@@ -75,6 +75,7 @@ import { DEMO_VISITOR_USER } from './lib/demoManagement'
 import { AdministradorContent } from './components/admin/AdministradorContent'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
+import { ClienteCadastroForm, emptyClienteFormState, type ClienteFormState } from './components/ClienteCadastroForm'
 import { TEMPLATE_SERVICOS_PADRAO } from './lib/servicosCadastroUtils'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
 import {
@@ -2578,6 +2579,8 @@ type Cliente = {
   kmIdaPadrao?: string
   /** KM de retorno predefinidos — preenchidos no relatório de serviço ao escolher o cliente */
   kmRetornoPadrao?: string
+  /** Pessoa física ou jurídica — usado no formulário de cadastro */
+  tipoCliente?: 'fisica' | 'juridica'
 }
 
 function findClienteByRelatorio(clientes: Cliente[], rel: RelatorioServico): Cliente | undefined {
@@ -6356,23 +6359,7 @@ export default function Dashboard() {
   const [clienteListaDetalheId, setClienteListaDetalheId] = useState<string | null>(null)
   const [clientesActiveTab, setClientesActiveTab] = useState<'cadastrar' | 'listar' | 'grupos'>('cadastrar')
   const [clienteGrupoTarifaSelecionadoId, setClienteGrupoTarifaSelecionadoId] = useState<string | null>(null)
-  const [clienteForm, setClienteForm] = useState({
-    nomeEmpresa: '',
-    morada: '',
-    localidade: '',
-    conselho: '',
-    pais: '',
-    codigoPostal: '',
-    freguesia: '',
-    numeroContribuicaoFiscal: '',
-    telefones: '',
-    email: '',
-    contato: '',
-    photo: '',
-    grupoTarifaId: '',
-    kmIdaPadrao: '',
-    kmRetornoPadrao: '',
-  })
+  const [clienteForm, setClienteForm] = useState<ClienteFormState>(() => emptyClienteFormState())
 
   const clientesOrdenadosAlfabeticamente = useMemo(
     () => ordenarClientesPorNome(clientes, localeOrdenacaoClientes(selectedLanguage)),
@@ -13218,24 +13205,22 @@ export default function Dashboard() {
   // Funções para gerenciar Clientes
   const handleAddCliente = () => {
     setEditingCliente(null)
-    setClienteForm({
-      nomeEmpresa: '',
-      morada: '',
-      localidade: '',
-      conselho: '',
-      pais: '',
-      codigoPostal: '',
-      freguesia: '',
-      numeroContribuicaoFiscal: '',
-      telefones: '',
-      email: '',
-      contato: '',
-      photo: '',
-      grupoTarifaId: clienteGrupoTarifaSelecionadoId || ordenarServicoGrupos(servicoGrupos)[0]?.id || '',
-      kmIdaPadrao: '',
-      kmRetornoPadrao: '',
-    })
+    setClienteForm(
+      emptyClienteFormState(
+        clienteGrupoTarifaSelecionadoId || ordenarServicoGrupos(servicoGrupos)[0]?.id || ''
+      )
+    )
     setShowClienteForm(true)
+  }
+
+  const handleCancelClienteForm = () => {
+    setEditingCliente(null)
+    setClienteForm(
+      emptyClienteFormState(
+        clienteGrupoTarifaSelecionadoId || ordenarServicoGrupos(servicoGrupos)[0]?.id || ''
+      )
+    )
+    if (showClientesModal) setShowClienteForm(false)
   }
 
   const handleEditCliente = (cliente: Cliente) => {
@@ -13256,6 +13241,7 @@ export default function Dashboard() {
       grupoTarifaId: cliente.grupoTarifaId || '',
       kmIdaPadrao: kmStringForNumberField(cliente.kmIdaPadrao),
       kmRetornoPadrao: kmStringForNumberField(cliente.kmRetornoPadrao),
+      tipoCliente: cliente.tipoCliente === 'juridica' ? 'juridica' : 'fisica',
     })
     setClientesActiveTab('cadastrar')
     setShowClienteForm(true)
@@ -15118,8 +15104,9 @@ export default function Dashboard() {
     const grupoTarifaId = (clienteForm.grupoTarifaId || '').trim() || undefined
     const kmIdaPadrao = normalizeKmForPersist(clienteForm.kmIdaPadrao)
     const kmRetornoPadrao = normalizeKmForPersist(clienteForm.kmRetornoPadrao)
+    const tipoCliente = clienteForm.tipoCliente === 'juridica' ? 'juridica' : 'fisica'
     if (editingCliente) {
-      savedCliente = { ...editingCliente, ...clienteForm, grupoTarifaId, kmIdaPadrao, kmRetornoPadrao }
+      savedCliente = { ...editingCliente, ...clienteForm, grupoTarifaId, kmIdaPadrao, kmRetornoPadrao, tipoCliente }
       updatedClientes = clientes.map(c =>
         c.id === editingCliente.id
           ? savedCliente
@@ -15132,6 +15119,7 @@ export default function Dashboard() {
         grupoTarifaId,
         kmIdaPadrao,
         kmRetornoPadrao,
+        tipoCliente,
         equipamentos: [],
         relatorios: {} // Pasta na Biblioteca de Relatórios (Relatórios de Serviço + Despesas)
       }
@@ -15168,6 +15156,7 @@ export default function Dashboard() {
       grupoTarifaId: savedCliente.grupoTarifaId || '',
       kmIdaPadrao: kmStringForNumberField(savedCliente.kmIdaPadrao),
       kmRetornoPadrao: kmStringForNumberField(savedCliente.kmRetornoPadrao),
+      tipoCliente: savedCliente.tipoCliente === 'juridica' ? 'juridica' : 'fisica',
     })
     setEditingCliente(savedCliente)
     alert((t as any).clienteSaved || 'Cliente salvo com sucesso!')
@@ -34403,7 +34392,8 @@ onKeyPress={(e) => {
                 🏠
               </button>
             </div>
-            {/* Cabeçalho Profissional - oculto em mobile (toolbar substitui) */}
+            {/* Cabeçalho Profissional - oculto em mobile (toolbar substitui) e na aba Cadastrar (formulário Novo Cliente) */}
+            {clientesActiveTab !== 'cadastrar' ? (
             <div className="tab-header-desktop tab-glass-hero">
               <div className="tab-glass-hero-top">
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
@@ -34481,6 +34471,7 @@ onKeyPress={(e) => {
                 </div>
               </div>
             </div>
+            ) : null}
 
             {/* Abas de Navegação - ocultas em mobile (toolbar tem Cadastrar/Listar + Adicionar na aba cadastrar) */}
             <div className="tab-nav-desktop tab-glass-nav tab-glass-nav--clientes">
@@ -34574,6 +34565,7 @@ onKeyPress={(e) => {
               )}
             </div>
 
+            {clientesActiveTab !== 'cadastrar' ? (
             <div
               className="clientes-financeiro-aviso"
               style={{
@@ -34602,507 +34594,192 @@ onKeyPress={(e) => {
                 {safeT?.clientesFinanceiro || 'Clientes / Financeiro'}
               </button>
             </div>
+            ) : null}
             
             {clientesActiveTab === 'cadastrar' ? (
               <div>
-                {showClienteForm && (
-              <div
-                className={
-                  editingCliente &&
-                  (clienteCadastroAlertaDevedorId === editingCliente.id ||
-                    (Boolean(editingCliente.isDevedor) &&
-                      (Number(editingCliente.saldoPendente ?? 0) > 0 ||
-                        Number(editingCliente.relatoriosNaoPagoCount ?? 0) > 0)))
-                    ? 'cliente-form-alerta-devedor'
-                    : undefined
-                }
-                style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
-                  <h3 style={{ margin: 0 }}>{editingCliente ? (safeT?.editCliente || 'Editar Cliente') : (safeT?.addCliente || 'Adicionar Cliente')}</h3>
-                  {editingCliente && clienteCadastroAlertaDevedorId === editingCliente.id && (
-                    <button
-                      type="button"
-                      className="btn-danger"
-                      onClick={() => setClienteCadastroAlertaDevedorId(null)}
-                      style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap' }}
-                    >
-                      {safeT?.encerrarAlertaDevedorCadastro || 'Encerrar alerta de devedor'}
-                    </button>
-                  )}
-                </div>
-
-                {editingCliente &&
-                  Boolean(editingCliente.isDevedor) &&
-                  Number(editingCliente.saldoPendente ?? 0) > 0 && (
-                    <div
-                      style={{
-                        marginBottom: '14px',
-                        padding: '12px 14px',
-                        borderRadius: '8px',
-                        background: 'rgba(70, 0, 0, 0.5)',
-                        border: '1px solid rgba(255, 100, 100, 0.48)',
-                      }}
-                    >
+                <ClienteCadastroForm
+                  clienteForm={clienteForm}
+                  setClienteForm={setClienteForm}
+                  editingCliente={editingCliente}
+                  safeT={safeT as Record<string, string | undefined>}
+                  servicoGrupos={servicoGrupos}
+                  clienteGrupoTarifaSelecionadoId={clienteGrupoTarifaSelecionadoId}
+                  onSave={handleSaveCliente}
+                  onCancel={handleCancelClienteForm}
+                  onPhotoChange={handleClientePhotoChange}
+                  onRemovePhoto={handleRemoveClientePhoto}
+                  onBack={handleCancelClienteForm}
+                  variant="page"
+                  sanitizeKmFieldTyping={sanitizeKmFieldTyping}
+                  className={
+                    editingCliente &&
+                    (clienteCadastroAlertaDevedorId === editingCliente.id ||
+                      (Boolean(editingCliente.isDevedor) &&
+                        (Number(editingCliente.saldoPendente ?? 0) > 0 ||
+                          Number(editingCliente.relatoriosNaoPagoCount ?? 0) > 0)))
+                      ? 'cliente-form-alerta-devedor'
+                      : undefined
+                  }
+                  headerSlot={
+                    editingCliente && clienteCadastroAlertaDevedorId === editingCliente.id ? (
+                      <button
+                        type="button"
+                        className="btn-danger"
+                        onClick={() => setClienteCadastroAlertaDevedorId(null)}
+                        style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap' }}
+                      >
+                        {safeT?.encerrarAlertaDevedorCadastro || 'Encerrar alerta de devedor'}
+                      </button>
+                    ) : null
+                  }
+                  alertSlot={
+                    editingCliente &&
+                    Boolean(editingCliente.isDevedor) &&
+                    Number(editingCliente.saldoPendente ?? 0) > 0 ? (
                       <div
                         style={{
-                          fontSize: '11px',
-                          fontWeight: 800,
-                          color: '#fecaca',
-                          letterSpacing: '0.05em',
+                          marginBottom: '14px',
+                          padding: '12px 14px',
+                          borderRadius: '8px',
+                          background: 'rgba(70, 0, 0, 0.5)',
+                          border: '1px solid rgba(255, 100, 100, 0.48)',
                         }}
                       >
-                        {(safeT as any)?.clienteDevedorBadge || 'Devedor'}
-                      </div>
-                      <div style={{ fontSize: '15px', color: '#fff', marginTop: '6px', fontWeight: 700 }}>
-                        {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
-                        {Number(editingCliente.saldoPendente ?? 0).toFixed(2)}
-                      </div>
-                      {(() => {
-                        const nums = (
-                          clientesDevedores.find(
-                            d => d.clienteId === editingCliente.id && d.isDevedor
-                          )?.faturasPendentes ?? []
-                        )
-                          .map(f => f.numeroFatura)
-                          .filter(Boolean)
-                        if (nums.length === 0) return null
-                        const txt =
-                          nums.length <= 6
-                            ? nums.join(', ')
-                            : `${nums.slice(0, 6).join(', ')} (+${nums.length - 6})`
-                        return (
-                          <div
-                            style={{
-                              fontSize: '12px',
-                              color: '#fca5a5',
-                              marginTop: '8px',
-                              wordBreak: 'break-word',
-                              lineHeight: 1.35,
-                            }}
-                          >
-                            {(safeT as any)?.clienteDevedorFaturasLabel || 'Faturas em aberto'}: {txt}
-                          </div>
-                        )
-                      })()}
-                    </div>
-                  )}
-                
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.nomeEmpresa || 'Nome da Empresa'} *</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.nomeEmpresa || 'Nome da Empresa'}
-                      value={clienteForm.nomeEmpresa}
-                      onChange={(e) => setClienteForm({ ...clienteForm, nomeEmpresa: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>
-                      {(safeT as any)?.clienteGrupoTarifa || 'Grupo / tabela de valores'}
-                    </label>
-                    <select
-                      value={
-                        clienteForm.grupoTarifaId ||
-                        clienteGrupoTarifaSelecionadoId ||
-                        ordenarServicoGrupos(servicoGrupos)[0]?.id ||
-                        ''
-                      }
-                      onChange={(e) => setClienteForm({ ...clienteForm, grupoTarifaId: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '8px',
-                        backgroundColor: '#222222',
-                        color: '#fff',
-                        border: '1px solid rgba(0, 255, 0, 0.3)',
-                        borderRadius: '4px',
-                      }}
-                    >
-                      <option value="">{(safeT as any)?.clienteSemGrupoTarifa || '— Sem grupo (tarifa padrão) —'}</option>
-                      {ordenarServicoGrupos(servicoGrupos).map((g) => (
-                        <option key={g.id} value={g.id}>
-                          {g.nome}
-                        </option>
-                      ))}
-                    </select>
-                    <p style={{ margin: '6px 0 0', fontSize: '11px', opacity: 0.65, lineHeight: 1.4 }}>
-                      {(safeT as any)?.clienteGrupoTarifaHint ||
-                        'Ex.: NONATO SERVICE, REVENDEDORES PT, HOMAG ALEMANHA, HOMAG USA — cada grupo tem a sua tabela no Cadastro de Serviços.'}
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.morada || 'Morada'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.morada || 'Morada'}
-                      value={clienteForm.morada}
-                      onChange={(e) => setClienteForm({ ...clienteForm, morada: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.conselho || 'Conselho'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.conselho || 'Conselho'}
-                      value={clienteForm.conselho}
-                      onChange={(e) => setClienteForm({ ...clienteForm, conselho: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.pais || 'País'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.pais || 'País'}
-                      value={clienteForm.pais}
-                      onChange={(e) => setClienteForm({ ...clienteForm, pais: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.codigoPostal || 'Código Postal'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.codigoPostal || 'Código Postal'}
-                      value={clienteForm.codigoPostal}
-                      onChange={(e) => setClienteForm({ ...clienteForm, codigoPostal: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  {(clienteForm.morada || clienteForm.codigoPostal)?.trim() && (
-                    <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([clienteForm.morada, clienteForm.codigoPostal, clienteForm.pais].filter(Boolean).join(', '))}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          padding: '8px 16px',
-                          backgroundColor: 'rgba(66, 133, 244, 0.2)',
-                          color: '#6ba3f6',
-                          border: '1px solid rgba(66, 133, 244, 0.5)',
-                          borderRadius: '6px',
-                          textDecoration: 'none',
-                          fontSize: '14px',
-                          fontWeight: '500'
-                        }}
-                      >
-                        🗺️ {(safeT as any)?.abrirGoogleMaps || 'Abrir no Google Maps'}
-                      </a>
-                      <span style={{ fontSize: '12px', color: '#888' }}>
-                        {(safeT as any)?.abrirMapsDesc || 'Abre o endereço no Google Maps'}
-                      </span>
-                    </div>
-                  )}
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.freguesia || 'Freguesia'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.freguesia || 'Freguesia'}
-                      value={clienteForm.freguesia}
-                      onChange={(e) => setClienteForm({ ...clienteForm, freguesia: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.identificacaoFiscal || 'Identificação Fiscal'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.identificacaoFiscal || 'Identificação Fiscal'}
-                      value={clienteForm.numeroContribuicaoFiscal}
-                      onChange={(e) => setClienteForm({ ...clienteForm, numeroContribuicaoFiscal: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.telefones || 'Telefones'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.telefones || 'Telefones'}
-                      value={clienteForm.telefones}
-                      onChange={(e) => setClienteForm({ ...clienteForm, telefones: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
-                    <input
-                      type="email"
-                      placeholder={safeT?.email || 'E-mail'}
-                      value={clienteForm.email}
-                      onChange={(e) => setClienteForm({ ...clienteForm, email: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.contato || 'Contato'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.contato || 'Contato'}
-                      value={clienteForm.contato}
-                      onChange={(e) => setClienteForm({ ...clienteForm, contato: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>
-                      {(safeT as any)?.clienteKmIdaPadrao || 'KM de ida (padrão)'}
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      placeholder={(safeT as any)?.clienteKmIdaPadrao || 'KM de ida (padrão)'}
-                      value={clienteForm.kmIdaPadrao}
-                      onChange={(e) =>
-                        setClienteForm({ ...clienteForm, kmIdaPadrao: sanitizeKmFieldTyping(e.target.value) })
-                      }
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>
-                      {(safeT as any)?.clienteKmRetornoPadrao || 'KM de retorno (padrão)'}
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      placeholder={(safeT as any)?.clienteKmRetornoPadrao || 'KM de retorno (padrão)'}
-                      value={clienteForm.kmRetornoPadrao}
-                      onChange={(e) =>
-                        setClienteForm({ ...clienteForm, kmRetornoPadrao: sanitizeKmFieldTyping(e.target.value) })
-                      }
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <p style={{ margin: 0, fontSize: '11px', opacity: 0.65, lineHeight: 1.4 }}>
-                      {(safeT as any)?.clienteKmPadraoHint ||
-                        'Usado automaticamente no relatório de serviço ao escolher este cliente. Pode alterar no relatório se estiver mais perto ou mais longe.'}
-                    </p>
-                  </div>
-                  
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.photo || 'Foto do Cliente'}</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleClientePhotoChange}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                    {clienteForm.photo && (
-                      <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
-                        <img 
-                          src={clienteForm.photo} 
-                          alt="Preview" 
-                          style={{ 
-                            maxWidth: '100%', 
-                            maxHeight: '400px', 
-                            width: 'auto',
-                            height: 'auto',
-                            borderRadius: '8px', 
-                            border: '2px solid rgba(0, 255, 0, 0.5)',
-                            objectFit: 'contain',
-                            backgroundColor: '#222222',
-                            padding: '5px'
-                          }} 
-                        />
-                        <button 
-                          className="btn-danger" 
-                          onClick={handleRemoveClientePhoto} 
-                          style={{ padding: '8px 16px', fontSize: '12px' }}
-                        >
-                          {safeT?.removePhoto || 'Remover Foto'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {editingCliente && (editingCliente.anexosSolicitacaoServico?.length ?? 0) > 0 ? (
-                  <div style={{ marginTop: '18px', padding: '14px', borderRadius: '8px', border: '1px solid rgba(0, 255, 136, 0.25)', backgroundColor: 'rgba(0, 40, 24, 0.35)' }}>
-                    <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#9fdf9f' }}>{(safeT as any)?.solicitacaoServicoTecnicoAnexosClienteTitulo || 'Solicitações de serviço — documentos devolvidos'}</h4>
-                    <ul style={{ margin: 0, paddingLeft: '18px', color: '#e0e0e0', fontSize: '13px', lineHeight: 1.6 }}>
-                      {(editingCliente.anexosSolicitacaoServico || []).map((an) => (
-                        <li key={an.id} style={{ marginBottom: '6px' }}>
-                          <a href={an.dados} download={an.nome} style={{ color: '#5eead4', fontWeight: 600 }}>{an.nome}</a>
-                          <span style={{ color: '#888', fontSize: '11px', marginLeft: '8px' }}>
-                            {(safeT as any)?.solicitacaoServicoTecnicoAnexoRef || 'Ref.'} {an.solicitacaoServicoId}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-
-                {editingCliente ? (() => {
-                  const txc = safeT as Record<string, string>
-                  const relsDespBib = relatoriosServico
-                    .filter(
-                      r =>
-                        r.clienteId === editingCliente.id &&
-                        fechamentosGuardadosBibliotecaIds.includes(r.id) &&
-                        Array.isArray(fechamentosRelatorios[r.id]) &&
-                        (fechamentosRelatorios[r.id]?.length ?? 0) > 0
-                    )
-                    .sort((a, b) =>
-                      String(a.numero ?? '').localeCompare(String(b.numero ?? ''), undefined, { sensitivity: 'base', numeric: true })
-                    )
-                  if (relsDespBib.length === 0) return null
-                  return (
-                    <div
-                      style={{
-                        marginTop: '18px',
-                        padding: '16px',
-                        borderRadius: '10px',
-                        border: '1px solid rgba(255, 170, 0, 0.4)',
-                        background: 'rgba(40, 32, 14, 0.45)',
-                      }}
-                    >
-                      <h4 style={{ margin: '0 0 6px 0', fontSize: '14px', color: '#ffcc80' }}>
-                        {txc.clienteCadastroDespesasBibliotecaTitulo || 'Relatórios de despesas (biblioteca)'}
-                      </h4>
-                      <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.45 }}>
-                        {txc.clienteCadastroDespesasBibliotecaDesc ||
-                          'Fechamentos guardados na biblioteca: totais, consultar despesas e PDF (como na Biblioteca de relatórios).'}
-                      </p>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {relsDespBib.map(rel => {
-                          const itens = fechamentosRelatorios[rel.id] || []
-                          const itensVis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, rel.id, itens)
-                          const tot = totaisFechamentoLiquidoComIva(itensVis, fechamentoIvaPorRelatorioId[rel.id]).comIva
+                        <div style={{ fontSize: '11px', fontWeight: 800, color: '#fecaca', letterSpacing: '0.05em' }}>
+                          {(safeT as any)?.clienteDevedorBadge || 'Devedor'}
+                        </div>
+                        <div style={{ fontSize: '15px', color: '#fff', marginTop: '6px', fontWeight: 700 }}>
+                          {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
+                          {Number(editingCliente.saldoPendente ?? 0).toFixed(2)}
+                        </div>
+                        {(() => {
+                          const nums = (
+                            clientesDevedores.find(
+                              d => d.clienteId === editingCliente.id && d.isDevedor
+                            )?.faturasPendentes ?? []
+                          )
+                            .map(f => f.numeroFatura)
+                            .filter(Boolean)
+                          if (nums.length === 0) return null
+                          const txt =
+                            nums.length <= 6
+                              ? nums.join(', ')
+                              : `${nums.slice(0, 6).join(', ')} (+${nums.length - 6})`
                           return (
-                            <div
-                              key={rel.id}
-                              style={{
-                                padding: '12px 14px',
-                                borderRadius: '8px',
-                                background: 'rgba(0,0,0,0.35)',
-                                border: '1px solid rgba(255, 200, 120, 0.25)',
-                              }}
-                            >
-                              <div style={{ fontWeight: 700, color: '#fff', fontSize: '13px', marginBottom: '4px' }}>
-                                {(txc.fechamentoRelatorio || 'Fechamento')}{' '}
-                                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                                  {(txc.relatorioNumeroLabel || 'Rel.')} {rel.numero}
-                                </span>
-                                <span style={{ fontWeight: 600, color: '#fbbf77', marginLeft: '8px' }}>
-                                  · {txc.total || 'Total'} €{tot.toFixed(2)}
-                                </span>
-                              </div>
-                              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.75)', marginBottom: '8px' }}>
-                                {rel.maquinaModelo} · {rel.data}
-                              </div>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
-                                <button
-                                  type="button"
-                                  className="btn-primary"
-                                  style={{ padding: '6px 10px', fontSize: '11px' }}
-                                  onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio: rel, itens: itensVis })}
-                                >
-                                  👁️ {txc.visualizarDespesasBiblioteca || safeT?.view || 'Ver'}
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn-primary"
-                                  style={{ padding: '6px 10px', fontSize: '11px' }}
-                                  onClick={() => imprimirPDFDespesasDaBiblioteca(rel, itensVis)}
-                                >
-                                  📄 {txc.gerarPDF || safeT?.gerarPDF || 'PDF'}
-                                </button>
-                              </div>
+                            <div style={{ fontSize: '12px', color: '#fca5a5', marginTop: '8px', wordBreak: 'break-word', lineHeight: 1.35 }}>
+                              {(safeT as any)?.clienteDevedorFaturasLabel || 'Faturas em aberto'}: {txt}
                             </div>
                           )
-                        })}
+                        })()}
                       </div>
-                    </div>
-                  )
-                })() : null}
-                
-                <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                  <button className="btn-primary" onClick={handleSaveCliente} style={{ flex: 1, padding: '8px 16px' }}>
-                    {safeT?.save || 'Salvar'}
-                  </button>
-                  <button className="btn-primary" onClick={() => { 
-                    setShowClienteForm(false); 
-                    setEditingCliente(null); 
-                    setClienteForm({ 
-                      nomeEmpresa: '', 
-                      morada: '', 
-                      localidade: '', 
-                      conselho: '', 
-                      pais: '', 
-                      codigoPostal: '', 
-                      freguesia: '', 
-                      numeroContribuicaoFiscal: '', 
-                      telefones: '', 
-                      email: '', 
-                      contato: '',
-                      photo: '',
-                      grupoTarifaId: '',
-                      kmIdaPadrao: '',
-                      kmRetornoPadrao: '',
-                    });
-                  }} style={{ flex: 1, padding: '8px 16px' }}>
-                    {safeT?.cancel || 'Cancelar'}
-                  </button>
-                </div>
-                {editingCliente ? (
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    onClick={() =>
-                      abrirClienteDadosContabilidade({
-                        ...editingCliente,
-                        nomeEmpresa: clienteForm.nomeEmpresa,
-                        morada: clienteForm.morada,
-                        localidade: clienteForm.localidade,
-                        conselho: clienteForm.conselho,
-                        pais: clienteForm.pais,
-                        codigoPostal: clienteForm.codigoPostal,
-                        freguesia: clienteForm.freguesia,
-                        numeroContribuicaoFiscal: clienteForm.numeroContribuicaoFiscal,
-                        telefones: clienteForm.telefones,
-                        email: clienteForm.email,
-                        contato: clienteForm.contato,
-                        photo: clienteForm.photo,
-                      })
-                    }
-                    style={{
-                      width: '100%',
-                      marginTop: '10px',
-                      padding: '10px 16px',
-                      fontSize: '12px',
-                      lineHeight: 1.3,
-                      boxSizing: 'border-box',
-                      backgroundColor: 'rgba(21, 101, 192, 0.35)',
-                      borderColor: 'rgba(100, 181, 246, 0.55)',
-                    }}
-                    title={(safeT as any)?.clienteDadosContabilidadeSub || ''}
-                  >
-                    📄 {(safeT as any)?.clienteDadosContabilidade || 'Dados p/ contabilidade'}
-                  </button>
-                ) : null}
-              </div>
-            )}
+                    ) : null
+                  }
+                  editingExtras={
+                    <>
+                      {editingCliente && (editingCliente.anexosSolicitacaoServico?.length ?? 0) > 0 ? (
+                        <div style={{ marginTop: '0', padding: '14px', borderRadius: '8px', border: '1px solid rgba(0, 255, 136, 0.25)', backgroundColor: 'rgba(0, 40, 24, 0.35)' }}>
+                          <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#9fdf9f' }}>{(safeT as any)?.solicitacaoServicoTecnicoAnexosClienteTitulo || 'Solicitações de serviço — documentos devolvidos'}</h4>
+                          <ul style={{ margin: 0, paddingLeft: '18px', color: '#e0e0e0', fontSize: '13px', lineHeight: 1.6 }}>
+                            {(editingCliente.anexosSolicitacaoServico || []).map((an) => (
+                              <li key={an.id} style={{ marginBottom: '6px' }}>
+                                <a href={an.dados} download={an.nome} style={{ color: '#5eead4', fontWeight: 600 }}>{an.nome}</a>
+                                <span style={{ color: '#888', fontSize: '11px', marginLeft: '8px' }}>
+                                  {(safeT as any)?.solicitacaoServicoTecnicoAnexoRef || 'Ref.'} {an.solicitacaoServicoId}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                      {editingCliente ? (() => {
+                        const txc = safeT as Record<string, string>
+                        const relsDespBib = relatoriosServico
+                          .filter(
+                            r =>
+                              r.clienteId === editingCliente.id &&
+                              fechamentosGuardadosBibliotecaIds.includes(r.id) &&
+                              Array.isArray(fechamentosRelatorios[r.id]) &&
+                              (fechamentosRelatorios[r.id]?.length ?? 0) > 0
+                          )
+                          .sort((a, b) =>
+                            String(a.numero ?? '').localeCompare(String(b.numero ?? ''), undefined, { sensitivity: 'base', numeric: true })
+                          )
+                        if (relsDespBib.length === 0) return null
+                        return (
+                          <div style={{ marginTop: '18px', padding: '16px', borderRadius: '10px', border: '1px solid rgba(255, 170, 0, 0.4)', background: 'rgba(40, 32, 14, 0.45)' }}>
+                            <h4 style={{ margin: '0 0 6px 0', fontSize: '14px', color: '#ffcc80' }}>
+                              {txc.clienteCadastroDespesasBibliotecaTitulo || 'Relatórios de despesas (biblioteca)'}
+                            </h4>
+                            <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.45 }}>
+                              {txc.clienteCadastroDespesasBibliotecaDesc || 'Fechamentos guardados na biblioteca: totais, consultar despesas e PDF (como na Biblioteca de relatórios).'}
+                            </p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                              {relsDespBib.map(rel => {
+                                const itens = fechamentosRelatorios[rel.id] || []
+                                const itensVis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, rel.id, itens)
+                                const tot = totaisFechamentoLiquidoComIva(itensVis, fechamentoIvaPorRelatorioId[rel.id]).comIva
+                                return (
+                                  <div key={rel.id} style={{ padding: '12px 14px', borderRadius: '8px', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255, 200, 120, 0.25)' }}>
+                                    <div style={{ fontWeight: 700, color: '#fff', fontSize: '13px', marginBottom: '4px' }}>
+                                      {(txc.fechamentoRelatorio || 'Fechamento')}{' '}
+                                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                        {(txc.relatorioNumeroLabel || 'Rel.')} {rel.numero}
+                                      </span>
+                                      <span style={{ fontWeight: 600, color: '#fbbf77', marginLeft: '8px' }}>
+                                        · {txc.total || 'Total'} €{tot.toFixed(2)}
+                                      </span>
+                                    </div>
+                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.75)', marginBottom: '8px' }}>
+                                      {rel.maquinaModelo} · {rel.data}
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                                      <button type="button" className="btn-primary" style={{ padding: '6px 10px', fontSize: '11px' }} onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio: rel, itens: itensVis })}>
+                                        👁️ {txc.visualizarDespesasBiblioteca || safeT?.view || 'Ver'}
+                                      </button>
+                                      <button type="button" className="btn-primary" style={{ padding: '6px 10px', fontSize: '11px' }} onClick={() => imprimirPDFDespesasDaBiblioteca(rel, itensVis)}>
+                                        📄 {txc.gerarPDF || safeT?.gerarPDF || 'PDF'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )
+                      })() : null}
+                    </>
+                  }
+                  footerExtras={
+                    editingCliente ? (
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() =>
+                          abrirClienteDadosContabilidade({
+                            ...editingCliente,
+                            nomeEmpresa: clienteForm.nomeEmpresa,
+                            morada: clienteForm.morada,
+                            localidade: clienteForm.localidade,
+                            conselho: clienteForm.conselho,
+                            pais: clienteForm.pais,
+                            codigoPostal: clienteForm.codigoPostal,
+                            freguesia: clienteForm.freguesia,
+                            numeroContribuicaoFiscal: clienteForm.numeroContribuicaoFiscal,
+                            telefones: clienteForm.telefones,
+                            email: clienteForm.email,
+                            contato: clienteForm.contato,
+                            photo: clienteForm.photo,
+                          })
+                        }
+                        style={{ width: '100%', marginTop: '10px', padding: '10px 16px', fontSize: '12px', lineHeight: 1.3, boxSizing: 'border-box', backgroundColor: 'rgba(21, 101, 192, 0.35)', borderColor: 'rgba(100, 181, 246, 0.55)' }}
+                        title={(safeT as any)?.clienteDadosContabilidadeSub || ''}
+                      >
+                        📄 {(safeT as any)?.clienteDadosContabilidade || 'Dados p/ contabilidade'}
+                      </button>
+                    ) : null
+                  }
+                />
               </div>
             ) : clientesActiveTab === 'grupos' ? (
               <div style={{ display: 'flex', gap: '18px', alignItems: 'stretch', flexWrap: 'wrap', marginTop: '12px' }}>
@@ -71253,7 +70930,19 @@ A1;Peça exemplo;10`}
               {safeT?.addCliente || 'Adicionar Cliente'}
             </button>
             {showClienteForm && (
-              <div
+              <ClienteCadastroForm
+                clienteForm={clienteForm}
+                setClienteForm={setClienteForm}
+                editingCliente={editingCliente}
+                safeT={safeT as Record<string, string | undefined>}
+                servicoGrupos={servicoGrupos}
+                clienteGrupoTarifaSelecionadoId={clienteGrupoTarifaSelecionadoId}
+                onSave={handleSaveCliente}
+                onCancel={handleCancelClienteForm}
+                onPhotoChange={handleClientePhotoChange}
+                onRemovePhoto={handleRemoveClientePhoto}
+                variant="modal"
+                sanitizeKmFieldTyping={sanitizeKmFieldTyping}
                 className={
                   editingCliente &&
                   (clienteCadastroAlertaDevedorId === editingCliente.id ||
@@ -71262,11 +70951,8 @@ A1;Peça exemplo;10`}
                     ? 'cliente-form-alerta-devedor'
                     : undefined
                 }
-                style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
-                  <h4 style={{ margin: 0 }}>{editingCliente ? (safeT?.editCliente || 'Editar Cliente') : (safeT?.addCliente || 'Adicionar Cliente')}</h4>
-                  {editingCliente && clienteCadastroAlertaDevedorId === editingCliente.id && (
+                headerSlot={
+                  editingCliente && clienteCadastroAlertaDevedorId === editingCliente.id ? (
                     <button
                       type="button"
                       className="btn-danger"
@@ -71275,12 +70961,12 @@ A1;Peça exemplo;10`}
                     >
                       {safeT?.encerrarAlertaDevedorCadastro || 'Encerrar alerta de devedor'}
                     </button>
-                  )}
-                </div>
-
-                {editingCliente &&
+                  ) : null
+                }
+                alertSlot={
+                  editingCliente &&
                   Boolean(editingCliente.isDevedor) &&
-                  Number(editingCliente.saldoPendente ?? 0) > 0 && (
+                  Number(editingCliente.saldoPendente ?? 0) > 0 ? (
                     <div
                       style={{
                         marginBottom: '12px',
@@ -71290,204 +70976,17 @@ A1;Peça exemplo;10`}
                         border: '1px solid rgba(255, 100, 100, 0.48)',
                       }}
                     >
-                      <div
-                        style={{
-                          fontSize: '11px',
-                          fontWeight: 800,
-                          color: '#fecaca',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
+                      <div style={{ fontSize: '11px', fontWeight: 800, color: '#fecaca', letterSpacing: '0.05em' }}>
                         {(safeT as any)?.clienteDevedorBadge || 'Devedor'}
                       </div>
                       <div style={{ fontSize: '14px', color: '#fff', marginTop: '6px', fontWeight: 700 }}>
                         {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
                         {Number(editingCliente.saldoPendente ?? 0).toFixed(2)}
                       </div>
-                      {(() => {
-                        const nums = (
-                          clientesDevedores.find(
-                            d => d.clienteId === editingCliente.id && d.isDevedor
-                          )?.faturasPendentes ?? []
-                        )
-                          .map(f => f.numeroFatura)
-                          .filter(Boolean)
-                        if (nums.length === 0) return null
-                        const txt =
-                          nums.length <= 6
-                            ? nums.join(', ')
-                            : `${nums.slice(0, 6).join(', ')} (+${nums.length - 6})`
-                        return (
-                          <div
-                            style={{
-                              fontSize: '11px',
-                              color: '#fca5a5',
-                              marginTop: '6px',
-                              wordBreak: 'break-word',
-                              lineHeight: 1.35,
-                            }}
-                          >
-                            {(safeT as any)?.clienteDevedorFaturasLabel || 'Faturas em aberto'}: {txt}
-                          </div>
-                        )
-                      })()}
                     </div>
-                  )}
-                <input
-                  type="text"
-                  placeholder={safeT?.nomeEmpresa || 'Nome da Empresa'}
-                  value={clienteForm.nomeEmpresa}
-                  onChange={(e) => setClienteForm({ ...clienteForm, nomeEmpresa: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <select
-                  value={
-                    clienteForm.grupoTarifaId ||
-                    clienteGrupoTarifaSelecionadoId ||
-                    ordenarServicoGrupos(servicoGrupos)[0]?.id ||
-                    ''
-                  }
-                  onChange={(e) => setClienteForm({ ...clienteForm, grupoTarifaId: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                >
-                  <option value="">{(safeT as any)?.clienteSemGrupoTarifa || '— Sem grupo (tarifa padrão) —'}</option>
-                  {ordenarServicoGrupos(servicoGrupos).map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.nome}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  placeholder={safeT?.morada || 'Morada'}
-                  value={clienteForm.morada}
-                  onChange={(e) => setClienteForm({ ...clienteForm, morada: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.conselho || 'Conselho'}
-                  value={clienteForm.conselho}
-                  onChange={(e) => setClienteForm({ ...clienteForm, conselho: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.pais || 'País'}
-                  value={clienteForm.pais}
-                  onChange={(e) => setClienteForm({ ...clienteForm, pais: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.codigoPostal || 'Código Postal'}
-                  value={clienteForm.codigoPostal}
-                  onChange={(e) => setClienteForm({ ...clienteForm, codigoPostal: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.freguesia || 'Freguesia'}
-                  value={clienteForm.freguesia}
-                  onChange={(e) => setClienteForm({ ...clienteForm, freguesia: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.identificacaoFiscal || 'Identificação Fiscal'}
-                  value={clienteForm.numeroContribuicaoFiscal}
-                  onChange={(e) => setClienteForm({ ...clienteForm, numeroContribuicaoFiscal: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.telefones || 'Telefones'}
-                  value={clienteForm.telefones}
-                  onChange={(e) => setClienteForm({ ...clienteForm, telefones: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="email"
-                  placeholder={safeT?.email || 'E-mail'}
-                  value={clienteForm.email}
-                  onChange={(e) => setClienteForm({ ...clienteForm, email: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.contato || 'Contato'}
-                  value={clienteForm.contato}
-                  onChange={(e) => setClienteForm({ ...clienteForm, contato: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder={(safeT as any)?.clienteKmIdaPadrao || 'KM de ida (padrão)'}
-                  value={clienteForm.kmIdaPadrao}
-                  onChange={(e) =>
-                    setClienteForm({ ...clienteForm, kmIdaPadrao: sanitizeKmFieldTyping(e.target.value) })
-                  }
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder={(safeT as any)?.clienteKmRetornoPadrao || 'KM de retorno (padrão)'}
-                  value={clienteForm.kmRetornoPadrao}
-                  onChange={(e) =>
-                    setClienteForm({ ...clienteForm, kmRetornoPadrao: sanitizeKmFieldTyping(e.target.value) })
-                  }
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <p style={{ margin: '0 0 10px', fontSize: '11px', opacity: 0.65, lineHeight: 1.4 }}>
-                  {(safeT as any)?.clienteKmPadraoHint ||
-                    'Usado automaticamente no relatório de serviço ao escolher este cliente. Pode alterar no relatório se necessário.'}
-                </p>
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.photo || 'Foto do Cliente'}</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleClientePhotoChange}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                  />
-                  {clienteForm.photo && (
-                    <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
-                      <img 
-                        src={clienteForm.photo} 
-                        alt="Preview" 
-                        style={{ 
-                          maxWidth: '100%', 
-                          maxHeight: '400px', 
-                          width: 'auto',
-                          height: 'auto',
-                          borderRadius: '8px', 
-                          border: '2px solid rgba(0, 255, 0, 0.5)',
-                          objectFit: 'contain',
-                          backgroundColor: '#222222',
-                          padding: '5px'
-                        }} 
-                      />
-                      <button 
-                        className="btn-danger" 
-                        onClick={handleRemoveClientePhoto} 
-                        style={{ padding: '8px 16px', fontSize: '12px' }}
-                      >
-                        {safeT?.removePhoto || 'Remover Foto'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                  <button className="btn-primary" onClick={handleSaveCliente} style={{ flex: 1 }}>
-                    {safeT?.save || 'Salvar'}
-                  </button>
-                  <button className="btn-primary" onClick={() => { setShowClienteForm(false); setEditingCliente(null); setClienteForm({ nomeEmpresa: '', morada: '', localidade: '', conselho: '', pais: '', codigoPostal: '', freguesia: '', numeroContribuicaoFiscal: '', telefones: '', email: '', contato: '', photo: '' }); }} style={{ flex: 1 }}>
-                    {safeT?.cancel || 'Cancelar'}
-                  </button>
-                </div>
-              </div>
+                  ) : null
+                }
+              />
             )}
             {clientes.length === 0 ? (
               <p>{safeT?.noClientes || 'Nenhum cliente cadastrado.'}</p>
