@@ -13,6 +13,8 @@ import {
 } from './pdfDocumentLayout'
 import {
   getRelatorioCabecalhoEquipamentoDados,
+  type EquipamentoArmazemIdLookup,
+  type RelatorioEquipamentoCabecalhoLinha,
   type RelatorioServicoEquipamentosHost,
 } from './relatorioServicoEquipamentos'
 
@@ -42,9 +44,37 @@ export type RelatorioServicoPdfMetaLabels = {
   equipamentoId: string
   maquinaModelo: string
   numeroMaquina: string
+  equipNumero: string
   cidade: string
   telefone: string
   tipoServico: string
+}
+
+function buildPdfEquipamentosRelatorioTableHtml(
+  linhas: RelatorioEquipamentoCabecalhoLinha[],
+  labels: Pick<RelatorioServicoPdfMetaLabels, 'equipNumero' | 'equipamentoId' | 'maquinaModelo'>,
+  esc: (s: string | undefined | null) => string
+): string {
+  const rows = linhas
+    .map(
+      (linha) => `<tr>
+      <td class="ns-pdf-meta__equip-num">${linha.numero}</td>
+      <td class="ns-pdf-meta__equip-id">${esc(linha.equipamentoId)}</td>
+      <td class="ns-pdf-meta__equip-modelo">${esc(linha.maquinaModelo)}</td>
+    </tr>`
+    )
+    .join('')
+
+  return `<table class="ns-pdf-meta__equip-table" role="presentation">
+    <thead>
+      <tr>
+        <th scope="col">${labels.equipNumero}</th>
+        <th scope="col">${labels.equipamentoId}</th>
+        <th scope="col">${labels.maquinaModelo}</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>`
 }
 
 export function buildRelatorioServicoPdfMetaSectionHtml(options: {
@@ -61,9 +91,11 @@ export function buildRelatorioServicoPdfMetaSectionHtml(options: {
   labels: RelatorioServicoPdfMetaLabels
   dataFormatada: string
   modifier?: '' | 'dark' | 'expense'
+  equipamentosArmazem?: EquipamentoArmazemIdLookup[]
 }): string {
-  const { relatorio, title, labels, dataFormatada, modifier = '' } = options
-  const eq = getRelatorioCabecalhoEquipamentoDados(relatorio)
+  const { relatorio, title, labels, dataFormatada, modifier = '', equipamentosArmazem = [] } =
+    options
+  const eq = getRelatorioCabecalhoEquipamentoDados(relatorio, equipamentosArmazem)
   const esc = escapePdfHtml
 
   const fields: PdfMetaField[] = [
@@ -73,25 +105,33 @@ export function buildRelatorioServicoPdfMetaSectionHtml(options: {
     { label: labels.telefone, value: esc(relatorio.telefone || '—') },
   ]
 
-  if (eq.ids && eq.ids !== '—') {
+  if (!eq.multiplos) {
+    if (eq.ids && eq.ids !== '—') {
+      fields.push({
+        label: labels.equipamentoId,
+        value: esc(eq.ids),
+        fullWidth: eq.ids.length > 28,
+      })
+    }
     fields.push({
-      label: labels.equipamentoId,
-      value: esc(eq.ids),
-      fullWidth: eq.multiplos || eq.ids.length > 28,
+      label: labels.maquinaModelo,
+      value: esc(eq.modelos !== '—' ? eq.modelos : relatorio.maquinaModelo || '—'),
     })
   }
 
   fields.push(
-    {
-      label: labels.maquinaModelo,
-      value: esc(eq.modelos !== '—' ? eq.modelos : relatorio.maquinaModelo || '—'),
-      fullWidth: eq.multiplos,
-    },
     { label: labels.cidade, value: esc(relatorio.cidade || '—') },
     { label: labels.tipoServico, value: esc(relatorio.tipoServico || '—') }
   )
 
-  return buildPdfMetaSectionHtml({ title, fields, modifier })
+  const metaHtml = buildPdfMetaSectionHtml({ title, fields, modifier })
+
+  if (eq.multiplos && eq.linhas.length > 1) {
+    const tableHtml = buildPdfEquipamentosRelatorioTableHtml(eq.linhas, labels, esc)
+    return metaHtml.replace('</section>', `${tableHtml}</section>`)
+  }
+
+  return metaHtml
 }
 
 /** CSS do cabeçalho PDF — reutilizado em todos os modelos (exceto Ferwood). */
@@ -117,6 +157,43 @@ body.rs-pdf--detailed { font-size: 11px; line-height: 1.55; padding: 10px 12px 2
 body.rs-pdf--compact { font-size: 8px; line-height: 1.38; padding: 6px 8px 14px; }
 
 ${PDF_DOCUMENT_LAYOUT_CSS}
+
+.ns-pdf-meta__equip-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 0.92em;
+}
+.ns-pdf-meta__equip-table th,
+.ns-pdf-meta__equip-table td {
+  border: 1px solid #e2e8f0;
+  padding: 7px 8px;
+  text-align: left;
+  vertical-align: middle;
+}
+.ns-pdf-meta__equip-table th {
+  background: #1e293b;
+  color: #f8fafc;
+  font-weight: 600;
+  font-size: 0.82em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ns-pdf-meta__equip-table .ns-pdf-meta__equip-num {
+  width: 52px;
+  text-align: center;
+  font-weight: 700;
+  color: #1e3a5f;
+}
+.ns-pdf-meta__equip-table tbody tr:nth-child(even) td {
+  background: #f8fafc;
+}
+.ns-pdf-meta--dark .ns-pdf-meta__equip-table th {
+  background: #0f172a;
+}
+.ns-pdf-meta--dark .ns-pdf-meta__equip-table tbody tr:nth-child(even) td {
+  background: #1e293b22;
+}
 
 .rs-pdf .info-section {
   margin-bottom: 16px;

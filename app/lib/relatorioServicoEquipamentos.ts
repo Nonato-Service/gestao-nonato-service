@@ -1,5 +1,13 @@
 export type RelatorioEquipamentoOrigem = 'cliente' | 'armazem'
 
+export type EquipamentoArmazemIdLookup = { id?: string; numeroSerie?: string }
+
+export type RelatorioEquipamentoCabecalhoLinha = {
+  numero: number
+  equipamentoId: string
+  maquinaModelo: string
+}
+
 export type RelatorioEquipamentoRef = {
   uid: string
   equipamentoOrigem: RelatorioEquipamentoOrigem
@@ -24,6 +32,46 @@ export function resolverIdEquipamentoCliente(
   idx = 0
 ): string {
   return String(eq.id || eq.numeroSerie || idx).trim()
+}
+
+/** true = ID gerado pela app (UUID ou prefixo eqc-), não código próprio do utilizador. */
+export function equipamentoIdETecnicoGerado(id: string | undefined): boolean {
+  const t = String(id ?? '').trim()
+  if (!t) return true
+  if (/^eqc-/i.test(t)) return true
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89abAB][0-9a-f]{3}-[0-9a-f]{12}$/i.test(t)
+}
+
+/** ID visível no relatório/PDF: código do cliente, ID do armazém pela série; nunca UUID interno. */
+export function resolverIdEquipamentoVisivelCliente(
+  eq: { id?: string; numeroSerie?: string },
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+): string {
+  const idC = String(eq.id ?? '').trim()
+  if (idC && !equipamentoIdETecnicoGerado(idC)) return idC
+  const s = String(eq.numeroSerie ?? '').trim()
+  if (s) {
+    const wh = equipamentosArmazem.find(
+      (e) => String(e.numeroSerie ?? '').trim().toLowerCase() === s.toLowerCase()
+    )
+    const idA = String(wh?.id ?? '').trim()
+    if (idA && !equipamentoIdETecnicoGerado(idA)) return idA
+  }
+  return equipamentoIdETecnicoGerado(idC) ? '' : idC
+}
+
+export function resolverIdEquipamentoVisivelRelatorio(
+  eq: RelatorioEquipamentoRef,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+): string {
+  if (eq.equipamentoOrigem === 'armazem') {
+    const id = String(eq.equipamentoId ?? '').trim()
+    return equipamentoIdETecnicoGerado(id) ? '' : id
+  }
+  return resolverIdEquipamentoVisivelCliente(
+    { id: eq.equipamentoId, numeroSerie: eq.numeroMaquina },
+    equipamentosArmazem
+  )
 }
 
 export function criarEquipamentoRelatorioVazio(
@@ -75,10 +123,12 @@ export function normalizarEquipamentosRelatorio(
 
 export function formatarEquipamentoRelatorioLinha(
   eq: RelatorioEquipamentoRef,
-  indice?: number
+  indice?: number,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): string {
   const prefix = indice != null ? `Equip. ${indice}` : ''
-  const idPart = eq.equipamentoId ? `ID: ${eq.equipamentoId}` : ''
+  const idVis = resolverIdEquipamentoVisivelRelatorio(eq, equipamentosArmazem)
+  const idPart = idVis ? `ID: ${idVis}` : ''
   const modelo = eq.maquinaModelo
   const origemTag = eq.equipamentoOrigem === 'armazem' ? '(Armazém)' : ''
   const partes = [idPart, modelo, origemTag].filter(Boolean)
@@ -87,49 +137,70 @@ export function formatarEquipamentoRelatorioLinha(
   return prefix ? `${prefix} — ${corpo}` : corpo
 }
 
-export function formatarEquipamentosIdsRelatorio(equipamentos: RelatorioEquipamentoRef[]): string {
+export function formatarEquipamentosIdsRelatorio(
+  equipamentos: RelatorioEquipamentoRef[],
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+): string {
   return equipamentosRelatorioPreenchidos(equipamentos)
-    .map((eq) => eq.equipamentoId)
+    .map((eq) => resolverIdEquipamentoVisivelRelatorio(eq, equipamentosArmazem))
     .filter(Boolean)
     .join(' · ')
 }
 
-export function getRelatorioCabecalhoEquipamentoDados(r: RelatorioServicoEquipamentosHost): {
+export function getRelatorioCabecalhoEquipamentoDados(
+  r: RelatorioServicoEquipamentosHost,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+): {
   ids: string
   modelos: string
   numeros: string
   multiplos: boolean
+  linhas: RelatorioEquipamentoCabecalhoLinha[]
 } {
   const list = equipamentosRelatorioPreenchidos(normalizarEquipamentosRelatorio(r))
+  const linhas = list.map((eq, i) => ({
+    numero: i + 1,
+    equipamentoId: resolverIdEquipamentoVisivelRelatorio(eq, equipamentosArmazem) || '—',
+    maquinaModelo: eq.maquinaModelo || '—',
+  }))
 
   if (list.length === 0) {
+    const idLegacy = String(r.equipamentoId ?? '').trim()
+    const idVis =
+      idLegacy && !equipamentoIdETecnicoGerado(idLegacy) ? idLegacy : '—'
     return {
-      ids: String(r.equipamentoId ?? '').trim() || '—',
+      ids: idVis,
       modelos: String(r.maquinaModelo ?? '').trim() || '—',
       numeros: String(r.numeroMaquina ?? '').trim() || '—',
       multiplos: false,
+      linhas: [],
     }
   }
 
   if (list.length === 1) {
-    const eq = list[0]
+    const linha = linhas[0]
     return {
-      ids: eq.equipamentoId || '—',
-      modelos: eq.maquinaModelo || '—',
-      numeros: eq.numeroMaquina || '—',
+      ids: linha.equipamentoId,
+      modelos: linha.maquinaModelo,
+      numeros: list[0].numeroMaquina || '—',
       multiplos: false,
+      linhas: [linha],
     }
   }
 
   return {
-    ids: list.map((eq) => eq.equipamentoId).filter(Boolean).join(' · ') || '—',
-    modelos: list.map((eq, i) => `${i + 1}) ${eq.maquinaModelo || '—'}`).join(' · '),
-    numeros: list.map((eq, i) => `${i + 1}) ${eq.numeroMaquina || '—'}`).join(' · '),
+    ids: '—',
+    modelos: '—',
+    numeros: '—',
     multiplos: true,
+    linhas,
   }
 }
 
-export function sincronizarCamposLegadoEquipamentos(equipamentos: RelatorioEquipamentoRef[]): {
+export function sincronizarCamposLegadoEquipamentos(
+  equipamentos: RelatorioEquipamentoRef[],
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+): {
   equipamentoId?: string
   equipamentoOrigem?: RelatorioEquipamentoOrigem
   maquinaModelo: string
@@ -150,19 +221,13 @@ export function sincronizarCamposLegadoEquipamentos(equipamentos: RelatorioEquip
     }
   }
 
-  const cabecalho = getRelatorioCabecalhoEquipamentoDados({
-    equipamentoId: '',
-    equipamentoOrigem: 'cliente',
-    maquinaModelo: '',
-    numeroMaquina: '',
-    equipamentos: list,
-  })
+  const idVis = resolverIdEquipamentoVisivelRelatorio(principal, equipamentosArmazem)
 
   return {
-    equipamentoId: cabecalho.ids === '—' ? principal.equipamentoId : cabecalho.ids,
+    equipamentoId: idVis,
     equipamentoOrigem: principal.equipamentoOrigem,
-    maquinaModelo: cabecalho.modelos === '—' ? principal.maquinaModelo : cabecalho.modelos,
-    numeroMaquina: cabecalho.numeros === '—' ? principal.numeroMaquina : cabecalho.numeros,
+    maquinaModelo: principal.maquinaModelo,
+    numeroMaquina: principal.numeroMaquina,
     equipamentos: raw,
   }
 }
@@ -193,18 +258,31 @@ export function validarEquipamentosRelatorio(equipamentos: RelatorioEquipamentoR
 }
 
 export function prepararRelatorioServicoEquipamentos<T extends RelatorioServicoEquipamentosHost>(
-  form: T
+  form: T,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): T {
-  const normalizados = normalizarEquipamentosRelatorio(form)
-  const synced = sincronizarCamposLegadoEquipamentos(normalizados)
+  const normalizados = normalizarEquipamentosRelatorio(form).map((eq) => ({
+    ...eq,
+    equipamentoId:
+      eq.equipamentoOrigem === 'armazem'
+        ? eq.equipamentoId
+        : resolverIdEquipamentoVisivelRelatorio(eq, equipamentosArmazem) || eq.equipamentoId,
+  }))
+  const synced = sincronizarCamposLegadoEquipamentos(normalizados, equipamentosArmazem)
   return { ...form, ...synced }
 }
 
 export function relatorioParaImprimirPDFEquipamentos<T extends RelatorioServicoEquipamentosHost>(
-  r: T
+  r: T,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): T {
-  const equipamentos = equipamentosRelatorioPreenchidos(normalizarEquipamentosRelatorio(r))
-  const cabecalho = getRelatorioCabecalhoEquipamentoDados(r)
+  const equipamentos = equipamentosRelatorioPreenchidos(normalizarEquipamentosRelatorio(r)).map(
+    (eq) => ({
+      ...eq,
+      equipamentoId: resolverIdEquipamentoVisivelRelatorio(eq, equipamentosArmazem) || eq.equipamentoId,
+    })
+  )
+  const cabecalho = getRelatorioCabecalhoEquipamentoDados(r, equipamentosArmazem)
 
   if (equipamentos.length === 0) {
     if (cabecalho.ids === '—' && cabecalho.modelos === '—') return r
@@ -223,31 +301,34 @@ export function relatorioParaImprimirPDFEquipamentos<T extends RelatorioServicoE
     return {
       ...r,
       equipamentos,
-      equipamentoId: eq.equipamentoId || cabecalho.ids,
+      equipamentoId: cabecalho.ids !== '—' ? cabecalho.ids : eq.equipamentoId,
       equipamentoOrigem: eq.equipamentoOrigem,
       maquinaModelo: `${eq.maquinaModelo || '—'}${tagArmazem}`.trim(),
       numeroMaquina: eq.numeroMaquina,
     }
   }
 
+  const principal = equipamentos[0]
   return {
     ...r,
     equipamentos,
-    equipamentoId: cabecalho.ids,
-    equipamentoOrigem: equipamentos[0]?.equipamentoOrigem,
-    maquinaModelo: cabecalho.modelos,
-    numeroMaquina: cabecalho.numeros === '—' ? '' : cabecalho.numeros,
+    equipamentoId: cabecalho.linhas[0]?.equipamentoId || principal.equipamentoId,
+    equipamentoOrigem: principal.equipamentoOrigem,
+    maquinaModelo: principal.maquinaModelo,
+    numeroMaquina: principal.numeroMaquina,
   }
 }
 
 export function equipamentosClienteParaBiblioteca(
-  equipamentos: RelatorioEquipamentoRef[]
+  equipamentos: RelatorioEquipamentoRef[],
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): string[] {
   return [
     ...new Set(
       equipamentosRelatorioPreenchidos(equipamentos)
-        .filter((eq) => eq.equipamentoOrigem !== 'armazem' && eq.equipamentoId)
-        .map((eq) => eq.equipamentoId)
+        .filter((eq) => eq.equipamentoOrigem !== 'armazem')
+        .map((eq) => resolverIdEquipamentoVisivelRelatorio(eq, equipamentosArmazem))
+        .filter(Boolean)
     ),
   ]
 }
@@ -259,11 +340,15 @@ type ClienteRelatoriosHost = {
 
 export function aplicarRelatorioNaBibliotecaCliente<T extends ClienteRelatoriosHost, R extends { id: string; data: string; numero: string } & RelatorioServicoEquipamentosHost>(
   clientes: T[],
-  savedRelatorio: R
+  savedRelatorio: R,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): T[] {
   if (!savedRelatorio.clienteId) return clientes
 
-  const keys = equipamentosClienteParaBiblioteca(normalizarEquipamentosRelatorio(savedRelatorio))
+  const keys = equipamentosClienteParaBiblioteca(
+    normalizarEquipamentosRelatorio(savedRelatorio),
+    equipamentosArmazem
+  )
   const clienteIndex = clientes.findIndex((c) => c.id === savedRelatorio.clienteId)
   if (clienteIndex === -1) return clientes
 

@@ -76,7 +76,8 @@ import {
   relatorioParaImprimirPDFEquipamentos,
   aplicarRelatorioNaBibliotecaCliente,
   resolverIdEquipamentoCliente,
-  getRelatorioCabecalhoEquipamentoDados,
+  resolverIdEquipamentoVisivelCliente,
+  resolverIdEquipamentoVisivelRelatorio,
   type RelatorioEquipamentoRef,
 } from './lib/relatorioServicoEquipamentos'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
@@ -2861,17 +2862,33 @@ function equipamentoClienteIdETecnicoGerado(id: string | undefined): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89abAB][0-9a-f]{3}-[0-9a-f]{12}$/i.test(t)
 }
 
-/** ID no cabeçalho do protocolo/PDF: código próprio do cliente; senão ID do armazém pela série; senão ID interno do equipamento no cliente (UUID/eqc-). */
+/** ID no cabeçalho do protocolo/PDF: código próprio do cliente; senão ID do armazém pela série. */
 function idEquipamentoVisivelParaProtocolo(eq: EquipamentoCliente | undefined, equipamentosArmazem: Equipamento[]): string {
   if (!eq) return ''
-  const idC = (eq.id || '').trim()
-  if (idC && !equipamentoClienteIdETecnicoGerado(eq.id)) return idC
-  const s = (eq.numeroSerie || '').trim()
-  const idA = s
-    ? (equipamentosArmazem.find((e) => (e.numeroSerie || '').trim().toLowerCase() === s.toLowerCase())?.id || '').trim()
-    : ''
-  if (idA) return idA
-  return idC
+  return resolverIdEquipamentoVisivelCliente(eq, equipamentosArmazem)
+}
+
+function resolverChaveEquipamentoClienteRelatorio(
+  equipamentoId: string,
+  clienteEquipamentos: EquipamentoCliente[] | undefined,
+  equipamentosArmazem: Equipamento[]
+): string {
+  const alvo = String(equipamentoId ?? '').trim()
+  if (!alvo || !clienteEquipamentos?.length) return alvo
+  for (let idx = 0; idx < clienteEquipamentos.length; idx++) {
+    const item = clienteEquipamentos[idx]
+    const key = resolverIdEquipamentoCliente(item, idx)
+    const vis = idEquipamentoVisivelParaProtocolo(item, equipamentosArmazem)
+    if (
+      key === alvo ||
+      vis === alvo ||
+      String(item.numeroSerie ?? '').trim() === alvo ||
+      String(item.id ?? '').trim() === alvo
+    ) {
+      return key
+    }
+  }
+  return alvo
 }
 
 function mergeEquipamentosClienteLists(
@@ -17020,35 +17037,42 @@ export default function Dashboard() {
     setEditingDiaTrabalhoIndex(null)
     // Garantir que todos os campos sejam preservados, especialmente arrays
     const equipamentosEditRaw = normalizarEquipamentosRelatorio(r)
-    let equipamentosEdit = equipamentosEditRaw
-    if (equipamentosEdit.length === 1 && r.clienteId && equipamentosEdit[0].equipamentoOrigem === 'cliente') {
+    let equipamentosEdit = equipamentosEditRaw.map((eqItem) => {
+      if (eqItem.equipamentoOrigem === 'armazem') {
+        return {
+          ...eqItem,
+          equipamentoId: resolverIdEquipamentoVisivelRelatorio(eqItem, equipamentos) || eqItem.equipamentoId,
+        }
+      }
+      if (!r.clienteId) return eqItem
       const cli = clientes.find((c) => c.id === r.clienteId)
       const eqMatch = cli?.equipamentos?.find(
         (e, idx) =>
-          e.id === equipamentosEdit[0].equipamentoId ||
-          e.numeroSerie === equipamentosEdit[0].equipamentoId ||
-          resolverIdEquipamentoCliente(e, idx) === equipamentosEdit[0].equipamentoId
+          e.id === eqItem.equipamentoId ||
+          e.numeroSerie === eqItem.equipamentoId ||
+          e.numeroSerie === eqItem.numeroMaquina ||
+          resolverIdEquipamentoCliente(e, idx) === eqItem.equipamentoId ||
+          idEquipamentoVisivelParaProtocolo(e, equipamentos) === eqItem.equipamentoId
       )
-      if (eqMatch) {
-        equipamentosEdit = [
-          {
-            ...equipamentosEdit[0],
-            equipamentoId: resolverIdEquipamentoCliente(
-              eqMatch,
-              cli?.equipamentos?.indexOf(eqMatch) ?? 0
-            ),
-            maquinaModelo: equipamentosEdit[0].maquinaModelo || `${eqMatch.modelo} ${eqMatch.marca}`.trim(),
-            numeroMaquina: equipamentosEdit[0].numeroMaquina || eqMatch.numeroSerie || '',
-          },
-        ]
+      if (!eqMatch) {
+        return {
+          ...eqItem,
+          equipamentoId: resolverIdEquipamentoVisivelRelatorio(eqItem, equipamentos) || eqItem.equipamentoId,
+        }
       }
-    }
+      return {
+        ...eqItem,
+        equipamentoId: idEquipamentoVisivelParaProtocolo(eqMatch, equipamentos) || eqItem.equipamentoId,
+        maquinaModelo: eqItem.maquinaModelo || `${eqMatch.modelo} ${eqMatch.marca}`.trim(),
+        numeroMaquina: eqItem.numeroMaquina || eqMatch.numeroSerie || '',
+      }
+    })
     if (equipamentosEdit.length === 0) {
       equipamentosEdit = [criarEquipamentoRelatorioVazio('cliente')]
     }
     setRelatorioServicoForm({
       ...r,
-      ...sincronizarCamposLegadoEquipamentos(equipamentosEdit),
+      ...sincronizarCamposLegadoEquipamentos(equipamentosEdit, equipamentos),
       equipamentoOrigem: r.equipamentoOrigem === 'armazem' ? 'armazem' : 'cliente',
       diasTrabalho: sortDiasTrabalhoCronologicamente(
         normalizarDiasTrabalhoParaPersist(r.diasTrabalho ? [...r.diasTrabalho] : [])
@@ -17203,6 +17227,7 @@ export default function Dashboard() {
     equipamentoId: (t as Record<string, string>).relatorioEquipamentoIdLabel || 'ID do equipamento',
     maquinaModelo: t.maquinaModelo || 'Máquina/Modelo',
     numeroMaquina: t.numeroMaquina || 'Número da Máquina',
+    equipNumero: (t as Record<string, string>).relatorioPdfColEquipNumero || 'N.º',
     cidade: t.cidade || 'Cidade',
     telefone: t.telefone || 'Telefone',
     tipoServico: t.tipoServico || 'Tipo de Serviço',
@@ -17219,6 +17244,7 @@ export default function Dashboard() {
       labels: buildPdfMetaLabelsRelatorio(),
       dataFormatada,
       modifier,
+      equipamentosArmazem: equipamentos,
     })
 
   /** Pré-visualização no painel Administrador: logo da lista ou logo principal (barra), para PDFs */
@@ -19854,9 +19880,9 @@ export default function Dashboard() {
     }
   };
 
-  /** Só para impressão/PDF: formata 1–5 equipamentos (ID + modelo + série) numa linha legível. */
+  /** Só para impressão/PDF: normaliza 1–5 equipamentos com ID visível de cadastro. */
   const relatorioParaImprimirPDF = (r: RelatorioServico): RelatorioServico =>
-    relatorioParaImprimirPDFEquipamentos(r)
+    relatorioParaImprimirPDFEquipamentos(r, equipamentos)
 
   const persistPdfModeloPorRelatorioMap = (map: Record<string, string>) => {
     try {
@@ -21182,7 +21208,7 @@ export default function Dashboard() {
       horasTrabalho: totais.horasTrabalho,
       kmsPercorridos: totais.kmsPercorridos,
       horasViagem: totais.horasViagem
-    })
+    }, equipamentos)
 
     const dupRelatorio = encontrarRelatorioServicoDuplicado(
       relatoriosServico,
@@ -21220,7 +21246,7 @@ export default function Dashboard() {
 
     // Biblioteca por cliente: indexa em cada equipamento do cliente (até 5)
     if (savedRelatorio.clienteId) {
-      const updatedClientes = aplicarRelatorioNaBibliotecaCliente(clientes, savedRelatorio)
+      const updatedClientes = aplicarRelatorioNaBibliotecaCliente(clientes, savedRelatorio, equipamentos)
       if (updatedClientes !== clientes) {
         setClientes(updatedClientes)
         saveData('nonato-clientes', updatedClientes)
@@ -21285,7 +21311,7 @@ export default function Dashboard() {
       horasTrabalho: totais.horasTrabalho,
       kmsPercorridos: totais.kmsPercorridos,
       horasViagem: totais.horasViagem
-    })
+    }, equipamentos)
 
     const dupRelatorioSaveGen = encontrarRelatorioServicoDuplicado(
       relatoriosServico,
@@ -21324,7 +21350,7 @@ export default function Dashboard() {
     saveData('nonato-relatorios-servico', updatedRelatorios)
     
     if (savedRelatorio.clienteId) {
-      const updatedClientesGen = aplicarRelatorioNaBibliotecaCliente(clientes, savedRelatorio)
+      const updatedClientesGen = aplicarRelatorioNaBibliotecaCliente(clientes, savedRelatorio, equipamentos)
       if (updatedClientesGen !== clientes) {
         setClientes(updatedClientesGen)
         saveData('nonato-clientes', updatedClientesGen)
@@ -32845,7 +32871,7 @@ onKeyPress={(e) => {
                             )
                             return {
                               ...prev,
-                              ...sincronizarCamposLegadoEquipamentos(equipamentosAtuais),
+                              ...sincronizarCamposLegadoEquipamentos(equipamentosAtuais, equipamentos),
                               cliente: selectedClient?.nomeEmpresa || '',
                               clienteId: selectedClient?.id || '',
                               cidade: selectedClient?.conselho || selectedClient?.localidade || '',
@@ -32869,7 +32895,7 @@ onKeyPress={(e) => {
                       const atualizarEquipamentos = (next: RelatorioEquipamentoRef[]) => {
                         setRelatorioServicoForm(prev => ({
                           ...prev,
-                          ...sincronizarCamposLegadoEquipamentos(next),
+                          ...sincronizarCamposLegadoEquipamentos(next, equipamentos),
                         }))
                       }
                       return (
@@ -33005,28 +33031,33 @@ onKeyPress={(e) => {
                                         </select>
                                       ) : (
                                         <select
-                                          value={eq.equipamentoId || ''}
+                                          value={
+                                            relatorioServicoForm.clienteId
+                                              ? resolverChaveEquipamentoClienteRelatorio(
+                                                  eq.equipamentoId || '',
+                                                  clientes.find(c => c.id === relatorioServicoForm.clienteId)?.equipamentos,
+                                                  equipamentos
+                                                )
+                                              : eq.equipamentoId || ''
+                                          }
                                           onChange={(e) => {
                                             const chave = e.target.value
-                                            const selectedEquipamento = clientes
-                                              .find(c => c.id === relatorioServicoForm.clienteId)
-                                              ?.equipamentos?.find(
-                                                (itemCli, idxCli) =>
-                                                  resolverIdEquipamentoCliente(itemCli, idxCli) === chave
-                                              )
+                                            const clienteEquipamentos = clientes.find(
+                                              c => c.id === relatorioServicoForm.clienteId
+                                            )?.equipamentos
+                                            const selectedEquipamento = clienteEquipamentos?.find(
+                                              (itemCli, idxCli) =>
+                                                resolverIdEquipamentoCliente(itemCli, idxCli) === chave
+                                            )
+                                            const idVisivel = selectedEquipamento
+                                              ? idEquipamentoVisivelParaProtocolo(selectedEquipamento, equipamentos)
+                                              : chave
                                             const next = equipamentosForm.map(item =>
                                               item.uid === eq.uid
                                                 ? {
                                                     ...item,
                                                     equipamentoOrigem: 'cliente' as const,
-                                                    equipamentoId: selectedEquipamento
-                                                      ? resolverIdEquipamentoCliente(
-                                                          selectedEquipamento,
-                                                          clientes
-                                                            .find(c => c.id === relatorioServicoForm.clienteId)
-                                                            ?.equipamentos?.indexOf(selectedEquipamento) ?? 0
-                                                        )
-                                                      : chave,
+                                                    equipamentoId: idVisivel || chave,
                                                     numeroMaquina: selectedEquipamento?.numeroSerie || '',
                                                     maquinaModelo: selectedEquipamento
                                                       ? `${selectedEquipamento.modelo} ${selectedEquipamento.marca}`.trim()
@@ -33044,9 +33075,10 @@ onKeyPress={(e) => {
                                             .find(c => c.id === relatorioServicoForm.clienteId)
                                             ?.equipamentos?.map((itemCli, idxCli) => {
                                               const eqKey = resolverIdEquipamentoCliente(itemCli, idxCli)
+                                              const idVisivel = idEquipamentoVisivelParaProtocolo(itemCli, equipamentos)
                                               return (
                                                 <option key={eqKey} value={eqKey}>
-                                                  ID {eqKey} · {itemCli.modelo} {itemCli.marca}
+                                                  ID {idVisivel || eqKey} · {itemCli.modelo} {itemCli.marca}
                                                 </option>
                                               )
                                             })}
