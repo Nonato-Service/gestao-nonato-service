@@ -104,6 +104,7 @@ import { CadastroServicosContent } from './components/CadastroServicosContent'
 import { ClienteCadastroForm, emptyClienteFormState, type ClienteFormState } from './components/ClienteCadastroForm'
 import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
+import { ClienteGpsNavButton } from './components/ClienteGpsNavButton'
 import { TEMPLATE_SERVICOS_PADRAO } from './lib/servicosCadastroUtils'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
 import {
@@ -35883,7 +35884,7 @@ onKeyPress={(e) => {
                         </h3>
                         <ul className="clientes-alfa-nomes">
                           {(clientesPorLetra.get(letra) ?? []).map(c => (
-                            <li key={c.id}>
+                            <li key={c.id} className="clientes-alfa-item">
                               <button
                                 type="button"
                                 className="clientes-alfa-nome-btn"
@@ -35891,6 +35892,17 @@ onKeyPress={(e) => {
                               >
                                 {c.nomeEmpresa}
                               </button>
+                              <ClienteGpsNavButton
+                                language={selectedLanguage}
+                                endereco={{
+                                  morada: c.morada,
+                                  localidade: c.localidade,
+                                  conselho: c.conselho,
+                                  codigoPostal: c.codigoPostal,
+                                  pais: c.pais,
+                                }}
+                                className="clientes-alfa-gps-btn"
+                              />
                             </li>
                           ))}
                         </ul>

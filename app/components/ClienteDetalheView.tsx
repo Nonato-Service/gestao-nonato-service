@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react'
 import { IconHome, IconIdCard } from './UiIcons'
 import { translations, translationBundleKey } from '../translations'
+import { ClienteEnderecoMapsActions } from './ClienteEnderecoMapsActions'
 import {
   buildServicosFinanceirosCliente,
   calcularResumoFinanceiroCliente,
@@ -35,6 +36,9 @@ export type ClienteDetalheData = {
   id: string
   nomeEmpresa: string
   morada: string
+  localidade?: string
+  conselho?: string
+  pais?: string
   codigoPostal: string
   numeroContribuicaoFiscal: string
   telefones: string
@@ -266,6 +270,8 @@ export function ClienteDetalheView({
   const pagamentoLabel = (pag: 'pago' | 'pendente' | 'devedor') =>
     pag === 'pago' ? tr('pagoStatus') : pag === 'devedor' ? tr('devedorStatus') : tr('pendenteStatus')
 
+  const cidadeExibicao = [cliente.localidade, cliente.conselho].map((s) => String(s || '').trim()).filter(Boolean).join(' · ')
+
   return (
     <div className="cliente-detalhe-v2">
       <header className="cliente-detalhe-v2__page-header">
@@ -302,6 +308,18 @@ export function ClienteDetalheView({
           </div>
         </div>
 
+        <ClienteEnderecoMapsActions
+          endereco={{
+            morada: cliente.morada,
+            localidade: cliente.localidade,
+            conselho: cliente.conselho,
+            codigoPostal: cliente.codigoPostal,
+            pais: cliente.pais,
+          }}
+          tr={tr}
+          className="cliente-detalhe-v2__maps-hero"
+        />
+
         <div className="cliente-detalhe-v2__info-grid">
           <div className="cliente-detalhe-v2__profile">
             <div className="cliente-detalhe-v2__avatar">
@@ -321,6 +339,9 @@ export function ClienteDetalheView({
             <h4 className="cliente-detalhe-v2__col-title">{tr('informacoesContato')}</h4>
             <InfoRow icon={<IconPhone />} value={cliente.telefones?.trim() || vazio} />
             <InfoRow icon={<IconMapPin />} value={cliente.morada?.trim() || vazio} />
+            {cidadeExibicao ? (
+              <InfoRow icon={<IconMapPin />} label={tr('cidade')} value={cidadeExibicao} />
+            ) : null}
             {cliente.codigoPostal ? (
               <InfoRow icon={<IconMapPin />} label={tr('codigoPostal')} value={cliente.codigoPostal} />
             ) : null}

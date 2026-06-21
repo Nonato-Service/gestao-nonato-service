@@ -10,9 +10,8 @@ import {
 import { translations, translationBundleKey } from '../translations'
 import {
   buildEnderecoMapsQuery,
-  buildGoogleMapsNavigationUrl,
-  buildGoogleMapsSearchUrl,
 } from '../lib/enderecoMapsUtils'
+import { ClienteEnderecoMapsActions } from './ClienteEnderecoMapsActions'
 import { ordenarServicoGrupos, type ServicoCadastroGrupo } from '../lib/servicosCadastroUtils'
 
 function useClienteFormTr(language: string) {
@@ -167,15 +166,14 @@ export function ClienteCadastroForm({
   const titulo = editingCliente ? tr('editCliente') : tr('novoCliente')
   const subtitulo = editingCliente ? tr('editClienteSubtitle') : tr('novoClienteSubtitle')
 
-  const mapsQuery = buildEnderecoMapsQuery({
+  const mapsEndereco = {
     morada: clienteForm.morada,
     localidade: clienteForm.localidade,
     conselho: clienteForm.conselho,
     codigoPostal: clienteForm.codigoPostal,
     pais: clienteForm.pais,
-  })
-  const mapsSearchUrl = buildGoogleMapsSearchUrl(mapsQuery)
-  const mapsNavUrl = buildGoogleMapsNavigationUrl(mapsQuery)
+  }
+  const mapsQuery = buildEnderecoMapsQuery(mapsEndereco)
 
   return (
     <div
@@ -317,6 +315,19 @@ export function ClienteCadastroForm({
           />
         </FieldInput>
 
+        {!isFisica ? (
+          <FieldInput id="contato-cliente" icon={<IconUser size={18} />} label={tr('contato')} fullWidth>
+            <input
+              id="contato-cliente"
+              type="text"
+              className="cliente-cadastro-v2__input"
+              placeholder={tr('contatoPlaceholder')}
+              value={clienteForm.contato}
+              onChange={(e) => setClienteForm({ ...clienteForm, contato: e.target.value })}
+            />
+          </FieldInput>
+        ) : null}
+
         <FieldInput id="endereco-cliente" icon={<IconMapPin />} label={tr('endereco') || tr('morada')} required fullWidth>
           <input
             id="endereco-cliente"
@@ -350,6 +361,12 @@ export function ClienteCadastroForm({
           />
         </FieldInput>
 
+        {mapsQuery.trim() ? (
+          <div className="cliente-cadastro-v2__field cliente-cadastro-v2__field--span-2">
+            <ClienteEnderecoMapsActions endereco={mapsEndereco} tr={tr} />
+          </div>
+        ) : null}
+
         <FieldInput
           id="nif-cliente"
           icon={<IconIdCard size={18} />}
@@ -366,27 +383,6 @@ export function ClienteCadastroForm({
           />
         </FieldInput>
         </div>
-
-        {mapsQuery.trim() ? (
-          <div className="cliente-cadastro-v2__maps-actions">
-            <a
-              href={mapsNavUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cliente-cadastro-v2__maps-btn cliente-cadastro-v2__maps-btn--nav"
-            >
-              🧭 {tr('clienteAbrirGpsNavegar')}
-            </a>
-            <a
-              href={mapsSearchUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cliente-cadastro-v2__maps-btn"
-            >
-              🗺️ {tr('clienteVerNoMapa')}
-            </a>
-          </div>
-        ) : null}
       </section>
 
       {showExtras ? (
@@ -414,18 +410,15 @@ export function ClienteCadastroForm({
               />
             </FieldInput>
 
-            {!isFisica ? (
-              <FieldInput id="contato-cliente" icon={<IconUser size={18} />} label={tr('contato')}>
-                <input
-                  id="contato-cliente"
-                  type="text"
-                  className="cliente-cadastro-v2__input"
-                  placeholder={tr('contatoPlaceholder')}
-                  value={clienteForm.contato}
-                  onChange={(e) => setClienteForm({ ...clienteForm, contato: e.target.value })}
-                />
-              </FieldInput>
-            ) : null}
+            <FieldInput id="localidade-detalhe-cliente" icon={<IconMapPin />} label={tr('localidade')}>
+              <input
+                id="localidade-detalhe-cliente"
+                type="text"
+                className="cliente-cadastro-v2__input"
+                value={clienteForm.localidade}
+                onChange={(e) => setClienteForm({ ...clienteForm, localidade: e.target.value })}
+              />
+            </FieldInput>
 
             <FieldInput id="conselho-cliente" icon={<IconMapPin />} label={tr('conselho')}>
               <input
