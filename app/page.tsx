@@ -2581,6 +2581,226 @@ function resolveClienteEEquipamentoParaFormularioAgenda(
   return { clienteId, equipamentoId }
 }
 
+/** Resolve equipamento do agendamento para exibição (estado visual, lista, etc.). */
+function resolverEquipamentoAgendamentoParaExibicao(
+  ag: Agendamento,
+  clientes: Cliente[]
+): { equipamento: EquipamentoCliente | null; rotulo: string } {
+  if (isAgendamentoPessoal(ag)) return { equipamento: null, rotulo: '' }
+
+  const { clienteId, equipamentoId } = resolveClienteEEquipamentoParaFormularioAgenda(ag, clientes)
+  const cli = clientes.find((c) => c.id === clienteId)
+  const equipamentos = cli?.equipamentos || []
+
+  const encontrarPorId = (id: string) =>
+    equipamentos.find((e) => e.numeroSerie === id || e.id === id) || null
+
+  let eq: EquipamentoCliente | null = null
+  if (equipamentoId) eq = encontrarPorId(equipamentoId)
+
+  if (!eq && (ag.equipamento || '').trim() && equipamentos.length) {
+    const label = (ag.equipamento || '').trim().toLowerCase()
+    eq =
+      equipamentos.find((e) => {
+        const blob = `${e.tipoEquipamento || ''} ${e.marca || ''} ${e.modelo || ''} ${e.numeroSerie || ''}`.toLowerCase()
+        return (
+          blob.includes(label) ||
+          label.includes((e.modelo || '').toLowerCase()) ||
+          (e.numeroSerie && label.includes(String(e.numeroSerie).toLowerCase()))
+        )
+      }) || null
+  }
+
+  if (!eq && equipamentos.length === 1) eq = equipamentos[0]
+
+  const rotuloEq = eq
+    ? [eq.tipoEquipamento, eq.marca, eq.modelo].filter((p) => String(p || '').trim()).join(' · ') ||
+      String(eq.modelo || '').trim()
+    : ''
+  const serie = eq?.numeroSerie ? ` (${eq.numeroSerie})` : ''
+  const rotulo = rotuloEq ? `${rotuloEq}${serie}` : String(ag.equipamento || '').trim()
+
+  return { equipamento: eq, rotulo }
+}
+
+function renderBlocoEquipamentoAgendamentoEstadoVisual(
+  ag: Agendamento,
+  clientes: Cliente[],
+  tr?: Record<string, string | undefined>
+): React.ReactNode {
+  if (isAgendamentoPessoal(ag)) return null
+
+  const { equipamento: eq, rotulo } = resolverEquipamentoAgendamentoParaExibicao(ag, clientes)
+  const tipoServico = String(ag.tipoServico || '').trim()
+
+  if (!rotulo && !eq && !tipoServico) {
+    return (
+      <p
+        style={{
+          margin: '8px 0 0 0',
+          fontSize: '10px',
+          opacity: 0.7,
+          fontStyle: 'italic',
+          textTransform: 'uppercase',
+          letterSpacing: '0.4px',
+        }}
+      >
+        {(tr?.equipamentoNaoEncontrado || 'Equipamento não indicado na agenda').toUpperCase()}
+      </p>
+    )
+  }
+
+  const detalhes: string[] = []
+  if (eq) {
+    if (eq.tipoEquipamento?.trim()) detalhes.push(`${tr?.tipoEquipamento || 'Tipo'}: ${eq.tipoEquipamento}`)
+    if (eq.marca?.trim()) detalhes.push(`${tr?.marca || 'Marca'}: ${eq.marca}`)
+    if (eq.modelo?.trim()) detalhes.push(`${tr?.modelo || 'Modelo'}: ${eq.modelo}`)
+    if (eq.numeroSerie?.trim()) detalhes.push(`${tr?.numeroSerie || 'N.º Série'}: ${eq.numeroSerie}`)
+    if (eq.familia?.trim()) detalhes.push(`${tr?.familia || 'Família'}: ${eq.familia}`)
+    if (eq.grupo?.trim()) detalhes.push(`${tr?.grupo || 'Grupo'}: ${eq.grupo}`)
+  }
+
+  return (
+    <div
+      style={{
+        marginTop: '8px',
+        padding: '8px',
+        backgroundColor: 'rgba(0, 0, 0, 0.28)',
+        borderRadius: '5px',
+        border: '1px solid rgba(255, 213, 79, 0.35)',
+      }}
+    >
+      {rotulo ? (
+        <p
+          style={{
+            margin: 0,
+            fontSize: '11px',
+            fontWeight: 'bold',
+            color: '#ffd54f',
+            textTransform: 'uppercase',
+            letterSpacing: '0.4px',
+            lineHeight: 1.35,
+          }}
+        >
+          🔧 {(tr?.equipamento || 'Equipamento').toUpperCase()}: {rotulo.toUpperCase()}
+        </p>
+      ) : null}
+      {detalhes.map((linha, idx) => (
+        <p
+          key={`eq-d-${idx}`}
+          style={{
+            margin: idx === 0 && !rotulo ? 0 : '4px 0 0 0',
+            fontSize: '10px',
+            opacity: 0.9,
+            textTransform: 'uppercase',
+            letterSpacing: '0.35px',
+            lineHeight: 1.35,
+          }}
+        >
+          {linha.toUpperCase()}
+        </p>
+      ))}
+      {tipoServico ? (
+        <p
+          style={{
+            margin: '4px 0 0 0',
+            fontSize: '10px',
+            opacity: 0.88,
+            textTransform: 'uppercase',
+            letterSpacing: '0.35px',
+            lineHeight: 1.35,
+          }}
+        >
+          {(tr?.tipoServico || 'Tipo de Serviço').toUpperCase()}: {tipoServico.toUpperCase()}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+/** Agendamentos visíveis no cartão do técnico (serviço do técnico + assuntos pessoais da equipa). */
+function agendamentoVisivelNoEstadoVisualTecnico(ag: Agendamento, tecnicoName: string): boolean {
+  if (!agendamentoStatusAtivoParaEstadoVisual(ag)) return false
+  if (isAgendamentoPessoal(ag)) return true
+  return String(ag.tecnico || '').trim() === String(tecnicoName || '').trim()
+}
+
+function estiloCardAgendaEstadoVisualShared(ag: Agendamento): React.CSSProperties {
+  if (normalizeStatusAgendamento(ag) === 'concluido') {
+    return {
+      padding: '10px',
+      backgroundColor: 'rgba(0, 200, 80, 0.14)',
+      borderRadius: '6px',
+      border: '1px solid rgba(0, 255, 130, 0.45)',
+    }
+  }
+  if (isAgendamentoPessoal(ag)) {
+    return {
+      padding: '10px',
+      backgroundColor: 'rgba(124, 58, 237, 0.22)',
+      borderRadius: '6px',
+      border: '1px solid rgba(216, 180, 254, 0.55)',
+    }
+  }
+  if (normalizeTipoAgendamento(ag) === 'pre-agendamento') {
+    return {
+      padding: '10px',
+      backgroundColor: 'rgba(255, 150, 0, 0.22)',
+      borderRadius: '6px',
+      border: '1px solid rgba(255, 180, 60, 0.7)',
+    }
+  }
+  return {
+    padding: '10px',
+    backgroundColor: 'rgba(40, 100, 220, 0.2)',
+    borderRadius: '6px',
+    border: '1px solid rgba(120, 170, 255, 0.55)',
+  }
+}
+
+function rotuloTipoAgendamentoEstadoVisual(
+  ag: Agendamento,
+  tr?: Record<string, string | undefined>
+): string {
+  if (isAgendamentoPessoal(ag)) {
+    return (
+      ag.subtipoPessoal === 'visita-tecnica'
+        ? tr?.agendaVisitaTecnica || 'Visita técnica'
+        : tr?.agendaPessoal || 'Pessoal'
+    ).toUpperCase()
+  }
+  return (
+    normalizeTipoAgendamento(ag) === 'pre-agendamento'
+      ? tr?.preAgendamento || 'Pré-Agendamento'
+      : tr?.agendamentoTecnico || 'Agendamento Técnico'
+  ).toUpperCase()
+}
+
+function renderBlocoAssuntoPessoalEstadoVisual(
+  ag: Agendamento,
+  tr?: Record<string, string | undefined>
+): React.ReactNode {
+  if (!isAgendamentoPessoal(ag)) return null
+  const obs = String(ag.observacoesTecnicas || '').trim()
+  if (!obs) return null
+  return (
+    <p
+      style={{
+        margin: '6px 0 0 0',
+        fontSize: '10px',
+        opacity: 0.88,
+        textTransform: 'uppercase',
+        letterSpacing: '0.35px',
+        lineHeight: 1.35,
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
+      }}
+    >
+      {(tr?.observacaoTecnica || 'Observação').toUpperCase()}: {obs.toUpperCase()}
+    </p>
+  )
+}
+
 /** Máx. de concluídos na vista em lista; painéis usam valores menores para não sobrecarregar o ecrã. */
 const AGENDA_CONCLUIDOS_LISTA_MAX = 60
 const AGENDA_PAINEL_CONCLUIDOS_MAX = 40
@@ -14518,6 +14738,16 @@ export default function Dashboard() {
             pecasAnexadas: [],
           }
         : {}),
+    }
+
+    if (!pessoal && formSanitizado.equipamentoId && !String(formSanitizado.equipamento || '').trim()) {
+      const cliSave = clientes.find((c) => c.id === formSanitizado.clienteId)
+      const eqSave = cliSave?.equipamentos?.find(
+        (e) => e.numeroSerie === formSanitizado.equipamentoId || e.id === formSanitizado.equipamentoId
+      )
+      if (eqSave) {
+        formSanitizado.equipamento = `${eqSave.modelo} (${eqSave.numeroSerie})`
+      }
     }
 
     const statusAntes = editingAgendamento ? normalizeStatusAgendamento(editingAgendamento) : null
@@ -44664,8 +44894,8 @@ A1;Peça exemplo;10`}
                   new Date(hojeDate.getFullYear(), hojeDate.getMonth(), hojeDate.getDate() + 30)
                 )
 
-                const agendamentosAtivos = agendamentos.filter(
-                  (ag) => ag.tecnico === tecnico.name && agendamentoStatusAtivoParaEstadoVisual(ag)
+                const agendamentosAtivos = agendamentos.filter((ag) =>
+                  agendamentoVisivelNoEstadoVisualTecnico(ag, tecnico.name)
                 )
 
                 const agendamentosHoje = agendamentosAtivos
@@ -44698,16 +44928,20 @@ A1;Peça exemplo;10`}
 
                 const temAgendamentoTecnicoHoje = agendamentosAtivos.some(
                   (ag) =>
-                    normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && agendamentoIncluiData(ag, hoje)
+                    !isAgendamentoPessoal(ag) &&
+                    normalizeTipoAgendamento(ag) === 'agendamento-tecnico' &&
+                    agendamentoIncluiData(ag, hoje)
                 )
 
                 const temPreAgendamento = agendamentosAtivos.some(
                   (ag) =>
+                    !isAgendamentoPessoal(ag) &&
                     normalizeTipoAgendamento(ag) === 'pre-agendamento' &&
                     agendamentoPeriodoIntersectaIntervalo(ag, hoje, fimJanela)
                 )
 
                 const temAgendamentoTecnicoFuturo = agendamentosAtivos.some((ag) => {
+                  if (isAgendamentoPessoal(ag)) return false
                   if (normalizeTipoAgendamento(ag) !== 'agendamento-tecnico') return false
                   const keys = getDatasPeriodoAgendamento(ag)
                   return keys.some((k) => {
@@ -44718,8 +44952,18 @@ A1;Peça exemplo;10`}
 
                 const temAgendamentoTecnicoEmCurso = agendamentosAtivos.some(
                   (ag) =>
+                    !isAgendamentoPessoal(ag) &&
                     normalizeTipoAgendamento(ag) === 'agendamento-tecnico' &&
                     agendamentoPeriodoIntersectaIntervalo(ag, hoje, fimJanela)
+                )
+
+                const temAssuntoPessoal = agendamentosAtivos.some(
+                  (ag) =>
+                    isAgendamentoPessoal(ag) && agendamentoPeriodoIntersectaIntervalo(ag, hoje, fimJanela)
+                )
+
+                const temAssuntoPessoalHoje = agendamentosAtivos.some(
+                  (ag) => isAgendamentoPessoal(ag) && agendamentoIncluiData(ag, hoje)
                 )
 
                 // Determinar cor do boneco
@@ -44752,35 +44996,19 @@ A1;Peça exemplo;10`}
                   corBoneco = '#00c853'
                   statusTexto = safeT?.emAtendimento || 'EM ATENDIMENTO'
                   corIndicador = '#00c853'
+                } else if (temAssuntoPessoalHoje || temAssuntoPessoal) {
+                  corBoneco = '#a855f7'
+                  statusTexto =
+                    temAssuntoPessoalHoje
+                      ? ((safeT as any)?.agendaAssuntoPessoalHoje || 'ASSUNTO PESSOAL HOJE')
+                      : ((safeT as any)?.agendaAssuntoPessoal || 'ASSUNTO PESSOAL')
+                  corIndicador = '#a855f7'
                 }
 
                 // Verificar se é interno ou externo
                 const isInterno = tecnico.type === 'internal'
 
-                const estiloCardAgendaEstadoVisual = (ag: Agendamento): React.CSSProperties => {
-                  if (ag.status === 'concluido') {
-                    return {
-                      padding: '10px',
-                      backgroundColor: 'rgba(0, 200, 80, 0.14)',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(0, 255, 130, 0.45)',
-                    }
-                  }
-                  if (ag.tipo === 'pre-agendamento') {
-                    return {
-                      padding: '10px',
-                      backgroundColor: 'rgba(255, 150, 0, 0.22)',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(255, 180, 60, 0.7)',
-                    }
-                  }
-                  return {
-                    padding: '10px',
-                    backgroundColor: 'rgba(40, 100, 220, 0.2)',
-                    borderRadius: '6px',
-                    border: '1px solid rgba(120, 170, 255, 0.55)',
-                  }
-                }
+                const estiloCardAgendaEstadoVisual = estiloCardAgendaEstadoVisualShared
 
                 return (
                   <div 
@@ -44842,7 +45070,7 @@ A1;Peça exemplo;10`}
                       <p style={{ margin: 0, fontSize: '14px', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         {(isInterno ? (safeT?.interno || 'Interno') : (safeT?.externo || 'Externo')).toUpperCase()}
                       </p>
-                      <p style={{ margin: '10px 0 0 0', fontSize: '16px', fontWeight: 'bold', color: corBoneco === '#ffffff' ? '#fff' : corBoneco === '#00c853' ? '#00c853' : corBoneco === '#ffd700' ? '#ffd700' : '#00c853', textTransform: 'uppercase' }}>
+                      <p style={{ margin: '10px 0 0 0', fontSize: '16px', fontWeight: 'bold', color: corBoneco === '#ffffff' ? '#fff' : corBoneco === '#00c853' ? '#00c853' : corBoneco === '#ffd700' ? '#ffd700' : corBoneco === '#a855f7' ? '#a855f7' : '#00c853', textTransform: 'uppercase' }}>
                         {statusTexto}
                       </p>
                     </div>
@@ -44867,15 +45095,10 @@ A1;Peça exemplo;10`}
                               </p>
                               <p style={{ margin: '5px 0 0 0', fontSize: '12px', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                 {rotuloPeriodoAgendamento(ag)} · {ag.hora}
-                                {!isAgendamentoPessoal(ag)
-                                  ? ` - ${(normalizeTipoAgendamento(ag) === 'pre-agendamento' ? (safeT?.preAgendamento || 'Pré-Agendamento') : (safeT?.agendamentoTecnico || 'Agendamento Técnico')).toUpperCase()}`
-                                  : ''}
+                                {` - ${rotuloTipoAgendamentoEstadoVisual(ag, safeT as Record<string, string | undefined>)}`}
                               </p>
-                              {ag.equipamento && !isAgendamentoPessoal(ag) && (
-                                <p style={{ margin: '5px 0 0 0', fontSize: '11px', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                  {(safeT?.equipamento || 'Equipamento').toUpperCase()}: {ag.equipamento.toUpperCase()}
-                                </p>
-                              )}
+                              {renderBlocoAssuntoPessoalEstadoVisual(ag, safeT as Record<string, string | undefined>)}
+                              {renderBlocoEquipamentoAgendamentoEstadoVisual(ag, clientes, safeT as Record<string, string | undefined>)}
                             </div>
                           ))}
                           {Array.from(
@@ -44896,15 +45119,10 @@ A1;Peça exemplo;10`}
                               </p>
                               <p style={{ margin: '5px 0 0 0', fontSize: '12px', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                 {rotuloPeriodoAgendamento(ag)} · {ag.hora}
-                                {!isAgendamentoPessoal(ag)
-                                  ? ` - ${(normalizeTipoAgendamento(ag) === 'pre-agendamento' ? (safeT?.preAgendamento || 'Pré-Agendamento') : (safeT?.agendamentoTecnico || 'Agendamento Técnico')).toUpperCase()}`
-                                  : ''}
+                                {` - ${rotuloTipoAgendamentoEstadoVisual(ag, safeT as Record<string, string | undefined>)}`}
                               </p>
-                              {ag.equipamento && !isAgendamentoPessoal(ag) && (
-                                <p style={{ margin: '5px 0 0 0', fontSize: '11px', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                  {(safeT?.equipamento || 'Equipamento').toUpperCase()}: {ag.equipamento.toUpperCase()}
-                                </p>
-                              )}
+                              {renderBlocoAssuntoPessoalEstadoVisual(ag, safeT as Record<string, string | undefined>)}
+                              {renderBlocoEquipamentoAgendamentoEstadoVisual(ag, clientes, safeT as Record<string, string | undefined>)}
                             </div>
                           ))}
                         </div>
