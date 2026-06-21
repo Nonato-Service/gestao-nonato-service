@@ -1,7 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { isOnline, processSyncQueue, getPendingSyncCount } from '../utils/dataStorage'
+import {
+  isOnline,
+  autoSyncPendingChanges,
+  getPendingSyncCount,
+  setupAutoSyncOnReconnect,
+} from '../utils/dataStorage'
+import { getStoredUiString } from '../translations'
 
 export function OfflineIndicator() {
   const [online, setOnline] = useState(true)
@@ -9,42 +15,58 @@ export function OfflineIndicator() {
   const [syncing, setSyncing] = useState(false)
   const [lastSync, setLastSync] = useState<number | null>(null)
 
+  const refreshPending = () => setPendingCount(getPendingSyncCount())
+
+  const runSync = () => {
+    setSyncing(true)
+    autoSyncPendingChanges().then(({ synced }) => {
+      refreshPending()
+      setSyncing(false)
+      if (synced > 0) setLastSync(Date.now())
+    })
+  }
+
   useEffect(() => {
     setOnline(isOnline())
-    setPendingCount(getPendingSyncCount())
+    refreshPending()
+
+    const teardownAutoSync = setupAutoSyncOnReconnect()
 
     const handleOnline = () => {
       setOnline(true)
-      setSyncing(true)
-      processSyncQueue().then(({ synced }) => {
-        setPendingCount(getPendingSyncCount())
-        setSyncing(false)
-        if (synced > 0) setLastSync(Date.now())
-      })
+      runSync()
     }
 
     const handleOffline = () => {
       setOnline(false)
     }
 
+    const handleSyncCompleted = () => {
+      refreshPending()
+      setLastSync(Date.now())
+      setSyncing(false)
+    }
+
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
+    window.addEventListener('nonato-sync-completed', handleSyncCompleted)
     return () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
+      window.removeEventListener('nonato-sync-completed', handleSyncCompleted)
+      teardownAutoSync()
     }
-  }, [online])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runSync estável o suficiente para este efeito
+  }, [])
 
   useEffect(() => {
-    if (!online) return
-    const interval = setInterval(() => setPendingCount(getPendingSyncCount()), 5000)
+    const interval = setInterval(refreshPending, 5000)
     return () => clearInterval(interval)
-  }, [online])
+  }, [])
 
-  // Esconder "Sincronizado" após 3 segundos
   useEffect(() => {
     if (lastSync && online && pendingCount === 0 && !syncing) {
-      const t = setTimeout(() => setLastSync(null), 3000)
+      const t = setTimeout(() => setLastSync(null), 4000)
       return () => clearTimeout(t)
     }
   }, [lastSync, online, pendingCount, syncing])
@@ -66,6 +88,7 @@ export function OfflineIndicator() {
         alignItems: 'center',
         gap: 8,
         boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+        maxWidth: 'min(92vw, 360px)',
         ...(online
           ? {
               backgroundColor: syncing ? 'rgba(0, 150, 255, 0.9)' : 'rgba(0, 200, 100, 0.9)',
@@ -78,13 +101,23 @@ export function OfflineIndicator() {
       }}
     >
       {!online ? (
-        <>Modo offline — dados salvos localmente</>
+        <>
+          {getStoredUiString(
+            'offlineModeBanner',
+            'Modo offline — pode trabalhar; alterações serão enviadas ao servidor quando voltar a ligar.'
+          )}
+        </>
       ) : syncing ? (
-        <>Sincronizando...</>
+        <>{getStoredUiString('offlineSyncing', 'A sincronizar com o servidor…')}</>
       ) : pendingCount > 0 ? (
-        <>{pendingCount} alteração(ões) a sincronizar</>
+        <>
+          {getStoredUiString('offlineSyncPending', '{n} alteração(ões) pendente(s) — a enviar ao servidor…').replace(
+            '{n}',
+            String(pendingCount)
+          )}
+        </>
       ) : lastSync ? (
-        <>Sincronizado</>
+        <>{getStoredUiString('offlineSyncDone', 'Sincronizado com o servidor')}</>
       ) : null}
     </div>
   )

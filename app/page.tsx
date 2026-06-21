@@ -15,6 +15,9 @@ import {
   loadData,
   saveData,
   loadAllFromServer,
+  loadAllForBootstrap,
+  saveOfflineServerSnapshot,
+  isOnline,
   loadFromServer,
   pushAllLocalStorageToServer,
   setBlockImplicitServerPushDuringBootstrap,
@@ -4123,6 +4126,7 @@ export default function Dashboard() {
   const [syncPendingPullRisk, setSyncPendingPullRisk] = useState<PullRiskSeverity>('none')
   /** Primeira carga: pedidos ao servidor + fusão de dados (evita parecer que «não termina»). */
   const [appInitialLoading, setAppInitialLoading] = useState(true)
+  const [bootstrapOfflineMode, setBootstrapOfflineMode] = useState(false)
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
   /** Vista resumida no painel inicial; «Entrar no sistema» mostra métricas, atalhos e inventário. */
   const [dashboardWorkspaceExpanded, setDashboardWorkspaceExpanded] = useState(true)
@@ -8134,8 +8138,12 @@ export default function Dashboard() {
       if (typeof window !== 'undefined') {
         try {
           let skipDemoBootstrap = false
-          const authBoot = await fetch('/api/auth/status', { credentials: 'include', cache: 'no-store' })
-          if (authBoot.ok) {
+          const authBoot = await fetch('/api/auth/status', {
+            credentials: 'include',
+            cache: 'no-store',
+            signal: AbortSignal.timeout(4000),
+          }).catch(() => null)
+          if (authBoot?.ok) {
             const authData = (await authBoot.json()) as { authenticated?: boolean; user?: { id?: string } }
             if (authData.authenticated && authData.user?.id && !authData.user.isDemoGuest && authData.user.id !== 'demo-visitor') {
               skipDemoBootstrap = true
@@ -8149,8 +8157,12 @@ export default function Dashboard() {
             }
           }
           if (!skipDemoBootstrap) {
-            const demoRes = await fetch('/api/demo/status', { credentials: 'include', cache: 'no-store' })
-            if (demoRes.ok) {
+            const demoRes = await fetch('/api/demo/status', {
+              credentials: 'include',
+              cache: 'no-store',
+              signal: AbortSignal.timeout(4000),
+            }).catch(() => null)
+            if (demoRes?.ok) {
               const demoSt = (await demoRes.json()) as {
                 isDemo?: boolean
                 expired?: boolean
@@ -8195,7 +8207,7 @@ export default function Dashboard() {
               /* ignorar */
             }
             // Qualquer aparelho: só apagar local depois de ler o servidor com sucesso (evita dashboard a zeros).
-            const pre = await loadAllFromServer()
+            const pre = await loadAllForBootstrap()
             if (pre.ok) {
               const backupCadastroAntesFullPull: Record<string, string> = {}
               for (const k of NONATO_CADASTRO_KEYS_BACKUP_ON_FULL_PULL) {
@@ -8297,10 +8309,9 @@ export default function Dashboard() {
         if (syncSt) serverRevision = syncSt.revision
 
         // Primeiro, tentar carregar tudo do servidor (ou reutilizar bundle do full-pull já obtido antes do wipe)
-        serverData =
-          serverDataFromFullPullPrefetch !== null
-            ? serverDataFromFullPullPrefetch
-            : (await loadAllFromServer()).data
+        const bootLoad = await loadAllForBootstrap(serverDataFromFullPullPrefetch)
+        serverData = bootLoad.data
+        if (!bootLoad.ok) setBootstrapOfflineMode(true)
         await reportBoot(28)
 
         /** Após wipe total, não bloquear por dados locais residuais; usar só servidor para sidebar/manuais nesta carga. */
@@ -11464,6 +11475,9 @@ export default function Dashboard() {
         dataBootstrapCompleteRef.current = true
         if (!bootstrapLoadErrored) {
           setSyncBootstrapPercent(100)
+          if (Object.keys(serverData).length > 0) {
+            void saveOfflineServerSnapshot(serverData)
+          }
           await new Promise((r) => setTimeout(r, 40))
         }
         setAppInitialLoading(false)
@@ -64624,7 +64638,9 @@ A1;Peça exemplo;10`}
           }}
         />
         <p style={{ color: '#e8fff0', fontSize: 15, fontWeight: 700, textAlign: 'center', maxWidth: 320, margin: 0 }}>
-          {(safeT as any)?.syncInitialLoadTitle || 'A carregar dados do servidor…'}
+          {bootstrapOfflineMode || !isOnline()
+            ? (safeT as any)?.syncInitialLoadOfflineTitle || 'A carregar dados locais (modo offline)…'
+            : (safeT as any)?.syncInitialLoadTitle || 'A carregar dados do servidor…'}
         </p>
         <p
           style={{
@@ -64644,7 +64660,10 @@ A1;Peça exemplo;10`}
           {syncBootstrapPercent}%
         </p>
         <p style={{ color: '#9ab0a2', fontSize: 12, textAlign: 'center', maxWidth: 320, lineHeight: 1.45, margin: 0 }}>
-          {(safeT as any)?.syncInitialLoadHint || 'Aguarde até esta mensagem desaparecer.'}
+          {bootstrapOfflineMode || !isOnline()
+            ? (safeT as any)?.syncInitialLoadOfflineHint ||
+              'Sem ligação ao servidor — a usar cópia guardada neste aparelho.'
+            : (safeT as any)?.syncInitialLoadHint || 'Aguarde até esta mensagem desaparecer.'}
         </p>
       </div>
     ) : null

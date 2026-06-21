@@ -12,6 +12,8 @@ import {
 
 const API_BASE = '/api/data'
 const SYNC_QUEUE_KEY = 'nonato-sync-queue'
+/** Cópia completa do servidor em IndexedDB — permite arranque offline após uma visita online. */
+const OFFLINE_SNAPSHOT_KEY = 'nonato-offline-server-snapshot'
 
 /** Durante a carga inicial da página: não enviar migrações «só servidor» (saveToLocalStorage=false) nem pushes implícitos em loadData — evita revisões e payloads diferentes por aparelho. */
 let blockImplicitServerPushDuringBootstrap = false
@@ -155,6 +157,13 @@ function setSyncQueue(queue: Array<{ key: string; value: any; timestamp: number 
   } catch {}
 }
 
+/** Último valor por chave — evita fila com dezenas de gravações repetidas offline. */
+function enqueueSyncItem(key: string, value: any): void {
+  const queue = getSyncQueue().filter((item) => item.key !== key)
+  queue.push({ key, value, timestamp: Date.now() })
+  setSyncQueue(queue)
+}
+
 // Helper para criar AbortSignal com timeout (compatibilidade)
 function createTimeoutSignal(timeoutMs: number): AbortSignal {
   if (typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal) {
@@ -203,7 +212,13 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
   let synced = 0
   let failed = 0
   const remaining: typeof queue = []
+  /** Por chave, só enviar o item mais recente (último timestamp). */
+  const latestByKey = new Map<string, (typeof queue)[number]>()
   for (const item of queue) {
+    const prev = latestByKey.get(item.key)
+    if (!prev || item.timestamp >= prev.timestamp) latestByKey.set(item.key, item)
+  }
+  for (const item of latestByKey.values()) {
     const ok = await _doSaveToServer(item.key, item.value)
     if (ok) synced++
     else {
@@ -212,8 +227,55 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
     }
   }
   setSyncQueue(remaining)
-  serverOffline = false
+  serverOffline = failed > 0
+  if (synced > 0) serverOffline = false
   return { synced, failed }
+}
+
+let autoSyncInFlight = false
+
+/** Envia alterações pendentes ao servidor — chamado ao voltar online ou periodicamente. */
+export async function autoSyncPendingChanges(): Promise<{ synced: number; failed: number }> {
+  if (isNonatoDemoBuild() || !isOnline()) return { synced: 0, failed: 0 }
+  if (autoSyncInFlight) return { synced: 0, failed: 0 }
+  if (getPendingSyncCount() === 0) return { synced: 0, failed: 0 }
+  autoSyncInFlight = true
+  try {
+    const online = await checkServerOnline()
+    if (!online) return { synced: 0, failed: 0 }
+    const result = await processSyncQueue()
+    if (typeof window !== 'undefined' && result.synced > 0) {
+      try {
+        window.dispatchEvent(new CustomEvent('nonato-sync-completed', { detail: result }))
+      } catch {
+        /* ignorar */
+      }
+    }
+    return result
+  } finally {
+    autoSyncInFlight = false
+  }
+}
+
+/** Regista listeners para sincronizar automaticamente quando a ligação voltar. */
+export function setupAutoSyncOnReconnect(): () => void {
+  if (typeof window === 'undefined') return () => {}
+
+  const run = () => {
+    if (isOnline()) void autoSyncPendingChanges()
+  }
+
+  window.addEventListener('online', run)
+  const interval = window.setInterval(() => {
+    if (isOnline() && getPendingSyncCount() > 0) void autoSyncPendingChanges()
+  }, 15000)
+
+  if (isOnline()) void autoSyncPendingChanges()
+
+  return () => {
+    window.removeEventListener('online', run)
+    window.clearInterval(interval)
+  }
 }
 
 // Quantidade de itens pendentes de sincronização
@@ -347,18 +409,14 @@ export async function saveToServer(key: string, value: any): Promise<boolean> {
       while (true) {
         if (!isOnline()) {
           serverOffline = true
-          const queue = getSyncQueue()
-          queue.push({ key, value: current, timestamp: Date.now() })
-          setSyncQueue(queue)
+          enqueueSyncItem(key, current)
           return false
         }
         try {
           lastOk = await _doSaveToServer(key, current)
           if (!lastOk) {
             serverOffline = true
-            const queue = getSyncQueue()
-            queue.push({ key, value: current, timestamp: Date.now() })
-            setSyncQueue(queue)
+            enqueueSyncItem(key, current)
           }
         } catch (error: any) {
           lastOk = false
@@ -366,9 +424,7 @@ export async function saveToServer(key: string, value: any): Promise<boolean> {
             (error?.message && (error.message.includes('NetworkError') || error.message.includes('Failed to fetch') || error.message.includes('CONNECTION_REFUSED')))
           if (isNetworkError) {
             serverOffline = true
-            const queue = getSyncQueue()
-            queue.push({ key, value: current, timestamp: Date.now() })
-            setSyncQueue(queue)
+            enqueueSyncItem(key, current)
           }
         }
         const next = coalesceNextValueByKey.get(key)
@@ -428,7 +484,71 @@ export async function loadFromServer(key: string): Promise<any | null> {
 }
 
 /** Resultado de carregar o bundle completo: `ok` distingue rede/HTTP bem-sucedidos de falha (timeout, offline). */
-export type LoadAllFromServerResult = { data: Record<string, any>; ok: boolean }
+export type LoadAllFromServerResult = {
+  data: Record<string, any>
+  ok: boolean
+  source?: 'server' | 'local' | 'snapshot'
+}
+
+/** Junta localStorage + IndexedDB + snapshot offline para arranque sem rede. */
+export async function loadAllFromLocalCache(): Promise<Record<string, any>> {
+  const fromLs = await collectAllLocalNonatoDataForSync()
+  try {
+    const snap = await getKv(OFFLINE_SNAPSHOT_KEY)
+    if (snap && typeof snap === 'object' && !Array.isArray(snap)) {
+      return { ...(snap as Record<string, any>), ...fromLs }
+    }
+  } catch {
+    /* ignorar */
+  }
+  return fromLs
+}
+
+/** Guarda bundle do servidor para uso offline (IndexedDB — não compete com quota do localStorage). */
+export async function saveOfflineServerSnapshot(data: Record<string, any>): Promise<void> {
+  if (typeof window === 'undefined' || Object.keys(data).length === 0) return
+  try {
+    await saveKv(OFFLINE_SNAPSHOT_KEY, data)
+  } catch (e) {
+    console.warn('[Nonato offline] Falha ao guardar snapshot:', e)
+  }
+}
+
+/**
+ * Carga inicial inteligente: offline → imediato com dados locais;
+ * online → tenta servidor uma vez; se falhar, usa cache local/snapshot.
+ */
+export async function loadAllForBootstrap(
+  prefetched?: Record<string, any> | null
+): Promise<LoadAllFromServerResult> {
+  if (prefetched && Object.keys(prefetched).length > 0) {
+    void saveOfflineServerSnapshot(prefetched)
+    return { data: prefetched, ok: true, source: 'server' }
+  }
+
+  if (!isOnline()) {
+    serverOffline = true
+    const local = await loadAllFromLocalCache()
+    return {
+      data: local,
+      ok: false,
+      source: Object.keys(local).length > 0 ? 'local' : 'snapshot',
+    }
+  }
+
+  const server = await loadAllFromServerOnce()
+  if (server.ok && Object.keys(server.data).length > 0) {
+    void saveOfflineServerSnapshot(server.data)
+    return { ...server, source: 'server' }
+  }
+
+  serverOffline = true
+  const local = await loadAllFromLocalCache()
+  if (Object.keys(local).length > 0) {
+    return { data: local, ok: false, source: 'local' }
+  }
+  return { ...server, source: 'server' }
+}
 
 const LOAD_ALL_TIMEOUT_MS = 25_000
 
@@ -576,9 +696,7 @@ export async function saveAllToServer(
   if (!isOnline()) {
     serverOffline = true
     for (const [key, value] of Object.entries(data)) {
-      const queue = getSyncQueue()
-      queue.push({ key, value, timestamp: Date.now() })
-      setSyncQueue(queue)
+      enqueueSyncItem(key, value)
     }
     return false
   }

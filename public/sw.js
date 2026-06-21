@@ -1,11 +1,11 @@
 // Service Worker - Gestão Técnica Nonato Service (PWA offline)
 // Bumpar CACHE_NAME em cada deploy que altere precache / lógica offline
-const CACHE_NAME = 'nonato-pwa-v17'
+const CACHE_NAME = 'nonato-pwa-v18'
 
 const PRECACHE_ASSETS = ['/', '/icon.svg', '/manifest.json']
 
 const OFFLINE_HTML =
-  '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Offline</title></head><body style="background:#000;color:#0f0;font-family:sans-serif;padding:20px;text-align:center"><h1>Sem ligação</h1><p>Abra o app quando tiver internet para carregar os dados.</p></body></html>'
+  '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nonato Service</title></head><body style="background:#000;color:#0f0;font-family:sans-serif;padding:24px;text-align:center;line-height:1.5"><h1 style="margin:0 0 12px">Sem ligação</h1><p style="color:#ccc;margin:0 0 16px">Se já abriu o sistema com internet neste aparelho, volte a abrir a app — os dados locais devem carregar.</p><p style="color:#888;font-size:14px;margin:0">Na primeira utilização é necessário internet para preparar o modo offline.</p></body></html>'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -45,11 +45,9 @@ async function navigateResponse(request) {
     if (c) return c
     const idx = await caches.match('/', { ignoreSearch: true })
     if (idx) return idx
-    return new Response(OFFLINE_HTML, { headers: { 'Content-Type': 'text/html' } })
+    return new Response(OFFLINE_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   }
 
-  // Com internet: rede primeiro — o telemóvel passa a ver versões novas de imediato.
-  // Offline ou falha: mantém comportamento PWA (cache / página offline).
   if (self.navigator.onLine) {
     try {
       const r = await fetch(request, { cache: 'no-cache' })
@@ -64,12 +62,22 @@ async function navigateResponse(request) {
   return fromCache()
 }
 
+async function cacheFirst(request) {
+  const cached = await caches.match(request, { ignoreSearch: true })
+  if (cached) return cached
+  try {
+    const r = await fetch(request, { cache: 'no-cache' })
+    return putInCache(request, r)
+  } catch {
+    return caches.match(request, { ignoreSearch: true }).then((c) => c || new Response('', { status: 503, statusText: 'Offline' }))
+  }
+}
+
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
   if (url.origin !== self.location.origin) return
   if (event.request.method !== 'GET') return
   if (url.pathname.startsWith('/api/')) return
-  // Bíblia e Campo têm apps e service workers próprios — não interceptar
   if (url.pathname.startsWith('/biblia-app')) return
   if (url.pathname.startsWith('/campo-app')) return
 
@@ -77,6 +85,12 @@ self.addEventListener('fetch', (event) => {
 
   if (isNavigate) {
     event.respondWith(navigateResponse(event.request))
+    return
+  }
+
+  // JS/CSS do Next — cache-first para funcionar offline após uma visita online
+  if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/_next/image')) {
+    event.respondWith(cacheFirst(event.request))
     return
   }
 

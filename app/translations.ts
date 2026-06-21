@@ -504,6 +504,12 @@ export const translations = {
     syncPushSending: "A enviar para o servidor",
     syncInitialLoadTitle: "A carregar dados do servidor…",
     syncInitialLoadHint: "Aguarde até esta mensagem desaparecer — depois o sistema fica pronto.",
+    syncInitialLoadOfflineTitle: "A carregar dados locais (modo offline)…",
+    syncInitialLoadOfflineHint: "Sem ligação ao servidor — a usar cópia guardada neste aparelho.",
+    offlineModeBanner: "Modo offline — pode trabalhar; alterações serão enviadas ao servidor quando voltar a ligar.",
+    offlineSyncPending: "{n} alteração(ões) pendente(s) — a enviar ao servidor…",
+    offlineSyncing: "A sincronizar com o servidor…",
+    offlineSyncDone: "Sincronizado com o servidor",
     syncReloadFlushing: "A guardar e a recarregar…",
     syncTrafficTitle: "Sincronização",
     syncTrafficBoot: "A preparar ligação ao servidor…",
@@ -4120,6 +4126,12 @@ export const translations = {
     syncPushSending: "Enviando al servidor",
     syncInitialLoadTitle: "Cargando datos del servidor...",
     syncInitialLoadHint: "Espere hasta que este mensaje desaparezca; entonces el sistema estará listo.",
+    syncInitialLoadOfflineTitle: "Cargando datos locales (modo sin conexión)…",
+    syncInitialLoadOfflineHint: "Sin conexión al servidor — se usa la copia guardada en este dispositivo.",
+    offlineModeBanner: "Modo sin conexión — puede trabajar; los cambios se enviarán al servidor al volver a conectarse.",
+    offlineSyncPending: "{n} cambio(s) pendiente(s) — enviando al servidor…",
+    offlineSyncing: "Sincronizando con el servidor…",
+    offlineSyncDone: "Sincronizado con el servidor",
     syncReloadFlushing: "Guardando y recargando…",
     syncTrafficTitle: "Sincronización",
     syncTrafficBoot: "Preparando conexión al servidor…",
@@ -7745,6 +7757,12 @@ export const translations = {
     syncPushSending: "Envoi vers le serveur",
     syncInitialLoadTitle: "Chargement des données depuis le serveur…",
     syncInitialLoadHint: "Attendez que ce message disparaisse – le système est alors prêt.",
+    syncInitialLoadOfflineTitle: "Chargement des données locales (mode hors ligne)…",
+    syncInitialLoadOfflineHint: "Pas de connexion au serveur — utilisation de la copie enregistrée sur cet appareil.",
+    offlineModeBanner: "Mode hors ligne — vous pouvez travailler ; les modifications seront envoyées au serveur dès la reconnexion.",
+    offlineSyncPending: "{n} modification(s) en attente — envoi au serveur…",
+    offlineSyncing: "Synchronisation avec le serveur…",
+    offlineSyncDone: "Synchronisé avec le serveur",
     syncReloadFlushing: "Sauvegarde et rechargement…",
     syncTrafficTitle: "Synchronisation",
     syncTrafficBoot: "Préparation de la connexion au serveur…",
@@ -11369,6 +11387,12 @@ export const translations = {
     syncPushSending: "Invio al server",
     syncInitialLoadTitle: "Caricamento dati dal server…",
     syncInitialLoadHint: "Attendi finché questo messaggio non scompare, quindi il sistema è pronto.",
+    syncInitialLoadOfflineTitle: "Caricamento dati locali (modalità offline)…",
+    syncInitialLoadOfflineHint: "Nessuna connessione al server — si usa la copia salvata su questo dispositivo.",
+    offlineModeBanner: "Modalità offline — puoi lavorare; le modifiche verranno inviate al server quando torni online.",
+    offlineSyncPending: "{n} modifica/he in sospeso — invio al server…",
+    offlineSyncing: "Sincronizzazione con il server…",
+    offlineSyncDone: "Sincronizzato con il server",
     syncReloadFlushing: "Salvataggio e ricaricamento...",
     syncTrafficTitle: "Sincronizzazione",
     syncTrafficBoot: "Preparazione della connessione al server…",
@@ -14989,6 +15013,12 @@ export const translations = {
     syncPushSending: "Wird an den Server gesendet",
     syncInitialLoadTitle: "Daten vom Server werden geladen…",
     syncInitialLoadHint: "Warten Sie, bis diese Meldung verschwindet – dann ist das System bereit.",
+    syncInitialLoadOfflineTitle: "Lokale Daten werden geladen (Offline-Modus)…",
+    syncInitialLoadOfflineHint: "Keine Serververbindung — gespeicherte Kopie auf diesem Gerät wird verwendet.",
+    offlineModeBanner: "Offline-Modus — Sie können arbeiten; Änderungen werden beim Wieder verbinden an den Server gesendet.",
+    offlineSyncPending: "{n} ausstehende Änderung(en) — Senden an den Server…",
+    offlineSyncing: "Synchronisierung mit dem Server…",
+    offlineSyncDone: "Mit dem Server synchronisiert",
     syncReloadFlushing: "Speichern und neu laden…",
     syncTrafficTitle: "Synchronisation",
     syncTrafficBoot: "Verbindung zum Server wird vorbereitet…",
@@ -18616,6 +18646,12 @@ export const translations = {
     syncPushSending: "Sending to server",
     syncInitialLoadTitle: "Loading data from server…",
     syncInitialLoadHint: "Wait until this message disappears — then the system is ready.",
+    syncInitialLoadOfflineTitle: "Loading local data (offline mode)…",
+    syncInitialLoadOfflineHint: "No server connection — using the copy saved on this device.",
+    offlineModeBanner: "Offline mode — you can work; changes will be sent to the server when you reconnect.",
+    offlineSyncPending: "{n} pending change(s) — sending to server…",
+    offlineSyncing: "Syncing with server…",
+    offlineSyncDone: "Synced with server",
     syncReloadFlushing: "Saving and reloading…",
     syncTrafficTitle: "Sync",
     syncTrafficBoot: "Connecting to server…",
@@ -21801,4 +21837,16 @@ export function localeDatetimeGeneral(lang: string): string {
   if (lang === 'de') return 'de-DE'
   if (isEnglishUi(lang)) return 'en-US'
   return 'pt-BR'
+}
+
+export function getStoredUiString(key: string, fallback?: string): string {
+  if (typeof window === 'undefined') return fallback ?? key
+  try {
+    const lang = localStorage.getItem('nonato-language') || 'pt-BR'
+    const bundleKey = translationBundleKey(lang)
+    const bundle = translations[bundleKey] as Record<string, string | undefined>
+    return bundle[key] ?? fallback ?? key
+  } catch {
+    return fallback ?? key
+  }
 }

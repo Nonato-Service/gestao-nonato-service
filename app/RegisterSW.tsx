@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { processSyncQueue } from './utils/dataStorage'
+import { setupAutoSyncOnReconnect } from './utils/dataStorage'
 
 // Bumpar este número em cada deploy para forçar atualização no telemóvel/tablet
-const SW_VERSION = 17
+const SW_VERSION = 18
 
 export function RegisterSW() {
   const [updateReady, setUpdateReady] = useState(false)
@@ -76,15 +76,14 @@ export function RegisterSW() {
       }
     }, 30_000)
 
-    if (navigator.onLine) {
-      processSyncQueue().then(() => {})
-    }
+    const teardownAutoSync = setupAutoSyncOnReconnect()
 
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange)
       window.removeEventListener('pageshow', onPageShow)
       window.removeEventListener('focus', onPageShow)
       window.clearInterval(interval)
+      teardownAutoSync()
     }
   }, [])
 
