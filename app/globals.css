@@ -11328,6 +11328,64 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   align-items: stretch;
 }
 
+.biblioteca-pecas-numero-circulo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba(0, 200, 83, 0.62);
+  background: rgba(0, 200, 83, 0.14);
+  color: #00e676;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.biblioteca-pecas-numero-circulo--sm {
+  min-width: 1.55rem;
+  height: 1.55rem;
+  font-size: 0.66rem;
+}
+
+.biblioteca-pecas-numero-circulo--md {
+  min-width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.72rem;
+}
+
+.biblioteca-pecas-numero-circulo--lg {
+  min-width: 2rem;
+  height: 2rem;
+  font-size: 0.82rem;
+}
+
+.biblioteca-pecas-numero-circulo--empty {
+  opacity: 0.35;
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+}
+
+.biblioteca-pecas-hub__catalog-td--numero {
+  text-align: center;
+  vertical-align: middle;
+  width: 52px;
+}
+
+.biblioteca-pecas-hub__catalog-th--numero {
+  width: 52px;
+  min-width: 52px;
+  text-align: center;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
 .biblioteca-pecas-hub__piece-chip {
   display: inline-flex;
   align-items: center;

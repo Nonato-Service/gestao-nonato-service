@@ -1740,7 +1740,7 @@ type PecaBiblioteca = {
   quantidade?: number
   dataCriacao?: string
   importacaoPendente?: boolean
-  /** Número sequencial dentro do grupo (categoria/subcategoria): 01, 02, 03… */
+  /** Número sequencial dentro da categoria (01, 02, 03… — ignora subcategoria). */
   numeroSequenciaGrupo?: string
 }
 
@@ -1895,8 +1895,7 @@ const BIBLIOTECA_SEM_GRUPO_SEQUENCIA_KEY = '__sem_grupo__'
 function chaveSequenciaNumeroPecaBiblioteca(p: Pick<PecaBiblioteca, 'categoriaId' | 'subcategoriaId'>): string {
   const cat = String(p.categoriaId || '').trim()
   if (!cat) return BIBLIOTECA_SEM_GRUPO_SEQUENCIA_KEY
-  const sub = String(p.subcategoriaId || '').trim()
-  return sub ? `${cat}::${sub}` : cat
+  return cat
 }
 
 function formatNumeroSequenciaPecaBiblioteca(n: number): string {
@@ -1952,28 +1951,14 @@ function garantirNumerosSequenciaPecaBiblioteca(pecas: PecaBiblioteca[]): { list
         { numeric: true }
       )
     })
-    const usados = new Set<number>()
-    for (const p of ordenada) {
-      let n = parseNumeroSequenciaPecaBiblioteca(p.numeroSequenciaGrupo)
-      if (n > 0 && !usados.has(n)) {
-        usados.add(n)
-        const fmt = formatNumeroSequenciaPecaBiblioteca(n)
-        if (p.numeroSequenciaGrupo !== fmt) {
-          byId.get(p.id)!.numeroSequenciaGrupo = fmt
-          alterou = true
-        }
-      }
-    }
-    let next = 1
-    for (const p of ordenada) {
+    ordenada.forEach((p, idx) => {
+      const fmt = formatNumeroSequenciaPecaBiblioteca(idx + 1)
       const cur = byId.get(p.id)!
-      if (parseNumeroSequenciaPecaBiblioteca(cur.numeroSequenciaGrupo) > 0) continue
-      while (usados.has(next)) next++
-      cur.numeroSequenciaGrupo = formatNumeroSequenciaPecaBiblioteca(next)
-      usados.add(next)
-      next++
-      alterou = true
-    }
+      if (cur.numeroSequenciaGrupo !== fmt) {
+        cur.numeroSequenciaGrupo = fmt
+        alterou = true
+      }
+    })
   }
   return { lista: out, alterou }
 }
@@ -2028,12 +2013,35 @@ function rotuloNumeroSequenciaPecaBiblioteca(
     peca.categoriaId && categorias
       ? categorias.find((c) => c.id === peca.categoriaId)?.nome || peca.categoria
       : peca.categoria
-  const sub =
-    peca.subcategoriaId && subcategorias
-      ? subcategorias.find((s) => s.id === peca.subcategoriaId)?.nome || peca.subcategoria
-      : peca.subcategoria
-  const grupo = [cat, sub].filter(Boolean).join(' / ') || ''
+  const grupo = String(cat || '').trim()
   return grupo ? `${grupo} ${num}` : num
+}
+
+function NumeroSequenciaCirculo({
+  numero,
+  title,
+  size = 'md',
+  empty = '—',
+}: {
+  numero?: string | null
+  title?: string
+  size?: 'sm' | 'md' | 'lg'
+  empty?: string | null
+}) {
+  const n = String(numero || '').trim()
+  if (!n) {
+    if (empty == null) return null
+    return <span className="biblioteca-pecas-numero-circulo biblioteca-pecas-numero-circulo--empty">{empty}</span>
+  }
+  return (
+    <span
+      className={`biblioteca-pecas-numero-circulo biblioteca-pecas-numero-circulo--${size}`}
+      title={title || n}
+      aria-label={title || n}
+    >
+      {n}
+    </span>
+  )
 }
 
 function buildPecaCatalogoUrlFromTemplate(template: string, codigo: string): string | null {
@@ -23414,9 +23422,15 @@ export default function Dashboard() {
                 <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>
                   {hubT.nome || 'Nome'}
                 </th>
-                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>
-                  {(hubT as any).importacaoPreviewColNumeroSequencia || 'Nº grupo'}
-                </th>
+                <th
+                  style={{
+                    padding: '10px',
+                    textAlign: 'center',
+                    borderBottom: '1px solid rgba(0, 200, 83, 0.3)',
+                    width: '52px',
+                  }}
+                  aria-label={(hubT as any).importacaoPreviewColNumeroSequencia || 'Nº grupo'}
+                />
                 <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>
                   {hubT.preco || 'Preço'}
                 </th>
@@ -23440,8 +23454,12 @@ export default function Dashboard() {
                     {(p.nome || p.descricao || '').slice(0, 80)}
                     {(p.nome || p.descricao || '').length > 80 ? '…' : ''}
                   </td>
-                  <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>
-                    {rotuloNumeroSequenciaPecaBiblioteca(p, categoriasPecas, subcategoriasPecas) || '—'}
+                  <td style={{ padding: '8px 10px', textAlign: 'center', verticalAlign: 'middle' }}>
+                    <NumeroSequenciaCirculo
+                      numero={p.numeroSequenciaGrupo}
+                      title={rotuloNumeroSequenciaPecaBiblioteca(p, categoriasPecas, subcategoriasPecas)}
+                      size="sm"
+                    />
                   </td>
                   <td style={{ padding: '8px 10px' }}>{p.preco || '-'}</td>
                   <td style={{ padding: '6px', textAlign: 'center', verticalAlign: 'middle' }}>
@@ -23694,10 +23712,10 @@ export default function Dashboard() {
       }
 
       alteradas++
-      return {
-        ...proximaPeca,
-        numeroSequenciaGrupo: '',
-      }
+      const categoriaMudou = proximaPeca.categoriaId !== (peca.categoriaId || '')
+      return categoriaMudou
+        ? { ...proximaPeca, numeroSequenciaGrupo: '' }
+        : proximaPeca
     })
 
     return { lista: updated, alteradas }
@@ -23746,10 +23764,10 @@ export default function Dashboard() {
       }
 
       alteradas++
-      return {
-        ...proximaPeca,
-        numeroSequenciaGrupo: '',
-      }
+      const categoriaMudou = proximaPeca.categoriaId !== (peca.categoriaId || '')
+      return categoriaMudou
+        ? { ...proximaPeca, numeroSequenciaGrupo: '' }
+        : proximaPeca
     })
 
     if (alteradas === 0) {
@@ -37304,30 +37322,20 @@ onKeyPress={(e) => {
                   />
                 </div>
                 
-                <div className="biblioteca-pecas-form__field">
-                  <label className="biblioteca-pecas-form__label">
-                    {(safeT as any)?.pecaBibliotecaNumeroSequenciaLabel || 'Nº no grupo'}
-                  </label>
-                  <input
-                    type="text"
-                    className="biblioteca-pecas-form__input"
-                    readOnly
-                    value={
-                      pecaBibliotecaForm.numeroSequenciaGrupo
-                        ? rotuloNumeroSequenciaPecaBiblioteca(
-                            pecaBibliotecaForm,
-                            categoriasPecas,
-                            subcategoriasPecas
-                          )
-                        : '—'
-                    }
-                    style={{ opacity: 0.95, cursor: 'default' }}
-                  />
-                  <p className="biblioteca-pecas-form__hint" style={{ marginTop: '6px', fontSize: '12px', opacity: 0.82 }}>
-                    {(safeT as any)?.pecaBibliotecaNumeroSequenciaHint ||
-                      'Numeração sequencial em cada grupo (01, 02, 03…). Ex.: Cilindros 01, Correias 01.'}
-                  </p>
-                </div>
+                {pecaBibliotecaForm.numeroSequenciaGrupo ? (
+                  <div className="biblioteca-pecas-form__field" style={{ marginBottom: '4px' }}>
+                    <NumeroSequenciaCirculo
+                      numero={pecaBibliotecaForm.numeroSequenciaGrupo}
+                      title={rotuloNumeroSequenciaPecaBiblioteca(
+                        pecaBibliotecaForm,
+                        categoriasPecas,
+                        subcategoriasPecas
+                      )}
+                      size="lg"
+                      empty={null}
+                    />
+                  </div>
+                ) : null}
 
                 <div className="biblioteca-pecas-form__field">
                   <label className="biblioteca-pecas-form__label">
@@ -38507,17 +38515,11 @@ onKeyPress={(e) => {
                             </span>
                           </span>
                           {peca.numeroSequenciaGrupo ? (
-                            <span
-                              className="biblioteca-pecas-hub__piece-chip biblioteca-pecas-hub__piece-chip--code"
+                            <NumeroSequenciaCirculo
+                              numero={peca.numeroSequenciaGrupo}
                               title={rotuloNumeroSequenciaPecaBiblioteca(peca, categoriasPecas, subcategoriasPecas)}
-                            >
-                              <span className="biblioteca-pecas-hub__piece-chip-k">
-                                {(safeT as any)?.bibliotecaColNumeroSequencia || 'Nº'}
-                              </span>
-                              <span className="biblioteca-pecas-hub__piece-chip-v">
-                                {rotuloNumeroSequenciaPecaBiblioteca(peca, categoriasPecas, subcategoriasPecas)}
-                              </span>
-                            </span>
+                              size="sm"
+                            />
                           ) : null}
                         </div>
                         {!somenteLeituraBiblioteca ? (
@@ -38978,12 +38980,10 @@ onKeyPress={(e) => {
                                   {headerFilter}
                                 </span>
                               </th>
-                              <th className="biblioteca-pecas-hub__catalog-th">
-                                <span className="biblioteca-pecas-hub__catalog-th-label">
-                                  {(safeT as any)?.bibliotecaColNumeroSequencia || 'Nº'}
-                                  {headerFilter}
-                                </span>
-                              </th>
+                              <th
+                                className="biblioteca-pecas-hub__catalog-th biblioteca-pecas-hub__catalog-th--numero"
+                                aria-label={(safeT as any)?.bibliotecaColNumeroSequencia || 'Nº'}
+                              />
                               <th className="biblioteca-pecas-hub__catalog-th">
                                 <span className="biblioteca-pecas-hub__catalog-th-label">
                                   {safeT?.subcategoriaPecaBiblioteca || 'Subcategoria'}
@@ -39067,16 +39067,16 @@ onKeyPress={(e) => {
                                       <span>{grupoNome || safeT?.bibliotecaGrupoSemCategoria || '—'}</span>
                                     </span>
                                   </td>
-                                  <td className="biblioteca-pecas-hub__catalog-td">
-                                    <span className="biblioteca-pecas-hub__catalog-chip biblioteca-pecas-hub__catalog-chip--code">
-                                      <span className="biblioteca-pecas-hub__catalog-chip-k">
-                                        {(safeT as any)?.bibliotecaColNumeroSequencia || 'Nº'}
-                                      </span>
-                                      <span>
-                                        {rotuloNumeroSequenciaPecaBiblioteca(peca, categoriasPecas, subcategoriasPecas) ||
-                                          '—'}
-                                      </span>
-                                    </span>
+                                  <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--numero">
+                                    <NumeroSequenciaCirculo
+                                      numero={peca.numeroSequenciaGrupo}
+                                      title={rotuloNumeroSequenciaPecaBiblioteca(
+                                        peca,
+                                        categoriasPecas,
+                                        subcategoriasPecas
+                                      )}
+                                      size="sm"
+                                    />
                                   </td>
                                   <td className="biblioteca-pecas-hub__catalog-td">{peca.subcategoria || '—'}</td>
                                   <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--price">
