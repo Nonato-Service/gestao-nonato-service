@@ -35,8 +35,8 @@ export function serverCadastroBundleIsEmpty(server: Record<string, unknown>): bo
   )
 }
 
-export function localStorageKeyHasMeaningfulCadastro(raw: string | null): boolean {
-  if (raw === null || raw.trim() === '') return false
+export function localStorageKeyHasMeaningfulCadastro(raw: string | null | undefined): boolean {
+  if (raw == null || raw.trim() === '') return false
   try {
     const parsed = JSON.parse(raw) as unknown
     return serverKeyHasMeaningfulData(parsed)

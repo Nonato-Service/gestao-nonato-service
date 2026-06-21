@@ -531,8 +531,8 @@ function formatServicoValorExibicao(v: unknown): string {
 }
 
 /** Campo de valor (texto): aceita vírgula ou ponto; vazio trata-se como 0 ao guardar. */
-function parseServicoValorInput(raw: string): number {
-  const t = raw.trim().replace(/\s/g, '').replace(/€/g, '').replace(',', '.')
+function parseServicoValorInput(raw: string | undefined | null): number {
+  const t = String(raw ?? '').trim().replace(/\s/g, '').replace(/€/g, '').replace(',', '.')
   if (t === '' || t === '-' || t === '.') return 0
   const n = parseFloat(t)
   return Number.isFinite(n) ? n : NaN
@@ -625,7 +625,7 @@ function servicoRotuloParaSelectFechamento(s: { cod?: string; nome: string; desc
   const cod = servicoCodParaExibicao(s)
   const codNorm = (cod || '').trim().toUpperCase()
   const legivel = servicoDescricaoLegivelFechamento(s)
-  const legNorm = legivel.trim().toUpperCase()
+  const legNorm = String(legivel ?? '').trim().toUpperCase()
   if (cod && legivel && legNorm !== codNorm) return `${cod} — ${legivel}`
   if (legivel) return cod ? `${cod} — ${legivel}` : legivel
   return cod || '—'
@@ -2063,13 +2063,13 @@ function relatorioServicoMesmaChaveNegocio(
   clienteId: string | undefined,
   clienteNome: string
 ): boolean {
-  if (existente.numero.trim() !== numero.trim()) return false
-  const normData = (s: string) => s.trim().slice(0, 10)
+  if (String(existente.numero ?? '').trim() !== String(numero ?? '').trim()) return false
+  const normData = (s: string) => String(s ?? '').trim().slice(0, 10)
   if (normData(existente.data) !== normData(data)) return false
   const idE = (existente.clienteId || '').trim()
   const idN = (clienteId || '').trim()
   if (idE && idN) return idE === idN
-  return existente.cliente.trim().toLowerCase() === clienteNome.trim().toLowerCase()
+  return String(existente.cliente ?? '').trim().toLowerCase() === String(clienteNome ?? '').trim().toLowerCase()
 }
 
 function encontrarRelatorioServicoDuplicado(
