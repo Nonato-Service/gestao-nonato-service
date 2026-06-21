@@ -18,6 +18,7 @@ Abra [http://localhost:3000](http://localhost:3000) no navegador.
 
 ## Estrutura de Cores
 
-- **Fundo da tela**: Preto (#000000)
-- **Containers e Modais**: Cinza (#2a2a2a)
-- **Bordas dos botões**: Verde (#00ff00)
+- **Fundo da tela**: Cinza escuro (#121212)
+- **Containers e Modais**: Cinza (#1e1e1e)
+- **Bordas e destaques**: Verde (#00c853)
+- **Informação / status**: Azul (#2196f3)

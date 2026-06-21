@@ -355,24 +355,24 @@ export function PedidoOrcamentosAvulsoContent({
   const headerStyle = {
     marginBottom: '40px',
     padding: '30px',
-    background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
+    background: 'linear-gradient(135deg, rgba(0, 200, 83, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
     borderRadius: '12px',
-    border: '1px solid rgba(0, 255, 0, 0.3)',
-    boxShadow: '0 4px 20px rgba(0, 255, 0, 0.08)'
+    border: '1px solid rgba(0, 200, 83, 0.3)',
+    boxShadow: '0 4px 20px rgba(0, 200, 83, 0.08)'
   }
   const blockStyle = {
     marginBottom: '30px',
     padding: '20px',
     backgroundColor: '#141414',
     borderRadius: '12px',
-    border: '1px solid rgba(0, 255, 0, 0.2)'
+    border: '1px solid rgba(0, 200, 83, 0.2)'
   }
   const inputStyle = {
     width: '100%' as const,
     padding: '12px',
     marginBottom: '15px',
-    backgroundColor: '#222222',
-    border: '1px solid rgba(0, 255, 0, 0.3)',
+    backgroundColor: '#1e1e1e',
+    border: '1px solid rgba(0, 200, 83, 0.3)',
     borderRadius: '6px',
     color: '#fff',
     fontSize: '14px'
@@ -431,7 +431,7 @@ export function PedidoOrcamentosAvulsoContent({
       {/* Cliente */}
       <div style={blockStyle}>
         <h3 style={labelStyle}>{safeT?.cliente || 'Cliente'}</h3>
-        <p style={{ color: '#999', fontSize: '13px', marginBottom: '12px' }}>
+        <p style={{ color: '#b0b0b0', fontSize: '13px', marginBottom: '12px' }}>
           {safeT?.buscarClienteOuDigitar || 'Selecione um cliente cadastrado ou digite o nome manualmente.'}
         </p>
         <input
@@ -458,8 +458,8 @@ export function PedidoOrcamentosAvulsoContent({
                 style={{
                   padding: '12px 15px',
                   marginBottom: '8px',
-                  backgroundColor: clienteSelecionado?.id === cliente.id ? 'rgba(0, 100, 255, 0.2)' : '#2a2a2a',
-                  border: `1px solid ${clienteSelecionado?.id === cliente.id ? 'rgba(0, 100, 255, 0.5)' : 'rgba(0, 255, 0, 0.2)'}`,
+                  backgroundColor: clienteSelecionado?.id === cliente.id ? 'rgba(0, 100, 255, 0.2)' : '#1e1e1e',
+                  border: `1px solid ${clienteSelecionado?.id === cliente.id ? 'rgba(0, 100, 255, 0.5)' : 'rgba(0, 200, 83, 0.2)'}`,
                   borderRadius: '6px',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
@@ -476,7 +476,7 @@ export function PedidoOrcamentosAvulsoContent({
           )}
         </div>
         <div style={{ marginTop: '10px' }}>
-          <label style={{ color: '#999', fontSize: '13px', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>
+          <label style={{ color: '#b0b0b0', fontSize: '13px', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>
             {safeT?.ouNomeManualCliente || 'Ou nome do cliente (avulso)'}
           </label>
           <input
@@ -491,8 +491,8 @@ export function PedidoOrcamentosAvulsoContent({
           />
         </div>
         {(clienteSelecionado || clienteNomeManual) && (
-          <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-            <strong style={{ color: '#00ff00' }}>{safeT?.clienteSelecionado || 'Cliente'}:</strong> {nomeClienteExibido}
+          <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#222', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+            <strong style={{ color: '#00c853' }}>{safeT?.clienteSelecionado || 'Cliente'}:</strong> {nomeClienteExibido}
           </div>
         )}
       </div>
@@ -500,7 +500,7 @@ export function PedidoOrcamentosAvulsoContent({
       {/* Equipamento */}
       <div style={blockStyle}>
         <h3 style={labelStyle}>{safeT?.equipamento || 'Equipamento'}</h3>
-        <p style={{ color: '#999', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase' }}>
+        <p style={{ color: '#b0b0b0', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase' }}>
           {safeT?.equipamentoDescPedido || 'Se o cliente for cadastrado, escolha um equipamento ou descreva manualmente.'}
         </p>
         {equipamentosDoCliente.length > 0 && (
@@ -515,13 +515,13 @@ export function PedidoOrcamentosAvulsoContent({
                 style={{
                   padding: '12px',
                   marginBottom: '8px',
-                  backgroundColor: equipamentoSelecionado === eq ? 'rgba(0, 255, 0, 0.15)' : '#2a2a2a',
-                  border: `1px solid ${equipamentoSelecionado === eq ? 'rgba(0, 255, 0, 0.5)' : 'rgba(0, 255, 0, 0.2)'}`,
+                  backgroundColor: equipamentoSelecionado === eq ? 'rgba(0, 200, 83, 0.15)' : '#1e1e1e',
+                  border: `1px solid ${equipamentoSelecionado === eq ? 'rgba(0, 200, 83, 0.5)' : 'rgba(0, 200, 83, 0.2)'}`,
                   borderRadius: '6px',
                   cursor: 'pointer'
                 }}
               >
-                <div style={{ color: '#00ff00', fontWeight: 'bold' }}>
+                <div style={{ color: '#00c853', fontWeight: 'bold' }}>
                   {eq.tipoEquipamento} {eq.modelo && `- ${eq.modelo}`}
                 </div>
                 <div style={{ fontSize: '12px', color: '#ccc' }}>
@@ -531,7 +531,7 @@ export function PedidoOrcamentosAvulsoContent({
             ))}
           </div>
         )}
-        <label style={{ color: '#999', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+        <label style={{ color: '#b0b0b0', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
           {safeT?.descricaoManualEquipamento || 'Descrição manual do equipamento (opcional)'}
         </label>
         <input
@@ -545,8 +545,8 @@ export function PedidoOrcamentosAvulsoContent({
           style={inputStyle}
         />
         {(equipamentoSelecionado || equipamentoManual) && (
-          <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-            <strong style={{ color: '#00ff00' }}>{safeT?.equipamento || 'Equipamento'}:</strong>{' '}
+          <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#222', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+            <strong style={{ color: '#00c853' }}>{safeT?.equipamento || 'Equipamento'}:</strong>{' '}
             {equipamentoSelecionado
               ? `${equipamentoSelecionado.tipoEquipamento} ${equipamentoSelecionado.modelo || ''} - ${equipamentoSelecionado.marca}`
               : equipamentoManual}
@@ -557,7 +557,7 @@ export function PedidoOrcamentosAvulsoContent({
       {/* Adicionar peças */}
       <div style={blockStyle}>
         <h3 style={labelStyle}>{safeT?.adicionarPecas || 'Adicionar peças'}</h3>
-        <p style={{ color: '#999', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase' }}>
+        <p style={{ color: '#b0b0b0', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase' }}>
           {safeT?.adicionarPecasDesc || 'Busque na Biblioteca de Peças por código/nome ou digite o código manualmente.'}
         </p>
         {!mostrarFormPeca ? (
@@ -567,10 +567,10 @@ export function PedidoOrcamentosAvulsoContent({
               onClick={() => { setMostrarFormPeca(true); setModoPeca('biblioteca'); setBuscaPeca(''); }}
               style={{
                 padding: '10px 18px',
-                backgroundColor: 'rgba(0, 255, 0, 0.15)',
-                border: '1px solid rgba(0, 255, 0, 0.5)',
+                backgroundColor: 'rgba(0, 200, 83, 0.15)',
+                border: '1px solid rgba(0, 200, 83, 0.5)',
                 borderRadius: '8px',
-                color: '#00ff00',
+                color: '#00c853',
                 cursor: 'pointer',
                 fontWeight: 'bold',
                 textTransform: 'uppercase'
@@ -596,7 +596,7 @@ export function PedidoOrcamentosAvulsoContent({
             </button>
           </div>
         ) : (
-          <div style={{ padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)', marginBottom: '15px' }}>
+          <div style={{ padding: '15px', backgroundColor: '#121212', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.3)', marginBottom: '15px' }}>
             {modoPeca === 'biblioteca' && (
               <>
                 <label style={{ color: '#ccc', display: 'block', marginBottom: '8px' }}>{safeT?.buscarPorCodigoOuNome || safeT?.buscarPorCodigo || 'Buscar por código ou nome'}</label>
@@ -628,11 +628,11 @@ export function PedidoOrcamentosAvulsoContent({
                         {peca.imagem ? (
                           <img src={peca.imagem} alt="" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }} />
                         ) : (
-                          <div style={{ width: 48, height: 48, backgroundColor: '#333', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>—</div>
+                          <div style={{ width: 48, height: 48, backgroundColor: '#333', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#909090' }}>—</div>
                         )}
                         <div style={{ flex: 1 }}>
                           <div style={{ color: '#fff', fontWeight: 'bold' }}>{peca.nome}</div>
-                          <div style={{ color: '#999', fontSize: '12px' }}>{peca.codigo}</div>
+                          <div style={{ color: '#b0b0b0', fontSize: '12px' }}>{peca.codigo}</div>
                         </div>
                       </div>
                     ))
@@ -669,7 +669,7 @@ export function PedidoOrcamentosAvulsoContent({
                 <button
                   type="button"
                   onClick={adicionarPecaManual}
-                  style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', borderRadius: '6px', color: '#00ff00', cursor: 'pointer', fontWeight: 'bold' }}
+                  style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 200, 83, 0.2)', border: '1px solid rgba(0, 200, 83, 0.5)', borderRadius: '6px', color: '#00c853', cursor: 'pointer', fontWeight: 'bold' }}
                 >
                   {safeT?.adicionar || 'Adicionar'}
                 </button>
@@ -688,7 +688,7 @@ export function PedidoOrcamentosAvulsoContent({
         {/* Lista de peças do pedido */}
         {pecasPedido.length > 0 && (
           <div style={{ marginTop: '20px' }}>
-            <h4 style={{ color: '#00ff00', marginBottom: '12px', fontSize: '15px', textTransform: 'uppercase' }}>{safeT?.pecasNoPedido || 'Peças no pedido'}</h4>
+            <h4 style={{ color: '#00c853', marginBottom: '12px', fontSize: '15px', textTransform: 'uppercase' }}>{safeT?.pecasNoPedido || 'Peças no pedido'}</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {pecasPedido.map((p) => (
                 <div
@@ -700,17 +700,17 @@ export function PedidoOrcamentosAvulsoContent({
                     padding: '12px 15px',
                     backgroundColor: '#222',
                     borderRadius: '8px',
-                    border: '1px solid rgba(0, 255, 0, 0.2)'
+                    border: '1px solid rgba(0, 200, 83, 0.2)'
                   }}
                 >
                   {p.imagem ? (
                     <img src={p.imagem} alt={p.nome} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6 }} />
                   ) : (
-                    <div style={{ width: 56, height: 56, backgroundColor: '#333', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '11px' }}>—</div>
+                    <div style={{ width: 56, height: 56, backgroundColor: '#333', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#909090', fontSize: '11px' }}>—</div>
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ color: '#fff', fontWeight: 'bold' }}>{p.nome}</div>
-                    <div style={{ color: '#999', fontSize: '12px' }}>{p.codigo}</div>
+                    <div style={{ color: '#b0b0b0', fontSize: '12px' }}>{p.codigo}</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <button
@@ -720,7 +720,7 @@ export function PedidoOrcamentosAvulsoContent({
                     >
                       −
                     </button>
-                    <span style={{ minWidth: 28, textAlign: 'center', color: '#00ff00', fontWeight: 'bold' }}>{p.quantidade}</span>
+                    <span style={{ minWidth: 28, textAlign: 'center', color: '#00c853', fontWeight: 'bold' }}>{p.quantidade}</span>
                     <button
                       type="button"
                       onClick={() => alterarQuantidadePeca(p.id, 1)}
@@ -743,9 +743,9 @@ export function PedidoOrcamentosAvulsoContent({
         )}
 
         {/* Opção: Gerar com nome do cliente ou NONATO SERVICE + Gerar pedido + Código */}
-        <div style={{ ...blockStyle, marginTop: '24px', borderColor: 'rgba(0, 255, 0, 0.35)' }}>
+        <div style={{ ...blockStyle, marginTop: '24px', borderColor: 'rgba(0, 200, 83, 0.35)' }}>
           <h3 style={labelStyle}>{safeT?.gerarDocumentoComo || 'Ao gerar documento'}</h3>
-          <p style={{ color: '#999', fontSize: '13px', marginBottom: '16px', textTransform: 'uppercase' }}>
+          <p style={{ color: '#b0b0b0', fontSize: '13px', marginBottom: '16px', textTransform: 'uppercase' }}>
             {safeT?.desejaGerarComNomeClienteOuNonato || 'Deseja gerar com o nome do cliente ou com o nome da NONATO SERVICE? Se escolher NONATO SERVICE, no documento enviado ao revendedor aparecerá apenas o nome NONATO SERVICE; o resto mantém-se (equipamento, peças).'}
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
@@ -755,7 +755,7 @@ export function PedidoOrcamentosAvulsoContent({
                 name="emitirComo"
                 checked={emitirComoCliente === 'cliente'}
                 onChange={() => setEmitirComoCliente('cliente')}
-                style={{ accentColor: '#00ff00' }}
+                style={{ accentColor: '#00c853' }}
               />
               <span style={{ textTransform: 'uppercase' }}>{safeT?.gerarComNomeCliente || 'Com nome do cliente'}</span>
             </label>
@@ -765,7 +765,7 @@ export function PedidoOrcamentosAvulsoContent({
                 name="emitirComo"
                 checked={emitirComoCliente === 'nonato-service'}
                 onChange={() => setEmitirComoCliente('nonato-service')}
-                style={{ accentColor: '#00ff00' }}
+                style={{ accentColor: '#00c853' }}
               />
               <span style={{ textTransform: 'uppercase' }}>{safeT?.gerarComNomeNonatoService || 'Com nome da NONATO SERVICE'}</span>
             </label>
@@ -793,10 +793,10 @@ export function PedidoOrcamentosAvulsoContent({
               onClick={handleGerarPedido}
               style={{
                 padding: '14px 24px',
-                backgroundColor: 'rgba(0, 255, 0, 0.2)',
-                border: '1px solid rgba(0, 255, 0, 0.6)',
+                backgroundColor: 'rgba(0, 200, 83, 0.2)',
+                border: '1px solid rgba(0, 200, 83, 0.6)',
                 borderRadius: '8px',
-                color: '#00ff00',
+                color: '#00c853',
                 cursor: 'pointer',
                 fontWeight: 'bold',
                 fontSize: '15px',
@@ -810,8 +810,8 @@ export function PedidoOrcamentosAvulsoContent({
             {safeT?.pedidoOrcamentoPreviewHint || 'Use «Visualizar PDF» para ver o documento antes de gerar. Depois imprima ou guarde como PDF no browser.'}
           </p>
           {codigoUltimoGerado && (
-            <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#1a2a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
-              <div style={{ color: '#00ff00', fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase' }}>
+            <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#1a2a1a', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.3)' }}>
+              <div style={{ color: '#00c853', fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase' }}>
                 {safeT?.codigoOrcamento || 'Código do orçamento'}: {codigoUltimoGerado}
               </div>
               <div style={{ fontSize: '12px', color: '#aaa', textTransform: 'uppercase' }}>
@@ -830,24 +830,24 @@ export function PedidoOrcamentosAvulsoContent({
                     key={p.codigo}
                     style={{
                       padding: '14px 16px',
-                      backgroundColor: '#1a1a1a',
+                      backgroundColor: '#121212',
                       borderRadius: '8px',
-                      border: '1px solid rgba(0, 255, 0, 0.25)'
+                      border: '1px solid rgba(0, 200, 83, 0.25)'
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                        <span style={{ color: '#00ff00', fontWeight: '600', fontSize: '13px' }}>{p.codigo}</span>
+                        <span style={{ color: '#00c853', fontWeight: '600', fontSize: '13px' }}>{p.codigo}</span>
                         <span style={{ color: '#ccc', fontSize: '13px' }}>{p.emitirComoCliente === 'nonato-service' ? (safeT?.nomeNonatoService || 'NONATO SERVICE') : p.clienteNomeReal}</span>
-                        <span style={{ color: '#999', fontSize: '12px' }}>{new Date(p.dataGeracao).toLocaleDateString('pt-BR')}</span>
+                        <span style={{ color: '#b0b0b0', fontSize: '12px' }}>{new Date(p.dataGeracao).toLocaleDateString('pt-BR')}</span>
                         <span
                           style={{
                             padding: '3px 8px',
                             borderRadius: '4px',
                             fontSize: '11px',
                             fontWeight: '600',
-                            backgroundColor: p.status === 'entregue' ? 'rgba(0, 255, 0, 0.2)' : p.status === 'aprovado' ? 'rgba(0, 200, 100, 0.2)' : p.status === 'concluido' ? 'rgba(0, 150, 255, 0.2)' : p.status === 'cancelado' ? 'rgba(255, 68, 68, 0.2)' : 'rgba(150, 150, 150, 0.2)',
-                            border: p.status === 'entregue' ? '1px solid rgba(0, 255, 0, 0.6)' : p.status === 'aprovado' ? '1px solid rgba(0, 200, 100, 0.6)' : p.status === 'concluido' ? '1px solid rgba(0, 150, 255, 0.6)' : p.status === 'cancelado' ? '1px solid rgba(255, 68, 68, 0.6)' : '1px solid rgba(150, 150, 150, 0.4)',
+                            backgroundColor: p.status === 'entregue' ? 'rgba(0, 200, 83, 0.2)' : p.status === 'aprovado' ? 'rgba(0, 200, 100, 0.2)' : p.status === 'concluido' ? 'rgba(0, 150, 255, 0.2)' : p.status === 'cancelado' ? 'rgba(255, 68, 68, 0.2)' : 'rgba(150, 150, 150, 0.2)',
+                            border: p.status === 'entregue' ? '1px solid rgba(0, 200, 83, 0.6)' : p.status === 'aprovado' ? '1px solid rgba(0, 200, 100, 0.6)' : p.status === 'concluido' ? '1px solid rgba(0, 150, 255, 0.6)' : p.status === 'cancelado' ? '1px solid rgba(255, 68, 68, 0.6)' : '1px solid rgba(150, 150, 150, 0.4)',
                             color: p.status === 'cancelado' ? '#ff8888' : '#fff'
                           }}
                         >
@@ -869,7 +869,7 @@ export function PedidoOrcamentosAvulsoContent({
                           if (saveData) await saveData(PEDIDOS_AVULSO_KEY, pedidosGerados)
                           alert(safeT?.orcamentoSalvo || 'Orçamento salvo com sucesso!')
                         }}
-                        style={{ padding: '6px 12px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.6)', borderRadius: '6px', color: '#00ff00', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
+                        style={{ padding: '6px 12px', backgroundColor: 'rgba(0, 200, 83, 0.2)', border: '1px solid rgba(0, 200, 83, 0.6)', borderRadius: '6px', color: '#00c853', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
                       >
                         💾 {safeT?.guardar || 'Guardar'}
                       </button>
@@ -916,8 +916,8 @@ export function PedidoOrcamentosAvulsoContent({
                             fontSize: '12px',
                             fontWeight: '600',
                             cursor: 'pointer',
-                            backgroundColor: p.status === status ? (status === 'entregue' ? 'rgba(0, 255, 0, 0.35)' : status === 'aprovado' ? 'rgba(0, 200, 100, 0.35)' : status === 'concluido' ? 'rgba(0, 150, 255, 0.35)' : 'rgba(255, 68, 68, 0.35)') : 'rgba(100, 100, 100, 0.2)',
-                            border: p.status === status ? (status === 'entregue' ? '1px solid rgba(0, 255, 0, 0.8)' : status === 'aprovado' ? '1px solid rgba(0, 200, 100, 0.8)' : status === 'concluido' ? '1px solid rgba(0, 150, 255, 0.8)' : '1px solid rgba(255, 68, 68, 0.8)') : '1px solid rgba(150, 150, 150, 0.5)',
+                            backgroundColor: p.status === status ? (status === 'entregue' ? 'rgba(0, 200, 83, 0.35)' : status === 'aprovado' ? 'rgba(0, 200, 100, 0.35)' : status === 'concluido' ? 'rgba(0, 150, 255, 0.35)' : 'rgba(255, 68, 68, 0.35)') : 'rgba(100, 100, 100, 0.2)',
+                            border: p.status === status ? (status === 'entregue' ? '1px solid rgba(0, 200, 83, 0.8)' : status === 'aprovado' ? '1px solid rgba(0, 200, 100, 0.8)' : status === 'concluido' ? '1px solid rgba(0, 150, 255, 0.8)' : '1px solid rgba(255, 68, 68, 0.8)') : '1px solid rgba(150, 150, 150, 0.5)',
                             color: p.status === status ? '#fff' : '#aaa'
                           }}
                         >

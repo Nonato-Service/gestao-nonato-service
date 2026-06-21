@@ -235,9 +235,9 @@ export function InstallPromptProvider({ children }: { children: ReactNode }) {
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: '#1a1a1a',
+                background: '#121212',
                 borderRadius: 16,
-                border: '2px solid rgba(0, 255, 0, 0.5)',
+                border: '2px solid rgba(0, 200, 83, 0.5)',
                 padding: 24,
                 maxWidth: 400,
                 width: '100%',
@@ -245,12 +245,12 @@ export function InstallPromptProvider({ children }: { children: ReactNode }) {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <h3 style={{ margin: 0, color: '#00ff00', fontSize: 18 }}>📲 {t.installApp}</h3>
+                <h3 style={{ margin: 0, color: '#00c853', fontSize: 18 }}>📲 {t.installApp}</h3>
                 <button
                   type="button"
                   onClick={() => setShowCard(false)}
                   aria-label={t.close}
-                  style={{ background: 'transparent', border: 'none', color: '#999', fontSize: 24, cursor: 'pointer', lineHeight: 1 }}
+                  style={{ background: 'transparent', border: 'none', color: '#b0b0b0', fontSize: 24, cursor: 'pointer', lineHeight: 1 }}
                 >
                   ×
                 </button>
@@ -278,7 +278,7 @@ export function InstallPromptProvider({ children }: { children: ReactNode }) {
                 </button>
               ) : (
                 <>
-                  <p style={{ color: '#00ff00', fontSize: 13, marginBottom: 8, fontWeight: 600 }}>{t.addToHome}</p>
+                  <p style={{ color: '#00c853', fontSize: 13, marginBottom: 8, fontWeight: 600 }}>{t.addToHome}</p>
                   {isMobileOrTablet ? (
                     isIos ? (
                       <>

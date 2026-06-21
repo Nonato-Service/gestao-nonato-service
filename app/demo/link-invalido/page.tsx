@@ -24,7 +24,7 @@ export default function DemoLinkInvalidoPage() {
           style={{
             display: 'inline-block',
             padding: '12px 24px',
-            background: '#00ff00',
+            background: '#00c853',
             color: '#000',
             borderRadius: '8px',
             textDecoration: 'none',

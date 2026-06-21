@@ -1,0 +1,32 @@
+---
+description: Nunca apagar dados do utilizador; proteger cadastros em alterações e deploy
+alwaysApply: true
+---
+
+# Regra: Proteger Dados do Utilizador
+
+No projeto **Gestão Técnica Nonato Service**, **nunca** pode desaparecer informação que o utilizador já tinha guardado (clientes, equipamentos, relatórios, serviços, etc.) por causa de uma alteração de código, arranque da app ou deploy.
+
+## Proibições
+
+1. **Nunca** apagar ou sobrescrever cadastros críticos com listas/objetos vazios (`[]`, `{}`) no servidor ou no `localStorage`.
+2. **Nunca** fazer `wipe` / `removeItem` em chaves `nonato-*` de cadastro sem confirmação explícita do utilizador (ex.: botão «Carregar do servidor»).
+3. **Nunca** gravar snapshot offline ou enviar «Enviar tudo ao servidor» se o payload tiver **menos** cadastro do que o backup de segurança ou a cópia anterior.
+4. **Nunca** alterar lógica de arranque (`loadAllData`, `getData`, sync) sem chamar `backupCriticalCadastroToIdb()` no início e considerar `restoreCriticalCadastroFromIdbIfNeeded()`.
+
+## Chaves críticas
+
+Usar sempre `NONATO_CRITICAL_CADASTRO_KEYS` em `app/lib/criticalCadastroKeys.ts` e funções em `app/utils/cadastroSafety.ts`.
+
+## Ao implementar
+
+1. Novos textos → **6 idiomas** (`idiomas-6.mdc`).
+2. Antes de push ao servidor → `omitEmptyProtectedKeysForServerPush` e `NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE`.
+3. Deploy Railway → volume em `/app/data` e `DATA_DIR=/app/data` (ver DEPLOY-RAILWAY.md).
+4. Testar mentalmente: «Se o servidor vier vazio após deploy, o aparelho repõe os dados?» — tem de ser **sim**.
+
+## Utilitários
+
+- `app/utils/cadastroSafety.ts` — backup/recuperação
+- `app/utils/dataStorage.ts` — fila offline, bloqueio de overwrite vazio
+- `app/lib/criticalCadastroKeys.ts` — lista de chaves protegidas

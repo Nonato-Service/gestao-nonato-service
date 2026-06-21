@@ -62,7 +62,7 @@ export function AdminClientePrioritarioSection({
               </div>
 
               {clientePrioritario && !showClientePrioritarioForm ? (
-                <div style={{ padding: '20px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
+                <div style={{ padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', marginBottom: '20px' }}>
                     <div>
                       <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.nomeEmpresa || 'Nome da Empresa'}</strong>
@@ -113,7 +113,7 @@ export function AdminClientePrioritarioSection({
                   </div>
                 </div>
               ) : showClientePrioritarioForm ? (
-                <div style={{ border: '1px solid rgba(255, 215, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#222222' }}>
+                <div style={{ border: '1px solid rgba(255, 215, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#1e1e1e' }}>
                   <h3 style={{ marginBottom: '15px', color: '#ffd700' }}>{editingClientePrioritario ? (safeT?.editClientePrioritario || 'Editar Cliente Prioritário') : (safeT?.addClientePrioritario || 'Adicionar Cliente Prioritário')}</h3>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>

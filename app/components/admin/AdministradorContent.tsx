@@ -102,9 +102,9 @@ export function AdministradorContent({
                   padding: '6px 8px',
                   fontSize: '16px',
                   backgroundColor: 'transparent',
-                  border: '1px solid rgba(0, 255, 0, 0.3)',
+                  border: '1px solid rgba(0, 200, 83, 0.3)',
                   borderRadius: '4px',
-                  color: '#00ff00',
+                  color: '#00c853',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                   display: 'flex',
@@ -115,12 +115,12 @@ export function AdministradorContent({
                 }}
                 title={safeT?.voltar || 'Voltar'}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
-                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
+                  e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.1)'
+                  e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.5)'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent'
-                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
+                  e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.3)'
                 }}
               >
                 ↶

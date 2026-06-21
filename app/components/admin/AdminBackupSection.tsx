@@ -63,7 +63,7 @@ export function AdminBackupSection({
                 {safeT?.backupRestore || 'BACKUP E SEGURANÇA'}
               </h3>
               {!isDemoMode && (
-                <p style={{ padding: '10px 12px', marginBottom: '15px', backgroundColor: 'rgba(0, 150, 0, 0.12)', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '6px', color: '#90ee90', fontSize: '12px' }}>
+                <p style={{ padding: '10px 12px', marginBottom: '15px', backgroundColor: 'rgba(0, 150, 0, 0.12)', border: '1px solid rgba(0, 200, 83, 0.35)', borderRadius: '6px', color: '#90ee90', fontSize: '12px' }}>
                   <strong>Para não perder o código:</strong> use «Descarregar backup (ZIP)» e guarde no seu PC.
                 </p>
               )}
@@ -73,7 +73,7 @@ export function AdminBackupSection({
                 </p>
               )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', opacity: isDemoMode ? 0.7 : 1, pointerEvents: isDemoMode ? 'none' : 'auto' }}>
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupTitle || 'Backup Completo do Sistema'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '10px', lineHeight: 1.45 }}>
                     {safeT?.backupDescription || 'Crie um backup completo de todos os dados do sistema'} O JSON inclui relatórios (dias de trabalho), clientes, peças, agenda e fechamentos — guarde fora deste PC.
@@ -86,7 +86,7 @@ export function AdminBackupSection({
                   </button>
                 </div>
 
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
+                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>{safeT?.restoreTitle || 'Restaurar Backup'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
                     Escolha o ficheiro <strong>.json</strong> que descarregou com «Criar Backup» (ex.: backup-nonato-service-2026-06-05.json).
@@ -115,7 +115,7 @@ export function AdminBackupSection({
                   </label>
                 </div>
 
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupCodigoTitle || 'Backup do Código do Programa'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupCodigoDescription || 'Faça backup de TODOS os arquivos do código fonte do programa'}</p>
                   <p style={{ fontSize: '12px', marginBottom: '8px', opacity: 0.8 }}><strong>Pasta dos backups:</strong> {codeBackupsFolder || (isDemoMode ? '—' : 'Atualize a lista.')}</p>
@@ -133,7 +133,7 @@ export function AdminBackupSection({
   return (
             <div className="admin-section admin-section--emerald">
               {!isDemoMode && (
-                <p style={{ padding: '10px 12px', marginBottom: '15px', backgroundColor: 'rgba(0, 150, 0, 0.12)', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '6px', color: '#90ee90', fontSize: '12px' }}>
+                <p style={{ padding: '10px 12px', marginBottom: '15px', backgroundColor: 'rgba(0, 150, 0, 0.12)', border: '1px solid rgba(0, 200, 83, 0.35)', borderRadius: '6px', color: '#90ee90', fontSize: '12px' }}>
                   <strong>Para não perder o código:</strong> use «Descarregar backup (ZIP)» e guarde o ficheiro no seu PC. Assim o código fica seguro mesmo que o servidor seja reinstalado.
                 </p>
               )}
@@ -143,12 +143,12 @@ export function AdminBackupSection({
                 </p>
               )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', opacity: isDemoMode ? 0.7 : 1, pointerEvents: isDemoMode ? 'none' : 'auto' }}>
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupTitle || 'Backup Completo do Sistema'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '10px', lineHeight: 1.45 }}>
                     {safeT?.backupDescription || 'Crie um backup completo de todos os dados do sistema'} O ficheiro JSON inclui relatórios de serviço (dias de trabalho), clientes, equipamentos, fornecedores, peças, categorias, agenda e fechamentos — guarde cópias fora deste PC (pen ou nuvem).
                   </p>
-                  <p style={{ fontSize: '11px', opacity: 0.62, marginBottom: '12px', lineHeight: 1.45, padding: '8px 10px', backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.12)' }}>
+                  <p style={{ fontSize: '11px', opacity: 0.62, marginBottom: '12px', lineHeight: 1.45, padding: '8px 10px', backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: '6px', border: '1px solid rgba(0,200,83,0.12)' }}>
                     <strong style={{ color: '#9be7ff' }}>Dupla proteção recomendada:</strong> (1) dados em JSON com «Criar Backup» + cópias automáticas abaixo; (2) código da aplicação com «Descarregar backup (ZIP)» / backup no servidor — são coisas diferentes; use as duas.
                   </p>
                   <button className="btn-primary" onClick={handleCreateBackup} style={{ padding: '8px 15px' }} disabled={isDemoMode}>
@@ -156,7 +156,7 @@ export function AdminBackupSection({
                   </button>
                 </div>
 
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
+                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>{safeT?.restoreTitle || 'Restaurar Backup'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
                     {safeT?.restoreDescription || 'Restaure todos os dados a partir de um arquivo de backup'} Se fez «Criar Backup» e guardou o ficheiro <strong>.json</strong> no PC (ex.: ontem), use o botão abaixo para o escolher. Repõe relatórios, clientes, peças, agenda e fechamentos no servidor e neste aparelho.
@@ -185,7 +185,7 @@ export function AdminBackupSection({
                   </label>
                 </div>
 
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.28)' }}>
+                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.28)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>Cópias automáticas periódicas (navegador)</strong>
                   <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
                     Além do instantâneo ao abrir a página e após guardar relatórios, pode gravar até seis instantâneos <strong>de X em X minutos</strong> neste computador. Não substitui o JSON descarregado para a pen, mas ajuda a recuperar erros recentes.
@@ -213,7 +213,7 @@ export function AdminBackupSection({
                         setAutoBackupInterval(n)
                         void saveData('nonato-auto-backup-interval', String(n))
                       }}
-                      style={{ padding: '6px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}
+                      style={{ padding: '6px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
                     >
                       <option value={15}>15 minutos</option>
                       <option value={30}>30 minutos</option>
@@ -224,7 +224,7 @@ export function AdminBackupSection({
                   </div>
                 </div>
 
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
+                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>Recuperar dados — cópias automáticas recentes</strong>
                   <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
                     O sistema guarda até seis instantâneos no navegador (inclui relatórios de serviço e clientes). Se perdeu linhas de dias de trabalho, experimente uma data <strong>anterior</strong> ao problema. A restauração repõe também no <strong>servidor</strong> (precisa de ligação).
@@ -276,7 +276,7 @@ export function AdminBackupSection({
                   )}
                 </div>
 
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)', borderLeft: '4px solid #00ff00' }}>
+                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)', borderLeft: '4px solid #00c853' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupCodigoTitle || 'Backup do Código do Programa'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupCodigoDescription || 'Faça backup de TODOS os arquivos do código fonte do programa'}</p>
                   <button className="btn-primary" onClick={handleBackupCodigo} style={{ padding: '8px 15px', marginRight: '8px', marginBottom: '8px' }} disabled={isDemoMode}>
@@ -287,7 +287,7 @@ export function AdminBackupSection({
                   </button>
                 </div>
 
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(255, 165, 0, 0.3)' }}>
+                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(255, 165, 0, 0.3)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px', color: '#ffa500' }}>{safeT?.restoreCodeTitle || '⚠️ RESTAURAR CÓDIGO DO PROGRAMA'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>
                     {safeT?.restoreCodeDescription || 'Restaure o código do programa a partir de um backup anterior. Esta operação substituirá TODOS os arquivos atuais pelos arquivos do backup selecionado.'}

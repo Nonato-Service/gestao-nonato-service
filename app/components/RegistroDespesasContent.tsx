@@ -328,11 +328,11 @@ export function RegistroDespesasContent({
       <div style={{
         marginBottom: '24px',
         padding: '24px',
-        background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.06) 0%, rgba(0, 0, 0, 0.9) 100%)',
+        background: 'linear-gradient(135deg, rgba(0, 200, 83, 0.06) 0%, rgba(0, 0, 0, 0.9) 100%)',
         borderRadius: '12px',
-        border: '2px solid rgba(0, 255, 0, 0.3)'
+        border: '2px solid rgba(0, 200, 83, 0.3)'
       }}>
-        <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', color: '#00ff00', letterSpacing: '2px' }}>
+        <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', color: '#00c853', letterSpacing: '2px' }}>
           {safeT?.registroDespesasTitle || 'REGISTRO DE DESPESAS'}
         </h1>
         <p style={{ margin: 0, opacity: 0.9, color: '#ccc' }}>
@@ -370,7 +370,7 @@ export function RegistroDespesasContent({
               style={{
                 width: '100%',
                 padding: '8px',
-                backgroundColor: '#2a2a2a',
+                backgroundColor: '#1e1e1e',
                 color: '#fff',
                 border: '1px solid rgba(251, 191, 36, 0.35)',
                 borderRadius: '6px'
@@ -392,7 +392,7 @@ export function RegistroDespesasContent({
               style={{
                 width: '100%',
                 padding: '8px',
-                backgroundColor: '#2a2a2a',
+                backgroundColor: '#1e1e1e',
                 color: '#fff',
                 border: '1px solid rgba(251, 191, 36, 0.35)',
                 borderRadius: '6px',
@@ -440,14 +440,14 @@ export function RegistroDespesasContent({
       </div>
 
       {!docAtual ? (
-        <div style={{ backgroundColor: '#2a2a2a', borderRadius: '8px', padding: '24px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-          <h3 style={{ marginTop: 0, color: '#00ff00' }}>{safeT?.cliente || 'Cliente'} *</h3>
+        <div style={{ backgroundColor: '#1e1e1e', borderRadius: '8px', padding: '24px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+          <h3 style={{ marginTop: 0, color: '#00c853' }}>{safeT?.cliente || 'Cliente'} *</h3>
           <input
             type="text"
             placeholder={safeT?.buscarCliente || 'Buscar cliente...'}
             value={buscaCliente}
             onChange={(e) => setBuscaCliente(e.target.value)}
-            style={{ width: '100%', padding: '10px', marginBottom: '12px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+            style={{ width: '100%', padding: '10px', marginBottom: '12px', backgroundColor: '#121212', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
           />
           <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '20px' }}>
             {clientesFiltrados.map(c => (
@@ -459,8 +459,8 @@ export function RegistroDespesasContent({
                   marginBottom: '4px',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  backgroundColor: clienteSelecionado?.id === c.id ? 'rgba(0, 255, 0, 0.2)' : '#1a1a1a',
-                  border: clienteSelecionado?.id === c.id ? '2px solid #00ff00' : '1px solid #444'
+                  backgroundColor: clienteSelecionado?.id === c.id ? 'rgba(0, 200, 83, 0.2)' : '#121212',
+                  border: clienteSelecionado?.id === c.id ? '2px solid #00c853' : '1px solid #444'
                 }}
               >
                 {c.nomeEmpresa}
@@ -468,13 +468,13 @@ export function RegistroDespesasContent({
             ))}
           </div>
 
-          <h3 style={{ color: '#00ff00' }}>{safeT?.relatorioServico || 'Relatório de Serviço'} ({safeT?.opcional || 'opcional'})</h3>
+          <h3 style={{ color: '#00c853' }}>{safeT?.relatorioServico || 'Relatório de Serviço'} ({safeT?.opcional || 'opcional'})</h3>
           <input
             type="text"
             placeholder={safeT?.buscarRelatorio || 'Buscar relatório...'}
             value={buscaRelatorio}
             onChange={(e) => setBuscaRelatorio(e.target.value)}
-            style={{ width: '100%', padding: '10px', marginBottom: '12px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+            style={{ width: '100%', padding: '10px', marginBottom: '12px', backgroundColor: '#121212', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
           />
           <div style={{ maxHeight: '150px', overflowY: 'auto', marginBottom: '20px' }}>
             <div
@@ -484,8 +484,8 @@ export function RegistroDespesasContent({
                 marginBottom: '4px',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                backgroundColor: !relatorioSelecionado ? 'rgba(0, 255, 0, 0.2)' : '#1a1a1a',
-                border: !relatorioSelecionado ? '2px solid #00ff00' : '1px solid #444'
+                backgroundColor: !relatorioSelecionado ? 'rgba(0, 200, 83, 0.2)' : '#121212',
+                border: !relatorioSelecionado ? '2px solid #00c853' : '1px solid #444'
               }}
             >
               {safeT?.nenhumRelatorio || 'Nenhum relatório'}
@@ -499,8 +499,8 @@ export function RegistroDespesasContent({
                   marginBottom: '4px',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  backgroundColor: relatorioSelecionado?.id === r.id ? 'rgba(0, 255, 0, 0.2)' : '#1a1a1a',
-                  border: relatorioSelecionado?.id === r.id ? '2px solid #00ff00' : '1px solid #444'
+                  backgroundColor: relatorioSelecionado?.id === r.id ? 'rgba(0, 200, 83, 0.2)' : '#121212',
+                  border: relatorioSelecionado?.id === r.id ? '2px solid #00c853' : '1px solid #444'
                 }}
               >
                 {r.numero} - {r.cliente} ({new Date(r.data).toLocaleDateString('pt-BR')})
@@ -517,10 +517,10 @@ export function RegistroDespesasContent({
           </button>
         </div>
       ) : (
-        <div style={{ backgroundColor: '#2a2a2a', borderRadius: '8px', padding: '24px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+        <div style={{ backgroundColor: '#1e1e1e', borderRadius: '8px', padding: '24px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <strong style={{ color: '#00ff00' }}>{docAtual.clienteNome}</strong>
+              <strong style={{ color: '#00c853' }}>{docAtual.clienteNome}</strong>
               {docAtual.relatorioNumero && <span style={{ marginLeft: '12px', color: '#aaa' }}>| Relatório: {docAtual.relatorioNumero}</span>}
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -610,11 +610,11 @@ export function RegistroDespesasContent({
             <div style={{
               padding: '20px',
               marginBottom: '20px',
-              backgroundColor: '#1a1a1a',
+              backgroundColor: '#121212',
               borderRadius: '8px',
-              border: '1px solid rgba(0, 255, 0, 0.3)'
+              border: '1px solid rgba(0, 200, 83, 0.3)'
             }}>
-              <h4 style={{ marginTop: 0, color: '#00ff00' }}>{safeT?.novaDespesa || 'Nova Despesa'}</h4>
+              <h4 style={{ marginTop: 0, color: '#00c853' }}>{safeT?.novaDespesa || 'Nova Despesa'}</h4>
 
               <div style={{ marginBottom: '12px' }}>
                 <label>{safeT?.tipoDespesa || 'Tipo'}</label>
@@ -624,7 +624,7 @@ export function RegistroDespesasContent({
                     const s = despesasCadastradas.find(x => x.id === e.target.value)
                     setDespesaForm(prev => ({ ...prev, tipoId: e.target.value, tipoNome: s?.nome || '' }))
                   }}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.selecione || 'Selecione...'}</option>
                   {despesasCadastradas.map(s => (
@@ -641,7 +641,7 @@ export function RegistroDespesasContent({
                   step="0.01"
                   value={despesaForm.valor || ''}
                   onChange={(e) => setDespesaForm(prev => ({ ...prev, valor: parseFloat(e.target.value) || 0 }))}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
               </div>
 
@@ -652,7 +652,7 @@ export function RegistroDespesasContent({
                   value={despesaForm.descricao || ''}
                   onChange={(e) => setDespesaForm(prev => ({ ...prev, descricao: e.target.value }))}
                   placeholder={safeT?.descricaoPlaceholder || 'Ex: Combustível, refeição, peças...'}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
               </div>
 
@@ -661,7 +661,7 @@ export function RegistroDespesasContent({
                 <select
                   value={despesaForm.cartaoId || ''}
                   onChange={e => setDespesaForm(prev => ({ ...prev, cartaoId: e.target.value }))}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(251, 191, 36, 0.35)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(251, 191, 36, 0.35)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.registroDespesasCartaoNenhum || '— Não especificado —'}</option>
                   {cartoesEmpresa.map(c => (
@@ -679,7 +679,7 @@ export function RegistroDespesasContent({
                   value={despesaForm.codigoBarras || ''}
                   onChange={(e) => setDespesaForm(prev => ({ ...prev, codigoBarras: e.target.value }))}
                   placeholder={safeT?.escanearOuDigitar || 'Digite o código...'}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
               </div>
 
@@ -744,7 +744,7 @@ export function RegistroDespesasContent({
             </div>
           )}
 
-          <h4 style={{ color: '#00ff00', marginBottom: '12px' }}>{safeT?.despesasAdicionadas || 'Despesas adicionadas'}</h4>
+          <h4 style={{ color: '#00c853', marginBottom: '12px' }}>{safeT?.despesasAdicionadas || 'Despesas adicionadas'}</h4>
           {docAtual.despesas.length === 0 ? (
             <p style={{ color: '#888', fontStyle: 'italic' }}>{safeT?.nenhumaDespesaAinda || 'Nenhuma despesa ainda.'}</p>
           ) : (
@@ -757,7 +757,7 @@ export function RegistroDespesasContent({
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '12px',
-                    backgroundColor: '#1a1a1a',
+                    backgroundColor: '#121212',
                     borderRadius: '6px',
                     border: '1px solid #444'
                   }}
@@ -770,7 +770,7 @@ export function RegistroDespesasContent({
                       </span>
                     )}
                     {d.codigoBarras && <span style={{ marginLeft: '8px', color: '#888', fontSize: '12px' }}>| {d.codigoBarras}</span>}
-                    {d.fotos.length > 0 && <span style={{ marginLeft: '8px', color: '#00ff00' }}>📷 {d.fotos.length}</span>}
+                    {d.fotos.length > 0 && <span style={{ marginLeft: '8px', color: '#00c853' }}>📷 {d.fotos.length}</span>}
                   </div>
                   <button className="btn-danger" onClick={() => removerDespesa(d.id)} style={{ padding: '4px 8px', fontSize: '12px' }}>
                     {safeT?.delete || 'Excluir'}
@@ -1045,8 +1045,8 @@ export function RegistroDespesasContent({
       )}
 
       {documentos.length > 0 && (
-        <div style={{ marginTop: '32px', padding: '20px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-          <h3 style={{ marginTop: 0, color: '#00ff00' }}>{safeT?.documentosSalvos || 'Documentos salvos'}</h3>
+        <div style={{ marginTop: '32px', padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+          <h3 style={{ marginTop: 0, color: '#00c853' }}>{safeT?.documentosSalvos || 'Documentos salvos'}</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {documentos.map(doc => (
               <div
@@ -1056,7 +1056,7 @@ export function RegistroDespesasContent({
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   padding: '12px',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#121212',
                   borderRadius: '6px',
                   border: '1px solid #444'
                 }}

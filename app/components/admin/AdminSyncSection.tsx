@@ -50,10 +50,10 @@ export function AdminSyncSection({
                     </>
                   ) : (
                     <>
-                      <p style={{ fontSize: '12px', color: '#666', margin: '0 0 10px' }}>
+                      <p style={{ fontSize: '12px', color: '#909090', margin: '0 0 10px' }}>
                         {(safeT as any)?.syncAdminNoPending || 'Neste momento não há diferença de revisão pendente de decisão.'}
                       </p>
-                      <p style={{ fontSize: '11px', color: '#999', margin: '0 0 10px', lineHeight: 1.45 }}>
+                      <p style={{ fontSize: '11px', color: '#b0b0b0', margin: '0 0 10px', lineHeight: 1.45 }}>
                         {(safeT as any)?.syncAdminManualPullHint ||
                           'Se o PC tem os dados certos mas aqui parece desatualizado (revisão local «à frente» do servidor), use primeiro o botão abaixo — não use «Enviar tudo» a partir de um aparelho vazio ou velho.'}
                       </p>
@@ -120,7 +120,7 @@ export function AdminSyncSection({
                         ? (safeT as any)?.syncPushSending || 'A enviar…'
                         : (safeT as any)?.syncAdminForcePush || 'Enviar tudo o que está neste aparelho para o servidor'}
                     </button>
-                    <p style={{ fontSize: '10px', color: '#666', margin: '8px 0 0', lineHeight: 1.45 }}>
+                    <p style={{ fontSize: '10px', color: '#909090', margin: '8px 0 0', lineHeight: 1.45 }}>
                       {(safeT as any)?.syncAdminForcePushHint ||
                         'Confirmação pedida. Se o outro aparelho tem o que o servidor ainda não tem, faça o envio a partir desse aparelho, não a partir de um vazio (senão piora a divergência).'}
                     </p>

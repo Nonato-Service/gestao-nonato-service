@@ -78,28 +78,28 @@ export default function DemoWelcomePage() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
-        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
+        background: 'linear-gradient(135deg, #0a0a0a 0%, #121212 100%)',
       }}
     >
       <div
         style={{
           maxWidth: '480px',
           width: '100%',
-          background: '#1a1a1a',
-          border: '1px solid rgba(0, 255, 0, 0.3)',
+          background: '#121212',
+          border: '1px solid rgba(0, 200, 83, 0.3)',
           borderRadius: '16px',
           padding: '40px 32px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 255, 0, 0.08)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 200, 83, 0.08)',
           textAlign: 'center',
         }}
       >
         <div style={{ fontSize: '48px', marginBottom: '20px', lineHeight: 1 }}>🔒</div>
-        <h1 style={{ color: '#00ff00', fontSize: '1.5rem', fontWeight: 700, marginBottom: '16px' }}>
+        <h1 style={{ color: '#00c853', fontSize: '1.5rem', fontWeight: 700, marginBottom: '16px' }}>
           Gestor Demo — NONATO SERVICE
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '24px' }}>
           O seu acesso é válido por{' '}
-          <strong style={{ color: '#00ff00' }}>
+          <strong style={{ color: '#00c853' }}>
             {demoDays} dia{demoDays === 1 ? '' : 's'}
           </strong>{' '}
           após entrar.
@@ -121,14 +121,14 @@ export default function DemoWelcomePage() {
           style={{
             display: 'inline-block',
             padding: '14px 32px',
-            background: loading ? '#00aa00' : '#00ff00',
+            background: loading ? '#00aa00' : '#00c853',
             color: '#000',
             fontWeight: 700,
             fontSize: '1rem',
             borderRadius: '8px',
             border: 'none',
             cursor: loading ? 'wait' : 'pointer',
-            boxShadow: '0 4px 12px rgba(0, 255, 0, 0.3)',
+            boxShadow: '0 4px 12px rgba(0, 200, 83, 0.3)',
           }}
         >
           {loading ? 'A entrar…' : 'Aceitar e entrar'}

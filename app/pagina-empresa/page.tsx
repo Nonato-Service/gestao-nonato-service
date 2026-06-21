@@ -23,10 +23,10 @@ export default function PaginaEmpresa() {
             alignItems: 'center',
             gap: '8px',
             marginBottom: '32px',
-            color: '#00ff00',
+            color: '#00c853',
             textDecoration: 'none',
             fontSize: '14px',
-            border: '1px solid rgba(0, 255, 0, 0.5)',
+            border: '1px solid rgba(0, 200, 83, 0.5)',
             padding: '8px 16px',
             borderRadius: '8px',
           }}
@@ -39,9 +39,9 @@ export default function PaginaEmpresa() {
           style={{
             fontSize: 'clamp(1.5rem, 4vw, 2rem)',
             fontWeight: 700,
-            color: '#00ff00',
+            color: '#00c853',
             marginBottom: '8px',
-            textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
+            textShadow: '0 0 20px rgba(0, 200, 83, 0.3)',
           }}
         >
           NONATO SERVICE
@@ -59,14 +59,14 @@ export default function PaginaEmpresa() {
         {/* Blocos de serviços */}
         <section
           style={{
-            background: '#1a1a1a',
-            border: '1px solid rgba(0, 255, 0, 0.25)',
+            background: '#121212',
+            border: '1px solid rgba(0, 200, 83, 0.25)',
             borderRadius: '12px',
             padding: '20px 24px',
             marginBottom: '20px',
           }}
         >
-          <h2 style={{ color: '#00ff00', fontSize: '1.1rem', marginBottom: '12px', fontWeight: 600 }}>
+          <h2 style={{ color: '#00c853', fontSize: '1.1rem', marginBottom: '12px', fontWeight: 600 }}>
             Vendas de equipamentos de segunda mão
           </h2>
           <p style={{ color: '#ddd', lineHeight: 1.7, margin: 0 }}>
@@ -76,14 +76,14 @@ export default function PaginaEmpresa() {
 
         <section
           style={{
-            background: '#1a1a1a',
-            border: '1px solid rgba(0, 255, 0, 0.25)',
+            background: '#121212',
+            border: '1px solid rgba(0, 200, 83, 0.25)',
             borderRadius: '12px',
             padding: '20px 24px',
             marginBottom: '20px',
           }}
         >
-          <h2 style={{ color: '#00ff00', fontSize: '1.1rem', marginBottom: '12px', fontWeight: 600 }}>
+          <h2 style={{ color: '#00c853', fontSize: '1.1rem', marginBottom: '12px', fontWeight: 600 }}>
             Venda, manutenção e instalação
           </h2>
           <p style={{ color: '#ddd', lineHeight: 1.7, margin: 0 }}>
@@ -93,14 +93,14 @@ export default function PaginaEmpresa() {
 
         <section
           style={{
-            background: '#1a1a1a',
-            border: '1px solid rgba(0, 255, 0, 0.25)',
+            background: '#121212',
+            border: '1px solid rgba(0, 200, 83, 0.25)',
             borderRadius: '12px',
             padding: '20px 24px',
             marginBottom: '20px',
           }}
         >
-          <h2 style={{ color: '#00ff00', fontSize: '1.1rem', marginBottom: '12px', fontWeight: 600 }}>
+          <h2 style={{ color: '#00c853', fontSize: '1.1rem', marginBottom: '12px', fontWeight: 600 }}>
             Manutenção corretiva e preventiva
           </h2>
           <p style={{ color: '#ddd', lineHeight: 1.7, margin: 0 }}>
@@ -111,14 +111,14 @@ export default function PaginaEmpresa() {
         {/* Visita a trabalhos executados */}
         <section
           style={{
-            background: 'linear-gradient(135deg, #1a1a1a 0%, #0f1a0f 100%)',
-            border: '2px solid rgba(0, 255, 0, 0.4)',
+            background: 'linear-gradient(135deg, #121212 0%, #0f1a0f 100%)',
+            border: '2px solid rgba(0, 200, 83, 0.4)',
             borderRadius: '12px',
             padding: '24px 24px',
             marginBottom: '20px',
           }}
         >
-          <h2 style={{ color: '#00ff00', fontSize: '1.2rem', marginBottom: '12px', fontWeight: 700 }}>
+          <h2 style={{ color: '#00c853', fontSize: '1.2rem', marginBottom: '12px', fontWeight: 700 }}>
             Visita a trabalhos executados
           </h2>
           <p style={{ color: '#ddd', lineHeight: 1.7, margin: 0 }}>
@@ -128,8 +128,8 @@ export default function PaginaEmpresa() {
             style={{
               marginTop: '16px',
               padding: '16px',
-              background: 'rgba(0, 255, 0, 0.06)',
-              border: '1px dashed rgba(0, 255, 0, 0.35)',
+              background: 'rgba(0, 200, 83, 0.06)',
+              border: '1px dashed rgba(0, 200, 83, 0.35)',
               borderRadius: '8px',
               color: '#aaa',
               fontSize: '0.95rem',
@@ -139,7 +139,7 @@ export default function PaginaEmpresa() {
           </div>
         </section>
 
-        <p style={{ textAlign: 'center', color: '#666', fontSize: '13px', marginTop: '32px' }}>
+        <p style={{ textAlign: 'center', color: '#909090', fontSize: '13px', marginTop: '32px' }}>
           BOA TRADE — Gestão Técnica
         </p>
       </div>

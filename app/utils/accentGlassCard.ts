@@ -1,6 +1,6 @@
 /**
  * Mesmo padrão visual dos cartões «Recursos que Fazem a Diferença» na tela inicial
- * (page.tsx: fundo rgba(30,35,30,0.9), borda 1px rgba(0,255,0,0.2), hover borda 0.45).
+ * (page.tsx: fundo rgba(30,35,30,0.9), borda 1px rgba(0,200,83,0.2), hover borda 0.45).
  * Para outras cores (âmbar, etc.): mesma lógica de contraste, sem blur — como na splash.
  */
 
@@ -13,8 +13,8 @@ export const ACCENT_AMBER: AccentRgb = { r: 255, g: 170, b: 0 }
 
 /** Valores literais da tela inicial — cartões verdes */
 export const SPLASH_CARD_BG_GREEN = 'rgba(30, 35, 30, 0.9)'
-export const SPLASH_BORDER_GREEN = 'rgba(0, 255, 0, 0.2)'
-export const SPLASH_BORDER_GREEN_HOVER = 'rgba(0, 255, 0, 0.45)'
+export const SPLASH_BORDER_GREEN = 'rgba(0, 200, 83, 0.2)'
+export const SPLASH_BORDER_GREEN_HOVER = 'rgba(0, 200, 83, 0.45)'
 
 function isNeonGreen(a: AccentRgb): boolean {
   return a.r === 0 && a.g === 255 && a.b === 0
@@ -45,7 +45,7 @@ export function glassCardStyle(accent: AccentRgb, opts?: GlassCardOpts): CSSProp
       padding: pad,
       borderRadius: radius,
       backgroundColor: SPLASH_CARD_BG_GREEN,
-      border: `${bw} solid rgba(0, 255, 0, ${ba})`,
+      border: `${bw} solid rgba(0, 200, 83, ${ba})`,
       transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
       boxShadow: 'none',
     }

@@ -57,7 +57,7 @@ export function AdminUsersSection({
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {users.map(user => (
-                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)' }}>
                       <div>
                         <strong style={{ display: 'block', marginBottom: '5px' }}>{user.name}</strong>
                         <span style={{ fontSize: '12px', opacity: 0.7 }}>{user.email} • {user.role}</span>
@@ -86,7 +86,7 @@ export function AdminUsersSection({
               </div>
               
               {showUserForm && (
-                <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#222222' }}>
+                <div style={{ border: '1px solid rgba(0, 200, 83, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#1e1e1e' }}>
                   <h3 style={{ marginBottom: '15px' }}>{editingUser ? safeT?.editUser : safeT?.addUser}</h3>
                   
                   <div style={{ marginBottom: '15px' }}>
@@ -95,7 +95,7 @@ export function AdminUsersSection({
                       type="text"
                       value={userForm.name}
                       onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -105,7 +105,7 @@ export function AdminUsersSection({
                       type="email"
                       value={userForm.email}
                       onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -115,7 +115,7 @@ export function AdminUsersSection({
                       type="text"
                       value={userForm.role}
                       onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -128,7 +128,7 @@ export function AdminUsersSection({
                       value={userForm.password}
                       onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
                       placeholder={editingUser ? (safeT?.leaveEmptyToKeepPassword || 'Deixe vazio para manter a senha atual') : ''}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
 
@@ -137,7 +137,7 @@ export function AdminUsersSection({
                     <select
                       value={userForm.linkedProfileType}
                       onChange={(e) => setUserForm({ ...userForm, linkedProfileType: e.target.value as 'gestor' | 'tecnico' | '', linkedProfileId: '' })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     >
                       <option value="">Sem vínculo direto</option>
                       <option value="gestor">{safeT?.gestores || 'Gestores'}</option>
@@ -153,7 +153,7 @@ export function AdminUsersSection({
                       <select
                         value={userForm.linkedProfileId}
                         onChange={(e) => setUserForm({ ...userForm, linkedProfileId: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                       >
                         <option value="">{userForm.linkedProfileType === 'gestor' ? (safeT?.selecionarGestor || 'Selecionar Gestor') : (safeT?.selecionarTecnico || 'Selecionar Técnico')}</option>
                         {userForm.linkedProfileType === 'gestor'
@@ -171,7 +171,7 @@ export function AdminUsersSection({
                     </div>
                   )}
                   
-                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                       <input
                         type="checkbox"
@@ -179,7 +179,7 @@ export function AdminUsersSection({
                         onChange={(e) => setUserForm({ ...userForm, isAdmin: e.target.checked })}
                         style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                       />
-                      <strong style={{ color: '#00ff00' }}>{safeT?.administradorGeral || 'Administrador Geral'}</strong>
+                      <strong style={{ color: '#00c853' }}>{safeT?.administradorGeral || 'Administrador Geral'}</strong>
                     </label>
                     <p style={{ fontSize: '12px', opacity: 0.7, marginTop: '5px', marginLeft: '28px' }}>
                       {safeT?.administradorGeralDesc || 'O administrador geral tem acesso a todas as funcionalidades do sistema'}
@@ -187,7 +187,7 @@ export function AdminUsersSection({
                   </div>
                   
                   {!userForm.isAdmin && (
-                    <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                    <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                       <strong style={{ display: 'block', marginBottom: '15px' }}>{safeT?.permissions || 'Permissões'}</strong>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                         {userForm.permissions && Object.entries(userForm.permissions).map(([key, value]) => (
@@ -231,7 +231,7 @@ export function AdminUsersSection({
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {users.map(user => (
-                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)' }}>
                       <div>
                         <strong style={{ display: 'block', marginBottom: '5px' }}>{user.name}</strong>
                         <span style={{ fontSize: '12px', opacity: 0.7 }}>{user.email} • {user.role}</span>

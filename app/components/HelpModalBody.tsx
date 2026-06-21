@@ -27,7 +27,7 @@ export function HelpModalBody({ text, titlePara, titleComo, titleResumo }: Props
       <div className="help-modal-body">
         <h3
           style={{
-            color: '#00ff88',
+            color: '#2ecc71',
             fontSize: 15,
             margin: '0 0 12px',
             fontWeight: 700,
@@ -53,7 +53,7 @@ export function HelpModalBody({ text, titlePara, titleComo, titleResumo }: Props
       <section style={{ marginBottom: 22 }}>
         <h3
           style={{
-            color: '#00ff88',
+            color: '#2ecc71',
             fontSize: 15,
             margin: '0 0 10px',
             fontWeight: 700,
@@ -67,7 +67,7 @@ export function HelpModalBody({ text, titlePara, titleComo, titleResumo }: Props
       <section>
         <h3
           style={{
-            color: '#00ff88',
+            color: '#2ecc71',
             fontSize: 15,
             margin: '0 0 10px',
             fontWeight: 700,

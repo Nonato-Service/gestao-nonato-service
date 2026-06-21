@@ -3,6 +3,7 @@
 import { mergeManuaisFamiliasGrupos } from './manuaisMerge'
 import { isNonatoDemoBuild } from './nonatoDemoMode'
 import { applyRevisionFromSaveResponse, fetchSyncStatus } from './syncRevision'
+import { safeMergeOfflineSnapshot } from './cadastroSafety'
 import {
   saveManuaisFamiliasGruposToIdb,
   loadManuaisFamiliasGruposFromIdb,
@@ -506,12 +507,7 @@ export async function loadAllFromLocalCache(): Promise<Record<string, any>> {
 
 /** Guarda bundle do servidor para uso offline (IndexedDB — não compete com quota do localStorage). */
 export async function saveOfflineServerSnapshot(data: Record<string, any>): Promise<void> {
-  if (typeof window === 'undefined' || Object.keys(data).length === 0) return
-  try {
-    await saveKv(OFFLINE_SNAPSHOT_KEY, data)
-  } catch (e) {
-    console.warn('[Nonato offline] Falha ao guardar snapshot:', e)
-  }
+  await safeMergeOfflineSnapshot(data)
 }
 
 /**

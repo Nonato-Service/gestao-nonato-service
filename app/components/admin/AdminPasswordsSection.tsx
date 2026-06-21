@@ -49,14 +49,14 @@ export function AdminPasswordsSection(props: AdminPasswordsSectionProps) {
                 {showPasswordForm && (
                   <div style={{ 
                     padding: '20px', 
-                    backgroundColor: '#222222', 
+                    backgroundColor: '#1e1e1e', 
                     borderRadius: '6px', 
-                    border: '1px solid rgba(0, 255, 0, 0.3)',
+                    border: '1px solid rgba(0, 200, 83, 0.3)',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '15px'
                   }}>
-                    <h4 style={{ color: '#00ff00', margin: 0, fontSize: '16px' }}>
+                    <h4 style={{ color: '#00c853', margin: 0, fontSize: '16px' }}>
                       {safeT?.createPassword || 'Criar Nova Senha'}
                     </h4>
                     
@@ -74,7 +74,7 @@ export function AdminPasswordsSection(props: AdminPasswordsSectionProps) {
                           padding: '10px', 
                           backgroundColor: '#141414', 
                           color: '#fff', 
-                          border: '1px solid rgba(0, 255, 0, 0.3)', 
+                          border: '1px solid rgba(0, 200, 83, 0.3)', 
                           borderRadius: '4px',
                           fontSize: '14px'
                         }}
@@ -96,7 +96,7 @@ export function AdminPasswordsSection(props: AdminPasswordsSectionProps) {
                             padding: '10px', 
                             backgroundColor: '#141414', 
                             color: '#fff', 
-                            border: '1px solid rgba(0, 255, 0, 0.3)', 
+                            border: '1px solid rgba(0, 200, 83, 0.3)', 
                             borderRadius: '4px',
                             fontSize: '14px',
                             fontFamily: 'monospace'
@@ -138,7 +138,7 @@ export function AdminPasswordsSection(props: AdminPasswordsSectionProps) {
                 )}
                 
                 {managedPasswords.length === 0 && !showPasswordForm ? (
-                  <div style={{ padding: '20px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)', textAlign: 'center' }}>
+                  <div style={{ padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)', textAlign: 'center' }}>
                     <p style={{ fontSize: '14px', opacity: 0.6 }}>{safeT?.noPasswordsManaged || 'Nenhuma senha gerenciada ainda.'}</p>
                   </div>
                 ) : (
@@ -148,9 +148,9 @@ export function AdminPasswordsSection(props: AdminPasswordsSectionProps) {
                         key={entry.id} 
                         style={{ 
                           padding: '15px', 
-                          backgroundColor: '#222222', 
+                          backgroundColor: '#1e1e1e', 
                           borderRadius: '6px', 
-                          border: '1px solid rgba(0, 255, 0, 0.2)',
+                          border: '1px solid rgba(0, 200, 83, 0.2)',
                           display: 'flex',
                           flexDirection: 'column',
                           gap: '10px'
@@ -211,7 +211,7 @@ export function AdminPasswordsSection(props: AdminPasswordsSectionProps) {
                             padding: '10px', 
                             backgroundColor: '#141414', 
                             borderRadius: '4px', 
-                            border: '1px solid rgba(0, 255, 0, 0.3)',
+                            border: '1px solid rgba(0, 200, 83, 0.3)',
                             fontFamily: 'monospace',
                             fontSize: '14px',
                             wordBreak: 'break-all'
