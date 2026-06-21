@@ -18,6 +18,14 @@ export type RelatorioServicoEquipamentosHost = {
   equipamentos?: RelatorioEquipamentoRef[]
 }
 
+/** ID técnico do equipamento no cadastro do cliente (prioriza `id`, depois n.º série). */
+export function resolverIdEquipamentoCliente(
+  eq: { id?: string; numeroSerie?: string },
+  idx = 0
+): string {
+  return String(eq.id || eq.numeroSerie || idx).trim()
+}
+
 export function criarEquipamentoRelatorioVazio(
   origem: RelatorioEquipamentoOrigem = 'cliente'
 ): RelatorioEquipamentoRef {
@@ -84,7 +92,42 @@ export function formatarEquipamentosIdsRelatorio(equipamentos: RelatorioEquipame
   return equipamentosRelatorioPreenchidos(equipamentos)
     .map((eq) => eq.equipamentoId)
     .filter(Boolean)
-    .join(', ')
+    .join(' · ')
+}
+
+export function getRelatorioCabecalhoEquipamentoDados(r: RelatorioServicoEquipamentosHost): {
+  ids: string
+  modelos: string
+  numeros: string
+  multiplos: boolean
+} {
+  const list = equipamentosRelatorioPreenchidos(normalizarEquipamentosRelatorio(r))
+
+  if (list.length === 0) {
+    return {
+      ids: String(r.equipamentoId ?? '').trim() || '—',
+      modelos: String(r.maquinaModelo ?? '').trim() || '—',
+      numeros: String(r.numeroMaquina ?? '').trim() || '—',
+      multiplos: false,
+    }
+  }
+
+  if (list.length === 1) {
+    const eq = list[0]
+    return {
+      ids: eq.equipamentoId || '—',
+      modelos: eq.maquinaModelo || '—',
+      numeros: eq.numeroMaquina || '—',
+      multiplos: false,
+    }
+  }
+
+  return {
+    ids: list.map((eq) => eq.equipamentoId).filter(Boolean).join(' · ') || '—',
+    modelos: list.map((eq, i) => `${i + 1}) ${eq.maquinaModelo || '—'}`).join(' · '),
+    numeros: list.map((eq, i) => `${i + 1}) ${eq.numeroMaquina || '—'}`).join(' · '),
+    multiplos: true,
+  }
 }
 
 export function sincronizarCamposLegadoEquipamentos(equipamentos: RelatorioEquipamentoRef[]): {
@@ -94,7 +137,8 @@ export function sincronizarCamposLegadoEquipamentos(equipamentos: RelatorioEquip
   numeroMaquina: string
   equipamentos: RelatorioEquipamentoRef[]
 } {
-  const list = equipamentosRelatorioPreenchidos(equipamentos).slice(0, MAX_EQUIPAMENTOS_RELATORIO)
+  const raw = equipamentos.slice(0, MAX_EQUIPAMENTOS_RELATORIO)
+  const list = equipamentosRelatorioPreenchidos(raw)
   const principal = list[0]
 
   if (!principal) {
@@ -103,27 +147,24 @@ export function sincronizarCamposLegadoEquipamentos(equipamentos: RelatorioEquip
       equipamentoOrigem: 'cliente',
       maquinaModelo: '',
       numeroMaquina: '',
-      equipamentos: [],
+      equipamentos: raw,
     }
   }
 
-  const resumoModelo =
-    list.length <= 1
-      ? principal.maquinaModelo
-      : list.map((eq, i) => formatarEquipamentoRelatorioLinha(eq, i + 1)).join(' · ')
+  const cabecalho = getRelatorioCabecalhoEquipamentoDados({
+    equipamentoId: '',
+    equipamentoOrigem: 'cliente',
+    maquinaModelo: '',
+    numeroMaquina: '',
+    equipamentos: list,
+  })
 
   return {
-    equipamentoId: principal.equipamentoId,
+    equipamentoId: cabecalho.ids === '—' ? principal.equipamentoId : cabecalho.ids,
     equipamentoOrigem: principal.equipamentoOrigem,
-    maquinaModelo: resumoModelo,
-    numeroMaquina:
-      list.length === 1
-        ? principal.numeroMaquina
-        : list
-            .map((eq) => eq.numeroMaquina)
-            .filter(Boolean)
-            .join(', '),
-    equipamentos: list,
+    maquinaModelo: cabecalho.modelos === '—' ? principal.maquinaModelo : cabecalho.modelos,
+    numeroMaquina: cabecalho.numeros === '—' ? principal.numeroMaquina : cabecalho.numeros,
+    equipamentos: raw,
   }
 }
 
@@ -164,39 +205,39 @@ export function relatorioParaImprimirPDFEquipamentos<T extends RelatorioServicoE
   r: T
 ): T {
   const equipamentos = equipamentosRelatorioPreenchidos(normalizarEquipamentosRelatorio(r))
-  if (equipamentos.length === 0) return r
+  const cabecalho = getRelatorioCabecalhoEquipamentoDados(r)
+
+  if (equipamentos.length === 0) {
+    if (cabecalho.ids === '—' && cabecalho.modelos === '—') return r
+    return {
+      ...r,
+      equipamentoId: cabecalho.ids === '—' ? r.equipamentoId : cabecalho.ids,
+      maquinaModelo: cabecalho.modelos === '—' ? r.maquinaModelo : cabecalho.modelos,
+      numeroMaquina: cabecalho.numeros === '—' ? r.numeroMaquina : cabecalho.numeros,
+    }
+  }
 
   if (equipamentos.length === 1) {
     const eq = equipamentos[0]
-    if (eq.equipamentoOrigem === 'armazem') {
-      const linha = formatarEquipamentoRelatorioLinha(eq)
-      return {
-        ...r,
-        equipamentos,
-        equipamentoId: eq.equipamentoId,
-        equipamentoOrigem: 'armazem',
-        maquinaModelo: `${linha} (Armazém — gestão industrial)`.trim(),
-        numeroMaquina: '',
-      }
-    }
+    const tagArmazem =
+      eq.equipamentoOrigem === 'armazem' ? ' (Armazém — gestão industrial)' : ''
     return {
       ...r,
       equipamentos,
-      equipamentoId: eq.equipamentoId,
-      equipamentoOrigem: 'cliente',
-      maquinaModelo: eq.maquinaModelo,
+      equipamentoId: eq.equipamentoId || cabecalho.ids,
+      equipamentoOrigem: eq.equipamentoOrigem,
+      maquinaModelo: `${eq.maquinaModelo || '—'}${tagArmazem}`.trim(),
       numeroMaquina: eq.numeroMaquina,
     }
   }
 
-  const linhas = equipamentos.map((eq, i) => formatarEquipamentoRelatorioLinha(eq, i + 1))
   return {
     ...r,
     equipamentos,
-    equipamentoId: formatarEquipamentosIdsRelatorio(equipamentos),
+    equipamentoId: cabecalho.ids,
     equipamentoOrigem: equipamentos[0]?.equipamentoOrigem,
-    maquinaModelo: linhas.join(' · '),
-    numeroMaquina: '',
+    maquinaModelo: cabecalho.modelos,
+    numeroMaquina: cabecalho.numeros === '—' ? '' : cabecalho.numeros,
   }
 }
 

@@ -5455,6 +5455,25 @@ a:focus-visible {
   color: #66b3ff;
 }
 
+.relatorio-equipamento-card__label--id {
+  color: #fcd34d;
+}
+
+.relatorio-equipamento-card__input {
+  width: 100%;
+  padding: 8px;
+  background-color: #141414;
+  color: #fff;
+  border: 1px solid rgba(0, 200, 83, 0.3);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.relatorio-equipamento-card__input--id {
+  border-color: rgba(252, 211, 77, 0.45);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
 .relatorio-equipamento-card__select {
   width: 100%;
   padding: 8px;

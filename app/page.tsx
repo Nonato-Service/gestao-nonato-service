@@ -74,6 +74,8 @@ import {
   prepararRelatorioServicoEquipamentos,
   relatorioParaImprimirPDFEquipamentos,
   aplicarRelatorioNaBibliotecaCliente,
+  resolverIdEquipamentoCliente,
+  getRelatorioCabecalhoEquipamentoDados,
   type RelatorioEquipamentoRef,
 } from './lib/relatorioServicoEquipamentos'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
@@ -16701,6 +16703,7 @@ export default function Dashboard() {
       assinaturaCliente: undefined,
       dataAssinaturaCliente: undefined,
       equipamentoOrigem: 'cliente',
+      equipamentos: [criarEquipamentoRelatorioVazio('cliente')],
     })
     setNovoDiaTrabalho({
       data: new Date().toISOString().split('T')[0], // Inicializar com a data de hoje
@@ -16754,7 +16757,33 @@ export default function Dashboard() {
     setEditingRelatorioServico(r)
     setEditingDiaTrabalhoIndex(null)
     // Garantir que todos os campos sejam preservados, especialmente arrays
-    const equipamentosEdit = normalizarEquipamentosRelatorio(r)
+    const equipamentosEditRaw = normalizarEquipamentosRelatorio(r)
+    let equipamentosEdit = equipamentosEditRaw
+    if (equipamentosEdit.length === 1 && r.clienteId && equipamentosEdit[0].equipamentoOrigem === 'cliente') {
+      const cli = clientes.find((c) => c.id === r.clienteId)
+      const eqMatch = cli?.equipamentos?.find(
+        (e, idx) =>
+          e.id === equipamentosEdit[0].equipamentoId ||
+          e.numeroSerie === equipamentosEdit[0].equipamentoId ||
+          resolverIdEquipamentoCliente(e, idx) === equipamentosEdit[0].equipamentoId
+      )
+      if (eqMatch) {
+        equipamentosEdit = [
+          {
+            ...equipamentosEdit[0],
+            equipamentoId: resolverIdEquipamentoCliente(
+              eqMatch,
+              cli?.equipamentos?.indexOf(eqMatch) ?? 0
+            ),
+            maquinaModelo: equipamentosEdit[0].maquinaModelo || `${eqMatch.modelo} ${eqMatch.marca}`.trim(),
+            numeroMaquina: equipamentosEdit[0].numeroMaquina || eqMatch.numeroSerie || '',
+          },
+        ]
+      }
+    }
+    if (equipamentosEdit.length === 0) {
+      equipamentosEdit = [criarEquipamentoRelatorioVazio('cliente')]
+    }
     setRelatorioServicoForm({
       ...r,
       ...sincronizarCamposLegadoEquipamentos(equipamentosEdit),
@@ -17082,6 +17111,36 @@ export default function Dashboard() {
       .replace(/"/g, '&quot;')
       .replace(/\r\n|\r|\n/g, '<br/>')
 
+  const buildPdfHtmlIdsEquipamentoRelatorio = (
+    relatorio: RelatorioServico,
+    itemClass: string,
+    labelClass: string,
+    valueClass?: string
+  ) => {
+    const dados = getRelatorioCabecalhoEquipamentoDados(relatorio)
+    if (!dados.ids || dados.ids === '—') return ''
+    const lbl = (t as any).relatorioEquipamentoIdLabel || 'ID do equipamento'
+    const val = escapePdfHtml(dados.ids)
+    if (valueClass) {
+      return `<div class="${itemClass}"><span class="${labelClass}">${lbl}:</span><span class="${valueClass}">${val}</span></div>`
+    }
+    return `<div class="${itemClass}"><span class="${labelClass}">${lbl}:</span> ${val}</div>`
+  }
+
+  const buildPdfHtmlIdsEquipamentoRelatorioLi = (relatorio: RelatorioServico) => {
+    const dados = getRelatorioCabecalhoEquipamentoDados(relatorio)
+    if (!dados.ids || dados.ids === '—') return ''
+    const lbl = (t as any).relatorioEquipamentoIdLabel || 'ID do equipamento'
+    return `<li><span class="label">${lbl}</span><span class="value">${escapePdfHtml(dados.ids)}</span></li>`
+  }
+
+  const buildPdfHtmlIdsEquipamentoRelatorioInline = (relatorio: RelatorioServico) => {
+    const dados = getRelatorioCabecalhoEquipamentoDados(relatorio)
+    if (!dados.ids || dados.ids === '—') return ''
+    const lbl = (t as any).relatorioEquipamentoIdLabel || 'ID do equipamento'
+    return `<strong>${lbl}:</strong> ${escapePdfHtml(dados.ids)} &nbsp;|&nbsp; `
+  }
+
   // Função para gerar PDF/Imprimir Relatório - Formato Clássico (baseado na imagem)
   const handlePrintRelatorioClassico = (relatorio: RelatorioServico) => {
     try {
@@ -17110,6 +17169,7 @@ export default function Dashboard() {
               <div class="info-item"><span class="info-label">${t.tecnico || 'Técnico'}:</span> ${relatorio.tecnico || '-'}</div>
               <div class="info-item"><span class="info-label">${t.data || 'Data'}:</span> ${dataFormatada}</div>
               <div class="info-item"><span class="info-label">${t.cliente || 'Cliente'}:</span> ${relatorio.cliente || '-'}</div>
+              ${buildPdfHtmlIdsEquipamentoRelatorio(relatorio, 'info-item', 'info-label')}
               <div class="info-item"><span class="info-label">${t.maquinaModelo || 'Máquina/Modelo'}:</span> ${relatorio.maquinaModelo || '-'}</div>
               <div class="info-item"><span class="info-label">${t.cidade || 'Cidade'}:</span> ${relatorio.cidade || '-'}</div>
               <div class="info-item"><span class="info-label">${t.numeroMaquina || 'Número da Máquina'}:</span> ${relatorio.numeroMaquina || '-'}</div>
@@ -17309,6 +17369,7 @@ export default function Dashboard() {
               <div class="info-item"><span class="info-label">${t.tecnico || 'Técnico'}:</span> ${relatorio.tecnico || '-'}</div>
               <div class="info-item"><span class="info-label">${t.cliente || 'Cliente'}:</span> ${relatorio.cliente || '-'}</div>
               <div class="info-item"><span class="info-label">${t.data || 'Data'}:</span> ${dataFormatada}</div>
+              ${buildPdfHtmlIdsEquipamentoRelatorio(relatorio, 'info-item', 'info-label')}
               <div class="info-item"><span class="info-label">${t.maquinaModelo || 'Máquina'}:</span> ${relatorio.maquinaModelo || '-'}</div>
               <div class="info-item"><span class="info-label">${t.numeroMaquina || 'Nº Máquina'}:</span> ${relatorio.numeroMaquina || '-'}</div>
               <div class="info-item"><span class="info-label">${t.tipoServico || 'Tipo'}:</span> ${relatorio.tipoServico || '-'}</div>
@@ -17481,6 +17542,7 @@ export default function Dashboard() {
               <div class="info-item"><span class="info-label">${t.tecnico || 'Técnico'}:</span> ${relatorio.tecnico || '-'}</div>
               <div class="info-item"><span class="info-label">${t.data || 'Data'}:</span> ${dataFormatada}</div>
               <div class="info-item"><span class="info-label">${t.cliente || 'Cliente'}:</span> ${relatorio.cliente || '-'}</div>
+              ${buildPdfHtmlIdsEquipamentoRelatorio(relatorio, 'info-item', 'info-label')}
               <div class="info-item"><span class="info-label">${t.maquinaModelo || 'Máquina/Modelo'}:</span> ${relatorio.maquinaModelo || '-'}</div>
               <div class="info-item"><span class="info-label">${t.cidade || 'Cidade'}:</span> ${relatorio.cidade || '-'}</div>
               <div class="info-item"><span class="info-label">${t.numeroMaquina || 'Número da Máquina'}:</span> ${relatorio.numeroMaquina || '-'}</div>
@@ -17891,6 +17953,7 @@ export default function Dashboard() {
               <div class="info-item-modern"><span class="info-label-modern">${t.tecnico || 'Técnico'}:</span> ${relatorio.tecnico || '-'}</div>
               <div class="info-item-modern"><span class="info-label-modern">${t.data || 'Data'}:</span> ${dataFormatada}</div>
               <div class="info-item-modern"><span class="info-label-modern">${t.cliente || 'Cliente'}:</span> ${relatorio.cliente || '-'}</div>
+              ${buildPdfHtmlIdsEquipamentoRelatorio(relatorio, 'info-item-modern', 'info-label-modern')}
               <div class="info-item-modern"><span class="info-label-modern">${t.maquinaModelo || 'Máquina/Modelo'}:</span> ${relatorio.maquinaModelo || '-'}</div>
               <div class="info-item-modern"><span class="info-label-modern">${t.cidade || 'Cidade'}:</span> ${relatorio.cidade || '-'}</div>
               <div class="info-item-modern"><span class="info-label-modern">${t.numeroMaquina || 'Número da Máquina'}:</span> ${relatorio.numeroMaquina || '-'}</div>
@@ -18263,6 +18326,7 @@ export default function Dashboard() {
               <li><span class="label">${t.tecnico || 'Técnico'}</span><span class="value">${relatorio.tecnico || '-'}</span></li>
               <li><span class="label">${t.data || 'Data'}</span><span class="value">${dataFormatada}</span></li>
               <li><span class="label">${t.cliente || 'Cliente'}</span><span class="value">${relatorio.cliente || '-'}</span></li>
+              ${buildPdfHtmlIdsEquipamentoRelatorioLi(relatorio)}
               <li><span class="label">${t.maquinaModelo || 'Máquina/Modelo'}</span><span class="value">${relatorio.maquinaModelo || '-'}</span></li>
               <li><span class="label">${t.cidade || 'Cidade'}</span><span class="value">${relatorio.cidade || '-'}</span></li>
               <li><span class="label">${t.numeroMaquina || 'Número da Máquina'}</span><span class="value">${relatorio.numeroMaquina || '-'}</span></li>
@@ -20312,7 +20376,7 @@ export default function Dashboard() {
         ${buildPdfHeaderForRelatorio(relatorio, 'detailed')}
         <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
           <p><strong>${t.tecnico || 'Técnico'}:</strong> ${relatorio.tecnico || '-'} &nbsp;|&nbsp; <strong>${t.data || 'Data'}:</strong> ${dataFormatada} &nbsp;|&nbsp; <strong>${t.cliente || 'Cliente'}:</strong> ${relatorio.cliente || '-'}</p>
-          <p><strong>${t.maquinaModelo || 'Máquina'}:</strong> ${relatorio.maquinaModelo || '-'} &nbsp;|&nbsp; <strong>${t.numeroMaquina || 'Nº'}:</strong> ${relatorio.numeroMaquina || '-'} &nbsp;|&nbsp; <strong>${t.tipoServico || 'Tipo'}:</strong> ${relatorio.tipoServico || '-'}</p>
+          <p>${buildPdfHtmlIdsEquipamentoRelatorioInline(relatorio)}<strong>${t.maquinaModelo || 'Máquina'}:</strong> ${relatorio.maquinaModelo || '-'} &nbsp;|&nbsp; <strong>${t.numeroMaquina || 'Nº'}:</strong> ${relatorio.numeroMaquina || '-'} &nbsp;|&nbsp; <strong>${t.tipoServico || 'Tipo'}:</strong> ${relatorio.tipoServico || '-'}</p>
           <p><strong>${t.cidade || 'Cidade'}:</strong> ${relatorio.cidade || '-'} &nbsp;|&nbsp; <strong>${t.telefone || 'Telefone'}:</strong> ${relatorio.telefone || '-'}</p>
         </div>
         ${renderReportDiasTable(relatorio, totais)}
@@ -32251,6 +32315,26 @@ onKeyPress={(e) => {
 
                                   <div className="relatorio-equipamento-card__grid">
                                     <div>
+                                      <label className="relatorio-equipamento-card__label relatorio-equipamento-card__label--id">
+                                        {safeT?.relatorioEquipamentoIdLabel || 'ID do equipamento'}
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={eq.equipamentoId || ''}
+                                        placeholder={safeT?.relatorioEquipamentoIdPlaceholder || 'ID interno, armazém ou n.º série'}
+                                        onChange={(e) => {
+                                          const next = equipamentosForm.map(item =>
+                                            item.uid === eq.uid
+                                              ? { ...item, equipamentoId: e.target.value.trim() }
+                                              : item
+                                          )
+                                          atualizarEquipamentos(next)
+                                        }}
+                                        className="relatorio-equipamento-card__input relatorio-equipamento-card__input--id"
+                                      />
+                                    </div>
+
+                                    <div>
                                       <label className="relatorio-equipamento-card__label relatorio-equipamento-card__label--blue">
                                         {safeT?.relatorioEquipamentoOrigem || 'Origem do equipamento'}
                                       </label>
@@ -32276,7 +32360,7 @@ onKeyPress={(e) => {
                                       </select>
                                     </div>
 
-                                    <div>
+                                    <div style={{ gridColumn: '1 / -1' }}>
                                       <label className="relatorio-equipamento-card__label">
                                         {eq.equipamentoOrigem === 'armazem'
                                           ? (safeT?.equipamentoArmazemRelatorio || 'Equipamento do armazém')
@@ -32316,15 +32400,26 @@ onKeyPress={(e) => {
                                         <select
                                           value={eq.equipamentoId || ''}
                                           onChange={(e) => {
+                                            const chave = e.target.value
                                             const selectedEquipamento = clientes
                                               .find(c => c.id === relatorioServicoForm.clienteId)
-                                              ?.equipamentos?.find(itemCli => itemCli.numeroSerie === e.target.value)
+                                              ?.equipamentos?.find(
+                                                (itemCli, idxCli) =>
+                                                  resolverIdEquipamentoCliente(itemCli, idxCli) === chave
+                                              )
                                             const next = equipamentosForm.map(item =>
                                               item.uid === eq.uid
                                                 ? {
                                                     ...item,
                                                     equipamentoOrigem: 'cliente' as const,
-                                                    equipamentoId: e.target.value,
+                                                    equipamentoId: selectedEquipamento
+                                                      ? resolverIdEquipamentoCliente(
+                                                          selectedEquipamento,
+                                                          clientes
+                                                            .find(c => c.id === relatorioServicoForm.clienteId)
+                                                            ?.equipamentos?.indexOf(selectedEquipamento) ?? 0
+                                                        )
+                                                      : chave,
                                                     numeroMaquina: selectedEquipamento?.numeroSerie || '',
                                                     maquinaModelo: selectedEquipamento
                                                       ? `${selectedEquipamento.modelo} ${selectedEquipamento.marca}`.trim()
@@ -32340,11 +32435,15 @@ onKeyPress={(e) => {
                                           <option value="">{safeT?.selecioneEquipamento || 'Selecione o equipamento'}</option>
                                           {relatorioServicoForm.clienteId && clientes
                                             .find(c => c.id === relatorioServicoForm.clienteId)
-                                            ?.equipamentos?.map((itemCli, idxCli) => (
-                                              <option key={idxCli} value={itemCli.numeroSerie || idxCli.toString()}>
-                                                {itemCli.modelo} {itemCli.marca} {itemCli.numeroSerie && `(${itemCli.numeroSerie})`}
-                                              </option>
-                                            ))}
+                                            ?.equipamentos?.map((itemCli, idxCli) => {
+                                              const eqKey = resolverIdEquipamentoCliente(itemCli, idxCli)
+                                              return (
+                                                <option key={eqKey} value={eqKey}>
+                                                  ID {eqKey} · {itemCli.modelo} {itemCli.marca}
+                                                  {itemCli.numeroSerie ? ` · S/N ${itemCli.numeroSerie}` : ''}
+                                                </option>
+                                              )
+                                            })}
                                         </select>
                                       )}
                                     </div>
