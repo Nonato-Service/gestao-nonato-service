@@ -19636,6 +19636,28 @@ export default function Dashboard() {
     persistPdfModeloPadrao(model)
   }
 
+  const resolveRelatorioPdfModelContextId = (): string | null => {
+    const id = String(editingRelatorioServico?.id || relatorioServicoForm.id || '').trim()
+    return id || null
+  }
+
+  const getPdfModelSelecionadoNoFormulario = (): string => {
+    const id = resolveRelatorioPdfModelContextId()
+    if (id) return getPdfModelForRelatorio(id)
+    return selectedPDFModelRef.current || selectedPDFModel
+  }
+
+  const escolherModeloPdfNoFormulario = (model: string) => {
+    escolherModeloPdfRelatorio(resolveRelatorioPdfModelContextId(), model)
+  }
+
+  const garantirPdfModeloGravadoParaRelatorio = (relatorioId: string, model: string) => {
+    if (!RELATORIO_SERVICO_PDF_MODELOS.has(model)) return
+    if (!pdfModelPorRelatorioIdRef.current[relatorioId]) {
+      escolherModeloPdfRelatorio(relatorioId, model)
+    }
+  }
+
   const handlePrintRelatorio = (relatorio: RelatorioServico, pdfModel?: string) => {
     const dono = resolverRelatorioServicoDono(relatorio)
     const r = relatorioParaImprimirPDF(dono)
@@ -21048,6 +21070,8 @@ export default function Dashboard() {
 
     void createAutoBackup()
 
+    const modelEscolhido = getPdfModelSelecionadoNoFormulario()
+
     setShowRelatorioServicoForm(false)
     setRelatorioServicoForm({
       id: '',
@@ -21103,7 +21127,8 @@ export default function Dashboard() {
     
     // Gerar/Imprimir o relatório após salvar
     setTimeout(() => {
-      handlePrintRelatorio(savedRelatorio, getPdfModelForRelatorio(savedRelatorio.id))
+      handlePrintRelatorio(savedRelatorio, modelEscolhido)
+      garantirPdfModeloGravadoParaRelatorio(savedRelatorio.id, modelEscolhido)
     }, 500)
   }
 
@@ -21186,7 +21211,9 @@ export default function Dashboard() {
     void createAutoBackup()
     setRelatorioServicoForm(savedRelatorio)
     setEditingRelatorioServico(savedRelatorio)
-    handlePrintRelatorio(savedRelatorio, getPdfModelForRelatorio(savedRelatorio.id))
+    const modelEscolhido = getPdfModelSelecionadoNoFormulario()
+    handlePrintRelatorio(savedRelatorio, modelEscolhido)
+    garantirPdfModeloGravadoParaRelatorio(savedRelatorio.id, modelEscolhido)
   }
 
   // Deletar relatório a partir do formulário: se estiver editando, exclui da lista; senão limpa o formulário
@@ -33671,22 +33698,12 @@ onKeyPress={(e) => {
                     {safeT?.salvar || 'Salvar'}
                   </button>
                   <select
-                    value={
-                      editingRelatorioServico?.id
-                        ? getPdfModelForRelatorio(editingRelatorioServico.id)
-                        : selectedPDFModel
-                    }
+                    className="relatorio-servico-pdf-modelo-select"
+                    value={getPdfModelSelecionadoNoFormulario()}
                     onChange={(e) => {
-                      escolherModeloPdfRelatorio(editingRelatorioServico?.id ?? null, e.target.value)
+                      escolherModeloPdfNoFormulario(e.target.value)
                     }}
                     style={{
-                      padding: '8px 10px',
-                      fontSize: '12px',
-                      backgroundColor: '#141414',
-                      color: '#fff',
-                      border: '1px solid rgba(0, 150, 255, 0.65)',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
                       minWidth: '140px',
                     }}
                     title={(safeT as Record<string, string>).relatorioPdfModeloFormularioTitle || safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
@@ -34239,14 +34256,13 @@ onKeyPress={(e) => {
                         <div className="rs-card-acoes">
                           <div className="relatorio-servico-card-acoes-linha">
                             <select
-                              className={`rs-card-select${btnPulseClass}`}
+                              className={`relatorio-servico-pdf-modelo-select rs-card-select${btnPulseClass}`}
                               value={getPdfModelForRelatorio(relatorio.id)}
                               onChange={(e) => {
                                 e.stopPropagation()
                                 escolherModeloPdfRelatorio(relatorio.id, e.target.value)
                               }}
                               onClick={(e) => e.stopPropagation()}
-                              onMouseDown={(e) => e.stopPropagation()}
                               title={(safeT as Record<string, string>).relatorioPdfModeloCartaoTitle || safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
                             >
                               <optgroup label={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados para cliente'}>
@@ -59424,7 +59440,7 @@ A1;Peça exemplo;10`}
                       )}
                     </div>
                     <select
-                      className="biblioteca-relatorios-toolbar__modelo"
+                      className="biblioteca-relatorios-toolbar__modelo relatorio-servico-pdf-modelo-select"
                       value={selectedPDFModel}
                       onChange={e => escolherModeloPdfRelatorio(null, e.target.value)}
                       aria-label={(safeT as Record<string, string>).bibliotecaRelatoriosModeloPdf || 'Modelo PDF'}
@@ -59732,6 +59748,34 @@ A1;Peça exemplo;10`}
                                                 <td className="bib-col-num">{totais.kmsPercorridos}</td>
                                                 <td className="bib-col-acoes">
                                                   <div className="bib-acoes-icones">
+                                                    <select
+                                                      className="relatorio-servico-pdf-modelo-select"
+                                                      value={getPdfModelForRelatorio(relatorio.id)}
+                                                      onChange={(e) =>
+                                                        escolherModeloPdfRelatorio(relatorio.id, e.target.value)
+                                                      }
+                                                      aria-label={(safeT as Record<string, string>).relatorioPdfModeloCartaoTitle || safeT?.selecioneModeloPDF || 'Modelo PDF'}
+                                                      title={(safeT as Record<string, string>).relatorioPdfModeloCartaoTitle || safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
+                                                    >
+                                                      <optgroup label={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados'}>
+                                                        <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
+                                                        <option value="detalhado">{safeT?.modeloDetalhado || 'Detalhado'}</option>
+                                                        <option value="compacto">{safeT?.modeloCompacto || 'Compacto'}</option>
+                                                        <option value="moderno">{safeT?.modeloModerno || 'Moderno'}</option>
+                                                        <option value="profissional">{safeT?.modeloProfissional || 'Profissional'}</option>
+                                                      </optgroup>
+                                                      <optgroup label={safeT?.relatorioPdfOptgroupOutros || 'Outros'}>
+                                                        <option value="minimalista">{safeT?.modeloMinimalista || 'Minimalista'}</option>
+                                                        <option value="tecnico">{safeT?.modeloTecnico || 'Técnico'}</option>
+                                                        <option value="executivo">{safeT?.modeloExecutivo || 'Executivo'}</option>
+                                                        <option value="negro">{safeT?.modeloNegro || 'Negro'}</option>
+                                                        <option value="ferwood">{safeT?.modeloFerwood || 'Ferwood'}</option>
+                                                        <option value="resumido">{safeT?.modeloResumido || 'Resumido'}</option>
+                                                        <option value="colorido">{safeT?.modeloColorido || 'Colorido'}</option>
+                                                        <option value="formal">{safeT?.modeloFormal || 'Formal'}</option>
+                                                        <option value="lista">{safeT?.modeloLista || 'Lista'}</option>
+                                                      </optgroup>
+                                                    </select>
                                                     <button
                                                       type="button"
                                                       className="bib-acao bib-acao--ver"
@@ -74577,6 +74621,7 @@ A1;Peça exemplo;10`}
               </button>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <select
+                  className="relatorio-servico-pdf-modelo-select"
                   value={viewingRelatorioServico ? getPdfModelForRelatorio(viewingRelatorioServico.id) : selectedPDFModel}
                   onChange={(e) => {
                     if (viewingRelatorioServico) {
@@ -74587,13 +74632,6 @@ A1;Peça exemplo;10`}
                   }}
                   style={{
                     width: '100%',
-                    padding: '8px',
-                    fontSize: '11px',
-                    backgroundColor: '#141414',
-                    color: '#66b3ff',
-                    border: '1px solid rgba(0, 150, 255, 0.5)',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
                   }}
                   title={viewingRelatorioServico ? ((safeT as Record<string, string>).relatorioPdfModeloCartaoTitle || safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF') : ((safeT as Record<string, string>).bibliotecaRelatoriosModeloPdfPadrao || safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF')}
                 >
