@@ -80,9 +80,8 @@ export function formatarEquipamentoRelatorioLinha(
   const prefix = indice != null ? `Equip. ${indice}` : ''
   const idPart = eq.equipamentoId ? `ID: ${eq.equipamentoId}` : ''
   const modelo = eq.maquinaModelo
-  const sn = eq.numeroMaquina ? `S/N: ${eq.numeroMaquina}` : ''
   const origemTag = eq.equipamentoOrigem === 'armazem' ? '(Armazém)' : ''
-  const partes = [idPart, modelo, sn, origemTag].filter(Boolean)
+  const partes = [idPart, modelo, origemTag].filter(Boolean)
   const corpo = partes.join(' · ')
   if (!corpo) return prefix || '—'
   return prefix ? `${prefix} — ${corpo}` : corpo

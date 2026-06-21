@@ -13935,7 +13935,7 @@ export default function Dashboard() {
       sub ? `${sub}\n` : '',
       `${lblNum}: ${relatorio.numero}`,
       `${lblCliente}: ${relatorio.cliente}`,
-      `${lblEquip}: ${relatorio.maquinaModelo} ${relatorio.numeroMaquina || ''}`.trim(),
+      `${lblEquip}: ${relatorio.maquinaModelo || ''}`.trim(),
       `${lblData}: ${relatorio.data}`,
       '',
       ...(clienteFiscal
@@ -13986,7 +13986,7 @@ export default function Dashboard() {
         '',
         `${lblNum}: ${relatorio.numero}`,
         `${lblCliente}: ${relatorio.cliente}`,
-        `${lblEquip}: ${relatorio.maquinaModelo} ${relatorio.numeroMaquina || ''}`.trim(),
+        `${lblEquip}: ${relatorio.maquinaModelo || ''}`.trim(),
         `${lblData}: ${relatorio.data}`,
         '',
       ]
@@ -14030,7 +14030,7 @@ export default function Dashboard() {
         ? `<tr><td colspan="4" style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;background:#fafafa">${escAttr(t.totalSemIva || 'Total s/ IVA')}</td><td style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;font-weight:600;background:#fafafa">${ivContab.liquido.toFixed(2)} €</td></tr><tr><td colspan="4" style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;background:#fafafa">${escAttr(t.valorIva || 'IVA')} (${ivContab.taxa}%)</td><td style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;font-weight:600;background:#fafafa">${ivContab.iva.toFixed(2)} €</td></tr><tr><td colspan="4" style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:700;background:#f1f8e9">${escAttr(t.totalComIva || 'Total com IVA')}</td><td style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:800;background:#f1f8e9">${total.toFixed(2)} €</td></tr>`
         : `<tr><td colspan="4" style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:700;background:#f1f8e9">${escAttr(lblSoma)}</td><td style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:800;background:#f1f8e9">${total.toFixed(2)} €</td></tr>`
     const tableHtml = `<div class="contab-scroll"><table class="contab-items-table" style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:0"><thead><tr><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:left">${escAttr(lblCod)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:left">${escAttr(lblDesc)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblQtd)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblVu)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblTot)}</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot>${footIvaRows}</tfoot></table></div>`
-    const infoRel = `<div class="contab-info-card" style="margin-bottom:16px;padding:14px;border-radius:10px;background:#f1f8e9;border:1px solid #c8e6c9;font-size:13px;line-height:1.5"><div style="word-wrap:break-word"><strong>${escAttr(lblNum)}:</strong> ${escAttr(relatorio.numero)}</div><div style="word-wrap:break-word"><strong>${escAttr(lblCliente)}:</strong> ${escAttr(relatorio.cliente)}</div><div style="word-wrap:break-word"><strong>${escAttr(lblEquip)}:</strong> ${escAttr(`${relatorio.maquinaModelo} ${relatorio.numeroMaquina || ''}`.trim())}</div><div><strong>${escAttr(lblData)}:</strong> ${escAttr(relatorio.data)}</div></div>`
+    const infoRel = `<div class="contab-info-card" style="margin-bottom:16px;padding:14px;border-radius:10px;background:#f1f8e9;border:1px solid #c8e6c9;font-size:13px;line-height:1.5"><div style="word-wrap:break-word"><strong>${escAttr(lblNum)}:</strong> ${escAttr(relatorio.numero)}</div><div style="word-wrap:break-word"><strong>${escAttr(lblCliente)}:</strong> ${escAttr(relatorio.cliente)}</div><div style="word-wrap:break-word"><strong>${escAttr(lblEquip)}:</strong> ${escAttr(`${relatorio.maquinaModelo || ''}`.trim())}</div><div><strong>${escAttr(lblData)}:</strong> ${escAttr(relatorio.data)}</div></div>`
     const rowFiscalHtml = (a: string, b: string) =>
       `<tr><td style="padding:6px 8px;color:#666;width:34%">${a}</td><td style="padding:6px 8px;font-weight:600">${b}</td></tr>`
     let fiscalHtml = ''
@@ -17360,7 +17360,7 @@ export default function Dashboard() {
     const lblRelatorio = tAny.relatorio || 'Relatório'
     const logoPart = logoSrc ? `<img src="${esc(logoSrc)}" alt="Logo" style="max-height:80px;max-width:220px;object-fit:contain;display:block"/>` : ''
     const numVal = esc(relatorio.numero)
-    const equipTexto = [relatorio.maquinaModelo, relatorio.numeroMaquina].filter(Boolean).join(' · ') || '—'
+    const equipTexto = relatorio.maquinaModelo || '—'
     const dataVal = esc(relatorio.data)
     const tituloDoc = esc(titFechamento)
     const localeStr = localeForLongDatetime(selectedLanguage)
@@ -19998,7 +19998,6 @@ export default function Dashboard() {
       
       // Preparar dados das máquinas
       const maquinasInfo = relatorio.maquinaModelo || '-';
-      const numeroSerie = relatorio.numeroMaquina || '-';
       
       // Preparar dados da intervenção
       const cliente = relatorio.cliente || '-';
@@ -20219,7 +20218,6 @@ export default function Dashboard() {
                     <th>FERWOOD CODE</th>
                     <th>LINE</th>
                     <th>BRAND/MODEL</th>
-                    <th>SERIAL NUMBER</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -20227,7 +20225,6 @@ export default function Dashboard() {
                     <td>${relatorio.numero || '-'}</td>
                     <td>-</td>
                     <td>${maquinasInfo}</td>
-                    <td>${numeroSerie}</td>
                   </tr>
                 </tbody>
               </table>
@@ -20411,10 +20408,6 @@ export default function Dashboard() {
                 <div class="info-item">
                   <span class="info-label">BRAND/MODEL</span>
                   <span>${maquinasInfo}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">SERIAL NUMBER</span>
-                  <span>${numeroSerie}</span>
                 </div>
               </div>
               <table>
@@ -20678,7 +20671,7 @@ export default function Dashboard() {
       </style></head><body>
         ${buildPdfHeaderForRelatorio(relatorio, 'detailed')}
         <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
-          <p><strong>${t.tecnico}:</strong> ${relatorio.tecnico || '-'}. <strong>${t.cliente}:</strong> ${relatorio.cliente || '-'}. <strong>${t.maquinaModelo}:</strong> ${relatorio.maquinaModelo || '-'}. <strong>${t.numeroMaquina}:</strong> ${relatorio.numeroMaquina || '-'}.</p>
+          <p><strong>${t.tecnico}:</strong> ${relatorio.tecnico || '-'}. <strong>${t.cliente}:</strong> ${relatorio.cliente || '-'}. <strong>${t.maquinaModelo}:</strong> ${relatorio.maquinaModelo || '-'}.</p>
           <p><strong>${t.tipoServico}:</strong> ${relatorio.tipoServico || '-'}. <strong>${t.cidade}:</strong> ${relatorio.cidade || '-'}. <strong>${t.telefone}:</strong> ${relatorio.telefone || '-'}.</p>
         </div>
         ${renderReportDiasTable(relatorio, totais)}
@@ -20714,7 +20707,7 @@ export default function Dashboard() {
       </style></head><body>
         ${buildPdfHeaderForRelatorio(relatorio, 'compact')}
         <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
-          <ul class="lis"><li><span class="l">${t.tecnico}</span><span class="v">${relatorio.tecnico || '-'}</span></li><li><span class="l">${t.data}</span><span class="v">${dataFormatada}</span></li><li><span class="l">${t.cliente}</span><span class="v">${relatorio.cliente || '-'}</span></li><li><span class="l">${t.maquinaModelo}</span><span class="v">${relatorio.maquinaModelo || '-'}</span></li><li><span class="l">${t.numeroMaquina}</span><span class="v">${relatorio.numeroMaquina || '-'}</span></li><li><span class="l">${t.tipoServico}</span><span class="v">${relatorio.tipoServico || '-'}</span></li><li><span class="l">${t.telefone}</span><span class="v">${relatorio.telefone || '-'}</span></li></ul>
+          <ul class="lis"><li><span class="l">${t.tecnico}</span><span class="v">${relatorio.tecnico || '-'}</span></li><li><span class="l">${t.data}</span><span class="v">${dataFormatada}</span></li><li><span class="l">${t.cliente}</span><span class="v">${relatorio.cliente || '-'}</span></li><li><span class="l">${t.maquinaModelo}</span><span class="v">${relatorio.maquinaModelo || '-'}</span></li><li><span class="l">${t.tipoServico}</span><span class="v">${relatorio.tipoServico || '-'}</span></li><li><span class="l">${t.telefone}</span><span class="v">${relatorio.telefone || '-'}</span></li></ul>
         </div>
         ${renderReportDiasTable(relatorio, totais)}
         <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
@@ -33007,7 +33000,6 @@ onKeyPress={(e) => {
                                           {equipamentosAtivos.map(itemEq => (
                                             <option key={itemEq.id} value={itemEq.id}>
                                               [Armazém] ID {itemEq.id} · {itemEq.familia || '—'} · {itemEq.modelo} {itemEq.marca}
-                                              {itemEq.numeroSerie ? ` · S/N ${itemEq.numeroSerie}` : ''}
                                             </option>
                                           ))}
                                         </select>
@@ -33055,7 +33047,6 @@ onKeyPress={(e) => {
                                               return (
                                                 <option key={eqKey} value={eqKey}>
                                                   ID {eqKey} · {itemCli.modelo} {itemCli.marca}
-                                                  {itemCli.numeroSerie ? ` · S/N ${itemCli.numeroSerie}` : ''}
                                                 </option>
                                               )
                                             })}
@@ -33063,7 +33054,7 @@ onKeyPress={(e) => {
                                       )}
                                     </div>
 
-                                    {(eq.equipamentoId || eq.maquinaModelo || eq.numeroMaquina) && (
+                                    {(eq.equipamentoId || eq.maquinaModelo) && (
                                       <div className="relatorio-equipamento-card__preview">
                                         <strong>{safeT?.relatorioEquipamentoIdLabel || 'ID'}:</strong>{' '}
                                         <span className="relatorio-equipamento-card__id">{eq.equipamentoId || '—'}</span>
@@ -33071,12 +33062,6 @@ onKeyPress={(e) => {
                                           <>
                                             <span className="relatorio-equipamento-card__sep"> · </span>
                                             <strong>{safeT?.maquinaModelo || 'Modelo'}:</strong> {eq.maquinaModelo}
-                                          </>
-                                        ) : null}
-                                        {eq.numeroMaquina ? (
-                                          <>
-                                            <span className="relatorio-equipamento-card__sep"> · </span>
-                                            <strong>{safeT?.numeroMaquina || 'S/N'}:</strong> {eq.numeroMaquina}
                                           </>
                                         ) : null}
                                       </div>
@@ -34809,9 +34794,6 @@ onKeyPress={(e) => {
                                 <span style={{ color: '#66b3ff' }}>ID {relatorio.equipamentoId} · </span>
                               )}
                               {(relatorio.maquinaModelo && String(relatorio.maquinaModelo).trim()) || '—'}
-                              {relatorio.numeroMaquina && String(relatorio.numeroMaquina).trim()
-                                ? ` · S/N ${String(relatorio.numeroMaquina).trim()}`
-                                : ''}
                             </p>
                           </div>
                         </div>
@@ -45748,7 +45730,7 @@ A1;Peça exemplo;10`}
           const clienteVal = esc(relatorioSelecionado.cliente)
           const numVal = esc(relatorioSelecionado.numero)
           const equipTexto =
-            [relatorioSelecionado.maquinaModelo, relatorioSelecionado.numeroMaquina].filter(Boolean).join(' · ') || '—'
+            [relatorioSelecionado.maquinaModelo].filter(Boolean).join(' · ') || '—'
           const equipVal = esc(equipTexto)
           const dataVal = esc(relatorioSelecionado.data)
           const tituloDoc = esc(titFechamento) + ' — ' + esc(lblRelatorio) + ' ' + numVal
@@ -45819,7 +45801,7 @@ A1;Peça exemplo;10`}
             fechTotIva.incluir && fechTotIva.iva > 0.0001
               ? `\n${(safeT as any)?.totalSemIva || 'Total s/ IVA'}: ${fechTotIva.liquido.toFixed(2)} €\n${(safeT as any)?.valorIva || 'IVA'} (${fechTotIva.taxa}%): ${fechTotIva.iva.toFixed(2)} €\n`
               : '\n'
-          const texto = `Fechamento Relatório ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo} ${relatorioSelecionado.numeroMaquina || ''}\nData: ${relatorioSelecionado.data}\n\nItens:\n${linhas}${extraIva}\n*${(safeT as any)?.totalComIva || 'Total'}: ${fechTotIva.comIva.toFixed(2)} €*`
+          const texto = `Fechamento Relatório ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo || ''}\nData: ${relatorioSelecionado.data}\n\nItens:\n${linhas}${extraIva}\n*${(safeT as any)?.totalComIva || 'Total'}: ${fechTotIva.comIva.toFixed(2)} €*`
           window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener')
         }
         const handleEnviarEmailFechamento = () => {
@@ -45830,7 +45812,7 @@ A1;Peça exemplo;10`}
             fechTotIva.incluir && fechTotIva.iva > 0.0001
               ? `\n${(safeT as any)?.totalSemIva || 'Total s/ IVA'}: ${fechTotIva.liquido.toFixed(2)} €\n${(safeT as any)?.valorIva || 'IVA'} (${fechTotIva.taxa}%): ${fechTotIva.iva.toFixed(2)} €\n`
               : '\n'
-          const corpo = `Fechamento de despesas do relatório de serviço.\n\nRelatório: ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo} ${relatorioSelecionado.numeroMaquina || ''}\nData: ${relatorioSelecionado.data}\n\nItens a cobrar:\n${linhas}${extraIvaMail}\n${(safeT as any)?.totalComIva || 'Total com IVA'}: ${fechTotIva.comIva.toFixed(2)} €\n\n--\nEnviado pela Gestão Técnica Nonato Service`
+          const corpo = `Fechamento de despesas do relatório de serviço.\n\nRelatório: ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo || ''}\nData: ${relatorioSelecionado.data}\n\nItens a cobrar:\n${linhas}${extraIvaMail}\n${(safeT as any)?.totalComIva || 'Total com IVA'}: ${fechTotIva.comIva.toFixed(2)} €\n\n--\nEnviado pela Gestão Técnica Nonato Service`
           window.location.href = `${mailtoPrefixContabilidade()}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
         }
         const relatoriosPendentesFechamentoLista = relatoriosServico.filter(r => !fechamentosGuardadosBibliotecaIds.includes(r.id))
@@ -46148,7 +46130,7 @@ A1;Peça exemplo;10`}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
                     <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.cliente || 'Cliente'}</span><br/><strong style={{ color: '#fff', fontSize: '14px' }}>{relatorioSelecionado.cliente}</strong></div>
                     <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.numeroRelatorio || 'Nº Relatório'}</span><br/><strong style={{ color: '#00c853', fontSize: '14px' }}>{relatorioSelecionado.numero}</strong></div>
-                    <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.equipamento || 'Equipamento'}</span><br/><strong style={{ color: '#fff', fontSize: '14px' }}>{relatorioSelecionado.maquinaModelo} {relatorioSelecionado.numeroMaquina ? `– ${relatorioSelecionado.numeroMaquina}` : ''}</strong></div>
+                    <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.equipamento || 'Equipamento'}</span><br/><strong style={{ color: '#fff', fontSize: '14px' }}>{relatorioSelecionado.maquinaModelo || '—'}</strong></div>
                     <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.data || 'Data'}</span><br/><span style={{ color: '#ccc', fontSize: '14px' }}>{relatorioSelecionado.data}</span></div>
                   </div>
                 </div>
@@ -62886,7 +62868,6 @@ A1;Peça exemplo;10`}
                     <div><strong>{safeT?.cidade || 'Cidade'}:</strong> {relatorioSelecionado.cidade}</div>
                     <div><strong>{safeT?.telefone || 'Telefone'}:</strong> {relatorioSelecionado.telefone}</div>
                     {relatorioSelecionado.maquinaModelo && <div><strong>{safeT?.maquinaModelo || 'Máquina/Modelo'}:</strong> {relatorioSelecionado.maquinaModelo}</div>}
-                    {relatorioSelecionado.numeroMaquina && <div><strong>{safeT?.numeroMaquina || 'Nº Máquina'}:</strong> {relatorioSelecionado.numeroMaquina}</div>}
                     {relatorioSelecionado.tipoServico && <div><strong>{safeT?.tipoServico || 'Tipo de Serviço'}:</strong> {relatorioSelecionado.tipoServico}</div>}
                   </div>
                 </div>
@@ -72081,13 +72062,6 @@ A1;Peça exemplo;10`}
                 />
                 <input
                   type="text"
-                  placeholder={safeT?.numeroMaquina || 'Número da Máquina'}
-                  value={relatorioServicoForm.numeroMaquina}
-                  onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, numeroMaquina: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
                   placeholder={safeT?.tipoServico || 'Tipo de Serviço'}
                   value={relatorioServicoForm.tipoServico}
                   onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, tipoServico: e.target.value })}
@@ -72144,7 +72118,6 @@ A1;Peça exemplo;10`}
                     {relatorio.equipamentoOrigem === 'armazem' && relatorio.equipamentoId && (
                       <p style={{ fontSize: '12px', color: '#88ccff', marginTop: '6px', fontFamily: 'monospace' }}>
                         ID {relatorio.equipamentoId} · {relatorio.maquinaModelo || '—'}
-                        {relatorio.numeroMaquina ? ` · S/N ${relatorio.numeroMaquina}` : ''}
                       </p>
                     )}
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
@@ -75079,24 +75052,12 @@ A1;Peça exemplo;10`}
                           )}
                           {eq.equipamentoId && eq.maquinaModelo ? <span style={{ color: '#888' }}> · </span> : null}
                           {eq.maquinaModelo || null}
-                          {eq.numeroMaquina ? (
-                            <>
-                              <span style={{ color: '#888' }}> · </span>
-                              <span style={{ color: '#ccc' }}>S/N: {eq.numeroMaquina}</span>
-                            </>
-                          ) : null}
                         </p>
                       ))}
                     </div>
                   ) : (
                     <p style={{ fontSize: '14px', lineHeight: 1.45, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                       {viewingRelatorioServico.maquinaModelo || '-'}
-                      {viewingRelatorioServico.numeroMaquina ? (
-                        <>
-                          <span style={{ color: '#888' }}> · </span>
-                          <span style={{ color: '#ccc' }}>S/N: {viewingRelatorioServico.numeroMaquina}</span>
-                        </>
-                      ) : null}
                     </p>
                   )}
                 </div>

@@ -87,11 +87,6 @@ export function buildRelatorioServicoPdfMetaSectionHtml(options: {
       value: esc(eq.modelos !== '—' ? eq.modelos : relatorio.maquinaModelo || '—'),
       fullWidth: eq.multiplos,
     },
-    {
-      label: labels.numeroMaquina,
-      value: esc(eq.numeros !== '—' ? eq.numeros : relatorio.numeroMaquina || '—'),
-      fullWidth: eq.multiplos,
-    },
     { label: labels.cidade, value: esc(relatorio.cidade || '—') },
     { label: labels.tipoServico, value: esc(relatorio.tipoServico || '—') }
   )
