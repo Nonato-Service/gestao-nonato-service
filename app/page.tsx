@@ -36010,99 +36010,18 @@ onKeyPress={(e) => {
             ? hubT.bibliotecaSecaoBadgeAClassificar || 'A classificar'
             : hubT.bibliotecaSecaoBadgeGrupo || 'Grupo'
           return (
-            <div
-              style={{
-                borderRadius: 16,
-                overflow: 'visible',
-                border: isSem
-                  ? '1px solid rgba(255, 170, 90, 0.42)'
-                  : '1px solid rgba(0, 220, 120, 0.3)',
-                boxShadow: isSem
-                  ? '0 12px 40px rgba(255, 100, 40, 0.1), inset 0 1px 0 rgba(255,255,255,0.05)'
-                  : '0 16px 48px rgba(0, 40, 24, 0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
-                background: isSem ? 'rgba(32, 20, 8, 0.82)' : 'rgba(6, 16, 10, 0.88)',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 14,
-                  flexWrap: 'wrap',
-                  padding: '14px 18px',
-                  background: isSem
-                    ? 'linear-gradient(108deg, rgba(140, 70, 12, 0.5) 0%, rgba(36, 22, 8, 0.96) 52%)'
-                    : 'linear-gradient(108deg, rgba(0, 100, 52, 0.5) 0%, rgba(6, 28, 16, 0.97) 55%)',
-                  borderBottom: '1px solid rgba(255,255,255,0.07)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, minWidth: 0, flex: 1 }}>
-                  <span
-                    style={{
-                      flexShrink: 0,
-                      marginTop: 2,
-                      fontSize: 10,
-                      letterSpacing: '0.14em',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      padding: '5px 10px',
-                      borderRadius: 8,
-                      background: isSem ? 'rgba(255, 150, 60, 0.22)' : 'rgba(0, 230, 120, 0.14)',
-                      border: isSem ? '1px solid rgba(255, 190, 110, 0.38)' : '1px solid rgba(0, 255, 150, 0.28)',
-                      color: isSem ? '#ffd8b0' : '#c6ffd8',
-                    }}
-                  >
-                    {badge}
-                  </span>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: 'clamp(1.02rem, 2.8vw, 1.22rem)',
-                        fontWeight: 800,
-                        letterSpacing: '0.03em',
-                        color: isSem ? '#ffeacc' : '#f0fff6',
-                        lineHeight: 1.3,
-                        wordBreak: 'break-word',
-                      }}
-                    >
-                      {props.titulo}
-                    </h3>
-                  </div>
+            <div className={`biblioteca-pecas-hub__secao${isSem ? ' biblioteca-pecas-hub__secao--sem' : ''}`}>
+              <div className="biblioteca-pecas-hub__secao-header">
+                <div className="biblioteca-pecas-hub__secao-header-main">
+                  <span className="biblioteca-pecas-hub__secao-badge">{badge}</span>
+                  <h3 className="biblioteca-pecas-hub__secao-title">{props.titulo}</h3>
                 </div>
-                <span
-                  style={{
-                    flexShrink: 0,
-                    fontSize: 12,
-                    fontWeight: 800,
-                    padding: '7px 15px',
-                    borderRadius: 999,
-                    background: isSem ? 'rgba(255, 130, 40, 0.25)' : 'rgba(0, 210, 96, 0.2)',
-                    border: isSem ? '1px solid rgba(255, 170, 90, 0.45)' : '1px solid rgba(0, 255, 140, 0.35)',
-                    color: '#fff',
-                    letterSpacing: '0.02em',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.28)',
-                  }}
-                >
-                  {bibFmtCount(props.count)}
-                </span>
+                <span className="biblioteca-pecas-hub__secao-count">{bibFmtCount(props.count)}</span>
               </div>
               {props.descricaoExtra ? (
-                <div
-                  style={{
-                    padding: '12px 18px',
-                    fontSize: 12,
-                    lineHeight: 1.55,
-                    color: 'rgba(255, 235, 210, 0.92)',
-                    background: 'rgba(0,0,0,0.22)',
-                    borderBottom: '1px solid rgba(255,255,255,0.05)',
-                  }}
-                >
-                  {props.descricaoExtra}
-                </div>
+                <div className="biblioteca-pecas-hub__secao-extra">{props.descricaoExtra}</div>
               ) : null}
-              <div style={{ padding: 18, background: 'rgba(0,0,0,0.2)' }}>{props.children}</div>
+              <div className="biblioteca-pecas-hub__secao-body">{props.children}</div>
             </div>
           )
         }
@@ -37799,60 +37718,24 @@ onKeyPress={(e) => {
                           />
                         </div>
                         <h4 className="biblioteca-pecas-hub__piece-name">{peca.nome}</h4>
-                        <div
-                          style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '8px',
-                            marginBottom: '4px',
-                            alignItems: 'center',
-                          }}
-                        >
+                        <div className="biblioteca-pecas-hub__piece-meta">
                           <span
+                            className="biblioteca-pecas-hub__piece-chip biblioteca-pecas-hub__piece-chip--code"
                             title={`${safeT?.codigoPecaBiblioteca || 'Código'}: ${peca.codigo || ''}`}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '6px 14px',
-                              borderRadius: '999px',
-                              fontSize: '12px',
-                              fontWeight: 600,
-                              lineHeight: 1.25,
-                              backgroundColor: 'rgba(25, 55, 95, 0.55)',
-                              border: '1px solid rgba(100, 185, 255, 0.5)',
-                              color: '#d0ecff',
-                              maxWidth: '100%',
-                              boxSizing: 'border-box',
-                            }}
                           >
-                            <span style={{ opacity: 0.82, fontWeight: 500, fontSize: '11px' }}>
+                            <span className="biblioteca-pecas-hub__piece-chip-k">
                               {safeT?.codigoPecaBiblioteca || 'Código'}
                             </span>
-                            <span style={{ wordBreak: 'break-all' }}>{peca.codigo || '—'}</span>
+                            <span className="biblioteca-pecas-hub__piece-chip-v">{peca.codigo || '—'}</span>
                           </span>
                           <span
+                            className={`biblioteca-pecas-hub__piece-chip${grupoNome ? ' biblioteca-pecas-hub__piece-chip--group' : ' biblioteca-pecas-hub__piece-chip--group-muted'}`}
                             title={`${safeT?.categoriaPecaBiblioteca || 'Grupo'}: ${grupoNome || (safeT?.bibliotecaGrupoSemCategoria || 'Sem categoria')}`}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '6px 14px',
-                              borderRadius: '999px',
-                              fontSize: '12px',
-                              fontWeight: 600,
-                              lineHeight: 1.25,
-                              backgroundColor: grupoNome ? 'rgba(0, 70, 32, 0.5)' : 'rgba(70, 48, 18, 0.55)',
-                              border: grupoNome ? '1px solid rgba(0, 230, 110, 0.42)' : '1px solid rgba(255, 175, 90, 0.45)',
-                              color: grupoNome ? '#c8ffd8' : '#ffd9b0',
-                              maxWidth: '100%',
-                              boxSizing: 'border-box',
-                            }}
                           >
-                            <span style={{ opacity: 0.82, fontWeight: 500, fontSize: '11px' }}>
+                            <span className="biblioteca-pecas-hub__piece-chip-k">
                               {safeT?.categoriaPecaBiblioteca || 'Grupo'}
                             </span>
-                            <span style={{ wordBreak: 'break-word' }}>
+                            <span className="biblioteca-pecas-hub__piece-chip-v">
                               {grupoNome || safeT?.bibliotecaGrupoSemCategoria || '—'}
                             </span>
                           </span>
