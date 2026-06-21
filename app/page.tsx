@@ -22555,7 +22555,11 @@ export default function Dashboard() {
   ): { pecas: PecaBiblioteca[] } | { error: string } => {
     const trimmed = raw.trim()
     if (!trimmed) {
-      return { error: t?.importacaoUrlObrigatoria ?? 'Cole o conteúdo JSON ou CSV na caixa acima.' }
+      return {
+        error:
+          (t as any)?.importacaoColarVazio ??
+          'Cole o conteúdo copiado do site na caixa abaixo (Ctrl+A no site, Ctrl+C, depois Ctrl+V).',
+      }
     }
     if (/^https?:\/\//i.test(trimmed) && !trimmed.includes('\n')) {
       return {
@@ -22933,8 +22937,23 @@ export default function Dashboard() {
     const merge = opts?.mergeComExistente !== false
     const p = String(plain || '').trim()
     const h = String(html || '').trim()
+    const { raw, plainFallback } = pickBestCatalogRawFromClipboard(h, p)
+    const incoming = (raw || p || h).trim()
 
-    if (/^https?:\/\//i.test(p) && !p.includes('\n') && h.length < 40) {
+    if (!incoming) {
+      setImportacaoUrlError(
+        (t as any)?.importacaoColarVazio ??
+          'Cole o conteúdo copiado do site na caixa abaixo (Ctrl+A no site, Ctrl+C, depois Ctrl+V).'
+      )
+      setImportacaoPreview(null)
+      return
+    }
+
+    const prev = merge ? importacaoTextoColado.trim() : ''
+    const merged = merge && prev.length ? `${prev}\n\n${incoming}` : incoming
+    setImportacaoTextoColado(merged)
+
+    if (/^https?:\/\//i.test(p) && !p.includes('\n') && h.length < 40 && incoming === p) {
       setUrlImportacaoPecas(p)
       try {
         const origin = new URL(p).origin
@@ -22942,40 +22961,21 @@ export default function Dashboard() {
       } catch {
         /* ignorar */
       }
-      setAbaBibliotecaPecas('importacao')
       setImportacaoUrlError(
         (t as any)?.importacaoColarUrlUsarBuscar ??
-          'URL colada. Prima «Buscar da URL» ou copie o conteúdo da página (Ctrl+A no site, depois Ctrl+V aqui).'
+          'Copie o conteúdo da página (Ctrl+A no site), não só o endereço. O link foi guardado acima se quiser «Buscar da URL».'
       )
-      void handleBuscarImportacaoUrl(p)
+      setImportacaoPreview(null)
       return
     }
 
-    if (!clipboardLooksLikeCatalogImport(h, p)) {
-      setImportacaoUrlError(
-        (t as any)?.importacaoColarNaoReconhecido ??
-          'Conteúdo não reconhecido. No site: Ctrl+A, Ctrl+C. Depois clique na caixa de colagem e Ctrl+V.'
-      )
-      return
-    }
-
-    const { raw, plainFallback } = pickBestCatalogRawFromClipboard(h, p)
-    if (!raw.trim()) {
-      setImportacaoUrlError(t?.importacaoUrlObrigatoria ?? 'Cole o conteúdo copiado do site.')
-      return
-    }
-
-    const prev = merge ? importacaoTextoColado.trim() : ''
-    const merged = prev.length ? `${prev}\n\n${raw}` : raw
     const result = processarTextoImportacaoPecas(merged, plainFallback || p)
-    setImportacaoTextoColado(merged)
     aplicarResultadoColagemCatalogo(result, merged)
   }, [
     aplicarResultadoColagemCatalogo,
     processarTextoImportacaoPecas,
     importacaoLojaBaseUrl,
     importacaoTextoColado,
-    handleBuscarImportacaoUrl,
     t,
   ])
 
@@ -23045,9 +23045,18 @@ export default function Dashboard() {
   }, [parseRawToPecas, t, importacaoLojaBaseUrl])
 
   const handleImportacaoColarTexto = useCallback(() => {
-    const result = processarTextoImportacaoPecas(importacaoTextoColado, importacaoTextoColado)
-    aplicarResultadoColagemCatalogo(result, importacaoTextoColado.trim())
-  }, [importacaoTextoColado, processarTextoImportacaoPecas, aplicarResultadoColagemCatalogo])
+    const raw = importacaoTextoColado.trim()
+    if (!raw) {
+      setImportacaoUrlError(
+        (t as any)?.importacaoColarVazio ??
+          'Cole o conteúdo copiado do site na caixa abaixo (Ctrl+A no site, Ctrl+C, depois Ctrl+V).'
+      )
+      setImportacaoPreview(null)
+      return
+    }
+    const result = processarTextoImportacaoPecas(raw, raw)
+    aplicarResultadoColagemCatalogo(result, raw)
+  }, [importacaoTextoColado, processarTextoImportacaoPecas, aplicarResultadoColagemCatalogo, t])
 
   const handleAdicionarImportacaoPreview = useCallback(() => {
     if (!importacaoPreview || importacaoPreview.length === 0) return
