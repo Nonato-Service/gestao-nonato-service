@@ -10494,20 +10494,48 @@ button.dia-trabalho-acao-btn--del:hover {
 .biblioteca-hub-tab--active {
   font-weight: 800;
   color: #ffffff;
-  border: 1px solid rgba(0, 255, 175, 0.72);
-  background: linear-gradient(168deg, rgba(28, 105, 68, 0.96) 0%, rgba(6, 44, 28, 0.99) 100%);
+  border: 1px solid color-mix(in srgb, var(--bib-green) 88%, #ffffff 12%);
+  background: var(--bib-green);
   box-shadow:
-    0 0 0 1px rgba(0, 255, 140, 0.22),
-    0 8px 30px rgba(0, 130, 72, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    0 0 0 1px rgba(0, 168, 107, 0.22),
+    0 8px 24px rgba(0, 168, 107, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .biblioteca-hub-tab--active:hover {
-  border-color: rgba(120, 255, 200, 0.85);
+  border-color: color-mix(in srgb, var(--bib-green-hover) 90%, #ffffff 10%);
+  background: var(--bib-green-hover);
   box-shadow:
-    0 0 0 1px rgba(0, 255, 160, 0.3),
-    0 10px 34px rgba(0, 150, 85, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    0 0 0 1px rgba(0, 168, 107, 0.3),
+    0 10px 28px rgba(0, 168, 107, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.biblioteca-hub-tab--purple {
+  border-color: rgba(147, 51, 234, 0.45);
+  background: rgba(147, 51, 234, 0.12);
+  color: #f3e8ff;
+}
+
+.biblioteca-hub-tab--purple:hover {
+  border-color: rgba(167, 85, 247, 0.62);
+  background: rgba(147, 51, 234, 0.2);
+  color: #ffffff;
+}
+
+.biblioteca-hub-tab--purple.biblioteca-hub-tab--active {
+  border-color: color-mix(in srgb, var(--bib-purple) 88%, #ffffff 12%);
+  background: var(--bib-purple);
+  color: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(147, 51, 234, 0.24),
+    0 8px 24px rgba(147, 51, 234, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.biblioteca-hub-tab--purple.biblioteca-hub-tab--active:hover {
+  background: var(--bib-purple-hover);
+  border-color: color-mix(in srgb, var(--bib-purple-hover) 90%, #ffffff 10%);
 }
 
 .biblioteca-hub-tab:active {
@@ -10516,10 +10544,22 @@ button.dia-trabalho-acao-btn--del:hover {
 
 /* —— Hub «Biblioteca de peças»: layout geral, hero, KPIs, navegação, ferramentas —— */
 .biblioteca-pecas-hub {
-  --bib-hub-accent: rgba(0, 230, 150, 0.92);
-  --bib-hub-accent-soft: rgba(0, 210, 125, 0.35);
+  --bib-green: #00a86b;
+  --bib-green-hover: #00945d;
+  --bib-green-active: #008556;
+  --bib-purple: #9333ea;
+  --bib-purple-hover: #7e22ce;
+  --bib-purple-active: #6b21a8;
+  --bib-orange: #f97316;
+  --bib-orange-hover: #ea580c;
+  --bib-orange-active: #c2410c;
+  --bib-ghost-border: rgba(255, 255, 255, 0.22);
+  --bib-ghost-bg: rgba(255, 255, 255, 0.04);
+  --bib-ghost-hover-bg: rgba(255, 255, 255, 0.08);
+  --bib-hub-accent: #00a86b;
+  --bib-hub-accent-soft: rgba(0, 168, 107, 0.35);
   --bib-hub-surface: rgba(8, 18, 14, 0.72);
-  --bib-hub-border: rgba(0, 210, 120, 0.22);
+  --bib-hub-border: rgba(0, 168, 107, 0.22);
   --bib-hub-text: rgba(245, 255, 248, 0.96);
   --bib-hub-muted: rgba(200, 230, 212, 0.88);
   max-width: 1200px;
@@ -10578,25 +10618,18 @@ button.dia-trabalho-acao-btn--del:hover {
   color: #fff;
 }
 
-.biblioteca-pecas-hub__icon-btn--back {
-  background: rgba(0, 200, 83, 0.07);
-  border-color: rgba(0, 200, 83, 0.45);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-}
-.biblioteca-pecas-hub__icon-btn--back:hover {
-  background: rgba(0, 200, 83, 0.14);
-  border-color: rgba(0, 255, 180, 0.65);
-  box-shadow: 0 4px 16px rgba(0, 60, 30, 0.35);
-}
+.biblioteca-pecas-hub__icon-btn--back,
 .biblioteca-pecas-hub__icon-btn--home {
-  background: rgba(0, 140, 255, 0.08);
-  border-color: rgba(0, 160, 255, 0.45);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  background: var(--bib-ghost-bg);
+  border-color: var(--bib-ghost-border);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: none;
 }
+.biblioteca-pecas-hub__icon-btn--back:hover,
 .biblioteca-pecas-hub__icon-btn--home:hover {
-  background: rgba(0, 140, 255, 0.16);
-  border-color: rgba(100, 200, 255, 0.7);
-  box-shadow: 0 4px 16px rgba(0, 40, 80, 0.35);
+  background: var(--bib-ghost-hover-bg);
+  border-color: rgba(255, 255, 255, 0.34);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
 }
 .biblioteca-pecas-hub__icon-btn:focus-visible {
   outline: none;
@@ -10761,9 +10794,9 @@ button.dia-trabalho-acao-btn--del:hover {
   font-weight: 600;
   border-radius: 10px;
   cursor: pointer;
-  border: 1px solid rgba(0, 200, 120, 0.32);
-  background: rgba(0, 0, 0, 0.2);
-  color: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--bib-ghost-border);
+  background: var(--bib-ghost-bg);
+  color: rgba(255, 255, 255, 0.88);
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
@@ -10771,16 +10804,21 @@ button.dia-trabalho-acao-btn--del:hover {
     box-shadow 0.2s ease;
 }
 .biblioteca-pecas-hub__seg:hover {
-  border-color: rgba(0, 255, 160, 0.45);
-  box-shadow: 0 2px 12px rgba(0, 50, 28, 0.25);
+  border-color: rgba(255, 255, 255, 0.32);
+  background: var(--bib-ghost-hover-bg);
+  color: #ffffff;
 }
 .biblioteca-pecas-hub__seg--active {
-  background: linear-gradient(168deg, rgba(28, 105, 68, 0.85) 0%, rgba(6, 44, 28, 0.95) 100%);
-  border-color: rgba(0, 255, 175, 0.55);
-  color: #c8ffd8;
+  background: var(--bib-green);
+  border-color: color-mix(in srgb, var(--bib-green) 88%, #ffffff 12%);
+  color: #ffffff;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 4px 18px rgba(0, 90, 50, 0.3);
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 4px 16px rgba(0, 168, 107, 0.28);
+}
+.biblioteca-pecas-hub__seg--active:hover {
+  background: var(--bib-green-hover);
+  border-color: color-mix(in srgb, var(--bib-green-hover) 90%, #ffffff 10%);
 }
 
 .biblioteca-pecas-hub__select {
@@ -11551,6 +11589,136 @@ button.dia-trabalho-acao-btn--del:hover {
   font-size: 11px;
   font-weight: 700;
   border-radius: 8px;
+}
+
+/* Botões semânticos — Biblioteca de Peças (paleta da imagem de referência) */
+.biblioteca-pecas-hub .btn-primary {
+  background: var(--bib-green) !important;
+  border: 1px solid color-mix(in srgb, var(--bib-green) 85%, #ffffff 15%) !important;
+  color: #ffffff !important;
+  box-shadow: none;
+}
+
+.biblioteca-pecas-hub .btn-primary:hover:not(:disabled) {
+  background: var(--bib-green-hover) !important;
+  border-color: color-mix(in srgb, var(--bib-green-hover) 80%, #ffffff 20%) !important;
+  box-shadow: 0 0 16px rgba(0, 168, 107, 0.24), 0 6px 18px rgba(0, 0, 0, 0.28) !important;
+}
+
+.biblioteca-pecas-hub .btn-primary:active:not(:disabled) {
+  background: var(--bib-green-active) !important;
+}
+
+.biblioteca-pecas-hub .btn-secondary,
+.biblioteca-btn--ghost {
+  background: var(--bib-ghost-bg) !important;
+  border: 1px solid var(--bib-ghost-border) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  box-shadow: none !important;
+}
+
+.biblioteca-pecas-hub .btn-secondary:hover:not(:disabled),
+.biblioteca-btn--ghost:hover:not(:disabled) {
+  background: var(--bib-ghost-hover-bg) !important;
+  border-color: rgba(255, 255, 255, 0.34) !important;
+  color: #ffffff !important;
+}
+
+.biblioteca-btn--purple {
+  background: var(--bib-purple) !important;
+  border: 1px solid color-mix(in srgb, var(--bib-purple) 85%, #ffffff 15%) !important;
+  color: #ffffff !important;
+  box-shadow: none;
+}
+
+.biblioteca-btn--purple:hover:not(:disabled) {
+  background: var(--bib-purple-hover) !important;
+  border-color: color-mix(in srgb, var(--bib-purple-hover) 80%, #ffffff 20%) !important;
+  box-shadow: 0 0 16px rgba(147, 51, 234, 0.28), 0 6px 18px rgba(0, 0, 0, 0.28) !important;
+}
+
+.biblioteca-btn--purple:active:not(:disabled) {
+  background: var(--bib-purple-active) !important;
+}
+
+.biblioteca-btn--orange {
+  background: var(--bib-orange) !important;
+  border: 1px solid color-mix(in srgb, var(--bib-orange) 85%, #ffffff 15%) !important;
+  color: #ffffff !important;
+  box-shadow: none;
+}
+
+.biblioteca-btn--orange:hover:not(:disabled) {
+  background: var(--bib-orange-hover) !important;
+  border-color: color-mix(in srgb, var(--bib-orange-hover) 80%, #ffffff 20%) !important;
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.28), 0 6px 18px rgba(0, 0, 0, 0.28) !important;
+}
+
+.biblioteca-btn--orange:active:not(:disabled) {
+  background: var(--bib-orange-active) !important;
+}
+
+.biblioteca-btn--green,
+.biblioteca-btn--purple,
+.biblioteca-btn--orange,
+.biblioteca-btn--ghost {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.25;
+  cursor: pointer;
+  border-radius: 8px;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease,
+    transform 0.18s ease;
+}
+
+.biblioteca-btn--green {
+  background: var(--bib-green);
+  border: 1px solid color-mix(in srgb, var(--bib-green) 85%, #ffffff 15%);
+  color: #ffffff;
+}
+
+.biblioteca-btn--green:hover:not(:disabled) {
+  background: var(--bib-green-hover);
+  border-color: color-mix(in srgb, var(--bib-green-hover) 80%, #ffffff 20%);
+}
+
+.biblioteca-hub-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.biblioteca-hub-toolbar__actions .biblioteca-btn--green,
+.biblioteca-hub-toolbar__actions .biblioteca-btn--purple,
+.biblioteca-hub-toolbar__actions .biblioteca-btn--orange,
+.biblioteca-hub-toolbar__actions .biblioteca-btn--ghost {
+  padding: 8px 14px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.biblioteca-pecas-hub__hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.biblioteca-pecas-hub__hero-actions .biblioteca-btn--green,
+.biblioteca-pecas-hub__hero-actions .biblioteca-btn--purple {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 /* Diário de anotação — barra lateral e cartões no modal */

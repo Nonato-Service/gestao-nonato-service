@@ -36187,6 +36187,53 @@ onKeyPress={(e) => {
                   </p>
                 </div>
                 <div className="tab-glass-hero-actions">
+                  <div className="biblioteca-pecas-hub__hero-actions">
+                    <button
+                      type="button"
+                      className="biblioteca-btn--green"
+                      onClick={() => {
+                        setAbaBibliotecaPecas('cadastro')
+                        setSalvarPecaBibliotecaVoltaParaImportacao(false)
+                        setShowBibliotecaPecasForm(true)
+                        setEditingPecaBiblioteca(null)
+                        const categoriaSelecionada = categoriasPecas.find(c => c.id === ultimoGrupoSelecionado)
+                        const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === ultimoSubgrupoSelecionado)
+                        const gid = ultimoGrupoSelecionado || ''
+                        const sid =
+                          gid && subcategoriaSelecionada && subcategoriaSelecionada.categoriaId === gid
+                            ? ultimoSubgrupoSelecionado
+                            : ''
+                        const subNome = sid ? subcategoriaSelecionada?.nome || '' : ''
+                        setPecaBibliotecaForm({
+                          id: '',
+                          nome: '',
+                          codigo: '',
+                          preco: '',
+                          descricao: '',
+                          categoria: categoriaSelecionada?.nome || '',
+                          categoriaId: gid,
+                          subcategoria: subNome,
+                          subcategoriaId: sid,
+                          imagem: '',
+                          dataCriacao: new Date().toISOString(),
+                        })
+                        setPecaBibliotecaImagemUrlDraft('')
+                        setUltimoGrupoSelecionado(gid)
+                        setUltimoSubgrupoSelecionado(sid)
+                        setPecaBibliotecaPickerCategoriaAberto(false)
+                        setPecaBibliotecaPickerSubcategoriaAberto(false)
+                      }}
+                    >
+                      {safeT?.novaPecaBiblioteca || 'Nova Peça'}
+                    </button>
+                    <button
+                      type="button"
+                      className="biblioteca-btn--purple"
+                      onClick={() => setAbaBibliotecaPecas('grupos')}
+                    >
+                      {safeT?.gerenciarCategorias || 'Gerenciar Categorias'}
+                    </button>
+                  </div>
                   <div className="tab-glass-hero-actions-row">
                   <button
                     type="button"
@@ -36321,7 +36368,7 @@ onKeyPress={(e) => {
               <button
                 type="button"
                 role="tab"
-                className={bibliotecaHubTabClass(abaBibliotecaPecas === 'grupos')}
+                className={`biblioteca-hub-tab biblioteca-hub-tab--purple${abaBibliotecaPecas === 'grupos' ? ' biblioteca-hub-tab--active' : ''}`}
                 aria-selected={abaBibliotecaPecas === 'grupos'}
                 onClick={() => setAbaBibliotecaPecas('grupos')}
               >
@@ -36416,6 +36463,7 @@ onKeyPress={(e) => {
                       'Para renomear ou apagar categorias e subcategorias já criadas, abra a aba «Gerenciar Categorias» e use os botões Editar / Excluir ao lado de cada nome.'}{' '}
                     <button
                       type="button"
+                      className="biblioteca-btn--purple"
                       onClick={() => setAbaBibliotecaPecas('grupos')}
                       style={{
                         marginLeft: '6px',
@@ -36425,10 +36473,6 @@ onKeyPress={(e) => {
                         fontWeight: 700,
                         cursor: 'pointer',
                         borderRadius: 8,
-                        border: '1px solid rgba(0, 255, 120, 0.5)',
-                        backgroundColor: 'rgba(12, 48, 26, 0.9)',
-                        color: '#e8fff0',
-                        boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
                       }}
                     >
                       {(safeT as any).pecaBibliotecaIrGerirGrupos || 'Abrir Gerenciar Categorias'}
@@ -37596,6 +37640,7 @@ onKeyPress={(e) => {
                   </div>
                   <button
                     type="button"
+                    className={filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA ? 'biblioteca-btn--orange' : 'biblioteca-btn--ghost'}
                     onClick={() => {
                       setFiltroGrupoBiblioteca(BIBLIOTECA_FILTRO_SEM_CATEGORIA)
                       setFiltroSubgrupoBiblioteca('')
@@ -37606,10 +37651,7 @@ onKeyPress={(e) => {
                       whiteSpace: 'nowrap',
                       cursor: 'pointer',
                       borderRadius: '6px',
-                      border: '1px solid rgba(255, 180, 90, 0.55)',
-                      backgroundColor: filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA ? 'rgba(255, 140, 40, 0.25)' : 'rgba(50, 36, 18, 0.75)',
-                      color: '#ffd4a8',
-                      fontWeight: filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA ? 700 : 500,
+                      fontWeight: filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA ? 700 : 600,
                     }}
                   >
                     {(safeT as any).bibliotecaBotaoIrSemCategoria || 'Ver só sem categoria'}
@@ -37660,6 +37702,28 @@ onKeyPress={(e) => {
                         fontSize: '13px',
                       }}
                     />
+                  </div>
+                  <div className="biblioteca-hub-toolbar__actions">
+                    <button
+                      type="button"
+                      className="biblioteca-btn--purple"
+                      onClick={() => setAbaBibliotecaPecas('grupos')}
+                    >
+                      {safeT?.gerenciarCategorias || 'Gerenciar Categorias'}
+                    </button>
+                    {(filtroGrupoBiblioteca || filtroSubgrupoBiblioteca || buscaCodigoBiblioteca.trim()) ? (
+                      <button
+                        type="button"
+                        className="biblioteca-btn--orange"
+                        onClick={() => {
+                          setFiltroGrupoBiblioteca('')
+                          setFiltroSubgrupoBiblioteca('')
+                          setBuscaCodigoBiblioteca('')
+                        }}
+                      >
+                        {safeT?.limparFiltros || 'Limpar Filtros'}
+                      </button>
+                    ) : null}
                   </div>
                 </div>
                 </div>
@@ -37908,7 +37972,7 @@ onKeyPress={(e) => {
                           </button>
                           <button
                             type="button"
-                            className="btn-secondary"
+                            className="biblioteca-btn--orange"
                             onClick={() => setSelecaoPecasBibliotecaIds([])}
                             style={{ padding: '8px 12px', fontSize: '12px' }}
                           >
