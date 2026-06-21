@@ -1969,6 +1969,21 @@ function chavePecaBibliotecaSequenciaPreview(p: { codigo?: string; nome?: string
   return nome ? `n:${nome}` : ''
 }
 
+function compararPecasBibliotecaPorNumeroSequencia(a: PecaBiblioteca, b: PecaBiblioteca): number {
+  const na = parseNumeroSequenciaPecaBiblioteca(a.numeroSequenciaGrupo)
+  const nb = parseNumeroSequenciaPecaBiblioteca(b.numeroSequenciaGrupo)
+  if (na && nb && na !== nb) return na - nb
+  if (na && !nb) return -1
+  if (!na && nb) return 1
+  return String(a.nome || a.codigo || '').localeCompare(String(b.nome || b.codigo || ''), undefined, {
+    numeric: true,
+  })
+}
+
+function ordenarPecasBibliotecaParaExibicao(pecas: PecaBiblioteca[]): PecaBiblioteca[] {
+  return [...pecas].sort(compararPecasBibliotecaPorNumeroSequencia)
+}
+
 function atribuirNumerosSequenciaNovasPecas(
   novas: PecaBiblioteca[],
   existentes: PecaBiblioteca[]
@@ -38460,7 +38475,7 @@ onKeyPress={(e) => {
                     }
                     return true
                   }
-                  const pecasVisiveisParaLote = pecasBiblioteca.filter(passaFiltroBiblioteca)
+                  const pecasVisiveisParaLote = ordenarPecasBibliotecaParaExibicao(pecasBiblioteca.filter(passaFiltroBiblioteca))
                   const pecasCatalogoFiltradas = pecasVisiveisParaLote.filter((p) => !ehImportacaoPendenteStrict(p))
 
                   const renderPecaBibliotecaGridCell = (peca: PecaBiblioteca) => {
