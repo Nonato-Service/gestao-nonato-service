@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { translateWithMyMemory } from '../lib/mymemory-translate'
+import { translateWithMyMemory, WRITING_ASSIST_FIELD_MAX_CHARS } from '../lib/mymemory-translate'
 
 const STORAGE_NATIVE = 'nonato-writing-native-lang'
 
@@ -74,7 +74,11 @@ export function WritingLanguageAssistModal({
       setWroteIn('pt-BR')
     }
     setNeedIn(selectedLanguage)
-    setDraft(typeof fieldInitialText === 'string' ? fieldInitialText : '')
+    setDraft(
+      typeof fieldInitialText === 'string'
+        ? fieldInitialText.slice(0, WRITING_ASSIST_FIELD_MAX_CHARS)
+        : ''
+    )
     setTranslated('')
     setLoading(false)
     setToast('')
@@ -180,8 +184,9 @@ export function WritingLanguageAssistModal({
         <label style={{ display: 'block', fontSize: '12px', color: '#9ab0a2', marginBottom: '6px' }}>{labels.yourText}</label>
         <textarea
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => setDraft(e.target.value.slice(0, WRITING_ASSIST_FIELD_MAX_CHARS))}
           placeholder={labels.placeholder}
+          maxLength={WRITING_ASSIST_FIELD_MAX_CHARS}
           rows={5}
           style={{
             width: '100%',
@@ -197,6 +202,9 @@ export function WritingLanguageAssistModal({
             minHeight: '100px',
           }}
         />
+        <p style={{ margin: '-6px 0 14px', fontSize: '11px', color: 'rgba(154, 176, 162, 0.88)', textAlign: 'right' }}>
+          {draft.length}/{WRITING_ASSIST_FIELD_MAX_CHARS}
+        </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
           <div>
@@ -416,7 +424,7 @@ export function WritingLanguageAssistModal({
               type="button"
               disabled={!draft.trim()}
               onClick={() => {
-                onApplyToField(draft)
+                onApplyToField(draft.slice(0, WRITING_ASSIST_FIELD_MAX_CHARS))
                 onClose()
               }}
               style={{
@@ -437,7 +445,7 @@ export function WritingLanguageAssistModal({
               type="button"
               disabled={!translated.trim()}
               onClick={() => {
-                onApplyToField(translated.trim())
+                onApplyToField(translated.trim().slice(0, WRITING_ASSIST_FIELD_MAX_CHARS))
                 onClose()
               }}
               style={{

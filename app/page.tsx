@@ -94,6 +94,7 @@ import {
 import { WritingLanguageAssistModal } from './components/WritingLanguageAssistModal'
 import { useInstallPrompt } from './components/InstallPrompt'
 import { WritingAssistFieldContext } from './context/WritingAssistFieldContext'
+import { translateWithMyMemory, WRITING_ASSIST_FIELD_MAX_CHARS } from './lib/mymemory-translate'
 import { AssistTextarea, AssistInput } from './components/AssistTextFields'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PagamentosContadorContent } from './components/PagamentosContadorContent'
@@ -7741,7 +7742,7 @@ export default function Dashboard() {
       }
       if (selection.toString().trim().length > 0) {
         const text = selection.toString().trim()
-        if (text.length > 0 && text.length < 500) { // Limitar tamanho
+        if (text.length > 0 && text.length <= WRITING_ASSIST_FIELD_MAX_CHARS) {
           const range = selection.getRangeAt(0)
           const rect = range.getBoundingClientRect()
           
@@ -8239,32 +8240,11 @@ export default function Dashboard() {
     setQuickTranslateResult('')
 
     try {
-      const fromCode = languageCodes[from] || from
-      const toCode = languageCodes[to] || to
-      
-      // Usar apenas API MyMemory (sem problemas de CORS)
-      const response = await fetch(
-        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${fromCode}|${toCode}`,
-        { 
-          method: 'GET',
-          headers: { 'Accept': 'application/json' }
-        }
-      )
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.responseData && data.responseData.translatedText) {
-          setQuickTranslateResult(data.responseData.translatedText)
-          setQuickTranslating(false)
-          return
-        }
-      }
-
-      // Se falhar, mostrar mensagem de erro
       const tTyped = t as any
-      setQuickTranslateResult(tTyped.translationError || 'Erro ao traduzir. Verifique sua conexão e tente novamente.')
-    } catch (error) {
-      // Silenciar erros de rede para não poluir o console
+      const errMsg = tTyped.translationError || 'Erro ao traduzir. Verifique sua conexão e tente novamente.'
+      const out = await translateWithMyMemory(text, from, to, errMsg)
+      setQuickTranslateResult(out)
+    } catch {
       const tTyped = t as any
       setQuickTranslateResult(tTyped.translationError || 'Erro ao traduzir. Verifique sua conexão e tente novamente.')
     }
@@ -33866,9 +33846,15 @@ onKeyPress={(e) => {
                       </label>
                       <AssistTextarea
                         value={novoDiaTrabalho.descricaoTrabalho || ''}
-                        onValueChange={(v) => setNovoDiaTrabalho({ ...novoDiaTrabalho, descricaoTrabalho: v })}
+                        onValueChange={(v) =>
+                          setNovoDiaTrabalho({
+                            ...novoDiaTrabalho,
+                            descricaoTrabalho: v.slice(0, WRITING_ASSIST_FIELD_MAX_CHARS),
+                          })
+                        }
                         assistButtonTitle={(safeT as any)?.writingAssistFieldBtnTitle}
                         placeholder={safeT?.descricaoTrabalhoPlaceholder || 'Descreva o trabalho realizado neste dia (opcional)...'}
+                        maxLength={WRITING_ASSIST_FIELD_MAX_CHARS}
                         rows={3}
                         style={{
                           width: '100%',
@@ -33881,6 +33867,9 @@ onKeyPress={(e) => {
                           resize: 'vertical',
                         }}
                       />
+                      <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.45)', textAlign: 'right' }}>
+                        {(novoDiaTrabalho.descricaoTrabalho || '').length}/{WRITING_ASSIST_FIELD_MAX_CHARS}
+                      </p>
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '14px', flexWrap: 'nowrap' }}>
