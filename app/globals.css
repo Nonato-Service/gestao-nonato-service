@@ -14661,6 +14661,46 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   margin-top: 4px;
 }
 
+.cliente-cadastro-v2__maps-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cliente-cadastro-v2__maps-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: rgba(66, 133, 244, 0.15);
+  border: 1px solid rgba(66, 133, 244, 0.4);
+  color: #6ba3f6;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.cliente-cadastro-v2__maps-btn:hover {
+  background: rgba(66, 133, 244, 0.25);
+  border-color: rgba(66, 133, 244, 0.55);
+}
+
+.cliente-cadastro-v2__maps-btn--nav {
+  background: rgba(0, 200, 83, 0.12);
+  border-color: rgba(0, 200, 83, 0.45);
+  color: #4ade80;
+}
+
+.cliente-cadastro-v2__maps-btn--nav:hover {
+  background: rgba(0, 200, 83, 0.22);
+  border-color: rgba(0, 200, 83, 0.6);
+}
+
 .cliente-cadastro-v2__maps-link a {
   display: inline-flex;
   align-items: center;

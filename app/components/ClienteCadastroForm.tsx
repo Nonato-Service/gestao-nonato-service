@@ -8,6 +8,11 @@ import {
   IconUser,
 } from './UiIcons'
 import { translations, translationBundleKey } from '../translations'
+import {
+  buildEnderecoMapsQuery,
+  buildGoogleMapsNavigationUrl,
+  buildGoogleMapsSearchUrl,
+} from '../lib/enderecoMapsUtils'
 import { ordenarServicoGrupos, type ServicoCadastroGrupo } from '../lib/servicosCadastroUtils'
 
 function useClienteFormTr(language: string) {
@@ -162,7 +167,15 @@ export function ClienteCadastroForm({
   const titulo = editingCliente ? tr('editCliente') : tr('novoCliente')
   const subtitulo = editingCliente ? tr('editClienteSubtitle') : tr('novoClienteSubtitle')
 
-  const mapsQuery = [clienteForm.morada, clienteForm.codigoPostal, clienteForm.pais].filter(Boolean).join(', ')
+  const mapsQuery = buildEnderecoMapsQuery({
+    morada: clienteForm.morada,
+    localidade: clienteForm.localidade,
+    conselho: clienteForm.conselho,
+    codigoPostal: clienteForm.codigoPostal,
+    pais: clienteForm.pais,
+  })
+  const mapsSearchUrl = buildGoogleMapsSearchUrl(mapsQuery)
+  const mapsNavUrl = buildGoogleMapsNavigationUrl(mapsQuery)
 
   return (
     <div
@@ -326,6 +339,17 @@ export function ClienteCadastroForm({
           />
         </FieldInput>
 
+        <FieldInput id="cidade-cliente" icon={<IconMapPin />} label={tr('cidade')} fullWidth={referenceLayout}>
+          <input
+            id="cidade-cliente"
+            type="text"
+            className="cliente-cadastro-v2__input"
+            placeholder={tr('cidadePlaceholder')}
+            value={clienteForm.localidade}
+            onChange={(e) => setClienteForm({ ...clienteForm, localidade: e.target.value })}
+          />
+        </FieldInput>
+
         <FieldInput
           id="nif-cliente"
           icon={<IconIdCard size={18} />}
@@ -342,6 +366,27 @@ export function ClienteCadastroForm({
           />
         </FieldInput>
         </div>
+
+        {mapsQuery.trim() ? (
+          <div className="cliente-cadastro-v2__maps-actions">
+            <a
+              href={mapsNavUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cliente-cadastro-v2__maps-btn cliente-cadastro-v2__maps-btn--nav"
+            >
+              🧭 {tr('clienteAbrirGpsNavegar')}
+            </a>
+            <a
+              href={mapsSearchUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cliente-cadastro-v2__maps-btn"
+            >
+              🗺️ {tr('clienteVerNoMapa')}
+            </a>
+          </div>
+        ) : null}
       </section>
 
       {showExtras ? (
@@ -381,16 +426,6 @@ export function ClienteCadastroForm({
                 />
               </FieldInput>
             ) : null}
-
-            <FieldInput id="localidade-cliente" icon={<IconMapPin />} label={tr('localidade')}>
-              <input
-                id="localidade-cliente"
-                type="text"
-                className="cliente-cadastro-v2__input"
-                value={clienteForm.localidade}
-                onChange={(e) => setClienteForm({ ...clienteForm, localidade: e.target.value })}
-              />
-            </FieldInput>
 
             <FieldInput id="conselho-cliente" icon={<IconMapPin />} label={tr('conselho')}>
               <input
@@ -479,17 +514,6 @@ export function ClienteCadastroForm({
               />
             </FieldInput>
 
-            {mapsQuery.trim() ? (
-              <div className="cliente-cadastro-v2__maps-link">
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  🗺️ {tr('abrirGoogleMaps')}
-                </a>
-              </div>
-            ) : null}
           </div>
         ) : null}
       </section>
