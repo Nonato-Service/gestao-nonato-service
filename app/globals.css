@@ -11804,6 +11804,10 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   background: rgba(0, 36, 56, 0.42);
 }
 
+.importacao-pecas-preview-panel {
+  scroll-margin-top: 96px;
+}
+
 .biblioteca-pecas-form__url-row {
   display: flex;
   flex-wrap: wrap;

@@ -1858,18 +1858,34 @@ const HOMAG_SHOP_PECA_LOOKUP_ROOT = 'https://shop.homag.com/s/?language=en_US'
 /** HTML/texto colado de uma página de catálogo (não tratar como colagem só de imagem). */
 function clipboardLooksLikeCatalogImport(html: string, plain: string): boolean {
   const h = String(html || '')
-  if (h.length >= 80) {
-    if (/<table\b/i.test(h) || /<tr\b/i.test(h)) return true
-    if (/<img[^>]+src=/i.test(h) && /<(?:div|td|th|li|article|section|p)\b/i.test(h)) return true
-  }
   const p = String(plain || '').trim()
-  if (!p || p.length < 15) return false
-  if (/^https?:\/\//i.test(p) && !p.includes('\n') && !p.includes(';')) return false
+  if (h.length >= 40 && (/<table\b/i.test(h) || /<tr\b/i.test(h) || /<img\b/i.test(h))) return true
+  if (!p || p.length < 10) return false
+  if (/^https?:\/\//i.test(p) && !p.includes('\n')) return true
   if (p.startsWith('[') || p.startsWith('{')) return true
   const lines = p.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
-  if (lines.length >= 3) return true
-  if (lines.length >= 2 && (p.includes(';') || p.includes('\t'))) return true
+  if (lines.length >= 2) return true
+  if (p.length >= 25) return true
   return false
+}
+
+function pickBestCatalogRawFromClipboard(html: string, plain: string): { raw: string; plainFallback: string } {
+  const h = String(html || '').trim()
+  const p = String(plain || '').trim()
+  if (!h && !p) return { raw: '', plainFallback: '' }
+  if (/^https?:\/\//i.test(p) && !p.includes('\n') && h.length < 40) return { raw: p, plainFallback: p }
+  if (h.length >= 40 && /<table\b/i.test(h)) return { raw: h, plainFallback: p }
+  if (h.length >= 40 && p.length >= 20) {
+    const plainLines = p.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+    const htmlLooksUseful =
+      /<table\b/i.test(h) ||
+      /<tr\b/i.test(h) ||
+      (/<img\b/i.test(h) && plainLines.length >= 2)
+    if (htmlLooksUseful) return { raw: h, plainFallback: p }
+    if (plainLines.length >= 2) return { raw: p, plainFallback: p }
+  }
+  if (h.length >= 40) return { raw: h, plainFallback: p }
+  return { raw: p, plainFallback: p }
 }
 
 function buildPecaCatalogoUrlFromTemplate(template: string, codigo: string): string | null {
@@ -6230,6 +6246,7 @@ export default function Dashboard() {
   const [pecaBibliotecaImagemUrlDraft, setPecaBibliotecaImagemUrlDraft] = useState('')
   /** Contentor do formulário da peça — listener nativo `paste` em captura (mais fiável que só React) */
   const pecaBibliotecaFormPasteRootRef = useRef<HTMLDivElement | null>(null)
+  const importacaoPreviewPanelRef = useRef<HTMLDivElement | null>(null)
   const [showNovaCategoriaForm, setShowNovaCategoriaForm] = useState(false)
   const [novaCategoriaNome, setNovaCategoriaNome] = useState('')
   const [showNovaSubcategoriaForm, setShowNovaSubcategoriaForm] = useState(false)
@@ -22293,6 +22310,35 @@ export default function Dashboard() {
             }
           })
         }
+
+        // 4) Fallback: texto visível da página (sites com HTML vazio mas texto copiado)
+        if (itens.length === 0) {
+          const textFromHtml = (doc.body?.innerText || doc.body?.textContent || '')
+            .replace(/\u00a0/g, ' ')
+            .replace(/\r/g, '')
+            .trim()
+          if (textFromHtml.length >= 12) {
+            const innerLines = textFromHtml.split(/\n/).map((l) => l.trim()).filter(Boolean)
+            if (innerLines.length >= 2) {
+              const homagNumericLine = /^\d{7,14}$/
+              let homagBuf: string[] = []
+              for (const line of innerLines) {
+                if (homagNumericLine.test(line)) {
+                  if (homagBuf.length) {
+                    pushIfValid({
+                      codigo: line,
+                      nome: homagBuf[0],
+                      descricao: homagBuf.slice(1).join(' ').trim() || homagBuf[0],
+                    })
+                    homagBuf = []
+                  }
+                } else {
+                  homagBuf.push(line)
+                }
+              }
+            }
+          }
+        }
       } catch {
         // segue para retorno vazio caso não consiga analisar HTML
       }
@@ -22317,7 +22363,7 @@ export default function Dashboard() {
       else itens = [parsed]
     } else {
       const lines = raw.split(/\r?\n/).map((l: string) => l.trim()).filter(Boolean)
-      if (lines.length < 2) return []
+      if (lines.length < 1) return []
 
       const looksLikeDelimitedTable =
         (lines[0].includes(';') || lines[0].includes(',')) &&
@@ -22503,7 +22549,10 @@ export default function Dashboard() {
     })
   }, [])
 
-  const processarTextoImportacaoPecas = useCallback((raw: string): { pecas: PecaBiblioteca[] } | { error: string } => {
+  const processarTextoImportacaoPecas = useCallback((
+    raw: string,
+    plainFallback = ''
+  ): { pecas: PecaBiblioteca[] } | { error: string } => {
     const trimmed = raw.trim()
     if (!trimmed) {
       return { error: t?.importacaoUrlObrigatoria ?? 'Cole o conteúdo JSON ou CSV na caixa acima.' }
@@ -22512,19 +22561,39 @@ export default function Dashboard() {
       return {
         error:
           t?.importacaoColarUrlNaoSuportado ??
-          'Neste campo, cole o conteúdo JSON/CSV (não a URL). Para links, use "Buscar da URL".',
+          'Cole o conteúdo da página (Ctrl+A no site), não só o endereço. Para URL use «Buscar da URL» na aba Importação.',
       }
     }
     try {
       const paginaColagem =
         (/^https?:\/\//i.test(urlImportacaoPecas.trim()) && urlImportacaoPecas.trim()) ||
         (/^https?:\/\//i.test(importacaoLojaBaseUrl.trim()) ? importacaoLojaBaseUrl.trim() : '')
-      const pecas = parseRawToPecas(trimmed, importacaoLojaBaseUrl, paginaColagem)
+      const tryParse = (text: string) => parseRawToPecas(text, importacaoLojaBaseUrl, paginaColagem)
+
+      let pecas = tryParse(trimmed)
+      const fb = plainFallback.trim()
+      if (pecas.length === 0 && fb && fb !== trimmed) {
+        pecas = tryParse(fb)
+      }
+      if (pecas.length === 0 && /<[a-z][\s\S]*>/i.test(trimmed)) {
+        const stripped = trimmed
+          .replace(/<script[\s\S]*?<\/script>/gi, '\n')
+          .replace(/<style[\s\S]*?<\/style>/gi, '\n')
+          .replace(/<br\s*\/?>/gi, '\n')
+          .replace(/<\/(p|div|tr|li|h[1-6]|td|th)>/gi, '\n')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/[ \t]+\n/g, '\n')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim()
+        if (stripped.length >= 12 && stripped !== trimmed) {
+          pecas = tryParse(stripped)
+        }
+      }
       if (pecas.length === 0) {
         return {
           error:
             t?.importacaoNenhumaLinha ??
-            'Nenhuma lista encontrada. Use JSON (array ou objeto com .pecas/.parts/.items/.data/.itens) ou CSV (1ª linha = cabeçalhos).',
+            'Nenhuma peça reconhecida. Copie o conteúdo visível da página (Ctrl+A no site) ou use CSV/JSON.',
         }
       }
       return { pecas }
@@ -22536,71 +22605,6 @@ export default function Dashboard() {
       }
     }
   }, [parseRawToPecas, t, importacaoLojaBaseUrl, urlImportacaoPecas])
-
-  const handlePasteCatalogoPecaBiblioteca = useCallback(
-    (e: React.ClipboardEvent | ClipboardEvent) => {
-      const cd = e.clipboardData
-      if (!cd) return
-      const html = cd.getData('text/html') || ''
-      const plain = cd.getData('text/plain') || ''
-      if (!clipboardLooksLikeCatalogImport(html, plain)) return
-
-      const raw = (html && html.length >= 40 ? html : plain).trim()
-      if (!raw) return
-
-      e.preventDefault()
-      e.stopPropagation()
-
-      const result = processarTextoImportacaoPecas(raw)
-      if ('error' in result) {
-        window.alert(result.error)
-        return
-      }
-      if (result.pecas.length === 1) {
-        const p = result.pecas[0]
-        setShowBibliotecaPecasForm(true)
-        setEditingPecaBiblioteca(null)
-        setPecaBibliotecaForm((prev) => ({
-          ...prev,
-          id: '',
-          nome: p.nome || '',
-          codigo: p.codigo || '',
-          preco: p.preco || '',
-          descricao: p.descricao || '',
-          imagem: p.imagem || prev.imagem,
-          dataCriacao: prev.dataCriacao || new Date().toISOString(),
-        }))
-        if (p.imagem) setPecaBibliotecaImagemUrlDraft('')
-        return
-      }
-      setImportacaoTextoColado(raw)
-      setImportacaoPreview(result.pecas)
-      setImportacaoUrlError(null)
-      setAbaBibliotecaPecas('importacao')
-      window.alert(
-        `${t?.importacaoPreviewDesc || 'Pré-visualização:'} ${result.pecas.length} ${t?.importacaoPecasEncontradas || 'peça(s) encontrada(s)'}. ${(t as any)?.importacaoEnviarParaFila || 'Use a aba Importação para enviar para a fila.'}`
-      )
-    },
-    [processarTextoImportacaoPecas, t]
-  )
-
-  useLayoutEffect(() => {
-    if (!showBibliotecaPecasForm) return
-    const root = pecaBibliotecaFormPasteRootRef.current
-    if (!root) return
-    const listener = (ev: Event) => {
-      const ce = ev as ClipboardEvent
-      handlePasteCatalogoPecaBiblioteca(ce)
-      if (!ce.defaultPrevented) handlePasteImagemPecaBiblioteca(ce)
-    }
-    root.addEventListener('paste', listener, true)
-    return () => root.removeEventListener('paste', listener, true)
-  }, [
-    showBibliotecaPecasForm,
-    editingPecaBiblioteca?.id,
-    handlePasteCatalogoPecaBiblioteca,
-    handlePasteImagemPecaBiblioteca,
-  ])
 
   const importarPecaDoCatalogoUrl = useCallback(
     async (codigoDigitado: string, opts?: { silent?: boolean }): Promise<PecaBiblioteca | null> => {
@@ -22735,8 +22739,9 @@ export default function Dashboard() {
     void saveData(NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY, pecaLookupUrlTemplate)
   }, [pecaLookupUrlTemplate])
 
-  const handleBuscarImportacaoUrl = useCallback(async () => {
-    const url = urlImportacaoPecas.trim()
+  const handleBuscarImportacaoUrl = useCallback(async (urlOverride?: string) => {
+    const url = (urlOverride ?? urlImportacaoPecas).trim()
+    if (urlOverride) setUrlImportacaoPecas(urlOverride)
     const isHomagUrl = /shop\.homag\.com/i.test(url)
     const autoSelectGuiaPlataforma = () => {
       if (typeof navigator === 'undefined') return
@@ -22888,27 +22893,133 @@ export default function Dashboard() {
     window.open(target, '_blank', 'noopener,noreferrer')
   }, [urlImportacaoPecas, importacaoLojaBaseUrl, t])
 
+  const aplicarResultadoColagemCatalogo = useCallback((
+    result: { pecas: PecaBiblioteca[] } | { error: string },
+    textoColado: string
+  ) => {
+    if ('error' in result) {
+      setImportacaoUrlError(result.error)
+      setImportacaoPreview(null)
+      return
+    }
+    setImportacaoUrlError(null)
+    setImportacaoPreview(result.pecas)
+    setImportacaoTextoColado(textoColado)
+    if (result.pecas.length === 1) {
+      const p = result.pecas[0]
+      setShowBibliotecaPecasForm(true)
+      setEditingPecaBiblioteca(null)
+      setPecaBibliotecaForm((prev) => ({
+        ...prev,
+        id: '',
+        nome: p.nome || '',
+        codigo: p.codigo || '',
+        preco: p.preco || '',
+        descricao: p.descricao || '',
+        imagem: p.imagem || prev.imagem,
+        dataCriacao: prev.dataCriacao || new Date().toISOString(),
+      }))
+      if (p.imagem) setPecaBibliotecaImagemUrlDraft('')
+    } else if (result.pecas.length > 1) {
+      setAbaBibliotecaPecas('importacao')
+    }
+  }, [])
+
+  const executarColagemCatalogo = useCallback((
+    html: string,
+    plain: string,
+    opts?: { mergeComExistente?: boolean }
+  ) => {
+    const merge = opts?.mergeComExistente !== false
+    const p = String(plain || '').trim()
+    const h = String(html || '').trim()
+
+    if (/^https?:\/\//i.test(p) && !p.includes('\n') && h.length < 40) {
+      setUrlImportacaoPecas(p)
+      try {
+        const origin = new URL(p).origin
+        if (!importacaoLojaBaseUrl.trim()) setImportacaoLojaBaseUrl(origin)
+      } catch {
+        /* ignorar */
+      }
+      setAbaBibliotecaPecas('importacao')
+      setImportacaoUrlError(
+        (t as any)?.importacaoColarUrlUsarBuscar ??
+          'URL colada. Prima «Buscar da URL» ou copie o conteúdo da página (Ctrl+A no site, depois Ctrl+V aqui).'
+      )
+      void handleBuscarImportacaoUrl(p)
+      return
+    }
+
+    if (!clipboardLooksLikeCatalogImport(h, p)) {
+      setImportacaoUrlError(
+        (t as any)?.importacaoColarNaoReconhecido ??
+          'Conteúdo não reconhecido. No site: Ctrl+A, Ctrl+C. Depois clique na caixa de colagem e Ctrl+V.'
+      )
+      return
+    }
+
+    const { raw, plainFallback } = pickBestCatalogRawFromClipboard(h, p)
+    if (!raw.trim()) {
+      setImportacaoUrlError(t?.importacaoUrlObrigatoria ?? 'Cole o conteúdo copiado do site.')
+      return
+    }
+
+    const prev = merge ? importacaoTextoColado.trim() : ''
+    const merged = prev.length ? `${prev}\n\n${raw}` : raw
+    const result = processarTextoImportacaoPecas(merged, plainFallback || p)
+    setImportacaoTextoColado(merged)
+    aplicarResultadoColagemCatalogo(result, merged)
+  }, [
+    aplicarResultadoColagemCatalogo,
+    processarTextoImportacaoPecas,
+    importacaoLojaBaseUrl,
+    importacaoTextoColado,
+    handleBuscarImportacaoUrl,
+    t,
+  ])
+
+  const handlePasteCatalogoPecaBiblioteca = useCallback(
+    (e: React.ClipboardEvent | ClipboardEvent) => {
+      const cd = e.clipboardData
+      if (!cd) return
+      const html = cd.getData('text/html') || ''
+      const plain = cd.getData('text/plain') || ''
+      if (!plain.trim() && html.trim().length < 20) return
+
+      e.preventDefault()
+      e.stopPropagation()
+      executarColagemCatalogo(html, plain, { mergeComExistente: false })
+    },
+    [executarColagemCatalogo]
+  )
+
+  useLayoutEffect(() => {
+    if (!showBibliotecaPecasForm) return
+    const root = pecaBibliotecaFormPasteRootRef.current
+    if (!root) return
+    const listener = (ev: Event) => {
+      const ce = ev as ClipboardEvent
+      handlePasteCatalogoPecaBiblioteca(ce)
+      if (!ce.defaultPrevented) handlePasteImagemPecaBiblioteca(ce)
+    }
+    root.addEventListener('paste', listener, true)
+    return () => root.removeEventListener('paste', listener, true)
+  }, [
+    showBibliotecaPecasForm,
+    editingPecaBiblioteca?.id,
+    handlePasteCatalogoPecaBiblioteca,
+    handlePasteImagemPecaBiblioteca,
+  ])
+
   /** Colagem a partir do site: preferir `text/html` (tabelas + &lt;img&gt;) em vez de só texto plano. */
   const handleImportacaoPecasPaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const html = e.clipboardData?.getData('text/html') || ''
     const plain = e.clipboardData?.getData('text/plain') || ''
-    if (!clipboardLooksLikeCatalogImport(html, plain)) return
+    if (!plain.trim() && html.trim().length < 20) return
     e.preventDefault()
-    const raw = (html && html.length >= 40 ? html : plain).trim()
-    setImportacaoTextoColado((cur) => {
-      const prev = (cur || '').trim()
-      const merged = prev.length ? `${prev}\n\n${raw}` : raw
-      const result = processarTextoImportacaoPecas(merged)
-      if ('pecas' in result) {
-        setImportacaoPreview(result.pecas)
-        setImportacaoUrlError(null)
-      } else {
-        setImportacaoPreview(null)
-        setImportacaoUrlError(result.error)
-      }
-      return merged
-    })
-  }, [processarTextoImportacaoPecas])
+    executarColagemCatalogo(html, plain, { mergeComExistente: true })
+  }, [executarColagemCatalogo])
 
   const handleImportacaoFicheiro = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -22934,15 +23045,9 @@ export default function Dashboard() {
   }, [parseRawToPecas, t, importacaoLojaBaseUrl])
 
   const handleImportacaoColarTexto = useCallback(() => {
-    const result = processarTextoImportacaoPecas(importacaoTextoColado)
-    if ('error' in result) {
-      setImportacaoUrlError(result.error)
-      setImportacaoPreview(null)
-      return
-    }
-    setImportacaoUrlError(null)
-    setImportacaoPreview(result.pecas)
-  }, [importacaoTextoColado, processarTextoImportacaoPecas])
+    const result = processarTextoImportacaoPecas(importacaoTextoColado, importacaoTextoColado)
+    aplicarResultadoColagemCatalogo(result, importacaoTextoColado.trim())
+  }, [importacaoTextoColado, processarTextoImportacaoPecas, aplicarResultadoColagemCatalogo])
 
   const handleAdicionarImportacaoPreview = useCallback(() => {
     if (!importacaoPreview || importacaoPreview.length === 0) return
@@ -22999,6 +23104,130 @@ export default function Dashboard() {
         )
       })
   }, [aplicarRegrasClassificacaoEmLista, importacaoPreview, pecasBiblioteca, t])
+
+  const renderPainelPreviewImportacao = useCallback(() => {
+    if (!importacaoPreview || importacaoPreview.length === 0) return null
+    const hubT: Record<string, string> = (safeT || {}) as Record<string, string>
+    return (
+      <div ref={importacaoPreviewPanelRef} className="importacao-pecas-preview-panel" style={{ marginTop: '20px' }}>
+        <p style={{ fontSize: '14px', marginBottom: '12px', color: '#00c853', fontWeight: 600 }}>
+          {hubT.importacaoPreviewDesc || 'Pré-visualização:'} {importacaoPreview.length}{' '}
+          {hubT.importacaoPecasEncontradas || 'peça(s) encontrada(s)'}
+        </p>
+        <div
+          style={{
+            maxHeight: '360px',
+            overflow: 'auto',
+            marginBottom: '16px',
+            border: '1px solid rgba(0, 200, 83, 0.35)',
+            borderRadius: '8px',
+            background: 'rgba(0, 0, 0, 0.25)',
+          }}
+        >
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+            <thead>
+              <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.12)', color: '#00c853' }}>
+                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>
+                  {hubT.codigo || 'Código'}
+                </th>
+                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>
+                  {hubT.nome || 'Nome'}
+                </th>
+                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>
+                  {hubT.preco || 'Preço'}
+                </th>
+                <th
+                  style={{
+                    padding: '10px',
+                    textAlign: 'center',
+                    borderBottom: '1px solid rgba(0, 200, 83, 0.3)',
+                    width: '56px',
+                  }}
+                >
+                  {(hubT as any).importacaoPreviewColImagem || 'Img'}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {importacaoPreview.slice(0, 50).map((p, i) => (
+                <tr key={`${p.codigo || 'n'}-${i}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <td style={{ padding: '8px 10px' }}>{p.codigo || '-'}</td>
+                  <td style={{ padding: '8px 10px' }}>
+                    {(p.nome || p.descricao || '').slice(0, 80)}
+                    {(p.nome || p.descricao || '').length > 80 ? '…' : ''}
+                  </td>
+                  <td style={{ padding: '8px 10px' }}>{p.preco || '-'}</td>
+                  <td style={{ padding: '6px', textAlign: 'center', verticalAlign: 'middle' }}>
+                    {p.imagem ? (
+                      <img
+                        src={pecaBibliotecaSrcImagemDisplay(p.imagem)}
+                        alt=""
+                        referrerPolicy="no-referrer"
+                        style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }}
+                      />
+                    ) : (
+                      <span style={{ color: '#909090', fontSize: '12px' }}>—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {importacaoPreview.length > 50 && (
+            <p style={{ padding: '8px 10px', fontSize: '12px', opacity: 0.8 }}>
+              … +{importacaoPreview.length - 50} {hubT.importacaoMaisItens || 'mais'}
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={handleAdicionarImportacaoPreview}
+          className="biblioteca-btn--green"
+          style={{
+            padding: '12px 24px',
+            fontWeight: '600',
+            fontSize: '14px',
+          }}
+        >
+          {hubT.importacaoEnviarParaFila || hubT.importacaoAdicionarBiblioteca || 'Enviar para fila'} ({importacaoPreview.length})
+        </button>
+      </div>
+    )
+  }, [importacaoPreview, safeT, handleAdicionarImportacaoPreview, pecaBibliotecaSrcImagemDisplay])
+
+  useEffect(() => {
+    if (!importacaoPreview?.length) return
+    const el = importacaoPreviewPanelRef.current
+    if (!el) return
+    window.requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    })
+  }, [importacaoPreview])
+
+  useEffect(() => {
+    const raw = importacaoTextoColado.trim()
+    if (raw.length < 12) {
+      if (!raw.length) setImportacaoPreview(null)
+      return
+    }
+    const lineCount = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).length
+    const shouldAutoPreview =
+      raw.startsWith('[') ||
+      raw.startsWith('{') ||
+      /<table\b/i.test(raw) ||
+      lineCount >= 2 ||
+      raw.length >= 60
+    if (!shouldAutoPreview) return
+
+    const timer = window.setTimeout(() => {
+      const result = processarTextoImportacaoPecas(raw, raw)
+      if ('pecas' in result && result.pecas.length > 0) {
+        setImportacaoPreview(result.pecas)
+        setImportacaoUrlError(null)
+      }
+    }, 500)
+    return () => window.clearTimeout(timer)
+  }, [importacaoTextoColado, processarTextoImportacaoPecas])
 
   const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
     const normalizado = next.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
@@ -23929,7 +24158,8 @@ export default function Dashboard() {
     } else if (action === 'open-biblioteca-pecas') {
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
     } else if (action === 'open-importacao-pecas') {
-      openTab('importacao-pecas', getTabTitle('importacao-pecas'))
+      setAbaBibliotecaPecas('importacao')
+      openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
     } else if (action === 'open-pecas-substituicao') {
       openTab('pecas-substituicao', getTabTitle('pecas-substituicao'))
     } else if (action === 'open-solicitacao-servico-tecnico') {
@@ -36493,17 +36723,60 @@ onKeyPress={(e) => {
               </div>
               <div className="importacao-pecas-paste-steps">
                 <span>{(safeT as any)?.importacaoColarCatalogoPasso1 || '1. Abra o site e copie tudo (Ctrl+A, Ctrl+C)'}</span>
-                <span>{(safeT as any)?.importacaoColarCatalogoPasso2 || '2. Clique abaixo e cole (Ctrl+V)'}</span>
+                <span>{(safeT as any)?.importacaoColarCatalogoPasso2 || '2. Cole na caixa abaixo (Ctrl+V)'}</span>
                 <span>{(safeT as any)?.importacaoColarCatalogoPasso3 || '3. Veja os dados antes de gravar'}</span>
               </div>
-              <div
-                tabIndex={0}
-                className="biblioteca-pecas-form__paste-zone biblioteca-pecas-form__paste-zone--catalog"
-                onClick={(ev) => (ev.currentTarget as HTMLDivElement).focus()}
-                onPaste={handlePasteCatalogoPecaBiblioteca}
-              >
-                {(safeT as any)?.importacaoColarCatalogoPasso2 || '2. Cole tudo na caixa abaixo'} — Ctrl+V
+              <AssistTextarea
+                showAssist={false}
+                value={importacaoTextoColado}
+                onValueChange={(v) => { setImportacaoTextoColado(v); setImportacaoUrlError(null) }}
+                onPaste={handleImportacaoPecasPaste}
+                placeholder={(safeT as any)?.importacaoColarCatalogoPlaceholder || 'Clique aqui e cole (Ctrl+V) o conteúdo copiado do site do fornecedor…'}
+                className="importacao-pecas-paste-textarea"
+                style={{
+                  width: '100%',
+                  minHeight: '140px',
+                  padding: '12px',
+                  backgroundColor: '#141414',
+                  border: '1px solid rgba(0, 180, 255, 0.35)',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  fontSize: '13px',
+                  fontFamily: 'monospace',
+                  marginBottom: '8px',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '8px' }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleImportacaoColarTexto}
+                  style={{ padding: '10px 16px', fontSize: '13px' }}
+                >
+                  {(safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Processar colagem'}
+                </button>
+                <button
+                  type="button"
+                  onClick={abrirSiteImportacaoNoNavegador}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: 'rgba(180, 120, 255, 0.12)',
+                    border: '1px solid rgba(200, 160, 255, 0.55)',
+                    borderRadius: '8px',
+                    color: '#d4b8ff',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '13px',
+                  }}
+                >
+                  🔗 {safeT?.importacaoAbrirSiteNovaAba || 'Abrir no navegador'}
+                </button>
               </div>
+              {importacaoUrlError && (
+                <p style={{ fontSize: '13px', color: '#ff9a9a', margin: '0 0 8px', lineHeight: 1.45 }}>{importacaoUrlError}</p>
+              )}
+              {renderPainelPreviewImportacao()}
             </div>
 
             <button 
@@ -36566,17 +36839,42 @@ onKeyPress={(e) => {
                   </div>
                   <div className="importacao-pecas-paste-steps">
                     <span>{(safeT as any)?.importacaoColarCatalogoPasso1 || '1. Copie várias linhas do site'}</span>
-                    <span>{(safeT as any)?.importacaoColarCatalogoPasso2 || '2. Cole tudo na caixa abaixo'}</span>
+                    <span>{(safeT as any)?.importacaoColarCatalogoPasso2 || '2. Cole na caixa abaixo (Ctrl+V)'}</span>
                     <span>{(safeT as any)?.importacaoColarCatalogoPasso3 || '3. Veja a pré-visualização antes de salvar'}</span>
                   </div>
-                  <div
-                    tabIndex={0}
-                    className="biblioteca-pecas-form__paste-zone biblioteca-pecas-form__paste-zone--catalog"
-                    onClick={(ev) => (ev.currentTarget as HTMLDivElement).focus()}
-                    onPaste={handlePasteCatalogoPecaBiblioteca}
+                  <AssistTextarea
+                    showAssist={false}
+                    value={importacaoTextoColado}
+                    onValueChange={(v) => { setImportacaoTextoColado(v); setImportacaoUrlError(null) }}
+                    onPaste={handleImportacaoPecasPaste}
+                    placeholder={(safeT as any)?.importacaoColarCatalogoPlaceholder || 'Clique aqui e cole (Ctrl+V) o conteúdo copiado do site…'}
+                    className="importacao-pecas-paste-textarea"
+                    style={{
+                      width: '100%',
+                      minHeight: '120px',
+                      padding: '12px',
+                      backgroundColor: '#141414',
+                      border: '1px solid rgba(0, 180, 255, 0.35)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontSize: '13px',
+                      fontFamily: 'monospace',
+                      marginBottom: '8px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={handleImportacaoColarTexto}
+                    style={{ padding: '8px 14px', fontSize: '12px', marginBottom: '8px' }}
                   >
-                    {(safeT as any)?.importacaoColarCatalogoPasso2 || '2. Cole tudo na caixa abaixo'} — Ctrl+V
-                  </div>
+                    {(safeT as any)?.importacaoImportarCatalogo || 'Processar colagem'}
+                  </button>
+                  {importacaoUrlError && (
+                    <p style={{ fontSize: '12px', color: '#ff9a9a', margin: '0 0 8px', lineHeight: 1.45 }}>{importacaoUrlError}</p>
+                  )}
+                  {renderPainelPreviewImportacao()}
                 </div>
                 
                 <label className="file-upload-label biblioteca-pecas-form__label" htmlFor="peca-biblioteca-image-upload-tab" style={{ marginBottom: '10px' }}>
@@ -39235,52 +39533,12 @@ A1;Peça exemplo;10`}
                     }}
                   />
                 </div>
-                {importacaoPreview && importacaoPreview.length > 0 && (
-                  <div style={{ marginTop: '20px' }}>
-                    <p style={{ fontSize: '14px', marginBottom: '12px', color: '#00c853' }}>
-                      {safeT?.importacaoPreviewDesc || 'Pré-visualização:'} {importacaoPreview.length} {safeT?.importacaoPecasEncontradas || 'peça(s) encontrada(s)'}
-                    </p>
-                    <div style={{ maxHeight: '320px', overflow: 'auto', marginBottom: '16px', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '8px' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                        <thead>
-                          <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.1)', color: '#00c853' }}>
-                            <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>{safeT?.codigo || 'Código'}</th>
-                            <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>{safeT?.nome || 'Nome'}</th>
-                            <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>{safeT?.preco || 'Preço'}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {importacaoPreview.slice(0, 50).map((p, i) => (
-                            <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                              <td style={{ padding: '8px 10px' }}>{p.codigo || '-'}</td>
-                              <td style={{ padding: '8px 10px' }}>{(p.nome || p.descricao || '').slice(0, 50)}{(p.nome || p.descricao || '').length > 50 ? '…' : ''}</td>
-                              <td style={{ padding: '8px 10px' }}>{p.preco || '-'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      {importacaoPreview.length > 50 && (
-                        <p style={{ padding: '8px 10px', fontSize: '12px', opacity: 0.8 }}>… +{importacaoPreview.length - 50} {safeT?.importacaoMaisItens || 'mais'}</p>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleAdicionarImportacaoPreview}
-                      style={{
-                        padding: '12px 24px',
-                        backgroundColor: 'rgba(0, 200, 83, 0.25)',
-                        border: '2px solid #00c853',
-                        borderRadius: '8px',
-                        color: '#00c853',
-                        cursor: 'pointer',
-                        fontWeight: '600',
-                        fontSize: '14px'
-                      }}
-                    >
-                      {safeT?.importacaoEnviarParaFila || safeT?.importacaoAdicionarBiblioteca || 'Enviar para fila'} ({importacaoPreview.length})
-                    </button>
+                {importacaoUrlError && (
+                  <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'rgba(200, 60, 60, 0.15)', border: '1px solid rgba(255, 80, 80, 0.5)', borderRadius: '8px', color: '#ff8888' }}>
+                    {importacaoUrlError}
                   </div>
                 )}
+                {renderPainelPreviewImportacao()}
               </div>
             )}
           </div>
@@ -39687,60 +39945,12 @@ A1;Peça exemplo;10`}
                   }}
                 />
               </div>
-              {importacaoPreview && importacaoPreview.length > 0 && (
-                <div style={{ marginTop: '20px' }}>
-                  <p style={{ fontSize: '14px', marginBottom: '12px', color: '#00c853' }}>
-                    {safeT?.importacaoPreviewDesc || 'Pré-visualização:'} {importacaoPreview.length} {safeT?.importacaoPecasEncontradas || 'peça(s) encontrada(s)'}
-                  </p>
-                  <div style={{ maxHeight: '320px', overflow: 'auto', marginBottom: '16px', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '8px' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                      <thead>
-                        <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.1)', color: '#00c853' }}>
-                          <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>{safeT?.codigo || 'Código'}</th>
-                          <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>{safeT?.nome || 'Nome'}</th>
-                          <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>{safeT?.preco || 'Preço'}</th>
-                          <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid rgba(0, 200, 83, 0.3)', width: '56px' }}>{(safeT as any)?.importacaoPreviewColImagem || 'Img'}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {importacaoPreview.slice(0, 50).map((p, i) => (
-                          <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                            <td style={{ padding: '8px 10px' }}>{p.codigo || '-'}</td>
-                            <td style={{ padding: '8px 10px' }}>{(p.nome || p.descricao || '').slice(0, 50)}{(p.nome || p.descricao || '').length > 50 ? '…' : ''}</td>
-                            <td style={{ padding: '8px 10px' }}>{p.preco || '-'}</td>
-                            <td style={{ padding: '6px', textAlign: 'center', verticalAlign: 'middle' }}>
-                              {p.imagem ? (
-                                <img src={p.imagem} alt="" referrerPolicy="no-referrer" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
-                              ) : (
-                                <span style={{ color: '#909090', fontSize: '12px' }}>—</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {importacaoPreview.length > 50 && (
-                      <p style={{ padding: '8px 10px', fontSize: '12px', opacity: 0.8 }}>… +{importacaoPreview.length - 50} {safeT?.importacaoMaisItens || 'mais'}</p>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleAdicionarImportacaoPreview}
-                    style={{
-                      padding: '12px 24px',
-                      backgroundColor: 'rgba(0, 200, 83, 0.25)',
-                      border: '2px solid #00c853',
-                      borderRadius: '8px',
-                      color: '#00c853',
-                      cursor: 'pointer',
-                      fontWeight: '600',
-                      fontSize: '14px'
-                    }}
-                  >
-                    {safeT?.importacaoEnviarParaFila || safeT?.importacaoAdicionarBiblioteca || 'Enviar para fila'} ({importacaoPreview.length})
-                  </button>
+              {importacaoUrlError && (
+                <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'rgba(200, 60, 60, 0.15)', border: '1px solid rgba(255, 80, 80, 0.5)', borderRadius: '8px', color: '#ff8888' }}>
+                  {importacaoUrlError}
                 </div>
               )}
+              {renderPainelPreviewImportacao()}
             </div>
           </div>
         )
