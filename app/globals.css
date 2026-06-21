@@ -7441,6 +7441,34 @@ a:focus-visible {
   align-items: center;
 }
 
+.clientes-module-tabs,
+.fornecedores-module-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  margin-bottom: 16px;
+}
+
+.clientes-cadastro-page .clientes-module-tabs,
+.clientes-cadastro-page .fornecedores-module-tabs {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 769px) {
+  .clientes-cadastro-page .clientes-module-toolbar,
+  .clientes-cadastro-page .fornecedores-module-toolbar {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .clientes-module-tabs,
+  .fornecedores-module-tabs {
+    display: none !important;
+  }
+}
+
 .tab-glass-cards-grid {
   display: grid;
   gap: 15px;

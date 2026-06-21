@@ -34466,8 +34466,8 @@ onKeyPress={(e) => {
             }
           >
             {/* Barra mobile — oculta na aba Cadastrar (layout Novo Cliente) */}
-            {clientesActiveTab !== 'cadastrar' && !clienteListaDetalheId ? (
-            <div className="mobile-sticky-toolbar">
+            {!clienteListaDetalheId ? (
+            <div className="mobile-sticky-toolbar clientes-module-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>
                 ↶ {safeT?.voltar || 'Voltar'}
               </button>
@@ -34593,8 +34593,8 @@ onKeyPress={(e) => {
             ) : null}
 
             {/* Abas Listar / Grupos — ocultas na aba Cadastrar (layout Novo Cliente) */}
-            {clientesActiveTab !== 'cadastrar' && !clienteListaDetalheId ? (
-            <div className="tab-nav-desktop tab-glass-nav tab-glass-nav--clientes">
+            {!clienteListaDetalheId ? (
+            <div className="tab-nav-desktop tab-glass-nav tab-glass-nav--clientes clientes-module-tabs">
               <button 
                 className="btn-primary"
                 onClick={() => {
@@ -35237,11 +35237,11 @@ onKeyPress={(e) => {
               (fornecedorListaDetalheId ? ' fornecedores-detalhe-page' : '')
             }
           >
-            {fornecedoresActiveTab !== 'cadastrar' && !fornecedorListaDetalheId ? (
-            <div className="mobile-sticky-toolbar">
+            {!fornecedorListaDetalheId ? (
+            <div className="mobile-sticky-toolbar fornecedores-module-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
               <button
-                className="mobile-toolbar-btn"
+                className={`mobile-toolbar-btn ${fornecedoresActiveTab === 'cadastrar' ? 'active' : ''}`}
                 onClick={() => {
                   setFornecedoresActiveTab('cadastrar')
                   setFornecedorListaDetalheId(null)
@@ -35339,8 +35339,8 @@ onKeyPress={(e) => {
             </div>
             ) : null}
 
-            {fornecedoresActiveTab !== 'cadastrar' && !fornecedorListaDetalheId ? (
-            <div className="tab-nav-desktop tab-glass-nav tab-glass-nav--clientes">
+            {!fornecedorListaDetalheId ? (
+            <div className="tab-nav-desktop tab-glass-nav tab-glass-nav--clientes fornecedores-module-tabs">
               <button
                 className="btn-primary"
                 onClick={() => {
@@ -35352,8 +35352,8 @@ onKeyPress={(e) => {
                   fontSize: '14px',
                   fontWeight: 'bold',
                   border: '1px solid',
-                  borderColor: 'rgba(0, 200, 83, 0.22)',
-                  backgroundColor: 'rgba(22, 28, 28, 0.88)',
+                  borderColor: fornecedoresActiveTab === 'cadastrar' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 200, 83, 0.22)',
+                  backgroundColor: fornecedoresActiveTab === 'cadastrar' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
                   color: '#ffffff',
                   transition: 'border-color 0.2s ease, background-color 0.2s ease',
                   borderRadius: '8px',
