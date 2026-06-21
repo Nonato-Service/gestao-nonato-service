@@ -1345,14 +1345,13 @@ body,
   width: 280px;
   min-width: 280px;
   min-height: 0;
-  max-height: 100vh;
-  max-height: 100dvh;
+  height: 100%;
   align-self: stretch;
-  padding: 20px 14px 24px;
+  padding: 20px 14px max(20px, env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   gap: 10px;
-  /* Rolagem no .sidebar-scroll-inner para o balão poder sair à direita sem ser cortado */
+  /* Altura total da coluna; rolagem só no .sidebar-scroll-inner */
   overflow: visible;
   overscroll-behavior: contain;
   background: linear-gradient(180deg, #1e1e1e 0%, #181818 52%, #121212 100%);
@@ -1380,9 +1379,9 @@ body,
   z-index: 1;
 }
 
-/* Área rolável da navegação (logo + “Sair” ficam fora; balões podem ultrapassar a borda direita) */
+/* Área rolável da navegação (logo + «Sair» ficam fora; balões podem ultrapassar a borda direita) */
 .sidebar .sidebar-scroll-inner {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -1392,6 +1391,13 @@ body,
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
+}
+
+.sidebar-footer {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 .sidebar .sidebar-scroll-inner::-webkit-scrollbar {
   width: 8px;
@@ -2338,7 +2344,7 @@ svg.ns-vivid-icon.assist-field-glyph {
 
 .sidebar-logout-btn {
   width: 100%;
-  margin-top: 14px;
+  margin-top: 0;
   margin-bottom: 0;
   padding: 14px 16px;
   display: flex;
@@ -3759,7 +3765,8 @@ html, body {
     align-self: stretch;
     min-height: 0;
     max-height: none;
-    height: auto;
+    height: 100%;
+    flex: 0 0 280px;
   }
   .app-layout:not(.app-compact-layout) > .main-app-column {
     min-height: 0;
@@ -4708,6 +4715,12 @@ body {
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior: contain !important;
+  }
+  .app-compact-layout .sidebar .sidebar-footer {
+    flex-shrink: 0 !important;
+    margin-top: auto !important;
+    padding-top: 8px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
   }
   .app-compact-layout .sidebar.sidebar-mobile-open {
     transform: translate3d(0, 0, 0) !important;

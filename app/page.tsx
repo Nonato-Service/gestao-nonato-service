@@ -65157,6 +65157,8 @@ A1;Peça exemplo;10`}
       style={{
         display: 'flex',
         minHeight: '100dvh',
+        height: '100dvh',
+        maxHeight: '100dvh',
         backgroundColor: '#121212',
         color: '#fff',
         paddingBottom: openTabs.length > 0 ? 'calc(72px + env(safe-area-inset-bottom, 0px))' : '0',
@@ -67166,7 +67168,8 @@ A1;Peça exemplo;10`}
 
         </div>
 
-        {/* Botão Sair do Sistema - fixo no rodapé da sidebar */}
+        {/* Botão Sair do Sistema — rodapé dentro da sidebar */}
+        <div className="sidebar-footer">
         <button
           type="button"
           onClick={handleSairDoSistema}
@@ -67175,6 +67178,7 @@ A1;Peça exemplo;10`}
           <span style={{ fontSize: '16px', lineHeight: 1 }} aria-hidden title={safeT?.sairDoSistema || 'Sair do Sistema'}>🚪</span>
           <span>{safeT?.sairDoSistema || 'Sair do Sistema'}</span>
         </button>
+        </div>
       </div>
 
       {/* Área Principal */}
