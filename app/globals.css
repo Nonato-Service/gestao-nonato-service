@@ -11791,6 +11791,18 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   border-color: rgba(0, 255, 200, 0.65);
   background: rgba(0, 44, 26, 0.38);
 }
+.biblioteca-pecas-form__paste-zone--catalog {
+  border-color: rgba(0, 180, 255, 0.45);
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.biblioteca-pecas-form__paste-zone--catalog:focus {
+  border-color: rgba(120, 210, 255, 0.72);
+  background: rgba(0, 36, 56, 0.42);
+}
 
 .biblioteca-pecas-form__url-row {
   display: flex;

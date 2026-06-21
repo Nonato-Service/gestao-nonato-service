@@ -1855,6 +1855,23 @@ const NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY = 'nonato-peca-lookup-url-template'
 /** URL de entrada da loja HOMAG (sem código no path); convertida automaticamente para pesquisa global. */
 const HOMAG_SHOP_PECA_LOOKUP_ROOT = 'https://shop.homag.com/s/?language=en_US'
 
+/** HTML/texto colado de uma página de catálogo (não tratar como colagem só de imagem). */
+function clipboardLooksLikeCatalogImport(html: string, plain: string): boolean {
+  const h = String(html || '')
+  if (h.length >= 80) {
+    if (/<table\b/i.test(h) || /<tr\b/i.test(h)) return true
+    if (/<img[^>]+src=/i.test(h) && /<(?:div|td|th|li|article|section|p)\b/i.test(h)) return true
+  }
+  const p = String(plain || '').trim()
+  if (!p || p.length < 15) return false
+  if (/^https?:\/\//i.test(p) && !p.includes('\n') && !p.includes(';')) return false
+  if (p.startsWith('[') || p.startsWith('{')) return true
+  const lines = p.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+  if (lines.length >= 3) return true
+  if (lines.length >= 2 && (p.includes(';') || p.includes('\t'))) return true
+  return false
+}
+
 function buildPecaCatalogoUrlFromTemplate(template: string, codigo: string): string | null {
   const rawCode = String(codigo || '').trim()
   const tpl = String(template || '').trim()
@@ -21734,6 +21751,10 @@ export default function Dashboard() {
       const cd = e.clipboardData
       if (!cd) return
 
+      const htmlEarly = cd.getData('text/html') || ''
+      const plainEarly = cd.getData('text/plain') || ''
+      if (clipboardLooksLikeCatalogImport(htmlEarly, plainEarly)) return
+
       const aplicarFileImagem = (file: File) => {
         const reader = new FileReader()
         reader.onload = () => {
@@ -21840,15 +21861,6 @@ export default function Dashboard() {
   useEffect(() => {
     setBibliotecaImageHoverPreview(null)
   }, [abaBibliotecaPecas, activeTabId])
-
-  useLayoutEffect(() => {
-    if (!showBibliotecaPecasForm) return
-    const root = pecaBibliotecaFormPasteRootRef.current
-    if (!root) return
-    const listener = (ev: Event) => handlePasteImagemPecaBiblioteca(ev as ClipboardEvent)
-    root.addEventListener('paste', listener, true)
-    return () => root.removeEventListener('paste', listener, true)
-  }, [showBibliotecaPecasForm, editingPecaBiblioteca?.id, handlePasteImagemPecaBiblioteca])
 
   function normalizeImportKey(v: any): string {
     return String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -22491,6 +22503,105 @@ export default function Dashboard() {
     })
   }, [])
 
+  const processarTextoImportacaoPecas = useCallback((raw: string): { pecas: PecaBiblioteca[] } | { error: string } => {
+    const trimmed = raw.trim()
+    if (!trimmed) {
+      return { error: t?.importacaoUrlObrigatoria ?? 'Cole o conteúdo JSON ou CSV na caixa acima.' }
+    }
+    if (/^https?:\/\//i.test(trimmed) && !trimmed.includes('\n')) {
+      return {
+        error:
+          t?.importacaoColarUrlNaoSuportado ??
+          'Neste campo, cole o conteúdo JSON/CSV (não a URL). Para links, use "Buscar da URL".',
+      }
+    }
+    try {
+      const paginaColagem =
+        (/^https?:\/\//i.test(urlImportacaoPecas.trim()) && urlImportacaoPecas.trim()) ||
+        (/^https?:\/\//i.test(importacaoLojaBaseUrl.trim()) ? importacaoLojaBaseUrl.trim() : '')
+      const pecas = parseRawToPecas(trimmed, importacaoLojaBaseUrl, paginaColagem)
+      if (pecas.length === 0) {
+        return {
+          error:
+            t?.importacaoNenhumaLinha ??
+            'Nenhuma lista encontrada. Use JSON (array ou objeto com .pecas/.parts/.items/.data/.itens) ou CSV (1ª linha = cabeçalhos).',
+        }
+      }
+      return { pecas }
+    } catch (err: any) {
+      return {
+        error:
+          err?.message ||
+          (t?.importacaoErroJsonInvalido ?? 'Conteúdo inválido. Use JSON ou CSV com cabeçalhos na primeira linha.'),
+      }
+    }
+  }, [parseRawToPecas, t, importacaoLojaBaseUrl, urlImportacaoPecas])
+
+  const handlePasteCatalogoPecaBiblioteca = useCallback(
+    (e: React.ClipboardEvent | ClipboardEvent) => {
+      const cd = e.clipboardData
+      if (!cd) return
+      const html = cd.getData('text/html') || ''
+      const plain = cd.getData('text/plain') || ''
+      if (!clipboardLooksLikeCatalogImport(html, plain)) return
+
+      const raw = (html && html.length >= 40 ? html : plain).trim()
+      if (!raw) return
+
+      e.preventDefault()
+      e.stopPropagation()
+
+      const result = processarTextoImportacaoPecas(raw)
+      if ('error' in result) {
+        window.alert(result.error)
+        return
+      }
+      if (result.pecas.length === 1) {
+        const p = result.pecas[0]
+        setShowBibliotecaPecasForm(true)
+        setEditingPecaBiblioteca(null)
+        setPecaBibliotecaForm((prev) => ({
+          ...prev,
+          id: '',
+          nome: p.nome || '',
+          codigo: p.codigo || '',
+          preco: p.preco || '',
+          descricao: p.descricao || '',
+          imagem: p.imagem || prev.imagem,
+          dataCriacao: prev.dataCriacao || new Date().toISOString(),
+        }))
+        if (p.imagem) setPecaBibliotecaImagemUrlDraft('')
+        return
+      }
+      setImportacaoTextoColado(raw)
+      setImportacaoPreview(result.pecas)
+      setImportacaoUrlError(null)
+      setAbaBibliotecaPecas('importacao')
+      window.alert(
+        `${t?.importacaoPreviewDesc || 'Pré-visualização:'} ${result.pecas.length} ${t?.importacaoPecasEncontradas || 'peça(s) encontrada(s)'}. ${(t as any)?.importacaoEnviarParaFila || 'Use a aba Importação para enviar para a fila.'}`
+      )
+    },
+    [processarTextoImportacaoPecas, t]
+  )
+
+  useLayoutEffect(() => {
+    if (!showBibliotecaPecasForm) return
+    const root = pecaBibliotecaFormPasteRootRef.current
+    if (!root) return
+    const listener = (ev: Event) => {
+      const ce = ev as ClipboardEvent
+      handlePasteCatalogoPecaBiblioteca(ce)
+      if (!ce.defaultPrevented) handlePasteImagemPecaBiblioteca(ce)
+    }
+    root.addEventListener('paste', listener, true)
+    return () => root.removeEventListener('paste', listener, true)
+  }, [
+    showBibliotecaPecasForm,
+    editingPecaBiblioteca?.id,
+    handlePasteCatalogoPecaBiblioteca,
+    handlePasteImagemPecaBiblioteca,
+  ])
+
   const importarPecaDoCatalogoUrl = useCallback(
     async (codigoDigitado: string, opts?: { silent?: boolean }): Promise<PecaBiblioteca | null> => {
       const cod = String(codigoDigitado || '').trim()
@@ -22780,19 +22891,24 @@ export default function Dashboard() {
   /** Colagem a partir do site: preferir `text/html` (tabelas + &lt;img&gt;) em vez de só texto plano. */
   const handleImportacaoPecasPaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const html = e.clipboardData?.getData('text/html') || ''
-    if (!html || html.length < 80) return
-    const looksCatalogHtml =
-      /<table\b/i.test(html) ||
-      /<tr\b/i.test(html) ||
-      (/<img[^>]+src=/i.test(html) && /<(?:div|td|th|li|article|section)/i.test(html))
-    if (!looksCatalogHtml) return
+    const plain = e.clipboardData?.getData('text/plain') || ''
+    if (!clipboardLooksLikeCatalogImport(html, plain)) return
     e.preventDefault()
+    const raw = (html && html.length >= 40 ? html : plain).trim()
     setImportacaoTextoColado((cur) => {
-      const t = (cur || '').trim()
-      return t.length ? `${t}\n\n${html}` : html
+      const prev = (cur || '').trim()
+      const merged = prev.length ? `${prev}\n\n${raw}` : raw
+      const result = processarTextoImportacaoPecas(merged)
+      if ('pecas' in result) {
+        setImportacaoPreview(result.pecas)
+        setImportacaoUrlError(null)
+      } else {
+        setImportacaoPreview(null)
+        setImportacaoUrlError(result.error)
+      }
+      return merged
     })
-    setImportacaoUrlError(null)
-  }, [])
+  }, [processarTextoImportacaoPecas])
 
   const handleImportacaoFicheiro = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -22818,34 +22934,15 @@ export default function Dashboard() {
   }, [parseRawToPecas, t, importacaoLojaBaseUrl])
 
   const handleImportacaoColarTexto = useCallback(() => {
-    const raw = importacaoTextoColado.trim()
-    if (!raw) {
-      setImportacaoUrlError(t?.importacaoUrlObrigatoria ?? 'Cole o conteúdo JSON ou CSV na caixa acima.')
-      return
-    }
-    if (/^https?:\/\//i.test(raw)) {
-      setImportacaoUrlError(
-        t?.importacaoColarUrlNaoSuportado ??
-        'Neste campo, cole o conteúdo JSON/CSV (não a URL). Para links, use "Buscar da URL".'
-      )
+    const result = processarTextoImportacaoPecas(importacaoTextoColado)
+    if ('error' in result) {
+      setImportacaoUrlError(result.error)
+      setImportacaoPreview(null)
       return
     }
     setImportacaoUrlError(null)
-    setImportacaoPreview(null)
-    try {
-      const paginaColagem =
-        (/^https?:\/\//i.test(urlImportacaoPecas.trim()) && urlImportacaoPecas.trim()) ||
-        (/^https?:\/\//i.test(importacaoLojaBaseUrl.trim()) ? importacaoLojaBaseUrl.trim() : '')
-      const pecas = parseRawToPecas(raw, importacaoLojaBaseUrl, paginaColagem)
-      if (pecas.length === 0) {
-        setImportacaoUrlError(t?.importacaoNenhumaLinha ?? 'Nenhuma lista encontrada. Use JSON (array ou objeto com .pecas/.parts/.items/.data/.itens) ou CSV (1ª linha = cabeçalhos).')
-        return
-      }
-      setImportacaoPreview(pecas)
-    } catch (err: any) {
-      setImportacaoUrlError(err?.message || (t?.importacaoErroJsonInvalido ?? 'Conteúdo inválido. Use JSON ou CSV com cabeçalhos na primeira linha.'))
-    }
-  }, [importacaoTextoColado, parseRawToPecas, t, importacaoLojaBaseUrl, urlImportacaoPecas])
+    setImportacaoPreview(result.pecas)
+  }, [importacaoTextoColado, processarTextoImportacaoPecas])
 
   const handleAdicionarImportacaoPreview = useCallback(() => {
     if (!importacaoPreview || importacaoPreview.length === 0) return
@@ -36376,6 +36473,39 @@ onKeyPress={(e) => {
                   </div>
                 </div>
             
+            <div className="importacao-pecas-paste-box" style={{ marginBottom: '18px' }}>
+              <div className="importacao-pecas-paste-head">
+                <div>
+                  <h4>{(safeT as any)?.importacaoColarCatalogoTitle || 'Colar catálogo do site'}</h4>
+                  <p>
+                    {(safeT as any)?.importacaoColarCatalogoDesc ||
+                      'Abra o site do fornecedor, copie a página (Ctrl+A, Ctrl+C) e cole aqui. Uma peça preenche o cadastro; várias peças abrem a importação.'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => setAbaBibliotecaPecas('importacao')}
+                  style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                >
+                  📥 {(safeT as any)?.importacaoPecas || 'Importação de Peças'}
+                </button>
+              </div>
+              <div className="importacao-pecas-paste-steps">
+                <span>{(safeT as any)?.importacaoColarCatalogoPasso1 || '1. Abra o site e copie tudo (Ctrl+A, Ctrl+C)'}</span>
+                <span>{(safeT as any)?.importacaoColarCatalogoPasso2 || '2. Clique abaixo e cole (Ctrl+V)'}</span>
+                <span>{(safeT as any)?.importacaoColarCatalogoPasso3 || '3. Veja os dados antes de gravar'}</span>
+              </div>
+              <div
+                tabIndex={0}
+                className="biblioteca-pecas-form__paste-zone biblioteca-pecas-form__paste-zone--catalog"
+                onClick={(ev) => (ev.currentTarget as HTMLDivElement).focus()}
+                onPaste={handlePasteCatalogoPecaBiblioteca}
+              >
+                {(safeT as any)?.importacaoColarCatalogoPasso2 || '2. Cole tudo na caixa abaixo'} — Ctrl+V
+              </div>
+            </div>
+
             <button 
               className="btn-primary" 
               onClick={() => { 
@@ -36423,6 +36553,31 @@ onKeyPress={(e) => {
                 <h3 className="biblioteca-pecas-form__title">
                   {editingPecaBiblioteca ? (safeT?.editPecaBiblioteca || 'Editar Peça') : (safeT?.novaPecaBiblioteca || 'Nova Peça')}
                 </h3>
+
+                <div className="importacao-pecas-paste-box biblioteca-pecas-form__catalog-paste" style={{ marginBottom: '16px' }}>
+                  <div className="importacao-pecas-paste-head">
+                    <div>
+                      <h4>{(safeT as any)?.importacaoColarCatalogoTitle || 'Colar catálogo do site'}</h4>
+                      <p>
+                        {(safeT as any)?.importacaoColarCatalogoDesc ||
+                          'Copie a página do fornecedor (Ctrl+A no site, depois Ctrl+V aqui). O formulário é preenchido automaticamente.'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="importacao-pecas-paste-steps">
+                    <span>{(safeT as any)?.importacaoColarCatalogoPasso1 || '1. Copie várias linhas do site'}</span>
+                    <span>{(safeT as any)?.importacaoColarCatalogoPasso2 || '2. Cole tudo na caixa abaixo'}</span>
+                    <span>{(safeT as any)?.importacaoColarCatalogoPasso3 || '3. Veja a pré-visualização antes de salvar'}</span>
+                  </div>
+                  <div
+                    tabIndex={0}
+                    className="biblioteca-pecas-form__paste-zone biblioteca-pecas-form__paste-zone--catalog"
+                    onClick={(ev) => (ev.currentTarget as HTMLDivElement).focus()}
+                    onPaste={handlePasteCatalogoPecaBiblioteca}
+                  >
+                    {(safeT as any)?.importacaoColarCatalogoPasso2 || '2. Cole tudo na caixa abaixo'} — Ctrl+V
+                  </div>
+                </div>
                 
                 <label className="file-upload-label biblioteca-pecas-form__label" htmlFor="peca-biblioteca-image-upload-tab" style={{ marginBottom: '10px' }}>
                   {safeT?.imagemPecaBiblioteca || 'Imagem da Peça'}
@@ -39018,48 +39173,68 @@ onKeyPress={(e) => {
                       'HOMAG: pode usar só https://shop.homag.com/s/?language=en_US (o código é acrescentado na pesquisa). Outras lojas: {codigo} ou * no URL. A página tem de ser legível pelo importador; a loja HOMAG muitas vezes exige JavaScript ou o script homag:import no PC.'}
                   </p>
                 </div>
-                <p style={{ fontSize: '13px', margin: '16px 0 8px 0', color: '#aaa' }}>
-                  {safeT?.importacaoColarDesc || 'Ou cole aqui o conteúdo JSON ou CSV (ex.: copiado do site ou de um ficheiro):'}
-                </p>
-                <AssistTextarea
-                  value={importacaoTextoColado}
-                  onValueChange={(v) => { setImportacaoTextoColado(v); setImportacaoUrlError(null) }}
-                  onPaste={handleImportacaoPecasPaste}
-                  placeholder='[{"codigo":"A1","nome":"Peça exemplo","preco":"10"}]
+                <div className="importacao-pecas-paste-box">
+                  <div className="importacao-pecas-paste-head">
+                    <div>
+                      <h4>{(safeT as any)?.importacaoColarCatalogoTitle || 'Colar catálogo do site'}</h4>
+                      <p>
+                        {(safeT as any)?.importacaoColarCatalogoDesc ||
+                          'Copie várias peças da página do fornecedor e cole tudo aqui de uma vez. O sistema tenta separar código, nome, descrição, preço e imagem (HTML com <img> ou URL de foto).'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={handleImportacaoColarTexto}
+                      style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                    >
+                      {(safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Importar do texto colado'}
+                    </button>
+                  </div>
+                  <div className="importacao-pecas-paste-steps">
+                    <span>{(safeT as any)?.importacaoColarCatalogoPasso1 || '1. Copie várias linhas do site'}</span>
+                    <span>{(safeT as any)?.importacaoColarCatalogoPasso2 || '2. Cole tudo na caixa abaixo'}</span>
+                    <span>{(safeT as any)?.importacaoColarCatalogoPasso3 || '3. Veja a pré-visualização antes de salvar'}</span>
+                  </div>
+                  <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#aaa' }}>
+                    {safeT?.importacaoColarDesc || 'Ou cole aqui o conteúdo JSON ou CSV (ex.: copiado do site ou de um ficheiro):'}
+                  </p>
+                  <AssistTextarea
+                    value={importacaoTextoColado}
+                    onValueChange={(v) => { setImportacaoTextoColado(v); setImportacaoUrlError(null) }}
+                    onPaste={handleImportacaoPecasPaste}
+                    placeholder={(safeT as any)?.importacaoColarCatalogoPlaceholder || `Exemplo de colagem rápida:
+
+COD-001
+Motor ventilador 220V
+34,90 €
+
+COD-002
+Sensor térmico
+12,50 €
+
+ou
+[{"codigo":"A1","nome":"Peça exemplo","preco":"10"}]
+
 ou
 codigo;nome;preco
-A1;Peça exemplo;10'
-                  style={{
-                    width: '100%',
-                    minHeight: '100px',
-                    padding: '12px',
-                    backgroundColor: '#141414',
-                    border: '1px solid rgba(0, 168, 107, 0.3)',
-                    borderRadius: '8px',
-                    color: '#fff',
-                    fontSize: '13px',
-                    fontFamily: 'monospace',
-                    marginBottom: '8px',
-                    boxSizing: 'border-box'
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleImportacaoColarTexto}
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: 'rgba(0, 200, 100, 0.2)',
-                    border: '1px solid rgba(0, 200, 100, 0.6)',
-                    borderRadius: '8px',
-                    color: '#7feb9f',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    fontSize: '13px',
-                    marginBottom: '20px'
-                  }}
-                >
-                  {safeT?.importacaoImportarDoTexto || 'Importar do texto colado'}
-                </button>
+A1;Peça exemplo;10`}
+                    className="importacao-pecas-paste-textarea"
+                    style={{
+                      width: '100%',
+                      minHeight: '180px',
+                      padding: '12px',
+                      backgroundColor: '#141414',
+                      border: '1px solid rgba(0, 200, 83, 0.3)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontSize: '13px',
+                      fontFamily: 'monospace',
+                      marginBottom: '8px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
                 {importacaoPreview && importacaoPreview.length > 0 && (
                   <div style={{ marginTop: '20px' }}>
                     <p style={{ fontSize: '14px', marginBottom: '12px', color: '#00c853' }}>
