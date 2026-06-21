@@ -10441,11 +10441,9 @@ button.dia-trabalho-acao-btn--del:hover {
   margin-bottom: 20px;
   padding: 10px 12px;
   border-radius: 16px;
-  background: linear-gradient(152deg, rgba(12, 38, 26, 0.78) 0%, rgba(5, 10, 8, 0.94) 100%);
-  border: 1px solid rgba(0, 210, 125, 0.32);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 10px 36px rgba(0, 0, 0, 0.38);
+  background: #1e1e1e;
+  border: 1px solid #2c2c2c;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
 }
 
 .biblioteca-hub-tab {
@@ -10457,16 +10455,14 @@ button.dia-trabalho-acao-btn--del:hover {
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: 0.01em;
-  color: rgba(245, 255, 248, 0.96);
+  color: rgba(255, 255, 255, 0.88);
   cursor: pointer;
   outline: none;
   padding: 10px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 195, 118, 0.35);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.22) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 2px 12px rgba(0, 0, 0, 0.32);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: none;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease,
@@ -10476,39 +10472,29 @@ button.dia-trabalho-acao-btn--del:hover {
 }
 
 .biblioteca-hub-tab:hover {
-  border-color: rgba(0, 255, 165, 0.5);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 4px 20px rgba(0, 95, 55, 0.32);
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
 .biblioteca-hub-tab:focus-visible {
-  border-color: rgba(0, 255, 180, 0.65);
-  box-shadow:
-    0 0 0 2px rgba(0, 230, 140, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 4px 18px rgba(0, 0, 0, 0.35);
+  border-color: rgba(0, 168, 107, 0.55);
+  box-shadow: 0 0 0 2px rgba(0, 168, 107, 0.28);
 }
 
 .biblioteca-hub-tab--active {
   font-weight: 800;
   color: #ffffff;
-  border: 1px solid color-mix(in srgb, var(--bib-green) 88%, #ffffff 12%);
-  background: var(--bib-green);
-  box-shadow:
-    0 0 0 1px rgba(0, 168, 107, 0.22),
-    0 8px 24px rgba(0, 168, 107, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  border: 1px solid #00945d;
+  background: #00a86b;
+  box-shadow: 0 4px 16px rgba(0, 168, 107, 0.32);
 }
 
 .biblioteca-hub-tab--active:hover {
-  border-color: color-mix(in srgb, var(--bib-green-hover) 90%, #ffffff 10%);
-  background: var(--bib-green-hover);
-  box-shadow:
-    0 0 0 1px rgba(0, 168, 107, 0.3),
-    0 10px 28px rgba(0, 168, 107, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  border-color: #008556;
+  background: #00945d;
+  box-shadow: 0 6px 20px rgba(0, 168, 107, 0.36);
 }
 
 .biblioteca-hub-tab--purple {
@@ -10524,18 +10510,15 @@ button.dia-trabalho-acao-btn--del:hover {
 }
 
 .biblioteca-hub-tab--purple.biblioteca-hub-tab--active {
-  border-color: color-mix(in srgb, var(--bib-purple) 88%, #ffffff 12%);
-  background: var(--bib-purple);
+  border-color: #7e22ce;
+  background: #9333ea;
   color: #ffffff;
-  box-shadow:
-    0 0 0 1px rgba(147, 51, 234, 0.24),
-    0 8px 24px rgba(147, 51, 234, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 16px rgba(147, 51, 234, 0.32);
 }
 
 .biblioteca-hub-tab--purple.biblioteca-hub-tab--active:hover {
-  background: var(--bib-purple-hover);
-  border-color: color-mix(in srgb, var(--bib-purple-hover) 90%, #ffffff 10%);
+  background: #7e22ce;
+  border-color: #6b21a8;
 }
 
 .biblioteca-hub-tab:active {
@@ -16365,4 +16348,195 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
     width: 100%;
     justify-content: center;
   }
+}
+
+/* ===================================================================
+   Biblioteca de Peças — paleta definitiva (sobrepõe ns-ui-v2 / tab-glass)
+   Verde #00a86b | Roxo #9333ea | Laranja #f97316 | Neutro ghost
+   =================================================================== */
+html body .biblioteca-pecas-hub.tab-glass-root.ns-ui-v2 .btn-primary:not(.btn-danger) {
+  background: #00a86b !important;
+  border: 1px solid #00945d !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(0, 168, 107, 0.28) !important;
+}
+
+html body .biblioteca-pecas-hub.tab-glass-root.ns-ui-v2 .btn-primary:not(.btn-danger):hover:not(:disabled) {
+  background: #00945d !important;
+  border-color: #008556 !important;
+  box-shadow: 0 6px 18px rgba(0, 168, 107, 0.34) !important;
+}
+
+html body .biblioteca-pecas-hub.tab-glass-root.ns-ui-v2 .btn-secondary {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html body .biblioteca-pecas-hub.tab-glass-root.ns-ui-v2 .btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.32) !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-btn--green,
+html body .biblioteca-pecas-hub .biblioteca-btn--green:hover,
+html body .biblioteca-pecas-hub .biblioteca-btn--green:active {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-btn--green {
+  background: #00a86b !important;
+  border: 1px solid #00945d !important;
+  box-shadow: 0 4px 14px rgba(0, 168, 107, 0.28) !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-btn--green:hover:not(:disabled) {
+  background: #00945d !important;
+  border-color: #008556 !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-btn--purple {
+  background: #9333ea !important;
+  border: 1px solid #7e22ce !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(147, 51, 234, 0.28) !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-btn--purple:hover:not(:disabled) {
+  background: #7e22ce !important;
+  border-color: #6b21a8 !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-btn--orange {
+  background: #f97316 !important;
+  border: 1px solid #ea580c !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.28) !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-btn--orange:hover:not(:disabled) {
+  background: #ea580c !important;
+  border-color: #c2410c !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-btn--ghost {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
+  box-shadow: none !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-btn--ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.32) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body .biblioteca-pecas-hub .tab-glass-hero-actions > .biblioteca-btn--green,
+html body .biblioteca-pecas-hub .tab-glass-hero-actions > .biblioteca-btn--purple,
+html body .biblioteca-pecas-hub .tab-glass-hero-actions .biblioteca-pecas-hub__hero-actions .biblioteca-btn--green,
+html body .biblioteca-pecas-hub .tab-glass-hero-actions .biblioteca-pecas-hub__hero-actions .biblioteca-btn--purple {
+  padding: 10px 16px !important;
+  min-height: 40px !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+html body .biblioteca-pecas-hub .tab-glass-hero-actions-row > .biblioteca-pecas-hub__icon-btn {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
+  font-size: 16px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: none !important;
+}
+
+html body .biblioteca-pecas-hub .tab-glass-hero-actions-row > .biblioteca-pecas-hub__icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.32) !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-pecas-hub__seg--active {
+  background: #00a86b !important;
+  border-color: #00945d !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(0, 168, 107, 0.28) !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-hub-tab--active:not(.biblioteca-hub-tab--purple) {
+  background: #00a86b !important;
+  border-color: #00945d !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-hub-tab--purple.biblioteca-hub-tab--active {
+  background: #9333ea !important;
+  border-color: #7e22ce !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-hub-toolbar {
+  background: #1e1e1e !important;
+  border-color: #2c2c2c !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-pecas-hub__stats-panel {
+  background: #1e1e1e !important;
+  border-color: #2c2c2c !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-pecas-hub__hero-ring {
+  background: #2c2c2c !important;
+  box-shadow: none !important;
+}
+
+html body .biblioteca-pecas-hub .tab-glass-hero.tab-glass-hero--compact {
+  background: #1e1e1e !important;
+  border-color: #2c2c2c !important;
+}
+
+html body .biblioteca-pecas-hub.tab-glass-root input:focus,
+html body .biblioteca-pecas-hub.tab-glass-root select:focus,
+html body .biblioteca-pecas-hub.tab-glass-root textarea:focus {
+  border-color: rgba(0, 168, 107, 0.55) !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-pecas-hub__select {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-pecas-hub__select:focus {
+  border-color: rgba(0, 168, 107, 0.55) !important;
+  box-shadow: 0 0 0 2px rgba(0, 168, 107, 0.22) !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-pecas-hub__kpi {
+  background: #1e1e1e !important;
+  border: 1px solid #2c2c2c !important;
+  box-shadow: none !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-pecas-form {
+  border-color: #2c2c2c !important;
+}
+
+html body .biblioteca-pecas-hub .biblioteca-pecas-hub__grupos-header .btn-primary {
+  background: #00a86b !important;
+  border-color: #00945d !important;
 }

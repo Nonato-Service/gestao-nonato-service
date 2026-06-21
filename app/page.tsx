@@ -36399,7 +36399,7 @@ onKeyPress={(e) => {
             {/* Banner: a selecionar peça para o checklist (veio do Criação de Checklist) */}
             {criacaoChecklistPendentePeca?.origem === 'biblioteca' && (
               <div className="biblioteca-pecas-hub__banner">
-                <span style={{ color: '#00c853', fontWeight: 600, fontSize: '13px' }}>{(safeT as any)?.selecionarPecaParaChecklist || 'Selecione uma peça abaixo e clique em OK para associar ao item do checklist.'}</span>
+                <span style={{ color: '#00a86b', fontWeight: 600, fontSize: '13px' }}>{(safeT as any)?.selecionarPecaParaChecklist || 'Selecione uma peça abaixo e clique em OK para associar ao item do checklist.'}</span>
                 {pecaSelecionadaParaChecklist && (
                   <>
                     <span style={{ color: '#fff', fontSize: '13px' }}>{pecaSelecionadaParaChecklist.codigo} — {pecaSelecionadaParaChecklist.nome}</span>
@@ -36421,7 +36421,7 @@ onKeyPress={(e) => {
                           setCriacaoChecklistEditingItemPecasId(null)
                           openTab('familias-grupos', getTabTitle('familias-grupos'))
                         }}
-                        style={{ padding: '8px 20px', fontSize: '13px', fontWeight: 700, color: '#00c853', border: '2px solid rgba(0,200,83,0.6)', borderRadius: '8px', backgroundColor: 'rgba(0,200,83,0.2)', cursor: 'pointer' }}
+                        style={{ padding: '8px 20px', fontSize: '13px', fontWeight: 700, color: '#00a86b', border: '2px solid rgba(0, 168, 107,0.6)', borderRadius: '8px', backgroundColor: 'rgba(0, 168, 107,0.2)', cursor: 'pointer' }}
                       >
                         {(safeT as any)?.okUsarNoChecklist || 'OK — Usar no checklist'}
                       </button>
@@ -37209,11 +37209,11 @@ onKeyPress={(e) => {
                   backgroundColor: '#141414', 
                   padding: '30px', 
                   borderRadius: '8px', 
-                  border: '1px solid rgba(0, 200, 83, 0.3)',
+                  border: '1px solid rgba(0, 168, 107, 0.3)',
                   minWidth: '400px',
                   maxWidth: '500px'
                 }}>
-                  <h3 style={{ marginBottom: '20px', color: '#00c853' }}>
+                  <h3 style={{ marginBottom: '20px', color: '#00a86b' }}>
                     {safeT?.novaCategoria || 'Novo Grupo'}
                   </h3>
                   <div style={{ marginBottom: '20px' }}>
@@ -37225,7 +37225,7 @@ onKeyPress={(e) => {
                       value={novaCategoriaNome}
                       onChange={(e) => setNovaCategoriaNome(e.target.value)}
                           placeholder={safeT?.nomeCategoria || 'Nome da Categoria'}
-                      style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 168, 107, 0.3)', borderRadius: '4px' }}
                       onKeyPress={(e) => {
                         if (e.key === 'Enter' && novaCategoriaNome.trim()) {
                           const refId = pecaBibliotecaForm.categoriaId
@@ -37326,11 +37326,11 @@ onKeyPress={(e) => {
                   backgroundColor: '#141414', 
                   padding: '30px', 
                   borderRadius: '8px', 
-                  border: '1px solid rgba(0, 200, 83, 0.3)',
+                  border: '1px solid rgba(0, 168, 107, 0.3)',
                   minWidth: '400px',
                   maxWidth: '500px'
                 }}>
-                  <h3 style={{ marginBottom: '20px', color: '#00c853' }}>
+                  <h3 style={{ marginBottom: '20px', color: '#00a86b' }}>
                     {safeT?.novaSubcategoria || 'Nova Subcategoria'}
                   </h3>
                   {!pecaBibliotecaForm.categoriaId ? (
@@ -37352,7 +37352,7 @@ onKeyPress={(e) => {
                         <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '5px' }}>
                           {safeT?.categoriaPecaBiblioteca || 'Categoria'}:
                         </p>
-                        <p style={{ fontSize: '14px', color: '#00c853' }}>
+                        <p style={{ fontSize: '14px', color: '#00a86b' }}>
                           {categoriasPecas.find(c => c.id === pecaBibliotecaForm.categoriaId)?.nome || ''}
                         </p>
                       </div>
@@ -37365,7 +37365,7 @@ onKeyPress={(e) => {
                           value={novaSubcategoriaNome}
                           onChange={(e) => setNovaSubcategoriaNome(e.target.value)}
                           placeholder={safeT?.nomeSubcategoria || 'Nome da Subcategoria'}
-                          style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 168, 107, 0.3)', borderRadius: '4px' }}
                           onKeyPress={(e) => {
                             if (e.key === 'Enter' && novaSubcategoriaNome.trim() && pecaBibliotecaForm.categoriaId) {
                               const categoriaId = pecaBibliotecaForm.categoriaId
@@ -37697,7 +37697,7 @@ onKeyPress={(e) => {
                         padding: '8px 10px',
                         backgroundColor: '#1e1e1e',
                         color: '#fff',
-                        border: '1px solid rgba(0, 200, 83, 0.3)',
+                        border: '1px solid rgba(0, 168, 107, 0.3)',
                         borderRadius: '4px',
                         fontSize: '13px',
                       }}
@@ -37942,14 +37942,14 @@ onKeyPress={(e) => {
                             gap: '12px',
                             padding: '10px 12px',
                             borderRadius: '10px',
-                            border: '1px solid rgba(0, 200, 83, 0.14)',
+                            border: '1px solid rgba(0, 168, 107, 0.14)',
                             background: 'rgba(255,255,255,0.025)',
                             cursor: 'pointer',
                             textAlign: 'left',
                           }}
                         >
                           <div>
-                            <h3 style={{ margin: 0, fontSize: '15px', color: '#00c853', fontWeight: '600' }}>
+                            <h3 style={{ margin: 0, fontSize: '15px', color: '#00a86b', fontWeight: '600' }}>
                               {safeT?.classificacaoLoteTitulo || 'Classificação rápida em lote'}
                             </h3>
                             <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#b9c3b9' }}>
@@ -37957,14 +37957,14 @@ onKeyPress={(e) => {
                                 'Selecione peças ou use os filtros acima. Depois aplique grupo/subgrupo de uma vez.'}
                             </p>
                           </div>
-                          <span style={{ color: '#00c853', fontSize: '14px', fontWeight: 700, minWidth: '18px', textAlign: 'center' }}>
+                          <span style={{ color: '#00a86b', fontSize: '14px', fontWeight: 700, minWidth: '18px', textAlign: 'center' }}>
                             {classificacaoLoteExpanded ? '▲' : '▼'}
                           </span>
                         </button>
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                           <button
                             type="button"
-                            className="btn-secondary"
+                            className="biblioteca-btn--ghost"
                             onClick={() => setSelecaoPecasBibliotecaIds(pecasVisiveisParaLote.map((peca) => peca.id))}
                             style={{ padding: '8px 12px', fontSize: '12px' }}
                           >
@@ -37999,7 +37999,7 @@ onKeyPress={(e) => {
                                   padding: '10px',
                                   backgroundColor: '#1e1e1e',
                                   color: '#fff',
-                                  border: '1px solid rgba(0, 200, 83, 0.3)',
+                                  border: '1px solid rgba(0, 168, 107, 0.3)',
                                   borderRadius: '6px',
                                   fontSize: '13px',
                                 }}
@@ -38030,7 +38030,7 @@ onKeyPress={(e) => {
                                   padding: '10px',
                                   backgroundColor: '#1e1e1e',
                                   color: '#fff',
-                                  border: '1px solid rgba(0, 200, 83, 0.3)',
+                                  border: '1px solid rgba(0, 168, 107, 0.3)',
                                   borderRadius: '6px',
                                   fontSize: '13px',
                                 }}
@@ -38074,7 +38074,7 @@ onKeyPress={(e) => {
                                   padding: '10px',
                                   backgroundColor: '#1e1e1e',
                                   color: '#fff',
-                                  border: '1px solid rgba(0, 200, 83, 0.3)',
+                                  border: '1px solid rgba(0, 168, 107, 0.3)',
                                   borderRadius: '6px',
                                   fontSize: '13px',
                                 }}
@@ -38140,7 +38140,7 @@ onKeyPress={(e) => {
                                     padding: '8px 10px',
                                     borderRadius: '8px',
                                     backgroundColor: 'rgba(255,255,255,0.03)',
-                                    border: '1px solid rgba(0,200,83,0.12)',
+                                    border: '1px solid rgba(0, 168, 107,0.12)',
                                     flexWrap: 'wrap',
                                   }}
                                 >
@@ -38906,7 +38906,7 @@ onKeyPress={(e) => {
                   <div style={{ marginTop: '10px' }}>
                     <button
                       type="button"
-                      className="btn-primary"
+                      className="biblioteca-btn--green"
                       onClick={() => setShowImportacaoGuiaHomag(true)}
                       style={{ padding: '8px 12px', fontSize: '12px' }}
                     >
@@ -38925,7 +38925,7 @@ onKeyPress={(e) => {
                       minWidth: '280px',
                       padding: '12px 16px',
                       backgroundColor: '#141414',
-                      border: '1px solid rgba(0, 200, 83, 0.3)',
+                      border: '1px solid rgba(0, 168, 107, 0.3)',
                       borderRadius: '8px',
                       color: '#fff',
                       fontSize: '14px'
@@ -38934,17 +38934,15 @@ onKeyPress={(e) => {
                   />
                   <button
                     type="button"
+                    className="biblioteca-btn--green"
                     onClick={handleBuscarImportacaoUrl}
                     disabled={importacaoUrlLoading}
                     style={{
                       padding: '12px 24px',
-                      backgroundColor: importacaoUrlLoading ? '#333' : 'rgba(0, 200, 83, 0.2)',
-                      border: '1px solid #00c853',
-                      borderRadius: '8px',
-                      color: '#00c853',
+                      opacity: importacaoUrlLoading ? 0.6 : 1,
                       cursor: importacaoUrlLoading ? 'not-allowed' : 'pointer',
                       fontWeight: '600',
-                      fontSize: '14px'
+                      fontSize: '14px',
                     }}
                   >
                     {importacaoUrlLoading ? (safeT?.importacaoBuscando || 'A buscar...') : (safeT?.importacaoBuscarUrl || 'Buscar da URL')}
@@ -39122,7 +39120,7 @@ onKeyPress={(e) => {
                       maxWidth: '480px',
                       padding: '10px 14px',
                       backgroundColor: '#141414',
-                      border: '1px solid rgba(0, 200, 83, 0.25)',
+                      border: '1px solid rgba(0, 168, 107, 0.25)',
                       borderRadius: '8px',
                       color: '#fff',
                       fontSize: '13px',
@@ -39176,7 +39174,7 @@ A1;Peça exemplo;10'
                     minHeight: '100px',
                     padding: '12px',
                     backgroundColor: '#141414',
-                    border: '1px solid rgba(0, 200, 83, 0.3)',
+                    border: '1px solid rgba(0, 168, 107, 0.3)',
                     borderRadius: '8px',
                     color: '#fff',
                     fontSize: '13px',
