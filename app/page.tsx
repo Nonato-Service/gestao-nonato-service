@@ -33945,8 +33945,8 @@ onKeyPress={(e) => {
                   {relatorioServicoForm.diasTrabalho && relatorioServicoForm.diasTrabalho.length > 0 ? (
                     <div style={{ marginTop: '15px' }}>
                       <h5 style={{ marginBottom: '10px', color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: 'bold' }}>{safeT?.controleHorasDeslocamentos || 'CONTROLE DE HORAS E DESLOCAMENTOS'}</h5>
-                      <div style={{ overflowX: 'auto', overflowY: 'visible', maxWidth: '100%' }}>
-                        <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse', backgroundColor: '#141414', border: '1px solid rgba(0, 200, 83, 0.25)', fontSize: '10px' }}>
+                      <div className="relatorio-dias-trabalho-wrap">
+                        <table className="relatorio-dias-trabalho-table" style={{ backgroundColor: '#141414', border: '1px solid rgba(0, 200, 83, 0.25)', fontSize: '10px' }}>
                           <thead>
                             <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.12)', borderBottom: '2px solid rgba(0, 200, 83, 0.35)' }}>
                               <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '60px' }} rowSpan={2}>{safeT?.data || 'DATA'}</th>
@@ -33955,7 +33955,7 @@ onKeyPress={(e) => {
                               <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} colSpan={3}>{safeT?.retorno || 'RETORNO'}</th>
                               <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} colSpan={3}>{safeT?.km || 'KM'}</th>
                               <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '50px' }} rowSpan={2}>{safeT?.pausa || 'PAUSA'}</th>
-                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.25)', color: '#ffffff', fontSize: '8px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '112px', width: '1%' }} rowSpan={2}>{safeT?.acao || 'AÇÃO'}</th>
+                              <th className="relatorio-dia-acao-head" style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.25)', color: '#ffffff', fontSize: '8px', fontWeight: 'bold', whiteSpace: 'nowrap' }} rowSpan={2}>{safeT?.acao || 'AÇÃO'}</th>
                             </tr>
                             <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.12)', borderBottom: '2px solid rgba(0, 200, 83, 0.35)' }}>
                               <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.saida || 'Saída'}</th>
@@ -33994,7 +33994,7 @@ onKeyPress={(e) => {
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.2)', fontSize: '10px', whiteSpace: 'nowrap' }}>{dia.kmRetorno || '0'}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.2)', fontSize: '10px', fontWeight: 'bold', color: '#ffffff', whiteSpace: 'nowrap' }}>{diaCalculado.kmTotal || '0'}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.2)', fontSize: '10px', color: '#ffffff', whiteSpace: 'nowrap' }} rowSpan={temDescricao ? 2 : 1}>{dia.pausa || '0'}</td>
-                                    <td style={{ padding: '2px 2px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.2)', verticalAlign: 'middle', minWidth: '112px' }} rowSpan={temDescricao ? 2 : 1}>
+                                    <td className="relatorio-dia-acao-cell" style={{ padding: '2px 2px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.2)', verticalAlign: 'middle' }} rowSpan={temDescricao ? 2 : 1}>
                                       <div style={{ display: 'flex', gap: '3px', justifyContent: 'center', flexWrap: 'nowrap', alignItems: 'center' }}>
                                         <button
                                           type="button"
@@ -34044,10 +34044,14 @@ onKeyPress={(e) => {
                                   </tr>
                                   {temDescricao && (
                                     <tr style={{ borderBottom: '1px solid rgba(0, 200, 83, 0.2)' }}>
-                                      <td colSpan={15} style={{ padding: '8px', textAlign: 'left', border: '1px solid rgba(0, 200, 83, 0.2)', fontSize: '10px', color: '#ffffff', backgroundColor: '#141414' }}>
-                                        <div style={{ display: 'flex', alignItems: 'start', gap: '8px' }}>
-                                          <span style={{ fontSize: '12px', marginRight: '4px' }}>📝</span>
-                                          <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{dia.descricaoTrabalho}</span>
+                                      <td
+                                        colSpan={12}
+                                        className="relatorio-dia-descricao-cell"
+                                        style={{ padding: '8px', border: '1px solid rgba(0, 200, 83, 0.2)', color: '#ffffff', backgroundColor: '#141414' }}
+                                      >
+                                        <div style={{ display: 'flex', alignItems: 'start', gap: '8px', minWidth: 0 }}>
+                                          <span style={{ fontSize: '12px', flexShrink: 0 }}>📝</span>
+                                          <span style={{ minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{dia.descricaoTrabalho}</span>
                                         </div>
                                       </td>
                                     </tr>
@@ -75405,8 +75409,8 @@ A1;Peça exemplo;10`}
                 <h3 style={{ color: 'rgba(0, 200, 83, 0.9)', marginBottom: '15px', fontSize: '16px' }}>
                   {safeT?.controleHorasDeslocamentos || 'Controle de Horas e Deslocamentos'}
                 </h3>
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+                <div className="relatorio-dias-trabalho-wrap">
+                  <table className="relatorio-dias-trabalho-table" style={{ borderCollapse: 'collapse', fontSize: '11px' }}>
                     <thead>
                       <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.12)', borderBottom: '2px solid rgba(0, 200, 83, 0.35)' }}>
                         <th style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold' }} rowSpan={2}>{safeT?.data || 'DATA'}</th>
@@ -75457,10 +75461,14 @@ A1;Peça exemplo;10`}
                             </tr>
                             {temDescricao && (
                               <tr style={{ borderBottom: '1px solid rgba(0, 200, 83, 0.2)' }}>
-                                <td colSpan={13} style={{ padding: '10px', textAlign: 'left', border: '1px solid rgba(0, 200, 83, 0.2)', fontSize: '11px', color: '#ffffff', backgroundColor: '#141414' }}>
-                                  <div style={{ display: 'flex', alignItems: 'start', gap: '8px' }}>
-                                    <span style={{ fontSize: '14px' }}>📝</span>
-                                    <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{dia.descricaoTrabalho}</span>
+                                <td
+                                  colSpan={12}
+                                  className="relatorio-dia-descricao-cell"
+                                  style={{ padding: '10px', border: '1px solid rgba(0, 200, 83, 0.2)', color: '#ffffff', backgroundColor: '#141414', fontSize: '11px' }}
+                                >
+                                  <div style={{ display: 'flex', alignItems: 'start', gap: '8px', minWidth: 0 }}>
+                                    <span style={{ fontSize: '14px', flexShrink: 0 }}>📝</span>
+                                    <span style={{ minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{dia.descricaoTrabalho}</span>
                                   </div>
                                 </td>
                               </tr>

@@ -5562,6 +5562,45 @@ a:focus-visible {
   scroll-margin-top: 20px;
 }
 
+.relatorio-dias-trabalho-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.relatorio-dias-trabalho-table {
+  width: 100%;
+  min-width: 720px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.relatorio-dias-trabalho-table .relatorio-dia-descricao-cell {
+  max-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
+  line-height: 1.45;
+  text-align: left;
+  vertical-align: top;
+}
+
+.relatorio-dias-trabalho-table .relatorio-dia-acao-head,
+.relatorio-dias-trabalho-table .relatorio-dia-acao-cell {
+  width: 112px;
+  min-width: 112px;
+  max-width: 112px;
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  background: #141414;
+  box-shadow: -6px 0 10px rgba(0, 0, 0, 0.35);
+}
+
+.relatorio-dias-trabalho-table .relatorio-dia-acao-head {
+  background: rgba(0, 200, 83, 0.12);
+}
+
 .relatorio-servico-dia-trabalho-editor {
   scroll-margin-top: 16px;
 }
