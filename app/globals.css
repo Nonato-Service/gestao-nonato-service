@@ -10988,8 +10988,8 @@ button.dia-trabalho-acao-btn--del:hover {
 }
 
 .biblioteca-pecas-hub__piece-chip--group {
-  background: #052e16;
-  border-color: #14532d;
+  background: rgba(5, 46, 22, 0.38);
+  border-color: rgba(20, 83, 45, 0.55);
   color: #ffffff;
 }
 
@@ -11737,8 +11737,8 @@ button.dia-trabalho-acao-btn--del:hover {
 }
 
 .biblioteca-pecas-hub__catalog-chip--group {
-  background: #052e16;
-  border-color: #14532d;
+  background: rgba(5, 46, 22, 0.38);
+  border-color: rgba(20, 83, 45, 0.55);
   color: #ffffff;
 }
 
@@ -16776,8 +16776,8 @@ html body .biblioteca-pecas-hub .biblioteca-pecas-hub__piece-chip--code .bibliot
 }
 
 html body .biblioteca-pecas-hub .biblioteca-pecas-hub__piece-chip--group {
-  background: #052e16 !important;
-  border-color: #14532d !important;
+  background: rgba(5, 46, 22, 0.38) !important;
+  border-color: rgba(20, 83, 45, 0.55) !important;
 }
 
 html body .biblioteca-pecas-hub .biblioteca-pecas-hub__piece-chip--group .biblioteca-pecas-hub__piece-chip-k,
@@ -16803,8 +16803,8 @@ html body .biblioteca-pecas-hub .biblioteca-pecas-hub__catalog-chip--code {
 }
 
 html body .biblioteca-pecas-hub .biblioteca-pecas-hub__catalog-chip--group {
-  background: #052e16 !important;
-  border-color: #14532d !important;
+  background: rgba(5, 46, 22, 0.38) !important;
+  border-color: rgba(20, 83, 45, 0.55) !important;
 }
 
 html body .biblioteca-pecas-hub .biblioteca-pecas-hub__secao-header {
