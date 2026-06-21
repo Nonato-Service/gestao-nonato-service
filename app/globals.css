@@ -6442,6 +6442,14 @@ a:focus-visible {
   border-radius: 12px;
   max-width: 160px;
 }
+.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-picker {
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.relatorio-servico-pdf-modelo-picker--form {
+  min-width: 140px;
+}
 .biblioteca-relatorios-empty-busca,
 .biblioteca-relatorios-muted {
   margin: 0 0 12px;
@@ -8579,7 +8587,14 @@ button.dia-trabalho-acao-btn--del:hover {
   cursor: pointer;
 }
 
-/* Modelo PDF — select nativo clicável (formulário, cartões, biblioteca, modal) */
+/* Modelo PDF — botão/lista customizada (evita bug do <select> nativo dentro de overflow:auto) */
+.relatorio-servico-pdf-modelo-picker {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.relatorio-servico-pdf-modelo-picker__trigger.relatorio-servico-pdf-modelo-select,
 .relatorio-servico-pdf-modelo-select,
 .rs-card-select.relatorio-servico-pdf-modelo-select,
 select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select {
@@ -8588,10 +8603,13 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   pointer-events: auto !important;
   cursor: pointer !important;
   touch-action: manipulation;
-  -webkit-appearance: menulist;
-  appearance: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
   min-height: 36px;
-  padding: 8px 28px 8px 10px !important;
+  padding: 8px 10px !important;
   background-color: rgba(12, 18, 16, 0.92) !important;
   color: #f4fff7 !important;
   border: 1px solid rgba(52, 211, 153, 0.45) !important;
@@ -8601,6 +8619,85 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   line-height: 1.25;
   box-sizing: border-box;
   max-width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+
+.relatorio-servico-pdf-modelo-picker__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.relatorio-servico-pdf-modelo-picker__chevron {
+  flex-shrink: 0;
+  opacity: 0.75;
+  font-size: 11px;
+}
+
+.relatorio-servico-pdf-modelo-picker__menu {
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: 12px;
+  border: 1px solid rgba(52, 211, 153, 0.42);
+  background: rgba(10, 16, 14, 0.98);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  padding: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.relatorio-servico-pdf-modelo-picker__menu--compact {
+  font-size: 11px;
+}
+
+.relatorio-servico-pdf-modelo-picker__group + .relatorio-servico-pdf-modelo-picker__group {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.relatorio-servico-pdf-modelo-picker__group-label {
+  padding: 4px 8px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.95);
+}
+
+.relatorio-servico-pdf-modelo-picker__option {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #f4fff7;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.relatorio-servico-pdf-modelo-picker__option:hover,
+.relatorio-servico-pdf-modelo-picker__option:focus-visible {
+  background: rgba(0, 200, 83, 0.16);
+  outline: none;
+}
+
+.relatorio-servico-pdf-modelo-picker__option.is-selected {
+  background: rgba(0, 200, 83, 0.24);
+  color: #ffffff;
+}
+
+.relatorio-servico-pdf-modelo-picker--compact .relatorio-servico-pdf-modelo-picker__trigger {
+  min-height: 32px;
+  font-size: 10px !important;
+  padding: 6px 8px !important;
 }
 
 .tab-glass-root select.relatorio-servico-pdf-modelo-select,
