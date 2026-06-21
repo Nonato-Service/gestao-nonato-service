@@ -884,6 +884,7 @@ type SidebarGroup =
   | 'gestao-tecnica'
   | 'parceiros-comercial'
   | 'documentacao-relatorios'
+  | 'pecas-biblioteca'
   | 'gestao-custos'
   | 'gestao-industrial'
   | 'gestao-financeira'
@@ -995,6 +996,7 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
   'gestao-tecnica',
   'parceiros-comercial',
   'documentacao-relatorios',
+  'pecas-biblioteca',
   'gestao-custos',
   'checklist-group',
   'gestao-industrial',
@@ -1011,6 +1013,7 @@ const SIDEBAR_GROUP_LAUNCHER_IDS = new Set([
   'gestao-tecnica-default',
   'parceiros-comercial-default',
   'documentacao-relatorios-default',
+  'pecas-biblioteca-default',
   'gestao-custos-default',
   'gestao-industrial-default',
   'gestao-financeira-default',
@@ -1074,6 +1077,7 @@ const SIDEBAR_TRANSLATION_KEY_BY_ID: Record<string, string> = {
   'gestao-tecnica-default': 'gestaoTecnicaTitle',
   'parceiros-comercial-default': 'parceirosComercialTitle',
   'documentacao-relatorios-default': 'documentacaoRelatoriosTitle',
+  'pecas-biblioteca-default': 'pecasBibliotecaTitle',
   'gestao-industrial-default': 'gestaoIndustrialTitle',
   'gestao-financeira-default': 'gestaoFinanceiraTitle',
   'gestao-custos-default': 'gestaoCustosTitle',
@@ -1105,16 +1109,19 @@ function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
   if (
     [
       'relatorio-servico-default',
-      'biblioteca-pecas-default',
       'biblioteca-relatorios-default',
       'relatorios-excluidos-clientes-default',
+      'fechamento-relatorios-servicos-default',
     ].includes(buttonId)
   ) {
     return 'documentacao-relatorios'
   }
 
+  if (['biblioteca-pecas-default', 'pecas-substituicao-default'].includes(buttonId)) {
+    return 'pecas-biblioteca'
+  }
+
   if ([
-    'fechamento-relatorios-servicos-default',
     'orcamentos-avulso-default',
     'orcamento-servico-tecnico-default',
     'pedido-orcamentos-avulso-default',
@@ -6593,6 +6600,7 @@ export default function Dashboard() {
       'open-gestao-tecnica',
       'open-parceiros-comercial',
       'open-documentacao-relatorios',
+      'open-pecas-biblioteca',
       'open-ordem-preparacao',
       'open-formularios-checklist-tecnicos',
       'open-verificacao-final-entrega',
@@ -6634,6 +6642,7 @@ export default function Dashboard() {
       'open-almoxarifado-armazem',
       'open-parceiros-comercial',
       'open-documentacao-relatorios',
+      'open-pecas-biblioteca',
     ])
     return Array.from(s)
   }, [DEMO_ALLOWED_ACTIONS, DEMO_MODULE_CATALOG])
@@ -10135,7 +10144,7 @@ export default function Dashboard() {
           'clientes-default': { translationKey: 'clientesTitle', group: 'parceiros-comercial' },
           'fornecedores-default': { translationKey: 'fornecedoresTitle', group: 'parceiros-comercial' },
           'relatorio-servico-default': { translationKey: 'relatorioServicoTitle', group: 'documentacao-relatorios' },
-          'biblioteca-pecas-default': { translationKey: 'cadastroPecasBibliotecaTitle', group: 'documentacao-relatorios' },
+          'biblioteca-pecas-default': { translationKey: 'cadastroPecasBibliotecaTitle', group: 'pecas-biblioteca' },
           'solicitacao-servico-tecnico-default': { translationKey: 'solicitacaoServicoTecnicoTitle', group: 'empresa-institucional' },
           'agenda-default': { translationKey: 'agendaTitle', group: 'gestao-tecnica' },
           'diario-pedidos-dia-default': { translationKey: 'diarioPedidosTitle', group: 'gestao-tecnica' },
@@ -10144,7 +10153,7 @@ export default function Dashboard() {
           'biblioteca-relatorios-default': { translationKey: 'bibliotecaRelatoriosTitle', group: 'documentacao-relatorios' },
           'relatorios-excluidos-clientes-default': { translationKey: 'relatoriosExcluidosClientesTitle', group: 'documentacao-relatorios' },
           'cadastro-servicos-default': { translationKey: 'cadastroServicosTitle', group: 'gestao-tecnica' },
-          'fechamento-relatorios-servicos-default': { translationKey: 'fechamentoRelatoriosServicosTitle', group: 'gestao-custos' },
+          'fechamento-relatorios-servicos-default': { translationKey: 'fechamentoRelatoriosServicosTitle', group: 'documentacao-relatorios' },
           'orcamentos-avulso-default': { translationKey: 'orcamentosAvulsoTitle', group: 'gestao-custos' },
           'pedido-orcamentos-avulso-default': { translationKey: 'pedidoOrcamentosAvulsoTitle', group: 'gestao-custos' },
           'orcamento-servico-tecnico-default': { translationKey: 'orcamentoServicoTecnicoTitle', group: 'gestao-custos' },
@@ -10157,6 +10166,7 @@ export default function Dashboard() {
           'gestao-tecnica-default': { translationKey: 'gestaoTecnicaTitle' },
           'parceiros-comercial-default': { translationKey: 'parceirosComercialTitle' },
           'documentacao-relatorios-default': { translationKey: 'documentacaoRelatoriosTitle' },
+          'pecas-biblioteca-default': { translationKey: 'pecasBibliotecaTitle' },
           'gestao-industrial-default': { translationKey: 'gestaoIndustrialTitle' },
           'gestao-financeira-default': { translationKey: 'gestaoFinanceiraTitle' },
           'gestao-custos-default': { translationKey: 'gestaoCustosTitle' },
@@ -10186,6 +10196,7 @@ export default function Dashboard() {
           const isGestaoTecnicaButton = defaults.group === 'gestao-tecnica' ||
                                         defaults.group === 'parceiros-comercial' ||
                                         defaults.group === 'documentacao-relatorios' ||
+                                        defaults.group === 'pecas-biblioteca' ||
                                         b.id === 'gestores-default' ||
                                         b.id === 'clientes-default' ||
                                         b.id === 'fornecedores-default' ||
@@ -10238,6 +10249,7 @@ export default function Dashboard() {
                                b.id === 'gestao-tecnica-default' ? 'open-gestao-tecnica' :
                                b.id === 'parceiros-comercial-default' ? 'open-parceiros-comercial' :
                                b.id === 'documentacao-relatorios-default' ? 'open-documentacao-relatorios' :
+                               b.id === 'pecas-biblioteca-default' ? 'open-pecas-biblioteca' :
                                b.id === 'gestao-industrial-default' ? 'open-gestao-industrial' :
                                b.id === 'gestao-financeira-default' ? 'open-gestao-financeira' :
                                b.id === 'mensagens-internas-default' ? 'open-mensagens-internas' :
@@ -10281,9 +10293,11 @@ export default function Dashboard() {
       const documentacaoRelatoriosButtonIds = [
         'relatorio-servico-default',
         'biblioteca-relatorios-default',
-        'biblioteca-pecas-default',
         'relatorios-excluidos-clientes-default',
+        'fechamento-relatorios-servicos-default',
       ]
+
+      const pecasBibliotecaButtonIds = ['biblioteca-pecas-default', 'pecas-substituicao-default']
 
       const empresaInstitucionalButtonIds = [
         'cadastro-nonato-service-default',
@@ -10299,7 +10313,6 @@ export default function Dashboard() {
         'estado-visual-tecnico-default': 'estadoVisualTecnico',
         'informacoes-conhecimento-tecnicos-default': 'informacoesConhecimentoTecnicosTitle',
         'cadastro-servicos-default': 'cadastroServicosTitle',
-        'fechamento-relatorios-servicos-default': 'fechamentoRelatoriosServicosTitle',
       }
 
       const parceirosTranslationKeys: { [key: string]: string } = {
@@ -10310,8 +10323,13 @@ export default function Dashboard() {
       const documentacaoTranslationKeys: { [key: string]: string } = {
         'relatorio-servico-default': 'relatorioServicoTitle',
         'biblioteca-relatorios-default': 'bibliotecaRelatoriosTitle',
-        'biblioteca-pecas-default': 'cadastroPecasBibliotecaTitle',
         'relatorios-excluidos-clientes-default': 'relatoriosExcluidosClientesTitle',
+        'fechamento-relatorios-servicos-default': 'fechamentoRelatoriosServicosTitle',
+      }
+
+      const pecasBibliotecaTranslationKeys: { [key: string]: string } = {
+        'biblioteca-pecas-default': 'cadastroPecasBibliotecaTitle',
+        'pecas-substituicao-default': 'pecasSubstituicao',
       }
       
       const empresaInstitucionalTranslationKeys: { [key: string]: string } = {
@@ -10352,12 +10370,18 @@ export default function Dashboard() {
             translationKey: documentacaoTranslationKeys[b.id || ''] || b.translationKey
           }
         }
-        if (b.id === 'cadastro-servicos-default' || b.id === 'fechamento-relatorios-servicos-default') {
+        if (pecasBibliotecaButtonIds.includes(b.id || '')) {
+          return {
+            ...b,
+            customName: false,
+            translationKey: pecasBibliotecaTranslationKeys[b.id || ''] || b.translationKey
+          }
+        }
+        if (b.id === 'cadastro-servicos-default') {
           return {
             ...b,
             customName: false,
             translationKey: translationKeys[b.id || ''] || b.translationKey
-            // group: preservar o que o usuário definiu no Organizador de Botões
           }
         }
         return b
@@ -10401,7 +10425,7 @@ export default function Dashboard() {
         }
       }
 
-      // Biblioteca / relatórios / peças: grupo «Documentação e relatórios»; cadastro de serviços mantém-se na Gestão Técnica
+      // Relatórios, peças e fechamento: grupos lógicos separados
       buttons = buttons.map((b: SidebarButton) => {
         if (b.id === 'biblioteca-relatorios-default' && b.group !== 'documentacao-relatorios') {
           buttonsMigrated = true
@@ -10419,14 +10443,27 @@ export default function Dashboard() {
           buttonsMigrated = true
           return { ...b, group: 'documentacao-relatorios', translationKey: 'relatorioServicoTitle', action: 'open-relatorio-servico' }
         }
-        if (b.id === 'biblioteca-pecas-default' && b.group !== 'documentacao-relatorios') {
+        if (b.id === 'fechamento-relatorios-servicos-default' && b.group !== 'documentacao-relatorios') {
           buttonsMigrated = true
           return {
             ...b,
             group: 'documentacao-relatorios',
+            translationKey: 'fechamentoRelatoriosServicosTitle',
+            action: 'open-fechamento-relatorios-servicos',
+          }
+        }
+        if (b.id === 'biblioteca-pecas-default' && b.group !== 'pecas-biblioteca') {
+          buttonsMigrated = true
+          return {
+            ...b,
+            group: 'pecas-biblioteca',
             translationKey: 'cadastroPecasBibliotecaTitle',
             action: b.action === 'open-biblioteca-pecas' ? 'open-biblioteca-hub' : b.action || 'open-biblioteca-hub',
           }
+        }
+        if (b.id === 'pecas-substituicao-default' && b.group !== 'pecas-biblioteca') {
+          buttonsMigrated = true
+          return { ...b, group: 'pecas-biblioteca', translationKey: 'pecasSubstituicao' }
         }
         if (b.id === 'clientes-default' && b.group !== 'parceiros-comercial') {
           buttonsMigrated = true
@@ -10905,7 +10942,7 @@ export default function Dashboard() {
           action: 'open-biblioteca-hub',
           order: buttons.length,
           translationKey: 'cadastroPecasBibliotecaTitle',
-          group: 'documentacao-relatorios'
+          group: 'pecas-biblioteca'
         }
         buttons.push(bibliotecaPecasButton)
       }
@@ -11155,6 +11192,20 @@ export default function Dashboard() {
         else buttons.push(docButton)
       }
 
+      const hasPecasBiblioteca = buttons.some((b: SidebarButton) => b.id === 'pecas-biblioteca-default')
+      if (!hasPecasBiblioteca) {
+        const idxDoc = buttons.findIndex((b: SidebarButton) => b.id === 'documentacao-relatorios-default')
+        const pecasButton: SidebarButton = {
+          id: 'pecas-biblioteca-default',
+          name: 'PEÇAS E BIBLIOTECA',
+          action: 'open-pecas-biblioteca',
+          order: idxDoc >= 0 ? (buttons[idxDoc].order ?? 0) + 0.45 : buttons.length,
+          translationKey: 'pecasBibliotecaTitle',
+        }
+        if (idxDoc >= 0) buttons.splice(idxDoc + 1, 0, pecasButton)
+        else buttons.push(pecasButton)
+      }
+
       if (!hasGestaoIndustrial) {
         const gestaoIndustrialButton: SidebarButton = {
           id: 'gestao-industrial-default',
@@ -11261,7 +11312,7 @@ export default function Dashboard() {
           action: 'open-fechamento-relatorios-servicos',
           order: cadastroIdx >= 0 ? (buttons[cadastroIdx].order ?? 0) + 0.5 : buttons.length,
           translationKey: 'fechamentoRelatoriosServicosTitle',
-          group: 'gestao-custos',
+          group: 'documentacao-relatorios',
           customName: false
         }
         if (cadastroIdx >= 0) {
@@ -11562,7 +11613,7 @@ export default function Dashboard() {
           action: 'open-fechamento-relatorios-servicos',
           order: cadastroIdx >= 0 ? cadastroIdx + 0.5 : filteredButtons.length,
           translationKey: 'fechamentoRelatoriosServicosTitle',
-          group: 'gestao-custos' as const,
+          group: 'documentacao-relatorios' as const,
           customName: false
         }
         if (cadastroIdx >= 0) {
@@ -11667,7 +11718,7 @@ export default function Dashboard() {
           action: 'open-biblioteca-hub',
           order: 7,
           translationKey: 'cadastroPecasBibliotecaTitle',
-          group: 'gestao-tecnica'
+          group: 'pecas-biblioteca'
         },
         {
           id: 'agenda-default',
@@ -11715,7 +11766,7 @@ export default function Dashboard() {
           action: 'open-fechamento-relatorios-servicos',
           order: 11.5,
           translationKey: 'fechamentoRelatoriosServicosTitle',
-          group: 'gestao-custos'
+          group: 'documentacao-relatorios'
         },
       ]
       // Verificar se realmente houve mudança antes de atualizar para evitar loop infinito
@@ -12300,7 +12351,7 @@ export default function Dashboard() {
     
     // Não permitir deletar os botões padrão e principais
     if (buttonId === 'administrador-default' || buttonId === 'extras-default' || buttonId === 'cadastro-nonato-service-default' || buttonId === 'ficha-pagamento-transferencia-default' || buttonId === 'ficha-fatura-cliente-default' || 
-        buttonId === 'gestao-tecnica-default' || buttonId === 'parceiros-comercial-default' || buttonId === 'documentacao-relatorios-default' || buttonId === 'gestao-industrial-default' ||
+        buttonId === 'gestao-tecnica-default' || buttonId === 'parceiros-comercial-default' || buttonId === 'documentacao-relatorios-default' || buttonId === 'pecas-biblioteca-default' || buttonId === 'gestao-industrial-default' ||
         buttonId === 'gestores-default' || buttonId === 'equipamentos-default' || 
         buttonId === 'clientes-default' || buttonId === 'fornecedores-default' || 
         buttonId === 'relatorio-servico-default' || buttonId === 'cadastro-servicos-default' || buttonId === 'fechamento-relatorios-servicos-default' ||
@@ -12457,6 +12508,8 @@ export default function Dashboard() {
       return (safeT as any)?.parceirosComercialTitle || button.name || ''
     } else if (button.id === 'documentacao-relatorios-default') {
       return (safeT as any)?.documentacaoRelatoriosTitle || button.name || ''
+    } else if (button.id === 'pecas-biblioteca-default') {
+      return (safeT as any)?.pecasBibliotecaTitle || button.name || ''
     } else if (button.id === 'gestao-tecnica-default') {
       return safeT?.gestaoTecnicaTitle || button.name || ''
     } else if (button.id === 'gestao-custos-default') {
@@ -21611,7 +21664,8 @@ export default function Dashboard() {
           name: 'PEÇAS QUE NECESSITAM DE SER SUBSTITUÍDAS',
           action: 'open-pecas-substituicao',
           order: prevButtons.length,
-          translationKey: 'pecasSubstituicao'
+          translationKey: 'pecasSubstituicao',
+          group: 'pecas-biblioteca',
         }
         updatedButtons.push(pecasButton)
       }
@@ -24429,6 +24483,7 @@ export default function Dashboard() {
       'open-gestao-tecnica',
       'open-parceiros-comercial',
       'open-documentacao-relatorios',
+      'open-pecas-biblioteca',
       'open-gestao-custos',
       'open-comunicacao-interna',
       'open-gestao-industrial',
@@ -24573,6 +24628,8 @@ export default function Dashboard() {
       toggleOrOpenDashboardHub('parceiros-comercial', 'parceiros-comercial')
     } else if (action === 'open-documentacao-relatorios') {
       toggleOrOpenDashboardHub('documentacao-relatorios', 'documentacao-relatorios')
+    } else if (action === 'open-pecas-biblioteca') {
+      toggleOrOpenDashboardHub('pecas-biblioteca', 'pecas-biblioteca')
     } else if (action === 'open-gestao-custos') {
       toggleOrOpenDashboardHub('gestao-custos', 'gestao-custos')
     } else if (action === 'open-gestao-financeira') {
@@ -24620,6 +24677,8 @@ export default function Dashboard() {
         'open-gestao-tecnica',
         'open-parceiros-comercial',
         'open-documentacao-relatorios',
+      'open-pecas-biblioteca',
+        'open-pecas-biblioteca',
         'open-gestao-custos',
         'open-comunicacao-interna',
         'open-checklist-group',
@@ -60900,6 +60959,8 @@ A1;Peça exemplo;10`}
         return (safeT as any)?.parceirosComercialTitle || 'CLIENTES E FORNECEDORES'
       case 'documentacao-relatorios':
         return (safeT as any)?.documentacaoRelatoriosTitle || 'DOCUMENTAÇÃO E RELATÓRIOS'
+      case 'pecas-biblioteca':
+        return (safeT as any)?.pecasBibliotecaTitle || 'PEÇAS E BIBLIOTECA'
       case 'gestao-custos':
         return safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS'
       case 'gestao-industrial':
@@ -61036,7 +61097,24 @@ A1;Peça exemplo;10`}
         'relatorio-servico-default': '📄',
         'biblioteca-relatorios-default': '📚',
         'relatorios-excluidos-clientes-default': '🗃️',
+        'fechamento-relatorios-servicos-default': '💼',
+      }
+      for (const button of sorted) {
+        if (!canAccessAction(button.action)) continue
+        rows.push({
+          key: button.id,
+          title: getButtonName(button),
+          desc: descForHubRow(button.id, button.action),
+          ...hubRowIcon(docHubIcon[button.id || '']),
+          action: button.action,
+          buttonId: button.id
+        })
+      }
+    } else if (hubId === 'pecas-biblioteca') {
+      const sorted = [...getButtonsByGroup('pecas-biblioteca')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      const pecasHubIcon: Record<string, string> = {
         'biblioteca-pecas-default': '🔩',
+        'pecas-substituicao-default': '⚠️',
       }
       for (const button of sorted) {
         const perm =
@@ -61047,7 +61125,7 @@ A1;Peça exemplo;10`}
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          ...hubRowIcon(docHubIcon[button.id || '']),
+          ...hubRowIcon(pecasHubIcon[button.id || '']),
           action,
           buttonId: button.id
         })
@@ -61121,7 +61199,6 @@ A1;Peça exemplo;10`}
         'orcamentos-avulso-default': <IconCoins size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
         'pedido-orcamentos-avulso-default': <IconFileText size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
         'orcamento-servico-tecnico-default': <IconWrench size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
-        'mapa-visual-separacao-pecas-default': <IconMap size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
       }
       const sorted = [...getButtonsByGroup('gestao-custos')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
@@ -66336,10 +66413,8 @@ A1;Peça exemplo;10`}
           </div>
         )}
 
-        {/* Grupo: DOCUMENTAÇÃO E RELATÓRIOS (relatório, bibliotecas, peças) */}
-        {getButtonsByGroup('documentacao-relatorios').some((b) =>
-          b.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessAction(b.action)
-        ) && (
+        {/* Grupo: DOCUMENTAÇÃO E RELATÓRIOS */}
+        {getButtonsByGroup('documentacao-relatorios').some((b) => canAccessAction(b.action)) && (
           <div className="sidebar-nav-cluster">
             <button
               type="button"
@@ -66356,7 +66431,7 @@ A1;Peça exemplo;10`}
               )}
               <span className="sidebar-nav-label sidebar-nav-label--stacked">
                 <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
-                  📚
+                  📄
                 </span>
                 <span className="sidebar-nav-label-stack">
                   <span className="sidebar-nav-label-text">
@@ -66372,13 +66447,94 @@ A1;Peça exemplo;10`}
               ) : null}
             </button>
             {expandedGroups.has('documentacao-relatorios') &&
-              getButtonsByGroup('documentacao-relatorios').some((b) =>
+              getButtonsByGroup('documentacao-relatorios').some((b) => canAccessAction(b.action)) && (
+                <div className="sidebar-action-buttons">
+                  {getButtonsByGroup('documentacao-relatorios')
+                    .filter((button) => canAccessAction(button.action))
+                    .sort((a, b) => a.order - b.order)
+                    .map((button) => {
+                      const isSelected = selectedSidebarButton === button.action
+                      const rowSub = resolveActionCardDescription(
+                        trCardDesc,
+                        button.id,
+                        button.action,
+                        pickTrChain(trCardDesc, ['mainHubCardHint'])
+                      )
+                      return (
+                        <button
+                          key={button.id}
+                          type="button"
+                          data-sidebar-nav-action={button.action}
+                          className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                            isSelected ? ' sidebar-action-btn-active' : ''
+                          }`}
+                          onClick={() => handleButtonClick(button.action)}
+                        >
+                          {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+                          <span className="sidebar-empresa-entry-row">
+                            <span className="sidebar-empresa-entry-text">
+                              <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                            </span>
+                          </span>
+                          <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>›</span>
+                          {rowSub?.trim() ? (
+                            <span className="sidebar-tip-bubble" role="tooltip">
+                              {rowSub}
+                            </span>
+                          ) : null}
+                        </button>
+                      )
+                    })}
+                </div>
+              )}
+          </div>
+        )}
+
+        {/* Grupo: PEÇAS E BIBLIOTECA */}
+        {getButtonsByGroup('pecas-biblioteca').some((b) =>
+          b.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessAction(b.action)
+        ) && (
+          <div className="sidebar-nav-cluster">
+            <button
+              type="button"
+              className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-pecas-biblioteca' ? ' sidebar-group-btn-selected' : ''}`}
+              onClick={() => handleButtonClick('open-pecas-biblioteca')}
+              title={
+                String((safeT as any)?.sidebarGroupPecasBibliotecaDesc || '').trim()
+                  ? String((safeT as any)?.sidebarGroupPecasBibliotecaDesc)
+                  : undefined
+              }
+            >
+              {selectedSidebarButton === 'open-pecas-biblioteca' && (
+                <span className="sidebar-nav-check" aria-hidden>✓</span>
+              )}
+              <span className="sidebar-nav-label sidebar-nav-label--stacked">
+                <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
+                  🔩
+                </span>
+                <span className="sidebar-nav-label-stack">
+                  <span className="sidebar-nav-label-text">
+                    {(safeT as any)?.pecasBibliotecaTitle || 'PEÇAS E BIBLIOTECA'}
+                  </span>
+                </span>
+              </span>
+              <span className={sidebarGroupChevronClass(expandedGroups.has('pecas-biblioteca'))} aria-hidden />
+              {String((safeT as any)?.sidebarGroupPecasBibliotecaDesc || '').trim() ? (
+                <span className="sidebar-tip-bubble" role="tooltip">
+                  {(safeT as any).sidebarGroupPecasBibliotecaDesc}
+                </span>
+              ) : null}
+            </button>
+            {expandedGroups.has('pecas-biblioteca') &&
+              getButtonsByGroup('pecas-biblioteca').some((b) =>
                 b.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessAction(b.action)
               ) && (
                 <div className="sidebar-action-buttons">
-                  {getButtonsByGroup('documentacao-relatorios')
+                  {getButtonsByGroup('pecas-biblioteca')
                     .filter((button) =>
-                      button.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessAction(button.action)
+                      button.id === 'biblioteca-pecas-default'
+                        ? canAccessAction('open-biblioteca-pecas')
+                        : canAccessAction(button.action)
                     )
                     .sort((a, b) => a.order - b.order)
                     .map((button) => {
@@ -66406,7 +66562,7 @@ A1;Peça exemplo;10`}
                             {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
                             <span className="sidebar-empresa-entry-row">
                               <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
-                                📚
+                                🔩
                               </span>
                               <span className="sidebar-empresa-entry-text">
                                 <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
@@ -66645,6 +66801,7 @@ A1;Peça exemplo;10`}
           {expandedGroups.has('gestao-custos') && (
             <div className="sidebar-action-buttons">
               {getButtonsByGroup('gestao-custos')
+                .filter((button) => canAccessAction(button.action))
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
                   const isSelected = selectedSidebarButton === button.action

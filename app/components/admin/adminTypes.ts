@@ -110,7 +110,7 @@ export type CodeBackup = { path: string; timestamp: string; filesCount: number }
 export type AutoBackup = { timestamp: number; data?: { date?: string } }
 
 export type SidebarGroup =
-  | 'gestao-tecnica' | 'parceiros-comercial' | 'documentacao-relatorios' | 'gestao-custos'
+  | 'gestao-tecnica' | 'parceiros-comercial' | 'documentacao-relatorios' | 'pecas-biblioteca' | 'gestao-custos'
   | 'gestao-industrial' | 'gestao-financeira' | 'checklist-group' | 'comunicacao-interna'
   | 'manuais-informacoes-tecnicas' | 'biblia-nonato-service' | 'almoxarifado-armazem'
   | 'empresa-institucional' | 'outros'
