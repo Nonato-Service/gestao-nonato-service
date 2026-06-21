@@ -78,6 +78,7 @@ import {
   resolverIdEquipamentoCliente,
   resolverIdEquipamentoVisivelCliente,
   resolverIdEquipamentoVisivelRelatorio,
+  resolverEquipamentoRelatorioParaExibicao,
   type RelatorioEquipamentoRef,
 } from './lib/relatorioServicoEquipamentos'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
@@ -17370,6 +17371,9 @@ export default function Dashboard() {
       dataFormatada,
       modifier,
       equipamentosArmazem: equipamentos,
+      equipamentosCliente: relatorio.clienteId
+        ? (clientes.find((c) => c.id === relatorio.clienteId)?.equipamentos ?? [])
+        : [],
     })
 
   /** Pré-visualização no painel Administrador: logo da lista ou logo principal (barra), para PDFs */
@@ -33220,7 +33224,15 @@ onKeyPress={(e) => {
                                     {(eq.equipamentoId || eq.maquinaModelo) && (
                                       <div className="relatorio-equipamento-card__preview">
                                         <strong>{safeT?.relatorioEquipamentoIdLabel || 'ID'}:</strong>{' '}
-                                        <span className="relatorio-equipamento-card__id">{eq.equipamentoId || '—'}</span>
+                                        <span className="relatorio-equipamento-card__id">
+                                          {resolverEquipamentoRelatorioParaExibicao(
+                                            eq,
+                                            equipamentos,
+                                            relatorioServicoForm.clienteId
+                                              ? (clientes.find((c) => c.id === relatorioServicoForm.clienteId)?.equipamentos ?? [])
+                                              : []
+                                          ) || '—'}
+                                        </span>
                                         {eq.maquinaModelo ? (
                                           <>
                                             <span className="relatorio-equipamento-card__sep"> · </span>
@@ -75307,33 +75319,45 @@ A1;Peça exemplo;10`}
                       ? (safeT?.relatorioEquipamentosTitulo || 'Equipamentos do relatório')
                       : (safeT?.maquinaModelo || 'Máquina/Modelo')}
                   </p>
-                  {normalizarEquipamentosRelatorio(viewingRelatorioServico).length > 0 ? (
-                    <div className="relatorio-equipamentos-view-list">
-                      {normalizarEquipamentosRelatorio(viewingRelatorioServico).map((eq, eqIdx) => (
-                        <p
-                          key={eq.uid || `view-eq-${eqIdx}`}
-                          style={{ fontSize: '14px', lineHeight: 1.45, overflowWrap: 'anywhere', wordBreak: 'break-word', margin: eqIdx === 0 ? 0 : '8px 0 0' }}
-                        >
-                          {normalizarEquipamentosRelatorio(viewingRelatorioServico).length > 1 && (
-                            <span style={{ color: '#00c853', fontWeight: 700, marginRight: 6 }}>
-                              {(safeT?.relatorioEquipamentoNumero || 'Equipamento {n}').replace('{n}', String(eqIdx + 1))}:
-                            </span>
-                          )}
-                          {eq.equipamentoId && (
-                            <span style={{ color: '#66b3ff', fontWeight: 'bold' }}>
-                              {safeT?.relatorioEquipamentoIdLabel || 'ID'}: {eq.equipamentoId}
-                            </span>
-                          )}
-                          {eq.equipamentoId && eq.maquinaModelo ? <span style={{ color: '#888' }}> · </span> : null}
-                          {eq.maquinaModelo || null}
+                  {(() => {
+                    const eqListView = normalizarEquipamentosRelatorio(viewingRelatorioServico)
+                    const eqCliView = viewingRelatorioServico.clienteId
+                      ? (clientes.find((c) => c.id === viewingRelatorioServico.clienteId)?.equipamentos ?? [])
+                      : []
+                    if (eqListView.length === 0) {
+                      return (
+                        <p style={{ fontSize: '14px', lineHeight: 1.45, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                          {viewingRelatorioServico.maquinaModelo || '-'}
                         </p>
-                      ))}
-                    </div>
-                  ) : (
-                    <p style={{ fontSize: '14px', lineHeight: 1.45, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
-                      {viewingRelatorioServico.maquinaModelo || '-'}
-                    </p>
-                  )}
+                      )
+                    }
+                    return (
+                      <div className="relatorio-equipamentos-view-list">
+                        {eqListView.map((eq, eqIdx) => {
+                          const idVisivel = resolverEquipamentoRelatorioParaExibicao(eq, equipamentos, eqCliView)
+                          return (
+                            <p
+                              key={eq.uid || `view-eq-${eqIdx}`}
+                              style={{ fontSize: '14px', lineHeight: 1.45, overflowWrap: 'anywhere', wordBreak: 'break-word', margin: eqIdx === 0 ? 0 : '8px 0 0' }}
+                            >
+                              {eqListView.length > 1 && (
+                                <span style={{ color: '#00c853', fontWeight: 700, marginRight: 6 }}>
+                                  {(safeT?.relatorioEquipamentoNumero || 'Equipamento {n}').replace('{n}', String(eqIdx + 1))}:
+                                </span>
+                              )}
+                              {idVisivel ? (
+                                <span style={{ color: '#66b3ff', fontWeight: 'bold' }}>
+                                  {safeT?.relatorioEquipamentoIdLabel || 'ID'}: {idVisivel}
+                                </span>
+                              ) : null}
+                              {idVisivel && eq.maquinaModelo ? <span style={{ color: '#888' }}> · </span> : null}
+                              {eq.maquinaModelo || null}
+                            </p>
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
                 </div>
                 <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: '12px', color: '#b0b0b0', marginBottom: '5px' }}>{safeT?.tipoServico || 'Tipo de Serviço'}</p>

@@ -92,10 +92,18 @@ export function buildRelatorioServicoPdfMetaSectionHtml(options: {
   dataFormatada: string
   modifier?: '' | 'dark' | 'expense'
   equipamentosArmazem?: EquipamentoArmazemIdLookup[]
+  equipamentosCliente?: EquipamentoClienteIdLookup[]
 }): string {
-  const { relatorio, title, labels, dataFormatada, modifier = '', equipamentosArmazem = [] } =
-    options
-  const eq = getRelatorioCabecalhoEquipamentoDados(relatorio, equipamentosArmazem)
+  const {
+    relatorio,
+    title,
+    labels,
+    dataFormatada,
+    modifier = '',
+    equipamentosArmazem = [],
+    equipamentosCliente = [],
+  } = options
+  const eq = getRelatorioCabecalhoEquipamentoDados(relatorio, equipamentosArmazem, equipamentosCliente)
   const esc = escapePdfHtml
 
   const fields: PdfMetaField[] = [

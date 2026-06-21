@@ -2,6 +2,8 @@ export type RelatorioEquipamentoOrigem = 'cliente' | 'armazem'
 
 export type EquipamentoArmazemIdLookup = { id?: string; numeroSerie?: string }
 
+export type EquipamentoClienteIdLookup = { id?: string; numeroSerie?: string }
+
 export type RelatorioEquipamentoCabecalhoLinha = {
   numero: number
   equipamentoId: string
@@ -72,6 +74,38 @@ export function resolverIdEquipamentoVisivelRelatorio(
     { id: eq.equipamentoId, numeroSerie: eq.numeroMaquina },
     equipamentosArmazem
   )
+}
+
+/** ID para ecrã/PDF: resolve código visível; nunca mostra UUID interno se existir alternativa no cliente/armazém. */
+export function resolverEquipamentoRelatorioParaExibicao(
+  eq: RelatorioEquipamentoRef,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],
+  equipamentosCliente: EquipamentoClienteIdLookup[] = []
+): string {
+  if (eq.equipamentoOrigem === 'armazem') {
+    const id = String(eq.equipamentoId ?? '').trim()
+    return equipamentoIdETecnicoGerado(id) ? '' : id
+  }
+
+  const idStored = String(eq.equipamentoId ?? '').trim()
+  const snStored = String(eq.numeroMaquina ?? '').trim()
+
+  for (let idx = 0; idx < equipamentosCliente.length; idx++) {
+    const e = equipamentosCliente[idx]
+    const idCli = String(e.id ?? '').trim()
+    const snCli = String(e.numeroSerie ?? '').trim()
+    const matches =
+      (idStored && (idCli === idStored || snCli === idStored || resolverIdEquipamentoCliente(e, idx) === idStored)) ||
+      (snStored && snCli === snStored)
+    if (matches) {
+      const vis = resolverIdEquipamentoVisivelCliente(e, equipamentosArmazem)
+      if (vis) return vis
+    }
+  }
+
+  const vis = resolverIdEquipamentoVisivelRelatorio(eq, equipamentosArmazem)
+  if (vis) return vis
+  return equipamentoIdETecnicoGerado(idStored) ? '' : idStored
 }
 
 export function criarEquipamentoRelatorioVazio(
@@ -149,7 +183,8 @@ export function formatarEquipamentosIdsRelatorio(
 
 export function getRelatorioCabecalhoEquipamentoDados(
   r: RelatorioServicoEquipamentosHost,
-  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],
+  equipamentosCliente: EquipamentoClienteIdLookup[] = []
 ): {
   ids: string
   modelos: string
@@ -160,7 +195,8 @@ export function getRelatorioCabecalhoEquipamentoDados(
   const list = equipamentosRelatorioPreenchidos(normalizarEquipamentosRelatorio(r))
   const linhas = list.map((eq, i) => ({
     numero: i + 1,
-    equipamentoId: resolverIdEquipamentoVisivelRelatorio(eq, equipamentosArmazem) || '—',
+    equipamentoId:
+      resolverEquipamentoRelatorioParaExibicao(eq, equipamentosArmazem, equipamentosCliente) || '—',
     maquinaModelo: eq.maquinaModelo || '—',
   }))
 
