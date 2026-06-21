@@ -1740,6 +1740,8 @@ type PecaBiblioteca = {
   quantidade?: number
   dataCriacao?: string
   importacaoPendente?: boolean
+  /** Número sequencial dentro do grupo (categoria/subcategoria): 01, 02, 03… */
+  numeroSequenciaGrupo?: string
 }
 
 type RegraClassificacaoPeca = {
@@ -1886,6 +1888,152 @@ function pickBestCatalogRawFromClipboard(html: string, plain: string): { raw: st
   }
   if (h.length >= 40) return { raw: h, plainFallback: p }
   return { raw: p, plainFallback: p }
+}
+
+const BIBLIOTECA_SEM_GRUPO_SEQUENCIA_KEY = '__sem_grupo__'
+
+function chaveSequenciaNumeroPecaBiblioteca(p: Pick<PecaBiblioteca, 'categoriaId' | 'subcategoriaId'>): string {
+  const cat = String(p.categoriaId || '').trim()
+  if (!cat) return BIBLIOTECA_SEM_GRUPO_SEQUENCIA_KEY
+  const sub = String(p.subcategoriaId || '').trim()
+  return sub ? `${cat}::${sub}` : cat
+}
+
+function formatNumeroSequenciaPecaBiblioteca(n: number): string {
+  if (!Number.isFinite(n) || n < 1) return '01'
+  if (n > 999) return String(n)
+  return String(n).padStart(n > 99 ? 3 : 2, '0')
+}
+
+function parseNumeroSequenciaPecaBiblioteca(raw: string | undefined | null): number {
+  const digits = String(raw || '').replace(/\D/g, '')
+  const n = parseInt(digits, 10)
+  return Number.isFinite(n) && n > 0 ? n : 0
+}
+
+function proximoNumeroSequenciaPecaBiblioteca(
+  categoriaId: string,
+  subcategoriaId: string,
+  pecas: PecaBiblioteca[],
+  excludeId?: string
+): string {
+  const key = chaveSequenciaNumeroPecaBiblioteca({ categoriaId, subcategoriaId })
+  let max = 0
+  for (const p of pecas) {
+    if (excludeId && p.id === excludeId) continue
+    if (chaveSequenciaNumeroPecaBiblioteca(p) !== key) continue
+    const n = parseNumeroSequenciaPecaBiblioteca(p.numeroSequenciaGrupo)
+    if (n > max) max = n
+  }
+  return formatNumeroSequenciaPecaBiblioteca(max + 1)
+}
+
+function garantirNumerosSequenciaPecaBiblioteca(pecas: PecaBiblioteca[]): { lista: PecaBiblioteca[]; alterou: boolean } {
+  const grupos = new Map<string, PecaBiblioteca[]>()
+  for (const p of pecas) {
+    const k = chaveSequenciaNumeroPecaBiblioteca(p)
+    if (!grupos.has(k)) grupos.set(k, [])
+    grupos.get(k)!.push(p)
+  }
+  let alterou = false
+  const out = pecas.map((p) => ({ ...p }))
+  const byId = new Map(out.map((p) => [p.id, p]))
+
+  for (const [, list] of grupos) {
+    const ordenada = [...list].sort((a, b) => {
+      const na = parseNumeroSequenciaPecaBiblioteca(a.numeroSequenciaGrupo)
+      const nb = parseNumeroSequenciaPecaBiblioteca(b.numeroSequenciaGrupo)
+      if (na && nb && na !== nb) return na - nb
+      if (na && !nb) return -1
+      if (!na && nb) return 1
+      return String(a.dataCriacao || a.nome || '').localeCompare(
+        String(b.dataCriacao || b.nome || ''),
+        undefined,
+        { numeric: true }
+      )
+    })
+    const usados = new Set<number>()
+    for (const p of ordenada) {
+      let n = parseNumeroSequenciaPecaBiblioteca(p.numeroSequenciaGrupo)
+      if (n > 0 && !usados.has(n)) {
+        usados.add(n)
+        const fmt = formatNumeroSequenciaPecaBiblioteca(n)
+        if (p.numeroSequenciaGrupo !== fmt) {
+          byId.get(p.id)!.numeroSequenciaGrupo = fmt
+          alterou = true
+        }
+      }
+    }
+    let next = 1
+    for (const p of ordenada) {
+      const cur = byId.get(p.id)!
+      if (parseNumeroSequenciaPecaBiblioteca(cur.numeroSequenciaGrupo) > 0) continue
+      while (usados.has(next)) next++
+      cur.numeroSequenciaGrupo = formatNumeroSequenciaPecaBiblioteca(next)
+      usados.add(next)
+      next++
+      alterou = true
+    }
+  }
+  return { lista: out, alterou }
+}
+
+function atribuirNumerosSequenciaNovasPecas(
+  novas: PecaBiblioteca[],
+  existentes: PecaBiblioteca[]
+): PecaBiblioteca[] {
+  const combinado = [...existentes]
+  const out: PecaBiblioteca[] = []
+  for (const p of novas) {
+    const temNumero = parseNumeroSequenciaPecaBiblioteca(p.numeroSequenciaGrupo) > 0
+    let numero = temNumero
+      ? formatNumeroSequenciaPecaBiblioteca(parseNumeroSequenciaPecaBiblioteca(p.numeroSequenciaGrupo))
+      : ''
+    if (!numero) {
+      numero = proximoNumeroSequenciaPecaBiblioteca(p.categoriaId || '', p.subcategoriaId || '', combinado)
+    }
+    const peca = { ...p, numeroSequenciaGrupo: numero }
+    out.push(peca)
+    combinado.push(peca)
+  }
+  return out
+}
+
+function resolverNumeroSequenciaAoSalvarPecaBiblioteca(
+  form: PecaBiblioteca,
+  pecas: PecaBiblioteca[],
+  editing?: PecaBiblioteca | null
+): string {
+  const gid = form.categoriaId || ''
+  const sid = form.subcategoriaId || ''
+  if (editing) {
+    const oldKey = chaveSequenciaNumeroPecaBiblioteca(editing)
+    const newKey = chaveSequenciaNumeroPecaBiblioteca({ categoriaId: gid, subcategoriaId: sid })
+    const existente = parseNumeroSequenciaPecaBiblioteca(editing.numeroSequenciaGrupo)
+    if (oldKey === newKey && existente > 0) {
+      return formatNumeroSequenciaPecaBiblioteca(existente)
+    }
+  }
+  return proximoNumeroSequenciaPecaBiblioteca(gid, sid, pecas, editing?.id)
+}
+
+function rotuloNumeroSequenciaPecaBiblioteca(
+  peca: Pick<PecaBiblioteca, 'numeroSequenciaGrupo' | 'categoriaId' | 'subcategoriaId' | 'categoria' | 'subcategoria'>,
+  categorias?: { id: string; nome: string }[],
+  subcategorias?: { id: string; nome: string }[]
+): string {
+  const num = String(peca.numeroSequenciaGrupo || '').trim()
+  if (!num) return ''
+  const cat =
+    peca.categoriaId && categorias
+      ? categorias.find((c) => c.id === peca.categoriaId)?.nome || peca.categoria
+      : peca.categoria
+  const sub =
+    peca.subcategoriaId && subcategorias
+      ? subcategorias.find((s) => s.id === peca.subcategoriaId)?.nome || peca.subcategoria
+      : peca.subcategoria
+  const grupo = [cat, sub].filter(Boolean).join(' / ') || ''
+  return grupo ? `${grupo} ${num}` : num
 }
 
 function buildPecaCatalogoUrlFromTemplate(template: string, codigo: string): string | null {
@@ -6271,6 +6419,42 @@ export default function Dashboard() {
       subcategoriaId: ultimoSubgrupoSelecionado,
     })
   }, [ultimoGrupoSelecionado, ultimoSubgrupoSelecionado])
+  useEffect(() => {
+    if (!showBibliotecaPecasForm) return
+    const gid = pecaBibliotecaForm.categoriaId || ultimoGrupoSelecionado || ''
+    const sid =
+      pecaBibliotecaForm.subcategoriaId ||
+      (gid === ultimoGrupoSelecionado ? ultimoSubgrupoSelecionado : '') ||
+      ''
+    if (!gid && !sid) {
+      setPecaBibliotecaForm((prev) => (prev.numeroSequenciaGrupo ? { ...prev, numeroSequenciaGrupo: '' } : prev))
+      return
+    }
+    if (editingPecaBiblioteca) {
+      const oldKey = chaveSequenciaNumeroPecaBiblioteca(editingPecaBiblioteca)
+      const newKey = chaveSequenciaNumeroPecaBiblioteca({ categoriaId: gid, subcategoriaId: sid })
+      const existente = parseNumeroSequenciaPecaBiblioteca(editingPecaBiblioteca.numeroSequenciaGrupo)
+      if (oldKey === newKey && existente > 0) {
+        const fmt = formatNumeroSequenciaPecaBiblioteca(existente)
+        setPecaBibliotecaForm((prev) =>
+          prev.numeroSequenciaGrupo === fmt ? prev : { ...prev, numeroSequenciaGrupo: fmt }
+        )
+        return
+      }
+    }
+    const next = proximoNumeroSequenciaPecaBiblioteca(gid, sid, pecasBiblioteca, editingPecaBiblioteca?.id)
+    setPecaBibliotecaForm((prev) =>
+      prev.numeroSequenciaGrupo === next ? prev : { ...prev, numeroSequenciaGrupo: next }
+    )
+  }, [
+    showBibliotecaPecasForm,
+    pecaBibliotecaForm.categoriaId,
+    pecaBibliotecaForm.subcategoriaId,
+    ultimoGrupoSelecionado,
+    ultimoSubgrupoSelecionado,
+    editingPecaBiblioteca,
+    pecasBiblioteca,
+  ])
   const [selecaoPecasBibliotecaIds, setSelecaoPecasBibliotecaIds] = useState<string[]>([])
   const [classificacaoLoteCategoriaId, setClassificacaoLoteCategoriaId] = useState('')
   const [classificacaoLoteSubcategoriaId, setClassificacaoLoteSubcategoriaId] = useState('')
@@ -6283,6 +6467,7 @@ export default function Dashboard() {
   const [importacaoUrlLoading, setImportacaoUrlLoading] = useState(false)
   const [importacaoUrlError, setImportacaoUrlError] = useState<string | null>(null)
   const [importacaoPreview, setImportacaoPreview] = useState<PecaBiblioteca[] | null>(null)
+  const [importacaoDuplicadasIgnoradas, setImportacaoDuplicadasIgnoradas] = useState(0)
   const [importacaoTextoColado, setImportacaoTextoColado] = useState('')
   /** Origem da loja (ex. https://shop.homag.com) para completar src relativos tipo /s/sfsites/... (Salesforce B2B) */
   const [importacaoLojaBaseUrl, setImportacaoLojaBaseUrl] = useState('')
@@ -9548,9 +9733,12 @@ export default function Dashboard() {
       // Carregar peças biblioteca
       const savedPecasBiblioteca = getData('nonato-pecas-biblioteca')
       if (savedPecasBiblioteca && Array.isArray(savedPecasBiblioteca)) {
-        setPecasBiblioteca(
-          (savedPecasBiblioteca as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+        const raw = (savedPecasBiblioteca as PecaBiblioteca[]).map((peca) =>
+          sanitizarPecaBibliotecaImportacaoFlag(peca)
         )
+        const { lista, alterou } = garantirNumerosSequenciaPecaBiblioteca(raw)
+        setPecasBiblioteca(lista)
+        if (alterou) void saveData('nonato-pecas-biblioteca', lista)
       }
 
       const savedPecaLookupTpl = getData(NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY)
@@ -21645,8 +21833,15 @@ export default function Dashboard() {
       return
     }
 
+    const numeroSeq = resolverNumeroSequenciaAoSalvarPecaBiblioteca(
+      pecaBibliotecaForm,
+      pecasBiblioteca,
+      editingPecaBiblioteca
+    )
+
     const novaPeca: PecaBiblioteca = {
       ...pecaBibliotecaForm,
+      numeroSequenciaGrupo: numeroSeq,
       id: editingPecaBiblioteca?.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
       dataCriacao: editingPecaBiblioteca?.dataCriacao || new Date().toISOString(),
       importacaoPendente: editingPecaBiblioteca?.importacaoPendente || false
@@ -21882,6 +22077,59 @@ export default function Dashboard() {
   function normalizeImportKey(v: any): string {
     return String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
   }
+
+  const chavePecaBibliotecaParaImport = (p: { codigo?: string; nome?: string }) =>
+    normalizeImportKey(p.codigo) || `n:${normalizeImportKey(p.nome)}`
+
+  const separarPecasImportacao = useCallback(
+    (pecas: PecaBiblioteca[]) => {
+      const existentesKeys = new Set(
+        pecasBiblioteca.map((e) => chavePecaBibliotecaParaImport(e)).filter(Boolean)
+      )
+      const novas: PecaBiblioteca[] = []
+      const duplicadas: PecaBiblioteca[] = []
+      const vistoLote = new Set<string>()
+      for (const p of pecas) {
+        const key = chavePecaBibliotecaParaImport(p)
+        if (!key) {
+          novas.push(p)
+          continue
+        }
+        if (vistoLote.has(key)) {
+          duplicadas.push(p)
+          continue
+        }
+        vistoLote.add(key)
+        if (existentesKeys.has(key)) {
+          duplicadas.push(p)
+        } else {
+          novas.push(p)
+        }
+      }
+      return { novas, duplicadas }
+    },
+    [pecasBiblioteca]
+  )
+
+  const aplicarPreviewImportacaoFiltrado = useCallback(
+    (pecas: PecaBiblioteca[]): boolean => {
+      const { novas, duplicadas } = separarPecasImportacao(pecas)
+      setImportacaoDuplicadasIgnoradas(duplicadas.length)
+      if (novas.length === 0) {
+        setImportacaoPreview(null)
+        setImportacaoUrlError(
+          (t as any)?.importacaoPreviewTodasDuplicadas ??
+            'Todas as peças desta colagem já existem na biblioteca. Códigos repetidos não são permitidos.'
+        )
+        return false
+      }
+      const novasComNumero = atribuirNumerosSequenciaNovasPecas(novas, pecasBiblioteca)
+      setImportacaoPreview(novasComNumero)
+      setImportacaoUrlError(null)
+      return true
+    },
+    [separarPecasImportacao, t, pecasBiblioteca]
+  )
 
   function buildImportedPecaDescricao(nome: string, codigo: string, descricaoOriginal: string): string {
     const nomeLimpo = String(nome || '').trim()
@@ -22774,9 +23022,7 @@ export default function Dashboard() {
       try {
         const pecas = parseRawToPecas(raw, importacaoLojaBaseUrl, url)
         if (pecas.length === 0) return false
-        setImportacaoPreview(pecas)
-        setImportacaoUrlError(null)
-        return true
+        return aplicarPreviewImportacaoFiltrado(pecas)
       } catch {
         return false
       }
@@ -22866,7 +23112,7 @@ export default function Dashboard() {
     } finally {
       setImportacaoUrlLoading(false)
     }
-  }, [urlImportacaoPecas, t, parseRawToPecas, importacaoLojaBaseUrl])
+  }, [urlImportacaoPecas, t, parseRawToPecas, importacaoLojaBaseUrl, aplicarPreviewImportacaoFiltrado])
 
   const abrirSiteImportacaoNoNavegador = useCallback(() => {
     const resolveOpenableUrl = (raw: string): string | null => {
@@ -22904,13 +23150,25 @@ export default function Dashboard() {
     if ('error' in result) {
       setImportacaoUrlError(result.error)
       setImportacaoPreview(null)
+      setImportacaoDuplicadasIgnoradas(0)
+      return
+    }
+    setImportacaoTextoColado(textoColado)
+    const { novas, duplicadas } = separarPecasImportacao(result.pecas)
+    setImportacaoDuplicadasIgnoradas(duplicadas.length)
+    if (novas.length === 0) {
+      setImportacaoPreview(null)
+      setImportacaoUrlError(
+        (t as any)?.importacaoPreviewTodasDuplicadas ??
+          'Todas as peças desta colagem já existem na biblioteca. Códigos repetidos não são permitidos.'
+      )
       return
     }
     setImportacaoUrlError(null)
-    setImportacaoPreview(result.pecas)
-    setImportacaoTextoColado(textoColado)
-    if (result.pecas.length === 1) {
-      const p = result.pecas[0]
+    const novasComNumero = atribuirNumerosSequenciaNovasPecas(novas, pecasBiblioteca)
+    setImportacaoPreview(novasComNumero)
+    if (novas.length === 1) {
+      const p = novas[0]
       setShowBibliotecaPecasForm(true)
       setEditingPecaBiblioteca(null)
       setPecaBibliotecaForm((prev) => ({
@@ -22924,10 +23182,10 @@ export default function Dashboard() {
         dataCriacao: prev.dataCriacao || new Date().toISOString(),
       }))
       if (p.imagem) setPecaBibliotecaImagemUrlDraft('')
-    } else if (result.pecas.length > 1) {
+    } else if (novas.length > 1) {
       setAbaBibliotecaPecas('importacao')
     }
-  }, [])
+  }, [separarPecasImportacao, t, pecasBiblioteca])
 
   const executarColagemCatalogo = useCallback((
     html: string,
@@ -23035,14 +23293,14 @@ export default function Dashboard() {
           setImportacaoUrlError(t?.importacaoNenhumaLinha ?? 'Nenhuma lista encontrada no ficheiro. Use CSV (1ª linha = cabeçalhos) ou JSON.')
           return
         }
-        setImportacaoPreview(pecas)
+        aplicarPreviewImportacaoFiltrado(pecas)
       } catch (err: any) {
         setImportacaoUrlError(err?.message || (t?.importacaoErroJsonInvalido ?? 'Ficheiro inválido. Use CSV ou JSON.'))
       }
     }
     reader.readAsText(file, 'UTF-8')
     e.target.value = ''
-  }, [parseRawToPecas, t, importacaoLojaBaseUrl])
+  }, [parseRawToPecas, t, importacaoLojaBaseUrl, aplicarPreviewImportacaoFiltrado])
 
   const handleImportacaoColarTexto = useCallback(() => {
     const raw = importacaoTextoColado.trim()
@@ -23077,7 +23335,8 @@ export default function Dashboard() {
       })
     })
     const classificadosAutomaticamente = aplicarRegrasClassificacaoEmLista(novos, true)
-    const atualizado = [...existentes, ...classificadosAutomaticamente.lista]
+    const novosComNumero = atribuirNumerosSequenciaNovasPecas(classificadosAutomaticamente.lista, existentes)
+    const atualizado = [...existentes, ...novosComNumero]
     const atualizadoNormalizado = atualizado.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
     setPecasBiblioteca(atualizadoNormalizado)
     void saveData('nonato-pecas-biblioteca', atualizadoNormalizado)
@@ -23085,7 +23344,9 @@ export default function Dashboard() {
         let mensagemFinal: string
         if (novos.length === 0) {
           mensagemFinal =
-            t?.importacaoSemNovidades ?? 'Nenhuma peça nova para adicionar (itens já existentes na biblioteca).'
+            (t as any)?.importacaoPreviewTodasDuplicadas ??
+            t?.importacaoSemNovidades ??
+            'Nenhuma peça nova para adicionar (itens já existentes na biblioteca).'
         } else {
           const mensagemBase =
             t?.importacaoSucesso ?? `${novos.length} peça(s) enviada(s) para a fila. Abra cada uma e use Salvar para integrar ao catálogo da Biblioteca.`
@@ -23103,6 +23364,7 @@ export default function Dashboard() {
           setImportacaoPreview(null)
           setImportacaoTextoColado('')
           setUrlImportacaoPecas('')
+          setImportacaoDuplicadasIgnoradas(0)
         }
       })
       .catch((err) => {
@@ -23117,12 +23379,22 @@ export default function Dashboard() {
   const renderPainelPreviewImportacao = useCallback(() => {
     if (!importacaoPreview || importacaoPreview.length === 0) return null
     const hubT: Record<string, string> = (safeT || {}) as Record<string, string>
+    const avisoDuplicadas =
+      importacaoDuplicadasIgnoradas > 0
+        ? String(
+            (hubT as any).importacaoDuplicadasIgnoradas ||
+              '{count} peça(s) repetida(s) ignorada(s) (já existem na biblioteca).'
+          ).replace('{count}', String(importacaoDuplicadasIgnoradas))
+        : ''
     return (
       <div ref={importacaoPreviewPanelRef} className="importacao-pecas-preview-panel" style={{ marginTop: '20px' }}>
         <p style={{ fontSize: '14px', marginBottom: '12px', color: '#00c853', fontWeight: 600 }}>
           {hubT.importacaoPreviewDesc || 'Pré-visualização:'} {importacaoPreview.length}{' '}
           {hubT.importacaoPecasEncontradas || 'peça(s) encontrada(s)'}
         </p>
+        {avisoDuplicadas ? (
+          <p style={{ fontSize: '13px', margin: '0 0 12px', color: '#ffb366', lineHeight: 1.45 }}>{avisoDuplicadas}</p>
+        ) : null}
         <div
           style={{
             maxHeight: '360px',
@@ -23141,6 +23413,9 @@ export default function Dashboard() {
                 </th>
                 <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>
                   {hubT.nome || 'Nome'}
+                </th>
+                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>
+                  {(hubT as any).importacaoPreviewColNumeroSequencia || 'Nº grupo'}
                 </th>
                 <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>
                   {hubT.preco || 'Preço'}
@@ -23164,6 +23439,9 @@ export default function Dashboard() {
                   <td style={{ padding: '8px 10px' }}>
                     {(p.nome || p.descricao || '').slice(0, 80)}
                     {(p.nome || p.descricao || '').length > 80 ? '…' : ''}
+                  </td>
+                  <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>
+                    {rotuloNumeroSequenciaPecaBiblioteca(p, categoriasPecas, subcategoriasPecas) || '—'}
                   </td>
                   <td style={{ padding: '8px 10px' }}>{p.preco || '-'}</td>
                   <td style={{ padding: '6px', textAlign: 'center', verticalAlign: 'middle' }}>
@@ -23202,7 +23480,7 @@ export default function Dashboard() {
         </button>
       </div>
     )
-  }, [importacaoPreview, safeT, handleAdicionarImportacaoPreview, pecaBibliotecaSrcImagemDisplay])
+  }, [importacaoPreview, importacaoDuplicadasIgnoradas, safeT, handleAdicionarImportacaoPreview, pecaBibliotecaSrcImagemDisplay, categoriasPecas, subcategoriasPecas])
 
   useEffect(() => {
     if (!importacaoPreview?.length) return
@@ -23216,7 +23494,10 @@ export default function Dashboard() {
   useEffect(() => {
     const raw = importacaoTextoColado.trim()
     if (raw.length < 12) {
-      if (!raw.length) setImportacaoPreview(null)
+      if (!raw.length) {
+        setImportacaoPreview(null)
+        setImportacaoDuplicadasIgnoradas(0)
+      }
       return
     }
     const lineCount = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).length
@@ -23231,12 +23512,11 @@ export default function Dashboard() {
     const timer = window.setTimeout(() => {
       const result = processarTextoImportacaoPecas(raw, raw)
       if ('pecas' in result && result.pecas.length > 0) {
-        setImportacaoPreview(result.pecas)
-        setImportacaoUrlError(null)
+        aplicarPreviewImportacaoFiltrado(result.pecas)
       }
     }, 500)
     return () => window.clearTimeout(timer)
-  }, [importacaoTextoColado, processarTextoImportacaoPecas])
+  }, [importacaoTextoColado, processarTextoImportacaoPecas, aplicarPreviewImportacaoFiltrado])
 
   const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
     const normalizado = next.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
@@ -23260,8 +23540,9 @@ export default function Dashboard() {
           'Já existe uma peça com este código. Não são permitidas peças repetidas na biblioteca.'
       )
     }
-    setPecasBiblioteca(semCodigoRepetido)
-    void saveData('nonato-pecas-biblioteca', semCodigoRepetido).catch((err) => {
+    const { lista: comNumeros } = garantirNumerosSequenciaPecaBiblioteca(semCodigoRepetido)
+    setPecasBiblioteca(comNumeros)
+    void saveData('nonato-pecas-biblioteca', comNumeros).catch((err) => {
       console.error('[pecas biblioteca]', err)
       alert(
         (t as any)?.importacaoErroGravarFila ??
@@ -23413,7 +23694,10 @@ export default function Dashboard() {
       }
 
       alteradas++
-      return proximaPeca
+      return {
+        ...proximaPeca,
+        numeroSequenciaGrupo: '',
+      }
     })
 
     return { lista: updated, alteradas }
@@ -23462,7 +23746,10 @@ export default function Dashboard() {
       }
 
       alteradas++
-      return proximaPeca
+      return {
+        ...proximaPeca,
+        numeroSequenciaGrupo: '',
+      }
     })
 
     if (alteradas === 0) {
@@ -36763,7 +37050,7 @@ onKeyPress={(e) => {
                   onClick={handleImportacaoColarTexto}
                   style={{ padding: '10px 16px', fontSize: '13px' }}
                 >
-                  {(safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Processar colagem'}
+                  {(safeT as any)?.importacaoProcessarColagem || (safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Processar colagem'}
                 </button>
                 <button
                   type="button"
@@ -36878,7 +37165,7 @@ onKeyPress={(e) => {
                     onClick={handleImportacaoColarTexto}
                     style={{ padding: '8px 14px', fontSize: '12px', marginBottom: '8px' }}
                   >
-                    {(safeT as any)?.importacaoImportarCatalogo || 'Processar colagem'}
+                    {(safeT as any)?.importacaoProcessarColagem || (safeT as any)?.importacaoImportarCatalogo || 'Processar colagem'}
                   </button>
                   {importacaoUrlError && (
                     <p style={{ fontSize: '12px', color: '#ff9a9a', margin: '0 0 8px', lineHeight: 1.45 }}>{importacaoUrlError}</p>
@@ -37017,6 +37304,31 @@ onKeyPress={(e) => {
                   />
                 </div>
                 
+                <div className="biblioteca-pecas-form__field">
+                  <label className="biblioteca-pecas-form__label">
+                    {(safeT as any)?.pecaBibliotecaNumeroSequenciaLabel || 'Nº no grupo'}
+                  </label>
+                  <input
+                    type="text"
+                    className="biblioteca-pecas-form__input"
+                    readOnly
+                    value={
+                      pecaBibliotecaForm.numeroSequenciaGrupo
+                        ? rotuloNumeroSequenciaPecaBiblioteca(
+                            pecaBibliotecaForm,
+                            categoriasPecas,
+                            subcategoriasPecas
+                          )
+                        : '—'
+                    }
+                    style={{ opacity: 0.95, cursor: 'default' }}
+                  />
+                  <p className="biblioteca-pecas-form__hint" style={{ marginTop: '6px', fontSize: '12px', opacity: 0.82 }}>
+                    {(safeT as any)?.pecaBibliotecaNumeroSequenciaHint ||
+                      'Numeração sequencial em cada grupo (01, 02, 03…). Ex.: Cilindros 01, Correias 01.'}
+                  </p>
+                </div>
+
                 <div className="biblioteca-pecas-form__field">
                   <label className="biblioteca-pecas-form__label">
                     {safeT?.precoPecaBiblioteca || 'Preço (€)'}
@@ -37453,17 +37765,33 @@ onKeyPress={(e) => {
                         return
                       }
                       if (idEdicao) {
+                        const numeroSeq = resolverNumeroSequenciaAoSalvarPecaBiblioteca(
+                          pecaBibliotecaForm,
+                          pecasBiblioteca,
+                          editingPecaBiblioteca
+                        )
                         const updated = pecasBiblioteca.map((p) =>
                           p.id === idEdicao
-                            ? { ...pecaBibliotecaForm, id: idEdicao, importacaoPendente: false }
+                            ? {
+                                ...pecaBibliotecaForm,
+                                id: idEdicao,
+                                numeroSequenciaGrupo: numeroSeq,
+                                importacaoPendente: false,
+                              }
                             : p
                         )
                         persistPecasBiblioteca(updated)
                       } else {
+                        const numeroSeq = resolverNumeroSequenciaAoSalvarPecaBiblioteca(
+                          pecaBibliotecaForm,
+                          pecasBiblioteca,
+                          null
+                        )
                         const newPeca: PecaBiblioteca = {
                           ...pecaBibliotecaForm,
                           id: Date.now().toString(),
-                          importacaoPendente: false
+                          numeroSequenciaGrupo: numeroSeq,
+                          importacaoPendente: false,
                         }
                         const updated = [...pecasBiblioteca, newPeca]
                         persistPecasBiblioteca(updated)
@@ -38178,6 +38506,19 @@ onKeyPress={(e) => {
                               {grupoNome || safeT?.bibliotecaGrupoSemCategoria || '—'}
                             </span>
                           </span>
+                          {peca.numeroSequenciaGrupo ? (
+                            <span
+                              className="biblioteca-pecas-hub__piece-chip biblioteca-pecas-hub__piece-chip--code"
+                              title={rotuloNumeroSequenciaPecaBiblioteca(peca, categoriasPecas, subcategoriasPecas)}
+                            >
+                              <span className="biblioteca-pecas-hub__piece-chip-k">
+                                {(safeT as any)?.bibliotecaColNumeroSequencia || 'Nº'}
+                              </span>
+                              <span className="biblioteca-pecas-hub__piece-chip-v">
+                                {rotuloNumeroSequenciaPecaBiblioteca(peca, categoriasPecas, subcategoriasPecas)}
+                              </span>
+                            </span>
+                          ) : null}
                         </div>
                         {!somenteLeituraBiblioteca ? (
                         <div
@@ -38639,6 +38980,12 @@ onKeyPress={(e) => {
                               </th>
                               <th className="biblioteca-pecas-hub__catalog-th">
                                 <span className="biblioteca-pecas-hub__catalog-th-label">
+                                  {(safeT as any)?.bibliotecaColNumeroSequencia || 'Nº'}
+                                  {headerFilter}
+                                </span>
+                              </th>
+                              <th className="biblioteca-pecas-hub__catalog-th">
+                                <span className="biblioteca-pecas-hub__catalog-th-label">
                                   {safeT?.subcategoriaPecaBiblioteca || 'Subcategoria'}
                                   {headerFilter}
                                 </span>
@@ -38718,6 +39065,17 @@ onKeyPress={(e) => {
                                         {safeT?.categoriaPecaBiblioteca || 'Grupo'}
                                       </span>
                                       <span>{grupoNome || safeT?.bibliotecaGrupoSemCategoria || '—'}</span>
+                                    </span>
+                                  </td>
+                                  <td className="biblioteca-pecas-hub__catalog-td">
+                                    <span className="biblioteca-pecas-hub__catalog-chip biblioteca-pecas-hub__catalog-chip--code">
+                                      <span className="biblioteca-pecas-hub__catalog-chip-k">
+                                        {(safeT as any)?.bibliotecaColNumeroSequencia || 'Nº'}
+                                      </span>
+                                      <span>
+                                        {rotuloNumeroSequenciaPecaBiblioteca(peca, categoriasPecas, subcategoriasPecas) ||
+                                          '—'}
+                                      </span>
                                     </span>
                                   </td>
                                   <td className="biblioteca-pecas-hub__catalog-td">{peca.subcategoria || '—'}</td>
@@ -39495,7 +39853,7 @@ onKeyPress={(e) => {
                       onClick={handleImportacaoColarTexto}
                       style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
                     >
-                      {(safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Importar do texto colado'}
+                      {(safeT as any)?.importacaoProcessarColagem || (safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Processar colagem'}
                     </button>
                   </div>
                   <div className="importacao-pecas-paste-steps">
@@ -39852,7 +40210,7 @@ A1;Peça exemplo;10`}
                     onClick={handleImportacaoColarTexto}
                     style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
                   >
-                    {(safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Importar do texto colado'}
+                    {(safeT as any)?.importacaoProcessarColagem || (safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Processar colagem'}
                   </button>
                 </div>
 
