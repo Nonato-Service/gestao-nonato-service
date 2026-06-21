@@ -48,10 +48,11 @@ type Props = {
   language: string
   servicoGrupos: ServicoCadastroGrupo[]
   clienteGrupoTarifaSelecionadoId: string | null
-  onSave: () => void
+  onSave: () => void | Promise<void>
   onCancel: () => void
   onPhotoChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onRemovePhoto: () => void
+  saving?: boolean
   onBack?: () => void
   variant?: 'page' | 'modal'
   /** Layout igual à referência visual — só campos principais, sem extras */
@@ -140,6 +141,7 @@ export function ClienteCadastroForm({
   onCancel,
   onPhotoChange,
   onRemovePhoto,
+  saving = false,
   onBack,
   variant = 'page',
   referenceLayout = false,
@@ -496,12 +498,12 @@ export function ClienteCadastroForm({
       {showExtras ? editingExtras : null}
 
       <div className="cliente-cadastro-v2__actions">
-        <button type="button" className="cliente-cadastro-v2__submit" onClick={onSave}>
+        <button type="button" className="cliente-cadastro-v2__submit" onClick={onSave} disabled={saving}>
           <span className="cliente-cadastro-v2__submit-icon">+</span>
-          {editingCliente ? tr('save') : tr('addCliente')}
+          {saving ? tr('clienteSalvando') : editingCliente ? tr('save') : tr('addCliente')}
         </button>
         {!referenceLayout ? (
-          <button type="button" className="cliente-cadastro-v2__cancel" onClick={onCancel}>
+          <button type="button" className="cliente-cadastro-v2__cancel" onClick={onCancel} disabled={saving}>
             {tr('cancel')}
           </button>
         ) : null}

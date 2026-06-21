@@ -2843,6 +2843,43 @@ function findClienteByRelatorio(clientes: Cliente[], rel: RelatorioServico): Cli
   return clientes.find((c) => (c.nomeEmpresa || '').trim().toLowerCase() === nome)
 }
 
+function normalizarNomeClienteComparacao(nome: string): string {
+  return String(nome ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+}
+
+function normalizarNifClienteComparacao(nif: string): string {
+  return String(nif ?? '').replace(/[\s.\-/]/g, '').toUpperCase()
+}
+
+/** Evita cadastros duplicados (mesmo nome ou NIF) ao gravar cliente. */
+function encontrarClienteDuplicadoCadastro(
+  clientes: Cliente[],
+  opts: { nomeEmpresa: string; numeroContribuicaoFiscal?: string; excludeId?: string }
+): { cliente: Cliente; motivo: 'nome' | 'nif' } | null {
+  const excludeId = String(opts.excludeId ?? '').trim()
+  const nifKey = normalizarNifClienteComparacao(opts.numeroContribuicaoFiscal || '')
+  if (nifKey.length >= 3) {
+    const byNif = clientes.find(
+      (c) =>
+        c.id !== excludeId &&
+        normalizarNifClienteComparacao(c.numeroContribuicaoFiscal || '') === nifKey
+    )
+    if (byNif) return { cliente: byNif, motivo: 'nif' }
+  }
+  const nomeKey = normalizarNomeClienteComparacao(opts.nomeEmpresa)
+  if (!nomeKey) return null
+  const byNome = clientes.find(
+    (c) => c.id !== excludeId && normalizarNomeClienteComparacao(c.nomeEmpresa) === nomeKey
+  )
+  if (byNome) return { cliente: byNome, motivo: 'nome' }
+  return null
+}
+
 function nomeGrupoTarifaServico(servicoGrupos: ServicoCadastroGrupo[], grupoId?: string): string {
   if (!grupoId) return ''
   return servicoGrupos.find((g) => g.id === grupoId)?.nome || ''
@@ -6675,6 +6712,8 @@ export default function Dashboard() {
   const [fornecedoresActiveTab, setFornecedoresActiveTab] = useState<'cadastrar' | 'listar'>('cadastrar')
   const [clienteGrupoTarifaSelecionadoId, setClienteGrupoTarifaSelecionadoId] = useState<string | null>(null)
   const [clienteForm, setClienteForm] = useState<ClienteFormState>(() => emptyClienteFormState())
+  const clienteSaveInFlightRef = useRef(false)
+  const [clienteSaveInFlight, setClienteSaveInFlight] = useState(false)
 
   const clientesOrdenadosAlfabeticamente = useMemo(
     () => ordenarClientesPorNome(clientes, localeOrdenacaoClientes(selectedLanguage)),
@@ -15466,10 +15505,40 @@ export default function Dashboard() {
   }
 
   const handleSaveCliente = async () => {
+    if (clienteSaveInFlightRef.current) return
+
     if (!clienteForm.nomeEmpresa?.trim() || !clienteForm.morada?.trim()) {
       alert(t.fillAllFields)
       return
     }
+
+    const duplicado = encontrarClienteDuplicadoCadastro(clientes, {
+      nomeEmpresa: clienteForm.nomeEmpresa,
+      numeroContribuicaoFiscal: clienteForm.numeroContribuicaoFiscal,
+      excludeId: editingCliente?.id,
+    })
+    if (duplicado) {
+      const tr = t as Record<string, string | undefined>
+      const nomeDup = (duplicado.cliente.nomeEmpresa || '').trim() || '—'
+      if (duplicado.motivo === 'nif') {
+        const nifDup = (clienteForm.numeroContribuicaoFiscal || '').trim()
+        alert(
+          (tr.clienteJaExistenteNif || 'Já existe um cliente com o NIF «{nif}»: {nome}.')
+            .replace('{nif}', nifDup)
+            .replace('{nome}', nomeDup)
+        )
+      } else {
+        alert(
+          (tr.clienteJaExistenteNome ||
+            'Já existe um cliente com o nome «{nome}». Abra o registo existente em «Listar clientes» em vez de criar outro.')
+            .replace('{nome}', nomeDup)
+        )
+      }
+      return
+    }
+
+    clienteSaveInFlightRef.current = true
+    setClienteSaveInFlight(true)
 
     let updatedClientes: Cliente[]
     let savedCliente: Cliente
@@ -15477,61 +15546,63 @@ export default function Dashboard() {
     const kmIdaPadrao = normalizeKmForPersist(clienteForm.kmIdaPadrao)
     const kmRetornoPadrao = normalizeKmForPersist(clienteForm.kmRetornoPadrao)
     const tipoCliente = clienteForm.tipoCliente === 'juridica' ? 'juridica' : 'fisica'
-    if (editingCliente) {
-      savedCliente = { ...editingCliente, ...clienteForm, grupoTarifaId, kmIdaPadrao, kmRetornoPadrao, tipoCliente }
-      updatedClientes = clientes.map(c =>
-        c.id === editingCliente.id
-          ? savedCliente
-          : c
-      )
-    } else {
-      const newCliente: Cliente = savedCliente = {
-        id: Date.now().toString(),
-        ...clienteForm,
-        grupoTarifaId,
-        kmIdaPadrao,
-        kmRetornoPadrao,
-        tipoCliente,
-        equipamentos: [],
-        relatorios: {} // Pasta na Biblioteca de Relatórios (Relatórios de Serviço + Despesas)
-      }
-      updatedClientes = [...clientes, newCliente]
-    }
-    setClientes(updatedClientes)
-
     try {
+      if (editingCliente) {
+        savedCliente = { ...editingCliente, ...clienteForm, grupoTarifaId, kmIdaPadrao, kmRetornoPadrao, tipoCliente }
+        updatedClientes = clientes.map(c =>
+          c.id === editingCliente.id
+            ? savedCliente
+            : c
+        )
+      } else {
+        const newCliente: Cliente = savedCliente = {
+          id: Date.now().toString(),
+          ...clienteForm,
+          grupoTarifaId,
+          kmIdaPadrao,
+          kmRetornoPadrao,
+          tipoCliente,
+          equipamentos: [],
+          relatorios: {} // Pasta na Biblioteca de Relatórios (Relatórios de Serviço + Despesas)
+        }
+        updatedClientes = [...clientes, newCliente]
+      }
+      setClientes(updatedClientes)
+
       const savedOk = await saveData('nonato-clientes', updatedClientes, true, true)
       if (!savedOk) {
         alert((t as any).erroSalvar || 'Erro ao salvar no servidor. Verifique a ligação e tente novamente.')
         return
       }
+
+      createAutoBackupBeforeOperation()
+      setClienteForm({
+        nomeEmpresa: savedCliente.nomeEmpresa,
+        morada: savedCliente.morada,
+        localidade: savedCliente.localidade,
+        conselho: savedCliente.conselho,
+        pais: savedCliente.pais,
+        codigoPostal: savedCliente.codigoPostal,
+        freguesia: savedCliente.freguesia,
+        numeroContribuicaoFiscal: savedCliente.numeroContribuicaoFiscal || '',
+        telefones: savedCliente.telefones,
+        email: savedCliente.email,
+        contato: savedCliente.contato,
+        photo: savedCliente.photo || '',
+        grupoTarifaId: savedCliente.grupoTarifaId || '',
+        kmIdaPadrao: kmStringForNumberField(savedCliente.kmIdaPadrao),
+        kmRetornoPadrao: kmStringForNumberField(savedCliente.kmRetornoPadrao),
+        tipoCliente: savedCliente.tipoCliente === 'juridica' ? 'juridica' : 'fisica',
+      })
+      setEditingCliente(savedCliente)
+      alert((t as any).clienteSaved || 'Cliente salvo com sucesso!')
     } catch (err) {
       console.error('Erro ao salvar clientes:', err)
       alert((t as any).erroSalvar || 'Erro ao salvar. Tente novamente.')
-      return
+    } finally {
+      clienteSaveInFlightRef.current = false
+      setClienteSaveInFlight(false)
     }
-
-    createAutoBackupBeforeOperation()
-    setClienteForm({
-      nomeEmpresa: savedCliente.nomeEmpresa,
-      morada: savedCliente.morada,
-      localidade: savedCliente.localidade,
-      conselho: savedCliente.conselho,
-      pais: savedCliente.pais,
-      codigoPostal: savedCliente.codigoPostal,
-      freguesia: savedCliente.freguesia,
-      numeroContribuicaoFiscal: savedCliente.numeroContribuicaoFiscal || '',
-      telefones: savedCliente.telefones,
-      email: savedCliente.email,
-      contato: savedCliente.contato,
-      photo: savedCliente.photo || '',
-      grupoTarifaId: savedCliente.grupoTarifaId || '',
-      kmIdaPadrao: kmStringForNumberField(savedCliente.kmIdaPadrao),
-      kmRetornoPadrao: kmStringForNumberField(savedCliente.kmRetornoPadrao),
-      tipoCliente: savedCliente.tipoCliente === 'juridica' ? 'juridica' : 'fisica',
-    })
-    setEditingCliente(savedCliente)
-    alert((t as any).clienteSaved || 'Cliente salvo com sucesso!')
   }
 
   // Funções para gerenciar Cliente Prioritário
@@ -35365,6 +35436,7 @@ onKeyPress={(e) => {
                   servicoGrupos={servicoGrupos}
                   clienteGrupoTarifaSelecionadoId={clienteGrupoTarifaSelecionadoId}
                   onSave={handleSaveCliente}
+                  saving={clienteSaveInFlight}
                   onCancel={handleCancelClienteForm}
                   onPhotoChange={handleClientePhotoChange}
                   onRemovePhoto={handleRemoveClientePhoto}
@@ -71486,6 +71558,7 @@ A1;Peça exemplo;10`}
                 servicoGrupos={servicoGrupos}
                 clienteGrupoTarifaSelecionadoId={clienteGrupoTarifaSelecionadoId}
                 onSave={handleSaveCliente}
+                saving={clienteSaveInFlight}
                 onCancel={handleCancelClienteForm}
                 onPhotoChange={handleClientePhotoChange}
                 onRemovePhoto={handleRemoveClientePhoto}
