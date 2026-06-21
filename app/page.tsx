@@ -79,6 +79,9 @@ import {
   resolverIdEquipamentoVisivelCliente,
   resolverIdEquipamentoVisivelRelatorio,
   resolverEquipamentoRelatorioParaExibicao,
+  resolverClienteIdRelatorio,
+  resolverChaveEquipamentoClienteRelatorio,
+  prepararEquipamentosRelatorioParaEdicao,
   type RelatorioEquipamentoRef,
 } from './lib/relatorioServicoEquipamentos'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
@@ -2912,29 +2915,6 @@ function equipamentoClienteIdETecnicoGerado(id: string | undefined): boolean {
 function idEquipamentoVisivelParaProtocolo(eq: EquipamentoCliente | undefined, equipamentosArmazem: Equipamento[]): string {
   if (!eq) return ''
   return resolverIdEquipamentoVisivelCliente(eq, equipamentosArmazem)
-}
-
-function resolverChaveEquipamentoClienteRelatorio(
-  equipamentoId: string,
-  clienteEquipamentos: EquipamentoCliente[] | undefined,
-  equipamentosArmazem: Equipamento[]
-): string {
-  const alvo = String(equipamentoId ?? '').trim()
-  if (!alvo || !clienteEquipamentos?.length) return alvo
-  for (let idx = 0; idx < clienteEquipamentos.length; idx++) {
-    const item = clienteEquipamentos[idx]
-    const key = resolverIdEquipamentoCliente(item, idx)
-    const vis = idEquipamentoVisivelParaProtocolo(item, equipamentosArmazem)
-    if (
-      key === alvo ||
-      vis === alvo ||
-      String(item.numeroSerie ?? '').trim() === alvo ||
-      String(item.id ?? '').trim() === alvo
-    ) {
-      return key
-    }
-  }
-  return alvo
 }
 
 function mergeEquipamentosClienteLists(
@@ -6940,6 +6920,8 @@ export default function Dashboard() {
   const [showFaturasGeralModal, setShowFaturasGeralModal] = useState(false)
   const [showEquipamentoClienteForm, setShowEquipamentoClienteForm] = useState(false)
   const [editingEquipamentoCliente, setEditingEquipamentoCliente] = useState<EquipamentoCliente | null>(null)
+  const [editingEquipamentoClienteIndex, setEditingEquipamentoClienteIndex] = useState<number | null>(null)
+  const equipamentoClienteFormRef = useRef<HTMLDivElement | null>(null)
   const [isSavingEquipamentoCliente, setIsSavingEquipamentoCliente] = useState(false)
   const [equipamentoClienteGuardadoMsg, setEquipamentoClienteGuardadoMsg] = useState('')
   const [equipamentoClienteForm, setEquipamentoClienteForm] = useState<EquipamentoCliente>({
@@ -16611,6 +16593,10 @@ export default function Dashboard() {
   const handleViewClienteEquipamentos = (cliente: Cliente) => {
     const latest = clientes.find((c) => c.id === cliente.id) || cliente
     setSelectedClienteForEquipamento(latest)
+    setShowEquipamentoClienteForm(false)
+    setEditingEquipamentoCliente(null)
+    setEditingEquipamentoClienteIndex(null)
+    setEquipamentoClienteTemCodigoProprio(false)
     setEquipamentoClienteGuardadoMsg('')
   }
 
@@ -16618,6 +16604,7 @@ export default function Dashboard() {
     const latest = clientes.find((c) => c.id === cliente.id) || cliente
     setSelectedClienteForEquipamento(latest)
     setEditingEquipamentoCliente(null)
+    setEditingEquipamentoClienteIndex(null)
     setEquipamentoClienteGuardadoMsg('')
     setEquipamentoClienteForm({
       id: '',
@@ -16640,20 +16627,30 @@ export default function Dashboard() {
 
   const handleEditEquipamentoCliente = (cliente: Cliente, equipamento: EquipamentoCliente, index: number) => {
     const latest = clientes.find((c) => c.id === cliente.id) || cliente
+    const eqAtual =
+      index >= 0 && index < (latest.equipamentos?.length ?? 0)
+        ? latest.equipamentos[index]
+        : equipamento
     setSelectedClienteForEquipamento(latest)
-    setEditingEquipamentoCliente(equipamento)
+    setEditingEquipamentoCliente(eqAtual)
+    setEditingEquipamentoClienteIndex(index >= 0 ? index : null)
     setEquipamentoClienteGuardadoMsg('')
-    const idBruto = String(equipamento.id ?? '').trim()
-    setEquipamentoClienteTemCodigoProprio(Boolean(idBruto && !equipamentoClienteIdETecnicoGerado(equipamento.id)))
-    // Garantir que itemsIncluded e relatorios sejam arrays
-    setEquipamentoClienteForm({ 
-      ...equipamento,
-      id: equipamentoClienteIdETecnicoGerado(equipamento.id) ? '' : idBruto,
-      itemsIncluded: equipamento.itemsIncluded ? [...equipamento.itemsIncluded] : [],
-      relatorios: equipamento.relatorios ? [...equipamento.relatorios] : []
+    const idBruto = String(eqAtual.id ?? '').trim()
+    const idETecnico = equipamentoClienteIdETecnicoGerado(eqAtual.id)
+    const idVisivel = idEquipamentoVisivelParaProtocolo(eqAtual, equipamentos)
+    const temCodigoProprio = Boolean((idBruto && !idETecnico) || (idETecnico && idVisivel))
+    setEquipamentoClienteTemCodigoProprio(temCodigoProprio)
+    setEquipamentoClienteForm({
+      ...eqAtual,
+      id: temCodigoProprio ? (idBruto && !idETecnico ? idBruto : idVisivel) : '',
+      itemsIncluded: eqAtual.itemsIncluded ? [...eqAtual.itemsIncluded] : [],
+      relatorios: eqAtual.relatorios ? [...eqAtual.relatorios] : [],
     })
     setNewItemCliente('')
     setShowEquipamentoClienteForm(true)
+    requestAnimationFrame(() => {
+      equipamentoClienteFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
   }
 
   const handleDeleteEquipamentoCliente = (clienteId: string, index: number) => {
@@ -16714,12 +16711,21 @@ export default function Dashboard() {
 
     if (clienteAtual && idUsuario) {
       const editIndex = editingEquipamentoCliente
-        ? clienteAtual.equipamentos.findIndex((eq) =>
-            editingEquipamentoCliente.id
-              ? eq.id === editingEquipamentoCliente.id
-              : eq.numeroSerie === editingEquipamentoCliente.numeroSerie &&
-                eq.tipoEquipamento === editingEquipamentoCliente.tipoEquipamento
-          )
+        ? (() => {
+            if (
+              editingEquipamentoClienteIndex != null &&
+              editingEquipamentoClienteIndex >= 0 &&
+              editingEquipamentoClienteIndex < clienteAtual.equipamentos.length
+            ) {
+              return editingEquipamentoClienteIndex
+            }
+            return clienteAtual.equipamentos.findIndex((eq) =>
+              editingEquipamentoCliente.id
+                ? eq.id === editingEquipamentoCliente.id
+                : eq.numeroSerie === editingEquipamentoCliente.numeroSerie &&
+                  eq.tipoEquipamento === editingEquipamentoCliente.tipoEquipamento
+            )
+          })()
         : -1
       const dupId = clienteAtual.equipamentos.some((eq, i) => {
         if (editIndex >= 0 && i === editIndex) return false
@@ -16759,7 +16765,14 @@ export default function Dashboard() {
       if (c.id !== selectedClienteForEquipamento.id) return c
       if (editingEquipamentoCliente) {
         let index = -1
-        if (editingEquipamentoCliente.id) {
+        if (
+          editingEquipamentoClienteIndex != null &&
+          editingEquipamentoClienteIndex >= 0 &&
+          editingEquipamentoClienteIndex < c.equipamentos.length
+        ) {
+          index = editingEquipamentoClienteIndex
+        }
+        if (index < 0 && editingEquipamentoCliente.id) {
           index = c.equipamentos.findIndex((eq) => eq.id === editingEquipamentoCliente.id)
         }
         if (index < 0) {
@@ -17159,45 +17172,29 @@ export default function Dashboard() {
 
   const handleEditRelatorioServico = (relatorio: RelatorioServico) => {
     const r = resolverRelatorioServicoDono(relatorio)
+    const clienteResolvido = findClienteByRelatorio(clientes, r)
+    const clienteId = resolverClienteIdRelatorio(r, clientes)
     setEditingRelatorioServico(r)
     setEditingDiaTrabalhoIndex(null)
-    // Garantir que todos os campos sejam preservados, especialmente arrays
     const equipamentosEditRaw = normalizarEquipamentosRelatorio(r)
-    let equipamentosEdit = equipamentosEditRaw.map((eqItem) => {
-      if (eqItem.equipamentoOrigem === 'armazem') {
-        return {
-          ...eqItem,
-          equipamentoId: resolverIdEquipamentoVisivelRelatorio(eqItem, equipamentos) || eqItem.equipamentoId,
-        }
-      }
-      if (!r.clienteId) return eqItem
-      const cli = clientes.find((c) => c.id === r.clienteId)
-      const eqMatch = cli?.equipamentos?.find(
-        (e, idx) =>
-          e.id === eqItem.equipamentoId ||
-          e.numeroSerie === eqItem.equipamentoId ||
-          e.numeroSerie === eqItem.numeroMaquina ||
-          resolverIdEquipamentoCliente(e, idx) === eqItem.equipamentoId ||
-          idEquipamentoVisivelParaProtocolo(e, equipamentos) === eqItem.equipamentoId
-      )
-      if (!eqMatch) {
-        return {
-          ...eqItem,
-          equipamentoId: resolverIdEquipamentoVisivelRelatorio(eqItem, equipamentos) || eqItem.equipamentoId,
-        }
-      }
-      return {
-        ...eqItem,
-        equipamentoId: idEquipamentoVisivelParaProtocolo(eqMatch, equipamentos) || eqItem.equipamentoId,
-        maquinaModelo: eqItem.maquinaModelo || `${eqMatch.modelo} ${eqMatch.marca}`.trim(),
-        numeroMaquina: eqItem.numeroMaquina || eqMatch.numeroSerie || '',
-      }
-    })
+    let equipamentosEdit = prepararEquipamentosRelatorioParaEdicao(
+      equipamentosEditRaw,
+      clienteResolvido?.equipamentos,
+      equipamentos
+    )
     if (equipamentosEdit.length === 0) {
       equipamentosEdit = [criarEquipamentoRelatorioVazio('cliente')]
     }
     setRelatorioServicoForm({
       ...r,
+      clienteId,
+      cliente: r.cliente || clienteResolvido?.nomeEmpresa || '',
+      cidade:
+        r.cidade ||
+        clienteResolvido?.conselho ||
+        clienteResolvido?.localidade ||
+        '',
+      telefone: r.telefone || clienteResolvido?.telefones || '',
       ...sincronizarCamposLegadoEquipamentos(equipamentosEdit, equipamentos),
       equipamentoOrigem: r.equipamentoOrigem === 'armazem' ? 'armazem' : 'cliente',
       diasTrabalho: sortDiasTrabalhoCronologicamente(
@@ -33026,6 +33023,11 @@ onKeyPress={(e) => {
 
                     {(() => {
                       const equipamentosForm = normalizarEquipamentosRelatorio(relatorioServicoForm)
+                      const clienteRelatorio = findClienteByRelatorio(clientes, relatorioServicoForm)
+                      const clienteIdEfetivo =
+                        relatorioServicoForm.clienteId || clienteRelatorio?.id || ''
+                      const clienteEquipamentos =
+                        clientes.find((c) => c.id === clienteIdEfetivo)?.equipamentos ?? []
                       const podeAdicionarEquip = equipamentosForm.length < MAX_EQUIPAMENTOS_RELATORIO
                       const atualizarEquipamentos = (next: RelatorioEquipamentoRef[]) => {
                         setRelatorioServicoForm(prev => ({
@@ -33167,20 +33169,17 @@ onKeyPress={(e) => {
                                       ) : (
                                         <select
                                           value={
-                                            relatorioServicoForm.clienteId
+                                            clienteIdEfetivo
                                               ? resolverChaveEquipamentoClienteRelatorio(
                                                   eq.equipamentoId || '',
-                                                  clientes.find(c => c.id === relatorioServicoForm.clienteId)?.equipamentos,
+                                                  clienteEquipamentos,
                                                   equipamentos
                                                 )
                                               : eq.equipamentoId || ''
                                           }
                                           onChange={(e) => {
                                             const chave = e.target.value
-                                            const clienteEquipamentos = clientes.find(
-                                              c => c.id === relatorioServicoForm.clienteId
-                                            )?.equipamentos
-                                            const selectedEquipamento = clienteEquipamentos?.find(
+                                            const selectedEquipamento = clienteEquipamentos.find(
                                               (itemCli, idxCli) =>
                                                 resolverIdEquipamentoCliente(itemCli, idxCli) === chave
                                             )
@@ -33203,12 +33202,11 @@ onKeyPress={(e) => {
                                             atualizarEquipamentos(next)
                                           }}
                                           className="relatorio-equipamento-card__select"
-                                          disabled={!relatorioServicoForm.clienteId}
+                                          disabled={!clienteIdEfetivo}
                                         >
                                           <option value="">{safeT?.selecioneEquipamento || 'Selecione o equipamento'}</option>
-                                          {relatorioServicoForm.clienteId && clientes
-                                            .find(c => c.id === relatorioServicoForm.clienteId)
-                                            ?.equipamentos?.map((itemCli, idxCli) => {
+                                          {clienteIdEfetivo &&
+                                            clienteEquipamentos.map((itemCli, idxCli) => {
                                               const eqKey = resolverIdEquipamentoCliente(itemCli, idxCli)
                                               const idVisivel = idEquipamentoVisivelParaProtocolo(itemCli, equipamentos)
                                               return (
@@ -33217,6 +33215,33 @@ onKeyPress={(e) => {
                                                 </option>
                                               )
                                             })}
+                                          {clienteIdEfetivo &&
+                                            eq.equipamentoId &&
+                                            !clienteEquipamentos.some(
+                                              (itemCli, idxCli) =>
+                                                resolverChaveEquipamentoClienteRelatorio(
+                                                  eq.equipamentoId || '',
+                                                  clienteEquipamentos,
+                                                  equipamentos
+                                                ) === resolverIdEquipamentoCliente(itemCli, idxCli)
+                                            ) && (
+                                              <option
+                                                value={resolverChaveEquipamentoClienteRelatorio(
+                                                  eq.equipamentoId || '',
+                                                  clienteEquipamentos,
+                                                  equipamentos
+                                                )}
+                                              >
+                                                ID{' '}
+                                                {resolverEquipamentoRelatorioParaExibicao(
+                                                  eq,
+                                                  equipamentos,
+                                                  clienteEquipamentos
+                                                ) || eq.equipamentoId}{' '}
+                                                · {(safeT as any)?.relatorioEquipamentoCadastroAnterior ||
+                                                  'cadastro anterior'}
+                                              </option>
+                                            )}
                                         </select>
                                       )}
                                     </div>
@@ -33228,9 +33253,7 @@ onKeyPress={(e) => {
                                           {resolverEquipamentoRelatorioParaExibicao(
                                             eq,
                                             equipamentos,
-                                            relatorioServicoForm.clienteId
-                                              ? (clientes.find((c) => c.id === relatorioServicoForm.clienteId)?.equipamentos ?? [])
-                                              : []
+                                            clienteEquipamentos
                                           ) || '—'}
                                         </span>
                                         {eq.maquinaModelo ? (
@@ -73873,7 +73896,10 @@ A1;Peça exemplo;10`}
             <div className="equipamentos-cliente-modal-body" style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
               {/* Formulário Adicionar/Editar - layout melhorado com imagem em destaque */}
               {showEquipamentoClienteForm && (
-                <div style={{ marginBottom: '28px', borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(0, 200, 83, 0.2)', background: 'linear-gradient(180deg, rgba(0, 200, 83, 0.04) 0%, rgba(0, 0, 0, 0.4) 100%)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}>
+                <div
+                  ref={equipamentoClienteFormRef}
+                  style={{ marginBottom: '28px', borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(0, 200, 83, 0.2)', background: 'linear-gradient(180deg, rgba(0, 200, 83, 0.04) 0%, rgba(0, 0, 0, 0.4) 100%)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}
+                >
                   {/* Título do formulário */}
                   <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(0, 200, 83, 0.12)', background: 'rgba(0, 200, 83, 0.06)' }}>
                     <h4 style={{ margin: 0, fontSize: '17px', fontWeight: '600', color: '#00c853', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -74056,6 +74082,7 @@ A1;Peça exemplo;10`}
                         onClick={() => {
                           setShowEquipamentoClienteForm(false)
                           setEditingEquipamentoCliente(null)
+                          setEditingEquipamentoClienteIndex(null)
                           setEquipamentoClienteGuardadoMsg('')
                           setEquipamentoClienteTemCodigoProprio(false)
                         }}
@@ -74198,7 +74225,7 @@ A1;Peça exemplo;10`}
 
                             {/* Botões de acção */}
                             <div className="equipamento-cliente-card-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                              <button className="btn-primary equipamento-cliente-card-action" onClick={() => handleEditEquipamentoCliente(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 200, 83, 0.4)', background: 'rgba(0, 200, 83, 0.12)', color: '#00c853', flex: 1, minWidth: '100px' }}>✏️ {safeT?.edit || 'Editar'}</button>
+                              <button type="button" className="btn-primary equipamento-cliente-card-action" onClick={() => handleEditEquipamentoCliente(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 200, 83, 0.4)', background: 'rgba(0, 200, 83, 0.12)', color: '#00c853', flex: 1, minWidth: '100px' }}>✏️ {safeT?.edit || 'Editar'}</button>
                               <button className="btn-primary equipamento-cliente-card-action" onClick={() => handleOpenRelatorios(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 200, 83, 0.35)', background: 'rgba(0, 200, 83, 0.08)', color: '#00c853', flex: 1, minWidth: '100px' }}>📋 {safeT?.relatorios || 'Relatórios'}</button>
                               <button className="btn-danger equipamento-cliente-card-action" onClick={() => handleDeleteEquipamentoCliente(selectedClienteForEquipamento.id, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', flex: 1, minWidth: '100px' }}>🗑️ {safeT?.delete || 'Excluir'}</button>
                             </div>

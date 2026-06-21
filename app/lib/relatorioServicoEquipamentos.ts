@@ -2,7 +2,12 @@ export type RelatorioEquipamentoOrigem = 'cliente' | 'armazem'
 
 export type EquipamentoArmazemIdLookup = { id?: string; numeroSerie?: string }
 
-export type EquipamentoClienteIdLookup = { id?: string; numeroSerie?: string }
+export type EquipamentoClienteIdLookup = {
+  id?: string
+  numeroSerie?: string
+  modelo?: string
+  marca?: string
+}
 
 export type RelatorioEquipamentoCabecalhoLinha = {
   numero: number
@@ -77,6 +82,103 @@ export function resolverIdEquipamentoVisivelRelatorio(
 }
 
 /** ID para ecrã/PDF: resolve código visível; nunca mostra UUID interno se existir alternativa no cliente/armazém. */
+/** Resolve `clienteId` quando o relatório antigo só tem o nome do cliente. */
+export function resolverClienteIdRelatorio(
+  rel: { clienteId?: string; cliente?: string },
+  clientes: { id: string; nomeEmpresa?: string }[]
+): string {
+  const cid = String(rel.clienteId ?? '').trim()
+  if (cid && clientes.some((c) => c.id === cid)) return cid
+  const nome = String(rel.cliente ?? '')
+    .trim()
+    .toLowerCase()
+  if (!nome) return cid
+  const hit = clientes.find(
+    (c) => String(c.nomeEmpresa ?? '').trim().toLowerCase() === nome
+  )
+  return hit?.id || cid
+}
+
+/** Chave interna do select (UUID / id / série) a partir do ID visível ou técnico guardado. */
+export function resolverChaveEquipamentoClienteRelatorio(
+  equipamentoId: string,
+  clienteEquipamentos: EquipamentoClienteIdLookup[] | undefined,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+): string {
+  const alvo = String(equipamentoId ?? '').trim()
+  if (!alvo || !clienteEquipamentos?.length) return alvo
+  for (let idx = 0; idx < clienteEquipamentos.length; idx++) {
+    const item = clienteEquipamentos[idx]
+    const key = resolverIdEquipamentoCliente(item, idx)
+    const vis = resolverIdEquipamentoVisivelCliente(item, equipamentosArmazem)
+    if (
+      key === alvo ||
+      vis === alvo ||
+      String(item.numeroSerie ?? '').trim() === alvo ||
+      String(item.id ?? '').trim() === alvo
+    ) {
+      return key
+    }
+  }
+  return alvo
+}
+
+/** Normaliza linhas de equipamento ao abrir um relatório para edição (IDs visíveis + dados do cadastro). */
+export function prepararEquipamentosRelatorioParaEdicao(
+  equipamentosRaw: RelatorioEquipamentoRef[],
+  clienteEquipamentos: EquipamentoClienteIdLookup[] | undefined,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+): RelatorioEquipamentoRef[] {
+  const cliEq = clienteEquipamentos ?? []
+
+  return equipamentosRaw.map((eqItem) => {
+    if (eqItem.equipamentoOrigem === 'armazem') {
+      return {
+        ...eqItem,
+        equipamentoId:
+          resolverIdEquipamentoVisivelRelatorio(eqItem, equipamentosArmazem) ||
+          eqItem.equipamentoId,
+      }
+    }
+
+    const alvo = String(eqItem.equipamentoId ?? '').trim()
+    const sn = String(eqItem.numeroMaquina ?? '').trim()
+
+    const eqMatch = cliEq.find((e, idx) => {
+      const key = resolverIdEquipamentoCliente(e, idx)
+      const vis = resolverIdEquipamentoVisivelCliente(e, equipamentosArmazem)
+      return (
+        (alvo &&
+          (String(e.id ?? '').trim() === alvo ||
+            String(e.numeroSerie ?? '').trim() === alvo ||
+            key === alvo ||
+            vis === alvo)) ||
+        (sn && String(e.numeroSerie ?? '').trim() === sn)
+      )
+    })
+
+    if (eqMatch) {
+      const idx = cliEq.indexOf(eqMatch)
+      const idVis = resolverIdEquipamentoVisivelCliente(eqMatch, equipamentosArmazem)
+      const chave = resolverIdEquipamentoCliente(eqMatch, idx)
+      return {
+        ...eqItem,
+        equipamentoId: idVis || chave || alvo || sn,
+        maquinaModelo:
+          eqItem.maquinaModelo ||
+          `${String(eqMatch.modelo ?? '').trim()} ${String(eqMatch.marca ?? '').trim()}`.trim(),
+        numeroMaquina: eqItem.numeroMaquina || String(eqMatch.numeroSerie ?? '').trim(),
+      }
+    }
+
+    return {
+      ...eqItem,
+      equipamentoId:
+        resolverIdEquipamentoVisivelRelatorio(eqItem, equipamentosArmazem) || eqItem.equipamentoId,
+    }
+  })
+}
+
 export function resolverEquipamentoRelatorioParaExibicao(
   eq: RelatorioEquipamentoRef,
   equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],
