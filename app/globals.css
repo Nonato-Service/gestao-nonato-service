@@ -3507,11 +3507,11 @@ html, body {
     font-size: 13px !important;
     line-height: 1.35 !important;
   }
-  .tab-content-wrapper input,
-  .tab-content-wrapper select,
+  .tab-content-wrapper input:not(.cliente-cadastro-v2__input),
+  .tab-content-wrapper select:not(.cliente-cadastro-v2__select),
   .tab-content-wrapper textarea,
-  .main-content-area input,
-  .main-content-area select,
+  .main-content-area input:not(.cliente-cadastro-v2__input),
+  .main-content-area select:not(.cliente-cadastro-v2__select),
   .main-content-area textarea {
     border-radius: 10px !important;
     padding: 10px 12px !important;
@@ -14346,6 +14346,20 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   z-index: 1;
 }
 
+.cliente-cadastro-v2__input-wrap .cliente-cadastro-v2__input,
+.cliente-cadastro-v2__input-wrap .cliente-cadastro-v2__select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px 12px 44px !important;
+  font-size: 14px;
+  color: #fff;
+  background: rgba(18, 18, 18, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
 .cliente-cadastro-v2__input,
 .cliente-cadastro-v2__select {
   width: 100%;
@@ -14579,7 +14593,20 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   font-weight: 500;
 }
 
-/* Sobrescreve regras globais de .tab-content-wrapper */
+/* Sobrescreve regras globais de .tab-content-wrapper e .tab-glass-root */
+.clientes-cadastro-page .cliente-cadastro-v2__input-wrap .cliente-cadastro-v2__input,
+.clientes-cadastro-page .cliente-cadastro-v2__input-wrap .cliente-cadastro-v2__select,
+.clientes-cadastro-page .cliente-cadastro-v2 textarea {
+  padding: 14px 16px 14px 48px !important;
+  font-size: 14px !important;
+  background: #121212 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  color: #ffffff !important;
+  min-height: 50px;
+  box-sizing: border-box;
+}
+
 .clientes-cadastro-page .cliente-cadastro-v2__input,
 .clientes-cadastro-page .cliente-cadastro-v2__select,
 .clientes-cadastro-page .cliente-cadastro-v2 textarea {
@@ -16636,9 +16663,9 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   box-shadow: 0 4px 16px rgba(0, 200, 83, 0.28) !important;
 }
 
-.tab-glass-root input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']),
-.tab-glass-root select,
-.tab-glass-root textarea {
+.tab-glass-root input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']):not(.cliente-cadastro-v2__input),
+.tab-glass-root select:not(.cliente-cadastro-v2__select),
+.tab-glass-root textarea:not(.cliente-cadastro-v2__input) {
   padding: 12px 14px !important;
   background: rgba(0, 0, 0, 0.25) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
@@ -17088,4 +17115,17 @@ html body .admin-shell .btn-secondary:not(.btn-danger):not(.btn-primary):hover:n
   border-color: rgba(255, 255, 255, 0.32) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Cadastro clientes/fornecedores: preservar espaço do ícone à esquerda */
+html body .tab-glass-root .cliente-cadastro-v2__input-wrap .cliente-cadastro-v2__input,
+html body .tab-glass-root .cliente-cadastro-v2__input-wrap .cliente-cadastro-v2__select,
+html body .tab-glass-root .cliente-cadastro-v2__input-wrap select.cliente-cadastro-v2__input {
+  padding: 12px 14px 12px 44px !important;
+}
+
+html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wrap .cliente-cadastro-v2__input,
+html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wrap .cliente-cadastro-v2__select,
+html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wrap select.cliente-cadastro-v2__input {
+  padding: 14px 16px 14px 48px !important;
 }
