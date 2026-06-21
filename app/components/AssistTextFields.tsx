@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useCallback, useRef } from 'react'
 import { useWritingAssistField } from '../context/WritingAssistFieldContext'
 
 const assistBtnStyle: React.CSSProperties = {
@@ -97,9 +97,14 @@ export function AssistTextarea(
   const { value, onValueChange, showAssist = true, assistButtonTitle = 'Tradução assistida para este campo', ...rest } =
     props
   const { openForField } = useWritingAssistField()
+  const onValueChangeRef = useRef(onValueChange)
+  onValueChangeRef.current = onValueChange
+  const handleValueChange = useCallback((next: string) => {
+    onValueChangeRef.current(next)
+  }, [])
 
   if (showAssist === false || rest.readOnly) {
-    return <textarea {...rest} value={value} onChange={(e) => onValueChange(e.target.value)} />
+    return <textarea {...rest} value={value} onChange={(e) => handleValueChange(e.target.value)} />
   }
 
   return (
@@ -115,7 +120,7 @@ export function AssistTextarea(
       <textarea
         {...rest}
         value={value}
-        onChange={(e) => onValueChange(e.target.value)}
+        onChange={(e) => handleValueChange(e.target.value)}
         style={{
           ...(rest.style as React.CSSProperties),
           flex: 1,
@@ -128,7 +133,7 @@ export function AssistTextarea(
         className="assist-field-btn"
         title={assistButtonTitle}
         aria-label={assistButtonTitle}
-        onClick={() => openForField(value, onValueChange)}
+        onClick={() => openForField(value, handleValueChange)}
         style={assistBtnStyle}
       >
         <AssistFieldGlyph />
@@ -158,6 +163,11 @@ export function AssistInput(props: InputRest) {
     ...rest
   } = props
   const { openForField } = useWritingAssistField()
+  const onValueChangeRef = useRef(onValueChange)
+  onValueChangeRef.current = onValueChange
+  const handleValueChange = useCallback((next: string) => {
+    onValueChangeRef.current(next)
+  }, [])
 
   /** Palavras-passe: nunca enviar conteúdo ao assistente por defeito. */
   const textLike =
@@ -165,7 +175,7 @@ export function AssistInput(props: InputRest) {
     (type === 'text' || type === 'email' || type === 'search' || type === 'url' || type === 'tel')
 
   if (showAssist === false || rest.readOnly || !textLike) {
-    return <input {...rest} type={type} value={value} onChange={(e) => onValueChange(e.target.value)} />
+    return <input {...rest} type={type} value={value} onChange={(e) => handleValueChange(e.target.value)} />
   }
 
   return (
@@ -182,7 +192,7 @@ export function AssistInput(props: InputRest) {
         {...rest}
         type={type}
         value={value}
-        onChange={(e) => onValueChange(e.target.value)}
+        onChange={(e) => handleValueChange(e.target.value)}
         style={{
           ...(rest.style as React.CSSProperties),
           flex: 1,
@@ -195,7 +205,7 @@ export function AssistInput(props: InputRest) {
         className="assist-field-btn"
         title={assistButtonTitle}
         aria-label={assistButtonTitle}
-        onClick={() => openForField(value, onValueChange)}
+        onClick={() => openForField(value, handleValueChange)}
         style={assistBtnStyleInline}
       >
         <AssistFieldGlyph />

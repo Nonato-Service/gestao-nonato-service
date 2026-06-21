@@ -186,7 +186,6 @@ export function WritingLanguageAssistModal({
           value={draft}
           onChange={(e) => setDraft(e.target.value.slice(0, WRITING_ASSIST_FIELD_MAX_CHARS))}
           placeholder={labels.placeholder}
-          maxLength={WRITING_ASSIST_FIELD_MAX_CHARS}
           rows={5}
           style={{
             width: '100%',

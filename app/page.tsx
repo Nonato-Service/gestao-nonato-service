@@ -21809,6 +21809,10 @@ export default function Dashboard() {
       kmTotal,
       kmIda: normalizeKmForPersist(novoDiaTrabalho.kmIda),
       kmRetorno: normalizeKmForPersist(novoDiaTrabalho.kmRetorno),
+      descricaoTrabalho: String(novoDiaTrabalho.descricaoTrabalho ?? '').slice(
+        0,
+        WRITING_ASSIST_FIELD_MAX_CHARS
+      ),
     }
 
     if (editingDiaTrabalhoIndex !== null) {
@@ -33294,7 +33298,9 @@ onKeyPress={(e) => {
                       fontWeight: 'bold',
                       color: '#ffffff'
                     }}>
-                      {safeT?.novoDiaTrabalho || 'Novo Dia de Trabalho'}
+                      {editingDiaTrabalhoIndex !== null
+                        ? (safeT as any)?.editarDiaTrabalho || 'Editar Dia de Trabalho'
+                        : safeT?.novoDiaTrabalho || 'Novo Dia de Trabalho'}
                     </h5>
                     <p style={{ 
                       marginBottom: '20px', 
@@ -33398,7 +33404,7 @@ onKeyPress={(e) => {
                           <input
                             type="time"
                             value={novoDiaTrabalho.idaHora}
-                            onChange={(e) => setNovoDiaTrabalho({ ...novoDiaTrabalho, idaHora: e.target.value })}
+                            onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, idaHora: e.target.value }))}
                             placeholder="--:--"
                             style={{ 
                               width: '100%', 
@@ -33432,7 +33438,7 @@ onKeyPress={(e) => {
                           <input
                             type="time"
                             value={novoDiaTrabalho.idaChegada}
-                            onChange={(e) => setNovoDiaTrabalho({ ...novoDiaTrabalho, idaChegada: e.target.value })}
+                            onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, idaChegada: e.target.value }))}
                             placeholder="--:--"
                             style={{ 
                               width: '100%', 
@@ -33484,7 +33490,7 @@ onKeyPress={(e) => {
                           <input
                             type="time"
                             value={novoDiaTrabalho.horasInicio}
-                            onChange={(e) => setNovoDiaTrabalho({ ...novoDiaTrabalho, horasInicio: e.target.value })}
+                            onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, horasInicio: e.target.value }))}
                             placeholder="--:--"
                             style={{ 
                               width: '100%', 
@@ -33518,7 +33524,7 @@ onKeyPress={(e) => {
                           <input
                             type="time"
                             value={novoDiaTrabalho.horasFim}
-                            onChange={(e) => setNovoDiaTrabalho({ ...novoDiaTrabalho, horasFim: e.target.value })}
+                            onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, horasFim: e.target.value }))}
                             placeholder="--:--"
                             style={{ 
                               width: '100%', 
@@ -33570,7 +33576,7 @@ onKeyPress={(e) => {
                           <input
                             type="time"
                             value={novoDiaTrabalho.retornoSaida}
-                            onChange={(e) => setNovoDiaTrabalho({ ...novoDiaTrabalho, retornoSaida: e.target.value })}
+                            onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, retornoSaida: e.target.value }))}
                             placeholder="--:--"
                             style={{ 
                               width: '100%', 
@@ -33604,7 +33610,7 @@ onKeyPress={(e) => {
                           <input
                             type="time"
                             value={novoDiaTrabalho.retornoChegada}
-                            onChange={(e) => setNovoDiaTrabalho({ ...novoDiaTrabalho, retornoChegada: e.target.value })}
+                            onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, retornoChegada: e.target.value }))}
                             placeholder="--:--"
                             style={{ 
                               width: '100%', 
@@ -33658,7 +33664,7 @@ onKeyPress={(e) => {
                             inputMode="decimal"
                             value={novoDiaTrabalho.kmIda ?? ''}
                             onChange={(e) =>
-                              setNovoDiaTrabalho({ ...novoDiaTrabalho, kmIda: sanitizeKmFieldTyping(e.target.value) })
+                              setNovoDiaTrabalho((prev) => ({ ...prev, kmIda: sanitizeKmFieldTyping(e.target.value) }))
                             }
                             placeholder="0"
                             style={{ 
@@ -33686,7 +33692,7 @@ onKeyPress={(e) => {
                             inputMode="decimal"
                             value={novoDiaTrabalho.kmRetorno ?? ''}
                             onChange={(e) =>
-                              setNovoDiaTrabalho({ ...novoDiaTrabalho, kmRetorno: sanitizeKmFieldTyping(e.target.value) })
+                              setNovoDiaTrabalho((prev) => ({ ...prev, kmRetorno: sanitizeKmFieldTyping(e.target.value) }))
                             }
                             placeholder="0"
                             style={{ 
@@ -33738,11 +33744,13 @@ onKeyPress={(e) => {
                             <input
                               type="checkbox"
                               checked={novoDiaTrabalho.pausa === 'true' || novoDiaTrabalho.pausa === 'sim'}
-                              onChange={(e) => setNovoDiaTrabalho({ 
-                                ...novoDiaTrabalho, 
-                                pausa: e.target.checked ? 'sim' : '',
-                                tempoPausa: e.target.checked ? novoDiaTrabalho.tempoPausa || '' : ''
-                              })}
+                              onChange={(e) =>
+                                setNovoDiaTrabalho((prev) => ({
+                                  ...prev,
+                                  pausa: e.target.checked ? 'sim' : '',
+                                  tempoPausa: e.target.checked ? prev.tempoPausa || '' : '',
+                                }))
+                              }
                               style={{ 
                                 position: 'absolute',
                                 opacity: 0,
@@ -33797,7 +33805,7 @@ onKeyPress={(e) => {
                             <input
                               type="time"
                               value={novoDiaTrabalho.tempoPausa || ''}
-                              onChange={(e) => setNovoDiaTrabalho({ ...novoDiaTrabalho, tempoPausa: e.target.value })}
+                              onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, tempoPausa: e.target.value }))}
                               placeholder="00:30"
                               style={{ 
                                 width: '100%', 
@@ -33846,16 +33854,22 @@ onKeyPress={(e) => {
                       </label>
                       <AssistTextarea
                         value={novoDiaTrabalho.descricaoTrabalho || ''}
-                        onValueChange={(v) =>
-                          setNovoDiaTrabalho({
-                            ...novoDiaTrabalho,
-                            descricaoTrabalho: v.slice(0, WRITING_ASSIST_FIELD_MAX_CHARS),
-                          })
-                        }
+                        onValueChange={(v) => {
+                          const next = v.slice(0, WRITING_ASSIST_FIELD_MAX_CHARS)
+                          setNovoDiaTrabalho((prev) => ({ ...prev, descricaoTrabalho: next }))
+                          if (editingDiaTrabalhoIndex !== null) {
+                            setRelatorioServicoForm((prevForm) => {
+                              const idx = editingDiaTrabalhoIndex
+                              if (idx < 0 || idx >= prevForm.diasTrabalho.length) return prevForm
+                              const dias = [...prevForm.diasTrabalho]
+                              dias[idx] = { ...dias[idx], descricaoTrabalho: next }
+                              return { ...prevForm, diasTrabalho: dias }
+                            })
+                          }
+                        }}
                         assistButtonTitle={(safeT as any)?.writingAssistFieldBtnTitle}
                         placeholder={safeT?.descricaoTrabalhoPlaceholder || 'Descreva o trabalho realizado neste dia (opcional)...'}
-                        maxLength={WRITING_ASSIST_FIELD_MAX_CHARS}
-                        rows={3}
+                        rows={5}
                         style={{
                           width: '100%',
                           padding: '12px',
@@ -34005,7 +34019,10 @@ onKeyPress={(e) => {
                                               kmTotal: dia.kmTotal || '',
                                               pausa: dia.pausa || '',
                                               tempoPausa: dia.tempoPausa || '',
-                                              descricaoTrabalho: dia.descricaoTrabalho || ''
+                                              descricaoTrabalho: String(dia.descricaoTrabalho ?? '').slice(
+                                                0,
+                                                WRITING_ASSIST_FIELD_MAX_CHARS
+                                              ),
                                             })
                                             setEditingDiaTrabalhoIndex(index)
                                             scrollRelatorioServicoDiaEditorIntoView()
