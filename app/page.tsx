@@ -64,7 +64,8 @@ import {
   hashImagemComprovante,
   mensagemDuplicadoComprovante,
 } from './lib/comprovanteDuplicado'
-import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, type RelatorioServicoPdfHeaderVariant } from './lib/relatorioServicoPdfPrintCss'
+import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, buildRelatorioServicoPdfMetaSectionHtml, type RelatorioServicoPdfHeaderVariant, type RelatorioServicoPdfMetaLabels } from './lib/relatorioServicoPdfPrintCss'
+import { PDF_DOCUMENT_LAYOUT_CSS, buildPdfDocumentHeaderHtml, buildPdfDocumentFooterHtml, buildPdfMetaSectionHtml } from './lib/pdfDocumentLayout'
 import {
   MAX_EQUIPAMENTOS_RELATORIO,
   criarEquipamentoRelatorioVazio,
@@ -16934,6 +16935,31 @@ export default function Dashboard() {
     })
   };
 
+  const buildPdfMetaLabelsRelatorio = (): RelatorioServicoPdfMetaLabels => ({
+    tecnico: t.tecnico || 'Técnico',
+    data: t.data || 'Data',
+    cliente: t.cliente || 'Cliente',
+    equipamentoId: (t as Record<string, string>).relatorioEquipamentoIdLabel || 'ID do equipamento',
+    maquinaModelo: t.maquinaModelo || 'Máquina/Modelo',
+    numeroMaquina: t.numeroMaquina || 'Número da Máquina',
+    cidade: t.cidade || 'Cidade',
+    telefone: t.telefone || 'Telefone',
+    tipoServico: t.tipoServico || 'Tipo de Serviço',
+  })
+
+  const buildPdfClienteEquipamentoSection = (
+    relatorio: RelatorioServico,
+    dataFormatada: string,
+    modifier: '' | 'dark' | 'expense' = ''
+  ) =>
+    buildRelatorioServicoPdfMetaSectionHtml({
+      relatorio,
+      title: t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO',
+      labels: buildPdfMetaLabelsRelatorio(),
+      dataFormatada,
+      modifier,
+    })
+
   /** Pré-visualização no painel Administrador: logo da lista ou logo principal (barra), para PDFs */
   const administradorPreviewPdfLogo = (selectedId: string): string | null => {
     const bib = resolveBibliotecaLogoDataUrl(selectedId)
@@ -17064,10 +17090,6 @@ export default function Dashboard() {
     const titFechamento = tAny.fechamentoDespesasRelatorio || 'Fechamento de Despesas'
     const lblImprimir = tAny.imprimirGuardarPDF || 'Imprimir / Guardar como PDF'
     const lblFechar = tAny.close || 'Fechar'
-    const lblCliente = tAny.cliente || 'Cliente'
-    const lblNumRelatorio = tAny.numeroRelatorio || 'Nº Relatório'
-    const lblEquipamento = tAny.equipamento || 'Equipamento'
-    const lblData = tAny.data || 'Data'
     const lblCOD = tAny.codigoOuCod || 'COD'
     const lblDescricao = tAny.descricao || 'Descrição'
     const lblQuantidade = tAny.quantidade || 'Quantidade'
@@ -17075,27 +17097,43 @@ export default function Dashboard() {
     const lblTotal = tAny.total || 'Total'
     const lblSomaTotal = tAny.somaTotal || 'SOMA TOTAL'
     const lblRelatorio = tAny.relatorio || 'Relatório'
-    const logoPart = logoSrc ? '<img src="' + esc(logoSrc) + '" alt="Logo" style="max-height:80px;max-width:220px;object-fit:contain;display:block"/>' : ''
-    const clienteVal = esc(relatorio.cliente)
+    const logoPart = logoSrc ? `<img src="${esc(logoSrc)}" alt="Logo" style="max-height:80px;max-width:220px;object-fit:contain;display:block"/>` : ''
     const numVal = esc(relatorio.numero)
     const equipTexto = [relatorio.maquinaModelo, relatorio.numeroMaquina].filter(Boolean).join(' · ') || '—'
-    const equipVal = esc(equipTexto)
     const dataVal = esc(relatorio.data)
-    const tituloDoc = esc(titFechamento) + ' — ' + esc(lblRelatorio) + ' ' + numVal
+    const tituloDoc = esc(titFechamento)
     const localeStr = localeForLongDatetime(selectedLanguage)
     const docGeradoEm = tAny.pdfDocumentoGeradoEm || 'Documento gerado em'
     const dataHoraGerado = new Date().toLocaleString(localeStr)
+    const empresaNomePdf = esc((fichaCadastral.nomeEmpresa || 'Nonato Service').trim())
+    const headerHtml = buildPdfDocumentHeaderHtml({
+      logoContent: logoPart || empresaNomePdf,
+      title: tituloDoc,
+      reportNumber: numVal,
+      subtitle: `${esc(lblRelatorio)} · ${empresaNomePdf}`,
+      badgeLabel: tAny.numeroRelatorio || 'Nº Relatório',
+      theme: 'expense',
+      variant: 'detailed',
+    })
+    const infoMetaBib = buildPdfMetaSectionHtml({
+      title: tAny.dadosClienteEquipamento || tAny.dadosRelatorio || 'Dados do relatório',
+      modifier: 'expense',
+      fields: [
+        { label: esc(tAny.cliente || 'Cliente'), value: esc(relatorio.cliente) },
+        { label: esc(tAny.numeroRelatorio || 'Nº Relatório'), value: numVal },
+        { label: esc(tAny.equipamento || 'Equipamento'), value: esc(equipTexto), fullWidth: equipTexto.length > 42 },
+        { label: esc(tAny.data || 'Data'), value: dataVal },
+      ],
+    })
     const footPdf =
       ivPdf.incluir && ivPdf.iva > 0.0001
-        ? `<tr><td colspan="3" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-size:12px;border-top:1px solid #c8e6c9">${esc(tAny.totalSemIva || 'Total s/ IVA')}</td><td colspan="2" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-weight:700;border-top:1px solid #c8e6c9">${ivPdf.liquido.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-size:12px">${esc(tAny.valorIva || 'IVA')} (${ivPdf.taxa}%)</td><td colspan="2" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-weight:700">${ivPdf.iva.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#00a650">${esc(tAny.totalComIva || 'Total com IVA')}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#00a650">${totalCobranca.toFixed(2)} €</td></tr>`
-        : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#00a650">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#00a650">${totalCobranca.toFixed(2)} €</td></tr>`
-    const tableContent = `<div style="margin:24px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid #a5d6a7"><table class="fech-pdf-itens" style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:14px 18px;text-align:left;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdf}</tfoot></table></div>`
-    const infoMetaBib = `<table role="presentation" class="fech-pdf-meta" style="width:100%;max-width:100%;border-collapse:collapse;margin:0 0 18px;border:1px solid #c8e6c9;border-radius:10px;overflow:hidden;box-sizing:border-box"><tbody><tr><th scope="row" style="width:30%;padding:12px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#2e7d32;vertical-align:top;border-bottom:1px solid #c8e6c9;background:#f1f8e9">${esc(lblCliente)}</th><td style="padding:12px 14px;font-size:14px;font-weight:600;color:#1b5e20;vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;border-bottom:1px solid #c8e6c9;background:#f1f8e9">${clienteVal}</td></tr><tr><th scope="row" style="padding:12px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#2e7d32;vertical-align:top;border-bottom:1px solid #c8e6c9;background:#f1f8e9">${esc(lblNumRelatorio)}</th><td style="padding:12px 14px;font-size:14px;font-weight:600;color:#1b5e20;vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;border-bottom:1px solid #c8e6c9;background:#f1f8e9">${numVal}</td></tr><tr><th scope="row" style="padding:12px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#2e7d32;vertical-align:top;border-bottom:1px solid #c8e6c9;background:#f1f8e9">${esc(lblEquipamento)}</th><td style="padding:12px 14px;font-size:14px;font-weight:600;color:#1b5e20;vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;border-bottom:1px solid #c8e6c9;background:#f1f8e9">${equipVal}</td></tr><tr><th scope="row" style="padding:12px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#2e7d32;vertical-align:top;background:#f1f8e9">${esc(lblData)}</th><td style="padding:12px 14px;font-size:14px;font-weight:600;color:#1b5e20;vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;background:#f1f8e9">${dataVal}</td></tr></tbody></table>`
-    const headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:3px solid #00a650;flex-wrap:wrap;gap:16px;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="flex-shrink:0">' + logoPart + '</div>' : ''}<div style="flex:1;min-width:0;max-width:100%"><div style="font-size:20px;font-weight:700;color:#00a650;margin-bottom:12px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaBib}</div></div>`
-    const rodape = `<div style="margin-top:32px;padding-top:20px;border-top:1px solid #e0e0e0;text-align:center"><div style="font-size:11px;color:#666">${esc(docGeradoEm)} ${dataHoraGerado}</div><div style="font-size:10px;color:#999">Nonato Service</div></div>`
+        ? `<tr><td colspan="3" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-size:12px;border-top:1px solid #c8e6c9">${esc(tAny.totalSemIva || 'Total s/ IVA')}</td><td colspan="2" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-weight:700;border-top:1px solid #c8e6c9">${ivPdf.liquido.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-size:12px">${esc(tAny.valorIva || 'IVA')} (${ivPdf.taxa}%)</td><td colspan="2" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-weight:700">${ivPdf.iva.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#0d7a3d">${esc(tAny.totalComIva || 'Total com IVA')}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#0d7a3d">${totalCobranca.toFixed(2)} €</td></tr>`
+        : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#0d7a3d">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#0d7a3d">${totalCobranca.toFixed(2)} €</td></tr>`
+    const tableContent = `<div style="margin:8px 0 24px;border-radius:8px;overflow:hidden;border:1px solid #c8e6c9"><table class="fech-pdf-itens" style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdf}</tfoot></table></div>`
+    const rodape = buildPdfDocumentFooterHtml(`${esc(docGeradoEm)} ${dataHoraGerado} · Nonato Service`)
     const btnsNoPrint = `<div class="no-print" style="margin-bottom:20px"><button onclick="window.print()" style="padding:12px 24px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">${esc(lblImprimir)}</button> <button onclick="window.close()" style="padding:12px 20px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer">${esc(lblFechar)}</button></div>`
     const pdfRowStyles = `.pdf-tbody tr:nth-child(odd){background:#fff}.pdf-tbody tr:nth-child(even){background:#f1f8e9}`
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(titFechamento)} - ${esc(relatorio.numero)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:24px;font-size:12px;background:#fff;max-width:100%;box-sizing:border-box}${pdfRowStyles}.fech-pdf-itens{min-width:0}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none!important}.fech-pdf-itens{font-size:10px}.fech-pdf-itens th,.fech-pdf-itens td{padding:8px 10px!important}}.no-print{display:block}</style></head><body>${btnsNoPrint}${headerHtml}${tableContent}${rodape}</body></html>`
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(titFechamento)} - ${esc(relatorio.numero)}</title><style>@page{size:A4;margin:12mm}${PDF_DOCUMENT_LAYOUT_CSS}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:24px;font-size:12px;background:#fff;max-width:100%;box-sizing:border-box}${pdfRowStyles}.fech-pdf-itens{min-width:0}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none!important}.fech-pdf-itens{font-size:10px}.fech-pdf-itens th,.fech-pdf-itens td{padding:8px 10px!important}}.no-print{display:block}</style></head><body>${btnsNoPrint}${headerHtml}${infoMetaBib}${tableContent}${rodape}</body></html>`
     const printWin = window.open('', '_blank')
     if (!printWin) { alert(tAny.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.'); return }
     printWin.document.write(html)
@@ -17110,36 +17148,6 @@ export default function Dashboard() {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/\r\n|\r|\n/g, '<br/>')
-
-  const buildPdfHtmlIdsEquipamentoRelatorio = (
-    relatorio: RelatorioServico,
-    itemClass: string,
-    labelClass: string,
-    valueClass?: string
-  ) => {
-    const dados = getRelatorioCabecalhoEquipamentoDados(relatorio)
-    if (!dados.ids || dados.ids === '—') return ''
-    const lbl = (t as any).relatorioEquipamentoIdLabel || 'ID do equipamento'
-    const val = escapePdfHtml(dados.ids)
-    if (valueClass) {
-      return `<div class="${itemClass}"><span class="${labelClass}">${lbl}:</span><span class="${valueClass}">${val}</span></div>`
-    }
-    return `<div class="${itemClass}"><span class="${labelClass}">${lbl}:</span> ${val}</div>`
-  }
-
-  const buildPdfHtmlIdsEquipamentoRelatorioLi = (relatorio: RelatorioServico) => {
-    const dados = getRelatorioCabecalhoEquipamentoDados(relatorio)
-    if (!dados.ids || dados.ids === '—') return ''
-    const lbl = (t as any).relatorioEquipamentoIdLabel || 'ID do equipamento'
-    return `<li><span class="label">${lbl}</span><span class="value">${escapePdfHtml(dados.ids)}</span></li>`
-  }
-
-  const buildPdfHtmlIdsEquipamentoRelatorioInline = (relatorio: RelatorioServico) => {
-    const dados = getRelatorioCabecalhoEquipamentoDados(relatorio)
-    if (!dados.ids || dados.ids === '—') return ''
-    const lbl = (t as any).relatorioEquipamentoIdLabel || 'ID do equipamento'
-    return `<strong>${lbl}:</strong> ${escapePdfHtml(dados.ids)} &nbsp;|&nbsp; `
-  }
 
   // Função para gerar PDF/Imprimir Relatório - Formato Clássico (baseado na imagem)
   const handlePrintRelatorioClassico = (relatorio: RelatorioServico) => {
@@ -17163,20 +17171,7 @@ export default function Dashboard() {
         <body class="rs-pdf rs-pdf--classic">
           ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
 
-          <div class="info-section">
-            <h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
-            <div class="info-grid">
-              <div class="info-item"><span class="info-label">${t.tecnico || 'Técnico'}:</span> ${relatorio.tecnico || '-'}</div>
-              <div class="info-item"><span class="info-label">${t.data || 'Data'}:</span> ${dataFormatada}</div>
-              <div class="info-item"><span class="info-label">${t.cliente || 'Cliente'}:</span> ${relatorio.cliente || '-'}</div>
-              ${buildPdfHtmlIdsEquipamentoRelatorio(relatorio, 'info-item', 'info-label')}
-              <div class="info-item"><span class="info-label">${t.maquinaModelo || 'Máquina/Modelo'}:</span> ${relatorio.maquinaModelo || '-'}</div>
-              <div class="info-item"><span class="info-label">${t.cidade || 'Cidade'}:</span> ${relatorio.cidade || '-'}</div>
-              <div class="info-item"><span class="info-label">${t.numeroMaquina || 'Número da Máquina'}:</span> ${relatorio.numeroMaquina || '-'}</div>
-              <div class="info-item"><span class="info-label">${t.telefone || 'Telefone'}:</span> ${relatorio.telefone || '-'}</div>
-              <div class="info-item"><span class="info-label">${t.tipoServico || 'Tipo de Serviço'}:</span> ${relatorio.tipoServico || '-'}</div>
-            </div>
-          </div>
+          ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada)}
 
           ${relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0 ? `
           <div class="info-section">
@@ -17363,18 +17358,7 @@ export default function Dashboard() {
         <body class="rs-pdf rs-pdf--compact">
           ${buildPdfHeaderForRelatorio(relatorio, 'compact')}
 
-          <div class="info-section">
-            <h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
-            <div class="info-grid">
-              <div class="info-item"><span class="info-label">${t.tecnico || 'Técnico'}:</span> ${relatorio.tecnico || '-'}</div>
-              <div class="info-item"><span class="info-label">${t.cliente || 'Cliente'}:</span> ${relatorio.cliente || '-'}</div>
-              <div class="info-item"><span class="info-label">${t.data || 'Data'}:</span> ${dataFormatada}</div>
-              ${buildPdfHtmlIdsEquipamentoRelatorio(relatorio, 'info-item', 'info-label')}
-              <div class="info-item"><span class="info-label">${t.maquinaModelo || 'Máquina'}:</span> ${relatorio.maquinaModelo || '-'}</div>
-              <div class="info-item"><span class="info-label">${t.numeroMaquina || 'Nº Máquina'}:</span> ${relatorio.numeroMaquina || '-'}</div>
-              <div class="info-item"><span class="info-label">${t.tipoServico || 'Tipo'}:</span> ${relatorio.tipoServico || '-'}</div>
-            </div>
-          </div>
+          ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada)}
 
           ${relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0 ? `
           <div class="info-section">
@@ -17536,20 +17520,7 @@ export default function Dashboard() {
         <body class="rs-pdf rs-pdf--detailed">
           ${buildPdfHeaderForRelatorio(relatorio, 'detailed')}
 
-          <div class="info-section">
-            <h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
-            <div class="info-grid">
-              <div class="info-item"><span class="info-label">${t.tecnico || 'Técnico'}:</span> ${relatorio.tecnico || '-'}</div>
-              <div class="info-item"><span class="info-label">${t.data || 'Data'}:</span> ${dataFormatada}</div>
-              <div class="info-item"><span class="info-label">${t.cliente || 'Cliente'}:</span> ${relatorio.cliente || '-'}</div>
-              ${buildPdfHtmlIdsEquipamentoRelatorio(relatorio, 'info-item', 'info-label')}
-              <div class="info-item"><span class="info-label">${t.maquinaModelo || 'Máquina/Modelo'}:</span> ${relatorio.maquinaModelo || '-'}</div>
-              <div class="info-item"><span class="info-label">${t.cidade || 'Cidade'}:</span> ${relatorio.cidade || '-'}</div>
-              <div class="info-item"><span class="info-label">${t.numeroMaquina || 'Número da Máquina'}:</span> ${relatorio.numeroMaquina || '-'}</div>
-              <div class="info-item"><span class="info-label">${t.telefone || 'Telefone'}:</span> ${relatorio.telefone || '-'}</div>
-              <div class="info-item"><span class="info-label">${t.tipoServico || 'Tipo de Serviço'}:</span> ${relatorio.tipoServico || '-'}</div>
-            </div>
-          </div>
+          ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada)}
 
           ${relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0 ? `
           <div class="info-section">
@@ -17947,20 +17918,7 @@ export default function Dashboard() {
         <body>
           ${buildPdfHeaderForRelatorio(relatorio, 'detailed')}
 
-          <div class="info-card">
-            <h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
-            <div class="info-grid-modern">
-              <div class="info-item-modern"><span class="info-label-modern">${t.tecnico || 'Técnico'}:</span> ${relatorio.tecnico || '-'}</div>
-              <div class="info-item-modern"><span class="info-label-modern">${t.data || 'Data'}:</span> ${dataFormatada}</div>
-              <div class="info-item-modern"><span class="info-label-modern">${t.cliente || 'Cliente'}:</span> ${relatorio.cliente || '-'}</div>
-              ${buildPdfHtmlIdsEquipamentoRelatorio(relatorio, 'info-item-modern', 'info-label-modern')}
-              <div class="info-item-modern"><span class="info-label-modern">${t.maquinaModelo || 'Máquina/Modelo'}:</span> ${relatorio.maquinaModelo || '-'}</div>
-              <div class="info-item-modern"><span class="info-label-modern">${t.cidade || 'Cidade'}:</span> ${relatorio.cidade || '-'}</div>
-              <div class="info-item-modern"><span class="info-label-modern">${t.numeroMaquina || 'Número da Máquina'}:</span> ${relatorio.numeroMaquina || '-'}</div>
-              <div class="info-item-modern"><span class="info-label-modern">${t.telefone || 'Telefone'}:</span> ${relatorio.telefone || '-'}</div>
-              <div class="info-item-modern"><span class="info-label-modern">${t.tipoServico || 'Tipo de Serviço'}:</span> ${relatorio.tipoServico || '-'}</div>
-            </div>
-          </div>
+          ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada)}
 
           ${relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0 ? `
           <div class="info-card">
@@ -18320,20 +18278,7 @@ export default function Dashboard() {
         <body>
           ${buildPdfHeaderForRelatorio(relatorio, 'compact')}
 
-          <div class="section-minimal">
-            <div class="section-title">${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</div>
-            <ul class="info-list">
-              <li><span class="label">${t.tecnico || 'Técnico'}</span><span class="value">${relatorio.tecnico || '-'}</span></li>
-              <li><span class="label">${t.data || 'Data'}</span><span class="value">${dataFormatada}</span></li>
-              <li><span class="label">${t.cliente || 'Cliente'}</span><span class="value">${relatorio.cliente || '-'}</span></li>
-              ${buildPdfHtmlIdsEquipamentoRelatorioLi(relatorio)}
-              <li><span class="label">${t.maquinaModelo || 'Máquina/Modelo'}</span><span class="value">${relatorio.maquinaModelo || '-'}</span></li>
-              <li><span class="label">${t.cidade || 'Cidade'}</span><span class="value">${relatorio.cidade || '-'}</span></li>
-              <li><span class="label">${t.numeroMaquina || 'Número da Máquina'}</span><span class="value">${relatorio.numeroMaquina || '-'}</span></li>
-              <li><span class="label">${t.telefone || 'Telefone'}</span><span class="value">${relatorio.telefone || '-'}</span></li>
-              <li><span class="label">${t.tipoServico || 'Tipo de Serviço'}</span><span class="value">${relatorio.tipoServico || '-'}</span></li>
-            </ul>
-          </div>
+          ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada)}
 
           ${relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0 ? `
           <div class="section-minimal">
@@ -18702,21 +18647,7 @@ export default function Dashboard() {
         <body>
           ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
 
-          <div class="section-tecnico">
-            <h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
-            <div class="content">
-              <div class="info-grid-tecnico">
-                <div class="info-item-tecnico"><span class="info-label-tecnico">${t.tecnico || 'Técnico'}:</span> ${relatorio.tecnico || '-'}</div>
-                <div class="info-item-tecnico"><span class="info-label-tecnico">${t.data || 'Data'}:</span> ${dataFormatada}</div>
-                <div class="info-item-tecnico"><span class="info-label-tecnico">${t.cliente || 'Cliente'}:</span> ${relatorio.cliente || '-'}</div>
-                <div class="info-item-tecnico"><span class="info-label-tecnico">${t.maquinaModelo || 'Máquina/Modelo'}:</span> ${relatorio.maquinaModelo || '-'}</div>
-                <div class="info-item-tecnico"><span class="info-label-tecnico">${t.cidade || 'Cidade'}:</span> ${relatorio.cidade || '-'}</div>
-                <div class="info-item-tecnico"><span class="info-label-tecnico">${t.numeroMaquina || 'Número da Máquina'}:</span> ${relatorio.numeroMaquina || '-'}</div>
-                <div class="info-item-tecnico"><span class="info-label-tecnico">${t.telefone || 'Telefone'}:</span> ${relatorio.telefone || '-'}</div>
-                <div class="info-item-tecnico"><span class="info-label-tecnico">${t.tipoServico || 'Tipo de Serviço'}:</span> ${relatorio.tipoServico || '-'}</div>
-              </div>
-            </div>
-          </div>
+          ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada, 'dark')}
 
           ${relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0 ? `
           <div class="section-tecnico">
@@ -19093,19 +19024,7 @@ export default function Dashboard() {
         <body>
           ${buildPdfHeaderForRelatorio(relatorio, 'detailed')}
 
-          <div class="section-executivo">
-            <div class="section-title-executivo">${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</div>
-            <table class="info-table-executivo">
-              <tr><td class="label">${t.tecnico || 'Técnico'}</td><td class="value">${relatorio.tecnico || '-'}</td></tr>
-              <tr><td class="label">${t.data || 'Data'}</td><td class="value">${dataFormatada}</td></tr>
-              <tr><td class="label">${t.cliente || 'Cliente'}</td><td class="value">${relatorio.cliente || '-'}</td></tr>
-              <tr><td class="label">${t.maquinaModelo || 'Máquina/Modelo'}</td><td class="value">${relatorio.maquinaModelo || '-'}</td></tr>
-              <tr><td class="label">${t.cidade || 'Cidade'}</td><td class="value">${relatorio.cidade || '-'}</td></tr>
-              <tr><td class="label">${t.numeroMaquina || 'Número da Máquina'}</td><td class="value">${relatorio.numeroMaquina || '-'}</td></tr>
-              <tr><td class="label">${t.telefone || 'Telefone'}</td><td class="value">${relatorio.telefone || '-'}</td></tr>
-              <tr><td class="label">${t.tipoServico || 'Tipo de Serviço'}</td><td class="value">${relatorio.tipoServico || '-'}</td></tr>
-            </table>
-          </div>
+          ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada)}
 
           ${relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0 ? `
           <div class="section-executivo">
@@ -19306,6 +19225,12 @@ export default function Dashboard() {
               padding: 15px;
               line-height: 1.6;
             }
+            .ns-pdf-header__title, .ns-pdf-header__subtitle { color: #fff !important; }
+            .ns-pdf-header__logo-text { color: #f5f5f5 !important; }
+            .ns-pdf-header__badge { background: #111 !important; border-color: #444 !important; }
+            .ns-pdf-header__badge-k { color: #aaa !important; }
+            .ns-pdf-header__badge-v { color: #fff !important; }
+            .ns-pdf-header__bar { opacity: 0.9; }
             .header-negro {
               background: #000;
               color: #fff;
@@ -19497,21 +19422,7 @@ export default function Dashboard() {
         <body>
           ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
 
-          <div class="section-negro">
-            <h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
-            <div class="content">
-              <div class="info-grid-negro">
-                <div class="info-item-negro"><span class="info-label-negro">${t.tecnico || 'Técnico'}:</span><span class="info-value-negro">${relatorio.tecnico || '-'}</span></div>
-                <div class="info-item-negro"><span class="info-label-negro">${t.data || 'Data'}:</span><span class="info-value-negro">${dataFormatada}</span></div>
-                <div class="info-item-negro"><span class="info-label-negro">${t.cliente || 'Cliente'}:</span><span class="info-value-negro">${relatorio.cliente || '-'}</span></div>
-                <div class="info-item-negro"><span class="info-label-negro">${t.maquinaModelo || 'Máquina/Modelo'}:</span><span class="info-value-negro">${relatorio.maquinaModelo || '-'}</span></div>
-                <div class="info-item-negro"><span class="info-label-negro">${t.cidade || 'Cidade'}:</span><span class="info-value-negro">${relatorio.cidade || '-'}</span></div>
-                <div class="info-item-negro"><span class="info-label-negro">${t.numeroMaquina || 'Número da Máquina'}:</span><span class="info-value-negro">${relatorio.numeroMaquina || '-'}</span></div>
-                <div class="info-item-negro"><span class="info-label-negro">${t.telefone || 'Telefone'}:</span><span class="info-value-negro">${relatorio.telefone || '-'}</span></div>
-                <div class="info-item-negro"><span class="info-label-negro">${t.tipoServico || 'Tipo de Serviço'}:</span><span class="info-value-negro">${relatorio.tipoServico || '-'}</span></div>
-              </div>
-            </div>
-          </div>
+          ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada, 'dark')}
 
           ${relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0 ? `
           <div class="section-negro">
@@ -20374,11 +20285,7 @@ export default function Dashboard() {
         @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
       </style></head><body>
         ${buildPdfHeaderForRelatorio(relatorio, 'detailed')}
-        <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
-          <p><strong>${t.tecnico || 'Técnico'}:</strong> ${relatorio.tecnico || '-'} &nbsp;|&nbsp; <strong>${t.data || 'Data'}:</strong> ${dataFormatada} &nbsp;|&nbsp; <strong>${t.cliente || 'Cliente'}:</strong> ${relatorio.cliente || '-'}</p>
-          <p>${buildPdfHtmlIdsEquipamentoRelatorioInline(relatorio)}<strong>${t.maquinaModelo || 'Máquina'}:</strong> ${relatorio.maquinaModelo || '-'} &nbsp;|&nbsp; <strong>${t.numeroMaquina || 'Nº'}:</strong> ${relatorio.numeroMaquina || '-'} &nbsp;|&nbsp; <strong>${t.tipoServico || 'Tipo'}:</strong> ${relatorio.tipoServico || '-'}</p>
-          <p><strong>${t.cidade || 'Cidade'}:</strong> ${relatorio.cidade || '-'} &nbsp;|&nbsp; <strong>${t.telefone || 'Telefone'}:</strong> ${relatorio.telefone || '-'}</p>
-        </div>
+        ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada)}
         ${renderReportDiasTable(relatorio, totais)}
         <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
         ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes || 'Observações'}</h3><p>${relatorio.observacoes}</p></div>` : ''}
@@ -20412,9 +20319,7 @@ export default function Dashboard() {
         @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
       </style></head><body>
         ${buildPdfHeaderForRelatorio(relatorio, 'compact')}
-        <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
-          <div class="row-res"><span>${t.tecnico}: ${relatorio.tecnico || '-'}</span><span>${t.cliente}: ${relatorio.cliente || '-'}</span><span>${t.maquinaModelo}: ${relatorio.maquinaModelo || '-'}</span><span>${t.tipoServico}: ${relatorio.tipoServico || '-'}</span><span>${t.telefone}: ${relatorio.telefone || '-'}</span></div>
-        </div>
+        ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada)}
         ${renderReportDiasTable(relatorio, totais)}
         <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
         ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes}</h3><p>${relatorio.observacoes}</p></div>` : ''}

@@ -3,6 +3,13 @@ import fs from 'fs'
 import path from 'path'
 import { getDemoContext } from '../../../data/demo-context'
 import { translationBundleKey } from '../../../../translations'
+import {
+  PDF_DOCUMENT_LAYOUT_CSS,
+  buildPdfDocumentFooterHtml,
+  buildPdfDocumentHeaderHtml,
+  buildPdfMetaSectionHtml,
+  escapePdfHtml,
+} from '../../../../lib/pdfDocumentLayout'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,9 +57,10 @@ export async function GET(
         total: 'Total',
         totalPorCartao: 'Conferência por cartão (soma das linhas)',
         rodape: 'Documento gerado em',
-        nonato: 'NONATO SERVICE'
+        nonato: 'NONATO SERVICE',
+        badge: 'Documento',
       },
-      'es': {
+      es: {
         titulo: 'REGISTRO DE GASTOS PAGADOS CON TARJETA PARA DECLARACIÓN DEL IRPF',
         subtitulo: 'Documento para envío / IRPF',
         cliente: 'Cliente',
@@ -68,9 +76,10 @@ export async function GET(
         total: 'Total',
         totalPorCartao: 'Totales por tarjeta',
         rodape: 'Documento generado el',
-        nonato: 'NONATO SERVICE'
+        nonato: 'NONATO SERVICE',
+        badge: 'Documento',
       },
-      'fr': {
+      fr: {
         titulo: 'REGISTRE DES DÉPENSES',
         subtitulo: "Document d'envoi",
         cliente: 'Client',
@@ -86,9 +95,10 @@ export async function GET(
         total: 'Total',
         totalPorCartao: 'Totaux par carte',
         rodape: 'Document généré le',
-        nonato: 'NONATO SERVICE'
+        nonato: 'NONATO SERVICE',
+        badge: 'Document',
       },
-      'it': {
+      it: {
         titulo: 'REGISTRO SPESE',
         subtitulo: 'Documento per invio',
         cliente: 'Cliente',
@@ -104,9 +114,10 @@ export async function GET(
         total: 'Totale',
         totalPorCartao: 'Totali per carta',
         rodape: 'Documento generato il',
-        nonato: 'NONATO SERVICE'
+        nonato: 'NONATO SERVICE',
+        badge: 'Documento',
       },
-      'de': {
+      de: {
         titulo: 'KARTENZAHLUNGEN FÜR DIE STEUERERKLÄRUNG (AUSGABEN)',
         subtitulo: 'Dokument zur Übergabe / Steuer',
         cliente: 'Kunde',
@@ -122,9 +133,10 @@ export async function GET(
         total: 'Gesamt',
         totalPorCartao: 'Summen pro Karte',
         rodape: 'Dokument erstellt am',
-        nonato: 'NONATO SERVICE'
+        nonato: 'NONATO SERVICE',
+        badge: 'Dokument',
       },
-      'en': {
+      en: {
         titulo: 'EXPENSE RECORD',
         subtitulo: 'Document for submission',
         cliente: 'Customer',
@@ -140,16 +152,13 @@ export async function GET(
         total: 'Total',
         totalPorCartao: 'Totals per card (line sum check)',
         rodape: 'Document generated on',
-        nonato: 'NONATO SERVICE'
-      }
+        nonato: 'NONATO SERVICE',
+        badge: 'Document',
+      },
     }
     const labels = t[lang] || t['pt-BR']
 
-    const esc = (s: string) =>
-      String(s || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
+    const esc = escapePdfHtml
 
     const totalGeral = (doc.despesas || []).reduce((s: number, d: any) => s + (d.valor || 0), 0)
     const totaisPorCartao: Record<string, number> = {}
@@ -158,30 +167,31 @@ export async function GET(
       totaisPorCartao[rot] = (totaisPorCartao[rot] || 0) + (Number(d.valor) || 0)
     }
     const dataFormatada = new Date().toLocaleString('pt-BR')
+    const docData = new Date(doc.data || doc.dataCriacao).toLocaleDateString('pt-BR')
+    const docRef = String(doc.id || '').slice(-8).toUpperCase()
 
     const despesasHtml = (doc.despesas || []).map((d: any, i: number) => {
       const fotosHtml = (d.fotos || []).map((f: string) =>
-        `<img src="${f}" alt="Comprovante" style="max-width: 100%; max-height: 200px; margin: 4px; border: 1px solid #ddd; border-radius: 4px;" />`
+        `<img src="${f}" alt="Comprovante" class="desp-pdf-thumb" />`
       ).join('')
       const cartaoCell = esc(String(d.cartaoRotulo || '').trim()) || '—'
       return `
         <tr>
           <td>${i + 1}</td>
-          <td>${d.tipoNome || '-'}</td>
-          <td style="font-size:9pt;white-space:nowrap;">${cartaoCell}</td>
-          <td>€ ${(d.valor || 0).toFixed(2)}</td>
-          <td>${(d.descricao || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>
-          <td>${d.codigoBarras || '-'}</td>
+          <td>${esc(d.tipoNome || '-')}</td>
+          <td class="nowrap">${cartaoCell}</td>
+          <td class="num">€ ${(d.valor || 0).toFixed(2)}</td>
+          <td>${esc(d.descricao || '-')}</td>
+          <td>${esc(d.codigoBarras || '-')}</td>
         </tr>
         ${d.fotos?.length ? `
-        <tr>
-          <td colspan="6" style="padding: 12px; background: #f9f9f9;">
-            <strong>${labels.comprovantes}:</strong><br/>
-            <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px;">${fotosHtml}</div>
+        <tr class="desp-pdf-attach-row">
+          <td colspan="6">
+            <strong>${labels.comprovantes}:</strong>
+            <div class="desp-pdf-attach-grid">${fotosHtml}</div>
           </td>
         </tr>
-        ` : ''}
-      `
+        ` : ''}`
     }).join('')
 
     const totaisCartaoHtml = Object.entries(totaisPorCartao)
@@ -189,81 +199,117 @@ export async function GET(
       .map(
         ([rotulo, tot]) => `
       <tr>
-        <td style="padding:8px 12px;border:1px solid #ccc;">${esc(rotulo)}</td>
-        <td style="padding:8px 12px;border:1px solid #ccc;font-weight:600;">€ ${tot.toFixed(2)}</td>
+        <th scope="row">${esc(rotulo)}</th>
+        <td class="num">€ ${tot.toFixed(2)}</td>
       </tr>`
       )
       .join('')
+
+    const headerHtml = buildPdfDocumentHeaderHtml({
+      logoContent: labels.nonato,
+      title: labels.titulo,
+      reportNumber: docRef,
+      subtitle: `${labels.subtitulo} · ${labels.nonato}`,
+      badgeLabel: labels.badge,
+      theme: 'expense',
+      variant: 'detailed',
+    })
+
+    const metaHtml = buildPdfMetaSectionHtml({
+      title: labels.subtitulo,
+      modifier: 'expense',
+      fields: [
+        { label: labels.cliente, value: esc(doc.clienteNome || '—') },
+        { label: labels.data, value: esc(docData) },
+        ...(doc.relatorioNumero
+          ? [{ label: labels.relatorio, value: esc(doc.relatorioNumero), fullWidth: String(doc.relatorioNumero).length > 36 }]
+          : []),
+        { label: labels.total, value: `€ ${totalGeral.toFixed(2)}` },
+      ],
+    })
+
+    const footerHtml = buildPdfDocumentFooterHtml(
+      `${labels.rodape} ${dataFormatada} — ${labels.nonato}${isDemo ? ' — DEMO' : ''}`
+    )
 
     const html = `<!DOCTYPE html>
 <html lang="${langRaw}">
 <head>
   <meta charset="UTF-8">
-  <title>${labels.titulo} - ${doc.clienteNome}</title>
+  <title>${labels.titulo} - ${esc(doc.clienteNome || '')}</title>
   <style>
+    ${PDF_DOCUMENT_LAYOUT_CSS}
+    @page { size: A4 portrait; margin: 12mm; }
     * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; color: #1a1a1a; line-height: 1.5; font-size: 11pt; }
-    .header { background: linear-gradient(135deg, #000 0%, #1a2a1a 50%, #0d1a0d 100%); border-bottom: 3px solid #00ff00; padding: 20px 24px; text-align: center; }
-    .header h1 { margin: 0; font-size: 22pt; font-weight: 700; color: #00ff00; letter-spacing: 2px; }
-    .header .subtitle { margin: 6px 0 0 0; font-size: 11pt; color: rgba(255,255,255,0.9); }
-    .info-block { background: #f5f5f5; padding: 16px 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #00ff00; }
-    .info-block strong { color: #006600; }
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 10pt; }
-    th, td { border: 1px solid #ccc; padding: 10px 12px; text-align: left; }
-    th { background: #e8f5e8; color: #1a5a1a; font-weight: 600; }
-    .total-row { background: #e8f5e8; font-weight: bold; font-size: 12pt; }
-    .footer { margin-top: 30px; text-align: center; font-size: 9pt; color: #666; padding: 12px; border-top: 1px solid #ddd; }
-    @media print { .header { position: fixed; top: 0; left: 0; right: 0; } body { padding-top: 100px; } }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 18px 20px 24px;
+      color: #1a1a1a;
+      line-height: 1.5;
+      font-size: 10pt;
+      background: #fff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .desp-pdf-table-wrap { margin: 0 0 18px; border: 1px solid #dbeafe; border-radius: 4px; overflow: hidden; }
+    table.desp-pdf-table { width: 100%; border-collapse: collapse; margin: 0; font-size: 9.5pt; }
+    .desp-pdf-table th, .desp-pdf-table td { border: 1px solid #e2e8f0; padding: 9px 10px; text-align: left; vertical-align: top; }
+    .desp-pdf-table th { background: #0d7a3d; color: #fff; font-weight: 600; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.04em; }
+    .desp-pdf-table tbody tr:nth-child(even):not(.desp-pdf-attach-row) td { background: #f8fafc; }
+    .desp-pdf-table .num, .desp-pdf-table .nowrap { white-space: nowrap; }
+    .desp-pdf-table .num { text-align: right; }
+    .desp-pdf-table .total-row td { background: #e8f5e9 !important; font-weight: 700; color: #0d7a3d; }
+    .desp-pdf-attach-row td { background: #fafafa !important; padding: 12px 14px !important; }
+    .desp-pdf-attach-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .desp-pdf-thumb { max-width: 180px; max-height: 180px; border: 1px solid #ddd; border-radius: 4px; object-fit: contain; background: #fff; }
+    .desp-pdf-card { margin-top: 8px; }
+    .desp-pdf-card table { width: 100%; max-width: 420px; border-collapse: collapse; font-size: 9.5pt; }
+    .desp-pdf-card th, .desp-pdf-card td { border: 1px solid #c8e6c9; padding: 8px 10px; text-align: left; }
+    .desp-pdf-card th { background: #f1f8e9; color: #2e7d32; font-size: 8pt; text-transform: uppercase; }
+    .desp-pdf-card td.num { text-align: right; font-weight: 600; }
   </style>
 </head>
 <body>
-  <header class="header">
-    <h1>${labels.titulo}</h1>
-    <p class="subtitle">${labels.subtitulo} — ${labels.nonato}</p>
-  </header>
+  ${headerHtml}
+  ${metaHtml}
 
-  <div class="info-block">
-    <p><strong>${labels.cliente}:</strong> ${doc.clienteNome}</p>
-    ${doc.relatorioNumero ? `<p><strong>${labels.relatorio}:</strong> ${doc.relatorioNumero}</p>` : ''}
-    <p><strong>${labels.data}:</strong> ${new Date(doc.data || doc.dataCriacao).toLocaleDateString('pt-BR')}</p>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>${labels.tipo}</th>
-        <th>${labels.cartao}</th>
-        <th>${labels.valor}</th>
-        <th>${labels.descricao}</th>
-        <th>${labels.codigoBarras}</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${despesasHtml}
-      <tr class="total-row">
-        <td colspan="3">${labels.total}</td>
-        <td>€ ${totalGeral.toFixed(2)}</td>
-        <td colspan="2"></td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="info-block" style="margin-top:16px;">
-    <p style="margin:0 0 8px;font-weight:700;color:#006600;">${labels.totalPorCartao}</p>
-    <table style="margin:0;max-width:520px;">
-      <tbody>${totaisCartaoHtml}</tbody>
+  <div class="desp-pdf-table-wrap">
+    <table class="desp-pdf-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>${labels.tipo}</th>
+          <th>${labels.cartao}</th>
+          <th>${labels.valor}</th>
+          <th>${labels.descricao}</th>
+          <th>${labels.codigoBarras}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${despesasHtml}
+        <tr class="total-row">
+          <td colspan="3">${labels.total}</td>
+          <td class="num">€ ${totalGeral.toFixed(2)}</td>
+          <td colspan="2"></td>
+        </tr>
+      </tbody>
     </table>
   </div>
 
-  <div class="footer">
-    <p>${labels.rodape} ${dataFormatada} — ${labels.nonato}${isDemo ? ' — DEMO' : ''}</p>
-  </div>
+  <section class="ns-pdf-meta ns-pdf-meta--expense desp-pdf-card">
+    <h2 class="ns-pdf-meta__title">${labels.totalPorCartao}</h2>
+    <table role="presentation">
+      <tbody>${totaisCartaoHtml}</tbody>
+    </table>
+  </section>
+
+  ${footerHtml}
 </body>
 </html>`
 
     return new NextResponse(html, {
-      headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
     })
   } catch (error: any) {
     console.error('Erro ao gerar PDF despesas:', error)
