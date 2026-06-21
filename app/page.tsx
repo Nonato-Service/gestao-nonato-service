@@ -1917,14 +1917,13 @@ function proximoNumeroSequenciaPecaBiblioteca(
   excludeId?: string
 ): string {
   const key = chaveSequenciaNumeroPecaBiblioteca({ categoriaId, subcategoriaId })
-  let max = 0
+  let count = 0
   for (const p of pecas) {
     if (excludeId && p.id === excludeId) continue
     if (chaveSequenciaNumeroPecaBiblioteca(p) !== key) continue
-    const n = parseNumeroSequenciaPecaBiblioteca(p.numeroSequenciaGrupo)
-    if (n > max) max = n
+    count++
   }
-  return formatNumeroSequenciaPecaBiblioteca(max + 1)
+  return formatNumeroSequenciaPecaBiblioteca(count + 1)
 }
 
 function garantirNumerosSequenciaPecaBiblioteca(pecas: PecaBiblioteca[]): { lista: PecaBiblioteca[]; alterou: boolean } {
@@ -1940,21 +1939,21 @@ function garantirNumerosSequenciaPecaBiblioteca(pecas: PecaBiblioteca[]): { list
 
   for (const [, list] of grupos) {
     const ordenada = [...list].sort((a, b) => {
-      const na = parseNumeroSequenciaPecaBiblioteca(a.numeroSequenciaGrupo)
-      const nb = parseNumeroSequenciaPecaBiblioteca(b.numeroSequenciaGrupo)
-      if (na && nb && na !== nb) return na - nb
-      if (na && !nb) return -1
-      if (!na && nb) return 1
-      return String(a.dataCriacao || a.nome || '').localeCompare(
-        String(b.dataCriacao || b.nome || ''),
-        undefined,
-        { numeric: true }
-      )
+      const dateCmp = String(a.dataCriacao || '').localeCompare(String(b.dataCriacao || ''))
+      if (dateCmp !== 0) return dateCmp
+      return String(a.nome || a.codigo || '').localeCompare(String(b.nome || b.codigo || ''), undefined, {
+        numeric: true,
+      })
     })
     ordenada.forEach((p, idx) => {
       const fmt = formatNumeroSequenciaPecaBiblioteca(idx + 1)
       const cur = byId.get(p.id)!
-      if (cur.numeroSequenciaGrupo !== fmt) {
+      const atual = String(cur.numeroSequenciaGrupo ?? '').trim()
+      const atualFmt =
+        parseNumeroSequenciaPecaBiblioteca(atual) > 0
+          ? formatNumeroSequenciaPecaBiblioteca(parseNumeroSequenciaPecaBiblioteca(atual))
+          : ''
+      if (atualFmt !== fmt) {
         cur.numeroSequenciaGrupo = fmt
         alterou = true
       }
@@ -1963,25 +1962,33 @@ function garantirNumerosSequenciaPecaBiblioteca(pecas: PecaBiblioteca[]): { list
   return { lista: out, alterou }
 }
 
+function chavePecaBibliotecaSequenciaPreview(p: { codigo?: string; nome?: string }): string {
+  const cod = String(p.codigo ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
+  if (cod) return cod
+  const nome = String(p.nome ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
+  return nome ? `n:${nome}` : ''
+}
+
 function atribuirNumerosSequenciaNovasPecas(
   novas: PecaBiblioteca[],
   existentes: PecaBiblioteca[]
 ): PecaBiblioteca[] {
-  const combinado = [...existentes]
-  const out: PecaBiblioteca[] = []
-  for (const p of novas) {
-    const temNumero = parseNumeroSequenciaPecaBiblioteca(p.numeroSequenciaGrupo) > 0
-    let numero = temNumero
-      ? formatNumeroSequenciaPecaBiblioteca(parseNumeroSequenciaPecaBiblioteca(p.numeroSequenciaGrupo))
-      : ''
-    if (!numero) {
-      numero = proximoNumeroSequenciaPecaBiblioteca(p.categoriaId || '', p.subcategoriaId || '', combinado)
-    }
-    const peca = { ...p, numeroSequenciaGrupo: numero }
-    out.push(peca)
-    combinado.push(peca)
+  if (novas.length === 0) return novas
+  const merged = [
+    ...existentes,
+    ...novas.map((p) => ({ ...p, numeroSequenciaGrupo: '' })),
+  ]
+  const { lista } = garantirNumerosSequenciaPecaBiblioteca(merged)
+  const numeroPorChave = new Map<string, string>()
+  for (const p of lista) {
+    const k = p.id || chavePecaBibliotecaSequenciaPreview(p)
+    if (k && p.numeroSequenciaGrupo) numeroPorChave.set(k, p.numeroSequenciaGrupo)
   }
-  return out
+  return novas.map((p) => {
+    const k = p.id || chavePecaBibliotecaSequenciaPreview(p)
+    const num = k ? numeroPorChave.get(k) : undefined
+    return num ? { ...p, numeroSequenciaGrupo: num } : p
+  })
 }
 
 function resolverNumeroSequenciaAoSalvarPecaBiblioteca(
@@ -2028,7 +2035,8 @@ function NumeroSequenciaCirculo({
   size?: 'sm' | 'md' | 'lg'
   empty?: string | null
 }) {
-  const n = String(numero || '').trim()
+  const parsed = parseNumeroSequenciaPecaBiblioteca(numero)
+  const n = parsed > 0 ? formatNumeroSequenciaPecaBiblioteca(parsed) : ''
   if (!n) {
     if (empty == null) return null
     return <span className="biblioteca-pecas-numero-circulo biblioteca-pecas-numero-circulo--empty">{empty}</span>
@@ -6463,6 +6471,13 @@ export default function Dashboard() {
     editingPecaBiblioteca,
     pecasBiblioteca,
   ])
+  useEffect(() => {
+    if (pecasBiblioteca.length === 0) return
+    const { lista, alterou } = garantirNumerosSequenciaPecaBiblioteca(pecasBiblioteca)
+    if (!alterou) return
+    setPecasBiblioteca(lista)
+    void saveData('nonato-pecas-biblioteca', lista)
+  }, [pecasBiblioteca])
   const [selecaoPecasBibliotecaIds, setSelecaoPecasBibliotecaIds] = useState<string[]>([])
   const [classificacaoLoteCategoriaId, setClassificacaoLoteCategoriaId] = useState('')
   const [classificacaoLoteSubcategoriaId, setClassificacaoLoteSubcategoriaId] = useState('')
@@ -9744,9 +9759,9 @@ export default function Dashboard() {
         const raw = (savedPecasBiblioteca as PecaBiblioteca[]).map((peca) =>
           sanitizarPecaBibliotecaImportacaoFlag(peca)
         )
-        const { lista, alterou } = garantirNumerosSequenciaPecaBiblioteca(raw)
+        const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw)
         setPecasBiblioteca(lista)
-        if (alterou) void saveData('nonato-pecas-biblioteca', lista)
+        void saveData('nonato-pecas-biblioteca', lista)
       }
 
       const savedPecaLookupTpl = getData(NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY)
@@ -22969,7 +22984,8 @@ export default function Dashboard() {
             inserida = dup
             return prev
           }
-          const next = [...prev, comCat]
+          const nextRaw = [...prev, comCat]
+          const next = garantirNumerosSequenciaPecaBiblioteca(nextRaw).lista
           void saveData('nonato-pecas-biblioteca', next)
           return next
         })
@@ -23343,9 +23359,10 @@ export default function Dashboard() {
       })
     })
     const classificadosAutomaticamente = aplicarRegrasClassificacaoEmLista(novos, true)
-    const novosComNumero = atribuirNumerosSequenciaNovasPecas(classificadosAutomaticamente.lista, existentes)
-    const atualizado = [...existentes, ...novosComNumero]
-    const atualizadoNormalizado = atualizado.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+    const merged = [...existentes, ...classificadosAutomaticamente.lista]
+    const { lista: atualizadoNormalizado } = garantirNumerosSequenciaPecaBiblioteca(
+      merged.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+    )
     setPecasBiblioteca(atualizadoNormalizado)
     void saveData('nonato-pecas-biblioteca', atualizadoNormalizado)
       .then(() => {
@@ -39358,11 +39375,12 @@ onKeyPress={(e) => {
                                               const updated = categoriasPecas.filter((c) => c.id !== categoria.id)
                                               setCategoriasPecas(updated)
                                               saveData('nonato-categorias-pecas', updated)
-                                              const updatedPecas = pecasBiblioteca.map((p) =>
+                                              const updatedPecasRaw = pecasBiblioteca.map((p) =>
                                                 p.categoriaId === categoria.id
                                                   ? { ...p, categoriaId: '', categoria: '', subcategoriaId: '', subcategoria: '' }
                                                   : p
                                               )
+                                              const updatedPecas = garantirNumerosSequenciaPecaBiblioteca(updatedPecasRaw).lista
                                               setPecasBiblioteca(updatedPecas)
                                               saveData('nonato-pecas-biblioteca', updatedPecas)
                                             }
@@ -39531,9 +39549,10 @@ onKeyPress={(e) => {
                                                     const updated = subcategoriasPecas.filter((s) => s.id !== subcategoria.id)
                                                     setSubcategoriasPecas(updated)
                                                     saveData('nonato-subcategorias-pecas', updated)
-                                                    const updatedPecas = pecasBiblioteca.map((p) =>
+                                                    const updatedPecasRaw = pecasBiblioteca.map((p) =>
                                                       p.subcategoriaId === subcategoria.id ? { ...p, subcategoriaId: '', subcategoria: '' } : p
                                                     )
+                                                    const updatedPecas = garantirNumerosSequenciaPecaBiblioteca(updatedPecasRaw).lista
                                                     setPecasBiblioteca(updatedPecas)
                                                     saveData('nonato-pecas-biblioteca', updatedPecas)
                                                   }
@@ -72443,7 +72462,9 @@ A1;Peça exemplo;10`}
                       </button>
                       <button className="btn-danger" onClick={() => {
                         if (window.confirm(safeT?.confirmDelete || 'Tem certeza que deseja excluir esta peça?')) {
-                          const updated = pecasBiblioteca.filter(p => p.id !== peca.id)
+                          const updated = garantirNumerosSequenciaPecaBiblioteca(
+                            pecasBiblioteca.filter((p) => p.id !== peca.id)
+                          ).lista
                           setPecasBiblioteca(updated)
                           saveData('nonato-pecas-biblioteca', updated)
                         }
