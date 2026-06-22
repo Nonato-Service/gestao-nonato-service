@@ -14,11 +14,23 @@ function FgRowActions(props: {
   const { onEdit, onDelete, editTitle, deleteTitle } = props
   return (
     <div className="fg-checklist-pro__row-actions">
-      <button type="button" className="fg-checklist-pro__act" onClick={onEdit} title={editTitle}>
-        Ed
+      <button
+        type="button"
+        className="fg-checklist-pro__act"
+        onClick={onEdit}
+        title={editTitle}
+        aria-label={editTitle}
+      >
+        <span aria-hidden>✎</span>
       </button>
-      <button type="button" className="fg-checklist-pro__act fg-checklist-pro__act--danger" onClick={onDelete} title={deleteTitle}>
-        X
+      <button
+        type="button"
+        className="fg-checklist-pro__act fg-checklist-pro__act--danger"
+        onClick={onDelete}
+        title={deleteTitle}
+        aria-label={deleteTitle}
+      >
+        <span aria-hidden>×</span>
       </button>
     </div>
   )
@@ -377,8 +389,14 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                 placeholder={tr('novaFamilia', 'Nome da nova familia...')}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddFamilia()}
               />
-              <button type="button" className="fg-checklist-pro__btn fg-checklist-pro__btn--primary" onClick={handleAddFamilia}>
-                +
+              <button
+                type="button"
+                className="fg-checklist-pro__btn fg-checklist-pro__btn--primary"
+                onClick={handleAddFamilia}
+                title={tr('add', 'Adicionar')}
+                aria-label={tr('add', 'Adicionar')}
+              >
+                <span aria-hidden>+</span>
               </button>
             </div>
           </div>
@@ -401,7 +419,7 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                         onClick={() => setFamiliaExpandidaChecklist((prev) => (prev === familia ? null : familia))}
                         aria-expanded={famExpanded}
                       >
-                        {famExpanded ? 'v' : '>'}
+                        {famExpanded ? '▾' : '▸'}
                       </button>
                       {editingFamiliaNome === familia ? (
                         <>
@@ -502,44 +520,50 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                                     <span className="fg-checklist-pro__row-name">{p.nome}</span>
                                     <span className="fg-checklist-pro__row-meta">{gruposParente}</span>
                                   </button>
-                                  <label className="fg-checklist-pro__thumb-upload" title={tr('adicionarImagem', 'Imagem')}>
-                                    <input
-                                      type="file"
-                                      accept="image/*"
-                                      onChange={(ev) => {
-                                        const file = ev.target.files?.[0]
-                                        if (file) {
-                                          const r = new FileReader()
-                                          r.onload = () => {
-                                            const next = parentesChecklist.map((x) =>
-                                              x.id === p.id ? { ...x, imagem: r.result as string } : x
-                                            )
-                                            setParentesChecklist(next)
-                                            saveData('nonato-parentes-checklist', next)
+                                  <div className="fg-checklist-pro__row-tools">
+                                    <label
+                                      className="fg-checklist-pro__act fg-checklist-pro__act--img"
+                                      title={tr('adicionarImagem', 'Imagem')}
+                                      aria-label={tr('adicionarImagem', 'Imagem')}
+                                    >
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(ev) => {
+                                          const file = ev.target.files?.[0]
+                                          if (file) {
+                                            const r = new FileReader()
+                                            r.onload = () => {
+                                              const next = parentesChecklist.map((x) =>
+                                                x.id === p.id ? { ...x, imagem: r.result as string } : x
+                                              )
+                                              setParentesChecklist(next)
+                                              saveData('nonato-parentes-checklist', next)
+                                            }
+                                            r.readAsDataURL(file)
                                           }
-                                          r.readAsDataURL(file)
-                                        }
-                                        ev.target.value = ''
+                                          ev.target.value = ''
+                                        }}
+                                      />
+                                      <span aria-hidden>Img</span>
+                                    </label>
+                                    <FgRowActions
+                                      onEdit={(ev) => {
+                                        ev.stopPropagation()
+                                        setEditingParenteId(p.id)
+                                        setEditParenteNome(p.nome)
                                       }}
+                                      onDelete={(ev) => {
+                                        ev.stopPropagation()
+                                        const next = parentesChecklist.filter((x) => x.id !== p.id)
+                                        setParentesChecklist(next)
+                                        saveData('nonato-parentes-checklist', next)
+                                        if (selectedParenteIdForPainelGrupos === p.id) setSelectedParenteIdForPainelGrupos('')
+                                      }}
+                                      editTitle={tr('edit', 'Editar')}
+                                      deleteTitle={tr('delete', 'Excluir')}
                                     />
-                                    Img
-                                  </label>
-                                  <FgRowActions
-                                    onEdit={(ev) => {
-                                      ev.stopPropagation()
-                                      setEditingParenteId(p.id)
-                                      setEditParenteNome(p.nome)
-                                    }}
-                                    onDelete={(ev) => {
-                                      ev.stopPropagation()
-                                      const next = parentesChecklist.filter((x) => x.id !== p.id)
-                                      setParentesChecklist(next)
-                                      saveData('nonato-parentes-checklist', next)
-                                      if (selectedParenteIdForPainelGrupos === p.id) setSelectedParenteIdForPainelGrupos('')
-                                    }}
-                                    editTitle={tr('edit', 'Editar')}
-                                    deleteTitle={tr('delete', 'Excluir')}
-                                  />
+                                  </div>
                                 </>
                               )}
                             </div>
@@ -554,8 +578,14 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                             placeholder={tr('nomeDoParente', 'Nome do parente...')}
                             onKeyDown={(e) => e.key === 'Enter' && handleAddParente(familia)}
                           />
-                          <button type="button" className="fg-checklist-pro__btn" onClick={() => handleAddParente(familia)}>
-                            +
+                          <button
+                            type="button"
+                            className="fg-checklist-pro__btn fg-checklist-pro__btn--primary"
+                            onClick={() => handleAddParente(familia)}
+                            title={tr('add', 'Adicionar')}
+                            aria-label={tr('add', 'Adicionar')}
+                          >
+                            <span aria-hidden>+</span>
                           </button>
                         </div>
                       </div>
@@ -803,6 +833,8 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                                     <button
                                       type="button"
                                       className="fg-checklist-pro__act"
+                                      title={tr('edit', 'Editar')}
+                                      aria-label={tr('edit', 'Editar')}
                                       onClick={() => {
                                         setCriacaoChecklistEditingItemId(item.id)
                                         setCriacaoChecklistGrupoIdAddingItem(null)
@@ -816,11 +848,13 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                                         })
                                       }}
                                     >
-                                      Ed
+                                      <span aria-hidden>✎</span>
                                     </button>
                                     <button
                                       type="button"
                                       className="fg-checklist-pro__act fg-checklist-pro__act--danger"
+                                      title={tr('delete', 'Excluir')}
+                                      aria-label={tr('delete', 'Excluir')}
                                       onClick={() => {
                                         const nextGrupos = gruposChecklist.map((gItem) => {
                                           if (gItem.id !== gr.id) return gItem
@@ -831,7 +865,7 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                                         if (criacaoChecklistEditingItemId === item.id) cancelForm()
                                       }}
                                     >
-                                      X
+                                      <span aria-hidden>×</span>
                                     </button>
                                   </div>
                                 </div>
