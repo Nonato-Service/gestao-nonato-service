@@ -15,8 +15,58 @@ let manuaisSaveDebounceTimer: ReturnType<typeof setTimeout> | null = null
 let manuaisSaveAlertShownOnce = false
 
 const MANUAIS_STORAGE_KEY = 'nonato-manuais-familias-grupos'
+const DEFAULT_GRUPO_NAME = '__default__'
+
+function getGrupoIdsForFamilia(familia: string, gruposList: ManuaisGrupo[]): string[] {
+  return gruposList.filter((g) => g.familia === familia).map((g) => g.id)
+}
+
+function getModelosForFamilia(
+  familia: string,
+  gruposList: ManuaisGrupo[],
+  modelosList: ManuaisModelo[]
+): ManuaisModelo[] {
+  const ids = new Set(getGrupoIdsForFamilia(familia, gruposList))
+  return modelosList.filter((m) => ids.has(m.grupoId))
+}
+
+function ensureDefaultGrupoForFamilia(
+  familia: string,
+  gruposList: ManuaisGrupo[]
+): { grupos: ManuaisGrupo[]; grupoId: string } {
+  const famGrups = gruposList.filter((g) => g.familia === familia)
+  const hidden = famGrups.find((g) => g.nome === DEFAULT_GRUPO_NAME)
+  if (hidden) return { grupos: gruposList, grupoId: hidden.id }
+  if (famGrups.length === 1) return { grupos: gruposList, grupoId: famGrups[0].id }
+  const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `mdg-${Date.now()}`
+  const novo: ManuaisGrupo = { id, nome: DEFAULT_GRUPO_NAME, familia }
+  return { grupos: [...gruposList, novo], grupoId: id }
+}
+
+function familiaForModelo(modelo: ManuaisModelo, gruposList: ManuaisGrupo[]): string | null {
+  return gruposList.find((g) => g.id === modelo.grupoId)?.familia ?? null
+}
 
 type SetState<T> = React.Dispatch<React.SetStateAction<T>>
+
+function ManuaisRowActions(props: {
+  onEdit: (ev: React.MouseEvent) => void
+  onDelete: (ev: React.MouseEvent) => void
+  editTitle: string
+  deleteTitle: string
+}) {
+  const { onEdit, onDelete, editTitle, deleteTitle } = props
+  return (
+    <div className="manuais-pro__row-actions">
+      <button type="button" className="manuais-pro__act" onClick={onEdit} title={editTitle}>
+        Ed
+      </button>
+      <button type="button" className="manuais-pro__act manuais-pro__act--danger" onClick={onDelete} title={deleteTitle}>
+        X
+      </button>
+    </div>
+  )
+}
 
 export type ManuaisInformacoesContentProps = {
   safeT: Record<string, string | undefined>
@@ -372,18 +422,20 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
 
   const handleAddModelo = () => {
     const nome = novoModeloManuais.trim()
-    if (nome && selectedGrupoManuais) {
-      const novo: ManuaisModelo = {
-        id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `m-${Date.now()}`,
-        nome,
-        grupoId: selectedGrupoManuais,
-      }
-      const next = [...manuaisModelos, novo]
-      setManuaisModelos(next)
-      setNovoModeloManuais('')
-      setSelectedModeloManuaisId(novo.id)
-      persistManuaisFG(familias, grupos, next)
+    if (!nome || !selectedFamiliaManuais) return
+    const { grupos: nextGrupos, grupoId } = ensureDefaultGrupoForFamilia(selectedFamiliaManuais, grupos)
+    if (nextGrupos.length !== grupos.length) setManuaisGrupos(nextGrupos)
+    const novo: ManuaisModelo = {
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `m-${Date.now()}`,
+      nome,
+      grupoId,
     }
+    const next = [...manuaisModelos, novo]
+    setManuaisModelos(next)
+    setNovoModeloManuais('')
+    setSelectedGrupoManuais(grupoId)
+    setSelectedModeloManuaisId(novo.id)
+    persistManuaisFG(familias, nextGrupos, next)
   }
 
   const handleSaveModeloEdit = (modeloId: string) => {
@@ -452,7 +504,6 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
 
   const [navSearch, setNavSearch] = useState('')
   const [expandedFamilias, setExpandedFamilias] = useState<Record<string, boolean>>({})
-  const [expandedGrupos, setExpandedGrupos] = useState<Record<string, boolean>>({})
 
   const navQuery = navSearch.trim().toLowerCase()
 
@@ -460,13 +511,9 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
     if (!navQuery) return familiasListManuais
     return familiasListManuais.filter((familia) => {
       if (familia.toLowerCase().includes(navQuery)) return true
-      const famGroups = grupos.filter((g) => g.familia === familia)
-      return famGroups.some((g) => {
-        if (g.nome.toLowerCase().includes(navQuery)) return true
-        return modelos.some(
-          (m) => m.grupoId === g.id && m.nome.toLowerCase().includes(navQuery)
-        )
-      })
+      return getModelosForFamilia(familia, grupos, modelos).some((m) =>
+        m.nome.toLowerCase().includes(navQuery)
+      )
     })
   }, [familiasListManuais, grupos, modelos, navQuery])
 
@@ -484,12 +531,15 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
     lineHeight: 1.5,
   }
 
+  const breadcrumbFamilia =
+    selectedModelo != null
+      ? familiaForModelo(selectedModelo, grupos) || selectedFamiliaManuais
+      : selectedFamiliaManuais
+
   const breadcrumb =
-    selectedModelo && selectedGrupo && selectedFamiliaManuais
-      ? `${selectedFamiliaManuais} › ${selectedGrupo.nome} › ${selectedModelo.nome}`
-      : selectedGrupo && selectedFamiliaManuais
-        ? `${selectedFamiliaManuais} › ${selectedGrupo.nome}`
-        : selectedFamiliaManuais || tr('manuaisHubSelectModelTitle', 'Selecione um modelo')
+    selectedModelo && breadcrumbFamilia
+      ? `${breadcrumbFamilia} › ${selectedModelo.nome}`
+      : breadcrumbFamilia || tr('manuaisHubSelectModelTitle', 'Selecione um modelo')
 
   return (
     <div className="manuais-pro">
@@ -508,7 +558,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
               <p className="manuais-pro__lead">
                 {tr(
                   'manuaisInformacoesTecnicasDesc',
-                  'Organize documentaÃ§Ã£o por famÃ­lia, grupo e modelo de equipamento.'
+                  'Organize documentacao por familia e modelo de equipamento.'
                 )}
               </p>
             </div>
@@ -539,10 +589,6 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
             <strong>{familias.length}</strong>
           </div>
           <div className="manuais-pro__kpi">
-            <span>{tr('manuaisGruposLabel', 'Grupos')}</span>
-            <strong>{grupos.length}</strong>
-          </div>
-          <div className="manuais-pro__kpi">
             <span>{tr('manuaisModelosLabel', 'Modelos')}</span>
             <strong>{modelos.length}</strong>
           </div>
@@ -562,7 +608,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
               className="manuais-pro__search"
               value={navSearch}
               onChange={(e) => setNavSearch(e.target.value)}
-              placeholder={tr('manuaisHubSearchPlaceholder', 'Pesquisar famÃ­lia, grupo ou modelo...')}
+              placeholder={tr('manuaisHubSearchPlaceholder', 'Pesquisar familia ou modelo...')}
             />
           </div>
 
@@ -584,28 +630,6 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
               </div>
             </div>
             <div className="manuais-pro__quick-add-block">
-              <label className="manuais-pro__label">{tr('manuaisGruposLabel', 'Grupo')}</label>
-              <div className="manuais-pro__quick-row">
-                <input
-                  type="text"
-                  className="manuais-pro__input"
-                  value={novoGrupoManuais}
-                  onChange={(e) => setNovoGrupoManuais(e.target.value)}
-                  placeholder={tr('manuaisNovoGrupoPlaceholder', 'Novo grupo...')}
-                  disabled={!selectedFamiliaManuais}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddGrupo()}
-                />
-                <button
-                  type="button"
-                  className="manuais-pro__btn manuais-pro__btn--primary"
-                  onClick={handleAddGrupo}
-                  disabled={!selectedFamiliaManuais}
-                >
-                  +
-                </button>
-              </div>
-            </div>
-            <div className="manuais-pro__quick-add-block">
               <label className="manuais-pro__label">{tr('manuaisModelosLabel', 'Modelo')}</label>
               <div className="manuais-pro__quick-row">
                 <input
@@ -614,14 +638,14 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                   value={novoModeloManuais}
                   onChange={(e) => setNovoModeloManuais(e.target.value)}
                   placeholder={tr('manuaisNovoModeloPlaceholder', 'Novo modelo...')}
-                  disabled={!selectedGrupoManuais}
+                  disabled={!selectedFamiliaManuais}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddModelo()}
                 />
                 <button
                   type="button"
                   className="manuais-pro__btn manuais-pro__btn--primary"
                   onClick={handleAddModelo}
-                  disabled={!selectedGrupoManuais}
+                  disabled={!selectedFamiliaManuais}
                 >
                   +
                 </button>
@@ -631,19 +655,15 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
 
           <div className="manuais-pro__tree">
             {filteredFamilias.length === 0 ? (
-              <p className="manuais-pro__empty-hint">{tr('manuaisNenhumaFamilia', 'Nenhuma famÃ­lia. Crie uma acima.')}</p>
+              <p className="manuais-pro__empty-hint">{tr('manuaisNenhumaFamilia', 'Nenhuma familia. Crie uma acima.')}</p>
             ) : (
               filteredFamilias.map((familia) => {
-                const familiaGrupos = grupos
-                  .filter((g) => g.familia === familia)
+                const familiaModelos = getModelosForFamilia(familia, grupos, modelos)
                   .filter(
-                    (g) =>
+                    (m) =>
                       !navQuery ||
                       familia.toLowerCase().includes(navQuery) ||
-                      g.nome.toLowerCase().includes(navQuery) ||
-                      modelos.some(
-                        (m) => m.grupoId === g.id && m.nome.toLowerCase().includes(navQuery)
-                      )
+                      m.nome.toLowerCase().includes(navQuery)
                   )
                   .sort((a, b) => a.nome.localeCompare(b.nome, undefined, { sensitivity: 'base' }))
                 const famExpanded = expandedFamilias[familia] ?? selectedFamiliaManuais === familia
@@ -658,7 +678,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                         onClick={() => setExpandedFamilias((p) => ({ ...p, [familia]: !famExpanded }))}
                         aria-expanded={famExpanded}
                       >
-                        {famExpanded ? 'â–¾' : 'â–¸'}
+                        {famExpanded ? 'v' : '>'}
                       </button>
                       {editingFamiliaManuais === familia ? (
                         <>
@@ -673,7 +693,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                             autoFocus
                           />
                           <button type="button" className="manuais-pro__act" onClick={() => handleSaveFamiliaEdit(familia)}>
-                            âœ“
+                            OK
                           </button>
                         </>
                       ) : (
@@ -683,178 +703,82 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                             className="manuais-pro__row-label"
                             onClick={() => {
                               setSelectedFamiliaManuais(familia)
-                              setSelectedGrupoManuais(null)
                               setSelectedModeloManuaisId(null)
                               setExpandedFamilias((p) => ({ ...p, [familia]: true }))
                             }}
                           >
                             <span className="manuais-pro__row-name">{familia}</span>
-                            <span className="manuais-pro__row-meta">{familiaGrupos.length}</span>
+                            <span className="manuais-pro__row-meta">{familiaModelos.length}</span>
                           </button>
-                          <div className="manuais-pro__row-actions">
-                            <button
-                              type="button"
-                              className="manuais-pro__act"
-                              onClick={() => {
-                                setEditingFamiliaManuais(familia)
-                                setEditingFamiliaManuaisValue(familia)
-                              }}
-                              title={tr('editar', 'Editar')}
-                            >
-                              âœŽ
-                            </button>
-                            <button
-                              type="button"
-                              className="manuais-pro__act manuais-pro__act--danger"
-                              onClick={() => handleDeleteFamilia(familia)}
-                              title={tr('excluir', 'Excluir')}
-                            >
-                              âœ•
-                            </button>
-                          </div>
+                          <ManuaisRowActions
+                            onEdit={(ev) => {
+                              ev.stopPropagation()
+                              setEditingFamiliaManuais(familia)
+                              setEditingFamiliaManuaisValue(familia)
+                            }}
+                            onDelete={(ev) => {
+                              ev.stopPropagation()
+                              handleDeleteFamilia(familia)
+                            }}
+                            editTitle={tr('editar', 'Editar')}
+                            deleteTitle={tr('excluir', 'Excluir')}
+                          />
                         </>
                       )}
                     </div>
 
                     {famExpanded &&
-                      familiaGrupos.map((grupo) => {
-                        const groupModels = modelos
-                          .filter((m) => m.grupoId === grupo.id)
-                          .filter((m) => !navQuery || m.nome.toLowerCase().includes(navQuery) || grupo.nome.toLowerCase().includes(navQuery) || familia.toLowerCase().includes(navQuery))
-                          .sort((a, b) => a.nome.localeCompare(b.nome, undefined, { sensitivity: 'base' }))
-                        const grpExpanded = expandedGrupos[grupo.id] ?? selectedGrupoManuais === grupo.id
-                        return (
-                          <div key={grupo.id} className="manuais-pro__tree-nested">
-                            <div
-                              className={`manuais-pro__row manuais-pro__row--grupo ${selectedGrupoManuais === grupo.id ? 'is-active' : ''}`}
-                            >
+                      familiaModelos.map((modelo) => (
+                        <div
+                          key={modelo.id}
+                          className={`manuais-pro__row manuais-pro__row--modelo ${selectedModeloManuaisId === modelo.id ? 'is-active' : ''}`}
+                        >
+                          {editingModeloManuaisId === modelo.id ? (
+                            <>
+                              <input
+                                className="manuais-pro__inline-input"
+                                value={editingModeloManuaisValue}
+                                onChange={(e) => setEditingModeloManuaisValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveModeloEdit(modelo.id)
+                                  if (e.key === 'Escape') setEditingModeloManuaisId(null)
+                                }}
+                                autoFocus
+                              />
+                              <button type="button" className="manuais-pro__act" onClick={() => handleSaveModeloEdit(modelo.id)}>
+                                OK
+                              </button>
+                            </>
+                          ) : (
+                            <>
                               <button
                                 type="button"
-                                className="manuais-pro__expand"
-                                onClick={() => setExpandedGrupos((p) => ({ ...p, [grupo.id]: !grpExpanded }))}
-                                aria-expanded={grpExpanded}
+                                className="manuais-pro__row-label"
+                                onClick={() => {
+                                  setSelectedFamiliaManuais(familia)
+                                  setSelectedGrupoManuais(modelo.grupoId)
+                                  setSelectedModeloManuaisId(modelo.id)
+                                }}
                               >
-                                {grpExpanded ? 'â–¾' : 'â–¸'}
+                                <span className="manuais-pro__row-name">{modelo.nome}</span>
                               </button>
-                              {editingGrupoManuaisId === grupo.id ? (
-                                <>
-                                  <input
-                                    className="manuais-pro__inline-input"
-                                    value={editingGrupoManuaisValue}
-                                    onChange={(e) => setEditingGrupoManuaisValue(e.target.value)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') handleSaveGrupoEdit(grupo.id)
-                                      if (e.key === 'Escape') setEditingGrupoManuaisId(null)
-                                    }}
-                                    autoFocus
-                                  />
-                                  <button type="button" className="manuais-pro__act" onClick={() => handleSaveGrupoEdit(grupo.id)}>
-                                    âœ“
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <button
-                                    type="button"
-                                    className="manuais-pro__row-label"
-                                    onClick={() => {
-                                      setSelectedFamiliaManuais(familia)
-                                      setSelectedGrupoManuais(grupo.id)
-                                      setSelectedModeloManuaisId(null)
-                                      setExpandedGrupos((p) => ({ ...p, [grupo.id]: true }))
-                                    }}
-                                  >
-                                    <span className="manuais-pro__row-name">{grupo.nome}</span>
-                                    <span className="manuais-pro__row-meta">{groupModels.length}</span>
-                                  </button>
-                                  <div className="manuais-pro__row-actions">
-                                    <button
-                                      type="button"
-                                      className="manuais-pro__act"
-                                      onClick={() => {
-                                        setEditingGrupoManuaisId(grupo.id)
-                                        setEditingGrupoManuaisValue(grupo.nome)
-                                      }}
-                                      title={tr('editar', 'Editar')}
-                                    >
-                                      âœŽ
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="manuais-pro__act manuais-pro__act--danger"
-                                      onClick={() => handleDeleteGrupo(grupo.id, grupo.nome)}
-                                      title={tr('excluir', 'Excluir')}
-                                    >
-                                      âœ•
-                                    </button>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-
-                            {grpExpanded &&
-                              groupModels.map((modelo) => (
-                                <div
-                                  key={modelo.id}
-                                  className={`manuais-pro__row manuais-pro__row--modelo ${selectedModeloManuaisId === modelo.id ? 'is-active' : ''}`}
-                                >
-                                  {editingModeloManuaisId === modelo.id ? (
-                                    <>
-                                      <input
-                                        className="manuais-pro__inline-input"
-                                        value={editingModeloManuaisValue}
-                                        onChange={(e) => setEditingModeloManuaisValue(e.target.value)}
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') handleSaveModeloEdit(modelo.id)
-                                          if (e.key === 'Escape') setEditingModeloManuaisId(null)
-                                        }}
-                                        autoFocus
-                                      />
-                                      <button type="button" className="manuais-pro__act" onClick={() => handleSaveModeloEdit(modelo.id)}>
-                                        âœ“
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <button
-                                        type="button"
-                                        className="manuais-pro__row-label"
-                                        onClick={() => {
-                                          setSelectedFamiliaManuais(familia)
-                                          setSelectedGrupoManuais(grupo.id)
-                                          setSelectedModeloManuaisId(modelo.id)
-                                        }}
-                                      >
-                                        <span className="manuais-pro__row-name">{modelo.nome}</span>
-                                      </button>
-                                      <div className="manuais-pro__row-actions">
-                                        <button
-                                          type="button"
-                                          className="manuais-pro__act"
-                                          onClick={() => {
-                                            setEditingModeloManuaisId(modelo.id)
-                                            setEditingModeloManuaisValue(modelo.nome)
-                                          }}
-                                          title={tr('editar', 'Editar')}
-                                        >
-                                          âœŽ
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="manuais-pro__act manuais-pro__act--danger"
-                                          onClick={() => handleDeleteModelo(modelo.id, modelo.nome)}
-                                          title={tr('excluir', 'Excluir')}
-                                        >
-                                          âœ•
-                                        </button>
-                                      </div>
-                                    </>
-                                  )}
-                                </div>
-                              ))}
-                          </div>
-                        )
-                      })}
+                              <ManuaisRowActions
+                                onEdit={(ev) => {
+                                  ev.stopPropagation()
+                                  setEditingModeloManuaisId(modelo.id)
+                                  setEditingModeloManuaisValue(modelo.nome)
+                                }}
+                                onDelete={(ev) => {
+                                  ev.stopPropagation()
+                                  handleDeleteModelo(modelo.id, modelo.nome)
+                                }}
+                                editTitle={tr('editar', 'Editar')}
+                                deleteTitle={tr('excluir', 'Excluir')}
+                              />
+                            </>
+                          )}
+                        </div>
+                      ))}
                   </div>
                 )
               })
@@ -919,7 +843,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                           onClick={() => removeDocumento(selectedModelo.id, d.id)}
                           title={tr('excluir', 'Excluir')}
                         >
-                          âœ•
+                          X
                         </button>
                       </li>
                     ))}
@@ -954,7 +878,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                         onClick={() => removeImagem(selectedModelo.id, img.id)}
                         title={tr('excluir', 'Excluir')}
                       >
-                        âœ•
+                        X
                       </button>
                     </div>
                   ))}
