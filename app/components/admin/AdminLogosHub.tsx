@@ -37,10 +37,7 @@ export type AdminLogosHubProps = {
   logosRelatorios: LogoRelatorio[]
   adminBibliotecaLogoDraft: AdminBibliotecaLogoDraft | null
   adminBibliotecaLogoSaving: boolean
-  logoRelatorioSelecionadoId: string
-  logoFechamentoSelecionadoId: string
-  logoOrcamentoSelecionadoId: string
-  logoProtocoloServicoSelecionadoId: string
+  getSelectedLogoIdForSituation: (situationId: PdfLogoSituationId) => string
   incluirLogoNosRelatorios: boolean
   incluirLogoFechamentosDespesas: boolean
   setIncluirLogoNosRelatorios: (v: boolean) => void
@@ -48,7 +45,6 @@ export type AdminLogosHubProps = {
   saveData: (key: string, value: unknown, saveToLocalStorage?: boolean, awaitServer?: boolean) => Promise<boolean>
   administradorPreviewPdfLogo: (selectedId: string) => string | null
   aplicarLogoUnificadoTodosPdfs: (logoId: string) => void
-  getSelectedLogoIdForSituation: (situationId: PdfLogoSituationId) => string
   setSelectedLogoIdForSituation: (situationId: PdfLogoSituationId, logoId: string) => void
   administradorUploadLogoForSituation: (
     situationId: PdfLogoSituationId,
@@ -64,8 +60,12 @@ export type AdminLogosHubProps = {
 const PDF_ACCENT: Record<PdfLogoSituationId, string> = {
   relatorios: 'green',
   fechamentos: 'amber',
-  orcamentos: 'blue',
+  orcamentoPecas: 'blue',
+  orcamentoServico: 'cyan',
+  documentos: 'indigo',
   protocolos: 'violet',
+  checklist: 'teal',
+  preChecklist: 'rose',
 }
 
 function tr(safeT: SafeT, key: string, fallback: string): string {
@@ -301,10 +301,7 @@ export function AdminLogosHub(props: AdminLogosHubProps) {
     logosRelatorios,
     adminBibliotecaLogoDraft,
     adminBibliotecaLogoSaving,
-    logoRelatorioSelecionadoId,
-    logoFechamentoSelecionadoId,
-    logoOrcamentoSelecionadoId,
-    logoProtocoloServicoSelecionadoId,
+    getSelectedLogoIdForSituation,
     incluirLogoNosRelatorios,
     incluirLogoFechamentosDespesas,
     setIncluirLogoNosRelatorios,
@@ -312,7 +309,6 @@ export function AdminLogosHub(props: AdminLogosHubProps) {
     saveData,
     administradorPreviewPdfLogo,
     aplicarLogoUnificadoTodosPdfs,
-    getSelectedLogoIdForSituation,
     setSelectedLogoIdForSituation,
     administradorUploadLogoForSituation,
     administradorClearLogoForSituation,
@@ -327,17 +323,17 @@ export function AdminLogosHub(props: AdminLogosHubProps) {
   const [activePdfSituation, setActivePdfSituation] = useState<PdfLogoSituationId>('relatorios')
 
   const selectedBySituation = useMemo(
-    (): Record<PdfLogoSituationId, string> => ({
-      relatorios: logoRelatorioSelecionadoId,
-      fechamentos: logoFechamentoSelecionadoId,
-      orcamentos: logoOrcamentoSelecionadoId,
-      protocolos: logoProtocoloServicoSelecionadoId,
-    }),
-    [logoRelatorioSelecionadoId, logoFechamentoSelecionadoId, logoOrcamentoSelecionadoId, logoProtocoloServicoSelecionadoId]
+    (): Record<PdfLogoSituationId, string> =>
+      Object.fromEntries(
+        PDF_LOGO_SITUATIONS.map((sit) => [sit.id, getSelectedLogoIdForSituation(sit.id)])
+      ) as Record<PdfLogoSituationId, string>,
+    [getSelectedLogoIdForSituation]
   )
 
   const activeSitDef = PDF_LOGO_SITUATIONS.find((s) => s.id === activePdfSituation) || PDF_LOGO_SITUATIONS[0]
-  const activeSelectedId = pdfLogosModoUnificado ? logoRelatorioSelecionadoId : selectedBySituation[activePdfSituation]
+  const activeSelectedId = pdfLogosModoUnificado
+    ? getSelectedLogoIdForSituation('relatorios')
+    : selectedBySituation[activePdfSituation]
   const activePreview = administradorPreviewPdfLogo(activeSelectedId)
   const activeLabel = resolveLogoLabel(activeSelectedId, logosRelatorios, safeT)
 
@@ -482,7 +478,7 @@ export function AdminLogosHub(props: AdminLogosHubProps) {
                   if (pdfLogosModoUnificado) return
                   setPdfLogosModoUnificado(true)
                   void saveData('nonato-pdf-logos-unificado', true)
-                  aplicarLogoUnificadoTodosPdfs(logoRelatorioSelecionadoId || '')
+                  aplicarLogoUnificadoTodosPdfs(getSelectedLogoIdForSituation('relatorios') || '')
                 }}
               >
                 {tr(safeT, 'adminLogosModoUnico', 'Mesmo logo em tudo')}
@@ -503,7 +499,7 @@ export function AdminLogosHub(props: AdminLogosHubProps) {
                 'Relatórios, despesas, orçamentos e protocolos usam a mesma imagem.'
               )}
               accent="green"
-              selectedId={logoRelatorioSelecionadoId}
+              selectedId={getSelectedLogoIdForSituation('relatorios')}
               includeToggle="relatorios"
               includeChecked={incluirLogoNosRelatorios}
               onIncludeChange={(v) => {

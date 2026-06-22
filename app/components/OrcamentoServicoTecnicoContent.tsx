@@ -135,6 +135,8 @@ type Props = {
   onOpenCadastroServicosModal?: () => void
   saveData?: (key: string, value: unknown) => Promise<void>
   loadData?: (key: string, fromServer?: boolean) => Promise<unknown>
+  /** Logo do Administrador (Centro de Logos → Orçamento de serviço). Sobrepõe o logo do papel timbrado na impressão. */
+  adminPdfLogoHtml?: string
 }
 
 function bootOstFormFromRascunho(
@@ -204,6 +206,7 @@ export function OrcamentoServicoTecnicoContent({
   onOpenCadastroServicosModal,
   saveData,
   loadData,
+  adminPdfLogoHtml = '',
 }: Props) {
   const t = safeT
   const [papel, setPapel] = useState<PapelTimbradoFullState>(() => loadPapelTimbradoState())
@@ -738,7 +741,16 @@ export function OrcamentoServicoTecnicoContent({
           <div className="papel-timbrado-sheet" id="orcamento-servico-tecnico-print-area">
             <div className="papel-timbrado-sheet-inner">
               <header className="papel-timbrado-header">
-                {mostrar.logo ? <img className="papel-timbrado-logo" src={logoSrc} alt="" onError={() => setLogoBroken(true)} /> : null}
+                {mostrar.logo ? (
+                  adminPdfLogoHtml ? (
+                    <div
+                      className="papel-timbrado-logo papel-timbrado-logo--admin"
+                      dangerouslySetInnerHTML={{ __html: adminPdfLogoHtml }}
+                    />
+                  ) : (
+                    <img className="papel-timbrado-logo" src={logoSrc} alt="" onError={() => setLogoBroken(true)} />
+                  )
+                ) : null}
                 <div className="papel-timbrado-header-text">
                   {mostrar.nomeEmpresa ? <strong>{cfg.nomeEmpresa}</strong> : null}
                 </div>

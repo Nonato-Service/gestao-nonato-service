@@ -9901,6 +9901,26 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   box-shadow: inset 3px 0 0 #ab82ff;
 }
 
+.admin-logos-hub-pdf-nav__item--cyan.admin-logos-hub-pdf-nav__item--active {
+  border-color: rgba(0, 188, 212, 0.45);
+  box-shadow: inset 3px 0 0 #00bcd4;
+}
+
+.admin-logos-hub-pdf-nav__item--indigo.admin-logos-hub-pdf-nav__item--active {
+  border-color: rgba(121, 134, 203, 0.45);
+  box-shadow: inset 3px 0 0 #7986cb;
+}
+
+.admin-logos-hub-pdf-nav__item--teal.admin-logos-hub-pdf-nav__item--active {
+  border-color: rgba(38, 166, 154, 0.45);
+  box-shadow: inset 3px 0 0 #26a69a;
+}
+
+.admin-logos-hub-pdf-nav__item--rose.admin-logos-hub-pdf-nav__item--active {
+  border-color: rgba(236, 64, 122, 0.45);
+  box-shadow: inset 3px 0 0 #ec407a;
+}
+
 .admin-logos-hub-pdf-nav__icon {
   font-size: 20px;
   flex-shrink: 0;
@@ -9952,6 +9972,26 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 .admin-logos-hub-pdf-editor--violet {
   border-color: rgba(171, 130, 255, 0.25);
   background: linear-gradient(180deg, rgba(171, 130, 255, 0.06) 0%, rgba(0, 0, 0, 0.15) 100%);
+}
+
+.admin-logos-hub-pdf-editor--cyan {
+  border-color: rgba(0, 188, 212, 0.25);
+  background: linear-gradient(180deg, rgba(0, 188, 212, 0.06) 0%, rgba(0, 0, 0, 0.15) 100%);
+}
+
+.admin-logos-hub-pdf-editor--indigo {
+  border-color: rgba(121, 134, 203, 0.25);
+  background: linear-gradient(180deg, rgba(121, 134, 203, 0.06) 0%, rgba(0, 0, 0, 0.15) 100%);
+}
+
+.admin-logos-hub-pdf-editor--teal {
+  border-color: rgba(38, 166, 154, 0.25);
+  background: linear-gradient(180deg, rgba(38, 166, 154, 0.06) 0%, rgba(0, 0, 0, 0.15) 100%);
+}
+
+.admin-logos-hub-pdf-editor--rose {
+  border-color: rgba(236, 64, 122, 0.25);
+  background: linear-gradient(180deg, rgba(236, 64, 122, 0.06) 0%, rgba(0, 0, 0, 0.15) 100%);
 }
 
 .admin-logos-hub-pdf-editor__head {

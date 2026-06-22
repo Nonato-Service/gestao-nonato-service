@@ -148,7 +148,7 @@ import {
   type ProtocoloTemplateId,
 } from './lib/protocoloInteligente'
 import { buildProtocoloServicoPdfHtmlFromProtocolo } from './lib/protocoloPdfBuild'
-import { PDF_LOGO_SITUATIONS, type PdfLogoSituationId } from './lib/adminPdfLogoSituations'
+import { PDF_LOGO_SITUATIONS, PDF_LOGO_LEGACY_STORAGE_KEYS, buildEmptyPdfLogoSelection, type PdfLogoSituationId } from './lib/adminPdfLogoSituations'
 import {
   buildSolicitacaoServicoTecnicoPrintHtml,
   downloadSolicitacaoServicoTecnicoHtmlFile,
@@ -4357,11 +4357,10 @@ export default function Dashboard() {
   const [loginUser, setLoginUser] = useState<User | null>(null)
   const [incluirLogoNosRelatorios, setIncluirLogoNosRelatorios] = useState<boolean>(true) // Incluir logo nos PDFs (Administrador)
   const [logosRelatorios, setLogosRelatorios] = useState<LogoRelatorio[]>([]) // Logos disponíveis para escolha nos relatórios
-  const [logoRelatorioSelecionadoId, setLogoRelatorioSelecionadoId] = useState<string>('') // '' = logo principal
+  const [pdfLogoSelectedIds, setPdfLogoSelectedIds] = useState<Record<PdfLogoSituationId, string>>(() =>
+    buildEmptyPdfLogoSelection()
+  )
   const [incluirLogoFechamentosDespesas, setIncluirLogoFechamentosDespesas] = useState<boolean>(true) // Logo nos PDF de Fechamentos de Despesas
-  const [logoFechamentoSelecionadoId, setLogoFechamentoSelecionadoId] = useState<string>('') // Logo escolhido para fechamentos
-  const [logoOrcamentoSelecionadoId, setLogoOrcamentoSelecionadoId] = useState<string>('') // Logo escolhido para PDF de Orçamento
-  const [logoProtocoloServicoSelecionadoId, setLogoProtocoloServicoSelecionadoId] = useState<string>('') // Logo para PDF de Protocolos de Serviço
   /** true = um único logo para todos os PDFs; false = escolha por tipo (relatórios, fechamentos, orçamento, protocolo) */
   const [pdfLogosModoUnificado, setPdfLogosModoUnificado] = useState(false)
   const [showPedidoOrcamentoModal, setShowPedidoOrcamentoModal] = useState(false) // Modal para pedido de orçamento
@@ -9937,42 +9936,38 @@ export default function Dashboard() {
       if (mergedLogosRelatorios && mergedLogosRelatorios.length > 0) {
         setLogosRelatorios(mergedLogosRelatorios)
       }
-      const savedLogoRelatorioId = getData('nonato-relatorios-logo-id')
-      if (typeof savedLogoRelatorioId === 'string') {
-        setLogoRelatorioSelecionadoId(savedLogoRelatorioId)
-      }
+      const loadedPdfLogoIds = buildEmptyPdfLogoSelection()
+      PDF_LOGO_SITUATIONS.forEach((sit) => {
+        let savedId = getData(sit.storageKey)
+        if (typeof savedId !== 'string') {
+          const legacyKey = PDF_LOGO_LEGACY_STORAGE_KEYS[sit.id]
+          if (legacyKey) {
+            const legacyVal = getData(legacyKey)
+            if (typeof legacyVal === 'string') savedId = legacyVal
+          }
+        }
+        if (typeof savedId === 'string') {
+          loadedPdfLogoIds[sit.id] = savedId
+        }
+      })
+      setPdfLogoSelectedIds(loadedPdfLogoIds)
       const savedIncluirLogoFechamentos = getData('nonato-fechamentos-incluir-logo')
       if (savedIncluirLogoFechamentos !== undefined && savedIncluirLogoFechamentos !== null) {
         setIncluirLogoFechamentosDespesas(savedIncluirLogoFechamentos === true || savedIncluirLogoFechamentos === 'true')
-      }
-      const savedLogoFechamentoId = getData('nonato-fechamentos-logo-id')
-      if (typeof savedLogoFechamentoId === 'string') {
-        setLogoFechamentoSelecionadoId(savedLogoFechamentoId)
-      }
-      const savedLogoOrcamentoId = getData('nonato-orcamento-logo-id')
-      if (typeof savedLogoOrcamentoId === 'string') {
-        setLogoOrcamentoSelecionadoId(savedLogoOrcamentoId)
-      }
-      const savedLogoProtocoloServicoId = getData('nonato-protocolo-servico-logo-id')
-      if (typeof savedLogoProtocoloServicoId === 'string') {
-        setLogoProtocoloServicoSelecionadoId(savedLogoProtocoloServicoId)
       }
       const savedPdfLogosUnificado = getData('nonato-pdf-logos-unificado')
       const unificadoPdf = savedPdfLogosUnificado === true || savedPdfLogosUnificado === 'true'
       setPdfLogosModoUnificado(unificadoPdf)
       if (unificadoPdf) {
-        const master =
-          typeof savedLogoRelatorioId === 'string'
-            ? savedLogoRelatorioId
-            : ''
-        setLogoRelatorioSelecionadoId(master)
-        setLogoFechamentoSelecionadoId(master)
-        setLogoOrcamentoSelecionadoId(master)
-        setLogoProtocoloServicoSelecionadoId(master)
-        saveData('nonato-relatorios-logo-id', master)
-        saveData('nonato-fechamentos-logo-id', master)
-        saveData('nonato-orcamento-logo-id', master)
-        saveData('nonato-protocolo-servico-logo-id', master)
+        const master = loadedPdfLogoIds.relatorios || ''
+        const unified = buildEmptyPdfLogoSelection()
+        PDF_LOGO_SITUATIONS.forEach((sit) => {
+          unified[sit.id] = master
+        })
+        setPdfLogoSelectedIds(unified)
+        PDF_LOGO_SITUATIONS.forEach((sit) => {
+          saveData(sit.storageKey, master)
+        })
       }
       const savedPdfModeloRel = getData(PDF_MODEL_PADRAO_STORAGE_KEY)
       if (typeof savedPdfModeloRel === 'string' && RELATORIO_SERVICO_PDF_MODELOS.has(savedPdfModeloRel)) {
@@ -17506,35 +17501,42 @@ export default function Dashboard() {
     }
   }
 
-  // Helper: HTML do logo para cabeçalho dos PDFs (respeita opção do Administrador e logo escolhido)
-  const getLogoHtmlForReport = (): string => {
+  const getSelectedLogoIdForSituation = (situationId: PdfLogoSituationId): string => {
+    const def = PDF_LOGO_SITUATIONS.find((s) => s.id === situationId)
+    if (!def) return ''
+    return readStoredLogoSelectionId(def.storageKey, pdfLogoSelectedIds[situationId])
+  }
+
+  const getLogoHtmlForSituation = (
+    situationId: PdfLogoSituationId,
+    requireInclude?: 'relatorios' | 'fechamentos'
+  ): string => {
     if (typeof window === 'undefined') return ''
-    if (!isIncluirLogoRelatoriosAtivo()) return ''
-    const selectedId = readStoredLogoSelectionId('nonato-relatorios-logo-id', logoRelatorioSelecionadoId)
+    if (requireInclude === 'relatorios' && !isIncluirLogoRelatoriosAtivo()) return ''
+    if (requireInclude === 'fechamentos' && !isIncluirLogoFechamentosAtivo()) return ''
+    const selectedId = getSelectedLogoIdForSituation(situationId)
     return resolvePdfLogoHtmlBySelectedId(selectedId)
   }
+
+  // Helper: HTML do logo para cabeçalho dos PDFs (respeita opção do Administrador e logo escolhido)
+  const getLogoHtmlForReport = (): string => getLogoHtmlForSituation('relatorios', 'relatorios')
 
   // Helper: HTML do logo para PDF de Fechamentos de Despesas dos Relatórios (opção separada no Administrador)
-  const getLogoHtmlForFechamento = (): string => {
-    if (typeof window === 'undefined') return ''
-    if (!isIncluirLogoFechamentosAtivo()) return ''
-    const selectedId = readStoredLogoSelectionId('nonato-fechamentos-logo-id', logoFechamentoSelecionadoId)
-    return resolvePdfLogoHtmlBySelectedId(selectedId)
-  }
+  const getLogoHtmlForFechamento = (): string => getLogoHtmlForSituation('fechamentos', 'fechamentos')
 
-  // Helper: HTML do logo para PDF de Orçamento (opção separada no Administrador)
-  const getLogoHtmlForOrcamento = (): string => {
-    if (typeof window === 'undefined') return ''
-    const selectedId = readStoredLogoSelectionId('nonato-orcamento-logo-id', logoOrcamentoSelecionadoId)
-    return resolvePdfLogoHtmlBySelectedId(selectedId)
-  }
+  // Helper: HTML do logo para PDF de Orçamento de peças
+  const getLogoHtmlForOrcamento = (): string => getLogoHtmlForSituation('orcamentoPecas')
+
+  const getLogoHtmlForOrcamentoServico = (): string => getLogoHtmlForSituation('orcamentoServico')
+
+  const getLogoHtmlForDocumentos = (): string => getLogoHtmlForSituation('documentos')
 
   // Helper: HTML do logo para PDF de Protocolos de Serviço (opção separada no Administrador)
-  const getLogoHtmlForProtocoloServico = (): string => {
-    if (typeof window === 'undefined') return ''
-    const selectedId = readStoredLogoSelectionId('nonato-protocolo-servico-logo-id', logoProtocoloServicoSelecionadoId)
-    return resolvePdfLogoHtmlBySelectedId(selectedId)
-  }
+  const getLogoHtmlForProtocoloServico = (): string => getLogoHtmlForSituation('protocolos')
+
+  const getLogoHtmlForChecklist = (): string => getLogoHtmlForSituation('checklist')
+
+  const getLogoHtmlForPreChecklist = (): string => getLogoHtmlForSituation('preChecklist')
 
   const buildPdfHeaderForRelatorio = (
     relatorio: RelatorioServico,
@@ -17591,22 +17593,21 @@ export default function Dashboard() {
     return resolveLogoPrincipalDataUrl()
   }
 
-  /** Modo Administrador: um logo para relatórios, fechamentos, orçamentos e protocolos */
+  /** Modo Administrador: um logo para todos os tipos de PDF */
   const aplicarLogoUnificadoTodosPdfs = (logoId: string) => {
-    setLogoRelatorioSelecionadoId(logoId)
-    setLogoFechamentoSelecionadoId(logoId)
-    setLogoOrcamentoSelecionadoId(logoId)
-    setLogoProtocoloServicoSelecionadoId(logoId)
-    saveData('nonato-relatorios-logo-id', logoId)
-    saveData('nonato-fechamentos-logo-id', logoId)
-    saveData('nonato-orcamento-logo-id', logoId)
-    saveData('nonato-protocolo-servico-logo-id', logoId)
+    const next = buildEmptyPdfLogoSelection()
+    PDF_LOGO_SITUATIONS.forEach((sit) => {
+      next[sit.id] = logoId
+    })
+    setPdfLogoSelectedIds(next)
+    PDF_LOGO_SITUATIONS.forEach((sit) => {
+      void saveData(sit.storageKey, logoId)
+    })
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('nonato-relatorios-logo-id', logoId)
-        localStorage.setItem('nonato-fechamentos-logo-id', logoId)
-        localStorage.setItem('nonato-orcamento-logo-id', logoId)
-        localStorage.setItem('nonato-protocolo-servico-logo-id', logoId)
+        PDF_LOGO_SITUATIONS.forEach((sit) => {
+          localStorage.setItem(sit.storageKey, logoId)
+        })
       } catch { /* ignorar */ }
     }
   }
@@ -17667,13 +17668,7 @@ export default function Dashboard() {
       if (pdfLogosModoUnificado) {
         aplicarLogoUnificadoTodosPdfs(id)
       } else {
-        setLogoRelatorioSelecionadoId(id)
-        saveData('nonato-relatorios-logo-id', id)
-        if (typeof window !== 'undefined') {
-          try {
-            localStorage.setItem('nonato-relatorios-logo-id', id)
-          } catch { /* ignorar */ }
-        }
+        setSelectedLogoIdForSituation('relatorios', id)
       }
     } catch (err) {
       console.error('[nonato-logos-relatorios]', err)
@@ -17687,49 +17682,19 @@ export default function Dashboard() {
     }
   }
 
-  const getSelectedLogoIdForSituation = (situationId: PdfLogoSituationId): string => {
-    switch (situationId) {
-      case 'relatorios':
-        return logoRelatorioSelecionadoId
-      case 'fechamentos':
-        return logoFechamentoSelecionadoId
-      case 'orcamentos':
-        return logoOrcamentoSelecionadoId
-      case 'protocolos':
-        return logoProtocoloServicoSelecionadoId
-      default:
-        return ''
-    }
-  }
-
   const setSelectedLogoIdForSituation = (situationId: PdfLogoSituationId, logoId: string) => {
     if (pdfLogosModoUnificado) {
       aplicarLogoUnificadoTodosPdfs(logoId)
       return
     }
     const v = String(logoId ?? '')
-    switch (situationId) {
-      case 'relatorios':
-        setLogoRelatorioSelecionadoId(v)
-        void saveData('nonato-relatorios-logo-id', v)
-        break
-      case 'fechamentos':
-        setLogoFechamentoSelecionadoId(v)
-        void saveData('nonato-fechamentos-logo-id', v)
-        break
-      case 'orcamentos':
-        setLogoOrcamentoSelecionadoId(v)
-        void saveData('nonato-orcamento-logo-id', v)
-        break
-      case 'protocolos':
-        setLogoProtocoloServicoSelecionadoId(v)
-        void saveData('nonato-protocolo-servico-logo-id', v)
-        break
-    }
+    const def = PDF_LOGO_SITUATIONS.find((s) => s.id === situationId)
+    if (!def) return
+    setPdfLogoSelectedIds((prev) => ({ ...prev, [situationId]: v }))
+    void saveData(def.storageKey, v)
     if (typeof window !== 'undefined') {
       try {
-        const def = PDF_LOGO_SITUATIONS.find((s) => s.id === situationId)
-        if (def) localStorage.setItem(def.storageKey, v)
+        localStorage.setItem(def.storageKey, v)
       } catch {
         /* ignorar */
       }
@@ -17803,7 +17768,7 @@ export default function Dashboard() {
         setSelectedLogoIdForSituation(sit.id, '')
       }
     })
-    if (pdfLogosModoUnificado && logoRelatorioSelecionadoId === logoId) {
+    if (pdfLogosModoUnificado && getSelectedLogoIdForSituation('relatorios') === logoId) {
       aplicarLogoUnificadoTodosPdfs('')
     }
   }
@@ -28519,10 +28484,8 @@ const nextF = familias.filter(x => x !== f)
               logosRelatorios,
               adminBibliotecaLogoDraft,
               adminBibliotecaLogoSaving,
-              logoRelatorioSelecionadoId,
-              logoFechamentoSelecionadoId,
-              logoOrcamentoSelecionadoId,
-              logoProtocoloServicoSelecionadoId,
+              getSelectedLogoIdForSituation,
+              setSelectedLogoIdForSituation,
               incluirLogoNosRelatorios,
               incluirLogoFechamentosDespesas,
               setIncluirLogoNosRelatorios,
@@ -28533,8 +28496,6 @@ const nextF = familias.filter(x => x !== f)
               administradorAddBibliotecaLogo,
               commitAdminBibliotecaLogoDraft,
               discardAdminBibliotecaLogoDraft,
-              getSelectedLogoIdForSituation,
-              setSelectedLogoIdForSituation,
               administradorUploadLogoForSituation,
               administradorClearLogoForSituation,
               administradorRemoveBibliotecaLogo,
@@ -41245,7 +41206,7 @@ A1;Peça exemplo;10`}
                     : selectedLanguage === 'es'
                       ? 'es'
                       : 'pt'
-          const html = buildSolicitacaoServicoTecnicoPrintHtml(dataPdf, L, getLogoHtmlForProtocoloServico(), htmlLang)
+          const html = buildSolicitacaoServicoTecnicoPrintHtml(dataPdf, L, getLogoHtmlForDocumentos(), htmlLang)
           return { html, refVal }
         }
         const baixarFormularioOficialClienteHtml = (rec: SolicitacaoServicoTecnico) => {
@@ -45875,6 +45836,7 @@ A1;Peça exemplo;10`}
             onOpenCadastroServicosModal={() => setShowCadastroServicosModal(true)}
             saveData={saveData}
             loadData={loadData}
+            adminPdfLogoHtml={getLogoHtmlForOrcamentoServico()}
           />
         )
 
@@ -70573,10 +70535,8 @@ A1;Peça exemplo;10`}
                 logosRelatorios,
                 adminBibliotecaLogoDraft,
                 adminBibliotecaLogoSaving,
-                logoRelatorioSelecionadoId,
-                logoFechamentoSelecionadoId,
-                logoOrcamentoSelecionadoId,
-                logoProtocoloServicoSelecionadoId,
+                getSelectedLogoIdForSituation,
+                setSelectedLogoIdForSituation,
                 incluirLogoNosRelatorios,
                 incluirLogoFechamentosDespesas,
                 setIncluirLogoNosRelatorios,
@@ -70587,8 +70547,6 @@ A1;Peça exemplo;10`}
                 administradorAddBibliotecaLogo,
                 commitAdminBibliotecaLogoDraft,
                 discardAdminBibliotecaLogoDraft,
-                getSelectedLogoIdForSituation,
-                setSelectedLogoIdForSituation,
                 administradorUploadLogoForSituation,
                 administradorClearLogoForSituation,
                 administradorRemoveBibliotecaLogo,

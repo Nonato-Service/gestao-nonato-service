@@ -30,10 +30,8 @@ export type AdminConfigGeralSectionProps = {
   logosRelatorios: LogoRelatorio[]
   adminBibliotecaLogoDraft: AdminBibliotecaLogoDraft | null
   adminBibliotecaLogoSaving: boolean
-  logoRelatorioSelecionadoId: string
-  logoFechamentoSelecionadoId: string
-  logoOrcamentoSelecionadoId: string
-  logoProtocoloServicoSelecionadoId: string
+  getSelectedLogoIdForSituation: (situationId: PdfLogoSituationId) => string
+  setSelectedLogoIdForSituation: (situationId: PdfLogoSituationId, logoId: string) => void
   incluirLogoNosRelatorios: boolean
   incluirLogoFechamentosDespesas: boolean
   setIncluirLogoNosRelatorios: (v: boolean) => void
@@ -44,8 +42,6 @@ export type AdminConfigGeralSectionProps = {
   administradorAddBibliotecaLogo: (e: React.ChangeEvent<HTMLInputElement>) => void
   commitAdminBibliotecaLogoDraft: () => void | Promise<void>
   discardAdminBibliotecaLogoDraft: () => void
-  getSelectedLogoIdForSituation: (situationId: PdfLogoSituationId) => string
-  setSelectedLogoIdForSituation: (situationId: PdfLogoSituationId, logoId: string) => void
   administradorUploadLogoForSituation: (
     situationId: PdfLogoSituationId,
     e: React.ChangeEvent<HTMLInputElement>
