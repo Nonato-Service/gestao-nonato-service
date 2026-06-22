@@ -114,6 +114,7 @@ import { PagamentosContadorContent } from './components/PagamentosContadorConten
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { GestaoDemosContent } from './components/GestaoDemosContent'
 import { ManuaisInformacoesContent } from './components/ManuaisInformacoesContent'
+import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'
 import { FamiliasGruposChecklistContent } from './components/FamiliasGruposChecklistContent'
 import { FamiliasGruposEquipamentosContent } from './components/FamiliasGruposEquipamentosContent'
@@ -6170,13 +6171,11 @@ export default function Dashboard() {
       'comprovantes-despesas': t?.comprovantesDespesasTitle || 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
       'mapa-visual-separacao-pecas': t?.mapaVisualSeparacaoPecasTitle || 'Mapa Visual de Separação de Peças / Cliente',
       'manuais-informacoes-tecnicas':
-        (t as any)?.conhecimentoTecnicoHubTitle ||
         t?.manuaisInformacoesTecnicasTitle ||
-        'Centro de Conhecimento Técnico',
+        'MANUAIS E INFORMAÇÕES TÉCNICA DOS EQUIPAMENTOS',
       'biblia-nonato-service':
-        (t as any)?.conhecimentoTecnicoHubTitle ||
         (t as any)?.bibliaNonatoServiceTitle ||
-        'Centro de Conhecimento Técnico',
+        'BÍBLIA DA NONATO SERVICE',
       'almoxarifado-armazem': t?.almoxarifadoArmazemTitle || 'Almoxarifado / Armazém',
       'checklist': t?.checklistTitle || 'CHECKLIST',
       'checklist-hub': t?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST',
@@ -25045,13 +25044,19 @@ export default function Dashboard() {
       openTab('registro-despesas', getTabTitle('registro-despesas'))
     } else if (action === 'open-mapa-visual-separacao-pecas') {
       openTab('mapa-visual-separacao-pecas', getTabTitle('mapa-visual-separacao-pecas'))
-    } else if (action === 'open-manuais-informacoes-tecnicas' || action === 'open-biblia-nonato-service') {
-      const unifiedTitle = getTabTitle('manuais-informacoes-tecnicas')
-      const existingUnified = openTabs.find((tab) => tab.type === 'manuais-informacoes-tecnicas')
-      if (existingUnified) {
-        setActiveTabId(existingUnified.id)
+    } else if (action === 'open-manuais-informacoes-tecnicas') {
+      const existingManuais = openTabs.find((tab) => tab.type === 'manuais-informacoes-tecnicas')
+      if (existingManuais) {
+        setActiveTabId(existingManuais.id)
       } else {
-        openTab('manuais-informacoes-tecnicas', unifiedTitle)
+        openTab('manuais-informacoes-tecnicas', getTabTitle('manuais-informacoes-tecnicas'))
+      }
+    } else if (action === 'open-biblia-nonato-service') {
+      const existingBiblia = openTabs.find((tab) => tab.type === 'biblia-nonato-service')
+      if (existingBiblia) {
+        setActiveTabId(existingBiblia.id)
+      } else {
+        openTab('biblia-nonato-service', getTabTitle('biblia-nonato-service'))
       }
     } else if (action === 'open-almoxarifado-armazem') {
       openTab('almoxarifado-armazem', getTabTitle('almoxarifado-armazem'))
@@ -55430,10 +55435,19 @@ A1;Peça exemplo;10`}
         )
 
       case 'manuais-informacoes-tecnicas':
-        return ManuaisInformacoesTabContent({ hubMode: 'unified' })
+        return ManuaisInformacoesTabContent({ hubMode: 'manuais' })
 
       case 'biblia-nonato-service':
-        return ManuaisInformacoesTabContent({ hubMode: 'unified' })
+        return (
+          <BibliaNonatoServiceContent
+            safeT={safeT as Record<string, string | undefined>}
+            closeTab={closeTab}
+            activeTabId={activeTabId ?? undefined}
+            onHome={voltarPaginaInicial}
+            isCompactLayout={isCompactLayout}
+            saveData={saveData}
+          />
+        )
 
       case 'informacoes-conhecimento-tecnicos':
         {
@@ -65811,6 +65825,11 @@ A1;Peça exemplo;10`}
                         </span>
                         <span className="sidebar-empresa-entry-text">
                           <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                          <span className="sidebar-empresa-entry-sub">
+                            {pickTrChain(trCardDesc, ['manuaisInformacoesTecnicasDesc', 'quickAccessManuaisDesc']) ||
+                              trCardDesc?.manuaisInformacoesTecnicasConteudo ||
+                              ''}
+                          </span>
                         </span>
                       </span>
                       <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
@@ -65889,6 +65908,11 @@ A1;Peça exemplo;10`}
                         </span>
                         <span className="sidebar-empresa-entry-text">
                           <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                          <span className="sidebar-empresa-entry-sub">
+                            {pickTrChain(trCardDesc, ['bibliaNonatoServiceDesc', 'bibliaNonatoHubCardDesc']) ||
+                              trCardDesc?.bibliaNonatoQuickDesc ||
+                              ''}
+                          </span>
                         </span>
                       </span>
                       <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
