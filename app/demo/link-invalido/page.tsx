@@ -1,38 +1,19 @@
-'use client'
+import Link from 'next/link'
 
 export default function DemoLinkInvalidoPage() {
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        background: '#0a0a0a',
-        color: '#fff',
-        textAlign: 'center',
-      }}
-    >
-      <div style={{ maxWidth: '440px' }}>
-        <h1 style={{ color: '#ff9b9b', marginBottom: '12px' }}>Link inválido</h1>
-        <p style={{ opacity: 0.85, lineHeight: 1.6, marginBottom: '20px' }}>
-          Este link de demonstração não existe ou está incompleto. Peça um link personalizado a quem lhe enviou o acesso.
+    <div className="ns-init-shell">
+      <div className="ns-init-card ns-init-card--error">
+        <div className="ns-init-icon" aria-hidden>
+          !
+        </div>
+        <h1 className="ns-init-title ns-init-title--error">Link inválido</h1>
+        <p className="ns-init-lead">
+          Este link de demonstração não existe, expirou ou já foi utilizado. Solicite um novo acesso ao administrador.
         </p>
-        <a
-          href="/"
-          style={{
-            display: 'inline-block',
-            padding: '12px 24px',
-            background: '#00c853',
-            color: '#000',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            fontWeight: 700,
-          }}
-        >
+        <Link href="/" className="ns-init-cta">
           Voltar ao início
-        </a>
+        </Link>
       </div>
     </div>
   )

@@ -1,44 +1,24 @@
-'use client'
-
-import React from 'react'
+import Link from 'next/link'
 
 export default function DemoEncerradoPage() {
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        background: 'linear-gradient(135deg, #0a0a0a 0%, #121212 100%)',
-        color: '#fff',
-        textAlign: 'center',
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '480px',
-          width: '100%',
-          background: '#121212',
-          border: '1px solid rgba(0, 200, 83, 0.3)',
-          borderRadius: '16px',
-          padding: '40px 32px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-        }}
-      >
-        <div style={{ fontSize: '48px', marginBottom: '20px' }}>✓</div>
-        <h1 style={{ color: '#00c853', fontSize: '1.5rem', fontWeight: 700, marginBottom: '16px' }}>
-          Demonstração encerrada
-        </h1>
-        <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1rem', lineHeight: 1.6, marginBottom: '16px' }}>
-          Obrigado por experimentar o sistema NONATO SERVICE.
+    <div className="ns-init-shell">
+      <div className="ns-init-card">
+        <div className="ns-init-icon" aria-hidden>
+          ✓
+        </div>
+        <h1 className="ns-init-title">Demonstração encerrada</h1>
+        <p className="ns-init-lead">
+          Obrigado por experimentar o Gestor Demo da Nonato Service. A versão de produção completa não está disponível
+          neste ambiente de teste.
         </p>
-        <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-          Este acesso era apenas para demonstração. Os dados da produção não estão disponíveis neste link.
-          Para contratar ou obter acesso completo, contacte a NONATO SERVICE.
+        <p className="ns-init-note">
+          Para continuar a utilizar o sistema com todos os módulos, contacte a Nonato Service e solicite acesso
+          definitivo.
         </p>
+        <Link href="/" className="ns-init-cta">
+          Voltar ao início
+        </Link>
       </div>
     </div>
   )

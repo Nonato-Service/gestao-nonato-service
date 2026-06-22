@@ -4648,7 +4648,7 @@ export default function Dashboard() {
   const [cadastroRestoredNotice, setCadastroRestoredNotice] = useState(0)
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
   /** Vista resumida no painel inicial; «Entrar no sistema» mostra métricas, atalhos e inventário. */
-  const [dashboardWorkspaceExpanded, setDashboardWorkspaceExpanded] = useState(true)
+  const [dashboardWorkspaceExpanded, setDashboardWorkspaceExpanded] = useState(false)
   /** No painel completo (sem aba): mostrar grelha só com os botões do grupo expandido na barra lateral. */
   const [dashboardMainHubId, setDashboardMainHubId] = useState<string | null>(null)
   const [showTranslatorModal, setShowTranslatorModal] = useState(false)
@@ -6079,7 +6079,7 @@ export default function Dashboard() {
   const voltarPaginaInicial = () => {
     setOpenTabs([])
     setActiveTabId(null)
-    setDashboardWorkspaceExpanded(true)
+    setDashboardWorkspaceExpanded(false)
     setDashboardMainHubId(null)
     // Fechar todos os modais
     setShowModal(false)
@@ -64004,63 +64004,44 @@ A1;Peça exemplo;10`}
 
   const bootLoadingOverlay =
     appInitialLoading ? (
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 100000002,
-          backgroundColor: 'rgba(0,0,0,0.58)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 16,
-          padding: 24,
-          boxSizing: 'border-box',
-        }}
-        aria-busy={true}
-        aria-live="polite"
-        role="status"
-      >
-        <div
-          className="ns-boot-spinner"
-          style={{
-            width: 44,
-            height: 44,
-            border: '3px solid rgba(0,255,122,0.22)',
-            borderTopColor: '#2ecc71',
-            borderRadius: '50%',
-            flexShrink: 0,
-          }}
-        />
-        <p style={{ color: '#e8fff0', fontSize: 15, fontWeight: 700, textAlign: 'center', maxWidth: 320, margin: 0 }}>
-          {bootstrapOfflineMode || !isOnline()
-            ? (safeT as any)?.syncInitialLoadOfflineTitle || 'A carregar dados locais (modo offline)…'
-            : (safeT as any)?.syncInitialLoadTitle || 'A carregar dados do servidor…'}
-        </p>
-        <p
-          style={{
-            color: '#2ecc71',
-            fontSize: 36,
-            fontWeight: 900,
-            textAlign: 'center',
-            margin: 0,
-            letterSpacing: '0.04em',
-            textShadow: '0 0 24px rgba(0, 255, 136, 0.35)',
-          }}
-          aria-valuenow={syncBootstrapPercent}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          role="progressbar"
-        >
-          {syncBootstrapPercent}%
-        </p>
-        <p style={{ color: '#9ab0a2', fontSize: 12, textAlign: 'center', maxWidth: 320, lineHeight: 1.45, margin: 0 }}>
-          {bootstrapOfflineMode || !isOnline()
-            ? (safeT as any)?.syncInitialLoadOfflineHint ||
-              'Sem ligação ao servidor — a usar cópia guardada neste aparelho.'
-            : (safeT as any)?.syncInitialLoadHint || 'Aguarde até esta mensagem desaparecer.'}
-        </p>
+      <div className="ns-boot-overlay" aria-busy={true} aria-live="polite" role="status">
+        <div className="ns-boot-card">
+          <div
+            className="ns-boot-spinner"
+            style={{
+              width: 44,
+              height: 44,
+              border: '3px solid rgba(0,255,122,0.22)',
+              borderTopColor: '#2ecc71',
+              borderRadius: '50%',
+              margin: '0 auto',
+            }}
+          />
+          <p className="ns-boot-card__label">
+            {(safeT as any)?.bootOverlayLabel ||
+              (bootstrapOfflineMode || !isOnline()
+                ? (safeT as any)?.syncInitialLoadOfflineTitle || 'A carregar dados locais (modo offline)…'
+                : (safeT as any)?.syncInitialLoadTitle || 'A carregar dados do servidor…')}
+          </p>
+          <p
+            className="ns-boot-card__pct"
+            aria-valuenow={syncBootstrapPercent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            role="progressbar"
+          >
+            {syncBootstrapPercent}%
+          </p>
+          <p className="ns-boot-card__hint">
+            {bootstrapOfflineMode || !isOnline()
+              ? (safeT as any)?.syncInitialLoadOfflineHint ||
+                'Sem ligação ao servidor — a usar cópia guardada neste aparelho.'
+              : (safeT as any)?.syncInitialLoadHint || 'Aguarde até esta mensagem desaparecer.'}
+          </p>
+          <div className="ns-boot-progress" aria-hidden>
+            <div className="ns-boot-progress__bar" style={{ width: `${Math.max(2, syncBootstrapPercent)}%` }} />
+          </div>
+        </div>
       </div>
     ) : null
 
@@ -64250,6 +64231,32 @@ A1;Peça exemplo;10`}
             </button>
           </section>
 
+          <section className="ns-splash-steps" aria-label={(safeT as any)?.splashStepsAria || 'Como funciona'}>
+            {[
+              {
+                n: '1',
+                t: (safeT as any)?.splashStep1Title || 'Entrar com segurança',
+                d: (safeT as any)?.splashStep1Desc || 'Autenticação rápida — utilize a senha definida pelo administrador.',
+              },
+              {
+                n: '2',
+                t: (safeT as any)?.splashStep2Title || 'Sincronizar dados',
+                d: (safeT as any)?.splashStep2Desc || 'O sistema alinha servidor, nuvem e cópia local automaticamente.',
+              },
+              {
+                n: '3',
+                t: (safeT as any)?.splashStep3Title || 'Trabalhar com clareza',
+                d: (safeT as any)?.splashStep3Desc || 'Menu lateral, atalhos e ajuda F1 em cada módulo.',
+              },
+            ].map((step) => (
+              <div key={step.n} className="ns-splash-step">
+                <div className="ns-splash-step__num">{step.n}</div>
+                <h3 className="ns-splash-step__title">{step.t}</h3>
+                <p className="ns-splash-step__desc">{step.d}</p>
+              </div>
+            ))}
+          </section>
+
           <details className="ns-splash-legal">
             <summary>
               <span>{safeT?.splashIpTitle || 'Propriedade intelectual'}</span>
@@ -64389,128 +64396,67 @@ A1;Peça exemplo;10`}
 
   if (showPasswordScreen) {
     return (
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: '#1e1e1e',
-          zIndex: 99999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding:
-            'max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px))'
-        }}
-      >
-        <div
-          style={{
-            maxWidth: '440px',
-            width: '100%',
-            padding: 'clamp(20px, 5vw, 32px)',
-            backgroundColor: '#0a0a0a',
-            borderRadius: '12px',
-            border: '2px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 0 30px rgba(0, 200, 83, 0.1)'
-          }}
-        >
-          <h2 style={{ color: '#fff', marginBottom: '8px', fontSize: '18px', fontWeight: '600', textAlign: 'center' }}>
-            {safeT?.acessoAoSistema || 'Acesso ao sistema'}
-          </h2>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', marginBottom: '12px', textAlign: 'center' }}>
-            {safeT?.permissoesDefinidasAdministrador || 'As permissões são definidas no Administrador.'}
+      <div className="ns-login-root">
+        <div className="ns-login-card">
+          <div style={{ textAlign: 'center' }}>
+            <span className="ns-login-badge">Nonato Service</span>
+          </div>
+          <h2 className="ns-login-title">{safeT?.acessoAoSistema || 'Acesso ao sistema'}</h2>
+          <p className="ns-login-subtitle">
+            {(safeT as any)?.loginSubtitle ||
+              safeT?.permissoesDefinidasAdministrador ||
+              'Ambiente seguro · acesso controlado pelo Administrador.'}
           </p>
-          <p style={{ color: '#8cd8ff', fontSize: '12px', marginBottom: '14px', padding: '8px', backgroundColor: 'rgba(0,150,255,0.08)', borderRadius: '6px', textAlign: 'center', lineHeight: 1.5 }}>
-            Pode deixar o utilizador <strong>em branco</strong> e introduzir <strong>só a senha</strong>.
-            Também aceita e-mail ou nome parecido (ex.: nonato.service@gmail.com).
+          <p className="ns-login-hint">
+            {(safeT as any)?.loginHintBlankUser ||
+              'Pode deixar o utilizador em branco e introduzir só a senha. Também aceita e-mail ou nome de utilizador.'}
           </p>
           {users.length === 0 && managedPasswords.length > 0 && (
-            <p style={{ color: '#ffaa00', fontSize: '12px', marginBottom: '12px', padding: '8px', backgroundColor: 'rgba(255,170,0,0.1)', borderRadius: '6px', textAlign: 'center' }}>
-              {safeT?.aindaNaoHaUsuarios || 'Ainda não há usuários. Use uma senha do Gestor de Senhas para entrar e cadastrar usuários no Administrador.'}
+            <p className="ns-login-hint ns-login-hint--warn">
+              {safeT?.aindaNaoHaUsuarios ||
+                'Ainda não há usuários. Use uma senha do Gestor de Senhas para entrar e cadastrar usuários no Administrador.'}
             </p>
           )}
           {users.length === 0 && managedPasswords.length === 0 && (
-            <p style={{ color: '#8cd8ff', fontSize: '12px', marginBottom: '12px', padding: '8px', backgroundColor: 'rgba(0,150,255,0.08)', borderRadius: '6px', textAlign: 'center' }}>
-              Primeiro acesso: use uma senha com pelo menos 4 caracteres. Depois configure utilizadores no Administrador.
+            <p className="ns-login-hint">
+              {(safeT as any)?.loginFirstAccessHint ||
+                'Primeiro acesso: use uma senha com pelo menos 4 caracteres. Depois configure utilizadores no Administrador.'}
             </p>
           )}
           <input
             type="text"
+            className="ns-login-field"
             value={loginUsuarioInput}
             onChange={(e) => setLoginUsuarioInput(e.target.value)}
-            placeholder="E-mail ou nome (opcional — pode deixar em branco)"
+            placeholder={(safeT as any)?.loginPlaceholderUsuario || 'E-mail ou nome (opcional)'}
             autoComplete="username"
-            style={{
-              width: '100%',
-              padding: '12px 14px',
-              fontSize: '14px',
-              backgroundColor: '#141414',
-              border: '2px solid rgba(0, 200, 83, 0.35)',
-              borderRadius: '8px',
-              color: '#fff',
-              outline: 'none',
-              marginBottom: '14px',
-              boxSizing: 'border-box'
-            }}
           />
           <input
             type="password"
+            className="ns-login-field"
+            style={{ marginBottom: 22 }}
             value={senhaInicialInput}
             onChange={(e) => setSenhaInicialInput(e.target.value)}
             placeholder={safeT?.password || 'Senha'}
             autoComplete="current-password"
-            style={{
-              width: '100%',
-              padding: '12px 14px',
-              fontSize: '14px',
-              backgroundColor: '#141414',
-              border: '2px solid rgba(0, 200, 83, 0.35)',
-              borderRadius: '8px',
-              color: '#fff',
-              outline: 'none',
-              marginBottom: '22px',
-              boxSizing: 'border-box'
-            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleLoginSubmit()
             }}
           />
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div className="ns-login-actions">
             <button
               type="button"
+              className="ns-login-btn ns-login-btn--ghost"
               onClick={() => {
                 setShowPasswordScreen(false)
                 setLoginUsuarioInput('')
                 setSenhaInicialInput('')
                 setShowSplashInicial(true)
               }}
-              style={{
-                padding: '12px 24px',
-                fontSize: '14px',
-                color: 'rgba(255,255,255,0.9)',
-                backgroundColor: 'transparent',
-                border: '2px solid rgba(255, 255, 255, 0.4)',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
             >
               {safeT?.voltar || 'Voltar'}
             </button>
-            <button
-              type="button"
-              onClick={handleLoginSubmit}
-              style={{
-                padding: '12px 28px',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#000',
-                backgroundColor: '#00c853',
-                border: '2px solid #00c853',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-            >
+            <button type="button" className="ns-login-btn ns-login-btn--primary" onClick={handleLoginSubmit}>
               {safeT?.entrar || 'Entrar'}
             </button>
           </div>
@@ -64523,47 +64469,18 @@ A1;Peça exemplo;10`}
 
   if (!loginUser) {
     return (
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: '#1e1e1e',
-          zIndex: 99999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding:
-            'max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px))'
-        }}
-      >
-        <div
-          style={{
-            maxWidth: '440px',
-            width: '100%',
-            padding: 'clamp(20px, 5vw, 32px)',
-            backgroundColor: '#0a0a0a',
-            borderRadius: '12px',
-            border: '2px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 0 30px rgba(0, 200, 83, 0.1)'
-          }}
-        >
-          <h2 style={{ color: '#fff', marginBottom: '8px', fontSize: '18px', fontWeight: '600', textAlign: 'center' }}>{safeT?.acessoAoSistema || 'Acesso ao sistema'}</h2>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', marginBottom: '20px', textAlign: 'center' }}>{safeT?.permissoesDefinidasAdministrador || 'As permissões são definidas no Administrador.'}</p>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <button
-              type="button"
-              onClick={() => setShowPasswordScreen(true)}
-              style={{
-                padding: '12px 28px',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#000',
-                backgroundColor: '#00c853',
-                border: '2px solid #00c853',
-                borderRadius: '8px',
-                cursor: 'pointer'
-              }}
-            >
+      <div className="ns-login-root">
+        <div className="ns-login-card">
+          <div style={{ textAlign: 'center' }}>
+            <span className="ns-login-badge">Nonato Service</span>
+          </div>
+          <h2 className="ns-login-title">{safeT?.acessoAoSistema || 'Acesso ao sistema'}</h2>
+          <p className="ns-login-subtitle">
+            {(safeT as any)?.loginSessionRequired ||
+              'Inicie sessão para aceder ao painel de gestão técnica e aos seus dados.'}
+          </p>
+          <div className="ns-login-actions">
+            <button type="button" className="ns-login-btn ns-login-btn--primary" onClick={() => setShowPasswordScreen(true)}>
               {safeT?.fazerLogin || 'Fazer login'}
             </button>
           </div>
@@ -64576,14 +64493,22 @@ A1;Peça exemplo;10`}
 
   if (demoExpired) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'linear-gradient(135deg, #0d1a0d 0%, #1a2a1a 100%)', color: '#fff', padding: '40px', textAlign: 'center' }}>
-        <h1 style={{ color: '#ff6b6b', marginBottom: '20px', fontSize: '24px' }}>Demonstração expirada</h1>
-        <p style={{ opacity: 0.9, marginBottom: '30px', maxWidth: '400px' }}>
-          O período de demonstração terminou. Entre em contacto para obter acesso completo.
-        </p>
-        <a href="/" style={{ padding: '12px 24px', backgroundColor: '#00c853', color: '#000', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold' }}>
-          Voltar ao início
-        </a>
+      <div className="ns-init-shell">
+        <div className="ns-init-card ns-init-card--error">
+          <div className="ns-init-icon" aria-hidden>
+            ⏱
+          </div>
+          <h1 className="ns-init-title ns-init-title--error">
+            {(safeT as any)?.demoExpiredTitle || 'Demonstração expirada'}
+          </h1>
+          <p className="ns-init-lead">
+            {(safeT as any)?.demoExpiredDesc ||
+              'O período de demonstração terminou. Entre em contacto para obter acesso completo.'}
+          </p>
+          <a href="/" className="ns-init-cta">
+            {(safeT as any)?.demoExpiredBack || 'Voltar ao início'}
+          </a>
+        </div>
         {bootLoadingOverlay}
         {syncTrafficLightsWidget}
       </div>
@@ -66911,6 +66836,17 @@ A1;Peça exemplo;10`}
                 <div className="ns-dashboard-entry">
                   <div className="ns-dashboard-entry-hero">
                     <div className="ns-dashboard-entry-pill">{(safeT as any)?.dashboardEntradaBadge || 'Nonato Service'}</div>
+                    <div className="ns-dashboard-entry-steps" aria-label={(safeT as any)?.dashboardEntradaStepsAria || 'Fluxo de trabalho'}>
+                      <span className="ns-dashboard-entry-step-pill">
+                        <strong>1</strong> {(safeT as any)?.dashboardEntradaStep1 || 'Resumo'}
+                      </span>
+                      <span className="ns-dashboard-entry-step-pill">
+                        <strong>2</strong> {(safeT as any)?.dashboardEntradaStep2 || 'Painel completo'}
+                      </span>
+                      <span className="ns-dashboard-entry-step-pill">
+                        <strong>3</strong> {(safeT as any)?.dashboardEntradaStep3 || 'Módulos'}
+                      </span>
+                    </div>
                     <div style={{ marginBottom: isCompactLayout ? 14 : 22 }}>
                       <LogoComponent size={isCompactLayout ? 'small' : 'large'} />
                     </div>

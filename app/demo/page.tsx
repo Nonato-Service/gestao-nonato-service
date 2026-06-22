@@ -58,11 +58,15 @@ export default function DemoWelcomePage() {
 
   if (invalidLink || !rid) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', background: '#0a0a0a', color: '#fff', textAlign: 'center' }}>
-        <div style={{ maxWidth: '440px' }}>
-          <h1 style={{ color: '#ff9b9b', marginBottom: '12px' }}>Link inválido</h1>
-          <p style={{ opacity: 0.85, lineHeight: 1.6 }}>
-            Este link de demonstração não existe ou está incompleto. Peça um link personalizado a quem lhe enviou o acesso.
+      <div className="ns-init-shell">
+        <div className="ns-init-card ns-init-card--error">
+          <div className="ns-init-icon" aria-hidden>
+            !
+          </div>
+          <h1 className="ns-init-title ns-init-title--error">Link inválido</h1>
+          <p className="ns-init-lead">
+            Este link de demonstração não existe ou está incompleto. Peça um link personalizado a quem lhe enviou o
+            acesso.
           </p>
         </div>
       </div>
@@ -70,67 +74,29 @@ export default function DemoWelcomePage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        background: 'linear-gradient(135deg, #0a0a0a 0%, #121212 100%)',
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '480px',
-          width: '100%',
-          background: '#121212',
-          border: '1px solid rgba(0, 200, 83, 0.3)',
-          borderRadius: '16px',
-          padding: '40px 32px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 200, 83, 0.08)',
-          textAlign: 'center',
-        }}
-      >
-        <div style={{ fontSize: '48px', marginBottom: '20px', lineHeight: 1 }}>🔒</div>
-        <h1 style={{ color: '#00c853', fontSize: '1.5rem', fontWeight: 700, marginBottom: '16px' }}>
-          Gestor Demo — NONATO SERVICE
-        </h1>
-        <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '24px' }}>
+    <div className="ns-init-shell">
+      <div className="ns-init-card">
+        <div className="ns-init-icon" aria-hidden>
+          🔒
+        </div>
+        <h1 className="ns-init-title">Gestor Demo — NONATO SERVICE</h1>
+        <p className="ns-init-lead">
           O seu acesso é válido por{' '}
-          <strong style={{ color: '#00c853' }}>
+          <strong style={{ color: '#6ee7b7' }}>
             {demoDays} dia{demoDays === 1 ? '' : 's'}
           </strong>{' '}
           após entrar.
         </p>
-        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.5, marginBottom: '16px' }}>
+        <p className="ns-init-note">
           Os dados desta demonstração ficam isolados. Ao clicar em «Aceitar e entrar», concorda com estes termos.
         </p>
         {demoUsuario && (
-          <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem', lineHeight: 1.55, marginBottom: '24px', padding: '12px', borderRadius: '10px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)' }}>
+          <p className="ns-init-user-box">
             Utilizador de acesso: <strong style={{ color: '#ffd36a' }}>{demoUsuario}</strong>
-            <br />
-            A senha foi enviada pelo administrador (WhatsApp, e-mail ou mensagem).
+            <br />A senha foi enviada pelo administrador (WhatsApp, e-mail ou mensagem).
           </p>
         )}
-        <button
-          type="button"
-          onClick={handleActivate}
-          disabled={loading}
-          style={{
-            display: 'inline-block',
-            padding: '14px 32px',
-            background: loading ? '#00aa00' : '#00c853',
-            color: '#000',
-            fontWeight: 700,
-            fontSize: '1rem',
-            borderRadius: '8px',
-            border: 'none',
-            cursor: loading ? 'wait' : 'pointer',
-            boxShadow: '0 4px 12px rgba(0, 200, 83, 0.3)',
-          }}
-        >
+        <button type="button" className="ns-init-cta" onClick={handleActivate} disabled={loading}>
           {loading ? 'A entrar…' : 'Aceitar e entrar'}
         </button>
       </div>

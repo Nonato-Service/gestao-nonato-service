@@ -14,6 +14,7 @@ import { syncConhecimentoTecnicoLegacyStores, mergeManuaisPayloads } from '../li
 import { AssistTextarea } from './AssistTextFields'
 import { saveManuaisFamiliasGruposToIdb } from '../utils/manuaisIndexedDb'
 import { ProImageHoverPreview } from './ProImageHoverPreview'
+import { ConhecimentoFileViewer, ConhecimentoFileItem } from './ConhecimentoFileViewer'
 
 let manuaisSaveDebounceTimer: ReturnType<typeof setTimeout> | null = null
 let manuaisSaveAlertShownOnce = false
@@ -1158,44 +1159,30 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
 
               {mainTab === 'docs' && (
                 <div className="manuais-pro__panels">
-                  <section className="manuais-pro__panel">
+                  <section className="manuais-pro__panel manuais-pro__panel--full">
                     <h3 className="manuais-pro__panel-title">{tr('manuaisDocumentos', 'Documentos')}</h3>
-                    {selectedModelDocs.length === 0 ? (
-                      <p className="manuais-pro__empty-hint">{tr('manuaisHubNoDocuments', 'Nenhum documento.')}</p>
-                    ) : (
-                      <ul className="manuais-pro__doc-list">
-                        {selectedModelDocs.map((d) => (
-                          <li key={d.id} className="manuais-pro__doc-item">
-                            <a href={d.dados} download={d.nome} target="_blank" rel="noopener noreferrer" title={d.nome}>
-                              {d.nome}
-                            </a>
-                            <button
-                              type="button"
-                              className="manuais-pro__act manuais-pro__act--danger"
-                              onClick={() => removeDocumento(selectedModelo.id, d.id)}
-                              title={tr('excluir', 'Excluir')}
-                            >
-                              X
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <label className="manuais-pro__upload">
-                      <input
-                        type="file"
-                        accept=".pdf,application/pdf,image/*"
-                        className="manuais-pro__file-input"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0]
-                          if (f) {
-                            addDocumento(selectedModelo.id, f)
-                            e.target.value = ''
-                          }
-                        }}
-                      />
-                      {tr('manuaisAdicionarDocumento', '+ Adicionar documento')}
-                    </label>
+                    <p className="manuais-pro__panel-hint">
+                      {tr(
+                        'bibliaDocumentosHint',
+                        'Visualize PDFs e ficheiros no ecrã, selecione texto para traduzir ou descarregue quando precisar.'
+                      )}
+                    </p>
+                    <ConhecimentoFileViewer
+                      items={selectedModelDocs.map(
+                        (d): ConhecimentoFileItem => ({
+                          id: d.id,
+                          nome: d.nome,
+                          dataUrl: d.dados,
+                          tipo: d.tipo,
+                        })
+                      )}
+                      onRemove={(docId) => removeDocumento(selectedModelo.id, docId)}
+                      tr={tr}
+                      emptyHint={tr('manuaisHubNoDocuments', 'Nenhum documento.')}
+                      uploadLabel={tr('manuaisAdicionarDocumento', '+ Adicionar documento')}
+                      accept=".pdf,application/pdf,.doc,.docx,image/*,.txt,.md,.csv,.json"
+                      onUpload={(f) => addDocumento(selectedModelo.id, f)}
+                    />
                   </section>
 
                   <section className="manuais-pro__panel">
@@ -1239,42 +1226,29 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                   </section>
 
                   <section className="manuais-pro__panel manuais-pro__panel--full">
-                    <h3 className="manuais-pro__panel-title">{tr('bibliaAnexosLabel', 'Anexos tecnicos')}</h3>
-                    {selectedModelAnexos.length === 0 ? (
-                      <p className="manuais-pro__empty-hint">{tr('bibliaSemAnexos', 'Nenhum anexo.')}</p>
-                    ) : (
-                      <ul className="manuais-pro__doc-list">
-                        {selectedModelAnexos.map((a) => (
-                          <li key={a.id} className="manuais-pro__doc-item">
-                            <a href={a.dataUrl} download={a.nome} target="_blank" rel="noopener noreferrer" title={a.nome}>
-                              {a.nome}
-                            </a>
-                            <button
-                              type="button"
-                              className="manuais-pro__act manuais-pro__act--danger"
-                              onClick={() => removeAnexo(selectedModelo.id, a.id)}
-                              title={tr('excluir', 'Excluir')}
-                            >
-                              X
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <label className="manuais-pro__upload">
-                      <input
-                        type="file"
-                        className="manuais-pro__file-input"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0]
-                          if (f) {
-                            addAnexo(selectedModelo.id, f)
-                            e.target.value = ''
-                          }
-                        }}
-                      />
-                      {tr('bibliaAdicionarAnexo', '+ Adicionar anexo')}
-                    </label>
+                    <h3 className="manuais-pro__panel-title">{tr('bibliaAnexosLabel', 'Anexos técnicos')}</h3>
+                    <p className="manuais-pro__panel-hint">
+                      {tr(
+                        'bibliaNonatoAnexosAjuda',
+                        'PDF, Word (.doc/.docx) ou imagens. Visualize aqui, selecione texto para traduzir ou descarregue.'
+                      )}
+                    </p>
+                    <ConhecimentoFileViewer
+                      items={selectedModelAnexos.map(
+                        (a): ConhecimentoFileItem => ({
+                          id: a.id,
+                          nome: a.nome,
+                          dataUrl: a.dataUrl,
+                          mime: a.mime,
+                        })
+                      )}
+                      onRemove={(anexoId) => removeAnexo(selectedModelo.id, anexoId)}
+                      tr={tr}
+                      emptyHint={tr('bibliaSemAnexos', 'Nenhum anexo.')}
+                      uploadLabel={tr('bibliaAdicionarAnexo', '+ Adicionar anexo')}
+                      accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.txt,.md,.csv,.json"
+                      onUpload={(f) => addAnexo(selectedModelo.id, f)}
+                    />
                   </section>
                 </div>
               )}
