@@ -90,14 +90,18 @@ export function applyDiarioLembretePatch(
 export function formatDiarioLembreteIntervalo(minutos: number, t: Record<string, string>): string {
   const key = DIARIO_LEMBRETE_INTERVALO_KEYS[minutos]
   if (key && t[key]) return t[key]
-  if (minutos < 60) return `${minutos} min`
+  if (minutos < 60) {
+    const unit = t.diarioPedidosLembreteMinutosLabel || 'min'
+    return `${minutos} ${unit}`
+  }
   if (minutos % 1440 === 0) {
     const dias = minutos / 1440
     if (dias === 1) return t.diarioPedidosLembrete1dia || '1 dia'
     return `${dias} ${t.diarioPedidosLembreteDias || 'dias'}`
   }
   const h = Math.round(minutos / 60)
-  return h === 1 ? t.diarioPedidosLembrete1h || '1 hora' : `${h} h`
+  const hUnit = t.diarioPedidosLembreteHorasAbrev || 'h'
+  return h === 1 ? t.diarioPedidosLembrete1h || '1 hora' : `${h} ${hUnit}`
 }
 
 export function isDiarioLembreteDue(

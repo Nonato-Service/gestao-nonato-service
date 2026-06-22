@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { saveData } from '../utils/dataStorage'
 import { AssistTextarea } from './AssistTextFields'
 
@@ -47,7 +47,7 @@ export type ConhecimentoTecnicosContentProps = {
   voltarPaginaInicial: () => void
   tecnicos: TecnicoResumo[]
   tecnicoConhecimentoSelecionado: string | null
-  setTecnicoConhecimentoSelecionado: (id: string) => void
+  setTecnicoConhecimentoSelecionado: (id: string | null) => void
   conhecimentoTecnicos: ConhecimentoTecnicoEntry[]
   setConhecimentoTecnicos: React.Dispatch<React.SetStateAction<ConhecimentoTecnicoEntry[]>>
   familiasEquipamento: string[]
@@ -179,9 +179,25 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
     return tecnicos.filter((t) => t.name.toLowerCase().includes(q))
   }, [buscaTecnico, tecnicos])
 
-  const conhecimentosDoTecnico = tecnicoConhecimentoSelecionado
-    ? conhecimentoTecnicos.filter((c) => c.tecnicoId === tecnicoConhecimentoSelecionado)
-    : []
+  useEffect(() => {
+    if (tecnicos.length === 0) {
+      if (tecnicoConhecimentoSelecionado !== null) {
+        setTecnicoConhecimentoSelecionado(null)
+      }
+      return
+    }
+    const selecionadoValido =
+      tecnicoConhecimentoSelecionado != null &&
+      tecnicos.some((t) => t.id === tecnicoConhecimentoSelecionado)
+    if (!selecionadoValido) {
+      setTecnicoConhecimentoSelecionado(tecnicos[0].id)
+    }
+  }, [tecnicos, tecnicoConhecimentoSelecionado, setTecnicoConhecimentoSelecionado])
+
+  const conhecimentosDoTecnico = useMemo(() => {
+    if (!tecnicoConhecimentoSelecionado) return []
+    return conhecimentoTecnicos.filter((c) => c.tecnicoId === tecnicoConhecimentoSelecionado)
+  }, [conhecimentoTecnicos, tecnicoConhecimentoSelecionado])
 
   const tecnicoSelecionado = tecnicos.find((t) => t.id === tecnicoConhecimentoSelecionado)
   const stats = computeTecnicoStats(conhecimentosDoTecnico)
@@ -297,17 +313,34 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
             <span>{safeT.conhecimentoTecnicosKpiTecnicos || 'Técnicos'}</span>
             <strong>{tecnicos.length}</strong>
           </div>
-          <div className="ct-pro__stat">
-            <span>{safeT.conhecimentoTecnicosKpiRegistos || 'Registos'}</span>
-            <strong>{conhecimentoTecnicos.length}</strong>
-          </div>
-          <div className="ct-pro__stat">
-            <span>{safeT.conhecimentoTecnicosKpiAreas || 'Pilares'}</span>
-            <strong>4</strong>
-          </div>
+          {tecnicoSelecionado ? (
+            <>
+              <div className="ct-pro__stat ct-pro__stat--focus">
+                <span>{safeT.conhecimentoTecnicosKpiRegistosTecnico || 'Registos deste técnico'}</span>
+                <strong>{conhecimentosDoTecnico.length}</strong>
+              </div>
+              <div className="ct-pro__stat ct-pro__stat--focus">
+                <span>{safeT.conhecimentoTecnicosChipMedia || 'Média geral'}</span>
+                <strong>{stats.media.toFixed(1)}</strong>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="ct-pro__stat ct-pro__stat--muted">
+                <span>{safeT.conhecimentoTecnicosKpiRegistosTecnico || 'Registos deste técnico'}</span>
+                <strong>—</strong>
+              </div>
+              <div className="ct-pro__stat ct-pro__stat--muted">
+                <span>{safeT.conhecimentoTecnicosChipMedia || 'Média geral'}</span>
+                <strong>—</strong>
+              </div>
+            </>
+          )}
           <p className="ct-pro__lead">
-            {safeT.informacoesConhecimentoTecnicosSelecioneTecnico ||
-              'Escolha o técnico na coluna esquerda. Defina níveis por equipamento com toques rápidos — sem listas escondidas.'}
+            {tecnicoSelecionado
+              ? `${safeT.conhecimentoTecnicosViewingPrefix || 'A consultar'} ${tecnicoSelecionado.name}. ${safeT.conhecimentoTecnicosSomenteSelecionado || 'Somente os dados deste técnico são mostrados à direita.'}`
+              : safeT.informacoesConhecimentoTecnicosSelecioneTecnico ||
+                'Escolha o técnico na coluna esquerda para ver apenas os registos dele.'}
           </p>
         </div>
 
@@ -386,7 +419,13 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
                   </p>
                 </div>
               ) : (
-                <>
+                <div key={tecnicoSelecionado.id} className="ct-pro__stage-solo">
+                  <div className="ct-pro__solo-banner" role="status">
+                    <span className="ct-pro__solo-banner-label">
+                      {safeT.conhecimentoTecnicosSoloBanner || 'Somente técnico seleccionado'}
+                    </span>
+                    <strong className="ct-pro__solo-banner-name">{tecnicoSelecionado.name}</strong>
+                  </div>
                   <div
                     className="ct-pro__profile"
                     style={
@@ -469,7 +508,8 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
                         ▣
                       </div>
                       <p>
-                        {safeT.informacoesConhecimentoNenhumRegisto ||
+                        {safeT.conhecimentoTecnicosEmptyStage ||
+                          safeT.informacoesConhecimentoNenhumRegisto ||
                           'Nenhum equipamento neste técnico. Use o selector acima para começar.'}
                       </p>
                     </div>
@@ -514,7 +554,7 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
                                 {camposDesc.map((s) => (
                                   <div key={s.field} className="ct-pro__note">
                                     <label className="ct-pro__note-label">
-                                      {safeT.conhecimentoDescricaoDetalhada ?? 'Notas'} — {skillLabel(s.field)}
+                                      {safeT.conhecimentoTecnicosNotasLabel || safeT.conhecimentoDescricaoDetalhada || 'Notas'} — {skillLabel(s.field)}
                                     </label>
                                     <AssistTextarea
                                       value={descricaoValue(ent, s.field)}
@@ -545,7 +585,7 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
                       })}
                     </div>
                   )}
-                </>
+                </div>
               )}
             </main>
           </div>

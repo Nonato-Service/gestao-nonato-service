@@ -15588,6 +15588,16 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   line-height: 1;
 }
 
+.ct-pro__stat--focus {
+  border-color: rgba(52, 211, 153, 0.28);
+  background: rgba(6, 78, 59, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.12);
+}
+
+.ct-pro__stat--muted strong {
+  color: rgba(148, 163, 184, 0.55);
+}
+
 .ct-pro__lead {
   margin: 0;
   padding: 14px 18px;
@@ -15800,6 +15810,58 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   padding: 18px;
   min-height: 560px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.ct-pro__stage-solo {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  animation: ct-pro-stage-in 0.28s ease-out;
+}
+
+@keyframes ct-pro-stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ct-pro__solo-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  background: linear-gradient(90deg, rgba(6, 78, 59, 0.35), rgba(15, 23, 42, 0.45));
+}
+
+.ct-pro__solo-banner-label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(167, 243, 208, 0.85);
+}
+
+.ct-pro__solo-banner-name {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #ecfdf5;
+}
+
+.ct-pro__rail-item:not(.is-active) {
+  opacity: 0.72;
+}
+
+.ct-pro__rail-item.is-active {
+  opacity: 1;
 }
 
 .ct-pro__pick-hint,
