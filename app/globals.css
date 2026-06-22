@@ -9605,382 +9605,798 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   border-color: var(--admin-border);
 }
 
-/* —— Logos PDF por situação (Administrador) —— */
-.admin-logos-pdf-root {
-  margin-top: 22px;
-  padding: 18px;
-  background-color: #141414;
-  border-radius: 8px;
-  border: 1px solid rgba(0, 200, 83, 0.25);
+/* —— Centro de Logos (Administrador) —— */
+.admin-config-geral {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.admin-logos-pdf-root__header {
-  margin-bottom: 16px;
+.admin-config-relatorio-card {
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(0, 200, 83, 0.08) 0%, rgba(18, 18, 18, 0.95) 55%);
+  border: 1px solid rgba(0, 200, 83, 0.22);
 }
 
-.admin-logos-pdf-root__title {
-  color: #00c853;
+.admin-config-relatorio-card__title {
   margin: 0 0 6px;
-  font-size: 15px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #6ee7a8;
+  letter-spacing: 0.03em;
+}
+
+.admin-config-relatorio-card__desc {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.62);
+  line-height: 1.5;
+}
+
+.admin-config-relatorio-card__label {
+  margin: 0 0 4px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.admin-config-relatorio-card__number {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #00e676;
   letter-spacing: 0.04em;
 }
 
-.admin-logos-pdf-root__desc {
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 12px;
-  margin: 0;
-  line-height: 1.55;
-  max-width: 72ch;
+.admin-logos-hub {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 255, 136, 0.18);
+  background: linear-gradient(180deg, rgba(16, 24, 20, 0.98) 0%, rgba(10, 12, 11, 0.99) 100%);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
 }
 
-.admin-logos-pdf-modo {
-  margin-bottom: 18px;
-  padding: 14px;
-  background: #121212;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 180, 0, 0.35);
+.admin-logos-hub--compact .admin-logos-hub__hero {
+  padding: 16px;
+}
+
+.admin-logos-hub--compact .admin-logos-hub__steps {
+  display: none;
+}
+
+.admin-logos-hub__hero {
+  position: relative;
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin-logos-hub__hero-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 120% at 10% -20%, rgba(0, 230, 118, 0.18), transparent 55%);
+  pointer-events: none;
+}
+
+.admin-logos-hub__hero-content {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.admin-logos-pdf-modo__title {
-  font-size: 13px;
-  color: #fff;
-  display: block;
-  margin-bottom: 2px;
-}
-
-.admin-logos-pdf-modo__option {
-  display: flex;
+  gap: 16px;
   align-items: flex-start;
-  gap: 10px;
-  cursor: pointer;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.95);
 }
 
-.admin-logos-pdf-modo__option input {
-  width: 18px;
-  height: 18px;
-  accent-color: #00c853;
-  margin-top: 2px;
-  flex-shrink: 0;
-}
-
-.admin-logos-pdf-unificado {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-.admin-logos-pdf-unificado__extra-toggles {
-  padding: 0 4px 4px;
-}
-
-.admin-logo-situacao-grid {
+.admin-logos-hub__hero-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
-  gap: 14px;
-  margin-bottom: 18px;
+  place-items: center;
+  font-size: 24px;
+  background: rgba(0, 230, 118, 0.12);
+  border: 1px solid rgba(0, 230, 118, 0.35);
+  flex-shrink: 0;
 }
 
-.admin-logo-situacao-card {
-  padding: 14px;
-  background: #121212;
+.admin-logos-hub__hero-title {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.admin-logos-hub__hero-desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.68);
+  max-width: 58ch;
+}
+
+.admin-logos-hub__steps {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-logos-hub__steps li {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-logos-hub__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin-logos-hub__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
   border-radius: 10px;
-  border: 1px solid rgba(0, 200, 83, 0.22);
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.admin-logos-hub__tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.admin-logos-hub__tab--active {
+  background: rgba(0, 230, 118, 0.14);
+  border-color: rgba(0, 230, 118, 0.45);
+  color: #b9f6ca;
+}
+
+.admin-logos-hub__panel {
+  padding: 18px 16px 20px;
+}
+
+.admin-logos-hub-mode {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-logos-hub-mode__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.admin-logos-hub-mode__switch {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-logos-hub-mode__btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.admin-logos-hub-mode__btn--active {
+  background: rgba(0, 230, 118, 0.2);
+  color: #e8ffe8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.admin-logos-hub-pdf-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 820px) {
+  .admin-logos-hub-pdf-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-logos-hub-pdf-nav {
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.admin-logos-hub-pdf-nav__title {
+  margin: 0 0 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.admin-logos-hub-pdf-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  min-width: 0;
+  gap: 6px;
 }
 
-.admin-logo-situacao-card--compact {
-  padding: 12px;
-}
-
-.admin-logo-situacao-card__head {
+.admin-logos-hub-pdf-nav__item {
+  width: 100%;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
 }
 
-.admin-logo-situacao-card__title-wrap {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  min-width: 0;
-  flex: 1 1 180px;
+.admin-logos-hub-pdf-nav__item:hover {
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.admin-logo-situacao-card__badge {
-  font-size: 10px;
-  font-weight: 700;
-  color: #00c853;
-  letter-spacing: 0.12em;
-  flex-shrink: 0;
-  margin-top: 2px;
+.admin-logos-hub-pdf-nav__item--active {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-.admin-logo-situacao-card__icon {
+.admin-logos-hub-pdf-nav__item--green.admin-logos-hub-pdf-nav__item--active {
+  border-color: rgba(0, 230, 118, 0.45);
+  box-shadow: inset 3px 0 0 #00e676;
+}
+
+.admin-logos-hub-pdf-nav__item--amber.admin-logos-hub-pdf-nav__item--active {
+  border-color: rgba(255, 193, 7, 0.45);
+  box-shadow: inset 3px 0 0 #ffc107;
+}
+
+.admin-logos-hub-pdf-nav__item--blue.admin-logos-hub-pdf-nav__item--active {
+  border-color: rgba(66, 165, 245, 0.45);
+  box-shadow: inset 3px 0 0 #42a5f5;
+}
+
+.admin-logos-hub-pdf-nav__item--violet.admin-logos-hub-pdf-nav__item--active {
+  border-color: rgba(171, 130, 255, 0.45);
+  box-shadow: inset 3px 0 0 #ab82ff;
+}
+
+.admin-logos-hub-pdf-nav__icon {
   font-size: 20px;
-  line-height: 1;
   flex-shrink: 0;
 }
 
-.admin-logo-situacao-card__title {
-  margin: 0;
-  font-size: 14px;
+.admin-logos-hub-pdf-nav__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-logos-hub-pdf-nav__text strong {
+  font-size: 12px;
   color: #fff;
   line-height: 1.3;
 }
 
-.admin-logo-situacao-card__desc {
-  margin: 4px 0 0;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.55);
+.admin-logos-hub-pdf-nav__text small {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.48);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-logos-hub-pdf-editor {
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-logos-hub-pdf-editor--green {
+  border-color: rgba(0, 230, 118, 0.25);
+  background: linear-gradient(180deg, rgba(0, 230, 118, 0.06) 0%, rgba(0, 0, 0, 0.15) 100%);
+}
+
+.admin-logos-hub-pdf-editor--amber {
+  border-color: rgba(255, 193, 7, 0.25);
+  background: linear-gradient(180deg, rgba(255, 193, 7, 0.06) 0%, rgba(0, 0, 0, 0.15) 100%);
+}
+
+.admin-logos-hub-pdf-editor--blue {
+  border-color: rgba(66, 165, 245, 0.25);
+  background: linear-gradient(180deg, rgba(66, 165, 245, 0.06) 0%, rgba(0, 0, 0, 0.15) 100%);
+}
+
+.admin-logos-hub-pdf-editor--violet {
+  border-color: rgba(171, 130, 255, 0.25);
+  background: linear-gradient(180deg, rgba(171, 130, 255, 0.06) 0%, rgba(0, 0, 0, 0.15) 100%);
+}
+
+.admin-logos-hub-pdf-editor__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.admin-logos-hub-pdf-editor__badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 4px;
+}
+
+.admin-logos-hub-pdf-editor__icon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.admin-logos-hub-pdf-editor__titles h4 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.admin-logos-hub-pdf-editor__titles p {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.58);
   line-height: 1.45;
 }
 
-.admin-logo-situacao-card__include {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.9);
-  flex-shrink: 0;
-}
-
-.admin-logo-situacao-card__include input {
-  width: 16px;
-  height: 16px;
-  accent-color: #00c853;
-}
-
-.admin-logo-situacao-preview {
-  min-height: 92px;
+.admin-logos-hub-pdf-editor__preview {
+  min-height: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0d0d0d;
-  border-radius: 8px;
-  border: 1px dashed rgba(0, 200, 83, 0.3);
-  padding: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 2px dashed rgba(255, 255, 255, 0.12);
 }
 
-.admin-logo-situacao-preview__img {
+.admin-logos-hub-pdf-editor__preview img {
   max-width: 100%;
-  max-height: 80px;
+  max-height: 120px;
   object-fit: contain;
 }
 
-.admin-logo-situacao-preview__empty {
-  font-size: 11px;
+.admin-logos-hub-pdf-editor__preview span {
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.42);
   text-align: center;
   line-height: 1.45;
 }
 
-.admin-logo-situacao-card__current {
-  margin: 0;
+.admin-logos-hub-pdf-editor__current {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.72);
-  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.admin-logos-hub-pdf-editor__current strong {
+  font-size: 13px;
+  color: #fff;
+  font-weight: 600;
   word-break: break-word;
 }
 
-.admin-logo-situacao-card__current strong {
-  color: rgba(255, 255, 255, 0.9);
+.admin-logos-hub-ui-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 14px;
 }
 
-.admin-logo-situacao-card__actions {
+.admin-logos-hub-ui-card {
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-logos-hub-ui-card--cyan {
+  border-color: rgba(34, 211, 238, 0.25);
+}
+
+.admin-logos-hub-ui-card--emerald {
+  border-color: rgba(0, 230, 118, 0.25);
+}
+
+.admin-logos-hub-ui-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.admin-logos-hub-ui-card__title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.admin-logos-hub-ui-card__hint {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.52);
+  line-height: 1.45;
+}
+
+.admin-logos-hub-status {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.admin-logos-hub-status--active {
+  background: rgba(0, 230, 118, 0.15);
+  color: #69f0ae;
+  border: 1px solid rgba(0, 230, 118, 0.35);
+}
+
+.admin-logos-hub-status--draft {
+  background: rgba(255, 193, 7, 0.12);
+  color: #ffd54f;
+  border: 1px solid rgba(255, 193, 7, 0.35);
+}
+
+.admin-logos-hub-status--empty {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-logos-hub-dropzone {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px dashed rgba(255, 255, 255, 0.12);
+}
+
+.admin-logos-hub-dropzone--draft {
+  border-color: rgba(255, 193, 7, 0.45);
+  background: rgba(255, 193, 7, 0.06);
+}
+
+.admin-logos-hub-dropzone__media {
+  max-width: 100%;
+  max-height: 100px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.admin-logos-hub-dropzone__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.admin-logos-hub-dropzone__icon {
+  font-size: 22px;
+  opacity: 0.7;
+}
+
+.admin-logos-hub-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.admin-logos-hub-actions--pdf {
+  flex-direction: column;
   align-items: stretch;
 }
 
-.admin-logo-situacao-card__btn-file {
+.admin-logos-hub-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  padding: 8px 12px;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
   font-size: 12px;
-  margin: 0;
-  white-space: nowrap;
-}
-
-.admin-logo-situacao-card__select {
-  flex: 1 1 140px;
-  min-width: 0;
-  padding: 8px 10px;
-  background: #141414;
-  color: #fff;
-  border: 1px solid rgba(0, 200, 83, 0.3);
-  border-radius: 6px;
-  font-size: 12px;
-}
-
-.admin-logo-situacao-card__btn-clear {
-  padding: 8px 12px;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.admin-logos-biblioteca {
-  padding: 14px;
-  background: #121212;
-  border-radius: 8px;
-  border: 1px solid rgba(0, 200, 83, 0.2);
-}
-
-.admin-logos-biblioteca__head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.admin-logos-biblioteca__title {
-  margin: 0 0 4px;
-  font-size: 13px;
-  color: #fff;
-}
-
-.admin-logos-biblioteca__desc {
-  margin: 0;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.55);
-  line-height: 1.45;
-  max-width: 52ch;
-}
-
-.admin-logos-biblioteca__draft {
-  margin-bottom: 12px;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 180, 0, 0.45);
-  background: rgba(255, 160, 0, 0.08);
-}
-
-.admin-logos-biblioteca__draft-badge {
-  font-size: 10px;
   font-weight: 700;
-  color: #ffb74d;
-  letter-spacing: 0.08em;
-  display: block;
-  margin-bottom: 8px;
+  cursor: pointer;
+  transition: transform 0.12s, opacity 0.12s, background 0.12s;
+  text-align: center;
 }
 
-.admin-logos-biblioteca__draft-body {
+.admin-logos-hub-btn:hover {
+  transform: translateY(-1px);
+}
+
+.admin-logos-hub-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.admin-logos-hub-btn--sm {
+  padding: 8px 12px;
+  font-size: 11px;
+}
+
+.admin-logos-hub-btn--primary {
+  background: linear-gradient(180deg, rgba(0, 230, 118, 0.35) 0%, rgba(0, 180, 90, 0.25) 100%);
+  border-color: rgba(0, 230, 118, 0.5);
+  color: #eafff3;
+}
+
+.admin-logos-hub-btn--save {
+  background: rgba(0, 230, 118, 0.22);
+  border-color: rgba(0, 230, 118, 0.45);
+  color: #fff;
+}
+
+.admin-logos-hub-btn--ghost {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.admin-logos-hub-btn--danger {
+  background: rgba(244, 67, 54, 0.15);
+  border-color: rgba(244, 67, 54, 0.4);
+  color: #ffcdd2;
+}
+
+.admin-logos-hub-select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-logos-hub-select-wrap label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.admin-logos-hub-select-wrap select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 13px;
+}
+
+.admin-logos-hub-toggle-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
+  gap: 10px;
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.78);
+  cursor: pointer;
 }
 
-.admin-logos-biblioteca__draft-body img {
-  max-width: 120px;
-  max-height: 72px;
+.admin-logos-hub-toggle-row--inline {
+  margin-top: 0;
+  margin-bottom: 14px;
+}
+
+.admin-logos-hub-toggle-row input {
+  width: 16px;
+  height: 16px;
+  accent-color: #00e676;
+}
+
+.admin-logos-hub-brand-intro {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.58);
+  line-height: 1.5;
+}
+
+.admin-logos-hub-brand-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.admin-logos-hub-brand-item {
+  width: 96px;
+  text-align: center;
+  padding: 10px 8px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-logos-hub-brand-item span {
+  display: block;
+  margin-top: 8px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.admin-logos-hub-library {
+  margin-top: 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.admin-logos-hub-library summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  list-style: none;
+}
+
+.admin-logos-hub-library summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-logos-hub-library__count {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 230, 118, 0.15);
+  color: #69f0ae;
+}
+
+.admin-logos-hub-library__body {
+  padding: 0 14px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin-logos-hub-library__desc {
+  margin: 12px 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.52);
+  line-height: 1.45;
+}
+
+.admin-logos-hub-library__draft {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  background: rgba(255, 193, 7, 0.06);
+}
+
+.admin-logos-hub-library__draft img {
+  max-width: 80px;
+  max-height: 56px;
   object-fit: contain;
   background: #fff;
-  padding: 6px;
+  padding: 4px;
   border-radius: 6px;
 }
 
-.admin-logos-biblioteca__draft-body p {
-  margin: 6px 0 0;
-  font-size: 11px;
-  color: rgba(255, 200, 140, 0.95);
-  line-height: 1.45;
-}
-
-.admin-logos-biblioteca__draft-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.admin-logos-biblioteca__btn-muted {
-  background: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.25) !important;
-  color: rgba(255, 255, 255, 0.88) !important;
-}
-
-.admin-logos-biblioteca__empty {
-  margin: 0;
+.admin-logos-hub-library__empty {
+  margin: 8px 0 0;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.45);
 }
 
-.admin-logos-biblioteca__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
-  gap: 10px;
+.admin-logos-hub-library__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.admin-logos-biblioteca__item {
-  padding: 10px 12px;
-  background: #222;
-  border-radius: 8px;
-  border: 1px solid rgba(0, 200, 83, 0.2);
+.admin-logos-hub-library__item {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) auto;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
-  min-width: 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.admin-logos-biblioteca__thumb {
-  width: 56px;
+.admin-logos-hub-library__thumb {
+  width: 52px;
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0d0d0d;
-  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 6px;
   overflow: hidden;
 }
 
-.admin-logos-biblioteca__thumb img {
+.admin-logos-hub-library__thumb img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
 }
 
-.admin-logos-biblioteca__meta {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.admin-logos-biblioteca__name {
+.admin-logos-hub-library__item strong {
+  display: block;
   font-size: 12px;
+  color: #fff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #fff;
 }
 
-.admin-logos-biblioteca__uses {
+.admin-logos-hub-library__item small {
+  display: block;
+  margin-top: 2px;
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.48);
-  line-height: 1.35;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .modal.admin-modal {
