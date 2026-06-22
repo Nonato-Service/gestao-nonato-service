@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { saveData } from '../utils/dataStorage'
 import { AssistTextarea } from './AssistTextFields'
 
@@ -29,6 +29,16 @@ type TecnicoResumo = {
 type NivelOpcao = { value: number; label: string }
 type TipoEquipamentoOpcao = { id: string; nome: string }
 
+type SkillField = 'mecanico' | 'eletrico' | 'software' | 'programacao'
+type CampoDescricao = SkillField
+
+const SKILL_META: Array<{ field: SkillField; icon: string; tone: string }> = [
+  { field: 'mecanico', icon: '⚙', tone: 'mech' },
+  { field: 'eletrico', icon: '⚡', tone: 'elec' },
+  { field: 'software', icon: '◈', tone: 'soft' },
+  { field: 'programacao', icon: '⌘', tone: 'prog' },
+]
+
 export type ConhecimentoTecnicosContentProps = {
   safeT: Record<string, string | undefined>
   LogoComponent: React.ComponentType<{ size?: 'small' | 'medium' | 'large' }>
@@ -44,8 +54,6 @@ export type ConhecimentoTecnicosContentProps = {
   gruposEquipamento: Array<{ familia?: string; nome: string }>
 }
 
-type CampoDescricao = 'mecanico' | 'eletrico' | 'software' | 'programacao'
-
 function tecnicoTypeLabel(tecnico: TecnicoResumo, safeT: Record<string, string | undefined>): string {
   if (tecnico.type === 'internal') return safeT.internal ?? 'Interno'
   if (tecnico.type === 'external') return safeT.external ?? 'Externo'
@@ -53,9 +61,79 @@ function tecnicoTypeLabel(tecnico: TecnicoResumo, safeT: Record<string, string |
 }
 
 function tecnicoTypeClass(tecnico: TecnicoResumo): string {
-  if (tecnico.type === 'internal') return 'conhecimento-tecnicos__badge--internal'
-  if (tecnico.type === 'external') return 'conhecimento-tecnicos__badge--external'
-  return 'conhecimento-tecnicos__badge--warehouse'
+  if (tecnico.type === 'internal') return 'ct-pro__badge--internal'
+  if (tecnico.type === 'external') return 'ct-pro__badge--external'
+  return 'ct-pro__badge--warehouse'
+}
+
+function nivelTone(value: number): string {
+  if (value >= 4) return 'expert'
+  if (value >= 3) return 'advanced'
+  if (value >= 2) return 'medium'
+  if (value >= 1) return 'basic'
+  return 'none'
+}
+
+function computeTecnicoStats(entries: ConhecimentoTecnicoEntry[]) {
+  let totalSkills = 0
+  let sum = 0
+  let expert = 0
+  for (const e of entries) {
+    for (const f of SKILL_META) {
+      const v = e[f.field]
+      totalSkills++
+      sum += v
+      if (v >= 4) expert++
+    }
+  }
+  const media = totalSkills > 0 ? sum / totalSkills : 0
+  return { equipamentos: entries.length, media, expert, totalSkills }
+}
+
+function SkillPillar(props: {
+  label: string
+  icon: string
+  tone: string
+  value: number
+  nivelOpcoes: NivelOpcao[]
+  onChange: (v: number) => void
+}) {
+  const { label, icon, tone, value, nivelOpcoes, onChange } = props
+  const activeLabel = nivelOpcoes.find((o) => o.value === value)?.label ?? '—'
+  return (
+    <div className={`ct-pro__pillar ct-pro__pillar--${tone} ct-pro__pillar--${nivelTone(value)}`}>
+      <div className="ct-pro__pillar-top">
+        <span className="ct-pro__pillar-icon" aria-hidden>
+          {icon}
+        </span>
+        <div className="ct-pro__pillar-copy">
+          <span className="ct-pro__pillar-label">{label}</span>
+          <span className="ct-pro__pillar-level">{activeLabel}</span>
+        </div>
+        <span className="ct-pro__pillar-score">{value}/4</span>
+      </div>
+      <div className="ct-pro__pillar-meter" aria-hidden>
+        {[1, 2, 3, 4].map((step) => (
+          <span key={step} className={`ct-pro__pillar-seg${value >= step ? ' is-lit' : ''}`} />
+        ))}
+      </div>
+      <div className="ct-pro__pillar-picker" role="group" aria-label={label}>
+        {nivelOpcoes.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            className={`ct-pro__lvl-btn${value === o.value ? ' is-active' : ''}`}
+            title={o.label}
+            aria-label={`${label}: ${o.label}`}
+            aria-pressed={value === o.value}
+            onClick={() => onChange(o.value)}
+          >
+            {o.value}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentProps) {
@@ -73,6 +151,8 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
     familiasEquipamento,
     gruposEquipamento,
   } = props
+
+  const [buscaTecnico, setBuscaTecnico] = useState('')
 
   const nivelOpcoes: NivelOpcao[] = [
     { value: 0, label: safeT.conhecimentoNivelNenhum ?? 'Nenhum' },
@@ -93,11 +173,18 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
     return out
   }, [familiasEquipamento, gruposEquipamento])
 
+  const tecnicosFiltrados = useMemo(() => {
+    const q = buscaTecnico.trim().toLowerCase()
+    if (!q) return tecnicos
+    return tecnicos.filter((t) => t.name.toLowerCase().includes(q))
+  }, [buscaTecnico, tecnicos])
+
   const conhecimentosDoTecnico = tecnicoConhecimentoSelecionado
     ? conhecimentoTecnicos.filter((c) => c.tecnicoId === tecnicoConhecimentoSelecionado)
     : []
 
   const tecnicoSelecionado = tecnicos.find((t) => t.id === tecnicoConhecimentoSelecionado)
+  const stats = computeTecnicoStats(conhecimentosDoTecnico)
 
   const addConhecimento = (equipamentoTipoId: string, equipamentoTipoNome: string) => {
     if (!tecnicoConhecimentoSelecionado) return
@@ -120,11 +207,7 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
     void saveData('nonato-conhecimento-tecnicos', next)
   }
 
-  const updateConhecimento = (
-    id: string,
-    field: 'mecanico' | 'eletrico' | 'software' | 'programacao',
-    value: number
-  ) => {
+  const updateConhecimento = (id: string, field: SkillField, value: number) => {
     const next = conhecimentoTecnicos.map((c) => (c.id === id ? { ...c, [field]: value } : c))
     setConhecimentoTecnicos(next)
     void saveData('nonato-conhecimento-tecnicos', next)
@@ -150,33 +233,47 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
     void saveData('nonato-conhecimento-tecnicos', next)
   }
 
+  const skillLabel = (field: SkillField) => {
+    if (field === 'mecanico') return safeT.conhecimentoMecanico ?? 'Mecânico'
+    if (field === 'eletrico') return safeT.conhecimentoEletrico ?? 'Elétrico'
+    if (field === 'software') return safeT.conhecimentoSoftware ?? 'Software'
+    return safeT.conhecimentoProgramacao ?? 'Programação'
+  }
+
+  const descricaoValue = (ent: ConhecimentoTecnicoEntry, field: CampoDescricao) => {
+    if (field === 'mecanico') return ent.descricaoMecanico ?? ''
+    if (field === 'eletrico') return ent.descricaoEletrico ?? ''
+    if (field === 'software') return ent.descricaoSoftware ?? ''
+    return ent.descricaoProgramacao ?? ''
+  }
+
   return (
-    <div className="conhecimento-tecnicos ns-ui-v2">
-      <header className="conhecimento-tecnicos__hero">
-        <div className="conhecimento-tecnicos__hero-glow" aria-hidden />
-        <div className="conhecimento-tecnicos__hero-top">
-          <div className="conhecimento-tecnicos__hero-brand">
-            <div className="conhecimento-tecnicos__hero-icon" aria-hidden>
+    <div className="ct-pro ns-ui-v2">
+      <div className="ct-pro__ambient" aria-hidden>
+        <span className="ct-pro__orb ct-pro__orb--a" />
+        <span className="ct-pro__orb ct-pro__orb--b" />
+        <span className="ct-pro__orb ct-pro__orb--c" />
+        <span className="ct-pro__gridlines" />
+      </div>
+
+      <div className="ct-pro__shell">
+        <header className="ct-pro__masthead">
+          <div className="ct-pro__masthead-left">
+            <div className="ct-pro__mark" aria-hidden>
               CT
             </div>
-            <div className="conhecimento-tecnicos__hero-text">
-              <p className="conhecimento-tecnicos__eyebrow">
-                {safeT.conhecimentoTecnicosEyebrow || 'Competências técnicas'}
-              </p>
-              <h1 className="conhecimento-tecnicos__title">
-                {safeT.informacoesConhecimentoTecnicosTitle || 'INFORMAÇÕES DE CONHECIMENTO DOS TÉCNICOS'}
+            <div>
+              <p className="ct-pro__eyebrow">{safeT.conhecimentoTecnicosEyebrow || 'Centro de competências'}</p>
+              <h1 className="ct-pro__title">
+                {safeT.informacoesConhecimentoTecnicosTitle || 'CONHECIMENTO DOS TÉCNICOS'}
               </h1>
-              <p className="conhecimento-tecnicos__lead">
-                {safeT.informacoesConhecimentoTecnicosDesc ||
-                  'Área para registar e consultar informações de conhecimento dos técnicos.'}
-              </p>
             </div>
           </div>
-          <div className="conhecimento-tecnicos__hero-actions">
+          <div className="ct-pro__masthead-actions">
             <LogoComponent size="small" />
             <button
               type="button"
-              className="conhecimento-tecnicos__nav-btn"
+              className="ct-pro__icon-btn"
               onClick={() => closeTab(activeTabId || '')}
               title={safeT.voltar || 'Voltar'}
               aria-label={safeT.voltar || 'Voltar'}
@@ -185,7 +282,7 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
             </button>
             <button
               type="button"
-              className="conhecimento-tecnicos__nav-btn conhecimento-tecnicos__nav-btn--home"
+              className="ct-pro__icon-btn ct-pro__icon-btn--accent"
               onClick={voltarPaginaInicial}
               title={safeT.paginaInicial || 'Página Inicial'}
               aria-label={safeT.paginaInicial || 'Página Inicial'}
@@ -193,233 +290,267 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
               🏠
             </button>
           </div>
-        </div>
-        <div className="conhecimento-tecnicos__kpis">
-          <div className="conhecimento-tecnicos__kpi">
+        </header>
+
+        <div className="ct-pro__stats-row">
+          <div className="ct-pro__stat">
             <span>{safeT.conhecimentoTecnicosKpiTecnicos || 'Técnicos'}</span>
             <strong>{tecnicos.length}</strong>
           </div>
-          <div className="conhecimento-tecnicos__kpi">
+          <div className="ct-pro__stat">
             <span>{safeT.conhecimentoTecnicosKpiRegistos || 'Registos'}</span>
             <strong>{conhecimentoTecnicos.length}</strong>
           </div>
-          <div className="conhecimento-tecnicos__kpi">
-            <span>{safeT.conhecimentoTecnicosKpiAreas || 'Áreas avaliadas'}</span>
+          <div className="ct-pro__stat">
+            <span>{safeT.conhecimentoTecnicosKpiAreas || 'Pilares'}</span>
             <strong>4</strong>
           </div>
-        </div>
-      </header>
-
-      <p className="conhecimento-tecnicos__intro">
-        {safeT.informacoesConhecimentoTecnicosSelecioneTecnico ||
-          'Selecione um técnico abaixo para gerir os tipos de equipamento e os conhecimentos (mecânico, elétrico, software e programação) por equipamento.'}
-      </p>
-
-      {tecnicos.length === 0 ? (
-        <div className="conhecimento-tecnicos__empty">
-          <p>
-            {safeT.informacoesConhecimentoSemTecnicos ||
-              'Não há técnicos cadastrados. Adicione técnicos em Cadastro de Técnicos (Gestão Técnica).'}
+          <p className="ct-pro__lead">
+            {safeT.informacoesConhecimentoTecnicosSelecioneTecnico ||
+              'Escolha o técnico na coluna esquerda. Defina níveis por equipamento com toques rápidos — sem listas escondidas.'}
           </p>
         </div>
-      ) : (
-        <div className="conhecimento-tecnicos__grid">
-          {tecnicos.map((tecnico) => (
-            <button
-              key={tecnico.id}
-              type="button"
-              className={`conhecimento-tecnicos__card${tecnicoConhecimentoSelecionado === tecnico.id ? ' is-active' : ''}`}
-              onClick={() => setTecnicoConhecimentoSelecionado(tecnico.id)}
-            >
-              <div className="conhecimento-tecnicos__avatar">
-                {tecnico.photo ? (
-                  <img src={tecnico.photo} alt="" className="conhecimento-tecnicos__avatar-img" />
-                ) : (
-                  <span className="conhecimento-tecnicos__avatar-fallback" aria-hidden>
-                    👤
-                  </span>
-                )}
-              </div>
-              <div className="conhecimento-tecnicos__card-name">{tecnico.name}</div>
-              <span className={`conhecimento-tecnicos__badge ${tecnicoTypeClass(tecnico)}`}>
-                {tecnicoTypeLabel(tecnico, safeT)}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
 
-      {tecnicoConhecimentoSelecionado && tecnicos.length > 0 ? (
-        <section className="conhecimento-tecnicos__panel" aria-labelledby="conhecimento-tecnicos-panel-title">
-          <div className="conhecimento-tecnicos__panel-head">
-            <div>
-              <h2 id="conhecimento-tecnicos-panel-title" className="conhecimento-tecnicos__panel-title">
-                {safeT.informacoesConhecimentoPorEquipamento || 'Tipos de equipamento e conhecimentos'}
-              </h2>
-              {tecnicoSelecionado ? (
-                <p className="conhecimento-tecnicos__panel-sub">
-                  {tecnicoSelecionado.name}
-                </p>
-              ) : null}
+        {tecnicos.length === 0 ? (
+          <div className="ct-pro__empty-hero">
+            <div className="ct-pro__empty-icon" aria-hidden>
+              ◎
             </div>
-            <div className="conhecimento-tecnicos__add-row">
-              <label className="conhecimento-tecnicos__add-label" htmlFor="conhecimento-tecnicos-add-tipo">
-                {safeT.informacoesConhecimentoAdicionarTipo || 'Adicionar tipo de equipamento:'}
-              </label>
-              <select
-                id="conhecimento-tecnicos-add-tipo"
-                className="conhecimento-tecnicos__select"
-                defaultValue=""
-                onChange={(e) => {
-                  const v = e.target.value
-                  if (!v) return
-                  const opt = tiposEquipamentoOpcoes.find((o) => o.id === v)
-                  if (opt) addConhecimento(opt.id, opt.nome)
-                  e.target.value = ''
-                }}
-              >
-                <option value="">
-                  — {safeT.informacoesConhecimentoSelecioneTipo ?? 'Selecione'} —
-                </option>
-                {tiposEquipamentoOpcoes.map((opt) => (
-                  <option key={opt.id} value={opt.id}>
-                    {opt.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <h2>{safeT.conhecimentoTecnicosEmptyTitle || 'Sem técnicos no sistema'}</h2>
+            <p>
+              {safeT.informacoesConhecimentoSemTecnicos ||
+                'Não há técnicos cadastrados. Adicione técnicos em Cadastro de Técnicos (Gestão Técnica).'}
+            </p>
           </div>
+        ) : (
+          <div className="ct-pro__workspace">
+            <aside className="ct-pro__rail" aria-label={safeT.conhecimentoTecnicosRailLabel || 'Lista de técnicos'}>
+              <div className="ct-pro__rail-head">
+                <span className="ct-pro__rail-title">{safeT.conhecimentoTecnicosRailTitle || 'Equipa técnica'}</span>
+                <span className="ct-pro__rail-count">{tecnicosFiltrados.length}</span>
+              </div>
+              <label className="ct-pro__search-wrap">
+                <span className="ct-pro__search-icon" aria-hidden>
+                  ⌕
+                </span>
+                <input
+                  type="search"
+                  className="ct-pro__search"
+                  value={buscaTecnico}
+                  onChange={(e) => setBuscaTecnico(e.target.value)}
+                  placeholder={safeT.conhecimentoTecnicosBuscaPlaceholder || 'Filtrar técnico…'}
+                  autoComplete="off"
+                />
+              </label>
+              <div className="ct-pro__rail-list">
+                {tecnicosFiltrados.map((tecnico) => {
+                  const nReg = conhecimentoTecnicos.filter((c) => c.tecnicoId === tecnico.id).length
+                  const isActive = tecnicoConhecimentoSelecionado === tecnico.id
+                  return (
+                    <button
+                      key={tecnico.id}
+                      type="button"
+                      className={`ct-pro__rail-item${isActive ? ' is-active' : ''}`}
+                      onClick={() => setTecnicoConhecimentoSelecionado(tecnico.id)}
+                    >
+                      <div className="ct-pro__rail-avatar">
+                        {tecnico.photo ? (
+                          <img src={tecnico.photo} alt="" />
+                        ) : (
+                          <span aria-hidden>👤</span>
+                        )}
+                      </div>
+                      <div className="ct-pro__rail-body">
+                        <span className="ct-pro__rail-name">{tecnico.name}</span>
+                        <span className={`ct-pro__badge ${tecnicoTypeClass(tecnico)}`}>
+                          {tecnicoTypeLabel(tecnico, safeT)}
+                        </span>
+                      </div>
+                      <span className="ct-pro__rail-meta">{nReg}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </aside>
 
-          {tiposEquipamentoOpcoes.length === 0 ? (
-            <p className="conhecimento-tecnicos__hint">
-              {safeT.informacoesConhecimentoSemTipos ||
-                'Nenhum tipo de equipamento cadastrado. Configure em Cadastro de Famílias e Grupos para os Equipamentos (Gestão Técnica).'}
-            </p>
-          ) : null}
+            <main className="ct-pro__stage">
+              {!tecnicoSelecionado ? (
+                <div className="ct-pro__pick-hint">
+                  <div className="ct-pro__pick-hint-icon" aria-hidden>
+                    ←
+                  </div>
+                  <h2>{safeT.conhecimentoTecnicosPickTitle || 'Selecione um técnico'}</h2>
+                  <p>
+                    {safeT.conhecimentoTecnicosPickDesc ||
+                      'A matriz de competências aparece aqui com cartões por equipamento e níveis visuais.'}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div
+                    className="ct-pro__profile"
+                    style={
+                      tecnicoSelecionado.photo
+                        ? ({ ['--ct-pro-photo' as string]: `url(${tecnicoSelecionado.photo})` } as React.CSSProperties)
+                        : undefined
+                    }
+                  >
+                    <div className="ct-pro__profile-main">
+                      <div className="ct-pro__profile-avatar">
+                        {tecnicoSelecionado.photo ? (
+                          <img src={tecnicoSelecionado.photo} alt="" />
+                        ) : (
+                          <span aria-hidden>👤</span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="ct-pro__profile-eyebrow">
+                          {safeT.informacoesConhecimentoPorEquipamento || 'Matriz de competências'}
+                        </p>
+                        <h2 className="ct-pro__profile-name">{tecnicoSelecionado.name}</h2>
+                        <span className={`ct-pro__badge ct-pro__badge--lg ${tecnicoTypeClass(tecnicoSelecionado)}`}>
+                          {tecnicoTypeLabel(tecnicoSelecionado, safeT)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="ct-pro__profile-stats">
+                      <div className="ct-pro__profile-chip">
+                        <strong>{stats.equipamentos}</strong>
+                        <span>{safeT.conhecimentoTecnicosChipEquip || 'Equipamentos'}</span>
+                      </div>
+                      <div className="ct-pro__profile-chip">
+                        <strong>{stats.media.toFixed(1)}</strong>
+                        <span>{safeT.conhecimentoTecnicosChipMedia || 'Média geral'}</span>
+                      </div>
+                      <div className="ct-pro__profile-chip ct-pro__profile-chip--gold">
+                        <strong>{stats.expert}</strong>
+                        <span>{safeT.conhecimentoTecnicosChipExpert || 'Especialista'}</span>
+                      </div>
+                    </div>
+                  </div>
 
-          {conhecimentosDoTecnico.length === 0 ? (
-            <p className="conhecimento-tecnicos__hint">
-              {safeT.informacoesConhecimentoNenhumRegisto ||
-                'Nenhum tipo de equipamento adicionado para este técnico. Use o campo acima para adicionar.'}
-            </p>
-          ) : (
-            <div className="conhecimento-tecnicos__table-wrap">
-              <table className="conhecimento-tecnicos__table">
-                <thead>
-                  <tr>
-                    <th>{safeT.informacoesConhecimentoTipoEquipamento ?? 'Tipo de equipamento'}</th>
-                    <th>{safeT.conhecimentoMecanico ?? 'Mecânico'}</th>
-                    <th>{safeT.conhecimentoEletrico ?? 'Elétrico'}</th>
-                    <th>{safeT.conhecimentoSoftware ?? 'Software'}</th>
-                    <th>{safeT.conhecimentoProgramacao ?? 'Programação'}</th>
-                    <th className="conhecimento-tecnicos__th-action" aria-label={safeT.delete || 'Eliminar'} />
-                  </tr>
-                </thead>
-                <tbody>
-                  {conhecimentosDoTecnico.map((ent) => {
-                    const temAlgumNivel =
-                      ent.mecanico > 0 || ent.eletrico > 0 || ent.software > 0 || ent.programacao > 0
-                    const campos: { key: CampoDescricao; label: string; value: string }[] = []
-                    if (ent.mecanico > 0)
-                      campos.push({
-                        key: 'mecanico',
-                        label: safeT.conhecimentoMecanico ?? 'Mecânico',
-                        value: ent.descricaoMecanico ?? '',
-                      })
-                    if (ent.eletrico > 0)
-                      campos.push({
-                        key: 'eletrico',
-                        label: safeT.conhecimentoEletrico ?? 'Elétrico',
-                        value: ent.descricaoEletrico ?? '',
-                      })
-                    if (ent.software > 0)
-                      campos.push({
-                        key: 'software',
-                        label: safeT.conhecimentoSoftware ?? 'Software',
-                        value: ent.descricaoSoftware ?? '',
-                      })
-                    if (ent.programacao > 0)
-                      campos.push({
-                        key: 'programacao',
-                        label: safeT.conhecimentoProgramacao ?? 'Programação',
-                        value: ent.descricaoProgramacao ?? '',
-                      })
+                  <div className="ct-pro__toolbar">
+                    <label className="ct-pro__add-wrap" htmlFor="ct-pro-add-equip">
+                      <span className="ct-pro__add-label">
+                        {safeT.informacoesConhecimentoAdicionarTipo || 'Adicionar equipamento'}
+                      </span>
+                      <select
+                        id="ct-pro-add-equip"
+                        className="ct-pro__add-select"
+                        defaultValue=""
+                        onChange={(e) => {
+                          const v = e.target.value
+                          if (!v) return
+                          const opt = tiposEquipamentoOpcoes.find((o) => o.id === v)
+                          if (opt) addConhecimento(opt.id, opt.nome)
+                          e.target.value = ''
+                        }}
+                      >
+                        <option value="">+ {safeT.informacoesConhecimentoSelecioneTipo ?? 'Selecionar tipo'}</option>
+                        {tiposEquipamentoOpcoes.map((opt) => (
+                          <option key={opt.id} value={opt.id}>
+                            {opt.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
 
-                    return (
-                      <React.Fragment key={ent.id}>
-                        <tr className="conhecimento-tecnicos__row-main">
-                          <td className="conhecimento-tecnicos__cell-equip">{ent.equipamentoTipoNome}</td>
-                          {(['mecanico', 'eletrico', 'software', 'programacao'] as const).map((field) => (
-                            <td key={field} className="conhecimento-tecnicos__cell-level">
-                              <select
-                                className="conhecimento-tecnicos__level-select"
-                                value={ent[field]}
-                                onChange={(e) => updateConhecimento(ent.id, field, Number(e.target.value))}
+                  {tiposEquipamentoOpcoes.length === 0 ? (
+                    <p className="ct-pro__hint">
+                      {safeT.informacoesConhecimentoSemTipos ||
+                        'Nenhum tipo de equipamento cadastrado. Configure em Cadastro de Famílias e Grupos.'}
+                    </p>
+                  ) : null}
+
+                  {conhecimentosDoTecnico.length === 0 ? (
+                    <div className="ct-pro__empty-stage">
+                      <div className="ct-pro__empty-stage-icon" aria-hidden>
+                        ▣
+                      </div>
+                      <p>
+                        {safeT.informacoesConhecimentoNenhumRegisto ||
+                          'Nenhum equipamento neste técnico. Use o selector acima para começar.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="ct-pro__cards">
+                      {conhecimentosDoTecnico.map((ent) => {
+                        const camposDesc = SKILL_META.filter((s) => ent[s.field] > 0)
+                        return (
+                          <article key={ent.id} className="ct-pro__equip-card">
+                            <header className="ct-pro__equip-head">
+                              <div>
+                                <p className="ct-pro__equip-kicker">
+                                  {safeT.informacoesConhecimentoTipoEquipamento ?? 'Equipamento'}
+                                </p>
+                                <h3 className="ct-pro__equip-title">{ent.equipamentoTipoNome}</h3>
+                              </div>
+                              <button
+                                type="button"
+                                className="ct-pro__equip-remove"
+                                onClick={() => removeConhecimento(ent.id)}
+                                title={safeT.delete || 'Eliminar'}
+                                aria-label={safeT.delete || 'Eliminar'}
                               >
-                                {nivelOpcoes.map((o) => (
-                                  <option key={o.value} value={o.value}>
-                                    {o.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-                          ))}
-                          <td className="conhecimento-tecnicos__cell-action">
-                            <button
-                              type="button"
-                              className="conhecimento-tecnicos__remove-btn"
-                              onClick={() => removeConhecimento(ent.id)}
-                              title={safeT.delete || 'Eliminar'}
-                              aria-label={safeT.delete || 'Eliminar'}
-                            >
-                              ✕
-                            </button>
-                          </td>
-                        </tr>
-                        {temAlgumNivel
-                          ? campos.map(({ key, label, value }) => (
-                              <tr key={`${ent.id}-${key}`} className="conhecimento-tecnicos__row-detail">
-                                <td colSpan={6}>
-                                  <div className="conhecimento-tecnicos__detail-block">
-                                    <label className="conhecimento-tecnicos__detail-label">
-                                      {safeT.conhecimentoDescricaoDetalhada ?? 'Descrição detalhada'} — {label}
+                                ✕
+                              </button>
+                            </header>
+                            <div className="ct-pro__matrix">
+                              {SKILL_META.map((s) => (
+                                <SkillPillar
+                                  key={s.field}
+                                  label={skillLabel(s.field)}
+                                  icon={s.icon}
+                                  tone={s.tone}
+                                  value={ent[s.field]}
+                                  nivelOpcoes={nivelOpcoes}
+                                  onChange={(v) => updateConhecimento(ent.id, s.field, v)}
+                                />
+                              ))}
+                            </div>
+                            {camposDesc.length > 0 ? (
+                              <div className="ct-pro__notes">
+                                {camposDesc.map((s) => (
+                                  <div key={s.field} className="ct-pro__note">
+                                    <label className="ct-pro__note-label">
+                                      {safeT.conhecimentoDescricaoDetalhada ?? 'Notas'} — {skillLabel(s.field)}
                                     </label>
-                                    <div className="conhecimento-tecnicos__detail-input-wrap">
-                                      <AssistTextarea
-                                        value={value}
-                                        onValueChange={(v) => updateConhecimentoDescricaoCampo(ent.id, key, v)}
-                                        placeholder={
-                                          safeT.conhecimentoDescricaoPlaceholder ??
-                                          'Descreva em detalhe os conhecimentos nesta área...'
-                                        }
-                                        rows={2}
-                                        style={{
-                                          width: '100%',
-                                          padding: '10px 12px',
-                                          backgroundColor: 'rgba(15, 23, 42, 0.45)',
-                                          color: '#e2e8f0',
-                                          border: '1px solid rgba(148, 163, 184, 0.22)',
-                                          borderRadius: '10px',
-                                          fontSize: '13px',
-                                          resize: 'vertical',
-                                          minHeight: '56px',
-                                        }}
-                                      />
-                                    </div>
+                                    <AssistTextarea
+                                      value={descricaoValue(ent, s.field)}
+                                      onValueChange={(v) => updateConhecimentoDescricaoCampo(ent.id, s.field, v)}
+                                      placeholder={
+                                        safeT.conhecimentoDescricaoPlaceholder ??
+                                        'Detalhe experiência, certificações, limitações…'
+                                      }
+                                      rows={2}
+                                      style={{
+                                        width: '100%',
+                                        padding: '12px 14px',
+                                        background: 'rgba(2, 6, 23, 0.55)',
+                                        color: '#f1f5f9',
+                                        border: '1px solid rgba(148, 163, 184, 0.2)',
+                                        borderRadius: '12px',
+                                        fontSize: '13px',
+                                        resize: 'vertical',
+                                        minHeight: '64px',
+                                      }}
+                                    />
                                   </div>
-                                </td>
-                              </tr>
-                            ))
-                          : null}
-                      </React.Fragment>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      ) : null}
+                                ))}
+                              </div>
+                            ) : null}
+                          </article>
+                        )
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+            </main>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
