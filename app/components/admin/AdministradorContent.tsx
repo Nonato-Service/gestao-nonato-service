@@ -214,7 +214,7 @@ export function AdministradorContent({
         id="admin-detail-prioritario"
         icon="★"
         title={safeT?.clientePrioritarioTitle || 'Cliente prioritário'}
-        sub={safeT?.adminClientePriorSummarySub || 'Empresa em destaque e dados para formulários e fluxos internos.'}
+        sub={safeT?.adminClientePriorSummarySub || 'Empresa em destaque: identidade, morada, contactos e foto para formulários e fluxos.'}
         toneClass="admin-disclosure--amber"
       >
         <AdminClientePrioritarioSection {...clientePrioritario} safeT={safeT} />

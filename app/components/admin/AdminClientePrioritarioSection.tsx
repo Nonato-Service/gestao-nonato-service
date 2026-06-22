@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo, useState } from 'react'
 import type { ClientePrioritario, ClientePrioritarioForm, SafeT } from './adminTypes'
 
 type ClientePrioritarioEntity = ClientePrioritario
@@ -23,6 +23,45 @@ export type AdminClientePrioritarioSectionProps = {
   emptyClientePrioritarioForm: () => ClientePrioritarioForm
 }
 
+function tr(safeT: SafeT, key: string, fallback: string): string {
+  return (safeT as Record<string, string | undefined>)[key] || fallback
+}
+
+const TRACKED_FIELDS: (keyof ClientePrioritarioForm)[] = [
+  'nomeEmpresa',
+  'morada',
+  'localidade',
+  'conselho',
+  'pais',
+  'codigoPostal',
+  'freguesia',
+  'numeroContribuicaoFiscal',
+  'telefones',
+  'email',
+  'contato',
+  'photo',
+]
+
+function completeness(data: Partial<ClientePrioritarioForm> | ClientePrioritario | null): number {
+  if (!data) return 0
+  const filled = TRACKED_FIELDS.filter((key) => String(data[key] || '').trim().length > 0).length
+  return Math.round((filled / TRACKED_FIELDS.length) * 100)
+}
+
+function formatAddress(data: ClientePrioritario | ClientePrioritarioForm): string {
+  return [data.morada, data.localidade, data.freguesia, data.conselho, data.codigoPostal, data.pais]
+    .map((part) => (part || '').trim())
+    .filter(Boolean)
+    .join(' · ')
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '★'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
 export function AdminClientePrioritarioSection({
   safeT,
   clientePrioritario,
@@ -40,241 +79,339 @@ export function AdminClientePrioritarioSection({
   setEditingClientePrioritario,
   emptyClientePrioritarioForm,
 }: AdminClientePrioritarioSectionProps) {
-  return (
-            <div className="admin-section admin-section--amber">
-              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  {clientePrioritario ? (
-                    <>
-                      <button className="btn-primary" onClick={handleEditClientePrioritario} style={{ padding: '8px 15px', backgroundColor: 'rgba(255, 215, 0, 0.2)', borderColor: 'rgba(255, 215, 0, 0.5)' }}>
-                        {safeT?.editClientePrioritario || 'Editar Cliente Prioritário'}
-                      </button>
-                      <button className="btn-danger" onClick={handleDeleteClientePrioritario} style={{ padding: '8px 15px' }}>
-                        {safeT?.deleteClientePrioritario || 'Excluir Cliente Prioritário'}
-                      </button>
-                    </>
-                  ) : (
-                    <button className="btn-primary" onClick={handleAddClientePrioritario} style={{ padding: '8px 15px', backgroundColor: 'rgba(255, 215, 0, 0.2)', borderColor: 'rgba(255, 215, 0, 0.5)' }}>
-                      {safeT?.addClientePrioritario || 'Adicionar Cliente Prioritário'}
-                    </button>
-                  )}
-                </div>
-              </div>
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [copyFlash, setCopyFlash] = useState<'email' | 'phone' | null>(null)
 
-              {clientePrioritario && !showClientePrioritarioForm ? (
-                <div style={{ padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', marginBottom: '20px' }}>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.nomeEmpresa || 'Nome da Empresa'}</strong>
-                      <span>{clientePrioritario.nomeEmpresa}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.morada || 'Morada'}</strong>
-                      <span>{clientePrioritario.morada}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.conselho || 'Conselho'}</strong>
-                      <span>{clientePrioritario.conselho}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.pais || 'País'}</strong>
-                      <span>{clientePrioritario.pais}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.codigoPostal || 'Código Postal'}</strong>
-                      <span>{clientePrioritario.codigoPostal}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.freguesia || 'Freguesia'}</strong>
-                      <span>{clientePrioritario.freguesia}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.identificacaoFiscal || 'Identificação Fiscal'}</strong>
-                      <span>{clientePrioritario.numeroContribuicaoFiscal}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.telefones || 'Telefones'}</strong>
-                      <span>{clientePrioritario.telefones}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</strong>
-                      <span>{clientePrioritario.email}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.contato || 'Contato'}</strong>
-                      <span>{clientePrioritario.contato}</span>
-                    </div>
-                    {clientePrioritario.photo && (
-                      <div>
-                        <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>Foto</strong>
-                        <img src={clientePrioritario.photo} alt="Cliente Prioritário" style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '4px' }} />
+  const activeData = showClientePrioritarioForm ? clientePrioritarioForm : clientePrioritario
+  const pct = useMemo(() => completeness(activeData), [activeData])
+  const hasClient = Boolean(clientePrioritario)
+  const hasPhoto = Boolean((activeData?.photo || '').trim())
+
+  const cancelForm = () => {
+    setShowClientePrioritarioForm(false)
+    setEditingClientePrioritario(null)
+    setClientePrioritarioForm(emptyClientePrioritarioForm())
+  }
+
+  const copyValue = async (value: string, kind: 'email' | 'phone') => {
+    if (!value.trim()) return
+    try {
+      await navigator.clipboard.writeText(value.trim())
+      setCopyFlash(kind)
+      window.setTimeout(() => setCopyFlash((cur) => (cur === kind ? null : cur)), 2000)
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const renderField = (
+    key: keyof ClientePrioritarioForm,
+    label: string,
+    opts?: { required?: boolean; type?: string; placeholder?: string }
+  ) => (
+    <label key={key} className="admin-priority-client-hub__field">
+      <span>
+        {label}
+        {opts?.required ? <em className="admin-priority-client-hub__required">*</em> : null}
+      </span>
+      <input
+        type={opts?.type || 'text'}
+        placeholder={opts?.placeholder || label}
+        value={clientePrioritarioForm[key] as string}
+        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, [key]: e.target.value })}
+      />
+    </label>
+  )
+
+  return (
+    <section className="admin-priority-client-hub">
+      <header className="admin-priority-client-hub__hero">
+        <div className="admin-priority-client-hub__hero-glow" aria-hidden="true" />
+        <div className="admin-priority-client-hub__hero-content">
+          <div className="admin-priority-client-hub__hero-icon" aria-hidden="true">
+            ★
+          </div>
+          <div>
+            <h3 className="admin-priority-client-hub__hero-title">
+              {tr(safeT, 'adminClientePriorHubTitle', 'Cliente em Destaque')}
+            </h3>
+            <p className="admin-priority-client-hub__hero-desc">
+              {tr(
+                safeT,
+                'adminClientePriorHubDesc',
+                'A empresa prioritária alimenta formulários, fluxos internos e documentos — mantenha os dados sempre completos e visíveis.'
+              )}
+            </p>
+          </div>
+        </div>
+        <ol className="admin-priority-client-hub__steps">
+          <li>{tr(safeT, 'adminClientePriorStep1', '1. Identidade da empresa')}</li>
+          <li>{tr(safeT, 'adminClientePriorStep2', '2. Morada completa')}</li>
+          <li>{tr(safeT, 'adminClientePriorStep3', '3. Contactos e foto')}</li>
+        </ol>
+      </header>
+
+      <div className="admin-priority-client-hub__stats">
+        <div className="admin-priority-client-hub__stat">
+          <span>{tr(safeT, 'adminClientePriorKpiStatus', 'Estado')}</span>
+          <strong className={hasClient ? 'admin-priority-client-hub__stat--active' : ''}>
+            {hasClient
+              ? tr(safeT, 'adminClientePriorKpiStatusActive', 'Cadastrado')
+              : tr(safeT, 'adminClientePriorKpiStatusEmpty', 'Vazio')}
+          </strong>
+        </div>
+        <div className="admin-priority-client-hub__stat">
+          <span>{tr(safeT, 'adminClientePriorKpiComplete', 'Perfil completo')}</span>
+          <strong>{pct}%</strong>
+        </div>
+        <div className="admin-priority-client-hub__stat admin-priority-client-hub__stat--note">
+          <span>{tr(safeT, 'adminClientePriorKpiPhoto', 'Foto')}</span>
+          <strong>
+            {hasPhoto
+              ? tr(safeT, 'adminClientePriorKpiPhotoYes', 'Sim')
+              : tr(safeT, 'adminClientePriorKpiPhotoNo', 'Não')}
+          </strong>
+        </div>
+      </div>
+
+      <p className="admin-priority-client-hub__note">
+        {tr(
+          safeT,
+          'adminClientePriorSingleNote',
+          'Apenas um cliente prioritário pode existir no sistema. Edite ou remova antes de registar outro.'
+        )}
+      </p>
+
+      <div className="admin-priority-client-hub__toolbar">
+        {!showClientePrioritarioForm && hasClient ? (
+          <>
+            <button type="button" className="admin-priority-client-hub-btn admin-priority-client-hub-btn--primary" onClick={handleEditClientePrioritario}>
+              {safeT?.editClientePrioritario || 'Editar Cliente Prioritário'}
+            </button>
+            {confirmDelete ? (
+              <>
+                <button type="button" className="admin-priority-client-hub-btn admin-priority-client-hub-btn--danger" onClick={() => { handleDeleteClientePrioritario(); setConfirmDelete(false) }}>
+                  {tr(safeT, 'adminClientePriorConfirmDelete', 'Sim, eliminar')}
+                </button>
+                <button type="button" className="admin-priority-client-hub-btn admin-priority-client-hub-btn--ghost" onClick={() => setConfirmDelete(false)}>
+                  {safeT?.cancel || 'Cancelar'}
+                </button>
+              </>
+            ) : (
+              <button type="button" className="admin-priority-client-hub-btn admin-priority-client-hub-btn--danger-outline" onClick={() => setConfirmDelete(true)}>
+                {safeT?.deleteClientePrioritario || 'Excluir Cliente Prioritário'}
+              </button>
+            )}
+          </>
+        ) : !showClientePrioritarioForm ? (
+          <button type="button" className="admin-priority-client-hub-btn admin-priority-client-hub-btn--primary" onClick={handleAddClientePrioritario}>
+            + {tr(safeT, 'adminClientePriorRegister', 'Registar cliente prioritário')}
+          </button>
+        ) : null}
+      </div>
+
+      {showClientePrioritarioForm ? (
+        <div className="admin-priority-client-hub__editor">
+          <header className="admin-priority-client-hub__editor-head">
+            <div>
+              <h4>{editingClientePrioritario ? safeT?.editClientePrioritario : safeT?.addClientePrioritario}</h4>
+              <p>{tr(safeT, 'adminClientePriorRequiredNote', 'Campos com * são obrigatórios: empresa, morada e e-mail.')}</p>
+            </div>
+            <button type="button" className="admin-priority-client-hub-btn admin-priority-client-hub-btn--ghost admin-priority-client-hub-btn--sm" onClick={cancelForm}>
+              {safeT?.cancel || 'Cancelar'}
+            </button>
+          </header>
+
+          <div className="admin-priority-client-hub__progress" aria-label={tr(safeT, 'adminClientePriorCompleteness', 'Completude do perfil')}>
+            <div className="admin-priority-client-hub__progress-bar">
+              <span style={{ width: `${pct}%` }} />
+            </div>
+            <small>
+              {pct}% {tr(safeT, 'adminClientePriorCompleteness', 'completude do perfil')}
+            </small>
+          </div>
+
+          <div className="admin-priority-client-hub__sections">
+            <article className="admin-priority-client-hub-section admin-priority-client-hub-section--identity">
+              <header>
+                <span aria-hidden="true">🏢</span>
+                <div>
+                  <strong>{tr(safeT, 'adminClientePriorSectionIdentity', 'Identidade')}</strong>
+                  <small>{tr(safeT, 'adminClientePriorSectionIdentityDesc', 'Nome da empresa e imagem de destaque')}</small>
+                </div>
+              </header>
+              <div className="admin-priority-client-hub__grid">
+                {renderField('nomeEmpresa', safeT?.nomeEmpresa || 'Nome da Empresa', { required: true })}
+                <div className="admin-priority-client-hub__photo">
+                  <span>{tr(safeT, 'adminClientePriorPhotoLabel', 'Foto / logotipo')}</span>
+                  <div className={`admin-priority-client-hub__dropzone${clientePrioritarioForm.photo ? ' admin-priority-client-hub__dropzone--filled' : ''}`}>
+                    {clientePrioritarioForm.photo ? (
+                      <img src={clientePrioritarioForm.photo} alt="" />
+                    ) : (
+                      <div className="admin-priority-client-hub__dropzone-empty">
+                        <span aria-hidden="true">⬆</span>
+                        <p>{tr(safeT, 'adminClientePriorPhotoHint', 'PNG ou JPG — aparece nos fluxos em destaque')}</p>
                       </div>
                     )}
                   </div>
-                </div>
-              ) : showClientePrioritarioForm ? (
-                <div style={{ border: '1px solid rgba(255, 215, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#1e1e1e' }}>
-                  <h3 style={{ marginBottom: '15px', color: '#ffd700' }}>{editingClientePrioritario ? (safeT?.editClientePrioritario || 'Editar Cliente Prioritário') : (safeT?.addClientePrioritario || 'Adicionar Cliente Prioritário')}</h3>
-                  
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.nomeEmpresa || 'Nome da Empresa'} *</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.nomeEmpresa || 'Nome da Empresa'}
-                        value={clientePrioritarioForm.nomeEmpresa}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, nomeEmpresa: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.morada || 'Morada'} *</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.morada || 'Morada'}
-                        value={clientePrioritarioForm.morada}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, morada: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.conselho || 'Conselho'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.conselho || 'Conselho'}
-                        value={clientePrioritarioForm.conselho}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, conselho: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.pais || 'País'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.pais || 'País'}
-                        value={clientePrioritarioForm.pais}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, pais: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.codigoPostal || 'Código Postal'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.codigoPostal || 'Código Postal'}
-                        value={clientePrioritarioForm.codigoPostal}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, codigoPostal: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.freguesia || 'Freguesia'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.freguesia || 'Freguesia'}
-                        value={clientePrioritarioForm.freguesia}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, freguesia: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.identificacaoFiscal || 'Identificação Fiscal'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.identificacaoFiscal || 'Identificação Fiscal'}
-                        value={clientePrioritarioForm.numeroContribuicaoFiscal}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, numeroContribuicaoFiscal: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.telefones || 'Telefones'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.telefones || 'Telefones'}
-                        value={clientePrioritarioForm.telefones}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, telefones: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'} *</label>
-                      <input
-                        type="email"
-                        placeholder={safeT?.email || 'E-mail'}
-                        value={clientePrioritarioForm.email}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, email: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.contato || 'Contato'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.contato || 'Contato'}
-                        value={clientePrioritarioForm.contato}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, contato: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>Foto</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleClientePrioritarioPhotoChange}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                      {clientePrioritarioForm.photo && (
-                        <div style={{ marginTop: '10px' }}>
-                          <img src={clientePrioritarioForm.photo} alt="Preview" style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '4px', marginBottom: '10px' }} />
-                          <button className="btn-danger" onClick={handleRemoveClientePrioritarioPhoto} style={{ padding: '6px 12px', fontSize: '12px' }}>
-                            Remover Foto
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                    <button className="btn-primary" onClick={handleSaveClientePrioritario} style={{ flex: 1, backgroundColor: 'rgba(255, 215, 0, 0.2)', borderColor: 'rgba(255, 215, 0, 0.5)' }}>
-                      {safeT?.save || 'Salvar'}
-                    </button>
-                    <button className="btn-primary" onClick={() => { 
-                      setShowClientePrioritarioForm(false); 
-                      setEditingClientePrioritario(null); 
-                      setClientePrioritarioForm({
-                        nomeEmpresa: '',
-                        morada: '',
-                        localidade: '',
-                        conselho: '',
-                        pais: '',
-                        codigoPostal: '',
-                        freguesia: '',
-                        numeroContribuicaoFiscal: '',
-                        telefones: '',
-                        email: '',
-                        contato: '',
-                        photo: ''
-                      }); 
-                    }} style={{ flex: 1 }}>
-                      {safeT?.cancel || 'Cancelar'}
-                    </button>
+                  <div className="admin-priority-client-hub__photo-actions">
+                    <label className="admin-priority-client-hub-btn admin-priority-client-hub-btn--secondary admin-priority-client-hub-btn--sm">
+                      {tr(safeT, 'adminClientePriorPhotoUpload', 'Carregar imagem')}
+                      <input type="file" accept="image/*" hidden onChange={handleClientePrioritarioPhotoChange} />
+                    </label>
+                    {clientePrioritarioForm.photo ? (
+                      <button type="button" className="admin-priority-client-hub-btn admin-priority-client-hub-btn--ghost admin-priority-client-hub-btn--sm" onClick={handleRemoveClientePrioritarioPhoto}>
+                        {tr(safeT, 'adminClientePriorPhotoRemove', 'Remover foto')}
+                      </button>
+                    ) : null}
                   </div>
                 </div>
+              </div>
+            </article>
+
+            <article className="admin-priority-client-hub-section admin-priority-client-hub-section--address">
+              <header>
+                <span aria-hidden="true">📍</span>
+                <div>
+                  <strong>{tr(safeT, 'adminClientePriorSectionAddress', 'Morada')}</strong>
+                  <small>{tr(safeT, 'adminClientePriorSectionAddressDesc', 'Endereço completo para documentos e mapas')}</small>
+                </div>
+              </header>
+              <div className="admin-priority-client-hub__grid">
+                {renderField('morada', safeT?.morada || 'Morada', { required: true })}
+                {renderField('localidade', safeT?.localidade || 'Localidade')}
+                {renderField('freguesia', safeT?.freguesia || 'Freguesia')}
+                {renderField('conselho', safeT?.conselho || 'Conselho')}
+                {renderField('codigoPostal', safeT?.codigoPostal || 'Código Postal')}
+                {renderField('pais', safeT?.pais || 'País')}
+              </div>
+            </article>
+
+            <article className="admin-priority-client-hub-section admin-priority-client-hub-section--contact">
+              <header>
+                <span aria-hidden="true">📞</span>
+                <div>
+                  <strong>{tr(safeT, 'adminClientePriorSectionContact', 'Fiscal e contactos')}</strong>
+                  <small>{tr(safeT, 'adminClientePriorSectionContactDesc', 'NIF, telefones, e-mail e pessoa de contacto')}</small>
+                </div>
+              </header>
+              <div className="admin-priority-client-hub__grid">
+                {renderField('numeroContribuicaoFiscal', safeT?.identificacaoFiscal || 'Identificação Fiscal')}
+                {renderField('telefones', safeT?.telefones || 'Telefones')}
+                {renderField('email', safeT?.email || 'E-mail', { required: true, type: 'email' })}
+                {renderField('contato', safeT?.contato || 'Contato')}
+              </div>
+            </article>
+          </div>
+
+          <div className="admin-priority-client-hub__editor-actions">
+            <button type="button" className="admin-priority-client-hub-btn admin-priority-client-hub-btn--ghost" onClick={cancelForm}>
+              {safeT?.cancel || 'Cancelar'}
+            </button>
+            <button type="button" className="admin-priority-client-hub-btn admin-priority-client-hub-btn--primary" onClick={handleSaveClientePrioritario}>
+              {safeT?.save || 'Salvar'}
+            </button>
+          </div>
+        </div>
+      ) : hasClient && clientePrioritario ? (
+        <article className="admin-priority-client-hub-showcase">
+          <div className="admin-priority-client-hub-showcase__glow" aria-hidden="true" />
+          <div className="admin-priority-client-hub-showcase__main">
+            <div className="admin-priority-client-hub-showcase__avatar" aria-hidden="true">
+              {clientePrioritario.photo ? (
+                <img src={clientePrioritario.photo} alt="" />
               ) : (
-                <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>{safeT?.noClientePrioritario || 'Nenhum cliente prioritário cadastrado'}</p>
+                initials(clientePrioritario.nomeEmpresa)
               )}
             </div>
+            <div className="admin-priority-client-hub-showcase__info">
+              <span className="admin-priority-client-hub-showcase__badge">
+                {tr(safeT, 'adminClientePriorViewCard', 'Cliente prioritário ativo')}
+              </span>
+              <h4>{clientePrioritario.nomeEmpresa}</h4>
+              <p>{formatAddress(clientePrioritario)}</p>
+              <div className="admin-priority-client-hub-showcase__chips">
+                {clientePrioritario.numeroContribuicaoFiscal ? (
+                  <span className="admin-priority-client-hub-chip">
+                    NIF: {clientePrioritario.numeroContribuicaoFiscal}
+                  </span>
+                ) : null}
+                {clientePrioritario.contato ? (
+                  <span className="admin-priority-client-hub-chip">{clientePrioritario.contato}</span>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          <div className="admin-priority-client-hub-showcase__contacts">
+            {clientePrioritario.email ? (
+              <div className="admin-priority-client-hub-contact-row">
+                <span>{safeT?.email || 'E-mail'}</span>
+                <strong>{clientePrioritario.email}</strong>
+                <button
+                  type="button"
+                  className={`admin-priority-client-hub-btn admin-priority-client-hub-btn--xs admin-priority-client-hub-btn--ghost${copyFlash === 'email' ? ' admin-priority-client-hub-btn--success' : ''}`}
+                  onClick={() => void copyValue(clientePrioritario.email, 'email')}
+                >
+                  {copyFlash === 'email'
+                    ? tr(safeT, 'adminClientePriorCopied', 'Copiado!')
+                    : tr(safeT, 'adminClientePriorCopyEmail', 'Copiar e-mail')}
+                </button>
+              </div>
+            ) : null}
+            {clientePrioritario.telefones ? (
+              <div className="admin-priority-client-hub-contact-row">
+                <span>{safeT?.telefones || 'Telefones'}</span>
+                <strong>{clientePrioritario.telefones}</strong>
+                <button
+                  type="button"
+                  className={`admin-priority-client-hub-btn admin-priority-client-hub-btn--xs admin-priority-client-hub-btn--ghost${copyFlash === 'phone' ? ' admin-priority-client-hub-btn--success' : ''}`}
+                  onClick={() => void copyValue(clientePrioritario.telefones, 'phone')}
+                >
+                  {copyFlash === 'phone'
+                    ? tr(safeT, 'adminClientePriorCopied', 'Copiado!')
+                    : tr(safeT, 'adminClientePriorCopyPhone', 'Copiar telefone')}
+                </button>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="admin-priority-client-hub-showcase__details">
+            {(
+              [
+                [safeT?.morada || 'Morada', clientePrioritario.morada],
+                [safeT?.localidade || 'Localidade', clientePrioritario.localidade],
+                [safeT?.freguesia || 'Freguesia', clientePrioritario.freguesia],
+                [safeT?.conselho || 'Conselho', clientePrioritario.conselho],
+                [safeT?.codigoPostal || 'Código Postal', clientePrioritario.codigoPostal],
+                [safeT?.pais || 'País', clientePrioritario.pais],
+              ] as const
+            )
+              .filter(([, value]) => String(value || '').trim())
+              .map(([label, value]) => (
+                <div key={label} className="admin-priority-client-hub-detail">
+                  <span>{label}</span>
+                  <strong>{value}</strong>
+                </div>
+              ))}
+          </div>
+
+          <div className="admin-priority-client-hub__progress admin-priority-client-hub__progress--inline">
+            <div className="admin-priority-client-hub__progress-bar">
+              <span style={{ width: `${pct}%` }} />
+            </div>
+            <small>{pct}% {tr(safeT, 'adminClientePriorCompleteness', 'completude do perfil')}</small>
+          </div>
+        </article>
+      ) : (
+        <div className="admin-priority-client-hub__empty">
+          <span aria-hidden="true">★</span>
+          <p>{safeT?.noClientePrioritario || 'Nenhum cliente prioritário cadastrado'}</p>
+          <button type="button" className="admin-priority-client-hub-btn admin-priority-client-hub-btn--primary" onClick={handleAddClientePrioritario}>
+            {safeT?.addClientePrioritario || 'Adicionar Cliente Prioritário'}
+          </button>
+        </div>
+      )}
+    </section>
   )
 }
