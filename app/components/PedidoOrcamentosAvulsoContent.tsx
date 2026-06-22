@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react'
 import { openPedidoOrcamentoAvulsoPdf } from '../lib/pedidoOrcamentoAvulsoPdf'
+import { ProImageHoverPreview } from './ProImageHoverPreview'
 
 export type ClientePedido = {
   id: string
@@ -576,11 +577,15 @@ export function PedidoOrcamentosAvulsoContent({
                             className="orc-pro__list-item orc-pro__list-item--peca"
                             onClick={() => adicionarPecaDaBiblioteca(peca)}
                           >
-                            {peca.imagem ? (
-                              <img src={peca.imagem} alt="" />
-                            ) : (
-                              <div className="orc-pro__peca-thumb">—</div>
-                            )}
+                            <ProImageHoverPreview
+                              src={peca.imagem}
+                              alt={peca.nome}
+                              label={`${peca.codigo} — ${peca.nome}`}
+                              disablePreview={!peca.imagem}
+                              thumbClassName="orc-pro__peca-thumb"
+                            >
+                              —
+                            </ProImageHoverPreview>
                             <div className="orc-pro__peca-info">
                               <strong>{peca.nome}</strong>
                               <small>{peca.codigo}</small>
@@ -641,11 +646,15 @@ export function PedidoOrcamentosAvulsoContent({
                 <h4 className="orc-pro__panel-title">{safeT?.pecasNoPedido || 'Peças no pedido'}</h4>
                 {pecasPedido.map((p) => (
                   <div key={p.id} className="orc-pro__peca-card">
-                    {p.imagem ? (
-                      <img src={p.imagem} alt={p.nome} className="orc-pro__peca-thumb orc-pro__peca-thumb--lg" />
-                    ) : (
-                      <div className="orc-pro__peca-thumb orc-pro__peca-thumb--lg">—</div>
-                    )}
+                    <ProImageHoverPreview
+                      src={p.imagem}
+                      alt={p.nome}
+                      label={`${p.codigo} — ${p.nome}`}
+                      disablePreview={!p.imagem}
+                      thumbClassName="orc-pro__peca-thumb orc-pro__peca-thumb--lg"
+                    >
+                      —
+                    </ProImageHoverPreview>
                     <div className="orc-pro__peca-info">
                       <strong>{p.nome}</strong>
                       <small>{p.codigo}</small>

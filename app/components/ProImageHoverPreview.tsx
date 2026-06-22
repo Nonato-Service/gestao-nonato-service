@@ -9,6 +9,8 @@ type Props = {
   label?: string
   className?: string
   thumbClassName?: string
+  /** Quando true, mostra miniatura mas sem popup ampliado (ex.: logo padrao). */
+  disablePreview?: boolean
   children?: React.ReactNode
 }
 
@@ -18,11 +20,14 @@ export function ProImageHoverPreview({
   label,
   className = 'fg-pro-preview',
   thumbClassName = 'fg-pro-preview__thumb',
+  disablePreview = false,
   children,
 }: Props) {
   const anchorRef = useRef<HTMLSpanElement>(null)
   const [visible, setVisible] = useState(false)
   const [pos, setPos] = useState({ top: 0, left: 0 })
+
+  const canPreview = Boolean(src) && !disablePreview
 
   const updatePosition = useCallback(() => {
     const el = anchorRef.current
@@ -40,9 +45,10 @@ export function ProImageHoverPreview({
   }, [])
 
   const show = useCallback(() => {
+    if (!canPreview) return
     updatePosition()
     setVisible(true)
-  }, [updatePosition])
+  }, [canPreview, updatePosition])
 
   const hide = useCallback(() => setVisible(false), [])
 
@@ -51,7 +57,7 @@ export function ProImageHoverPreview({
   }
 
   const flyout =
-    visible && typeof document !== 'undefined'
+    visible && canPreview && typeof document !== 'undefined'
       ? createPortal(
           <div
             className="fg-pro-preview__flyout"
@@ -72,10 +78,10 @@ export function ProImageHoverPreview({
     <>
       <span
         ref={anchorRef}
-        className={`${className} ${visible ? 'is-active' : ''}`}
+        className={`${className} ${visible ? 'is-active' : ''} ${canPreview ? 'fg-pro-preview--zoomable' : ''}`}
         onMouseEnter={show}
         onMouseLeave={hide}
-        title={label || alt || undefined}
+        title={canPreview ? label || alt || undefined : undefined}
       >
         <span className={thumbClassName}>
           <img src={src} alt={alt} draggable={false} />

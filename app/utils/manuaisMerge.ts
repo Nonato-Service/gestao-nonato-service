@@ -25,6 +25,9 @@ export function mergeManuaisFamiliasGrupos(server: any, local: any): any {
     const imgMap = new Map<string, any>()
     for (const i of s.imagens || []) imgMap.set(i.id, i)
     for (const i of l.imagens || []) imgMap.set(i.id, i)
+    const anexoMap = new Map<string, any>()
+    for (const a of s.anexos || []) anexoMap.set(a.id, a)
+    for (const a of l.anexos || []) anexoMap.set(a.id, a)
     return {
       ...s,
       ...l,
@@ -32,9 +35,15 @@ export function mergeManuaisFamiliasGrupos(server: any, local: any): any {
       grupoId: l.grupoId || s.grupoId,
       documentos: Array.from(docMap.values()),
       imagens: Array.from(imgMap.values()),
+      anexos: Array.from(anexoMap.values()),
+      software: mergeTexto(s.software, l.software),
+      notas: mergeTexto(s.notas, l.notas),
       infoTecnicas: mergeTexto(s.infoTecnicas, l.infoTecnicas),
       infoMecanicas: mergeTexto(s.infoMecanicas, l.infoMecanicas),
-      infoEletricas: mergeTexto(s.infoEletricas, l.infoEletricas)
+      infoEletricas: mergeTexto(s.infoEletricas, l.infoEletricas),
+      bibliaModeloId: l.bibliaModeloId || s.bibliaModeloId,
+      bibliaLinhaId: l.bibliaLinhaId || s.bibliaLinhaId,
+      bibliaFamiliaId: l.bibliaFamiliaId || s.bibliaFamiliaId,
     }
   }
 

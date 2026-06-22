@@ -14451,7 +14451,7 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 .manuais-pro__kpis {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
 }
 .manuais-pro__kpi {
@@ -14572,10 +14572,15 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   border: 1px solid transparent;
   background: rgba(255, 255, 255, 0.02);
 }
-.manuais-pro__row--grupo { min-height: 36px; }
+.manuais-pro__row--grupo {
+  min-height: 36px;
+  margin-left: 8px;
+  padding-left: 4px;
+  border-left: 2px solid rgba(56, 189, 248, 0.1);
+}
 .manuais-pro__row--modelo {
   min-height: 34px;
-  margin-left: 14px;
+  margin-left: 22px;
   padding-left: 6px;
   border-left: 2px solid rgba(56, 189, 248, 0.15);
 }
@@ -14859,6 +14864,31 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   cursor: zoom-in;
 }
 .manuais-pro__image-remove { position: absolute; top: 4px; right: 4px; z-index: 2; }
+.manuais-pro__tree-block--nested { margin-left: 10px; }
+.manuais-pro__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.manuais-pro__tab {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  background: rgba(8, 12, 18, 0.55);
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.manuais-pro__tab.is-active {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #f0f9ff;
+}
+.manuais-pro__placeholder--compact {
+  min-height: 120px;
+  padding: 24px;
+}
 @media (max-width: 1100px) {
   .manuais-pro__layout { grid-template-columns: 1fr; min-height: auto; }
   .manuais-pro__kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -23622,6 +23652,70 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
 }
 .manuais-pro .fg-pro-preview__flyout-label {
   color: #7dd3fc;
+}
+.fg-pro-preview--zoomable {
+  cursor: zoom-in;
+}
+.fg-pro-preview__thumb--peca-sm {
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 200, 83, 0.25);
+  background: rgba(2, 6, 23, 0.75);
+  flex-shrink: 0;
+}
+.fg-pro-preview__thumb--peca-sm img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.fg-pro-preview__thumb--peca-md {
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 200, 83, 0.25);
+  background: rgba(15, 23, 42, 0.65);
+  flex-shrink: 0;
+}
+.fg-pro-preview__thumb--peca-md img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.fg-pro-preview__thumb--peca-lg {
+  width: 150px;
+  height: 150px;
+  max-width: 150px;
+  max-height: 150px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 200, 83, 0.3);
+  background: rgba(2, 6, 23, 0.75);
+  margin: 0 auto;
+}
+.fg-pro-preview__thumb--peca-lg img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.orc-pro .fg-pro-preview .orc-pro__peca-thumb {
+  width: 48px;
+  height: 48px;
+}
+.orc-pro .fg-pro-preview .orc-pro__peca-thumb--lg {
+  width: 56px;
+  height: 56px;
+}
+.orc-pro .fg-pro-preview .orc-pro__peca-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.orc-pro .fg-pro-preview__thumb--peca-sm img,
+.orc-pro .orc-pro__list-item--peca .fg-pro-preview__thumb img {
+  object-fit: cover;
 }
 
 /* ── Pedido Orçamentos Avulso (orc-pro) ── */

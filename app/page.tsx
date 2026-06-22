@@ -92,6 +92,13 @@ import {
 } from './lib/relatorioServicoEquipamentos'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
 import {
+  buildConhecimentoTecnicoFromSources,
+  BIBLIA_NONATO_STORAGE_KEY,
+  BIBLIA_LEGACY_CATEGORIES_KEY,
+  CONHECIMENTO_TECNICO_STORAGE_KEY,
+  syncConhecimentoTecnicoLegacyStores,
+} from './lib/conhecimentoTecnicoMerge'
+import {
   loadManuaisFamiliasGruposFromIdb,
   saveManuaisFamiliasGruposToIdb,
   getKv,
@@ -104,12 +111,12 @@ import { translateWithMyMemory, WRITING_ASSIST_FIELD_MAX_CHARS } from './lib/mym
 import { AssistTextarea, AssistInput } from './components/AssistTextFields'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PagamentosContadorContent } from './components/PagamentosContadorContent'
-import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { GestaoDemosContent } from './components/GestaoDemosContent'
 import { ManuaisInformacoesContent } from './components/ManuaisInformacoesContent'
 import { FamiliasGruposChecklistContent } from './components/FamiliasGruposChecklistContent'
 import { FamiliasGruposEquipamentosContent } from './components/FamiliasGruposEquipamentosContent'
+import { ProImageHoverPreview } from './components/ProImageHoverPreview'
 import { DEMO_VISITOR_USER } from './lib/demoManagement'
 import { AdministradorContent } from './components/admin/AdministradorContent'
 import { AdminUserFormPanel } from './components/admin/AdminUserFormPanel'
@@ -6160,8 +6167,14 @@ export default function Dashboard() {
       'pagamentos-contador': t?.pagamentosContadorTitle || 'PAGAMENTOS AO CONTADOR',
       'comprovantes-despesas': t?.comprovantesDespesasTitle || 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
       'mapa-visual-separacao-pecas': t?.mapaVisualSeparacaoPecasTitle || 'Mapa Visual de Separação de Peças / Cliente',
-      'manuais-informacoes-tecnicas': t?.manuaisInformacoesTecnicasTitle || 'Manuais e Informações Técnica dos Equipamentos',
-      'biblia-nonato-service': (t as any)?.bibliaNonatoServiceTitle || 'Bíblia da Nonato Service',
+      'manuais-informacoes-tecnicas':
+        (t as any)?.conhecimentoTecnicoHubTitle ||
+        t?.manuaisInformacoesTecnicasTitle ||
+        'Centro de Conhecimento Técnico',
+      'biblia-nonato-service':
+        (t as any)?.conhecimentoTecnicoHubTitle ||
+        (t as any)?.bibliaNonatoServiceTitle ||
+        'Centro de Conhecimento Técnico',
       'almoxarifado-armazem': t?.almoxarifadoArmazemTitle || 'Almoxarifado / Armazém',
       'checklist': t?.checklistTitle || 'CHECKLIST',
       'checklist-hub': t?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST',
@@ -9572,9 +9585,15 @@ export default function Dashboard() {
         /* ignorar */
       }
       const savedManuaisFG = getData('nonato-manuais-familias-grupos')
-      const mergedManuaisFG = mergeManuaisFamiliasGrupos(
+      const savedBiblia = getData(BIBLIA_NONATO_STORAGE_KEY)
+      const savedBibliaLegacy = getData(BIBLIA_LEGACY_CATEGORIES_KEY)
+      const savedUnified = getData(CONHECIMENTO_TECNICO_STORAGE_KEY)
+      const mergedManuaisFG = buildConhecimentoTecnicoFromSources(
         savedManuaisFG && typeof savedManuaisFG === 'object' ? savedManuaisFG : {},
-        fromIdbManuais && typeof fromIdbManuais === 'object' ? fromIdbManuais : {}
+        savedBiblia,
+        fromIdbManuais && typeof fromIdbManuais === 'object' ? fromIdbManuais : undefined,
+        savedBibliaLegacy,
+        savedUnified && typeof savedUnified === 'object' ? savedUnified : undefined
       )
       setManuaisFamilias(Array.isArray(mergedManuaisFG.familias) ? mergedManuaisFG.familias : [])
       setManuaisGrupos(Array.isArray(mergedManuaisFG.grupos) ? mergedManuaisFG.grupos : [])
@@ -9583,6 +9602,13 @@ export default function Dashboard() {
         await saveManuaisFamiliasGruposToIdb(mergedManuaisFG)
       } catch {
         /* IDB pode falhar em modo privado; estado em memória mantém-se */
+      }
+      const hasConhecimentoData =
+        (mergedManuaisFG.familias?.length ?? 0) > 0 ||
+        (mergedManuaisFG.grupos?.length ?? 0) > 0 ||
+        (mergedManuaisFG.modelos?.length ?? 0) > 0
+      if (hasConhecimentoData) {
+        void syncConhecimentoTecnicoLegacyStores(mergedManuaisFG, saveData).catch(() => {})
       }
 
       await reportBoot(52)
@@ -25017,10 +25043,14 @@ export default function Dashboard() {
       openTab('registro-despesas', getTabTitle('registro-despesas'))
     } else if (action === 'open-mapa-visual-separacao-pecas') {
       openTab('mapa-visual-separacao-pecas', getTabTitle('mapa-visual-separacao-pecas'))
-    } else if (action === 'open-manuais-informacoes-tecnicas') {
-      openTab('manuais-informacoes-tecnicas', getTabTitle('manuais-informacoes-tecnicas'))
-    } else if (action === 'open-biblia-nonato-service') {
-      openTab('biblia-nonato-service', getTabTitle('biblia-nonato-service'))
+    } else if (action === 'open-manuais-informacoes-tecnicas' || action === 'open-biblia-nonato-service') {
+      const unifiedTitle = getTabTitle('manuais-informacoes-tecnicas')
+      const existingUnified = openTabs.find((tab) => tab.type === 'manuais-informacoes-tecnicas')
+      if (existingUnified) {
+        setActiveTabId(existingUnified.id)
+      } else {
+        openTab('manuais-informacoes-tecnicas', unifiedTitle)
+      }
     } else if (action === 'open-almoxarifado-armazem') {
       openTab('almoxarifado-armazem', getTabTitle('almoxarifado-armazem'))
     } else if (action === 'open-quick-gestao-custos') {
@@ -26382,9 +26412,10 @@ export default function Dashboard() {
     )
   }
 
-  function ManuaisInformacoesTabContent() {
+  function ManuaisInformacoesTabContent(props?: { hubMode?: 'unified' | 'manuais' | 'biblia' }) {
     return (
       <ManuaisInformacoesContent
+        hubMode={props?.hubMode ?? 'unified'}
         safeT={safeT as Record<string, string | undefined>}
         LogoComponent={LogoComponent}
         closeTab={closeTab}
@@ -55397,22 +55428,10 @@ A1;Peça exemplo;10`}
         )
 
       case 'manuais-informacoes-tecnicas':
-        return ManuaisInformacoesTabContent()
+        return ManuaisInformacoesTabContent({ hubMode: 'unified' })
 
       case 'biblia-nonato-service':
-        return (
-          <BibliaNonatoServiceContent
-            saveData={async (key, data) => {
-              await saveData(key, data)
-            }}
-            loadData={loadData}
-            safeT={safeT as Record<string, string | undefined>}
-            closeTab={closeTab}
-            activeTabId={activeTabId || undefined}
-            onHome={voltarPaginaInicial}
-            isCompactLayout={isCompactLayout}
-          />
-        )
+        return ManuaisInformacoesTabContent({ hubMode: 'unified' })
 
       case 'informacoes-conhecimento-tecnicos':
         {
@@ -61818,18 +61837,12 @@ A1;Peça exemplo;10`}
                             const srcImg = resolveImagemItemOrcamentoDisplay(item, pecasBiblioteca)
                             if (!itemOrcamentoDeveMostrarImagem(item) || !srcImg) return null
                             return (
-                            <img 
-                              src={srcImg} 
+                            <ProImageHoverPreview
+                              src={srcImg}
                               alt={item.descricao}
-                              style={{
-                                width: '80px',
-                                height: '80px',
-                                objectFit: pecaBibliotecaTemImagemPropria(item.imagem) ? 'cover' : 'contain',
-                                borderRadius: '4px',
-                                border: '1px solid rgba(0, 200, 83, 0.2)',
-                                backgroundColor: pecaBibliotecaTemImagemPropria(item.imagem) ? undefined : '#0f0f0f',
-                                flexShrink: 0,
-                              }}
+                              label={item.codigo ? `${item.codigo} — ${item.descricao}` : item.descricao}
+                              disablePreview={!pecaBibliotecaTemImagemPropria(item.imagem) && !(typeof item.imagem === 'string' && item.imagem.trim())}
+                              thumbClassName="fg-pro-preview__thumb fg-pro-preview__thumb--peca-md"
                             />
                             )
                           })()}
@@ -62160,17 +62173,12 @@ A1;Peça exemplo;10`}
                                 e.currentTarget.style.backgroundColor = 'transparent'
                               }}
                             >
-                              <img
+                              <ProImageHoverPreview
                                 src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
                                 alt={peca.nome}
-                                style={{
-                                  width: '50px',
-                                  height: '50px',
-                                  objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
-                                  borderRadius: '4px',
-                                  backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
-                                  flexShrink: 0,
-                                }}
+                                label={`${peca.codigo} — ${peca.nome}`}
+                                disablePreview={!pecaBibliotecaTemImagemPropria(peca.imagem)}
+                                thumbClassName="fg-pro-preview__thumb fg-pro-preview__thumb--peca-sm"
                               />
                               <div style={{ flex: 1 }}>
                                 <div style={{ color: '#66b3ff', fontWeight: 'bold' }}>{peca.nome}</div>
@@ -62191,10 +62199,12 @@ A1;Peça exemplo;10`}
                     if (!srcPreview && !itemOrcamentoDeveMostrarImagem({ imagem: itemForm.imagem, pecaId: itemForm.pecaId })) return null
                     return (
                     <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-                      <img 
-                        src={srcPreview} 
+                      <ProImageHoverPreview
+                        src={srcPreview}
                         alt={safeT?.imagemPeca || 'Imagem da Peça'}
-                        style={{ maxWidth: '150px', maxHeight: '150px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.3)', objectFit: pecaBibliotecaTemImagemPropria(itemForm.imagem) ? 'cover' : 'contain' }}
+                        label={itemForm.descricao || itemForm.codigo || (safeT?.imagemPeca || 'Imagem da Peça')}
+                        disablePreview={!pecaBibliotecaTemImagemPropria(itemForm.imagem) && !(typeof itemForm.imagem === 'string' && itemForm.imagem.trim())}
+                        thumbClassName="fg-pro-preview__thumb fg-pro-preview__thumb--peca-lg"
                       />
                     </div>
                     )
@@ -63473,21 +63483,12 @@ A1;Peça exemplo;10`}
                                       const srcImg = resolveImagemItemOrcamentoDisplay(item, pecasBiblioteca)
                                       if (!itemOrcamentoDeveMostrarImagem(item) || !srcImg) return null
                                       return (
-                                      <img 
-                                        src={srcImg} 
+                                      <ProImageHoverPreview
+                                        src={srcImg}
                                         alt={item.descricao}
-                                        style={{
-                                          width: '80px',
-                                          height: '80px',
-                                          objectFit: pecaBibliotecaTemImagemPropria(item.imagem) ? 'cover' : 'contain',
-                                          borderRadius: '4px',
-                                          border: '1px solid rgba(0, 200, 83, 0.3)',
-                                          backgroundColor: pecaBibliotecaTemImagemPropria(item.imagem) ? undefined : '#0f0f0f',
-                                          flexShrink: 0,
-                                        }}
-                                        onError={(e) => {
-                                          e.currentTarget.style.display = 'none'
-                                        }}
+                                        label={item.codigo ? `${item.codigo} — ${item.descricao}` : item.descricao}
+                                        disablePreview={!pecaBibliotecaTemImagemPropria(item.imagem) && !(typeof item.imagem === 'string' && item.imagem.trim())}
+                                        thumbClassName="fg-pro-preview__thumb fg-pro-preview__thumb--peca-md"
                                       />
                                       )
                                     })()}
