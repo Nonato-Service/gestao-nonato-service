@@ -31,11 +31,13 @@ import {
   type DemoRecipientWithState,
 } from '../lib/demoManagement'
 import { buildDemoUsername, formatDemoCredentialsText, generateDemoAccessCredentials } from '../lib/demoCredentials'
+import type { SafeT } from './admin/adminTypes'
 
 type Variant = 'full' | 'embedded' | 'compact'
 
 type Props = {
   variant?: Variant
+  safeT?: SafeT
   saveData?: (key: string, value: unknown, saveToLocalStorage?: boolean, awaitServer?: boolean) => Promise<boolean>
   loadData?: (key: string) => Promise<unknown>
   onOpenFullTab?: () => void
@@ -61,6 +63,11 @@ const STATUS_LABELS: Record<DemoRecipientStatus, string> = {
   expirado: 'Expirado',
 }
 
+function tr(safeT: SafeT | undefined, key: string, fallback: string): string {
+  if (!safeT) return fallback
+  return (safeT as Record<string, string | undefined>)[key] || fallback
+}
+
 function statusBadgeStyle(status: DemoRecipientStatus): React.CSSProperties {
   if (status === 'pendente') return { color: '#bdbdff', border: '1px solid rgba(160,160,255,0.35)', background: 'rgba(120,120,255,0.08)' }
   if (status === 'expirado') return { color: '#ff9b9b', border: '1px solid rgba(255,120,120,0.35)', background: 'rgba(255,80,80,0.08)' }
@@ -70,6 +77,7 @@ function statusBadgeStyle(status: DemoRecipientStatus): React.CSSProperties {
 
 export function GestaoDemosContent({
   variant = 'full',
+  safeT,
   saveData,
   loadData,
   onOpenFullTab,
@@ -338,9 +346,9 @@ export function GestaoDemosContent({
   }
 
   const stepTabs: { id: WizardStep; label: string; num: string }[] = [
-    { id: 'pacote', label: 'Módulos', num: '1' },
-    { id: 'destinatario', label: 'Destinatário', num: '2' },
-    { id: 'enviados', label: 'Enviados', num: '3' },
+    { id: 'pacote', label: tr(safeT, 'adminDemosHubStepModules', 'Módulos'), num: '1' },
+    { id: 'destinatario', label: tr(safeT, 'adminDemosHubStepRecipient', 'Destinatário'), num: '2' },
+    { id: 'enviados', label: tr(safeT, 'adminDemosHubStepSent', 'Enviados'), num: '3' },
   ]
 
   const panelStyle: React.CSSProperties = {
@@ -352,17 +360,17 @@ export function GestaoDemosContent({
   }
 
   const renderStats = () => (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: compact ? '6px' : '10px', marginBottom: compact ? '12px' : '16px' }}>
+    <div className="admin-demos-hub__stats">
       {[
-        { n: stats.total, label: 'Registadas', color: '#9be7ff' },
-        { n: stats.pendente, label: 'Pendentes', color: '#bdbdff' },
-        { n: stats.ativo, label: 'Ativas', color: '#7dffb3' },
-        { n: stats.aExpirar, label: 'A expirar', color: '#ffd36a' },
-        { n: stats.expirado, label: 'Expiradas', color: '#ff9b9b' },
+        { n: stats.total, label: tr(safeT, 'adminDemosHubKpiTotal', 'Registadas'), tone: 'total' },
+        { n: stats.pendente, label: tr(safeT, 'adminDemosHubKpiPending', 'Pendentes'), tone: 'pending' },
+        { n: stats.ativo, label: tr(safeT, 'adminDemosHubKpiActive', 'Ativas'), tone: 'active' },
+        { n: stats.aExpirar, label: tr(safeT, 'adminDemosHubKpiExpiring', 'A expirar'), tone: 'expiring' },
+        { n: stats.expirado, label: tr(safeT, 'adminDemosHubKpiExpired', 'Expiradas'), tone: 'expired' },
       ].map((s) => (
-        <div key={s.label} style={{ padding: compact ? '8px' : '12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center' }}>
-          <strong style={{ display: 'block', fontSize: compact ? '18px' : '22px', color: s.color }}>{s.n}</strong>
-          <span style={{ fontSize: compact ? '10px' : '11px', opacity: 0.75 }}>{s.label}</span>
+        <div key={s.label} className={`admin-demos-hub__stat admin-demos-hub__stat--${s.tone}`}>
+          <strong>{s.n}</strong>
+          <span>{s.label}</span>
         </div>
       ))}
     </div>
@@ -370,24 +378,17 @@ export function GestaoDemosContent({
 
   const renderStepNav = () =>
     !compact ? (
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+      <div className="admin-demos-hub__steps-nav" role="tablist" aria-label={tr(safeT, 'adminDemosHubTitle', 'Centro de Demonstrações')}>
         {stepTabs.map((t) => (
           <button
             key={t.id}
             type="button"
+            role="tab"
+            aria-selected={step === t.id}
+            className={`admin-demos-hub__step-tab${step === t.id ? ' admin-demos-hub__step-tab--active' : ''}`}
             onClick={() => setStep(t.id)}
-            style={{
-              flex: '1 1 140px',
-              padding: '12px 14px',
-              borderRadius: '10px',
-              border: step === t.id ? '2px solid rgba(0,255,140,0.5)' : '1px solid rgba(255,255,255,0.12)',
-              background: step === t.id ? 'rgba(0,255,140,0.1)' : 'rgba(255,255,255,0.03)',
-              color: step === t.id ? '#7dffb3' : '#ccc',
-              cursor: 'pointer',
-              textAlign: 'left',
-            }}
           >
-            <span style={{ fontWeight: 800, marginRight: '8px', opacity: 0.7 }}>{t.num}.</span>
+            <span className="admin-demos-hub__step-num">{t.num}</span>
             {t.label}
           </button>
         ))}
@@ -399,14 +400,14 @@ export function GestaoDemosContent({
       {([
         {
           id: 'pacote-completo' as const,
-          title: 'Envio completo (pacote)',
-          desc: 'Escolha um perfil pronto ou todos os módulos de uma vez',
+          title: tr(safeT, 'adminDemosHubModeFullTitle', 'Envio completo (pacote)'),
+          desc: tr(safeT, 'adminDemosHubModeFullDesc', 'Escolha um perfil pronto ou todos os módulos de uma vez'),
           icon: '📦',
         },
         {
           id: 'modulo-a-modulo' as const,
-          title: 'Passo a passo (item a item)',
-          desc: 'Configure cada módulo um de cada vez, no seu ritmo',
+          title: tr(safeT, 'adminDemosHubModeStepTitle', 'Passo a passo (item a item)'),
+          desc: tr(safeT, 'adminDemosHubModeStepDesc', 'Configure cada módulo um de cada vez, no seu ritmo'),
           icon: '🧩',
         },
       ]).map((opt) => {
@@ -1017,7 +1018,7 @@ export function GestaoDemosContent({
                 cursor: 'pointer',
               }}
             >
-              {id === 'todos' ? `Todos (${stats.total})` : `${STATUS_LABELS[id as DemoRecipientStatus]} (${enriched.filter((r) => r.status === id).length})`}
+              {id === 'todos' ? `${tr(safeT, 'adminDemosHubFilterAll', 'Todos')} (${stats.total})` : `${STATUS_LABELS[id as DemoRecipientStatus]} (${enriched.filter((r) => r.status === id).length})`}
             </button>
           ))}
         </div>
@@ -1025,18 +1026,18 @@ export function GestaoDemosContent({
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Procurar por nome, e-mail ou utilizador…"
+          placeholder={tr(safeT, 'adminDemosHubSearchPlaceholder', 'Procurar por nome, e-mail ou utilizador…')}
           style={{ ...inputStyle, width: '100%', maxWidth: '400px', marginBottom: '12px' }}
         />
 
         {demoDetalhe ? (
           renderRecipientDetail(demoDetalhe)
         ) : filtered.length === 0 ? (
-          <p style={{ textAlign: 'center', opacity: 0.6, padding: '24px' }}>Nenhuma demonstração neste filtro.</p>
+          <p style={{ textAlign: 'center', opacity: 0.6, padding: '24px' }}>{tr(safeT, 'adminDemosHubEmpty', 'Nenhuma demonstração neste filtro.')}</p>
         ) : (
           <div className="clientes-alfa-wrap" style={{ maxHeight: compact ? '280px' : 'none', overflowY: compact ? 'auto' : 'visible' }}>
             <p style={{ fontSize: '12px', opacity: 0.75, margin: '0 0 12px' }}>
-              Clique num <strong>nome</strong> para ver link, credenciais, estado e acções.
+              {tr(safeT, 'adminDemosHubListHint', 'Clique num nome para ver link, credenciais, estado e acções.')}
             </p>
             {demoListaAgrupada.length > 1 && (
               <nav className="clientes-alfa-jump" aria-label="Índice alfabético">
@@ -1071,47 +1072,69 @@ export function GestaoDemosContent({
     )
   }
 
-  const body = (
-    <>
-      <div style={{ ...panelStyle, background: 'rgba(255,120,80,0.08)', border: '1px solid rgba(255,120,80,0.35)' }}>
-        <strong style={{ color: '#ffb199' }}>Importante — não misture com o seu programa principal</strong>
-        <p style={{ margin: '8px 0 0', fontSize: '12px', opacity: 0.9, lineHeight: 1.6 }}>
-          Envie o link <strong>só aos clientes</strong>. Não abra links de demo no browser onde trabalha no sistema real —
-          isso activava modo demonstração no seu programa. Para testar, use <strong>janela anónima</strong> ou outro browser.
+  const hubShell = (content: React.ReactNode) => (
+    <section className={`admin-demos-hub${compact ? ' admin-demos-hub--compact' : ''}`}>
+      <header className="admin-demos-hub__hero">
+        <div className="admin-demos-hub__hero-glow" aria-hidden="true" />
+        <div className="admin-demos-hub__hero-content">
+          <div className="admin-demos-hub__hero-icon" aria-hidden="true">
+            📤
+          </div>
+          <div>
+            <h3 className="admin-demos-hub__hero-title">{tr(safeT, 'adminDemosHubTitle', 'Centro de Demonstrações')}</h3>
+            <p className="admin-demos-hub__hero-desc">{tr(safeT, 'adminDemosHubDesc', 'Crie links personalizados, gere credenciais e envie por WhatsApp, e-mail ou cópia.')}</p>
+          </div>
+        </div>
+        {!compact ? (
+          <ol className="admin-demos-hub__steps">
+            <li>{tr(safeT, 'adminDemosHubStep1', '1. Escolha módulos ou pacote')}</li>
+            <li>{tr(safeT, 'adminDemosHubStep2', '2. Registe o destinatário')}</li>
+            <li>{tr(safeT, 'adminDemosHubStep3', '3. Envie link e credenciais')}</li>
+          </ol>
+        ) : null}
+      </header>
+
+      <div className="admin-demos-hub__warn">
+        <strong>{tr(safeT, 'adminDemosHubWarnTitle', 'Não misture com o programa principal')}</strong>
+        <p>
+          {tr(
+            safeT,
+            'adminDemosHubWarnBody',
+            'Envie o link só aos clientes. Não abra links de demo no browser onde trabalha no sistema real — use janela anónima ou outro browser para testar.'
+          )}
         </p>
         <button
           type="button"
+          className="admin-demos-hub-btn admin-demos-hub-btn--warn"
           onClick={() => {
             void fetch('/api/demo/clear', { credentials: 'include' })
               .then(() => window.location.assign('/'))
               .catch(() => window.location.assign('/api/demo/clear'))
           }}
-          style={{ marginTop: '10px', padding: '8px 14px', background: 'rgba(255,120,80,0.15)', border: '1px solid rgba(255,120,80,0.45)', color: '#ffb199', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 700 }}
         >
-          Sair do modo demo neste browser
+          {tr(safeT, 'adminDemosHubExitDemo', 'Sair do modo demo neste browser')}
         </button>
       </div>
 
-      <div style={{ ...panelStyle, background: 'rgba(0,180,255,0.06)', border: '1px solid rgba(0,180,255,0.2)' }}>
-        <strong style={{ color: '#8cd8ff' }}>Como enviar um Gestor Demo em 3 passos</strong>
-        <ol style={{ margin: '8px 0 0', paddingLeft: '20px', fontSize: '12px', opacity: 0.85, lineHeight: 1.6 }}>
-          <li>Escolha <strong>envio completo</strong> (pacote) ou <strong>módulo a módulo</strong></li>
-          <li>Registe o <strong>destinatário</strong> — o sistema gera <strong>utilizador e senha</strong> automaticamente</li>
-          <li>Envie por <strong>WhatsApp, e-mail ou cópia</strong> — o sistema não envia automaticamente</li>
-        </ol>
-        <p style={{ fontSize: '11px', opacity: 0.65, margin: '8px 0 0' }}>Link base: {demoLinkBaseUrl}</p>
-      </div>
+      <p className="admin-demos-hub__link-base">
+        {tr(safeT, 'adminDemosHubLinkBase', 'Link base')}: <code>{demoLinkBaseUrl}</code>
+      </p>
 
-      {onOpenFullTab && variant !== 'full' && (
-        <div style={{ marginBottom: '12px', textAlign: 'right' }}>
-          <button type="button" onClick={onOpenFullTab} style={{ padding: '8px 14px', fontSize: '12px', background: 'rgba(0,180,255,0.12)', border: '1px solid rgba(0,200,255,0.45)', color: '#9be7ff', borderRadius: '8px', cursor: 'pointer' }}>
-            Abrir ecrã completo numa aba
+      {onOpenFullTab && variant !== 'full' ? (
+        <div className="admin-demos-hub__toolbar-top">
+          <button type="button" className="admin-demos-hub-btn admin-demos-hub-btn--ghost" onClick={onOpenFullTab}>
+            {tr(safeT, 'adminDemosHubOpenFull', 'Abrir ecrã completo numa aba')}
           </button>
         </div>
-      )}
+      ) : null}
 
+      <div className="admin-demos-hub__body">{content}</div>
+    </section>
+  )
+
+  const wizard = (
+    <>
       {renderStepNav()}
-
       {compact ? (
         <>
           {renderPacoteStep()}
@@ -1130,25 +1153,29 @@ export function GestaoDemosContent({
 
   if (variant === 'full') {
     return (
-      <div className="tab-content-wrapper" style={{ padding: compact ? '12px' : '20px' }}>
+      <div className="tab-content-wrapper admin-demos-hub-page" style={{ padding: compact ? '12px' : '20px' }}>
         {(closeTab || voltarPaginaInicial) && (
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="admin-demos-hub-page__head">
             {LogoComponent && <LogoComponent size="small" />}
-            <h1 style={{ flex: 1, margin: 0, fontSize: '1.25rem', color: '#8cd8ff' }}>📤 Gestão de envio de demonstrações</h1>
+            <h1>{tr(safeT, 'adminDemosHubTitle', 'Centro de Demonstrações')}</h1>
             {closeTab && activeTabId && (
-              <button type="button" onClick={() => closeTab(activeTabId)} style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '6px', cursor: 'pointer' }}>↶ Voltar</button>
+              <button type="button" className="admin-demos-hub-btn admin-demos-hub-btn--ghost" onClick={() => closeTab(activeTabId)}>
+                ↶ {tr(safeT, 'voltar', 'Voltar')}
+              </button>
             )}
             {voltarPaginaInicial && (
-              <button type="button" onClick={voltarPaginaInicial} style={{ padding: '8px 12px', background: 'rgba(0,150,255,0.12)', border: '1px solid rgba(0,150,255,0.35)', color: '#8cc8ff', borderRadius: '6px', cursor: 'pointer' }}>🏠 Início</button>
+              <button type="button" className="admin-demos-hub-btn admin-demos-hub-btn--ghost" onClick={voltarPaginaInicial}>
+                🏠 {tr(safeT, 'paginaInicial', 'Início')}
+              </button>
             )}
           </div>
         )}
-        {body}
+        {hubShell(wizard)}
       </div>
     )
   }
 
-  return <div className="gestao-demos-embed">{body}</div>
+  return hubShell(wizard)
 }
 
 const inputStyle: React.CSSProperties = {

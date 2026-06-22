@@ -45821,6 +45821,7 @@ A1;Peça exemplo;10`}
         return (
           <GestaoDemosContent
             variant="full"
+            safeT={safeT}
             saveData={saveData}
             loadData={loadData}
             closeTab={closeTab}

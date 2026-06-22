@@ -62,6 +62,7 @@ export function AdministradorContent({
 
         <GestaoDemosContent
           variant="compact"
+          safeT={safeT}
           saveData={saveData}
           loadData={loadData}
           onOpenFullTab={onOpenDemosFullTab}
@@ -168,7 +169,7 @@ export function AdministradorContent({
         sub={
           (safeT as Record<string, string | undefined>)?.syncAdminSectionHintNew ||
           (safeT as Record<string, string | undefined>)?.syncAdminSectionHint ||
-          'Aviso automático com resumo quando o servidor foi atualizado noutro aparelho.'
+          'Mantenha PC, tablet e telemóvel alinhados com o servidor — decisão manual no Administrador.'
         }
         toneClass="admin-disclosure--sync"
       >
@@ -184,6 +185,7 @@ export function AdministradorContent({
       >
         <GestaoDemosContent
           variant="embedded"
+          safeT={safeT}
           saveData={saveData}
           loadData={loadData}
           onOpenFullTab={onOpenDemosFullTab}

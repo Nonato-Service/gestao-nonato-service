@@ -5,147 +5,166 @@ import type { SafeT } from './adminTypes'
 
 type Props = { safeT: SafeT }
 
+type AdminAreaCard = {
+  num: string
+  icon: string
+  tone: string
+  titleKey: string
+  titleFallback: string
+  descKey: string
+  descFallback: string
+  onActivate: () => void
+}
+
+function tr(safeT: SafeT, key: string, fallback: string): string {
+  return (safeT as Record<string, string | undefined>)[key] || fallback
+}
+
+function openAdminSection(id: string) {
+  const el = document.getElementById(id) as HTMLDetailsElement | null
+  if (el) {
+    el.open = true
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
 export function AdminPanelIndex({ safeT }: Props) {
+  const cards: AdminAreaCard[] = [
+    {
+      num: '01',
+      icon: '↔',
+      tone: 'sky',
+      titleKey: 'adminJumpSyncTitle',
+      titleFallback: 'Sincronização entre aparelhos',
+      descKey: 'syncAdminJumpHint',
+      descFallback: 'Servidor e outros aparelhos',
+      onActivate: () => openAdminSection('admin-detail-sync'),
+    },
+    {
+      num: '02',
+      icon: '▶',
+      tone: 'violet',
+      titleKey: 'adminJumpDemosTitle',
+      titleFallback: 'Demonstrações',
+      descKey: 'adminJumpDemosDesc',
+      descFallback: 'Links, destinatários e prazos',
+      onActivate: () => openAdminSection('admin-detail-demos'),
+    },
+    {
+      num: '03',
+      icon: '⚙',
+      tone: 'slate',
+      titleKey: 'adminJumpGeralTitle',
+      titleFallback: 'Configurações gerais',
+      descKey: 'adminJumpGeralDesc',
+      descFallback: 'Relatórios, logos e PDFs',
+      onActivate: () => openAdminSection('admin-detail-geral'),
+    },
+    {
+      num: '04',
+      icon: '👤',
+      tone: 'indigo',
+      titleKey: 'adminJumpUsersTitle',
+      titleFallback: 'Gestão de utilizadores',
+      descKey: 'adminJumpUsersDesc',
+      descFallback: 'Contas, módulos e permissões',
+      onActivate: () => openAdminSection('admin-detail-users'),
+    },
+    {
+      num: '05',
+      icon: '★',
+      tone: 'amber',
+      titleKey: 'adminJumpClienteTitle',
+      titleFallback: 'Cliente prioritário',
+      descKey: 'adminJumpClienteDesc',
+      descFallback: 'Empresa em destaque — formulários e fluxos',
+      onActivate: () => openAdminSection('admin-detail-prioritario'),
+    },
+    {
+      num: '06',
+      icon: '☰',
+      tone: 'teal',
+      titleKey: 'adminJumpSidebarTitle',
+      titleFallback: 'Menu lateral',
+      descKey: 'adminJumpSidebarDesc',
+      descFallback: 'Arraste botões entre áreas e posições',
+      onActivate: () => openAdminSection('admin-detail-sidebar'),
+    },
+    {
+      num: '07',
+      icon: '📄',
+      tone: 'rose',
+      titleKey: 'adminJumpPapelTimbradoTitle',
+      titleFallback: 'Papel timbrado',
+      descKey: 'adminJumpPapelTimbradoDesc',
+      descFallback: 'Modelo A4 com logo e contactos',
+      onActivate: () => window.open('/papel-timbrado', '_blank', 'noopener,noreferrer'),
+    },
+    {
+      num: '08',
+      icon: '🔐',
+      tone: 'orange',
+      titleKey: 'adminJumpPasswordsTitle',
+      titleFallback: 'Gestor de senhas',
+      descKey: 'adminJumpPasswordsDesc',
+      descFallback: 'Cofre de credenciais — checklist e técnicos',
+      onActivate: () => openAdminSection('admin-detail-passwords'),
+    },
+    {
+      num: '09',
+      icon: '💾',
+      tone: 'emerald',
+      titleKey: 'adminJumpBackupTitle',
+      titleFallback: 'Backup e segurança',
+      descKey: 'adminJumpBackupDesc',
+      descFallback: '5 últimos de cada tipo + restauro individual',
+      onActivate: () => openAdminSection('admin-backup-seguranca'),
+    },
+  ]
+
   return (
-            <div className="admin-panels-overview">
-              <p className="admin-panels-overview__title">{safeT?.adminPanelIndexTitle || 'Áreas do administrador'}</p>
-              <p className="admin-panels-overview__lead">
-                {safeT?.adminPanelIndexLead ||
-                  'Todas as secções estão fechadas por defeito. Use os atalhos abaixo ou o título de cada bloco para expandir só o que precisa.'}
-              </p>
-              <div className="admin-panels-grid">
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-detail-sync') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">01</span>
-                  <span className="admin-panel-jump__t">{(safeT as any)?.syncAdminSectionTitle || 'Sincronização'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.syncAdminJumpHint || 'Servidor e outros aparelhos'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-detail-demos') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">02</span>
-                  <span className="admin-panel-jump__t">{safeT?.adminJumpDemosTitle || 'Demonstrações'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.adminJumpDemosDesc || 'Links, destinatários e prazos'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-detail-geral') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">03</span>
-                  <span className="admin-panel-jump__t">{safeT?.configuracoesGerais || 'Configurações gerais'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.adminJumpGeralDesc || 'Relatórios, logos e PDFs'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-detail-users') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">04</span>
-                  <span className="admin-panel-jump__t">{safeT?.userManagement || 'Utilizadores'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.adminJumpUsersDesc || 'Contas e permissões'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-detail-prioritario') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">05</span>
-                  <span className="admin-panel-jump__t">{safeT?.clientePrioritarioTitle || 'Cliente prioritário'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.adminJumpClienteDesc || 'Dados em destaque no sistema'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-detail-sidebar') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">06</span>
-                  <span className="admin-panel-jump__t">{safeT?.adminJumpSidebarTitle || 'Menu lateral'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.adminJumpSidebarDesc || 'Ordem e botões da barra'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    window.open('/papel-timbrado', '_blank', 'noopener,noreferrer')
-                  }}
-                >
-                  <span className="admin-panel-jump__k">07</span>
-                  <span className="admin-panel-jump__t">{(safeT as any)?.adminJumpPapelTimbradoTitle || 'Papel timbrado'}</span>
-                  <span className="admin-panel-jump__d">{(safeT as any)?.adminJumpPapelTimbradoDesc || 'Modelo A4 com logo e contactos'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-detail-passwords') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">08</span>
-                  <span className="admin-panel-jump__t">{safeT?.passwordManagerTitle || 'Gestor de senhas'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.adminJumpPasswordsDesc || 'Senhas de técnicos / checklist'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-backup-seguranca') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">09</span>
-                  <span className="admin-panel-jump__t">{safeT?.backupRestore || 'Backup e segurança'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.adminJumpBackupDesc || 'Código, ZIP e restauração'}</span>
-                </button>
-              </div>
-            </div>
+    <div className="admin-panels-overview">
+      <div className="admin-panels-overview__head">
+        <div>
+          <p className="admin-panels-overview__eyebrow">{tr(safeT, 'adminPanelIndexEyebrow', 'Painel administrativo')}</p>
+          <p className="admin-panels-overview__title">{tr(safeT, 'adminPanelIndexTitle', 'Áreas do administrador')}</p>
+          <p className="admin-panels-overview__lead">
+            {tr(
+              safeT,
+              'adminPanelIndexLead',
+              'Todas as secções começam fechadas para manter o ecrã limpo. Use os atalhos abaixo ou clique no título de cada bloco para expandir apenas o que precisa.'
+            )}
+          </p>
+        </div>
+        <span className="admin-panels-overview__badge" aria-label={`${cards.length} áreas`}>
+          {cards.length}
+        </span>
+      </div>
+
+      <div className="admin-panels-grid">
+        {cards.map((card) => (
+          <button
+            key={card.num}
+            type="button"
+            className={`admin-panel-jump admin-panel-jump--${card.tone}`}
+            onClick={card.onActivate}
+          >
+            <span className="admin-panel-jump__icon" aria-hidden="true">
+              {card.icon}
+            </span>
+            <span className="admin-panel-jump__body">
+              <span className="admin-panel-jump__meta">
+                <span className="admin-panel-jump__k">{card.num}</span>
+              </span>
+              <span className="admin-panel-jump__t">{tr(safeT, card.titleKey, card.titleFallback)}</span>
+              <span className="admin-panel-jump__d">{tr(safeT, card.descKey, card.descFallback)}</span>
+            </span>
+            <span className="admin-panel-jump__arrow" aria-hidden="true">
+              →
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
