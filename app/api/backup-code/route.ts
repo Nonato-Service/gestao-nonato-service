@@ -291,6 +291,27 @@ Para restaurar o histórico de comandos:
     }
     fs.writeFileSync(path.join(backupDir, 'metadata.json'), JSON.stringify(metadata, null, 2), 'utf-8')
 
+    // Manter apenas os 5 backups de código mais recentes no servidor
+    try {
+      const entries = fs
+        .readdirSync(backupsBase)
+        .filter((item) => item.startsWith('code-backup-'))
+        .map((item) => {
+          const fullPath = path.join(backupsBase, item)
+          return { fullPath, mtime: fs.statSync(fullPath).mtime.getTime() }
+        })
+        .sort((a, b) => b.mtime - a.mtime)
+      entries.slice(5).forEach(({ fullPath }) => {
+        try {
+          fs.rmSync(fullPath, { recursive: true, force: true })
+        } catch {
+          /* ignorar */
+        }
+      })
+    } catch {
+      /* ignorar limpeza */
+    }
+
     // Verificar se algo foi realmente gravado (pasta do backup existe e tem conteúdo)
     const backupDirExists = fs.existsSync(backupDir)
     const backupDirContents = backupDirExists ? fs.readdirSync(backupDir) : []

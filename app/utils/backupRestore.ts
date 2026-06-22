@@ -11,7 +11,9 @@ import {
 
 export const BACKUP_VERSION = '2.0.0'
 export const AUTO_BACKUP_STORAGE_KEY = 'nonato-auto-backups'
-export const MAX_AUTO_BACKUPS = 8
+export const MAX_AUTO_BACKUPS = 5
+export const MAX_MANUAL_DATA_BACKUPS = 5
+export const MANUAL_DATA_BACKUP_STORAGE_KEY = 'nonato-manual-data-backups'
 const MAX_AUTO_VALUE_CHARS = 250_000
 
 const SKIP_BACKUP_KEYS = new Set([
@@ -277,6 +279,76 @@ export async function createAutoBackupEntry(): Promise<boolean> {
   if (backups.length > MAX_AUTO_BACKUPS) backups = backups.slice(0, MAX_AUTO_BACKUPS)
   const persisted = tryPersistAutoBackups(backups)
   return persisted.ok
+}
+
+export type StoredBackupEntry = { timestamp: number; data: unknown }
+
+export function readStoredBackupList(storageKey: string): StoredBackupEntry[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(storageKey)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed.sort((a: StoredBackupEntry, b: StoredBackupEntry) => b.timestamp - a.timestamp)
+  } catch {
+    return []
+  }
+}
+
+export function tryPersistStoredBackups(
+  storageKey: string,
+  backups: StoredBackupEntry[],
+  max: number
+): { ok: boolean; kept: number } {
+  if (typeof window === 'undefined') return { ok: false, kept: 0 }
+  let working = backups.slice().sort((a, b) => b.timestamp - a.timestamp).slice(0, max)
+  while (working.length > 0) {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(working))
+      return { ok: true, kept: working.length }
+    } catch (e: unknown) {
+      const msg = String((e as Error)?.message || e)
+      if ((e as { name?: string })?.name === 'QuotaExceededError' || msg.toLowerCase().includes('quota')) {
+        working = working.slice(0, Math.max(0, working.length - 1))
+        continue
+      }
+      throw e
+    }
+  }
+  try {
+    localStorage.removeItem(storageKey)
+  } catch {
+    /* ignorar */
+  }
+  return { ok: false, kept: 0 }
+}
+
+export async function pushManualDataBackupEntry(): Promise<{ ok: boolean; timestamp: number }> {
+  const data = await collectFullBackupData()
+  const envelope = buildBackupEnvelope(data)
+  return pushManualDataBackupFromEnvelope(envelope)
+}
+
+export function pushManualDataBackupFromEnvelope(envelope: ReturnType<typeof buildBackupEnvelope>): { ok: boolean; timestamp: number } {
+  const existing = readStoredBackupList(MANUAL_DATA_BACKUP_STORAGE_KEY)
+  const next = [{ timestamp: envelope.timestamp, data: envelope }, ...existing.filter((b) => b.timestamp !== envelope.timestamp)]
+  const persisted = tryPersistStoredBackups(MANUAL_DATA_BACKUP_STORAGE_KEY, next, MAX_MANUAL_DATA_BACKUPS)
+  return { ok: persisted.ok, timestamp: envelope.timestamp }
+}
+
+export function deleteStoredBackupEntry(storageKey: string, timestamp: number): boolean {
+  const list = readStoredBackupList(storageKey).filter((b) => b.timestamp !== timestamp)
+  try {
+    if (list.length === 0) {
+      localStorage.removeItem(storageKey)
+    } else {
+      localStorage.setItem(storageKey, JSON.stringify(list))
+    }
+    return true
+  } catch {
+    return false
+  }
 }
 
 export function downloadBackupJson(envelope: unknown, fileName: string): void {

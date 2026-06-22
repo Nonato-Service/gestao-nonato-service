@@ -29,7 +29,13 @@ import {
   restoreFullBackup,
   createAutoBackupEntry,
   downloadBackupJson,
+  readStoredBackupList,
+  MANUAL_DATA_BACKUP_STORAGE_KEY,
+  AUTO_BACKUP_STORAGE_KEY,
+  deleteStoredBackupEntry,
+  pushManualDataBackupFromEnvelope,
 } from './utils/backupRestore'
+import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
 import { cmpNomeCliente, ordenarClientesPorNome, localeOrdenacaoClientes } from './lib/ordenarClientes'
 import {
@@ -13169,15 +13175,18 @@ export default function Dashboard() {
           }
         } else {
           downloadBackupJson(envelope, fileName)
+          pushManualDataBackupFromEnvelope(envelope)
           alert(((t as any).backupSuccess || 'Backup realizado com sucesso!') + '\n' + ((t as any).backupDownloaded || 'Backup baixado'))
         }
       } else {
         downloadBackupJson(envelope, fileName)
+        const stored = pushManualDataBackupFromEnvelope(envelope)
         alert(
           ((t as any).backupSuccess || 'Backup realizado com sucesso!') +
             '\n' +
             ((t as any).backupDownloaded || 'Backup baixado') +
-            `\n\nChaves incluídas: ${Object.keys(data).length} (cadastro, serviços, relatórios, peças, etc.)`
+            `\n\nChaves incluídas: ${Object.keys(data).length} (cadastro, serviços, relatórios, peças, etc.)` +
+            (stored.ok ? '\n\n✓ Registado nos últimos 5 backups JSON locais (restauro individual abaixo).' : '')
         )
       }
     } catch (error) {
@@ -13247,15 +13256,24 @@ export default function Dashboard() {
 
   // Função para deletar backup automático
   const deleteAutoBackup = (timestamp: number) => {
-    try {
-      const backups = getAutoBackups()
-      const filtered = backups.filter((b: any) => b.timestamp !== timestamp)
-      localStorage.setItem('nonato-auto-backups', JSON.stringify(filtered))
-      return true
-    } catch (e) {
-      return false
-    }
+    return deleteStoredBackupEntry(AUTO_BACKUP_STORAGE_KEY, timestamp)
   }
+
+  const getManualDataBackups = () => readStoredBackupList(MANUAL_DATA_BACKUP_STORAGE_KEY)
+
+  const deleteManualDataBackup = (timestamp: number) =>
+    deleteStoredBackupEntry(MANUAL_DATA_BACKUP_STORAGE_KEY, timestamp)
+
+  const restoreManualDataBackup = async (backup: { timestamp: number; data?: unknown }) =>
+    restoreAutoBackup(backup as { timestamp: number; data?: any })
+
+  const downloadStoredBackupJson = (backup: { timestamp: number; data?: unknown }, prefix: string) => {
+    if (!backup?.data) return
+    const dateStr = new Date(backup.timestamp).toISOString().split('T')[0]
+    downloadBackupJson(backup.data, `${prefix}-${dateStr}.json`)
+  }
+
+  const getZipHistory = () => getZipDownloadHistory()
 
   // Função para criar backup antes de operações críticas
   const createAutoBackupBeforeOperation = () => {
@@ -13278,13 +13296,15 @@ export default function Dashboard() {
       }
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)
+      const fileName = `backup-codigo-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.zip`
       const a = document.createElement('a')
       a.href = url
-      a.download = `backup-codigo-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.zip`
+      a.download = fileName
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
+      pushZipDownloadHistory({ fileName, sizeBytes: blob.size })
       alert('✓ ZIP descarregado. Guarde o ficheiro no seu PC para não perder o código.')
     } catch (error) {
       alert('❌ Erro ao descarregar backup: ' + (error as Error).message)
@@ -13335,9 +13355,9 @@ export default function Dashboard() {
         }
         const existingBackups = JSON.parse(localStorage.getItem('nonato-code-backups') || '[]')
         existingBackups.unshift(backupInfo)
-        // Manter apenas os últimos 10 backups
-        if (existingBackups.length > 10) {
-          existingBackups.splice(10)
+        // Manter apenas os últimos 5 backups
+        if (existingBackups.length > 5) {
+          existingBackups.splice(5)
         }
         localStorage.setItem('nonato-code-backups', JSON.stringify(existingBackups))
         // Atualizar lista de backups
@@ -13360,7 +13380,7 @@ export default function Dashboard() {
       })
       const result = await response.json()
       if (response.ok) {
-        setCodeBackups(result.backups || [])
+        setCodeBackups((result.backups || []).slice(0, 5))
         setCodeBackupsFolder(result.backupsFolder || '')
       } else {
         // Se a API não existir, tentar carregar do localStorage
@@ -28617,6 +28637,12 @@ const nextF = familias.filter(x => x !== f)
               loadCodeBackups,
               getAutoBackups,
               restoreAutoBackup,
+              deleteAutoBackup,
+              getManualDataBackups,
+              restoreManualDataBackup,
+              deleteManualDataBackup,
+              downloadStoredBackupJson,
+              getZipHistory,
             }}
           />
         )
@@ -70668,6 +70694,12 @@ A1;Peça exemplo;10`}
                 loadCodeBackups,
                 getAutoBackups,
                 restoreAutoBackup,
+                deleteAutoBackup,
+                getManualDataBackups,
+                restoreManualDataBackup,
+                deleteManualDataBackup,
+                downloadStoredBackupJson,
+                getZipHistory,
               }}
             />
           </div>

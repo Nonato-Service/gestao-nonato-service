@@ -244,7 +244,7 @@ export function AdministradorContent({
         id="admin-backup-seguranca"
         icon="🛡"
         title={safeT?.backupRestore || 'Backup e segurança'}
-        sub={safeT?.adminBackupSummarySub || 'Cópias de dados, exportação do código em ZIP e restauração controlada.'}
+        sub={safeT?.adminBackupSummarySub || 'Centro de backup: 5 últimos de cada tipo com restauro individual.'}
         toneClass="admin-disclosure--emerald"
       >
         <AdminBackupSection variant="full" safeT={safeT} {...backup} />

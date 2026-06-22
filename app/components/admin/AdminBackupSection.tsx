@@ -1,6 +1,7 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo, useState } from 'react'
+import { formatBackupBytes, MAX_BACKUP_HISTORY } from '../../lib/adminBackupRegistry'
 import type { AutoBackup, CodeBackup, SafeT } from './adminTypes'
 
 export type AdminBackupSectionProps = {
@@ -28,354 +29,418 @@ export type AdminBackupSectionProps = {
   loadCodeBackups: () => void
   getAutoBackups: () => AutoBackup[]
   restoreAutoBackup: (b: AutoBackup) => void | Promise<void>
+  deleteAutoBackup: (timestamp: number) => boolean
+  getManualDataBackups: () => AutoBackup[]
+  restoreManualDataBackup: (b: AutoBackup) => void | Promise<void>
+  deleteManualDataBackup: (timestamp: number) => boolean
+  downloadStoredBackupJson: (backup: AutoBackup, prefix: string) => void
+  getZipHistory: () => Array<{ timestamp: number; fileName: string; sizeBytes?: number }>
 }
 
-export function AdminBackupSection({
-  variant = 'full',
-  safeT,
-  isDemoMode,
-  selectedLanguage,
-  localeDatetimeGeneral,
-  autoBackupEnabled,
-  autoBackupInterval,
-  setAutoBackupEnabled,
-  setAutoBackupInterval,
-  codeBackups,
-  codeBackupsFolder,
-  loadingBackups,
-  restoringFromZip,
-  restoreFromZipInputRef,
-  saveData,
-  handleCreateBackup,
-  handleRestoreBackup,
-  handleBackupCodigo,
-  handleDownloadBackupZip,
-  handleRestoreCodigo,
-  handleRestoreFromZip,
-  loadCodeBackups,
-  getAutoBackups,
-  restoreAutoBackup,
-}: AdminBackupSectionProps) {
+function tr(safeT: SafeT, key: string, fallback: string): string {
+  return (safeT as Record<string, string | undefined>)[key] || fallback
+}
+
+function formatWhen(ts: number, locale: string): string {
+  try {
+    return new Date(ts).toLocaleString(locale)
+  } catch {
+    return new Date(ts).toLocaleString()
+  }
+}
+
+type ConfirmState = { kind: 'restore-auto' | 'restore-manual' | 'restore-code' | 'delete-auto' | 'delete-manual'; id: number | string } | null
+
+export function AdminBackupSection(props: AdminBackupSectionProps) {
+  const {
+    variant = 'full',
+    safeT,
+    isDemoMode,
+    selectedLanguage,
+    localeDatetimeGeneral,
+    autoBackupEnabled,
+    autoBackupInterval,
+    setAutoBackupEnabled,
+    setAutoBackupInterval,
+    codeBackups,
+    codeBackupsFolder,
+    loadingBackups,
+    restoringFromZip,
+    restoreFromZipInputRef,
+    saveData,
+    handleCreateBackup,
+    handleRestoreBackup,
+    handleBackupCodigo,
+    handleDownloadBackupZip,
+    handleRestoreCodigo,
+    handleRestoreFromZip,
+    loadCodeBackups,
+    getAutoBackups,
+    restoreAutoBackup,
+    deleteAutoBackup,
+    getManualDataBackups,
+    restoreManualDataBackup,
+    deleteManualDataBackup,
+    downloadStoredBackupJson,
+    getZipHistory,
+  } = props
+
+  const [tick, setTick] = useState(0)
+  const [confirm, setConfirm] = useState<ConfirmState>(null)
+  const locale = localeDatetimeGeneral(selectedLanguage)
+
+  const autoBackups = useMemo(() => getAutoBackups().slice(0, MAX_BACKUP_HISTORY), [getAutoBackups, tick])
+  const manualBackups = useMemo(() => getManualDataBackups().slice(0, MAX_BACKUP_HISTORY), [getManualDataBackups, tick])
+  const codeList = useMemo(() => codeBackups.slice(0, MAX_BACKUP_HISTORY), [codeBackups])
+  const zipHistory = useMemo(() => getZipHistory().slice(0, MAX_BACKUP_HISTORY), [getZipHistory, tick])
+
+  const bump = () => setTick((n) => n + 1)
+
+  const renderSlots = (filled: number, label: string) => (
+    <div className="admin-backup-hub-slots" aria-label={label}>
+      {Array.from({ length: MAX_BACKUP_HISTORY }).map((_, i) => (
+        <span key={i} className={`admin-backup-hub-slot${i < filled ? ' admin-backup-hub-slot--filled' : ''}`} title={`${i + 1}/${MAX_BACKUP_HISTORY}`} />
+      ))}
+    </div>
+  )
+
+  const runConfirm = async () => {
+    if (!confirm) return
+    const c = confirm
+    setConfirm(null)
+    if (c.kind === 'restore-auto') {
+      await restoreAutoBackup(autoBackups.find((b) => b.timestamp === c.id) || { timestamp: c.id as number })
+      return
+    }
+    if (c.kind === 'restore-manual') {
+      await restoreManualDataBackup(manualBackups.find((b) => b.timestamp === c.id) || { timestamp: c.id as number })
+      return
+    }
+    if (c.kind === 'restore-code') {
+      handleRestoreCodigo(String(c.id))
+      return
+    }
+    if (c.kind === 'delete-auto') {
+      deleteAutoBackup(c.id as number)
+      bump()
+      return
+    }
+    if (c.kind === 'delete-manual') {
+      deleteManualDataBackup(c.id as number)
+      bump()
+    }
+  }
+
   if (variant === 'compact') {
     return (
-            <div className="admin-section admin-section--emerald" style={{ marginBottom: '24px' }}>
-              <h3 className="admin-section-title">
-                {safeT?.backupRestore || 'BACKUP E SEGURANÇA'}
-              </h3>
-              {!isDemoMode && (
-                <p style={{ padding: '10px 12px', marginBottom: '15px', backgroundColor: 'rgba(0, 150, 0, 0.12)', border: '1px solid rgba(0, 200, 83, 0.35)', borderRadius: '6px', color: '#90ee90', fontSize: '12px' }}>
-                  <strong>Para não perder o código:</strong> use «Descarregar backup (ZIP)» e guarde no seu PC.
-                </p>
-              )}
-              {isDemoMode && (
-                <p style={{ padding: '12px', marginBottom: '15px', backgroundColor: 'rgba(255, 165, 0, 0.15)', border: '1px solid rgba(255, 165, 0, 0.4)', borderRadius: '6px', color: '#ffa500', fontSize: '13px' }}>
-                  Em modo demonstração o backup está desativado.
-                </p>
-              )}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', opacity: isDemoMode ? 0.7 : 1, pointerEvents: isDemoMode ? 'none' : 'auto' }}>
-                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupTitle || 'Backup Completo do Sistema'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '10px', lineHeight: 1.45 }}>
-                    {safeT?.backupDescription || 'Crie um backup completo de todos os dados do sistema'} O JSON inclui relatórios (dias de trabalho), clientes, peças, agenda e fechamentos — guarde fora deste PC.
-                  </p>
-                  <p style={{ fontSize: '11px', opacity: 0.65, marginBottom: '12px' }}>
-                    Cópias automáticas periódicas e restauro pormenorizado: abra a aba <strong>Administrador</strong> e expanda <strong>Backup e segurança</strong>.
-                  </p>
-                  <button className="btn-primary" onClick={handleCreateBackup} style={{ padding: '8px 15px' }} disabled={isDemoMode}>
-                    {safeT?.createBackup || 'Criar Backup'}
-                  </button>
-                </div>
-
-                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>{safeT?.restoreTitle || 'Restaurar Backup'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
-                    Escolha o ficheiro <strong>.json</strong> que descarregou com «Criar Backup» (ex.: backup-nonato-service-2026-06-05.json).
-                  </p>
-                  <label
-                    style={{
-                      display: 'inline-block',
-                      padding: '8px 15px',
-                      backgroundColor: '#0066cc',
-                      color: '#fff',
-                      borderRadius: '6px',
-                      cursor: isDemoMode ? 'not-allowed' : 'pointer',
-                      fontWeight: 600,
-                      fontSize: '13px',
-                      opacity: isDemoMode ? 0.5 : 1,
-                    }}
-                  >
-                    {safeT?.restoreBackup || 'Restaurar Backup'} (.json)
-                    <input
-                      type="file"
-                      accept=".json,application/json"
-                      onChange={handleRestoreBackup}
-                      disabled={isDemoMode}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
-                </div>
-
-                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupCodigoTitle || 'Backup do Código do Programa'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupCodigoDescription || 'Faça backup de TODOS os arquivos do código fonte do programa'}</p>
-                  <p style={{ fontSize: '12px', marginBottom: '8px', opacity: 0.8 }}><strong>Pasta dos backups:</strong> {codeBackupsFolder || (isDemoMode ? '—' : 'Atualize a lista.')}</p>
-                  <button className="btn-primary" onClick={handleBackupCodigo} style={{ padding: '8px 15px', marginRight: '8px', marginBottom: '8px' }} disabled={isDemoMode}>
-                    {safeT?.backupCodigoButton || 'Fazer Backup do Código'}
-                  </button>
-                  <button type="button" onClick={handleDownloadBackupZip} disabled={isDemoMode} style={{ padding: '8px 15px', marginBottom: '8px', background: 'rgba(0, 150, 255, 0.25)', border: '1px solid rgba(0, 150, 255, 0.6)', color: '#66b3ff', borderRadius: '6px', cursor: isDemoMode ? 'not-allowed' : 'pointer', fontWeight: '600' }}>
-                    📥 Descarregar backup (ZIP) para o PC
-                  </button>
-                </div>
-              </div>
-            </div>
+      <div className="admin-section admin-section--emerald">
+        <p className="admin-backup-hub__compact-note">
+          {tr(safeT, 'adminBackupHubCompactNote', 'Abra a aba Administrador → Backup e segurança para o centro completo com os 5 últimos de cada tipo.')}
+        </p>
+        <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--primary" onClick={handleCreateBackup} disabled={isDemoMode}>
+          {safeT?.createBackup || 'Criar Backup'}
+        </button>
+      </div>
     )
   }
+
   return (
-            <div className="admin-section admin-section--emerald">
-              {!isDemoMode && (
-                <p style={{ padding: '10px 12px', marginBottom: '15px', backgroundColor: 'rgba(0, 150, 0, 0.12)', border: '1px solid rgba(0, 200, 83, 0.35)', borderRadius: '6px', color: '#90ee90', fontSize: '12px' }}>
-                  <strong>Para não perder o código:</strong> use «Descarregar backup (ZIP)» e guarde o ficheiro no seu PC. Assim o código fica seguro mesmo que o servidor seja reinstalado.
-                </p>
+    <section className={`admin-backup-hub${isDemoMode ? ' admin-backup-hub--demo' : ''}`}>
+      <header className="admin-backup-hub__hero">
+        <div className="admin-backup-hub__hero-glow" aria-hidden="true" />
+        <div className="admin-backup-hub__hero-content">
+          <div className="admin-backup-hub__hero-icon" aria-hidden="true">
+            🛡️
+          </div>
+          <div>
+            <h3 className="admin-backup-hub__hero-title">{tr(safeT, 'adminBackupHubTitle', 'Centro de Backup e Segurança')}</h3>
+            <p className="admin-backup-hub__hero-desc">
+              {tr(
+                safeT,
+                'adminBackupHubDesc',
+                'Quatro camadas de proteção: dados do sistema, JSON manual, código no servidor e ZIP no PC. Mantém sempre os 5 mais recentes de cada tipo, com restauro individual.'
               )}
-              {isDemoMode && (
-                <p style={{ padding: '12px', marginBottom: '15px', backgroundColor: 'rgba(255, 165, 0, 0.15)', border: '1px solid rgba(255, 165, 0, 0.4)', borderRadius: '6px', color: '#ffa500', fontSize: '13px' }}>
-                  Em modo demonstração o backup e restauração do código estão desativados. Para usar backup, abra a aplicação fora do link de demonstração.
-                </p>
-              )}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', opacity: isDemoMode ? 0.7 : 1, pointerEvents: isDemoMode ? 'none' : 'auto' }}>
-                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupTitle || 'Backup Completo do Sistema'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '10px', lineHeight: 1.45 }}>
-                    {safeT?.backupDescription || 'Crie um backup completo de todos os dados do sistema'} O ficheiro JSON inclui relatórios de serviço (dias de trabalho), clientes, equipamentos, fornecedores, peças, categorias, agenda e fechamentos — guarde cópias fora deste PC (pen ou nuvem).
-                  </p>
-                  <p style={{ fontSize: '11px', opacity: 0.62, marginBottom: '12px', lineHeight: 1.45, padding: '8px 10px', backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: '6px', border: '1px solid rgba(0,200,83,0.12)' }}>
-                    <strong style={{ color: '#9be7ff' }}>Dupla proteção recomendada:</strong> (1) dados em JSON com «Criar Backup» + cópias automáticas abaixo; (2) código da aplicação com «Descarregar backup (ZIP)» / backup no servidor — são coisas diferentes; use as duas.
-                  </p>
-                  <button className="btn-primary" onClick={handleCreateBackup} style={{ padding: '8px 15px' }} disabled={isDemoMode}>
-                    {safeT?.createBackup || 'Criar Backup'}
-                  </button>
-                </div>
+            </p>
+          </div>
+        </div>
+        <ol className="admin-backup-hub__steps">
+          <li>{tr(safeT, 'adminBackupHubStep1', '1. Ative cópias automáticas')}</li>
+          <li>{tr(safeT, 'adminBackupHubStep2', '2. Crie JSON + código + ZIP')}</li>
+          <li>{tr(safeT, 'adminBackupHubStep3', '3. Restaure só o que precisar')}</li>
+        </ol>
+      </header>
 
-                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>{safeT?.restoreTitle || 'Restaurar Backup'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
-                    {safeT?.restoreDescription || 'Restaure todos os dados a partir de um arquivo de backup'} Se fez «Criar Backup» e guardou o ficheiro <strong>.json</strong> no PC (ex.: ontem), use o botão abaixo para o escolher. Repõe relatórios, clientes, peças, agenda e fechamentos no servidor e neste aparelho.
-                  </p>
-                  <label
-                    style={{
-                      display: 'inline-block',
-                      padding: '8px 15px',
-                      backgroundColor: '#0066cc',
-                      color: '#fff',
-                      borderRadius: '6px',
-                      cursor: isDemoMode ? 'not-allowed' : 'pointer',
-                      fontWeight: 600,
-                      fontSize: '13px',
-                      opacity: isDemoMode ? 0.5 : 1,
-                    }}
-                  >
-                    {safeT?.restoreBackup || 'Restaurar Backup'} (.json)
-                    <input
-                      type="file"
-                      accept=".json,application/json"
-                      onChange={handleRestoreBackup}
-                      disabled={isDemoMode}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
-                </div>
+      {isDemoMode ? (
+        <p className="admin-backup-hub__demo-warn">{tr(safeT, 'adminBackupHubDemoWarn', 'Modo demonstração: backup e restauro desativados.')}</p>
+      ) : (
+        <p className="admin-backup-hub__safe-note">
+          {tr(
+            safeT,
+            'adminBackupHubSafeNote',
+            'Dupla proteção: dados (JSON) e código (pasta/ZIP) são coisas diferentes — use ambos regularmente.'
+          )}
+        </p>
+      )}
 
-                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.28)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>Cópias automáticas periódicas (navegador)</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
-                    Além do instantâneo ao abrir a página e após guardar relatórios, pode gravar até seis instantâneos <strong>de X em X minutos</strong> neste computador. Não substitui o JSON descarregado para a pen, mas ajuda a recuperar erros recentes.
-                  </p>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', color: '#ccc', marginBottom: '10px', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={autoBackupEnabled}
-                      disabled={isDemoMode}
-                      onChange={(e) => {
-                        const v = e.target.checked
-                        setAutoBackupEnabled(v)
-                        void saveData('nonato-auto-backup-enabled', v ? 'true' : 'false')
-                      }}
-                    />
-                    Ativar cópias automáticas periódicas
-                  </label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px', fontSize: '12px', color: '#ccc' }}>
-                    <span style={{ opacity: 0.85 }}>Intervalo:</span>
-                    <select
-                      value={autoBackupInterval}
-                      disabled={isDemoMode}
-                      onChange={(e) => {
-                        const n = parseInt(e.target.value, 10)
-                        setAutoBackupInterval(n)
-                        void saveData('nonato-auto-backup-interval', String(n))
-                      }}
-                      style={{ padding: '6px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
-                    >
-                      <option value={15}>15 minutos</option>
-                      <option value={30}>30 minutos</option>
-                      <option value={60}>60 minutos</option>
-                      <option value={120}>2 horas</option>
-                      <option value={360}>6 horas</option>
-                    </select>
-                  </div>
-                </div>
+      <div className="admin-backup-hub__auto-panel">
+        <header>
+          <h4>{tr(safeT, 'adminBackupHubAutoTitle', 'Cópia automática periódica')}</h4>
+          <p>{tr(safeT, 'adminBackupHubAutoDesc', 'Instantâneos no navegador — até 5 registos, restauro individual abaixo.')}</p>
+        </header>
+        <div className="admin-backup-hub__auto-controls">
+          <label className="admin-backup-hub-toggle">
+            <input
+              type="checkbox"
+              checked={autoBackupEnabled}
+              disabled={isDemoMode}
+              onChange={(e) => {
+                const v = e.target.checked
+                setAutoBackupEnabled(v)
+                void saveData('nonato-auto-backup-enabled', v ? 'true' : 'false')
+              }}
+            />
+            <span>{tr(safeT, 'adminBackupHubAutoEnable', 'Ativar cópias automáticas')}</span>
+          </label>
+          <label className="admin-backup-hub-interval">
+            <span>{tr(safeT, 'adminBackupHubAutoInterval', 'Intervalo')}</span>
+            <select
+              value={autoBackupInterval}
+              disabled={isDemoMode}
+              onChange={(e) => {
+                const n = parseInt(e.target.value, 10)
+                setAutoBackupInterval(n)
+                void saveData('nonato-auto-backup-interval', String(n))
+              }}
+            >
+              <option value={15}>15 min</option>
+              <option value={30}>30 min</option>
+              <option value={60}>60 min</option>
+              <option value={120}>2 h</option>
+              <option value={360}>6 h</option>
+            </select>
+          </label>
+          <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--primary" onClick={handleCreateBackup} disabled={isDemoMode}>
+            + {tr(safeT, 'adminBackupHubCreateJsonNow', 'Criar JSON agora')}
+          </button>
+        </div>
+      </div>
 
-                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>Recuperar dados — cópias automáticas recentes</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
-                    O sistema guarda até seis instantâneos no navegador (inclui relatórios de serviço e clientes). Se perdeu linhas de dias de trabalho, experimente uma data <strong>anterior</strong> ao problema. A restauração repõe também no <strong>servidor</strong> (precisa de ligação).
-                  </p>
-                  {getAutoBackups().length === 0 ? (
-                    <p style={{ fontSize: '12px', opacity: 0.55, margin: 0 }}>Ainda não há cópias automáticas neste navegador — voltará a haver após guardar relatórios ou ao reiniciar a página.</p>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '280px', overflowY: 'auto' }}>
-                      {getAutoBackups().map((b: { timestamp: number; data?: { date?: string } }) => (
-                        <div
-                          key={b.timestamp}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: '10px',
-                            flexWrap: 'wrap',
-                            padding: '10px 12px',
-                            backgroundColor: '#141414',
-                            borderRadius: '6px',
-                            border: '1px solid rgba(100, 180, 255, 0.25)',
-                          }}
-                        >
-                          <span style={{ fontSize: '12px', color: '#ccc' }}>
-                            {new Date(b.timestamp).toLocaleString(localeDatetimeGeneral(selectedLanguage))}
-                            {b.data?.date ? <span style={{ opacity: 0.65 }}> · bundle {String(b.data.date).slice(0, 19)}</span> : null}
-                          </span>
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            disabled={isDemoMode}
-                            onClick={() => {
-                              if (
-                                !window.confirm(
-                                  'Restaurar esta cópia automática? Substitui dados no servidor e neste PC (inclui relatórios e clientes deste instantâneo). A página recarrega em seguida.'
-                                )
-                              ) {
-                                return
-                              }
-                              void restoreAutoBackup(b)
-                            }}
-                            style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
-                          >
-                            Restaurar esta cópia
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)', borderLeft: '4px solid #00c853' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupCodigoTitle || 'Backup do Código do Programa'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupCodigoDescription || 'Faça backup de TODOS os arquivos do código fonte do programa'}</p>
-                  <button className="btn-primary" onClick={handleBackupCodigo} style={{ padding: '8px 15px', marginRight: '8px', marginBottom: '8px' }} disabled={isDemoMode}>
-                    {safeT?.backupCodigoButton || 'Fazer Backup do Código'}
-                  </button>
-                  <button type="button" onClick={handleDownloadBackupZip} disabled={isDemoMode} style={{ padding: '8px 15px', marginBottom: '8px', background: 'rgba(0, 150, 255, 0.25)', border: '1px solid rgba(0, 150, 255, 0.6)', color: '#66b3ff', borderRadius: '6px', cursor: isDemoMode ? 'not-allowed' : 'pointer', fontWeight: '600' }}>
-                    📥 Descarregar backup (ZIP) para o PC
-                  </button>
-                </div>
-
-                <div style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(255, 165, 0, 0.3)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px', color: '#ffa500' }}>{safeT?.restoreCodeTitle || '⚠️ RESTAURAR CÓDIGO DO PROGRAMA'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>
-                    {safeT?.restoreCodeDescription || 'Restaure o código do programa a partir de um backup anterior. Esta operação substituirá TODOS os arquivos atuais pelos arquivos do backup selecionado.'}
-                  </p>
-                  <p style={{ fontSize: '12px', marginBottom: '12px', padding: '8px 10px', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '4px', border: '1px solid rgba(255,165,0,0.2)' }}>
-                    <strong style={{ color: '#ffa500' }}>Pasta onde os backups estão guardados:</strong>
-                    <br />
-                    <span style={{ wordBreak: 'break-all', opacity: 0.95 }}>{codeBackupsFolder || (isDemoMode ? 'Em modo demonstração o backup está desativado.' : (loadingBackups ? 'A carregar…' : 'Clique em «Atualizar Lista» para ver o caminho.'))}</span>
-                  </p>
-                  {loadingBackups ? (
-                    <p style={{ fontSize: '12px', opacity: 0.7, padding: '10px', textAlign: 'center' }}>{safeT?.loadingBackups || 'Carregando backups...'}</p>
-                  ) : codeBackups.length === 0 ? (
-                    <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', textAlign: 'center' }}>{safeT?.noCodeBackups || 'Nenhum backup de código encontrado.'}</p>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto', marginBottom: '10px' }}>
-                      {codeBackups.map((backup, index) => (
-                        <div 
-                          key={index}
-                          style={{ 
-                            padding: '12px', 
-                            backgroundColor: '#141414', 
-                            borderRadius: '4px', 
-                            border: '1px solid rgba(255, 165, 0, 0.2)',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                          }}
-                        >
-                          <div style={{ flex: 1 }}>
-                            <strong style={{ display: 'block', fontSize: '13px', marginBottom: '4px' }}>
-                              {(safeT?.backupNumber || 'Backup {number}').replace('{number}', String(index + 1))}
-                            </strong>
-                            <span style={{ fontSize: '11px', opacity: 0.7, display: 'block' }}>
-                              {new Date(backup.timestamp).toLocaleString(localeDatetimeGeneral(selectedLanguage))}
-                            </span>
-                            <span style={{ fontSize: '11px', opacity: 0.6, display: 'block', marginTop: '2px' }}>
-                              {(safeT?.filesCount || '{count} arquivos').replace('{count}', String(backup.filesCount || 'N/A'))} • {backup.path || (safeT?.locationNotSpecified || 'Local não especificado')}
-                            </span>
-                          </div>
-                          <button
-                            className="btn-primary"
-                            onClick={() => handleRestoreCodigo(backup.path)}
-                            disabled={isDemoMode}
-                            style={{ 
-                              padding: '8px 16px', 
-                              fontSize: '12px', 
-                              whiteSpace: 'nowrap',
-                              backgroundColor: '#ffa500',
-                              borderColor: '#ffa500',
-                              color: '#000'
-                            }}
-                          >
-                            {safeT?.restoreButton || '🔄 Restaurar'}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  <button 
-                    className="btn-primary" 
-                    onClick={loadCodeBackups} 
-                    style={{ padding: '6px 12px', fontSize: '11px', opacity: 0.8 }}
-                    disabled={isDemoMode}
-                  >
-                    {safeT?.updateListButton || '🔄 Atualizar Lista'}
-                  </button>
-
-                  <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255,165,0,0.2)' }}>
-                    <p style={{ fontSize: '12px', opacity: 0.8, marginBottom: '8px' }}>Restaurar a partir de um ficheiro ZIP (backup que descarregou para o PC):</p>
-                    <input
-                      ref={restoreFromZipInputRef}
-                      type="file"
-                      accept=".zip"
-                      onChange={handleRestoreFromZip}
-                      style={{ display: 'none' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => restoreFromZipInputRef.current?.click()}
-                      disabled={isDemoMode || restoringFromZip}
-                      style={{ padding: '8px 14px', fontSize: '12px', background: 'rgba(255, 165, 0, 0.2)', border: '1px solid rgba(255, 165, 0, 0.5)', color: '#ffa500', borderRadius: '6px', cursor: isDemoMode || restoringFromZip ? 'not-allowed' : 'pointer', fontWeight: '600' }}
-                    >
-                      {restoringFromZip ? 'A restaurar…' : '📂 Restaurar a partir de ficheiro ZIP'}
-                    </button>
-                  </div>
-                </div>
-              </div>
+      <div className="admin-backup-hub-grid">
+        {/* Sistema automático */}
+        <article className="admin-backup-hub-card admin-backup-hub-card--system">
+          <header>
+            <span className="admin-backup-hub-card__icon" aria-hidden="true">
+              🔄
+            </span>
+            <div>
+              <h4>{tr(safeT, 'adminBackupHubSystemTitle', '5 últimos — Sistema (auto)')}</h4>
+              <p>{tr(safeT, 'adminBackupHubSystemDesc', 'Instantâneos automáticos no navegador com dados do sistema.')}</p>
             </div>
+          </header>
+          {renderSlots(autoBackups.length, 'Sistema')}
+          {autoBackups.length === 0 ? (
+            <p className="admin-backup-hub-empty">{tr(safeT, 'adminBackupHubSystemEmpty', 'Ainda sem cópias — ative o automático ou guarde relatórios.')}</p>
+          ) : (
+            <ul className="admin-backup-hub-list">
+              {autoBackups.map((b, index) => (
+                <li key={b.timestamp}>
+                  <div>
+                    <strong>#{index + 1}</strong>
+                    <span>{formatWhen(b.timestamp, locale)}</span>
+                  </div>
+                  <div className="admin-backup-hub-list__actions">
+                    <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--ghost" disabled={isDemoMode} onClick={() => downloadStoredBackupJson(b, 'backup-auto')}>
+                      {tr(safeT, 'adminBackupHubDownloadJson', 'JSON')}
+                    </button>
+                    {confirm?.kind === 'restore-auto' && confirm.id === b.timestamp ? (
+                      <>
+                        <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--danger" disabled={isDemoMode} onClick={() => void runConfirm()}>
+                          {tr(safeT, 'adminBackupHubConfirmRestore', 'Restaurar')}
+                        </button>
+                        <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--ghost" onClick={() => setConfirm(null)}>
+                          {safeT?.cancel || 'Cancelar'}
+                        </button>
+                      </>
+                    ) : (
+                      <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--primary" disabled={isDemoMode} onClick={() => setConfirm({ kind: 'restore-auto', id: b.timestamp })}>
+                        {tr(safeT, 'adminBackupHubRestoreOne', 'Restaurar')}
+                      </button>
+                    )}
+                    {confirm?.kind === 'delete-auto' && confirm.id === b.timestamp ? (
+                      <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--danger-outline" disabled={isDemoMode} onClick={() => void runConfirm()}>
+                        {tr(safeT, 'adminBackupHubConfirmDelete', 'Eliminar')}
+                      </button>
+                    ) : (
+                      <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--ghost" disabled={isDemoMode} onClick={() => setConfirm({ kind: 'delete-auto', id: b.timestamp })}>
+                        {safeT?.delete || 'Excluir'}
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </article>
+
+        {/* JSON manual */}
+        <article className="admin-backup-hub-card admin-backup-hub-card--json">
+          <header>
+            <span className="admin-backup-hub-card__icon" aria-hidden="true">
+              📄
+            </span>
+            <div>
+              <h4>{tr(safeT, 'adminBackupHubJsonTitle', '5 últimos — JSON manual')}</h4>
+              <p>{tr(safeT, 'adminBackupHubJsonDesc', 'Cópias criadas com «Criar JSON agora» — também descarregadas para o PC.')}</p>
+            </div>
+          </header>
+          {renderSlots(manualBackups.length, 'JSON')}
+          <label className="admin-backup-hub-file">
+            {tr(safeT, 'adminBackupHubImportJson', 'Importar JSON externo')}
+            <input type="file" accept=".json,application/json" onChange={handleRestoreBackup} disabled={isDemoMode} />
+          </label>
+          {manualBackups.length === 0 ? (
+            <p className="admin-backup-hub-empty">{tr(safeT, 'adminBackupHubJsonEmpty', 'Crie o primeiro backup JSON acima.')}</p>
+          ) : (
+            <ul className="admin-backup-hub-list">
+              {manualBackups.map((b, index) => (
+                <li key={b.timestamp}>
+                  <div>
+                    <strong>#{index + 1}</strong>
+                    <span>{formatWhen(b.timestamp, locale)}</span>
+                  </div>
+                  <div className="admin-backup-hub-list__actions">
+                    <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--ghost" disabled={isDemoMode} onClick={() => downloadStoredBackupJson(b, 'backup-manual')}>
+                      {tr(safeT, 'adminBackupHubDownloadJson', 'JSON')}
+                    </button>
+                    {confirm?.kind === 'restore-manual' && confirm.id === b.timestamp ? (
+                      <>
+                        <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--danger" disabled={isDemoMode} onClick={() => void runConfirm()}>
+                          {tr(safeT, 'adminBackupHubConfirmRestore', 'Restaurar')}
+                        </button>
+                        <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--ghost" onClick={() => setConfirm(null)}>
+                          {safeT?.cancel || 'Cancelar'}
+                        </button>
+                      </>
+                    ) : (
+                      <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--primary" disabled={isDemoMode} onClick={() => setConfirm({ kind: 'restore-manual', id: b.timestamp })}>
+                        {tr(safeT, 'adminBackupHubRestoreOne', 'Restaurar')}
+                      </button>
+                    )}
+                    {confirm?.kind === 'delete-manual' && confirm.id === b.timestamp ? (
+                      <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--danger-outline" disabled={isDemoMode} onClick={() => void runConfirm()}>
+                        {tr(safeT, 'adminBackupHubConfirmDelete', 'Eliminar')}
+                      </button>
+                    ) : (
+                      <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--ghost" disabled={isDemoMode} onClick={() => setConfirm({ kind: 'delete-manual', id: b.timestamp })}>
+                        {safeT?.delete || 'Excluir'}
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </article>
+
+        {/* Código servidor */}
+        <article className="admin-backup-hub-card admin-backup-hub-card--code">
+          <header>
+            <span className="admin-backup-hub-card__icon" aria-hidden="true">
+              💾
+            </span>
+            <div>
+              <h4>{tr(safeT, 'adminBackupHubCodeTitle', '5 últimos — Código (servidor)')}</h4>
+              <p>{tr(safeT, 'adminBackupHubCodeDesc', 'Pastas code-backup-* na pasta backups do projeto.')}</p>
+            </div>
+          </header>
+          {renderSlots(codeList.length, 'Código')}
+          <div className="admin-backup-hub-code-actions">
+            <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--secondary" disabled={isDemoMode} onClick={handleBackupCodigo}>
+              {safeT?.backupCodigoButton || 'Backup do código'}
+            </button>
+            <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--ghost admin-backup-hub-btn--sm" disabled={isDemoMode} onClick={loadCodeBackups}>
+              {safeT?.updateListButton || 'Atualizar lista'}
+            </button>
+          </div>
+          <p className="admin-backup-hub-folder">
+            <span>{tr(safeT, 'adminBackupHubCodeFolder', 'Pasta')}</span>
+            <code>{codeBackupsFolder || (loadingBackups ? '…' : '—')}</code>
+          </p>
+          {loadingBackups ? (
+            <p className="admin-backup-hub-empty">{safeT?.loadingBackups || 'Carregando…'}</p>
+          ) : codeList.length === 0 ? (
+            <p className="admin-backup-hub-empty">{safeT?.noCodeBackups || 'Nenhum backup de código.'}</p>
+          ) : (
+            <ul className="admin-backup-hub-list">
+              {codeList.map((backup, index) => (
+                <li key={backup.path || index}>
+                  <div>
+                    <strong>#{index + 1}</strong>
+                    <span>{formatWhen(new Date(backup.timestamp).getTime(), locale)}</span>
+                    <small>{(safeT?.filesCount || '{count} ficheiros').replace('{count}', String(backup.filesCount || '—'))}</small>
+                  </div>
+                  <div className="admin-backup-hub-list__actions">
+                    {confirm?.kind === 'restore-code' && confirm.id === backup.path ? (
+                      <>
+                        <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--danger" disabled={isDemoMode} onClick={() => void runConfirm()}>
+                          {tr(safeT, 'adminBackupHubConfirmRestore', 'Restaurar')}
+                        </button>
+                        <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--ghost" onClick={() => setConfirm(null)}>
+                          {safeT?.cancel || 'Cancelar'}
+                        </button>
+                      </>
+                    ) : (
+                      <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--primary" disabled={isDemoMode} onClick={() => setConfirm({ kind: 'restore-code', id: backup.path })}>
+                        {safeT?.restoreButton || 'Restaurar'}
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </article>
+
+        {/* ZIP */}
+        <article className="admin-backup-hub-card admin-backup-hub-card--zip">
+          <header>
+            <span className="admin-backup-hub-card__icon" aria-hidden="true">
+              📦
+            </span>
+            <div>
+              <h4>{tr(safeT, 'adminBackupHubZipTitle', '5 últimos — ZIP descarregados')}</h4>
+              <p>{tr(safeT, 'adminBackupHubZipDesc', 'Histórico de ZIP guardados no PC + restauro a partir de ficheiro.')}</p>
+            </div>
+          </header>
+          {renderSlots(zipHistory.length, 'ZIP')}
+          <div className="admin-backup-hub-code-actions">
+            <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--secondary" disabled={isDemoMode} onClick={handleDownloadBackupZip}>
+              {tr(safeT, 'adminBackupHubDownloadZip', 'Descarregar ZIP agora')}
+            </button>
+            <input ref={restoreFromZipInputRef} type="file" accept=".zip" onChange={handleRestoreFromZip} hidden />
+            <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--ghost" disabled={isDemoMode || restoringFromZip} onClick={() => restoreFromZipInputRef.current?.click()}>
+              {restoringFromZip ? tr(safeT, 'adminBackupHubRestoringZip', 'A restaurar…') : tr(safeT, 'adminBackupHubRestoreZipFile', 'Restaurar de ZIP')}
+            </button>
+          </div>
+          {zipHistory.length === 0 ? (
+            <p className="admin-backup-hub-empty">{tr(safeT, 'adminBackupHubZipEmpty', 'Ainda não descarregou ZIP — faça o primeiro acima.')}</p>
+          ) : (
+            <ul className="admin-backup-hub-list admin-backup-hub-list--meta">
+              {zipHistory.map((entry, index) => (
+                <li key={entry.timestamp}>
+                  <div>
+                    <strong>#{index + 1}</strong>
+                    <span>{formatWhen(entry.timestamp, locale)}</span>
+                    <small>
+                      {entry.fileName} · {formatBackupBytes(entry.sizeBytes)}
+                    </small>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </article>
+      </div>
+    </section>
   )
 }
