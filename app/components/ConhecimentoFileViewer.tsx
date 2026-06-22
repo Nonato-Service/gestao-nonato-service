@@ -1,7 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { AssistTextarea } from './AssistTextFields'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useWritingAssistField } from '../context/WritingAssistFieldContext'
 
 export type ConhecimentoFileItem = {
@@ -58,6 +57,10 @@ function isWord(m: string, nome: string) {
   )
 }
 
+function supportsTranslation(m: string, nome: string) {
+  return isPdf(m, nome) || isTextLike(m, nome) || isWord(m, nome)
+}
+
 async function loadTextContent(item: ConhecimentoFileItem): Promise<string> {
   const mime = guessMime(item.nome, item.mime, item.tipo)
   if (isTextLike(mime, item.nome)) {
@@ -77,14 +80,26 @@ async function loadTextContent(item: ConhecimentoFileItem): Promise<string> {
   return ''
 }
 
+function readTextareaSelection(el: HTMLTextAreaElement | null) {
+  if (!el) return { text: '', start: 0, end: 0, hasSelection: false, full: '' }
+  const full = el.value
+  const start = el.selectionStart ?? 0
+  const end = el.selectionEnd ?? 0
+  const hasSelection = start !== end
+  const text = (hasSelection ? full.slice(start, end) : full).trim()
+  return { text, start, end, hasSelection, full }
+}
+
 export function ConhecimentoFileViewer(props: Props) {
   const { items, onRemove, tr, emptyHint, uploadLabel, onUpload, accept } = props
   const { openForField } = useWritingAssistField()
   const [previewId, setPreviewId] = useState<string | null>(null)
-  const [textContent, setTextContent] = useState('')
   const [textLoading, setTextLoading] = useState(false)
   const [textError, setTextError] = useState<string | null>(null)
   const [editableText, setEditableText] = useState('')
+  const [pdfPasteText, setPdfPasteText] = useState('')
+  const docTextRef = useRef<HTMLTextAreaElement>(null)
+  const pdfTextRef = useRef<HTMLTextAreaElement>(null)
 
   const previewItem = useMemo(
     () => (previewId ? items.find((i) => i.id === previewId) ?? null : null),
@@ -95,17 +110,23 @@ export function ConhecimentoFileViewer(props: Props) {
     ? guessMime(previewItem.nome, previewItem.mime, previewItem.tipo)
     : ''
 
+  const canTranslate = previewItem ? supportsTranslation(previewMime, previewItem.nome) : false
+  const isPdfPreview = previewItem ? isPdf(previewMime, previewItem.nome) : false
+  const isDocTextPreview = previewItem
+    ? isTextLike(previewMime, previewItem.nome) || isWord(previewMime, previewItem.nome)
+    : false
+
   useEffect(() => {
     if (!previewItem) {
-      setTextContent('')
       setEditableText('')
+      setPdfPasteText('')
       setTextError(null)
       setTextLoading(false)
       return
     }
+    setPdfPasteText('')
     const mime = guessMime(previewItem.nome, previewItem.mime, previewItem.tipo)
     if (isPdf(mime, previewItem.nome) || isImage(mime, previewItem.nome)) {
-      setTextContent('')
       setEditableText('')
       setTextError(null)
       setTextLoading(false)
@@ -115,51 +136,56 @@ export function ConhecimentoFileViewer(props: Props) {
       setTextLoading(true)
       setTextError(null)
       loadTextContent(previewItem)
-        .then((t) => {
-          setTextContent(t)
-          setEditableText(t)
-        })
+        .then((t) => setEditableText(t))
         .catch((err) => {
           setTextError(err instanceof Error ? err.message : String(err))
-          setTextContent('')
           setEditableText('')
         })
         .finally(() => setTextLoading(false))
       return
     }
-    setTextContent('')
     setEditableText('')
     setTextError(null)
     setTextLoading(false)
   }, [previewItem])
 
-  const handleTranslateSelection = useCallback(() => {
-    const sel = typeof window !== 'undefined' ? window.getSelection()?.toString().trim() : ''
-    const source = sel || editableText.trim()
-    if (!source) {
-      alert(tr('bibliaPreviewSemSelecao', 'Selecione um trecho de texto ou carregue o conteúdo textual primeiro.'))
+  const runTranslate = useCallback(() => {
+    const el = isPdfPreview ? pdfTextRef.current : docTextRef.current
+    const { text, start, end, hasSelection, full } = readTextareaSelection(el)
+    if (!text) {
+      alert(
+        tr(
+          'bibliaTraducaoSemTexto',
+          isPdfPreview
+            ? 'Copie texto do PDF (Ctrl+C) e cole no campo abaixo antes de traduzir.'
+            : 'Escreva, cole ou selecione texto no campo antes de traduzir.'
+        )
+      )
       return
     }
-    openForField(source, (translated) => {
-      if (sel) {
-        try {
-          void navigator.clipboard.writeText(translated)
-          alert(tr('bibliaTraducaoCopiada', 'Tradução copiada para a área de transferência.'))
-        } catch {
-          setEditableText((prev) => (prev ? `${prev}\n\n---\n${translated}` : translated))
-        }
+
+    const apply = (translated: string) => {
+      if (isPdfPreview) {
+        setPdfPasteText(translated)
+        return
+      }
+      if (hasSelection) {
+        setEditableText(full.slice(0, start) + translated + full.slice(end))
       } else {
         setEditableText(translated)
       }
-    })
-  }, [editableText, openForField, tr])
+    }
 
-  const handleCopySelection = useCallback(() => {
-    const sel = typeof window !== 'undefined' ? window.getSelection()?.toString().trim() : ''
-    const text = sel || editableText
-    if (!text) return
-    void navigator.clipboard.writeText(text).catch(() => {})
-  }, [editableText])
+    openForField(text, apply)
+  }, [isPdfPreview, openForField, tr])
+
+  const runCopy = useCallback(() => {
+    const el = isPdfPreview ? pdfTextRef.current : docTextRef.current
+    const { text, full } = readTextareaSelection(el)
+    const toCopy = text || full
+    if (!toCopy.trim()) return
+    void navigator.clipboard.writeText(toCopy).catch(() => {})
+  }, [isPdfPreview])
 
   const renderPreviewBody = () => {
     if (!previewItem) return null
@@ -191,13 +217,14 @@ export function ConhecimentoFileViewer(props: Props) {
         </p>
       )
     }
-    if (isTextLike(mime, previewItem.nome) || isWord(mime, previewItem.nome)) {
+    if (isDocTextPreview) {
       return (
-        <AssistTextarea
+        <textarea
+          ref={docTextRef}
           value={editableText}
-          onValueChange={setEditableText}
+          onChange={(e) => setEditableText(e.target.value)}
           rows={14}
-          className="manuais-pro__preview-textarea"
+          className="manuais-pro__preview-textarea manuais-pro__translate-field"
           style={{
             width: '100%',
             minHeight: 220,
@@ -205,8 +232,10 @@ export function ConhecimentoFileViewer(props: Props) {
             lineHeight: 1.55,
             userSelect: 'text',
           }}
-          placeholder={tr('bibliaPreviewTextoPlaceholder', 'Conteúdo do ficheiro — selecione texto para traduzir.')}
-          assistButtonTitle={tr('bibliaTraduzirTexto', 'Traduzir texto com assistente')}
+          placeholder={tr(
+            'bibliaPreviewTextoPlaceholder',
+            'Conteúdo do ficheiro — selecione um trecho ou traduza tudo.'
+          )}
         />
       )
     }
@@ -271,70 +300,70 @@ export function ConhecimentoFileViewer(props: Props) {
 
       {previewItem && (
         <div className="manuais-pro__preview-panel">
-          <div className="manuais-pro__translate-guide">
-            <p className="manuais-pro__translate-guide-title">
-              {tr('bibliaTraducaoComoTitulo', 'Como traduzir')}
-            </p>
-            <ol className="manuais-pro__translate-steps">
-              <li>{tr('bibliaTraducaoPasso1', '1. Clique Visualizar no ficheiro')}</li>
-              <li>{tr('bibliaTraducaoPasso2', '2. Selecione o texto (ou use o campo abaixo em Word/TXT)')}</li>
-              <li>{tr('bibliaTraducaoPasso3', '3. Prima Traduzir — abre o assistente de dois idiomas')}</li>
-            </ol>
-            {isPdf(previewMime, previewItem.nome) && (
-              <p className="manuais-pro__translate-pdf-hint">
-                {tr(
-                  'bibliaTraducaoPdfHint',
-                  'Em PDF: selecione texto dentro do documento, copie (Ctrl+C) e use «Abrir tradutor» para colar e traduzir.'
-                )}
-              </p>
-            )}
-          </div>
           <div className="manuais-pro__preview-head">
             <div>
               <p className="manuais-pro__preview-eyebrow">{tr('bibliaPreviewTitulo', 'Pré-visualização')}</p>
               <strong className="manuais-pro__preview-filename">{previewItem.nome}</strong>
             </div>
-            <div className="manuais-pro__preview-toolbar">
-              <button
-                type="button"
-                className="manuais-pro__doc-btn manuais-pro__doc-btn--translate-main"
-                onClick={() => {
-                  const sel = typeof window !== 'undefined' ? window.getSelection()?.toString().trim() : ''
-                  const source = sel || editableText.trim()
-                  openForField(source, (translated) => {
-                    if (!source) return
-                    if (sel) {
-                      void navigator.clipboard.writeText(translated).catch(() => {})
-                      alert(tr('bibliaTraducaoCopiada', 'Tradução copiada para a área de transferência.'))
-                    } else {
-                      setEditableText(translated)
-                    }
-                  })
-                }}
+            {isPdfPreview && (
+              <a
+                href={previewItem.dataUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="manuais-pro__doc-btn"
               >
-                ✦ {tr('bibliaAbrirTradutor', 'Abrir tradutor')}
-              </button>
-              <button type="button" className="manuais-pro__doc-btn manuais-pro__doc-btn--accent" onClick={handleTranslateSelection}>
-                {tr('bibliaTraduzirSelecao', 'Traduzir seleção')}
-              </button>
-              <button type="button" className="manuais-pro__doc-btn" onClick={handleCopySelection}>
-                {tr('bibliaCopiarSelecao', 'Copiar seleção')}
-              </button>
-              {(isTextLike(previewMime, previewItem.nome) || isWord(previewMime, previewItem.nome)) && editableText && (
-                <button
-                  type="button"
-                  className="manuais-pro__doc-btn manuais-pro__doc-btn--accent"
-                  onClick={() => openForField(editableText, setEditableText)}
-                >
-                  {tr('bibliaTraduzirTexto', 'Traduzir texto completo')}
-                </button>
-              )}
-              <a href={previewItem.dataUrl} target="_blank" rel="noopener noreferrer" className="manuais-pro__doc-btn">
                 {tr('bibliaAbrirNovaJanela', 'Abrir janela')}
               </a>
-            </div>
+            )}
           </div>
+
           <div className="manuais-pro__preview-body">{renderPreviewBody()}</div>
+
+          {canTranslate && (
+            <div className="manuais-pro__translate-zone">
+              <p className="manuais-pro__translate-zone-title">
+                {tr('bibliaTraducaoComoTitulo', 'Tradução')}
+              </p>
+              <p className="manuais-pro__translate-zone-hint">
+                {isPdfPreview
+                  ? tr(
+                      'bibliaTraducaoHintPdf',
+                      '1. Selecione texto no PDF acima e copie (Ctrl+C). 2. Cole abaixo. 3. Prima Traduzir (trecho seleccionado ou texto completo).'
+                    )
+                  : tr(
+                      'bibliaTraducaoHintDoc',
+                      'Selecione um trecho no texto acima ou deixe sem seleção para traduzir tudo. Prima Traduzir.'
+                    )}
+              </p>
+
+              {isPdfPreview && (
+                <textarea
+                  ref={pdfTextRef}
+                  value={pdfPasteText}
+                  onChange={(e) => setPdfPasteText(e.target.value)}
+                  rows={6}
+                  className="manuais-pro__translate-field"
+                  placeholder={tr(
+                    'bibliaTraducaoCampoPdf',
+                    'Cole aqui o texto copiado do PDF…'
+                  )}
+                />
+              )}
+
+              <div className="manuais-pro__translate-actions">
+                <button
+                  type="button"
+                  className="manuais-pro__doc-btn manuais-pro__doc-btn--translate-main"
+                  onClick={runTranslate}
+                >
+                  {tr('bibliaTraduzir', 'Traduzir')}
+                </button>
+                <button type="button" className="manuais-pro__doc-btn" onClick={runCopy}>
+                  {tr('bibliaCopiarTexto', 'Copiar texto')}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
