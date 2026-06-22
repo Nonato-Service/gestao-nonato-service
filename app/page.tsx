@@ -148,6 +148,7 @@ import {
   type ProtocoloTemplateId,
 } from './lib/protocoloInteligente'
 import { buildProtocoloServicoPdfHtmlFromProtocolo } from './lib/protocoloPdfBuild'
+import { PDF_LOGO_SITUATIONS, type PdfLogoSituationId } from './lib/adminPdfLogoSituations'
 import {
   buildSolicitacaoServicoTecnicoPrintHtml,
   downloadSolicitacaoServicoTecnicoHtmlFile,
@@ -17686,6 +17687,127 @@ export default function Dashboard() {
     }
   }
 
+  const getSelectedLogoIdForSituation = (situationId: PdfLogoSituationId): string => {
+    switch (situationId) {
+      case 'relatorios':
+        return logoRelatorioSelecionadoId
+      case 'fechamentos':
+        return logoFechamentoSelecionadoId
+      case 'orcamentos':
+        return logoOrcamentoSelecionadoId
+      case 'protocolos':
+        return logoProtocoloServicoSelecionadoId
+      default:
+        return ''
+    }
+  }
+
+  const setSelectedLogoIdForSituation = (situationId: PdfLogoSituationId, logoId: string) => {
+    if (pdfLogosModoUnificado) {
+      aplicarLogoUnificadoTodosPdfs(logoId)
+      return
+    }
+    const v = String(logoId ?? '')
+    switch (situationId) {
+      case 'relatorios':
+        setLogoRelatorioSelecionadoId(v)
+        void saveData('nonato-relatorios-logo-id', v)
+        break
+      case 'fechamentos':
+        setLogoFechamentoSelecionadoId(v)
+        void saveData('nonato-fechamentos-logo-id', v)
+        break
+      case 'orcamentos':
+        setLogoOrcamentoSelecionadoId(v)
+        void saveData('nonato-orcamento-logo-id', v)
+        break
+      case 'protocolos':
+        setLogoProtocoloServicoSelecionadoId(v)
+        void saveData('nonato-protocolo-servico-logo-id', v)
+        break
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        const def = PDF_LOGO_SITUATIONS.find((s) => s.id === situationId)
+        if (def) localStorage.setItem(def.storageKey, v)
+      } catch {
+        /* ignorar */
+      }
+    }
+  }
+
+  const administradorClearLogoForSituation = (situationId: PdfLogoSituationId) => {
+    setSelectedLogoIdForSituation(situationId, '')
+  }
+
+  const administradorUploadLogoForSituation = (
+    situationId: PdfLogoSituationId,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const inputEl = e.target
+    const reader = new FileReader()
+    reader.onload = () => {
+      void (async () => {
+        const data = reader.result as string
+        if (!data || !data.startsWith('data:image/')) {
+          inputEl.value = ''
+          return
+        }
+        const name = file.name.replace(/\.[^.]+$/, '') || `Logo ${logosRelatorios.length + 1}`
+        const id = `logo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+        const prevList = logosRelatorios
+        const next = [...prevList, { id, name, data, type: 'image' as const }]
+        setLogosRelatorios(next)
+        setAdminBibliotecaLogoSaving(true)
+        try {
+          const serverOk = await saveData('nonato-logos-relatorios', next, true, true)
+          if (!serverOk) {
+            alert(
+              (t as { adminLogoServidorIndisponivel?: string }).adminLogoServidorIndisponivel ||
+                'Gravado neste aparelho, mas o servidor não confirmou.'
+            )
+          }
+          if (pdfLogosModoUnificado) {
+            aplicarLogoUnificadoTodosPdfs(id)
+          } else {
+            setSelectedLogoIdForSituation(situationId, id)
+          }
+        } catch (err) {
+          console.error('[nonato-logos-relatorios]', err)
+          setLogosRelatorios(prevList)
+          alert(
+            (t as any)?.logoBibliotecaSaveFail ||
+              'Não foi possível guardar o logo. Tente uma imagem mais pequena.'
+          )
+        } finally {
+          setAdminBibliotecaLogoSaving(false)
+          inputEl.value = ''
+        }
+      })()
+    }
+    reader.onerror = () => {
+      inputEl.value = ''
+      alert(t.errorReadingFile || 'Erro ao ler o arquivo.')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const administradorRemoveBibliotecaLogo = (logoId: string) => {
+    const next = logosRelatorios.filter((x) => x.id !== logoId)
+    setLogosRelatorios(next)
+    void saveData('nonato-logos-relatorios', next)
+    PDF_LOGO_SITUATIONS.forEach((sit) => {
+      if (getSelectedLogoIdForSituation(sit.id) === logoId) {
+        setSelectedLogoIdForSituation(sit.id, '')
+      }
+    })
+    if (pdfLogosModoUnificado && logoRelatorioSelecionadoId === logoId) {
+      aplicarLogoUnificadoTodosPdfs('')
+    }
+  }
+
   /** PDF de fechamento de despesas a partir da Biblioteca */
   const imprimirPDFDespesasDaBiblioteca = (relatorio: RelatorioServico, itens: FechamentoItem[]) => {
     const st = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
@@ -28405,17 +28527,17 @@ const nextF = familias.filter(x => x !== f)
               incluirLogoFechamentosDespesas,
               setIncluirLogoNosRelatorios,
               setIncluirLogoFechamentosDespesas,
-              setLogosRelatorios,
-              setLogoRelatorioSelecionadoId,
-              setLogoFechamentoSelecionadoId,
-              setLogoOrcamentoSelecionadoId,
-              setLogoProtocoloServicoSelecionadoId,
               saveData,
               administradorPreviewPdfLogo,
               aplicarLogoUnificadoTodosPdfs,
               administradorAddBibliotecaLogo,
               commitAdminBibliotecaLogoDraft,
               discardAdminBibliotecaLogoDraft,
+              getSelectedLogoIdForSituation,
+              setSelectedLogoIdForSituation,
+              administradorUploadLogoForSituation,
+              administradorClearLogoForSituation,
+              administradorRemoveBibliotecaLogo,
             }}
             users={{
               users,
@@ -70459,17 +70581,17 @@ A1;Peça exemplo;10`}
                 incluirLogoFechamentosDespesas,
                 setIncluirLogoNosRelatorios,
                 setIncluirLogoFechamentosDespesas,
-                setLogosRelatorios,
-                setLogoRelatorioSelecionadoId,
-                setLogoFechamentoSelecionadoId,
-                setLogoOrcamentoSelecionadoId,
-                setLogoProtocoloServicoSelecionadoId,
                 saveData,
                 administradorPreviewPdfLogo,
                 aplicarLogoUnificadoTodosPdfs,
                 administradorAddBibliotecaLogo,
                 commitAdminBibliotecaLogoDraft,
                 discardAdminBibliotecaLogoDraft,
+                getSelectedLogoIdForSituation,
+                setSelectedLogoIdForSituation,
+                administradorUploadLogoForSituation,
+                administradorClearLogoForSituation,
+                administradorRemoveBibliotecaLogo,
               }}
               users={{
                 users,

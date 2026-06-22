@@ -9604,6 +9604,385 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 .admin-group-panel--soft {
   border-color: var(--admin-border);
 }
+
+/* —— Logos PDF por situação (Administrador) —— */
+.admin-logos-pdf-root {
+  margin-top: 22px;
+  padding: 18px;
+  background-color: #141414;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 200, 83, 0.25);
+}
+
+.admin-logos-pdf-root__header {
+  margin-bottom: 16px;
+}
+
+.admin-logos-pdf-root__title {
+  color: #00c853;
+  margin: 0 0 6px;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+
+.admin-logos-pdf-root__desc {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.55;
+  max-width: 72ch;
+}
+
+.admin-logos-pdf-modo {
+  margin-bottom: 18px;
+  padding: 14px;
+  background: #121212;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 180, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-logos-pdf-modo__title {
+  font-size: 13px;
+  color: #fff;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.admin-logos-pdf-modo__option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.admin-logos-pdf-modo__option input {
+  width: 18px;
+  height: 18px;
+  accent-color: #00c853;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.admin-logos-pdf-unificado {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.admin-logos-pdf-unificado__extra-toggles {
+  padding: 0 4px 4px;
+}
+
+.admin-logo-situacao-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.admin-logo-situacao-card {
+  padding: 14px;
+  background: #121212;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 200, 83, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-logo-situacao-card--compact {
+  padding: 12px;
+}
+
+.admin-logo-situacao-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-logo-situacao-card__title-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 180px;
+}
+
+.admin-logo-situacao-card__badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #00c853;
+  letter-spacing: 0.12em;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.admin-logo-situacao-card__icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.admin-logo-situacao-card__title {
+  margin: 0;
+  font-size: 14px;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.admin-logo-situacao-card__desc {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.45;
+}
+
+.admin-logo-situacao-card__include {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
+}
+
+.admin-logo-situacao-card__include input {
+  width: 16px;
+  height: 16px;
+  accent-color: #00c853;
+}
+
+.admin-logo-situacao-preview {
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0d0d0d;
+  border-radius: 8px;
+  border: 1px dashed rgba(0, 200, 83, 0.3);
+  padding: 10px;
+}
+
+.admin-logo-situacao-preview__img {
+  max-width: 100%;
+  max-height: 80px;
+  object-fit: contain;
+}
+
+.admin-logo-situacao-preview__empty {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.42);
+  text-align: center;
+  line-height: 1.45;
+}
+
+.admin-logo-situacao-card__current {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.admin-logo-situacao-card__current strong {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.admin-logo-situacao-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.admin-logo-situacao-card__btn-file {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 12px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.admin-logo-situacao-card__select {
+  flex: 1 1 140px;
+  min-width: 0;
+  padding: 8px 10px;
+  background: #141414;
+  color: #fff;
+  border: 1px solid rgba(0, 200, 83, 0.3);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.admin-logo-situacao-card__btn-clear {
+  padding: 8px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.admin-logos-biblioteca {
+  padding: 14px;
+  background: #121212;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 200, 83, 0.2);
+}
+
+.admin-logos-biblioteca__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.admin-logos-biblioteca__title {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: #fff;
+}
+
+.admin-logos-biblioteca__desc {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.45;
+  max-width: 52ch;
+}
+
+.admin-logos-biblioteca__draft {
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 180, 0, 0.45);
+  background: rgba(255, 160, 0, 0.08);
+}
+
+.admin-logos-biblioteca__draft-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffb74d;
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.admin-logos-biblioteca__draft-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.admin-logos-biblioteca__draft-body img {
+  max-width: 120px;
+  max-height: 72px;
+  object-fit: contain;
+  background: #fff;
+  padding: 6px;
+  border-radius: 6px;
+}
+
+.admin-logos-biblioteca__draft-body p {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: rgba(255, 200, 140, 0.95);
+  line-height: 1.45;
+}
+
+.admin-logos-biblioteca__draft-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-logos-biblioteca__btn-muted {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.admin-logos-biblioteca__empty {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.admin-logos-biblioteca__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 10px;
+}
+
+.admin-logos-biblioteca__item {
+  padding: 10px 12px;
+  background: #222;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 200, 83, 0.2);
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.admin-logos-biblioteca__thumb {
+  width: 56px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0d0d0d;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.admin-logos-biblioteca__thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.admin-logos-biblioteca__meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.admin-logos-biblioteca__name {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #fff;
+}
+
+.admin-logos-biblioteca__uses {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.48);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 .modal.admin-modal {
   background: linear-gradient(180deg, #1a1f1c 0%, #121612 100%);
   border: 1px solid rgba(0, 255, 136, 0.22);
