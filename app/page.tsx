@@ -47025,73 +47025,53 @@ A1;Peça exemplo;10`}
 
       case 'ordem-preparacao':
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
-            {/* Cabeçalho Profissional */}
-            <div style={{
-              marginBottom: '40px',
-              padding: '30px',
-              background: 'linear-gradient(135deg, rgba(0, 200, 83, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '20px',
-              border: '2px solid rgba(0, 200, 83, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 200, 83, 0.1)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+          <div className="op-pro">
+            <section className="op-pro__hero">
+              <div className="op-pro__hero-top">
+                <div className="op-pro__hero-brand">
+                  <span className="op-pro__hero-icon" aria-hidden>OP</span>
+                  <div>
+                    <p className="op-pro__eyebrow">{safeT?.checklistHubStep2 || 'Gestão do checklist'}</p>
+                    <h1 className="op-pro__title">{safeT?.opTitle || 'Ordem de Preparação'}</h1>
+                    <p className="op-pro__lead">
+                      {safeT?.ordemPreparacaoDesc || safeT?.checklistDesc || 'Gerenciamento de ordens de preparação'}
+                    </p>
+                  </div>
+                </div>
+                <div className="op-pro__hero-actions">
                   <LogoComponent size="small" />
-                </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{
-                    margin: 0,
-                    fontSize: '32px',
-                    fontWeight: 'bold',
-                    color: '#00c853',
-                    letterSpacing: '3px',
-                    textShadow: '0 0 20px rgba(0, 200, 83, 0.3)',
-                    marginBottom: '8px'
-                  }}>
-                    {safeT?.opTitle || 'ORDEM DE PREPARAÇÃO'}
-                  </h1>
-                  <p style={{
-                    margin: 0,
-                    fontSize: '14px',
-                    color: '#ccc',
-                    opacity: 0.8
-                  }}>
-                    {safeT?.checklistDesc || 'Gerencie os checklists operacionais e pré-operacionais'}
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <button 
+                  <button
+                    type="button"
+                    className="op-pro__btn op-pro__btn--secondary"
                     onClick={voltarPaginaInicial}
-                    style={{ 
-                      padding: '6px 8px', 
-                      fontSize: '16px', 
-                      backgroundColor: 'transparent', 
-                      border: '1px solid rgba(0, 150, 255, 0.3)', 
-                      borderRadius: '4px', 
-                      color: '#66b3ff', 
-                      cursor: 'pointer', 
-                      transition: 'all 0.2s ease', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      width: '32px', 
-                      height: '32px' 
-                    }}
                     title={safeT?.paginaInicial || 'Página Inicial'}
                   >
-                    🏠
+                    Home
                   </button>
                 </div>
               </div>
-            </div>
+              <div className="op-pro__kpis op-pro__kpis--3">
+                <div className="op-pro__kpi">
+                  <span>{safeT?.opSavedOrders || 'Ordens salvas'}</span>
+                  <strong>{ordensPreparacaoSalvas.length}</strong>
+                </div>
+                <div className="op-pro__kpi">
+                  <span>{safeT?.opCode || 'Código SME_UP'}</span>
+                  <strong className="op-pro__kpi-text">{ordemPreparacaoForm.codiceSmeUp || '—'}</strong>
+                </div>
+                <div className="op-pro__kpi">
+                  <span>{safeT?.opTestRun || 'Test Run'}</span>
+                  <strong>{ordemPreparacaoForm.testRun ? (safeT?.sim || 'Sim') : (safeT?.nao || 'Não')}</strong>
+                </div>
+              </div>
+            </section>
 
             {/* Formulário */}
-            <div style={{ backgroundColor: '#141414', padding: '30px', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+            <div className="op-pro__panel op-pro__panel--form">
               {/* Seção 1: Dados Gerais */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+              <div className="op-pro__form-grid">
                 <div>
-                  <label style={{ display: 'block', color: '#ccc', marginBottom: '5px', fontSize: '12px' }}>
+                  <label className="op-pro__label">
                     {safeT?.opCode || 'Código SME_UP'}
                   </label>
                   <div style={{ position: 'relative' }}>
@@ -47120,7 +47100,7 @@ A1;Peça exemplo;10`}
                           setOrdemPreparacaoForm(prev => ({...prev, codiceSmeUp: val}))
                         }
                       }}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      className="op-pro__input"
                     />
                     {/* Feedback visual se encontrou */}
                     {equipamentos.some(eq => eq.id.toLowerCase() === ordemPreparacaoForm.codiceSmeUp.toLowerCase() || eq.numeroSerie.toLowerCase() === ordemPreparacaoForm.codiceSmeUp.toLowerCase()) && ordemPreparacaoForm.codiceSmeUp && (
@@ -47142,21 +47122,21 @@ A1;Peça exemplo;10`}
                   { key: 'famiglia', label: 'opFamily' },
                 ].map(field => (
                   <div key={field.key}>
-                    <label style={{ display: 'block', color: '#ccc', marginBottom: '5px', fontSize: '12px' }}>
+                    <label className="op-pro__label">
                       {safeT?.[field.label] || field.label}
                     </label>
                     <input
                       type="text"
                       value={(ordemPreparacaoForm as any)[field.key]}
                       onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, [field.key]: e.target.value})}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      className="op-pro__input"
                     />
                   </div>
                 ))}
                 
                 {/* Campo de Busca de Técnico Responsável */}
                 <div style={{ position: 'relative' }} data-tecnico-search>
-                  <label style={{ display: 'block', color: '#ccc', marginBottom: '5px', fontSize: '12px' }}>
+                  <label className="op-pro__label">
                     {safeT?.opTechResp || 'Técnico Responsável'}
                   </label>
                   <div style={{ position: 'relative' }}>
@@ -47194,15 +47174,7 @@ A1;Peça exemplo;10`}
                         }
                       }}
                       placeholder={safeT?.opSearchTech || 'Buscar técnico por nome, email ou telefone...'}
-                      style={{ 
-                        width: '100%', 
-                        padding: '8px', 
-                        backgroundColor: '#1e1e1e', 
-                        border: '1px solid #444', 
-                        color: '#fff', 
-                        borderRadius: '4px',
-                        paddingRight: ordemPreparacaoForm.tecnicoResponsabile ? '30px' : '8px'
-                      }}
+                      className={`op-pro__input op-pro__input--tech${ordemPreparacaoForm.tecnicoResponsabile ? ' has-clear' : ''}`}
                     />
                     {ordemPreparacaoForm.tecnicoResponsabile && (
                       <span 
@@ -47227,20 +47199,7 @@ A1;Peça exemplo;10`}
                       </span>
                     )}
                     {mostrarListaTecnicos && tecnicosFiltrados.length > 0 && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        right: 0,
-                        backgroundColor: '#1e1e1e',
-                        border: '1px solid #444',
-                        borderRadius: '4px',
-                        maxHeight: '200px',
-                        overflowY: 'auto',
-                        zIndex: 1000,
-                        marginTop: '4px',
-                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)'
-                      }}>
+                      <div className="op-pro__dropdown">
                         {tecnicosFiltrados.map(tecnico => (
                           <div
                             key={tecnico.id}
@@ -47249,19 +47208,7 @@ A1;Peça exemplo;10`}
                               setBuscaTecnico(tecnico.name)
                               setMostrarListaTecnicos(false)
                             }}
-                            style={{
-                              padding: '10px',
-                              cursor: 'pointer',
-                              borderBottom: '1px solid #333',
-                              color: '#fff',
-                              transition: 'background-color 0.2s'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#3a3a3a'
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'transparent'
-                            }}
+                            className="op-pro__dropdown-item"
                           >
                             <div style={{ fontWeight: 'bold', color: '#00c853', marginBottom: '4px' }}>
                               {tecnico.name}
@@ -47277,20 +47224,7 @@ A1;Peça exemplo;10`}
                       </div>
                     )}
                     {mostrarListaTecnicos && buscaTecnico.trim() && tecnicosFiltrados.length === 0 && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        right: 0,
-                        backgroundColor: '#1e1e1e',
-                        border: '1px solid #444',
-                        borderRadius: '4px',
-                        padding: '10px',
-                        zIndex: 1000,
-                        marginTop: '4px',
-                        color: '#909090',
-                        textAlign: 'center'
-                      }}>
+                      <div className="op-pro__dropdown op-pro__dropdown--empty">
                         {safeT?.noTechFound || 'Nenhum técnico encontrado'}
                       </div>
                     )}
@@ -47302,23 +47236,23 @@ A1;Peça exemplo;10`}
                   )}
                 </div>
                 
-                <div style={{ display: 'flex', alignItems: 'center', marginTop: '20px' }}>
+                <div className="op-pro__toggle-row">
                   <input
                     type="checkbox"
                     checked={ordemPreparacaoForm.testRun}
                     onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, testRun: e.target.checked})}
                     style={{ marginRight: '10px', transform: 'scale(1.5)' }}
                   />
-                  <label style={{ color: '#00c853', fontWeight: 'bold' }}>{safeT?.opTestRun || 'Test Run'}</label>
+                  <label className="op-pro__toggle-label">{safeT?.opTestRun || 'Test Run'}</label>
                 </div>
               </div>
 
               {/* Seções Numeradas */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
+              <div className="op-pro__sections-grid">
                 
                 {/* 1. Material Trabalhado */}
-                <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px' }}>
-                  <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opSection1 || '1. Material Trabalhado'}</h3>
+                <div className="op-pro__section">
+                  <h3 className="op-pro__section-title">{safeT?.opSection1 || '1. Material Trabalhado'}</h3>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
                     {['opChipboard', 'opMDF', 'opPlastic', 'opPhenolic', 'opAluminum'].map(opt => (
                       <label key={opt} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
@@ -47342,13 +47276,13 @@ A1;Peça exemplo;10`}
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.materialeLavoratoAltro}
                     onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, materialeLavoratoAltro: e.target.value })}
-                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                    className="op-pro__input op-pro__input--sm"
                   />
                 </div>
 
                 {/* 2. Tipologia Folheado */}
-                <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px' }}>
-                  <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opSection2 || '2. Tipologia Folheado'}</h3>
+                <div className="op-pro__section">
+                  <h3 className="op-pro__section-title">{safeT?.opSection2 || '2. Tipologia Folheado'}</h3>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
                     {['opAbsent', 'opGlossy', 'opMatte', 'opEmbossed', 'opCorian'].map(opt => (
                       <label key={opt} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
@@ -47368,13 +47302,13 @@ A1;Peça exemplo;10`}
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.tipologiaImpiallaggiaturaAltro}
                     onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, tipologiaImpiallaggiaturaAltro: e.target.value })}
-                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                    className="op-pro__input op-pro__input--sm"
                   />
                 </div>
 
                 {/* 3. Cor */}
-                <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px' }}>
-                  <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opSection3 || '3. Cor'}</h3>
+                <div className="op-pro__section">
+                  <h3 className="op-pro__section-title">{safeT?.opSection3 || '3. Cor'}</h3>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
                     {['opBlackMatte', 'opBlackGlossy', 'opWhiteMatte', 'opWhiteGlossy'].map(opt => (
                       <label key={opt} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
@@ -47394,41 +47328,41 @@ A1;Peça exemplo;10`}
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.coloreAltro}
                     onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, coloreAltro: e.target.value })}
-                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                    className="op-pro__input op-pro__input--sm"
                   />
                 </div>
 
                 {/* 4. Dimensões */}
-                <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px' }}>
-                  <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opSection4 || '4. Dimensões'}</h3>
+                <div className="op-pro__section">
+                  <h3 className="op-pro__section-title">{safeT?.opSection4 || '4. Dimensões'}</h3>
                   <div style={{ display: 'grid', gap: '10px' }}>
                     <input
                       type="text"
                       placeholder={safeT?.opMaxDim || 'Max (X/Y/Z)'}
                       value={ordemPreparacaoForm.dimensioniMax}
                       onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, dimensioniMax: e.target.value })}
-                      style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      className="op-pro__input op-pro__input--sm"
                     />
                     <input
                       type="text"
                       placeholder={safeT?.opMinDim || 'Min (X/Y/Z)'}
                       value={ordemPreparacaoForm.dimensioniMin}
                       onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, dimensioniMin: e.target.value })}
-                      style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      className="op-pro__input op-pro__input--sm"
                     />
                     <input
                       type="text"
                       placeholder={safeT?.opOther || 'Outro'}
                       value={ordemPreparacaoForm.dimensioniAltro}
                       onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, dimensioniAltro: e.target.value })}
-                      style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      className="op-pro__input op-pro__input--sm"
                     />
                   </div>
                 </div>
 
                 {/* 5. Tipologia de Borda */}
-                <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px' }}>
-                  <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opSection5 || '5. Tipologia de Borda'}</h3>
+                <div className="op-pro__section">
+                  <h3 className="op-pro__section-title">{safeT?.opSection5 || '5. Tipologia de Borda'}</h3>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
                     {['ABS', 'PVC', 'opRealWood', 'opAluminum', 'opLaminated', 'CPL', 'MELAMINICO', 'POLIESTERE LUCIDO', 'opSolidWoodStrips'].map(opt => (
                       <label key={opt} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
@@ -47452,13 +47386,13 @@ A1;Peça exemplo;10`}
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.tipologiaBordoAltro}
                     onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, tipologiaBordoAltro: e.target.value })}
-                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                    className="op-pro__input op-pro__input--sm"
                   />
                 </div>
 
                 {/* 6. Espessura Borda */}
-                <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px' }}>
-                  <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opSection6 || '6. Espessura Borda'}</h3>
+                <div className="op-pro__section">
+                  <h3 className="op-pro__section-title">{safeT?.opSection6 || '6. Espessura Borda'}</h3>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
                     {['0,3mm', '0,4mm', '0,8mm', '1mm', '2mm', '3mm'].map(opt => (
                       <label key={opt} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
@@ -47482,13 +47416,13 @@ A1;Peça exemplo;10`}
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.spessoreBordoAltro}
                     onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, spessoreBordoAltro: e.target.value })}
-                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                    className="op-pro__input op-pro__input--sm"
                   />
                 </div>
 
                 {/* 7. Tipo de Cola */}
-                <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px' }}>
-                  <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opSection7 || '7. Tipo de Cola'}</h3>
+                <div className="op-pro__section">
+                  <h3 className="op-pro__section-title">{safeT?.opSection7 || '7. Tipo de Cola'}</h3>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
                     {['PUR', 'EVA'].map(opt => (
                       <label key={opt} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
@@ -47512,13 +47446,13 @@ A1;Peça exemplo;10`}
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.tipoCollaAltro}
                     onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, tipoCollaAltro: e.target.value })}
-                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                    className="op-pro__input op-pro__input--sm"
                   />
                 </div>
 
                 {/* 9. Grades de Proteção */}
-                <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px' }}>
-                  <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opSection9 || '9. Grades de Proteção'}</h3>
+                <div className="op-pro__section">
+                  <h3 className="op-pro__section-title">{safeT?.opSection9 || '9. Grades de Proteção'}</h3>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
                     {['opLeftSide', 'opRightSide', 'opRearSide', 'opAdded'].map(opt => (
                       <label key={opt} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
@@ -47540,10 +47474,10 @@ A1;Peça exemplo;10`}
                 </div>
 
                 {/* 10. Ferramentas */}
-                <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px', gridColumn: 'span 2' }}>
-                  <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opSection10 || '10. Ferramentas'}</h3>
+                <div className="op-pro__section op-pro__section--wide">
+                  <h3 className="op-pro__section-title">{safeT?.opSection10 || '10. Ferramentas'}</h3>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <label className="op-pro__check">
                       <input
                         type="checkbox"
                         checked={ordemPreparacaoForm.utensiliFornitiCliente}
@@ -47557,9 +47491,9 @@ A1;Peça exemplo;10`}
                       placeholder={safeT?.opWhich || 'Quais?'}
                       value={ordemPreparacaoForm.utensiliQuali}
                       onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, utensiliQuali: e.target.value })}
-                      style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      className="op-pro__input op-pro__input--sm"
                     />
-                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <label className="op-pro__check">
                       <input
                         type="checkbox"
                         checked={ordemPreparacaoForm.utensiliFornitiPrimaTestRun}
@@ -47568,7 +47502,7 @@ A1;Peça exemplo;10`}
                       />
                       <span style={{ color: '#ccc' }}>{safeT?.opBeforeTestRun || 'Antes do Test Run?'}</span>
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <label className="op-pro__check">
                       <input
                         type="checkbox"
                         checked={ordemPreparacaoForm.utensiliCaricoFerwood}
@@ -47577,7 +47511,7 @@ A1;Peça exemplo;10`}
                       />
                       <span style={{ color: '#ccc' }}>{safeT?.opFerwoodCharge || 'A cargo Ferwood'}</span>
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <label className="op-pro__check">
                       <input
                         type="checkbox"
                         checked={ordemPreparacaoForm.tappetoEvacuazione}
@@ -47591,16 +47525,16 @@ A1;Peça exemplo;10`}
                       placeholder={safeT?.opSuctionCups || 'Ventosas (qtd)'}
                       value={ordemPreparacaoForm.ventose}
                       onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, ventose: e.target.value })}
-                      style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      className="op-pro__input op-pro__input--sm"
                     />
                   </div>
                 </div>
 
                 {/* 11. Material Test Run */}
-                <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px' }}>
-                  <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opSection11 || '11. Material Test Run'}</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                <div className="op-pro__section">
+                  <h3 className="op-pro__section-title">{safeT?.opSection11 || '11. Material Test Run'}</h3>
+                  <div className="op-pro__order-list">
+                    <label className="op-pro__check">
                       <input
                         type="checkbox"
                         checked={ordemPreparacaoForm.materialeTestRunFornitoCliente}
@@ -47614,9 +47548,9 @@ A1;Peça exemplo;10`}
                       placeholder={safeT?.opWhichAndQty || 'Quais e Qtd?'}
                       value={ordemPreparacaoForm.materialeTestRunQualiQta}
                       onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, materialeTestRunQualiQta: e.target.value })}
-                      style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      className="op-pro__input op-pro__input--sm"
                     />
-                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <label className="op-pro__check">
                       <input
                         type="checkbox"
                         checked={ordemPreparacaoForm.materialeTestRunMagazzinoFW}
@@ -47629,102 +47563,78 @@ A1;Peça exemplo;10`}
                 </div>
 
                 {/* 12. Língua e Documentação */}
-                <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px' }}>
-                  <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opSection12 || '12. Língua e Documentação'}</h3>
+                <div className="op-pro__section">
+                  <h3 className="op-pro__section-title">{safeT?.opSection12 || '12. Língua e Documentação'}</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <label style={{ color: '#ccc', fontSize: '12px' }}>{safeT?.opDestLang || 'Língua Destino'}</label>
+                    <label className="op-pro__label op-pro__label--inline">{safeT?.opDestLang || 'Língua Destino'}</label>
                     <input
                       type="text"
                       value={ordemPreparacaoForm.linguaDestinazione}
                       onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, linguaDestinazione: e.target.value })}
-                      style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      className="op-pro__input op-pro__input--sm"
                     />
-                    <label style={{ color: '#ccc', fontSize: '12px' }}>{safeT?.opManuals || 'Manuais'}</label>
+                    <label className="op-pro__label op-pro__label--inline">{safeT?.opManuals || 'Manuais'}</label>
                     <input
                       type="text"
                       value={ordemPreparacaoForm.manualistica}
                       onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, manualistica: e.target.value })}
-                      style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      className="op-pro__input op-pro__input--sm"
                     />
-                    <label style={{ color: '#ccc', fontSize: '12px' }}>{safeT?.opStickers || 'Adesivos'}</label>
+                    <label className="op-pro__label op-pro__label--inline">{safeT?.opStickers || 'Adesivos'}</label>
                     <input
                       type="text"
                       value={ordemPreparacaoForm.adesivi}
                       onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, adesivi: e.target.value })}
-                      style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      className="op-pro__input op-pro__input--sm"
                     />
                   </div>
                 </div>
 
                 {/* Notas de Produção */}
-                <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px', gridColumn: '1 / -1' }}>
-                  <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opProductionNotes || 'Notas de Produção'}</h3>
+                <div className="op-pro__section op-pro__section--full">
+                  <h3 className="op-pro__section-title">{safeT?.opProductionNotes || 'Notas de Produção'}</h3>
                   <AssistTextarea
                     rows={5}
                     value={ordemPreparacaoForm.noteProduzione}
                     onValueChange={(v) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, noteProduzione: v })}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px', resize: 'vertical' }}
+                    className="op-pro__textarea"
                   />
                 </div>
 
                 {/* Campo de Impressões */}
-                <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px', gridColumn: '1 / -1' }}>
-                  <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opImpressoes || 'Impressões'}</h3>
+                <div className="op-pro__section op-pro__section--full">
+                  <h3 className="op-pro__section-title">{safeT?.opImpressoes || 'Impressões'}</h3>
                   <AssistTextarea
                     rows={4}
                     value={ordemPreparacaoForm.impressoes}
                     onValueChange={(v) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, impressoes: v })}
                     placeholder={safeT?.opImpressoesPlaceholder || 'Informações sobre impressões, etiquetas, marcações, etc...'}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px', resize: 'vertical' }}
+                    className="op-pro__textarea"
                   />
                 </div>
 
               </div>
 
               {/* Botões de Ação */}
-              <div style={{ marginTop: '30px', display: 'flex', gap: '15px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <div className="op-pro__actions">
                 <button
+                  type="button"
+                  className="op-pro__btn op-pro__btn--primary"
                   onClick={handleSaveOrdemPreparacao}
-                  style={{
-                    padding: '12px 25px',
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '16px'
-                  }}
                 >
                   💾 {safeT?.opSave || 'Salvar Ordem'}
                 </button>
                 <button
+                  type="button"
+                  className="op-pro__btn op-pro__btn--success"
                   onClick={() => handlePrintOrdemPreparacao()}
-                  style={{
-                    padding: '12px 25px',
-                    backgroundColor: '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '16px'
-                  }}
                 >
                   🖨️ {safeT?.opPrint || 'Imprimir/PDF'}
                 </button>
                 <button
+                  type="button"
+                  className="op-pro__btn op-pro__btn--accent"
                   onClick={handleGerarFormularioChecklist}
-                  style={{
-                    padding: '12px 25px',
-                    backgroundColor: '#ff6b00',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '16px'
-                  }}
                 >
                   📋 {safeT?.opGenerateForm || 'Gerar Formulário'}
                 </button>
@@ -47732,8 +47642,8 @@ A1;Peça exemplo;10`}
             </div>
 
             {/* Lista de Ordens Salvas */}
-            <div style={{ marginTop: '40px', backgroundColor: '#141414', padding: '30px', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
-              <h3 style={{ color: '#00c853', marginBottom: '20px' }}>{safeT?.opSavedOrders || 'Ordens Salvas'}</h3>
+            <div className="op-pro__panel op-pro__panel--list">
+              <h3 className="op-pro__panel-title">{safeT?.opSavedOrders || 'Ordens Salvas'}</h3>
               
               {/* Busca */}
               <input
@@ -47741,7 +47651,7 @@ A1;Peça exemplo;10`}
                 placeholder={safeT?.opSearch || 'Buscar Ordem'}
                 value={buscaOrdem}
                 onChange={(e) => setBuscaOrdem(e.target.value)}
-                style={{ width: '100%', padding: '10px', marginBottom: '20px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                className="op-pro__search"
               />
 
               {/* Lista */}
@@ -47750,9 +47660,9 @@ A1;Peça exemplo;10`}
                 o.cliente.toLowerCase().includes(buscaOrdem.toLowerCase()) ||
                 o.modello.toLowerCase().includes(buscaOrdem.toLowerCase())
               ).length === 0 ? (
-                <p style={{ color: '#909090', textAlign: 'center' }}>{safeT?.opNoOrders || 'Nenhuma ordem encontrada'}</p>
+                <p className="op-pro__empty-hint">{safeT?.opNoOrders || 'Nenhuma ordem encontrada'}</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div className="op-pro__order-list">
                   {ordensPreparacaoSalvas
                     .filter(o => 
                       o.codiceSmeUp.toLowerCase().includes(buscaOrdem.toLowerCase()) ||
@@ -47760,31 +47670,34 @@ A1;Peça exemplo;10`}
                       o.modello.toLowerCase().includes(buscaOrdem.toLowerCase())
                     )
                     .map(ordem => (
-                      <div key={ordem.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid #333' }}>
-                        <div>
-                          <div style={{ color: '#00c853', fontWeight: 'bold', fontSize: '16px' }}>{ordem.codiceSmeUp}</div>
-                          <div style={{ color: '#ccc', fontSize: '14px' }}>{ordem.cliente} - {ordem.modello}</div>
-                          <div style={{ color: '#909090', fontSize: '12px' }}>{new Date(ordem.dataCriacao).toLocaleDateString()}</div>
+                      <div key={ordem.id} className="op-pro__order-card">
+                        <div className="op-pro__order-meta">
+                          <div className="op-pro__order-code">{ordem.codiceSmeUp}</div>
+                          <div className="op-pro__order-sub">{ordem.cliente} - {ordem.modello}</div>
+                          <div className="op-pro__order-date">{new Date(ordem.dataCriacao).toLocaleDateString()}</div>
                         </div>
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                          <button 
-                            onClick={() => handlePrintOrdemPreparacao(ordem)} 
+                        <div className="op-pro__order-actions">
+                          <button
+                            type="button"
+                            className="op-pro__act op-pro__act--success"
+                            onClick={() => handlePrintOrdemPreparacao(ordem)}
                             title={safeT?.opPrint || 'Imprimir'}
-                            style={{ cursor: 'pointer', background: 'rgba(40, 167, 69, 0.2)', border: '1px solid rgba(40, 167, 69, 0.5)', borderRadius: '4px', padding: '8px 12px', color: '#28a745' }}
                           >
                             🖨️
                           </button>
-                          <button 
-                            onClick={() => handleEditOrdemPreparacao(ordem)} 
+                          <button
+                            type="button"
+                            className="op-pro__act"
+                            onClick={() => handleEditOrdemPreparacao(ordem)}
                             title={safeT?.edit || 'Editar'}
-                            style={{ cursor: 'pointer', background: 'rgba(0, 100, 255, 0.2)', border: '1px solid rgba(0, 100, 255, 0.5)', borderRadius: '4px', padding: '8px 12px', color: '#66b3ff' }}
                           >
                             ✏️
                           </button>
-                          <button 
-                            onClick={(e) => handleDeleteOrdemPreparacao(ordem.id, e)} 
+                          <button
+                            type="button"
+                            className="op-pro__act op-pro__act--danger"
+                            onClick={(e) => handleDeleteOrdemPreparacao(ordem.id, e)}
                             title={safeT?.delete || 'Excluir'}
-                            style={{ cursor: 'pointer', background: 'rgba(255, 0, 0, 0.2)', border: '1px solid rgba(255, 0, 0, 0.5)', borderRadius: '4px', padding: '8px 12px', color: '#ff6666' }}
                           >
                             🗑️
                           </button>
