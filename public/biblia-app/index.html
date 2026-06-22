@@ -142,11 +142,22 @@
         </div>
         <div class="attachments" id="attachmentsBlock" hidden>
           <h3 class="attachments__title">Anexos</h3>
+          <p class="hint">Visualize no ecrã, descarregue se precisar ou traduza o texto copiado.</p>
           <ul class="attachments__list" id="attachmentsList"></ul>
           <label class="btn btn--secondary btn--file attachments__add">
             + Adicionar ficheiro
-            <input type="file" id="attachmentInput" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx" hidden />
+            <input type="file" id="attachmentInput" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.txt" hidden />
           </label>
+        </div>
+        <div class="biblia-view-tools" id="bibliaViewTools" hidden>
+          <h3 class="biblia-view-tools__title">Consulta e tradução</h3>
+          <p class="hint biblia-view-tools__hint">
+            Selecione texto numa aba acima ou abra um anexo em Visualizar. Prima Traduzir quando precisar.
+          </p>
+          <div class="biblia-view-tools__actions">
+            <button type="button" class="btn btn--primary" id="btnBibliaTranslate">Traduzir</button>
+            <button type="button" class="btn btn--secondary" id="btnBibliaCopy">Copiar texto</button>
+          </div>
         </div>
         <p class="save-hint" id="saveHint">Alterações guardadas automaticamente neste dispositivo.</p>
       </section>
@@ -156,6 +167,30 @@
       <span>Dados guardados neste aparelho. No programa online sincroniza automaticamente com o servidor.</span>
     </footer>
   </div>
+
+  <dialog class="preview-modal" id="previewModal">
+    <div class="preview-modal__head">
+      <div>
+        <p class="preview-modal__eyebrow">Pré-visualização</p>
+        <h3 class="preview-modal__title" id="previewModalTitle">Anexo</h3>
+      </div>
+      <button type="button" class="btn btn--ghost" id="previewModalClose">Fechar</button>
+    </div>
+    <div class="preview-modal__translate">
+      <p class="hint">Em PDF: selecione texto no documento, copie (Ctrl+C) e cole abaixo. Depois prima Traduzir.</p>
+      <textarea
+        id="previewTranslateField"
+        class="textarea preview-modal__paste"
+        rows="4"
+        placeholder="Cole aqui o texto a traduzir…"
+      ></textarea>
+      <div class="preview-modal__actions">
+        <button type="button" class="btn btn--primary" id="previewModalTranslate">Traduzir</button>
+        <button type="button" class="btn btn--secondary" id="previewModalCopy">Copiar texto</button>
+      </div>
+    </div>
+    <div class="preview-modal__body" id="previewModalBody"></div>
+  </dialog>
 
   <dialog class="modal" id="modal">
     <form method="dialog" class="modal__form" id="modalForm">

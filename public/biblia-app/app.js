@@ -18,6 +18,191 @@
   let route = { categoryId: null, brandId: null, modelId: null };
   let searchQuery = "";
   let activeTab = "software";
+  const IS_EMBEDDED = new URLSearchParams(window.location.search).get("embedded") === "1";
+  let previewAttachment = null;
+
+  function translateViaParent(text) {
+    return new Promise((resolve) => {
+      const source = String(text || "").trim();
+      if (!source) {
+        resolve("");
+        return;
+      }
+      if (!IS_EMBEDDED || !window.parent || window.parent === window) {
+        alert("Tradução disponível ao abrir a Bíblia dentro do programa Gestão.");
+        resolve(null);
+        return;
+      }
+      const callbackId = uid();
+      const timeout = window.setTimeout(() => {
+        window.removeEventListener("message", onMsg);
+        resolve(null);
+      }, 120000);
+      function onMsg(ev) {
+        if (ev.origin !== window.location.origin) return;
+        const d = ev.data;
+        if (d && d.type === "nonato-biblia-translate-result" && d.callbackId === callbackId) {
+          window.clearTimeout(timeout);
+          window.removeEventListener("message", onMsg);
+          resolve(typeof d.translated === "string" ? d.translated : "");
+        }
+      }
+      window.addEventListener("message", onMsg);
+      window.parent.postMessage(
+        { type: "nonato-biblia-translate-request", text: source, callbackId },
+        window.location.origin
+      );
+    });
+  }
+
+  function getActiveDetailField() {
+    const map = {
+      software: "fieldSoftware",
+      mechanical: "fieldMechanical",
+      electrical: "fieldElectrical",
+      notes: "fieldNotes",
+    };
+    const id = map[activeTab] || "fieldSoftware";
+    return $(id);
+  }
+
+  function readTextareaSelection(el) {
+    if (!el) return { text: "", start: 0, end: 0, hasSelection: false, full: "" };
+    const full = el.value || "";
+    const start = el.selectionStart ?? 0;
+    const end = el.selectionEnd ?? 0;
+    const hasSelection = start !== end;
+    const text = (hasSelection ? full.slice(start, end) : full).trim();
+    return { text, start, end, hasSelection, full };
+  }
+
+  async function runTranslateFromTextarea(el) {
+    const { text, start, end, hasSelection, full } = readTextareaSelection(el);
+    if (!text) {
+      alert("Selecione ou escreva texto antes de traduzir.");
+      return;
+    }
+    const translated = await translateViaParent(text);
+    if (translated == null || translated === "") return;
+    if (hasSelection) {
+      el.value = full.slice(0, start) + translated + full.slice(end);
+      scheduleSave();
+    } else {
+      el.value = translated;
+      scheduleSave();
+    }
+  }
+
+  function runCopyFromTextarea(el) {
+    const { text, full } = readTextareaSelection(el);
+    const toCopy = text || full;
+    if (!toCopy.trim()) return;
+    navigator.clipboard.writeText(toCopy).catch(() => {});
+  }
+
+  function isPdfAttachment(a) {
+    const n = (a.name || "").toLowerCase();
+    return (a.mime || "") === "application/pdf" || n.endsWith(".pdf");
+  }
+
+  function isImageAttachment(a) {
+    const n = (a.name || "").toLowerCase();
+    return (a.mime || "").startsWith("image/") || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(n);
+  }
+
+  function isTextAttachment(a) {
+    const n = (a.name || "").toLowerCase();
+    return (a.mime || "").startsWith("text/") || /\.(txt|md|csv|json|log|xml|html?)$/i.test(n);
+  }
+
+  function isWordAttachment(a) {
+    const n = (a.name || "").toLowerCase();
+    return (
+      (a.mime || "").includes("wordprocessingml") ||
+      (a.mime || "") === "application/msword" ||
+      /\.(docx?|rtf)$/i.test(n)
+    );
+  }
+
+  async function loadAttachmentText(a) {
+    if (isTextAttachment(a)) {
+      const res = await fetch(a.dataUrl);
+      return res.text();
+    }
+    if (isWordAttachment(a)) {
+      const res = await fetch("/api/extract-file-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataUrl: a.dataUrl, nome: a.name }),
+      });
+      const data = await res.json();
+      if (data.ok && data.text) return data.text;
+      throw new Error(data.message || data.error || "extract_failed");
+    }
+    return "";
+  }
+
+  async function openAttachmentPreview(a) {
+    previewAttachment = a;
+    const modal = $("previewModal");
+    const body = $("previewModalBody");
+    const title = $("previewModalTitle");
+    const paste = $("previewTranslateField");
+    if (!modal || !body || !title) return;
+    title.textContent = a.name || "Anexo";
+    if (paste) paste.value = "";
+    body.innerHTML = '<p class="hint">A carregar…</p>';
+
+    if (isPdfAttachment(a)) {
+      body.innerHTML =
+        '<iframe class="preview-modal__frame" title="' +
+        escapeHtml(a.name || "PDF") +
+        '" src="' +
+        a.dataUrl +
+        '"></iframe>';
+    } else if (isImageAttachment(a)) {
+      body.innerHTML =
+        '<div class="preview-modal__image-wrap"><img class="preview-modal__image" src="' +
+        a.dataUrl +
+        '" alt="' +
+        escapeHtml(a.name || "") +
+        '" /></div>';
+    } else if (isTextAttachment(a) || isWordAttachment(a)) {
+      try {
+        const text = await loadAttachmentText(a);
+        if (paste) paste.value = text;
+        body.innerHTML =
+          '<textarea class="textarea preview-modal__text" rows="12" readonly>' +
+          escapeHtml(text) +
+          "</textarea>";
+      } catch (e) {
+        body.innerHTML =
+          '<p class="hint">Não foi possível extrair texto. Use Descarregar ou converta para PDF/TXT.</p>';
+      }
+    } else {
+      body.innerHTML =
+        '<p class="hint">Pré-visualização não disponível para este tipo. Use Descarregar.</p>';
+    }
+
+    modal.showModal();
+  }
+
+  async function runPreviewTranslate() {
+    const paste = $("previewTranslateField");
+    if (!paste) return;
+    const { text, start, end, hasSelection, full } = readTextareaSelection(paste);
+    if (!text) {
+      alert("Cole ou selecione texto no campo de tradução.");
+      return;
+    }
+    const translated = await translateViaParent(text);
+    if (translated == null) return;
+    if (hasSelection) {
+      paste.value = full.slice(0, start) + translated + full.slice(end);
+    } else {
+      paste.value = translated;
+    }
+  }
 
   const $ = (id) => document.getElementById(id);
 
@@ -349,11 +534,21 @@
     ul.innerHTML = attachments
       .map(
         (a) => `<li class="attachments__item">
-          <a href="${a.dataUrl}" download="${escapeHtml(a.name)}" title="Descarregar">${escapeHtml(a.name)}</a>
+          <span class="attachments__name" title="${escapeHtml(a.name)}">${escapeHtml(a.name)}</span>
+          <button type="button" class="btn btn--secondary attachments__view" data-view="${a.id}">Visualizar</button>
+          <a href="${a.dataUrl}" download="${escapeHtml(a.name)}" class="attachments__dl" title="Descarregar">↓</a>
           <button type="button" class="attachments__remove" data-att="${a.id}" title="Remover">✕</button>
         </li>`
       )
       .join("");
+
+    ul.querySelectorAll("[data-view]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-view");
+        const att = attachments.find((x) => x.id === id);
+        if (att) openAttachmentPreview(att);
+      });
+    });
 
     ul.querySelectorAll("[data-att]").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -658,6 +853,9 @@
 
     detailDirty = false;
     renderAttachments();
+
+    const tools = $("bibliaViewTools");
+    if (tools) tools.hidden = !IS_EMBEDDED;
   }
 
   function scheduleSave() {
@@ -892,6 +1090,26 @@
       }
     };
     reader.readAsText(file);
+  });
+
+  $("btnBibliaTranslate")?.addEventListener("click", () => {
+    runTranslateFromTextarea(getActiveDetailField());
+  });
+
+  $("btnBibliaCopy")?.addEventListener("click", () => {
+    runCopyFromTextarea(getActiveDetailField());
+  });
+
+  $("previewModalClose")?.addEventListener("click", () => {
+    $("previewModal")?.close();
+  });
+
+  $("previewModalTranslate")?.addEventListener("click", () => {
+    runPreviewTranslate();
+  });
+
+  $("previewModalCopy")?.addEventListener("click", () => {
+    runCopyFromTextarea($("previewTranslateField"));
   });
 
   $("attachmentInput")?.addEventListener("change", (e) => {
