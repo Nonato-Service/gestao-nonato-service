@@ -114,6 +114,7 @@ import { PagamentosContadorContent } from './components/PagamentosContadorConten
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { GestaoDemosContent } from './components/GestaoDemosContent'
 import { ManuaisInformacoesContent } from './components/ManuaisInformacoesContent'
+import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'
 import { FamiliasGruposChecklistContent } from './components/FamiliasGruposChecklistContent'
 import { FamiliasGruposEquipamentosContent } from './components/FamiliasGruposEquipamentosContent'
 import { ProImageHoverPreview } from './components/ProImageHoverPreview'
@@ -66834,79 +66835,23 @@ A1;Peça exemplo;10`}
               </div>
               {!dashboardWorkspaceExpanded ? (
                 <div className="ns-dashboard-entry">
-                  <div className="ns-dashboard-entry-hero">
-                    <div className="ns-dashboard-entry-pill">{(safeT as any)?.dashboardEntradaBadge || 'Nonato Service'}</div>
-                    <div className="ns-dashboard-entry-steps" aria-label={(safeT as any)?.dashboardEntradaStepsAria || 'Fluxo de trabalho'}>
-                      <span className="ns-dashboard-entry-step-pill">
-                        <strong>1</strong> {(safeT as any)?.dashboardEntradaStep1 || 'Resumo'}
-                      </span>
-                      <span className="ns-dashboard-entry-step-pill">
-                        <strong>2</strong> {(safeT as any)?.dashboardEntradaStep2 || 'Painel completo'}
-                      </span>
-                      <span className="ns-dashboard-entry-step-pill">
-                        <strong>3</strong> {(safeT as any)?.dashboardEntradaStep3 || 'Módulos'}
-                      </span>
-                    </div>
-                    <div style={{ marginBottom: isCompactLayout ? 14 : 22 }}>
-                      <LogoComponent size={isCompactLayout ? 'small' : 'large'} />
-                    </div>
-                    <h1 className="ns-dashboard-entry-title">
-                      {(safeT as any)?.dashboardEntradaTitulo || safeT?.welcomeDashboard || safeT?.welcome || 'Bem-vindo'}
-                    </h1>
-                    <p className="ns-dashboard-entry-lead">
-                      {(safeT as any)?.dashboardEntradaSub || safeT?.welcomeText2 || ''}
-                    </p>
-                    <div className="ns-dashboard-entry-grid">
-                      {(
-                        [
-                          { icon: '📋', t: (safeT as any)?.dashboardEntradaCard1Titulo, d: (safeT as any)?.dashboardEntradaCard1Desc },
-                          { icon: '👥', t: (safeT as any)?.dashboardEntradaCard2Titulo, d: (safeT as any)?.dashboardEntradaCard2Desc },
-                          { icon: '🏭', t: (safeT as any)?.dashboardEntradaCard3Titulo, d: (safeT as any)?.dashboardEntradaCard3Desc },
-                          {
-                            icon: (
-                              <svg
-                                className="ns-dashboard-entry-card-svg ns-dashboard-entry-card-svg--comunicacao ns-vivid-icon ns-vivid-icon--chat"
-                                viewBox="0 0 24 24"
-                                width="26"
-                                height="26"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                aria-hidden
-                              >
-                                <path
-                                  d="M5.5 9.5h13a2 2 0 012 2v5.5a2 2 0 01-2 2h-3.4l-3.4 3.1V18.5H5.5a2 2 0 01-2-2v-5.5a2 2 0 012-2z"
-                                  stroke="currentColor"
-                                  strokeWidth="1.35"
-                                  strokeLinejoin="round"
-                                />
-                                <path d="M9 13h6M9 15.5h4" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" opacity="0.75" />
-                              </svg>
-                            ),
-                            t: (safeT as any)?.dashboardEntradaCard4Titulo,
-                            d: (safeT as any)?.dashboardEntradaCard4Desc,
-                          },
-                        ] as { icon: React.ReactNode; t: string | undefined; d: string | undefined }[]
-                      ).map((row, i) => (
-                        <div key={i} className="ns-dashboard-entry-card">
-                          <div className="ns-dashboard-entry-card-icon" aria-hidden>{row.icon}</div>
-                          <h3 className="ns-dashboard-entry-card-title">{row.t}</h3>
-                          <p className="ns-dashboard-entry-card-desc">{row.d}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      className="btn-primary ns-dashboard-entry-cta"
-                      onClick={() => {
-                        setDashboardMainHubId(null)
-                        setDashboardWorkspaceExpanded(true)
-                      }}
-                    >
-                      <span aria-hidden style={{ fontSize: 18 }}>→</span>
-                      {(safeT as any)?.dashboardEntrarPainelCompleto || safeT?.acessarSistema || 'Entrar no sistema'}
-                    </button>
-                    <p className="ns-dashboard-entry-note">{(safeT as any)?.dashboardEntradaNota}</p>
-                  </div>
+                  <DashboardEntryShowcase
+                    safeT={safeT as Record<string, string | undefined>}
+                    isCompactLayout={isCompactLayout}
+                    logoSlot={
+                      <LogoComponent size={isCompactLayout ? 'small' : 'medium'} />
+                    }
+                    onEnter={() => {
+                      setDashboardMainHubId(null)
+                      setDashboardWorkspaceExpanded(true)
+                    }}
+                    enterLabel={
+                      (safeT as any)?.dashboardEntrarPainelCompleto ||
+                      safeT?.acessarSistema ||
+                      'Entrar no sistema'
+                    }
+                    note={(safeT as any)?.dashboardEntradaNota}
+                  />
                 </div>
               ) : (
                 <>

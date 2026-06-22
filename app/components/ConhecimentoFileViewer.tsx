@@ -271,17 +271,54 @@ export function ConhecimentoFileViewer(props: Props) {
 
       {previewItem && (
         <div className="manuais-pro__preview-panel">
+          <div className="manuais-pro__translate-guide">
+            <p className="manuais-pro__translate-guide-title">
+              {tr('bibliaTraducaoComoTitulo', 'Como traduzir')}
+            </p>
+            <ol className="manuais-pro__translate-steps">
+              <li>{tr('bibliaTraducaoPasso1', '1. Clique Visualizar no ficheiro')}</li>
+              <li>{tr('bibliaTraducaoPasso2', '2. Selecione o texto (ou use o campo abaixo em Word/TXT)')}</li>
+              <li>{tr('bibliaTraducaoPasso3', '3. Prima Traduzir — abre o assistente de dois idiomas')}</li>
+            </ol>
+            {isPdf(previewMime, previewItem.nome) && (
+              <p className="manuais-pro__translate-pdf-hint">
+                {tr(
+                  'bibliaTraducaoPdfHint',
+                  'Em PDF: selecione texto dentro do documento, copie (Ctrl+C) e use «Abrir tradutor» para colar e traduzir.'
+                )}
+              </p>
+            )}
+          </div>
           <div className="manuais-pro__preview-head">
             <div>
               <p className="manuais-pro__preview-eyebrow">{tr('bibliaPreviewTitulo', 'Pré-visualização')}</p>
               <strong className="manuais-pro__preview-filename">{previewItem.nome}</strong>
             </div>
             <div className="manuais-pro__preview-toolbar">
-              <button type="button" className="manuais-pro__doc-btn" onClick={handleCopySelection}>
-                {tr('bibliaCopiarSelecao', 'Copiar seleção')}
+              <button
+                type="button"
+                className="manuais-pro__doc-btn manuais-pro__doc-btn--translate-main"
+                onClick={() => {
+                  const sel = typeof window !== 'undefined' ? window.getSelection()?.toString().trim() : ''
+                  const source = sel || editableText.trim()
+                  openForField(source, (translated) => {
+                    if (!source) return
+                    if (sel) {
+                      void navigator.clipboard.writeText(translated).catch(() => {})
+                      alert(tr('bibliaTraducaoCopiada', 'Tradução copiada para a área de transferência.'))
+                    } else {
+                      setEditableText(translated)
+                    }
+                  })
+                }}
+              >
+                ✦ {tr('bibliaAbrirTradutor', 'Abrir tradutor')}
               </button>
               <button type="button" className="manuais-pro__doc-btn manuais-pro__doc-btn--accent" onClick={handleTranslateSelection}>
                 {tr('bibliaTraduzirSelecao', 'Traduzir seleção')}
+              </button>
+              <button type="button" className="manuais-pro__doc-btn" onClick={handleCopySelection}>
+                {tr('bibliaCopiarSelecao', 'Copiar seleção')}
               </button>
               {(isTextLike(previewMime, previewItem.nome) || isWord(previewMime, previewItem.nome)) && editableText && (
                 <button
