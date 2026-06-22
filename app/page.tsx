@@ -5146,11 +5146,12 @@ export default function Dashboard() {
 
   // Componente de botões de navegação (retorno e página inicial)
   // Componente de Logo
-  const LogoComponent = ({ size = 'medium' }: { size?: 'small' | 'medium' | 'large' }) => {
+  const LogoComponent = ({ size = 'medium' }: { size?: 'small' | 'medium' | 'large' | 'xlarge' }) => {
     const sizes = {
       small: { container: '80px', fontSize: '16px', serviceSize: '10px' },
       medium: { container: '120px', fontSize: '24px', serviceSize: '14px' },
-      large: { container: '160px', fontSize: '32px', serviceSize: '18px' }
+      large: { container: '160px', fontSize: '32px', serviceSize: '18px' },
+      xlarge: { container: '240px', fontSize: '46px', serviceSize: '22px' }
     }
     const s = sizes[size]
     
@@ -66839,7 +66840,7 @@ A1;Peça exemplo;10`}
                     safeT={safeT as Record<string, string | undefined>}
                     isCompactLayout={isCompactLayout}
                     logoSlot={
-                      <LogoComponent size={isCompactLayout ? 'small' : 'medium'} />
+                      <LogoComponent size={isCompactLayout ? 'large' : 'xlarge'} />
                     }
                     onEnter={() => {
                       setDashboardMainHubId(null)

@@ -16520,6 +16520,16 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 .ns-showcase__logo {
   position: relative;
   z-index: 1;
+  margin-bottom: clamp(4px, 1vh, 12px);
+  transform: scale(1);
+}
+.ns-showcase__logo .ns-logo-in-box {
+  width: clamp(160px, 24vw, 240px) !important;
+  height: clamp(160px, 24vw, 240px) !important;
+  border-radius: 18px;
+  border: 1px solid rgba(0, 255, 136, 0.28);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.32);
 }
 .ns-showcase__copy {
   position: relative;
@@ -16591,6 +16601,15 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   opacity: 1;
   transform: scale(1);
   pointer-events: auto;
+}
+.ns-showcase__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 .ns-showcase__visual {
   width: 100%;
@@ -16756,6 +16775,10 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 .ns-showcase--compact .ns-showcase__stage {
   min-height: 220px;
+}
+.ns-showcase--compact .ns-showcase__logo .ns-logo-in-box {
+  width: clamp(120px, 28vw, 160px) !important;
+  height: clamp(120px, 28vw, 160px) !important;
 }
 .ns-showcase--compact .ns-showcase__visual {
   flex-direction: column;

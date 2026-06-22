@@ -1,0 +1,17 @@
+Imagens do carrossel pós-login (DashboardEntryShowcase)
+================================================================
+
+Ficheiros actuais: SVG em alta resolução (1280×720) com ecrãs realistas de cada módulo.
+
+Para usar capturas de ecrã reais do seu sistema:
+  1. Faça screenshot de cada área (Relatórios, Clientes, Peças, etc.)
+  2. Grave como PNG ou WebP com estes nomes (ou substitua os SVG):
+       slide-reports.svg   → ou slide-reports.png
+       slide-clients.svg
+       slide-parts.svg
+       slide-knowledge.svg
+       slide-warehouse.svg
+       slide-finance.svg
+  3. Se usar PNG, actualize SHOWCASE_IMAGES em app/components/DashboardEntryShowcase.tsx
+
+Recomendado: proporção 16:9, largura mínima 1280 px.
