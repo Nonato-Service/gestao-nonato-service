@@ -23,6 +23,16 @@ import {
   setBlockImplicitServerPushDuringBootstrap,
 } from './utils/dataStorage'
 import {
+  applyDiarioLembretePatch,
+  advanceDiarioLembreteAfterFire,
+  clearDiarioLembreteOnConcluido,
+  formatDiarioLembreteIntervalo,
+  isDiarioLembreteDue,
+  normalizeDiarioItemLembrete,
+  requestDiarioNotificationPermission,
+  showDiarioBrowserNotification,
+} from './lib/diarioLembrete'
+import {
   collectFullBackupData,
   buildBackupEnvelope,
   normalizeBackupFile,
@@ -114,6 +124,8 @@ import { PagamentosContadorContent } from './components/PagamentosContadorConten
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { GestaoDemosContent } from './components/GestaoDemosContent'
 import { ManuaisInformacoesContent } from './components/ManuaisInformacoesContent'
+import { ConhecimentoTecnicosContent } from './components/ConhecimentoTecnicosContent'
+import { DiarioLembreteIntervalPicker } from './components/DiarioLembreteIntervalPicker'
 import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'
 import { FamiliasGruposChecklistContent } from './components/FamiliasGruposChecklistContent'
@@ -948,6 +960,10 @@ type DiarioPedidoItem = {
   anexos?: DiarioPedidoAnexo[]
   /** Quando a anotação foi criada a partir do cadastro — permite mostrar morada/contactos ao expandir */
   clienteCadastroId?: string
+  lembreteAtivo?: boolean
+  lembreteIntervaloMinutos?: number
+  lembreteProximoEm?: string
+  lembreteUltimoEm?: string
 }
 
 const DIARIO_PEDIDOS_DIA_STORAGE_KEY = 'nonato-diario-pedidos-dia'
@@ -4329,6 +4345,11 @@ export default function Dashboard() {
   const [diarioPedidosModalTopoRetraido, setDiarioPedidosModalTopoRetraido] = useState(false)
   /** Só uma linha do diário expandida de cada vez (clique noutro nome retrai o anterior). */
   const [diarioPedidoExpandidoId, setDiarioPedidoExpandidoId] = useState<string | null>(null)
+  const [diarioComposeLembreteAtivo, setDiarioComposeLembreteAtivo] = useState(false)
+  const [diarioComposeLembreteMinutos, setDiarioComposeLembreteMinutos] = useState(60)
+  const [diarioLembreteAvisos, setDiarioLembreteAvisos] = useState<Array<{ id: string; titulo: string }>>([])
+  const [diarioLembretePulseActive, setDiarioLembretePulseActive] = useState(false)
+  const diarioLembretePulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const diarioPedidosHydratedRef = useRef(false)
   const diarioPedidoImgInputRef = useRef<HTMLInputElement | null>(null)
   const diarioPedidoImgTargetRef = useRef<'composer' | 'edit' | null>(null)
@@ -4916,7 +4937,7 @@ export default function Dashboard() {
             const clienteCadastroId =
               typeof rawCid === 'string' && rawCid.trim() ? String(rawCid).trim() : undefined
             const base = { ...item, clienteCadastroId, anexos: anexos?.length ? anexos : undefined }
-            return base
+            return { ...base, ...normalizeDiarioItemLembrete(base) }
           }) as DiarioPedidoItem[]
           setDiarioPedidosItems(valid)
         }
@@ -4961,6 +4982,72 @@ export default function Dashboard() {
     if (!diarioPedidosHydratedRef.current) return
     void saveData(DIARIO_PEDIDOS_DIA_STORAGE_KEY, diarioPedidosItems)
   }, [diarioPedidosItems])
+
+  /** Lembretes periódicos do diário de anotação (notificação do browser + aviso in-app). */
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const runTick = () => {
+      if (!diarioPedidosHydratedRef.current) return
+      const t = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
+      const now = Date.now()
+      const fired: Array<{ id: string; titulo: string }> = []
+
+      setDiarioPedidosItems((prev) => {
+        let changed = false
+        const next = prev.map((item) => {
+          if (!isDiarioLembreteDue(item, now)) return item
+          changed = true
+          const { titulo } = diarioPedidoTituloECorpo(item.texto)
+          fired.push({
+            id: item.id,
+            titulo: titulo || String((t as { diarioPedidosTituloSoImagem?: string }).diarioPedidosTituloSoImagem || 'Anotação'),
+          })
+          return { ...item, ...advanceDiarioLembreteAfterFire(item) }
+        })
+        if (!changed) return prev
+
+        queueMicrotask(() => {
+          const notifTitulo = String((t as { diarioPedidosLembreteNotifTitulo?: string }).diarioPedidosLembreteNotifTitulo || 'Diário — lembrete')
+          const notifCorpo = String((t as { diarioPedidosLembreteNotifCorpo?: string }).diarioPedidosLembreteNotifCorpo || 'Verifique esta anotação')
+          for (const f of fired) {
+            showDiarioBrowserNotification(notifTitulo, `${f.titulo}: ${notifCorpo}`)
+          }
+          if (fired.length > 0) {
+            setDiarioLembretePulseActive(true)
+            if (diarioLembretePulseTimerRef.current) {
+              window.clearTimeout(diarioLembretePulseTimerRef.current)
+            }
+            diarioLembretePulseTimerRef.current = window.setTimeout(() => {
+              setDiarioLembretePulseActive(false)
+              diarioLembretePulseTimerRef.current = null
+            }, 9000)
+            setDiarioLembreteAvisos((prevAvisos) => {
+              const ids = new Set(prevAvisos.map((a) => a.id))
+              const merged = [...prevAvisos]
+              for (const f of fired) {
+                if (!ids.has(f.id)) {
+                  merged.push(f)
+                  ids.add(f.id)
+                }
+              }
+              return merged
+            })
+          }
+        })
+
+        return next
+      })
+    }
+
+    runTick()
+    const interval = window.setInterval(runTick, 30_000)
+    const initial = window.setTimeout(runTick, 4_000)
+    return () => {
+      window.clearInterval(interval)
+      window.clearTimeout(initial)
+    }
+  }, [selectedLanguage])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -24796,6 +24883,8 @@ export default function Dashboard() {
     setDiarioPedidoExpandidoId(null)
     setDiarioComposeClienteSel('')
     setDiarioComposeClienteNomeLivre('')
+    setDiarioComposeLembreteAtivo(false)
+    setDiarioComposeLembreteMinutos(60)
   }, [showDiarioPedidosModal])
 
   // Marcar como lidas as mensagens destinadas ao usuário atual do Hub quando ele abre uma conversa
@@ -55450,240 +55539,22 @@ A1;Peça exemplo;10`}
         )
 
       case 'informacoes-conhecimento-tecnicos':
-        {
-          const nivelOpcoes = [
-            { value: 0, label: safeT?.conhecimentoNivelNenhum ?? 'Nenhum' },
-            { value: 1, label: safeT?.conhecimentoNivelBasico ?? 'Básico' },
-            { value: 2, label: safeT?.conhecimentoNivelMedio ?? 'Médio' },
-            { value: 3, label: safeT?.conhecimentoNivelAvancado ?? 'Avançado' },
-            { value: 4, label: safeT?.conhecimentoNivelEspecialista ?? 'Especialista' }
-          ]
-          const tiposEquipamentoOpcoes = (() => {
-            const out: { id: string; nome: string }[] = []
-            const fams = [...(familiasEquipamento || [])].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-            fams.forEach(f => {
-              const grupos = (gruposEquipamento || []).filter(g => (g.familia || '') === f)
-              if (grupos.length === 0) out.push({ id: `${f}|`, nome: f })
-              else grupos.forEach(g => out.push({ id: `${g.familia || f}|${g.nome}`, nome: `${g.familia || f} › ${g.nome}` }))
-            })
-            return out
-          })()
-          const conhecimentosDoTecnico = (tecnicoConhecimentoSelecionado ? conhecimentoTecnicos.filter(c => c.tecnicoId === tecnicoConhecimentoSelecionado) : [])
-          const addConhecimento = (equipamentoTipoId: string, equipamentoTipoNome: string) => {
-            if (!tecnicoConhecimentoSelecionado) return
-            const existe = conhecimentoTecnicos.some(c => c.tecnicoId === tecnicoConhecimentoSelecionado && c.equipamentoTipoId === equipamentoTipoId)
-            if (existe) return
-            const novo: ConhecimentoTecnicoEntry = {
-              id: `ct-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-              tecnicoId: tecnicoConhecimentoSelecionado,
-              equipamentoTipoId: equipamentoTipoId,
-              equipamentoTipoNome: equipamentoTipoNome,
-              mecanico: 0, eletrico: 0, software: 0, programacao: 0
-            }
-            const next = [...conhecimentoTecnicos, novo]
-            setConhecimentoTecnicos(next)
-            saveData('nonato-conhecimento-tecnicos', next).catch(() => {})
-          }
-          const updateConhecimento = (id: string, field: 'mecanico' | 'eletrico' | 'software' | 'programacao', value: number) => {
-            const next = conhecimentoTecnicos.map(c => c.id === id ? { ...c, [field]: value } : c)
-            setConhecimentoTecnicos(next)
-            saveData('nonato-conhecimento-tecnicos', next).catch(() => {})
-          }
-          type CampoDescricao = 'mecanico' | 'eletrico' | 'software' | 'programacao'
-          const updateConhecimentoDescricaoCampo = (id: string, campo: CampoDescricao, value: string) => {
-            const key = campo === 'mecanico' ? 'descricaoMecanico' : campo === 'eletrico' ? 'descricaoEletrico' : campo === 'software' ? 'descricaoSoftware' : 'descricaoProgramacao'
-            const next = conhecimentoTecnicos.map(c => c.id === id ? { ...c, [key]: value } : c)
-            setConhecimentoTecnicos(next)
-            saveData('nonato-conhecimento-tecnicos', next).catch(() => {})
-          }
-          const removeConhecimento = (id: string) => {
-            const next = conhecimentoTecnicos.filter(c => c.id !== id)
-            setConhecimentoTecnicos(next)
-            saveData('nonato-conhecimento-tecnicos', next).catch(() => {})
-          }
-          return (
-            <div className="tab-content-wrapper tab-glass-root ns-ui-v2" style={{ minHeight: '480px' }}>
-              <div className="tab-glass-hero tab-glass-hero--compact">
-                <div className="tab-glass-hero-top" style={{ marginBottom: 0 }}>
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <LogoComponent size="small" />
-                  </div>
-                  <div className="tab-glass-hero-heading">
-                    <h1 className="tab-glass-hero-title" style={{ fontSize: 'clamp(1rem, 3.5vw, 1.15rem)' }}>
-                      {(safeT as any)?.informacoesConhecimentoTecnicosTitle || 'INFORMAÇÕES DE CONHECIMENTO DOS TÉCNICOS'}
-                    </h1>
-                    <p className="tab-glass-hero-meta" style={{ fontSize: '12px' }}>
-                      {(safeT as any)?.informacoesConhecimentoTecnicosDesc || 'Área para registar e consultar informações de conhecimento dos técnicos.'}
-                    </p>
-                  </div>
-                  <div className="tab-glass-hero-actions">
-                    <div className="tab-glass-hero-actions-row">
-                    <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'rgba(0, 200, 83, 0.06)', border: '1px solid rgba(0, 200, 83, 0.55)', borderRadius: '4px', color: '#ffffff', cursor: 'pointer', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={safeT?.voltar || 'Voltar'}>↶</button>
-                    <button onClick={voltarPaginaInicial} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'rgba(0, 150, 255, 0.06)', border: '1px solid rgba(0, 150, 255, 0.55)', borderRadius: '4px', color: '#ffffff', cursor: 'pointer', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '13px', marginBottom: '16px' }}>
-                {(safeT as any)?.informacoesConhecimentoTecnicosSelecioneTecnico || 'Selecione um técnico abaixo para gerir os tipos de equipamento e os conhecimentos (mecânico, elétrico, software e programação) por equipamento.'}
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', marginBottom: '28px' }}>
-                {tecnicos.map(tecnico => (
-                  <button
-                    key={tecnico.id}
-                    type="button"
-                    onClick={() => setTecnicoConhecimentoSelecionado(tecnico.id)}
-                    style={{
-                      padding: '12px',
-                      backgroundColor: tecnicoConhecimentoSelecionado === tecnico.id ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
-                      borderRadius: '10px',
-                      border: tecnicoConhecimentoSelecionado === tecnico.id ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 200, 83, 0.22)',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      transition: 'border-color 0.2s ease, background-color 0.2s ease',
-                      color: '#ffffff'
-                    }}
-                  >
-                    <div style={{ width: '64px', height: '64px', margin: '0 auto 8px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#1e1e1e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {tecnico.photo ? (
-                        <img src={tecnico.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <span style={{ fontSize: '28px', color: '#909090' }}>👤</span>
-                      )}
-                    </div>
-                    <div style={{ fontWeight: '600', color: '#eee', fontSize: '13px', marginBottom: '4px' }}>{tecnico.name}</div>
-                    <div style={{
-                      fontSize: '11px',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      display: 'inline-block',
-                      backgroundColor: tecnico.type === 'internal' ? 'rgba(0, 200, 83, 0.2)' : tecnico.type === 'external' ? 'rgba(255, 165, 0, 0.2)' : 'rgba(100, 149, 237, 0.2)',
-                      color: tecnico.type === 'internal' ? '#00c853' : tecnico.type === 'external' ? '#ffaa00' : '#6495ed'
-                    }}>
-                      {tecnico.type === 'internal' ? (safeT?.internal ?? 'Interno') : tecnico.type === 'external' ? (safeT?.external ?? 'Externo') : 'Armazém'}
-                    </div>
-                  </button>
-                ))}
-              </div>
-              {tecnicos.length === 0 && (
-                <div style={{ padding: '24px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
-                  <p style={{ color: '#aaa' }}>{(safeT as any)?.informacoesConhecimentoSemTecnicos || 'Não há técnicos cadastrados. Adicione técnicos em Cadastro de Técnicos (Gestão Técnica).'}</p>
-                </div>
-              )}
-              {tecnicoConhecimentoSelecionado && tecnicos.length > 0 && (
-                <div style={{ padding: '24px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.25)' }}>
-                  <h3 style={{ margin: '0 0 16px', color: '#00c853', fontSize: '16px' }}>
-                    {(safeT as any)?.informacoesConhecimentoPorEquipamento || 'Tipos de equipamento e conhecimentos'}
-                  </h3>
-                  <div style={{ marginBottom: '16px', display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-                    <label style={{ color: '#bbb', fontSize: '13px' }}>{(safeT as any)?.informacoesConhecimentoAdicionarTipo || 'Adicionar tipo de equipamento:'}</label>
-                    <select
-                      defaultValue=""
-                      onChange={(e) => {
-                        const v = e.target.value
-                        if (!v) return
-                        const opt = tiposEquipamentoOpcoes.find(o => o.id === v)
-                        if (opt) addConhecimento(opt.id, opt.nome)
-                        e.target.value = ''
-                      }}
-                      style={{ padding: '8px 12px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', minWidth: '220px' }}
-                    >
-                      <option value="">— {(safeT as any)?.informacoesConhecimentoSelecioneTipo ?? 'Selecione'} —</option>
-                      {tiposEquipamentoOpcoes.map(opt => (
-                        <option key={opt.id} value={opt.id}>
-                          {opt.nome}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {tiposEquipamentoOpcoes.length === 0 && (
-                    <p style={{ color: '#888', fontSize: '13px', marginBottom: '16px' }}>
-                      {(safeT as any)?.informacoesConhecimentoSemTipos || 'Nenhum tipo de equipamento cadastrado. Configure em Cadastro de Famílias e Grupos para os Equipamentos (Gestão Técnica).'}
-                    </p>
-                  )}
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>
-                          <th style={{ textAlign: 'left', padding: '10px', color: '#00c853' }}>{(safeT as any)?.informacoesConhecimentoTipoEquipamento ?? 'Tipo de equipamento'}</th>
-                          <th style={{ textAlign: 'center', padding: '10px', color: '#00c853' }}>{(safeT as any)?.conhecimentoMecanico ?? 'Mecânico'}</th>
-                          <th style={{ textAlign: 'center', padding: '10px', color: '#00c853' }}>{(safeT as any)?.conhecimentoEletrico ?? 'Elétrico'}</th>
-                          <th style={{ textAlign: 'center', padding: '10px', color: '#00c853' }}>{(safeT as any)?.conhecimentoSoftware ?? 'Software'}</th>
-                          <th style={{ textAlign: 'center', padding: '10px', color: '#00c853' }}>{(safeT as any)?.conhecimentoProgramacao ?? 'Programação'}</th>
-                          <th style={{ width: '44px' }}></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {conhecimentosDoTecnico.map(ent => (
-                          <React.Fragment key={ent.id}>
-                            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                              <td style={{ padding: '10px', color: '#ddd' }}>{ent.equipamentoTipoNome}</td>
-                              <td style={{ padding: '8px', textAlign: 'center' }}>
-                                <select value={ent.mecanico} onChange={(e) => updateConhecimento(ent.id, 'mecanico', Number(e.target.value))} style={{ padding: '6px 8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', minWidth: '100px' }}>
-                                  {nivelOpcoes.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                                </select>
-                              </td>
-                              <td style={{ padding: '8px', textAlign: 'center' }}>
-                                <select value={ent.eletrico} onChange={(e) => updateConhecimento(ent.id, 'eletrico', Number(e.target.value))} style={{ padding: '6px 8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', minWidth: '100px' }}>
-                                  {nivelOpcoes.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                                </select>
-                              </td>
-                              <td style={{ padding: '8px', textAlign: 'center' }}>
-                                <select value={ent.software} onChange={(e) => updateConhecimento(ent.id, 'software', Number(e.target.value))} style={{ padding: '6px 8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', minWidth: '100px' }}>
-                                  {nivelOpcoes.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                                </select>
-                              </td>
-                              <td style={{ padding: '8px', textAlign: 'center' }}>
-                                <select value={ent.programacao} onChange={(e) => updateConhecimento(ent.id, 'programacao', Number(e.target.value))} style={{ padding: '6px 8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', minWidth: '100px' }}>
-                                  {nivelOpcoes.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                                </select>
-                              </td>
-                              <td style={{ padding: '8px' }}>
-                                <button type="button" onClick={() => removeConhecimento(ent.id)} style={{ padding: '4px 8px', backgroundColor: 'transparent', border: '1px solid rgba(255, 68, 68, 0.5)', borderRadius: '4px', color: '#f66', cursor: 'pointer' }} title={safeT?.delete || 'Excluir'}>✕</button>
-                              </td>
-                            </tr>
-                            {(() => {
-                              const temAlgumNivel = ent.mecanico > 0 || ent.eletrico > 0 || ent.software > 0 || ent.programacao > 0
-                              if (!temAlgumNivel) return null
-                              const campos: { key: CampoDescricao; label: string; value: string }[] = []
-                              if (ent.mecanico > 0) campos.push({ key: 'mecanico', label: (safeT as any)?.conhecimentoMecanico ?? 'Mecânico', value: ent.descricaoMecanico ?? '' })
-                              if (ent.eletrico > 0) campos.push({ key: 'eletrico', label: (safeT as any)?.conhecimentoEletrico ?? 'Elétrico', value: ent.descricaoEletrico ?? '' })
-                              if (ent.software > 0) campos.push({ key: 'software', label: (safeT as any)?.conhecimentoSoftware ?? 'Software', value: ent.descricaoSoftware ?? '' })
-                              if (ent.programacao > 0) campos.push({ key: 'programacao', label: (safeT as any)?.conhecimentoProgramacao ?? 'Programação', value: ent.descricaoProgramacao ?? '' })
-                              return (
-                                <tr style={{ borderBottom: '1px solid rgba(0, 200, 83, 0.15)' }}>
-                                  <td colSpan={6} style={{ padding: '8px 10px 14px', verticalAlign: 'top' }}>
-                                    {campos.map(({ key, label, value }) => (
-                                      <div key={key} style={{ marginBottom: campos.length > 1 ? '14px' : 0 }}>
-                                        <label style={{ display: 'block', color: '#00c853', fontSize: '12px', marginBottom: '6px' }}>
-                                          {(safeT as any)?.conhecimentoDescricaoDetalhada ?? 'Descrição detalhada'} — {label}
-                                        </label>
-                                        <AssistTextarea
-                                          value={value}
-                                          onValueChange={(v) => updateConhecimentoDescricaoCampo(ent.id, key, v)}
-                                          placeholder={(safeT as any)?.conhecimentoDescricaoPlaceholder ?? 'Descreva em detalhe os conhecimentos nesta área...'}
-                                          rows={2}
-                                          style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#eee', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', fontSize: '13px', resize: 'vertical', minHeight: '56px' }}
-                                        />
-                                      </div>
-                                    ))}
-                                  </td>
-                                </tr>
-                              )
-                            })()}
-                          </React.Fragment>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  {conhecimentosDoTecnico.length === 0 && (
-                    <p style={{ color: '#888', fontSize: '13px', marginTop: '12px' }}>{(safeT as any)?.informacoesConhecimentoNenhumRegisto || 'Nenhum tipo de equipamento adicionado para este técnico. Use o campo acima para adicionar.'}</p>
-                  )}
-                </div>
-              )}
-            </div>
-          )
-        }
+        return (
+          <ConhecimentoTecnicosContent
+            safeT={safeT as Record<string, string | undefined>}
+            LogoComponent={LogoComponent}
+            closeTab={closeTab}
+            activeTabId={activeTabId}
+            voltarPaginaInicial={voltarPaginaInicial}
+            tecnicos={tecnicos}
+            tecnicoConhecimentoSelecionado={tecnicoConhecimentoSelecionado}
+            setTecnicoConhecimentoSelecionado={setTecnicoConhecimentoSelecionado}
+            conhecimentoTecnicos={conhecimentoTecnicos}
+            setConhecimentoTecnicos={setConhecimentoTecnicos}
+            familiasEquipamento={familiasEquipamento}
+            gruposEquipamento={gruposEquipamento}
+          />
+        )
 
       case 'almoxarifado-armazem':
         return (
@@ -67795,6 +67666,39 @@ A1;Peça exemplo;10`}
                   ))}
                 </ul>
               ) : null}
+              <div className="ns-diario-lembrete">
+                <label className="ns-diario-lembrete__toggle">
+                  <input
+                    type="checkbox"
+                    checked={diarioComposeLembreteAtivo}
+                    onChange={async (e) => {
+                      const checked = e.target.checked
+                      if (checked) {
+                        await requestDiarioNotificationPermission()
+                      }
+                      setDiarioComposeLembreteAtivo(checked)
+                    }}
+                  />
+                  <span>{(safeT as any)?.diarioPedidosLembreteAtivar || 'Activar lembrete periódico'}</span>
+                </label>
+                {diarioComposeLembreteAtivo ? (
+                  <div className="ns-diario-lembrete__row">
+                    <span className="ns-diario-lembrete__label">
+                      {(safeT as any)?.diarioPedidosLembreteIntervalo || 'Repetir a cada'}
+                    </span>
+                    <DiarioLembreteIntervalPicker
+                      minutes={diarioComposeLembreteMinutos}
+                      onMinutesChange={setDiarioComposeLembreteMinutos}
+                      safeT={safeT as Record<string, string>}
+                      idPrefix="ns-diario-compose-lembrete"
+                    />
+                  </div>
+                ) : null}
+                <p className="ns-diario-lembrete__hint">
+                  {(safeT as any)?.diarioPedidosLembreteHint ||
+                    'Enquanto a anotação não estiver concluída, o sistema recorda no intervalo escolhido.'}
+                </p>
+              </div>
               <div className="ns-diario-composer__actions">
                 <button
                   type="button"
@@ -67849,6 +67753,16 @@ A1;Peça exemplo;10`}
                       diarioPedidoComposerAnexos.length > 0
                         ? diarioPedidoComposerAnexos.map((a) => ({ ...a }))
                         : undefined
+                    const lembreteFields = diarioComposeLembreteAtivo
+                      ? applyDiarioLembretePatch(
+                          {},
+                          {
+                            ativo: true,
+                            intervaloMinutos: diarioComposeLembreteMinutos,
+                            reagendarAgora: true,
+                          }
+                        )
+                      : { lembreteAtivo: false as const }
                     setDiarioPedidoEditandoId(null)
                     setDiarioPedidoEditDraft('')
                     setDiarioPedidoEditAnexos([])
@@ -67861,12 +67775,15 @@ A1;Peça exemplo;10`}
                         criadoEm,
                         anexos,
                         ...(clienteCadastroId ? { clienteCadastroId } : {}),
+                        ...lembreteFields,
                       },
                     ])
                     setDiarioPedidoDraft('')
                     setDiarioPedidoComposerAnexos([])
                     setDiarioComposeClienteSel('')
                     setDiarioComposeClienteNomeLivre('')
+                    setDiarioComposeLembreteAtivo(false)
+                    setDiarioComposeLembreteMinutos(60)
                   }}
                 >
                   {(safeT as any)?.diarioPedidosAdicionar || 'Registar anotação'}
@@ -67990,6 +67907,34 @@ A1;Peça exemplo;10`}
                       diarioNAnexos > 0 ||
                       (item.clienteCadastroId != null && item.clienteCadastroId !== '')
                     const diarioDetalheAberto = diarioPedidoExpandidoId === item.id
+                    let lembreteProximoFmt = '—'
+                    if (item.lembreteAtivo && item.lembreteProximoEm) {
+                      try {
+                        lembreteProximoFmt = new Date(item.lembreteProximoEm).toLocaleString(diarioPedidosLocale, {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      } catch {
+                        lembreteProximoFmt = '—'
+                      }
+                    }
+                    let lembreteUltimoFmt = '—'
+                    if (item.lembreteUltimoEm) {
+                      try {
+                        lembreteUltimoFmt = new Date(item.lembreteUltimoEm).toLocaleString(diarioPedidosLocale, {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      } catch {
+                        lembreteUltimoFmt = '—'
+                      }
+                    }
                     return (
                       <li key={item.id} className={`ns-diario-entry ${cardTone}`}>
                         <div className="ns-diario-entry__head">
@@ -68005,6 +67950,21 @@ A1;Peça exemplo;10`}
                             >
                               {statusLabel}
                             </span>
+                            {item.lembreteAtivo && item.status !== 'concluido' ? (
+                              <span
+                                className="ns-diario-lembrete-badge"
+                                title={
+                                  (safeT as any)?.diarioPedidosLembreteBadge ||
+                                  `Lembrete: ${formatDiarioLembreteIntervalo(item.lembreteIntervaloMinutos ?? 60, safeT as Record<string, string>)}`
+                                }
+                              >
+                                🔔{' '}
+                                {formatDiarioLembreteIntervalo(
+                                  item.lembreteIntervaloMinutos ?? 60,
+                                  safeT as Record<string, string>
+                                )}
+                              </span>
+                            ) : null}
                             {diarioPrecisaExpandir && diarioNomeListaSobrio ? (
                               <button
                                 type="button"
@@ -68303,6 +68263,115 @@ A1;Peça exemplo;10`}
                             ) : null}
                           </>
                         )}
+                        {!isEditing ? (
+                          <div className="ns-diario-lembrete ns-diario-lembrete--entry">
+                            <div className="ns-diario-lembrete__head">
+                              <span className="ns-diario-lembrete__title">
+                                {(safeT as any)?.diarioPedidosLembreteTitulo || 'Lembrete'}
+                              </span>
+                            </div>
+                            <label className="ns-diario-lembrete__toggle">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(item.lembreteAtivo && item.status !== 'concluido')}
+                                disabled={item.status === 'concluido'}
+                                onChange={async (e) => {
+                                  const checked = e.target.checked
+                                  if (checked) {
+                                    await requestDiarioNotificationPermission()
+                                  }
+                                  setDiarioPedidosItems((p) =>
+                                    p.map((x) =>
+                                      x.id === item.id
+                                        ? {
+                                            ...x,
+                                            ...applyDiarioLembretePatch(x, {
+                                              ativo: checked,
+                                              intervaloMinutos: x.lembreteIntervaloMinutos ?? 60,
+                                              reagendarAgora: checked,
+                                            }),
+                                            atualizadoEm: new Date().toISOString(),
+                                          }
+                                        : x
+                                    )
+                                  )
+                                }}
+                              />
+                              <span>{(safeT as any)?.diarioPedidosLembreteAtivar || 'Activar lembrete periódico'}</span>
+                            </label>
+                            {item.lembreteAtivo && item.status !== 'concluido' ? (
+                              <>
+                                <div className="ns-diario-lembrete__row">
+                                  <span className="ns-diario-lembrete__label">
+                                    {(safeT as any)?.diarioPedidosLembreteIntervalo || 'Repetir a cada'}
+                                  </span>
+                                  <DiarioLembreteIntervalPicker
+                                    minutes={item.lembreteIntervaloMinutos ?? 60}
+                                    onMinutesChange={(min) =>
+                                      setDiarioPedidosItems((p) =>
+                                        p.map((x) =>
+                                          x.id === item.id
+                                            ? {
+                                                ...x,
+                                                ...applyDiarioLembretePatch(x, {
+                                                  ativo: true,
+                                                  intervaloMinutos: min,
+                                                  reagendarAgora: true,
+                                                }),
+                                                atualizadoEm: new Date().toISOString(),
+                                              }
+                                            : x
+                                        )
+                                      )
+                                    }
+                                    safeT={safeT as Record<string, string>}
+                                    idPrefix={`ns-diario-lembrete-${item.id}`}
+                                  />
+                                </div>
+                                <div className="ns-diario-lembrete__meta">
+                                  <span className="ns-diario-lembrete__meta-label">
+                                    {(safeT as any)?.diarioPedidosLembreteProximo || 'Próximo lembrete'}
+                                  </span>
+                                  <span className="ns-diario-lembrete__meta-value">{lembreteProximoFmt}</span>
+                                  {item.lembreteUltimoEm ? (
+                                    <>
+                                      <span className="ns-diario-lembrete__meta-sep" aria-hidden>
+                                        ·
+                                      </span>
+                                      <span className="ns-diario-lembrete__meta-label">
+                                        {(safeT as any)?.diarioPedidosLembreteUltimo || 'Último lembrete'}
+                                      </span>
+                                      <span className="ns-diario-lembrete__meta-value">{lembreteUltimoFmt}</span>
+                                    </>
+                                  ) : null}
+                                </div>
+                                <button
+                                  type="button"
+                                  className="ns-diario-btn ns-diario-btn--ghost ns-diario-lembrete__reagendar"
+                                  onClick={() =>
+                                    setDiarioPedidosItems((p) =>
+                                      p.map((x) =>
+                                        x.id === item.id
+                                          ? {
+                                              ...x,
+                                              ...applyDiarioLembretePatch(x, {
+                                                ativo: true,
+                                                intervaloMinutos: x.lembreteIntervaloMinutos ?? 60,
+                                                reagendarAgora: true,
+                                              }),
+                                              atualizadoEm: new Date().toISOString(),
+                                            }
+                                          : x
+                                      )
+                                    )
+                                  }
+                                >
+                                  {(safeT as any)?.diarioPedidosLembreteReagendar || 'Reagendar a partir de agora'}
+                                </button>
+                              </>
+                            ) : null}
+                          </div>
+                        ) : null}
                         <div className="ns-diario-entry__meta">
                           <span className="ns-diario-entry__meta-label">{(safeT as any)?.diarioPedidosMetaCriado || 'Registado'}</span>
                           <span className="ns-diario-entry__meta-value">{criadoFmt}</span>
@@ -68340,13 +68409,20 @@ A1;Peça exemplo;10`}
                                 <button
                                   type="button"
                                   className="btn-primary ns-diario-btn ns-diario-btn--accent"
-                                  onClick={() =>
-                                    setDiarioPedidosItems((p) =>
-                                      p.map((x) =>
-                                        x.id === item.id ? { ...x, status: 'concluido' as const, atualizadoEm: new Date().toISOString() } : x
-                                      )
+                                onClick={() =>
+                                  setDiarioPedidosItems((p) =>
+                                    p.map((x) =>
+                                      x.id === item.id
+                                        ? {
+                                            ...x,
+                                            status: 'concluido' as const,
+                                            atualizadoEm: new Date().toISOString(),
+                                            ...clearDiarioLembreteOnConcluido(x),
+                                          }
+                                        : x
                                     )
-                                  }
+                                  )
+                                }
                                 >
                                   {(safeT as any)?.diarioPedidosBtnConcluir || 'Marcar concluído'}
                                 </button>
@@ -68402,6 +68478,48 @@ A1;Peça exemplo;10`}
           </div>
         </div>
       )}
+
+      {diarioLembretePulseActive ? (
+        <div className="ns-diario-lembrete-pulse" aria-hidden />
+      ) : null}
+
+      {diarioLembreteAvisos.length > 0 ? (
+        <div className="ns-diario-lembrete-toast-stack" role="status" aria-live="polite">
+          {diarioLembreteAvisos.map((aviso) => (
+            <div key={aviso.id} className="ns-diario-lembrete-toast">
+              <div className="ns-diario-lembrete-toast__body">
+                <strong className="ns-diario-lembrete-toast__title">
+                  {(safeT as any)?.diarioPedidosLembreteNotifTitulo || 'Diário — lembrete'}
+                </strong>
+                <p className="ns-diario-lembrete-toast__text">
+                  {aviso.titulo}: {(safeT as any)?.diarioPedidosLembreteNotifCorpo || 'Verifique esta anotação'}
+                </p>
+              </div>
+              <div className="ns-diario-lembrete-toast__actions">
+                <button
+                  type="button"
+                  className="ns-diario-btn ns-diario-btn--primary ns-diario-lembrete-toast__btn"
+                  onClick={() => {
+                    setShowDiarioPedidosModal(true)
+                    setDiarioPedidoExpandidoId(aviso.id)
+                    setDiarioLembreteAvisos((p) => p.filter((a) => a.id !== aviso.id))
+                  }}
+                >
+                  {(safeT as any)?.diarioPedidosLembreteToastVer || 'Abrir diário'}
+                </button>
+                <button
+                  type="button"
+                  className="ns-diario-btn ns-diario-btn--ghost ns-diario-lembrete-toast__btn"
+                  onClick={() => setDiarioLembreteAvisos((p) => p.filter((a) => a.id !== aviso.id))}
+                  aria-label={(safeT as any)?.diarioPedidosLembreteToastFechar || 'Fechar aviso'}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       {/* Modal de Acesso ao Checklist - Área restrita (nome + senha do Gestor de Senhas) */}
       {showChecklistAccessModal && (
