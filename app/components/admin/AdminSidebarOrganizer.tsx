@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo, useState } from 'react'
 import type { SafeT, SidebarButton, SidebarGroup } from './adminTypes'
 
 export type AdminSidebarOrganizerProps = {
@@ -36,6 +36,12 @@ export type AdminSidebarOrganizerProps = {
   setShowButtonForm: (v: boolean) => void
 }
 
+function tr(safeT: SafeT, key: string, fallback: string): string {
+  return (safeT as Record<string, string | undefined>)[key] || fallback
+}
+
+type DropTarget = { group: SidebarGroup; index: number }
+
 export function AdminSidebarOrganizer({
   safeT,
   sidebarButtons,
@@ -43,11 +49,7 @@ export function AdminSidebarOrganizer({
   sidebarPinnedIds,
   sidebarOrganizerSearch,
   setSidebarOrganizerSearch,
-  showSidebarButtonOrganizer,
-  setShowSidebarButtonOrganizer,
   draggedButton,
-  dragOverIndex,
-  setDragOverIndex,
   normalizeSidebarButtons,
   isSidebarButtonLocked,
   getDefaultSidebarGroup,
@@ -56,8 +58,6 @@ export function AdminSidebarOrganizer({
   getButtonsByGroup,
   handleRestoreSidebarOrganizerDefaults,
   handleDragStart,
-  handleDragOver,
-  handleDragLeave,
   handleDropWithGroup,
   handleDragEnd,
   handleMoveButtonToGroup,
@@ -68,239 +68,340 @@ export function AdminSidebarOrganizer({
   setButtonForm,
   setShowButtonForm,
 }: AdminSidebarOrganizerProps) {
+  const [dropTarget, setDropTarget] = useState<DropTarget | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [expandedMoveId, setExpandedMoveId] = useState<string | null>(null)
+
   const SIDEBAR_GROUPS = sidebarGroups
   const SIDEBAR_PINNED_IDS = sidebarPinnedIds
   const normalizedButtons = normalizeSidebarButtons(sidebarButtons)
   const coreButtons = normalizedButtons.filter((button) => isSidebarButtonLocked(button))
   const searchTerm = sidebarOrganizerSearch.trim().toLowerCase()
+  const isDragging = Boolean(draggedButton)
+
+  const movableCount = useMemo(
+    () => normalizedButtons.filter((button) => !isSidebarButtonLocked(button)).length,
+    [normalizedButtons, isSidebarButtonLocked]
+  )
+
+  const clearDrop = () => setDropTarget(null)
+
+  const onDragEndLocal = () => {
+    clearDrop()
+    handleDragEnd()
+  }
+
+  const renderDropSlot = (group: SidebarGroup, index: number, label?: string) => {
+    const active = dropTarget?.group === group && dropTarget.index === index
+    return (
+      <div
+        key={`drop-${group}-${index}`}
+        className={`admin-sidebar-hub-drop${active ? ' admin-sidebar-hub-drop--active' : ''}${isDragging ? ' admin-sidebar-hub-drop--visible' : ''}`}
+        onDragOver={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          setDropTarget({ group, index })
+        }}
+        onDragLeave={(e) => {
+          if (e.currentTarget.contains(e.relatedTarget as Node)) return
+          if (dropTarget?.group === group && dropTarget.index === index) clearDrop()
+        }}
+        onDrop={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          handleDropWithGroup(e, index, group)
+          clearDrop()
+        }}
+      >
+        <span>{label || tr(safeT, 'adminSidebarHubDropHere', 'Soltar aqui')}</span>
+      </div>
+    )
+  }
 
   return (
-      <div className="admin-section admin-section--ui sidebar-organizer-shell">
-        <div className="sidebar-organizer-hero">
+    <section className="admin-sidebar-hub">
+      <header className="admin-sidebar-hub__hero">
+        <div className="admin-sidebar-hub__hero-glow" aria-hidden="true" />
+        <div className="admin-sidebar-hub__hero-content">
+          <div className="admin-sidebar-hub__hero-icon" aria-hidden="true">
+            ☰
+          </div>
           <div>
-            <h3 className="admin-section-title sidebar-organizer-title">
-              {safeT?.buttonOrganizer || 'ORGANIZAÇÃO DA INTERFACE'}
+            <h3 className="admin-sidebar-hub__hero-title">
+              {tr(safeT, 'adminSidebarHubTitle', 'Organizador do Menu Lateral')}
             </h3>
-            <p className="sidebar-organizer-subtitle">
-              {(safeT as any)?.organizeButtonsFreeGroupDesc ||
-                'Pode mover qualquer botão para qualquer grupo. Ex.: um botão da Gestão Técnica pode passar para Gestão Industrial. Use o menu ao lado de cada botão para escolher o grupo.'}
+            <p className="admin-sidebar-hub__hero-desc">
+              {tr(
+                safeT,
+                'adminSidebarHubDesc',
+                'Arraste cada botão para qualquer área e posição. Use as setas para ajustes finos — a barra lateral atualiza ao guardar.'
+              )}
             </p>
           </div>
-          <div className="sidebar-organizer-actions">
-            <button
-              className="btn-primary"
-              onClick={handleRestoreSidebarOrganizerDefaults}
-              style={{ padding: '10px 16px', fontSize: '12px' }}
-            >
-              {(safeT as any)?.sidebarOrganizerRestore || 'Restaurar padrão'}
-            </button>
-            <button
-              className="btn-primary"
-              onClick={() => setShowSidebarButtonOrganizer(!showSidebarButtonOrganizer)}
-              style={{ padding: '10px 16px', fontSize: '12px' }}
-            >
-              {showSidebarButtonOrganizer
-                ? ((safeT as any)?.hideSidebarOrganizer || 'Ocultar Organizador')
-                : ((safeT as any)?.organizeSidebarButtons || 'Abrir Organizador Moderno')}
-            </button>
-            <button
-              className="btn-primary"
-              onClick={() => setShowButtonForm(true)}
-              style={{ padding: '10px 16px', fontSize: '12px' }}
-            >
-              {safeT?.addButton || 'Adicionar Botão'}
-            </button>
-          </div>
         </div>
+        <ol className="admin-sidebar-hub__steps">
+          <li>{tr(safeT, 'adminSidebarHubStep1', '1. Arraste para a posição desejada')}</li>
+          <li>{tr(safeT, 'adminSidebarHubStep2', '2. ↑ ↓ mudam a ordem na coluna')}</li>
+          <li>{tr(safeT, 'adminSidebarHubStep3', '3. ← → ou arraste entre áreas')}</li>
+        </ol>
+      </header>
 
-        <div className="sidebar-organizer-summary">
-          <div className="sidebar-organizer-stat">
-            <span className="sidebar-organizer-stat-value">{normalizedButtons.filter((button) => !isSidebarButtonLocked(button)).length}</span>
-            <span className="sidebar-organizer-stat-label">Botões organizáveis</span>
-          </div>
-          <div className="sidebar-organizer-stat">
-            <span className="sidebar-organizer-stat-value">{SIDEBAR_GROUPS.length}</span>
-            <span className="sidebar-organizer-stat-label">Áreas da barra lateral</span>
-          </div>
-          <div className="sidebar-organizer-stat">
-            <span className="sidebar-organizer-stat-value">{coreButtons.length}</span>
-            <span className="sidebar-organizer-stat-label">Botões principais protegidos</span>
-          </div>
+      <div className="admin-sidebar-hub__stats">
+        <div className="admin-sidebar-hub__stat">
+          <span>{tr(safeT, 'adminSidebarHubKpiMovable', 'Botões móveis')}</span>
+          <strong>{movableCount}</strong>
         </div>
+        <div className="admin-sidebar-hub__stat">
+          <span>{tr(safeT, 'adminSidebarHubKpiAreas', 'Áreas')}</span>
+          <strong>{SIDEBAR_GROUPS.length}</strong>
+        </div>
+        <div className="admin-sidebar-hub__stat admin-sidebar-hub__stat--note">
+          <span>{tr(safeT, 'adminSidebarHubKpiProtected', 'Protegidos')}</span>
+          <strong>{coreButtons.length}</strong>
+        </div>
+      </div>
 
-        {coreButtons.length > 0 && (
-          <div className="sidebar-organizer-core-strip">
-            <span className="sidebar-organizer-core-label">{safeT?.mainButton || 'Botão Principal'}:</span>
-            {coreButtons.map((button) => (
-              <span key={button.id} className="sidebar-organizer-core-chip">
-                {getButtonName(button)}
-              </span>
-            ))}
-          </div>
-        )}
+      <div className="admin-sidebar-hub__legend">
+        <div className="admin-sidebar-hub__legend-item">
+          <span aria-hidden="true">⠿</span>
+          <p>{tr(safeT, 'adminSidebarHubLegendDrag', 'Arraste pelo ícone ou solte nas linhas verdes')}</p>
+        </div>
+        <div className="admin-sidebar-hub__legend-item">
+          <span aria-hidden="true">↑↓</span>
+          <p>{tr(safeT, 'adminSidebarHubLegendVertical', 'Setas verticais: sobe ou desce na mesma área')}</p>
+        </div>
+        <div className="admin-sidebar-hub__legend-item">
+          <span aria-hidden="true">←→</span>
+          <p>{tr(safeT, 'adminSidebarHubLegendHorizontal', 'Setas horizontais: envia para a área ao lado')}</p>
+        </div>
+      </div>
 
-        {showSidebarButtonOrganizer && (
-          <>
-            <p className="sidebar-organizer-hint">
-              {safeT?.dragToReorder ||
-                'Arraste os botões para reorganizá-los'}
-              {' '}
-              Use também os controlos do card para mover dentro da coluna ou enviar para outra área.
-            </p>
+      {coreButtons.length > 0 ? (
+        <div className="admin-sidebar-hub__core">
+          <span>{safeT?.mainButton || 'Botão Principal'}</span>
+          {coreButtons.map((button) => (
+            <span key={button.id} className="admin-sidebar-hub__core-chip">
+              {getButtonName(button)}
+            </span>
+          ))}
+        </div>
+      ) : null}
 
-            <div className="sidebar-organizer-toolbar">
-              <input
-                type="text"
-                value={sidebarOrganizerSearch}
-                onChange={(e) => setSidebarOrganizerSearch(e.target.value)}
-                className="sidebar-organizer-search"
-                placeholder={(safeT as any)?.sidebarOrganizerSearchPlaceholder || 'Buscar botão por nome...'}
-              />
-            </div>
+      <div className="admin-sidebar-hub__toolbar">
+        <label className="admin-sidebar-hub__search">
+          <span aria-hidden="true">🔍</span>
+          <input
+            type="search"
+            value={sidebarOrganizerSearch}
+            onChange={(e) => setSidebarOrganizerSearch(e.target.value)}
+            placeholder={tr(safeT, 'sidebarOrganizerSearchPlaceholder', 'Pesquisar botão por nome…')}
+          />
+        </label>
+        <div className="admin-sidebar-hub__toolbar-actions">
+          <button type="button" className="admin-sidebar-hub-btn admin-sidebar-hub-btn--ghost" onClick={handleRestoreSidebarOrganizerDefaults}>
+            {tr(safeT, 'sidebarOrganizerRestore', 'Restaurar padrão')}
+          </button>
+          <button type="button" className="admin-sidebar-hub-btn admin-sidebar-hub-btn--primary" onClick={() => setShowButtonForm(true)}>
+            + {safeT?.addButton || 'Adicionar Botão'}
+          </button>
+        </div>
+      </div>
 
-            <div className="sidebar-organizer-board">
-              {SIDEBAR_GROUPS.map((group) => {
-                const groupButtons = getButtonsByGroup(group).filter((button) => {
-                  if (!searchTerm) return true
-                  const name = getButtonName(button).toLowerCase()
-                  return name.includes(searchTerm)
-                })
-                return (
-                  <div
-                    key={group}
-                    className="sidebar-organizer-column"
-                    onDragOver={(e) => {
-                      e.preventDefault()
-                      setDragOverIndex(groupButtons.length)
-                    }}
-                    onDrop={(e) => handleDropWithGroup(e, groupButtons.length, group)}
-                  >
-                    <div className="sidebar-organizer-column-head">
-                      <div>
-                        <h4>{getSidebarGroupLabel(group)}</h4>
-                        <p>{groupButtons.length} botão{groupButtons.length === 1 ? '' : 'ões'}</p>
-                      </div>
-                      <span className="sidebar-organizer-column-badge">{groupButtons.length}</span>
-                    </div>
+      <div className={`admin-sidebar-hub-board${isDragging ? ' admin-sidebar-hub-board--dragging' : ''}`}>
+        {SIDEBAR_GROUPS.map((group) => {
+          const groupButtons = getButtonsByGroup(group).filter((button) => {
+            if (!searchTerm) return true
+            return getButtonName(button).toLowerCase().includes(searchTerm)
+          })
+          const isColumnTarget = isDragging && dropTarget?.group === group
 
-                    <div className="sidebar-organizer-column-body">
-                      {groupButtons.length === 0 ? (
-                        <div className="sidebar-organizer-empty">
-                          {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                        </div>
-                      ) : (
-                        groupButtons.map((button, index) => {
-                          const currentGroup = button.group || getDefaultSidebarGroup(button.id)
-                          const currentGroupIndex = SIDEBAR_GROUPS.indexOf(currentGroup)
-                          return (
-                            <div
-                              key={button.id}
-                              className={`sidebar-organizer-card${draggedButton === button.id ? ' is-dragging' : ''}${dragOverIndex === index ? ' is-drop-target' : ''}`}
-                              draggable
-                              onDragStart={() => handleDragStart(button.id)}
-                              onDragOver={(e) => handleDragOver(e, index)}
-                              onDragLeave={handleDragLeave}
-                              onDrop={(e) => handleDropWithGroup(e, index, group)}
-                              onDragEnd={handleDragEnd}
-                            >
-                              <div className="sidebar-organizer-card-main">
-                                <div className="sidebar-organizer-card-topline">
-                                  <span className="sidebar-organizer-card-grip">::</span>
-                                  <span className="sidebar-organizer-card-name" title={getButtonName(button)}>
-                                    {getButtonName(button)}
-                                  </span>
-                                </div>
-                                <div className="sidebar-organizer-card-meta">
+          return (
+            <article
+              key={group}
+              className={`admin-sidebar-hub-column${isColumnTarget ? ' admin-sidebar-hub-column--target' : ''}`}
+              onDragOver={(e) => {
+                e.preventDefault()
+                if (groupButtons.length === 0) setDropTarget({ group, index: 0 })
+              }}
+            >
+              <header className="admin-sidebar-hub-column__head">
+                <div>
+                  <h4>{getSidebarGroupLabel(group)}</h4>
+                  <p>
+                    {groupButtons.length}{' '}
+                    {groupButtons.length === 1
+                      ? tr(safeT, 'adminSidebarHubButtonSingular', 'botão')
+                      : tr(safeT, 'adminSidebarHubButtonPlural', 'botões')}
+                  </p>
+                </div>
+                <span className="admin-sidebar-hub-column__badge">{groupButtons.length}</span>
+              </header>
+
+              <div className="admin-sidebar-hub-column__body">
+                {groupButtons.length === 0 ? (
+                  <>
+                    {renderDropSlot(group, 0, tr(safeT, 'adminSidebarHubEmptyColumn', 'Área vazia — solte aqui'))}
+                    <div className="admin-sidebar-hub-empty">{safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}</div>
+                  </>
+                ) : (
+                  <>
+                    {renderDropSlot(group, 0)}
+                    {groupButtons.map((button, index) => {
+                      const currentGroup = button.group || getDefaultSidebarGroup(button.id)
+                      const currentGroupIndex = SIDEBAR_GROUPS.indexOf(currentGroup)
+                      const isConfirming = confirmDeleteId === button.id
+                      const showMoveMenu = expandedMoveId === button.id
+
+                      return (
+                        <React.Fragment key={button.id}>
+                          <div
+                            className={`admin-sidebar-hub-card${draggedButton === button.id ? ' admin-sidebar-hub-card--dragging' : ''}`}
+                            draggable
+                            onDragStart={() => handleDragStart(button.id)}
+                            onDragEnd={onDragEndLocal}
+                          >
+                            <div className="admin-sidebar-hub-card__main">
+                              <span className="admin-sidebar-hub-card__grip" aria-hidden="true" title={safeT?.dragToReorder || 'Arraste'}>
+                                ⠿
+                              </span>
+                              <div className="admin-sidebar-hub-card__text">
+                                <strong title={getButtonName(button)}>{getButtonName(button)}</strong>
+                                <small>{button.action}</small>
+                                <div className="admin-sidebar-hub-card__tags">
                                   <span>{getSidebarGroupLabel(currentGroup)}</span>
-                                  {SIDEBAR_PINNED_IDS.has(button.id) && (
-                                    <span>Fixo recomendado</span>
-                                  )}
+                                  {SIDEBAR_PINNED_IDS.has(button.id) ? (
+                                    <span className="admin-sidebar-hub-card__tag-pinned">
+                                      {tr(safeT, 'adminSidebarHubPinned', 'Fixo')}
+                                    </span>
+                                  ) : null}
                                 </div>
                               </div>
+                            </div>
 
-                              <div className="sidebar-organizer-card-controls">
-                                <select
-                                  value={currentGroup}
-                                  onChange={(e) => handleMoveButtonToGroup(button.id, e.target.value as SidebarGroup)}
-                                  className="sidebar-organizer-select"
+                            <div className="admin-sidebar-hub-card__controls">
+                              <div className="admin-sidebar-hub-movepad" aria-label={tr(safeT, 'adminSidebarHubMovePad', 'Mover botão')}>
+                                <button
+                                  type="button"
+                                  className="admin-sidebar-hub-movepad__btn"
+                                  onClick={() => handleMoveButton(button.id, 'up')}
+                                  disabled={index === 0}
+                                  title={safeT?.moveUp || 'Subir'}
                                 >
-                                  {SIDEBAR_GROUPS.map((groupOption) => (
-                                    <option key={groupOption} value={groupOption}>
-                                      {getSidebarGroupLabel(groupOption)}
-                                    </option>
-                                  ))}
-                                </select>
-
-                                <div className="sidebar-organizer-card-actions-row">
+                                  ↑
+                                </button>
+                                <div className="admin-sidebar-hub-movepad__middle">
                                   <button
                                     type="button"
-                                    className="sidebar-organizer-mini-btn"
-                                    onClick={() => handleMoveButton(button.id, 'up')}
-                                    disabled={index === 0}
-                                    title={safeT?.moveUp || 'Mover para Cima'}
-                                  >
-                                    ↑
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="sidebar-organizer-mini-btn"
-                                    onClick={() => handleMoveButton(button.id, 'down')}
-                                    disabled={index === groupButtons.length - 1}
-                                    title={safeT?.moveDown || 'Mover para Baixo'}
-                                  >
-                                    ↓
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="sidebar-organizer-mini-btn"
+                                    className="admin-sidebar-hub-movepad__btn"
                                     onClick={() => handleMoveButtonAcrossGroups(button.id, 'left')}
                                     disabled={currentGroupIndex <= 0}
-                                    title="Mover para a área anterior"
+                                    title={tr(safeT, 'adminSidebarHubMoveLeft', 'Área anterior')}
                                   >
                                     ←
                                   </button>
                                   <button
                                     type="button"
-                                    className="sidebar-organizer-mini-btn"
+                                    className="admin-sidebar-hub-movepad__btn admin-sidebar-hub-movepad__btn--center"
+                                    onClick={() => setExpandedMoveId(showMoveMenu ? null : button.id)}
+                                    title={tr(safeT, 'adminSidebarHubSendTo', 'Enviar para área')}
+                                  >
+                                    ◫
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="admin-sidebar-hub-movepad__btn"
                                     onClick={() => handleMoveButtonAcrossGroups(button.id, 'right')}
                                     disabled={currentGroupIndex >= SIDEBAR_GROUPS.length - 1}
-                                    title="Mover para a próxima área"
+                                    title={tr(safeT, 'adminSidebarHubMoveRight', 'Próxima área')}
                                   >
                                     →
                                   </button>
-                                  <button
-                                    type="button"
-                                    className="btn-primary"
-                                    onClick={() => {
-                                      setEditingButton(button)
-                                      setButtonForm({ name: button.name, action: button.action })
-                                      setShowButtonForm(true)
+                                </div>
+                                <button
+                                  type="button"
+                                  className="admin-sidebar-hub-movepad__btn"
+                                  onClick={() => handleMoveButton(button.id, 'down')}
+                                  disabled={index === groupButtons.length - 1}
+                                  title={safeT?.moveDown || 'Descer'}
+                                >
+                                  ↓
+                                </button>
+                              </div>
+
+                              {showMoveMenu ? (
+                                <label className="admin-sidebar-hub-send">
+                                  <span>{tr(safeT, 'adminSidebarHubSendTo', 'Enviar para')}</span>
+                                  <select
+                                    value={currentGroup}
+                                    onChange={(e) => {
+                                      handleMoveButtonToGroup(button.id, e.target.value as SidebarGroup)
+                                      setExpandedMoveId(null)
                                     }}
-                                    style={{ padding: '8px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
                                   >
-                                    {safeT?.edit || 'Editar'}
-                                  </button>
+                                    {SIDEBAR_GROUPS.map((groupOption) => (
+                                      <option key={groupOption} value={groupOption}>
+                                        {getSidebarGroupLabel(groupOption)}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                              ) : null}
+
+                              <div className="admin-sidebar-hub-card__actions">
+                                <button
+                                  type="button"
+                                  className="admin-sidebar-hub-btn admin-sidebar-hub-btn--xs admin-sidebar-hub-btn--ghost"
+                                  onClick={() => {
+                                    setEditingButton(button)
+                                    setButtonForm({ name: button.name, action: button.action })
+                                    setShowButtonForm(true)
+                                  }}
+                                >
+                                  {safeT?.edit || 'Editar'}
+                                </button>
+                                {isConfirming ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="admin-sidebar-hub-btn admin-sidebar-hub-btn--xs admin-sidebar-hub-btn--danger"
+                                      onClick={() => {
+                                        handleDeleteButton(button.id)
+                                        setConfirmDeleteId(null)
+                                      }}
+                                    >
+                                      {tr(safeT, 'adminSidebarHubConfirmDelete', 'Sim')}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="admin-sidebar-hub-btn admin-sidebar-hub-btn--xs admin-sidebar-hub-btn--ghost"
+                                      onClick={() => setConfirmDeleteId(null)}
+                                    >
+                                      {safeT?.cancel || 'Não'}
+                                    </button>
+                                  </>
+                                ) : (
                                   <button
                                     type="button"
-                                    className="btn-danger"
-                                    onClick={() => handleDeleteButton(button.id)}
-                                    style={{ padding: '8px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                                    className="admin-sidebar-hub-btn admin-sidebar-hub-btn--xs admin-sidebar-hub-btn--danger-outline"
+                                    onClick={() => setConfirmDeleteId(button.id)}
                                   >
                                     {safeT?.delete || 'Excluir'}
                                   </button>
-                                </div>
+                                )}
                               </div>
                             </div>
-                          )
-                        })
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </>
-        )}
+                          </div>
+                          {renderDropSlot(group, index + 1)}
+                        </React.Fragment>
+                      )
+                    })}
+                  </>
+                )}
+              </div>
+            </article>
+          )
+        })}
       </div>
+    </section>
   )
 }

@@ -224,7 +224,7 @@ export function AdministradorContent({
         id="admin-detail-sidebar"
         icon="☰"
         title={safeT?.adminJumpSidebarTitle || 'Menu lateral'}
-        sub={safeT?.adminJumpSidebarDesc || 'Ordem dos botões, grupos e nomes apresentados na barra.'}
+        sub={safeT?.adminJumpSidebarDesc || 'Arraste botões entre áreas e posições — setas para ajustes finos.'}
         toneClass="admin-disclosure--emerald"
       >
         <AdminSidebarOrganizer safeT={safeT} {...sidebar} />
