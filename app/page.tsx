@@ -12526,28 +12526,28 @@ export default function Dashboard() {
   }
 
   // Função para salvar senha manualmente criada
-  const handleSavePassword = () => {
+  const handleSavePassword = (): boolean => {
     if (!passwordForm.tecnicoName.trim()) {
       alert(safeT?.fillAllFields || 'Por favor, preencha o nome do técnico!')
-      return
+      return false
     }
     if (!passwordForm.password.trim()) {
       alert(safeT?.fillAllFields || 'Por favor, preencha ou gere uma senha!')
-      return
+      return false
     }
-    
+
     const newPasswordEntry: PasswordEntry = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       tecnicoName: passwordForm.tecnicoName,
       password: passwordForm.password,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     }
-    
+
     const updatedPasswords = [...managedPasswords, newPasswordEntry]
     setManagedPasswords(updatedPasswords)
     saveData('nonato-managed-passwords', updatedPasswords)
     setPasswordForm({ tecnicoName: '', password: '' })
-    alert(safeT?.passwordSaved || 'Senha salva com sucesso!')
+    return true
   }
 
   const handleAddButton = () => {

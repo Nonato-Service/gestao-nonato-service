@@ -10439,6 +10439,470 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   color: rgba(255, 255, 255, 0.45);
 }
 
+/* —— Centro de Senhas (Administrador) —— */
+.admin-passwords-hub {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 193, 7, 0.22);
+  background: linear-gradient(165deg, rgba(255, 193, 7, 0.04) 0%, rgba(0, 0, 0, 0.35) 42%, rgba(0, 0, 0, 0.5) 100%);
+  overflow: hidden;
+}
+
+.admin-passwords-hub__hero {
+  position: relative;
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.admin-passwords-hub__hero-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 120% at 0% 0%, rgba(255, 193, 7, 0.12), transparent 55%);
+  pointer-events: none;
+}
+
+.admin-passwords-hub__hero-content {
+  position: relative;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.admin-passwords-hub__hero-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  background: rgba(255, 193, 7, 0.12);
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  flex-shrink: 0;
+}
+
+.admin-passwords-hub__hero-title {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.admin-passwords-hub__hero-desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.68);
+  max-width: 62ch;
+}
+
+.admin-passwords-hub__steps {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-passwords-hub__steps li {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-passwords-hub__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin-passwords-hub__stat {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-passwords-hub__stat span {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.admin-passwords-hub__stat strong {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffe082;
+}
+
+.admin-passwords-hub__stat--note strong {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.admin-passwords-hub__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin-passwords-hub__search {
+  flex: 1 1 220px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.admin-passwords-hub__search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+}
+
+.admin-passwords-hub__toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-passwords-hub__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.admin-passwords-hub__sort select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 12px;
+}
+
+.admin-passwords-hub-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+
+.admin-passwords-hub-btn--sm {
+  padding: 7px 11px;
+  font-size: 11px;
+  border-radius: 8px;
+}
+
+.admin-passwords-hub-btn--primary {
+  background: rgba(255, 193, 7, 0.18);
+  border-color: rgba(255, 193, 7, 0.45);
+  color: #ffe082;
+}
+
+.admin-passwords-hub-btn--primary:hover {
+  background: rgba(255, 193, 7, 0.28);
+}
+
+.admin-passwords-hub-btn--secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.admin-passwords-hub-btn--ghost {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.admin-passwords-hub-btn--danger {
+  background: rgba(244, 67, 54, 0.2);
+  border-color: rgba(244, 67, 54, 0.45);
+  color: #ff8a80;
+}
+
+.admin-passwords-hub-btn--danger-outline {
+  background: transparent;
+  border-color: rgba(244, 67, 54, 0.35);
+  color: #ff8a80;
+}
+
+.admin-passwords-hub-btn--success {
+  background: rgba(0, 230, 118, 0.16);
+  border-color: rgba(0, 230, 118, 0.4);
+  color: #b9f6ca;
+}
+
+.admin-passwords-hub__flash {
+  margin: 0;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b9f6ca;
+  background: rgba(0, 230, 118, 0.1);
+  border-bottom: 1px solid rgba(0, 230, 118, 0.2);
+}
+
+.admin-passwords-hub__composer {
+  margin: 16px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 193, 7, 0.25);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.admin-passwords-hub__composer h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  color: #ffe082;
+}
+
+.admin-passwords-hub__composer-hint,
+.admin-passwords-hub__composer-tip {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.admin-passwords-hub__composer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.admin-passwords-hub__composer-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.admin-passwords-hub__composer-grid input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 13px;
+}
+
+.admin-passwords-hub__password-row {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-passwords-hub__password-row input {
+  flex: 1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.admin-passwords-hub__strength {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.admin-passwords-hub__strength-bar {
+  flex: 1;
+  max-width: 160px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.admin-passwords-hub__strength-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.2s ease;
+}
+
+.admin-passwords-hub__strength-bar span[data-level='weak'] {
+  background: #ef5350;
+}
+
+.admin-passwords-hub__strength-bar span[data-level='mid'] {
+  background: #ffb74d;
+}
+
+.admin-passwords-hub__strength-bar span[data-level='strong'] {
+  background: #66bb6a;
+}
+
+.admin-passwords-hub__composer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.admin-passwords-hub__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  max-height: min(520px, 60vh);
+  overflow-y: auto;
+}
+
+.admin-passwords-hub__empty {
+  padding: 32px 20px;
+  text-align: center;
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-passwords-hub__empty span {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.admin-passwords-hub__empty p {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.admin-passwords-hub-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.admin-passwords-hub-card:hover {
+  border-color: rgba(255, 193, 7, 0.22);
+  background: rgba(255, 193, 7, 0.04);
+}
+
+.admin-passwords-hub-card__main {
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 240px;
+}
+
+.admin-passwords-hub-card__avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffe082;
+  background: rgba(255, 193, 7, 0.12);
+  border: 1px solid rgba(255, 193, 7, 0.28);
+  flex-shrink: 0;
+}
+
+.admin-passwords-hub-card__info {
+  min-width: 0;
+}
+
+.admin-passwords-hub-card__info h5 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.admin-passwords-hub-card__info time {
+  display: block;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 8px;
+}
+
+.admin-passwords-hub-card__secret code {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  color: #ffe082;
+  word-break: break-all;
+}
+
+.admin-passwords-hub-card__masked {
+  font-size: 18px;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.admin-passwords-hub-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+@media (max-width: 720px) {
+  .admin-passwords-hub__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-passwords-hub-card__actions {
+    width: 100%;
+  }
+}
+
 .modal.admin-modal {
   background: linear-gradient(180deg, #1a1f1c 0%, #121612 100%);
   border: 1px solid rgba(0, 255, 136, 0.22);

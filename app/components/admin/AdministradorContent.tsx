@@ -235,7 +235,7 @@ export function AdministradorContent({
         icon="🔒"
         title={safeT?.passwordManagerTitle || 'Gestor de senhas'}
         sub={safeT?.adminPasswordsSummarySub || 'Senhas para checklist e acesso de técnicos.'}
-        toneClass="admin-disclosure--violet"
+        toneClass="admin-disclosure--amber"
       >
         <AdminPasswordsSection safeT={safeT} {...passwords} />
       </AdminDisclosure>
