@@ -19142,6 +19142,7 @@ html body .mobile-toolbar-home,
 html body .pagamentos-contador-tabs__btn,
 html body .pagamentos-contador-btn-sm,
 html body .orcamentos-avulso-tipo-btn,
+html body .orc-pro__tipo-btn,
 html body .hub-comunicacao-send-btn,
 html body .hub-comunicacao-person-btn,
 html body .hub-comunicacao-group-chip,
@@ -23400,4 +23401,695 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   .fg-checklist-pro__kpis { grid-template-columns: 1fr 1fr; }
   .fg-checklist-pro__grupo-card { grid-template-columns: 24px 40px 1fr; }
   .fg-checklist-pro__grupo-card .fg-checklist-pro__row-actions { grid-column: 2 / -1; justify-content: flex-end; }
+}
+
+/* ── Pedido Orçamentos Avulso (orc-pro) ── */
+.orc-pro {
+  padding: clamp(16px, 2.2vw, 24px);
+  max-width: 1560px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+.orc-pro__hero {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+  padding: 20px 22px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 200, 83, 0.28);
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.55) 0%, rgba(0, 200, 83, 0.12) 50%, rgba(15, 23, 42, 0.72) 100%);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+}
+.orc-pro__hero-top {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.orc-pro__hero-brand {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  min-width: 0;
+}
+.orc-pro__hero-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #6ee7b7;
+  background: rgba(0, 200, 83, 0.12);
+  border: 1px solid rgba(110, 231, 183, 0.35);
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+.orc-pro__title {
+  margin: 0 0 6px;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  font-weight: 800;
+  color: #ecfdf5;
+  line-height: 1.25;
+}
+.orc-pro__lead {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: rgba(167, 243, 208, 0.78);
+  max-width: 56ch;
+}
+.orc-pro__hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.orc-pro__kpis {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.orc-pro__kpi {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.orc-pro__kpi span {
+  display: block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 4px;
+}
+.orc-pro__kpi strong {
+  font-size: 1.2rem;
+  color: #34d399;
+  font-weight: 800;
+}
+.orc-pro__layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  gap: 16px;
+  min-height: 520px;
+  align-items: stretch;
+}
+.orc-pro__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+.orc-pro__main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+.orc-pro__panel {
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 200, 83, 0.2);
+  background: rgba(15, 23, 42, 0.55);
+  box-sizing: border-box;
+}
+.orc-pro__panel-title {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(110, 231, 183, 0.9);
+}
+.orc-pro__panel-desc {
+  margin: 0 0 12px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.5);
+}
+.orc-pro__search,
+.orc-pro__input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 200, 83, 0.25);
+  background: rgba(2, 6, 23, 0.75);
+  color: #f8fafc;
+  font: inherit;
+  font-size: 0.86rem;
+  box-sizing: border-box;
+}
+.orc-pro__input--qty {
+  width: 80px;
+  margin-bottom: 0;
+}
+.orc-pro__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 200, 83, 0.35);
+  background: rgba(15, 23, 42, 0.5);
+  color: #6ee7b7;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1;
+  box-sizing: border-box;
+}
+.orc-pro__btn--primary {
+  background: rgba(0, 200, 83, 0.15);
+  border-color: rgba(0, 200, 83, 0.5);
+  color: #34d399;
+}
+.orc-pro__btn--primary:not(:disabled):hover {
+  background: rgba(0, 200, 83, 0.22);
+}
+.orc-pro__btn--secondary {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(96, 165, 250, 0.45);
+  color: #93c5fd;
+}
+.orc-pro__btn--secondary:not(:disabled):hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+.orc-pro__btn--danger {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fca5a5;
+}
+.orc-pro__list {
+  max-height: 220px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.orc-pro__list--equip {
+  max-height: 200px;
+}
+.orc-pro__list-item {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 200, 83, 0.2);
+  background: rgba(2, 6, 23, 0.65);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.orc-pro__list-item.is-active {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.15);
+}
+.orc-pro__list-item strong {
+  display: block;
+  font-size: 0.88rem;
+  color: #93c5fd;
+  margin-bottom: 2px;
+}
+.orc-pro__list-item small {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.4;
+}
+.orc-pro__list-item--equip.is-active {
+  border-color: rgba(0, 200, 83, 0.5);
+  background: rgba(0, 200, 83, 0.12);
+}
+.orc-pro__list-item--equip strong {
+  color: #34d399;
+}
+.orc-pro__list-item--peca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0;
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  padding: 10px 4px;
+}
+.orc-pro__list-item--peca:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.orc-pro__peca-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 200, 83, 0.2);
+  background: rgba(2, 6, 23, 0.55);
+}
+.orc-pro__peca-card img,
+.orc-pro__peca-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.06);
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.72rem;
+}
+.orc-pro__peca-card .orc-pro__peca-thumb--lg {
+  width: 56px;
+  height: 56px;
+}
+.orc-pro__peca-info {
+  flex: 1;
+  min-width: 0;
+}
+.orc-pro__peca-info strong {
+  display: block;
+  font-size: 0.88rem;
+  color: #f8fafc;
+  margin-bottom: 2px;
+}
+.orc-pro__peca-info small {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+.orc-pro__peca-qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.orc-pro__peca-qty span {
+  min-width: 28px;
+  text-align: center;
+  font-weight: 700;
+  color: #34d399;
+}
+.orc-pro__act {
+  width: auto;
+  min-width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  padding: 0 8px;
+  border-radius: 7px;
+  border: 1px solid rgba(110, 231, 183, 0.28);
+  background: rgba(15, 23, 42, 0.65);
+  color: #6ee7b7;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+.orc-pro__act--danger {
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+}
+.orc-pro__chip {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 200, 83, 0.25);
+  background: rgba(0, 200, 83, 0.08);
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+.orc-pro__chip strong {
+  color: #34d399;
+}
+.orc-pro__chip--success {
+  background: rgba(0, 200, 83, 0.1);
+  border-color: rgba(0, 200, 83, 0.3);
+}
+.orc-pro__radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.orc-pro__radio-row label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.84rem;
+  text-transform: uppercase;
+}
+.orc-pro__radio-row input {
+  accent-color: #00c853;
+}
+.orc-pro__actions-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.orc-pro__actions-bar--sm {
+  gap: 8px;
+}
+.orc-pro__empty-hint {
+  margin: 0;
+  padding: 16px 8px;
+  text-align: center;
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+.orc-pro__hint {
+  margin: 0 0 12px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.4);
+}
+.orc-pro__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: 1px solid rgba(150, 150, 150, 0.4);
+  background: rgba(150, 150, 150, 0.2);
+  color: #fff;
+}
+.orc-pro__badge--entregue {
+  background: rgba(0, 200, 83, 0.2);
+  border-color: rgba(0, 200, 83, 0.6);
+}
+.orc-pro__badge--aprovado {
+  background: rgba(0, 200, 100, 0.2);
+  border-color: rgba(0, 200, 100, 0.6);
+}
+.orc-pro__badge--concluido {
+  background: rgba(0, 150, 255, 0.2);
+  border-color: rgba(0, 150, 255, 0.6);
+}
+.orc-pro__badge--cancelado {
+  background: rgba(255, 68, 68, 0.2);
+  border-color: rgba(255, 68, 68, 0.6);
+  color: #ff8888;
+}
+.orc-pro__history-card {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 200, 83, 0.25);
+  background: rgba(2, 6, 23, 0.65);
+}
+.orc-pro__history-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.orc-pro__history-code {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #34d399;
+}
+.orc-pro__history-meta {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+.orc-pro__history-list {
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.orc-pro__field {
+  margin-bottom: 12px;
+}
+.orc-pro__field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.orc-pro__form-box {
+  padding: 14px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 200, 83, 0.25);
+  background: rgba(2, 6, 23, 0.55);
+}
+.orc-pro__pecas-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+.orc-pro__status-chip {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(150, 150, 150, 0.5);
+  background: rgba(100, 100, 100, 0.2);
+  color: #aaa;
+}
+.orc-pro__status-chip.is-active.orc-pro__status-chip--entregue {
+  background: rgba(0, 200, 83, 0.35);
+  border-color: rgba(0, 200, 83, 0.8);
+  color: #fff;
+}
+.orc-pro__status-chip.is-active.orc-pro__status-chip--aprovado {
+  background: rgba(0, 200, 100, 0.35);
+  border-color: rgba(0, 200, 100, 0.8);
+  color: #fff;
+}
+.orc-pro__status-chip.is-active.orc-pro__status-chip--concluido {
+  background: rgba(0, 150, 255, 0.35);
+  border-color: rgba(0, 150, 255, 0.8);
+  color: #fff;
+}
+.orc-pro__status-chip.is-active.orc-pro__status-chip--cancelado {
+  background: rgba(255, 68, 68, 0.35);
+  border-color: rgba(255, 68, 68, 0.8);
+  color: #fff;
+}
+@media (max-width: 960px) {
+  .orc-pro__layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .orc-pro__hero-top {
+    flex-direction: column;
+  }
+  .orc-pro__hero-actions {
+    align-self: flex-end;
+  }
+  .orc-pro__tipo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .orc-pro__kpis--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ── Orçamentos Avulso — hero, tipos e workspace ── */
+.orc-pro.orcamentos-avulso-page {
+  padding: clamp(16px, 2.2vw, 24px);
+  max-width: 1560px;
+}
+.orc-pro__eyebrow {
+  margin: 0 0 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(147, 197, 253, 0.75);
+}
+.orc-pro__hero--orc {
+  border-color: rgba(59, 130, 246, 0.35);
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.55) 0%, rgba(59, 130, 246, 0.12) 48%, rgba(15, 23, 42, 0.72) 100%);
+}
+.orc-pro__hero-icon--orc {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.14);
+  border-color: rgba(147, 197, 253, 0.35);
+}
+.orc-pro__hero--orc .orc-pro__title {
+  color: #eff6ff;
+}
+.orc-pro__hero--orc .orc-pro__lead {
+  color: rgba(191, 219, 254, 0.78);
+}
+.orc-pro:not(.orcamentos-avulso-page) .orc-pro__eyebrow {
+  color: rgba(110, 231, 183, 0.75);
+}
+.orc-pro__kpis--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.orc-pro__kpi-mode {
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  text-transform: capitalize;
+  line-height: 1.35;
+  word-break: break-word;
+}
+.orc-pro__tipo-nav {
+  margin-bottom: 16px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(59, 130, 246, 0.22);
+  background: rgba(2, 6, 23, 0.55);
+}
+.orc-pro__tipo-nav-title {
+  margin: 0 0 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(147, 197, 253, 0.85);
+}
+.orc-pro__tipo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.orc-pro__tipo-btn {
+  position: relative;
+  padding: 12px 14px;
+  min-height: 52px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: rgba(15, 23, 42, 0.65);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.orc-pro__tipo-btn--blue {
+  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.1);
+}
+.orc-pro__tipo-btn--blue:hover {
+  border-color: rgba(96, 165, 250, 0.65);
+  background: rgba(59, 130, 246, 0.18);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.15);
+}
+.orc-pro__tipo-btn--blue.is-active {
+  border-color: rgba(96, 165, 250, 0.85);
+  background: rgba(59, 130, 246, 0.28);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.22);
+}
+.orc-pro__tipo-btn--amber {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.1);
+}
+.orc-pro__tipo-btn--amber:hover {
+  border-color: rgba(251, 191, 36, 0.65);
+  background: rgba(245, 158, 11, 0.18);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.15);
+}
+.orc-pro__tipo-btn--amber.is-active {
+  border-color: rgba(251, 191, 36, 0.85);
+  background: rgba(245, 158, 11, 0.28);
+  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.2);
+}
+.orc-pro__tipo-check {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #34d399;
+}
+.orc-pro__workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.orc-pro.orcamentos-avulso-page .orc-pro__panel {
+  margin-bottom: 0;
+}
+.orc-pro__panel--amber {
+  border-color: rgba(245, 158, 11, 0.32) !important;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.06) 0%, rgba(2, 6, 23, 0.55) 100%);
+}
+.orc-pro__panel--blue {
+  border-color: rgba(59, 130, 246, 0.28) !important;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.06) 0%, rgba(2, 6, 23, 0.55) 100%);
+}
+.orc-pro__panel--form,
+.orc-pro__panel--history {
+  padding: 22px 24px;
+}
+.orc-pro__panel-title--lg {
+  margin-bottom: 20px !important;
+  font-size: 1.15rem !important;
+}
+.orc-pro__empty-state {
+  padding: 40px 24px;
+  text-align: center;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 200, 83, 0.25);
+  background: rgba(2, 6, 23, 0.55);
+}
+.orc-pro__empty-hint--lg {
+  font-size: 0.95rem;
+  padding: 0;
+}
+.orc-pro__panel-title--blue {
+  color: #93c5fd !important;
+}
+.orc-pro__panel-title--amber {
+  color: #fbbf24 !important;
+}
+.orc-pro__search--amber {
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+.orc-pro__search--amber:focus {
+  border-color: rgba(251, 191, 36, 0.65) !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+}
+.orc-pro__scroll-list {
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.orc-pro__scroll-list--sm {
+  max-height: 240px;
+  margin-bottom: 12px;
+}
+.orc-pro.orcamentos-avulso-page .orc-pro__btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+}
+@media (max-width: 640px) {
+  .orc-pro__tipo-grid {
+    grid-template-columns: 1fr;
+  }
+  .orc-pro__kpis--3 {
+    grid-template-columns: 1fr;
+  }
 }

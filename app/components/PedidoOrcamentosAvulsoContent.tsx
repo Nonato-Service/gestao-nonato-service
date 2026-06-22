@@ -352,529 +352,427 @@ export function PedidoOrcamentosAvulsoContent({
     onGerarOrcamento?.()
   }
 
-  const headerStyle = {
-    marginBottom: '40px',
-    padding: '30px',
-    background: 'linear-gradient(135deg, rgba(0, 200, 83, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-    borderRadius: '12px',
-    border: '1px solid rgba(0, 200, 83, 0.3)',
-    boxShadow: '0 4px 20px rgba(0, 200, 83, 0.08)'
+  const statusBadgeClass = (status?: StatusPedidoAvulso) => {
+    if (status === 'entregue') return 'orc-pro__badge orc-pro__badge--entregue'
+    if (status === 'aprovado') return 'orc-pro__badge orc-pro__badge--aprovado'
+    if (status === 'concluido') return 'orc-pro__badge orc-pro__badge--concluido'
+    if (status === 'cancelado') return 'orc-pro__badge orc-pro__badge--cancelado'
+    return 'orc-pro__badge'
   }
-  const blockStyle = {
-    marginBottom: '30px',
-    padding: '20px',
-    backgroundColor: '#141414',
-    borderRadius: '12px',
-    border: '1px solid rgba(0, 200, 83, 0.2)'
+
+  const statusLabel = (status?: StatusPedidoAvulso) => {
+    if (status === 'cancelado') return safeT?.pedidoCancelado || 'Pedido Cancelado'
+    if (status === 'concluido') return safeT?.concluido || 'Concluído'
+    if (status === 'aprovado') return safeT?.aprovado || 'Aprovado'
+    if (status === 'entregue') return safeT?.entregue || 'Entregue'
+    return safeT?.pendente || 'Pendente'
   }
-  const inputStyle = {
-    width: '100%' as const,
-    padding: '12px',
-    marginBottom: '15px',
-    backgroundColor: '#1e1e1e',
-    border: '1px solid rgba(0, 200, 83, 0.3)',
-    borderRadius: '6px',
-    color: '#fff',
-    fontSize: '14px'
-  }
-  const labelStyle = { color: '#66b3ff', marginBottom: '10px', fontSize: '16px', display: 'block' as const, textTransform: 'uppercase' as const }
 
   return (
-    <div className="orcamentos-avulso-page">
-      {/* Cabeçalho */}
-      <div className="orcamentos-avulso-header-card" style={headerStyle}>
-        <div className="orcamentos-avulso-header-inner">
-          <div className="orcamentos-avulso-header-logo">
+    <div className="orc-pro">
+      <section className="orc-pro__hero">
+        <div className="orc-pro__hero-top">
+          <div className="orc-pro__hero-brand">
+            <span className="orc-pro__hero-icon" aria-hidden>
+              POA
+            </span>
+            <div>
+              <p className="orc-pro__eyebrow">{safeT?.pedidoOrcamentosAvulso || 'Pedidos'}</p>
+              <h1 className="orc-pro__title">
+                {safeT?.pedidoOrcamentosAvulsoTitle || 'Pedido de Orçamentos Avulso'}
+              </h1>
+              <p className="orc-pro__lead">
+                {safeT?.pedidoOrcamentoAvulsoDesc || 'Monte pedidos com cliente, equipamento e peças de forma rápida e organizada.'}
+              </p>
+            </div>
+          </div>
+          <div className="orc-pro__hero-actions">
             <LogoComponent size="small" />
-          </div>
-          <div className="orcamentos-avulso-header-title">
-            <h1>
-              {safeT?.pedidoOrcamentosAvulsoTitle || 'PEDIDO DE ORÇAMENTOS AVULSO'}
-            </h1>
-            <p>
-              {safeT?.pedidoOrcamentoAvulsoDesc || 'Cliente, equipamento e peças para orçamento'}
-            </p>
-          </div>
-          <div className="orcamentos-avulso-header-actions">
             <button
-              className="btn-primary"
+              type="button"
+              className="orc-pro__btn"
               onClick={() => closeTab(activeTabId)}
-              style={{ padding: '8px 12px', fontSize: '14px', minWidth: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               title={safeT?.voltar || 'Voltar'}
             >
-              ↶
+              &larr;
             </button>
             <button
+              type="button"
+              className="orc-pro__btn orc-pro__btn--secondary"
               onClick={voltarPaginaInicial}
-              style={{
-                padding: '8px 12px',
-                fontSize: '14px',
-                backgroundColor: 'transparent',
-                border: '1px solid rgba(0, 150, 255, 0.5)',
-                borderRadius: '4px',
-                color: '#66b3ff',
-                cursor: 'pointer',
-                minWidth: '32px',
-                height: '32px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
               title={safeT?.voltarInicio || 'Voltar ao Início'}
             >
-              🏠
+              Home
             </button>
           </div>
         </div>
-      </div>
+        <div className="orc-pro__kpis">
+          <div className="orc-pro__kpi">
+            <span>{safeT?.pecasNoPedido || 'Peças no pedido'}</span>
+            <strong>{pecasPedido.length}</strong>
+          </div>
+          <div className="orc-pro__kpi">
+            <span>{safeT?.ultimosPedidosGerados || 'Pedidos gerados'}</span>
+            <strong>{pedidosGerados.length}</strong>
+          </div>
+        </div>
+      </section>
 
-      {/* Cliente */}
-      <div style={blockStyle}>
-        <h3 style={labelStyle}>{safeT?.cliente || 'Cliente'}</h3>
-        <p style={{ color: '#b0b0b0', fontSize: '13px', marginBottom: '12px' }}>
-          {safeT?.buscarClienteOuDigitar || 'Selecione um cliente cadastrado ou digite o nome manualmente.'}
-        </p>
-        <input
-          type="text"
-          placeholder={safeT?.buscarCliente || 'Buscar cliente por nome ou email...'}
-          value={buscaCliente}
-          onChange={(e) => setBuscaCliente(e.target.value)}
-          style={inputStyle}
-        />
-        <div style={{ maxHeight: '220px', overflowY: 'auto', marginBottom: '15px' }}>
-          {clientesFiltrados.length === 0 ? (
-            <p style={{ color: '#ccc', textAlign: 'center', padding: '15px' }}>
-              {safeT?.nenhumClienteEncontrado || 'Nenhum cliente encontrado'}
+      <div className="orc-pro__layout">
+        <aside className="orc-pro__sidebar">
+          <section className="orc-pro__panel">
+            <h3 className="orc-pro__panel-title">{safeT?.cliente || 'Cliente'}</h3>
+            <p className="orc-pro__panel-desc">
+              {safeT?.buscarClienteOuDigitar || 'Selecione um cliente cadastrado ou digite o nome manualmente.'}
             </p>
-          ) : (
-            clientesFiltrados.map((cliente) => (
-              <div
-                key={cliente.id}
-                onClick={() => {
-                  setClienteSelecionado(cliente)
-                  setClienteNomeManual('')
-                  setEquipamentoSelecionado(null)
-                }}
-                style={{
-                  padding: '12px 15px',
-                  marginBottom: '8px',
-                  backgroundColor: clienteSelecionado?.id === cliente.id ? 'rgba(0, 100, 255, 0.2)' : '#1e1e1e',
-                  border: `1px solid ${clienteSelecionado?.id === cliente.id ? 'rgba(0, 100, 255, 0.5)' : 'rgba(0, 200, 83, 0.2)'}`,
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <div style={{ fontWeight: 'bold', color: '#66b3ff' }}>{cliente.nomeEmpresa}</div>
-                {(cliente.morada || cliente.codigoPostal || cliente.conselho || cliente.email) && (
-                  <div style={{ fontSize: '12px', color: '#ccc' }}>
-                    {[cliente.morada, cliente.codigoPostal, cliente.conselho, cliente.email].filter(Boolean).join(' · ')}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-        <div style={{ marginTop: '10px' }}>
-          <label style={{ color: '#b0b0b0', fontSize: '13px', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>
-            {safeT?.ouNomeManualCliente || 'Ou nome do cliente (avulso)'}
-          </label>
-          <input
-            type="text"
-            placeholder={safeT?.nomeClienteManual || 'Digite o nome do cliente'}
-            value={clienteNomeManual}
-            onChange={(e) => {
-              setClienteNomeManual(e.target.value)
-              if (e.target.value) setClienteSelecionado(null)
-            }}
-            style={inputStyle}
-          />
-        </div>
-        {(clienteSelecionado || clienteNomeManual) && (
-          <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#222', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
-            <strong style={{ color: '#00c853' }}>{safeT?.clienteSelecionado || 'Cliente'}:</strong> {nomeClienteExibido}
-          </div>
-        )}
-      </div>
-
-      {/* Equipamento */}
-      <div style={blockStyle}>
-        <h3 style={labelStyle}>{safeT?.equipamento || 'Equipamento'}</h3>
-        <p style={{ color: '#b0b0b0', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase' }}>
-          {safeT?.equipamentoDescPedido || 'Se o cliente for cadastrado, escolha um equipamento ou descreva manualmente.'}
-        </p>
-        {equipamentosDoCliente.length > 0 && (
-          <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '15px' }}>
-            {equipamentosDoCliente.map((eq, idx) => (
-              <div
-                key={idx}
-                onClick={() => {
-                  setEquipamentoSelecionado(eq)
-                  setEquipamentoManual('')
-                }}
-                style={{
-                  padding: '12px',
-                  marginBottom: '8px',
-                  backgroundColor: equipamentoSelecionado === eq ? 'rgba(0, 200, 83, 0.15)' : '#1e1e1e',
-                  border: `1px solid ${equipamentoSelecionado === eq ? 'rgba(0, 200, 83, 0.5)' : 'rgba(0, 200, 83, 0.2)'}`,
-                  borderRadius: '6px',
-                  cursor: 'pointer'
-                }}
-              >
-                <div style={{ color: '#00c853', fontWeight: 'bold' }}>
-                  {eq.tipoEquipamento} {eq.modelo && `- ${eq.modelo}`}
-                </div>
-                <div style={{ fontSize: '12px', color: '#ccc' }}>
-                  {eq.marca} {eq.numeroSerie && `· Nº Série: ${eq.numeroSerie}`}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        <label style={{ color: '#b0b0b0', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
-          {safeT?.descricaoManualEquipamento || 'Descrição manual do equipamento (opcional)'}
-        </label>
-        <input
-          type="text"
-          placeholder={safeT?.equipamentoManualPlaceholder || 'Ex: Seccionadora HPP 250'}
-          value={equipamentoManual}
-          onChange={(e) => {
-            setEquipamentoManual(e.target.value)
-            if (e.target.value) setEquipamentoSelecionado(null)
-          }}
-          style={inputStyle}
-        />
-        {(equipamentoSelecionado || equipamentoManual) && (
-          <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#222', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
-            <strong style={{ color: '#00c853' }}>{safeT?.equipamento || 'Equipamento'}:</strong>{' '}
-            {equipamentoSelecionado
-              ? `${equipamentoSelecionado.tipoEquipamento} ${equipamentoSelecionado.modelo || ''} - ${equipamentoSelecionado.marca}`
-              : equipamentoManual}
-          </div>
-        )}
-      </div>
-
-      {/* Adicionar peças */}
-      <div style={blockStyle}>
-        <h3 style={labelStyle}>{safeT?.adicionarPecas || 'Adicionar peças'}</h3>
-        <p style={{ color: '#b0b0b0', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase' }}>
-          {safeT?.adicionarPecasDesc || 'Busque na Biblioteca de Peças por código/nome ou digite o código manualmente.'}
-        </p>
-        {!mostrarFormPeca ? (
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={() => { setMostrarFormPeca(true); setModoPeca('biblioteca'); setBuscaPeca(''); }}
-              style={{
-                padding: '10px 18px',
-                backgroundColor: 'rgba(0, 200, 83, 0.15)',
-                border: '1px solid rgba(0, 200, 83, 0.5)',
-                borderRadius: '8px',
-                color: '#00c853',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                textTransform: 'uppercase'
-              }}
-            >
-              📚 {safeT?.orcamentoBuscarBibliotecaPecas || 'Buscar na Biblioteca de Peças'}
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMostrarFormPeca(true); setModoPeca('manual'); setCodigoManualPeca(''); setNomeManualPeca(''); setQuantidadeNovaPeca(1); }}
-              style={{
-                padding: '10px 18px',
-                backgroundColor: 'rgba(0, 100, 255, 0.15)',
-                border: '1px solid rgba(0, 100, 255, 0.5)',
-                borderRadius: '8px',
-                color: '#66b3ff',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                textTransform: 'uppercase'
-              }}
-            >
-              ✏️ {safeT?.digitarCodigoManual || 'Digitar código / peça manual'}
-            </button>
-          </div>
-        ) : (
-          <div style={{ padding: '15px', backgroundColor: '#121212', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.3)', marginBottom: '15px' }}>
-            {modoPeca === 'biblioteca' && (
-              <>
-                <label style={{ color: '#ccc', display: 'block', marginBottom: '8px' }}>{safeT?.buscarPorCodigoOuNome || safeT?.buscarPorCodigo || 'Buscar por código ou nome'}</label>
-                <input
-                  type="text"
-                  value={buscaPeca}
-                  onChange={(e) => setBuscaPeca(e.target.value)}
-                  placeholder={safeT?.codigoPecaBiblioteca || 'Código'}
-                  style={inputStyle}
-                  autoFocus
-                />
-                <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
-                  {pecasFiltradas.length === 0 ? (
-                    <p style={{ color: '#888', padding: '10px', textTransform: 'uppercase' }}>{safeT?.nenhumaPecaEncontrada || 'Nenhuma peça encontrada'}</p>
-                  ) : (
-                    pecasFiltradas.map((peca) => (
-                      <div
-                        key={peca.id}
-                        onClick={() => adicionarPecaDaBiblioteca(peca)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '12px',
-                          padding: '10px 12px',
-                          borderBottom: '1px solid #333',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {peca.imagem ? (
-                          <img src={peca.imagem} alt="" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }} />
-                        ) : (
-                          <div style={{ width: 48, height: 48, backgroundColor: '#333', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#909090' }}>—</div>
-                        )}
-                        <div style={{ flex: 1 }}>
-                          <div style={{ color: '#fff', fontWeight: 'bold' }}>{peca.nome}</div>
-                          <div style={{ color: '#b0b0b0', fontSize: '12px' }}>{peca.codigo}</div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </>
-            )}
-            {modoPeca === 'manual' && (
-              <>
-                <input
-                  type="text"
-                  value={codigoManualPeca}
-                  onChange={(e) => setCodigoManualPeca(e.target.value)}
-                  placeholder={safeT?.codigoPecaBiblioteca || 'Código'}
-                  style={inputStyle}
-                />
-                <input
-                  type="text"
-                  value={nomeManualPeca}
-                  onChange={(e) => setNomeManualPeca(e.target.value)}
-                  placeholder={safeT?.nomePecaBiblioteca || 'Nome da peça'}
-                  style={inputStyle}
-                />
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ color: '#ccc', marginRight: '8px', textTransform: 'uppercase' }}>{safeT?.quantidade || 'Quantidade'}</label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={quantidadeNovaPeca}
-                    onChange={(e) => setQuantidadeNovaPeca(parseInt(e.target.value, 10) || 1)}
-                    style={{ ...inputStyle, width: '80px', marginBottom: 0 }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={adicionarPecaManual}
-                  style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 200, 83, 0.2)', border: '1px solid rgba(0, 200, 83, 0.5)', borderRadius: '6px', color: '#00c853', cursor: 'pointer', fontWeight: 'bold' }}
-                >
-                  {safeT?.adicionar || 'Adicionar'}
-                </button>
-              </>
-            )}
-            <button
-              type="button"
-              onClick={() => { setMostrarFormPeca(false); setModoPeca(null); }}
-              style={{ marginTop: '12px', padding: '8px 14px', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid #555', borderRadius: '6px', color: '#ccc', cursor: 'pointer', textTransform: 'uppercase' }}
-            >
-              {safeT?.cancel || 'Cancelar'}
-            </button>
-          </div>
-        )}
-
-        {/* Lista de peças do pedido */}
-        {pecasPedido.length > 0 && (
-          <div style={{ marginTop: '20px' }}>
-            <h4 style={{ color: '#00c853', marginBottom: '12px', fontSize: '15px', textTransform: 'uppercase' }}>{safeT?.pecasNoPedido || 'Peças no pedido'}</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {pecasPedido.map((p) => (
-                <div
-                  key={p.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '15px',
-                    padding: '12px 15px',
-                    backgroundColor: '#222',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(0, 200, 83, 0.2)'
-                  }}
-                >
-                  {p.imagem ? (
-                    <img src={p.imagem} alt={p.nome} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6 }} />
-                  ) : (
-                    <div style={{ width: 56, height: 56, backgroundColor: '#333', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#909090', fontSize: '11px' }}>—</div>
-                  )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: '#fff', fontWeight: 'bold' }}>{p.nome}</div>
-                    <div style={{ color: '#b0b0b0', fontSize: '12px' }}>{p.codigo}</div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <button
-                      type="button"
-                      onClick={() => alterarQuantidadePeca(p.id, -1)}
-                      style={{ width: 28, height: 28, padding: 0, fontSize: '16px', backgroundColor: '#333', border: '1px solid #555', borderRadius: 4, color: '#fff', cursor: 'pointer' }}
-                    >
-                      −
-                    </button>
-                    <span style={{ minWidth: 28, textAlign: 'center', color: '#00c853', fontWeight: 'bold' }}>{p.quantidade}</span>
-                    <button
-                      type="button"
-                      onClick={() => alterarQuantidadePeca(p.id, 1)}
-                      style={{ width: 28, height: 28, padding: 0, fontSize: '16px', backgroundColor: '#333', border: '1px solid #555', borderRadius: 4, color: '#fff', cursor: 'pointer' }}
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removerPeca(p.id)}
-                    style={{ padding: '6px 10px', backgroundColor: 'rgba(255,0,0,0.2)', border: '1px solid rgba(255,0,0,0.5)', borderRadius: 4, color: '#ff6666', cursor: 'pointer', fontSize: '12px', textTransform: 'uppercase' }}
-                  >
-                    {safeT?.delete || 'Remover'}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Opção: Gerar com nome do cliente ou NONATO SERVICE + Gerar pedido + Código */}
-        <div style={{ ...blockStyle, marginTop: '24px', borderColor: 'rgba(0, 200, 83, 0.35)' }}>
-          <h3 style={labelStyle}>{safeT?.gerarDocumentoComo || 'Ao gerar documento'}</h3>
-          <p style={{ color: '#b0b0b0', fontSize: '13px', marginBottom: '16px', textTransform: 'uppercase' }}>
-            {safeT?.desejaGerarComNomeClienteOuNonato || 'Deseja gerar com o nome do cliente ou com o nome da NONATO SERVICE? Se escolher NONATO SERVICE, no documento enviado ao revendedor aparecerá apenas o nome NONATO SERVICE; o resto mantém-se (equipamento, peças).'}
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#ccc' }}>
-              <input
-                type="radio"
-                name="emitirComo"
-                checked={emitirComoCliente === 'cliente'}
-                onChange={() => setEmitirComoCliente('cliente')}
-                style={{ accentColor: '#00c853' }}
-              />
-              <span style={{ textTransform: 'uppercase' }}>{safeT?.gerarComNomeCliente || 'Com nome do cliente'}</span>
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#ccc' }}>
-              <input
-                type="radio"
-                name="emitirComo"
-                checked={emitirComoCliente === 'nonato-service'}
-                onChange={() => setEmitirComoCliente('nonato-service')}
-                style={{ accentColor: '#00c853' }}
-              />
-              <span style={{ textTransform: 'uppercase' }}>{safeT?.gerarComNomeNonatoService || 'Com nome da NONATO SERVICE'}</span>
-            </label>
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '8px' }}>
-            <button
-              type="button"
-              onClick={handleVisualizarPdf}
-              style={{
-                padding: '14px 24px',
-                backgroundColor: 'rgba(0, 100, 255, 0.15)',
-                border: '1px solid rgba(0, 100, 255, 0.6)',
-                borderRadius: '8px',
-                color: '#66b3ff',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '15px',
-                textTransform: 'uppercase',
-              }}
-            >
-              👁️ {safeT?.visualizarPdfPedido || safeT?.visualizar || 'Visualizar PDF'}
-            </button>
-            <button
-              type="button"
-              onClick={handleGerarPedido}
-              style={{
-                padding: '14px 24px',
-                backgroundColor: 'rgba(0, 200, 83, 0.2)',
-                border: '1px solid rgba(0, 200, 83, 0.6)',
-                borderRadius: '8px',
-                color: '#00c853',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '15px',
-                textTransform: 'uppercase',
-              }}
-            >
-              {safeT?.gerarPedido || 'Gerar pedido'}
-            </button>
-          </div>
-          <p style={{ color: '#888', fontSize: '12px', margin: '0 0 16px', lineHeight: 1.5 }}>
-            {safeT?.pedidoOrcamentoPreviewHint || 'Use «Visualizar PDF» para ver o documento antes de gerar. Depois imprima ou guarde como PDF no browser.'}
-          </p>
-          {codigoUltimoGerado && (
-            <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#1a2a1a', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.3)' }}>
-              <div style={{ color: '#00c853', fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase' }}>
-                {safeT?.codigoOrcamento || 'Código do orçamento'}: {codigoUltimoGerado}
-              </div>
-              <div style={{ fontSize: '12px', color: '#aaa', textTransform: 'uppercase' }}>
-                {safeT?.guardeCodigoParaLocalizar || 'Guarde este código para localizar o orçamento depois.'}
-              </div>
-            </div>
-          )}
-          {pedidosGerados.length > 0 && (
-            <div style={{ marginTop: '16px' }}>
-              <h4 style={{ color: '#66b3ff', marginBottom: '12px', fontSize: '14px', textTransform: 'uppercase' }}>
-                {safeT?.ultimosPedidosGerados || 'Últimos pedidos (localizar por código)'}
-              </h4>
-              <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {[...pedidosGerados].reverse().slice(0, 50).map((p) => (
+            <input
+              type="text"
+              className="orc-pro__search"
+              placeholder={safeT?.buscarCliente || 'Buscar cliente por nome ou email...'}
+              value={buscaCliente}
+              onChange={(e) => setBuscaCliente(e.target.value)}
+            />
+            <div className="orc-pro__list">
+              {clientesFiltrados.length === 0 ? (
+                <p className="orc-pro__empty-hint">
+                  {safeT?.nenhumClienteEncontrado || 'Nenhum cliente encontrado'}
+                </p>
+              ) : (
+                clientesFiltrados.map((cliente) => (
                   <div
-                    key={p.codigo}
-                    style={{
-                      padding: '14px 16px',
-                      backgroundColor: '#121212',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(0, 200, 83, 0.25)'
+                    key={cliente.id}
+                    className={`orc-pro__list-item ${clienteSelecionado?.id === cliente.id ? 'is-active' : ''}`}
+                    onClick={() => {
+                      setClienteSelecionado(cliente)
+                      setClienteNomeManual('')
+                      setEquipamentoSelecionado(null)
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                        <span style={{ color: '#00c853', fontWeight: '600', fontSize: '13px' }}>{p.codigo}</span>
-                        <span style={{ color: '#ccc', fontSize: '13px' }}>{p.emitirComoCliente === 'nonato-service' ? (safeT?.nomeNonatoService || 'NONATO SERVICE') : p.clienteNomeReal}</span>
-                        <span style={{ color: '#b0b0b0', fontSize: '12px' }}>{new Date(p.dataGeracao).toLocaleDateString('pt-BR')}</span>
-                        <span
-                          style={{
-                            padding: '3px 8px',
-                            borderRadius: '4px',
-                            fontSize: '11px',
-                            fontWeight: '600',
-                            backgroundColor: p.status === 'entregue' ? 'rgba(0, 200, 83, 0.2)' : p.status === 'aprovado' ? 'rgba(0, 200, 100, 0.2)' : p.status === 'concluido' ? 'rgba(0, 150, 255, 0.2)' : p.status === 'cancelado' ? 'rgba(255, 68, 68, 0.2)' : 'rgba(150, 150, 150, 0.2)',
-                            border: p.status === 'entregue' ? '1px solid rgba(0, 200, 83, 0.6)' : p.status === 'aprovado' ? '1px solid rgba(0, 200, 100, 0.6)' : p.status === 'concluido' ? '1px solid rgba(0, 150, 255, 0.6)' : p.status === 'cancelado' ? '1px solid rgba(255, 68, 68, 0.6)' : '1px solid rgba(150, 150, 150, 0.4)',
-                            color: p.status === 'cancelado' ? '#ff8888' : '#fff'
-                          }}
-                        >
-                          {p.status === 'cancelado' ? (safeT?.pedidoCancelado || 'Pedido Cancelado') : p.status === 'concluido' ? (safeT?.concluido || 'Concluído') : p.status === 'aprovado' ? (safeT?.aprovado || 'Aprovado') : p.status === 'entregue' ? (safeT?.entregue || 'Entregue') : (safeT?.pendente || 'Pendente')}
-                        </span>
-                      </div>
+                    <strong>{cliente.nomeEmpresa}</strong>
+                    {(cliente.morada || cliente.codigoPostal || cliente.conselho || cliente.email) && (
+                      <small>
+                        {[cliente.morada, cliente.codigoPostal, cliente.conselho, cliente.email].filter(Boolean).join(' · ')}
+                      </small>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="orc-pro__field">
+              <label>{safeT?.ouNomeManualCliente || 'Ou nome do cliente (avulso)'}</label>
+              <input
+                type="text"
+                className="orc-pro__input"
+                placeholder={safeT?.nomeClienteManual || 'Digite o nome do cliente'}
+                value={clienteNomeManual}
+                onChange={(e) => {
+                  setClienteNomeManual(e.target.value)
+                  if (e.target.value) setClienteSelecionado(null)
+                }}
+              />
+            </div>
+            {(clienteSelecionado || clienteNomeManual) && (
+              <div className="orc-pro__chip">
+                <strong>{safeT?.clienteSelecionado || 'Cliente'}:</strong> {nomeClienteExibido}
+              </div>
+            )}
+          </section>
+
+          <section className="orc-pro__panel">
+            <h3 className="orc-pro__panel-title">{safeT?.equipamento || 'Equipamento'}</h3>
+            <p className="orc-pro__panel-desc">
+              {safeT?.equipamentoDescPedido || 'Se o cliente for cadastrado, escolha um equipamento ou descreva manualmente.'}
+            </p>
+            {equipamentosDoCliente.length > 0 && (
+              <div className="orc-pro__list orc-pro__list--equip">
+                {equipamentosDoCliente.map((eq, idx) => (
+                  <div
+                    key={idx}
+                    className={`orc-pro__list-item orc-pro__list-item--equip ${equipamentoSelecionado === eq ? 'is-active' : ''}`}
+                    onClick={() => {
+                      setEquipamentoSelecionado(eq)
+                      setEquipamentoManual('')
+                    }}
+                  >
+                    <strong>
+                      {eq.tipoEquipamento} {eq.modelo && `- ${eq.modelo}`}
+                    </strong>
+                    <small>
+                      {eq.marca} {eq.numeroSerie && `· Nº Série: ${eq.numeroSerie}`}
+                    </small>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="orc-pro__field">
+              <label>{safeT?.descricaoManualEquipamento || 'Descrição manual do equipamento (opcional)'}</label>
+              <input
+                type="text"
+                className="orc-pro__input"
+                placeholder={safeT?.equipamentoManualPlaceholder || 'Ex: Seccionadora HPP 250'}
+                value={equipamentoManual}
+                onChange={(e) => {
+                  setEquipamentoManual(e.target.value)
+                  if (e.target.value) setEquipamentoSelecionado(null)
+                }}
+              />
+            </div>
+            {(equipamentoSelecionado || equipamentoManual) && (
+              <div className="orc-pro__chip">
+                <strong>{safeT?.equipamento || 'Equipamento'}:</strong>{' '}
+                {equipamentoSelecionado
+                  ? `${equipamentoSelecionado.tipoEquipamento} ${equipamentoSelecionado.modelo || ''} - ${equipamentoSelecionado.marca}`
+                  : equipamentoManual}
+              </div>
+            )}
+          </section>
+        </aside>
+
+        <main className="orc-pro__main">
+          <section className="orc-pro__panel">
+            <h3 className="orc-pro__panel-title">{safeT?.adicionarPecas || 'Adicionar peças'}</h3>
+            <p className="orc-pro__panel-desc">
+              {safeT?.adicionarPecasDesc || 'Busque na Biblioteca de Peças por código/nome ou digite o código manualmente.'}
+            </p>
+            {!mostrarFormPeca ? (
+              <div className="orc-pro__actions-bar">
+                <button
+                  type="button"
+                  className="orc-pro__btn orc-pro__btn--primary"
+                  onClick={() => { setMostrarFormPeca(true); setModoPeca('biblioteca'); setBuscaPeca(''); }}
+                >
+                  📚 {safeT?.orcamentoBuscarBibliotecaPecas || 'Buscar na Biblioteca de Peças'}
+                </button>
+                <button
+                  type="button"
+                  className="orc-pro__btn orc-pro__btn--secondary"
+                  onClick={() => { setMostrarFormPeca(true); setModoPeca('manual'); setCodigoManualPeca(''); setNomeManualPeca(''); setQuantidadeNovaPeca(1); }}
+                >
+                  ✏️ {safeT?.digitarCodigoManual || 'Digitar código / peça manual'}
+                </button>
+              </div>
+            ) : (
+              <div className="orc-pro__form-box">
+                {modoPeca === 'biblioteca' && (
+                  <>
+                    <div className="orc-pro__field">
+                      <label>{safeT?.buscarPorCodigoOuNome || safeT?.buscarPorCodigo || 'Buscar por código ou nome'}</label>
+                      <input
+                        type="text"
+                        className="orc-pro__input"
+                        value={buscaPeca}
+                        onChange={(e) => setBuscaPeca(e.target.value)}
+                        placeholder={safeT?.codigoPecaBiblioteca || 'Código'}
+                        autoFocus
+                      />
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <div className="orc-pro__list">
+                      {pecasFiltradas.length === 0 ? (
+                        <p className="orc-pro__empty-hint">{safeT?.nenhumaPecaEncontrada || 'Nenhuma peça encontrada'}</p>
+                      ) : (
+                        pecasFiltradas.map((peca) => (
+                          <div
+                            key={peca.id}
+                            className="orc-pro__list-item orc-pro__list-item--peca"
+                            onClick={() => adicionarPecaDaBiblioteca(peca)}
+                          >
+                            {peca.imagem ? (
+                              <img src={peca.imagem} alt="" />
+                            ) : (
+                              <div className="orc-pro__peca-thumb">—</div>
+                            )}
+                            <div className="orc-pro__peca-info">
+                              <strong>{peca.nome}</strong>
+                              <small>{peca.codigo}</small>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </>
+                )}
+                {modoPeca === 'manual' && (
+                  <>
+                    <input
+                      type="text"
+                      className="orc-pro__input"
+                      value={codigoManualPeca}
+                      onChange={(e) => setCodigoManualPeca(e.target.value)}
+                      placeholder={safeT?.codigoPecaBiblioteca || 'Código'}
+                    />
+                    <input
+                      type="text"
+                      className="orc-pro__input"
+                      value={nomeManualPeca}
+                      onChange={(e) => setNomeManualPeca(e.target.value)}
+                      placeholder={safeT?.nomePecaBiblioteca || 'Nome da peça'}
+                    />
+                    <div className="orc-pro__field">
+                      <label>{safeT?.quantidade || 'Quantidade'}</label>
+                      <input
+                        type="number"
+                        min={1}
+                        className="orc-pro__input orc-pro__input--qty"
+                        value={quantidadeNovaPeca}
+                        onChange={(e) => setQuantidadeNovaPeca(parseInt(e.target.value, 10) || 1)}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="orc-pro__btn orc-pro__btn--primary"
+                      onClick={adicionarPecaManual}
+                    >
+                      {safeT?.adicionar || 'Adicionar'}
+                    </button>
+                  </>
+                )}
+                <button
+                  type="button"
+                  className="orc-pro__btn"
+                  onClick={() => { setMostrarFormPeca(false); setModoPeca(null); }}
+                >
+                  {safeT?.cancel || 'Cancelar'}
+                </button>
+              </div>
+            )}
+
+            {pecasPedido.length > 0 && (
+              <div className="orc-pro__pecas-stack">
+                <h4 className="orc-pro__panel-title">{safeT?.pecasNoPedido || 'Peças no pedido'}</h4>
+                {pecasPedido.map((p) => (
+                  <div key={p.id} className="orc-pro__peca-card">
+                    {p.imagem ? (
+                      <img src={p.imagem} alt={p.nome} className="orc-pro__peca-thumb orc-pro__peca-thumb--lg" />
+                    ) : (
+                      <div className="orc-pro__peca-thumb orc-pro__peca-thumb--lg">—</div>
+                    )}
+                    <div className="orc-pro__peca-info">
+                      <strong>{p.nome}</strong>
+                      <small>{p.codigo}</small>
+                    </div>
+                    <div className="orc-pro__peca-qty">
                       <button
                         type="button"
+                        className="orc-pro__act"
+                        onClick={() => alterarQuantidadePeca(p.id, -1)}
+                      >
+                        −
+                      </button>
+                      <span>{p.quantidade}</span>
+                      <button
+                        type="button"
+                        className="orc-pro__act"
+                        onClick={() => alterarQuantidadePeca(p.id, 1)}
+                      >
+                        +
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      className="orc-pro__act orc-pro__act--danger"
+                      onClick={() => removerPeca(p.id)}
+                      title={safeT?.delete || 'Remover'}
+                    >
+                      X
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="orc-pro__panel">
+            <h3 className="orc-pro__panel-title">{safeT?.gerarDocumentoComo || 'Ao gerar documento'}</h3>
+            <p className="orc-pro__panel-desc">
+              {safeT?.desejaGerarComNomeClienteOuNonato || 'Deseja gerar com o nome do cliente ou com o nome da NONATO SERVICE? Se escolher NONATO SERVICE, no documento enviado ao revendedor aparecerá apenas o nome NONATO SERVICE; o resto mantém-se (equipamento, peças).'}
+            </p>
+            <div className="orc-pro__radio-row">
+              <label>
+                <input
+                  type="radio"
+                  name="emitirComo"
+                  checked={emitirComoCliente === 'cliente'}
+                  onChange={() => setEmitirComoCliente('cliente')}
+                />
+                <span>{safeT?.gerarComNomeCliente || 'Com nome do cliente'}</span>
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="emitirComo"
+                  checked={emitirComoCliente === 'nonato-service'}
+                  onChange={() => setEmitirComoCliente('nonato-service')}
+                />
+                <span>{safeT?.gerarComNomeNonatoService || 'Com nome da NONATO SERVICE'}</span>
+              </label>
+            </div>
+            <div className="orc-pro__actions-bar">
+              <button
+                type="button"
+                className="orc-pro__btn orc-pro__btn--secondary"
+                onClick={handleVisualizarPdf}
+              >
+                👁️ {safeT?.visualizarPdfPedido || safeT?.visualizar || 'Visualizar PDF'}
+              </button>
+              <button
+                type="button"
+                className="orc-pro__btn orc-pro__btn--primary"
+                onClick={handleGerarPedido}
+              >
+                {safeT?.gerarPedido || 'Gerar pedido'}
+              </button>
+            </div>
+            <p className="orc-pro__hint">
+              {safeT?.pedidoOrcamentoPreviewHint || 'Use «Visualizar PDF» para ver o documento antes de gerar. Depois imprima ou guarde como PDF no browser.'}
+            </p>
+            {codigoUltimoGerado && (
+              <div className="orc-pro__chip orc-pro__chip--success">
+                <strong>{safeT?.codigoOrcamento || 'Código do orçamento'}:</strong> {codigoUltimoGerado}
+                <br />
+                <small>{safeT?.guardeCodigoParaLocalizar || 'Guarde este código para localizar o orçamento depois.'}</small>
+              </div>
+            )}
+          </section>
+
+          {pedidosGerados.length > 0 && (
+            <section className="orc-pro__panel">
+              <h3 className="orc-pro__panel-title">
+                {safeT?.ultimosPedidosGerados || 'Últimos pedidos (localizar por código)'}
+              </h3>
+              <div className="orc-pro__history-list">
+                {[...pedidosGerados].reverse().slice(0, 50).map((p) => (
+                  <div key={p.codigo} className="orc-pro__history-card">
+                    <div className="orc-pro__history-head">
+                      <span className="orc-pro__history-code">{p.codigo}</span>
+                      <span className="orc-pro__history-meta">
+                        {p.emitirComoCliente === 'nonato-service' ? (safeT?.nomeNonatoService || 'NONATO SERVICE') : p.clienteNomeReal}
+                      </span>
+                      <span className="orc-pro__history-meta">
+                        {new Date(p.dataGeracao).toLocaleDateString('pt-BR')}
+                      </span>
+                      <span className={statusBadgeClass(p.status)}>{statusLabel(p.status)}</span>
+                    </div>
+                    <div className="orc-pro__actions-bar orc-pro__actions-bar--sm">
+                      <button
+                        type="button"
+                        className="orc-pro__act"
                         onClick={() => handleVisualizarPdfGuardado(p)}
-                        style={{ padding: '6px 12px', backgroundColor: 'rgba(0, 100, 255, 0.2)', border: '1px solid rgba(0, 100, 255, 0.6)', borderRadius: '6px', color: '#66b3ff', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
                       >
                         👁️ PDF
                       </button>
                       <button
                         type="button"
+                        className="orc-pro__act"
                         onClick={async () => {
                           if (saveData) await saveData(PEDIDOS_AVULSO_KEY, pedidosGerados)
                           alert(safeT?.orcamentoSalvo || 'Orçamento salvo com sucesso!')
                         }}
-                        style={{ padding: '6px 12px', backgroundColor: 'rgba(0, 200, 83, 0.2)', border: '1px solid rgba(0, 200, 83, 0.6)', borderRadius: '6px', color: '#00c853', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
                       >
                         💾 {safeT?.guardar || 'Guardar'}
                       </button>
                       <button
                         type="button"
+                        className="orc-pro__act orc-pro__act--danger"
                         onClick={async () => {
                           if (!confirm(safeT?.confirmarExcluirPedidoOrcamento || safeT?.confirmarExcluirOrcamento || 'Deseja realmente excluir este pedido?')) return
                           const atualizados = pedidosGerados.filter((x) => x.codigo !== p.codigo)
@@ -889,7 +787,6 @@ export function PedidoOrcamentosAvulsoContent({
                             } catch (_) {}
                           }
                         }}
-                        style={{ padding: '6px 12px', backgroundColor: 'rgba(255, 68, 68, 0.2)', border: '1px solid rgba(255, 68, 68, 0.6)', borderRadius: '6px', color: '#ff6666', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
                       >
                         🗑️ {safeT?.deletar || 'Deletar'}
                       </button>
@@ -897,6 +794,7 @@ export function PedidoOrcamentosAvulsoContent({
                         <button
                           key={status}
                           type="button"
+                          className={`orc-pro__status-chip orc-pro__status-chip--${status} ${p.status === status ? 'is-active' : ''}`}
                           onClick={async () => {
                             const atualizados = pedidosGerados.map((x) => (x.codigo === p.codigo ? { ...x, status } : x))
                             setPedidosGerados(atualizados)
@@ -910,16 +808,6 @@ export function PedidoOrcamentosAvulsoContent({
                               } catch (_) {}
                             }
                           }}
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '6px',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            backgroundColor: p.status === status ? (status === 'entregue' ? 'rgba(0, 200, 83, 0.35)' : status === 'aprovado' ? 'rgba(0, 200, 100, 0.35)' : status === 'concluido' ? 'rgba(0, 150, 255, 0.35)' : 'rgba(255, 68, 68, 0.35)') : 'rgba(100, 100, 100, 0.2)',
-                            border: p.status === status ? (status === 'entregue' ? '1px solid rgba(0, 200, 83, 0.8)' : status === 'aprovado' ? '1px solid rgba(0, 200, 100, 0.8)' : status === 'concluido' ? '1px solid rgba(0, 150, 255, 0.8)' : '1px solid rgba(255, 68, 68, 0.8)') : '1px solid rgba(150, 150, 150, 0.5)',
-                            color: p.status === status ? '#fff' : '#aaa'
-                          }}
                         >
                           {status === 'cancelado' ? (safeT?.pedidoCancelado || 'Pedido Cancelado') : status === 'concluido' ? (safeT?.concluido || 'Concluído') : status === 'aprovado' ? (safeT?.aprovado || 'Aprovado') : (safeT?.entregue || 'Entregue')}
                         </button>
@@ -928,9 +816,9 @@ export function PedidoOrcamentosAvulsoContent({
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           )}
-        </div>
+        </main>
       </div>
     </div>
   )

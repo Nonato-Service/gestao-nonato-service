@@ -9,7 +9,6 @@ import {
   calcularResumoFinanceiroCliente,
   coletarRelatoriosCliente,
   dataClienteDesde,
-  dataEquipamentoAdicionado,
   fmtEuro,
   formatarData,
   idClienteExibicao,
@@ -383,7 +382,6 @@ export function ClienteDetalheView({
           <div className="cliente-detalhe-v2__equip-grid">
             {equipamentos.map((eq, index) => {
               const photo = eq.photo || eq.coverPhoto
-              const dataAdd = dataEquipamentoAdicionado(eq, index, cliente.relatorios, language, vazio)
               const idEquip = rotuloIdEquipamentoCliente(eq, equipamentosArmazem, index)
               return (
                 <button
@@ -407,9 +405,6 @@ export function ClienteDetalheView({
                       </span>
                     ) : null}
                     {eq.numeroSerie ? <span>{eq.numeroSerie}</span> : null}
-                    <span className="cliente-detalhe-v2__equip-date">
-                      {tr('adicionadoEm')} {dataAdd}
-                    </span>
                   </div>
                 </button>
               )
