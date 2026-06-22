@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react'
 import { GrupoChecklist, ItemTrabalhoCriacao, ParenteChecklist } from '../lib/checklistTypes'
+import { ProImageHoverPreview } from './ProImageHoverPreview'
 
 type SetState<T> = React.Dispatch<React.SetStateAction<T>>
 
@@ -514,9 +515,14 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                               ) : (
                                 <>
                                   <button type="button" className="fg-checklist-pro__row-label" onClick={() => selectParente(familia, p.id)}>
-                                    <span className="fg-checklist-pro__thumb">
-                                      {p.imagem ? <img src={p.imagem} alt="" /> : <span>{p.nome.charAt(0)}</span>}
-                                    </span>
+                                    <ProImageHoverPreview
+                                      src={p.imagem}
+                                      alt={p.nome}
+                                      label={`${familia} › ${p.nome}`}
+                                      thumbClassName="fg-checklist-pro__thumb"
+                                    >
+                                      {p.nome.charAt(0)}
+                                    </ProImageHoverPreview>
                                     <span className="fg-checklist-pro__row-name">{p.nome}</span>
                                     <span className="fg-checklist-pro__row-meta">{gruposParente}</span>
                                   </button>
@@ -682,7 +688,14 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                                 ev.target.value = ''
                               }}
                             />
-                            {g.imagem ? <img src={g.imagem} alt="" /> : <span>{(g.numeroGrupo || g.nomeGrupo || '?').charAt(0)}</span>}
+                            <ProImageHoverPreview
+                              src={g.imagem}
+                              alt={g.nomeGrupo}
+                              label={`${g.numeroGrupo ? `${g.numeroGrupo} — ` : ''}${g.nomeGrupo}`}
+                              thumbClassName="fg-pro-preview__thumb fg-pro-preview__thumb--fill"
+                            >
+                              {(g.numeroGrupo || g.nomeGrupo || '?').charAt(0)}
+                            </ProImageHoverPreview>
                           </label>
                           {isEditing ? (
                             <div className="fg-checklist-pro__grupo-edit">

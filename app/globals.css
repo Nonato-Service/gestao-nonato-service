@@ -14638,24 +14638,40 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   margin-left: auto;
 }
 .manuais-pro__act {
-  width: auto;
-  min-width: 28px;
-  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
   flex-shrink: 0;
-  padding: 0 8px;
-  border-radius: 7px;
-  border: 1px solid rgba(125, 211, 252, 0.28);
-  background: rgba(15, 23, 42, 0.65);
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(125, 211, 252, 0.35);
+  background: rgba(15, 23, 42, 0.75);
   color: #7dd3fc;
-  font-size: 0.72rem;
+  font-size: 0.95rem;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.manuais-pro__act span {
+  display: block;
+  line-height: 1;
+}
+.manuais-pro__act:hover {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(125, 211, 252, 0.55);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.1);
 }
 .manuais-pro__act--danger {
   border-color: rgba(248, 113, 113, 0.45);
   color: #fca5a5;
-  background: rgba(127, 29, 29, 0.25);
+  background: rgba(127, 29, 29, 0.22);
+}
+.manuais-pro__act--danger:hover {
+  background: rgba(185, 28, 28, 0.35);
+  border-color: rgba(248, 113, 113, 0.65);
 }
 .manuais-pro__inline-input {
   flex: 1;
@@ -14829,8 +14845,20 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
-.manuais-pro__image-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.manuais-pro__image-remove { position: absolute; top: 4px; right: 4px; }
+.manuais-pro__image-wrap img,
+.manuais-pro__image-thumb,
+.manuais-pro__image-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.manuais-pro__image-wrap .fg-pro-preview {
+  width: 100%;
+  height: 100%;
+  cursor: zoom-in;
+}
+.manuais-pro__image-remove { position: absolute; top: 4px; right: 4px; z-index: 2; }
 @media (max-width: 1100px) {
   .manuais-pro__layout { grid-template-columns: 1fr; min-height: auto; }
   .manuais-pro__kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -19149,6 +19177,8 @@ html body .fg-checklist-pro__btn,
 html body .fg-checklist-pro__btn-add,
 html body .fg-checklist-pro__act,
 html body .fg-checklist-pro__tool-btn,
+html body .manuais-pro__act,
+html body .manuais-pro__btn,
 html body .hub-comunicacao-send-btn,
 html body .hub-comunicacao-person-btn,
 html body .hub-comunicacao-group-chip,
@@ -23525,6 +23555,73 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
     justify-content: flex-end;
     margin-top: 4px;
   }
+}
+
+/* ── Pre-visualizacao de imagem (hover) — partilhado ── */
+.fg-pro-preview {
+  display: inline-flex;
+  flex-shrink: 0;
+  cursor: zoom-in;
+  outline: none;
+}
+.fg-pro-preview.is-active .fg-checklist-pro__thumb,
+.fg-pro-preview.is-active .fg-pro-preview__thumb {
+  border-color: rgba(52, 211, 153, 0.65);
+  box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.15);
+}
+.fg-pro-preview__thumb--fill {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.fg-pro-preview__thumb--fill img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.fg-checklist-pro__grupo-img .fg-pro-preview {
+  width: 100%;
+  height: 100%;
+}
+.fg-checklist-pro__row-label .fg-pro-preview {
+  flex-shrink: 0;
+}
+.fg-pro-preview__flyout {
+  position: fixed;
+  z-index: 12000;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 200, 83, 0.35);
+  background: rgba(2, 6, 23, 0.98);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+}
+.fg-pro-preview__flyout-label {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #34d399;
+  line-height: 1.35;
+  word-break: break-word;
+}
+.fg-pro-preview__flyout-img {
+  display: block;
+  width: 100%;
+  max-height: min(360px, 55vh);
+  object-fit: contain;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+}
+.manuais-pro .fg-pro-preview__flyout {
+  border-color: rgba(56, 189, 248, 0.35);
+}
+.manuais-pro .fg-pro-preview__flyout-label {
+  color: #7dd3fc;
 }
 
 /* ── Pedido Orçamentos Avulso (orc-pro) ── */

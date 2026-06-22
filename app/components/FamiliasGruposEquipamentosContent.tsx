@@ -14,11 +14,11 @@ function FgRowActions(props: {
   const { onEdit, onDelete, editTitle, deleteTitle } = props
   return (
     <div className="fg-checklist-pro__row-actions">
-      <button type="button" className="fg-checklist-pro__act" onClick={onEdit} title={editTitle}>
-        Ed
+      <button type="button" className="fg-checklist-pro__act" onClick={onEdit} title={editTitle} aria-label={editTitle}>
+        <span aria-hidden>✎</span>
       </button>
-      <button type="button" className="fg-checklist-pro__act fg-checklist-pro__act--danger" onClick={onDelete} title={deleteTitle}>
-        X
+      <button type="button" className="fg-checklist-pro__act fg-checklist-pro__act--danger" onClick={onDelete} title={deleteTitle} aria-label={deleteTitle}>
+        <span aria-hidden>×</span>
       </button>
     </div>
   )

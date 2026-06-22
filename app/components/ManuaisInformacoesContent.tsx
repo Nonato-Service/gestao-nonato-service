@@ -10,6 +10,7 @@ import {
 } from '../lib/manuaisTypes'
 import { AssistTextarea } from './AssistTextFields'
 import { saveManuaisFamiliasGruposToIdb } from '../utils/manuaisIndexedDb'
+import { ProImageHoverPreview } from './ProImageHoverPreview'
 
 let manuaisSaveDebounceTimer: ReturnType<typeof setTimeout> | null = null
 let manuaisSaveAlertShownOnce = false
@@ -58,11 +59,11 @@ function ManuaisRowActions(props: {
   const { onEdit, onDelete, editTitle, deleteTitle } = props
   return (
     <div className="manuais-pro__row-actions">
-      <button type="button" className="manuais-pro__act" onClick={onEdit} title={editTitle}>
-        Ed
+      <button type="button" className="manuais-pro__act" onClick={onEdit} title={editTitle} aria-label={editTitle}>
+        <span aria-hidden>✎</span>
       </button>
-      <button type="button" className="manuais-pro__act manuais-pro__act--danger" onClick={onDelete} title={deleteTitle}>
-        X
+      <button type="button" className="manuais-pro__act manuais-pro__act--danger" onClick={onDelete} title={deleteTitle} aria-label={deleteTitle}>
+        <span aria-hidden>×</span>
       </button>
     </div>
   )
@@ -871,14 +872,20 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                 <div className="manuais-pro__image-grid">
                   {selectedModelImgs.map((img) => (
                     <div key={img.id} className="manuais-pro__image-wrap">
-                      <img src={img.dados} alt={img.nome} />
+                      <ProImageHoverPreview
+                        src={img.dados}
+                        alt={img.nome}
+                        label={img.nome}
+                        thumbClassName="manuais-pro__image-thumb"
+                      />
                       <button
                         type="button"
                         className="manuais-pro__act manuais-pro__act--danger manuais-pro__image-remove"
                         onClick={() => removeImagem(selectedModelo.id, img.id)}
                         title={tr('excluir', 'Excluir')}
+                        aria-label={tr('excluir', 'Excluir')}
                       >
-                        X
+                        <span aria-hidden>×</span>
                       </button>
                     </div>
                   ))}
