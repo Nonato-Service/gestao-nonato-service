@@ -121,7 +121,13 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
   const grupos = Array.isArray(manuaisGrupos) ? manuaisGrupos : []
   const modelos = Array.isArray(manuaisModelos) ? manuaisModelos : []
 
-  const persistManuaisFG = (familiasSnapshot: string[], gruposSnapshot: ManuaisGrupo[], modelosSnapshot: ManuaisModelo[]) => {
+  const MANUAIS_STORAGE_KEY = 'nonato-manuais-familias-grupos'
+
+  const buildManuaisPayloads = (
+    familiasSnapshot: string[],
+    gruposSnapshot: ManuaisGrupo[],
+    modelosSnapshot: ManuaisModelo[]
+  ) => {
     const payloadFull = { familias: familiasSnapshot, grupos: gruposSnapshot, modelos: modelosSnapshot }
     const payloadLite = {
       familias: familiasSnapshot,
@@ -131,8 +137,33 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
         return rest
       }),
     }
-    saveManuaisFamiliasGruposToIdb(payloadFull).catch(() => {})
-    saveData('nonato-manuais-familias-grupos', payloadLite).catch(() => {})
+    return { payloadFull, payloadLite }
+  }
+
+  /** IndexedDB = dados completos; localStorage = versão leve; servidor = payload completo. */
+  const persistManuaisToStorage = async (
+    familiasSnapshot: string[],
+    gruposSnapshot: ManuaisGrupo[],
+    modelosSnapshot: ManuaisModelo[]
+  ) => {
+    const { payloadFull, payloadLite } = buildManuaisPayloads(familiasSnapshot, gruposSnapshot, modelosSnapshot)
+    await saveManuaisFamiliasGruposToIdb(payloadFull)
+    try {
+      localStorage.setItem(MANUAIS_STORAGE_KEY, JSON.stringify(payloadLite))
+    } catch {
+      try {
+        localStorage.setItem(`${MANUAIS_STORAGE_KEY}--idb`, '1')
+      } catch {
+        /* ignorar */
+      }
+    }
+    await saveData(MANUAIS_STORAGE_KEY, payloadFull, false)
+  }
+
+  const persistManuaisFG = (familiasSnapshot: string[], gruposSnapshot: ManuaisGrupo[], modelosSnapshot: ManuaisModelo[]) => {
+    void persistManuaisToStorage(familiasSnapshot, gruposSnapshot, modelosSnapshot).catch((err) => {
+      console.error('Erro ao guardar manuais (famílias/grupos):', err)
+    })
   }
 
   const selectedModelo = useMemo(
@@ -199,22 +230,8 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
   }, [familiasListManuais, gruposByFamilia, modelosByGrupo, treeSearch])
 
   const runSaveManuaisModelos = async (modelosSnapshot: ManuaisModelo[]) => {
-    const payloadFull = {
-      familias: manuaisFamiliasRef.current,
-      grupos: manuaisGruposRef.current,
-      modelos: modelosSnapshot,
-    }
-    const payloadLite = {
-      familias: payloadFull.familias,
-      grupos: payloadFull.grupos,
-      modelos: modelosSnapshot.map((m: ManuaisModelo) => {
-        const { documentos: _d, imagens: _i, ...rest } = m || {}
-        return rest
-      }),
-    }
     try {
-      await saveManuaisFamiliasGruposToIdb(payloadFull)
-      await saveData('nonato-manuais-familias-grupos', payloadLite)
+      await persistManuaisToStorage(manuaisFamiliasRef.current, manuaisGruposRef.current, modelosSnapshot)
       manuaisSaveAlertShownOnce = false
     } catch (err) {
       console.error('Erro ao guardar manuais:', err)

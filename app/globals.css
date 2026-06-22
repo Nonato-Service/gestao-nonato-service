@@ -13698,9 +13698,9 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 
 /* Centro de Manuais e Informações Técnicas */
 .manuais-hub-page {
+  width: 100%;
+  box-sizing: border-box;
   padding: clamp(16px, 2.5vw, 28px);
-  max-width: 1480px;
-  margin: 0 auto;
   min-height: min(72vh, 720px);
 }
 .manuais-hub__hero {
@@ -13713,12 +13713,27 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 .manuais-hub__hero-top {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: minmax(72px, 1fr) minmax(0, 2fr) minmax(72px, 1fr);
   gap: 16px;
   align-items: center;
   padding: 18px 20px 12px;
 }
-.manuais-hub__hero-center { text-align: center; min-width: 0; }
+.manuais-hub__brand {
+  justify-self: start;
+  display: flex;
+  align-items: center;
+}
+.manuais-hub__hero-center {
+  justify-self: center;
+  text-align: center;
+  min-width: 0;
+  max-width: 100%;
+}
+.manuais-hub__actions {
+  justify-self: end;
+  display: flex;
+  gap: 6px;
+}
 .manuais-hub__title {
   margin: 0 0 4px;
   font-size: clamp(1rem, 2.2vw, 1.35rem);
@@ -13732,7 +13747,6 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   color: rgba(186, 230, 253, 0.78);
   line-height: 1.45;
 }
-.manuais-hub__actions { display: flex; gap: 6px; }
 .manuais-hub__icon-btn {
   width: 34px;
   height: 34px;

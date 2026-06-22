@@ -9001,12 +9001,7 @@ export default function Dashboard() {
         }
         // Clientes: com divergência de revisão o local «conta» como não vazio e bloqueava o servidor inteiro —
         // fundir para trazer equipamentos/alterações gravadas noutro aparelho sem apagar clientes só locais.
-        if (
-          key === 'nonato-clientes' &&
-          !preferServerOnlyAfterFullPullWipe &&
-          deferServerMerge &&
-          typeof window !== 'undefined'
-        ) {
+        if (key === 'nonato-clientes' && !preferServerOnlyAfterFullPullWipe && typeof window !== 'undefined') {
           const serverValue = serverData[key]
           const localData = localStorage.getItem(key)
           if (serverValue != null && Array.isArray(serverValue) && localData !== null && localData !== '') {
@@ -15779,13 +15774,27 @@ export default function Dashboard() {
         }
         updatedClientes = [...clientes, newCliente]
       }
+      const previousClientes = clientes
       setClientes(updatedClientes)
 
-      const savedOk = await saveData('nonato-clientes', updatedClientes, true, true)
-      if (!savedOk) {
-        alert((t as any).erroSalvar || 'Erro ao salvar no servidor. Verifique a ligação e tente novamente.')
+      let localSaved = false
+      try {
+        await saveData('nonato-clientes', updatedClientes, true, false)
+        const raw = typeof window !== 'undefined' ? localStorage.getItem('nonato-clientes') : null
+        if (raw) {
+          const parsed = JSON.parse(raw) as Cliente[]
+          localSaved = Array.isArray(parsed) && parsed.some((c) => c.id === savedCliente.id)
+        }
+      } catch {
+        localSaved = false
+      }
+      if (!localSaved) {
+        setClientes(previousClientes)
+        alert((t as any).erroSalvar || 'Erro ao salvar. Tente novamente.')
         return
       }
+
+      void saveData('nonato-clientes', updatedClientes, false, true).catch(() => {})
 
       createAutoBackupBeforeOperation()
       setClienteForm({
