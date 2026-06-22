@@ -20768,6 +20768,14 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   color: rgba(255, 255, 255, 0.55);
 }
 
+.cliente-detalhe-v2__equip-id {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: rgba(110, 231, 183, 0.92) !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
 .cliente-detalhe-v2__equip-date {
   font-size: 12px !important;
   color: rgba(255, 255, 255, 0.38) !important;
@@ -23369,6 +23377,18 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   flex-wrap: wrap;
   padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.fg-checklist-pro__kpis--compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.fg-checklist-pro__form-grid--single {
+  grid-template-columns: 1fr auto;
+}
+.fg-checklist-pro__grupo-card--equip {
+  grid-template-columns: 28px 1fr auto;
+}
+.fg-checklist-pro__grupo-edit--full {
+  grid-column: 2 / -1;
 }
 @media (max-width: 1100px) {
   .fg-checklist-pro__layout { grid-template-columns: 1fr; }

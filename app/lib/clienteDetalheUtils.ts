@@ -16,6 +16,15 @@ export type RelatorioClienteLike = {
   numeroMaquina?: string
 }
 
+import {
+  equipamentoIdETecnicoGerado,
+  resolverIdEquipamentoCliente,
+  resolverIdEquipamentoVisivelCliente,
+  type EquipamentoArmazemIdLookup,
+} from './relatorioServicoEquipamentos'
+
+export type { EquipamentoArmazemIdLookup } from './relatorioServicoEquipamentos'
+
 export type EquipamentoClienteLike = {
   id?: string
   tipoEquipamento: string
@@ -24,6 +33,37 @@ export type EquipamentoClienteLike = {
   numeroSerie: string
   photo?: string
   coverPhoto?: string
+}
+
+export type RotuloIdEquipamentoCliente = {
+  texto: string
+  titulo?: string
+  tecnico?: boolean
+}
+
+/** ID para listas/cartões: código visível, ID próprio ou referência técnica (nunca oculto na UI). */
+export function rotuloIdEquipamentoCliente(
+  eq: { id?: string; numeroSerie?: string },
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],
+  index = 0
+): RotuloIdEquipamentoCliente | null {
+  const sn = String(eq.numeroSerie ?? '').trim()
+  const vis = resolverIdEquipamentoVisivelCliente(eq, equipamentosArmazem).trim()
+  if (vis) return { texto: vis, titulo: vis }
+
+  const raw = String(eq.id ?? '').trim()
+  if (raw) {
+    if (sn && raw.toLowerCase() === sn.toLowerCase()) return null
+    if (!equipamentoIdETecnicoGerado(raw)) return { texto: raw, titulo: raw }
+    const curto = raw.length > 28 ? `${raw.slice(0, 14)}…${raw.slice(-8)}` : raw
+    return { texto: curto, titulo: raw, tecnico: true }
+  }
+
+  const chave = resolverIdEquipamentoCliente(eq, index).trim()
+  if (chave && (!sn || chave.toLowerCase() !== sn.toLowerCase())) {
+    return { texto: chave, titulo: chave, tecnico: true }
+  }
+  return null
 }
 
 export type FaturaPecasLike = {

@@ -13,6 +13,8 @@ import {
   fmtEuro,
   formatarData,
   idClienteExibicao,
+  rotuloIdEquipamentoCliente,
+  type EquipamentoArmazemIdLookup,
   type EquipamentoClienteLike,
   type FaturaPecasLike,
   type FechamentoItemLike,
@@ -51,6 +53,7 @@ export type ClienteDetalheData = {
 type Props = {
   cliente: ClienteDetalheData
   language: string
+  equipamentosArmazem?: EquipamentoArmazemIdLookup[]
   faturasPecas: FaturaPecasLike[]
   fechamentosGuardadosBibliotecaIds: string[]
   fechamentosRelatorios: Record<string, FechamentoItemLike[]>
@@ -193,6 +196,7 @@ function PagamentoPills({ pagamento, tr }: { pagamento: 'pago' | 'pendente' | 'd
 export function ClienteDetalheView({
   cliente,
   language,
+  equipamentosArmazem = [],
   faturasPecas,
   fechamentosGuardadosBibliotecaIds,
   fechamentosRelatorios,
@@ -380,6 +384,7 @@ export function ClienteDetalheView({
             {equipamentos.map((eq, index) => {
               const photo = eq.photo || eq.coverPhoto
               const dataAdd = dataEquipamentoAdicionado(eq, index, cliente.relatorios, language, vazio)
+              const idEquip = rotuloIdEquipamentoCliente(eq, equipamentosArmazem, index)
               return (
                 <button
                   key={eq.id || `${eq.numeroSerie}-${index}`}
@@ -396,6 +401,11 @@ export function ClienteDetalheView({
                   </div>
                   <div className="cliente-detalhe-v2__equip-body">
                     <strong>{[eq.marca, eq.modelo].filter(Boolean).join(' ') || eq.tipoEquipamento}</strong>
+                    {idEquip ? (
+                      <span className="cliente-detalhe-v2__equip-id" title={idEquip.titulo || idEquip.texto}>
+                        {tr('equipamentoId')}: {idEquip.texto}
+                      </span>
+                    ) : null}
                     {eq.numeroSerie ? <span>{eq.numeroSerie}</span> : null}
                     <span className="cliente-detalhe-v2__equip-date">
                       {tr('adicionadoEm')} {dataAdd}
