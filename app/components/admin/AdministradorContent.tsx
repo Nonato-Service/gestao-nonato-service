@@ -204,8 +204,8 @@ export function AdministradorContent({
         id="admin-detail-users"
         icon="👤"
         title={safeT?.userManagement || 'Gestão de utilizadores'}
-        sub={safeT?.adminUsersSummarySub || 'Contas, permissões e vínculo com gestores ou técnicos.'}
-        toneClass="admin-disclosure--violet"
+        sub={safeT?.adminUsersSummarySub || 'Contas, módulos visíveis e vínculo com gestores ou técnicos.'}
+        toneClass="admin-disclosure--cyan"
       >
         <AdminUsersSection variant="full" safeT={safeT} {...users} />
       </AdminDisclosure>

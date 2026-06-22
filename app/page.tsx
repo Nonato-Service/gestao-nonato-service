@@ -103,6 +103,7 @@ import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvul
 import { GestaoDemosContent } from './components/GestaoDemosContent'
 import { DEMO_VISITOR_USER } from './lib/demoManagement'
 import { AdministradorContent } from './components/admin/AdministradorContent'
+import { AdminUserFormPanel } from './components/admin/AdminUserFormPanel'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
 import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
@@ -70680,137 +70681,27 @@ A1;Peça exemplo;10`}
           setEditingUser(null); 
           setUserForm(createEmptyUserForm()); 
         }}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className="modal admin-users-hub-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '920px', maxHeight: '92vh', overflowY: 'auto' }}>
             <h2>{editingUser ? safeT?.editUser : safeT?.addUser}</h2>
-            
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
-              <input
-                type="text"
-                value={userForm.name}
-                onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              />
-            </div>
-            
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
-              <input
-                type="email"
-                value={userForm.email}
-                onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              />
-            </div>
-            
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.role || 'Função'}</label>
-              <input
-                type="text"
-                value={userForm.role}
-                onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              />
-            </div>
-            
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>
-                {safeT?.password || 'Senha'} {!editingUser && <span style={{ color: '#ff0000' }}>*</span>}
-              </label>
-              <input
-                type="password"
-                value={userForm.password}
-                onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
-                placeholder={editingUser ? (safeT?.leaveEmptyToKeepPassword || 'Deixe vazio para manter a senha atual') : ''}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Vincular com</label>
-              <select
-                value={userForm.linkedProfileType}
-                onChange={(e) => setUserForm({ ...userForm, linkedProfileType: e.target.value as 'gestor' | 'tecnico' | '', linkedProfileId: '' })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              >
-                <option value="">Sem vínculo direto</option>
-                <option value="gestor">{safeT?.gestores || 'Gestores'}</option>
-                <option value="tecnico">{safeT?.tecnicos || 'Técnicos'}</option>
-              </select>
-            </div>
-
-            {userForm.linkedProfileType && (
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>
-                  {userForm.linkedProfileType === 'gestor' ? (safeT?.selecionarGestor || 'Selecionar Gestor') : (safeT?.selecionarTecnico || 'Selecionar Técnico')}
-                </label>
-                <select
-                  value={userForm.linkedProfileId}
-                  onChange={(e) => setUserForm({ ...userForm, linkedProfileId: e.target.value })}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-                >
-                  <option value="">{userForm.linkedProfileType === 'gestor' ? (safeT?.selecionarGestor || 'Selecionar Gestor') : (safeT?.selecionarTecnico || 'Selecionar Técnico')}</option>
-                  {(userForm.linkedProfileType === 'gestor' ? gestores : tecnicos).map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {'area' in item
-                        ? `${item.name} (${item.area || '-'})`
-                        : `${item.name} (${item.type === 'internal' ? (safeT?.tecnicoInterno || 'Interno') : item.type === 'external' ? (safeT?.tecnicoExterno || 'Externo') : (safeT?.armazem || 'Armazém')})`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            
-            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={userForm.isAdmin}
-                  onChange={(e) => setUserForm({ ...userForm, isAdmin: e.target.checked })}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                />
-                <strong style={{ color: '#00c853' }}>{safeT?.administradorGeral || 'Administrador Geral'}</strong>
-              </label>
-              <p style={{ fontSize: '12px', opacity: 0.7, marginTop: '5px', marginLeft: '28px' }}>
-                {safeT?.administradorGeralDesc || 'O administrador geral tem acesso a todas as funcionalidades do sistema'}
-              </p>
-            </div>
-            
-            {!userForm.isAdmin && (
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
-                <strong style={{ display: 'block', marginBottom: '15px' }}>{safeT?.permissions || 'Permissões'}</strong>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                  {userForm.permissions && Object.entries(userForm.permissions).map(([key, value]) => (
-                    <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px' }}>
-                      <input
-                        type="checkbox"
-                        checked={value as boolean}
-                        onChange={(e) => setUserForm({ 
-                          ...userForm, 
-                          permissions: { 
-                            ...(userForm.permissions || {}), 
-                            [key]: e.target.checked 
-                          } 
-                        })}
-                        style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                      />
-                      <span>{safeT?.[`permission${key.charAt(0).toUpperCase() + key.slice(1)}` as keyof typeof safeT] || key}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button className="btn-primary" onClick={handleSaveUser} style={{ flex: 1 }}>
-                {safeT?.save || 'Salvar'}
-              </button>
-              <button className="btn-primary" onClick={() => { 
-                setShowUserForm(false); 
-                setEditingUser(null); 
-                setUserForm(createEmptyUserForm()); 
-              }} style={{ flex: 1 }}>
+            <AdminUserFormPanel
+              safeT={safeT}
+              editingUser={editingUser}
+              userForm={userForm}
+              setUserForm={setUserForm}
+              gestores={gestores}
+              tecnicos={tecnicos}
+              compact
+            />
+            <div className="admin-users-hub__editor-actions">
+              <button type="button" className="admin-users-hub-btn admin-users-hub-btn--ghost" onClick={() => {
+                setShowUserForm(false)
+                setEditingUser(null)
+                setUserForm(createEmptyUserForm())
+              }}>
                 {safeT?.cancel || 'Cancelar'}
+              </button>
+              <button type="button" className="admin-users-hub-btn admin-users-hub-btn--primary" onClick={handleSaveUser}>
+                {safeT?.save || 'Salvar'}
               </button>
             </div>
           </div>

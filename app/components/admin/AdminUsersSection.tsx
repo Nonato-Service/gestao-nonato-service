@@ -1,6 +1,12 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo, useState } from 'react'
+import {
+  USER_PERMISSION_KEYS,
+  countActivePermissions,
+  getActivePermissionKeys,
+} from '../../lib/adminUserPermissions'
+import { AdminUserFormPanel } from './AdminUserFormPanel'
 import type { GestorItem, SafeT, TecnicoItem, User, UserFormState } from './adminTypes'
 
 export type AdminUsersSectionProps = {
@@ -22,6 +28,22 @@ export type AdminUsersSectionProps = {
   createEmptyUserForm: () => UserFormState
 }
 
+function tr(safeT: SafeT, key: string, fallback: string): string {
+  return (safeT as Record<string, string | undefined>)[key] || fallback
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
+function permissionLabel(safeT: SafeT, key: string): string {
+  const cap = key.charAt(0).toUpperCase() + key.slice(1)
+  return tr(safeT, `permission${cap}`, key)
+}
+
 export function AdminUsersSection({
   variant = 'full',
   safeT,
@@ -40,214 +62,318 @@ export function AdminUsersSection({
   setEditingUser,
   createEmptyUserForm,
 }: AdminUsersSectionProps) {
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<'all' | 'admins' | 'standard'>('all')
+  const [sortBy, setSortBy] = useState<'name' | 'role'>('name')
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+
+  const stats = useMemo(() => {
+    const admins = users.filter((u) => u.isAdmin).length
+    const linked = users.filter((u) => u.linkedProfileType && u.linkedProfileId).length
+    return { total: users.length, admins, linked }
+  }, [users])
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    let list = [...users]
+    if (filter === 'admins') list = list.filter((u) => u.isAdmin)
+    if (filter === 'standard') list = list.filter((u) => !u.isAdmin)
+    if (q) {
+      list = list.filter(
+        (u) =>
+          u.name.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          u.role.toLowerCase().includes(q)
+      )
+    }
+    list.sort((a, b) => {
+      if (sortBy === 'role') return a.role.localeCompare(b.role, undefined, { sensitivity: 'base' })
+      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    })
+    return list
+  }, [users, search, filter, sortBy])
+
+  const cancelForm = () => {
+    setShowUserForm(false)
+    setEditingUser(null)
+    setUserForm(createEmptyUserForm())
+  }
+
   if (variant === 'compact') {
     return (
-            <div className="admin-section">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 136, 0.2)', paddingBottom: '10px' }}>
-                <h3 className="admin-section-title" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>
-                  {safeT?.userManagement || 'GESTÃO DE USUÁRIOS'}
-                </h3>
-                <button className="btn-primary" onClick={handleAddUser} style={{ padding: '8px 15px' }}>
-                  {safeT?.addUser || 'Adicionar Usuário'}
-                </button>
-              </div>
-              
-              {users.length === 0 ? (
-                <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>{safeT?.noUsers || 'Nenhum usuário cadastrado'}</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {users.map(user => (
-                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)' }}>
-                      <div>
-                        <strong style={{ display: 'block', marginBottom: '5px' }}>{user.name}</strong>
-                        <span style={{ fontSize: '12px', opacity: 0.7 }}>{user.email} • {user.role}</span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '5px' }}>
-                        <button className="btn-primary" onClick={() => handleEditUser(user)} style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '80px' }}>
-                          {safeT?.edit || 'Editar'}
-                        </button>
-                        <button className="btn-danger" onClick={() => handleDeleteUser(user.id)} style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '80px' }}>
-                          {safeT?.delete || 'Excluir'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+      <div className="admin-section">
+        <div className="admin-users-hub__compact-head">
+          <h3 className="admin-section-title">{safeT?.userManagement || 'GESTÃO DE USUÁRIOS'}</h3>
+          <button type="button" className="admin-users-hub-btn admin-users-hub-btn--primary admin-users-hub-btn--sm" onClick={handleAddUser}>
+            {safeT?.addUser || 'Adicionar Usuário'}
+          </button>
+        </div>
+        {users.length === 0 ? (
+          <p className="admin-users-hub__compact-empty">{safeT?.noUsers || 'Nenhum usuário cadastrado'}</p>
+        ) : (
+          <div className="admin-users-hub__compact-list">
+            {users.map((user) => (
+              <div key={user.id} className="admin-users-hub-card admin-users-hub-card--compact">
+                <div className="admin-users-hub-card__main">
+                  <div className="admin-users-hub-card__avatar" aria-hidden="true">
+                    {initials(user.name)}
+                  </div>
+                  <div className="admin-users-hub-card__info">
+                    <h5>{user.name}</h5>
+                    <span>
+                      {user.email} · {user.role}
+                    </span>
+                  </div>
                 </div>
-              )}
-            </div>
+                <div className="admin-users-hub-card__actions">
+                  <button type="button" className="admin-users-hub-btn admin-users-hub-btn--sm" onClick={() => handleEditUser(user)}>
+                    {safeT?.edit || 'Editar'}
+                  </button>
+                  <button type="button" className="admin-users-hub-btn admin-users-hub-btn--sm admin-users-hub-btn--danger-outline" onClick={() => handleDeleteUser(user.id)}>
+                    {safeT?.delete || 'Excluir'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     )
   }
+
   return (
-            <div className="admin-section">
-              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '16px' }}>
-                <button className="btn-primary" onClick={handleAddUser} style={{ padding: '8px 15px' }}>
-                  {safeT?.addUser || 'Adicionar Usuário'}
-                </button>
-              </div>
-              
-              {showUserForm && (
-                <div style={{ border: '1px solid rgba(0, 200, 83, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#1e1e1e' }}>
-                  <h3 style={{ marginBottom: '15px' }}>{editingUser ? safeT?.editUser : safeT?.addUser}</h3>
-                  
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
-                    <input
-                      type="text"
-                      value={userForm.name}
-                      onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
-                    <input
-                      type="email"
-                      value={userForm.email}
-                      onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.role || 'Função'}</label>
-                    <input
-                      type="text"
-                      value={userForm.role}
-                      onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>
-                      {safeT?.password || 'Senha'} {!editingUser && <span style={{ color: '#ff0000' }}>*</span>}
-                    </label>
-                    <input
-                      type="password"
-                      value={userForm.password}
-                      onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
-                      placeholder={editingUser ? (safeT?.leaveEmptyToKeepPassword || 'Deixe vazio para manter a senha atual') : ''}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
+    <section className="admin-users-hub">
+      <header className="admin-users-hub__hero">
+        <div className="admin-users-hub__hero-glow" aria-hidden="true" />
+        <div className="admin-users-hub__hero-content">
+          <div className="admin-users-hub__hero-icon" aria-hidden="true">
+            👥
+          </div>
+          <div>
+            <h3 className="admin-users-hub__hero-title">{tr(safeT, 'adminUsersHubTitle', 'Centro de Utilizadores')}</h3>
+            <p className="admin-users-hub__hero-desc">
+              {tr(
+                safeT,
+                'adminUsersHubDesc',
+                'Defina contas, escolha módulos visíveis e vincule gestores ou técnicos — tudo num painel claro e rápido.'
+              )}
+            </p>
+          </div>
+        </div>
+        <ol className="admin-users-hub__steps">
+          <li>{tr(safeT, 'adminUsersStep1', '1. Crie ou edite a conta')}</li>
+          <li>{tr(safeT, 'adminUsersStep2', '2. Selecione o que pode usar')}</li>
+          <li>{tr(safeT, 'adminUsersStep3', '3. Vincule perfil se necessário')}</li>
+        </ol>
+      </header>
 
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Vincular com</label>
-                    <select
-                      value={userForm.linkedProfileType}
-                      onChange={(e) => setUserForm({ ...userForm, linkedProfileType: e.target.value as 'gestor' | 'tecnico' | '', linkedProfileId: '' })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-                    >
-                      <option value="">Sem vínculo direto</option>
-                      <option value="gestor">{safeT?.gestores || 'Gestores'}</option>
-                      <option value="tecnico">{safeT?.tecnicos || 'Técnicos'}</option>
-                    </select>
-                  </div>
+      <div className="admin-users-hub__stats">
+        <div className="admin-users-hub__stat">
+          <span>{tr(safeT, 'adminUsersKpiTotal', 'Utilizadores')}</span>
+          <strong>{stats.total}</strong>
+        </div>
+        <div className="admin-users-hub__stat">
+          <span>{tr(safeT, 'adminUsersKpiAdmins', 'Administradores')}</span>
+          <strong>{stats.admins}</strong>
+        </div>
+        <div className="admin-users-hub__stat admin-users-hub__stat--note">
+          <span>{tr(safeT, 'adminUsersKpiLinked', 'Com vínculo')}</span>
+          <strong>{stats.linked}</strong>
+        </div>
+      </div>
 
-                  {userForm.linkedProfileType && (
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>
-                        {userForm.linkedProfileType === 'gestor' ? (safeT?.selecionarGestor || 'Selecionar Gestor') : (safeT?.selecionarTecnico || 'Selecionar Técnico')}
-                      </label>
-                      <select
-                        value={userForm.linkedProfileId}
-                        onChange={(e) => setUserForm({ ...userForm, linkedProfileId: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+      <div className="admin-users-hub__toolbar">
+        <label className="admin-users-hub__search">
+          <span aria-hidden="true">🔍</span>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={tr(safeT, 'adminUsersSearchPlaceholder', 'Pesquisar nome, e-mail ou função…')}
+          />
+        </label>
+        <div className="admin-users-hub__toolbar-actions">
+          <div className="admin-users-hub__filters" role="tablist" aria-label={tr(safeT, 'adminUsersFilterLabel', 'Filtrar')}>
+            {(
+              [
+                ['all', 'adminUsersFilterAll', 'Todos'],
+                ['admins', 'adminUsersFilterAdmins', 'Admins'],
+                ['standard', 'adminUsersFilterStandard', 'Com permissões'],
+              ] as const
+            ).map(([id, key, fb]) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={filter === id}
+                className={`admin-users-hub-filter${filter === id ? ' admin-users-hub-filter--active' : ''}`}
+                onClick={() => setFilter(id)}
+              >
+                {tr(safeT, key, fb)}
+              </button>
+            ))}
+          </div>
+          <label className="admin-users-hub__sort">
+            <span>{tr(safeT, 'adminUsersSortLabel', 'Ordenar')}</span>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as 'name' | 'role')}>
+              <option value="name">{tr(safeT, 'adminUsersSortName', 'Nome A–Z')}</option>
+              <option value="role">{tr(safeT, 'adminUsersSortRole', 'Função A–Z')}</option>
+            </select>
+          </label>
+          <button
+            type="button"
+            className={`admin-users-hub-btn admin-users-hub-btn--primary${showUserForm && !editingUser ? ' admin-users-hub-btn--active' : ''}`}
+            onClick={handleAddUser}
+          >
+            + {tr(safeT, 'adminUsersNewUser', 'Novo utilizador')}
+          </button>
+        </div>
+      </div>
+
+      {showUserForm ? (
+        <div className="admin-users-hub__editor">
+          <header className="admin-users-hub__editor-head">
+            <h4>{editingUser ? safeT?.editUser || 'Editar Utilizador' : safeT?.addUser || 'Adicionar Utilizador'}</h4>
+            <button type="button" className="admin-users-hub-btn admin-users-hub-btn--ghost admin-users-hub-btn--sm" onClick={cancelForm}>
+              {safeT?.cancel || 'Cancelar'}
+            </button>
+          </header>
+          <AdminUserFormPanel
+            safeT={safeT}
+            editingUser={editingUser}
+            userForm={userForm}
+            setUserForm={setUserForm}
+            gestores={gestores}
+            tecnicos={tecnicos}
+          />
+          <div className="admin-users-hub__editor-actions">
+            <button type="button" className="admin-users-hub-btn admin-users-hub-btn--ghost" onClick={cancelForm}>
+              {safeT?.cancel || 'Cancelar'}
+            </button>
+            <button type="button" className="admin-users-hub-btn admin-users-hub-btn--primary" onClick={handleSaveUser}>
+              {safeT?.save || 'Salvar'}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="admin-users-hub__list">
+        {users.length === 0 ? (
+          <div className="admin-users-hub__empty">
+            <span aria-hidden="true">👤</span>
+            <p>{safeT?.noUsers || 'Nenhum usuário cadastrado'}</p>
+            <button type="button" className="admin-users-hub-btn admin-users-hub-btn--primary" onClick={handleAddUser}>
+              {safeT?.addUser || 'Adicionar Usuário'}
+            </button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="admin-users-hub__empty">
+            <span aria-hidden="true">🔎</span>
+            <p>{tr(safeT, 'adminUsersEmptyFiltered', 'Nenhum resultado para esta pesquisa ou filtro.')}</p>
+          </div>
+        ) : (
+          filtered.map((user) => {
+            const activeKeys = getActivePermissionKeys(user.permissions, user.isAdmin)
+            const activeCount = countActivePermissions(user.permissions, user.isAdmin)
+            const visibleChips = activeKeys.slice(0, 5)
+            const extraCount = activeKeys.length - visibleChips.length
+            const isConfirming = confirmDeleteId === user.id
+
+            return (
+              <article
+                key={user.id}
+                className={`admin-users-hub-card${editingUser?.id === user.id ? ' admin-users-hub-card--editing' : ''}`}
+              >
+                <div className="admin-users-hub-card__main">
+                  <div className="admin-users-hub-card__avatar" aria-hidden="true">
+                    {initials(user.name)}
+                  </div>
+                  <div className="admin-users-hub-card__info">
+                    <div className="admin-users-hub-card__title-row">
+                      <h5>{user.name}</h5>
+                      {user.isAdmin ? (
+                        <span className="admin-users-hub-badge admin-users-hub-badge--admin">
+                          {tr(safeT, 'adminUsersAdminBadge', 'Admin')}
+                        </span>
+                      ) : (
+                        <span className="admin-users-hub-badge admin-users-hub-badge--modules">
+                          {activeCount}/{USER_PERMISSION_KEYS.length}{' '}
+                          {tr(safeT, 'adminUsersModulesLabel', 'módulos')}
+                        </span>
+                      )}
+                    </div>
+                    <span className="admin-users-hub-card__meta">
+                      {user.email} · {user.role}
+                    </span>
+                    {user.linkedProfileType && user.linkedProfileId ? (
+                      <span className="admin-users-hub-card__link">
+                        {tr(safeT, 'adminUsersLinkedProfile', 'Vínculo')}:{' '}
+                        {user.linkedProfileType === 'gestor' ? safeT?.gestores || 'Gestor' : safeT?.tecnicos || 'Técnico'}
+                      </span>
+                    ) : null}
+                    <div className="admin-users-hub-card__chips" aria-label={safeT?.permissions || 'Permissões'}>
+                      {user.isAdmin ? (
+                        <span className="admin-users-hub-chip admin-users-hub-chip--gold">
+                          {tr(safeT, 'adminUsersFullAccessChip', 'Acesso total')}
+                        </span>
+                      ) : activeKeys.length === 0 ? (
+                        <span className="admin-users-hub-chip admin-users-hub-chip--muted">
+                          {tr(safeT, 'adminUsersNoModulesChip', 'Sem módulos ativos')}
+                        </span>
+                      ) : (
+                        <>
+                          {visibleChips.map((key) => (
+                            <span key={key} className="admin-users-hub-chip">
+                              {permissionLabel(safeT, key)}
+                            </span>
+                          ))}
+                          {extraCount > 0 ? (
+                            <span className="admin-users-hub-chip admin-users-hub-chip--more">+{extraCount}</span>
+                          ) : null}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="admin-users-hub-card__actions">
+                  <button type="button" className="admin-users-hub-btn admin-users-hub-btn--sm" onClick={() => handleEditUser(user)}>
+                    {safeT?.edit || 'Editar'}
+                  </button>
+                  {isConfirming ? (
+                    <>
+                      <button
+                        type="button"
+                        className="admin-users-hub-btn admin-users-hub-btn--sm admin-users-hub-btn--danger"
+                        onClick={() => {
+                          handleDeleteUser(user.id)
+                          setConfirmDeleteId(null)
+                        }}
                       >
-                        <option value="">{userForm.linkedProfileType === 'gestor' ? (safeT?.selecionarGestor || 'Selecionar Gestor') : (safeT?.selecionarTecnico || 'Selecionar Técnico')}</option>
-                        {userForm.linkedProfileType === 'gestor'
-                          ? gestores.map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {`${item.name} (${item.area || '-'})`}
-                              </option>
-                            ))
-                          : tecnicos.map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {`${item.name} (${item.type === 'internal' ? (safeT?.tecnicoInterno || 'Interno') : item.type === 'external' ? (safeT?.tecnicoExterno || 'Externo') : (safeT?.armazem || 'Armazém')})`}
-                              </option>
-                            ))}
-                      </select>
-                    </div>
-                  )}
-                  
-                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                      <input
-                        type="checkbox"
-                        checked={userForm.isAdmin}
-                        onChange={(e) => setUserForm({ ...userForm, isAdmin: e.target.checked })}
-                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                      />
-                      <strong style={{ color: '#00c853' }}>{safeT?.administradorGeral || 'Administrador Geral'}</strong>
-                    </label>
-                    <p style={{ fontSize: '12px', opacity: 0.7, marginTop: '5px', marginLeft: '28px' }}>
-                      {safeT?.administradorGeralDesc || 'O administrador geral tem acesso a todas as funcionalidades do sistema'}
-                    </p>
-                  </div>
-                  
-                  {!userForm.isAdmin && (
-                    <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
-                      <strong style={{ display: 'block', marginBottom: '15px' }}>{safeT?.permissions || 'Permissões'}</strong>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                        {userForm.permissions && Object.entries(userForm.permissions).map(([key, value]) => (
-                          <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px' }}>
-                            <input
-                              type="checkbox"
-                              checked={value as boolean}
-                              onChange={(e) => setUserForm({ 
-                                ...userForm, 
-                                permissions: { 
-                                  ...(userForm.permissions || {}), 
-                                  [key]: e.target.checked 
-                                } 
-                              })}
-                              style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                            />
-                            <span>{safeT?.[`permission${key.charAt(0).toUpperCase() + key.slice(1)}` as keyof typeof safeT] || key}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button className="btn-primary" onClick={handleSaveUser} style={{ flex: 1 }}>
-                      {safeT?.save || 'Salvar'}
+                        {tr(safeT, 'adminUsersConfirmDelete', 'Sim, eliminar')}
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-users-hub-btn admin-users-hub-btn--sm admin-users-hub-btn--ghost"
+                        onClick={() => setConfirmDeleteId(null)}
+                      >
+                        {safeT?.cancel || 'Cancelar'}
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className="admin-users-hub-btn admin-users-hub-btn--sm admin-users-hub-btn--danger-outline"
+                      onClick={() => setConfirmDeleteId(user.id)}
+                    >
+                      {safeT?.delete || 'Excluir'}
                     </button>
-                    <button className="btn-primary" onClick={() => { 
-                      setShowUserForm(false); 
-                      setEditingUser(null); 
-                      setUserForm(createEmptyUserForm()); 
-                    }} style={{ flex: 1 }}>
-                      {safeT?.cancel || 'Cancelar'}
-                    </button>
-                  </div>
+                  )}
                 </div>
-              )}
-              
-              {users.length === 0 ? (
-                <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>{safeT?.noUsers || 'Nenhum usuário cadastrado'}</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {users.map(user => (
-                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)' }}>
-                      <div>
-                        <strong style={{ display: 'block', marginBottom: '5px' }}>{user.name}</strong>
-                        <span style={{ fontSize: '12px', opacity: 0.7 }}>{user.email} • {user.role}</span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '5px' }}>
-                        <button className="btn-primary" onClick={() => handleEditUser(user)} style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '80px' }}>
-                          {safeT?.edit || 'Editar'}
-                        </button>
-                        <button className="btn-danger" onClick={() => handleDeleteUser(user.id)} style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '80px' }}>
-                          {safeT?.delete || 'Excluir'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+              </article>
+            )
+          })
+        )}
+      </div>
+    </section>
   )
 }
