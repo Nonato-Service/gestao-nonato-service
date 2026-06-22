@@ -108,6 +108,7 @@ import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceCont
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { GestaoDemosContent } from './components/GestaoDemosContent'
 import { ManuaisInformacoesContent } from './components/ManuaisInformacoesContent'
+import { FamiliasGruposChecklistContent } from './components/FamiliasGruposChecklistContent'
 import { DEMO_VISITOR_USER } from './lib/demoManagement'
 import { AdministradorContent } from './components/admin/AdministradorContent'
 import { AdminUserFormPanel } from './components/admin/AdminUserFormPanel'
@@ -26285,6 +26286,67 @@ export default function Dashboard() {
     }
   }
 
+  function FamiliasGruposChecklistTabContent() {
+    return (
+      <FamiliasGruposChecklistContent
+        safeT={safeT as Record<string, string | undefined>}
+        LogoComponent={LogoComponent}
+        closeTab={closeTab}
+        activeTabId={activeTabId}
+        voltarPaginaInicial={voltarPaginaInicial}
+        saveData={saveData}
+        familiasChecklist={familiasChecklist}
+        setFamiliasChecklist={setFamiliasChecklist}
+        gruposChecklist={gruposChecklist}
+        setGruposChecklist={setGruposChecklist}
+        parentesChecklist={parentesChecklist}
+        setParentesChecklist={setParentesChecklist}
+        novaFamiliaEquipamento={novaFamiliaEquipamento}
+        setNovaFamiliaEquipamento={setNovaFamiliaEquipamento}
+        selectedFamiliaForGrupos={selectedFamiliaForGrupos}
+        setSelectedFamiliaForGrupos={setSelectedFamiliaForGrupos}
+        familiaExpandidaChecklist={familiaExpandidaChecklist}
+        setFamiliaExpandidaChecklist={setFamiliaExpandidaChecklist}
+        editingFamiliaNome={editingFamiliaNome}
+        setEditingFamiliaNome={setEditingFamiliaNome}
+        editFamiliaValue={editFamiliaValue}
+        setEditFamiliaValue={setEditFamiliaValue}
+        novoParenteNomePorFamilia={novoParenteNomePorFamilia}
+        setNovoParenteNomePorFamilia={setNovoParenteNomePorFamilia}
+        editingParenteId={editingParenteId}
+        setEditingParenteId={setEditingParenteId}
+        editParenteNome={editParenteNome}
+        setEditParenteNome={setEditParenteNome}
+        selectedParenteIdForPainelGrupos={selectedParenteIdForPainelGrupos}
+        setSelectedParenteIdForPainelGrupos={setSelectedParenteIdForPainelGrupos}
+        selectedParenteIdForNovoGrupo={selectedParenteIdForNovoGrupo}
+        setSelectedParenteIdForNovoGrupo={setSelectedParenteIdForNovoGrupo}
+        novoGrupoPorFamilia={novoGrupoPorFamilia}
+        setNovoGrupoPorFamilia={setNovoGrupoPorFamilia}
+        novoNumeroGrupoPorFamilia={novoNumeroGrupoPorFamilia}
+        setNovoNumeroGrupoPorFamilia={setNovoNumeroGrupoPorFamilia}
+        editingGrupoFamilia={editingGrupoFamilia}
+        setEditingGrupoFamilia={setEditingGrupoFamilia}
+        editingGrupoNome={editingGrupoNome}
+        setEditingGrupoNome={setEditingGrupoNome}
+        editGrupoValue={editGrupoValue}
+        setEditGrupoValue={setEditGrupoValue}
+        editGrupoNumeroValue={editGrupoNumeroValue}
+        setEditGrupoNumeroValue={setEditGrupoNumeroValue}
+        selectedFamiliaCriacaoChecklist={selectedFamiliaCriacaoChecklist}
+        setSelectedFamiliaCriacaoChecklist={setSelectedFamiliaCriacaoChecklist}
+        selectedParenteIdCriacaoChecklist={selectedParenteIdCriacaoChecklist}
+        setSelectedParenteIdCriacaoChecklist={setSelectedParenteIdCriacaoChecklist}
+        criacaoChecklistGrupoIdAddingItem={criacaoChecklistGrupoIdAddingItem}
+        setCriacaoChecklistGrupoIdAddingItem={setCriacaoChecklistGrupoIdAddingItem}
+        criacaoChecklistEditingItemId={criacaoChecklistEditingItemId}
+        setCriacaoChecklistEditingItemId={setCriacaoChecklistEditingItemId}
+        criacaoChecklistItemForm={criacaoChecklistItemForm}
+        setCriacaoChecklistItemForm={setCriacaoChecklistItemForm}
+      />
+    )
+  }
+
   function ManuaisInformacoesTabContent() {
     return (
       <ManuaisInformacoesContent
@@ -27840,8 +27902,9 @@ export default function Dashboard() {
           />
         )
       case 'familias-grupos':
+        return FamiliasGruposChecklistTabContent()
       case 'familias-grupos-equipamentos': {
-        const isChecklist = tab.type === 'familias-grupos'
+        const isChecklist = false
         const familiasList = isChecklist
           ? Array.from(new Set([...familiasChecklist, ...gruposChecklist.map(g => g.familia).filter(f => f && f.trim())])).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
           : [...familiasEquipamento].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
