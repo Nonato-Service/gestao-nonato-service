@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-label="Armazém e industrial">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-label="Armazï¿½m e industrial">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#0a0e14"/>
@@ -10,32 +10,32 @@
   <rect x="0" y="0" width="228" height="720" fill="#0c1018"/>
   <text x="32" y="52" fill="#00c853" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="700">NONATO SERVICE</text>
   <rect x="16" y="184" width="196" height="36" rx="8" fill="rgba(244,114,182,0.16)" stroke="rgba(244,114,182,0.35)"/>
-  <text x="32" y="207" fill="#e2e8f0" font-family="Segoe UI,Arial,sans-serif" font-size="13"><í Armazém</text>
+  <text x="32" y="207" fill="#e2e8f0" font-family="Segoe UI,Arial,sans-serif" font-size="13"><ï¿½ Armazï¿½m</text>
   <rect x="248" y="20" width="1012" height="56" rx="12" fill="#111827"/>
-  <text x="272" y="54" fill="#f8fafc" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="700">Separação e stock</text>
+  <text x="272" y="54" fill="#f8fafc" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="700">Separaï¿½ï¿½o e stock</text>
   <rect x="248" y="92" width="480" height="596" rx="16" fill="#0f141c" stroke="#243044" filter="url(#shadow)"/>
-  <text x="272" y="128" fill="#f472b6" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="700">ORDEM DE PREPARAÇÃO #SP-118</text>
+  <text x="272" y="128" fill="#f472b6" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="700">ORDEM DE PREPARAï¿½ï¿½O #SP-118</text>
   <rect x="272" y="148" width="432" height="48" rx="8" fill="#111827" stroke="#334155"/>
-  <text x="288" y="178" fill="#e2e8f0" font-family="Segoe UI,Arial,sans-serif" font-size="13">OS #2847 · Metalúrgica Silva</text>
+  <text x="288" y="178" fill="#e2e8f0" font-family="Segoe UI,Arial,sans-serif" font-size="13">OS #2847 ï¿½ Metalï¿½rgica Silva</text>
   <rect x="272" y="212" width="432" height="44" rx="8" fill="rgba(0,200,83,0.12)" stroke="rgba(0,255,136,0.25)"/>
-  <text x="288" y="240" fill="#bbf7d0" font-family="Segoe UI,Arial,sans-serif" font-size="12"> NS-004821 · Rolamento · Qtd 2</text>
+  <text x="288" y="240" fill="#bbf7d0" font-family="Segoe UI,Arial,sans-serif" font-size="12"> NS-004821 ï¿½ Rolamento ï¿½ Qtd 2</text>
   <rect x="272" y="268" width="432" height="44" rx="8" fill="#111827" stroke="#1e293b"/>
-  <text x="288" y="296" fill="#e2e8f0" font-family="Segoe UI,Arial,sans-serif" font-size="12">Ë NS-004822 · Filtro · Qtd 1</text>
+  <text x="288" y="296" fill="#e2e8f0" font-family="Segoe UI,Arial,sans-serif" font-size="12">ï¿½ NS-004822 ï¿½ Filtro ï¿½ Qtd 1</text>
   <rect x="272" y="332" width="160" height="40" rx="10" fill="#00c853"/>
-  <text x="304" y="358" fill="#041008" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="700">Confirmar saída</text>
+  <text x="304" y="358" fill="#041008" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="700">Confirmar saï¿½da</text>
   <rect x="752" y="92" width="508" height="596" rx="16" fill="#0f141c" stroke="#243044" filter="url(#shadow)"/>
   <text x="776" y="128" fill="#2dd4bf" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="700">STOCK EM TEMPO REAL</text>
   <rect x="776" y="148" width="460" height="36" rx="8" fill="#111827"/>
-  <text x="792" y="172" fill="#94a3b8" font-family="Segoe UI,Arial,sans-serif" font-size="11" font-weight="700">CÓDIGO · DESCRIÇÃO · QTD · LOCAL</text>
+  <text x="792" y="172" fill="#94a3b8" font-family="Segoe UI,Arial,sans-serif" font-size="11" font-weight="700">Cï¿½DIGO ï¿½ DESCRIï¿½ï¿½O ï¿½ QTD ï¿½ LOCAL</text>
   <rect x="776" y="196" width="460" height="40" rx="6" fill="rgba(0,200,83,0.08)"/>
-  <text x="792" y="222" fill="#e2e8f0" font-family="Segoe UI,Arial,sans-serif" font-size="12">NS-004821 · Rolamento · 14 · A3</text>
+  <text x="792" y="222" fill="#e2e8f0" font-family="Segoe UI,Arial,sans-serif" font-size="12">NS-004821 ï¿½ Rolamento ï¿½ 14 ï¿½ A3</text>
   <rect x="776" y="244" width="460" height="40" rx="6" fill="#111827"/>
-  <text x="792" y="270" fill="#e2e8f0" font-family="Segoe UI,Arial,sans-serif" font-size="12">NS-004822 · Filtro · 3 · B1</text>
+  <text x="792" y="270" fill="#e2e8f0" font-family="Segoe UI,Arial,sans-serif" font-size="12">NS-004822 ï¿½ Filtro ï¿½ 3 ï¿½ B1</text>
   <rect x="776" y="292" width="460" height="40" rx="6" fill="#111827"/>
-  <text x="792" y="318" fill="#e2e8f0" font-family="Segoe UI,Arial,sans-serif" font-size="12">NS-004890 · Kit vedação · 28 · C2</text>
+  <text x="792" y="318" fill="#e2e8f0" font-family="Segoe UI,Arial,sans-serif" font-size="12">NS-004890 ï¿½ Kit vedaï¿½ï¿½o ï¿½ 28 ï¿½ C2</text>
   <rect x="776" y="360" width="220" height="100" rx="10" fill="#111827" stroke="#334155"/>
   <text x="792" y="388" fill="#fbbf24" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="700">847</text>
-  <text x="792" y="412" fill="#94a3b8" font-family="Segoe UI,Arial,sans-serif" font-size="11">Referências activas</text>
+  <text x="792" y="412" fill="#94a3b8" font-family="Segoe UI,Arial,sans-serif" font-size="11">Referï¿½ncias activas</text>
   <rect x="1016" y="360" width="220" height="100" rx="10" fill="#111827" stroke="#334155"/>
   <text x="1032" y="388" fill="#00c853" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="700">12</text>
   <text x="1032" y="412" fill="#94a3b8" font-family="Segoe UI,Arial,sans-serif" font-size="11">Ordens pendentes</text>

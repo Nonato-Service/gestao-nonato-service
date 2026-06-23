@@ -32163,9 +32163,10 @@ export default function Dashboard() {
                         <span style={{ fontSize: '16px' }}>📅</span>
                         {safeT?.data || 'Data'}
                       </label>
-                      <div style={{ position: 'relative' }}>
+                      <div className="ns-datetime-field">
                         <input
                           type="date"
+                          className="ns-datetime-input"
                           value={novoDiaTrabalho.data || new Date().toISOString().split('T')[0]}
                           onChange={(e) => {
                             const dataSelecionada = e.target.value
@@ -32183,24 +32184,7 @@ export default function Dashboard() {
                               setNovoDiaTrabalho((prev) => ({ ...prev, data: key }))
                             }
                           }}
-                          style={{ 
-                            width: '100%', 
-                            padding: '12px 40px 12px 12px', 
-                            backgroundColor: '#1e1e1e', 
-                            color: '#fff', 
-                            border: '1px solid rgba(255, 255, 255, 0.1)', 
-                            borderRadius: '6px', 
-                            fontSize: '14px'
-                          }}
                         />
-                        <span style={{ 
-                          position: 'absolute', 
-                          right: '12px', 
-                          top: '50%', 
-                          transform: 'translateY(-50%)',
-                          fontSize: '16px',
-                          pointerEvents: 'none'
-                        }}>📅</span>
                       </div>
                     </div>
 
@@ -32233,25 +32217,8 @@ export default function Dashboard() {
                             value={novoDiaTrabalho.idaHora}
                             onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, idaHora: e.target.value }))}
                             placeholder="--:--"
-                            style={{ 
-                              width: '100%', 
-                              padding: '12px 40px 12px 12px', 
-                              backgroundColor: '#1e1e1e', 
-                              color: '#fff', 
-                              border: '1px solid rgba(255, 255, 255, 0.1)', 
-                              borderRadius: '6px', 
-                              fontSize: '14px'
-                            }}
+                            className="ns-datetime-input"
                           />
-                          <span style={{ 
-                            position: 'absolute', 
-                            right: '12px', 
-                            top: '50%', 
-                            transform: 'translateY(-50%)',
-                            fontSize: '16px',
-                            pointerEvents: 'none',
-                            marginTop: '12px'
-                          }}>🕐</span>
                         </div>
                         <div style={{ position: 'relative' }}>
                           <label style={{ 
@@ -32267,25 +32234,8 @@ export default function Dashboard() {
                             value={novoDiaTrabalho.idaChegada}
                             onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, idaChegada: e.target.value }))}
                             placeholder="--:--"
-                            style={{ 
-                              width: '100%', 
-                              padding: '12px 40px 12px 12px', 
-                              backgroundColor: '#1e1e1e', 
-                              color: '#fff', 
-                              border: '1px solid rgba(255, 255, 255, 0.1)', 
-                              borderRadius: '6px', 
-                              fontSize: '14px'
-                            }}
+                            className="ns-datetime-input"
                           />
-                          <span style={{ 
-                            position: 'absolute', 
-                            right: '12px', 
-                            top: '50%', 
-                            transform: 'translateY(-50%)',
-                            fontSize: '16px',
-                            pointerEvents: 'none',
-                            marginTop: '12px'
-                          }}>🕐</span>
                         </div>
                       </div>
                     </div>
@@ -32319,25 +32269,8 @@ export default function Dashboard() {
                             value={novoDiaTrabalho.horasInicio}
                             onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, horasInicio: e.target.value }))}
                             placeholder="--:--"
-                            style={{ 
-                              width: '100%', 
-                              padding: '12px 40px 12px 12px', 
-                              backgroundColor: '#1e1e1e', 
-                              color: '#fff', 
-                              border: '1px solid rgba(255, 255, 255, 0.1)', 
-                              borderRadius: '6px', 
-                              fontSize: '14px'
-                            }}
+                            className="ns-datetime-input"
                           />
-                          <span style={{ 
-                            position: 'absolute', 
-                            right: '12px', 
-                            top: '50%', 
-                            transform: 'translateY(-50%)',
-                            fontSize: '16px',
-                            pointerEvents: 'none',
-                            marginTop: '12px'
-                          }}>🕐</span>
                         </div>
                         <div style={{ position: 'relative' }}>
                           <label style={{ 
@@ -32353,25 +32286,8 @@ export default function Dashboard() {
                             value={novoDiaTrabalho.horasFim}
                             onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, horasFim: e.target.value }))}
                             placeholder="--:--"
-                            style={{ 
-                              width: '100%', 
-                              padding: '12px 40px 12px 12px', 
-                              backgroundColor: '#1e1e1e', 
-                              color: '#fff', 
-                              border: '1px solid rgba(255, 255, 255, 0.1)', 
-                              borderRadius: '6px', 
-                              fontSize: '14px'
-                            }}
+                            className="ns-datetime-input"
                           />
-                          <span style={{ 
-                            position: 'absolute', 
-                            right: '12px', 
-                            top: '50%', 
-                            transform: 'translateY(-50%)',
-                            fontSize: '16px',
-                            pointerEvents: 'none',
-                            marginTop: '12px'
-                          }}>🕐</span>
                         </div>
                       </div>
                     </div>
@@ -32405,25 +32321,8 @@ export default function Dashboard() {
                             value={novoDiaTrabalho.retornoSaida}
                             onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, retornoSaida: e.target.value }))}
                             placeholder="--:--"
-                            style={{ 
-                              width: '100%', 
-                              padding: '12px 40px 12px 12px', 
-                              backgroundColor: '#1e1e1e', 
-                              color: '#fff', 
-                              border: '1px solid rgba(255, 255, 255, 0.1)', 
-                              borderRadius: '6px', 
-                              fontSize: '14px'
-                            }}
+                            className="ns-datetime-input"
                           />
-                          <span style={{ 
-                            position: 'absolute', 
-                            right: '12px', 
-                            top: '50%', 
-                            transform: 'translateY(-50%)',
-                            fontSize: '16px',
-                            pointerEvents: 'none',
-                            marginTop: '12px'
-                          }}>🕐</span>
                         </div>
                         <div style={{ position: 'relative' }}>
                           <label style={{ 
@@ -32439,25 +32338,8 @@ export default function Dashboard() {
                             value={novoDiaTrabalho.retornoChegada}
                             onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, retornoChegada: e.target.value }))}
                             placeholder="--:--"
-                            style={{ 
-                              width: '100%', 
-                              padding: '12px 40px 12px 12px', 
-                              backgroundColor: '#1e1e1e', 
-                              color: '#fff', 
-                              border: '1px solid rgba(255, 255, 255, 0.1)', 
-                              borderRadius: '6px', 
-                              fontSize: '14px'
-                            }}
+                            className="ns-datetime-input"
                           />
-                          <span style={{ 
-                            position: 'absolute', 
-                            right: '12px', 
-                            top: '50%', 
-                            transform: 'translateY(-50%)',
-                            fontSize: '16px',
-                            pointerEvents: 'none',
-                            marginTop: '12px'
-                          }}>🕐</span>
                         </div>
                       </div>
                     </div>
@@ -32634,24 +32516,8 @@ export default function Dashboard() {
                               value={novoDiaTrabalho.tempoPausa || ''}
                               onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, tempoPausa: e.target.value }))}
                               placeholder="00:30"
-                              style={{ 
-                                width: '100%', 
-                                padding: '12px 40px 12px 12px', 
-                                backgroundColor: '#141414', 
-                                color: '#fff', 
-                                border: '1px solid rgba(255, 255, 255, 0.1)', 
-                                borderRadius: '6px', 
-                                fontSize: '14px'
-                              }}
+                              className="ns-datetime-input ns-datetime-input--muted"
                             />
-                            <span style={{ 
-                              position: 'absolute', 
-                              right: '12px', 
-                              top: '50%', 
-                              transform: 'translateY(-50%)',
-                              fontSize: '16px',
-                              pointerEvents: 'none'
-                            }}>🕐</span>
                           </div>
                           <p style={{ 
                             marginTop: '6px', 

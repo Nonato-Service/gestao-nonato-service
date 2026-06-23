@@ -77,6 +77,64 @@ select option:hover {
   color: #ffffff;
 }
 
+/*
+ * Campos date/time — picker nativo legível em fundo escuro (tablet, Android, iOS).
+ * Sem isto o ícone do browser fica preto/invisível e parece haver «dois botões» (nativo + emoji).
+ */
+input[type='date'],
+input[type='time'],
+input[type='datetime-local'],
+input[type='month'],
+input[type='week'] {
+  color-scheme: dark;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.35) contrast(1.08);
+  opacity: 0.95;
+  cursor: pointer;
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.ns-datetime-field {
+  position: relative;
+  width: 100%;
+}
+
+.ns-datetime-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 2.75rem 12px 12px;
+  background-color: #1e1e1e;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-size: 14px;
+  color-scheme: dark;
+  min-height: 44px;
+}
+
+.ns-datetime-input--muted {
+  background-color: #141414;
+}
+
+@media (max-width: 1024px) {
+  .ns-datetime-input {
+    min-height: 48px;
+    font-size: max(16px, 0.95rem);
+  }
+
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='time']::-webkit-calendar-picker-indicator,
+  input[type='datetime-local']::-webkit-calendar-picker-indicator {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+}
+
 html {
   width: 100%;
   overflow-x: hidden;

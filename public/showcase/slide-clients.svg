@@ -17,21 +17,21 @@
   <rect x="272" y="116" width="320" height="40" rx="10" fill="#111827" stroke="#334155"/>
   <text x="288" y="142" fill="#64748b" font-family="Segoe UI,Arial,sans-serif" font-size="13">Pesquisar cliente ou equipamento&</text>
   <rect x="272" y="176" width="964" height="44" rx="8" fill="#111827"/>
-  <text x="288" y="204" fill="#94a3b8" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="700">CLIENTE · EQUIPAMENTOS · ÚLTIMO SERVIÇO</text>
+  <text x="288" y="204" fill="#94a3b8" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="700">CLIENTE ï¿½ EQUIPAMENTOS ï¿½ ï¿½LTIMO SERVIï¿½O</text>
   <rect x="272" y="232" width="964" height="64" rx="10" fill="rgba(0,200,83,0.08)" stroke="rgba(0,255,136,0.2)"/>
-  <text x="288" y="260" fill="#f8fafc" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="700">Metalúrgica Silva Lda.</text>
+  <text x="288" y="260" fill="#f8fafc" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="700">Metalï¿½rgica Silva Lda.</text>
   <text x="520" y="260" fill="#94a3b8" font-family="Segoe UI,Arial,sans-serif" font-size="13">12 equipamentos</text>
-  <text x="760" y="260" fill="#7dd3fc" font-family="Segoe UI,Arial,sans-serif" font-size="13">OS #2841 · 18/06/2026</text>
+  <text x="760" y="260" fill="#7dd3fc" font-family="Segoe UI,Arial,sans-serif" font-size="13">OS #2841 ï¿½ 18/06/2026</text>
   <rect x="272" y="308" width="964" height="64" rx="10" fill="#111827" stroke="#1e293b"/>
-  <text x="288" y="336" fill="#f8fafc" font-family="Segoe UI,Arial,sans-serif" font-size="14">Indústria Alimentar Norte</text>
+  <text x="288" y="336" fill="#f8fafc" font-family="Segoe UI,Arial,sans-serif" font-size="14">Indï¿½stria Alimentar Norte</text>
   <text x="520" y="336" fill="#94a3b8" font-family="Segoe UI,Arial,sans-serif" font-size="13">8 equipamentos</text>
   <rect x="272" y="384" width="964" height="64" rx="10" fill="#111827" stroke="#1e293b"/>
-  <text x="288" y="412" fill="#f8fafc" font-family="Segoe UI,Arial,sans-serif" font-size="14">Frigoríficos Costa</text>
+  <text x="288" y="412" fill="#f8fafc" font-family="Segoe UI,Arial,sans-serif" font-size="14">Frigorï¿½ficos Costa</text>
   <text x="520" y="412" fill="#94a3b8" font-family="Segoe UI,Arial,sans-serif" font-size="13">24 equipamentos</text>
   <rect x="272" y="472" width="460" height="180" rx="12" fill="#111827" stroke="#334155"/>
   <text x="288" y="500" fill="#00c853" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="700">EQUIPAMENTO SELECIONADO</text>
-  <text x="288" y="528" fill="#e2e8f0" font-family="Segoe UI,Arial,sans-serif" font-size="14">ID: EQ-2024-884 · Compressor Atlas</text>
-  <text x="288" y="556" fill="#94a3b8" font-family="Segoe UI,Arial,sans-serif" font-size="12">Histórico · Manutenções · Anexos técnicos</text>
+  <text x="288" y="528" fill="#e2e8f0" font-family="Segoe UI,Arial,sans-serif" font-size="14">ID: EQ-2024-884 ï¿½ Compressor Atlas</text>
+  <text x="288" y="556" fill="#94a3b8" font-family="Segoe UI,Arial,sans-serif" font-size="12">Histï¿½rico ï¿½ Manutenï¿½ï¿½es ï¿½ Anexos tï¿½cnicos</text>
   <rect x="288" y="580" width="140" height="36" rx="8" fill="#00c853"/>
-  <text x="318" y="603" fill="#041008" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="700">Ver histórico</text>
+  <text x="318" y="603" fill="#041008" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="700">Ver histï¿½rico</text>
 </svg>
