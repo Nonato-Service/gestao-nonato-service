@@ -10,6 +10,10 @@ import {
   saveKv,
   getKv,
 } from './manuaisIndexedDb'
+import {
+  NONATO_CRITICAL_CADASTRO_KEYS,
+  serverKeyHasMeaningfulData,
+} from '../lib/criticalCadastroKeys'
 
 const API_BASE = '/api/data'
 const SYNC_QUEUE_KEY = 'nonato-sync-queue'
@@ -21,6 +25,43 @@ let blockImplicitServerPushDuringBootstrap = false
 
 export function setBlockImplicitServerPushDuringBootstrap(block: boolean): void {
   blockImplicitServerPushDuringBootstrap = block
+}
+
+/** Arranque da página concluído — evita loadData prematuro a apagar localStorage com [] do servidor. */
+let dataBootstrapComplete = false
+
+export function markDataBootstrapComplete(): void {
+  dataBootstrapComplete = true
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent('nonato-bootstrap-complete'))
+    } catch {
+      /* ignorar */
+    }
+  }
+}
+
+export function isDataBootstrapComplete(): boolean {
+  return dataBootstrapComplete
+}
+
+/** Espera o bootstrap principal (page.tsx) antes de loadData em efeitos paralelos. */
+export function waitForDataBootstrapComplete(timeoutMs = 120_000): Promise<void> {
+  if (dataBootstrapComplete) return Promise.resolve()
+  if (typeof window === 'undefined') return Promise.resolve()
+  return new Promise((resolve) => {
+    let done = false
+    const finish = () => {
+      if (done) return
+      done = true
+      window.removeEventListener('nonato-bootstrap-complete', onEv)
+      window.clearTimeout(tid)
+      resolve()
+    }
+    const onEv = () => finish()
+    const tid = window.setTimeout(finish, timeoutMs)
+    window.addEventListener('nonato-bootstrap-complete', onEv)
+  })
 }
 
 function shouldDeferImplicitServerPush(): boolean {
@@ -279,6 +320,54 @@ export function setupAutoSyncOnReconnect(): () => void {
   }
 }
 
+/** Envia fila pendente com fetch keepalive ao fechar/recarregar o separador. */
+function flushPendingSyncWithKeepalive(): void {
+  if (typeof window === 'undefined' || isNonatoDemoBuild() || !isOnline()) return
+  const queue = getSyncQueue()
+  if (queue.length === 0) return
+  const latestByKey = new Map<string, (typeof queue)[number]>()
+  for (const item of queue) {
+    const prev = latestByKey.get(item.key)
+    if (!prev || item.timestamp >= prev.timestamp) latestByKey.set(item.key, item)
+  }
+  for (const item of latestByKey.values()) {
+    try {
+      const payloadStr =
+        typeof item.value === 'string' ? item.value : JSON.stringify(item.value)
+      const body = JSON.stringify({ key: item.key, value: item.value })
+      const isLarge =
+        payloadStr.length > 100000 &&
+        (payloadStr.startsWith('data:image/') ||
+          payloadStr.startsWith('data:video/') ||
+          payloadStr.startsWith('data:application/pdf'))
+      const endpoint = isLarge ? `${API_BASE}/save-text` : `${API_BASE}/save`
+      void fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: isLarge ? JSON.stringify({ key: item.key, value: payloadStr }) : body,
+        keepalive: true,
+      }).catch(() => {})
+    } catch {
+      /* ignorar */
+    }
+  }
+}
+
+/** Regista flush da fila ao esconder a página (F5, fechar separador, deploy+reload). */
+export function setupFlushSyncOnPageHide(): () => void {
+  if (typeof window === 'undefined') return () => {}
+  const run = () => flushPendingSyncWithKeepalive()
+  window.addEventListener('pagehide', run)
+  const onVis = () => {
+    if (document.visibilityState === 'hidden') run()
+  }
+  document.addEventListener('visibilitychange', onVis)
+  return () => {
+    window.removeEventListener('pagehide', run)
+    document.removeEventListener('visibilitychange', onVis)
+  }
+}
+
 // Quantidade de itens pendentes de sincronização
 export function getPendingSyncCount(): number {
   return getSyncQueue().length
@@ -302,6 +391,8 @@ export const NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE = new Set([
   'nonato-relatorios-servico',
   'nonato-pecas-biblioteca',
   'nonato-biblioteca-pecas',
+  'nonato-diario-pedidos-dia',
+  'nonato-conhecimento-tecnicos',
 ])
 
 function isEmptyDataArray(value: unknown): boolean {
@@ -833,6 +924,74 @@ export async function saveData(
   return serverOk
 }
 
+async function readLocalValueForLoad(
+  key: string,
+  parseJson: boolean
+): Promise<{ parsed: unknown; raw: string | null }> {
+  if (typeof window === 'undefined') return { parsed: null, raw: null }
+  const raw = localStorage.getItem(key)
+  if (raw !== null && raw !== '') {
+    if (!parseJson) return { parsed: raw, raw }
+    try {
+      return { parsed: JSON.parse(raw), raw }
+    } catch {
+      return { parsed: null, raw }
+    }
+  }
+  try {
+    const fromKv = await getKv(key)
+    if (fromKv !== null && fromKv !== undefined) {
+      return { parsed: fromKv, raw: null }
+    }
+  } catch {
+    /* ignorar */
+  }
+  return { parsed: null, raw: null }
+}
+
+function shouldPreferLocalOverServerOnLoad(key: string, serverValue: unknown, localParsed: unknown): boolean {
+  if (!serverKeyHasMeaningfulData(serverValue) && serverKeyHasMeaningfulData(localParsed)) {
+    return true
+  }
+  if (
+    (NONATO_CRITICAL_CADASTRO_KEYS as readonly string[]).includes(key) &&
+    !serverKeyHasMeaningfulData(serverValue) &&
+    serverKeyHasMeaningfulData(localParsed)
+  ) {
+    return true
+  }
+  if (Array.isArray(serverValue) && serverValue.length === 0 && Array.isArray(localParsed) && localParsed.length > 0) {
+    return true
+  }
+  if (
+    typeof serverValue === 'object' &&
+    serverValue !== null &&
+    !Array.isArray(serverValue) &&
+    Object.keys(serverValue).length === 0 &&
+    typeof localParsed === 'object' &&
+    localParsed !== null &&
+    !Array.isArray(localParsed) &&
+    Object.keys(localParsed as object).length > 0
+  ) {
+    return true
+  }
+  return false
+}
+
+function writeLocalStorageValue(key: string, value: unknown): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
+  } catch (error) {
+    console.error(`Erro ao atualizar localStorage (${key}):`, error)
+  }
+}
+
+function scheduleServerMigrationPush(key: string, value: unknown): void {
+  if (blockImplicitServerPushDuringBootstrap || serverOffline) return
+  saveToServer(key, value).catch(() => {})
+}
+
 // Função híbrida: carrega do servidor primeiro, depois do localStorage como fallback
 export async function loadData(key: string, parseJson = true): Promise<any | null> {
   // Tentar carregar do servidor primeiro (apenas se não estiver offline)
@@ -897,14 +1056,27 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
         }
       }
       if (serverData !== null) {
-        // Se encontrou no servidor, também atualizar o localStorage
-        if (typeof window !== 'undefined') {
-          try {
-            localStorage.setItem(key, typeof serverData === 'string' ? serverData : JSON.stringify(serverData))
-          } catch (error) {
-            console.error(`Erro ao atualizar localStorage (${key}):`, error)
+        const localSnapshot = await readLocalValueForLoad(key, parseJson)
+
+        // Barra lateral: preservar organização do utilizador (espelha getData no bootstrap)
+        if (
+          key === 'nonato-sidebar-buttons' &&
+          Array.isArray(localSnapshot.parsed) &&
+          localSnapshot.parsed.length > 0
+        ) {
+          scheduleServerMigrationPush(key, localSnapshot.parsed)
+          return localSnapshot.parsed
+        }
+
+        // Servidor vazio/stale após deploy: não apagar o que já está neste aparelho
+        if (shouldPreferLocalOverServerOnLoad(key, serverData, localSnapshot.parsed)) {
+          if (localSnapshot.parsed !== null && localSnapshot.parsed !== undefined) {
+            scheduleServerMigrationPush(key, localSnapshot.parsed)
+            return localSnapshot.parsed
           }
         }
+
+        writeLocalStorageValue(key, serverData)
         return serverData
       }
     }

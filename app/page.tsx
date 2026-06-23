@@ -21,6 +21,8 @@ import {
   loadFromServer,
   pushAllLocalStorageToServer,
   setBlockImplicitServerPushDuringBootstrap,
+  markDataBootstrapComplete,
+  waitForDataBootstrapComplete,
 } from './utils/dataStorage'
 import {
   applyDiarioLembretePatch,
@@ -4919,6 +4921,7 @@ export default function Dashboard() {
     let cancelled = false
     ;(async () => {
       try {
+        await waitForDataBootstrapComplete()
         const raw = await loadData(DIARIO_PEDIDOS_DIA_STORAGE_KEY)
         if (cancelled) return
         if (Array.isArray(raw)) {
@@ -4958,6 +4961,7 @@ export default function Dashboard() {
     let cancelled = false
     ;(async () => {
       try {
+        await waitForDataBootstrapComplete()
         const raw = await loadData(DIARIO_PEDIDOS_MODAL_TOPO_RETRAIDO_KEY)
         if (cancelled) return
         if (raw === true || raw === 1 || raw === '1') setDiarioPedidosModalTopoRetraido(true)
@@ -7968,6 +7972,8 @@ export default function Dashboard() {
     let cancelled = false
     ;(async () => {
     try {
+    await waitForDataBootstrapComplete()
+    if (cancelled) return
     let savedButtons = await loadData('nonato-sidebar-buttons')
     if (cancelled) return
     if (!savedButtons || !Array.isArray(savedButtons)) return
@@ -12167,6 +12173,7 @@ export default function Dashboard() {
           }
         }
         dataBootstrapCompleteRef.current = true
+        markDataBootstrapComplete()
         if (!bootstrapLoadErrored) {
           setSyncBootstrapPercent(100)
           if (Object.keys(serverData).length > 0) {

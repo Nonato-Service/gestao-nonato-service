@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { setupAutoSyncOnReconnect } from './utils/dataStorage'
+import { setupAutoSyncOnReconnect, setupFlushSyncOnPageHide } from './utils/dataStorage'
 
 // Bumpar este número em cada deploy para forçar atualização no telemóvel/tablet
 const SW_VERSION = 18
@@ -77,6 +77,7 @@ export function RegisterSW() {
     }, 30_000)
 
     const teardownAutoSync = setupAutoSyncOnReconnect()
+    const teardownFlush = setupFlushSyncOnPageHide()
 
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange)
@@ -84,6 +85,7 @@ export function RegisterSW() {
       window.removeEventListener('focus', onPageShow)
       window.clearInterval(interval)
       teardownAutoSync()
+      teardownFlush()
     }
   }, [])
 
