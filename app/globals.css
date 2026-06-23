@@ -15940,6 +15940,16 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   background: rgba(56, 189, 248, 0.22);
   border-color: rgba(125, 211, 252, 0.75);
 }
+.manuais-pro__zip-pdf-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: min(48vh, 420px);
+  min-width: 0;
+}
+.manuais-pro__zip-pdf-loading {
+  margin: 0 0 8px;
+}
 .manuais-pro__zip-pdf-scroll {
   flex: 1;
   min-height: min(48vh, 420px);

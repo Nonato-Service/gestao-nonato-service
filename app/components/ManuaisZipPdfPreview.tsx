@@ -8,6 +8,8 @@ type Props = {
   entryPaths: string[]
   onNavigate: (path: string) => void
   tr: (key: string, fallback: string) => string
+  /** URL blob com application/pdf — fallback se pdf.js falhar */
+  fallbackBlobUrl?: string | null
 }
 
 function normalizePathPart(part: string): string {
@@ -64,6 +66,7 @@ async function handleAnnotationLink(
   onNavigate: (path: string) => void,
   pdf: { getDestination: (id: unknown) => Promise<unknown>; getPageIndex: (ref: unknown) => Promise<number> }
 ): Promise<boolean> {
+  const title = ann.titleObj?.str?.trim() || ''
   const url = (ann.url || ann.unsafeUrl || '').trim()
   if (url) {
     if (/^https?:\/\//i.test(url)) {
@@ -92,7 +95,6 @@ async function handleAnnotationLink(
     }
   }
 
-  const title = ann.titleObj?.str?.trim()
   if (title && /\.(pdf|htm|html)$/i.test(title)) {
     const resolved = resolveZipEntryPath(currentPath, title, entryPaths)
     if (resolved) {
@@ -118,28 +120,52 @@ async function handleAnnotationLink(
   return false
 }
 
+let pdfjsWorkerConfigured = false
+
+async function loadPdfJs() {
+  const pdfjs = await import('pdfjs-dist')
+  if (!pdfjsWorkerConfigured) {
+    pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
+    pdfjsWorkerConfigured = true
+  }
+  return pdfjs
+}
+
 export function ManuaisZipPdfPreview(props: Props) {
-  const { bytes, path, entryPaths, onNavigate, tr } = props
+  const { bytes, path, entryPaths, onNavigate, tr, fallbackBlobUrl } = props
   const containerRef = useRef<HTMLDivElement>(null)
+  const onNavigateRef = useRef(onNavigate)
+  const entryPathsRef = useRef(entryPaths)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [useFallback, setUseFallback] = useState(false)
+
+  onNavigateRef.current = onNavigate
+  entryPathsRef.current = entryPaths
 
   useEffect(() => {
     let cancelled = false
-    const container = containerRef.current
-    if (!container) return
-
-    container.innerHTML = ''
     setLoading(true)
     setError(null)
+    setUseFallback(false)
+
+    const container = containerRef.current
+    if (container) container.innerHTML = ''
 
     ;(async () => {
       try {
-        const pdfjs = await import('pdfjs-dist')
-        pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
-
+        const pdfjs = await loadPdfJs()
         const pdf = await pdfjs.getDocument({ data: bytes.slice() }).promise
-        if (cancelled) return
+        if (cancelled) {
+          await pdf.destroy()
+          return
+        }
+
+        const host = containerRef.current
+        if (!host) {
+          await pdf.destroy()
+          return
+        }
 
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum)
@@ -173,14 +199,10 @@ export function ManuaisZipPdfPreview(props: Props) {
           for (const ann of annotations) {
             if (ann.subtype !== 'Link' || !ann.rect) continue
             const rect = viewport.convertToViewportRectangle(ann.rect)
-            const x1 = rect[0]
-            const y1 = rect[1]
-            const x2 = rect[2]
-            const y2 = rect[3]
-            const left = Math.min(x1, x2)
-            const top = Math.min(y1, y2)
-            const width = Math.max(4, Math.abs(x2 - x1))
-            const height = Math.max(4, Math.abs(y2 - y1))
+            const left = Math.min(rect[0], rect[2])
+            const top = Math.min(rect[1], rect[3])
+            const width = Math.max(4, Math.abs(rect[2] - rect[0]))
+            const height = Math.max(4, Math.abs(rect[3] - rect[1]))
 
             const btn = document.createElement('button')
             btn.type = 'button'
@@ -191,23 +213,33 @@ export function ManuaisZipPdfPreview(props: Props) {
             btn.style.height = `${height}px`
             btn.setAttribute(
               'aria-label',
-              ann.titleObj?.str || ann.url || tr('manuaisZipPdfLink', 'Ligação do manual')
+              ann.titleObj?.str || ann.url || 'Ligação do manual'
             )
             btn.onclick = (e) => {
               e.preventDefault()
-              void handleAnnotationLink(ann, path, entryPaths, onNavigate, pdf)
+              void handleAnnotationLink(
+                ann,
+                path,
+                entryPathsRef.current,
+                onNavigateRef.current,
+                pdf
+              )
             }
             linkLayer.appendChild(btn)
           }
 
           pageWrap.appendChild(linkLayer)
-          container.appendChild(pageWrap)
+          host.appendChild(pageWrap)
         }
 
         await pdf.destroy()
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : String(err))
+          if (fallbackBlobUrl) {
+            setUseFallback(true)
+          } else {
+            setError(err instanceof Error ? err.message : String(err))
+          }
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -217,26 +249,43 @@ export function ManuaisZipPdfPreview(props: Props) {
     return () => {
       cancelled = true
     }
-  }, [bytes, path, entryPaths, onNavigate, tr])
-
-  if (loading) {
-    return <p className="manuais-pro__preview-status">{tr('bibliaPreviewCarregando', 'A carregar conteúdo…')}</p>
-  }
-
-  if (error) {
-    return (
-      <p className="manuais-pro__preview-status manuais-pro__preview-status--warn">
-        {tr('manuaisZipPdfErro', 'Não foi possível renderizar o PDF com ligações.')}
-        {error ? ` (${error})` : ''}
-      </p>
-    )
-  }
+  }, [bytes, path, fallbackBlobUrl])
 
   return (
-    <div
-      ref={containerRef}
-      className="manuais-pro__zip-pdf-scroll"
-      aria-label={tr('manuaisZipPdfViewer', 'Visualizador PDF do ZIP')}
-    />
+    <div className="manuais-pro__zip-pdf-wrap">
+      {loading ? (
+        <p className="manuais-pro__preview-status manuais-pro__zip-pdf-loading">
+          {tr('bibliaPreviewCarregando', 'A carregar conteúdo…')}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="manuais-pro__preview-status manuais-pro__preview-status--warn">
+          {tr('manuaisZipPdfErro', 'Não foi possível renderizar o PDF com ligações.')}
+          {error ? ` (${error})` : ''}
+        </p>
+      ) : null}
+      {useFallback && fallbackBlobUrl ? (
+        <>
+          <p className="manuais-pro__preview-status" style={{ marginBottom: 8, fontSize: '0.8rem' }}>
+            {tr(
+              'manuaisZipPdfFallback',
+              'Modo simples (sem ligações Elétrica/Mecânica no PDF). Use os botões Índice / Elétrica / Mecânica acima.'
+            )}
+          </p>
+          <iframe
+            className="manuais-pro__preview-frame"
+            src={`${fallbackBlobUrl}#toolbar=1&navpanes=0`}
+            title={path}
+          />
+        </>
+      ) : (
+        <div
+          ref={containerRef}
+          className="manuais-pro__zip-pdf-scroll"
+          aria-label={tr('manuaisZipPdfViewer', 'Visualizador PDF do ZIP')}
+          style={{ display: loading || error ? 'none' : 'block' }}
+        />
+      )}
+    </div>
   )
 }

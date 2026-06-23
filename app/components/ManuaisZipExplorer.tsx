@@ -95,6 +95,7 @@ export function ManuaisZipExplorer(props: Props) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null)
+  const [previewPdfBlobUrl, setPreviewPdfBlobUrl] = useState<string | null>(null)
   const [previewText, setPreviewText] = useState('')
   const [previewKind, setPreviewKind] = useState<'pdf' | 'image' | 'text' | 'archive' | 'other' | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
@@ -106,6 +107,10 @@ export function ManuaisZipExplorer(props: Props) {
     setSelectedPath(null)
     setPreviewUrl(null)
     setPreviewBytes(null)
+    setPreviewPdfBlobUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
     setPreviewText('')
     setPreviewKind(null)
     setError(null)
@@ -152,13 +157,18 @@ export function ManuaisZipExplorer(props: Props) {
   useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl)
+      if (previewPdfBlobUrl) URL.revokeObjectURL(previewPdfBlobUrl)
     }
-  }, [previewUrl])
+  }, [previewUrl, previewPdfBlobUrl])
 
   useEffect(() => {
     setPreviewText('')
     setPreviewKind(null)
     setPreviewBytes(null)
+    setPreviewPdfBlobUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
     setPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
       return null
@@ -179,6 +189,12 @@ export function ManuaisZipExplorer(props: Props) {
         if (cancelled) return
         const kind = detectKindFromBytes(selectedPath, bytes)
         if (kind === 'pdf') {
+          const pdfBlob = new Blob([bytes], { type: 'application/pdf' })
+          const pdfUrl = URL.createObjectURL(pdfBlob)
+          setPreviewPdfBlobUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev)
+            return pdfUrl
+          })
           setPreviewBytes(bytes.slice())
           setPreviewKind('pdf')
         } else if (kind === 'image') {
@@ -379,6 +395,7 @@ export function ManuaisZipExplorer(props: Props) {
               entryPaths={entryPaths}
               onNavigate={navigateToEntry}
               tr={tr}
+              fallbackBlobUrl={previewPdfBlobUrl}
             />
           ) : previewKind === 'image' && previewUrl ? (
             <div className="manuais-pro__preview-image-wrap">

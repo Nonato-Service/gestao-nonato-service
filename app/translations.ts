@@ -2939,6 +2939,7 @@ export const translations = {
     manuaisZipPdfLink: "Ligação do manual",
     manuaisZipPdfErro: "Não foi possível renderizar o PDF com ligações.",
     manuaisZipPdfViewer: "Visualizador PDF do ZIP",
+    manuaisZipPdfFallback: "Modo simples (sem ligações Elétrica/Mecânica no PDF). Use os botões Índice / Elétrica / Mecânica acima.",
     manuaisZipAProcurar: "Procurar ficheiro no ZIP…",
     manuaisZipListaTitulo: "Ficheiros no ZIP",
     manuaisZipSemEntradas: "Nenhum ficheiro encontrado.",
