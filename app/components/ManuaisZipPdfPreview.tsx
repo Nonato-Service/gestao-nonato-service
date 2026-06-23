@@ -8,12 +8,99 @@ type Props = {
   entryPaths: string[]
   onNavigate: (path: string) => void
   tr: (key: string, fallback: string) => string
-  /** URL blob com application/pdf — fallback se pdf.js falhar */
   fallbackBlobUrl?: string | null
 }
 
+export type ManualSection = 'eletrica' | 'mecanica'
+
 function normalizePathPart(part: string): string {
   return decodeURIComponent(part.trim().replace(/\\/g, '/'))
+}
+
+function normalizeZipRelativePath(currentPath: string, target: string): string {
+  const raw = normalizePathPart(target.split('#')[0].split('?')[0])
+  if (!raw) return ''
+  if (/^[a-zA-Z]:\//.test(raw) || raw.startsWith('/')) return raw.replace(/^\/+/, '')
+
+  const dir = currentPath.includes('/') ? currentPath.replace(/\/[^/]+$/, '') : ''
+  let combined = raw
+  if (dir && !raw.startsWith('../') && !raw.startsWith('./')) {
+    combined = raw.includes('/') ? raw : `${dir}/${raw}`
+  } else if (dir) {
+    combined = `${dir}/${raw}`
+  }
+
+  const parts = combined.split('/').filter((p) => p.length > 0)
+  const stack: string[] = []
+  for (const p of parts) {
+    if (p === '.') continue
+    if (p === '..') {
+      stack.pop()
+      continue
+    }
+    stack.push(p)
+  }
+  return stack.join('/')
+}
+
+function cleanLinkTarget(target: string): string {
+  let t = target.trim()
+  t = t.replace(/^file:\/\/\/[a-z]:\//i, '')
+  t = t.replace(/^file:\/\//i, '')
+  return t.replace(/^\/+/, '')
+}
+
+/** PDF de secção Elétrica / Mecânica dentro do ZIP (HOMAG / Movecho). */
+export function findManualSectionPdf(entryPaths: string[], section: ManualSection): string | null {
+  const pdfs = entryPaths.filter((p) => /\.pdf$/i.test(p))
+  const folderRes =
+    section === 'eletrica'
+      ? /^(elektr|eletric|electric|elektro|el)$/i
+      : /^(mechan|mecan|mechanik|mk)$/i
+  const pathRes =
+    section === 'eletrica'
+      ? /elektr|eletric|electric|elektro|(^|[\\/])el[\.\-_/\\]/i
+      : /mechan|mecan|mechanik|(^|[\\/])mk[\.\-_/\\]/i
+
+  const inSection = pdfs.filter((p) => {
+    const parts = p.split(/[/\\]/)
+    if (parts.some((part) => folderRes.test(part))) return true
+    return pathRes.test(p)
+  })
+
+  if (inSection.length === 0) return null
+
+  const indexInSection = inSection.find((p) => /index\.pdf$/i.test(p))
+  if (indexInSection) return indexInSection
+
+  inSection.sort(
+    (a, b) => a.split('/').length - b.split('/').length || a.localeCompare(b, undefined, { sensitivity: 'base' })
+  )
+  return inSection[0]
+}
+
+function matchEntryByPathSuffix(normalized: string, entryPaths: string[]): string | null {
+  const targetParts = normalized
+    .toLowerCase()
+    .replace(/\\/g, '/')
+    .split('/')
+    .filter(Boolean)
+  if (targetParts.length === 0) return null
+  if (/^[a-z]:$/.test(targetParts[0])) targetParts.shift()
+
+  const matches = entryPaths.filter((p) => {
+    const ep = p.toLowerCase().replace(/\\/g, '/').split('/').filter(Boolean)
+    if (ep.length < targetParts.length) return false
+    const tail = ep.slice(-targetParts.length)
+    return tail.every((seg, i) => seg === targetParts[i])
+  })
+
+  if (matches.length === 1) return matches[0]
+  if (matches.length > 1) {
+    matches.sort((a, b) => a.length - b.length)
+    return matches[0]
+  }
+  return null
 }
 
 /** Resolve ligações relativas do PDF (ex.: Elektrik/Index.PDF) para um ficheiro dentro do ZIP. */
@@ -22,31 +109,43 @@ export function resolveZipEntryPath(
   linkTarget: string,
   entryPaths: string[]
 ): string | null {
-  const raw = normalizePathPart(linkTarget.split('#')[0].split('?')[0])
-  if (!raw) return null
+  const normalized = normalizeZipRelativePath(currentPath, cleanLinkTarget(linkTarget))
+  if (!normalized) return null
 
-  const lowerPaths = entryPaths.map((p) => ({ p, l: p.toLowerCase() }))
-  const rawLower = raw.toLowerCase()
+  const suffixMatch = matchEntryByPathSuffix(normalized, entryPaths)
+  if (suffixMatch) return suffixMatch
 
-  const direct = lowerPaths.find((x) => x.l === rawLower)
+  const lowerPaths = entryPaths.map((p) => ({ p, l: p.toLowerCase().replace(/\\/g, '/') }))
+  const normLower = normalized.toLowerCase()
+
+  const direct = lowerPaths.find((x) => x.l === normLower)
   if (direct) return direct.p
 
-  const base = rawLower.split('/').pop() || rawLower
+  const base = normLower.split('/').pop() || normLower
   const byBase = lowerPaths.filter((x) => x.l.split('/').pop() === base)
   if (byBase.length === 1) return byBase[0].p
 
-  const dir = currentPath.includes('/') ? currentPath.replace(/\/[^/]+$/, '/') : ''
-  const combined = normalizePathPart(`${dir}${raw}`).replace(/\/+/g, '/')
-  const comb = lowerPaths.find((x) => x.l === combined.toLowerCase())
-  if (comb) return comb.p
-
   const ends = lowerPaths.filter(
-    (x) => x.l.endsWith(`/${rawLower}`) || x.l.endsWith(rawLower) || x.l.includes(`/${rawLower}`)
+    (x) => x.l.endsWith(`/${normLower}`) || x.l.endsWith(normLower) || x.l.includes(`/${normLower}`)
   )
   if (ends.length === 1) return ends[0].p
+  if (ends.length > 1) {
+    ends.sort((a, b) => a.l.length - b.l.length)
+    return ends[0].p
+  }
 
-  const keyword = rawLower.replace(/\.(pdf|html?)$/i, '')
-  if (keyword.length >= 4) {
+  if (!/\.[a-z0-9]{2,5}$/i.test(normLower)) {
+    const folderPdfs = lowerPaths.filter(
+      (x) => x.l.includes(`/${normLower}/`) && x.l.endsWith('.pdf')
+    )
+    if (folderPdfs.length > 0) {
+      const idx = folderPdfs.find((x) => /index\.pdf$/.test(x.l))
+      return (idx || folderPdfs[0]).p
+    }
+  }
+
+  const keyword = normLower.replace(/\.(pdf|htm|html?)$/i, '')
+  if (keyword.length >= 3) {
     const kw = lowerPaths.filter((x) => x.l.includes(keyword) && x.l.endsWith('.pdf'))
     if (kw.length === 1) return kw[0].p
   }
@@ -54,70 +153,112 @@ export function resolveZipEntryPath(
   return null
 }
 
+function extractAnnotationTargets(ann: Record<string, unknown>): string[] {
+  const out: string[] = []
+  const push = (v: unknown) => {
+    if (typeof v === 'string' && v.trim()) out.push(v.trim())
+  }
+  push(ann.unsafeUrl)
+  push(ann.url)
+  const titleObj = ann.titleObj as { str?: string } | undefined
+  push(titleObj?.str)
+  const contentsObj = ann.contentsObj as { str?: string } | undefined
+  push(contentsObj?.str)
+  push(ann.attachment)
+  return out
+}
+
+function targetLooksLikeSection(target: string, section: ManualSection): boolean {
+  const blob = cleanLinkTarget(target).toLowerCase()
+  if (section === 'eletrica') {
+    return /elektr|eletric|electric|elektro|(^|[\\/])el[\.\-_/\\]/.test(blob)
+  }
+  return /mechan|mecan|mechanik|(^|[\\/])mk[\.\-_/\\]/.test(blob)
+}
+
 async function handleAnnotationLink(
-  ann: {
-    url?: string | null
-    unsafeUrl?: string | null
-    dest?: unknown
-    titleObj?: { str?: string }
-  },
+  ann: Record<string, unknown>,
   currentPath: string,
   entryPaths: string[],
   onNavigate: (path: string) => void,
-  pdf: { getDestination: (id: unknown) => Promise<unknown>; getPageIndex: (ref: unknown) => Promise<number> }
+  pdf: { getDestination: (id: unknown) => Promise<unknown>; getPageIndex: (ref: unknown) => Promise<number> },
+  sectionHint?: ManualSection | null
 ): Promise<boolean> {
-  const title = ann.titleObj?.str?.trim() || ''
-  const url = (ann.url || ann.unsafeUrl || '').trim()
-  if (url) {
-    if (/^https?:\/\//i.test(url)) {
-      window.open(url, '_blank', 'noopener,noreferrer')
+  if (sectionHint) {
+    const hinted = findManualSectionPdf(entryPaths, sectionHint)
+    if (hinted) {
+      onNavigate(hinted)
       return true
     }
-    const resolved = resolveZipEntryPath(currentPath, url, entryPaths)
+  }
+
+  for (const rawTarget of extractAnnotationTargets(ann)) {
+    const target = cleanLinkTarget(rawTarget)
+    if (/^https?:\/\//i.test(rawTarget)) {
+      window.open(rawTarget, '_blank', 'noopener,noreferrer')
+      return true
+    }
+    if (/^file:/i.test(rawTarget) && !target) continue
+
+    const resolved = resolveZipEntryPath(currentPath, target, entryPaths)
     if (resolved) {
       onNavigate(resolved)
       return true
     }
-    const blob = `${url} ${title}`.toLowerCase()
-    if (/elektr|eletric|electric|elektro/.test(blob)) {
-      const target = entryPaths.find((p) => /elektr|eletric|electric|elektro/i.test(p) && /\.pdf$/i.test(p))
-      if (target) {
-        onNavigate(target)
+    if (targetLooksLikeSection(target, 'eletrica')) {
+      const t = findManualSectionPdf(entryPaths, 'eletrica')
+      if (t) {
+        onNavigate(t)
         return true
       }
     }
-    if (/mechan|mecan|mechanik/.test(blob)) {
-      const target = entryPaths.find((p) => /mechan|mecan|mechanik/i.test(p) && /\.pdf$/i.test(p))
-      if (target) {
-        onNavigate(target)
+    if (targetLooksLikeSection(target, 'mecanica')) {
+      const t = findManualSectionPdf(entryPaths, 'mecanica')
+      if (t) {
+        onNavigate(t)
         return true
       }
     }
   }
 
-  if (title && /\.(pdf|htm|html)$/i.test(title)) {
-    const resolved = resolveZipEntryPath(currentPath, title, entryPaths)
-    if (resolved) {
-      onNavigate(resolved)
-      return true
-    }
-  }
-
-  if (ann.dest) {
+  const dest = ann.dest
+  if (dest) {
     try {
-      const dest = await pdf.getDestination(ann.dest)
-      if (Array.isArray(dest) && dest[0]) {
-        const pageIndex = await pdf.getPageIndex(dest[0] as never)
+      const resolvedDest = await pdf.getDestination(dest)
+      if (Array.isArray(resolvedDest) && resolvedDest[0]) {
+        const pageIndex = await pdf.getPageIndex(resolvedDest[0] as never)
         const el = document.querySelector(`[data-zip-pdf-page="${pageIndex + 1}"]`)
         el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         return true
       }
     } catch {
-      /* ignorar destinos inválidos */
+      /* ignorar */
     }
   }
 
   return false
+}
+
+function inferIndexSectionHints(
+  links: Array<{ centerX: number; centerY: number; viewportWidth: number }>,
+  indexPath: string
+): Map<number, ManualSection> {
+  const hints = new Map<number, ManualSection>()
+  if (!/(^|\/)index\.pdf$/i.test(indexPath)) return hints
+
+  const rightSide = links
+    .map((l, i) => ({ ...l, i }))
+    .filter((l) => l.centerX >= l.viewportWidth * 0.4)
+    .sort((a, b) => a.centerX - b.centerX || a.centerY - b.centerY)
+
+  if (rightSide.length >= 2) {
+    hints.set(rightSide[rightSide.length - 2].i, 'mecanica')
+    hints.set(rightSide[rightSide.length - 1].i, 'eletrica')
+  } else if (rightSide.length === 1) {
+    hints.set(rightSide[0].i, 'eletrica')
+  }
+
+  return hints
 }
 
 let pdfjsWorkerConfigured = false
@@ -134,6 +275,7 @@ async function loadPdfJs() {
 export function ManuaisZipPdfPreview(props: Props) {
   const { bytes, path, entryPaths, onNavigate, tr, fallbackBlobUrl } = props
   const containerRef = useRef<HTMLDivElement>(null)
+  const pdfDocRef = useRef<{ getDestination: (id: unknown) => Promise<unknown>; getPageIndex: (ref: unknown) => Promise<number>; destroy: () => Promise<void> } | null>(null)
   const onNavigateRef = useRef(onNavigate)
   const entryPathsRef = useRef(entryPaths)
   const [loading, setLoading] = useState(true)
@@ -167,12 +309,36 @@ export function ManuaisZipPdfPreview(props: Props) {
           return
         }
 
+        pdfDocRef.current = pdf
+
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum)
           if (cancelled) return
 
           const scale = 1.12
           const viewport = page.getViewport({ scale })
+          const annotations = await page.getAnnotations()
+
+          const linkMeta: Array<{ centerX: number; centerY: number; viewportWidth: number }> = []
+          const linkAnnotations: Array<Record<string, unknown>> = []
+
+          for (const ann of annotations) {
+            if (ann.subtype !== 'Link' || !ann.rect) continue
+            const rect = viewport.convertToViewportRectangle(ann.rect)
+            const left = Math.min(rect[0], rect[2])
+            const top = Math.min(rect[1], rect[3])
+            const width = Math.max(4, Math.abs(rect[2] - rect[0]))
+            const height = Math.max(4, Math.abs(rect[3] - rect[1]))
+            linkMeta.push({
+              centerX: left + width / 2,
+              centerY: top + height / 2,
+              viewportWidth: viewport.width,
+            })
+            linkAnnotations.push(ann as Record<string, unknown>)
+          }
+
+          const sectionHints =
+            pageNum === 1 ? inferIndexSectionHints(linkMeta, path) : new Map<number, ManualSection>()
 
           const pageWrap = document.createElement('div')
           pageWrap.className = 'manuais-pro__zip-pdf-page'
@@ -195,44 +361,60 @@ export function ManuaisZipPdfPreview(props: Props) {
           linkLayer.style.width = `${viewport.width}px`
           linkLayer.style.height = `${viewport.height}px`
 
-          const annotations = await page.getAnnotations()
-          for (const ann of annotations) {
-            if (ann.subtype !== 'Link' || !ann.rect) continue
-            const rect = viewport.convertToViewportRectangle(ann.rect)
+          linkAnnotations.forEach((ann, linkIdx) => {
+            const rect = viewport.convertToViewportRectangle(ann.rect as number[])
             const left = Math.min(rect[0], rect[2])
             const top = Math.min(rect[1], rect[3])
             const width = Math.max(4, Math.abs(rect[2] - rect[0]))
             const height = Math.max(4, Math.abs(rect[3] - rect[1]))
+            const sectionHint = sectionHints.get(linkIdx) ?? null
 
             const btn = document.createElement('button')
             btn.type = 'button'
             btn.className = 'manuais-pro__zip-pdf-link'
+            if (sectionHint) btn.dataset.section = sectionHint
             btn.style.left = `${left}px`
             btn.style.top = `${top}px`
             btn.style.width = `${width}px`
             btn.style.height = `${height}px`
+            const titleObj = ann.titleObj as { str?: string } | undefined
             btn.setAttribute(
               'aria-label',
-              ann.titleObj?.str || ann.url || 'Ligação do manual'
+              titleObj?.str ||
+                (typeof ann.url === 'string' ? ann.url : '') ||
+                (sectionHint === 'eletrica'
+                  ? tr('manuaisZipNavEletrica', 'Elétrica')
+                  : sectionHint === 'mecanica'
+                    ? tr('manuaisZipNavMecanica', 'Mecânica')
+                    : tr('manuaisZipPdfLink', 'Ligação do manual'))
             )
             btn.onclick = (e) => {
               e.preventDefault()
+              e.stopPropagation()
+              if (sectionHint) {
+                const hinted = findManualSectionPdf(entryPathsRef.current, sectionHint)
+                if (hinted) {
+                  onNavigateRef.current(hinted)
+                  return
+                }
+              }
+              const livePdf = pdfDocRef.current
+              if (!livePdf) return
               void handleAnnotationLink(
                 ann,
                 path,
                 entryPathsRef.current,
                 onNavigateRef.current,
-                pdf
+                livePdf,
+                sectionHint
               )
             }
             linkLayer.appendChild(btn)
-          }
+          })
 
           pageWrap.appendChild(linkLayer)
           host.appendChild(pageWrap)
         }
-
-        await pdf.destroy()
       } catch (err) {
         if (!cancelled) {
           if (fallbackBlobUrl) {
@@ -248,6 +430,8 @@ export function ManuaisZipPdfPreview(props: Props) {
 
     return () => {
       cancelled = true
+      void pdfDocRef.current?.destroy()
+      pdfDocRef.current = null
     }
   }, [bytes, path, fallbackBlobUrl])
 

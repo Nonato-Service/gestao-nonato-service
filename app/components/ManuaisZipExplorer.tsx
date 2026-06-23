@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import JSZip from 'jszip'
-import { ManuaisZipPdfPreview } from './ManuaisZipPdfPreview'
+import { ManuaisZipPdfPreview, findManualSectionPdf } from './ManuaisZipPdfPreview'
 
 type ZipEntry = { path: string; size: number }
 
@@ -252,12 +252,20 @@ export function ManuaisZipExplorer(props: Props) {
         {
           id: 'eletrica',
           label: tr('manuaisZipNavEletrica', 'Elétrica'),
-          path: findSectionPdf(entries, /elektr|eletric|electric|elektro|el[\.\-_]/i),
+          path:
+            findManualSectionPdf(
+              entries.map((e) => e.path),
+              'eletrica'
+            ) || findSectionPdf(entries, /elektr|eletric|electric|elektro|el[\.\-_]/i),
         },
         {
           id: 'mecanica',
           label: tr('manuaisZipNavMecanica', 'Mecânica'),
-          path: findSectionPdf(entries, /mechan|mecan|mechanik|mk[\.\-_]/i),
+          path:
+            findManualSectionPdf(
+              entries.map((e) => e.path),
+              'mecanica'
+            ) || findSectionPdf(entries, /mechan|mecan|mechanik|mk[\.\-_]/i),
         },
       ].filter((s) => s.path),
     [entries, tr]
