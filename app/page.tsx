@@ -57,7 +57,7 @@ import {
   serverKeyHasMeaningfulData,
 } from './lib/criticalCadastroKeys'
 import { isNonatoDemoBuild } from './utils/nonatoDemoMode'
-import { collectLocalNonatoSnapshot, summarizeDataDiff } from './utils/syncDiff'
+import { assessSyncPendingSeverity, collectLocalNonatoSnapshot, summarizeDataDiff } from './utils/syncDiff'
 import {
   backupCriticalCadastroToIdb,
   restoreCriticalCadastroFromIdbIfNeeded,
@@ -4682,6 +4682,7 @@ export default function Dashboard() {
   const [syncPullRiskReady, setSyncPullRiskReady] = useState(false)
   const [syncPendingPullRisk, setSyncPendingPullRisk] = useState<PullRiskSeverity>('none')
   const SYNC_MODAL_SNOOZE_LS = 'nonato-sync-modal-snooze-until'
+  const SYNC_MODAL_DISMISSED_REV_LS = 'nonato-sync-modal-dismissed-rev'
   const isSyncModalSnoozed = useCallback(() => {
     if (typeof window === 'undefined') return false
     try {
@@ -4696,12 +4697,15 @@ export default function Dashboard() {
     if (typeof window !== 'undefined') {
       try {
         sessionStorage.setItem(SYNC_MODAL_SNOOZE_LS, String(Date.now() + 60 * 60 * 1000))
+        if (syncPendingRemote?.revision) {
+          sessionStorage.setItem(SYNC_MODAL_DISMISSED_REV_LS, String(syncPendingRemote.revision))
+        }
       } catch {
         /* ignorar */
       }
     }
     setSyncDecisionModalOpen(false)
-  }, [])
+  }, [syncPendingRemote?.revision])
   /** Primeira carga: pedidos ao servidor + fusão de dados (evita parecer que «não termina»). */
   const [appInitialLoading, setAppInitialLoading] = useState(true)
   const [bootstrapOfflineMode, setBootstrapOfflineMode] = useState(false)
@@ -8264,22 +8268,20 @@ export default function Dashboard() {
       setSyncPullRiskReady(true)
       return
     }
-    const lines = syncPendingRemote.summaryLines
-    const text = lines.join('\n').toLowerCase()
-    let severity: PullRiskSeverity = 'none'
-    if (
-      text.includes('apagar') ||
-      text.includes('0 registos') ||
-      text.includes('deixariam de aparecer') ||
-      text.includes('não há dados de manuais no servidor')
-    ) {
-      severity = 'severe'
-    } else if (lines.length >= 4 || text.includes('menos') || text.includes('risco') || text.includes('perder')) {
-      severity = 'caution'
-    }
-    setSyncPendingPullRisk(severity)
+    setSyncPendingPullRisk(assessSyncPendingSeverity(syncPendingRemote.summaryLines))
     setSyncPullRiskReady(true)
   }, [syncPendingRemote?.revision])
+
+  const isSyncModalDismissedForRevision = useCallback((revision: number) => {
+    if (typeof window === 'undefined') return false
+    try {
+      const raw = sessionStorage.getItem(SYNC_MODAL_DISMISSED_REV_LS)
+      const dismissed = raw ? parseInt(raw, 10) : 0
+      return Number.isFinite(dismissed) && revision <= dismissed
+    } catch {
+      return false
+    }
+  }, [])
 
   /** Com atualização pendente, o fluxo de trabalho só continua após escolher carregar do servidor ou enviar para o servidor. */
   useEffect(() => {
@@ -8287,8 +8289,9 @@ export default function Dashboard() {
     if (!syncPendingRemote) return
     if (!syncPullRiskReady) return
     if (isSyncModalSnoozed()) return
+    if (isSyncModalDismissedForRevision(syncPendingRemote.revision)) return
     setSyncDecisionModalOpen(true)
-  }, [appInitialLoading, syncPendingRemote, syncPullRiskReady, isSyncModalSnoozed])
+  }, [appInitialLoading, syncPendingRemote, syncPullRiskReady, isSyncModalSnoozed, isSyncModalDismissedForRevision])
 
   /** Servidor: rever revisão em fundo e ao voltar ao ecrã — evita depender de F5 para ver alterações noutro aparelho. */
   useEffect(() => {
@@ -12223,16 +12226,25 @@ export default function Dashboard() {
       }
       const lastAccAfter = getLastAcceptedRevision()
       const stForPending = stFinal ?? syncSt
+      const summaryLinesForPending = summarizeDataDiff(serverData, localSnapshotBeforeMerge)
       const showSyncPending =
         stForPending !== null &&
         stForPending.revision > lastAccAfter &&
-        hasMeaningfulLocalData()
+        hasMeaningfulLocalData() &&
+        summaryLinesForPending.length > 0
+      if (
+        stForPending !== null &&
+        stForPending.revision > lastAccAfter &&
+        summaryLinesForPending.length === 0
+      ) {
+        setLastAcceptedRevision(stForPending.revision)
+      }
       setSyncPendingRemote(
         showSyncPending
           ? {
-              revision: stForPending.revision,
-              updatedAt: stForPending.updatedAt,
-              summaryLines: summarizeDataDiff(serverData, localSnapshotBeforeMerge),
+              revision: stForPending!.revision,
+              updatedAt: stForPending!.updatedAt,
+              summaryLines: summaryLinesForPending,
             }
           : null
       )
@@ -67312,13 +67324,33 @@ A1;Peça exemplo;10`}
               </>
             ) : (
               <>
+                <button
+                  type="button"
+                  disabled={syncPullChecking || syncPushLoading}
+                  onClick={adiarSyncModal}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: '#e8f4ff',
+                    background: 'rgba(56, 189, 248, 0.12)',
+                    border: '1px solid rgba(56, 189, 248, 0.55)',
+                    borderRadius: '8px',
+                    cursor: syncPullChecking || syncPushLoading ? 'not-allowed' : 'pointer',
+                    marginBottom: '14px',
+                  }}
+                >
+                  {(safeT as any)?.syncModalSnooze || 'Continuar sem sincronizar agora'}
+                </button>
                 <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#ccc', lineHeight: 1.5 }}>
                   {(safeT as any)?.syncModalIntro ||
                     'Outro equipamento gravou dados no servidor. Resumo em relação ao que estava neste aparelho:'}
                 </p>
                 <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#ffb84d', lineHeight: 1.45, fontWeight: 600 }}>
-                  {(safeT as any)?.syncModalBlockingNote ||
-                    'Enquanto existir esta diferença, o sistema não fica disponível para trabalho normal — escolha uma das opções abaixo.'}
+                  {(safeT as any)?.syncModalBlockingNoteSoft ||
+                    (safeT as any)?.syncModalBlockingNote ||
+                    'Pode continuar a trabalhar sem sincronizar (botão acima) ou escolher uma opção abaixo.'}
                 </p>
                 {syncPendingRemote.updatedAt ? (
                   <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#888' }}>

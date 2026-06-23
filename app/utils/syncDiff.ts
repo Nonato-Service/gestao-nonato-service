@@ -12,7 +12,20 @@ const SKIP_SNAPSHOT_KEYS = new Set([
   'nonato-last-code-backup-date',
   'nonato-protocolo-servico-draft',
   'nonato-manuais-familias-grupos--idb',
+  /** Preferências locais / estado de UI — não bloquear sync multi-dispositivo. */
+  'nonato-auto-backup-enabled',
+  'nonato-auto-backup-interval',
+  'nonato-biblia-nonato-service',
+  'nonato-biblioteca-pecas-ultima-selecao',
 ])
+
+/** Chaves dinâmicas (ex.: lembrete por data/hora) ignoradas no resumo de sync. */
+const SKIP_SNAPSHOT_KEY_PREFIXES = ['nonato-agenda-reminder-']
+
+function shouldSkipSyncDiffKey(key: string): boolean {
+  if (SKIP_SNAPSHOT_KEYS.has(key)) return true
+  return SKIP_SNAPSHOT_KEY_PREFIXES.some((prefix) => key.startsWith(prefix))
+}
 
 /** Etiquetas para chaves de dados (resumo de sync e aviso de risco). */
 export const SYNC_KEY_LABELS: Record<string, string> = {
@@ -68,7 +81,7 @@ export function collectLocalNonatoSnapshot(): Record<string, unknown> {
   if (typeof window === 'undefined') return out
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i)
-    if (!k || !k.startsWith('nonato-') || SKIP_SNAPSHOT_KEYS.has(k)) continue
+    if (!k || !k.startsWith('nonato-') || shouldSkipSyncDiffKey(k)) continue
     const raw = localStorage.getItem(k)
     if (raw === null || raw === '' || raw.length < 2) continue
     try {
@@ -109,7 +122,7 @@ export function summarizeDataDiff(server: Record<string, unknown>, local: Record
 
   for (const key of Array.from(keys)) {
     if (!key.startsWith('nonato-')) continue
-    if (SKIP_SNAPSHOT_KEYS.has(key)) continue
+    if (shouldSkipSyncDiffKey(key)) continue
     if (key.endsWith('.json')) continue
 
     const s = server[key]
@@ -167,4 +180,41 @@ export function summarizeDataDiff(server: Record<string, unknown>, local: Record
   }
 
   return lines.slice(0, 14)
+}
+
+/** True quando puxar do servidor pode apagar ou reduzir dados locais importantes. */
+export function isSyncDiffBlocking(lines: string[]): boolean {
+  if (lines.length === 0) return false
+  const text = lines.join('\n').toLowerCase()
+  return (
+    text.includes('só neste aparelho') ||
+    text.includes('a menos no servidor') ||
+    text.includes('−') ||
+    text.includes('apagar') ||
+    text.includes('0 registos') ||
+    text.includes('deixariam de aparecer') ||
+    text.includes('pode perder') ||
+    text.includes('existiam aqui')
+  )
+}
+
+export type SyncPendingSeverity = 'none' | 'caution' | 'severe'
+
+/** Severidade do modal antes de escolher carregar/enviar — diferenças só aditivas → OK simples. */
+export function assessSyncPendingSeverity(lines: string[]): SyncPendingSeverity {
+  if (lines.length === 0) return 'none'
+  if (!isSyncDiffBlocking(lines)) return 'none'
+  const text = lines.join('\n').toLowerCase()
+  if (
+    text.includes('apagar') ||
+    text.includes('0 registos') ||
+    text.includes('deixariam de aparecer') ||
+    text.includes('não há dados de manuais no servidor')
+  ) {
+    return 'severe'
+  }
+  if (lines.length >= 4 || text.includes('menos') || text.includes('risco') || text.includes('perder')) {
+    return 'caution'
+  }
+  return 'caution'
 }
