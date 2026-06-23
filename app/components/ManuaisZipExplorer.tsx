@@ -39,6 +39,40 @@ function entryLabel(path: string): string {
   return parts[parts.length - 1] || path
 }
 
+function mimeForZipEntry(path: string, kind: ReturnType<typeof entryKind>): string {
+  const lower = path.toLowerCase()
+  if (kind === 'pdf') return 'application/pdf'
+  if (kind === 'image') {
+    if (lower.endsWith('.png')) return 'image/png'
+    if (lower.endsWith('.gif')) return 'image/gif'
+    if (lower.endsWith('.webp')) return 'image/webp'
+    if (lower.endsWith('.bmp')) return 'image/bmp'
+    if (lower.endsWith('.svg')) return 'image/svg+xml'
+    return 'image/jpeg'
+  }
+  if (kind === 'text') {
+    if (lower.endsWith('.json')) return 'application/json'
+    if (lower.endsWith('.csv')) return 'text/csv'
+    if (lower.endsWith('.md')) return 'text/markdown'
+    if (lower.endsWith('.html') || lower.endsWith('.htm')) return 'text/html'
+    return 'text/plain'
+  }
+  return 'application/octet-stream'
+}
+
+function detectKindFromBytes(path: string, bytes: Uint8Array): ReturnType<typeof entryKind> {
+  if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+    return 'pdf'
+  }
+  if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
+    return 'image'
+  }
+  if (bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xd8) {
+    return 'image'
+  }
+  return entryKind(path)
+}
+
 export function ManuaisZipExplorer(props: Props) {
   const { dataUrl, tr } = props
   const zipRef = useRef<JSZip | null>(null)
@@ -119,7 +153,6 @@ export function ManuaisZipExplorer(props: Props) {
 
     let cancelled = false
     let objectUrl: string | null = null
-    const kind = entryKind(selectedPath)
     setPreviewLoading(true)
     setError(null)
 
@@ -127,15 +160,16 @@ export function ManuaisZipExplorer(props: Props) {
       try {
         const file = zipRef.current!.file(selectedPath)
         if (!file) throw new Error('missing_entry')
+        const bytes = await file.async('uint8array')
+        if (cancelled) return
+        const kind = detectKindFromBytes(selectedPath, bytes)
         if (kind === 'pdf' || kind === 'image') {
-          const blob = await file.async('blob')
-          if (cancelled) return
+          const blob = new Blob([bytes], { type: mimeForZipEntry(selectedPath, kind) })
           objectUrl = URL.createObjectURL(blob)
           setPreviewUrl(objectUrl)
           setPreviewKind(kind)
         } else if (kind === 'text') {
-          const text = await file.async('string')
-          if (cancelled) return
+          const text = new TextDecoder('utf-8', { fatal: false }).decode(bytes)
           setPreviewText(text)
           setPreviewKind('text')
         } else if (kind === 'archive') {
@@ -176,7 +210,9 @@ export function ManuaisZipExplorer(props: Props) {
     try {
       const file = zipRef.current.file(selectedPath)
       if (!file) return
-      const blob = await file.async('blob')
+      const bytes = await file.async('uint8array')
+      const kind = detectKindFromBytes(selectedPath, bytes)
+      const blob = new Blob([bytes], { type: mimeForZipEntry(selectedPath, kind) })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -276,7 +312,11 @@ export function ManuaisZipExplorer(props: Props) {
           ) : previewLoading ? (
             <p className="manuais-pro__preview-status">{tr('bibliaPreviewCarregando', 'A carregar conteúdo…')}</p>
           ) : previewKind === 'pdf' && previewUrl ? (
-            <iframe className="manuais-pro__preview-frame" src={previewUrl} title={selectedPath} />
+            <iframe
+              className="manuais-pro__preview-frame"
+              src={`${previewUrl}#toolbar=1&navpanes=0`}
+              title={selectedPath}
+            />
           ) : previewKind === 'image' && previewUrl ? (
             <div className="manuais-pro__preview-image-wrap">
               <img src={previewUrl} alt={selectedPath} className="manuais-pro__preview-image" />
