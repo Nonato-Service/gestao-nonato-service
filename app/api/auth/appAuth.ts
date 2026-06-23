@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { NextRequest, NextResponse } from 'next/server'
 import { DATA_DIR, ensureDataDir } from '../data/shared'
+import { ensureUserMenuPolicy } from '../../lib/sidebarMenuPermissions'
 import { getDemoContext, isDemoGuestLock, rejectDemoGuestProductionAccess } from '../data/demo-context'
 
 export const APP_SESSION_COOKIE = 'nonato_app_session'
@@ -94,7 +95,7 @@ function toPublicUser(session: AppSession): StoredUser {
 }
 
 function toStoredUser(user: any): StoredUser {
-  return {
+  return ensureUserMenuPolicy({
     id: String(user.id),
     name: String(user.name || 'Utilizador'),
     email: String(user.email || ''),
@@ -108,7 +109,7 @@ function toStoredUser(user: any): StoredUser {
         ? user.menuItems
         : undefined,
     menuItemsConfigured: Boolean(user.menuItemsConfigured),
-  }
+  })
 }
 
 function normalizeLoginText(value: string): string {

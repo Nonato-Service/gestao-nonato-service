@@ -15410,18 +15410,49 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   color: rgba(186, 230, 253, 0.78);
   max-width: 56ch;
 }
-.manuais-pro__hero-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.manuais-pro__hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
+  max-width: min(100%, 420px);
+}
 .manuais-pro__tool-btn {
-  width: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  box-sizing: border-box;
+  min-height: 34px;
   height: 34px;
+  padding: 0 10px;
   border-radius: 10px;
   border: 1px solid rgba(56, 189, 248, 0.35);
   background: rgba(15, 23, 42, 0.5);
   color: #7dd3fc;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
-.manuais-pro__tool-btn--accent { border-color: rgba(129, 140, 248, 0.4); color: #a5b4fc; }
+.manuais-pro__tool-btn:hover {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(125, 211, 252, 0.5);
+}
+.manuais-pro__tool-btn--icon {
+  width: 34px;
+  min-width: 34px;
+  padding: 0;
+  font-size: 1rem;
+}
+.manuais-pro__tool-btn--accent {
+  border-color: rgba(129, 140, 248, 0.4);
+  color: #a5b4fc;
+}
 .manuais-pro__kpis {
   position: relative;
   display: grid;

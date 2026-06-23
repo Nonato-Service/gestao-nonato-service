@@ -62,6 +62,7 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
       { buttonId: 'relatorios-excluidos-clientes-default', action: 'open-relatorios-excluidos-clientes', labelKey: 'relatoriosExcluidosClientesTitle', fallbackLabel: 'Relatórios excluídos', legacyKey: 'clientes' },
       { buttonId: 'fechamento-relatorios-servicos-default', action: 'open-fechamento-relatorios-servicos', labelKey: 'fechamentoRelatoriosServicosTitle', fallbackLabel: 'Fechamento de relatórios', legacyKey: 'relatorioServico' },
       { buttonId: 'protocolos-servico-default', action: 'open-protocolos-servico', labelKey: 'protocolosServicoTitle', fallbackLabel: 'Protocolos de serviço', legacyKey: 'relatorioServico' },
+      { buttonId: 'manual-programa-default', action: 'open-manual-programa', labelKey: 'manualProgramaTitle', fallbackLabel: 'Manual do Programa', legacyKey: 'extras' },
     ],
   },
   {
@@ -111,6 +112,7 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
     fallbackDesc: 'Checklists visíveis.',
     icon: '✅',
     items: [
+      { buttonId: 'checklist-group-default', action: 'open-checklist-hub', labelKey: 'checklistGroupTitle', fallbackLabel: 'Hub do checklist', legacyKey: 'extras' },
       { buttonId: 'pre-checklist-default', action: 'open-pre-checklist', labelKey: 'preChecklistSubTitle', fallbackLabel: 'Pré-checklist', legacyKey: 'extras' },
       { buttonId: 'checklist-basico-default', action: 'open-checklist-basico', labelKey: 'checklistBasicoSubTitle', fallbackLabel: 'Checklist básico', legacyKey: 'extras' },
       { buttonId: 'checklist-default', action: 'open-checklist', labelKey: 'checklistSubTitle', fallbackLabel: 'Checklist', legacyKey: 'extras' },
@@ -207,6 +209,8 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
     items: [
       { buttonId: 'administrador-default', action: 'open-administrador', labelKey: 'administrador', fallbackLabel: 'Administrador', legacyKey: 'extras' },
       { buttonId: 'extras-default', action: 'open-extra', labelKey: 'extras', fallbackLabel: 'Extras', legacyKey: 'extras' },
+      { buttonId: 'manual-gestor-default', action: 'open-manual-gestor', labelKey: 'manualUsoGestorNonatoService', fallbackLabel: 'Manual do gestor', legacyKey: 'extras' },
+      { buttonId: 'translator-default', action: 'open-translator', labelKey: 'translator', fallbackLabel: 'Tradutor', legacyKey: 'extras' },
     ],
   },
 ]
@@ -229,12 +233,40 @@ export function getButtonIdForAction(action: string): string | undefined {
   return ACTION_TO_BUTTON_ID[action]
 }
 
+/** Detecta menu personalizado mesmo em gravações antigas sem a flag explícita. */
+export function inferMenuItemsConfigured(
+  menuItems?: Record<string, boolean | undefined>,
+  menuItemsConfigured?: boolean
+): boolean {
+  if (menuItemsConfigured) return true
+  if (!menuItems || typeof menuItems !== 'object') return false
+  const keys = Object.keys(menuItems)
+  if (keys.length === 0) return false
+  if (keys.some((k) => menuItems[k] === false)) return true
+  const knownCount = keys.filter((k) => ALL_MENU_ITEM_IDS.includes(k)).length
+  return knownCount >= 2
+}
+
 /** Utilizador com menu personalizado gravado (modo estrito). */
 export function hasStrictMenuPolicy(
   menuItems?: Record<string, boolean | undefined>,
   menuItemsConfigured?: boolean
 ): boolean {
-  return Boolean(menuItemsConfigured)
+  return inferMenuItemsConfigured(menuItems, menuItemsConfigured)
+}
+
+/** Normaliza política de menu ao carregar/gravar utilizadores não-admin. */
+export function ensureUserMenuPolicy<
+  T extends { menuItems?: Record<string, boolean | undefined>; menuItemsConfigured?: boolean; isAdmin?: boolean }
+>(user: T): T {
+  if (user.isAdmin) return user
+  const configured = inferMenuItemsConfigured(user.menuItems, user.menuItemsConfigured)
+  if (!configured) return user
+  return {
+    ...user,
+    menuItemsConfigured: true,
+    menuItems: normalizeMenuItems(user.menuItems),
+  }
 }
 
 /** Garante todas as chaves conhecidas — ausentes ficam desligados. */

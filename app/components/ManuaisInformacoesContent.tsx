@@ -961,7 +961,8 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
               onClick={handleExportJson}
               title={tr('conhecimentoTecnicoExportar', tr('bibliaNonatoExportar', 'Exportar JSON'))}
             >
-              JSON ↓
+              <span>{tr('bibliaNonatoExportarBtn', 'Exportar')}</span>
+              <span aria-hidden="true">↓</span>
             </button>
             <button
               type="button"
@@ -978,7 +979,8 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
               }}
               title={tr('conhecimentoTecnicoImportar', tr('bibliaNonatoImportar', 'Importar JSON'))}
             >
-              JSON ↑
+              <span>{tr('bibliaNonatoImportarBtn', 'Importar')}</span>
+              <span aria-hidden="true">↑</span>
             </button>
             <input
               ref={importInputRef}
@@ -994,9 +996,10 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
             />
             <button
               type="button"
-              className="manuais-pro__tool-btn"
+              className="manuais-pro__tool-btn manuais-pro__tool-btn--icon"
               onClick={() => closeTab(activeTabId || '')}
               title={tr('voltar', 'Voltar')}
+              aria-label={tr('voltar', 'Voltar')}
             >
               &larr;
             </button>
@@ -1006,7 +1009,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
               onClick={voltarPaginaInicial}
               title={tr('paginaInicial', 'Página Inicial')}
             >
-              Início
+              {tr('paginaInicial', 'Início')}
             </button>
           </div>
         </div>

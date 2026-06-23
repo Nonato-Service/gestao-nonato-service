@@ -50,7 +50,7 @@ import {
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
 import { cmpNomeCliente, ordenarClientesPorNome, localeOrdenacaoClientes } from './lib/ordenarClientes'
-import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, getButtonIdForAction, hasStrictMenuPolicy, normalizeMenuItems, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
+import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasStrictMenuPolicy, normalizeMenuItems, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
   NONATO_CRITICAL_CADASTRO_KEYS,
   localStorageKeyHasMeaningfulCadastro,
@@ -9592,9 +9592,10 @@ export default function Dashboard() {
       // Carregar usuários
       const savedUsers = getData('nonato-users')
       if (savedUsers && Array.isArray(savedUsers) && savedUsers.length > 0) {
-        setUsers(savedUsers)
+        const normalizedUsers = savedUsers.map((u: User) => ensureUserMenuPolicy(u))
+        setUsers(normalizedUsers)
         // Garantir que está salvo no servidor
-        saveData('nonato-users', savedUsers, false).catch(() => {})
+        saveData('nonato-users', normalizedUsers, false).catch(() => {})
       } else if (savedUsers && Array.isArray(savedUsers)) {
         // Array vazio - manter mas não salvar
         setUsers(savedUsers)
@@ -12724,7 +12725,7 @@ export default function Dashboard() {
         }
 
     if (editingUser) {
-      const updatedUser: User = {
+      const updatedUser: User = ensureUserMenuPolicy({
         ...savedUser,
         name: userForm.name,
         email: userForm.email,
@@ -12736,7 +12737,7 @@ export default function Dashboard() {
         permissions: syncLegacyPermissionsFromMenuItems(normalizedMenuItems, userForm.permissions),
         menuItems: normalizedMenuItems,
         menuItemsConfigured,
-      }
+      })
       const updatedUsers = users.map(u => 
         u.id === editingUser.id 
           ? updatedUser
@@ -12756,12 +12757,12 @@ export default function Dashboard() {
         })
       }
     } else {
-      const newUser: User = {
+      const newUser: User = ensureUserMenuPolicy({
         ...savedUser,
         permissions: syncLegacyPermissionsFromMenuItems(normalizedMenuItems, userForm.permissions),
         menuItems: normalizedMenuItems,
         menuItemsConfigured,
-      }
+      })
       const updatedUsers = [...users, newUser]
       setUsers(updatedUsers)
       saveData('nonato-users', updatedUsers)
@@ -24795,6 +24796,8 @@ export default function Dashboard() {
     'open-clientes-financeiro': 'extras',
     'open-relatorios-excluidos-clientes': 'clientes',
     'open-protocolos-servico': 'relatorioServico',
+    'open-manual-programa': 'extras',
+    'open-manual-gestor': 'extras',
     'open-manuais-informacoes-tecnicas': 'equipamentos',
     'open-biblia-nonato-service': 'equipamentos',
     'open-almoxarifado-armazem': 'extras',
@@ -24829,7 +24832,7 @@ export default function Dashboard() {
     }
 
     const permKey = actionToPermission[action]
-    if (!permKey) return true
+    if (!permKey) return false
     const val = loginUser.permissions?.[permKey]
     // Utilizadores/gravações antigas sem a chave: permitir relatórios (antes o sistema não bloqueava)
     if (val === undefined && permKey === 'relatorioServico') return true
@@ -24859,18 +24862,32 @@ export default function Dashboard() {
         loginUser?.menuItems,
         loginUser?.isAdmin,
         moduleId,
-        (action) => {
-          if (!loginUser) return false
-          if (isDemoMode && DEMO_HIDDEN_ACTIONS.has(action)) return false
-          if (loginUser.isAdmin) return true
-          const permKey = actionToPermission[action]
-          if (!permKey) return true
-          return Boolean(loginUser.permissions?.[permKey])
-        },
+        (action) => canAccessAction(action),
         loginUser?.menuItemsConfigured
       ),
-    [loginUser, isDemoMode, DEMO_HIDDEN_ACTIONS]
+    [loginUser, canAccessAction]
   )
+
+  useEffect(() => {
+    if (!loginUser?.id || loginUser.isAdmin) return
+    const fresh = users.find((u) => u.id === loginUser.id)
+    if (!fresh) return
+    const next = ensureUserMenuPolicy(fresh)
+    const menuChanged = JSON.stringify(next.menuItems) !== JSON.stringify(loginUser.menuItems)
+    const permChanged = JSON.stringify(next.permissions) !== JSON.stringify(loginUser.permissions)
+    const flagChanged = Boolean(next.menuItemsConfigured) !== Boolean(loginUser.menuItemsConfigured)
+    if (!menuChanged && !permChanged && !flagChanged) return
+    setLoginUser((prev) =>
+      prev
+        ? {
+            ...prev,
+            permissions: next.permissions,
+            menuItems: next.menuItems,
+            menuItemsConfigured: next.menuItemsConfigured,
+          }
+        : prev
+    )
+  }, [users, loginUser?.id, loginUser?.isAdmin, loginUser?.menuItems, loginUser?.permissions, loginUser?.menuItemsConfigured])
 
   const currentCommunicationIdentity = useMemo(() => {
     if (!loginUser || loginUser.isAdmin) return null
@@ -65229,6 +65246,7 @@ A1;Peça exemplo;10`}
         )}
 
         {/* Botão principal: Manual detalhado do programa */}
+        {canAccessAction('open-manual-programa') && (
         <div className="sidebar-nav-cluster" data-sidebar-zone="documentacao">
           <button
             type="button"
@@ -65296,6 +65314,7 @@ A1;Peça exemplo;10`}
             </div>
           )}
         </div>
+        )}
 
         {/* Grupo: GESTÃO DE CUSTOS — mesmo padrão de cores e contorno do botão GESTÃO TÉCNICA */}
         {canAccessModule('gestao-custos') && (
@@ -66387,6 +66406,26 @@ A1;Peça exemplo;10`}
           id="sistema"
           label={(safeT as any)?.sidebarSectionSistema || 'Sistema'}
         />
+        <div className="sidebar-nav-cluster sidebar-extra-lang-cluster" data-sidebar-zone="sistema">
+          <div className="sidebar-extra-lang-wrap">
+            <label className="sidebar-extra-lang-label">{safeT?.selectLanguage || 'Idioma'}</label>
+            <select
+              className="ns-lang-select sidebar-extra-lang-select"
+              value={selectedLanguage}
+              onChange={(e) => {
+                setSelectedLanguage(e.target.value)
+                handleLanguageChange(e.target.value)
+              }}
+            >
+              {getLanguages(safeT).map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.flag} {lang.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        {canAccessAction('open-extra') && (
         <div className="sidebar-nav-cluster" data-sidebar-zone="sistema">
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-extra' ? ' sidebar-group-btn-selected' : ''}`}
@@ -66413,25 +66452,8 @@ A1;Peça exemplo;10`}
           
           {expandedGroups.has('extra') && (
             <div className="sidebar-action-buttons">
-              {/* Seletor de Idioma */}
-              <div className="sidebar-extra-lang-wrap">
-                <label className="sidebar-extra-lang-label">{safeT?.selectLanguage || 'Idioma'}</label>
-                <select 
-                  className="ns-lang-select sidebar-extra-lang-select"
-                  value={selectedLanguage} 
-                  onChange={(e) => {
-                    setSelectedLanguage(e.target.value)
-                    handleLanguageChange(e.target.value)
-                  }}
-                >
-                  {getLanguages(safeT).map(lang => (
-                    <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
-                  ))}
-                </select>
-              </div>
-
               {/* Botão Tradutor de Idiomas */}
-              {!isDemoMode && (
+              {!isDemoMode && canAccessAction('open-translator') && (
               <button
                 className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
                   selectedSidebarButton === 'open-translator' ? ' sidebar-action-btn-active' : ''
@@ -66469,7 +66491,7 @@ A1;Peça exemplo;10`}
               )}
 
               {/* Assistente de escrita (dois idiomas) */}
-              {!isDemoMode && (
+              {!isDemoMode && canAccessAction('open-extra') && (
               <button
                 type="button"
                 className="btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry"
@@ -66525,7 +66547,7 @@ A1;Peça exemplo;10`}
               ) : null}
 
               {/* Botão Manual de Uso do Gestor Nonato Service */}
-              {!isDemoMode && (
+              {!isDemoMode && canAccessAction('open-manual-gestor') && (
               <button
                 className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
                   selectedSidebarButton === 'open-manual-gestor' ? ' sidebar-action-btn-active' : ''
@@ -66566,11 +66588,12 @@ A1;Peça exemplo;10`}
             </div>
           )}
         </div>
+        )}
         </>
         )}
 
-        {/* Botão ADMINISTRADOR - Sempre visível no final (fallback se a lista estiver vazia após deploy) */}
-        {!isDemoMode && (() => {
+        {/* Botão ADMINISTRADOR — só visível com permissão */}
+        {!isDemoMode && canAccessAction('open-administrador') && (() => {
           const adminBtn = getButtonsByGroup('outros').find(b => b.id === 'administrador-default') || {
             id: 'administrador-default',
             name: 'ADMINISTRADOR',
