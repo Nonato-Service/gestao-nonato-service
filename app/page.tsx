@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
@@ -5547,7 +5547,7 @@ export default function Dashboard() {
               }}
               style={{
                 padding: '10px',
-                backgroundColor: '#1e1e1e',
+                backgroundColor: '#484848',
                 border: '2px solid rgba(0, 200, 83, 0.3)',
                 borderRadius: '6px',
                 color: '#fff',
@@ -5585,7 +5585,7 @@ export default function Dashboard() {
               }}
               style={{
                 padding: '10px',
-                backgroundColor: '#1e1e1e',
+                backgroundColor: '#484848',
                 border: '2px solid rgba(0, 200, 83, 0.3)',
                 borderRadius: '6px',
                 color: '#fff',
@@ -5616,7 +5616,7 @@ export default function Dashboard() {
                   {gestoresDisponiveis.map(g => (
                     <div key={g.id} style={{ 
                       padding: '6px 10px', 
-                      backgroundColor: g.id === remetenteId ? 'rgba(0, 100, 255, 0.2)' : '#141414',
+                      backgroundColor: g.id === remetenteId ? 'rgba(0, 100, 255, 0.2)' : '#404040',
                       borderRadius: '4px',
                       fontSize: '12px',
                       border: g.id === remetenteId ? '1px solid rgba(0, 100, 255, 0.5)' : '1px solid rgba(0, 100, 255, 0.2)'
@@ -5654,7 +5654,7 @@ export default function Dashboard() {
               }}
               style={{
                 padding: '10px',
-                backgroundColor: '#1e1e1e',
+                backgroundColor: '#484848',
                 border: '2px solid rgba(0, 200, 83, 0.3)',
                 borderRadius: '6px',
                 color: '#fff',
@@ -5681,7 +5681,7 @@ export default function Dashboard() {
                 onChange={(e) => setDestinatarioId(e.target.value)}
                 style={{
                   padding: '10px',
-                  backgroundColor: '#1e1e1e',
+                  backgroundColor: '#484848',
                   border: '2px solid rgba(0, 200, 83, 0.3)',
                   borderRadius: '6px',
                   color: '#fff',
@@ -5712,7 +5712,7 @@ export default function Dashboard() {
                     {tecnicosDisponiveis.map(t => (
                       <div key={t.id} style={{ 
                         padding: '6px 10px', 
-                        backgroundColor: t.id === destinatarioId ? (destinatarioTipo === 'interno' ? 'rgba(0, 200, 83, 0.2)' : 'rgba(255, 165, 0, 0.2)') : '#141414',
+                        backgroundColor: t.id === destinatarioId ? (destinatarioTipo === 'interno' ? 'rgba(0, 200, 83, 0.2)' : 'rgba(255, 165, 0, 0.2)') : '#404040',
                         borderRadius: '4px',
                         fontSize: '12px',
                         border: t.id === destinatarioId ? `1px solid ${destinatarioTipo === 'interno' ? 'rgba(0, 200, 83, 0.5)' : 'rgba(255, 165, 0, 0.5)'}` : `1px solid ${destinatarioTipo === 'interno' ? 'rgba(0, 200, 83, 0.2)' : 'rgba(255, 165, 0, 0.2)'}`
@@ -5731,7 +5731,7 @@ export default function Dashboard() {
             </div>
           )}
           {destinatarioTipo === 'armazem' && (
-            <div style={{ padding: '10px', backgroundColor: '#1e1e1e', borderRadius: '6px', color: '#ccc', textAlign: 'center' }}>
+            <div style={{ padding: '10px', backgroundColor: '#484848', borderRadius: '6px', color: '#ccc', textAlign: 'center' }}>
               {safeT?.armazem || 'Armazém'}
             </div>
           )}
@@ -5750,7 +5750,7 @@ export default function Dashboard() {
             placeholder={safeT?.assunto || 'Assunto'}
             style={{
               padding: '10px',
-              backgroundColor: '#1e1e1e',
+              backgroundColor: '#484848',
               border: '1px solid rgba(0, 200, 83, 0.3)',
               borderRadius: '4px',
               color: '#fff',
@@ -5772,7 +5772,7 @@ export default function Dashboard() {
             style={{
               width: '100%',
               padding: '10px',
-              backgroundColor: '#1e1e1e',
+              backgroundColor: '#484848',
               border: '1px solid rgba(0, 200, 83, 0.3)',
               borderRadius: '4px',
               color: '#fff',
@@ -18622,7 +18622,7 @@ export default function Dashboard() {
             body {
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               font-size: 11px;
-              color: #121212;
+              color: #3a3a3a;
               background: #fff;
               padding: 15px;
               line-height: 1.6;
@@ -19591,7 +19591,7 @@ export default function Dashboard() {
                         <td><strong>${diaCalc.kmTotal || '0'}</strong></td>
                         <td>${dia.tempoPausa || dia.pausa || '0:00'}</td>
                       </tr>
-                      ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr><td colspan="14" style="text-align:left;padding:6px 8px;font-size:9px;border:1px solid #444;background:#121212;color:#e0e0e0;vertical-align:top;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
+                      ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr><td colspan="14" style="text-align:left;padding:6px 8px;font-size:9px;border:1px solid #444;background:#3a3a3a;color:#e0e0e0;vertical-align:top;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
                     `;
                   }).join('')}
                 </tbody>
@@ -20167,7 +20167,7 @@ export default function Dashboard() {
             .section-negro {
               border: 2px solid #fff;
               margin-bottom: 20px;
-              background: #121212;
+              background: #3a3a3a;
             }
             .section-negro h3 {
               background: #fff;
@@ -20226,7 +20226,7 @@ export default function Dashboard() {
               color: #fff;
             }
             .table-negro tr:nth-child(even) {
-              background: #121212;
+              background: #3a3a3a;
             }
             .summary-negro {
               display: grid;
@@ -20287,13 +20287,13 @@ export default function Dashboard() {
               font-size: 10px;
               padding: 10px;
               border: 1px solid #333;
-              background: #121212;
+              background: #3a3a3a;
             }
             .observacoes-negro {
               margin-top: 20px;
               padding: 15px;
               border: 2px solid #fff;
-              background: #121212;
+              background: #3a3a3a;
             }
             .observacoes-negro h4 {
               font-size: 11px;
@@ -20366,7 +20366,7 @@ export default function Dashboard() {
                         <td><strong>${diaCalc.kmTotal || '0'}</strong></td>
                         <td>${dia.tempoPausa || dia.pausa || '0:00'}</td>
                       </tr>
-                      ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr><td colspan="14" style="text-align:left;padding:6px 8px;font-size:9px;border:1px solid #555;background:#1e1e1e;color:#e5e5e5;vertical-align:top;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
+                      ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr><td colspan="14" style="text-align:left;padding:6px 8px;font-size:9px;border:1px solid #555;background:#484848;color:#e5e5e5;vertical-align:top;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
                     `;
                   }).join('')}
                 </tbody>
@@ -21196,7 +21196,7 @@ export default function Dashboard() {
       const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${relatorio.numero}</title><style>
         ${RELATORIO_SERVICO_PDF_HEADER_CSS}
         @page{size:A4;margin:15mm}*{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#121212;background:#fff;padding:20px;line-height:1.5}
+        body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#3a3a3a;background:#fff;padding:20px;line-height:1.5}
         .report-section{margin-bottom:18px;padding:14px;background:#f8fafc;border-left:3px solid #1e3a5f;border-radius:2px}
         .report-section h3{font-family:Georgia,serif;font-size:11px;margin-bottom:10px;color:#1e293b;text-transform:uppercase;letter-spacing:0.1em;border-bottom:1px solid #e2e8f0;padding-bottom:8px}
         table{width:100%;border-collapse:collapse;font-size:10px}
@@ -26967,7 +26967,7 @@ export default function Dashboard() {
                       onChange={(e) => setFiltroAreaGestor(e.target.value)}
                       style={{
                         padding: '8px 12px',
-                        backgroundColor: '#1e1e1e',
+                        backgroundColor: '#484848',
                         color: '#fff',
                         border: '1px solid rgba(0, 200, 83, 0.3)',
                         borderRadius: '4px',
@@ -26988,23 +26988,23 @@ export default function Dashboard() {
                     <h3 style={{ marginBottom: '15px' }}>{safeT?.addGestor || 'Adicionar Gestor'}</h3>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
-                      <input type="text" value={gestorForm.name} onChange={(e) => setGestorForm({ ...gestorForm, name: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                      <input type="text" value={gestorForm.name} onChange={(e) => setGestorForm({ ...gestorForm, name: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
-                      <input type="email" value={gestorForm.email} onChange={(e) => setGestorForm({ ...gestorForm, email: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                      <input type="email" value={gestorForm.email} onChange={(e) => setGestorForm({ ...gestorForm, email: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.phone || 'Telefone'}</label>
-                      <input type="text" value={gestorForm.phone} onChange={(e) => setGestorForm({ ...gestorForm, phone: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                      <input type="text" value={gestorForm.phone} onChange={(e) => setGestorForm({ ...gestorForm, phone: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.address || 'Endereço'}</label>
-                      <input type="text" value={gestorForm.address} onChange={(e) => setGestorForm({ ...gestorForm, address: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                      <input type="text" value={gestorForm.address} onChange={(e) => setGestorForm({ ...gestorForm, address: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.areaAtuacao || 'Área de Atuação'}</label>
-                      <select value={gestorForm.area} onChange={(e) => setGestorForm({ ...gestorForm, area: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}>
+                      <select value={gestorForm.area} onChange={(e) => setGestorForm({ ...gestorForm, area: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}>
                         {tiposGestores.sort((a, b) => a.ordem - b.ordem).map(tipo => (
                           <option key={tipo.id} value={tipo.id}>{tipo.icone} {tipo.nome}</option>
                         ))}
@@ -27021,7 +27021,7 @@ export default function Dashboard() {
                           }
                           reader.readAsDataURL(file)
                         }
-                      }} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                      }} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button className="btn-primary" onClick={handleSaveGestor} style={{ flex: 1 }}>
@@ -27128,7 +27128,7 @@ export default function Dashboard() {
                       padding: '12px 24px',
                       fontSize: '14px',
                       fontWeight: 'bold',
-                      backgroundColor: tecnicosTipoTab === 'todos' ? 'rgba(0, 100, 255, 0.3)' : '#1e1e1e',
+                      backgroundColor: tecnicosTipoTab === 'todos' ? 'rgba(0, 100, 255, 0.3)' : '#484848',
                       borderColor: tecnicosTipoTab === 'todos' ? 'rgba(0, 100, 255, 0.6)' : 'rgba(0, 100, 255, 0.3)',
                       color: tecnicosTipoTab === 'todos' ? '#66b3ff' : '#fff',
                       transition: 'all 0.3s ease'
@@ -27145,7 +27145,7 @@ export default function Dashboard() {
                       fontWeight: 'bold',
                       border: '1px solid',
                       borderColor: tecnicosTipoTab === 'interno' ? 'rgba(0, 200, 83, 0.5)' : 'rgba(0, 200, 83, 0.2)',
-                      backgroundColor: tecnicosTipoTab === 'interno' ? 'rgba(0, 200, 83, 0.2)' : '#1e1e1e',
+                      backgroundColor: tecnicosTipoTab === 'interno' ? 'rgba(0, 200, 83, 0.2)' : '#484848',
                       color: tecnicosTipoTab === 'interno' ? '#00c853' : '#fff',
                       transition: 'all 0.3s ease'
                     }}
@@ -27161,7 +27161,7 @@ export default function Dashboard() {
                       fontWeight: 'bold',
                       border: '1px solid',
                       borderColor: tecnicosTipoTab === 'externo' ? 'rgba(0, 200, 83, 0.5)' : 'rgba(0, 200, 83, 0.2)',
-                      backgroundColor: tecnicosTipoTab === 'externo' ? 'rgba(0, 200, 83, 0.2)' : '#1e1e1e',
+                      backgroundColor: tecnicosTipoTab === 'externo' ? 'rgba(0, 200, 83, 0.2)' : '#484848',
                       color: tecnicosTipoTab === 'externo' ? '#00c853' : '#fff',
                       transition: 'all 0.3s ease'
                     }}
@@ -27179,23 +27179,23 @@ export default function Dashboard() {
                     <h3 style={{ marginBottom: '15px' }}>{editingTecnico ? (safeT?.editTecnico || 'Editar Técnico') : (safeT?.addTecnico || 'Adicionar Técnico')}</h3>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
-                      <input type="text" value={tecnicoForm.name} onChange={(e) => setTecnicoForm({ ...tecnicoForm, name: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                      <input type="text" value={tecnicoForm.name} onChange={(e) => setTecnicoForm({ ...tecnicoForm, name: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
-                      <input type="email" value={tecnicoForm.email} onChange={(e) => setTecnicoForm({ ...tecnicoForm, email: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                      <input type="email" value={tecnicoForm.email} onChange={(e) => setTecnicoForm({ ...tecnicoForm, email: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.phone || 'Telefone'}</label>
-                      <input type="text" value={tecnicoForm.phone} onChange={(e) => setTecnicoForm({ ...tecnicoForm, phone: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                      <input type="text" value={tecnicoForm.phone} onChange={(e) => setTecnicoForm({ ...tecnicoForm, phone: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.address || 'Endereço'}</label>
-                      <input type="text" value={tecnicoForm.address} onChange={(e) => setTecnicoForm({ ...tecnicoForm, address: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                      <input type="text" value={tecnicoForm.address} onChange={(e) => setTecnicoForm({ ...tecnicoForm, address: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.type || 'Tipo'}</label>
-                      <select value={tecnicoForm.type} onChange={(e) => setTecnicoForm({ ...tecnicoForm, type: e.target.value as 'internal' | 'external' })} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}>
+                      <select value={tecnicoForm.type} onChange={(e) => setTecnicoForm({ ...tecnicoForm, type: e.target.value as 'internal' | 'external' })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}>
                         <option value="internal">{safeT?.internal || 'Interno'}</option>
                         <option value="external">{safeT?.external || 'Externo'}</option>
                       </select>
@@ -27211,7 +27211,7 @@ export default function Dashboard() {
                           }
                           reader.readAsDataURL(file)
                         }
-                      }} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                      }} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button className="btn-primary" onClick={handleSaveTecnico} style={{ flex: 1 }}>
@@ -27317,7 +27317,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <div style={{ padding: '28px', backgroundColor: '#1e1e1e', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+            <div style={{ padding: '28px', backgroundColor: '#484848', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '18px 24px', marginBottom: '24px' }}>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.cadastroNonatoServiceLogo || 'Logo da empresa'}</label>
@@ -27335,39 +27335,39 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.fichaCadastralNomeEmpresa || 'Nome da empresa'}</label>
-                  <input type="text" value={fichaCadastral.nomeEmpresa} onChange={e => setFichaCadastral({ ...fichaCadastral, nomeEmpresa: e.target.value })} placeholder="Ex: Nonato Service, Lda" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
+                  <input type="text" value={fichaCadastral.nomeEmpresa} onChange={e => setFichaCadastral({ ...fichaCadastral, nomeEmpresa: e.target.value })} placeholder="Ex: Nonato Service, Lda" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.fichaCadastralNif || 'NIF'}</label>
-                  <input type="text" value={fichaCadastral.nif} onChange={e => setFichaCadastral({ ...fichaCadastral, nif: e.target.value })} placeholder="PT 123 456 789" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
+                  <input type="text" value={fichaCadastral.nif} onChange={e => setFichaCadastral({ ...fichaCadastral, nif: e.target.value })} placeholder="PT 123 456 789" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.fichaCadastralNib || 'NIB (conta nacional)'}</label>
-                  <input type="text" value={fichaCadastral.nib} onChange={e => setFichaCadastral({ ...fichaCadastral, nib: e.target.value })} placeholder="0000 0000 00000000000 00" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
+                  <input type="text" value={fichaCadastral.nib} onChange={e => setFichaCadastral({ ...fichaCadastral, nib: e.target.value })} placeholder="0000 0000 00000000000 00" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.cadastroNonatoServiceIban || 'IBAN (transferências internacionais)'}</label>
-                  <input type="text" value={fichaCadastral.iban ?? ''} onChange={e => setFichaCadastral({ ...fichaCadastral, iban: e.target.value })} placeholder="PT50 0000 0000 0000 0000 0000 0" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
+                  <input type="text" value={fichaCadastral.iban ?? ''} onChange={e => setFichaCadastral({ ...fichaCadastral, iban: e.target.value })} placeholder="PT50 0000 0000 0000 0000 0000 0" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.fichaCadastralSwift || 'Código SWIFT / BIC'}</label>
-                  <input type="text" value={fichaCadastral.swift} onChange={e => setFichaCadastral({ ...fichaCadastral, swift: e.target.value })} placeholder="EX: CGDIPTPL" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
+                  <input type="text" value={fichaCadastral.swift} onChange={e => setFichaCadastral({ ...fichaCadastral, swift: e.target.value })} placeholder="EX: CGDIPTPL" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.cadastroNonatoServiceNomeBanco || 'Nome do banco'}</label>
-                  <input type="text" value={fichaCadastral.nomeBanco ?? ''} onChange={e => setFichaCadastral({ ...fichaCadastral, nomeBanco: e.target.value })} placeholder="Ex: Caixa Geral de Depósitos" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
+                  <input type="text" value={fichaCadastral.nomeBanco ?? ''} onChange={e => setFichaCadastral({ ...fichaCadastral, nomeBanco: e.target.value })} placeholder="Ex: Caixa Geral de Depósitos" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.cadastroNonatoServiceTelefone || 'Telefone'}</label>
-                  <input type="text" value={fichaCadastral.telefone ?? ''} onChange={e => setFichaCadastral({ ...fichaCadastral, telefone: e.target.value })} placeholder="+351 123 456 789" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
+                  <input type="text" value={fichaCadastral.telefone ?? ''} onChange={e => setFichaCadastral({ ...fichaCadastral, telefone: e.target.value })} placeholder="+351 123 456 789" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.cadastroNonatoServiceEmail || 'E-mail'}</label>
-                  <input type="email" value={fichaCadastral.email ?? ''} onChange={e => setFichaCadastral({ ...fichaCadastral, email: e.target.value })} placeholder="geral@nonatoservice.pt" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
+                  <input type="email" value={fichaCadastral.email ?? ''} onChange={e => setFichaCadastral({ ...fichaCadastral, email: e.target.value })} placeholder="geral@nonatoservice.pt" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.cadastroNonatoServiceMorada || 'Morada'}</label>
-                  <input type="text" value={fichaCadastral.morada ?? ''} onChange={e => setFichaCadastral({ ...fichaCadastral, morada: e.target.value })} placeholder="Rua, número, código postal, localidade" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
+                  <input type="text" value={fichaCadastral.morada ?? ''} onChange={e => setFichaCadastral({ ...fichaCadastral, morada: e.target.value })} placeholder="Rua, número, código postal, localidade" style={{ width: '100%', padding: '10px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
                 </div>
               </div>
               <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', marginBottom: '20px', lineHeight: 1.5 }}>
@@ -27502,7 +27502,7 @@ export default function Dashboard() {
                         telefoneWhats: primeiroTel
                       })
                     }}
-                    style={{ width: '100%', maxWidth: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.35)', borderRadius: '6px', cursor: 'pointer' }}
+                    style={{ width: '100%', maxWidth: '100%', padding: '10px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.35)', borderRadius: '6px', cursor: 'pointer' }}
                   >
                     <option value="">{safeT?.cadastroNonatoEnvioPlaceholderCliente || '— Selecionar cliente do cadastro (preenche e-mail e telefone) —'}</option>
                     {clientesOrdenadosAlfabeticamente.map(cli => (
@@ -27521,7 +27521,7 @@ export default function Dashboard() {
                       value={cadastroNonatoEnvioCliente.emailDestino}
                       onChange={e => setCadastroNonatoEnvioCliente({ ...cadastroNonatoEnvioCliente, emailDestino: e.target.value, clienteId: '' })}
                       placeholder="cliente@empresa.pt"
-                      style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 150, 255, 0.35)', borderRadius: '6px' }}
+                      style={{ width: '100%', padding: '10px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 150, 255, 0.35)', borderRadius: '6px' }}
                     />
                   </div>
                   <div>
@@ -27531,7 +27531,7 @@ export default function Dashboard() {
                       value={cadastroNonatoEnvioCliente.telefoneWhats}
                       onChange={e => setCadastroNonatoEnvioCliente({ ...cadastroNonatoEnvioCliente, telefoneWhats: e.target.value, clienteId: '' })}
                       placeholder="+351 9XX XXX XXX"
-                      style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(37, 211, 102, 0.35)', borderRadius: '6px' }}
+                      style={{ width: '100%', padding: '10px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(37, 211, 102, 0.35)', borderRadius: '6px' }}
                     />
                   </div>
                 </div>
@@ -27628,7 +27628,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <div style={{ padding: '24px', backgroundColor: '#1e1e1e', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)', marginBottom: '18px' }}>
+            <div style={{ padding: '24px', backgroundColor: '#484848', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)', marginBottom: '18px' }}>
               <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', marginBottom: '16px', lineHeight: 1.55 }}>
                 {trPag.fichaPagamentoTransferenciaInfo || ''}
               </p>
@@ -27797,7 +27797,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <div style={{ padding: '24px', backgroundColor: '#1e1e1e', borderRadius: '12px', border: '1px solid rgba(80, 160, 255, 0.25)', marginBottom: '18px' }}>
+            <div style={{ padding: '24px', backgroundColor: '#484848', borderRadius: '12px', border: '1px solid rgba(80, 160, 255, 0.25)', marginBottom: '18px' }}>
               <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', marginBottom: '16px', lineHeight: 1.55 }}>
                 {trFat.fichaFaturaClienteInfo || ''}
               </p>
@@ -28208,11 +28208,11 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Barra de Ações - padrão Visualizar Equipamento (card #1e1e1e, borda 1px verde) */}
+            {/* Barra de Ações - padrão Visualizar Equipamento (card #484848, borda 1px verde) */}
             <div style={{
               marginBottom: '20px',
               padding: '14px 18px',
-              backgroundColor: '#1e1e1e',
+              backgroundColor: '#484848',
               borderRadius: '8px',
               border: '1px solid rgba(0, 200, 83, 0.2)',
               display: 'flex',
@@ -28249,7 +28249,7 @@ export default function Dashboard() {
                   style={{
                     width: '100%',
                     padding: '12px 40px 12px 16px',
-                    backgroundColor: '#1e1e1e',
+                    backgroundColor: '#484848',
                     color: '#fff',
                     border: '1px solid rgba(0, 200, 83, 0.3)',
                     borderRadius: '8px',
@@ -28268,7 +28268,7 @@ export default function Dashboard() {
             </div>
 
             {showEquipamentoForm && (
-              <div id="equipamentos-form-section" style={{ border: '1px solid rgba(0, 200, 83, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#1e1e1e' }}>
+              <div id="equipamentos-form-section" style={{ border: '1px solid rgba(0, 200, 83, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#484848' }}>
                 <h3 style={{ marginBottom: '15px', color: '#00c853' }}>{editingEquipamento ? safeT?.editEquipamento : safeT?.addEquipamento}</h3>
                 
                 <div style={{ marginBottom: '15px' }}>
@@ -28278,7 +28278,7 @@ export default function Dashboard() {
                     value={equipamentoForm.id}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, id: e.target.value })}
                     disabled={!!editingEquipamento}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -28288,7 +28288,7 @@ export default function Dashboard() {
                     type="text"
                     value={equipamentoForm.tipoEquipamento}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, tipoEquipamento: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -28298,7 +28298,7 @@ export default function Dashboard() {
                     type="text"
                     value={equipamentoForm.modelo}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, modelo: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -28308,7 +28308,7 @@ export default function Dashboard() {
                     type="text"
                     value={equipamentoForm.marca}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, marca: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -28318,7 +28318,7 @@ export default function Dashboard() {
                     type="text"
                     value={equipamentoForm.numeroSerie}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, numeroSerie: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -28328,7 +28328,7 @@ export default function Dashboard() {
                     type="text"
                     value={equipamentoForm.familia}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, familia: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -28338,7 +28338,7 @@ export default function Dashboard() {
                     type="text"
                     value={equipamentoForm.grupo}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, grupo: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -28349,7 +28349,7 @@ export default function Dashboard() {
                     placeholder={(safeT as any)?.equipamentoPesoExemplo || 'Ex: 10 kg'}
                     value={equipamentoForm.peso}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, peso: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -28399,13 +28399,13 @@ export default function Dashboard() {
                           )
                           setEquipamentoForm({ ...equipamentoForm, quantidadePartes: qtd, partes: novasPartes })
                         }}
-                        style={{ width: '100%', maxWidth: '120px', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', maxWidth: '120px', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     {(equipamentoForm.partes || []).map((parte, idx) => {
                       const total = equipamentoForm.quantidadePartes || 1
                       return (
-                        <div key={idx} style={{ marginBottom: '20px', padding: '14px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                        <div key={idx} style={{ marginBottom: '20px', padding: '14px', backgroundColor: '#404040', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                           <div style={{ marginBottom: '10px', fontWeight: 600, color: '#00c853' }}>
                             {(safeT as any)?.equipamentoParte || 'Parte'} {parte.ordem}/{total}
                           </div>
@@ -28419,7 +28419,7 @@ export default function Dashboard() {
                                 novasPartes[idx] = { ...parte, tipoId, id: tipoId === 'especifico' ? (parte.id || '') : undefined }
                                 setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                               }}
-                              style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                              style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                             >
                               <option value="geral">{(safeT as any)?.equipamentoIdGeral || 'ID geral (igual ao equipamento)'}</option>
                               <option value="especifico">{(safeT as any)?.equipamentoIdEspecifico || 'ID específico'}</option>
@@ -28436,7 +28436,7 @@ export default function Dashboard() {
                                   novasPartes[idx] = { ...parte, numeroSerieFabricante: e.target.value }
                                   setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                                 }}
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                               />
                             </div>
                           )}
@@ -28452,7 +28452,7 @@ export default function Dashboard() {
                                     novasPartes[idx] = { ...parte, id: e.target.value }
                                     setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                                   }}
-                                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                                 />
                               </div>
                               <div style={{ marginBottom: '10px' }}>
@@ -28465,7 +28465,7 @@ export default function Dashboard() {
                                     novasPartes[idx] = { ...parte, numeroSerieFabricante: e.target.value }
                                     setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                                   }}
-                                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                                 />
                               </div>
                             </>
@@ -28482,7 +28482,7 @@ export default function Dashboard() {
                     type="file"
                     accept="image/*"
                     onChange={handleEquipamentoPhotoChange}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   />
                   {equipamentoForm.photo && (
                     <div style={{ marginTop: '10px' }}>
@@ -28506,7 +28506,7 @@ export default function Dashboard() {
             )}
 
             {searchedEquipamento ? (
-              <div style={{ padding: '20px', backgroundColor: '#141414', borderRadius: '8px', marginBottom: '20px' }}>
+              <div style={{ padding: '20px', backgroundColor: '#404040', borderRadius: '8px', marginBottom: '20px' }}>
                 <h3>{searchedEquipamento.tipoEquipamento} - {searchedEquipamento.modelo}</h3>
                 <p><strong>{safeT?.marca || 'Marca'}:</strong> {searchedEquipamento.marca}</p>
                 <p><strong>{safeT?.numeroSerie || 'Número de Série'}:</strong> {searchedEquipamento.numeroSerie}</p>
@@ -28650,7 +28650,7 @@ export default function Dashboard() {
             {/* Modal de Visualização Detalhada do Equipamento */}
             {viewingEquipamento && (
               <div className="modal-overlay" onClick={() => setViewingEquipamento(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-                <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px', maxHeight: '90vh', overflowY: 'auto', width: '100%', backgroundColor: '#141414', borderRadius: '8px', padding: '20px' }}>
+                <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px', maxHeight: '90vh', overflowY: 'auto', width: '100%', backgroundColor: '#404040', borderRadius: '8px', padding: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid rgba(0, 200, 83, 0.3)', paddingBottom: '15px' }}>
                     <h2 style={{ margin: 0 }}>{viewingEquipamento.tipoEquipamento} - {viewingEquipamento.modelo}</h2>
                     <button
@@ -28665,7 +28665,7 @@ export default function Dashboard() {
                   </div>
 
                   {/* Informações Básicas */}
-                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
                     <h3 style={{ marginBottom: '15px', color: '#00c853' }}>{t.informacoesBasicas || 'Informações Básicas'}</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                       <p><strong>ID:</strong> {viewingEquipamento.id}</p>
@@ -28695,7 +28695,7 @@ export default function Dashboard() {
                             onClick={() => setEquipamentoDetailTab(tab)}
                             style={{
                               padding: '10px 20px',
-                              backgroundColor: isActive ? 'rgba(0, 200, 83, 0.2)' : '#1e1e1e',
+                              backgroundColor: isActive ? 'rgba(0, 200, 83, 0.2)' : '#484848',
                               border: isActive ? '1px solid rgba(0, 200, 83, 0.5)' : '1px solid rgba(0, 200, 83, 0.2)',
                               color: '#fff',
                               borderRadius: '4px',
@@ -28717,7 +28717,7 @@ export default function Dashboard() {
                     {equipamentoDetailTab === 'historico' && (
                       <div>
                         <h3 style={{ marginBottom: '15px', color: '#00c853' }}>{t.historicoEquipamento || 'Histórico do Equipamento'}</h3>
-                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
                           <h4 style={{ marginBottom: '10px' }}>{t.adicionarEventoHistorico || 'Adicionar Evento ao Histórico'}</h4>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <div>
@@ -28725,7 +28725,7 @@ export default function Dashboard() {
                               <select
                                 value={historicoForm.tipo}
                                 onChange={(e) => setHistoricoForm({ ...historicoForm, tipo: e.target.value })}
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                               >
                                 <option value="manutencao">{t.manutencao || 'Manutenção'}</option>
                                 <option value="reparo">{t.reparo || 'Reparo'}</option>
@@ -28741,7 +28741,7 @@ export default function Dashboard() {
                                 value={historicoForm.descricao}
                                 onValueChange={(v) => setHistoricoForm({ ...historicoForm, descricao: v })}
                                 rows={3}
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                                 placeholder={t?.descricaoEventoPlaceholder || 'Descreva o evento...'}
                               />
                             </div>
@@ -28751,7 +28751,7 @@ export default function Dashboard() {
                                 type="text"
                                 value={historicoForm.responsavel}
                                 onChange={(e) => setHistoricoForm({ ...historicoForm, responsavel: e.target.value })}
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                                 placeholder={t?.nomeResponsavel || 'Nome do responsável'}
                               />
                             </div>
@@ -28761,7 +28761,7 @@ export default function Dashboard() {
                                 value={historicoForm.observacoes}
                                 onValueChange={(v) => setHistoricoForm({ ...historicoForm, observacoes: v })}
                                 rows={2}
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                                 placeholder={t?.observacoesAdicionais || 'Observações adicionais...'}
                               />
                             </div>
@@ -28807,7 +28807,7 @@ export default function Dashboard() {
                             <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>{t.nenhumEventoRegistrado || 'Nenhum evento registrado no histórico.'}</p>
                           ) : (
                             viewingEquipamento.historico.map((evento) => (
-                              <div key={evento.id} style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                              <div key={evento.id} style={{ padding: '15px', backgroundColor: '#484848', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
                                   <div>
                                     <strong style={{ color: '#00c853' }}>{evento.tipo.charAt(0).toUpperCase() + evento.tipo.slice(1)}</strong>
@@ -28856,7 +28856,7 @@ export default function Dashboard() {
                     {equipamentoDetailTab === 'documentos' && (
                       <div>
                         <h3 style={{ marginBottom: '15px', color: '#00c853' }}>{t.documentoPDF || 'Documentos PDF'}</h3>
-                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
                           <h4 style={{ marginBottom: '10px' }}>{t.addPdf || 'Adicionar Documento PDF'}</h4>
                           <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', opacity: 0.8 }}>{t.selecioneArquivoPdf || 'Selecione um arquivo PDF:'}</label>
                           <input
@@ -28888,7 +28888,7 @@ export default function Dashboard() {
                               reader.readAsDataURL(file)
                               e.target.value = ''
                             }}
-                            style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                            style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                           />
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -28896,7 +28896,7 @@ export default function Dashboard() {
                             <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>{t.nenhumDocumentoPdf || 'Nenhum documento PDF cadastrado.'}</p>
                           ) : (
                             viewingEquipamento.documentosPdf.map((pdf, index) => (
-                              <div key={index} style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div key={index} style={{ padding: '15px', backgroundColor: '#484848', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                   <span style={{ fontSize: '24px' }}>📄</span>
                                   <span>{t.documentoPDF || 'Documento PDF'} {index + 1}</span>
@@ -28925,7 +28925,7 @@ export default function Dashboard() {
                     {equipamentoDetailTab === 'fotos' && (
                       <div>
                         <h3 style={{ marginBottom: '15px', color: '#00c853' }}>{t.albumFotos || 'Álbum de Fotos'}</h3>
-                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
                           <h4 style={{ marginBottom: '10px' }}>{t.adicionarFotoAlbum || 'Adicionar Foto ao Álbum'}</h4>
                           <input
                             type="file"
@@ -28961,7 +28961,7 @@ export default function Dashboard() {
                               })
                               e.target.value = ''
                             }}
-                            style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                            style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                           />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '15px' }}>
@@ -28969,7 +28969,7 @@ export default function Dashboard() {
                             <div style={{ gridColumn: '1 / -1', textAlign: 'center', opacity: 0.6, padding: '20px' }}>{t.nenhumaFotoAlbum || 'Nenhuma foto no álbum.'}</div>
                           ) : (
                             viewingEquipamento.photoLibrary.map((foto, index) => (
-                              <div key={index} style={{ position: 'relative', padding: '10px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                              <div key={index} style={{ position: 'relative', padding: '10px', backgroundColor: '#484848', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                                 <img src={foto} alt={`Foto ${index + 1}`} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px', cursor: 'pointer' }} onClick={() => window.open(foto, '_blank')} />
                                 <button className="btn-danger" onClick={() => {
                                   if (window.confirm(t.confirmDeleteFoto || 'Tem certeza que deseja excluir esta foto?')) {
@@ -29102,7 +29102,7 @@ export default function Dashboard() {
                         
                         {/* Formulário de Adicionar/Editar Item */}
                         {(editingItemIncluded || !editingItemIncluded) && (
-                          <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+                          <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
                             <h4 style={{ marginBottom: '10px' }}>{editingItemIncluded ? (t.editItem || 'Editar Item') : (t.addItem || 'Adicionar Item')}</h4>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                               <input 
@@ -29116,7 +29116,7 @@ export default function Dashboard() {
                                   }
                                 }}
                                 placeholder={t.enterItemName || 'Digite o nome do item'} 
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} 
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} 
                               />
                               <div>
                                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px' }}>{t.anexarImagemOpcional || 'Anexar Imagem (opcional)'}</label>
@@ -29138,7 +29138,7 @@ export default function Dashboard() {
                                       reader.readAsDataURL(file)
                                     }
                                   }}
-                                  style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                                  style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                                 />
                                 {(editingItemIncluded ? itemIncludedForm.imagem : itemIncludedForm.imagem) && (
                                   <div style={{ marginTop: '10px' }}>
@@ -29243,7 +29243,7 @@ export default function Dashboard() {
                                 : item
                               
                               return (
-                                <div key={itemObj.id || index} style={{ padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                                <div key={itemObj.id || index} style={{ padding: '15px', backgroundColor: '#484848', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                                   <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                     {itemObj.imagem && (
                                       <img 
@@ -31574,7 +31574,7 @@ export default function Dashboard() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
               {sections.map((s, idx) => (
-                <div key={idx} style={{ background: '#141414', border: '1px solid rgba(0,200,83,0.2)', borderRadius: '12px', padding: '16px' }}>
+                <div key={idx} style={{ background: '#404040', border: '1px solid rgba(0,200,83,0.2)', borderRadius: '12px', padding: '16px' }}>
                   <h3 style={{ margin: '0 0 8px', color: '#2ecc71', fontSize: '15px' }}>{s.title}</h3>
                   <p style={{ margin: 0, color: '#d6d6d6', lineHeight: 1.6, fontSize: '13px' }}>{s.body}</p>
                 </div>
@@ -31747,7 +31747,7 @@ export default function Dashboard() {
                 <h3 style={{ marginBottom: '15px' }}>{editingRelatorioServico ? (safeT?.editRelatorioServico || 'Editar Relatório de Serviço') : (safeT?.addRelatorioServico || 'Adicionar Relatório de Serviço')}</h3>
                 
                 {/* Informações Básicas */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
                   <h4 style={{ marginBottom: '15px', color: '#00c853' }}>{safeT?.informacoesBasicas || 'Informações Básicas'}</h4>
                   <div className="relatorio-servico-form-grid-2" style={{ gap: '15px' }}>
                     <div>
@@ -31757,7 +31757,7 @@ export default function Dashboard() {
                         placeholder={safeT?.numeroRelatorio || 'Número do Relatório'}
                         value={relatorioServicoForm.numero}
                         onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, numero: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                       />
                       <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', margin: '6px 0 0', lineHeight: 1.35 }}>
                         {(safeT as any)?.numeroRelatorioAutoAjuda ||
@@ -31782,7 +31782,7 @@ export default function Dashboard() {
                             numero: preverProximoNumeroRelatorio(v),
                           })
                         }}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -31791,7 +31791,7 @@ export default function Dashboard() {
                       <select
                         value={relatorioServicoForm.tecnico}
                         onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, tecnico: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                       >
                         <option value="">{safeT?.selecioneTecnico || 'Selecione o técnico'}</option>
                         {tecnicos.map(tec => (
@@ -31823,7 +31823,7 @@ export default function Dashboard() {
                           })
                           if (selectedClient) applyKmClienteAoRelatorio(selectedClient)
                         }}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                       >
                         <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
                         {clientesOrdenadosAlfabeticamente.map(cli => (
@@ -32097,14 +32097,14 @@ export default function Dashboard() {
                         placeholder={safeT?.tipoServico || 'Tipo de Serviço'}
                         value={relatorioServicoForm.tipoServico}
                         onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, tipoServico: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Dias de Trabalho */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
                   <h4 style={{ marginBottom: '15px', color: '#00c853' }}>{safeT?.diasTrabalho || 'Dias de Trabalho'}</h4>
                   
                   {/* Formulário para adicionar novo dia - Formato da Foto */}
@@ -32116,7 +32116,7 @@ export default function Dashboard() {
                     padding: '20px', 
                     borderRadius: '8px', 
                     marginBottom: '15px', 
-                    backgroundColor: '#141414' 
+                    backgroundColor: '#404040' 
                   }}
                   >
                     <h5 style={{ 
@@ -32142,7 +32142,7 @@ export default function Dashboard() {
                       fontSize: '11px', 
                       color: '#00c853',
                       padding: '8px',
-                      backgroundColor: '#141414',
+                      backgroundColor: '#404040',
                       borderRadius: '4px',
                       border: '1px solid rgba(0, 200, 83, 0.3)'
                     }}>
@@ -32379,7 +32379,7 @@ export default function Dashboard() {
                             style={{ 
                               width: '100%', 
                               padding: '12px', 
-                              backgroundColor: '#1e1e1e', 
+                              backgroundColor: '#484848', 
                               color: '#fff', 
                               border: '1px solid rgba(255, 255, 255, 0.1)', 
                               borderRadius: '6px', 
@@ -32407,7 +32407,7 @@ export default function Dashboard() {
                             style={{ 
                               width: '100%', 
                               padding: '12px', 
-                              backgroundColor: '#1e1e1e', 
+                              backgroundColor: '#484848', 
                               color: '#fff', 
                               border: '1px solid rgba(255, 255, 255, 0.1)', 
                               borderRadius: '6px', 
@@ -32497,7 +32497,7 @@ export default function Dashboard() {
                         <div style={{ 
                           marginTop: '12px',
                           padding: '12px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           borderRadius: '6px',
                           border: '1px solid rgba(0, 200, 83, 0.3)'
                         }}>
@@ -32566,7 +32566,7 @@ export default function Dashboard() {
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           color: '#fff',
                           border: '1px solid rgba(255, 255, 255, 0.1)',
                           borderRadius: '6px',
@@ -32639,7 +32639,7 @@ export default function Dashboard() {
                     <div style={{ marginTop: '15px' }}>
                       <h5 style={{ marginBottom: '10px', color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: 'bold' }}>{safeT?.controleHorasDeslocamentos || 'CONTROLE DE HORAS E DESLOCAMENTOS'}</h5>
                       <div className="relatorio-dias-trabalho-wrap">
-                        <table className="relatorio-dias-trabalho-table" style={{ backgroundColor: '#141414', border: '1px solid rgba(0, 200, 83, 0.25)', fontSize: '10px' }}>
+                        <table className="relatorio-dias-trabalho-table" style={{ backgroundColor: '#404040', border: '1px solid rgba(0, 200, 83, 0.25)', fontSize: '10px' }}>
                           <thead>
                             <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.12)', borderBottom: '2px solid rgba(0, 200, 83, 0.35)' }}>
                               <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '60px' }} rowSpan={2}>{safeT?.data || 'DATA'}</th>
@@ -32740,7 +32740,7 @@ export default function Dashboard() {
                                       <td
                                         colSpan={12}
                                         className="relatorio-dia-descricao-cell"
-                                        style={{ padding: '8px', border: '1px solid rgba(0, 200, 83, 0.2)', color: '#ffffff', backgroundColor: '#141414' }}
+                                        style={{ padding: '8px', border: '1px solid rgba(0, 200, 83, 0.2)', color: '#ffffff', backgroundColor: '#404040' }}
                                       >
                                         <div style={{ display: 'flex', alignItems: 'start', gap: '8px', minWidth: 0 }}>
                                           <span style={{ fontSize: '12px', flexShrink: 0 }}>📝</span>
@@ -32757,14 +32757,14 @@ export default function Dashboard() {
                       </div>
                     </div>
                 ) : (
-                  <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', textAlign: 'center', border: '1px solid rgba(255, 255, 0, 0.3)' }}>
+                  <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px', textAlign: 'center', border: '1px solid rgba(255, 255, 0, 0.3)' }}>
                     <p style={{ color: '#ffaa00', fontSize: '13px' }}>{safeT?.nenhumDiaTrabalhoAdicionado || 'Nenhum dia de trabalho adicionado ainda'}</p>
                   </div>
                   )}
                 </div>
 
                 {/* Observações */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
                   <h4 style={{ marginBottom: '15px', color: '#00c853' }}>{t?.observacoes || 'Observações'}</h4>
                   <div>
                     <label style={{ display: 'block', marginBottom: '5px' }}>{t?.observacoes || 'Observações'}</label>
@@ -32777,7 +32777,7 @@ export default function Dashboard() {
                       style={{
                         width: '100%',
                         padding: '8px',
-                        backgroundColor: '#141414',
+                        backgroundColor: '#404040',
                         color: '#fff',
                         border: '1px solid rgba(0, 200, 83, 0.3)',
                         borderRadius: '4px',
@@ -32787,7 +32787,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Pontos em Aberto */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
                   <h4 style={{ marginBottom: '15px', color: '#00c853' }}>{t?.pontosAberto || 'Pontos em Aberto'}</h4>
                   <div>
                     <label style={{ display: 'block', marginBottom: '5px' }}>{t?.pontosAberto || 'Pontos em Aberto'}</label>
@@ -32800,7 +32800,7 @@ export default function Dashboard() {
                       style={{
                         width: '100%',
                         padding: '8px',
-                        backgroundColor: '#141414',
+                        backgroundColor: '#404040',
                         color: '#fff',
                         border: '1px solid rgba(0, 200, 83, 0.3)',
                         borderRadius: '4px',
@@ -32810,7 +32810,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Assinatura do Cliente - confirmação do serviço */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.3)' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.3)' }}>
                     <h4 style={{ marginBottom: '10px', color: '#00c853' }}>{safeT?.assinaturaCliente || 'Assinatura do Cliente'}</h4>
                     <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginBottom: '12px' }}>{safeT?.assinaturaClienteDesc || 'O cliente pode assinar aqui quando utilizar tablet ou telemóvel.'}</p>
                     {relatorioServicoForm.assinaturaCliente && !mostrarCanvasAssinatura ? (
@@ -32914,11 +32914,11 @@ export default function Dashboard() {
 
                 {/* Peças de Substituição */}
                 {relatorioServicoForm.necessarioTrocaPecas && (
-                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
                     <h4 style={{ marginBottom: '15px', color: '#00c853' }}>{safeT?.pecasSubstituicao || 'Peças de Substituição'}</h4>
                     
                     {/* Formulário para adicionar peça */}
-                    <div style={{ border: '1px solid rgba(0, 200, 83, 0.2)', padding: '15px', borderRadius: '6px', marginBottom: '15px', backgroundColor: '#141414' }}>
+                    <div style={{ border: '1px solid rgba(0, 200, 83, 0.2)', padding: '15px', borderRadius: '6px', marginBottom: '15px', backgroundColor: '#404040' }}>
                       <h5 style={{ marginBottom: '10px' }}>{safeT?.addPeca || 'Adicionar Peça'}</h5>
                       
                       {/* Busca por código da biblioteca */}
@@ -32983,7 +32983,7 @@ export default function Dashboard() {
                                 })
                               }
                             }}
-                            style={{ flex: 1, minWidth: '160px', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', fontSize: '12px' }}
+                            style={{ flex: 1, minWidth: '160px', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', fontSize: '12px' }}
                           />
                           <button
                             type="button"
@@ -33030,7 +33030,7 @@ export default function Dashboard() {
 
                       {/* Exibir peça encontrada */}
                       {pecaSelecionadaBiblioteca && (
-                        <div style={{ marginBottom: '15px', padding: '12px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '2px solid rgba(0, 200, 83, 0.5)' }}>
+                        <div style={{ marginBottom: '15px', padding: '12px', backgroundColor: '#484848', borderRadius: '6px', border: '2px solid rgba(0, 200, 83, 0.5)' }}>
                           <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                             {pecaSelecionadaBiblioteca.imagem && (
                               <img 
@@ -33072,7 +33072,7 @@ export default function Dashboard() {
                           value={novaPeca.quantidade}
                           onChange={(e) => setNovaPeca({ ...novaPeca, quantidade: e.target.value })}
                           placeholder={safeT?.digiteQuantidade || 'Digite a quantidade...'}
-                          style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', fontSize: '12px' }}
+                          style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', fontSize: '12px' }}
                         />
                       </div>
 
@@ -33105,7 +33105,7 @@ export default function Dashboard() {
                       <div>
                         <h5 style={{ marginBottom: '10px' }}>{safeT?.pecasAdicionadas || 'Peças Adicionadas'}:</h5>
                         {relatorioServicoForm.pecasSubstituicao.map((peca, index) => (
-                          <div key={peca.id || index} style={{ border: '1px solid rgba(0, 200, 83, 0.2)', padding: '10px', borderRadius: '6px', marginBottom: '10px', backgroundColor: '#141414', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div key={peca.id || index} style={{ border: '1px solid rgba(0, 200, 83, 0.2)', padding: '10px', borderRadius: '6px', marginBottom: '10px', backgroundColor: '#404040', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
                               <p style={{ marginBottom: '3px', fontWeight: 'bold' }}>{peca.descricao}</p>
                               <p style={{ fontSize: '12px', marginBottom: '3px' }}>{safeT?.codigo || 'Código'}: {peca.codigo} | {safeT?.quantidade || 'Quantidade'}: {peca.quantidade}</p>
@@ -33118,9 +33118,9 @@ export default function Dashboard() {
                       </div>
                     )}
                     
-                    {/* Botão Gerar Pedido de Orçamento - padrão Visualizar Equipamento (card #1e1e1e, borda 1px, botão estilo aba) */}
+                    {/* Botão Gerar Pedido de Orçamento - padrão Visualizar Equipamento (card #484848, borda 1px, botão estilo aba) */}
                     {relatorioServicoForm.pecasSubstituicao.length > 0 && (
-                      <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                      <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                         <button 
                           onClick={() => setShowPedidoOrcamentoModal(true)}
                           style={{ 
@@ -33166,27 +33166,27 @@ export default function Dashboard() {
                   >
                     <h3 className="relatorio-resumo-cobranca-titulo">{safeT?.resumoHorasDeslocamentos?.toUpperCase() || 'RESUMO DE HORAS, DESLOCAMENTOS E DIÁRIAS'}</h3>
                     <div className="relatorio-servico-resumo-totais-grid">
-                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
+                      <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
                         <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasTrabalho || 'Horas de Trabalho'}</p>
                         <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasTrabalho}h</p>
                       </div>
-                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
+                      <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
                         <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.kmsPercorridos || 'Km\'s Percorridos'}</p>
                         <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).kmsPercorridos} km</p>
                       </div>
-                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
+                      <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
                         <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasViagem || 'Horas de Viagem'}</p>
                         <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagem}h</p>
                       </div>
-                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
+                      <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
                         <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
                         <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{relatorioServicoForm.diasTrabalho.length}</p>
                       </div>
-                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.3)', textAlign: 'center' }}>
+                      <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.3)', textAlign: 'center' }}>
                         <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>
                         <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagemIda}</p>
                       </div>
-                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.3)', textAlign: 'center' }}>
+                      <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.3)', textAlign: 'center' }}>
                         <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemRetorno || 'Horas de Viagem de Retorno'}</p>
                         <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagemRetorno}</p>
                       </div>
@@ -33195,13 +33195,13 @@ export default function Dashboard() {
                     )
                   })()
                 ) : (
-                  <div style={{ marginBottom: '15px', padding: '12px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(255, 255, 0, 0.3)', textAlign: 'center' }}>
+                  <div style={{ marginBottom: '15px', padding: '12px', backgroundColor: '#484848', borderRadius: '6px', border: '1px solid rgba(255, 255, 0, 0.3)', textAlign: 'center' }}>
                     <p style={{ color: '#ffaa00', fontSize: '12px' }}>⚠️ {safeT?.adicioneDiasTrabalho || 'Adicione dias de trabalho para ver os cálculos finais'}</p>
                   </div>
                 )}
 
                 {/* Status do Serviço */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
                   <h4 style={{ marginBottom: '15px', color: '#00c853' }}>{safeT?.statusServico || 'Status do Serviço'}</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
@@ -33338,7 +33338,7 @@ export default function Dashboard() {
                       codigo: '',
                       quantidade: ''
                     });
-                  }} style={{ padding: '8px 16px', backgroundColor: '#1e1e1e', borderColor: '#666' }}>
+                  }} style={{ padding: '8px 16px', backgroundColor: '#484848', borderColor: '#666' }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                   </div>
@@ -33436,7 +33436,7 @@ export default function Dashboard() {
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    backgroundColor: '#1e1e1e',
+                    backgroundColor: '#484848',
                     color: '#fff',
                     border: '1px solid rgba(0, 200, 83, 0.28)',
                     borderRadius: '8px',
@@ -33489,7 +33489,7 @@ export default function Dashboard() {
               </p>
             ) : !relatorioServicoListaDetalheId ? (
               <>
-                <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#1e1e1e', borderRadius: '6px', fontSize: '14px' }}>
+                <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#484848', borderRadius: '6px', fontSize: '14px' }}>
                   {safeT?.mostrando || 'Mostrando'} {relatoriosListaFiltrados.length} {safeT?.de || 'de'}{' '}
                   {relatoriosServicoListaPrincipal.length} {safeT?.relatoriosServico || 'relatório(s)'}
                 </div>
@@ -34570,7 +34570,7 @@ export default function Dashboard() {
                       style={{ 
                         width: '100%', 
                         padding: '10px', 
-                        backgroundColor: '#1e1e1e', 
+                        backgroundColor: '#484848', 
                         color: '#fff', 
                         border: '1px solid rgba(0, 200, 83, 0.3)', 
                         borderRadius: '4px',
@@ -34587,7 +34587,7 @@ export default function Dashboard() {
                     {safeT?.nenhumEncontrado || 'Nenhum encontrado com'} {safeT?.cliente || 'cliente'} "{buscaCliente}"
                   </p>
                 ) : (
-                  <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#1e1e1e', borderRadius: '6px', fontSize: '14px' }}>
+                  <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#484848', borderRadius: '6px', fontSize: '14px' }}>
                     {safeT?.mostrando || 'Mostrando'} {clientesFiltrados.length} {safeT?.de || 'de'} {clientes.length} {safeT?.clientes || 'cliente(s)'}
                   </div>
                 )}
@@ -34879,7 +34879,7 @@ export default function Dashboard() {
                   style={{
                     width: '100%',
                     padding: '10px',
-                    backgroundColor: '#1e1e1e',
+                    backgroundColor: '#484848',
                     color: '#fff',
                     border: '1px solid rgba(0, 200, 83, 0.3)',
                     borderRadius: '4px',
@@ -34996,7 +34996,7 @@ export default function Dashboard() {
                   const temFaturas = fornecedor.faturas && fornecedor.faturas.length > 0
 
                   return (
-                    <div key={fornecedor.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                    <div key={fornecedor.id} style={{ backgroundColor: '#404040', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                       <h3 style={{ marginBottom: '10px', color: '#00c853' }}>{fornecedor.nomeEmpresa}</h3>
                       {fornecedor.localidade && (
                         <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{t.localidade}:</strong> {fornecedor.localidade}{fornecedor.pais && `, ${fornecedor.pais}`}</p>
@@ -35019,7 +35019,7 @@ export default function Dashboard() {
 
                       {/* Indicadores de Status de Faturas por Cliente */}
                       {!temFaturas ? (
-                        <div style={{ marginTop: '15px', marginBottom: '10px', padding: '10px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+                        <div style={{ marginTop: '15px', marginBottom: '10px', padding: '10px', backgroundColor: '#484848', borderRadius: '6px' }}>
                           <h4 style={{ fontSize: '13px', marginBottom: '10px', color: '#00c853' }}>{safeT?.statusFaturas || 'Status de Faturas'}:</h4>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                             {/* BRANCA - Sem Faturas */}
@@ -35056,7 +35056,7 @@ export default function Dashboard() {
                           </div>
                         </div>
                       ) : statusPorCliente.length > 0 && (
-                        <div style={{ marginTop: '15px', marginBottom: '10px', padding: '10px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+                        <div style={{ marginTop: '15px', marginBottom: '10px', padding: '10px', backgroundColor: '#484848', borderRadius: '6px' }}>
                           <h4 style={{ fontSize: '13px', marginBottom: '10px', color: '#00c853' }}>{safeT?.statusFaturasPorCliente || 'Status de Faturas por Cliente'}:</h4>
                           {statusPorCliente.map((status, idx) => (
                             <div key={idx} style={{ marginBottom: '15px', paddingBottom: '15px', borderBottom: idx < statusPorCliente.length - 1 ? '1px solid rgba(0, 200, 83, 0.1)' : 'none' }}>
@@ -35279,7 +35279,7 @@ export default function Dashboard() {
               alignItems: 'start',
               marginBottom: '32px'
             }}>
-              <div style={{ padding: '20px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.25)' }}>
+              <div style={{ padding: '20px', backgroundColor: '#404040', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.25)' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#00c853', fontWeight: 600 }}>
                   {safeT?.translateFrom || 'Traduzir de:'}
                 </label>
@@ -35287,7 +35287,7 @@ export default function Dashboard() {
                   className="ns-lang-select"
                   value={translatorFrom}
                   onChange={(e) => setTranslatorFrom(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px', marginBottom: '14px', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '10px 12px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px', marginBottom: '14px', fontSize: '14px' }}
                 >
                   {langs.map(lang => (
                     <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -35298,7 +35298,7 @@ export default function Dashboard() {
                   onValueChange={setTranslatorText}
                   placeholder={safeT?.enterTextToTranslate || 'Digite o texto...'}
                   rows={5}
-                  style={{ width: '100%', padding: '14px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px', resize: 'vertical', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '14px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px', resize: 'vertical', fontSize: '14px' }}
                 />
               </div>
 
@@ -35328,7 +35328,7 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              <div style={{ padding: '20px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.25)' }}>
+              <div style={{ padding: '20px', backgroundColor: '#404040', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.25)' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#00c853', fontWeight: 600 }}>
                   {safeT?.translateTo || 'Traduzir para:'}
                 </label>
@@ -35336,7 +35336,7 @@ export default function Dashboard() {
                   className="ns-lang-select"
                   value={translatorTo}
                   onChange={(e) => setTranslatorTo(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px', marginBottom: '14px', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '10px 12px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px', marginBottom: '14px', fontSize: '14px' }}
                 >
                   {langs.map(lang => (
                     <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -35348,7 +35348,7 @@ export default function Dashboard() {
                   value={translatedText || quickTranslateResult || ''}
                   onValueChange={() => {}}
                   rows={5}
-                  style={{ width: '100%', padding: '14px', backgroundColor: '#1e1e1e', color: '#00c853', border: '1px solid rgba(0, 200, 83, 0.4)', borderRadius: '8px', resize: 'vertical', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '14px', backgroundColor: '#484848', color: '#00c853', border: '1px solid rgba(0, 200, 83, 0.4)', borderRadius: '8px', resize: 'vertical', fontSize: '14px' }}
                 />
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
                   {(translatedText || quickTranslateResult) && (
@@ -35406,7 +35406,7 @@ export default function Dashboard() {
             {/* Biblioteca de palavras-chave - separada por idiomas */}
             <div style={{
               padding: '24px',
-              backgroundColor: '#141414',
+              backgroundColor: '#404040',
               borderRadius: '16px',
               border: '2px solid rgba(0, 200, 83, 0.3)',
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
@@ -35424,7 +35424,7 @@ export default function Dashboard() {
                     className="ns-lang-select"
                     value={translatorLibraryFrom}
                     onChange={(e) => setTranslatorLibraryFrom(e.target.value)}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px' }}
                   >
                     {langs.map(lang => (
                       <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -35437,7 +35437,7 @@ export default function Dashboard() {
                     className="ns-lang-select"
                     value={translatorLibraryTo}
                     onChange={(e) => setTranslatorLibraryTo(e.target.value)}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px' }}
                   >
                     {langs.map(lang => (
                       <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -35453,7 +35453,7 @@ export default function Dashboard() {
                     value={libraryEntrySource}
                     onChange={(e) => setLibraryEntrySource(e.target.value)}
                     placeholder={safeT?.enterWord || 'Ex.: Olá'}
-                    style={{ width: '100%', padding: '10px 12px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px' }}
+                    style={{ width: '100%', padding: '10px 12px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px' }}
                   />
                 </div>
                 <div>
@@ -35463,7 +35463,7 @@ export default function Dashboard() {
                     value={libraryEntryTarget}
                     onChange={(e) => setLibraryEntryTarget(e.target.value)}
                     placeholder={safeT?.enterTranslation || 'Ex.: Hello'}
-                    style={{ width: '100%', padding: '10px 12px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px' }}
+                    style={{ width: '100%', padding: '10px 12px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px' }}
                   />
                 </div>
                 <button
@@ -35509,7 +35509,7 @@ export default function Dashboard() {
                           justifyContent: 'space-between',
                           alignItems: 'center',
                           padding: '12px 14px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           borderRadius: '8px',
                           border: '1px solid rgba(0, 200, 83, 0.2)'
                         }}
@@ -35983,7 +35983,7 @@ export default function Dashboard() {
                   width: '100%',
                   minHeight: '140px',
                   padding: '12px',
-                  backgroundColor: '#141414',
+                  backgroundColor: '#404040',
                   border: '1px solid rgba(0, 180, 255, 0.35)',
                   borderRadius: '8px',
                   color: '#fff',
@@ -36099,7 +36099,7 @@ export default function Dashboard() {
                       width: '100%',
                       minHeight: '120px',
                       padding: '12px',
-                      backgroundColor: '#141414',
+                      backgroundColor: '#404040',
                       border: '1px solid rgba(0, 180, 255, 0.35)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -36382,12 +36382,12 @@ export default function Dashboard() {
                   {pecaBibliotecaPickerCategoriaAberto && (() => {
                     const rowLine = '#555555'
                     const headerBg = '#2f2f2f'
-                    const zebraA = '#1e1e1e'
+                    const zebraA = '#484848'
                     const zebraB = '#3a3a3a'
                     const text = '#ffffff'
                     const muted = '#ffffff'
                     const tdRule: React.CSSProperties = { borderBottom: `1px solid ${rowLine}` }
-                    const thRule: React.CSSProperties = { borderBottom: '2px solid #121212' }
+                    const thRule: React.CSSProperties = { borderBottom: '2px solid #3a3a3a' }
                     const rowHover = (e: React.MouseEvent<HTMLTableRowElement>) => {
                       e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(255, 255, 255, 0.22)'
                     }
@@ -36563,12 +36563,12 @@ export default function Dashboard() {
                     {pecaBibliotecaPickerSubcategoriaAberto && (() => {
                       const rowLine = '#555555'
                       const headerBg = '#454545'
-                      const zebraA = '#1e1e1e'
+                      const zebraA = '#484848'
                       const zebraB = '#3a3a3a'
                       const text = '#ffffff'
                       const muted = '#ffffff'
                       const tdRule: React.CSSProperties = { borderBottom: `1px solid ${rowLine}` }
-                      const thRule: React.CSSProperties = { borderBottom: '2px solid #121212' }
+                      const thRule: React.CSSProperties = { borderBottom: '2px solid #3a3a3a' }
                       const subsOrdenadas = subcategoriasPecas
                         .filter((sub) => sub.categoriaId === pecaBibliotecaForm.categoriaId)
                         .sort((a, b) =>
@@ -36832,7 +36832,7 @@ export default function Dashboard() {
                 zIndex: 10000 
               }}>
                 <div style={{ 
-                  backgroundColor: '#141414', 
+                  backgroundColor: '#404040', 
                   padding: '30px', 
                   borderRadius: '8px', 
                   border: '1px solid rgba(0, 168, 107, 0.3)',
@@ -36851,7 +36851,7 @@ export default function Dashboard() {
                       value={novaCategoriaNome}
                       onChange={(e) => setNovaCategoriaNome(e.target.value)}
                           placeholder={safeT?.nomeCategoria || 'Nome da Categoria'}
-                      style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 168, 107, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 168, 107, 0.3)', borderRadius: '4px' }}
                       onKeyPress={(e) => {
                         if (e.key === 'Enter' && novaCategoriaNome.trim()) {
                           const refId = pecaBibliotecaForm.categoriaId
@@ -36949,7 +36949,7 @@ export default function Dashboard() {
                 zIndex: 10000 
               }}>
                 <div style={{ 
-                  backgroundColor: '#141414', 
+                  backgroundColor: '#404040', 
                   padding: '30px', 
                   borderRadius: '8px', 
                   border: '1px solid rgba(0, 168, 107, 0.3)',
@@ -36974,7 +36974,7 @@ export default function Dashboard() {
                     </div>
                   ) : (
                     <>
-                      <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#1e1e1e', borderRadius: '4px' }}>
+                      <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#484848', borderRadius: '4px' }}>
                         <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '5px' }}>
                           {safeT?.categoriaPecaBiblioteca || 'Categoria'}:
                         </p>
@@ -36991,7 +36991,7 @@ export default function Dashboard() {
                           value={novaSubcategoriaNome}
                           onChange={(e) => setNovaSubcategoriaNome(e.target.value)}
                           placeholder={safeT?.nomeSubcategoria || 'Nome da Subcategoria'}
-                          style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 168, 107, 0.3)', borderRadius: '4px' }}
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 168, 107, 0.3)', borderRadius: '4px' }}
                           onKeyPress={(e) => {
                             if (e.key === 'Enter' && novaSubcategoriaNome.trim() && pecaBibliotecaForm.categoriaId) {
                               const categoriaId = pecaBibliotecaForm.categoriaId
@@ -37321,7 +37321,7 @@ export default function Dashboard() {
                         width: '100%',
                         boxSizing: 'border-box',
                         padding: '8px 10px',
-                        backgroundColor: '#1e1e1e',
+                        backgroundColor: '#484848',
                         color: '#fff',
                         border: '1px solid rgba(0, 168, 107, 0.3)',
                         borderRadius: '4px',
@@ -37594,7 +37594,7 @@ export default function Dashboard() {
                                 style={{
                                   width: '100%',
                                   padding: '10px',
-                                  backgroundColor: '#1e1e1e',
+                                  backgroundColor: '#484848',
                                   color: '#fff',
                                   border: '1px solid rgba(0, 168, 107, 0.3)',
                                   borderRadius: '6px',
@@ -37625,7 +37625,7 @@ export default function Dashboard() {
                                 style={{
                                   width: '100%',
                                   padding: '10px',
-                                  backgroundColor: '#1e1e1e',
+                                  backgroundColor: '#484848',
                                   color: '#fff',
                                   border: '1px solid rgba(0, 168, 107, 0.3)',
                                   borderRadius: '6px',
@@ -37669,7 +37669,7 @@ export default function Dashboard() {
                                 style={{
                                   width: '100%',
                                   padding: '10px',
-                                  backgroundColor: '#1e1e1e',
+                                  backgroundColor: '#484848',
                                   color: '#fff',
                                   border: '1px solid rgba(0, 168, 107, 0.3)',
                                   borderRadius: '6px',
@@ -38116,11 +38116,11 @@ export default function Dashboard() {
                         const rowLine = '#555555'
                         const excelHeaderBg = '#2f2f2f'
                         const excelSubHeadBg = '#454545'
-                        const excelZebraA = '#1e1e1e'
+                        const excelZebraA = '#484848'
                         const excelZebraB = '#3a3a3a'
                         const excelText = '#ffffff'
                         const excelMuted = '#ffffff'
-                        const thRule = { borderBottom: '2px solid #121212' } as React.CSSProperties
+                        const thRule = { borderBottom: '2px solid #3a3a3a' } as React.CSSProperties
                         const tdRule = { borderBottom: `1px solid ${rowLine}` } as React.CSSProperties
                         return (
                           <div
@@ -38538,7 +38538,7 @@ export default function Dashboard() {
                       flex: '1',
                       minWidth: '280px',
                       padding: '12px 16px',
-                      backgroundColor: '#141414',
+                      backgroundColor: '#404040',
                       border: '1px solid rgba(0, 168, 107, 0.3)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -38733,7 +38733,7 @@ export default function Dashboard() {
                       width: '100%',
                       maxWidth: '480px',
                       padding: '10px 14px',
-                      backgroundColor: '#141414',
+                      backgroundColor: '#404040',
                       border: '1px solid rgba(0, 168, 107, 0.25)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -38759,7 +38759,7 @@ export default function Dashboard() {
                       width: '100%',
                       maxWidth: '640px',
                       padding: '10px 14px',
-                      backgroundColor: '#141414',
+                      backgroundColor: '#404040',
                       border: '1px solid rgba(0, 180, 255, 0.35)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -38823,7 +38823,7 @@ A1;Peça exemplo;10`}
                       width: '100%',
                       minHeight: '180px',
                       padding: '12px',
-                      backgroundColor: '#141414',
+                      backgroundColor: '#404040',
                       border: '1px solid rgba(0, 200, 83, 0.3)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -39052,7 +39052,7 @@ A1;Peça exemplo;10`}
                     flex: '1',
                     minWidth: '280px',
                     padding: '12px 16px',
-                    backgroundColor: '#141414',
+                    backgroundColor: '#404040',
                     border: '1px solid rgba(0, 200, 83, 0.3)',
                     borderRadius: '8px',
                     color: '#fff',
@@ -39167,7 +39167,7 @@ A1;Peça exemplo;10`}
                       width: '100%',
                       maxWidth: '480px',
                       padding: '10px 14px',
-                      backgroundColor: '#141414',
+                      backgroundColor: '#404040',
                       border: '1px solid rgba(0, 200, 83, 0.25)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -39193,7 +39193,7 @@ A1;Peça exemplo;10`}
                       width: '100%',
                       maxWidth: '640px',
                       padding: '10px 14px',
-                      backgroundColor: '#141414',
+                      backgroundColor: '#404040',
                       border: '1px solid rgba(0, 180, 255, 0.35)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -39235,7 +39235,7 @@ A1;Peça exemplo;10`}
                     width: '100%',
                     minHeight: '180px',
                     padding: '12px',
-                    backgroundColor: '#141414',
+                    backgroundColor: '#404040',
                     border: '1px solid rgba(0, 200, 83, 0.3)',
                     borderRadius: '8px',
                     color: '#fff',
@@ -39856,7 +39856,7 @@ A1;Peça exemplo;10`}
                 <select
                   value={sstModeloBase.clienteId || ''}
                   onChange={(e) => setSstModeloBase(mergeClienteSelecionadoSst(sstModeloBase, e.target.value || undefined))}
-                  style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
+                  style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
                 >
                   <option value="">{(safeT as any)?.solicitacaoServicoTecnicoClienteCadastradoOpt || '— Nenhum —'}</option>
                   {clientesOrdenadosAlfabeticamente.map((cli) => (
@@ -39877,7 +39877,7 @@ A1;Peça exemplo;10`}
                     <select
                       value={sstModeloBase.equipamentoClienteChave || ''}
                       onChange={(e) => setSstModeloBase(patchEquipamentoClienteChave(sstModeloBase, e.target.value, cidMb))}
-                      style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
+                      style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
                     >
                       <option value="">{(safeT as any)?.solicitacaoServicoTecnicoEquipamentoManual || '— Introduzir equipamento manualmente —'}</option>
                       {eqsMb.map((eq, idxMb) => {
@@ -39917,7 +39917,7 @@ A1;Peça exemplo;10`}
                       type="text"
                       value={(sstModeloBase as any)[key] || ''}
                       onChange={(e) => setSstModeloBase({ ...sstModeloBase, [key]: e.target.value })}
-                      style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.28)', borderRadius: '6px' }}
+                      style={{ width: '100%', padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.28)', borderRadius: '6px' }}
                     />
                   </div>
                 ))}
@@ -39928,7 +39928,7 @@ A1;Peça exemplo;10`}
                   value={sstModeloBase.problemasApresentados}
                   onValueChange={(v) => setSstModeloBase({ ...sstModeloBase, problemasApresentados: v })}
                   rows={3}
-                  style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.28)', borderRadius: '6px' }}
+                  style={{ width: '100%', padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.28)', borderRadius: '6px' }}
                 />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', marginBottom: '14px' }}>
@@ -39946,7 +39946,7 @@ A1;Peça exemplo;10`}
                         horarioPreferido: (e.target.value || '') as SolicitacaoServicoTecnico['horarioPreferido']
                       })
                     }
-                    style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.28)', borderRadius: '6px' }}
+                    style={{ width: '100%', padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.28)', borderRadius: '6px' }}
                   >
                     <option value="">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcPlaceholder || '—'}</option>
                     <option value="manha">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcManha || '—'}</option>
@@ -39966,7 +39966,7 @@ A1;Peça exemplo;10`}
                         nivelUrgencia: e.target.value ? (e.target.value as SolicitacaoServicoTecnico['nivelUrgencia']) : undefined
                       })
                     }
-                    style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.28)', borderRadius: '6px' }}
+                    style={{ width: '100%', padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.28)', borderRadius: '6px' }}
                   >
                     <option value="">{safeT?.solicitacaoServicoTecnicoNivelUrgencia}</option>
                     <option value="baixa">{safeT?.solicitacaoServicoTecnicoUrgenciaBaixa}</option>
@@ -40013,7 +40013,7 @@ A1;Peça exemplo;10`}
                         mergeClienteSelecionadoSst(solicitacaoServicoTecnicoForm, e.target.value || undefined)
                       )
                     }
-                    style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
+                    style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
                   >
                     <option value="">{(safeT as any)?.solicitacaoServicoTecnicoClienteCadastradoOpt || '— Nenhum / preencher só o nome acima —'}</option>
                     {clientesOrdenadosAlfabeticamente.map((cli) => (
@@ -40041,7 +40041,7 @@ A1;Peça exemplo;10`}
                             patchEquipamentoClienteChave(solicitacaoServicoTecnicoForm, e.target.value, cidFv)
                           )
                         }
-                        style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
+                        style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
                       >
                         <option value="">{(safeT as any)?.solicitacaoServicoTecnicoEquipamentoManual || '— Introduzir equipamento manualmente —'}</option>
                         {eqsFv.map((eq, idxFv) => {
@@ -40078,7 +40078,7 @@ A1;Peça exemplo;10`}
                   ].map(({ key, label, type }) => (
                     <div key={key}>
                       <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{label}</label>
-                      <input type={type || 'text'} value={type === 'date' ? ((solicitacaoServicoTecnicoForm as any)[key] ? String((solicitacaoServicoTecnicoForm as any)[key]).slice(0, 10) : '') : ((solicitacaoServicoTecnicoForm as any)[key] || '')} onChange={e => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, [key]: type === 'date' ? (e.target.value || undefined) : e.target.value })} style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
+                      <input type={type || 'text'} value={type === 'date' ? ((solicitacaoServicoTecnicoForm as any)[key] ? String((solicitacaoServicoTecnicoForm as any)[key]).slice(0, 10) : '') : ((solicitacaoServicoTecnicoForm as any)[key] || '')} onChange={e => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, [key]: type === 'date' ? (e.target.value || undefined) : e.target.value })} style={{ width: '100%', padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
                     </div>
                   ))}
                 </div>
@@ -40088,7 +40088,7 @@ A1;Peça exemplo;10`}
                     value={solicitacaoServicoTecnicoForm.problemasApresentados}
                     onValueChange={(v) => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, problemasApresentados: v })}
                     rows={4}
-                    style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
+                    style={{ width: '100%', padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
                   />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', marginBottom: '16px' }}>
@@ -40106,7 +40106,7 @@ A1;Peça exemplo;10`}
                           horarioPreferido: (e.target.value || '') as SolicitacaoServicoTecnico['horarioPreferido']
                         })
                       }
-                      style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.28)', borderRadius: '6px' }}
+                      style={{ width: '100%', padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.28)', borderRadius: '6px' }}
                     >
                       <option value="">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcPlaceholder || '—'}</option>
                       <option value="manha">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcManha || '—'}</option>
@@ -40126,7 +40126,7 @@ A1;Peça exemplo;10`}
                           nivelUrgencia: e.target.value ? (e.target.value as SolicitacaoServicoTecnico['nivelUrgencia']) : undefined
                         })
                       }
-                      style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.28)', borderRadius: '6px' }}
+                      style={{ width: '100%', padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.28)', borderRadius: '6px' }}
                     >
                       <option value="">{safeT?.solicitacaoServicoTecnicoNivelUrgencia}</option>
                       <option value="baixa">{safeT?.solicitacaoServicoTecnicoUrgenciaBaixa}</option>
@@ -40217,7 +40217,7 @@ A1;Peça exemplo;10`}
                 )}
                 <div style={{ marginBottom: '16px' }}>
                   <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.solicitacaoServicoTecnicoProblemasApresentados}</label>
-                  <AssistTextarea value={solicitacaoServicoTecnicoForm.problemasApresentados} onValueChange={(v) => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, problemasApresentados: v })} rows={3} style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
+                  <AssistTextarea value={solicitacaoServicoTecnicoForm.problemasApresentados} onValueChange={(v) => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, problemasApresentados: v })} rows={3} style={{ width: '100%', padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
                 </div>
 
                 <div style={{ ...glassNestedStyle(ACCENT_GREEN), marginBottom: '20px' }}>
@@ -40415,10 +40415,10 @@ A1;Peça exemplo;10`}
                             <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>{fmtDataSst(s.dataCriacao)}</td>
                             <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>{fmtDataSst(s.dataAssinaturaCliente)}</td>
                             <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
-                              <input type="date" value={s.dataRecebimento ? s.dataRecebimento.slice(0, 10) : ''} onChange={e => handleUpdateDataRecebimento(s.id, e.target.value)} style={{ padding: '6px 8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', fontSize: '12px' }} title={safeT?.solicitacaoServicoTecnicoDataRecebimento} />
+                              <input type="date" value={s.dataRecebimento ? s.dataRecebimento.slice(0, 10) : ''} onChange={e => handleUpdateDataRecebimento(s.id, e.target.value)} style={{ padding: '6px 8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', fontSize: '12px' }} title={safeT?.solicitacaoServicoTecnicoDataRecebimento} />
                             </td>
                             <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
-                              <select value={s.nivelUrgencia || ''} onChange={e => handleUpdateUrgencia(s.id, e.target.value ? (e.target.value as 'baixa' | 'media' | 'alta' | 'critica') : undefined)} style={{ padding: '6px 8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', fontSize: '12px', maxWidth: 140 }}>
+                              <select value={s.nivelUrgencia || ''} onChange={e => handleUpdateUrgencia(s.id, e.target.value ? (e.target.value as 'baixa' | 'media' | 'alta' | 'critica') : undefined)} style={{ padding: '6px 8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', fontSize: '12px', maxWidth: 140 }}>
                                 <option value="">{safeT?.solicitacaoServicoTecnicoNivelUrgencia}</option>
                                 <option value="baixa">{safeT?.solicitacaoServicoTecnicoUrgenciaBaixa}</option>
                                 <option value="media">{safeT?.solicitacaoServicoTecnicoUrgenciaMedia}</option>
@@ -40659,7 +40659,7 @@ A1;Peça exemplo;10`}
             <div className="agenda-tecnica-view-toggle" style={{
               marginBottom: '30px',
               padding: '20px',
-              backgroundColor: '#141414',
+              backgroundColor: '#404040',
               borderRadius: '12px',
               border: '1px solid rgba(0, 200, 83, 0.2)',
               display: 'flex',
@@ -40679,7 +40679,7 @@ A1;Peça exemplo;10`}
                     padding: '12px 24px',
                     fontSize: '14px',
                     fontWeight: 'bold',
-                    backgroundColor: visualizacaoAgenda === 'lista' ? 'rgba(0, 200, 83, 0.3)' : '#1e1e1e',
+                    backgroundColor: visualizacaoAgenda === 'lista' ? 'rgba(0, 200, 83, 0.3)' : '#484848',
                     border: visualizacaoAgenda === 'lista' ? '2px solid rgba(0, 200, 83, 0.6)' : '1px solid rgba(0, 200, 83, 0.3)',
                     color: visualizacaoAgenda === 'lista' ? '#00c853' : '#fff',
                     cursor: 'pointer',
@@ -40700,7 +40700,7 @@ A1;Peça exemplo;10`}
                     padding: '12px 24px',
                     fontSize: '14px',
                     fontWeight: 'bold',
-                    backgroundColor: visualizacaoAgenda === 'calendario' ? 'rgba(0, 200, 83, 0.3)' : '#1e1e1e',
+                    backgroundColor: visualizacaoAgenda === 'calendario' ? 'rgba(0, 200, 83, 0.3)' : '#484848',
                     border: visualizacaoAgenda === 'calendario' ? '2px solid rgba(0, 200, 83, 0.6)' : '1px solid rgba(0, 200, 83, 0.3)',
                     color: visualizacaoAgenda === 'calendario' ? '#00c853' : '#fff',
                     cursor: 'pointer',
@@ -40753,7 +40753,7 @@ A1;Peça exemplo;10`}
                 <select
                   value={filtroAgenda}
                   onChange={(e) => setFiltroAgenda(e.target.value as typeof filtroAgenda)}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', fontSize: '13px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                 >
                   <option value="todos">{safeT?.todos || 'Todos'}</option>
                   <option value="pre-agendamento">{safeT?.preAgendamento || 'Pré-Agendamento'}</option>
@@ -40766,7 +40766,7 @@ A1;Peça exemplo;10`}
                 <select
                   value={filtroTecnicoAgenda}
                   onChange={(e) => setFiltroTecnicoAgenda(e.target.value)}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', fontSize: '13px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                 >
                   <option value="">{safeT?.todosTecnicos || 'Todos os técnicos'}</option>
                   {tecnicos.map(tec => (
@@ -40779,7 +40779,7 @@ A1;Peça exemplo;10`}
                   type="date"
                   value={filtroDataAgenda}
                   onChange={(e) => setFiltroDataAgenda(e.target.value)}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', fontSize: '13px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                 />
               </div>
               <div className="agenda-tecnica-filtros__field" style={{ flex: '1 1 220px', minWidth: '180px', maxWidth: '420px' }}>
@@ -40794,7 +40794,7 @@ A1;Peça exemplo;10`}
                   style={{
                     width: '100%',
                     padding: '8px 10px',
-                    backgroundColor: '#1e1e1e',
+                    backgroundColor: '#484848',
                     color: '#fff',
                     border: '1px solid rgba(0, 200, 83, 0.3)',
                     borderRadius: '4px',
@@ -41103,7 +41103,7 @@ A1;Peça exemplo;10`}
                       borderRadius: '8px',
                       border: opts?.cancelado || isAgendamentoCancelado(a) ? `2px solid ${AGENDA_CANCELADO_BORDA}` : `1px solid ${borda}`,
                       background: opts?.cancelado || isAgendamentoCancelado(a) ? AGENDA_CANCELADO_BG : undefined,
-                      backgroundColor: opts?.cancelado || isAgendamentoCancelado(a) ? undefined : '#181818',
+                      backgroundColor: opts?.cancelado || isAgendamentoCancelado(a) ? undefined : '#444444',
                       boxShadow: opts?.cancelado || isAgendamentoCancelado(a) ? AGENDA_CANCELADO_SOMBRA : undefined,
                       color: '#fff',
                       cursor: 'pointer',
@@ -41376,7 +41376,7 @@ A1;Peça exemplo;10`}
                       padding: '10px 12px',
                       borderRadius: '8px',
                       border: '1px solid rgba(0, 200, 83, 0.25)',
-                      backgroundColor: '#141414',
+                      backgroundColor: '#404040',
                       color: '#fff',
                       fontSize: '14px',
                     }}
@@ -41394,7 +41394,7 @@ A1;Peça exemplo;10`}
                           padding: '8px 10px',
                           borderRadius: '8px',
                           border: '1px solid rgba(0, 200, 83, 0.25)',
-                          backgroundColor: '#141414',
+                          backgroundColor: '#404040',
                           color: '#fff',
                           fontSize: '13px',
                         }}
@@ -41412,7 +41412,7 @@ A1;Peça exemplo;10`}
                           padding: '8px 10px',
                           borderRadius: '8px',
                           border: '1px solid rgba(0, 200, 83, 0.25)',
-                          backgroundColor: '#141414',
+                          backgroundColor: '#404040',
                           color: '#fff',
                           fontSize: '13px',
                         }}
@@ -41584,7 +41584,7 @@ A1;Peça exemplo;10`}
                         setAgendaForm({ ...agendaForm, categoria: 'servico' })
                       }
                     }}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   >
                     <option value="servico">{(safeT as any)?.agendaCategoriaServico || 'Serviço ao cliente'}</option>
                     <option value="pessoal">{(safeT as any)?.agendaCategoriaPessoal || 'Assunto pessoal'}</option>
@@ -41605,7 +41605,7 @@ A1;Peça exemplo;10`}
                             subtipoPessoal: e.target.value as 'pessoal' | 'visita-tecnica',
                           })
                         }
-                        style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(180, 130, 255, 0.45)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(180, 130, 255, 0.45)', borderRadius: '4px' }}
                       >
                         <option value="pessoal">{(safeT as any)?.agendaPessoal || 'Pessoal'}</option>
                         <option value="visita-tecnica">{(safeT as any)?.agendaVisitaTecnica || 'Visita técnica'}</option>
@@ -41620,7 +41620,7 @@ A1;Peça exemplo;10`}
                         value={agendaForm.assunto || ''}
                         onChange={(e) => setAgendaForm({ ...agendaForm, assunto: e.target.value })}
                         placeholder={(safeT as any)?.agendaAssuntoPlaceholder || 'Ex.: médico, banco, assuntos particulares…'}
-                        style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(180, 130, 255, 0.45)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(180, 130, 255, 0.45)', borderRadius: '4px' }}
                       />
                     </div>
                   </>
@@ -41635,7 +41635,7 @@ A1;Peça exemplo;10`}
                       <select
                         value={agendaForm.tipo}
                         onChange={(e) => setAgendaForm({ ...agendaForm, tipo: e.target.value as 'pre-agendamento' | 'agendamento-tecnico' })}
-                        style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                       >
                         <option value="pre-agendamento">{safeT?.preAgendamento || 'Pré-Agendamento'}</option>
                         <option value="agendamento-tecnico">{safeT?.agendamentoTecnico || 'Agendamento Técnico'}</option>
@@ -41649,7 +41649,7 @@ A1;Peça exemplo;10`}
                       <select
                         value={agendaForm.tecnico}
                         onChange={(e) => setAgendaForm({ ...agendaForm, tecnico: e.target.value })}
-                        style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                       >
                         <option value="">{safeT?.selecioneTecnico || 'Selecione o técnico'}</option>
                         {tecnicos.map(tec => (
@@ -41680,7 +41680,7 @@ A1;Peça exemplo;10`}
                         equipamento: '',
                       });
                     }}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   >
                     <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
                     {clientesOrdenadosAlfabeticamente.map(cli => (
@@ -41699,7 +41699,7 @@ A1;Peça exemplo;10`}
                       type="date"
                       value={agendaForm.data}
                       onChange={(e) => setAgendaForm({ ...agendaForm, data: e.target.value })}
-                      style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   <div>
@@ -41710,7 +41710,7 @@ A1;Peça exemplo;10`}
                       type="time"
                       value={agendaForm.hora}
                       onChange={(e) => setAgendaForm({ ...agendaForm, hora: e.target.value })}
-                      style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                 </div>
@@ -41727,7 +41727,7 @@ A1;Peça exemplo;10`}
                         status: e.target.value as Agendamento['status'],
                       })
                     }
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   >
                     <option value="pendente">{safeT?.pendente || 'Pendente'}</option>
                     <option value="confirmado">{safeT?.confirmado || 'Confirmado'}</option>
@@ -41737,7 +41737,7 @@ A1;Peça exemplo;10`}
                   </select>
                 </div>
 
-                <div style={{ marginBottom: '15px', padding: '14px', backgroundColor: '#121212', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.25)' }}>
+                <div style={{ marginBottom: '15px', padding: '14px', backgroundColor: '#3a3a3a', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.25)' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#00c853' }}>
                     {safeT?.duracaoEstimada || 'Duração Estimada (dias)'}
                   </label>
@@ -41752,7 +41752,7 @@ A1;Peça exemplo;10`}
                     <button
                       type="button"
                       onClick={() => goAgendaPickerMes(-1)}
-                      style={{ padding: '6px 12px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.35)', color: '#00c853', borderRadius: '6px', cursor: 'pointer', fontSize: '16px' }}
+                      style={{ padding: '6px 12px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.35)', color: '#00c853', borderRadius: '6px', cursor: 'pointer', fontSize: '16px' }}
                     >
                       ‹
                     </button>
@@ -41762,7 +41762,7 @@ A1;Peça exemplo;10`}
                     <button
                       type="button"
                       onClick={() => goAgendaPickerMes(1)}
-                      style={{ padding: '6px 12px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.35)', color: '#00c853', borderRadius: '6px', cursor: 'pointer', fontSize: '16px' }}
+                      style={{ padding: '6px 12px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.35)', color: '#00c853', borderRadius: '6px', cursor: 'pointer', fontSize: '16px' }}
                     >
                       ›
                     </button>
@@ -41854,7 +41854,7 @@ A1;Peça exemplo;10`}
                     value={agendaForm.tipoServico}
                     onChange={(e) => setAgendaForm({ ...agendaForm, tipoServico: e.target.value })}
                     placeholder={safeT?.tipoServicoPlaceholder || 'Ex: Manutenção, Reparo, Instalação...'}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -41876,7 +41876,7 @@ A1;Peça exemplo;10`}
                         equipamento: display,
                       });
                     }}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     disabled={!agendaForm.clienteId}
                   >
                     <option value="">{!agendaForm.clienteId ? (safeT?.selecioneClientePrimeiro || 'Selecione o cliente primeiro') : (safeT?.selecioneEquipamento || 'Selecione o equipamento')}</option>
@@ -41891,7 +41891,7 @@ A1;Peça exemplo;10`}
                 </div>
 
                 {/* Informações de Contato e Localização */}
-                <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '4px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#484848', borderRadius: '4px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                   <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#00c853' }}>{safeT?.informacoesContato || 'Informações de Contato e Localização'}</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
                     <div>
@@ -41903,7 +41903,7 @@ A1;Peça exemplo;10`}
                         value={agendaForm.telefone}
                         onChange={(e) => setAgendaForm({ ...agendaForm, telefone: e.target.value })}
                         placeholder={safeT?.telefonePlaceholder || 'Telefone do cliente'}
-                        style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     <div>
@@ -41915,7 +41915,7 @@ A1;Peça exemplo;10`}
                         value={agendaForm.endereco}
                         onChange={(e) => setAgendaForm({ ...agendaForm, endereco: e.target.value })}
                         placeholder={safeT?.enderecoPlaceholder || 'Endereço do cliente'}
-                        style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     <div>
@@ -41927,7 +41927,7 @@ A1;Peça exemplo;10`}
                         value={agendaForm.cidade}
                         onChange={(e) => setAgendaForm({ ...agendaForm, cidade: e.target.value })}
                         placeholder={safeT?.cidadePlaceholder || 'Cidade do cliente'}
-                        style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                   </div>
@@ -41945,7 +41945,7 @@ A1;Peça exemplo;10`}
                     onValueChange={(v) => setAgendaForm({ ...agendaForm, observacoesTecnicas: v })}
                     rows={4}
                     placeholder={safeT?.observacaoTecnicaPlaceholder || 'Observações técnicas sobre o agendamento...'}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', resize: 'vertical' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', resize: 'vertical' }}
                   ></AssistTextarea>
                 </div>
 
@@ -41962,12 +41962,12 @@ A1;Peça exemplo;10`}
                     onValueChange={(v) => setAgendaForm({ ...agendaForm, relatorioTrabalhoExecutado: v })}
                     rows={4}
                     placeholder={(safeT as any)?.agendaRelatorioTrabalhoExecutadoPlaceholder || 'Ex.: substituição de corrente, calibração, testes de ciclos...'}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.25)', borderRadius: '6px', resize: 'vertical' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.25)', borderRadius: '6px', resize: 'vertical' }}
                   />
                 </div>
 
                 {!isAgendamentoPessoal(agendaForm) ? (
-                <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '4px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#484848', borderRadius: '4px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', marginBottom: agendaForm.necessidadePecas ? '15px' : '0' }}>
                     <input
                       type="checkbox"
@@ -41989,7 +41989,7 @@ A1;Peça exemplo;10`}
                           value={agendaForm.codigoNotaFiscal || ''}
                           onChange={(e) => setAgendaForm({ ...agendaForm, codigoNotaFiscal: e.target.value })}
                           placeholder={safeT?.codigoNotaFiscalPlaceholder || 'Digite o código da nota fiscal'}
-                          style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                         />
                       </div>
 
@@ -42027,7 +42027,7 @@ A1;Peça exemplo;10`}
                                 }
                               })()
                             }}
-                            style={{ flex: 1, minWidth: '160px', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                            style={{ flex: 1, minWidth: '160px', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                           />
                           <button
                             type="button"
@@ -42071,7 +42071,7 @@ A1;Peça exemplo;10`}
                           </p>
                         ) : null}
                         {agendaForm.pecasAnexadas && agendaForm.pecasAnexadas.length > 0 && (
-                          <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#141414', borderRadius: '4px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                          <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#404040', borderRadius: '4px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                             <p style={{ fontSize: '12px', marginBottom: '8px', color: '#00c853' }}>
                               {safeT?.pecasAnexadas || 'Peças selecionadas'}:
                             </p>
@@ -42080,7 +42080,7 @@ A1;Peça exemplo;10`}
                                 const peca = pecasBiblioteca.find(p => p.id === pecaId)
                                 if (!peca) return null
                                 return (
-                                  <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', backgroundColor: '#1e1e1e', borderRadius: '3px' }}>
+                                  <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', backgroundColor: '#484848', borderRadius: '3px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
                                       <img
                                         src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
@@ -42090,7 +42090,7 @@ A1;Peça exemplo;10`}
                                           height: '40px',
                                           objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
                                           borderRadius: '4px',
-                                          backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                                          backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
                                           flexShrink: 0,
                                         }}
                                       />
@@ -42199,7 +42199,7 @@ A1;Peça exemplo;10`}
 
                   if (agendamentosFiltrados.length === 0) {
                     return (
-                      <div className="agenda-lista-empty" style={{ padding: '40px', textAlign: 'center', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                      <div className="agenda-lista-empty" style={{ padding: '40px', textAlign: 'center', backgroundColor: '#404040', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                         <p style={{ fontSize: '16px', opacity: 0.7 }}>
                           {(filtroAgenda !== 'todos' || filtroTecnicoAgenda || filtroDataAgenda)
                             ? (safeT?.nenhumAgendamentoFiltro || 'Nenhum agendamento encontrado com os filtros selecionados.')
@@ -42258,7 +42258,7 @@ A1;Peça exemplo;10`}
                       title={(safeT as any)?.agendaCardClickToEditHint || 'Clique para editar (ou use o botão Editar)'}
                       className={['agenda-lista-card', pulseClass || '', cancelado ? 'agenda-lista-card-cancelado' : ''].filter(Boolean).join(' ') || undefined}
                       style={{
-                        backgroundColor: cancelado ? undefined : '#141414',
+                        backgroundColor: cancelado ? undefined : '#404040',
                         background: cancelado ? AGENDA_CANCELADO_BG : undefined,
                         padding: '20px',
                         borderRadius: '10px',
@@ -42352,7 +42352,7 @@ A1;Peça exemplo;10`}
                           </div>
 
                           {(agendamento.telefone || agendamento.endereco || agendamento.cidade) && !isAgendamentoPessoal(agendamento) && (
-                            <div style={{ padding: '10px', backgroundColor: '#1e1e1e', borderRadius: '8px', marginBottom: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <div style={{ padding: '10px', backgroundColor: '#484848', borderRadius: '8px', marginBottom: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
                               <h4 style={{ fontSize: '13px', marginBottom: '8px', color: '#e8ffe8' }}>{safeT?.informacoesContato || 'Informações de Contato'}</h4>
                               <div className="agenda-card-meta-grid agenda-card-meta-grid--contato" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px', fontSize: '13px' }}>
                                 {agendamento.telefone && (
@@ -42375,7 +42375,7 @@ A1;Peça exemplo;10`}
                           )}
 
                           {agendamento.observacoesTecnicas && (
-                            <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
                               <p style={{ margin: 0, fontSize: '13px', opacity: 0.9 }}>
                                 <strong style={{ color: '#e8ffe8' }}>{safeT?.observacaoTecnica || 'Observação Técnica'}:</strong>
                                 <span style={{ marginLeft: '8px', fontStyle: 'italic', color: 'rgba(255,255,255,0.85)' }}>{agendamento.observacoesTecnicas}</span>
@@ -42434,7 +42434,7 @@ A1;Peça exemplo;10`}
                                               height: '30px',
                                               objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
                                               borderRadius: '4px',
-                                              backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                                              backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
                                               flexShrink: 0,
                                             }}
                                           />
@@ -42596,7 +42596,7 @@ A1;Peça exemplo;10`}
                           </button>
                         </div>
                         {agDoDiaAtivos.length === 0 ? (
-                          <div className="agenda-lista-empty" style={{ padding: '30px', textAlign: 'center', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                          <div className="agenda-lista-empty" style={{ padding: '30px', textAlign: 'center', backgroundColor: '#404040', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                             <p style={{ fontSize: '14px', opacity: 0.7, margin: 0 }}>
                               {(safeT as any)?.agendaDiaSemCompromissos || 'Nenhum compromisso ativo neste dia.'}
                             </p>
@@ -43099,7 +43099,7 @@ A1;Peça exemplo;10`}
                   ) : null}
 
                   {/* Legenda */}
-                  <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                  <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#404040', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                     <h4 style={{ marginBottom: '10px', fontSize: '14px', color: '#00c853' }}>
                       {safeT?.legenda || 'Legenda'}
                     </h4>
@@ -43783,7 +43783,7 @@ A1;Peça exemplo;10`}
             {/* Seção de Pedidos de Orçamento - padrão Visualizar Equipamento */}
             <div style={{ 
               padding: '30px', 
-              backgroundColor: '#141414', 
+              backgroundColor: '#404040', 
               borderRadius: '16px', 
               border: '2px solid rgba(0, 200, 83, 0.3)',
               marginBottom: '30px',
@@ -43841,7 +43841,7 @@ A1;Peça exemplo;10`}
                           key={pedido.id} 
                           style={{ 
                             padding: '20px', 
-                            backgroundColor: '#1e1e1e', 
+                            backgroundColor: '#484848', 
                             borderRadius: '12px', 
                             border: '2px solid rgba(255, 165, 0, 0.2)',
                             transition: 'all 0.3s ease',
@@ -43947,13 +43947,13 @@ A1;Peça exemplo;10`}
                             </button>
                           </div>
                           
-                          <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#141414', borderRadius: '4px' }}>
+                          <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#404040', borderRadius: '4px' }}>
                             <p style={{ fontSize: '13px', marginBottom: '8px', fontWeight: 'bold' }}>
                               {safeT?.pecasPedido || 'Peças'} ({pedido.pecas.length}):
                             </p>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
                               {pedido.pecas.map((peca, idx) => (
-                                <div key={idx} style={{ fontSize: '12px', padding: '5px', backgroundColor: '#1e1e1e', borderRadius: '3px' }}>
+                                <div key={idx} style={{ fontSize: '12px', padding: '5px', backgroundColor: '#484848', borderRadius: '3px' }}>
                                   {peca.descricao} - {safeT?.codigo || 'Código'}: {peca.codigo} - {safeT?.quantidade || 'Qtd'}: {peca.quantidade}
                                 </div>
                               ))}
@@ -43966,10 +43966,10 @@ A1;Peça exemplo;10`}
               )}
             </div>
 
-            {/* Seção de Lista de Peças para Orçamento - padrão Visualizar Equipamento (1px borda, cards #1e1e1e) */}
+            {/* Seção de Lista de Peças para Orçamento - padrão Visualizar Equipamento (1px borda, cards #484848) */}
             <div style={{ 
               padding: '30px', 
-              backgroundColor: '#141414', 
+              backgroundColor: '#404040', 
               borderRadius: '12px', 
               border: '1px solid rgba(0, 200, 83, 0.2)',
               marginTop: '30px'
@@ -43990,7 +43990,7 @@ A1;Peça exemplo;10`}
                   style={{ 
                     padding: '10px 20px', 
                     fontSize: '14px',
-                    backgroundColor: showListaPecasOrcamento ? 'rgba(255, 165, 0, 0.2)' : '#1e1e1e',
+                    backgroundColor: showListaPecasOrcamento ? 'rgba(255, 165, 0, 0.2)' : '#484848',
                     border: showListaPecasOrcamento ? '1px solid rgba(255, 165, 0, 0.5)' : '1px solid rgba(255, 165, 0, 0.2)',
                     color: '#fff',
                     fontWeight: showListaPecasOrcamento ? 'bold' : '500',
@@ -44067,7 +44067,7 @@ A1;Peça exemplo;10`}
                               key={index}
                               style={{ 
                                 padding: '15px', 
-                                backgroundColor: '#1e1e1e', 
+                                backgroundColor: '#484848', 
                                 borderRadius: '6px', 
                                 border: '1px solid rgba(255, 165, 0, 0.2)'
                               }}
@@ -44086,13 +44086,13 @@ A1;Peça exemplo;10`}
                                 </div>
                               </div>
                               
-                              <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#141414', borderRadius: '4px' }}>
+                              <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#404040', borderRadius: '4px' }}>
                                 <p style={{ fontSize: '13px', marginBottom: '8px', fontWeight: 'bold', color: '#ffaa00' }}>
                                   {safeT?.pedidosContendoPeca || 'Pedidos contendo esta peça'} ({item.pedidos.length}):
                                 </p>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                                   {item.pedidos.map((pedido, pIndex) => (
-                                    <div key={pIndex} style={{ fontSize: '12px', padding: '5px', backgroundColor: '#1e1e1e', borderRadius: '3px', border: '1px solid rgba(255, 165, 0, 0.1)' }}>
+                                    <div key={pIndex} style={{ fontSize: '12px', padding: '5px', backgroundColor: '#484848', borderRadius: '3px', border: '1px solid rgba(255, 165, 0, 0.1)' }}>
                                       <strong>{safeT?.relatorio || 'Relatório'}:</strong> {pedido.relatorioNumero} | 
                                       <strong> {safeT?.cliente || 'Cliente'}:</strong> {pedido.cliente} | 
                                       <strong> {safeT?.quantidade || 'Qtd'}:</strong> {pedido.quantidade} | 
@@ -44113,7 +44113,7 @@ A1;Peça exemplo;10`}
             {/* Seção de Cadastro de Serviços */}
             <div style={{ 
               padding: '20px', 
-              backgroundColor: '#141414', 
+              backgroundColor: '#404040', 
               borderRadius: '8px', 
               border: '1px solid rgba(0, 200, 83, 0.3)',
               marginTop: '20px'
@@ -44677,8 +44677,8 @@ A1;Peça exemplo;10`}
             bodyBg = '#fafafa'; bodyColor = '#1565c0'; thBg = '#1565c0'; thColor = '#fff'; footBg = '#e3f2fd'; footColor = '#0d47a1'; borderColor = '#90caf9'; rowBgEven = '#ffffff'; rowBgOdd = '#e3f2fd'
             headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding:24px;background:linear-gradient(135deg,#e3f2fd 0%,#bbdefb 100%);border-radius:12px;border-left:6px solid #1565c0;flex-wrap:wrap;gap:20px;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="flex-shrink:0">' + logoPart + '</div>' : ''}<div style="flex:1;min-width:0;max-width:100%"><div style="font-size:20px;font-weight:700;color:#0d47a1;margin-bottom:12px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('#1565c0', '#0d47a1', '#90caf9', '#fff')}</div></div>`
           } else if (modelo === 3) {
-            bodyBg = '#fff'; bodyColor = '#212121'; thBg = '#37474f'; thColor = '#fff'; footBg = '#eceff1'; footColor = '#263238'; borderColor = '#cfd8dc'; rowBgEven = '#ffffff'; rowBgOdd = '#fafafa'
-            headerHtml = `<div style="margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid #e0e0e0;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="margin-bottom:16px">' + logoPart + '</div>' : ''}<div style="font-size:22px;font-weight:700;color:#212121;letter-spacing:-0.5px;margin-bottom:16px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('#616161', '#212121', '#e0e0e0', '#fafafa')}</div>`
+            bodyBg = '#fff'; bodyColor = '#4a4a4a'; thBg = '#37474f'; thColor = '#fff'; footBg = '#eceff1'; footColor = '#263238'; borderColor = '#cfd8dc'; rowBgEven = '#ffffff'; rowBgOdd = '#fafafa'
+            headerHtml = `<div style="margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid #e0e0e0;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="margin-bottom:16px">' + logoPart + '</div>' : ''}<div style="font-size:22px;font-weight:700;color:#4a4a4a;letter-spacing:-0.5px;margin-bottom:16px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('#616161', '#4a4a4a', '#e0e0e0', '#fafafa')}</div>`
           } else if (modelo === 4) {
             bodyBg = '#f5f5f5'; bodyColor = '#263238'; thBg = '#37474f'; thColor = '#fff'; footBg = '#546e7a'; footColor = '#fff'; borderColor = '#546e7a'; rowBgEven = '#ffffff'; rowBgOdd = '#eceff1'
             headerHtml = `<div style="margin-bottom:24px;padding:24px;background:#37474f;color:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:100%;box-sizing:border-box">${logoPart ? '<div style="margin-bottom:16px">' + logoPart + '</div>' : ''}<div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:16px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('rgba(255,255,255,0.88)', '#fff', 'rgba(255,255,255,0.22)', 'rgba(255,255,255,0.1)')}</div>`
@@ -44692,8 +44692,8 @@ A1;Peça exemplo;10`}
             bodyBg = '#fafaf8'; bodyColor = '#3e2723'; thBg = '#5d4037'; thColor = '#fff'; footBg = '#d7ccc8'; footColor = '#3e2723'; borderColor = '#8d6e63'; rowBgEven = '#ffffff'; rowBgOdd = '#efebe9'
             headerHtml = `<div style="margin-bottom:24px;padding:28px;background:linear-gradient(135deg,#5d4037 0%,#3e2723 100%);color:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-width:100%;box-sizing:border-box">${logoPart ? '<div style="margin-bottom:16px">' + logoPart + '</div>' : ''}<div style="font-size:20px;font-weight:700;color:#efebe9;margin-bottom:16px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('rgba(255,255,255,0.9)', '#efebe9', 'rgba(255,255,255,0.22)', 'rgba(255,255,255,0.12)')}</div>`
           } else {
-            bodyBg = '#fff'; bodyColor = '#000'; thBg = '#212121'; thColor = '#fff'; footBg = '#212121'; footColor = '#fff'; borderColor = '#424242'; rowBgEven = '#ffffff'; rowBgOdd = '#fafafa'
-            headerHtml = `<div style="margin-bottom:28px;border:2px solid #212121;padding:24px;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #212121">' + logoPart + '</div>' : ''}<div style="font-size:18px;font-weight:700;color:#212121;margin-bottom:20px;font-family:Georgia,serif;line-height:1.25;word-break:break-word">${tituloDoc}</div><table role="presentation" style="width:100%;border-collapse:collapse"><tr><th scope="row" style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161;width:28%;text-align:left;vertical-align:top">${esc(lblCliente)}</th><td style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45">${clienteVal}</td></tr><tr><th scope="row" style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161;text-align:left;vertical-align:top">${esc(lblNumRelatorio)}</th><td style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere">${numVal}</td></tr><tr><th scope="row" style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161;text-align:left;vertical-align:top">${esc(lblEquipamento)}</th><td style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere">${equipVal}</td></tr><tr><th scope="row" style="padding:10px 0;font-size:10px;text-transform:uppercase;color:#616161;text-align:left;vertical-align:top">${esc(lblData)}</th><td style="padding:10px 0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere">${dataVal}</td></tr></table></div>`
+            bodyBg = '#fff'; bodyColor = '#000'; thBg = '#4a4a4a'; thColor = '#fff'; footBg = '#4a4a4a'; footColor = '#fff'; borderColor = '#424242'; rowBgEven = '#ffffff'; rowBgOdd = '#fafafa'
+            headerHtml = `<div style="margin-bottom:28px;border:2px solid #4a4a4a;padding:24px;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #4a4a4a">' + logoPart + '</div>' : ''}<div style="font-size:18px;font-weight:700;color:#4a4a4a;margin-bottom:20px;font-family:Georgia,serif;line-height:1.25;word-break:break-word">${tituloDoc}</div><table role="presentation" style="width:100%;border-collapse:collapse"><tr><th scope="row" style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161;width:28%;text-align:left;vertical-align:top">${esc(lblCliente)}</th><td style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45">${clienteVal}</td></tr><tr><th scope="row" style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161;text-align:left;vertical-align:top">${esc(lblNumRelatorio)}</th><td style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere">${numVal}</td></tr><tr><th scope="row" style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161;text-align:left;vertical-align:top">${esc(lblEquipamento)}</th><td style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere">${equipVal}</td></tr><tr><th scope="row" style="padding:10px 0;font-size:10px;text-transform:uppercase;color:#616161;text-align:left;vertical-align:top">${esc(lblData)}</th><td style="padding:10px 0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere">${dataVal}</td></tr></table></div>`
           }
           const pdfRowStyles = `.pdf-tbody tr:nth-child(odd){background:${rowBgEven}}.pdf-tbody tr:nth-child(even){background:${rowBgOdd}}`
           const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(titFechamento)} - ${esc(relatorioSelecionado.numero)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:24px;color:${bodyColor};font-size:12px;background:${bodyBg};line-height:1.4;max-width:100%;box-sizing:border-box}${pdfRowStyles}.fech-pdf-itens{min-width:0;width:100%}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none!important}.fech-pdf-itens{font-size:10px}.fech-pdf-itens th,.fech-pdf-itens td{padding:8px 10px!important}}.no-print{display:block}</style></head><body>${btnsNoPrint}${headerHtml}${tableContent(thBg, thColor, footBg, footColor, borderColor)}${rodape}</body></html>`
@@ -44780,7 +44780,7 @@ A1;Peça exemplo;10`}
           >
             <header
               style={{
-                background: 'linear-gradient(135deg, #0d0d0d 0%, #121212 100%)',
+                background: 'linear-gradient(135deg, #383838 0%, #3a3a3a 100%)',
                 border: '1px solid rgba(0, 200, 83, 0.25)',
                 borderRadius: '16px',
                 padding: isCompactLayout ? '16px 14px' : '24px 28px',
@@ -44914,7 +44914,7 @@ A1;Peça exemplo;10`}
                   padding: '10px 12px',
                   borderRadius: '8px',
                   border: '1px solid rgba(255,255,255,0.2)',
-                  background: '#141414',
+                  background: '#404040',
                   color: '#fff',
                   fontSize: '14px',
                   marginBottom: '12px',
@@ -44996,7 +44996,7 @@ A1;Peça exemplo;10`}
                         padding: '12px 14px',
                         borderRadius: '10px',
                         border: '1px solid rgba(255,255,255,0.2)',
-                        background: '#121212',
+                        background: '#3a3a3a',
                         color: '#fff',
                         fontSize: '15px',
                         marginBottom: '14px',
@@ -45033,7 +45033,7 @@ A1;Peça exemplo;10`}
                       'A editar despesas já guardadas na Biblioteca. Quando terminar, use «Guardar alterações na Biblioteca» — o relatório continua na Biblioteca e o cartão na lista fica verde (concluído).'}
                   </div>
                 )}
-                <div style={{ padding: '22px 24px', backgroundColor: '#1e1e1e', borderRadius: '14px', border: '1px solid rgba(0, 200, 83, 0.2)', marginBottom: '20px' }}>
+                <div style={{ padding: '22px 24px', backgroundColor: '#484848', borderRadius: '14px', border: '1px solid rgba(0, 200, 83, 0.2)', marginBottom: '20px' }}>
                   <h3 style={{ margin: '0 0 16px', color: 'rgba(0, 200, 83, 0.95)', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{(safeT as any)?.cabecalhoRelatorio || 'Cabeçalho do relatório'}</h3>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
                     <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.cliente || 'Cliente'}</span><br/><strong style={{ color: '#fff', fontSize: '14px' }}>{relatorioSelecionado.cliente}</strong></div>
@@ -45151,7 +45151,7 @@ A1;Peça exemplo;10`}
                             padding: '8px 10px',
                             borderRadius: 8,
                             border: '1px solid rgba(56, 189, 248, 0.45)',
-                            background: '#141414',
+                            background: '#404040',
                             color: '#fff',
                             fontSize: 14,
                           }}
@@ -45167,7 +45167,7 @@ A1;Peça exemplo;10`}
                   )}
                 </div>
 
-                <div style={{ padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.25)' }}>
+                <div style={{ padding: '20px', backgroundColor: '#484848', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.25)' }}>
                   <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
                     <h3 style={{ margin: 0, color: '#00c853', fontSize: '16px' }}>{(safeT as any)?.itensCobrancaFechamento || 'Itens a cobrar (ajuste com o Cadastro de Serviços)'}</h3>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>✏️ {(safeT as any)?.editarItensFechamento || 'Editar itens'}</span>
@@ -45208,7 +45208,7 @@ A1;Peça exemplo;10`}
                           padding: '10px 12px',
                           borderRadius: '8px',
                           border: '1px solid rgba(0, 200, 83, 0.35)',
-                          background: '#141414',
+                          background: '#404040',
                           color: '#fff',
                           fontSize: '14px',
                         }}
@@ -45350,7 +45350,7 @@ A1;Peça exemplo;10`}
                                 {valorUnitExibir.toFixed(2)} €
                               </span>
                             ) : (
-                              <input type="number" step="0.01" min={0} value={item.valorUnitario === 0 ? '' : item.valorUnitario} onChange={e => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })} style={{ width: '80px', padding: '6px', background: '#1e1e1e', border: '1px solid #444', borderRadius: '4px', color: '#fff' }} placeholder="0,00" />
+                              <input type="number" step="0.01" min={0} value={item.valorUnitario === 0 ? '' : item.valorUnitario} onChange={e => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })} style={{ width: '80px', padding: '6px', background: '#484848', border: '1px solid #444', borderRadius: '4px', color: '#fff' }} placeholder="0,00" />
                             )}
                           </td>
                           <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 600, color: cobrarDiaria ? '#00c853' : '#888' }}>{totalExibir.toFixed(2)} €{eDiarias && !cobrarDiaria ? ' (' + ((safeT as any)?.naoCobrar || 'não cobrar') + ')' : ''}</td>
@@ -45367,7 +45367,7 @@ A1;Peça exemplo;10`}
                                     const s = servicos.find((sv) => sv.id === e.target.value)
                                     if (s) aplicarServico('diarias', s)
                                   }}
-                                  style={{ width: '100%', maxWidth: '220px', padding: '6px 8px', background: '#1e1e1e', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '11px', margin: '0 auto', display: 'block' }}
+                                  style={{ width: '100%', maxWidth: '220px', padding: '6px 8px', background: '#484848', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '11px', margin: '0 auto', display: 'block' }}
                                   title={(safeT as any)?.selecionarServicoDiarias || 'Serviço de diárias (DFC, DDT…)'}
                                 >
                                   <option value="">{(safeT as any)?.servicoDiarias || '— Serviço diárias —'}</option>
@@ -45385,7 +45385,7 @@ A1;Peça exemplo;10`}
                                   const s = servicos.find((sv) => sv.id === e.target.value)
                                   if (s) aplicarServico(item.id, s)
                                 }}
-                                style={{ width: '100%', maxWidth: '220px', padding: '6px 8px', background: '#1e1e1e', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '11px', margin: '0 auto', display: 'block' }}
+                                style={{ width: '100%', maxWidth: '220px', padding: '6px 8px', background: '#484848', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '11px', margin: '0 auto', display: 'block' }}
                                 title={(safeT as any)?.selecionarServicoCadastro || 'Serviço do grupo selecionado'}
                               >
                                 <option value="">{(safeT as any)?.selecioneServicoAnexar || '— Serviço do cadastro —'}</option>
@@ -45402,7 +45402,7 @@ A1;Peça exemplo;10`}
                           {temLinhasManuaisFechamento && (
                             <td style={{ padding: '8px' }}>
                               {eManual ? (
-                                <select value={item.servicoId || ''} onChange={e => { const sid = e.target.value; const s = servicos.find(sv => sv.id === sid); if (s) aplicarServico(item.id, s) }} style={{ width: '100%', padding: '6px 8px', background: '#1e1e1e', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>
+                                <select value={item.servicoId || ''} onChange={e => { const sid = e.target.value; const s = servicos.find(sv => sv.id === sid); if (s) aplicarServico(item.id, s) }} style={{ width: '100%', padding: '6px 8px', background: '#484848', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>
                                   <option value="">{(safeT as any)?.selecioneServicoAnexar || '— Selecionar serviço (código, descrição, valor) —'}</option>
                                   {servicosParaItem(item).map((s) => (
                                     <option key={s.id} value={s.id}>
@@ -45566,7 +45566,7 @@ A1;Peça exemplo;10`}
                       📋 {(safeT as any)?.contabilidadeDocManualButton || 'Documento p/ contabilidade'}
                     </button>
                     <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginRight: '4px' }}>{(safeT as any)?.modeloPDFFechamento || 'Modelo PDF'}:</span>
-                    <select value={fechamentoPdfModelo} onChange={e => setFechamentoPdfModelo(Number(e.target.value))} style={{ padding: '8px 12px', fontSize: '12px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.4)', borderRadius: '8px', cursor: 'pointer', minWidth: '160px' }}>
+                    <select value={fechamentoPdfModelo} onChange={e => setFechamentoPdfModelo(Number(e.target.value))} style={{ padding: '8px 12px', fontSize: '12px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.4)', borderRadius: '8px', cursor: 'pointer', minWidth: '160px' }}>
                       <option value={1}>{(safeT as any)?.modeloFechamentoClassico || '1. Clássico'}</option>
                       <option value={2}>{(safeT as any)?.modeloFechamentoModerno || '2. Moderno'}</option>
                       <option value={3}>{(safeT as any)?.modeloFechamentoMinimalista || '3. Minimalista'}</option>
@@ -45582,7 +45582,7 @@ A1;Peça exemplo;10`}
                     <button type="button" onClick={handleEnviarWhatsAppFechamento} style={{ padding: '10px 20px', fontSize: '13px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#25D366', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
                       WhatsApp {(safeT as any)?.enviarPor || 'Enviar'}
                     </button>
-                    <button type="button" onClick={handleEnviarEmailFechamento} style={{ padding: '10px 20px', fontSize: '13px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.4)', cursor: 'pointer', fontWeight: '500' }}>
+                    <button type="button" onClick={handleEnviarEmailFechamento} style={{ padding: '10px 20px', fontSize: '13px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.4)', cursor: 'pointer', fontWeight: '500' }}>
                       ✉ {(safeT as any)?.enviarEmail || 'Enviar por Email'}
                     </button>
                   </div>
@@ -46172,7 +46172,7 @@ A1;Peça exemplo;10`}
               style={{
                 marginBottom: '20px',
                 padding: '14px 16px',
-                backgroundColor: '#121212',
+                backgroundColor: '#3a3a3a',
                 borderRadius: '10px',
                 border: '1px solid rgba(0,200,83,0.15)',
               }}
@@ -46217,7 +46217,7 @@ A1;Peça exemplo;10`}
             </div>
             </details>
             {/* Total do período */}
-            <div style={{ marginBottom: '20px', padding: '14px 16px', backgroundColor: '#141414', borderRadius: '10px', border: '1px solid rgba(0,200,83,0.25)' }}>
+            <div style={{ marginBottom: '20px', padding: '14px 16px', backgroundColor: '#404040', borderRadius: '10px', border: '1px solid rgba(0,200,83,0.25)' }}>
               {filtroPeriodoView === 'mensal' && filtroMes ? (
                 <span style={{ color: '#fde68a', fontWeight: 700, fontSize: '18px' }}>
                   {(safeT as any)?.comprovantesTotalMesDestaque || 'Total do mês selecionado'} ({filtroMes}):{' '}
@@ -46424,14 +46424,14 @@ A1;Peça exemplo;10`}
                     <div style={{ marginBottom: '10px' }}>
                       <div style={{ color: '#00c853', fontSize: '12px', marginBottom: '6px' }}>{(safeT as any)?.comprovantesCliente || 'Cliente'}</div>
                       {clientes.length === 0 ? (
-                        <p style={{ color: '#ffaa66', fontSize: '13px', margin: 0, padding: '10px', background: '#121212', borderRadius: '6px', border: '1px solid rgba(255,170,102,0.35)' }}>
+                        <p style={{ color: '#ffaa66', fontSize: '13px', margin: 0, padding: '10px', background: '#3a3a3a', borderRadius: '6px', border: '1px solid rgba(255,170,102,0.35)' }}>
                           {(safeT as any)?.comprovantesNenhumClienteCadastrado || 'Não há clientes cadastrados. Cadastre clientes em Gestão técnica → Clientes antes de adicionar comprovantes por cliente.'}
                         </p>
                       ) : (
                         <select
                           value={formComp.cliente}
                           onChange={e => setFormComp(prev => ({ ...prev, cliente: e.target.value }))}
-                          style={{ width: '100%', padding: '10px', background: '#121212', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }}
+                          style={{ width: '100%', padding: '10px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }}
                         >
                           <option value="">{(safeT as any)?.comprovantesSelecioneClientePlaceholder || 'Selecione um cliente…'}</option>
                           {clientesOrdenadosAlfabeticamente.map(c => (
@@ -46444,7 +46444,7 @@ A1;Peça exemplo;10`}
                   <label style={{ display: 'block', color: '#00c853', fontSize: '12px', marginBottom: '6px' }}>
                     {(safeT as any)?.comprovantesDataRecibo || 'Data do recibo (no documento / PDF)'}
                   </label>
-                  <input type="date" value={formComp.data} onChange={e => setFormComp(prev => ({ ...prev, data: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#121212', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }} />
+                  <input type="date" value={formComp.data} onChange={e => setFormComp(prev => ({ ...prev, data: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }} />
                   <label style={{ display: 'block', color: '#00c853', fontSize: '12px', marginBottom: '6px' }}>
                     {(safeT as any)?.comprovantesMesArquivo || 'Mês de arquivo (IRS / filtro por mês)'}
                   </label>
@@ -46452,15 +46452,15 @@ A1;Peça exemplo;10`}
                     type="month"
                     value={formComp.mesCompetencia}
                     onChange={e => setFormComp(prev => ({ ...prev, mesCompetencia: e.target.value }))}
-                    style={{ width: '100%', padding: '10px', marginBottom: '8px', background: '#121212', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }}
+                    style={{ width: '100%', padding: '10px', marginBottom: '8px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }}
                   />
                   <p style={{ margin: '0 0 12px', fontSize: '11px', color: '#888', lineHeight: 1.4 }}>
                     {(safeT as any)?.comprovantesMesArquivoHint ||
                       'Se fotografou hoje um recibo de outro mês, escolha aqui o mês em que a despesa deve entrar; a data acima deve refletir o recibo para o PDF.'}
                   </p>
-                  <input type="number" step={0.01} placeholder={(safeT as any)?.comprovantesValorUnitario || 'Valor unitário'} value={formComp.valorUnitario || ''} onChange={e => setFormComp(prev => ({ ...prev, valorUnitario: Number(e.target.value) || 0 }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#121212', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }} />
-                  <input type="number" min={1} placeholder={(safeT as any)?.comprovantesQuantidade || 'Quantidade'} value={formComp.quantidade || ''} onChange={e => setFormComp(prev => ({ ...prev, quantidade: Number(e.target.value) || 1 }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#121212', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }} />
-                  <input placeholder={(safeT as any)?.comprovantesDescricaoOpcional || (safeT as any)?.comprovantesDescricao || 'Descrição (opcional)'} value={formComp.descricao} onChange={e => setFormComp(prev => ({ ...prev, descricao: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#121212', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }} />
+                  <input type="number" step={0.01} placeholder={(safeT as any)?.comprovantesValorUnitario || 'Valor unitário'} value={formComp.valorUnitario || ''} onChange={e => setFormComp(prev => ({ ...prev, valorUnitario: Number(e.target.value) || 0 }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }} />
+                  <input type="number" min={1} placeholder={(safeT as any)?.comprovantesQuantidade || 'Quantidade'} value={formComp.quantidade || ''} onChange={e => setFormComp(prev => ({ ...prev, quantidade: Number(e.target.value) || 1 }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }} />
+                  <input placeholder={(safeT as any)?.comprovantesDescricaoOpcional || (safeT as any)?.comprovantesDescricao || 'Descrição (opcional)'} value={formComp.descricao} onChange={e => setFormComp(prev => ({ ...prev, descricao: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }} />
                   <label style={{ display: 'block', color: '#00c853', fontSize: '12px', marginBottom: '6px' }}>{(safeT as any)?.comprovantesImagem || 'Imagem do recibo (anexar)'}</label>
                   <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setFormComp(prev => ({ ...prev, imagemBase64: (r.result as string) || '' })); r.readAsDataURL(f); } }} style={{ width: '100%', padding: '8px', marginBottom: formComp.imagemBase64 ? '8px' : '16px', color: '#ccc' }} />
                   {formComp.imagemBase64 && <div style={{ marginBottom: '16px' }}><img src={formComp.imagemBase64} alt="Preview" style={{ maxWidth: '100%', maxHeight: 120, borderRadius: '6px', border: '1px solid rgba(0,200,83,0.3)' }} /><button type="button" onClick={() => setFormComp(prev => ({ ...prev, imagemBase64: '' }))} style={{ display: 'block', marginTop: '6px', padding: '4px 8px', fontSize: '11px', background: 'rgba(255,68,68,0.2)', border: '1px solid #ff4444', borderRadius: '4px', color: '#ff4444', cursor: 'pointer' }}>{(safeT as any)?.comprovantesRemoverImagem || (safeT as any)?.removerImagem || 'Remover imagem'}</button></div>}
@@ -46474,7 +46474,7 @@ A1;Peça exemplo;10`}
             {/* Modal Envio WhatsApp / Email - 5 modelos */}
             {showEnvioModal && (
               <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10001 }} onClick={() => setShowEnvioModal(false)}>
-                <div style={{ background: '#1e1e1e', padding: '28px', borderRadius: '16px', border: '2px solid rgba(0,200,83,0.35)', maxWidth: '720px', width: '100%', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
+                <div style={{ background: '#484848', padding: '28px', borderRadius: '16px', border: '2px solid rgba(0,200,83,0.35)', maxWidth: '720px', width: '100%', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
                   <h2 style={{ margin: '0 0 8px', color: '#00c853', fontSize: '22px' }}>{(safeT as any)?.comprovantesEnvioTitulo || 'Enviar por WhatsApp e Email'}</h2>
                   <p style={{ color: '#aaa', fontSize: '13px', marginBottom: '24px' }}>{(safeT as any)?.comprovantesEnvioDesc || 'Escolha um dos 5 modelos, selecione o canal e gere a mensagem para copiar ou abrir diretamente.'}</p>
                   {/* 5 modelos */}
@@ -46489,7 +46489,7 @@ A1;Peça exemplo;10`}
                   {/* Técnico (opcional) */}
                   <div style={{ marginBottom: '20px', padding: '16px', background: '#252525', borderRadius: '10px', border: '1px solid #333' }}>
                     <div style={{ color: '#00c853', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>{(safeT as any)?.comprovantesTecnicoOpcional || 'Técnico (opcional)'}</div>
-                    <select value={envioForm.tecnicoId} onChange={e => setEnvioForm(f => ({ ...f, tecnicoId: e.target.value }))} style={{ width: '100%', padding: '10px', background: '#121212', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }}>
+                    <select value={envioForm.tecnicoId} onChange={e => setEnvioForm(f => ({ ...f, tecnicoId: e.target.value }))} style={{ width: '100%', padding: '10px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }}>
                       <option value="">{(safeT as any)?.comprovantesNenhumTecnico || 'Nenhum técnico selecionado'}</option>
                       {tecnicos.map(t => (<option key={t.id} value={t.id}>{t.name}{t.email ? ` (${t.email})` : ''}</option>))}
                     </select>
@@ -46502,20 +46502,20 @@ A1;Peça exemplo;10`}
                       {(safeT as any)?.comprovantesCanalWhatsApp || 'WhatsApp'}
                     </label>
                     {envioForm.whatsapp && (
-                      <input type="text" placeholder={(safeT as any)?.comprovantesTelefone || 'Telefone (ex: 351912345678)'} value={envioForm.telefone} onChange={e => setEnvioForm(f => ({ ...f, telefone: e.target.value }))} style={{ width: '100%', padding: '10px', marginTop: '6px', background: '#121212', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }} />
+                      <input type="text" placeholder={(safeT as any)?.comprovantesTelefone || 'Telefone (ex: 351912345678)'} value={envioForm.telefone} onChange={e => setEnvioForm(f => ({ ...f, telefone: e.target.value }))} style={{ width: '100%', padding: '10px', marginTop: '6px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }} />
                     )}
                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', cursor: 'pointer', color: '#ccc' }}>
                       <input type="checkbox" checked={envioForm.email} onChange={e => setEnvioForm(f => ({ ...f, email: e.target.checked }))} />
                       {(safeT as any)?.comprovantesCanalEmail || 'Email'}
                     </label>
                     {envioForm.email && (
-                      <input type="email" placeholder={(safeT as any)?.comprovantesEmailDestino || 'Email do destinatário'} value={envioForm.emailDestino} onChange={e => setEnvioForm(f => ({ ...f, emailDestino: e.target.value }))} style={{ width: '100%', padding: '10px', marginTop: '6px', background: '#121212', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }} />
+                      <input type="email" placeholder={(safeT as any)?.comprovantesEmailDestino || 'Email do destinatário'} value={envioForm.emailDestino} onChange={e => setEnvioForm(f => ({ ...f, emailDestino: e.target.value }))} style={{ width: '100%', padding: '10px', marginTop: '6px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }} />
                     )}
                   </div>
                   {/* Preview */}
                   <div style={{ marginBottom: '20px' }}>
                     <div style={{ color: '#00c853', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>{(safeT as any)?.comprovantesPreview || 'Pré-visualização da mensagem'}</div>
-                    <AssistTextarea readOnly value={mensagemEnvio} onValueChange={() => {}} rows={8} style={{ width: '100%', padding: '12px', background: '#141414', border: '1px solid #333', borderRadius: '8px', color: '#ccc', fontSize: '13px', resize: 'vertical', fontFamily: 'inherit' }} showAssist={false} />
+                    <AssistTextarea readOnly value={mensagemEnvio} onValueChange={() => {}} rows={8} style={{ width: '100%', padding: '12px', background: '#404040', border: '1px solid #333', borderRadius: '8px', color: '#ccc', fontSize: '13px', resize: 'vertical', fontFamily: 'inherit' }} showAssist={false} />
                   </div>
                   {/* Ações */}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -46547,7 +46547,7 @@ A1;Peça exemplo;10`}
               >
                 <div
                   style={{
-                    background: '#1e1e1e',
+                    background: '#484848',
                     padding: '24px',
                     borderRadius: '14px',
                     border: '2px solid rgba(147,197,253,0.45)',
@@ -46685,7 +46685,7 @@ A1;Peça exemplo;10`}
                           {comprovanteReciboRapido.ocrSnippet}
                         </pre>
                       </details>
-                      <div style={{ marginBottom: '14px', padding: '12px', background: '#141414', borderRadius: '8px', border: '1px solid rgba(147,197,253,0.25)' }}>
+                      <div style={{ marginBottom: '14px', padding: '12px', background: '#404040', borderRadius: '8px', border: '1px solid rgba(147,197,253,0.25)' }}>
                         <div style={{ color: '#93c5fd', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
                           {(safeT as any)?.comprovantesClientesAtivosTitulo || 'Associar a'}
                         </div>
@@ -47053,7 +47053,7 @@ A1;Peça exemplo;10`}
             </div>
             <div style={{ 
               padding: '40px', 
-              backgroundColor: '#141414', 
+              backgroundColor: '#404040', 
               borderRadius: '12px', 
               border: '2px solid rgba(0, 200, 83, 0.3)',
               textAlign: 'center'
@@ -47816,7 +47816,7 @@ A1;Peça exemplo;10`}
             </div>
 
             {/* Filtros */}
-            <div style={{ marginBottom: '30px', backgroundColor: '#141414', padding: '20px', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+            <div style={{ marginBottom: '30px', backgroundColor: '#404040', padding: '20px', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px', alignItems: 'end' }}>
                 <div>
                   <label style={{ display: 'block', color: '#fff', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>
@@ -47827,7 +47827,7 @@ A1;Peça exemplo;10`}
                     placeholder={safeT?.opSearchForm || 'Buscar formulário por código, cliente, técnico...'}
                     value={buscaFormulario}
                     onChange={(e) => setBuscaFormulario(e.target.value)}
-                    style={{ width: '100%', padding: '12px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px', fontSize: '16px' }}
+                    style={{ width: '100%', padding: '12px', backgroundColor: '#484848', border: '1px solid #444', color: '#fff', borderRadius: '4px', fontSize: '16px' }}
                   />
                 </div>
                 <div>
@@ -47837,7 +47837,7 @@ A1;Peça exemplo;10`}
                   <select
                     value={filtroTipoFormulario}
                     onChange={(e) => setFiltroTipoFormulario(e.target.value as 'todos' | 'checklist-gerado' | 'ordem-preparacao')}
-                    style={{ width: '100%', padding: '12px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.3)', color: '#fff', borderRadius: '4px', fontSize: '16px', cursor: 'pointer' }}
+                    style={{ width: '100%', padding: '12px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.3)', color: '#fff', borderRadius: '4px', fontSize: '16px', cursor: 'pointer' }}
                   >
                     <option value="todos">{safeT?.todosTipos || 'Todos os Tipos'}</option>
                     <option value="checklist-gerado">{safeT?.checklistGerado || 'Checklist Gerado'}</option>
@@ -47872,7 +47872,7 @@ A1;Peça exemplo;10`}
                 })
                 .map(formulario => (
                   <div key={formulario.id} style={{
-                    backgroundColor: '#141414',
+                    backgroundColor: '#404040',
                     padding: '25px',
                     borderRadius: '12px',
                     border: '2px solid rgba(0, 200, 83, 0.3)',
@@ -47997,7 +47997,7 @@ A1;Peça exemplo;10`}
                       <div style={{
                         marginTop: '20px',
                         padding: '15px',
-                        backgroundColor: '#1e1e1e',
+                        backgroundColor: '#484848',
                         borderRadius: '8px',
                         border: '1px solid #333'
                       }}>
@@ -48012,7 +48012,7 @@ A1;Peça exemplo;10`}
                           <div><strong style={{ color: '#00c853' }}>{safeT?.dataChecklist || 'Data'}:</strong> {formulario.data || '-'}</div>
                         </div>
                         {formulario.grupos && formulario.grupos.length > 0 && (
-                          <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#141414', borderRadius: '4px' }}>
+                          <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#404040', borderRadius: '4px' }}>
                             <strong style={{ color: '#66b3ff' }}>{safeT?.gruposSelecionados || 'Grupos Selecionados'}:</strong>
                             <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
                               {formulario.grupos.map((g: any, idx: number) => (
@@ -48028,7 +48028,7 @@ A1;Peça exemplo;10`}
                       <div style={{
                         marginTop: '20px',
                         padding: '15px',
-                        backgroundColor: '#1e1e1e',
+                        backgroundColor: '#484848',
                         borderRadius: '8px',
                         border: '1px solid #333'
                       }}>
@@ -48040,14 +48040,14 @@ A1;Peça exemplo;10`}
                         </div>
                         
                         {formulario.impressoes && (
-                          <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#141414', borderRadius: '4px' }}>
+                          <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#404040', borderRadius: '4px' }}>
                             <strong style={{ color: '#66b3ff' }}>Impressões:</strong>
                             <p style={{ margin: '5px 0 0 0', color: '#ccc', whiteSpace: 'pre-wrap' }}>{formulario.impressoes}</p>
                           </div>
                         )}
                         
                         {formulario.noteProduzione && (
-                          <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#141414', borderRadius: '4px' }}>
+                          <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#404040', borderRadius: '4px' }}>
                             <strong style={{ color: '#66b3ff' }}>Notas de Produção:</strong>
                             <p style={{ margin: '5px 0 0 0', color: '#ccc', whiteSpace: 'pre-wrap' }}>{formulario.noteProduzione}</p>
                           </div>
@@ -48060,7 +48060,7 @@ A1;Peça exemplo;10`}
               {formulariosChecklistTecnicos.length === 0 && (
                 <div style={{
                   padding: '40px',
-                  backgroundColor: '#141414',
+                  backgroundColor: '#404040',
                   borderRadius: '12px',
                   border: '2px solid rgba(0, 200, 83, 0.3)',
                   textAlign: 'center'
@@ -48134,7 +48134,7 @@ A1;Peça exemplo;10`}
               }}
               >
                 <div style={{
-                  backgroundColor: '#141414',
+                  backgroundColor: '#404040',
                   borderRadius: '12px',
                   border: '2px solid rgba(0, 200, 83, 0.5)',
                   maxWidth: '1600px',
@@ -48331,7 +48331,7 @@ A1;Peça exemplo;10`}
                   <div style={{ 
                     marginBottom: '30px', 
                     padding: '20px', 
-                    backgroundColor: '#1e1e1e', 
+                    backgroundColor: '#484848', 
                     borderRadius: '8px',
                     border: '1px solid rgba(0, 200, 83, 0.3)'
                   }}>
@@ -48367,7 +48367,7 @@ A1;Peça exemplo;10`}
                   </div>
 
                   {/* Solicitação de peças (só aparece quando o técnico seleciona e adiciona a peça) */}
-                  <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.3)' }}>
+                  <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#404040', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.3)' }}>
                     <h3 style={{ color: '#00c853', marginBottom: '15px', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
                       <span>{safeT?.solicitacaoPecas || 'Solicitação de peças'}</span>
                       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -48482,7 +48482,7 @@ A1;Peça exemplo;10`}
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -48495,7 +48495,7 @@ A1;Peça exemplo;10`}
                     {(checklistGeradoVisualizar.pecasNecessarias && checklistGeradoVisualizar.pecasNecessarias.length > 0) ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '260px', overflowY: 'auto' }}>
                         {checklistGeradoVisualizar.pecasNecessarias.map((p: any, idx: number) => (
-                          <div key={p.id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)', flexWrap: 'wrap', gap: '8px' }}>
+                          <div key={p.id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', backgroundColor: '#484848', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)', flexWrap: 'wrap', gap: '8px' }}>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <span style={{ color: '#ccc' }}>{p.codigo || p.codigoPeca} · {p.nome || p.descricao || '-'} · Qtd: {p.quantidade || 1}</span>
                               {(p.tecnicoSolicitante || p.tecnico) && (
@@ -48559,7 +48559,7 @@ A1;Peça exemplo;10`}
                     <div key={grupo.grupoId || grupoIndex} style={{ 
                       marginBottom: '30px', 
                       padding: '20px', 
-                      backgroundColor: '#1e1e1e', 
+                      backgroundColor: '#484848', 
                       borderRadius: '8px',
                       border: '1px solid rgba(0, 200, 83, 0.3)'
                     }}>
@@ -48647,7 +48647,7 @@ A1;Peça exemplo;10`}
                             }}
                             style={{
                               padding: '8px 12px',
-                              backgroundColor: '#1e1e1e',
+                              backgroundColor: '#484848',
                               border: '1px solid rgba(0, 200, 83, 0.3)',
                               borderRadius: '6px',
                               color: '#fff',
@@ -48684,7 +48684,7 @@ A1;Peça exemplo;10`}
                             style={{
                               padding: '8px 12px',
                               width: '160px',
-                              backgroundColor: '#1e1e1e',
+                              backgroundColor: '#484848',
                               border: '1px solid rgba(0, 200, 83, 0.3)',
                               borderRadius: '6px',
                               color: '#fff',
@@ -48751,7 +48751,7 @@ A1;Peça exemplo;10`}
                         
                         // Determinar cor da borda baseado no status
                         let borderColor = 'rgba(0, 200, 83, 0.2)'
-                        let backgroundColor = '#141414'
+                        let backgroundColor = '#404040'
                         if (manutencao.statusConclusao === 'concluido') {
                           borderColor = 'rgba(255, 193, 7, 0.6)' // Amarelo
                           backgroundColor = 'rgba(255, 193, 7, 0.05)'
@@ -48797,7 +48797,7 @@ A1;Peça exemplo;10`}
                             <div style={{ 
                               marginBottom: '15px', 
                               padding: '10px', 
-                              backgroundColor: '#1e1e1e', 
+                              backgroundColor: '#484848', 
                               borderRadius: '6px',
                               opacity: 0.7,
                               pointerEvents: 'none'
@@ -48913,7 +48913,7 @@ A1;Peça exemplo;10`}
                                           novosGrupos[grupoIndex].manutencoes[manIndex].tecnicoExecucao = v === '__outro__' ? '' : v
                                           setChecklistGeradoVisualizar({ ...checklistGeradoVisualizar, grupos: novosGrupos })
                                         }}
-                                        style={{ flex: 1, minWidth: '140px', padding: '8px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
+                                        style={{ flex: 1, minWidth: '140px', padding: '8px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
                                       >
                                         <option value="">— {(safeT as any)?.selecioneTecnico || 'Selecione'} —</option>
                                         {(grupo.tecnicosNoGrupo as string[]).map((nome: string) => (
@@ -48926,7 +48926,7 @@ A1;Peça exemplo;10`}
                                           const novosGrupos = [...(checklistGeradoVisualizar.grupos || [])]
                                           novosGrupos[grupoIndex].manutencoes[manIndex].tecnicoExecucao = e.target.value
                                           setChecklistGeradoVisualizar({ ...checklistGeradoVisualizar, grupos: novosGrupos })
-                                        }} placeholder={(safeT as any)?.nomeTecnicoOuOutro || 'Nome'} style={{ width: '120px', padding: '8px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }} />
+                                        }} placeholder={(safeT as any)?.nomeTecnicoOuOutro || 'Nome'} style={{ width: '120px', padding: '8px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }} />
                                       )}
                                     </>
                                   ) : (
@@ -48934,7 +48934,7 @@ A1;Peça exemplo;10`}
                                       const novosGrupos = [...(checklistGeradoVisualizar.grupos || [])]
                                       novosGrupos[grupoIndex].manutencoes[manIndex].tecnicoExecucao = e.target.value
                                       setChecklistGeradoVisualizar({ ...checklistGeradoVisualizar, grupos: novosGrupos })
-                                    }} placeholder={safeT?.nomeTecnico || 'Nome do técnico'} style={{ flex: 1, minWidth: '140px', padding: '8px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }} />
+                                    }} placeholder={safeT?.nomeTecnico || 'Nome do técnico'} style={{ flex: 1, minWidth: '140px', padding: '8px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }} />
                                   )}
                                   <button
                                     onClick={async () => {
@@ -48999,13 +48999,13 @@ A1;Peça exemplo;10`}
                                   trabalhandoAgoraDisplay.forEach((s: any) => { const [a,b,c] = (s.tempoIndividual || '00:00:00').split(':').map(Number); tot += (a||0)*3600+(b||0)*60+(c||0) })
                                   const th = Math.floor(tot/3600), tm = Math.floor((tot%3600)/60), ts = Math.floor(tot%60)
                                   return `${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}:${String(ts).padStart(2,'0')}`
-                                })()} style={{ width: '100%', padding: '8px', backgroundColor: '#141414', border: '1px solid #444', borderRadius: '6px', color: '#00c853', fontSize: '14px', fontWeight: 'bold' }} />
+                                })()} style={{ width: '100%', padding: '8px', backgroundColor: '#404040', border: '1px solid #444', borderRadius: '6px', color: '#00c853', fontSize: '14px', fontWeight: 'bold' }} />
                               </div>
                             </div>
 
                             {/* Histórico de Técnicos */}
                             {manutencao.historicoTecnicos && manutencao.historicoTecnicos.length > 0 && (
-                              <div style={{ marginTop: '15px', marginBottom: '15px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                              <div style={{ marginTop: '15px', marginBottom: '15px', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                                 <label style={{ display: 'block', color: '#00c853', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                                   {safeT?.historicoTecnicos || 'Histórico de Técnicos'}:
                                 </label>
@@ -49013,7 +49013,7 @@ A1;Peça exemplo;10`}
                                   {manutencao.historicoTecnicos.map((historico: any, idx: number) => (
                                     <div key={idx} style={{
                                       padding: '10px',
-                                      backgroundColor: '#141414',
+                                      backgroundColor: '#404040',
                                       borderRadius: '6px',
                                       border: '1px solid rgba(0, 200, 83, 0.1)',
                                       display: 'grid',
@@ -49178,7 +49178,7 @@ A1;Peça exemplo;10`}
 
                               {/* Lista de Horários Registrados */}
                               {manutencao.horarios && manutencao.horarios.length > 0 && (
-                                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#141414', borderRadius: '6px' }}>
+                                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#404040', borderRadius: '6px' }}>
                                   {manutencao.horarios.map((h: any, hIndex: number) => (
                                     <div key={hIndex} style={{ 
                                       marginBottom: '5px', 
@@ -49229,7 +49229,7 @@ A1;Peça exemplo;10`}
                                   style={{
                                     flex: '0 0 200px',
                                     padding: '8px',
-                                    backgroundColor: '#1e1e1e',
+                                    backgroundColor: '#484848',
                                     border: '1px solid rgba(0, 200, 83, 0.3)',
                                     borderRadius: '6px',
                                     color: '#fff',
@@ -49247,7 +49247,7 @@ A1;Peça exemplo;10`}
                                   style={{
                                     flex: 1,
                                     padding: '8px',
-                                    backgroundColor: '#1e1e1e',
+                                    backgroundColor: '#484848',
                                     border: '1px solid rgba(0, 200, 83, 0.3)',
                                     borderRadius: '6px',
                                     color: '#fff',
@@ -49314,12 +49314,12 @@ A1;Peça exemplo;10`}
 
                               {/* Lista de Observações */}
                               {manutencao.observacoes && manutencao.observacoes.length > 0 && (
-                                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#141414', borderRadius: '6px' }}>
+                                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#404040', borderRadius: '6px' }}>
                                   {manutencao.observacoes.map((obs: any, obsIndex: number) => (
                                     <div key={obsIndex} style={{ 
                                       marginBottom: '8px', 
                                       padding: '8px',
-                                      backgroundColor: '#1e1e1e',
+                                      backgroundColor: '#484848',
                                       borderRadius: '4px',
                                       fontSize: '13px'
                                     }}>
@@ -49335,7 +49335,7 @@ A1;Peça exemplo;10`}
                             </div>
 
                             {/* Status de Conclusão */}
-                            <div style={{ marginTop: '15px', padding: '15px', backgroundColor: manutencao.statusConclusao === 'concluido' ? 'rgba(255, 193, 7, 0.1)' : '#1e1e1e', borderRadius: '8px', border: manutencao.statusConclusao === 'concluido' ? '1px solid rgba(255, 193, 7, 0.5)' : '1px solid rgba(0, 200, 83, 0.2)' }}>
+                            <div style={{ marginTop: '15px', padding: '15px', backgroundColor: manutencao.statusConclusao === 'concluido' ? 'rgba(255, 193, 7, 0.1)' : '#484848', borderRadius: '8px', border: manutencao.statusConclusao === 'concluido' ? '1px solid rgba(255, 193, 7, 0.5)' : '1px solid rgba(0, 200, 83, 0.2)' }}>
                               {manutencao.statusConclusao === 'concluido' ? (
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                   <div>
@@ -49533,7 +49533,7 @@ A1;Peça exemplo;10`}
                     >
                       <div
                         style={{
-                          backgroundColor: '#141414',
+                          backgroundColor: '#404040',
                           borderRadius: '12px',
                           border: '2px solid rgba(0, 200, 83, 0.4)',
                           maxWidth: '700px',
@@ -49646,7 +49646,7 @@ A1;Peça exemplo;10`}
                                       <strong style={{ color: '#00c853' }}>{safeT?.outrosDocumentos || 'Outros documentos'}:</strong>
                                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
                                         {documentosPdf.map((url: string, i: number) => (
-                                          <button key={i} onClick={() => window.open(url, '_blank')} style={{ padding: '8px 16px', backgroundColor: '#1e1e1e', color: '#66b3ff', border: '1px solid #444', borderRadius: '6px', cursor: 'pointer', textAlign: 'left' }}>
+                                          <button key={i} onClick={() => window.open(url, '_blank')} style={{ padding: '8px 16px', backgroundColor: '#484848', color: '#66b3ff', border: '1px solid #444', borderRadius: '6px', cursor: 'pointer', textAlign: 'left' }}>
                                             📄 {safeT?.documento || 'Documento'} {i + 1}
                                           </button>
                                         ))}
@@ -49669,7 +49669,7 @@ A1;Peça exemplo;10`}
                                 value={buscaCodigoPecaExecucao}
                                 onChange={(e) => setBuscaCodigoPecaExecucao(e.target.value)}
                                 placeholder={safeT?.codigoPeca || 'Código da peça'}
-                                style={{ flex: 1, minWidth: '180px', padding: '10px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff' }}
+                                style={{ flex: 1, minWidth: '180px', padding: '10px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff' }}
                               />
                               <input
                                 type="number"
@@ -49677,7 +49677,7 @@ A1;Peça exemplo;10`}
                                 value={quantidadePecaExecucao}
                                 onChange={(e) => setQuantidadePecaExecucao(e.target.value || '1')}
                                 placeholder="Qtd"
-                                style={{ width: '80px', padding: '10px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff' }}
+                                style={{ width: '80px', padding: '10px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff' }}
                               />
                             </div>
                             {buscaCodigoPecaExecucao.trim() && (
@@ -49685,7 +49685,7 @@ A1;Peça exemplo;10`}
                                 {pecasBiblioteca
                                   .filter((p: PecaBiblioteca) => (p.codigo || '').toLowerCase().includes(buscaCodigoPecaExecucao.toLowerCase()) || (p.nome || '').toLowerCase().includes(buscaCodigoPecaExecucao.toLowerCase()))
                                   .map((p: PecaBiblioteca) => (
-                                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#1e1e1e', borderRadius: '6px', marginBottom: '8px', border: '1px solid #333' }}>
+                                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#484848', borderRadius: '6px', marginBottom: '8px', border: '1px solid #333' }}>
                                       <div>
                                         <span style={{ color: '#00c853', fontWeight: 'bold' }}>{p.codigo}</span>
                                         <span style={{ color: '#ccc', marginLeft: '10px' }}>{p.nome || p.descricao || '-'}</span>
@@ -49730,11 +49730,11 @@ A1;Peça exemplo;10`}
                               value={buscaBibliotecaPecasExecucao}
                               onChange={(e) => setBuscaBibliotecaPecasExecucao(e.target.value)}
                               placeholder={safeT?.buscarPecaNomeCodigo || 'Buscar por nome, código ou descrição...'}
-                              style={{ width: '100%', padding: '12px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff', marginBottom: '15px' }}
+                              style={{ width: '100%', padding: '12px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff', marginBottom: '15px' }}
                             />
                             <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', alignItems: 'center' }}>
                               <span style={{ color: '#00c853', fontSize: '14px' }}>{safeT?.quantidade || 'Quantidade'}:</span>
-                              <input type="number" min="1" value={quantidadePecaExecucao} onChange={(e) => setQuantidadePecaExecucao(e.target.value || '1')} style={{ width: '80px', padding: '8px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff' }} />
+                              <input type="number" min="1" value={quantidadePecaExecucao} onChange={(e) => setQuantidadePecaExecucao(e.target.value || '1')} style={{ width: '80px', padding: '8px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff' }} />
                             </div>
                             <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '15px' }}>
                               {pecasBiblioteca
@@ -49744,7 +49744,7 @@ A1;Peça exemplo;10`}
                                   return (p.codigo || '').toLowerCase().includes(q) || (p.nome || '').toLowerCase().includes(q) || (p.descricao || '').toLowerCase().includes(q)
                                 })
                                 .map((p: PecaBiblioteca) => (
-                                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#1e1e1e', borderRadius: '6px', marginBottom: '8px', border: '1px solid #333' }}>
+                                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#484848', borderRadius: '6px', marginBottom: '8px', border: '1px solid #333' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                       {p.imagem && <img src={p.imagem} alt="" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />}
                                       <div>
@@ -49818,7 +49818,7 @@ A1;Peça exemplo;10`}
               }}
               >
                 <div style={{
-                  backgroundColor: '#141414',
+                  backgroundColor: '#404040',
                   borderRadius: '12px',
                   border: '2px solid rgba(0, 200, 83, 0.5)',
                   maxWidth: '1400px',
@@ -49852,14 +49852,14 @@ A1;Peça exemplo;10`}
                   </button>
 
                   {/* Formulário - Estrutura Idêntica ao Original (Somente Leitura) */}
-                  <div style={{ backgroundColor: '#141414', padding: '30px', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                  <div style={{ backgroundColor: '#404040', padding: '30px', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                     {/* Seção 1: Dados Gerais */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
                       <div>
                         <label style={{ display: 'block', color: '#ccc', marginBottom: '5px', fontSize: '12px' }}>
                           {safeT?.opCode || 'Código SME_UP'}
                         </label>
-                        <div style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none' }}>
+                        <div style={{ width: '100%', padding: '8px', backgroundColor: '#484848', border: '1px solid #444', color: '#fff', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none' }}>
                           {formularioVisualizar.codiceSmeUp || '-'}
                         </div>
                       </div>
@@ -49878,7 +49878,7 @@ A1;Peça exemplo;10`}
                           <label style={{ display: 'block', color: '#ccc', marginBottom: '5px', fontSize: '12px' }}>
                             {safeT?.[field.label] || field.label}
                           </label>
-                          <div style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none' }}>
+                          <div style={{ width: '100%', padding: '8px', backgroundColor: '#484848', border: '1px solid #444', color: '#fff', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none' }}>
                             {(formularioVisualizar as any)[field.key] || '-'}
                           </div>
                         </div>
@@ -49888,7 +49888,7 @@ A1;Peça exemplo;10`}
                         <label style={{ display: 'block', color: '#ccc', marginBottom: '5px', fontSize: '12px' }}>
                           {safeT?.opTechResp || 'Técnico Responsável'}
                         </label>
-                        <div style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: '#fff', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none' }}>
+                        <div style={{ width: '100%', padding: '8px', backgroundColor: '#484848', border: '1px solid #444', color: '#fff', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none' }}>
                           {formularioVisualizar.tecnicoResponsabile || '-'}
                         </div>
                       </div>
@@ -49904,7 +49904,7 @@ A1;Peça exemplo;10`}
                     {/* Seções Numeradas - Estrutura Idêntica ao Original */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
                     {/* Dados Gerais */}
-                    <div style={{ backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', border: '1px solid #444' }}>
+                    <div style={{ backgroundColor: '#484848', padding: '20px', borderRadius: '8px', border: '1px solid #444' }}>
                       <h3 style={{ color: '#00c853', marginBottom: '15px', fontSize: '18px', borderBottom: '1px solid rgba(0, 200, 83, 0.3)', paddingBottom: '10px' }}>
                         {safeT?.opGeneralData || 'DADOS GERAIS'}
                       </h3>
@@ -49935,7 +49935,7 @@ A1;Peça exemplo;10`}
                             </label>
                           ))}
                         </div>
-                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.materialeLavoratoAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.materialeLavoratoAltro ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.materialeLavoratoAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.materialeLavoratoAltro ? 'normal' : 'italic' }}>
                           {formularioVisualizar.materialeLavoratoAltro || safeT?.opOther || 'Outro'}
                         </div>
                       </div>
@@ -49953,7 +49953,7 @@ A1;Peça exemplo;10`}
                             </label>
                           ))}
                         </div>
-                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.tipologiaImpiallaggiaturaAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.tipologiaImpiallaggiaturaAltro ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.tipologiaImpiallaggiaturaAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.tipologiaImpiallaggiaturaAltro ? 'normal' : 'italic' }}>
                           {formularioVisualizar.tipologiaImpiallaggiaturaAltro || safeT?.opOther || 'Outro'}
                         </div>
                       </div>
@@ -49971,7 +49971,7 @@ A1;Peça exemplo;10`}
                             </label>
                           ))}
                         </div>
-                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.coloreAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.coloreAltro ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.coloreAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.coloreAltro ? 'normal' : 'italic' }}>
                           {formularioVisualizar.coloreAltro || safeT?.opOther || 'Outro'}
                         </div>
                       </div>
@@ -49980,13 +49980,13 @@ A1;Peça exemplo;10`}
                       <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px' }}>
                         <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opSection4 || '4. Dimensões'}</h3>
                         <div style={{ display: 'grid', gap: '10px' }}>
-                          <div style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.dimensioniMax ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.dimensioniMax ? 'normal' : 'italic' }}>
+                          <div style={{ padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.dimensioniMax ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.dimensioniMax ? 'normal' : 'italic' }}>
                             {formularioVisualizar.dimensioniMax || safeT?.opMaxDim || 'Max (X/Y/Z)'}
                           </div>
-                          <div style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.dimensioniMin ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.dimensioniMin ? 'normal' : 'italic' }}>
+                          <div style={{ padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.dimensioniMin ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.dimensioniMin ? 'normal' : 'italic' }}>
                             {formularioVisualizar.dimensioniMin || safeT?.opMinDim || 'Min (X/Y/Z)'}
                           </div>
-                          <div style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.dimensioniAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.dimensioniAltro ? 'normal' : 'italic' }}>
+                          <div style={{ padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.dimensioniAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.dimensioniAltro ? 'normal' : 'italic' }}>
                             {formularioVisualizar.dimensioniAltro || safeT?.opOther || 'Outro'}
                           </div>
                         </div>
@@ -50005,7 +50005,7 @@ A1;Peça exemplo;10`}
                             </label>
                           ))}
                         </div>
-                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.tipologiaBordoAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.tipologiaBordoAltro ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.tipologiaBordoAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.tipologiaBordoAltro ? 'normal' : 'italic' }}>
                           {formularioVisualizar.tipologiaBordoAltro || safeT?.opOther || 'Outro'}
                         </div>
                       </div>
@@ -50023,7 +50023,7 @@ A1;Peça exemplo;10`}
                             </label>
                           ))}
                         </div>
-                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.spessoreBordoAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.spessoreBordoAltro ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.spessoreBordoAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.spessoreBordoAltro ? 'normal' : 'italic' }}>
                           {formularioVisualizar.spessoreBordoAltro || safeT?.opOther || 'Outro'}
                         </div>
                       </div>
@@ -50041,7 +50041,7 @@ A1;Peça exemplo;10`}
                             </label>
                           ))}
                         </div>
-                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.tipoCollaAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.tipoCollaAltro ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.tipoCollaAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.tipoCollaAltro ? 'normal' : 'italic' }}>
                           {formularioVisualizar.tipoCollaAltro || safeT?.opOther || 'Outro'}
                         </div>
                       </div>
@@ -50071,7 +50071,7 @@ A1;Peça exemplo;10`}
                             </span>
                             <span style={{ color: '#ccc' }}>{safeT?.opClientProvided || 'Fornecido pelo Cliente'}</span>
                           </label>
-                          <div style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.utensiliQuali ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.utensiliQuali ? 'normal' : 'italic' }}>
+                          <div style={{ padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.utensiliQuali ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.utensiliQuali ? 'normal' : 'italic' }}>
                             {formularioVisualizar.utensiliQuali || safeT?.opWhich || 'Quais?'}
                           </div>
                           <label style={{ display: 'flex', alignItems: 'center', cursor: 'default', opacity: 0.8, pointerEvents: 'none' }}>
@@ -50092,7 +50092,7 @@ A1;Peça exemplo;10`}
                             </span>
                             <span style={{ color: '#ccc' }}>{safeT?.opChipEvacuation || 'Tapete Evacuação'}</span>
                           </label>
-                          <div style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.ventose ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.ventose ? 'normal' : 'italic' }}>
+                          <div style={{ padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.ventose ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.ventose ? 'normal' : 'italic' }}>
                             {formularioVisualizar.ventose || safeT?.opSuctionCups || 'Ventosas (qtd)'}
                           </div>
                         </div>
@@ -50108,7 +50108,7 @@ A1;Peça exemplo;10`}
                             </span>
                             <span style={{ color: '#ccc' }}>{safeT?.opClientProvided || 'Fornecido pelo Cliente'}</span>
                           </label>
-                          <div style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.materialeTestRunQualiQta ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.materialeTestRunQualiQta ? 'normal' : 'italic' }}>
+                          <div style={{ padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.materialeTestRunQualiQta ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.materialeTestRunQualiQta ? 'normal' : 'italic' }}>
                             {formularioVisualizar.materialeTestRunQualiQta || safeT?.opWhichAndQty || 'Quais e Qtd?'}
                           </div>
                           <label style={{ display: 'flex', alignItems: 'center', cursor: 'default', opacity: 0.8, pointerEvents: 'none' }}>
@@ -50126,19 +50126,19 @@ A1;Peça exemplo;10`}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                           <div>
                             <label style={{ color: '#ccc', fontSize: '12px', display: 'block', marginBottom: '5px' }}>{safeT?.opDestLang || 'Língua Destino'}</label>
-                            <div style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.linguaDestinazione ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.linguaDestinazione ? 'normal' : 'italic' }}>
+                            <div style={{ padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.linguaDestinazione ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.linguaDestinazione ? 'normal' : 'italic' }}>
                               {formularioVisualizar.linguaDestinazione || '-'}
                             </div>
                           </div>
                           <div>
                             <label style={{ color: '#ccc', fontSize: '12px', display: 'block', marginBottom: '5px' }}>{safeT?.opManuals || 'Manuais'}</label>
-                            <div style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.manualistica ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.manualistica ? 'normal' : 'italic' }}>
+                            <div style={{ padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.manualistica ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.manualistica ? 'normal' : 'italic' }}>
                               {formularioVisualizar.manualistica || '-'}
                             </div>
                           </div>
                           <div>
                             <label style={{ color: '#ccc', fontSize: '12px', display: 'block', marginBottom: '5px' }}>{safeT?.opStickers || 'Adesivos'}</label>
-                            <div style={{ padding: '6px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.adesivi ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.adesivi ? 'normal' : 'italic' }}>
+                            <div style={{ padding: '6px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.adesivi ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.adesivi ? 'normal' : 'italic' }}>
                               {formularioVisualizar.adesivi || '-'}
                             </div>
                           </div>
@@ -50148,7 +50148,7 @@ A1;Peça exemplo;10`}
                       {/* Notas de Produção - Estrutura Idêntica ao Original */}
                       <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px', gridColumn: '1 / -1' }}>
                         <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opProductionNotes || 'Notas de Produção'}</h3>
-                        <div style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.noteProduzione ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', minHeight: '100px', whiteSpace: 'pre-wrap', fontStyle: formularioVisualizar.noteProduzione ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', padding: '10px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.noteProduzione ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', minHeight: '100px', whiteSpace: 'pre-wrap', fontStyle: formularioVisualizar.noteProduzione ? 'normal' : 'italic' }}>
                           {formularioVisualizar.noteProduzione || '-'}
                         </div>
                       </div>
@@ -50156,7 +50156,7 @@ A1;Peça exemplo;10`}
                       {/* Campo de Impressões - Estrutura Idêntica ao Original */}
                       <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px', gridColumn: '1 / -1' }}>
                         <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opImpressoes || 'Impressões'}</h3>
-                        <div style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', border: '1px solid #444', color: formularioVisualizar.impressoes ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', minHeight: '80px', whiteSpace: 'pre-wrap', fontStyle: formularioVisualizar.impressoes ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', padding: '10px', backgroundColor: '#484848', border: '1px solid #444', color: formularioVisualizar.impressoes ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', minHeight: '80px', whiteSpace: 'pre-wrap', fontStyle: formularioVisualizar.impressoes ? 'normal' : 'italic' }}>
                           {formularioVisualizar.impressoes || safeT?.opImpressoesPlaceholder || 'Informações sobre impressões, etiquetas, marcações, etc...'}
                         </div>
                       </div>
@@ -50255,7 +50255,7 @@ A1;Peça exemplo;10`}
             {/* Conteúdo Principal */}
             <div style={{ 
               padding: '30px', 
-              backgroundColor: '#141414', 
+              backgroundColor: '#404040', 
               borderRadius: '12px', 
               border: '2px solid rgba(0, 200, 83, 0.3)'
             }}>
@@ -50295,7 +50295,7 @@ A1;Peça exemplo;10`}
 
                   {/* Filtro por Família */}
                   {gruposChecklist.length > 0 && (
-                    <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                    <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                       <label style={{ display: 'block', color: '#fff', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
                         {safeT?.filtrarPorFamilia || 'Filtrar por Família'}:
                       </label>
@@ -50306,7 +50306,7 @@ A1;Peça exemplo;10`}
                           width: '100%',
                           maxWidth: '400px',
                           padding: '10px',
-                          backgroundColor: '#141414',
+                          backgroundColor: '#404040',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -50364,7 +50364,7 @@ A1;Peça exemplo;10`}
                       return familias.map(familia => (
                         <div key={familia} style={{
                           padding: '20px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           borderRadius: '12px',
                           border: '2px solid rgba(0, 200, 83, 0.2)',
                           marginBottom: '20px'
@@ -50385,7 +50385,7 @@ A1;Peça exemplo;10`}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
                               {gruposPorFamilia[familia].map(grupo => (
                         <div key={grupo.id} style={{
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           borderRadius: '12px',
                           padding: '20px',
                           border: '1px solid rgba(0, 200, 83, 0.1)',
@@ -50448,7 +50448,7 @@ A1;Peça exemplo;10`}
                                   {grupo.manutencoes.length} {safeT?.manutencoes || 'Manutenções'}
                                 </p>
                                 {grupo.trabalhosASeremExecutados && (
-                                  <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)' }}>
+                                  <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.1)' }}>
                                     <p style={{ color: '#00c853', fontSize: '12px', fontWeight: 'bold', margin: '0 0 5px 0' }}>
                                       {safeT?.trabalhosASeremExecutados || 'Trabalhos a serem executados'}:
                                     </p>
@@ -50467,7 +50467,7 @@ A1;Peça exemplo;10`}
                               {grupo.manutencoes.map(manutencao => (
                                 <div key={manutencao.id} style={{
                                   padding: '10px',
-                                  backgroundColor: '#141414',
+                                  backgroundColor: '#404040',
                                   borderRadius: '6px',
                                   marginBottom: '8px',
                                   border: '1px solid #333'
@@ -50661,7 +50661,7 @@ A1;Peça exemplo;10`}
                         {gruposAprovados.length > 0 && (
                           <div style={{
                             padding: '30px',
-                            backgroundColor: '#141414',
+                            backgroundColor: '#404040',
                             borderRadius: '16px',
                             border: '2px solid rgba(0, 150, 255, 0.4)',
                             boxShadow: '0 4px 20px rgba(0, 150, 255, 0.1)'
@@ -50693,7 +50693,7 @@ A1;Peça exemplo;10`}
                         {gruposFuncionamento.length > 0 && (
                           <div style={{
                             padding: '30px',
-                            backgroundColor: '#141414',
+                            backgroundColor: '#404040',
                             borderRadius: '16px',
                             border: '2px solid rgba(0, 200, 83, 0.4)',
                             boxShadow: '0 4px 20px rgba(0, 200, 83, 0.1)'
@@ -50724,7 +50724,7 @@ A1;Peça exemplo;10`}
                         {/* Seção: Checklist e verificação geral do equipamento para entrega (sempre visível) */}
                         <div style={{
                           padding: '30px',
-                          backgroundColor: '#141414',
+                          backgroundColor: '#404040',
                           borderRadius: '16px',
                           border: '2px solid rgba(255, 180, 0, 0.4)',
                           boxShadow: '0 4px 20px rgba(255, 180, 0, 0.1)'
@@ -50846,7 +50846,7 @@ A1;Peça exemplo;10`}
                             style={{
                               width: '100%',
                               padding: '12px',
-                              backgroundColor: '#1e1e1e',
+                              backgroundColor: '#484848',
                               border: '1px solid rgba(0, 200, 83, 0.3)',
                               borderRadius: '8px',
                               color: '#fff',
@@ -50866,7 +50866,7 @@ A1;Peça exemplo;10`}
                             style={{
                               width: '100%',
                               padding: '12px',
-                              backgroundColor: '#1e1e1e',
+                              backgroundColor: '#484848',
                               border: '1px solid rgba(0, 200, 83, 0.3)',
                               borderRadius: '8px',
                               color: '#fff',
@@ -50899,7 +50899,7 @@ A1;Peça exemplo;10`}
                             style={{
                               width: '100%',
                               padding: '12px',
-                              backgroundColor: '#1e1e1e',
+                              backgroundColor: '#484848',
                               border: '1px solid rgba(0, 200, 83, 0.3)',
                               borderRadius: '8px',
                               color: '#fff',
@@ -50918,7 +50918,7 @@ A1;Peça exemplo;10`}
                           </p>
                         </div>
                         {(grupoChecklistForm.numeroGrupo || grupoChecklistForm.nomeGrupo) && (
-                          <div style={{ padding: '12px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                          <div style={{ padding: '12px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                             <div style={{ color: '#00c853', fontSize: '13px', marginBottom: '4px' }}>{safeT?.numeroGrupo || 'Número do Grupo'}: {grupoChecklistForm.numeroGrupo}</div>
                             <div style={{ color: '#ccc', fontSize: '13px' }}>{safeT?.nomeGrupo || 'Nome do Grupo'}: {grupoChecklistForm.nomeGrupo}</div>
                           </div>
@@ -50948,7 +50948,7 @@ A1;Peça exemplo;10`}
                           style={{
                             flex: 1,
                             padding: '12px',
-                            backgroundColor: '#1e1e1e',
+                            backgroundColor: '#484848',
                             border: '1px solid rgba(0, 200, 83, 0.3)',
                             borderRadius: '8px',
                             color: '#fff',
@@ -50992,7 +50992,7 @@ A1;Peça exemplo;10`}
                             style={{
                               flex: 1,
                               padding: '12px',
-                              backgroundColor: '#1e1e1e',
+                              backgroundColor: '#484848',
                               border: '1px solid rgba(0, 150, 255, 0.3)',
                               borderRadius: '8px',
                               color: '#fff',
@@ -51023,7 +51023,7 @@ A1;Peça exemplo;10`}
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -51073,7 +51073,7 @@ A1;Peça exemplo;10`}
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -51158,7 +51158,7 @@ A1;Peça exemplo;10`}
                     </h2>
                   </div>
 
-                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                     <p style={{ color: '#00c853', margin: 0, fontSize: '14px', fontWeight: 'bold' }}>
                       {safeT?.grupo || 'Grupo'}: {grupoSelecionadoParaManutencao.numeroGrupo} - {grupoSelecionadoParaManutencao.nomeGrupo}
                     </p>
@@ -51177,7 +51177,7 @@ A1;Peça exemplo;10`}
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -51260,7 +51260,7 @@ A1;Peça exemplo;10`}
                         <div style={{ 
                           marginBottom: '15px', 
                           padding: '15px', 
-                          backgroundColor: '#141414', 
+                          backgroundColor: '#404040', 
                           borderRadius: '8px',
                           border: '1px solid rgba(0, 200, 83, 0.2)'
                         }}>
@@ -51275,7 +51275,7 @@ A1;Peça exemplo;10`}
                             style={{
                               width: '100%',
                               padding: '10px',
-                              backgroundColor: '#1e1e1e',
+                              backgroundColor: '#484848',
                               border: '1px solid rgba(0, 200, 83, 0.3)',
                               borderRadius: '6px',
                               color: '#fff',
@@ -51306,7 +51306,7 @@ A1;Peça exemplo;10`}
                                     style={{
                                       padding: '10px',
                                       marginBottom: '8px',
-                                      backgroundColor: '#1e1e1e',
+                                      backgroundColor: '#484848',
                                       borderRadius: '6px',
                                       border: '1px solid rgba(0, 200, 83, 0.2)',
                                       cursor: 'pointer',
@@ -51320,7 +51320,7 @@ A1;Peça exemplo;10`}
                                       e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.5)'
                                     }}
                                     onMouseLeave={(e) => {
-                                      e.currentTarget.style.backgroundColor = '#1e1e1e'
+                                      e.currentTarget.style.backgroundColor = '#484848'
                                       e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.2)'
                                     }}
                                   >
@@ -51333,7 +51333,7 @@ A1;Peça exemplo;10`}
                                         objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
                                         borderRadius: '4px',
                                         border: '1px solid rgba(0, 200, 83, 0.2)',
-                                        backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                                        backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
                                         flexShrink: 0,
                                       }}
                                     />
@@ -51394,7 +51394,7 @@ A1;Peça exemplo;10`}
                                   key={pecaItem.pecaId}
                                   style={{
                                     padding: '12px',
-                                    backgroundColor: '#141414',
+                                    backgroundColor: '#404040',
                                     borderRadius: '6px',
                                     border: '1px solid rgba(0, 200, 83, 0.2)',
                                     display: 'flex',
@@ -51411,7 +51411,7 @@ A1;Peça exemplo;10`}
                                       objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
                                       borderRadius: '4px',
                                       border: '1px solid rgba(0, 200, 83, 0.2)',
-                                      backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                                      backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
                                       flexShrink: 0,
                                     }}
                                   />
@@ -51435,7 +51435,7 @@ A1;Peça exemplo;10`}
                                       style={{
                                         width: '60px',
                                         padding: '4px 8px',
-                                        backgroundColor: '#1e1e1e',
+                                        backgroundColor: '#484848',
                                         border: '1px solid rgba(0, 200, 83, 0.3)',
                                         borderRadius: '4px',
                                         color: '#fff',
@@ -51588,7 +51588,7 @@ A1;Peça exemplo;10`}
             <div style={{ 
               marginBottom: '40px', 
               padding: '30px', 
-              backgroundColor: '#141414', 
+              backgroundColor: '#404040', 
               borderRadius: '12px', 
               border: '1px solid rgba(0, 200, 83, 0.3)'
             }}>
@@ -51638,7 +51638,7 @@ A1;Peça exemplo;10`}
                       style={{
                         flex: 1,
                         padding: '12px',
-                        backgroundColor: '#1e1e1e',
+                        backgroundColor: '#484848',
                         border: '1px solid rgba(0, 200, 83, 0.3)',
                         borderRadius: '8px',
                         color: '#fff',
@@ -51676,7 +51676,7 @@ A1;Peça exemplo;10`}
                       style={{
                         flex: 1,
                         padding: '12px',
-                        backgroundColor: '#1e1e1e',
+                        backgroundColor: '#484848',
                         border: '1px solid rgba(0, 200, 83, 0.3)',
                         borderRadius: '8px',
                         color: '#fff',
@@ -51707,7 +51707,7 @@ A1;Peça exemplo;10`}
                 )}
 
                 {checklistEquipamentoSelecionado && (
-                  <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.5)' }}>
+                  <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.5)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '15px' }}>
                       <h4 style={{ color: '#00c853', margin: 0, fontSize: '18px' }}>
                         {safeT?.equipamentoEncontrado || 'Equipamento Encontrado'}
@@ -51735,7 +51735,7 @@ A1;Peça exemplo;10`}
                       <div><strong style={{ color: '#00c853' }}>{safeT?.numeroSerie || 'Número de Série'}:</strong> {checklistEquipamentoSelecionado.numeroSerie}</div>
                       <div><strong style={{ color: '#00c853' }}>{safeT?.familia || 'Família'}:</strong> {checklistEquipamentoSelecionado.familia || 'N/A'}</div>
                     </div>
-                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.3)' }}>
+                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#404040', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.3)' }}>
                       <p style={{ color: '#00c853', margin: 0, fontSize: '14px', fontWeight: 'bold' }}>
                         ✓ {safeT?.equipamentoSelecionadoParaChecklist || 'Equipamento selecionado! Agora você pode criar o checklist para este equipamento.'}
                       </p>
@@ -51755,7 +51755,7 @@ A1;Peça exemplo;10`}
               <div 
                 onClick={() => openTab('pre-checklist', getTabTitle('pre-checklist'))}
                 style={{
-                  backgroundColor: '#141414',
+                  backgroundColor: '#404040',
                   borderRadius: '16px',
                   padding: '40px',
                   border: '1px solid rgba(0, 200, 83, 0.1)',
@@ -51793,7 +51793,7 @@ A1;Peça exemplo;10`}
               <div 
                 onClick={() => openTab('checklist', getTabTitle('checklist'))}
                 style={{
-                  backgroundColor: '#141414',
+                  backgroundColor: '#404040',
                   borderRadius: '16px',
                   padding: '40px',
                   border: '1px solid rgba(0, 200, 83, 0.1)',
@@ -51930,11 +51930,11 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
-            {/* Buscador de Equipamentos — padrão Visualizar Equipamento (card #1e1e1e, borda 1px) */}
+            {/* Buscador de Equipamentos — padrão Visualizar Equipamento (card #484848, borda 1px) */}
             <div className="checklist-editor-search-card" style={{ 
               marginBottom: '20px',
               padding: '20px', 
-              backgroundColor: '#1e1e1e', 
+              backgroundColor: '#484848', 
               borderRadius: '8px', 
               border: '1px solid rgba(0, 200, 83, 0.2)'
             }}>
@@ -51956,7 +51956,7 @@ A1;Peça exemplo;10`}
                     style={{
                       width: '100%',
                       padding: '10px',
-                      backgroundColor: '#1e1e1e',
+                      backgroundColor: '#484848',
                       border: '1px solid rgba(0, 200, 83, 0.3)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -51986,7 +51986,7 @@ A1;Peça exemplo;10`}
                     style={{
                       width: '100%',
                       padding: '10px',
-                      backgroundColor: '#1e1e1e',
+                      backgroundColor: '#484848',
                       border: '1px solid rgba(0, 200, 83, 0.3)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -52032,12 +52032,12 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
-            {/* Criação do Checklist — padrão Visualizar Equipamento (card #1e1e1e, borda 1px) */}
+            {/* Criação do Checklist — padrão Visualizar Equipamento (card #484848, borda 1px) */}
             {checklistEquipamentoSelecionado && (
               <div className="checklist-editor-info-card" style={{ 
                 marginBottom: '20px',
                 padding: '20px', 
-                backgroundColor: '#1e1e1e', 
+                backgroundColor: '#484848', 
                 borderRadius: '8px', 
                 border: '1px solid rgba(0, 200, 83, 0.2)'
               }}>
@@ -52141,7 +52141,7 @@ A1;Peça exemplo;10`}
                         style={{
                           width: '100%',
                           padding: '10px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -52165,7 +52165,7 @@ A1;Peça exemplo;10`}
                         style={{
                           width: '100%',
                           padding: '10px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -52191,7 +52191,7 @@ A1;Peça exemplo;10`}
               <div className="checklist-editor-montagem-card" style={{ 
                 marginBottom: '30px',
                 padding: '25px', 
-                backgroundColor: '#141414', 
+                backgroundColor: '#404040', 
                 borderRadius: '12px', 
                 border: '1px solid rgba(0, 200, 83, 0.3)'
               }}>
@@ -52200,14 +52200,14 @@ A1;Peça exemplo;10`}
                 </h3>
 
                 {/* Selecionar família | Selecionar parente */}
-                <div className="checklist-editor-montagem-filter-card" style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                <div className="checklist-editor-montagem-filter-card" style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                   <div className="checklist-editor-montagem-filters" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '24px' }}>
                     <div className="checklist-editor-montagem-field" style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '220px' }}>
                       <label style={{ fontSize: '13px', fontWeight: 600, color: '#00c853' }}>{safeT?.selecionarFamilia || 'Selecionar família'}</label>
                       <select
                         value={checklistMontagemFamilia}
                         onChange={(e) => { setChecklistMontagemFamilia(e.target.value); setChecklistMontagemParenteId(''); setChecklistMontagemServicosSelecionados(new Set()) }}
-                        style={{ height: '42px', padding: '0 12px', backgroundColor: '#141414', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', minWidth: '220px' }}
+                        style={{ height: '42px', padding: '0 12px', backgroundColor: '#404040', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', minWidth: '220px' }}
                       >
                         <option value="">— {safeT?.nenhum || 'Nenhum'}</option>
                         {(() => {
@@ -52225,7 +52225,7 @@ A1;Peça exemplo;10`}
                         value={checklistMontagemParenteId}
                         onChange={(e) => { setChecklistMontagemParenteId(e.target.value); setChecklistMontagemServicosSelecionados(new Set()) }}
                         disabled={!checklistMontagemFamilia}
-                        style={{ height: '42px', padding: '0 12px', backgroundColor: checklistMontagemFamilia ? '#141414' : '#111', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: checklistMontagemFamilia ? '#fff' : '#666', fontSize: '14px', minWidth: '220px' }}
+                        style={{ height: '42px', padding: '0 12px', backgroundColor: checklistMontagemFamilia ? '#404040' : '#111', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: checklistMontagemFamilia ? '#fff' : '#666', fontSize: '14px', minWidth: '220px' }}
                       >
                         <option value="">— {safeT?.nenhum || 'Nenhum'}</option>
                         {checklistMontagemFamilia && parentesChecklist.filter(p => p.familia === checklistMontagemFamilia).map(pr => (
@@ -52240,7 +52240,7 @@ A1;Peça exemplo;10`}
                 {checklistMontagemFamilia && checklistMontagemParenteId && (() => {
                   const parenteCab = parentesChecklist.find(p => p.id === checklistMontagemParenteId)
                   return (
-                    <div style={{ marginBottom: '20px', padding: '16px 20px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.25)', borderLeft: '4px solid #00c853' }}>
+                    <div style={{ marginBottom: '20px', padding: '16px 20px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.25)', borderLeft: '4px solid #00c853' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px 32px', alignItems: 'center' }}>
                         <div>
                           <span style={{ fontSize: '12px', color: '#00c853', fontWeight: 600, textTransform: 'uppercase' }}>{safeT?.familia || 'Família'}</span>
@@ -52279,7 +52279,7 @@ A1;Peça exemplo;10`}
                         {gruposDoParente.map(gr => {
                           const itens = gr.itensTrabalho && gr.itensTrabalho.length > 0 ? gr.itensTrabalho : (gr.manutencoes || []).map((m: ManutencaoChecklist) => ({ id: m.id, tipo: safeT?.manutencao || 'Manutenção', descricaoTrabalho: m.nome || '', dataCriacao: (m as any).dataCriacao || '' } as ItemTrabalhoCriacao))
                           return (
-                            <div key={gr.id} style={{ border: '1px solid rgba(0, 200, 83, 0.25)', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#141414', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+                            <div key={gr.id} style={{ border: '1px solid rgba(0, 200, 83, 0.25)', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#404040', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
                               {/* Cabeçalho profissional: imagem centralizada e maior, número e nome do grupo */}
                               <div style={{
                                 display: 'flex',
@@ -52287,7 +52287,7 @@ A1;Peça exemplo;10`}
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 padding: '28px 24px 20px',
-                                backgroundColor: 'linear-gradient(180deg, #1e1e1e 0%, #222 100%)',
+                                backgroundColor: 'linear-gradient(180deg, #484848 0%, #222 100%)',
                                 background: 'linear-gradient(180deg, #2d2d2d 0%, #1f1f1f 100%)',
                                 borderBottom: '2px solid rgba(0, 200, 83, 0.25)',
                                 position: 'relative'
@@ -52307,7 +52307,7 @@ A1;Peça exemplo;10`}
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    backgroundColor: '#141414',
+                                    backgroundColor: '#404040',
                                     color: '#00c853',
                                     fontSize: '48px',
                                     fontWeight: 700,
@@ -52372,7 +52372,7 @@ A1;Peça exemplo;10`}
                                     justifyContent: 'center',
                                     flexShrink: 0
                                   }}>
-                                    {checklistMontagemGruposNecessitamPecas.has(gr.id) && <span style={{ width: isCompactLayout ? '5px' : '6px', height: isCompactLayout ? '5px' : '6px', borderRadius: '50%', backgroundColor: '#121212' }} />}
+                                    {checklistMontagemGruposNecessitamPecas.has(gr.id) && <span style={{ width: isCompactLayout ? '5px' : '6px', height: isCompactLayout ? '5px' : '6px', borderRadius: '50%', backgroundColor: '#3a3a3a' }} />}
                                   </div>
                                   <span style={{ fontSize: isCompactLayout ? '11px' : '13px', color: checklistMontagemGruposNecessitamPecas.has(gr.id) ? '#00c853' : '#999', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{safeT?.necessitaPecasGrupo ?? 'Necessita peças'}</span>
                                 </div>
@@ -52400,7 +52400,7 @@ A1;Peça exemplo;10`}
                                             alignItems: 'center',
                                             gap: '12px',
                                             padding: '12px',
-                                            backgroundColor: estaSelecionado ? '#1a3a1a' : '#141414',
+                                            backgroundColor: estaSelecionado ? '#1a3a1a' : '#404040',
                                             borderRadius: '6px',
                                             borderLeft: estaSelecionado ? '3px solid #00c853' : '3px solid rgba(0, 200, 83, 0.3)',
                                             cursor: 'pointer',
@@ -52418,7 +52418,7 @@ A1;Peça exemplo;10`}
                                             justifyContent: 'center',
                                             flexShrink: 0
                                           }}>
-                                            {estaSelecionado && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#121212' }} />}
+                                            {estaSelecionado && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#3a3a3a' }} />}
                                           </div>
                                           <span style={{ color: estaSelecionado ? '#fff' : '#ccc', fontSize: '14px', flex: 1 }}>{label}</span>
                                         </div>
@@ -52428,7 +52428,7 @@ A1;Peça exemplo;10`}
                                 )}
                               </div>
                               {checklistMontagemGruposNecessitamPecas.has(gr.id) && (
-                                <div className="checklist-editor-pecas-box" style={{ borderTop: '1px solid rgba(0, 200, 83, 0.25)', padding: '16px', backgroundColor: '#141414' }}>
+                                <div className="checklist-editor-pecas-box" style={{ borderTop: '1px solid rgba(0, 200, 83, 0.25)', padding: '16px', backgroundColor: '#404040' }}>
                                   <div style={{ fontSize: '14px', fontWeight: 700, color: '#00c853', marginBottom: '12px' }}>{safeT?.adicionarPecasGrupo ?? 'Adicionar peças'}</div>
                                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -52436,11 +52436,11 @@ A1;Peça exemplo;10`}
                                       <div className="checklist-editor-pecas-form-row" style={{ display: 'flex', alignItems: 'flex-end', gap: '12px', flexWrap: 'wrap' }}>
                                         <div className="checklist-editor-pecas-field" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                           <label style={{ fontSize: '11px', color: '#888', whiteSpace: 'nowrap' }}>{safeT?.codigoPeca ?? 'Código da peça'}</label>
-                                          <input className="checklist-editor-pecas-input" type="text" placeholder="" value={checklistMontagemCodigoPecaInput[gr.id] || ''} onChange={(e) => setChecklistMontagemCodigoPecaInput(prev => ({ ...prev, [gr.id]: e.target.value }))} style={{ width: '160px', height: '36px', padding: '0 10px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.4)', borderRadius: '6px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }} />
+                                          <input className="checklist-editor-pecas-input" type="text" placeholder="" value={checklistMontagemCodigoPecaInput[gr.id] || ''} onChange={(e) => setChecklistMontagemCodigoPecaInput(prev => ({ ...prev, [gr.id]: e.target.value }))} style={{ width: '160px', height: '36px', padding: '0 10px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.4)', borderRadius: '6px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }} />
                                         </div>
                                         <div className="checklist-editor-pecas-field checklist-editor-pecas-field--qty" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                           <label style={{ fontSize: '11px', color: '#888', whiteSpace: 'nowrap' }}>{safeT?.quantidade ?? 'Quantidade'}</label>
-                                          <input className="checklist-editor-pecas-input checklist-editor-pecas-input--qty" type="number" min={1} value={checklistMontagemQuantidadeInput[gr.id] ?? 1} onChange={(e) => setChecklistMontagemQuantidadeInput(prev => ({ ...prev, [gr.id]: Math.max(1, parseInt(e.target.value, 10) || 1) }))} style={{ minWidth: '90px', width: '90px', height: '36px', padding: '0 10px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.4)', borderRadius: '6px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }} />
+                                          <input className="checklist-editor-pecas-input checklist-editor-pecas-input--qty" type="number" min={1} value={checklistMontagemQuantidadeInput[gr.id] ?? 1} onChange={(e) => setChecklistMontagemQuantidadeInput(prev => ({ ...prev, [gr.id]: Math.max(1, parseInt(e.target.value, 10) || 1) }))} style={{ minWidth: '90px', width: '90px', height: '36px', padding: '0 10px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.4)', borderRadius: '6px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }} />
                                         </div>
                                         <button className="checklist-editor-pecas-add-btn" type="button" onClick={() => { const cod = (checklistMontagemCodigoPecaInput[gr.id] || '').trim(); if (!cod) return; const qtd = Math.max(1, checklistMontagemQuantidadeInput[gr.id] ?? 1); const nomePeca = pecasBiblioteca.find(p => p.codigo === cod)?.nome; setChecklistMontagemPecasPorGrupo(prev => ({ ...prev, [gr.id]: [...(prev[gr.id] || []), { codigo: cod, nome: nomePeca, quantidade: qtd }] })); setChecklistMontagemCodigoPecaInput(prev => ({ ...prev, [gr.id]: '' })); setChecklistMontagemQuantidadeInput(prev => ({ ...prev, [gr.id]: 1 })); }} style={{ padding: '8px 16px', height: '36px', fontSize: '13px', backgroundColor: '#00c853', color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>{safeT?.adicionar ?? 'Adicionar'}</button>
                                       </div>
@@ -52491,7 +52491,7 @@ A1;Peça exemplo;10`}
                     <button type="button" onClick={() => setChecklistMontagemImagemZoomLevel((v) => Math.max(25, v - 25))} style={{ padding: '8px 14px', backgroundColor: '#333', color: '#fff', border: '1px solid #00c853', borderRadius: 6, cursor: 'pointer' }}>{safeT?.zoomOut ?? '− Zoom out'}</button>
                     <span style={{ color: '#fff', minWidth: 60, textAlign: 'center' }}>{checklistMontagemImagemZoomLevel}%</span>
                     <button type="button" onClick={() => setChecklistMontagemImagemZoomLevel((v) => Math.min(300, v + 25))} style={{ padding: '8px 14px', backgroundColor: '#333', color: '#fff', border: '1px solid #00c853', borderRadius: 6, cursor: 'pointer' }}>{safeT?.zoomIn ?? '+ Zoom in'}</button>
-                    <button type="button" onClick={() => setChecklistMontagemImagemZoom(null)} style={{ padding: '8px 14px', backgroundColor: '#141414', color: '#fff', border: '1px solid #888', borderRadius: 6, cursor: 'pointer', marginLeft: 8 }}>{safeT?.close ?? 'Fechar'}</button>
+                    <button type="button" onClick={() => setChecklistMontagemImagemZoom(null)} style={{ padding: '8px 14px', backgroundColor: '#404040', color: '#fff', border: '1px solid #888', borderRadius: 6, cursor: 'pointer', marginLeft: 8 }}>{safeT?.close ?? 'Fechar'}</button>
                   </div>
                 </div>
               </div>
@@ -52502,7 +52502,7 @@ A1;Peça exemplo;10`}
               <div style={{ 
                 marginTop: '30px',
                 padding: '25px', 
-                backgroundColor: '#141414', 
+                backgroundColor: '#404040', 
                 borderRadius: '12px', 
                 border: '1px solid rgba(0, 200, 83, 0.3)',
                 display: 'flex',
@@ -52603,7 +52603,7 @@ A1;Peça exemplo;10`}
               <div style={{
                 marginTop: '25px',
                 padding: '25px',
-                backgroundColor: '#141414',
+                backgroundColor: '#404040',
                 borderRadius: '12px',
                 border: '1px solid rgba(255, 193, 7, 0.3)'
               }}>
@@ -52622,7 +52622,7 @@ A1;Peça exemplo;10`}
                           justifyContent: 'space-between',
                           alignItems: 'center',
                           padding: '14px 16px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           borderRadius: '8px',
                           border: '1px solid rgba(255, 193, 7, 0.2)'
                         }}
@@ -52747,7 +52747,7 @@ A1;Peça exemplo;10`}
             <div style={{ 
               marginBottom: '40px', 
               padding: '30px', 
-              backgroundColor: '#141414', 
+              backgroundColor: '#404040', 
               borderRadius: '12px', 
               border: '1px solid rgba(0, 200, 83, 0.3)'
             }}>
@@ -52797,7 +52797,7 @@ A1;Peça exemplo;10`}
                       style={{
                         flex: 1,
                         padding: '12px',
-                        backgroundColor: '#1e1e1e',
+                        backgroundColor: '#484848',
                         border: '1px solid rgba(0, 200, 83, 0.3)',
                         borderRadius: '8px',
                         color: '#fff',
@@ -52835,7 +52835,7 @@ A1;Peça exemplo;10`}
                       style={{
                         flex: 1,
                         padding: '12px',
-                        backgroundColor: '#1e1e1e',
+                        backgroundColor: '#484848',
                         border: '1px solid rgba(0, 200, 83, 0.3)',
                         borderRadius: '8px',
                         color: '#fff',
@@ -52866,7 +52866,7 @@ A1;Peça exemplo;10`}
                 )}
 
                 {checklistEquipamentoSelecionado && (
-                  <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.5)' }}>
+                  <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.5)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '15px' }}>
                       <h4 style={{ color: '#00c853', margin: 0, fontSize: '18px' }}>
                         {safeT?.equipamentoEncontrado || 'Equipamento Encontrado'}
@@ -52894,7 +52894,7 @@ A1;Peça exemplo;10`}
                       <div><strong style={{ color: '#00c853' }}>{safeT?.numeroSerie || 'Número de Série'}:</strong> {checklistEquipamentoSelecionado.numeroSerie}</div>
                       <div><strong style={{ color: '#00c853' }}>{safeT?.familia || 'Família'}:</strong> {checklistEquipamentoSelecionado.familia || 'N/A'}</div>
                     </div>
-                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.3)' }}>
+                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#404040', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.3)' }}>
                       <p style={{ color: '#00c853', margin: 0, fontSize: '14px', fontWeight: 'bold' }}>
                         ✓ {safeT?.equipamentoSelecionadoParaChecklist || 'Equipamento selecionado! Agora você pode criar o checklist para este equipamento.'}
                       </p>
@@ -52914,7 +52914,7 @@ A1;Peça exemplo;10`}
               <div 
                 onClick={() => openTab('pre-checklist', getTabTitle('pre-checklist'))}
                 style={{
-                  backgroundColor: '#141414',
+                  backgroundColor: '#404040',
                   borderRadius: '16px',
                   padding: '40px',
                   border: '1px solid rgba(0, 200, 83, 0.1)',
@@ -52952,7 +52952,7 @@ A1;Peça exemplo;10`}
               <div 
                 onClick={() => openTab('checklist', getTabTitle('checklist'))}
                 style={{
-                  backgroundColor: '#141414',
+                  backgroundColor: '#404040',
                   borderRadius: '16px',
                   padding: '40px',
                   border: '1px solid rgba(0, 200, 83, 0.1)',
@@ -53089,11 +53089,11 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
-            {/* Buscador de Equipamentos — padrão Visualizar Equipamento (card #1e1e1e, borda 1px) */}
+            {/* Buscador de Equipamentos — padrão Visualizar Equipamento (card #484848, borda 1px) */}
             <div style={{ 
               marginBottom: '20px',
               padding: '20px', 
-              backgroundColor: '#1e1e1e', 
+              backgroundColor: '#484848', 
               borderRadius: '8px', 
               border: '1px solid rgba(0, 200, 83, 0.2)'
             }}>
@@ -53115,7 +53115,7 @@ A1;Peça exemplo;10`}
                     style={{
                       width: '100%',
                       padding: '10px',
-                      backgroundColor: '#1e1e1e',
+                      backgroundColor: '#484848',
                       border: '1px solid rgba(0, 200, 83, 0.3)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -53145,7 +53145,7 @@ A1;Peça exemplo;10`}
                     style={{
                       width: '100%',
                       padding: '10px',
-                      backgroundColor: '#1e1e1e',
+                      backgroundColor: '#484848',
                       border: '1px solid rgba(0, 200, 83, 0.3)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -53191,12 +53191,12 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
-            {/* Criação do Checklist — padrão Visualizar Equipamento (card #1e1e1e, borda 1px) */}
+            {/* Criação do Checklist — padrão Visualizar Equipamento (card #484848, borda 1px) */}
             {checklistEquipamentoSelecionado && (
               <div style={{ 
                 marginBottom: '20px',
                 padding: '20px', 
-                backgroundColor: '#1e1e1e', 
+                backgroundColor: '#484848', 
                 borderRadius: '8px', 
                 border: '1px solid rgba(0, 200, 83, 0.2)'
               }}>
@@ -53368,10 +53368,10 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
-            {/* Conteúdo do Pre Checklist — padrão Visualizar Equipamento (borda 1px, fundo #121212) */}
+            {/* Conteúdo do Pre Checklist — padrão Visualizar Equipamento (borda 1px, fundo #3a3a3a) */}
             <div style={{ 
               padding: '30px', 
-              backgroundColor: '#141414', 
+              backgroundColor: '#404040', 
               borderRadius: '12px', 
               border: '1px solid rgba(0, 200, 83, 0.2)'
             }}>
@@ -53383,7 +53383,7 @@ A1;Peça exemplo;10`}
               </p>
 
               {/* Busca de Equipamento */}
-              <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+              <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                 <h3 style={{ color: '#00c853', marginBottom: '20px', fontSize: '18px' }}>
                   {safeT?.buscarEquipamento || 'Buscar Equipamento'}
                 </h3>
@@ -53425,7 +53425,7 @@ A1;Peça exemplo;10`}
                       style={{
                         flex: 1,
                         padding: '10px',
-                        backgroundColor: '#1e1e1e',
+                        backgroundColor: '#484848',
                         border: '1px solid rgba(0, 200, 83, 0.3)',
                         borderRadius: '6px',
                         color: '#fff',
@@ -53459,7 +53459,7 @@ A1;Peça exemplo;10`}
                       style={{
                         flex: 1,
                         padding: '10px',
-                        backgroundColor: '#1e1e1e',
+                        backgroundColor: '#484848',
                         border: '1px solid rgba(0, 200, 83, 0.3)',
                         borderRadius: '6px',
                         color: '#fff',
@@ -53486,7 +53486,7 @@ A1;Peça exemplo;10`}
                 )}
 
                 {preCheckEquipamentoSelecionado && (
-                  <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                  <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                     <h4 style={{ color: '#00c853', marginBottom: '15px', fontSize: '16px' }}>
                       {safeT?.equipamentoEncontrado || 'Equipamento Encontrado'}
                     </h4>
@@ -53519,7 +53519,7 @@ A1;Peça exemplo;10`}
 
               {/* Formulário PRE CHECK */}
               {preCheckEquipamentoSelecionado && (
-                <div style={{ padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                <div style={{ padding: '20px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                   <h3 style={{ color: '#00c853', marginBottom: '20px', fontSize: '18px' }}>
                     {safeT?.preencherPreCheck || 'Preencher PRE CHECK'}
                   </h3>
@@ -53536,7 +53536,7 @@ A1;Peça exemplo;10`}
                         style={{
                           width: '100%',
                           padding: '10px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -53555,7 +53555,7 @@ A1;Peça exemplo;10`}
                         style={{
                           width: '100%',
                           padding: '10px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -53590,7 +53590,7 @@ A1;Peça exemplo;10`}
                         style={{
                           width: '100%',
                           padding: '10px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -53615,7 +53615,7 @@ A1;Peça exemplo;10`}
                         style={{
                           width: '100%',
                           padding: '10px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -53643,7 +53643,7 @@ A1;Peça exemplo;10`}
 
               {/* Lista de PRE CHECKS Salvos */}
               {preCheckList.length > 0 && (
-                <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                   <h3 style={{ color: '#00c853', marginBottom: '20px', fontSize: '18px' }}>
                     PRE CHECKS Realizados ({preCheckList.length})
                   </h3>
@@ -53653,7 +53653,7 @@ A1;Peça exemplo;10`}
                         key={pc.id}
                         style={{
                           padding: '15px',
-                          backgroundColor: '#141414',
+                          backgroundColor: '#404040',
                           borderRadius: '8px',
                           border: '1px solid rgba(0, 200, 83, 0.2)'
                         }}
@@ -53791,7 +53791,7 @@ A1;Peça exemplo;10`}
                 </div>
               </div>
             )}
-            <div style={{ padding: '24px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+            <div style={{ padding: '24px', backgroundColor: '#404040', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
               <p style={{ color: '#ccc', fontSize: '15px', lineHeight: 1.6, margin: 0 }}>
                 {safeT?.verificacaoFinalEntregaConteudo || 'Utilize esta área para realizar a verificação final do equipamento antes da entrega ao cliente. Aqui pode registar testes de funcionamento, inspeção visual e conformidade.'}
               </p>
@@ -53827,17 +53827,17 @@ A1;Peça exemplo;10`}
               <button type="button" onClick={() => { setInformacoesMecanicasAba('lista'); setShowEquipamentoForm(false); setEditingEquipamento(null); }} style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', backgroundColor: informacoesMecanicasAba === 'lista' ? 'rgba(0, 200, 83, 0.25)' : 'rgba(0, 200, 83, 0.08)', border: informacoesMecanicasAba === 'lista' ? '2px solid rgba(0, 200, 83, 0.6)' : '1px solid rgba(0, 200, 83, 0.35)', borderRadius: '8px', color: informacoesMecanicasAba === 'lista' ? '#00c853' : '#ccc', cursor: 'pointer' }}>📋 {(safeT as any)?.verEquipamentosArmazem || 'Ver equipamentos do armazém'}</button>
             </div>
             {informacoesMecanicasAba === 'cadastro' && showEquipamentoForm && (
-              <div style={{ border: '1px solid rgba(0, 200, 83, 0.25)', padding: '24px', borderRadius: '12px', marginBottom: '24px', backgroundColor: '#1e1e1e' }}>
+              <div style={{ border: '1px solid rgba(0, 200, 83, 0.25)', padding: '24px', borderRadius: '12px', marginBottom: '24px', backgroundColor: '#484848' }}>
                 <h3 style={{ marginBottom: '16px', color: '#00c853' }}>{editingEquipamento ? (safeT?.editEquipamento || 'Editar equipamento') : ((safeT as any)?.cadastrarEquipamento || 'Cadastrar equipamento')}</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.equipamentoId || 'ID'}</label><input type="text" value={equipamentoForm.id} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, id: e.target.value })} disabled={!!editingEquipamento} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.tipoEquipamento || 'Tipo'}</label><input type="text" value={equipamentoForm.tipoEquipamento} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, tipoEquipamento: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.modelo || 'Modelo'}</label><input type="text" value={equipamentoForm.modelo} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, modelo: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.marca || 'Marca'}</label><input type="text" value={equipamentoForm.marca} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, marca: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.numeroSerie || 'Nº Série'}</label><input type="text" value={equipamentoForm.numeroSerie} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, numeroSerie: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{(safeT as any)?.equipamentoPeso || 'Peso'}</label><input type="text" placeholder={(safeT as any)?.equipamentoPesoExemplo || 'Ex: 10 kg'} value={equipamentoForm.peso} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, peso: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.familia || 'Família'}</label><select value={equipamentoForm.familia} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, familia: e.target.value, grupo: '' })} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}><option value="">{(safeT as any)?.selecioneFamilia || 'Selecione a família'}</option>{familiasEquipamento.map(f => <option key={f} value={f}>{f}</option>)}</select></div>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.grupo || 'Grupo'}</label><select value={equipamentoForm.grupo} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, grupo: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} disabled={!equipamentoForm.familia}><option value="">{(safeT as any)?.selecioneGrupo || 'Selecione o grupo'}</option>{gruposDaFamiliaSelecionada.map(g => <option key={g.nome + g.familia} value={g.nome}>{g.nome}</option>)}</select></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.equipamentoId || 'ID'}</label><input type="text" value={equipamentoForm.id} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, id: e.target.value })} disabled={!!editingEquipamento} style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.tipoEquipamento || 'Tipo'}</label><input type="text" value={equipamentoForm.tipoEquipamento} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, tipoEquipamento: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.modelo || 'Modelo'}</label><input type="text" value={equipamentoForm.modelo} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, modelo: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.marca || 'Marca'}</label><input type="text" value={equipamentoForm.marca} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, marca: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.numeroSerie || 'Nº Série'}</label><input type="text" value={equipamentoForm.numeroSerie} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, numeroSerie: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{(safeT as any)?.equipamentoPeso || 'Peso'}</label><input type="text" placeholder={(safeT as any)?.equipamentoPesoExemplo || 'Ex: 10 kg'} value={equipamentoForm.peso} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, peso: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.familia || 'Família'}</label><select value={equipamentoForm.familia} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, familia: e.target.value, grupo: '' })} style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}><option value="">{(safeT as any)?.selecioneFamilia || 'Selecione a família'}</option>{familiasEquipamento.map(f => <option key={f} value={f}>{f}</option>)}</select></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.grupo || 'Grupo'}</label><select value={equipamentoForm.grupo} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, grupo: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} disabled={!equipamentoForm.familia}><option value="">{(safeT as any)?.selecioneGrupo || 'Selecione o grupo'}</option>{gruposDaFamiliaSelecionada.map(g => <option key={g.nome + g.familia} value={g.nome}>{g.nome}</option>)}</select></div>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#ccc' }}>{(safeT as any)?.equipamentoUmaParteSo || 'Este equipamento é composto de uma só parte?'}</label>
                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
@@ -53848,14 +53848,14 @@ A1;Peça exemplo;10`}
                   {!equipamentoForm.umaParteSo && (
                     <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
                       <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{(safeT as any)?.equipamentoQuantasPartes || 'Quantas partes?'}</label>
-                      <input type="number" min={1} max={99} value={equipamentoForm.quantidadePartes || 1} onChange={(e) => { const qtd = Math.max(1, Math.min(99, parseInt(e.target.value, 10) || 1)); const partesAtual = equipamentoForm.partes || []; const novasPartes: PartEquipamento[] = Array.from({ length: qtd }, (_, i) => partesAtual[i] ? { ...partesAtual[i], ordem: i + 1 } : { ordem: i + 1, tipoId: 'geral', numeroSerieFabricante: '' }); setEquipamentoForm({ ...equipamentoForm, quantidadePartes: qtd, partes: novasPartes }); }} style={{ width: '120px', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
+                      <input type="number" min={1} max={99} value={equipamentoForm.quantidadePartes || 1} onChange={(e) => { const qtd = Math.max(1, Math.min(99, parseInt(e.target.value, 10) || 1)); const partesAtual = equipamentoForm.partes || []; const novasPartes: PartEquipamento[] = Array.from({ length: qtd }, (_, i) => partesAtual[i] ? { ...partesAtual[i], ordem: i + 1 } : { ordem: i + 1, tipoId: 'geral', numeroSerieFabricante: '' }); setEquipamentoForm({ ...equipamentoForm, quantidadePartes: qtd, partes: novasPartes }); }} style={{ width: '120px', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} />
                       {(equipamentoForm.partes || []).map((parte, idx) => (
-                        <div key={idx} style={{ marginTop: '12px', padding: '12px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                        <div key={idx} style={{ marginTop: '12px', padding: '12px', backgroundColor: '#404040', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                           <div style={{ marginBottom: '8px', fontWeight: 600, color: '#00c853' }}>{(safeT as any)?.equipamentoParte || 'Parte'} {parte.ordem}/{equipamentoForm.quantidadePartes || 1}</div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
-                            <div><label style={{ fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.equipamentoTipoId || 'ID geral ou específico?'}</label><select value={parte.tipoId} onChange={(e) => { const tipoId = e.target.value as 'geral' | 'especifico'; const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, tipoId, id: tipoId === 'especifico' ? (parte.id || '') : undefined }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}><option value="geral">{(safeT as any)?.equipamentoIdGeral || 'ID geral'}</option><option value="especifico">{(safeT as any)?.equipamentoIdEspecifico || 'ID específico'}</option></select></div>
-                            {parte.tipoId === 'especifico' && <div><label style={{ fontSize: '12px', color: '#aaa' }}>ID</label><input type="text" value={parte.id || ''} onChange={(e) => { const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, id: e.target.value }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>}
-                            <div><label style={{ fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.equipamentoNumeroSerieFabricante || 'Nº série fabricante'}</label><input type="text" value={parte.numeroSerieFabricante || ''} onChange={(e) => { const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, numeroSerieFabricante: e.target.value }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>
+                            <div><label style={{ fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.equipamentoTipoId || 'ID geral ou específico?'}</label><select value={parte.tipoId} onChange={(e) => { const tipoId = e.target.value as 'geral' | 'especifico'; const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, tipoId, id: tipoId === 'especifico' ? (parte.id || '') : undefined }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}><option value="geral">{(safeT as any)?.equipamentoIdGeral || 'ID geral'}</option><option value="especifico">{(safeT as any)?.equipamentoIdEspecifico || 'ID específico'}</option></select></div>
+                            {parte.tipoId === 'especifico' && <div><label style={{ fontSize: '12px', color: '#aaa' }}>ID</label><input type="text" value={parte.id || ''} onChange={(e) => { const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, id: e.target.value }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>}
+                            <div><label style={{ fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.equipamentoNumeroSerieFabricante || 'Nº série fabricante'}</label><input type="text" value={parte.numeroSerieFabricante || ''} onChange={(e) => { const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, numeroSerieFabricante: e.target.value }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }} /></div>
                           </div>
                         </div>
                       ))}
@@ -53866,11 +53866,11 @@ A1;Peça exemplo;10`}
               </div>
             )}
             {informacoesMecanicasAba === 'lista' && (
-              <div style={{ backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)', overflow: 'hidden' }}>
+              <div style={{ backgroundColor: '#404040', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)', overflow: 'hidden' }}>
                 <div style={{ padding: '16px', borderBottom: '1px solid rgba(0, 200, 83, 0.2)', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
                   <span style={{ color: '#00c853', fontWeight: '600' }}>{(safeT as any)?.filtrarPor || 'Filtrar por'}:</span>
-                  <select value={informacoesMecanicasFiltroFamilia} onChange={(e) => setInformacoesMecanicasFiltroFamilia(e.target.value)} style={{ padding: '8px 12px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', minWidth: '160px' }}><option value="">{safeT?.familia || 'Família'} (todas)</option>{familiasEquipamento.map(f => <option key={f} value={f}>{f}</option>)}</select>
-                  <select value={informacoesMecanicasFiltroGrupo} onChange={(e) => setInformacoesMecanicasFiltroGrupo(e.target.value)} style={{ padding: '8px 12px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', minWidth: '160px' }}><option value="">{safeT?.grupo || 'Grupo'} (todos)</option>{gruposEquipamento.map(g => <option key={g.nome + g.familia} value={g.nome}>{g.nome} ({g.familia})</option>)}</select>
+                  <select value={informacoesMecanicasFiltroFamilia} onChange={(e) => setInformacoesMecanicasFiltroFamilia(e.target.value)} style={{ padding: '8px 12px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', minWidth: '160px' }}><option value="">{safeT?.familia || 'Família'} (todas)</option>{familiasEquipamento.map(f => <option key={f} value={f}>{f}</option>)}</select>
+                  <select value={informacoesMecanicasFiltroGrupo} onChange={(e) => setInformacoesMecanicasFiltroGrupo(e.target.value)} style={{ padding: '8px 12px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', minWidth: '160px' }}><option value="">{safeT?.grupo || 'Grupo'} (todos)</option>{gruposEquipamento.map(g => <option key={g.nome + g.familia} value={g.nome}>{g.nome} ({g.familia})</option>)}</select>
                   <span style={{ color: '#aaa', fontSize: '13px' }}>{listagemFiltrada.length} {(safeT as any)?.equipamentosAtivos || 'equipamento(s)'}</span>
                 </div>
                 <div style={{ overflowX: 'auto' }}>
@@ -54012,7 +54012,7 @@ A1;Peça exemplo;10`}
             {/* Conteúdo da Comunicação Interna */}
             <div style={{ 
               padding: '30px', 
-              backgroundColor: '#141414', 
+              backgroundColor: '#404040', 
               borderRadius: '12px', 
               border: '2px solid rgba(0, 200, 83, 0.3)'
             }}>
@@ -54069,7 +54069,7 @@ A1;Peça exemplo;10`}
             <div style={{ 
               marginTop: '50px',
               padding: '30px', 
-              backgroundColor: '#141414', 
+              backgroundColor: '#404040', 
               borderRadius: '12px', 
               border: '2px solid rgba(0, 200, 83, 0.3)'
             }}>
@@ -54101,7 +54101,7 @@ A1;Peça exemplo;10`}
                   onChange={(e) => setTecnicoSelecionado(e.target.value)}
                   style={{
                     padding: '10px',
-                    backgroundColor: '#1e1e1e',
+                    backgroundColor: '#484848',
                     border: '2px solid rgba(0, 200, 83, 0.3)',
                     borderRadius: '8px',
                     color: '#fff',
@@ -54338,7 +54338,7 @@ A1;Peça exemplo;10`}
             </div>
 
             {!hubUsuarioEfetivo ? (
-              <div className="hub-comunicacao-empty" style={{ background: '#141414', borderRadius: '16px', border: '2px solid rgba(0, 200, 83, 0.25)', padding: isCompactLayout ? '18px 14px' : '28px' }}>
+              <div className="hub-comunicacao-empty" style={{ background: '#404040', borderRadius: '16px', border: '2px solid rgba(0, 200, 83, 0.25)', padding: isCompactLayout ? '18px 14px' : '28px' }}>
                 <h3 style={{ margin: '0 0 20px 0', color: '#00c853', fontSize: '18px' }}>
                   {podeEscolherManualHub ? (safeT?.quemEstaUsando || 'Quem está usando agora?') : 'Acesso à comunicação'}
                 </h3>
@@ -54404,7 +54404,7 @@ A1;Peça exemplo;10`}
               </div>
             ) : (
               <div className="hub-comunicacao-layout" style={{ display: 'grid', gridTemplateColumns: isCompactLayout ? '1fr' : 'minmax(280px, 340px) 1fr', gap: '24px', alignItems: 'start' }}>
-                <div className="hub-comunicacao-sidebar" style={{ background: '#141414', borderRadius: '16px', border: '2px solid rgba(0, 200, 83, 0.25)', padding: isCompactLayout ? '16px 12px' : '20px', position: isCompactLayout ? 'static' : 'sticky', top: '20px' }}>
+                <div className="hub-comunicacao-sidebar" style={{ background: '#404040', borderRadius: '16px', border: '2px solid rgba(0, 200, 83, 0.25)', padding: isCompactLayout ? '16px 12px' : '20px', position: isCompactLayout ? 'static' : 'sticky', top: '20px' }}>
                   <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid rgba(0, 200, 83, 0.2)' }}>
                     <span style={{ color: '#888', fontSize: '12px' }}>{safeT?.voceEstaComo || 'Você está como'}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
@@ -54491,7 +54491,7 @@ A1;Peça exemplo;10`}
                   )}
                 </div>
 
-                <div className="hub-comunicacao-chat" style={{ background: '#141414', borderRadius: '16px', border: '2px solid rgba(0, 200, 83, 0.25)', padding: isCompactLayout ? '16px 12px' : '24px', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+                <div className="hub-comunicacao-chat" style={{ background: '#404040', borderRadius: '16px', border: '2px solid rgba(0, 200, 83, 0.25)', padding: isCompactLayout ? '16px 12px' : '24px', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
                   {hubDestinatarioSelecionado.length === 0 ? (
                     <div style={{ color: '#888', textAlign: 'center', padding: '48px 24px' }}>
                       {hubUsuarioEfetivo.tipo === 'tecnico' ? (safeT?.selecioneUmGestor || 'Selecione um gestor na lista ao lado para ver e enviar mensagens. Só esse gestor receberá e lerá.') : (safeT?.selecioneUmOuMaisTecnicos || 'Selecione um ou mais destinatários ou um grupo na lista ao lado.')}
@@ -54532,8 +54532,8 @@ A1;Peça exemplo;10`}
                         })}
                       </div>
                       <div className="hub-comunicacao-composer" style={{ borderTop: '1px solid rgba(0, 200, 83, 0.2)', paddingTop: '16px' }}>
-                        <AssistInput className="hub-comunicacao-input" type="text" placeholder={safeT?.assunto || 'Assunto'} value={hubAssunto} onValueChange={setHubAssunto} assistButtonTitle={(safeT as any)?.writingAssistFieldBtnTitle} style={{ width: '100%', padding: '10px 14px', marginBottom: '10px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
-                        <AssistTextarea className="hub-comunicacao-textarea" placeholder={safeT?.mensagem || 'Mensagem'} value={hubMensagemTexto} onValueChange={setHubMensagemTexto} rows={3} style={{ width: '100%', padding: '10px 14px', marginBottom: '12px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px', resize: 'vertical' }} />
+                        <AssistInput className="hub-comunicacao-input" type="text" placeholder={safeT?.assunto || 'Assunto'} value={hubAssunto} onValueChange={setHubAssunto} assistButtonTitle={(safeT as any)?.writingAssistFieldBtnTitle} style={{ width: '100%', padding: '10px 14px', marginBottom: '10px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+                        <AssistTextarea className="hub-comunicacao-textarea" placeholder={safeT?.mensagem || 'Mensagem'} value={hubMensagemTexto} onValueChange={setHubMensagemTexto} rows={3} style={{ width: '100%', padding: '10px 14px', marginBottom: '12px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px', resize: 'vertical' }} />
                         <button className="hub-comunicacao-send-btn" type="button" onClick={enviarMensagemPrivada} disabled={!hubAssunto.trim() || !hubMensagemTexto.trim()} style={{ padding: '12px 24px', backgroundColor: 'rgba(0, 200, 83, 0.2)', border: '2px solid rgba(0, 200, 83, 0.5)', borderRadius: '10px', color: '#00c853', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', width: isCompactLayout ? '100%' : 'auto' }}>
                           {safeT?.enviar || 'Enviar'}
                         </button>
@@ -54672,7 +54672,7 @@ A1;Peça exemplo;10`}
             {/* Primeiro Painel: Mensagens */}
             <div style={{ 
               padding: '30px', 
-              backgroundColor: '#141414', 
+              backgroundColor: '#404040', 
               borderRadius: '12px', 
               border: '2px solid rgba(0, 200, 83, 0.3)',
               marginBottom: '30px'
@@ -54942,7 +54942,7 @@ A1;Peça exemplo;10`}
                           flexDirection: 'column',
                           alignItems: 'center',
                           padding: '20px',
-                          backgroundColor: temNovaMensagem ? 'rgba(255, 193, 7, 0.08)' : '#1e1e1e',
+                          backgroundColor: temNovaMensagem ? 'rgba(255, 193, 7, 0.08)' : '#484848',
                           borderRadius: '12px',
                           border: temNovaMensagem ? '2px solid #ffc107' : '2px solid rgba(0, 100, 255, 0.3)',
                           transition: 'all 0.3s ease',
@@ -55058,7 +55058,7 @@ A1;Peça exemplo;10`}
                         onClick={() => { setTecnicoAlertaSelecionado(tecnico); setGestorAlertaSelecionado(null) }}
                         style={{
                           display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px',
-                          backgroundColor: temNovaMensagem ? 'rgba(255, 193, 7, 0.08)' : '#1e1e1e',
+                          backgroundColor: temNovaMensagem ? 'rgba(255, 193, 7, 0.08)' : '#484848',
                           borderRadius: '12px', border: temNovaMensagem ? '2px solid #ffc107' : '2px solid rgba(0, 255, 100, 0.3)',
                           transition: 'all 0.3s ease', cursor: 'pointer', animation: temNovaMensagem ? 'piscar-amarelo 1.5s ease-in-out infinite' : 'none', position: 'relative'
                         }}
@@ -55117,7 +55117,7 @@ A1;Peça exemplo;10`}
                         onClick={() => { setTecnicoAlertaSelecionado(tecnico); setGestorAlertaSelecionado(null) }}
                         style={{
                           display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px',
-                          backgroundColor: temNovaMensagem ? 'rgba(255, 193, 7, 0.08)' : '#1e1e1e',
+                          backgroundColor: temNovaMensagem ? 'rgba(255, 193, 7, 0.08)' : '#484848',
                           borderRadius: '12px', border: temNovaMensagem ? '2px solid #ffc107' : '2px solid rgba(255, 165, 0, 0.3)',
                           transition: 'all 0.3s ease', cursor: 'pointer', animation: temNovaMensagem ? 'piscar-amarelo 1.5s ease-in-out infinite' : 'none', position: 'relative'
                         }}
@@ -55162,7 +55162,7 @@ A1;Peça exemplo;10`}
                 <div className="alerta-mensagens-detail-panel" style={{
                   marginTop: '30px',
                   padding: '25px',
-                  backgroundColor: '#141414',
+                  backgroundColor: '#404040',
                   borderRadius: '12px',
                   border: '2px solid rgba(255, 193, 7, 0.4)'
                 }}>
@@ -55204,7 +55204,7 @@ A1;Peça exemplo;10`}
                           return (
                             <div className={`alerta-mensagens-message-card${naoLida ? ' alerta-mensagens-message-card-unread' : ''}`} key={checklistId} style={{
                               padding: '18px',
-                              backgroundColor: naoLida ? 'rgba(255, 193, 7, 0.08)' : '#1e1e1e',
+                              backgroundColor: naoLida ? 'rgba(255, 193, 7, 0.08)' : '#484848',
                               borderRadius: '8px',
                               border: `1px solid ${naoLida ? 'rgba(255, 193, 7, 0.5)' : '#333'}`,
                               borderLeft: `4px solid ${naoLida ? '#ffc107' : '#555'}`
@@ -55331,7 +55331,7 @@ A1;Peça exemplo;10`}
                                   <strong style={{ color: '#ffc107', fontSize: '13px' }}>{safeT?.pecasSolicitadas || 'Peças solicitadas'}:</strong>
                                   <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                     {pecas.map((p: any, i: number) => (
-                                      <div key={i} style={{ padding: '8px 12px', backgroundColor: '#141414', borderRadius: '6px', fontSize: '13px', color: '#ccc', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                                      <div key={i} style={{ padding: '8px 12px', backgroundColor: '#404040', borderRadius: '6px', fontSize: '13px', color: '#ccc', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                                         <span>{p.codigo || '-'} · {p.nome || '-'} · Qtd: {p.quantidade ?? 1}</span>
                                         {p.tecnicoSolicitante && <span style={{ color: '#ffc107' }}>{safeT?.solicitadoPor || 'Solicitado por'}: {p.tecnicoSolicitante}</span>}
                                       </div>
@@ -55350,7 +55350,7 @@ A1;Peça exemplo;10`}
 
               {/* Painel Mensagens do Técnico selecionado (Alerta) */}
               {tecnicoAlertaSelecionado && (
-                <div className="alerta-mensagens-detail-panel" style={{ marginTop: '30px', padding: '25px', backgroundColor: '#141414', borderRadius: '12px', border: tecnicoAlertaSelecionado.type === 'internal' ? '2px solid rgba(0, 255, 100, 0.4)' : '2px solid rgba(255, 165, 0, 0.4)' }}>
+                <div className="alerta-mensagens-detail-panel" style={{ marginTop: '30px', padding: '25px', backgroundColor: '#404040', borderRadius: '12px', border: tecnicoAlertaSelecionado.type === 'internal' ? '2px solid rgba(0, 255, 100, 0.4)' : '2px solid rgba(255, 165, 0, 0.4)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
                     <h3 style={{ color: tecnicoAlertaSelecionado.type === 'internal' ? '#00ff64' : '#ffa500', margin: 0, fontSize: '20px' }}>
                       📬 {safeT?.mensagensRecebidas || 'Mensagens recebidas'} — {tecnicoAlertaSelecionado.name}
@@ -55371,7 +55371,7 @@ A1;Peça exemplo;10`}
                     return (
                       <div className="alerta-mensagens-detail-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '400px', overflowY: 'auto' }}>
                         {msgsTecnico.map((msg: MensagemComunicacao) => (
-                          <div className={`alerta-mensagens-message-card${msg.lida ? '' : ' alerta-mensagens-message-card-unread'}`} key={msg.id} style={{ padding: '14px', backgroundColor: msg.lida ? '#1e1e1e' : 'rgba(255, 193, 7, 0.08)', borderRadius: '8px', border: `1px solid ${msg.lida ? '#333' : 'rgba(255, 193, 7, 0.4)'}`, borderLeft: `4px solid ${msg.lida ? '#555' : '#ffc107'}` }}>
+                          <div className={`alerta-mensagens-message-card${msg.lida ? '' : ' alerta-mensagens-message-card-unread'}`} key={msg.id} style={{ padding: '14px', backgroundColor: msg.lida ? '#484848' : 'rgba(255, 193, 7, 0.08)', borderRadius: '8px', border: `1px solid ${msg.lida ? '#333' : 'rgba(255, 193, 7, 0.4)'}`, borderLeft: `4px solid ${msg.lida ? '#555' : '#ffc107'}` }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <strong style={{ color: '#ccc' }}>{msg.assunto}</strong>
@@ -55425,7 +55425,7 @@ A1;Peça exemplo;10`}
                   padding: '40px',
                   textAlign: 'center',
                   color: '#b0b0b0',
-                  backgroundColor: '#141414',
+                  backgroundColor: '#404040',
                   borderRadius: '12px',
                   border: '2px solid rgba(0, 200, 83, 0.3)'
                 }}>
@@ -55587,10 +55587,10 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
-            {/* Conteúdo do Almoxarifado — padrão Visualizar Equipamento (borda 1px, fundo #121212) */}
+            {/* Conteúdo do Almoxarifado — padrão Visualizar Equipamento (borda 1px, fundo #3a3a3a) */}
             <div style={{ 
               padding: '30px', 
-              backgroundColor: '#141414', 
+              backgroundColor: '#404040', 
               borderRadius: '12px', 
               border: '1px solid rgba(0, 200, 83, 0.2)'
             }}>
@@ -55607,7 +55607,7 @@ A1;Peça exemplo;10`}
                         {equipamentos.map((equip: Equipamento) => {
                           const temPdf = !!(equip.manualPdf && equip.manualPdf.trim())
                           return (
-                            <div key={equip.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                            <div key={equip.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                               <div>
                                 <span style={{ color: '#fff', fontWeight: 600 }}>{equip.modelo || equip.id}</span>
                                 {equip.marca && <span style={{ color: '#888', marginLeft: '8px' }}>{equip.marca}</span>}
@@ -55769,7 +55769,7 @@ A1;Peça exemplo;10`}
                   <div style={{
                     marginTop: '20px',
                     padding: '20px',
-                    backgroundColor: '#1e1e1e',
+                    backgroundColor: '#484848',
                     borderRadius: '8px',
                     border: '1px solid rgba(0, 200, 83, 0.2)'
                   }}>
@@ -56188,7 +56188,7 @@ A1;Peça exemplo;10`}
               className="gestao-financeira-inner"
               style={{
                 padding: gfInnerPad,
-                backgroundColor: '#141414',
+                backgroundColor: '#404040',
                 borderRadius: '12px',
                 border: '2px solid rgba(0, 200, 83, 0.3)',
                 boxSizing: 'border-box',
@@ -56875,7 +56875,7 @@ A1;Peça exemplo;10`}
               style={{
                 marginBottom: '20px',
                 padding: isCompactLayout ? '10px 10px' : '14px 18px',
-                backgroundColor: '#1e1e1e',
+                backgroundColor: '#484848',
                 borderRadius: '8px',
                 border: '1px solid rgba(0, 200, 83, 0.2)',
                 display: 'flex',
@@ -56927,12 +56927,12 @@ A1;Peça exemplo;10`}
               ))}
             </div>
 
-            {/* Conteúdo das Abas — padrão Visualizar Equipamento (fundo #121212, borda 1px verde) */}
+            {/* Conteúdo das Abas — padrão Visualizar Equipamento (fundo #3a3a3a, borda 1px verde) */}
             <div
               className="clientes-financeiro-conteudo"
               style={{
                 padding: cfContPad,
-                backgroundColor: '#141414',
+                backgroundColor: '#404040',
                 borderRadius: '12px',
                 border: '1px solid rgba(0, 200, 83, 0.2)',
                 minHeight: isCompactLayout ? '280px' : '500px',
@@ -56949,7 +56949,7 @@ A1;Peça exemplo;10`}
                     alignItems: 'center',
                     gap: '16px',
                     padding: '16px 20px',
-                    backgroundColor: '#121212',
+                    backgroundColor: '#3a3a3a',
                     borderRadius: '10px',
                     border: '1px solid rgba(0, 200, 83, 0.2)'
                   }}>
@@ -57115,7 +57115,7 @@ A1;Peça exemplo;10`}
                           key={os.id}
                           style={{
                             padding: '18px 20px',
-                            backgroundColor: '#1e1e1e',
+                            backgroundColor: '#484848',
                             border: '1px solid rgba(0, 200, 83, 0.2)',
                             borderRadius: '10px',
                             display: 'flex',
@@ -57176,7 +57176,7 @@ A1;Peça exemplo;10`}
                         padding: '48px 24px',
                         color: 'rgba(255,255,255,0.6)',
                         fontSize: '14px',
-                        backgroundColor: '#121212',
+                        backgroundColor: '#3a3a3a',
                         borderRadius: '10px',
                         border: '1px dashed rgba(0, 200, 83, 0.2)'
                       }}>
@@ -57191,7 +57191,7 @@ A1;Peça exemplo;10`}
                     const cardOs: React.CSSProperties = {
                       marginTop: '22px',
                       padding: '18px 20px',
-                      backgroundColor: '#121212',
+                      backgroundColor: '#3a3a3a',
                       borderRadius: '12px',
                       border: '1px solid rgba(0, 200, 83, 0.22)',
                     }
@@ -57471,7 +57471,7 @@ A1;Peça exemplo;10`}
                                         padding: '8px 10px',
                                         fontSize: '12px',
                                         borderRadius: '6px',
-                                        background: '#1e1e1e',
+                                        background: '#484848',
                                         color: '#fff',
                                         border: '1px solid rgba(255,255,255,0.2)',
                                       }}
@@ -57586,7 +57586,7 @@ A1;Peça exemplo;10`}
                     </button>
                   </div>
 
-                  {/* Lista de Faturas — padrão Visualizar Equipamento (card #1e1e1e, borda 1px verde) */}
+                  {/* Lista de Faturas — padrão Visualizar Equipamento (card #484848, borda 1px verde) */}
                   <div style={{ display: 'grid', gap: '15px' }}>
                     {faturasPecas.map((fatura) => {
                       const sinalPag = getSinalPagamentoFaturaPecas(fatura)
@@ -57656,7 +57656,7 @@ A1;Peça exemplo;10`}
                         key={fatura.id}
                         style={{
                           padding: '20px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           border:
                             sinalPag === 'atrasado'
                               ? '1px solid rgba(239, 68, 68, 0.5)'
@@ -57873,7 +57873,7 @@ A1;Peça exemplo;10`}
                     {safeT?.clientesDevedores || 'CLIENTES DEVEDORES'}
                   </h2>
                   
-                  {/* Lista de Clientes Devedores — padrão card #1e1e1e, borda 1px (vermelho para devedores) */}
+                  {/* Lista de Clientes Devedores — padrão card #484848, borda 1px (vermelho para devedores) */}
                   <div style={{ display: 'grid', gap: '15px' }}>
                     {clientesDevedores
                       .filter(
@@ -57890,7 +57890,7 @@ A1;Peça exemplo;10`}
                           key={devedor.clienteId}
                           style={{
                             padding: '20px',
-                            backgroundColor: '#1e1e1e',
+                            backgroundColor: '#484848',
                             border: '1px solid rgba(255, 0, 0, 0.3)',
                             borderRadius: '8px'
                           }}
@@ -57947,7 +57947,7 @@ A1;Peça exemplo;10`}
                                 {safeT?.faturasPendentes || 'Faturas Pendentes'}:
                               </p>
                               {devedor.faturasPendentes.map((fatura) => (
-                                <div key={fatura.faturaId} style={{ marginBottom: '8px', padding: '8px', backgroundColor: '#141414', border: '1px solid rgba(255, 0, 0, 0.2)', borderRadius: '4px' }}>
+                                <div key={fatura.faturaId} style={{ marginBottom: '8px', padding: '8px', backgroundColor: '#404040', border: '1px solid rgba(255, 0, 0, 0.2)', borderRadius: '4px' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span style={{ color: '#ccc', fontSize: '12px' }}>{fatura.numeroFatura}</span>
                                     <span style={{ color: '#ff0000', fontSize: '14px', fontWeight: 'bold' }}>€{fatura.valor.toFixed(2)}</span>
@@ -58015,7 +58015,7 @@ A1;Peça exemplo;10`}
                         onChange={(e) => setFiltroPeriodo(e.target.value as 'semanal' | 'mensal' | 'anual')}
                         style={{
                           padding: '10px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -58034,7 +58034,7 @@ A1;Peça exemplo;10`}
                       'Valores calculados automaticamente a partir de faturas de peças, ordens de serviço e fechamentos na biblioteca com IVA ativo no fecho.'}
                   </p>
 
-                  {/* Resumo de IVA — padrão Visualizar Equipamento (card #1e1e1e, borda 1px) */}
+                  {/* Resumo de IVA — padrão Visualizar Equipamento (card #484848, borda 1px) */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginBottom: '30px' }}>
                     {(() => {
                       const ivasFiltrados = ivaControlesEfetivos.filter(iv => iv.tipoPeriodo === filtroPeriodo)
@@ -58045,19 +58045,19 @@ A1;Peça exemplo;10`}
 
                       return (
                         <>
-                          <div style={{ padding: '20px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ padding: '20px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
                             <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.IVACobrado || 'IVA Cobrado'}</p>
                             <p style={{ color: '#00c853', margin: 0, fontSize: '24px', fontWeight: 'bold' }}>€{totalCobrado.toFixed(2)}</p>
                           </div>
-                          <div style={{ padding: '20px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ padding: '20px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
                             <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.IVAPago || 'IVA Pago'}</p>
                             <p style={{ color: '#66b3ff', margin: 0, fontSize: '24px', fontWeight: 'bold' }}>€{totalPago.toFixed(2)}</p>
                           </div>
-                          <div style={{ padding: '20px', backgroundColor: '#1e1e1e', border: '1px solid rgba(255, 0, 0, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ padding: '20px', backgroundColor: '#484848', border: '1px solid rgba(255, 0, 0, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
                             <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.IVAApagar || 'IVA a Pagar'}</p>
                             <p style={{ color: '#ff0000', margin: 0, fontSize: '24px', fontWeight: 'bold' }}>€{totalApagar.toFixed(2)}</p>
                           </div>
-                          <div style={{ padding: '20px', backgroundColor: '#1e1e1e', border: '1px solid rgba(255, 255, 0, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ padding: '20px', backgroundColor: '#484848', border: '1px solid rgba(255, 255, 0, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
                             <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.periodosPendentes || 'Períodos Pendentes'}</p>
                             <p style={{ color: '#ffff00', margin: 0, fontSize: '24px', fontWeight: 'bold' }}>{ivasPendentes}</p>
                           </div>
@@ -58076,7 +58076,7 @@ A1;Peça exemplo;10`}
                           key={iva.id}
                           style={{
                             padding: '20px',
-                            backgroundColor: '#1e1e1e',
+                            backgroundColor: '#484848',
                             border: '1px solid rgba(0, 200, 83, 0.2)',
                             borderRadius: '8px'
                           }}
@@ -58149,7 +58149,7 @@ A1;Peça exemplo;10`}
                         onChange={(e) => setFiltroPeriodo(e.target.value as 'semanal' | 'mensal' | 'anual')}
                         style={{
                           padding: '10px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -58295,7 +58295,7 @@ A1;Peça exemplo;10`}
                           key={relatorio.id}
                           style={{
                             padding: '20px',
-                            backgroundColor: '#1e1e1e',
+                            backgroundColor: '#484848',
                             border: '1px solid rgba(0, 200, 83, 0.2)',
                             borderRadius: '8px'
                           }}
@@ -59275,7 +59275,7 @@ A1;Peça exemplo;10`}
                 </p>
               </div>
               {pastasLista.length === 0 ? (
-                <div style={{ padding: '40px', textAlign: 'center', color: '#888', background: '#121212', borderRadius: '12px', border: '1px dashed #444' }}>
+                <div style={{ padding: '40px', textAlign: 'center', color: '#888', background: '#3a3a3a', borderRadius: '12px', border: '1px dashed #444' }}>
                   {tx.nenhumRelatorioExcluido || 'Nenhum relatório excluído guardado ainda. Ao eliminar um relatório de serviço ou uma nota no equipamento, uma cópia aparece aqui.'}
                 </div>
               ) : (
@@ -59322,7 +59322,7 @@ A1;Peça exemplo;10`}
                               key={item.archiveId}
                               style={{
                                 padding: '14px',
-                                background: '#141414',
+                                background: '#404040',
                                 borderRadius: '8px',
                                 border: '1px solid rgba(255, 255, 255, 0.08)'
                               }}
@@ -59412,7 +59412,7 @@ A1;Peça exemplo;10`}
             </div>
             {modalNotaExcluida && modalNotaExcluida.tipo === 'nota-equipamento' && (
               <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99998, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }} onClick={() => setModalNotaExcluida(null)}>
-                <div style={{ background: '#121212', borderRadius: '14px', border: '2px solid #9966ff', maxWidth: '640px', width: '100%', maxHeight: '85vh', overflow: 'auto', padding: '22px' }} onClick={e => e.stopPropagation()}>
+                <div style={{ background: '#3a3a3a', borderRadius: '14px', border: '2px solid #9966ff', maxWidth: '640px', width: '100%', maxHeight: '85vh', overflow: 'auto', padding: '22px' }} onClick={e => e.stopPropagation()}>
                   <h3 style={{ color: '#c4a7ff', margin: '0 0 8px' }}>{modalNotaExcluida.relatorio.titulo}</h3>
                   <p style={{ color: '#888', fontSize: '12px', margin: '0 0 12px' }}>{modalNotaExcluida.relatorio.dataGeracao}</p>
                   <pre style={{ whiteSpace: 'pre-wrap', color: '#ddd', fontSize: '14px', margin: 0, fontFamily: 'inherit' }}>{modalNotaExcluida.relatorio.conteudo}</pre>
@@ -59432,7 +59432,7 @@ A1;Peça exemplo;10`}
             </h2>
             <div style={{ 
               padding: '20px', 
-              backgroundColor: '#141414', 
+              backgroundColor: '#404040', 
               borderRadius: '8px', 
               border: '1px solid rgba(0, 200, 83, 0.3)',
               color: '#ffffff'
@@ -61226,7 +61226,7 @@ A1;Peça exemplo;10`}
                     style={{
                       padding: '15px',
                       marginBottom: '10px',
-                      backgroundColor: relatorioSelecionado?.id === relatorio.id ? 'rgba(0, 200, 83, 0.2)' : '#1e1e1e',
+                      backgroundColor: relatorioSelecionado?.id === relatorio.id ? 'rgba(0, 200, 83, 0.2)' : '#484848',
                       border: `1px solid ${relatorioSelecionado?.id === relatorio.id ? 'rgba(0, 200, 83, 0.5)' : 'rgba(0, 200, 83, 0.2)'}`,
                       borderRadius: '6px',
                       cursor: 'pointer',
@@ -61278,7 +61278,7 @@ A1;Peça exemplo;10`}
                     style={{
                       padding: '15px',
                       marginBottom: '10px',
-                      backgroundColor: clienteSelecionado?.id === cliente.id ? 'rgba(0, 100, 255, 0.2)' : '#1e1e1e',
+                      backgroundColor: clienteSelecionado?.id === cliente.id ? 'rgba(0, 100, 255, 0.2)' : '#484848',
                       border: `1px solid ${clienteSelecionado?.id === cliente.id ? 'rgba(0, 100, 255, 0.5)' : 'rgba(0, 100, 255, 0.2)'}`,
                       borderRadius: '6px',
                       cursor: 'pointer',
@@ -61332,7 +61332,7 @@ A1;Peça exemplo;10`}
                     style={{
                       padding: '14px',
                       marginBottom: '8px',
-                      backgroundColor: clienteCadastroPrioritarioFixo?.id === cliente.id ? 'rgba(255, 165, 0, 0.22)' : '#1e1e1e',
+                      backgroundColor: clienteCadastroPrioritarioFixo?.id === cliente.id ? 'rgba(255, 165, 0, 0.22)' : '#484848',
                       border: `1px solid ${clienteCadastroPrioritarioFixo?.id === cliente.id ? 'rgba(255, 165, 0, 0.6)' : 'rgba(255, 165, 0, 0.2)'}`,
                       borderRadius: '6px',
                       cursor: 'pointer'
@@ -61380,7 +61380,7 @@ A1;Peça exemplo;10`}
             </h3>
             
             {/* Informações do Cliente/Empresa */}
-            <div style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+            <div style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
               <h4 style={{ color: '#66b3ff', marginBottom: '10px', fontSize: '16px' }}>
                 {tipoOrcamento === 'dados-fixos' ? (safeT?.dadosNonatoService || 'Dados da NONATO SERVICE') :
                  tipoOrcamento === 'orcamento-relatorio' ? (safeT?.dadosDoRelatorio || 'Dados do Relatório') :
@@ -61462,7 +61462,7 @@ A1;Peça exemplo;10`}
                     style={{
                       flex: 1,
                       padding: '10px',
-                      backgroundColor: '#1e1e1e',
+                      backgroundColor: '#484848',
                       border: '1px solid rgba(0, 200, 83, 0.3)',
                       borderRadius: '6px',
                       color: '#fff',
@@ -61518,7 +61518,7 @@ A1;Peça exemplo;10`}
                   style={{
                     width: '100%',
                     padding: '10px',
-                    backgroundColor: '#1e1e1e',
+                    backgroundColor: '#484848',
                     border: '1px solid rgba(0, 200, 83, 0.3)',
                     borderRadius: '6px',
                     color: '#fff',
@@ -61538,7 +61538,7 @@ A1;Peça exemplo;10`}
                   style={{
                     width: '100%',
                     padding: '10px',
-                    backgroundColor: '#1e1e1e',
+                    backgroundColor: '#484848',
                     border: '1px solid rgba(0, 200, 83, 0.3)',
                     borderRadius: '6px',
                     color: '#fff',
@@ -61559,7 +61559,7 @@ A1;Peça exemplo;10`}
                 style={{
                   width: '100%',
                   padding: '10px',
-                  backgroundColor: '#1e1e1e',
+                  backgroundColor: '#484848',
                   border: '1px solid rgba(0, 200, 83, 0.3)',
                   borderRadius: '6px',
                   color: '#fff',
@@ -61645,7 +61645,7 @@ A1;Peça exemplo;10`}
                     return (
                       <div key={item.id || `${item.codigo || 'item'}-${index}`} style={{ 
                         padding: '15px', 
-                        backgroundColor: '#1e1e1e', 
+                        backgroundColor: '#484848', 
                         borderRadius: '8px',
                         border: '1px solid rgba(0, 200, 83, 0.2)'
                       }}>
@@ -61670,7 +61670,7 @@ A1;Peça exemplo;10`}
                                 <span style={{ 
                                   fontSize: '11px', 
                                   color: '#b0b0b0',
-                                  backgroundColor: '#141414',
+                                  backgroundColor: '#404040',
                                   padding: '2px 6px',
                                   borderRadius: '4px'
                                 }}>
@@ -61729,7 +61729,7 @@ A1;Peça exemplo;10`}
                                     width: 52,
                                     padding: '4px 6px',
                                     textAlign: 'center',
-                                    backgroundColor: '#141414',
+                                    backgroundColor: '#404040',
                                     border: '1px solid rgba(0, 200, 83, 0.35)',
                                     borderRadius: 4,
                                     color: '#00c853',
@@ -61819,7 +61819,7 @@ A1;Peça exemplo;10`}
                 zIndex: 2147483647
               }} onClick={() => setShowItemForm(false)}>
                 <div style={{
-                  backgroundColor: '#141414',
+                  backgroundColor: '#404040',
                   padding: '30px',
                   borderRadius: '12px',
                   border: '1px solid rgba(0, 200, 83, 0.3)',
@@ -61886,7 +61886,7 @@ A1;Peça exemplo;10`}
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#141414',
+                          backgroundColor: '#404040',
                           border: '2px solid rgba(0, 200, 83, 0.6)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -61907,7 +61907,7 @@ A1;Peça exemplo;10`}
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#141414',
+                          backgroundColor: '#404040',
                           border: '1px solid rgba(0, 200, 83, 0.5)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -61928,7 +61928,7 @@ A1;Peça exemplo;10`}
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#141414',
+                          backgroundColor: '#404040',
                           border: '1px solid rgba(0, 200, 83, 0.5)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -61956,7 +61956,7 @@ A1;Peça exemplo;10`}
                         style={{
                           width: '100%',
                           padding: '10px',
-                          backgroundColor: '#1e1e1e',
+                          backgroundColor: '#484848',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '6px',
                           color: '#fff'
@@ -61969,7 +61969,7 @@ A1;Peça exemplo;10`}
                           overflowY: 'auto',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '6px',
-                          backgroundColor: '#1e1e1e'
+                          backgroundColor: '#484848'
                         }}>
                           {pecasFiltradas.map(peca => (
                             <div
@@ -62028,7 +62028,7 @@ A1;Peça exemplo;10`}
                   })()}
 
                   {itemFormMode === 'manual' && (
-                  <div style={{ marginBottom: '20px', padding: '14px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.3)' }}>
+                  <div style={{ marginBottom: '20px', padding: '14px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.3)' }}>
                     <label style={{ display: 'block', marginBottom: '8px', color: '#ccc', fontWeight: 600 }}>
                       {safeT?.imagemPecaBiblioteca || 'Imagem do produto'}
                     </label>
@@ -62105,7 +62105,7 @@ A1;Peça exemplo;10`}
                       style={{
                         width: '100%',
                         padding: '10px',
-                        backgroundColor: '#141414',
+                        backgroundColor: '#404040',
                         border: '1px solid rgba(0, 200, 83, 0.3)',
                         borderRadius: '6px',
                         color: '#fff',
@@ -62172,7 +62172,7 @@ A1;Peça exemplo;10`}
                           style={{
                             width: '100%',
                             padding: '10px',
-                            backgroundColor: '#1e1e1e',
+                            backgroundColor: '#484848',
                             border: '1px solid rgba(0, 200, 83, 0.3)',
                             borderRadius: '6px',
                             color: '#fff'
@@ -62193,7 +62193,7 @@ A1;Peça exemplo;10`}
                           style={{
                             width: '100%',
                             padding: '10px',
-                            backgroundColor: '#1e1e1e',
+                            backgroundColor: '#484848',
                             border: '1px solid rgba(0, 200, 83, 0.3)',
                             borderRadius: '6px',
                             color: '#fff'
@@ -62203,7 +62203,7 @@ A1;Peça exemplo;10`}
                       {itemForm.precoUnitario > 0 && itemForm.quantidade > 0 && (
                         <div style={{ 
                           padding: '10px', 
-                          backgroundColor: '#1e1e1e', 
+                          backgroundColor: '#484848', 
                           borderRadius: '6px',
                           marginBottom: '15px',
                           border: '1px solid rgba(0, 200, 83, 0.3)'
@@ -62265,7 +62265,7 @@ A1;Peça exemplo;10`}
             {dadosOrcamento.itens.length > 0 && (tipoOrcamento !== 'orcamento-relatorio' && tipoOrcamento !== 'cliente-prioritario-fixo') && (
               <div style={{ 
                 padding: '20px', 
-                backgroundColor: '#1e1e1e', 
+                backgroundColor: '#484848', 
                 borderRadius: '8px',
                 border: '2px solid rgba(0, 100, 255, 0.5)',
                 textAlign: 'right'
@@ -62296,7 +62296,7 @@ A1;Peça exemplo;10`}
                 style={{
                   width: '100%',
                   padding: '10px',
-                  backgroundColor: '#1e1e1e',
+                  backgroundColor: '#484848',
                   border: '1px solid rgba(0, 200, 83, 0.3)',
                   borderRadius: '6px',
                   color: '#fff',
@@ -62565,7 +62565,7 @@ A1;Peça exemplo;10`}
                   }}
                   style={{
                     padding: '10px 20px',
-                    backgroundColor: '#1e1e1e',
+                    backgroundColor: '#484848',
                     border: '1px solid rgba(0, 200, 83, 0.5)',
                     borderRadius: '8px',
                     color: '#00c853',
@@ -63117,7 +63117,7 @@ A1;Peça exemplo;10`}
                             }}
                             style={{
                               padding: '8px 15px',
-                              backgroundColor: '#1e1e1e',
+                              backgroundColor: '#484848',
                               border: '1px solid rgba(0, 200, 83, 0.5)',
                               borderRadius: '6px',
                               color: '#00c853',
@@ -63291,7 +63291,7 @@ A1;Peça exemplo;10`}
                               return (
                                 <div key={index} style={{ 
                                   padding: '15px', 
-                                  backgroundColor: '#141414', 
+                                  backgroundColor: '#404040', 
                                   borderRadius: '4px',
                                   border: '1px solid rgba(0, 200, 83, 0.3)'
                                 }}>
@@ -63316,7 +63316,7 @@ A1;Peça exemplo;10`}
                                           <span style={{ 
                                             fontSize: '11px', 
                                             color: '#b0b0b0',
-                                            backgroundColor: '#1e1e1e',
+                                            backgroundColor: '#484848',
                                             padding: '2px 6px',
                                             borderRadius: '4px'
                                           }}>
@@ -63352,7 +63352,7 @@ A1;Peça exemplo;10`}
                                                 style={{
                                                   width: '100%',
                                                   padding: '8px',
-                                                  backgroundColor: '#1e1e1e',
+                                                  backgroundColor: '#484848',
                                                   border: '1px solid rgba(0, 200, 83, 0.3)',
                                                   borderRadius: '4px',
                                                   color: '#fff',
@@ -63374,7 +63374,7 @@ A1;Peça exemplo;10`}
                                                 style={{
                                                   width: '100%',
                                                   padding: '8px',
-                                                  backgroundColor: '#1e1e1e',
+                                                  backgroundColor: '#484848',
                                                   border: '1px solid rgba(0, 200, 83, 0.3)',
                                                   borderRadius: '4px',
                                                   color: '#fff',
@@ -63580,7 +63580,7 @@ A1;Peça exemplo;10`}
             limparEstadoModalEnvioOrcamento()
           }}>
             <div style={{
-              backgroundColor: '#141414',
+              backgroundColor: '#404040',
               padding: '30px',
               borderRadius: '12px',
               border: '2px solid rgba(0, 100, 255, 0.5)',
@@ -63590,7 +63590,7 @@ A1;Peça exemplo;10`}
               <h3 style={{ color: '#66b3ff', marginBottom: '20px' }}>
                 {safeT?.enviarPorEmail || 'Enviar por Email'}
               </h3>
-              <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#121212', borderRadius: '8px', border: '1px solid rgba(0,200,83,0.2)' }}>
+              <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#3a3a3a', borderRadius: '8px', border: '1px solid rgba(0,200,83,0.2)' }}>
                 <label style={{ display: 'block', marginBottom: '8px', color: '#66b3ff', fontWeight: 700, fontSize: '13px' }}>
                   {safeT?.envioOrcamentoClienteCadastro || 'Cliente do cadastro'}
                 </label>
@@ -63638,7 +63638,7 @@ A1;Peça exemplo;10`}
                   style={{
                     width: '100%',
                     padding: '10px',
-                    backgroundColor: '#1e1e1e',
+                    backgroundColor: '#484848',
                     border: '1px solid rgba(0, 200, 83, 0.3)',
                     borderRadius: '6px',
                     color: '#fff'
@@ -63706,7 +63706,7 @@ A1;Peça exemplo;10`}
             limparEstadoModalEnvioOrcamento()
           }}>
             <div style={{
-              backgroundColor: '#141414',
+              backgroundColor: '#404040',
               padding: '30px',
               borderRadius: '12px',
               border: '2px solid rgba(37, 211, 102, 0.5)',
@@ -63716,7 +63716,7 @@ A1;Peça exemplo;10`}
               <h3 style={{ color: '#25D366', marginBottom: '20px' }}>
                 {safeT?.enviarPorWhatsApp || 'Enviar por WhatsApp'}
               </h3>
-              <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#121212', borderRadius: '8px', border: '1px solid rgba(0,200,83,0.2)' }}>
+              <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#3a3a3a', borderRadius: '8px', border: '1px solid rgba(0,200,83,0.2)' }}>
                 <label style={{ display: 'block', marginBottom: '8px', color: '#25D366', fontWeight: 700, fontSize: '13px' }}>
                   {safeT?.envioOrcamentoClienteCadastro || 'Cliente do cadastro'}
                 </label>
@@ -63765,7 +63765,7 @@ A1;Peça exemplo;10`}
                   style={{
                     width: '100%',
                     padding: '10px',
-                    backgroundColor: '#1e1e1e',
+                    backgroundColor: '#484848',
                     border: '1px solid rgba(37, 211, 102, 0.3)',
                     borderRadius: '6px',
                     color: '#fff'
@@ -63977,7 +63977,7 @@ A1;Peça exemplo;10`}
         style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: '#0a0a0a',
+          backgroundColor: '#363636',
           zIndex: 99999,
           overflow: 'auto',
           display: 'flex',
@@ -64340,7 +64340,7 @@ A1;Peça exemplo;10`}
         minHeight: '100dvh',
         height: '100dvh',
         maxHeight: '100dvh',
-        backgroundColor: '#121212',
+        backgroundColor: '#3a3a3a',
         color: '#fff',
         paddingBottom: openTabs.length > 0 ? 'calc(72px + env(safe-area-inset-bottom, 0px))' : '0',
         paddingTop: isDemoMode && !isCompactLayout ? '48px' : undefined
@@ -67315,7 +67315,7 @@ A1;Peça exemplo;10`}
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
-                background: 'linear-gradient(180deg, #121212 0%, #0d0d0d 100%)',
+                background: 'linear-gradient(180deg, #3a3a3a 0%, #383838 100%)',
                 borderRadius: '16px',
                 border: '1px solid rgba(0, 200, 83, 0.25)',
                 boxShadow: '0 24px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,200,83,0.08)'
@@ -68500,7 +68500,7 @@ A1;Peça exemplo;10`}
           <div 
             className="modal" 
             onClick={(e) => e.stopPropagation()} 
-            style={{ maxWidth: '520px', width: '90%', padding: '24px', backgroundColor: '#141414', borderRadius: '12px', border: '2px solid rgba(255, 180, 0, 0.6)', boxShadow: '0 0 20px rgba(255, 180, 0, 0.2)' }}
+            style={{ maxWidth: '520px', width: '90%', padding: '24px', backgroundColor: '#404040', borderRadius: '12px', border: '2px solid rgba(255, 180, 0, 0.6)', boxShadow: '0 0 20px rgba(255, 180, 0, 0.2)' }}
           >
             <h3 style={{ color: '#ffb400', marginBottom: '16px', fontSize: '18px', borderBottom: '1px solid rgba(255, 180, 0, 0.3)', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span>⚠️</span>
@@ -68534,14 +68534,14 @@ A1;Peça exemplo;10`}
                   onChange={(e) => setChecklistAccessNomeInput(e.target.value)}
                   placeholder={safeT?.checklistPlaceholderNome || 'Seu nome'}
                   autoFocus
-                  style={{ width: '100%', padding: '12px 14px', fontSize: '14px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff', outline: 'none' }}
+                  style={{ width: '100%', padding: '12px 14px', fontSize: '14px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff', outline: 'none' }}
                 />
                 <input
                   type="password"
                   value={checklistAccessPasswordInput}
                   onChange={(e) => setChecklistAccessPasswordInput(e.target.value)}
                   placeholder={safeT?.checklistPlaceholderSenha || 'Sua senha (Gestor de Senhas)'}
-                  style={{ width: '100%', padding: '12px 14px', fontSize: '14px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff', outline: 'none' }}
+                  style={{ width: '100%', padding: '12px 14px', fontSize: '14px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', color: '#fff', outline: 'none' }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       const nome = checklistAccessNomeInput.trim()
@@ -68873,7 +68873,7 @@ A1;Peça exemplo;10`}
                 type="text"
                 value={buttonForm.name}
                 onChange={(e) => setButtonForm({ ...buttonForm, name: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -68883,7 +68883,7 @@ A1;Peça exemplo;10`}
                 value={buttonForm.action}
                 onChange={(e) => setButtonForm({ ...buttonForm, action: e.target.value })}
                 placeholder="ex: open-gestores"
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -68911,14 +68911,14 @@ A1;Peça exemplo;10`}
               <button 
                 className={gestoresActiveTab === 'gestores' ? 'btn-primary' : 'btn-primary'}
                 onClick={() => setGestoresActiveTab('gestores')}
-                style={{ backgroundColor: gestoresActiveTab === 'gestores' ? 'rgba(0, 200, 83, 0.2)' : '#1e1e1e' }}
+                style={{ backgroundColor: gestoresActiveTab === 'gestores' ? 'rgba(0, 200, 83, 0.2)' : '#484848' }}
               >
                 {safeT?.gestoresTab || 'Gestores'}
               </button>
               <button 
                 className={gestoresActiveTab === 'tecnicos' ? 'btn-primary' : 'btn-primary'}
                 onClick={() => setGestoresActiveTab('tecnicos')}
-                style={{ backgroundColor: gestoresActiveTab === 'tecnicos' ? 'rgba(0, 200, 83, 0.2)' : '#1e1e1e' }}
+                style={{ backgroundColor: gestoresActiveTab === 'tecnicos' ? 'rgba(0, 200, 83, 0.2)' : '#484848' }}
               >
                 {safeT?.tecnicosTab || 'Técnicos'}
               </button>
@@ -68976,7 +68976,7 @@ A1;Peça exemplo;10`}
                       onChange={(e) => setFiltroAreaGestor(e.target.value)}
                       style={{
                         padding: '8px 12px',
-                        backgroundColor: '#1e1e1e',
+                        backgroundColor: '#484848',
                         color: '#fff',
                         border: '1px solid rgba(0, 200, 83, 0.3)',
                         borderRadius: '4px',
@@ -69081,7 +69081,7 @@ A1;Peça exemplo;10`}
                       padding: '12px 24px',
                       fontSize: '14px',
                       fontWeight: 'bold',
-                      backgroundColor: tecnicosTipoTab === 'todos' ? 'rgba(0, 100, 255, 0.3)' : '#1e1e1e',
+                      backgroundColor: tecnicosTipoTab === 'todos' ? 'rgba(0, 100, 255, 0.3)' : '#484848',
                       borderColor: tecnicosTipoTab === 'todos' ? 'rgba(0, 100, 255, 0.6)' : 'rgba(0, 100, 255, 0.3)',
                       color: tecnicosTipoTab === 'todos' ? '#66b3ff' : '#fff',
                       transition: 'all 0.3s ease'
@@ -69098,7 +69098,7 @@ A1;Peça exemplo;10`}
                       fontWeight: 'bold',
                       border: '1px solid',
                       borderColor: tecnicosTipoTab === 'interno' ? 'rgba(0, 200, 83, 0.5)' : 'rgba(0, 200, 83, 0.2)',
-                      backgroundColor: tecnicosTipoTab === 'interno' ? 'rgba(0, 200, 83, 0.2)' : '#1e1e1e',
+                      backgroundColor: tecnicosTipoTab === 'interno' ? 'rgba(0, 200, 83, 0.2)' : '#484848',
                       color: tecnicosTipoTab === 'interno' ? '#00c853' : '#fff',
                       transition: 'all 0.3s ease'
                     }}
@@ -69114,7 +69114,7 @@ A1;Peça exemplo;10`}
                       fontWeight: 'bold',
                       border: '1px solid',
                       borderColor: tecnicosTipoTab === 'externo' ? 'rgba(0, 200, 83, 0.5)' : 'rgba(0, 200, 83, 0.2)',
-                      backgroundColor: tecnicosTipoTab === 'externo' ? 'rgba(0, 200, 83, 0.2)' : '#1e1e1e',
+                      backgroundColor: tecnicosTipoTab === 'externo' ? 'rgba(0, 200, 83, 0.2)' : '#484848',
                       color: tecnicosTipoTab === 'externo' ? '#00c853' : '#fff',
                       transition: 'all 0.3s ease'
                     }}
@@ -69202,7 +69202,7 @@ A1;Peça exemplo;10`}
                 type="text"
                 value={gestorForm.name}
                 onChange={(e) => setGestorForm({ ...gestorForm, name: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -69211,7 +69211,7 @@ A1;Peça exemplo;10`}
                 type="email"
                 value={gestorForm.email}
                 onChange={(e) => setGestorForm({ ...gestorForm, email: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -69220,7 +69220,7 @@ A1;Peça exemplo;10`}
                 type="text"
                 value={gestorForm.phone}
                 onChange={(e) => setGestorForm({ ...gestorForm, phone: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -69229,7 +69229,7 @@ A1;Peça exemplo;10`}
                 type="text"
                 value={gestorForm.address}
                 onChange={(e) => setGestorForm({ ...gestorForm, address: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -69237,7 +69237,7 @@ A1;Peça exemplo;10`}
               <select
                 value={gestorForm.area}
                 onChange={(e) => setGestorForm({ ...gestorForm, area: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               >
                 {tiposGestores.sort((a, b) => a.ordem - b.ordem).map(tipo => (
                   <option key={tipo.id} value={tipo.id}>{tipo.icone} {tipo.nome}</option>
@@ -69255,7 +69255,7 @@ A1;Peça exemplo;10`}
                 type="file"
                 accept="image/*"
                 onChange={handleGestorPhotoChange}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
               {gestorForm.photo && (
                 <div style={{ marginTop: '10px' }}>
@@ -69299,7 +69299,7 @@ A1;Peça exemplo;10`}
               </button>
 
               {(editingTipoGestor !== null || tipoGestorForm.nome !== '') && (
-                <div style={{ border: '1px solid rgba(255, 165, 0, 0.3)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}>
+                <div style={{ border: '1px solid rgba(255, 165, 0, 0.3)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#404040' }}>
                   <h3 style={{ marginBottom: '15px', color: '#ffaa00' }}>
                     {editingTipoGestor && editingTipoGestor.id ? '✏️ Editar Tipo' : '➕ Adicionar Novo Tipo'}
                   </h3>
@@ -69318,7 +69318,7 @@ A1;Peça exemplo;10`}
                         })
                       }}
                       placeholder="ex: Gestor de Qualidade"
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
 
@@ -69329,7 +69329,7 @@ A1;Peça exemplo;10`}
                       value={tipoGestorForm.id}
                       onChange={(e) => setTipoGestorForm({ ...tipoGestorForm, id: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })}
                       placeholder="ex: gestor-qualidade"
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <small style={{ color: '#b0b0b0', fontSize: '12px' }}>ID único usado internamente (sem espaços ou caracteres especiais)</small>
                   </div>
@@ -69341,7 +69341,7 @@ A1;Peça exemplo;10`}
                       value={tipoGestorForm.icone}
                       onChange={(e) => setTipoGestorForm({ ...tipoGestorForm, icone: e.target.value })}
                       placeholder="ex: 🎯"
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <small style={{ color: '#b0b0b0', fontSize: '12px' }}>Use um emoji para representar o tipo</small>
                   </div>
@@ -69360,7 +69360,7 @@ A1;Peça exemplo;10`}
                         value={tipoGestorForm.cor}
                         onChange={(e) => setTipoGestorForm({ ...tipoGestorForm, cor: e.target.value })}
                         placeholder="#00c853"
-                        style={{ flex: 1, padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ flex: 1, padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                   </div>
@@ -69371,7 +69371,7 @@ A1;Peça exemplo;10`}
                       type="number"
                       value={tipoGestorForm.ordem}
                       onChange={(e) => setTipoGestorForm({ ...tipoGestorForm, ordem: parseInt(e.target.value) || 0 })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <small style={{ color: '#b0b0b0', fontSize: '12px' }}>Números menores aparecem primeiro</small>
                   </div>
@@ -69408,7 +69408,7 @@ A1;Peça exemplo;10`}
                           key={tipo.id} 
                           style={{ 
                             padding: '15px', 
-                            backgroundColor: '#141414', 
+                            backgroundColor: '#404040', 
                             borderRadius: '8px', 
                             border: `1px solid rgba(${corRgb[0]}, ${corRgb[1]}, ${corRgb[2]}, 0.3)`,
                             display: 'flex',
@@ -69477,7 +69477,7 @@ A1;Peça exemplo;10`}
                 type="text"
                 value={tecnicoForm.name}
                 onChange={(e) => setTecnicoForm({ ...tecnicoForm, name: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -69486,7 +69486,7 @@ A1;Peça exemplo;10`}
                 type="email"
                 value={tecnicoForm.email}
                 onChange={(e) => setTecnicoForm({ ...tecnicoForm, email: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -69495,7 +69495,7 @@ A1;Peça exemplo;10`}
                 type="text"
                 value={tecnicoForm.phone}
                 onChange={(e) => setTecnicoForm({ ...tecnicoForm, phone: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -69504,7 +69504,7 @@ A1;Peça exemplo;10`}
                 type="text"
                 value={tecnicoForm.address}
                 onChange={(e) => setTecnicoForm({ ...tecnicoForm, address: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -69512,7 +69512,7 @@ A1;Peça exemplo;10`}
               <select
                 value={tecnicoForm.type}
                 onChange={(e) => setTecnicoForm({ ...tecnicoForm, type: e.target.value as 'internal' | 'external' })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               >
                 <option value="internal">{safeT?.internal || 'Interno'}</option>
                 <option value="external">{safeT?.external || 'Externo'}</option>
@@ -69524,7 +69524,7 @@ A1;Peça exemplo;10`}
                 type="file"
                 accept="image/*"
                 onChange={handleTecnicoPhotoChange}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
               {tecnicoForm.photo && (
                 <div style={{ marginTop: '10px' }}>
@@ -69568,12 +69568,12 @@ A1;Peça exemplo;10`}
                     setSearchedEquipamento(found || null)
                   }
                 }}
-                style={{ flex: 1, padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ flex: 1, padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
 
             {searchedEquipamento ? (
-              <div style={{ padding: '20px', backgroundColor: '#141414', borderRadius: '8px', marginBottom: '20px' }}>
+              <div style={{ padding: '20px', backgroundColor: '#404040', borderRadius: '8px', marginBottom: '20px' }}>
                 <h3>{searchedEquipamento.tipoEquipamento} - {searchedEquipamento.modelo}</h3>
                 <p><strong>{safeT?.marca || 'Marca'}:</strong> {searchedEquipamento.marca}</p>
                 <p><strong>{safeT?.numeroSerie || 'Número de Série'}:</strong> {searchedEquipamento.numeroSerie}</p>
@@ -69588,7 +69588,7 @@ A1;Peça exemplo;10`}
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
                     {equipamentos.map(equipamento => (
-                      <div key={equipamento.id} style={{ padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                      <div key={equipamento.id} style={{ padding: '15px', backgroundColor: '#404040', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                         {equipamento.photo && (
                           <img src={equipamento.photo} alt={equipamento.modelo} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
                         )}
@@ -69659,7 +69659,7 @@ A1;Peça exemplo;10`}
                 value={equipamentoForm.id}
                 onChange={(e) => setEquipamentoForm({ ...equipamentoForm, id: e.target.value })}
                 disabled={!!editingEquipamento}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
 
@@ -69669,7 +69669,7 @@ A1;Peça exemplo;10`}
                 type="text"
                 value={equipamentoForm.tipoEquipamento}
                 onChange={(e) => setEquipamentoForm({ ...equipamentoForm, tipoEquipamento: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
 
@@ -69679,7 +69679,7 @@ A1;Peça exemplo;10`}
                 type="text"
                 value={equipamentoForm.modelo}
                 onChange={(e) => setEquipamentoForm({ ...equipamentoForm, modelo: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
 
@@ -69689,7 +69689,7 @@ A1;Peça exemplo;10`}
                 type="text"
                 value={equipamentoForm.marca}
                 onChange={(e) => setEquipamentoForm({ ...equipamentoForm, marca: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
 
@@ -69699,7 +69699,7 @@ A1;Peça exemplo;10`}
                 type="text"
                 value={equipamentoForm.numeroSerie}
                 onChange={(e) => setEquipamentoForm({ ...equipamentoForm, numeroSerie: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
             </div>
 
@@ -69715,7 +69715,7 @@ A1;Peça exemplo;10`}
                   setEquipamentoForm({ ...equipamentoForm, familia: novaFamilia, grupo: grupoValido ? equipamentoForm.grupo : '' })
                 }}
                 placeholder={familiasEquipamento.length ? (safeT?.selecioneOuDigiteFamilia || 'Selecione ou digite...') : (safeT?.digiteFamilia || 'Digite a família')}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
               <datalist id="datalist-familias-equipamento">
                 {familiasEquipamento.map((f, i) => <option key={i} value={f} />)}
@@ -69732,7 +69732,7 @@ A1;Peça exemplo;10`}
                 placeholder={equipamentoForm.familia
                   ? (gruposEquipamento.filter(g => g.familia === equipamentoForm.familia).length ? (safeT?.selecioneOuDigiteGrupo || 'Selecione ou digite...') : (safeT?.digiteGrupo || 'Digite o grupo'))
                   : (safeT?.selecioneFamiliaPrimeiro || 'Selecione primeiro a família')}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
               <datalist id="datalist-grupos-equipamento">
                 {(equipamentoForm.familia
@@ -69759,7 +69759,7 @@ A1;Peça exemplo;10`}
                     placeholder={(safeT as any)?.equipamentoPesoExemplo || 'Ex: 10 kg'}
                     value={equipamentoForm.peso}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, peso: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -69809,13 +69809,13 @@ A1;Peça exemplo;10`}
                           )
                           setEquipamentoForm({ ...equipamentoForm, quantidadePartes: qtd, partes: novasPartes })
                         }}
-                        style={{ width: '100%', maxWidth: '120px', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', maxWidth: '120px', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     {(equipamentoForm.partes || []).map((parte, idx) => {
                       const total = equipamentoForm.quantidadePartes || 1
                       return (
-                        <div key={idx} style={{ marginBottom: '20px', padding: '14px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                        <div key={idx} style={{ marginBottom: '20px', padding: '14px', backgroundColor: '#404040', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                           <div style={{ marginBottom: '10px', fontWeight: 600, color: '#00c853' }}>
                             {(safeT as any)?.equipamentoParte || 'Parte'} {parte.ordem}/{total}
                           </div>
@@ -69829,7 +69829,7 @@ A1;Peça exemplo;10`}
                                 novasPartes[idx] = { ...parte, tipoId, id: tipoId === 'especifico' ? (parte.id || '') : undefined }
                                 setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                               }}
-                              style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                              style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                             >
                               <option value="geral">{(safeT as any)?.equipamentoIdGeral || 'ID geral (igual ao equipamento)'}</option>
                               <option value="especifico">{(safeT as any)?.equipamentoIdEspecifico || 'ID específico'}</option>
@@ -69846,7 +69846,7 @@ A1;Peça exemplo;10`}
                                   novasPartes[idx] = { ...parte, numeroSerieFabricante: e.target.value }
                                   setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                                 }}
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                               />
                             </div>
                           )}
@@ -69862,7 +69862,7 @@ A1;Peça exemplo;10`}
                                     novasPartes[idx] = { ...parte, id: e.target.value }
                                     setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                                   }}
-                                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                                 />
                               </div>
                               <div style={{ marginBottom: '10px' }}>
@@ -69875,7 +69875,7 @@ A1;Peça exemplo;10`}
                                     novasPartes[idx] = { ...parte, numeroSerieFabricante: e.target.value }
                                     setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                                   }}
-                                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                                 />
                               </div>
                             </>
@@ -69893,7 +69893,7 @@ A1;Peça exemplo;10`}
               <select
                 value={equipamentoForm.modeloManuaisId || ''}
                 onChange={(e) => setEquipamentoForm({ ...equipamentoForm, modeloManuaisId: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               >
                 <option value="">{(safeT as any)?.equipamentoNenhumModeloManuais || '— Nenhum —'}</option>
                 {manuaisModelos.map((mod) => {
@@ -69913,7 +69913,7 @@ A1;Peça exemplo;10`}
                 type="file"
                 accept="image/*"
                 onChange={handleEquipamentoPhotoChange}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               />
               {equipamentoForm.photo && (
                 <div style={{ marginTop: '10px' }}>
@@ -70072,7 +70072,7 @@ A1;Peça exemplo;10`}
                         ...(ehDevedor
                           ? {}
                           : {
-                              backgroundColor: '#1e1e1e',
+                              backgroundColor: '#484848',
                               border: '1px solid rgba(255, 255, 255, 0.1)',
                             }),
                         padding: '8px', 
@@ -70092,7 +70092,7 @@ A1;Peça exemplo;10`}
                             borderRadius: '6px',
                             overflow: 'hidden',
                             border: '1px solid rgba(255, 255, 255, 0.2)',
-                            backgroundColor: '#141414',
+                            backgroundColor: '#404040',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center'
@@ -70548,7 +70548,7 @@ A1;Peça exemplo;10`}
               <p style={{ margin: '0 0 10px', color: '#2ecc71', fontSize: '14px', fontWeight: 'bold' }}>
                 {safeT?.relatorioResumoDivida || 'Relatório da dívida — faturas em aberto'}
               </p>
-              <div style={{ maxHeight: '220px', overflowY: 'auto', border: '1px solid rgba(255, 0, 0, 0.25)', borderRadius: '6px', padding: '8px', backgroundColor: '#141414' }}>
+              <div style={{ maxHeight: '220px', overflowY: 'auto', border: '1px solid rgba(255, 0, 0, 0.25)', borderRadius: '6px', padding: '8px', backgroundColor: '#404040' }}>
                 {modalClienteDivida.faturasPendentes.length === 0 ? (
                   <p style={{ margin: 0, color: '#888', fontSize: '13px' }}>{safeT?.semFaturasDetalheRelatorio || 'Sem detalhe de faturas (saldo calculado por outras regras).'}</p>
                 ) : (
@@ -70621,7 +70621,7 @@ A1;Peça exemplo;10`}
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
                 {fornecedores.map(fornecedor => (
-                  <div key={fornecedor.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                  <div key={fornecedor.id} style={{ backgroundColor: '#404040', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                     <p><strong>{fornecedor.nomeEmpresa}</strong></p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{fornecedor.localidade}, {fornecedor.pais}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{fornecedor.telefones}</p>
@@ -70665,12 +70665,12 @@ A1;Peça exemplo;10`}
                   placeholder={safeT?.numeroRelatorio || 'Número do Relatório'}
                   value={relatorioServicoForm.numero}
                   onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, numero: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
                 <select
                   value={relatorioServicoForm.tecnico}
                   onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, tecnico: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.selecioneTecnico || 'Selecione o técnico'}</option>
                   {tecnicos.map(tec => (
@@ -70690,7 +70690,7 @@ A1;Peça exemplo;10`}
                     }));
                     if (selectedClient) applyKmClienteAoRelatorio(selectedClient)
                   }}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
                   {clientesOrdenadosAlfabeticamente.map(cli => (
@@ -70713,21 +70713,21 @@ A1;Peça exemplo;10`}
                       numero: preverProximoNumeroRelatorio(v),
                     })
                   }}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.maquinaModelo || 'Máquina/Modelo'}
                   value={relatorioServicoForm.maquinaModelo}
                   onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, maquinaModelo: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.tipoServico || 'Tipo de Serviço'}
                   value={relatorioServicoForm.tipoServico}
                   onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, tipoServico: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={handleSaveRelatorioServico} style={{ flex: 1 }}>
@@ -70758,7 +70758,7 @@ A1;Peça exemplo;10`}
                         : undefined
                     }
                     style={{
-                      backgroundColor: fluxoPendenteFinanceiro ? 'rgba(60, 12, 12, 0.35)' : '#141414',
+                      backgroundColor: fluxoPendenteFinanceiro ? 'rgba(60, 12, 12, 0.35)' : '#404040',
                       padding: '15px',
                       borderRadius: '8px',
                       border: fluxoPendenteFinanceiro
@@ -71090,7 +71090,7 @@ A1;Peça exemplo;10`}
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginTop: '20px' }}>
                 {pecasBiblioteca.map(peca => (
-                  <div key={peca.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                  <div key={peca.id} style={{ backgroundColor: '#404040', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                     <img
                       src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
                       alt="Imagem da Peça"
@@ -71099,7 +71099,7 @@ A1;Peça exemplo;10`}
                         maxHeight: '100px',
                         objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
                         marginBottom: '10px',
-                        backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                        backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
                         borderRadius: '4px',
                       }}
                     />
@@ -71149,7 +71149,7 @@ A1;Peça exemplo;10`}
                     const searchTerm = e.target.value.toLowerCase()
                     // Filtro será aplicado na renderização
                   }}
-                  style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
               </div>
             </div>
@@ -71176,7 +71176,7 @@ A1;Peça exemplo;10`}
                         }}
                         style={{
                           padding: '15px',
-                          backgroundColor: isSelecionada ? 'rgba(0, 200, 83, 0.2)' : '#141414',
+                          backgroundColor: isSelecionada ? 'rgba(0, 200, 83, 0.2)' : '#404040',
                           border: isSelecionada ? '2px solid #00c853' : '1px solid rgba(0, 200, 83, 0.2)',
                           borderRadius: '8px',
                           cursor: 'pointer',
@@ -71192,7 +71192,7 @@ A1;Peça exemplo;10`}
                               height: '60px',
                               objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
                               borderRadius: '4px',
-                              backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                              backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
                               padding: pecaBibliotecaTemImagemPropria(peca.imagem) ? 0 : '4px',
                               boxSizing: 'border-box',
                             }}
@@ -71277,7 +71277,7 @@ A1;Peça exemplo;10`}
               width: '100%',
               maxHeight: '90vh',
               overflowY: 'auto',
-              background: 'linear-gradient(180deg, #121212 0%, #0d0d0d 100%)',
+              background: 'linear-gradient(180deg, #3a3a3a 0%, #383838 100%)',
               borderRadius: '16px',
               border: '2px solid rgba(37, 211, 102, 0.4)',
               padding: '24px',
@@ -71370,7 +71370,7 @@ A1;Peça exemplo;10`}
                 <select
                   value={agendaForm.tipo}
                   onChange={(e) => setAgendaForm({ ...agendaForm, tipo: e.target.value as 'pre-agendamento' | 'agendamento-tecnico' })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="pre-agendamento">{safeT?.preAgendamento || 'Pré-Agendamento'}</option>
                   <option value="agendamento-tecnico">{safeT?.agendamentoTecnico || 'Agendamento Técnico'}</option>
@@ -71378,7 +71378,7 @@ A1;Peça exemplo;10`}
                 <select
                   value={agendaForm.tecnico}
                   onChange={(e) => setAgendaForm({ ...agendaForm, tecnico: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.selecioneTecnico || 'Selecione o técnico'}</option>
                   {tecnicos.map(tec => (
@@ -71400,7 +71400,7 @@ A1;Peça exemplo;10`}
                       equipamento: '',
                     });
                   }}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
                   {clientesOrdenadosAlfabeticamente.map(cli => (
@@ -71412,14 +71412,14 @@ A1;Peça exemplo;10`}
                   placeholder={safeT?.data || 'Data'}
                   value={agendaForm.data}
                   onChange={(e) => setAgendaForm({ ...agendaForm, data: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="time"
                   placeholder={safeT?.hora || 'Hora'}
                   value={agendaForm.hora}
                   onChange={(e) => setAgendaForm({ ...agendaForm, hora: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
                 <select
                   value={agendaForm.status}
@@ -71429,7 +71429,7 @@ A1;Peça exemplo;10`}
                       status: e.target.value as Agendamento['status'],
                     })
                   }
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="pendente">{safeT?.pendente || 'Pendente'}</option>
                   <option value="confirmado">{safeT?.confirmado || 'Confirmado'}</option>
@@ -71437,7 +71437,7 @@ A1;Peça exemplo;10`}
                   <option value="concluido">{safeT?.concluido || 'Concluído'}</option>
                   <option value="cancelado">{safeT?.cancelado || 'Cancelado'}</option>
                 </select>
-                <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#121212', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.25)' }}>
+                <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#3a3a3a', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.25)' }}>
                   <label style={{ display: 'block', marginBottom: '4px', fontSize: '13px', color: '#00c853' }}>
                     {safeT?.duracaoEstimada || 'Duração Estimada (dias)'}
                   </label>
@@ -71445,11 +71445,11 @@ A1;Peça exemplo;10`}
                     {safeT?.agendaCalendarioDiasHint || 'Toque nos dias do calendário e confirme para definir quantos dias durará o serviço.'}
                   </p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '6px' }}>
-                    <button type="button" onClick={() => goAgendaPickerMes(-1)} style={{ padding: '4px 10px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.35)', color: '#00c853', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>‹</button>
+                    <button type="button" onClick={() => goAgendaPickerMes(-1)} style={{ padding: '4px 10px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.35)', color: '#00c853', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>‹</button>
                     <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff', textTransform: 'capitalize' }}>
                       {new Date(agendaPickerAno, agendaPickerMes, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
                     </span>
-                    <button type="button" onClick={() => goAgendaPickerMes(1)} style={{ padding: '4px 10px', backgroundColor: '#1e1e1e', border: '1px solid rgba(0, 200, 83, 0.35)', color: '#00c853', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>›</button>
+                    <button type="button" onClick={() => goAgendaPickerMes(1)} style={{ padding: '4px 10px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.35)', color: '#00c853', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>›</button>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '3px', textAlign: 'center', fontSize: '10px', color: '#888', marginBottom: '3px' }}>
                     {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((d) => (
@@ -71527,7 +71527,7 @@ A1;Peça exemplo;10`}
                       equipamento: display,
                     });
                   }}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   disabled={!agendaForm.clienteId}
                 >
                   <option value="">{!agendaForm.clienteId ? (safeT?.selecioneClientePrimeiro || 'Selecione o cliente primeiro') : (safeT?.selecioneEquipamento || 'Selecione o equipamento')}</option>
@@ -71544,7 +71544,7 @@ A1;Peça exemplo;10`}
                   value={agendaForm.observacoesTecnicas}
                   onValueChange={(v) => setAgendaForm({ ...agendaForm, observacoesTecnicas: v })}
                   rows={3}
-                  style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 ></AssistTextarea>
                 <AssistTextarea
                   placeholder={(safeT as any)?.agendaRelatorioTrabalhoExecutadoPlaceholder || 'Trabalho executado / relatório...'}
@@ -71568,7 +71568,7 @@ A1;Peça exemplo;10`}
             ) : (
               <div style={{ marginTop: '20px' }}>
                 {agendamentos.map(agendamento => (
-                  <div key={agendamento.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)', marginBottom: '10px' }}>
+                  <div key={agendamento.id} style={{ backgroundColor: '#404040', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)', marginBottom: '10px' }}>
                     <p><strong>{agendamento.cliente}</strong> - {agendamento.data} {agendamento.hora}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tecnico || 'Técnico'}: {agendamento.tecnico}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tipoAgendamento || 'Tipo'}: {agendamento.tipo}</p>
@@ -71680,7 +71680,7 @@ A1;Peça exemplo;10`}
                   padding: '12px 24px',
                   fontSize: '14px',
                   fontWeight: 'bold',
-                  backgroundColor: abaDesmontados === 'grupos' ? 'rgba(255, 165, 0, 0.3)' : '#1e1e1e',
+                  backgroundColor: abaDesmontados === 'grupos' ? 'rgba(255, 165, 0, 0.3)' : '#484848',
                   borderColor: abaDesmontados === 'grupos' ? 'rgba(255, 165, 0, 0.6)' : 'rgba(255, 165, 0, 0.3)',
                   color: abaDesmontados === 'grupos' ? '#ffaa00' : '#fff',
                   borderRadius: '8px',
@@ -71697,7 +71697,7 @@ A1;Peça exemplo;10`}
                   padding: '12px 24px',
                   fontSize: '14px',
                   fontWeight: 'bold',
-                  backgroundColor: abaDesmontados === 'pecas' ? 'rgba(255, 165, 0, 0.3)' : '#1e1e1e',
+                  backgroundColor: abaDesmontados === 'pecas' ? 'rgba(255, 165, 0, 0.3)' : '#484848',
                   borderColor: abaDesmontados === 'pecas' ? 'rgba(255, 165, 0, 0.6)' : 'rgba(255, 165, 0, 0.3)',
                   color: abaDesmontados === 'pecas' ? '#ffaa00' : '#fff',
                   borderRadius: '8px',
@@ -71721,21 +71721,21 @@ A1;Peça exemplo;10`}
                       placeholder={safeT?.numeroGrupo || 'Número do Grupo'}
                       value={grupoDesmontadoForm.numeroGrupo}
                       onChange={(e) => setGrupoDesmontadoForm({ ...grupoDesmontadoForm, numeroGrupo: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.familia || 'Família'}
                       value={grupoDesmontadoForm.familia}
                       onChange={(e) => setGrupoDesmontadoForm({ ...grupoDesmontadoForm, familia: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.idFabricante || 'ID/Número do Fabricante'}
                       value={grupoDesmontadoForm.idFabricante}
                       onChange={(e) => setGrupoDesmontadoForm({ ...grupoDesmontadoForm, idFabricante: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                     <h5 style={{ marginTop: '15px', marginBottom: '10px' }}>{safeT?.localizacao || 'Localização'}</h5>
                     <input
@@ -71743,21 +71743,21 @@ A1;Peça exemplo;10`}
                       placeholder={safeT?.rua || 'Rua'}
                       value={grupoDesmontadoForm.localizacao.rua}
                       onChange={(e) => setGrupoDesmontadoForm({ ...grupoDesmontadoForm, localizacao: { ...grupoDesmontadoForm.localizacao, rua: e.target.value } })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.numeroEspaco || 'Número/Letras do Espaço'}
                       value={grupoDesmontadoForm.localizacao.numeroEspaco}
                       onChange={(e) => setGrupoDesmontadoForm({ ...grupoDesmontadoForm, localizacao: { ...grupoDesmontadoForm.localizacao, numeroEspaco: e.target.value } })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.numeroGrupoPrateleira || 'Número do Grupo da Prateleira'}
                       value={grupoDesmontadoForm.localizacao.numeroGrupoPrateleira}
                       onChange={(e) => setGrupoDesmontadoForm({ ...grupoDesmontadoForm, localizacao: { ...grupoDesmontadoForm.localizacao, numeroGrupoPrateleira: e.target.value } })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                     <label className="file-upload-label" htmlFor="grupo-desmontado-image-upload" style={{ marginBottom: '10px' }}>
                       {safeT?.imagemGrupo || 'Imagem do Grupo'}
@@ -71792,7 +71792,7 @@ A1;Peça exemplo;10`}
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginTop: '20px' }}>
                     {gruposDesmontados.map(grupo => (
-                      <div key={grupo.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                      <div key={grupo.id} style={{ backgroundColor: '#404040', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                         {grupo.imagem && <img src={grupo.imagem} alt="Imagem do Grupo" style={{ maxWidth: '100%', maxHeight: '100px', objectFit: 'cover', marginBottom: '10px' }} />}
                         <p><strong>{grupo.numeroGrupo}</strong> ({grupo.familia})</p>
                         <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.localizacao || 'Localização'}: {grupo.localizacao.rua}, {grupo.localizacao.numeroEspaco}, {grupo.localizacao.numeroGrupoPrateleira}</p>
@@ -71824,19 +71824,19 @@ A1;Peça exemplo;10`}
                       placeholder={safeT?.numeroPeca || 'Número da Peça'}
                       value={pecaDesmontadaForm.numeroPeca}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, numeroPeca: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.familia || 'Família'}
                       value={pecaDesmontadaForm.familia}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, familia: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                     <select
                       value={pecaDesmontadaForm.grupoId}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, grupoId: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     >
                       <option value="">{safeT?.selecioneGrupo || 'Selecione um grupo'}</option>
                       {gruposDesmontados.map(grupo => (
@@ -71848,54 +71848,54 @@ A1;Peça exemplo;10`}
                       placeholder={safeT?.nome || 'Nome'}
                       value={pecaDesmontadaForm.nome}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, nome: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.codigo || 'Código'}
                       value={pecaDesmontadaForm.codigo}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, codigo: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.marca || 'Marca'}
                       value={pecaDesmontadaForm.marca}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, marca: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.modelo || 'Modelo'}
                       value={pecaDesmontadaForm.modelo}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, modelo: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.tipoEquipamento || 'Tipo de Equipamento'}
                       value={pecaDesmontadaForm.tipoEquipamento}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, tipoEquipamento: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                     <AssistTextarea
                       placeholder={safeT?.observacoes || 'Observações'}
                       value={pecaDesmontadaForm.observacoes}
                       onValueChange={(v) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, observacoes: v })}
                       rows={3}
-                      style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     ></AssistTextarea>
                     <input
                       type="number"
                       placeholder={safeT?.quantidade || 'Quantidade'}
                       value={pecaDesmontadaForm.quantidade}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, quantidade: parseInt(e.target.value) || 1 })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     />
                     <select
                       value={pecaDesmontadaForm.statusFuncional}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, statusFuncional: e.target.value as 'funciona' | 'nao-funciona' | 'nao-testado' })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                     >
                       <option value="nao-testado">{safeT?.naoTestado || 'Não Testado'}</option>
                       <option value="funciona">{safeT?.funciona || 'Funciona'}</option>
@@ -71943,7 +71943,7 @@ A1;Peça exemplo;10`}
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginTop: '20px' }}>
                     {pecasDesmontadas.map(peca => (
-                      <div key={peca.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                      <div key={peca.id} style={{ backgroundColor: '#404040', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                         {peca.imagens && peca.imagens.length > 0 && <img src={peca.imagens[0]} alt="Imagem da Peça" style={{ maxWidth: '100%', maxHeight: '100px', objectFit: 'cover', marginBottom: '10px' }} />}
                         <p><strong>{peca.nome}</strong> ({peca.numeroPeca})</p>
                         <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.familia || 'Família'}: {peca.familia}</p>
@@ -71985,7 +71985,7 @@ A1;Peça exemplo;10`}
                   border: '1px solid rgba(0, 200, 83, 0.2)',
                   borderRadius: '8px',
                   padding: '10px',
-                  background: '#141414',
+                  background: '#404040',
                 }}
               >
                 <div style={{ fontSize: '12px', color: '#7dff9e', marginBottom: '8px' }}>
@@ -72010,7 +72010,7 @@ A1;Peça exemplo;10`}
                         servicoGrupoSelecionadoId === g.id
                           ? '1px solid rgba(0, 200, 80, 0.65)'
                           : '1px solid rgba(0, 200, 83, 0.15)',
-                      background: servicoGrupoSelecionadoId === g.id ? 'rgba(18, 52, 24, 0.95)' : '#121212',
+                      background: servicoGrupoSelecionadoId === g.id ? 'rgba(18, 52, 24, 0.95)' : '#3a3a3a',
                       color: '#fff',
                       cursor: 'pointer',
                       fontSize: '13px',
@@ -72054,7 +72054,7 @@ A1;Peça exemplo;10`}
                           flex: 1,
                           minWidth: '120px',
                           padding: '6px 8px',
-                          background: '#141414',
+                          background: '#404040',
                           color: '#fff',
                           border: '1px solid rgba(0, 200, 83, 0.3)',
                           borderRadius: '4px',
@@ -72087,7 +72087,7 @@ A1;Peça exemplo;10`}
                     ''
                   }
                   onChange={(e) => setServicoForm({ ...servicoForm, grupoId: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 >
                   {ordenarServicoGrupos(servicoGrupos).map((g) => (
                     <option key={g.id} value={g.id}>
@@ -72098,7 +72098,7 @@ A1;Peça exemplo;10`}
                 <select
                   value={servicoForm.categoria}
                   onChange={(e) => setServicoForm({ ...servicoForm, categoria: e.target.value as 'servico' | 'despesa' })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="servico">{safeT?.servico || 'SERVIÇO'}</option>
                   <option value="despesa">{safeT?.despesa || 'DESPESA'}</option>
@@ -72114,7 +72114,7 @@ A1;Peça exemplo;10`}
                       flex: 1,
                       minWidth: 0,
                       padding: '8px',
-                      backgroundColor: '#141414',
+                      backgroundColor: '#404040',
                       color: '#fff',
                       border: '1px solid rgba(0, 200, 83, 0.3)',
                       borderRadius: '4px',
@@ -72126,14 +72126,14 @@ A1;Peça exemplo;10`}
                   placeholder={safeT?.nomeServico || 'Nome do Serviço/Despesa'}
                   value={servicoForm.nome}
                   onChange={(e) => setServicoForm({ ...servicoForm, nome: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
                 <AssistTextarea
                   placeholder={safeT?.descricaoServico || 'Descrição (opcional)'}
                   value={servicoForm.descricao}
                   onValueChange={(v) => setServicoForm({ ...servicoForm, descricao: v })}
                   rows={3}
-                  style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 ></AssistTextarea>
                 <input
                   type="text"
@@ -72142,12 +72142,12 @@ A1;Peça exemplo;10`}
                   placeholder={safeT?.valorServico || 'Valor (ex.: 60 ou 60,00)'}
                   value={servicoValorInput}
                   onChange={(e) => setServicoValorInput(e.target.value)}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
                 <select
                   value={servicoForm.tipoCobranca}
                   onChange={(e) => setServicoForm({ ...servicoForm, tipoCobranca: e.target.value as 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras' })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="unidade">{safeT?.tipoCobrancaUnidade || 'Por Unidade'}</option>
                   <option value="km">{safeT?.tipoCobrancaKm || 'Por KM'}</option>
@@ -72175,7 +72175,7 @@ A1;Peça exemplo;10`}
                   .map((servico) => {
                   const codExModal = servicoCodParaExibicao(servico)
                   return (
-                  <li key={servico.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)', marginBottom: '10px' }}>
+                  <li key={servico.id} style={{ backgroundColor: '#404040', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)', marginBottom: '10px' }}>
                     <p>
                       <strong>
                         {codExModal ? <>COD: {codExModal} · </> : null}
@@ -72223,7 +72223,7 @@ A1;Peça exemplo;10`}
       {/* Modal de Equipamentos do Cliente - Layout profissional com imagem */}
       {selectedClienteForEquipamento && (
         <div className="modal-overlay" onClick={() => { setSelectedClienteForEquipamento(null); setShowEquipamentoClienteForm(false); setEquipamentoClienteTemCodigoProprio(false); }}>
-          <div className="modal modal-equipamentos-cliente" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '920px', width: '96%', maxHeight: '94vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #151515 0%, #0a0a0a 100%)', borderRadius: '20px', border: '1px solid rgba(0, 200, 83, 0.2)', boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,200,83,0.06)' }}>
+          <div className="modal modal-equipamentos-cliente" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '920px', width: '96%', maxHeight: '94vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #3c3c3c 0%, #363636 100%)', borderRadius: '20px', border: '1px solid rgba(0, 200, 83, 0.2)', boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,200,83,0.06)' }}>
             {/* Cabeçalho */}
             <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(0, 200, 83, 0.12)', background: 'linear-gradient(135deg, rgba(0, 200, 83, 0.06) 0%, transparent 100%)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
@@ -72381,7 +72381,7 @@ A1;Peça exemplo;10`}
                                 onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, id: e.target.value })}
                                 placeholder="Ex.: EQ-001, REF-2024-A"
                                 autoComplete="off"
-                                style={{ width: '100%', padding: '14px 16px', backgroundColor: '#0f0f0f', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                                style={{ width: '100%', padding: '14px 16px', backgroundColor: '#363636', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
                               />
                               <p style={{ margin: '8px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.45 }}>
                                 {(safeT as any)?.equipamentoClienteIdHint ||
@@ -72391,19 +72391,19 @@ A1;Peça exemplo;10`}
                           ) : null}
                           <div>
                             <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: '500' }}>{safeT?.tipoEquipamento || 'Tipo de Equipamento'}</label>
-                            <input type="text" value={equipamentoClienteForm.tipoEquipamento} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, tipoEquipamento: e.target.value })} placeholder="Ex.: Compressor, Gerador" style={{ width: '100%', padding: '14px 16px', backgroundColor: '#0f0f0f', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+                            <input type="text" value={equipamentoClienteForm.tipoEquipamento} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, tipoEquipamento: e.target.value })} placeholder="Ex.: Compressor, Gerador" style={{ width: '100%', padding: '14px 16px', backgroundColor: '#363636', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
                           </div>
                           <div>
                             <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: '500' }}>{safeT?.modelo || 'Modelo'}</label>
-                            <input type="text" value={equipamentoClienteForm.modelo} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, modelo: e.target.value })} placeholder="Ex.: XYZ-2000" style={{ width: '100%', padding: '14px 16px', backgroundColor: '#0f0f0f', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+                            <input type="text" value={equipamentoClienteForm.modelo} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, modelo: e.target.value })} placeholder="Ex.: XYZ-2000" style={{ width: '100%', padding: '14px 16px', backgroundColor: '#363636', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
                           </div>
                           <div>
                             <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: '500' }}>{safeT?.marca || 'Marca'}</label>
-                            <input type="text" value={equipamentoClienteForm.marca} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, marca: e.target.value })} placeholder="Ex.: Marca ABC" style={{ width: '100%', padding: '14px 16px', backgroundColor: '#0f0f0f', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+                            <input type="text" value={equipamentoClienteForm.marca} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, marca: e.target.value })} placeholder="Ex.: Marca ABC" style={{ width: '100%', padding: '14px 16px', backgroundColor: '#363636', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
                           </div>
                           <div>
                             <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: '500' }}>{safeT?.numeroSerie || 'Número de Série'} <span style={{ color: 'rgba(255, 100, 100, 0.9)', fontWeight: '600' }}>*</span></label>
-                            <input type="text" value={equipamentoClienteForm.numeroSerie} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, numeroSerie: e.target.value })} placeholder="Ex.: SN123456789" style={{ width: '100%', padding: '14px 16px', backgroundColor: '#0f0f0f', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+                            <input type="text" value={equipamentoClienteForm.numeroSerie} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, numeroSerie: e.target.value })} placeholder="Ex.: SN123456789" style={{ width: '100%', padding: '14px 16px', backgroundColor: '#363636', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
                           </div>
                         </div>
                       </div>
@@ -72621,8 +72621,8 @@ A1;Peça exemplo;10`}
             {showRelatorioForm && (
               <div className="modal-relatorios-equipamento-form" style={{ border: '1px solid rgba(0, 200, 83, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
                 <h4>{editingRelatorio ? (safeT?.editarRelatorio || 'Editar Relatório') : (safeT?.novoRelatorio || 'Novo Relatório')}</h4>
-                <input type="text" placeholder={safeT?.tituloRelatorio || 'Título'} value={relatorioForm.titulo} onChange={(e) => setRelatorioForm({ ...relatorioForm, titulo: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
-                <AssistTextarea placeholder={safeT?.conteudoRelatorio || 'Conteúdo'} value={relatorioForm.conteudo} onValueChange={(v) => setRelatorioForm({ ...relatorioForm, conteudo: v })} rows={5} style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}></AssistTextarea>
+                <input type="text" placeholder={safeT?.tituloRelatorio || 'Título'} value={relatorioForm.titulo} onChange={(e) => setRelatorioForm({ ...relatorioForm, titulo: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                <AssistTextarea placeholder={safeT?.conteudoRelatorio || 'Conteúdo'} value={relatorioForm.conteudo} onValueChange={(v) => setRelatorioForm({ ...relatorioForm, conteudo: v })} rows={5} style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}></AssistTextarea>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={handleSaveRelatorio} style={{ flex: 1 }}>{safeT?.save || 'Salvar'}</button>
                   <button className="btn-primary" onClick={() => { setShowRelatorioForm(false); setEditingRelatorio(null); }} style={{ flex: 1 }}>{safeT?.cancel || 'Cancelar'}</button>
@@ -72632,7 +72632,7 @@ A1;Peça exemplo;10`}
             {selectedEquipamentoForRelatorio.equipamento.relatorios && selectedEquipamentoForRelatorio.equipamento.relatorios.length > 0 ? (
               <div style={{ marginTop: '20px' }}>
                 {selectedEquipamentoForRelatorio.equipamento.relatorios.map(relatorio => (
-                  <div key={relatorio.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)', marginBottom: '10px' }}>
+                  <div key={relatorio.id} style={{ backgroundColor: '#404040', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)', marginBottom: '10px' }}>
                     <p><strong>{relatorio.titulo}</strong></p>
                     <p style={{ fontSize: '14px', opacity: 0.8, whiteSpace: 'pre-wrap' }}>{relatorio.conteudo}</p>
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
@@ -72660,8 +72660,8 @@ A1;Peça exemplo;10`}
             {showFaturaFornecedorForm && (
               <div style={{ border: '1px solid rgba(0, 200, 83, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
                 <h4>{editingFaturaFornecedor ? (safeT?.editarFatura || 'Editar Fatura') : (safeT?.adicionarFatura || 'Adicionar Fatura')}</h4>
-                <input type="text" placeholder={safeT?.numeroFatura || 'Número da Fatura'} value={faturaFornecedorForm.numeroFatura} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, numeroFatura: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
-                <input type="month" placeholder={safeT?.mes || 'Mês'} value={faturaFornecedorForm.mes} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, mes: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                <input type="text" placeholder={safeT?.numeroFatura || 'Número da Fatura'} value={faturaFornecedorForm.numeroFatura} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, numeroFatura: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                <input type="month" placeholder={safeT?.mes || 'Mês'} value={faturaFornecedorForm.mes} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, mes: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
                 <div style={{ marginBottom: '12px' }}>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.92)' }}>
                     {(safeT as any)?.faturaFornecedorValorTitulo || 'Valor total da fatura (€)'}
@@ -72693,7 +72693,7 @@ A1;Peça exemplo;10`}
                     style={{
                       width: '100%',
                       padding: '10px 10px',
-                      backgroundColor: '#141414',
+                      backgroundColor: '#404040',
                       color: '#fff',
                       border: '1px solid rgba(0, 200, 83, 0.35)',
                       borderRadius: '6px',
@@ -72737,7 +72737,7 @@ A1;Peça exemplo;10`}
                       const forn = fornecedores.find(x => x.id === id)
                       setFaturaFornecedorForm({ ...faturaFornecedorForm, clienteId: id, clienteNome: forn?.nomeEmpresa || '' })
                     }}
-                    style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   >
                     <option value="">{(safeT as any)?.faturaFornecedorSelecioneFornecedor || 'Selecione o fornecedor'}</option>
                     {fornecedores.map(f => (
@@ -72752,14 +72752,14 @@ A1;Peça exemplo;10`}
                       const cli = clientes.find(c => c.id === id)
                       setFaturaFornecedorForm({ ...faturaFornecedorForm, clienteId: id, clienteNome: cli?.nomeEmpresa || '' })
                     }}
-                    style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   >
                     <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
                     {clientesOrdenadosAlfabeticamente.map(cli => <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>)}
                   </select>
                 )}
-                <input type="date" placeholder={safeT?.dataVencimento || 'Data de Vencimento'} value={faturaFornecedorForm.dataVencimento} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, dataVencimento: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
-                <select value={faturaFornecedorForm.status} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, status: e.target.value as 'pendente' | 'paga' | 'vencida' })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}>
+                <input type="date" placeholder={safeT?.dataVencimento || 'Data de Vencimento'} value={faturaFornecedorForm.dataVencimento} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, dataVencimento: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                <select value={faturaFornecedorForm.status} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, status: e.target.value as 'pendente' | 'paga' | 'vencida' })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}>
                   <option value="pendente">{safeT?.pendente || 'Pendente'}</option>
                   <option value="paga">{safeT?.paga || 'Paga'}</option>
                   <option value="vencida">{safeT?.vencida || 'Vencida'}</option>
@@ -72787,7 +72787,7 @@ A1;Peça exemplo;10`}
                     </div>
                   )
                 })()}
-                <AssistTextarea placeholder={safeT?.observacoes || 'Observações'} value={faturaFornecedorForm.observacoes} onValueChange={(v) => setFaturaFornecedorForm({ ...faturaFornecedorForm, observacoes: v })} rows={3} style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}></AssistTextarea>
+                <AssistTextarea placeholder={safeT?.observacoes || 'Observações'} value={faturaFornecedorForm.observacoes} onValueChange={(v) => setFaturaFornecedorForm({ ...faturaFornecedorForm, observacoes: v })} rows={3} style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}></AssistTextarea>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={() => handleSaveFaturaFornecedor()} style={{ flex: 1 }}>{safeT?.save || 'Salvar'}</button>
                   <button className="btn-primary" onClick={() => { setShowFaturaFornecedorForm(false); setEditingFaturaFornecedor(null); }} style={{ flex: 1 }}>{safeT?.cancel || 'Cancelar'}</button>
@@ -72822,7 +72822,7 @@ A1;Peça exemplo;10`}
                     key={fatura.id}
                     className="fatura-fornecedor-lista-card"
                     style={{
-                      backgroundColor: '#141414',
+                      backgroundColor: '#404040',
                       padding: '18px 16px',
                       borderRadius: '10px',
                       border: borderFf,
@@ -72901,7 +72901,7 @@ A1;Peça exemplo;10`}
           <div
             className="modal"
             onClick={e => e.stopPropagation()}
-            style={{ maxWidth: '640px', width: '100%', maxHeight: '92vh', overflowY: 'auto', backgroundColor: '#121212', border: '1px solid rgba(0, 200, 83, 0.25)', borderRadius: '10px', padding: '22px' }}
+            style={{ maxWidth: '640px', width: '100%', maxHeight: '92vh', overflowY: 'auto', backgroundColor: '#3a3a3a', border: '1px solid rgba(0, 200, 83, 0.25)', borderRadius: '10px', padding: '22px' }}
           >
             <h2 style={{ marginTop: 0, color: '#00c853', fontSize: '20px' }}>
               {editingFatura ? ((safeT as any)?.faturaModalTituloEditar || 'Editar fatura de peças') : ((safeT as any)?.faturaModalTituloNova || 'Nova fatura de peças')}
@@ -72911,7 +72911,7 @@ A1;Peça exemplo;10`}
             </p>
 
             <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{safeT?.numeroFatura || 'Número da fatura'}</label>
-            <input type="text" value={faturaForm.numeroFatura} onChange={e => setFaturaForm({ ...faturaForm, numeroFatura: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+            <input type="text" value={faturaForm.numeroFatura} onChange={e => setFaturaForm({ ...faturaForm, numeroFatura: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
 
             <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{safeT?.selecioneCliente || 'Cliente'} *</label>
             <select
@@ -72930,7 +72930,7 @@ A1;Peça exemplo;10`}
                   return next
                 })
               }}
-              style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+              style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
             >
               <option value="">{(safeT as any)?.faturaSelecioneCliente || '— Selecione o cliente —'}</option>
               {clientesOrdenadosAlfabeticamente.map(cli => (
@@ -72946,7 +72946,7 @@ A1;Peça exemplo;10`}
                 const os = ordensServico.find(o => o.id === id)
                 setFaturaForm({ ...faturaForm, ordemServicoId: id, numeroOS: os?.numeroOS || '' })
               }}
-              style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+              style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
             >
               <option value="">{(safeT as any)?.faturaSemOS || 'Nenhuma (só cliente)'}</option>
               {ordensServico.filter(os => !faturaForm.clienteId || os.clienteId === faturaForm.clienteId).map(os => (
@@ -72957,22 +72957,22 @@ A1;Peça exemplo;10`}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
                 <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{safeT?.dataEmissao || 'Data emissão'}</label>
-                <input type="date" value={faturaForm.dataEmissao} onChange={e => setFaturaForm({ ...faturaForm, dataEmissao: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '4px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                <input type="date" value={faturaForm.dataEmissao} onChange={e => setFaturaForm({ ...faturaForm, dataEmissao: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '4px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
               </div>
               <div>
                 <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{safeT?.dataVencimento || 'Data vencimento'}</label>
-                <input type="date" value={faturaForm.dataVencimento} onChange={e => setFaturaForm({ ...faturaForm, dataVencimento: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '4px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                <input type="date" value={faturaForm.dataVencimento} onChange={e => setFaturaForm({ ...faturaForm, dataVencimento: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '4px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
               <div>
                 <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{safeT?.IVA || 'IVA'} (%)</label>
-                <input type="number" min={0} max={100} step={0.5} value={faturaForm.taxaIVA} onChange={e => setFaturaForm({ ...faturaForm, taxaIVA: parseFloat(e.target.value) || 0 })} style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+                <input type="number" min={0} max={100} step={0.5} value={faturaForm.taxaIVA} onChange={e => setFaturaForm({ ...faturaForm, taxaIVA: parseFloat(e.target.value) || 0 })} style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
               </div>
               <div>
                 <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{safeT?.status || 'Estado'}</label>
-                <select value={faturaForm.status} onChange={e => setFaturaForm({ ...faturaForm, status: e.target.value as 'pendente' | 'paga' | 'vencida' | 'cancelada' })} style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}>
+                <select value={faturaForm.status} onChange={e => setFaturaForm({ ...faturaForm, status: e.target.value as 'pendente' | 'paga' | 'vencida' | 'cancelada' })} style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}>
                   <option value="pendente">{safeT?.pendente || 'Pendente'}</option>
                   <option value="paga">{safeT?.paga || 'Paga'}</option>
                   <option value="vencida">{safeT?.vencida || 'Vencida'}</option>
@@ -73069,7 +73069,7 @@ A1;Peça exemplo;10`}
             </div>
 
             <label style={{ color: '#aaa', fontSize: '12px', display: 'block', marginTop: '14px' }}>{(safeT as any)?.faturaValorManualSemIVA || 'Valor sem IVA (use se não preencher linhas abaixo)'}</label>
-            <input type="text" inputMode="decimal" placeholder="0,00" value={faturaForm.valorManualSemIVA} onChange={e => setFaturaForm({ ...faturaForm, valorManualSemIVA: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+            <input type="text" inputMode="decimal" placeholder="0,00" value={faturaForm.valorManualSemIVA} onChange={e => setFaturaForm({ ...faturaForm, valorManualSemIVA: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
 
             <div style={{ marginTop: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -73092,24 +73092,24 @@ A1;Peça exemplo;10`}
                     const next = [...faturaForm.itens]
                     next[idx] = { ...next[idx], descricao: e.target.value }
                     setFaturaForm({ ...faturaForm, itens: next })
-                  }} style={{ padding: '6px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.25)', borderRadius: '4px', fontSize: '12px' }} />
+                  }} style={{ padding: '6px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.25)', borderRadius: '4px', fontSize: '12px' }} />
                   <input type="number" min={0} step={1} placeholder={(safeT as any)?.faturaQtd || 'Qtd'} value={item.quantidade || ''} onChange={e => {
                     const next = [...faturaForm.itens]
                     next[idx] = { ...next[idx], quantidade: parseFloat(e.target.value) || 0 }
                     setFaturaForm({ ...faturaForm, itens: next })
-                  }} style={{ padding: '6px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.25)', borderRadius: '4px', fontSize: '12px' }} />
+                  }} style={{ padding: '6px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.25)', borderRadius: '4px', fontSize: '12px' }} />
                   <input type="number" min={0} step={0.01} placeholder={(safeT as any)?.faturaPrecoUnit || 'Preço'} value={item.precoUnitario || ''} onChange={e => {
                     const next = [...faturaForm.itens]
                     next[idx] = { ...next[idx], precoUnitario: parseFloat(e.target.value) || 0 }
                     setFaturaForm({ ...faturaForm, itens: next })
-                  }} style={{ padding: '6px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.25)', borderRadius: '4px', fontSize: '12px' }} />
+                  }} style={{ padding: '6px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.25)', borderRadius: '4px', fontSize: '12px' }} />
                   <button type="button" className="btn-danger" style={{ padding: '6px', fontSize: '11px' }} onClick={() => setFaturaForm({ ...faturaForm, itens: faturaForm.itens.filter((_, i) => i !== idx) })} title={(safeT as any)?.faturaRemoverLinha || 'Remover'}>×</button>
                 </div>
               ))}
             </div>
 
             <label style={{ color: '#aaa', fontSize: '12px', display: 'block', marginTop: '12px' }}>{safeT?.observacoes || 'Observações'}</label>
-            <AssistTextarea value={faturaForm.observacoes} onValueChange={(v) => setFaturaForm({ ...faturaForm, observacoes: v })} rows={3} style={{ width: '100%', padding: '10px', marginBottom: '16px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
+            <AssistTextarea value={faturaForm.observacoes} onValueChange={(v) => setFaturaForm({ ...faturaForm, observacoes: v })} rows={3} style={{ width: '100%', padding: '10px', marginBottom: '16px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <button type="button" className="btn-primary" onClick={handleSaveFatura} style={{ flex: 1, padding: '12px', fontWeight: '600' }}>{safeT?.save || 'Guardar'}</button>
@@ -73141,19 +73141,19 @@ A1;Peça exemplo;10`}
                 
                 return (
                   <>
-                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '2px solid #ffffff' }}>
+                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '2px solid #ffffff' }}>
                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', marginBottom: '5px' }}>{semFaturas}</div>
                       <div style={{ fontSize: '12px', opacity: 0.8 }}>{safeT?.fornecedoresSemFaturas || 'Fornecedores sem Faturas'}</div>
                     </div>
-                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '2px solid #ffd700' }}>
+                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '2px solid #ffd700' }}>
                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffd700', marginBottom: '5px' }}>{faturasPendentes.length}</div>
                       <div style={{ fontSize: '12px', opacity: 0.8 }}>{safeT?.faturasAPagar || 'Faturas a Pagar'}</div>
                     </div>
-                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '2px solid #ff0000' }}>
+                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '2px solid #ff0000' }}>
                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff0000', marginBottom: '5px' }}>{faturasVencidas.length}</div>
                       <div style={{ fontSize: '12px', opacity: 0.8 }}>{safeT?.faturasVencidas || 'Faturas Vencidas'}</div>
                     </div>
-                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '2px solid #00c853' }}>
+                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '2px solid #00c853' }}>
                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#00c853', marginBottom: '5px' }}>{faturasPagas.length}</div>
                       <div style={{ fontSize: '12px', opacity: 0.8 }}>{safeT?.faturasPagas || 'Faturas Pagas'}</div>
                     </div>
@@ -73171,7 +73171,7 @@ A1;Peça exemplo;10`}
                 hoje.setHours(0, 0, 0, 0)
                 
                 return (
-                  <div key={fornecedor.id} style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                  <div key={fornecedor.id} style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#404040', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                     <h3 style={{ marginBottom: '15px', color: '#00c853' }}>{fornecedor.nomeEmpresa}</h3>
                     
                     {/* Agrupar faturas por cliente */}
@@ -73191,7 +73191,7 @@ A1;Peça exemplo;10`}
                         const faturasPagas = faturas.filter(f => f.status === 'paga')
                         
                         return (
-                          <div key={clienteId} style={{ marginBottom: '20px', padding: '12px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+                          <div key={clienteId} style={{ marginBottom: '20px', padding: '12px', backgroundColor: '#484848', borderRadius: '6px' }}>
                             <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#00c853' }}>Cliente: {clienteNome}</h4>
                             
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '15px' }}>
@@ -73252,7 +73252,7 @@ A1;Peça exemplo;10`}
                                   <div key={fatura.id} style={{ 
                                     padding: '14px 14px', 
                                     marginBottom: '10px', 
-                                    backgroundColor: '#141414', 
+                                    backgroundColor: '#404040', 
                                     borderRadius: '8px',
                                     borderLeft: `4px solid ${statusColor}`,
                                     minWidth: 0,
@@ -73336,7 +73336,7 @@ A1;Peça exemplo;10`}
                 className="ns-lang-select"
                 value={translatorFrom} 
                 onChange={(e) => setTranslatorFrom(e.target.value)}
-                style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               >
                 {getLanguages(safeT).map(lang => (
                   <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -73352,7 +73352,7 @@ A1;Peça exemplo;10`}
                 className="ns-lang-select"
                 value={translatorTo} 
                 onChange={(e) => setTranslatorTo(e.target.value)}
-                style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
               >
                 {getLanguages(safeT).map(lang => (
                   <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -73369,7 +73369,7 @@ A1;Peça exemplo;10`}
                 onValueChange={setTranslatorText}
                 placeholder={safeT?.enterTextToTranslate || 'Digite o texto que deseja traduzir...'}
                 rows={6}
-                style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', resize: 'vertical' }}
+                style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', resize: 'vertical' }}
               />
             </div>
 
@@ -73400,7 +73400,7 @@ A1;Peça exemplo;10`}
                   value={translatedText || quickTranslateResult}
                   onValueChange={() => {}}
                   rows={6}
-                  style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#00c853', border: '1px solid rgba(0, 200, 83, 0.5)', borderRadius: '4px', resize: 'vertical' }}
+                  style={{ width: '100%', padding: '10px', backgroundColor: '#404040', color: '#00c853', border: '1px solid rgba(0, 200, 83, 0.5)', borderRadius: '4px', resize: 'vertical' }}
                 />
                 <button 
                   className="btn-primary" 
@@ -73446,7 +73446,7 @@ A1;Peça exemplo;10`}
           zIndex: 10000
         }}>
           <div style={{
-            backgroundColor: '#141414',
+            backgroundColor: '#404040',
             padding: '30px',
             borderRadius: '8px',
             maxWidth: '800px',
@@ -73459,7 +73459,7 @@ A1;Peça exemplo;10`}
               {safeT?.gerarPedidoOrcamento || '📋 Gerar Pedido de Orçamento'}
             </h2>
             
-            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '6px' }}>
+            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
               <h3 style={{ marginBottom: '15px', color: '#00c853' }}>
                 {safeT?.cliente || 'Cliente'}: {relatorioServicoForm.cliente}
               </h3>
@@ -73478,9 +73478,9 @@ A1;Peça exemplo;10`}
               <h3 style={{ marginBottom: '15px', color: '#00c853' }}>
                 {safeT?.pecasSubstituicao || 'Peças que deverão ser substituídas'}
               </h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#1e1e1e', borderRadius: '6px', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#484848', borderRadius: '6px', overflow: 'hidden' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#141414' }}>
+                  <tr style={{ backgroundColor: '#404040' }}>
                     <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>
                       {safeT?.descricaoItem || 'Descrição'}
                     </th>
@@ -73619,7 +73619,7 @@ A1;Peça exemplo;10`}
               maxWidth: '1200px',
               maxHeight: '90vh',
               overflowY: 'auto',
-              backgroundColor: '#141414',
+              backgroundColor: '#404040',
               minWidth: 0,
               width: 'min(100%, 1200px)',
               ...(relatorioServicoFluxoFinanceiroPendente(
@@ -73649,7 +73649,7 @@ A1;Peça exemplo;10`}
             </div>
 
             {/* Informações Principais */}
-            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)', minWidth: 0 }}>
+            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)', minWidth: 0 }}>
               <h3 style={{ color: '#00c853', marginBottom: '15px', fontSize: '16px' }}>
                 {safeT?.dadosClienteEquipamento || 'Dados do Cliente e Equipamento'}
               </h3>
@@ -73754,7 +73754,7 @@ A1;Peça exemplo;10`}
 
             {/* Dias de Trabalho */}
             {viewingRelatorioServico.diasTrabalho && viewingRelatorioServico.diasTrabalho.length > 0 && (
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                 <h3 style={{ color: 'rgba(0, 200, 83, 0.9)', marginBottom: '15px', fontSize: '16px' }}>
                   {safeT?.controleHorasDeslocamentos || 'Controle de Horas e Deslocamentos'}
                 </h3>
@@ -73813,7 +73813,7 @@ A1;Peça exemplo;10`}
                                 <td
                                   colSpan={12}
                                   className="relatorio-dia-descricao-cell"
-                                  style={{ padding: '10px', border: '1px solid rgba(0, 200, 83, 0.2)', color: '#ffffff', backgroundColor: '#141414', fontSize: '11px' }}
+                                  style={{ padding: '10px', border: '1px solid rgba(0, 200, 83, 0.2)', color: '#ffffff', backgroundColor: '#404040', fontSize: '11px' }}
                                 >
                                   <div style={{ display: 'flex', alignItems: 'start', gap: '8px', minWidth: 0 }}>
                                     <span style={{ fontSize: '14px', flexShrink: 0 }}>📝</span>
@@ -73857,27 +73857,27 @@ A1;Peça exemplo;10`}
                     >
                       <h3 className="relatorio-resumo-cobranca-titulo">{safeT?.resumoHorasDeslocamentos?.toUpperCase() || 'RESUMO DE HORAS, DESLOCAMENTOS E DIÁRIAS'}</h3>
                       <div className="relatorio-servico-resumo-totais-grid">
-                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
+                        <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
                           <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasTrabalho || 'Horas de Trabalho'}</p>
                           <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{totais.horasTrabalho}h</p>
                         </div>
-                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
+                        <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
                           <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.kmsPercorridos || 'Km\'s Percorridos'}</p>
                           <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{totais.kmsPercorridos} km</p>
                         </div>
-                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
+                        <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
                           <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasViagem || 'Horas de Viagem'}</p>
                           <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{totais.horasViagem}h</p>
                         </div>
-                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
+                        <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
                           <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
                           <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{diasTrabalhoRelatorioOrdenados(viewingRelatorioServico).length}</p>
                         </div>
-                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.3)', textAlign: 'center' }}>
+                        <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.3)', textAlign: 'center' }}>
                           <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>
                           <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{totais.horasViagemIda}</p>
                         </div>
-                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.3)', textAlign: 'center' }}>
+                        <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.3)', textAlign: 'center' }}>
                           <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemRetorno || 'Horas de Viagem de Retorno'}</p>
                           <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{totais.horasViagemRetorno}</p>
                         </div>
@@ -73890,13 +73890,13 @@ A1;Peça exemplo;10`}
 
             {/* Peças de Substituição */}
             {viewingRelatorioServico.pecasSubstituicao && viewingRelatorioServico.pecasSubstituicao.length > 0 && (
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                 <h3 style={{ color: '#00c853', marginBottom: '15px', fontSize: '16px' }}>
                   {safeT?.pecasSubstituicao || 'Peças de Substituição'}
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
                   {viewingRelatorioServico.pecasSubstituicao.map((peca, index) => (
-                    <div key={peca.id || index} style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+                    <div key={peca.id || index} style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                       <img
                         src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
                         alt={peca.descricao}
@@ -73906,7 +73906,7 @@ A1;Peça exemplo;10`}
                           objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
                           borderRadius: '4px',
                           marginBottom: '8px',
-                          backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                          backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
                         }}
                       />
                       <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>{peca.descricao}</p>
@@ -73920,7 +73920,7 @@ A1;Peça exemplo;10`}
 
             {/* Observações e Pontos Abertos */}
             {(viewingRelatorioServico.observacoes || viewingRelatorioServico.pontosAberto) && (
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                 {viewingRelatorioServico.observacoes && (
                   <div style={{ marginBottom: viewingRelatorioServico.pontosAberto ? '15px' : '0' }}>
                     <h3 style={{ color: '#00c853', marginBottom: '10px', fontSize: '14px' }}>
@@ -73941,7 +73941,7 @@ A1;Peça exemplo;10`}
             )}
 
             {/* Status do Serviço */}
-            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
               <h3 style={{ color: '#00c853', marginBottom: '15px', fontSize: '16px' }}>
                 {safeT?.statusServico || 'Status do Serviço'}
               </h3>
@@ -74083,7 +74083,7 @@ A1;Peça exemplo;10`}
                       key={pedido.id}
                       style={{
                         padding: '20px',
-                        backgroundColor: '#1e1e1e',
+                        backgroundColor: '#484848',
                         borderRadius: '12px',
                         border: `3px solid ${statusColor}`,
                         boxShadow: `0 0 15px ${statusColor}40`
@@ -74140,7 +74140,7 @@ A1;Peça exemplo;10`}
                       </div>
 
                       {/* Lista de Peças */}
-                      <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#141414', borderRadius: '8px' }}>
+                      <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#404040', borderRadius: '8px' }}>
                         <h4 style={{ color: '#00c853', marginBottom: '15px', fontSize: '16px' }}>
                           {safeT?.pecas || 'Peças'}
                         </h4>
@@ -74163,7 +74163,7 @@ A1;Peça exemplo;10`}
                                 key={item.id || index}
                                 style={{
                                   padding: '12px',
-                                  backgroundColor: '#1e1e1e',
+                                  backgroundColor: '#484848',
                                   borderRadius: '6px',
                                   border: `2px solid ${itemStatusColor}`,
                                   boxShadow: `0 0 8px ${itemStatusColor}40`,
@@ -74186,7 +74186,7 @@ A1;Peça exemplo;10`}
                                         objectFit: pecaBibliotecaTemImagemPropria(item.imagem) ? 'cover' : 'contain',
                                         borderRadius: '4px',
                                         border: '1px solid rgba(0, 200, 83, 0.3)',
-                                        backgroundColor: pecaBibliotecaTemImagemPropria(item.imagem) ? undefined : '#0f0f0f',
+                                        backgroundColor: pecaBibliotecaTemImagemPropria(item.imagem) ? undefined : '#363636',
                                         flexShrink: 0,
                                       }}
                                     />
@@ -74242,7 +74242,7 @@ A1;Peça exemplo;10`}
                                     style={{
                                       width: '100%',
                                       padding: '6px 8px',
-                                      backgroundColor: '#141414',
+                                      backgroundColor: '#404040',
                                       border: '1px solid #00c853',
                                       borderRadius: '4px',
                                       color: '#fff',

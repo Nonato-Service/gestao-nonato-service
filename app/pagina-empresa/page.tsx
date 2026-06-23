@@ -8,7 +8,7 @@ export default function PaginaEmpresa() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#121212',
+        background: '#3a3a3a',
         color: '#fff',
         padding: '24px 20px 48px',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -59,7 +59,7 @@ export default function PaginaEmpresa() {
         {/* Blocos de serviços */}
         <section
           style={{
-            background: '#121212',
+            background: '#3a3a3a',
             border: '1px solid rgba(0, 200, 83, 0.25)',
             borderRadius: '12px',
             padding: '20px 24px',
@@ -76,7 +76,7 @@ export default function PaginaEmpresa() {
 
         <section
           style={{
-            background: '#121212',
+            background: '#3a3a3a',
             border: '1px solid rgba(0, 200, 83, 0.25)',
             borderRadius: '12px',
             padding: '20px 24px',
@@ -93,7 +93,7 @@ export default function PaginaEmpresa() {
 
         <section
           style={{
-            background: '#121212',
+            background: '#3a3a3a',
             border: '1px solid rgba(0, 200, 83, 0.25)',
             borderRadius: '12px',
             padding: '20px 24px',
@@ -111,7 +111,7 @@ export default function PaginaEmpresa() {
         {/* Visita a trabalhos executados */}
         <section
           style={{
-            background: 'linear-gradient(135deg, #121212 0%, #0f1a0f 100%)',
+            background: 'linear-gradient(135deg, #3a3a3a 0%, #0f1a0f 100%)',
             border: '2px solid rgba(0, 200, 83, 0.4)',
             borderRadius: '12px',
             padding: '24px 24px',

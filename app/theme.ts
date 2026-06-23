@@ -1,13 +1,13 @@
 /**
  * Tokens espelhados em `globals.css` (:root).
- * Paleta: fundo #121212, cartões #1e1e1e, verde #00c853, azul #2196f3.
+ * Paleta: fundo cinza escuro #3a3a3a, cartões #454545, verde #00c853, azul #2196f3.
  */
 export const theme = {
-  bgBody: '#121212',
-  bgSurface: '#1e1e1e',
-  container: '#1e1e1e',
-  inputBg: '#1e1e1e',
-  borderSubtle: '#2c2c2c',
+  bgBody: '#3a3a3a',
+  bgSurface: '#454545',
+  container: '#454545',
+  inputBg: '#4c4c4c',
+  borderSubtle: '#5a5a5a',
   borderAccentSoft: 'rgba(0, 200, 83, 0.35)',
   accentPrimary: '#00c853',
   accentPrimaryStrong: '#2ecc71',

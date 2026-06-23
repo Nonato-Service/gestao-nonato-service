@@ -235,7 +235,7 @@ export function InstallPromptProvider({ children }: { children: ReactNode }) {
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: '#121212',
+                background: '#3a3a3a',
                 borderRadius: 16,
                 border: '2px solid rgba(0, 200, 83, 0.5)',
                 padding: 24,

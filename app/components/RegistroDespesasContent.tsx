@@ -370,7 +370,7 @@ export function RegistroDespesasContent({
               style={{
                 width: '100%',
                 padding: '8px',
-                backgroundColor: '#1e1e1e',
+                backgroundColor: '#484848',
                 color: '#fff',
                 border: '1px solid rgba(251, 191, 36, 0.35)',
                 borderRadius: '6px'
@@ -392,7 +392,7 @@ export function RegistroDespesasContent({
               style={{
                 width: '100%',
                 padding: '8px',
-                backgroundColor: '#1e1e1e',
+                backgroundColor: '#484848',
                 color: '#fff',
                 border: '1px solid rgba(251, 191, 36, 0.35)',
                 borderRadius: '6px',
@@ -440,14 +440,14 @@ export function RegistroDespesasContent({
       </div>
 
       {!docAtual ? (
-        <div style={{ backgroundColor: '#1e1e1e', borderRadius: '8px', padding: '24px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+        <div style={{ backgroundColor: '#484848', borderRadius: '8px', padding: '24px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
           <h3 style={{ marginTop: 0, color: '#00c853' }}>{safeT?.cliente || 'Cliente'} *</h3>
           <input
             type="text"
             placeholder={safeT?.buscarCliente || 'Buscar cliente...'}
             value={buscaCliente}
             onChange={(e) => setBuscaCliente(e.target.value)}
-            style={{ width: '100%', padding: '10px', marginBottom: '12px', backgroundColor: '#121212', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+            style={{ width: '100%', padding: '10px', marginBottom: '12px', backgroundColor: '#3a3a3a', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
           />
           <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '20px' }}>
             {clientesFiltrados.map(c => (
@@ -459,7 +459,7 @@ export function RegistroDespesasContent({
                   marginBottom: '4px',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  backgroundColor: clienteSelecionado?.id === c.id ? 'rgba(0, 200, 83, 0.2)' : '#121212',
+                  backgroundColor: clienteSelecionado?.id === c.id ? 'rgba(0, 200, 83, 0.2)' : '#3a3a3a',
                   border: clienteSelecionado?.id === c.id ? '2px solid #00c853' : '1px solid #444'
                 }}
               >
@@ -474,7 +474,7 @@ export function RegistroDespesasContent({
             placeholder={safeT?.buscarRelatorio || 'Buscar relatório...'}
             value={buscaRelatorio}
             onChange={(e) => setBuscaRelatorio(e.target.value)}
-            style={{ width: '100%', padding: '10px', marginBottom: '12px', backgroundColor: '#121212', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+            style={{ width: '100%', padding: '10px', marginBottom: '12px', backgroundColor: '#3a3a3a', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
           />
           <div style={{ maxHeight: '150px', overflowY: 'auto', marginBottom: '20px' }}>
             <div
@@ -484,7 +484,7 @@ export function RegistroDespesasContent({
                 marginBottom: '4px',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                backgroundColor: !relatorioSelecionado ? 'rgba(0, 200, 83, 0.2)' : '#121212',
+                backgroundColor: !relatorioSelecionado ? 'rgba(0, 200, 83, 0.2)' : '#3a3a3a',
                 border: !relatorioSelecionado ? '2px solid #00c853' : '1px solid #444'
               }}
             >
@@ -499,7 +499,7 @@ export function RegistroDespesasContent({
                   marginBottom: '4px',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  backgroundColor: relatorioSelecionado?.id === r.id ? 'rgba(0, 200, 83, 0.2)' : '#121212',
+                  backgroundColor: relatorioSelecionado?.id === r.id ? 'rgba(0, 200, 83, 0.2)' : '#3a3a3a',
                   border: relatorioSelecionado?.id === r.id ? '2px solid #00c853' : '1px solid #444'
                 }}
               >
@@ -517,7 +517,7 @@ export function RegistroDespesasContent({
           </button>
         </div>
       ) : (
-        <div style={{ backgroundColor: '#1e1e1e', borderRadius: '8px', padding: '24px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+        <div style={{ backgroundColor: '#484848', borderRadius: '8px', padding: '24px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <strong style={{ color: '#00c853' }}>{docAtual.clienteNome}</strong>
@@ -610,7 +610,7 @@ export function RegistroDespesasContent({
             <div style={{
               padding: '20px',
               marginBottom: '20px',
-              backgroundColor: '#121212',
+              backgroundColor: '#3a3a3a',
               borderRadius: '8px',
               border: '1px solid rgba(0, 200, 83, 0.3)'
             }}>
@@ -624,7 +624,7 @@ export function RegistroDespesasContent({
                     const s = despesasCadastradas.find(x => x.id === e.target.value)
                     setDespesaForm(prev => ({ ...prev, tipoId: e.target.value, tipoNome: s?.nome || '' }))
                   }}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.selecione || 'Selecione...'}</option>
                   {despesasCadastradas.map(s => (
@@ -641,7 +641,7 @@ export function RegistroDespesasContent({
                   step="0.01"
                   value={despesaForm.valor || ''}
                   onChange={(e) => setDespesaForm(prev => ({ ...prev, valor: parseFloat(e.target.value) || 0 }))}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
               </div>
 
@@ -652,7 +652,7 @@ export function RegistroDespesasContent({
                   value={despesaForm.descricao || ''}
                   onChange={(e) => setDespesaForm(prev => ({ ...prev, descricao: e.target.value }))}
                   placeholder={safeT?.descricaoPlaceholder || 'Ex: Combustível, refeição, peças...'}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
               </div>
 
@@ -661,7 +661,7 @@ export function RegistroDespesasContent({
                 <select
                   value={despesaForm.cartaoId || ''}
                   onChange={e => setDespesaForm(prev => ({ ...prev, cartaoId: e.target.value }))}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(251, 191, 36, 0.35)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(251, 191, 36, 0.35)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.registroDespesasCartaoNenhum || '— Não especificado —'}</option>
                   {cartoesEmpresa.map(c => (
@@ -679,7 +679,7 @@ export function RegistroDespesasContent({
                   value={despesaForm.codigoBarras || ''}
                   onChange={(e) => setDespesaForm(prev => ({ ...prev, codigoBarras: e.target.value }))}
                   placeholder={safeT?.escanearOuDigitar || 'Digite o código...'}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 />
               </div>
 
@@ -757,7 +757,7 @@ export function RegistroDespesasContent({
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '12px',
-                    backgroundColor: '#121212',
+                    backgroundColor: '#3a3a3a',
                     borderRadius: '6px',
                     border: '1px solid #444'
                   }}
@@ -799,7 +799,7 @@ export function RegistroDespesasContent({
         >
           <div
             style={{
-              background: '#1e1e1e',
+              background: '#484848',
               padding: '24px',
               borderRadius: '14px',
               border: '2px solid rgba(147,197,253,0.45)',
@@ -1045,7 +1045,7 @@ export function RegistroDespesasContent({
       )}
 
       {documentos.length > 0 && (
-        <div style={{ marginTop: '32px', padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+        <div style={{ marginTop: '32px', padding: '20px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
           <h3 style={{ marginTop: 0, color: '#00c853' }}>{safeT?.documentosSalvos || 'Documentos salvos'}</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {documentos.map(doc => (
@@ -1056,7 +1056,7 @@ export function RegistroDespesasContent({
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   padding: '12px',
-                  backgroundColor: '#121212',
+                  backgroundColor: '#3a3a3a',
                   borderRadius: '6px',
                   border: '1px solid #444'
                 }}

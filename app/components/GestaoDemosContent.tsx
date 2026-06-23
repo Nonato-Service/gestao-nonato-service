@@ -661,7 +661,7 @@ export function GestaoDemosContent({
           value={gridSearch}
           onChange={(e) => setGridSearch(e.target.value)}
           placeholder="Filtrar módulos…"
-          style={{ width: '100%', maxWidth: '360px', marginBottom: '10px', padding: '8px 12px', background: '#141414', color: '#fff', border: '1px solid rgba(0,180,255,0.28)', borderRadius: '8px' }}
+          style={{ width: '100%', maxWidth: '360px', marginBottom: '10px', padding: '8px 12px', background: '#404040', color: '#fff', border: '1px solid rgba(0,180,255,0.28)', borderRadius: '8px' }}
         />
         {DEMO_MODULE_GROUP_ORDER.map((groupId) => {
           const items = grouped[groupId]
@@ -687,7 +687,7 @@ export function GestaoDemosContent({
                           setModuleSelectionMode('modulo-a-modulo')
                           setModuleMode(module, e.target.value as DemoModuleMode)
                         }}
-                        style={{ width: '100%', padding: '6px', background: '#141414', color: '#fff', border: '1px solid rgba(0,180,255,0.25)', borderRadius: '4px', fontSize: '11px' }}
+                        style={{ width: '100%', padding: '6px', background: '#404040', color: '#fff', border: '1px solid rgba(0,180,255,0.25)', borderRadius: '4px', fontSize: '11px' }}
                       >
                         <option value="active">Ativo</option>
                         <option value="teaser">Mostrar bloqueado</option>
@@ -1180,7 +1180,7 @@ export function GestaoDemosContent({
 
 const inputStyle: React.CSSProperties = {
   padding: '10px 12px',
-  backgroundColor: '#141414',
+  backgroundColor: '#404040',
   color: '#fff',
   border: '1px solid rgba(0, 200, 83, 0.25)',
   borderRadius: '8px',
