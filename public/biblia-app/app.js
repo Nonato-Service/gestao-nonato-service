@@ -1112,10 +1112,19 @@
     runCopyFromTextarea($("previewTranslateField"));
   });
 
-  $("attachmentInput")?.addEventListener("change", (e) => {
-    const file = e.target.files && e.target.files[0];
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("read_failed"));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  $("attachmentInput")?.addEventListener("change", async (e) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
     e.target.value = "";
-    if (!file) return;
+    if (files.length === 0) return;
 
     const cat = findCategory(route.categoryId);
     const brand = cat ? findBrand(cat, route.brandId) : null;
@@ -1123,29 +1132,46 @@
     if (!model) return;
 
     const attachments = ensureAttachments(model);
-    if (attachments.length >= ATTACHMENT_MAX_PER_MODEL) {
-      alert("Limite de " + ATTACHMENT_MAX_PER_MODEL + " anexos por modelo.");
-      return;
-    }
-    if (file.size > ATTACHMENT_MAX_BYTES) {
-      alert("Ficheiro demasiado grande (máx. ~6 MB).");
-      return;
+    let added = 0;
+    let skippedLimit = false;
+
+    for (const file of files) {
+      if (attachments.length >= ATTACHMENT_MAX_PER_MODEL) {
+        skippedLimit = true;
+        break;
+      }
+      if (file.size > ATTACHMENT_MAX_BYTES) {
+        alert("«" + file.name + "» demasiado grande (máx. ~6 MB).");
+        continue;
+      }
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
+        const mime =
+          file.type ||
+          (/\.pdf$/i.test(file.name) ? "application/pdf" : "application/octet-stream");
+        attachments.push({
+          id: uid(),
+          name: file.name.slice(0, 200),
+          mime,
+          dataUrl,
+        });
+        added += 1;
+      } catch {
+        alert("Não foi possível ler «" + file.name + "».");
+      }
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      attachments.push({
-        id: uid(),
-        name: file.name.slice(0, 200),
-        mime: file.type || "application/octet-stream",
-        dataUrl: String(reader.result || ""),
-      });
+    if (skippedLimit) {
+      alert("Limite de " + ATTACHMENT_MAX_PER_MODEL + " anexos por modelo.");
+    }
+    if (added > 0) {
       save();
       renderAttachments();
-      $("saveHint").textContent = "Anexo guardado " + new Date().toLocaleTimeString("pt-BR");
-    };
-    reader.onerror = () => alert("Não foi possível ler o ficheiro.");
-    reader.readAsDataURL(file);
+      $("saveHint").textContent =
+        added === 1
+          ? "Anexo guardado " + new Date().toLocaleTimeString("pt-BR")
+          : added + " anexos guardados " + new Date().toLocaleTimeString("pt-BR");
+    }
   });
 
   function seedExample() {

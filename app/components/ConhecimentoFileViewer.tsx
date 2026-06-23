@@ -18,8 +18,10 @@ type Props = {
   tr: (key: string, fallback: string) => string
   emptyHint: string
   uploadLabel: string
-  onUpload: (file: File) => void
+  onUpload: (files: File[]) => void
   accept?: string
+  /** Permite escolher vários ficheiros de uma vez (predefinido: sim). */
+  multiple?: boolean
 }
 
 function guessMime(nome: string, mime?: string, tipo?: string): string {
@@ -112,7 +114,7 @@ function dataUrlToObjectUrl(dataUrl: string, mime: string): string {
 }
 
 export function ConhecimentoFileViewer(props: Props) {
-  const { items, onRemove, tr, emptyHint, uploadLabel, onUpload, accept } = props
+  const { items, onRemove, tr, emptyHint, uploadLabel, onUpload, accept, multiple = true } = props
   const { openForField } = useWritingAssistField()
   const [previewId, setPreviewId] = useState<string | null>(null)
   const [textLoading, setTextLoading] = useState(false)
@@ -456,13 +458,13 @@ export function ConhecimentoFileViewer(props: Props) {
         <input
           type="file"
           accept={accept}
+          multiple={multiple}
           className="manuais-pro__file-input"
           onChange={(e) => {
-            const f = e.target.files?.[0]
-            if (f) {
-              onUpload(f)
-              e.target.value = ''
-            }
+            const list = e.target.files
+            if (!list || list.length === 0) return
+            onUpload(Array.from(list))
+            e.target.value = ''
           }}
         />
         {uploadLabel}

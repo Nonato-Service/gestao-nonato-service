@@ -1383,7 +1383,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                     <p className="manuais-pro__panel-hint">
                       {tr(
                         'bibliaDocumentosHint',
-                        'Visualize PDFs e ficheiros no ecrã, selecione texto para traduzir ou descarregue quando precisar.'
+                        'Visualize PDFs e ficheiros no ecrã. Pode seleccionar vários PDFs de uma vez em «+ Adicionar documento(s)».'
                       )}
                     </p>
                     <p className="manuais-pro__panel-hint">
@@ -1447,7 +1447,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                       emptyHint={tr('manuaisHubNoDocuments', 'Nenhum documento.')}
                       uploadLabel={tr('manuaisAdicionarDocumento', '+ Adicionar documento')}
                       accept=".pdf,application/pdf,.doc,.docx,image/*,.txt,.md,.csv,.json,.zip,application/zip,application/x-zip-compressed"
-                      onUpload={(f) => addDocumento(selectedModelo.id, f)}
+                      onUpload={(files) => files.forEach((f) => addDocumento(selectedModelo.id, f))}
                     />
                   </section>
 
@@ -1496,7 +1496,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                     <p className="manuais-pro__panel-hint">
                       {tr(
                         'bibliaNonatoAnexosAjuda',
-                        'PDF, Word (.doc/.docx) ou imagens. Visualize aqui, selecione texto para traduzir ou descarregue.'
+                        'PDF, Word (.doc/.docx) ou imagens. Pode seleccionar vários ficheiros de uma vez.'
                       )}
                     </p>
                     <ConhecimentoFileViewer
@@ -1513,7 +1513,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                       emptyHint={tr('bibliaSemAnexos', 'Nenhum anexo.')}
                       uploadLabel={tr('bibliaAdicionarAnexo', '+ Adicionar anexo')}
                       accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.txt,.md,.csv,.json"
-                      onUpload={(f) => addAnexo(selectedModelo.id, f)}
+                      onUpload={(files) => files.forEach((f) => addAnexo(selectedModelo.id, f))}
                     />
                   </section>
                 </div>
