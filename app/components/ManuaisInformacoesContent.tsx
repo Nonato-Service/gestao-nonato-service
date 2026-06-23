@@ -271,6 +271,18 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
 
   const tr = (key: string, fallback: string) => safeT[key] || fallback
 
+  const [navSearch, setNavSearch] = useState('')
+  const [expandedFamilias, setExpandedFamilias] = useState<Record<string, boolean>>({})
+  const [expandedGrupos, setExpandedGrupos] = useState<Record<string, boolean>>({})
+  const [mainTab, setMainTab] = useState<'ficha' | 'docs' | 'equip'>('ficha')
+  const [bibliaSecaoTab, setBibliaSecaoTab] = useState<BibliaSecao>('software')
+  const [manuaisImportProgress, setManuaisImportProgress] = useState<{ current: number; total: number } | null>(
+    null
+  )
+  const manuaisFolderInputRef = useRef<HTMLInputElement>(null)
+  const manuaisZipInputRef = useRef<HTMLInputElement>(null)
+  const importInputRef = useRef<HTMLInputElement>(null)
+
   const uploadSecao = (): BibliaSecao | undefined => (hubMode === 'biblia' ? bibliaSecaoTab : undefined)
 
   const bibliaSecaoTabs: { id: BibliaSecao; labelKey: string; fallback: string }[] = [
@@ -845,18 +857,6 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
   const hubIcon = hubMode === 'biblia' ? 'B' : hubMode === 'manuais' ? 'M' : 'CT'
 
   const displayMarcaNome = (nome: string) => (nome === DEFAULT_GRUPO_NAME ? tr('marcaGeral', 'Geral') : nome)
-
-  const [navSearch, setNavSearch] = useState('')
-  const [expandedFamilias, setExpandedFamilias] = useState<Record<string, boolean>>({})
-  const [expandedGrupos, setExpandedGrupos] = useState<Record<string, boolean>>({})
-  const [mainTab, setMainTab] = useState<'ficha' | 'docs' | 'equip'>('ficha')
-  const [bibliaSecaoTab, setBibliaSecaoTab] = useState<BibliaSecao>('software')
-  const [manuaisImportProgress, setManuaisImportProgress] = useState<{ current: number; total: number } | null>(
-    null
-  )
-  const manuaisFolderInputRef = useRef<HTMLInputElement>(null)
-  const manuaisZipInputRef = useRef<HTMLInputElement>(null)
-  const importInputRef = useRef<HTMLInputElement>(null)
 
   const hubEyebrow =
     hubMode === 'unified'
