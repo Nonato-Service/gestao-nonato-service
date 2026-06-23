@@ -2615,17 +2615,33 @@ svg.ns-vivid-icon.assist-field-glyph {
   }
 }
 
-/* Submenu ativo — verde sólido como botões principais */
+/* Submenu ativo — anel branco animado (igual Ajuda F1); fundo/cor como botão inativo */
 .sidebar .sidebar-action-btn.sidebar-action-btn-active {
-  border: 1px solid var(--sidebar-active-border) !important;
-  border-left: 3px solid var(--sidebar-accent) !important;
-  background: var(--sidebar-active-bg) !important;
-  color: #ffffff !important;
-  font-weight: 700 !important;
+  isolation: isolate;
+  border: 2px solid transparent !important;
+  border-left: 2px solid transparent !important;
+  --help-f1-ring-angle: 0deg;
+  box-sizing: border-box;
+  background:
+    linear-gradient(var(--sidebar-inactive-bg), var(--sidebar-inactive-bg)) padding-box,
+    conic-gradient(
+      from var(--help-f1-ring-angle),
+      rgba(255, 255, 255, 0.2) 0deg,
+      rgba(255, 255, 255, 0.2) 282deg,
+      rgba(255, 255, 255, 0.55) 308deg,
+      rgba(255, 255, 255, 1) 328deg,
+      rgba(255, 255, 255, 0.55) 352deg,
+      rgba(255, 255, 255, 0.2) 360deg
+    ) border-box !important;
+  background-clip: padding-box, border-box;
+  background-origin: border-box;
+  color: rgba(255, 255, 255, 0.88) !important;
+  font-weight: 600 !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 4px 16px rgba(0, 200, 83, 0.22) !important;
+    0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 0 20px rgba(255, 255, 255, 0.16) !important;
   text-shadow: none !important;
+  animation: main-help-f1-ring-angle 2.6s linear infinite;
 }
 
 .sidebar .sidebar-action-btn .sidebar-nav-check {
@@ -2639,7 +2655,7 @@ svg.ns-vivid-icon.assist-field-glyph {
 }
 
 .sidebar .sidebar-action-btn.sidebar-action-btn-active .sidebar-nav-check {
-  color: rgba(220, 252, 231, 0.98);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* Cabeçalhos / botões na sidebar (incl. principais): base .btn-primary; cabeçalhos de grupo sobrescrevem acima */
@@ -2692,28 +2708,72 @@ svg.ns-vivid-icon.assist-field-glyph {
   }
 }
 
-/* Grupo selecionado — verde institucional (#00c853 / rgba(18,52,24)) */
+/* Grupo selecionado — anel branco animado (igual Ajuda F1); fundo/cor como cabeçalho inativo */
 .sidebar .sidebar-group-btn-selected,
 .sidebar-group-btn-selected {
-  border: 1px solid var(--sidebar-active-border) !important;
-  border-left: 4px solid var(--sidebar-accent) !important;
-  background: var(--sidebar-active-bg) !important;
-  color: #ffffff !important;
-  font-weight: 700 !important;
+  isolation: isolate;
+  border: 2px solid transparent !important;
+  border-left: 2px solid transparent !important;
+  --help-f1-ring-angle: 0deg;
+  box-sizing: border-box;
+  background:
+    linear-gradient(var(--sidebar-inactive-bg), var(--sidebar-inactive-bg)) padding-box,
+    conic-gradient(
+      from var(--help-f1-ring-angle),
+      rgba(255, 255, 255, 0.2) 0deg,
+      rgba(255, 255, 255, 0.2) 282deg,
+      rgba(255, 255, 255, 0.55) 308deg,
+      rgba(255, 255, 255, 1) 328deg,
+      rgba(255, 255, 255, 0.55) 352deg,
+      rgba(255, 255, 255, 0.2) 360deg
+    ) border-box !important;
+  background-clip: padding-box, border-box;
+  background-origin: border-box;
+  color: var(--sidebar-text-dim) !important;
+  font-weight: 600 !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 4px 18px rgba(0, 200, 83, 0.22) !important;
+    0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 0 20px rgba(255, 255, 255, 0.16) !important;
   text-shadow: none !important;
   transform: none !important;
+  animation: main-help-f1-ring-angle 2.6s linear infinite;
 }
 
 .sidebar .btn-administrador.sidebar-group-btn-selected {
-  border: 1px solid rgba(251, 113, 133, 0.55) !important;
-  border-left: 4px solid #fb7185 !important;
-  background: linear-gradient(165deg, rgba(90, 24, 36, 0.55) 0%, rgba(28, 12, 16, 0.96) 100%) !important;
+  background:
+    linear-gradient(165deg, rgba(48, 28, 32, 0.55) 0%, rgba(22, 18, 19, 0.98) 100%) padding-box,
+    conic-gradient(
+      from var(--help-f1-ring-angle),
+      rgba(255, 255, 255, 0.2) 0deg,
+      rgba(255, 255, 255, 0.2) 282deg,
+      rgba(255, 255, 255, 0.55) 308deg,
+      rgba(255, 255, 255, 1) 328deg,
+      rgba(255, 255, 255, 0.55) 352deg,
+      rgba(255, 255, 255, 0.2) 360deg
+    ) border-box !important;
+  background-clip: padding-box, border-box;
+  background-origin: border-box;
+  border: 2px solid transparent !important;
+  border-left: 2px solid transparent !important;
   color: #fff !important;
   text-shadow: none !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 0 20px rgba(255, 255, 255, 0.16) !important;
+  animation: main-help-f1-ring-angle 2.6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar .sidebar-action-btn.sidebar-action-btn-active,
+  .sidebar .sidebar-group-btn-selected,
+  .sidebar-group-btn-selected,
+  .sidebar .btn-administrador.sidebar-group-btn-selected {
+    animation: none;
+    --help-f1-ring-angle: 210deg;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.18),
+      0 0 22px rgba(255, 255, 255, 0.2) !important;
+  }
 }
 
 .sidebar-admin-footer {
