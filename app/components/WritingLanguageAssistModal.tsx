@@ -209,6 +209,7 @@ export function WritingLanguageAssistModal({
           <div>
             <label style={{ display: 'block', fontSize: '12px', color: '#9ab0a2', marginBottom: '6px' }}>{labels.wroteIn}</label>
             <select
+              className="ns-lang-select"
               value={wroteIn}
               onChange={(e) => {
                 const v = e.target.value
@@ -246,6 +247,7 @@ export function WritingLanguageAssistModal({
               </span>
             </label>
             <select
+              className="ns-lang-select"
               value={needIn}
               onChange={(e) => setNeedIn(e.target.value)}
               style={{

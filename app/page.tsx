@@ -35408,6 +35408,7 @@ export default function Dashboard() {
                   {safeT?.translateFrom || 'Traduzir de:'}
                 </label>
                 <select
+                  className="ns-lang-select"
                   value={translatorFrom}
                   onChange={(e) => setTranslatorFrom(e.target.value)}
                   style={{ width: '100%', padding: '10px 12px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px', marginBottom: '14px', fontSize: '14px' }}
@@ -35456,6 +35457,7 @@ export default function Dashboard() {
                   {safeT?.translateTo || 'Traduzir para:'}
                 </label>
                 <select
+                  className="ns-lang-select"
                   value={translatorTo}
                   onChange={(e) => setTranslatorTo(e.target.value)}
                   style={{ width: '100%', padding: '10px 12px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px', marginBottom: '14px', fontSize: '14px' }}
@@ -35543,6 +35545,7 @@ export default function Dashboard() {
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#00c853' }}>{safeT?.translateFrom || 'De idioma:'}</label>
                   <select
+                    className="ns-lang-select"
                     value={translatorLibraryFrom}
                     onChange={(e) => setTranslatorLibraryFrom(e.target.value)}
                     style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px' }}
@@ -35555,6 +35558,7 @@ export default function Dashboard() {
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#00c853' }}>{safeT?.translateTo || 'Para idioma:'}</label>
                   <select
+                    className="ns-lang-select"
                     value={translatorLibraryTo}
                     onChange={(e) => setTranslatorLibraryTo(e.target.value)}
                     style={{ width: '100%', padding: '10px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px' }}
@@ -66304,6 +66308,7 @@ A1;Peça exemplo;10`}
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', color: '#ffffff' }}>{safeT?.selectLanguage || 'Idioma'}</label>
                 <select 
+                  className="ns-lang-select"
                   value={selectedLanguage} 
                   onChange={(e) => {
                     setSelectedLanguage(e.target.value)
@@ -73419,6 +73424,7 @@ A1;Peça exemplo;10`}
                 {safeT?.translateFrom || 'Traduzir de:'}
               </label>
               <select 
+                className="ns-lang-select"
                 value={translatorFrom} 
                 onChange={(e) => setTranslatorFrom(e.target.value)}
                 style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
@@ -73434,6 +73440,7 @@ A1;Peça exemplo;10`}
                 {safeT?.translateTo || 'Traduzir para:'}
               </label>
               <select 
+                className="ns-lang-select"
                 value={translatorTo} 
                 onChange={(e) => setTranslatorTo(e.target.value)}
                 style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}

@@ -46,6 +46,37 @@
   scrollbar-color: var(--ns-primary) var(--ns-bg-1);
 }
 
+/*
+ * Select nativo — lista dropdown legível.
+ * No Windows/Edge o fundo do popup costuma ser claro; sem color-scheme/option escuro o texto branco fica invisível.
+ */
+select {
+  color-scheme: dark;
+  background-color: var(--ns-input-bg);
+  color: var(--ns-text);
+}
+
+select option,
+select optgroup {
+  background-color: #1c1c1c;
+  color: #f5f5f5;
+}
+
+select option:checked,
+select option:hover {
+  background-color: #0f4d28;
+  color: #ffffff;
+}
+
+.ns-lang-select {
+  color-scheme: dark;
+}
+
+.ns-lang-select option {
+  background-color: #141414;
+  color: #ffffff;
+}
+
 html {
   width: 100%;
   overflow-x: hidden;
@@ -1266,6 +1297,12 @@ body,
   border: 1px solid rgba(0, 255, 122, 0.22);
   border-radius: 10px;
   font-size: 12px;
+  color-scheme: dark;
+}
+
+.sidebar-action-buttons select,
+.sidebar select.ns-lang-select {
+  color-scheme: dark;
 }
 
 .sidebar-organizer-card-actions-row {
@@ -24966,6 +25003,12 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 10px !important;
   color: #fff !important;
+  color-scheme: dark;
+}
+
+.modal-overlay .modal select option {
+  background-color: #1a1a1a !important;
+  color: #f5f5f5 !important;
 }
 
 .modal-overlay .modal .btn-primary {
@@ -27396,6 +27439,23 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   background: rgba(0, 0, 0, 0.55);
   color: #fff;
   font-size: 0.95rem;
+}
+
+/* Lista do select — fundo cinza legível no Windows (cliente, equipamento, técnico) */
+.cb-pro__field select {
+  color-scheme: dark;
+  background-color: #2a2a2a;
+}
+
+.cb-pro__field select option {
+  background-color: #5c5c5c;
+  color: #ffffff;
+}
+
+.cb-pro__field select option:checked,
+.cb-pro__field select option:hover {
+  background-color: #6e6e6e;
+  color: #ffffff;
 }
 .cb-pro__equip-card {
   margin-top: 18px;
