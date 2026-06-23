@@ -4681,6 +4681,27 @@ export default function Dashboard() {
   /** Pré-cálculo do risco de «puxar» servidor — permite modal mínimo (só OK) quando `none`. */
   const [syncPullRiskReady, setSyncPullRiskReady] = useState(false)
   const [syncPendingPullRisk, setSyncPendingPullRisk] = useState<PullRiskSeverity>('none')
+  const SYNC_MODAL_SNOOZE_LS = 'nonato-sync-modal-snooze-until'
+  const isSyncModalSnoozed = useCallback(() => {
+    if (typeof window === 'undefined') return false
+    try {
+      const raw = sessionStorage.getItem(SYNC_MODAL_SNOOZE_LS)
+      const until = raw ? parseInt(raw, 10) : 0
+      return Number.isFinite(until) && until > Date.now()
+    } catch {
+      return false
+    }
+  }, [])
+  const adiarSyncModal = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem(SYNC_MODAL_SNOOZE_LS, String(Date.now() + 60 * 60 * 1000))
+      } catch {
+        /* ignorar */
+      }
+    }
+    setSyncDecisionModalOpen(false)
+  }, [])
   /** Primeira carga: pedidos ao servidor + fusão de dados (evita parecer que «não termina»). */
   const [appInitialLoading, setAppInitialLoading] = useState(true)
   const [bootstrapOfflineMode, setBootstrapOfflineMode] = useState(false)
@@ -8235,48 +8256,39 @@ export default function Dashboard() {
     }
   }, [syncPendingRemote])
 
-  /** Antes de mostrar escolhas longas, avalia risco: caso seguro (`none`) → um só botão OK. */
+  /** Avalia risco só com o resumo já calculado — evita bloquear minutos em «A verificar…» (payload grande no servidor). */
   useEffect(() => {
     if (!syncPendingRemote) return
-    if (isNonatoDemoBuild()) return
-    setSyncPullRiskReady(false)
-    let cancelled = false
-    void (async () => {
-      try {
-        const localNow = collectLocalNonatoSnapshot()
-        const { data: serverNow, ok: serverPullOk } = await loadAllFromServer()
-        if (cancelled) return
-        const sk = Object.keys(serverNow || {}).filter((k) => k.startsWith('nonato-'))
-        if (!serverPullOk || sk.length === 0) {
-          if (!cancelled) {
-            setSyncPendingPullRisk('caution')
-            setSyncPullRiskReady(true)
-          }
-          return
-        }
-        const { severity } = assessPullServerRisk(serverNow || {}, localNow)
-        if (!cancelled) {
-          setSyncPendingPullRisk(severity)
-          setSyncPullRiskReady(true)
-        }
-      } catch {
-        if (!cancelled) {
-          setSyncPendingPullRisk('caution')
-          setSyncPullRiskReady(true)
-        }
-      }
-    })()
-    return () => {
-      cancelled = true
+    if (isNonatoDemoBuild()) {
+      setSyncPendingPullRisk('none')
+      setSyncPullRiskReady(true)
+      return
     }
+    const lines = syncPendingRemote.summaryLines
+    const text = lines.join('\n').toLowerCase()
+    let severity: PullRiskSeverity = 'none'
+    if (
+      text.includes('apagar') ||
+      text.includes('0 registos') ||
+      text.includes('deixariam de aparecer') ||
+      text.includes('não há dados de manuais no servidor')
+    ) {
+      severity = 'severe'
+    } else if (lines.length >= 4 || text.includes('menos') || text.includes('risco') || text.includes('perder')) {
+      severity = 'caution'
+    }
+    setSyncPendingPullRisk(severity)
+    setSyncPullRiskReady(true)
   }, [syncPendingRemote?.revision])
 
   /** Com atualização pendente, o fluxo de trabalho só continua após escolher carregar do servidor ou enviar para o servidor. */
   useEffect(() => {
     if (appInitialLoading) return
     if (!syncPendingRemote) return
+    if (!syncPullRiskReady) return
+    if (isSyncModalSnoozed()) return
     setSyncDecisionModalOpen(true)
-  }, [appInitialLoading, syncPendingRemote])
+  }, [appInitialLoading, syncPendingRemote, syncPullRiskReady, isSyncModalSnoozed])
 
   /** Servidor: rever revisão em fundo e ao voltar ao ecrã — evita depender de F5 para ver alterações noutro aparelho. */
   useEffect(() => {
@@ -8291,6 +8303,7 @@ export default function Dashboard() {
       if (cancelled) return
       if (typeof navigator !== 'undefined' && !navigator.onLine) return
       if (!dataBootstrapCompleteRef.current) return
+      if (isSyncModalSnoozed()) return
       try {
         const st = await fetchSyncStatus()
         if (cancelled || !st) return
@@ -67182,9 +67195,25 @@ A1;Peça exemplo;10`}
                   type="button"
                   className="btn-primary"
                   disabled
-                  style={{ width: '100%', justifyContent: 'center', opacity: 0.65, cursor: 'wait' }}
+                  style={{ width: '100%', justifyContent: 'center', opacity: 0.65, cursor: 'wait', marginBottom: '10px' }}
                 >
                   {(safeT as any)?.syncPullRiskChecking || 'A verificar…'}
+                </button>
+                <button
+                  type="button"
+                  onClick={adiarSyncModal}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    fontSize: '13px',
+                    color: '#9ecbff',
+                    background: 'transparent',
+                    border: '1px solid rgba(56, 189, 248, 0.35)',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {(safeT as any)?.syncModalSnooze || 'Continuar sem sincronizar agora'}
                 </button>
               </>
             ) : syncPendingPullRisk === 'none' ? (
@@ -67261,6 +67290,23 @@ A1;Peça exemplo;10`}
                   >
                     {(safeT as any)?.syncModalAdvancedPush ||
                       'Preciso de enviar deste aparelho para o servidor (situação rara)'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={syncPullChecking || syncPushLoading}
+                    onClick={adiarSyncModal}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      fontSize: '12px',
+                      color: '#aaa',
+                      background: 'transparent',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '8px',
+                      cursor: syncPullChecking || syncPushLoading ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {(safeT as any)?.syncModalSnooze || 'Continuar sem sincronizar agora'}
                   </button>
                 </div>
               </>
@@ -67344,6 +67390,23 @@ A1;Peça exemplo;10`}
                     {(safeT as any)?.syncModalPushDeviceHint ||
                       'Substitui o servidor pela cópia deste aparelho se AQUI está a informação certa.'}
                   </p>
+                  <button
+                    type="button"
+                    disabled={syncPullChecking || syncPushLoading}
+                    onClick={adiarSyncModal}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      fontSize: '12px',
+                      color: '#aaa',
+                      background: 'transparent',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '8px',
+                      cursor: syncPullChecking || syncPushLoading ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {(safeT as any)?.syncModalSnooze || 'Continuar sem sincronizar agora'}
+                  </button>
                 </div>
               </>
             )}
