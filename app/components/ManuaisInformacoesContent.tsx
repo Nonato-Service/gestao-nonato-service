@@ -23,7 +23,25 @@ const MANUAIS_STORAGE_KEY = 'nonato-manuais-familias-grupos'
 const DEFAULT_GRUPO_NAME = '__default__'
 const MANUAIS_FOLDER_IMPORT_MAX_BYTES = 120 * 1024 * 1024
 const MANUAIS_ZIP_IMPORT_MAX_BYTES = 200 * 1024 * 1024
+const MANUAIS_ARQUIVO_MAX_BYTES = BIBLIA_ANEXO_MAX_BYTES
 const MANUAIS_FOLDER_IMPORT_EXT = /\.(pdf|txt|doc|docx|png|jpe?g|gif|webp)$/i
+
+function alertArquivoExcedeLimitePermitido(
+  tr: (key: string, fallback: string) => string,
+  fileName: string,
+  fileSize: number,
+  maxBytes: number
+): void {
+  window.alert(
+    tr(
+      'arquivoExcedeLimitePermitido',
+      `O ficheiro «${fileName}» (${formatManuaisBytes(fileSize)}) está a passar o limite permitido (máx. ${formatManuaisBytes(maxBytes)}).`
+    )
+      .replace(/\{nome\}/g, fileName)
+      .replace(/\{tamanho\}/g, formatManuaisBytes(fileSize))
+      .replace(/\{limite\}/g, formatManuaisBytes(maxBytes))
+  )
+}
 
 function formatManuaisBytes(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
@@ -208,7 +226,7 @@ async function persistManuaisToStorage(
   gruposSnapshot: ManuaisGrupo[],
   modelosSnapshot: ManuaisModelo[],
   saveData: ManuaisInformacoesContentProps['saveData']
-) {
+): Promise<boolean> {
   const { payloadFull, payloadLite } = buildManuaisPayloads(familiasSnapshot, gruposSnapshot, modelosSnapshot)
   await saveManuaisFamiliasGruposToIdb(payloadFull)
   try {
@@ -220,8 +238,9 @@ async function persistManuaisToStorage(
       /* ignorar */
     }
   }
-  await saveData(MANUAIS_STORAGE_KEY, payloadFull, false)
+  const serverOk = await saveData(MANUAIS_STORAGE_KEY, payloadFull, false, true)
   await syncConhecimentoTecnicoLegacyStores(payloadFull, saveData)
+  return serverOk
 }
 
 export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps) {
@@ -311,8 +330,16 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
 
   const runSaveManuaisModelos = async (modelosSnapshot: ManuaisModelo[]) => {
     try {
-      await persistManuaisToStorage(manuaisFamiliasRef.current, manuaisGruposRef.current, modelosSnapshot, saveData)
+      const ok = await persistManuaisToStorage(
+        manuaisFamiliasRef.current,
+        manuaisGruposRef.current,
+        modelosSnapshot,
+        saveData
+      )
       manuaisSaveAlertShownOnce = false
+      if (!ok) {
+        throw new Error('server_save_failed')
+      }
     } catch (err) {
       console.error('Erro ao guardar manuais:', err)
       if (!manuaisSaveAlertShownOnce) {
@@ -354,6 +381,10 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
   }
 
   const addDocumento = (modeloId: string, file: File) => {
+    if (file.size > MANUAIS_ARQUIVO_MAX_BYTES) {
+      alertArquivoExcedeLimitePermitido(tr, file.name, file.size, MANUAIS_ARQUIVO_MAX_BYTES)
+      return
+    }
     if (isZipArchiveFileNameOrMime(file.name, file.type)) {
       void addDocumentoZip(modeloId, file)
       return
@@ -449,6 +480,11 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
       )
       return
     }
+    const oversized = files.find((f) => f.size > MANUAIS_ARQUIVO_MAX_BYTES)
+    if (oversized) {
+      alertArquivoExcedeLimitePermitido(tr, oversized.name, oversized.size, MANUAIS_ARQUIVO_MAX_BYTES)
+      return
+    }
     const confirmMsg = tr(
       'manuaisConfirmarImportPasta',
       `Importar ${files.length} ficheiro(s) (${formatManuaisBytes(totalBytes)}) para este modelo?`
@@ -504,12 +540,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
       return
     }
     if (file.size > MANUAIS_ZIP_IMPORT_MAX_BYTES) {
-      window.alert(
-        tr(
-          'manuaisImportacaoZipGrande',
-          `ZIP demasiado grande (máx. ${formatManuaisBytes(MANUAIS_ZIP_IMPORT_MAX_BYTES)}).`
-        )
-      )
+      alertArquivoExcedeLimitePermitido(tr, file.name, file.size, MANUAIS_ZIP_IMPORT_MAX_BYTES)
       return
     }
     if (
@@ -546,6 +577,10 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
   }
 
   const addImagem = (modeloId: string, file: File) => {
+    if (file.size > MANUAIS_ARQUIVO_MAX_BYTES) {
+      alertArquivoExcedeLimitePermitido(tr, file.name, file.size, MANUAIS_ARQUIVO_MAX_BYTES)
+      return
+    }
     if (manuaisSaveDebounceTimer) {
       clearTimeout(manuaisSaveDebounceTimer)
       manuaisSaveDebounceTimer = null
@@ -591,7 +626,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
 
   const addAnexo = (modeloId: string, file: File) => {
     if (file.size > BIBLIA_ANEXO_MAX_BYTES) {
-      alert(tr('bibliaAnexoGrande', 'Ficheiro demasiado grande (máx. 6 MB).'))
+      alertArquivoExcedeLimitePermitido(tr, file.name, file.size, BIBLIA_ANEXO_MAX_BYTES)
       return
     }
     if (manuaisSaveDebounceTimer) {

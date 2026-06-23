@@ -58,7 +58,7 @@ import {
   serverKeyHasMeaningfulData,
 } from './lib/criticalCadastroKeys'
 import { isNonatoDemoBuild } from './utils/nonatoDemoMode'
-import { assessSyncPendingSeverity, collectLocalNonatoSnapshot, summarizeDataDiff } from './utils/syncDiff'
+import { assessSyncPendingSeverity, collectLocalNonatoSnapshot, hasMeaningfulSyncDiff, summarizeDataDiff } from './utils/syncDiff'
 import {
   backupCriticalCadastroToIdb,
   restoreCriticalCadastroFromIdbIfNeeded,
@@ -103,7 +103,7 @@ import {
   prepararEquipamentosRelatorioParaEdicao,
   type RelatorioEquipamentoRef,
 } from './lib/relatorioServicoEquipamentos'
-import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
+import { mergeManuaisFamiliasGrupos, manuaisPayloadHasRichContent } from './utils/manuaisMerge'
 import {
   buildConhecimentoTecnicoFromSources,
   BIBLIA_NONATO_STORAGE_KEY,
@@ -4737,6 +4737,7 @@ export default function Dashboard() {
         sessionStorage.setItem(SYNC_MODAL_SNOOZE_LS, String(Date.now() + 60 * 60 * 1000))
         if (syncPendingRemote?.revision) {
           sessionStorage.setItem(SYNC_MODAL_DISMISSED_REV_LS, String(syncPendingRemote.revision))
+          setLastAcceptedRevision(syncPendingRemote.revision)
         }
       } catch {
         /* ignorar */
@@ -8327,6 +8328,7 @@ export default function Dashboard() {
 
   const isSyncModalDismissedForRevision = useCallback((revision: number) => {
     if (typeof window === 'undefined') return false
+    if (getLastAcceptedRevision() >= revision) return true
     try {
       const raw = sessionStorage.getItem(SYNC_MODAL_DISMISSED_REV_LS)
       const dismissed = raw ? parseInt(raw, 10) : 0
@@ -8369,6 +8371,11 @@ export default function Dashboard() {
         const { data: serverData, ok: pullOk } = await loadAllFromServer()
         if (cancelled || !pullOk) return
         const localSnap = collectLocalNonatoSnapshot()
+        if (!hasMeaningfulSyncDiff(serverData, localSnap)) {
+          setLastAcceptedRevision(st.revision)
+          setSyncPendingRemote(null)
+          return
+        }
         const lines = summarizeDataDiff(serverData, localSnap)
         setSyncPendingRemote((prev) => {
           if (prev && prev.revision === st.revision) return prev
@@ -9015,6 +9022,13 @@ export default function Dashboard() {
               const backupCadastroAntesFullPullMerge: Record<string, string> = backupCadastroAntesFullPull
               preferServerOnlyAfterFullPullWipe = true
               serverDataFromFullPullPrefetch = { ...pre.data }
+              let backupManuaisFromIdb: { familias?: string[]; grupos?: ManuaisGrupo[]; modelos?: ManuaisModelo[] } | null =
+                null
+              try {
+                backupManuaisFromIdb = await loadManuaisFamiliasGruposFromIdb()
+              } catch {
+                /* ignorar */
+              }
               for (const k of NONATO_CADASTRO_KEYS_BACKUP_ON_FULL_PULL) {
                 const sv = serverDataFromFullPullPrefetch[k]
                 const serverVazio = !serverKeyHasMeaningfulData(sv)
@@ -9025,6 +9039,13 @@ export default function Dashboard() {
                     /* ignorar parse */
                   }
                 }
+              }
+              if (backupManuaisFromIdb && manuaisPayloadHasRichContent(backupManuaisFromIdb)) {
+                const sv = serverDataFromFullPullPrefetch['nonato-manuais-familias-grupos']
+                serverDataFromFullPullPrefetch['nonato-manuais-familias-grupos'] = mergeManuaisFamiliasGrupos(
+                  sv && typeof sv === 'object' ? sv : {},
+                  backupManuaisFromIdb
+                )
               }
               await deleteAllNonatoKvFromIdb()
               const keepLocalOnFullPull = new Set([
@@ -9205,33 +9226,35 @@ export default function Dashboard() {
             }
           }
         }
-        // Manuais: fundir servidor + local para não perder PDFs/anexos quando o servidor ainda não sincronizou
+        // Manuais: fundir servidor + localStorage (mesmo que só um exista) para não perder PDFs/anexos
         if (
           key === 'nonato-manuais-familias-grupos' &&
           !preferServerOnlyAfterFullPullWipe &&
           typeof window !== 'undefined'
         ) {
-          const serverValue = serverData[key]
+          const serverValue =
+            serverData[key] != null && typeof serverData[key] === 'object' ? serverData[key] : {}
+          let localParsed: { familias?: string[]; grupos?: ManuaisGrupo[]; modelos?: ManuaisModelo[] } = {}
           const localData = localStorage.getItem(key)
-          if (serverValue != null && typeof serverValue === 'object' && localData !== null && localData !== '') {
+          if (localData !== null && localData !== '') {
             try {
-              const local = JSON.parse(localData) as { familias?: string[]; grupos?: ManuaisGrupo[]; modelos?: ManuaisModelo[] }
-              if (local && typeof local === 'object') {
-                const merged = mergeManuaisFamiliasGrupos(
-                  serverValue as { familias?: string[]; grupos?: ManuaisGrupo[]; modelos?: ManuaisModelo[] },
-                  local
-                )
-                try {
-                  localStorage.setItem(key, JSON.stringify(merged))
-                } catch (e) {
-                  console.error('Erro ao gravar manuais fundidos no localStorage:', e)
-                }
-                saveData(key, merged, false).catch(() => {})
-                return merged
-              }
-            } catch (e) {
-              /* continuar com a lógica normal */
+              const parsed = JSON.parse(localData)
+              if (parsed && typeof parsed === 'object') localParsed = parsed
+            } catch {
+              /* ignorar */
             }
+          }
+          if (serverData[key] != null || localData) {
+            const merged = mergeManuaisFamiliasGrupos(serverValue, localParsed)
+            try {
+              localStorage.setItem(key, JSON.stringify(merged))
+            } catch (e) {
+              console.error('Erro ao gravar manuais fundidos no localStorage:', e)
+            }
+            if (!deferServerMerge) {
+              saveData(key, merged, false).catch(() => {})
+            }
+            return merged
           }
         }
         // Clientes: com divergência de revisão o local «conta» como não vazio e bloqueava o servidor inteiro —
@@ -9830,6 +9853,16 @@ export default function Dashboard() {
         (mergedManuaisFG.modelos?.length ?? 0) > 0
       if (hasConhecimentoData) {
         void syncConhecimentoTecnicoLegacyStores(mergedManuaisFG, saveData).catch(() => {})
+        if (manuaisPayloadHasRichContent(mergedManuaisFG)) {
+          void saveData('nonato-manuais-familias-grupos', mergedManuaisFG, false, true).catch(() => {})
+        }
+      } else if (fromIdbManuais && manuaisPayloadHasRichContent(fromIdbManuais)) {
+        /** Recuperação: IDB tinha dados mas servidor/local vieram vazios — repor estado e enviar ao servidor. */
+        setManuaisFamilias(Array.isArray(fromIdbManuais.familias) ? fromIdbManuais.familias : [])
+        setManuaisGrupos(Array.isArray(fromIdbManuais.grupos) ? fromIdbManuais.grupos : [])
+        setManuaisModelos(Array.isArray(fromIdbManuais.modelos) ? fromIdbManuais.modelos : [])
+        void syncConhecimentoTecnicoLegacyStores(fromIdbManuais, saveData).catch(() => {})
+        void saveData('nonato-manuais-familias-grupos', fromIdbManuais, false, true).catch(() => {})
       }
 
       await reportBoot(52)
@@ -12281,17 +12314,16 @@ export default function Dashboard() {
       }
       const lastAccAfter = getLastAcceptedRevision()
       const stForPending = stFinal ?? syncSt
-      const summaryLinesForPending = summarizeDataDiff(serverData, localSnapshotBeforeMerge)
+      const meaningfulSyncDiff = hasMeaningfulSyncDiff(serverData, localSnapshotBeforeMerge)
+      const summaryLinesForPending = meaningfulSyncDiff
+        ? summarizeDataDiff(serverData, localSnapshotBeforeMerge)
+        : []
       const showSyncPending =
         stForPending !== null &&
         stForPending.revision > lastAccAfter &&
         hasMeaningfulLocalData() &&
-        summaryLinesForPending.length > 0
-      if (
-        stForPending !== null &&
-        stForPending.revision > lastAccAfter &&
-        summaryLinesForPending.length === 0
-      ) {
+        meaningfulSyncDiff
+      if (stForPending !== null && stForPending.revision > lastAccAfter && !meaningfulSyncDiff) {
         setLastAcceptedRevision(stForPending.revision)
       }
       setSyncPendingRemote(

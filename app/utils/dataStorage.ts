@@ -375,6 +375,14 @@ export function getPendingSyncCount(): number {
 
 // Salvar diretamente no servidor (sem fila) - uso interno
 const MANUAIS_KEY = 'nonato-manuais-familias-grupos'
+const CONHECIMENTO_TECNICO_KEY = 'nonato-conhecimento-tecnico-unificado'
+const BIBLIA_NONATO_KEY = 'nonato-biblia-nonato-service'
+
+const MANUAIS_OBJECT_KEYS_BLOCK_EMPTY_OVERWRITE = new Set([
+  MANUAIS_KEY,
+  CONHECIMENTO_TECNICO_KEY,
+  BIBLIA_NONATO_KEY,
+])
 
 /**
  * Chaves em que gravar `[]` no servidor apagaria cadastros críticos (ex.: serviços/valores).
@@ -400,8 +408,41 @@ function isEmptyDataArray(value: unknown): boolean {
   return Array.isArray(value) && value.length === 0
 }
 
+function isEmptyManuaisLikePayload(value: unknown): boolean {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) return true
+  const v = value as { familias?: unknown[]; grupos?: unknown[]; modelos?: unknown[] }
+  const hasFam = Array.isArray(v.familias) && v.familias.length > 0
+  const hasGrp = Array.isArray(v.grupos) && v.grupos.length > 0
+  const hasMod = Array.isArray(v.modelos) && v.modelos.length > 0
+  return !hasFam && !hasGrp && !hasMod
+}
+
+function manuaisLikePayloadHasContent(value: unknown): boolean {
+  if (isEmptyManuaisLikePayload(value)) return false
+  const v = value as {
+    modelos?: Array<{ documentos?: unknown[]; imagens?: unknown[]; anexos?: unknown[] }>
+    familias?: unknown[]
+  }
+  if (Array.isArray(v.familias) && v.familias.length > 0) return true
+  for (const m of v.modelos || []) {
+    if ((m.documentos?.length ?? 0) > 0) return true
+    if ((m.imagens?.length ?? 0) > 0) return true
+    if ((m.anexos?.length ?? 0) > 0) return true
+  }
+  return (v.modelos?.length ?? 0) > 0
+}
+
 /** Evita que uma lista vazia (sync/atualização) apague dados já guardados no servidor. */
 async function shouldBlockEmptyServerOverwrite(key: string, value: unknown): Promise<boolean> {
+  if (MANUAIS_OBJECT_KEYS_BLOCK_EMPTY_OVERWRITE.has(key)) {
+    if (!isEmptyManuaisLikePayload(value)) return false
+    try {
+      const existing = await loadFromServer(key)
+      return manuaisLikePayloadHasContent(existing)
+    } catch {
+      return false
+    }
+  }
   if (!NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE.has(key)) return false
   if (!isEmptyDataArray(value)) return false
   try {
@@ -417,6 +458,9 @@ export function omitEmptyProtectedKeysForServerPush(data: Record<string, any>): 
   const out: Record<string, any> = { ...data }
   for (const key of NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE) {
     if (isEmptyDataArray(out[key])) delete out[key]
+  }
+  for (const key of MANUAIS_OBJECT_KEYS_BLOCK_EMPTY_OVERWRITE) {
+    if (isEmptyManuaisLikePayload(out[key])) delete out[key]
   }
   return out
 }

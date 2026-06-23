@@ -46,7 +46,14 @@ export async function POST(request: NextRequest) {
         revision = meta.revision
         updatedAt = meta.updatedAt
         // Evitar que um .json antigo prevaleça sobre o .txt no bundle /load (JSON era lido primeiro).
-        if (key === 'nonato-logos-relatorios' || key === 'nonato-logo' || key === 'nonato-logo-dashboard') {
+        if (
+          key === 'nonato-logos-relatorios' ||
+          key === 'nonato-logo' ||
+          key === 'nonato-logo-dashboard' ||
+          key === 'nonato-manuais-familias-grupos' ||
+          key === 'nonato-biblia-nonato-service' ||
+          key === 'nonato-conhecimento-tecnico-unificado'
+        ) {
           try {
             const jsonPath = path.join(resolveDataDirForKey(key, dataDir), `${key}.json`)
             if (fs.existsSync(jsonPath)) fs.unlinkSync(jsonPath)

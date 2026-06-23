@@ -119,6 +119,24 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // Manuais/Bíblia com PDFs: `.txt` completo prevalece sobre `.json` lite (evita perder anexos no sync).
+      for (const richKey of [
+        'nonato-manuais-familias-grupos',
+        'nonato-biblia-nonato-service',
+        'nonato-conhecimento-tecnico-unificado',
+      ] as const) {
+        const txtPath = path.join(dataDir, `${richKey}.txt`)
+        if (!fs.existsSync(txtPath)) continue
+        try {
+          const c = fs.readFileSync(txtPath, 'utf-8')
+          if (c && c.trim() !== '') {
+            allData[richKey] = JSON.parse(c)
+          }
+        } catch (e) {
+          console.error(`Erro ao ler ${richKey}.txt no bundle:`, e)
+        }
+      }
+
       return NextResponse.json({ success: true, data: allData }, { headers: jsonHeaders() })
     }
 

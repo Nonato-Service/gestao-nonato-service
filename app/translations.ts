@@ -2811,6 +2811,7 @@ export const translations = {
     conhecimentoTecnicoConfirmImport: "Importar combina os dados do ficheiro com os actuais. Continuar?",
     bibliaFichaTab: "Ficha técnica",
     bibliaAnexoGrande: "Ficheiro demasiado grande (máx. 6 MB).",
+    arquivoExcedeLimitePermitido: "O ficheiro «{nome}» ({tamanho}) está a passar o limite permitido (máx. {limite}).",
     bibliaAnexoLimite: "Limite de 24 anexos por modelo.",
     bibliaSecaoFicheirosHint: "PDFs e ficheiros desta secção. Ao mudar de aba (Software, Mecânica, Elétrica, Notas) vê só os ficheiros dessa secção.",
     bibliaSecaoImagensHint: "Fotos e esquemas desta secção. Use «+ Adicionar imagem(ns)».",

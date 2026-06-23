@@ -1,3 +1,41 @@
+/** Verifica se o payload de manuais/bíblia tem estrutura vazia (sem famílias, grupos nem modelos). */
+export function isEmptyManuaisPayload(value: unknown): boolean {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) return true
+  const v = value as { familias?: unknown[]; grupos?: unknown[]; modelos?: unknown[] }
+  const hasFam = Array.isArray(v.familias) && v.familias.length > 0
+  const hasGrp = Array.isArray(v.grupos) && v.grupos.length > 0
+  const hasMod = Array.isArray(v.modelos) && v.modelos.length > 0
+  return !hasFam && !hasGrp && !hasMod
+}
+
+/** Indica se há PDFs, anexos, imagens ou texto técnico guardado. */
+export function manuaisPayloadHasRichContent(value: unknown): boolean {
+  if (isEmptyManuaisPayload(value)) return false
+  const v = value as {
+    modelos?: Array<{
+      documentos?: unknown[]
+      imagens?: unknown[]
+      anexos?: unknown[]
+      software?: string
+      notas?: string
+      infoTecnicas?: string
+      infoMecanicas?: string
+      infoEletricas?: string
+    }>
+  }
+  for (const m of v.modelos || []) {
+    if ((m.documentos?.length ?? 0) > 0) return true
+    if ((m.imagens?.length ?? 0) > 0) return true
+    if ((m.anexos?.length ?? 0) > 0) return true
+    if (String(m.software || '').trim()) return true
+    if (String(m.notas || '').trim()) return true
+    if (String(m.infoTecnicas || '').trim()) return true
+    if (String(m.infoMecanicas || '').trim()) return true
+    if (String(m.infoEletricas || '').trim()) return true
+  }
+  return (v.modelos?.length ?? 0) > 0
+}
+
 /**
  * Funde dados do servidor com os do localStorage para a secção Manuais e Informações Técnicas.
  * Evita perder PDFs/anexos quando o servidor ainda não sincronizou ou tem versão antiga.

@@ -75,6 +75,54 @@ function isEmptyStored(value: unknown): boolean {
   return false
 }
 
+/** Manuais: localStorage guarda versão «lite» (sem PDFs); servidor pode ter anexos completos — comparar estrutura, não base64. */
+function normalizeManuaisForSyncDiff(value: unknown): unknown {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) return value
+  const v = value as {
+    familias?: unknown[]
+    grupos?: Array<{ id?: unknown; nome?: unknown; familia?: unknown }>
+    modelos?: Array<Record<string, unknown>>
+  }
+  const ids = (arr: unknown[] | undefined) =>
+    (arr || [])
+      .map((x) => (x && typeof x === 'object' && 'id' in x ? String((x as { id: unknown }).id) : ''))
+      .filter(Boolean)
+      .sort()
+  return {
+    familias: [...(v.familias || [])].map(String).sort(),
+    grupos: (v.grupos || []).map((g) => ({
+      id: String(g.id ?? ''),
+      nome: String(g.nome ?? ''),
+      familia: String(g.familia ?? ''),
+    })),
+    modelos: (v.modelos || []).map((m) => ({
+      id: String(m.id ?? ''),
+      nome: String(m.nome ?? ''),
+      grupoId: String(m.grupoId ?? ''),
+      software: String(m.software ?? '').trim(),
+      notas: String(m.notas ?? '').trim(),
+      infoTecnicas: String(m.infoTecnicas ?? '').trim(),
+      infoMecanicas: String(m.infoMecanicas ?? '').trim(),
+      infoEletricas: String(m.infoEletricas ?? '').trim(),
+      docIds: ids(m.documentos as unknown[] | undefined),
+      imgIds: ids(m.imagens as unknown[] | undefined),
+      anexoIds: ids(m.anexos as unknown[] | undefined),
+    })),
+  }
+}
+
+function normalizeValueForSyncDiff(key: string, value: unknown): unknown {
+  if (key === 'nonato-manuais-familias-grupos') return normalizeManuaisForSyncDiff(value)
+  if (
+    (key === 'nonato-logo' || key === 'nonato-logo-dashboard') &&
+    typeof value === 'string' &&
+    value.startsWith('data:')
+  ) {
+    return { kind: 'data-url', len: value.length, mime: value.slice(5, value.indexOf(';') > 0 ? value.indexOf(';') : 40) }
+  }
+  return value
+}
+
 /** Snapshot síncrono do localStorage (antes de fundir com o servidor no arranque). */
 export function collectLocalNonatoSnapshot(): Record<string, unknown> {
   const out: Record<string, unknown> = {}
@@ -125,8 +173,8 @@ export function summarizeDataDiff(server: Record<string, unknown>, local: Record
     if (shouldSkipSyncDiffKey(key)) continue
     if (key.endsWith('.json')) continue
 
-    const s = server[key]
-    const l = local[key]
+    const s = normalizeValueForSyncDiff(key, server[key])
+    const l = normalizeValueForSyncDiff(key, local[key])
     const hasS = !isEmptyStored(s)
     const hasL = !isEmptyStored(l)
     const label = friendlyKey(key)
@@ -175,11 +223,12 @@ export function summarizeDataDiff(server: Record<string, unknown>, local: Record
     }
   }
 
-  if (lines.length === 0) {
-    lines.push('• O servidor tem uma revisão mais recente; a diferença pode estar em ficheiros grandes (ex.: logo, vídeo) ou dados já fundidos.')
-  }
-
   return lines.slice(0, 14)
+}
+
+/** True quando há diferença real entre servidor e este aparelho (não basta subir a revisão). */
+export function hasMeaningfulSyncDiff(server: Record<string, unknown>, local: Record<string, unknown>): boolean {
+  return summarizeDataDiff(server, local).length > 0
 }
 
 /** True quando puxar do servidor pode apagar ou reduzir dados locais importantes. */
