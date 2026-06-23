@@ -3142,9 +3142,9 @@ button.btn-danger.btn-danger--inline {
 .bottom-tabs-bar {
   position: fixed;
   bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-  left: calc(296px + 16px);
-  right: 16px;
-  max-width: 1060px;
+  left: calc(296px + 8px);
+  right: 8px;
+  max-width: min(1280px, calc(100vw - 312px));
   margin-left: auto;
   margin-right: auto;
   min-height: 60px;
@@ -3180,16 +3180,73 @@ button.btn-danger.btn-danger--inline {
   max-width: min(120px, 28vw);
   object-fit: contain;
 }
+.bottom-tabs-track {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
 .bottom-tabs-scroll {
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 14px 10px;
+  padding: 8px 30px 10px;
   overflow-x: auto;
   overflow-y: hidden;
+  scroll-behavior: smooth;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 200, 83, 0.38) transparent;
+}
+.bottom-tabs-scroll-btn {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 28px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  color: rgba(210, 255, 225, 0.92);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.bottom-tabs-scroll-btn--left {
+  left: 0;
+  border-radius: 0 10px 10px 0;
+  background: linear-gradient(90deg, rgba(8, 12, 10, 0.98) 0%, rgba(8, 12, 10, 0.72) 58%, transparent 100%);
+  text-shadow: 0 0 10px rgba(0, 200, 83, 0.35);
+}
+.bottom-tabs-scroll-btn--right {
+  right: 0;
+  border-radius: 10px 0 0 10px;
+  background: linear-gradient(270deg, rgba(8, 12, 10, 0.98) 0%, rgba(8, 12, 10, 0.72) 58%, transparent 100%);
+  text-shadow: 0 0 10px rgba(0, 200, 83, 0.35);
+}
+.bottom-tabs-scroll-btn:hover {
+  color: #ffffff;
+}
+.bottom-tabs-scroll-btn:focus-visible {
+  outline: 2px solid rgba(0, 200, 83, 0.65);
+  outline-offset: -2px;
+}
+.bottom-tabs-track.can-scroll-left .bottom-tabs-scroll-btn--left,
+.bottom-tabs-track.can-scroll-right .bottom-tabs-scroll-btn--right {
+  opacity: 1;
+  pointer-events: auto;
 }
 .bottom-tabs-scroll::-webkit-scrollbar {
   height: 5px;
@@ -3888,10 +3945,14 @@ html, body {
   }
   .bottom-tabs-scroll {
     gap: 8px !important;
-    padding-left: max(4px, env(safe-area-inset-left, 0px)) !important;
-    padding-right: max(4px, env(safe-area-inset-right, 0px)) !important;
+    padding-left: 26px !important;
+    padding-right: 26px !important;
     scroll-padding-inline: 8px;
     -webkit-overflow-scrolling: touch;
+  }
+  .bottom-tabs-scroll-btn {
+    width: 24px !important;
+    font-size: 18px !important;
   }
   /* Não usar flex:1 + min-height:0 aqui: quebrava a altura do conteúdo das abas no telefone (só o dashboard rolava). A rolagem das abas está no .tab-inner-scroll. */
   .tab-content-wrapper {
@@ -5272,7 +5333,7 @@ body {
     min-height: 52px !important;
   }
   .bottom-tabs-scroll {
-    padding: 4px 8px 6px !important;
+    padding: 4px 24px 6px !important;
     gap: 6px !important;
   }
   .bottom-tab-item {

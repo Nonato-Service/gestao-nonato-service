@@ -4897,6 +4897,8 @@ export default function Dashboard() {
   const [bottomTabsDraggingId, setBottomTabsDraggingId] = useState<string | null>(null)
   const [bottomTabsDragOverId, setBottomTabsDragOverId] = useState<string | null>(null)
   const [bottomTabsSavedOrder, setBottomTabsSavedOrder] = useState<string[] | null>(null)
+  const bottomTabsScrollRef = useRef<HTMLDivElement>(null)
+  const [bottomTabsScrollHints, setBottomTabsScrollHints] = useState({ left: false, right: false })
   /** Sem abas e painel ainda não expandido: esconder sidebar na vista de entrada. */
   const hideSidebarForEntryDashboard = !activeTabId && !dashboardWorkspaceExpanded
   useEffect(() => {
@@ -4930,6 +4932,43 @@ export default function Dashboard() {
       // ignore
     }
   }, [])
+
+  const refreshBottomTabsScrollHints = useCallback(() => {
+    const el = bottomTabsScrollRef.current
+    if (!el) return
+    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth)
+    setBottomTabsScrollHints({
+      left: el.scrollLeft > 4,
+      right: maxScroll - el.scrollLeft > 4,
+    })
+  }, [])
+
+  const scrollBottomTabsBy = useCallback((direction: -1 | 1) => {
+    const el = bottomTabsScrollRef.current
+    if (!el) return
+    el.scrollBy({
+      left: direction * Math.max(160, Math.round(el.clientWidth * 0.55)),
+      behavior: 'smooth',
+    })
+  }, [])
+
+  useEffect(() => {
+    refreshBottomTabsScrollHints()
+  }, [openTabs, activeTabId, refreshBottomTabsScrollHints])
+
+  useEffect(() => {
+    const el = bottomTabsScrollRef.current
+    if (!el || openTabs.length === 0) return
+    const onScroll = () => refreshBottomTabsScrollHints()
+    el.addEventListener('scroll', onScroll, { passive: true })
+    const ro = new ResizeObserver(() => refreshBottomTabsScrollHints())
+    ro.observe(el)
+    refreshBottomTabsScrollHints()
+    return () => {
+      el.removeEventListener('scroll', onScroll)
+      ro.disconnect()
+    }
+  }, [openTabs.length, refreshBottomTabsScrollHints])
 
   useEffect(() => {
     let cancelled = false
@@ -66962,7 +67001,24 @@ A1;Peça exemplo;10`}
             <div className="bottom-tabs-brand" title="NONATO SERVICE">
               <NonatoBrandLogo variant="original" alt="" className="bottom-tabs-brand-img" aria-hidden />
             </div>
-            <div className="bottom-tabs-scroll">
+            <div
+              className={`bottom-tabs-track${bottomTabsScrollHints.left ? ' can-scroll-left' : ''}${bottomTabsScrollHints.right ? ' can-scroll-right' : ''}`}
+            >
+              <button
+                type="button"
+                className="bottom-tabs-scroll-btn bottom-tabs-scroll-btn--left"
+                aria-label={(safeT as any)?.bottomTabsScrollLeft || 'Deslizar abas para a esquerda'}
+                tabIndex={bottomTabsScrollHints.left ? 0 : -1}
+                aria-hidden={!bottomTabsScrollHints.left}
+                onClick={() => scrollBottomTabsBy(-1)}
+              >
+                ‹
+              </button>
+              <div
+                ref={bottomTabsScrollRef}
+                className="bottom-tabs-scroll"
+                onScroll={refreshBottomTabsScrollHints}
+              >
               {openTabs.map((tab) => (
                 <div
                   key={tab.id}
@@ -67064,6 +67120,17 @@ A1;Peça exemplo;10`}
                   </button>
                 </div>
               ))}
+              </div>
+              <button
+                type="button"
+                className="bottom-tabs-scroll-btn bottom-tabs-scroll-btn--right"
+                aria-label={(safeT as any)?.bottomTabsScrollRight || 'Deslizar abas para a direita'}
+                tabIndex={bottomTabsScrollHints.right ? 0 : -1}
+                aria-hidden={!bottomTabsScrollHints.right}
+                onClick={() => scrollBottomTabsBy(1)}
+              >
+                ›
+              </button>
             </div>
           </div>
         )}
