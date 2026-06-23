@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useWritingAssistField } from '../context/WritingAssistFieldContext'
+import { ManuaisZipExplorer } from './ManuaisZipExplorer'
 
 export type ConhecimentoFileItem = {
   id: string
@@ -55,6 +56,10 @@ function isWord(m: string, nome: string) {
     m === 'application/msword' ||
     /\.(docx?|rtf)$/i.test(nome)
   )
+}
+
+function isZip(m: string, nome: string) {
+  return m === 'application/zip' || m === 'application/x-zip-compressed' || /\.zip$/i.test(nome)
 }
 
 function supportsTranslation(m: string, nome: string) {
@@ -111,8 +116,9 @@ export function ConhecimentoFileViewer(props: Props) {
     : ''
 
   const canTranslate = previewItem ? supportsTranslation(previewMime, previewItem.nome) : false
-  const isPdfPreview = previewItem ? isPdf(previewMime, previewItem.nome) : false
-  const isDocTextPreview = previewItem
+  const isZipPreview = previewItem ? isZip(previewMime, previewItem.nome) : false
+  const isPdfPreview = previewItem && !isZipPreview ? isPdf(previewMime, previewItem.nome) : false
+  const isDocTextPreview = previewItem && !isZipPreview
     ? isTextLike(previewMime, previewItem.nome) || isWord(previewMime, previewItem.nome)
     : false
 
@@ -126,6 +132,12 @@ export function ConhecimentoFileViewer(props: Props) {
     }
     setPdfPasteText('')
     const mime = guessMime(previewItem.nome, previewItem.mime, previewItem.tipo)
+    if (isZip(mime, previewItem.nome)) {
+      setEditableText('')
+      setTextError(null)
+      setTextLoading(false)
+      return
+    }
     if (isPdf(mime, previewItem.nome) || isImage(mime, previewItem.nome)) {
       setEditableText('')
       setTextError(null)
@@ -238,6 +250,9 @@ export function ConhecimentoFileViewer(props: Props) {
           )}
         />
       )
+    }
+    if (isZip(mime, previewItem.nome)) {
+      return <ManuaisZipExplorer dataUrl={previewItem.dataUrl} tr={tr} />
     }
     return (
       <p className="manuais-pro__preview-status">

@@ -1,6 +1,13 @@
 export type ManuaisGrupo = { id: string; nome: string; familia: string }
 
-export type ManuaisDocumento = { id: string; nome: string; tipo: string; dados: string }
+export type ManuaisDocumento = {
+  id: string
+  nome: string
+  tipo: string
+  dados: string
+  /** Caminho dentro da pasta importada (ex.: movecho manual/Index.PDF) */
+  caminhoRelativo?: string
+}
 
 export type ManuaisImagem = { id: string; nome: string; dados: string }
 

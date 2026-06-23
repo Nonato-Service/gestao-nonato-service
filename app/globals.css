@@ -15792,6 +15792,141 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   border-radius: 10px;
   background: #fff;
 }
+.manuais-pro__zip-explorer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: min(62vh, 520px);
+}
+.manuais-pro__zip-explorer-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: rgba(186, 230, 253, 0.88);
+  line-height: 1.45;
+}
+.manuais-pro__zip-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(8, 12, 18, 0.72);
+  color: #f0f9ff;
+  font-size: 0.85rem;
+}
+.manuais-pro__zip-search::placeholder {
+  color: rgba(148, 163, 184, 0.75);
+}
+.manuais-pro__zip-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 34%) minmax(0, 1fr);
+  gap: 12px;
+  min-height: min(56vh, 480px);
+}
+.manuais-pro__zip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  max-height: min(56vh, 480px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+}
+.manuais-pro__zip-empty {
+  padding: 14px;
+  color: rgba(148, 163, 184, 0.85);
+  font-size: 0.82rem;
+}
+.manuais-pro__zip-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: transparent;
+  color: #e2e8f0;
+  text-align: left;
+  cursor: pointer;
+}
+.manuais-pro__zip-item:hover {
+  background: rgba(56, 189, 248, 0.08);
+}
+.manuais-pro__zip-item.is-active {
+  background: rgba(56, 189, 248, 0.16);
+  box-shadow: inset 3px 0 0 rgba(56, 189, 248, 0.75);
+}
+.manuais-pro__zip-item-badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.manuais-pro__zip-item-badge--pdf {
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.45);
+}
+.manuais-pro__zip-item-badge--image {
+  color: #bbf7d0;
+  border-color: rgba(74, 222, 128, 0.4);
+}
+.manuais-pro__zip-item-badge--text {
+  color: #bae6fd;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+.manuais-pro__zip-item-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.manuais-pro__zip-item-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.manuais-pro__zip-item-path {
+  font-size: 0.68rem;
+  color: rgba(148, 163, 184, 0.85);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.manuais-pro__zip-item-size {
+  font-size: 0.68rem;
+  color: rgba(148, 163, 184, 0.9);
+  white-space: nowrap;
+}
+.manuais-pro__zip-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: min(56vh, 480px);
+}
+.manuais-pro__zip-preview .manuais-pro__preview-frame {
+  flex: 1;
+  min-height: min(48vh, 420px);
+}
+.manuais-pro__zip-preview-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+@media (max-width: 900px) {
+  .manuais-pro__zip-layout {
+    grid-template-columns: 1fr;
+  }
+  .manuais-pro__zip-list {
+    max-height: 220px;
+  }
+}
 .manuais-pro__preview-image-wrap {
   display: flex;
   justify-content: center;
@@ -15841,6 +15976,18 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
+}
+.manuais-pro__bulk-upload {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.manuais-pro__import-progress {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  color: #86efac;
+  font-weight: 600;
 }
 .manuais-pro__file-input { display: none; }
 .manuais-pro__image-grid {

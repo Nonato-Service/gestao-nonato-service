@@ -21,6 +21,37 @@ let manuaisSaveAlertShownOnce = false
 
 const MANUAIS_STORAGE_KEY = 'nonato-manuais-familias-grupos'
 const DEFAULT_GRUPO_NAME = '__default__'
+const MANUAIS_FOLDER_IMPORT_MAX_BYTES = 120 * 1024 * 1024
+const MANUAIS_ZIP_IMPORT_MAX_BYTES = 200 * 1024 * 1024
+const MANUAIS_FOLDER_IMPORT_EXT = /\.(pdf|txt|doc|docx|png|jpe?g|gif|webp)$/i
+
+function formatManuaisBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${bytes} B`
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(reader.error ?? new Error('read_failed'))
+    reader.readAsDataURL(file)
+  })
+}
+
+function shouldImportManualFolderFile(file: File): boolean {
+  return MANUAIS_FOLDER_IMPORT_EXT.test(file.name)
+}
+
+function manualFolderDisplayName(file: File): string {
+  const rel = (file as File & { webkitRelativePath?: string }).webkitRelativePath?.trim()
+  if (rel) {
+    const parts = rel.split(/[/\\]/)
+    return parts.length > 1 ? parts.slice(1).join('/') : rel
+  }
+  return file.name
+}
 
 function getGrupoIdsForFamilia(familia: string, gruposList: ManuaisGrupo[]): string[] {
   return gruposList.filter((g) => g.familia === familia).map((g) => g.id)
@@ -306,6 +337,135 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
       return snapshot
     })
     void Promise.resolve().then(() => persistModelosImmediate(snapshot))
+  }
+
+  const appendDocumentosToModelo = async (modeloId: string, novos: ManuaisDocumento[]) => {
+    if (novos.length === 0) return
+    if (manuaisSaveDebounceTimer) {
+      clearTimeout(manuaisSaveDebounceTimer)
+      manuaisSaveDebounceTimer = null
+    }
+    let snapshot: ManuaisModelo[] = []
+    setManuaisModelos((prev) => {
+      snapshot = prev.map((mo) => {
+        if (mo.id !== modeloId) return mo
+        const docs = Array.isArray(mo.documentos) ? mo.documentos : []
+        return { ...mo, documentos: [...docs, ...novos] }
+      })
+      manuaisModelosRef.current = snapshot
+      return snapshot
+    })
+    await persistModelosImmediate(snapshot)
+  }
+
+  const addDocumentosFromFolder = async (modeloId: string, fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return
+    const files = Array.from(fileList).filter(shouldImportManualFolderFile)
+    if (files.length === 0) {
+      window.alert(
+        tr(
+          'manuaisImportacaoSemFicheiros',
+          'Nenhum PDF ou documento compatível encontrado na pasta (PDF, TXT, Word, imagens).'
+        )
+      )
+      return
+    }
+    const totalBytes = files.reduce((sum, f) => sum + f.size, 0)
+    if (totalBytes > MANUAIS_FOLDER_IMPORT_MAX_BYTES) {
+      window.alert(
+        tr(
+          'manuaisImportacaoMuitoGrande',
+          `Pacote demasiado grande (máx. ${formatManuaisBytes(MANUAIS_FOLDER_IMPORT_MAX_BYTES)}). Compacte a pasta inteira em ZIP e use «Importar pacote ZIP».`
+        )
+      )
+      return
+    }
+    const confirmMsg = tr(
+      'manuaisConfirmarImportPasta',
+      `Importar ${files.length} ficheiro(s) (${formatManuaisBytes(totalBytes)}) para este modelo?`
+    )
+      .replace(/\{n\}/g, String(files.length))
+      .replace(/\{size\}/g, formatManuaisBytes(totalBytes))
+    if (!window.confirm(confirmMsg)) return
+
+    setManuaisImportProgress({ current: 0, total: files.length })
+    const novos: ManuaisDocumento[] = []
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        const dados = await readFileAsDataUrl(file)
+        const rel = (file as File & { webkitRelativePath?: string }).webkitRelativePath?.trim()
+        const id =
+          typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID()
+            : `doc-${Date.now()}-${i}`
+        novos.push({
+          id,
+          nome: manualFolderDisplayName(file),
+          tipo: file.type || 'application/octet-stream',
+          dados,
+          caminhoRelativo: rel || undefined,
+        })
+        setManuaisImportProgress({ current: i + 1, total: files.length })
+      }
+      await appendDocumentosToModelo(modeloId, novos)
+      window.alert(
+        tr('manuaisImportacaoOk', `Importados ${novos.length} ficheiro(s).`).replace(/\{n\}/g, String(novos.length))
+      )
+    } catch (err) {
+      console.error('Importação de pasta de manuais:', err)
+      window.alert(tr('manuaisErroAoGuardar', 'Não foi possível guardar. O navegador pode estar sem espaço.'))
+    } finally {
+      setManuaisImportProgress(null)
+    }
+  }
+
+  const addDocumentoZip = async (modeloId: string, file: File) => {
+    const lower = file.name.toLowerCase()
+    if (!lower.endsWith('.zip')) {
+      window.alert(tr('manuaisImportacaoZipInvalido', 'Selecione um ficheiro .zip com a pasta do manual.'))
+      return
+    }
+    if (file.size > MANUAIS_ZIP_IMPORT_MAX_BYTES) {
+      window.alert(
+        tr(
+          'manuaisImportacaoZipGrande',
+          `ZIP demasiado grande (máx. ${formatManuaisBytes(MANUAIS_ZIP_IMPORT_MAX_BYTES)}).`
+        )
+      )
+      return
+    }
+    if (
+      !window.confirm(
+        tr(
+          'manuaisConfirmarImportZip',
+          `Guardar o pacote «${file.name}» (${formatManuaisBytes(file.size)}) neste modelo? Pode descarregar depois e extrair no PC (ex.: Start.exe HOMAG).`
+        )
+          .replace(/\{nome\}/g, file.name)
+          .replace(/\{size\}/g, formatManuaisBytes(file.size))
+      )
+    ) {
+      return
+    }
+    setManuaisImportProgress({ current: 0, total: 1 })
+    try {
+      const dados = await readFileAsDataUrl(file)
+      const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `zip-${Date.now()}`
+      await appendDocumentosToModelo(modeloId, [
+        {
+          id,
+          nome: file.name,
+          tipo: 'application/zip',
+          dados,
+        },
+      ])
+      window.alert(tr('manuaisImportacaoZipOk', 'Pacote ZIP guardado. Use Descarregar para extrair no computador.'))
+    } catch (err) {
+      console.error('Importação ZIP de manuais:', err)
+      window.alert(tr('manuaisErroAoGuardar', 'Não foi possível guardar. O navegador pode estar sem espaço.'))
+    } finally {
+      setManuaisImportProgress(null)
+    }
   }
 
   const addImagem = (modeloId: string, file: File) => {
@@ -610,6 +770,11 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
   const [expandedFamilias, setExpandedFamilias] = useState<Record<string, boolean>>({})
   const [expandedGrupos, setExpandedGrupos] = useState<Record<string, boolean>>({})
   const [mainTab, setMainTab] = useState<'ficha' | 'docs' | 'equip'>('ficha')
+  const [manuaisImportProgress, setManuaisImportProgress] = useState<{ current: number; total: number } | null>(
+    null
+  )
+  const manuaisFolderInputRef = useRef<HTMLInputElement>(null)
+  const manuaisZipInputRef = useRef<HTMLInputElement>(null)
   const importInputRef = useRef<HTMLInputElement>(null)
 
   const hubEyebrow =
@@ -1167,11 +1332,59 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                         'Visualize PDFs e ficheiros no ecrã, selecione texto para traduzir ou descarregue quando precisar.'
                       )}
                     </p>
+                    <p className="manuais-pro__panel-hint">
+                      {tr(
+                        'manuaisPacotePastaHint',
+                        'Manuais HOMAG / CD com vários ficheiros: compacte a pasta em ZIP (recomendado, ~80 MB) ou importe a pasta — entram PDF, TXT, Word e imagens. O Start.exe só funciona no PC após descarregar o ZIP.'
+                      )}
+                    </p>
+                    {manuaisImportProgress ? (
+                      <p className="manuais-pro__import-progress" role="status">
+                        {tr('manuaisImportandoProgress', `A importar ${manuaisImportProgress.current}/${manuaisImportProgress.total}…`)
+                          .replace(/\{n\}/g, String(manuaisImportProgress.current))
+                          .replace(/\{total\}/g, String(manuaisImportProgress.total))}
+                      </p>
+                    ) : null}
+                    <div className="manuais-pro__bulk-upload">
+                      <label className="manuais-pro__upload">
+                        <input
+                          ref={manuaisFolderInputRef}
+                          type="file"
+                          className="manuais-pro__file-input"
+                          multiple
+                          /* @ts-expect-error webkitdirectory não está nos tipos React */
+                          webkitdirectory=""
+                          directory=""
+                          onChange={(e) => {
+                            const list = e.target.files
+                            void addDocumentosFromFolder(selectedModelo.id, list)
+                            e.target.value = ''
+                          }}
+                        />
+                        {tr('manuaisImportarPasta', '+ Importar pasta (PDFs…)')}
+                      </label>
+                      <label className="manuais-pro__upload">
+                        <input
+                          ref={manuaisZipInputRef}
+                          type="file"
+                          accept=".zip,application/zip,application/x-zip-compressed"
+                          className="manuais-pro__file-input"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0]
+                            if (f) {
+                              void addDocumentoZip(selectedModelo.id, f)
+                              e.target.value = ''
+                            }
+                          }}
+                        />
+                        {tr('manuaisImportarZip', '+ Importar pacote ZIP')}
+                      </label>
+                    </div>
                     <ConhecimentoFileViewer
                       items={selectedModelDocs.map(
                         (d): ConhecimentoFileItem => ({
                           id: d.id,
-                          nome: d.nome,
+                          nome: d.caminhoRelativo || d.nome,
                           dataUrl: d.dados,
                           tipo: d.tipo,
                         })
