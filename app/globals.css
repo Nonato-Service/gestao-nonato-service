@@ -6691,7 +6691,7 @@ a:focus-visible {
 }
 .biblioteca-relatorios-cliente__title {
   margin: 0;
-  color: #f4fff7;
+  color: rgba(255, 255, 255, 0.75);
   font-size: clamp(14px, 2.6vw, 17px);
   font-weight: 700;
   letter-spacing: 0.02em;
