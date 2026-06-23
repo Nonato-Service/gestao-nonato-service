@@ -33,6 +33,8 @@ export type User = {
   permissions?: Record<string, boolean | undefined>
   /** Itens do menu visíveis (botão da sidebar → on/off). Sobrepõe permissões legadas quando definido. */
   menuItems?: Record<string, boolean>
+  /** Quando true, só aparecem itens explicitamente activos em menuItems. */
+  menuItemsConfigured?: boolean
 }
 
 export type UserFormState = {
@@ -56,6 +58,7 @@ export type UserFormState = {
     extras: boolean
   }
   menuItems: Record<string, boolean>
+  menuItemsConfigured: boolean
 }
 
 export type GestorItem = { id: string; name: string; area?: string }

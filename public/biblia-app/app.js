@@ -124,6 +124,61 @@
     );
   }
 
+  const TAB_TO_SECAO = {
+    software: "software",
+    mechanical: "mecanica",
+    electrical: "eletrica",
+    notes: "notas",
+  };
+
+  function getActiveSecao() {
+    return TAB_TO_SECAO[activeTab] || "software";
+  }
+
+  function inferSecaoFromName(nome) {
+    const n = String(nome || "").toLowerCase().replace(/\\/g, "/");
+    if (/elektr|eletric|electric|(?:^|[/_-])el(?:[/_\-.]|$)|\/el\//.test(n)) return "eletrica";
+    if (/mechan|mecan|(?:^|[/_-])mk(?:[/_\-.]|$)|\/mk\//.test(n)) return "mecanica";
+    if (/software|(?:^|[/_-])sw(?:[/_\-.]|$)|\bplc\b/.test(n)) return "software";
+    return null;
+  }
+
+  function normalizeSecao(value) {
+    const v = String(value || "").toLowerCase();
+    if (v === "software") return "software";
+    if (v === "mecanica" || v === "mechanical" || v === "mecânica") return "mecanica";
+    if (v === "eletrica" || v === "electrical" || v === "elétrica") return "eletrica";
+    if (v === "notas" || v === "notes") return "notas";
+    return null;
+  }
+
+  function resolveAttachmentSecao(a) {
+    return normalizeSecao(a.secao) || normalizeSecao(a.section) || inferSecaoFromName(a.name) || "notas";
+  }
+
+  function dataUrlToBlobUrl(dataUrl, mime) {
+    try {
+      const parts = String(dataUrl || "").split(",");
+      if (parts.length < 2) return null;
+      const bin = atob(parts[1]);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], { type: mime || "application/octet-stream" });
+      return URL.createObjectURL(blob);
+    } catch {
+      return null;
+    }
+  }
+
+  let previewObjectUrl = null;
+
+  function revokePreviewObjectUrl() {
+    if (previewObjectUrl) {
+      URL.revokeObjectURL(previewObjectUrl);
+      previewObjectUrl = null;
+    }
+  }
+
   async function loadAttachmentText(a) {
     if (isTextAttachment(a)) {
       const res = await fetch(a.dataUrl);
@@ -154,12 +209,28 @@
     body.innerHTML = '<p class="hint">A carregar…</p>';
 
     if (isPdfAttachment(a)) {
-      body.innerHTML =
-        '<iframe class="preview-modal__frame" title="' +
-        escapeHtml(a.name || "PDF") +
-        '" src="' +
-        a.dataUrl +
-        '"></iframe>';
+      revokePreviewObjectUrl();
+      const blobUrl = dataUrlToBlobUrl(a.dataUrl, "application/pdf");
+      if (blobUrl) {
+        previewObjectUrl = blobUrl;
+        body.innerHTML =
+          '<div class="preview-modal__pdf-wrap">' +
+          '<iframe class="preview-modal__frame" title="' +
+          escapeHtml(a.name || "PDF") +
+          '" src="' +
+          blobUrl +
+          '"></iframe>' +
+          '<a class="btn btn--secondary preview-modal__open" href="' +
+          blobUrl +
+          '" target="_blank" rel="noopener">Abrir janela</a></div>';
+      } else {
+        body.innerHTML =
+          '<iframe class="preview-modal__frame" title="' +
+          escapeHtml(a.name || "PDF") +
+          '" src="' +
+          a.dataUrl +
+          '"></iframe>';
+      }
     } else if (isImageAttachment(a)) {
       body.innerHTML =
         '<div class="preview-modal__image-wrap"><img class="preview-modal__image" src="' +
@@ -519,6 +590,7 @@
   function renderAttachments() {
     const block = $("attachmentsBlock");
     const ul = $("attachmentsList");
+    const imgUl = $("attachmentsImagesList");
     const cat = findCategory(route.categoryId);
     const brand = cat ? findBrand(cat, route.brandId) : null;
     const model = brand ? findModel(brand, route.modelId) : null;
@@ -526,23 +598,57 @@
 
     block.hidden = false;
     const attachments = ensureAttachments(model);
-    if (attachments.length === 0) {
-      ul.innerHTML = '<li class="hint">Nenhum anexo neste modelo.</li>';
-      return;
-    }
+    const secao = getActiveSecao();
+    const secaoLabel =
+      activeTab === "mechanical"
+        ? "Mecânica"
+        : activeTab === "electrical"
+          ? "Elétrica"
+          : activeTab === "notes"
+            ? "Notas"
+            : "Software";
 
-    ul.innerHTML = attachments
-      .map(
-        (a) => `<li class="attachments__item">
+    const filtered = attachments.filter((a) => resolveAttachmentSecao(a) === secao);
+    const files = filtered.filter((a) => !isImageAttachment(a));
+    const images = filtered.filter((a) => isImageAttachment(a));
+
+    const titleEl = $("attachmentsTitle");
+    if (titleEl) titleEl.textContent = "Anexos — " + secaoLabel;
+
+    if (files.length === 0) {
+      ul.innerHTML = '<li class="hint">Nenhum documento nesta secção.</li>';
+    } else {
+      ul.innerHTML = files
+        .map(
+          (a) => `<li class="attachments__item">
           <span class="attachments__name" title="${escapeHtml(a.name)}">${escapeHtml(a.name)}</span>
           <button type="button" class="btn btn--secondary attachments__view" data-view="${a.id}">Visualizar</button>
           <a href="${a.dataUrl}" download="${escapeHtml(a.name)}" class="attachments__dl" title="Descarregar">↓</a>
           <button type="button" class="attachments__remove" data-att="${a.id}" title="Remover">✕</button>
         </li>`
-      )
-      .join("");
+        )
+        .join("");
+    }
 
-    ul.querySelectorAll("[data-view]").forEach((btn) => {
+    if (imgUl) {
+      if (images.length === 0) {
+        imgUl.innerHTML = '<li class="hint">Nenhuma imagem nesta secção.</li>';
+      } else {
+        imgUl.innerHTML = images
+          .map(
+            (a) => `<li class="attachments__item attachments__item--image">
+            <button type="button" class="attachments__thumb-btn" data-view="${a.id}">
+              <img class="attachments__thumb" src="${a.dataUrl}" alt="${escapeHtml(a.name)}" />
+              <span class="attachments__name">${escapeHtml(a.name)}</span>
+            </button>
+            <button type="button" class="attachments__remove" data-att="${a.id}" title="Remover">✕</button>
+          </li>`
+          )
+          .join("");
+      }
+    }
+
+    block.querySelectorAll("[data-view]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-view");
         const att = attachments.find((x) => x.id === id);
@@ -550,7 +656,7 @@
       });
     });
 
-    ul.querySelectorAll("[data-att]").forEach((btn) => {
+    block.querySelectorAll("[data-att]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-att");
         model.attachments = attachments.filter((x) => x.id !== id);
@@ -1101,6 +1207,7 @@
   });
 
   $("previewModalClose")?.addEventListener("click", () => {
+    revokePreviewObjectUrl();
     $("previewModal")?.close();
   });
 
@@ -1121,11 +1228,8 @@
     });
   }
 
-  $("attachmentInput")?.addEventListener("change", async (e) => {
-    const files = e.target.files ? Array.from(e.target.files) : [];
-    e.target.value = "";
-    if (files.length === 0) return;
-
+  async function addAttachmentFiles(files) {
+    if (!files.length) return;
     const cat = findCategory(route.categoryId);
     const brand = cat ? findBrand(cat, route.brandId) : null;
     const model = brand ? findModel(brand, route.modelId) : null;
@@ -1154,6 +1258,7 @@
           name: file.name.slice(0, 200),
           mime,
           dataUrl,
+          secao: getActiveSecao(),
         });
         added += 1;
       } catch {
@@ -1172,6 +1277,18 @@
           ? "Anexo guardado " + new Date().toLocaleTimeString("pt-BR")
           : added + " anexos guardados " + new Date().toLocaleTimeString("pt-BR");
     }
+  }
+
+  $("imageInput")?.addEventListener("change", async (e) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    e.target.value = "";
+    await addAttachmentFiles(files);
+  });
+
+  $("attachmentInput")?.addEventListener("change", async (e) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    e.target.value = "";
+    await addAttachmentFiles(files);
   });
 
   function seedExample() {

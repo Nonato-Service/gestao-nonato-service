@@ -1,3 +1,5 @@
+import type { BibliaAnexo, BibliaSecao } from '../components/bibliaNonatoTypes'
+
 export type ManuaisGrupo = { id: string; nome: string; familia: string }
 
 export type ManuaisDocumento = {
@@ -7,11 +9,16 @@ export type ManuaisDocumento = {
   dados: string
   /** Caminho dentro da pasta importada (ex.: movecho manual/Index.PDF) */
   caminhoRelativo?: string
+  /** Secção da Bíblia (Software / Mecânica / Elétrica / Notas) */
+  secao?: BibliaSecao
 }
 
-export type ManuaisImagem = { id: string; nome: string; dados: string }
-
-import type { BibliaAnexo } from '../components/bibliaNonatoTypes'
+export type ManuaisImagem = {
+  id: string
+  nome: string
+  dados: string
+  secao?: BibliaSecao
+}
 
 export type ManuaisModelo = {
   id: string

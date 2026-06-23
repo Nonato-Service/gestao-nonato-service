@@ -8,8 +8,8 @@ import {
   ManuaisImagem,
   ManuaisModelo,
 } from '../lib/manuaisTypes'
-import type { BibliaAnexo } from './bibliaNonatoTypes'
-import { BIBLIA_ANEXO_MAX_BYTES, BIBLIA_ANEXO_MAX_PER_MODEL } from './bibliaNonatoTypes'
+import type { BibliaAnexo, BibliaSecao } from './bibliaNonatoTypes'
+import { BIBLIA_ANEXO_MAX_BYTES, BIBLIA_ANEXO_MAX_PER_MODEL, inferBibliaSecaoFromName, resolveBibliaSecao } from './bibliaNonatoTypes'
 import { syncConhecimentoTecnicoLegacyStores, mergeManuaisPayloads } from '../lib/conhecimentoTecnicoMerge'
 import { AssistTextarea } from './AssistTextFields'
 import { saveManuaisFamiliasGruposToIdb } from '../utils/manuaisIndexedDb'
@@ -271,6 +271,15 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
 
   const tr = (key: string, fallback: string) => safeT[key] || fallback
 
+  const uploadSecao = (): BibliaSecao | undefined => (hubMode === 'biblia' ? bibliaSecaoTab : undefined)
+
+  const bibliaSecaoTabs: { id: BibliaSecao; labelKey: string; fallback: string }[] = [
+    { id: 'software', labelKey: 'bibliaSoftware', fallback: 'Software / PLC' },
+    { id: 'mecanica', labelKey: 'manuaisInfoMecanicas', fallback: 'Mecânica' },
+    { id: 'eletrica', labelKey: 'manuaisInfoEletricas', fallback: 'Elétrica' },
+    { id: 'notas', labelKey: 'bibliaNotas', fallback: 'Notas' },
+  ]
+
   const familias = Array.isArray(manuaisFamilias) ? manuaisFamilias : []
   const grupos = Array.isArray(manuaisGrupos) ? manuaisGrupos : []
   const modelos = Array.isArray(manuaisModelos) ? manuaisModelos : []
@@ -354,6 +363,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
           nome: file.name,
           tipo: file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream'),
           dados: reader.result as string,
+          ...(uploadSecao() ? { secao: uploadSecao() } : {}),
         }
         let snapshot: ManuaisModelo[] = []
         setManuaisModelos((prev) => {
@@ -454,6 +464,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
             (/\.pdf$/i.test(file.name) ? 'application/pdf' : 'application/octet-stream'),
           dados,
           caminhoRelativo: rel || undefined,
+          secao: uploadSecao() || inferBibliaSecaoFromName(rel || file.name) || undefined,
         })
         setManuaisImportProgress({ current: i + 1, total: files.length })
       }
@@ -530,7 +541,12 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
     const reader = new FileReader()
     reader.onload = () => {
       const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `img-${Date.now()}`
-      const novo: ManuaisImagem = { id, nome: file.name, dados: reader.result as string }
+      const novo: ManuaisImagem = {
+        id,
+        nome: file.name,
+        dados: reader.result as string,
+        ...(uploadSecao() ? { secao: uploadSecao() } : {}),
+      }
       let snapshot: ManuaisModelo[] = []
       setManuaisModelos((prev) => {
         snapshot = prev.map((mo) => {
@@ -582,8 +598,9 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
       const novo: BibliaAnexo = {
         id,
         nome: file.name,
-        mime: file.type || 'application/octet-stream',
+        mime: file.type || (/\.pdf$/i.test(file.name) ? 'application/pdf' : 'application/octet-stream'),
         dataUrl: reader.result as string,
+        ...(uploadSecao() ? { secao: uploadSecao() } : {}),
       }
       let snapshot: ManuaisModelo[] = []
       setManuaisModelos((prev) => {
@@ -772,6 +789,15 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
   const selectedModelDocs = Array.isArray(selectedModelo?.documentos) ? selectedModelo!.documentos : []
   const selectedModelImgs = Array.isArray(selectedModelo?.imagens) ? selectedModelo!.imagens : []
   const selectedModelAnexos = Array.isArray(selectedModelo?.anexos) ? selectedModelo!.anexos : []
+
+  const filterByBibliaSecao = <T extends { secao?: BibliaSecao; nome?: string }>(items: T[]): T[] => {
+    if (hubMode !== 'biblia') return items
+    return items.filter((item) => resolveBibliaSecao(item) === bibliaSecaoTab)
+  }
+
+  const visibleModelDocs = filterByBibliaSecao(selectedModelDocs)
+  const visibleModelImgs = filterByBibliaSecao(selectedModelImgs)
+  const visibleModelAnexos = filterByBibliaSecao(selectedModelAnexos)
   const equipamentosAssociados = selectedModelo
     ? equipamentos.filter((e) => e.modeloManuaisId === selectedModelo.id && e.status !== 'baixado')
     : []
@@ -824,6 +850,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
   const [expandedFamilias, setExpandedFamilias] = useState<Record<string, boolean>>({})
   const [expandedGrupos, setExpandedGrupos] = useState<Record<string, boolean>>({})
   const [mainTab, setMainTab] = useState<'ficha' | 'docs' | 'equip'>('ficha')
+  const [bibliaSecaoTab, setBibliaSecaoTab] = useState<BibliaSecao>('software')
   const [manuaisImportProgress, setManuaisImportProgress] = useState<{ current: number; total: number } | null>(
     null
   )
@@ -1320,6 +1347,160 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                 )}
               </p>
             </div>
+          ) : hubMode === 'biblia' ? (
+            <>
+              <div className="manuais-pro__tabs" role="tablist">
+                {bibliaSecaoTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    className={`manuais-pro__tab ${bibliaSecaoTab === tab.id ? 'is-active' : ''}`}
+                    onClick={() => setBibliaSecaoTab(tab.id)}
+                  >
+                    {tr(tab.labelKey, tab.fallback)}
+                  </button>
+                ))}
+              </div>
+
+              <div className="manuais-pro__panels">
+                <section className="manuais-pro__panel manuais-pro__panel--full">
+                  <h3 className="manuais-pro__panel-title">
+                    {tr(
+                      bibliaSecaoTabs.find((t) => t.id === bibliaSecaoTab)?.labelKey || 'bibliaSoftware',
+                      bibliaSecaoTabs.find((t) => t.id === bibliaSecaoTab)?.fallback || 'Software / PLC'
+                    )}
+                  </h3>
+                  <AssistTextarea
+                    value={
+                      bibliaSecaoTab === 'software'
+                        ? selectedModelo.software ?? selectedModelo.infoTecnicas ?? ''
+                        : bibliaSecaoTab === 'mecanica'
+                          ? selectedModelo.infoMecanicas ?? ''
+                          : bibliaSecaoTab === 'eletrica'
+                            ? selectedModelo.infoEletricas ?? ''
+                            : selectedModelo.notas ?? ''
+                    }
+                    onValueChange={(v) => {
+                      if (bibliaSecaoTab === 'software') {
+                        updateModelo(selectedModelo.id, { software: v, infoTecnicas: v })
+                      } else if (bibliaSecaoTab === 'mecanica') {
+                        updateModelo(selectedModelo.id, { infoMecanicas: v })
+                      } else if (bibliaSecaoTab === 'eletrica') {
+                        updateModelo(selectedModelo.id, { infoEletricas: v })
+                      } else {
+                        updateModelo(selectedModelo.id, { notas: v })
+                      }
+                    }}
+                    placeholder={
+                      bibliaSecaoTab === 'software'
+                        ? tr('bibliaSoftwarePlaceholder', 'Versões, parâmetros, backups…')
+                        : bibliaSecaoTab === 'mecanica'
+                          ? tr('manuaisInfoMecanicasPlaceholder', 'Calibração, peças, manutenção…')
+                          : bibliaSecaoTab === 'eletrica'
+                            ? tr('manuaisInfoEletricasPlaceholder', 'Esquemas, fusíveis, motores, IO…')
+                            : tr('bibliaNotasPlaceholder', 'Histórico, peculiaridades, contactos…')
+                    }
+                    rows={6}
+                    style={textareaStyle}
+                  />
+                </section>
+
+                <section className="manuais-pro__panel manuais-pro__panel--full">
+                  <h3 className="manuais-pro__panel-title">{tr('manuaisDocumentos', 'Documentos')}</h3>
+                  <p className="manuais-pro__panel-hint">
+                    {tr(
+                      'bibliaSecaoFicheirosHint',
+                      'PDFs e ficheiros desta secção. Ao mudar de aba (Software, Mecânica, Elétrica, Notas) vê só os ficheiros dessa secção.'
+                    )}
+                  </p>
+                  <ConhecimentoFileViewer
+                    items={visibleModelDocs.map(
+                      (d): ConhecimentoFileItem => ({
+                        id: d.id,
+                        nome: d.caminhoRelativo || d.nome,
+                        dataUrl: d.dados,
+                        tipo: d.tipo,
+                      })
+                    )}
+                    onRemove={(docId) => removeDocumento(selectedModelo.id, docId)}
+                    tr={tr}
+                    emptyHint={tr('manuaisHubNoDocuments', 'Nenhum documento nesta secção.')}
+                    uploadLabel={tr('manuaisAdicionarDocumento', '+ Adicionar documento(s)')}
+                    accept=".pdf,application/pdf,.doc,.docx,image/*,.txt,.md,.csv,.json"
+                    onUpload={(files) => files.forEach((f) => addDocumento(selectedModelo.id, f))}
+                  />
+                </section>
+
+                <section className="manuais-pro__panel">
+                  <h3 className="manuais-pro__panel-title">{tr('manuaisImagens', 'Imagens')}</h3>
+                  <p className="manuais-pro__panel-hint">
+                    {tr('bibliaSecaoImagensHint', 'Fotos e esquemas desta secção. Use «+ Adicionar imagem(ns)».')}
+                  </p>
+                  <div className="manuais-pro__image-grid">
+                    {visibleModelImgs.map((img) => (
+                      <div key={img.id} className="manuais-pro__image-wrap">
+                        <ProImageHoverPreview
+                          src={img.dados}
+                          alt={img.nome}
+                          label={img.nome}
+                          thumbClassName="manuais-pro__image-thumb"
+                        />
+                        <button
+                          type="button"
+                          className="manuais-pro__act manuais-pro__act--danger manuais-pro__image-remove"
+                          onClick={() => removeImagem(selectedModelo.id, img.id)}
+                          title={tr('excluir', 'Excluir')}
+                          aria-label={tr('excluir', 'Excluir')}
+                        >
+                          <span aria-hidden>×</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <label className="manuais-pro__upload">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="manuais-pro__file-input"
+                      onChange={(e) => {
+                        const list = e.target.files ? Array.from(e.target.files) : []
+                        list.forEach((f) => addImagem(selectedModelo.id, f))
+                        e.target.value = ''
+                      }}
+                    />
+                    {tr('manuaisAdicionarImagem', '+ Adicionar imagem(ns)')}
+                  </label>
+                </section>
+
+                <section className="manuais-pro__panel manuais-pro__panel--full">
+                  <h3 className="manuais-pro__panel-title">{tr('bibliaAnexosLabel', 'Anexos técnicos')}</h3>
+                  <p className="manuais-pro__panel-hint">
+                    {tr(
+                      'bibliaNonatoAnexosAjuda',
+                      'PDF, Word (.doc/.docx) ou imagens desta secção. Pode seleccionar vários ficheiros de uma vez.'
+                    )}
+                  </p>
+                  <ConhecimentoFileViewer
+                    items={visibleModelAnexos.map(
+                      (a): ConhecimentoFileItem => ({
+                        id: a.id,
+                        nome: a.nome,
+                        dataUrl: a.dataUrl,
+                        mime: a.mime,
+                      })
+                    )}
+                    onRemove={(anexoId) => removeAnexo(selectedModelo.id, anexoId)}
+                    tr={tr}
+                    emptyHint={tr('bibliaSemAnexos', 'Nenhum anexo nesta secção.')}
+                    uploadLabel={tr('bibliaAdicionarAnexo', '+ Adicionar anexo(s)')}
+                    accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.txt,.md,.csv,.json"
+                    onUpload={(files) => files.forEach((f) => addAnexo(selectedModelo.id, f))}
+                  />
+                </section>
+              </div>
+            </>
           ) : (
             <>
               <div className="manuais-pro__tabs" role="tablist">

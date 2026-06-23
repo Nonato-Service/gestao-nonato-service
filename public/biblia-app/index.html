@@ -141,12 +141,19 @@
           </div>
         </div>
         <div class="attachments" id="attachmentsBlock" hidden>
-          <h3 class="attachments__title">Anexos</h3>
-          <p class="hint">Visualize no ecrã, descarregue se precisar ou traduza o texto copiado. Pode seleccionar vários PDFs de uma vez.</p>
+          <h3 class="attachments__title" id="attachmentsTitle">Anexos</h3>
+          <p class="hint">Documentos e imagens da secção activa (Software, Mecânica, Elétrica ou Notas). PDFs abrem no ecrã.</p>
+          <h4 class="attachments__subtitle">Documentos</h4>
           <ul class="attachments__list" id="attachmentsList"></ul>
           <label class="btn btn--secondary btn--file attachments__add">
-            + Adicionar ficheiro(s)
-            <input type="file" id="attachmentInput" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.txt" multiple hidden />
+            + Adicionar documento(s)
+            <input type="file" id="attachmentInput" accept=".pdf,.doc,.docx,.txt" multiple hidden />
+          </label>
+          <h4 class="attachments__subtitle">Imagens</h4>
+          <ul class="attachments__list attachments__list--images" id="attachmentsImagesList"></ul>
+          <label class="btn btn--secondary btn--file attachments__add">
+            + Adicionar imagem(ns)
+            <input type="file" id="imageInput" accept="image/*" multiple hidden />
           </label>
         </div>
         <div class="biblia-view-tools" id="bibliaViewTools" hidden>

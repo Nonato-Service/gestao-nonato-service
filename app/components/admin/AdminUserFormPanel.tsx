@@ -1,16 +1,12 @@
 'use client'
 
 import React, { useMemo } from 'react'
-import {
-  USER_PERMISSION_GROUPS,
-  applyPermissionPreset,
-  setGroupPermissions,
-  type UserPermissionPresetId,
-} from '../../lib/adminUserPermissions'
+import { applyPermissionPreset, type UserPermissionPresetId } from '../../lib/adminUserPermissions'
 import {
   SIDEBAR_MENU_MODULES,
   buildMenuItemsFromLegacyPermissions,
   countModuleActiveItems,
+  normalizeMenuItems,
   setModuleMenuItems,
   syncLegacyPermissionsFromMenuItems,
 } from '../../lib/sidebarMenuPermissions'
@@ -41,10 +37,11 @@ export function AdminUserFormPanel({
 }: AdminUserFormPanelProps) {
   const setMenuItem = (buttonId: string, value: boolean) => {
     setUserForm((prev) => {
-      const menuItems = { ...prev.menuItems, [buttonId]: value }
+      const menuItems = normalizeMenuItems({ ...prev.menuItems, [buttonId]: value })
       return {
         ...prev,
         menuItems,
+        menuItemsConfigured: true,
         permissions: syncLegacyPermissionsFromMenuItems(menuItems, prev.permissions),
       }
     })
@@ -53,8 +50,8 @@ export function AdminUserFormPanel({
   const applyPreset = (preset: UserPermissionPresetId) => {
     setUserForm((prev) => {
       const permissions = applyPermissionPreset(prev.permissions, preset)
-      const menuItems = buildMenuItemsFromLegacyPermissions(permissions)
-      return { ...prev, permissions, menuItems }
+      const menuItems = normalizeMenuItems(buildMenuItemsFromLegacyPermissions(permissions))
+      return { ...prev, permissions, menuItems, menuItemsConfigured: true }
     })
   }
 
@@ -217,44 +214,6 @@ export function AdminUserFormPanel({
             ))}
           </div>
 
-          <details className="admin-users-hub-legacy-perms">
-            <summary>{tr(safeT, 'adminUsersLegacyPermissions', 'Permissões rápidas (grupos legados)')}</summary>
-            <div className="admin-users-hub-perm-groups">
-              {USER_PERMISSION_GROUPS.map((group) => {
-                const groupKeys = group.permissions.map((p) => p.key)
-                const activeCount = groupKeys.filter((k) => userForm.permissions[k]).length
-                const allOn = activeCount === groupKeys.length
-                return (
-                  <section key={group.id} className="admin-users-hub-perm-group admin-users-hub-perm-group--legacy">
-                    <header className="admin-users-hub-perm-group__head">
-                      <div className="admin-users-hub-perm-group__title">
-                        <span aria-hidden="true">{group.icon}</span>
-                        <div>
-                          <strong>{tr(safeT, group.titleKey, group.id)}</strong>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        className="admin-users-hub-btn admin-users-hub-btn--xs admin-users-hub-btn--ghost"
-                        onClick={() =>
-                          setUserForm((prev) => {
-                            const permissions = setGroupPermissions(prev.permissions, group, !allOn)
-                            const menuItems = buildMenuItemsFromLegacyPermissions(permissions, prev.menuItems)
-                            return { ...prev, permissions, menuItems }
-                          })
-                        }
-                      >
-                        {allOn
-                          ? tr(safeT, 'adminUsersGroupClearAll', 'Desmarcar grupo')
-                          : tr(safeT, 'adminUsersGroupSelectAll', 'Marcar grupo')}
-                      </button>
-                    </header>
-                  </section>
-                )
-              })}
-            </div>
-          </details>
-
           <div className="admin-users-hub-menu-modules">
             {SIDEBAR_MENU_MODULES.map((module) => {
               const activeCount = countModuleActiveItems(userForm.menuItems, module)
@@ -278,10 +237,13 @@ export function AdminUserFormPanel({
                         className="admin-users-hub-btn admin-users-hub-btn--xs admin-users-hub-btn--ghost"
                         onClick={() =>
                           setUserForm((prev) => {
-                            const menuItems = setModuleMenuItems(prev.menuItems, module, !allOn)
+                            const menuItems = normalizeMenuItems(
+                              setModuleMenuItems(prev.menuItems, module, !allOn)
+                            )
                             return {
                               ...prev,
                               menuItems,
+                              menuItemsConfigured: true,
                               permissions: syncLegacyPermissionsFromMenuItems(menuItems, prev.permissions),
                             }
                           })

@@ -22,6 +22,7 @@ export type StoredUser = {
   linkedProfileId?: string
   permissions?: Record<string, boolean>
   menuItems?: Record<string, boolean>
+  menuItemsConfigured?: boolean
 }
 
 type AppSession = StoredUser & {
@@ -88,6 +89,7 @@ function toPublicUser(session: AppSession): StoredUser {
     linkedProfileId: session.linkedProfileId,
     permissions: session.permissions,
     menuItems: session.menuItems,
+    menuItemsConfigured: session.menuItemsConfigured,
   }
 }
 
@@ -105,6 +107,7 @@ function toStoredUser(user: any): StoredUser {
       user.menuItems && typeof user.menuItems === 'object' && !Array.isArray(user.menuItems)
         ? user.menuItems
         : undefined,
+    menuItemsConfigured: Boolean(user.menuItemsConfigured),
   }
 }
 

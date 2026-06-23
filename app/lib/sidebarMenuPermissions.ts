@@ -1,5 +1,4 @@
-import type { UserFormState } from '../components/admin/adminTypes'
-import type { SidebarGroup } from '../components/admin/adminTypes'
+import type { UserFormState, SidebarGroup } from '../components/admin/adminTypes'
 import { USER_PERMISSION_KEYS, type UserPermissionKey } from './adminUserPermissions'
 
 export type SidebarMenuItemDef = {
@@ -33,8 +32,8 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
       { buttonId: 'gestores-default', action: 'open-gestores', labelKey: 'gestoresTitle', fallbackLabel: 'Gestores', legacyKey: 'gestores' },
       { buttonId: 'agenda-default', action: 'open-agenda', labelKey: 'agendaTitle', fallbackLabel: 'Agenda', legacyKey: 'agenda' },
       { buttonId: 'diario-pedidos-dia-default', action: 'open-diario-pedidos-dia', labelKey: 'diarioPedidosTitle', fallbackLabel: 'Diário de pedidos', legacyKey: 'agenda' },
-      { buttonId: 'estado-visual-tecnico-default', action: 'open-estado-visual-tecnico', labelKey: 'estadoVisualTecnico', fallbackLabel: 'Estado visual do técnico' },
-      { buttonId: 'informacoes-conhecimento-tecnicos-default', action: 'open-informacoes-conhecimento-tecnicos', labelKey: 'informacoesConhecimentoTecnicosTitle', fallbackLabel: 'Conhecimento dos técnicos' },
+      { buttonId: 'estado-visual-tecnico-default', action: 'open-estado-visual-tecnico', labelKey: 'estadoVisualTecnico', fallbackLabel: 'Estado visual do técnico', legacyKey: 'gestores' },
+      { buttonId: 'informacoes-conhecimento-tecnicos-default', action: 'open-informacoes-conhecimento-tecnicos', labelKey: 'informacoesConhecimentoTecnicosTitle', fallbackLabel: 'Conhecimento dos técnicos', legacyKey: 'gestores' },
       { buttonId: 'cadastro-servicos-default', action: 'open-cadastro-servicos', labelKey: 'cadastroServicosTitle', fallbackLabel: 'Cadastro de serviços', legacyKey: 'cadastroServicos' },
     ],
   },
@@ -62,6 +61,7 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
       { buttonId: 'biblioteca-relatorios-default', action: 'open-biblioteca-relatorios', labelKey: 'bibliotecaRelatoriosTitle', fallbackLabel: 'Biblioteca de relatórios', legacyKey: 'relatorioServico' },
       { buttonId: 'relatorios-excluidos-clientes-default', action: 'open-relatorios-excluidos-clientes', labelKey: 'relatoriosExcluidosClientesTitle', fallbackLabel: 'Relatórios excluídos', legacyKey: 'clientes' },
       { buttonId: 'fechamento-relatorios-servicos-default', action: 'open-fechamento-relatorios-servicos', labelKey: 'fechamentoRelatoriosServicosTitle', fallbackLabel: 'Fechamento de relatórios', legacyKey: 'relatorioServico' },
+      { buttonId: 'protocolos-servico-default', action: 'open-protocolos-servico', labelKey: 'protocolosServicoTitle', fallbackLabel: 'Protocolos de serviço', legacyKey: 'relatorioServico' },
     ],
   },
   {
@@ -73,6 +73,7 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
     icon: '📚',
     items: [
       { buttonId: 'biblioteca-pecas-default', action: 'open-biblioteca-pecas', labelKey: 'cadastroPecasBibliotecaTitle', fallbackLabel: 'Biblioteca de peças', legacyKey: 'bibliotecaPecas' },
+      { buttonId: 'importacao-pecas-default', action: 'open-importacao-pecas', labelKey: 'importacaoPecas', fallbackLabel: 'Importação de peças', legacyKey: 'bibliotecaPecas' },
       { buttonId: 'pecas-substituicao-default', action: 'open-pecas-substituicao', labelKey: 'pecasSubstituicaoTitle', fallbackLabel: 'Peças de substituição', legacyKey: 'bibliotecaPecas' },
     ],
   },
@@ -114,6 +115,7 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
       { buttonId: 'checklist-basico-default', action: 'open-checklist-basico', labelKey: 'checklistBasicoSubTitle', fallbackLabel: 'Checklist básico', legacyKey: 'extras' },
       { buttonId: 'checklist-default', action: 'open-checklist', labelKey: 'checklistSubTitle', fallbackLabel: 'Checklist', legacyKey: 'extras' },
       { buttonId: 'gestao-grupos-checklist-default', action: 'open-gestao-grupos-checklist', labelKey: 'gestaoGruposChecklistTitle', fallbackLabel: 'Grupos checklist', legacyKey: 'extras' },
+      { buttonId: 'ordem-preparacao-default', action: 'open-ordem-preparacao', labelKey: 'ordemPreparacaoTitle', fallbackLabel: 'Ordem de preparação', legacyKey: 'extras' },
       { buttonId: 'formularios-checklist-tecnicos-default', action: 'open-formularios-checklist-tecnicos', labelKey: 'formulariosChecklistTecnicosTitle', fallbackLabel: 'Formulários técnicos', legacyKey: 'extras' },
       { buttonId: 'verificacao-final-entrega-default', action: 'open-verificacao-final-entrega', labelKey: 'verificacaoFinalEntregaTitle', fallbackLabel: 'Verificação final', legacyKey: 'extras' },
       { buttonId: 'familias-grupos-default', action: 'open-familias-grupos', labelKey: 'familiasGruposTitle', fallbackLabel: 'Famílias e grupos', legacyKey: 'equipamentos' },
@@ -211,12 +213,37 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
 
 export const ALL_MENU_ITEM_IDS = SIDEBAR_MENU_MODULES.flatMap((m) => m.items.map((i) => i.buttonId))
 
+const ACTION_TO_BUTTON_ID: Record<string, string> = Object.fromEntries(
+  SIDEBAR_MENU_MODULES.flatMap((mod) => mod.items.map((item) => [item.action, item.buttonId]))
+)
+
 export function getMenuItemDef(buttonId: string): SidebarMenuItemDef | undefined {
   for (const mod of SIDEBAR_MENU_MODULES) {
     const item = mod.items.find((i) => i.buttonId === buttonId)
     if (item) return item
   }
   return undefined
+}
+
+export function getButtonIdForAction(action: string): string | undefined {
+  return ACTION_TO_BUTTON_ID[action]
+}
+
+/** Utilizador com menu personalizado gravado (modo estrito). */
+export function hasStrictMenuPolicy(
+  menuItems?: Record<string, boolean | undefined>,
+  menuItemsConfigured?: boolean
+): boolean {
+  return Boolean(menuItemsConfigured)
+}
+
+/** Garante todas as chaves conhecidas — ausentes ficam desligados. */
+export function normalizeMenuItems(partial?: Record<string, boolean | undefined>): Record<string, boolean> {
+  const items: Record<string, boolean> = {}
+  for (const id of ALL_MENU_ITEM_IDS) {
+    items[id] = Boolean(partial?.[id])
+  }
+  return items
 }
 
 /** Constrói menuItems a partir das permissões legadas (utilizadores antigos). */
@@ -236,7 +263,7 @@ export function buildMenuItemsFromLegacyPermissions(
       if (item.legacyKey) {
         items[item.buttonId] = Boolean(permissions[item.legacyKey])
       } else {
-        items[item.buttonId] = true
+        items[item.buttonId] = false
       }
     }
   }
@@ -287,13 +314,39 @@ export function canAccessSidebarMenuItem(
   isAdmin: boolean | undefined,
   buttonId: string,
   action: string,
-  legacyAccess: LegacyAccessCheck
+  legacyAccess: LegacyAccessCheck,
+  menuItemsConfigured?: boolean
 ): boolean {
   if (isAdmin) return true
 
-  if (menuItems && Object.prototype.hasOwnProperty.call(menuItems, buttonId)) {
-    return Boolean(menuItems[buttonId])
+  if (hasStrictMenuPolicy(menuItems, menuItemsConfigured)) {
+    return Boolean(menuItems?.[buttonId])
+  }
+
+  const def = getMenuItemDef(buttonId)
+  if (def) {
+    if (menuItems && Object.prototype.hasOwnProperty.call(menuItems, buttonId)) {
+      return Boolean(menuItems[buttonId])
+    }
+    if (def.legacyKey) return legacyAccess(action)
+    return legacyAccess(action)
   }
 
   return legacyAccess(action)
+}
+
+/** Verifica se algum item de um módulo está activo (para ocultar cabeçalhos da sidebar). */
+export function canAccessSidebarModule(
+  menuItems: Record<string, boolean | undefined> | undefined,
+  isAdmin: boolean | undefined,
+  moduleId: SidebarGroup,
+  legacyAccess: LegacyAccessCheck,
+  menuItemsConfigured?: boolean
+): boolean {
+  if (isAdmin) return true
+  const mod = SIDEBAR_MENU_MODULES.find((m) => m.id === moduleId)
+  if (!mod) return false
+  return mod.items.some((item) =>
+    canAccessSidebarMenuItem(menuItems, isAdmin, item.buttonId, item.action, legacyAccess, menuItemsConfigured)
+  )
 }

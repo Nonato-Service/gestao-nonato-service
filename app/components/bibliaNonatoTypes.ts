@@ -3,11 +3,42 @@ export const BIBLIA_LEGACY_CATEGORIES_KEY = 'nonatoServiceBiblia.v1'
 export const BIBLIA_ANEXO_MAX_BYTES = 6 * 1024 * 1024
 export const BIBLIA_ANEXO_MAX_PER_MODEL = 24
 
+/** Secção da ficha técnica (Software, Mecânica, Elétrica, Notas). */
+export type BibliaSecao = 'software' | 'mecanica' | 'eletrica' | 'notas'
+
 export type BibliaAnexo = {
   id: string
   nome: string
   mime: string
   dataUrl: string
+  secao?: BibliaSecao
+}
+
+/** Tenta classificar ficheiros antigos pelo nome/caminho (ex.: HOMAG Elektrik/MK). */
+export function inferBibliaSecaoFromName(nome: string): BibliaSecao | undefined {
+  const n = String(nome || '').toLowerCase().replace(/\\/g, '/')
+  if (/elektr|eletric|electric|(?:^|[/_-])el(?:[/_\-.]|$)|\/el\//.test(n)) return 'eletrica'
+  if (/mechan|mecan|(?:^|[/_-])mk(?:[/_\-.]|$)|\/mk\//.test(n)) return 'mecanica'
+  if (/software|(?:^|[/_-])sw(?:[/_\-.]|$)|\bplc\b/.test(n)) return 'software'
+  return undefined
+}
+
+export function normalizeBibliaSecao(value: unknown): BibliaSecao | undefined {
+  const v = String(value || '').toLowerCase()
+  if (v === 'software') return 'software'
+  if (v === 'mecanica' || v === 'mechanical' || v === 'mecânica') return 'mecanica'
+  if (v === 'eletrica' || v === 'electrical' || v === 'elétrica') return 'eletrica'
+  if (v === 'notas' || v === 'notes') return 'notas'
+  return undefined
+}
+
+export function resolveBibliaSecao(
+  item: { secao?: BibliaSecao; nome?: string },
+  fallback: BibliaSecao = 'notas'
+): BibliaSecao {
+  const direct = normalizeBibliaSecao(item.secao)
+  if (direct) return direct
+  return inferBibliaSecaoFromName(item.nome || '') ?? fallback
 }
 
 export type BibliaModelo = {
@@ -65,12 +96,20 @@ function normalizeModelo(mod: any, mi: number): BibliaModelo {
   const anexosRaw = Array.isArray(mod?.anexos) ? mod.anexos : []
   const anexos: BibliaAnexo[] = anexosRaw
     .filter((a: any) => a && typeof a.dataUrl === 'string' && a.dataUrl.startsWith('data:'))
-    .map((a: any) => ({
-      id: a.id || bibliaUid(),
-      nome: String(a.nome || a.name || 'ficheiro').slice(0, 200),
-      mime: a.mime || 'application/octet-stream',
-      dataUrl: a.dataUrl,
-    }))
+    .map((a: any) => {
+      const nome = String(a.nome || a.name || 'ficheiro').slice(0, 200)
+      const secao =
+        normalizeBibliaSecao(a.secao) ||
+        normalizeBibliaSecao(a.section) ||
+        inferBibliaSecaoFromName(nome)
+      return {
+        id: a.id || bibliaUid(),
+        nome,
+        mime: a.mime || 'application/octet-stream',
+        dataUrl: a.dataUrl,
+        ...(secao ? { secao } : {}),
+      }
+    })
   const parsed =
     mod?.software != null || mod?.mechanical != null || mod?.electrical != null
       ? {
