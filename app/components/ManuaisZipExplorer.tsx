@@ -25,11 +25,12 @@ function formatBytes(bytes: number): string {
   return `${bytes} B`
 }
 
-function entryKind(path: string): 'pdf' | 'image' | 'text' | 'other' {
+function entryKind(path: string): 'pdf' | 'image' | 'text' | 'archive' | 'other' {
   const lower = path.toLowerCase()
   if (lower.endsWith('.pdf')) return 'pdf'
   if (/\.(png|jpe?g|gif|webp|bmp|svg)$/.test(lower)) return 'image'
   if (/\.(txt|md|csv|json|log|xml|html?)$/.test(lower)) return 'text'
+  if (/\.(rar|7z|cab|tar|gz|bz2)$/i.test(lower)) return 'archive'
   return 'other'
 }
 
@@ -48,7 +49,7 @@ export function ManuaisZipExplorer(props: Props) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewText, setPreviewText] = useState('')
-  const [previewKind, setPreviewKind] = useState<'pdf' | 'image' | 'text' | 'other' | null>(null)
+  const [previewKind, setPreviewKind] = useState<'pdf' | 'image' | 'text' | 'archive' | 'other' | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
 
   useEffect(() => {
@@ -137,6 +138,8 @@ export function ManuaisZipExplorer(props: Props) {
           if (cancelled) return
           setPreviewText(text)
           setPreviewKind('text')
+        } else if (kind === 'archive') {
+          setPreviewKind('archive')
         } else {
           setPreviewKind('other')
         }
@@ -155,6 +158,12 @@ export function ManuaisZipExplorer(props: Props) {
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
   }, [selectedPath])
+
+  const hasPreviewable = useMemo(
+    () => entries.some((e) => ['pdf', 'image', 'text'].includes(entryKind(e.path))),
+    [entries]
+  )
+  const selectedIsArchive = selectedPath ? entryKind(selectedPath) === 'archive' : false
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -196,6 +205,14 @@ export function ManuaisZipExplorer(props: Props) {
 
   return (
     <div className="manuais-pro__zip-explorer">
+      {!hasPreviewable ? (
+        <p className="manuais-pro__preview-status manuais-pro__preview-status--warn" style={{ marginBottom: 12 }}>
+          {tr(
+            'manuaisZipSoArquivoInterno',
+            'Este ZIP só contém outro arquivo comprimido (.rar, .7z, etc.) — não há PDFs para ver aqui. Descarregue, extraia no PC (WinRAR ou 7-Zip) e use «Importar pasta» com a pasta descompactada, ou compacte essa pasta em .zip com PDFs dentro.'
+          )}
+        </p>
+      ) : null}
       <p className="manuais-pro__zip-explorer-hint">
         {tr(
           'manuaisZipConteudoHint',
@@ -229,7 +246,15 @@ export function ManuaisZipExplorer(props: Props) {
                     title={entry.path}
                   >
                     <span className={`manuais-pro__zip-item-badge manuais-pro__zip-item-badge--${kind}`}>
-                      {kind === 'pdf' ? 'PDF' : kind === 'image' ? 'IMG' : kind === 'text' ? 'TXT' : '···'}
+                      {kind === 'pdf'
+                        ? 'PDF'
+                        : kind === 'image'
+                          ? 'IMG'
+                          : kind === 'text'
+                            ? 'TXT'
+                            : kind === 'archive'
+                              ? 'RAR'
+                              : '···'}
                     </span>
                     <span className="manuais-pro__zip-item-text">
                       <span className="manuais-pro__zip-item-name">{entryLabel(entry.path)}</span>
@@ -264,6 +289,13 @@ export function ManuaisZipExplorer(props: Props) {
               className="manuais-pro__preview-textarea"
               style={{ width: '100%', minHeight: 280, fontFamily: 'inherit', lineHeight: 1.5 }}
             />
+          ) : previewKind === 'archive' || selectedIsArchive ? (
+            <p className="manuais-pro__preview-status">
+              {tr(
+                'manuaisZipRarExtrair',
+                'Ficheiro .rar / .7z: extraia no computador (WinRAR ou 7-Zip). Depois importe a pasta descompactada com «+ Importar pasta», ou volte a compactar só os PDFs em .zip.'
+              )}
+            </p>
           ) : (
             <p className="manuais-pro__preview-status">
               {tr(
