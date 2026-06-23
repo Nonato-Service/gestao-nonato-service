@@ -1221,6 +1221,16 @@ function sidebarGroupChevronClass(isExpanded: boolean): string {
   return `sidebar-nav-chevron${isExpanded ? ' sidebar-nav-chevron--expanded' : ''}`
 }
 
+function SidebarSectionSep({ id, label }: { id: string; label: string }) {
+  return (
+    <div className="sidebar-section-sep" data-section={id} role="presentation">
+      <span className="sidebar-section-sep__line" aria-hidden />
+      <span className="sidebar-section-sep__label">{label}</span>
+      <span className="sidebar-section-sep__line" aria-hidden />
+    </div>
+  )
+}
+
 /** Substitui o botão legado «ficha-cadastral-default» por dois: transferência e fatura (cliente). */
 function migrateLegacyFichaCadastralSidebarButtons(buttons: SidebarButton[]): SidebarButton[] {
   if (!buttons.some((b) => b.id === 'ficha-cadastral-default')) return buttons
@@ -64673,7 +64683,12 @@ A1;Peça exemplo;10`}
         
         {/* Grupo: GESTÃO TÉCNICA — só mostra se o usuário tiver permissão em algum botão */}
         {getButtonsByGroup('gestao-tecnica').some((b) => canAccessAction(b.action)) && (
-        <div className="sidebar-nav-cluster">
+        <>
+        <SidebarSectionSep
+          id="operacao"
+          label={(safeT as any)?.sidebarSectionOperacao || 'Operação'}
+        />
+        <div className="sidebar-nav-cluster" data-sidebar-zone="operacao">
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-tecnica' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-tecnica')}
@@ -64793,11 +64808,17 @@ A1;Peça exemplo;10`}
             </div>
           )}
         </div>
+        </>
         )}
 
         {/* Grupo: CLIENTES E FORNECEDORES */}
         {getButtonsByGroup('parceiros-comercial').some((b) => canAccessAction(b.action)) && (
-          <div className="sidebar-nav-cluster">
+          <>
+          <SidebarSectionSep
+            id="comercial"
+            label={(safeT as any)?.sidebarSectionComercial || 'Comercial'}
+          />
+          <div className="sidebar-nav-cluster" data-sidebar-zone="comercial">
             <button
               type="button"
               className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-parceiros-comercial' ? ' sidebar-group-btn-selected' : ''}`}
@@ -64869,11 +64890,17 @@ A1;Peça exemplo;10`}
               </div>
             )}
           </div>
+          </>
         )}
 
         {/* Grupo: DOCUMENTAÇÃO E RELATÓRIOS */}
         {getButtonsByGroup('documentacao-relatorios').some((b) => canAccessAction(b.action)) && (
-          <div className="sidebar-nav-cluster">
+          <>
+          <SidebarSectionSep
+            id="documentacao"
+            label={(safeT as any)?.sidebarSectionDocumentacao || 'Documentação'}
+          />
+          <div className="sidebar-nav-cluster" data-sidebar-zone="documentacao">
             <button
               type="button"
               className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-documentacao-relatorios' ? ' sidebar-group-btn-selected' : ''}`}
@@ -64946,13 +64973,14 @@ A1;Peça exemplo;10`}
                 </div>
               )}
           </div>
+          </>
         )}
 
         {/* Grupo: PEÇAS E BIBLIOTECA */}
         {getButtonsByGroup('pecas-biblioteca').some((b) =>
           b.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessAction(b.action)
         ) && (
-          <div className="sidebar-nav-cluster">
+          <div className="sidebar-nav-cluster" data-sidebar-zone="comercial">
             <button
               type="button"
               className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-pecas-biblioteca' ? ' sidebar-group-btn-selected' : ''}`}
@@ -65075,7 +65103,7 @@ A1;Peça exemplo;10`}
         )}
 
         {/* Protocolos de Serviço — entrada na barra lateral (textos via protocolosServico*) */}
-        <div className="sidebar-nav-cluster sidebar-nav-cluster--protocolos">
+        <div className="sidebar-nav-cluster sidebar-nav-cluster--protocolos" data-sidebar-zone="documentacao">
           <button
             type="button"
             className={`btn-primary sidebar-group-header sidebar-group-header--protocolos${selectedSidebarButton === 'open-protocolos-servico' ? ' sidebar-group-btn-selected' : ''}`}
@@ -65163,7 +65191,7 @@ A1;Peça exemplo;10`}
         </div>
 
         {/* Botão principal: Manual detalhado do programa */}
-        <div className="sidebar-nav-cluster">
+        <div className="sidebar-nav-cluster" data-sidebar-zone="documentacao">
           <button
             type="button"
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-manual-programa' ? ' sidebar-group-btn-selected' : ''}`}
@@ -65232,7 +65260,7 @@ A1;Peça exemplo;10`}
         </div>
 
         {/* Grupo: GESTÃO DE CUSTOS — mesmo padrão de cores e contorno do botão GESTÃO TÉCNICA */}
-        <div className="sidebar-nav-cluster">
+        <div className="sidebar-nav-cluster" data-sidebar-zone="comercial">
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-custos' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-custos')}
@@ -65308,7 +65336,11 @@ A1;Peça exemplo;10`}
         </div>
 
         {/* Botão: COMUNICAÇÃO INTERNA C/ GESTORES E TECNICOS */}
-        <div className="sidebar-nav-cluster">
+        <SidebarSectionSep
+          id="comunicacao"
+          label={(safeT as any)?.sidebarSectionComunicacao || 'Comunicação'}
+        />
+        <div className="sidebar-nav-cluster" data-sidebar-zone="comunicacao">
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-comunicacao-interna' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-comunicacao-interna')}
@@ -65473,7 +65505,7 @@ A1;Peça exemplo;10`}
         </div>
 
         {/* Grupo: GESTÃO DOS CHECKLIST (Movido para fora da Gestão Industrial) */}
-        <div className="sidebar-nav-cluster">
+        <div className="sidebar-nav-cluster" data-sidebar-zone="operacao">
           {sidebarButtons
             .filter(btn => btn.id === 'checklist-group-default')
             .map((button) => {
@@ -65550,7 +65582,7 @@ A1;Peça exemplo;10`}
         </div>
 
         {/* Grupo: GESTÃO INDUSTRIAL */}
-        <div className="sidebar-nav-cluster">
+        <div className="sidebar-nav-cluster" data-sidebar-zone="operacao">
           {(() => {
             const gestaoIndustrialActive = selectedSidebarButton === 'open-gestao-industrial' || getButtonsByGroup('gestao-industrial').some((b: SidebarButton) => b.id === selectedSidebarButton)
             return (
@@ -65699,7 +65731,7 @@ A1;Peça exemplo;10`}
         </div>
 
         {/* Botão Principal: MANUAIS — expande para abrir */}
-        <div className="sidebar-nav-cluster">
+        <div className="sidebar-nav-cluster" data-sidebar-zone="operacao">
         {sidebarButtons
           .filter(b => b.id === 'manuais-informacoes-tecnicas-default')
           .map((button) => {
@@ -65782,7 +65814,7 @@ A1;Peça exemplo;10`}
         </div>
 
         {/* Bíblia Nonato Service — espaço dedicado (separado dos manuais oficiais) */}
-        <div className="sidebar-nav-cluster">
+        <div className="sidebar-nav-cluster" data-sidebar-zone="documentacao">
         {sidebarButtons
           .filter(b => b.id === 'biblia-nonato-service-default')
           .map((button) => {
@@ -65866,7 +65898,7 @@ A1;Peça exemplo;10`}
 
         {/* Armazém / almoxarifado e mapa de separação (mesmo cluster lógico) */}
         {getButtonsByGroup('almoxarifado-armazem').some((b) => canAccessAction(b.action)) && (
-          <div className="sidebar-nav-cluster">
+          <div className="sidebar-nav-cluster" data-sidebar-zone="operacao">
             {(() => {
               const headerBtn =
                 sidebarButtons.find((b) => b.id === 'almoxarifado-armazem-default') ||
@@ -65961,7 +65993,7 @@ A1;Peça exemplo;10`}
         )}
 
         {/* Grupo: GESTÃO FINANCEIRA (subsecções: painel, clientes, despesas, outros) */}
-        <div className="sidebar-nav-cluster">
+        <div className="sidebar-nav-cluster" data-sidebar-zone="comercial">
           {(() => {
             const finClusterActive =
               selectedSidebarButton === 'open-gestao-financeira' ||
@@ -66124,7 +66156,12 @@ A1;Peça exemplo;10`}
         {/* Grupo: empresa e registos oficiais (cadastro, ficha, solicitação) — mesmo rigor visual que Protocolos */}
         {!isDemoMode &&
           getButtonsByGroup('empresa-institucional').some((b) => canAccessAction(b.action)) && (
-            <div className="sidebar-nav-cluster sidebar-nav-cluster--empresa-institucional">
+            <>
+            <SidebarSectionSep
+              id="institucional"
+              label={(safeT as any)?.sidebarSectionInstitucional || 'Institucional'}
+            />
+            <div className="sidebar-nav-cluster sidebar-nav-cluster--empresa-institucional" data-sidebar-zone="institucional">
               <button
                 type="button"
                 className={`btn-primary sidebar-group-header sidebar-group-header--empresa-institucional${
@@ -66274,11 +66311,17 @@ A1;Peça exemplo;10`}
                 </div>
               )}
             </div>
+            </>
           )}
 
         {/* Grupo: EXTRA — na demo só idioma; restantes ferramentas sensíveis ficam ocultas */}
         {(!isDemoMode || isActionVisibleInDemo('open-extra')) && (
-        <div className="sidebar-nav-cluster">
+        <>
+        <SidebarSectionSep
+          id="sistema"
+          label={(safeT as any)?.sidebarSectionSistema || 'Sistema'}
+        />
+        <div className="sidebar-nav-cluster" data-sidebar-zone="sistema">
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-extra' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-extra')}
@@ -66305,16 +66348,15 @@ A1;Peça exemplo;10`}
           {expandedGroups.has('extra') && (
             <div className="sidebar-action-buttons">
               {/* Seletor de Idioma */}
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', color: '#ffffff' }}>{safeT?.selectLanguage || 'Idioma'}</label>
+              <div className="sidebar-extra-lang-wrap">
+                <label className="sidebar-extra-lang-label">{safeT?.selectLanguage || 'Idioma'}</label>
                 <select 
-                  className="ns-lang-select"
+                  className="ns-lang-select sidebar-extra-lang-select"
                   value={selectedLanguage} 
                   onChange={(e) => {
                     setSelectedLanguage(e.target.value)
                     handleLanguageChange(e.target.value)
                   }}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#1e1e1e', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                 >
                   {getLanguages(safeT).map(lang => (
                     <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -66458,6 +66500,7 @@ A1;Peça exemplo;10`}
             </div>
           )}
         </div>
+        </>
         )}
 
         {/* Botão ADMINISTRADOR - Sempre visível no final (fallback se a lista estiver vazia após deploy) */}
@@ -66471,7 +66514,7 @@ A1;Peça exemplo;10`}
           }
           const isSelected = selectedSidebarButton === adminBtn.action
           return (
-            <div key={adminBtn.id} className="sidebar-nav-cluster">
+            <div key={adminBtn.id} className="sidebar-nav-cluster" data-sidebar-zone="sistema">
               <button
                 type="button"
                 className={`btn-administrador sidebar-group-header sidebar-admin-footer${isSelected ? ' sidebar-group-btn-selected' : ''}`}

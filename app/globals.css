@@ -1361,42 +1361,51 @@ body,
   }
 }
 
-/* Barra lateral — tema escuro neutro + verde #00c853 */
+/* Barra lateral — tema escuro neutro + verde #00c853 (Sidebar Pro) */
 .sidebar {
   --sidebar-rail: #00c853;
   --sidebar-dim: rgba(0, 200, 83, 0.45);
   --sidebar-accent: #00c853;
   --sidebar-accent-soft: #2ecc71;
   --sidebar-accent-muted: rgba(0, 200, 83, 0.16);
-  --sidebar-active-bg: rgba(0, 120, 60, 0.35);
-  --sidebar-active-border: rgba(0, 200, 83, 0.55);
-  --sidebar-inactive-bg: rgba(30, 30, 30, 0.92);
-  --sidebar-inactive-border: rgba(44, 44, 44, 0.95);
-  --sidebar-surface: #1e1e1e;
-  --sidebar-drawer-bg0: rgba(30, 30, 30, 0.98);
-  --sidebar-drawer-bg1: rgba(24, 24, 24, 0.99);
-  --sidebar-drawer-rail: rgba(0, 200, 83, 0.42);
-  --sidebar-subtle-line: #2c2c2c;
-  --sidebar-text: #ffffff;
-  --sidebar-text-dim: #b0b0b0;
-  width: 280px;
-  min-width: 280px;
+  --sidebar-active-bg: rgba(0, 120, 60, 0.38);
+  --sidebar-active-border: rgba(0, 200, 83, 0.58);
+  --sidebar-inactive-bg: rgba(22, 26, 24, 0.94);
+  --sidebar-inactive-border: rgba(48, 52, 50, 0.92);
+  --sidebar-surface: rgba(28, 32, 30, 0.96);
+  --sidebar-drawer-bg0: rgba(18, 22, 20, 0.98);
+  --sidebar-drawer-bg1: rgba(14, 16, 15, 0.99);
+  --sidebar-drawer-rail: rgba(0, 200, 83, 0.48);
+  --sidebar-subtle-line: rgba(255, 255, 255, 0.07);
+  --sidebar-text: #f4f7f5;
+  --sidebar-text-dim: #a8b0ac;
+  --sidebar-zone-operacao: #00c853;
+  --sidebar-zone-comercial: #38bdf8;
+  --sidebar-zone-documentacao: #a78bfa;
+  --sidebar-zone-comunicacao: #f472b6;
+  --sidebar-zone-institucional: #fbbf24;
+  --sidebar-zone-sistema: #fb7185;
+  width: 296px;
+  min-width: 296px;
   min-height: 0;
   height: 100%;
   align-self: stretch;
-  padding: 20px 14px max(20px, env(safe-area-inset-bottom, 0px));
+  padding: 18px 12px max(18px, env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  /* Altura total da coluna; rolagem só no .sidebar-scroll-inner */
+  gap: 8px;
   overflow: visible;
   overscroll-behavior: contain;
-  background: linear-gradient(180deg, #1e1e1e 0%, #181818 52%, #121212 100%);
-  border-right: 1px solid var(--ns-border-subtle);
+  background:
+    radial-gradient(ellipse 120% 80% at 0% 0%, rgba(0, 200, 83, 0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 60% at 100% 100%, rgba(56, 189, 248, 0.04) 0%, transparent 50%),
+    linear-gradient(180deg, #1a1e1c 0%, #141816 48%, #0e100f 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow:
-    inset 1px 0 0 rgba(255, 255, 255, 0.03),
-    8px 0 28px rgba(0, 0, 0, 0.42);
+    inset 1px 0 0 rgba(255, 255, 255, 0.04),
+    12px 0 40px rgba(0, 0, 0, 0.48);
   position: relative;
+  isolation: isolate;
 }
 .sidebar::before {
   content: '';
@@ -1404,12 +1413,27 @@ body,
   left: 0;
   top: 0;
   bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, #00c853 0%, rgba(0, 200, 83, 0.45) 42%, rgba(18, 18, 18, 0.95) 100%);
-  opacity: 0.95;
+  width: 4px;
+  background: linear-gradient(
+    180deg,
+    #00c853 0%,
+    rgba(0, 200, 83, 0.55) 35%,
+    rgba(56, 189, 248, 0.25) 65%,
+    rgba(18, 18, 18, 0.2) 100%
+  );
+  opacity: 0.98;
   pointer-events: none;
-  border-radius: 0 2px 2px 0;
-  box-shadow: 2px 0 16px rgba(0, 200, 83, 0.12);
+  border-radius: 0 3px 3px 0;
+  box-shadow: 3px 0 22px rgba(0, 200, 83, 0.18);
+}
+.sidebar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
 }
 .sidebar > * {
   position: relative;
@@ -1422,12 +1446,112 @@ body,
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
   overflow-x: visible;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
+  padding-right: 2px;
+}
+
+/* Separadores de zona — hierarquia visual da navegação */
+.sidebar-section-sep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 6px 8px;
+  user-select: none;
+  flex-shrink: 0;
+}
+.sidebar-section-sep:first-child {
+  margin-top: 2px;
+}
+.sidebar-section-sep__line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+}
+.sidebar-section-sep__label {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.sidebar-section-sep[data-section='operacao'] .sidebar-section-sep__label {
+  color: rgba(110, 231, 183, 0.78);
+  border-color: rgba(0, 200, 83, 0.18);
+  background: rgba(0, 200, 83, 0.06);
+}
+.sidebar-section-sep[data-section='comercial'] .sidebar-section-sep__label {
+  color: rgba(125, 211, 252, 0.78);
+  border-color: rgba(56, 189, 248, 0.18);
+  background: rgba(56, 189, 248, 0.06);
+}
+.sidebar-section-sep[data-section='documentacao'] .sidebar-section-sep__label {
+  color: rgba(196, 181, 253, 0.78);
+  border-color: rgba(167, 139, 250, 0.18);
+  background: rgba(167, 139, 250, 0.06);
+}
+.sidebar-section-sep[data-section='comunicacao'] .sidebar-section-sep__label {
+  color: rgba(249, 168, 212, 0.78);
+  border-color: rgba(244, 114, 182, 0.18);
+  background: rgba(244, 114, 182, 0.06);
+}
+.sidebar-section-sep[data-section='institucional'] .sidebar-section-sep__label {
+  color: rgba(253, 224, 71, 0.78);
+  border-color: rgba(251, 191, 36, 0.18);
+  background: rgba(251, 191, 36, 0.06);
+}
+.sidebar-section-sep[data-section='sistema'] .sidebar-section-sep__label {
+  color: rgba(253, 164, 175, 0.78);
+  border-color: rgba(251, 113, 133, 0.18);
+  background: rgba(251, 113, 133, 0.06);
+}
+
+/* Painel de idioma dentro de Extras */
+.sidebar-extra-lang-wrap {
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.sidebar-extra-lang-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+.sidebar-extra-lang-select {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: rgba(18, 22, 20, 0.98);
+  color: #f4f7f5;
+  border: 1px solid rgba(0, 200, 83, 0.28);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.sidebar-extra-lang-select:hover {
+  border-color: rgba(0, 200, 83, 0.45);
+}
+.sidebar-extra-lang-select:focus-visible {
+  outline: 2px solid rgba(0, 200, 83, 0.65);
+  outline-offset: 2px;
 }
 
 .sidebar-footer {
@@ -1444,9 +1568,12 @@ body,
   border-radius: 8px;
 }
 .sidebar .sidebar-scroll-inner::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #3a3a3a 0%, #1e1e1e 100%);
+  background: linear-gradient(180deg, rgba(0, 200, 83, 0.35) 0%, rgba(58, 58, 58, 0.95) 100%);
   border-radius: 8px;
-  border: 1px solid rgba(0, 200, 83, 0.2);
+  border: 1px solid rgba(0, 200, 83, 0.22);
+}
+.sidebar .sidebar-scroll-inner::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(0, 200, 83, 0.52) 0%, rgba(72, 72, 72, 0.98) 100%);
 }
 
 /* Desktop: sidebar por cima da coluna central para o balão (à direita) não ficar tapado pelo conteúdo */
@@ -1471,20 +1598,39 @@ body,
   }
 }
 
-/* Cada módulo da navegação: “cartão” leve para não misturar com o vizinho ao expandir */
+/* Cada módulo da navegação: cartão com acento por zona funcional */
 .sidebar-nav-cluster {
-  margin: 0 0 12px;
-  padding: 6px 7px 8px;
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin: 0 0 8px;
+  padding: 5px 6px 7px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.03),
-    0 1px 0 rgba(0, 0, 0, 0.28);
+    0 2px 12px rgba(0, 0, 0, 0.22);
   transition:
     background 0.24s ease,
     border-color 0.24s ease,
-    box-shadow 0.28s ease;
+    box-shadow 0.28s ease,
+    transform 0.22s ease;
+}
+.sidebar-nav-cluster[data-sidebar-zone='operacao'] {
+  border-left: 2px solid rgba(0, 200, 83, 0.35);
+}
+.sidebar-nav-cluster[data-sidebar-zone='comercial'] {
+  border-left: 2px solid rgba(56, 189, 248, 0.32);
+}
+.sidebar-nav-cluster[data-sidebar-zone='documentacao'] {
+  border-left: 2px solid rgba(167, 139, 250, 0.32);
+}
+.sidebar-nav-cluster[data-sidebar-zone='comunicacao'] {
+  border-left: 2px solid rgba(244, 114, 182, 0.32);
+}
+.sidebar-nav-cluster[data-sidebar-zone='institucional'] {
+  border-left: 2px solid rgba(251, 191, 36, 0.35);
+}
+.sidebar-nav-cluster[data-sidebar-zone='sistema'] {
+  border-left: 2px solid rgba(251, 113, 133, 0.32);
 }
 
 /* Último bloco de navegação: sem margem extra; o botão Sair traz o espaçamento */
@@ -1492,14 +1638,50 @@ body,
   margin-bottom: 0;
 }
 
-/* Grupo com subitens abertos: cartão um pouco mais definido */
+/* Grupo com subitens abertos: cartão mais definido + brilho de zona */
 .sidebar-nav-cluster:has(.sidebar-action-buttons) {
-  padding: 8px 8px 10px;
-  background: var(--sidebar-surface);
-  border-color: rgba(255, 255, 255, 0.08);
+  padding: 7px 7px 9px;
+  background: linear-gradient(165deg, rgba(24, 28, 26, 0.98) 0%, rgba(16, 18, 17, 0.99) 100%);
+  border-color: rgba(255, 255, 255, 0.09);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 4px 18px rgba(0, 0, 0, 0.28);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 6px 22px rgba(0, 0, 0, 0.32);
+}
+.sidebar-nav-cluster[data-sidebar-zone='operacao']:has(.sidebar-action-buttons) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 6px 22px rgba(0, 0, 0, 0.32),
+    0 0 24px rgba(0, 200, 83, 0.06);
+}
+.sidebar-nav-cluster[data-sidebar-zone='comercial']:has(.sidebar-action-buttons) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 6px 22px rgba(0, 0, 0, 0.32),
+    0 0 24px rgba(56, 189, 248, 0.05);
+}
+.sidebar-nav-cluster[data-sidebar-zone='documentacao']:has(.sidebar-action-buttons) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 6px 22px rgba(0, 0, 0, 0.32),
+    0 0 24px rgba(167, 139, 250, 0.05);
+}
+.sidebar-nav-cluster[data-sidebar-zone='comunicacao']:has(.sidebar-action-buttons) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 6px 22px rgba(0, 0, 0, 0.32),
+    0 0 24px rgba(244, 114, 182, 0.05);
+}
+.sidebar-nav-cluster[data-sidebar-zone='institucional']:has(.sidebar-action-buttons) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 6px 22px rgba(0, 0, 0, 0.32),
+    0 0 24px rgba(251, 191, 36, 0.05);
+}
+.sidebar-nav-cluster[data-sidebar-zone='sistema']:has(.sidebar-action-buttons) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 6px 22px rgba(0, 0, 0, 0.32),
+    0 0 24px rgba(251, 113, 133, 0.05);
 }
 
 /* Bloco «Protocolos de serviço»: acento dedicado e tipografia em duas linhas */
@@ -1798,13 +1980,14 @@ body,
 
 .sidebar-brand {
   flex-shrink: 0;
-  margin-bottom: 22px;
+  margin-bottom: 14px;
   text-align: center;
-  padding: 10px 10px 12px;
+  padding: 12px 12px 14px;
   overflow: hidden;
-  background: var(--sidebar-surface);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(165deg, rgba(32, 38, 34, 0.98) 0%, rgba(18, 22, 20, 0.99) 100%);
+  border-radius: 18px;
+  border: 1px solid rgba(0, 200, 83, 0.14);
   min-height: 112px;
   max-height: min(28vh, 200px);
   height: auto;
@@ -1814,8 +1997,9 @@ body,
   box-sizing: border-box;
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 6px 20px rgba(0, 0, 0, 0.28);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 28px rgba(0, 0, 0, 0.32),
+    0 0 32px rgba(0, 200, 83, 0.06);
 }
 
 /* Logo upload na sidebar: altura da caixa fixa + cover (preenche toda a área; padding 0 evita “moldura” cinzenta do contain) */
@@ -2740,7 +2924,7 @@ button.btn-danger.btn-danger--inline {
 .bottom-tabs-bar {
   position: fixed;
   bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-  left: calc(280px + 16px);
+  left: calc(296px + 16px);
   right: 16px;
   max-width: 1060px;
   margin-left: auto;
@@ -3784,7 +3968,7 @@ html, body {
 @media (min-width: 1025px) {
   .app-layout > .sidebar {
     flex-shrink: 0;
-    min-width: 280px;
+    min-width: 296px;
   }
   /*
    * Travar a app ao viewport (igual ao .app-compact-layout no telemóvel). Sem isto, o flex
@@ -3803,7 +3987,7 @@ html, body {
     min-height: 0;
     max-height: none;
     height: 100%;
-    flex: 0 0 280px;
+    flex: 0 0 296px;
   }
   .app-layout:not(.app-compact-layout) > .main-app-column {
     min-height: 0;
