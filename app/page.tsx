@@ -133,6 +133,7 @@ import { ManuaisInformacoesContent } from './components/ManuaisInformacoesConten
 import ManualProgramaContent from './components/ManualProgramaContent'
 import type { ManualProgramaPageDef } from './lib/manualProgramaCatalog'
 import { ConhecimentoTecnicosContent } from './components/ConhecimentoTecnicosContent'
+import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { DiarioLembreteIntervalPicker } from './components/DiarioLembreteIntervalPicker'
 import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'
 import { FamiliasGruposChecklistContent } from './components/FamiliasGruposChecklistContent'
@@ -55778,7 +55779,17 @@ A1;Peça exemplo;10`}
         return ManuaisInformacoesTabContent({ hubMode: 'manuais' })
 
       case 'biblia-nonato-service':
-        return ManuaisInformacoesTabContent({ hubMode: 'biblia' })
+        return (
+          <BibliaNonatoServiceContent
+            safeT={safeT as Record<string, string | undefined>}
+            closeTab={closeTab}
+            activeTabId={activeTabId}
+            onHome={voltarPaginaInicial}
+            isCompactLayout={isCompactLayout}
+            saveData={saveData}
+            loadData={loadData}
+          />
+        )
 
       case 'informacoes-conhecimento-tecnicos':
         return (
