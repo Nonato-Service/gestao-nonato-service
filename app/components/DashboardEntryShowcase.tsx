@@ -25,13 +25,6 @@ type Props = {
 
 const SLIDE_INTERVAL_MS = 5200
 
-function circularOffset(i: number, active: number, total: number): number {
-  let diff = i - active
-  if (diff > total / 2) diff -= total
-  if (diff < -total / 2) diff += total
-  return diff
-}
-
 export function DashboardEntryShowcase(props: Props) {
   const { safeT, isCompactLayout, logoSlot, onEnter, enterLabel, note } = props
   const t = safeT as Record<string, string | undefined>
@@ -104,16 +97,12 @@ export function DashboardEntryShowcase(props: Props) {
 
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
-  const [animating, setAnimating] = useState(false)
 
   const go = useCallback(
     (next: number) => {
-      if (animating) return
-      setAnimating(true)
       setIndex((next + slides.length) % slides.length)
-      window.setTimeout(() => setAnimating(false), 780)
     },
-    [animating, slides.length]
+    [slides.length]
   )
 
   useEffect(() => {
@@ -128,7 +117,7 @@ export function DashboardEntryShowcase(props: Props) {
 
   return (
     <div
-      className={`ns-showcase ns-showcase--cinema${isCompactLayout ? ' ns-showcase--compact' : ''}`}
+      className={`ns-showcase ns-showcase--cinema ns-showcase--clean${isCompactLayout ? ' ns-showcase--compact' : ''}`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
@@ -149,31 +138,24 @@ export function DashboardEntryShowcase(props: Props) {
       </header>
 
       <div className="ns-showcase__cinema" aria-label={t?.dashboardShowcaseAria || 'Demonstração das funcionalidades'}>
-        <div className="ns-showcase__deck">
-          {slides.map((slide, i) => {
-            const offset = circularOffset(i, index, slides.length)
-            if (Math.abs(offset) > 2) return null
-            return (
-              <article
-                key={slide.id}
-                className={`ns-showcase__deck-card${i === index ? ' is-active' : ''}${animating ? ' is-animating' : ''}`}
-                data-offset={offset}
-                aria-hidden={i !== index}
-                aria-label={slide.title}
-              >
-                <div className="ns-showcase__deck-screen">
-                  <DashboardShowcaseSlideVisual visual={slide.visual} />
-                </div>
-                {i === index ? (
-                  <div className="ns-showcase__deck-caption" aria-live="polite">
-                    <h1 className="ns-showcase__title">{slide.title}</h1>
-                    <p className="ns-showcase__desc">{slide.desc}</p>
-                  </div>
-                ) : null}
-              </article>
-            )
-          })}
+        <div className="ns-showcase__stage">
+          {slides.map((slide, i) => (
+            <article
+              key={slide.id}
+              className={`ns-showcase__slide${i === index ? ' is-active' : ''}`}
+              aria-hidden={i !== index}
+            >
+              <div className="ns-showcase__slide-frame">
+                <DashboardShowcaseSlideVisual visual={slide.visual} />
+              </div>
+            </article>
+          ))}
         </div>
+      </div>
+
+      <div className="ns-showcase__info" aria-live="polite">
+        <h1 className="ns-showcase__title">{current.title}</h1>
+        <p className="ns-showcase__desc">{current.desc}</p>
       </div>
 
       <footer className="ns-showcase__dock">
@@ -196,36 +178,12 @@ export function DashboardEntryShowcase(props: Props) {
           ))}
         </div>
 
-        <div className="ns-showcase__dock-row">
-          <button
-            type="button"
-            className="ns-showcase__arrow"
-            onClick={() => go(index - 1)}
-            aria-label={t?.voltar || 'Anterior'}
-          >
-            ‹
-          </button>
-
-          <button type="button" className="btn-primary ns-showcase__cta" onClick={onEnter}>
-            <span aria-hidden>→</span>
-            {enterLabel}
-          </button>
-
-          <button
-            type="button"
-            className="ns-showcase__arrow"
-            onClick={() => go(index + 1)}
-            aria-label={t?.proximo || 'Seguinte'}
-          >
-            ›
-          </button>
-        </div>
+        <button type="button" className="btn-primary ns-showcase__cta" onClick={onEnter}>
+          <span aria-hidden>→</span>
+          {enterLabel}
+        </button>
 
         {note ? <p className="ns-showcase__note">{note}</p> : null}
-        <p className="ns-showcase__hint">
-          {t?.dashboardShowcaseHint ||
-            `A explorar: ${current.chip} — os módulos passam automaticamente; toque num botão ou use as setas.`}
-        </p>
       </footer>
     </div>
   )

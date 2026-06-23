@@ -105,16 +105,19 @@ import {
 } from './lib/relatorioServicoEquipamentos'
 import { mergeManuaisFamiliasGrupos, manuaisPayloadHasRichContent } from './utils/manuaisMerge'
 import {
-  buildConhecimentoTecnicoFromSources,
+  buildManuaisFromSources,
+  buildBibliaConhecimentoFromSources,
   BIBLIA_NONATO_STORAGE_KEY,
   BIBLIA_LEGACY_CATEGORIES_KEY,
   CONHECIMENTO_TECNICO_STORAGE_KEY,
-  syncConhecimentoTecnicoLegacyStores,
+  syncManuaisConhecimentoStores,
+  syncBibliaConhecimentoStore,
 } from './lib/conhecimentoTecnicoMerge'
 import {
   loadManuaisFamiliasGruposFromIdb,
   saveManuaisFamiliasGruposToIdb,
   getKv,
+  saveKv,
   deleteAllNonatoKvFromIdb,
 } from './utils/manuaisIndexedDb'
 import { WritingLanguageAssistModal } from './components/WritingLanguageAssistModal'
@@ -131,7 +134,6 @@ import ManualProgramaContent from './components/ManualProgramaContent'
 import type { ManualProgramaPageDef } from './lib/manualProgramaCatalog'
 import { ConhecimentoTecnicosContent } from './components/ConhecimentoTecnicosContent'
 import { DiarioLembreteIntervalPicker } from './components/DiarioLembreteIntervalPicker'
-import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'
 import { FamiliasGruposChecklistContent } from './components/FamiliasGruposChecklistContent'
 import { ChecklistBasicoContent } from './components/ChecklistBasicoContent'
@@ -1778,6 +1780,17 @@ function normalizeKmForPersist(raw: string | undefined): string {
 
 function isKmFieldEmpty(raw: string | undefined | null): boolean {
   return kmStringForNumberField(raw) === ''
+}
+
+/** KM predefinidos no cadastro do cliente (ida / retorno). */
+function getKmPadraoDoCliente(cliente?: { kmIdaPadrao?: string; kmRetornoPadrao?: string } | null): {
+  kmIda: string
+  kmRetorno: string
+} {
+  return {
+    kmIda: kmStringForNumberField(cliente?.kmIdaPadrao),
+    kmRetorno: kmStringForNumberField(cliente?.kmRetornoPadrao),
+  }
 }
 
 type PecaSubstituicao = {
@@ -4531,6 +4544,28 @@ export default function Dashboard() {
   const [novoModeloManuais, setNovoModeloManuais] = useState('')
   const [editingModeloManuaisId, setEditingModeloManuaisId] = useState<string | null>(null)
   const [editingModeloManuaisValue, setEditingModeloManuaisValue] = useState('')
+  // Bíblia Nonato Service — estado separado dos Manuais
+  const [bibliaFamilias, setBibliaFamilias] = useState<string[]>([])
+  const [bibliaGrupos, setBibliaGrupos] = useState<ManuaisGrupo[]>([])
+  const [bibliaModelos, setBibliaModelos] = useState<ManuaisModelo[]>([])
+  const bibliaFamiliasRef = useRef(bibliaFamilias)
+  const bibliaGruposRef = useRef(bibliaGrupos)
+  const bibliaModelosRef = useRef(bibliaModelos)
+  bibliaFamiliasRef.current = bibliaFamilias
+  bibliaGruposRef.current = bibliaGrupos
+  bibliaModelosRef.current = bibliaModelos
+  const [novaFamiliaBiblia, setNovaFamiliaBiblia] = useState('')
+  const [novoGrupoBiblia, setNovoGrupoBiblia] = useState('')
+  const [novoModeloBiblia, setNovoModeloBiblia] = useState('')
+  const [selectedFamiliaBiblia, setSelectedFamiliaBiblia] = useState<string | null>(null)
+  const [selectedGrupoBiblia, setSelectedGrupoBiblia] = useState<string | null>(null)
+  const [selectedModeloBibliaId, setSelectedModeloBibliaId] = useState<string | null>(null)
+  const [editingFamiliaBiblia, setEditingFamiliaBiblia] = useState<string | null>(null)
+  const [editingFamiliaBibliaValue, setEditingFamiliaBibliaValue] = useState('')
+  const [editingGrupoBibliaId, setEditingGrupoBibliaId] = useState<string | null>(null)
+  const [editingGrupoBibliaValue, setEditingGrupoBibliaValue] = useState('')
+  const [editingModeloBibliaId, setEditingModeloBibliaId] = useState<string | null>(null)
+  const [editingModeloBibliaValue, setEditingModeloBibliaValue] = useState('')
   const [selectedFamiliaForGrupos, setSelectedFamiliaForGrupos] = useState<string | null>(null)
   const [showEquipamentosModal, setShowEquipamentosModal] = useState(false)
   const [showEquipamentoForm, setShowEquipamentoForm] = useState(false)
@@ -9832,11 +9867,9 @@ export default function Dashboard() {
       const savedBiblia = getData(BIBLIA_NONATO_STORAGE_KEY)
       const savedBibliaLegacy = getData(BIBLIA_LEGACY_CATEGORIES_KEY)
       const savedUnified = getData(CONHECIMENTO_TECNICO_STORAGE_KEY)
-      const mergedManuaisFG = buildConhecimentoTecnicoFromSources(
+      const mergedManuaisFG = buildManuaisFromSources(
         savedManuaisFG && typeof savedManuaisFG === 'object' ? savedManuaisFG : {},
-        savedBiblia,
         fromIdbManuais && typeof fromIdbManuais === 'object' ? fromIdbManuais : undefined,
-        savedBibliaLegacy,
         savedUnified && typeof savedUnified === 'object' ? savedUnified : undefined
       )
       setManuaisFamilias(Array.isArray(mergedManuaisFG.familias) ? mergedManuaisFG.familias : [])
@@ -9847,12 +9880,12 @@ export default function Dashboard() {
       } catch {
         /* IDB pode falhar em modo privado; estado em memória mantém-se */
       }
-      const hasConhecimentoData =
+      const hasManuaisData =
         (mergedManuaisFG.familias?.length ?? 0) > 0 ||
         (mergedManuaisFG.grupos?.length ?? 0) > 0 ||
         (mergedManuaisFG.modelos?.length ?? 0) > 0
-      if (hasConhecimentoData) {
-        void syncConhecimentoTecnicoLegacyStores(mergedManuaisFG, saveData).catch(() => {})
+      if (hasManuaisData) {
+        void syncManuaisConhecimentoStores(mergedManuaisFG, saveData).catch(() => {})
         if (manuaisPayloadHasRichContent(mergedManuaisFG)) {
           void saveData('nonato-manuais-familias-grupos', mergedManuaisFG, false, true).catch(() => {})
         }
@@ -9861,8 +9894,37 @@ export default function Dashboard() {
         setManuaisFamilias(Array.isArray(fromIdbManuais.familias) ? fromIdbManuais.familias : [])
         setManuaisGrupos(Array.isArray(fromIdbManuais.grupos) ? fromIdbManuais.grupos : [])
         setManuaisModelos(Array.isArray(fromIdbManuais.modelos) ? fromIdbManuais.modelos : [])
-        void syncConhecimentoTecnicoLegacyStores(fromIdbManuais, saveData).catch(() => {})
+        void syncManuaisConhecimentoStores(fromIdbManuais, saveData).catch(() => {})
         void saveData('nonato-manuais-familias-grupos', fromIdbManuais, false, true).catch(() => {})
+      }
+
+      let fromIdbBiblia: { familias?: string[]; grupos?: ManuaisGrupo[]; modelos?: ManuaisModelo[] } | null = null
+      try {
+        fromIdbBiblia = await getKv(BIBLIA_NONATO_STORAGE_KEY)
+      } catch {
+        /* ignorar */
+      }
+      const mergedBibliaFG = buildBibliaConhecimentoFromSources(
+        savedBiblia,
+        savedBibliaLegacy,
+        fromIdbBiblia && typeof fromIdbBiblia === 'object' ? fromIdbBiblia : undefined
+      )
+      setBibliaFamilias(Array.isArray(mergedBibliaFG.familias) ? mergedBibliaFG.familias : [])
+      setBibliaGrupos(Array.isArray(mergedBibliaFG.grupos) ? mergedBibliaFG.grupos : [])
+      setBibliaModelos(Array.isArray(mergedBibliaFG.modelos) ? mergedBibliaFG.modelos : [])
+      const hasBibliaData =
+        (mergedBibliaFG.familias?.length ?? 0) > 0 ||
+        (mergedBibliaFG.grupos?.length ?? 0) > 0 ||
+        (mergedBibliaFG.modelos?.length ?? 0) > 0
+      if (hasBibliaData) {
+        if (manuaisPayloadHasRichContent(mergedBibliaFG)) {
+          try {
+            await saveKv(BIBLIA_NONATO_STORAGE_KEY, mergedBibliaFG)
+          } catch {
+            /* ignorar */
+          }
+        }
+        void syncBibliaConhecimentoStore(mergedBibliaFG, saveData).catch(() => {})
       }
 
       await reportBoot(52)
@@ -16108,18 +16170,10 @@ export default function Dashboard() {
       const previousClientes = clientes
       setClientes(updatedClientes)
 
-      let localSaved = false
       try {
         await saveData('nonato-clientes', updatedClientes, true, false)
-        const raw = typeof window !== 'undefined' ? localStorage.getItem('nonato-clientes') : null
-        if (raw) {
-          const parsed = JSON.parse(raw) as Cliente[]
-          localSaved = Array.isArray(parsed) && parsed.some((c) => c.id === savedCliente.id)
-        }
-      } catch {
-        localSaved = false
-      }
-      if (!localSaved) {
+      } catch (err) {
+        console.error('Erro ao salvar clientes localmente:', err)
         setClientes(previousClientes)
         alert((t as any).erroSalvar || 'Erro ao salvar. Tente novamente.')
         return
@@ -17770,6 +17824,22 @@ export default function Dashboard() {
       ),
       pecasSubstituicao: r.pecasSubstituicao ? [...r.pecasSubstituicao] : [],
     })
+    if (clienteResolvido) {
+      const { kmIda, kmRetorno } = getKmPadraoDoCliente(clienteResolvido)
+      if (kmIda || kmRetorno) {
+        setNovoDiaTrabalho((prev) => {
+          const next = {
+            ...prev,
+            data: prev.data || new Date().toISOString().split('T')[0],
+            kmIda: isKmFieldEmpty(prev.kmIda) && kmIda ? kmIda : prev.kmIda,
+            kmRetorno: isKmFieldEmpty(prev.kmRetorno) && kmRetorno ? kmRetorno : prev.kmRetorno,
+          }
+          const kmIdaNum = parseFloat(next.kmIda) || 0
+          const kmRetornoNum = parseFloat(next.kmRetorno) || 0
+          return { ...next, kmTotal: String(kmIdaNum + kmRetornoNum) }
+        })
+      }
+    }
     setShowRelatorioServicoForm(true)
     scrollRelatorioServicoFormIntoView()
   }
@@ -21922,15 +21992,14 @@ export default function Dashboard() {
 
   const applyKmClienteAoRelatorio = useCallback(
     (cliente?: Cliente | null) => {
-      const kmIda = kmStringForNumberField(cliente?.kmIdaPadrao)
-      const kmRetorno = kmStringForNumberField(cliente?.kmRetornoPadrao)
+      const { kmIda, kmRetorno } = getKmPadraoDoCliente(cliente)
       if (!kmIda && !kmRetorno) return
 
       setNovoDiaTrabalho((prev) =>
         atualizarCalculosDia({
           ...prev,
-          kmIda: kmIda || prev.kmIda,
-          kmRetorno: kmRetorno || prev.kmRetorno,
+          kmIda: isKmFieldEmpty(prev.kmIda) && kmIda ? kmIda : prev.kmIda,
+          kmRetorno: isKmFieldEmpty(prev.kmRetorno) && kmRetorno ? kmRetorno : prev.kmRetorno,
         })
       )
 
@@ -21960,6 +22029,21 @@ export default function Dashboard() {
     },
     []
   )
+
+  useEffect(() => {
+    if (!showRelatorioServicoForm) return
+    const cliente =
+      clientes.find((c) => c.id === relatorioServicoForm.clienteId) ||
+      findClienteByRelatorio(clientes, relatorioServicoForm)
+    if (!cliente) return
+    applyKmClienteAoRelatorio(cliente)
+  }, [
+    showRelatorioServicoForm,
+    relatorioServicoForm.clienteId,
+    relatorioServicoForm.cliente,
+    clientes,
+    applyKmClienteAoRelatorio,
+  ])
 
   const handleSaveRelatorioServico = () => {
     // Validar apenas campos obrigatórios do relatório (não dos dias de trabalho)
@@ -22425,9 +22509,19 @@ export default function Dashboard() {
       return
     }
 
+    const clienteAtual =
+      clientes.find((c) => c.id === relatorioServicoForm.clienteId) ||
+      findClienteByRelatorio(clientes, relatorioServicoForm)
+    const { kmIda: kmIdaPadrao, kmRetorno: kmRetornoPadrao } = getKmPadraoDoCliente(clienteAtual)
+
+    let kmIdaVal = normalizeKmForPersist(novoDiaTrabalho.kmIda)
+    let kmRetornoVal = normalizeKmForPersist(novoDiaTrabalho.kmRetorno)
+    if (!kmIdaVal && kmIdaPadrao) kmIdaVal = kmIdaPadrao
+    if (!kmRetornoVal && kmRetornoPadrao) kmRetornoVal = kmRetornoPadrao
+
     // Calcular KM Total automaticamente
-    const kmIda = parseFloat(novoDiaTrabalho.kmIda) || 0
-    const kmRetorno = parseFloat(novoDiaTrabalho.kmRetorno) || 0
+    const kmIda = parseFloat(kmIdaVal) || 0
+    const kmRetorno = parseFloat(kmRetornoVal) || 0
     const kmTotal = (kmIda + kmRetorno).toString()
 
     // Calcular durações se necessário
@@ -22486,8 +22580,8 @@ export default function Dashboard() {
       retornoDuracao,
       horasDuracao,
       kmTotal,
-      kmIda: normalizeKmForPersist(novoDiaTrabalho.kmIda),
-      kmRetorno: normalizeKmForPersist(novoDiaTrabalho.kmRetorno),
+      kmIda: kmIdaVal,
+      kmRetorno: kmRetornoVal,
       descricaoTrabalho: String(novoDiaTrabalho.descricaoTrabalho ?? '').slice(
         0,
         WRITING_ASSIST_FIELD_MAX_CHARS
@@ -22497,25 +22591,33 @@ export default function Dashboard() {
     if (editingDiaTrabalhoIndex !== null) {
       const updatedDias = [...relatorioServicoForm.diasTrabalho]
       updatedDias[editingDiaTrabalhoIndex] = diaAtualizado
+      const diasOrdenados = sortDiasTrabalhoCronologicamente(updatedDias)
+      const totais = calcularTotais(diasOrdenados)
       setRelatorioServicoForm({
         ...relatorioServicoForm,
-        diasTrabalho: sortDiasTrabalhoCronologicamente(updatedDias),
+        diasTrabalho: diasOrdenados,
+        kmsPercorridos: totais.kmsPercorridos,
+        horasTrabalho: totais.horasTrabalho,
+        horasViagem: totais.horasViagem,
       })
       setEditingDiaTrabalhoIndex(null)
     } else {
+      const diasOrdenados = sortDiasTrabalhoCronologicamente([
+        ...relatorioServicoForm.diasTrabalho,
+        diaAtualizado,
+      ])
+      const totais = calcularTotais(diasOrdenados)
       setRelatorioServicoForm({
         ...relatorioServicoForm,
-        diasTrabalho: sortDiasTrabalhoCronologicamente([
-          ...relatorioServicoForm.diasTrabalho,
-          diaAtualizado,
-        ]),
+        diasTrabalho: diasOrdenados,
+        kmsPercorridos: totais.kmsPercorridos,
+        horasTrabalho: totais.horasTrabalho,
+        horasViagem: totais.horasViagem,
       })
     }
 
     setNovoDiaTrabalho(() => {
-      const clienteAtual = clientes.find((c) => c.id === relatorioServicoForm.clienteId)
-      const kmIda = kmStringForNumberField(clienteAtual?.kmIdaPadrao)
-      const kmRetorno = kmStringForNumberField(clienteAtual?.kmRetornoPadrao)
+      const { kmIda, kmRetorno } = getKmPadraoDoCliente(clienteAtual)
       return atualizarCalculosDia({
         data: new Date().toISOString().split('T')[0],
         idaHora: '',
@@ -26808,47 +26910,49 @@ export default function Dashboard() {
   }
 
   function ManuaisInformacoesTabContent(props?: { hubMode?: 'unified' | 'manuais' | 'biblia' }) {
+    const hubMode = props?.hubMode ?? 'unified'
+    const isBiblia = hubMode === 'biblia'
     return (
       <ManuaisInformacoesContent
-        hubMode={props?.hubMode ?? 'unified'}
+        hubMode={hubMode}
         safeT={safeT as Record<string, string | undefined>}
         LogoComponent={LogoComponent}
         closeTab={closeTab}
         activeTabId={activeTabId}
         voltarPaginaInicial={voltarPaginaInicial}
-        manuaisFamilias={manuaisFamilias}
-        setManuaisFamilias={setManuaisFamilias}
-        manuaisGrupos={manuaisGrupos}
-        setManuaisGrupos={setManuaisGrupos}
-        manuaisModelos={manuaisModelos}
-        setManuaisModelos={setManuaisModelos}
-        novaFamiliaManuais={novaFamiliaManuais}
-        setNovaFamiliaManuais={setNovaFamiliaManuais}
-        novoGrupoManuais={novoGrupoManuais}
-        setNovoGrupoManuais={setNovoGrupoManuais}
-        novoModeloManuais={novoModeloManuais}
-        setNovoModeloManuais={setNovoModeloManuais}
-        selectedFamiliaManuais={selectedFamiliaManuais}
-        setSelectedFamiliaManuais={setSelectedFamiliaManuais}
-        selectedGrupoManuais={selectedGrupoManuais}
-        setSelectedGrupoManuais={setSelectedGrupoManuais}
-        selectedModeloManuaisId={selectedModeloManuaisId}
-        setSelectedModeloManuaisId={setSelectedModeloManuaisId}
-        editingFamiliaManuais={editingFamiliaManuais}
-        setEditingFamiliaManuais={setEditingFamiliaManuais}
-        editingFamiliaManuaisValue={editingFamiliaManuaisValue}
-        setEditingFamiliaManuaisValue={setEditingFamiliaManuaisValue}
-        editingGrupoManuaisId={editingGrupoManuaisId}
-        setEditingGrupoManuaisId={setEditingGrupoManuaisId}
-        editingGrupoManuaisValue={editingGrupoManuaisValue}
-        setEditingGrupoManuaisValue={setEditingGrupoManuaisValue}
-        editingModeloManuaisId={editingModeloManuaisId}
-        setEditingModeloManuaisId={setEditingModeloManuaisId}
-        editingModeloManuaisValue={editingModeloManuaisValue}
-        setEditingModeloManuaisValue={setEditingModeloManuaisValue}
-        manuaisFamiliasRef={manuaisFamiliasRef}
-        manuaisGruposRef={manuaisGruposRef}
-        manuaisModelosRef={manuaisModelosRef}
+        manuaisFamilias={isBiblia ? bibliaFamilias : manuaisFamilias}
+        setManuaisFamilias={isBiblia ? setBibliaFamilias : setManuaisFamilias}
+        manuaisGrupos={isBiblia ? bibliaGrupos : manuaisGrupos}
+        setManuaisGrupos={isBiblia ? setBibliaGrupos : setManuaisGrupos}
+        manuaisModelos={isBiblia ? bibliaModelos : manuaisModelos}
+        setManuaisModelos={isBiblia ? setBibliaModelos : setManuaisModelos}
+        novaFamiliaManuais={isBiblia ? novaFamiliaBiblia : novaFamiliaManuais}
+        setNovaFamiliaManuais={isBiblia ? setNovaFamiliaBiblia : setNovaFamiliaManuais}
+        novoGrupoManuais={isBiblia ? novoGrupoBiblia : novoGrupoManuais}
+        setNovoGrupoManuais={isBiblia ? setNovoGrupoBiblia : setNovoGrupoManuais}
+        novoModeloManuais={isBiblia ? novoModeloBiblia : novoModeloManuais}
+        setNovoModeloManuais={isBiblia ? setNovoModeloBiblia : setNovoModeloManuais}
+        selectedFamiliaManuais={isBiblia ? selectedFamiliaBiblia : selectedFamiliaManuais}
+        setSelectedFamiliaManuais={isBiblia ? setSelectedFamiliaBiblia : setSelectedFamiliaManuais}
+        selectedGrupoManuais={isBiblia ? selectedGrupoBiblia : selectedGrupoManuais}
+        setSelectedGrupoManuais={isBiblia ? setSelectedGrupoBiblia : setSelectedGrupoManuais}
+        selectedModeloManuaisId={isBiblia ? selectedModeloBibliaId : selectedModeloManuaisId}
+        setSelectedModeloManuaisId={isBiblia ? setSelectedModeloBibliaId : setSelectedModeloManuaisId}
+        editingFamiliaManuais={isBiblia ? editingFamiliaBiblia : editingFamiliaManuais}
+        setEditingFamiliaManuais={isBiblia ? setEditingFamiliaBiblia : setEditingFamiliaManuais}
+        editingFamiliaManuaisValue={isBiblia ? editingFamiliaBibliaValue : editingFamiliaManuaisValue}
+        setEditingFamiliaManuaisValue={isBiblia ? setEditingFamiliaBibliaValue : setEditingFamiliaManuaisValue}
+        editingGrupoManuaisId={isBiblia ? editingGrupoBibliaId : editingGrupoManuaisId}
+        setEditingGrupoManuaisId={isBiblia ? setEditingGrupoBibliaId : setEditingGrupoManuaisId}
+        editingGrupoManuaisValue={isBiblia ? editingGrupoBibliaValue : editingGrupoManuaisValue}
+        setEditingGrupoManuaisValue={isBiblia ? setEditingGrupoBibliaValue : setEditingGrupoManuaisValue}
+        editingModeloManuaisId={isBiblia ? editingModeloBibliaId : editingModeloManuaisId}
+        setEditingModeloManuaisId={isBiblia ? setEditingModeloBibliaId : setEditingModeloManuaisId}
+        editingModeloManuaisValue={isBiblia ? editingModeloBibliaValue : editingModeloManuaisValue}
+        setEditingModeloManuaisValue={isBiblia ? setEditingModeloBibliaValue : setEditingModeloManuaisValue}
+        manuaisFamiliasRef={isBiblia ? bibliaFamiliasRef : manuaisFamiliasRef}
+        manuaisGruposRef={isBiblia ? bibliaGruposRef : manuaisGruposRef}
+        manuaisModelosRef={isBiblia ? bibliaModelosRef : manuaisModelosRef}
         equipamentos={equipamentos}
         saveData={saveData}
       />
@@ -55674,17 +55778,7 @@ A1;Peça exemplo;10`}
         return ManuaisInformacoesTabContent({ hubMode: 'manuais' })
 
       case 'biblia-nonato-service':
-        return (
-          <BibliaNonatoServiceContent
-            safeT={safeT as Record<string, string | undefined>}
-            closeTab={closeTab}
-            activeTabId={activeTabId}
-            onHome={voltarPaginaInicial}
-            isCompactLayout={isCompactLayout}
-            saveData={saveData}
-            loadData={loadData}
-          />
-        )
+        return ManuaisInformacoesTabContent({ hubMode: 'biblia' })
 
       case 'informacoes-conhecimento-tecnicos':
         return (

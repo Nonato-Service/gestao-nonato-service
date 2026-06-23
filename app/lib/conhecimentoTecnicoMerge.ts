@@ -221,11 +221,9 @@ export function manuaisToBibliaStore(payload: ManuaisFamiliasGruposPayload): Bib
   return serializeBibliaForServer({ familias })
 }
 
-export function buildConhecimentoTecnicoFromSources(
+export function buildManuaisFromSources(
   manuaisRaw: unknown,
-  bibliaRaw: unknown,
   idbManuaisRaw?: unknown,
-  bibliaLegacyRaw?: unknown,
   unifiedRaw?: unknown
 ): ManuaisFamiliasGruposPayload {
   const baseManuais: ManuaisFamiliasGruposPayload = {
@@ -247,14 +245,49 @@ export function buildConhecimentoTecnicoFromSources(
       : baseManuais
   let mergedManuais = mergeManuaisPayloads(fromUnified, fromServer)
   mergedManuais = mergeManuaisPayloads(mergedManuais, fromIdb)
-  mergedManuais = mergeBibliaIntoManuais(bibliaRaw, mergedManuais)
-  if (bibliaLegacyRaw) {
-    mergedManuais = mergeBibliaIntoManuais(bibliaLegacyRaw, mergedManuais)
-  }
   return mergedManuais
 }
 
-export async function syncConhecimentoTecnicoLegacyStores(
+export function buildBibliaConhecimentoFromSources(
+  bibliaRaw: unknown,
+  bibliaLegacyRaw?: unknown,
+  idbBibliaRaw?: unknown
+): ManuaisFamiliasGruposPayload {
+  const empty: ManuaisFamiliasGruposPayload = { familias: [], grupos: [], modelos: [] }
+  let merged = mergeBibliaIntoManuais(bibliaRaw, empty)
+  if (bibliaLegacyRaw) {
+    merged = mergeBibliaIntoManuais(bibliaLegacyRaw, merged)
+  }
+  if (idbBibliaRaw && typeof idbBibliaRaw === 'object') {
+    merged = mergeManuaisPayloads(merged, idbBibliaRaw as ManuaisFamiliasGruposPayload)
+  }
+  return merged
+}
+
+/** @deprecated Preferir buildManuaisFromSources + buildBibliaConhecimentoFromSources separados. */
+export function buildConhecimentoTecnicoFromSources(
+  manuaisRaw: unknown,
+  bibliaRaw: unknown,
+  idbManuaisRaw?: unknown,
+  bibliaLegacyRaw?: unknown,
+  unifiedRaw?: unknown
+): ManuaisFamiliasGruposPayload {
+  let merged = buildManuaisFromSources(manuaisRaw, idbManuaisRaw, unifiedRaw)
+  merged = mergeBibliaIntoManuais(bibliaRaw, merged)
+  if (bibliaLegacyRaw) {
+    merged = mergeBibliaIntoManuais(bibliaLegacyRaw, merged)
+  }
+  return merged
+}
+
+export async function syncManuaisConhecimentoStores(
+  payload: ManuaisFamiliasGruposPayload,
+  saveData: (key: string, value: unknown, saveToLocalStorage?: boolean, awaitServer?: boolean) => Promise<boolean>
+): Promise<void> {
+  await saveData(CONHECIMENTO_TECNICO_STORAGE_KEY, payload, false).catch(() => {})
+}
+
+export async function syncBibliaConhecimentoStore(
   payload: ManuaisFamiliasGruposPayload,
   saveData: (key: string, value: unknown, saveToLocalStorage?: boolean, awaitServer?: boolean) => Promise<boolean>
 ): Promise<void> {
@@ -267,7 +300,14 @@ export async function syncConhecimentoTecnicoLegacyStores(
     /* ignorar */
   }
   await saveData(BIBLIA_NONATO_STORAGE_KEY, bibliaStore, false).catch(() => {})
-  await saveData(CONHECIMENTO_TECNICO_STORAGE_KEY, payload, false).catch(() => {})
+}
+
+export async function syncConhecimentoTecnicoLegacyStores(
+  payload: ManuaisFamiliasGruposPayload,
+  saveData: (key: string, value: unknown, saveToLocalStorage?: boolean, awaitServer?: boolean) => Promise<boolean>
+): Promise<void> {
+  await syncManuaisConhecimentoStores(payload, saveData)
+  await syncBibliaConhecimentoStore(payload, saveData)
 }
 
 export { BIBLIA_NONATO_STORAGE_KEY, BIBLIA_LEGACY_CATEGORIES_KEY }

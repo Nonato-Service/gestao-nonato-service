@@ -377,6 +377,7 @@ export function getPendingSyncCount(): number {
 const MANUAIS_KEY = 'nonato-manuais-familias-grupos'
 const CONHECIMENTO_TECNICO_KEY = 'nonato-conhecimento-tecnico-unificado'
 const BIBLIA_NONATO_KEY = 'nonato-biblia-nonato-service'
+const CLIENTES_KEY = 'nonato-clientes'
 
 const MANUAIS_OBJECT_KEYS_BLOCK_EMPTY_OVERWRITE = new Set([
   MANUAIS_KEY,
@@ -945,6 +946,19 @@ export async function saveData(
         console.error(`Erro ao salvar no IndexedDB (${key}):`, idbErr)
         throw idbErr
       }
+    }
+    if (key === CLIENTES_KEY) {
+      try {
+        await saveKv(key, value)
+      } catch (idbErr) {
+        console.warn(`[saveData] espelho IndexedDB falhou para ${key}`, idbErr)
+      }
+    }
+  } else if (key === CLIENTES_KEY && typeof window !== 'undefined') {
+    try {
+      await saveKv(key, value)
+    } catch (idbErr) {
+      console.warn(`[saveData] espelho IndexedDB falhou para ${key}`, idbErr)
     }
   }
 

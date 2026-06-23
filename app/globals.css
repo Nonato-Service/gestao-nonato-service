@@ -18322,6 +18322,93 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   isolation: isolate;
 }
 
+/* Modo limpo — um slide, título único, CTA sempre visível */
+.ns-showcase--clean .ns-showcase__cinema {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(44vh, 420px);
+}
+.ns-showcase--clean .ns-showcase__stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: clamp(180px, 34vh, 380px);
+}
+.ns-showcase--clean .ns-showcase__slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px) scale(0.985);
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s ease,
+    visibility 0.45s;
+  pointer-events: none;
+}
+.ns-showcase--clean .ns-showcase__slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: auto;
+}
+.ns-showcase--clean .ns-showcase__slide-frame {
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(52, 211, 153, 0.22);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.38);
+  background: rgba(8, 14, 22, 0.92);
+}
+.ns-showcase--clean .ns-showcase__info {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+  padding: clamp(4px, 0.8vh, 8px) clamp(8px, 2vw, 16px) 0;
+}
+.ns-showcase--clean .ns-showcase__info .ns-showcase__title {
+  margin: 0 0 6px;
+  font-size: clamp(1.05rem, 2.4vw, 1.45rem);
+  line-height: 1.2;
+}
+.ns-showcase--clean .ns-showcase__info .ns-showcase__desc {
+  margin: 0;
+  font-size: clamp(0.78rem, 1.6vw, 0.92rem);
+  line-height: 1.45;
+  color: rgba(226, 232, 240, 0.82);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ns-showcase--clean .ns-showcase__dock {
+  flex-shrink: 0;
+  width: 100%;
+  gap: clamp(8px, 1.2vh, 12px);
+  padding-top: clamp(4px, 0.8vh, 8px);
+}
+.ns-showcase--clean .ns-showcase__chips {
+  justify-content: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 2px;
+}
+.ns-showcase--clean .ns-showcase__chips::-webkit-scrollbar {
+  display: none;
+}
+.ns-showcase--clean .ns-showcase__cta {
+  width: min(100%, 420px);
+  margin: 0 auto;
+}
+.ns-showcase--clean .ns-showcase__deck-caption {
+  display: none;
+}
+
 /* Modo cinema — ocupa o ecrã inteiro, carrossel 3D, sem scroll */
 .ns-showcase--cinema {
   max-width: none;

@@ -9,10 +9,15 @@ import {
   ManuaisModelo,
 } from '../lib/manuaisTypes'
 import type { BibliaAnexo, BibliaSecao } from './bibliaNonatoTypes'
-import { BIBLIA_ANEXO_MAX_BYTES, BIBLIA_ANEXO_MAX_PER_MODEL, inferBibliaSecaoFromName, resolveBibliaSecao } from './bibliaNonatoTypes'
-import { syncConhecimentoTecnicoLegacyStores, mergeManuaisPayloads } from '../lib/conhecimentoTecnicoMerge'
+import { BIBLIA_ANEXO_MAX_BYTES, BIBLIA_ANEXO_MAX_PER_MODEL, BIBLIA_NONATO_STORAGE_KEY, inferBibliaSecaoFromName, resolveBibliaSecao } from './bibliaNonatoTypes'
+import {
+  manuaisToBibliaStore,
+  syncConhecimentoTecnicoLegacyStores,
+  syncManuaisConhecimentoStores,
+  mergeManuaisPayloads,
+} from '../lib/conhecimentoTecnicoMerge'
 import { AssistTextarea } from './AssistTextFields'
-import { saveManuaisFamiliasGruposToIdb } from '../utils/manuaisIndexedDb'
+import { saveKv, saveManuaisFamiliasGruposToIdb } from '../utils/manuaisIndexedDb'
 import { ProImageHoverPreview } from './ProImageHoverPreview'
 import { ConhecimentoFileViewer, ConhecimentoFileItem } from './ConhecimentoFileViewer'
 
@@ -225,9 +230,26 @@ async function persistManuaisToStorage(
   familiasSnapshot: string[],
   gruposSnapshot: ManuaisGrupo[],
   modelosSnapshot: ManuaisModelo[],
-  saveData: ManuaisInformacoesContentProps['saveData']
+  saveData: ManuaisInformacoesContentProps['saveData'],
+  hubMode: 'unified' | 'manuais' | 'biblia'
 ): Promise<boolean> {
   const { payloadFull, payloadLite } = buildManuaisPayloads(familiasSnapshot, gruposSnapshot, modelosSnapshot)
+
+  if (hubMode === 'biblia') {
+    await saveKv(BIBLIA_NONATO_STORAGE_KEY, payloadFull)
+    const bibliaStore = manuaisToBibliaStore(payloadFull)
+    try {
+      localStorage.setItem(BIBLIA_NONATO_STORAGE_KEY, JSON.stringify(bibliaStore))
+    } catch {
+      try {
+        localStorage.setItem(`${BIBLIA_NONATO_STORAGE_KEY}--idb`, '1')
+      } catch {
+        /* ignorar */
+      }
+    }
+    return saveData(BIBLIA_NONATO_STORAGE_KEY, bibliaStore, false, true)
+  }
+
   await saveManuaisFamiliasGruposToIdb(payloadFull)
   try {
     localStorage.setItem(MANUAIS_STORAGE_KEY, JSON.stringify(payloadLite))
@@ -239,7 +261,11 @@ async function persistManuaisToStorage(
     }
   }
   const serverOk = await saveData(MANUAIS_STORAGE_KEY, payloadFull, false, true)
-  await syncConhecimentoTecnicoLegacyStores(payloadFull, saveData)
+  if (hubMode === 'unified') {
+    await syncConhecimentoTecnicoLegacyStores(payloadFull, saveData)
+  } else {
+    await syncManuaisConhecimentoStores(payloadFull, saveData)
+  }
   return serverOk
 }
 
@@ -323,7 +349,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
     manuaisFamiliasRef.current = familiasSnapshot
     manuaisGruposRef.current = gruposSnapshot
     manuaisModelosRef.current = modelosSnapshot
-    void persistManuaisToStorage(familiasSnapshot, gruposSnapshot, modelosSnapshot, saveData).catch((err) => {
+    void persistManuaisToStorage(familiasSnapshot, gruposSnapshot, modelosSnapshot, saveData, hubMode).catch((err) => {
       console.error('Erro ao guardar manuais:', err)
     })
   }
@@ -334,7 +360,8 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
         manuaisFamiliasRef.current,
         manuaisGruposRef.current,
         modelosSnapshot,
-        saveData
+        saveData,
+        hubMode
       )
       manuaisSaveAlertShownOnce = false
       if (!ok) {
