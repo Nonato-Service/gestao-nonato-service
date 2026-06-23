@@ -5635,8 +5635,8 @@ a:focus-visible {
   text-align: left;
   padding: 12px 14px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #333333;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--ns-surface-soft);
   color: #fff;
   font-size: 14px;
   font-weight: 600;
@@ -6492,8 +6492,8 @@ a:focus-visible {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  /* Fundo um pouco mais opaco — leitura mais sólida */
-  background: rgba(0, 0, 0, 0.38);
+  /* Fundo sólido — contraste com o corpo da app sem preto extra */
+  background: var(--ns-container);
   border-radius: clamp(8px, 1.5vw, 16px);
 }
 
@@ -6661,6 +6661,13 @@ a:focus-visible {
   gap: 12px;
 }
 
+.biblioteca-relatorios-cliente {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--ns-surface-soft);
+}
+
 .biblioteca-relatorios-cliente__summary {
   cursor: pointer;
   display: flex;
@@ -6669,11 +6676,11 @@ a:focus-visible {
   gap: 12px;
   padding: 14px 16px;
   user-select: none;
-  background: linear-gradient(180deg, rgba(20, 28, 24, 0.98) 0%, rgba(10, 14, 12, 0.99) 100%);
-  border-bottom: 1px solid rgba(52, 211, 153, 0.14);
+  background: linear-gradient(180deg, #525252 0%, #484848 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 .biblioteca-relatorios-cliente[open] .biblioteca-relatorios-cliente__summary {
-  border-bottom-color: rgba(52, 211, 153, 0.28);
+  border-bottom-color: rgba(255, 255, 255, 0.14);
 }
 .biblioteca-relatorios-cliente__title-row {
   display: flex;
@@ -6760,7 +6767,7 @@ a:focus-visible {
 
 .biblioteca-relatorios-cliente__body {
   padding: 16px 16px 18px;
-  background: rgba(0, 0, 0, 0.12);
+  background: var(--ns-container);
 }
 
 /* Relatório de serviço: modelo PDF + Ver / PDF / Excluir em grelha */
