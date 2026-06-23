@@ -393,6 +393,7 @@ export const NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE = new Set([
   'nonato-biblioteca-pecas',
   'nonato-diario-pedidos-dia',
   'nonato-conhecimento-tecnicos',
+  'nonato-checklist-basico-instancias',
 ])
 
 function isEmptyDataArray(value: unknown): boolean {

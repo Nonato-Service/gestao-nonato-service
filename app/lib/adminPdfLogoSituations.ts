@@ -7,6 +7,7 @@ export type PdfLogoSituationId =
   | 'protocolos'
   | 'checklist'
   | 'preChecklist'
+  | 'checklistBasico'
 
 export type PdfLogoSituationDef = {
   id: PdfLogoSituationId
@@ -102,6 +103,16 @@ export const PDF_LOGO_SITUATIONS: PdfLogoSituationDef[] = [
     descKey: 'escolherLogoPreChecklistDesc',
     descFallback: 'Verificação pré-operacional antes da intervenção técnica.',
     storageKey: 'nonato-pre-checklist-logo-id',
+  },
+  {
+    id: 'checklistBasico',
+    badge: '09',
+    icon: '📋',
+    titleKey: 'escolherLogoChecklistBasico',
+    titleFallback: 'Checklist básico',
+    descKey: 'escolherLogoChecklistBasicoDesc',
+    descFallback: 'Revisões rápidas em campo com grupos e situações personalizadas.',
+    storageKey: 'nonato-checklist-basico-logo-id',
   },
 ]
 

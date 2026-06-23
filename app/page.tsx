@@ -131,6 +131,7 @@ import { DiarioLembreteIntervalPicker } from './components/DiarioLembreteInterva
 import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'
 import { FamiliasGruposChecklistContent } from './components/FamiliasGruposChecklistContent'
+import { ChecklistBasicoContent } from './components/ChecklistBasicoContent'
 import { FamiliasGruposEquipamentosContent } from './components/FamiliasGruposEquipamentosContent'
 import { ProImageHoverPreview } from './components/ProImageHoverPreview'
 import { DEMO_VISITOR_USER } from './lib/demoManagement'
@@ -1095,6 +1096,7 @@ const SIDEBAR_TRANSLATION_KEY_BY_ID: Record<string, string> = {
   'equipamentos-default': 'equipamentosTitle',
   'checklist-group-default': 'checklistGroupTitle',
   'pre-checklist-default': 'preChecklistSubTitle',
+  'checklist-basico-default': 'checklistBasicoSubTitle',
   'checklist-default': 'checklistSubTitle',
   'verificacao-final-entrega-default': 'verificacaoFinalEntregaTitle',
   'clientes-default': 'clientesTitle',
@@ -1184,6 +1186,7 @@ function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
 
   if ([
     'pre-checklist-default',
+    'checklist-basico-default',
     'checklist-default',
     'gestao-grupos-checklist-default',
     'ordem-preparacao-default',
@@ -4066,7 +4069,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-pagamento-transferencia' | 'ficha-fatura-cliente' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'pagamentos-contador' | 'manuais-informacoes-tecnicas' | 'biblia-nonato-service' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa' | 'informacoes-mecanicas-eletricas'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-pagamento-transferencia' | 'ficha-fatura-cliente' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'pagamentos-contador' | 'manuais-informacoes-tecnicas' | 'biblia-nonato-service' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-basico' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa' | 'informacoes-mecanicas-eletricas'
 
 type Tab = {
   id: string
@@ -4103,6 +4106,7 @@ const HUB_CARD_DESC_BY_BUTTON_ID: Record<string, readonly string[]> = {
   'desmontados-default': ['desmontadosSubtitle'],
   'familias-grupos-default': ['familiasGruposDesc'],
   'pre-checklist-default': ['preChecklistDesc'],
+  'checklist-basico-default': ['checklistBasicoDesc'],
   'checklist-default': ['checklistDesc'],
   'verificacao-final-entrega-default': ['verificacaoFinalEntregaDesc'],
   'gestao-grupos-checklist-default': ['gestaoGruposChecklistDesc'],
@@ -5190,6 +5194,7 @@ export default function Dashboard() {
       'almoxarifado-armazem': 'open-almoxarifado-armazem',
       'pre-checklist': 'open-pre-checklist',
       checklist: 'open-checklist',
+      'checklist-basico': 'open-checklist-basico',
       'checklist-hub': 'open-checklist-hub',
       'gestao-grupos-checklist': 'open-gestao-grupos-checklist',
       'ordem-preparacao': 'open-ordem-preparacao',
@@ -6269,6 +6274,7 @@ export default function Dashboard() {
         'BÍBLIA DA NONATO SERVICE',
       'almoxarifado-armazem': t?.almoxarifadoArmazemTitle || 'Almoxarifado / Armazém',
       'checklist': t?.checklistTitle || 'CHECKLIST',
+      'checklist-basico': t?.checklistBasicoPageTitle || t?.checklistBasicoSubTitle || 'CHECKLIST BÁSICO',
       'checklist-hub': t?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST',
       'gestao-grupos-checklist': t?.gestaoGruposChecklistTitle || 'GESTÃO DOS GRUPOS PARA CHECKLIST (CHECKLIST FINAL PARA A ENTREGA)',
       'ordem-preparacao': t?.ordemPreparacaoTitle || 'ORDEM DE PREPARAÇÃO',
@@ -6434,6 +6440,7 @@ export default function Dashboard() {
       'familias-grupos-equipamentos': ['familiasGruposEquipamentosHubCardDesc'],
       'pre-checklist': ['preChecklistDesc'],
       checklist: ['checklistDesc'],
+      'checklist-basico': ['checklistBasicoDesc'],
       administrador: ['administradorGeralDesc'],
       'informacoes-conhecimento-tecnicos': ['informacoesConhecimentoTecnicosDesc'],
     }
@@ -10484,6 +10491,7 @@ export default function Dashboard() {
           'equipamentos-default': { translationKey: 'equipamentosTitle', group: 'gestao-industrial' },
           'checklist-group-default': { translationKey: 'checklistGroupTitle', group: undefined },
           'pre-checklist-default': { translationKey: 'preChecklistSubTitle', group: 'checklist-group' },
+          'checklist-basico-default': { translationKey: 'checklistBasicoSubTitle', group: 'checklist-group' },
           'checklist-default': { translationKey: 'checklistSubTitle', group: 'checklist-group' },
           'verificacao-final-entrega-default': { translationKey: 'verificacaoFinalEntregaTitle', group: 'checklist-group' },
           'clientes-default': { translationKey: 'clientesTitle', group: 'parceiros-comercial' },
@@ -10570,6 +10578,7 @@ export default function Dashboard() {
                                b.id === 'equipamentos-default' ? 'open-equipamentos' :
                                b.id === 'checklist-group-default' ? 'open-checklist-hub' :
                                b.id === 'pre-checklist-default' ? 'open-pre-checklist' :
+                               b.id === 'checklist-basico-default' ? 'open-checklist-basico' :
                                b.id === 'checklist-default' ? 'open-checklist' :
                                b.id === 'verificacao-final-entrega-default' ? 'open-verificacao-final-entrega' :
                                b.id === 'clientes-default' ? 'open-clientes' :
@@ -11046,6 +11055,20 @@ export default function Dashboard() {
         }
         buttons.push(preChecklistButton)
         // Salvar imediatamente após adicionar
+        saveData('nonato-sidebar-buttons', buttons)
+      }
+
+      const hasChecklistBasico = buttons.some((b: SidebarButton) => b.id === 'checklist-basico-default')
+      if (!hasChecklistBasico) {
+        const checklistBasicoButton: SidebarButton = {
+          id: 'checklist-basico-default',
+          name: 'CHECKLIST BÁSICO',
+          action: 'open-checklist-basico',
+          order: buttons.length,
+          translationKey: 'checklistBasicoSubTitle',
+          group: 'checklist-group',
+        }
+        buttons.push(checklistBasicoButton)
         saveData('nonato-sidebar-buttons', buttons)
       }
 
@@ -12838,6 +12861,8 @@ export default function Dashboard() {
         return safeT?.checklistGroupTitle || button.name || ''
       } else if (button.id === 'pre-checklist-default') {
         return safeT?.preChecklistSubTitle || safeT?.preChecklistTitle || button.name || ''
+      } else if (button.id === 'checklist-basico-default') {
+        return safeT?.checklistBasicoSubTitle || safeT?.checklistBasicoPageTitle || button.name || ''
       } else if (button.id === 'checklist-default') {
         return safeT?.checklistSubTitle || safeT?.checklistTitle || button.name || ''
       } else if (button.id === 'comunicacao-interna-default') {
@@ -24630,6 +24655,7 @@ export default function Dashboard() {
     'open-alerta-mensagens': 'extras',
     'open-checklist-hub': 'extras',
     'open-pre-checklist': 'extras',
+    'open-checklist-basico': 'extras',
     'open-checklist': 'extras',
     'open-gestao-grupos-checklist': 'extras',
     'open-formularios-checklist-tecnicos': 'extras',
@@ -25063,6 +25089,8 @@ export default function Dashboard() {
       openTab('checklist-hub', getTabTitle('checklist-hub'))
     } else if (action === 'open-pre-checklist') {
       openTab('pre-checklist', getTabTitle('pre-checklist'))
+    } else if (action === 'open-checklist-basico') {
+      openTab('checklist-basico', getTabTitle('checklist-basico'))
     } else if (action === 'open-checklist') {
       // Área restrita: mostrar modal de credenciamento (senha do Gestor de Senhas)
       setChecklistAccessStep('message')
@@ -55560,6 +55588,21 @@ A1;Peça exemplo;10`}
             setConhecimentoTecnicos={setConhecimentoTecnicos}
             familiasEquipamento={familiasEquipamento}
             gruposEquipamento={gruposEquipamento}
+          />
+        )
+
+      case 'checklist-basico':
+        return (
+          <ChecklistBasicoContent
+            safeT={safeT as Record<string, string | undefined>}
+            LogoComponent={LogoComponent}
+            closeTab={closeTab}
+            activeTabId={activeTabId}
+            voltarPaginaInicial={voltarPaginaInicial}
+            clientes={clientes}
+            tecnicos={tecnicos}
+            logoUrl={logoUrl}
+            logoType={logoType}
           />
         )
 
