@@ -4199,13 +4199,26 @@ html, body {
     min-height: 0;
     overflow: hidden;
     box-sizing: border-box;
+    --app-sidebar-extend-top: env(safe-area-inset-top, 0px);
+    --app-sidebar-extend-bottom: 0px;
+  }
+  .app-layout:not(.app-compact-layout):not(.app-layout-no-top-bar) {
+    --app-sidebar-extend-top: calc(48px + env(safe-area-inset-top, 0px));
+  }
+  .app-layout:not(.app-compact-layout).app-has-bottom-tabs {
+    --app-sidebar-extend-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   }
   .app-layout:not(.app-compact-layout) > .sidebar {
     align-self: stretch;
-    min-height: 0;
+    min-height: calc(100% + var(--app-sidebar-extend-top) + var(--app-sidebar-extend-bottom));
     max-height: none;
-    height: 100%;
+    height: auto;
     flex: 0 0 296px;
+    margin-top: calc(-1 * var(--app-sidebar-extend-top));
+    margin-bottom: calc(-1 * var(--app-sidebar-extend-bottom));
+    padding-top: calc(18px + var(--app-sidebar-extend-top));
+    padding-bottom: calc(max(18px, env(safe-area-inset-bottom, 0px)) + var(--app-sidebar-extend-bottom));
+    box-sizing: border-box;
   }
   .app-layout:not(.app-compact-layout) > .main-app-column {
     min-height: 0;
