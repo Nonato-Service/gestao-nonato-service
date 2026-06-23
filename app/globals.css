@@ -25,6 +25,10 @@
   --ns-container: #454545;
   --ns-input-bg: #4c4c4c;
   --ns-border-subtle: #5a5a5a;
+  --ns-entry-bg-0: #121212;
+  --ns-entry-bg-1: #141414;
+  --ns-entry-surface: #1a1a1a;
+  --ns-entry-surface-soft: #1e1e1e;
   --ns-border-accent-soft: rgba(0, 200, 83, 0.35);
   --ns-accent-neon: #00c853;
   --ns-glow-primary: rgba(0, 200, 83, 0.35);
@@ -9302,7 +9306,7 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 .ns-splash-root--entry {
   background: radial-gradient(ellipse 100% 70% at 50% -15%, rgba(0, 255, 136, 0.11), transparent 52%),
     radial-gradient(ellipse 55% 45% at 100% 100%, rgba(0, 180, 120, 0.06), transparent 50%),
-    linear-gradient(180deg, #383838 0%, #363636 100%) !important;
+    linear-gradient(180deg, var(--ns-entry-bg-1) 0%, var(--ns-entry-bg-0) 100%) !important;
 }
 .ns-splash-inner {
   position: relative;
@@ -18788,6 +18792,49 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
+  background: var(--ns-entry-bg-0) !important;
+}
+
+/* Página inicial — cinza quase preto (resto da app mantém #3a3a3a) */
+.app-layout.app-layout-entry-focus {
+  background: var(--ns-entry-bg-0) !important;
+}
+
+.app-layout.app-layout-entry-focus .main-content-area,
+.app-layout.app-layout-entry-focus .tab-inner-scroll {
+  background-color: var(--ns-entry-bg-0) !important;
+  background-image: none !important;
+}
+
+.app-layout.app-layout-entry-focus .ns-dashboard-root::before {
+  background:
+    radial-gradient(ellipse 95% 70% at 50% -8%, rgba(0, 200, 83, 0.08), transparent 55%),
+    radial-gradient(ellipse 50% 45% at 100% 0%, rgba(33, 150, 243, 0.06), transparent 45%),
+    linear-gradient(180deg, var(--ns-entry-bg-1) 0%, var(--ns-entry-bg-0) 35%, var(--ns-entry-bg-0) 100%);
+}
+
+.app-layout.app-layout-entry-focus .ns-dashboard-entry-hero {
+  background: linear-gradient(
+    155deg,
+    rgba(28, 28, 28, 0.96) 0%,
+    rgba(22, 22, 22, 0.98) 45%,
+    rgba(18, 18, 18, 0.99) 100%
+  );
+  border-color: rgba(52, 211, 153, 0.2);
+}
+
+.app-layout.app-layout-entry-focus .ns-dashboard-entry-card {
+  background: rgba(30, 30, 30, 0.82);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.app-layout.app-layout-entry-focus .ns-dashboard-entry-step-pill {
+  background: rgba(24, 24, 24, 0.9);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.app-layout.app-layout-entry-focus .mobile-app-header {
+  background: linear-gradient(180deg, var(--ns-entry-bg-1) 0%, var(--ns-entry-bg-0) 100%);
 }
 
 /* Telemóvel: sem botão ☰ na entrada (evita gaveta vazia); o menu volta após «Entrar no sistema» */

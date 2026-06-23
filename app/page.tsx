@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
@@ -63977,7 +63977,7 @@ A1;Peça exemplo;10`}
         style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: '#363636',
+          backgroundColor: '#121212',
           zIndex: 99999,
           overflow: 'auto',
           display: 'flex',
