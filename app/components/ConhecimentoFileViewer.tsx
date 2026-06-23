@@ -95,6 +95,22 @@ function readTextareaSelection(el: HTMLTextAreaElement | null) {
   return { text, start, end, hasSelection, full }
 }
 
+function dataUrlToUint8Array(dataUrl: string): Uint8Array {
+  const comma = dataUrl.indexOf(',')
+  const base64 = comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl
+  const binary = atob(base64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+  return bytes
+}
+
+/** Blob URL com MIME correcto — data: URLs em iframe PDF falham com octet-stream ou ficheiros grandes. */
+function dataUrlToObjectUrl(dataUrl: string, mime: string): string {
+  const bytes = dataUrlToUint8Array(dataUrl)
+  const blob = new Blob([bytes], { type: mime })
+  return URL.createObjectURL(blob)
+}
+
 export function ConhecimentoFileViewer(props: Props) {
   const { items, onRemove, tr, emptyHint, uploadLabel, onUpload, accept } = props
   const { openForField } = useWritingAssistField()
@@ -103,6 +119,8 @@ export function ConhecimentoFileViewer(props: Props) {
   const [textError, setTextError] = useState<string | null>(null)
   const [editableText, setEditableText] = useState('')
   const [pdfPasteText, setPdfPasteText] = useState('')
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null)
+  const [pdfPreviewLoading, setPdfPreviewLoading] = useState(false)
   const docTextRef = useRef<HTMLTextAreaElement>(null)
   const pdfTextRef = useRef<HTMLTextAreaElement>(null)
 
@@ -161,6 +179,45 @@ export function ConhecimentoFileViewer(props: Props) {
     setTextLoading(false)
   }, [previewItem])
 
+  useEffect(() => {
+    if (!previewItem || !isPdfPreview) {
+      setPdfPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return null
+      })
+      setPdfPreviewLoading(false)
+      return
+    }
+
+    let cancelled = false
+    let objectUrl: string | null = null
+    setPdfPreviewLoading(true)
+
+    try {
+      objectUrl = dataUrlToObjectUrl(previewItem.dataUrl, 'application/pdf')
+      if (!cancelled) {
+        setPdfPreviewUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev)
+          return objectUrl
+        })
+      }
+    } catch {
+      if (!cancelled) {
+        setPdfPreviewUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev)
+          return null
+        })
+      }
+    } finally {
+      if (!cancelled) setPdfPreviewLoading(false)
+    }
+
+    return () => {
+      cancelled = true
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [previewItem, isPdfPreview])
+
   const runTranslate = useCallback(() => {
     const el = isPdfPreview ? pdfTextRef.current : docTextRef.current
     const { text, start, end, hasSelection, full } = readTextareaSelection(el)
@@ -203,10 +260,23 @@ export function ConhecimentoFileViewer(props: Props) {
     if (!previewItem) return null
     const mime = previewMime
     if (isPdf(mime, previewItem.nome)) {
+      if (pdfPreviewLoading) {
+        return <p className="manuais-pro__preview-status">{tr('bibliaPreviewCarregando', 'A carregar conteúdo…')}</p>
+      }
+      if (!pdfPreviewUrl) {
+        return (
+          <p className="manuais-pro__preview-status manuais-pro__preview-status--warn">
+            {tr(
+              'manuaisPdfPreviewErro',
+              'Não foi possível abrir o PDF aqui. Use Descarregar ou Abrir janela.'
+            )}
+          </p>
+        )
+      }
       return (
         <iframe
           className="manuais-pro__preview-frame"
-          src={previewItem.dataUrl}
+          src={`${pdfPreviewUrl}#toolbar=1&navpanes=0&view=FitH`}
           title={previewItem.nome}
         />
       )
@@ -320,9 +390,9 @@ export function ConhecimentoFileViewer(props: Props) {
               <p className="manuais-pro__preview-eyebrow">{tr('bibliaPreviewTitulo', 'Pré-visualização')}</p>
               <strong className="manuais-pro__preview-filename">{previewItem.nome}</strong>
             </div>
-            {isPdfPreview && (
+            {isPdfPreview && pdfPreviewUrl && (
               <a
-                href={previewItem.dataUrl}
+                href={pdfPreviewUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="manuais-pro__doc-btn"

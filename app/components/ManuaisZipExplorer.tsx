@@ -85,6 +85,13 @@ function detectKindFromBytes(path: string, bytes: Uint8Array): ReturnType<typeof
   return entryKind(path)
 }
 
+/** Só o Index.PDF principal usa o visualizador com ligações (ícones). Manuais Elétrica/Mecânica → browser nativo. */
+function shouldUseLinkedPdfViewer(path: string, bytes: Uint8Array): boolean {
+  if (!/(^|\/)index\.pdf$/i.test(path)) return false
+  if (/(elektr|eletric|electric|elektro|mechan|mecan|mechanik)/i.test(path)) return false
+  return bytes.length < 4 * 1024 * 1024
+}
+
 export function ManuaisZipExplorer(props: Props) {
   const { dataUrl, tr } = props
   const zipRef = useRef<JSZip | null>(null)
@@ -396,15 +403,33 @@ export function ManuaisZipExplorer(props: Props) {
             </p>
           ) : previewLoading ? (
             <p className="manuais-pro__preview-status">{tr('bibliaPreviewCarregando', 'A carregar conteúdo…')}</p>
-          ) : previewKind === 'pdf' && previewBytes ? (
-            <ManuaisZipPdfPreview
-              bytes={previewBytes}
-              path={selectedPath}
-              entryPaths={entryPaths}
-              onNavigate={navigateToEntry}
-              tr={tr}
-              fallbackBlobUrl={previewPdfBlobUrl}
-            />
+          ) : previewKind === 'pdf' && previewBytes && previewPdfBlobUrl ? (
+            shouldUseLinkedPdfViewer(selectedPath, previewBytes) ? (
+              <ManuaisZipPdfPreview
+                bytes={previewBytes}
+                path={selectedPath}
+                entryPaths={entryPaths}
+                onNavigate={navigateToEntry}
+                tr={tr}
+                fallbackBlobUrl={previewPdfBlobUrl}
+              />
+            ) : (
+              <div className="manuais-pro__zip-native-pdf">
+                <p className="manuais-pro__preview-status" style={{ marginBottom: 8, fontSize: '0.8rem' }}>
+                  {tr(
+                    'manuaisZipPdfNativeViewer',
+                    'Visualizador do browser (recomendado para manuais Elétrica/Mecânica e PDFs grandes).'
+                  )}
+                </p>
+                <iframe
+                  className="manuais-pro__preview-frame"
+                  src={`${previewPdfBlobUrl}#toolbar=1&navpanes=0&view=FitH`}
+                  title={selectedPath}
+                />
+              </div>
+            )
+          ) : previewKind === 'pdf' ? (
+            <p className="manuais-pro__preview-status">{tr('bibliaPreviewCarregando', 'A carregar conteúdo…')}</p>
           ) : previewKind === 'image' && previewUrl ? (
             <div className="manuais-pro__preview-image-wrap">
               <img src={previewUrl} alt={selectedPath} className="manuais-pro__preview-image" />

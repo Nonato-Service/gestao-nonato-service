@@ -349,7 +349,12 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
       const reader = new FileReader()
       reader.onload = () => {
         const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `doc-${Date.now()}`
-        const novo: ManuaisDocumento = { id, nome: file.name, tipo: file.type, dados: reader.result as string }
+        const novo: ManuaisDocumento = {
+          id,
+          nome: file.name,
+          tipo: file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream'),
+          dados: reader.result as string,
+        }
         let snapshot: ManuaisModelo[] = []
         setManuaisModelos((prev) => {
           snapshot = prev.map((mo) => {
@@ -444,7 +449,9 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
         novos.push({
           id,
           nome: manualFolderDisplayName(file),
-          tipo: file.type || 'application/octet-stream',
+          tipo:
+            file.type ||
+            (/\.pdf$/i.test(file.name) ? 'application/pdf' : 'application/octet-stream'),
           dados,
           caminhoRelativo: rel || undefined,
         })

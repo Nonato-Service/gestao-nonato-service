@@ -272,6 +272,18 @@ async function loadPdfJs() {
   return pdfjs
 }
 
+const MAX_PDFJS_PAGES = 12
+const MAX_PDFJS_BYTES = 3 * 1024 * 1024
+
+function preferNativePdfViewer(path: string, byteLength: number, numPages: number): boolean {
+  if (numPages > MAX_PDFJS_PAGES) return true
+  if (byteLength > MAX_PDFJS_BYTES) return true
+  if (/(elektr|eletric|electric|elektro|mechan|mecan|mechanik)/i.test(path) && !/(^|\/)index\.pdf$/i.test(path)) {
+    return true
+  }
+  return false
+}
+
 export function ManuaisZipPdfPreview(props: Props) {
   const { bytes, path, entryPaths, onNavigate, tr, fallbackBlobUrl } = props
   const containerRef = useRef<HTMLDivElement>(null)
@@ -303,13 +315,25 @@ export function ManuaisZipPdfPreview(props: Props) {
           return
         }
 
+        if (preferNativePdfViewer(path, bytes.length, pdf.numPages)) {
+          await pdf.destroy()
+          if (fallbackBlobUrl) {
+            setUseFallback(true)
+          } else {
+            setError('PDF demasiado grande para o visualizador interno.')
+          }
+          return
+        }
+
         const host = containerRef.current
         if (!host) {
           await pdf.destroy()
+          if (fallbackBlobUrl) setUseFallback(true)
           return
         }
 
         pdfDocRef.current = pdf
+        let renderedPages = 0
 
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum)
@@ -414,6 +438,13 @@ export function ManuaisZipPdfPreview(props: Props) {
 
           pageWrap.appendChild(linkLayer)
           host.appendChild(pageWrap)
+          renderedPages += 1
+          if (pageNum === 1 && !cancelled) setLoading(false)
+        }
+
+        if (!cancelled && renderedPages === 0) {
+          if (fallbackBlobUrl) setUseFallback(true)
+          else setError('Não foi possível desenhar páginas do PDF.')
         }
       } catch (err) {
         if (!cancelled) {
