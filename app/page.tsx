@@ -50,6 +50,7 @@ import {
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
 import { cmpNomeCliente, ordenarClientesPorNome, localeOrdenacaoClientes } from './lib/ordenarClientes'
+import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem } from './lib/sidebarMenuPermissions'
 import {
   NONATO_CRITICAL_CADASTRO_KEYS,
   localStorageKeyHasMeaningfulCadastro,
@@ -898,6 +899,7 @@ type User = {
     cadastroServicos?: boolean
     extras?: boolean
   }
+  menuItems?: Record<string, boolean>
 }
 
 type UserFormState = {
@@ -920,6 +922,7 @@ type UserFormState = {
     cadastroServicos: boolean
     extras: boolean
   }
+  menuItems: Record<string, boolean>
 }
 
 type SidebarGroup =
@@ -4231,7 +4234,19 @@ export default function Dashboard() {
       desmontados: false,
       cadastroServicos: false,
       extras: false
-    }
+    },
+    menuItems: buildMenuItemsFromLegacyPermissions({
+      gestores: false,
+      equipamentos: false,
+      clientes: false,
+      fornecedores: false,
+      relatorioServico: false,
+      bibliotecaPecas: false,
+      agenda: false,
+      desmontados: false,
+      cadastroServicos: false,
+      extras: false,
+    })
   })
 
   const userToFormState = (user: User, passwordField?: string): UserFormState => ({
@@ -4254,6 +4269,21 @@ export default function Dashboard() {
       cadastroServicos: Boolean(user.permissions?.cadastroServicos),
       extras: Boolean(user.permissions?.extras),
     },
+    menuItems: buildMenuItemsFromLegacyPermissions(
+      {
+        gestores: Boolean(user.permissions?.gestores),
+        equipamentos: Boolean(user.permissions?.equipamentos),
+        clientes: Boolean(user.permissions?.clientes),
+        fornecedores: Boolean(user.permissions?.fornecedores),
+        relatorioServico: Boolean(user.permissions?.relatorioServico),
+        bibliotecaPecas: Boolean(user.permissions?.bibliotecaPecas),
+        agenda: Boolean(user.permissions?.agenda),
+        desmontados: Boolean(user.permissions?.desmontados),
+        cadastroServicos: Boolean(user.permissions?.cadastroServicos),
+        extras: Boolean(user.permissions?.extras),
+      },
+      user.menuItems
+    ),
   })
 
   const [showModal, setShowModal] = useState(false)
@@ -12679,7 +12709,8 @@ export default function Dashboard() {
           linkedProfileId: userForm.linkedProfileId || '',
           password: userForm.password,
           isAdmin: userForm.isAdmin,
-          permissions: userForm.permissions
+          permissions: userForm.permissions,
+          menuItems: userForm.menuItems,
         }
 
     if (editingUser) {
@@ -12692,7 +12723,8 @@ export default function Dashboard() {
         linkedProfileId: userForm.linkedProfileId || '',
         password: userForm.password || savedUser.password,
         isAdmin: userForm.isAdmin,
-        permissions: userForm.permissions
+        permissions: userForm.permissions,
+        menuItems: userForm.menuItems,
       }
       const updatedUsers = users.map(u => 
         u.id === editingUser.id 
@@ -12703,6 +12735,14 @@ export default function Dashboard() {
       saveData('nonato-users', updatedUsers)
       setEditingUser(updatedUser)
       setUserForm(userToFormState(updatedUser, ''))
+      if (loginUser?.id === updatedUser.id) {
+        setLoginUser({
+          ...loginUser,
+          permissions: updatedUser.permissions,
+          menuItems: updatedUser.menuItems,
+          isAdmin: updatedUser.isAdmin,
+        })
+      }
     } else {
       const newUser: User = savedUser
       const updatedUsers = [...users, newUser]
@@ -24761,6 +24801,16 @@ export default function Dashboard() {
     return Boolean(val)
   }, [loginUser, isDemoMode, DEMO_HIDDEN_ACTIONS])
 
+  const canAccessSidebarButton = useCallback(
+    (button: SidebarButton): boolean =>
+      canAccessSidebarMenuItem(loginUser?.menuItems, loginUser?.isAdmin, button.id, button.action, (action) => {
+        if (!loginUser) return false
+        if (isDemoMode && DEMO_HIDDEN_ACTIONS.has(action)) return false
+        return canAccessAction(action)
+      }),
+    [loginUser, isDemoMode, DEMO_HIDDEN_ACTIONS, canAccessAction]
+  )
+
   const currentCommunicationIdentity = useMemo(() => {
     if (!loginUser || loginUser.isAdmin) return null
     const loginEmail = (loginUser.email || '').trim().toLowerCase()
@@ -25127,9 +25177,14 @@ export default function Dashboard() {
       window.alert('Este modulo aparece na demonstração apenas como pré-visualização. Para usar esta função, peça a ativação completa.')
       return
     }
-    if (!groupToggles.includes(action) && !canAccessAction(action)) {
-      window.alert('Você não tem permissão para acessar esta função.')
-      return
+    if (!groupToggles.includes(action)) {
+      const allowed = buttonId
+        ? canAccessSidebarMenuItem(loginUser?.menuItems, loginUser?.isAdmin, buttonId, action, canAccessAction)
+        : canAccessAction(action)
+      if (!allowed) {
+        window.alert('Você não tem permissão para acessar esta função.')
+        return
+      }
     }
     // Ao selecionar qualquer opção da sidebar, mostrar sempre desde o início do conteúdo
     scrollMainContentToTop()
@@ -25333,7 +25388,7 @@ export default function Dashboard() {
       ])
       if (!keepDrawerOpen.has(action)) setMobileMenuOpen(false)
     }
-  }, [expandedGroups, openTab, getTabTitle, canAccessAction, isDemoTeaserAction, isDemoMode, DEMO_HIDDEN_ACTIONS, safeT, scrollMainContentToTop, isCompactLayout, activeTabId, openTabs, dashboardWorkspaceExpanded, openDashboardHubFromSidebar, dashboardMainHubId, toggleOrOpenDashboardHub, ensureGestaoFinanceiraSidebarExpanded])
+  }, [expandedGroups, openTab, getTabTitle, canAccessAction, loginUser, isDemoTeaserAction, isDemoMode, DEMO_HIDDEN_ACTIONS, safeT, scrollMainContentToTop, isCompactLayout, activeTabId, openTabs, dashboardWorkspaceExpanded, openDashboardHubFromSidebar, dashboardMainHubId, toggleOrOpenDashboardHub, ensureGestaoFinanceiraSidebarExpanded])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -59653,7 +59708,7 @@ A1;Peça exemplo;10`}
       }
       const sorted = [...getButtonsByGroup('gestao-tecnica')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
-        if (!canAccessAction(button.action)) continue
+        if (!canAccessSidebarButton(button)) continue
         rows.push({
           key: button.id,
           title: getButtonName(button),
@@ -59670,7 +59725,7 @@ A1;Peça exemplo;10`}
         'fornecedores-default': '🏭',
       }
       for (const button of sorted) {
-        if (!canAccessAction(button.action)) continue
+        if (!canAccessSidebarButton(button)) continue
         rows.push({
           key: button.id,
           title: getButtonName(button),
@@ -59689,7 +59744,7 @@ A1;Peça exemplo;10`}
         'fechamento-relatorios-servicos-default': '💼',
       }
       for (const button of sorted) {
-        if (!canAccessAction(button.action)) continue
+        if (!canAccessSidebarButton(button)) continue
         rows.push({
           key: button.id,
           title: getButtonName(button),
@@ -59707,7 +59762,7 @@ A1;Peça exemplo;10`}
       }
       for (const button of sorted) {
         const perm =
-          button.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessAction(button.action)
+          button.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessSidebarButton(button)
         if (!perm) continue
         const action = button.id === 'biblioteca-pecas-default' ? 'open-biblioteca-hub' : button.action
         rows.push({
@@ -59745,7 +59800,7 @@ A1;Peça exemplo;10`}
         return '💰'
       }
       const pushFin = (button: SidebarButton, subsection: string | undefined) => {
-        if (!canAccessAction(button.action)) return
+        if (!canAccessSidebarButton(button)) return
         rows.push({
           key: button.id,
           title: getButtonName(button),
@@ -59791,7 +59846,7 @@ A1;Peça exemplo;10`}
       }
       const sorted = [...getButtonsByGroup('gestao-custos')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
-        if (!canAccessAction(button.action)) continue
+        if (!canAccessSidebarButton(button)) continue
         rows.push({
           key: button.id,
           title: getButtonName(button),
@@ -59807,7 +59862,7 @@ A1;Peça exemplo;10`}
       const sorted = [...getButtonsByGroup('gestao-industrial')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
         if (button.id === 'checklist-group-default') {
-          if (canAccessAction(button.action)) {
+          if (canAccessSidebarButton(button)) {
             rows.push({
               key: button.id,
               title: getButtonName(button),
@@ -59819,7 +59874,7 @@ A1;Peça exemplo;10`}
           }
           continue
         }
-        if (!canAccessAction(button.action)) continue
+        if (!canAccessSidebarButton(button)) continue
         rows.push({
           key: button.id,
           title: getButtonName(button),
@@ -59832,7 +59887,7 @@ A1;Peça exemplo;10`}
     } else if (hubId === 'checklist-group') {
       const sorted = [...getButtonsByGroup('checklist-group')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
-        if (!canAccessAction(button.action)) continue
+        if (!canAccessSidebarButton(button)) continue
         rows.push({
           key: button.id,
           title: getButtonName(button),
@@ -59961,7 +60016,7 @@ A1;Peça exemplo;10`}
         return cardHint
       }
       for (const button of sorted) {
-        if (!canAccessAction(button.action)) continue
+        if (!canAccessSidebarButton(button)) continue
         rows.push({
           key: button.id,
           title: getButtonName(button),
@@ -60014,7 +60069,7 @@ A1;Peça exemplo;10`}
       const seen = new Set<string>(['open-translator', 'open-manual-gestor'])
       for (const button of getButtonsByGroup('outros')) {
         if (seen.has(button.action)) continue
-        if (!canAccessAction(button.action)) continue
+        if (!canAccessSidebarButton(button)) continue
         seen.add(button.action)
         rows.push({
           key: button.id,
@@ -64613,7 +64668,7 @@ A1;Peça exemplo;10`}
         {/* Botões da Sidebar - Organizados por Grupos */}
         
         {/* Grupo: GESTÃO TÉCNICA — só mostra se o usuário tiver permissão em algum botão */}
-        {getButtonsByGroup('gestao-tecnica').some((b) => canAccessAction(b.action)) && (
+        {getButtonsByGroup('gestao-tecnica').some((b) => canAccessSidebarButton(b)) && (
         <>
         <SidebarSectionSep
           id="operacao"
@@ -64648,10 +64703,10 @@ A1;Peça exemplo;10`}
             ) : null}
           </button>
           
-          {expandedGroups.has('gestao-tecnica') && getButtonsByGroup('gestao-tecnica').some((b) => canAccessAction(b.action)) && (
+          {expandedGroups.has('gestao-tecnica') && getButtonsByGroup('gestao-tecnica').some((b) => canAccessSidebarButton(b)) && (
             <div className="sidebar-action-buttons">
               {getButtonsByGroup('gestao-tecnica')
-                .filter((button) => canAccessAction(button.action))
+                .filter((button) => canAccessSidebarButton(button))
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
                   if (button.id === 'diario-pedidos-dia-default') {
@@ -64743,7 +64798,7 @@ A1;Peça exemplo;10`}
         )}
 
         {/* Grupo: CLIENTES E FORNECEDORES */}
-        {getButtonsByGroup('parceiros-comercial').some((b) => canAccessAction(b.action)) && (
+        {getButtonsByGroup('parceiros-comercial').some((b) => canAccessSidebarButton(b)) && (
           <>
           <SidebarSectionSep
             id="comercial"
@@ -64783,7 +64838,7 @@ A1;Peça exemplo;10`}
             {expandedGroups.has('parceiros-comercial') && (
               <div className="sidebar-action-buttons">
                 {getButtonsByGroup('parceiros-comercial')
-                  .filter((button) => canAccessAction(button.action))
+                  .filter((button) => canAccessSidebarButton(button))
                   .sort((a, b) => a.order - b.order)
                   .map((button) => {
                     const isSelected = selectedSidebarButton === button.action
@@ -64825,7 +64880,7 @@ A1;Peça exemplo;10`}
         )}
 
         {/* Grupo: DOCUMENTAÇÃO E RELATÓRIOS */}
-        {getButtonsByGroup('documentacao-relatorios').some((b) => canAccessAction(b.action)) && (
+        {getButtonsByGroup('documentacao-relatorios').some((b) => canAccessSidebarButton(b)) && (
           <>
           <SidebarSectionSep
             id="documentacao"
@@ -64863,10 +64918,10 @@ A1;Peça exemplo;10`}
               ) : null}
             </button>
             {expandedGroups.has('documentacao-relatorios') &&
-              getButtonsByGroup('documentacao-relatorios').some((b) => canAccessAction(b.action)) && (
+              getButtonsByGroup('documentacao-relatorios').some((b) => canAccessSidebarButton(b)) && (
                 <div className="sidebar-action-buttons">
                   {getButtonsByGroup('documentacao-relatorios')
-                    .filter((button) => canAccessAction(button.action))
+                    .filter((button) => canAccessSidebarButton(button))
                     .sort((a, b) => a.order - b.order)
                     .map((button) => {
                       const isSelected = selectedSidebarButton === button.action
@@ -64909,7 +64964,7 @@ A1;Peça exemplo;10`}
 
         {/* Grupo: PEÇAS E BIBLIOTECA */}
         {getButtonsByGroup('pecas-biblioteca').some((b) =>
-          b.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessAction(b.action)
+          b.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessSidebarButton(b)
         ) && (
           <div className="sidebar-nav-cluster" data-sidebar-zone="comercial">
             <button
@@ -64944,14 +64999,14 @@ A1;Peça exemplo;10`}
             </button>
             {expandedGroups.has('pecas-biblioteca') &&
               getButtonsByGroup('pecas-biblioteca').some((b) =>
-                b.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessAction(b.action)
+                b.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessSidebarButton(b)
               ) && (
                 <div className="sidebar-action-buttons">
                   {getButtonsByGroup('pecas-biblioteca')
                     .filter((button) =>
                       button.id === 'biblioteca-pecas-default'
                         ? canAccessAction('open-biblioteca-pecas')
-                        : canAccessAction(button.action)
+                        : canAccessSidebarButton(button)
                     )
                     .sort((a, b) => a.order - b.order)
                     .map((button) => {
@@ -65218,7 +65273,7 @@ A1;Peça exemplo;10`}
           {expandedGroups.has('gestao-custos') && (
             <div className="sidebar-action-buttons">
               {getButtonsByGroup('gestao-custos')
-                .filter((button) => canAccessAction(button.action))
+                .filter((button) => canAccessSidebarButton(button))
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
                   const isSelected = selectedSidebarButton === button.action
@@ -65694,7 +65749,7 @@ A1;Peça exemplo;10`}
                     </span>
                   ) : null}
                 </button>
-                {expandedGroups.has('manuais-informacoes-main') && canAccessAction(button.action) && (
+                {expandedGroups.has('manuais-informacoes-main') && canAccessSidebarButton(button) && (
                   <div className="sidebar-action-buttons">
                     <button
                       type="button"
@@ -65777,7 +65832,7 @@ A1;Peça exemplo;10`}
                     </span>
                   ) : null}
                 </button>
-                {expandedGroups.has('biblia-nonato-main') && canAccessAction(button.action) && (
+                {expandedGroups.has('biblia-nonato-main') && canAccessSidebarButton(button) && (
                   <div className="sidebar-action-buttons">
                     <button
                       type="button"
@@ -65828,7 +65883,7 @@ A1;Peça exemplo;10`}
         </div>
 
         {/* Armazém / almoxarifado e mapa de separação (mesmo cluster lógico) */}
-        {getButtonsByGroup('almoxarifado-armazem').some((b) => canAccessAction(b.action)) && (
+        {getButtonsByGroup('almoxarifado-armazem').some((b) => canAccessSidebarButton(b)) && (
           <div className="sidebar-nav-cluster" data-sidebar-zone="operacao">
             {(() => {
               const headerBtn =
@@ -65869,7 +65924,7 @@ A1;Peça exemplo;10`}
                   {expandedGroups.has('almoxarifado-main') && (
                     <div className="sidebar-action-buttons">
                       {getButtonsByGroup('almoxarifado-armazem')
-                        .filter((button) => canAccessAction(button.action))
+                        .filter((button) => canAccessSidebarButton(button))
                         .sort((a, b) => a.order - b.order)
                         .map((button) => {
                           const isSelected = selectedSidebarButton === button.action || selectedSidebarButton === button.id
@@ -65984,7 +66039,7 @@ A1;Peça exemplo;10`}
                 </button>
               )
             }
-            const anyFinChild = finSorted.some((b) => canAccessAction(b.action))
+            const anyFinChild = finSorted.some((b) => canAccessSidebarButton(b))
             const showFinExpand = anyFinChild || canAccessAction('open-gestao-financeira')
             return (
               <>
@@ -66045,22 +66100,22 @@ A1;Peça exemplo;10`}
                         </button>
                       </div>
                     )}
-                    {finBy.clientes.some((b) => canAccessAction(b.action)) && (
+                    {finBy.clientes.some((b) => canAccessSidebarButton(b)) && (
                       <div className="sidebar-fin-subgroup">
                         <div className="sidebar-fin-subgroup-label">{labCli}</div>
-                        {finBy.clientes.filter((b) => canAccessAction(b.action)).map(renderFinRow)}
+                        {finBy.clientes.filter((b) => canAccessSidebarButton(b)).map(renderFinRow)}
                       </div>
                     )}
-                    {finBy.despesas.some((b) => canAccessAction(b.action)) && (
+                    {finBy.despesas.some((b) => canAccessSidebarButton(b)) && (
                       <div className="sidebar-fin-subgroup">
                         <div className="sidebar-fin-subgroup-label">{labDesp}</div>
-                        {finBy.despesas.filter((b) => canAccessAction(b.action)).map(renderFinRow)}
+                        {finBy.despesas.filter((b) => canAccessSidebarButton(b)).map(renderFinRow)}
                       </div>
                     )}
-                    {finBy.outros.some((b) => canAccessAction(b.action)) && (
+                    {finBy.outros.some((b) => canAccessSidebarButton(b)) && (
                       <div className="sidebar-fin-subgroup">
                         <div className="sidebar-fin-subgroup-label">{labOut}</div>
-                        {finBy.outros.filter((b) => canAccessAction(b.action)).map(renderFinRow)}
+                        {finBy.outros.filter((b) => canAccessSidebarButton(b)).map(renderFinRow)}
                       </div>
                     )}
                     {!anyFinChild && !canAccessAction('open-gestao-financeira') && (
@@ -66086,7 +66141,7 @@ A1;Peça exemplo;10`}
 
         {/* Grupo: empresa e registos oficiais (cadastro, ficha, solicitação) — mesmo rigor visual que Protocolos */}
         {!isDemoMode &&
-          getButtonsByGroup('empresa-institucional').some((b) => canAccessAction(b.action)) && (
+          getButtonsByGroup('empresa-institucional').some((b) => canAccessSidebarButton(b)) && (
             <>
             <SidebarSectionSep
               id="institucional"
@@ -66159,7 +66214,7 @@ A1;Peça exemplo;10`}
                   aria-label={(safeT as any)?.empresaInstitucionalTitle || 'Empresa e registos oficiais'}
                 >
                   {getButtonsByGroup('empresa-institucional')
-                    .filter((button) => canAccessAction(button.action))
+                    .filter((button) => canAccessSidebarButton(button))
                     .sort((a, b) => a.order - b.order)
                     .map((button) => {
                       const isSelected = selectedSidebarButton === button.action

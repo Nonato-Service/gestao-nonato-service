@@ -21,6 +21,7 @@ export type StoredUser = {
   linkedProfileType?: 'gestor' | 'tecnico' | ''
   linkedProfileId?: string
   permissions?: Record<string, boolean>
+  menuItems?: Record<string, boolean>
 }
 
 type AppSession = StoredUser & {
@@ -86,6 +87,7 @@ function toPublicUser(session: AppSession): StoredUser {
     linkedProfileType: session.linkedProfileType,
     linkedProfileId: session.linkedProfileId,
     permissions: session.permissions,
+    menuItems: session.menuItems,
   }
 }
 
@@ -99,6 +101,10 @@ function toStoredUser(user: any): StoredUser {
     linkedProfileType: user.linkedProfileType || '',
     linkedProfileId: user.linkedProfileId || '',
     permissions: user.permissions && typeof user.permissions === 'object' ? user.permissions : {},
+    menuItems:
+      user.menuItems && typeof user.menuItems === 'object' && !Array.isArray(user.menuItems)
+        ? user.menuItems
+        : undefined,
   }
 }
 

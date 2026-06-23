@@ -31,6 +31,8 @@ export type User = {
   password?: string
   isAdmin?: boolean
   permissions?: Record<string, boolean | undefined>
+  /** Itens do menu visíveis (botão da sidebar → on/off). Sobrepõe permissões legadas quando definido. */
+  menuItems?: Record<string, boolean>
 }
 
 export type UserFormState = {
@@ -53,6 +55,7 @@ export type UserFormState = {
     cadastroServicos: boolean
     extras: boolean
   }
+  menuItems: Record<string, boolean>
 }
 
 export type GestorItem = { id: string; name: string; area?: string }

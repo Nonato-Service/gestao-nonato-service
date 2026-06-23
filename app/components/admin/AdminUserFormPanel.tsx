@@ -1,12 +1,19 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
   USER_PERMISSION_GROUPS,
   applyPermissionPreset,
   setGroupPermissions,
   type UserPermissionPresetId,
 } from '../../lib/adminUserPermissions'
+import {
+  SIDEBAR_MENU_MODULES,
+  buildMenuItemsFromLegacyPermissions,
+  countModuleActiveItems,
+  setModuleMenuItems,
+  syncLegacyPermissionsFromMenuItems,
+} from '../../lib/sidebarMenuPermissions'
 import type { GestorItem, SafeT, TecnicoItem, User, UserFormState } from './adminTypes'
 
 function tr(safeT: SafeT, key: string, fallback: string): string {
@@ -32,19 +39,29 @@ export function AdminUserFormPanel({
   tecnicos,
   compact = false,
 }: AdminUserFormPanelProps) {
-  const setPermission = (key: keyof UserFormState['permissions'], value: boolean) => {
-    setUserForm((prev) => ({
-      ...prev,
-      permissions: { ...prev.permissions, [key]: value },
-    }))
+  const setMenuItem = (buttonId: string, value: boolean) => {
+    setUserForm((prev) => {
+      const menuItems = { ...prev.menuItems, [buttonId]: value }
+      return {
+        ...prev,
+        menuItems,
+        permissions: syncLegacyPermissionsFromMenuItems(menuItems, prev.permissions),
+      }
+    })
   }
 
   const applyPreset = (preset: UserPermissionPresetId) => {
-    setUserForm((prev) => ({
-      ...prev,
-      permissions: applyPermissionPreset(prev.permissions, preset),
-    }))
+    setUserForm((prev) => {
+      const permissions = applyPermissionPreset(prev.permissions, preset)
+      const menuItems = buildMenuItemsFromLegacyPermissions(permissions)
+      return { ...prev, permissions, menuItems }
+    })
   }
+
+  const activeModulesCount = useMemo(
+    () => SIDEBAR_MENU_MODULES.filter((mod) => countModuleActiveItems(userForm.menuItems, mod) > 0).length,
+    [userForm.menuItems]
+  )
 
   const presets: { id: UserPermissionPresetId; labelKey: string; fallback: string }[] = [
     { id: 'technician', labelKey: 'adminUsersPresetTechnician', fallback: 'Técnico de campo' },
@@ -173,8 +190,18 @@ export function AdminUserFormPanel({
           <header className="admin-users-hub-permissions__head">
             <div>
               <h4>{tr(safeT, 'adminUsersPermissionsTitle', 'O que este utilizador pode usar')}</h4>
-              <p>{tr(safeT, 'adminUsersPermissionsSubtitle', 'Ative os módulos visíveis na barra lateral e nos fluxos do sistema.')}</p>
+              <p>
+                {tr(
+                  safeT,
+                  'adminUsersPermissionsSubtitleMenu',
+                  'Ative cada módulo e escolha os botões que aparecem na barra lateral. Os desativados ficam ocultos.'
+                )}
+              </p>
             </div>
+            <span className="admin-users-hub-perm-modules-summary">
+              {activeModulesCount}/{SIDEBAR_MENU_MODULES.length}{' '}
+              {tr(safeT, 'adminUsersModulesActive', 'módulos com acesso')}
+            </span>
           </header>
 
           <div className="admin-users-hub-presets">
@@ -190,33 +217,74 @@ export function AdminUserFormPanel({
             ))}
           </div>
 
-          <div className="admin-users-hub-perm-groups">
-            {USER_PERMISSION_GROUPS.map((group) => {
-              const groupKeys = group.permissions.map((p) => p.key)
-              const activeCount = groupKeys.filter((k) => userForm.permissions[k]).length
-              const allOn = activeCount === groupKeys.length
+          <details className="admin-users-hub-legacy-perms">
+            <summary>{tr(safeT, 'adminUsersLegacyPermissions', 'Permissões rápidas (grupos legados)')}</summary>
+            <div className="admin-users-hub-perm-groups">
+              {USER_PERMISSION_GROUPS.map((group) => {
+                const groupKeys = group.permissions.map((p) => p.key)
+                const activeCount = groupKeys.filter((k) => userForm.permissions[k]).length
+                const allOn = activeCount === groupKeys.length
+                return (
+                  <section key={group.id} className="admin-users-hub-perm-group admin-users-hub-perm-group--legacy">
+                    <header className="admin-users-hub-perm-group__head">
+                      <div className="admin-users-hub-perm-group__title">
+                        <span aria-hidden="true">{group.icon}</span>
+                        <div>
+                          <strong>{tr(safeT, group.titleKey, group.id)}</strong>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="admin-users-hub-btn admin-users-hub-btn--xs admin-users-hub-btn--ghost"
+                        onClick={() =>
+                          setUserForm((prev) => {
+                            const permissions = setGroupPermissions(prev.permissions, group, !allOn)
+                            const menuItems = buildMenuItemsFromLegacyPermissions(permissions, prev.menuItems)
+                            return { ...prev, permissions, menuItems }
+                          })
+                        }
+                      >
+                        {allOn
+                          ? tr(safeT, 'adminUsersGroupClearAll', 'Desmarcar grupo')
+                          : tr(safeT, 'adminUsersGroupSelectAll', 'Marcar grupo')}
+                      </button>
+                    </header>
+                  </section>
+                )
+              })}
+            </div>
+          </details>
+
+          <div className="admin-users-hub-menu-modules">
+            {SIDEBAR_MENU_MODULES.map((module) => {
+              const activeCount = countModuleActiveItems(userForm.menuItems, module)
+              const allOn = activeCount === module.items.length
               return (
-                <section key={group.id} className="admin-users-hub-perm-group">
-                  <header className="admin-users-hub-perm-group__head">
-                    <div className="admin-users-hub-perm-group__title">
-                      <span aria-hidden="true">{group.icon}</span>
+                <section key={module.id} className="admin-users-hub-menu-module">
+                  <header className="admin-users-hub-menu-module__head">
+                    <div className="admin-users-hub-menu-module__title">
+                      <span aria-hidden="true">{module.icon}</span>
                       <div>
-                        <strong>{tr(safeT, group.titleKey, group.id)}</strong>
-                        <small>{tr(safeT, group.descKey, '')}</small>
+                        <strong>{tr(safeT, module.titleKey, module.fallbackTitle)}</strong>
+                        <small>{tr(safeT, module.descKey, module.fallbackDesc)}</small>
                       </div>
                     </div>
                     <div className="admin-users-hub-perm-group__actions">
                       <span className="admin-users-hub-perm-group__count">
-                        {activeCount}/{groupKeys.length}
+                        {activeCount}/{module.items.length}
                       </span>
                       <button
                         type="button"
                         className="admin-users-hub-btn admin-users-hub-btn--xs admin-users-hub-btn--ghost"
                         onClick={() =>
-                          setUserForm((prev) => ({
-                            ...prev,
-                            permissions: setGroupPermissions(prev.permissions, group, !allOn),
-                          }))
+                          setUserForm((prev) => {
+                            const menuItems = setModuleMenuItems(prev.menuItems, module, !allOn)
+                            return {
+                              ...prev,
+                              menuItems,
+                              permissions: syncLegacyPermissionsFromMenuItems(menuItems, prev.permissions),
+                            }
+                          })
                         }
                       >
                         {allOn
@@ -225,24 +293,20 @@ export function AdminUserFormPanel({
                       </button>
                     </div>
                   </header>
-                  <div className="admin-users-hub-perm-grid">
-                    {group.permissions.map((perm) => {
-                      const on = userForm.permissions[perm.key]
+                  <div className="admin-users-hub-menu-module__items">
+                    {module.items.map((item) => {
+                      const on = Boolean(userForm.menuItems[item.buttonId])
                       return (
                         <button
-                          key={perm.key}
+                          key={item.buttonId}
                           type="button"
                           role="switch"
                           aria-checked={on}
-                          className={`admin-users-hub-perm-card admin-users-hub-perm-card--${perm.accent}${on ? ' admin-users-hub-perm-card--on' : ''}`}
-                          onClick={() => setPermission(perm.key, !on)}
+                          className={`admin-users-hub-menu-item${on ? ' admin-users-hub-menu-item--on' : ''}`}
+                          onClick={() => setMenuItem(item.buttonId, !on)}
                         >
-                          <span className="admin-users-hub-perm-card__icon" aria-hidden="true">
-                            {perm.icon}
-                          </span>
-                          <span className="admin-users-hub-perm-card__body">
-                            <strong>{tr(safeT, perm.labelKey, perm.key)}</strong>
-                            <small>{tr(safeT, perm.hintKey, '')}</small>
+                          <span className="admin-users-hub-menu-item__label">
+                            {tr(safeT, item.labelKey, item.fallbackLabel)}
                           </span>
                           <span className={`admin-users-hub-switch admin-users-hub-switch--sm${on ? ' admin-users-hub-switch--on' : ''}`} aria-hidden="true">
                             <span />
