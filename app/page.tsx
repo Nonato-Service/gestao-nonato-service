@@ -9585,6 +9585,7 @@ export default function Dashboard() {
       const savedTiposGestores = getData('nonato-tipos-gestores')
       if (savedTiposGestores && Array.isArray(savedTiposGestores) && savedTiposGestores.length > 0) {
         setTiposGestores(savedTiposGestores)
+        saveData('nonato-tipos-gestores', savedTiposGestores, false).catch(() => {})
       }
 
       // Carregar serviços + grupos (migrar legado nome/cod; garantir grupoId e grupo default)
@@ -13178,22 +13179,24 @@ export default function Dashboard() {
           ...gestorForm
         }
 
+    const isNewGestor = !editingGestor
+    let updatedGestores: Gestor[]
     if (editingGestor) {
-      const updatedGestores = gestores.map(g => 
-        g.id === editingGestor.id 
-          ? savedGestor
-          : g
+      updatedGestores = gestores.map(g =>
+        g.id === editingGestor.id ? savedGestor : g
       )
-      setGestores(updatedGestores)
-      saveData('nonato-gestores', updatedGestores)
     } else {
-      const newGestor: Gestor = savedGestor
-      const updatedGestores = [...gestores, newGestor]
-      setGestores(updatedGestores)
-      saveData('nonato-gestores', updatedGestores)
+      updatedGestores = [...gestores, savedGestor]
     }
-    setGestorForm({ name: savedGestor.name, email: savedGestor.email, phone: savedGestor.phone, address: savedGestor.address, area: savedGestor.area, photo: savedGestor.photo || '' })
-    setEditingGestor(savedGestor)
+
+    setGestores(updatedGestores)
+    void saveData('nonato-gestores', updatedGestores)
+    setFiltroAreaGestor('todas')
+    setShowGestorForm(false)
+    setEditingGestor(null)
+    const primeiroTipo = tiposGestores.length > 0 ? tiposGestores[0].id : 'assistencia-tecnica'
+    setGestorForm({ name: '', email: '', phone: '', address: '', area: primeiroTipo, photo: '' })
+    alert(isNewGestor ? (t.gestorSaved || 'Gestor cadastrado com sucesso.') : (t.gestorUpdated || 'Gestor atualizado com sucesso.'))
   }
 
   // Funções para gerenciar tipos de gestores
@@ -13230,41 +13233,39 @@ export default function Dashboard() {
       return
     }
 
-    // Gerar ID se não existir
-    if (!editingTipoGestor && !tipoGestorForm.id) {
-      tipoGestorForm.id = tipoGestorForm.nome.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-    }
+    const isEditingExisting = Boolean(
+      editingTipoGestor?.id && tiposGestores.some((t) => t.id === editingTipoGestor.id)
+    )
 
-    // Verificar se ID já existe (exceto se estiver editando)
-    if (!editingTipoGestor && tiposGestores.some(t => t.id === tipoGestorForm.id)) {
+    if (!isEditingExisting && tiposGestores.some((t) => t.id === tipoGestorForm.id)) {
       alert('Já existe um tipo com este ID. Escolha outro nome.')
       return
     }
 
     const savedTipoGestor: TipoGestor = { ...tipoGestorForm }
     let updatedTipos: TipoGestor[]
-    if (editingTipoGestor) {
-      // Atualizar tipo existente
-      updatedTipos = tiposGestores.map(t => 
+    if (isEditingExisting && editingTipoGestor) {
+      updatedTipos = tiposGestores.map((t) =>
         t.id === editingTipoGestor.id ? savedTipoGestor : t
       )
-      // Se o ID mudou, atualizar todos os gestores que usam esse tipo
       if (editingTipoGestor.id !== tipoGestorForm.id) {
-        const updatedGestores = gestores.map(g => 
+        const updatedGestores = gestores.map((g) =>
           g.area === editingTipoGestor.id ? { ...g, area: tipoGestorForm.id } : g
         )
         setGestores(updatedGestores)
-        saveData('nonato-gestores', updatedGestores)
+        void saveData('nonato-gestores', updatedGestores)
       }
     } else {
-      // Adicionar novo tipo
-      updatedTipos = [...tiposGestores, tipoGestorForm]
+      updatedTipos = [...tiposGestores, savedTipoGestor]
     }
 
     setTiposGestores(updatedTipos)
-    saveData('nonato-tipos-gestores', updatedTipos)
-    setEditingTipoGestor(savedTipoGestor)
-    setTipoGestorForm(savedTipoGestor)
+    void saveData('nonato-tipos-gestores', updatedTipos)
+    setEditingTipoGestor(null)
+    const novaOrdem =
+      updatedTipos.length > 0 ? Math.max(...updatedTipos.map((t) => t.ordem)) + 1 : 1
+    setTipoGestorForm({ id: '', nome: '', cor: '#00c853', icone: '👤', ordem: novaOrdem })
+    alert(isEditingExisting ? 'Tipo de gestor atualizado com sucesso.' : 'Tipo de gestor cadastrado com sucesso.')
   }
 
   // Função auxiliar para obter informações do tipo de gestor
