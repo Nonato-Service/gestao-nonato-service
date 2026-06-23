@@ -127,6 +127,8 @@ import { PagamentosContadorContent } from './components/PagamentosContadorConten
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { GestaoDemosContent } from './components/GestaoDemosContent'
 import { ManuaisInformacoesContent } from './components/ManuaisInformacoesContent'
+import ManualProgramaContent from './components/ManualProgramaContent'
+import type { ManualProgramaPageDef } from './lib/manualProgramaCatalog'
 import { ConhecimentoTecnicosContent } from './components/ConhecimentoTecnicosContent'
 import { DiarioLembreteIntervalPicker } from './components/DiarioLembreteIntervalPicker'
 import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
@@ -6580,6 +6582,21 @@ export default function Dashboard() {
     const text = t?.[key]
     return text || (t?.helpDefault || 'Consulte o manual do sistema para mais informações sobre esta secção.')
   }
+
+  const getManualHelpContent = useCallback(
+    (helpKey: string, page: ManualProgramaPageDef): string => {
+      const t = safeT as Record<string, string | undefined>
+      if (helpKey === '__manualDiarioPedidos__') {
+        const intro =
+          t?.diarioPedidosModalSub ||
+          'Quadro operacional para notas do dia com estados planeado, em execução e concluído.'
+        return `${intro}\n\n---COMO---\n\n• Abra «Diário de anotação» em Gestão Técnica na barra lateral.\n• Escolha o cliente (cadastro ou «Outro») e escreva uma tarefa por linha.\n• Marque cada anotação como planeado, em execução ou concluído.\n• Anexe até 4 imagens por anotação se precisar de prova visual.\n• Active lembrete periódico para não esquecer tarefas em aberto.\n• Arquive concluídos quando o dia estiver tratado.`
+      }
+      const text = t?.[helpKey]
+      return text || t?.helpDefault || 'Consulte o manual do sistema para mais informações sobre esta secção.'
+    },
+    [safeT]
+  )
 
   const openHelpModal = useCallback(() => {
     if (activeTabId) {
@@ -31755,37 +31772,15 @@ export default function Dashboard() {
       }
 
       case 'manual-programa': {
-        const mT = safeT as any
-        const manualTitle = mT?.manualProgramaTitle || 'Manual do Programa'
-        const sections: Array<{ title: string; body: string }> = [
-          { title: mT?.manualSecaoInicio || '1) Início rápido', body: mT?.manualSecaoInicioDesc || 'Faça login, escolha o idioma, confirme as permissões do utilizador e organize os botões no Organizador da Sidebar.' },
-          { title: mT?.manualSecaoCadastro || '2) Cadastro base', body: mT?.manualSecaoCadastroDesc || 'Cadastre Gestores, Equipamentos, Clientes e Fornecedores antes de iniciar os relatórios e solicitações.' },
-          { title: mT?.manualSecaoOperacao || '3) Operação técnica', body: mT?.manualSecaoOperacaoDesc || 'Use Relatório de Serviço, Protocolos de Serviço, Agenda e Checklist para controlar todo o ciclo do atendimento técnico.' },
-          { title: mT?.manualSecaoPecas || '4) Peças e biblioteca', body: mT?.manualSecaoPecasDesc || 'Registe peças na Biblioteca e use Importação (URL, ficheiro CSV/JSON ou texto colado) para ganho de produtividade.' },
-          { title: mT?.manualSecaoFinanceiro || '5) Financeiro', body: mT?.manualSecaoFinanceiroDesc || 'Acompanhe custos, despesas, comprovantes e clientes financeiros para fechar os serviços com rastreabilidade.' },
-          { title: mT?.manualSecaoAjuda || '6) Ajuda e suporte interno', body: mT?.manualSecaoAjudaDesc || 'No painel ou em cada módulo, use o botão Ajuda (ou F1) no topo da área central para a ajuda contextual desse ecrã.' },
-          { title: mT?.manualSecaoBoasPraticas || '7) Boas práticas profissionais', body: mT?.manualSecaoBoasPraticasDesc || 'Guarde dados com frequência, mantenha códigos de peças padronizados e use nomes consistentes para clientes/equipamentos.' },
-          { title: mT?.manualSecaoSeguranca || '8) Segurança e backup', body: mT?.manualSecaoSegurancaDesc || 'A sincronização entre aparelhos é feita pelo aviso automático. Mantenha backups no Administrador.' }
-        ]
         return (
-          <div style={{ padding: '30px', maxWidth: '1300px', margin: '0 auto' }} className="tab-content-wrapper">
-            <div className="mobile-sticky-toolbar">
-              <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
-              <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
-            </div>
-            <div style={{ marginBottom: '20px', padding: '24px', borderRadius: '16px', border: '1px solid rgba(0,200,83,0.25)', background: 'linear-gradient(135deg, rgba(0,200,83,0.08), rgba(0,0,0,0.75))' }}>
-              <h1 style={{ margin: 0, color: '#00c853', letterSpacing: '1px' }}>{manualTitle}</h1>
-              <p style={{ margin: '8px 0 0', color: '#ccc' }}>{mT?.manualProgramaSubtitle || 'Guia detalhado para uso profissional do sistema.'}</p>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
-              {sections.map((s, idx) => (
-                <div key={idx} style={{ background: '#404040', border: '1px solid rgba(0,200,83,0.2)', borderRadius: '12px', padding: '16px' }}>
-                  <h3 style={{ margin: '0 0 8px', color: '#2ecc71', fontSize: '15px' }}>{s.title}</h3>
-                  <p style={{ margin: 0, color: '#d6d6d6', lineHeight: 1.6, fontSize: '13px' }}>{s.body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ManualProgramaContent
+            tr={safeT as Record<string, string | undefined>}
+            getHelpContent={getManualHelpContent}
+            getTabTitle={(tabType) => getTabTitle(tabType as TabType)}
+            onOpenModule={(tabType) => openTab(tabType as TabType, getTabTitle(tabType as TabType))}
+            onClose={() => closeTab(activeTabId || '')}
+            onHome={voltarPaginaInicial}
+          />
         )
       }
 
@@ -66078,6 +66073,7 @@ A1;Peça exemplo;10`}
         )}
 
         {/* Grupo: GESTÃO FINANCEIRA (subsecções: painel, clientes, despesas, outros) */}
+        {canAccessModule('gestao-financeira') && (
         <div className="sidebar-nav-cluster" data-sidebar-zone="comercial">
           {(() => {
             const finClusterActive =
@@ -66237,6 +66233,7 @@ A1;Peça exemplo;10`}
             )
           })()}
         </div>
+        )}
 
         {/* Grupo: empresa e registos oficiais (cadastro, ficha, solicitação) — mesmo rigor visual que Protocolos */}
         {!isDemoMode &&

@@ -179,6 +179,7 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
     fallbackDesc: 'Financeiro visível.',
     icon: '💰',
     items: [
+      { buttonId: 'gestao-financeira-default', action: 'open-gestao-financeira', labelKey: 'gestaoFinanceiraTitle', fallbackLabel: 'Gestão financeira (painel)', legacyKey: 'extras' },
       { buttonId: 'clientes-financeiro-default', action: 'open-clientes-financeiro', labelKey: 'clientesFinanceiroTitle', fallbackLabel: 'Clientes financeiro', legacyKey: 'extras' },
       { buttonId: 'comprovantes-despesas-default', action: 'open-comprovantes-despesas', labelKey: 'comprovantesDespesasTitle', fallbackLabel: 'Comprovantes despesas', legacyKey: 'extras' },
       { buttonId: 'registro-despesas-default', action: 'open-registro-despesas', labelKey: 'registroDespesasTitle', fallbackLabel: 'Registo despesas', legacyKey: 'cadastroServicos' },
