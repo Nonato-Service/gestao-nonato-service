@@ -55674,7 +55674,17 @@ A1;Peça exemplo;10`}
         return ManuaisInformacoesTabContent({ hubMode: 'manuais' })
 
       case 'biblia-nonato-service':
-        return ManuaisInformacoesTabContent({ hubMode: 'biblia' })
+        return (
+          <BibliaNonatoServiceContent
+            safeT={safeT as Record<string, string | undefined>}
+            closeTab={closeTab}
+            activeTabId={activeTabId}
+            onHome={voltarPaginaInicial}
+            isCompactLayout={isCompactLayout}
+            saveData={saveData}
+            loadData={loadData}
+          />
+        )
 
       case 'informacoes-conhecimento-tecnicos':
         return (
@@ -66915,10 +66925,14 @@ A1;Peça exemplo;10`}
             <div
               className={isCompactLayout ? 'ns-dashboard-root ns-dashboard-root--compact' : 'ns-dashboard-root'}
               style={{
-              maxWidth: '1400px',
+              maxWidth: dashboardWorkspaceExpanded ? '1400px' : 'none',
               margin: '0 auto',
-              padding: isCompactLayout ? '12px 8px' : '40px 20px',
-              minHeight: 'calc(100vh - 60px)'
+              padding: dashboardWorkspaceExpanded ? (isCompactLayout ? '12px 8px' : '40px 20px') : 0,
+              minHeight: dashboardWorkspaceExpanded ? 'calc(100vh - 60px)' : '100%',
+              height: dashboardWorkspaceExpanded ? undefined : '100%',
+              flex: dashboardWorkspaceExpanded ? undefined : '1 1 auto',
+              display: dashboardWorkspaceExpanded ? undefined : 'flex',
+              flexDirection: dashboardWorkspaceExpanded ? undefined : 'column',
             }}>
               <div className="main-dashboard-actions-bar">
                 {dashboardWorkspaceExpanded ? (
