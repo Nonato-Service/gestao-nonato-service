@@ -78,8 +78,7 @@ select option:hover {
 }
 
 /*
- * Campos date/time — ícone nativo do browser escondido (fica preto/invisível ao sol).
- * Substituído por badge verde + ícone branco (alto contraste, fábrica / exterior).
+ * Campos date/time — ícone nativo escondido; ícone branco simples (sem fundo verde).
  */
 input[type='date'],
 input[type='time'],
@@ -88,7 +87,7 @@ input[type='month'],
 input[type='week'] {
   color-scheme: dark;
   position: relative;
-  padding-right: 3.35rem !important;
+  padding-right: 2.5rem !important;
   min-height: 44px;
   -webkit-appearance: none;
   appearance: none;
@@ -125,7 +124,7 @@ input[type='date']::-webkit-datetime-edit-year-field:focus,
 input[type='time']::-webkit-datetime-edit-text:focus,
 input[type='time']::-webkit-datetime-edit-hour-field:focus,
 input[type='time']::-webkit-datetime-edit-minute-field:focus {
-  background-color: rgba(0, 200, 83, 0.22);
+  background-color: rgba(255, 255, 255, 0.08);
   color: #ffffff;
   -webkit-text-fill-color: #ffffff;
 }
@@ -137,7 +136,7 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
   position: absolute;
   right: 0;
   top: 0;
-  width: 3.35rem;
+  width: 2.5rem;
   height: 100%;
   min-height: 44px;
   cursor: pointer;
@@ -146,17 +145,17 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator {
 
 input[type='time'],
 input[type='datetime-local'] {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='10' fill='%2300c853'/%3E%3Crect x='1.5' y='1.5' width='33' height='33' rx='8.5' fill='none' stroke='%23ffffff' stroke-width='2.5'/%3E%3Ccircle cx='18' cy='18' r='7.5' fill='none' stroke='%23ffffff' stroke-width='2.4'/%3E%3Cpath d='M18 12.5v6l4.5 3' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='12' cy='12' r='9' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M12 7v5l3.5 2.5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 36px 36px;
+  background-position: right 10px center;
+  background-size: 18px 18px;
 }
 
 input[type='date'] {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='10' fill='%2300c853'/%3E%3Crect x='1.5' y='1.5' width='33' height='33' rx='8.5' fill='none' stroke='%23ffffff' stroke-width='2.5'/%3E%3Crect x='8' y='13' width='20' height='14' rx='2' fill='none' stroke='%23ffffff' stroke-width='2.2'/%3E%3Cpath d='M8 17h20M12 10v3.5M24 10v3.5' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect x='3' y='5' width='18' height='16' rx='2' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 36px 36px;
+  background-position: right 10px center;
+  background-size: 18px 18px;
 }
 
 .ns-datetime-field {
@@ -167,7 +166,7 @@ input[type='date'] {
 .ns-datetime-input {
   width: 100%;
   box-sizing: border-box;
-  padding: 12px 3.35rem 12px 12px;
+  padding: 12px 2.5rem 12px 12px;
   background-color: #1e1e1e;
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -182,18 +181,18 @@ input[type='date'] {
 .ns-datetime-input[type='time'],
 .ns-datetime-input[type='datetime-local'] {
   background-color: #1e1e1e;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='10' fill='%2300c853'/%3E%3Crect x='1.5' y='1.5' width='33' height='33' rx='8.5' fill='none' stroke='%23ffffff' stroke-width='2.5'/%3E%3Ccircle cx='18' cy='18' r='7.5' fill='none' stroke='%23ffffff' stroke-width='2.4'/%3E%3Cpath d='M18 12.5v6l4.5 3' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='12' cy='12' r='9' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M12 7v5l3.5 2.5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 36px 36px;
+  background-position: right 10px center;
+  background-size: 18px 18px;
 }
 
 .ns-datetime-input[type='date'] {
   background-color: #1e1e1e;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='10' fill='%2300c853'/%3E%3Crect x='1.5' y='1.5' width='33' height='33' rx='8.5' fill='none' stroke='%23ffffff' stroke-width='2.5'/%3E%3Crect x='8' y='13' width='20' height='14' rx='2' fill='none' stroke='%23ffffff' stroke-width='2.2'/%3E%3Cpath d='M8 17h20M12 10v3.5M24 10v3.5' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect x='3' y='5' width='18' height='16' rx='2' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 36px 36px;
+  background-position: right 10px center;
+  background-size: 18px 18px;
 }
 
 .ns-datetime-input--muted {
@@ -211,7 +210,7 @@ input[type='date'] {
   input[type='datetime-local'] {
     min-height: 48px;
     font-size: max(16px, 0.95rem);
-    padding-right: 3.6rem !important;
+    padding-right: 2.65rem !important;
   }
 
   .ns-datetime-input[type='time'],
@@ -220,14 +219,14 @@ input[type='date'] {
   input[type='time'],
   input[type='datetime-local'],
   input[type='date'] {
-    background-size: 40px 40px;
-    background-position: right 6px center;
+    background-size: 20px 20px;
+    background-position: right 8px center;
   }
 
   input[type='date']::-webkit-calendar-picker-indicator,
   input[type='time']::-webkit-calendar-picker-indicator,
   input[type='datetime-local']::-webkit-calendar-picker-indicator {
-    width: 3.6rem;
+    width: 2.65rem;
     min-height: 48px;
   }
 }
