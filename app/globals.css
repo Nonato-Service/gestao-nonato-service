@@ -15919,6 +15919,72 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   display: flex;
   justify-content: flex-end;
 }
+.manuais-pro__zip-section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.manuais-pro__zip-section-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.1);
+  color: #bae6fd;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.manuais-pro__zip-section-btn.is-active,
+.manuais-pro__zip-section-btn:hover {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: rgba(125, 211, 252, 0.75);
+}
+.manuais-pro__zip-pdf-scroll {
+  flex: 1;
+  min-height: min(48vh, 420px);
+  max-height: min(62vh, 560px);
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: #2a2a2a;
+  padding: 8px;
+}
+.manuais-pro__zip-pdf-page {
+  position: relative;
+  margin: 0 auto 12px;
+  width: fit-content;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+.manuais-pro__zip-pdf-canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.manuais-pro__zip-pdf-links {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+.manuais-pro__zip-pdf-link {
+  position: absolute;
+  pointer-events: auto;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: rgba(56, 189, 248, 0.08);
+  cursor: pointer;
+  border-radius: 2px;
+}
+.manuais-pro__zip-pdf-link:hover {
+  background: rgba(56, 189, 248, 0.22);
+  outline: 1px solid rgba(125, 211, 252, 0.65);
+}
+.manuais-pro__zip-item-badge--archive {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fcd34d;
+}
 @media (max-width: 900px) {
   .manuais-pro__zip-layout {
     grid-template-columns: 1fr;

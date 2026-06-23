@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import JSZip from 'jszip'
+import { ManuaisZipPdfPreview } from './ManuaisZipPdfPreview'
 
 type ZipEntry = { path: string; size: number }
 
@@ -37,6 +38,17 @@ function entryKind(path: string): 'pdf' | 'image' | 'text' | 'archive' | 'other'
 function entryLabel(path: string): string {
   const parts = path.split(/[/\\]/)
   return parts[parts.length - 1] || path
+}
+
+function findSectionPdf(entries: ZipEntry[], folderRe: RegExp): string | null {
+  const pdfs = entries.filter((e) => /\.pdf$/i.test(e.path))
+  const inFolder = pdfs.filter((e) => {
+    const parts = e.path.split(/[/\\]/)
+    return parts.some((part) => folderRe.test(part))
+  })
+  if (inFolder.length === 0) return null
+  const indexInFolder = inFolder.find((e) => /index\.pdf$/i.test(e.path))
+  return indexInFolder?.path || inFolder.sort((a, b) => a.path.localeCompare(b.path))[0].path
 }
 
 function mimeForZipEntry(path: string, kind: ReturnType<typeof entryKind>): string {
@@ -82,6 +94,7 @@ export function ManuaisZipExplorer(props: Props) {
   const [search, setSearch] = useState('')
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null)
   const [previewText, setPreviewText] = useState('')
   const [previewKind, setPreviewKind] = useState<'pdf' | 'image' | 'text' | 'archive' | 'other' | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
@@ -92,6 +105,7 @@ export function ManuaisZipExplorer(props: Props) {
     setEntries([])
     setSelectedPath(null)
     setPreviewUrl(null)
+    setPreviewBytes(null)
     setPreviewText('')
     setPreviewKind(null)
     setError(null)
@@ -144,6 +158,7 @@ export function ManuaisZipExplorer(props: Props) {
   useEffect(() => {
     setPreviewText('')
     setPreviewKind(null)
+    setPreviewBytes(null)
     setPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
       return null
@@ -163,11 +178,14 @@ export function ManuaisZipExplorer(props: Props) {
         const bytes = await file.async('uint8array')
         if (cancelled) return
         const kind = detectKindFromBytes(selectedPath, bytes)
-        if (kind === 'pdf' || kind === 'image') {
+        if (kind === 'pdf') {
+          setPreviewBytes(bytes.slice())
+          setPreviewKind('pdf')
+        } else if (kind === 'image') {
           const blob = new Blob([bytes], { type: mimeForZipEntry(selectedPath, kind) })
           objectUrl = URL.createObjectURL(blob)
           setPreviewUrl(objectUrl)
-          setPreviewKind(kind)
+          setPreviewKind('image')
         } else if (kind === 'text') {
           const text = new TextDecoder('utf-8', { fatal: false }).decode(bytes)
           setPreviewText(text)
@@ -204,6 +222,35 @@ export function ManuaisZipExplorer(props: Props) {
     if (!q) return entries
     return entries.filter((e) => e.path.toLowerCase().includes(q))
   }, [entries, search])
+
+  const entryPaths = useMemo(() => entries.map((e) => e.path), [entries])
+
+  const sectionNav = useMemo(
+    () =>
+      [
+        {
+          id: 'index',
+          label: tr('manuaisZipNavIndice', 'Índice'),
+          path: entries.find((e) => /(^|\/)index\.pdf$/i.test(e.path))?.path || null,
+        },
+        {
+          id: 'eletrica',
+          label: tr('manuaisZipNavEletrica', 'Elétrica'),
+          path: findSectionPdf(entries, /elektr|eletric|electric|elektro|el[\.\-_]/i),
+        },
+        {
+          id: 'mecanica',
+          label: tr('manuaisZipNavMecanica', 'Mecânica'),
+          path: findSectionPdf(entries, /mechan|mecan|mechanik|mk[\.\-_]/i),
+        },
+      ].filter((s) => s.path),
+    [entries, tr]
+  )
+
+  const navigateToEntry = useCallback((targetPath: string) => {
+    setSearch('')
+    setSelectedPath(targetPath)
+  }, [])
 
   const downloadSelected = async () => {
     if (!selectedPath || !zipRef.current) return
@@ -252,9 +299,23 @@ export function ManuaisZipExplorer(props: Props) {
       <p className="manuais-pro__zip-explorer-hint">
         {tr(
           'manuaisZipConteudoHint',
-          'Escolha um ficheiro na lista (PDF, imagem ou texto). Para Start.exe HOMAG, descarregue o ZIP completo.'
+          'Escolha um ficheiro na lista (PDF, imagem ou texto). Toque em Elétrica/Mecânica no PDF ou use os botões abaixo. Para Start.exe HOMAG, descarregue o ZIP completo.'
         )}
       </p>
+      {sectionNav.length > 0 ? (
+        <div className="manuais-pro__zip-section-nav" role="navigation" aria-label={tr('manuaisZipNavTitulo', 'Secções do manual')}>
+          {sectionNav.map((sec) => (
+            <button
+              key={sec.id}
+              type="button"
+              className={`manuais-pro__zip-section-btn${selectedPath === sec.path ? ' is-active' : ''}`}
+              onClick={() => sec.path && navigateToEntry(sec.path)}
+            >
+              {sec.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <input
         type="search"
         className="manuais-pro__zip-search"
@@ -311,11 +372,13 @@ export function ManuaisZipExplorer(props: Props) {
             </p>
           ) : previewLoading ? (
             <p className="manuais-pro__preview-status">{tr('bibliaPreviewCarregando', 'A carregar conteúdo…')}</p>
-          ) : previewKind === 'pdf' && previewUrl ? (
-            <iframe
-              className="manuais-pro__preview-frame"
-              src={`${previewUrl}#toolbar=1&navpanes=0`}
-              title={selectedPath}
+          ) : previewKind === 'pdf' && previewBytes ? (
+            <ManuaisZipPdfPreview
+              bytes={previewBytes}
+              path={selectedPath}
+              entryPaths={entryPaths}
+              onNavigate={navigateToEntry}
+              tr={tr}
             />
           ) : previewKind === 'image' && previewUrl ? (
             <div className="manuais-pro__preview-image-wrap">
