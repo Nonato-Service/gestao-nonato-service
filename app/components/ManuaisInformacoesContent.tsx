@@ -31,6 +31,38 @@ function formatManuaisBytes(bytes: number): string {
   return `${bytes} B`
 }
 
+function isZipArchiveFileNameOrMime(name: string, type: string): boolean {
+  const n = name.trim().toLowerCase()
+  if (/\.(zip|zipx)$/i.test(n)) return true
+  const t = (type || '').trim().toLowerCase()
+  return (
+    t === 'application/zip' ||
+    t === 'application/x-zip-compressed' ||
+    t === 'application/x-zip' ||
+    t === 'multipart/x-zip'
+  )
+}
+
+async function fileHasZipMagic(file: File): Promise<boolean> {
+  try {
+    const head = new Uint8Array(await file.slice(0, 4).arrayBuffer())
+    if (head.length < 4) return false
+    if (head[0] !== 0x50 || head[1] !== 0x4b) return false
+    return (
+      (head[2] === 0x03 && head[3] === 0x04) ||
+      (head[2] === 0x05 && head[3] === 0x06) ||
+      (head[2] === 0x07 && head[3] === 0x08)
+    )
+  } catch {
+    return false
+  }
+}
+
+async function isZipArchiveFile(file: File): Promise<boolean> {
+  if (isZipArchiveFileNameOrMime(file.name, file.type)) return true
+  return fileHasZipMagic(file)
+}
+
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -301,28 +333,38 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
   }
 
   const addDocumento = (modeloId: string, file: File) => {
-    if (manuaisSaveDebounceTimer) {
-      clearTimeout(manuaisSaveDebounceTimer)
-      manuaisSaveDebounceTimer = null
+    if (isZipArchiveFileNameOrMime(file.name, file.type)) {
+      void addDocumentoZip(modeloId, file)
+      return
     }
-    const reader = new FileReader()
-    reader.onload = () => {
-      const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `doc-${Date.now()}`
-      const novo: ManuaisDocumento = { id, nome: file.name, tipo: file.type, dados: reader.result as string }
-      let snapshot: ManuaisModelo[] = []
-      setManuaisModelos((prev) => {
-        snapshot = prev.map((mo) => {
-          if (mo.id !== modeloId) return mo
-          const docs = Array.isArray(mo.documentos) ? mo.documentos : []
-          if (docs.some((d) => d.id === id)) return mo
-          return { ...mo, documentos: [...docs, novo] }
+    void fileHasZipMagic(file).then((isZip) => {
+      if (isZip) {
+        void addDocumentoZip(modeloId, file)
+        return
+      }
+      if (manuaisSaveDebounceTimer) {
+        clearTimeout(manuaisSaveDebounceTimer)
+        manuaisSaveDebounceTimer = null
+      }
+      const reader = new FileReader()
+      reader.onload = () => {
+        const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `doc-${Date.now()}`
+        const novo: ManuaisDocumento = { id, nome: file.name, tipo: file.type, dados: reader.result as string }
+        let snapshot: ManuaisModelo[] = []
+        setManuaisModelos((prev) => {
+          snapshot = prev.map((mo) => {
+            if (mo.id !== modeloId) return mo
+            const docs = Array.isArray(mo.documentos) ? mo.documentos : []
+            if (docs.some((d) => d.id === id)) return mo
+            return { ...mo, documentos: [...docs, novo] }
+          })
+          manuaisModelosRef.current = snapshot
+          return snapshot
         })
-        manuaisModelosRef.current = snapshot
-        return snapshot
-      })
-      void Promise.resolve().then(() => persistModelosImmediate(snapshot))
-    }
-    reader.readAsDataURL(file)
+        void Promise.resolve().then(() => persistModelosImmediate(snapshot))
+      }
+      reader.readAsDataURL(file)
+    })
   }
 
   const removeDocumento = (modeloId: string, docId: string) => {
@@ -421,9 +463,14 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
   }
 
   const addDocumentoZip = async (modeloId: string, file: File) => {
-    const lower = file.name.toLowerCase()
-    if (!lower.endsWith('.zip')) {
-      window.alert(tr('manuaisImportacaoZipInvalido', 'Selecione um ficheiro .zip com a pasta do manual.'))
+    const zipOk = await isZipArchiveFile(file)
+    if (!zipOk) {
+      window.alert(
+        `${tr('manuaisImportacaoZipInvalido', 'Selecione um ficheiro .zip com a pasta do manual.')}\n\n«${file.name}»\n\n${tr(
+          'manuaisImportacaoZipInvalidoHint',
+          'Se for .rar ou .7z, compacte de novo como .zip no Windows (clique direito → Enviar para → Pasta comprimida).'
+        )}`
+      )
       return
     }
     if (file.size > MANUAIS_ZIP_IMPORT_MAX_BYTES) {
@@ -454,7 +501,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
       await appendDocumentosToModelo(modeloId, [
         {
           id,
-          nome: file.name,
+          nome: /\.(zip|zipx)$/i.test(file.name.trim()) ? file.name : `${file.name.replace(/\.+$/, '')}.zip`,
           tipo: 'application/zip',
           dados,
         },
@@ -1367,7 +1414,6 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                         <input
                           ref={manuaisZipInputRef}
                           type="file"
-                          accept=".zip,application/zip,application/x-zip-compressed"
                           className="manuais-pro__file-input"
                           onChange={(e) => {
                             const f = e.target.files?.[0]
@@ -1393,7 +1439,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                       tr={tr}
                       emptyHint={tr('manuaisHubNoDocuments', 'Nenhum documento.')}
                       uploadLabel={tr('manuaisAdicionarDocumento', '+ Adicionar documento')}
-                      accept=".pdf,application/pdf,.doc,.docx,image/*,.txt,.md,.csv,.json"
+                      accept=".pdf,application/pdf,.doc,.docx,image/*,.txt,.md,.csv,.json,.zip,application/zip,application/x-zip-compressed"
                       onUpload={(f) => addDocumento(selectedModelo.id, f)}
                     />
                   </section>
