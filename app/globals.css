@@ -6664,8 +6664,8 @@ a:focus-visible {
 .biblioteca-relatorios-cliente {
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: var(--ns-surface-soft);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #3e3e3e;
 }
 
 .biblioteca-relatorios-cliente__summary {
@@ -6676,8 +6676,8 @@ a:focus-visible {
   gap: 12px;
   padding: 14px 16px;
   user-select: none;
-  background: linear-gradient(180deg, #525252 0%, #484848 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, #434343 0%, #383838 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 .biblioteca-relatorios-cliente[open] .biblioteca-relatorios-cliente__summary {
   border-bottom-color: rgba(255, 255, 255, 0.14);
