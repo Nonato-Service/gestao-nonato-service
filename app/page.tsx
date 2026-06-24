@@ -145,7 +145,7 @@ import { ChecklistBasicoContent } from './components/ChecklistBasicoContent'
 import { FamiliasGruposEquipamentosContent } from './components/FamiliasGruposEquipamentosContent'
 import { EquipamentosArmazemMenu } from './components/EquipamentosArmazemMenu'
 import { ContextualBackBar } from './components/ContextualBackBar'
-import { ProImageHoverPreview } from './components/ProImageHoverPreview'
+import { BibliotecaPecasGaleriaCategorias } from './components/BibliotecaPecasGaleriaCategorias'
 import { DEMO_VISITOR_USER } from './lib/demoManagement'
 import { AdministradorContent } from './components/admin/AdministradorContent'
 import { AdminUserFormPanel } from './components/admin/AdminUserFormPanel'
@@ -7020,6 +7020,7 @@ export default function Dashboard() {
   /** Biblioteca: filtra peças cujo código contém o texto (sem distinção maiúsculas/minúsculas). */
   const [buscaCodigoBiblioteca, setBuscaCodigoBiblioteca] = useState<string>('')
   const [abaBibliotecaPecas, setAbaBibliotecaPecas] = useState<'cadastro' | 'biblioteca' | 'biblioteca-gestao' | 'grupos' | 'importacao'>('cadastro')
+  const [bibliotecaGaleriaCategoriaId, setBibliotecaGaleriaCategoriaId] = useState<string | null>(null)
   /** Se a peça foi aberta a partir da fila de importação, após Salvar regressa à aba Importação (não à Biblioteca). */
   const [salvarPecaBibliotecaVoltaParaImportacao, setSalvarPecaBibliotecaVoltaParaImportacao] = useState(false)
   const [visualizacaoBiblioteca, setVisualizacaoBiblioteca] = useState<'grid' | 'lista'>('grid')
@@ -24933,6 +24934,11 @@ export default function Dashboard() {
     [pecasBiblioteca, regrasClassificacaoPecas, persistPecasBiblioteca, persistRegrasClassificacaoPecas]
   )
 
+  const pecasCatalogoBiblioteca = useMemo(
+    () => pecasBiblioteca.filter((p) => !ehImportacaoPendenteStrict(p)),
+    [pecasBiblioteca]
+  )
+
   const pecasImportadasPendentes = useMemo(
     () => pecasBiblioteca.filter((peca) => ehImportacaoPendenteStrict(peca)),
     [pecasBiblioteca]
@@ -36688,7 +36694,10 @@ export default function Dashboard() {
                 role="tab"
                 className={bibliotecaHubTabClass(abaBibliotecaPecas === 'cadastro')}
                 aria-selected={abaBibliotecaPecas === 'cadastro'}
-                onClick={() => setAbaBibliotecaPecas('cadastro')}
+                onClick={() => {
+                  setBibliotecaGaleriaCategoriaId(null)
+                  setAbaBibliotecaPecas('cadastro')
+                }}
               >
                 {safeT?.cadastroPecas || 'Cadastro de Peças'}
               </button>
@@ -36698,6 +36707,7 @@ export default function Dashboard() {
                 className={bibliotecaHubTabClass(abaBibliotecaPecas === 'biblioteca')}
                 aria-selected={abaBibliotecaPecas === 'biblioteca'}
                 onClick={() => {
+                  setBibliotecaGaleriaCategoriaId(null)
                   setAbaBibliotecaPecas('biblioteca')
                   setBibliotecaAgruparPorCategoria(true)
                   setVisualizacaoBiblioteca('grid')
@@ -36783,127 +36793,17 @@ export default function Dashboard() {
             {/* Conteúdo da aba Cadastro */}
             {abaBibliotecaPecas === 'cadastro' && (
               <>
-                <div className="biblioteca-pecas-hub__callout" style={{ marginBottom: '20px' }}>
-                  <div className="biblioteca-pecas-hub__callout-accent" aria-hidden />
-                  <div
-                    style={{
-                      padding: '12px 16px 10px 22px',
-                      fontSize: 10,
-                      letterSpacing: '0.14em',
-                      textTransform: 'uppercase',
-                      fontWeight: 800,
-                      color: 'rgba(170, 255, 205, 0.88)',
-                      borderBottom: '1px solid rgba(0, 255, 120, 0.1)',
-                    }}
-                  >
-                    {safeT?.cadastroPecas || 'Cadastro de Peças'}
-                  </div>
-                  <div
-                    style={{
-                      padding: '12px 16px 14px 22px',
-                      fontSize: '13px',
-                      color: 'rgba(255,255,255,0.93)',
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    <strong style={{ color: '#8effb8' }}>{(safeT as any).pecaBibliotecaDicaGerirGruposTitulo || 'Grupos e subgrupos'}</strong>
-                    {' — '}
-                    {(safeT as any).pecaBibliotecaDicaGerirGruposCorpo ||
-                      'Para renomear ou apagar categorias e subcategorias já criadas, abra a aba «Gerenciar Categorias» e use os botões Editar / Excluir ao lado de cada nome.'}{' '}
-                    <button
-                      type="button"
-                      className="biblioteca-btn--purple"
-                      onClick={() => setAbaBibliotecaPecas('grupos')}
-                      style={{
-                        marginLeft: '6px',
-                        marginTop: '4px',
-                        padding: '6px 12px',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        borderRadius: 8,
-                      }}
-                    >
-                      {(safeT as any).pecaBibliotecaIrGerirGrupos || 'Abrir Gerenciar Categorias'}
-                    </button>
-                  </div>
-                </div>
-            
-            <div className="importacao-pecas-paste-box" style={{ marginBottom: '18px' }}>
-              <div className="importacao-pecas-paste-head">
-                <div>
-                  <h4>{(safeT as any)?.importacaoColarCatalogoTitle || 'Colar catálogo do site'}</h4>
-                  <p>
-                    {(safeT as any)?.importacaoColarCatalogoDesc ||
-                      'Abra o site do fornecedor, copie a página (Ctrl+A, Ctrl+C) e cole aqui. Uma peça preenche o cadastro; várias peças abrem a importação.'}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={() => setAbaBibliotecaPecas('importacao')}
-                  style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
-                >
-                  📥 {(safeT as any)?.importacaoPecas || 'Importação de Peças'}
-                </button>
-              </div>
-              <div className="importacao-pecas-paste-steps">
-                <span>{(safeT as any)?.importacaoColarCatalogoPasso1 || '1. Abra o site e copie tudo (Ctrl+A, Ctrl+C)'}</span>
-                <span>{(safeT as any)?.importacaoColarCatalogoPasso2 || '2. Cole na caixa abaixo (Ctrl+V)'}</span>
-                <span>{(safeT as any)?.importacaoColarCatalogoPasso3 || '3. Veja os dados antes de gravar'}</span>
-              </div>
-              <AssistTextarea
-                showAssist={false}
-                value={importacaoTextoColado}
-                onValueChange={(v) => { setImportacaoTextoColado(v); setImportacaoUrlError(null) }}
-                onPaste={handleImportacaoPecasPaste}
-                placeholder={(safeT as any)?.importacaoColarCatalogoPlaceholder || 'Clique aqui e cole (Ctrl+V) o conteúdo copiado do site do fornecedor…'}
-                className="importacao-pecas-paste-textarea"
-                style={{
-                  width: '100%',
-                  minHeight: '140px',
-                  padding: '12px',
-                  backgroundColor: '#404040',
-                  border: '1px solid rgba(0, 180, 255, 0.35)',
-                  borderRadius: '8px',
-                  color: '#fff',
-                  fontSize: '13px',
-                  fontFamily: 'monospace',
-                  marginBottom: '8px',
-                  boxSizing: 'border-box',
-                }}
-              />
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '8px' }}>
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={handleImportacaoColarTexto}
-                  style={{ padding: '10px 16px', fontSize: '13px' }}
-                >
-                  {(safeT as any)?.importacaoProcessarColagem || (safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Processar colagem'}
-                </button>
-                <button
-                  type="button"
-                  onClick={abrirSiteImportacaoNoNavegador}
+                <p
                   style={{
-                    padding: '10px 16px',
-                    backgroundColor: 'rgba(180, 120, 255, 0.12)',
-                    border: '1px solid rgba(200, 160, 255, 0.55)',
-                    borderRadius: '8px',
-                    color: '#d4b8ff',
-                    cursor: 'pointer',
-                    fontWeight: '600',
+                    margin: '0 0 16px',
                     fontSize: '13px',
+                    color: 'rgba(190, 255, 210, 0.95)',
+                    lineHeight: 1.55,
                   }}
                 >
-                  🔗 {safeT?.importacaoAbrirSiteNovaAba || 'Abrir no navegador'}
-                </button>
-              </div>
-              {importacaoUrlError && (
-                <p style={{ fontSize: '13px', color: '#ff9a9a', margin: '0 0 8px', lineHeight: 1.45 }}>{importacaoUrlError}</p>
-              )}
-              {renderPainelPreviewImportacao()}
-            </div>
+                  {(safeT as any)?.bibliotecaCadastroSomenteHint ||
+                    'Cadastre ou edite peças aqui. Consulte o catálogo visual na aba «Biblioteca».'}
+                </p>
 
             <button 
               className="btn-primary" 
@@ -37988,40 +37888,23 @@ export default function Dashboard() {
               </div>
             )}
             
-            <div
-              style={{
-                marginTop: '20px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: '1px solid rgba(0, 200, 120, 0.28)',
-                backgroundColor: 'rgba(0, 24, 12, 0.45)',
-              }}
-            >
-              <p style={{ margin: '0 0 12px', fontSize: '14px', color: 'rgba(255,255,255,0.92)', lineHeight: 1.5 }}>
-                <strong style={{ color: '#7dff9e' }}>{safeT?.bibliotecaPecas || 'Biblioteca'}</strong>
-                {' — '}
-                {safeT?.cadastroPecasBibliotecaCatalogoHint ||
-                  'O catálogo completo está na aba «Biblioteca» (por categoria ou todas as peças). Aqui no «Cadastro» vê apenas o que ainda está a importar ou a completar antes de gravar.'}
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={() => {
-                    setAbaBibliotecaPecas('biblioteca')
-                    setBibliotecaAgruparPorCategoria(true)
-                    setVisualizacaoBiblioteca('grid')
+            {pecasImportadasPendentes.length > 0 && (
+                <div
+                  style={{
+                    marginTop: '20px',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 193, 7, 0.35)',
+                    backgroundColor: 'rgba(40, 32, 8, 0.45)',
                   }}
-                  style={{ padding: '8px 14px', fontSize: '13px' }}
                 >
-                  {safeT?.abrirBiblioteca || 'Abrir Biblioteca'}
-                </button>
-              </div>
-              {pecasImportadasPendentes.length > 0 && (
-                <div style={{ marginTop: '16px' }}>
                   <div style={{ fontSize: '13px', color: '#ffdc73', fontWeight: 600, marginBottom: '8px' }}>
                     {safeT?.pecaBibliotecaImportacoesPendentes || 'Importações pendentes'} ({pecasImportadasPendentes.length})
                   </div>
+                  <p style={{ margin: '0 0 12px', fontSize: '12px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.45 }}>
+                    {safeT?.bibliotecaImportacoesNaoSalvasBanner ||
+                      'Abra cada peça, confira os dados e use Salvar para integrá-la ao catálogo.'}
+                  </p>
                   <div
                     style={{
                       display: 'grid',
@@ -38032,24 +37915,28 @@ export default function Dashboard() {
                     }}
                   >
                     {pecasImportadasPendentes.map((peca) => (
-                      <div
+                      <button
                         key={peca.id}
+                        type="button"
+                        onClick={() => handleEditPecaBiblioteca(peca)}
                         style={{
                           padding: '10px',
                           borderRadius: '8px',
                           backgroundColor: 'rgba(20,20,20,0.95)',
                           border: '1px solid rgba(255, 193, 7, 0.25)',
                           fontSize: '12px',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          color: 'inherit',
                         }}
                       >
                         <div style={{ fontWeight: 700, color: '#fff', marginBottom: '4px' }}>{peca.nome}</div>
                         <div style={{ color: '#bfbfbf' }}>{peca.codigo}</div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
               )}
-            </div>
               </>
             )}
 
@@ -38076,6 +37963,30 @@ export default function Dashboard() {
                       'Vista só por categoria (consulta). Para alterar nomes, preços, classificar em lote ou excluir, abra «Editar biblioteca».'}
                   </p>
                 )}
+                {somenteLeituraBiblioteca ? (
+                  <BibliotecaPecasGaleriaCategorias
+                    categorias={categoriasPecasAlfabeto}
+                    pecasCatalogo={pecasCatalogoBiblioteca}
+                    categoriaSelecionadaId={bibliotecaGaleriaCategoriaId}
+                    onSelecionarCategoria={setBibliotecaGaleriaCategoriaId}
+                    onVoltarCategorias={() => setBibliotecaGaleriaCategoriaId(null)}
+                    srcImagem={pecaBibliotecaSrcImagemDisplay}
+                    temImagemPropria={pecaBibliotecaTemImagemPropria}
+                    onThumbEnter={(ev, src, label) => showBibliotecaImgPreview(ev, src, label)}
+                    onThumbLeave={hideBibliotecaImgPreview}
+                    t={{
+                      titulo: (safeT as any)?.bibliotecaGaleriaCategoriasTitulo,
+                      descricao: (safeT as any)?.bibliotecaGaleriaCategoriasDesc,
+                      voltar: (safeT as any)?.bibliotecaGaleriaVoltarCategorias,
+                      pecasCount: (safeT as any)?.bibliotecaGaleriaPecasNaCategoria,
+                      semImagem: (safeT as any)?.bibliotecaGaleriaSemImagemCategoria,
+                      cliqueAbrir: (safeT as any)?.bibliotecaGaleriaCliqueCategoria,
+                      codigo: safeT?.codigoPecaBiblioteca || safeT?.codigo,
+                      semPecasCategoria: (safeT as any)?.bibliotecaGaleriaSemPecasCategoria,
+                    }}
+                  />
+                ) : (
+                <>
                 {/* Controles de visualização — painel único */}
                 <div className="biblioteca-hub-toolbar">
                   <div className="biblioteca-hub-toolbar__title">
@@ -38945,6 +38856,8 @@ export default function Dashboard() {
                     </>
                   )
                 })()}
+                </>
+                )}
               </div>
             )})()}
 
