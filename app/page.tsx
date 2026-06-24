@@ -139,6 +139,7 @@ import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'
 import { FamiliasGruposChecklistContent } from './components/FamiliasGruposChecklistContent'
 import { ChecklistBasicoContent } from './components/ChecklistBasicoContent'
 import { FamiliasGruposEquipamentosContent } from './components/FamiliasGruposEquipamentosContent'
+import { EquipamentosArmazemMenu } from './components/EquipamentosArmazemMenu'
 import { ProImageHoverPreview } from './components/ProImageHoverPreview'
 import { DEMO_VISITOR_USER } from './lib/demoManagement'
 import { AdministradorContent } from './components/admin/AdministradorContent'
@@ -4572,6 +4573,9 @@ export default function Dashboard() {
   const [showEquipamentoForm, setShowEquipamentoForm] = useState(false)
   const [editingEquipamento, setEditingEquipamento] = useState<Equipamento | null>(null)
   const [viewingEquipamento, setViewingEquipamento] = useState<Equipamento | null>(null)
+  type EquipamentosArmazemEtapa = 'hub' | 'cadastrar' | 'visualizar-familias' | 'visualizar-lista'
+  const [equipamentosArmazemEtapa, setEquipamentosArmazemEtapa] = useState<EquipamentosArmazemEtapa>('hub')
+  const [equipamentosVisualizarFamilia, setEquipamentosVisualizarFamilia] = useState<string | '__ALL__' | null>(null)
   const [equipamentoDetailTab, setEquipamentoDetailTab] = useState<'historico' | 'documentos' | 'fotos' | 'itens' | 'etiquetas'>('historico')
   const [historicoForm, setHistoricoForm] = useState<{ tipo: string; descricao: string; responsavel: string; observacoes: string }>({ tipo: 'outro', descricao: '', responsavel: '', observacoes: '' })
   const [newItemIncluded, setNewItemIncluded] = useState('')
@@ -6377,7 +6381,7 @@ export default function Dashboard() {
     const t = safeT as any
     const titles: Record<TabType, string> = {
       'gestores': t?.gestoresTitle || 'Gestores e Técnicos',
-      'equipamentos': t?.equipamentos || 'CADASTRO DE EQUIPAMENTOS DO ARMAZÉM',
+      'equipamentos': t?.equipamentos || 'CADASTRAR EQUIPAMENTOS E VISUALIZAR EQUIPAMENTOS DO ARMAZÉM',
       'familias-grupos': t?.familiasGruposTitle || 'Cadastro de Famílias e Grupos para Checklist',
       'familias-grupos-equipamentos': t?.familiasGruposEquipamentosTitle || 'Cadastro de Famílias e Grupos para os Equipamentos',
       'pre-checklist': t?.preChecklistTitle || 'PRE CHECKLIST',
@@ -8093,6 +8097,34 @@ export default function Dashboard() {
       porMarca: Object.entries(porMarca).sort(sortDesc)
     }
   }, [equipamentosAtivos, equipamentos.length, t])
+
+  const familiasArmazemMenu = useMemo(() => {
+    const tTyped = t as any
+    const semFamilia = tTyped.semFamilia || 'Sem Família'
+    const contagem = new Map<string, number>()
+    for (const eq of equipamentos) {
+      const nome = (eq.familia || '').trim() || semFamilia
+      contagem.set(nome, (contagem.get(nome) || 0) + 1)
+    }
+    for (const fam of familiasEquipamento) {
+      const nome = fam.trim()
+      if (nome && !contagem.has(nome)) contagem.set(nome, 0)
+    }
+    return Array.from(contagem.entries())
+      .map(([nome, total]) => ({ nome, total }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, undefined, { sensitivity: 'base' }))
+  }, [equipamentos, familiasEquipamento, t])
+
+  const equipamentosListaVisualizar = useMemo(() => {
+    const tTyped = t as any
+    const semFamilia = tTyped.semFamilia || 'Sem Família'
+    if (equipamentosVisualizarFamilia === '__ALL__') return equipamentos
+    if (!equipamentosVisualizarFamilia) return []
+    if (equipamentosVisualizarFamilia === semFamilia) {
+      return equipamentos.filter((eq) => !(eq.familia || '').trim())
+    }
+    return equipamentos.filter((eq) => (eq.familia || '').trim() === equipamentosVisualizarFamilia)
+  }, [equipamentos, equipamentosVisualizarFamilia, t])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -11237,7 +11269,7 @@ export default function Dashboard() {
       if (!hasEquipamentos) {
         const equipamentosButton: SidebarButton = {
           id: 'equipamentos-default',
-          name: 'CADASTRO DE EQUIPAMENTOS DO ARMAZÉM',
+          name: 'CADASTRAR EQUIPAMENTOS E VISUALIZAR EQUIPAMENTOS DO ARMAZÉM',
           action: 'open-equipamentos',
           order: buttons.length,
           translationKey: 'equipamentosTitle',
@@ -12072,7 +12104,7 @@ export default function Dashboard() {
       if (!hasEquipamentosAfter) {
         filteredButtons.push({
           id: 'equipamentos-default',
-          name: 'CADASTRO DE EQUIPAMENTOS DO ARMAZÉM',
+          name: 'CADASTRAR EQUIPAMENTOS E VISUALIZAR EQUIPAMENTOS DO ARMAZÉM',
           action: 'open-equipamentos',
           order: filteredButtons.length,
           translationKey: 'equipamentosTitle',
@@ -12266,7 +12298,7 @@ export default function Dashboard() {
         },
         {
           id: 'equipamentos-default',
-          name: 'CADASTRO DE EQUIPAMENTOS DO ARMAZÉM',
+          name: 'CADASTRAR EQUIPAMENTOS E VISUALIZAR EQUIPAMENTOS DO ARMAZÉM',
           action: 'open-equipamentos',
           order: 3,
           translationKey: 'equipamentosTitle',
@@ -25451,6 +25483,12 @@ export default function Dashboard() {
       setFamiliasGruposModalVariant('checklist')
       openTab('familias-grupos', getTabTitle('familias-grupos'))
     } else if (action === 'open-equipamentos') {
+      setEquipamentosArmazemEtapa('hub')
+      setEquipamentosVisualizarFamilia(null)
+      setShowEquipamentoForm(false)
+      setEditingEquipamento(null)
+      setViewingEquipamento(null)
+      setSearchedEquipamento(null)
       openTab('equipamentos', getTabTitle('equipamentos'))
     } else if (action === 'open-checklist-hub') {
       openTab('checklist-hub', getTabTitle('checklist-hub'))
@@ -28567,6 +28605,69 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {(equipamentosArmazemEtapa === 'hub' || equipamentosArmazemEtapa === 'visualizar-familias') && (
+              <EquipamentosArmazemMenu
+                safeT={safeT as Record<string, string | undefined>}
+                etapa={equipamentosArmazemEtapa === 'hub' ? 'hub' : 'visualizar-familias'}
+                familias={familiasArmazemMenu}
+                totalEquipamentos={equipamentos.length}
+                onCadastrar={() => {
+                  setEquipamentosArmazemEtapa('cadastrar')
+                  setShowEquipamentoForm(false)
+                  setEditingEquipamento(null)
+                  setSearchedEquipamento(null)
+                }}
+                onAbrirVisualizar={() => {
+                  setEquipamentosArmazemEtapa('visualizar-familias')
+                  setEquipamentosVisualizarFamilia(null)
+                }}
+                onEscolherFamilia={(familia) => {
+                  setEquipamentosVisualizarFamilia(familia)
+                  setEquipamentosArmazemEtapa('visualizar-lista')
+                  setSearchedEquipamento(null)
+                }}
+                onVoltarHub={() => {
+                  setEquipamentosArmazemEtapa('hub')
+                  setEquipamentosVisualizarFamilia(null)
+                }}
+              />
+            )}
+
+            {(equipamentosArmazemEtapa === 'cadastrar' || equipamentosArmazemEtapa === 'visualizar-lista') && (
+              <>
+            <div style={{ marginBottom: '16px', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => {
+                  if (equipamentosArmazemEtapa === 'cadastrar') {
+                    setEquipamentosArmazemEtapa('hub')
+                    setShowEquipamentoForm(false)
+                    setEditingEquipamento(null)
+                  } else {
+                    setEquipamentosArmazemEtapa('visualizar-familias')
+                    setEquipamentosVisualizarFamilia(null)
+                    setViewingEquipamento(null)
+                  }
+                }}
+                style={{ padding: '10px 16px', fontSize: '13px' }}
+              >
+                ←{' '}
+                {equipamentosArmazemEtapa === 'cadastrar'
+                  ? (safeT as any)?.equipamentosVoltarMenu || 'Voltar ao menu'
+                  : (safeT as any)?.equipamentosVoltarFamilias || 'Voltar às famílias'}
+              </button>
+              {equipamentosArmazemEtapa === 'visualizar-lista' && equipamentosVisualizarFamilia ? (
+                <span style={{ fontSize: '14px', color: '#ccc' }}>
+                  {equipamentosVisualizarFamilia === '__ALL__'
+                    ? (safeT as any)?.equipamentosVerTodos || 'Ver todos os equipamentos'
+                    : `${safeT?.familia || 'Família'}: ${equipamentosVisualizarFamilia}`}
+                  {' · '}
+                  {equipamentosListaVisualizar.length} {safeT?.equipamentosAtivos || 'equipamento(s)'}
+                </span>
+              ) : null}
+            </div>
+
             {/* Barra de Ações - padrão Visualizar Equipamento (card #484848, borda 1px verde) */}
             <div style={{
               marginBottom: '20px',
@@ -28579,6 +28680,7 @@ export default function Dashboard() {
               alignItems: 'center',
               flexWrap: 'wrap'
             }}>
+              {equipamentosArmazemEtapa === 'cadastrar' ? (
               <button 
                 className="btn-primary" 
                 onClick={handleAddEquipamento} 
@@ -28593,6 +28695,7 @@ export default function Dashboard() {
               >
                 ➕ {safeT?.addEquipamento || 'Adicionar Equipamento'}
               </button>
+              ) : (
               <div style={{ flex: 1, minWidth: '300px', position: 'relative' }}>
                 <input
                   type="text"
@@ -28601,7 +28704,8 @@ export default function Dashboard() {
                   onChange={(e) => setSearchEquipamentoId(e.target.value)}
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
-                      const found = equipamentos.find(eq => eq.id === searchEquipamentoId.trim())
+                      const pool = equipamentosListaVisualizar
+                      const found = pool.find(eq => eq.id === searchEquipamentoId.trim())
                       setSearchedEquipamento(found || null)
                     }
                   }}
@@ -28624,9 +28728,10 @@ export default function Dashboard() {
                   pointerEvents: 'none'
                 }}>🔍</span>
               </div>
+              )}
             </div>
 
-            {showEquipamentoForm && (
+            {equipamentosArmazemEtapa === 'cadastrar' && showEquipamentoForm && (
               <div id="equipamentos-form-section" style={{ border: '1px solid rgba(0, 200, 83, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#484848' }}>
                 <h3 style={{ marginBottom: '15px', color: '#00c853' }}>{editingEquipamento ? safeT?.editEquipamento : safeT?.addEquipamento}</h3>
                 
@@ -28864,145 +28969,116 @@ export default function Dashboard() {
               </div>
             )}
 
-            {searchedEquipamento ? (
+            {equipamentosArmazemEtapa === 'cadastrar' && !showEquipamentoForm && (
+              <div style={{ textAlign: 'center', padding: '48px 24px', borderRadius: '16px', border: '1px dashed rgba(0, 200, 83, 0.2)', background: 'rgba(0, 200, 83, 0.03)' }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>➕</div>
+                <p style={{ margin: 0, fontSize: '16px', color: 'rgba(255,255,255,0.75)' }}>
+                  {(safeT as any)?.equipamentosHubCadastrarDesc || 'Registar novo equipamento no armazém'}
+                </p>
+                <p style={{ margin: '8px 0 0', fontSize: '14px', color: 'rgba(255,255,255,0.5)' }}>
+                  {safeT?.addEquipamento || 'Adicionar Equipamento'} para abrir o formulário.
+                </p>
+              </div>
+            )}
+
+            {equipamentosArmazemEtapa === 'visualizar-lista' && (
+              searchedEquipamento ? (
               <div style={{ padding: '20px', backgroundColor: '#404040', borderRadius: '8px', marginBottom: '20px' }}>
                 <h3>{searchedEquipamento.tipoEquipamento} - {searchedEquipamento.modelo}</h3>
                 <p><strong>{safeT?.marca || 'Marca'}:</strong> {searchedEquipamento.marca}</p>
                 <p><strong>{safeT?.numeroSerie || 'Número de Série'}:</strong> {searchedEquipamento.numeroSerie}</p>
-                <button className="btn-primary" onClick={() => setSearchedEquipamento(null)} style={{ marginTop: '10px' }}>
-                  {safeT?.close || 'Fechar'}
-                </button>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
+                  <button className="btn-primary" onClick={() => setViewingEquipamento(searchedEquipamento)}>
+                    👁️ {t.viewEquipamento}
+                  </button>
+                  <button className="btn-primary" onClick={() => setSearchedEquipamento(null)}>
+                    {safeT?.close || 'Fechar'}
+                  </button>
+                </div>
               </div>
             ) : (
               <>
-                {equipamentos.length === 0 ? (
+                {equipamentosListaVisualizar.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '48px 24px', borderRadius: '16px', border: '1px dashed rgba(0, 200, 83, 0.2)', background: 'rgba(0, 200, 83, 0.03)' }}>
                     <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>📦</div>
                     <p style={{ margin: 0, fontSize: '16px', color: 'rgba(255,255,255,0.75)' }}>{safeT?.noEquipamentos || 'Nenhum equipamento cadastrado'}</p>
-                    <p style={{ margin: '8px 0 0', fontSize: '14px', color: 'rgba(255,255,255,0.5)' }}>{safeT?.addEquipamento || 'Adicione equipamento'} para começar.</p>
                   </div>
                 ) : (
-                  <>
-                    {/* Resumo visual */}
-                    <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                      <div style={{ padding: '14px 20px', borderRadius: '12px', background: 'rgba(0, 200, 83, 0.08)', border: '1px solid rgba(0, 200, 83, 0.25)', flex: '1', minWidth: '140px' }}>
-                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{safeT?.equipamentosAtivos || 'Ativos'}</span>
-                        <p style={{ margin: '6px 0 0', fontSize: '24px', fontWeight: '700', color: '#00c853' }}>{inventarioArmazem.totalAtivos}</p>
-                      </div>
-                      <div style={{ padding: '14px 20px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', flex: '1', minWidth: '140px' }}>
-                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{safeT?.totalBaixados || 'Baixados'}</span>
-                        <p style={{ margin: '6px 0 0', fontSize: '24px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>{inventarioArmazem.totalBaixados}</p>
-                      </div>
-                    </div>
-                    {/* Grid de cards */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '18px' }}>
-                      {equipamentos.map(equipamento => {
-                        const isBaixado = equipamento.status === 'baixado'
-                        const foto = equipamento.photo || equipamento.coverPhoto
-                        return (
-                          <div
-                            key={equipamento.id}
-                            style={{
-                              borderRadius: '16px',
-                              overflow: 'hidden',
-                              border: '1px solid rgba(0, 200, 83, 0.15)',
-                              background: 'linear-gradient(180deg, rgba(26,26,26,0.98) 0%, rgba(18,18,18,0.98) 100%)',
-                              transition: 'border-color 0.2s, box-shadow 0.2s',
-                              opacity: isBaixado ? 0.85 : 1
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.35)'
-                              e.currentTarget.style.boxShadow = '0 8px 28px rgba(0, 200, 83, 0.08)'
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.15)'
-                              e.currentTarget.style.boxShadow = 'none'
-                            }}
-                          >
-                            {/* Imagem ou placeholder */}
-                            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/10', background: 'rgba(0, 200, 83, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                              {foto ? (
-                                <img src={foto} alt={equipamento.modelo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              ) : (
-                                <span style={{ fontSize: '48px', opacity: 0.4 }}>🔧</span>
-                              )}
-                              {isBaixado && (
-                                <span style={{ position: 'absolute', top: '10px', right: '10px', padding: '5px 12px', fontSize: '11px', fontWeight: '600', background: 'rgba(80,80,80,0.95)', color: 'rgba(255,255,255,0.95)', borderRadius: '8px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                                  {safeT?.baixado || 'Baixado'}
-                                </span>
-                              )}
-                            </div>
-                            <div style={{ padding: '18px' }}>
-                              <p style={{ margin: 0, fontSize: '11px', color: 'rgba(0, 200, 83, 0.9)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{equipamento.tipoEquipamento}</p>
-                              <h3 style={{ margin: '8px 0 6px', fontSize: '17px', fontWeight: '600', color: '#fff' }}>{equipamento.modelo}</h3>
-                              <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.75)' }}>{equipamento.marca}{equipamento.numeroSerie ? ` · ${equipamento.numeroSerie}` : ''}</p>
-                              {(equipamento.familia || equipamento.grupo) && (
-                                <p style={{ margin: '8px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>{[equipamento.familia, equipamento.grupo].filter(Boolean).join(' / ')}</p>
-                              )}
-                              <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>ID: {equipamento.id}</p>
-                              <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
-                                <button
-                                  className="btn-primary"
-                                  onClick={() => setViewingEquipamento(equipamento)}
-                                  style={{ flex: 1, minWidth: '90px', padding: '10px 14px', fontSize: '13px', borderRadius: '10px', fontWeight: '600' }}
-                                >
-                                  👁️ {t.viewEquipamento}
-                                </button>
-                                <button
-                                  className="btn-primary"
-                                  onClick={() => {
-                                    setEditingEquipamento(equipamento)
-                                    const qtd = Math.max(1, equipamento.quantidadePartes ?? (equipamento.partes?.length ?? 1))
-                                    const partes = (equipamento.partes && equipamento.partes.length > 0)
-                                      ? equipamento.partes
-                                      : Array.from({ length: qtd }, (_, i) => ({ ordem: i + 1, tipoId: 'geral' as const, numeroSerieFabricante: '' }))
-                                    setEquipamentoForm({
-                                      id: equipamento.id || '',
-                                      tipoEquipamento: equipamento.tipoEquipamento || '',
-                                      modelo: equipamento.modelo || '',
-                                      marca: equipamento.marca || '',
-                                      numeroSerie: equipamento.numeroSerie || '',
-                                      familia: equipamento.familia || '',
-                                      grupo: equipamento.grupo || '',
-                                      peso: equipamento.peso ?? '',
-                                      umaParteSo: equipamento.umaParteSo ?? true,
-                                      quantidadePartes: qtd,
-                                      partes,
-                                      photo: equipamento.photo || '',
-                                      coverPhoto: equipamento.coverPhoto || '',
-                                      photoLibrary: equipamento.photoLibrary || [],
-                                      manualPdf: equipamento.manualPdf || '',
-                                      documentosPdf: equipamento.documentosPdf || [],
-                                      itemsIncluded: (equipamento.itemsIncluded || []).map(item =>
-                                        typeof item === 'string'
-                                          ? { id: Date.now().toString() + Math.random(), nome: item }
-                                          : item
-                                      ),
-                                      historico: equipamento.historico || [],
-                                      modeloManuaisId: equipamento.modeloManuaisId || ''
-                                    })
-                                    setShowEquipamentoForm(true)
-                                    setTimeout(() => document.getElementById('equipamentos-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
-                                  }}
-                                  style={{ padding: '10px 14px', fontSize: '13px', borderRadius: '10px', fontWeight: '600', background: 'rgba(0, 200, 83, 0.1)', border: '1px solid rgba(0, 200, 83, 0.35)', color: '#00c853' }}
-                                >
-                                  ✏️ {safeT?.edit || 'Editar'}
-                                </button>
-                                <button
-                                  className="btn-danger"
-                                  onClick={() => handleDeleteEquipamento(equipamento.id)}
-                                  style={{ padding: '10px 14px', fontSize: '13px', borderRadius: '10px', fontWeight: '600' }}
-                                >
-                                  🗑️ {safeT?.delete || 'Excluir'}
-                                </button>
-                              </div>
-                            </div>
+                  <div className="ns-equip-list">
+                    {equipamentosListaVisualizar.map((equipamento) => {
+                      const isBaixado = equipamento.status === 'baixado'
+                      return (
+                        <div key={equipamento.id} className={`ns-equip-list__row${isBaixado ? ' is-baixado' : ''}`}>
+                          <div className="ns-equip-list__main">
+                            <p className="ns-equip-list__tipo">{equipamento.tipoEquipamento}</p>
+                            <h3 className="ns-equip-list__modelo">{equipamento.modelo}</h3>
+                            <p className="ns-equip-list__meta">
+                              {equipamento.marca}
+                              {equipamento.numeroSerie ? ` · ${equipamento.numeroSerie}` : ''}
+                              {(equipamento.familia || equipamento.grupo)
+                                ? ` · ${[equipamento.familia, equipamento.grupo].filter(Boolean).join(' / ')}`
+                                : ''}
+                            </p>
+                            <p className="ns-equip-list__id">ID: {equipamento.id}</p>
+                            {isBaixado ? (
+                              <span className="ns-equip-list__badge">{safeT?.baixado || 'Baixado'}</span>
+                            ) : null}
                           </div>
-                        )
-                      })}
-                    </div>
-                  </>
+                          <div className="ns-equip-list__actions">
+                            <button type="button" className="btn-primary" onClick={() => setViewingEquipamento(equipamento)}>
+                              👁️ {t.viewEquipamento}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              onClick={() => {
+                                setEditingEquipamento(equipamento)
+                                const qtd = Math.max(1, equipamento.quantidadePartes ?? (equipamento.partes?.length ?? 1))
+                                const partes = (equipamento.partes && equipamento.partes.length > 0)
+                                  ? equipamento.partes
+                                  : Array.from({ length: qtd }, (_, i) => ({ ordem: i + 1, tipoId: 'geral' as const, numeroSerieFabricante: '' }))
+                                setEquipamentoForm({
+                                  id: equipamento.id || '',
+                                  tipoEquipamento: equipamento.tipoEquipamento || '',
+                                  modelo: equipamento.modelo || '',
+                                  marca: equipamento.marca || '',
+                                  numeroSerie: equipamento.numeroSerie || '',
+                                  familia: equipamento.familia || '',
+                                  grupo: equipamento.grupo || '',
+                                  peso: equipamento.peso ?? '',
+                                  umaParteSo: equipamento.umaParteSo ?? true,
+                                  quantidadePartes: qtd,
+                                  partes,
+                                  photo: equipamento.photo || '',
+                                  coverPhoto: equipamento.coverPhoto || '',
+                                  photoLibrary: equipamento.photoLibrary || [],
+                                  manualPdf: equipamento.manualPdf || '',
+                                  documentosPdf: equipamento.documentosPdf || [],
+                                  itemsIncluded: (equipamento.itemsIncluded || []).map(item =>
+                                    typeof item === 'string'
+                                      ? { id: Date.now().toString() + Math.random(), nome: item }
+                                      : item
+                                  ),
+                                  historico: equipamento.historico || [],
+                                  modeloManuaisId: equipamento.modeloManuaisId || ''
+                                })
+                                setEquipamentosArmazemEtapa('cadastrar')
+                                setShowEquipamentoForm(true)
+                                setTimeout(() => document.getElementById('equipamentos-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
+                              }}
+                            >
+                              ✏️ {safeT?.edit || 'Editar'}
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
                 )}
+              </>
+            )
+            )}
+
               </>
             )}
 
