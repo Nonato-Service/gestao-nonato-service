@@ -24794,6 +24794,13 @@ export default function Dashboard() {
     t,
   ])
 
+  const handleLimparImportacaoPreview = useCallback(() => {
+    setImportacaoPreview(null)
+    setImportacaoTextoColado('')
+    setImportacaoDuplicadasIgnoradas(0)
+    setImportacaoUrlError(null)
+  }, [])
+
   const renderPainelPreviewImportacao = useCallback(() => {
     if (!importacaoPreview || importacaoPreview.length === 0) return null
     const hubT: Record<string, string> = (safeT || {}) as Record<string, string>
@@ -24894,21 +24901,44 @@ export default function Dashboard() {
             </p>
           )}
         </div>
-        <button
-          type="button"
-          onClick={handleAdicionarImportacaoPreview}
-          className="biblioteca-btn--green"
-          style={{
-            padding: '12px 24px',
-            fontWeight: '600',
-            fontSize: '14px',
-          }}
-        >
-          {hubT.importacaoEnviarParaFila || hubT.importacaoAdicionarBiblioteca || 'Enviar para fila'} ({importacaoPreview.length})
-        </button>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+          <button
+            type="button"
+            onClick={handleAdicionarImportacaoPreview}
+            className="biblioteca-btn--green"
+            style={{
+              padding: '12px 24px',
+              fontWeight: '600',
+              fontSize: '14px',
+            }}
+          >
+            {hubT.importacaoEnviarParaFila || hubT.importacaoAdicionarBiblioteca || 'Enviar para fila'} ({importacaoPreview.length})
+          </button>
+          <button
+            type="button"
+            onClick={handleLimparImportacaoPreview}
+            className="biblioteca-btn--ghost"
+            style={{
+              padding: '12px 20px',
+              fontWeight: '600',
+              fontSize: '14px',
+            }}
+          >
+            {hubT.importacaoBtnLimparPreVisualizacao || 'Limpar lista e texto colado'}
+          </button>
+        </div>
       </div>
     )
-  }, [importacaoPreview, importacaoDuplicadasIgnoradas, safeT, handleAdicionarImportacaoPreview, pecaBibliotecaSrcImagemDisplay, categoriasPecas, subcategoriasPecas])
+  }, [
+    importacaoPreview,
+    importacaoDuplicadasIgnoradas,
+    safeT,
+    handleAdicionarImportacaoPreview,
+    handleLimparImportacaoPreview,
+    pecaBibliotecaSrcImagemDisplay,
+    categoriasPecas,
+    subcategoriasPecas,
+  ])
 
   useEffect(() => {
     if (!importacaoPreview?.length) return

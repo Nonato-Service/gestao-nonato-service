@@ -2067,7 +2067,7 @@ export const translations = {
     importacaoSemNovidades: "Nenhuma peça nova para adicionar (itens já existentes na biblioteca).",
     importacaoConfirmarLimparLista: "Deseja limpar a lista importada agora? OK = limpar a pré-visualização e o texto; Cancelar = manter para conferir.",
     importacaoModalPosFilaTitulo: "Próximo passo",
-    importacaoBtnLimparPreVisualizacao: "Limpar lista e texto colado",
+    importacaoBtnLimparPreVisualizacao: "Limpar lista",
     importacaoBtnManterPreVisualizacao: "Manter para conferir",
     importacaoErroGravarFila: "Não foi possível gravar na biblioteca. Verifique espaço no navegador ou tente de novo.",
     importacaoErroFetchFailed: "Não foi possível aceder à URL. Verifique o endereço e a ligação, ou se o site permite acesso.",
