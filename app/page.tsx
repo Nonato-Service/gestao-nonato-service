@@ -7962,7 +7962,14 @@ export default function Dashboard() {
   })
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false)
   /** Largura ≤1024px: menu em gaveta, conteúdo a largura total (tablet/telemóvel) */
-  const [isCompactLayout, setIsCompactLayout] = useState(false)
+  const COMPACT_LAYOUT_MAX_PX = 1024
+  const [isCompactLayout, setIsCompactLayout] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return (
+      window.innerWidth <= COMPACT_LAYOUT_MAX_PX ||
+      document.documentElement.classList.contains('app-compact-layout-early')
+    )
+  })
   const canvasAssinaturaRef = useRef<HTMLCanvasElement>(null)
   const [mostrarCanvasAssinatura, setMostrarCanvasAssinatura] = useState(false)
   const isDrawingRef = useRef(false)
@@ -8419,8 +8426,10 @@ export default function Dashboard() {
   useLayoutEffect(() => {
     const q = () => {
       if (typeof window === 'undefined') return
-      setIsCompactLayout(window.innerWidth <= 1024)
-      if (window.innerWidth > 1024) setMobileMenuOpen(false)
+      const compact = window.innerWidth <= COMPACT_LAYOUT_MAX_PX
+      setIsCompactLayout(compact)
+      document.documentElement.classList.toggle('app-compact-layout-early', compact)
+      if (!compact) setMobileMenuOpen(false)
     }
     q()
     window.addEventListener('resize', q)
@@ -23160,6 +23169,32 @@ export default function Dashboard() {
     }
   }, [])
 
+  /** Imagens em cache podem não disparar onLoad — marcar prontas sem ref (evita loop React #185). */
+  useEffect(() => {
+    const preview = bibliotecaImageHoverPreview
+    if (!preview || preview.imageReady) return
+    const { src, seq } = preview
+    let cancelled = false
+    const markReady = () => {
+      if (cancelled) return
+      setBibliotecaImageHoverPreview((prev) =>
+        prev && prev.seq === seq && !prev.imageReady ? { ...prev, imageReady: true } : prev
+      )
+    }
+    const img = new Image()
+    img.onload = markReady
+    img.onerror = () => {
+      if (!cancelled) hideBibliotecaImgPreview()
+    }
+    img.src = src
+    if (img.complete && img.naturalWidth > 0) markReady()
+    return () => {
+      cancelled = true
+      img.onload = null
+      img.onerror = null
+    }
+  }, [bibliotecaImageHoverPreview?.seq, bibliotecaImageHoverPreview?.src, hideBibliotecaImgPreview])
+
   function normalizeImportKey(v: any): string {
     return String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
   }
@@ -36171,16 +36206,11 @@ export default function Dashboard() {
                     key={`${preview.seq}-${preview.src}`}
                     src={preview.src}
                     alt=""
-                    ref={(imgEl) => {
-                      if (imgEl?.complete && imgEl.naturalWidth > 0) {
-                        setBibliotecaImageHoverPreview((prev) =>
-                          prev && prev.seq === preview.seq ? { ...prev, imageReady: true } : prev
-                        )
-                      }
-                    }}
                     onLoad={() => {
                       setBibliotecaImageHoverPreview((prev) =>
-                        prev && prev.seq === preview.seq ? { ...prev, imageReady: true } : prev
+                        prev && prev.seq === preview.seq && !prev.imageReady
+                          ? { ...prev, imageReady: true }
+                          : prev
                       )
                     }}
                     onError={() => {
@@ -65049,7 +65079,7 @@ A1;Peça exemplo;10`}
 
   return (
     <div
-      className={`app-layout${!isDemoMode ? ' app-layout-no-top-bar' : ''}${isCompactLayout ? ' app-compact-layout' : ''}${isCompactLayout && isDemoMode ? ' app-compact-with-demo' : ''}${openTabs.length > 0 ? ' app-has-bottom-tabs' : ''}${hideSidebarForEntryDashboard ? ' app-layout-entry-focus' : ''}`}
+      className={`app-layout${!isDemoMode ? ' app-layout-no-top-bar' : ''}${isCompactLayout ? ' app-compact-layout' : ''}${isCompactLayout && isDemoMode ? ' app-compact-with-demo' : ''}${openTabs.length > 0 ? ' app-has-bottom-tabs' : ''}${hideSidebarForEntryDashboard ? ' app-layout-entry-focus' : ''}${dashboardWorkspaceExpanded ? ' app-layout-workspace-open' : ''}`}
       style={{
         display: 'flex',
         minHeight: '100dvh',
@@ -65193,7 +65223,35 @@ A1;Peça exemplo;10`}
           >
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
-          <span className="mobile-app-header-title">NONATO SERVICE</span>
+          <span className="mobile-app-header-title" title={activeTabId ? openTabs.find((t) => t.id === activeTabId)?.title : undefined}>
+            {activeTabId
+              ? openTabs.find((t) => t.id === activeTabId)?.title || 'NONATO SERVICE'
+              : 'NONATO SERVICE'}
+          </span>
+          <div className="mobile-header-right-actions">
+            {(activeTabId || dashboardWorkspaceExpanded) && (
+              <button
+                type="button"
+                className="mobile-header-action-btn mobile-header-action-btn--home"
+                onClick={voltarPaginaInicial}
+                aria-label={safeT?.paginaInicial || 'Página Inicial'}
+                title={safeT?.paginaInicial || 'Página Inicial'}
+              >
+                🏠
+              </button>
+            )}
+            {activeTabId && (
+              <button
+                type="button"
+                className="mobile-header-action-btn mobile-header-action-btn--close"
+                onClick={() => closeTab(activeTabId)}
+                aria-label={safeT?.close || 'Fechar'}
+                title={safeT?.close || 'Fechar aba'}
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </header>
       )}
       {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css). Classe extra na vista de entrada: esconde de forma fiável face a media queries. */}

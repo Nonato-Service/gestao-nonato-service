@@ -3739,6 +3739,13 @@ div[style*="border-bottom"][style*="255, 0, 0.2"] > div:last-child {
 
 /* ========== RESPONSIVIDADE: TABLET E CELULAR ========== */
 
+:root {
+  --ns-bp-phone: 480px;
+  --ns-bp-tablet: 768px;
+  --ns-bp-compact: 1024px;
+  --ns-bp-desktop: 1025px;
+}
+
 /* Garantir que nada ultrapasse a largura do ecrã */
 html, body {
   max-width: 100vw;
@@ -3746,9 +3753,28 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Tablet (até 1024px) — tamanho base vem do html (clamp); não forçar 14px no layout */
+/*
+ * Antes da hidratação React: script em layout.tsx aplica .app-compact-layout-early no <html>
+ * quando largura ≤1024 — evita flash de sidebar desktop no telemóvel/tablet.
+ */
+html.app-compact-layout-early body {
+  overscroll-behavior: none;
+}
+html.app-compact-layout-early .app-layout:not(.app-compact-layout) .sidebar {
+  position: fixed !important;
+  transform: translate3d(-105%, 0, 0) !important;
+  width: min(100vw - 4px, 360px) !important;
+  min-width: min(100vw - 4px, 360px) !important;
+  z-index: 2090 !important;
+}
+html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-column {
+  width: 100% !important;
+  max-width: 100vw !important;
+}
+
+/* Tablet (até 1024px) — fallback legado só se NÃO for layout compacto (gaveta) */
 @media (max-width: 1024px) {
-  .app-layout:not(.app-compact-layout) {
+  .app-layout:not(.app-compact-layout):not(.app-compact-layout-early) {
     font-size: inherit !important;
   }
   .header {
@@ -3758,12 +3784,13 @@ html, body {
   .header h1 {
     font-size: 22px !important;
   }
-  .sidebar {
+  /* Sidebar fixa 240px: apenas desktop estreito sem gaveta — NÃO aplicar em .app-compact-layout */
+  .app-layout:not(.app-compact-layout) .sidebar {
     width: 240px !important;
     min-width: 240px !important;
     padding: 16px 12px !important;
   }
-  .bottom-tabs-bar {
+  .app-layout:not(.app-compact-layout) .bottom-tabs-bar {
     left: 240px;
   }
   .container {
@@ -4898,6 +4925,40 @@ body {
   gap: 8px;
   flex-shrink: 0;
 }
+.mobile-header-action-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 200, 83, 0.45);
+  background: rgba(0, 200, 83, 0.08);
+  color: #00c853;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0;
+}
+.mobile-header-action-btn--home {
+  border-color: rgba(120, 185, 255, 0.55);
+  color: #66b3ff;
+  background: rgba(80, 140, 255, 0.1);
+}
+.mobile-header-action-btn--close {
+  border-color: rgba(255, 120, 120, 0.5);
+  color: #ff8a8a;
+  background: rgba(255, 80, 80, 0.08);
+  font-size: 16px;
+  font-weight: 800;
+}
+.mobile-header-action-btn:active {
+  transform: scale(0.96);
+}
 .mobile-refresh-toggle {
   flex-shrink: 0;
   width: 44px;
@@ -5288,6 +5349,138 @@ body {
     left: 10px !important;
     right: 10px !important;
     max-width: none !important;
+  }
+  /* Tablet + telemóvel: barras sticky dos módulos (antes só ≤768px) */
+  .app-compact-layout .mobile-sticky-toolbar {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 112px), 1fr));
+    gap: 8px;
+    padding: 10px 10px;
+    background: #404040;
+    border: 2px solid rgba(0, 200, 83, 0.3);
+    border-radius: 6px;
+    margin: -8px -8px 12px -8px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    align-items: stretch;
+  }
+  .app-compact-layout .tab-header-desktop,
+  .app-compact-layout .tab-nav-desktop {
+    display: none !important;
+  }
+  /* Evitar zoom automático iOS em tablet */
+  .app-compact-layout input,
+  .app-compact-layout select,
+  .app-compact-layout textarea {
+    font-size: 16px !important;
+  }
+  .app-compact-layout input,
+  .app-compact-layout select {
+    min-height: 44px;
+  }
+  /* Painel do módulo: botões empilhados em ecrã estreito */
+  .app-compact-layout .main-module-context-panel .main-module-context-actions {
+    width: 100%;
+    justify-content: stretch !important;
+  }
+  .app-compact-layout .main-module-context-panel .main-content-action-btn,
+  .app-compact-layout .main-module-context-panel .ns-nav-back-bar__btn {
+    flex: 1 1 auto;
+    min-height: 44px;
+    justify-content: center;
+  }
+  .app-compact-layout .main-module-context-back-btn {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* Tabelas e conteúdos largos */
+  .app-compact-layout .tab-inner-scroll,
+  .app-compact-layout .main-content-area {
+    overflow-x: hidden;
+  }
+  .app-compact-layout .tab-content-wrapper table,
+  .app-compact-layout .main-content-area table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .app-compact-layout .tab-content-wrapper [style*='minWidth: 400px'],
+  .app-compact-layout .tab-content-wrapper [style*='min-width: 400px'],
+  .app-compact-layout .tab-content-wrapper [style*='minWidth: 480px'],
+  .app-compact-layout .tab-content-wrapper [style*='min-width: 480px'],
+  .app-compact-layout .tab-content-wrapper [style*='minWidth: 500px'],
+  .app-compact-layout .tab-content-wrapper [style*='min-width: 500px'],
+  .app-compact-layout .tab-content-wrapper [style*='minWidth: 600px'],
+  .app-compact-layout .tab-content-wrapper [style*='min-width: 600px'],
+  .app-compact-layout .tab-content-wrapper [style*='minWidth: 800px'],
+  .app-compact-layout .tab-content-wrapper [style*='min-width: 800px'],
+  .app-compact-layout .tab-content-wrapper [style*='minWidth: 900px'],
+  .app-compact-layout .tab-content-wrapper [style*='min-width: 900px'],
+  .app-compact-layout .tab-content-wrapper [style*='minWidth: 1080px'],
+  .app-compact-layout .tab-content-wrapper [style*='min-width: 1080px'],
+  .app-compact-layout .main-content-area [style*='minWidth: 400px'],
+  .app-compact-layout .main-content-area [style*='min-width: 400px'],
+  .app-compact-layout .main-content-area [style*='minWidth: 480px'],
+  .app-compact-layout .main-content-area [style*='min-width: 480px'],
+  .app-compact-layout .main-content-area [style*='minWidth: 500px'],
+  .app-compact-layout .main-content-area [style*='min-width: 500px'],
+  .app-compact-layout .main-content-area [style*='minWidth: 600px'],
+  .app-compact-layout .main-content-area [style*='min-width: 600px'],
+  .app-compact-layout .main-content-area [style*='minWidth: 800px'],
+  .app-compact-layout .main-content-area [style*='min-width: 800px'],
+  .app-compact-layout .main-content-area [style*='minWidth: 900px'],
+  .app-compact-layout .main-content-area [style*='min-width: 900px'],
+  .app-compact-layout .main-content-area [style*='minWidth: 1080px'],
+  .app-compact-layout .main-content-area [style*='min-width: 1080px'] {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  /* Modais quase full-screen */
+  .app-compact-layout .modal-overlay {
+    padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) !important;
+  }
+  .app-compact-layout .modal {
+    width: min(96vw, 640px) !important;
+    max-width: 96vw !important;
+    max-height: min(92dvh, 900px) !important;
+  }
+  /* Hubs com abas horizontais (Biblioteca, etc.) */
+  .app-compact-layout .biblioteca-hub-tablist,
+  .app-compact-layout .hub-tablist,
+  .app-compact-layout [class*='-hub-tablist'] {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    padding: 8px !important;
+  }
+  .app-compact-layout .biblioteca-hub-tab,
+  .app-compact-layout .hub-tab,
+  .app-compact-layout [class*='-hub-tab']:not([class*='tablist']) {
+    flex: 1 1 calc(50% - 6px) !important;
+    min-height: 44px !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+  .app-compact-layout .biblioteca-pecas-hub__piece-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr)) !important;
+  }
+  .app-compact-layout .biblioteca-pecas-hub__kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .app-compact-layout .bottom-tabs-scroll {
+    touch-action: pan-x;
+  }
+  .app-compact-layout button,
+  .app-compact-layout .btn-primary,
+  .app-compact-layout .btn-danger {
+    touch-action: manipulation;
   }
   /* Gaveta: só cabeçalhos de grupo (não os botões dentro de .sidebar-action-buttons) */
   .app-compact-layout .sidebar .sidebar-scroll-inner button.btn-primary.sidebar-group-header,
@@ -20450,7 +20643,7 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 
 /* Telemóvel: sem botão ☰ na entrada (evita gaveta vazia); o menu volta após «Entrar no sistema» */
-.app-layout.app-layout-entry-focus.app-compact-layout .mobile-menu-toggle {
+.app-layout.app-layout-entry-focus.app-compact-layout:not(.app-layout-workspace-open) .mobile-menu-toggle {
   visibility: hidden !important;
   pointer-events: none !important;
   opacity: 0 !important;
