@@ -2,6 +2,132 @@ export type RelatorioEquipamentoOrigem = 'cliente' | 'armazem'
 
 export type EquipamentoArmazemIdLookup = { id?: string; numeroSerie?: string }
 
+export type EquipamentoArmazemBaixaLookup = EquipamentoArmazemIdLookup & {
+  status?: 'ativo' | 'baixado'
+  modelo?: string
+  marca?: string
+  motivoBaixa?: string
+  dataBaixa?: string
+  historico?: Array<{
+    id: string
+    data: string
+    tipo: 'manutencao' | 'reparo' | 'inspecao' | 'transferencia' | 'baixa' | 'outro'
+    descricao: string
+    responsavel?: string
+    observacoes?: string
+  }>
+}
+
+export type EquipamentoArmazemVendidoInfo = {
+  id: string
+  modelo?: string
+  marca?: string
+}
+
+export const MOTIVO_BAIXA_EQUIPAMENTO_VENDIDO = 'vendido' as const
+export const TEXTO_EQUIPAMENTO_VENDIDO = 'EQUIPAMENTO VENDIDO'
+
+export function normalizarChaveIdEquipamento(valor: string | undefined): string {
+  return String(valor ?? '').trim().toLowerCase()
+}
+
+export function equipamentoArmazemEstaAtivo(e: { status?: string }): boolean {
+  return (e.status || 'ativo') !== 'baixado'
+}
+
+export function coletarIdsComparacaoEquipamentoCliente(
+  eq: RelatorioEquipamentoRef,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+): string[] {
+  const ids = new Set<string>()
+  const idEq = String(eq.equipamentoId ?? '').trim()
+  const sn = String(eq.numeroMaquina ?? '').trim()
+  if (idEq) ids.add(normalizarChaveIdEquipamento(idEq))
+  if (sn) ids.add(normalizarChaveIdEquipamento(sn))
+  const vis = resolverIdEquipamentoVisivelRelatorio(eq, equipamentosArmazem)
+  if (vis) ids.add(normalizarChaveIdEquipamento(vis))
+  return [...ids].filter(Boolean)
+}
+
+export function chavesEquipamentoArmazem(e: EquipamentoArmazemIdLookup): string[] {
+  return [e.id, e.numeroSerie].map(normalizarChaveIdEquipamento).filter(Boolean)
+}
+
+export function encontrarEquipamentoArmazemCorrespondenteCliente(
+  eq: RelatorioEquipamentoRef,
+  equipamentosArmazem: EquipamentoArmazemBaixaLookup[]
+): EquipamentoArmazemBaixaLookup | null {
+  if (eq.equipamentoOrigem !== 'cliente') return null
+  const chavesCliente = coletarIdsComparacaoEquipamentoCliente(eq, equipamentosArmazem)
+  if (chavesCliente.length === 0) return null
+
+  return (
+    equipamentosArmazem.find((wh) => {
+      if (!equipamentoArmazemEstaAtivo(wh)) return false
+      const chavesWh = chavesEquipamentoArmazem(wh)
+      return chavesWh.some((ch) => chavesCliente.includes(ch))
+    }) ?? null
+  )
+}
+
+export function aplicarBaixaVendaEquipamentosArmazemRelatorio<
+  T extends EquipamentoArmazemBaixaLookup
+>(
+  relatorio: RelatorioServicoEquipamentosHost & {
+    data?: string
+    numero?: string
+    cliente?: string
+    tecnico?: string
+  },
+  equipamentosArmazem: T[]
+): { equipamentos: T[]; vendidos: EquipamentoArmazemVendidoInfo[] } {
+  const list = equipamentosRelatorioPreenchidos(normalizarEquipamentosRelatorio(relatorio))
+  const vendidos: EquipamentoArmazemVendidoInfo[] = []
+  const idsBaixados = new Set<string>()
+  let equipamentos = equipamentosArmazem
+  const dataBaixa = String(relatorio.data ?? '').trim() || new Date().toISOString().split('T')[0]
+  const obsRelatorio = [
+    relatorio.numero ? `Relatório n.º ${relatorio.numero}` : '',
+    relatorio.cliente ? `Cliente: ${relatorio.cliente}` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
+  for (const eq of list) {
+    const match = encontrarEquipamentoArmazemCorrespondenteCliente(eq, equipamentos)
+    if (!match?.id || idsBaixados.has(match.id)) continue
+
+    idsBaixados.add(match.id)
+    vendidos.push({
+      id: match.id,
+      modelo: match.modelo,
+      marca: match.marca,
+    })
+
+    equipamentos = equipamentos.map((item) => {
+      if (item.id !== match.id) return item
+      const historico = [...(item.historico ?? [])]
+      historico.unshift({
+        id: `venda-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        data: dataBaixa,
+        tipo: 'baixa',
+        descricao: TEXTO_EQUIPAMENTO_VENDIDO,
+        responsavel: relatorio.tecnico,
+        observacoes: obsRelatorio || undefined,
+      })
+      return {
+        ...item,
+        status: 'baixado' as const,
+        dataBaixa,
+        motivoBaixa: MOTIVO_BAIXA_EQUIPAMENTO_VENDIDO,
+        historico,
+      }
+    })
+  }
+
+  return { equipamentos, vendidos }
+}
+
 export type EquipamentoClienteIdLookup = {
   id?: string
   numeroSerie?: string

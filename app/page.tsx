@@ -101,7 +101,11 @@ import {
   resolverClienteIdRelatorio,
   resolverChaveEquipamentoClienteRelatorio,
   prepararEquipamentosRelatorioParaEdicao,
+  aplicarBaixaVendaEquipamentosArmazemRelatorio,
+  encontrarEquipamentoArmazemCorrespondenteCliente,
+  MOTIVO_BAIXA_EQUIPAMENTO_VENDIDO,
   type RelatorioEquipamentoRef,
+  type EquipamentoArmazemVendidoInfo,
 } from './lib/relatorioServicoEquipamentos'
 import { mergeManuaisFamiliasGrupos, manuaisPayloadHasRichContent } from './utils/manuaisMerge'
 import {
@@ -1538,6 +1542,8 @@ type Equipamento = {
   historico?: HistoricoEquipamento[]
   status?: 'ativo' | 'baixado'
   dataBaixa?: string
+  /** Ex.: vendido — baixa automática quando o mesmo ID aparece num relatório de cliente */
+  motivoBaixa?: string
   /** ID do modelo em Manuais e Informações Técnicas (Família > Grupo > Modelo) */
   modeloManuaisId?: string
 }
@@ -14132,7 +14138,9 @@ export default function Dashboard() {
     if (!window.confirm(confirmMsg)) return
 
     const updatedEquipamentos = equipamentos.map((e) =>
-      e.id === equipamentoId ? { ...e, status: 'ativo' as const, dataBaixa: undefined } : e
+      e.id === equipamentoId
+        ? { ...e, status: 'ativo' as const, dataBaixa: undefined, motivoBaixa: undefined }
+        : e
     )
     setEquipamentos(updatedEquipamentos)
     await saveData('nonato-equipamentos', updatedEquipamentos)
@@ -22164,6 +22172,39 @@ export default function Dashboard() {
     applyKmClienteAoRelatorio,
   ])
 
+  const alertarEquipamentosVendidosArmazem = (
+    vendidos: EquipamentoArmazemVendidoInfo[],
+    cliente: string
+  ) => {
+    if (vendidos.length === 0) return
+    const linhas = vendidos
+      .map((v) => {
+        const detalhe = [v.modelo, v.marca].filter(Boolean).join(' ')
+        return `• ID ${v.id}${detalhe ? ` — ${detalhe}` : ''}`
+      })
+      .join('\n')
+    const titulo =
+      (safeT as any)?.equipamentoVendidoAlertTitulo || 'Equipamento vendido detectado'
+    const corpo = (
+      (safeT as any)?.equipamentoVendidoAlertCorpo ||
+      'O(s) equipamento(s) do armazém abaixo coincidem com o ID deste relatório (cliente: {cliente}). Baixa automática aplicada — registo mantido no armazém (EQUIPAMENTO VENDIDO).'
+    ).replace('{cliente}', cliente || '—')
+    alert(`${titulo}\n\n${corpo}\n\n${linhas}`)
+  }
+
+  const aplicarBaixaArmazemPorVendaRelatorio = (
+    savedRelatorio: RelatorioServico
+  ): EquipamentoArmazemVendidoInfo[] => {
+    const { equipamentos: nextEquip, vendidos } = aplicarBaixaVendaEquipamentosArmazemRelatorio(
+      savedRelatorio,
+      equipamentos
+    )
+    if (vendidos.length === 0) return []
+    setEquipamentos(nextEquip)
+    void saveData('nonato-equipamentos', nextEquip)
+    return vendidos
+  }
+
   const handleSaveRelatorioServico = () => {
     // Validar apenas campos obrigatórios do relatório (não dos dias de trabalho)
     if (!relatorioServicoForm.tecnico || !relatorioServicoForm.cliente || !relatorioServicoForm.data || !relatorioServicoForm.numero) {
@@ -22239,6 +22280,11 @@ export default function Dashboard() {
         setClientes(updatedClientes)
         saveData('nonato-clientes', updatedClientes)
       }
+    }
+
+    const vendidosArmazem = aplicarBaixaArmazemPorVendaRelatorio(savedRelatorio)
+    if (vendidosArmazem.length > 0) {
+      alertarEquipamentosVendidosArmazem(vendidosArmazem, savedRelatorio.cliente)
     }
 
     void createAutoBackup()
@@ -22345,6 +22391,11 @@ export default function Dashboard() {
       }
     }
 
+    const vendidosArmazemGen = aplicarBaixaArmazemPorVendaRelatorio(savedRelatorio)
+    if (vendidosArmazemGen.length > 0) {
+      alertarEquipamentosVendidosArmazem(vendidosArmazemGen, savedRelatorio.cliente)
+    }
+
     void createAutoBackup()
 
     const modelEscolhido = getPdfModelSelecionadoNoFormulario()
@@ -22420,21 +22471,23 @@ export default function Dashboard() {
       alert(`Por favor, preencha os campos obrigatórios: ${camposFaltando.join(', ')}`)
       return
     }
-    if (relatorioServicoForm.equipamentoOrigem === 'armazem' && !relatorioServicoForm.equipamentoId) {
-      alert('Selecione o equipamento no armazém (gestão industrial) ou mude a origem para "Cliente".')
+    const equipamentosValidacaoPdf = normalizarEquipamentosRelatorio(relatorioServicoForm)
+    const erroEquipamentosPdf = validarEquipamentosRelatorio(equipamentosValidacaoPdf)
+    if (erroEquipamentosPdf) {
+      alert(erroEquipamentosPdf)
       return
     }
     const diasRecalculados = sortDiasTrabalhoCronologicamente(
       normalizarDiasTrabalhoParaPersist(relatorioServicoForm.diasTrabalho).map((dia) => atualizarCalculosDia(dia))
     )
     const totais = calcularTotais(diasRecalculados)
-    const relatorioToSave: RelatorioServico = {
+    const relatorioToSave: RelatorioServico = prepararRelatorioServicoEquipamentos({
       ...relatorioServicoForm,
       diasTrabalho: diasRecalculados,
       horasTrabalho: totais.horasTrabalho,
       kmsPercorridos: totais.kmsPercorridos,
       horasViagem: totais.horasViagem
-    }
+    }, equipamentos)
     const dupRelatorioPdf = encontrarRelatorioServicoDuplicado(
       relatoriosServico,
       relatorioToSave.numero,
@@ -22460,30 +22513,16 @@ export default function Dashboard() {
     }
     setRelatoriosServico(updatedRelatorios)
     saveData('nonato-relatorios-servico', updatedRelatorios)
-    if (
-      relatorioToSave.equipamentoOrigem !== 'armazem' &&
-      relatorioToSave.clienteId &&
-      relatorioToSave.equipamentoId
-    ) {
-      const clienteIndex = clientes.findIndex(c => c.id === relatorioToSave.clienteId)
-      if (clienteIndex !== -1) {
-        const updatedClientes = [...clientes]
-        if (!updatedClientes[clienteIndex].relatorios) updatedClientes[clienteIndex].relatorios = {}
-        const equipamentoKey = relatorioToSave.equipamentoId
-        if (!updatedClientes[clienteIndex].relatorios![equipamentoKey]) updatedClientes[clienteIndex].relatorios![equipamentoKey] = []
-        const equipamentoRelatorios = updatedClientes[clienteIndex].relatorios![equipamentoKey]
-        const existingIndex = equipamentoRelatorios.findIndex(r => r.id === savedRelatorio.id)
-        if (existingIndex !== -1) equipamentoRelatorios[existingIndex] = savedRelatorio
-        else equipamentoRelatorios.push(savedRelatorio)
-        equipamentoRelatorios.sort((a, b) => {
-          const dataA = new Date(a.data).getTime()
-          const dataB = new Date(b.data).getTime()
-          if (dataA === dataB) return b.numero.localeCompare(a.numero)
-          return dataB - dataA
-        })
-        setClientes(updatedClientes)
-        saveData('nonato-clientes', updatedClientes)
+    if (savedRelatorio.clienteId) {
+      const updatedClientesPdf = aplicarRelatorioNaBibliotecaCliente(clientes, savedRelatorio, equipamentos)
+      if (updatedClientesPdf !== clientes) {
+        setClientes(updatedClientesPdf)
+        saveData('nonato-clientes', updatedClientesPdf)
       }
+    }
+    const vendidosArmazemPdf = aplicarBaixaArmazemPorVendaRelatorio(savedRelatorio)
+    if (vendidosArmazemPdf.length > 0) {
+      alertarEquipamentosVendidosArmazem(vendidosArmazemPdf, savedRelatorio.cliente)
     }
     void createAutoBackup()
     setRelatorioServicoForm(savedRelatorio)
@@ -22868,14 +22907,9 @@ export default function Dashboard() {
   }
 
   // Funções para Biblioteca de Peças
-  /** true se outra peça já usa o mesmo código (comparação sem espaços e sem distinção maiúsculas/minúsculas). */
-  const pecaBibliotecaCodigoDuplicado = (codigo: string, excluirPecaId?: string) => {
-    const c = (codigo || '').trim().toLowerCase()
-    if (!c) return false
-    return pecasBiblioteca.some(
-      (p) => p.id !== excluirPecaId && (p.codigo || '').trim().toLowerCase() === c
-    )
-  }
+  /** true se outra peça já usa o mesmo código (comparação robusta: espaços, pontuação, zeros). */
+  const pecaBibliotecaCodigoDuplicado = (codigo: string, excluirPecaId?: string) =>
+    codigoExisteNaBibliotecaPecas(codigo, pecasBiblioteca, excluirPecaId)
 
   /** Após gravar uma peça: Biblioteca, grelha, filtro pela categoria guardada e vista por categoria. */
   const navegarBibliotecaAposSalvarPeca = (categoriaIdSalva: string) => {
@@ -23199,6 +23233,44 @@ export default function Dashboard() {
     return String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
   }
 
+  /** Variantes do código para detetar duplicados (espaços, pontuação, zeros à esquerda). */
+  function variantesCodigoPecaBiblioteca(codigo: string | undefined | null): string[] {
+    const norm = normalizeImportKey(codigo)
+    if (!norm) return []
+    const out = new Set<string>([norm])
+    const semPontuacao = norm.replace(/[^a-z0-9]/g, '')
+    if (semPontuacao) {
+      out.add(semPontuacao)
+      if (/^\d+$/.test(semPontuacao)) {
+        const semZeros = semPontuacao.replace(/^0+/, '') || semPontuacao
+        out.add(semZeros)
+      }
+    }
+    return [...out]
+  }
+
+  function construirIndiceCodigosBiblioteca(biblioteca: PecaBiblioteca[]): Set<string> {
+    const idx = new Set<string>()
+    for (const p of biblioteca) {
+      for (const v of variantesCodigoPecaBiblioteca(p.codigo)) idx.add(v)
+    }
+    return idx
+  }
+
+  function codigoExisteNaBibliotecaPecas(
+    codigo: string | undefined | null,
+    biblioteca: PecaBiblioteca[],
+    excluirId?: string
+  ): boolean {
+    const alvo = variantesCodigoPecaBiblioteca(codigo)
+    if (alvo.length === 0) return false
+    return biblioteca.some((p) => {
+      if (excluirId && p.id === excluirId) return false
+      const existentes = variantesCodigoPecaBiblioteca(p.codigo)
+      return existentes.some((v) => alvo.includes(v))
+    })
+  }
+
   const chavePecaBibliotecaParaImport = (p: { codigo?: string; nome?: string }) =>
     normalizeImportKey(p.codigo) || `n:${normalizeImportKey(p.nome)}`
 
@@ -23206,20 +23278,20 @@ export default function Dashboard() {
 
   const separarPecasImportacao = useCallback(
     (pecas: PecaBiblioteca[]) => {
-      const codigosNaBiblioteca = new Set(
-        pecasBiblioteca.map((e) => codigoNormalizadoImport(e.codigo)).filter(Boolean)
-      )
+      const indiceBiblioteca = construirIndiceCodigosBiblioteca(pecasBiblioteca)
       const novas: PecaBiblioteca[] = []
       const duplicadas: PecaBiblioteca[] = []
       const vistoCodigoLote = new Set<string>()
       for (const p of pecas) {
-        const codigoNorm = codigoNormalizadoImport(p.codigo)
-        if (codigoNorm) {
-          if (vistoCodigoLote.has(codigoNorm) || codigosNaBiblioteca.has(codigoNorm)) {
+        const variantes = variantesCodigoPecaBiblioteca(p.codigo)
+        if (variantes.length > 0) {
+          const colideBiblioteca = variantes.some((v) => indiceBiblioteca.has(v))
+          const colideLote = variantes.some((v) => vistoCodigoLote.has(v))
+          if (colideBiblioteca || colideLote) {
             duplicadas.push(p)
             continue
           }
-          vistoCodigoLote.add(codigoNorm)
+          variantes.forEach((v) => vistoCodigoLote.add(v))
           novas.push(p)
           continue
         }
@@ -23272,7 +23344,26 @@ export default function Dashboard() {
         )
       }
 
-      const novasComNumero = atribuirNumerosSequenciaNovasPecas(novas, pecasBiblioteca)
+      const novasComNumero = atribuirNumerosSequenciaNovasPecas(novas, pecasBiblioteca).filter(
+        (p) => !codigoExisteNaBibliotecaPecas(p.codigo, pecasBiblioteca)
+      )
+      if (novasComNumero.length === 0) {
+        setImportacaoPreview(null)
+        const msg = String(
+          (t as any)?.importacaoPreviewTodasDuplicadas ??
+            'Importação cancelada: {count} peça(s) com código já existente na biblioteca.'
+        ).replace('{count}', String(duplicadas.length || pecas.length))
+        setImportacaoUrlError(msg)
+        if (notificar) {
+          const codes = listarCodigosPecasImport(duplicadas.length ? duplicadas : pecas)
+          alert(
+            codes
+              ? `${msg}\n\n${(t as any)?.importacaoCodigosDuplicadosLista || 'Códigos repetidos:'} ${codes}`
+              : msg
+          )
+        }
+        return { ok: false as const, novas: [] as PecaBiblioteca[], duplicadas }
+      }
       setImportacaoPreview(novasComNumero)
       setImportacaoUrlError(null)
       return { ok: true as const, novas: novasComNumero, duplicadas }
@@ -24036,8 +24127,14 @@ export default function Dashboard() {
         return null
       }
 
-      const jaExiste = pecasBiblioteca.find((p) => normalizeImportKey(p.codigo) === normalizeImportKey(cod))
-      if (jaExiste) return jaExiste
+      if (codigoExisteNaBibliotecaPecas(cod, pecasBiblioteca)) {
+        const alvo = variantesCodigoPecaBiblioteca(cod)
+        return (
+          pecasBiblioteca.find((p) =>
+            variantesCodigoPecaBiblioteca(p.codigo).some((v) => alvo.includes(v))
+          ) ?? null
+        )
+      }
 
       setPecaLookupLoading(true)
       try {
@@ -24108,7 +24205,10 @@ export default function Dashboard() {
         )
         let inserida: PecaBiblioteca = comCat
         setPecasBiblioteca((prev) => {
-          const dup = prev.find((p) => normalizeImportKey(p.codigo) === normalizeImportKey(comCat.codigo))
+          const alvoCodigo = variantesCodigoPecaBiblioteca(comCat.codigo)
+          const dup = prev.find((p) =>
+            variantesCodigoPecaBiblioteca(p.codigo).some((v) => alvoCodigo.includes(v))
+          )
           if (dup) {
             inserida = dup
             return prev
@@ -24461,23 +24561,69 @@ export default function Dashboard() {
   const handleAdicionarImportacaoPreview = useCallback(() => {
     if (!importacaoPreview || importacaoPreview.length === 0) return
     const existentes = pecasBiblioteca
-    const existentesCodigos = new Set(
-      existentes.map((e) => codigoNormalizadoImport(e.codigo)).filter(Boolean)
-    )
+    const indiceBiblioteca = construirIndiceCodigosBiblioteca(existentes)
     const novos: PecaBiblioteca[] = []
+    const rejeitados: PecaBiblioteca[] = []
+    const indiceLote = new Set<string>()
+
     importacaoPreview.forEach((p, i) => {
-      const codigoNorm = codigoNormalizadoImport(p.codigo)
-      if (codigoNorm) {
-        if (existentesCodigos.has(codigoNorm)) return
-        existentesCodigos.add(codigoNorm)
+      const variantes = variantesCodigoPecaBiblioteca(p.codigo)
+      if (variantes.length > 0) {
+        const colide =
+          variantes.some((v) => indiceBiblioteca.has(v)) ||
+          variantes.some((v) => indiceLote.has(v))
+        if (colide) {
+          rejeitados.push(p)
+          return
+        }
+        variantes.forEach((v) => {
+          indiceLote.add(v)
+          indiceBiblioteca.add(v)
+        })
       }
       novos.push({
         ...p,
         id: `import-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 9)}`,
         dataCriacao: new Date().toISOString(),
-        importacaoPendente: true
+        importacaoPendente: true,
       })
     })
+
+    if (novos.length === 0) {
+      const msg = String(
+        (t as any)?.importacaoPreviewTodasDuplicadas ??
+          t?.importacaoSemNovidades ??
+          'Nenhuma peça nova para adicionar (itens já existentes na biblioteca).'
+      ).replace('{count}', String(rejeitados.length || importacaoPreview.length))
+      const codes = listarCodigosPecasImport(rejeitados.length ? rejeitados : importacaoPreview)
+      alert(
+        codes
+          ? `${msg}\n\n${(t as any)?.importacaoCodigosDuplicadosLista || 'Códigos repetidos:'} ${codes}`
+          : msg
+      )
+      setImportacaoPreview(null)
+      setImportacaoDuplicadasIgnoradas(rejeitados.length || importacaoPreview.length)
+      setImportacaoUrlError(msg)
+      return
+    }
+
+    if (rejeitados.length > 0) {
+      const msgParcial = String(
+        (t as any)?.importacaoParcialDuplicadas ??
+          '{novas} peça(s) nova(s) serão importadas. {ignoradas} ignorada(s) (código já na biblioteca).'
+      )
+        .replace('{novas}', String(novos.length))
+        .replace('{ignoradas}', String(rejeitados.length))
+      const codes = listarCodigosPecasImport(rejeitados)
+      alert(
+        codes
+          ? `${msgParcial}\n\n${(t as any)?.importacaoCodigosIgnorados || 'Códigos ignorados:'} ${codes}`
+          : msgParcial
+      )
+      setImportacaoDuplicadasIgnoradas(rejeitados.length)
+      setImportacaoPreview(novos)
+    }
+
     const classificadosAutomaticamente = aplicarRegrasClassificacaoEmLista(novos, true)
     const merged = [...existentes, ...classificadosAutomaticamente.lista]
     const { lista: atualizadoNormalizado } = garantirNumerosSequenciaPecaBiblioteca(
@@ -24486,20 +24632,13 @@ export default function Dashboard() {
     setPecasBiblioteca(atualizadoNormalizado)
     void saveData('nonato-pecas-biblioteca', atualizadoNormalizado)
       .then(() => {
-        let mensagemFinal: string
-        if (novos.length === 0) {
-          mensagemFinal =
-            (t as any)?.importacaoPreviewTodasDuplicadas ??
-            t?.importacaoSemNovidades ??
-            'Nenhuma peça nova para adicionar (itens já existentes na biblioteca).'
-        } else {
-          const mensagemBase =
-            t?.importacaoSucesso ?? `${novos.length} peça(s) enviada(s) para a fila. Abra cada uma e use Salvar para integrar ao catálogo da Biblioteca.`
-          mensagemFinal =
-            classificadosAutomaticamente.alteradas > 0
-              ? `${mensagemBase} ${classificadosAutomaticamente.alteradas} já foram classificadas automaticamente.`
-              : mensagemBase
-        }
+        const mensagemBase =
+          t?.importacaoSucesso ??
+          `${novos.length} peça(s) enviada(s) para a fila. Abra cada uma e use Salvar para integrar ao catálogo da Biblioteca.`
+        const mensagemFinal =
+          classificadosAutomaticamente.alteradas > 0
+            ? `${mensagemBase} ${classificadosAutomaticamente.alteradas} já foram classificadas automaticamente.`
+            : mensagemBase
 
         const desejaLimparLista = window.confirm(
           `${mensagemFinal}\n\n${t?.importacaoConfirmarLimparLista ?? 'Deseja limpar a lista importada agora? Clique em OK para limpar ou em Cancelar para manter e conferir.'}`
@@ -24679,13 +24818,13 @@ export default function Dashboard() {
     const semCodigoRepetido: PecaBiblioteca[] = []
     let rejeitadosPorCodigo = 0
     for (const peca of normalizado) {
-      const c = (peca.codigo || '').trim().toLowerCase()
-      if (c) {
-        if (codigosVistos.has(c)) {
+      const variantes = variantesCodigoPecaBiblioteca(peca.codigo)
+      if (variantes.length > 0) {
+        if (variantes.some((v) => codigosVistos.has(v))) {
           rejeitadosPorCodigo++
           continue
         }
-        codigosVistos.add(c)
+        variantes.forEach((v) => codigosVistos.add(v))
       }
       semCodigoRepetido.push(peca)
     }
@@ -29180,6 +29319,8 @@ export default function Dashboard() {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '18px' }}>
                       {equipamentosListaVisualizar.map((equipamento) => {
                         const isBaixado = equipamento.status === 'baixado'
+                        const isVendido =
+                          isBaixado && equipamento.motivoBaixa === MOTIVO_BAIXA_EQUIPAMENTO_VENDIDO
                         const foto = equipamento.photo || equipamento.coverPhoto
                         return (
                           <div
@@ -29187,17 +29328,28 @@ export default function Dashboard() {
                             style={{
                               borderRadius: '16px',
                               overflow: 'hidden',
-                              border: '1px solid rgba(0, 200, 83, 0.15)',
-                              background: 'linear-gradient(180deg, rgba(26,26,26,0.98) 0%, rgba(18,18,18,0.98) 100%)',
+                              border: isVendido
+                                ? '1px solid rgba(244, 67, 54, 0.55)'
+                                : '1px solid rgba(0, 200, 83, 0.15)',
+                              background: isVendido
+                                ? 'linear-gradient(180deg, rgba(60, 18, 18, 0.98) 0%, rgba(28, 12, 12, 0.98) 100%)'
+                                : 'linear-gradient(180deg, rgba(26,26,26,0.98) 0%, rgba(18,18,18,0.98) 100%)',
                               transition: 'border-color 0.2s, box-shadow 0.2s',
-                              opacity: isBaixado ? 0.85 : 1
+                              opacity: isBaixado && !isVendido ? 0.85 : 1
                             }}
+                            className={isVendido ? 'equipamento-armazem-card--vendido' : undefined}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.35)'
-                              e.currentTarget.style.boxShadow = '0 8px 28px rgba(0, 200, 83, 0.08)'
+                              e.currentTarget.style.borderColor = isVendido
+                                ? 'rgba(244, 67, 54, 0.75)'
+                                : 'rgba(0, 200, 83, 0.35)'
+                              e.currentTarget.style.boxShadow = isVendido
+                                ? '0 8px 28px rgba(244, 67, 54, 0.15)'
+                                : '0 8px 28px rgba(0, 200, 83, 0.08)'
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.15)'
+                              e.currentTarget.style.borderColor = isVendido
+                                ? 'rgba(244, 67, 54, 0.55)'
+                                : 'rgba(0, 200, 83, 0.15)'
                               e.currentTarget.style.boxShadow = 'none'
                             }}
                           >
@@ -29207,11 +29359,29 @@ export default function Dashboard() {
                               ) : (
                                 <span style={{ fontSize: '48px', opacity: 0.4 }}>🔧</span>
                               )}
-                              {isBaixado && (
+                              {isVendido ? (
+                                <span
+                                  style={{
+                                    position: 'absolute',
+                                    top: '10px',
+                                    right: '10px',
+                                    padding: '5px 12px',
+                                    fontSize: '11px',
+                                    fontWeight: '700',
+                                    background: 'rgba(198, 40, 40, 0.95)',
+                                    color: '#fff',
+                                    borderRadius: '8px',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.04em',
+                                  }}
+                                >
+                                  {(safeT as any)?.equipamentoVendido || 'EQUIPAMENTO VENDIDO'}
+                                </span>
+                              ) : isBaixado ? (
                                 <span style={{ position: 'absolute', top: '10px', right: '10px', padding: '5px 12px', fontSize: '11px', fontWeight: '600', background: 'rgba(80,80,80,0.95)', color: 'rgba(255,255,255,0.95)', borderRadius: '8px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                                   {safeT?.baixado || 'Baixado'}
                                 </span>
-                              )}
+                              ) : null}
                             </div>
                             <div style={{ padding: '18px' }}>
                               <p style={{ margin: 0, fontSize: '11px', color: 'rgba(0, 200, 83, 0.9)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{equipamento.tipoEquipamento}</p>
@@ -29221,6 +29391,25 @@ export default function Dashboard() {
                                 <p style={{ margin: '8px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>{[equipamento.familia, equipamento.grupo].filter(Boolean).join(' / ')}</p>
                               )}
                               <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>ID: {equipamento.id}</p>
+                              {isVendido && (
+                                <p
+                                  style={{
+                                    margin: '10px 0 0',
+                                    padding: '8px 10px',
+                                    fontSize: '12px',
+                                    fontWeight: '700',
+                                    color: '#ff8a80',
+                                    background: 'rgba(244, 67, 54, 0.12)',
+                                    border: '1px solid rgba(244, 67, 54, 0.35)',
+                                    borderRadius: '8px',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.03em',
+                                  }}
+                                >
+                                  {(safeT as any)?.equipamentoVendido || 'EQUIPAMENTO VENDIDO'}
+                                  {equipamento.dataBaixa ? ` · ${equipamento.dataBaixa}` : ''}
+                                </p>
+                              )}
                               <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
                                 <button
                                   className="btn-primary"
@@ -29318,7 +29507,13 @@ export default function Dashboard() {
                       <p><strong>{t.numeroSerie}:</strong> {viewingEquipamento.numeroSerie}</p>
                       <p><strong>{t.familia}:</strong> {viewingEquipamento.familia || 'N/A'}</p>
                       <p><strong>{t.grupo}:</strong> {viewingEquipamento.grupo || 'N/A'}</p>
-                      <p><strong>{t.status || 'Status'}:</strong> {viewingEquipamento.status === 'baixado' ? (t.baixado || 'Baixado') : (t.ativo || 'Ativo')}</p>
+                      <p><strong>{t.status || 'Status'}:</strong>{' '}
+                        {viewingEquipamento.motivoBaixa === MOTIVO_BAIXA_EQUIPAMENTO_VENDIDO
+                          ? ((safeT as any)?.equipamentoVendido || 'EQUIPAMENTO VENDIDO')
+                          : viewingEquipamento.status === 'baixado'
+                            ? (t.baixado || 'Baixado')
+                            : (t.ativo || 'Ativo')}
+                      </p>
                     </div>
                   </div>
 
@@ -32540,29 +32735,51 @@ export default function Dashboard() {
                                     </div>
 
                                     <div>
-                                      <label className="relatorio-equipamento-card__label relatorio-equipamento-card__label--blue">
+                                      <span className="relatorio-equipamento-card__label relatorio-equipamento-card__label--blue">
                                         {safeT?.relatorioEquipamentoOrigem || 'Origem do equipamento'}
-                                      </label>
-                                      <select
-                                        value={eq.equipamentoOrigem}
-                                        onChange={(e) => {
-                                          const v = e.target.value === 'armazem' ? 'armazem' : 'cliente'
-                                          const next = equipamentosForm.map(item =>
-                                            item.uid === eq.uid
-                                              ? { ...item, equipamentoOrigem: v, equipamentoId: '', numeroMaquina: '', maquinaModelo: '' }
-                                              : item
-                                          )
-                                          atualizarEquipamentos(next)
-                                        }}
-                                        className="relatorio-equipamento-card__select relatorio-equipamento-card__select--blue"
+                                      </span>
+                                      <div
+                                        className="relatorio-equipamento-card__origem-radios"
+                                        role="radiogroup"
+                                        aria-label={safeT?.relatorioEquipamentoOrigem || 'Origem do equipamento'}
                                       >
-                                        <option value="cliente">
-                                          {safeT?.relatorioEquipOrigemCliente || 'Cliente — equipamentos do cadastro'}
-                                        </option>
-                                        <option value="armazem">
-                                          {safeT?.relatorioEquipOrigemArmazem || 'Armazém — gestão industrial'}
-                                        </option>
-                                      </select>
+                                        <label className="relatorio-equipamento-card__origem-radio">
+                                          <input
+                                            type="radio"
+                                            name={`eq-origem-${eq.uid}`}
+                                            value="cliente"
+                                            checked={eq.equipamentoOrigem === 'cliente'}
+                                            onChange={() => {
+                                              const next = equipamentosForm.map(item =>
+                                                item.uid === eq.uid
+                                                  ? { ...item, equipamentoOrigem: 'cliente' as const, equipamentoId: '', numeroMaquina: '', maquinaModelo: '' }
+                                                  : item
+                                              )
+                                              atualizarEquipamentos(next)
+                                            }}
+                                          />
+                                          <span className="relatorio-equipamento-card__origem-radio-mark" aria-hidden="true" />
+                                          <span>{safeT?.relatorioEquipOrigemCliente || 'Cliente — equipamentos do cadastro'}</span>
+                                        </label>
+                                        <label className="relatorio-equipamento-card__origem-radio">
+                                          <input
+                                            type="radio"
+                                            name={`eq-origem-${eq.uid}`}
+                                            value="armazem"
+                                            checked={eq.equipamentoOrigem === 'armazem'}
+                                            onChange={() => {
+                                              const next = equipamentosForm.map(item =>
+                                                item.uid === eq.uid
+                                                  ? { ...item, equipamentoOrigem: 'armazem' as const, equipamentoId: '', numeroMaquina: '', maquinaModelo: '' }
+                                                  : item
+                                              )
+                                              atualizarEquipamentos(next)
+                                            }}
+                                          />
+                                          <span className="relatorio-equipamento-card__origem-radio-mark" aria-hidden="true" />
+                                          <span>{safeT?.relatorioEquipOrigemArmazem || 'Armazém — gestão industrial'}</span>
+                                        </label>
+                                      </div>
                                     </div>
 
                                     <div style={{ gridColumn: '1 / -1' }}>
@@ -32679,6 +32896,31 @@ export default function Dashboard() {
                                         </select>
                                       )}
                                     </div>
+
+                                    {eq.equipamentoOrigem === 'cliente' &&
+                                      (eq.equipamentoId || eq.numeroMaquina) &&
+                                      (() => {
+                                        const matchArmazem = encontrarEquipamentoArmazemCorrespondenteCliente(
+                                          eq,
+                                          equipamentos
+                                        )
+                                        if (!matchArmazem) return null
+                                        return (
+                                          <div
+                                            className="relatorio-equipamento-card__venda-aviso"
+                                            style={{ gridColumn: '1 / -1' }}
+                                          >
+                                            {(safeT as any)?.relatorioEquipVendaDetectada ||
+                                              'Este ID coincide com um equipamento ativo no armazém. Ao guardar o relatório, será dada baixa automática (EQUIPAMENTO VENDIDO).'}
+                                            {matchArmazem.id ? (
+                                              <span className="relatorio-equipamento-card__venda-aviso-id">
+                                                {' '}
+                                                ID armazém: {matchArmazem.id}
+                                              </span>
+                                            ) : null}
+                                          </div>
+                                        )
+                                      })()}
 
                                     {(eq.equipamentoId || eq.maquinaModelo) && (
                                       <div className="relatorio-equipamento-card__preview">
@@ -33557,7 +33799,7 @@ export default function Dashboard() {
                             onBlur={async () => {
                               const cod = codigoBuscaPeca.trim()
                               if (!cod || !pecaLookupUrlTemplate.trim()) return
-                              if (pecasBiblioteca.some((p) => normalizeImportKey(p.codigo) === normalizeImportKey(cod))) return
+                              if (codigoExisteNaBibliotecaPecas(cod, pecasBiblioteca)) return
                               if (pecaSelecionadaBiblioteca) return
                               const fetched = await importarPecaDoCatalogoUrl(cod, { silent: true })
                               if (fetched) {
@@ -61119,13 +61361,8 @@ A1;Peça exemplo;10`}
       setBuscaCodigoPeca(peca.codigo)
     }
 
-    const codigoJaExisteNaBiblioteca = (codigo: string, excluirPecaId?: string) => {
-      const c = (codigo || '').trim().toLowerCase()
-      if (!c) return false
-      return pecasBiblioteca.some(
-        (p) => p.id !== excluirPecaId && (p.codigo || '').trim().toLowerCase() === c
-      )
-    }
+    const codigoJaExisteNaBiblioteca = (codigo: string, excluirPecaId?: string) =>
+      codigoExisteNaBibliotecaPecas(codigo, pecasBiblioteca, excluirPecaId)
 
     const tentarGravarPecaManualNaBiblioteca = (dados: {
       codigo: string
