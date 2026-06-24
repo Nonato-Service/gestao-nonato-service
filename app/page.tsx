@@ -23239,15 +23239,19 @@ export default function Dashboard() {
     const norm = normalizeImportKey(codigo)
     if (!norm) return []
     const out = new Set<string>([norm])
-    const semPontuacao = norm.replace(/[^a-z0-9]/g, '')
-    if (semPontuacao) {
-      out.add(semPontuacao)
-      if (/^\d+$/.test(semPontuacao)) {
-        const semZeros = semPontuacao.replace(/^0+/, '') || semPontuacao
-        out.add(semZeros)
-      }
+    const compact = norm.replace(/[^a-z0-9]/g, '')
+    if (compact && compact !== norm && compact.length >= 3) {
+      out.add(compact)
+    }
+    if (/^\d+$/.test(compact) && compact.length >= 5) {
+      const semZeros = compact.replace(/^0+/, '') || compact
+      if (semZeros !== compact) out.add(semZeros)
     }
     return [...out]
+  }
+
+  function pecaBibliotecaEstaNoCatalogo(p: PecaBiblioteca): boolean {
+    return !ehImportacaoPendenteStrict(p)
   }
 
   function construirIndiceCodigosBiblioteca(biblioteca: PecaBiblioteca[]): Set<string> {
@@ -23279,28 +23283,93 @@ export default function Dashboard() {
 
   const separarPecasImportacao = useCallback(
     (pecas: PecaBiblioteca[]) => {
-      const indiceBiblioteca = construirIndiceCodigosBiblioteca(pecasBiblioteca)
+      const catalogo = pecasBiblioteca.filter(pecaBibliotecaEstaNoCatalogo)
+      const filaPendente = pecasBiblioteca.filter((p) => ehImportacaoPendenteStrict(p))
+      const indiceCatalogo = construirIndiceCodigosBiblioteca(catalogo)
+      const indiceFila = construirIndiceCodigosBiblioteca(filaPendente)
       const novas: PecaBiblioteca[] = []
-      const duplicadas: PecaBiblioteca[] = []
+      const duplicadasCatalogo: PecaBiblioteca[] = []
+      const duplicadasFila: PecaBiblioteca[] = []
+      const duplicadasLote: PecaBiblioteca[] = []
+      const semCodigo: PecaBiblioteca[] = []
       const vistoCodigoLote = new Set<string>()
+
       for (const p of pecas) {
-        const variantes = variantesCodigoPecaBiblioteca(p.codigo)
-        if (variantes.length > 0) {
-          const colideBiblioteca = variantes.some((v) => indiceBiblioteca.has(v))
-          const colideLote = variantes.some((v) => vistoCodigoLote.has(v))
-          if (colideBiblioteca || colideLote) {
-            duplicadas.push(p)
-            continue
-          }
-          variantes.forEach((v) => vistoCodigoLote.add(v))
-          novas.push(p)
+        const codigo = String(p.codigo ?? '').trim()
+        if (!codigo) {
+          semCodigo.push(p)
           continue
         }
+        const variantes = variantesCodigoPecaBiblioteca(codigo)
+        if (variantes.length === 0) {
+          semCodigo.push(p)
+          continue
+        }
+        if (variantes.some((v) => indiceCatalogo.has(v))) {
+          duplicadasCatalogo.push(p)
+          continue
+        }
+        if (variantes.some((v) => indiceFila.has(v))) {
+          duplicadasFila.push(p)
+          continue
+        }
+        if (variantes.some((v) => vistoCodigoLote.has(v))) {
+          duplicadasLote.push(p)
+          continue
+        }
+        variantes.forEach((v) => vistoCodigoLote.add(v))
         novas.push(p)
       }
-      return { novas, duplicadas }
+
+      const duplicadas = [...duplicadasCatalogo, ...duplicadasFila, ...duplicadasLote]
+      return { novas, duplicadas, duplicadasCatalogo, duplicadasFila, duplicadasLote, semCodigo }
     },
     [pecasBiblioteca]
+  )
+
+  const montarMensagemImportacaoIgnoradas = useCallback(
+    (info: {
+      duplicadasCatalogo: PecaBiblioteca[]
+      duplicadasFila: PecaBiblioteca[]
+      duplicadasLote: PecaBiblioteca[]
+      semCodigo: PecaBiblioteca[]
+    }) => {
+      const partes: string[] = []
+      if (info.duplicadasCatalogo.length > 0) {
+        partes.push(
+          String(
+            (t as any)?.importacaoDuplicadasCatalogo ??
+              '{count} peça(s) já existem no catálogo da biblioteca (gravadas).'
+          ).replace('{count}', String(info.duplicadasCatalogo.length))
+        )
+      }
+      if (info.duplicadasFila.length > 0) {
+        partes.push(
+          String(
+            (t as any)?.importacaoDuplicadasFila ??
+              '{count} peça(s) já estão na fila amarela (importação pendente) — não foram duplicadas.'
+          ).replace('{count}', String(info.duplicadasFila.length))
+        )
+      }
+      if (info.duplicadasLote.length > 0) {
+        partes.push(
+          String(
+            (t as any)?.importacaoDuplicadasLote ??
+              '{count} peça(s) repetidas na mesma colagem/importação.'
+          ).replace('{count}', String(info.duplicadasLote.length))
+        )
+      }
+      if (info.semCodigo.length > 0) {
+        partes.push(
+          String(
+            (t as any)?.importacaoSemCodigoIgnoradas ??
+              '{count} linha(s) ignorada(s) por não ter código identificável.'
+          ).replace('{count}', String(info.semCodigo.length))
+        )
+      }
+      return partes.join('\n')
+    },
+    [t]
   )
 
   const listarCodigosPecasImport = (pecas: PecaBiblioteca[], max = 12) =>
@@ -23309,67 +23378,114 @@ export default function Dashboard() {
   const processarDuplicadosImportacao = useCallback(
     (pecas: PecaBiblioteca[], opts?: { notificar?: boolean }) => {
       const notificar = opts?.notificar === true
-      const { novas, duplicadas } = separarPecasImportacao(pecas)
-      setImportacaoDuplicadasIgnoradas(duplicadas.length)
+      const { novas, duplicadas, duplicadasCatalogo, duplicadasFila, duplicadasLote, semCodigo } =
+        separarPecasImportacao(pecas)
+      setImportacaoDuplicadasIgnoradas(duplicadas.length + semCodigo.length)
+
+      const detalheIgnoradas = montarMensagemImportacaoIgnoradas({
+        duplicadasCatalogo,
+        duplicadasFila,
+        duplicadasLote,
+        semCodigo,
+      })
 
       if (novas.length === 0) {
         setImportacaoPreview(null)
-        const msg = String(
-          (t as any)?.importacaoPreviewTodasDuplicadas ??
-            'Importação cancelada: {count} peça(s) com código já existente na biblioteca.'
-        ).replace('{count}', String(duplicadas.length))
-        setImportacaoUrlError(msg)
+        const msgBase =
+          duplicadasCatalogo.length > 0
+            ? String(
+                (t as any)?.importacaoPreviewTodasDuplicadas ??
+                  'Importação cancelada: {count} peça(s) com código já existente no catálogo da biblioteca.'
+              ).replace('{count}', String(duplicadasCatalogo.length))
+            : duplicadasFila.length > 0
+              ? String(
+                  (t as any)?.importacaoPreviewTodasNaFila ??
+                    'Nenhuma peça nova: {count} já estão na fila amarela (pendentes). Abra-as no Cadastro e use Salvar, ou limpe a fila antes de importar de novo.'
+                ).replace('{count}', String(duplicadasFila.length))
+              : String(
+                  (t as any)?.importacaoPreviewNenhumaNova ??
+                    'Nenhuma peça nova para importar após filtrar duplicados e linhas inválidas.'
+                )
+        const msg = detalheIgnoradas ? `${msgBase}\n\n${detalheIgnoradas}` : msgBase
+        setImportacaoUrlError(msgBase)
         if (notificar) {
-          const codes = listarCodigosPecasImport(duplicadas)
+          const codes = listarCodigosPecasImport(
+            duplicadasCatalogo.length
+              ? duplicadasCatalogo
+              : duplicadasFila.length
+                ? duplicadasFila
+                : duplicadas.length
+                  ? duplicadas
+                  : semCodigo
+          )
           alert(
             codes
-              ? `${msg}\n\n${(t as any)?.importacaoCodigosDuplicadosLista || 'Códigos repetidos:'} ${codes}`
+              ? `${msg}\n\n${(t as any)?.importacaoCodigosDuplicadosLista || 'Códigos:'} ${codes}`
               : msg
           )
         }
-        return { ok: false as const, novas: [] as PecaBiblioteca[], duplicadas }
+        return {
+          ok: false as const,
+          novas: [] as PecaBiblioteca[],
+          duplicadas,
+          duplicadasCatalogo,
+          duplicadasFila,
+        }
       }
 
-      if (duplicadas.length > 0 && notificar) {
+      if ((duplicadas.length > 0 || semCodigo.length > 0) && notificar) {
         const msg = String(
           (t as any)?.importacaoParcialDuplicadas ??
-            '{novas} peça(s) nova(s) serão importadas. {ignoradas} ignorada(s) (código já na biblioteca).'
+            '{novas} peça(s) nova(s) prontas para importar. {ignoradas} ignorada(s).'
         )
           .replace('{novas}', String(novas.length))
-          .replace('{ignoradas}', String(duplicadas.length))
-        const codes = listarCodigosPecasImport(duplicadas)
+          .replace('{ignoradas}', String(duplicadas.length + semCodigo.length))
+        const codes = listarCodigosPecasImport([...duplicadasCatalogo, ...duplicadasFila, ...duplicadasLote])
         alert(
-          codes
-            ? `${msg}\n\n${(t as any)?.importacaoCodigosIgnorados || 'Códigos ignorados:'} ${codes}`
-            : msg
+          `${msg}${detalheIgnoradas ? `\n\n${detalheIgnoradas}` : ''}${
+            codes
+              ? `\n\n${(t as any)?.importacaoCodigosIgnorados || 'Códigos ignorados:'} ${codes}`
+              : ''
+          }`
         )
       }
 
+      const catalogo = pecasBiblioteca.filter(pecaBibliotecaEstaNoCatalogo)
       const novasComNumero = atribuirNumerosSequenciaNovasPecas(novas, pecasBiblioteca).filter(
-        (p) => !codigoExisteNaBibliotecaPecas(p.codigo, pecasBiblioteca)
+        (p) => !codigoExisteNaBibliotecaPecas(p.codigo, catalogo)
       )
       if (novasComNumero.length === 0) {
         setImportacaoPreview(null)
-        const msg = String(
-          (t as any)?.importacaoPreviewTodasDuplicadas ??
-            'Importação cancelada: {count} peça(s) com código já existente na biblioteca.'
-        ).replace('{count}', String(duplicadas.length || pecas.length))
-        setImportacaoUrlError(msg)
-        if (notificar) {
-          const codes = listarCodigosPecasImport(duplicadas.length ? duplicadas : pecas)
-          alert(
-            codes
-              ? `${msg}\n\n${(t as any)?.importacaoCodigosDuplicadosLista || 'Códigos repetidos:'} ${codes}`
-              : msg
-          )
+        const msgBase =
+          duplicadasCatalogo.length > 0
+            ? String(
+                (t as any)?.importacaoPreviewTodasDuplicadas ??
+                  'Importação cancelada: {count} peça(s) com código já existente no catálogo da biblioteca.'
+              ).replace('{count}', String(duplicadasCatalogo.length))
+            : duplicadasFila.length > 0
+              ? String(
+                  (t as any)?.importacaoPreviewTodasNaFila ??
+                    'Nenhuma peça nova: {count} já estão na fila amarela (pendentes).'
+                ).replace('{count}', String(duplicadasFila.length))
+              : String(
+                  (t as any)?.importacaoPreviewNenhumaNova ??
+                    'Nenhuma peça nova para importar após filtrar duplicados e linhas inválidas.'
+                )
+        setImportacaoUrlError(msgBase)
+        if (notificar) alert(detalheIgnoradas ? `${msgBase}\n\n${detalheIgnoradas}` : msgBase)
+        return {
+          ok: false as const,
+          novas: [] as PecaBiblioteca[],
+          duplicadas,
+          duplicadasCatalogo,
+          duplicadasFila,
         }
-        return { ok: false as const, novas: [] as PecaBiblioteca[], duplicadas }
       }
       setImportacaoPreview(novasComNumero)
       setImportacaoUrlError(null)
-      return { ok: true as const, novas: novasComNumero, duplicadas }
+      return { ok: true as const, novas: novasComNumero, duplicadas, duplicadasCatalogo, duplicadasFila }
     },
-    [separarPecasImportacao, t, pecasBiblioteca]
+    [separarPecasImportacao, montarMensagemImportacaoIgnoradas, t, pecasBiblioteca]
   )
 
   const aplicarPreviewImportacaoFiltrado = useCallback(
@@ -24562,67 +24678,77 @@ export default function Dashboard() {
   const handleAdicionarImportacaoPreview = useCallback(() => {
     if (!importacaoPreview || importacaoPreview.length === 0) return
     const existentes = pecasBiblioteca
-    const indiceBiblioteca = construirIndiceCodigosBiblioteca(existentes)
-    const novos: PecaBiblioteca[] = []
-    const rejeitados: PecaBiblioteca[] = []
-    const indiceLote = new Set<string>()
+    const { novas: novasFiltradas, duplicadasCatalogo, duplicadasFila, duplicadasLote, semCodigo } =
+      separarPecasImportacao(importacaoPreview)
 
-    importacaoPreview.forEach((p, i) => {
-      const variantes = variantesCodigoPecaBiblioteca(p.codigo)
-      if (variantes.length > 0) {
-        const colide =
-          variantes.some((v) => indiceBiblioteca.has(v)) ||
-          variantes.some((v) => indiceLote.has(v))
-        if (colide) {
-          rejeitados.push(p)
-          return
-        }
-        variantes.forEach((v) => {
-          indiceLote.add(v)
-          indiceBiblioteca.add(v)
-        })
-      }
-      novos.push({
-        ...p,
-        id: `import-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 9)}`,
-        dataCriacao: new Date().toISOString(),
-        importacaoPendente: true,
+    if (novasFiltradas.length === 0) {
+      const detalhe = montarMensagemImportacaoIgnoradas({
+        duplicadasCatalogo,
+        duplicadasFila,
+        duplicadasLote,
+        semCodigo,
       })
-    })
-
-    if (novos.length === 0) {
-      const msg = String(
-        (t as any)?.importacaoPreviewTodasDuplicadas ??
-          t?.importacaoSemNovidades ??
-          'Nenhuma peça nova para adicionar (itens já existentes na biblioteca).'
-      ).replace('{count}', String(rejeitados.length || importacaoPreview.length))
-      const codes = listarCodigosPecasImport(rejeitados.length ? rejeitados : importacaoPreview)
+      const msgBase =
+        duplicadasCatalogo.length > 0
+          ? String(
+              (t as any)?.importacaoPreviewTodasDuplicadas ??
+                'Nenhuma peça nova para adicionar (já existem no catálogo da biblioteca).'
+            ).replace('{count}', String(duplicadasCatalogo.length))
+          : duplicadasFila.length > 0
+            ? String(
+                (t as any)?.importacaoPreviewTodasNaFila ??
+                  'Nenhuma peça nova: {count} já estão na fila amarela (pendentes).'
+              ).replace('{count}', String(duplicadasFila.length))
+            : (t as any)?.importacaoSemNovidades ??
+              'Nenhuma peça nova para adicionar.'
+      const codes = listarCodigosPecasImport(
+        duplicadasCatalogo.length
+          ? duplicadasCatalogo
+          : duplicadasFila.length
+            ? duplicadasFila
+            : importacaoPreview
+      )
       alert(
-        codes
-          ? `${msg}\n\n${(t as any)?.importacaoCodigosDuplicadosLista || 'Códigos repetidos:'} ${codes}`
-          : msg
+        detalhe
+          ? `${msgBase}\n\n${detalhe}${codes ? `\n\n${(t as any)?.importacaoCodigosDuplicadosLista || 'Códigos:'} ${codes}` : ''}`
+          : codes
+            ? `${msgBase}\n\n${(t as any)?.importacaoCodigosDuplicadosLista || 'Códigos:'} ${codes}`
+            : msgBase
       )
       setImportacaoPreview(null)
-      setImportacaoDuplicadasIgnoradas(rejeitados.length || importacaoPreview.length)
-      setImportacaoUrlError(msg)
+      setImportacaoDuplicadasIgnoradas(
+        duplicadasCatalogo.length + duplicadasFila.length + duplicadasLote.length + semCodigo.length
+      )
+      setImportacaoUrlError(msgBase)
       return
     }
 
-    if (rejeitados.length > 0) {
-      const msgParcial = String(
-        (t as any)?.importacaoParcialDuplicadas ??
-          '{novas} peça(s) nova(s) serão importadas. {ignoradas} ignorada(s) (código já na biblioteca).'
-      )
-        .replace('{novas}', String(novos.length))
-        .replace('{ignoradas}', String(rejeitados.length))
-      const codes = listarCodigosPecasImport(rejeitados)
+    const novos: PecaBiblioteca[] = novasFiltradas.map((p, i) => ({
+      ...p,
+      id: `import-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 9)}`,
+      dataCriacao: new Date().toISOString(),
+      importacaoPendente: true,
+    }))
+
+    const ignoradasTotal =
+      duplicadasCatalogo.length + duplicadasFila.length + duplicadasLote.length + semCodigo.length
+    if (ignoradasTotal > 0) {
+      const detalhe = montarMensagemImportacaoIgnoradas({
+        duplicadasCatalogo,
+        duplicadasFila,
+        duplicadasLote,
+        semCodigo,
+      })
       alert(
-        codes
-          ? `${msgParcial}\n\n${(t as any)?.importacaoCodigosIgnorados || 'Códigos ignorados:'} ${codes}`
-          : msgParcial
+        `${String(
+          (t as any)?.importacaoParcialDuplicadas ??
+            '{novas} peça(s) enviada(s) para a fila. {ignoradas} ignorada(s).'
+        )
+          .replace('{novas}', String(novos.length))
+          .replace('{ignoradas}', String(ignoradasTotal))}\n\n${detalhe}`
       )
-      setImportacaoDuplicadasIgnoradas(rejeitados.length)
-      setImportacaoPreview(novos)
+      setImportacaoDuplicadasIgnoradas(ignoradasTotal)
+      setImportacaoPreview(novasFiltradas)
     }
 
     const classificadosAutomaticamente = aplicarRegrasClassificacaoEmLista(novos, true)
@@ -24659,7 +24785,14 @@ export default function Dashboard() {
             'Não foi possível gravar na biblioteca. O armazenamento do navegador pode estar cheio — liberte espaço ou reduza imagens nas peças.'
         )
       })
-  }, [aplicarRegrasClassificacaoEmLista, importacaoPreview, pecasBiblioteca, t])
+  }, [
+    aplicarRegrasClassificacaoEmLista,
+    importacaoPreview,
+    montarMensagemImportacaoIgnoradas,
+    pecasBiblioteca,
+    separarPecasImportacao,
+    t,
+  ])
 
   const renderPainelPreviewImportacao = useCallback(() => {
     if (!importacaoPreview || importacaoPreview.length === 0) return null
@@ -24668,7 +24801,7 @@ export default function Dashboard() {
       importacaoDuplicadasIgnoradas > 0
         ? String(
             (hubT as any).importacaoDuplicadasIgnoradas ||
-              '{count} peça(s) repetida(s) ignorada(s) (já existem na biblioteca).'
+              '{count} peça(s) ignorada(s) na importação (catálogo gravado, fila amarela ou repetidas na colagem).'
           ).replace('{count}', String(importacaoDuplicadasIgnoradas))
         : ''
     return (
@@ -24807,11 +24940,11 @@ export default function Dashboard() {
     const timer = window.setTimeout(() => {
       const result = processarTextoImportacaoPecas(raw, raw)
       if ('pecas' in result && result.pecas.length > 0) {
-        aplicarPreviewImportacaoFiltrado(result.pecas)
+        processarDuplicadosImportacao(result.pecas)
       }
     }, 500)
     return () => window.clearTimeout(timer)
-  }, [importacaoTextoColado, processarTextoImportacaoPecas, aplicarPreviewImportacaoFiltrado])
+  }, [importacaoTextoColado, processarTextoImportacaoPecas, processarDuplicadosImportacao])
 
   const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
     const normalizado = next.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
