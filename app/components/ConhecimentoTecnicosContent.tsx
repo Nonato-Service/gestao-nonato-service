@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
+import { ContextualBackBar } from './ContextualBackBar'
 import { saveData } from '../utils/dataStorage'
 import { AssistTextarea } from './AssistTextFields'
 
@@ -420,6 +421,11 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
                 </div>
               ) : (
                 <div key={tecnicoSelecionado.id} className="ct-pro__stage-solo">
+                  <ContextualBackBar
+                    label={safeT.navBackToTechniciansList || 'Voltar à lista de técnicos'}
+                    onBack={() => setTecnicoConhecimentoSelecionado(null)}
+                    compact
+                  />
                   <div className="ct-pro__solo-banner" role="status">
                     <span className="ct-pro__solo-banner-label">
                       {safeT.conhecimentoTecnicosSoloBanner || 'Somente técnico seleccionado'}

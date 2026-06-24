@@ -140,6 +140,7 @@ import { FamiliasGruposChecklistContent } from './components/FamiliasGruposCheck
 import { ChecklistBasicoContent } from './components/ChecklistBasicoContent'
 import { FamiliasGruposEquipamentosContent } from './components/FamiliasGruposEquipamentosContent'
 import { EquipamentosArmazemMenu } from './components/EquipamentosArmazemMenu'
+import { ContextualBackBar } from './components/ContextualBackBar'
 import { ProImageHoverPreview } from './components/ProImageHoverPreview'
 import { DEMO_VISITOR_USER } from './lib/demoManagement'
 import { AdministradorContent } from './components/admin/AdministradorContent'
@@ -4108,6 +4109,67 @@ type Tab = {
   type: TabType
   title: string
   icon?: string
+  /** Hub do painel principal para «Voltar» quando a aba foi aberta a partir de um hub */
+  returnHubId?: string | null
+}
+
+/** Hub pai por defeito quando a aba é aberta pela sidebar (sem hub activo no centro). */
+const TAB_DEFAULT_PARENT_HUB: Partial<Record<TabType, string>> = {
+  gestores: 'gestao-tecnica',
+  agenda: 'gestao-tecnica',
+  'estado-visual-tecnico': 'gestao-tecnica',
+  'informacoes-conhecimento-tecnicos': 'gestao-tecnica',
+  'cadastro-servicos': 'gestao-tecnica',
+  clientes: 'parceiros-comercial',
+  fornecedores: 'parceiros-comercial',
+  'relatorio-servico': 'documentacao-relatorios',
+  'biblioteca-relatorios': 'documentacao-relatorios',
+  'relatorios-excluidos-clientes': 'documentacao-relatorios',
+  'fechamento-relatorios-servicos': 'documentacao-relatorios',
+  'biblioteca-pecas': 'pecas-biblioteca',
+  'pecas-substituicao': 'pecas-biblioteca',
+  'importacao-pecas': 'pecas-biblioteca',
+  'solicitacao-servico-tecnico': 'pecas-biblioteca',
+  'mapa-visual-separacao-pecas': 'pecas-biblioteca',
+  'gestao-custos': 'gestao-custos',
+  'orcamentos-avulso': 'gestao-custos',
+  'pedido-orcamentos-avulso': 'gestao-custos',
+  'orcamento-servico-tecnico': 'gestao-custos',
+  'registro-despesas': 'gestao-financeira',
+  'checklist-hub': 'checklist-group',
+  'pre-checklist': 'checklist-group',
+  'checklist-basico': 'checklist-group',
+  checklist: 'checklist-group',
+  'gestao-grupos-checklist': 'checklist-group',
+  'ordem-preparacao': 'checklist-group',
+  'formularios-checklist-tecnicos': 'checklist-group',
+  'verificacao-final-entrega': 'checklist-group',
+  equipamentos: 'gestao-industrial',
+  'familias-grupos': 'gestao-industrial',
+  'familias-grupos-equipamentos': 'gestao-industrial',
+  desmontados: 'gestao-industrial',
+  'hub-comunicacao': 'comunicacao-interna',
+  'mensagens-internas': 'comunicacao-interna',
+  'mensagens-internas-tecnicos': 'comunicacao-interna',
+  'tecnicos-internos': 'comunicacao-interna',
+  'tecnicos-externos': 'comunicacao-interna',
+  'alerta-mensagens': 'comunicacao-interna',
+  'comunicacao-interna': 'comunicacao-interna',
+  'manuais-informacoes-tecnicas': 'manuais-informacoes-main',
+  'biblia-nonato-service': 'biblia-nonato-main',
+  'almoxarifado-armazem': 'almoxarifado-main',
+  'gestao-financeira': 'gestao-financeira',
+  'clientes-financeiro': 'gestao-financeira',
+  'comprovantes-despesas': 'gestao-financeira',
+  'pagamentos-contador': 'gestao-financeira',
+  'protocolos-servico': 'protocolos-main',
+  'manual-programa': 'manual-programa-main',
+  'cadastro-nonato-service': 'empresa-institucional-main',
+  'ficha-pagamento-transferencia': 'empresa-institucional-main',
+  'ficha-fatura-cliente': 'empresa-institucional-main',
+  translator: 'extra',
+  administrador: 'admin-main',
+  'gestao-demos': 'admin-main',
 }
 
 type DemoModuleMode = 'active' | 'teaser' | 'hidden'
@@ -5263,27 +5325,38 @@ export default function Dashboard() {
   }, [activeTabId])
 
   useEffect(() => {
-    if (activeTabId) setDashboardMainHubId(null)
-  }, [activeTabId])
-
-  useEffect(() => {
     if (!dashboardWorkspaceExpanded) setDashboardMainHubId(null)
   }, [dashboardWorkspaceExpanded])
 
   // Funções para gerenciar abas
-  const openTab = (type: TabType, title: string, icon?: string) => {
+  const openTab = (type: TabType, title: string, icon?: string, explicitReturnHub?: string | null) => {
     const DEMO_BLOCKED_TABS: TabType[] = ['administrador', 'gestao-demos']
     if (isDemoMode && DEMO_BLOCKED_TABS.includes(type)) {
       window.alert('O Administrador e a gestão interna não estão disponíveis na versão de demonstração.')
       return
     }
     const tabId = `${type}-${Date.now()}`
-    const newTab: Tab = { id: tabId, type, title, icon }
-    
+    const resolvedReturnHub =
+      explicitReturnHub !== undefined
+        ? explicitReturnHub
+        : dashboardMainHubId ?? TAB_DEFAULT_PARENT_HUB[type] ?? null
+    const newTab: Tab = {
+      id: tabId,
+      type,
+      title,
+      icon,
+      ...(resolvedReturnHub ? { returnHubId: resolvedReturnHub } : {}),
+    }
+
     setOpenTabs(prev => {
       const existingTab = prev.find(t => t.type === type)
       if (existingTab) {
         queueMicrotask(() => setActiveTabId(existingTab.id))
+        if (resolvedReturnHub && existingTab.returnHubId !== resolvedReturnHub) {
+          return prev.map((t) =>
+            t.id === existingTab.id ? { ...t, returnHubId: resolvedReturnHub } : t
+          )
+        }
         return prev
       }
       queueMicrotask(() => setActiveTabId(tabId))
@@ -6307,11 +6380,11 @@ export default function Dashboard() {
       {onVoltar && (
         <button
           type="button"
-          className="btn-primary btn--compact"
+          className="ns-nav-back-bar__btn"
           onClick={onVoltar}
           title={safeT?.voltar || 'Voltar'}
         >
-          ↶ {safeT?.voltar || 'Voltar'}
+          ← {safeT?.voltar || 'Voltar'}
         </button>
       )}
       {mostrarPaginaInicial && (
@@ -6953,7 +7026,11 @@ export default function Dashboard() {
     /** Canto superior esquerdo fixo (px), calculado a partir da miniatura — não segue o cursor. */
     left: number
     top: number
+    seq: number
+    imageReady: boolean
   } | null>(null)
+  const bibliotecaPreviewHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const bibliotecaPreviewSeqRef = useRef(0)
   const [editingCategoria, setEditingCategoria] = useState<CategoriaPeca | null>(null)
   const [editingSubcategoria, setEditingSubcategoria] = useState<SubcategoriaPeca | null>(null)
   const [ultimoGrupoSelecionado, setUltimoGrupoSelecionado] = useState<string>('')
@@ -23033,6 +23110,15 @@ export default function Dashboard() {
 
   const showBibliotecaImgPreview = useCallback((e: React.MouseEvent, src: string, alt: string) => {
     if (typeof window === 'undefined') return
+    const trimmedSrc = String(src || '').trim()
+    if (!trimmedSrc || trimmedSrc === PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC) return
+
+    if (bibliotecaPreviewHideTimerRef.current) {
+      clearTimeout(bibliotecaPreviewHideTimerRef.current)
+      bibliotecaPreviewHideTimerRef.current = null
+    }
+
+    const seq = ++bibliotecaPreviewSeqRef.current
     const el = e.currentTarget as HTMLElement
     const r = el.getBoundingClientRect()
     const pad = 12
@@ -23046,15 +23132,33 @@ export default function Dashboard() {
     let top = r.top + (r.height - panelH) / 2
     if (top + panelH > window.innerHeight - pad) top = window.innerHeight - panelH - pad
     if (top < pad) top = pad
-    setBibliotecaImageHoverPreview({ src, alt, left, top })
+    setBibliotecaImageHoverPreview({ src: trimmedSrc, alt, left, top, seq, imageReady: false })
   }, [])
   const hideBibliotecaImgPreview = useCallback(() => {
-    setBibliotecaImageHoverPreview(null)
+    if (bibliotecaPreviewHideTimerRef.current) {
+      clearTimeout(bibliotecaPreviewHideTimerRef.current)
+    }
+    bibliotecaPreviewHideTimerRef.current = setTimeout(() => {
+      bibliotecaPreviewHideTimerRef.current = null
+      setBibliotecaImageHoverPreview(null)
+    }, 120)
   }, [])
 
   useEffect(() => {
+    if (bibliotecaPreviewHideTimerRef.current) {
+      clearTimeout(bibliotecaPreviewHideTimerRef.current)
+      bibliotecaPreviewHideTimerRef.current = null
+    }
     setBibliotecaImageHoverPreview(null)
   }, [abaBibliotecaPecas, activeTabId])
+
+  useEffect(() => {
+    return () => {
+      if (bibliotecaPreviewHideTimerRef.current) {
+        clearTimeout(bibliotecaPreviewHideTimerRef.current)
+      }
+    }
+  }, [])
 
   function normalizeImportKey(v: any): string {
     return String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -28635,38 +28739,35 @@ export default function Dashboard() {
 
             {(equipamentosArmazemEtapa === 'cadastrar' || equipamentosArmazemEtapa === 'visualizar-lista') && (
               <>
-            <div style={{ marginBottom: '16px', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => {
-                  if (equipamentosArmazemEtapa === 'cadastrar') {
-                    setEquipamentosArmazemEtapa('hub')
-                    setShowEquipamentoForm(false)
-                    setEditingEquipamento(null)
-                  } else {
-                    setEquipamentosArmazemEtapa('visualizar-familias')
-                    setEquipamentosVisualizarFamilia(null)
-                    setViewingEquipamento(null)
-                  }
-                }}
-                style={{ padding: '10px 16px', fontSize: '13px' }}
-              >
-                ←{' '}
-                {equipamentosArmazemEtapa === 'cadastrar'
+            <ContextualBackBar
+              label={
+                equipamentosArmazemEtapa === 'cadastrar'
                   ? (safeT as any)?.equipamentosVoltarMenu || 'Voltar ao menu'
-                  : (safeT as any)?.equipamentosVoltarFamilias || 'Voltar às famílias'}
-              </button>
-              {equipamentosArmazemEtapa === 'visualizar-lista' && equipamentosVisualizarFamilia ? (
-                <span style={{ fontSize: '14px', color: '#ccc' }}>
-                  {equipamentosVisualizarFamilia === '__ALL__'
-                    ? (safeT as any)?.equipamentosVerTodos || 'Ver todos os equipamentos'
-                    : `${safeT?.familia || 'Família'}: ${equipamentosVisualizarFamilia}`}
-                  {' · '}
-                  {equipamentosListaVisualizar.length} {safeT?.equipamentosAtivos || 'equipamento(s)'}
-                </span>
-              ) : null}
-            </div>
+                  : (safeT as any)?.equipamentosVoltarFamilias || 'Voltar às famílias'
+              }
+              onBack={() => {
+                if (equipamentosArmazemEtapa === 'cadastrar') {
+                  setEquipamentosArmazemEtapa('hub')
+                  setShowEquipamentoForm(false)
+                  setEditingEquipamento(null)
+                } else {
+                  setEquipamentosArmazemEtapa('visualizar-familias')
+                  setEquipamentosVisualizarFamilia(null)
+                  setViewingEquipamento(null)
+                }
+              }}
+              meta={
+                equipamentosArmazemEtapa === 'visualizar-lista' && equipamentosVisualizarFamilia ? (
+                  <>
+                    {equipamentosVisualizarFamilia === '__ALL__'
+                      ? (safeT as any)?.equipamentosVerTodos || 'Ver todos os equipamentos'
+                      : `${safeT?.familia || 'Família'}: ${equipamentosVisualizarFamilia}`}
+                    {' · '}
+                    {equipamentosListaVisualizar.length} {safeT?.equipamentosAtivos || 'equipamento(s)'}
+                  </>
+                ) : null
+              }
+            />
 
             {/* Barra de Ações - padrão Visualizar Equipamento (card #484848, borda 1px verde) */}
             <div style={{
@@ -36045,10 +36146,11 @@ export default function Dashboard() {
             {bibliotecaImageHoverPreview && typeof window !== 'undefined' ? (() => {
               const maxW = 300
               const maxH = 300
-              const { left, top } = bibliotecaImageHoverPreview
+              const preview = bibliotecaImageHoverPreview
+              const { left, top } = preview
               return (
                 <div
-                  key={bibliotecaImageHoverPreview.src}
+                  key={`bib-preview-${preview.seq}`}
                   className="biblioteca-peca-img-preview-flyout"
                   style={{
                     position: 'fixed',
@@ -36066,9 +36168,24 @@ export default function Dashboard() {
                   aria-hidden
                 >
                   <img
-                    key={bibliotecaImageHoverPreview.src}
-                    src={bibliotecaImageHoverPreview.src}
+                    key={`${preview.seq}-${preview.src}`}
+                    src={preview.src}
                     alt=""
+                    ref={(imgEl) => {
+                      if (imgEl?.complete && imgEl.naturalWidth > 0) {
+                        setBibliotecaImageHoverPreview((prev) =>
+                          prev && prev.seq === preview.seq ? { ...prev, imageReady: true } : prev
+                        )
+                      }
+                    }}
+                    onLoad={() => {
+                      setBibliotecaImageHoverPreview((prev) =>
+                        prev && prev.seq === preview.seq ? { ...prev, imageReady: true } : prev
+                      )
+                    }}
+                    onError={() => {
+                      hideBibliotecaImgPreview()
+                    }}
                     style={{
                       display: 'block',
                       width: 'auto',
@@ -36078,9 +36195,11 @@ export default function Dashboard() {
                       objectFit: 'contain',
                       borderRadius: 10,
                       background: 'rgba(0,0,0,0.35)',
+                      opacity: preview.imageReady ? 1 : 0,
+                      transition: 'opacity 0.12s ease',
                     }}
                   />
-                  {bibliotecaImageHoverPreview.alt ? (
+                  {preview.alt ? (
                     <div
                       style={{
                         marginTop: 10,
@@ -36090,9 +36209,11 @@ export default function Dashboard() {
                         lineHeight: 1.4,
                         maxWidth: maxW,
                         wordBreak: 'break-word',
+                        opacity: preview.imageReady ? 1 : 0,
+                        transition: 'opacity 0.12s ease',
                       }}
                     >
-                      {bibliotecaImageHoverPreview.alt}
+                      {preview.alt}
                     </div>
                   ) : null}
                 </div>
@@ -36669,7 +36790,7 @@ export default function Dashboard() {
                         if (pecaBibliotecaTemImagemPropria(pecaBibliotecaForm.imagem)) {
                           showBibliotecaImgPreview(
                             ev,
-                            pecaBibliotecaForm.imagem as string,
+                            String(pecaBibliotecaForm.imagem).trim(),
                             pecaBibliotecaForm.nome || safeT?.imagemPecaBiblioteca || ''
                           )
                           ev.currentTarget.style.transform = 'scale(1.06)'
@@ -37858,7 +37979,20 @@ export default function Dashboard() {
                           if (!isPendingChecklist && (!somenteLeituraBiblioteca || isFiltroSoSemCategoria)) handleEditPecaBiblioteca(peca)
                         }}
                       >
-                        <div className="biblioteca-pecas-hub__piece-thumb">
+                        <div
+                          className="biblioteca-pecas-hub__piece-thumb"
+                          onMouseEnter={(ev) => {
+                            if (!pecaBibliotecaTemImagemPropria(peca.imagem)) return
+                            showBibliotecaImgPreview(ev, String(peca.imagem).trim(), peca.nome)
+                            const img = ev.currentTarget.querySelector('img')
+                            if (img instanceof HTMLImageElement) img.style.transform = 'scale(1.08)'
+                          }}
+                          onMouseLeave={(ev) => {
+                            hideBibliotecaImgPreview()
+                            const img = ev.currentTarget.querySelector('img')
+                            if (img instanceof HTMLImageElement) img.style.transform = 'scale(1)'
+                          }}
+                        >
                           <img
                             src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
                             alt={peca.nome}
@@ -37874,18 +38008,6 @@ export default function Dashboard() {
                               objectFit: 'cover',
                               display: 'block',
                               transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
-                            }}
-                            onMouseEnter={(ev) => {
-                              showBibliotecaImgPreview(
-                                ev,
-                                pecaBibliotecaSrcImagemDisplay(peca.imagem),
-                                peca.nome
-                              )
-                              ev.currentTarget.style.transform = 'scale(1.08)'
-                            }}
-                            onMouseLeave={(ev) => {
-                              hideBibliotecaImgPreview()
-                              ev.currentTarget.style.transform = 'scale(1)'
                             }}
                           />
                         </div>
@@ -38416,7 +38538,26 @@ export default function Dashboard() {
                                     if (!isPendingChecklist && (!somenteLeituraBiblioteca || isFiltroSoSemCategoria)) handleEditPecaBiblioteca(peca)
                                   }}
                                 >
-                                  <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--thumb">
+                                  <td
+                                    className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--thumb"
+                                    onMouseEnter={(ev) => {
+                                      if (!pecaBibliotecaTemImagemPropria(peca.imagem)) return
+                                      showBibliotecaImgPreview(ev, String(peca.imagem).trim(), peca.nome)
+                                      const img = ev.currentTarget.querySelector('img')
+                                      if (img instanceof HTMLImageElement) {
+                                        img.style.transform = 'scale(1.12)'
+                                        img.style.boxShadow = '0 8px 22px rgba(0,0,0,0.45)'
+                                      }
+                                    }}
+                                    onMouseLeave={(ev) => {
+                                      hideBibliotecaImgPreview()
+                                      const img = ev.currentTarget.querySelector('img')
+                                      if (img instanceof HTMLImageElement) {
+                                        img.style.transform = 'scale(1)'
+                                        img.style.boxShadow = 'none'
+                                      }
+                                    }}
+                                  >
                                     <img
                                       src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
                                       alt={peca.nome}
@@ -38424,22 +38565,6 @@ export default function Dashboard() {
                                       title={hubT.bibliotecaImagemHoverTitle || ''}
                                       style={{
                                         transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-                                      }}
-                                      onMouseEnter={(ev) => {
-                                        showBibliotecaImgPreview(
-                                          ev,
-                                          pecaBibliotecaSrcImagemDisplay(peca.imagem),
-                                          peca.nome
-                                        )
-                                        if (pecaBibliotecaTemImagemPropria(peca.imagem)) {
-                                          ev.currentTarget.style.transform = 'scale(1.12)'
-                                          ev.currentTarget.style.boxShadow = '0 8px 22px rgba(0,0,0,0.45)'
-                                        }
-                                      }}
-                                      onMouseLeave={(ev) => {
-                                        hideBibliotecaImgPreview()
-                                        ev.currentTarget.style.transform = 'scale(1)'
-                                        ev.currentTarget.style.boxShadow = 'none'
                                       }}
                                     />
                                   </td>
@@ -52497,6 +52622,13 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
+            {checklistEquipamentoSelecionado ? (
+              <ContextualBackBar
+                label={(safeT as any)?.navBackToSearch || 'Voltar à busca'}
+                onBack={handleLimparBuscaChecklist}
+              />
+            ) : null}
+
             {/* Criação do Checklist — padrão Visualizar Equipamento (card #484848, borda 1px) */}
             {checklistEquipamentoSelecionado && (
               <div className="checklist-editor-info-card" style={{ 
@@ -53950,6 +54082,13 @@ A1;Peça exemplo;10`}
                   </div>
                 )}
 
+                {preCheckEquipamentoSelecionado ? (
+                  <ContextualBackBar
+                    label={(safeT as any)?.navBackToSearch || 'Voltar à busca'}
+                    onBack={handleLimparBuscaPreCheck}
+                  />
+                ) : null}
+
                 {preCheckEquipamentoSelecionado && (
                   <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                     <h4 style={{ color: '#00c853', marginBottom: '15px', fontSize: '16px' }}>
@@ -54802,6 +54941,19 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
+            {hubUsuarioEfetivo && podeEscolherManualHub ? (
+              <ContextualBackBar
+                label={(safeT as any)?.navBackToUserSelect || 'Voltar à seleção de usuário'}
+                onBack={() => {
+                  setHubUsuarioAtual(null)
+                  setHubDestinatarioSelecionado([])
+                  setHubAssunto('')
+                  setHubMensagemTexto('')
+                }}
+                compact
+              />
+            ) : null}
+
             {!hubUsuarioEfetivo ? (
               <div className="hub-comunicacao-empty" style={{ background: '#404040', borderRadius: '16px', border: '2px solid rgba(0, 200, 83, 0.25)', padding: isCompactLayout ? '18px 14px' : '28px' }}>
                 <h3 style={{ margin: '0 0 20px 0', color: '#00c853', fontSize: '18px' }}>
@@ -54957,6 +55109,17 @@ A1;Peça exemplo;10`}
                 </div>
 
                 <div className="hub-comunicacao-chat" style={{ background: '#404040', borderRadius: '16px', border: '2px solid rgba(0, 200, 83, 0.25)', padding: isCompactLayout ? '16px 12px' : '24px', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+                  {hubDestinatarioSelecionado.length > 0 ? (
+                    <ContextualBackBar
+                      label={(safeT as any)?.navBackToRecipients || 'Voltar aos destinatários'}
+                      onBack={() => {
+                        setHubDestinatarioSelecionado([])
+                        setHubAssunto('')
+                        setHubMensagemTexto('')
+                      }}
+                      compact
+                    />
+                  ) : null}
                   {hubDestinatarioSelecionado.length === 0 ? (
                     <div style={{ color: '#888', textAlign: 'center', padding: '48px 24px' }}>
                       {hubUsuarioEfetivo.tipo === 'tecnico' ? (safeT?.selecioneUmGestor || 'Selecione um gestor na lista ao lado para ver e enviar mensagens. Só esse gestor receberá e lerá.') : (safeT?.selecioneUmOuMaisTecnicos || 'Selecione um ou mais destinatários ou um grupo na lista ao lado.')}
@@ -60000,6 +60163,19 @@ A1;Peça exemplo;10`}
     }
   }
 
+  const formatNavBackToHub = (hubId: string) => {
+    const hubTitle = getDashboardMainHubTitle(hubId)
+    const tpl = (safeT as Record<string, string | undefined>).navBackToHub || 'Voltar a {hub}'
+    return tpl.replace('{hub}', hubTitle)
+  }
+
+  const voltarAoHubDaAba = (hubId: string) => {
+    setActiveTabId(null)
+    setDashboardMainHubId(hubId)
+    setDashboardWorkspaceExpanded(true)
+    scrollMainContentToTop()
+  }
+
   const renderDashboardMainHubContent = (hubId: string) => {
     const tr = safeT as Record<string, string | undefined>
     const qaColors = [
@@ -60432,10 +60608,10 @@ A1;Peça exemplo;10`}
         <div className="ns-hub-toolbar">
           <button
             type="button"
-            className="btn-primary ns-hub-back-btn"
+            className="ns-nav-back-bar__btn"
             onClick={() => setDashboardMainHubId(null)}
           >
-            {(tr as any).mainHubBackToDashboard || 'Voltar ao painel completo'}
+            ← {(tr as any).mainHubBackToDashboard || 'Voltar ao painel completo'}
           </button>
         </div>
         <div className={`ns-hub-hero${isCompactLayout ? ' ns-hub-hero--compact' : ''}`}>
@@ -64432,6 +64608,80 @@ A1;Peça exemplo;10`}
     </div>
   )
 
+  const renderSidebarChecklistCluster = () => {
+    if (!canAccessModule('checklist-group')) return null
+    const checklistBtn = sidebarButtons.find((btn) => btn.id === 'checklist-group-default')
+    if (!checklistBtn) return null
+    const isSelected = selectedSidebarButton === checklistBtn.action
+    return (
+      <div className="sidebar-nav-subcluster">
+        <button
+          type="button"
+          className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
+          onClick={() => handleButtonClick(checklistBtn.action)}
+        >
+          {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+          <span className="sidebar-nav-label sidebar-nav-label--stacked">
+            <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
+              📋
+            </span>
+            <span className="sidebar-nav-label-stack">
+              <span className="sidebar-nav-label-text">{getButtonName(checklistBtn)}</span>
+            </span>
+          </span>
+          <span className={sidebarGroupChevronClass(expandedGroups.has('checklist-group'))} aria-hidden />
+          {String(pickTrChain(trCardDesc, ['quickAccessChecklistHubDesc']) || '').trim() ? (
+            <span className="sidebar-tip-bubble" role="tooltip">
+              {pickTrChain(trCardDesc, ['quickAccessChecklistHubDesc']) || ''}
+            </span>
+          ) : null}
+        </button>
+        {expandedGroups.has('checklist-group') && (
+          <div className="sidebar-action-buttons">
+            {getButtonsByGroup('checklist-group')
+              .filter((subButton) => canAccessSidebarButton(subButton))
+              .sort((a, b) => a.order - b.order)
+              .map((subButton) => {
+                const isSubSelected = selectedSidebarButton === subButton.action
+                const chkSub = resolveActionCardDescription(
+                  trCardDesc,
+                  subButton.id,
+                  subButton.action,
+                  pickTrChain(trCardDesc, ['mainHubCardHint'])
+                )
+                return (
+                  <button
+                    key={subButton.id}
+                    type="button"
+                    className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                      isSubSelected ? ' sidebar-action-btn-active' : ''
+                    }`}
+                    data-button-action={subButton.action}
+                    onClick={() => handleButtonClick(subButton.action)}
+                  >
+                    {isSubSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+                    <span className="sidebar-empresa-entry-row">
+                      <span className="sidebar-empresa-entry-text">
+                        <span className="sidebar-empresa-entry-title">{getButtonName(subButton)}</span>
+                      </span>
+                    </span>
+                    <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                      ›
+                    </span>
+                    {chkSub?.trim() ? (
+                      <span className="sidebar-tip-bubble" role="tooltip">
+                        {chkSub}
+                      </span>
+                    ) : null}
+                  </button>
+                )
+              })}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   // Tela inicial (dashboard): logo do dashboard, mensagem profissional e agressiva, métricas, CTA
   if (showSplashInicial) {
     const dashboardLogo = logoUrlDashboard || logoUrl
@@ -65142,13 +65392,16 @@ A1;Peça exemplo;10`}
         </>
         )}
 
-        {/* Grupo: CLIENTES E FORNECEDORES */}
-        {getButtonsByGroup('parceiros-comercial').some((b) => canAccessSidebarButton(b)) && (
+        {/* Secção Comercial: parceiros, custos e financeira */}
+        {(getButtonsByGroup('parceiros-comercial').some((b) => canAccessSidebarButton(b)) ||
+          canAccessModule('gestao-custos') ||
+          canAccessModule('gestao-financeira')) && (
           <>
           <SidebarSectionSep
             id="comercial"
             label={(safeT as any)?.sidebarSectionComercial || 'Comercial'}
           />
+          {getButtonsByGroup('parceiros-comercial').some((b) => canAccessSidebarButton(b)) && (
           <div className="sidebar-nav-cluster" data-sidebar-zone="comercial">
             <button
               type="button"
@@ -65221,16 +65474,261 @@ A1;Peça exemplo;10`}
               </div>
             )}
           </div>
+          )}
+        {/* Grupo: GESTÃO DE CUSTOS — mesmo padrão de cores e contorno do botão GESTÃO TÉCNICA */}
+        {canAccessModule('gestao-custos') && (
+        <div className="sidebar-nav-cluster" data-sidebar-zone="comercial">
+          <button
+            className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-custos' ? ' sidebar-group-btn-selected' : ''}`}
+            onClick={() => handleButtonClick('open-gestao-custos')}
+          >
+            {selectedSidebarButton === 'open-gestao-custos' && (
+              <span className="sidebar-nav-check" aria-hidden>✓</span>
+            )}
+            <span className="sidebar-nav-label sidebar-nav-label--stacked">
+              <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
+                💵
+              </span>
+              <span className="sidebar-nav-label-stack">
+                <span className="sidebar-nav-label-text">{safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS'}</span>
+              </span>
+            </span>
+            <span className={sidebarGroupChevronClass(expandedGroups.has('gestao-custos'))} aria-hidden />
+            {String(pickTrChain(trCardDesc, ['quickAccessGestaoCustosDesc']) || '').trim() ? (
+              <span className="sidebar-tip-bubble" role="tooltip">
+                {pickTrChain(trCardDesc, ['quickAccessGestaoCustosDesc']) || ''}
+              </span>
+            ) : null}
+          </button>
+          
+          {expandedGroups.has('gestao-custos') && (
+            <div className="sidebar-action-buttons">
+              {getButtonsByGroup('gestao-custos')
+                .filter((button) => canAccessSidebarButton(button))
+                .sort((a, b) => a.order - b.order)
+                .map((button) => {
+                  const isSelected = selectedSidebarButton === button.action
+                  const custosSub = resolveActionCardDescription(
+                    trCardDesc,
+                    button.id,
+                    button.action,
+                    pickTrChain(trCardDesc, ['mainHubCardHint'])
+                  )
+                  return (
+                    <button
+                      key={button.id}
+                      type="button"
+                      data-sidebar-nav-action={button.action}
+                      className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                        isSelected ? ' sidebar-action-btn-active' : ''
+                      }`}
+                      onClick={() => handleButtonClick(button.action)}
+                    >
+                      {isSelected && (
+                        <span className="sidebar-nav-check" aria-hidden>✓</span>
+                      )}
+                      <span className="sidebar-empresa-entry-row">
+                        <span className="sidebar-empresa-entry-text">
+                          <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                        </span>
+                      </span>
+                      <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                        ›
+                      </span>
+                      {custosSub?.trim() ? (
+                        <span className="sidebar-tip-bubble" role="tooltip">
+                          {custosSub}
+                        </span>
+                      ) : null}
+                    </button>
+                  )
+                })}
+              {getButtonsByGroup('gestao-custos').length === 0 && (
+                <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center', color: '#ffffff' }}>
+                  {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+        )}
+
+        {/* Grupo: GESTÃO FINANCEIRA (subsecções: painel, clientes, despesas, outros) */}
+        {canAccessModule('gestao-financeira') && (
+        <div className="sidebar-nav-cluster" data-sidebar-zone="comercial">
+          {(() => {
+            const finClusterActive =
+              selectedSidebarButton === 'open-gestao-financeira' ||
+              getButtonsByGroup('gestao-financeira').some(
+                (b) => selectedSidebarButton === b.action || selectedSidebarButton === b.id
+              )
+            const finSorted = [...getButtonsByGroup('gestao-financeira')].sort((a, b) => a.order - b.order)
+            const finBy: { clientes: typeof finSorted; despesas: typeof finSorted; outros: typeof finSorted } = {
+              clientes: [],
+              despesas: [],
+              outros: [],
+            }
+            for (const b of finSorted) {
+              const sg = getGestaoFinanceiraUiSubgroup(b.id)
+              if (sg === 'clientes') finBy.clientes.push(b)
+              else if (sg === 'despesas') finBy.despesas.push(b)
+              else finBy.outros.push(b)
+            }
+            const labPainel = (safeT as any)?.gestaoFinanceiraSubgroupPainel || 'Visão geral'
+            const labCli = (safeT as any)?.gestaoFinanceiraSubgroupClientes || 'Clientes e cobranças'
+            const labDesp = (safeT as any)?.gestaoFinanceiraSubgroupDespesas || 'Despesas e declarações fiscais'
+            const labOut = (safeT as any)?.gestaoFinanceiraSubgroupOutros || 'Outros'
+            const painelEntryTitle =
+              (safeT as any)?.gestaoFinanceiraPainelEntryTitle || safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'
+            const renderFinRow = (button: SidebarButton) => {
+              const isSel = selectedSidebarButton === button.action || selectedSidebarButton === button.id
+              const finSub = resolveActionCardDescription(
+                trCardDesc,
+                button.id,
+                button.action,
+                pickTrChain(trCardDesc, ['mainHubCardHint'])
+              )
+              return (
+                <button
+                  key={button.id}
+                  type="button"
+                  data-sidebar-nav-action={button.action}
+                  className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                    isSel ? ' sidebar-action-btn-active' : ''
+                  }`}
+                  onClick={() => handleButtonClick(button.action, button.id)}
+                >
+                  {isSel ? <span className="sidebar-nav-check" aria-hidden>✓</span> : null}
+                  <span className="sidebar-empresa-entry-row">
+                    <span className="sidebar-empresa-entry-text">
+                      <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                    </span>
+                  </span>
+                  <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                    ›
+                  </span>
+                  {finSub?.trim() ? (
+                    <span className="sidebar-tip-bubble" role="tooltip">
+                      {finSub}
+                    </span>
+                  ) : null}
+                </button>
+              )
+            }
+            const anyFinChild = finSorted.some((b) => canAccessSidebarButton(b))
+            const showFinExpand = anyFinChild || canAccessAction('open-gestao-financeira')
+            return (
+              <>
+                <button
+                  type="button"
+                  className={`btn-primary sidebar-group-header${finClusterActive ? ' sidebar-group-btn-selected' : ''}`}
+                  onClick={() => handleButtonClick('open-gestao-financeira')}
+                  aria-expanded={expandedGroups.has('gestao-financeira')}
+                >
+                  {finClusterActive ? <span className="sidebar-nav-check" aria-hidden>✓</span> : null}
+                  <span className="sidebar-nav-label sidebar-nav-label--stacked">
+                    <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
+                      💰
+                    </span>
+                    <span className="sidebar-nav-label-stack">
+                      <span className="sidebar-nav-label-text">{safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}</span>
+                    </span>
+                  </span>
+                  <span className={sidebarGroupChevronClass(expandedGroups.has('gestao-financeira'))} aria-hidden />
+                  {String(safeT?.gestaoFinanceiraDesc || '').trim() ? (
+                    <span className="sidebar-tip-bubble" role="tooltip">
+                      {safeT?.gestaoFinanceiraDesc}
+                    </span>
+                  ) : null}
+                </button>
+                {expandedGroups.has('gestao-financeira') && showFinExpand && (
+                  <div className="sidebar-action-buttons">
+                    {canAccessAction('open-gestao-financeira') && (
+                      <div className="sidebar-fin-subgroup">
+                        <div className="sidebar-fin-subgroup-label">{labPainel}</div>
+                        <button
+                          type="button"
+                          data-sidebar-nav-action="open-gestao-financeira"
+                          className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                            selectedSidebarButton === 'open-gestao-financeira' ? ' sidebar-action-btn-active' : ''
+                          }`}
+                          onClick={() => handleButtonClick('open-gestao-financeira')}
+                        >
+                          {selectedSidebarButton === 'open-gestao-financeira' ? (
+                            <span className="sidebar-nav-check" aria-hidden>✓</span>
+                          ) : null}
+                          <span className="sidebar-empresa-entry-row">
+                            <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                              📊
+                            </span>
+                            <span className="sidebar-empresa-entry-text">
+                              <span className="sidebar-empresa-entry-title">{painelEntryTitle}</span>
+                            </span>
+                          </span>
+                          <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                            ›
+                          </span>
+                          {String(safeT?.gestaoFinanceiraDesc || '').trim() ? (
+                            <span className="sidebar-tip-bubble" role="tooltip">
+                              {safeT?.gestaoFinanceiraDesc}
+                            </span>
+                          ) : null}
+                        </button>
+                      </div>
+                    )}
+                    {finBy.clientes.some((b) => canAccessSidebarButton(b)) && (
+                      <div className="sidebar-fin-subgroup">
+                        <div className="sidebar-fin-subgroup-label">{labCli}</div>
+                        {finBy.clientes.filter((b) => canAccessSidebarButton(b)).map(renderFinRow)}
+                      </div>
+                    )}
+                    {finBy.despesas.some((b) => canAccessSidebarButton(b)) && (
+                      <div className="sidebar-fin-subgroup">
+                        <div className="sidebar-fin-subgroup-label">{labDesp}</div>
+                        {finBy.despesas.filter((b) => canAccessSidebarButton(b)).map(renderFinRow)}
+                      </div>
+                    )}
+                    {finBy.outros.some((b) => canAccessSidebarButton(b)) && (
+                      <div className="sidebar-fin-subgroup">
+                        <div className="sidebar-fin-subgroup-label">{labOut}</div>
+                        {finBy.outros.filter((b) => canAccessSidebarButton(b)).map(renderFinRow)}
+                      </div>
+                    )}
+                    {!anyFinChild && !canAccessAction('open-gestao-financeira') && (
+                      <p
+                        style={{
+                          fontSize: '12px',
+                          opacity: 0.6,
+                          padding: '10px',
+                          fontStyle: 'italic',
+                          textAlign: 'center',
+                          color: '#ffffff',
+                        }}
+                      >
+                        {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
+            )
+          })()}
+        </div>
+        )}
+
           </>
         )}
 
         {/* Grupo: DOCUMENTAÇÃO E RELATÓRIOS */}
-        {getButtonsByGroup('documentacao-relatorios').some((b) => canAccessSidebarButton(b)) && (
+        {(getButtonsByGroup('documentacao-relatorios').some((b) => canAccessSidebarButton(b)) ||
+          canAccessAction('open-protocolos-servico') ||
+          canAccessAction('open-manual-programa')) && (
           <>
           <SidebarSectionSep
             id="documentacao"
             label={(safeT as any)?.sidebarSectionDocumentacao || 'Documentação'}
           />
+          {getButtonsByGroup('documentacao-relatorios').some((b) => canAccessSidebarButton(b)) && (
           <div className="sidebar-nav-cluster" data-sidebar-zone="documentacao">
             <button
               type="button"
@@ -65304,128 +65802,9 @@ A1;Peça exemplo;10`}
                 </div>
               )}
           </div>
-          </>
-        )}
+          )}
 
-        {/* Grupo: PEÇAS E BIBLIOTECA */}
-        {getButtonsByGroup('pecas-biblioteca').some((b) => canAccessSidebarButton(b)) && (
-          <div className="sidebar-nav-cluster" data-sidebar-zone="comercial">
-            <button
-              type="button"
-              className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-pecas-biblioteca' ? ' sidebar-group-btn-selected' : ''}`}
-              onClick={() => handleButtonClick('open-pecas-biblioteca')}
-              title={
-                String((safeT as any)?.sidebarGroupPecasBibliotecaDesc || '').trim()
-                  ? String((safeT as any)?.sidebarGroupPecasBibliotecaDesc)
-                  : undefined
-              }
-            >
-              {selectedSidebarButton === 'open-pecas-biblioteca' && (
-                <span className="sidebar-nav-check" aria-hidden>✓</span>
-              )}
-              <span className="sidebar-nav-label sidebar-nav-label--stacked">
-                <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
-                  🔩
-                </span>
-                <span className="sidebar-nav-label-stack">
-                  <span className="sidebar-nav-label-text">
-                    {(safeT as any)?.pecasBibliotecaTitle || 'PEÇAS E BIBLIOTECA'}
-                  </span>
-                </span>
-              </span>
-              <span className={sidebarGroupChevronClass(expandedGroups.has('pecas-biblioteca'))} aria-hidden />
-              {String((safeT as any)?.sidebarGroupPecasBibliotecaDesc || '').trim() ? (
-                <span className="sidebar-tip-bubble" role="tooltip">
-                  {(safeT as any).sidebarGroupPecasBibliotecaDesc}
-                </span>
-              ) : null}
-            </button>
-            {expandedGroups.has('pecas-biblioteca') &&
-              getButtonsByGroup('pecas-biblioteca').some((b) => canAccessSidebarButton(b)) && (
-                <div className="sidebar-action-buttons">
-                  {getButtonsByGroup('pecas-biblioteca')
-                    .filter((button) => canAccessSidebarButton(button))
-                    .sort((a, b) => a.order - b.order)
-                    .map((button) => {
-                      if (button.id === 'biblioteca-pecas-default') {
-                        const isSelected =
-                          selectedSidebarButton === 'open-biblioteca-hub' ||
-                          selectedSidebarButton === 'open-biblioteca-pecas' ||
-                          selectedSidebarButton === 'open-importacao-pecas' ||
-                          selectedSidebarButton === 'open-pecas-substituicao'
-                        const bibSub = resolveActionCardDescription(
-                          trCardDesc,
-                          'biblioteca-pecas-default',
-                          'open-biblioteca-hub',
-                          pickTrChain(trCardDesc, ['mainHubCardHint'])
-                        )
-                        return (
-                          <button
-                            key={button.id}
-                            type="button"
-                            className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
-                              isSelected ? ' sidebar-action-btn-active' : ''
-                            }`}
-                            onClick={() => handleButtonClick('open-biblioteca-hub')}
-                          >
-                            {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
-                            <span className="sidebar-empresa-entry-row">
-                              <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
-                                🔩
-                              </span>
-                              <span className="sidebar-empresa-entry-text">
-                                <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
-                              </span>
-                            </span>
-                            <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
-                              ›
-                            </span>
-                            {bibSub?.trim() ? (
-                              <span className="sidebar-tip-bubble" role="tooltip">
-                                {bibSub}
-                              </span>
-                            ) : null}
-                          </button>
-                        )
-                      }
-                      const isSelected = selectedSidebarButton === button.action
-                      const rowSub = resolveActionCardDescription(
-                        trCardDesc,
-                        button.id,
-                        button.action,
-                        pickTrChain(trCardDesc, ['mainHubCardHint'])
-                      )
-                      return (
-                        <button
-                          key={button.id}
-                          type="button"
-                          data-sidebar-nav-action={button.action}
-                          className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
-                            isSelected ? ' sidebar-action-btn-active' : ''
-                          }`}
-                          onClick={() => handleButtonClick(button.action)}
-                        >
-                          {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
-                          <span className="sidebar-empresa-entry-row">
-                            <span className="sidebar-empresa-entry-text">
-                              <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
-                            </span>
-                          </span>
-                          <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>›</span>
-                          {rowSub?.trim() ? (
-                            <span className="sidebar-tip-bubble" role="tooltip">
-                              {rowSub}
-                            </span>
-                          ) : null}
-                        </button>
-                      )
-                    })}
-                </div>
-              )}
-          </div>
-        )}
-
-        {/* Protocolos de Serviço — entrada na barra lateral (textos via protocolosServico*) */}
+        {/* Protocolos de Serviço — documentação */}
         {canAccessAction('open-protocolos-servico') && (
         <div className="sidebar-nav-cluster sidebar-nav-cluster--protocolos" data-sidebar-zone="documentacao">
           <button
@@ -65585,83 +65964,202 @@ A1;Peça exemplo;10`}
           )}
         </div>
         )}
+          </>
+        )}
 
-        {/* Grupo: GESTÃO DE CUSTOS — mesmo padrão de cores e contorno do botão GESTÃO TÉCNICA */}
-        {canAccessModule('gestao-custos') && (
-        <div className="sidebar-nav-cluster" data-sidebar-zone="comercial">
-          <button
-            className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-custos' ? ' sidebar-group-btn-selected' : ''}`}
-            onClick={() => handleButtonClick('open-gestao-custos')}
-          >
-            {selectedSidebarButton === 'open-gestao-custos' && (
-              <span className="sidebar-nav-check" aria-hidden>✓</span>
-            )}
-            <span className="sidebar-nav-label sidebar-nav-label--stacked">
-              <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
-                💵
-              </span>
-              <span className="sidebar-nav-label-stack">
-                <span className="sidebar-nav-label-text">{safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS'}</span>
-              </span>
-            </span>
-            <span className={sidebarGroupChevronClass(expandedGroups.has('gestao-custos'))} aria-hidden />
-            {String(pickTrChain(trCardDesc, ['quickAccessGestaoCustosDesc']) || '').trim() ? (
-              <span className="sidebar-tip-bubble" role="tooltip">
-                {pickTrChain(trCardDesc, ['quickAccessGestaoCustosDesc']) || ''}
-              </span>
-            ) : null}
-          </button>
-          
-          {expandedGroups.has('gestao-custos') && (
-            <div className="sidebar-action-buttons">
-              {getButtonsByGroup('gestao-custos')
-                .filter((button) => canAccessSidebarButton(button))
-                .sort((a, b) => a.order - b.order)
-                .map((button) => {
-                  const isSelected = selectedSidebarButton === button.action
-                  const custosSub = resolveActionCardDescription(
-                    trCardDesc,
-                    button.id,
-                    button.action,
-                    pickTrChain(trCardDesc, ['mainHubCardHint'])
-                  )
-                  return (
-                    <button
-                      key={button.id}
-                      type="button"
-                      data-sidebar-nav-action={button.action}
-                      className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
-                        isSelected ? ' sidebar-action-btn-active' : ''
-                      }`}
-                      onClick={() => handleButtonClick(button.action)}
-                    >
-                      {isSelected && (
-                        <span className="sidebar-nav-check" aria-hidden>✓</span>
-                      )}
-                      <span className="sidebar-empresa-entry-row">
-                        <span className="sidebar-empresa-entry-text">
-                          <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
-                        </span>
-                      </span>
-                      <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
-                        ›
-                      </span>
-                      {custosSub?.trim() ? (
-                        <span className="sidebar-tip-bubble" role="tooltip">
-                          {custosSub}
-                        </span>
-                      ) : null}
-                    </button>
-                  )
-                })}
-              {getButtonsByGroup('gestao-custos').length === 0 && (
-                <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center', color: '#ffffff' }}>
-                  {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                </p>
+        {/* Secção: PEÇAS & ARMAZÉM */}
+        {(getButtonsByGroup('pecas-biblioteca').some((b) => canAccessSidebarButton(b)) ||
+          getButtonsByGroup('almoxarifado-armazem').some((b) => canAccessSidebarButton(b))) && (
+        <>
+        <SidebarSectionSep
+          id="pecas-armazem"
+          label={(safeT as any)?.sidebarSectionPecasArmazem || 'Peças & Armazém'}
+        />
+        {getButtonsByGroup('pecas-biblioteca').some((b) => canAccessSidebarButton(b)) && (
+          <div className="sidebar-nav-cluster" data-sidebar-zone="pecas-armazem">
+            <button
+              type="button"
+              className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-pecas-biblioteca' ? ' sidebar-group-btn-selected' : ''}`}
+              onClick={() => handleButtonClick('open-pecas-biblioteca')}
+              title={
+                String((safeT as any)?.sidebarGroupPecasBibliotecaDesc || '').trim()
+                  ? String((safeT as any)?.sidebarGroupPecasBibliotecaDesc)
+                  : undefined
+              }
+            >
+              {selectedSidebarButton === 'open-pecas-biblioteca' && (
+                <span className="sidebar-nav-check" aria-hidden>✓</span>
               )}
-            </div>
-          )}
-        </div>
+              <span className="sidebar-nav-label sidebar-nav-label--stacked">
+                <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
+                  🔩
+                </span>
+                <span className="sidebar-nav-label-stack">
+                  <span className="sidebar-nav-label-text">
+                    {(safeT as any)?.pecasBibliotecaTitle || 'PEÇAS E BIBLIOTECA'}
+                  </span>
+                </span>
+              </span>
+              <span className={sidebarGroupChevronClass(expandedGroups.has('pecas-biblioteca'))} aria-hidden />
+              {String((safeT as any)?.sidebarGroupPecasBibliotecaDesc || '').trim() ? (
+                <span className="sidebar-tip-bubble" role="tooltip">
+                  {(safeT as any).sidebarGroupPecasBibliotecaDesc}
+                </span>
+              ) : null}
+            </button>
+            {expandedGroups.has('pecas-biblioteca') &&
+              getButtonsByGroup('pecas-biblioteca').some((b) => canAccessSidebarButton(b)) && (
+                <div className="sidebar-action-buttons">
+                  {getButtonsByGroup('pecas-biblioteca')
+                    .filter((button) => canAccessSidebarButton(button))
+                    .sort((a, b) => a.order - b.order)
+                    .map((button) => {
+                      if (button.id === 'biblioteca-pecas-default') {
+                        const isSelected =
+                          selectedSidebarButton === 'open-biblioteca-hub' ||
+                          selectedSidebarButton === 'open-biblioteca-pecas' ||
+                          selectedSidebarButton === 'open-importacao-pecas' ||
+                          selectedSidebarButton === 'open-pecas-substituicao'
+                        const bibSub = resolveActionCardDescription(
+                          trCardDesc,
+                          'biblioteca-pecas-default',
+                          'open-biblioteca-hub',
+                          pickTrChain(trCardDesc, ['mainHubCardHint'])
+                        )
+                        return (
+                          <button
+                            key={button.id}
+                            type="button"
+                            className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                              isSelected ? ' sidebar-action-btn-active' : ''
+                            }`}
+                            onClick={() => handleButtonClick('open-biblioteca-hub')}
+                          >
+                            {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+                            <span className="sidebar-empresa-entry-row">
+                              <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                                🔩
+                              </span>
+                              <span className="sidebar-empresa-entry-text">
+                                <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                              </span>
+                            </span>
+                            <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                              ›
+                            </span>
+                            {bibSub?.trim() ? (
+                              <span className="sidebar-tip-bubble" role="tooltip">
+                                {bibSub}
+                              </span>
+                            ) : null}
+                          </button>
+                        )
+                      }
+                      const isSelected = selectedSidebarButton === button.action
+                      const rowSub = resolveActionCardDescription(
+                        trCardDesc,
+                        button.id,
+                        button.action,
+                        pickTrChain(trCardDesc, ['mainHubCardHint'])
+                      )
+                      return (
+                        <button
+                          key={button.id}
+                          type="button"
+                          data-sidebar-nav-action={button.action}
+                          className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                            isSelected ? ' sidebar-action-btn-active' : ''
+                          }`}
+                          onClick={() => handleButtonClick(button.action)}
+                        >
+                          {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+                          <span className="sidebar-empresa-entry-row">
+                            <span className="sidebar-empresa-entry-text">
+                              <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                            </span>
+                          </span>
+                          <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>›</span>
+                          {rowSub?.trim() ? (
+                            <span className="sidebar-tip-bubble" role="tooltip">
+                              {rowSub}
+                            </span>
+                          ) : null}
+                        </button>
+                      )
+                    })}
+                </div>
+              )}
+          </div>
+        )}
+
+        {getButtonsByGroup('almoxarifado-armazem').some((b) => canAccessSidebarButton(b)) && (
+          <div className="sidebar-nav-cluster" data-sidebar-zone="pecas-armazem">
+            {(() => {
+              const headerBtn =
+                sidebarButtons.find((b) => b.id === 'almoxarifado-armazem-default') ||
+                getButtonsByGroup('almoxarifado-armazem').find((b) => b.id === 'almoxarifado-armazem-default')
+              const clusterActive = getButtonsByGroup('almoxarifado-armazem').some(
+                (b) => selectedSidebarButton === b.action || selectedSidebarButton === b.id
+              )
+              return (
+                <div className="sidebar-nav-subcluster">
+                  <button
+                    type="button"
+                    className={`btn-primary sidebar-group-header${clusterActive ? ' sidebar-group-btn-selected' : ''}`}
+                    onClick={() => toggleOrOpenDashboardHub('almoxarifado-main', 'almoxarifado-main')}
+                  >
+                    {clusterActive && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+                    <span className="sidebar-nav-label sidebar-nav-label--stacked">
+                      <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
+                        📦
+                      </span>
+                      <span className="sidebar-nav-label-stack">
+                        <span className="sidebar-nav-label-text">
+                          {headerBtn
+                            ? getButtonName(headerBtn)
+                            : (safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'}
+                        </span>
+                      </span>
+                    </span>
+                    <span className={sidebarGroupChevronClass(expandedGroups.has('almoxarifado-main'))} aria-hidden />
+                  </button>
+                  {expandedGroups.has('almoxarifado-main') && (
+                    <div className="sidebar-action-buttons">
+                      {getButtonsByGroup('almoxarifado-armazem')
+                        .filter((button) => canAccessSidebarButton(button))
+                        .sort((a, b) => a.order - b.order)
+                        .map((button) => {
+                          const isSelected = selectedSidebarButton === button.action || selectedSidebarButton === button.id
+                          return (
+                            <button
+                              key={button.id}
+                              type="button"
+                              className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                                isSelected ? ' sidebar-action-btn-active' : ''
+                              }`}
+                              data-sidebar-nav-action={button.action}
+                              onClick={() => handleButtonClick(button.action, button.id)}
+                            >
+                              {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+                              <span className="sidebar-empresa-entry-row">
+                                <span className="sidebar-empresa-entry-text">
+                                  <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                                </span>
+                              </span>
+                              <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                                ›
+                              </span>
+                            </button>
+                          )
+                        })}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+          </div>
+        )}
+        </>
         )}
 
         {/* Botão: COMUNICAÇÃO INTERNA C/ GESTORES E TECNICOS */}
@@ -65848,89 +66346,20 @@ A1;Peça exemplo;10`}
         </>
         )}
 
-        {/* Grupo: GESTÃO DOS CHECKLIST (Movido para fora da Gestão Industrial) */}
-        {canAccessModule('checklist-group') && (
-        <div className="sidebar-nav-cluster" data-sidebar-zone="operacao">
-          {sidebarButtons
-            .filter(btn => btn.id === 'checklist-group-default')
-            .map((button) => {
-              const isSelected = selectedSidebarButton === button.action
-              return (
-                <div key={button.id} className="sidebar-nav-subcluster">
-                  <button
-                    className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
-                    onClick={() => handleButtonClick(button.action)}
-                  >
-                    {isSelected && (
-                      <span className="sidebar-nav-check" aria-hidden>✓</span>
-                    )}
-                    <span className="sidebar-nav-label sidebar-nav-label--stacked">
-                      <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
-                        📋
-                      </span>
-                      <span className="sidebar-nav-label-stack">
-                        <span className="sidebar-nav-label-text">{getButtonName(button)}</span>
-                      </span>
-                    </span>
-                    <span className={sidebarGroupChevronClass(expandedGroups.has('checklist-group'))} aria-hidden />
-                    {String(pickTrChain(trCardDesc, ['quickAccessChecklistHubDesc']) || '').trim() ? (
-                      <span className="sidebar-tip-bubble" role="tooltip">
-                        {pickTrChain(trCardDesc, ['quickAccessChecklistHubDesc']) || ''}
-                      </span>
-                    ) : null}
-                  </button>
-                  {expandedGroups.has('checklist-group') && (
-                    <div className="sidebar-action-buttons">
-                      {getButtonsByGroup('checklist-group')
-                        .filter((subButton) => canAccessSidebarButton(subButton))
-                        .sort((a, b) => a.order - b.order)
-                        .map((subButton) => {
-                          const isSubSelected = selectedSidebarButton === subButton.action
-                          const chkSub = resolveActionCardDescription(
-                            trCardDesc,
-                            subButton.id,
-                            subButton.action,
-                            pickTrChain(trCardDesc, ['mainHubCardHint'])
-                          )
-                          return (
-                            <button
-                              key={subButton.id}
-                              className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
-                                isSubSelected ? ' sidebar-action-btn-active' : ''
-                              }`}
-                              data-button-action={subButton.action}
-                              onClick={() => handleButtonClick(subButton.action)}
-                            >
-                              {isSubSelected && (
-                                <span className="sidebar-nav-check" aria-hidden>✓</span>
-                              )}
-                              <span className="sidebar-empresa-entry-row">
-                                <span className="sidebar-empresa-entry-text">
-                                  <span className="sidebar-empresa-entry-title">{getButtonName(subButton)}</span>
-                                </span>
-                              </span>
-                              <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
-                                ›
-                              </span>
-                              {chkSub?.trim() ? (
-                                <span className="sidebar-tip-bubble" role="tooltip">
-                                  {chkSub}
-                                </span>
-                              ) : null}
-                            </button>
-                          )
-                        })}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-        </div>
-        )}
-
         {/* Grupo: GESTÃO INDUSTRIAL */}
-        {canAccessModule('gestao-industrial') && (
-        <div className="sidebar-nav-cluster" data-sidebar-zone="operacao">
+        {(canAccessModule('gestao-industrial') ||
+          canAccessModule('checklist-group') ||
+          canAccessModule('manuais-informacoes-tecnicas') ||
+          canAccessModule('biblia-nonato-service')) && (
+        <>
+        <SidebarSectionSep
+          id="industrial"
+          label={(safeT as any)?.sidebarSectionIndustrial || 'Industrial'}
+        />
+        <div className="sidebar-nav-cluster" data-sidebar-zone="industrial">
+          {renderSidebarChecklistCluster()}
+          {canAccessModule('gestao-industrial') && (
+          <>
           {(() => {
             const gestaoIndustrialActive = selectedSidebarButton === 'open-gestao-industrial' || getButtonsByGroup('gestao-industrial').some((b: SidebarButton) => b.id === selectedSidebarButton)
             return (
@@ -65961,82 +66390,9 @@ A1;Peça exemplo;10`}
           {expandedGroups.has('gestao-industrial') && (
             <div className="sidebar-action-buttons">
               {getButtonsByGroup('gestao-industrial')
-                .filter((button) => canAccessSidebarButton(button))
+                .filter((button) => canAccessSidebarButton(button) && button.id !== 'checklist-group-default')
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
-                  // Se for o botão checklist-group, renderizar com sub-botões
-                  if (button.id === 'checklist-group-default') {
-                    const isSelected = selectedSidebarButton === button.action
-                    return (
-                      <div key={button.id} className="sidebar-nav-subcluster">
-                        <button
-                          className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
-                            isSelected ? ' sidebar-action-btn-active' : ''
-                          }`}
-                          onClick={() => handleButtonClick(button.action)}
-                        >
-                          {isSelected && (
-                            <span className="sidebar-nav-check" aria-hidden>✓</span>
-                          )}
-                          <span className="sidebar-empresa-entry-row" style={{ flex: 1, minWidth: 0 }}>
-                            <span className="sidebar-empresa-entry-text">
-                              <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
-                            </span>
-                          </span>
-                          <span className={sidebarGroupChevronClass(expandedGroups.has('checklist-group'))} aria-hidden />
-                          {String(pickTrChain(trCardDesc, ['quickAccessChecklistHubDesc']) || '').trim() ? (
-                            <span className="sidebar-tip-bubble" role="tooltip">
-                              {pickTrChain(trCardDesc, ['quickAccessChecklistHubDesc']) || ''}
-                            </span>
-                          ) : null}
-                        </button>
-                        {expandedGroups.has('checklist-group') && (
-                          <div className="sidebar-action-buttons">
-                            {getButtonsByGroup('checklist-group')
-                              .filter((subButton) => canAccessSidebarButton(subButton))
-                              .sort((a, b) => a.order - b.order)
-                              .map((subButton) => {
-                                const isSubSelected = selectedSidebarButton === subButton.action
-                                const indChkSub = resolveActionCardDescription(
-                                  trCardDesc,
-                                  subButton.id,
-                                  subButton.action,
-                                  pickTrChain(trCardDesc, ['mainHubCardHint'])
-                                )
-                                return (
-                                  <button
-                                    key={subButton.id}
-                                    className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
-                                      isSubSelected ? ' sidebar-action-btn-active' : ''
-                                    }`}
-                                    data-button-action={subButton.action}
-                                    onClick={() => handleButtonClick(subButton.action)}
-                                  >
-                                    {isSubSelected && (
-                                      <span className="sidebar-nav-check" aria-hidden>✓</span>
-                                    )}
-                                    <span className="sidebar-empresa-entry-row">
-                                      <span className="sidebar-empresa-entry-text">
-                                        <span className="sidebar-empresa-entry-title">{getButtonName(subButton)}</span>
-                                      </span>
-                                    </span>
-                                    <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
-                                      ›
-                                    </span>
-                                    {indChkSub?.trim() ? (
-                                      <span className="sidebar-tip-bubble" role="tooltip">
-                                        {indChkSub}
-                                      </span>
-                                    ) : null}
-                                  </button>
-                                )
-                              })}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  }
-                  // Para outros botões, renderizar normalmente (usar button.id na seleção para que dois botões com a mesma action não fiquem ambos ativos)
                   const isSelected = selectedSidebarButton === (button.id || button.action)
                   const indSub = resolveActionCardDescription(
                     trCardDesc,
@@ -66071,443 +66427,127 @@ A1;Peça exemplo;10`}
                     </button>
                   )
                 })}
-              {getButtonsByGroup('gestao-industrial').length === 0 && (
+              {getButtonsByGroup('gestao-industrial').filter((b) => b.id !== 'checklist-group-default').length === 0 && (
                 <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center', color: '#ffffff' }}>
                   {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
                 </p>
               )}
             </div>
           )}
-        </div>
-        )}
-
-        {/* Botão Principal: MANUAIS — expande para abrir */}
-        {canAccessModule('manuais-informacoes-tecnicas') && (
-        <div className="sidebar-nav-cluster" data-sidebar-zone="operacao">
-        {sidebarButtons
-          .filter(b => b.id === 'manuais-informacoes-tecnicas-default')
-          .map((button) => {
-            const isSelected = selectedSidebarButton === button.action
-            return (
-              <div key={button.id} className="sidebar-nav-subcluster">
-                <button
-                  type="button"
-                  className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
-                  onClick={() => toggleOrOpenDashboardHub('manuais-informacoes-main', 'manuais-informacoes-main')}
-                >
-                  {isSelected && (
-                    <span className="sidebar-nav-check" aria-hidden>✓</span>
-                  )}
-                  <span className="sidebar-nav-label sidebar-nav-label--stacked">
-                    <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
-                      📋
-                    </span>
-                    <span className="sidebar-nav-label-stack">
-                      <span className="sidebar-nav-label-text">{getButtonName(button)}</span>
-                    </span>
-                  </span>
-                  <span className={sidebarGroupChevronClass(expandedGroups.has('manuais-informacoes-main'))} aria-hidden />
-                  {String(
-                    pickTrChain(trCardDesc, ['quickAccessManuaisDesc', 'manuaisInformacoesTecnicasDesc']) || ''
-                  ).trim() ? (
-                    <span className="sidebar-tip-bubble" role="tooltip">
-                      {pickTrChain(trCardDesc, ['quickAccessManuaisDesc', 'manuaisInformacoesTecnicasDesc']) || ''}
-                    </span>
-                  ) : null}
-                </button>
-                {expandedGroups.has('manuais-informacoes-main') && canAccessSidebarButton(button) && (
-                  <div className="sidebar-action-buttons">
+          </>
+          )}
+          {/* Manuais e Bíblia — documentação técnica industrial */}
+          {canAccessModule('manuais-informacoes-tecnicas') &&
+            sidebarButtons
+              .filter((b) => b.id === 'manuais-informacoes-tecnicas-default')
+              .map((button) => {
+                const isSelected = selectedSidebarButton === button.action
+                return (
+                  <div key={button.id} className="sidebar-nav-subcluster">
                     <button
                       type="button"
-                      className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
-                        isSelected ? ' sidebar-action-btn-active' : ''
-                      }`}
-                      data-sidebar-nav-action={button.action}
-                      onClick={() => handleButtonClick(button.action)}
+                      className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
+                      onClick={() => toggleOrOpenDashboardHub('manuais-informacoes-main', 'manuais-informacoes-main')}
                     >
-                      {isSelected && (
-                        <span className="sidebar-nav-check" aria-hidden>✓</span>
-                      )}
-                      <span className="sidebar-empresa-entry-row">
-                        <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                      {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+                      <span className="sidebar-nav-label sidebar-nav-label--stacked">
+                        <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
                           📖
                         </span>
-                        <span className="sidebar-empresa-entry-text">
-                          <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
-                          <span className="sidebar-empresa-entry-sub">
-                            {pickTrChain(trCardDesc, ['manuaisInformacoesTecnicasDesc', 'quickAccessManuaisDesc']) ||
-                              trCardDesc?.manuaisInformacoesTecnicasConteudo ||
-                              ''}
-                          </span>
+                        <span className="sidebar-nav-label-stack">
+                          <span className="sidebar-nav-label-text">{getButtonName(button)}</span>
                         </span>
                       </span>
-                      <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
-                        ›
-                      </span>
-                      {(() => {
-                        const mh = resolveActionCardDescription(
-                          trCardDesc,
-                          button.id,
-                          button.action,
-                          pickTrChain(trCardDesc, ['mainHubCardHint'])
-                        )
-                        return mh?.trim() ? (
-                          <span className="sidebar-tip-bubble" role="tooltip">
-                            {mh}
-                          </span>
-                        ) : null
-                      })()}
+                      <span className={sidebarGroupChevronClass(expandedGroups.has('manuais-informacoes-main'))} aria-hidden />
+                      {String(
+                        pickTrChain(trCardDesc, ['quickAccessManuaisDesc', 'manuaisInformacoesTecnicasDesc']) || ''
+                      ).trim() ? (
+                        <span className="sidebar-tip-bubble" role="tooltip">
+                          {pickTrChain(trCardDesc, ['quickAccessManuaisDesc', 'manuaisInformacoesTecnicasDesc']) || ''}
+                        </span>
+                      ) : null}
                     </button>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-        )}
-
-        {/* Bíblia Nonato Service — espaço dedicado (separado dos manuais oficiais) */}
-        {canAccessModule('biblia-nonato-service') && (
-        <div className="sidebar-nav-cluster" data-sidebar-zone="documentacao">
-        {sidebarButtons
-          .filter(b => b.id === 'biblia-nonato-service-default')
-          .map((button) => {
-            const isSelected = selectedSidebarButton === button.action
-            return (
-              <div key={button.id} className="sidebar-nav-subcluster">
-                <button
-                  type="button"
-                  className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
-                  onClick={() => toggleOrOpenDashboardHub('biblia-nonato-main', 'biblia-nonato-main')}
-                >
-                  {isSelected && (
-                    <span className="sidebar-nav-check" aria-hidden>✓</span>
-                  )}
-                  <span className="sidebar-nav-label sidebar-nav-label--stacked">
-                    <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
-                      📚
-                    </span>
-                    <span className="sidebar-nav-label-stack">
-                      <span className="sidebar-nav-label-text">{getButtonName(button)}</span>
-                    </span>
-                  </span>
-                  <span className={sidebarGroupChevronClass(expandedGroups.has('biblia-nonato-main'))} aria-hidden />
-                  {String(
-                    pickTrChain(trCardDesc, ['bibliaNonatoQuickDesc', 'bibliaNonatoHubCardDesc']) || ''
-                  ).trim() ? (
-                    <span className="sidebar-tip-bubble" role="tooltip">
-                      {pickTrChain(trCardDesc, ['bibliaNonatoQuickDesc', 'bibliaNonatoHubCardDesc']) || ''}
-                    </span>
-                  ) : null}
-                </button>
-                {expandedGroups.has('biblia-nonato-main') && canAccessSidebarButton(button) && (
-                  <div className="sidebar-action-buttons">
-                    <button
-                      type="button"
-                      className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
-                        isSelected ? ' sidebar-action-btn-active' : ''
-                      }`}
-                      data-sidebar-nav-action={button.action}
-                      onClick={() => handleButtonClick(button.action)}
-                    >
-                      {isSelected && (
-                        <span className="sidebar-nav-check" aria-hidden>✓</span>
-                      )}
-                      <span className="sidebar-empresa-entry-row">
-                        <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
-                          📚
-                        </span>
-                        <span className="sidebar-empresa-entry-text">
-                          <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
-                          <span className="sidebar-empresa-entry-sub">
-                            {pickTrChain(trCardDesc, ['bibliaNonatoServiceDesc', 'bibliaNonatoHubCardDesc']) ||
-                              trCardDesc?.bibliaNonatoQuickDesc ||
-                              ''}
-                          </span>
-                        </span>
-                      </span>
-                      <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
-                        ›
-                      </span>
-                      {(() => {
-                        const mh = resolveActionCardDescription(
-                          trCardDesc,
-                          button.id,
-                          button.action,
-                          pickTrChain(trCardDesc, ['mainHubCardHint'])
-                        )
-                        return mh?.trim() ? (
-                          <span className="sidebar-tip-bubble" role="tooltip">
-                            {mh}
-                          </span>
-                        ) : null
-                      })()}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-        )}
-
-        {/* Armazém / almoxarifado e mapa de separação (mesmo cluster lógico) */}
-        {getButtonsByGroup('almoxarifado-armazem').some((b) => canAccessSidebarButton(b)) && (
-          <div className="sidebar-nav-cluster" data-sidebar-zone="operacao">
-            {(() => {
-              const headerBtn =
-                sidebarButtons.find((b) => b.id === 'almoxarifado-armazem-default') ||
-                getButtonsByGroup('almoxarifado-armazem').find((b) => b.id === 'almoxarifado-armazem-default')
-              const clusterActive = getButtonsByGroup('almoxarifado-armazem').some(
-                (b) => selectedSidebarButton === b.action || selectedSidebarButton === b.id
-              )
-              return (
-                <div className="sidebar-nav-subcluster">
-                  <button
-                    type="button"
-                    className={`btn-primary sidebar-group-header${clusterActive ? ' sidebar-group-btn-selected' : ''}`}
-                    onClick={() => toggleOrOpenDashboardHub('almoxarifado-main', 'almoxarifado-main')}
-                  >
-                    {clusterActive && <span className="sidebar-nav-check" aria-hidden>✓</span>}
-                    <span className="sidebar-nav-label sidebar-nav-label--stacked">
-                      <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
-                        📦
-                      </span>
-                      <span className="sidebar-nav-label-stack">
-                        <span className="sidebar-nav-label-text">
-                          {headerBtn
-                            ? getButtonName(headerBtn)
-                            : (safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'}
-                        </span>
-                      </span>
-                    </span>
-                    <span className={sidebarGroupChevronClass(expandedGroups.has('almoxarifado-main'))} aria-hidden />
-                    {String(
-                      pickTrChain(trCardDesc, ['quickAccessAlmoxarifadoDesc', 'almoxarifadoArmazemDesc', 'sidebarGroupAlmoxarifadoDesc']) || ''
-                    ).trim() ? (
-                      <span className="sidebar-tip-bubble" role="tooltip">
-                        {pickTrChain(trCardDesc, ['quickAccessAlmoxarifadoDesc', 'almoxarifadoArmazemDesc', 'sidebarGroupAlmoxarifadoDesc']) || ''}
-                      </span>
-                    ) : null}
-                  </button>
-                  {expandedGroups.has('almoxarifado-main') && (
-                    <div className="sidebar-action-buttons">
-                      {getButtonsByGroup('almoxarifado-armazem')
-                        .filter((button) => canAccessSidebarButton(button))
-                        .sort((a, b) => a.order - b.order)
-                        .map((button) => {
-                          const isSelected = selectedSidebarButton === button.action || selectedSidebarButton === button.id
-                          const icon =
-                            button.id === 'mapa-visual-separacao-pecas-default'
-                              ? '🗺️'
-                              : button.id === 'almoxarifado-armazem-default'
-                                ? '📦'
-                                : '📦'
-                          const mh = resolveActionCardDescription(
-                            trCardDesc,
-                            button.id,
-                            button.action,
-                            pickTrChain(trCardDesc, ['mainHubCardHint'])
-                          )
-                          return (
-                            <button
-                              key={button.id}
-                              type="button"
-                              className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
-                                isSelected ? ' sidebar-action-btn-active' : ''
-                              }`}
-                              data-sidebar-nav-action={button.action}
-                              onClick={() => handleButtonClick(button.action, button.id)}
-                            >
-                              {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
-                              <span className="sidebar-empresa-entry-row">
-                                <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
-                                  {icon}
-                                </span>
-                                <span className="sidebar-empresa-entry-text">
-                                  <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
-                                </span>
-                              </span>
-                              <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
-                                ›
-                              </span>
-                              {mh?.trim() ? (
-                                <span className="sidebar-tip-bubble" role="tooltip">
-                                  {mh}
-                                </span>
-                              ) : null}
-                            </button>
-                          )
-                        })}
-                    </div>
-                  )}
-                </div>
-              )
-            })()}
-          </div>
-        )}
-
-        {/* Grupo: GESTÃO FINANCEIRA (subsecções: painel, clientes, despesas, outros) */}
-        {canAccessModule('gestao-financeira') && (
-        <div className="sidebar-nav-cluster" data-sidebar-zone="comercial">
-          {(() => {
-            const finClusterActive =
-              selectedSidebarButton === 'open-gestao-financeira' ||
-              getButtonsByGroup('gestao-financeira').some(
-                (b) => selectedSidebarButton === b.action || selectedSidebarButton === b.id
-              )
-            const finSorted = [...getButtonsByGroup('gestao-financeira')].sort((a, b) => a.order - b.order)
-            const finBy: { clientes: typeof finSorted; despesas: typeof finSorted; outros: typeof finSorted } = {
-              clientes: [],
-              despesas: [],
-              outros: [],
-            }
-            for (const b of finSorted) {
-              const sg = getGestaoFinanceiraUiSubgroup(b.id)
-              if (sg === 'clientes') finBy.clientes.push(b)
-              else if (sg === 'despesas') finBy.despesas.push(b)
-              else finBy.outros.push(b)
-            }
-            const labPainel = (safeT as any)?.gestaoFinanceiraSubgroupPainel || 'Visão geral'
-            const labCli = (safeT as any)?.gestaoFinanceiraSubgroupClientes || 'Clientes e cobranças'
-            const labDesp = (safeT as any)?.gestaoFinanceiraSubgroupDespesas || 'Despesas e declarações fiscais'
-            const labOut = (safeT as any)?.gestaoFinanceiraSubgroupOutros || 'Outros'
-            const painelEntryTitle =
-              (safeT as any)?.gestaoFinanceiraPainelEntryTitle || safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'
-            const renderFinRow = (button: SidebarButton) => {
-              const isSel = selectedSidebarButton === button.action || selectedSidebarButton === button.id
-              const finSub = resolveActionCardDescription(
-                trCardDesc,
-                button.id,
-                button.action,
-                pickTrChain(trCardDesc, ['mainHubCardHint'])
-              )
-              return (
-                <button
-                  key={button.id}
-                  type="button"
-                  data-sidebar-nav-action={button.action}
-                  className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
-                    isSel ? ' sidebar-action-btn-active' : ''
-                  }`}
-                  onClick={() => handleButtonClick(button.action, button.id)}
-                >
-                  {isSel ? <span className="sidebar-nav-check" aria-hidden>✓</span> : null}
-                  <span className="sidebar-empresa-entry-row">
-                    <span className="sidebar-empresa-entry-text">
-                      <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
-                    </span>
-                  </span>
-                  <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
-                    ›
-                  </span>
-                  {finSub?.trim() ? (
-                    <span className="sidebar-tip-bubble" role="tooltip">
-                      {finSub}
-                    </span>
-                  ) : null}
-                </button>
-              )
-            }
-            const anyFinChild = finSorted.some((b) => canAccessSidebarButton(b))
-            const showFinExpand = anyFinChild || canAccessAction('open-gestao-financeira')
-            return (
-              <>
-                <button
-                  type="button"
-                  className={`btn-primary sidebar-group-header${finClusterActive ? ' sidebar-group-btn-selected' : ''}`}
-                  onClick={() => handleButtonClick('open-gestao-financeira')}
-                  aria-expanded={expandedGroups.has('gestao-financeira')}
-                >
-                  {finClusterActive ? <span className="sidebar-nav-check" aria-hidden>✓</span> : null}
-                  <span className="sidebar-nav-label sidebar-nav-label--stacked">
-                    <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
-                      💰
-                    </span>
-                    <span className="sidebar-nav-label-stack">
-                      <span className="sidebar-nav-label-text">{safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}</span>
-                    </span>
-                  </span>
-                  <span className={sidebarGroupChevronClass(expandedGroups.has('gestao-financeira'))} aria-hidden />
-                  {String(safeT?.gestaoFinanceiraDesc || '').trim() ? (
-                    <span className="sidebar-tip-bubble" role="tooltip">
-                      {safeT?.gestaoFinanceiraDesc}
-                    </span>
-                  ) : null}
-                </button>
-                {expandedGroups.has('gestao-financeira') && showFinExpand && (
-                  <div className="sidebar-action-buttons">
-                    {canAccessAction('open-gestao-financeira') && (
-                      <div className="sidebar-fin-subgroup">
-                        <div className="sidebar-fin-subgroup-label">{labPainel}</div>
+                    {expandedGroups.has('manuais-informacoes-main') && canAccessSidebarButton(button) && (
+                      <div className="sidebar-action-buttons">
                         <button
                           type="button"
-                          data-sidebar-nav-action="open-gestao-financeira"
                           className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
-                            selectedSidebarButton === 'open-gestao-financeira' ? ' sidebar-action-btn-active' : ''
+                            isSelected ? ' sidebar-action-btn-active' : ''
                           }`}
-                          onClick={() => handleButtonClick('open-gestao-financeira')}
+                          data-sidebar-nav-action={button.action}
+                          onClick={() => handleButtonClick(button.action)}
                         >
-                          {selectedSidebarButton === 'open-gestao-financeira' ? (
-                            <span className="sidebar-nav-check" aria-hidden>✓</span>
-                          ) : null}
+                          {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
                           <span className="sidebar-empresa-entry-row">
                             <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
-                              📊
+                              📖
                             </span>
                             <span className="sidebar-empresa-entry-text">
-                              <span className="sidebar-empresa-entry-title">{painelEntryTitle}</span>
+                              <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
                             </span>
                           </span>
                           <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
                             ›
                           </span>
-                          {String(safeT?.gestaoFinanceiraDesc || '').trim() ? (
-                            <span className="sidebar-tip-bubble" role="tooltip">
-                              {safeT?.gestaoFinanceiraDesc}
-                            </span>
-                          ) : null}
                         </button>
                       </div>
                     )}
-                    {finBy.clientes.some((b) => canAccessSidebarButton(b)) && (
-                      <div className="sidebar-fin-subgroup">
-                        <div className="sidebar-fin-subgroup-label">{labCli}</div>
-                        {finBy.clientes.filter((b) => canAccessSidebarButton(b)).map(renderFinRow)}
+                  </div>
+                )
+              })}
+          {canAccessModule('biblia-nonato-service') &&
+            sidebarButtons
+              .filter((b) => b.id === 'biblia-nonato-service-default')
+              .map((button) => {
+                const isSelected = selectedSidebarButton === button.action
+                return (
+                  <div key={button.id} className="sidebar-nav-subcluster">
+                    <button
+                      type="button"
+                      className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
+                      onClick={() => toggleOrOpenDashboardHub('biblia-nonato-main', 'biblia-nonato-main')}
+                    >
+                      {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+                      <span className="sidebar-nav-label sidebar-nav-label--stacked">
+                        <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
+                          📚
+                        </span>
+                        <span className="sidebar-nav-label-stack">
+                          <span className="sidebar-nav-label-text">{getButtonName(button)}</span>
+                        </span>
+                      </span>
+                      <span className={sidebarGroupChevronClass(expandedGroups.has('biblia-nonato-main'))} aria-hidden />
+                    </button>
+                    {expandedGroups.has('biblia-nonato-main') && canAccessSidebarButton(button) && (
+                      <div className="sidebar-action-buttons">
+                        <button
+                          type="button"
+                          className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                            isSelected ? ' sidebar-action-btn-active' : ''
+                          }`}
+                          data-sidebar-nav-action={button.action}
+                          onClick={() => handleButtonClick(button.action)}
+                        >
+                          {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+                          <span className="sidebar-empresa-entry-row">
+                            <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                              📚
+                            </span>
+                            <span className="sidebar-empresa-entry-text">
+                              <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                            </span>
+                          </span>
+                          <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                            ›
+                          </span>
+                        </button>
                       </div>
-                    )}
-                    {finBy.despesas.some((b) => canAccessSidebarButton(b)) && (
-                      <div className="sidebar-fin-subgroup">
-                        <div className="sidebar-fin-subgroup-label">{labDesp}</div>
-                        {finBy.despesas.filter((b) => canAccessSidebarButton(b)).map(renderFinRow)}
-                      </div>
-                    )}
-                    {finBy.outros.some((b) => canAccessSidebarButton(b)) && (
-                      <div className="sidebar-fin-subgroup">
-                        <div className="sidebar-fin-subgroup-label">{labOut}</div>
-                        {finBy.outros.filter((b) => canAccessSidebarButton(b)).map(renderFinRow)}
-                      </div>
-                    )}
-                    {!anyFinChild && !canAccessAction('open-gestao-financeira') && (
-                      <p
-                        style={{
-                          fontSize: '12px',
-                          opacity: 0.6,
-                          padding: '10px',
-                          fontStyle: 'italic',
-                          textAlign: 'center',
-                          color: '#ffffff',
-                        }}
-                      >
-                        {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                      </p>
                     )}
                   </div>
-                )}
-              </>
-            )
-          })()}
+                )
+              })}
         </div>
+        </>
         )}
 
         {/* Grupo: empresa e registos oficiais (cadastro, ficha, solicitação) — mesmo rigor visual que Protocolos */}
@@ -67087,6 +67127,16 @@ A1;Peça exemplo;10`}
                         </span>
                       </button>
                       <div className="main-module-context-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
+                        {activeTab.returnHubId ? (
+                          <button
+                            type="button"
+                            className="ns-nav-back-bar__btn main-module-context-back-btn"
+                            onClick={() => voltarAoHubDaAba(activeTab.returnHubId!)}
+                            title={formatNavBackToHub(activeTab.returnHubId!)}
+                          >
+                            ← {formatNavBackToHub(activeTab.returnHubId!)}
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           className="main-content-action-btn main-content-action-btn--home"

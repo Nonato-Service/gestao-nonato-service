@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { ContextualBackBar } from './ContextualBackBar'
 
 type Props = {
   safeT: Record<string, string | undefined>
@@ -56,11 +57,11 @@ export function EquipamentosArmazemMenu(props: Props) {
 
   return (
     <div className="ns-equip-hub">
-      <div className="ns-equip-hub__toolbar">
-        <button type="button" className="ns-equip-hub__back" onClick={onVoltarHub}>
-          ← {tr('equipamentosVoltarMenu', 'Voltar ao menu')}
-        </button>
-      </div>
+      <ContextualBackBar
+        label={tr('equipamentosVoltarMenu', 'Voltar ao menu')}
+        onBack={onVoltarHub}
+        className="ns-equip-hub__toolbar"
+      />
       <h2 className="ns-equip-hub__title">
         {tr('equipamentosVisualizarFamiliasTitulo', 'Escolha a família')}
       </h2>

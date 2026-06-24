@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import React, { useMemo, useRef, useState } from 'react'
+import { ContextualBackBar } from './ContextualBackBar'
 import {
   EquipamentoManuaisRef,
   ManuaisDocumento,
@@ -1000,6 +1001,24 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
       ? `${breadcrumbFamilia} › ${displayMarcaNome(selectedGrupo?.nome || DEFAULT_GRUPO_NAME)} › ${selectedModelo.nome}`
       : breadcrumbFamilia || tr('manuaisHubSelectModelTitle', 'Selecione um modelo')
 
+  const manuaisNavBack =
+    selectedModeloManuaisId != null
+      ? {
+          label: tr('navBackToGrupo', 'Voltar ao grupo'),
+          onBack: () => setSelectedModeloManuaisId(null),
+        }
+      : selectedGrupoManuais != null
+        ? {
+            label: tr('navBackToFamilia', 'Voltar à família'),
+            onBack: () => setSelectedGrupoManuais(null),
+          }
+        : selectedFamiliaManuais != null
+          ? {
+              label: tr('navBackToStructure', 'Voltar à estrutura'),
+              onBack: () => setSelectedFamiliaManuais(null),
+            }
+          : null
+
   return (
     <div className="manuais-pro">
       <section className="manuais-pro__hero">
@@ -1394,6 +1413,9 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
         </aside>
 
         <main className="manuais-pro__main">
+          {manuaisNavBack ? (
+            <ContextualBackBar label={manuaisNavBack.label} onBack={manuaisNavBack.onBack} compact />
+          ) : null}
           <header className="manuais-pro__main-head">
             <div>
               <p className="manuais-pro__breadcrumb-label">{tr('manuaisConteudoModelo', 'Conteúdo do modelo')}</p>
