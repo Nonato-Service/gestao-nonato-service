@@ -29004,76 +29004,128 @@ export default function Dashboard() {
                     <p style={{ margin: 0, fontSize: '16px', color: 'rgba(255,255,255,0.75)' }}>{safeT?.noEquipamentos || 'Nenhum equipamento cadastrado'}</p>
                   </div>
                 ) : (
-                  <div className="ns-equip-list">
-                    {equipamentosListaVisualizar.map((equipamento) => {
-                      const isBaixado = equipamento.status === 'baixado'
-                      return (
-                        <div key={equipamento.id} className={`ns-equip-list__row${isBaixado ? ' is-baixado' : ''}`}>
-                          <div className="ns-equip-list__main">
-                            <p className="ns-equip-list__tipo">{equipamento.tipoEquipamento}</p>
-                            <h3 className="ns-equip-list__modelo">{equipamento.modelo}</h3>
-                            <p className="ns-equip-list__meta">
-                              {equipamento.marca}
-                              {equipamento.numeroSerie ? ` · ${equipamento.numeroSerie}` : ''}
-                              {(equipamento.familia || equipamento.grupo)
-                                ? ` · ${[equipamento.familia, equipamento.grupo].filter(Boolean).join(' / ')}`
-                                : ''}
-                            </p>
-                            <p className="ns-equip-list__id">ID: {equipamento.id}</p>
-                            {isBaixado ? (
-                              <span className="ns-equip-list__badge">{safeT?.baixado || 'Baixado'}</span>
-                            ) : null}
+                  <>
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                      <div style={{ padding: '14px 20px', borderRadius: '12px', background: 'rgba(0, 200, 83, 0.08)', border: '1px solid rgba(0, 200, 83, 0.25)', flex: '1', minWidth: '140px' }}>
+                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{safeT?.equipamentosAtivos || 'Ativos'}</span>
+                        <p style={{ margin: '6px 0 0', fontSize: '24px', fontWeight: '700', color: '#00c853' }}>
+                          {equipamentosListaVisualizar.filter((e) => (e.status || 'ativo') !== 'baixado').length}
+                        </p>
+                      </div>
+                      <div style={{ padding: '14px 20px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', flex: '1', minWidth: '140px' }}>
+                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{safeT?.totalBaixados || 'Baixados'}</span>
+                        <p style={{ margin: '6px 0 0', fontSize: '24px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>
+                          {equipamentosListaVisualizar.filter((e) => e.status === 'baixado').length}
+                        </p>
+                      </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '18px' }}>
+                      {equipamentosListaVisualizar.map((equipamento) => {
+                        const isBaixado = equipamento.status === 'baixado'
+                        const foto = equipamento.photo || equipamento.coverPhoto
+                        return (
+                          <div
+                            key={equipamento.id}
+                            style={{
+                              borderRadius: '16px',
+                              overflow: 'hidden',
+                              border: '1px solid rgba(0, 200, 83, 0.15)',
+                              background: 'linear-gradient(180deg, rgba(26,26,26,0.98) 0%, rgba(18,18,18,0.98) 100%)',
+                              transition: 'border-color 0.2s, box-shadow 0.2s',
+                              opacity: isBaixado ? 0.85 : 1
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.35)'
+                              e.currentTarget.style.boxShadow = '0 8px 28px rgba(0, 200, 83, 0.08)'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.15)'
+                              e.currentTarget.style.boxShadow = 'none'
+                            }}
+                          >
+                            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/10', background: 'rgba(0, 200, 83, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                              {foto ? (
+                                <img src={foto} alt={equipamento.modelo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                <span style={{ fontSize: '48px', opacity: 0.4 }}>🔧</span>
+                              )}
+                              {isBaixado && (
+                                <span style={{ position: 'absolute', top: '10px', right: '10px', padding: '5px 12px', fontSize: '11px', fontWeight: '600', background: 'rgba(80,80,80,0.95)', color: 'rgba(255,255,255,0.95)', borderRadius: '8px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                                  {safeT?.baixado || 'Baixado'}
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ padding: '18px' }}>
+                              <p style={{ margin: 0, fontSize: '11px', color: 'rgba(0, 200, 83, 0.9)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{equipamento.tipoEquipamento}</p>
+                              <h3 style={{ margin: '8px 0 6px', fontSize: '17px', fontWeight: '600', color: '#fff' }}>{equipamento.modelo}</h3>
+                              <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.75)' }}>{equipamento.marca}{equipamento.numeroSerie ? ` · ${equipamento.numeroSerie}` : ''}</p>
+                              {(equipamento.familia || equipamento.grupo) && (
+                                <p style={{ margin: '8px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>{[equipamento.familia, equipamento.grupo].filter(Boolean).join(' / ')}</p>
+                              )}
+                              <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>ID: {equipamento.id}</p>
+                              <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
+                                <button
+                                  className="btn-primary"
+                                  onClick={() => setViewingEquipamento(equipamento)}
+                                  style={{ flex: 1, minWidth: '90px', padding: '10px 14px', fontSize: '13px', borderRadius: '10px', fontWeight: '600' }}
+                                >
+                                  👁️ {t.viewEquipamento}
+                                </button>
+                                <button
+                                  className="btn-primary"
+                                  onClick={() => {
+                                    setEditingEquipamento(equipamento)
+                                    const qtd = Math.max(1, equipamento.quantidadePartes ?? (equipamento.partes?.length ?? 1))
+                                    const partes = (equipamento.partes && equipamento.partes.length > 0)
+                                      ? equipamento.partes
+                                      : Array.from({ length: qtd }, (_, i) => ({ ordem: i + 1, tipoId: 'geral' as const, numeroSerieFabricante: '' }))
+                                    setEquipamentoForm({
+                                      id: equipamento.id || '',
+                                      tipoEquipamento: equipamento.tipoEquipamento || '',
+                                      modelo: equipamento.modelo || '',
+                                      marca: equipamento.marca || '',
+                                      numeroSerie: equipamento.numeroSerie || '',
+                                      familia: equipamento.familia || '',
+                                      grupo: equipamento.grupo || '',
+                                      peso: equipamento.peso ?? '',
+                                      umaParteSo: equipamento.umaParteSo ?? true,
+                                      quantidadePartes: qtd,
+                                      partes,
+                                      photo: equipamento.photo || '',
+                                      coverPhoto: equipamento.coverPhoto || '',
+                                      photoLibrary: equipamento.photoLibrary || [],
+                                      manualPdf: equipamento.manualPdf || '',
+                                      documentosPdf: equipamento.documentosPdf || [],
+                                      itemsIncluded: (equipamento.itemsIncluded || []).map(item =>
+                                        typeof item === 'string'
+                                          ? { id: Date.now().toString() + Math.random(), nome: item }
+                                          : item
+                                      ),
+                                      historico: equipamento.historico || [],
+                                      modeloManuaisId: equipamento.modeloManuaisId || ''
+                                    })
+                                    setEquipamentosArmazemEtapa('cadastrar')
+                                    setShowEquipamentoForm(true)
+                                    setTimeout(() => document.getElementById('equipamentos-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
+                                  }}
+                                  style={{ padding: '10px 14px', fontSize: '13px', borderRadius: '10px', fontWeight: '600', background: 'rgba(0, 200, 83, 0.1)', border: '1px solid rgba(0, 200, 83, 0.35)', color: '#00c853' }}
+                                >
+                                  ✏️ {safeT?.edit || 'Editar'}
+                                </button>
+                                <button
+                                  className="btn-danger"
+                                  onClick={() => handleDeleteEquipamento(equipamento.id)}
+                                  style={{ padding: '10px 14px', fontSize: '13px', borderRadius: '10px', fontWeight: '600' }}
+                                >
+                                  🗑️ {safeT?.delete || 'Excluir'}
+                                </button>
+                              </div>
+                            </div>
                           </div>
-                          <div className="ns-equip-list__actions">
-                            <button type="button" className="btn-primary" onClick={() => setViewingEquipamento(equipamento)}>
-                              👁️ {t.viewEquipamento}
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-primary"
-                              onClick={() => {
-                                setEditingEquipamento(equipamento)
-                                const qtd = Math.max(1, equipamento.quantidadePartes ?? (equipamento.partes?.length ?? 1))
-                                const partes = (equipamento.partes && equipamento.partes.length > 0)
-                                  ? equipamento.partes
-                                  : Array.from({ length: qtd }, (_, i) => ({ ordem: i + 1, tipoId: 'geral' as const, numeroSerieFabricante: '' }))
-                                setEquipamentoForm({
-                                  id: equipamento.id || '',
-                                  tipoEquipamento: equipamento.tipoEquipamento || '',
-                                  modelo: equipamento.modelo || '',
-                                  marca: equipamento.marca || '',
-                                  numeroSerie: equipamento.numeroSerie || '',
-                                  familia: equipamento.familia || '',
-                                  grupo: equipamento.grupo || '',
-                                  peso: equipamento.peso ?? '',
-                                  umaParteSo: equipamento.umaParteSo ?? true,
-                                  quantidadePartes: qtd,
-                                  partes,
-                                  photo: equipamento.photo || '',
-                                  coverPhoto: equipamento.coverPhoto || '',
-                                  photoLibrary: equipamento.photoLibrary || [],
-                                  manualPdf: equipamento.manualPdf || '',
-                                  documentosPdf: equipamento.documentosPdf || [],
-                                  itemsIncluded: (equipamento.itemsIncluded || []).map(item =>
-                                    typeof item === 'string'
-                                      ? { id: Date.now().toString() + Math.random(), nome: item }
-                                      : item
-                                  ),
-                                  historico: equipamento.historico || [],
-                                  modeloManuaisId: equipamento.modeloManuaisId || ''
-                                })
-                                setEquipamentosArmazemEtapa('cadastrar')
-                                setShowEquipamentoForm(true)
-                                setTimeout(() => document.getElementById('equipamentos-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
-                              }}
-                            >
-                              ✏️ {safeT?.edit || 'Editar'}
-                            </button>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
+                        )
+                      })}
+                    </div>
+                  </>
                 )}
               </>
             )
