@@ -23202,54 +23202,88 @@ export default function Dashboard() {
   const chavePecaBibliotecaParaImport = (p: { codigo?: string; nome?: string }) =>
     normalizeImportKey(p.codigo) || `n:${normalizeImportKey(p.nome)}`
 
+  const codigoNormalizadoImport = (codigo: string | undefined | null) => normalizeImportKey(codigo)
+
   const separarPecasImportacao = useCallback(
     (pecas: PecaBiblioteca[]) => {
-      const existentesKeys = new Set(
-        pecasBiblioteca.map((e) => chavePecaBibliotecaParaImport(e)).filter(Boolean)
+      const codigosNaBiblioteca = new Set(
+        pecasBiblioteca.map((e) => codigoNormalizadoImport(e.codigo)).filter(Boolean)
       )
       const novas: PecaBiblioteca[] = []
       const duplicadas: PecaBiblioteca[] = []
-      const vistoLote = new Set<string>()
+      const vistoCodigoLote = new Set<string>()
       for (const p of pecas) {
-        const key = chavePecaBibliotecaParaImport(p)
-        if (!key) {
+        const codigoNorm = codigoNormalizadoImport(p.codigo)
+        if (codigoNorm) {
+          if (vistoCodigoLote.has(codigoNorm) || codigosNaBiblioteca.has(codigoNorm)) {
+            duplicadas.push(p)
+            continue
+          }
+          vistoCodigoLote.add(codigoNorm)
           novas.push(p)
           continue
         }
-        if (vistoLote.has(key)) {
-          duplicadas.push(p)
-          continue
-        }
-        vistoLote.add(key)
-        if (existentesKeys.has(key)) {
-          duplicadas.push(p)
-        } else {
-          novas.push(p)
-        }
+        novas.push(p)
       }
       return { novas, duplicadas }
     },
     [pecasBiblioteca]
   )
 
-  const aplicarPreviewImportacaoFiltrado = useCallback(
-    (pecas: PecaBiblioteca[]): boolean => {
+  const listarCodigosPecasImport = (pecas: PecaBiblioteca[], max = 12) =>
+    [...new Set(pecas.map((p) => String(p.codigo || '').trim()).filter(Boolean))].slice(0, max).join(', ')
+
+  const processarDuplicadosImportacao = useCallback(
+    (pecas: PecaBiblioteca[], opts?: { notificar?: boolean }) => {
+      const notificar = opts?.notificar === true
       const { novas, duplicadas } = separarPecasImportacao(pecas)
       setImportacaoDuplicadasIgnoradas(duplicadas.length)
+
       if (novas.length === 0) {
         setImportacaoPreview(null)
-        setImportacaoUrlError(
+        const msg = String(
           (t as any)?.importacaoPreviewTodasDuplicadas ??
-            'Todas as peças desta colagem já existem na biblioteca. Códigos repetidos não são permitidos.'
-        )
-        return false
+            'Importação cancelada: {count} peça(s) com código já existente na biblioteca.'
+        ).replace('{count}', String(duplicadas.length))
+        setImportacaoUrlError(msg)
+        if (notificar) {
+          const codes = listarCodigosPecasImport(duplicadas)
+          alert(
+            codes
+              ? `${msg}\n\n${(t as any)?.importacaoCodigosDuplicadosLista || 'Códigos repetidos:'} ${codes}`
+              : msg
+          )
+        }
+        return { ok: false as const, novas: [] as PecaBiblioteca[], duplicadas }
       }
+
+      if (duplicadas.length > 0 && notificar) {
+        const msg = String(
+          (t as any)?.importacaoParcialDuplicadas ??
+            '{novas} peça(s) nova(s) serão importadas. {ignoradas} ignorada(s) (código já na biblioteca).'
+        )
+          .replace('{novas}', String(novas.length))
+          .replace('{ignoradas}', String(duplicadas.length))
+        const codes = listarCodigosPecasImport(duplicadas)
+        alert(
+          codes
+            ? `${msg}\n\n${(t as any)?.importacaoCodigosIgnorados || 'Códigos ignorados:'} ${codes}`
+            : msg
+        )
+      }
+
       const novasComNumero = atribuirNumerosSequenciaNovasPecas(novas, pecasBiblioteca)
       setImportacaoPreview(novasComNumero)
       setImportacaoUrlError(null)
-      return true
+      return { ok: true as const, novas: novasComNumero, duplicadas }
     },
     [separarPecasImportacao, t, pecasBiblioteca]
+  )
+
+  const aplicarPreviewImportacaoFiltrado = useCallback(
+    (pecas: PecaBiblioteca[], opts?: { notificar?: boolean }): boolean =>
+      processarDuplicadosImportacao(pecas, opts).ok,
+    [processarDuplicadosImportacao]
   )
 
   function buildImportedPecaDescricao(nome: string, codigo: string, descricaoOriginal: string): string {
@@ -23908,13 +23942,10 @@ export default function Dashboard() {
       return p
     }
     const mapped = itens.map((item, idx) => absolutizeImagem(mapItemToPecaBiblioteca(item, idx)))
-    const seen = new Set<string>()
     return mapped.filter((p) => {
-      const key = normalizeImportKey(p.codigo) || `n:${normalizeImportKey(p.nome)}`
-      if (!key) return false
-      if (seen.has(key)) return false
-      seen.add(key)
-      return true
+      const codigoNorm = normalizeImportKey(p.codigo)
+      const nomeNorm = normalizeImportKey(p.nome)
+      return Boolean(codigoNorm || nomeNorm)
     })
   }, [])
 
@@ -24144,7 +24175,7 @@ export default function Dashboard() {
       try {
         const pecas = parseRawToPecas(raw, importacaoLojaBaseUrl, url)
         if (pecas.length === 0) return false
-        return aplicarPreviewImportacaoFiltrado(pecas)
+        return aplicarPreviewImportacaoFiltrado(pecas, { notificar: true })
       } catch {
         return false
       }
@@ -24276,19 +24307,8 @@ export default function Dashboard() {
       return
     }
     setImportacaoTextoColado(textoColado)
-    const { novas, duplicadas } = separarPecasImportacao(result.pecas)
-    setImportacaoDuplicadasIgnoradas(duplicadas.length)
-    if (novas.length === 0) {
-      setImportacaoPreview(null)
-      setImportacaoUrlError(
-        (t as any)?.importacaoPreviewTodasDuplicadas ??
-          'Todas as peças desta colagem já existem na biblioteca. Códigos repetidos não são permitidos.'
-      )
-      return
-    }
-    setImportacaoUrlError(null)
-    const novasComNumero = atribuirNumerosSequenciaNovasPecas(novas, pecasBiblioteca)
-    setImportacaoPreview(novasComNumero)
+    const { ok, novas } = processarDuplicadosImportacao(result.pecas, { notificar: true })
+    if (!ok) return
     if (novas.length === 1) {
       const p = novas[0]
       setShowBibliotecaPecasForm(true)
@@ -24307,7 +24327,7 @@ export default function Dashboard() {
     } else if (novas.length > 1) {
       setAbaBibliotecaPecas('importacao')
     }
-  }, [separarPecasImportacao, t, pecasBiblioteca])
+  }, [processarDuplicadosImportacao, t, pecasBiblioteca])
 
   const executarColagemCatalogo = useCallback((
     html: string,
@@ -24415,7 +24435,7 @@ export default function Dashboard() {
           setImportacaoUrlError(t?.importacaoNenhumaLinha ?? 'Nenhuma lista encontrada no ficheiro. Use CSV (1ª linha = cabeçalhos) ou JSON.')
           return
         }
-        aplicarPreviewImportacaoFiltrado(pecas)
+        aplicarPreviewImportacaoFiltrado(pecas, { notificar: true })
       } catch (err: any) {
         setImportacaoUrlError(err?.message || (t?.importacaoErroJsonInvalido ?? 'Ficheiro inválido. Use CSV ou JSON.'))
       }
@@ -24441,14 +24461,16 @@ export default function Dashboard() {
   const handleAdicionarImportacaoPreview = useCallback(() => {
     if (!importacaoPreview || importacaoPreview.length === 0) return
     const existentes = pecasBiblioteca
-    const existentesKeys = new Set(
-      existentes.map((e) => normalizeImportKey(e.codigo) || `n:${normalizeImportKey(e.nome)}`)
+    const existentesCodigos = new Set(
+      existentes.map((e) => codigoNormalizadoImport(e.codigo)).filter(Boolean)
     )
     const novos: PecaBiblioteca[] = []
     importacaoPreview.forEach((p, i) => {
-      const key = normalizeImportKey(p.codigo) || `n:${normalizeImportKey(p.nome)}`
-      if (!key || existentesKeys.has(key)) return
-      existentesKeys.add(key)
+      const codigoNorm = codigoNormalizadoImport(p.codigo)
+      if (codigoNorm) {
+        if (existentesCodigos.has(codigoNorm)) return
+        existentesCodigos.add(codigoNorm)
+      }
       novos.push({
         ...p,
         id: `import-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 9)}`,
@@ -67267,7 +67289,8 @@ A1;Peça exemplo;10`}
               className={isCompactLayout ? 'ns-dashboard-root ns-dashboard-root--compact' : 'ns-dashboard-root'}
               style={{
               maxWidth: dashboardWorkspaceExpanded ? '1400px' : 'none',
-              margin: '0 auto',
+              margin: dashboardWorkspaceExpanded ? '0 auto' : 0,
+              width: dashboardWorkspaceExpanded ? undefined : '100%',
               padding: dashboardWorkspaceExpanded ? (isCompactLayout ? '12px 8px' : '40px 20px') : 0,
               minHeight: dashboardWorkspaceExpanded ? 'calc(100vh - 60px)' : '100%',
               height: dashboardWorkspaceExpanded ? undefined : '100%',
