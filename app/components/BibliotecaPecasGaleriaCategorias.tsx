@@ -7,7 +7,25 @@ type PecaBibliotecaGaleria = {
   nome: string
   codigo: string
   categoriaId?: string
+  categoria?: string
   imagem?: string
+  numeroSequenciaGrupo?: string
+}
+
+function parseNumeroSequenciaGaleria(val?: string | null): number {
+  const n = parseInt(String(val ?? '').replace(/\D/g, ''), 10)
+  return Number.isFinite(n) && n > 0 ? n : 0
+}
+
+function compararPecasGaleriaPorNumero(a: PecaBibliotecaGaleria, b: PecaBibliotecaGaleria): number {
+  const na = parseNumeroSequenciaGaleria(a.numeroSequenciaGrupo)
+  const nb = parseNumeroSequenciaGaleria(b.numeroSequenciaGrupo)
+  if (na && nb && na !== nb) return na - nb
+  if (na && !nb) return -1
+  if (!na && nb) return 1
+  return String(a.nome || a.codigo || '').localeCompare(String(b.nome || b.codigo || ''), undefined, {
+    numeric: true,
+  })
 }
 
 type GaleriaTranslations = {
@@ -65,7 +83,9 @@ export function BibliotecaPecasGaleriaCategorias({
 
   if (categoriaSelecionadaId) {
     const categoria = categorias.find((c) => c.id === categoriaSelecionadaId)
-    const pecasCategoria = pecasCatalogo.filter((p) => p.categoriaId === categoriaSelecionadaId)
+    const pecasCategoria = pecasCatalogo
+      .filter((p) => p.categoriaId === categoriaSelecionadaId)
+      .sort(compararPecasGaleriaPorNumero)
 
     return (
       <div className="biblioteca-galeria-categorias">
@@ -118,7 +138,19 @@ export function BibliotecaPecasGaleriaCategorias({
                     }}
                   />
                 </div>
-                <h4 className="biblioteca-pecas-hub__piece-name">{peca.nome}</h4>
+                <h4 className="biblioteca-pecas-hub__piece-name">
+                  {peca.numeroSequenciaGrupo ? (
+                    <span
+                      className="biblioteca-pecas-numero-circulo biblioteca-pecas-numero-circulo--sm"
+                      style={{ marginRight: '8px', verticalAlign: 'middle' }}
+                      title={peca.numeroSequenciaGrupo}
+                      aria-label={peca.numeroSequenciaGrupo}
+                    >
+                      {peca.numeroSequenciaGrupo}
+                    </span>
+                  ) : null}
+                  {peca.nome}
+                </h4>
                 <div className="biblioteca-pecas-hub__piece-meta">
                   <span className="biblioteca-pecas-hub__piece-chip biblioteca-pecas-hub__piece-chip--code">
                     <span className="biblioteca-pecas-hub__piece-chip-k">{t.codigo || 'Código'}</span>

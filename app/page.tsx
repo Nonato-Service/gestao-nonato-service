@@ -2003,10 +2003,33 @@ function pickBestCatalogRawFromClipboard(html: string, plain: string): { raw: st
 
 const BIBLIOTECA_SEM_GRUPO_SEQUENCIA_KEY = '__sem_grupo__'
 
-function chaveSequenciaNumeroPecaBiblioteca(p: Pick<PecaBiblioteca, 'categoriaId' | 'subcategoriaId'>): string {
-  const cat = String(p.categoriaId || '').trim()
-  if (!cat) return BIBLIOTECA_SEM_GRUPO_SEQUENCIA_KEY
-  return cat
+type CategoriaRefSequencia = Pick<CategoriaPeca, 'id' | 'nome'>
+
+/** Peças na fila amarela (importação pendente) não entram na numeração do catálogo. */
+function pecaEntraNaNumeracaoSequenciaBiblioteca(p: PecaBiblioteca): boolean {
+  return !ehImportacaoPendenteStrict(p)
+}
+
+function resolverChaveSequenciaNumeroPecaBiblioteca(
+  p: Pick<PecaBiblioteca, 'categoriaId' | 'categoria' | 'importacaoPendente'>,
+  categorias?: CategoriaRefSequencia[]
+): string | null {
+  if (!pecaEntraNaNumeracaoSequenciaBiblioteca(p as PecaBiblioteca)) return null
+  let catId = String(p.categoriaId || '').trim()
+  if (!catId && p.categoria?.trim() && categorias?.length) {
+    const alvo = p.categoria.trim().toLowerCase()
+    const porNome = categorias.find((c) => (c.nome || '').trim().toLowerCase() === alvo)
+    if (porNome) catId = porNome.id
+  }
+  if (!catId) return BIBLIOTECA_SEM_GRUPO_SEQUENCIA_KEY
+  return catId
+}
+
+function chaveSequenciaNumeroPecaBiblioteca(
+  p: Pick<PecaBiblioteca, 'categoriaId' | 'subcategoriaId' | 'categoria' | 'importacaoPendente'>,
+  categorias?: CategoriaRefSequencia[]
+): string {
+  return resolverChaveSequenciaNumeroPecaBiblioteca(p, categorias) ?? BIBLIOTECA_SEM_GRUPO_SEQUENCIA_KEY
 }
 
 function formatNumeroSequenciaPecaBiblioteca(n: number): string {
@@ -2025,22 +2048,28 @@ function proximoNumeroSequenciaPecaBiblioteca(
   categoriaId: string,
   subcategoriaId: string,
   pecas: PecaBiblioteca[],
-  excludeId?: string
+  excludeId?: string,
+  categorias?: CategoriaRefSequencia[]
 ): string {
-  const key = chaveSequenciaNumeroPecaBiblioteca({ categoriaId, subcategoriaId })
+  const key = chaveSequenciaNumeroPecaBiblioteca({ categoriaId, subcategoriaId }, categorias)
   let count = 0
   for (const p of pecas) {
     if (excludeId && p.id === excludeId) continue
-    if (chaveSequenciaNumeroPecaBiblioteca(p) !== key) continue
+    if (!pecaEntraNaNumeracaoSequenciaBiblioteca(p)) continue
+    if (chaveSequenciaNumeroPecaBiblioteca(p, categorias) !== key) continue
     count++
   }
   return formatNumeroSequenciaPecaBiblioteca(count + 1)
 }
 
-function garantirNumerosSequenciaPecaBiblioteca(pecas: PecaBiblioteca[]): { lista: PecaBiblioteca[]; alterou: boolean } {
+function garantirNumerosSequenciaPecaBiblioteca(
+  pecas: PecaBiblioteca[],
+  categorias?: CategoriaRefSequencia[]
+): { lista: PecaBiblioteca[]; alterou: boolean } {
   const grupos = new Map<string, PecaBiblioteca[]>()
   for (const p of pecas) {
-    const k = chaveSequenciaNumeroPecaBiblioteca(p)
+    const k = resolverChaveSequenciaNumeroPecaBiblioteca(p, categorias)
+    if (k === null) continue
     if (!grupos.has(k)) grupos.set(k, [])
     grupos.get(k)!.push(p)
   }
@@ -2070,6 +2099,14 @@ function garantirNumerosSequenciaPecaBiblioteca(pecas: PecaBiblioteca[]): { list
       }
     })
   }
+
+  for (const p of out) {
+    if (!pecaEntraNaNumeracaoSequenciaBiblioteca(p) && p.numeroSequenciaGrupo) {
+      byId.get(p.id)!.numeroSequenciaGrupo = ''
+      alterou = true
+    }
+  }
+
   return { lista: out, alterou }
 }
 
@@ -2097,14 +2134,15 @@ function ordenarPecasBibliotecaParaExibicao(pecas: PecaBiblioteca[]): PecaBiblio
 
 function atribuirNumerosSequenciaNovasPecas(
   novas: PecaBiblioteca[],
-  existentes: PecaBiblioteca[]
+  existentes: PecaBiblioteca[],
+  categorias?: CategoriaRefSequencia[]
 ): PecaBiblioteca[] {
   if (novas.length === 0) return novas
   const merged = [
     ...existentes,
     ...novas.map((p) => ({ ...p, numeroSequenciaGrupo: '' })),
   ]
-  const { lista } = garantirNumerosSequenciaPecaBiblioteca(merged)
+  const { lista } = garantirNumerosSequenciaPecaBiblioteca(merged, categorias)
   const numeroPorChave = new Map<string, string>()
   for (const p of lista) {
     const k = p.id || chavePecaBibliotecaSequenciaPreview(p)
@@ -2120,19 +2158,25 @@ function atribuirNumerosSequenciaNovasPecas(
 function resolverNumeroSequenciaAoSalvarPecaBiblioteca(
   form: PecaBiblioteca,
   pecas: PecaBiblioteca[],
-  editing?: PecaBiblioteca | null
+  editing?: PecaBiblioteca | null,
+  categorias?: CategoriaRefSequencia[]
 ): string {
-  const gid = form.categoriaId || ''
+  let gid = form.categoriaId || ''
+  if (!gid && form.categoria?.trim() && categorias?.length) {
+    const alvo = form.categoria.trim().toLowerCase()
+    const porNome = categorias.find((c) => (c.nome || '').trim().toLowerCase() === alvo)
+    if (porNome) gid = porNome.id
+  }
   const sid = form.subcategoriaId || ''
   if (editing) {
-    const oldKey = chaveSequenciaNumeroPecaBiblioteca(editing)
-    const newKey = chaveSequenciaNumeroPecaBiblioteca({ categoriaId: gid, subcategoriaId: sid })
+    const oldKey = chaveSequenciaNumeroPecaBiblioteca(editing, categorias)
+    const newKey = chaveSequenciaNumeroPecaBiblioteca({ categoriaId: gid, subcategoriaId: sid }, categorias)
     const existente = parseNumeroSequenciaPecaBiblioteca(editing.numeroSequenciaGrupo)
     if (oldKey === newKey && existente > 0) {
       return formatNumeroSequenciaPecaBiblioteca(existente)
     }
   }
-  return proximoNumeroSequenciaPecaBiblioteca(gid, sid, pecas, editing?.id)
+  return proximoNumeroSequenciaPecaBiblioteca(gid, sid, pecas, editing?.id, categorias)
 }
 
 function rotuloNumeroSequenciaPecaBiblioteca(
@@ -7091,18 +7135,23 @@ export default function Dashboard() {
   }, [ultimoGrupoSelecionado, ultimoSubgrupoSelecionado])
   useEffect(() => {
     if (!showBibliotecaPecasForm) return
-    const gid = pecaBibliotecaForm.categoriaId || ultimoGrupoSelecionado || ''
+    let gid = pecaBibliotecaForm.categoriaId || ultimoGrupoSelecionado || ''
     const sid =
       pecaBibliotecaForm.subcategoriaId ||
       (gid === ultimoGrupoSelecionado ? ultimoSubgrupoSelecionado : '') ||
       ''
+    if (!gid && pecaBibliotecaForm.categoria?.trim() && categoriasPecas.length) {
+      const alvo = pecaBibliotecaForm.categoria.trim().toLowerCase()
+      const porNome = categoriasPecas.find((c) => (c.nome || '').trim().toLowerCase() === alvo)
+      if (porNome) gid = porNome.id
+    }
     if (!gid && !sid) {
       setPecaBibliotecaForm((prev) => (prev.numeroSequenciaGrupo ? { ...prev, numeroSequenciaGrupo: '' } : prev))
       return
     }
     if (editingPecaBiblioteca) {
-      const oldKey = chaveSequenciaNumeroPecaBiblioteca(editingPecaBiblioteca)
-      const newKey = chaveSequenciaNumeroPecaBiblioteca({ categoriaId: gid, subcategoriaId: sid })
+      const oldKey = chaveSequenciaNumeroPecaBiblioteca(editingPecaBiblioteca, categoriasPecas)
+      const newKey = chaveSequenciaNumeroPecaBiblioteca({ categoriaId: gid, subcategoriaId: sid }, categoriasPecas)
       const existente = parseNumeroSequenciaPecaBiblioteca(editingPecaBiblioteca.numeroSequenciaGrupo)
       if (oldKey === newKey && existente > 0) {
         const fmt = formatNumeroSequenciaPecaBiblioteca(existente)
@@ -7112,7 +7161,13 @@ export default function Dashboard() {
         return
       }
     }
-    const next = proximoNumeroSequenciaPecaBiblioteca(gid, sid, pecasBiblioteca, editingPecaBiblioteca?.id)
+    const next = proximoNumeroSequenciaPecaBiblioteca(
+      gid,
+      sid,
+      pecasBiblioteca,
+      editingPecaBiblioteca?.id,
+      categoriasPecas
+    )
     setPecaBibliotecaForm((prev) =>
       prev.numeroSequenciaGrupo === next ? prev : { ...prev, numeroSequenciaGrupo: next }
     )
@@ -7120,18 +7175,20 @@ export default function Dashboard() {
     showBibliotecaPecasForm,
     pecaBibliotecaForm.categoriaId,
     pecaBibliotecaForm.subcategoriaId,
+    pecaBibliotecaForm.categoria,
     ultimoGrupoSelecionado,
     ultimoSubgrupoSelecionado,
     editingPecaBiblioteca,
     pecasBiblioteca,
+    categoriasPecas,
   ])
   useEffect(() => {
     if (pecasBiblioteca.length === 0) return
-    const { lista, alterou } = garantirNumerosSequenciaPecaBiblioteca(pecasBiblioteca)
+    const { lista, alterou } = garantirNumerosSequenciaPecaBiblioteca(pecasBiblioteca, categoriasPecas)
     if (!alterou) return
     setPecasBiblioteca(lista)
     void saveData('nonato-pecas-biblioteca', lista)
-  }, [pecasBiblioteca])
+  }, [pecasBiblioteca, categoriasPecas])
   const [selecaoPecasBibliotecaIds, setSelecaoPecasBibliotecaIds] = useState<string[]>([])
   const [classificacaoLoteCategoriaId, setClassificacaoLoteCategoriaId] = useState('')
   const [classificacaoLoteSubcategoriaId, setClassificacaoLoteSubcategoriaId] = useState('')
@@ -10488,13 +10545,20 @@ export default function Dashboard() {
         }))
       }
 
+      // Carregar categorias de peças (antes da numeração sequencial por grupo)
+      const savedCategoriasPecas = getData('nonato-categorias-pecas')
+      const catsInicial: CategoriaPeca[] = Array.isArray(savedCategoriasPecas) ? savedCategoriasPecas : []
+      if (savedCategoriasPecas) {
+        setCategoriasPecas(savedCategoriasPecas)
+      }
+
       // Carregar peças biblioteca
       const savedPecasBiblioteca = getData('nonato-pecas-biblioteca')
       if (savedPecasBiblioteca && Array.isArray(savedPecasBiblioteca)) {
         const raw = (savedPecasBiblioteca as PecaBiblioteca[]).map((peca) =>
           sanitizarPecaBibliotecaImportacaoFlag(peca)
         )
-        const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw)
+        const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, catsInicial)
         setPecasBiblioteca(lista)
         void saveData('nonato-pecas-biblioteca', lista)
       }
@@ -10502,12 +10566,6 @@ export default function Dashboard() {
       const savedPecaLookupTpl = getData(NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY)
       if (typeof savedPecaLookupTpl === 'string') {
         setPecaLookupUrlTemplate(savedPecaLookupTpl)
-      }
-
-      // Carregar categorias de peças
-      const savedCategoriasPecas = getData('nonato-categorias-pecas')
-      if (savedCategoriasPecas) {
-        setCategoriasPecas(savedCategoriasPecas)
       }
 
       // Carregar subcategorias de peças
@@ -22964,7 +23022,8 @@ export default function Dashboard() {
     const numeroSeq = resolverNumeroSequenciaAoSalvarPecaBiblioteca(
       pecaBibliotecaForm,
       pecasBiblioteca,
-      editingPecaBiblioteca
+      editingPecaBiblioteca,
+      categoriasPecas
     )
 
     const novaPeca: PecaBiblioteca = {
@@ -23476,7 +23535,7 @@ export default function Dashboard() {
       }
 
       const catalogo = pecasBiblioteca.filter(pecaBibliotecaEstaNoCatalogo)
-      const novasComNumero = atribuirNumerosSequenciaNovasPecas(novas, pecasBiblioteca).filter(
+      const novasComNumero = atribuirNumerosSequenciaNovasPecas(novas, pecasBiblioteca, categoriasPecas).filter(
         (p) => !codigoExisteNaBibliotecaPecas(p.codigo, catalogo)
       )
       if (novasComNumero.length === 0) {
@@ -23510,7 +23569,7 @@ export default function Dashboard() {
       setImportacaoUrlError(null)
       return { ok: true as const, novas: novasComNumero, duplicadas, duplicadasCatalogo, duplicadasFila }
     },
-    [separarPecasImportacao, montarMensagemImportacaoIgnoradas, t, pecasBiblioteca]
+    [separarPecasImportacao, montarMensagemImportacaoIgnoradas, t, pecasBiblioteca, categoriasPecas]
   )
 
   const aplicarPreviewImportacaoFiltrado = useCallback(
@@ -24356,7 +24415,7 @@ export default function Dashboard() {
             return prev
           }
           const nextRaw = [...prev, comCat]
-          const next = garantirNumerosSequenciaPecaBiblioteca(nextRaw).lista
+          const next = garantirNumerosSequenciaPecaBiblioteca(nextRaw, categoriasPecas).lista
           void saveData('nonato-pecas-biblioteca', next)
           return next
         })
@@ -24779,7 +24838,8 @@ export default function Dashboard() {
     const classificadosAutomaticamente = aplicarRegrasClassificacaoEmLista(novos, true)
     const merged = [...existentes, ...classificadosAutomaticamente.lista]
     const { lista: atualizadoNormalizado } = garantirNumerosSequenciaPecaBiblioteca(
-      merged.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+      merged.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca)),
+      categoriasPecas
     )
     setPecasBiblioteca(atualizadoNormalizado)
     const mensagemBase =
@@ -24806,12 +24866,41 @@ export default function Dashboard() {
     t,
   ])
 
+  const handleLimparImportacaoColagem = useCallback(
+    (opts?: { confirmarPreview?: boolean }) => {
+      const temConteudo =
+        !!importacaoTextoColado.trim() ||
+        (importacaoPreview?.length ?? 0) > 0 ||
+        !!importacaoUrlError
+      if (!temConteudo) return
+      if (opts?.confirmarPreview !== false && (importacaoPreview?.length ?? 0) > 0) {
+        const ok = window.confirm(
+          (t as any)?.importacaoConfirmarLimparLista ||
+            'Deseja limpar a lista importada agora? OK = limpar a pré-visualização e o texto; Cancelar = manter para conferir.'
+        )
+        if (!ok) return
+      }
+      setImportacaoPreview(null)
+      setImportacaoTextoColado('')
+      setImportacaoDuplicadasIgnoradas(0)
+      setImportacaoUrlError(null)
+    },
+    [importacaoPreview, importacaoTextoColado, importacaoUrlError, t]
+  )
+
+  const importacaoColagemTemConteudo = useMemo(
+    () =>
+      !!(
+        importacaoTextoColado.trim() ||
+        (importacaoPreview?.length ?? 0) > 0 ||
+        importacaoUrlError
+      ),
+    [importacaoTextoColado, importacaoPreview, importacaoUrlError]
+  )
+
   const handleLimparImportacaoPreview = useCallback(() => {
-    setImportacaoPreview(null)
-    setImportacaoTextoColado('')
-    setImportacaoDuplicadasIgnoradas(0)
-    setImportacaoUrlError(null)
-  }, [])
+    handleLimparImportacaoColagem({ confirmarPreview: false })
+  }, [handleLimparImportacaoColagem])
 
   const renderPainelPreviewImportacao = useCallback(() => {
     if (!importacaoPreview || importacaoPreview.length === 0) return null
@@ -25010,7 +25099,7 @@ export default function Dashboard() {
           'Já existe uma peça com este código. Não são permitidas peças repetidas na biblioteca.'
       )
     }
-    const { lista: comNumeros } = garantirNumerosSequenciaPecaBiblioteca(semCodigoRepetido)
+    const { lista: comNumeros } = garantirNumerosSequenciaPecaBiblioteca(semCodigoRepetido, categoriasPecas)
     setPecasBiblioteca(comNumeros)
     void saveData('nonato-pecas-biblioteca', comNumeros).catch((err) => {
       console.error('[pecas biblioteca]', err)
@@ -25019,7 +25108,7 @@ export default function Dashboard() {
           'Não foi possível gravar na biblioteca. Verifique espaço no navegador ou tente de novo.'
       )
     })
-  }, [t])
+  }, [t, categoriasPecas])
 
   const handleDeletePecaBiblioteca = useCallback(
     (pecaId: string) => {
@@ -37134,14 +37223,26 @@ export default function Dashboard() {
                       boxSizing: 'border-box',
                     }}
                   />
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    onClick={handleImportacaoColarTexto}
-                    style={{ padding: '8px 14px', fontSize: '12px', marginBottom: '8px' }}
-                  >
-                    {(safeT as any)?.importacaoProcessarColagem || (safeT as any)?.importacaoImportarCatalogo || 'Processar colagem'}
-                  </button>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={handleImportacaoColarTexto}
+                      style={{ padding: '8px 14px', fontSize: '12px' }}
+                    >
+                      {(safeT as any)?.importacaoProcessarColagem || (safeT as any)?.importacaoImportarCatalogo || 'Processar colagem'}
+                    </button>
+                    <button
+                      type="button"
+                      className="biblioteca-btn--ghost"
+                      onClick={() => handleLimparImportacaoColagem()}
+                      disabled={!importacaoColagemTemConteudo}
+                      style={{ padding: '8px 14px', fontSize: '12px', opacity: importacaoColagemTemConteudo ? 1 : 0.45 }}
+                      title={(safeT as any)?.importacaoBtnLimparColagemHint || 'Limpar o texto colado e a pré-visualização'}
+                    >
+                      {(safeT as any)?.importacaoBtnLimparColagem || safeT?.limpar || 'Limpar'}
+                    </button>
+                  </div>
                   {importacaoUrlError && (
                     <p style={{ fontSize: '12px', color: '#ff9a9a', margin: '0 0 8px', lineHeight: 1.45 }}>{importacaoUrlError}</p>
                   )}
@@ -37733,7 +37834,8 @@ export default function Dashboard() {
                         const numeroSeq = resolverNumeroSequenciaAoSalvarPecaBiblioteca(
                           pecaBibliotecaForm,
                           pecasBiblioteca,
-                          editingPecaBiblioteca
+                          editingPecaBiblioteca,
+                          categoriasPecas
                         )
                         const updated = pecasBiblioteca.map((p) =>
                           p.id === idEdicao
@@ -37750,7 +37852,8 @@ export default function Dashboard() {
                         const numeroSeq = resolverNumeroSequenciaAoSalvarPecaBiblioteca(
                           pecaBibliotecaForm,
                           pecasBiblioteca,
-                          null
+                          null,
+                          categoriasPecas
                         )
                         const newPeca: PecaBiblioteca = {
                           ...pecaBibliotecaForm,
@@ -39337,7 +39440,10 @@ export default function Dashboard() {
                                                   ? { ...p, categoriaId: '', categoria: '', subcategoriaId: '', subcategoria: '' }
                                                   : p
                                               )
-                                              const updatedPecas = garantirNumerosSequenciaPecaBiblioteca(updatedPecasRaw).lista
+                                              const updatedPecas = garantirNumerosSequenciaPecaBiblioteca(
+                                                updatedPecasRaw,
+                                                categoriasPecas
+                                              ).lista
                                               setPecasBiblioteca(updatedPecas)
                                               saveData('nonato-pecas-biblioteca', updatedPecas)
                                             }
@@ -39509,7 +39615,10 @@ export default function Dashboard() {
                                                     const updatedPecasRaw = pecasBiblioteca.map((p) =>
                                                       p.subcategoriaId === subcategoria.id ? { ...p, subcategoriaId: '', subcategoria: '' } : p
                                                     )
-                                                    const updatedPecas = garantirNumerosSequenciaPecaBiblioteca(updatedPecasRaw).lista
+                                                    const updatedPecas = garantirNumerosSequenciaPecaBiblioteca(
+                                                updatedPecasRaw,
+                                                categoriasPecas
+                                              ).lista
                                                     setPecasBiblioteca(updatedPecas)
                                                     saveData('nonato-pecas-biblioteca', updatedPecas)
                                                   }
@@ -39823,14 +39932,26 @@ export default function Dashboard() {
                           'Copie várias peças da página do fornecedor e cole tudo aqui de uma vez. O sistema tenta separar código, nome, descrição, preço e imagem (HTML com <img> ou URL de foto).'}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      onClick={handleImportacaoColarTexto}
-                      style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
-                    >
-                      {(safeT as any)?.importacaoProcessarColagem || (safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Processar colagem'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={handleImportacaoColarTexto}
+                        style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                      >
+                        {(safeT as any)?.importacaoProcessarColagem || (safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Processar colagem'}
+                      </button>
+                      <button
+                        type="button"
+                        className="biblioteca-btn--ghost"
+                        onClick={() => handleLimparImportacaoColagem()}
+                        disabled={!importacaoColagemTemConteudo}
+                        style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap', opacity: importacaoColagemTemConteudo ? 1 : 0.45 }}
+                        title={(safeT as any)?.importacaoBtnLimparColagemHint || 'Limpar o texto colado e a pré-visualização'}
+                      >
+                        {(safeT as any)?.importacaoBtnLimparColagem || safeT?.limpar || 'Limpar'}
+                      </button>
+                    </div>
                   </div>
                   <div className="importacao-pecas-paste-steps">
                     <span>{(safeT as any)?.importacaoColarCatalogoPasso1 || '1. Copie várias linhas do site'}</span>
@@ -40180,14 +40301,26 @@ A1;Peça exemplo;10`}
                     <h4>{(safeT as any)?.importacaoColarCatalogoTitle || 'Colar catálogo do site'}</h4>
                     <p>{(safeT as any)?.importacaoColarCatalogoDesc || 'Copie várias peças da página do fornecedor e cole tudo aqui de uma vez. O sistema tenta separar código, nome, descrição, preço e imagem (HTML com <img> ou URL de foto).'}</p>
                   </div>
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    onClick={handleImportacaoColarTexto}
-                    style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
-                  >
-                    {(safeT as any)?.importacaoProcessarColagem || (safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Processar colagem'}
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={handleImportacaoColarTexto}
+                      style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                    >
+                      {(safeT as any)?.importacaoProcessarColagem || (safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Processar colagem'}
+                    </button>
+                    <button
+                      type="button"
+                      className="biblioteca-btn--ghost"
+                      onClick={() => handleLimparImportacaoColagem()}
+                      disabled={!importacaoColagemTemConteudo}
+                      style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap', opacity: importacaoColagemTemConteudo ? 1 : 0.45 }}
+                      title={(safeT as any)?.importacaoBtnLimparColagemHint || 'Limpar o texto colado e a pré-visualização'}
+                    >
+                      {(safeT as any)?.importacaoBtnLimparColagem || safeT?.limpar || 'Limpar'}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="importacao-pecas-paste-steps">
@@ -72218,7 +72351,8 @@ A1;Peça exemplo;10`}
                       <button className="btn-danger" onClick={() => {
                         if (window.confirm(safeT?.confirmDelete || 'Tem certeza que deseja excluir esta peça?')) {
                           const updated = garantirNumerosSequenciaPecaBiblioteca(
-                            pecasBiblioteca.filter((p) => p.id !== peca.id)
+                            pecasBiblioteca.filter((p) => p.id !== peca.id),
+                            categoriasPecas
                           ).lista
                           setPecasBiblioteca(updated)
                           saveData('nonato-pecas-biblioteca', updated)
