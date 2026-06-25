@@ -14,6 +14,9 @@ import {
   NONATO_CRITICAL_CADASTRO_KEYS,
   serverKeyHasMeaningfulData,
 } from '../lib/criticalCadastroKeys'
+import {
+  canAutoPullServerChanges,
+} from './syncDiff'
 
 const API_BASE = '/api/data'
 const SYNC_QUEUE_KEY = 'nonato-sync-queue'
@@ -796,6 +799,107 @@ export async function collectAllLocalNonatoDataForSync(): Promise<Record<string,
   return out
 }
 
+const SKIP_PULL_KEYS = new Set([
+  'nonato-sync-last-accepted-revision',
+  'nonato-sync-queue',
+  'nonato-auto-backups',
+  'nonato-code-backups',
+  'nonato-language',
+  'nonato-protocolo-servico-draft',
+])
+
+function serverPullValueIsEmpty(value: unknown): boolean {
+  if (value === null || value === undefined) return true
+  if (typeof value === 'string') return value.trim() === ''
+  if (Array.isArray(value)) return value.length === 0
+  if (typeof value === 'object') return Object.keys(value as object).length === 0
+  return false
+}
+
+/**
+ * Alinha localStorage com o servidor quando a diferença é só aditiva / edição remota (sem risco de apagar).
+ * Não envia nada ao servidor — quebra o ciclo «atualizar num aparelho → aviso infinito nos outros».
+ */
+export async function applyNonBlockingServerPull(server: Record<string, unknown>): Promise<boolean> {
+  if (typeof window === 'undefined') return false
+  const local = collectLocalNonatoSnapshotForPull()
+  if (!canAutoPullServerChanges(server, local)) return false
+
+  let changed = false
+  const keys = new Set([...Object.keys(server), ...Object.keys(local)])
+
+  for (const key of keys) {
+    if (!key.startsWith('nonato-') || SKIP_PULL_KEYS.has(key) || key.endsWith('.json')) continue
+    const s = server[key]
+    const l = local[key]
+    const hasS = !serverPullValueIsEmpty(s)
+    const hasL = !serverPullValueIsEmpty(l)
+
+    if (!hasS && hasL) continue
+    if (!hasS && !hasL) continue
+    if (hasS && !hasL) {
+      await writeLocalFromServerPull(key, s)
+      changed = true
+      continue
+    }
+    try {
+      const ns = JSON.stringify(s)
+      const nl = JSON.stringify(l)
+      if (ns !== nl) {
+        await writeLocalFromServerPull(key, s)
+        changed = true
+      }
+    } catch {
+      await writeLocalFromServerPull(key, s)
+      changed = true
+    }
+  }
+
+  return changed
+}
+
+function collectLocalNonatoSnapshotForPull(): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  if (typeof window === 'undefined') return out
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i)
+    if (!k || !k.startsWith('nonato-') || SKIP_PULL_KEYS.has(k)) continue
+    const raw = localStorage.getItem(k)
+    if (raw === null || raw === '') continue
+    try {
+      out[k] = JSON.parse(raw) as unknown
+    } catch {
+      out[k] = raw
+    }
+  }
+  return out
+}
+
+async function writeLocalFromServerPull(key: string, value: unknown): Promise<void> {
+  if (typeof window === 'undefined') return
+  if (key === MANUAIS_KEY) {
+    await saveManuaisFamiliasGruposToIdb(value)
+    try {
+      localStorage.setItem(key, JSON.stringify(value))
+    } catch {
+      try {
+        localStorage.setItem(`${key}--idb`, '1')
+      } catch {
+        /* ignorar */
+      }
+    }
+    return
+  }
+  if (key === CLIENTES_KEY) {
+    try {
+      await saveKv(key, value)
+    } catch {
+      /* ignorar */
+    }
+  }
+  writeLocalStorageValue(key, value)
+}
+
 /** Envia toda a cópia local para o servidor (substitui ficheiros no servidor pelos deste aparelho). Uma revisão. */
 export async function pushAllLocalStorageToServer(): Promise<{ ok: boolean; error?: string }> {
   if (isNonatoDemoBuild()) {
@@ -1098,9 +1202,6 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
               }
             }
             saveManuaisFamiliasGruposToIdb(merged).catch(() => {})
-            if (!blockImplicitServerPushDuringBootstrap) {
-              saveToServer(key, merged).catch(() => {})
-            }
             return merged
           } catch {
             /* fallback abaixo */
@@ -1108,22 +1209,18 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
         } else if (idbLocal && typeof idbLocal === 'object') {
           const merged = mergeManuaisFamiliasGrupos(serverData, idbLocal)
           saveManuaisFamiliasGruposToIdb(merged).catch(() => {})
-          if (!blockImplicitServerPushDuringBootstrap) {
-            saveToServer(key, merged).catch(() => {})
-          }
           return merged
         }
       }
       if (serverData !== null) {
         const localSnapshot = await readLocalValueForLoad(key, parseJson)
 
-        // Barra lateral: preservar organização do utilizador (espelha getData no bootstrap)
+        // Barra lateral: preservar organização local — não empurrar ao servidor em cada loadData (evita ciclo multi-dispositivo).
         if (
           key === 'nonato-sidebar-buttons' &&
           Array.isArray(localSnapshot.parsed) &&
           localSnapshot.parsed.length > 0
         ) {
-          scheduleServerMigrationPush(key, localSnapshot.parsed)
           return localSnapshot.parsed
         }
 
@@ -1155,9 +1252,6 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
                 const idb = await loadManuaisFamiliasGruposFromIdb()
                 const merged = mergeManuaisFamiliasGrupos(parsed, idb || {})
                 saveManuaisFamiliasGruposToIdb(merged).catch(() => {})
-                if (!serverOffline && !blockImplicitServerPushDuringBootstrap) {
-                  saveToServer(key, merged).catch(() => {})
-                }
                 return merged
               } catch {
                 /* fallback ao parsed só com localStorage */

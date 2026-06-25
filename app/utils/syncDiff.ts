@@ -3,6 +3,8 @@
  * ao utilizador o que mudou noutro aparelho antes de escolher carregar ou enviar.
  */
 
+import { normalizarCodigoCliente } from '../lib/clienteCodigoUtils'
+
 const SKIP_SNAPSHOT_KEYS = new Set([
   'nonato-sync-last-accepted-revision',
   'nonato-sync-queue',
@@ -61,6 +63,7 @@ export const SYNC_KEY_LABELS: Record<string, string> = {
   'nonato-pre-checks': 'Pré-checks',
   'nonato-pedidos-separacao': 'Pedidos de separação',
   'nonato-ost-propostas-tecnico-v1': 'Orçamentos serviço técnico (propostas)',
+  'nonato-orcamentos-pecas-especiais': 'Orçamentos peças especiais',
 }
 
 function friendlyKey(key: string): string {
@@ -111,7 +114,25 @@ function normalizeManuaisForSyncDiff(value: unknown): unknown {
   }
 }
 
+/** Clientes: ignorar ordem do array e normalizar código — evita falso conflito entre aparelhos. */
+function normalizeClientesForSyncDiff(value: unknown): unknown {
+  if (!Array.isArray(value)) return value
+  return [...value]
+    .map((c) => {
+      if (!c || typeof c !== 'object') return c
+      const row = c as { id?: unknown; codigoCliente?: unknown; [k: string]: unknown }
+      const cod = normalizarCodigoCliente(String(row.codigoCliente ?? ''))
+      return cod && cod !== row.codigoCliente ? { ...row, codigoCliente: cod } : row
+    })
+    .sort((a, b) => {
+      const ia = a && typeof a === 'object' && 'id' in a ? String((a as { id: unknown }).id) : ''
+      const ib = b && typeof b === 'object' && 'id' in b ? String((b as { id: unknown }).id) : ''
+      return ia.localeCompare(ib, undefined, { numeric: true })
+    })
+}
+
 function normalizeValueForSyncDiff(key: string, value: unknown): unknown {
+  if (key === 'nonato-clientes') return normalizeClientesForSyncDiff(value)
   if (key === 'nonato-manuais-familias-grupos') return normalizeManuaisForSyncDiff(value)
   if (
     (key === 'nonato-logo' || key === 'nonato-logo-dashboard') &&
@@ -229,6 +250,13 @@ export function summarizeDataDiff(server: Record<string, unknown>, local: Record
 /** True quando há diferença real entre servidor e este aparelho (não basta subir a revisão). */
 export function hasMeaningfulSyncDiff(server: Record<string, unknown>, local: Record<string, unknown>): boolean {
   return summarizeDataDiff(server, local).length > 0
+}
+
+/** Diferenças só aditivas / edições no servidor — pode alinhar local sem modal bloqueante. */
+export function canAutoPullServerChanges(server: Record<string, unknown>, local: Record<string, unknown>): boolean {
+  const lines = summarizeDataDiff(server, local)
+  if (lines.length === 0) return false
+  return assessSyncPendingSeverity(lines) === 'none'
 }
 
 /** True quando puxar do servidor pode apagar ou reduzir dados locais importantes. */

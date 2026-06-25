@@ -69,6 +69,25 @@ export type OrcamentoPecasEspeciaisSalvo = {
 }
 
 const STORAGE_KEY = 'nonato-orcamentos-pecas-especiais'
+const DRAFT_STORAGE_KEY = 'nonato-orcamentos-pecas-especiais-draft'
+
+type FormDraft = {
+  clienteId: string
+  dataIso: string
+  numeroOferta: string
+  numeroManual: boolean
+  incluirIva: boolean
+  taxaIva: number
+  contactoNome: string
+  contactoTelefone: string
+  contactoEmail: string
+  linhas: LinhaOrcamentoPecasEsp[]
+  linhaEmbalagemTitulo: string
+  linhaEmbalagemDescricao: string
+  condicoesPagamento: string
+  condicoesPagamentoManual: boolean
+  notasRodape: string
+}
 
 function newRowId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
@@ -149,7 +168,12 @@ type Props = {
   activeTabId: string
   voltarPaginaInicial: () => void
   LogoComponent: React.ComponentType<{ size?: 'small' | 'medium' | 'large' }>
-  saveData?: (key: string, data: unknown) => Promise<void>
+  saveData?: (
+    key: string,
+    data: unknown,
+    saveToLocalStorage?: boolean,
+    awaitServer?: boolean
+  ) => Promise<boolean>
   loadData?: (key: string) => Promise<unknown>
   logoHtml?: string
 }
@@ -195,7 +219,102 @@ export function OrcamentoPecasEspeciaisContent({
   )
   const [buscaCliente, setBuscaCliente] = useState('')
   const [buscaPecaPorLinha, setBuscaPecaPorLinha] = useState<Record<string, string>>({})
+  const [formDirty, setFormDirty] = useState(false)
+  const [gravando, setGravando] = useState(false)
+  const [rascunhoAviso, setRascunhoAviso] = useState(false)
   const imagemInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
+  const draftRestoredRef = useRef(false)
+  const suppressDirtyRef = useRef(true)
+
+  const estadoFormularioVazio = useCallback((): FormDraft => {
+    return {
+      clienteId: '',
+      dataIso: hoje,
+      numeroOferta: '',
+      numeroManual: false,
+      incluirIva: false,
+      taxaIva: 23,
+      contactoNome: '',
+      contactoTelefone: '',
+      contactoEmail: '',
+      linhas: [novaLinhaVazia()],
+      linhaEmbalagemTitulo: t.orcamentoPecasEspEmbalagemTituloPadrao || 'Embalagem e envio',
+      linhaEmbalagemDescricao: '',
+      condicoesPagamento: condicoesPagamentoPadrao(t, false, 23),
+      condicoesPagamentoManual: false,
+      notasRodape:
+        t.orcamentoPecasEspNotasRodapePadrao ||
+        'Aplicam-se os nossos Termos e Condições Gerais e a Política de Privacidade.',
+    }
+  }, [hoje, t])
+
+  const aplicarEstadoFormulario = useCallback((draft: FormDraft) => {
+    setClienteId(draft.clienteId)
+    setDataIso(draft.dataIso)
+    setNumeroOferta(draft.numeroOferta)
+    setNumeroManual(draft.numeroManual)
+    setIncluirIva(draft.incluirIva)
+    setTaxaIva(draft.taxaIva)
+    setContactoNome(draft.contactoNome)
+    setContactoTelefone(draft.contactoTelefone)
+    setContactoEmail(draft.contactoEmail)
+    setLinhas(draft.linhas.length ? draft.linhas.map(normalizarLinhaSalva) : [novaLinhaVazia()])
+    setLinhaEmbalagemTitulo(draft.linhaEmbalagemTitulo)
+    setLinhaEmbalagemDescricao(draft.linhaEmbalagemDescricao)
+    setCondicoesPagamento(draft.condicoesPagamento)
+    setCondicoesPagamentoManual(draft.condicoesPagamentoManual)
+    setNotasRodape(draft.notasRodape)
+    setBuscaCliente('')
+    setBuscaPecaPorLinha({})
+  }, [])
+
+  const limparRascunhoSessao = useCallback(() => {
+    if (typeof window === 'undefined') return
+    try {
+      sessionStorage.removeItem(DRAFT_STORAGE_KEY)
+    } catch {
+      /* ignorar */
+    }
+  }, [])
+
+  const resetarFormularioNovo = useCallback(() => {
+    suppressDirtyRef.current = true
+    aplicarEstadoFormulario(estadoFormularioVazio())
+    setFormDirty(false)
+    limparRascunhoSessao()
+    setRascunhoAviso(false)
+    window.setTimeout(() => {
+      suppressDirtyRef.current = false
+    }, 0)
+  }, [aplicarEstadoFormulario, estadoFormularioVazio, limparRascunhoSessao])
+
+  useEffect(() => {
+    const tid = window.setTimeout(() => {
+      suppressDirtyRef.current = false
+    }, 120)
+    return () => window.clearTimeout(tid)
+  }, [])
+
+  useEffect(() => {
+    if (suppressDirtyRef.current) return
+    setFormDirty(true)
+  }, [
+    clienteId,
+    dataIso,
+    numeroOferta,
+    numeroManual,
+    incluirIva,
+    taxaIva,
+    contactoNome,
+    contactoTelefone,
+    contactoEmail,
+    linhas,
+    linhaEmbalagemTitulo,
+    linhaEmbalagemDescricao,
+    condicoesPagamento,
+    condicoesPagamentoManual,
+    notasRodape,
+  ])
 
   useEffect(() => {
     if (!loadData) return
@@ -205,6 +324,78 @@ export function OrcamentoPecasEspeciaisContent({
       })
       .catch(() => {})
   }, [loadData])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || draftRestoredRef.current) return
+    draftRestoredRef.current = true
+    try {
+      const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as Partial<FormDraft>
+      if (!parsed || typeof parsed !== 'object') return
+      aplicarEstadoFormulario({
+        ...estadoFormularioVazio(),
+        ...parsed,
+        linhas: Array.isArray(parsed.linhas)
+          ? parsed.linhas.map((l) => normalizarLinhaSalva(l as Partial<LinhaOrcamentoPecasEsp>))
+          : [novaLinhaVazia()],
+      })
+      suppressDirtyRef.current = true
+      setFormDirty(true)
+      setRascunhoAviso(true)
+      window.setTimeout(() => {
+        suppressDirtyRef.current = false
+      }, 0)
+    } catch {
+      /* ignorar */
+    }
+  }, [aplicarEstadoFormulario, estadoFormularioVazio])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !formDirty) return
+    const draft: FormDraft = {
+      clienteId,
+      dataIso,
+      numeroOferta,
+      numeroManual,
+      incluirIva,
+      taxaIva,
+      contactoNome,
+      contactoTelefone,
+      contactoEmail,
+      linhas,
+      linhaEmbalagemTitulo,
+      linhaEmbalagemDescricao,
+      condicoesPagamento,
+      condicoesPagamentoManual,
+      notasRodape,
+    }
+    const tid = window.setTimeout(() => {
+      try {
+        sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft))
+      } catch {
+        /* ignorar quota */
+      }
+    }, 600)
+    return () => window.clearTimeout(tid)
+  }, [
+    formDirty,
+    clienteId,
+    dataIso,
+    numeroOferta,
+    numeroManual,
+    incluirIva,
+    taxaIva,
+    contactoNome,
+    contactoTelefone,
+    contactoEmail,
+    linhas,
+    linhaEmbalagemTitulo,
+    linhaEmbalagemDescricao,
+    condicoesPagamento,
+    condicoesPagamentoManual,
+    notasRodape,
+  ])
 
   useEffect(() => {
     if (numeroManual) return
@@ -388,8 +579,14 @@ export function OrcamentoPecasEspeciaisContent({
   }
 
   const gravarOrcamento = async () => {
+    if (gravando) return
     if (!clienteSel) {
       alert(t.orcamentoPecasEspSelecioneCliente || 'Selecione um cliente.')
+      return
+    }
+    const linhasValidas = linhas.filter((l) => l.titulo.trim() || l.numeroArtigo.trim())
+    if (linhasValidas.length === 0) {
+      alert(t.orcamentoPecasEspLinhaObrigatoria || 'Adicione pelo menos uma linha com descrição ou código.')
       return
     }
     const num = numeroOferta.trim() || gerarNumeroOfertaPecasEspeciais(salvos, dataIso)
@@ -416,12 +613,47 @@ export function OrcamentoPecasEspeciaisContent({
       dataCriacao: new Date().toISOString(),
     }
     const next = [reg, ...salvos]
-    setSalvos(next)
-    if (saveData) await saveData(STORAGE_KEY, next).catch(() => {})
-    alert(t.orcamentoPecasEspGravado || 'Orçamento gravado.')
+    setGravando(true)
+    try {
+      let serverOk = true
+      if (saveData) {
+        serverOk = (await saveData(STORAGE_KEY, next, true, true)) === true
+      }
+      setSalvos(next)
+      if (!serverOk) {
+        alert(
+          t.orcamentoPecasEspGravadoServidorFalha ||
+            'Gravado neste aparelho, mas não foi possível enviar ao servidor. Verifique a ligação e toque em Gravar outra vez.'
+        )
+        return
+      }
+      limparRascunhoSessao()
+      setFormDirty(false)
+      setRascunhoAviso(false)
+      alert(
+        t.orcamentoPecasEspGravadoServidor ||
+          'Orçamento gravado e enviado ao servidor. Os outros aparelhos passam a vê-lo após sincronizar.'
+      )
+    } finally {
+      setGravando(false)
+    }
+  }
+
+  const cancelarFormulario = () => {
+    if (
+      formDirty &&
+      !window.confirm(
+        t.orcamentoPecasEspCancelarConfirm ||
+          'Descartar as alterações deste orçamento em edição? (O rascunho neste aparelho será apagado.)'
+      )
+    ) {
+      return
+    }
+    resetarFormularioNovo()
   }
 
   const carregarSalvo = (o: OrcamentoPecasEspeciaisSalvo) => {
+    suppressDirtyRef.current = true
     setClienteId(o.clienteId)
     setDataIso(o.dataIso)
     setNumeroOferta(o.numeroOferta)
@@ -437,6 +669,12 @@ export function OrcamentoPecasEspeciaisContent({
     setCondicoesPagamento(o.condicoesPagamento)
     setCondicoesPagamentoManual(true)
     setNotasRodape(o.notasRodape)
+    limparRascunhoSessao()
+    setFormDirty(false)
+    setRascunhoAviso(false)
+    window.setTimeout(() => {
+      suppressDirtyRef.current = false
+    }, 0)
   }
 
   return (
@@ -465,6 +703,18 @@ export function OrcamentoPecasEspeciaisContent({
       </div>
 
       <div className="orc-pro__panel orcamento-pecas-especiais-form">
+        {rascunhoAviso ? (
+          <p className="orcamento-pecas-especiais-hint orcamento-pecas-especiais-rascunho-aviso" role="status">
+            {t.orcamentoPecasEspRascunhoRestaurado ||
+              'Rascunho recuperado neste aparelho. Toque em Gravar para enviar ao servidor.'}
+          </p>
+        ) : null}
+        {formDirty && !gravando ? (
+          <p className="orcamento-pecas-especiais-hint orcamento-pecas-especiais-rascunho-aviso">
+            {t.orcamentoPecasEspRascunhoAuto ||
+              'Alterações guardadas temporariamente neste aparelho — use Gravar para enviar ao servidor.'}
+          </p>
+        ) : null}
         <div className="orcamento-pecas-especiais-grid-head">
           <div>
             <label className="orcamento-pecas-especiais-label">{t.orcamentoPecasEspNumero || 'N.º oferta'}</label>
@@ -868,8 +1118,23 @@ export function OrcamentoPecasEspeciaisContent({
           <button type="button" className="btn-primary" onClick={() => abrirPdf(false)}>
             📄 {t.gerarPDF || 'Gerar PDF'}
           </button>
-          <button type="button" className="btn-primary" onClick={() => void gravarOrcamento()}>
-            💾 {t.save || 'Gravar'}
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={gravando}
+            onClick={() => void gravarOrcamento()}
+          >
+            {gravando
+              ? t.orcamentoPecasEspSalvando || 'A gravar…'
+              : `💾 ${t.save || 'Gravar'}`}
+          </button>
+          <button
+            type="button"
+            className="btn-danger orcamento-pecas-especiais-btn-cancelar"
+            disabled={gravando}
+            onClick={cancelarFormulario}
+          >
+            ✕ {t.cancel || 'Cancelar'}
           </button>
         </div>
 

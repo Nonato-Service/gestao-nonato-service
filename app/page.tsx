@@ -23,6 +23,7 @@ import {
   setBlockImplicitServerPushDuringBootstrap,
   markDataBootstrapComplete,
   waitForDataBootstrapComplete,
+  applyNonBlockingServerPull,
 } from './utils/dataStorage'
 import {
   applyDiarioLembretePatch,
@@ -58,7 +59,7 @@ import {
   serverKeyHasMeaningfulData,
 } from './lib/criticalCadastroKeys'
 import { isNonatoDemoBuild } from './utils/nonatoDemoMode'
-import { assessSyncPendingSeverity, collectLocalNonatoSnapshot, hasMeaningfulSyncDiff, summarizeDataDiff } from './utils/syncDiff'
+import { assessSyncPendingSeverity, collectLocalNonatoSnapshot, hasMeaningfulSyncDiff, summarizeDataDiff, canAutoPullServerChanges } from './utils/syncDiff'
 import {
   backupCriticalCadastroToIdb,
   restoreCriticalCadastroFromIdbIfNeeded,
@@ -5037,6 +5038,14 @@ export default function Dashboard() {
   // Estado para Formulários e Checklist para Técnicos
   const [formulariosChecklistTecnicos, setFormulariosChecklistTecnicos] = useState<any[]>([])
   const [ultimoSalvamento, setUltimoSalvamento] = useState<string | null>(null) // Timestamp do último salvamento
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onLocalChanged = () => {
+      setUltimoSalvamento(new Date().toLocaleString(localeDatetimeGeneral(selectedLanguage)))
+    }
+    window.addEventListener('nonato-data-local-changed', onLocalChanged)
+    return () => window.removeEventListener('nonato-data-local-changed', onLocalChanged)
+  }, [selectedLanguage])
   const [buscaFormulario, setBuscaFormulario] = useState('')
   const [filtroTipoFormulario, setFiltroTipoFormulario] = useState<'todos' | 'checklist-gerado' | 'ordem-preparacao'>('todos')
   const [checklistGeradoVisualizar, setChecklistGeradoVisualizar] = useState<any | null>(null)
@@ -8516,15 +8525,48 @@ export default function Dashboard() {
     }
   }, [])
 
-  /** Com atualização pendente, o fluxo de trabalho só continua após escolher carregar do servidor ou enviar para o servidor. */
+  /** Com atualização pendente bloqueante, o fluxo só continua após escolher carregar ou enviar. Diferenças só aditivas alinham-se sozinhas. */
   useEffect(() => {
     if (appInitialLoading) return
     if (!syncPendingRemote) return
     if (!syncPullRiskReady) return
+    if (syncPendingPullRisk === 'none') return
     if (isSyncModalSnoozed()) return
     if (isSyncModalDismissedForRevision(syncPendingRemote.revision)) return
     setSyncDecisionModalOpen(true)
-  }, [appInitialLoading, syncPendingRemote, syncPullRiskReady, isSyncModalSnoozed, isSyncModalDismissedForRevision])
+  }, [appInitialLoading, syncPendingRemote, syncPullRiskReady, syncPendingPullRisk, isSyncModalSnoozed, isSyncModalDismissedForRevision])
+
+  /** Diferença não bloqueante: puxar servidor em silêncio (sem modal infinito). */
+  useEffect(() => {
+    if (appInitialLoading) return
+    if (!syncPendingRemote || !syncPullRiskReady || syncPendingPullRisk !== 'none') return
+    if (isSyncModalSnoozed()) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const { data: serverData, ok } = await loadAllFromServer()
+        if (cancelled || !ok) return
+        const localSnap = collectLocalNonatoSnapshot()
+        if (!canAutoPullServerChanges(serverData, localSnap)) return
+        await applyNonBlockingServerPull(serverData)
+        if (cancelled) return
+        setLastAcceptedRevision(syncPendingRemote.revision)
+        setSyncPendingRemote(null)
+        setSyncDecisionModalOpen(false)
+      } catch {
+        /* ignorar */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [
+    appInitialLoading,
+    syncPendingRemote?.revision,
+    syncPullRiskReady,
+    syncPendingPullRisk,
+    isSyncModalSnoozed,
+  ])
 
   /** Servidor: rever revisão em fundo e ao voltar ao ecrã — evita depender de F5 para ver alterações noutro aparelho. */
   useEffect(() => {
@@ -8550,6 +8592,13 @@ export default function Dashboard() {
         if (cancelled || !pullOk) return
         const localSnap = collectLocalNonatoSnapshot()
         if (!hasMeaningfulSyncDiff(serverData, localSnap)) {
+          setLastAcceptedRevision(st.revision)
+          setSyncPendingRemote(null)
+          return
+        }
+        if (canAutoPullServerChanges(serverData, localSnap)) {
+          await applyNonBlockingServerPull(serverData)
+          if (cancelled) return
           setLastAcceptedRevision(st.revision)
           setSyncPendingRemote(null)
           return
@@ -9450,7 +9499,9 @@ export default function Dashboard() {
                 } catch (e) {
                   console.error('Erro ao gravar clientes fundidos no localStorage:', e)
                 }
-                saveData(key, merged, false).catch(() => {})
+                if (!deferServerMerge) {
+                  saveData(key, merged, false).catch(() => {})
+                }
                 return merged
               }
             } catch (e) {
@@ -10094,7 +10145,6 @@ export default function Dashboard() {
         const base = normalizeClienteEquipamentos(savedClientes as Cliente[])
         const { lista: normalized, alterou: codigosAlterados } = garantirCodigosClientes(base)
         setClientes(normalized)
-        saveData('nonato-clientes', normalized, false).catch(() => {})
         if (codigosAlterados) {
           saveData('nonato-clientes', normalized, true, false).catch(() => {})
         }
@@ -12535,21 +12585,39 @@ export default function Dashboard() {
        */
       await reportBoot(92)
       const stFinal = await fetchSyncStatus()
+      let serverForCompare: Record<string, unknown> = serverData as Record<string, unknown>
+      try {
+        const fresh = await loadAllFromServer()
+        if (fresh.ok && Object.keys(fresh.data).length > 0) {
+          serverForCompare = fresh.data as Record<string, unknown>
+        }
+      } catch {
+        /* ignorar */
+      }
+      const localAfterBoot = collectLocalNonatoSnapshot()
+      const summaryLinesForPending = summarizeDataDiff(serverForCompare, localAfterBoot)
+      const meaningfulSyncDiff = summaryLinesForPending.length > 0
+      const bootSyncSeverity = assessSyncPendingSeverity(summaryLinesForPending)
+
       if (!deferServerMerge && stFinal !== null) {
         const cur = getLastAcceptedRevision()
         setLastAcceptedRevision(Math.max(cur, stFinal.revision))
       }
+
+      if (meaningfulSyncDiff && bootSyncSeverity === 'none' && stFinal !== null) {
+        await applyNonBlockingServerPull(serverForCompare)
+        const cur = getLastAcceptedRevision()
+        setLastAcceptedRevision(Math.max(cur, stFinal.revision))
+      }
+
       const lastAccAfter = getLastAcceptedRevision()
       const stForPending = stFinal ?? syncSt
-      const meaningfulSyncDiff = hasMeaningfulSyncDiff(serverData, localSnapshotBeforeMerge)
-      const summaryLinesForPending = meaningfulSyncDiff
-        ? summarizeDataDiff(serverData, localSnapshotBeforeMerge)
-        : []
       const showSyncPending =
         stForPending !== null &&
         stForPending.revision > lastAccAfter &&
         hasMeaningfulLocalData() &&
-        meaningfulSyncDiff
+        meaningfulSyncDiff &&
+        bootSyncSeverity !== 'none'
       if (stForPending !== null && stForPending.revision > lastAccAfter && !meaningfulSyncDiff) {
         setLastAcceptedRevision(stForPending.revision)
       }
@@ -45306,9 +45374,7 @@ A1;Peça exemplo;10`}
             activeTabId={activeTabId || ''}
             voltarPaginaInicial={voltarPaginaInicial}
             LogoComponent={LogoComponent}
-            saveData={async (key, data) => {
-              await saveData(key, data)
-            }}
+            saveData={saveData}
             loadData={loadData}
             logoHtml={getLogoHtmlForOrcamento()}
           />
@@ -65023,7 +65089,7 @@ A1;Peça exemplo;10`}
         ? trSync.syncTrafficBlue || 'A sincronizar…'
         : syncTrafficPhase === 'pending'
           ? trSync.syncTrafficYellow || 'Há alterações no servidor — este aparelho ainda não está alinhado'
-          : trSync.syncTrafficGreen || 'Atualizado — alinhado com o servidor'
+          : `${trSync.syncTrafficGreen || 'Atualizado — alinhado com o servidor.'} ${trSync.syncTrafficAutoSave || 'Guarda automática — não precisa de botão «Salvar».'}`
   const syncTrafficTitle = trSync.syncTrafficTitle || 'Sincronização'
   const syncTrafficLightsRow = (
     <div className="ns-sync-traffic__row" aria-hidden>

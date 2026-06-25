@@ -24265,6 +24265,20 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   margin-top: 8px;
 }
 
+.orcamento-pecas-especiais-btn-cancelar {
+  margin-left: auto;
+}
+
+.orcamento-pecas-especiais-rascunho-aviso {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(125, 255, 176, 0.35);
+  background: rgba(0, 80, 40, 0.25);
+  color: #b8f5d0;
+  line-height: 1.45;
+}
+
 .orcamento-pecas-especiais-salvos {
   list-style: none;
   margin: 0;
