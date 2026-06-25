@@ -931,7 +931,7 @@ export async function applySilentServerSync(server: Record<string, unknown>): Pr
 
 export type SilentServerSyncResult = 'noop' | 'ok' | 'fail'
 
-/** Puxa servidor → local, alinha revisão; recarrega a página se houve alterações (sem modal). */
+/** Puxa servidor → local, alinha revisão; não recarrega a página (evita reinício inesperado). */
 export async function runSilentServerSync(expectedRevision?: number): Promise<SilentServerSyncResult> {
   if (typeof window === 'undefined') return 'fail'
   if (isNonatoDemoBuild()) return 'noop'
@@ -945,12 +945,6 @@ export async function runSilentServerSync(expectedRevision?: number): Promise<Si
       setLastAcceptedRevision(rev)
     }
     if (changedKeys.length === 0) return 'noop'
-    try {
-      sessionStorage.setItem('nonato-sync-silent-reload', '1')
-    } catch {
-      /* ignorar */
-    }
-    window.location.reload()
     return 'ok'
   } catch {
     return 'fail'

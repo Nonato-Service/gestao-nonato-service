@@ -5,15 +5,30 @@ import { setupAutoSyncOnReconnect, setupFlushSyncOnPageHide } from './utils/data
 
 // Bumpar este número em cada deploy para forçar atualização no telemóvel/tablet
 const SW_VERSION = 18
+const SW_DISMISSED_SESSION_KEY = 'nonato-pwa-update-dismissed-v'
 
 export function RegisterSW() {
   const [updateReady, setUpdateReady] = useState(false)
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
   const reloadHandled = useRef(false)
-  const updateTriggered = useRef(false)
+  const userConfirmedUpdate = useRef(false)
+  const lastUpdateCheckAt = useRef(0)
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
+
+    const isDismissedThisSession = () => {
+      try {
+        return sessionStorage.getItem(SW_DISMISSED_SESSION_KEY) === String(SW_VERSION)
+      } catch {
+        return false
+      }
+    }
+
+    const markUpdateAvailable = () => {
+      if (isDismissedThisSession()) return
+      setUpdateReady(true)
+    }
 
     const register = () => {
       navigator.serviceWorker
@@ -23,22 +38,16 @@ export function RegisterSW() {
         })
         .then((reg) => {
           setRegistration(reg)
-          const activateWaitingWorker = () => {
-            if (!reg.waiting || updateTriggered.current) return
-            updateTriggered.current = true
-            setUpdateReady(true)
-            reg.waiting.postMessage({ type: 'SKIP_WAITING' })
-          }
 
-          if (reg.waiting) activateWaitingWorker()
-          // Verificar atualizações imediatamente e quando voltar ao app (importante no mobile)
-          reg.update()
+          // Só mostrar aviso — NUNCA activar a nova versão sem o utilizador carregar em «Atualizar»
+          if (reg.waiting) markUpdateAvailable()
+
           reg.addEventListener('updatefound', () => {
             const newWorker = reg.installing
             if (!newWorker) return
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                activateWaitingWorker()
+                markUpdateAvailable()
               }
             })
           })
@@ -48,33 +57,29 @@ export function RegisterSW() {
     register()
 
     const onControllerChange = () => {
+      if (!userConfirmedUpdate.current) return
       if (reloadHandled.current) return
       reloadHandled.current = true
       window.location.reload()
     }
     navigator.serviceWorker.addEventListener('controllerchange', onControllerChange)
 
+    const checkForUpdates = () => {
+      const now = Date.now()
+      if (now - lastUpdateCheckAt.current < 5 * 60_000) return
+      if (!navigator.onLine) return
+      lastUpdateCheckAt.current = now
+      navigator.serviceWorker.ready.then((reg) => reg.update()).catch(() => {})
+    }
+
     const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && navigator.onLine) {
-        navigator.serviceWorker.ready.then((reg) => reg.update())
-      }
+      if (document.visibilityState === 'visible') checkForUpdates()
     }
     document.addEventListener('visibilitychange', onVisibilityChange)
 
-    // iPad / tablet: voltar ao app ou repor da memória — verificar atualização
-    const onPageShow = () => {
-      if (navigator.onLine) {
-        navigator.serviceWorker.ready.then((reg) => reg.update()).catch(() => {})
-      }
-    }
+    const onPageShow = () => checkForUpdates()
     window.addEventListener('pageshow', onPageShow)
     window.addEventListener('focus', onPageShow)
-
-    const interval = window.setInterval(() => {
-      if (navigator.onLine) {
-        navigator.serviceWorker.ready.then((reg) => reg.update()).catch(() => {})
-      }
-    }, 30_000)
 
     const teardownAutoSync = setupAutoSyncOnReconnect()
     const teardownFlush = setupFlushSyncOnPageHide()
@@ -83,20 +88,32 @@ export function RegisterSW() {
       document.removeEventListener('visibilitychange', onVisibilityChange)
       window.removeEventListener('pageshow', onPageShow)
       window.removeEventListener('focus', onPageShow)
-      window.clearInterval(interval)
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
       teardownAutoSync()
       teardownFlush()
     }
   }, [])
 
   const handleUpdate = () => {
+    userConfirmedUpdate.current = true
+    setUpdateReady(false)
     if (registration?.waiting) {
       registration.waiting.postMessage({ type: 'SKIP_WAITING' })
-      // Fallback para mobile: controllerchange pode não disparar em alguns telemóveis
       setTimeout(() => {
         if (!reloadHandled.current) window.location.reload()
       }, 1500)
+      return
     }
+    window.location.reload()
+  }
+
+  const handleDismiss = () => {
+    try {
+      sessionStorage.setItem(SW_DISMISSED_SESSION_KEY, String(SW_VERSION))
+    } catch {
+      /* ignorar */
+    }
+    setUpdateReady(false)
   }
 
   if (!updateReady) return null
@@ -119,25 +136,44 @@ export function RegisterSW() {
         gap: 12,
         boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
         fontSize: 15,
-        fontWeight: 600
+        fontWeight: 600,
       }}
     >
-      <span>Atualização disponível</span>
-      <button
-        onClick={handleUpdate}
-        style={{
-          padding: '10px 24px',
-          background: '#fff',
-          color: '#006600',
-          border: 'none',
-          borderRadius: 8,
-          fontWeight: 700,
-          cursor: 'pointer',
-          fontSize: 14
-        }}
-      >
-        ATUALIZAR
-      </button>
+      <span>Nova versão disponível — só recarrega se carregar em «Atualizar»</span>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={handleDismiss}
+          style={{
+            padding: '10px 18px',
+            background: 'transparent',
+            color: '#fff',
+            border: '2px solid rgba(255,255,255,0.85)',
+            borderRadius: 8,
+            fontWeight: 700,
+            cursor: 'pointer',
+            fontSize: 14,
+          }}
+        >
+          DEPOIS
+        </button>
+        <button
+          type="button"
+          onClick={handleUpdate}
+          style={{
+            padding: '10px 24px',
+            background: '#fff',
+            color: '#006600',
+            border: 'none',
+            borderRadius: 8,
+            fontWeight: 700,
+            cursor: 'pointer',
+            fontSize: 14,
+          }}
+        >
+          ATUALIZAR
+        </button>
+      </div>
     </div>
   )
 }
