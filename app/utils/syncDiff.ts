@@ -19,6 +19,8 @@ const SKIP_SNAPSHOT_KEYS = new Set([
   'nonato-auto-backup-interval',
   'nonato-biblia-nonato-service',
   'nonato-biblioteca-pecas-ultima-selecao',
+  /** Ordem das abas inferiores — preferência local deste aparelho. */
+  'nonato-bottom-tabs-order',
 ])
 
 /** Chaves dinâmicas (ex.: lembrete por data/hora) ignoradas no resumo de sync. */

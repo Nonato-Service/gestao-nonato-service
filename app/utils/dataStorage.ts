@@ -2,7 +2,7 @@
 
 import { mergeManuaisFamiliasGrupos } from './manuaisMerge'
 import { isNonatoDemoBuild } from './nonatoDemoMode'
-import { applyRevisionFromSaveResponse, fetchSyncStatus } from './syncRevision'
+import { applyRevisionFromSaveResponse, fetchSyncStatus, setLastAcceptedRevision } from './syncRevision'
 import { safeMergeOfflineSnapshot } from './cadastroSafety'
 import {
   saveManuaisFamiliasGruposToIdb,
@@ -806,6 +806,8 @@ const SKIP_PULL_KEYS = new Set([
   'nonato-code-backups',
   'nonato-language',
   'nonato-protocolo-servico-draft',
+  /** Preferências só deste aparelho — não sobrescrever na sync automática. */
+  'nonato-bottom-tabs-order',
 ])
 
 function serverPullValueIsEmpty(value: unknown): boolean {
@@ -898,6 +900,61 @@ async function writeLocalFromServerPull(key: string, value: unknown): Promise<vo
     }
   }
   writeLocalStorageValue(key, value)
+}
+
+/**
+ * Sincronização silenciosa: servidor manda nos dados partilhados (sem modal).
+ * Devolve lista de chaves alteradas no localStorage.
+ */
+export async function applySilentServerSync(server: Record<string, unknown>): Promise<string[]> {
+  if (typeof window === 'undefined') return []
+  const changedKeys: string[] = []
+  for (const key of Object.keys(server)) {
+    if (!key.startsWith('nonato-') || SKIP_PULL_KEYS.has(key) || key.endsWith('.json')) continue
+    const s = server[key]
+    if (serverPullValueIsEmpty(s)) continue
+    const raw = localStorage.getItem(key)
+    let same = false
+    if (raw !== null && raw !== '') {
+      try {
+        same = JSON.stringify(JSON.parse(raw)) === JSON.stringify(s)
+      } catch {
+        same = raw === String(s)
+      }
+    }
+    if (same) continue
+    await writeLocalFromServerPull(key, s)
+    changedKeys.push(key)
+  }
+  return changedKeys
+}
+
+export type SilentServerSyncResult = 'noop' | 'ok' | 'fail'
+
+/** Puxa servidor → local, alinha revisão; recarrega a página se houve alterações (sem modal). */
+export async function runSilentServerSync(expectedRevision?: number): Promise<SilentServerSyncResult> {
+  if (typeof window === 'undefined') return 'fail'
+  if (isNonatoDemoBuild()) return 'noop'
+  try {
+    const { data: serverData, ok } = await loadAllFromServer()
+    if (!ok || Object.keys(serverData).length === 0) return 'fail'
+    const changedKeys = await applySilentServerSync(serverData as Record<string, unknown>)
+    const st = await fetchSyncStatus()
+    const rev = Math.max(expectedRevision ?? 0, st?.revision ?? 0)
+    if (Number.isFinite(rev) && rev > 0) {
+      setLastAcceptedRevision(rev)
+    }
+    if (changedKeys.length === 0) return 'noop'
+    try {
+      sessionStorage.setItem('nonato-sync-silent-reload', '1')
+    } catch {
+      /* ignorar */
+    }
+    window.location.reload()
+    return 'ok'
+  } catch {
+    return 'fail'
+  }
 }
 
 /** Envia toda a cópia local para o servidor (substitui ficheiros no servidor pelos deste aparelho). Uma revisão. */

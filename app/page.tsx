@@ -23,7 +23,8 @@ import {
   setBlockImplicitServerPushDuringBootstrap,
   markDataBootstrapComplete,
   waitForDataBootstrapComplete,
-  applyNonBlockingServerPull,
+  runSilentServerSync,
+  applySilentServerSync,
 } from './utils/dataStorage'
 import {
   applyDiarioLembretePatch,
@@ -59,7 +60,7 @@ import {
   serverKeyHasMeaningfulData,
 } from './lib/criticalCadastroKeys'
 import { isNonatoDemoBuild } from './utils/nonatoDemoMode'
-import { assessSyncPendingSeverity, collectLocalNonatoSnapshot, hasMeaningfulSyncDiff, summarizeDataDiff, canAutoPullServerChanges } from './utils/syncDiff'
+import { assessSyncPendingSeverity, collectLocalNonatoSnapshot, hasMeaningfulSyncDiff, summarizeDataDiff } from './utils/syncDiff'
 import {
   backupCriticalCadastroToIdb,
   restoreCriticalCadastroFromIdbIfNeeded,
@@ -4841,6 +4842,8 @@ export default function Dashboard() {
   /** Pré-cálculo do risco de «puxar» servidor — permite modal mínimo (só OK) quando `none`. */
   const [syncPullRiskReady, setSyncPullRiskReady] = useState(false)
   const [syncPendingPullRisk, setSyncPendingPullRisk] = useState<PullRiskSeverity>('none')
+  /** Sync automática falhou (rede/servidor) — semáforo amarelo; modal só se o utilizador abrir Admin. */
+  const [syncAutoSyncFailed, setSyncAutoSyncFailed] = useState(false)
   const SYNC_MODAL_SNOOZE_LS = 'nonato-sync-modal-snooze-until'
   const SYNC_MODAL_DISMISSED_REV_LS = 'nonato-sync-modal-dismissed-rev'
   const isSyncModalSnoozed = useCallback(() => {
@@ -8525,95 +8528,44 @@ export default function Dashboard() {
     }
   }, [])
 
-  /** Com atualização pendente bloqueante, o fluxo só continua após escolher carregar ou enviar. Diferenças só aditivas alinham-se sozinhas. */
-  useEffect(() => {
-    if (appInitialLoading) return
-    if (!syncPendingRemote) return
-    if (!syncPullRiskReady) return
-    if (syncPendingPullRisk === 'none') return
-    if (isSyncModalSnoozed()) return
-    if (isSyncModalDismissedForRevision(syncPendingRemote.revision)) return
-    setSyncDecisionModalOpen(true)
-  }, [appInitialLoading, syncPendingRemote, syncPullRiskReady, syncPendingPullRisk, isSyncModalSnoozed, isSyncModalDismissedForRevision])
-
-  /** Diferença não bloqueante: puxar servidor em silêncio (sem modal infinito). */
-  useEffect(() => {
-    if (appInitialLoading) return
-    if (!syncPendingRemote || !syncPullRiskReady || syncPendingPullRisk !== 'none') return
-    if (isSyncModalSnoozed()) return
-    let cancelled = false
-    void (async () => {
-      try {
-        const { data: serverData, ok } = await loadAllFromServer()
-        if (cancelled || !ok) return
-        const localSnap = collectLocalNonatoSnapshot()
-        if (!canAutoPullServerChanges(serverData, localSnap)) return
-        await applyNonBlockingServerPull(serverData)
-        if (cancelled) return
-        setLastAcceptedRevision(syncPendingRemote.revision)
-        setSyncPendingRemote(null)
-        setSyncDecisionModalOpen(false)
-      } catch {
-        /* ignorar */
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [
-    appInitialLoading,
-    syncPendingRemote?.revision,
-    syncPullRiskReady,
-    syncPendingPullRisk,
-    isSyncModalSnoozed,
-  ])
-
-  /** Servidor: rever revisão em fundo e ao voltar ao ecrã — evita depender de F5 para ver alterações noutro aparelho. */
+  /** Servidor: sync silenciosa em fundo e ao voltar ao ecrã. */
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (appInitialLoading) return
     if (isNonatoDemoBuild()) return
 
     let cancelled = false
+    let syncInFlight = false
     const POLL_MS = 45_000
 
     const runCheck = async () => {
-      if (cancelled) return
+      if (cancelled || syncInFlight) return
       if (typeof navigator !== 'undefined' && !navigator.onLine) return
       if (!dataBootstrapCompleteRef.current) return
-      if (isSyncModalSnoozed()) return
+      syncInFlight = true
       try {
         const st = await fetchSyncStatus()
         if (cancelled || !st) return
         const lastAcc = getLastAcceptedRevision()
-        if (st.revision <= lastAcc) return
+        if (st.revision <= lastAcc) {
+          setSyncAutoSyncFailed(false)
+          setSyncPendingRemote(null)
+          return
+        }
         if (!hasMeaningfulLocalData()) return
-        const { data: serverData, ok: pullOk } = await loadAllFromServer()
-        if (cancelled || !pullOk) return
-        const localSnap = collectLocalNonatoSnapshot()
-        if (!hasMeaningfulSyncDiff(serverData, localSnap)) {
-          setLastAcceptedRevision(st.revision)
-          setSyncPendingRemote(null)
+        const result = await runSilentServerSync(st.revision)
+        if (cancelled) return
+        if (result === 'fail') {
+          setSyncAutoSyncFailed(true)
           return
         }
-        if (canAutoPullServerChanges(serverData, localSnap)) {
-          await applyNonBlockingServerPull(serverData)
-          if (cancelled) return
-          setLastAcceptedRevision(st.revision)
-          setSyncPendingRemote(null)
-          return
-        }
-        const lines = summarizeDataDiff(serverData, localSnap)
-        setSyncPendingRemote((prev) => {
-          if (prev && prev.revision === st.revision) return prev
-          return {
-            revision: st.revision,
-            updatedAt: st.updatedAt,
-            summaryLines: lines,
-          }
-        })
+        setSyncAutoSyncFailed(false)
+        setSyncPendingRemote(null)
+        setSyncDecisionModalOpen(false)
       } catch {
-        /* ignorar rede / timeout */
+        if (!cancelled) setSyncAutoSyncFailed(true)
+      } finally {
+        syncInFlight = false
       }
     }
 
@@ -8758,21 +8710,15 @@ export default function Dashboard() {
     const lastAcc = getLastAcceptedRevision()
     const stBeforePush = await fetchSyncStatus()
     if (stBeforePush && stBeforePush.revision > lastAcc) {
-      const { data: serverData } = await loadAllFromServer()
-      const localSnap = collectLocalNonatoSnapshot()
-      setSyncPendingRemote({
-        revision: stBeforePush.revision,
-        updatedAt: stBeforePush.updatedAt || '',
-        summaryLines: summarizeDataDiff(serverData, localSnap),
-      })
-      setSyncDecisionModalOpen(true)
-      window.alert(
-        `${(safeT as any)?.syncModalTitle || 'Alterações noutro aparelho'}: ${
-          (safeT as any)?.syncAdminPendingNote ||
-          'O servidor tem uma versão mais recente do que a que este aparelho aceitou.'
-        }`
-      )
-      return
+      const synced = await runSilentServerSync(stBeforePush.revision)
+      if (synced === 'fail') {
+        window.alert(
+          (safeT as any)?.syncPullServerUnreadable ||
+            'Não foi possível alinhar com o servidor antes de enviar. Verifique a ligação e tente de novo.'
+        )
+        return
+      }
+      if (synced === 'ok') return
     }
     const msg =
       (safeT as any)?.syncPushConfirm ||
@@ -9338,10 +9284,17 @@ export default function Dashboard() {
         if (!bootLoad.ok) setBootstrapOfflineMode(true)
         await reportBoot(28)
 
-        /** Após wipe total, não bloquear por dados locais residuais; usar só servidor para sidebar/manuais nesta carga. */
-        const deferServerMerge = preferServerOnlyAfterFullPullWipe
-          ? false
-          : syncSt !== null && serverRevision > lastAccepted && hasMeaningfulLocalData()
+        /** Sincronização automática: fundir sempre com o servidor (sem modal bloqueante). */
+        const deferServerMerge = false
+        if (
+          syncSt !== null &&
+          serverRevision > lastAccepted &&
+          hasMeaningfulLocalData() &&
+          Object.keys(serverData).length > 0
+        ) {
+          await applySilentServerSync(serverData as Record<string, unknown>)
+          setLastAcceptedRevision(serverRevision)
+        }
         const serverKeysWithData = Object.keys(serverData).filter(key => {
           const value = serverData[key]
           if (Array.isArray(value)) return value.length > 0
@@ -12585,51 +12538,13 @@ export default function Dashboard() {
        */
       await reportBoot(92)
       const stFinal = await fetchSyncStatus()
-      let serverForCompare: Record<string, unknown> = serverData as Record<string, unknown>
-      try {
-        const fresh = await loadAllFromServer()
-        if (fresh.ok && Object.keys(fresh.data).length > 0) {
-          serverForCompare = fresh.data as Record<string, unknown>
-        }
-      } catch {
-        /* ignorar */
-      }
-      const localAfterBoot = collectLocalNonatoSnapshot()
-      const summaryLinesForPending = summarizeDataDiff(serverForCompare, localAfterBoot)
-      const meaningfulSyncDiff = summaryLinesForPending.length > 0
-      const bootSyncSeverity = assessSyncPendingSeverity(summaryLinesForPending)
-
-      if (!deferServerMerge && stFinal !== null) {
+      if (stFinal !== null) {
         const cur = getLastAcceptedRevision()
         setLastAcceptedRevision(Math.max(cur, stFinal.revision))
       }
-
-      if (meaningfulSyncDiff && bootSyncSeverity === 'none' && stFinal !== null) {
-        await applyNonBlockingServerPull(serverForCompare)
-        const cur = getLastAcceptedRevision()
-        setLastAcceptedRevision(Math.max(cur, stFinal.revision))
-      }
-
-      const lastAccAfter = getLastAcceptedRevision()
-      const stForPending = stFinal ?? syncSt
-      const showSyncPending =
-        stForPending !== null &&
-        stForPending.revision > lastAccAfter &&
-        hasMeaningfulLocalData() &&
-        meaningfulSyncDiff &&
-        bootSyncSeverity !== 'none'
-      if (stForPending !== null && stForPending.revision > lastAccAfter && !meaningfulSyncDiff) {
-        setLastAcceptedRevision(stForPending.revision)
-      }
-      setSyncPendingRemote(
-        showSyncPending
-          ? {
-              revision: stForPending!.revision,
-              updatedAt: stForPending!.updatedAt,
-              summaryLines: summaryLinesForPending,
-            }
-          : null
-      )
+      setSyncPendingRemote(null)
+      setSyncDecisionModalOpen(false)
+      setSyncAutoSyncFailed(false)
       } catch (error) {
         bootstrapLoadErrored = true
         setSyncBootstrapPercent(0)
@@ -45121,7 +45036,7 @@ A1;Peça exemplo;10`}
                 borderBottom: '1px solid rgba(0, 200, 83, 0.2)'
               }}>
                 <h3 style={{ margin: 0, color: '#ffaa00', fontSize: '22px', fontWeight: 'bold', letterSpacing: '2px' }}>
-                  ⚙️ {safeT?.listaPecasOrcamento || 'LISTA DE PEÇAS PARA ORÇAMENTO'}
+                  ⚙️ {safeT?.listaPecasOrcamento || 'LISTA DE PEÇAS SEPARADA PARA ORÇAMENTO'}
                 </h3>
                 <button
                   onClick={() => setShowListaPecasOrcamento(!showListaPecasOrcamento)}
@@ -65068,7 +64983,7 @@ A1;Peça exemplo;10`}
     ? 'boot'
     : syncPullChecking || syncPushLoading
       ? 'syncing'
-      : syncPendingRemote
+      : syncAutoSyncFailed
         ? 'pending'
         : 'ok'
   const syncTrafficTopPad = isDemoMode && !isCompactLayout ? 52 : 10
@@ -65087,8 +65002,8 @@ A1;Peça exemplo;10`}
       ? trSync.syncTrafficBoot || 'A preparar ligação ao servidor…'
       : syncTrafficPhase === 'syncing'
         ? trSync.syncTrafficBlue || 'A sincronizar…'
-        : syncTrafficPhase === 'pending'
-          ? trSync.syncTrafficYellow || 'Há alterações no servidor — este aparelho ainda não está alinhado'
+        : syncAutoSyncFailed
+          ? trSync.syncTrafficAutoFail || 'Não foi possível sincronizar automaticamente — verifique a ligação ou use Administrador.'
           : `${trSync.syncTrafficGreen || 'Atualizado — alinhado com o servidor.'} ${trSync.syncTrafficAutoSave || 'Guarda automática — não precisa de botão «Salvar».'}`
   const syncTrafficTitle = trSync.syncTrafficTitle || 'Sincronização'
   const syncTrafficLightsRow = (

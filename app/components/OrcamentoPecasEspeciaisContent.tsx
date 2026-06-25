@@ -1052,7 +1052,7 @@ export function OrcamentoPecasEspeciaisContent({
                     className="orcamento-pecas-especiais-input"
                   />
                   <input
-                    placeholder={t.orcamentoPecasEspColUnit || 'Preço unit. (ex.: 1.700,-)'}
+                    placeholder={t.orcamentoPecasEspColUnit || 'Preço unit. (ex.: 1.700,00)'}
                     value={l.precoUnitario}
                     onChange={(e) =>
                       setLinhas((p) => p.map((x) => (x.rowId === l.rowId ? { ...x, precoUnitario: e.target.value } : x)))

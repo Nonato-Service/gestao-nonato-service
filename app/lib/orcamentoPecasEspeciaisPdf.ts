@@ -257,8 +257,10 @@ export function gerarNumeroOfertaPecasEspeciais(
 
 export function formatarPrecoOrcamentoEur(valor: number): string {
   if (!Number.isFinite(valor)) return '—'
-  const fmt = valor.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
-  return `${fmt},-`
+  const fixed = (Math.round(valor * 100) / 100).toFixed(2)
+  const [intPart, decPart] = fixed.split('.')
+  const withDots = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  return `${withDots},${decPart}`
 }
 
 function normalizarTaxaIva(taxaIva: number): number {
