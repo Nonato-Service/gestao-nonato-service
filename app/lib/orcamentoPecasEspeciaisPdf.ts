@@ -261,6 +261,26 @@ export function formatarPrecoOrcamentoEur(valor: number): string {
   return `${fmt},-`
 }
 
+function normalizarTaxaIva(taxaIva: number): number {
+  let taxa = Number(taxaIva)
+  if (!Number.isFinite(taxa) || taxa < 0) taxa = 0
+  if (taxa > 100) taxa = 100
+  return taxa
+}
+
+/** Valor final acordado (com IVA) → líquido + IVA (ex.: 2500 € a 23% → ~2032,52 + ~467,48). */
+export function calcularTotaisDesdeValorFinalComIva(
+  valorFinalComIva: number,
+  taxaIva: number
+): { liquido: number; iva: number; comIva: number; taxa: number } {
+  const taxa = normalizarTaxaIva(taxaIva)
+  const comIva = Math.round((Number.isFinite(valorFinalComIva) ? valorFinalComIva : 0) * 100) / 100
+  const liquido =
+    taxa > 0 ? Math.round((comIva / (1 + taxa / 100)) * 100) / 100 : comIva
+  const iva = Math.round((comIva - liquido) * 100) / 100
+  return { liquido, iva, comIva, taxa }
+}
+
 export function calcularTotaisIvaPecasEspeciais(
   liquido: number,
   incluirIva: boolean,
@@ -268,11 +288,9 @@ export function calcularTotaisIvaPecasEspeciais(
 ): { liquido: number; iva: number; comIva: number; incluir: boolean; taxa: number } {
   const liquidoOk = Number.isFinite(liquido) ? liquido : 0
   if (!incluirIva) {
-    return { liquido: liquidoOk, iva: 0, comIva: liquidoOk, incluir: false, taxa: taxaIva }
+    return { liquido: liquidoOk, iva: 0, comIva: liquidoOk, incluir: false, taxa: normalizarTaxaIva(taxaIva) }
   }
-  let taxa = Number(taxaIva)
-  if (!Number.isFinite(taxa) || taxa < 0) taxa = 0
-  if (taxa > 100) taxa = 100
+  const taxa = normalizarTaxaIva(taxaIva)
   const iva = Math.round(liquidoOk * (taxa / 100) * 100) / 100
   const comIva = Math.round((liquidoOk + iva) * 100) / 100
   return { liquido: liquidoOk, iva, comIva, incluir: true, taxa }

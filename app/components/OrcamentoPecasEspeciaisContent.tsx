@@ -2,12 +2,15 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  calcularTotaisDesdeValorFinalComIva,
   calcularTotaisIvaPecasEspeciais,
   formatarPrecoOrcamentoEur,
   gerarNumeroOfertaPecasEspeciais,
   openOrcamentoPecasEspeciaisPdf,
   type OrcamentoPecasEspeciaisLinhaPdf,
 } from '../lib/orcamentoPecasEspeciaisPdf'
+
+export type ModoCalculoTotalPecasEsp = 'linhas' | 'valor-final'
 import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
 
 export type ClienteOrcamentoPecasEsp = {
@@ -65,6 +68,8 @@ export type OrcamentoPecasEspeciaisSalvo = {
   totalComIva?: string
   incluirIva?: boolean
   taxaIva?: number
+  modoCalculoTotal?: ModoCalculoTotalPecasEsp
+  valorFinalComIva?: string
   dataCriacao: string
 }
 
@@ -87,6 +92,8 @@ type FormDraft = {
   condicoesPagamento: string
   condicoesPagamentoManual: boolean
   notasRodape: string
+  modoCalculoTotal: ModoCalculoTotalPecasEsp
+  valorFinalComIva: string
 }
 
 function newRowId(): string {
@@ -200,6 +207,8 @@ export function OrcamentoPecasEspeciaisContent({
   const [numeroManual, setNumeroManual] = useState(false)
   const [incluirIva, setIncluirIva] = useState(false)
   const [taxaIva, setTaxaIva] = useState(23)
+  const [modoCalculoTotal, setModoCalculoTotal] = useState<ModoCalculoTotalPecasEsp>('linhas')
+  const [valorFinalComIva, setValorFinalComIva] = useState('')
   const [contactoNome, setContactoNome] = useState('')
   const [contactoTelefone, setContactoTelefone] = useState('')
   const [contactoEmail, setContactoEmail] = useState('')
@@ -245,6 +254,8 @@ export function OrcamentoPecasEspeciaisContent({
       notasRodape:
         t.orcamentoPecasEspNotasRodapePadrao ||
         'Aplicam-se os nossos Termos e Condições Gerais e a Política de Privacidade.',
+      modoCalculoTotal: 'linhas',
+      valorFinalComIva: '',
     }
   }, [hoje, t])
 
@@ -264,6 +275,8 @@ export function OrcamentoPecasEspeciaisContent({
     setCondicoesPagamento(draft.condicoesPagamento)
     setCondicoesPagamentoManual(draft.condicoesPagamentoManual)
     setNotasRodape(draft.notasRodape)
+    setModoCalculoTotal(draft.modoCalculoTotal === 'valor-final' ? 'valor-final' : 'linhas')
+    setValorFinalComIva(draft.valorFinalComIva)
     setBuscaCliente('')
     setBuscaPecaPorLinha({})
   }, [])
@@ -314,6 +327,8 @@ export function OrcamentoPecasEspeciaisContent({
     condicoesPagamento,
     condicoesPagamentoManual,
     notasRodape,
+    modoCalculoTotal,
+    valorFinalComIva,
   ])
 
   useEffect(() => {
@@ -369,6 +384,8 @@ export function OrcamentoPecasEspeciaisContent({
       condicoesPagamento,
       condicoesPagamentoManual,
       notasRodape,
+      modoCalculoTotal,
+      valorFinalComIva,
     }
     const tid = window.setTimeout(() => {
       try {
@@ -395,6 +412,8 @@ export function OrcamentoPecasEspeciaisContent({
     condicoesPagamento,
     condicoesPagamentoManual,
     notasRodape,
+    modoCalculoTotal,
+    valorFinalComIva,
   ])
 
   useEffect(() => {
@@ -433,10 +452,16 @@ export function OrcamentoPecasEspeciaisContent({
     return sum
   }, [linhas])
 
-  const totaisIva = useMemo(
-    () => calcularTotaisIvaPecasEspeciais(totalLiquidoNum, incluirIva, taxaIva),
-    [totalLiquidoNum, incluirIva, taxaIva]
-  )
+  const totaisIva = useMemo(() => {
+    if (incluirIva && modoCalculoTotal === 'valor-final') {
+      const finalNum = parsePrecoEuro(valorFinalComIva)
+      if (finalNum > 0) {
+        const d = calcularTotaisDesdeValorFinalComIva(finalNum, taxaIva)
+        return { ...d, incluir: true as const }
+      }
+    }
+    return calcularTotaisIvaPecasEspeciais(totalLiquidoNum, incluirIva, taxaIva)
+  }, [totalLiquidoNum, incluirIva, taxaIva, modoCalculoTotal, valorFinalComIva])
 
   const totalLiquidoFmt = useMemo(() => formatarPrecoOrcamentoEur(totaisIva.liquido), [totaisIva.liquido])
   const totalIvaFmt = useMemo(() => formatarPrecoOrcamentoEur(totaisIva.iva), [totaisIva.iva])
@@ -589,6 +614,10 @@ export function OrcamentoPecasEspeciaisContent({
       alert(t.orcamentoPecasEspLinhaObrigatoria || 'Adicione pelo menos uma linha com descrição ou código.')
       return
     }
+    if (incluirIva && modoCalculoTotal === 'valor-final' && parsePrecoEuro(valorFinalComIva) <= 0) {
+      alert(t.orcamentoPecasEspValorFinalObrigatorio || 'Indique o valor final acordado (com IVA).')
+      return
+    }
     const num = numeroOferta.trim() || gerarNumeroOfertaPecasEspeciais(salvos, dataIso)
     const reg: OrcamentoPecasEspeciaisSalvo = {
       id: newRowId(),
@@ -610,6 +639,8 @@ export function OrcamentoPecasEspeciaisContent({
       totalComIva: totalComIvaFmt,
       incluirIva,
       taxaIva,
+      modoCalculoTotal: incluirIva ? modoCalculoTotal : 'linhas',
+      valorFinalComIva: incluirIva && modoCalculoTotal === 'valor-final' ? valorFinalComIva : '',
       dataCriacao: new Date().toISOString(),
     }
     const next = [reg, ...salvos]
@@ -660,6 +691,8 @@ export function OrcamentoPecasEspeciaisContent({
     setNumeroManual(true)
     setIncluirIva(Boolean(o.incluirIva))
     setTaxaIva(Number.isFinite(Number(o.taxaIva)) ? Number(o.taxaIva) : 23)
+    setModoCalculoTotal(o.modoCalculoTotal === 'valor-final' ? 'valor-final' : 'linhas')
+    setValorFinalComIva(String(o.valorFinalComIva ?? ''))
     setContactoNome(o.contactoNome)
     setContactoTelefone(o.contactoTelefone)
     setContactoEmail(o.contactoEmail)
@@ -715,7 +748,7 @@ export function OrcamentoPecasEspeciaisContent({
               'Alterações guardadas temporariamente neste aparelho — use Gravar para enviar ao servidor.'}
           </p>
         ) : null}
-        <div className="orcamento-pecas-especiais-grid-head">
+        <div className="orcamento-pecas-especiais-grid-head orcamento-pecas-especiais-grid-head--2col">
           <div>
             <label className="orcamento-pecas-especiais-label">{t.orcamentoPecasEspNumero || 'N.º oferta'}</label>
             <input
@@ -737,74 +770,133 @@ export function OrcamentoPecasEspeciaisContent({
               className="orcamento-pecas-especiais-input"
             />
           </div>
-          <div>
-            <label className="orcamento-pecas-especiais-label">
-              {incluirIva ? t.totalComIva || 'Total com IVA' : t.orcamentoPecasEspTotalLiquido || 'Total líquido'}
-            </label>
-            <input
-              type="text"
-              readOnly
-              value={incluirIva ? totalComIvaFmt : totalLiquidoFmt}
-              className="orcamento-pecas-especiais-input"
-            />
-          </div>
         </div>
 
         <div className="orcamento-pecas-especiais-section orcamento-pecas-especiais-iva">
-          <h3>{t.orcamentoPecasEspModoIvaTitulo || 'Preços no orçamento'}</h3>
-          <div className="orcamento-pecas-especiais-iva-badge">
-            {incluirIva
-              ? (t.orcamentoPecasEspBadgeComIva || 'Modo: com IVA a {{taxa}}%').replace(
-                  /\{\{taxa\}\}/g,
-                  String(taxaIva)
-                )
-              : t.orcamentoPecasEspBadgeSemIva || 'Modo: sem IVA'}
-          </div>
-          <div className="orcamento-pecas-especiais-iva-actions">
-            <button
-              type="button"
-              className={`orcamento-pecas-especiais-iva-btn ${!incluirIva ? 'is-active' : ''}`}
-              onClick={() => setIncluirIva(false)}
+          <div className="orcamento-pecas-especiais-iva-row orcamento-pecas-especiais-iva-row--main">
+            <h3 className="orcamento-pecas-especiais-iva-row__title">
+              {t.orcamentoPecasEspModoIvaTitulo || 'Preços no orçamento'}
+            </h3>
+            <span
+              className={`orcamento-pecas-especiais-iva-badge${incluirIva ? ' orcamento-pecas-especiais-iva-badge--com' : ''}`}
             >
-              {t.orcamentoPecasEspSemIvaBtn || 'Sem IVA'}
-            </button>
-            <button
-              type="button"
-              className={`orcamento-pecas-especiais-iva-btn orcamento-pecas-especiais-iva-btn--com ${incluirIva ? 'is-active' : ''}`}
-              onClick={() => setIncluirIva(true)}
-            >
-              {t.orcamentoPecasEspComIvaBtn || 'Com IVA'}
-            </button>
-          </div>
-          {incluirIva ? (
-            <label className="orcamento-pecas-especiais-iva-taxa">
-              {t.orcamentoPecasEspIvaTaxaLabel || 'Taxa de IVA (%)'}
-              <input
-                type="number"
-                min={0}
-                max={100}
-                step={0.5}
-                value={taxaIva}
-                onChange={(e) => setTaxaIva(parseFloat(e.target.value) || 0)}
-                className="orcamento-pecas-especiais-input orcamento-pecas-especiais-input--taxa"
-              />
-            </label>
-          ) : null}
-          <div className="orcamento-pecas-especiais-totais-resumo">
-            <span>
-              {t.totalSemIva || 'Total sem IVA'}: <strong>{totalLiquidoFmt}</strong>
+              {incluirIva
+                ? (t.orcamentoPecasEspBadgeComIva || 'Modo: com IVA a {{taxa}}%').replace(
+                    /\{\{taxa\}\}/g,
+                    String(taxaIva)
+                  )
+                : t.orcamentoPecasEspBadgeSemIva || 'Modo: sem IVA — preços líquidos'}
             </span>
+            <div className="orcamento-pecas-especiais-iva-actions">
+              <button
+                type="button"
+                className={`orcamento-pecas-especiais-iva-btn ${!incluirIva ? 'is-active' : ''}`}
+                onClick={() => {
+                  setIncluirIva(false)
+                  setModoCalculoTotal('linhas')
+                }}
+              >
+                {t.orcamentoPecasEspSemIvaBtn || 'Sem IVA'}
+              </button>
+              <button
+                type="button"
+                className={`orcamento-pecas-especiais-iva-btn orcamento-pecas-especiais-iva-btn--com ${incluirIva ? 'is-active' : ''}`}
+                onClick={() => setIncluirIva(true)}
+              >
+                {t.orcamentoPecasEspComIvaBtn || 'Com IVA'}
+              </button>
+            </div>
             {incluirIva ? (
-              <>
-                <span>
-                  {t.valorIva || 'IVA'} ({taxaIva}%): <strong>{totalIvaFmt}</strong>
-                </span>
-                <span>
-                  {t.totalComIva || 'Total com IVA'}: <strong>{totalComIvaFmt}</strong>
-                </span>
-              </>
-            ) : null}
+              <label className="orcamento-pecas-especiais-iva-taxa orcamento-pecas-especiais-iva-taxa--inline">
+                <span>{t.orcamentoPecasEspIvaTaxaLabel || 'Taxa de IVA (%)'}</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={0.5}
+                  value={taxaIva}
+                  onChange={(e) => setTaxaIva(parseFloat(e.target.value) || 0)}
+                  className="orcamento-pecas-especiais-input orcamento-pecas-especiais-input--taxa"
+                />
+              </label>
+            ) : (
+              <span className="orcamento-pecas-especiais-iva-inline-total">
+                {t.totalSemIva || 'Total sem IVA'}: <strong>{totalLiquidoFmt}</strong>
+              </span>
+            )}
           </div>
+
+          {incluirIva ? (
+            <div className="orcamento-pecas-especiais-iva-row orcamento-pecas-especiais-iva-row--calc">
+              <span className="orcamento-pecas-especiais-modo-calculo__label">
+                {t.orcamentoPecasEspModoCalculoTitulo || 'Como calcular o total'}
+              </span>
+              <div className="orcamento-pecas-especiais-modo-calculo__btns">
+                <button
+                  type="button"
+                  className={`orcamento-pecas-especiais-iva-btn ${modoCalculoTotal === 'linhas' ? 'is-active' : ''}`}
+                  onClick={() => setModoCalculoTotal('linhas')}
+                >
+                  {t.orcamentoPecasEspModoSomaLinhas || 'Soma das linhas'}
+                </button>
+                <button
+                  type="button"
+                  className={`orcamento-pecas-especiais-iva-btn orcamento-pecas-especiais-iva-btn--com ${modoCalculoTotal === 'valor-final' ? 'is-active' : ''}`}
+                  onClick={() => {
+                    setModoCalculoTotal('valor-final')
+                    if (!valorFinalComIva.trim() && totaisIva.comIva > 0) {
+                      setValorFinalComIva(String(Math.round(totaisIva.comIva * 100) / 100).replace('.', ','))
+                    }
+                  }}
+                >
+                  {t.orcamentoPecasEspModoValorFinal || 'Valor final acordado'}
+                </button>
+              </div>
+              {modoCalculoTotal === 'valor-final' ? (
+                <label className="orcamento-pecas-especiais-valor-final-inline">
+                  <span>{t.orcamentoPecasEspValorFinalLabel || 'Valor final com IVA (€)'}</span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={valorFinalComIva}
+                    onChange={(e) => setValorFinalComIva(e.target.value)}
+                    placeholder={t.orcamentoPecasEspValorFinalPlaceholder || 'Ex.: 2500'}
+                    className="orcamento-pecas-especiais-input orcamento-pecas-especiais-input--valor-final"
+                  />
+                </label>
+              ) : null}
+            </div>
+          ) : null}
+
+          {incluirIva && modoCalculoTotal === 'valor-final' ? (
+            <p className="orcamento-pecas-especiais-hint orcamento-pecas-especiais-valor-final-hint">
+              {t.orcamentoPecasEspValorFinalHint ||
+                'Indique o preço que disse ao cliente (ex.: 2500 €). O programa calcula o valor sem IVA e o montante de IVA.'}
+            </p>
+          ) : null}
+
+          {incluirIva ? (
+            <div className="orcamento-pecas-especiais-iva-row orcamento-pecas-especiais-iva-row--totais">
+              <div className="orcamento-pecas-especiais-total-box">
+                <span className="orcamento-pecas-especiais-total-box__label">
+                  {t.totalSemIva || 'Total sem IVA'}
+                </span>
+                <strong className="orcamento-pecas-especiais-total-box__valor">{totalLiquidoFmt}</strong>
+              </div>
+              <div className="orcamento-pecas-especiais-total-box orcamento-pecas-especiais-total-box--iva">
+                <span className="orcamento-pecas-especiais-total-box__label">
+                  {t.valorIva || 'IVA'} ({totaisIva.taxa}%)
+                </span>
+                <strong className="orcamento-pecas-especiais-total-box__valor">{totalIvaFmt}</strong>
+              </div>
+              <div className="orcamento-pecas-especiais-total-box orcamento-pecas-especiais-total-box--final">
+                <span className="orcamento-pecas-especiais-total-box__label">
+                  {t.totalComIva || 'Total com IVA'}
+                </span>
+                <strong className="orcamento-pecas-especiais-total-box__valor">{totalComIvaFmt}</strong>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="orcamento-pecas-especiais-section">
