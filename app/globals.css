@@ -5996,15 +5996,60 @@ a:focus-visible {
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.clientes-alfa-nome-btn__titulo {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #fff;
+  word-break: break-word;
+  width: 100%;
+}
+.clientes-alfa-nome-btn__meta {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.58);
+  word-break: break-word;
+  width: 100%;
 }
 .clientes-alfa-nome-btn:hover {
   background: rgba(0, 200, 83, 0.12);
   border-color: rgba(0, 200, 83, 0.45);
   color: #ffffff;
 }
+.clientes-modal-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .clientes-modal-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .clientes-modal-cards-grid .cliente-lista-card-nome,
+  .clientes-modal-cards-grid .cliente-lista-card-sub {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    word-break: break-word;
+  }
+}
+
 .clientes-alfa-voltar {
   font-size: 13px;
 }
+
 
 /* Relatórios de Serviço — lista alfabética (só nome do cliente) */
 .rs-relatorios-alfa-wrap {
@@ -6031,8 +6076,8 @@ a:focus-visible {
   }
 }
 
-/* Clientes > Listar — telemóvel: cartão não corta nome / estado à direita */
-@media (max-width: 480px) {
+/* Clientes > Listar — telemóvel/tablet: cartão não corta nome / estado à direita */
+@media (max-width: 1024px) {
   .cliente-lista-card {
     align-items: flex-start !important;
   }
@@ -6286,15 +6331,18 @@ a:focus-visible {
 
 .relatorio-equipamento-card__origem-radios {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 4px;
 }
 
 .relatorio-equipamento-card__origem-radio {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
+  flex: 1 1 calc(50% - 4px);
+  min-width: min(100%, 148px);
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid rgba(100, 181, 246, 0.25);
@@ -6304,6 +6352,13 @@ a:focus-visible {
   line-height: 1.35;
   color: rgba(255, 255, 255, 0.92);
   transition: border-color 0.15s, background 0.15s;
+  box-sizing: border-box;
+}
+
+.relatorio-equipamento-card__origem-radio > span:last-child {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .relatorio-equipamento-card__origem-radio:hover {
@@ -6323,7 +6378,7 @@ a:focus-visible {
   flex: 0 0 18px;
   width: 18px;
   height: 18px;
-  margin-top: 1px;
+  margin-top: 0;
   border-radius: 50%;
   border: 2px solid rgba(100, 181, 246, 0.65);
   background: rgba(18, 18, 18, 0.9);
@@ -8362,8 +8417,9 @@ a:focus-visible {
 }
 
 @media (min-width: 769px) {
-  .clientes-cadastro-page .clientes-module-toolbar,
-  .clientes-cadastro-page .fornecedores-module-toolbar {
+  /* Só ocultar a toolbar mobile quando as abas desktop estão visíveis (não em tablet ≤1024 compacto) */
+  .app-layout:not(.app-compact-layout) .clientes-cadastro-page .clientes-module-toolbar,
+  .app-layout:not(.app-compact-layout) .clientes-cadastro-page .fornecedores-module-toolbar {
     display: none !important;
   }
 }
@@ -25989,7 +26045,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   color: rgba(255, 255, 255, 0.45);
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   .cliente-detalhe-v2__info-grid {
     grid-template-columns: 1fr;
   }
@@ -26006,6 +26062,14 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
   .cliente-detalhe-v2__fin-grid--4 {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .cliente-detalhe-v2__card {
+    padding: clamp(16px, 3vw, 24px);
+  }
+
+  .cliente-detalhe-v2__profile-name {
+    word-break: break-word;
   }
 }
 

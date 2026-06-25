@@ -150,6 +150,12 @@ import { DEMO_VISITOR_USER } from './lib/demoManagement'
 import { AdministradorContent } from './components/admin/AdministradorContent'
 import { AdminUserFormPanel } from './components/admin/AdminUserFormPanel'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
+import { OrcamentoPecasEspeciaisContent } from './components/OrcamentoPecasEspeciaisContent'
+import {
+  garantirCodigosClientes,
+  gerarProximoCodigoCliente,
+  codigoClienteExibicao,
+} from './lib/clienteCodigoUtils'
 import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
 import { ClienteCadastroForm, emptyClienteFormState, type ClienteFormState } from './components/ClienteCadastroForm'
@@ -1098,6 +1104,7 @@ const GESTAO_FINANCEIRA_TAB_TYPES = new Set<string>([
   'pagamentos-contador',
   'orcamentos-avulso',
   'pedido-orcamentos-avulso',
+  'orcamentos-pecas-especiais',
   'orcamento-servico-tecnico',
 ])
 
@@ -1130,6 +1137,7 @@ const SIDEBAR_TRANSLATION_KEY_BY_ID: Record<string, string> = {
   'fechamento-relatorios-servicos-default': 'fechamentoRelatoriosServicosTitle',
   'orcamentos-avulso-default': 'orcamentosAvulsoTitle',
   'orcamento-servico-tecnico-default': 'orcamentoServicoTecnicoTitle',
+  'orcamentos-pecas-especiais-default': 'orcamentoPecasEspeciaisTitle',
   'pedido-orcamentos-avulso-default': 'pedidoOrcamentosAvulsoTitle',
   'registro-despesas-default': 'registroDespesasTitle',
   'mapa-visual-separacao-pecas-default': 'mapaVisualSeparacaoPecasTitle',
@@ -1187,6 +1195,7 @@ function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
   if ([
     'orcamentos-avulso-default',
     'orcamento-servico-tecnico-default',
+    'orcamentos-pecas-especiais-default',
     'pedido-orcamentos-avulso-default',
   ].includes(buttonId)) return 'gestao-custos'
 
@@ -3107,6 +3116,8 @@ type EquipamentoCliente = {
 
 type Cliente = {
   id: string
+  /** Código legível (ex.: NS000042) — gerado automaticamente */
+  codigoCliente?: string
   nomeEmpresa: string
   morada: string
   localidade: string
@@ -4108,7 +4119,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-pagamento-transferencia' | 'ficha-fatura-cliente' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'pagamentos-contador' | 'manuais-informacoes-tecnicas' | 'biblia-nonato-service' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-basico' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa' | 'informacoes-mecanicas-eletricas'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-pagamento-transferencia' | 'ficha-fatura-cliente' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamentos-pecas-especiais' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'pagamentos-contador' | 'manuais-informacoes-tecnicas' | 'biblia-nonato-service' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-basico' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa' | 'informacoes-mecanicas-eletricas'
 
 type Tab = {
   id: string
@@ -4140,6 +4151,7 @@ const TAB_DEFAULT_PARENT_HUB: Partial<Record<TabType, string>> = {
   'gestao-custos': 'gestao-custos',
   'orcamentos-avulso': 'gestao-custos',
   'pedido-orcamentos-avulso': 'gestao-custos',
+  'orcamentos-pecas-especiais': 'gestao-custos',
   'orcamento-servico-tecnico': 'gestao-custos',
   'registro-despesas': 'gestao-financeira',
   'checklist-hub': 'checklist-group',
@@ -4197,6 +4209,7 @@ const HUB_CARD_DESC_BY_BUTTON_ID: Record<string, readonly string[]> = {
   'fechamento-relatorios-servicos-default': ['fechamentoRelatoriosServicosDesc'],
   'orcamentos-avulso-default': ['orcamentosAvulsoHubCardDesc'],
   'pedido-orcamentos-avulso-default': ['pedidoOrcamentosAvulsoHubCardDesc'],
+  'orcamentos-pecas-especiais-default': ['orcamentoPecasEspeciaisHubCardDesc'],
   'orcamento-servico-tecnico-default': ['orcamentoServicoTecnicoSubtitle'],
   'registro-despesas-default': ['registroDespesasDesc'],
   'mapa-visual-separacao-pecas-default': ['mapaVisualSeparacaoPecasHubCardDesc'],
@@ -5418,6 +5431,7 @@ export default function Dashboard() {
       'gestao-custos': 'open-gestao-custos',
       'orcamentos-avulso': 'open-orcamentos-avulso',
       'pedido-orcamentos-avulso': 'open-pedido-orcamentos-avulso',
+      'orcamentos-pecas-especiais': 'open-orcamentos-pecas-especiais',
       'orcamento-servico-tecnico': 'open-orcamento-servico-tecnico',
       'registro-despesas': 'open-registro-despesas',
       'mapa-visual-separacao-pecas': 'open-mapa-visual-separacao-pecas',
@@ -6493,6 +6507,7 @@ export default function Dashboard() {
       'clientes-financeiro': t?.clientesFinanceiroTitle || 'Clientes / Financeiro',
       'orcamentos-avulso': t?.orcamentosAvulsoTitle || 'Orçamentos Avulso',
       'pedido-orcamentos-avulso': t?.pedidoOrcamentosAvulsoTitle || 'PEDIDO DE ORÇAMENTOS AVULSO',
+      'orcamentos-pecas-especiais': (t as any)?.orcamentoPecasEspeciaisTitle || 'ORÇAMENTOS DE PEÇAS ESPECIAIS',
       'orcamento-servico-tecnico': (t as any)?.orcamentoServicoTecnicoTitle || 'ORÇAMENTO DE SERVIÇO TÉCNICO',
       'registro-despesas': t?.registroDespesasTitle || 'REGISTRO DE DESPESAS',
       'pagamentos-contador': t?.pagamentosContadorTitle || 'PAGAMENTOS AO CONTADOR',
@@ -6655,6 +6670,7 @@ export default function Dashboard() {
       'fechamento-relatorios-servicos': ['fechamentoRelatoriosServicosDesc'],
       'orcamentos-avulso': ['orcamentosAvulsoHubCardDesc'],
       'pedido-orcamentos-avulso': ['pedidoOrcamentosAvulsoHubCardDesc'],
+      'orcamentos-pecas-especiais': ['orcamentoPecasEspeciaisHubCardDesc'],
       'registro-despesas': ['registroDespesasDesc'],
       'mapa-visual-separacao-pecas': ['mapaVisualSeparacaoPecasHubCardDesc'],
       'clientes-financeiro': ['clientesFinanceiroHubCardDesc'],
@@ -6683,7 +6699,7 @@ export default function Dashboard() {
   }
 
   const getBottomTabAccentClass = (type: TabType): string => {
-    const fin: TabType[] = ['gestao-financeira', 'clientes-financeiro', 'comprovantes-despesas', 'orcamentos-avulso', 'pedido-orcamentos-avulso', 'orcamento-servico-tecnico', 'registro-despesas', 'pagamentos-contador']
+    const fin: TabType[] = ['gestao-financeira', 'clientes-financeiro', 'comprovantes-despesas', 'orcamentos-avulso', 'pedido-orcamentos-avulso', 'orcamentos-pecas-especiais', 'orcamento-servico-tecnico', 'registro-despesas', 'pagamentos-contador']
     if (fin.includes(type)) return 'bottom-tab-item--accent-finance'
     if (type === 'alerta-mensagens') return 'bottom-tab-item--accent-alert'
     const chk: TabType[] = ['pre-checklist', 'checklist', 'checklist-hub', 'gestao-grupos-checklist']
@@ -7237,6 +7253,7 @@ export default function Dashboard() {
       'open-gestao-grupos-checklist',
       'open-orcamentos-avulso',
       'open-pedido-orcamentos-avulso',
+      'open-orcamentos-pecas-especiais',
       'open-orcamento-servico-tecnico',
       'open-registro-despesas',
       'open-mapa-visual-separacao',
@@ -10074,13 +10091,20 @@ export default function Dashboard() {
           relatorios: c.relatorios && typeof c.relatorios === 'object' && !Array.isArray(c.relatorios) ? c.relatorios : {},
         }))
       if (savedClientes && Array.isArray(savedClientes) && savedClientes.length > 0) {
-        const normalized = normalizeClienteEquipamentos(savedClientes as Cliente[])
+        const base = normalizeClienteEquipamentos(savedClientes as Cliente[])
+        const { lista: normalized, alterou: codigosAlterados } = garantirCodigosClientes(base)
         setClientes(normalized)
-        // Garantir que está salvo no servidor
         saveData('nonato-clientes', normalized, false).catch(() => {})
+        if (codigosAlterados) {
+          saveData('nonato-clientes', normalized, true, false).catch(() => {})
+        }
       } else if (savedClientes && Array.isArray(savedClientes)) {
-        // Array vazio - manter mas não salvar
-        setClientes(normalizeClienteEquipamentos(savedClientes as Cliente[]))
+        const base = normalizeClienteEquipamentos(savedClientes as Cliente[])
+        const { lista: normalized, alterou: codigosAlterados } = garantirCodigosClientes(base)
+        setClientes(normalized)
+        if (codigosAlterados && normalized.length > 0) {
+          saveData('nonato-clientes', normalized, false).catch(() => {})
+        }
       }
 
       // Carregar cliente prioritário
@@ -10850,6 +10874,7 @@ export default function Dashboard() {
           'fechamento-relatorios-servicos-default': { translationKey: 'fechamentoRelatoriosServicosTitle', group: 'documentacao-relatorios' },
           'orcamentos-avulso-default': { translationKey: 'orcamentosAvulsoTitle', group: 'gestao-custos' },
           'pedido-orcamentos-avulso-default': { translationKey: 'pedidoOrcamentosAvulsoTitle', group: 'gestao-custos' },
+          'orcamentos-pecas-especiais-default': { translationKey: 'orcamentoPecasEspeciaisTitle', group: 'gestao-custos' },
           'orcamento-servico-tecnico-default': { translationKey: 'orcamentoServicoTecnicoTitle', group: 'gestao-custos' },
           'registro-despesas-default': { translationKey: 'registroDespesasTitle', group: 'gestao-financeira' },
           'mapa-visual-separacao-pecas-default': { translationKey: 'mapaVisualSeparacaoPecasTitle', group: 'almoxarifado-armazem' },
@@ -10935,6 +10960,7 @@ export default function Dashboard() {
                                b.id === 'fechamento-relatorios-servicos-default' ? 'open-fechamento-relatorios-servicos' :
                                b.id === 'orcamentos-avulso-default' ? 'open-orcamentos-avulso' :
                                b.id === 'pedido-orcamentos-avulso-default' ? 'open-pedido-orcamentos-avulso' :
+                               b.id === 'orcamentos-pecas-especiais-default' ? 'open-orcamentos-pecas-especiais' :
                                b.id === 'orcamento-servico-tecnico-default' ? 'open-orcamento-servico-tecnico' :
                                b.id === 'mapa-visual-separacao-pecas-default' ? 'open-mapa-visual-separacao-pecas' :
                                b.id === 'manuais-informacoes-tecnicas-default' ? 'open-manuais-informacoes-tecnicas' :
@@ -11228,6 +11254,7 @@ export default function Dashboard() {
       const hasCadastroServicos = buttons.some((b: SidebarButton) => b.id === 'cadastro-servicos-default')
       const hasOrcamentosAvulso = buttons.some((b: SidebarButton) => b.id === 'orcamentos-avulso-default')
       const hasPedidoOrcamentosAvulso = buttons.some((b: SidebarButton) => b.id === 'pedido-orcamentos-avulso-default')
+      const hasOrcamentosPecasEspeciais = buttons.some((b: SidebarButton) => b.id === 'orcamentos-pecas-especiais-default')
       const hasOrcamentoServicoTecnico = buttons.some((b: SidebarButton) => b.id === 'orcamento-servico-tecnico-default')
       const hasRegistroDespesas = buttons.some((b: SidebarButton) => b.id === 'registro-despesas-default')
       const hasMapaVisualSeparacaoPecas = buttons.some((b: SidebarButton) => b.id === 'mapa-visual-separacao-pecas-default')
@@ -11765,6 +11792,18 @@ export default function Dashboard() {
           group: 'gestao-custos'
         }
         buttons.push(pedidoOrcamentosAvulsoButton)
+      }
+
+      if (!hasOrcamentosPecasEspeciais) {
+        const orcamentosPecasEspeciaisButton: SidebarButton = {
+          id: 'orcamentos-pecas-especiais-default',
+          name: 'ORÇAMENTOS DE PEÇAS ESPECIAIS',
+          action: 'open-orcamentos-pecas-especiais',
+          order: buttons.length,
+          translationKey: 'orcamentoPecasEspeciaisTitle',
+          group: 'gestao-custos',
+        }
+        buttons.push(orcamentosPecasEspeciaisButton)
       }
 
       if (!hasOrcamentoServicoTecnico) {
@@ -13127,6 +13166,7 @@ export default function Dashboard() {
       'fechamento-relatorios-servicos-default',
       'orcamentos-avulso-default',
       'pedido-orcamentos-avulso-default',
+      'orcamentos-pecas-especiais-default',
       'orcamento-servico-tecnico-default',
       'registro-despesas-default',
       'mapa-visual-separacao-pecas-default',
@@ -13181,6 +13221,8 @@ export default function Dashboard() {
         return safeT?.orcamentosAvulsoTitle || button.name || ''
       } else if (button.id === 'pedido-orcamentos-avulso-default') {
         return safeT?.pedidoOrcamentosAvulsoTitle || button.name || ''
+      } else if (button.id === 'orcamentos-pecas-especiais-default') {
+        return (safeT as any)?.orcamentoPecasEspeciaisTitle || button.name || ''
       } else if (button.id === 'orcamento-servico-tecnico-default') {
         return (safeT as any)?.orcamentoServicoTecnicoTitle || button.name || ''
       } else if (button.id === 'registro-despesas-default') {
@@ -16283,15 +16325,17 @@ export default function Dashboard() {
             : c
         )
       } else {
+        const codigoCliente = gerarProximoCodigoCliente(clientes)
         const newCliente: Cliente = savedCliente = {
           id: Date.now().toString(),
+          codigoCliente,
           ...clienteForm,
           grupoTarifaId,
           kmIdaPadrao,
           kmRetornoPadrao,
           tipoCliente,
           equipamentos: [],
-          relatorios: {} // Pasta na Biblioteca de Relatórios (Relatórios de Serviço + Despesas)
+          relatorios: {},
         }
         updatedClientes = [...clientes, newCliente]
       }
@@ -25430,6 +25474,7 @@ export default function Dashboard() {
     'open-almoxarifado': 'extras',
     'open-orcamentos-avulso': 'cadastroServicos',
     'open-pedido-orcamentos-avulso': 'cadastroServicos',
+    'open-orcamentos-pecas-especiais': 'cadastroServicos',
     'open-orcamento-servico-tecnico': 'cadastroServicos',
     'open-registro-despesas': 'cadastroServicos',
     'open-pagamentos-contador': 'cadastroServicos',
@@ -34946,9 +34991,51 @@ export default function Dashboard() {
               (clienteListaDetalheId ? ' clientes-detalhe-page' : '')
             }
           >
-            {/* Barra mobile — oculta na aba Cadastrar (layout Novo Cliente) */}
-            {!clienteListaDetalheId ? (
-            <div className="mobile-sticky-toolbar clientes-module-toolbar">
+            {/* Barra mobile/tablet — visível em layout compacto (≤1024px); em cadastro desktop largo oculta via CSS */}
+            <div
+              className={
+                'mobile-sticky-toolbar clientes-module-toolbar' +
+                (clienteListaDetalheId ? ' clientes-detalhe-toolbar' : '')
+              }
+            >
+              {clienteListaDetalheId ? (
+                <>
+                  <button
+                    type="button"
+                    className="mobile-toolbar-btn mobile-toolbar-voltar"
+                    onClick={() => setClienteListaDetalheId(null)}
+                    title={safeT?.voltar || 'Voltar'}
+                  >
+                    ↶ {(safeT as any)?.clientesAlfabetoVoltarLista || safeT?.voltar || 'Voltar à lista'}
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile-toolbar-btn"
+                    onClick={() => {
+                      const alvo = clientes.find((x) => x.id === clienteListaDetalheId)
+                      if (alvo) handleEditCliente(alvo)
+                      setClientesActiveTab('cadastrar')
+                      setClienteListaDetalheId(null)
+                    }}
+                  >
+                    ✏️ {safeT?.edit || 'Editar'}
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile-toolbar-btn"
+                    onClick={() => {
+                      setClientesActiveTab('listar')
+                      setClienteListaDetalheId(null)
+                    }}
+                  >
+                    📋 {safeT?.clientesCadastrados || 'Listar'}
+                  </button>
+                  <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>
+                    🏠
+                  </button>
+                </>
+              ) : (
+                <>
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>
                 ↶ {safeT?.voltar || 'Voltar'}
               </button>
@@ -34990,8 +35077,9 @@ export default function Dashboard() {
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>
                 🏠
               </button>
+                </>
+              )}
             </div>
-            ) : null}
             {/* Cabeçalho Profissional - oculto em mobile (toolbar substitui) e na aba Cadastrar (formulário Novo Cliente) */}
             {clientesActiveTab !== 'cadastrar' && !clienteListaDetalheId ? (
             <div className="tab-header-desktop tab-glass-hero">
@@ -35663,7 +35751,22 @@ export default function Dashboard() {
                                 className="clientes-alfa-nome-btn"
                                 onClick={() => setClienteListaDetalheId(c.id)}
                               >
-                                {c.nomeEmpresa}
+                                <span className="clientes-alfa-nome-btn__titulo">{c.nomeEmpresa}</span>
+                                {(c.telefones || c.localidade || c.morada || c.numeroContribuicaoFiscal || c.email) ? (
+                                  <span className="clientes-alfa-nome-btn__meta">
+                                    {[
+                                      c.telefones?.trim(),
+                                      [c.localidade, c.codigoPostal].filter(Boolean).join(' ').trim() ||
+                                        c.morada?.trim(),
+                                      c.numeroContribuicaoFiscal
+                                        ? `NIF ${c.numeroContribuicaoFiscal}`
+                                        : '',
+                                      c.email?.trim(),
+                                    ]
+                                      .filter(Boolean)
+                                      .join(' · ')}
+                                  </span>
+                                ) : null}
                               </button>
                               <ClienteGpsNavButton
                                 language={selectedLanguage}
@@ -71053,7 +71156,7 @@ A1;Peça exemplo;10`}
             {clientes.length === 0 ? (
               <p>{safeT?.noClientes || 'Nenhum cliente cadastrado.'}</p>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '8px' }}>
+              <div className="clientes-modal-cards-grid">
                 {clientesOrdenadosAlfabeticamente.map(cliente => {
                   // Gerar iniciais do nome da empresa
                   const getIniciais = (nome: string) => {
@@ -71104,6 +71207,7 @@ A1;Peça exemplo;10`}
                       key={cliente.id}
                       data-cliente-card-id={cliente.id}
                       className={[
+                        'cliente-lista-card',
                         ehDevedor ? 'cliente-lista-card-devedor' : '',
                         highlightDevedor ? 'cliente-card-alerta-devedor' : '',
                       ]
@@ -71172,7 +71276,9 @@ A1;Peça exemplo;10`}
                       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <h3 style={{ 
+                            <h3
+                              className="cliente-lista-card-nome"
+                              style={{
                               margin: 0, 
                               color: highlightDevedor ? (ehDevedor ? '#fff' : '#ff6666') : '#fff', 
                               fontSize: '14px',
@@ -71183,7 +71289,9 @@ A1;Peça exemplo;10`}
                             }}>
                               {cliente.nomeEmpresa}
                             </h3>
-                            <p style={{ 
+                            <p
+                              className="cliente-lista-card-sub"
+                              style={{ 
                               margin: 0, 
                               color: highlightDevedor ? (ehDevedor ? '#fecaca' : '#ff8888') : '#888', 
                               fontSize: '11px',
