@@ -37,6 +37,11 @@ type GaleriaTranslations = {
   cliqueAbrir?: string
   codigo?: string
   semPecasCategoria?: string
+  buscarPorCodigo?: string
+  buscarPlaceholder?: string
+  buscaResultados?: string
+  buscaVazio?: string
+  limparBusca?: string
 }
 
 type Props = {
@@ -49,6 +54,8 @@ type Props = {
   temImagemPropria: (imagem: string | undefined | null) => boolean
   onThumbEnter?: (ev: React.MouseEvent, src: string, label: string) => void
   onThumbLeave?: () => void
+  buscaCodigo?: string
+  onBuscaCodigoChange?: (value: string) => void
   t?: GaleriaTranslations
 }
 
@@ -65,6 +72,69 @@ function primeiraImagemCategoria(
   return undefined
 }
 
+function renderPecaCard(
+  peca: PecaBibliotecaGaleria,
+  opts: {
+    srcImagem: (imagem: string | undefined | null) => string
+    temImagemPropria: (imagem: string | undefined | null) => boolean
+    onThumbEnter?: (ev: React.MouseEvent, src: string, label: string) => void
+    onThumbLeave?: () => void
+    codigoLabel: string
+  }
+) {
+  const { srcImagem, temImagemPropria, onThumbEnter, onThumbLeave, codigoLabel } = opts
+  return (
+    <article key={peca.id} className="biblioteca-pecas-hub__piece-card">
+      <div
+        className="biblioteca-pecas-hub__piece-thumb"
+        onMouseEnter={(ev) => {
+          if (!temImagemPropria(peca.imagem) || !onThumbEnter) return
+          onThumbEnter(ev, String(peca.imagem).trim(), peca.nome)
+          const img = ev.currentTarget.querySelector('img')
+          if (img instanceof HTMLImageElement) img.style.transform = 'scale(1.08)'
+        }}
+        onMouseLeave={(ev) => {
+          onThumbLeave?.()
+          const img = ev.currentTarget.querySelector('img')
+          if (img instanceof HTMLImageElement) img.style.transform = 'scale(1)'
+        }}
+      >
+        <img
+          src={srcImagem(peca.imagem)}
+          alt={peca.nome}
+          className={temImagemPropria(peca.imagem) ? undefined : 'biblioteca-pecas-hub__piece-img--padrao'}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            display: 'block',
+            transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
+          }}
+        />
+      </div>
+      <h4 className="biblioteca-pecas-hub__piece-name">
+        {peca.numeroSequenciaGrupo ? (
+          <span
+            className="biblioteca-pecas-numero-circulo biblioteca-pecas-numero-circulo--sm"
+            style={{ marginRight: '8px', verticalAlign: 'middle' }}
+            title={peca.numeroSequenciaGrupo}
+            aria-label={peca.numeroSequenciaGrupo}
+          >
+            {peca.numeroSequenciaGrupo}
+          </span>
+        ) : null}
+        {peca.nome}
+      </h4>
+      <div className="biblioteca-pecas-hub__piece-meta">
+        <span className="biblioteca-pecas-hub__piece-chip biblioteca-pecas-hub__piece-chip--code">
+          <span className="biblioteca-pecas-hub__piece-chip-k">{codigoLabel}</span>
+          <span className="biblioteca-pecas-hub__piece-chip-v">{peca.codigo || '—'}</span>
+        </span>
+      </div>
+    </article>
+  )
+}
+
 export function BibliotecaPecasGaleriaCategorias({
   categorias,
   pecasCatalogo,
@@ -75,11 +145,88 @@ export function BibliotecaPecasGaleriaCategorias({
   temImagemPropria,
   onThumbEnter,
   onThumbLeave,
+  buscaCodigo = '',
+  onBuscaCodigoChange,
   t = {},
 }: Props) {
   const categoriasOrdenadas = [...categorias].sort((a, b) =>
     (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
   )
+  const codigoLabel = t.codigo || 'Código'
+  const cardOpts = { srcImagem, temImagemPropria, onThumbEnter, onThumbLeave, codigoLabel }
+  const q = buscaCodigo.trim().toLowerCase()
+  const emBusca = q.length > 0
+
+  const barraBusca =
+    onBuscaCodigoChange != null ? (
+      <div className="biblioteca-galeria-categorias__search" role="search">
+        <div className="biblioteca-galeria-categorias__search-head">
+          <span className="biblioteca-galeria-categorias__search-icon" aria-hidden>
+            🔍
+          </span>
+          <div>
+            <strong className="biblioteca-galeria-categorias__search-title">
+              {t.buscarPorCodigo || 'Buscar peça por código'}
+            </strong>
+            <p className="biblioteca-galeria-categorias__search-hint">
+              Digite o código ou parte dele para encontrar na biblioteca.
+            </p>
+          </div>
+        </div>
+        <div className="biblioteca-galeria-categorias__search-row">
+          <input
+            id="biblioteca-galeria-busca-codigo"
+            type="search"
+            className="biblioteca-galeria-categorias__search-input"
+            value={buscaCodigo}
+            onChange={(e) => onBuscaCodigoChange(e.target.value)}
+            placeholder={t.buscarPlaceholder || 'Ex: 700030001 ou FO-123'}
+            autoComplete="off"
+            enterKeyHint="search"
+          />
+          {emBusca ? (
+            <button
+              type="button"
+              className="biblioteca-btn--orange biblioteca-galeria-categorias__search-clear"
+              onClick={() => onBuscaCodigoChange('')}
+            >
+              {t.limparBusca || 'Limpar'}
+            </button>
+          ) : null}
+        </div>
+      </div>
+    ) : null
+
+  if (emBusca) {
+    const resultados = [...pecasCatalogo]
+      .filter((peca) =>
+        String(peca.codigo ?? '')
+          .trim()
+          .toLowerCase()
+          .includes(q)
+      )
+      .sort(compararPecasGaleriaPorNumero)
+
+    return (
+      <div className="biblioteca-galeria-categorias">
+        {barraBusca}
+        <p className="biblioteca-galeria-categorias__lead biblioteca-galeria-categorias__search-results">
+          {String(t.buscaResultados || '{count} peça(s) encontrada(s) para «{codigo}»')
+            .replace('{count}', String(resultados.length))
+            .replace('{codigo}', buscaCodigo.trim())}
+        </p>
+        {resultados.length === 0 ? (
+          <p className="biblioteca-galeria-categorias__empty">
+            {t.buscaVazio || 'Nenhuma peça com este código no catálogo.'}
+          </p>
+        ) : (
+          <div className="biblioteca-pecas-hub__piece-grid biblioteca-galeria-categorias__grid-pecas">
+            {resultados.map((peca) => renderPecaCard(peca, cardOpts))}
+          </div>
+        )}
+      </div>
+    )
+  }
 
   if (categoriaSelecionadaId) {
     const categoria = categorias.find((c) => c.id === categoriaSelecionadaId)
@@ -89,6 +236,7 @@ export function BibliotecaPecasGaleriaCategorias({
 
     return (
       <div className="biblioteca-galeria-categorias">
+        {barraBusca}
         <div className="biblioteca-galeria-categorias__head">
           <button type="button" className="biblioteca-btn--ghost" onClick={onVoltarCategorias}>
             ← {t.voltar || 'Voltar às categorias'}
@@ -107,58 +255,7 @@ export function BibliotecaPecasGaleriaCategorias({
           </p>
         ) : (
           <div className="biblioteca-pecas-hub__piece-grid biblioteca-galeria-categorias__grid-pecas">
-            {pecasCategoria.map((peca) => (
-              <article key={peca.id} className="biblioteca-pecas-hub__piece-card">
-                <div
-                  className="biblioteca-pecas-hub__piece-thumb"
-                  onMouseEnter={(ev) => {
-                    if (!temImagemPropria(peca.imagem) || !onThumbEnter) return
-                    onThumbEnter(ev, String(peca.imagem).trim(), peca.nome)
-                    const img = ev.currentTarget.querySelector('img')
-                    if (img instanceof HTMLImageElement) img.style.transform = 'scale(1.08)'
-                  }}
-                  onMouseLeave={(ev) => {
-                    onThumbLeave?.()
-                    const img = ev.currentTarget.querySelector('img')
-                    if (img instanceof HTMLImageElement) img.style.transform = 'scale(1)'
-                  }}
-                >
-                  <img
-                    src={srcImagem(peca.imagem)}
-                    alt={peca.nome}
-                    className={
-                      temImagemPropria(peca.imagem) ? undefined : 'biblioteca-pecas-hub__piece-img--padrao'
-                    }
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block',
-                      transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
-                    }}
-                  />
-                </div>
-                <h4 className="biblioteca-pecas-hub__piece-name">
-                  {peca.numeroSequenciaGrupo ? (
-                    <span
-                      className="biblioteca-pecas-numero-circulo biblioteca-pecas-numero-circulo--sm"
-                      style={{ marginRight: '8px', verticalAlign: 'middle' }}
-                      title={peca.numeroSequenciaGrupo}
-                      aria-label={peca.numeroSequenciaGrupo}
-                    >
-                      {peca.numeroSequenciaGrupo}
-                    </span>
-                  ) : null}
-                  {peca.nome}
-                </h4>
-                <div className="biblioteca-pecas-hub__piece-meta">
-                  <span className="biblioteca-pecas-hub__piece-chip biblioteca-pecas-hub__piece-chip--code">
-                    <span className="biblioteca-pecas-hub__piece-chip-k">{t.codigo || 'Código'}</span>
-                    <span className="biblioteca-pecas-hub__piece-chip-v">{peca.codigo || '—'}</span>
-                  </span>
-                </div>
-              </article>
-            ))}
+            {pecasCategoria.map((peca) => renderPecaCard(peca, cardOpts))}
           </div>
         )}
       </div>
@@ -167,10 +264,9 @@ export function BibliotecaPecasGaleriaCategorias({
 
   return (
     <div className="biblioteca-galeria-categorias">
+      {barraBusca}
       <div className="biblioteca-galeria-categorias__intro">
-        <h2 className="biblioteca-galeria-categorias__title">
-          {t.titulo || 'Categorias'}
-        </h2>
+        <h2 className="biblioteca-galeria-categorias__title">{t.titulo || 'Categorias'}</h2>
         <p className="biblioteca-galeria-categorias__lead">
           {t.descricao ||
             'Escolha uma categoria para ver todas as imagens das peças. A capa usa automaticamente a primeira foto disponível.'}
@@ -196,11 +292,7 @@ export function BibliotecaPecasGaleriaCategorias({
               >
                 <div className="biblioteca-galeria-categorias__card-media">
                   {capa ? (
-                    <img
-                      src={srcImagem(capa)}
-                      alt=""
-                      className="biblioteca-galeria-categorias__card-img"
-                    />
+                    <img src={srcImagem(capa)} alt="" className="biblioteca-galeria-categorias__card-img" />
                   ) : (
                     <div className="biblioteca-galeria-categorias__card-placeholder">
                       <span>{(cat.nome || '?').slice(0, 2).toUpperCase()}</span>
