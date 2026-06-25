@@ -27,7 +27,7 @@ export const translations = {
     dashboardEntradaCard4Desc: "Custos, orçamentos e canais internos para fechar o ciclo com transparência.",
     dashboardEntrarPainelCompleto: "Entrar no sistema",
     dashboardEntradaNota: "O menu lateral está sempre disponível. Use o botão Ajuda (ou F1) no topo desta área; dentro de cada módulo aberto, o mesmo botão explica o ecrã em que está.",
-    dashboardShowcaseBadge: "Nonato Service · Gestão Técnica",
+    dashboardShowcaseBadge: "NONATO SERVICE · GESTÃO TÉCNICA",
     dashboardShowcaseAria: "Demonstração das funcionalidades do sistema",
     dashboardShowcaseSlide1Title: "Relatórios de serviço",
     dashboardShowcaseSlide1Desc: "Protocolos visuais, peças utilizadas, PDF profissional e envio ao cliente — tudo num fluxo claro.",

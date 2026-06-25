@@ -18894,41 +18894,64 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 .ns-showcase--modern .ns-showcase__brand-row {
   display: flex;
   align-items: center;
-  gap: clamp(12px, 2vw, 18px);
-  margin-bottom: clamp(14px, 2.5vh, 22px);
+  gap: clamp(16px, 2.4vw, 22px);
+  margin-bottom: clamp(18px, 3vh, 28px);
+  padding: clamp(10px, 1.4vh, 14px) clamp(14px, 2.2vw, 18px);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.58) 0%, rgba(8, 12, 18, 0.78) 100%);
+  border: 1px solid rgba(52, 211, 153, 0.18);
+  width: fit-content;
+  max-width: 100%;
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.ns-showcase--modern .ns-showcase__logo {
+  flex-shrink: 0;
+}
+.ns-showcase--modern .ns-showcase__logo > div {
+  gap: 0 !important;
 }
 .ns-showcase--modern .ns-showcase__logo .ns-logo-in-box {
-  width: clamp(68px, 8.5vw, 92px) !important;
-  height: clamp(68px, 8.5vw, 92px) !important;
+  width: clamp(88px, 10.5vw, 118px) !important;
+  height: clamp(88px, 10.5vw, 118px) !important;
   border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 200, 83, 0.38);
+  background: rgba(0, 0, 0, 0.45);
+  padding: 7px;
+  box-sizing: border-box;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.35),
+    0 0 24px rgba(0, 200, 83, 0.1);
 }
 .ns-showcase--modern .ns-showcase__brand-copy {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
 }
 .ns-showcase--modern .ns-showcase__badge {
   display: inline-flex;
   align-items: center;
   width: fit-content;
-  padding: 6px 14px;
+  padding: 7px 16px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
+  line-height: 1.25;
   text-transform: uppercase;
   color: #6ee7b7;
-  background: rgba(52, 211, 153, 0.1);
-  border: 1px solid rgba(52, 211, 153, 0.32);
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.38);
 }
 .ns-showcase--modern .ns-showcase__kicker {
   margin: 0;
-  font-size: clamp(13px, 1.85vw, 15px);
+  font-size: clamp(14px, 2vw, 16px);
   font-weight: 600;
-  color: rgba(148, 163, 184, 0.95);
-  letter-spacing: 0.02em;
+  color: rgba(226, 232, 240, 0.92);
+  letter-spacing: 0.015em;
+  line-height: 1.35;
 }
 .ns-showcase--modern .ns-showcase__headline {
   margin: 0 0 10px;
@@ -19255,6 +19278,23 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 .ns-showcase--modern.ns-showcase--compact {
   overflow: hidden;
   padding: 8px max(10px, env(safe-area-inset-left, 0px)) 10px max(10px, env(safe-area-inset-right, 0px));
+}
+.ns-showcase--modern.ns-showcase--compact .ns-showcase__brand-row {
+  gap: clamp(12px, 3vw, 16px);
+  padding: 10px 12px;
+  margin-bottom: clamp(12px, 2vh, 18px);
+}
+.ns-showcase--modern.ns-showcase--compact .ns-showcase__logo .ns-logo-in-box {
+  width: clamp(72px, 18vw, 96px) !important;
+  height: clamp(72px, 18vw, 96px) !important;
+  padding: 5px;
+}
+.ns-showcase--modern.ns-showcase--compact .ns-showcase__badge {
+  font-size: 11px;
+  padding: 6px 12px;
+}
+.ns-showcase--modern.ns-showcase--compact .ns-showcase__kicker {
+  font-size: clamp(12px, 3.2vw, 14px);
 }
 .ns-showcase--modern.ns-showcase--compact .ns-showcase__hero {
   justify-content: flex-start;
