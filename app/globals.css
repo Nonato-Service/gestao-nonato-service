@@ -27913,22 +27913,35 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   min-width: 44px;
   padding: 0;
   border-radius: 50%;
-  border: none;
-  background: #00c853;
-  color: #ffffff;
+  border: 1px solid rgba(0, 200, 83, 0.45);
+  background: rgba(0, 200, 83, 0.14);
+  color: #86efac;
   font-size: 18px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(0, 200, 83, 0.28);
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.cadastro-valores-v2__btn-nav:hover {
+  background: rgba(0, 200, 83, 0.22);
+  border-color: rgba(0, 200, 83, 0.55);
+  color: #bbf7d0;
 }
 
 .cadastro-valores-v2__btn-nav--home {
-  background: rgba(37, 99, 235, 0.15);
-  border: 1px solid rgba(96, 165, 250, 0.4);
+  background: rgba(37, 99, 235, 0.14);
+  border: 1px solid rgba(96, 165, 250, 0.45);
   color: #93c5fd;
   box-shadow: none;
+}
+
+.cadastro-valores-v2__btn-nav--home:hover {
+  background: rgba(37, 99, 235, 0.22);
+  border-color: rgba(96, 165, 250, 0.55);
+  color: #bfdbfe;
 }
 
 .cadastro-valores-v2__tabs {
@@ -27961,10 +27974,16 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .cadastro-valores-v2__tab--active {
-  background: #00c853;
-  border-color: #00c853;
-  color: #ffffff;
-  box-shadow: 0 4px 16px rgba(0, 200, 83, 0.28);
+  background: rgba(0, 200, 83, 0.14);
+  border-color: rgba(0, 200, 83, 0.45);
+  color: #86efac;
+  box-shadow: none;
+}
+
+.cadastro-valores-v2__tab--active:hover {
+  background: rgba(0, 200, 83, 0.22);
+  border-color: rgba(0, 200, 83, 0.55);
+  color: #bbf7d0;
 }
 
 .cadastro-valores-v2__alert {
@@ -28056,9 +28075,9 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .cadastro-valores-v2__grupo-btn--selected {
-  border: 2px solid #00c853;
-  background: rgba(0, 200, 83, 0.12);
-  box-shadow: 0 0 0 1px rgba(0, 200, 83, 0.2);
+  border: 1px solid rgba(0, 200, 83, 0.45);
+  background: rgba(0, 200, 83, 0.14);
+  box-shadow: none;
 }
 
 .cadastro-valores-v2__grupo-btn-name {
@@ -28172,9 +28191,17 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   font-weight: 600;
   border-radius: 10px;
   border: 1px solid rgba(96, 165, 250, 0.45);
-  background: rgba(37, 99, 235, 0.18);
+  background: rgba(37, 99, 235, 0.14);
   color: #93c5fd;
   cursor: pointer;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.cadastro-valores-v2__btn-info:hover {
+  background: rgba(37, 99, 235, 0.22);
+  border-color: rgba(96, 165, 250, 0.55);
+  color: #bfdbfe;
 }
 
 .cadastro-valores-v2__btn-warn {
@@ -28187,6 +28214,14 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   background: rgba(234, 179, 8, 0.14);
   color: #fde68a;
   cursor: pointer;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.cadastro-valores-v2__btn-warn:hover {
+  background: rgba(234, 179, 8, 0.22);
+  border-color: rgba(234, 179, 8, 0.55);
+  color: #fef3c7;
 }
 
 .cadastro-valores-v2__btn-danger {
@@ -28199,6 +28234,14 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   background: rgba(239, 68, 68, 0.14);
   color: #fca5a5;
   cursor: pointer;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.cadastro-valores-v2__btn-danger:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #fecaca;
 }
 
 .cadastro-valores-v2__btn-sm {
@@ -28391,9 +28434,36 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .cadastro-valores-modal .modal .btn-primary {
-  border-radius: 12px !important;
+  border-radius: 10px !important;
   font-weight: 600 !important;
   min-height: 40px;
+  border: 1px solid rgba(0, 200, 83, 0.45) !important;
+  background: rgba(0, 200, 83, 0.14) !important;
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+  box-shadow: none !important;
+}
+
+.cadastro-valores-modal .modal .btn-primary:hover {
+  background: rgba(0, 200, 83, 0.22) !important;
+  border-color: rgba(0, 200, 83, 0.55) !important;
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+}
+
+.cadastro-valores-modal .modal .btn-danger {
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+  background: rgba(239, 68, 68, 0.14) !important;
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
+  box-shadow: none !important;
+}
+
+.cadastro-valores-modal .modal .btn-danger:hover {
+  background: rgba(239, 68, 68, 0.22) !important;
+  border-color: rgba(239, 68, 68, 0.55) !important;
+  color: #fecaca !important;
+  -webkit-text-fill-color: #fecaca !important;
 }
 
 .cadastro-valores-modal .modal > div > div:first-child {
@@ -28412,8 +28482,10 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .cadastro-valores-modal .modal > div > div:first-child button[style*='rgba(18, 52, 24'] {
-  border: 2px solid #00c853 !important;
-  background: rgba(0, 200, 83, 0.12) !important;
+  border: 1px solid rgba(0, 200, 83, 0.45) !important;
+  background: rgba(0, 200, 83, 0.14) !important;
+  color: #86efac !important;
+  box-shadow: none !important;
 }
 
 /* === NS UI v2 — botões, formulários e modais em todo o sistema === */
@@ -28631,6 +28703,42 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   background: rgba(0, 200, 83, 0.22);
   border-color: rgba(0, 200, 83, 0.55);
   color: #bbf7d0;
+}
+
+/* Cadastro Serviços — garantir botões transparentes (verde / azul / vermelho / amarelo) */
+.cadastro-valores-v2 .cadastro-valores-v2__btn-green,
+.cadastro-valores-v2 .cadastro-valores-v2__btn-nav:not(.cadastro-valores-v2__btn-nav--home),
+.cadastro-valores-v2 .cadastro-valores-v2__tab--active {
+  border: 1px solid rgba(0, 200, 83, 0.45) !important;
+  background: rgba(0, 200, 83, 0.14) !important;
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+  box-shadow: none !important;
+}
+
+.cadastro-valores-v2 .cadastro-valores-v2__btn-info,
+.cadastro-valores-v2 .cadastro-valores-v2__btn-nav--home {
+  border: 1px solid rgba(96, 165, 250, 0.45) !important;
+  background: rgba(37, 99, 235, 0.14) !important;
+  color: #93c5fd !important;
+  -webkit-text-fill-color: #93c5fd !important;
+  box-shadow: none !important;
+}
+
+.cadastro-valores-v2 .cadastro-valores-v2__btn-danger {
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+  background: rgba(239, 68, 68, 0.14) !important;
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
+  box-shadow: none !important;
+}
+
+.cadastro-valores-v2 .cadastro-valores-v2__btn-warn {
+  border: 1px solid rgba(234, 179, 8, 0.45) !important;
+  background: rgba(234, 179, 8, 0.14) !important;
+  color: #fde68a !important;
+  -webkit-text-fill-color: #fde68a !important;
+  box-shadow: none !important;
 }
 
 @media (max-width: 768px) {
