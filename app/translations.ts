@@ -2103,7 +2103,7 @@ export const translations = {
     importacaoCodigosIgnorados: "Códigos ignorados:",
     importacaoColarCatalogoPasso1: "1. Copie várias linhas do site",
     importacaoColarCatalogoPasso2: "2. Cole tudo na caixa abaixo",
-    importacaoColarCatalogoPasso3: "3. Veja a pré-visualização antes de salvar",
+    importacaoColarCatalogoPasso3: "3. Clique em «Importar catálogo colado» — só entram peças novas; a caixa limpa-se sozinha",
     importacaoColarCatalogoPlaceholder: "Exemplo de colagem rápida:\n\nCOD-001\nMotor ventilador 220V\n34,90 €\n\nCOD-002\nSensor térmico\n12,50 €\n\nou\n[{\"codigo\":\"A1\",\"nome\":\"Peça exemplo\",\"preco\":\"10\"}]\n\nou\ncodigo;nome;preco\nA1;Peça exemplo;10",
     importacaoLojaBaseUrlLabel: "URL base da loja (opcional)",
     importacaoLojaBaseUrlPlaceholder: "https://shop.homag.com",

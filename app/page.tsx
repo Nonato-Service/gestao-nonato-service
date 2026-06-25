@@ -24745,6 +24745,125 @@ export default function Dashboard() {
     e.target.value = ''
   }, [parseRawToPecas, t, importacaoLojaBaseUrl, aplicarPreviewImportacaoFiltrado])
 
+  const limparEstadoColagemImportacao = useCallback(() => {
+    setImportacaoPreview(null)
+    setImportacaoTextoColado('')
+    setImportacaoDuplicadasIgnoradas(0)
+    setImportacaoUrlError(null)
+  }, [])
+
+  const executarEnvioImportacaoParaFila = useCallback(
+    (pecasOrigem: PecaBiblioteca[]) => {
+      if (!pecasOrigem.length) return
+
+      const existentes = pecasBiblioteca
+      const { novas: novasFiltradas, duplicadasCatalogo, duplicadasFila, duplicadasLote, semCodigo } =
+        separarPecasImportacao(pecasOrigem)
+      const ignoradasTotal =
+        duplicadasCatalogo.length + duplicadasFila.length + duplicadasLote.length + semCodigo.length
+
+      if (novasFiltradas.length === 0) {
+        const detalhe = montarMensagemImportacaoIgnoradas({
+          duplicadasCatalogo,
+          duplicadasFila,
+          duplicadasLote,
+          semCodigo,
+        })
+        const msgBase =
+          duplicadasCatalogo.length > 0
+            ? String(
+                (t as any)?.importacaoPreviewTodasDuplicadas ??
+                  'Nenhuma peça nova para adicionar (já existem no catálogo da biblioteca).'
+              ).replace('{count}', String(duplicadasCatalogo.length))
+            : duplicadasFila.length > 0
+              ? String(
+                  (t as any)?.importacaoPreviewTodasNaFila ??
+                    'Nenhuma peça nova: {count} já estão na fila amarela (pendentes).'
+                ).replace('{count}', String(duplicadasFila.length))
+              : (t as any)?.importacaoSemNovidades ?? 'Nenhuma peça nova para adicionar.'
+        const codes = listarCodigosPecasImport(
+          duplicadasCatalogo.length
+            ? duplicadasCatalogo
+            : duplicadasFila.length
+              ? duplicadasFila
+              : pecasOrigem
+        )
+        alert(
+          detalhe
+            ? `${msgBase}\n\n${detalhe}${codes ? `\n\n${(t as any)?.importacaoCodigosDuplicadosLista || 'Códigos:'} ${codes}` : ''}`
+            : codes
+              ? `${msgBase}\n\n${(t as any)?.importacaoCodigosDuplicadosLista || 'Códigos:'} ${codes}`
+              : msgBase
+        )
+        setImportacaoDuplicadasIgnoradas(ignoradasTotal)
+        setImportacaoUrlError(msgBase)
+        limparEstadoColagemImportacao()
+        return
+      }
+
+      const novos: PecaBiblioteca[] = novasFiltradas.map((p, i) => ({
+        ...p,
+        id: `import-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 9)}`,
+        dataCriacao: new Date().toISOString(),
+        importacaoPendente: true,
+      }))
+
+      if (ignoradasTotal > 0) {
+        const detalhe = montarMensagemImportacaoIgnoradas({
+          duplicadasCatalogo,
+          duplicadasFila,
+          duplicadasLote,
+          semCodigo,
+        })
+        const codes = listarCodigosPecasImport([...duplicadasCatalogo, ...duplicadasFila, ...duplicadasLote])
+        alert(
+          `${String(
+            (t as any)?.importacaoParcialDuplicadas ??
+              '{novas} peça(s) enviada(s) para a fila. {ignoradas} ignorada(s).'
+          )
+            .replace('{novas}', String(novos.length))
+            .replace('{ignoradas}', String(ignoradasTotal))}${detalhe ? `\n\n${detalhe}` : ''}${
+            codes ? `\n\n${(t as any)?.importacaoCodigosIgnorados || 'Códigos ignorados:'} ${codes}` : ''
+          }`
+        )
+        setImportacaoDuplicadasIgnoradas(ignoradasTotal)
+      }
+
+      const classificadosAutomaticamente = aplicarRegrasClassificacaoEmLista(novos, true)
+      const merged = [...existentes, ...classificadosAutomaticamente.lista]
+      const { lista: atualizadoNormalizado } = garantirNumerosSequenciaPecaBiblioteca(
+        merged.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca)),
+        categoriasPecas
+      )
+      setPecasBiblioteca(atualizadoNormalizado)
+      const mensagemBase =
+        t?.importacaoSucesso ??
+        `${novos.length} peça(s) enviada(s) para a fila. Abra cada uma e use Salvar para integrar ao catálogo da Biblioteca.`
+      const mensagemFinal =
+        classificadosAutomaticamente.alteradas > 0
+          ? `${mensagemBase} ${classificadosAutomaticamente.alteradas} já foram classificadas automaticamente.`
+          : mensagemBase
+      setImportacaoPosFilaModalMensagem(mensagemFinal)
+      limparEstadoColagemImportacao()
+      void saveData('nonato-pecas-biblioteca', atualizadoNormalizado).catch((err) => {
+        console.error('[importação fila]', err)
+        alert(
+          (t as any)?.importacaoErroGravarFila ??
+            'Não foi possível gravar na biblioteca. O armazenamento do navegador pode estar cheio — liberte espaço ou reduza imagens nas peças.'
+        )
+      })
+    },
+    [
+      aplicarRegrasClassificacaoEmLista,
+      categoriasPecas,
+      limparEstadoColagemImportacao,
+      montarMensagemImportacaoIgnoradas,
+      pecasBiblioteca,
+      separarPecasImportacao,
+      t,
+    ]
+  )
+
   const handleImportacaoColarTexto = useCallback(() => {
     const raw = importacaoTextoColado.trim()
     if (!raw) {
@@ -24755,116 +24874,42 @@ export default function Dashboard() {
       setImportacaoPreview(null)
       return
     }
-    const result = processarTextoImportacaoPecas(raw, raw)
-    aplicarResultadoColagemCatalogo(result, raw)
-  }, [importacaoTextoColado, processarTextoImportacaoPecas, aplicarResultadoColagemCatalogo, t])
 
-  const handleAdicionarImportacaoPreview = useCallback(() => {
-    if (!importacaoPreview || importacaoPreview.length === 0) return
-    const existentes = pecasBiblioteca
-    const { novas: novasFiltradas, duplicadasCatalogo, duplicadasFila, duplicadasLote, semCodigo } =
-      separarPecasImportacao(importacaoPreview)
-
-    if (novasFiltradas.length === 0) {
-      const detalhe = montarMensagemImportacaoIgnoradas({
-        duplicadasCatalogo,
-        duplicadasFila,
-        duplicadasLote,
-        semCodigo,
-      })
-      const msgBase =
-        duplicadasCatalogo.length > 0
-          ? String(
-              (t as any)?.importacaoPreviewTodasDuplicadas ??
-                'Nenhuma peça nova para adicionar (já existem no catálogo da biblioteca).'
-            ).replace('{count}', String(duplicadasCatalogo.length))
-          : duplicadasFila.length > 0
-            ? String(
-                (t as any)?.importacaoPreviewTodasNaFila ??
-                  'Nenhuma peça nova: {count} já estão na fila amarela (pendentes).'
-              ).replace('{count}', String(duplicadasFila.length))
-            : (t as any)?.importacaoSemNovidades ??
-              'Nenhuma peça nova para adicionar.'
-      const codes = listarCodigosPecasImport(
-        duplicadasCatalogo.length
-          ? duplicadasCatalogo
-          : duplicadasFila.length
-            ? duplicadasFila
-            : importacaoPreview
-      )
-      alert(
-        detalhe
-          ? `${msgBase}\n\n${detalhe}${codes ? `\n\n${(t as any)?.importacaoCodigosDuplicadosLista || 'Códigos:'} ${codes}` : ''}`
-          : codes
-            ? `${msgBase}\n\n${(t as any)?.importacaoCodigosDuplicadosLista || 'Códigos:'} ${codes}`
-            : msgBase
-      )
-      setImportacaoPreview(null)
-      setImportacaoDuplicadasIgnoradas(
-        duplicadasCatalogo.length + duplicadasFila.length + duplicadasLote.length + semCodigo.length
-      )
-      setImportacaoUrlError(msgBase)
+    if (importacaoPreview && importacaoPreview.length > 0) {
+      executarEnvioImportacaoParaFila(importacaoPreview)
       return
     }
 
-    const novos: PecaBiblioteca[] = novasFiltradas.map((p, i) => ({
-      ...p,
-      id: `import-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 9)}`,
-      dataCriacao: new Date().toISOString(),
-      importacaoPendente: true,
-    }))
-
-    const ignoradasTotal =
-      duplicadasCatalogo.length + duplicadasFila.length + duplicadasLote.length + semCodigo.length
-    if (ignoradasTotal > 0) {
-      const detalhe = montarMensagemImportacaoIgnoradas({
-        duplicadasCatalogo,
-        duplicadasFila,
-        duplicadasLote,
-        semCodigo,
-      })
-      alert(
-        `${String(
-          (t as any)?.importacaoParcialDuplicadas ??
-            '{novas} peça(s) enviada(s) para a fila. {ignoradas} ignorada(s).'
-        )
-          .replace('{novas}', String(novos.length))
-          .replace('{ignoradas}', String(ignoradasTotal))}\n\n${detalhe}`
-      )
-      setImportacaoDuplicadasIgnoradas(ignoradasTotal)
-      setImportacaoPreview(novasFiltradas)
+    const result = processarTextoImportacaoPecas(raw, raw)
+    if ('error' in result) {
+      setImportacaoUrlError(result.error)
+      setImportacaoPreview(null)
+      setImportacaoDuplicadasIgnoradas(0)
+      return
     }
 
-    const classificadosAutomaticamente = aplicarRegrasClassificacaoEmLista(novos, true)
-    const merged = [...existentes, ...classificadosAutomaticamente.lista]
-    const { lista: atualizadoNormalizado } = garantirNumerosSequenciaPecaBiblioteca(
-      merged.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca)),
-      categoriasPecas
-    )
-    setPecasBiblioteca(atualizadoNormalizado)
-    const mensagemBase =
-      t?.importacaoSucesso ??
-      `${novos.length} peça(s) enviada(s) para a fila. Abra cada uma e use Salvar para integrar ao catálogo da Biblioteca.`
-    const mensagemFinal =
-      classificadosAutomaticamente.alteradas > 0
-        ? `${mensagemBase} ${classificadosAutomaticamente.alteradas} já foram classificadas automaticamente.`
-        : mensagemBase
-    setImportacaoPosFilaModalMensagem(mensagemFinal)
-    void saveData('nonato-pecas-biblioteca', atualizadoNormalizado).catch((err) => {
-      console.error('[importação fila]', err)
-      alert(
-        (t as any)?.importacaoErroGravarFila ??
-          'Não foi possível gravar na biblioteca. O armazenamento do navegador pode estar cheio — liberte espaço ou reduza imagens nas peças.'
-      )
-    })
+    const filtrado = processarDuplicadosImportacao(result.pecas, { notificar: false })
+    if (!filtrado.ok || filtrado.novas.length === 0) {
+      processarDuplicadosImportacao(result.pecas, { notificar: true })
+      limparEstadoColagemImportacao()
+      return
+    }
+
+    executarEnvioImportacaoParaFila(filtrado.novas)
   }, [
-    aplicarRegrasClassificacaoEmLista,
+    executarEnvioImportacaoParaFila,
     importacaoPreview,
-    montarMensagemImportacaoIgnoradas,
-    pecasBiblioteca,
-    separarPecasImportacao,
+    importacaoTextoColado,
+    limparEstadoColagemImportacao,
+    processarDuplicadosImportacao,
+    processarTextoImportacaoPecas,
     t,
   ])
+
+  const handleAdicionarImportacaoPreview = useCallback(() => {
+    if (!importacaoPreview || importacaoPreview.length === 0) return
+    executarEnvioImportacaoParaFila(importacaoPreview)
+  }, [executarEnvioImportacaoParaFila, importacaoPreview])
 
   const handleLimparImportacaoColagem = useCallback(
     (opts?: { confirmarPreview?: boolean }) => {
@@ -37230,7 +37275,7 @@ export default function Dashboard() {
                       onClick={handleImportacaoColarTexto}
                       style={{ padding: '8px 14px', fontSize: '12px' }}
                     >
-                      {(safeT as any)?.importacaoProcessarColagem || (safeT as any)?.importacaoImportarCatalogo || 'Processar colagem'}
+                        {(safeT as any)?.importacaoImportarCatalogo || (safeT as any)?.importacaoProcessarColagem || 'Importar catálogo colado'}
                     </button>
                     <button
                       type="button"
@@ -39939,7 +39984,7 @@ export default function Dashboard() {
                         onClick={handleImportacaoColarTexto}
                         style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
                       >
-                        {(safeT as any)?.importacaoProcessarColagem || (safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Processar colagem'}
+                        {(safeT as any)?.importacaoImportarCatalogo || (safeT as any)?.importacaoProcessarColagem || safeT?.importacaoImportarDoTexto || 'Importar catálogo colado'}
                       </button>
                       <button
                         type="button"
