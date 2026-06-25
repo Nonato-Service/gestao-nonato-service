@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { setupAutoSyncOnReconnect, setupFlushSyncOnPageHide } from './utils/dataStorage'
 
 // Bumpar este número em cada deploy para forçar atualização no telemóvel/tablet
-const SW_VERSION = 19
+const SW_VERSION = 18
 const SW_DISMISSED_SESSION_KEY = 'nonato-pwa-update-dismissed-v'
 
 export function RegisterSW() {
