@@ -7151,6 +7151,7 @@ export default function Dashboard() {
   const [pecaLookupUrlTemplate, setPecaLookupUrlTemplate] = useState('')
   const [pecaLookupLoading, setPecaLookupLoading] = useState(false)
   const [showImportacaoGuiaHomag, setShowImportacaoGuiaHomag] = useState(false)
+  const [importacaoPosFilaModalMensagem, setImportacaoPosFilaModalMensagem] = useState<string | null>(null)
   const [importacaoGuiaPlataforma, setImportacaoGuiaPlataforma] = useState<'windows' | 'android' | 'ipad'>('windows')
   const [filtroImportacaoPendente, setFiltroImportacaoPendente] = useState<'todos' | 'sem-grupo' | 'sem-subgrupo'>('todos')
   const importacaoFileInputRef = useRef<HTMLInputElement>(null)
@@ -24781,34 +24782,21 @@ export default function Dashboard() {
       merged.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
     )
     setPecasBiblioteca(atualizadoNormalizado)
-    void saveData('nonato-pecas-biblioteca', atualizadoNormalizado)
-      .then(() => {
-        const mensagemBase =
-          t?.importacaoSucesso ??
-          `${novos.length} peça(s) enviada(s) para a fila. Abra cada uma e use Salvar para integrar ao catálogo da Biblioteca.`
-        const mensagemFinal =
-          classificadosAutomaticamente.alteradas > 0
-            ? `${mensagemBase} ${classificadosAutomaticamente.alteradas} já foram classificadas automaticamente.`
-            : mensagemBase
-
-        const desejaLimparLista = window.confirm(
-          `${mensagemFinal}\n\n${t?.importacaoConfirmarLimparLista ?? 'Deseja limpar a lista importada agora? Clique em OK para limpar ou em Cancelar para manter e conferir.'}`
-        )
-
-        if (desejaLimparLista) {
-          setImportacaoPreview(null)
-          setImportacaoTextoColado('')
-          setUrlImportacaoPecas('')
-          setImportacaoDuplicadasIgnoradas(0)
-        }
-      })
-      .catch((err) => {
-        console.error('[importação fila]', err)
-        alert(
-          (t as any)?.importacaoErroGravarFila ??
-            'Não foi possível gravar na biblioteca. O armazenamento do navegador pode estar cheio — liberte espaço ou reduza imagens nas peças.'
-        )
-      })
+    const mensagemBase =
+      t?.importacaoSucesso ??
+      `${novos.length} peça(s) enviada(s) para a fila. Abra cada uma e use Salvar para integrar ao catálogo da Biblioteca.`
+    const mensagemFinal =
+      classificadosAutomaticamente.alteradas > 0
+        ? `${mensagemBase} ${classificadosAutomaticamente.alteradas} já foram classificadas automaticamente.`
+        : mensagemBase
+    setImportacaoPosFilaModalMensagem(mensagemFinal)
+    void saveData('nonato-pecas-biblioteca', atualizadoNormalizado).catch((err) => {
+      console.error('[importação fila]', err)
+      alert(
+        (t as any)?.importacaoErroGravarFila ??
+          'Não foi possível gravar na biblioteca. O armazenamento do navegador pode estar cheio — liberte espaço ou reduza imagens nas peças.'
+      )
+    })
   }, [
     aplicarRegrasClassificacaoEmLista,
     importacaoPreview,
@@ -68406,6 +68394,56 @@ A1;Peça exemplo;10`}
           </div>
         )
       })()}
+
+      {importacaoPosFilaModalMensagem && (
+        <div
+          className="modal-overlay"
+          onClick={() => setImportacaoPosFilaModalMensagem(null)}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10065, padding: '20px' }}
+        >
+          <div
+            className="modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '520px', width: '100%' }}
+          >
+            <h2 style={{ margin: '0 0 12px', fontSize: '20px', color: '#00c853' }}>
+              {(safeT as any)?.importacaoModalPosFilaTitulo || 'Próximo passo'}
+            </h2>
+            <p style={{ margin: '0 0 14px', color: '#e8e8e8', fontSize: '14px', lineHeight: 1.5 }}>
+              {importacaoPosFilaModalMensagem}
+            </p>
+            <p style={{ margin: '0 0 20px', color: '#ccc', fontSize: '14px', lineHeight: 1.5 }}>
+              {(safeT as any)?.importacaoConfirmarLimparLista ||
+                'Deseja limpar a lista importada agora? OK = limpar a pré-visualização e o texto; Cancelar = manter para conferir.'}
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                className="biblioteca-btn--ghost"
+                style={{ padding: '10px 18px', fontWeight: 600, fontSize: '14px' }}
+                onClick={() => setImportacaoPosFilaModalMensagem(null)}
+              >
+                {(safeT as any)?.importacaoBtnManterPreVisualizacao || 'Manter para conferir'}
+              </button>
+              <button
+                type="button"
+                className="biblioteca-btn--green"
+                style={{ padding: '10px 18px', fontWeight: 600, fontSize: '14px' }}
+                onClick={() => {
+                  setImportacaoPreview(null)
+                  setImportacaoTextoColado('')
+                  setUrlImportacaoPecas('')
+                  setImportacaoDuplicadasIgnoradas(0)
+                  setImportacaoUrlError(null)
+                  setImportacaoPosFilaModalMensagem(null)
+                }}
+              >
+                {(safeT as any)?.importacaoBtnLimparPreVisualizacao || 'Limpar lista'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showImportacaoGuiaHomag && (
         <div
