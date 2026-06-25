@@ -41,6 +41,49 @@
   --ns-info-bg-medium: rgba(33, 150, 243, 0.22);
   --ns-info-glow: rgba(33, 150, 243, 0.35);
   --ns-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Botões ghost (transparentes) — tokens globais */
+  --ns-btn-green-bg: rgba(0, 200, 83, 0.14);
+  --ns-btn-green-border: rgba(0, 200, 83, 0.45);
+  --ns-btn-green-text: #86efac;
+  --ns-btn-green-bg-hover: rgba(0, 200, 83, 0.22);
+  --ns-btn-green-border-hover: rgba(0, 200, 83, 0.55);
+  --ns-btn-green-text-hover: #bbf7d0;
+  --ns-btn-blue-bg: rgba(37, 99, 235, 0.14);
+  --ns-btn-blue-border: rgba(96, 165, 250, 0.45);
+  --ns-btn-blue-text: #93c5fd;
+  --ns-btn-blue-bg-hover: rgba(37, 99, 235, 0.22);
+  --ns-btn-blue-border-hover: rgba(96, 165, 250, 0.55);
+  --ns-btn-blue-text-hover: #bfdbfe;
+  --ns-btn-red-bg: rgba(239, 68, 68, 0.14);
+  --ns-btn-red-border: rgba(239, 68, 68, 0.45);
+  --ns-btn-red-text: #fca5a5;
+  --ns-btn-red-bg-hover: rgba(239, 68, 68, 0.22);
+  --ns-btn-red-border-hover: rgba(239, 68, 68, 0.55);
+  --ns-btn-red-text-hover: #fecaca;
+  --ns-btn-yellow-bg: rgba(234, 179, 8, 0.14);
+  --ns-btn-yellow-border: rgba(234, 179, 8, 0.45);
+  --ns-btn-yellow-text: #fde68a;
+  --ns-btn-yellow-bg-hover: rgba(234, 179, 8, 0.22);
+  --ns-btn-yellow-border-hover: rgba(234, 179, 8, 0.55);
+  --ns-btn-yellow-text-hover: #fef3c7;
+  --ns-btn-purple-bg: rgba(139, 92, 246, 0.14);
+  --ns-btn-purple-border: rgba(167, 139, 250, 0.45);
+  --ns-btn-purple-text: #c4b5fd;
+  --ns-btn-purple-bg-hover: rgba(139, 92, 246, 0.22);
+  --ns-btn-purple-border-hover: rgba(167, 139, 250, 0.55);
+  --ns-btn-purple-text-hover: #ddd6fe;
+  --ns-btn-orange-bg: rgba(249, 115, 22, 0.14);
+  --ns-btn-orange-border: rgba(251, 146, 60, 0.45);
+  --ns-btn-orange-text: #fdba74;
+  --ns-btn-orange-bg-hover: rgba(249, 115, 22, 0.22);
+  --ns-btn-orange-border-hover: rgba(251, 146, 60, 0.55);
+  --ns-btn-orange-text-hover: #fed7aa;
+  --ns-btn-neutral-bg: rgba(255, 255, 255, 0.06);
+  --ns-btn-neutral-border: rgba(255, 255, 255, 0.14);
+  --ns-btn-neutral-text: rgba(255, 255, 255, 0.85);
+  --ns-btn-neutral-bg-hover: rgba(255, 255, 255, 0.1);
+  --ns-btn-neutral-border-hover: rgba(255, 255, 255, 0.22);
+  --ns-btn-neutral-text-hover: #ffffff;
   /* Micro-interação: ligeiramente «elástico» no hover (botões) */
   --ns-ease-spring: cubic-bezier(0.34, 1.25, 0.64, 1);
   --ns-shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.35);
@@ -417,11 +460,12 @@ body,
   }
 }
 
-/* Padrão Visualizar Equipamentos / ações principais: botão sólido verde escuro, contorno 1px, texto branco */
+/* Padrão global: botão verde transparente com borda */
 .btn-primary {
-  background: var(--ns-primary);
-  border: 1px solid color-mix(in srgb, var(--ns-primary) 85%, #ffffff 15%);
-  color: #fff !important;
+  background: var(--ns-btn-green-bg);
+  border: 1px solid var(--ns-btn-green-border);
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text);
   padding: 14px 28px;
   border-radius: 8px;
   font-size: 16px;
@@ -432,7 +476,8 @@ body,
     box-shadow 0.22s var(--ns-ease-out),
     filter 0.2s ease,
     background-color 0.2s ease,
-    border-color 0.2s ease;
+    border-color 0.2s ease,
+    color 0.2s ease;
   position: relative;
   letter-spacing: 0.5px;
   box-shadow: none;
@@ -440,15 +485,17 @@ body,
 }
 
 .btn-primary:hover {
-  background: var(--ns-primary-strong);
-  border: 1px solid color-mix(in srgb, var(--ns-primary-strong) 80%, #ffffff 20%);
-  color: #fff !important;
-  box-shadow: 0 0 20px var(--ns-glow-primary-soft), 0 8px 24px rgba(0, 0, 0, 0.35);
-  filter: brightness(1.06);
+  background: var(--ns-btn-green-bg-hover);
+  border: 1px solid var(--ns-btn-green-border-hover);
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover);
+  box-shadow: none;
+  filter: none;
 }
 
 .btn-primary:active {
-  box-shadow: 0 0 12px var(--ns-glow-primary-soft);
+  background: var(--ns-btn-green-bg);
+  box-shadow: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -477,36 +524,39 @@ body,
   border-color: color-mix(in srgb, var(--ns-primary-strong) 55%, transparent) !important;
 }
 
-/* Ação informativa (comunicação interna — azul, hover só em CSS) */
+/* Ação informativa — azul transparente */
 .btn-info {
   padding: 12px 24px;
-  background-color: var(--ns-info-bg-medium);
-  border: 2px solid rgba(102, 179, 255, 0.9);
+  background: var(--ns-btn-blue-bg);
+  border: 1px solid var(--ns-btn-blue-border);
   border-radius: var(--ns-radius-sm);
-  color: #fff !important;
+  color: var(--ns-btn-blue-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-blue-text);
   font-weight: 700;
   font-size: 16px;
   cursor: pointer;
   letter-spacing: 0.3px;
+  box-shadow: none;
   transition:
     background-color 0.2s ease,
     box-shadow 0.2s ease,
     border-color 0.2s ease,
-    filter 0.2s ease,
+    color 0.2s ease,
     transform 0.15s ease;
 }
 
 .btn-info:hover {
-  background-color: rgba(0, 100, 255, 0.42);
-  border-color: #9fd4ff;
-  color: #fff !important;
-  box-shadow: 0 0 16px var(--ns-info-glow);
-  filter: brightness(1.04);
+  background: var(--ns-btn-blue-bg-hover);
+  border-color: var(--ns-btn-blue-border-hover);
+  color: var(--ns-btn-blue-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-blue-text-hover);
+  box-shadow: none;
+  filter: none;
   transform: translateY(-1px);
 }
 
 .btn-info:active {
-  box-shadow: 0 0 10px rgba(102, 179, 255, 0.25);
+  box-shadow: none;
   transform: translateY(0);
 }
 
@@ -3069,9 +3119,10 @@ svg.ns-vivid-icon.assist-field-glyph {
 
 /* Botão vermelho: mesmo padrão Visualizar Equipamentos - texto branco, hover só brilho */
 .btn-danger {
-  background: transparent;
-  border: 1px solid rgba(255, 68, 68, 0.9);
-  color: #fff !important;
+  background: var(--ns-btn-red-bg);
+  border: 1px solid var(--ns-btn-red-border);
+  color: var(--ns-btn-red-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-red-text);
   padding: 14px 28px;
   border-radius: 8px;
   font-size: 16px;
@@ -3082,7 +3133,8 @@ svg.ns-vivid-icon.assist-field-glyph {
     box-shadow 0.22s var(--ns-ease-out),
     filter 0.2s ease,
     background-color 0.2s ease,
-    border-color 0.2s ease;
+    border-color 0.2s ease,
+    color 0.2s ease;
   width: 100%;
   letter-spacing: 0.5px;
   box-shadow: none;
@@ -3099,11 +3151,12 @@ button.btn-danger.btn-danger--inline {
 }
 
 .btn-danger:hover {
-  background: rgba(255, 68, 68, 0.15);
-  border: 1px solid #ff4444;
-  color: #fff !important;
-  box-shadow: 0 0 14px rgba(255, 70, 70, 0.5);
-  filter: brightness(1.15);
+  background: var(--ns-btn-red-bg-hover);
+  border: 1px solid var(--ns-btn-red-border-hover);
+  color: var(--ns-btn-red-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-red-text-hover);
+  box-shadow: none;
+  filter: none;
 }
 
 .btn-danger:active {
@@ -3569,17 +3622,18 @@ button.btn-danger.btn-danger--inline {
   box-shadow: 0 6px 22px var(--ns-glow-primary-soft) !important;
 }
 
-/* Botão Administrador: mesmo padrão Visualizar Equipamentos */
+/* Botão Administrador: vermelho transparente */
 .btn-administrador {
-  background: transparent;
-  border: 1px solid rgba(255, 68, 68, 0.9);
-  color: #ffffff;
+  background: var(--ns-btn-red-bg);
+  border: 1px solid var(--ns-btn-red-border);
+  color: var(--ns-btn-red-text);
+  -webkit-text-fill-color: var(--ns-btn-red-text);
   padding: 14px 28px;
   border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: box-shadow 0.2s ease, filter 0.2s ease;
+  transition: box-shadow 0.2s ease, filter 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   position: relative;
   letter-spacing: 0.5px;
   box-shadow: none;
@@ -3587,15 +3641,16 @@ button.btn-danger.btn-danger--inline {
 }
 
 .btn-administrador:hover {
-  background: rgba(255, 68, 68, 0.15);
-  border: 1px solid #ff4444;
-  color: #ffffff;
-  box-shadow: 0 0 14px rgba(255, 68, 68, 0.4);
-  filter: brightness(1.15);
+  background: var(--ns-btn-red-bg-hover);
+  border: 1px solid var(--ns-btn-red-border-hover);
+  color: var(--ns-btn-red-text-hover);
+  -webkit-text-fill-color: var(--ns-btn-red-text-hover);
+  box-shadow: none;
+  filter: none;
 }
 
 .btn-administrador:active {
-  box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+  box-shadow: none;
 }
 
 /* Animação do cadeado */
@@ -9956,22 +10011,26 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   padding: 0.62em 1.65em;
   font-size: clamp(0.84rem, 2.15vw, 1rem);
   font-weight: 700;
-  color: #021308;
-  background: linear-gradient(180deg, #62ffb8 0%, #00e676 46%, #00a344 100%);
-  border: 1px solid rgba(0, 255, 136, 0.45);
+  color: #86efac;
+  background: rgba(0, 200, 83, 0.14);
+  border: 1px solid rgba(0, 200, 83, 0.45);
   border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 10px 32px rgba(0, 255, 136, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.38);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 .ns-splash-cta:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.04);
-  box-shadow: 0 14px 40px rgba(0, 255, 136, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  background: rgba(0, 200, 83, 0.22);
+  border-color: rgba(0, 200, 83, 0.55);
+  color: #bbf7d0;
+  transform: none;
+  filter: none;
+  box-shadow: none;
 }
 .ns-splash-cta:active {
-  transform: translateY(0);
-  filter: brightness(0.98);
+  background: rgba(0, 200, 83, 0.18);
+  transform: none;
+  filter: none;
 }
 .ns-splash-cta:focus-visible {
   outline: 2px solid rgba(0, 255, 136, 0.9);
@@ -10316,14 +10375,17 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   background: rgba(255, 255, 255, 0.06);
 }
 .ns-login-btn--primary {
-  color: #021308;
-  background: linear-gradient(180deg, #62ffb8 0%, #00e676 46%, #00a344 100%);
-  border: 1px solid rgba(0, 255, 136, 0.45);
-  box-shadow: 0 8px 24px rgba(0, 255, 136, 0.18);
+  color: #86efac;
+  background: rgba(0, 200, 83, 0.14);
+  border: 1px solid rgba(0, 200, 83, 0.45);
+  box-shadow: none;
 }
 .ns-login-btn--primary:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.04);
+  transform: none;
+  filter: none;
+  background: rgba(0, 200, 83, 0.22);
+  border-color: rgba(0, 200, 83, 0.55);
+  color: #bbf7d0;
 }
 
 .ns-boot-overlay {
@@ -10460,18 +10522,23 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   padding: 0.65em 1.75em;
   font-size: 1rem;
   font-weight: 800;
-  color: #021308;
-  background: linear-gradient(180deg, #62ffb8 0%, #00e676 46%, #00a344 100%);
-  border: 1px solid rgba(0, 255, 136, 0.45);
+  color: var(--ns-btn-green-text);
+  -webkit-text-fill-color: var(--ns-btn-green-text);
+  background: var(--ns-btn-green-bg);
+  border: 1px solid var(--ns-btn-green-border);
   border-radius: 12px;
   cursor: pointer;
   text-decoration: none;
-  box-shadow: 0 10px 28px rgba(0, 255, 136, 0.2);
-  transition: transform 0.15s ease, filter 0.15s ease;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
 .ns-init-cta:hover {
   transform: translateY(-1px);
-  filter: brightness(1.04);
+  background: var(--ns-btn-green-bg-hover);
+  border-color: var(--ns-btn-green-border-hover);
+  color: var(--ns-btn-green-text-hover);
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover);
+  filter: none;
 }
 .ns-init-cta:disabled {
   opacity: 0.75;
@@ -19140,17 +19207,20 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   font-size: 15px !important;
   font-weight: 800 !important;
   border-radius: 14px !important;
-  border: none !important;
-  color: #042f2e !important;
-  background: linear-gradient(135deg, #6ee7b7 0%, #10b981 55%, #059669 100%) !important;
-  box-shadow:
-    0 12px 32px rgba(16, 185, 129, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
-  transition: transform 0.2s ease, filter 0.2s ease !important;
+  border: 1px solid rgba(0, 200, 83, 0.45) !important;
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+  background: rgba(0, 200, 83, 0.14) !important;
+  box-shadow: none !important;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
 }
 .ns-showcase--modern .ns-showcase__cta:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.05);
+  transform: none;
+  filter: none;
+  background: rgba(0, 200, 83, 0.22) !important;
+  border-color: rgba(0, 200, 83, 0.55) !important;
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
 }
 .ns-showcase--modern .ns-showcase__cta-icon {
   display: inline-flex;
@@ -19159,7 +19229,8 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  background: rgba(4, 47, 46, 0.12);
+  background: rgba(0, 200, 83, 0.18);
+  color: #bbf7d0;
   font-size: 16px;
   font-weight: 900;
 }
@@ -20146,9 +20217,9 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   color: #e2e8f0;
 }
 .ns-showcase-screen__btn--primary {
-  background: #00c853;
-  border-color: #00c853;
-  color: #041008;
+  background: var(--ns-btn-green-bg);
+  border-color: var(--ns-btn-green-border);
+  color: var(--ns-btn-green-text);
 }
 .ns-showcase-screen__pdf {
   flex: 1;
@@ -20674,12 +20745,20 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   border: 1px solid rgba(251, 191, 36, 0.25);
 }
 .manuais-pro__doc-btn--translate-main {
-  color: #021308 !important;
-  background: linear-gradient(180deg, #7dffb8, #00c853) !important;
-  border-color: rgba(0, 255, 136, 0.5) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
   font-size: 0.78rem !important;
   padding: 8px 14px !important;
-  box-shadow: 0 6px 20px rgba(0, 255, 136, 0.25);
+  box-shadow: none !important;
+}
+
+.manuais-pro__doc-btn--translate-main:hover:not(:disabled) {
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
 }
 
 .ns-dashboard-entry {
@@ -20800,18 +20879,23 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   font-weight: 800 !important;
   letter-spacing: 0.03em !important;
   border-radius: 14px !important;
-  color: #ffffff !important;
-  background: linear-gradient(165deg, #5eead4, #059669) !important;
-  border: none !important;
-  box-shadow: 0 10px 32px rgba(16, 185, 129, 0.35) !important;
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+  background: rgba(0, 200, 83, 0.14) !important;
+  border: 1px solid rgba(0, 200, 83, 0.45) !important;
+  box-shadow: none !important;
   display: inline-flex !important;
   align-items: center;
   gap: 10px;
 }
 
 .ns-dashboard-entry-cta:hover {
-  filter: brightness(1.07);
-  transform: translateY(-1px);
+  filter: none;
+  transform: none;
+  background: rgba(0, 200, 83, 0.22) !important;
+  border-color: rgba(0, 200, 83, 0.55) !important;
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
 }
 
 .ns-dashboard-entry-note {
@@ -21059,16 +21143,17 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 
 .biblioteca-hub-tab--active {
   font-weight: 800;
-  color: #ffffff;
-  border: 1px solid #00945d;
-  background: #00a86b;
-  box-shadow: 0 4px 16px rgba(0, 168, 107, 0.32);
+  color: var(--ns-btn-green-text);
+  border: 1px solid var(--ns-btn-green-border-hover);
+  background: var(--ns-btn-green-bg-hover);
+  box-shadow: none;
 }
 
 .biblioteca-hub-tab--active:hover {
-  border-color: #008556;
-  background: #00945d;
-  box-shadow: 0 6px 20px rgba(0, 168, 107, 0.36);
+  border-color: var(--ns-btn-green-border-hover);
+  background: var(--ns-btn-green-bg-hover);
+  color: var(--ns-btn-green-text-hover);
+  box-shadow: none;
 }
 
 .biblioteca-hub-tab--purple {
@@ -21101,15 +21186,27 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 
 /* —— Hub «Biblioteca de peças»: layout geral, hero, KPIs, navegação, ferramentas —— */
 .biblioteca-pecas-hub {
-  --bib-green: #00a86b;
-  --bib-green-hover: #00945d;
-  --bib-green-active: #008556;
-  --bib-purple: #9333ea;
-  --bib-purple-hover: #7e22ce;
-  --bib-purple-active: #6b21a8;
-  --bib-orange: #f97316;
-  --bib-orange-hover: #ea580c;
-  --bib-orange-active: #c2410c;
+  --bib-green: var(--ns-btn-green-bg);
+  --bib-green-hover: var(--ns-btn-green-bg-hover);
+  --bib-green-active: rgba(0, 200, 83, 0.18);
+  --bib-green-text: var(--ns-btn-green-text);
+  --bib-green-text-hover: var(--ns-btn-green-text-hover);
+  --bib-green-border: var(--ns-btn-green-border);
+  --bib-green-border-hover: var(--ns-btn-green-border-hover);
+  --bib-purple: var(--ns-btn-purple-bg);
+  --bib-purple-hover: var(--ns-btn-purple-bg-hover);
+  --bib-purple-active: rgba(139, 92, 246, 0.18);
+  --bib-purple-border: var(--ns-btn-purple-border);
+  --bib-purple-border-hover: var(--ns-btn-purple-border-hover);
+  --bib-purple-text: var(--ns-btn-purple-text);
+  --bib-purple-text-hover: var(--ns-btn-purple-text-hover);
+  --bib-orange: var(--ns-btn-orange-bg);
+  --bib-orange-hover: var(--ns-btn-orange-bg-hover);
+  --bib-orange-active: rgba(249, 115, 22, 0.18);
+  --bib-orange-border: var(--ns-btn-orange-border);
+  --bib-orange-border-hover: var(--ns-btn-orange-border-hover);
+  --bib-orange-text: var(--ns-btn-orange-text);
+  --bib-orange-text-hover: var(--ns-btn-orange-text-hover);
   --bib-ghost-border: rgba(255, 255, 255, 0.22);
   --bib-ghost-bg: rgba(255, 255, 255, 0.04);
   --bib-ghost-hover-bg: rgba(255, 255, 255, 0.08);
@@ -22578,15 +22675,18 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 /* Botões semânticos — Biblioteca de Peças (paleta da imagem de referência) */
 .biblioteca-pecas-hub .btn-primary {
   background: var(--bib-green) !important;
-  border: 1px solid color-mix(in srgb, var(--bib-green) 85%, #ffffff 15%) !important;
-  color: #ffffff !important;
+  border: 1px solid var(--bib-green-border) !important;
+  color: var(--bib-green-text) !important;
+  -webkit-text-fill-color: var(--bib-green-text) !important;
   box-shadow: none;
 }
 
 .biblioteca-pecas-hub .btn-primary:hover:not(:disabled) {
   background: var(--bib-green-hover) !important;
-  border-color: color-mix(in srgb, var(--bib-green-hover) 80%, #ffffff 20%) !important;
-  box-shadow: 0 0 16px rgba(0, 168, 107, 0.24), 0 6px 18px rgba(0, 0, 0, 0.28) !important;
+  border-color: var(--bib-green-border-hover) !important;
+  color: var(--bib-green-text-hover) !important;
+  -webkit-text-fill-color: var(--bib-green-text-hover) !important;
+  box-shadow: none !important;
 }
 
 .biblioteca-pecas-hub .btn-primary:active:not(:disabled) {
@@ -22610,15 +22710,18 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 
 .biblioteca-btn--purple {
   background: var(--bib-purple) !important;
-  border: 1px solid color-mix(in srgb, var(--bib-purple) 85%, #ffffff 15%) !important;
-  color: #ffffff !important;
+  border: 1px solid var(--bib-purple-border) !important;
+  color: var(--bib-purple-text) !important;
+  -webkit-text-fill-color: var(--bib-purple-text) !important;
   box-shadow: none;
 }
 
 .biblioteca-btn--purple:hover:not(:disabled) {
   background: var(--bib-purple-hover) !important;
-  border-color: color-mix(in srgb, var(--bib-purple-hover) 80%, #ffffff 20%) !important;
-  box-shadow: 0 0 16px rgba(147, 51, 234, 0.28), 0 6px 18px rgba(0, 0, 0, 0.28) !important;
+  border-color: var(--bib-purple-border-hover) !important;
+  color: var(--bib-purple-text-hover) !important;
+  -webkit-text-fill-color: var(--bib-purple-text-hover) !important;
+  box-shadow: none !important;
 }
 
 .biblioteca-btn--purple:active:not(:disabled) {
@@ -22627,15 +22730,18 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 
 .biblioteca-btn--orange {
   background: var(--bib-orange) !important;
-  border: 1px solid color-mix(in srgb, var(--bib-orange) 85%, #ffffff 15%) !important;
-  color: #ffffff !important;
+  border: 1px solid var(--bib-orange-border) !important;
+  color: var(--bib-orange-text) !important;
+  -webkit-text-fill-color: var(--bib-orange-text) !important;
   box-shadow: none;
 }
 
 .biblioteca-btn--orange:hover:not(:disabled) {
   background: var(--bib-orange-hover) !important;
-  border-color: color-mix(in srgb, var(--bib-orange-hover) 80%, #ffffff 20%) !important;
-  box-shadow: 0 0 16px rgba(249, 115, 22, 0.28), 0 6px 18px rgba(0, 0, 0, 0.28) !important;
+  border-color: var(--bib-orange-border-hover) !important;
+  color: var(--bib-orange-text-hover) !important;
+  -webkit-text-fill-color: var(--bib-orange-text-hover) !important;
+  box-shadow: none !important;
 }
 
 .biblioteca-btn--orange:active:not(:disabled) {
@@ -22664,13 +22770,17 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 
 .biblioteca-btn--green {
   background: var(--bib-green);
-  border: 1px solid color-mix(in srgb, var(--bib-green) 85%, #ffffff 15%);
-  color: #ffffff;
+  border: 1px solid var(--bib-green-border);
+  color: var(--bib-green-text);
+  -webkit-text-fill-color: var(--bib-green-text);
+  box-shadow: none;
 }
 
 .biblioteca-btn--green:hover:not(:disabled) {
   background: var(--bib-green-hover);
-  border-color: color-mix(in srgb, var(--bib-green-hover) 80%, #ffffff 20%);
+  border-color: var(--bib-green-border-hover);
+  color: var(--bib-green-text-hover);
+  -webkit-text-fill-color: var(--bib-green-text-hover);
 }
 
 .biblioteca-hub-toolbar__actions {
@@ -24938,7 +25048,7 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
    Mantém fundo/borda coloridos; só as palavras internas ficam #ffffff.
    ═══════════════════════════════════════════════════════════════════ */
 
-html body button,
+html body button:not(.agenda-painel-situacao-btn),
 html body input[type="button"],
 html body input[type="submit"],
 html body input[type="reset"],
@@ -24964,11 +25074,11 @@ html body .cliente-cadastro-v2__maps-btn--nav {
   -webkit-text-fill-color: #4ade80 !important;
 }
 
-html body button:hover,
-html body button:focus,
-html body button:focus-visible,
-html body button:active,
-html body button:disabled,
+html body button:not(.agenda-painel-situacao-btn):hover,
+html body button:not(.agenda-painel-situacao-btn):focus,
+html body button:not(.agenda-painel-situacao-btn):focus-visible,
+html body button:not(.agenda-painel-situacao-btn):active,
+html body button:not(.agenda-painel-situacao-btn):disabled,
 html body input[type="button"]:hover,
 html body input[type="submit"]:hover,
 html body input[type="reset"]:hover,
@@ -25049,7 +25159,7 @@ html body label.btn-info {
 }
 
 /* Palavras internas dos botões (spans, sub-labels da sidebar, etc.) */
-html body button *,
+html body button:not(.agenda-painel-situacao-btn) *,
 html body label[class*="btn-"] *,
 html body [role="button"]:not(.ns-hub-card):not(.ns-dashboard-qa-card):not(.ns-dashboard-stat):not(.mobile-sidebar-backdrop) *,
 html body a[class*="btn-"] * {
@@ -26446,18 +26556,21 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   padding: 18px 24px !important;
   font-size: 16px !important;
   font-weight: 700 !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  background: #00c853 !important;
-  border: none !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
   border-radius: 14px !important;
-  box-shadow: 0 6px 24px rgba(0, 200, 83, 0.32) !important;
+  box-shadow: none !important;
   transform: none !important;
 }
 
 .clientes-cadastro-page .cliente-cadastro-v2__submit:hover {
-  background: #2ecc71 !important;
-  box-shadow: 0 8px 28px rgba(0, 200, 83, 0.4) !important;
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+  box-shadow: none !important;
   transform: none !important;
 }
 
@@ -26473,15 +26586,18 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 .clientes-cadastro-page .cliente-cadastro-v2__back-btn {
   width: 48px;
   height: 48px;
-  background: #00c853 !important;
-  border: none !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 16px rgba(0, 200, 83, 0.28);
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none;
 }
 
 .clientes-cadastro-page .cliente-cadastro-v2__back-btn:hover {
-  background: #2ecc71 !important;
-  border: none !important;
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
 }
 
 @media (min-width: 1400px) {
@@ -26551,18 +26667,22 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: none;
-  background: #00c853;
-  color: #fff;
+  border: 1px solid var(--ns-btn-green-border);
+  background: var(--ns-btn-green-bg);
+  color: var(--ns-btn-green-text);
+  -webkit-text-fill-color: var(--ns-btn-green-text);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 200, 83, 0.28);
+  box-shadow: none;
 }
 
 .cliente-detalhe-v2__back-btn:hover {
-  background: #2ecc71;
+  background: var(--ns-btn-green-bg-hover);
+  border-color: var(--ns-btn-green-border-hover);
+  color: var(--ns-btn-green-text-hover);
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover);
 }
 
 .cliente-detalhe-v2__card {
@@ -26791,16 +26911,21 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   gap: 8px;
   padding: 12px 18px;
   border-radius: 12px;
-  border: none;
-  background: #00c853;
-  color: #fff;
+  border: 1px solid var(--ns-btn-green-border);
+  background: var(--ns-btn-green-bg);
+  color: var(--ns-btn-green-text);
+  -webkit-text-fill-color: var(--ns-btn-green-text);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: none;
 }
 
 .cliente-detalhe-v2__btn-add:hover {
-  background: #2ecc71;
+  background: var(--ns-btn-green-bg-hover);
+  border-color: var(--ns-btn-green-border-hover);
+  color: var(--ns-btn-green-text-hover);
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover);
 }
 
 .cliente-detalhe-v2__btn-add span {
@@ -27211,17 +27336,20 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   cursor: pointer;
 }
 
-/* Novo agendamento — verde principal */
+/* Novo agendamento — verde transparente */
 .agenda-tecnica-hero__actions-primary > .btn-primary:first-of-type {
-  background: #00c853 !important;
-  border: none !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  box-shadow: 0 4px 16px rgba(0, 200, 83, 0.28);
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none;
 }
 
 .agenda-tecnica-hero__actions-primary > .btn-primary:first-of-type:hover {
-  background: #2ecc71 !important;
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
 }
 
 /* Assunto pessoal — mantém roxo, só normaliza forma */
@@ -27236,7 +27364,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   border-radius: 12px !important;
 }
 
-/* Voltar circular verde */
+/* Voltar circular verde transparente */
 .agenda-tecnica-hero__actions-nav button:first-child {
   width: 48px !important;
   height: 48px !important;
@@ -27244,15 +27372,19 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   min-height: 48px !important;
   padding: 0 !important;
   border-radius: 50% !important;
-  background: #00c853 !important;
-  border: none !important;
-  color: #ffffff !important;
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
   font-size: 18px !important;
-  box-shadow: 0 4px 14px rgba(0, 200, 83, 0.28);
+  box-shadow: none;
 }
 
 .agenda-tecnica-hero__actions-nav button:first-child:hover {
-  background: #2ecc71 !important;
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
 }
 
 .agenda-tecnica-hero__actions-nav button:last-child {
@@ -27371,12 +27503,21 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .agenda-painel-voltar-btn {
-  background: #00c853 !important;
-  border: none !important;
-  color: #fff !important;
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
   border-radius: 12px !important;
   padding: 12px 20px !important;
   min-height: 48px !important;
+  box-shadow: none !important;
+}
+
+.agenda-painel-voltar-btn:hover {
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
 }
 
 .agenda-painel-situacao-btn:focus-visible {
@@ -27422,13 +27563,18 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   font-size: 15px !important;
   font-weight: 700 !important;
   border-radius: 14px !important;
-  background: #00c853 !important;
-  border: none !important;
-  color: #fff !important;
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none !important;
 }
 
 .agenda-tecnica-form__actions .btn-primary:hover {
-  background: #2ecc71 !important;
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
 }
 
 .agenda-tecnica-form__actions .btn-secondary {
@@ -27616,17 +27762,22 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   font-size: 14px !important;
   font-weight: 600 !important;
   border-radius: 10px !important;
-  background: #00c853 !important;
-  border: none !important;
-  color: #ffffff !important;
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  box-shadow: none !important;
 }
 
 .agenda-cal-btn-lista:hover {
-  background: #2ecc71 !important;
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
 }
 
 .agenda-cal-btn-atualizar {
@@ -28494,18 +28645,21 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   padding: 12px 20px !important;
   min-height: 44px !important;
   border-radius: 12px !important;
-  background: #00c853 !important;
-  border: none !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
   font-weight: 600 !important;
   font-size: 14px !important;
-  box-shadow: 0 4px 16px rgba(0, 200, 83, 0.28) !important;
+  box-shadow: none !important;
 }
 
 .tab-glass-hero-actions > .btn-primary:hover,
 .tab-glass-hero-actions > button.btn-primary:hover {
-  background: #2ecc71 !important;
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
 }
 
 .tab-glass-hero-actions-row > button {
@@ -28524,10 +28678,18 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .tab-glass-hero-actions-row > button:first-child {
-  background: #00c853 !important;
-  border: none !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(0, 200, 83, 0.28) !important;
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none !important;
+}
+
+.tab-glass-hero-actions-row > button:first-child:hover {
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
 }
 
 .tab-glass-hero-actions-row > button:last-child {
@@ -28543,10 +28705,10 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   border-radius: 12px !important;
   font-size: 14px !important;
   font-weight: 600 !important;
-  background: rgba(22, 28, 28, 0.92) !important;
-  border: 1px solid rgba(0, 200, 83, 0.28) !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
   box-shadow: none !important;
   -webkit-appearance: none !important;
   appearance: none !important;
@@ -28554,18 +28716,19 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 .tab-glass-nav--clientes .btn-primary,
 .tab-glass-nav--clientes .btn-primary:not(.btn-danger) {
-  background: rgba(22, 28, 28, 0.92) !important;
-  border-color: rgba(0, 200, 83, 0.28) !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  background: var(--ns-btn-green-bg) !important;
+  border-color: var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
 }
 
 .tab-glass-nav .btn-primary[style*='rgba(18, 52, 24'],
 .tab-glass-nav .btn-primary[style*='rgba(0, 200, 83, 0.3)'] {
-  background: #00c853 !important;
-  border-color: #00c853 !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 16px rgba(0, 200, 83, 0.28) !important;
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+  box-shadow: none !important;
 }
 
 .tab-glass-root input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']):not(.cliente-cadastro-v2__input),
@@ -28758,21 +28921,23 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 /* ===================================================================
-   Biblioteca de Peças — paleta definitiva (sobrepõe ns-ui-v2 / tab-glass)
-   Verde #00a86b | Roxo #9333ea | Laranja #f97316 | Neutro ghost
+   Biblioteca de Peças — botões ghost (sobrepõe ns-ui-v2 / tab-glass)
+   Verde | Roxo | Laranja | Neutro
    =================================================================== */
 html body .biblioteca-pecas-hub.tab-glass-root.ns-ui-v2 .btn-primary:not(.btn-danger) {
-  background: #00a86b !important;
-  border: 1px solid #00945d !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(0, 168, 107, 0.28) !important;
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none !important;
 }
 
 html body .biblioteca-pecas-hub.tab-glass-root.ns-ui-v2 .btn-primary:not(.btn-danger):hover:not(:disabled) {
-  background: #00945d !important;
-  border-color: #008556 !important;
-  box-shadow: 0 6px 18px rgba(0, 168, 107, 0.34) !important;
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+  box-shadow: none !important;
 }
 
 html body .biblioteca-pecas-hub.tab-glass-root.ns-ui-v2 .btn-secondary {
@@ -28791,45 +28956,51 @@ html body .biblioteca-pecas-hub.tab-glass-root.ns-ui-v2 .btn-secondary:hover:not
 html body .biblioteca-pecas-hub .biblioteca-btn--green,
 html body .biblioteca-pecas-hub .biblioteca-btn--green:hover,
 html body .biblioteca-pecas-hub .biblioteca-btn--green:active {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
 }
 
 html body .biblioteca-pecas-hub .biblioteca-btn--green {
-  background: #00a86b !important;
-  border: 1px solid #00945d !important;
-  box-shadow: 0 4px 14px rgba(0, 168, 107, 0.28) !important;
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  box-shadow: none !important;
 }
 
 html body .biblioteca-pecas-hub .biblioteca-btn--green:hover:not(:disabled) {
-  background: #00945d !important;
-  border-color: #008556 !important;
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
 }
 
 html body .biblioteca-pecas-hub .biblioteca-btn--purple {
-  background: #9333ea !important;
-  border: 1px solid #7e22ce !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(147, 51, 234, 0.28) !important;
+  background: var(--ns-btn-purple-bg) !important;
+  border: 1px solid var(--ns-btn-purple-border) !important;
+  color: var(--ns-btn-purple-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-purple-text) !important;
+  box-shadow: none !important;
 }
 
 html body .biblioteca-pecas-hub .biblioteca-btn--purple:hover:not(:disabled) {
-  background: #7e22ce !important;
-  border-color: #6b21a8 !important;
+  background: var(--ns-btn-purple-bg-hover) !important;
+  border-color: var(--ns-btn-purple-border-hover) !important;
+  color: var(--ns-btn-purple-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-purple-text-hover) !important;
 }
 
 html body .biblioteca-pecas-hub .biblioteca-btn--orange {
-  background: #f97316 !important;
-  border: 1px solid #ea580c !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.28) !important;
+  background: var(--ns-btn-orange-bg) !important;
+  border: 1px solid var(--ns-btn-orange-border) !important;
+  color: var(--ns-btn-orange-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-orange-text) !important;
+  box-shadow: none !important;
 }
 
 html body .biblioteca-pecas-hub .biblioteca-btn--orange:hover:not(:disabled) {
-  background: #ea580c !important;
-  border-color: #c2410c !important;
+  background: var(--ns-btn-orange-bg-hover) !important;
+  border-color: var(--ns-btn-orange-border-hover) !important;
+  color: var(--ns-btn-orange-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-orange-text-hover) !important;
 }
 
 html body .biblioteca-pecas-hub .biblioteca-btn--ghost {
@@ -28879,23 +29050,25 @@ html body .biblioteca-pecas-hub .tab-glass-hero-actions-row > .biblioteca-pecas-
 }
 
 html body .biblioteca-pecas-hub .biblioteca-pecas-hub__seg--active {
-  background: #00a86b !important;
-  border-color: #00945d !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(0, 168, 107, 0.28) !important;
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+  box-shadow: none !important;
 }
 
 html body .biblioteca-pecas-hub .biblioteca-hub-tab--active:not(.biblioteca-hub-tab--purple) {
-  background: #00a86b !important;
-  border-color: #00945d !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
 }
 
 html body .biblioteca-pecas-hub .biblioteca-hub-tab--purple.biblioteca-hub-tab--active {
-  background: #9333ea !important;
-  border-color: #7e22ce !important;
+  background: var(--ns-btn-purple-bg-hover) !important;
+  border-color: var(--ns-btn-purple-border-hover) !important;
+  color: var(--ns-btn-purple-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-purple-text-hover) !important;
 }
 
 html body .biblioteca-pecas-hub .biblioteca-hub-toolbar {
@@ -29009,8 +29182,10 @@ html body .biblioteca-pecas-hub .biblioteca-pecas-hub__secao-badge {
 }
 
 html body .biblioteca-pecas-hub .biblioteca-pecas-hub__grupos-header .btn-primary {
-  background: #00a86b !important;
-  border-color: #00945d !important;
+  background: var(--ns-btn-green-bg) !important;
+  border-color: var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -31295,8 +31470,18 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   cursor: pointer;
 }
 .cb-pro__btn--primary {
-  background: linear-gradient(135deg, #00c853, #00897b);
-  color: #000;
+  background: var(--ns-btn-green-bg);
+  border: 1px solid var(--ns-btn-green-border);
+  color: var(--ns-btn-green-text);
+  -webkit-text-fill-color: var(--ns-btn-green-text);
+  box-shadow: none;
+}
+
+.cb-pro__btn--primary:hover:not(:disabled) {
+  background: var(--ns-btn-green-bg-hover);
+  border-color: var(--ns-btn-green-border-hover);
+  color: var(--ns-btn-green-text-hover);
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover);
 }
 .cb-pro__btn--secondary {
   background: rgba(0, 200, 83, 0.15);
@@ -31772,5 +31957,176 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   .manual-pro-page-preview__sidebar {
     display: none;
   }
+}
+
+/* ===================================================================
+   NS Ghost Buttons — sistema inteiro (override final)
+   Garante botões transparentes por cor, inclusive inline legado.
+   =================================================================== */
+html body .btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn),
+html body button.btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn),
+html body a.btn-primary {
+  background: var(--ns-btn-green-bg) !important;
+  background-color: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none !important;
+}
+
+html body .btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):hover:not(:disabled),
+html body button.btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):hover:not(:disabled),
+html body a.btn-primary:hover {
+  background: var(--ns-btn-green-bg-hover) !important;
+  background-color: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+  filter: none !important;
+}
+
+html body .btn-danger:not(.sidebar-group-header),
+html body button.btn-danger:not(.sidebar-group-header) {
+  background: var(--ns-btn-red-bg) !important;
+  background-color: var(--ns-btn-red-bg) !important;
+  border: 1px solid var(--ns-btn-red-border) !important;
+  color: var(--ns-btn-red-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-red-text) !important;
+  box-shadow: none !important;
+}
+
+html body .btn-danger:not(.sidebar-group-header):hover:not(:disabled),
+html body button.btn-danger:not(.sidebar-group-header):hover:not(:disabled) {
+  background: var(--ns-btn-red-bg-hover) !important;
+  background-color: var(--ns-btn-red-bg-hover) !important;
+  border-color: var(--ns-btn-red-border-hover) !important;
+  color: var(--ns-btn-red-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-red-text-hover) !important;
+}
+
+html body .btn-info,
+html body button.btn-info {
+  background: var(--ns-btn-blue-bg) !important;
+  background-color: var(--ns-btn-blue-bg) !important;
+  border: 1px solid var(--ns-btn-blue-border) !important;
+  color: var(--ns-btn-blue-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-blue-text) !important;
+  box-shadow: none !important;
+}
+
+html body .btn-info:hover:not(:disabled),
+html body button.btn-info:hover:not(:disabled) {
+  background: var(--ns-btn-blue-bg-hover) !important;
+  background-color: var(--ns-btn-blue-bg-hover) !important;
+  border-color: var(--ns-btn-blue-border-hover) !important;
+  color: var(--ns-btn-blue-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-blue-text-hover) !important;
+}
+
+html body .btn-administrador:not(.sidebar-group-header),
+html body button.btn-administrador:not(.sidebar-group-header) {
+  background: var(--ns-btn-red-bg) !important;
+  background-color: var(--ns-btn-red-bg) !important;
+  border: 1px solid var(--ns-btn-red-border) !important;
+  color: var(--ns-btn-red-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-red-text) !important;
+  box-shadow: none !important;
+}
+
+html body .btn-administrador:not(.sidebar-group-header):hover:not(:disabled),
+html body button.btn-administrador:not(.sidebar-group-header):hover:not(:disabled) {
+  background: var(--ns-btn-red-bg-hover) !important;
+  background-color: var(--ns-btn-red-bg-hover) !important;
+  border-color: var(--ns-btn-red-border-hover) !important;
+  color: var(--ns-btn-red-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-red-text-hover) !important;
+}
+
+html body button.checklist-editor-pecas-add-btn,
+html body button:not(.agenda-painel-situacao-btn)[style*='background-color: rgb(0, 200, 83)'],
+html body button:not(.agenda-painel-situacao-btn)[style*='background-color:rgb(0, 200, 83)'],
+html body button:not(.agenda-painel-situacao-btn)[style*='backgroundColor: rgb(0, 200, 83)'] {
+  background: var(--ns-btn-green-bg) !important;
+  background-color: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none !important;
+}
+
+html body button.checklist-editor-pecas-add-btn:hover:not(:disabled),
+html body button:not(.agenda-painel-situacao-btn)[style*='background-color: rgb(0, 200, 83)']:hover:not(:disabled),
+html body button:not(.agenda-painel-situacao-btn)[style*='background-color:rgb(0, 200, 83)']:hover:not(:disabled) {
+  background: var(--ns-btn-green-bg-hover) !important;
+  background-color: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+}
+
+html body .mobile-toolbar-btn.active {
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+}
+
+html body .clientes-financeiro-panel .clientes-financeiro-conteudo button:not([class*='financeiro-despesas-bib']) {
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none !important;
+}
+
+html body .clientes-financeiro-panel .clientes-financeiro-conteudo button:not([class*='financeiro-despesas-bib']):hover {
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+}
+
+/* ===================================================================
+   Situação operacional (Agenda) — EXCLUÍDO do ghost global
+   Mantém cartões escuros com brilho/borda por cor (AO VIVO, CONFIRMADO…)
+   =================================================================== */
+html body button.agenda-painel-situacao-btn,
+html body .agenda-tecnica-painel-grid--menu .agenda-painel-situacao-btn {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  -webkit-text-fill-color: unset !important;
+  filter: none !important;
+}
+
+html body button.agenda-painel-situacao-btn:hover,
+html body button.agenda-painel-situacao-btn:focus,
+html body button.agenda-painel-situacao-btn:active {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  -webkit-text-fill-color: unset !important;
+  filter: none !important;
+}
+
+html body button.agenda-painel-situacao-btn > div {
+  box-shadow: inherit;
+}
+
+html body button.agenda-painel-situacao-btn *,
+html body .agenda-painel-situacao-btn * {
+  -webkit-text-fill-color: unset !important;
+}
+
+html body button.agenda-painel-situacao-btn:hover {
+  transform: translateY(-2px);
+}
+
+html body button.agenda-painel-situacao-btn:hover > div {
+  filter: brightness(1.08);
 }
 
