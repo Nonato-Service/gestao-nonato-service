@@ -26002,6 +26002,179 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   margin-top: 4px;
 }
 
+.cliente-cadastro-v2__actions--reference {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.cliente-cadastro-v2__actions--reference .cliente-cadastro-v2__cancel {
+  flex: 0 0 38%;
+  max-width: 220px;
+}
+
+.cliente-cadastro-v2__actions--reference .cliente-cadastro-v2__submit {
+  flex: 1 1 auto;
+}
+
+.cliente-cadastro-v2__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.cliente-cadastro-v2__cancel--header {
+  width: auto;
+  min-width: 120px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+}
+
+.cliente-cadastro-v2__cancel--header:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.42);
+  color: #fff;
+}
+
+.cliente-cadastro-v2__field-error {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #fecaca;
+}
+
+.cliente-cadastro-v2__similar {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: rgba(69, 46, 8, 0.35);
+}
+
+.cliente-cadastro-v2__similar-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fde68a;
+}
+
+.cliente-cadastro-v2__similar-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cliente-cadastro-v2__similar-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(254, 243, 199, 0.92);
+}
+
+.cliente-cadastro-v2__similar-open {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  background: rgba(180, 83, 9, 0.28);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cliente-cadastro-v2__similar-open:hover {
+  background: rgba(180, 83, 9, 0.42);
+}
+
+.cliente-cadastro-v2__duplicate--actions {
+  margin-top: 8px;
+  margin-bottom: 0;
+  padding: 12px 14px;
+}
+
+.cliente-cadastro-v2__duplicate--actions p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(254, 226, 226, 0.92);
+}
+
+.cliente-cadastro-v2__duplicate {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(251, 113, 133, 0.45);
+  background: rgba(76, 12, 24, 0.42);
+}
+
+.cliente-cadastro-v2__duplicate-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 15px;
+  color: #fecdd3;
+  background: rgba(244, 63, 94, 0.22);
+  border: 1px solid rgba(251, 113, 133, 0.45);
+}
+
+.cliente-cadastro-v2__duplicate-copy {
+  min-width: 0;
+  text-align: left;
+}
+
+.cliente-cadastro-v2__duplicate-copy strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #fecaca;
+}
+
+.cliente-cadastro-v2__duplicate-copy p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(254, 226, 226, 0.92);
+}
+
+.cliente-cadastro-v2__duplicate-open {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(251, 113, 133, 0.55);
+  background: rgba(190, 18, 60, 0.28);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cliente-cadastro-v2__duplicate-open:hover {
+  background: rgba(190, 18, 60, 0.42);
+}
+
+.cliente-cadastro-v2__input--error {
+  border-color: rgba(251, 113, 133, 0.65) !important;
+  box-shadow: 0 0 0 1px rgba(251, 113, 133, 0.25);
+}
+
 .cliente-cadastro-v2__submit {
   width: 100%;
   display: inline-flex;
@@ -26023,6 +26196,13 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 .cliente-cadastro-v2__submit:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 24px rgba(0, 255, 80, 0.35);
+}
+
+.cliente-cadastro-v2__submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .cliente-cadastro-v2__submit-icon {
@@ -26189,10 +26369,33 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .clientes-cadastro-page .cliente-cadastro-v2__actions {
-  margin-top: 0;
+  margin-top: 8px;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.clientes-cadastro-page .cliente-cadastro-v2__cancel {
+  flex: 0 0 38%;
+  max-width: 240px;
+  padding: 16px 20px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 14px !important;
+}
+
+.clientes-cadastro-page .cliente-cadastro-v2__cancel:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.42) !important;
+  color: #ffffff !important;
 }
 
 .clientes-cadastro-page .cliente-cadastro-v2__submit {
+  flex: 1 1 auto;
   margin-top: 4px;
   padding: 18px 24px !important;
   font-size: 16px !important;

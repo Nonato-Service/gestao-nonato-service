@@ -158,6 +158,11 @@ import {
   gerarProximoCodigoCliente,
   codigoClienteExibicao,
 } from './lib/clienteCodigoUtils'
+import {
+  encontrarClienteDuplicadoCadastro,
+  encontrarClienteDuplicadoCadastroAntecipado,
+  listarClientesNomeSimilarCadastro,
+} from './lib/clienteCadastroDuplicadoUtils'
 import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
 import { ClienteCadastroForm, emptyClienteFormState, type ClienteFormState } from './components/ClienteCadastroForm'
@@ -3161,43 +3166,6 @@ function findClienteByRelatorio(clientes: Cliente[], rel: RelatorioServico): Cli
   const nome = (rel.cliente || '').trim().toLowerCase()
   if (!nome) return undefined
   return clientes.find((c) => (c.nomeEmpresa || '').trim().toLowerCase() === nome)
-}
-
-function normalizarNomeClienteComparacao(nome: string): string {
-  return String(nome ?? '')
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ')
-}
-
-function normalizarNifClienteComparacao(nif: string): string {
-  return String(nif ?? '').replace(/[\s.\-/]/g, '').toUpperCase()
-}
-
-/** Evita cadastros duplicados (mesmo nome ou NIF) ao gravar cliente. */
-function encontrarClienteDuplicadoCadastro(
-  clientes: Cliente[],
-  opts: { nomeEmpresa: string; numeroContribuicaoFiscal?: string; excludeId?: string }
-): { cliente: Cliente; motivo: 'nome' | 'nif' } | null {
-  const excludeId = String(opts.excludeId ?? '').trim()
-  const nifKey = normalizarNifClienteComparacao(opts.numeroContribuicaoFiscal || '')
-  if (nifKey.length >= 3) {
-    const byNif = clientes.find(
-      (c) =>
-        c.id !== excludeId &&
-        normalizarNifClienteComparacao(c.numeroContribuicaoFiscal || '') === nifKey
-    )
-    if (byNif) return { cliente: byNif, motivo: 'nif' }
-  }
-  const nomeKey = normalizarNomeClienteComparacao(opts.nomeEmpresa)
-  if (!nomeKey) return null
-  const byNome = clientes.find(
-    (c) => c.id !== excludeId && normalizarNomeClienteComparacao(c.nomeEmpresa) === nomeKey
-  )
-  if (byNome) return { cliente: byNome, motivo: 'nome' }
-  return null
 }
 
 function nomeGrupoTarifaServico(servicoGrupos: ServicoCadastroGrupo[], grupoId?: string): string {
@@ -7321,6 +7289,7 @@ export default function Dashboard() {
   const [clienteForm, setClienteForm] = useState<ClienteFormState>(() => emptyClienteFormState())
   const clienteSaveInFlightRef = useRef(false)
   const [clienteSaveInFlight, setClienteSaveInFlight] = useState(false)
+  const [clienteDuplicadoSavePulse, setClienteDuplicadoSavePulse] = useState(0)
 
   const clientesOrdenadosAlfabeticamente = useMemo(
     () => ordenarClientesPorNome(clientes, localeOrdenacaoClientes(selectedLanguage)),
@@ -14373,12 +14342,18 @@ export default function Dashboard() {
 
   const handleCancelClienteForm = () => {
     setEditingCliente(null)
+    setClienteDuplicadoSavePulse(0)
     setClienteForm(
       emptyClienteFormState(
         clienteGrupoTarifaSelecionadoId || ordenarServicoGrupos(servicoGrupos)[0]?.id || ''
       )
     )
-    if (showClientesModal) setShowClienteForm(false)
+    if (showClientesModal) {
+      setShowClienteForm(false)
+    } else {
+      setClientesActiveTab('listar')
+      setClienteListaDetalheId(null)
+    }
   }
 
   const handleEditCliente = (cliente: Cliente) => {
@@ -16257,6 +16232,27 @@ export default function Dashboard() {
     fecharFormularioRelatorioServico()
   }
 
+  const clienteDuplicadoCadastro = useMemo(
+    () =>
+      encontrarClienteDuplicadoCadastroAntecipado(clientes, {
+        nomeEmpresa: clienteForm.nomeEmpresa,
+        numeroContribuicaoFiscal: clienteForm.numeroContribuicaoFiscal,
+        excludeId: editingCliente?.id,
+      }),
+    [clientes, clienteForm.nomeEmpresa, clienteForm.numeroContribuicaoFiscal, editingCliente?.id]
+  )
+
+  const clientesNomeSimilarCadastro = useMemo(
+    () =>
+      editingCliente || clienteDuplicadoCadastro
+        ? []
+        : listarClientesNomeSimilarCadastro(clientes, {
+            nomeEmpresa: clienteForm.nomeEmpresa,
+            excludeId: editingCliente?.id,
+          }),
+    [clientes, clienteForm.nomeEmpresa, editingCliente, clienteDuplicadoCadastro]
+  )
+
   const handleSaveCliente = async () => {
     if (clienteSaveInFlightRef.current) return
 
@@ -16271,21 +16267,18 @@ export default function Dashboard() {
       excludeId: editingCliente?.id,
     })
     if (duplicado) {
+      setClienteDuplicadoSavePulse((n) => n + 1)
       const tr = t as Record<string, string | undefined>
-      const nomeDup = (duplicado.cliente.nomeEmpresa || '').trim() || '—'
+      const nomeDup = (duplicado.cliente.nomeEmpresa || '').trim() || (tr.protocolosServicoEquipamentoSemId ?? '')
       if (duplicado.motivo === 'nif') {
         const nifDup = (clienteForm.numeroContribuicaoFiscal || '').trim()
         alert(
-          (tr.clienteJaExistenteNif || 'Já existe um cliente com o NIF «{nif}»: {nome}.')
+          (tr.clienteJaExistenteNif ?? '')
             .replace('{nif}', nifDup)
             .replace('{nome}', nomeDup)
         )
       } else {
-        alert(
-          (tr.clienteJaExistenteNome ||
-            'Já existe um cliente com o nome «{nome}». Abra o registo existente em «Listar clientes» em vez de criar outro.')
-            .replace('{nome}', nomeDup)
-        )
+        alert((tr.clienteJaExistenteNome ?? '').replace('{nome}', nomeDup))
       }
       return
     }
@@ -35288,10 +35281,14 @@ export default function Dashboard() {
                   onCancel={handleCancelClienteForm}
                   onPhotoChange={handleClientePhotoChange}
                   onRemovePhoto={handleRemoveClientePhoto}
-                  onBack={() => {
-                    setClientesActiveTab('listar')
-                    setClienteListaDetalheId(null)
+                  duplicateConflict={clienteDuplicadoCadastro}
+                  similarClientes={clientesNomeSimilarCadastro}
+                  duplicateSavePulse={clienteDuplicadoSavePulse}
+                  onOpenExistingCliente={(clienteId) => {
+                    const existente = clientes.find((c) => c.id === clienteId)
+                    if (existente) handleEditCliente(existente)
                   }}
+                  onBack={handleCancelClienteForm}
                   variant="page"
                   referenceLayout={!editingCliente}
                   sanitizeKmFieldTyping={sanitizeKmFieldTyping}
@@ -71125,6 +71122,13 @@ A1;Peça exemplo;10`}
                 onCancel={handleCancelClienteForm}
                 onPhotoChange={handleClientePhotoChange}
                 onRemovePhoto={handleRemoveClientePhoto}
+                duplicateConflict={clienteDuplicadoCadastro}
+                similarClientes={clientesNomeSimilarCadastro}
+                duplicateSavePulse={clienteDuplicadoSavePulse}
+                onOpenExistingCliente={(clienteId) => {
+                  const existente = clientes.find((c) => c.id === clienteId)
+                  if (existente) handleEditCliente(existente)
+                }}
                 variant="modal"
                 sanitizeKmFieldTyping={sanitizeKmFieldTyping}
                 className={

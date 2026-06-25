@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useId, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react'
 import {
   IconBuilding2,
   IconHome,
@@ -13,6 +13,7 @@ import {
 } from '../lib/enderecoMapsUtils'
 import { ClienteEnderecoMapsActions } from './ClienteEnderecoMapsActions'
 import { ordenarServicoGrupos, type ServicoCadastroGrupo } from '../lib/servicosCadastroUtils'
+import type { ClienteCadastroDuplicado } from '../lib/clienteCadastroDuplicadoUtils'
 
 function useClienteFormTr(language: string) {
   return useMemo(() => {
@@ -67,6 +68,21 @@ type Props = {
   editingExtras?: React.ReactNode
   footerExtras?: React.ReactNode
   sanitizeKmFieldTyping?: (v: string) => string
+  duplicateConflict?: ClienteCadastroDuplicado<{
+    id: string
+    nomeEmpresa?: string
+    codigoCliente?: string
+    numeroContribuicaoFiscal?: string
+  }> | null
+  onOpenExistingCliente?: (clienteId: string) => void
+  similarClientes?: Array<{
+    id: string
+    nomeEmpresa?: string
+    codigoCliente?: string
+    numeroContribuicaoFiscal?: string
+  }>
+  /** Incrementado quando o utilizador tenta gravar com duplicado — faz scroll ao aviso. */
+  duplicateSavePulse?: number
 }
 
 function IconPhone({ className }: { className?: string }) {
@@ -110,6 +126,7 @@ function FieldInput({
   required,
   fullWidth,
   children,
+  footer,
 }: {
   id: string
   icon: React.ReactNode
@@ -117,6 +134,7 @@ function FieldInput({
   required?: boolean
   fullWidth?: boolean
   children: React.ReactNode
+  footer?: React.ReactNode
 }) {
   return (
     <div className={'cliente-cadastro-v2__field' + (fullWidth ? ' cliente-cadastro-v2__field--span-2' : '')}>
@@ -130,6 +148,7 @@ function FieldInput({
         </span>
         {children}
       </div>
+      {footer}
     </div>
   )
 }
@@ -155,10 +174,16 @@ export function ClienteCadastroForm({
   editingExtras,
   footerExtras,
   sanitizeKmFieldTyping = (v) => v,
+  duplicateConflict = null,
+  onOpenExistingCliente,
+  similarClientes = [],
+  duplicateSavePulse = 0,
 }: Props) {
   const tr = useClienteFormTr(language)
   const photoInputId = useId()
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const duplicateBannerRef = useRef<HTMLDivElement>(null)
+  const actionsRef = useRef<HTMLDivElement>(null)
   const [detalhesAbertos, setDetalhesAbertos] = useState(Boolean(editingCliente) && !referenceLayout)
   const isFisica = clienteForm.tipoCliente !== 'juridica'
   const showExtras = !referenceLayout
@@ -174,6 +199,26 @@ export function ClienteCadastroForm({
     pais: clienteForm.pais,
   }
   const mapsQuery = buildEnderecoMapsQuery(mapsEndereco)
+  const hasDuplicate = Boolean(duplicateConflict && !editingCliente)
+  const duplicateNome = (duplicateConflict?.cliente.nomeEmpresa || '').trim() || tr('protocolosServicoEquipamentoSemId')
+  const duplicateNif = (clienteForm.numeroContribuicaoFiscal || '').trim()
+  const indisponivel = tr('protocolosServicoEquipamentoSemId')
+
+  const duplicateMessage = (() => {
+    if (!duplicateConflict) return ''
+    if (duplicateConflict.motivo === 'nif') {
+      return tr('clienteJaExistenteNif')
+        .replace('{nif}', duplicateNif || duplicateConflict.cliente.numeroContribuicaoFiscal || indisponivel)
+        .replace('{nome}', duplicateNome)
+    }
+    return tr('clienteJaExistenteNome').replace('{nome}', duplicateNome)
+  })()
+
+  useEffect(() => {
+    if (!duplicateConflict && duplicateSavePulse <= 0) return
+    const target = duplicateBannerRef.current || actionsRef.current
+    target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [duplicateConflict, duplicateSavePulse])
 
   return (
     <div
@@ -194,11 +239,21 @@ export function ClienteCadastroForm({
                 <h2 className="cliente-cadastro-v2__title">{titulo}</h2>
                 <p className="cliente-cadastro-v2__subtitle">{subtitulo}</p>
               </div>
-              {onBack ? (
-                <button type="button" className="cliente-cadastro-v2__back-btn" onClick={onBack} title={tr('voltar')}>
-                  <IconArrowLeft />
+              <div className="cliente-cadastro-v2__header-actions">
+                <button
+                  type="button"
+                  className="cliente-cadastro-v2__cancel cliente-cadastro-v2__cancel--header"
+                  onClick={onCancel}
+                  disabled={saving}
+                >
+                  {tr('cancel')}
                 </button>
-              ) : null}
+                {onBack ? (
+                  <button type="button" className="cliente-cadastro-v2__back-btn" onClick={onBack} title={tr('voltar')}>
+                    <IconArrowLeft />
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
           {headerSlot}
@@ -211,6 +266,27 @@ export function ClienteCadastroForm({
       )}
 
       {alertSlot}
+
+      {hasDuplicate ? (
+        <div ref={duplicateBannerRef} className="cliente-cadastro-v2__duplicate" role="alert">
+          <div className="cliente-cadastro-v2__duplicate-icon" aria-hidden>
+            !
+          </div>
+          <div className="cliente-cadastro-v2__duplicate-copy">
+            <strong>{tr('clienteDuplicadoAvisoInline')}</strong>
+            <p>{duplicateMessage}</p>
+            {onOpenExistingCliente ? (
+              <button
+                type="button"
+                className="cliente-cadastro-v2__duplicate-open"
+                onClick={() => onOpenExistingCliente(duplicateConflict!.cliente.id)}
+              >
+                {tr('clienteDuplicadoAbrirExistente')}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <section className="cliente-cadastro-v2__card">
         <h3 className="cliente-cadastro-v2__card-title">{tr('fotoPerfil')}</h3>
@@ -275,11 +351,49 @@ export function ClienteCadastroForm({
           label={isFisica ? tr('nomeCompleto') : tr('nomeEmpresa')}
           required
           fullWidth
+          footer={
+            <>
+              {hasDuplicate && duplicateConflict?.motivo === 'nome' ? (
+                <p className="cliente-cadastro-v2__field-error">{duplicateMessage}</p>
+              ) : null}
+              {!hasDuplicate && similarClientes.length > 0 && !editingCliente ? (
+                <div className="cliente-cadastro-v2__similar" role="status">
+                  <p className="cliente-cadastro-v2__similar-title">
+                    {tr('clienteNomesSimilaresTitulo')}
+                  </p>
+                  <ul className="cliente-cadastro-v2__similar-list">
+                    {similarClientes.map((c) => (
+                      <li key={c.id}>
+                        <span>
+                          {(c.nomeEmpresa || indisponivel).trim()}
+                          {c.numeroContribuicaoFiscal
+                            ? tr('clienteSimilarNifResumo').replace('{nif}', c.numeroContribuicaoFiscal)
+                            : ''}
+                        </span>
+                        {onOpenExistingCliente ? (
+                          <button
+                            type="button"
+                            className="cliente-cadastro-v2__similar-open"
+                            onClick={() => onOpenExistingCliente(c.id)}
+                          >
+                            {tr('clienteDuplicadoAbrirExistente')}
+                          </button>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </>
+          }
         >
           <input
             id="nome-cliente"
             type="text"
-            className="cliente-cadastro-v2__input"
+            className={
+              'cliente-cadastro-v2__input' +
+              (hasDuplicate && duplicateConflict?.motivo === 'nome' ? ' cliente-cadastro-v2__input--error' : '')
+            }
             placeholder={isFisica ? tr('nomeCompletoPlaceholder') : tr('nomeEmpresaPlaceholder')}
             value={clienteForm.nomeEmpresa}
             onChange={(e) => setClienteForm({ ...clienteForm, nomeEmpresa: e.target.value })}
@@ -387,11 +501,19 @@ export function ClienteCadastroForm({
           icon={<IconIdCard size={18} />}
           label={tr('nif') || tr('identificacaoFiscal')}
           fullWidth={referenceLayout}
+          footer={
+            hasDuplicate && duplicateConflict?.motivo === 'nif' ? (
+              <p className="cliente-cadastro-v2__field-error">{duplicateMessage}</p>
+            ) : null
+          }
         >
           <input
             id="nif-cliente"
             type="text"
-            className="cliente-cadastro-v2__input"
+            className={
+              'cliente-cadastro-v2__input' +
+              (hasDuplicate && duplicateConflict?.motivo === 'nif' ? ' cliente-cadastro-v2__input--error' : '')
+            }
             placeholder={tr('nifPlaceholder')}
             value={clienteForm.numeroContribuicaoFiscal}
             onChange={(e) => setClienteForm({ ...clienteForm, numeroContribuicaoFiscal: e.target.value })}
@@ -529,16 +651,29 @@ export function ClienteCadastroForm({
 
       {showExtras ? editingExtras : null}
 
-      <div className="cliente-cadastro-v2__actions">
-        <button type="button" className="cliente-cadastro-v2__submit" onClick={onSave} disabled={saving}>
+      {hasDuplicate ? (
+        <div className="cliente-cadastro-v2__duplicate cliente-cadastro-v2__duplicate--actions" role="alert">
+          <p>{duplicateMessage}</p>
+        </div>
+      ) : null}
+
+      <div
+        ref={actionsRef}
+        className={'cliente-cadastro-v2__actions' + (referenceLayout ? ' cliente-cadastro-v2__actions--reference' : '')}
+      >
+        <button type="button" className="cliente-cadastro-v2__cancel" onClick={onCancel} disabled={saving}>
+          {tr('cancel')}
+        </button>
+        <button
+          type="button"
+          className="cliente-cadastro-v2__submit"
+          onClick={onSave}
+          disabled={saving || hasDuplicate}
+          title={hasDuplicate ? tr('clienteDuplicadoBloqueioSalvar') : undefined}
+        >
           <span className="cliente-cadastro-v2__submit-icon">+</span>
           {saving ? tr('clienteSalvando') : editingCliente ? tr('save') : tr('addCliente')}
         </button>
-        {!referenceLayout ? (
-          <button type="button" className="cliente-cadastro-v2__cancel" onClick={onCancel} disabled={saving}>
-            {tr('cancel')}
-          </button>
-        ) : null}
       </div>
 
       {footerExtras}
