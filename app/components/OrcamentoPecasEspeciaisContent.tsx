@@ -167,6 +167,14 @@ function condicoesPagamentoPadrao(
   )
 }
 
+type EmpresaOrcamentoPecasEsp = {
+  nomeEmpresa?: string
+  morada?: string
+  nif?: string
+  telefone?: string
+  email?: string
+}
+
 type Props = {
   clientes: ClienteOrcamentoPecasEsp[]
   pecasBiblioteca: PecaBibliotecaPecasEsp[]
@@ -183,6 +191,7 @@ type Props = {
   ) => Promise<boolean>
   loadData?: (key: string) => Promise<unknown>
   logoHtml?: string
+  empresaInfo?: EmpresaOrcamentoPecasEsp
 }
 
 export function OrcamentoPecasEspeciaisContent({
@@ -196,6 +205,7 @@ export function OrcamentoPecasEspeciaisContent({
   saveData,
   loadData,
   logoHtml = '',
+  empresaInfo = {},
 }: Props) {
   const t = safeT
   const hoje = new Date().toISOString().slice(0, 10)
@@ -562,9 +572,26 @@ export function OrcamentoPecasEspeciaisContent({
       badgeSemIva: t.orcamentoPecasEspBadgeSemIva || 'Preços sem IVA',
       badgeComIva: t.orcamentoPecasEspBadgeComIva || 'Preços com IVA a {{taxa}}%',
       maisInfoLabel: t.orcamentoPecasEspInfoExtra || 'Mais informação',
+      empresaNifLabel: t.identificacaoFiscal || t.nif || 'NIF',
+      empresaTelefoneLabel: t.telefone || t.telefones || 'Telefone',
+      empresaEmailLabel: t.email || 'E-mail',
+      empresaNomeFallback: t.nonatoService || t.boaTrade || 'NONATO SERVICE',
     }),
     [t]
   )
+
+  const empresaPdf = useMemo(
+    () => ({
+      nomeEmpresa: empresaInfo.nomeEmpresa,
+      morada: empresaInfo.morada,
+      nif: empresaInfo.nif,
+      telefone: empresaInfo.telefone,
+      email: empresaInfo.email,
+    }),
+    [empresaInfo]
+  )
+
+  const empresaNomeExibicao = (empresaInfo.nomeEmpresa || t.nonatoService || t.boaTrade || '').trim()
 
   const montarPayloadPdf = (preview: boolean) => ({
     numeroOferta: numeroOferta.trim() || gerarNumeroOfertaPecasEspeciais(salvos, dataIso),
@@ -586,6 +613,7 @@ export function OrcamentoPecasEspeciaisContent({
     condicoesPagamento: condicoesPagamento.trim(),
     notasRodape: notasRodape.trim(),
     logoHtml,
+    empresa: empresaPdf,
     labels: labelsPdf,
     preview,
   })
@@ -714,8 +742,41 @@ export function OrcamentoPecasEspeciaisContent({
     <div className="orc-pro orcamentos-avulso-page orcamento-pecas-especiais-page">
       <div className="orcamentos-avulso-header-card">
         <div className="orcamentos-avulso-header-inner">
-          <div className="orcamentos-avulso-header-logo">
-            <LogoComponent size="small" />
+          <div className="orcamentos-avulso-header-brand">
+            <div className="orcamentos-avulso-header-logo">
+              {logoHtml ? (
+                <div className="orcamentos-avulso-header-logo-html" dangerouslySetInnerHTML={{ __html: logoHtml }} />
+              ) : (
+                <LogoComponent size="small" />
+              )}
+            </div>
+            <div className="orcamentos-avulso-header-empresa">
+              {empresaNomeExibicao ? <strong className="orcamentos-avulso-header-empresa-nome">{empresaNomeExibicao}</strong> : null}
+              {empresaInfo.morada?.trim() ? (
+                <span className="orcamentos-avulso-header-empresa-line">{empresaInfo.morada.trim()}</span>
+              ) : null}
+              {empresaInfo.nif?.trim() ? (
+                <span className="orcamentos-avulso-header-empresa-line">
+                  {(t.identificacaoFiscal || t.nif || 'NIF') + ': ' + empresaInfo.nif.trim()}
+                </span>
+              ) : null}
+              {empresaInfo.telefone?.trim() ? (
+                <span className="orcamentos-avulso-header-empresa-line">
+                  {(t.telefone || t.telefones || 'Telefone') + ': ' + empresaInfo.telefone.trim()}
+                </span>
+              ) : null}
+              {empresaInfo.email?.trim() ? (
+                <span className="orcamentos-avulso-header-empresa-line">
+                  {(t.email || 'E-mail') + ': ' + empresaInfo.email.trim()}
+                </span>
+              ) : null}
+              {!empresaInfo.morada?.trim() && !empresaInfo.nif?.trim() && !empresaInfo.telefone?.trim() && !empresaInfo.email?.trim() ? (
+                <span className="orcamentos-avulso-header-empresa-aviso">
+                  {t.orcamentoPecasEspEmpresaIncompleta ||
+                    'Preencha os dados da empresa em «Cadastro da Nonato Service» para aparecerem no orçamento.'}
+                </span>
+              ) : null}
+            </div>
           </div>
           <div className="orcamentos-avulso-header-title">
             <h1>{t.orcamentoPecasEspeciaisTitle || 'ORÇAMENTOS DE PEÇAS ESPECIAIS'}</h1>

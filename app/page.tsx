@@ -45289,6 +45289,13 @@ A1;Peça exemplo;10`}
             saveData={saveData}
             loadData={loadData}
             logoHtml={getLogoHtmlForOrcamento()}
+            empresaInfo={{
+              nomeEmpresa: fichaCadastral.nomeEmpresa,
+              morada: fichaCadastral.morada,
+              nif: fichaCadastral.nif,
+              telefone: fichaCadastral.telefone,
+              email: fichaCadastral.email,
+            }}
           />
         )
 

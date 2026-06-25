@@ -24159,16 +24159,61 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 
 .orcamentos-avulso-header-inner {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
+  grid-template-columns: minmax(220px, 34%) 1fr auto;
+  align-items: start;
   gap: 12px 16px;
 }
 
-.orcamentos-avulso-header-logo {
+.orcamentos-avulso-header-brand {
   grid-column: 1;
   grid-row: 1;
   display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.orcamentos-avulso-header-logo {
+  flex: 0 0 auto;
+  display: flex;
   align-items: center;
+}
+
+.orcamentos-avulso-header-logo-html img {
+  max-width: 120px;
+  max-height: 56px;
+  object-fit: contain;
+}
+
+.orcamentos-avulso-header-empresa {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.orcamentos-avulso-header-empresa-nome {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+
+.orcamentos-avulso-header-empresa-line {
+  display: block;
+  word-break: break-word;
+}
+
+.orcamentos-avulso-header-empresa-aviso {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #fde68a;
 }
 
 .orcamentos-avulso-header-title {
@@ -24273,9 +24318,10 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
     text-transform: none !important;
   }
 
-  .orcamentos-avulso-header-logo {
+  .orcamentos-avulso-header-brand {
     grid-column: 1;
     grid-row: 2;
+    flex-direction: column;
   }
 
   .orcamentos-avulso-header-actions {
@@ -27842,21 +27888,23 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .cadastro-valores-v2__btn-green {
-  padding: 12px 20px;
-  min-height: 44px;
-  font-size: 14px;
+  padding: 10px 16px;
+  min-height: 40px;
+  font-size: 13px;
   font-weight: 600;
-  border-radius: 12px;
-  border: none;
-  background: #00c853;
-  color: #ffffff;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 200, 83, 0.45);
+  background: rgba(0, 200, 83, 0.14);
+  color: #86efac;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 200, 83, 0.28);
-  transition: background 0.2s ease;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .cadastro-valores-v2__btn-green:hover {
-  background: #2ecc71;
+  background: rgba(0, 200, 83, 0.22);
+  border-color: rgba(0, 200, 83, 0.55);
+  color: #bbf7d0;
 }
 
 .cadastro-valores-v2__btn-nav {
@@ -28566,21 +28614,23 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 /* Alias: classes cadastro-valores reutilizáveis em qualquer ecrã */
 .ns-ui-v2 .cadastro-valores-v2__btn-green,
 .cadastro-valores-v2__btn-green {
-  padding: 12px 20px;
-  min-height: 44px;
-  font-size: 14px;
+  padding: 10px 16px;
+  min-height: 40px;
+  font-size: 13px;
   font-weight: 600;
-  border-radius: 12px;
-  border: none;
-  background: #00c853;
-  color: #ffffff;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 200, 83, 0.45);
+  background: rgba(0, 200, 83, 0.14);
+  color: #86efac;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 200, 83, 0.28);
+  box-shadow: none;
 }
 
 .ns-ui-v2 .cadastro-valores-v2__btn-green:hover,
 .cadastro-valores-v2__btn-green:hover {
-  background: #2ecc71;
+  background: rgba(0, 200, 83, 0.22);
+  border-color: rgba(0, 200, 83, 0.55);
+  color: #bbf7d0;
 }
 
 @media (max-width: 768px) {

@@ -11,6 +11,14 @@ export type OrcamentoPecasEspeciaisLinhaPdf = {
   imagem?: string
 }
 
+export type OrcamentoPecasEspeciaisEmpresaPdf = {
+  nomeEmpresa?: string
+  morada?: string
+  nif?: string
+  telefone?: string
+  email?: string
+}
+
 export type OrcamentoPecasEspeciaisPdfData = {
   numeroOferta: string
   dataIso: string
@@ -31,6 +39,7 @@ export type OrcamentoPecasEspeciaisPdfData = {
   condicoesPagamento?: string
   notasRodape?: string
   logoHtml?: string
+  empresa?: OrcamentoPecasEspeciaisEmpresaPdf
   labels?: Record<string, string | undefined>
   preview?: boolean
 }
@@ -54,6 +63,34 @@ function fmtData(iso: string): string {
   } catch {
     return iso
   }
+}
+
+function linhaEmpresa(label: string | undefined, valor: string | undefined): string {
+  const v = String(valor ?? '').trim()
+  if (!v) return ''
+  const lbl = String(label ?? '').trim()
+  return `<div class="empresa-line">${lbl ? `<span class="empresa-label">${esc(lbl)}:</span> ` : ''}${esc(v)}</div>`
+}
+
+function buildEmpresaInfoHtml(
+  empresa: OrcamentoPecasEspeciaisEmpresaPdf | undefined,
+  L: Record<string, string | undefined>
+): string {
+  if (!empresa) return ''
+  const nome = String(empresa.nomeEmpresa ?? '').trim() || String(L.empresaNomeFallback ?? '').trim()
+  const morada = String(empresa.morada ?? '').trim()
+  const nif = String(empresa.nif ?? '').trim()
+  const telefone = String(empresa.telefone ?? '').trim()
+  const email = String(empresa.email ?? '').trim()
+  if (!nome && !morada && !nif && !telefone && !email) return ''
+
+  return `<div class="header-empresa">
+    ${nome ? `<div class="empresa-nome">${esc(nome)}</div>` : ''}
+    ${morada ? `<div class="empresa-line empresa-line--morada">${esc(morada).replace(/\n/g, '<br/>')}</div>` : ''}
+    ${linhaEmpresa(L.empresaNifLabel, nif)}
+    ${linhaEmpresa(L.empresaTelefoneLabel, telefone)}
+    ${linhaEmpresa(L.empresaEmailLabel, email)}
+  </div>`
 }
 
 function blocoLinha(l: OrcamentoPecasEspeciaisLinhaPdf, L: Record<string, string | undefined>): string {
@@ -132,9 +169,15 @@ export function buildOrcamentoPecasEspeciaisPdfHtml(data: OrcamentoPecasEspeciai
     .preview-banner { background: #fff8e1; border: 2px dashed #f59e0b; color: #92400e; padding: 10px; margin-bottom: 16px; border-radius: 8px; font-weight: 600; text-align: center; }
     .iva-badge { display: inline-block; margin-bottom: 12px; padding: 6px 12px; border-radius: 999px; font-size: 10px; font-weight: 700; background: #ecfdf5; color: #14532d; border: 1px solid #86efac; }
     .header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 2px solid #166534; }
+    .header-left { display: flex; gap: 14px; align-items: flex-start; flex: 1 1 auto; min-width: 0; }
     .header-logo { flex: 0 0 auto; max-width: 180px; }
     .header-logo img { max-width: 100%; max-height: 72px; object-fit: contain; }
-    .header-offer { text-align: right; flex: 1; min-width: 0; }
+    .header-empresa { flex: 1 1 auto; min-width: 0; font-size: 11px; line-height: 1.45; color: #334155; }
+    .empresa-nome { font-size: 14px; font-weight: 800; color: #14532d; margin-bottom: 4px; }
+    .empresa-line { margin-bottom: 2px; }
+    .empresa-line--morada { margin-bottom: 4px; }
+    .empresa-label { font-weight: 700; color: #475569; }
+    .header-offer { text-align: right; flex: 0 0 auto; min-width: 180px; max-width: 42%; }
     .header-offer h1 { margin: 0 0 6px; font-size: 20px; color: #14532d; }
     .header-offer .meta { font-size: 12px; color: #334155; line-height: 1.5; }
     .client-block { margin-bottom: 16px; padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; }
@@ -167,7 +210,8 @@ export function buildOrcamentoPecasEspeciaisPdfHtml(data: OrcamentoPecasEspeciai
     .btn-close { background: #64748b; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; }
     @media (max-width: 640px) {
       .header { flex-direction: column; }
-      .header-offer { text-align: left; }
+      .header-left { flex-direction: column; }
+      .header-offer { text-align: left; max-width: none; }
       .contact-grid { grid-template-columns: 1fr; }
       .item-detail-flex { flex-direction: column; }
     }
@@ -176,7 +220,10 @@ export function buildOrcamentoPecasEspeciaisPdfHtml(data: OrcamentoPecasEspeciai
 <body>
   ${previewBanner}
   <div class="header">
-    <div class="header-logo">${data.logoHtml || ''}</div>
+    <div class="header-left">
+      <div class="header-logo">${data.logoHtml || ''}</div>
+      ${buildEmpresaInfoHtml(data.empresa, L)}
+    </div>
     <div class="header-offer">
       <h1>${esc(L.ofertaLabel || 'Oferta')} ${esc(data.numeroOferta)}</h1>
       <div class="meta">
