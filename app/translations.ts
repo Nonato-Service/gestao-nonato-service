@@ -2154,6 +2154,8 @@ export const translations = {
     bibliotecaPorCategoria: "Por categoria",
     bibliotecaTodasPecas: "Todas as peças",
     bibliotecaBuscarPorCodigo: "Buscar por código",
+    bibliotecaBuscaCodigoResultados: "{count} peça(s) encontrada(s) para «{codigo}»",
+    bibliotecaBuscaCodigoVazio: "Nenhuma peça com este código no catálogo.",
     pecaBibliotecaImportacoesPendentes: "Importações pendentes",
     bibliotecaCatalogoVazioSoPendentes: "Nenhuma peça integrada ao catálogo para estes filtros. As importações ainda não confirmadas aparecem na aba Importação e no aviso acima até gravar a peça (Salvar).",
     bibliotecaImportacoesNaoSalvasBanner: "Estas peças ainda não entram na grelha do catálogo por categoria. Abra cada uma, confira ou edite e use Salvar para integrá-las à Biblioteca.",

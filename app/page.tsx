@@ -7208,7 +7208,6 @@ export default function Dashboard() {
   const [pecaLookupUrlTemplate, setPecaLookupUrlTemplate] = useState('')
   const [pecaLookupLoading, setPecaLookupLoading] = useState(false)
   const [showImportacaoGuiaHomag, setShowImportacaoGuiaHomag] = useState(false)
-  const [importacaoPosFilaModalMensagem, setImportacaoPosFilaModalMensagem] = useState<string | null>(null)
   const [importacaoGuiaPlataforma, setImportacaoGuiaPlataforma] = useState<'windows' | 'android' | 'ipad'>('windows')
   const [filtroImportacaoPendente, setFiltroImportacaoPendente] = useState<'todos' | 'sem-grupo' | 'sem-subgrupo'>('todos')
   const importacaoFileInputRef = useRef<HTMLInputElement>(null)
@@ -24843,7 +24842,9 @@ export default function Dashboard() {
         classificadosAutomaticamente.alteradas > 0
           ? `${mensagemBase} ${classificadosAutomaticamente.alteradas} já foram classificadas automaticamente.`
           : mensagemBase
-      setImportacaoPosFilaModalMensagem(mensagemFinal)
+      if (ignoradasTotal === 0) {
+        alert(mensagemFinal)
+      }
       limparEstadoColagemImportacao()
       void saveData('nonato-pecas-biblioteca', atualizadoNormalizado).catch((err) => {
         console.error('[importação fila]', err)
@@ -24905,47 +24906,6 @@ export default function Dashboard() {
     processarTextoImportacaoPecas,
     t,
   ])
-
-  const handleAdicionarImportacaoPreview = useCallback(() => {
-    if (!importacaoPreview || importacaoPreview.length === 0) return
-    executarEnvioImportacaoParaFila(importacaoPreview)
-  }, [executarEnvioImportacaoParaFila, importacaoPreview])
-
-  const handleLimparImportacaoColagem = useCallback(
-    (opts?: { confirmarPreview?: boolean }) => {
-      const temConteudo =
-        !!importacaoTextoColado.trim() ||
-        (importacaoPreview?.length ?? 0) > 0 ||
-        !!importacaoUrlError
-      if (!temConteudo) return
-      if (opts?.confirmarPreview !== false && (importacaoPreview?.length ?? 0) > 0) {
-        const ok = window.confirm(
-          (t as any)?.importacaoConfirmarLimparLista ||
-            'Deseja limpar a lista importada agora? OK = limpar a pré-visualização e o texto; Cancelar = manter para conferir.'
-        )
-        if (!ok) return
-      }
-      setImportacaoPreview(null)
-      setImportacaoTextoColado('')
-      setImportacaoDuplicadasIgnoradas(0)
-      setImportacaoUrlError(null)
-    },
-    [importacaoPreview, importacaoTextoColado, importacaoUrlError, t]
-  )
-
-  const importacaoColagemTemConteudo = useMemo(
-    () =>
-      !!(
-        importacaoTextoColado.trim() ||
-        (importacaoPreview?.length ?? 0) > 0 ||
-        importacaoUrlError
-      ),
-    [importacaoTextoColado, importacaoPreview, importacaoUrlError]
-  )
-
-  const handleLimparImportacaoPreview = useCallback(() => {
-    handleLimparImportacaoColagem({ confirmarPreview: false })
-  }, [handleLimparImportacaoColagem])
 
   const renderPainelPreviewImportacao = useCallback(() => {
     if (!importacaoPreview || importacaoPreview.length === 0) return null
@@ -25047,40 +25007,12 @@ export default function Dashboard() {
             </p>
           )}
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-          <button
-            type="button"
-            onClick={handleAdicionarImportacaoPreview}
-            className="biblioteca-btn--green"
-            style={{
-              padding: '12px 24px',
-              fontWeight: '600',
-              fontSize: '14px',
-            }}
-          >
-            {hubT.importacaoEnviarParaFila || hubT.importacaoAdicionarBiblioteca || 'Enviar para fila'} ({importacaoPreview.length})
-          </button>
-          <button
-            type="button"
-            onClick={handleLimparImportacaoPreview}
-            className="biblioteca-btn--ghost"
-            style={{
-              padding: '12px 20px',
-              fontWeight: '600',
-              fontSize: '14px',
-            }}
-          >
-            {hubT.importacaoBtnLimparPreVisualizacao || 'Limpar lista e texto colado'}
-          </button>
-        </div>
       </div>
     )
   }, [
     importacaoPreview,
     importacaoDuplicadasIgnoradas,
     safeT,
-    handleAdicionarImportacaoPreview,
-    handleLimparImportacaoPreview,
     pecaBibliotecaSrcImagemDisplay,
     categoriasPecas,
     subcategoriasPecas,
@@ -37277,16 +37209,6 @@ export default function Dashboard() {
                     >
                         {(safeT as any)?.importacaoImportarCatalogo || (safeT as any)?.importacaoProcessarColagem || 'Importar catálogo colado'}
                     </button>
-                    <button
-                      type="button"
-                      className="biblioteca-btn--ghost"
-                      onClick={() => handleLimparImportacaoColagem()}
-                      disabled={!importacaoColagemTemConteudo}
-                      style={{ padding: '8px 14px', fontSize: '12px', opacity: importacaoColagemTemConteudo ? 1 : 0.45 }}
-                      title={(safeT as any)?.importacaoBtnLimparColagemHint || 'Limpar o texto colado e a pré-visualização'}
-                    >
-                      {(safeT as any)?.importacaoBtnLimparColagem || safeT?.limpar || 'Limpar'}
-                    </button>
                   </div>
                   {importacaoUrlError && (
                     <p style={{ fontSize: '12px', color: '#ff9a9a', margin: '0 0 8px', lineHeight: 1.45 }}>{importacaoUrlError}</p>
@@ -38357,27 +38279,168 @@ export default function Dashboard() {
                   </p>
                 )}
                 {somenteLeituraBiblioteca ? (
-                  <BibliotecaPecasGaleriaCategorias
-                    categorias={categoriasPecasAlfabeto}
-                    pecasCatalogo={pecasCatalogoBiblioteca}
-                    categoriaSelecionadaId={bibliotecaGaleriaCategoriaId}
-                    onSelecionarCategoria={setBibliotecaGaleriaCategoriaId}
-                    onVoltarCategorias={() => setBibliotecaGaleriaCategoriaId(null)}
-                    srcImagem={pecaBibliotecaSrcImagemDisplay}
-                    temImagemPropria={pecaBibliotecaTemImagemPropria}
-                    onThumbEnter={(ev, src, label) => showBibliotecaImgPreview(ev, src, label)}
-                    onThumbLeave={hideBibliotecaImgPreview}
-                    t={{
-                      titulo: (safeT as any)?.bibliotecaGaleriaCategoriasTitulo,
-                      descricao: (safeT as any)?.bibliotecaGaleriaCategoriasDesc,
-                      voltar: (safeT as any)?.bibliotecaGaleriaVoltarCategorias,
-                      pecasCount: (safeT as any)?.bibliotecaGaleriaPecasNaCategoria,
-                      semImagem: (safeT as any)?.bibliotecaGaleriaSemImagemCategoria,
-                      cliqueAbrir: (safeT as any)?.bibliotecaGaleriaCliqueCategoria,
-                      codigo: safeT?.codigoPecaBiblioteca || safeT?.codigo,
-                      semPecasCategoria: (safeT as any)?.bibliotecaGaleriaSemPecasCategoria,
-                    }}
-                  />
+                  <>
+                    <div
+                      className="biblioteca-hub-toolbar"
+                      style={{ marginBottom: '16px', padding: '12px 14px' }}
+                    >
+                      <div style={{ minWidth: '200px', flex: '1 1 260px', maxWidth: '420px' }}>
+                        <label
+                          htmlFor="biblioteca-busca-codigo-leitura"
+                          style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.75)', marginBottom: '4px' }}
+                        >
+                          {safeT?.bibliotecaBuscarPorCodigo || 'Buscar por código'}
+                        </label>
+                        <input
+                          id="biblioteca-busca-codigo-leitura"
+                          type="search"
+                          value={buscaCodigoBiblioteca}
+                          onChange={(e) => {
+                            setBuscaCodigoBiblioteca(e.target.value)
+                            if (e.target.value.trim()) setBibliotecaGaleriaCategoriaId(null)
+                          }}
+                          placeholder={safeT?.codigoPecaBibliotecaPlaceholder || 'Ex: FO-123-ABC'}
+                          autoComplete="off"
+                          style={{
+                            width: '100%',
+                            boxSizing: 'border-box',
+                            padding: '8px 10px',
+                            backgroundColor: '#484848',
+                            color: '#fff',
+                            border: '1px solid rgba(0, 168, 107, 0.3)',
+                            borderRadius: '4px',
+                            fontSize: '13px',
+                          }}
+                        />
+                      </div>
+                      {buscaCodigoBiblioteca.trim() ? (
+                        <button
+                          type="button"
+                          className="biblioteca-btn--orange"
+                          onClick={() => setBuscaCodigoBiblioteca('')}
+                          style={{ alignSelf: 'flex-end', padding: '8px 12px', fontSize: '12px' }}
+                        >
+                          {safeT?.limparFiltros || 'Limpar busca'}
+                        </button>
+                      ) : null}
+                    </div>
+                    {buscaCodigoBiblioteca.trim() ? (
+                      (() => {
+                        const q = buscaCodigoBiblioteca.trim().toLowerCase()
+                        const resultados = ordenarPecasBibliotecaParaExibicao(
+                          pecasCatalogoBiblioteca.filter((peca) =>
+                            String(peca.codigo ?? '')
+                              .trim()
+                              .toLowerCase()
+                              .includes(q)
+                          )
+                        )
+                        return (
+                          <div className="biblioteca-galeria-categorias">
+                            <p className="biblioteca-galeria-categorias__lead" style={{ marginBottom: '14px' }}>
+                              {String(
+                                (safeT as any)?.bibliotecaBuscaCodigoResultados ||
+                                  '{count} peça(s) encontrada(s) para «{codigo}»'
+                              )
+                                .replace('{count}', String(resultados.length))
+                                .replace('{codigo}', buscaCodigoBiblioteca.trim())}
+                            </p>
+                            {resultados.length === 0 ? (
+                              <p className="biblioteca-galeria-categorias__empty">
+                                {(safeT as any)?.bibliotecaBuscaCodigoVazio ||
+                                  'Nenhuma peça com este código no catálogo.'}
+                              </p>
+                            ) : (
+                              <div className="biblioteca-pecas-hub__piece-grid biblioteca-galeria-categorias__grid-pecas">
+                                {resultados.map((peca) => (
+                                  <article key={peca.id} className="biblioteca-pecas-hub__piece-card">
+                                    <div
+                                      className="biblioteca-pecas-hub__piece-thumb"
+                                      onMouseEnter={(ev) => {
+                                        if (!pecaBibliotecaTemImagemPropria(peca.imagem)) return
+                                        showBibliotecaImgPreview(
+                                          ev,
+                                          String(peca.imagem).trim(),
+                                          peca.nome || peca.codigo || ''
+                                        )
+                                        const img = ev.currentTarget.querySelector('img')
+                                        if (img instanceof HTMLImageElement) img.style.transform = 'scale(1.08)'
+                                      }}
+                                      onMouseLeave={(ev) => {
+                                        hideBibliotecaImgPreview()
+                                        const img = ev.currentTarget.querySelector('img')
+                                        if (img instanceof HTMLImageElement) img.style.transform = 'scale(1)'
+                                      }}
+                                    >
+                                      <img
+                                        src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                                        alt={peca.nome}
+                                        className={
+                                          pecaBibliotecaTemImagemPropria(peca.imagem)
+                                            ? undefined
+                                            : 'biblioteca-pecas-hub__piece-img--padrao'
+                                        }
+                                        style={{
+                                          width: '100%',
+                                          height: '100%',
+                                          objectFit: 'cover',
+                                          display: 'block',
+                                          transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
+                                        }}
+                                      />
+                                    </div>
+                                    <h4 className="biblioteca-pecas-hub__piece-name">
+                                      {peca.numeroSequenciaGrupo ? (
+                                        <span
+                                          className="biblioteca-pecas-numero-circulo biblioteca-pecas-numero-circulo--sm"
+                                          style={{ marginRight: '8px', verticalAlign: 'middle' }}
+                                          title={peca.numeroSequenciaGrupo}
+                                          aria-label={peca.numeroSequenciaGrupo}
+                                        >
+                                          {peca.numeroSequenciaGrupo}
+                                        </span>
+                                      ) : null}
+                                      {peca.nome}
+                                    </h4>
+                                    <div className="biblioteca-pecas-hub__piece-meta">
+                                      <span className="biblioteca-pecas-hub__piece-chip biblioteca-pecas-hub__piece-chip--code">
+                                        <span className="biblioteca-pecas-hub__piece-chip-k">
+                                          {safeT?.codigoPecaBiblioteca || safeT?.codigo || 'Código'}
+                                        </span>
+                                        <span className="biblioteca-pecas-hub__piece-chip-v">{peca.codigo || '—'}</span>
+                                      </span>
+                                    </div>
+                                  </article>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })()
+                    ) : (
+                      <BibliotecaPecasGaleriaCategorias
+                        categorias={categoriasPecasAlfabeto}
+                        pecasCatalogo={pecasCatalogoBiblioteca}
+                        categoriaSelecionadaId={bibliotecaGaleriaCategoriaId}
+                        onSelecionarCategoria={setBibliotecaGaleriaCategoriaId}
+                        onVoltarCategorias={() => setBibliotecaGaleriaCategoriaId(null)}
+                        srcImagem={pecaBibliotecaSrcImagemDisplay}
+                        temImagemPropria={pecaBibliotecaTemImagemPropria}
+                        onThumbEnter={(ev, src, label) => showBibliotecaImgPreview(ev, src, label)}
+                        onThumbLeave={hideBibliotecaImgPreview}
+                        t={{
+                          titulo: (safeT as any)?.bibliotecaGaleriaCategoriasTitulo,
+                          descricao: (safeT as any)?.bibliotecaGaleriaCategoriasDesc,
+                          voltar: (safeT as any)?.bibliotecaGaleriaVoltarCategorias,
+                          pecasCount: (safeT as any)?.bibliotecaGaleriaPecasNaCategoria,
+                          semImagem: (safeT as any)?.bibliotecaGaleriaSemImagemCategoria,
+                          cliqueAbrir: (safeT as any)?.bibliotecaGaleriaCliqueCategoria,
+                          codigo: safeT?.codigoPecaBiblioteca || safeT?.codigo,
+                          semPecasCategoria: (safeT as any)?.bibliotecaGaleriaSemPecasCategoria,
+                        }}
+                      />
+                    )}
+                  </>
                 ) : (
                 <>
                 {/* Controles de visualização — painel único */}
@@ -39986,16 +40049,6 @@ export default function Dashboard() {
                       >
                         {(safeT as any)?.importacaoImportarCatalogo || (safeT as any)?.importacaoProcessarColagem || safeT?.importacaoImportarDoTexto || 'Importar catálogo colado'}
                       </button>
-                      <button
-                        type="button"
-                        className="biblioteca-btn--ghost"
-                        onClick={() => handleLimparImportacaoColagem()}
-                        disabled={!importacaoColagemTemConteudo}
-                        style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap', opacity: importacaoColagemTemConteudo ? 1 : 0.45 }}
-                        title={(safeT as any)?.importacaoBtnLimparColagemHint || 'Limpar o texto colado e a pré-visualização'}
-                      >
-                        {(safeT as any)?.importacaoBtnLimparColagem || safeT?.limpar || 'Limpar'}
-                      </button>
                     </div>
                   </div>
                   <div className="importacao-pecas-paste-steps">
@@ -40353,17 +40406,7 @@ A1;Peça exemplo;10`}
                       onClick={handleImportacaoColarTexto}
                       style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
                     >
-                      {(safeT as any)?.importacaoProcessarColagem || (safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Processar colagem'}
-                    </button>
-                    <button
-                      type="button"
-                      className="biblioteca-btn--ghost"
-                      onClick={() => handleLimparImportacaoColagem()}
-                      disabled={!importacaoColagemTemConteudo}
-                      style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap', opacity: importacaoColagemTemConteudo ? 1 : 0.45 }}
-                      title={(safeT as any)?.importacaoBtnLimparColagemHint || 'Limpar o texto colado e a pré-visualização'}
-                    >
-                      {(safeT as any)?.importacaoBtnLimparColagem || safeT?.limpar || 'Limpar'}
+                      {(safeT as any)?.importacaoImportarCatalogo || (safeT as any)?.importacaoProcessarColagem || safeT?.importacaoImportarDoTexto || 'Importar catálogo colado'}
                     </button>
                   </div>
                 </div>
@@ -68572,56 +68615,6 @@ A1;Peça exemplo;10`}
           </div>
         )
       })()}
-
-      {importacaoPosFilaModalMensagem && (
-        <div
-          className="modal-overlay"
-          onClick={() => setImportacaoPosFilaModalMensagem(null)}
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10065, padding: '20px' }}
-        >
-          <div
-            className="modal"
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '520px', width: '100%' }}
-          >
-            <h2 style={{ margin: '0 0 12px', fontSize: '20px', color: '#00c853' }}>
-              {(safeT as any)?.importacaoModalPosFilaTitulo || 'Próximo passo'}
-            </h2>
-            <p style={{ margin: '0 0 14px', color: '#e8e8e8', fontSize: '14px', lineHeight: 1.5 }}>
-              {importacaoPosFilaModalMensagem}
-            </p>
-            <p style={{ margin: '0 0 20px', color: '#ccc', fontSize: '14px', lineHeight: 1.5 }}>
-              {(safeT as any)?.importacaoConfirmarLimparLista ||
-                'Deseja limpar a lista importada agora? OK = limpar a pré-visualização e o texto; Cancelar = manter para conferir.'}
-            </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'flex-end' }}>
-              <button
-                type="button"
-                className="biblioteca-btn--ghost"
-                style={{ padding: '10px 18px', fontWeight: 600, fontSize: '14px' }}
-                onClick={() => setImportacaoPosFilaModalMensagem(null)}
-              >
-                {(safeT as any)?.importacaoBtnManterPreVisualizacao || 'Manter para conferir'}
-              </button>
-              <button
-                type="button"
-                className="biblioteca-btn--green"
-                style={{ padding: '10px 18px', fontWeight: 600, fontSize: '14px' }}
-                onClick={() => {
-                  setImportacaoPreview(null)
-                  setImportacaoTextoColado('')
-                  setUrlImportacaoPecas('')
-                  setImportacaoDuplicadasIgnoradas(0)
-                  setImportacaoUrlError(null)
-                  setImportacaoPosFilaModalMensagem(null)
-                }}
-              >
-                {(safeT as any)?.importacaoBtnLimparPreVisualizacao || 'Limpar lista'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showImportacaoGuiaHomag && (
         <div
