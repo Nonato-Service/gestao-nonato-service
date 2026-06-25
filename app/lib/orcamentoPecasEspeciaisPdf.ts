@@ -6,7 +6,9 @@ export type OrcamentoPecasEspeciaisLinhaPdf = {
   precoTotal: string
   titulo: string
   descricao?: string
+  descricaoOriginal?: string
   infoExtra?: string
+  imagem?: string
 }
 
 export type OrcamentoPecasEspeciaisPdfData = {
@@ -22,6 +24,10 @@ export type OrcamentoPecasEspeciaisPdfData = {
   linhaEmbalagemTitulo?: string
   linhaEmbalagemDescricao?: string
   totalLiquido: string
+  totalIva?: string
+  totalComIva?: string
+  incluirIva?: boolean
+  taxaIva?: number
   condicoesPagamento?: string
   notasRodape?: string
   logoHtml?: string
@@ -37,6 +43,10 @@ function esc(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
+function escAttr(s: string): string {
+  return esc(s).replace(/'/g, '&#39;')
+}
+
 function fmtData(iso: string): string {
   try {
     const d = new Date(iso.includes('T') ? iso : `${iso}T12:00:00`)
@@ -46,14 +56,21 @@ function fmtData(iso: string): string {
   }
 }
 
-function blocoLinha(l: OrcamentoPecasEspeciaisLinhaPdf): string {
+function blocoLinha(l: OrcamentoPecasEspeciaisLinhaPdf, L: Record<string, string | undefined>): string {
   const extras: string[] = []
-  if (l.descricao?.trim()) extras.push(`<div class="item-desc">${esc(l.descricao).replace(/\n/g, '<br/>')}</div>`)
+  const descTexto = (l.descricao || l.descricaoOriginal || '').trim()
+  if (descTexto) {
+    extras.push(`<div class="item-desc">${esc(descTexto).replace(/\n/g, '<br/>')}</div>`)
+  }
   if (l.infoExtra?.trim()) {
     extras.push(
-      `<div class="item-extra"><strong>Mais informação:</strong><br/>${esc(l.infoExtra).replace(/\n/g, '<br/>')}</div>`
+      `<div class="item-extra"><strong>${esc(L.maisInfoLabel || 'Mais informação')}:</strong><br/>${esc(l.infoExtra).replace(/\n/g, '<br/>')}</div>`
     )
   }
+  const imgSrc = (l.imagem || '').trim()
+  const imgBlock = imgSrc
+    ? `<div class="item-img"><img src="${escAttr(imgSrc)}" alt="${escAttr(l.titulo || l.numeroArtigo || 'Produto')}" onerror="this.style.display='none'" /></div>`
+    : ''
   return `<tr class="item-row">
     <td class="c-pos">${l.pos}</td>
     <td class="c-art">${esc(l.numeroArtigo || '—')}</td>
@@ -62,15 +79,20 @@ function blocoLinha(l: OrcamentoPecasEspeciaisLinhaPdf): string {
     <td class="c-total">${esc(l.precoTotal || '—')}</td>
   </tr>
   <tr class="item-detail-row"><td colspan="5">
-    <div class="item-title">${esc(l.titulo || '—')}</div>
-    ${extras.join('')}
+    <div class="item-detail-flex">
+      ${imgBlock}
+      <div class="item-text">
+        <div class="item-title">${esc(l.titulo || '—')}</div>
+        ${extras.join('')}
+      </div>
+    </div>
   </td></tr>`
 }
 
 export function buildOrcamentoPecasEspeciaisPdfHtml(data: OrcamentoPecasEspeciaisPdfData): string {
   const L = data.labels || {}
   const titulo = L.titulo || 'Orçamento de peças especiais'
-  const linhasHtml = data.linhas.map(blocoLinha).join('')
+  const linhasHtml = data.linhas.map((l) => blocoLinha(l, L)).join('')
   const embalagem =
     data.linhaEmbalagemTitulo?.trim() || data.linhaEmbalagemDescricao?.trim()
       ? `<div class="ship-block">
@@ -85,6 +107,18 @@ export function buildOrcamentoPecasEspeciaisPdfHtml(data: OrcamentoPecasEspeciai
 
   const moradaCliente = [data.clienteNome, data.clienteMorada].filter(Boolean).join('<br/>')
 
+  const incluirIva = Boolean(data.incluirIva)
+  const taxa = Number.isFinite(Number(data.taxaIva)) ? Number(data.taxaIva) : 23
+  const modoIvaBadge = incluirIva
+    ? esc((L.badgeComIva || 'Preços com IVA a {{taxa}}%').replace(/\{\{taxa\}\}/g, String(taxa)))
+    : esc(L.badgeSemIva || 'Preços sem IVA')
+
+  const summaryRows = incluirIva
+    ? `<div class="summary-row"><span>${esc(L.totalLiquidoLabel || 'Total EUR líquido')}</span><span>${esc(data.totalLiquido || '—')}</span></div>
+       <div class="summary-row summary-row--sub"><span>${esc(L.valorIvaLabel || 'IVA')} (${taxa}%)</span><span>${esc(data.totalIva || '—')}</span></div>
+       <div class="summary-row summary-row--total"><span>${esc(L.totalComIvaLabel || 'Total com IVA')}</span><span>${esc(data.totalComIva || data.totalLiquido || '—')}</span></div>`
+    : `<div class="summary-row summary-row--total"><span>${esc(L.totalLiquidoLabel || 'Total EUR líquido')}</span><span>${esc(data.totalLiquido || '—')}</span></div>`
+
   return `<!DOCTYPE html>
 <html lang="pt-PT">
 <head>
@@ -96,6 +130,7 @@ export function buildOrcamentoPecasEspeciaisPdfHtml(data: OrcamentoPecasEspeciai
     * { box-sizing: border-box; }
     body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; padding: 18px; color: #111; font-size: 11px; line-height: 1.4; }
     .preview-banner { background: #fff8e1; border: 2px dashed #f59e0b; color: #92400e; padding: 10px; margin-bottom: 16px; border-radius: 8px; font-weight: 600; text-align: center; }
+    .iva-badge { display: inline-block; margin-bottom: 12px; padding: 6px 12px; border-radius: 999px; font-size: 10px; font-weight: 700; background: #ecfdf5; color: #14532d; border: 1px solid #86efac; }
     .header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 2px solid #166534; }
     .header-logo { flex: 0 0 auto; max-width: 180px; }
     .header-logo img { max-width: 100%; max-height: 72px; object-fit: contain; }
@@ -109,14 +144,20 @@ export function buildOrcamentoPecasEspeciaisPdfHtml(data: OrcamentoPecasEspeciai
     table.items { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
     table.items th { background: #ecfdf5; color: #14532d; font-size: 10px; text-transform: uppercase; padding: 8px 6px; border: 1px solid #cbd5e1; text-align: left; }
     table.items td { border: 1px solid #e2e8f0; padding: 6px; vertical-align: top; }
-    .item-detail-row td { background: #fafafa; border-top: none; padding-top: 0; }
-    .item-title { font-weight: 700; margin: 4px 0 6px; font-size: 12px; }
+    .item-detail-row td { background: #fafafa; border-top: none; padding-top: 8px; padding-bottom: 10px; }
+    .item-detail-flex { display: flex; gap: 12px; align-items: flex-start; }
+    .item-img { flex: 0 0 auto; width: 88px; }
+    .item-img img { width: 88px; height: 88px; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; }
+    .item-text { flex: 1; min-width: 0; }
+    .item-title { font-weight: 700; margin: 0 0 6px; font-size: 12px; }
     .item-desc, .item-extra { font-size: 10px; color: #334155; margin-bottom: 6px; white-space: pre-wrap; }
     .c-pos { width: 32px; text-align: center; }
     .c-qty { width: 48px; text-align: center; }
     .c-unit, .c-total { width: 88px; text-align: right; white-space: nowrap; }
     .summary { margin-top: 16px; padding: 12px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; }
-    .summary-row { display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; color: #14532d; }
+    .summary-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: #14532d; margin-bottom: 6px; }
+    .summary-row--sub { font-size: 12px; font-weight: 500; color: #334155; }
+    .summary-row--total { font-size: 15px; font-weight: 800; margin-bottom: 0; padding-top: 6px; border-top: 1px solid #86efac; }
     .ship-block { margin: 14px 0; padding: 10px 12px; border: 1px dashed #94a3b8; border-radius: 6px; }
     .ship-block h4 { margin: 0 0 6px; font-size: 12px; color: #0f172a; }
     .ship-text { font-size: 10px; white-space: pre-wrap; color: #334155; }
@@ -128,6 +169,7 @@ export function buildOrcamentoPecasEspeciaisPdfHtml(data: OrcamentoPecasEspeciai
       .header { flex-direction: column; }
       .header-offer { text-align: left; }
       .contact-grid { grid-template-columns: 1fr; }
+      .item-detail-flex { flex-direction: column; }
     }
   </style>
 </head>
@@ -143,6 +185,7 @@ export function buildOrcamentoPecasEspeciaisPdfHtml(data: OrcamentoPecasEspeciai
       </div>
     </div>
   </div>
+  <div class="iva-badge">${modoIvaBadge}</div>
   <div class="client-block">${moradaCliente || '—'}</div>
   <div class="contact-grid">
     <div><strong>${esc(L.contactoLabel || 'Pessoa de contacto')}</strong>${esc(data.contactoNome || '—')}</div>
@@ -162,12 +205,7 @@ export function buildOrcamentoPecasEspeciaisPdfHtml(data: OrcamentoPecasEspeciai
     <tbody>${linhasHtml || `<tr><td colspan="5" style="text-align:center;color:#64748b;">—</td></tr>`}</tbody>
   </table>
   ${embalagem}
-  <div class="summary">
-    <div class="summary-row">
-      <span>${esc(L.totalLiquidoLabel || 'Total EUR líquido')}</span>
-      <span>${esc(data.totalLiquido || '—')}</span>
-    </div>
-  </div>
+  <div class="summary">${summaryRows}</div>
   ${
     data.condicoesPagamento?.trim()
       ? `<div class="terms"><strong>${esc(L.condicoesPagamentoLabel || 'Condições de pagamento')}:</strong><br/>${esc(data.condicoesPagamento).replace(/\n/g, '<br/>')}</div>`
@@ -221,4 +259,21 @@ export function formatarPrecoOrcamentoEur(valor: number): string {
   if (!Number.isFinite(valor)) return '—'
   const fmt = valor.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
   return `${fmt},-`
+}
+
+export function calcularTotaisIvaPecasEspeciais(
+  liquido: number,
+  incluirIva: boolean,
+  taxaIva: number
+): { liquido: number; iva: number; comIva: number; incluir: boolean; taxa: number } {
+  const liquidoOk = Number.isFinite(liquido) ? liquido : 0
+  if (!incluirIva) {
+    return { liquido: liquidoOk, iva: 0, comIva: liquidoOk, incluir: false, taxa: taxaIva }
+  }
+  let taxa = Number(taxaIva)
+  if (!Number.isFinite(taxa) || taxa < 0) taxa = 0
+  if (taxa > 100) taxa = 100
+  const iva = Math.round(liquidoOk * (taxa / 100) * 100) / 100
+  const comIva = Math.round((liquidoOk + iva) * 100) / 100
+  return { liquido: liquidoOk, iva, comIva, incluir: true, taxa }
 }

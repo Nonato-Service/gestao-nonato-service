@@ -45300,6 +45300,7 @@ A1;Peça exemplo;10`}
         return (
           <OrcamentoPecasEspeciaisContent
             clientes={clientesOrdenadosAlfabeticamente}
+            pecasBiblioteca={pecasBiblioteca.filter((p) => !ehImportacaoPendenteStrict(p))}
             safeT={safeT}
             closeTab={closeTab}
             activeTabId={activeTabId || ''}

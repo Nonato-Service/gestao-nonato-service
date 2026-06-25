@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  calcularTotaisIvaPecasEspeciais,
   formatarPrecoOrcamentoEur,
   gerarNumeroOfertaPecasEspeciais,
   openOrcamentoPecasEspeciaisPdf,
@@ -22,6 +23,15 @@ export type ClienteOrcamentoPecasEsp = {
   codigoCliente?: string
 }
 
+export type PecaBibliotecaPecasEsp = {
+  id: string
+  codigo: string
+  nome: string
+  descricao?: string
+  imagem?: string
+  preco?: string
+}
+
 export type LinhaOrcamentoPecasEsp = {
   rowId: string
   numeroArtigo: string
@@ -29,7 +39,10 @@ export type LinhaOrcamentoPecasEsp = {
   precoUnitario: string
   titulo: string
   descricao: string
+  descricaoOriginal: string
   infoExtra: string
+  imagem: string
+  pecaId: string
 }
 
 export type OrcamentoPecasEspeciaisSalvo = {
@@ -48,6 +61,10 @@ export type OrcamentoPecasEspeciaisSalvo = {
   condicoesPagamento: string
   notasRodape: string
   totalLiquido: string
+  totalIva?: string
+  totalComIva?: string
+  incluirIva?: boolean
+  taxaIva?: number
   dataCriacao: string
 }
 
@@ -66,7 +83,26 @@ function novaLinhaVazia(): LinhaOrcamentoPecasEsp {
     precoUnitario: '',
     titulo: '',
     descricao: '',
+    descricaoOriginal: '',
     infoExtra: '',
+    imagem: '',
+    pecaId: '',
+  }
+}
+
+function normalizarLinhaSalva(l: Partial<LinhaOrcamentoPecasEsp>): LinhaOrcamentoPecasEsp {
+  const descOriginal = String(l.descricaoOriginal ?? l.descricao ?? '').trim()
+  return {
+    rowId: l.rowId || newRowId(),
+    numeroArtigo: String(l.numeroArtigo ?? ''),
+    quantidade: String(l.quantidade ?? '1'),
+    precoUnitario: String(l.precoUnitario ?? ''),
+    titulo: String(l.titulo ?? ''),
+    descricao: String(l.descricao ?? descOriginal),
+    descricaoOriginal: descOriginal,
+    infoExtra: String(l.infoExtra ?? ''),
+    imagem: String(l.imagem ?? ''),
+    pecaId: String(l.pecaId ?? ''),
   }
 }
 
@@ -87,8 +123,27 @@ function enderecoCliente(c: ClienteOrcamentoPecasEsp): string {
     .join('\n')
 }
 
+function condicoesPagamentoPadrao(
+  t: Record<string, string | undefined>,
+  incluirIva: boolean,
+  taxaIva: number
+): string {
+  if (incluirIva) {
+    return (
+      t.orcamentoPecasEspCondicoesPagamentoComIva ||
+      `Pagamento antecipado, sem desconto.\nPreços em Euros, com IVA de ${taxaIva}% incluído.`
+    ).replace(/\{\{taxa\}\}/g, String(taxaIva))
+  }
+  return (
+    t.orcamentoPecasEspCondicoesPagamentoPadrao ||
+    t.orcamentoPecasEspCondicoesSemIva ||
+    'Pagamento antecipado, sem desconto.\nPreços em Euros, sem IVA.'
+  )
+}
+
 type Props = {
   clientes: ClienteOrcamentoPecasEsp[]
+  pecasBiblioteca: PecaBibliotecaPecasEsp[]
   safeT: Record<string, string | undefined>
   closeTab: (tabId: string) => void
   activeTabId: string
@@ -101,6 +156,7 @@ type Props = {
 
 export function OrcamentoPecasEspeciaisContent({
   clientes,
+  pecasBiblioteca,
   safeT,
   closeTab,
   activeTabId,
@@ -118,6 +174,8 @@ export function OrcamentoPecasEspeciaisContent({
   const [dataIso, setDataIso] = useState(hoje)
   const [numeroOferta, setNumeroOferta] = useState('')
   const [numeroManual, setNumeroManual] = useState(false)
+  const [incluirIva, setIncluirIva] = useState(false)
+  const [taxaIva, setTaxaIva] = useState(23)
   const [contactoNome, setContactoNome] = useState('')
   const [contactoTelefone, setContactoTelefone] = useState('')
   const [contactoEmail, setContactoEmail] = useState('')
@@ -126,17 +184,18 @@ export function OrcamentoPecasEspeciaisContent({
     () => t.orcamentoPecasEspEmbalagemTituloPadrao || 'Embalagem e envio'
   )
   const [linhaEmbalagemDescricao, setLinhaEmbalagemDescricao] = useState('')
-  const [condicoesPagamento, setCondicoesPagamento] = useState(
-    () =>
-      t.orcamentoPecasEspCondicoesPagamentoPadrao ||
-      'Pagamento antecipado, sem desconto.\nPreços em Euros, sem IVA.'
+  const [condicoesPagamento, setCondicoesPagamento] = useState(() =>
+    condicoesPagamentoPadrao(t, false, 23)
   )
+  const [condicoesPagamentoManual, setCondicoesPagamentoManual] = useState(false)
   const [notasRodape, setNotasRodape] = useState(
     () =>
       t.orcamentoPecasEspNotasRodapePadrao ||
       'Aplicam-se os nossos Termos e Condições Gerais e a Política de Privacidade.'
   )
   const [buscaCliente, setBuscaCliente] = useState('')
+  const [buscaPecaPorLinha, setBuscaPecaPorLinha] = useState<Record<string, string>>({})
+  const imagemInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   useEffect(() => {
     if (!loadData) return
@@ -151,6 +210,11 @@ export function OrcamentoPecasEspeciaisContent({
     if (numeroManual) return
     setNumeroOferta(gerarNumeroOfertaPecasEspeciais(salvos, dataIso))
   }, [dataIso, salvos, numeroManual])
+
+  useEffect(() => {
+    if (condicoesPagamentoManual) return
+    setCondicoesPagamento(condicoesPagamentoPadrao(t, incluirIva, taxaIva))
+  }, [incluirIva, taxaIva, condicoesPagamentoManual, t])
 
   const clienteSel = useMemo(
     () => clientes.find((c) => c.id === clienteId) ?? null,
@@ -178,7 +242,62 @@ export function OrcamentoPecasEspeciaisContent({
     return sum
   }, [linhas])
 
-  const totalLiquidoFmt = useMemo(() => formatarPrecoOrcamentoEur(totalLiquidoNum), [totalLiquidoNum])
+  const totaisIva = useMemo(
+    () => calcularTotaisIvaPecasEspeciais(totalLiquidoNum, incluirIva, taxaIva),
+    [totalLiquidoNum, incluirIva, taxaIva]
+  )
+
+  const totalLiquidoFmt = useMemo(() => formatarPrecoOrcamentoEur(totaisIva.liquido), [totaisIva.liquido])
+  const totalIvaFmt = useMemo(() => formatarPrecoOrcamentoEur(totaisIva.iva), [totaisIva.iva])
+  const totalComIvaFmt = useMemo(() => formatarPrecoOrcamentoEur(totaisIva.comIva), [totaisIva.comIva])
+
+  const filtrarPecasBiblioteca = useCallback(
+    (q: string) => {
+      const b = q.trim().toLowerCase()
+      if (!b) return pecasBiblioteca.slice(0, 8)
+      return pecasBiblioteca
+        .filter(
+          (p) =>
+            (p.codigo || '').toLowerCase().includes(b) ||
+            (p.nome || '').toLowerCase().includes(b) ||
+            (p.descricao || '').toLowerCase().includes(b)
+        )
+        .slice(0, 8)
+    },
+    [pecasBiblioteca]
+  )
+
+  const aplicarPecaBiblioteca = useCallback((rowId: string, peca: PecaBibliotecaPecasEsp) => {
+    const descOriginal = String(peca.descricao || '').trim()
+    setLinhas((p) =>
+      p.map((x) =>
+        x.rowId === rowId
+          ? {
+              ...x,
+              pecaId: peca.id,
+              numeroArtigo: peca.codigo || x.numeroArtigo,
+              titulo: peca.nome || x.titulo,
+              descricaoOriginal: descOriginal,
+              descricao: descOriginal,
+              imagem: peca.imagem || x.imagem,
+              precoUnitario: peca.preco?.trim() ? peca.preco : x.precoUnitario,
+            }
+          : x
+      )
+    )
+    setBuscaPecaPorLinha((prev) => ({ ...prev, [rowId]: '' }))
+  }, [])
+
+  const handleImagemLinha = useCallback((rowId: string, file: File | null) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : ''
+      if (!result) return
+      setLinhas((p) => p.map((x) => (x.rowId === rowId ? { ...x, imagem: result } : x)))
+    }
+    reader.readAsDataURL(file)
+  }, [])
 
   const montarLinhasPdf = useCallback((): OrcamentoPecasEspeciaisLinhaPdf[] => {
     return linhas
@@ -195,7 +314,9 @@ export function OrcamentoPecasEspeciaisContent({
           precoTotal: formatarPrecoOrcamentoEur(total),
           titulo: l.titulo.trim(),
           descricao: l.descricao.trim(),
+          descricaoOriginal: l.descricaoOriginal.trim(),
           infoExtra: l.infoExtra.trim(),
+          imagem: l.imagem.trim(),
         }
       })
   }, [linhas])
@@ -215,14 +336,43 @@ export function OrcamentoPecasEspeciaisContent({
       colUnit: t.orcamentoPecasEspColUnit || 'Preço unit.',
       colTotal: t.orcamentoPecasEspColTotal || 'Preço EUR',
       totalLiquidoLabel: t.orcamentoPecasEspTotalLiquido || 'Total EUR líquido',
+      valorIvaLabel: t.valorIva || 'IVA',
+      totalComIvaLabel: t.totalComIva || 'Total com IVA',
       condicoesPagamentoLabel: t.orcamentoPecasEspCondicoesPagamento || 'Condições de pagamento',
       embalagemTitulo: t.orcamentoPecasEspEmbalagem || 'Embalagem e envio',
       imprimir: t.imprimirGuardarPdf || t.gerarPDF || 'Imprimir / Guardar PDF',
       fechar: t.fechar || 'Fechar',
       previewBanner: t.orcamentoPecasEspPreviewBanner || 'Pré-visualização',
+      badgeSemIva: t.orcamentoPecasEspBadgeSemIva || 'Preços sem IVA',
+      badgeComIva: t.orcamentoPecasEspBadgeComIva || 'Preços com IVA a {{taxa}}%',
+      maisInfoLabel: t.orcamentoPecasEspInfoExtra || 'Mais informação',
     }),
     [t]
   )
+
+  const montarPayloadPdf = (preview: boolean) => ({
+    numeroOferta: numeroOferta.trim() || gerarNumeroOfertaPecasEspeciais(salvos, dataIso),
+    dataIso,
+    clienteNome: clienteSel!.nomeEmpresa,
+    clienteMorada: enderecoCliente(clienteSel!),
+    clienteCodigo: codigoClienteExibicao(clienteSel!),
+    contactoNome: contactoNome.trim() || clienteSel!.contato || '',
+    contactoTelefone: contactoTelefone.trim() || clienteSel!.telefones || '',
+    contactoEmail: contactoEmail.trim() || clienteSel!.email || '',
+    linhas: montarLinhasPdf(),
+    linhaEmbalagemTitulo: linhaEmbalagemTitulo.trim(),
+    linhaEmbalagemDescricao: linhaEmbalagemDescricao.trim(),
+    totalLiquido: totalLiquidoFmt,
+    totalIva: totalIvaFmt,
+    totalComIva: totalComIvaFmt,
+    incluirIva,
+    taxaIva,
+    condicoesPagamento: condicoesPagamento.trim(),
+    notasRodape: notasRodape.trim(),
+    logoHtml,
+    labels: labelsPdf,
+    preview,
+  })
 
   const abrirPdf = (preview: boolean) => {
     if (!clienteSel) {
@@ -234,25 +384,7 @@ export function OrcamentoPecasEspeciaisContent({
       alert(t.orcamentoPecasEspLinhaObrigatoria || 'Adicione pelo menos uma linha com descrição ou código.')
       return
     }
-    openOrcamentoPecasEspeciaisPdf({
-      numeroOferta: numeroOferta.trim() || gerarNumeroOfertaPecasEspeciais(salvos, dataIso),
-      dataIso,
-      clienteNome: clienteSel.nomeEmpresa,
-      clienteMorada: enderecoCliente(clienteSel),
-      clienteCodigo: codigoClienteExibicao(clienteSel),
-      contactoNome: contactoNome.trim() || clienteSel.contato || '',
-      contactoTelefone: contactoTelefone.trim() || clienteSel.telefones || '',
-      contactoEmail: contactoEmail.trim() || clienteSel.email || '',
-      linhas: linhasPdf,
-      linhaEmbalagemTitulo: linhaEmbalagemTitulo.trim(),
-      linhaEmbalagemDescricao: linhaEmbalagemDescricao.trim(),
-      totalLiquido: totalLiquidoFmt,
-      condicoesPagamento: condicoesPagamento.trim(),
-      notasRodape: notasRodape.trim(),
-      logoHtml,
-      labels: labelsPdf,
-      preview,
-    })
+    openOrcamentoPecasEspeciaisPdf(montarPayloadPdf(preview))
   }
 
   const gravarOrcamento = async () => {
@@ -277,6 +409,10 @@ export function OrcamentoPecasEspeciaisContent({
       condicoesPagamento,
       notasRodape,
       totalLiquido: totalLiquidoFmt,
+      totalIva: totalIvaFmt,
+      totalComIva: totalComIvaFmt,
+      incluirIva,
+      taxaIva,
       dataCriacao: new Date().toISOString(),
     }
     const next = [reg, ...salvos]
@@ -290,13 +426,16 @@ export function OrcamentoPecasEspeciaisContent({
     setDataIso(o.dataIso)
     setNumeroOferta(o.numeroOferta)
     setNumeroManual(true)
+    setIncluirIva(Boolean(o.incluirIva))
+    setTaxaIva(Number.isFinite(Number(o.taxaIva)) ? Number(o.taxaIva) : 23)
     setContactoNome(o.contactoNome)
     setContactoTelefone(o.contactoTelefone)
     setContactoEmail(o.contactoEmail)
-    setLinhas(o.linhas.length ? o.linhas : [novaLinhaVazia()])
+    setLinhas(o.linhas.length ? o.linhas.map(normalizarLinhaSalva) : [novaLinhaVazia()])
     setLinhaEmbalagemTitulo(o.linhaEmbalagemTitulo)
     setLinhaEmbalagemDescricao(o.linhaEmbalagemDescricao)
     setCondicoesPagamento(o.condicoesPagamento)
+    setCondicoesPagamentoManual(true)
     setNotasRodape(o.notasRodape)
   }
 
@@ -349,8 +488,72 @@ export function OrcamentoPecasEspeciaisContent({
             />
           </div>
           <div>
-            <label className="orcamento-pecas-especiais-label">{t.total || 'Total líquido'}</label>
-            <input type="text" readOnly value={totalLiquidoFmt} className="orcamento-pecas-especiais-input" />
+            <label className="orcamento-pecas-especiais-label">
+              {incluirIva ? t.totalComIva || 'Total com IVA' : t.orcamentoPecasEspTotalLiquido || 'Total líquido'}
+            </label>
+            <input
+              type="text"
+              readOnly
+              value={incluirIva ? totalComIvaFmt : totalLiquidoFmt}
+              className="orcamento-pecas-especiais-input"
+            />
+          </div>
+        </div>
+
+        <div className="orcamento-pecas-especiais-section orcamento-pecas-especiais-iva">
+          <h3>{t.orcamentoPecasEspModoIvaTitulo || 'Preços no orçamento'}</h3>
+          <div className="orcamento-pecas-especiais-iva-badge">
+            {incluirIva
+              ? (t.orcamentoPecasEspBadgeComIva || 'Modo: com IVA a {{taxa}}%').replace(
+                  /\{\{taxa\}\}/g,
+                  String(taxaIva)
+                )
+              : t.orcamentoPecasEspBadgeSemIva || 'Modo: sem IVA'}
+          </div>
+          <div className="orcamento-pecas-especiais-iva-actions">
+            <button
+              type="button"
+              className={`orcamento-pecas-especiais-iva-btn ${!incluirIva ? 'is-active' : ''}`}
+              onClick={() => setIncluirIva(false)}
+            >
+              {t.orcamentoPecasEspSemIvaBtn || 'Sem IVA'}
+            </button>
+            <button
+              type="button"
+              className={`orcamento-pecas-especiais-iva-btn orcamento-pecas-especiais-iva-btn--com ${incluirIva ? 'is-active' : ''}`}
+              onClick={() => setIncluirIva(true)}
+            >
+              {t.orcamentoPecasEspComIvaBtn || 'Com IVA'}
+            </button>
+          </div>
+          {incluirIva ? (
+            <label className="orcamento-pecas-especiais-iva-taxa">
+              {t.orcamentoPecasEspIvaTaxaLabel || 'Taxa de IVA (%)'}
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={0.5}
+                value={taxaIva}
+                onChange={(e) => setTaxaIva(parseFloat(e.target.value) || 0)}
+                className="orcamento-pecas-especiais-input orcamento-pecas-especiais-input--taxa"
+              />
+            </label>
+          ) : null}
+          <div className="orcamento-pecas-especiais-totais-resumo">
+            <span>
+              {t.totalSemIva || 'Total sem IVA'}: <strong>{totalLiquidoFmt}</strong>
+            </span>
+            {incluirIva ? (
+              <>
+                <span>
+                  {t.valorIva || 'IVA'} ({taxaIva}%): <strong>{totalIvaFmt}</strong>
+                </span>
+                <span>
+                  {t.totalComIva || 'Total com IVA'}: <strong>{totalComIvaFmt}</strong>
+                </span>
+              </>
+            ) : null}
           </div>
         </div>
 
@@ -429,77 +632,196 @@ export function OrcamentoPecasEspeciaisContent({
               + {t.adicionar || 'Adicionar linha'}
             </button>
           </div>
-          {linhas.map((l, idx) => (
-            <div key={l.rowId} className="orcamento-pecas-especiais-linha">
-              <div className="orcamento-pecas-especiais-linha-head">
-                <strong>
-                  {t.orcamentoPecasEspColPos || 'Pos.'} {idx + 1}
-                </strong>
-                {linhas.length > 1 ? (
-                  <button
-                    type="button"
-                    className="btn-danger"
-                    style={{ padding: '4px 10px', fontSize: '12px' }}
-                    onClick={() => setLinhas((p) => p.filter((x) => x.rowId !== l.rowId))}
-                  >
-                    {t.remover || 'Remover'}
-                  </button>
+          {linhas.map((l, idx) => {
+            const pecasSugeridas = filtrarPecasBiblioteca(buscaPecaPorLinha[l.rowId] || '')
+            const descPreview = (l.descricao || l.descricaoOriginal || '').trim()
+            return (
+              <div key={l.rowId} className="orcamento-pecas-especiais-linha">
+                <div className="orcamento-pecas-especiais-linha-head">
+                  <strong>
+                    {t.orcamentoPecasEspColPos || 'Pos.'} {idx + 1}
+                  </strong>
+                  {linhas.length > 1 ? (
+                    <button
+                      type="button"
+                      className="btn-danger"
+                      style={{ padding: '4px 10px', fontSize: '12px' }}
+                      onClick={() => setLinhas((p) => p.filter((x) => x.rowId !== l.rowId))}
+                    >
+                      {t.remover || 'Remover'}
+                    </button>
+                  ) : null}
+                </div>
+
+                <div className="orcamento-pecas-especiais-biblioteca">
+                  <label className="orcamento-pecas-especiais-label">
+                    {t.orcamentoPecasEspBuscarPecaBiblioteca || 'Importar da biblioteca de peças'}
+                  </label>
+                  <input
+                    type="search"
+                    placeholder={t.buscarPeca || t.buscar || 'Buscar por código ou nome…'}
+                    value={buscaPecaPorLinha[l.rowId] || ''}
+                    onChange={(e) =>
+                      setBuscaPecaPorLinha((prev) => ({ ...prev, [l.rowId]: e.target.value }))
+                    }
+                    className="orcamento-pecas-especiais-input"
+                  />
+                  {pecasSugeridas.length > 0 && (buscaPecaPorLinha[l.rowId] || '').trim() ? (
+                    <ul className="orcamento-pecas-especiais-biblioteca-list">
+                      {pecasSugeridas.map((p) => (
+                        <li key={p.id}>
+                          <button
+                            type="button"
+                            className="orcamento-pecas-especiais-biblioteca-item"
+                            onClick={() => aplicarPecaBiblioteca(l.rowId, p)}
+                          >
+                            {p.imagem ? (
+                              <img src={p.imagem} alt="" className="orcamento-pecas-especiais-biblioteca-thumb" />
+                            ) : (
+                              <span className="orcamento-pecas-especiais-biblioteca-thumb orcamento-pecas-especiais-biblioteca-thumb--empty">
+                                —
+                              </span>
+                            )}
+                            <span>
+                              <strong>{p.codigo}</strong> — {p.nome}
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+
+                <div className="orcamento-pecas-especiais-linha-grid">
+                  <input
+                    placeholder={t.orcamentoPecasEspColArtigo || 'N.º artigo'}
+                    value={l.numeroArtigo}
+                    onChange={(e) =>
+                      setLinhas((p) => p.map((x) => (x.rowId === l.rowId ? { ...x, numeroArtigo: e.target.value } : x)))
+                    }
+                    className="orcamento-pecas-especiais-input"
+                  />
+                  <input
+                    placeholder={t.quantidade || 'Qtd.'}
+                    value={l.quantidade}
+                    onChange={(e) =>
+                      setLinhas((p) => p.map((x) => (x.rowId === l.rowId ? { ...x, quantidade: e.target.value } : x)))
+                    }
+                    className="orcamento-pecas-especiais-input"
+                  />
+                  <input
+                    placeholder={t.orcamentoPecasEspColUnit || 'Preço unit. (ex.: 1.700,-)'}
+                    value={l.precoUnitario}
+                    onChange={(e) =>
+                      setLinhas((p) => p.map((x) => (x.rowId === l.rowId ? { ...x, precoUnitario: e.target.value } : x)))
+                    }
+                    className="orcamento-pecas-especiais-input"
+                  />
+                </div>
+
+                <input
+                  placeholder={t.orcamentoPecasEspTituloLinha || 'Designação / título da peça'}
+                  value={l.titulo}
+                  onChange={(e) =>
+                    setLinhas((p) => p.map((x) => (x.rowId === l.rowId ? { ...x, titulo: e.target.value } : x)))
+                  }
+                  className="orcamento-pecas-especiais-input"
+                />
+
+                <div className="orcamento-pecas-especiais-imagem-row">
+                  <div className="orcamento-pecas-especiais-imagem-preview">
+                    {l.imagem ? (
+                      <img src={l.imagem} alt="" className="orcamento-pecas-especiais-imagem-thumb" />
+                    ) : (
+                      <span className="orcamento-pecas-especiais-imagem-empty">
+                        {t.orcamentoPecasEspSemImagem || 'Sem imagem'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="orcamento-pecas-especiais-imagem-actions">
+                    <input
+                      ref={(el) => {
+                        imagemInputRefs.current[l.rowId] = el
+                      }}
+                      type="file"
+                      accept="image/*"
+                      className="orcamento-pecas-especiais-file-input"
+                      onChange={(e) => handleImagemLinha(l.rowId, e.target.files?.[0] ?? null)}
+                    />
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      style={{ padding: '6px 12px', fontSize: '12px' }}
+                      onClick={() => imagemInputRefs.current[l.rowId]?.click()}
+                    >
+                      📷 {t.orcamentoPecasEspAdicionarImagem || 'Adicionar imagem'}
+                    </button>
+                    {l.imagem ? (
+                      <button
+                        type="button"
+                        className="btn-danger"
+                        style={{ padding: '6px 12px', fontSize: '12px' }}
+                        onClick={() =>
+                          setLinhas((p) => p.map((x) => (x.rowId === l.rowId ? { ...x, imagem: '' } : x)))
+                        }
+                      >
+                        {t.orcamentoPecasEspRemoverImagem || 'Remover imagem'}
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+
+                {l.descricaoOriginal ? (
+                  <p className="orcamento-pecas-especiais-hint">
+                    {t.orcamentoPecasEspDescricaoOriginal || 'Descrição original (biblioteca)'}:{' '}
+                    <em>{l.descricaoOriginal.slice(0, 120)}{l.descricaoOriginal.length > 120 ? '…' : ''}</em>
+                    {l.descricao !== l.descricaoOriginal ? (
+                      <button
+                        type="button"
+                        className="orcamento-pecas-especiais-link-btn"
+                        onClick={() =>
+                          setLinhas((p) =>
+                            p.map((x) =>
+                              x.rowId === l.rowId ? { ...x, descricao: x.descricaoOriginal } : x
+                            )
+                          )
+                        }
+                      >
+                        {t.orcamentoPecasEspRestaurarDescricao || 'Restaurar texto original'}
+                      </button>
+                    ) : null}
+                  </p>
                 ) : null}
+
+                <textarea
+                  placeholder={t.orcamentoPecasEspDescricaoLinha || 'Descrição técnica (copiada do original ou manual)'}
+                  value={l.descricao}
+                  onChange={(e) =>
+                    setLinhas((p) => p.map((x) => (x.rowId === l.rowId ? { ...x, descricao: e.target.value } : x)))
+                  }
+                  className="orcamento-pecas-especiais-textarea"
+                  rows={4}
+                />
+
+                {descPreview ? (
+                  <div className="orcamento-pecas-especiais-desc-preview">
+                    <strong>{t.orcamentoPecasEspDescricaoPreview || 'Leitura prévia da descrição (como no PDF)'}</strong>
+                    <div className="orcamento-pecas-especiais-desc-preview__body">{descPreview}</div>
+                  </div>
+                ) : null}
+
+                <textarea
+                  placeholder={t.orcamentoPecasEspInfoExtra || 'Mais informação (opcional)'}
+                  value={l.infoExtra}
+                  onChange={(e) =>
+                    setLinhas((p) => p.map((x) => (x.rowId === l.rowId ? { ...x, infoExtra: e.target.value } : x)))
+                  }
+                  className="orcamento-pecas-especiais-textarea"
+                  rows={2}
+                />
               </div>
-              <div className="orcamento-pecas-especiais-linha-grid">
-                <input
-                  placeholder={t.orcamentoPecasEspColArtigo || 'N.º artigo'}
-                  value={l.numeroArtigo}
-                  onChange={(e) =>
-                    setLinhas((p) => p.map((x) => (x.rowId === l.rowId ? { ...x, numeroArtigo: e.target.value } : x)))
-                  }
-                  className="orcamento-pecas-especiais-input"
-                />
-                <input
-                  placeholder={t.quantidade || 'Qtd.'}
-                  value={l.quantidade}
-                  onChange={(e) =>
-                    setLinhas((p) => p.map((x) => (x.rowId === l.rowId ? { ...x, quantidade: e.target.value } : x)))
-                  }
-                  className="orcamento-pecas-especiais-input"
-                />
-                <input
-                  placeholder={t.orcamentoPecasEspColUnit || 'Preço unit. (ex.: 1.700,-)'}
-                  value={l.precoUnitario}
-                  onChange={(e) =>
-                    setLinhas((p) => p.map((x) => (x.rowId === l.rowId ? { ...x, precoUnitario: e.target.value } : x)))
-                  }
-                  className="orcamento-pecas-especiais-input"
-                />
-              </div>
-              <input
-                placeholder={t.orcamentoPecasEspTituloLinha || 'Designação / título da peça'}
-                value={l.titulo}
-                onChange={(e) =>
-                  setLinhas((p) => p.map((x) => (x.rowId === l.rowId ? { ...x, titulo: e.target.value } : x)))
-                }
-                className="orcamento-pecas-especiais-input"
-              />
-              <textarea
-                placeholder={t.orcamentoPecasEspDescricaoLinha || 'Descrição técnica'}
-                value={l.descricao}
-                onChange={(e) =>
-                  setLinhas((p) => p.map((x) => (x.rowId === l.rowId ? { ...x, descricao: e.target.value } : x)))
-                }
-                className="orcamento-pecas-especiais-textarea"
-                rows={3}
-              />
-              <textarea
-                placeholder={t.orcamentoPecasEspInfoExtra || 'Mais informação (opcional)'}
-                value={l.infoExtra}
-                onChange={(e) =>
-                  setLinhas((p) => p.map((x) => (x.rowId === l.rowId ? { ...x, infoExtra: e.target.value } : x)))
-                }
-                className="orcamento-pecas-especiais-textarea"
-                rows={2}
-              />
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         <div className="orcamento-pecas-especiais-section">
@@ -523,7 +845,10 @@ export function OrcamentoPecasEspeciaisContent({
           <h3>{t.orcamentoPecasEspCondicoesPagamento || 'Condições de pagamento'}</h3>
           <textarea
             value={condicoesPagamento}
-            onChange={(e) => setCondicoesPagamento(e.target.value)}
+            onChange={(e) => {
+              setCondicoesPagamentoManual(true)
+              setCondicoesPagamento(e.target.value)
+            }}
             className="orcamento-pecas-especiais-textarea"
             rows={3}
           />
@@ -555,7 +880,9 @@ export function OrcamentoPecasEspeciaisContent({
               {salvos.slice(0, 20).map((o) => (
                 <li key={o.id}>
                   <button type="button" className="orcamento-pecas-especiais-salvo-btn" onClick={() => carregarSalvo(o)}>
-                    <strong>{o.numeroOferta}</strong> — {o.clienteNome} ({o.totalLiquido}) · {o.dataIso}
+                    <strong>{o.numeroOferta}</strong> — {o.clienteNome} (
+                    {o.incluirIva ? o.totalComIva || o.totalLiquido : o.totalLiquido}
+                    {o.incluirIva ? ` ${t.comIvaAbrev || 'c/ IVA'}` : ` ${t.semIvaAbrev || 's/ IVA'}`}) · {o.dataIso}
                   </button>
                 </li>
               ))}

@@ -4704,8 +4704,11 @@ body {
     border-radius: 6px;
     cursor: pointer;
     border: 1px solid rgba(0, 200, 83, 0.4);
-    background: #484848;
-    color: #fff;
+    background: #484848 !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
     transition: all 0.2s;
     white-space: normal !important;
     line-height: 1.25 !important;
@@ -4745,6 +4748,16 @@ body {
 }
 
 /* Tablet em retrato: manter layout flexível */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .app-layout:not(.app-compact-layout) .clientes-module-tabs .btn-primary,
+  .app-layout:not(.app-compact-layout) .fornecedores-module-tabs .btn-primary {
+    background: rgba(22, 28, 28, 0.92) !important;
+    border: 1px solid rgba(0, 200, 83, 0.35) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+}
+
 @media (min-width: 769px) and (max-width: 1024px) {
   .app-layout {
     flex-wrap: nowrap;
@@ -5382,6 +5395,51 @@ body {
     z-index: 100;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     align-items: stretch;
+  }
+  /* Tablet compacto: mesmos estilos dos botões da toolbar mobile (antes só ≤768px) */
+  .app-compact-layout .mobile-toolbar-btn {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    width: 100%;
+    min-height: 44px !important;
+    padding: 10px 10px !important;
+    font-size: max(12px, 0.75rem) !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    border: 1px solid rgba(0, 200, 83, 0.45) !important;
+    background: #484848 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    transition: background 0.2s ease, border-color 0.2s ease !important;
+    white-space: normal !important;
+    line-height: 1.25 !important;
+    word-break: break-word !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+  .app-compact-layout .mobile-toolbar-btn:active {
+    transform: scale(0.98);
+  }
+  .app-compact-layout .mobile-toolbar-btn.active {
+    background: rgba(0, 200, 83, 0.28) !important;
+    border-color: #00c853 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+  .app-compact-layout .mobile-toolbar-voltar {
+    background: rgba(0, 200, 83, 0.18) !important;
+    border-color: rgba(0, 200, 83, 0.55) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+  .app-compact-layout .mobile-toolbar-home {
+    min-width: 44px !important;
+    max-width: none !important;
+    justify-self: stretch;
   }
   .app-compact-layout .tab-header-desktop,
   .app-compact-layout .tab-nav-desktop {
@@ -24237,6 +24295,208 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   }
 }
 
+.orcamento-pecas-especiais-iva-badge {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.orcamento-pecas-especiais-iva-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.orcamento-pecas-especiais-iva-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.orcamento-pecas-especiais-iva-btn.is-active {
+  border: 2px solid #22c55e;
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  font-weight: 700;
+}
+
+.orcamento-pecas-especiais-iva-btn--com.is-active {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.18);
+  color: #bae6fd;
+}
+
+.orcamento-pecas-especiais-iva-taxa {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.orcamento-pecas-especiais-input--taxa {
+  width: 88px;
+  flex: 0 0 auto;
+}
+
+.orcamento-pecas-especiais-totais-resumo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 20px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.orcamento-pecas-especiais-biblioteca {
+  margin-bottom: 12px;
+}
+
+.orcamento-pecas-especiais-biblioteca-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  border: 1px solid rgba(0, 200, 83, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.orcamento-pecas-especiais-biblioteca-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.orcamento-pecas-especiais-biblioteca-item:last-child {
+  border-bottom: none;
+}
+
+.orcamento-pecas-especiais-biblioteca-item:hover {
+  background: rgba(0, 200, 83, 0.12);
+}
+
+.orcamento-pecas-especiais-biblioteca-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #fff;
+  flex: 0 0 auto;
+}
+
+.orcamento-pecas-especiais-biblioteca-thumb--empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.orcamento-pecas-especiais-imagem-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.orcamento-pecas-especiais-imagem-preview {
+  width: 88px;
+  height: 88px;
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.orcamento-pecas-especiais-imagem-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.orcamento-pecas-especiais-imagem-empty {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+  padding: 6px;
+}
+
+.orcamento-pecas-especiais-imagem-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.orcamento-pecas-especiais-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.orcamento-pecas-especiais-desc-preview {
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(102, 179, 255, 0.08);
+  border: 1px solid rgba(102, 179, 255, 0.25);
+}
+
+.orcamento-pecas-especiais-desc-preview strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #93c5fd;
+}
+
+.orcamento-pecas-especiais-desc-preview__body {
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: pre-wrap;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.orcamento-pecas-especiais-link-btn {
+  margin-left: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #93c5fd;
+  cursor: pointer;
+  font-size: 12px;
+  text-decoration: underline;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    TEXTO BRANCO EM TODOS OS BOTÕES — PROGRAMA INTEIRO
    Mantém fundo/borda coloridos; só as palavras internas ficam #ffffff.
@@ -24251,6 +24511,21 @@ html body label[class*="btn-"],
 html body a[class*="btn-"] {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Links estilo botão com cor temática (maps, etc.) — não forçar branco sobre fundo claro */
+html body a.cliente-endereco-maps__btn,
+html body a.cliente-endereco-maps__btn--nav,
+html body .cliente-cadastro-v2__maps-btn,
+html body .cliente-cadastro-v2__maps-btn--nav {
+  color: #6ba3f6 !important;
+  -webkit-text-fill-color: #6ba3f6 !important;
+}
+
+html body a.cliente-endereco-maps__btn--nav,
+html body .cliente-cadastro-v2__maps-btn--nav {
+  color: #4ade80 !important;
+  -webkit-text-fill-color: #4ade80 !important;
 }
 
 html body button:hover,
@@ -27555,10 +27830,21 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   border-radius: 12px !important;
   font-size: 14px !important;
   font-weight: 600 !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  color: rgba(255, 255, 255, 0.85) !important;
+  background: rgba(22, 28, 28, 0.92) !important;
+  border: 1px solid rgba(0, 200, 83, 0.28) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+.tab-glass-nav--clientes .btn-primary,
+.tab-glass-nav--clientes .btn-primary:not(.btn-danger) {
+  background: rgba(22, 28, 28, 0.92) !important;
+  border-color: rgba(0, 200, 83, 0.28) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .tab-glass-nav .btn-primary[style*='rgba(18, 52, 24'],
