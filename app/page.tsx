@@ -67775,16 +67775,28 @@ A1;Peça exemplo;10`}
               {/* Hero — identidade visual alinhada ao resto do painel */}
               <div
                 className={`ns-dashboard-full-hero${isCompactLayout ? ' ns-dashboard-full-hero--compact' : ''}`}
-                style={{ marginBottom: isCompactLayout ? 12 : 8 }}
               >
-                <div style={{ marginBottom: isCompactLayout ? 12 : 28 }}>
-                  <LogoComponent size={isCompactLayout ? 'small' : 'large'} />
+                <div className="ns-dashboard-full-hero__backdrop" aria-hidden>
+                  <div className="ns-dashboard-full-hero__orb ns-dashboard-full-hero__orb--a" />
+                  <div className="ns-dashboard-full-hero__orb ns-dashboard-full-hero__orb--b" />
                 </div>
-                <h1 className="ns-dashboard-full-title">{safeT?.title || 'GESTÃO TÉCNICA'}</h1>
-                <p className="ns-dashboard-full-welcome">{safeT?.welcome || 'Sistema de Gestão Completo'}</p>
-                <p className="ns-dashboard-full-lead">
-                  {safeT?.welcomeText2 || 'Gerencie clientes, equipamentos, relatórios e muito mais em um único lugar.'}
-                </p>
+                <div className="ns-dashboard-full-hero__content">
+                  <div className="ns-dashboard-full-hero__brand">
+                    <div className="ns-dashboard-full-hero__logo">
+                      <LogoComponent size={isCompactLayout ? 'small' : 'large'} />
+                    </div>
+                    <span className="ns-dashboard-full-hero__badge">
+                      {(safeT as Record<string, string | undefined>)?.dashboardShowcaseBadge ||
+                        'Nonato Service · Gestão Técnica'}
+                    </span>
+                  </div>
+                  <h1 className="ns-dashboard-full-title">{safeT?.title || 'Gestão Técnica'}</h1>
+                  <p className="ns-dashboard-full-welcome">{safeT?.welcome || 'Bem-vindo ao painel de controlo'}</p>
+                  <p className="ns-dashboard-full-lead">
+                    {safeT?.welcomeText2 ||
+                      'Utilize o menu lateral para aceder às funcionalidades disponíveis.'}
+                  </p>
+                </div>
               </div>
 
               {/* Estatísticas rápidas — cartões uniformes, hover em CSS */}
