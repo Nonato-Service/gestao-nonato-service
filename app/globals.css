@@ -18898,8 +18898,8 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   margin-bottom: clamp(14px, 2.5vh, 22px);
 }
 .ns-showcase--modern .ns-showcase__logo .ns-logo-in-box {
-  width: clamp(56px, 7vw, 76px) !important;
-  height: clamp(56px, 7vw, 76px) !important;
+  width: clamp(68px, 8.5vw, 92px) !important;
+  height: clamp(68px, 8.5vw, 92px) !important;
   border-radius: 16px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
 }
@@ -18913,9 +18913,9 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   display: inline-flex;
   align-items: center;
   width: fit-content;
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -18925,7 +18925,7 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 .ns-showcase--modern .ns-showcase__kicker {
   margin: 0;
-  font-size: clamp(11px, 1.6vw, 13px);
+  font-size: clamp(13px, 1.85vw, 15px);
   font-weight: 600;
   color: rgba(148, 163, 184, 0.95);
   letter-spacing: 0.02em;
