@@ -3560,20 +3560,22 @@ button.btn-danger.btn-danger--inline {
   }
 }
 
-/* Gestão Financeira > Clientes / Financeiro > Conteúdo: botões = padrão Visualizar Equipamentos */
+/* Gestão Financeira > Clientes / Financeiro > Conteúdo: botões ghost verde */
 .clientes-financeiro-panel .clientes-financeiro-conteudo button:not([class*='financeiro-despesas-bib']) {
-  background: transparent !important;
-  border: 1px solid rgba(0, 200, 83, 0.95) !important;
-  color: #ffffff !important;
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
   box-shadow: none !important;
-  transition: box-shadow 0.2s ease, filter 0.2s ease !important;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
 }
 .clientes-financeiro-panel .clientes-financeiro-conteudo button:not([class*='financeiro-despesas-bib']):hover {
-  background: rgba(0, 200, 83, 0.12) !important;
-  border: 1px solid #00c853 !important;
-  color: #ffffff !important;
-  box-shadow: 0 0 14px rgba(0, 200, 83, 0.45) !important;
-  filter: brightness(1.15) !important;
+  background: var(--ns-btn-green-bg-hover) !important;
+  border: 1px solid var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+  box-shadow: none !important;
+  filter: none !important;
 }
 
 .logo-container {
@@ -7969,6 +7971,72 @@ a:focus-visible {
   }
 }
 
+/* Atalhos — botões ghost (verde / laranja) */
+.gestao-financeira-cta-row .btn-primary {
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none !important;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+}
+.gestao-financeira-cta-row .btn-primary:hover:not(:disabled) {
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+  box-shadow: none !important;
+}
+.gestao-financeira-cta-row .gestao-financeira-cta-btn--warn,
+.gestao-financeira-cta-row .btn-primary.gestao-financeira-cta-btn--warn {
+  background: var(--ns-btn-orange-bg) !important;
+  border: 1px solid var(--ns-btn-orange-border) !important;
+  color: var(--ns-btn-orange-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-orange-text) !important;
+}
+.gestao-financeira-cta-row .gestao-financeira-cta-btn--warn:hover:not(:disabled),
+.gestao-financeira-cta-row .btn-primary.gestao-financeira-cta-btn--warn:hover:not(:disabled) {
+  background: var(--ns-btn-orange-bg-hover) !important;
+  border-color: var(--ns-btn-orange-border-hover) !important;
+  color: var(--ns-btn-orange-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-orange-text-hover) !important;
+}
+
+.gestao-financeira-mapa-marcar-pago__btn.btn-primary {
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none !important;
+}
+.gestao-financeira-mapa-marcar-pago__btn.btn-primary:hover:not(:disabled) {
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+}
+
+/* Abas Clientes / Financeiro — neutro; verde só na selecionada */
+.gf-fin-tab {
+  background: var(--ns-btn-neutral-bg) !important;
+  border: 1px solid var(--ns-btn-neutral-border) !important;
+  color: var(--ns-btn-neutral-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text) !important;
+  box-shadow: none !important;
+}
+.gf-fin-tab:hover:not(.gf-fin-tab--active) {
+  background: var(--ns-btn-neutral-bg-hover) !important;
+  border-color: var(--ns-btn-neutral-border-hover) !important;
+  color: var(--ns-btn-neutral-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text-hover) !important;
+}
+.gf-fin-tab--active {
+  background: var(--ns-btn-green-bg-hover) !important;
+  border: 1px solid var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+}
+
 /* Painel executivo — Gestão Financeira */
 .gf-painel-exec {
   width: 100%;
@@ -8015,17 +8083,22 @@ a:focus-visible {
   font-weight: 650;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #0f172a;
-  background: linear-gradient(135deg, #38bdf8 0%, #22d3ee 100%);
-  border: none;
+  color: var(--ns-btn-blue-text);
+  -webkit-text-fill-color: var(--ns-btn-blue-text);
+  background: var(--ns-btn-blue-bg);
+  border: 1px solid var(--ns-btn-blue-border);
   border-radius: 10px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(34, 211, 238, 0.25);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
 .gf-painel-exec__cta:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 28px rgba(34, 211, 238, 0.35);
+  background: var(--ns-btn-blue-bg-hover);
+  border-color: var(--ns-btn-blue-border-hover);
+  color: var(--ns-btn-blue-text-hover);
+  -webkit-text-fill-color: var(--ns-btn-blue-text-hover);
+  box-shadow: none;
 }
 .gf-painel-exec__hero {
   display: grid;
@@ -8241,22 +8314,31 @@ a:focus-visible {
   text-align: left;
   padding: 12px 14px;
   border-radius: 10px;
-  border: 1px solid rgba(51, 65, 85, 0.65);
-  background: rgba(30, 41, 59, 0.5);
-  color: #e2e8f0;
+  border: 1px solid var(--ns-btn-neutral-border);
+  background: var(--ns-btn-neutral-bg);
+  color: var(--ns-btn-neutral-text);
+  -webkit-text-fill-color: var(--ns-btn-neutral-text);
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  box-shadow: none;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 .gf-fin-index__btn:hover {
-  border-color: rgba(34, 197, 94, 0.45);
-  background: rgba(6, 78, 59, 0.18);
+  border-color: var(--ns-btn-green-border-hover);
+  background: var(--ns-btn-neutral-bg-hover);
+  color: var(--ns-btn-neutral-text-hover);
+  -webkit-text-fill-color: var(--ns-btn-neutral-text-hover);
 }
 .gf-fin-index__btn-title {
   display: block;
   font-size: 13px;
   font-weight: 750;
-  color: #86efac;
+  color: var(--ns-btn-green-text);
+  -webkit-text-fill-color: var(--ns-btn-green-text);
   margin-bottom: 4px;
+}
+.gf-fin-index__btn:hover .gf-fin-index__btn-title {
+  color: var(--ns-btn-green-text-hover);
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover);
 }
 .gf-fin-index__btn-hint {
   display: block;
@@ -28699,30 +28781,55 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   box-shadow: none !important;
 }
 
-.tab-glass-nav .btn-primary {
+.tab-glass-nav .btn-primary.tab-glass-nav__tab {
   padding: 12px 20px !important;
   min-height: 44px !important;
   border-radius: 12px !important;
   font-size: 14px !important;
   font-weight: 600 !important;
-  background: var(--ns-btn-green-bg) !important;
-  border: 1px solid var(--ns-btn-green-border) !important;
-  color: var(--ns-btn-green-text) !important;
-  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  background: var(--ns-btn-neutral-bg) !important;
+  border: 1px solid var(--ns-btn-neutral-border) !important;
+  color: var(--ns-btn-neutral-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text) !important;
   box-shadow: none !important;
   -webkit-appearance: none !important;
   appearance: none !important;
 }
 
-.tab-glass-nav--clientes .btn-primary,
-.tab-glass-nav--clientes .btn-primary:not(.btn-danger) {
-  background: var(--ns-btn-green-bg) !important;
-  border-color: var(--ns-btn-green-border) !important;
-  color: var(--ns-btn-green-text) !important;
-  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+.tab-glass-nav .btn-primary.tab-glass-nav__tab:hover:not(:disabled) {
+  background: var(--ns-btn-neutral-bg-hover) !important;
+  border-color: var(--ns-btn-neutral-border-hover) !important;
+  color: var(--ns-btn-neutral-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text-hover) !important;
+}
+
+.tab-glass-nav .btn-primary.tab-glass-nav__tab--active,
+.tab-glass-nav--clientes .btn-primary.tab-glass-nav__tab--active,
+.tab-glass-nav--clientes .btn-primary.tab-glass-nav__tab--active:not(.btn-danger) {
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+  box-shadow: none !important;
+}
+
+.tab-glass-nav .btn-primary.tab-glass-nav__tab--active:hover:not(:disabled) {
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+}
+
+.tab-glass-nav--clientes .btn-primary.tab-glass-nav__tab:not(.tab-glass-nav__tab--active),
+.tab-glass-nav--clientes .btn-primary.tab-glass-nav__tab:not(.tab-glass-nav__tab--active):not(.btn-danger) {
+  background: var(--ns-btn-neutral-bg) !important;
+  border-color: var(--ns-btn-neutral-border) !important;
+  color: var(--ns-btn-neutral-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text) !important;
 }
 
 .tab-glass-nav .btn-primary[style*='rgba(18, 52, 24'],
+.tab-glass-nav .btn-primary.tab-glass-nav__tab--active,
 .tab-glass-nav .btn-primary[style*='rgba(0, 200, 83, 0.3)'] {
   background: var(--ns-btn-green-bg-hover) !important;
   border-color: var(--ns-btn-green-border-hover) !important;
@@ -31963,8 +32070,8 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
    NS Ghost Buttons — sistema inteiro (override final)
    Garante botões transparentes por cor, inclusive inline legado.
    =================================================================== */
-html body .btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn),
-html body button.btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn),
+html body .btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):not(.tab-glass-nav__tab),
+html body button.btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):not(.tab-glass-nav__tab),
 html body a.btn-primary {
   background: var(--ns-btn-green-bg) !important;
   background-color: var(--ns-btn-green-bg) !important;
@@ -31974,8 +32081,8 @@ html body a.btn-primary {
   box-shadow: none !important;
 }
 
-html body .btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):hover:not(:disabled),
-html body button.btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):hover:not(:disabled),
+html body .btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):not(.tab-glass-nav__tab):hover:not(:disabled),
+html body button.btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):not(.tab-glass-nav__tab):hover:not(:disabled),
 html body a.btn-primary:hover {
   background: var(--ns-btn-green-bg-hover) !important;
   background-color: var(--ns-btn-green-bg-hover) !important;
@@ -32128,5 +32235,389 @@ html body button.agenda-painel-situacao-btn:hover {
 
 html body button.agenda-painel-situacao-btn:hover > div {
   filter: brightness(1.08);
+}
+
+/* Abas de módulo (Clientes, Fornecedores, Gestores) — neutro; verde só na selecionada */
+html body .tab-glass-nav__tab.btn-primary,
+html body button.tab-glass-nav__tab.btn-primary {
+  background: var(--ns-btn-neutral-bg) !important;
+  background-color: var(--ns-btn-neutral-bg) !important;
+  border: 1px solid var(--ns-btn-neutral-border) !important;
+  color: var(--ns-btn-neutral-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text) !important;
+  box-shadow: none !important;
+}
+
+html body .tab-glass-nav__tab.btn-primary:hover:not(:disabled),
+html body button.tab-glass-nav__tab.btn-primary:hover:not(:disabled) {
+  background: var(--ns-btn-neutral-bg-hover) !important;
+  background-color: var(--ns-btn-neutral-bg-hover) !important;
+  border-color: var(--ns-btn-neutral-border-hover) !important;
+  color: var(--ns-btn-neutral-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text-hover) !important;
+}
+
+html body .tab-glass-nav__tab--active.btn-primary,
+html body button.tab-glass-nav__tab--active.btn-primary {
+  background: var(--ns-btn-green-bg-hover) !important;
+  background-color: var(--ns-btn-green-bg-hover) !important;
+  border: 1px solid var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+  box-shadow: none !important;
+}
+
+html body .tab-glass-nav__tab--active.btn-primary:hover:not(:disabled),
+html body button.tab-glass-nav__tab--active.btn-primary:hover:not(:disabled) {
+  background: var(--ns-btn-green-bg-hover) !important;
+  background-color: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+}
+
+/* Orçamento de serviço técnico / papel timbrado — botões ghost (primary verde, secondary neutro) */
+html body .papel-timbrado-root button.primary,
+html body .papel-timbrado-root .papel-timbrado-toolbar button.primary {
+  background: var(--ns-btn-green-bg) !important;
+  background-color: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none !important;
+}
+
+html body .papel-timbrado-root button.primary:hover:not(:disabled),
+html body .papel-timbrado-root .papel-timbrado-toolbar button.primary:hover:not(:disabled) {
+  background: var(--ns-btn-green-bg-hover) !important;
+  background-color: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+}
+
+html body .papel-timbrado-root button.secondary,
+html body .papel-timbrado-root .papel-timbrado-toolbar button.secondary {
+  background: var(--ns-btn-neutral-bg) !important;
+  background-color: var(--ns-btn-neutral-bg) !important;
+  border: 1px solid var(--ns-btn-neutral-border) !important;
+  color: var(--ns-btn-neutral-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text) !important;
+  box-shadow: none !important;
+}
+
+html body .papel-timbrado-root button.secondary:hover:not(:disabled),
+html body .papel-timbrado-root .papel-timbrado-toolbar button.secondary:hover:not(:disabled) {
+  background: var(--ns-btn-neutral-bg-hover) !important;
+  background-color: var(--ns-btn-neutral-bg-hover) !important;
+  border-color: var(--ns-btn-neutral-border-hover) !important;
+  color: var(--ns-btn-neutral-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text-hover) !important;
+}
+
+html body .papel-timbrado-root .ost-subnav button.primary {
+  background: var(--ns-btn-green-bg-hover) !important;
+  background-color: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+}
+
+/* Gestão Financeira — botões ghost (prioridade sobre texto branco global) */
+html body .gestao-financeira-panel .gf-fin-index__btn {
+  background: var(--ns-btn-neutral-bg) !important;
+  background-color: var(--ns-btn-neutral-bg) !important;
+  border: 1px solid var(--ns-btn-neutral-border) !important;
+  color: var(--ns-btn-neutral-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text) !important;
+  box-shadow: none !important;
+}
+
+html body .gestao-financeira-panel .gf-fin-index__btn:hover:not(:disabled) {
+  background: var(--ns-btn-neutral-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-neutral-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text-hover) !important;
+}
+
+html body .gestao-financeira-panel .gf-fin-index__btn-title {
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+}
+
+html body .gestao-financeira-panel .gf-painel-exec__cta {
+  background: var(--ns-btn-blue-bg) !important;
+  border: 1px solid var(--ns-btn-blue-border) !important;
+  color: var(--ns-btn-blue-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-blue-text) !important;
+  box-shadow: none !important;
+}
+
+html body .gestao-financeira-panel .gf-painel-exec__cta:hover:not(:disabled) {
+  background: var(--ns-btn-blue-bg-hover) !important;
+  border-color: var(--ns-btn-blue-border-hover) !important;
+  color: var(--ns-btn-blue-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-blue-text-hover) !important;
+}
+
+html body .gestao-financeira-panel .gestao-financeira-cta-row .btn-primary:not(.gestao-financeira-cta-btn--warn) {
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none !important;
+}
+
+html body .gestao-financeira-panel .gestao-financeira-cta-row .btn-primary.gestao-financeira-cta-btn--warn {
+  background: var(--ns-btn-orange-bg) !important;
+  border: 1px solid var(--ns-btn-orange-border) !important;
+  color: var(--ns-btn-orange-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-orange-text) !important;
+}
+
+html body .gestao-financeira-panel .gestao-financeira-mapa-marcar-pago__btn.btn-primary {
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+}
+
+html body .clientes-financeiro-panel .gf-fin-tab {
+  background: var(--ns-btn-neutral-bg) !important;
+  border: 1px solid var(--ns-btn-neutral-border) !important;
+  color: var(--ns-btn-neutral-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text) !important;
+  box-shadow: none !important;
+}
+
+html body .clientes-financeiro-panel .gf-fin-tab--active {
+  background: var(--ns-btn-green-bg-hover) !important;
+  border: 1px solid var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+}
+
+html body .btn-chip-danger,
+html body button.btn-chip-danger {
+  background: var(--ns-btn-red-bg) !important;
+  background-color: var(--ns-btn-red-bg) !important;
+  border: 1px solid var(--ns-btn-red-border) !important;
+  color: var(--ns-btn-red-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-red-text) !important;
+  box-shadow: none !important;
+}
+
+html body .btn-chip-danger:hover:not(:disabled),
+html body button.btn-chip-danger:hover:not(:disabled) {
+  background: var(--ns-btn-red-bg-hover) !important;
+  background-color: var(--ns-btn-red-bg-hover) !important;
+  border-color: var(--ns-btn-red-border-hover) !important;
+  color: var(--ns-btn-red-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-red-text-hover) !important;
+}
+
+/* Mensagens Internas / Comunicação — botões ghost (prioridade sobre texto branco global) */
+html body .mensagens-internas-shell button.btn-primary,
+html body .comunicacao-interna-shell button.btn-primary {
+  background: var(--ns-btn-green-bg) !important;
+  background-color: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none !important;
+}
+
+html body .mensagens-internas-shell button.btn-primary:hover:not(:disabled),
+html body .comunicacao-interna-shell button.btn-primary:hover:not(:disabled) {
+  background: var(--ns-btn-green-bg-hover) !important;
+  background-color: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+}
+
+html body .mensagens-internas-shell button.btn-info,
+html body .comunicacao-interna-shell button.btn-info,
+html body .comunicacao-stack button.btn-info {
+  background: var(--ns-btn-blue-bg) !important;
+  background-color: var(--ns-btn-blue-bg) !important;
+  border: 1px solid var(--ns-btn-blue-border) !important;
+  color: var(--ns-btn-blue-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-blue-text) !important;
+  box-shadow: none !important;
+}
+
+html body .mensagens-internas-shell button.btn-info:hover:not(:disabled),
+html body .comunicacao-interna-shell button.btn-info:hover:not(:disabled),
+html body .comunicacao-stack button.btn-info:hover:not(:disabled) {
+  background: var(--ns-btn-blue-bg-hover) !important;
+  background-color: var(--ns-btn-blue-bg-hover) !important;
+  border-color: var(--ns-btn-blue-border-hover) !important;
+  color: var(--ns-btn-blue-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-blue-text-hover) !important;
+}
+
+html body .comunicacao-tab-btn {
+  padding: 12px 24px !important;
+  background: var(--ns-btn-neutral-bg) !important;
+  background-color: var(--ns-btn-neutral-bg) !important;
+  border: 1px solid var(--ns-btn-neutral-border) !important;
+  border-bottom: 3px solid transparent !important;
+  border-radius: 8px 8px 0 0 !important;
+  color: var(--ns-btn-neutral-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+  box-shadow: none !important;
+}
+
+html body .comunicacao-tab-btn:hover:not(:disabled) {
+  background: var(--ns-btn-neutral-bg-hover) !important;
+  border-color: var(--ns-btn-blue-border) !important;
+  color: var(--ns-btn-blue-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-blue-text) !important;
+}
+
+html body .comunicacao-tab-btn--active,
+html body .comunicacao-tab-btn.comunicacao-tab-btn--active {
+  background: var(--ns-btn-blue-bg-hover) !important;
+  background-color: var(--ns-btn-blue-bg-hover) !important;
+  border-color: var(--ns-btn-blue-border) !important;
+  border-bottom-color: var(--ns-btn-blue-border-hover) !important;
+  color: var(--ns-btn-blue-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-blue-text-hover) !important;
+  font-weight: 700 !important;
+}
+
+html body .comunicacao-hero-nav-btn {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 1px solid var(--ns-btn-blue-border) !important;
+  color: var(--ns-btn-blue-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-blue-text) !important;
+  box-shadow: none !important;
+}
+
+html body .comunicacao-hero-nav-btn:hover:not(:disabled) {
+  background: var(--ns-btn-blue-bg) !important;
+  background-color: var(--ns-btn-blue-bg) !important;
+  border-color: var(--ns-btn-blue-border-hover) !important;
+  color: var(--ns-btn-blue-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-blue-text-hover) !important;
+}
+
+html body .hub-comunicacao-shell .hub-comunicacao-send-btn {
+  background: var(--ns-btn-green-bg) !important;
+  background-color: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none !important;
+}
+
+html body .hub-comunicacao-shell .hub-comunicacao-send-btn:hover:not(:disabled) {
+  background: var(--ns-btn-green-bg-hover) !important;
+  background-color: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+}
+
+html body .hub-comunicacao-shell .hub-comunicacao-group-chip {
+  background: var(--ns-btn-neutral-bg) !important;
+  background-color: var(--ns-btn-neutral-bg) !important;
+  border: 1px solid var(--ns-btn-neutral-border) !important;
+  color: var(--ns-btn-neutral-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text) !important;
+  box-shadow: none !important;
+}
+
+html body .hub-comunicacao-shell .hub-comunicacao-group-chip:hover:not(:disabled) {
+  background: var(--ns-btn-neutral-bg-hover) !important;
+  border-color: var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+}
+
+html body .hub-comunicacao-shell .hub-comunicacao-hero-actions button.comunicacao-hero-nav-btn {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .hub-comunicacao-shell .hub-comunicacao-hero-actions button.btn-danger {
+  box-shadow: none !important;
+}
+
+html body .alerta-mensagens-shell .alerta-mensagens-action-btn-neutral {
+  background: var(--ns-btn-neutral-bg) !important;
+  border: 1px solid var(--ns-btn-neutral-border) !important;
+  color: var(--ns-btn-neutral-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-neutral-text) !important;
+  box-shadow: none !important;
+}
+
+html body .alerta-mensagens-shell .alerta-mensagens-action-btn-info {
+  background: var(--ns-btn-blue-bg) !important;
+  border: 1px solid var(--ns-btn-blue-border) !important;
+  color: var(--ns-btn-blue-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-blue-text) !important;
+  box-shadow: none !important;
+}
+
+html body .alerta-mensagens-shell .alerta-mensagens-action-btn-success {
+  background: var(--ns-btn-green-bg) !important;
+  border: 1px solid var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+  box-shadow: none !important;
+}
+
+html body .alerta-mensagens-shell .alerta-mensagens-action-btn-danger {
+  background: var(--ns-btn-red-bg) !important;
+  border: 1px solid var(--ns-btn-red-border) !important;
+  color: var(--ns-btn-red-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-red-text) !important;
+  box-shadow: none !important;
+}
+
+html body .alerta-mensagens-shell .alerta-mensagens-action-btn-neutral:hover:not(:disabled) {
+  background: var(--ns-btn-neutral-bg-hover) !important;
+  border-color: var(--ns-btn-neutral-border-hover) !important;
+}
+
+html body .alerta-mensagens-shell .alerta-mensagens-action-btn-info:hover:not(:disabled) {
+  background: var(--ns-btn-blue-bg-hover) !important;
+  border-color: var(--ns-btn-blue-border-hover) !important;
+  color: var(--ns-btn-blue-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-blue-text-hover) !important;
+}
+
+html body .alerta-mensagens-shell .alerta-mensagens-action-btn-success:hover:not(:disabled) {
+  background: var(--ns-btn-green-bg-hover) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
+}
+
+html body .alerta-mensagens-shell .alerta-mensagens-action-btn-danger:hover:not(:disabled) {
+  background: var(--ns-btn-red-bg-hover) !important;
+  border-color: var(--ns-btn-red-border-hover) !important;
+  color: var(--ns-btn-red-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-red-text-hover) !important;
+}
+
+html body .alerta-mensagens-shell .alerta-mensagens-hero-actions .comunicacao-hero-nav-btn {
+  border-color: var(--ns-btn-green-border) !important;
+  color: var(--ns-btn-green-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text) !important;
+}
+
+html body .alerta-mensagens-shell .alerta-mensagens-hero-actions .comunicacao-hero-nav-btn:hover:not(:disabled) {
+  background: var(--ns-btn-green-bg) !important;
+  border-color: var(--ns-btn-green-border-hover) !important;
+  color: var(--ns-btn-green-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
 }
 

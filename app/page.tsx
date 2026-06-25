@@ -5996,6 +5996,10 @@ export default function Dashboard() {
             }}
           />
         </div>
+
+        <button type="button" className="btn-info" onClick={handleEnviar}>
+          {safeT?.enviar || 'Enviar'}
+        </button>
       </div>
     )
   }
@@ -27767,7 +27771,7 @@ export default function Dashboard() {
             {/* Abas de Navegação - ocultas em mobile */}
             <div className="tab-nav-desktop tab-glass-nav">
               <button 
-                className="btn-primary"
+                className={`btn-primary tab-glass-nav__tab${gestoresActiveTab === 'gestores' ? ' tab-glass-nav__tab--active' : ''}`}
                 onClick={() => setGestoresActiveTab('gestores')}
                 style={{
                   padding: '12px 24px',
@@ -27785,7 +27789,7 @@ export default function Dashboard() {
                 👨‍💼 {safeT?.gestoresTab || 'Gestores'} ({gestores.length})
               </button>
               <button 
-                className="btn-primary"
+                className={`btn-primary tab-glass-nav__tab${gestoresActiveTab === 'tecnicos' ? ' tab-glass-nav__tab--active' : ''}`}
                 onClick={() => setGestoresActiveTab('tecnicos')}
                 style={{
                   padding: '12px 24px',
@@ -35145,7 +35149,7 @@ export default function Dashboard() {
             {!clienteListaDetalheId ? (
             <div className="tab-nav-desktop tab-glass-nav tab-glass-nav--clientes clientes-module-tabs">
               <button 
-                className="btn-primary"
+                className={`btn-primary tab-glass-nav__tab${clientesActiveTab === 'cadastrar' ? ' tab-glass-nav__tab--active' : ''}`}
                 onClick={() => {
                   setClientesActiveTab('cadastrar')
                   setClienteListaDetalheId(null)
@@ -35166,7 +35170,7 @@ export default function Dashboard() {
                 ➕ {safeT?.cadastrarCliente || 'Cadastrar Cliente'}
               </button>
               <button 
-                className="btn-primary"
+                className={`btn-primary tab-glass-nav__tab${clientesActiveTab === 'listar' ? ' tab-glass-nav__tab--active' : ''}`}
                 onClick={() => {
                   setClientesActiveTab('listar')
                   setClienteListaDetalheId(null)
@@ -35187,7 +35191,7 @@ export default function Dashboard() {
                 📋 {safeT?.clientesCadastrados || 'Clientes Cadastrados'} ({clientes.length})
               </button>
               <button
-                className="btn-primary"
+                className={`btn-primary tab-glass-nav__tab${clientesActiveTab === 'grupos' ? ' tab-glass-nav__tab--active' : ''}`}
                 onClick={() => {
                   setClientesActiveTab('grupos')
                   setClienteListaDetalheId(null)
@@ -35926,7 +35930,7 @@ export default function Dashboard() {
             {!fornecedorListaDetalheId ? (
             <div className="tab-nav-desktop tab-glass-nav tab-glass-nav--clientes fornecedores-module-tabs">
               <button
-                className="btn-primary"
+                className={`btn-primary tab-glass-nav__tab${fornecedoresActiveTab === 'cadastrar' ? ' tab-glass-nav__tab--active' : ''}`}
                 onClick={() => {
                   setFornecedoresActiveTab('cadastrar')
                   setFornecedorListaDetalheId(null)
@@ -35947,7 +35951,7 @@ export default function Dashboard() {
                 ➕ {safeT?.cadastrarFornecedor || 'Cadastrar Fornecedor'}
               </button>
               <button
-                className="btn-primary"
+                className={`btn-primary tab-glass-nav__tab${fornecedoresActiveTab === 'listar' ? ' tab-glass-nav__tab--active' : ''}`}
                 onClick={() => {
                   setFornecedoresActiveTab('listar')
                   setFornecedorListaDetalheId(null)
@@ -54977,7 +54981,7 @@ A1;Peça exemplo;10`}
       case 'comunicacao-interna':
         if (currentCommunicationIdentity && !loginUser?.isAdmin) {
           return (
-            <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }}>
+            <div className="comunicacao-interna-shell" style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }}>
               <div style={{ padding: '28px', borderRadius: '18px', border: '2px solid rgba(0,200,83,0.28)', background: 'linear-gradient(135deg, rgba(0,200,83,0.05) 0%, rgba(0,0,0,0.82) 100%)' }}>
                 <h2 style={{ margin: '0 0 10px 0', color: '#00c853' }}>{safeT?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA'}</h2>
                 <p style={{ margin: 0, color: '#d0d0d0', fontSize: '14px' }}>
@@ -54998,7 +55002,7 @@ A1;Peça exemplo;10`}
           )
         }
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+          <div className="comunicacao-interna-shell" style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
             {/* Cabeçalho Profissional */}
             <div style={{
               marginBottom: '40px',
@@ -55035,14 +55039,13 @@ A1;Peça exemplo;10`}
                 </div>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                   <button 
+                    type="button"
+                    className="comunicacao-hero-nav-btn"
                     onClick={() => closeTab(activeTabId || '')}
                     style={{ 
                       padding: '6px 8px', 
                       fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 200, 83, 0.3)',
                       borderRadius: '4px',
-                      color: '#66b3ff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -55052,26 +55055,17 @@ A1;Peça exemplo;10`}
                       height: '32px'
                     }}
                     title={safeT?.voltar || 'Voltar'}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 100, 255, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 100, 255, 0.5)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 100, 255, 0.3)'
-                    }}
                   >
                     ↶
                   </button>
                   <button 
+                    type="button"
+                    className="comunicacao-hero-nav-btn"
                     onClick={voltarPaginaInicial}
                     style={{ 
                       padding: '6px 8px', 
                       fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 150, 255, 0.3)',
                       borderRadius: '4px',
-                      color: '#66b3ff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -55081,14 +55075,6 @@ A1;Peça exemplo;10`}
                       height: '32px'
                     }}
                     title={safeT?.paginaInicial || 'Página Inicial'}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
-                    }}
                   >
                     🏠
                   </button>
@@ -55111,18 +55097,9 @@ A1;Peça exemplo;10`}
                 borderBottom: '2px solid rgba(0, 100, 255, 0.2)'
               }}>
                 <button
+                  type="button"
+                  className={`comunicacao-tab-btn${comunicacaoActiveTab === 'enviar' ? ' comunicacao-tab-btn--active' : ''}`}
                   onClick={() => setComunicacaoActiveTab('enviar')}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: comunicacaoActiveTab === 'enviar' ? 'rgba(0, 100, 255, 0.3)' : 'transparent',
-                    border: 'none',
-                    borderBottom: comunicacaoActiveTab === 'enviar' ? '3px solid #66b3ff' : '3px solid transparent',
-                    color: comunicacaoActiveTab === 'enviar' ? '#66b3ff' : '#ccc',
-                    fontWeight: comunicacaoActiveTab === 'enviar' ? 'bold' : 'normal',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    transition: 'all 0.3s ease'
-                  }}
                 >
                   {safeT?.enviarMensagem || 'Enviar Mensagem'}
                 </button>
@@ -55216,18 +55193,9 @@ A1;Peça exemplo;10`}
                     borderBottom: '2px solid rgba(0, 100, 255, 0.2)'
                   }}>
                     <button
+                      type="button"
+                      className={`comunicacao-tab-btn${comunicacaoTecnicoActiveTab === 'enviar' ? ' comunicacao-tab-btn--active' : ''}`}
                       onClick={() => setComunicacaoTecnicoActiveTab('enviar')}
-                      style={{
-                        padding: '12px 24px',
-                        backgroundColor: comunicacaoTecnicoActiveTab === 'enviar' ? 'rgba(0, 100, 255, 0.3)' : 'transparent',
-                        border: 'none',
-                        borderBottom: comunicacaoTecnicoActiveTab === 'enviar' ? '3px solid #66b3ff' : '3px solid transparent',
-                        color: comunicacaoTecnicoActiveTab === 'enviar' ? '#66b3ff' : '#ccc',
-                        fontWeight: comunicacaoTecnicoActiveTab === 'enviar' ? 'bold' : 'normal',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        transition: 'all 0.3s ease'
-                      }}
                     >
                       {safeT?.enviarMensagem || 'Enviar Mensagem'}
                     </button>
@@ -55414,12 +55382,12 @@ A1;Peça exemplo;10`}
                 </div>
                 <div className="hub-comunicacao-hero-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   {podeEscolherManualHub && hubUsuarioEfetivo && (
-                    <button onClick={() => { setHubUsuarioAtual(null); setHubDestinatarioSelecionado([]); setHubAssunto(''); setHubMensagemTexto('') }} style={{ padding: '8px 14px', backgroundColor: 'rgba(255,100,100,0.2)', border: '1px solid rgba(255,100,100,0.5)', borderRadius: '8px', color: '#ff9999', cursor: 'pointer', fontSize: '13px' }}>
+                    <button type="button" className="btn-danger" onClick={() => { setHubUsuarioAtual(null); setHubDestinatarioSelecionado([]); setHubAssunto(''); setHubMensagemTexto('') }} style={{ padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>
                       {safeT?.trocarUsuario || 'Trocar quem está usando'}
                     </button>
                   )}
-                  <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '8px 12px', backgroundColor: 'transparent', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '8px', color: '#66b3ff', cursor: 'pointer' }} title={safeT?.voltar || 'Voltar'}>↶</button>
-                  <button onClick={voltarPaginaInicial} style={{ padding: '8px 12px', backgroundColor: 'transparent', border: '1px solid rgba(0, 150, 255, 0.3)', borderRadius: '8px', color: '#66b3ff', cursor: 'pointer' }} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
+                  <button type="button" className="comunicacao-hero-nav-btn" onClick={() => closeTab(activeTabId || '')} style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer' }} title={safeT?.voltar || 'Voltar'}>↶</button>
+                  <button type="button" className="comunicacao-hero-nav-btn" onClick={voltarPaginaInicial} style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer' }} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
                 </div>
               </div>
             </div>
@@ -55661,7 +55629,7 @@ A1;Peça exemplo;10`}
       case 'mensagens-internas':
         if (currentCommunicationIdentity && !loginUser?.isAdmin) {
           return (
-            <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }}>
+            <div className="mensagens-internas-shell" style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }}>
               <div style={{ padding: '28px', borderRadius: '18px', border: '2px solid rgba(0,200,83,0.28)', background: 'linear-gradient(135deg, rgba(0,200,83,0.05) 0%, rgba(0,0,0,0.82) 100%)' }}>
                 <h2 style={{ margin: '0 0 10px 0', color: '#00c853' }}>{safeT?.mensagensInternas || 'MENSAGENS INTERNAS'}</h2>
                 <p style={{ margin: 0, color: '#d0d0d0', fontSize: '14px' }}>
@@ -55682,7 +55650,7 @@ A1;Peça exemplo;10`}
           )
         }
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+          <div className="mensagens-internas-shell" style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
             {/* Cabeçalho Profissional */}
             <div style={{
               marginBottom: '40px',
@@ -55719,14 +55687,13 @@ A1;Peça exemplo;10`}
                 </div>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                   <button 
+                    type="button"
+                    className="comunicacao-hero-nav-btn"
                     onClick={() => closeTab(activeTabId || '')}
                     style={{ 
                       padding: '6px 8px', 
                       fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 200, 83, 0.3)',
                       borderRadius: '4px',
-                      color: '#66b3ff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -55736,26 +55703,17 @@ A1;Peça exemplo;10`}
                       height: '32px'
                     }}
                     title={safeT?.voltar || 'Voltar'}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 100, 255, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 100, 255, 0.5)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 100, 255, 0.3)'
-                    }}
                   >
                     ↶
                   </button>
                   <button 
+                    type="button"
+                    className="comunicacao-hero-nav-btn"
                     onClick={voltarPaginaInicial}
                     style={{ 
                       padding: '6px 8px', 
                       fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 150, 255, 0.3)',
                       borderRadius: '4px',
-                      color: '#66b3ff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -55765,14 +55723,6 @@ A1;Peça exemplo;10`}
                       height: '32px'
                     }}
                     title={safeT?.paginaInicial || 'Página Inicial'}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
-                    }}
                   >
                     🏠
                   </button>
@@ -55796,18 +55746,9 @@ A1;Peça exemplo;10`}
                 borderBottom: '2px solid rgba(0, 100, 255, 0.2)'
               }}>
                 <button
+                  type="button"
+                  className={`comunicacao-tab-btn${comunicacaoActiveTab === 'enviar' ? ' comunicacao-tab-btn--active' : ''}`}
                   onClick={() => setComunicacaoActiveTab('enviar')}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: comunicacaoActiveTab === 'enviar' ? 'rgba(0, 100, 255, 0.3)' : 'transparent',
-                    border: 'none',
-                    borderBottom: comunicacaoActiveTab === 'enviar' ? '3px solid #66b3ff' : '3px solid transparent',
-                    color: comunicacaoActiveTab === 'enviar' ? '#66b3ff' : '#ccc',
-                    fontWeight: comunicacaoActiveTab === 'enviar' ? 'bold' : 'normal',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    transition: 'all 0.3s ease'
-                  }}
                 >
                   {safeT?.enviarMensagem || 'Enviar Mensagem'}
                 </button>
@@ -55947,6 +55888,8 @@ A1;Peça exemplo;10`}
                 </div>
                 <div className="alerta-mensagens-hero-actions" style={{ display: 'flex', gap: '10px' }}>
                   <button 
+                    type="button"
+                    className="comunicacao-hero-nav-btn"
                     onClick={() => {
                       const tab = openTabs.find(t => t.type === activeTabId)
                       if (tab) {
@@ -55959,10 +55902,7 @@ A1;Peça exemplo;10`}
                     style={{ 
                       padding: '6px 8px', 
                       fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 200, 83, 0.3)',
                       borderRadius: '4px',
-                      color: '#00c853',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -55972,26 +55912,17 @@ A1;Peça exemplo;10`}
                       height: '32px'
                     }}
                     title={safeT?.voltar || 'Voltar'}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.5)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.3)'
-                    }}
                   >
                     ↶
                   </button>
                   <button 
+                    type="button"
+                    className="comunicacao-hero-nav-btn"
                     onClick={voltarPaginaInicial}
                     style={{ 
                       padding: '6px 8px', 
                       fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 150, 255, 0.3)',
                       borderRadius: '4px',
-                      color: '#66b3ff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -56001,14 +55932,6 @@ A1;Peça exemplo;10`}
                       height: '32px'
                     }}
                     title={safeT?.paginaInicial || 'Página Inicial'}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
-                    }}
                   >
                     🏠
                   </button>
@@ -57755,16 +57678,13 @@ A1;Peça exemplo;10`}
                 <div className="gestao-financeira-cta-row">
                   {/* Botão Comprovantes de Despesas */}
                   <button
-                    className="btn-primary"
+                    className="btn-primary gestao-financeira-cta-btn"
                     onClick={() => handleButtonClick('open-comprovantes-despesas')}
                     style={{
                       padding: isCompactLayout ? '12px 16px' : '15px 30px',
                       fontSize: isCompactLayout ? '13px' : '16px',
                       fontWeight: 'bold',
-                      backgroundColor: 'rgba(0, 200, 83, 0.1)',
-                      border: '2px solid rgba(0, 200, 83, 0.5)',
                       borderRadius: '10px',
-                      color: '#00c853',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -57776,16 +57696,13 @@ A1;Peça exemplo;10`}
                     📄 {safeT?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS'}
                   </button>
                   <button
-                    className="btn-primary"
+                    className="btn-primary gestao-financeira-cta-btn"
                     onClick={() => handleButtonClick('open-pagamentos-contador')}
                     style={{
                       padding: isCompactLayout ? '12px 16px' : '15px 30px',
                       fontSize: isCompactLayout ? '13px' : '16px',
                       fontWeight: 'bold',
-                      backgroundColor: 'rgba(0, 200, 83, 0.1)',
-                      border: '2px solid rgba(0, 200, 83, 0.5)',
                       borderRadius: '10px',
-                      color: '#00c853',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -57798,16 +57715,13 @@ A1;Peça exemplo;10`}
                   </button>
                   {/* Botão Clientes / Financeiro */}
                   <button
-                    className="btn-primary"
+                    className="btn-primary gestao-financeira-cta-btn"
                     onClick={() => handleButtonClick('open-clientes-financeiro')}
                     style={{
                       padding: isCompactLayout ? '12px 16px' : '15px 30px',
                       fontSize: isCompactLayout ? '13px' : '16px',
                       fontWeight: 'bold',
-                      backgroundColor: 'rgba(0, 200, 83, 0.1)',
-                      border: '2px solid rgba(0, 200, 83, 0.5)',
                       borderRadius: '8px',
-                      color: '#00c853',
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
                       minWidth: isCompactLayout ? 'min(280px, 78vw)' : '250px',
@@ -57816,21 +57730,11 @@ A1;Peça exemplo;10`}
                       flex: '0 0 auto',
                       boxSizing: 'border-box',
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.2)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.8)'
-                      e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 200, 83, 0.3)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.5)'
-                      e.currentTarget.style.boxShadow = 'none'
-                    }}
                   >
                     {safeT?.clientesFinanceiro || 'Clientes / Financeiro'}
                   </button>
                   <button
-                    className="btn-primary"
+                    className="btn-primary gestao-financeira-cta-btn gestao-financeira-cta-btn--warn"
                     onClick={() => {
                       handleButtonClick('open-clientes-financeiro')
                       setClientesFinanceiroActiveTab('despesasControle')
@@ -57839,10 +57743,7 @@ A1;Peça exemplo;10`}
                       padding: isCompactLayout ? '12px 16px' : '15px 30px',
                       fontSize: isCompactLayout ? '13px' : '16px',
                       fontWeight: 'bold',
-                      backgroundColor: 'rgba(255, 170, 0, 0.08)',
-                      border: '2px solid rgba(255, 170, 0, 0.55)',
                       borderRadius: '10px',
-                      color: '#ffcc66',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -58001,32 +57902,19 @@ A1;Peça exemplo;10`}
               {(['os', 'faturas', 'devedores', 'iva', 'relatorios', 'despesasControle'] as const).map((tab) => (
                 <button
                   key={tab}
+                  type="button"
+                  className={`gf-fin-tab${clientesFinanceiroActiveTab === tab ? ' gf-fin-tab--active' : ''}`}
                   onClick={() => setClientesFinanceiroActiveTab(tab)}
                   style={{
                     padding: isCompactLayout ? '10px 12px' : '10px 20px',
                     fontSize: isCompactLayout ? '11px' : '13px',
                     fontWeight: 'bold',
                     flex: isCompactLayout ? '0 0 auto' : undefined,
-                    backgroundColor: clientesFinanceiroActiveTab === tab ? 'rgba(0, 200, 83, 0.2)' : 'transparent',
-                    border: `1px solid ${clientesFinanceiroActiveTab === tab ? 'rgba(0, 200, 83, 0.5)' : 'rgba(0, 200, 83, 0.2)'}`,
                     borderRadius: '6px',
-                    color: clientesFinanceiroActiveTab === tab ? '#00c853' : '#fff',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
                     textTransform: 'uppercase',
                     letterSpacing: '1px'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (clientesFinanceiroActiveTab !== tab) {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.5)'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (clientesFinanceiroActiveTab !== tab) {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.2)'
-                    }
                   }}
                 >
                   {tab === 'os' && (safeT?.ordemServico || 'ORDEM DE SERVIÇO')}
