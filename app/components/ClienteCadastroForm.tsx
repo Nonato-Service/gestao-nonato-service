@@ -48,7 +48,7 @@ export type ClienteFormState = {
 type Props = {
   clienteForm: ClienteFormState
   setClienteForm: React.Dispatch<React.SetStateAction<ClienteFormState>>
-  editingCliente: { id: string; isDevedor?: boolean; saldoPendente?: number } | null
+  editingCliente: { id: string; codigoCliente?: string; isDevedor?: boolean; saldoPendente?: number } | null
   language: string
   servicoGrupos: ServicoCadastroGrupo[]
   clienteGrupoTarifaSelecionadoId: string | null
@@ -285,6 +285,21 @@ export function ClienteCadastroForm({
             onChange={(e) => setClienteForm({ ...clienteForm, nomeEmpresa: e.target.value })}
           />
         </FieldInput>
+
+        {editingCliente?.codigoCliente ? (
+          <FieldInput id="codigo-cliente" icon={<IconIdCard size={18} />} label={tr('clienteCodigoLabel')} fullWidth>
+            <input
+              id="codigo-cliente"
+              type="text"
+              className="cliente-cadastro-v2__input"
+              value={editingCliente.codigoCliente}
+              readOnly
+              aria-readonly="true"
+            />
+          </FieldInput>
+        ) : !editingCliente ? (
+          <p className="cliente-cadastro-v2__hint">{tr('clienteCodigoAutoHint')}</p>
+        ) : null}
 
         {isFisica ? (
           <FieldInput

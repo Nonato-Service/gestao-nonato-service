@@ -20,6 +20,7 @@ import {
   type FechamentoIvaLike,
   type RelatorioClienteLike,
 } from '../lib/clienteDetalheUtils'
+import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
 
 function useDetalheTr(language: string) {
   return useMemo(() => {
@@ -35,6 +36,7 @@ function useDetalheTr(language: string) {
 
 export type ClienteDetalheData = {
   id: string
+  codigoCliente?: string
   nomeEmpresa: string
   morada: string
   localidade?: string
@@ -275,6 +277,8 @@ export function ClienteDetalheView({
 
   const cidadeExibicao = [cliente.localidade, cliente.conselho].map((s) => String(s || '').trim()).filter(Boolean).join(' · ')
 
+  const codigoExib = codigoClienteExibicao(cliente)
+
   return (
     <div className="cliente-detalhe-v2">
       <header className="cliente-detalhe-v2__page-header">
@@ -283,7 +287,7 @@ export function ClienteDetalheView({
             <IconHome size={14} />
           </span>
           <span className="cliente-detalhe-v2__breadcrumb-sep">/</span>
-          <span>{idClienteExibicao(cliente.id)}</span>
+          <span>{codigoExib}</span>
         </nav>
         <div className="cliente-detalhe-v2__title-row">
           <div>
@@ -333,6 +337,7 @@ export function ClienteDetalheView({
               )}
             </div>
             <h3 className="cliente-detalhe-v2__profile-name">{cliente.nomeEmpresa}</h3>
+            <p className="cliente-detalhe-v2__profile-nif">{tr('clienteCodigoLabel')}: {codigoExib}</p>
             {cliente.numeroContribuicaoFiscal ? (
               <p className="cliente-detalhe-v2__profile-nif">{cliente.numeroContribuicaoFiscal}</p>
             ) : null}
@@ -360,6 +365,7 @@ export function ClienteDetalheView({
             <StatRow icon={<IconCalendar />} label={tr('clienteDesde')} value={dataClienteDesde(relatorios, language, vazio)} />
             <StatRow icon={<IconUsers />} label={tr('totalServicos')} value={String(relatorios.length)} />
             <StatRow icon={<IconPrinter />} label={tr('equipamentosTitulo')} value={String(equipamentos.length)} />
+            <StatRow icon={<IconHash />} label={tr('clienteCodigoLabel')} value={codigoExib} />
             <StatRow icon={<IconHash />} label={tr('idCliente')} value={idClienteExibicao(cliente.id)} />
           </div>
         </div>

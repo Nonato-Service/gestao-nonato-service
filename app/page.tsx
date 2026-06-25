@@ -26080,6 +26080,8 @@ export default function Dashboard() {
       openTab('orcamentos-avulso', getTabTitle('orcamentos-avulso'))
     } else if (action === 'open-pedido-orcamentos-avulso') {
       openTab('pedido-orcamentos-avulso', getTabTitle('pedido-orcamentos-avulso'))
+    } else if (action === 'open-orcamentos-pecas-especiais') {
+      openTab('orcamentos-pecas-especiais', getTabTitle('orcamentos-pecas-especiais'))
     } else if (action === 'open-orcamento-servico-tecnico') {
       openTab('orcamento-servico-tecnico', getTabTitle('orcamento-servico-tecnico'))
     } else if (action === 'open-registro-despesas') {
@@ -34951,6 +34953,8 @@ export default function Dashboard() {
         const clientesFiltrados = ordenarClientesPorNome(
           clientes.filter(cliente =>
             cliente.nomeEmpresa.toLowerCase().includes(qCli) ||
+            codigoClienteExibicao(cliente).toLowerCase().includes(qCli) ||
+            (cliente.codigoCliente || '').toLowerCase().includes(qCli) ||
             (cliente.morada || '').toLowerCase().includes(qCli) ||
             (cliente.codigoPostal || '').toLowerCase().includes(qCli) ||
             (cliente.pais || '').toLowerCase().includes(qCli) ||
@@ -35751,7 +35755,10 @@ export default function Dashboard() {
                                 className="clientes-alfa-nome-btn"
                                 onClick={() => setClienteListaDetalheId(c.id)}
                               >
-                                <span className="clientes-alfa-nome-btn__titulo">{c.nomeEmpresa}</span>
+                                <span className="clientes-alfa-nome-btn__titulo">
+                                  {codigoClienteExibicao(c) !== '—' ? `${codigoClienteExibicao(c)} — ` : ''}
+                                  {c.nomeEmpresa}
+                                </span>
                                 {(c.telefones || c.localidade || c.morada || c.numeroContribuicaoFiscal || c.email) ? (
                                   <span className="clientes-alfa-nome-btn__meta">
                                     {[
@@ -45286,6 +45293,23 @@ A1;Peça exemplo;10`}
             saveData={saveData}
             loadData={loadData}
             adminPdfLogoHtml={getLogoHtmlForOrcamentoServico()}
+          />
+        )
+
+      case 'orcamentos-pecas-especiais':
+        return (
+          <OrcamentoPecasEspeciaisContent
+            clientes={clientesOrdenadosAlfabeticamente}
+            safeT={safeT}
+            closeTab={closeTab}
+            activeTabId={activeTabId || ''}
+            voltarPaginaInicial={voltarPaginaInicial}
+            LogoComponent={LogoComponent}
+            saveData={async (key, data) => {
+              await saveData(key, data)
+            }}
+            loadData={loadData}
+            logoHtml={getLogoHtmlForOrcamento()}
           />
         )
 
@@ -60836,6 +60860,7 @@ A1;Peça exemplo;10`}
         'fechamento-relatorios-servicos-default': <IconClipboardList size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
         'orcamentos-avulso-default': <IconCoins size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
         'pedido-orcamentos-avulso-default': <IconFileText size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
+        'orcamentos-pecas-especiais-default': <IconCoins size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
         'orcamento-servico-tecnico-default': <IconWrench size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
       }
       const sorted = [...getButtonsByGroup('gestao-custos')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))

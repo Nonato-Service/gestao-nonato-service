@@ -88,6 +88,7 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
     items: [
       { buttonId: 'orcamentos-avulso-default', action: 'open-orcamentos-avulso', labelKey: 'orcamentosAvulsoTitle', fallbackLabel: 'Orçamentos avulso', legacyKey: 'cadastroServicos' },
       { buttonId: 'orcamento-servico-tecnico-default', action: 'open-orcamento-servico-tecnico', labelKey: 'orcamentoServicoTecnicoTitle', fallbackLabel: 'Orçamento serviço técnico', legacyKey: 'cadastroServicos' },
+      { buttonId: 'orcamentos-pecas-especiais-default', action: 'open-orcamentos-pecas-especiais', labelKey: 'orcamentoPecasEspeciaisTitle', fallbackLabel: 'Orçamentos peças especiais', legacyKey: 'cadastroServicos' },
       { buttonId: 'pedido-orcamentos-avulso-default', action: 'open-pedido-orcamentos-avulso', labelKey: 'pedidoOrcamentosAvulsoTitle', fallbackLabel: 'Pedido de orçamentos', legacyKey: 'cadastroServicos' },
     ],
   },

@@ -24106,6 +24106,137 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   }
 }
 
+/* Orçamentos de peças especiais */
+.orcamento-pecas-especiais-page .orcamento-pecas-especiais-form {
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 200, 83, 0.2);
+}
+
+.orcamento-pecas-especiais-grid-head,
+.orcamento-pecas-especiais-grid-contact {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.orcamento-pecas-especiais-section {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.orcamento-pecas-especiais-section h3 {
+  margin: 0 0 12px;
+  color: #66b3ff;
+  font-size: 17px;
+}
+
+.orcamento-pecas-especiais-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.orcamento-pecas-especiais-section-head h3 {
+  margin: 0;
+}
+
+.orcamento-pecas-especiais-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.orcamento-pecas-especiais-input,
+.orcamento-pecas-especiais-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 14px;
+}
+
+.orcamento-pecas-especiais-textarea {
+  resize: vertical;
+  min-height: 72px;
+  margin-top: 8px;
+}
+
+.orcamento-pecas-especiais-hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.orcamento-pecas-especiais-linha {
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(0, 200, 83, 0.15);
+}
+
+.orcamento-pecas-especiais-linha-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.orcamento-pecas-especiais-linha-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.orcamento-pecas-especiais-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.orcamento-pecas-especiais-salvos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.orcamento-pecas-especiais-salvo-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .orcamento-pecas-especiais-grid-head,
+  .orcamento-pecas-especiais-grid-contact,
+  .orcamento-pecas-especiais-linha-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .orcamento-pecas-especiais-page .orcamento-pecas-especiais-form {
+    padding: 14px 12px;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    TEXTO BRANCO EM TODOS OS BOTÕES — PROGRAMA INTEIRO
    Mantém fundo/borda coloridos; só as palavras internas ficam #ffffff.
@@ -24918,6 +25049,17 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 .cliente-cadastro-v2__field:last-child {
   margin-bottom: 0;
+}
+
+.cliente-cadastro-v2__hint {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.65);
+  background: rgba(0, 200, 83, 0.08);
+  border: 1px solid rgba(0, 200, 83, 0.2);
 }
 
 .cliente-cadastro-v2__label {
