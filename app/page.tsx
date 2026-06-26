@@ -38279,168 +38279,37 @@ export default function Dashboard() {
                   </p>
                 )}
                 {somenteLeituraBiblioteca ? (
-                  <>
-                    <div
-                      className="biblioteca-hub-toolbar"
-                      style={{ marginBottom: '16px', padding: '12px 14px' }}
-                    >
-                      <div style={{ minWidth: '200px', flex: '1 1 260px', maxWidth: '420px' }}>
-                        <label
-                          htmlFor="biblioteca-busca-codigo-leitura"
-                          style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.75)', marginBottom: '4px' }}
-                        >
-                          {safeT?.bibliotecaBuscarPorCodigo || 'Buscar por código'}
-                        </label>
-                        <input
-                          id="biblioteca-busca-codigo-leitura"
-                          type="search"
-                          value={buscaCodigoBiblioteca}
-                          onChange={(e) => {
-                            setBuscaCodigoBiblioteca(e.target.value)
-                            if (e.target.value.trim()) setBibliotecaGaleriaCategoriaId(null)
-                          }}
-                          placeholder={safeT?.codigoPecaBibliotecaPlaceholder || 'Ex: FO-123-ABC'}
-                          autoComplete="off"
-                          style={{
-                            width: '100%',
-                            boxSizing: 'border-box',
-                            padding: '8px 10px',
-                            backgroundColor: '#484848',
-                            color: '#fff',
-                            border: '1px solid rgba(0, 168, 107, 0.3)',
-                            borderRadius: '4px',
-                            fontSize: '13px',
-                          }}
-                        />
-                      </div>
-                      {buscaCodigoBiblioteca.trim() ? (
-                        <button
-                          type="button"
-                          className="biblioteca-btn--orange"
-                          onClick={() => setBuscaCodigoBiblioteca('')}
-                          style={{ alignSelf: 'flex-end', padding: '8px 12px', fontSize: '12px' }}
-                        >
-                          {safeT?.limparFiltros || 'Limpar busca'}
-                        </button>
-                      ) : null}
-                    </div>
-                    {buscaCodigoBiblioteca.trim() ? (
-                      (() => {
-                        const q = buscaCodigoBiblioteca.trim().toLowerCase()
-                        const resultados = ordenarPecasBibliotecaParaExibicao(
-                          pecasCatalogoBiblioteca.filter((peca) =>
-                            String(peca.codigo ?? '')
-                              .trim()
-                              .toLowerCase()
-                              .includes(q)
-                          )
-                        )
-                        return (
-                          <div className="biblioteca-galeria-categorias">
-                            <p className="biblioteca-galeria-categorias__lead" style={{ marginBottom: '14px' }}>
-                              {String(
-                                (safeT as any)?.bibliotecaBuscaCodigoResultados ||
-                                  '{count} peça(s) encontrada(s) para «{codigo}»'
-                              )
-                                .replace('{count}', String(resultados.length))
-                                .replace('{codigo}', buscaCodigoBiblioteca.trim())}
-                            </p>
-                            {resultados.length === 0 ? (
-                              <p className="biblioteca-galeria-categorias__empty">
-                                {(safeT as any)?.bibliotecaBuscaCodigoVazio ||
-                                  'Nenhuma peça com este código no catálogo.'}
-                              </p>
-                            ) : (
-                              <div className="biblioteca-pecas-hub__piece-grid biblioteca-galeria-categorias__grid-pecas">
-                                {resultados.map((peca) => (
-                                  <article key={peca.id} className="biblioteca-pecas-hub__piece-card">
-                                    <div
-                                      className="biblioteca-pecas-hub__piece-thumb"
-                                      onMouseEnter={(ev) => {
-                                        if (!pecaBibliotecaTemImagemPropria(peca.imagem)) return
-                                        showBibliotecaImgPreview(
-                                          ev,
-                                          String(peca.imagem).trim(),
-                                          peca.nome || peca.codigo || ''
-                                        )
-                                        const img = ev.currentTarget.querySelector('img')
-                                        if (img instanceof HTMLImageElement) img.style.transform = 'scale(1.08)'
-                                      }}
-                                      onMouseLeave={(ev) => {
-                                        hideBibliotecaImgPreview()
-                                        const img = ev.currentTarget.querySelector('img')
-                                        if (img instanceof HTMLImageElement) img.style.transform = 'scale(1)'
-                                      }}
-                                    >
-                                      <img
-                                        src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
-                                        alt={peca.nome}
-                                        className={
-                                          pecaBibliotecaTemImagemPropria(peca.imagem)
-                                            ? undefined
-                                            : 'biblioteca-pecas-hub__piece-img--padrao'
-                                        }
-                                        style={{
-                                          width: '100%',
-                                          height: '100%',
-                                          objectFit: 'cover',
-                                          display: 'block',
-                                          transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
-                                        }}
-                                      />
-                                    </div>
-                                    <h4 className="biblioteca-pecas-hub__piece-name">
-                                      {peca.numeroSequenciaGrupo ? (
-                                        <span
-                                          className="biblioteca-pecas-numero-circulo biblioteca-pecas-numero-circulo--sm"
-                                          style={{ marginRight: '8px', verticalAlign: 'middle' }}
-                                          title={peca.numeroSequenciaGrupo}
-                                          aria-label={peca.numeroSequenciaGrupo}
-                                        >
-                                          {peca.numeroSequenciaGrupo}
-                                        </span>
-                                      ) : null}
-                                      {peca.nome}
-                                    </h4>
-                                    <div className="biblioteca-pecas-hub__piece-meta">
-                                      <span className="biblioteca-pecas-hub__piece-chip biblioteca-pecas-hub__piece-chip--code">
-                                        <span className="biblioteca-pecas-hub__piece-chip-k">
-                                          {safeT?.codigoPecaBiblioteca || safeT?.codigo || 'Código'}
-                                        </span>
-                                        <span className="biblioteca-pecas-hub__piece-chip-v">{peca.codigo || '—'}</span>
-                                      </span>
-                                    </div>
-                                  </article>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })()
-                    ) : (
-                      <BibliotecaPecasGaleriaCategorias
-                        categorias={categoriasPecasAlfabeto}
-                        pecasCatalogo={pecasCatalogoBiblioteca}
-                        categoriaSelecionadaId={bibliotecaGaleriaCategoriaId}
-                        onSelecionarCategoria={setBibliotecaGaleriaCategoriaId}
-                        onVoltarCategorias={() => setBibliotecaGaleriaCategoriaId(null)}
-                        srcImagem={pecaBibliotecaSrcImagemDisplay}
-                        temImagemPropria={pecaBibliotecaTemImagemPropria}
-                        onThumbEnter={(ev, src, label) => showBibliotecaImgPreview(ev, src, label)}
-                        onThumbLeave={hideBibliotecaImgPreview}
-                        t={{
-                          titulo: (safeT as any)?.bibliotecaGaleriaCategoriasTitulo,
-                          descricao: (safeT as any)?.bibliotecaGaleriaCategoriasDesc,
-                          voltar: (safeT as any)?.bibliotecaGaleriaVoltarCategorias,
-                          pecasCount: (safeT as any)?.bibliotecaGaleriaPecasNaCategoria,
-                          semImagem: (safeT as any)?.bibliotecaGaleriaSemImagemCategoria,
-                          cliqueAbrir: (safeT as any)?.bibliotecaGaleriaCliqueCategoria,
-                          codigo: safeT?.codigoPecaBiblioteca || safeT?.codigo,
-                          semPecasCategoria: (safeT as any)?.bibliotecaGaleriaSemPecasCategoria,
-                        }}
-                      />
-                    )}
-                  </>
+                  <BibliotecaPecasGaleriaCategorias
+                    categorias={categoriasPecasAlfabeto}
+                    pecasCatalogo={pecasCatalogoBiblioteca}
+                    categoriaSelecionadaId={bibliotecaGaleriaCategoriaId}
+                    onSelecionarCategoria={setBibliotecaGaleriaCategoriaId}
+                    onVoltarCategorias={() => setBibliotecaGaleriaCategoriaId(null)}
+                    srcImagem={pecaBibliotecaSrcImagemDisplay}
+                    temImagemPropria={pecaBibliotecaTemImagemPropria}
+                    onThumbEnter={(ev, src, label) => showBibliotecaImgPreview(ev, src, label)}
+                    onThumbLeave={hideBibliotecaImgPreview}
+                    buscaCodigo={buscaCodigoBiblioteca}
+                    onBuscaCodigoChange={(value) => {
+                      setBuscaCodigoBiblioteca(value)
+                      if (value.trim()) setBibliotecaGaleriaCategoriaId(null)
+                    }}
+                    t={{
+                      titulo: (safeT as any)?.bibliotecaGaleriaCategoriasTitulo,
+                      descricao: (safeT as any)?.bibliotecaGaleriaCategoriasDesc,
+                      voltar: (safeT as any)?.bibliotecaGaleriaVoltarCategorias,
+                      pecasCount: (safeT as any)?.bibliotecaGaleriaPecasNaCategoria,
+                      semImagem: (safeT as any)?.bibliotecaGaleriaSemImagemCategoria,
+                      cliqueAbrir: (safeT as any)?.bibliotecaGaleriaCliqueCategoria,
+                      codigo: safeT?.codigoPecaBiblioteca || safeT?.codigo,
+                      semPecasCategoria: (safeT as any)?.bibliotecaGaleriaSemPecasCategoria,
+                      buscarPorCodigo: safeT?.bibliotecaBuscarPorCodigo || 'Buscar peça por código',
+                      buscarPlaceholder: safeT?.codigoPecaBibliotecaPlaceholder || 'Ex: 700030001',
+                      buscaResultados: (safeT as any)?.bibliotecaBuscaCodigoResultados,
+                      buscaVazio: (safeT as any)?.bibliotecaBuscaCodigoVazio,
+                      limparBusca: safeT?.limparFiltros || 'Limpar busca',
+                    }}
+                  />
                 ) : (
                 <>
                 {/* Controles de visualização — painel único */}
