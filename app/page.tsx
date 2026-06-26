@@ -7202,6 +7202,15 @@ export default function Dashboard() {
   const [importacaoUrlError, setImportacaoUrlError] = useState<string | null>(null)
   const [importacaoPreview, setImportacaoPreview] = useState<PecaBiblioteca[] | null>(null)
   const [importacaoDuplicadasIgnoradas, setImportacaoDuplicadasIgnoradas] = useState(0)
+  /** Análise da colagem: peças novas vs já existentes no catálogo / fila. */
+  const [importacaoAnaliseColagem, setImportacaoAnaliseColagem] = useState<{
+    totalColagem: number
+    novas: PecaBiblioteca[]
+    duplicadasCatalogo: PecaBiblioteca[]
+    duplicadasFila: PecaBiblioteca[]
+    duplicadasLote: PecaBiblioteca[]
+    semCodigo: PecaBiblioteca[]
+  } | null>(null)
   const [importacaoTextoColado, setImportacaoTextoColado] = useState('')
   /** Origem da loja (ex. https://shop.homag.com) para completar src relativos tipo /s/sfsites/... (Salesforce B2B) */
   const [importacaoLojaBaseUrl, setImportacaoLojaBaseUrl] = useState('')
@@ -23464,6 +23473,14 @@ export default function Dashboard() {
       const { novas, duplicadas, duplicadasCatalogo, duplicadasFila, duplicadasLote, semCodigo } =
         separarPecasImportacao(pecas)
       setImportacaoDuplicadasIgnoradas(duplicadas.length + semCodigo.length)
+      setImportacaoAnaliseColagem({
+        totalColagem: pecas.length,
+        novas,
+        duplicadasCatalogo,
+        duplicadasFila,
+        duplicadasLote,
+        semCodigo,
+      })
 
       const detalheIgnoradas = montarMensagemImportacaoIgnoradas({
         duplicadasCatalogo,
@@ -23478,13 +23495,17 @@ export default function Dashboard() {
           duplicadasCatalogo.length > 0
             ? String(
                 (t as any)?.importacaoPreviewTodasDuplicadas ??
-                  'Importação cancelada: {count} peça(s) com código já existente no catálogo da biblioteca.'
-              ).replace('{count}', String(duplicadasCatalogo.length))
+                  'De {total} peça(s) colada(s), {count} já existem no catálogo da biblioteca — nenhuma nova para importar.'
+              )
+                .replace('{total}', String(pecas.length))
+                .replace('{count}', String(duplicadasCatalogo.length))
             : duplicadasFila.length > 0
               ? String(
                   (t as any)?.importacaoPreviewTodasNaFila ??
-                    'Nenhuma peça nova: {count} já estão na fila amarela (pendentes). Abra-as no Cadastro e use Salvar, ou limpe a fila antes de importar de novo.'
-                ).replace('{count}', String(duplicadasFila.length))
+                    'De {total} peça(s), {count} já estão na fila amarela (pendentes). Nenhuma peça nova.'
+                )
+                  .replace('{total}', String(pecas.length))
+                  .replace('{count}', String(duplicadasFila.length))
               : String(
                   (t as any)?.importacaoPreviewNenhumaNova ??
                     'Nenhuma peça nova para importar após filtrar duplicados e linhas inválidas.'
@@ -23519,8 +23540,9 @@ export default function Dashboard() {
       if ((duplicadas.length > 0 || semCodigo.length > 0) && notificar) {
         const msg = String(
           (t as any)?.importacaoParcialDuplicadas ??
-            '{novas} peça(s) nova(s) prontas para importar. {ignoradas} ignorada(s).'
+            'De {total} peça(s) colada(s): {novas} nova(s) para importar, {ignoradas} já existente(s) ou ignorada(s).'
         )
+          .replace('{total}', String(pecas.length))
           .replace('{novas}', String(novas.length))
           .replace('{ignoradas}', String(duplicadas.length + semCodigo.length))
         const codes = listarCodigosPecasImport([...duplicadasCatalogo, ...duplicadasFila, ...duplicadasLote])
@@ -23543,13 +23565,17 @@ export default function Dashboard() {
           duplicadasCatalogo.length > 0
             ? String(
                 (t as any)?.importacaoPreviewTodasDuplicadas ??
-                  'Importação cancelada: {count} peça(s) com código já existente no catálogo da biblioteca.'
-              ).replace('{count}', String(duplicadasCatalogo.length))
+                  'De {total} peça(s) colada(s), {count} já existem no catálogo da biblioteca — nenhuma nova para importar.'
+              )
+                .replace('{total}', String(pecas.length))
+                .replace('{count}', String(duplicadasCatalogo.length))
             : duplicadasFila.length > 0
               ? String(
                   (t as any)?.importacaoPreviewTodasNaFila ??
-                    'Nenhuma peça nova: {count} já estão na fila amarela (pendentes).'
-                ).replace('{count}', String(duplicadasFila.length))
+                    'De {total} peça(s), {count} já estão na fila amarela (pendentes).'
+                )
+                  .replace('{total}', String(pecas.length))
+                  .replace('{count}', String(duplicadasFila.length))
               : String(
                   (t as any)?.importacaoPreviewNenhumaNova ??
                     'Nenhuma peça nova para importar após filtrar duplicados e linhas inválidas.'
@@ -24746,10 +24772,29 @@ export default function Dashboard() {
 
   const limparEstadoColagemImportacao = useCallback(() => {
     setImportacaoPreview(null)
+    setImportacaoAnaliseColagem(null)
     setImportacaoTextoColado('')
     setImportacaoDuplicadasIgnoradas(0)
     setImportacaoUrlError(null)
   }, [])
+
+  const perguntarLimparColagemAposImportacao = useCallback(
+    (quantidadeNovas: number) => {
+      const pergunta = String(
+        (t as any)?.importacaoConfirmarLimparColagem ??
+          'Importação concluída: {count} peça(s) enviada(s) para a fila amarela.\n\nDeseja apagar o texto colado e limpar a análise para uma nova importação?'
+      ).replace('{count}', String(quantidadeNovas))
+      if (window.confirm(pergunta)) {
+        limparEstadoColagemImportacao()
+      } else {
+        setImportacaoPreview(null)
+        setImportacaoAnaliseColagem(null)
+        setImportacaoDuplicadasIgnoradas(0)
+        setImportacaoUrlError(null)
+      }
+    },
+    [limparEstadoColagemImportacao, t]
+  )
 
   const executarEnvioImportacaoParaFila = useCallback(
     (pecasOrigem: PecaBiblioteca[]) => {
@@ -24796,7 +24841,6 @@ export default function Dashboard() {
         )
         setImportacaoDuplicadasIgnoradas(ignoradasTotal)
         setImportacaoUrlError(msgBase)
-        limparEstadoColagemImportacao()
         return
       }
 
@@ -24845,7 +24889,7 @@ export default function Dashboard() {
       if (ignoradasTotal === 0) {
         alert(mensagemFinal)
       }
-      limparEstadoColagemImportacao()
+      perguntarLimparColagemAposImportacao(novos.length)
       void saveData('nonato-pecas-biblioteca', atualizadoNormalizado).catch((err) => {
         console.error('[importação fila]', err)
         alert(
@@ -24857,7 +24901,7 @@ export default function Dashboard() {
     [
       aplicarRegrasClassificacaoEmLista,
       categoriasPecas,
-      limparEstadoColagemImportacao,
+      perguntarLimparColagemAposImportacao,
       montarMensagemImportacaoIgnoradas,
       pecasBiblioteca,
       separarPecasImportacao,
@@ -24892,7 +24936,6 @@ export default function Dashboard() {
     const filtrado = processarDuplicadosImportacao(result.pecas, { notificar: false })
     if (!filtrado.ok || filtrado.novas.length === 0) {
       processarDuplicadosImportacao(result.pecas, { notificar: true })
-      limparEstadoColagemImportacao()
       return
     }
 
@@ -24901,137 +24944,219 @@ export default function Dashboard() {
     executarEnvioImportacaoParaFila,
     importacaoPreview,
     importacaoTextoColado,
-    limparEstadoColagemImportacao,
     processarDuplicadosImportacao,
     processarTextoImportacaoPecas,
     t,
   ])
 
   const renderPainelPreviewImportacao = useCallback(() => {
-    if (!importacaoPreview || importacaoPreview.length === 0) return null
+    const analise = importacaoAnaliseColagem
+    const novas = importacaoPreview ?? analise?.novas ?? []
+    const temAnalise =
+      analise &&
+      (analise.totalColagem > 0 ||
+        analise.duplicadasCatalogo.length > 0 ||
+        analise.duplicadasFila.length > 0 ||
+        novas.length > 0)
+    if (!temAnalise && novas.length === 0) return null
+
     const hubT: Record<string, string> = (safeT || {}) as Record<string, string>
-    const avisoDuplicadas =
-      importacaoDuplicadasIgnoradas > 0
-        ? String(
-            (hubT as any).importacaoDuplicadasIgnoradas ||
-              '{count} peça(s) ignorada(s) na importação (catálogo gravado, fila amarela ou repetidas na colagem).'
-          ).replace('{count}', String(importacaoDuplicadasIgnoradas))
-        : ''
-    return (
-      <div ref={importacaoPreviewPanelRef} className="importacao-pecas-preview-panel" style={{ marginTop: '20px' }}>
-        <p style={{ fontSize: '14px', marginBottom: '12px', color: '#00c853', fontWeight: 600 }}>
-          {hubT.importacaoPreviewDesc || 'Pré-visualização:'} {importacaoPreview.length}{' '}
-          {hubT.importacaoPecasEncontradas || 'peça(s) encontrada(s)'}
-        </p>
-        {avisoDuplicadas ? (
-          <p style={{ fontSize: '13px', margin: '0 0 12px', color: '#ffb366', lineHeight: 1.45 }}>{avisoDuplicadas}</p>
-        ) : null}
-        <div
-          style={{
-            maxHeight: '360px',
-            overflow: 'auto',
-            marginBottom: '16px',
-            border: '1px solid rgba(0, 200, 83, 0.35)',
-            borderRadius: '8px',
-            background: 'rgba(0, 0, 0, 0.25)',
-          }}
-        >
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+    const totalColagem = analise?.totalColagem ?? novas.length
+    const duplicadasCatalogo = analise?.duplicadasCatalogo ?? []
+    const duplicadasFila = analise?.duplicadasFila ?? []
+    const duplicadasLote = analise?.duplicadasLote ?? []
+    const semCodigo = analise?.semCodigo ?? []
+    const rejeitadasBiblioteca = duplicadasCatalogo.length
+    const rejeitadasOutras = duplicadasFila.length + duplicadasLote.length + semCodigo.length
+
+    const renderTabelaPecas = (
+      pecas: PecaBiblioteca[],
+      variant: 'vermelho' | 'amarelo',
+      max = 50
+    ) => {
+      const slice = pecas.slice(0, max)
+      const theadClass =
+        variant === 'vermelho'
+          ? 'importacao-pecas-tabela__head--vermelho'
+          : 'importacao-pecas-tabela__head--amarelo'
+      const wrapClass =
+        variant === 'vermelho'
+          ? 'importacao-pecas-tabela-wrap--vermelho'
+          : 'importacao-pecas-tabela-wrap--amarelo'
+      return (
+        <div className={`importacao-pecas-tabela-wrap ${wrapClass}`}>
+          <table className="importacao-pecas-tabela">
             <thead>
-              <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.12)', color: '#00c853' }}>
-                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>
-                  {hubT.codigo || 'Código'}
-                </th>
-                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>
-                  {hubT.nome || 'Nome'}
-                </th>
-                <th
-                  style={{
-                    padding: '10px',
-                    textAlign: 'center',
-                    borderBottom: '1px solid rgba(0, 200, 83, 0.3)',
-                    width: '52px',
-                  }}
-                  aria-label={(hubT as any).importacaoPreviewColNumeroSequencia || 'Nº grupo'}
-                />
-                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 200, 83, 0.3)' }}>
-                  {hubT.preco || 'Preço'}
-                </th>
-                <th
-                  style={{
-                    padding: '10px',
-                    textAlign: 'center',
-                    borderBottom: '1px solid rgba(0, 200, 83, 0.3)',
-                    width: '56px',
-                  }}
-                >
-                  {(hubT as any).importacaoPreviewColImagem || 'Img'}
-                </th>
+              <tr className={theadClass}>
+                <th>{hubT.codigo || 'Código'}</th>
+                <th>{hubT.nome || 'Nome'}</th>
+                <th>{hubT.preco || 'Preço'}</th>
+                <th>{(hubT as any).importacaoPreviewColImagem || 'Img'}</th>
               </tr>
             </thead>
             <tbody>
-              {importacaoPreview.slice(0, 50).map((p, i) => (
-                <tr key={`${p.codigo || 'n'}-${i}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <td style={{ padding: '8px 10px' }}>{p.codigo || '-'}</td>
-                  <td style={{ padding: '8px 10px' }}>
+              {slice.map((p, i) => (
+                <tr key={`${variant}-${p.codigo || 'n'}-${i}`}>
+                  <td>{p.codigo || '—'}</td>
+                  <td>
                     {(p.nome || p.descricao || '').slice(0, 80)}
                     {(p.nome || p.descricao || '').length > 80 ? '…' : ''}
                   </td>
-                  <td style={{ padding: '8px 10px', textAlign: 'center', verticalAlign: 'middle' }}>
-                    <NumeroSequenciaCirculo
-                      numero={p.numeroSequenciaGrupo}
-                      title={rotuloNumeroSequenciaPecaBiblioteca(p, categoriasPecas, subcategoriasPecas)}
-                      size="sm"
-                    />
-                  </td>
-                  <td style={{ padding: '8px 10px' }}>{p.preco || '-'}</td>
-                  <td style={{ padding: '6px', textAlign: 'center', verticalAlign: 'middle' }}>
+                  <td>{p.preco || '—'}</td>
+                  <td className="importacao-pecas-tabela__img-cell">
                     {p.imagem ? (
                       <img
                         src={pecaBibliotecaSrcImagemDisplay(p.imagem)}
                         alt=""
                         referrerPolicy="no-referrer"
-                        style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }}
                       />
                     ) : (
-                      <span style={{ color: '#909090', fontSize: '12px' }}>—</span>
+                      <span>—</span>
                     )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {importacaoPreview.length > 50 && (
-            <p style={{ padding: '8px 10px', fontSize: '12px', opacity: 0.8 }}>
-              … +{importacaoPreview.length - 50} {hubT.importacaoMaisItens || 'mais'}
+          {pecas.length > max ? (
+            <p className="importacao-pecas-tabela__mais">
+              … +{pecas.length - max} {hubT.importacaoMaisItens || 'mais'}
+            </p>
+          ) : null}
+        </div>
+      )
+    }
+
+    return (
+      <div ref={importacaoPreviewPanelRef} className="importacao-pecas-preview-panel">
+        <div className="importacao-pecas-resumo">
+          <strong>
+            {(hubT as any).importacaoAnaliseTitulo || 'Análise da colagem'}
+          </strong>
+          <p>
+            {String(
+              (hubT as any).importacaoAnaliseResumo ||
+                'Foram detectadas {total} peça(s): {novas} nova(s) para cadastrar, {catalogo} já existente(s) na biblioteca.'
+            )
+              .replace('{total}', String(totalColagem))
+              .replace('{novas}', String(novas.length))
+              .replace('{catalogo}', String(rejeitadasBiblioteca))}
+            {rejeitadasOutras > 0
+              ? ` ${String(
+                  (hubT as any).importacaoAnaliseResumoExtra ||
+                    '({extra} ignorada(s): fila amarela, repetidas na colagem ou sem código).'
+                ).replace('{extra}', String(rejeitadasOutras))}`
+              : ''}
+          </p>
+          {novas.length > 0 ? (
+            <p className="importacao-pecas-resumo__acao">
+              {(hubT as any).importacaoAnaliseAcao ||
+                'Clique «Importar catálogo colado» para enviar apenas as peças novas para a fila amarela.'}
+            </p>
+          ) : (
+            <p className="importacao-pecas-resumo__aviso">
+              {(hubT as any).importacaoAnaliseNenhumaNova ||
+                'Nenhuma peça nova pode ser importada — todas já existem ou foram ignoradas.'}
             </p>
           )}
         </div>
+
+        {duplicadasCatalogo.length > 0 ? (
+          <section className="importacao-pecas-secao importacao-pecas-secao--vermelho">
+            <div className="importacao-pecas-secao__head">
+              <span className="importacao-pecas-secao__badge">⛔</span>
+              <div>
+                <h4>
+                  {String(
+                    (hubT as any).importacaoJaCadastradasTitulo ||
+                      'Já cadastradas na biblioteca ({count})'
+                  ).replace('{count}', String(duplicadasCatalogo.length))}
+                </h4>
+                <p>
+                  {(hubT as any).importacaoJaCadastradasDesc ||
+                    'Estas peças têm o mesmo código no catálogo gravado — não serão importadas novamente.'}
+                </p>
+              </div>
+            </div>
+            {renderTabelaPecas(duplicadasCatalogo, 'vermelho')}
+          </section>
+        ) : null}
+
+        {duplicadasFila.length > 0 ? (
+          <section className="importacao-pecas-secao importacao-pecas-secao--vermelho importacao-pecas-secao--fila">
+            <div className="importacao-pecas-secao__head">
+              <span className="importacao-pecas-secao__badge">⚠️</span>
+              <div>
+                <h4>
+                  {String(
+                    (hubT as any).importacaoJaNaFilaTitulo || 'Já na fila amarela ({count})'
+                  ).replace('{count}', String(duplicadasFila.length))}
+                </h4>
+                <p>
+                  {(hubT as any).importacaoJaNaFilaDesc ||
+                    'Estas peças já aguardam confirmação (Salvar) — não serão duplicadas.'}
+                </p>
+              </div>
+            </div>
+            {renderTabelaPecas(duplicadasFila, 'vermelho')}
+          </section>
+        ) : null}
+
+        {novas.length > 0 ? (
+          <section className="importacao-pecas-secao importacao-pecas-secao--amarelo">
+            <div className="importacao-pecas-secao__head">
+              <span className="importacao-pecas-secao__badge">✅</span>
+              <div>
+                <h4>
+                  {String(
+                    (hubT as any).importacaoNovasTitulo || 'Novas para cadastrar ({count})'
+                  ).replace('{count}', String(novas.length))}
+                </h4>
+                <p>
+                  {(hubT as any).importacaoNovasDesc ||
+                    'Serão enviadas para a fila amarela ao importar. Depois abra cada uma e use Salvar.'}
+                </p>
+              </div>
+            </div>
+            {renderTabelaPecas(novas, 'amarelo')}
+          </section>
+        ) : null}
+
+        {(duplicadasLote.length > 0 || semCodigo.length > 0) && (
+          <p className="importacao-pecas-resumo__extra">
+            {montarMensagemImportacaoIgnoradas({
+              duplicadasCatalogo: [],
+              duplicadasFila: [],
+              duplicadasLote,
+              semCodigo,
+            })}
+          </p>
+        )}
       </div>
     )
   }, [
     importacaoPreview,
-    importacaoDuplicadasIgnoradas,
+    importacaoAnaliseColagem,
     safeT,
     pecaBibliotecaSrcImagemDisplay,
-    categoriasPecas,
-    subcategoriasPecas,
+    montarMensagemImportacaoIgnoradas,
   ])
 
   useEffect(() => {
-    if (!importacaoPreview?.length) return
+    if (!importacaoPreview?.length && !importacaoAnaliseColagem?.totalColagem) return
     const el = importacaoPreviewPanelRef.current
     if (!el) return
     window.requestAnimationFrame(() => {
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     })
-  }, [importacaoPreview])
+  }, [importacaoPreview, importacaoAnaliseColagem])
 
   useEffect(() => {
     const raw = importacaoTextoColado.trim()
     if (raw.length < 12) {
       if (!raw.length) {
         setImportacaoPreview(null)
+        setImportacaoAnaliseColagem(null)
         setImportacaoDuplicadasIgnoradas(0)
       }
       return
@@ -25184,6 +25309,8 @@ export default function Dashboard() {
     () => pecasBiblioteca.filter((peca) => ehImportacaoPendenteStrict(peca)),
     [pecasBiblioteca]
   )
+
+  const importacaoNovasProntasCount = importacaoPreview?.length ?? 0
 
   const pecasImportadasSemGrupoCount = useMemo(
     () => pecasImportadasPendentes.filter((peca) => !peca.categoriaId).length,
@@ -37205,9 +37332,22 @@ export default function Dashboard() {
                       type="button"
                       className="btn-primary"
                       onClick={handleImportacaoColarTexto}
-                      style={{ padding: '8px 14px', fontSize: '12px' }}
+                      disabled={!importacaoTextoColado.trim()}
+                      style={{
+                        padding: '8px 14px',
+                        fontSize: '12px',
+                        opacity: importacaoTextoColado.trim() ? 1 : 0.55,
+                        cursor: importacaoTextoColado.trim() ? 'pointer' : 'not-allowed',
+                      }}
                     >
-                        {(safeT as any)?.importacaoImportarCatalogo || (safeT as any)?.importacaoProcessarColagem || 'Importar catálogo colado'}
+                      {importacaoNovasProntasCount > 0
+                        ? String(
+                            (safeT as any)?.importacaoImportarNovasCount ||
+                              'Importar {count} peça(s) nova(s)'
+                          ).replace('{count}', String(importacaoNovasProntasCount))
+                        : (safeT as any)?.importacaoImportarCatalogo ||
+                          (safeT as any)?.importacaoProcessarColagem ||
+                          'Importar catálogo colado'}
                     </button>
                   </div>
                   {importacaoUrlError && (
@@ -39914,9 +40054,24 @@ export default function Dashboard() {
                         type="button"
                         className="btn-primary"
                         onClick={handleImportacaoColarTexto}
-                        style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                        disabled={!importacaoTextoColado.trim()}
+                        style={{
+                          padding: '10px 16px',
+                          fontSize: '13px',
+                          whiteSpace: 'nowrap',
+                          opacity: importacaoTextoColado.trim() ? 1 : 0.55,
+                          cursor: importacaoTextoColado.trim() ? 'pointer' : 'not-allowed',
+                        }}
                       >
-                        {(safeT as any)?.importacaoImportarCatalogo || (safeT as any)?.importacaoProcessarColagem || safeT?.importacaoImportarDoTexto || 'Importar catálogo colado'}
+                        {importacaoNovasProntasCount > 0
+                          ? String(
+                              (safeT as any)?.importacaoImportarNovasCount ||
+                                'Importar {count} peça(s) nova(s)'
+                            ).replace('{count}', String(importacaoNovasProntasCount))
+                          : (safeT as any)?.importacaoImportarCatalogo ||
+                            (safeT as any)?.importacaoProcessarColagem ||
+                            safeT?.importacaoImportarDoTexto ||
+                            'Importar catálogo colado'}
                       </button>
                     </div>
                   </div>
