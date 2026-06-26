@@ -25056,9 +25056,18 @@ export default function Dashboard() {
           ) : (
             <p className="importacao-pecas-resumo__aviso">
               {(hubT as any).importacaoAnaliseNenhumaNova ||
-                'Nenhuma peça nova pode ser importada — todas já existem ou foram ignoradas.'}
+                'Nenhuma peça nova pode ser importada — todas já existem ou foram ignoradas. Use «Limpar colagem» abaixo para colar outra página.'}
             </p>
           )}
+          <div className="importacao-pecas-resumo__actions">
+            <button
+              type="button"
+              className="biblioteca-btn--orange importacao-pecas-limpar-colagem-btn"
+              onClick={limparEstadoColagemImportacao}
+            >
+              🗑️ {(hubT as any).importacaoLimparColagem || 'Limpar colagem e análise'}
+            </button>
+          </div>
         </div>
 
         {duplicadasCatalogo.length > 0 ? (
@@ -25140,6 +25149,7 @@ export default function Dashboard() {
     safeT,
     pecaBibliotecaSrcImagemDisplay,
     montarMensagemImportacaoIgnoradas,
+    limparEstadoColagemImportacao,
   ])
 
   useEffect(() => {
@@ -37349,6 +37359,16 @@ export default function Dashboard() {
                           (safeT as any)?.importacaoProcessarColagem ||
                           'Importar catálogo colado'}
                     </button>
+                    {(importacaoTextoColado.trim() || importacaoAnaliseColagem || importacaoPreview?.length) ? (
+                      <button
+                        type="button"
+                        className="biblioteca-btn--orange"
+                        onClick={limparEstadoColagemImportacao}
+                        style={{ padding: '8px 14px', fontSize: '12px' }}
+                      >
+                        🗑️ {(safeT as any)?.importacaoLimparColagem || 'Limpar colagem'}
+                      </button>
+                    ) : null}
                   </div>
                   {importacaoUrlError && (
                     <p style={{ fontSize: '12px', color: '#ff9a9a', margin: '0 0 8px', lineHeight: 1.45 }}>{importacaoUrlError}</p>
@@ -38443,7 +38463,9 @@ export default function Dashboard() {
                       cliqueAbrir: (safeT as any)?.bibliotecaGaleriaCliqueCategoria,
                       codigo: safeT?.codigoPecaBiblioteca || safeT?.codigo,
                       semPecasCategoria: (safeT as any)?.bibliotecaGaleriaSemPecasCategoria,
-                      buscarPorCodigo: safeT?.bibliotecaBuscarPorCodigo || 'Buscar peça por código',
+                      buscarPorCodigo:
+                        (safeT as any)?.bibliotecaGaleriaBuscaTitulo || safeT?.bibliotecaBuscarPorCodigo,
+                      buscaHint: (safeT as any)?.bibliotecaGaleriaBuscaHint,
                       buscarPlaceholder: safeT?.codigoPecaBibliotecaPlaceholder || 'Ex: 700030001',
                       buscaResultados: (safeT as any)?.bibliotecaBuscaCodigoResultados,
                       buscaVazio: (safeT as any)?.bibliotecaBuscaCodigoVazio,
@@ -40073,6 +40095,16 @@ export default function Dashboard() {
                             safeT?.importacaoImportarDoTexto ||
                             'Importar catálogo colado'}
                       </button>
+                      {(importacaoTextoColado.trim() || importacaoAnaliseColagem || importacaoPreview?.length) ? (
+                        <button
+                          type="button"
+                          className="biblioteca-btn--orange"
+                          onClick={limparEstadoColagemImportacao}
+                          style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                        >
+                          🗑️ {(safeT as any)?.importacaoLimparColagem || 'Limpar colagem'}
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                   <div className="importacao-pecas-paste-steps">

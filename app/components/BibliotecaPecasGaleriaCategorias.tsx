@@ -38,6 +38,7 @@ type GaleriaTranslations = {
   codigo?: string
   semPecasCategoria?: string
   buscarPorCodigo?: string
+  buscaHint?: string
   buscarPlaceholder?: string
   buscaResultados?: string
   buscaVazio?: string
@@ -169,7 +170,7 @@ export function BibliotecaPecasGaleriaCategorias({
               {t.buscarPorCodigo || 'Buscar peça por código'}
             </strong>
             <p className="biblioteca-galeria-categorias__search-hint">
-              Digite o código ou parte dele para encontrar na biblioteca.
+              {t.buscaHint}
             </p>
           </div>
         </div>
