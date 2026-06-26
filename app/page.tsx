@@ -38581,30 +38581,18 @@ export default function Dashboard() {
                       </select>
                     </div>
                   ) : null}
-                  <div style={{ minWidth: '200px', flex: '1 1 220px', maxWidth: '360px' }}>
-                    <label
-                      htmlFor="biblioteca-busca-codigo"
-                      style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.75)', marginBottom: '4px' }}
-                    >
+                  <div className="biblioteca-busca-codigo">
+                    <label htmlFor="biblioteca-busca-codigo" className="biblioteca-busca-codigo__label">
                       {safeT?.bibliotecaBuscarPorCodigo || 'Buscar por código'}
                     </label>
                     <input
                       id="biblioteca-busca-codigo"
                       type="search"
+                      className="biblioteca-busca-codigo__input"
                       value={buscaCodigoBiblioteca}
                       onChange={(e) => setBuscaCodigoBiblioteca(e.target.value)}
                       placeholder={safeT?.codigoPecaBibliotecaPlaceholder || 'Ex: FO-123-ABC'}
                       autoComplete="off"
-                      style={{
-                        width: '100%',
-                        boxSizing: 'border-box',
-                        padding: '8px 10px',
-                        backgroundColor: '#484848',
-                        color: '#fff',
-                        border: '1px solid rgba(0, 168, 107, 0.3)',
-                        borderRadius: '4px',
-                        fontSize: '13px',
-                      }}
                     />
                   </div>
                   <div className="biblioteca-hub-toolbar__actions">

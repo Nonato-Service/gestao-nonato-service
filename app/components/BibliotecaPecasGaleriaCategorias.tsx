@@ -160,25 +160,15 @@ export function BibliotecaPecasGaleriaCategorias({
 
   const barraBusca =
     onBuscaCodigoChange != null ? (
-      <div className="biblioteca-galeria-categorias__search" role="search">
-        <div className="biblioteca-galeria-categorias__search-head">
-          <span className="biblioteca-galeria-categorias__search-icon" aria-hidden>
-            🔍
-          </span>
-          <div>
-            <strong className="biblioteca-galeria-categorias__search-title">
-              {t.buscarPorCodigo || 'Buscar peça por código'}
-            </strong>
-            <p className="biblioteca-galeria-categorias__search-hint">
-              {t.buscaHint}
-            </p>
-          </div>
-        </div>
-        <div className="biblioteca-galeria-categorias__search-row">
+      <div className="biblioteca-busca-codigo biblioteca-galeria-categorias__search-wrap" role="search">
+        <label htmlFor="biblioteca-galeria-busca-codigo" className="biblioteca-busca-codigo__label">
+          {t.buscarPorCodigo || 'Buscar peça por código'}
+        </label>
+        <div className="biblioteca-busca-codigo__row">
           <input
             id="biblioteca-galeria-busca-codigo"
             type="search"
-            className="biblioteca-galeria-categorias__search-input"
+            className="biblioteca-busca-codigo__input"
             value={buscaCodigo}
             onChange={(e) => onBuscaCodigoChange(e.target.value)}
             placeholder={t.buscarPlaceholder || 'Ex: 700030001 ou FO-123'}
@@ -188,7 +178,7 @@ export function BibliotecaPecasGaleriaCategorias({
           {emBusca ? (
             <button
               type="button"
-              className="biblioteca-btn--orange biblioteca-galeria-categorias__search-clear"
+              className="biblioteca-btn--orange biblioteca-busca-codigo__clear"
               onClick={() => onBuscaCodigoChange('')}
             >
               {t.limparBusca || 'Limpar'}
