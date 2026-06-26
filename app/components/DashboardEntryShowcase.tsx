@@ -1,9 +1,8 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { DashboardShowcaseSlideVisual } from './DashboardShowcaseSlideVisual'
-
-type VisualId = 'reports' | 'clients' | 'parts' | 'knowledge' | 'warehouse' | 'finance'
+import { DashboardShowcaseSlideVisual, type VisualId } from './DashboardShowcaseSlideVisual'
+import { ShowcaseTypingText } from './ShowcaseTypingText'
 
 type Slide = {
   id: VisualId
@@ -24,7 +23,7 @@ type Props = {
   note?: string
 }
 
-const SLIDE_INTERVAL_MS = 6000
+const SLIDE_INTERVAL_MS = 9000
 
 export function DashboardEntryShowcase(props: Props) {
   const { safeT, isCompactLayout, logoSlot, onEnter, enterLabel, note } = props
@@ -41,7 +40,7 @@ export function DashboardEntryShowcase(props: Props) {
         chip: t?.dashboardShowcaseChipReports || 'Relatórios',
         icon: '📋',
         accent: '#34d399',
-        highlight: 'PDF e envio automático',
+        highlight: t?.dashboardShowcaseSlide1Highlight || 'PDF e envio automático',
       },
       {
         id: 'clients',
@@ -52,7 +51,7 @@ export function DashboardEntryShowcase(props: Props) {
         chip: t?.dashboardShowcaseChipClients || 'Clientes',
         icon: '👥',
         accent: '#38bdf8',
-        highlight: 'Histórico e equipamentos',
+        highlight: t?.dashboardShowcaseSlide2Highlight || 'Histórico e equipamentos',
       },
       {
         id: 'parts',
@@ -63,7 +62,7 @@ export function DashboardEntryShowcase(props: Props) {
         chip: t?.dashboardShowcaseChipParts || 'Peças',
         icon: '🔧',
         accent: '#fbbf24',
-        highlight: 'Stock e catálogo visual',
+        highlight: t?.dashboardShowcaseSlide3Highlight || 'Stock e catálogo visual',
       },
       {
         id: 'knowledge',
@@ -74,7 +73,7 @@ export function DashboardEntryShowcase(props: Props) {
         chip: t?.dashboardShowcaseChipKnowledge || 'Conhecimento',
         icon: '📚',
         accent: '#a78bfa',
-        highlight: 'Bíblia e manuais técnicos',
+        highlight: t?.dashboardShowcaseSlide4Highlight || 'Bíblia e manuais técnicos',
       },
       {
         id: 'warehouse',
@@ -85,7 +84,7 @@ export function DashboardEntryShowcase(props: Props) {
         chip: t?.dashboardShowcaseChipWarehouse || 'Armazém',
         icon: '🏭',
         accent: '#fb7185',
-        highlight: 'Separação e stock',
+        highlight: t?.dashboardShowcaseSlide5Highlight || 'Separação e stock',
       },
       {
         id: 'finance',
@@ -96,7 +95,51 @@ export function DashboardEntryShowcase(props: Props) {
         chip: t?.dashboardShowcaseChipFinance || 'Finanças',
         icon: '💬',
         accent: '#2dd4bf',
-        highlight: 'Orçamentos e mensagens',
+        highlight: t?.dashboardShowcaseSlide6Highlight || 'Orçamentos e mensagens',
+      },
+      {
+        id: 'import',
+        title: t?.dashboardShowcaseSlide7Title || 'Importação inteligente de catálogo',
+        desc:
+          t?.dashboardShowcaseSlide7Desc ||
+          'Cole páginas de fornecedores, analise duplicados em vermelho e amarelo e importe só peças novas.',
+        chip: t?.dashboardShowcaseChipImport || 'Importação',
+        icon: '📥',
+        accent: '#f97316',
+        highlight: t?.dashboardShowcaseSlide7Highlight || 'Análise vermelho / amarelo',
+      },
+      {
+        id: 'schedule',
+        title: t?.dashboardShowcaseSlide8Title || 'Diário e agendamento',
+        desc:
+          t?.dashboardShowcaseSlide8Desc ||
+          'Pedidos de serviço, visitas técnicas e estados em tempo real — nada se perde na operação.',
+        chip: t?.dashboardShowcaseChipSchedule || 'Agenda',
+        icon: '📅',
+        accent: '#818cf8',
+        highlight: t?.dashboardShowcaseSlide8Highlight || 'OS e visitas agendadas',
+      },
+      {
+        id: 'equipment',
+        title: t?.dashboardShowcaseSlide9Title || 'Equipamentos e carga',
+        desc:
+          t?.dashboardShowcaseSlide9Desc ||
+          'Sequência de volumes, etiquetas de armazém e rastreio da máquina até ao camião.',
+        chip: t?.dashboardShowcaseChipEquipment || 'Equipamentos',
+        icon: '⚙️',
+        accent: '#e879f9',
+        highlight: t?.dashboardShowcaseSlide9Highlight || 'Volumes T/3 · T/2 · T/1',
+      },
+      {
+        id: 'sync',
+        title: t?.dashboardShowcaseSlide10Title || 'Sincronização em equipa',
+        desc:
+          t?.dashboardShowcaseSlide10Desc ||
+          'Escritório, campo e servidor alinhados — envie e carregue dados em todos os aparelhos.',
+        chip: t?.dashboardShowcaseChipSync || 'Sincronização',
+        icon: '🔄',
+        accent: '#22d3ee',
+        highlight: t?.dashboardShowcaseSlide10Highlight || 'Multi-dispositivo',
       },
     ],
     [t]
@@ -105,9 +148,11 @@ export function DashboardEntryShowcase(props: Props) {
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [direction, setDirection] = useState<'next' | 'prev'>('next')
 
   const go = useCallback(
-    (next: number) => {
+    (next: number, dir?: 'next' | 'prev') => {
+      if (dir) setDirection(dir)
       setIndex((next + slides.length) % slides.length)
       setProgress(0)
     },
@@ -121,6 +166,7 @@ export function DashboardEntryShowcase(props: Props) {
       setProgress((prev) => {
         const next = prev + (stepMs / SLIDE_INTERVAL_MS) * 100
         if (next >= 100) {
+          setDirection('next')
           setIndex((cur) => (cur + 1) % slides.length)
           return 0
         }
@@ -138,7 +184,7 @@ export function DashboardEntryShowcase(props: Props) {
 
   return (
     <div
-      className={`ns-showcase ns-showcase--modern${isCompactLayout ? ' ns-showcase--compact' : ''}`}
+      className={`ns-showcase ns-showcase--modern ns-showcase--cinematic${isCompactLayout ? ' ns-showcase--compact' : ''}`}
       style={{ '--ns-showcase-accent': current.accent } as React.CSSProperties}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -155,9 +201,7 @@ export function DashboardEntryShowcase(props: Props) {
             {logoSlot ? <div className="ns-showcase__logo">{logoSlot}</div> : null}
             <div className="ns-showcase__brand-copy">
               <span className="ns-showcase__badge">{badge}</span>
-              <p className="ns-showcase__kicker">
-                {t?.welcome || 'Sistema de Gestão Completo'}
-              </p>
+              <p className="ns-showcase__kicker">{t?.welcome || 'Sistema de Gestão Completo'}</p>
             </div>
           </div>
 
@@ -166,7 +210,11 @@ export function DashboardEntryShowcase(props: Props) {
           </h1>
           <p className="ns-showcase__tagline">{tagline}</p>
 
-          <div className="ns-showcase__module-grid" role="tablist" aria-label={t?.dashboardShowcaseModules || 'Módulos'}>
+          <div
+            className="ns-showcase__module-grid"
+            role="tablist"
+            aria-label={t?.dashboardShowcaseModules || 'Módulos do sistema'}
+          >
             {slides.map((slide, i) => (
               <button
                 key={slide.id}
@@ -175,7 +223,7 @@ export function DashboardEntryShowcase(props: Props) {
                 aria-selected={i === index}
                 aria-label={slide.title}
                 className={`ns-showcase__module${i === index ? ' is-active' : ''}`}
-                onClick={() => go(i)}
+                onClick={() => go(i, i >= index ? 'next' : 'prev')}
                 style={{ '--module-accent': slide.accent } as React.CSSProperties}
               >
                 <span className="ns-showcase__module-icon" aria-hidden>
@@ -196,18 +244,18 @@ export function DashboardEntryShowcase(props: Props) {
             {note ? <p className="ns-showcase__note">{note}</p> : null}
           </div>
 
-          <ul className="ns-showcase__trust" aria-label="Destaques">
+          <ul className="ns-showcase__trust" aria-label={t?.dashboardShowcaseTrustAria || 'Destaques'}>
             <li>
-              <strong>6</strong>
+              <strong>{slides.length}</strong>
               <span>{t?.dashboardShowcaseModules || 'Módulos integrados'}</span>
             </li>
             <li>
               <strong>PDF</strong>
-              <span>Relatórios profissionais</span>
+              <span>{t?.dashboardShowcaseTrustPdf || 'Relatórios profissionais'}</span>
             </li>
             <li>
               <strong>24/7</strong>
-              <span>Dados sincronizados</span>
+              <span>{t?.dashboardShowcaseTrustSync || 'Dados sincronizados'}</span>
             </li>
           </ul>
         </section>
@@ -216,7 +264,7 @@ export function DashboardEntryShowcase(props: Props) {
           className="ns-showcase__preview"
           aria-label={t?.dashboardShowcaseAria || 'Demonstração das funcionalidades'}
         >
-          <div className="ns-showcase__preview-shell">
+          <div className="ns-showcase__preview-shell ns-showcase__preview-shell--float">
             <header className="ns-showcase__preview-bar">
               <div className="ns-showcase__preview-dots" aria-hidden>
                 <span />
@@ -224,7 +272,7 @@ export function DashboardEntryShowcase(props: Props) {
                 <span />
               </div>
               <span className="ns-showcase__preview-chip">
-                <span className="ns-showcase__preview-chip-dot" aria-hidden />
+                <span className="ns-showcase__preview-chip-dot ns-showcase-animate-pulse" aria-hidden />
                 {current.highlight}
               </span>
               <span className="ns-showcase__preview-counter">
@@ -236,25 +284,32 @@ export function DashboardEntryShowcase(props: Props) {
               {slides.map((slide, i) => (
                 <article
                   key={slide.id}
-                  className={`ns-showcase__preview-slide${i === index ? ' is-active' : ''}`}
+                  className={`ns-showcase__preview-slide ns-showcase__preview-slide--${direction}${
+                    i === index ? ' is-active' : ''
+                  }`}
                   aria-hidden={i !== index}
                 >
-                  <DashboardShowcaseSlideVisual visual={slide.id} />
+                  <DashboardShowcaseSlideVisual visual={slide.id} live={i === index} />
                 </article>
               ))}
+              <div className="ns-showcase__preview-scanline" aria-hidden />
             </div>
 
             <footer className="ns-showcase__preview-footer">
               <div className="ns-showcase__preview-copy">
-                <h2 className="ns-showcase__title">{current.title}</h2>
-                <p className="ns-showcase__desc">{current.desc}</p>
+                <h2 className="ns-showcase__title" key={`title-${index}`}>
+                  <ShowcaseTypingText text={current.title} active speed={22} delay={80} showCursor={false} />
+                </h2>
+                <p className="ns-showcase__desc" key={`desc-${index}`}>
+                  <ShowcaseTypingText text={current.desc} active speed={14} delay={420} showCursor={false} />
+                </p>
               </div>
               <div className="ns-showcase__preview-nav">
                 <button
                   type="button"
                   className="ns-showcase__nav-btn"
-                  aria-label="Módulo anterior"
-                  onClick={() => go(index - 1)}
+                  aria-label={t?.dashboardShowcaseNavPrev || 'Módulo anterior'}
+                  onClick={() => go(index - 1, 'prev')}
                 >
                   ‹
                 </button>
@@ -264,8 +319,8 @@ export function DashboardEntryShowcase(props: Props) {
                 <button
                   type="button"
                   className="ns-showcase__nav-btn"
-                  aria-label="Próximo módulo"
-                  onClick={() => go(index + 1)}
+                  aria-label={t?.dashboardShowcaseNavNext || 'Próximo módulo'}
+                  onClick={() => go(index + 1, 'next')}
                 >
                   ›
                 </button>
