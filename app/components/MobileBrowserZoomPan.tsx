@@ -100,14 +100,10 @@ export function MobileBrowserZoomPan() {
       }
     }
 
-    const setZoomed = (zoomed: boolean, pinchZoom = false) => {
-      if (zoomedRef.current === zoomed) {
-        document.documentElement.toggleAttribute('data-pinch-zoom', pinchZoom)
-        return
-      }
+    const setZoomed = (zoomed: boolean) => {
+      if (zoomedRef.current === zoomed) return
       zoomedRef.current = zoomed
       toggleLayoutClass(zoomed)
-      document.documentElement.toggleAttribute('data-pinch-zoom', pinchZoom)
 
       if (zoomed) {
         savedOverflowRef.current = {
@@ -119,7 +115,6 @@ export function MobileBrowserZoomPan() {
         updateScrollExtent()
       } else {
         panRef.current = null
-        document.documentElement.removeAttribute('data-pinch-zoom')
         if (savedOverflowRef.current) {
           document.documentElement.style.overflow = savedOverflowRef.current.html
           document.body.style.overflow = savedOverflowRef.current.body
@@ -137,9 +132,9 @@ export function MobileBrowserZoomPan() {
       const scale = getScale()
       const desktopSite = document.documentElement.classList.contains('app-touch-desktop-site')
       const scaleZoomed = zoomedRef.current ? scale > 1.003 : scale > 1.012
-      const overflowPan = isFirefox && desktopSite && hasScrollOverflow()
-      const next = scaleZoomed || overflowPan
-      setZoomed(next, scaleZoomed)
+      const overflowZoomed = isFirefox && (scaleZoomed || (desktopSite && hasScrollOverflow()))
+      const next = isFirefox ? overflowZoomed || scaleZoomed : scaleZoomed
+      setZoomed(next)
       if (next) updateScrollExtent()
     }
 

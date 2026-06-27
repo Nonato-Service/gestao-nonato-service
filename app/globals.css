@@ -4575,35 +4575,31 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
 }
 
 /*
- * Firefox (Android/iOS): escala compacta + scroll interno no modo normal;
- * modo computador: pan horizontal quando o layout é mais largo que o ecrã.
+ * Firefox (Android/iOS): visualViewport/pinch e touch-action pinch-zoom diferem do Chrome.
+ * Reforçar cadeia flex + scroll interno e evitar overscroll/touch que bloqueiam rolagem.
  */
 @media (max-width: 1280px) {
   html.browser-firefox {
     font-size: clamp(10.5px, 1.15vw, 12px) !important;
     -moz-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    touch-action: auto !important;
   }
 
-  html.browser-firefox:not(.app-touch-desktop-site):not(.mobile-browser-zoomed) {
-    font-size: clamp(9px, 2.6vw, 10px) !important;
+  html.browser-firefox body {
+    touch-action: auto !important;
   }
 
-  html.browser-firefox:not(.app-touch-desktop-site):not(.mobile-browser-zoomed) .app-layout.app-compact-layout {
+  /* Modo normal (sem site desktop): reduzir tudo de uma vez */
+  html.browser-firefox:not(.app-touch-desktop-site) .app-layout.app-compact-layout {
     zoom: 0.86;
   }
 
-  /* Modo computador no telefone: layout reporta ~900–1280px — encolher para o ecrã físico */
-  @media (pointer: coarse) {
-    html.browser-firefox.app-touch-desktop-site:not(.mobile-browser-zoomed) .app-layout {
-      zoom: 0.54;
-    }
+  html.browser-firefox:not(.app-touch-desktop-site) {
+    font-size: clamp(9px, 2.6vw, 10px) !important;
   }
 
-  html.browser-firefox.app-touch-desktop-site:not(.mobile-browser-zoomed) {
-    font-size: clamp(10px, 1vw, 11px) !important;
-  }
-
+  /* Modo computador: permitir zoom nativo e pan no documento */
   html.browser-firefox.app-touch-desktop-site,
   html.browser-firefox.app-touch-desktop-site body,
   html.browser-firefox.mobile-browser-zoomed,
@@ -4614,11 +4610,12 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
     overscroll-behavior: auto !important;
   }
 
-  html.browser-firefox:not(.app-touch-desktop-site):not(.mobile-browser-zoomed) .main-content-area,
-  html.browser-firefox:not(.app-touch-desktop-site):not(.mobile-browser-zoomed) .tab-inner-scroll,
-  html.browser-firefox:not(.app-touch-desktop-site):not(.mobile-browser-zoomed) .app-compact-layout .sidebar .sidebar-scroll-inner {
-    touch-action: pan-y !important;
-    -webkit-overflow-scrolling: touch;
+  html.browser-firefox .main-content-area,
+  html.browser-firefox .tab-inner-scroll,
+  html.browser-firefox .app-layout,
+  html.browser-firefox .app-compact-layout,
+  html.browser-firefox .main-app-column {
+    touch-action: auto !important;
   }
 
   html.browser-firefox input,
@@ -4671,6 +4668,14 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
     padding: 5px 7px !important;
   }
 
+  html.browser-firefox .cliente-ident-line__cod-value {
+    font-size: 10px;
+  }
+
+  html.browser-firefox .cliente-ident-line__nome {
+    font-size: 13px;
+  }
+
   html.browser-firefox .cliente-lista-linhas__value--nome {
     font-size: 12px;
   }
@@ -4681,52 +4686,35 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
 }
 
 @media (max-width: 600px) {
-  html.browser-firefox:not(.app-touch-desktop-site):not(.mobile-browser-zoomed) {
+  html.browser-firefox:not(.app-touch-desktop-site) {
     font-size: clamp(8.5px, 2.8vw, 9.5px) !important;
   }
 
-  html.browser-firefox:not(.app-touch-desktop-site):not(.mobile-browser-zoomed) .app-layout.app-compact-layout {
-    zoom: 0.82;
-  }
-
-  @media (pointer: coarse) {
-    html.browser-firefox.app-touch-desktop-site:not(.mobile-browser-zoomed) .app-layout {
-      zoom: 0.48;
-    }
+  html.browser-firefox:not(.app-touch-desktop-site) .app-layout.app-compact-layout {
+    zoom: 0.84;
   }
 }
 
 @media (max-width: 768px) {
-  html.browser-firefox:not(.app-touch-desktop-site) input,
-  html.browser-firefox:not(.app-touch-desktop-site) select,
-  html.browser-firefox:not(.app-touch-desktop-site) textarea,
-  html.browser-firefox:not(.app-touch-desktop-site) button {
+  html.browser-firefox input,
+  html.browser-firefox select,
+  html.browser-firefox textarea,
+  html.browser-firefox button {
     font-size: 12px !important;
     min-height: 36px !important;
-  }
-
-  html.browser-firefox:not(.app-touch-desktop-site) .main-content-area,
-  html.browser-firefox:not(.app-touch-desktop-site) .tab-content-wrapper {
-    font-size: inherit !important;
   }
 }
 
 @media (max-width: 1024px) {
-  html.browser-firefox:not(.mobile-browser-zoomed):not(.app-touch-desktop-site),
-  html.browser-firefox:not(.mobile-browser-zoomed):not(.app-touch-desktop-site) body {
-    touch-action: pan-y;
-    overscroll-behavior-y: none;
-  }
-
-  html.browser-firefox.app-touch-desktop-site:not(.mobile-browser-zoomed),
-  html.browser-firefox.app-touch-desktop-site:not(.mobile-browser-zoomed) body {
+  html.browser-firefox,
+  html.browser-firefox body {
     touch-action: auto;
     overscroll-behavior-y: auto;
   }
 
   html.browser-firefox .app-compact-layout {
-    height: 100dvh;
-    max-height: 100dvh;
+    height: 100vh;
+    max-height: 100vh;
     min-height: 0;
   }
 
@@ -4738,25 +4726,8 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
     overflow: hidden;
   }
 
-  html.browser-firefox:not(.app-touch-desktop-site):not(.mobile-browser-zoomed) .app-compact-layout .main-content-area,
-  html.browser-firefox:not(.app-touch-desktop-site):not(.mobile-browser-zoomed) .app-compact-layout .tab-inner-scroll {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto !important;
-    overflow-x: hidden;
-    touch-action: pan-y !important;
-    overscroll-behavior-y: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  html.browser-firefox:not(.app-touch-desktop-site) .app-compact-layout .sidebar .sidebar-scroll-inner {
-    overflow-y: auto !important;
-    touch-action: pan-y !important;
-    overscroll-behavior-y: contain;
-  }
-
-  html.browser-firefox.app-touch-desktop-site .app-compact-layout .main-content-area,
-  html.browser-firefox.app-touch-desktop-site .app-compact-layout .tab-inner-scroll {
+  html.browser-firefox .app-compact-layout .main-content-area,
+  html.browser-firefox .app-compact-layout .tab-inner-scroll {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto !important;
@@ -4766,24 +4737,22 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
     -webkit-overflow-scrolling: touch;
   }
 
-  html.browser-firefox.mobile-browser-zoomed[data-pinch-zoom] .app-compact-layout,
-  html.browser-firefox.mobile-browser-zoomed[data-pinch-zoom] .app-layout,
-  html.browser-firefox.mobile-browser-zoomed[data-pinch-zoom] .main-app-column,
-  html.browser-firefox.mobile-browser-zoomed[data-pinch-zoom] .main-content-area,
-  html.browser-firefox.mobile-browser-zoomed[data-pinch-zoom] .tab-inner-scroll {
+  html.browser-firefox .app-compact-layout .sidebar .sidebar-scroll-inner {
+    overflow-y: auto !important;
+    touch-action: auto !important;
+    overscroll-behavior-y: contain;
+  }
+
+  html.browser-firefox.mobile-browser-zoomed .app-compact-layout,
+  html.browser-firefox.mobile-browser-zoomed .app-layout,
+  html.browser-firefox.mobile-browser-zoomed .main-app-column,
+  html.browser-firefox.mobile-browser-zoomed .main-content-area,
+  html.browser-firefox.mobile-browser-zoomed .tab-inner-scroll {
     overflow: visible !important;
     touch-action: auto !important;
     max-height: none !important;
     height: auto !important;
     zoom: 1 !important;
-  }
-
-  html.browser-firefox.mobile-browser-zoomed:not([data-pinch-zoom]).app-touch-desktop-site .app-compact-layout,
-  html.browser-firefox.mobile-browser-zoomed:not([data-pinch-zoom]).app-touch-desktop-site .app-layout {
-    overflow: visible !important;
-    touch-action: auto !important;
-    max-height: none !important;
-    height: auto !important;
   }
 }
 
