@@ -4,6 +4,15 @@ import path from 'path'
 import { getDemoContext } from '../data/demo-context'
 import { getProjectRoot } from './project-root'
 import { copyCodeBackupItems, hasCodeBackupMarkers, pruneOldCodeBackups } from './shared'
+import {
+  ensureBackupLayout,
+  formatBackupStamp,
+  getCodigoBackupsDir,
+  MAX_CODE_FOLDER_BACKUPS,
+  MAX_CODIGO_ZIP_ON_DISK,
+  pruneFilesInDir,
+} from './backup-paths'
+import { writeCodeZipToFile } from './zip-code'
 
 export const runtime = 'nodejs'
 
@@ -17,24 +26,32 @@ export async function POST(request: NextRequest) {
       )
     }
     const projectRoot = path.resolve(getProjectRoot())
-    const backupsBase = path.join(projectRoot, 'backups')
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    const backupDir = path.join(backupsBase, `code-backup-${timestamp}`)
+    const { root: backupsBase, codigoDir } = ensureBackupLayout(projectRoot)
+    const stamp = formatBackupStamp()
+    const backupDir = path.join(codigoDir, `code-backup-${stamp}`)
 
     try {
-      const diagnosticPath = path.join(projectRoot, 'backups', 'ONDE-GUARDAMOS-BACKUPS.txt')
+      const diagnosticPath = path.join(backupsBase, 'ONDE-GUARDAMOS-BACKUPS.txt')
       if (!fs.existsSync(path.dirname(diagnosticPath))) {
         fs.mkdirSync(path.dirname(diagnosticPath), { recursive: true })
       }
       fs.writeFileSync(
         diagnosticPath,
-        'Pasta onde os backups do código são guardados:\n' +
-          path.resolve(backupsBase) +
-          '\n\nRaiz do projeto detectada: ' +
+        'PASTAS DE BACKUP DO PROJETO\n' +
+          '==========================\n\n' +
+          'JSON (dados):  ' +
+          path.resolve(path.join(backupsBase, 'json')) +
+          '\n' +
+          'Código (ZIP):  ' +
+          path.resolve(codigoDir) +
+          '\n\n' +
+          'Raiz do projeto: ' +
           projectRoot +
-          '\nRaiz válida (app + package.json): ' +
+          '\n' +
+          'Raiz válida: ' +
           (hasCodeBackupMarkers(projectRoot) ? 'sim' : 'NÃO') +
-          '\nData: ' +
+          '\n' +
+          'Data: ' +
           new Date().toISOString(),
         'utf-8'
       )
@@ -42,8 +59,8 @@ export async function POST(request: NextRequest) {
       /* ignorar */
     }
 
-    if (!fs.existsSync(backupsBase)) {
-      fs.mkdirSync(backupsBase, { recursive: true })
+    if (!fs.existsSync(codigoDir)) {
+      fs.mkdirSync(codigoDir, { recursive: true })
     }
     fs.mkdirSync(backupDir, { recursive: true })
 
@@ -89,7 +106,22 @@ Para restaurar:
     }
     fs.writeFileSync(path.join(backupDir, 'metadata.json'), JSON.stringify(metadata, null, 2), 'utf-8')
 
-    pruneOldCodeBackups(backupsBase, 5)
+    let zipFileName = ''
+    let zipPath = ''
+    try {
+      zipFileName = `backup-codigo-${stamp}.zip`
+      zipPath = path.join(codigoDir, zipFileName)
+      await writeCodeZipToFile(projectRoot, zipPath)
+      pruneFilesInDir(
+        codigoDir,
+        (name) => name.startsWith('backup-codigo-') && name.endsWith('.zip'),
+        MAX_CODIGO_ZIP_ON_DISK
+      )
+    } catch (zipErr) {
+      console.error('[backup-code] ZIP automático falhou:', zipErr)
+    }
+
+    pruneOldCodeBackups(codigoDir, MAX_CODE_FOLDER_BACKUPS)
 
     return NextResponse.json({
       success: true,
@@ -97,6 +129,10 @@ Para restaurar:
       backupPath: backupDir,
       backupsFolder: backupsBase,
       backupsFolderAbsolute: path.resolve(backupsBase),
+      codigoFolder: path.resolve(codigoDir),
+      jsonFolder: path.resolve(path.join(backupsBase, 'json')),
+      zipPath: zipPath || undefined,
+      zipFileName: zipFileName || undefined,
       filesCount: backedUpFiles.length,
       items: backedUpItems,
     })

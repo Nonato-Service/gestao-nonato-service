@@ -13761,12 +13761,33 @@ export default function Dashboard() {
       } else {
         downloadBackupJson(envelope, fileName)
         const stored = pushManualDataBackupFromEnvelope(envelope)
+        let diskMsg = ''
+        try {
+          const saveRes = await fetch('/api/backup-data/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: jsonStr,
+          })
+          const saveResult = await saveRes.json().catch(() => ({}))
+          if (saveRes.ok && saveResult.jsonFolderAbsolute) {
+            diskMsg =
+              '\n\n✓ Guardado na pasta do projeto:\n' +
+              saveResult.jsonFolderAbsolute +
+              '\\' +
+              (saveResult.fileName || fileName)
+          } else if (!saveRes.ok && saveResult.error) {
+            diskMsg = '\n\n(Aviso: não foi possível guardar no disco — ' + saveResult.error + ')'
+          }
+        } catch {
+          diskMsg = '\n\n(Aviso: servidor local indisponível — só descarregou para o PC.)'
+        }
         alert(
           ((t as any).backupSuccess || 'Backup realizado com sucesso!') +
             '\n' +
             ((t as any).backupDownloaded || 'Backup baixado') +
             `\n\nChaves incluídas: ${Object.keys(data).length} (cadastro, serviços, relatórios, peças, etc.)` +
-            (stored.ok ? '\n\n✓ Registado nos últimos 5 backups JSON locais (restauro individual abaixo).' : '')
+            (stored.ok ? '\n\n✓ Registado nos últimos 5 backups JSON no navegador.' : '') +
+            diskMsg
         )
       }
     } catch (error) {
@@ -13885,7 +13906,13 @@ export default function Dashboard() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
       pushZipDownloadHistory({ fileName, sizeBytes: blob.size })
-      alert('✓ ZIP descarregado. Guarde o ficheiro no seu PC para não perder o código.')
+      const savedPath = response.headers.get('X-Backup-Saved-Path') || ''
+      const savedFolder = response.headers.get('X-Backup-Saved-Folder') || ''
+      alert(
+        '✓ ZIP descarregado e guardado na pasta do projeto.' +
+          (savedPath ? '\n\nFicheiro:\n' + savedPath : savedFolder ? '\n\nPasta:\n' + savedFolder : '') +
+          '\n\nCopie a pasta backups\\codigo\\ para pen USB de vez em quando.'
+      )
     } catch (error) {
       alert('❌ Erro ao descarregar backup: ' + (error as Error).message)
     }
@@ -13904,8 +13931,18 @@ export default function Dashboard() {
       const result = await response.json()
 
       if (response.ok) {
-        const pathToShow = result.backupsFolderAbsolute || result.backupPath || result.backupsFolder || ''
-        alert((t.codeBackupCreatedSuccess || '✓ BACKUP DO CÓDIGO CRIADO COM SUCESSO!\n\nPasta de backups: ' + pathToShow + '\n\nArquivos salvos: {count}\n\nAbra a pasta acima para ver o backup.').replace('{count}', String(result.filesCount)))
+        const jsonFolder = result.jsonFolder || ''
+        const codigoFolder = result.codigoFolder || result.backupsFolderAbsolute || result.backupsFolder || ''
+        const zipLine = result.zipFileName ? '\nZIP: ' + result.codigoFolder + '\\' + result.zipFileName : ''
+        alert(
+          (t.codeBackupCreatedSuccess || '✓ BACKUP DO CÓDIGO CRIADO COM SUCESSO!').replace('{count}', String(result.filesCount)).replace('{path}', codigoFolder) +
+            '\n\nPasta JSON (dados): ' +
+            (jsonFolder || 'backups\\json') +
+            '\nPasta CÓDIGO (ZIP + pastas): ' +
+            codigoFolder +
+            zipLine +
+            '\n\nAbra o Explorador de Ficheiros nesses caminhos.'
+        )
         loadCodeBackups()
       } else {
         throw new Error(result.error || 'Erro ao criar backup')
@@ -13961,7 +13998,7 @@ export default function Dashboard() {
       const result = await response.json()
       if (response.ok) {
         setCodeBackups((result.backups || []).slice(0, 5))
-        setCodeBackupsFolder(result.backupsFolder || '')
+        setCodeBackupsFolder(result.codigoFolder || result.backupsFolder || '')
       } else {
         // Se a API não existir, tentar carregar do localStorage
         const localBackups = JSON.parse(localStorage.getItem('nonato-code-backups') || '[]')

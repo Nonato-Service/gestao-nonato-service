@@ -40,7 +40,11 @@ export type AdminBackupSectionProps = {
 type BackupStatus = {
   projectRoot?: string
   backupsFolder?: string
+  jsonFolder?: string
+  codigoFolder?: string
   backupsCount?: number
+  jsonCount?: number
+  zipCount?: number
   projectRootValid?: boolean
   writable?: boolean
   onRailway?: boolean
@@ -289,11 +293,23 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
             <code>{status?.projectRoot || '—'}</code>
           </div>
           <div className={`admin-backup-hub__status-pill${status?.writable ? ' ok' : ' warn'}`}>
-            <span>{tr(safeT, 'adminBackupHubStatusFolder', 'Pasta backups')}</span>
-            <code>{status?.backupsFolder || codeBackupsFolder || '—'}</code>
+            <span>{tr(safeT, 'adminBackupHubStatusJsonFolder', 'Pasta JSON (dados)')}</span>
+            <code>{status?.jsonFolder || '—'}</code>
+          </div>
+          <div className={`admin-backup-hub__status-pill${status?.writable ? ' ok' : ' warn'}`}>
+            <span>{tr(safeT, 'adminBackupHubStatusCodigoFolder', 'Pasta CÓDIGO (ZIP)')}</span>
+            <code>{status?.codigoFolder || codeBackupsFolder || '—'}</code>
           </div>
           <div className="admin-backup-hub__status-pill">
-            <span>{tr(safeT, 'adminBackupHubStatusCount', 'Backups código')}</span>
+            <span>{tr(safeT, 'adminBackupHubStatusJsonCount', 'Ficheiros JSON')}</span>
+            <strong>{status?.jsonCount ?? '—'}</strong>
+          </div>
+          <div className="admin-backup-hub__status-pill">
+            <span>{tr(safeT, 'adminBackupHubStatusZipCount', 'Ficheiros ZIP')}</span>
+            <strong>{status?.zipCount ?? '—'}</strong>
+          </div>
+          <div className="admin-backup-hub__status-pill">
+            <span>{tr(safeT, 'adminBackupHubStatusCount', 'Pastas código')}</span>
             <strong>{status?.backupsCount ?? codeList.length}</strong>
           </div>
           <div className={`admin-backup-hub__status-pill${status?.onRailway ? ' warn' : ' ok'}`}>
@@ -305,17 +321,13 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
             </strong>
           </div>
         </div>
-        {status ? (
-          <p className="admin-backup-hub__status-hint">
-            {tr(
-              safeT,
-              status.onRailway ? 'adminBackupHubStatusHintRailway' : 'adminBackupHubStatusHintLocal',
-              status.onRailway
-                ? 'No Railway, restauro de código afeta só o contentor actual — após redeploy use ZIP local ou git.'
-                : 'Ambiente local: backup de código e restauro ZIP funcionam na pasta do projeto.'
-            )}
-          </p>
-        ) : null}
+        <p className="admin-backup-hub__status-hint">
+          {tr(
+            safeT,
+            'adminBackupHubFoldersHint',
+            'Os backups ficam em backups/json/ (dados) e backups/codigo/ (ZIP + pastas). Abra no Explorador de Ficheiros do Windows.'
+          )}
+        </p>
       </div>
 
       {isDemoMode ? (
@@ -327,7 +339,11 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
         <div className="admin-backup-hub-zone admin-backup-hub-zone--data">
           <h4 className="admin-backup-hub-zone__title">📊 {tr(safeT, 'adminBackupHubZoneData', 'Dados do sistema (JSON)')}</h4>
           <p className="admin-backup-hub-zone__desc">
-            {tr(safeT, 'adminBackupHubZoneDataDesc', 'Restaura clientes, relatórios, peças, configurações — não altera o código-fonte.')}
+            {tr(
+              safeT,
+              'adminBackupHubZoneDataDesc',
+              'Restaura clientes, relatórios, peças, configurações — não altera o código-fonte. Cada backup guarda ficheiro em backups/json/ com data no nome.'
+            )}
           </p>
 
           <div className="admin-backup-hub__auto-panel">
@@ -407,7 +423,7 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
             {tr(
               safeT,
               'adminBackupHubZoneCodeDesc',
-              'Substitui app/, public/, middleware.ts e configs. Após restauro: recarregue a página; se package.json mudou, execute npm install e npm run dev.'
+              'Substitui app/, public/, middleware.ts e configs. ZIP guardado em backups/codigo/backup-codigo-DATA.zip'
             )}
           </p>
 
