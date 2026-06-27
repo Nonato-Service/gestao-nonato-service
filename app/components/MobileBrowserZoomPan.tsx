@@ -4,8 +4,7 @@ import { useEffect, useRef } from 'react'
 
 /**
  * Telemóvel/tablet: após pinch-zoom do browser, permite arrastar a vista em X e Y.
- * O layout compacto (100dvh + overflow hidden) bloqueia o pan nativo — libertamos
- * o documento, alargamos a área de scroll e fazemos pan manual se necessário.
+ * Firefox: visualViewport.scale pode falhar — usa fallbacks e touch-action via CSS.
  */
 export function MobileBrowserZoomPan() {
   const zoomedRef = useRef(false)
@@ -21,19 +20,29 @@ export function MobileBrowserZoomPan() {
       navigator.maxTouchPoints > 0 || 'ontouchstart' in window
     const isFirefox = /Firefox\//i.test(navigator.userAgent || '')
 
-    if (!isTouchDevice || isFirefox) return
+    if (!isTouchDevice) return
 
-    const shouldHandle = () => {
-      const w = window.innerWidth
-      return w <= 1280
-    }
+    const shouldHandle = () => window.innerWidth <= 1280
 
     const getScale = () => {
-      if (vv && vv.scale > 0) return vv.scale
+      if (vv && vv.scale > 0 && Number.isFinite(vv.scale)) {
+        return vv.scale
+      }
       const cw = document.documentElement.clientWidth
       const iw = window.innerWidth
-      if (cw > 0 && iw > 0 && iw < cw) return cw / iw
+      if (cw > 0 && iw > 0 && cw > iw + 1) return cw / iw
+      if (isFirefox && vv && vv.width > 0 && iw > 0 && iw > vv.width + 1) {
+        return iw / vv.width
+      }
       return 1
+    }
+
+    const hasScrollOverflow = () => {
+      const root = document.documentElement
+      return (
+        root.scrollWidth > root.clientWidth + 4 ||
+        root.scrollHeight > root.clientHeight + 4
+      )
     }
 
     const toggleLayoutClass = (zoomed: boolean) => {
@@ -57,10 +66,8 @@ export function MobileBrowserZoomPan() {
     }
 
     const updateScrollExtent = () => {
-      const scale = getScale()
-      if (scale <= 1.008) return
-
-      const pad = 96
+      const scale = Math.max(getScale(), 1)
+      const pad = isFirefox ? 128 : 96
       const layoutW = document.documentElement.clientWidth
       const layoutH = document.documentElement.clientHeight
       const contentH = Math.max(
@@ -123,7 +130,10 @@ export function MobileBrowserZoomPan() {
         return
       }
       const scale = getScale()
-      const next = zoomedRef.current ? scale > 1.005 : scale > 1.015
+      const desktopSite = document.documentElement.classList.contains('app-touch-desktop-site')
+      const scaleZoomed = zoomedRef.current ? scale > 1.003 : scale > 1.012
+      const overflowZoomed = isFirefox && (scaleZoomed || (desktopSite && hasScrollOverflow()))
+      const next = isFirefox ? overflowZoomed || scaleZoomed : scaleZoomed
       setZoomed(next)
       if (next) updateScrollExtent()
     }
@@ -148,12 +158,12 @@ export function MobileBrowserZoomPan() {
     }
 
     const onTouchStart = (e: TouchEvent) => {
-      if (!zoomedRef.current) return
       if (e.touches.length === 2) {
         schedule()
+        if (isFirefox) updateScrollExtent()
         return
       }
-      if (e.touches.length !== 1) return
+      if (!zoomedRef.current || e.touches.length !== 1) return
       updateScrollExtent()
       panRef.current = {
         x: e.touches[0].clientX,
@@ -164,8 +174,8 @@ export function MobileBrowserZoomPan() {
     }
 
     const onTouchMove = (e: TouchEvent) => {
-      if (!zoomedRef.current || !panRef.current) return
-      if (e.touches.length !== 1) return
+      if (e.touches.length === 2) return
+      if (!zoomedRef.current || !panRef.current || e.touches.length !== 1) return
 
       const p = panRef.current
       const dx = p.x - e.touches[0].clientX
