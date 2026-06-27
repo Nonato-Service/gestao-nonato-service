@@ -4576,32 +4576,25 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
 
 /*
  * Firefox (Android/iOS): visualViewport/pinch e touch-action pinch-zoom diferem do Chrome.
- * Reforçar cadeia flex + scroll interno e evitar overscroll/touch que bloqueiam rolagem.
+ * Telemóvel pequeno: sem zoom CSS (quebra scroll); rolagem interna + pinch só após ampliar.
  */
 @media (max-width: 1280px) {
   html.browser-firefox {
-    font-size: clamp(10.5px, 1.15vw, 12px) !important;
     -moz-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    touch-action: auto !important;
   }
 
-  html.browser-firefox body {
-    touch-action: auto !important;
+  html.browser-firefox:not(.app-touch-desktop-site):not(.mobile-browser-zoomed) {
+    font-size: 14px !important;
   }
 
-  /* Modo normal (sem site desktop): reduzir tudo de uma vez */
-  html.browser-firefox:not(.app-touch-desktop-site) .app-layout.app-compact-layout {
-    zoom: 0.86;
+  html.browser-firefox.app-touch-desktop-site:not(.mobile-browser-zoomed) {
+    font-size: clamp(11px, 1.05vw, 12px) !important;
   }
 
-  html.browser-firefox:not(.app-touch-desktop-site) {
-    font-size: clamp(9px, 2.6vw, 10px) !important;
-  }
-
-  /* Modo computador: permitir zoom nativo e pan no documento */
-  html.browser-firefox.app-touch-desktop-site,
-  html.browser-firefox.app-touch-desktop-site body,
+  /* Modo computador com pinch: permitir pan no documento */
+  html.browser-firefox.app-touch-desktop-site.mobile-browser-zoomed,
+  html.browser-firefox.app-touch-desktop-site.mobile-browser-zoomed body,
   html.browser-firefox.mobile-browser-zoomed,
   html.browser-firefox.mobile-browser-zoomed body {
     touch-action: auto !important;
@@ -4610,111 +4603,130 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
     overscroll-behavior: auto !important;
   }
 
-  html.browser-firefox .main-content-area,
-  html.browser-firefox .tab-inner-scroll,
-  html.browser-firefox .app-layout,
-  html.browser-firefox .app-compact-layout,
-  html.browser-firefox .main-app-column {
+  html.browser-firefox:not(.mobile-browser-zoomed) .main-content-area,
+  html.browser-firefox:not(.mobile-browser-zoomed) .tab-inner-scroll,
+  html.browser-firefox:not(.mobile-browser-zoomed) .app-compact-layout .sidebar .sidebar-scroll-inner {
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html.browser-firefox.mobile-browser-zoomed .main-content-area,
+  html.browser-firefox.mobile-browser-zoomed .tab-inner-scroll,
+  html.browser-firefox.mobile-browser-zoomed .app-layout,
+  html.browser-firefox.mobile-browser-zoomed .app-compact-layout,
+  html.browser-firefox.mobile-browser-zoomed .main-app-column {
     touch-action: auto !important;
   }
 
-  html.browser-firefox input,
-  html.browser-firefox select,
-  html.browser-firefox textarea,
-  html.browser-firefox button {
-    font-size: 12px !important;
+  html.browser-firefox:not(.app-touch-desktop-site) input,
+  html.browser-firefox:not(.app-touch-desktop-site) select,
+  html.browser-firefox:not(.app-touch-desktop-site) textarea {
+    font-size: 16px !important;
+    min-height: 44px;
   }
 
-  html.browser-firefox input,
-  html.browser-firefox select,
-  html.browser-firefox textarea {
-    min-height: 36px;
+  html.browser-firefox:not(.app-touch-desktop-site) button {
+    font-size: 13px !important;
+    min-height: 40px;
   }
 
   html.browser-firefox .mobile-menu-toggle,
   html.browser-firefox .mobile-header-action-btn,
   html.browser-firefox .mobile-refresh-toggle {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
-    font-size: 16px !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    font-size: 18px !important;
   }
 
   html.browser-firefox .mobile-app-header {
-    min-height: calc(46px + env(safe-area-inset-top, 0px)) !important;
-    height: 46px !important;
+    min-height: calc(48px + env(safe-area-inset-top, 0px)) !important;
+    height: 48px !important;
+    padding-left: max(8px, env(safe-area-inset-left)) !important;
+    padding-right: max(8px, env(safe-area-inset-right)) !important;
   }
 
   html.browser-firefox .mobile-app-header-title {
-    font-size: 12px !important;
+    font-size: 13px !important;
   }
 
   html.browser-firefox .app-compact-layout .mobile-toolbar-btn {
-    min-height: 34px !important;
-    padding: 6px 7px !important;
-    font-size: 10px !important;
+    min-height: 38px !important;
+    padding: 7px 8px !important;
+    font-size: 11px !important;
   }
 
   html.browser-firefox .sidebar button {
-    font-size: 10px !important;
-    padding: 5px 7px !important;
-    min-height: 32px !important;
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+    min-height: 40px !important;
   }
 
   html.browser-firefox .bottom-tab-item {
-    min-height: 38px !important;
+    min-height: 40px !important;
     font-size: 11px !important;
-    padding: 5px 7px !important;
-  }
-
-  html.browser-firefox .cliente-ident-line__cod-value {
-    font-size: 10px;
-  }
-
-  html.browser-firefox .cliente-ident-line__nome {
-    font-size: 13px;
+    padding: 5px 6px !important;
   }
 
   html.browser-firefox .cliente-lista-linhas__value--nome {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   html.browser-firefox .cliente-lista-linhas__value--info {
-    font-size: 9.5px;
+    font-size: 10px;
   }
 }
 
-@media (max-width: 600px) {
-  html.browser-firefox:not(.app-touch-desktop-site) {
-    font-size: clamp(8.5px, 2.8vw, 9.5px) !important;
+@media (max-width: 480px) {
+  html.browser-firefox:not(.app-touch-desktop-site):not(.mobile-browser-zoomed) {
+    font-size: 13px !important;
   }
 
-  html.browser-firefox:not(.app-touch-desktop-site) .app-layout.app-compact-layout {
-    zoom: 0.84;
+  html.browser-firefox:not(.app-touch-desktop-site) .app-compact-layout {
+    padding-top: calc(48px + env(safe-area-inset-top, 0px)) !important;
+  }
+
+  html.browser-firefox:not(.app-touch-desktop-site) .app-compact-layout .main-content-area {
+    padding: 6px !important;
+  }
+
+  html.browser-firefox:not(.app-touch-desktop-site) .mobile-app-header-title {
+    font-size: 12px !important;
+  }
+
+  html.browser-firefox:not(.app-touch-desktop-site) .bottom-tab-item {
+    font-size: 10px !important;
+    min-height: 38px !important;
   }
 }
 
 @media (max-width: 768px) {
-  html.browser-firefox input,
-  html.browser-firefox select,
-  html.browser-firefox textarea,
-  html.browser-firefox button {
+  html.browser-firefox.app-touch-desktop-site input,
+  html.browser-firefox.app-touch-desktop-site select,
+  html.browser-firefox.app-touch-desktop-site textarea,
+  html.browser-firefox.app-touch-desktop-site button {
     font-size: 12px !important;
     min-height: 36px !important;
   }
 }
 
 @media (max-width: 1024px) {
-  html.browser-firefox,
-  html.browser-firefox body {
+  html.browser-firefox:not(.mobile-browser-zoomed):not(.app-touch-desktop-site),
+  html.browser-firefox:not(.mobile-browser-zoomed):not(.app-touch-desktop-site) body {
+    touch-action: pan-y;
+    overscroll-behavior-y: none;
+  }
+
+  html.browser-firefox.app-touch-desktop-site:not(.mobile-browser-zoomed),
+  html.browser-firefox.app-touch-desktop-site:not(.mobile-browser-zoomed) body {
     touch-action: auto;
     overscroll-behavior-y: auto;
   }
 
   html.browser-firefox .app-compact-layout {
-    height: 100vh;
-    max-height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
     min-height: 0;
   }
 

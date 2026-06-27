@@ -37,14 +37,6 @@ export function MobileBrowserZoomPan() {
       return 1
     }
 
-    const hasScrollOverflow = () => {
-      const root = document.documentElement
-      return (
-        root.scrollWidth > root.clientWidth + 4 ||
-        root.scrollHeight > root.clientHeight + 4
-      )
-    }
-
     const toggleLayoutClass = (zoomed: boolean) => {
       document.documentElement.classList.toggle('mobile-browser-zoomed', zoomed)
       document.body.classList.toggle('mobile-browser-zoomed', zoomed)
@@ -130,10 +122,10 @@ export function MobileBrowserZoomPan() {
         return
       }
       const scale = getScale()
-      const desktopSite = document.documentElement.classList.contains('app-touch-desktop-site')
       const scaleZoomed = zoomedRef.current ? scale > 1.003 : scale > 1.012
-      const overflowZoomed = isFirefox && (scaleZoomed || (desktopSite && hasScrollOverflow()))
-      const next = isFirefox ? overflowZoomed || scaleZoomed : scaleZoomed
+      // Firefox: só activar pan documento com pinch real — overflow horizontal no modo desktop
+      // fazia activar mobile-browser-zoomed sempre e quebrava scroll interno no telemóvel pequeno.
+      const next = scaleZoomed
       setZoomed(next)
       if (next) updateScrollExtent()
     }

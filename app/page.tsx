@@ -8524,7 +8524,6 @@ export default function Dashboard() {
   /** Modo computador no telemóvel: centrar vista horizontal quando a página é mais larga que o ecrã */
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (/Firefox\//i.test(navigator.userAgent || '')) return
     const touch = navigator.maxTouchPoints > 0 || 'ontouchstart' in window
     if (!touch || window.innerWidth < 900) return
 
@@ -8540,7 +8539,11 @@ export default function Dashboard() {
     const run = () => requestAnimationFrame(() => setTimeout(centerHorizontally, 150))
     run()
     window.addEventListener('orientationchange', run)
-    return () => window.removeEventListener('orientationchange', run)
+    window.addEventListener('resize', run)
+    return () => {
+      window.removeEventListener('orientationchange', run)
+      window.removeEventListener('resize', run)
+    }
   }, [loginUser, isCompactLayout, activeTabId])
 
   useEffect(() => {
