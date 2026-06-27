@@ -37,6 +37,14 @@ export function MobileBrowserZoomPan() {
       return 1
     }
 
+    const hasScrollOverflow = () => {
+      const root = document.documentElement
+      return (
+        root.scrollWidth > root.clientWidth + 4 ||
+        root.scrollHeight > root.clientHeight + 4
+      )
+    }
+
     const toggleLayoutClass = (zoomed: boolean) => {
       document.documentElement.classList.toggle('mobile-browser-zoomed', zoomed)
       document.body.classList.toggle('mobile-browser-zoomed', zoomed)
@@ -92,10 +100,14 @@ export function MobileBrowserZoomPan() {
       }
     }
 
-    const setZoomed = (zoomed: boolean) => {
-      if (zoomedRef.current === zoomed) return
+    const setZoomed = (zoomed: boolean, pinchZoom = false) => {
+      if (zoomedRef.current === zoomed) {
+        document.documentElement.toggleAttribute('data-pinch-zoom', pinchZoom)
+        return
+      }
       zoomedRef.current = zoomed
       toggleLayoutClass(zoomed)
+      document.documentElement.toggleAttribute('data-pinch-zoom', pinchZoom)
 
       if (zoomed) {
         savedOverflowRef.current = {
@@ -107,6 +119,7 @@ export function MobileBrowserZoomPan() {
         updateScrollExtent()
       } else {
         panRef.current = null
+        document.documentElement.removeAttribute('data-pinch-zoom')
         if (savedOverflowRef.current) {
           document.documentElement.style.overflow = savedOverflowRef.current.html
           document.body.style.overflow = savedOverflowRef.current.body
@@ -122,11 +135,11 @@ export function MobileBrowserZoomPan() {
         return
       }
       const scale = getScale()
+      const desktopSite = document.documentElement.classList.contains('app-touch-desktop-site')
       const scaleZoomed = zoomedRef.current ? scale > 1.003 : scale > 1.012
-      // Firefox: só activar pan documento com pinch real — overflow horizontal no modo desktop
-      // fazia activar mobile-browser-zoomed sempre e quebrava scroll interno no telemóvel pequeno.
-      const next = scaleZoomed
-      setZoomed(next)
+      const overflowPan = isFirefox && desktopSite && hasScrollOverflow()
+      const next = scaleZoomed || overflowPan
+      setZoomed(next, scaleZoomed)
       if (next) updateScrollExtent()
     }
 
