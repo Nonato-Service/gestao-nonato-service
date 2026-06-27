@@ -2,18 +2,32 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { setupAutoSyncOnReconnect, setupFlushSyncOnPageHide } from './utils/dataStorage'
+import { getStoredUiString } from './translations'
 
 // Bumpar este número em cada deploy para forçar atualização no telemóvel/tablet
 const SW_VERSION = 19
 const SW_DISMISSED_SESSION_KEY = 'nonato-pwa-update-dismissed-v'
+const UI_LANGUAGE_EVENT = 'nonato-ui-language'
 
 export function RegisterSW() {
   const [updateReady, setUpdateReady] = useState(false)
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
+  const [uiLangTick, setUiLangTick] = useState(0)
   const reloadHandled = useRef(false)
   const userConfirmedUpdate = useRef(false)
   const lastUpdateCheckAt = useRef(0)
 
+  useEffect(() => {
+    const refreshUiLang = () => setUiLangTick((n) => n + 1)
+    window.addEventListener(UI_LANGUAGE_EVENT, refreshUiLang)
+    window.addEventListener('storage', refreshUiLang)
+    return () => {
+      window.removeEventListener(UI_LANGUAGE_EVENT, refreshUiLang)
+      window.removeEventListener('storage', refreshUiLang)
+    }
+  }, [])
+
+  void uiLangTick
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
 
@@ -139,23 +153,31 @@ export function RegisterSW() {
         fontWeight: 600,
       }}
     >
-      <span>Nova versão disponível — carregue em «Atualizar» para recarregar o programa</span>
+      <span>
+        {getStoredUiString(
+          'pwaUpdateBannerMessage',
+          'Nova versão disponível — carregue em «Atualizar» para recarregar o programa'
+        )}
+      </span>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <button
           type="button"
           className="pwa-update-banner__btn pwa-update-banner__btn--later"
           onClick={handleDismiss}
-          title="Continuar com a versão actual e actualizar mais tarde"
+          title={getStoredUiString(
+            'pwaUpdateBtnLaterTitle',
+            'Continuar com a versão actual e actualizar mais tarde'
+          )}
         >
-          DEPOIS
+          {getStoredUiString('pwaUpdateBtnLater', 'DEPOIS')}
         </button>
         <button
           type="button"
           className="pwa-update-banner__btn pwa-update-banner__btn--update"
           onClick={handleUpdate}
-          title="Recarregar o programa com a versão nova"
+          title={getStoredUiString('pwaUpdateBtnUpdateTitle', 'Recarregar o programa com a versão nova')}
         >
-          ATUALIZAR
+          {getStoredUiString('pwaUpdateBtnUpdate', 'ATUALIZAR')}
         </button>
       </div>
     </div>

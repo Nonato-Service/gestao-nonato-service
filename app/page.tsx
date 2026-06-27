@@ -12968,6 +12968,9 @@ export default function Dashboard() {
   const handleLanguageChange = (languageCode: string) => {
     setSelectedLanguage(languageCode)
     saveData('nonato-language', languageCode, false)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('nonato-ui-language'))
+    }
     // Não precisa recarregar a página - o useMemo já atualiza automaticamente
     // Forçar re-renderização de componentes que dependem do idioma
   }
