@@ -27,15 +27,17 @@ start "" "%URL%"
 "@
 Set-Content -Path $launcher -Value $launcherContent -Encoding UTF8
 
-$iconCandidates = @(
-  (Join-Path $proj 'public\brand\nonato-logo-original.png'),
-  (Join-Path $proj 'public\icon-192.png'),
-  (Join-Path $proj 'public\icon-512.png'),
-  (Join-Path $proj 'app\icon.svg'),
-  (Join-Path $proj 'public\icon.svg')
-)
-$iconPath = $iconCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
-if (-not $iconPath) {
+$iconScript = Join-Path $PSScriptRoot 'gerar-icone-app.ps1'
+$pwaIconScript = Join-Path $PSScriptRoot 'gerar-icones-pwa.ps1'
+if (Test-Path $pwaIconScript) {
+  & $pwaIconScript | Out-Null
+}
+if (Test-Path $iconScript) {
+  & $iconScript | Out-Null
+}
+
+$iconPath = Join-Path $proj 'public\brand\nonato-app-icon.ico'
+if (-not (Test-Path $iconPath)) {
   $iconPath = "$env:SystemRoot\System32\imageres.dll,109"
 }
 
@@ -57,6 +59,7 @@ Write-Host '  ATALHO CRIADO COM SUCESSO'
 Write-Host '============================================'
 Write-Host ''
 Write-Host "  Area de trabalho: $shortcutPath"
+Write-Host "  Icone: $iconPath"
 Write-Host "  URL: $url"
 Write-Host '  Modo: janela tipo app (Edge/Chrome --app)'
 Write-Host ''

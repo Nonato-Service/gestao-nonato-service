@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   /** Favicon / PWA: app/icon.svg + public/icon.svg (logo em public/brand/nonato-logo-original.png) */
   icons: {
     icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
-    apple: [{ url: '/brand/nonato-logo-original.png', sizes: '180x180', type: 'image/png' }],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
   appleWebApp: {
     capable: true,
@@ -53,7 +53,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/brand/nonato-logo-original.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="NONATO SERVICE" />
