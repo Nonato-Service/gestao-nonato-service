@@ -46,7 +46,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var w=window.innerWidth||document.documentElement.clientWidth||1025;if(w<=1024){document.documentElement.classList.add('app-compact-layout-early');}}catch(e){}})();`,
+            __html: `(function(){try{var ua=navigator.userAgent||'';if(/Firefox\\//i.test(ua)){document.documentElement.classList.add('browser-firefox');}var touch=('ontouchstart' in window)||((navigator.maxTouchPoints||0)>0);var w=window.innerWidth||document.documentElement.clientWidth||1025;if(w<=1024){document.documentElement.classList.add('app-compact-layout-early');}if(touch&&w>=900){document.documentElement.classList.add('app-touch-desktop-site');}}catch(e){}})();`,
           }}
         />
         <meta charSet="utf-8" />

@@ -19,8 +19,9 @@ export function MobileBrowserZoomPan() {
     const vv = window.visualViewport
     const isTouchDevice =
       navigator.maxTouchPoints > 0 || 'ontouchstart' in window
+    const isFirefox = /Firefox\//i.test(navigator.userAgent || '')
 
-    if (!isTouchDevice) return
+    if (!isTouchDevice || isFirefox) return
 
     const shouldHandle = () => {
       const w = window.innerWidth

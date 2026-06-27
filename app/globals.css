@@ -336,6 +336,19 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Browsers sem touch-action: pinch-zoom (ex.: Firefox Android) — evitar valor inválido */
+@supports not (touch-action: pinch-zoom) {
+  html,
+  body,
+  .main-content-area,
+  .tab-inner-scroll,
+  .app-layout,
+  .app-compact-layout,
+  .main-app-column {
+    touch-action: pan-y;
+  }
+}
+
 /* Foco visível — acessibilidade + acabamento “produto” */
 :focus {
   outline: none;
@@ -377,7 +390,7 @@ body,
 /* Desktop com rato: touch-action: pan-y em contentores com overflow pode, em alguns Chromium/Windows,
    atrapalhar a roda do rato no contentor de rolagem. Em pointer fino usamos auto; em touch mantém-se pan-y.
    overscroll-behavior: contain evita encadear o scroll ao documento (menos “saltos” e gestos que parecem atualizar a página). */
-@media (pointer: fine) {
+@media (pointer: fine) and (hover: hover) {
   .main-content-area:not(.main-content-area-tab-open) {
     touch-action: auto;
     overscroll-behavior-y: contain;
@@ -4491,6 +4504,126 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
     margin-left: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+  }
+}
+
+/*
+ * Telemóvel/tablet com "modo computador" (site desktop): centrar o programa no ecrã.
+ * A barra lateral e o dock de abas usam position:fixed — alinham-se ao contentor centrado.
+ */
+@media (pointer: coarse), ((hover: none) and (max-width: 1280px)) {
+  html.app-touch-desktop-site {
+    --app-touch-shell-width: min(1280px, 100vw);
+    --app-touch-shell-gutter: max(0px, calc((100vw - var(--app-touch-shell-width)) / 2));
+  }
+
+  html.app-touch-desktop-site body {
+    background-color: #2e2e2e;
+  }
+
+  html.app-touch-desktop-site .app-layout.app-compact-layout {
+    width: 100%;
+    max-width: var(--app-touch-shell-width);
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  html.app-touch-desktop-site .app-compact-layout .mobile-app-header {
+    left: var(--app-touch-shell-gutter) !important;
+    right: var(--app-touch-shell-gutter) !important;
+    width: auto;
+    max-width: var(--app-touch-shell-width);
+  }
+
+  html.app-touch-desktop-site .app-compact-layout .sidebar {
+    left: var(--app-touch-shell-gutter) !important;
+  }
+
+  html.app-touch-desktop-site .app-compact-layout .bottom-tabs-bar {
+    left: calc(var(--app-touch-shell-gutter) + 10px) !important;
+    right: calc(var(--app-touch-shell-gutter) + 10px) !important;
+    max-width: calc(var(--app-touch-shell-width) - 20px) !important;
+  }
+
+  @media (min-width: 1025px) {
+    html.app-touch-desktop-site .app-layout:not(.app-compact-layout) {
+      width: 100%;
+      max-width: var(--app-touch-shell-width);
+      margin-left: auto !important;
+      margin-right: auto !important;
+      position: relative;
+    }
+
+    html.app-touch-desktop-site .app-layout:not(.app-compact-layout) > .sidebar {
+      left: var(--app-touch-shell-gutter) !important;
+    }
+
+    html.app-touch-desktop-site .app-layout:not(.app-compact-layout) .bottom-tabs-bar {
+      left: calc(var(--app-touch-shell-gutter) + 296px + 8px) !important;
+      right: calc(var(--app-touch-shell-gutter) + 8px) !important;
+      max-width: none !important;
+    }
+
+    html.app-touch-desktop-site .app-top-bar {
+      left: calc(var(--app-touch-shell-gutter) + env(safe-area-inset-left, 0px)) !important;
+      right: calc(var(--app-touch-shell-gutter) + env(safe-area-inset-right, 0px)) !important;
+      width: auto;
+      max-width: var(--app-touch-shell-width);
+      margin-inline: auto;
+    }
+  }
+}
+
+/*
+ * Firefox (Android/iOS): visualViewport/pinch e touch-action pinch-zoom diferem do Chrome.
+ * Reforçar cadeia flex + scroll interno e evitar overscroll/touch que bloqueiam rolagem.
+ */
+@media (max-width: 1024px) {
+  html.browser-firefox,
+  html.browser-firefox body {
+    touch-action: auto;
+    overscroll-behavior-y: auto;
+  }
+
+  html.browser-firefox .app-compact-layout {
+    height: 100vh;
+    max-height: 100vh;
+    min-height: 0;
+  }
+
+  html.browser-firefox .app-compact-layout .main-app-column {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  html.browser-firefox .app-compact-layout .main-content-area,
+  html.browser-firefox .app-compact-layout .tab-inner-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html.browser-firefox .app-compact-layout .sidebar .sidebar-scroll-inner {
+    overflow-y: auto !important;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1280px) {
+  html.browser-firefox .app-layout:not(.app-compact-layout) .main-content-area,
+  html.browser-firefox .app-layout:not(.app-compact-layout) .tab-inner-scroll {
+    min-height: 0;
+    overflow-y: auto !important;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
   }
 }
 
