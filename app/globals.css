@@ -4668,9 +4668,8 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
     padding: 5px 7px !important;
   }
 
-  html.browser-firefox .cliente-ident-line__cod {
+  html.browser-firefox .cliente-ident-line__cod-value {
     font-size: 10px;
-    padding: 2px 6px;
   }
 
   html.browser-firefox .cliente-ident-line__nome {
@@ -6563,9 +6562,9 @@ a:focus-visible {
 /* Lista: código compacto + nome (sem repetir CÓD./CLIENTE em cada linha) */
 .cliente-ident-line {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   flex-wrap: wrap;
-  gap: 8px 10px;
+  gap: 8px 12px;
   width: 100%;
   min-width: 0;
 }
@@ -6577,21 +6576,57 @@ a:focus-visible {
   align-items: center;
 }
 .cliente-ident-line__cod {
+  display: inline-flex;
+  align-items: center;
   flex-shrink: 0;
+  gap: 4px;
+  padding: 3px 9px 3px 8px;
+  border-radius: 6px;
+  background: rgba(0, 200, 83, 0.1);
+  border: 1px solid rgba(0, 200, 83, 0.28);
+  line-height: 1.25;
+  box-sizing: border-box;
+}
+.cliente-ident-line__cod-label {
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  flex-shrink: 0;
+}
+.cliente-ident-line__cod-sep {
+  color: rgba(0, 200, 83, 0.45);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.cliente-ident-line__cod-value {
   font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   color: #69f0ae;
-  padding: 2px 7px;
-  border-radius: 5px;
-  background: rgba(0, 200, 83, 0.1);
-  border: 1px solid rgba(0, 200, 83, 0.22);
-  line-height: 1.3;
+  flex-shrink: 0;
+}
+.cliente-ident-line__nome-wrap {
+  flex: 1 1 min(140px, 100%);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.cliente-ident-line__nome-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+  line-height: 1.2;
 }
 .cliente-ident-line__nome {
-  flex: 1 1 min(120px, 100%);
-  min-width: 0;
   font-size: 14px;
   font-weight: 600;
   color: #f5f5f5;

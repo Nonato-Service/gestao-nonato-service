@@ -62,7 +62,8 @@ export function ClienteIdentidadeChips({
     return (
       <span className={`cliente-ident-line cliente-ident-line--inline ${className || ''}`}>
         <span className="cliente-ident-line__cod" title={`${lblCod}: ${cod}`}>
-          {cod}
+          <span className="cliente-ident-line__cod-label">{lblCod}</span>
+          <span className="cliente-ident-line__cod-value">{cod}</span>
         </span>
       </span>
     )
@@ -79,11 +80,18 @@ export function ClienteIdentidadeChips({
             title={`${lblCod}: ${cod}`}
             aria-label={`${lblCod} ${cod}`}
           >
-            {cod}
+            <span className="cliente-ident-line__cod-label">{lblCod}</span>
+            <span className="cliente-ident-line__cod-sep" aria-hidden>
+              ·
+            </span>
+            <span className="cliente-ident-line__cod-value">{cod}</span>
           </span>
         ) : null}
-        <span className="cliente-ident-line__nome" title={`${lblNome}: ${nome}`}>
-          {nome}
+        <span className="cliente-ident-line__nome-wrap">
+          <span className="cliente-ident-line__nome-label">{lblNome}</span>
+          <span className="cliente-ident-line__nome" title={`${lblNome}: ${nome}`}>
+            {nome}
+          </span>
         </span>
       </span>
     )
