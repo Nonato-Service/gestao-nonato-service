@@ -12,6 +12,7 @@ import {
   buildEnderecoMapsQuery,
 } from '../lib/enderecoMapsUtils'
 import { ClienteEnderecoMapsActions } from './ClienteEnderecoMapsActions'
+import { ClienteIdentidadeChips } from './ClienteIdentidadeChips'
 import { ordenarServicoGrupos, type ServicoCadastroGrupo } from '../lib/servicosCadastroUtils'
 import type { ClienteCadastroDuplicado } from '../lib/clienteCadastroDuplicadoUtils'
 
@@ -322,6 +323,21 @@ export function ClienteCadastroForm({
       <section className="cliente-cadastro-v2__card cliente-cadastro-v2__card--info">
         <h3 className="cliente-cadastro-v2__card-title">{tr('informacoesCliente')}</h3>
 
+        {editingCliente?.codigoCliente ? (
+          <div className="cliente-cadastro-v2__ident-banner" role="status">
+            <ClienteIdentidadeChips
+              cliente={{
+                codigoCliente: editingCliente.codigoCliente,
+                id: editingCliente.id,
+                nomeEmpresa: clienteForm.nomeEmpresa,
+              }}
+              language={language}
+            />
+          </div>
+        ) : !editingCliente ? (
+          <p className="cliente-cadastro-v2__hint">{tr('clienteCodigoAutoHint')}</p>
+        ) : null}
+
         <div
           className={
             'cliente-cadastro-v2__fields-grid' +
@@ -399,21 +415,6 @@ export function ClienteCadastroForm({
             onChange={(e) => setClienteForm({ ...clienteForm, nomeEmpresa: e.target.value })}
           />
         </FieldInput>
-
-        {editingCliente?.codigoCliente ? (
-          <FieldInput id="codigo-cliente" icon={<IconIdCard size={18} />} label={tr('clienteCodigoLabel')} fullWidth>
-            <input
-              id="codigo-cliente"
-              type="text"
-              className="cliente-cadastro-v2__input"
-              value={editingCliente.codigoCliente}
-              readOnly
-              aria-readonly="true"
-            />
-          </FieldInput>
-        ) : !editingCliente ? (
-          <p className="cliente-cadastro-v2__hint">{tr('clienteCodigoAutoHint')}</p>
-        ) : null}
 
         {isFisica ? (
           <FieldInput

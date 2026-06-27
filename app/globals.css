@@ -6478,6 +6478,78 @@ a:focus-visible {
   color: #fff;
   word-break: break-word;
   width: 100%;
+  display: block;
+}
+
+/* Identidade do cliente — Cód. = NS… · Cliente = nome */
+.cliente-ident-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 6px 8px;
+  width: 100%;
+  min-width: 0;
+}
+.cliente-ident-chips--inline {
+  display: inline-flex;
+  width: auto;
+}
+.cliente-ident-chips__item {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 5px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.25;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.cliente-ident-chips__item--cod {
+  flex: 0 1 auto;
+  border-color: rgba(0, 200, 83, 0.38);
+  background: rgba(0, 200, 83, 0.12);
+}
+.cliente-ident-chips__item--nome {
+  flex: 1 1 min(100%, 140px);
+  min-width: 0;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.cliente-ident-chips__label {
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.52);
+  flex-shrink: 0;
+}
+.cliente-ident-chips__eq {
+  color: rgba(0, 200, 83, 0.9);
+  font-weight: 800;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+.cliente-ident-chips__value {
+  font-weight: 600;
+  color: #fff;
+  word-break: break-word;
+  min-width: 0;
+}
+.cliente-ident-chips__item--cod .cliente-ident-chips__value {
+  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  letter-spacing: 0.04em;
+  color: #69f0ae;
+}
+.cliente-cadastro-v2__ident-banner {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 200, 83, 0.28);
+  background: linear-gradient(135deg, rgba(0, 200, 83, 0.1) 0%, rgba(0, 0, 0, 0.18) 100%);
 }
 .clientes-alfa-nome-btn__meta {
   font-size: 12px;

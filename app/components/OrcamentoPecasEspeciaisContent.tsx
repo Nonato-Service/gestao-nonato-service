@@ -12,6 +12,7 @@ import {
 
 export type ModoCalculoTotalPecasEsp = 'linhas' | 'valor-final'
 import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
+import { formatClienteIdentidadeTexto } from './ClienteIdentidadeChips'
 
 export type ClienteOrcamentoPecasEsp = {
   id: string
@@ -986,7 +987,10 @@ export function OrcamentoPecasEspeciaisContent({
             <option value="">{t.selecioneCliente || '— Selecionar cliente —'}</option>
             {clientesFiltrados.map((c) => (
               <option key={c.id} value={c.id}>
-                {codigoClienteExibicao(c)} — {c.nomeEmpresa}
+                {formatClienteIdentidadeTexto(c, {
+                  cod: t.clienteIdentTagCod,
+                  nome: t.clienteIdentTagNome,
+                })}
               </option>
             ))}
           </select>

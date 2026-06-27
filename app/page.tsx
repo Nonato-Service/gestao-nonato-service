@@ -166,6 +166,7 @@ import {
 import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
 import { ClienteCadastroForm, emptyClienteFormState, type ClienteFormState } from './components/ClienteCadastroForm'
+import { ClienteIdentidadeChips, formatClienteIdentidadeTexto } from './components/ClienteIdentidadeChips'
 import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { rotuloIdEquipamentoCliente } from './lib/clienteDetalheUtils'
@@ -16498,7 +16499,13 @@ export default function Dashboard() {
         tipoCliente: savedCliente.tipoCliente === 'juridica' ? 'juridica' : 'fisica',
       })
       setEditingCliente(savedCliente)
-      alert((t as any).clienteSaved || 'Cliente salvo com sucesso!')
+      const trSave = t as Record<string, string | undefined>
+      alert(
+        `${trSave.clienteSaved || 'Cliente salvo com sucesso!'}\n\n${formatClienteIdentidadeTexto(savedCliente, {
+          cod: trSave.clienteIdentTagCod,
+          nome: trSave.clienteIdentTagNome,
+        })}`
+      )
     } catch (err) {
       console.error('Erro ao salvar clientes:', err)
       alert((t as any).erroSalvar || 'Erro ao salvar. Tente novamente.')
@@ -36009,8 +36016,7 @@ export default function Dashboard() {
                                 onClick={() => setClienteListaDetalheId(c.id)}
                               >
                                 <span className="clientes-alfa-nome-btn__titulo">
-                                  {codigoClienteExibicao(c) !== '—' ? `${codigoClienteExibicao(c)} — ` : ''}
-                                  {c.nomeEmpresa}
+                                  <ClienteIdentidadeChips cliente={c} language={selectedLanguage} />
                                 </span>
                                 {(c.telefones || c.localidade || c.morada || c.numeroContribuicaoFiscal || c.email) ? (
                                   <span className="clientes-alfa-nome-btn__meta">
