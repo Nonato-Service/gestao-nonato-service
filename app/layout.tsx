@@ -5,6 +5,7 @@ import { RegisterSW } from './RegisterSW'
 import { OfflineIndicator } from './components/OfflineIndicator'
 import { InstallPromptProvider } from './components/InstallPrompt'
 import { NonatoDemoShell } from './components/NonatoDemoShell'
+import { MobileBrowserZoomPan } from './components/MobileBrowserZoomPan'
 
 // Evita pré-renderização pesada no build (reduz memória no Railway)
 export const dynamic = 'force-dynamic'
@@ -67,6 +68,7 @@ export default function RootLayout({
         <RegisterSW />
         <OfflineIndicator />
         <NonatoDemoShell />
+        <MobileBrowserZoomPan />
       </body>
     </html>
   )

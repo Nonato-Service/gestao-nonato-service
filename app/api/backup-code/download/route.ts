@@ -5,6 +5,7 @@ import { PassThrough } from 'stream'
 import archiver from 'archiver'
 import { getDemoContext } from '../../data/demo-context'
 import { getProjectRoot } from '../project-root'
+import { CODE_BACKUP_ITEMS } from '../shared'
 
 export const runtime = 'nodejs'
 
@@ -17,23 +18,6 @@ function nodeStreamToWebReadableStream(pass: PassThrough): ReadableStream<Uint8A
     },
   })
 }
-
-const ITEMS_TO_BACKUP = [
-  'app',
-  'public',
-  'next.config.js',
-  'next.config.mjs',
-  'package.json',
-  'package-lock.json',
-  'tsconfig.json',
-  'next-env.d.ts',
-  '.gitignore',
-  'README.md',
-  'tailwind.config.js',
-  'tailwind.config.ts',
-  'postcss.config.js',
-  'globals.css'
-]
 
 const IGNORE_IN_ZIP = ['**/node_modules/**', '**/.next/**', '**/backups/**', '**/.git/**']
 
@@ -50,6 +34,7 @@ export async function GET(request: NextRequest) {
     const projectRoot = path.resolve(getProjectRoot())
     const pass = new PassThrough()
     const archive = archiver('zip', { zlib: { level: 6 } })
+    let filesAdded = 0
 
     archive.on('error', (err: Error) => {
       console.error('[backup-code/download] Erro no ZIP:', err)
@@ -58,19 +43,30 @@ export async function GET(request: NextRequest) {
 
     archive.pipe(pass)
 
-    for (const item of ITEMS_TO_BACKUP) {
+    for (const item of CODE_BACKUP_ITEMS) {
       const fullPath = path.join(projectRoot, item)
       if (!fs.existsSync(fullPath)) continue
       const stat = fs.statSync(fullPath)
       if (stat.isDirectory()) {
         archive.glob('**/*', { cwd: fullPath, dot: true, ignore: IGNORE_IN_ZIP }, { prefix: item })
+        filesAdded++
       } else {
         archive.file(fullPath, { name: item })
+        filesAdded++
       }
     }
 
-    // Ficheiro de informação dentro do ZIP
-    const info = `Backup do código - ${new Date().toISOString()}\nProjeto: gestao-tecnica-nonato-service\nDescompacte e use na pasta do projeto.`
+    if (filesAdded === 0) {
+      return NextResponse.json(
+        { error: 'Nenhum ficheiro encontrado para ZIP. Raiz do projeto: ' + projectRoot },
+        { status: 500 }
+      )
+    }
+
+    const info = `Backup do código - ${new Date().toISOString()}
+Projeto: gestao-tecnica-nonato-service
+Conteúdo: app/, public/, middleware.ts, configs, scripts/
+Para restaurar: use «Restaurar de ZIP» no Administrador ou extraia na pasta do projeto e execute npm install.`
     archive.append(info, { name: 'LEIA-ME-BACKUP.txt' })
 
     void archive.finalize()
@@ -82,11 +78,9 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': `attachment; filename="${filename}"`,
       },
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
     console.error('[backup-code/download]', error)
-    return NextResponse.json(
-      { error: 'Erro ao criar ZIP: ' + (error?.message || String(error)) },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Erro ao criar ZIP: ' + message }, { status: 500 })
   }
 }

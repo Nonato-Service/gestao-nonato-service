@@ -13979,27 +13979,25 @@ export default function Dashboard() {
 
   // Função para restaurar código a partir de um backup
   const handleRestoreCodigo = async (backupPath: string) => {
-    if (!window.confirm(t.restoreCodeConfirm || '⚠️ ATENÇÃO: Esta operação irá RESTAURAR o código do programa a partir do backup selecionado.\n\nTODOS os arquivos atuais serão substituídos pelos arquivos do backup.\n\nEsta ação NÃO PODE ser desfeita!\n\nDeseja continuar?')) {
-      return
-    }
-
-    if (!window.confirm(t.restoreCodeFinalConfirm || '⚠️ CONFIRMAÇÃO FINAL:\n\nVocê tem CERTEZA que deseja restaurar o código?\n\nEsta operação é IRREVERSÍVEL e pode causar perda de dados se o backup estiver desatualizado.\n\nConfirma a restauração?')) {
-      return
-    }
-
     try {
       const response = await fetch('/api/backup-code/restore', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ backupPath })
+        body: JSON.stringify({ backupPath }),
       })
 
       const result = await response.json()
 
       if (response.ok) {
-        alert((t.codeRestoredSuccess || '✓ CÓDIGO RESTAURADO COM SUCESSO!\n\nBackup restaurado: {path}\nArquivos restaurados: {count}\n\nA página será recarregada em 3 segundos para aplicar as mudanças.').replace('{path}', result.backupPath).replace('{count}', String(result.filesCount)))
+        const items = Array.isArray(result.itemsRestored) ? `\nItens: ${result.itemsRestored.join(', ')}` : ''
+        alert(
+          (t.codeRestoredSuccess ||
+            '✓ CÓDIGO RESTAURADO COM SUCESSO!\n\nBackup: {path}\nFicheiros: {count}\n\nA página será recarregada em 3 segundos. Se package.json mudou, execute npm install antes de continuar.')
+            .replace('{path}', result.backupPath || backupPath)
+            .replace('{count}', String(result.filesCount)) + items
+        )
         setTimeout(() => {
           window.location.reload()
         }, 3000)
@@ -14007,7 +14005,11 @@ export default function Dashboard() {
         throw new Error(result.error || 'Erro ao restaurar backup')
       }
     } catch (error) {
-      alert((t.errorRestoringCode || 'Erro ao restaurar código: {error}. Verifique se o backup existe e se você tem permissões para restaurar arquivos.').replace('{error}', (error as Error).message))
+      alert(
+        (t.errorRestoringCode ||
+          'Erro ao restaurar código: {error}. Verifique se o backup existe e se tem permissões de escrita.')
+          .replace('{error}', (error as Error).message)
+      )
       console.error('Erro na restauração:', error)
     }
   }
@@ -14021,7 +14023,10 @@ export default function Dashboard() {
       event.target.value = ''
       return
     }
-    if (!window.confirm('Restaurar o código a partir deste ZIP? Os ficheiros atuais (app, public, config) serão substituídos. Continuar?')) {
+    if (!window.confirm(
+      (safeT as Record<string, string | undefined>)?.adminBackupHubRestoreZipConfirm ||
+        'Restaurar o código a partir deste ZIP?\n\nAs pastas app/, public/ e ficheiros de configuração serão SUBSTITUÍDOS.\n\nRecomendado: pare o servidor, restaure, execute npm install se necessário, e volte a npm run dev.\n\nContinuar?'
+    )) {
       event.target.value = ''
       return
     }
@@ -14035,8 +14040,9 @@ export default function Dashboard() {
       })
       const result = await response.json()
       if (response.ok) {
-        alert('✓ ' + (result.message || `Restaurados ${result.filesCount} ficheiro(s). A página será recarregada.`))
-        setTimeout(() => window.location.reload(), 2000)
+        const items = Array.isArray(result.itemsRestored) ? `\n\nItens restaurados: ${result.itemsRestored.join(', ')}` : ''
+        alert('✓ ' + (result.message || `Restaurados ${result.filesCount} ficheiro(s).`) + items + '\n\nA página será recarregada.')
+        setTimeout(() => window.location.reload(), 2500)
       } else {
         throw new Error(result.error || 'Erro ao restaurar')
       }

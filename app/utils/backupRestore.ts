@@ -146,10 +146,21 @@ export function buildBackupEnvelope(data: Record<string, any>, timestamp?: numbe
   }
 }
 
-/** Converte ficheiro JSON (v1 ou v2) para mapa chave → valor. */
+/** Converte ficheiro JSON (v1, v2 ou chaves flat) para mapa chave → valor. */
 export function normalizeBackupFile(parsed: unknown): Record<string, any> {
   if (!parsed || typeof parsed !== 'object') throw new Error('Backup inválido')
   const root = parsed as Record<string, unknown>
+
+  if (Object.keys(root).some((k) => k.startsWith('nonato-'))) {
+    const flat: Record<string, any> = {}
+    for (const [key, raw] of Object.entries(root)) {
+      if (!key.startsWith('nonato-')) continue
+      const v = parseRawValue(raw)
+      if (v !== null) flat[key] = v
+    }
+    if (Object.keys(flat).length > 0) return flat
+  }
+
   const inner = root.data
   if (!inner || typeof inner !== 'object') throw new Error('Estrutura de backup inválida')
 
@@ -224,14 +235,16 @@ export async function restoreFullBackup(keyMap: Record<string, any>): Promise<Re
   }
 
   if (!serverOk) {
+    let savedAny = false
     for (const key of keys) {
       try {
-        await saveData(key, keyMap[key], false, true)
+        const ok = await saveData(key, keyMap[key], false, true)
+        if (ok) savedAny = true
       } catch {
         /* continuar */
       }
     }
-    serverOk = true
+    serverOk = savedAny
   }
 
   return { ok: true, keysRestored: keys.length, serverOk }
