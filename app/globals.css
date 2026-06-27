@@ -4580,7 +4580,7 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
  */
 @media (max-width: 1280px) {
   html.browser-firefox {
-    font-size: clamp(12px, 1.55vw, 14px) !important;
+    font-size: clamp(10.5px, 1.15vw, 12px) !important;
     -moz-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
@@ -4589,45 +4589,75 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
   html.browser-firefox select,
   html.browser-firefox textarea,
   html.browser-firefox button {
-    font-size: max(13px, 0.8125rem) !important;
+    font-size: 12px !important;
   }
 
   html.browser-firefox input,
   html.browser-firefox select,
   html.browser-firefox textarea {
-    min-height: 40px;
+    min-height: 36px;
   }
 
   html.browser-firefox .mobile-menu-toggle,
   html.browser-firefox .mobile-header-action-btn,
   html.browser-firefox .mobile-refresh-toggle {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-    font-size: 18px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    font-size: 16px !important;
+  }
+
+  html.browser-firefox .mobile-app-header {
+    min-height: calc(46px + env(safe-area-inset-top, 0px)) !important;
+    height: 46px !important;
   }
 
   html.browser-firefox .mobile-app-header-title {
-    font-size: 14px !important;
+    font-size: 12px !important;
   }
 
   html.browser-firefox .app-compact-layout .mobile-toolbar-btn {
-    min-height: 38px !important;
-    padding: 8px 8px !important;
-    font-size: max(11px, 0.68rem) !important;
+    min-height: 34px !important;
+    padding: 6px 7px !important;
+    font-size: 10px !important;
   }
 
   html.browser-firefox .sidebar button {
-    font-size: max(11px, 0.68rem) !important;
-    padding: 6px 8px !important;
-    min-height: 36px !important;
+    font-size: 10px !important;
+    padding: 5px 7px !important;
+    min-height: 32px !important;
+  }
+
+  html.browser-firefox .bottom-tab-item {
+    min-height: 38px !important;
+    font-size: 11px !important;
+    padding: 5px 7px !important;
+  }
+
+  html.browser-firefox .cliente-ident-chips__item {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  html.browser-firefox .cliente-ident-chips__label {
+    font-size: 9px;
   }
 }
 
 @media (max-width: 600px) {
   html.browser-firefox {
-    font-size: clamp(11px, 2.9vw, 13px) !important;
+    font-size: clamp(10px, 2.5vw, 11px) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  html.browser-firefox input,
+  html.browser-firefox select,
+  html.browser-firefox textarea,
+  html.browser-firefox button {
+    font-size: 12px !important;
+    min-height: 36px !important;
   }
 }
 
@@ -4672,23 +4702,23 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
 
 @media (min-width: 1025px) and (max-width: 1280px) {
   html.browser-firefox {
-    font-size: 12px !important;
+    font-size: 11px !important;
   }
 
   html.browser-firefox .app-layout:not(.app-compact-layout) > .sidebar {
-    width: 248px !important;
-    min-width: 248px !important;
-    max-width: 248px !important;
+    width: 228px !important;
+    min-width: 228px !important;
+    max-width: 228px !important;
   }
 
   html.browser-firefox .app-layout:not(.app-compact-layout) > .main-app-column {
-    margin-left: 248px !important;
-    width: calc(100% - 248px) !important;
-    max-width: calc(100% - 248px) !important;
+    margin-left: 228px !important;
+    width: calc(100% - 228px) !important;
+    max-width: calc(100% - 228px) !important;
   }
 
   html.browser-firefox .app-layout:not(.app-compact-layout) .bottom-tabs-bar {
-    left: calc(var(--app-touch-shell-gutter, 0px) + 248px + 8px) !important;
+    left: calc(var(--app-touch-shell-gutter, 0px) + 228px + 8px) !important;
   }
 
   html.browser-firefox .app-layout:not(.app-compact-layout) .main-content-area,
