@@ -167,6 +167,7 @@ import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
 import { ClienteCadastroForm, emptyClienteFormState, type ClienteFormState } from './components/ClienteCadastroForm'
 import { ClienteIdentidadeChips, formatClienteIdentidadeTexto, formatNifClienteExibicao } from './components/ClienteIdentidadeChips'
+import { ClienteListaLinhas } from './components/ClienteListaLinhas'
 import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { rotuloIdEquipamentoCliente } from './lib/clienteDetalheUtils'
@@ -36015,25 +36016,7 @@ export default function Dashboard() {
                                 className="clientes-alfa-nome-btn"
                                 onClick={() => setClienteListaDetalheId(c.id)}
                               >
-                                <span className="clientes-alfa-nome-btn__titulo">
-                                  <ClienteIdentidadeChips cliente={c} language={selectedLanguage} />
-                                </span>
-                                {(c.telefones || c.localidade || c.morada || c.numeroContribuicaoFiscal || c.email) ? (
-                                  <span className="clientes-alfa-nome-btn__meta">
-                                    {[
-                                      c.telefones?.trim(),
-                                      [c.localidade, c.codigoPostal]
-                                        .map((x) => String(x || '').trim())
-                                        .filter((x) => x && !/^x+$/i.test(x))
-                                        .join(' ')
-                                        .trim() || c.morada?.trim(),
-                                      formatNifClienteExibicao(c.numeroContribuicaoFiscal),
-                                      c.email?.trim(),
-                                    ]
-                                      .filter(Boolean)
-                                      .join(' · ')}
-                                  </span>
-                                ) : null}
+                                <ClienteListaLinhas cliente={c} language={selectedLanguage} />
                               </button>
                               <ClienteGpsNavButton
                                 language={selectedLanguage}
