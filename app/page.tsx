@@ -13779,7 +13779,9 @@ export default function Dashboard() {
             diskMsg = '\n\n(Aviso: não foi possível guardar no disco — ' + saveResult.error + ')'
           }
         } catch {
-          diskMsg = '\n\n(Aviso: servidor local indisponível — só descarregou para o PC.)'
+          diskMsg =
+            '\n\n(Aviso: não guardou na pasta do projeto — verifique se usa http://localhost:3000 com npm run dev.)\n' +
+            'Os ficheiros podem estar em Descargas — execute SINCRONIZAR-BACKUPS-DESCARGAS.bat'
         }
         alert(
           ((t as any).backupSuccess || 'Backup realizado com sucesso!') +
@@ -47088,7 +47090,7 @@ A1;Peça exemplo;10`}
               subtotal: items.reduce((s, x) => s + (Number(x.valorTotal) || 0), 0),
             }))
         })()
-        const clientesAtivosPainel = resolverClientesAtivosComprovanteHoje({
+        const paramsClientesComprovante = () => ({
           relatoriosAbertos: relatoriosServicoListaPrincipal.map((r) => ({
             id: r.id,
             cliente: r.cliente,
@@ -47115,6 +47117,14 @@ A1;Peça exemplo;10`}
             status: a.status,
           })),
         })
+        const resolverClientesComprovantePorData = (dataIso: string) =>
+          resolverClientesAtivosComprovanteHoje({
+            dataReferencia: dataIso,
+            ...paramsClientesComprovante(),
+          })
+        const estadoClienteParaDataRecibo = (dataIso: string) =>
+          estadoClienteReciboRapido(resolverClientesComprovantePorData(dataIso))
+        const clientesAtivosPainel = resolverClientesComprovantePorData(new Date().toISOString().slice(0, 10))
         const mapGrupoComprovantes = (() => {
           const m = new Map<string, ComprovanteDespesa[]>()
           for (const c of filtrados) {
@@ -47464,34 +47474,7 @@ A1;Peça exemplo;10`}
                       const data = dataParsed || new Date().toISOString().slice(0, 10)
                       const mesCompetencia = (dataParsed || data).slice(0, 7)
                       const descricao = extrairDescricaoRecibo(text)
-                      const sugeridos = resolverClientesAtivosComprovanteHoje({
-                        relatoriosAbertos: relatoriosServicoListaPrincipal.map((r) => ({
-                          id: r.id,
-                          cliente: r.cliente,
-                          clienteId: r.clienteId,
-                          data: r.data,
-                          numero: r.numero,
-                        })),
-                        relatoriosFechados: relatoriosServico
-                          .filter((r) => r.servicoConcluido)
-                          .map((r) => ({
-                            id: r.id,
-                            cliente: r.cliente,
-                            clienteId: r.clienteId,
-                            data: r.data,
-                            numero: r.numero,
-                            servicoConcluido: r.servicoConcluido,
-                          })),
-                        agendamentos: agendamentos.map((a) => ({
-                          id: a.id,
-                          cliente: a.cliente,
-                          clienteId: a.clienteId,
-                          data: a.data,
-                          hora: a.hora,
-                          status: a.status,
-                        })),
-                      })
-                      const estadoCliente = estadoClienteReciboRapido(sugeridos)
+                      const estadoCliente = estadoClienteParaDataRecibo(data)
                       setComprovanteReciboRapido({
                         step: 'preview',
                         imagemBase64,
@@ -48002,11 +47985,19 @@ A1;Peça exemplo;10`}
                       <input
                         type="date"
                         value={String(comprovanteReciboRapido.data || '').slice(0, 10)}
-                        onChange={e =>
-                          setComprovanteReciboRapido(prev =>
-                            prev && prev.step === 'preview' ? { ...prev, data: e.target.value } : prev
-                          )
-                        }
+                        onChange={e => {
+                          const novaData = e.target.value
+                          setComprovanteReciboRapido(prev => {
+                            if (!prev || prev.step !== 'preview') return prev
+                            const estado = estadoClienteParaDataRecibo(novaData)
+                            return {
+                              ...prev,
+                              data: novaData,
+                              mesCompetencia: novaData.slice(0, 7),
+                              ...estado,
+                            }
+                          })
+                        }}
                         style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#111', border: '1px solid rgba(147,197,253,0.35)', borderRadius: '8px', color: '#fff' }}
                       />
                       <label style={{ display: 'block', color: '#93c5fd', fontSize: '12px', marginBottom: '4px' }}>
@@ -48064,15 +48055,21 @@ A1;Peça exemplo;10`}
                         </div>
                         {comprovanteReciboRapido.clientesSugeridos.length === 0 ? (
                           <p style={{ margin: 0, fontSize: '12px', color: '#888', lineHeight: 1.45 }}>
-                            {(safeT as any)?.comprovantesClientesAtivosNenhum ||
-                              'Nenhum cliente ativo (relatório aberto, fechado ou agenda). Será despesa pessoal.'}
+                            {(
+                              (safeT as any)?.comprovantesClientesAtivosNenhumData ||
+                              'Nenhum cliente com relatório ou agenda no dia {data}. Será despesa pessoal ou escolha manualmente.'
+                            ).replace(
+                              '{data}',
+                              formatarDataListaComprovante(String(comprovanteReciboRapido.data || '').slice(0, 10))
+                            )}
                           </p>
                         ) : comprovanteReciboRapido.clientesSugeridos.length === 1 ? (
                           <p style={{ margin: 0, fontSize: '12px', color: '#bbf7d0', lineHeight: 1.45 }}>
                             {(
-                              (safeT as any)?.comprovantesClientesAtivosAuto ||
-                              'Detectado automaticamente: {cliente} ({origem})'
+                              (safeT as any)?.comprovantesClientesAtivosAutoData ||
+                              'Para o dia {data}: {cliente} ({origem})'
                             )
+                              .replace('{data}', formatarDataListaComprovante(String(comprovanteReciboRapido.data || '').slice(0, 10)))
                               .replace('{cliente}', comprovanteReciboRapido.clientesSugeridos[0].clienteNome)
                               .replace(
                                 '{origem}',
@@ -48085,7 +48082,13 @@ A1;Peça exemplo;10`}
                         ) : (
                           <>
                             <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#aaa' }}>
-                              {(safeT as any)?.comprovantesClientesAtivosEscolha || 'Em qual cliente?'}
+                              {(
+                                (safeT as any)?.comprovantesClientesAtivosEscolhaData ||
+                                'Vários clientes no dia {data}. Qual deles?'
+                              ).replace(
+                                '{data}',
+                                formatarDataListaComprovante(String(comprovanteReciboRapido.data || '').slice(0, 10))
+                              )}
                             </p>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                               {comprovanteReciboRapido.clientesSugeridos.map((cl) => {

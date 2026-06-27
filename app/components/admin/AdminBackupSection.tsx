@@ -105,10 +105,17 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
   const [status, setStatus] = useState<BackupStatus | null>(null)
   const [statusLoading, setStatusLoading] = useState(false)
   const [codeListLoaded, setCodeListLoaded] = useState(false)
+  const [isLocalHost, setIsLocalHost] = useState(true)
   const loadCodeBackupsRef = useRef(loadCodeBackups)
   const locale = localeDatetimeGeneral(selectedLanguage)
 
   loadCodeBackupsRef.current = loadCodeBackups
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const h = window.location.hostname
+    setIsLocalHost(h === 'localhost' || h === '127.0.0.1')
+  }, [])
 
   const refreshStatus = useCallback(async () => {
     setStatusLoading(true)
@@ -328,6 +335,23 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
             'Os backups ficam em backups/json/ (dados) e backups/codigo/ (ZIP + pastas). Abra no Explorador de Ficheiros do Windows.'
           )}
         </p>
+        {!isLocalHost ? (
+          <p className="admin-backup-hub__demo-warn">
+            {tr(
+              safeT,
+              'adminBackupHubNotLocalWarn',
+              'Está a usar o site na internet (Railway). Os ficheiros NÃO vão para o PC — só para Descargas do browser. Para guardar na pasta do projeto, use http://localhost:3000 no mesmo PC onde corre npm run dev.'
+            )}
+          </p>
+        ) : (
+          <p className="admin-backup-hub__safe-note">
+            {tr(
+              safeT,
+              'adminBackupHubLocalOpenHint',
+              'No PC: duplo clique em ABRI-PASTAS-BACKUP.bat na pasta do projeto (ou SINCRONIZAR-BACKUPS-DESCARGAS.bat se só vir ficheiros em Descargas).'
+            )}
+          </p>
+        )}
       </div>
 
       {isDemoMode ? (

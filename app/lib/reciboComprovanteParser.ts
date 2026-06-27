@@ -36,16 +36,23 @@ export function parseTotalEurosFromReceiptText(text: string): number {
   return Math.round(Math.max(...pool) * 100) / 100
 }
 
+function isoFromParts(day: string, month: string, year: string): string | null {
+  const iso = `${year}-${month}-${day}`
+  const dt = new Date(iso + 'T12:00:00')
+  if (Number.isNaN(dt.getTime())) return null
+  return iso
+}
+
 /** Data em ISO YYYY-MM-DD ou null */
 export function parseDataReciboIso(text: string): string | null {
-  const m = text.match(/\b(\d{2})[./-](\d{2})[./-](\d{4})\b/)
-  if (m) {
-    const y = m[3]
-    const mo = m[2]
-    const d = m[1]
-    const iso = `${y}-${mo}-${d}`
-    const dt = new Date(iso + 'T12:00:00')
-    if (!Number.isNaN(dt.getTime())) return iso
+  const m4 = text.match(/\b(\d{2})[./-](\d{2})[./-](\d{4})\b/)
+  if (m4) return isoFromParts(m4[1], m4[2], m4[3])
+
+  const m2 = text.match(/\b(\d{2})[./-](\d{2})[./-](\d{2})\b/)
+  if (m2) {
+    const yy = parseInt(m2[3], 10)
+    const year = yy >= 70 ? 1900 + yy : 2000 + yy
+    return isoFromParts(m2[1], m2[2], String(year))
   }
   return null
 }

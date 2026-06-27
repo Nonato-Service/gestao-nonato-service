@@ -125,29 +125,35 @@ function clientesDeAgendaHoje(agendamentos: AgendamentoRef[], hoje: string): Cli
 /** Dias para procurar relatórios fechados quando não há cliente ativo hoje. */
 const DIAS_RELATORIOS_FECHADOS_RECENTES = 30
 
-/**
- * Resolve clientes ativos para comprovantes do dia.
- * Prioridade (primeira origem vence por cliente): 1) relatórios abertos de hoje;
- * 2) relatórios já fechados de hoje; 3) agenda de hoje;
- * 4) se ainda vazio, relatórios fechados dos últimos 30 dias.
- */
+/** Resolve clientes ativos para comprovantes numa data (relatório / agenda). */
 export function resolverClientesAtivosComprovanteHoje(params: {
+  /** Data do recibo ou do dia de atendimento (YYYY-MM-DD). Por omissão: hoje. */
+  dataReferencia?: string
+  /** @deprecated use dataReferencia */
   hoje?: string
   relatoriosAbertos: RelatorioRef[]
   relatoriosFechados?: RelatorioRef[]
   agendamentos: AgendamentoRef[]
 }): ClienteAtivoComprovante[] {
-  const hoje = params.hoje || isoHojeLocal()
+  const dataRef = String(params.dataReferencia || params.hoje || isoHojeLocal())
+    .trim()
+    .slice(0, 10)
   const fechados = params.relatoriosFechados ?? []
 
-  const deAbertos = clientesDeRelatoriosAbertosHoje(params.relatoriosAbertos, hoje)
-  const deFechadosHoje = clientesDeRelatoriosFechados(fechados, hoje)
-  const deAgenda = clientesDeAgendaHoje(params.agendamentos, hoje)
+  const deAbertos = clientesDeRelatoriosAbertosHoje(params.relatoriosAbertos, dataRef)
+  const deFechadosNoDia = clientesDeRelatoriosFechados(fechados, dataRef)
+  const deAgenda = clientesDeAgendaHoje(params.agendamentos, dataRef)
 
-  const mesclado = mesclarClientesPrioridade(deAbertos, deFechadosHoje, deAgenda)
+  const mesclado = mesclarClientesPrioridade(deAbertos, deFechadosNoDia, deAgenda)
   if (mesclado.length > 0) return mesclado
 
-  return mesclarClientesPrioridade(clientesDeRelatoriosFechados(fechados, hoje, DIAS_RELATORIOS_FECHADOS_RECENTES))
+  // Só no painel «hoje»: se não houver cliente, tenta relatórios fechados recentes
+  if (dataRef === isoHojeLocal()) {
+    return mesclarClientesPrioridade(
+      clientesDeRelatoriosFechados(fechados, dataRef, DIAS_RELATORIOS_FECHADOS_RECENTES)
+    )
+  }
+  return []
 }
 
 export function labelOrigemClienteComprovante(
