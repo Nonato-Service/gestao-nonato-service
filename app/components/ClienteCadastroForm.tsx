@@ -332,6 +332,7 @@ export function ClienteCadastroForm({
                 nomeEmpresa: clienteForm.nomeEmpresa,
               }}
               language={language}
+              variant="banner"
             />
           </div>
         ) : !editingCliente ? (

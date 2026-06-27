@@ -40,11 +40,18 @@ type Props = {
   cliente: ClienteIdentidade
   language?: string
   className?: string
-  /** Só o código (ex.: breadcrumb) */
+  /** list = lista compacta; banner = faixa após gravar; full = etiquetas explícitas */
+  variant?: 'list' | 'banner' | 'full'
   codOnly?: boolean
 }
 
-export function ClienteIdentidadeChips({ cliente, language = 'pt-BR', className, codOnly }: Props) {
+export function ClienteIdentidadeChips({
+  cliente,
+  language = 'pt-BR',
+  className,
+  variant = 'list',
+  codOnly,
+}: Props) {
   const tr = useIdentTr(language)
   const cod = codigoClienteExibicao(cliente)
   const nome = (cliente.nomeEmpresa || '').trim() || '—'
@@ -53,11 +60,30 @@ export function ClienteIdentidadeChips({ cliente, language = 'pt-BR', className,
 
   if (codOnly && cod !== '—') {
     return (
-      <span className={`cliente-ident-chips cliente-ident-chips--inline ${className || ''}`}>
-        <span className="cliente-ident-chips__item cliente-ident-chips__item--cod">
-          <span className="cliente-ident-chips__label">{lblCod}</span>
-          <span className="cliente-ident-chips__eq" aria-hidden>=</span>
-          <span className="cliente-ident-chips__value">{cod}</span>
+      <span className={`cliente-ident-line cliente-ident-line--inline ${className || ''}`}>
+        <span className="cliente-ident-line__cod" title={`${lblCod}: ${cod}`}>
+          {cod}
+        </span>
+      </span>
+    )
+  }
+
+  if (variant === 'list' || variant === 'banner') {
+    return (
+      <span
+        className={`cliente-ident-line${variant === 'banner' ? ' cliente-ident-line--banner' : ''} ${className || ''}`}
+      >
+        {cod !== '—' ? (
+          <span
+            className="cliente-ident-line__cod"
+            title={`${lblCod}: ${cod}`}
+            aria-label={`${lblCod} ${cod}`}
+          >
+            {cod}
+          </span>
+        ) : null}
+        <span className="cliente-ident-line__nome" title={`${lblNome}: ${nome}`}>
+          {nome}
         </span>
       </span>
     )
@@ -72,13 +98,18 @@ export function ClienteIdentidadeChips({ cliente, language = 'pt-BR', className,
           <span className="cliente-ident-chips__value">{cod}</span>
         </span>
       ) : null}
-      {!codOnly ? (
-        <span className="cliente-ident-chips__item cliente-ident-chips__item--nome">
-          <span className="cliente-ident-chips__label">{lblNome}</span>
-          <span className="cliente-ident-chips__eq" aria-hidden>=</span>
-          <span className="cliente-ident-chips__value">{nome}</span>
-        </span>
-      ) : null}
+      <span className="cliente-ident-chips__item cliente-ident-chips__item--nome">
+        <span className="cliente-ident-chips__label">{lblNome}</span>
+        <span className="cliente-ident-chips__eq" aria-hidden>=</span>
+        <span className="cliente-ident-chips__value">{nome}</span>
+      </span>
     </span>
   )
+}
+
+/** Evita «NIF NIF 123» quando o valor já traz o prefixo. */
+export function formatNifClienteExibicao(nif: string | undefined | null): string {
+  const t = String(nif ?? '').trim()
+  if (!t) return ''
+  return /^nif[\s.:]/i.test(t) ? t : `NIF ${t}`
 }

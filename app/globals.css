@@ -4635,13 +4635,13 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
     padding: 5px 7px !important;
   }
 
-  html.browser-firefox .cliente-ident-chips__item {
-    padding: 4px 8px;
-    font-size: 11px;
+  html.browser-firefox .cliente-ident-line__cod {
+    font-size: 10px;
+    padding: 2px 6px;
   }
 
-  html.browser-firefox .cliente-ident-chips__label {
-    font-size: 9px;
+  html.browser-firefox .cliente-ident-line__nome {
+    font-size: 13px;
   }
 }
 
@@ -6485,9 +6485,9 @@ a:focus-visible {
 .clientes-alfa-nome-btn {
   width: 100%;
   text-align: left;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   background: var(--ns-surface-soft);
   color: #fff;
   font-size: 14px;
@@ -6497,7 +6497,7 @@ a:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
   box-sizing: border-box;
 }
@@ -6511,7 +6511,49 @@ a:focus-visible {
   display: block;
 }
 
-/* Identidade do cliente — Cód. = NS… · Cliente = nome */
+/* Lista: código compacto + nome (sem repetir CÓD./CLIENTE em cada linha) */
+.cliente-ident-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  width: 100%;
+  min-width: 0;
+}
+.cliente-ident-line--inline {
+  display: inline-flex;
+  width: auto;
+}
+.cliente-ident-line--banner {
+  align-items: center;
+}
+.cliente-ident-line__cod {
+  flex-shrink: 0;
+  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #69f0ae;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(0, 200, 83, 0.1);
+  border: 1px solid rgba(0, 200, 83, 0.22);
+  line-height: 1.3;
+}
+.cliente-ident-line__nome {
+  flex: 1 1 min(120px, 100%);
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f5f5f5;
+  line-height: 1.35;
+  word-break: break-word;
+}
+.cliente-ident-line--banner .cliente-ident-line__nome {
+  font-size: 15px;
+}
+
+/* Etiquetas explícitas — só em contextos pontuais (não na lista) */
 .cliente-ident-chips {
   display: flex;
   flex-wrap: wrap;
@@ -6576,18 +6618,19 @@ a:focus-visible {
 }
 .cliente-cadastro-v2__ident-banner {
   margin: 0 0 14px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 200, 83, 0.28);
-  background: linear-gradient(135deg, rgba(0, 200, 83, 0.1) 0%, rgba(0, 0, 0, 0.18) 100%);
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 200, 83, 0.2);
+  background: rgba(0, 200, 83, 0.06);
 }
 .clientes-alfa-nome-btn__meta {
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.48);
   word-break: break-word;
   width: 100%;
+  padding-left: 2px;
 }
 .clientes-alfa-nome-btn:hover {
   background: rgba(0, 200, 83, 0.12);

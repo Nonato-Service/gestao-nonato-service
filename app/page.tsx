@@ -166,7 +166,7 @@ import {
 import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
 import { ClienteCadastroForm, emptyClienteFormState, type ClienteFormState } from './components/ClienteCadastroForm'
-import { ClienteIdentidadeChips, formatClienteIdentidadeTexto } from './components/ClienteIdentidadeChips'
+import { ClienteIdentidadeChips, formatClienteIdentidadeTexto, formatNifClienteExibicao } from './components/ClienteIdentidadeChips'
 import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { rotuloIdEquipamentoCliente } from './lib/clienteDetalheUtils'
@@ -36022,11 +36022,12 @@ export default function Dashboard() {
                                   <span className="clientes-alfa-nome-btn__meta">
                                     {[
                                       c.telefones?.trim(),
-                                      [c.localidade, c.codigoPostal].filter(Boolean).join(' ').trim() ||
-                                        c.morada?.trim(),
-                                      c.numeroContribuicaoFiscal
-                                        ? `NIF ${c.numeroContribuicaoFiscal}`
-                                        : '',
+                                      [c.localidade, c.codigoPostal]
+                                        .map((x) => String(x || '').trim())
+                                        .filter((x) => x && !/^x+$/i.test(x))
+                                        .join(' ')
+                                        .trim() || c.morada?.trim(),
+                                      formatNifClienteExibicao(c.numeroContribuicaoFiscal),
                                       c.email?.trim(),
                                     ]
                                       .filter(Boolean)
