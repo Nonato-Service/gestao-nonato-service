@@ -8503,45 +8503,15 @@ export default function Dashboard() {
   useLayoutEffect(() => {
     const q = () => {
       if (typeof window === 'undefined') return
-      const touch =
-        navigator.maxTouchPoints > 0 || 'ontouchstart' in window
-      const w = window.innerWidth
-      const compact = w <= COMPACT_LAYOUT_MAX_PX
+      const compact = window.innerWidth <= COMPACT_LAYOUT_MAX_PX
       setIsCompactLayout(compact)
       document.documentElement.classList.toggle('app-compact-layout-early', compact)
-      document.documentElement.classList.toggle('app-touch-desktop-site', touch && w >= 900)
-      document.documentElement.classList.toggle(
-        'browser-firefox',
-        /Firefox\//i.test(navigator.userAgent || '')
-      )
       if (!compact) setMobileMenuOpen(false)
     }
     q()
     window.addEventListener('resize', q)
     return () => window.removeEventListener('resize', q)
   }, [])
-
-  /** Modo computador no telemóvel: centrar vista horizontal quando a página é mais larga que o ecrã */
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (/Firefox\//i.test(navigator.userAgent || '')) return
-    const touch = navigator.maxTouchPoints > 0 || 'ontouchstart' in window
-    if (!touch || window.innerWidth < 900) return
-
-    const centerHorizontally = () => {
-      if (document.documentElement.classList.contains('mobile-browser-zoomed')) return
-      const root = document.documentElement
-      const extra = root.scrollWidth - root.clientWidth
-      if (extra > 12) {
-        window.scrollTo(Math.round(extra / 2), window.scrollY)
-      }
-    }
-
-    const run = () => requestAnimationFrame(() => setTimeout(centerHorizontally, 150))
-    run()
-    window.addEventListener('orientationchange', run)
-    return () => window.removeEventListener('orientationchange', run)
-  }, [loginUser, isCompactLayout, activeTabId])
 
   useEffect(() => {
     if (!isCompactLayout || !mobileMenuOpen) return
