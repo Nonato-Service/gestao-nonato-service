@@ -38,9 +38,6 @@ export async function GET(request: NextRequest) {
       writable,
       isDemo,
       onRailway,
-      hint: onRailway
-        ? 'No Railway, restauro de código afeta só o contentor actual — após redeploy use ZIP local ou git.'
-        : 'Ambiente local: backup de código e restauro ZIP funcionam na pasta do projeto.',
     })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error)

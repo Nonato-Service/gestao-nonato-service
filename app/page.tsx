@@ -8965,7 +8965,7 @@ export default function Dashboard() {
   useEffect(() => {
     const activeTab = openTabs.find(tab => tab.id === activeTabId)
     if (activeTab?.type === 'administrador') {
-      loadCodeBackups()
+      loadCodeBackups({ silent: true })
     }
   }, [activeTabId, openTabs])
 
@@ -13949,8 +13949,8 @@ export default function Dashboard() {
   }
 
   // Função para carregar lista de backups disponíveis
-  const loadCodeBackups = async () => {
-    setLoadingBackups(true)
+  const loadCodeBackups = async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoadingBackups(true)
     try {
       const response = await fetch('/api/backup-code/list', {
         method: 'GET',

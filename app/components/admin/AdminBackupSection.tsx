@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { formatBackupBytes, MAX_BACKUP_HISTORY } from '../../lib/adminBackupRegistry'
 import type { AutoBackup, CodeBackup, SafeT } from './adminTypes'
 
@@ -26,7 +26,7 @@ export type AdminBackupSectionProps = {
   handleDownloadBackupZip: () => void
   handleRestoreCodigo: (path: string) => void
   handleRestoreFromZip: (e: React.ChangeEvent<HTMLInputElement>) => void
-  loadCodeBackups: () => void
+  loadCodeBackups: (opts?: { silent?: boolean }) => void
   getAutoBackups: () => AutoBackup[]
   restoreAutoBackup: (b: AutoBackup) => void | Promise<void>
   deleteAutoBackup: (timestamp: number) => boolean
@@ -44,7 +44,6 @@ type BackupStatus = {
   projectRootValid?: boolean
   writable?: boolean
   onRailway?: boolean
-  hint?: string
 }
 
 function tr(safeT: SafeT, key: string, fallback: string): string {
@@ -101,7 +100,11 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
   const [confirm, setConfirm] = useState<ConfirmState>(null)
   const [status, setStatus] = useState<BackupStatus | null>(null)
   const [statusLoading, setStatusLoading] = useState(false)
+  const [codeListLoaded, setCodeListLoaded] = useState(false)
+  const loadCodeBackupsRef = useRef(loadCodeBackups)
   const locale = localeDatetimeGeneral(selectedLanguage)
+
+  loadCodeBackupsRef.current = loadCodeBackups
 
   const refreshStatus = useCallback(async () => {
     setStatusLoading(true)
@@ -117,8 +120,12 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
 
   useEffect(() => {
     void refreshStatus()
-    loadCodeBackups()
-  }, [refreshStatus, loadCodeBackups])
+    loadCodeBackupsRef.current()
+  }, [refreshStatus])
+
+  useEffect(() => {
+    if (!loadingBackups) setCodeListLoaded(true)
+  }, [loadingBackups])
 
   const autoBackups = useMemo(() => getAutoBackups().slice(0, MAX_BACKUP_HISTORY), [getAutoBackups, tick])
   const manualBackups = useMemo(() => getManualDataBackups().slice(0, MAX_BACKUP_HISTORY), [getManualDataBackups, tick])
@@ -272,7 +279,7 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
       <div className="admin-backup-hub__status">
         <div className="admin-backup-hub__status-head">
           <strong>{tr(safeT, 'adminBackupHubStatusTitle', 'Diagnóstico do servidor')}</strong>
-          <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--ghost" onClick={() => { void refreshStatus(); loadCodeBackups() }} disabled={statusLoading}>
+          <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--ghost" onClick={() => { void refreshStatus(); loadCodeBackupsRef.current({ silent: codeListLoaded }) }} disabled={statusLoading}>
             {statusLoading ? '…' : tr(safeT, 'updateListButton', 'Atualizar')}
           </button>
         </div>
@@ -291,10 +298,24 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
           </div>
           <div className={`admin-backup-hub__status-pill${status?.onRailway ? ' warn' : ' ok'}`}>
             <span>{tr(safeT, 'adminBackupHubStatusEnv', 'Ambiente')}</span>
-            <strong>{status?.onRailway ? 'Railway / Cloud' : 'Local'}</strong>
+            <strong>
+              {status?.onRailway
+                ? tr(safeT, 'adminBackupHubStatusEnvRailway', 'Railway / Cloud')
+                : tr(safeT, 'adminBackupHubStatusEnvLocal', 'Local')}
+            </strong>
           </div>
         </div>
-        {status?.hint ? <p className="admin-backup-hub__status-hint">{status.hint}</p> : null}
+        {status ? (
+          <p className="admin-backup-hub__status-hint">
+            {tr(
+              safeT,
+              status.onRailway ? 'adminBackupHubStatusHintRailway' : 'adminBackupHubStatusHintLocal',
+              status.onRailway
+                ? 'No Railway, restauro de código afeta só o contentor actual — após redeploy use ZIP local ou git.'
+                : 'Ambiente local: backup de código e restauro ZIP funcionam na pasta do projeto.'
+            )}
+          </p>
+        ) : null}
       </div>
 
       {isDemoMode ? (
@@ -413,8 +434,8 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
               <h5>{tr(safeT, 'adminBackupHubCodeTitle', 'Backups no servidor (5 últimos)')}</h5>
             </header>
             {renderSlots(codeList.length, 'Código')}
-            {loadingBackups ? (
-              <p className="admin-backup-hub-empty">{safeT?.loadingBackups || 'Carregando…'}</p>
+            {loadingBackups && !codeListLoaded ? (
+              <p className="admin-backup-hub-empty admin-backup-hub-empty--reserved">{safeT?.loadingBackups || 'Carregando…'}</p>
             ) : codeList.length === 0 ? (
               <p className="admin-backup-hub-empty">{safeT?.noCodeBackups || 'Nenhum backup de código — crie o primeiro acima.'}</p>
             ) : (
