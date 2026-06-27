@@ -4899,6 +4899,42 @@ body {
   }
 }
 
+/* Banner PWA — botões com contraste legível (não herdar regra global branca) */
+html body .pwa-update-banner button.pwa-update-banner__btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1.2;
+  min-height: 44px;
+}
+
+html body .pwa-update-banner button.pwa-update-banner__btn--later {
+  background: transparent !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid rgba(255, 255, 255, 0.9) !important;
+}
+
+html body .pwa-update-banner button.pwa-update-banner__btn--later:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+html body .pwa-update-banner button.pwa-update-banner__btn--update {
+  background: #ffffff !important;
+  color: #004d26 !important;
+  -webkit-text-fill-color: #004d26 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
+  background: #e8ffe8 !important;
+  color: #003319 !important;
+  -webkit-text-fill-color: #003319 !important;
+}
+
 /* Tablet em retrato: manter layout flexível */
 @media (min-width: 769px) and (max-width: 1024px) {
   .app-layout:not(.app-compact-layout) .clientes-module-tabs .btn-primary,
@@ -25930,7 +25966,6 @@ html body .financeiro-despesas-bib-card button,
 html body .pagamentos-contador-card button,
 html body .biblioteca-pecas-hub button,
 html body .ns-diario-modal button,
-html body .pwa-update-banner button,
 html body .cliente-lista-card-devedor button,
 html body .cliente-form-alerta-devedor button,
 html body .cliente-card-alerta-devedor button,

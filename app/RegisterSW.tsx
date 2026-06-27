@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { setupAutoSyncOnReconnect, setupFlushSyncOnPageHide } from './utils/dataStorage'
 
 // Bumpar este número em cada deploy para forçar atualização no telemóvel/tablet
-const SW_VERSION = 18
+const SW_VERSION = 19
 const SW_DISMISSED_SESSION_KEY = 'nonato-pwa-update-dismissed-v'
 
 export function RegisterSW() {
@@ -139,37 +139,21 @@ export function RegisterSW() {
         fontWeight: 600,
       }}
     >
-      <span>Nova versão disponível — só recarrega se carregar em «Atualizar»</span>
+      <span>Nova versão disponível — carregue em «Atualizar» para recarregar o programa</span>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <button
           type="button"
+          className="pwa-update-banner__btn pwa-update-banner__btn--later"
           onClick={handleDismiss}
-          style={{
-            padding: '10px 18px',
-            background: 'transparent',
-            color: '#fff',
-            border: '2px solid rgba(255,255,255,0.85)',
-            borderRadius: 8,
-            fontWeight: 700,
-            cursor: 'pointer',
-            fontSize: 14,
-          }}
+          title="Continuar com a versão actual e actualizar mais tarde"
         >
           DEPOIS
         </button>
         <button
           type="button"
+          className="pwa-update-banner__btn pwa-update-banner__btn--update"
           onClick={handleUpdate}
-          style={{
-            padding: '10px 24px',
-            background: '#fff',
-            color: '#006600',
-            border: 'none',
-            borderRadius: 8,
-            fontWeight: 700,
-            cursor: 'pointer',
-            fontSize: 14,
-          }}
+          title="Recarregar o programa com a versão nova"
         >
           ATUALIZAR
         </button>
