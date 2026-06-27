@@ -65537,9 +65537,15 @@ A1;Peça exemplo;10`}
   const handleLoginSubmit = async () => {
     const usuario = loginUsuarioInput.trim()
     const senha = senhaInicialInput.trim()
+    const tr = safeT as Record<string, string | undefined>
+
+    if (!usuario) {
+      window.alert(tr.loginUsernameRequired || 'Introduza o utilizador (e-mail ou nome).')
+      return
+    }
 
     if (!senha) {
-      window.alert('Introduza a senha.')
+      window.alert(tr.loginPasswordRequired || 'Introduza a senha.')
       return
     }
 
@@ -65610,7 +65616,7 @@ A1;Peça exemplo;10`}
           </p>
           <p className="ns-login-hint">
             {(safeT as any)?.loginHintBlankUser ||
-              'Pode deixar o utilizador em branco e introduzir só a senha. Também aceita e-mail ou nome de utilizador.'}
+              'Utilizador e senha são obrigatórios. Use o e-mail ou nome cadastrado no Administrador.'}
           </p>
           {users.length === 0 && managedPasswords.length > 0 && (
             <p className="ns-login-hint ns-login-hint--warn">
@@ -65629,8 +65635,9 @@ A1;Peça exemplo;10`}
             className="ns-login-field"
             value={loginUsuarioInput}
             onChange={(e) => setLoginUsuarioInput(e.target.value)}
-            placeholder={(safeT as any)?.loginPlaceholderUsuario || 'E-mail ou nome (opcional)'}
+            placeholder={(safeT as any)?.loginPlaceholderUsuario || 'E-mail ou nome de utilizador *'}
             autoComplete="username"
+            required
           />
           <input
             type="password"
@@ -65638,8 +65645,9 @@ A1;Peça exemplo;10`}
             style={{ marginBottom: 22 }}
             value={senhaInicialInput}
             onChange={(e) => setSenhaInicialInput(e.target.value)}
-            placeholder={safeT?.password || 'Senha'}
+            placeholder={`${safeT?.password || 'Senha'} *`}
             autoComplete="current-password"
+            required
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleLoginSubmit()
             }}

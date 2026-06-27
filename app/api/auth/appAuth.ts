@@ -280,7 +280,7 @@ export function resetAdminPasswordOnDisk(newPassword: string, email?: string): S
 export function validateAppCredentials(username: string, password: string): StoredUser | null {
   const usuario = username.trim()
   const senha = password.trim()
-  if (!senha) return null
+  if (!senha || !usuario) return null
 
   const masterPassword = process.env.NONATO_MASTER_PASSWORD?.trim()
   if (masterPassword && senha === masterPassword) {
@@ -295,11 +295,6 @@ export function validateAppCredentials(username: string, password: string): Stor
     const byLogin = findUserByLoginInput(users, usuario)
     if (byLogin && String(byLogin.password || '').trim() === senha) {
       return toStoredUser(byLogin)
-    }
-
-    const byPassword = findUserByPassword(users, senha)
-    if (byPassword) {
-      return toStoredUser(byPassword)
     }
 
     const managedOk = managedPasswords.some((p) => p && String(p.password || '').trim() === senha)

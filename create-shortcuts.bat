@@ -25,12 +25,16 @@ powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut 
 REM Criar atalho para listar backups
 powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%desktop%\Listar Backups.lnk'); $Shortcut.TargetPath = '%projectPath%list-backups.bat'; $Shortcut.WorkingDirectory = '%projectPath%'; $Shortcut.IconLocation = 'shell32.dll,4'; $Shortcut.Description = 'Listar backups disponiveis'; $Shortcut.Save()"
 
+REM Atalho do programa (icone + janela tipo app)
+powershell -NoProfile -ExecutionPolicy Bypass -File "%projectPath%scripts\criar-atalho-gestao.ps1"
+
 echo.
 echo ========================================
 echo   ATALHOS CRIADOS COM SUCESSO!
 echo ========================================
 echo.
-echo Os seguintes atalhos foram criados na sua area de trabalho:
+echo Na area de trabalho:
+echo   - NONATO SERVICE - Gestao  (abrir o programa)
 echo   - Iniciar Servidor
 echo   - Parar Servidor
 echo   - Reiniciar Servidor
