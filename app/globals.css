@@ -6938,6 +6938,28 @@ a:focus-visible {
 .relatorio-equipamentos-block__add {
   flex-shrink: 0;
   white-space: nowrap;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 200, 83, 0.55) !important;
+  background: rgba(0, 200, 83, 0.14) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.relatorio-equipamentos-block__add:hover:not(:disabled) {
+  background: rgba(0, 200, 83, 0.24) !important;
+  border-color: rgba(0, 200, 83, 0.72) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.relatorio-equipamentos-block__add:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .relatorio-equipamentos-block__empty {
