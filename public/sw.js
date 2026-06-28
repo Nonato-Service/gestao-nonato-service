@@ -1,6 +1,6 @@
 // Service Worker - Gestão Técnica Nonato Service (PWA offline)
 // Bumpar CACHE_NAME em cada deploy que altere precache / lógica offline
-const CACHE_NAME = 'nonato-pwa-v44'
+const CACHE_NAME = 'nonato-pwa-v45'
 
 const PRECACHE_ASSETS = ['/icon.svg', '/manifest.json']
 

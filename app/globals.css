@@ -22767,6 +22767,20 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   transform: translateY(-1px);
 }
 
+.biblioteca-galeria-categorias__anexar-wrap {
+  display: flex;
+  margin-top: 12px;
+}
+
+.biblioteca-galeria-categorias__anexar-btn {
+  flex: 1;
+  width: 100%;
+  min-width: 72px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .biblioteca-pecas-hub__piece-thumb {
   position: relative;
   width: 100%;

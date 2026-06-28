@@ -57,6 +57,11 @@ type Props = {
   onThumbLeave?: () => void
   buscaCodigo?: string
   onBuscaCodigoChange?: (value: string) => void
+  modoAnexarRelatorio?: boolean
+  pecaSelecionadaId?: string | null
+  onSelecionarPeca?: (peca: PecaBibliotecaGaleria) => void
+  onAnexarPeca?: (peca: PecaBibliotecaGaleria) => void
+  labelAnexar?: string
   t?: GaleriaTranslations
 }
 
@@ -81,11 +86,39 @@ function renderPecaCard(
     onThumbEnter?: (ev: React.MouseEvent, src: string, label: string) => void
     onThumbLeave?: () => void
     codigoLabel: string
+    modoAnexarRelatorio?: boolean
+    selecionada?: boolean
+    onSelecionar?: () => void
+    onAnexar?: () => void
+    labelAnexar?: string
   }
 ) {
-  const { srcImagem, temImagemPropria, onThumbEnter, onThumbLeave, codigoLabel } = opts
+  const {
+    srcImagem,
+    temImagemPropria,
+    onThumbEnter,
+    onThumbLeave,
+    codigoLabel,
+    modoAnexarRelatorio = false,
+    selecionada = false,
+    onSelecionar,
+    onAnexar,
+    labelAnexar = 'Anexar ao relatório',
+  } = opts
   return (
-    <article key={peca.id} className="biblioteca-pecas-hub__piece-card">
+    <article
+      key={peca.id}
+      className={[
+        'biblioteca-pecas-hub__piece-card',
+        modoAnexarRelatorio && 'biblioteca-pecas-hub__piece-card--pickable',
+        selecionada && 'biblioteca-pecas-hub__piece-card--selected',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      onClick={() => {
+        if (modoAnexarRelatorio) onSelecionar?.()
+      }}
+    >
       <div
         className="biblioteca-pecas-hub__piece-thumb"
         onMouseEnter={(ev) => {
@@ -132,6 +165,16 @@ function renderPecaCard(
           <span className="biblioteca-pecas-hub__piece-chip-v">{peca.codigo || '—'}</span>
         </span>
       </div>
+      {modoAnexarRelatorio ? (
+        <div
+          className="biblioteca-galeria-categorias__anexar-wrap"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button type="button" className="btn-primary biblioteca-galeria-categorias__anexar-btn" onClick={onAnexar}>
+            {labelAnexar}
+          </button>
+        </div>
+      ) : null}
     </article>
   )
 }
@@ -148,13 +191,29 @@ export function BibliotecaPecasGaleriaCategorias({
   onThumbLeave,
   buscaCodigo = '',
   onBuscaCodigoChange,
+  modoAnexarRelatorio = false,
+  pecaSelecionadaId = null,
+  onSelecionarPeca,
+  onAnexarPeca,
+  labelAnexar,
   t = {},
 }: Props) {
   const categoriasOrdenadas = [...categorias].sort((a, b) =>
     (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
   )
   const codigoLabel = t.codigo || 'Código'
-  const cardOpts = { srcImagem, temImagemPropria, onThumbEnter, onThumbLeave, codigoLabel }
+  const cardOptsFor = (peca: PecaBibliotecaGaleria) => ({
+    srcImagem,
+    temImagemPropria,
+    onThumbEnter,
+    onThumbLeave,
+    codigoLabel,
+    modoAnexarRelatorio,
+    selecionada: modoAnexarRelatorio && pecaSelecionadaId === peca.id,
+    onSelecionar: () => onSelecionarPeca?.(peca),
+    onAnexar: () => onAnexarPeca?.(peca),
+    labelAnexar: labelAnexar || 'Anexar ao relatório',
+  })
   const q = buscaCodigo.trim().toLowerCase()
   const emBusca = q.length > 0
 
@@ -212,7 +271,7 @@ export function BibliotecaPecasGaleriaCategorias({
           </p>
         ) : (
           <div className="biblioteca-pecas-hub__piece-grid biblioteca-galeria-categorias__grid-pecas">
-            {resultados.map((peca) => renderPecaCard(peca, cardOpts))}
+            {resultados.map((peca) => renderPecaCard(peca, cardOptsFor(peca)))}
           </div>
         )}
       </div>
@@ -246,7 +305,7 @@ export function BibliotecaPecasGaleriaCategorias({
           </p>
         ) : (
           <div className="biblioteca-pecas-hub__piece-grid biblioteca-galeria-categorias__grid-pecas">
-            {pecasCategoria.map((peca) => renderPecaCard(peca, cardOpts))}
+            {pecasCategoria.map((peca) => renderPecaCard(peca, cardOptsFor(peca)))}
           </div>
         )}
       </div>

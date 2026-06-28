@@ -38644,6 +38644,19 @@ export default function Dashboard() {
                       setBuscaCodigoBiblioteca(value)
                       if (value.trim()) setBibliotecaGaleriaCategoriaId(null)
                     }}
+                    modoAnexarRelatorio={selecionarPecaParaRelatorioServico}
+                    pecaSelecionadaId={pecaSelecionadaParaRelatorio?.id ?? null}
+                    onSelecionarPeca={(peca) => {
+                      const full = pecasBiblioteca.find((p) => p.id === peca.id)
+                      if (full) setPecaSelecionadaParaRelatorio(full)
+                    }}
+                    onAnexarPeca={(peca) => {
+                      const full = pecasBiblioteca.find((p) => p.id === peca.id)
+                      if (full) anexarPecaBibliotecaAoRelatorio(full, '1', { continuarNaBiblioteca: true })
+                    }}
+                    labelAnexar={
+                      (safeT as any)?.anexarPecasAoRelatorio || safeT?.anexarPecas || 'Anexar ao relatório'
+                    }
                     t={{
                       titulo: (safeT as any)?.bibliotecaGaleriaCategoriasTitulo,
                       descricao: (safeT as any)?.bibliotecaGaleriaCategoriasDesc,
