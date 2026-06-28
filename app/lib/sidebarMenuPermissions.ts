@@ -75,7 +75,6 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
     items: [
       { buttonId: 'biblioteca-pecas-default', action: 'open-biblioteca-pecas', labelKey: 'cadastroPecasBibliotecaTitle', fallbackLabel: 'Biblioteca de peças', legacyKey: 'bibliotecaPecas' },
       { buttonId: 'importacao-pecas-default', action: 'open-importacao-pecas', labelKey: 'importacaoPecas', fallbackLabel: 'Importação de peças', legacyKey: 'bibliotecaPecas' },
-      { buttonId: 'pecas-substituicao-default', action: 'open-pecas-substituicao', labelKey: 'pecasSubstituicaoTitle', fallbackLabel: 'Peças de substituição', legacyKey: 'bibliotecaPecas' },
     ],
   },
   {

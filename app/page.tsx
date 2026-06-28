@@ -1199,7 +1199,7 @@ function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
     return 'documentacao-relatorios'
   }
 
-  if (['biblioteca-pecas-default', 'pecas-substituicao-default'].includes(buttonId)) {
+  if (buttonId === 'biblioteca-pecas-default') {
     return 'pecas-biblioteca'
   }
 
@@ -11103,7 +11103,7 @@ export default function Dashboard() {
         'fechamento-relatorios-servicos-default',
       ]
 
-      const pecasBibliotecaButtonIds = ['biblioteca-pecas-default', 'pecas-substituicao-default']
+      const pecasBibliotecaButtonIds = ['biblioteca-pecas-default']
 
       const empresaInstitucionalButtonIds = [
         'cadastro-nonato-service-default',
@@ -11135,7 +11135,6 @@ export default function Dashboard() {
 
       const pecasBibliotecaTranslationKeys: { [key: string]: string } = {
         'biblioteca-pecas-default': 'cadastroPecasBibliotecaTitle',
-        'pecas-substituicao-default': 'pecasSubstituicaoTitle',
       }
       
       const empresaInstitucionalTranslationKeys: { [key: string]: string } = {
@@ -11258,24 +11257,29 @@ export default function Dashboard() {
             action: 'open-fechamento-relatorios-servicos',
           }
         }
-        if (b.id === 'biblioteca-pecas-default' && b.group !== 'pecas-biblioteca') {
-          buttonsMigrated = true
-          return {
-            ...b,
-            group: 'pecas-biblioteca',
-            translationKey: 'cadastroPecasBibliotecaTitle',
-            action: b.action === 'open-biblioteca-pecas' ? 'open-biblioteca-hub' : b.action || 'open-biblioteca-hub',
-          }
-        }
-        if (b.id === 'pecas-substituicao-default') {
-          if (b.group !== 'pecas-biblioteca' || b.translationKey === 'pecasSubstituicao') {
+        if (b.id === 'biblioteca-pecas-default') {
+          const nomeAntigo =
+            b.name === 'CADASTRO DE PEÇAS E BIBLIOTECA' ||
+            b.name === 'PEÇAS E BIBLIOTECA' ||
+            b.translationKey !== 'cadastroPecasBibliotecaTitle' ||
+            b.group !== 'pecas-biblioteca'
+          if (nomeAntigo) {
             buttonsMigrated = true
             return {
               ...b,
               group: 'pecas-biblioteca',
-              translationKey: 'pecasSubstituicaoTitle',
-              name: 'PEÇAS DE SUBSTITUIÇÃO',
+              translationKey: 'cadastroPecasBibliotecaTitle',
+              name: 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS',
+              action: b.action === 'open-biblioteca-pecas' ? 'open-biblioteca-hub' : b.action || 'open-biblioteca-hub',
             }
+          }
+        }
+        if (b.id === 'pecas-biblioteca-default' && (b.name === 'PEÇAS E BIBLIOTECA' || b.translationKey !== 'pecasBibliotecaTitle')) {
+          buttonsMigrated = true
+          return {
+            ...b,
+            translationKey: 'pecasBibliotecaTitle',
+            name: 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS',
           }
         }
         if (b.id === 'clientes-default' && b.group !== 'parceiros-comercial') {
@@ -11296,6 +11300,11 @@ export default function Dashboard() {
         }
         return b
       })
+
+      if (buttons.some((b: SidebarButton) => b.id === 'pecas-substituicao-default')) {
+        buttonsMigrated = true
+        buttons = buttons.filter((b: SidebarButton) => b.id !== 'pecas-substituicao-default')
+      }
 
       // Cadastro Nonato, ficha e solicitação de serviço: grupo lógico «Empresa & registos oficiais»
       buttons = buttons.map((b: SidebarButton) => {
@@ -11766,7 +11775,7 @@ export default function Dashboard() {
       if (!hasBibliotecaPecas) {
         const bibliotecaPecasButton: SidebarButton = {
           id: 'biblioteca-pecas-default',
-          name: 'CADASTRO DE PEÇAS E BIBLIOTECA',
+          name: 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS',
           action: 'open-biblioteca-hub',
           order: buttons.length,
           translationKey: 'cadastroPecasBibliotecaTitle',
@@ -12037,7 +12046,7 @@ export default function Dashboard() {
         const idxDoc = buttons.findIndex((b: SidebarButton) => b.id === 'documentacao-relatorios-default')
         const pecasButton: SidebarButton = {
           id: 'pecas-biblioteca-default',
-          name: 'PEÇAS E BIBLIOTECA',
+          name: 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS',
           action: 'open-pecas-biblioteca',
           order: idxDoc >= 0 ? (buttons[idxDoc].order ?? 0) + 0.45 : buttons.length,
           translationKey: 'pecasBibliotecaTitle',
@@ -12358,7 +12367,7 @@ export default function Dashboard() {
       if (!hasBibliotecaPecasAfter) {
         filteredButtons.push({
           id: 'biblioteca-pecas-default',
-          name: 'CADASTRO DE PEÇAS E BIBLIOTECA',
+          name: 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS',
           action: 'open-biblioteca-hub',
           order: filteredButtons.length,
           translationKey: 'cadastroPecasBibliotecaTitle',
@@ -12554,7 +12563,7 @@ export default function Dashboard() {
         },
         {
           id: 'biblioteca-pecas-default',
-          name: 'CADASTRO DE PEÇAS E BIBLIOTECA',
+          name: 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS',
           action: 'open-biblioteca-hub',
           order: 7,
           translationKey: 'cadastroPecasBibliotecaTitle',
@@ -13234,7 +13243,6 @@ export default function Dashboard() {
       'relatorio-servico-default',
       'biblioteca-relatorios-default',
       'biblioteca-pecas-default',
-      'pecas-substituicao-default',
       'solicitacao-servico-tecnico-default',
       'agenda-default',
       'diario-pedidos-dia-default',
@@ -13275,8 +13283,6 @@ export default function Dashboard() {
         return safeT?.bibliotecaRelatoriosTitle || button.name || ''
       } else if (button.id === 'biblioteca-pecas-default') {
         return safeT?.cadastroPecasBibliotecaTitle || button.name || ''
-      } else if (button.id === 'pecas-substituicao-default') {
-        return (safeT as any)?.pecasSubstituicaoTitle || button.name || 'PEÇAS DE SUBSTITUIÇÃO'
       } else if (button.id === 'relatorios-excluidos-clientes-default') {
         return (safeT as any)?.relatoriosExcluidosClientesTitle || button.name || ''
       } else if (button.id === 'solicitacao-servico-tecnico-default') {
@@ -22905,39 +22911,6 @@ export default function Dashboard() {
     }
   }
   
-  // Função para atualizar o botão de peças na sidebar
-  const updatePecasButton = useCallback(() => {
-    // Verificar se há algum relatório com necessarioTrocaPecas = true
-    const hasPecasToReplace = relatoriosServico.some(r => r.necessarioTrocaPecas === true)
-    
-    setSidebarButtons(prevButtons => {
-      // Remover o botão de peças se já existir
-      let updatedButtons = prevButtons.filter(b => b.id !== 'pecas-substituicao-default')
-      
-      // Se houver peças para substituir, adicionar o botão
-      if (hasPecasToReplace) {
-        const pecasButton: SidebarButton = {
-          id: 'pecas-substituicao-default',
-          name: 'PEÇAS DE SUBSTITUIÇÃO',
-          action: 'open-pecas-substituicao',
-          order: prevButtons.length,
-          translationKey: 'pecasSubstituicaoTitle',
-          group: 'pecas-biblioteca',
-        }
-        updatedButtons.push(pecasButton)
-      }
-      
-      // Salvar no localStorage
-      saveData('nonato-sidebar-buttons', updatedButtons)
-      return updatedButtons
-    })
-  }, [relatoriosServico])
-  
-  // useEffect para atualizar botão de peças quando relatórios mudarem
-  useEffect(() => {
-    updatePecasButton()
-  }, [updatePecasButton])
-
   /** Mesma regra que ordenação/PDF — inclui DD/MM/AA; evita o calendário não reconhecer dias já guardados noutro formato. */
   const normalizeDateKey = (value?: string): string => diaTrabalhoDataChaveOrdenacao(value)
 
@@ -61437,7 +61410,7 @@ A1;Peça exemplo;10`}
       case 'documentacao-relatorios':
         return (safeT as any)?.documentacaoRelatoriosTitle || 'DOCUMENTAÇÃO E RELATÓRIOS'
       case 'pecas-biblioteca':
-        return (safeT as any)?.pecasBibliotecaTitle || 'PEÇAS E BIBLIOTECA'
+        return (safeT as any)?.pecasBibliotecaTitle || 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS'
       case 'gestao-custos':
         return safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS'
       case 'gestao-industrial':
@@ -61604,9 +61577,9 @@ A1;Peça exemplo;10`}
       const sorted = [...getButtonsByGroup('pecas-biblioteca')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       const pecasHubIcon: Record<string, string> = {
         'biblioteca-pecas-default': '🔩',
-        'pecas-substituicao-default': '⚠️',
       }
       for (const button of sorted) {
+        if (button.id === 'pecas-substituicao-default') continue
         const perm = canAccessSidebarButton(button)
         if (!perm) continue
         const action = button.id === 'biblioteca-pecas-default' ? 'open-biblioteca-hub' : button.action
@@ -67351,7 +67324,7 @@ A1;Peça exemplo;10`}
                 </span>
                 <span className="sidebar-nav-label-stack">
                   <span className="sidebar-nav-label-text">
-                    {(safeT as any)?.pecasBibliotecaTitle || 'PEÇAS E BIBLIOTECA'}
+                    {(safeT as any)?.pecasBibliotecaTitle || 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS'}
                   </span>
                 </span>
               </span>
@@ -67366,15 +67339,14 @@ A1;Peça exemplo;10`}
               getButtonsByGroup('pecas-biblioteca').some((b) => canAccessSidebarButton(b)) && (
                 <div className="sidebar-action-buttons">
                   {getButtonsByGroup('pecas-biblioteca')
-                    .filter((button) => canAccessSidebarButton(button))
+                    .filter((button) => canAccessSidebarButton(button) && button.id !== 'pecas-substituicao-default')
                     .sort((a, b) => a.order - b.order)
                     .map((button) => {
                       if (button.id === 'biblioteca-pecas-default') {
                         const isSelected =
                           selectedSidebarButton === 'open-biblioteca-hub' ||
                           selectedSidebarButton === 'open-biblioteca-pecas' ||
-                          selectedSidebarButton === 'open-importacao-pecas' ||
-                          selectedSidebarButton === 'open-pecas-substituicao'
+                          selectedSidebarButton === 'open-importacao-pecas'
                         const bibSub = resolveActionCardDescription(
                           trCardDesc,
                           'biblioteca-pecas-default',
