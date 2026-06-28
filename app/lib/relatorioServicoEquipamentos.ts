@@ -675,6 +675,7 @@ export function equipamentosClienteParaBiblioteca(
 
 type ClienteRelatoriosHost = {
   id: string
+  equipamentos?: EquipamentoClienteIdLookup[]
   relatorios?: Record<string, Array<{ id: string; data: string; numero: string }>>
 }
 
@@ -685,10 +686,15 @@ export function aplicarRelatorioNaBibliotecaCliente<T extends ClienteRelatoriosH
 ): T[] {
   if (!savedRelatorio.clienteId) return clientes
 
+  const clienteIndex = clientes.findIndex((c) => c.id === savedRelatorio.clienteId)
+  if (clienteIndex === -1) return clientes
+
+  const clienteOrig = clientes[clienteIndex]
+
   let keys = equipamentosClienteParaBiblioteca(
     normalizarEquipamentosRelatorio(savedRelatorio),
     equipamentosArmazem,
-    cliente.equipamentos ?? []
+    clienteOrig.equipamentos ?? []
   )
   if (keys.length === 0) {
     const legadoSn = String(savedRelatorio.numeroMaquina ?? '').trim()
@@ -698,8 +704,6 @@ export function aplicarRelatorioNaBibliotecaCliente<T extends ClienteRelatoriosH
     else if (legadoMod) keys = [legadoMod]
     else if (legadoId) keys = [legadoId]
   }
-  const clienteIndex = clientes.findIndex((c) => c.id === savedRelatorio.clienteId)
-  if (clienteIndex === -1) return clientes
 
   const updated = [...clientes]
   const cliente = { ...updated[clienteIndex] }
