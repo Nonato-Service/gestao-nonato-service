@@ -11135,7 +11135,7 @@ export default function Dashboard() {
 
       const pecasBibliotecaTranslationKeys: { [key: string]: string } = {
         'biblioteca-pecas-default': 'cadastroPecasBibliotecaTitle',
-        'pecas-substituicao-default': 'pecasSubstituicao',
+        'pecas-substituicao-default': 'pecasSubstituicaoTitle',
       }
       
       const empresaInstitucionalTranslationKeys: { [key: string]: string } = {
@@ -11267,9 +11267,16 @@ export default function Dashboard() {
             action: b.action === 'open-biblioteca-pecas' ? 'open-biblioteca-hub' : b.action || 'open-biblioteca-hub',
           }
         }
-        if (b.id === 'pecas-substituicao-default' && b.group !== 'pecas-biblioteca') {
-          buttonsMigrated = true
-          return { ...b, group: 'pecas-biblioteca', translationKey: 'pecasSubstituicao' }
+        if (b.id === 'pecas-substituicao-default') {
+          if (b.group !== 'pecas-biblioteca' || b.translationKey === 'pecasSubstituicao') {
+            buttonsMigrated = true
+            return {
+              ...b,
+              group: 'pecas-biblioteca',
+              translationKey: 'pecasSubstituicaoTitle',
+              name: 'PEÇAS DE SUBSTITUIÇÃO',
+            }
+          }
         }
         if (b.id === 'clientes-default' && b.group !== 'parceiros-comercial') {
           buttonsMigrated = true
@@ -13227,6 +13234,7 @@ export default function Dashboard() {
       'relatorio-servico-default',
       'biblioteca-relatorios-default',
       'biblioteca-pecas-default',
+      'pecas-substituicao-default',
       'solicitacao-servico-tecnico-default',
       'agenda-default',
       'diario-pedidos-dia-default',
@@ -13267,6 +13275,8 @@ export default function Dashboard() {
         return safeT?.bibliotecaRelatoriosTitle || button.name || ''
       } else if (button.id === 'biblioteca-pecas-default') {
         return safeT?.cadastroPecasBibliotecaTitle || button.name || ''
+      } else if (button.id === 'pecas-substituicao-default') {
+        return (safeT as any)?.pecasSubstituicaoTitle || button.name || 'PEÇAS DE SUBSTITUIÇÃO'
       } else if (button.id === 'relatorios-excluidos-clientes-default') {
         return (safeT as any)?.relatoriosExcluidosClientesTitle || button.name || ''
       } else if (button.id === 'solicitacao-servico-tecnico-default') {
@@ -22908,10 +22918,10 @@ export default function Dashboard() {
       if (hasPecasToReplace) {
         const pecasButton: SidebarButton = {
           id: 'pecas-substituicao-default',
-          name: 'PEÇAS QUE NECESSITAM DE SER SUBSTITUÍDAS',
+          name: 'PEÇAS DE SUBSTITUIÇÃO',
           action: 'open-pecas-substituicao',
           order: prevButtons.length,
-          translationKey: 'pecasSubstituicao',
+          translationKey: 'pecasSubstituicaoTitle',
           group: 'pecas-biblioteca',
         }
         updatedButtons.push(pecasButton)
