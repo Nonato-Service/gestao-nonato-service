@@ -462,6 +462,51 @@ export function formatarEquipamentosIdsRelatorio(
     .join(' · ')
 }
 
+/** Texto resumido para UI / WhatsApp / e-mail (relatório de despesas). */
+export function textoEquipamentosResumoRelatorioDespesas(
+  r: RelatorioServicoEquipamentosHost,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],
+  equipamentosCliente: EquipamentoClienteIdLookup[] = []
+): string {
+  const linhas = linhasTextoEquipamentosRelatorioDespesas(r, equipamentosArmazem, equipamentosCliente)
+  if (linhas.length <= 1) return linhas[0]?.texto ?? '—'
+  return linhas.map((l) => `Equip. ${l.numero}: ${l.texto}`).join('\n')
+}
+
+/** Uma ou várias linhas de equipamento para tabelas / PDF de despesas. */
+export function linhasTextoEquipamentosRelatorioDespesas(
+  r: RelatorioServicoEquipamentosHost,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],
+  equipamentosCliente: EquipamentoClienteIdLookup[] = []
+): Array<{ numero: number; texto: string }> {
+  const cab = getRelatorioCabecalhoEquipamentoDados(r, equipamentosArmazem, equipamentosCliente)
+  if (cab.multiplos && cab.linhas.length > 1) {
+    return cab.linhas.map((l) => ({
+      numero: l.numero,
+      texto:
+        [
+          l.equipamentoId !== '—' ? `ID ${l.equipamentoId}` : '',
+          l.maquinaModelo !== '—' ? l.maquinaModelo : '',
+          l.numeroMaquina !== '—' ? `S/N ${l.numeroMaquina}` : '',
+        ]
+          .filter(Boolean)
+          .join(' · ') || '—',
+    }))
+  }
+  const texto =
+    cab.modelos !== '—' ? cab.modelos : String(r.maquinaModelo ?? '').trim() || '—'
+  return [{ numero: 1, texto }]
+}
+
+export function relatorioTemMultiplosEquipamentosDespesas(
+  r: RelatorioServicoEquipamentosHost,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],
+  equipamentosCliente: EquipamentoClienteIdLookup[] = []
+): boolean {
+  const cab = getRelatorioCabecalhoEquipamentoDados(r, equipamentosArmazem, equipamentosCliente)
+  return cab.multiplos && cab.linhas.length > 1
+}
+
 export function getRelatorioCabecalhoEquipamentoDados(
   r: RelatorioServicoEquipamentosHost,
   equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],

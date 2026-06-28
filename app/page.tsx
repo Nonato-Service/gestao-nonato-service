@@ -86,7 +86,7 @@ import {
   hashImagemComprovante,
   mensagemDuplicadoComprovante,
 } from './lib/comprovanteDuplicado'
-import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, buildRelatorioServicoPdfMetaSectionHtml, type RelatorioServicoPdfHeaderVariant, type RelatorioServicoPdfMetaLabels } from './lib/relatorioServicoPdfPrintCss'
+import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, buildRelatorioServicoPdfMetaSectionHtml, buildFechamentoDespesasRelatorioInfoHtml, type RelatorioServicoPdfHeaderVariant, type RelatorioServicoPdfMetaLabels } from './lib/relatorioServicoPdfPrintCss'
 import { PDF_DOCUMENT_LAYOUT_CSS, buildPdfDocumentHeaderHtml, buildPdfDocumentFooterHtml, buildPdfMetaSectionHtml } from './lib/pdfDocumentLayout'
 import {
   MAX_EQUIPAMENTOS_RELATORIO,
@@ -97,6 +97,9 @@ import {
   prepararRelatorioServicoEquipamentos,
   relatorioParaImprimirPDFEquipamentos,
   aplicarRelatorioNaBibliotecaCliente,
+  getRelatorioCabecalhoEquipamentoDados,
+  linhasTextoEquipamentosRelatorioDespesas,
+  textoEquipamentosResumoRelatorioDespesas,
   resolverIdEquipamentoCliente,
   resolverIdEquipamentoVisivelCliente,
   resolverIdEquipamentoVisivelRelatorio,
@@ -108,6 +111,7 @@ import {
   encontrarEquipamentoArmazemCorrespondenteCliente,
   MOTIVO_BAIXA_EQUIPAMENTO_VENDIDO,
   type RelatorioEquipamentoRef,
+  type EquipamentoArmazemIdLookup,
   type EquipamentoArmazemVendidoInfo,
 } from './lib/relatorioServicoEquipamentos'
 import { mergeManuaisFamiliasGrupos, manuaisPayloadHasRichContent } from './utils/manuaisMerge'
@@ -3523,6 +3527,37 @@ function buildBibliotecaRelatoriosPorCliente(
 
   rows.sort((x, y) => cmpBibliotecaLocale(x.cliente.nomeEmpresa || '', y.cliente.nomeEmpresa || ''))
   return rows
+}
+
+function equipamentosClienteDoRelatorioDespesas(
+  rel: { clienteId?: string; cliente?: string },
+  clientes: Cliente[]
+) {
+  const cid = rel.clienteId || resolverClienteIdRelatorio(rel as RelatorioServico, clientes)
+  return clientes.find((c) => c.id === cid)?.equipamentos ?? []
+}
+
+function EquipamentosRelatorioDespesasInline({
+  relatorio,
+  clientes,
+  equipamentosArmazem,
+}: {
+  relatorio: RelatorioServico
+  clientes: Cliente[]
+  equipamentosArmazem: EquipamentoArmazemIdLookup[]
+}) {
+  const clEq = equipamentosClienteDoRelatorioDespesas(relatorio, clientes)
+  const linhas = linhasTextoEquipamentosRelatorioDespesas(relatorio, equipamentosArmazem, clEq)
+  if (linhas.length <= 1) return <>{linhas[0]?.texto ?? '—'}</>
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      {linhas.map((l) => (
+        <div key={l.numero} style={{ lineHeight: 1.35 }}>
+          <span style={{ opacity: 0.85 }}>Equip. {l.numero}:</span> {l.texto}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function normalizarTextoFaturaBusca(s: string): string {
@@ -7976,6 +8011,7 @@ export default function Dashboard() {
   const [fechamentoRelatorioSelecionadoId, setFechamentoRelatorioSelecionadoId] = useState<string | null>(null)
   /** Edição de despesas aberta a partir da Biblioteca (mantém o relatório na Biblioteca até guardar). */
   const [fechamentoEditandoDespesasBibliotecaId, setFechamentoEditandoDespesasBibliotecaId] = useState<string | null>(null)
+  const [relatorioServicoEditandoBibliotecaId, setRelatorioServicoEditandoBibliotecaId] = useState<string | null>(null)
   const [fechamentoOsConsultaInput, setFechamentoOsConsultaInput] = useState('')
   const [fechamentoPdfModelo, setFechamentoPdfModelo] = useState<number>(1) // 1-8 modelos de PDF
   const [modalVisualizarDespesasBiblioteca, setModalVisualizarDespesasBiblioteca] = useState<{ relatorio: RelatorioServico; itens: FechamentoItem[] } | null>(null)
@@ -16414,6 +16450,7 @@ export default function Dashboard() {
     setShowRelatorioServicoForm(false)
     setShowRelatorioServicoModal(false)
     setEditingRelatorioServico(null)
+    setRelatorioServicoEditandoBibliotecaId(null)
     setEditingDiaTrabalhoIndex(null)
     setSelecionarPecaParaRelatorioServico(false)
     setPecaSelecionadaParaRelatorio(null)
@@ -18242,6 +18279,13 @@ export default function Dashboard() {
     scrollRelatorioServicoFormIntoView()
   }
 
+  const handleEditarRelatorioServicoNaBiblioteca = (relatorio: RelatorioServico) => {
+    const r = resolverRelatorioServicoDono(relatorio)
+    setRelatorioServicoEditandoBibliotecaId(r.id)
+    openTab('relatorio-servico', getTabTitle('relatorio-servico'))
+    handleEditRelatorioServico(r)
+  }
+
   // —— Logos PDF: resolução unificada (state + localStorage), como no preview do Administrador ——
   const logoImgHtmlFromDataUrl = (dataUrl: string): string => {
     const src = String(dataUrl).replace(/"/g, '&quot;')
@@ -18643,7 +18687,7 @@ export default function Dashboard() {
     const lblRelatorio = tAny.relatorio || 'Relatório'
     const logoPart = logoSrc ? `<img src="${esc(logoSrc)}" alt="Logo" style="max-height:80px;max-width:220px;object-fit:contain;display:block"/>` : ''
     const numVal = esc(relatorio.numero)
-    const equipTexto = relatorio.maquinaModelo || '—'
+    const clEqBib = equipamentosClienteDoRelatorioDespesas(relatorio, clientes)
     const dataVal = esc(relatorio.data)
     const tituloDoc = esc(titFechamento)
     const localeStr = localeForLongDatetime(selectedLanguage)
@@ -18659,15 +18703,22 @@ export default function Dashboard() {
       theme: 'expense',
       variant: 'detailed',
     })
-    const infoMetaBib = buildPdfMetaSectionHtml({
+    const infoMetaBib = buildFechamentoDespesasRelatorioInfoHtml({
+      relatorio,
       title: tAny.dadosClienteEquipamento || tAny.dadosRelatorio || 'Dados do relatório',
-      modifier: 'expense',
-      fields: [
-        { label: esc(tAny.cliente || 'Cliente'), value: esc(relatorio.cliente) },
-        { label: esc(tAny.numeroRelatorio || 'Nº Relatório'), value: numVal },
-        { label: esc(tAny.equipamento || 'Equipamento'), value: esc(equipTexto), fullWidth: equipTexto.length > 42 },
-        { label: esc(tAny.data || 'Data'), value: dataVal },
-      ],
+      labels: {
+        cliente: tAny.cliente || 'Cliente',
+        numeroRelatorio: tAny.numeroRelatorio || 'Nº Relatório',
+        equipamento: tAny.equipamento || 'Equipamento',
+        data: tAny.data || 'Data',
+        equipNumero: tAny.equipNumero || 'N.º',
+        equipamentoId: tAny.equipamentoId || 'ID equipamento',
+        numeroMaquina: tAny.numeroMaquina || 'N.º máquina',
+        maquinaModelo: tAny.maquinaModelo || 'Máquina/Modelo',
+      },
+      esc,
+      equipamentosArmazem: equipamentos,
+      equipamentosCliente: clEqBib,
     })
     const footPdf =
       ivPdf.incluir && ivPdf.iva > 0.0001
@@ -22588,6 +22639,64 @@ export default function Dashboard() {
     )
   }
 
+  /** Atualiza linhas fixas (horas/km/diárias) do fechamento guardado quando o relatório de serviço é editado na Biblioteca. */
+  function sincronizarItensFechamentoComRelatorioAtualizado(
+    rel: RelatorioServico,
+    salvosBrutos: FechamentoItem[] | undefined
+  ): FechamentoItem[] {
+    const salvos = salvosBrutos || []
+    const seisDoResumo = buildItensFechamentoBaseRelatorio(rel)
+    if (salvos.length === 0) return seisDoResumo
+    const isLinhaManualFechamento = (i: FechamentoItem) => {
+      if (i.origem === 'manual') return true
+      if (i.origem === 'relatorio') return false
+      return !(FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(i.id)
+    }
+    const itensExtrasSalvos = salvos.filter(
+      (i) =>
+        isLinhaManualFechamento(i) ||
+        i.id.startsWith('peca-') ||
+        i.id.startsWith('m')
+    )
+    const grupoId = fechamentoGrupoPorRelatorioId[rel.id] || null
+    const seisComQuantidadeDoResumo = seisDoResumo.map((item) => {
+      const saved = salvos.find((s) => s.id === item.id)
+      if (!saved) return item
+      const cobrarDiaria =
+        item.id === 'diarias' && typeof saved.cobrarDiaria === 'boolean'
+          ? saved.cobrarDiaria
+          : (item as FechamentoItem).cobrarDiaria !== false
+      const enriched = enriquecerLinhaFechamentoComCadastro(
+        {
+          ...item,
+          ...saved,
+          id: item.id,
+          quantidade: item.quantidade ?? 0,
+          tipoCobranca: item.tipoCobranca,
+          origem: saved.origem ?? item.origem,
+        },
+        servicos as ServicoCadastroFechamentoMin[],
+        saved.servicoId,
+        grupoId
+      )
+      return {
+        ...enriched,
+        cobrarDiaria: item.id === 'diarias' ? cobrarDiaria : undefined,
+      }
+    })
+    const seisIds = ['ht', 'km', 'diarias', 'hida', 'hret']
+    const comTodosSeis = seisIds
+      .map(
+        (id) =>
+          seisComQuantidadeDoResumo.find((i) => i.id === id) ||
+          seisDoResumo.find((i) => i.id === id)
+      )
+      .filter(Boolean) as FechamentoItem[]
+    return [...comTodosSeis, ...itensExtrasSalvos].filter(
+      (i) => !(i.id === 'hviagem' && i.origem === 'relatorio')
+    )
+  }
+
   /** Ao marcar «Serviço concluído»: arquiva na Biblioteca (para o equipamento), regista fechamento base e para o destaque laranja. */
   function arquivarRelatorioConcluidoNaBiblioteca(rel: RelatorioServico) {
     if (!rel.servicoConcluido) return
@@ -22722,8 +22831,23 @@ export default function Dashboard() {
     if (savedRelatorio.servicoConcluido) {
       arquivarRelatorioConcluidoNaBiblioteca(savedRelatorio)
     }
+    if (fechamentosGuardadosBibliotecaIds.includes(savedRelatorio.id)) {
+      const rid = savedRelatorio.id
+      setFechamentosRelatorios((prev) => {
+        const merged = sincronizarItensFechamentoComRelatorioAtualizado(savedRelatorio, prev[rid])
+        const next = { ...prev, [rid]: merged }
+        void saveData('nonato-fechamentos-relatorios', next)
+        return next
+      })
+    }
     if (!opts?.silencioso) {
-      alert(t.relatorioServicoSaved || 'Relatório de serviço salvo com sucesso!')
+      const fromBiblioteca = relatorioServicoEditandoBibliotecaId === savedRelatorio.id
+      alert(
+        fromBiblioteca
+          ? (safeT as any)?.relatorioServicoAtualizadoNaBiblioteca ||
+              'Alterações guardadas. O relatório continua na Biblioteca de Relatórios.'
+          : t.relatorioServicoSaved || 'Relatório de serviço salvo com sucesso!'
+      )
     }
     return savedRelatorio
   }
@@ -28303,7 +28427,14 @@ export default function Dashboard() {
               wordBreak: 'break-word',
             }}
           >
-            {relV.cliente} · {relV.maquinaModelo} · {relV.data}
+            {relV.cliente} · {relV.data}
+            <span style={{ display: 'block', marginTop: 6 }}>
+              <EquipamentosRelatorioDespesasInline
+                relatorio={relV}
+                clientes={clientes}
+                equipamentosArmazem={equipamentos}
+              />
+            </span>
           </p>
           <div className="biblioteca-despesas-modal-table-wrap">
             <table
@@ -33556,6 +33687,35 @@ export default function Dashboard() {
                 style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px', maxHeight: '90vh', overflowY: 'auto' }}
               >
                 <h3 style={{ marginBottom: '15px' }}>{editingRelatorioServico ? (safeT?.editRelatorioServico || 'Editar Relatório de Serviço') : (safeT?.addRelatorioServico || 'Adicionar Relatório de Serviço')}</h3>
+                {relatorioServicoEditandoBibliotecaId &&
+                  editingRelatorioServico?.id === relatorioServicoEditandoBibliotecaId && (
+                    <div
+                      role="status"
+                      style={{
+                        marginBottom: 16,
+                        padding: '12px 16px',
+                        borderRadius: 10,
+                        border: '1px solid rgba(255, 170, 0, 0.55)',
+                        background: 'rgba(40, 32, 16, 0.35)',
+                        color: '#ffdd99',
+                        fontSize: 13,
+                        lineHeight: 1.45,
+                      }}
+                    >
+                      {(safeT as any)?.relatorioServicoEditandoBibliotecaAviso ||
+                        'A editar relatório já guardado na Biblioteca. Guarde as alterações — o relatório e o fechamento mantêm-se na Biblioteca.'}
+                      <div style={{ marginTop: 10 }}>
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          style={{ fontSize: 12, padding: '6px 12px' }}
+                          onClick={() => openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))}
+                        >
+                          {(safeT as any)?.abrirBibliotecaRelatorios || 'Abrir Biblioteca de Relatórios'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 
                 {/* Informações Básicas */}
                 <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
@@ -36272,7 +36432,9 @@ export default function Dashboard() {
                                       </span>
                                     </div>
                                     <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.75)', marginBottom: '8px' }}>
-                                      {rel.maquinaModelo} · {rel.data}
+                                      <EquipamentosRelatorioDespesasInline relatorio={rel} clientes={clientes} equipamentosArmazem={equipamentos} />
+                                      {' · '}
+                                      {rel.data}
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
                                       <button type="button" className="btn-primary" style={{ padding: '6px 10px', fontSize: '11px' }} onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio: rel, itens: itensVis })}>
@@ -46802,8 +46964,17 @@ A1;Peça exemplo;10`}
           const lblRelatorio = (safeT as any)?.relatorio || 'Relatório'
           const clienteVal = esc(relatorioSelecionado.cliente)
           const numVal = esc(relatorioSelecionado.numero)
-          const equipTexto =
-            [relatorioSelecionado.maquinaModelo].filter(Boolean).join(' · ') || '—'
+          const clEqFech = equipamentosClienteDoRelatorioDespesas(relatorioSelecionado, clientes)
+          const cabEqFech = getRelatorioCabecalhoEquipamentoDados(
+            relatorioSelecionado,
+            equipamentos,
+            clEqFech
+          )
+          const equipTexto = textoEquipamentosResumoRelatorioDespesas(
+            relatorioSelecionado,
+            equipamentos,
+            clEqFech
+          )
           const equipVal = esc(equipTexto)
           const dataVal = esc(relatorioSelecionado.data)
           const tituloDoc = esc(titFechamento) + ' — ' + esc(lblRelatorio) + ' ' + numVal
@@ -46833,7 +47004,26 @@ A1;Peça exemplo;10`}
               const bb = last ? 'none' : `1px solid ${sepColor}`
               return `<tr><th scope="row" style="width:30%;padding:12px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${labelColor};vertical-align:top;border-bottom:${bb};background:${cellBg}">${esc(lbl)}</th><td style="padding:12px 14px;font-size:14px;font-weight:600;color:${valueColor};vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;border-bottom:${bb};background:${cellBg}">${valEsc}</td></tr>`
             }
-            return `<table role="presentation" class="fech-pdf-meta" style="width:100%;max-width:100%;border-collapse:collapse;margin:0 0 18px;border:1px solid ${sepColor};border-radius:10px;overflow:hidden;box-sizing:border-box"><tbody>${row(lblCliente, clienteVal, false)}${row(lblNumRelatorio, numVal, false)}${row(lblEquipamento, equipVal, false)}${row(lblData, dataVal, true)}</tbody></table>`
+            const equipRows =
+              cabEqFech.multiplos && cabEqFech.linhas.length > 1
+                ? cabEqFech.linhas
+                    .map((l, i) => {
+                      const lbl =
+                        i === 0
+                          ? lblEquipamento
+                          : `${lblEquipamento} ${l.numero}`
+                      const val = [
+                        l.equipamentoId !== '—' ? `ID ${l.equipamentoId}` : '',
+                        l.maquinaModelo !== '—' ? l.maquinaModelo : '',
+                        l.numeroMaquina !== '—' ? `S/N ${l.numeroMaquina}` : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' · ') || '—'
+                      return row(lbl, esc(val), false)
+                    })
+                    .join('')
+                : row(lblEquipamento, equipVal, false)
+            return `<table role="presentation" class="fech-pdf-meta" style="width:100%;max-width:100%;border-collapse:collapse;margin:0 0 18px;border:1px solid ${sepColor};border-radius:10px;overflow:hidden;box-sizing:border-box"><tbody>${row(lblCliente, clienteVal, false)}${row(lblNumRelatorio, numVal, false)}${equipRows}${row(lblData, dataVal, true)}</tbody></table>`
           }
           if (modelo === 1) {
             bodyBg = '#fff'; bodyColor = '#111'; thBg = '#00a650'; thColor = '#fff'; footBg = '#e8f5e9'; footColor = '#00a650'; borderColor = '#a5d6a7'; rowBgEven = '#ffffff'; rowBgOdd = '#f1f8e9'
@@ -46858,7 +47048,7 @@ A1;Peça exemplo;10`}
             headerHtml = `<div style="margin-bottom:24px;padding:28px;background:linear-gradient(135deg,#5d4037 0%,#3e2723 100%);color:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-width:100%;box-sizing:border-box">${logoPart ? '<div style="margin-bottom:16px">' + logoPart + '</div>' : ''}<div style="font-size:20px;font-weight:700;color:#efebe9;margin-bottom:16px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('rgba(255,255,255,0.9)', '#efebe9', 'rgba(255,255,255,0.22)', 'rgba(255,255,255,0.12)')}</div>`
           } else {
             bodyBg = '#fff'; bodyColor = '#000'; thBg = '#4a4a4a'; thColor = '#fff'; footBg = '#4a4a4a'; footColor = '#fff'; borderColor = '#424242'; rowBgEven = '#ffffff'; rowBgOdd = '#fafafa'
-            headerHtml = `<div style="margin-bottom:28px;border:2px solid #4a4a4a;padding:24px;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #4a4a4a">' + logoPart + '</div>' : ''}<div style="font-size:18px;font-weight:700;color:#4a4a4a;margin-bottom:20px;font-family:Georgia,serif;line-height:1.25;word-break:break-word">${tituloDoc}</div><table role="presentation" style="width:100%;border-collapse:collapse"><tr><th scope="row" style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161;width:28%;text-align:left;vertical-align:top">${esc(lblCliente)}</th><td style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45">${clienteVal}</td></tr><tr><th scope="row" style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161;text-align:left;vertical-align:top">${esc(lblNumRelatorio)}</th><td style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere">${numVal}</td></tr><tr><th scope="row" style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161;text-align:left;vertical-align:top">${esc(lblEquipamento)}</th><td style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere">${equipVal}</td></tr><tr><th scope="row" style="padding:10px 0;font-size:10px;text-transform:uppercase;color:#616161;text-align:left;vertical-align:top">${esc(lblData)}</th><td style="padding:10px 0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere">${dataVal}</td></tr></table></div>`
+            headerHtml = `<div style="margin-bottom:28px;border:2px solid #4a4a4a;padding:24px;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #4a4a4a">' + logoPart + '</div>' : ''}<div style="font-size:18px;font-weight:700;color:#4a4a4a;margin-bottom:20px;font-family:Georgia,serif;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('#616161', '#4a4a4a', '#e0e0e0', '#fafafa')}</div>`
           }
           const pdfRowStyles = `.pdf-tbody tr:nth-child(odd){background:${rowBgEven}}.pdf-tbody tr:nth-child(even){background:${rowBgOdd}}`
           const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(titFechamento)} - ${esc(relatorioSelecionado.numero)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:24px;color:${bodyColor};font-size:12px;background:${bodyBg};line-height:1.4;max-width:100%;box-sizing:border-box}${pdfRowStyles}.fech-pdf-itens{min-width:0;width:100%}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none!important}.fech-pdf-itens{font-size:10px}.fech-pdf-itens th,.fech-pdf-itens td{padding:8px 10px!important}}.no-print{display:block}</style></head><body>${btnsNoPrint}${headerHtml}${tableContent(thBg, thColor, footBg, footColor, borderColor)}${rodape}</body></html>`
@@ -46874,7 +47064,7 @@ A1;Peça exemplo;10`}
             fechTotIva.incluir && fechTotIva.iva > 0.0001
               ? `\n${(safeT as any)?.totalSemIva || 'Total s/ IVA'}: ${fechTotIva.liquido.toFixed(2)} €\n${(safeT as any)?.valorIva || 'IVA'} (${fechTotIva.taxa}%): ${fechTotIva.iva.toFixed(2)} €\n`
               : '\n'
-          const texto = `Fechamento Relatório ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo || ''}\nData: ${relatorioSelecionado.data}\n\nItens:\n${linhas}${extraIva}\n*${(safeT as any)?.totalComIva || 'Total'}: ${fechTotIva.comIva.toFixed(2)} €*`
+          const texto = `Fechamento Relatório ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento(s):\n${textoEquipamentosResumoRelatorioDespesas(relatorioSelecionado, equipamentos, equipamentosClienteDoRelatorioDespesas(relatorioSelecionado, clientes))}\nData: ${relatorioSelecionado.data}\n\nItens:\n${linhas}${extraIva}\n*${(safeT as any)?.totalComIva || 'Total'}: ${fechTotIva.comIva.toFixed(2)} €*`
           window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener')
         }
         const handleEnviarEmailFechamento = () => {
@@ -46885,7 +47075,7 @@ A1;Peça exemplo;10`}
             fechTotIva.incluir && fechTotIva.iva > 0.0001
               ? `\n${(safeT as any)?.totalSemIva || 'Total s/ IVA'}: ${fechTotIva.liquido.toFixed(2)} €\n${(safeT as any)?.valorIva || 'IVA'} (${fechTotIva.taxa}%): ${fechTotIva.iva.toFixed(2)} €\n`
               : '\n'
-          const corpo = `Fechamento de despesas do relatório de serviço.\n\nRelatório: ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo || ''}\nData: ${relatorioSelecionado.data}\n\nItens a cobrar:\n${linhas}${extraIvaMail}\n${(safeT as any)?.totalComIva || 'Total com IVA'}: ${fechTotIva.comIva.toFixed(2)} €\n\n--\nEnviado pela Gestão Técnica Nonato Service`
+          const corpo = `Fechamento de despesas do relatório de serviço.\n\nRelatório: ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento(s):\n${textoEquipamentosResumoRelatorioDespesas(relatorioSelecionado, equipamentos, equipamentosClienteDoRelatorioDespesas(relatorioSelecionado, clientes))}\nData: ${relatorioSelecionado.data}\n\nItens a cobrar:\n${linhas}${extraIvaMail}\n${(safeT as any)?.totalComIva || 'Total com IVA'}: ${fechTotIva.comIva.toFixed(2)} €\n\n--\nEnviado pela Gestão Técnica Nonato Service`
           window.location.href = `${mailtoPrefixContabilidade()}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
         }
         const relatoriosPendentesFechamentoLista = relatoriosServico.filter(r => !fechamentosGuardadosBibliotecaIds.includes(r.id))
@@ -47203,7 +47393,7 @@ A1;Peça exemplo;10`}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
                     <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.cliente || 'Cliente'}</span><br/><strong style={{ color: '#fff', fontSize: '14px' }}>{relatorioSelecionado.cliente}</strong></div>
                     <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.numeroRelatorio || 'Nº Relatório'}</span><br/><strong style={{ color: '#00c853', fontSize: '14px' }}>{relatorioSelecionado.numero}</strong></div>
-                    <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.equipamento || 'Equipamento'}</span><br/><strong style={{ color: '#fff', fontSize: '14px' }}>{relatorioSelecionado.maquinaModelo || '—'}</strong></div>
+                    <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.equipamento || 'Equipamento'}</span><br/><strong style={{ color: '#fff', fontSize: '14px', fontWeight: 600 }}><EquipamentosRelatorioDespesasInline relatorio={relatorioSelecionado} clientes={clientes} equipamentosArmazem={equipamentos} /></strong></div>
                     <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.data || 'Data'}</span><br/><span style={{ color: '#ccc', fontSize: '14px' }}>{relatorioSelecionado.data}</span></div>
                   </div>
                 </div>
@@ -60769,7 +60959,11 @@ A1;Peça exemplo;10`}
                           <div className="financeiro-despesas-bib-card__sub">
                             <strong className="financeiro-despesas-bib-card__sub-nome">{nomeCli}</strong>
                             {' · '}
-                            {rel.maquinaModelo}
+                            <EquipamentosRelatorioDespesasInline
+                              relatorio={rel}
+                              clientes={clientes}
+                              equipamentosArmazem={equipamentos}
+                            />
                             {' · '}
                             {tx.total || 'Total'}:{' '}
                             <strong className="financeiro-despesas-bib-card__sub-total">€{tot.toFixed(2)}</strong>
@@ -61429,6 +61623,20 @@ A1;Peça exemplo;10`}
                                                     </button>
                                                     <button
                                                       type="button"
+                                                      className="bib-acao bib-acao--edit"
+                                                      title={
+                                                        (txBib as any).editarRelatorioServicoBiblioteca ??
+                                                        safeT?.edit ??
+                                                        'Editar'
+                                                      }
+                                                      onClick={() =>
+                                                        handleEditarRelatorioServicoNaBiblioteca(relatorio)
+                                                      }
+                                                    >
+                                                      Ed.
+                                                    </button>
+                                                    <button
+                                                      type="button"
                                                       className="bib-acao bib-acao--pdf"
                                                       title={safeT?.gerarPDF || 'PDF'}
                                                       onClick={() => handlePrintRelatorio(relatorio, getPdfModelForRelatorio(relatorio.id))}
@@ -61500,7 +61708,13 @@ A1;Peça exemplo;10`}
                                     return (
                                       <tr key={relatorio.id}>
                                         <td className="bib-col-num">{relatorio.numero}</td>
-                                        <td>{relatorio.maquinaModelo || '—'}</td>
+                                        <td>
+                                          <EquipamentosRelatorioDespesasInline
+                                            relatorio={relatorio}
+                                            clientes={clientes}
+                                            equipamentosArmazem={equipamentos}
+                                          />
+                                        </td>
                                         <td className="bib-col-num">€{totalCobranca.toFixed(2)}</td>
                                         <td className="bib-col-acoes">
                                           <div className="bib-acoes-icones">
@@ -76434,9 +76648,15 @@ A1;Peça exemplo;10`}
               <button 
                 className="btn-primary" 
                 onClick={() => {
-                  handleEditRelatorioServico(viewingRelatorioServico)
+                  const rel = viewingRelatorioServico
                   setViewingRelatorioServico(null)
-                  setShowRelatorioServicoForm(true)
+                  if (!rel) return
+                  if (fechamentosGuardadosBibliotecaIds.includes(rel.id)) {
+                    handleEditarRelatorioServicoNaBiblioteca(rel)
+                  } else {
+                    openTab('relatorio-servico', getTabTitle('relatorio-servico'))
+                    handleEditRelatorioServico(rel)
+                  }
                 }}
                 style={{ flex: 1, padding: '10px', backgroundColor: 'rgba(0, 200, 83, 0.2)', border: '1px solid rgba(0, 200, 83, 0.6)', color: '#fff' }}
               >

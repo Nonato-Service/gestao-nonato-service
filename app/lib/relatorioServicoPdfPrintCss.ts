@@ -14,6 +14,7 @@ import {
 import {
   getRelatorioCabecalhoEquipamentoDados,
   type EquipamentoArmazemIdLookup,
+  type EquipamentoClienteIdLookup,
   type RelatorioEquipamentoCabecalhoLinha,
   type RelatorioServicoEquipamentosHost,
 } from './relatorioServicoEquipamentos'
@@ -77,6 +78,64 @@ function buildPdfEquipamentosRelatorioTableHtml(
     </thead>
     <tbody>${rows}</tbody>
   </table>`
+}
+
+/** Meta (cliente + equipamentos) para PDF de fechamento / despesas — lista todos os equipamentos se > 1. */
+export function buildFechamentoDespesasRelatorioInfoHtml(options: {
+  relatorio: RelatorioServicoEquipamentosHost & { cliente?: string; data?: string; numero?: string }
+  title: string
+  labels: {
+    cliente: string
+    numeroRelatorio: string
+    equipamento: string
+    data: string
+    equipNumero: string
+    equipamentoId: string
+    numeroMaquina: string
+    maquinaModelo: string
+  }
+  esc?: (s: string | undefined | null) => string
+  equipamentosArmazem?: EquipamentoArmazemIdLookup[]
+  equipamentosCliente?: EquipamentoClienteIdLookup[]
+}): string {
+  const {
+    relatorio,
+    title,
+    labels,
+    esc = escapePdfHtml,
+    equipamentosArmazem = [],
+    equipamentosCliente = [],
+  } = options
+  const cab = getRelatorioCabecalhoEquipamentoDados(relatorio, equipamentosArmazem, equipamentosCliente)
+  const fields: PdfMetaField[] = [
+    { label: esc(labels.cliente), value: esc(relatorio.cliente) },
+    { label: esc(labels.numeroRelatorio), value: esc(relatorio.numero) },
+  ]
+  if (!cab.multiplos || cab.linhas.length <= 1) {
+    const equipTexto =
+      cab.modelos !== '—' ? cab.modelos : String(relatorio.maquinaModelo ?? '').trim() || '—'
+    fields.push({
+      label: esc(labels.equipamento),
+      value: esc(equipTexto),
+      fullWidth: String(equipTexto).length > 42,
+    })
+  }
+  fields.push({ label: esc(labels.data), value: esc(relatorio.data) })
+  let html = buildPdfMetaSectionHtml({ title: esc(title), fields, modifier: 'expense' })
+  if (cab.multiplos && cab.linhas.length > 1) {
+    const tableHtml = buildPdfEquipamentosRelatorioTableHtml(
+      cab.linhas,
+      {
+        equipNumero: labels.equipNumero,
+        equipamentoId: labels.equipamentoId,
+        numeroMaquina: labels.numeroMaquina,
+        maquinaModelo: labels.maquinaModelo,
+      },
+      esc
+    )
+    html = html.replace('</section>', `<div class="ns-pdf-meta__equip-wrap">${tableHtml}</div></section>`)
+  }
+  return html
 }
 
 export function buildRelatorioServicoPdfMetaSectionHtml(options: {
