@@ -33000,6 +33000,31 @@ export default function Dashboard() {
               </div>
             </div>
             
+            {(showRelatorioServicoForm || relatorioServicoListaDetalheId) && (
+              <div className="relatorio-servico-voltar-bar">
+                <button
+                  type="button"
+                  className="relatorio-servico-voltar-bar__btn"
+                  onClick={() => {
+                    if (showRelatorioServicoForm) {
+                      setShowRelatorioServicoForm(false)
+                      setEditingRelatorioServico(null)
+                      return
+                    }
+                    setRelatorioServicoListaDetalheId(null)
+                  }}
+                  title={safeT?.voltar || 'Voltar'}
+                >
+                  ↶{' '}
+                  {showRelatorioServicoForm
+                    ? relatorioServicoListaDetalheId
+                      ? safeT?.voltar || 'Voltar'
+                      : (safeT as any)?.clientesAlfabetoVoltarLista || safeT?.voltar || 'Voltar à lista'
+                    : (safeT as any)?.clientesAlfabetoVoltarLista || 'Voltar à lista por letra'}
+                </button>
+              </div>
+            )}
+
             {showRelatorioServicoForm && (
               <div
                 id="relatorio-servico-edit-form"
@@ -33148,7 +33173,7 @@ export default function Dashboard() {
                                     </span>
                                     <button
                                       type="button"
-                                      className="btn-danger relatorio-equipamento-card__remove"
+                                      className="btn-danger btn-danger--inline relatorio-equipamento-card__remove"
                                       onClick={() => {
                                         atualizarEquipamentos(equipamentosForm.filter(item => item.uid !== eq.uid))
                                       }}
@@ -34865,14 +34890,6 @@ export default function Dashboard() {
               </>
             ) : (
               <div>
-                <button
-                  type="button"
-                  className="btn-secondary clientes-alfa-voltar"
-                  onClick={() => setRelatorioServicoListaDetalheId(null)}
-                  style={{ marginBottom: '14px' }}
-                >
-                  ← {(safeT as any)?.clientesAlfabetoVoltarLista || 'Voltar à lista por letra'}
-                </button>
                 {relatoriosParaDetalhe.length === 0 ? (
                   <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>
                     {(safeT as any)?.relatorioServicoNaoEncontrado || 'Relatório não encontrado'}
@@ -75011,6 +75028,15 @@ A1;Peça exemplo;10`}
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '20px', borderBottom: '2px solid rgba(0, 200, 83, 0.3)', paddingBottom: '15px', minWidth: 0 }}>
+              <button
+                type="button"
+                className="relatorio-servico-voltar-bar__btn"
+                onClick={() => setViewingRelatorioServico(null)}
+                title={safeT?.voltar || 'Voltar'}
+                style={{ flexShrink: 0 }}
+              >
+                ↶ {safeT?.voltar || 'Voltar'}
+              </button>
               <h2
                 style={{ color: '#00c853', margin: 0, flex: '1 1 12rem', minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', wordBreak: 'break-word', fontSize: 'clamp(16px, 4vw, 22px)' }}
                 title={

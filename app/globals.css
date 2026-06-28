@@ -6862,6 +6862,42 @@ a:focus-visible {
   align-items: center;
 }
 
+.relatorio-servico-voltar-bar {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  background: rgba(42, 42, 42, 0.96);
+  border: 1px solid rgba(0, 200, 83, 0.35);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
+.relatorio-servico-voltar-bar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 200, 83, 0.5);
+  background: rgba(0, 200, 83, 0.12);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.relatorio-servico-voltar-bar__btn:hover {
+  background: rgba(0, 200, 83, 0.22);
+  border-color: rgba(0, 200, 83, 0.72);
+}
+
 .relatorio-servico-form-grid-2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6933,21 +6969,41 @@ a:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
+  flex-wrap: nowrap;
   margin-bottom: 10px;
 }
 
 .relatorio-equipamento-card__badge {
-  font-size: 11px;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 auto;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #00c853;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
-.relatorio-equipamento-card__remove {
-  padding: 4px 10px !important;
+.relatorio-equipamento-card__remove.btn-danger {
+  width: auto !important;
+  flex: 0 0 auto;
+  min-height: 0 !important;
+  padding: 5px 11px !important;
   font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em;
+  border-radius: 6px !important;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.tab-glass-root .relatorio-equipamento-card__remove.btn-danger {
+  min-height: unset !important;
+  width: auto !important;
 }
 
 .relatorio-equipamento-card__grid {
@@ -7110,6 +7166,14 @@ a:focus-visible {
 @media (max-width: 640px) {
   .relatorio-equipamento-card__grid {
     grid-template-columns: 1fr;
+  }
+
+  .relatorio-equipamento-card__head {
+    gap: 8px;
+  }
+
+  .relatorio-equipamento-card__badge {
+    font-size: 11px;
   }
 }
 
