@@ -4956,6 +4956,9 @@ export default function Dashboard() {
   const [criacaoChecklistEditingItemPecasId, setCriacaoChecklistEditingItemPecasId] = useState<string | null>(null) // ID do item a definir peças (Sim)
   const [criacaoChecklistPendentePeca, setCriacaoChecklistPendentePeca] = useState<{ grupoId: string; itemId: string; origem: 'biblioteca' | 'equipamentos-pdf' } | null>(null) // Ao abrir Cadastro de Peças ou PDF Armazém desde o checklist
   const [pecaSelecionadaParaChecklist, setPecaSelecionadaParaChecklist] = useState<PecaBiblioteca | null>(null) // Peça escolhida na Biblioteca para o item do checklist
+  const [selecionarPecaParaRelatorioServico, setSelecionarPecaParaRelatorioServico] = useState(false)
+  const [pecaSelecionadaParaRelatorio, setPecaSelecionadaParaRelatorio] = useState<PecaBiblioteca | null>(null)
+  const [showFecharRelatorioOpcoesModal, setShowFecharRelatorioOpcoesModal] = useState(false)
   const [criacaoChecklistItemForm, setCriacaoChecklistItemForm] = useState<{ tipo: string; descricaoTrabalho: string; necessitaPecas: boolean; origemPecas?: 'biblioteca' | 'equipamentos-pdf' | 'codigo-manual'; codigoPeca: string; pecasManuais: Array<{ codigo: string; quantia: number }> }>({ tipo: 'Manutenção', descricaoTrabalho: '', necessitaPecas: false, codigoPeca: '', pecasManuais: [] })
   const [showGrupoChecklistForm, setShowGrupoChecklistForm] = useState(false)
   const [editingGrupoChecklist, setEditingGrupoChecklist] = useState<GrupoChecklist | null>(null)
@@ -16347,6 +16350,9 @@ export default function Dashboard() {
     setShowRelatorioServicoModal(false)
     setEditingRelatorioServico(null)
     setEditingDiaTrabalhoIndex(null)
+    setSelecionarPecaParaRelatorioServico(false)
+    setPecaSelecionadaParaRelatorio(null)
+    setShowFecharRelatorioOpcoesModal(false)
   }
 
   /** Fecha formulário do relatório (a saída do separador «Relatório de Serviço» faz-se ao enviar o fechamento à Biblioteca). */
@@ -22406,6 +22412,10 @@ export default function Dashboard() {
   }
 
   const handleSaveRelatorioServico = () => {
+    salvarRelatorioServicoAtual()
+  }
+
+  const salvarRelatorioServicoAtual = (opts?: { silencioso?: boolean }): RelatorioServico | null => {
     // Validar apenas campos obrigatórios do relatório (não dos dias de trabalho)
     if (!relatorioServicoForm.tecnico || !relatorioServicoForm.cliente || !relatorioServicoForm.data || !relatorioServicoForm.numero) {
       const camposFaltando = []
@@ -22414,13 +22424,13 @@ export default function Dashboard() {
       if (!relatorioServicoForm.data) camposFaltando.push('Data')
       if (!relatorioServicoForm.numero) camposFaltando.push('Número do Relatório')
       alert(`Por favor, preencha os campos obrigatórios: ${camposFaltando.join(', ')}`)
-      return
+      return null
     }
     const equipamentosValidacao = normalizarEquipamentosRelatorio(relatorioServicoForm)
     const erroEquipamentos = validarEquipamentosRelatorio(equipamentosValidacao)
     if (erroEquipamentos) {
       alert(erroEquipamentos)
-      return
+      return null
     }
 
     // Recalcular todos os dias antes de salvar e ordenar por data (ordem cronológica no PDF e na lista)
@@ -22451,7 +22461,7 @@ export default function Dashboard() {
       alert(
         `Já existe um relatório de serviço com o n.º «${dupRelatorio.numero}» na mesma data para este cliente.\n\nAbra o relatório existente para editar, ou altere o número ou a data antes de guardar.`
       )
-      return
+      return null
     }
 
     let updatedRelatorios: RelatorioServico[]
@@ -22509,7 +22519,10 @@ export default function Dashboard() {
       descricaoTrabalho: ''
     })
     setEditingRelatorioServico(savedRelatorio)
-    alert(t.relatorioServicoSaved || 'Relatório de serviço salvo com sucesso!')
+    if (!opts?.silencioso) {
+      alert(t.relatorioServicoSaved || 'Relatório de serviço salvo com sucesso!')
+    }
+    return savedRelatorio
   }
 
   // Função para salvar e gerar o relatório
@@ -23088,6 +23101,307 @@ export default function Dashboard() {
     const updatedPecas = [...relatorioServicoForm.pecasSubstituicao]
     updatedPecas.splice(index, 1)
     setRelatorioServicoForm({ ...relatorioServicoForm, pecasSubstituicao: updatedPecas })
+  }
+
+  const anexarPecaBibliotecaAoRelatorio = (
+    peca: PecaBiblioteca,
+    quantidade = '1',
+    opts?: { continuarNaBiblioteca?: boolean }
+  ) => {
+    const codigo = String(peca.codigo ?? '').trim()
+    if (!codigo) return
+    const jaExiste = relatorioServicoForm.pecasSubstituicao.some(
+      (p) => String(p.codigo ?? '').trim().toLowerCase() === codigo.toLowerCase()
+    )
+    if (jaExiste) {
+      alert((safeT as any)?.pecaJaAdicionada || 'Esta peça já foi adicionada!')
+      return
+    }
+    setRelatorioServicoForm((prev) => ({
+      ...prev,
+      pecasSubstituicao: [
+        ...prev.pecasSubstituicao,
+        {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          descricao: peca.nome || peca.descricao || '',
+          codigo,
+          quantidade: String(quantidade),
+          imagem: peca.imagem,
+        },
+      ],
+    }))
+    setPecaSelecionadaParaRelatorio(null)
+    if (opts?.continuarNaBiblioteca) return
+    setSelecionarPecaParaRelatorioServico(false)
+    openTab('relatorio-servico', getTabTitle('relatorio-servico'))
+  }
+
+  const abrirBibliotecaParaAnexarAoRelatorio = () => {
+    setSelecionarPecaParaRelatorioServico(true)
+    setPecaSelecionadaParaRelatorio(null)
+    setAbaBibliotecaPecas('biblioteca')
+    openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
+  }
+
+  const cancelarSelecaoPecaParaRelatorio = () => {
+    setSelecionarPecaParaRelatorioServico(false)
+    setPecaSelecionadaParaRelatorio(null)
+    openTab('relatorio-servico', getTabTitle('relatorio-servico'))
+  }
+
+  const buildItensFechamentoBaseRelatorio = (r: RelatorioServico): FechamentoItem[] => {
+    const hhmmToDecimal = (s: string): number => {
+      const raw = String(s ?? '').trim()
+      if (!raw) return 0
+      if (!raw.includes(':')) {
+        const n = parseFloat(raw.replace(',', '.'))
+        return Number.isFinite(n) ? n : 0
+      }
+      const parts = raw.split(':').map((p) => p.trim())
+      const h = parseInt(parts[0], 10) || 0
+      const m = parseInt(parts[1] ?? '0', 10) || 0
+      return h + m / 60
+    }
+    const dias = r.diasTrabalho || []
+    const totais = calcularTotais(dias)
+    const tAny = totais as typeof totais & {
+      horasTrabalhoMinutos?: number
+      horasViagemIdaMinutos?: number
+      horasViagemRetornoMinutos?: number
+    }
+    const minutosParaHorasDecimal = (min: number | undefined): number => {
+      if (min == null || !Number.isFinite(min)) return 0
+      return Math.round(min) / 60
+    }
+    const grupoId = fechamentoGrupoPorRelatorioId[r.id] || null
+    const base: FechamentoItem[] = [
+      {
+        id: 'ht',
+        descricao: t.horasTrabalho || 'Horas de Trabalho',
+        tipoCobranca: 'hora',
+        quantidade:
+          typeof tAny.horasTrabalhoMinutos === 'number'
+            ? minutosParaHorasDecimal(tAny.horasTrabalhoMinutos)
+            : hhmmToDecimal(totais.horasTrabalho),
+        valorUnitario: 0,
+        valorTotal: 0,
+        origem: 'relatorio',
+      },
+      {
+        id: 'km',
+        descricao: t.kmsPercorridos || "Km's Percorridos",
+        tipoCobranca: 'km',
+        quantidade: parseFloat(totais.kmsPercorridos) || 0,
+        valorUnitario: 0,
+        valorTotal: 0,
+        origem: 'relatorio',
+      },
+      {
+        id: 'diarias',
+        descricao: t.diarias || 'Diárias',
+        tipoCobranca: 'diarias',
+        quantidade: dias.length,
+        valorUnitario: 0,
+        valorTotal: 0,
+        origem: 'relatorio',
+        cobrarDiaria: true,
+      },
+      {
+        id: 'hida',
+        descricao: t.horasViagemIda || 'Horas de Viagem de Ida',
+        tipoCobranca: 'hora',
+        quantidade:
+          typeof tAny.horasViagemIdaMinutos === 'number'
+            ? minutosParaHorasDecimal(tAny.horasViagemIdaMinutos)
+            : hhmmToDecimal(totais.horasViagemIda),
+        valorUnitario: 0,
+        valorTotal: 0,
+        origem: 'relatorio',
+      },
+      {
+        id: 'hret',
+        descricao: t.horasViagemRetorno || 'Horas de Viagem de Retorno',
+        tipoCobranca: 'hora',
+        quantidade:
+          typeof tAny.horasViagemRetornoMinutos === 'number'
+            ? minutosParaHorasDecimal(tAny.horasViagemRetornoMinutos)
+            : hhmmToDecimal(totais.horasViagemRetorno),
+        valorUnitario: 0,
+        valorTotal: 0,
+        origem: 'relatorio',
+      },
+    ]
+    return base.map((item) =>
+      enriquecerLinhaFechamentoComCadastro(
+        item,
+        servicos as ServicoCadastroFechamentoMin[],
+        undefined,
+        grupoId
+      )
+    )
+  }
+
+  const buildItensFechamentoPecasRelatorio = (pecas: PecaSubstituicao[]): FechamentoItem[] =>
+    pecas.map((p, idx) => {
+      const bib = pecasBiblioteca.find(
+        (b) => String(b.codigo ?? '').trim().toLowerCase() === String(p.codigo ?? '').trim().toLowerCase()
+      )
+      const valorUnit = bib?.preco ? parseFloat(String(bib.preco).replace(',', '.')) || 0 : 0
+      const qtd = parseFloat(String(p.quantidade ?? '')) || 1
+      return {
+        id: `peca-${p.id || idx}`,
+        descricao: p.descricao || p.codigo || 'Peça',
+        cod: p.codigo,
+        tipoCobranca: 'unidade' as const,
+        quantidade: qtd,
+        valorUnitario: valorUnit,
+        valorTotal: Math.round(qtd * valorUnit * 100) / 100,
+        origem: 'manual' as const,
+      }
+    })
+
+  const criarPedidoOrcamentoDoRelatorio = async (rel: RelatorioServico) => {
+    if (!rel.pecasSubstituicao?.length) {
+      alert((safeT as any)?.relatorioSemPecasParaOrcamento || 'Adicione peças ao relatório antes de gerar o pedido de orçamento.')
+      return
+    }
+    const novoPedido: PedidoOrcamento = {
+      id: Date.now().toString(),
+      numeroRelatorio: rel.numero,
+      cliente: rel.cliente,
+      clienteId: rel.clienteId,
+      equipamentoId: rel.equipamentoId,
+      maquinaModelo: rel.maquinaModelo,
+      numeroMaquina: rel.numeroMaquina,
+      data: rel.data,
+      dataGeracao: new Date().toISOString(),
+      pecas: rel.pecasSubstituicao,
+      status: 'pendente',
+    }
+    const updatedPedidos = [...pedidosOrcamento, novoPedido]
+    setPedidosOrcamento(updatedPedidos)
+    saveData('nonato-pedidos-orcamento', updatedPedidos)
+    try {
+      const orcamentosExistentesData = await loadData('nonato-orcamentos-avulso')
+      let orcamentosExistentes: any[] = Array.isArray(orcamentosExistentesData) ? orcamentosExistentesData : []
+      const itensOrcamento = rel.pecasSubstituicao.map((peca) => {
+        const pecaBiblioteca = pecasBiblioteca.find((p) => p.codigo === peca.codigo)
+        const precoUnitario = pecaBiblioteca?.preco
+          ? parseFloat(pecaBiblioteca.preco.toString().replace(',', '.')) || 0
+          : 0
+        const quantidade = parseFloat(peca.quantidade.toString()) || 1
+        return {
+          descricao: peca.descricao,
+          quantidade,
+          precoUnitario,
+          total: quantidade * precoUnitario,
+        }
+      })
+      const totalOrcamento = itensOrcamento.reduce((sum, item) => sum + item.total, 0)
+      const novoOrcamento = {
+        id: `orc-${Date.now()}`,
+        numeroOrcamento: rel.numero || `ORC-${Date.now()}`,
+        data: rel.data || new Date().toISOString().split('T')[0],
+        validade: '',
+        descricao: `${safeT?.relatorioServico || 'Relatório'}: ${rel.numero} - ${rel.maquinaModelo || ''}`,
+        observacoes: `${safeT?.cliente || 'Cliente'}: ${rel.cliente || ''}`,
+        tipo: rel.clienteId ? ('cliente-cadastrado' as const) : ('dados-fixos' as const),
+        clienteId: rel.clienteId,
+        clienteNome: rel.cliente,
+        dadosCliente: rel.clienteId ? clientes.find((c) => c.id === rel.clienteId) : null,
+        itens: itensOrcamento,
+        total: totalOrcamento,
+        dataCriacao: new Date().toISOString(),
+      }
+      await saveData('nonato-orcamentos-avulso', [...orcamentosExistentes, novoOrcamento])
+    } catch (error) {
+      console.error('Erro ao criar orçamento:', error)
+    }
+  }
+
+  const imprimirRelatorioPecasEDespesas = (rel: RelatorioServico) => {
+    const itensServico = buildItensFechamentoBaseRelatorio(rel)
+    const itensPecas = buildItensFechamentoPecasRelatorio(rel.pecasSubstituicao || [])
+    const todosItens = [...itensServico, ...itensPecas]
+    const totalGeral = todosItens.reduce((s, i) => s + (Number(i.valorTotal) || 0), 0)
+    const esc = (v: string) =>
+      String(v ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+    const linhasPecas = (rel.pecasSubstituicao || [])
+      .map(
+        (p) =>
+          `<tr><td>${esc(p.codigo)}</td><td>${esc(p.descricao)}</td><td>${esc(String(p.quantidade))}</td></tr>`
+      )
+      .join('')
+    const linhasDespesas = todosItens
+      .map(
+        (i) =>
+          `<tr><td>${esc(i.descricao)}</td><td style="text-align:right">${i.quantidade}</td><td style="text-align:right">${(i.valorUnitario || 0).toFixed(2)} €</td><td style="text-align:right">${(i.valorTotal || 0).toFixed(2)} €</td></tr>`
+      )
+      .join('')
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(rel.numero)} — Peças e Despesas</title>
+<style>body{font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#111}h1,h2{color:#1e3a5f}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#1e293b;color:#fff}</style></head><body>
+<h1>${esc(safeT?.relatorioServico || 'Relatório de Serviço')} — ${esc(rel.numero)}</h1>
+<p><strong>${esc(safeT?.cliente || 'Cliente')}:</strong> ${esc(rel.cliente)} · <strong>${esc(safeT?.data || 'Data')}:</strong> ${esc(rel.data)}</p>
+<h2>${esc(safeT?.pecasSubstituicao || 'Peças')}</h2>
+<table><thead><tr><th>${esc(safeT?.codigo || 'Código')}</th><th>${esc(safeT?.descricaoItem || 'Descrição')}</th><th>${esc(safeT?.quantidade || 'Qtd.')}</th></tr></thead><tbody>${linhasPecas || `<tr><td colspan="3">—</td></tr>`}</tbody></table>
+<h2>${esc((safeT as any)?.relatorioResumoDespesasPecas || 'Resumo de despesas, peças e serviços')}</h2>
+<table><thead><tr><th>${esc(safeT?.descricaoItem || 'Descrição')}</th><th>${esc(safeT?.quantidade || 'Qtd.')}</th><th>${esc(safeT?.valorUnitario || 'Unit.')}</th><th>${esc(safeT?.total || 'Total')}</th></tr></thead><tbody>${linhasDespesas}</tbody>
+<tfoot><tr><td colspan="3" style="text-align:right;font-weight:700">${esc(safeT?.total || 'Total')}</td><td style="text-align:right;font-weight:700">${totalGeral.toFixed(2)} €</td></tr></tfoot></table>
+<script>window.onload=function(){window.print()}</script></body></html>`
+    const w = window.open('', '_blank')
+    if (!w) {
+      alert(safeT?.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.')
+      return
+    }
+    w.document.write(html)
+    w.document.close()
+  }
+
+  const executarFecharRelatorioComOpcao = async (
+    opcao: 'pedido-orcamento' | 'fechamento-pecas' | 'relatorios-completos'
+  ) => {
+    const rel = salvarRelatorioServicoAtual({ silencioso: true })
+    if (!rel) return
+    setShowFecharRelatorioOpcoesModal(false)
+
+    if (opcao === 'pedido-orcamento') {
+      if (!rel.pecasSubstituicao?.length) {
+        alert((safeT as any)?.relatorioSemPecasParaOrcamento || 'Adicione peças ao relatório antes de gerar o pedido de orçamento.')
+        return
+      }
+      await criarPedidoOrcamentoDoRelatorio(rel)
+      setShowListaPecasOrcamento(true)
+      openTab('gestao-custos', getTabTitle('gestao-custos'))
+      fecharFormularioRelatorioServico()
+      alert(safeT?.pedidoOrcamentoGerado || 'Pedido de orçamento gerado com sucesso!')
+      return
+    }
+
+    if (opcao === 'fechamento-pecas') {
+      const itens = [
+        ...buildItensFechamentoBaseRelatorio(rel),
+        ...buildItensFechamentoPecasRelatorio(rel.pecasSubstituicao || []),
+      ]
+      const nextFechamentos = { ...fechamentosRelatorios, [rel.id]: itens }
+      setFechamentosRelatorios(nextFechamentos)
+      saveData('nonato-fechamentos-relatorios', nextFechamentos)
+      setFechamentoRelatorioSelecionadoId(rel.id)
+      setFechamentoEditandoDespesasBibliotecaId(null)
+      openTab('fechamento-relatorios-servicos', getTabTitle('fechamento-relatorios-servicos'))
+      fecharFormularioRelatorioServico()
+      return
+    }
+
+    handlePrintRelatorio(rel, getPdfModelForRelatorio(rel.id))
+    if (rel.pecasSubstituicao?.length) {
+      setTimeout(() => imprimirRelatorioPecasEDespesas(rel), 600)
+    } else {
+      imprimirRelatorioPecasEDespesas(rel)
+    }
+    fecharFormularioRelatorioServico()
   }
 
   const handlePecaImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34395,10 +34709,7 @@ export default function Dashboard() {
                           </button>
                           <button
                             className="btn-primary"
-                            onClick={() => {
-                              // Abrir biblioteca de peças
-                              openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
-                            }}
+                            onClick={abrirBibliotecaParaAnexarAoRelatorio}
                             style={{ padding: '8px 15px', fontSize: '12px', whiteSpace: 'nowrap' }}
                           >
                             {safeT?.abrirBiblioteca || '📚 Abrir Biblioteca'}
@@ -34649,6 +34960,19 @@ export default function Dashboard() {
                   <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
                   <button className="btn-primary" onClick={handleSaveRelatorioServico} style={{ padding: '8px 16px' }}>
                     {safeT?.salvar || 'Salvar'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => setShowFecharRelatorioOpcoesModal(true)}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: 'rgba(255, 165, 0, 0.18)',
+                      borderColor: 'rgba(255, 165, 0, 0.55)',
+                      color: '#fff',
+                    }}
+                  >
+                    {(safeT as any)?.relatorioFecharTitulo || 'Fechar relatório'}
                   </button>
                   <RelatorioPdfModeloPicker
                     value={getPdfModelSelecionadoNoFormulario()}
@@ -37350,6 +37674,51 @@ export default function Dashboard() {
               </div>
             )}
 
+            {selecionarPecaParaRelatorioServico && (
+              <div className="biblioteca-pecas-hub__banner">
+                <span style={{ color: '#ffaa00', fontWeight: 600, fontSize: '13px' }}>
+                  {(safeT as any)?.relatorioSelecionarPecaBibliotecaBanner ||
+                    'Selecione uma peça abaixo e clique em «Anexar ao relatório» para adicionar ao relatório de serviço em edição.'}
+                </span>
+                {pecaSelecionadaParaRelatorio ? (
+                  <span style={{ color: '#fff', fontSize: '13px' }}>
+                    {pecaSelecionadaParaRelatorio.codigo} — {pecaSelecionadaParaRelatorio.nome}
+                  </span>
+                ) : null}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={cancelarSelecaoPecaParaRelatorio}
+                    style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '6px', backgroundColor: 'transparent', color: '#ccc', cursor: 'pointer' }}
+                  >
+                    {(safeT as any)?.cancel || 'Cancelar'}
+                  </button>
+                  {pecaSelecionadaParaRelatorio ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          anexarPecaBibliotecaAoRelatorio(pecaSelecionadaParaRelatorio, '1', {
+                            continuarNaBiblioteca: true,
+                          })
+                        }
+                        style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 600, color: '#fff', border: '1px solid rgba(255,165,0,0.55)', borderRadius: '8px', backgroundColor: 'rgba(255,165,0,0.22)', cursor: 'pointer' }}
+                      >
+                        {(safeT as any)?.anexarPecasContinuar || '+ Anexar e continuar na biblioteca'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => anexarPecaBibliotecaAoRelatorio(pecaSelecionadaParaRelatorio, '1')}
+                        style={{ padding: '8px 20px', fontSize: '13px', fontWeight: 700, color: '#00a86b', border: '2px solid rgba(0, 168, 107,0.6)', borderRadius: '8px', backgroundColor: 'rgba(0, 168, 107,0.2)', cursor: 'pointer' }}
+                      >
+                        {(safeT as any)?.anexarPecasAoRelatorio || safeT?.anexarPecas || 'Anexar ao relatório'}
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+            )}
+
             {/* Conteúdo da aba Cadastro */}
             {abaBibliotecaPecas === 'cadastro' && (
               <>
@@ -38468,16 +38837,21 @@ export default function Dashboard() {
                   const renderPecaBibliotecaGridCell = (peca: PecaBiblioteca) => {
                     const grupoNome = peca.categoriaId ? categoriasPecas.find((c) => c.id === peca.categoriaId)?.nome : null
                     const isPendingChecklist = criacaoChecklistPendentePeca?.origem === 'biblioteca'
-                    const isSelected = isPendingChecklist && pecaSelecionadaParaChecklist?.id === peca.id
+                    const isPendingRelatorio = selecionarPecaParaRelatorioServico
+                    const isPickable = isPendingChecklist || isPendingRelatorio
+                    const isSelected =
+                      (isPendingChecklist && pecaSelecionadaParaChecklist?.id === peca.id) ||
+                      (isPendingRelatorio && pecaSelecionadaParaRelatorio?.id === peca.id)
                     return (
                       <div
                         key={peca.id}
-                        className={`biblioteca-pecas-hub__piece-card${isSelected ? ' biblioteca-pecas-hub__piece-card--selected' : ''}${isPendingChecklist ? ' biblioteca-pecas-hub__piece-card--pickable' : ''}`}
+                        className={`biblioteca-pecas-hub__piece-card${isSelected ? ' biblioteca-pecas-hub__piece-card--selected' : ''}${isPickable ? ' biblioteca-pecas-hub__piece-card--pickable' : ''}`}
                         onClick={() => {
                           if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca)
+                          else if (isPendingRelatorio) setPecaSelecionadaParaRelatorio(peca)
                         }}
                         onDoubleClick={() => {
-                          if (!isPendingChecklist && (!somenteLeituraBiblioteca || isFiltroSoSemCategoria)) handleEditPecaBiblioteca(peca)
+                          if (!isPickable && (!somenteLeituraBiblioteca || isFiltroSoSemCategoria)) handleEditPecaBiblioteca(peca)
                         }}
                       >
                         <div
@@ -38568,6 +38942,23 @@ export default function Dashboard() {
                             style={{ flex: 1, minWidth: '72px', padding: '6px 8px', fontSize: '12px' }}
                           >
                             {safeT?.delete || 'Excluir'}
+                          </button>
+                        </div>
+                        ) : isPendingRelatorio ? (
+                        <div
+                          style={{ display: 'flex', gap: '6px', marginTop: '12px', flexWrap: 'wrap' }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              anexarPecaBibliotecaAoRelatorio(peca, '1', { continuarNaBiblioteca: true })
+                            }}
+                            style={{ flex: 1, minWidth: '72px', padding: '6px 8px', fontSize: '12px' }}
+                          >
+                            {(safeT as any)?.anexarPecasAoRelatorio || safeT?.anexarPecas || 'Anexar ao relatório'}
                           </button>
                         </div>
                         ) : isFiltroSoSemCategoria ? (
@@ -39016,7 +39407,7 @@ export default function Dashboard() {
                                   {headerFilter}
                                 </span>
                               </th>
-                              {(!somenteLeituraBiblioteca || isFiltroSoSemCategoria) ? (
+                              {(!somenteLeituraBiblioteca || isFiltroSoSemCategoria || selecionarPecaParaRelatorioServico) ? (
                               <th className="biblioteca-pecas-hub__catalog-th biblioteca-pecas-hub__catalog-th--right biblioteca-pecas-hub__catalog-th--actions">
                                 {safeT?.actions || 'Ações'}
                               </th>
@@ -39027,16 +39418,21 @@ export default function Dashboard() {
                             {pecasCatalogoFiltradas.map((peca, idx) => {
                               const grupoNome = peca.categoriaId ? categoriasPecas.find((c) => c.id === peca.categoriaId)?.nome : null
                               const isPendingChecklist = criacaoChecklistPendentePeca?.origem === 'biblioteca'
-                              const isSelected = isPendingChecklist && pecaSelecionadaParaChecklist?.id === peca.id
+                              const isPendingRelatorio = selecionarPecaParaRelatorioServico
+                              const isPickable = isPendingChecklist || isPendingRelatorio
+                              const isSelected =
+                                (isPendingChecklist && pecaSelecionadaParaChecklist?.id === peca.id) ||
+                                (isPendingRelatorio && pecaSelecionadaParaRelatorio?.id === peca.id)
                               return (
                                 <tr
                                   key={peca.id}
-                                  className={`biblioteca-pecas-hub__catalog-row${idx % 2 === 0 ? ' biblioteca-pecas-hub__catalog-row--a' : ' biblioteca-pecas-hub__catalog-row--b'}${isSelected ? ' biblioteca-pecas-hub__catalog-row--selected' : ''}${isPendingChecklist ? ' biblioteca-pecas-hub__catalog-row--pickable' : ''}`}
+                                  className={`biblioteca-pecas-hub__catalog-row${idx % 2 === 0 ? ' biblioteca-pecas-hub__catalog-row--a' : ' biblioteca-pecas-hub__catalog-row--b'}${isSelected ? ' biblioteca-pecas-hub__catalog-row--selected' : ''}${isPickable ? ' biblioteca-pecas-hub__catalog-row--pickable' : ''}`}
                                   onClick={() => {
                                     if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca)
+                                    else if (isPendingRelatorio) setPecaSelecionadaParaRelatorio(peca)
                                   }}
                                   onDoubleClick={() => {
-                                    if (!isPendingChecklist && (!somenteLeituraBiblioteca || isFiltroSoSemCategoria)) handleEditPecaBiblioteca(peca)
+                                    if (!isPickable && (!somenteLeituraBiblioteca || isFiltroSoSemCategoria)) handleEditPecaBiblioteca(peca)
                                   }}
                                 >
                                   <td
@@ -39126,6 +39522,22 @@ export default function Dashboard() {
                                         {safeT?.delete || 'Excluir'}
                                       </button>
                                     </div>
+                                  </td>
+                                  ) : isPendingRelatorio ? (
+                                  <td
+                                    className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--actions"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <button
+                                      type="button"
+                                      className="btn-primary"
+                                      onClick={() =>
+                                        anexarPecaBibliotecaAoRelatorio(peca, '1', { continuarNaBiblioteca: true })
+                                      }
+                                      style={{ fontWeight: 600 }}
+                                    >
+                                      {(safeT as any)?.anexarPecasAoRelatorio || safeT?.anexarPecas || 'Anexar ao relatório'}
+                                    </button>
                                   </td>
                                   ) : isFiltroSoSemCategoria ? (
                                   <td
@@ -74878,6 +75290,84 @@ A1;Peça exemplo;10`}
         </div>
       )}
 
+      {/* Modal — opções ao fechar relatório com peças / despesas */}
+      {showFecharRelatorioOpcoesModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+          }}
+          onClick={() => setShowFecharRelatorioOpcoesModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#404040',
+              padding: '28px',
+              borderRadius: '10px',
+              maxWidth: '560px',
+              width: '92%',
+              border: '2px solid rgba(255, 165, 0, 0.45)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ margin: '0 0 10px', color: '#ffaa00', fontSize: '20px' }}>
+              {(safeT as any)?.relatorioFecharTitulo || 'Fechar relatório'}
+            </h2>
+            <p style={{ margin: '0 0 18px', fontSize: '13px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.5 }}>
+              {(safeT as any)?.relatorioFecharDescricao ||
+                'Escolha o que fazer ao concluir este relatório. O relatório será guardado automaticamente.'}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => void executarFecharRelatorioComOpcao('pedido-orcamento')}
+                style={{
+                  padding: '12px 16px',
+                  textAlign: 'left',
+                  backgroundColor: 'rgba(255, 165, 0, 0.18)',
+                  borderColor: 'rgba(255, 165, 0, 0.55)',
+                }}
+              >
+                📋 {(safeT as any)?.relatorioFecharOpcaoPedidoOrcamento ||
+                  'Fechar e gerar pedido de orçamento de peças (lista em Gestão de Custos)'}
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => void executarFecharRelatorioComOpcao('fechamento-pecas')}
+                style={{ padding: '12px 16px', textAlign: 'left' }}
+              >
+                💰 {(safeT as any)?.relatorioFecharOpcaoFechamento ||
+                  'Fechar e abrir fechamento com peças + despesas de serviço'}
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => void executarFecharRelatorioComOpcao('relatorios-completos')}
+                style={{ padding: '12px 16px', textAlign: 'left' }}
+              >
+                🖨️ {(safeT as any)?.relatorioFecharOpcaoRelatoriosCompletos ||
+                  'Gerar relatório de serviço + resumo de peças e despesas'}
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setShowFecharRelatorioOpcoesModal(false)}
+                style={{ padding: '10px 16px', marginTop: '6px', backgroundColor: '#484848', borderColor: '#666' }}
+              >
+                {safeT?.cancel || 'Cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Pedido de Orçamento */}
       {showPedidoOrcamentoModal && (
         <div style={{
@@ -74955,78 +75445,7 @@ A1;Peça exemplo;10`}
               <button
                 className="btn-primary"
                 onClick={async () => {
-                  // Criar pedido de orçamento
-                  const novoPedido: PedidoOrcamento = {
-                    id: Date.now().toString(),
-                    numeroRelatorio: relatorioServicoForm.numero,
-                    cliente: relatorioServicoForm.cliente,
-                    clienteId: relatorioServicoForm.clienteId,
-                    equipamentoId: relatorioServicoForm.equipamentoId,
-                    maquinaModelo: relatorioServicoForm.maquinaModelo,
-                    numeroMaquina: relatorioServicoForm.numeroMaquina,
-                    data: relatorioServicoForm.data,
-                    dataGeracao: new Date().toISOString(),
-                    pecas: relatorioServicoForm.pecasSubstituicao,
-                    status: 'pendente'
-                  }
-                  
-                  const updatedPedidos = [...pedidosOrcamento, novoPedido]
-                  setPedidosOrcamento(updatedPedidos)
-                  saveData('nonato-pedidos-orcamento', updatedPedidos)
-                  
-                  // Criar orçamento na seção "Orçamentos Gerados"
-                  try {
-                    // Carregar orçamentos existentes usando a função loadData
-                    const orcamentosExistentesData = await loadData('nonato-orcamentos-avulso')
-                    let orcamentosExistentes: any[] = []
-                    if (orcamentosExistentesData && Array.isArray(orcamentosExistentesData)) {
-                      orcamentosExistentes = orcamentosExistentesData
-                    }
-                    
-                    // Converter peças em itens do orçamento
-                    const itensOrcamento = relatorioServicoForm.pecasSubstituicao.map(peca => {
-                      // Buscar preço da peça na biblioteca se disponível
-                      const pecaBiblioteca = pecasBiblioteca.find(p => p.codigo === peca.codigo)
-                      const precoUnitario = pecaBiblioteca?.preco ? parseFloat(pecaBiblioteca.preco.toString().replace(',', '.')) || 0 : 0
-                      const quantidade = parseFloat(peca.quantidade.toString()) || 1
-                      
-                      return {
-                        descricao: peca.descricao,
-                        quantidade: quantidade,
-                        precoUnitario: precoUnitario,
-                        total: quantidade * precoUnitario
-                      }
-                    })
-                    
-                    const totalOrcamento = itensOrcamento.reduce((sum, item) => sum + item.total, 0)
-                    
-                    // Criar novo orçamento
-                    const novoOrcamento = {
-                      id: `orc-${Date.now()}`,
-                      numeroOrcamento: relatorioServicoForm.numero || `ORC-${Date.now()}`,
-                      data: relatorioServicoForm.data || new Date().toISOString().split('T')[0],
-                      validade: '',
-                      descricao: `${safeT?.relatorioServico || 'Relatório'}: ${relatorioServicoForm.numero} - ${relatorioServicoForm.maquinaModelo || ''}`,
-                      observacoes: `${safeT?.cliente || 'Cliente'}: ${relatorioServicoForm.cliente || ''}`,
-                      tipo: relatorioServicoForm.clienteId ? 'cliente-cadastrado' as const : 'dados-fixos' as const,
-                      clienteId: relatorioServicoForm.clienteId,
-                      clienteNome: relatorioServicoForm.cliente,
-                      dadosCliente: relatorioServicoForm.clienteId ? clientes.find(c => c.id === relatorioServicoForm.clienteId) : null,
-                      itens: itensOrcamento,
-                      total: totalOrcamento,
-                      dataCriacao: new Date().toISOString()
-                    }
-                    
-                    // Adicionar ao array de orçamentos
-                    const novosOrcamentos = [...orcamentosExistentes, novoOrcamento]
-                    
-                    // Salvar usando a função saveData
-                    await saveData('nonato-orcamentos-avulso', novosOrcamentos)
-                  } catch (error) {
-                    console.error('Erro ao criar orçamento:', error)
-                    alert('Erro ao criar orçamento: ' + (error instanceof Error ? error.message : String(error)))
-                  }
-                  
+                  await criarPedidoOrcamentoDoRelatorio(relatorioServicoForm)
                   alert(safeT?.pedidoOrcamentoGerado || 'Pedido de orçamento gerado com sucesso!')
                   setShowPedidoOrcamentoModal(false)
                 }}
