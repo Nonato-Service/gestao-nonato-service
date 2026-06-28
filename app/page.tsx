@@ -35955,7 +35955,7 @@ export default function Dashboard() {
                 )}
 
                 {clientesFiltrados.length > 0 && (
-                  <div className="clientes-alfa-wrap">
+                  <div className="clientes-alfa-wrap clientes-cadastrados-lista">
                     {clientesLetrasOrdem.length > 1 && (
                       <nav
                         className="clientes-alfa-jump"
@@ -38118,297 +38118,6 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Modal para criar novo Grupo (Categoria) */}
-            {showNovaCategoriaForm && (
-              <div style={{ 
-                position: 'fixed', 
-                top: 0, 
-                left: 0, 
-                right: 0, 
-                bottom: 0, 
-                backgroundColor: 'rgba(0, 0, 0, 0.8)', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                zIndex: 10000 
-              }}>
-                <div style={{ 
-                  backgroundColor: '#404040', 
-                  padding: '30px', 
-                  borderRadius: '8px', 
-                  border: '1px solid rgba(0, 168, 107, 0.3)',
-                  minWidth: '400px',
-                  maxWidth: '500px'
-                }}>
-                  <h3 style={{ marginBottom: '20px', color: '#00a86b' }}>
-                    {safeT?.novaCategoria || 'Novo Grupo'}
-                  </h3>
-                  <div style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
-                          {safeT?.nomeCategoria || 'Nome da Categoria'} <span style={{ color: '#ff0000' }}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={novaCategoriaNome}
-                      onChange={(e) => setNovaCategoriaNome(e.target.value)}
-                          placeholder={safeT?.nomeCategoria || 'Nome da Categoria'}
-                      style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 168, 107, 0.3)', borderRadius: '4px' }}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && novaCategoriaNome.trim()) {
-                          const refId = pecaBibliotecaForm.categoriaId
-                          const idx = refId ? categoriasPecas.findIndex(c => c.id === refId) : -1
-                          const newCategoria: CategoriaPeca = {
-                            id: Date.now().toString(),
-                            nome: novaCategoriaNome.trim()
-                          }
-                          const updated =
-                            idx >= 0
-                              ? [...categoriasPecas.slice(0, idx + 1), newCategoria, ...categoriasPecas.slice(idx + 1)]
-                              : [...categoriasPecas, newCategoria]
-                          setCategoriasPecas(updated)
-                          saveData('nonato-categorias-pecas', updated)
-                          setUltimoGrupoSelecionado(newCategoria.id)
-                          setUltimoSubgrupoSelecionado('')
-                          setPecaBibliotecaForm({
-                            ...pecaBibliotecaForm,
-                            categoriaId: newCategoria.id,
-                            categoria: newCategoria.nome,
-                            subcategoriaId: '',
-                            subcategoria: ''
-                          })
-                          setNovaCategoriaNome('')
-                          setShowNovaCategoriaForm(false)
-                              alert(safeT?.categoriaPecaSaved || 'Categoria criada com sucesso!')
-                        }
-                      }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
-                      className="btn-primary"
-                      onClick={() => {
-                        if (!novaCategoriaNome.trim()) {
-                              alert(safeT?.fillAllFields || 'Preencha o nome da categoria!')
-                          return
-                        }
-                        const refId = pecaBibliotecaForm.categoriaId
-                        const idx = refId ? categoriasPecas.findIndex(c => c.id === refId) : -1
-                        const newCategoria: CategoriaPeca = {
-                          id: Date.now().toString(),
-                          nome: novaCategoriaNome.trim()
-                        }
-                        const updated =
-                          idx >= 0
-                            ? [...categoriasPecas.slice(0, idx + 1), newCategoria, ...categoriasPecas.slice(idx + 1)]
-                            : [...categoriasPecas, newCategoria]
-                        setCategoriasPecas(updated)
-                        saveData('nonato-categorias-pecas', updated)
-                        setUltimoGrupoSelecionado(newCategoria.id)
-                        setUltimoSubgrupoSelecionado('')
-                        setPecaBibliotecaForm({
-                          ...pecaBibliotecaForm,
-                          categoriaId: newCategoria.id,
-                          categoria: newCategoria.nome,
-                          subcategoriaId: '',
-                          subcategoria: ''
-                        })
-                        setNovaCategoriaNome('')
-                        setShowNovaCategoriaForm(false)
-                              alert(safeT?.categoriaPecaSaved || 'Categoria criada com sucesso!')
-                      }}
-                      style={{ flex: 1, padding: '10px' }}
-                    >
-                      {safeT?.criar || safeT?.save || 'Criar'}
-                    </button>
-                    <button
-                      className="btn-secondary"
-                      onClick={() => {
-                        setShowNovaCategoriaForm(false)
-                        setNovaCategoriaNome('')
-                      }}
-                      style={{ flex: 1, padding: '10px' }}
-                    >
-                      {safeT?.cancel || 'Cancelar'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Modal para criar novo Subgrupo (Subcategoria) */}
-            {showNovaSubcategoriaForm && (
-              <div style={{ 
-                position: 'fixed', 
-                top: 0, 
-                left: 0, 
-                right: 0, 
-                bottom: 0, 
-                backgroundColor: 'rgba(0, 0, 0, 0.8)', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                zIndex: 10000 
-              }}>
-                <div style={{ 
-                  backgroundColor: '#404040', 
-                  padding: '30px', 
-                  borderRadius: '8px', 
-                  border: '1px solid rgba(0, 168, 107, 0.3)',
-                  minWidth: '400px',
-                  maxWidth: '500px'
-                }}>
-                  <h3 style={{ marginBottom: '20px', color: '#00a86b' }}>
-                    {safeT?.novaSubcategoria || 'Nova Subcategoria'}
-                  </h3>
-                  {!pecaBibliotecaForm.categoriaId ? (
-                    <div>
-                      <p style={{ marginBottom: '20px', color: '#ff0000' }}>
-                        {safeT?.selecioneCategoriaPrimeiro || 'Selecione uma categoria primeiro'}
-                      </p>
-                      <button
-                        className="btn-secondary"
-                        onClick={() => setShowNovaSubcategoriaForm(false)}
-                        style={{ width: '100%', padding: '10px' }}
-                      >
-                        {safeT?.cancel || 'Cancelar'}
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#484848', borderRadius: '4px' }}>
-                        <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '5px' }}>
-                          {safeT?.categoriaPecaBiblioteca || 'Categoria'}:
-                        </p>
-                        <p style={{ fontSize: '14px', color: '#00a86b' }}>
-                          {categoriasPecas.find(c => c.id === pecaBibliotecaForm.categoriaId)?.nome || ''}
-                        </p>
-                      </div>
-                      <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
-                          {safeT?.nomeSubcategoria || 'Nome da Subcategoria'} <span style={{ color: '#ff0000' }}>*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={novaSubcategoriaNome}
-                          onChange={(e) => setNovaSubcategoriaNome(e.target.value)}
-                          placeholder={safeT?.nomeSubcategoria || 'Nome da Subcategoria'}
-                          style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 168, 107, 0.3)', borderRadius: '4px' }}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter' && novaSubcategoriaNome.trim() && pecaBibliotecaForm.categoriaId) {
-                              const categoriaId = pecaBibliotecaForm.categoriaId
-                              const prevSubId = pecaBibliotecaForm.subcategoriaId
-                              const newSubcategoria: SubcategoriaPeca = {
-                                id: Date.now().toString(),
-                                nome: novaSubcategoriaNome.trim(),
-                                categoriaId
-                              }
-                              const prevIdx =
-                                prevSubId && subcategoriasPecas.some(s => s.id === prevSubId && s.categoriaId === categoriaId)
-                                  ? subcategoriasPecas.findIndex(s => s.id === prevSubId)
-                                  : -1
-                              let updated: SubcategoriaPeca[]
-                              if (prevIdx >= 0) {
-                                updated = [...subcategoriasPecas.slice(0, prevIdx + 1), newSubcategoria, ...subcategoriasPecas.slice(prevIdx + 1)]
-                              } else {
-                                let insertAt = subcategoriasPecas.length
-                                for (let i = subcategoriasPecas.length - 1; i >= 0; i--) {
-                                  if (subcategoriasPecas[i].categoriaId === categoriaId) {
-                                    insertAt = i + 1
-                                    break
-                                  }
-                                }
-                                updated = [...subcategoriasPecas.slice(0, insertAt), newSubcategoria, ...subcategoriasPecas.slice(insertAt)]
-                              }
-                              setSubcategoriasPecas(updated)
-                              saveData('nonato-subcategorias-pecas', updated)
-                              const catNome = categoriasPecas.find(c => c.id === categoriaId)?.nome ?? pecaBibliotecaForm.categoria
-                              setUltimoGrupoSelecionado(categoriaId)
-                              setUltimoSubgrupoSelecionado(newSubcategoria.id)
-                              setPecaBibliotecaForm({
-                                ...pecaBibliotecaForm,
-                                categoria: catNome,
-                                subcategoriaId: newSubcategoria.id,
-                                subcategoria: newSubcategoria.nome
-                              })
-                              setNovaSubcategoriaNome('')
-                              setShowNovaSubcategoriaForm(false)
-                              alert(safeT?.subcategoriaPecaSaved || 'Subcategoria criada com sucesso!')
-                            }
-                          }}
-                        />
-                      </div>
-                      <div style={{ display: 'flex', gap: '10px' }}>
-                        <button
-                          className="btn-primary"
-                          onClick={() => {
-                            if (!novaSubcategoriaNome.trim()) {
-                              alert(safeT?.fillAllFields || 'Preencha o nome da subcategoria!')
-                              return
-                            }
-                            if (!pecaBibliotecaForm.categoriaId) {
-                              alert(safeT?.selecioneCategoriaPrimeiro || 'Selecione uma categoria primeiro')
-                              return
-                            }
-                            const categoriaId = pecaBibliotecaForm.categoriaId
-                            const prevSubId = pecaBibliotecaForm.subcategoriaId
-                            const newSubcategoria: SubcategoriaPeca = {
-                              id: Date.now().toString(),
-                              nome: novaSubcategoriaNome.trim(),
-                              categoriaId
-                            }
-                            const prevIdx =
-                              prevSubId && subcategoriasPecas.some(s => s.id === prevSubId && s.categoriaId === categoriaId)
-                                ? subcategoriasPecas.findIndex(s => s.id === prevSubId)
-                                : -1
-                            let updated: SubcategoriaPeca[]
-                            if (prevIdx >= 0) {
-                              updated = [...subcategoriasPecas.slice(0, prevIdx + 1), newSubcategoria, ...subcategoriasPecas.slice(prevIdx + 1)]
-                            } else {
-                              let insertAt = subcategoriasPecas.length
-                              for (let i = subcategoriasPecas.length - 1; i >= 0; i--) {
-                                if (subcategoriasPecas[i].categoriaId === categoriaId) {
-                                  insertAt = i + 1
-                                  break
-                                }
-                              }
-                              updated = [...subcategoriasPecas.slice(0, insertAt), newSubcategoria, ...subcategoriasPecas.slice(insertAt)]
-                            }
-                            setSubcategoriasPecas(updated)
-                            saveData('nonato-subcategorias-pecas', updated)
-                            const catNome = categoriasPecas.find(c => c.id === categoriaId)?.nome ?? pecaBibliotecaForm.categoria
-                            setUltimoGrupoSelecionado(categoriaId)
-                            setUltimoSubgrupoSelecionado(newSubcategoria.id)
-                            setPecaBibliotecaForm({
-                              ...pecaBibliotecaForm,
-                              categoria: catNome,
-                              subcategoriaId: newSubcategoria.id,
-                              subcategoria: newSubcategoria.nome
-                            })
-                            setNovaSubcategoriaNome('')
-                            setShowNovaSubcategoriaForm(false)
-                            alert(safeT?.subcategoriaPecaSaved || 'Subgrupo criado com sucesso!')
-                          }}
-                          style={{ flex: 1, padding: '10px' }}
-                        >
-                          {safeT?.criar || safeT?.save || 'Criar'}
-                        </button>
-                        <button
-                          className="btn-secondary"
-                          onClick={() => {
-                            setShowNovaSubcategoriaForm(false)
-                            setNovaSubcategoriaNome('')
-                          }}
-                          style={{ flex: 1, padding: '10px' }}
-                        >
-                          {safeT?.cancel || 'Cancelar'}
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-            
             {pecasImportadasPendentes.length > 0 && (
                 <div
                   style={{
@@ -40191,6 +39900,298 @@ A1;Peça exemplo;10`}
                   </div>
                 )}
                 {renderPainelPreviewImportacao()}
+              </div>
+            )}
+
+            {/* Modais de categoria/subcategoria — visíveis em qualquer aba do hub (cadastro, gerenciar categorias, etc.) */}
+            {showNovaCategoriaForm && (
+              <div style={{ 
+                position: 'fixed', 
+                top: 0, 
+                left: 0, 
+                right: 0, 
+                bottom: 0, 
+                backgroundColor: 'rgba(0, 0, 0, 0.8)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                zIndex: 10000 
+              }}>
+                <div style={{ 
+                  backgroundColor: '#404040', 
+                  padding: '30px', 
+                  borderRadius: '8px', 
+                  border: '1px solid rgba(0, 168, 107, 0.3)',
+                  minWidth: '400px',
+                  maxWidth: '500px'
+                }}>
+                  <h3 style={{ marginBottom: '20px', color: '#00a86b' }}>
+                    {safeT?.novaCategoria || 'Novo Grupo'}
+                  </h3>
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+                          {safeT?.nomeCategoria || 'Nome da Categoria'} <span style={{ color: '#ff0000' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={novaCategoriaNome}
+                      onChange={(e) => setNovaCategoriaNome(e.target.value)}
+                          placeholder={safeT?.nomeCategoria || 'Nome da Categoria'}
+                      style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 168, 107, 0.3)', borderRadius: '4px' }}
+                      autoFocus
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && novaCategoriaNome.trim()) {
+                          const refId = pecaBibliotecaForm.categoriaId
+                          const idx = refId ? categoriasPecas.findIndex(c => c.id === refId) : -1
+                          const newCategoria: CategoriaPeca = {
+                            id: Date.now().toString(),
+                            nome: novaCategoriaNome.trim()
+                          }
+                          const updated =
+                            idx >= 0
+                              ? [...categoriasPecas.slice(0, idx + 1), newCategoria, ...categoriasPecas.slice(idx + 1)]
+                              : [...categoriasPecas, newCategoria]
+                          setCategoriasPecas(updated)
+                          saveData('nonato-categorias-pecas', updated)
+                          setUltimoGrupoSelecionado(newCategoria.id)
+                          setUltimoSubgrupoSelecionado('')
+                          setPecaBibliotecaForm({
+                            ...pecaBibliotecaForm,
+                            categoriaId: newCategoria.id,
+                            categoria: newCategoria.nome,
+                            subcategoriaId: '',
+                            subcategoria: ''
+                          })
+                          setNovaCategoriaNome('')
+                          setShowNovaCategoriaForm(false)
+                              alert(safeT?.categoriaPecaSaved || 'Categoria criada com sucesso!')
+                        }
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      className="btn-primary"
+                      onClick={() => {
+                        if (!novaCategoriaNome.trim()) {
+                              alert(safeT?.fillAllFields || 'Preencha o nome da categoria!')
+                          return
+                        }
+                        const refId = pecaBibliotecaForm.categoriaId
+                        const idx = refId ? categoriasPecas.findIndex(c => c.id === refId) : -1
+                        const newCategoria: CategoriaPeca = {
+                          id: Date.now().toString(),
+                          nome: novaCategoriaNome.trim()
+                        }
+                        const updated =
+                          idx >= 0
+                            ? [...categoriasPecas.slice(0, idx + 1), newCategoria, ...categoriasPecas.slice(idx + 1)]
+                            : [...categoriasPecas, newCategoria]
+                        setCategoriasPecas(updated)
+                        saveData('nonato-categorias-pecas', updated)
+                        setUltimoGrupoSelecionado(newCategoria.id)
+                        setUltimoSubgrupoSelecionado('')
+                        setPecaBibliotecaForm({
+                          ...pecaBibliotecaForm,
+                          categoriaId: newCategoria.id,
+                          categoria: newCategoria.nome,
+                          subcategoriaId: '',
+                          subcategoria: ''
+                        })
+                        setNovaCategoriaNome('')
+                        setShowNovaCategoriaForm(false)
+                              alert(safeT?.categoriaPecaSaved || 'Categoria criada com sucesso!')
+                      }}
+                      style={{ flex: 1, padding: '10px' }}
+                    >
+                      {safeT?.criar || safeT?.save || 'Criar'}
+                    </button>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => {
+                        setShowNovaCategoriaForm(false)
+                        setNovaCategoriaNome('')
+                      }}
+                      style={{ flex: 1, padding: '10px' }}
+                    >
+                      {safeT?.cancel || 'Cancelar'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showNovaSubcategoriaForm && (
+              <div style={{ 
+                position: 'fixed', 
+                top: 0, 
+                left: 0, 
+                right: 0, 
+                bottom: 0, 
+                backgroundColor: 'rgba(0, 0, 0, 0.8)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                zIndex: 10000 
+              }}>
+                <div style={{ 
+                  backgroundColor: '#404040', 
+                  padding: '30px', 
+                  borderRadius: '8px', 
+                  border: '1px solid rgba(0, 168, 107, 0.3)',
+                  minWidth: '400px',
+                  maxWidth: '500px'
+                }}>
+                  <h3 style={{ marginBottom: '20px', color: '#00a86b' }}>
+                    {safeT?.novaSubcategoria || 'Nova Subcategoria'}
+                  </h3>
+                  {!pecaBibliotecaForm.categoriaId ? (
+                    <div>
+                      <p style={{ marginBottom: '20px', color: '#ff0000' }}>
+                        {safeT?.selecioneCategoriaPrimeiro || 'Selecione uma categoria primeiro'}
+                      </p>
+                      <button
+                        className="btn-secondary"
+                        onClick={() => setShowNovaSubcategoriaForm(false)}
+                        style={{ width: '100%', padding: '10px' }}
+                      >
+                        {safeT?.cancel || 'Cancelar'}
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#484848', borderRadius: '4px' }}>
+                        <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '5px' }}>
+                          {safeT?.categoriaPecaBiblioteca || 'Categoria'}:
+                        </p>
+                        <p style={{ fontSize: '14px', color: '#00a86b' }}>
+                          {categoriasPecas.find(c => c.id === pecaBibliotecaForm.categoriaId)?.nome || ''}
+                        </p>
+                      </div>
+                      <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+                          {safeT?.nomeSubcategoria || 'Nome da Subcategoria'} <span style={{ color: '#ff0000' }}>*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={novaSubcategoriaNome}
+                          onChange={(e) => setNovaSubcategoriaNome(e.target.value)}
+                          placeholder={safeT?.nomeSubcategoria || 'Nome da Subcategoria'}
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 168, 107, 0.3)', borderRadius: '4px' }}
+                          autoFocus
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && novaSubcategoriaNome.trim() && pecaBibliotecaForm.categoriaId) {
+                              const categoriaId = pecaBibliotecaForm.categoriaId
+                              const prevSubId = pecaBibliotecaForm.subcategoriaId
+                              const newSubcategoria: SubcategoriaPeca = {
+                                id: Date.now().toString(),
+                                nome: novaSubcategoriaNome.trim(),
+                                categoriaId
+                              }
+                              const prevIdx =
+                                prevSubId && subcategoriasPecas.some(s => s.id === prevSubId && s.categoriaId === categoriaId)
+                                  ? subcategoriasPecas.findIndex(s => s.id === prevSubId)
+                                  : -1
+                              let updated: SubcategoriaPeca[]
+                              if (prevIdx >= 0) {
+                                updated = [...subcategoriasPecas.slice(0, prevIdx + 1), newSubcategoria, ...subcategoriasPecas.slice(prevIdx + 1)]
+                              } else {
+                                let insertAt = subcategoriasPecas.length
+                                for (let i = subcategoriasPecas.length - 1; i >= 0; i--) {
+                                  if (subcategoriasPecas[i].categoriaId === categoriaId) {
+                                    insertAt = i + 1
+                                    break
+                                  }
+                                }
+                                updated = [...subcategoriasPecas.slice(0, insertAt), newSubcategoria, ...subcategoriasPecas.slice(insertAt)]
+                              }
+                              setSubcategoriasPecas(updated)
+                              saveData('nonato-subcategorias-pecas', updated)
+                              const catNome = categoriasPecas.find(c => c.id === categoriaId)?.nome ?? pecaBibliotecaForm.categoria
+                              setUltimoGrupoSelecionado(categoriaId)
+                              setUltimoSubgrupoSelecionado(newSubcategoria.id)
+                              setPecaBibliotecaForm({
+                                ...pecaBibliotecaForm,
+                                categoria: catNome,
+                                subcategoriaId: newSubcategoria.id,
+                                subcategoria: newSubcategoria.nome
+                              })
+                              setNovaSubcategoriaNome('')
+                              setShowNovaSubcategoriaForm(false)
+                              alert(safeT?.subcategoriaPecaSaved || 'Subcategoria criada com sucesso!')
+                            }
+                          }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                          className="btn-primary"
+                          onClick={() => {
+                            if (!novaSubcategoriaNome.trim()) {
+                              alert(safeT?.fillAllFields || 'Preencha o nome da subcategoria!')
+                              return
+                            }
+                            if (!pecaBibliotecaForm.categoriaId) {
+                              alert(safeT?.selecioneCategoriaPrimeiro || 'Selecione uma categoria primeiro')
+                              return
+                            }
+                            const categoriaId = pecaBibliotecaForm.categoriaId
+                            const prevSubId = pecaBibliotecaForm.subcategoriaId
+                            const newSubcategoria: SubcategoriaPeca = {
+                              id: Date.now().toString(),
+                              nome: novaSubcategoriaNome.trim(),
+                              categoriaId
+                            }
+                            const prevIdx =
+                              prevSubId && subcategoriasPecas.some(s => s.id === prevSubId && s.categoriaId === categoriaId)
+                                ? subcategoriasPecas.findIndex(s => s.id === prevSubId)
+                                : -1
+                            let updated: SubcategoriaPeca[]
+                            if (prevIdx >= 0) {
+                              updated = [...subcategoriasPecas.slice(0, prevIdx + 1), newSubcategoria, ...subcategoriasPecas.slice(prevIdx + 1)]
+                            } else {
+                              let insertAt = subcategoriasPecas.length
+                              for (let i = subcategoriasPecas.length - 1; i >= 0; i--) {
+                                if (subcategoriasPecas[i].categoriaId === categoriaId) {
+                                  insertAt = i + 1
+                                  break
+                                }
+                              }
+                              updated = [...subcategoriasPecas.slice(0, insertAt), newSubcategoria, ...subcategoriasPecas.slice(insertAt)]
+                            }
+                            setSubcategoriasPecas(updated)
+                            saveData('nonato-subcategorias-pecas', updated)
+                            const catNome = categoriasPecas.find(c => c.id === categoriaId)?.nome ?? pecaBibliotecaForm.categoria
+                            setUltimoGrupoSelecionado(categoriaId)
+                            setUltimoSubgrupoSelecionado(newSubcategoria.id)
+                            setPecaBibliotecaForm({
+                              ...pecaBibliotecaForm,
+                              categoria: catNome,
+                              subcategoriaId: newSubcategoria.id,
+                              subcategoria: newSubcategoria.nome
+                            })
+                            setNovaSubcategoriaNome('')
+                            setShowNovaSubcategoriaForm(false)
+                            alert(safeT?.subcategoriaPecaSaved || 'Subgrupo criado com sucesso!')
+                          }}
+                          style={{ flex: 1, padding: '10px' }}
+                        >
+                          {safeT?.criar || safeT?.save || 'Criar'}
+                        </button>
+                        <button
+                          className="btn-secondary"
+                          onClick={() => {
+                            setShowNovaSubcategoriaForm(false)
+                            setNovaSubcategoriaNome('')
+                          }}
+                          style={{ flex: 1, padding: '10px' }}
+                        >
+                          {safeT?.cancel || 'Cancelar'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             )}
           </div>

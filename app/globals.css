@@ -10,6 +10,10 @@
   --ns-bg-1: #3a3a3a;
   --ns-surface: #454545;
   --ns-surface-soft: #4a4a4a;
+  /** Painéis internos em Informações / Situação financeira do cliente */
+  --ns-cliente-inner-bg: #1f1f1f;
+  --ns-cliente-inner-border: rgba(255, 255, 255, 0.06);
+  --ns-cliente-inner-bg-hover: #242424;
   --ns-text: #ffffff;
   --ns-text-muted: #b0b0b0;
   /* Verde principal (#00c853) — botões, destaques, status */
@@ -6376,6 +6380,13 @@ a:focus-visible {
   box-sizing: border-box;
 }
 
+/* Lista de clientes cadastrados — mesmo cinza dos painéis internos (situação financeira) */
+.clientes-cadastrados-lista .clientes-alfa-nome-btn {
+  background: var(--ns-cliente-inner-bg);
+  border: 1px solid var(--ns-cliente-inner-border);
+  border-radius: 12px;
+}
+
 /* Lista alfabética: Cód. = / Cliente = / Inf. adicional = */
 .cliente-lista-linhas {
   width: 100%;
@@ -6688,6 +6699,11 @@ a:focus-visible {
 .clientes-alfa-nome-btn--devedor:hover {
   background: rgba(180, 24, 24, 0.32) !important;
   border-color: rgba(248, 113, 113, 0.72) !important;
+}
+.clientes-cadastrados-lista .clientes-alfa-nome-btn:not(.clientes-alfa-nome-btn--devedor):hover {
+  background: var(--ns-cliente-inner-bg-hover) !important;
+  border-color: rgba(0, 200, 83, 0.45) !important;
+  color: #ffffff;
 }
 .cliente-lista-linhas--devedor .cliente-lista-linhas__row--cod {
   border-left-color: rgba(248, 113, 113, 0.75);
@@ -28241,7 +28257,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   padding: 18px 20px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #1f1f1f;
+  background: var(--ns-cliente-inner-bg);
   cursor: pointer;
   text-align: left;
   width: 100%;
@@ -28251,7 +28267,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 .cliente-detalhe-v2__equip-card:hover {
   border-color: rgba(0, 200, 83, 0.35);
-  background: #242424;
+  background: var(--ns-cliente-inner-bg-hover);
 }
 
 .cliente-detalhe-v2__equip-icon {
@@ -28321,8 +28337,8 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 .cliente-detalhe-v2__fin-stat {
   padding: 18px 20px;
   border-radius: 12px;
-  background: #1f1f1f;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--ns-cliente-inner-bg);
+  border: 1px solid var(--ns-cliente-inner-border);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -28375,8 +28391,8 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 .cliente-detalhe-v2__fin-servico {
   padding: 18px 20px;
   border-radius: 12px;
-  background: #1f1f1f;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--ns-cliente-inner-bg);
+  border: 1px solid var(--ns-cliente-inner-border);
   margin-bottom: 12px;
 }
 
