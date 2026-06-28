@@ -17955,6 +17955,53 @@ export default function Dashboard() {
     setTimeout(run, 320)
   }, [])
 
+  const scrollRelatorioServicoListaIntoView = useCallback(() => {
+    const run = () => {
+      const main = mainContentAreaRef.current
+      const inner = main?.querySelector('.tab-inner-scroll') as HTMLElement | null
+      const alvo =
+        (document.querySelector('.rs-relatorios-alfa-wrap') as HTMLElement | null) ||
+        (document.querySelector('.relatorio-servico-hero') as HTMLElement | null)
+      if (inner) {
+        if (alvo) {
+          const pad = 14
+          const innerRect = inner.getBoundingClientRect()
+          const alvoRect = alvo.getBoundingClientRect()
+          const nextTop = alvoRect.top - innerRect.top + inner.scrollTop - pad
+          inner.scrollTo({ top: Math.max(0, nextTop), behavior: 'smooth' })
+        } else {
+          inner.scrollTo({ top: 0, behavior: 'smooth' })
+        }
+        return
+      }
+      alvo?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    queueMicrotask(run)
+    setTimeout(run, 80)
+    setTimeout(run, 280)
+  }, [])
+
+  /** Lista → detalhe → editar: um «Voltar» fecha o formulário e regressa à lista alfabética. */
+  const voltarNavegacaoRelatorioServico = useCallback(() => {
+    const tinhaForm = showRelatorioServicoForm
+    const tinhaDetalhe = !!relatorioServicoListaDetalheId
+
+    if (tinhaForm) {
+      setShowRelatorioServicoForm(false)
+      setEditingRelatorioServico(null)
+    }
+    if (tinhaDetalhe) {
+      setRelatorioServicoListaDetalheId(null)
+    }
+    if (tinhaForm || tinhaDetalhe) {
+      scrollRelatorioServicoListaIntoView()
+    }
+  }, [
+    showRelatorioServicoForm,
+    relatorioServicoListaDetalheId,
+    scrollRelatorioServicoListaIntoView,
+  ])
+
   /** Secção «Novo Dia de Trabalho» fica acima da tabela; com scroll interno no cartão do relatório, Editar parecia não fazer nada. */
   const scrollRelatorioServicoDiaEditorIntoView = useCallback(() => {
     const run = () => {
@@ -32938,7 +32985,13 @@ export default function Dashboard() {
                   </button>
                   <div className="relatorio-servico-hero-actions-row">
                     <button 
-                      onClick={() => closeTab(activeTabId || '')}
+                      onClick={() => {
+                        if (showRelatorioServicoForm || relatorioServicoListaDetalheId) {
+                          voltarNavegacaoRelatorioServico()
+                          return
+                        }
+                        closeTab(activeTabId || '')
+                      }}
                       style={{ 
                         padding: '6px 8px', 
                         fontSize: '16px',
@@ -33005,22 +33058,15 @@ export default function Dashboard() {
                 <button
                   type="button"
                   className="relatorio-servico-voltar-bar__btn"
-                  onClick={() => {
-                    if (showRelatorioServicoForm) {
-                      setShowRelatorioServicoForm(false)
-                      setEditingRelatorioServico(null)
-                      return
-                    }
-                    setRelatorioServicoListaDetalheId(null)
-                  }}
+                  onClick={voltarNavegacaoRelatorioServico}
                   title={safeT?.voltar || 'Voltar'}
                 >
                   ↶{' '}
-                  {showRelatorioServicoForm
-                    ? relatorioServicoListaDetalheId
+                  {relatorioServicoListaDetalheId
+                    ? (safeT as any)?.clientesAlfabetoVoltarLista || safeT?.voltar || 'Voltar à lista'
+                    : showRelatorioServicoForm
                       ? safeT?.voltar || 'Voltar'
-                      : (safeT as any)?.clientesAlfabetoVoltarLista || safeT?.voltar || 'Voltar à lista'
-                    : (safeT as any)?.clientesAlfabetoVoltarLista || 'Voltar à lista por letra'}
+                      : (safeT as any)?.clientesAlfabetoVoltarLista || 'Voltar à lista por letra'}
                 </button>
               </div>
             )}
@@ -34621,8 +34667,7 @@ export default function Dashboard() {
                       {safeT?.limpar || safeT?.clear || 'Limpar'}
                     </button>
                     <button className="btn-primary" onClick={() => { 
-                    setShowRelatorioServicoForm(false); 
-                    setEditingRelatorioServico(null); 
+                    voltarNavegacaoRelatorioServico()
                     setRelatorioServicoForm({ 
                       id: '', 
                       numero: '', 
