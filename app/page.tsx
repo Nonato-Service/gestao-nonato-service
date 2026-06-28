@@ -46522,8 +46522,11 @@ A1;Peça exemplo;10`}
             const idx = list.findIndex(i => i.id === id)
             if (idx === -1) return prev
             const item = { ...list[idx], ...upd }
-            if (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret') item.valorTotal = Math.round(item.quantidade * item.valorUnitario * 100) / 100
-            else if (item.tipoCobranca === 'valor-fixo' || item.tipoCobranca === 'unidade') item.valorTotal = item.valorUnitario * (item.quantidade || 1)
+            if (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret') {
+              item.valorTotal = Math.round(item.quantidade * item.valorUnitario * 100) / 100
+            } else if (item.tipoCobranca === 'valor-fixo' || item.tipoCobranca === 'unidade') {
+              item.valorTotal = Math.round(item.valorUnitario * (item.quantidade || 1) * 100) / 100
+            }
             const nova = [...list.slice(0, idx), item, ...list.slice(idx + 1)]
             const next = { ...prev, [rid]: nova }
             void saveData('nonato-fechamentos-relatorios', next)
@@ -46555,7 +46558,15 @@ A1;Peça exemplo;10`}
         const adicionarItemManual = () => {
           if (!relatorioSelecionado) return
           const rid = relatorioSelecionado.id
-          const novo: FechamentoItem = { id: 'm' + Date.now(), descricao: (safeT as any)?.outroItem || 'Outro item', tipoCobranca: 'valor-fixo', quantidade: 1, valorUnitario: 0, valorTotal: 0, origem: 'manual' }
+          const novo: FechamentoItem = {
+            id: 'm' + Date.now(),
+            descricao: (safeT as any)?.outroItem || 'Outro item',
+            tipoCobranca: 'unidade',
+            quantidade: 1,
+            valorUnitario: 0,
+            valorTotal: 0,
+            origem: 'manual',
+          }
           setFechamentosRelatorios(prev => {
             const list = buildItensParaExibirFromSalvos(prev[rid])
             const nova = [...list, novo]
@@ -46564,6 +46575,31 @@ A1;Peça exemplo;10`}
             return next
           })
         }
+        const adicionarPecasInstaladasFechamento = () => {
+          if (!relatorioSelecionado) return
+          const pecas = relatorioSelecionado.pecasInstaladas || []
+          if (pecas.length === 0) return
+          const rid = relatorioSelecionado.id
+          const listAtual = buildItensParaExibirFromSalvos(fechamentosRelatorios[rid])
+          const idsExistentes = new Set(listAtual.map((i) => i.id))
+          const pecasNovas = pecas.filter((p, idx) => !idsExistentes.has(`peca-${p.id || idx}`))
+          if (pecasNovas.length === 0) {
+            alert(
+              (safeT as any)?.pecasInstaladasJaNoFechamento ||
+                'Todas as peças instaladas/substituídas deste relatório já estão no fechamento.'
+            )
+            return
+          }
+          setFechamentosRelatorios(prev => {
+            const list = buildItensParaExibirFromSalvos(prev[rid])
+            const novosItens = buildItensFechamentoPecasRelatorio(pecasNovas)
+            const nova = [...list, ...novosItens]
+            const next = { ...prev, [rid]: nova }
+            void saveData('nonato-fechamentos-relatorios', next)
+            return next
+          })
+        }
+        const temPecasInstaladasNoRelatorio = (relatorioSelecionado?.pecasInstaladas?.length ?? 0) > 0
         const removerItem = (id: string) => {
           if (!relatorioSelecionado) return
           const rid = relatorioSelecionado.id
@@ -47339,13 +47375,46 @@ A1;Peça exemplo;10`}
                           ) {
                             return Math.round(q * valorUnitExibir * 100) / 100
                           }
+                          if (eManual && (item.tipoCobranca === 'unidade' || item.tipoCobranca === 'valor-fixo')) {
+                            return Math.round((item.quantidade || 0) * valorUnitExibir * 100) / 100
+                          }
                           return normalizeServicoValorStored(item.valorTotal)
                         })()
                         return (
                         <tr key={item.id} style={{ borderBottom: '1px solid #333' }}>
                           <td style={{ padding: '10px 8px', color: '#00c853', fontWeight: 600 }}>{codExibir}</td>
-                          <td style={{ padding: '10px 8px', minWidth: '160px', maxWidth: 'min(480px, 55vw)', whiteSpace: 'normal', wordBreak: 'break-word', color: '#e8e8e8' }}>{nomeExibir}</td>
-                          <td style={{ padding: '10px 8px', textAlign: 'right' }}>{item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : item.quantidade}</td>
+                          <td style={{ padding: '10px 8px', minWidth: '160px', maxWidth: 'min(480px, 55vw)', whiteSpace: 'normal', wordBreak: 'break-word', color: '#e8e8e8' }}>
+                            {eManual ? (
+                              <input
+                                type="text"
+                                value={item.descricao}
+                                onChange={(e) => atualizarItem(item.id, { descricao: e.target.value })}
+                                style={{ width: '100%', minWidth: '120px', padding: '6px', background: '#484848', border: '1px solid #444', borderRadius: '4px', color: '#fff' }}
+                                placeholder={(safeT as any)?.descricao || 'Descrição'}
+                              />
+                            ) : (
+                              nomeExibir
+                            )}
+                          </td>
+                          <td style={{ padding: '10px 8px', textAlign: 'right' }}>
+                            {eManual ? (
+                              <input
+                                type="number"
+                                step={item.tipoCobranca === 'unidade' ? '1' : '0.01'}
+                                min={0}
+                                value={item.quantidade === 0 ? '' : item.quantidade}
+                                onChange={(e) => atualizarItem(item.id, { quantidade: parseFloat(e.target.value) || 0 })}
+                                style={{ width: '72px', padding: '6px', background: '#484848', border: '1px solid #444', borderRadius: '4px', color: '#fff', textAlign: 'right' }}
+                                placeholder="0"
+                              />
+                            ) : item.tipoCobranca === 'hora' ? (
+                              item.quantidade.toFixed(2) + ' h'
+                            ) : item.tipoCobranca === 'km' ? (
+                              item.quantidade.toFixed(0) + ' km'
+                            ) : (
+                              item.quantidade
+                            )}
+                          </td>
                           <td style={{ padding: '10px 8px', textAlign: 'right' }}>
                             {itemFixoDoRelatorio ? (
                               <span style={{ color: valorUnitExibir > 0 ? '#ccc' : '#ff8800' }}>
@@ -47483,7 +47552,30 @@ A1;Peça exemplo;10`}
                   </table>
                   </div>
                   <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                    <button type="button" className="btn-primary" onClick={adicionarItemManual} style={{ padding: '8px 16px' }}>+ {(safeT as any)?.adicionarItemCobranca || 'Adicionar item a cobrar'}</button>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+                      <button type="button" className="btn-primary" onClick={adicionarItemManual} style={{ padding: '8px 16px' }}>
+                        + {(safeT as any)?.adicionarItemCobranca || 'Adicionar item a cobrar'}
+                      </button>
+                      {temPecasInstaladasNoRelatorio && (
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          onClick={adicionarPecasInstaladasFechamento}
+                          style={{
+                            padding: '8px 16px',
+                            background: 'rgba(255, 193, 7, 0.15)',
+                            border: '1px solid rgba(255, 193, 7, 0.55)',
+                            color: '#ffc107',
+                          }}
+                          title={
+                            (safeT as any)?.adicionarPecasInstaladasFechamentoHint ||
+                            'Adiciona as peças instaladas/substituídas do relatório. Ajuste quantidade e valor manualmente se não houver orçamento.'
+                          }
+                        >
+                          🔩 {(safeT as any)?.adicionarPecasInstaladasFechamento || 'Adicionar peças instaladas/substituídas'}
+                        </button>
+                      )}
+                    </div>
                     <div
                       style={{
                         textAlign: 'right',
