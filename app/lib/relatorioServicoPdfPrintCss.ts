@@ -52,7 +52,7 @@ export type RelatorioServicoPdfMetaLabels = {
 
 function buildPdfEquipamentosRelatorioTableHtml(
   linhas: RelatorioEquipamentoCabecalhoLinha[],
-  labels: Pick<RelatorioServicoPdfMetaLabels, 'equipNumero' | 'equipamentoId' | 'maquinaModelo'>,
+  labels: Pick<RelatorioServicoPdfMetaLabels, 'equipNumero' | 'equipamentoId' | 'numeroMaquina' | 'maquinaModelo'>,
   esc: (s: string | undefined | null) => string
 ): string {
   const rows = linhas
@@ -60,6 +60,7 @@ function buildPdfEquipamentosRelatorioTableHtml(
       (linha) => `<tr>
       <td class="ns-pdf-meta__equip-num">${linha.numero}</td>
       <td class="ns-pdf-meta__equip-id">${esc(linha.equipamentoId)}</td>
+      <td class="ns-pdf-meta__equip-sn">${esc(linha.numeroMaquina)}</td>
       <td class="ns-pdf-meta__equip-modelo">${esc(linha.maquinaModelo)}</td>
     </tr>`
     )
@@ -70,6 +71,7 @@ function buildPdfEquipamentosRelatorioTableHtml(
       <tr>
         <th scope="col">${labels.equipNumero}</th>
         <th scope="col">${labels.equipamentoId}</th>
+        <th scope="col">${labels.numeroMaquina}</th>
         <th scope="col">${labels.maquinaModelo}</th>
       </tr>
     </thead>
@@ -119,6 +121,12 @@ export function buildRelatorioServicoPdfMetaSectionHtml(options: {
         label: labels.equipamentoId,
         value: esc(eq.ids),
         fullWidth: eq.ids.length > 28,
+      })
+    }
+    if (eq.numeros && eq.numeros !== '—') {
+      fields.push({
+        label: labels.numeroMaquina,
+        value: esc(eq.numeros),
       })
     }
     fields.push({
@@ -192,6 +200,11 @@ ${PDF_DOCUMENT_LAYOUT_CSS}
   text-align: center;
   font-weight: 700;
   color: #1e3a5f;
+}
+.ns-pdf-meta__equip-table .ns-pdf-meta__equip-sn {
+  min-width: 88px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.95em;
 }
 .ns-pdf-meta__equip-table tbody tr:nth-child(even) td {
   background: #f8fafc;

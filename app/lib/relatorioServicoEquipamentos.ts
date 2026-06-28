@@ -138,6 +138,7 @@ export type EquipamentoClienteIdLookup = {
 export type RelatorioEquipamentoCabecalhoLinha = {
   numero: number
   equipamentoId: string
+  numeroMaquina: string
   maquinaModelo: string
 }
 
@@ -336,6 +337,58 @@ export function resolverEquipamentoRelatorioParaExibicao(
   return equipamentoIdETecnicoGerado(idStored) ? '' : idStored
 }
 
+function equipamentoClienteCorrespondeRelatorio(
+  eq: RelatorioEquipamentoRef,
+  e: EquipamentoClienteIdLookup,
+  idx: number,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+): boolean {
+  const idStored = String(eq.equipamentoId ?? '').trim()
+  const snStored = String(eq.numeroMaquina ?? '').trim()
+  const idCli = String(e.id ?? '').trim()
+  const snCli = String(e.numeroSerie ?? '').trim()
+  const key = resolverIdEquipamentoCliente(e, idx)
+  const vis = resolverIdEquipamentoVisivelCliente(e, equipamentosArmazem)
+  return (
+    (idStored &&
+      (idCli === idStored ||
+        snCli === idStored ||
+        key === idStored ||
+        vis === idStored)) ||
+    (snStored && snCli === snStored)
+  )
+}
+
+/** N.º de série / número do equipamento no cadastro (cliente ou armazém). */
+export function resolverNumeroMaquinaRelatorioParaExibicao(
+  eq: RelatorioEquipamentoRef,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],
+  equipamentosCliente: EquipamentoClienteIdLookup[] = []
+): string {
+  const sn = String(eq.numeroMaquina ?? '').trim()
+  if (sn) return sn
+
+  const idStored = String(eq.equipamentoId ?? '').trim()
+
+  if (eq.equipamentoOrigem === 'armazem') {
+    const wh = equipamentosArmazem.find(
+      (e) =>
+        String(e.id ?? '').trim() === idStored ||
+        String(e.numeroSerie ?? '').trim() === idStored
+    )
+    return String(wh?.numeroSerie ?? '').trim()
+  }
+
+  for (let idx = 0; idx < equipamentosCliente.length; idx++) {
+    const e = equipamentosCliente[idx]
+    if (equipamentoClienteCorrespondeRelatorio(eq, e, idx, equipamentosArmazem)) {
+      return String(e.numeroSerie ?? '').trim()
+    }
+  }
+
+  return ''
+}
+
 export function criarEquipamentoRelatorioVazio(
   origem: RelatorioEquipamentoOrigem = 'cliente'
 ): RelatorioEquipamentoRef {
@@ -425,6 +478,8 @@ export function getRelatorioCabecalhoEquipamentoDados(
     numero: i + 1,
     equipamentoId:
       resolverEquipamentoRelatorioParaExibicao(eq, equipamentosArmazem, equipamentosCliente) || '—',
+    numeroMaquina:
+      resolverNumeroMaquinaRelatorioParaExibicao(eq, equipamentosArmazem, equipamentosCliente) || '—',
     maquinaModelo: eq.maquinaModelo || '—',
   }))
 
@@ -446,7 +501,7 @@ export function getRelatorioCabecalhoEquipamentoDados(
     return {
       ids: linha.equipamentoId,
       modelos: linha.maquinaModelo,
-      numeros: list[0].numeroMaquina || '—',
+      numeros: linha.numeroMaquina,
       multiplos: false,
       linhas: [linha],
     }

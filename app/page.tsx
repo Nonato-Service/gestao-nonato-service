@@ -18317,7 +18317,11 @@ export default function Dashboard() {
     cliente: t.cliente || 'Cliente',
     equipamentoId: (t as Record<string, string>).relatorioEquipamentoIdLabel || 'ID do equipamento',
     maquinaModelo: t.maquinaModelo || 'Máquina/Modelo',
-    numeroMaquina: t.numeroMaquina || 'Número da Máquina',
+    numeroMaquina:
+      (t as Record<string, string>).numeroEquipamento ||
+      t.numeroSerie ||
+      t.numeroMaquina ||
+      'Número do Equipamento',
     equipNumero: (t as Record<string, string>).relatorioPdfColEquipNumero || 'N.º',
     cidade: t.cidade || 'Cidade',
     telefone: t.telefone || 'Telefone',
