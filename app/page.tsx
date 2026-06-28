@@ -22497,7 +22497,8 @@ export default function Dashboard() {
   }
 
   const handleSaveRelatorioServico = () => {
-    salvarRelatorioServicoAtual()
+    const saved = salvarRelatorioServicoAtual()
+    if (saved?.servicoConcluido) arquivarRelatorioConcluidoNaBiblioteca(saved)
   }
 
   const salvarRelatorioServicoAtual = (opts?: { silencioso?: boolean }): RelatorioServico | null => {
@@ -22695,6 +22696,10 @@ export default function Dashboard() {
     }
 
     void createAutoBackup()
+
+    if (savedRelatorio.servicoConcluido) {
+      arquivarRelatorioConcluidoNaBiblioteca(savedRelatorio)
+    }
 
     const modelEscolhido = getPdfModelSelecionadoNoFormulario()
 
@@ -23324,6 +23329,66 @@ export default function Dashboard() {
     )
   }
 
+  /** Ao marcar «Serviço concluído»: arquiva na Biblioteca (para o equipamento), regista fechamento base e para o destaque laranja. */
+  const arquivarRelatorioConcluidoNaBiblioteca = (rel: RelatorioServico) => {
+    if (!rel.servicoConcluido) return
+    const rid = rel.id
+    setFechamentosRelatorios((prev) => {
+      const cur = prev[rid]
+      if (Array.isArray(cur) && cur.length > 0) return prev
+      const next = { ...prev, [rid]: buildItensFechamentoBaseRelatorio(rel) }
+      void saveData('nonato-fechamentos-relatorios', next)
+      return next
+    })
+    setFechamentosGuardadosBibliotecaIds((prev) => {
+      if (prev.includes(rid)) return prev
+      const next = [...prev, rid]
+      void saveData('nonato-fechamentos-guardados-biblioteca', next)
+      return next
+    })
+    if (rel.clienteId) {
+      setClientes((prev) => {
+        const updated = aplicarRelatorioNaBibliotecaCliente(prev, rel, equipamentos)
+        if (updated === prev) return prev
+        void saveData('nonato-clientes', updated)
+        return updated
+      })
+    }
+  }
+
+  const concluidosReparadosRef = useRef(false)
+  useEffect(() => {
+    if (concluidosReparadosRef.current) return
+    if (relatoriosServico.length === 0) return
+    const pendentes = relatoriosServico.filter(
+      (r) => r.servicoConcluido && !fechamentosGuardadosBibliotecaIds.includes(r.id)
+    )
+    if (pendentes.length === 0) {
+      concluidosReparadosRef.current = true
+      return
+    }
+    let nextFech = { ...fechamentosRelatorios }
+    let nextGuard = [...fechamentosGuardadosBibliotecaIds]
+    let nextClientes = clientes
+    for (const rel of pendentes) {
+      const rid = rel.id
+      if (!Array.isArray(nextFech[rid]) || nextFech[rid]!.length === 0) {
+        nextFech[rid] = buildItensFechamentoBaseRelatorio(rel)
+      }
+      if (!nextGuard.includes(rid)) nextGuard.push(rid)
+      if (rel.clienteId) {
+        nextClientes = aplicarRelatorioNaBibliotecaCliente(nextClientes, rel, equipamentos)
+      }
+    }
+    setFechamentosRelatorios(nextFech)
+    setFechamentosGuardadosBibliotecaIds(nextGuard)
+    if (nextClientes !== clientes) setClientes(nextClientes)
+    void saveData('nonato-fechamentos-relatorios', nextFech)
+    void saveData('nonato-fechamentos-guardados-biblioteca', nextGuard)
+    if (nextClientes !== clientes) void saveData('nonato-clientes', nextClientes)
+    concluidosReparadosRef.current = true
+  }, [relatoriosServico, fechamentosRelatorios, fechamentosGuardadosBibliotecaIds, clientes, equipamentos])
+
   const buildItensFechamentoPecasRelatorio = (pecas: PecaSubstituicao[]): FechamentoItem[] =>
     pecas.map((p, idx) => {
       const bib = pecasBiblioteca.find(
@@ -23456,6 +23521,7 @@ export default function Dashboard() {
   ) => {
     const rel = salvarRelatorioServicoAtual({ silencioso: true })
     if (!rel) return
+    if (rel.servicoConcluido) arquivarRelatorioConcluidoNaBiblioteca(rel)
     setShowFecharRelatorioOpcoesModal(false)
 
     if (opcao === 'pedido-orcamento') {

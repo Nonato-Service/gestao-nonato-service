@@ -640,13 +640,34 @@ export function relatorioParaImprimirPDFEquipamentos<T extends RelatorioServicoE
 
 export function equipamentosClienteParaBiblioteca(
   equipamentos: RelatorioEquipamentoRef[],
-  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],
+  equipamentosCliente: EquipamentoClienteIdLookup[] = []
 ): string[] {
+  const chave = (eq: RelatorioEquipamentoRef): string => {
+    const vis = resolverIdEquipamentoVisivelRelatorio(eq, equipamentosArmazem)
+    if (vis) return vis
+    const sn = String(eq.numeroMaquina ?? '').trim()
+    if (sn) return sn
+    for (let idx = 0; idx < equipamentosCliente.length; idx++) {
+      const ce = equipamentosCliente[idx]
+      if (equipamentoClienteCorrespondeRelatorio(eq, ce, idx, equipamentosArmazem)) {
+        const ck =
+          String(ce.numeroSerie ?? '').trim() ||
+          resolverIdEquipamentoVisivelCliente(ce, equipamentosArmazem) ||
+          resolverIdEquipamentoCliente(ce, idx)
+        if (ck) return ck
+      }
+    }
+    const id = String(eq.equipamentoId ?? '').trim()
+    if (id) return id
+    return String(eq.maquinaModelo ?? '').trim()
+  }
+
   return [
     ...new Set(
       equipamentosRelatorioPreenchidos(equipamentos)
         .filter((eq) => eq.equipamentoOrigem !== 'armazem')
-        .map((eq) => resolverIdEquipamentoVisivelRelatorio(eq, equipamentosArmazem))
+        .map((eq) => chave(eq))
         .filter(Boolean)
     ),
   ]
@@ -664,10 +685,19 @@ export function aplicarRelatorioNaBibliotecaCliente<T extends ClienteRelatoriosH
 ): T[] {
   if (!savedRelatorio.clienteId) return clientes
 
-  const keys = equipamentosClienteParaBiblioteca(
+  let keys = equipamentosClienteParaBiblioteca(
     normalizarEquipamentosRelatorio(savedRelatorio),
-    equipamentosArmazem
+    equipamentosArmazem,
+    cliente.equipamentos ?? []
   )
+  if (keys.length === 0) {
+    const legadoSn = String(savedRelatorio.numeroMaquina ?? '').trim()
+    const legadoMod = String(savedRelatorio.maquinaModelo ?? '').trim()
+    const legadoId = String(savedRelatorio.equipamentoId ?? '').trim()
+    if (legadoSn) keys = [legadoSn]
+    else if (legadoMod) keys = [legadoMod]
+    else if (legadoId) keys = [legadoId]
+  }
   const clienteIndex = clientes.findIndex((c) => c.id === savedRelatorio.clienteId)
   if (clienteIndex === -1) return clientes
 
