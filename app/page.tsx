@@ -36,6 +36,7 @@ import {
   requestDiarioNotificationPermission,
   showDiarioBrowserNotification,
 } from './lib/diarioLembrete'
+import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer } from './lib/mergePecasBiblioteca'
 import {
   collectFullBackupData,
   buildBackupEnvelope,
@@ -2407,9 +2408,12 @@ type RelatorioServico = {
   liberacaoProducao: boolean
   instrucaoFuncionarios: boolean
   necessarioTrocaPecas: boolean
+  /** Peças efetivamente instaladas ou substituídas no serviço (distinto de «necessitam substituição»). */
+  pecasInstaladasSubstituidas: boolean
   observacoes: string
   pontosAberto: string
   pecasSubstituicao: PecaSubstituicao[]
+  pecasInstaladas: PecaSubstituicao[]
   equipamentoId?: string // cliente: n.º série do equipamento do cliente; armazém: id do equipamento em nonato-equipamentos
   clienteId?: string // Para associar ao cliente
   /** De onde veio o equipamento escolhido no relatório (distinção lógica cliente vs armazém industrial) */
@@ -4958,6 +4962,7 @@ export default function Dashboard() {
   const [pecaSelecionadaParaChecklist, setPecaSelecionadaParaChecklist] = useState<PecaBiblioteca | null>(null) // Peça escolhida na Biblioteca para o item do checklist
   const [selecionarPecaParaRelatorioServico, setSelecionarPecaParaRelatorioServico] = useState(false)
   const [pecaSelecionadaParaRelatorio, setPecaSelecionadaParaRelatorio] = useState<PecaBiblioteca | null>(null)
+  const [destinoAnexarPecaRelatorio, setDestinoAnexarPecaRelatorio] = useState<'substituicao' | 'instaladas'>('substituicao')
   const [showFecharRelatorioOpcoesModal, setShowFecharRelatorioOpcoesModal] = useState(false)
   const [criacaoChecklistItemForm, setCriacaoChecklistItemForm] = useState<{ tipo: string; descricaoTrabalho: string; necessitaPecas: boolean; origemPecas?: 'biblioteca' | 'equipamentos-pdf' | 'codigo-manual'; codigoPeca: string; pecasManuais: Array<{ codigo: string; quantia: number }> }>({ tipo: 'Manutenção', descricaoTrabalho: '', necessitaPecas: false, codigoPeca: '', pecasManuais: [] })
   const [showGrupoChecklistForm, setShowGrupoChecklistForm] = useState(false)
@@ -8034,9 +8039,11 @@ export default function Dashboard() {
     liberacaoProducao: false,
     instrucaoFuncionarios: false,
     necessarioTrocaPecas: false,
+    pecasInstaladasSubstituidas: false,
     observacoes: '',
     pontosAberto: '',
     pecasSubstituicao: [],
+    pecasInstaladas: [],
     assinaturaCliente: undefined,
     dataAssinaturaCliente: undefined,
     equipamentoOrigem: 'cliente',
@@ -9478,6 +9485,35 @@ export default function Dashboard() {
             }
             if (!deferServerMerge) {
               saveData(key, merged, false).catch(() => {})
+            }
+            return merged
+          }
+        }
+        // Biblioteca de peças: fundir servidor + local para não perder cadastros após deploy/sync
+        if (
+          key === 'nonato-pecas-biblioteca' &&
+          !preferServerOnlyAfterFullPullWipe &&
+          typeof window !== 'undefined'
+        ) {
+          const serverValue = serverData[key]
+          const localData = localStorage.getItem(key)
+          if (Array.isArray(serverValue) || (localData !== null && localData !== '')) {
+            let localParsed: unknown = null
+            if (localData !== null && localData !== '') {
+              try {
+                localParsed = JSON.parse(localData)
+              } catch {
+                /* continuar */
+              }
+            }
+            const merged = mergePecasBibliotecaArrays(serverValue, localParsed)
+            try {
+              localStorage.setItem(key, JSON.stringify(merged))
+            } catch (e) {
+              console.error('Erro ao gravar peças fundidas no localStorage:', e)
+            }
+            if (!deferServerMerge && pecasBibliotecaArraysDiffer(merged, serverValue)) {
+              void saveData(key, merged, false, true)
             }
             return merged
           }
@@ -18066,9 +18102,11 @@ export default function Dashboard() {
       liberacaoProducao: false,
       instrucaoFuncionarios: false,
       necessarioTrocaPecas: false,
+      pecasInstaladasSubstituidas: false,
       observacoes: '',
       pontosAberto: '',
       pecasSubstituicao: [],
+      pecasInstaladas: [],
       assinaturaCliente: undefined,
       dataAssinaturaCliente: undefined,
       equipamentoOrigem: 'cliente',
@@ -18152,6 +18190,8 @@ export default function Dashboard() {
         normalizarDiasTrabalhoParaPersist(r.diasTrabalho ? [...r.diasTrabalho] : [])
       ),
       pecasSubstituicao: r.pecasSubstituicao ? [...r.pecasSubstituicao] : [],
+      pecasInstaladas: r.pecasInstaladas ? [...r.pecasInstaladas] : [],
+      pecasInstaladasSubstituidas: r.pecasInstaladasSubstituidas ?? (r.pecasInstaladas?.length ?? 0) > 0,
     })
     if (clienteResolvido) {
       const { kmIda, kmRetorno } = getKmPadraoDoCliente(clienteResolvido)
@@ -21720,6 +21760,7 @@ export default function Dashboard() {
       <div><span class="chk ${relatorio.instrucaoFuncionarios ? 'checked' : ''}"></span> ${t.instrucaoFuncionarios || 'Instrução'}</div>
       <div><span class="chk ${relatorio.entregaDocumentacao ? 'checked' : ''}"></span> ${t.entregaDocumentacao || 'Documentação'}</div>
       <div><span class="chk ${relatorio.necessarioTrocaPecas ? 'checked' : ''}"></span> ${t.necessarioTrocaPecas || 'Troca de peças'}</div>
+      <div><span class="chk ${relatorio.pecasInstaladasSubstituidas ? 'checked' : ''}"></span> ${t.pecasInstaladasSubstituidas || 'Peças instaladas / substituídas'}</div>
     </div>`;
 
   const renderReportPecas = (relatorio: RelatorioServico) => {
@@ -21729,6 +21770,16 @@ export default function Dashboard() {
       <h3>${t.pecasSubstituicao || 'PEÇAS SUBSTITUIÇÃO'}</h3>
       <table><thead><tr><th>${t.descricaoItem || 'Descrição'}</th><th>${t.codigo || 'Código'}</th><th>${t.quantidade || 'Qtd'}</th></tr></thead>
       <tbody>${relatorio.pecasSubstituicao.map((p: PecaSubstituicao) => `<tr><td>${p.descricao || '-'}</td><td>${p.codigo || '-'}</td><td>${p.quantidade || '-'}</td></tr>`).join('')}</tbody></table>
+    </div>`;
+  };
+
+  const renderReportPecasInstaladas = (relatorio: RelatorioServico) => {
+    if (!relatorio.pecasInstaladas || relatorio.pecasInstaladas.length === 0) return '';
+    return `
+    <div class="report-section">
+      <h3>${t.pecasInstaladasSubstituidas || 'PEÇAS INSTALADAS / SUBSTITUÍDAS'}</h3>
+      <table><thead><tr><th>${t.descricaoItem || 'Descrição'}</th><th>${t.codigo || 'Código'}</th><th>${t.quantidade || 'Qtd'}</th></tr></thead>
+      <tbody>${relatorio.pecasInstaladas.map((p: PecaSubstituicao) => `<tr><td>${p.descricao || '-'}</td><td>${p.codigo || '-'}</td><td>${p.quantidade || '-'}</td></tr>`).join('')}</tbody></table>
     </div>`;
   };
 
@@ -21790,6 +21841,7 @@ export default function Dashboard() {
         ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes || 'Observações'}</h3><p>${relatorio.observacoes}</p></div>` : ''}
         ${relatorio.pontosAberto ? `<div class="report-section"><h3>${t.pontosAberto || 'Pontos em Aberto'}</h3><p>${relatorio.pontosAberto}</p></div>` : ''}
         ${renderReportPecas(relatorio)}
+        ${renderReportPecasInstaladas(relatorio)}
         ${renderReportAssinaturaCliente(relatorio)}
       </body></html>`;
       printWindow.document.write(htmlContent);
@@ -21823,6 +21875,7 @@ export default function Dashboard() {
         <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
         ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes}</h3><p>${relatorio.observacoes}</p></div>` : ''}
         ${renderReportPecas(relatorio)}
+        ${renderReportPecasInstaladas(relatorio)}
         ${renderReportAssinaturaCliente(relatorio)}
       </body></html>`;
       printWindow.document.write(htmlContent);
@@ -21858,6 +21911,7 @@ export default function Dashboard() {
         <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
         ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes}</h3><p>${relatorio.observacoes}</p></div>` : ''}
         ${renderReportPecas(relatorio)}
+        ${renderReportPecasInstaladas(relatorio)}
         ${renderReportAssinaturaCliente(relatorio)}
       </body></html>`;
       printWindow.document.write(htmlContent);
@@ -21893,6 +21947,7 @@ export default function Dashboard() {
         ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes}</h3><p>${relatorio.observacoes}</p></div>` : ''}
         ${relatorio.pontosAberto ? `<div class="report-section"><h3>${t.pontosAberto}</h3><p>${relatorio.pontosAberto}</p></div>` : ''}
         ${renderReportPecas(relatorio)}
+        ${renderReportPecasInstaladas(relatorio)}
         ${renderReportAssinaturaCliente(relatorio)}
       </body></html>`;
       printWindow.document.write(htmlContent);
@@ -21927,6 +21982,7 @@ export default function Dashboard() {
         <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
         ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes}</h3><p>${relatorio.observacoes}</p></div>` : ''}
         ${renderReportPecas(relatorio)}
+        ${renderReportPecasInstaladas(relatorio)}
         ${renderReportAssinaturaCliente(relatorio)}
       </body></html>`;
       printWindow.document.write(htmlContent);
@@ -22635,9 +22691,11 @@ export default function Dashboard() {
       liberacaoProducao: false,
       instrucaoFuncionarios: false,
       necessarioTrocaPecas: false,
+      pecasInstaladasSubstituidas: false,
       observacoes: '',
       pontosAberto: '',
       pecasSubstituicao: [],
+      pecasInstaladas: [],
       equipamentoOrigem: 'cliente',
     })
     setNovoDiaTrabalho({
@@ -22757,7 +22815,7 @@ export default function Dashboard() {
           data: new Date().toISOString().split('T')[0], maquinaModelo: '', numeroMaquina: '', tipoServico: '',
           diasTrabalho: [], horasTrabalho: '', kmsPercorridos: '', horasViagem: '',
           servicoConcluido: false, retornoNecessario: false, entregaDocumentacao: false, liberacaoProducao: false,
-          instrucaoFuncionarios: false, necessarioTrocaPecas: false, observacoes: '', pontosAberto: '', pecasSubstituicao: [],
+          instrucaoFuncionarios: false, necessarioTrocaPecas: false, pecasInstaladasSubstituidas: false, observacoes: '', pontosAberto: '', pecasSubstituicao: [], pecasInstaladas: [],
           equipamentoOrigem: 'cliente',
         })
         setNovoDiaTrabalho({
@@ -22798,9 +22856,11 @@ export default function Dashboard() {
         liberacaoProducao: false,
         instrucaoFuncionarios: false,
         necessarioTrocaPecas: false,
+        pecasInstaladasSubstituidas: false,
         observacoes: '',
         pontosAberto: '',
         pecasSubstituicao: [],
+        pecasInstaladas: [],
         clienteId: '',
         equipamentoId: '',
         equipamentoOrigem: 'cliente',
@@ -23042,15 +23102,24 @@ export default function Dashboard() {
     }
   }
 
-  const handleAddPeca = () => {
+  const handleAddPeca = (destino: 'substituicao' | 'instaladas' = destinoAnexarPecaRelatorio) => {
     if (!novaPeca.descricao || !novaPeca.codigo || !novaPeca.quantidade) {
       alert(t.fillAllFields)
       return
     }
-    setRelatorioServicoForm({
-      ...relatorioServicoForm,
-      pecasSubstituicao: [...relatorioServicoForm.pecasSubstituicao, { ...novaPeca, id: Date.now().toString() + Math.random().toString(36).substr(2, 9) }]
-    })
+    const novaEntrada = { ...novaPeca, id: Date.now().toString() + Math.random().toString(36).substr(2, 9) }
+    if (destino === 'instaladas') {
+      setRelatorioServicoForm({
+        ...relatorioServicoForm,
+        pecasInstaladasSubstituidas: true,
+        pecasInstaladas: [...(relatorioServicoForm.pecasInstaladas || []), novaEntrada],
+      })
+    } else {
+      setRelatorioServicoForm({
+        ...relatorioServicoForm,
+        pecasSubstituicao: [...relatorioServicoForm.pecasSubstituicao, novaEntrada],
+      })
+    }
     setNovaPeca({
       id: '',
       descricao: '',
@@ -23097,7 +23166,13 @@ export default function Dashboard() {
     }
   }
 
-  const handleRemovePeca = (index: number) => {
+  const handleRemovePeca = (index: number, destino: 'substituicao' | 'instaladas' = 'substituicao') => {
+    if (destino === 'instaladas') {
+      const updatedPecas = [...(relatorioServicoForm.pecasInstaladas || [])]
+      updatedPecas.splice(index, 1)
+      setRelatorioServicoForm({ ...relatorioServicoForm, pecasInstaladas: updatedPecas })
+      return
+    }
     const updatedPecas = [...relatorioServicoForm.pecasSubstituicao]
     updatedPecas.splice(index, 1)
     setRelatorioServicoForm({ ...relatorioServicoForm, pecasSubstituicao: updatedPecas })
@@ -23106,37 +23181,49 @@ export default function Dashboard() {
   const anexarPecaBibliotecaAoRelatorio = (
     peca: PecaBiblioteca,
     quantidade = '1',
-    opts?: { continuarNaBiblioteca?: boolean }
+    opts?: { continuarNaBiblioteca?: boolean; destino?: 'substituicao' | 'instaladas' }
   ) => {
+    const destino = opts?.destino ?? destinoAnexarPecaRelatorio
     const codigo = String(peca.codigo ?? '').trim()
     if (!codigo) return
-    const jaExiste = relatorioServicoForm.pecasSubstituicao.some(
+    const listaAtual =
+      destino === 'instaladas'
+        ? relatorioServicoForm.pecasInstaladas || []
+        : relatorioServicoForm.pecasSubstituicao
+    const jaExiste = listaAtual.some(
       (p) => String(p.codigo ?? '').trim().toLowerCase() === codigo.toLowerCase()
     )
     if (jaExiste) {
       alert((safeT as any)?.pecaJaAdicionada || 'Esta peça já foi adicionada!')
       return
     }
-    setRelatorioServicoForm((prev) => ({
-      ...prev,
-      pecasSubstituicao: [
-        ...prev.pecasSubstituicao,
-        {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-          descricao: peca.nome || peca.descricao || '',
-          codigo,
-          quantidade: String(quantidade),
-          imagem: peca.imagem,
-        },
-      ],
-    }))
+    const novaEntrada = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      descricao: peca.nome || peca.descricao || '',
+      codigo,
+      quantidade: String(quantidade),
+      imagem: peca.imagem,
+    }
+    setRelatorioServicoForm((prev) =>
+      destino === 'instaladas'
+        ? {
+            ...prev,
+            pecasInstaladasSubstituidas: true,
+            pecasInstaladas: [...(prev.pecasInstaladas || []), novaEntrada],
+          }
+        : {
+            ...prev,
+            pecasSubstituicao: [...prev.pecasSubstituicao, novaEntrada],
+          }
+    )
     setPecaSelecionadaParaRelatorio(null)
     if (opts?.continuarNaBiblioteca) return
     setSelecionarPecaParaRelatorioServico(false)
     openTab('relatorio-servico', getTabTitle('relatorio-servico'))
   }
 
-  const abrirBibliotecaParaAnexarAoRelatorio = () => {
+  const abrirBibliotecaParaAnexarAoRelatorio = (destino: 'substituicao' | 'instaladas' = 'substituicao') => {
+    setDestinoAnexarPecaRelatorio(destino)
     setSelecionarPecaParaRelatorioServico(true)
     setPecaSelecionadaParaRelatorio(null)
     setAbaBibliotecaPecas('biblioteca')
@@ -23321,7 +23408,10 @@ export default function Dashboard() {
 
   const imprimirRelatorioPecasEDespesas = (rel: RelatorioServico) => {
     const itensServico = buildItensFechamentoBaseRelatorio(rel)
-    const itensPecas = buildItensFechamentoPecasRelatorio(rel.pecasSubstituicao || [])
+    const itensPecas = [
+      ...buildItensFechamentoPecasRelatorio(rel.pecasInstaladas || []),
+      ...buildItensFechamentoPecasRelatorio(rel.pecasSubstituicao || []),
+    ]
     const todosItens = [...itensServico, ...itensPecas]
     const totalGeral = todosItens.reduce((s, i) => s + (Number(i.valorTotal) || 0), 0)
     const esc = (v: string) =>
@@ -23329,12 +23419,15 @@ export default function Dashboard() {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-    const linhasPecas = (rel.pecasSubstituicao || [])
-      .map(
-        (p) =>
-          `<tr><td>${esc(p.codigo)}</td><td>${esc(p.descricao)}</td><td>${esc(String(p.quantidade))}</td></tr>`
-      )
-      .join('')
+    const linhasPecasTabela = (pecas: PecaSubstituicao[]) =>
+      pecas
+        .map(
+          (p) =>
+            `<tr><td>${esc(p.codigo)}</td><td>${esc(p.descricao)}</td><td>${esc(String(p.quantidade))}</td></tr>`
+        )
+        .join('')
+    const linhasPecasNecessarias = linhasPecasTabela(rel.pecasSubstituicao || [])
+    const linhasPecasInstaladas = linhasPecasTabela(rel.pecasInstaladas || [])
     const linhasDespesas = todosItens
       .map(
         (i) =>
@@ -23345,8 +23438,10 @@ export default function Dashboard() {
 <style>body{font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#111}h1,h2{color:#1e3a5f}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#1e293b;color:#fff}</style></head><body>
 <h1>${esc(safeT?.relatorioServico || 'Relatório de Serviço')} — ${esc(rel.numero)}</h1>
 <p><strong>${esc(safeT?.cliente || 'Cliente')}:</strong> ${esc(rel.cliente)} · <strong>${esc(safeT?.data || 'Data')}:</strong> ${esc(rel.data)}</p>
-<h2>${esc(safeT?.pecasSubstituicao || 'Peças')}</h2>
-<table><thead><tr><th>${esc(safeT?.codigo || 'Código')}</th><th>${esc(safeT?.descricaoItem || 'Descrição')}</th><th>${esc(safeT?.quantidade || 'Qtd.')}</th></tr></thead><tbody>${linhasPecas || `<tr><td colspan="3">—</td></tr>`}</tbody></table>
+<h2>${esc(safeT?.pecasSubstituicao || 'Peças que necessitam substituição')}</h2>
+<table><thead><tr><th>${esc(safeT?.codigo || 'Código')}</th><th>${esc(safeT?.descricaoItem || 'Descrição')}</th><th>${esc(safeT?.quantidade || 'Qtd.')}</th></tr></thead><tbody>${linhasPecasNecessarias || `<tr><td colspan="3">—</td></tr>`}</tbody></table>
+<h2>${esc((safeT as any)?.pecasInstaladasSubstituidas || 'Peças instaladas / substituídas')}</h2>
+<table><thead><tr><th>${esc(safeT?.codigo || 'Código')}</th><th>${esc(safeT?.descricaoItem || 'Descrição')}</th><th>${esc(safeT?.quantidade || 'Qtd.')}</th></tr></thead><tbody>${linhasPecasInstaladas || `<tr><td colspan="3">—</td></tr>`}</tbody></table>
 <h2>${esc((safeT as any)?.relatorioResumoDespesasPecas || 'Resumo de despesas, peças e serviços')}</h2>
 <table><thead><tr><th>${esc(safeT?.descricaoItem || 'Descrição')}</th><th>${esc(safeT?.quantidade || 'Qtd.')}</th><th>${esc(safeT?.valorUnitario || 'Unit.')}</th><th>${esc(safeT?.total || 'Total')}</th></tr></thead><tbody>${linhasDespesas}</tbody>
 <tfoot><tr><td colspan="3" style="text-align:right;font-weight:700">${esc(safeT?.total || 'Total')}</td><td style="text-align:right;font-weight:700">${totalGeral.toFixed(2)} €</td></tr></tfoot></table>
@@ -23383,6 +23478,7 @@ export default function Dashboard() {
     if (opcao === 'fechamento-pecas') {
       const itens = [
         ...buildItensFechamentoBaseRelatorio(rel),
+        ...buildItensFechamentoPecasRelatorio(rel.pecasInstaladas || []),
         ...buildItensFechamentoPecasRelatorio(rel.pecasSubstituicao || []),
       ]
       const nextFechamentos = { ...fechamentosRelatorios, [rel.id]: itens }
@@ -25635,11 +25731,11 @@ export default function Dashboard() {
     }
     const { lista: comNumeros } = garantirNumerosSequenciaPecaBiblioteca(semCodigoRepetido, categoriasPecas)
     setPecasBiblioteca(comNumeros)
-    void saveData('nonato-pecas-biblioteca', comNumeros).catch((err) => {
+    void saveData('nonato-pecas-biblioteca', comNumeros, true, true).catch((err) => {
       console.error('[pecas biblioteca]', err)
       alert(
         (t as any)?.importacaoErroGravarFila ??
-          'Não foi possível gravar na biblioteca. Verifique espaço no navegador ou tente de novo.'
+          'Não foi possível gravar na biblioteca no servidor. Os dados ficaram neste aparelho — verifique ligação ou volume Railway (/app/data).'
       )
     })
   }, [t, categoriasPecas])
@@ -34610,10 +34706,35 @@ export default function Dashboard() {
                     )}
                   </div>
 
-                {/* Peças de Substituição */}
-                {relatorioServicoForm.necessarioTrocaPecas && (
-                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
-                    <h4 style={{ marginBottom: '15px', color: '#00c853' }}>{safeT?.pecasSubstituicao || 'Peças de Substituição'}</h4>
+                {/* Peças — necessárias vs instaladas/substituídas */}
+                {(
+                  [
+                    {
+                      active: relatorioServicoForm.necessarioTrocaPecas,
+                      destino: 'substituicao' as const,
+                      titulo: safeT?.pecasSubstituicao || 'Peças que Necessitam de ser Substituídas',
+                      lista: relatorioServicoForm.pecasSubstituicao,
+                      mostrarOrcamento: true,
+                    },
+                    {
+                      active: relatorioServicoForm.pecasInstaladasSubstituidas,
+                      destino: 'instaladas' as const,
+                      titulo:
+                        (safeT as any)?.pecasInstaladasSubstituidas || 'Peças Instaladas / Substituídas',
+                      lista: relatorioServicoForm.pecasInstaladas || [],
+                      mostrarOrcamento: false,
+                    },
+                  ] as const
+                )
+                  .filter((sec) => sec.active)
+                  .map((sec) => (
+                  <div
+                    key={sec.destino}
+                    style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}
+                    onFocus={() => setDestinoAnexarPecaRelatorio(sec.destino)}
+                    onClick={() => setDestinoAnexarPecaRelatorio(sec.destino)}
+                  >
+                    <h4 style={{ marginBottom: '15px', color: '#00c853' }}>{sec.titulo}</h4>
                     
                     {/* Formulário para adicionar peça */}
                     <div style={{ border: '1px solid rgba(0, 200, 83, 0.2)', padding: '15px', borderRadius: '6px', marginBottom: '15px', backgroundColor: '#404040' }}>
@@ -34709,7 +34830,7 @@ export default function Dashboard() {
                           </button>
                           <button
                             className="btn-primary"
-                            onClick={abrirBibliotecaParaAnexarAoRelatorio}
+                            onClick={() => abrirBibliotecaParaAnexarAoRelatorio(sec.destino)}
                             style={{ padding: '8px 15px', fontSize: '12px', whiteSpace: 'nowrap' }}
                           >
                             {safeT?.abrirBiblioteca || '📚 Abrir Biblioteca'}
@@ -34782,7 +34903,7 @@ export default function Dashboard() {
 
                       <button 
                         className="btn-primary" 
-                        onClick={handleAddPeca} 
+                        onClick={() => handleAddPeca(sec.destino)} 
                         disabled={!pecaSelecionadaBiblioteca || !novaPeca.quantidade}
                         style={{ 
                           padding: '8px 16px', 
@@ -34796,16 +34917,16 @@ export default function Dashboard() {
                     </div>
 
                     {/* Lista de peças adicionadas */}
-                    {relatorioServicoForm.pecasSubstituicao.length > 0 && (
+                    {sec.lista.length > 0 && (
                       <div>
                         <h5 style={{ marginBottom: '10px' }}>{safeT?.pecasAdicionadas || 'Peças Adicionadas'}:</h5>
-                        {relatorioServicoForm.pecasSubstituicao.map((peca, index) => (
+                        {sec.lista.map((peca, index) => (
                           <div key={peca.id || index} style={{ border: '1px solid rgba(0, 200, 83, 0.2)', padding: '10px', borderRadius: '6px', marginBottom: '10px', backgroundColor: '#404040', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
                               <p style={{ marginBottom: '3px', fontWeight: 'bold' }}>{peca.descricao}</p>
                               <p style={{ fontSize: '12px', marginBottom: '3px' }}>{safeT?.codigo || 'Código'}: {peca.codigo} | {safeT?.quantidade || 'Quantidade'}: {peca.quantidade}</p>
                             </div>
-                            <button className="btn-danger" onClick={() => handleRemovePeca(index)} style={{ padding: '3px 6px', fontSize: '10px', minWidth: 'auto', width: 'auto' }}>
+                            <button className="btn-danger" onClick={() => handleRemovePeca(index, sec.destino)} style={{ padding: '3px 6px', fontSize: '10px', minWidth: 'auto', width: 'auto' }}>
                               {safeT?.delete || 'Excluir'}
                             </button>
                           </div>
@@ -34813,8 +34934,7 @@ export default function Dashboard() {
                       </div>
                     )}
                     
-                    {/* Botão Gerar Pedido de Orçamento - padrão Visualizar Equipamento (card #484848, borda 1px, botão estilo aba) */}
-                    {relatorioServicoForm.pecasSubstituicao.length > 0 && (
+                    {sec.mostrarOrcamento && sec.lista.length > 0 && (
                       <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                         <button 
                           onClick={() => setShowPedidoOrcamentoModal(true)}
@@ -34836,7 +34956,7 @@ export default function Dashboard() {
                       </div>
                     )}
                   </div>
-                )}
+                ))}
 
                 {/* Resumo Final - Cálculos Finais - Organizado e Compacto */}
                 {relatorioServicoForm.diasTrabalho && relatorioServicoForm.diasTrabalho.length > 0 ? (
@@ -34953,6 +35073,22 @@ export default function Dashboard() {
                       />
                       <span>{safeT?.necessarioTrocaPecas || 'Necessário troca de Peças'}</span>
                     </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={relatorioServicoForm.pecasInstaladasSubstituidas}
+                        onChange={(e) =>
+                          setRelatorioServicoForm({
+                            ...relatorioServicoForm,
+                            pecasInstaladasSubstituidas: e.target.checked,
+                          })
+                        }
+                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                      />
+                      <span>
+                        {(safeT as any)?.pecasInstaladasSubstituidas || 'Peças Instaladas / Substituídas'}
+                      </span>
+                    </label>
                   </div>
                 </div>
                 
@@ -35017,9 +35153,11 @@ export default function Dashboard() {
                       liberacaoProducao: false, 
                       instrucaoFuncionarios: false, 
                       necessarioTrocaPecas: false, 
+                      pecasInstaladasSubstituidas: false,
                       observacoes: '', 
                       pontosAberto: '', 
-                      pecasSubstituicao: [] 
+                      pecasSubstituicao: [],
+                      pecasInstaladas: [],
                     });
                     setNovoDiaTrabalho({
                       data: new Date().toISOString().split('T')[0],
@@ -35345,6 +35483,12 @@ export default function Dashboard() {
                               {safeT?.pecas || 'Peças'}
                             </span>
                           )}
+                          {relatorio.pecasInstaladasSubstituidas && (
+                            <span className="rs-badge rs-badge--pecas" style={{ backgroundColor: 'rgba(0, 168, 107, 0.22)', borderColor: 'rgba(0, 168, 107, 0.55)' }}>
+                              <span className="rs-badge__ico" aria-hidden>✓</span>
+                              {(safeT as any)?.pecasInstaladasSubstituidas || 'Instaladas'}
+                            </span>
+                          )}
                           {relatorio.equipamentoOrigem === 'armazem' && (
                             <span className="rs-badge rs-badge--armazem">
                               {(safeT as any)?.badgeEquipamentoArmazem || '🏭 Armazém'}
@@ -35494,6 +35638,13 @@ export default function Dashboard() {
                           <div className="rs-card-pecas-chip">
                             <span className="rs-card-pecas-chip__ico" aria-hidden>⚙</span>
                             {relatorio.pecasSubstituicao.length} {safeT?.pecasSubstituicao || 'Peça(s) Substituída(s)'}
+                          </div>
+                        )}
+                        {(relatorio.pecasInstaladas?.length ?? 0) > 0 && (
+                          <div className="rs-card-pecas-chip" style={{ borderColor: 'rgba(0, 168, 107, 0.45)' }}>
+                            <span className="rs-card-pecas-chip__ico" aria-hidden>✓</span>
+                            {relatorio.pecasInstaladas!.length}{' '}
+                            {(safeT as any)?.pecasInstaladasSubstituidas || 'Peças instaladas / substituídas'}
                           </div>
                         )}
 
@@ -72604,7 +72755,7 @@ A1;Peça exemplo;10`}
                   <button className="btn-primary" onClick={handleSaveRelatorioServico} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowRelatorioServicoForm(false); setEditingRelatorioServico(null); setRelatorioServicoForm({ id: '', numero: '', tecnico: '', cliente: '', cidade: '', telefone: '', data: new Date().toISOString().split('T')[0], maquinaModelo: '', numeroMaquina: '', tipoServico: '', diasTrabalho: [], horasTrabalho: '', kmsPercorridos: '', horasViagem: '', servicoConcluido: false, retornoNecessario: false, entregaDocumentacao: false, liberacaoProducao: false, instrucaoFuncionarios: false, necessarioTrocaPecas: false, observacoes: '', pontosAberto: '', pecasSubstituicao: [], equipamentoOrigem: 'cliente' }); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={() => { setShowRelatorioServicoForm(false); setEditingRelatorioServico(null); setRelatorioServicoForm({ id: '', numero: '', tecnico: '', cliente: '', cidade: '', telefone: '', data: new Date().toISOString().split('T')[0], maquinaModelo: '', numeroMaquina: '', tipoServico: '', diasTrabalho: [], horasTrabalho: '', kmsPercorridos: '', horasViagem: '', servicoConcluido: false, retornoNecessario: false, entregaDocumentacao: false, liberacaoProducao: false, instrucaoFuncionarios: false, necessarioTrocaPecas: false, pecasInstaladasSubstituidas: false, observacoes: '', pontosAberto: '', pecasSubstituicao: [], pecasInstaladas: [], equipamentoOrigem: 'cliente' }); }} style={{ flex: 1 }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
@@ -75806,6 +75957,36 @@ A1;Peça exemplo;10`}
               </div>
             )}
 
+            {/* Peças instaladas / substituídas */}
+            {viewingRelatorioServico.pecasInstaladas && viewingRelatorioServico.pecasInstaladas.length > 0 && (
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 168, 107, 0.35)' }}>
+                <h3 style={{ color: '#00a86b', marginBottom: '15px', fontSize: '16px' }}>
+                  {(safeT as any)?.pecasInstaladasSubstituidas || 'Peças Instaladas / Substituídas'}
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
+                  {viewingRelatorioServico.pecasInstaladas.map((peca, index) => (
+                    <div key={peca.id || index} style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 168, 107, 0.25)' }}>
+                      <img
+                        src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                        alt={peca.descricao}
+                        style={{
+                          width: '100%',
+                          maxHeight: '100px',
+                          objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                          borderRadius: '4px',
+                          marginBottom: '8px',
+                          backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
+                        }}
+                      />
+                      <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>{peca.descricao}</p>
+                      <p style={{ fontSize: '11px', opacity: 0.8, marginBottom: '2px' }}>{safeT?.codigo || 'Código'}: {peca.codigo}</p>
+                      <p style={{ fontSize: '11px', opacity: 0.8 }}>{safeT?.quantidade || 'Quantidade'}: {peca.quantidade}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Observações e Pontos Abertos */}
             {(viewingRelatorioServico.observacoes || viewingRelatorioServico.pontosAberto) && (
               <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
@@ -75862,6 +76043,11 @@ A1;Peça exemplo;10`}
                 {viewingRelatorioServico.necessarioTrocaPecas && (
                   <span style={{ padding: '6px 12px', backgroundColor: '#ff4444', color: '#fff', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                     ⚙ {safeT?.necessarioTrocaPecas || 'Necessário Troca de Peças'}
+                  </span>
+                )}
+                {viewingRelatorioServico.pecasInstaladasSubstituidas && (
+                  <span style={{ padding: '6px 12px', backgroundColor: '#00a86b', color: '#fff', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                    ✓ {(safeT as any)?.pecasInstaladasSubstituidas || 'Peças Instaladas / Substituídas'}
                   </span>
                 )}
               </div>

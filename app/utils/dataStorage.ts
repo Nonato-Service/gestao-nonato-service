@@ -15,8 +15,14 @@ import {
   serverKeyHasMeaningfulData,
 } from '../lib/criticalCadastroKeys'
 import {
+  mergePecasBibliotecaArrays,
+  pecasBibliotecaArraysDiffer,
+} from '../lib/mergePecasBiblioteca'
+import {
   canAutoPullServerChanges,
 } from './syncDiff'
+
+const PECAS_BIBLIOTECA_KEY = 'nonato-pecas-biblioteca'
 
 const API_BASE = '/api/data'
 const SYNC_QUEUE_KEY = 'nonato-sync-queue'
@@ -879,6 +885,23 @@ function collectLocalNonatoSnapshotForPull(): Record<string, unknown> {
 
 async function writeLocalFromServerPull(key: string, value: unknown): Promise<void> {
   if (typeof window === 'undefined') return
+  if (key === PECAS_BIBLIOTECA_KEY && Array.isArray(value)) {
+    let localParsed: unknown = null
+    const raw = localStorage.getItem(key)
+    if (raw) {
+      try {
+        localParsed = JSON.parse(raw)
+      } catch {
+        /* ignorar */
+      }
+    }
+    const merged = mergePecasBibliotecaArrays(value, localParsed)
+    writeLocalStorageValue(key, merged)
+    if (pecasBibliotecaArraysDiffer(merged, value)) {
+      scheduleServerMigrationPush(key, merged)
+    }
+    return
+  }
   if (key === MANUAIS_KEY) {
     await saveManuaisFamiliasGruposToIdb(value)
     try {
@@ -1178,6 +1201,14 @@ function shouldPreferLocalOverServerOnLoad(key: string, serverValue: unknown, lo
     return true
   }
   if (
+    key === PECAS_BIBLIOTECA_KEY &&
+    Array.isArray(serverValue) &&
+    Array.isArray(localParsed) &&
+    localParsed.length > serverValue.length
+  ) {
+    return true
+  }
+  if (
     typeof serverValue === 'object' &&
     serverValue !== null &&
     !Array.isArray(serverValue) &&
@@ -1265,6 +1296,22 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
       }
       if (serverData !== null) {
         const localSnapshot = await readLocalValueForLoad(key, parseJson)
+
+        if (
+          key === PECAS_BIBLIOTECA_KEY &&
+          parseJson &&
+          Array.isArray(serverData) &&
+          localSnapshot.parsed !== null &&
+          localSnapshot.parsed !== undefined &&
+          Array.isArray(localSnapshot.parsed)
+        ) {
+          const merged = mergePecasBibliotecaArrays(serverData, localSnapshot.parsed)
+          writeLocalStorageValue(key, merged)
+          if (pecasBibliotecaArraysDiffer(merged, serverData)) {
+            scheduleServerMigrationPush(key, merged)
+          }
+          return merged
+        }
 
         // Barra lateral: preservar organização local — não empurrar ao servidor em cada loadData (evita ciclo multi-dispositivo).
         if (
