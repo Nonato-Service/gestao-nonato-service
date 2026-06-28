@@ -158,6 +158,7 @@ import {
   gerarProximoCodigoCliente,
   codigoClienteExibicao,
 } from './lib/clienteCodigoUtils'
+import { isClienteMarcadoDevedor } from './lib/clienteDevedorUtils'
 import {
   encontrarClienteDuplicadoCadastro,
   encontrarClienteDuplicadoCadastroAntecipado,
@@ -35546,9 +35547,7 @@ export default function Dashboard() {
                   className={
                     editingCliente &&
                     (clienteCadastroAlertaDevedorId === editingCliente.id ||
-                      (Boolean(editingCliente.isDevedor) &&
-                        (Number(editingCliente.saldoPendente ?? 0) > 0 ||
-                          Number(editingCliente.relatoriosNaoPagoCount ?? 0) > 0)))
+                      isClienteMarcadoDevedor(editingCliente))
                       ? 'cliente-form-alerta-devedor'
                       : undefined
                   }
@@ -35565,25 +35564,31 @@ export default function Dashboard() {
                     ) : null
                   }
                   alertSlot={
-                    editingCliente &&
-                    Boolean(editingCliente.isDevedor) &&
-                    Number(editingCliente.saldoPendente ?? 0) > 0 ? (
+                    editingCliente && isClienteMarcadoDevedor(editingCliente) ? (
                       <div
                         style={{
                           marginBottom: '14px',
                           padding: '12px 14px',
                           borderRadius: '8px',
-                          background: 'rgba(70, 0, 0, 0.5)',
+                          background: 'rgba(120, 16, 16, 0.45)',
                           border: '1px solid rgba(255, 100, 100, 0.48)',
                         }}
                       >
                         <div style={{ fontSize: '11px', fontWeight: 800, color: '#fecaca', letterSpacing: '0.05em' }}>
                           {(safeT as any)?.clienteDevedorBadge || 'Devedor'}
                         </div>
-                        <div style={{ fontSize: '15px', color: '#fff', marginTop: '6px', fontWeight: 700 }}>
-                          {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
-                          {Number(editingCliente.saldoPendente ?? 0).toFixed(2)}
-                        </div>
+                        {Number(editingCliente.saldoPendente ?? 0) > 0 ? (
+                          <div style={{ fontSize: '15px', color: '#fff', marginTop: '6px', fontWeight: 700 }}>
+                            {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
+                            {Number(editingCliente.saldoPendente ?? 0).toFixed(2)}
+                          </div>
+                        ) : null}
+                        {Number(editingCliente.relatoriosNaoPagoCount ?? 0) > 0 ? (
+                          <div style={{ fontSize: '12px', color: '#fca5a5', marginTop: '8px', lineHeight: 1.35 }}>
+                            {(safeT as any)?.clienteDevedorRelatoriosLabel || 'Relatórios não pagos'}:{' '}
+                            {Number(editingCliente.relatoriosNaoPagoCount ?? 0)}
+                          </div>
+                        ) : null}
                         {(() => {
                           const nums = (
                             clientesDevedores.find(
@@ -35979,14 +35984,16 @@ export default function Dashboard() {
                             : letra}
                         </h3>
                         <ul className="clientes-alfa-nomes">
-                          {(clientesPorLetra.get(letra) ?? []).map(c => (
+                          {(clientesPorLetra.get(letra) ?? []).map(c => {
+                            const devedor = isClienteMarcadoDevedor(c)
+                            return (
                             <li key={c.id} className="clientes-alfa-item">
                               <button
                                 type="button"
-                                className="clientes-alfa-nome-btn"
+                                className={`clientes-alfa-nome-btn${devedor ? ' clientes-alfa-nome-btn--devedor' : ''}`}
                                 onClick={() => setClienteListaDetalheId(c.id)}
                               >
-                                <ClienteListaLinhas cliente={c} language={selectedLanguage} />
+                                <ClienteListaLinhas cliente={c} language={selectedLanguage} devedor={devedor} />
                               </button>
                               <ClienteGpsNavButton
                                 language={selectedLanguage}
@@ -36000,7 +36007,8 @@ export default function Dashboard() {
                                 className="clientes-alfa-gps-btn"
                               />
                             </li>
-                          ))}
+                            )
+                          })}
                         </ul>
                       </section>
                     ))}
@@ -71328,8 +71336,7 @@ A1;Peça exemplo;10`}
                 className={
                   editingCliente &&
                   (clienteCadastroAlertaDevedorId === editingCliente.id ||
-                    (Boolean(editingCliente.isDevedor) &&
-                      Number(editingCliente.saldoPendente ?? 0) > 0))
+                    isClienteMarcadoDevedor(editingCliente))
                     ? 'cliente-form-alerta-devedor'
                     : undefined
                 }
@@ -71346,25 +71353,31 @@ A1;Peça exemplo;10`}
                   ) : null
                 }
                 alertSlot={
-                  editingCliente &&
-                  Boolean(editingCliente.isDevedor) &&
-                  Number(editingCliente.saldoPendente ?? 0) > 0 ? (
+                  editingCliente && isClienteMarcadoDevedor(editingCliente) ? (
                     <div
                       style={{
                         marginBottom: '12px',
                         padding: '10px 12px',
                         borderRadius: '8px',
-                        background: 'rgba(70, 0, 0, 0.5)',
+                        background: 'rgba(120, 16, 16, 0.45)',
                         border: '1px solid rgba(255, 100, 100, 0.48)',
                       }}
                     >
                       <div style={{ fontSize: '11px', fontWeight: 800, color: '#fecaca', letterSpacing: '0.05em' }}>
                         {(safeT as any)?.clienteDevedorBadge || 'Devedor'}
                       </div>
-                      <div style={{ fontSize: '14px', color: '#fff', marginTop: '6px', fontWeight: 700 }}>
-                        {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
-                        {Number(editingCliente.saldoPendente ?? 0).toFixed(2)}
-                      </div>
+                      {Number(editingCliente.saldoPendente ?? 0) > 0 ? (
+                        <div style={{ fontSize: '14px', color: '#fff', marginTop: '6px', fontWeight: 700 }}>
+                          {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
+                          {Number(editingCliente.saldoPendente ?? 0).toFixed(2)}
+                        </div>
+                      ) : null}
+                      {Number(editingCliente.relatoriosNaoPagoCount ?? 0) > 0 ? (
+                        <div style={{ fontSize: '12px', color: '#fca5a5', marginTop: '8px', lineHeight: 1.35 }}>
+                          {(safeT as any)?.clienteDevedorRelatoriosLabel || 'Relatórios não pagos'}:{' '}
+                          {Number(editingCliente.relatoriosNaoPagoCount ?? 0)}
+                        </div>
+                      ) : null}
                     </div>
                   ) : null
                 }

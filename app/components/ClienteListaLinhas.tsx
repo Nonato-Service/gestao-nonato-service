@@ -51,9 +51,10 @@ type Props = {
   cliente: ClienteListaLinhasData
   language?: string
   className?: string
+  devedor?: boolean
 }
 
-export function ClienteListaLinhas({ cliente, language = 'pt-BR', className }: Props) {
+export function ClienteListaLinhas({ cliente, language = 'pt-BR', className, devedor = false }: Props) {
   const tr = useListaTr(language)
   const cod = codigoClienteExibicao(cliente)
   const nome = (cliente.nomeEmpresa || '').trim() || '—'
@@ -63,7 +64,9 @@ export function ClienteListaLinhas({ cliente, language = 'pt-BR', className }: P
   const lblInf = tr('clienteIdentTagInfAdicional')
 
   return (
-    <div className={`cliente-lista-linhas${className ? ` ${className}` : ''}`}>
+    <div
+      className={`cliente-lista-linhas${devedor ? ' cliente-lista-linhas--devedor' : ''}${className ? ` ${className}` : ''}`}
+    >
       {cod !== '—' ? (
         <div className="cliente-lista-linhas__row cliente-lista-linhas__row--cod">
           <span className="cliente-lista-linhas__label">{lblCod}</span>

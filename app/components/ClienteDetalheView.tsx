@@ -21,6 +21,7 @@ import {
   type RelatorioClienteLike,
 } from '../lib/clienteDetalheUtils'
 import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
+import { isClienteMarcadoDevedor } from '../lib/clienteDevedorUtils'
 
 function useDetalheTr(language: string) {
   return useMemo(() => {
@@ -49,6 +50,8 @@ export type ClienteDetalheData = {
   equipamentos: EquipamentoClienteLike[]
   relatorios?: Record<string, RelatorioClienteLike[]>
   saldoPendente?: number
+  isDevedor?: boolean
+  relatoriosNaoPagoCount?: number
 }
 
 type Props = {
@@ -278,9 +281,10 @@ export function ClienteDetalheView({
   const cidadeExibicao = [cliente.localidade, cliente.conselho].map((s) => String(s || '').trim()).filter(Boolean).join(' · ')
 
   const codigoExib = codigoClienteExibicao(cliente)
+  const devedor = isClienteMarcadoDevedor(cliente)
 
   return (
-    <div className="cliente-detalhe-v2">
+    <div className={`cliente-detalhe-v2${devedor ? ' cliente-detalhe-v2--devedor' : ''}`}>
       <header className="cliente-detalhe-v2__page-header">
         <nav className="cliente-detalhe-v2__breadcrumb" aria-label="Breadcrumb">
           <span className="cliente-detalhe-v2__breadcrumb-home">

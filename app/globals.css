@@ -6678,6 +6678,27 @@ a:focus-visible {
   border-color: rgba(0, 200, 83, 0.45);
   color: #ffffff;
 }
+
+/* Cliente devedor — fundo vermelho transparente (lista, cadastro, detalhe) */
+.clientes-alfa-nome-btn--devedor {
+  background: rgba(180, 24, 24, 0.22) !important;
+  border-color: rgba(248, 113, 113, 0.55) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.clientes-alfa-nome-btn--devedor:hover {
+  background: rgba(180, 24, 24, 0.32) !important;
+  border-color: rgba(248, 113, 113, 0.72) !important;
+}
+.cliente-lista-linhas--devedor .cliente-lista-linhas__row--cod {
+  border-left-color: rgba(248, 113, 113, 0.75);
+}
+.cliente-lista-linhas--devedor .cliente-lista-linhas__value--cod {
+  color: #fca5a5;
+}
+.cliente-lista-linhas--devedor .cliente-lista-linhas__eq {
+  color: rgba(248, 113, 113, 0.88);
+}
+
 .clientes-modal-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
@@ -27655,6 +27676,12 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   border-color: rgba(255, 100, 100, 0.45);
 }
 
+.cliente-cadastro-v2.cliente-form-alerta-devedor .cliente-cadastro-v2__card--info {
+  background: rgba(180, 24, 24, 0.22) !important;
+  border-color: rgba(248, 113, 113, 0.55) !important;
+  box-shadow: 0 0 16px rgba(255, 0, 0, 0.15);
+}
+
 @media (max-width: 640px) {
   .cliente-cadastro-v2__title-row {
     flex-wrap: wrap;
@@ -27884,6 +27911,12 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   flex-direction: column;
   gap: 28px;
   width: 100%;
+}
+
+.cliente-detalhe-v2--devedor .cliente-detalhe-v2__card--info {
+  background: rgba(180, 24, 24, 0.22) !important;
+  border-color: rgba(248, 113, 113, 0.55) !important;
+  box-shadow: 0 0 16px rgba(255, 0, 0, 0.15);
 }
 
 .cliente-detalhe-v2__breadcrumb {
