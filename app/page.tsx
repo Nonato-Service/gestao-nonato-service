@@ -2526,6 +2526,8 @@ type FechamentoItem = {
   valorUnitario: number
   valorTotal: number
   origem?: 'relatorio' | 'manual'
+  /** Nota curta visível para o cliente (itens manuais / peças sem orçamento) */
+  infoAdicional?: string
   /** Apenas para item Diárias: false = não cobrar diária ao cliente (Sim/Não) */
   cobrarDiaria?: boolean
 }
@@ -7977,6 +7979,15 @@ export default function Dashboard() {
   const [fechamentoOsConsultaInput, setFechamentoOsConsultaInput] = useState('')
   const [fechamentoPdfModelo, setFechamentoPdfModelo] = useState<number>(1) // 1-8 modelos de PDF
   const [modalVisualizarDespesasBiblioteca, setModalVisualizarDespesasBiblioteca] = useState<{ relatorio: RelatorioServico; itens: FechamentoItem[] } | null>(null)
+  type FechamentoPecaModalLinha = {
+    pecaKey: string
+    codigo: string
+    descricao: string
+    quantidade: number
+    valorUnitario: number
+    infoAdicional: string
+  }
+  const [modalPecasFechamentoLinhas, setModalPecasFechamentoLinhas] = useState<FechamentoPecaModalLinha[] | null>(null)
   // Biblioteca de Relatórios: pesquisa por cliente e expandir/retrair todos
   const [buscaBibliotecaRelatoriosCliente, setBuscaBibliotecaRelatoriosCliente] = useState('')
   const [bibliotecaRelatoriosClientesExpandidos, setBibliotecaRelatoriosClientesExpandidos] = useState<Set<string>>(new Set())
@@ -14925,6 +14936,8 @@ export default function Dashboard() {
       const sv = i.servicoId ? servicos.find(s => s.id === i.servicoId) : null
       const cod = ((i.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—').toString()
       const desc = (i.descricao || '').trim() || '—'
+      const infoExtra = (i.infoAdicional || '').trim()
+      const descCompleta = infoExtra ? `${desc} (${infoExtra})` : desc
       const qtd =
         i.tipoCobranca === 'hora'
           ? `${i.quantidade.toFixed(2)} h`
@@ -14932,7 +14945,7 @@ export default function Dashboard() {
             ? `${i.quantidade.toFixed(0)} km`
             : String(i.quantidade)
       const vl = i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal
-      return `  • ${cod} — ${desc} | ${qtd} × ${i.valorUnitario.toFixed(2)} € = ${vl.toFixed(2)} €`
+      return `  • ${cod} — ${descCompleta} | ${qtd} × ${i.valorUnitario.toFixed(2)} € = ${vl.toFixed(2)} €`
     })
     const textoPlano = [
       titulo,
@@ -46566,6 +46579,7 @@ A1;Peça exemplo;10`}
             valorUnitario: 0,
             valorTotal: 0,
             origem: 'manual',
+            infoAdicional: '',
           }
           setFechamentosRelatorios(prev => {
             const list = buildItensParaExibirFromSalvos(prev[rid])
@@ -46590,14 +46604,51 @@ A1;Peça exemplo;10`}
             )
             return
           }
-          setFechamentosRelatorios(prev => {
+          setModalPecasFechamentoLinhas(
+            pecasNovas.map((p, idx) => {
+              const bib = pecasBiblioteca.find(
+                (b) => String(b.codigo ?? '').trim().toLowerCase() === String(p.codigo ?? '').trim().toLowerCase()
+              )
+              const valorUnit = bib?.preco ? parseFloat(String(bib.preco).replace(',', '.')) || 0 : 0
+              const qtd = parseFloat(String(p.quantidade ?? '')) || 1
+              const pecaKey = p.id || String(idx)
+              return {
+                pecaKey,
+                codigo: p.codigo || '',
+                descricao: p.descricao || p.codigo || 'Peça',
+                quantidade: qtd,
+                valorUnitario: valorUnit,
+                infoAdicional: '',
+              }
+            })
+          )
+        }
+        const confirmarModalPecasFechamento = () => {
+          if (!relatorioSelecionado || !modalPecasFechamentoLinhas?.length) return
+          const rid = relatorioSelecionado.id
+          const novosItens: FechamentoItem[] = modalPecasFechamentoLinhas.map((linha) => {
+            const qtd = linha.quantidade > 0 ? linha.quantidade : 1
+            const vu = Math.max(0, linha.valorUnitario || 0)
+            return {
+              id: `peca-${linha.pecaKey}`,
+              descricao: linha.descricao,
+              cod: linha.codigo || undefined,
+              tipoCobranca: 'unidade',
+              quantidade: qtd,
+              valorUnitario: vu,
+              valorTotal: Math.round(qtd * vu * 100) / 100,
+              origem: 'manual',
+              infoAdicional: linha.infoAdicional.trim() || undefined,
+            }
+          })
+          setFechamentosRelatorios((prev) => {
             const list = buildItensParaExibirFromSalvos(prev[rid])
-            const novosItens = buildItensFechamentoPecasRelatorio(pecasNovas)
             const nova = [...list, ...novosItens]
             const next = { ...prev, [rid]: nova }
             void saveData('nonato-fechamentos-relatorios', next)
             return next
           })
+          setModalPecasFechamentoLinhas(null)
         }
         const temPecasInstaladasNoRelatorio = (relatorioSelecionado?.pecasInstaladas?.length ?? 0) > 0
         const removerItem = (id: string) => {
@@ -46644,9 +46695,17 @@ A1;Peça exemplo;10`}
                 .toString()
                 .replace(/</g, '&lt;')
             const desc = (item.descricao || '').replace(/</g, '&lt;')
+            const infoExtra = (item.infoAdicional || '').trim().replace(/</g, '&lt;')
+            const descHtml = infoExtra
+              ? `${desc}<div style="font-size:10px;color:#888;margin-top:4px;font-style:italic">${infoExtra}</div>`
+              : desc
             const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
             const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
-            return `<tr><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;font-weight:600;color:inherit">${cod}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px">${desc}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
+            const vuLinha =
+              item.origem === 'manual' || item.id.startsWith('peca-') || item.id.startsWith('m')
+                ? normalizeServicoValorStored(item.valorUnitario)
+                : item.valorUnitario
+            return `<tr><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;font-weight:600;color:inherit">${cod}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px">${descHtml}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${vuLinha.toFixed(2)} €</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
           }).join('')
           const esc = (s: string) =>
             String(s ?? '')
@@ -47353,6 +47412,7 @@ A1;Peça exemplo;10`}
                         const cobrarDiaria = eDiarias ? (item.cobrarDiaria !== false) : true
                         const valorUnitExibir = (() => {
                           let v = normalizeServicoValorStored(item.valorUnitario)
+                          if (eManual) return v
                           if (v > 0) return v
                           const tpl = getServicoParaLinhaFechamento(
                             servicos as ServicoCadastroFechamentoMin[],
@@ -47376,7 +47436,7 @@ A1;Peça exemplo;10`}
                             return Math.round(q * valorUnitExibir * 100) / 100
                           }
                           if (eManual && (item.tipoCobranca === 'unidade' || item.tipoCobranca === 'valor-fixo')) {
-                            return Math.round((item.quantidade || 0) * valorUnitExibir * 100) / 100
+                            return Math.round((item.quantidade || 0) * normalizeServicoValorStored(item.valorUnitario) * 100) / 100
                           }
                           return normalizeServicoValorStored(item.valorTotal)
                         })()
@@ -47385,15 +47445,31 @@ A1;Peça exemplo;10`}
                           <td style={{ padding: '10px 8px', color: '#00c853', fontWeight: 600 }}>{codExibir}</td>
                           <td style={{ padding: '10px 8px', minWidth: '160px', maxWidth: 'min(480px, 55vw)', whiteSpace: 'normal', wordBreak: 'break-word', color: '#e8e8e8' }}>
                             {eManual ? (
-                              <input
-                                type="text"
-                                value={item.descricao}
-                                onChange={(e) => atualizarItem(item.id, { descricao: e.target.value })}
-                                style={{ width: '100%', minWidth: '120px', padding: '6px', background: '#484848', border: '1px solid #444', borderRadius: '4px', color: '#fff' }}
-                                placeholder={(safeT as any)?.descricao || 'Descrição'}
-                              />
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <input
+                                  type="text"
+                                  value={item.descricao}
+                                  onChange={(e) => atualizarItem(item.id, { descricao: e.target.value })}
+                                  style={{ width: '100%', minWidth: '120px', padding: '6px', background: '#484848', border: '1px solid #444', borderRadius: '4px', color: '#fff' }}
+                                  placeholder={(safeT as any)?.descricao || 'Descrição'}
+                                />
+                                <input
+                                  type="text"
+                                  value={item.infoAdicional || ''}
+                                  onChange={(e) => atualizarItem(item.id, { infoAdicional: e.target.value })}
+                                  style={{ width: '100%', minWidth: '120px', padding: '5px 6px', background: 'rgba(255,193,7,0.06)', border: '1px solid rgba(255,193,7,0.35)', borderRadius: '4px', color: '#ffe082', fontSize: '11px' }}
+                                  placeholder={(safeT as any)?.fechamentoInfoAdicionalPlaceholder || 'Informação adicional para o cliente (motivo do adicional)'}
+                                />
+                              </div>
                             ) : (
-                              nomeExibir
+                              <>
+                                {nomeExibir}
+                                {(item.infoAdicional || '').trim() ? (
+                                  <div style={{ fontSize: '11px', color: '#ffc107', marginTop: '4px', fontStyle: 'italic' }}>
+                                    {(item.infoAdicional || '').trim()}
+                                  </div>
+                                ) : null}
+                              </>
                             )}
                           </td>
                           <td style={{ padding: '10px 8px', textAlign: 'right' }}>
@@ -47416,7 +47492,26 @@ A1;Peça exemplo;10`}
                             )}
                           </td>
                           <td style={{ padding: '10px 8px', textAlign: 'right' }}>
-                            {itemFixoDoRelatorio ? (
+                            {eManual ? (
+                              <input
+                                type="number"
+                                step="0.01"
+                                min={0}
+                                value={item.valorUnitario === 0 ? '' : item.valorUnitario}
+                                onChange={(e) => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })}
+                                style={{
+                                  width: '92px',
+                                  padding: '6px',
+                                  background: item.valorUnitario <= 0 ? 'rgba(255,193,7,0.1)' : '#484848',
+                                  border: item.valorUnitario <= 0 ? '1px solid #ffc107' : '1px solid #444',
+                                  borderRadius: '4px',
+                                  color: '#fff',
+                                  textAlign: 'right',
+                                }}
+                                placeholder={(safeT as any)?.inserirValorEuro || 'Valor €'}
+                                title={(safeT as any)?.inserirValorEuro || 'Valor €'}
+                              />
+                            ) : itemFixoDoRelatorio ? (
                               <span style={{ color: valorUnitExibir > 0 ? '#ccc' : '#ff8800' }}>
                                 {valorUnitExibir.toFixed(2)} €
                               </span>
@@ -47682,6 +47777,145 @@ A1;Peça exemplo;10`}
                   </div>
                 </div>
               </>
+            )}
+            {modalPecasFechamentoLinhas && modalPecasFechamentoLinhas.length > 0 && (
+              <div
+                role="dialog"
+                aria-modal="true"
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  zIndex: 10050,
+                  background: 'rgba(0,0,0,0.72)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '16px',
+                }}
+                onClick={() => setModalPecasFechamentoLinhas(null)}
+              >
+                <div
+                  style={{
+                    width: '100%',
+                    maxWidth: '720px',
+                    maxHeight: '90vh',
+                    overflow: 'auto',
+                    background: '#2a2a2a',
+                    border: '1px solid rgba(255,193,7,0.45)',
+                    borderRadius: '14px',
+                    padding: '20px 22px',
+                    boxShadow: '0 16px 48px rgba(0,0,0,0.55)',
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 style={{ margin: '0 0 8px', color: '#ffc107', fontSize: '17px' }}>
+                    🔩 {(safeT as any)?.modalPecasFechamentoTitulo || 'Peças instaladas — quantidade e valor'}
+                  </h3>
+                  <p style={{ margin: '0 0 16px', color: '#bbb', fontSize: '13px', lineHeight: 1.45 }}>
+                    {(safeT as any)?.modalPecasFechamentoSub ||
+                      'Indique a quantidade e o valor de cada peça. Sem orçamento, preencha o valor manualmente.'}
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {modalPecasFechamentoLinhas.map((linha, idx) => (
+                      <div
+                        key={linha.pecaKey}
+                        style={{
+                          padding: '12px 14px',
+                          borderRadius: '10px',
+                          border: '1px solid rgba(255,255,255,0.12)',
+                          background: 'rgba(0,0,0,0.2)',
+                        }}
+                      >
+                        <div style={{ fontWeight: 600, color: '#fff', marginBottom: '4px' }}>{linha.descricao}</div>
+                        {linha.codigo ? (
+                          <div style={{ fontSize: '11px', color: '#00c853', marginBottom: '10px' }}>
+                            {(safeT as any)?.codigo || 'Código'}: {linha.codigo}
+                          </div>
+                        ) : null}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '10px' }}>
+                          <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', color: '#aaa' }}>
+                            {(safeT as any)?.quantidade || 'Quantidade'}
+                            <input
+                              type="number"
+                              min={0}
+                              step="1"
+                              value={linha.quantidade === 0 ? '' : linha.quantidade}
+                              onChange={(e) => {
+                                const q = parseFloat(e.target.value) || 0
+                                setModalPecasFechamentoLinhas((prev) =>
+                                  prev ? prev.map((l, i) => (i === idx ? { ...l, quantidade: q } : l)) : prev
+                                )
+                              }}
+                              style={{ padding: '8px', background: '#484848', border: '1px solid #555', borderRadius: '6px', color: '#fff' }}
+                            />
+                          </label>
+                          <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', color: '#aaa' }}>
+                            {(safeT as any)?.valorUnitario || 'Valor unit.'} € *
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={linha.valorUnitario === 0 ? '' : linha.valorUnitario}
+                              onChange={(e) => {
+                                const v = parseFloat(e.target.value) || 0
+                                setModalPecasFechamentoLinhas((prev) =>
+                                  prev ? prev.map((l, i) => (i === idx ? { ...l, valorUnitario: v } : l)) : prev
+                                )
+                              }}
+                              placeholder={(safeT as any)?.inserirValorEuro || 'Valor €'}
+                              style={{
+                                padding: '8px',
+                                background: linha.valorUnitario <= 0 ? 'rgba(255,193,7,0.1)' : '#484848',
+                                border: linha.valorUnitario <= 0 ? '1px solid #ffc107' : '1px solid #555',
+                                borderRadius: '6px',
+                                color: '#fff',
+                              }}
+                            />
+                          </label>
+                        </div>
+                        <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', color: '#aaa', marginTop: '10px' }}>
+                          {(safeT as any)?.fechamentoInfoAdicionalCliente || 'Info p/ cliente (opcional)'}
+                          <input
+                            type="text"
+                            value={linha.infoAdicional}
+                            onChange={(e) => {
+                              setModalPecasFechamentoLinhas((prev) =>
+                                prev ? prev.map((l, i) => (i === idx ? { ...l, infoAdicional: e.target.value } : l)) : prev
+                              )
+                            }}
+                            placeholder={(safeT as any)?.fechamentoInfoAdicionalPlaceholder || 'Motivo / nota para o cliente'}
+                            style={{ padding: '8px', background: '#484848', border: '1px solid #555', borderRadius: '6px', color: '#ffe082', fontSize: '12px' }}
+                          />
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'flex-end', marginTop: '18px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setModalPecasFechamentoLinhas(null)}
+                      style={{ padding: '10px 18px', borderRadius: '8px', border: '1px solid #555', background: 'transparent', color: '#ccc', cursor: 'pointer' }}
+                    >
+                      {(safeT as any)?.cancelar || 'Cancelar'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmarModalPecasFechamento}
+                      style={{
+                        padding: '10px 18px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(0,200,83,0.6)',
+                        background: 'rgba(0,200,83,0.25)',
+                        color: '#00c853',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {(safeT as any)?.confirmarAdicionarPecas || 'Adicionar ao fechamento'}
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         );
