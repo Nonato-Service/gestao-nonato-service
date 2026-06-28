@@ -22496,9 +22496,123 @@ export default function Dashboard() {
     return vendidos
   }
 
-  const handleSaveRelatorioServico = () => {
-    const saved = salvarRelatorioServicoAtual()
-    if (saved?.servicoConcluido) arquivarRelatorioConcluidoNaBiblioteca(saved)
+  function buildItensFechamentoBaseRelatorio(r: RelatorioServico): FechamentoItem[] {
+    const hhmmToDecimal = (s: string): number => {
+      const raw = String(s ?? '').trim()
+      if (!raw) return 0
+      if (!raw.includes(':')) {
+        const n = parseFloat(raw.replace(',', '.'))
+        return Number.isFinite(n) ? n : 0
+      }
+      const parts = raw.split(':').map((p) => p.trim())
+      const h = parseInt(parts[0], 10) || 0
+      const m = parseInt(parts[1] ?? '0', 10) || 0
+      return h + m / 60
+    }
+    const dias = r.diasTrabalho || []
+    const totais = calcularTotais(dias)
+    const tAny = totais as typeof totais & {
+      horasTrabalhoMinutos?: number
+      horasViagemIdaMinutos?: number
+      horasViagemRetornoMinutos?: number
+    }
+    const minutosParaHorasDecimal = (min: number | undefined): number => {
+      if (min == null || !Number.isFinite(min)) return 0
+      return Math.round(min) / 60
+    }
+    const grupoId = fechamentoGrupoPorRelatorioId[r.id] || null
+    const base: FechamentoItem[] = [
+      {
+        id: 'ht',
+        descricao: t.horasTrabalho || 'Horas de Trabalho',
+        tipoCobranca: 'hora',
+        quantidade:
+          typeof tAny.horasTrabalhoMinutos === 'number'
+            ? minutosParaHorasDecimal(tAny.horasTrabalhoMinutos)
+            : hhmmToDecimal(totais.horasTrabalho),
+        valorUnitario: 0,
+        valorTotal: 0,
+        origem: 'relatorio',
+      },
+      {
+        id: 'km',
+        descricao: t.kmsPercorridos || "Km's Percorridos",
+        tipoCobranca: 'km',
+        quantidade: parseFloat(totais.kmsPercorridos) || 0,
+        valorUnitario: 0,
+        valorTotal: 0,
+        origem: 'relatorio',
+      },
+      {
+        id: 'diarias',
+        descricao: t.diarias || 'Diárias',
+        tipoCobranca: 'diarias',
+        quantidade: dias.length,
+        valorUnitario: 0,
+        valorTotal: 0,
+        origem: 'relatorio',
+        cobrarDiaria: true,
+      },
+      {
+        id: 'hida',
+        descricao: t.horasViagemIda || 'Horas de Viagem de Ida',
+        tipoCobranca: 'hora',
+        quantidade:
+          typeof tAny.horasViagemIdaMinutos === 'number'
+            ? minutosParaHorasDecimal(tAny.horasViagemIdaMinutos)
+            : hhmmToDecimal(totais.horasViagemIda),
+        valorUnitario: 0,
+        valorTotal: 0,
+        origem: 'relatorio',
+      },
+      {
+        id: 'hret',
+        descricao: t.horasViagemRetorno || 'Horas de Viagem de Retorno',
+        tipoCobranca: 'hora',
+        quantidade:
+          typeof tAny.horasViagemRetornoMinutos === 'number'
+            ? minutosParaHorasDecimal(tAny.horasViagemRetornoMinutos)
+            : hhmmToDecimal(totais.horasViagemRetorno),
+        valorUnitario: 0,
+        valorTotal: 0,
+        origem: 'relatorio',
+      },
+    ]
+    return base.map((item) =>
+      enriquecerLinhaFechamentoComCadastro(
+        item,
+        servicos as ServicoCadastroFechamentoMin[],
+        undefined,
+        grupoId
+      )
+    )
+  }
+
+  /** Ao marcar «Serviço concluído»: arquiva na Biblioteca (para o equipamento), regista fechamento base e para o destaque laranja. */
+  function arquivarRelatorioConcluidoNaBiblioteca(rel: RelatorioServico) {
+    if (!rel.servicoConcluido) return
+    const rid = rel.id
+    setFechamentosRelatorios((prev) => {
+      const cur = prev[rid]
+      if (Array.isArray(cur) && cur.length > 0) return prev
+      const next = { ...prev, [rid]: buildItensFechamentoBaseRelatorio(rel) }
+      void saveData('nonato-fechamentos-relatorios', next)
+      return next
+    })
+    setFechamentosGuardadosBibliotecaIds((prev) => {
+      if (prev.includes(rid)) return prev
+      const next = [...prev, rid]
+      void saveData('nonato-fechamentos-guardados-biblioteca', next)
+      return next
+    })
+    if (rel.clienteId) {
+      setClientes((prev) => {
+        const updated = aplicarRelatorioNaBibliotecaCliente(prev, rel, equipamentos)
+        if (updated === prev) return prev
+        void saveData('nonato-clientes', updated)
+        return updated
+      })
+    }
   }
 
   const salvarRelatorioServicoAtual = (opts?: { silencioso?: boolean }): RelatorioServico | null => {
@@ -22605,10 +22719,17 @@ export default function Dashboard() {
       descricaoTrabalho: ''
     })
     setEditingRelatorioServico(savedRelatorio)
+    if (savedRelatorio.servicoConcluido) {
+      arquivarRelatorioConcluidoNaBiblioteca(savedRelatorio)
+    }
     if (!opts?.silencioso) {
       alert(t.relatorioServicoSaved || 'Relatório de serviço salvo com sucesso!')
     }
     return savedRelatorio
+  }
+
+  const handleSaveRelatorioServico = () => {
+    salvarRelatorioServicoAtual()
   }
 
   // Função para salvar e gerar o relatório
@@ -23235,125 +23356,6 @@ export default function Dashboard() {
     setSelecionarPecaParaRelatorioServico(false)
     setPecaSelecionadaParaRelatorio(null)
     openTab('relatorio-servico', getTabTitle('relatorio-servico'))
-  }
-
-  const buildItensFechamentoBaseRelatorio = (r: RelatorioServico): FechamentoItem[] => {
-    const hhmmToDecimal = (s: string): number => {
-      const raw = String(s ?? '').trim()
-      if (!raw) return 0
-      if (!raw.includes(':')) {
-        const n = parseFloat(raw.replace(',', '.'))
-        return Number.isFinite(n) ? n : 0
-      }
-      const parts = raw.split(':').map((p) => p.trim())
-      const h = parseInt(parts[0], 10) || 0
-      const m = parseInt(parts[1] ?? '0', 10) || 0
-      return h + m / 60
-    }
-    const dias = r.diasTrabalho || []
-    const totais = calcularTotais(dias)
-    const tAny = totais as typeof totais & {
-      horasTrabalhoMinutos?: number
-      horasViagemIdaMinutos?: number
-      horasViagemRetornoMinutos?: number
-    }
-    const minutosParaHorasDecimal = (min: number | undefined): number => {
-      if (min == null || !Number.isFinite(min)) return 0
-      return Math.round(min) / 60
-    }
-    const grupoId = fechamentoGrupoPorRelatorioId[r.id] || null
-    const base: FechamentoItem[] = [
-      {
-        id: 'ht',
-        descricao: t.horasTrabalho || 'Horas de Trabalho',
-        tipoCobranca: 'hora',
-        quantidade:
-          typeof tAny.horasTrabalhoMinutos === 'number'
-            ? minutosParaHorasDecimal(tAny.horasTrabalhoMinutos)
-            : hhmmToDecimal(totais.horasTrabalho),
-        valorUnitario: 0,
-        valorTotal: 0,
-        origem: 'relatorio',
-      },
-      {
-        id: 'km',
-        descricao: t.kmsPercorridos || "Km's Percorridos",
-        tipoCobranca: 'km',
-        quantidade: parseFloat(totais.kmsPercorridos) || 0,
-        valorUnitario: 0,
-        valorTotal: 0,
-        origem: 'relatorio',
-      },
-      {
-        id: 'diarias',
-        descricao: t.diarias || 'Diárias',
-        tipoCobranca: 'diarias',
-        quantidade: dias.length,
-        valorUnitario: 0,
-        valorTotal: 0,
-        origem: 'relatorio',
-        cobrarDiaria: true,
-      },
-      {
-        id: 'hida',
-        descricao: t.horasViagemIda || 'Horas de Viagem de Ida',
-        tipoCobranca: 'hora',
-        quantidade:
-          typeof tAny.horasViagemIdaMinutos === 'number'
-            ? minutosParaHorasDecimal(tAny.horasViagemIdaMinutos)
-            : hhmmToDecimal(totais.horasViagemIda),
-        valorUnitario: 0,
-        valorTotal: 0,
-        origem: 'relatorio',
-      },
-      {
-        id: 'hret',
-        descricao: t.horasViagemRetorno || 'Horas de Viagem de Retorno',
-        tipoCobranca: 'hora',
-        quantidade:
-          typeof tAny.horasViagemRetornoMinutos === 'number'
-            ? minutosParaHorasDecimal(tAny.horasViagemRetornoMinutos)
-            : hhmmToDecimal(totais.horasViagemRetorno),
-        valorUnitario: 0,
-        valorTotal: 0,
-        origem: 'relatorio',
-      },
-    ]
-    return base.map((item) =>
-      enriquecerLinhaFechamentoComCadastro(
-        item,
-        servicos as ServicoCadastroFechamentoMin[],
-        undefined,
-        grupoId
-      )
-    )
-  }
-
-  /** Ao marcar «Serviço concluído»: arquiva na Biblioteca (para o equipamento), regista fechamento base e para o destaque laranja. */
-  const arquivarRelatorioConcluidoNaBiblioteca = (rel: RelatorioServico) => {
-    if (!rel.servicoConcluido) return
-    const rid = rel.id
-    setFechamentosRelatorios((prev) => {
-      const cur = prev[rid]
-      if (Array.isArray(cur) && cur.length > 0) return prev
-      const next = { ...prev, [rid]: buildItensFechamentoBaseRelatorio(rel) }
-      void saveData('nonato-fechamentos-relatorios', next)
-      return next
-    })
-    setFechamentosGuardadosBibliotecaIds((prev) => {
-      if (prev.includes(rid)) return prev
-      const next = [...prev, rid]
-      void saveData('nonato-fechamentos-guardados-biblioteca', next)
-      return next
-    })
-    if (rel.clienteId) {
-      setClientes((prev) => {
-        const updated = aplicarRelatorioNaBibliotecaCliente(prev, rel, equipamentos)
-        if (updated === prev) return prev
-        void saveData('nonato-clientes', updated)
-        return updated
-      })
-    }
   }
 
   const concluidosReparadosRef = useRef(false)
