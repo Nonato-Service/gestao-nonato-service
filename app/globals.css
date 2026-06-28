@@ -298,12 +298,12 @@ html {
  */
 @media (max-width: 1024px) {
   html {
-    font-size: clamp(14px, 2.1vw, 16px);
+    font-size: clamp(15px, 2.35vw, 17px);
   }
 }
 @media (max-width: 600px) {
   html {
-    font-size: clamp(13px, 3.2vw, 15px);
+    font-size: clamp(15px, 3.8vw, 17px);
   }
 }
 
@@ -412,7 +412,7 @@ body,
 }
 
 /* Com zoom do browser activo: libertar overflow para poder deslocar a vista ampliada */
-@media (max-width: 1280px) {
+@media (max-width: 1024px) {
   html.mobile-browser-zoomed,
   html.mobile-browser-zoomed body,
   body.mobile-browser-zoomed {
@@ -420,7 +420,7 @@ body,
     overflow-x: auto !important;
     overflow-y: auto !important;
     max-width: none !important;
-    touch-action: auto !important;
+    touch-action: pan-x pan-y pinch-zoom !important;
     -webkit-overflow-scrolling: touch;
     height: auto !important;
     min-height: 100dvh;
@@ -432,18 +432,15 @@ body,
   html.mobile-browser-zoomed .app-compact-layout,
   html.mobile-browser-zoomed .app-layout,
   html.mobile-browser-zoomed .app-layout.mobile-browser-zoomed,
-  html.mobile-browser-zoomed .app-compact-layout.mobile-browser-zoomed,
   body.mobile-browser-zoomed .app-compact-layout,
   body.mobile-browser-zoomed .app-layout,
-  body.mobile-browser-zoomed .app-layout.mobile-browser-zoomed,
-  body.mobile-browser-zoomed .app-compact-layout.mobile-browser-zoomed {
+  body.mobile-browser-zoomed .app-layout.mobile-browser-zoomed {
     overflow: visible !important;
     height: auto !important;
     min-height: 100dvh;
     max-height: none !important;
     max-width: none !important;
-    touch-action: auto !important;
-    position: relative !important;
+    touch-action: pan-x pan-y pinch-zoom !important;
   }
 
   html.mobile-browser-zoomed .main-app-column,
@@ -463,7 +460,7 @@ body,
     overflow-y: visible !important;
     max-height: none !important;
     height: auto !important;
-    touch-action: auto !important;
+    touch-action: pan-x pan-y pinch-zoom !important;
     -webkit-overflow-scrolling: auto !important;
   }
 
@@ -472,20 +469,17 @@ body,
     max-width: none !important;
   }
 
-  /* Impedir que filhos com pan-y roubem o gesto horizontal/vertical com zoom */
   html.mobile-browser-zoomed .main-content-area *,
   html.mobile-browser-zoomed .tab-inner-scroll * {
-    touch-action: auto !important;
+    touch-action: inherit !important;
   }
 
-  /* Assinaturas/canvas: manter desenho com um dedo */
   html.mobile-browser-zoomed canvas[aria-label*='assinatura'],
   html.mobile-browser-zoomed .cb-pro__sig-canvas,
   html.mobile-browser-zoomed canvas[data-signature-canvas='true'] {
     touch-action: none !important;
   }
 
-  /* Só sem zoom: layout compacto normal */
   html:not(.mobile-browser-zoomed) .app-layout,
   html:not(.mobile-browser-zoomed) .app-compact-layout {
     max-width: 100vw !important;

@@ -1,8 +1,8 @@
 // Service Worker - Gestão Técnica Nonato Service (PWA offline)
 // Bumpar CACHE_NAME em cada deploy que altere precache / lógica offline
-const CACHE_NAME = 'nonato-pwa-v34'
+const CACHE_NAME = 'nonato-pwa-v35'
 
-const PRECACHE_ASSETS = ['/', '/icon.svg', '/manifest.json']
+const PRECACHE_ASSETS = ['/icon.svg', '/manifest.json']
 
 const OFFLINE_HTML =
   '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nonato Service</title></head><body style="background:#000;color:#0f0;font-family:sans-serif;padding:24px;text-align:center;line-height:1.5"><h1 style="margin:0 0 12px">Sem ligação</h1><p style="color:#ccc;margin:0 0 16px">Se já abriu o sistema com internet neste aparelho, volte a abrir a app — os dados locais devem carregar.</p><p style="color:#888;font-size:14px;margin:0">Na primeira utilização é necessário internet para preparar o modo offline.</p></body></html>'
