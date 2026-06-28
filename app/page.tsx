@@ -65724,7 +65724,6 @@ A1;Peça exemplo;10`}
         maxHeight: '100dvh',
         backgroundColor: '#3a3a3a',
         color: '#fff',
-        paddingBottom: openTabs.length > 0 ? 'calc(72px + env(safe-area-inset-bottom, 0px))' : '0',
         paddingTop: isDemoMode && !isCompactLayout ? '48px' : undefined
       }}
     >
