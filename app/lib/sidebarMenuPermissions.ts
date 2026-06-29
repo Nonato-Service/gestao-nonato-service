@@ -112,7 +112,7 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
     fallbackDesc: 'Checklists visíveis.',
     icon: '✅',
     items: [
-      { buttonId: 'checklist-group-default', action: 'open-checklist-hub', labelKey: 'checklistGroupTitle', fallbackLabel: 'Hub do checklist', legacyKey: 'extras' },
+      { buttonId: 'checklist-group-default', action: 'open-checklist-group', labelKey: 'checklistGroupTitle', fallbackLabel: 'Hub do checklist', legacyKey: 'extras' },
       { buttonId: 'pre-checklist-default', action: 'open-pre-checklist', labelKey: 'preChecklistSubTitle', fallbackLabel: 'Pré-checklist', legacyKey: 'extras' },
       { buttonId: 'checklist-basico-default', action: 'open-checklist-basico', labelKey: 'checklistBasicoSubTitle', fallbackLabel: 'Checklist básico', legacyKey: 'extras' },
       { buttonId: 'checklist-default', action: 'open-checklist', labelKey: 'checklistSubTitle', fallbackLabel: 'Checklist', legacyKey: 'extras' },

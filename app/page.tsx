@@ -53,7 +53,7 @@ import {
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
 import { cmpNomeCliente, ordenarClientesPorNome, localeOrdenacaoClientes } from './lib/ordenarClientes'
-import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasStrictMenuPolicy, normalizeMenuItems, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
+import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasStrictMenuPolicy, normalizeMenuItems, SIDEBAR_MENU_MODULES, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
   NONATO_CRITICAL_CADASTRO_KEYS,
   localStorageKeyHasMeaningfulCadastro,
@@ -62100,6 +62100,33 @@ A1;Peça exemplo;10`}
     return normalized
   }
 
+  /** Sub-itens da sidebar a partir do catálogo do módulo (não depende só do group guardado no browser). */
+  const getModuleSidebarEntries = (moduleId: SidebarGroup): SidebarButton[] => {
+    const mod = SIDEBAR_MENU_MODULES.find((m) => m.id === moduleId)
+    if (!mod) return getButtonsByGroup(moduleId)
+
+    const fromCatalog = mod.items
+      .filter((item) => !SIDEBAR_GROUP_LAUNCHER_IDS.has(item.buttonId))
+      .map((item, idx) => {
+        const saved = sidebarButtons.find((b) => b.id === item.buttonId)
+        if (saved) {
+          return { ...saved, group: moduleId, action: saved.action || item.action }
+        }
+        return {
+          id: item.buttonId,
+          name: item.fallbackLabel,
+          action: item.action,
+          order: idx,
+          translationKey: item.labelKey,
+          group: moduleId,
+        }
+      })
+
+    const catalogIds = new Set(fromCatalog.map((b) => b.id))
+    const extras = getButtonsByGroup(moduleId).filter((b) => !catalogIds.has(b.id))
+    return [...fromCatalog, ...extras].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  }
+
   const getSidebarGroupLabel = (group: SidebarGroup) => {
     switch (group) {
       case 'gestao-tecnica':
@@ -62377,21 +62404,8 @@ A1;Peça exemplo;10`}
         })
       }
     } else if (hubId === 'gestao-industrial') {
-      const sorted = [...getButtonsByGroup('gestao-industrial')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      const sorted = [...getModuleSidebarEntries('gestao-industrial')]
       for (const button of sorted) {
-        if (button.id === 'checklist-group-default') {
-          if (canAccessSidebarButton(button)) {
-            rows.push({
-              key: button.id,
-              title: getButtonName(button),
-              desc: descForHubRow(button.id, button.action),
-              icon: '📋',
-              action: button.action,
-              buttonId: button.id
-            })
-          }
-          continue
-        }
         if (!canAccessSidebarButton(button)) continue
         rows.push({
           key: button.id,
@@ -62403,7 +62417,7 @@ A1;Peça exemplo;10`}
         })
       }
     } else if (hubId === 'checklist-group') {
-      const sorted = [...getButtonsByGroup('checklist-group')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      const sorted = [...getModuleSidebarEntries('checklist-group')]
       for (const button of sorted) {
         if (!canAccessSidebarButton(button)) continue
         rows.push({
@@ -62487,7 +62501,23 @@ A1;Peça exemplo;10`}
         })
       }
     } else if (hubId === 'almoxarifado-main') {
-      const sorted = [...getButtonsByGroup('almoxarifado-armazem')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      const sorted = [...getModuleSidebarEntries('almoxarifado-armazem')]
+      const almoxMod = SIDEBAR_MENU_MODULES.find((m) => m.id === 'almoxarifado-armazem')
+      const launcher = almoxMod?.items.find((i) => i.buttonId === 'almoxarifado-armazem-default')
+      if (launcher) {
+        const savedLauncher = sidebarButtons.find((b) => b.id === launcher.buttonId)
+        const launcherBtn: SidebarButton = savedLauncher || {
+          id: launcher.buttonId,
+          name: launcher.fallbackLabel,
+          action: launcher.action,
+          order: -1,
+          translationKey: launcher.labelKey,
+          group: 'almoxarifado-armazem',
+        }
+        if (!sorted.some((b) => b.id === launcherBtn.id)) {
+          sorted.unshift(launcherBtn)
+        }
+      }
       const iconAlm: Record<string, string> = {
         'almoxarifado-armazem-default': '📦',
         'mapa-visual-separacao-pecas-default': '🗺️',
@@ -66602,7 +66632,7 @@ A1;Peça exemplo;10`}
 
   const renderSidebarChecklistCluster = () => {
     if (!canAccessModule('checklist-group')) return null
-    const checklistSubitens = getButtonsByGroup('checklist-group').filter((b) => canAccessSidebarButton(b))
+    const checklistSubitens = getModuleSidebarEntries('checklist-group').filter((b) => canAccessSidebarButton(b))
     const clusterActive =
       selectedSidebarButton === 'open-checklist-group' ||
       selectedSidebarButton === 'open-checklist-hub' ||
@@ -66632,11 +66662,9 @@ A1;Peça exemplo;10`}
             </span>
           ) : null}
         </button>
-        {expandedGroups.has('checklist-group') && (
+        {expandedGroups.has('checklist-group') && checklistSubitens.length > 0 && (
           <div className="sidebar-action-buttons">
-            {checklistSubitens
-              .sort((a, b) => a.order - b.order)
-              .map((subButton) => {
+            {checklistSubitens.map((subButton) => {
                 const isSubSelected = selectedSidebarButton === subButton.action || selectedSidebarButton === subButton.id
                 const chkSub = resolveActionCardDescription(
                   trCardDesc,
@@ -66672,20 +66700,6 @@ A1;Peça exemplo;10`}
                   </button>
                 )
               })}
-            {checklistSubitens.length === 0 && (
-              <p
-                style={{
-                  fontSize: '12px',
-                  opacity: 0.6,
-                  padding: '10px',
-                  fontStyle: 'italic',
-                  textAlign: 'center',
-                  color: '#ffffff',
-                }}
-              >
-                {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-              </p>
-            )}
           </div>
         )}
       </>
@@ -66694,7 +66708,7 @@ A1;Peça exemplo;10`}
 
   const renderSidebarAlmoxarifadoCluster = () => {
     if (!canAccessModule('almoxarifado-armazem')) return null
-    const almoxarifadoSubitens = getButtonsByGroup('almoxarifado-armazem').filter((b) => canAccessSidebarButton(b))
+    const almoxarifadoSubitens = getModuleSidebarEntries('almoxarifado-armazem').filter((b) => canAccessSidebarButton(b))
     const clusterActive =
       selectedSidebarButton === 'open-almoxarifado-armazem' ||
       almoxarifadoSubitens.some((b) => selectedSidebarButton === b.action || selectedSidebarButton === b.id)
@@ -66728,11 +66742,9 @@ A1;Peça exemplo;10`}
             </span>
           ) : null}
         </button>
-        {expandedGroups.has('almoxarifado-armazem') && (
+        {expandedGroups.has('almoxarifado-armazem') && almoxarifadoSubitens.length > 0 && (
           <div className="sidebar-action-buttons">
-            {almoxarifadoSubitens
-              .sort((a, b) => a.order - b.order)
-              .map((button) => {
+            {almoxarifadoSubitens.map((button) => {
                 const isSelected = selectedSidebarButton === button.action || selectedSidebarButton === button.id
                 const rowSub = resolveActionCardDescription(
                   trCardDesc,
@@ -66767,20 +66779,6 @@ A1;Peça exemplo;10`}
                   </button>
                 )
               })}
-            {almoxarifadoSubitens.length === 0 && (
-              <p
-                style={{
-                  fontSize: '12px',
-                  opacity: 0.6,
-                  padding: '10px',
-                  fontStyle: 'italic',
-                  textAlign: 'center',
-                  color: '#ffffff',
-                }}
-              >
-                {(safeT as any)?.almoxarifadoSidebarSoPrincipal || 'Abra o grupo acima para aceder ao armazém.'}
-              </p>
-            )}
           </div>
         )}
       </>
@@ -68457,12 +68455,14 @@ A1;Peça exemplo;10`}
           </button>
             )
           })()}
-          {expandedGroups.has('gestao-industrial') && (
+          {expandedGroups.has('gestao-industrial') && (() => {
+            const gestaoIndustrialSubitens = getModuleSidebarEntries('gestao-industrial').filter((button) =>
+              canAccessSidebarButton(button)
+            )
+            if (gestaoIndustrialSubitens.length === 0) return null
+            return (
             <div className="sidebar-action-buttons">
-              {getButtonsByGroup('gestao-industrial')
-                .filter((button) => canAccessSidebarButton(button) && button.id !== 'checklist-group-default' && button.id !== 'familias-grupos-default')
-                .sort((a, b) => a.order - b.order)
-                .map((button) => {
+              {gestaoIndustrialSubitens.map((button) => {
                   const isSelected = selectedSidebarButton === (button.id || button.action)
                   const indSub = resolveActionCardDescription(
                     trCardDesc,
@@ -68497,13 +68497,9 @@ A1;Peça exemplo;10`}
                     </button>
                   )
                 })}
-              {getButtonsByGroup('gestao-industrial').filter((b) => b.id !== 'checklist-group-default' && b.id !== 'familias-grupos-default').length === 0 && (
-                <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center', color: '#ffffff' }}>
-                  {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                </p>
-              )}
             </div>
-          )}
+            )
+          })()}
           </>
           )}
           {/* Manuais e Bíblia — documentação técnica industrial */}
