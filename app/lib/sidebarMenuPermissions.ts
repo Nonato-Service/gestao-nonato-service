@@ -112,7 +112,7 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
     fallbackDesc: 'Checklists visíveis.',
     icon: '✅',
     items: [
-      { buttonId: 'checklist-group-default', action: 'open-checklist-group', labelKey: 'checklistGroupTitle', fallbackLabel: 'Hub do checklist', legacyKey: 'extras' },
+      { buttonId: 'checklist-group-default', action: 'open-checklist-hub', labelKey: 'checklistGroupTitle', fallbackLabel: 'Hub do checklist', legacyKey: 'extras' },
       { buttonId: 'pre-checklist-default', action: 'open-pre-checklist', labelKey: 'preChecklistSubTitle', fallbackLabel: 'Pré-checklist', legacyKey: 'extras' },
       { buttonId: 'checklist-basico-default', action: 'open-checklist-basico', labelKey: 'checklistBasicoSubTitle', fallbackLabel: 'Checklist básico', legacyKey: 'extras' },
       { buttonId: 'checklist-default', action: 'open-checklist', labelKey: 'checklistSubTitle', fallbackLabel: 'Checklist', legacyKey: 'extras' },
@@ -120,7 +120,7 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
       { buttonId: 'ordem-preparacao-default', action: 'open-ordem-preparacao', labelKey: 'ordemPreparacaoTitle', fallbackLabel: 'Ordem de preparação', legacyKey: 'extras' },
       { buttonId: 'formularios-checklist-tecnicos-default', action: 'open-formularios-checklist-tecnicos', labelKey: 'formulariosChecklistTecnicosTitle', fallbackLabel: 'Formulários técnicos', legacyKey: 'extras' },
       { buttonId: 'verificacao-final-entrega-default', action: 'open-verificacao-final-entrega', labelKey: 'verificacaoFinalEntregaTitle', fallbackLabel: 'Verificação final', legacyKey: 'extras' },
-      { buttonId: 'familias-grupos-default', action: 'open-familias-grupos', labelKey: 'familiasGruposTitle', fallbackLabel: 'Famílias e grupos (checklist)', legacyKey: 'extras' },
+      { buttonId: 'familias-grupos-default', action: 'open-familias-grupos', labelKey: 'familiasGruposTitle', fallbackLabel: 'Famílias e grupos', legacyKey: 'equipamentos' },
     ],
   },
   {

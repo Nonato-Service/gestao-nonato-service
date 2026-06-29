@@ -82,19 +82,12 @@
   --ns-btn-orange-bg-hover: rgba(249, 115, 22, 0.22);
   --ns-btn-orange-border-hover: rgba(251, 146, 60, 0.55);
   --ns-btn-orange-text-hover: #fed7aa;
-  --ns-btn-neutral-bg: #383838;
-  --ns-btn-neutral-border: rgba(255, 255, 255, 0.1);
-  --ns-btn-neutral-text: rgba(255, 255, 255, 0.88);
-  --ns-btn-neutral-bg-hover: #404040;
-  --ns-btn-neutral-border-hover: rgba(255, 255, 255, 0.18);
+  --ns-btn-neutral-bg: rgba(255, 255, 255, 0.06);
+  --ns-btn-neutral-border: rgba(255, 255, 255, 0.14);
+  --ns-btn-neutral-text: rgba(255, 255, 255, 0.85);
+  --ns-btn-neutral-bg-hover: rgba(255, 255, 255, 0.1);
+  --ns-btn-neutral-border-hover: rgba(255, 255, 255, 0.22);
   --ns-btn-neutral-text-hover: #ffffff;
-  /** Cinza de preenchimento dentro de botões (tabs, painéis, agenda) */
-  --ns-btn-inner-fill: #404040;
-  --ns-btn-inner-fill-hover: var(--ns-btn-inner-fill-hover);
-  --ns-btn-inner-fill-deep: #383838;
-  /** Select / idioma — fundo do campo e lista dropdown */
-  --ns-select-inner-bg: #383838;
-  --ns-select-option-bg: #363636;
   /* Micro-interação: ligeiramente «elástico» no hover (botões) */
   --ns-ease-spring: cubic-bezier(0.34, 1.25, 0.64, 1);
   --ns-shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.35);
@@ -110,13 +103,13 @@
  */
 select {
   color-scheme: dark;
-  background-color: var(--ns-select-inner-bg);
+  background-color: var(--ns-input-bg);
   color: var(--ns-text);
 }
 
 select option,
 select optgroup {
-  background-color: var(--ns-select-option-bg);
+  background-color: #404040;
   color: #f5f5f5;
 }
 
@@ -128,12 +121,10 @@ select option:hover {
 
 .ns-lang-select {
   color-scheme: dark;
-  background-color: var(--ns-select-inner-bg);
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .ns-lang-select option {
-  background-color: var(--ns-select-option-bg);
+  background-color: #404040;
   color: #ffffff;
 }
 
@@ -227,7 +218,7 @@ input[type='date'] {
   width: 100%;
   box-sizing: border-box;
   padding: 12px 2.5rem 12px 12px;
-  background-color: var(--ns-btn-inner-fill);
+  background-color: #484848;
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
@@ -240,7 +231,7 @@ input[type='date'] {
 
 .ns-datetime-input[type='time'],
 .ns-datetime-input[type='datetime-local'] {
-  background-color: var(--ns-btn-inner-fill);
+  background-color: #484848;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='12' cy='12' r='9' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M12 7v5l3.5 2.5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
@@ -248,7 +239,7 @@ input[type='date'] {
 }
 
 .ns-datetime-input[type='date'] {
-  background-color: var(--ns-btn-inner-fill);
+  background-color: #484848;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect x='3' y='5' width='18' height='16' rx='2' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
@@ -256,11 +247,11 @@ input[type='date'] {
 }
 
 .ns-datetime-input--muted {
-  background-color: var(--ns-btn-inner-fill-deep);
+  background-color: #404040;
 }
 
 .ns-datetime-input--muted[type='time'] {
-  background-color: var(--ns-btn-inner-fill-deep);
+  background-color: #404040;
 }
 
 @media (max-width: 1024px) {
@@ -1682,11 +1673,11 @@ body,
   --sidebar-accent-muted: rgba(0, 200, 83, 0.16);
   --sidebar-active-bg: rgba(0, 120, 60, 0.38);
   --sidebar-active-border: rgba(0, 200, 83, 0.58);
-  --sidebar-inactive-bg: rgba(50, 50, 50, 0.98);
-  --sidebar-inactive-border: rgba(80, 80, 80, 0.92);
-  --sidebar-surface: rgba(60, 60, 60, 0.98);
-  --sidebar-drawer-bg0: rgba(46, 46, 46, 0.98);
-  --sidebar-drawer-bg1: rgba(40, 40, 40, 0.99);
+  --sidebar-inactive-bg: rgba(58, 58, 58, 0.96);
+  --sidebar-inactive-border: rgba(92, 92, 92, 0.92);
+  --sidebar-surface: rgba(69, 69, 69, 0.98);
+  --sidebar-drawer-bg0: rgba(58, 58, 58, 0.98);
+  --sidebar-drawer-bg1: rgba(54, 54, 54, 0.99);
   --sidebar-drawer-rail: rgba(0, 200, 83, 0.48);
   --sidebar-subtle-line: rgba(255, 255, 255, 0.07);
   --sidebar-text: #f4f7f5;
@@ -1843,9 +1834,9 @@ body,
   margin-bottom: 12px;
   padding: 12px;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.32);
+  background: rgba(0, 0, 0, 0.22);
   border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .sidebar-extra-lang-label {
   display: block;
@@ -1854,23 +1845,22 @@ body,
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(255, 255, 255, 0.55);
 }
 .sidebar-extra-lang-select {
   width: 100%;
   padding: 10px 12px;
-  background-color: var(--ns-select-inner-bg);
+  background-color: rgba(18, 22, 20, 0.98);
   color: #f4f7f5;
   border: 1px solid rgba(0, 200, 83, 0.28);
   border-radius: 10px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .sidebar-extra-lang-select:hover {
   border-color: rgba(0, 200, 83, 0.45);
-  background-color: var(--ns-btn-inner-fill-deep);
 }
 .sidebar-extra-lang-select:focus-visible {
   outline: 2px solid rgba(0, 200, 83, 0.65);
@@ -2114,7 +2104,7 @@ body,
   width: 6px;
 }
 .sidebar-tip-flyout::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #3a3a3a 0%, var(--ns-btn-inner-fill) 100%);
+  background: linear-gradient(180deg, #3a3a3a 0%, #484848 100%);
   border-radius: 6px;
   border: 1px solid rgba(0, 200, 83, 0.18);
 }
@@ -2723,7 +2713,7 @@ svg.ns-vivid-icon.assist-field-glyph {
   border-left-color: rgba(0, 200, 83, 0.28);
   border-top-color: rgba(255, 255, 255, 0.05);
   border-radius: 0 10px 10px 10px;
-  background: linear-gradient(180deg, rgba(28, 28, 28, 0.98) 0%, rgba(22, 22, 22, 0.99) 100%);
+  background: linear-gradient(180deg, rgba(32, 32, 32, 0.98) 0%, rgba(26, 26, 26, 0.99) 100%);
   gap: 6px;
   animation: sidebar-nav-drawer-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -4874,7 +4864,7 @@ body {
     border-radius: 6px;
     cursor: pointer;
     border: 1px solid rgba(0, 200, 83, 0.4);
-    background: var(--ns-btn-inner-fill) !important;
+    background: #484848 !important;
     color: #fff !important;
     -webkit-text-fill-color: #ffffff !important;
     -webkit-appearance: none !important;
@@ -5737,7 +5727,7 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
     border-radius: 6px !important;
     cursor: pointer !important;
     border: 1px solid rgba(0, 200, 83, 0.45) !important;
-    background: var(--ns-btn-inner-fill) !important;
+    background: #484848 !important;
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
     transition: background 0.2s ease, border-color 0.2s ease !important;
@@ -6278,7 +6268,7 @@ a:focus-visible {
   flex-wrap: wrap;
   gap: 8px;
   padding: 14px 16px;
-  background: var(--ns-btn-inner-fill);
+  background: #484848;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 14px;
   position: sticky;
@@ -6993,7 +6983,7 @@ a:focus-visible {
 .relatorio-equipamento-card {
   padding: 12px;
   border-radius: 8px;
-  background: var(--ns-btn-inner-fill-hover);
+  background: #464646;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -9195,7 +9185,7 @@ a:focus-visible {
 .tab-glass-hero {
   margin-bottom: clamp(16px, 4vw, 28px);
   padding: clamp(20px, 3vw, 28px);
-  background: var(--ns-btn-inner-fill);
+  background: #484848;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: none;
@@ -9259,7 +9249,7 @@ a:focus-visible {
   gap: 12px;
   margin-bottom: 20px;
   padding: 16px;
-  background: var(--ns-btn-inner-fill);
+  background: #484848;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
 }
@@ -9698,7 +9688,7 @@ button.dia-trabalho-acao-btn--del:hover {
 .financeiro-despesas-bib-card {
   padding: 14px 16px;
   border-radius: 10px;
-  background: var(--ns-btn-inner-fill-hover);
+  background: #464646;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-left-width: 5px;
   border-left-color: rgba(148, 163, 184, 0.45);
@@ -9706,22 +9696,22 @@ button.dia-trabalho-acao-btn--del:hover {
 .financeiro-despesas-bib-card--amarelo {
   border-left-color: var(--fin-cor-amarelo);
   border-color: var(--fin-cor-amarelo-borda);
-  background: linear-gradient(90deg, rgba(250, 204, 21, 0.14) 0%, var(--ns-btn-inner-fill-hover) 24%);
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.14) 0%, #464646 24%);
 }
 .financeiro-despesas-bib-card--azul {
   border-left-color: var(--fin-cor-azul);
   border-color: var(--fin-cor-azul-borda);
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.14) 0%, var(--ns-btn-inner-fill-hover) 24%);
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.14) 0%, #464646 24%);
 }
 .financeiro-despesas-bib-card--verde {
   border-left-color: var(--fin-cor-verde);
   border-color: var(--fin-cor-verde-borda);
-  background: linear-gradient(90deg, rgba(74, 222, 128, 0.12) 0%, var(--ns-btn-inner-fill-hover) 24%);
+  background: linear-gradient(90deg, rgba(74, 222, 128, 0.12) 0%, #464646 24%);
 }
 .financeiro-despesas-bib-card--vermelho {
   border-left-color: var(--fin-cor-vermelho);
   border-color: var(--fin-cor-vermelho-borda);
-  background: linear-gradient(90deg, rgba(248, 113, 113, 0.16) 0%, var(--ns-btn-inner-fill-hover) 24%);
+  background: linear-gradient(90deg, rgba(248, 113, 113, 0.16) 0%, #464646 24%);
 }
 .financeiro-despesas-bib-card__badge {
   display: inline-flex;
@@ -9952,7 +9942,7 @@ button.dia-trabalho-acao-btn--del:hover {
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid rgba(0, 200, 83, 0.3);
-  background: var(--ns-btn-inner-fill);
+  background: #484848;
   color: #fff;
   font-size: 14px;
 }
@@ -11331,7 +11321,7 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 
 /* ========== Painel Administrador (aba + modal) — visual vivo e coerente ========== */
 .admin-shell {
-  --admin-surface: var(--ns-btn-inner-fill);
+  --admin-surface: #484848;
   --admin-card: #444444;
   --admin-border: rgba(255, 255, 255, 0.12);
   --admin-border-hover: rgba(255, 255, 255, 0.22);
@@ -22255,7 +22245,7 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   margin-bottom: 20px;
   padding: 10px 12px;
   border-radius: 16px;
-  background: var(--ns-btn-inner-fill);
+  background: #484848;
   border: 1px solid #5a5a5a;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
 }
@@ -22624,7 +22614,7 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   width: 100%;
   box-sizing: border-box;
   padding: 8px 10px;
-  background-color: var(--ns-btn-inner-fill);
+  background-color: #484848;
   color: #fff;
   border: 1px solid rgba(0, 168, 107, 0.3);
   border-radius: 4px;
@@ -22682,7 +22672,7 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 .biblioteca-pecas-hub__select {
   width: 100%;
   padding: 10px 12px;
-  background: linear-gradient(180deg, var(--ns-btn-inner-fill) 0%, #161616 100%);
+  background: linear-gradient(180deg, #484848 0%, #161616 100%);
   color: #fff;
   border: 1px solid rgba(0, 200, 120, 0.32);
   border-radius: 10px;
@@ -27859,7 +27849,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .cliente-cadastro-v2--reference .cliente-cadastro-v2__card {
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 16px !important;
   padding: 28px !important;
@@ -28107,7 +28097,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .cliente-detalhe-v2__card {
-  background: var(--ns-btn-inner-fill);
+  background: #484848;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
   padding: 28px;
@@ -28701,7 +28691,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 .agenda-tecnica-hero {
   margin-bottom: 28px !important;
   padding: clamp(20px, 3vw, 28px) !important;
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 16px !important;
   box-shadow: none !important;
@@ -28824,7 +28814,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 .agenda-tecnica-view-toggle {
   margin-bottom: 24px !important;
   padding: 20px 24px !important;
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 16px !important;
 }
@@ -28871,7 +28861,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 .agenda-tecnica-filtros {
   margin-bottom: 24px !important;
   padding: 20px 24px !important;
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 16px !important;
   gap: 14px !important;
@@ -28909,7 +28899,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 /* Painel operacional */
 .agenda-tecnica-painel-outer {
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 16px !important;
   padding: 22px !important;
@@ -28947,7 +28937,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 /* Formulário inline */
 .agenda-tecnica-form {
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 16px !important;
   box-shadow: none !important;
@@ -29012,7 +29002,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 /* Cards da lista */
 .agenda-lista-card:not(.agenda-lista-card-cancelado) {
-  background-color: var(--ns-btn-inner-fill) !important;
+  background-color: #484848 !important;
   border-radius: 14px !important;
   padding: 22px !important;
 }
@@ -29024,7 +29014,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .agenda-lista-empty {
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border: 1px dashed rgba(255, 255, 255, 0.12) !important;
   border-radius: 14px !important;
   color: rgba(255, 255, 255, 0.45) !important;
@@ -29082,7 +29072,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 12px !important;
   min-height: 72px;
@@ -29252,7 +29242,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .agenda-cal-grid-wrap {
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 14px !important;
   padding: 14px !important;
@@ -29305,7 +29295,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .agenda-cal-day--empty {
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border: 1px solid rgba(255, 255, 255, 0.04) !important;
   opacity: 0.45;
 }
@@ -29344,7 +29334,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   margin-top: 24px;
   padding: 48px 24px;
   text-align: center;
-  background: var(--ns-btn-inner-fill);
+  background: #484848;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 14px;
 }
@@ -29424,7 +29414,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 .cadastro-valores-v2__hero {
   margin-bottom: 24px;
   padding: clamp(20px, 3vw, 28px);
-  background: var(--ns-btn-inner-fill);
+  background: #484848;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
 }
@@ -29522,7 +29512,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   gap: 12px;
   margin-bottom: 20px;
   padding: 16px;
-  background: var(--ns-btn-inner-fill);
+  background: #484848;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
 }
@@ -29583,7 +29573,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   max-height: 75vh;
   display: flex;
   flex-direction: column;
-  background: var(--ns-btn-inner-fill);
+  background: #484848;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 16px;
@@ -29591,7 +29581,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .cadastro-valores-v2__card {
-  background: var(--ns-btn-inner-fill);
+  background: #484848;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: clamp(16px, 3vw, 20px);
@@ -29976,7 +29966,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 /* Modal rápido — Cadastro de Serviços / Valores */
 .cadastro-valores-modal .modal {
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 16px !important;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.55) !important;
@@ -30215,13 +30205,13 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 .tab-glass-cards-grid > div,
 .tab-glass-cards-grid > article {
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 14px !important;
 }
 
 .modal {
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 16px !important;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55) !important;
@@ -30246,7 +30236,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .modal-overlay .modal select option {
-  background-color: var(--ns-btn-inner-fill-hover) !important;
+  background-color: #464646 !important;
   color: #f5f5f5 !important;
 }
 
@@ -30257,7 +30247,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 .ns-ui-card,
 .cadastro-valores-v2__card {
-  background: var(--ns-btn-inner-fill);
+  background: #484848;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: clamp(16px, 3vw, 20px);
@@ -30277,7 +30267,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 .ns-ui-count-bar {
   margin-bottom: 12px;
   padding: 12px 16px;
-  background: var(--ns-btn-inner-fill);
+  background: #484848;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
   font-size: 14px;
@@ -30518,12 +30508,12 @@ html body .biblioteca-pecas-hub .biblioteca-hub-tab--purple.biblioteca-hub-tab--
 }
 
 html body .biblioteca-pecas-hub .biblioteca-hub-toolbar {
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border-color: #5a5a5a !important;
 }
 
 html body .biblioteca-pecas-hub .biblioteca-pecas-hub__stats-panel {
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border-color: #5a5a5a !important;
 }
 
@@ -30533,7 +30523,7 @@ html body .biblioteca-pecas-hub .biblioteca-pecas-hub__hero-ring {
 }
 
 html body .biblioteca-pecas-hub .tab-glass-hero.tab-glass-hero--compact {
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border-color: #5a5a5a !important;
 }
 
@@ -30553,7 +30543,7 @@ html body .biblioteca-pecas-hub .biblioteca-pecas-hub__select:focus {
 }
 
 html body .biblioteca-pecas-hub .biblioteca-pecas-hub__kpi {
-  background: var(--ns-btn-inner-fill) !important;
+  background: #484848 !important;
   border: 1px solid #5a5a5a !important;
   box-shadow: none !important;
 }
@@ -30640,7 +30630,7 @@ html body .biblioteca-pecas-hub .biblioteca-pecas-hub__grupos-header .btn-primar
 html body .admin-shell .admin-panels-overview {
   background:
     linear-gradient(145deg, rgba(0, 168, 107, 0.08) 0%, transparent 42%),
-    var(--ns-btn-inner-fill) !important;
+    #484848 !important;
   border: 1px solid rgba(0, 168, 107, 0.22) !important;
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.32) !important;
 }
