@@ -1102,6 +1102,8 @@ const SIDEBAR_GROUP_LAUNCHER_IDS = new Set([
   'gestao-financeira-default',
   'administrador-default',
   'extras-default',
+  'almoxarifado-armazem-default',
+  'checklist-group-default',
 ])
 
 const SIDEBAR_PINNED_IDS = new Set([
@@ -1240,6 +1242,7 @@ function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
   if (['manuais-informacoes-tecnicas-default'].includes(buttonId)) return 'manuais-informacoes-tecnicas'
   if (['biblia-nonato-service-default'].includes(buttonId)) return 'biblia-nonato-service'
   if (['almoxarifado-armazem-default'].includes(buttonId)) return 'almoxarifado-armazem'
+  if (['checklist-group-default'].includes(buttonId)) return 'checklist-group'
   if (
     [
       'cadastro-nonato-service-default',
@@ -4205,7 +4208,7 @@ const TAB_DEFAULT_PARENT_HUB: Partial<Record<TabType, string>> = {
   'pecas-substituicao': 'pecas-biblioteca',
   'importacao-pecas': 'pecas-biblioteca',
   'solicitacao-servico-tecnico': 'pecas-biblioteca',
-  'mapa-visual-separacao-pecas': 'pecas-biblioteca',
+  'mapa-visual-separacao-pecas': 'almoxarifado-main',
   'gestao-custos': 'gestao-custos',
   'orcamentos-avulso': 'gestao-custos',
   'pedido-orcamentos-avulso': 'gestao-custos',
@@ -4221,7 +4224,7 @@ const TAB_DEFAULT_PARENT_HUB: Partial<Record<TabType, string>> = {
   'formularios-checklist-tecnicos': 'checklist-group',
   'verificacao-final-entrega': 'checklist-group',
   equipamentos: 'gestao-industrial',
-  'familias-grupos': 'gestao-industrial',
+  'familias-grupos': 'checklist-group',
   'familias-grupos-equipamentos': 'gestao-industrial',
   desmontados: 'gestao-industrial',
   'hub-comunicacao': 'comunicacao-interna',
@@ -5543,6 +5546,47 @@ export default function Dashboard() {
       }, tab.type === 'biblioteca-relatorios' ? 380 : 280)
       return () => clearTimeout(scrollT)
     }
+  }, [activeTabId, openTabs])
+
+  const ALMOXARIFADO_TAB_TYPES = new Set<string>(['almoxarifado-armazem', 'mapa-visual-separacao-pecas'])
+  const CHECKLIST_TAB_TYPES = new Set<string>([
+    'checklist-hub',
+    'familias-grupos',
+    'pre-checklist',
+    'checklist-basico',
+    'checklist',
+    'gestao-grupos-checklist',
+    'ordem-preparacao',
+    'formularios-checklist-tecnicos',
+    'verificacao-final-entrega',
+  ])
+
+  // Ao mudar para um separador do almoxarifado, expandir o grupo na sidebar.
+  useEffect(() => {
+    if (!activeTabId) return
+    const tab = openTabs.find((t) => t.id === activeTabId)
+    if (!tab) return
+    if (!ALMOXARIFADO_TAB_TYPES.has(tab.type)) return
+    setExpandedGroups((prev) => {
+      if (prev.has('almoxarifado-armazem')) return prev
+      const next = new Set(prev)
+      next.add('almoxarifado-armazem')
+      return next
+    })
+  }, [activeTabId, openTabs])
+
+  // Ao mudar para um separador de checklist, expandir o grupo na sidebar.
+  useEffect(() => {
+    if (!activeTabId) return
+    const tab = openTabs.find((t) => t.id === activeTabId)
+    if (!tab) return
+    if (!CHECKLIST_TAB_TYPES.has(tab.type)) return
+    setExpandedGroups((prev) => {
+      if (prev.has('checklist-group')) return prev
+      const next = new Set(prev)
+      next.add('checklist-group')
+      return next
+    })
   }, [activeTabId, openTabs])
 
   // Ao mudar para um separador financeiro, expandir o grupo na sidebar (sem impedir retrair depois).
@@ -10986,7 +11030,7 @@ export default function Dashboard() {
           'familias-grupos-default': { translationKey: 'familiasGruposTitle', group: 'checklist-group' },
           'familias-grupos-equipamentos-default': { translationKey: 'familiasGruposEquipamentosTitle', group: 'gestao-industrial' },
           'equipamentos-default': { translationKey: 'equipamentosTitle', group: 'gestao-industrial' },
-          'checklist-group-default': { translationKey: 'checklistGroupTitle', group: undefined },
+          'checklist-group-default': { translationKey: 'checklistGroupTitle', group: 'checklist-group' },
           'pre-checklist-default': { translationKey: 'preChecklistSubTitle', group: 'checklist-group' },
           'checklist-basico-default': { translationKey: 'checklistBasicoSubTitle', group: 'checklist-group' },
           'checklist-default': { translationKey: 'checklistSubTitle', group: 'checklist-group' },
@@ -11124,10 +11168,20 @@ export default function Dashboard() {
         return b
       })
       
-      // Forçar atualização da ação do botão checklist-group-default para o novo hub
+      // Cabeçalho da sidebar: hub checklist-group (não abrir tab checklist-hub directamente).
       buttons = buttons.map((b: SidebarButton) => {
-        if (b.id === 'checklist-group-default' && (b.action === 'open-checklist-group' || !b.action)) {
-          return { ...b, action: 'open-checklist-hub' }
+        if (b.id === 'checklist-group-default') {
+          const needsGroup = b.group !== 'checklist-group'
+          const needsAction = b.action !== 'open-checklist-group'
+          if (needsGroup || needsAction) {
+            buttonsMigrated = true
+            return {
+              ...b,
+              group: 'checklist-group',
+              action: 'open-checklist-group',
+              translationKey: 'checklistGroupTitle',
+            }
+          }
         }
         return b
       })
@@ -11345,6 +11399,10 @@ export default function Dashboard() {
           buttonsMigrated = true
           return { ...b, group: 'almoxarifado-armazem', translationKey: 'mapaVisualSeparacaoPecasTitle', action: 'open-mapa-visual-separacao-pecas' }
         }
+        if (b.id === 'almoxarifado-armazem-default' && b.group !== 'almoxarifado-armazem') {
+          buttonsMigrated = true
+          return { ...b, group: 'almoxarifado-armazem', translationKey: 'almoxarifadoArmazemTitle', action: 'open-almoxarifado-armazem' }
+        }
         return b
       })
 
@@ -11553,7 +11611,7 @@ export default function Dashboard() {
           action: 'open-checklist-group',
           order: buttons.length,
           translationKey: 'checklistGroupTitle',
-          group: undefined // Removido do grupo gestao-industrial para ser um botão principal
+          group: 'checklist-group',
         }
         buttons.push(checklistGroupButton)
         // Salvar imediatamente após adicionar
@@ -12002,20 +12060,23 @@ export default function Dashboard() {
         buttons.push(desmontadosButton)
       }
 
-      // Garantir botão Cadastro de Famílias e Grupos para Checklist no grupo GESTÃO INDUSTRIAL
+      // Garantir botão Cadastro de Famílias e Grupos para Checklist no grupo checklist-group
       const hasFamiliasGrupos = buttons.some((b: SidebarButton) => b.id === 'familias-grupos-default')
       if (!hasFamiliasGrupos) {
-        const equipamentosIdx = buttons.findIndex((b: SidebarButton) => b.id === 'equipamentos-default')
+        const preChecklistIdx = buttons.findIndex((b: SidebarButton) => b.id === 'pre-checklist-default')
         const familiasGruposButton: SidebarButton = {
           id: 'familias-grupos-default',
           name: 'CADASTRO DE FAMÍLIAS E GRUPOS PARA CHECKLIST',
           action: 'open-familias-grupos',
-          order: equipamentosIdx >= 0 ? Math.max(0, (buttons[equipamentosIdx].order ?? 3) - 1) : buttons.length,
+          order:
+            preChecklistIdx >= 0
+              ? Math.max(0, (buttons[preChecklistIdx].order ?? 12) - 0.5)
+              : buttons.length,
           translationKey: 'familiasGruposTitle',
-          group: 'gestao-industrial'
+          group: 'checklist-group',
         }
-        if (equipamentosIdx >= 0) {
-          buttons.splice(equipamentosIdx, 0, familiasGruposButton)
+        if (preChecklistIdx >= 0) {
+          buttons.splice(preChecklistIdx, 0, familiasGruposButton)
         } else {
           buttons.push(familiasGruposButton)
         }
@@ -12167,7 +12228,8 @@ export default function Dashboard() {
           name: 'ALMOXARIFADO / ARMAZEM',
           action: 'open-almoxarifado-armazem',
           order: insertPos,
-          translationKey: 'almoxarifadoArmazemTitle'
+          translationKey: 'almoxarifadoArmazemTitle',
+          group: 'almoxarifado-armazem',
         }
         if (gestaoIndustrialIndex >= 0 || manuaisIndex >= 0 || bibliaIndex >= 0) {
           buttons.splice(insertPos, 0, almoxarifadoArmazemButton)
@@ -26343,7 +26405,7 @@ export default function Dashboard() {
     'open-ficha-pagamento-transferencia': 'extras',
     'open-ficha-fatura-cliente': 'extras',
     'open-translator': 'extras',
-    'open-familias-grupos': 'equipamentos',
+    'open-familias-grupos': 'extras',
     'open-familias-grupos-equipamentos': 'equipamentos',
     'open-gestao-custos': 'cadastroServicos',
     'open-gestao-financeira': 'extras',
@@ -26808,6 +26870,24 @@ export default function Dashboard() {
     })
   }, [])
 
+  const ensureAlmoxarifadoSidebarExpanded = useCallback(() => {
+    setExpandedGroups((prev) => {
+      if (prev.has('almoxarifado-armazem')) return prev
+      const next = new Set(prev)
+      next.add('almoxarifado-armazem')
+      return next
+    })
+  }, [])
+
+  const ensureChecklistSidebarExpanded = useCallback(() => {
+    setExpandedGroups((prev) => {
+      if (prev.has('checklist-group')) return prev
+      const next = new Set(prev)
+      next.add('checklist-group')
+      return next
+    })
+  }, [])
+
   // Função para lidar com cliques nos botões da sidebar (buttonId opcional: quando dois botões abrem a mesma aba, usar id para só um ficar ativo)
   const handleButtonClick = useCallback((action: string, buttonId?: string) => {
     if (isDemoMode && (DEMO_HIDDEN_ACTIONS.has(action) || action === 'open-administrador')) {
@@ -26871,6 +26951,7 @@ export default function Dashboard() {
       const title = (safeT as any)?.familiasGruposEquipamentosTitle || 'Cadastro de Famílias e Grupos para os Equipamentos'
       openTab('familias-grupos-equipamentos', title)
     } else if (action === 'open-familias-grupos') {
+      ensureChecklistSidebarExpanded()
       setFamiliasGruposModalVariant('checklist')
       openTab('familias-grupos', getTabTitle('familias-grupos'))
     } else if (action === 'open-equipamentos') {
@@ -26882,23 +26963,31 @@ export default function Dashboard() {
       setSearchedEquipamento(null)
       openTab('equipamentos', getTabTitle('equipamentos'))
     } else if (action === 'open-checklist-hub') {
+      ensureChecklistSidebarExpanded()
       openTab('checklist-hub', getTabTitle('checklist-hub'))
     } else if (action === 'open-pre-checklist') {
+      ensureChecklistSidebarExpanded()
       openTab('pre-checklist', getTabTitle('pre-checklist'))
     } else if (action === 'open-checklist-basico') {
+      ensureChecklistSidebarExpanded()
       openTab('checklist-basico', getTabTitle('checklist-basico'))
     } else if (action === 'open-checklist') {
+      ensureChecklistSidebarExpanded()
       // Área restrita: mostrar modal de credenciamento (senha do Gestor de Senhas)
       setChecklistAccessStep('message')
       setChecklistAccessPasswordInput('')
       setShowChecklistAccessModal(true)
     } else if (action === 'open-gestao-grupos-checklist') {
+      ensureChecklistSidebarExpanded()
       openTab('gestao-grupos-checklist', getTabTitle('gestao-grupos-checklist'))
     } else if (action === 'open-ordem-preparacao') {
+      ensureChecklistSidebarExpanded()
       openTab('ordem-preparacao', getTabTitle('ordem-preparacao'))
     } else if (action === 'open-formularios-checklist-tecnicos') {
+      ensureChecklistSidebarExpanded()
       openTab('formularios-checklist-tecnicos', getTabTitle('formularios-checklist-tecnicos'))
     } else if (action === 'open-verificacao-final-entrega') {
+      ensureChecklistSidebarExpanded()
       openTab('verificacao-final-entrega', getTabTitle('verificacao-final-entrega'))
     } else if (action === 'open-comunicacao-interna') {
       toggleOrOpenDashboardHub('comunicacao-interna', 'comunicacao-interna')
@@ -26965,6 +27054,7 @@ export default function Dashboard() {
       ensureGestaoFinanceiraSidebarExpanded()
       openTab('registro-despesas', getTabTitle('registro-despesas'))
     } else if (action === 'open-mapa-visual-separacao-pecas') {
+      ensureAlmoxarifadoSidebarExpanded()
       openTab('mapa-visual-separacao-pecas', getTabTitle('mapa-visual-separacao-pecas'))
     } else if (action === 'open-manuais-informacoes-tecnicas') {
       const existingManuais = openTabs.find((tab) => tab.type === 'manuais-informacoes-tecnicas')
@@ -26981,6 +27071,7 @@ export default function Dashboard() {
         openTab('biblia-nonato-service', getTabTitle('biblia-nonato-service'))
       }
     } else if (action === 'open-almoxarifado-armazem') {
+      ensureAlmoxarifadoSidebarExpanded()
       openTab('almoxarifado-armazem', getTabTitle('almoxarifado-armazem'))
     } else if (action === 'open-quick-gestao-custos') {
       openTab('gestao-custos', getTabTitle('gestao-custos'))
@@ -27056,7 +27147,7 @@ export default function Dashboard() {
       ])
       if (!keepDrawerOpen.has(action)) setMobileMenuOpen(false)
     }
-  }, [expandedGroups, openTab, getTabTitle, canAccessAction, loginUser, isDemoTeaserAction, isDemoMode, DEMO_HIDDEN_ACTIONS, safeT, scrollMainContentToTop, isCompactLayout, activeTabId, openTabs, dashboardWorkspaceExpanded, openDashboardHubFromSidebar, dashboardMainHubId, toggleOrOpenDashboardHub, ensureGestaoFinanceiraSidebarExpanded])
+  }, [expandedGroups, openTab, getTabTitle, canAccessAction, loginUser, isDemoTeaserAction, isDemoMode, DEMO_HIDDEN_ACTIONS, safeT, scrollMainContentToTop, isCompactLayout, activeTabId, openTabs, dashboardWorkspaceExpanded, openDashboardHubFromSidebar, dashboardMainHubId, toggleOrOpenDashboardHub, ensureGestaoFinanceiraSidebarExpanded, ensureAlmoxarifadoSidebarExpanded, ensureChecklistSidebarExpanded])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -66511,23 +66602,27 @@ A1;Peça exemplo;10`}
 
   const renderSidebarChecklistCluster = () => {
     if (!canAccessModule('checklist-group')) return null
-    const checklistBtn = sidebarButtons.find((btn) => btn.id === 'checklist-group-default')
-    if (!checklistBtn) return null
-    const isSelected = selectedSidebarButton === checklistBtn.action
+    const checklistSubitens = getButtonsByGroup('checklist-group').filter((b) => canAccessSidebarButton(b))
+    const clusterActive =
+      selectedSidebarButton === 'open-checklist-group' ||
+      selectedSidebarButton === 'open-checklist-hub' ||
+      checklistSubitens.some((b) => selectedSidebarButton === b.action || selectedSidebarButton === b.id)
     return (
-      <div className="sidebar-nav-subcluster">
+      <>
         <button
           type="button"
-          className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
-          onClick={() => handleButtonClick(checklistBtn.action)}
+          className={`btn-primary sidebar-group-header${clusterActive ? ' sidebar-group-btn-selected' : ''}`}
+          onClick={() => toggleOrOpenDashboardHub('checklist-group', 'checklist-group')}
         >
-          {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+          {clusterActive && <span className="sidebar-nav-check" aria-hidden>✓</span>}
           <span className="sidebar-nav-label sidebar-nav-label--stacked">
             <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
               📋
             </span>
             <span className="sidebar-nav-label-stack">
-              <span className="sidebar-nav-label-text">{getButtonName(checklistBtn)}</span>
+              <span className="sidebar-nav-label-text">
+                {safeT?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST'}
+              </span>
             </span>
           </span>
           <span className={sidebarGroupChevronClass(expandedGroups.has('checklist-group'))} aria-hidden />
@@ -66539,11 +66634,10 @@ A1;Peça exemplo;10`}
         </button>
         {expandedGroups.has('checklist-group') && (
           <div className="sidebar-action-buttons">
-            {getButtonsByGroup('checklist-group')
-              .filter((subButton) => canAccessSidebarButton(subButton))
+            {checklistSubitens
               .sort((a, b) => a.order - b.order)
               .map((subButton) => {
-                const isSubSelected = selectedSidebarButton === subButton.action
+                const isSubSelected = selectedSidebarButton === subButton.action || selectedSidebarButton === subButton.id
                 const chkSub = resolveActionCardDescription(
                   trCardDesc,
                   subButton.id,
@@ -66557,8 +66651,9 @@ A1;Peça exemplo;10`}
                     className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
                       isSubSelected ? ' sidebar-action-btn-active' : ''
                     }`}
+                    data-sidebar-nav-action={subButton.action}
                     data-button-action={subButton.action}
-                    onClick={() => handleButtonClick(subButton.action)}
+                    onClick={() => handleButtonClick(subButton.action, subButton.id)}
                   >
                     {isSubSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
                     <span className="sidebar-empresa-entry-row">
@@ -66577,9 +66672,118 @@ A1;Peça exemplo;10`}
                   </button>
                 )
               })}
+            {checklistSubitens.length === 0 && (
+              <p
+                style={{
+                  fontSize: '12px',
+                  opacity: 0.6,
+                  padding: '10px',
+                  fontStyle: 'italic',
+                  textAlign: 'center',
+                  color: '#ffffff',
+                }}
+              >
+                {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
+              </p>
+            )}
           </div>
         )}
-      </div>
+      </>
+    )
+  }
+
+  const renderSidebarAlmoxarifadoCluster = () => {
+    if (!canAccessModule('almoxarifado-armazem')) return null
+    const almoxarifadoSubitens = getButtonsByGroup('almoxarifado-armazem').filter((b) => canAccessSidebarButton(b))
+    const clusterActive =
+      selectedSidebarButton === 'open-almoxarifado-armazem' ||
+      almoxarifadoSubitens.some((b) => selectedSidebarButton === b.action || selectedSidebarButton === b.id)
+    return (
+      <>
+        <button
+          type="button"
+          className={`btn-primary sidebar-group-header${clusterActive ? ' sidebar-group-btn-selected' : ''}`}
+          onClick={() => toggleOrOpenDashboardHub('almoxarifado-armazem', 'almoxarifado-main')}
+          title={
+            String((safeT as any)?.sidebarGroupAlmoxarifadoDesc || '').trim()
+              ? String((safeT as any)?.sidebarGroupAlmoxarifadoDesc)
+              : undefined
+          }
+        >
+          {clusterActive && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+          <span className="sidebar-nav-label sidebar-nav-label--stacked">
+            <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
+              📦
+            </span>
+            <span className="sidebar-nav-label-stack">
+              <span className="sidebar-nav-label-text">
+                {(safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'}
+              </span>
+            </span>
+          </span>
+          <span className={sidebarGroupChevronClass(expandedGroups.has('almoxarifado-armazem'))} aria-hidden />
+          {String((safeT as any)?.sidebarGroupAlmoxarifadoDesc || '').trim() ? (
+            <span className="sidebar-tip-bubble" role="tooltip">
+              {(safeT as any).sidebarGroupAlmoxarifadoDesc}
+            </span>
+          ) : null}
+        </button>
+        {expandedGroups.has('almoxarifado-armazem') && (
+          <div className="sidebar-action-buttons">
+            {almoxarifadoSubitens
+              .sort((a, b) => a.order - b.order)
+              .map((button) => {
+                const isSelected = selectedSidebarButton === button.action || selectedSidebarButton === button.id
+                const rowSub = resolveActionCardDescription(
+                  trCardDesc,
+                  button.id,
+                  button.action,
+                  pickTrChain(trCardDesc, ['mainHubCardHint'])
+                )
+                return (
+                  <button
+                    key={button.id}
+                    type="button"
+                    className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                      isSelected ? ' sidebar-action-btn-active' : ''
+                    }`}
+                    data-sidebar-nav-action={button.action}
+                    onClick={() => handleButtonClick(button.action, button.id)}
+                  >
+                    {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+                    <span className="sidebar-empresa-entry-row">
+                      <span className="sidebar-empresa-entry-text">
+                        <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                      </span>
+                    </span>
+                    <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                      ›
+                    </span>
+                    {rowSub?.trim() ? (
+                      <span className="sidebar-tip-bubble" role="tooltip">
+                        {rowSub}
+                      </span>
+                    ) : null}
+                  </button>
+                )
+              })}
+            {almoxarifadoSubitens.length === 0 && (
+              <p
+                style={{
+                  fontSize: '12px',
+                  opacity: 0.6,
+                  padding: '10px',
+                  fontStyle: 'italic',
+                  textAlign: 'center',
+                  color: '#ffffff',
+                }}
+              >
+                {(safeT as any)?.almoxarifadoSidebarSoPrincipal || 'Abra o grupo acima para aceder ao armazém.'}
+              </p>
+            )}
+          </div>
+        )}
+      </>
     )
   }
 
@@ -67903,16 +68107,14 @@ A1;Peça exemplo;10`}
           </>
         )}
 
-        {/* Secção: PEÇAS & ARMAZÉM */}
-        {(getButtonsByGroup('pecas-biblioteca').some((b) => canAccessSidebarButton(b)) ||
-          getButtonsByGroup('almoxarifado-armazem').some((b) => canAccessSidebarButton(b))) && (
+        {/* Secção: PEÇAS */}
+        {getButtonsByGroup('pecas-biblioteca').some((b) => canAccessSidebarButton(b)) && (
         <>
         <SidebarSectionSep
           id="pecas-armazem"
           label={(safeT as any)?.sidebarSectionPecasArmazem || 'Peças & Armazém'}
         />
-        {getButtonsByGroup('pecas-biblioteca').some((b) => canAccessSidebarButton(b)) && (
-          <div className="sidebar-nav-cluster" data-sidebar-zone="pecas-armazem">
+        <div className="sidebar-nav-cluster" data-sidebar-zone="pecas-armazem">
             <button
               type="button"
               className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-pecas-biblioteca' ? ' sidebar-group-btn-selected' : ''}`}
@@ -68024,76 +68226,7 @@ A1;Peça exemplo;10`}
                     })}
                 </div>
               )}
-          </div>
-        )}
-
-        {getButtonsByGroup('almoxarifado-armazem').some((b) => canAccessSidebarButton(b)) && (
-          <div className="sidebar-nav-cluster" data-sidebar-zone="pecas-armazem">
-            {(() => {
-              const headerBtn =
-                sidebarButtons.find((b) => b.id === 'almoxarifado-armazem-default') ||
-                getButtonsByGroup('almoxarifado-armazem').find((b) => b.id === 'almoxarifado-armazem-default')
-              const clusterActive = getButtonsByGroup('almoxarifado-armazem').some(
-                (b) => selectedSidebarButton === b.action || selectedSidebarButton === b.id
-              )
-              return (
-                <div className="sidebar-nav-subcluster">
-                  <button
-                    type="button"
-                    className={`btn-primary sidebar-group-header${clusterActive ? ' sidebar-group-btn-selected' : ''}`}
-                    onClick={() => toggleOrOpenDashboardHub('almoxarifado-main', 'almoxarifado-main')}
-                  >
-                    {clusterActive && <span className="sidebar-nav-check" aria-hidden>✓</span>}
-                    <span className="sidebar-nav-label sidebar-nav-label--stacked">
-                      <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
-                        📦
-                      </span>
-                      <span className="sidebar-nav-label-stack">
-                        <span className="sidebar-nav-label-text">
-                          {headerBtn
-                            ? getButtonName(headerBtn)
-                            : (safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'}
-                        </span>
-                      </span>
-                    </span>
-                    <span className={sidebarGroupChevronClass(expandedGroups.has('almoxarifado-main'))} aria-hidden />
-                  </button>
-                  {expandedGroups.has('almoxarifado-main') && (
-                    <div className="sidebar-action-buttons">
-                      {getButtonsByGroup('almoxarifado-armazem')
-                        .filter((button) => canAccessSidebarButton(button))
-                        .sort((a, b) => a.order - b.order)
-                        .map((button) => {
-                          const isSelected = selectedSidebarButton === button.action || selectedSidebarButton === button.id
-                          return (
-                            <button
-                              key={button.id}
-                              type="button"
-                              className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
-                                isSelected ? ' sidebar-action-btn-active' : ''
-                              }`}
-                              data-sidebar-nav-action={button.action}
-                              onClick={() => handleButtonClick(button.action, button.id)}
-                            >
-                              {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
-                              <span className="sidebar-empresa-entry-row">
-                                <span className="sidebar-empresa-entry-text">
-                                  <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
-                                </span>
-                              </span>
-                              <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
-                                ›
-                              </span>
-                            </button>
-                          )
-                        })}
-                    </div>
-                  )}
-                </div>
-              )
-            })()}
-          </div>
-        )}
+        </div>
         </>
         )}
 
@@ -68284,6 +68417,7 @@ A1;Peça exemplo;10`}
         {/* Grupo: GESTÃO INDUSTRIAL */}
         {(canAccessModule('gestao-industrial') ||
           canAccessModule('checklist-group') ||
+          canAccessModule('almoxarifado-armazem') ||
           canAccessModule('manuais-informacoes-tecnicas') ||
           canAccessModule('biblia-nonato-service')) && (
         <>
@@ -68293,6 +68427,7 @@ A1;Peça exemplo;10`}
         />
         <div className="sidebar-nav-cluster" data-sidebar-zone="industrial">
           {renderSidebarChecklistCluster()}
+          {renderSidebarAlmoxarifadoCluster()}
           {canAccessModule('gestao-industrial') && (
           <>
           {(() => {
@@ -68325,7 +68460,7 @@ A1;Peça exemplo;10`}
           {expandedGroups.has('gestao-industrial') && (
             <div className="sidebar-action-buttons">
               {getButtonsByGroup('gestao-industrial')
-                .filter((button) => canAccessSidebarButton(button) && button.id !== 'checklist-group-default')
+                .filter((button) => canAccessSidebarButton(button) && button.id !== 'checklist-group-default' && button.id !== 'familias-grupos-default')
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
                   const isSelected = selectedSidebarButton === (button.id || button.action)
@@ -68362,7 +68497,7 @@ A1;Peça exemplo;10`}
                     </button>
                   )
                 })}
-              {getButtonsByGroup('gestao-industrial').filter((b) => b.id !== 'checklist-group-default').length === 0 && (
+              {getButtonsByGroup('gestao-industrial').filter((b) => b.id !== 'checklist-group-default' && b.id !== 'familias-grupos-default').length === 0 && (
                 <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center', color: '#ffffff' }}>
                   {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
                 </p>
