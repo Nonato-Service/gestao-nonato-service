@@ -11247,9 +11247,20 @@ export default function Dashboard() {
       // Migrar botões de checklist para o grupo checklist-group (inclui Cadastro de Famílias e Grupos).
       let buttonsMigrated = false
       buttons = buttons.map((b: SidebarButton) => {
-        if (b.id === 'familias-grupos-default' && b.group !== 'checklist-group') {
-          buttonsMigrated = true
-          return { ...b, group: 'checklist-group', translationKey: 'familiasGruposTitle' }
+        if (b.id === 'familias-grupos-default') {
+          const needsFix =
+            b.group !== 'checklist-group' ||
+            b.action !== 'open-familias-grupos' ||
+            b.translationKey !== 'familiasGruposTitle'
+          if (needsFix) {
+            buttonsMigrated = true
+            return {
+              ...b,
+              group: 'checklist-group',
+              translationKey: 'familiasGruposTitle',
+              action: 'open-familias-grupos',
+            }
+          }
         }
         if (b.id === 'pre-checklist-default' && (b.group === 'gestao-industrial' || !b.group)) {
           buttonsMigrated = true
@@ -12002,23 +12013,27 @@ export default function Dashboard() {
         buttons.push(desmontadosButton)
       }
 
-      // Garantir botão Cadastro de Famílias e Grupos para Checklist no grupo GESTÃO INDUSTRIAL
+      // Garantir botão Cadastro de Famílias e Grupos para Checklist no grupo checklist-group
       const hasFamiliasGrupos = buttons.some((b: SidebarButton) => b.id === 'familias-grupos-default')
       if (!hasFamiliasGrupos) {
-        const equipamentosIdx = buttons.findIndex((b: SidebarButton) => b.id === 'equipamentos-default')
+        const preChecklistIdx = buttons.findIndex((b: SidebarButton) => b.id === 'pre-checklist-default')
         const familiasGruposButton: SidebarButton = {
           id: 'familias-grupos-default',
           name: 'CADASTRO DE FAMÍLIAS E GRUPOS PARA CHECKLIST',
           action: 'open-familias-grupos',
-          order: equipamentosIdx >= 0 ? Math.max(0, (buttons[equipamentosIdx].order ?? 3) - 1) : buttons.length,
+          order:
+            preChecklistIdx >= 0
+              ? Math.max(0, (buttons[preChecklistIdx].order ?? 12) - 0.5)
+              : buttons.length,
           translationKey: 'familiasGruposTitle',
-          group: 'gestao-industrial'
+          group: 'checklist-group',
         }
-        if (equipamentosIdx >= 0) {
-          buttons.splice(equipamentosIdx, 0, familiasGruposButton)
+        if (preChecklistIdx >= 0) {
+          buttons.splice(preChecklistIdx, 0, familiasGruposButton)
         } else {
           buttons.push(familiasGruposButton)
         }
+        buttonsMigrated = true
       }
 
       // Garantir botão Cadastro de Famílias e Grupos para os Equipamentos no grupo GESTÃO INDUSTRIAL
@@ -26343,7 +26358,7 @@ export default function Dashboard() {
     'open-ficha-pagamento-transferencia': 'extras',
     'open-ficha-fatura-cliente': 'extras',
     'open-translator': 'extras',
-    'open-familias-grupos': 'equipamentos',
+    'open-familias-grupos': 'extras',
     'open-familias-grupos-equipamentos': 'equipamentos',
     'open-gestao-custos': 'cadastroServicos',
     'open-gestao-financeira': 'extras',
@@ -61990,6 +62005,15 @@ A1;Peça exemplo;10`}
     group: 'empresa-institucional'
   }
 
+  const familiasGruposChecklistButton: SidebarButton = {
+    id: 'familias-grupos-default',
+    name: 'CADASTRO DE FAMÍLIAS E GRUPOS PARA CHECKLIST',
+    action: 'open-familias-grupos',
+    order: 11,
+    translationKey: 'familiasGruposTitle',
+    group: 'checklist-group',
+  }
+
   // Função para obter os botões de cada grupo
   const getButtonsByGroup = (group: SidebarGroup): SidebarButton[] => {
     const normalized = normalizeSidebarButtons(sidebarButtons)
@@ -62005,6 +62029,15 @@ A1;Peça exemplo;10`}
       !normalized.some((b) => b.id === 'cadastro-nonato-service-default')
     ) {
       return [cadastroNonatoServiceButton, ...normalized]
+    }
+    if (
+      !isDemoMode &&
+      group === 'checklist-group' &&
+      !normalized.some((b) => b.id === 'familias-grupos-default')
+    ) {
+      return [familiasGruposChecklistButton, ...normalized].sort(
+        (a, b) => (a.order ?? 0) - (b.order ?? 0)
+      )
     }
     return normalized
   }
@@ -66513,15 +66546,18 @@ A1;Peça exemplo;10`}
     if (!canAccessModule('checklist-group')) return null
     const checklistBtn = sidebarButtons.find((btn) => btn.id === 'checklist-group-default')
     if (!checklistBtn) return null
-    const isSelected = selectedSidebarButton === checklistBtn.action
+    const checklistGroupActive =
+      selectedSidebarButton === 'open-checklist-group' ||
+      selectedSidebarButton === checklistBtn.action ||
+      getButtonsByGroup('checklist-group').some((b: SidebarButton) => b.id === selectedSidebarButton)
     return (
       <div className="sidebar-nav-subcluster">
         <button
           type="button"
-          className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
-          onClick={() => handleButtonClick(checklistBtn.action)}
+          className={`btn-primary sidebar-group-header${checklistGroupActive ? ' sidebar-group-btn-selected' : ''}`}
+          onClick={() => toggleOrOpenDashboardHub('checklist-group', 'checklist-group')}
         >
-          {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+          {checklistGroupActive && <span className="sidebar-nav-check" aria-hidden>✓</span>}
           <span className="sidebar-nav-label sidebar-nav-label--stacked">
             <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
               📋
@@ -66540,7 +66576,11 @@ A1;Peça exemplo;10`}
         {expandedGroups.has('checklist-group') && (
           <div className="sidebar-action-buttons">
             {getButtonsByGroup('checklist-group')
-              .filter((subButton) => canAccessSidebarButton(subButton))
+              .filter(
+                (subButton) =>
+                  canAccessSidebarButton(subButton) &&
+                  subButton.id !== 'checklist-group-default'
+              )
               .sort((a, b) => a.order - b.order)
               .map((subButton) => {
                 const isSubSelected = selectedSidebarButton === subButton.action
@@ -68325,7 +68365,7 @@ A1;Peça exemplo;10`}
           {expandedGroups.has('gestao-industrial') && (
             <div className="sidebar-action-buttons">
               {getButtonsByGroup('gestao-industrial')
-                .filter((button) => canAccessSidebarButton(button) && button.id !== 'checklist-group-default')
+                .filter((button) => canAccessSidebarButton(button) && button.id !== 'checklist-group-default' && button.id !== 'familias-grupos-default')
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
                   const isSelected = selectedSidebarButton === (button.id || button.action)

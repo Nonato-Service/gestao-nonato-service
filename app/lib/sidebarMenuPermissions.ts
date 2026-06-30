@@ -120,7 +120,7 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
       { buttonId: 'ordem-preparacao-default', action: 'open-ordem-preparacao', labelKey: 'ordemPreparacaoTitle', fallbackLabel: 'Ordem de preparação', legacyKey: 'extras' },
       { buttonId: 'formularios-checklist-tecnicos-default', action: 'open-formularios-checklist-tecnicos', labelKey: 'formulariosChecklistTecnicosTitle', fallbackLabel: 'Formulários técnicos', legacyKey: 'extras' },
       { buttonId: 'verificacao-final-entrega-default', action: 'open-verificacao-final-entrega', labelKey: 'verificacaoFinalEntregaTitle', fallbackLabel: 'Verificação final', legacyKey: 'extras' },
-      { buttonId: 'familias-grupos-default', action: 'open-familias-grupos', labelKey: 'familiasGruposTitle', fallbackLabel: 'Famílias e grupos', legacyKey: 'equipamentos' },
+      { buttonId: 'familias-grupos-default', action: 'open-familias-grupos', labelKey: 'familiasGruposTitle', fallbackLabel: 'Famílias e grupos (checklist)', legacyKey: 'extras' },
     ],
   },
   {
