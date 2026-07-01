@@ -1813,6 +1813,11 @@ body,
   border-color: rgba(251, 146, 60, 0.22);
   background: rgba(251, 146, 60, 0.07);
 }
+.sidebar-section-sep[data-section='checklist'] .sidebar-section-sep__label {
+  color: rgba(134, 239, 172, 0.88);
+  border-color: rgba(0, 200, 83, 0.28);
+  background: rgba(0, 200, 83, 0.08);
+}
 .sidebar-section-sep[data-section='pecas-armazem'] .sidebar-section-sep__label {
   color: rgba(147, 197, 253, 0.88);
   border-color: rgba(59, 130, 246, 0.22);

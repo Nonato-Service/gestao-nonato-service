@@ -68368,7 +68368,6 @@ A1;Peça exemplo;10`}
 
         {/* Grupo: GESTÃO INDUSTRIAL */}
         {(canAccessModule('gestao-industrial') ||
-          canAccessModule('checklist-group') ||
           canAccessModule('manuais-informacoes-tecnicas') ||
           canAccessModule('biblia-nonato-service')) && (
         <>
@@ -68377,7 +68376,6 @@ A1;Peça exemplo;10`}
           label={(safeT as any)?.sidebarSectionIndustrial || 'Industrial'}
         />
         <div className="sidebar-nav-cluster" data-sidebar-zone="industrial">
-          {renderSidebarChecklistCluster()}
           {canAccessModule('gestao-industrial') && (
           <>
           {(() => {
@@ -68566,6 +68564,18 @@ A1;Peça exemplo;10`}
                   </div>
                 )
               })}
+        </div>
+        </>
+        )}
+
+        {canAccessModule('checklist-group') && (
+        <>
+        <SidebarSectionSep
+          id="checklist"
+          label={(safeT as any)?.sidebarSectionChecklist || safeT?.checklistGroupTitle || 'Checklist'}
+        />
+        <div className="sidebar-nav-cluster" data-sidebar-zone="checklist">
+          {renderSidebarChecklistCluster()}
         </div>
         </>
         )}
