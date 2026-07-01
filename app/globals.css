@@ -6268,12 +6268,19 @@ a:focus-visible {
   flex-wrap: wrap;
   gap: 8px;
   padding: 14px 16px;
-  background: #484848;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
   position: sticky;
   top: 0;
   z-index: 5;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.clientes-alfa-jump--modern {
+  gap: 6px;
+  padding: 12px 14px;
 }
 .clientes-alfa-jump-link {
   display: inline-flex;
@@ -6290,6 +6297,87 @@ a:focus-visible {
   font-weight: 700;
   text-decoration: none;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.clientes-alfa-jump-btn {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 42px;
+  min-height: 46px;
+  padding: 6px 8px 5px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, #343434 0%, #262626 100%);
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease,
+    color 0.16s ease;
+}
+.clientes-alfa-jump-btn__letter {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.clientes-alfa-jump-btn__count {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgba(0, 200, 83, 0.92);
+  line-height: 1;
+}
+.clientes-alfa-jump-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(0, 200, 83, 0.45);
+  background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(0, 200, 83, 0.12);
+}
+.clientes-alfa-jump-btn.is-active {
+  border-color: rgba(0, 200, 83, 0.72);
+  background: linear-gradient(180deg, rgba(0, 120, 60, 0.42) 0%, rgba(18, 38, 28, 0.98) 100%);
+  color: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(0, 200, 83, 0.28),
+    0 8px 22px rgba(0, 200, 83, 0.18);
+}
+.clientes-alfa-jump-btn.is-active .clientes-alfa-jump-btn__count {
+  color: #86efac;
+}
+.clientes-alfa-jump-btn.is-empty {
+  opacity: 0.28;
+  cursor: not-allowed;
+  background: #222222;
+  border-color: rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+}
+.clientes-alfa-jump-btn:focus-visible {
+  outline: 2px solid rgba(0, 200, 83, 0.75);
+  outline-offset: 2px;
+}
+.clientes-alfa-prompt {
+  margin: 0;
+  padding: 18px 16px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.62);
+  background: #262626;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
 }
 .clientes-alfa-jump-link:hover {
   background: rgba(0, 200, 83, 0.15);
@@ -6309,6 +6397,24 @@ a:focus-visible {
   background: rgba(255, 255, 255, 0.04);
   border-left: 3px solid #00c853;
   border-radius: 0 10px 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.clientes-alfa-letra__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #86efac;
+  background: rgba(0, 200, 83, 0.16);
+  border: 1px solid rgba(0, 200, 83, 0.35);
 }
 .clientes-alfa-nomes {
   list-style: none;

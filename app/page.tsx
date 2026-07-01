@@ -635,6 +635,17 @@ function servicoValorToInputString(v: number): string {
   return String(v)
 }
 
+const CLIENTES_ALFABETO_INDICE = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''), '#'] as const
+
+function getClienteLetraAlfabeto(nome: string): string {
+  const n = (nome || '').trim()
+  if (!n) return '#'
+  const ch = n[0].toUpperCase()
+  const base = ch.normalize('NFD').replace(/\p{M}/gu, '')
+  if (/[A-Z]/.test(base)) return base
+  return '#'
+}
+
 /** Grupo lógico no cadastro de serviços (ex.: «Horas trabalhadas»). */
 type ServicoCadastroGrupo = {
   id: string
@@ -7401,6 +7412,7 @@ export default function Dashboard() {
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
   const [buscaCliente, setBuscaCliente] = useState('')
   const [clienteListaDetalheId, setClienteListaDetalheId] = useState<string | null>(null)
+  const [clientesAlfaLetraFiltro, setClientesAlfaLetraFiltro] = useState<string | null>(null)
   const [clientesActiveTab, setClientesActiveTab] = useState<'cadastrar' | 'listar' | 'grupos'>('cadastrar')
   const [fornecedoresActiveTab, setFornecedoresActiveTab] = useState<'cadastrar' | 'listar'>('cadastrar')
   const [clienteGrupoTarifaSelecionadoId, setClienteGrupoTarifaSelecionadoId] = useState<string | null>(null)
@@ -7417,6 +7429,10 @@ export default function Dashboard() {
     () => localeOrdenacaoClientes(selectedLanguage),
     [selectedLanguage]
   )
+
+  useEffect(() => {
+    setClientesAlfaLetraFiltro(null)
+  }, [clientesActiveTab])
 
   /** Antes de gerar PDF/mail: valor, nota e anexos opcionais para a contabilidade. */
   const [modalEnvioContabilidadeCliente, setModalEnvioContabilidadeCliente] = useState<Cliente | null>(null)
@@ -35972,25 +35988,21 @@ export default function Dashboard() {
           ),
           localeOrdCli
         )
-        const getClienteLetraAlfabeto = (nome: string): string => {
-          const n = (nome || '').trim()
-          if (!n) return '#'
-          const ch = n[0].toUpperCase()
-          const base = ch.normalize('NFD').replace(/\p{M}/gu, '')
-          if (/[A-Z]/.test(base)) return base
-          return '#'
-        }
         const clientesPorLetra = new Map<string, typeof clientesFiltrados>()
         for (const c of clientesFiltrados) {
           const letra = getClienteLetraAlfabeto(c.nomeEmpresa)
           if (!clientesPorLetra.has(letra)) clientesPorLetra.set(letra, [])
           clientesPorLetra.get(letra)!.push(c)
         }
-        const clientesLetrasOrdem = [...clientesPorLetra.keys()].sort((a, b) => {
-          if (a === '#') return 1
-          if (b === '#') return -1
-          return a.localeCompare(b, 'pt-BR')
-        })
+        const clientesLetraAtiva =
+          clientesAlfaLetraFiltro &&
+          (clientesPorLetra.get(clientesAlfaLetraFiltro)?.length ?? 0) > 0
+            ? clientesAlfaLetraFiltro
+            : null
+        const clientesLetrasParaLista = clientesLetraAtiva ? [clientesLetraAtiva] : []
+        const clientesListaFiltradaCount = clientesLetraAtiva
+          ? (clientesPorLetra.get(clientesLetraAtiva)?.length ?? 0)
+          : 0
         const clientesParaDetalhe = clienteListaDetalheId
           ? clientesFiltrados.filter(c => c.id === clienteListaDetalheId)
           : []
@@ -36710,6 +36722,7 @@ export default function Dashboard() {
                       onChange={(e) => {
                         setBuscaCliente(e.target.value)
                         setClienteListaDetalheId(null)
+                        setClientesAlfaLetraFiltro(null)
                       }}
                       style={{ 
                         width: '100%', 
@@ -36732,68 +36745,100 @@ export default function Dashboard() {
                   </p>
                 ) : (
                   <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#484848', borderRadius: '6px', fontSize: '14px' }}>
-                    {safeT?.mostrando || 'Mostrando'} {clientesFiltrados.length} {safeT?.de || 'de'} {clientes.length} {safeT?.clientes || 'cliente(s)'}
+                    {clientesLetraAtiva
+                      ? `${clientesListaFiltradaCount} ${safeT?.clientes || 'cliente(s)'} ${(safeT as any)?.clientesAlfabetoComInicial || 'com inicial'} «${clientesLetraAtiva === '#' ? ((safeT as any)?.clientesAlfabetoOutros || 'Outros') : clientesLetraAtiva}»${buscaCliente.trim() ? ` (${safeT?.de || 'de'} ${clientesFiltrados.length} ${safeT?.filtrados || 'filtrados'})` : ''}`
+                      : `${safeT?.mostrando || 'Mostrando'} ${clientesFiltrados.length} ${safeT?.de || 'de'} ${clientes.length} ${safeT?.clientes || 'cliente(s)'} — ${(safeT as any)?.clientesAlfabetoSelecioneLetra || 'selecione uma letra abaixo'}`}
                   </div>
                 )}
 
                 {clientesFiltrados.length > 0 && (
                   <div className="clientes-alfa-wrap clientes-cadastrados-lista">
-                    {clientesLetrasOrdem.length > 1 && (
-                      <nav
-                        className="clientes-alfa-jump"
-                        aria-label={(safeT as any)?.clientesAlfabetoIndice || 'Índice A–Z'}
-                      >
-                        {clientesLetrasOrdem.map(letra => (
-                          <a
+                    <nav
+                      className="clientes-alfa-jump clientes-alfa-jump--modern"
+                      aria-label={(safeT as any)?.clientesAlfabetoIndice || 'Índice A–Z'}
+                    >
+                      {CLIENTES_ALFABETO_INDICE.map((letra) => {
+                        const count = clientesPorLetra.get(letra)?.length ?? 0
+                        const temClientes = count > 0
+                        const active = clientesLetraAtiva === letra
+                        return (
+                          <button
                             key={letra}
-                            href={`#clientes-letra-${letra}`}
-                            className="clientes-alfa-jump-link"
+                            type="button"
+                            className={`clientes-alfa-jump-btn${active ? ' is-active' : ''}${!temClientes ? ' is-empty' : ''}`}
+                            disabled={!temClientes}
+                            aria-pressed={active}
+                            title={
+                              temClientes
+                                ? `${count} ${safeT?.clientes || 'cliente(s)'}`
+                                : (safeT as any)?.clientesAlfabetoSemClientes || 'Sem clientes nesta letra'
+                            }
+                            onClick={() => {
+                              setClientesAlfaLetraFiltro(letra)
+                              setClienteListaDetalheId(null)
+                            }}
                           >
-                            {letra === '#' ? '#' : letra}
-                          </a>
-                        ))}
-                      </nav>
+                            <span className="clientes-alfa-jump-btn__letter">{letra === '#' ? '#' : letra}</span>
+                            {temClientes ? (
+                              <span className="clientes-alfa-jump-btn__count" aria-hidden>
+                                {count}
+                              </span>
+                            ) : null}
+                          </button>
+                        )
+                      })}
+                    </nav>
+
+                    {!clientesLetraAtiva ? (
+                      <p className="clientes-alfa-prompt">
+                        {(safeT as any)?.clientesAlfabetoPrompt ||
+                          'Toque numa letra acima para ver apenas os clientes com essa inicial.'}
+                      </p>
+                    ) : (
+                      clientesLetrasParaLista.map((letra) => (
+                        <section
+                          key={letra}
+                          id={`clientes-letra-${letra}`}
+                          className="clientes-alfa-secao"
+                        >
+                          <h3 className="clientes-alfa-letra">
+                            {letra === '#'
+                              ? (safeT as any)?.clientesAlfabetoOutros || 'Outros'
+                              : letra}
+                            <span className="clientes-alfa-letra__count">
+                              {(clientesPorLetra.get(letra) ?? []).length}
+                            </span>
+                          </h3>
+                          <ul className="clientes-alfa-nomes">
+                            {(clientesPorLetra.get(letra) ?? []).map((c) => {
+                              const devedor = isClienteMarcadoDevedor(c)
+                              return (
+                                <li key={c.id} className="clientes-alfa-item">
+                                  <button
+                                    type="button"
+                                    className={`clientes-alfa-nome-btn${devedor ? ' clientes-alfa-nome-btn--devedor' : ''}`}
+                                    onClick={() => setClienteListaDetalheId(c.id)}
+                                  >
+                                    <ClienteListaLinhas cliente={c} language={selectedLanguage} devedor={devedor} />
+                                  </button>
+                                  <ClienteGpsNavButton
+                                    language={selectedLanguage}
+                                    endereco={{
+                                      morada: c.morada,
+                                      localidade: c.localidade,
+                                      conselho: c.conselho,
+                                      codigoPostal: c.codigoPostal,
+                                      pais: c.pais,
+                                    }}
+                                    className="clientes-alfa-gps-btn"
+                                  />
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        </section>
+                      ))
                     )}
-                    {clientesLetrasOrdem.map(letra => (
-                      <section
-                        key={letra}
-                        id={`clientes-letra-${letra}`}
-                        className="clientes-alfa-secao"
-                      >
-                        <h3 className="clientes-alfa-letra">
-                          {letra === '#'
-                            ? (safeT as any)?.clientesAlfabetoOutros || 'Outros'
-                            : letra}
-                        </h3>
-                        <ul className="clientes-alfa-nomes">
-                          {(clientesPorLetra.get(letra) ?? []).map(c => {
-                            const devedor = isClienteMarcadoDevedor(c)
-                            return (
-                            <li key={c.id} className="clientes-alfa-item">
-                              <button
-                                type="button"
-                                className={`clientes-alfa-nome-btn${devedor ? ' clientes-alfa-nome-btn--devedor' : ''}`}
-                                onClick={() => setClienteListaDetalheId(c.id)}
-                              >
-                                <ClienteListaLinhas cliente={c} language={selectedLanguage} devedor={devedor} />
-                              </button>
-                              <ClienteGpsNavButton
-                                language={selectedLanguage}
-                                endereco={{
-                                  morada: c.morada,
-                                  localidade: c.localidade,
-                                  conselho: c.conselho,
-                                  codigoPostal: c.codigoPostal,
-                                  pais: c.pais,
-                                }}
-                                className="clientes-alfa-gps-btn"
-                              />
-                            </li>
-                            )
-                          })}
-                        </ul>
-                      </section>
-                    ))}
                   </div>
                 )}
                   </>
