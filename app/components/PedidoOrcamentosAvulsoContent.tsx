@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useId } from 'react'
 import { openPedidoOrcamentoAvulsoPdf } from '../lib/pedidoOrcamentoAvulsoPdf'
 import { ProImageHoverPreview } from './ProImageHoverPreview'
 
@@ -86,7 +86,10 @@ export function PedidoOrcamentosAvulsoContent({
   const [buscaPeca, setBuscaPeca] = useState('')
   const [codigoManualPeca, setCodigoManualPeca] = useState('')
   const [nomeManualPeca, setNomeManualPeca] = useState('')
+  const [imagemManualPeca, setImagemManualPeca] = useState('')
+  const [urlImagemManualPeca, setUrlImagemManualPeca] = useState('')
   const [quantidadeNovaPeca, setQuantidadeNovaPeca] = useState(1)
+  const imagemManualUploadId = useId()
   const [mostrarFormPeca, setMostrarFormPeca] = useState(false)
   const [modoPeca, setModoPeca] = useState<'biblioteca' | 'manual' | null>(null)
   const [emitirComoCliente, setEmitirComoCliente] = useState<'cliente' | 'nonato-service'>('cliente')
@@ -152,9 +155,39 @@ export function PedidoOrcamentosAvulsoContent({
     setModoPeca(null)
   }
 
+  const limparFormularioPecaManual = () => {
+    setCodigoManualPeca('')
+    setNomeManualPeca('')
+    setImagemManualPeca('')
+    setUrlImagemManualPeca('')
+    setQuantidadeNovaPeca(1)
+  }
+
+  const resolverImagemManualPeca = () => {
+    const url = urlImagemManualPeca.trim()
+    const img = imagemManualPeca.trim()
+    return img || url || undefined
+  }
+
+  const handleImagemManualFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !file.type.startsWith('image/')) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const result = event.target?.result
+      if (typeof result === 'string') {
+        setImagemManualPeca(result)
+        setUrlImagemManualPeca('')
+      }
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
   const adicionarPecaManual = () => {
     const codigo = (codigoManualPeca || '').trim()
     const nome = (nomeManualPeca || '').trim() || codigo || (safeT?.pecaManual || 'Peça manual')
+    const imagem = resolverImagemManualPeca()
     if (!codigo && !nome) return
     const existente = pecasPedido.find((p) => p.codigo === codigo && codigo)
     if (existente && codigo) {
@@ -168,14 +201,12 @@ export function PedidoOrcamentosAvulsoContent({
           id: 'manual-' + Date.now(),
           codigo: codigo || nome.slice(0, 20),
           nome,
-          imagem: undefined,
+          imagem,
           quantidade: quantidadeNovaPeca
         }
       ])
     }
-    setCodigoManualPeca('')
-    setNomeManualPeca('')
-    setQuantidadeNovaPeca(1)
+    limparFormularioPecaManual()
     setMostrarFormPeca(false)
     setModoPeca(null)
   }
@@ -547,7 +578,7 @@ export function PedidoOrcamentosAvulsoContent({
                 <button
                   type="button"
                   className="orc-pro__btn orc-pro__btn--secondary"
-                  onClick={() => { setMostrarFormPeca(true); setModoPeca('manual'); setCodigoManualPeca(''); setNomeManualPeca(''); setQuantidadeNovaPeca(1); }}
+                  onClick={() => { setMostrarFormPeca(true); setModoPeca('manual'); limparFormularioPecaManual(); }}
                 >
                   ✏️ {safeT?.digitarCodigoManual || 'Digitar código / peça manual'}
                 </button>
@@ -620,6 +651,62 @@ export function PedidoOrcamentosAvulsoContent({
                         className="orc-pro__input orc-pro__input--qty"
                         value={quantidadeNovaPeca}
                         onChange={(e) => setQuantidadeNovaPeca(parseInt(e.target.value, 10) || 1)}
+                      />
+                    </div>
+                    <div className="orc-pro__imagem-manual">
+                      <label>{safeT?.imagemPecaBiblioteca || safeT?.imagem || 'Imagem da peça'}</label>
+                      <p className="orc-pro__imagem-manual-hint">
+                        {safeT?.pedidoAvulsoImagemManualAjuda ||
+                          safeT?.orcamentoItemManualImagemAjuda ||
+                          'Opcional: carregue uma foto do dispositivo ou cole o URL de uma imagem.'}
+                      </p>
+                      <input
+                        id={imagemManualUploadId}
+                        type="file"
+                        accept="image/*"
+                        className="orc-pro__imagem-manual-file"
+                        onChange={handleImagemManualFile}
+                      />
+                      {(imagemManualPeca || urlImagemManualPeca.trim()) && (
+                        <div className="orc-pro__imagem-manual-preview">
+                          <ProImageHoverPreview
+                            src={imagemManualPeca || urlImagemManualPeca.trim()}
+                            alt={nomeManualPeca || codigoManualPeca || (safeT?.imagemPeca || 'Imagem da peça')}
+                            label={nomeManualPeca || codigoManualPeca || (safeT?.imagemPeca || 'Imagem da peça')}
+                            thumbClassName="orc-pro__peca-thumb orc-pro__peca-thumb--lg"
+                          />
+                        </div>
+                      )}
+                      <div className="orc-pro__imagem-manual-actions">
+                        <button
+                          type="button"
+                          className="orc-pro__btn orc-pro__btn--secondary"
+                          onClick={() => document.getElementById(imagemManualUploadId)?.click()}
+                        >
+                          📷 {safeT?.selectPhoto || 'Selecionar foto'}
+                        </button>
+                        {(imagemManualPeca || urlImagemManualPeca.trim()) && (
+                          <button
+                            type="button"
+                            className="orc-pro__btn orc-pro__btn--danger"
+                            onClick={() => {
+                              setImagemManualPeca('')
+                              setUrlImagemManualPeca('')
+                            }}
+                          >
+                            {safeT?.removerImagem || 'Remover imagem'}
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="url"
+                        className="orc-pro__input"
+                        value={urlImagemManualPeca}
+                        onChange={(e) => {
+                          setUrlImagemManualPeca(e.target.value)
+                          if (e.target.value.trim()) setImagemManualPeca('')
+                        }}
+                        placeholder={safeT?.pecaBibliotecaUrlPlaceholder || 'https://... (URL da imagem)'}
                       />
                     </div>
                     <button

@@ -35597,7 +35597,7 @@ export default function Dashboard() {
                   {relatoriosLetrasOrdem.length > 1 && (
                     <nav
                       className="clientes-alfa-jump"
-                      aria-label={(safeT as any)?.clientesAlfabetoIndice || 'Índice A–Z'}
+                      aria-label={safeT?.clientesAlfabetoIndice || 'Índice A–Z'}
                     >
                       {relatoriosLetrasOrdem.map(letra => (
                         <a
@@ -36746,8 +36746,8 @@ export default function Dashboard() {
                 ) : (
                   <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#484848', borderRadius: '6px', fontSize: '14px' }}>
                     {clientesLetraAtiva
-                      ? `${clientesListaFiltradaCount} ${safeT?.clientes || 'cliente(s)'} ${(safeT as any)?.clientesAlfabetoComInicial || 'com inicial'} «${clientesLetraAtiva === '#' ? ((safeT as any)?.clientesAlfabetoOutros || 'Outros') : clientesLetraAtiva}»${buscaCliente.trim() ? ` (${safeT?.de || 'de'} ${clientesFiltrados.length} ${safeT?.filtrados || 'filtrados'})` : ''}`
-                      : `${safeT?.mostrando || 'Mostrando'} ${clientesFiltrados.length} ${safeT?.de || 'de'} ${clientes.length} ${safeT?.clientes || 'cliente(s)'} — ${(safeT as any)?.clientesAlfabetoSelecioneLetra || 'selecione uma letra abaixo'}`}
+                      ? `${clientesListaFiltradaCount} ${safeT?.clientes || 'cliente(s)'} ${safeT?.clientesAlfabetoComInicial || 'com inicial'} «${clientesLetraAtiva === '#' ? (safeT?.clientesAlfabetoOutros || 'Outros') : clientesLetraAtiva}»${buscaCliente.trim() ? ` (${safeT?.de || 'de'} ${clientesFiltrados.length} ${safeT?.filtrados || 'filtrados'})` : ''}`
+                      : `${safeT?.mostrando || 'Mostrando'} ${clientesFiltrados.length} ${safeT?.de || 'de'} ${clientes.length} ${safeT?.clientes || 'cliente(s)'} — ${safeT?.clientesAlfabetoSelecioneLetra || 'selecione uma letra abaixo'}`}
                   </div>
                 )}
 
@@ -36755,7 +36755,7 @@ export default function Dashboard() {
                   <div className="clientes-alfa-wrap clientes-cadastrados-lista">
                     <nav
                       className="clientes-alfa-jump clientes-alfa-jump--modern"
-                      aria-label={(safeT as any)?.clientesAlfabetoIndice || 'Índice A–Z'}
+                      aria-label={safeT?.clientesAlfabetoIndice || 'Índice A–Z'}
                     >
                       {CLIENTES_ALFABETO_INDICE.map((letra) => {
                         const count = clientesPorLetra.get(letra)?.length ?? 0
@@ -36771,7 +36771,7 @@ export default function Dashboard() {
                             title={
                               temClientes
                                 ? `${count} ${safeT?.clientes || 'cliente(s)'}`
-                                : (safeT as any)?.clientesAlfabetoSemClientes || 'Sem clientes nesta letra'
+                                : safeT?.clientesAlfabetoSemClientes || 'Sem clientes nesta letra'
                             }
                             onClick={() => {
                               setClientesAlfaLetraFiltro(letra)
@@ -36791,7 +36791,7 @@ export default function Dashboard() {
 
                     {!clientesLetraAtiva ? (
                       <p className="clientes-alfa-prompt">
-                        {(safeT as any)?.clientesAlfabetoPrompt ||
+                        {safeT?.clientesAlfabetoPrompt ||
                           'Toque numa letra acima para ver apenas os clientes com essa inicial.'}
                       </p>
                     ) : (
@@ -36803,7 +36803,7 @@ export default function Dashboard() {
                         >
                           <h3 className="clientes-alfa-letra">
                             {letra === '#'
-                              ? (safeT as any)?.clientesAlfabetoOutros || 'Outros'
+                              ? safeT?.clientesAlfabetoOutros || 'Outros'
                               : letra}
                             <span className="clientes-alfa-letra__count">
                               {(clientesPorLetra.get(letra) ?? []).length}

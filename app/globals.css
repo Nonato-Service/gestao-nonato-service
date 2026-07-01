@@ -32059,6 +32059,42 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   border: 1px solid rgba(0, 200, 83, 0.25);
   background: rgba(2, 6, 23, 0.55);
 }
+.orc-pro__imagem-manual {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0 14px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+.orc-pro__imagem-manual label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.82);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.orc-pro__imagem-manual-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.52);
+}
+.orc-pro__imagem-manual-file {
+  display: none;
+}
+.orc-pro__imagem-manual-preview {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 4px;
+}
+.orc-pro__imagem-manual-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .orc-pro__pecas-stack {
   display: flex;
   flex-direction: column;
