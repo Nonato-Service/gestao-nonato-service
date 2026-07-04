@@ -3871,6 +3871,42 @@ function periodoFinanceiroFromDate(
   return { periodo: `${y}-W${String(weekNum).padStart(2, '0')}`, dataInicio: start, dataFim: end }
 }
 
+function isoWeekStringFromDate(d: Date): string {
+  const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+  const dayNum = tmp.getUTCDay() || 7
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum)
+  const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1))
+  const weekNo = Math.ceil(((tmp.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+  return `${tmp.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`
+}
+
+function dateFromIsoWeekString(isoWeek: string): Date {
+  const m = isoWeek.match(/^(\d{4})-W(\d{2})$/)
+  if (!m) return new Date()
+  const y = parseInt(m[1], 10)
+  const w = parseInt(m[2], 10)
+  const jan4 = new Date(y, 0, 4)
+  const dayOfWeek = jan4.getDay() || 7
+  const monday = new Date(jan4)
+  monday.setDate(jan4.getDate() - dayOfWeek + 1 + (w - 1) * 7)
+  monday.setHours(12, 0, 0, 0)
+  return monday
+}
+
+function financeiroReferenciaDateFromFiltros(
+  tipo: TipoPeriodoFinanceiro,
+  refMes: string,
+  refAno: number,
+  refSemana: string
+): Date {
+  if (tipo === 'mensal') {
+    const [y, mo] = refMes.split('-').map(x => parseInt(x, 10))
+    if (Number.isFinite(y) && Number.isFinite(mo)) return new Date(y, mo - 1, 15)
+  }
+  if (tipo === 'anual') return new Date(refAno, 6, 1)
+  return dateFromIsoWeekString(refSemana)
+}
+
 function dataDentroPeriodoFinanceiro(d: Date, inicio: Date, fim: Date): boolean {
   const t = d.getTime()
   return t >= inicio.getTime() && t <= fim.getTime()
@@ -7524,6 +7560,9 @@ export default function Dashboard() {
   const [gestaoFinMapaMarcarPagoOkMsg, setGestaoFinMapaMarcarPagoOkMsg] = useState('')
   const gestaoFinMapaMarcarPagoOkHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [filtroPeriodo, setFiltroPeriodo] = useState<'semanal' | 'mensal' | 'anual'>('mensal')
+  const [financeiroRefMes, setFinanceiroRefMes] = useState(() => new Date().toISOString().slice(0, 7))
+  const [financeiroRefAno, setFinanceiroRefAno] = useState(() => new Date().getFullYear())
+  const [financeiroRefSemana, setFinanceiroRefSemana] = useState(() => isoWeekStringFromDate(new Date()))
   const [showOSForm, setShowOSForm] = useState(false)
   const [showFaturaForm, setShowFaturaForm] = useState(false)
   const [editingOS, setEditingOS] = useState<OrdemServico | null>(null)
@@ -7815,14 +7854,26 @@ export default function Dashboard() {
     [financeiroDadosBase]
   )
 
+  const financeiroDataReferencia = useMemo(
+    () =>
+      financeiroReferenciaDateFromFiltros(
+        filtroPeriodo,
+        financeiroRefMes,
+        financeiroRefAno,
+        financeiroRefSemana
+      ),
+    [filtroPeriodo, financeiroRefMes, financeiroRefAno, financeiroRefSemana]
+  )
+
   /** Resumo do período selecionado (atualizado com os dados do sistema). */
   const relatorioFinanceiroVivo = useMemo(
     () =>
       buildRelatorioFinanceiroPeriodo({
         ...financeiroDadosBase,
         tipo: filtroPeriodo,
+        agora: financeiroDataReferencia,
       }),
-    [financeiroDadosBase, filtroPeriodo]
+    [financeiroDadosBase, filtroPeriodo, financeiroDataReferencia]
   )
 
   const relatoriosSemNFPendenteMapaGestaoFin = useMemo(() => {
@@ -60707,226 +60758,295 @@ A1;Peça exemplo;10`}
                 </div>
               )}
 
-              {clientesFinanceiroActiveTab === 'relatorios' && (
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ color: '#00c853', fontSize: '24px', margin: 0 }}>
-                      {safeT?.relatoriosFinanceiros || 'RELATÓRIOS FINANCEIROS'}
-                    </h2>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <select
-                        value={filtroPeriodo}
-                        onChange={(e) => setFiltroPeriodo(e.target.value as 'semanal' | 'mensal' | 'anual')}
-                        style={{
-                          padding: '10px',
-                          backgroundColor: '#484848',
-                          border: '1px solid rgba(0, 200, 83, 0.3)',
-                          borderRadius: '8px',
-                          color: '#fff',
-                          fontSize: '14px'
-                        }}
-                      >
-                        <option value="semanal">{safeT?.semanal || 'Semanal'}</option>
-                        <option value="mensal">{safeT?.mensal || 'Mensal'}</option>
-                        <option value="anual">{safeT?.anual || 'Anual'}</option>
-                      </select>
-                      <button
-                        className="btn-primary"
-                        onClick={() => {
-                          const novo = buildRelatorioFinanceiroPeriodo({
-                            ...financeiroDadosBase,
-                            tipo: filtroPeriodo,
-                            agora: new Date(),
-                          })
-                          novo.id = `rel-${Date.now()}`
-                          const semDup = relatoriosFinanceiros.filter(
-                            r => !(r.tipo === novo.tipo && r.periodo === novo.periodo)
-                          )
-                          const next = [novo, ...semDup]
-                          setRelatoriosFinanceiros(next)
-                          saveData('nonato-relatorios-financeiros', next)
-                        }}
-                        style={{
-                          padding: '10px 20px',
-                          fontSize: '14px',
-                          fontWeight: 'bold'
-                        }}
-                      >
-                        {(safeT as any)?.guardarRelatorioFinanceiro || safeT?.gerarRelatorio || 'Guardar relatório'}
-                      </button>
-                    </div>
-                  </div>
-
-                  <p style={{ color: '#888', fontSize: '12px', margin: '0 0 14px', lineHeight: 1.45 }}>
-                    {(safeT as any)?.relatorioFinanceiroHint ||
-                      'O resumo abaixo usa faturas de peças, ordens de serviço e fechamentos guardados na biblioteca. «Guardar relatório» grava uma cópia do período atual.'}
-                  </p>
-
-                  {/* Resumo do período atual (automático) */}
-                  <div
-                    style={{
-                      padding: '20px',
-                      marginBottom: '18px',
-                      backgroundColor: '#1a2433',
-                      border: '1px solid rgba(96, 165, 250, 0.45)',
-                      borderRadius: '8px',
-                    }}
-                  >
-                    <div style={{ marginBottom: '12px' }}>
-                      <h3 style={{ color: '#93c5fd', margin: '0 0 6px', fontSize: '17px' }}>
-                        {(safeT as any)?.relatorioFinanceiroVivoTitulo || 'Período atual'} ({filtroPeriodo})
-                      </h3>
-                      <p style={{ color: '#aaa', margin: 0, fontSize: '13px' }}>
-                        {relatorioFinanceiroVivo.periodo} ·{' '}
-                        {new Date(relatorioFinanceiroVivo.dataInicio).toLocaleDateString()} –{' '}
-                        {new Date(relatorioFinanceiroVivo.dataFim).toLocaleDateString()}
+              {clientesFinanceiroActiveTab === 'relatorios' && (() => {
+                const txRf = safeT as Record<string, string>
+                const loc = localeDateShort(selectedLanguage)
+                const fmtMoeda = (n: number) =>
+                  `€${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                const dataIni = new Date(relatorioFinanceiroVivo.dataInicio)
+                const dataFim = new Date(relatorioFinanceiroVivo.dataFim)
+                const anoAtual = new Date().getFullYear()
+                const anosDisponiveis: number[] = []
+                for (let a = anoAtual + 1; a >= 2020; a--) anosDisponiveis.push(a)
+                const resetPeriodoAtual = () => {
+                  const hoje = new Date()
+                  setFinanceiroRefMes(hoje.toISOString().slice(0, 7))
+                  setFinanceiroRefAno(hoje.getFullYear())
+                  setFinanceiroRefSemana(isoWeekStringFromDate(hoje))
+                }
+                const guardarRelatorioAtual = () => {
+                  const novo = buildRelatorioFinanceiroPeriodo({
+                    ...financeiroDadosBase,
+                    tipo: filtroPeriodo,
+                    agora: financeiroDataReferencia,
+                  })
+                  novo.id = `rel-${Date.now()}`
+                  const semDup = relatoriosFinanceiros.filter(
+                    r => !(r.tipo === novo.tipo && r.periodo === novo.periodo)
+                  )
+                  const next = [novo, ...semDup]
+                  setRelatoriosFinanceiros(next)
+                  saveData('nonato-relatorios-financeiros', next)
+                }
+                const relatoriosFiltrados = relatoriosFinanceiros
+                  .filter(rel => rel.tipo === filtroPeriodo)
+                  .sort((a, b) => new Date(b.dataGeracao).getTime() - new Date(a.dataGeracao).getTime())
+                return (
+                  <div className="gf-rel-fin">
+                    <header className="gf-rel-fin__header">
+                      <h2 className="gf-rel-fin__title">
+                        {safeT?.relatoriosFinanceiros || 'RELATÓRIOS FINANCEIROS'}
+                      </h2>
+                      <p className="gf-rel-fin__hint">
+                        {txRf.relatorioFinanceiroHint ||
+                          'Escolha o tipo de período e o mês/semana/ano para ver rendimentos, pendentes e devedores. «Guardar relatório» grava uma cópia desse período.'}
                       </p>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-                      <div>
-                        <p style={{ color: '#ccc', margin: '4px 0', fontSize: '12px' }}>{safeT?.totalVendas || 'Total vendas'}</p>
-                        <p style={{ color: '#00c853', margin: 0, fontSize: '17px', fontWeight: 'bold' }}>
-                          €{relatorioFinanceiroVivo.totalVendas.toFixed(2)}
-                        </p>
-                      </div>
-                      <div>
-                        <p style={{ color: '#ccc', margin: '4px 0', fontSize: '12px' }}>{safeT?.totalRecebido || 'Total recebido'}</p>
-                        <p style={{ color: '#66b3ff', margin: 0, fontSize: '17px', fontWeight: 'bold' }}>
-                          €{relatorioFinanceiroVivo.totalRecebido.toFixed(2)}
-                        </p>
-                      </div>
-                      <div>
-                        <p style={{ color: '#ccc', margin: '4px 0', fontSize: '12px' }}>{safeT?.totalIVA || 'Total IVA'}</p>
-                        <p style={{ color: '#fde047', margin: 0, fontSize: '17px', fontWeight: 'bold' }}>
-                          €{relatorioFinanceiroVivo.totalIVA.toFixed(2)}
-                        </p>
-                      </div>
-                      <div>
-                        <p style={{ color: '#ccc', margin: '4px 0', fontSize: '12px' }}>{safeT?.numeroFaturas || 'Faturas peças'}</p>
-                        <p style={{ color: '#e2e8f0', margin: 0, fontSize: '17px', fontWeight: 'bold' }}>
-                          {relatorioFinanceiroVivo.numeroFaturas}
-                        </p>
-                      </div>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginTop: '12px' }}>
-                      <div>
-                        <p style={{ color: '#ccc', margin: '4px 0', fontSize: '12px' }}>{safeT?.numeroOS || 'Nº OS'}</p>
-                        <p style={{ color: '#e2e8f0', margin: 0, fontSize: '17px', fontWeight: 'bold' }}>
-                          {relatorioFinanceiroVivo.numeroOS}
-                        </p>
-                      </div>
-                      <div>
-                        <p style={{ color: '#ccc', margin: '4px 0', fontSize: '12px' }}>
-                          {(safeT as any)?.financeiroFechamentosBiblioteca || 'Fech. biblioteca'}
-                        </p>
-                        <p style={{ color: '#e2e8f0', margin: 0, fontSize: '17px', fontWeight: 'bold' }}>
-                          {relatorioFinanceiroVivo.numeroFechamentosBiblioteca ?? 0} · €
-                          {(relatorioFinanceiroVivo.totalFechamentosBiblioteca ?? 0).toFixed(2)}
-                        </p>
-                      </div>
-                      <div>
-                        <p style={{ color: '#ccc', margin: '4px 0', fontSize: '12px' }}>
-                          {(safeT as any)?.financeiroRecebidoBiblioteca || 'Recebido (bib.)'}
-                        </p>
-                        <p style={{ color: '#86efac', margin: 0, fontSize: '17px', fontWeight: 'bold' }}>
-                          €{(relatorioFinanceiroVivo.recebidoFechamentosBiblioteca ?? 0).toFixed(2)}
-                        </p>
-                      </div>
-                      <div>
-                        <p style={{ color: '#ccc', margin: '4px 0', fontSize: '12px' }}>
-                          {(safeT as any)?.financeiroPendenteBiblioteca || 'Pendente (bib.)'}
-                        </p>
-                        <p style={{ color: '#fca5a5', margin: 0, fontSize: '17px', fontWeight: 'bold' }}>
-                          €{(relatorioFinanceiroVivo.pendenteFechamentosBiblioteca ?? 0).toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginTop: '12px' }}>
-                      <div>
-                        <p style={{ color: '#ccc', margin: '4px 0', fontSize: '12px' }}>{safeT?.clientesDevedores || 'Clientes devedores'}</p>
-                        <p style={{ color: '#fca5a5', margin: 0, fontSize: '17px', fontWeight: 'bold' }}>
-                          {relatorioFinanceiroVivo.clientesDevedores} · €
-                          {relatorioFinanceiroVivo.valorTotalDevedores.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                    </header>
 
-                  {/* Relatórios guardados */}
-                  <h3 style={{ color: '#ccc', fontSize: '14px', margin: '0 0 10px', fontWeight: 600 }}>
-                    {(safeT as any)?.relatoriosFinanceirosGuardados || 'Relatórios guardados'}
-                  </h3>
-                  <div style={{ display: 'grid', gap: '15px' }}>
-                    {relatoriosFinanceiros
-                      .filter(rel => rel.tipo === filtroPeriodo)
-                      .sort((a, b) => new Date(b.dataGeracao).getTime() - new Date(a.dataGeracao).getTime())
-                      .map((relatorio) => (
-                        <div
-                          key={relatorio.id}
-                          style={{
-                            padding: '20px',
-                            backgroundColor: '#484848',
-                            border: '1px solid rgba(0, 200, 83, 0.2)',
-                            borderRadius: '8px'
-                          }}
+                    <div className="gf-rel-fin__toolbar" role="group" aria-label={txRf.relatorioFinanceiroSelecionarPeriodo || 'Selecionar período'}>
+                      <div className="gf-rel-fin__field">
+                        <label className="gf-rel-fin__label" htmlFor="gf-rel-fin-tipo">
+                          {txRf.relatorioFinanceiroTipoPeriodo || 'Tipo de período'}
+                        </label>
+                        <select
+                          id="gf-rel-fin-tipo"
+                          className="gf-rel-fin__select"
+                          value={filtroPeriodo}
+                          onChange={(e) => setFiltroPeriodo(e.target.value as 'semanal' | 'mensal' | 'anual')}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                            <div>
-                              <h3 style={{ color: '#00c853', margin: 0, fontSize: '18px' }}>
-                                {relatorio.tipo.toUpperCase()}: {relatorio.periodo}
-                              </h3>
-                              <p style={{ color: '#ccc', margin: '5px 0', fontSize: '14px' }}>
-                                {new Date(relatorio.dataInicio).toLocaleDateString()} - {new Date(relatorio.dataFim).toLocaleDateString()}
-                              </p>
-                              <p style={{ color: '#888', margin: '5px 0', fontSize: '12px' }}>
-                                {safeT?.geradoEm || 'Gerado em'}: {new Date(relatorio.dataGeracao).toLocaleString()}
-                              </p>
-                            </div>
-                          </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginTop: '15px' }}>
-                            <div>
-                              <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.totalVendas || 'Total Vendas'}</p>
-                              <p style={{ color: '#00c853', margin: 0, fontSize: '18px', fontWeight: 'bold' }}>€{relatorio.totalVendas.toFixed(2)}</p>
-                            </div>
-                            <div>
-                              <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.totalRecebido || 'Total Recebido'}</p>
-                              <p style={{ color: '#66b3ff', margin: 0, fontSize: '18px', fontWeight: 'bold' }}>€{relatorio.totalRecebido.toFixed(2)}</p>
-                            </div>
-                            <div>
-                              <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.totalIVA || 'Total IVA'}</p>
-                              <p style={{ color: '#ffff00', margin: 0, fontSize: '18px', fontWeight: 'bold' }}>€{relatorio.totalIVA.toFixed(2)}</p>
-                            </div>
-                            <div>
-                              <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.numeroOS || 'Nº de OS'}</p>
-                              <p style={{ color: '#ccc', margin: 0, fontSize: '18px', fontWeight: 'bold' }}>{relatorio.numeroOS}</p>
-                            </div>
-                          </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginTop: '15px' }}>
-                            <div>
-                              <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.clientesDevedores || 'Clientes Devedores'}</p>
-                              <p style={{ color: '#ff0000', margin: 0, fontSize: '18px', fontWeight: 'bold' }}>{relatorio.clientesDevedores}</p>
-                            </div>
-                            <div>
-                              <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.valorTotalDevedores || 'Valor Total Devedores'}</p>
-                              <p style={{ color: '#ff0000', margin: 0, fontSize: '18px', fontWeight: 'bold' }}>€{relatorio.valorTotalDevedores.toFixed(2)}</p>
-                            </div>
-                            <div>
-                              <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.saldo || 'Saldo'}</p>
-                              <p style={{ color: relatorio.saldo >= 0 ? '#00c853' : '#ff0000', margin: 0, fontSize: '18px', fontWeight: 'bold' }}>
-                                €{relatorio.saldo.toFixed(2)}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    {relatoriosFinanceiros.filter(rel => rel.tipo === filtroPeriodo).length === 0 && (
-                      <div style={{ textAlign: 'center', padding: '40px', color: '#ccc' }}>
-                        {safeT?.nenhumRelatorio || 'Nenhum relatório gerado para este período'}
+                          <option value="semanal">{safeT?.semanal || 'Semanal'}</option>
+                          <option value="mensal">{safeT?.mensal || 'Mensal'}</option>
+                          <option value="anual">{safeT?.anual || 'Anual'}</option>
+                        </select>
                       </div>
-                    )}
+
+                      {filtroPeriodo === 'mensal' && (
+                        <div className="gf-rel-fin__field gf-rel-fin__field--destaque">
+                          <label className="gf-rel-fin__label" htmlFor="gf-rel-fin-mes">
+                            {txRf.relatorioFinanceiroSelecionarMes || 'Selecionar mês'}
+                          </label>
+                          <input
+                            id="gf-rel-fin-mes"
+                            type="month"
+                            className="gf-rel-fin__input gf-rel-fin__input--month"
+                            value={financeiroRefMes}
+                            onChange={(e) => setFinanceiroRefMes(e.target.value)}
+                          />
+                        </div>
+                      )}
+
+                      {filtroPeriodo === 'anual' && (
+                        <div className="gf-rel-fin__field gf-rel-fin__field--destaque">
+                          <label className="gf-rel-fin__label" htmlFor="gf-rel-fin-ano">
+                            {txRf.relatorioFinanceiroSelecionarAno || 'Selecionar ano'}
+                          </label>
+                          <select
+                            id="gf-rel-fin-ano"
+                            className="gf-rel-fin__select gf-rel-fin__select--destaque"
+                            value={financeiroRefAno}
+                            onChange={(e) => setFinanceiroRefAno(parseInt(e.target.value, 10))}
+                          >
+                            {anosDisponiveis.map(a => (
+                              <option key={a} value={a}>
+                                {a}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {filtroPeriodo === 'semanal' && (
+                        <div className="gf-rel-fin__field gf-rel-fin__field--destaque">
+                          <label className="gf-rel-fin__label" htmlFor="gf-rel-fin-semana">
+                            {txRf.relatorioFinanceiroSelecionarSemana || 'Selecionar semana'}
+                          </label>
+                          <input
+                            id="gf-rel-fin-semana"
+                            type="week"
+                            className="gf-rel-fin__input gf-rel-fin__input--week"
+                            value={financeiroRefSemana}
+                            onChange={(e) => setFinanceiroRefSemana(e.target.value)}
+                          />
+                        </div>
+                      )}
+
+                      <div className="gf-rel-fin__toolbar-actions">
+                        <button type="button" className="gf-rel-fin__btn gf-rel-fin__btn--ghost" onClick={resetPeriodoAtual}>
+                          {txRf.relatorioFinanceiroPeriodoAtual || 'Período actual'}
+                        </button>
+                        <button type="button" className="gf-rel-fin__btn gf-rel-fin__btn--primary" onClick={guardarRelatorioAtual}>
+                          {txRf.guardarRelatorioFinanceiro || safeT?.gerarRelatorio || 'Guardar relatório'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="gf-rel-fin__periodo-badge" aria-live="polite">
+                      <span className="gf-rel-fin__periodo-badge-label">
+                        {txRf.relatorioFinanceiroVivoTitulo || 'Resumo do período'}
+                      </span>
+                      <strong className="gf-rel-fin__periodo-badge-valor">{relatorioFinanceiroVivo.periodo}</strong>
+                      <span className="gf-rel-fin__periodo-badge-datas">
+                        {dataIni.toLocaleDateString(loc)} – {dataFim.toLocaleDateString(loc)}
+                      </span>
+                    </div>
+
+                    <section className="gf-rel-fin__sec" aria-labelledby="gf-rel-fin-sec-rend">
+                      <h3 id="gf-rel-fin-sec-rend" className="gf-rel-fin__sec-title gf-rel-fin__sec-title--rend">
+                        {txRf.relatorioFinanceiroSecRendimentos || 'Rendimentos'}
+                      </h3>
+                      <div className="gf-rel-fin__metrics">
+                        <article className="gf-rel-fin__metric gf-rel-fin__metric--vendas">
+                          <span className="gf-rel-fin__metric-label">{safeT?.totalVendas || 'Total vendas'}</span>
+                          <strong className="gf-rel-fin__metric-value">{fmtMoeda(relatorioFinanceiroVivo.totalVendas)}</strong>
+                        </article>
+                        <article className="gf-rel-fin__metric gf-rel-fin__metric--recebido">
+                          <span className="gf-rel-fin__metric-label">{safeT?.totalRecebido || 'Total recebido'}</span>
+                          <strong className="gf-rel-fin__metric-value">{fmtMoeda(relatorioFinanceiroVivo.totalRecebido)}</strong>
+                        </article>
+                        <article className="gf-rel-fin__metric gf-rel-fin__metric--iva">
+                          <span className="gf-rel-fin__metric-label">{txRf.totalIVA || 'Total IVA'}</span>
+                          <strong className="gf-rel-fin__metric-value">{fmtMoeda(relatorioFinanceiroVivo.totalIVA)}</strong>
+                        </article>
+                        <article className="gf-rel-fin__metric gf-rel-fin__metric--faturas">
+                          <span className="gf-rel-fin__metric-label">{txRf.numeroFaturas || 'Faturas peças'}</span>
+                          <strong className="gf-rel-fin__metric-value">{relatorioFinanceiroVivo.numeroFaturas}</strong>
+                        </article>
+                        <article className="gf-rel-fin__metric gf-rel-fin__metric--os">
+                          <span className="gf-rel-fin__metric-label">{safeT?.numeroOS || 'Nº OS'}</span>
+                          <strong className="gf-rel-fin__metric-value">{relatorioFinanceiroVivo.numeroOS}</strong>
+                        </article>
+                        <article className="gf-rel-fin__metric gf-rel-fin__metric--bib">
+                          <span className="gf-rel-fin__metric-label">
+                            {txRf.financeiroFechamentosBiblioteca || 'Fech. biblioteca'}
+                          </span>
+                          <strong className="gf-rel-fin__metric-value">
+                            {relatorioFinanceiroVivo.numeroFechamentosBiblioteca ?? 0}
+                            <span className="gf-rel-fin__metric-sub">{fmtMoeda(relatorioFinanceiroVivo.totalFechamentosBiblioteca ?? 0)}</span>
+                          </strong>
+                        </article>
+                      </div>
+                    </section>
+
+                    <section className="gf-rel-fin__sec" aria-labelledby="gf-rel-fin-sec-pend">
+                      <h3 id="gf-rel-fin-sec-pend" className="gf-rel-fin__sec-title gf-rel-fin__sec-title--pend">
+                        {txRf.relatorioFinanceiroSecPendentes || 'Pendentes'}
+                      </h3>
+                      <div className="gf-rel-fin__metrics gf-rel-fin__metrics--duo">
+                        <article className="gf-rel-fin__metric gf-rel-fin__metric--pend-bib">
+                          <span className="gf-rel-fin__metric-label">
+                            {txRf.financeiroPendenteBiblioteca || 'Pendente (biblioteca)'}
+                          </span>
+                          <strong className="gf-rel-fin__metric-value">
+                            {fmtMoeda(relatorioFinanceiroVivo.pendenteFechamentosBiblioteca ?? 0)}
+                          </strong>
+                        </article>
+                        <article className="gf-rel-fin__metric gf-rel-fin__metric--receb-bib">
+                          <span className="gf-rel-fin__metric-label">
+                            {txRf.financeiroRecebidoBiblioteca || 'Recebido (bib.)'}
+                          </span>
+                          <strong className="gf-rel-fin__metric-value">
+                            {fmtMoeda(relatorioFinanceiroVivo.recebidoFechamentosBiblioteca ?? 0)}
+                          </strong>
+                        </article>
+                      </div>
+                    </section>
+
+                    <section className="gf-rel-fin__sec" aria-labelledby="gf-rel-fin-sec-dev">
+                      <h3 id="gf-rel-fin-sec-dev" className="gf-rel-fin__sec-title gf-rel-fin__sec-title--dev">
+                        {txRf.relatorioFinanceiroSecDevedores || 'Devedores'}
+                      </h3>
+                      <div className="gf-rel-fin__metrics gf-rel-fin__metrics--duo">
+                        <article className="gf-rel-fin__metric gf-rel-fin__metric--dev-qtd">
+                          <span className="gf-rel-fin__metric-label">{safeT?.clientesDevedores || 'Clientes devedores'}</span>
+                          <strong className="gf-rel-fin__metric-value">{relatorioFinanceiroVivo.clientesDevedores}</strong>
+                        </article>
+                        <article className="gf-rel-fin__metric gf-rel-fin__metric--dev-val">
+                          <span className="gf-rel-fin__metric-label">
+                            {txRf.valorTotalDevedores || 'Valor total devedores'}
+                          </span>
+                          <strong className="gf-rel-fin__metric-value">
+                            {fmtMoeda(relatorioFinanceiroVivo.valorTotalDevedores)}
+                          </strong>
+                        </article>
+                      </div>
+                    </section>
+
+                    <section className="gf-rel-fin__guardados" aria-labelledby="gf-rel-fin-guardados-tit">
+                      <h3 id="gf-rel-fin-guardados-tit" className="gf-rel-fin__guardados-title">
+                        {txRf.relatoriosFinanceirosGuardados || 'Relatórios guardados'}
+                      </h3>
+                      <div className="gf-rel-fin__guardados-list">
+                        {relatoriosFiltrados.map(relatorio => {
+                          const isAtual =
+                            relatorio.periodo === relatorioFinanceiroVivo.periodo &&
+                            relatorio.tipo === relatorioFinanceiroVivo.tipo
+                          return (
+                            <article
+                              key={relatorio.id}
+                              className={`gf-rel-fin__card${isAtual ? ' gf-rel-fin__card--atual' : ''}`}
+                            >
+                              <header className="gf-rel-fin__card-head">
+                                <div>
+                                  <h4 className="gf-rel-fin__card-title">
+                                    {relatorio.tipo.toUpperCase()}: {relatorio.periodo}
+                                    {isAtual && (
+                                      <span className="gf-rel-fin__card-badge">
+                                        {txRf.relatorioFinanceiroPeriodoSelecionado || 'Seleccionado'}
+                                      </span>
+                                    )}
+                                  </h4>
+                                  <p className="gf-rel-fin__card-datas">
+                                    {new Date(relatorio.dataInicio).toLocaleDateString(loc)} –{' '}
+                                    {new Date(relatorio.dataFim).toLocaleDateString(loc)}
+                                  </p>
+                                  <p className="gf-rel-fin__card-gerado">
+                                    {safeT?.geradoEm || 'Gerado em'}: {new Date(relatorio.dataGeracao).toLocaleString(loc)}
+                                  </p>
+                                </div>
+                              </header>
+                              <div className="gf-rel-fin__card-metrics">
+                                <div className="gf-rel-fin__card-metric">
+                                  <span>{safeT?.totalVendas || 'Total Vendas'}</span>
+                                  <strong>{fmtMoeda(relatorio.totalVendas)}</strong>
+                                </div>
+                                <div className="gf-rel-fin__card-metric">
+                                  <span>{safeT?.totalRecebido || 'Total Recebido'}</span>
+                                  <strong>{fmtMoeda(relatorio.totalRecebido)}</strong>
+                                </div>
+                                <div className="gf-rel-fin__card-metric">
+                                  <span>{txRf.totalIVA || 'Total IVA'}</span>
+                                  <strong>{fmtMoeda(relatorio.totalIVA)}</strong>
+                                </div>
+                                <div className="gf-rel-fin__card-metric">
+                                  <span>{safeT?.numeroOS || 'Nº de OS'}</span>
+                                  <strong>{relatorio.numeroOS}</strong>
+                                </div>
+                                <div className="gf-rel-fin__card-metric gf-rel-fin__card-metric--dev">
+                                  <span>{safeT?.clientesDevedores || 'Clientes Devedores'}</span>
+                                  <strong>{relatorio.clientesDevedores}</strong>
+                                </div>
+                                <div className="gf-rel-fin__card-metric gf-rel-fin__card-metric--dev">
+                                  <span>{txRf.valorTotalDevedores || 'Valor Total Devedores'}</span>
+                                  <strong>{fmtMoeda(relatorio.valorTotalDevedores)}</strong>
+                                </div>
+                                <div className="gf-rel-fin__card-metric">
+                                  <span>{safeT?.saldo || 'Saldo'}</span>
+                                  <strong className={relatorio.saldo >= 0 ? 'gf-rel-fin__pos' : 'gf-rel-fin__neg'}>
+                                    {fmtMoeda(relatorio.saldo)}
+                                  </strong>
+                                </div>
+                              </div>
+                            </article>
+                          )
+                        })}
+                        {relatoriosFiltrados.length === 0 && (
+                          <p className="gf-rel-fin__empty">{safeT?.nenhumRelatorio || 'Nenhum relatório gerado para este período'}</p>
+                        )}
+                      </div>
+                    </section>
                   </div>
-                </div>
-              )}
+                )
+              })()}
 
               {clientesFinanceiroActiveTab === 'despesasControle' && (() => {
                 const tx = safeT as Record<string, string>

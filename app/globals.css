@@ -8810,6 +8810,319 @@ a:focus-visible {
   -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
 }
 
+/* Relatórios financeiros — Clientes / Financeiro › aba Relatórios */
+.gf-rel-fin {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 100%;
+}
+.gf-rel-fin__header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gf-rel-fin__title {
+  margin: 0;
+  font-size: clamp(1.25rem, 3vw, 1.65rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4ade80;
+  text-shadow: 0 0 18px rgba(74, 222, 128, 0.25);
+}
+.gf-rel-fin__hint {
+  margin: 0;
+  max-width: 920px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(226, 232, 240, 0.88);
+}
+.gf-rel-fin__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px 18px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.92) 100%);
+  border: 2px solid rgba(74, 222, 128, 0.35);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+.gf-rel-fin__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 140px;
+}
+.gf-rel-fin__field--destaque {
+  min-width: min(220px, 100%);
+  flex: 1 1 200px;
+}
+.gf-rel-fin__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+.gf-rel-fin__select,
+.gf-rel-fin__input {
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #f8fafc;
+  background: #1e293b;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 10px;
+  outline: none;
+  min-height: 46px;
+  box-sizing: border-box;
+}
+.gf-rel-fin__select--destaque,
+.gf-rel-fin__input--month,
+.gf-rel-fin__input--week {
+  border-color: rgba(74, 222, 128, 0.65);
+  background: #0f172a;
+  box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.gf-rel-fin__select:focus,
+.gf-rel-fin__input:focus {
+  border-color: #4ade80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.22);
+}
+.gf-rel-fin__toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-left: auto;
+  align-items: center;
+}
+.gf-rel-fin__btn {
+  padding: 12px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.12s ease;
+}
+.gf-rel-fin__btn--ghost {
+  color: #cbd5e1;
+  background: rgba(51, 65, 85, 0.55);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+.gf-rel-fin__btn--ghost:hover {
+  background: rgba(71, 85, 105, 0.75);
+  color: #f1f5f9;
+}
+.gf-rel-fin__btn--primary {
+  color: #052e16;
+  background: linear-gradient(180deg, #4ade80 0%, #22c55e 100%);
+  border-color: rgba(134, 239, 172, 0.8);
+}
+.gf-rel-fin__btn--primary:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+.gf-rel-fin__periodo-badge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 16px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(96, 165, 250, 0.45);
+}
+.gf-rel-fin__periodo-badge-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #93c5fd;
+}
+.gf-rel-fin__periodo-badge-valor {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: 0.03em;
+}
+.gf-rel-fin__periodo-badge-datas {
+  font-size: 14px;
+  color: #cbd5e1;
+}
+.gf-rel-fin__sec {
+  padding: 18px 20px 20px;
+  border-radius: 14px;
+  background: rgba(30, 41, 59, 0.55);
+  border: 1px solid rgba(71, 85, 105, 0.65);
+}
+.gf-rel-fin__sec-title {
+  margin: 0 0 16px;
+  padding-bottom: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 2px solid rgba(148, 163, 184, 0.25);
+}
+.gf-rel-fin__sec-title--rend { color: #4ade80; border-bottom-color: rgba(74, 222, 128, 0.35); }
+.gf-rel-fin__sec-title--pend { color: #fbbf24; border-bottom-color: rgba(251, 191, 36, 0.35); }
+.gf-rel-fin__sec-title--dev { color: #f87171; border-bottom-color: rgba(248, 113, 113, 0.35); }
+.gf-rel-fin__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+}
+.gf-rel-fin__metrics--duo {
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+}
+.gf-rel-fin__metric {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid rgba(51, 65, 85, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 88px;
+}
+.gf-rel-fin__metric-label {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+.gf-rel-fin__metric-value {
+  font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1.2;
+}
+.gf-rel-fin__metric-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.85em;
+  font-weight: 650;
+  color: #cbd5e1;
+}
+.gf-rel-fin__metric--vendas .gf-rel-fin__metric-value { color: #4ade80; }
+.gf-rel-fin__metric--recebido .gf-rel-fin__metric-value { color: #60a5fa; }
+.gf-rel-fin__metric--iva .gf-rel-fin__metric-value { color: #fde047; }
+.gf-rel-fin__metric--pend-bib .gf-rel-fin__metric-value { color: #fb923c; }
+.gf-rel-fin__metric--receb-bib .gf-rel-fin__metric-value { color: #86efac; }
+.gf-rel-fin__metric--dev-qtd .gf-rel-fin__metric-value,
+.gf-rel-fin__metric--dev-val .gf-rel-fin__metric-value { color: #f87171; }
+.gf-rel-fin__guardados-title {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #cbd5e1;
+}
+.gf-rel-fin__guardados-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gf-rel-fin__card {
+  padding: 18px 20px;
+  border-radius: 12px;
+  background: #334155;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+.gf-rel-fin__card--atual {
+  border-color: rgba(74, 222, 128, 0.55);
+  box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.2);
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.98) 0%, rgba(22, 101, 52, 0.12) 100%);
+}
+.gf-rel-fin__card-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: #4ade80;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.gf-rel-fin__card-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #052e16;
+  background: #4ade80;
+}
+.gf-rel-fin__card-datas {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #e2e8f0;
+}
+.gf-rel-fin__card-gerado {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+.gf-rel-fin__card-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.gf-rel-fin__card-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.55);
+}
+.gf-rel-fin__card-metric span {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.gf-rel-fin__card-metric strong {
+  font-size: 1.05rem;
+  color: #f1f5f9;
+}
+.gf-rel-fin__card-metric--dev strong { color: #f87171; }
+.gf-rel-fin__pos { color: #4ade80 !important; }
+.gf-rel-fin__neg { color: #f87171 !important; }
+.gf-rel-fin__empty {
+  margin: 0;
+  padding: 36px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #94a3b8;
+  border-radius: 12px;
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.4);
+}
+@media (max-width: 640px) {
+  .gf-rel-fin__toolbar {
+    padding: 14px;
+  }
+  .gf-rel-fin__toolbar-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+  .gf-rel-fin__btn {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+}
+
 /* Painel executivo — Gestão Financeira */
 .gf-painel-exec {
   width: 100%;
