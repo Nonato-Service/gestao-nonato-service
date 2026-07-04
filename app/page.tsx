@@ -7865,6 +7865,19 @@ export default function Dashboard() {
     [filtroPeriodo, financeiroRefMes, financeiroRefAno, financeiroRefSemana]
   )
 
+  const financeiroPeriodoAtivo = useMemo(
+    () => periodoFinanceiroFromDate(financeiroDataReferencia, filtroPeriodo),
+    [financeiroDataReferencia, filtroPeriodo]
+  )
+
+  const ivaControlesPeriodoSelecionado = useMemo(
+    () =>
+      ivaControlesEfetivos.filter(
+        iv => iv.tipoPeriodo === filtroPeriodo && iv.periodo === financeiroPeriodoAtivo.periodo
+      ),
+    [ivaControlesEfetivos, filtroPeriodo, financeiroPeriodoAtivo.periodo]
+  )
+
   /** Resumo do período selecionado (atualizado com os dados do sistema). */
   const relatorioFinanceiroVivo = useMemo(
     () =>
@@ -59548,6 +59561,122 @@ A1;Peça exemplo;10`}
               ))}
             </div>
 
+            {(clientesFinanceiroActiveTab === 'iva' || clientesFinanceiroActiveTab === 'relatorios') &&
+              (() => {
+                const txFin = safeT as Record<string, string>
+                const locFin = localeDateShort(selectedLanguage)
+                const anoAtualFin = new Date().getFullYear()
+                const anosFin: number[] = []
+                for (let a = anoAtualFin + 1; a >= 2020; a--) anosFin.push(a)
+                const resetFinPeriodoAtual = () => {
+                  const hoje = new Date()
+                  setFinanceiroRefMes(hoje.toISOString().slice(0, 7))
+                  setFinanceiroRefAno(hoje.getFullYear())
+                  setFinanceiroRefSemana(isoWeekStringFromDate(hoje))
+                }
+                const dataIniFin = financeiroPeriodoAtivo.dataInicio
+                const dataFimFin = financeiroPeriodoAtivo.dataFim
+                return (
+                  <div className="gf-fin-periodo-shared" style={{ marginBottom: '16px' }}>
+                    <p className="gf-fin-periodo-shared__hint">
+                      {txFin.financeiroPeriodoCompartilhadoHint ||
+                        'Período partilhado entre IVA e Relatórios — escolha o mês/semana/ano abaixo.'}
+                    </p>
+                    <div
+                      className="gf-rel-fin__toolbar gf-rel-fin__toolbar--shared"
+                      role="group"
+                      aria-label={txFin.relatorioFinanceiroSelecionarPeriodo || 'Selecionar período'}
+                    >
+                      <div className="gf-rel-fin__field">
+                        <label className="gf-rel-fin__label" htmlFor="gf-fin-shared-tipo">
+                          {txFin.relatorioFinanceiroTipoPeriodo || 'Tipo de período'}
+                        </label>
+                        <select
+                          id="gf-fin-shared-tipo"
+                          className="gf-rel-fin__select"
+                          value={filtroPeriodo}
+                          onChange={(e) => setFiltroPeriodo(e.target.value as 'semanal' | 'mensal' | 'anual')}
+                        >
+                          <option value="semanal">{safeT?.semanal || 'Semanal'}</option>
+                          <option value="mensal">{safeT?.mensal || 'Mensal'}</option>
+                          <option value="anual">{safeT?.anual || 'Anual'}</option>
+                        </select>
+                      </div>
+
+                      {filtroPeriodo === 'mensal' && (
+                        <div className="gf-rel-fin__field gf-rel-fin__field--destaque">
+                          <label className="gf-rel-fin__label" htmlFor="gf-fin-shared-mes">
+                            {txFin.relatorioFinanceiroSelecionarMes || 'Selecionar mês'}
+                          </label>
+                          <input
+                            id="gf-fin-shared-mes"
+                            type="month"
+                            className="gf-rel-fin__input gf-rel-fin__input--month"
+                            value={financeiroRefMes}
+                            onChange={(e) => setFinanceiroRefMes(e.target.value)}
+                          />
+                        </div>
+                      )}
+
+                      {filtroPeriodo === 'anual' && (
+                        <div className="gf-rel-fin__field gf-rel-fin__field--destaque">
+                          <label className="gf-rel-fin__label" htmlFor="gf-fin-shared-ano">
+                            {txFin.relatorioFinanceiroSelecionarAno || 'Selecionar ano'}
+                          </label>
+                          <select
+                            id="gf-fin-shared-ano"
+                            className="gf-rel-fin__select gf-rel-fin__select--destaque"
+                            value={financeiroRefAno}
+                            onChange={(e) => setFinanceiroRefAno(parseInt(e.target.value, 10))}
+                          >
+                            {anosFin.map(a => (
+                              <option key={a} value={a}>
+                                {a}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {filtroPeriodo === 'semanal' && (
+                        <div className="gf-rel-fin__field gf-rel-fin__field--destaque">
+                          <label className="gf-rel-fin__label" htmlFor="gf-fin-shared-semana">
+                            {txFin.relatorioFinanceiroSelecionarSemana || 'Selecionar semana'}
+                          </label>
+                          <input
+                            id="gf-fin-shared-semana"
+                            type="week"
+                            className="gf-rel-fin__input gf-rel-fin__input--week"
+                            value={financeiroRefSemana}
+                            onChange={(e) => setFinanceiroRefSemana(e.target.value)}
+                          />
+                        </div>
+                      )}
+
+                      <div className="gf-rel-fin__toolbar-actions">
+                        <button
+                          type="button"
+                          className="gf-rel-fin__btn gf-rel-fin__btn--ghost"
+                          onClick={resetFinPeriodoAtual}
+                        >
+                          {txFin.relatorioFinanceiroPeriodoAtual || 'Período actual'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="gf-rel-fin__periodo-badge" aria-live="polite">
+                      <span className="gf-rel-fin__periodo-badge-label">
+                        {txFin.relatorioFinanceiroVivoTitulo || 'Resumo do período'}
+                      </span>
+                      <strong className="gf-rel-fin__periodo-badge-valor">{financeiroPeriodoAtivo.periodo}</strong>
+                      <span className="gf-rel-fin__periodo-badge-datas">
+                        {dataIniFin.toLocaleDateString(locFin)} – {dataFimFin.toLocaleDateString(locFin)}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })()}
+
             {/* Conteúdo das Abas — padrão Visualizar Equipamento (fundo #3a3a3a, borda 1px verde) */}
             <div
               className="clientes-financeiro-conteudo"
@@ -60624,156 +60753,114 @@ A1;Peça exemplo;10`}
                 </div>
               )}
 
-              {clientesFinanceiroActiveTab === 'iva' && (
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ color: '#00c853', fontSize: '24px', margin: 0 }}>
-                      {safeT?.controleIVA || 'CONTROLE DE IVA'}
-                    </h2>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <select
-                        value={filtroPeriodo}
-                        onChange={(e) => setFiltroPeriodo(e.target.value as 'semanal' | 'mensal' | 'anual')}
-                        style={{
-                          padding: '10px',
-                          backgroundColor: '#484848',
-                          border: '1px solid rgba(0, 200, 83, 0.3)',
-                          borderRadius: '8px',
-                          color: '#fff',
-                          fontSize: '14px'
-                        }}
-                      >
-                        <option value="semanal">{safeT?.semanal || 'Semanal'}</option>
-                        <option value="mensal">{safeT?.mensal || 'Mensal'}</option>
-                        <option value="anual">{safeT?.anual || 'Anual'}</option>
-                      </select>
+              {clientesFinanceiroActiveTab === 'iva' && (() => {
+                const txIva = safeT as Record<string, string>
+                const locIva = localeDateShort(selectedLanguage)
+                const ivasFiltrados = ivaControlesPeriodoSelecionado
+                const totalCobrado = ivasFiltrados.reduce((sum, iv) => sum + iv.IVACobrado, 0)
+                const totalPago = ivasFiltrados.reduce((sum, iv) => sum + iv.IVAPago, 0)
+                const totalApagar = ivasFiltrados.reduce((sum, iv) => sum + iv.IVAApagar, 0)
+                const ivasPendentes = ivasFiltrados.filter(iv => iv.status === 'aberto' || iv.status === 'fechado').length
+                const fmtIva = (n: number) =>
+                  `€${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                return (
+                  <div className="gf-rel-fin gf-rel-fin--iva">
+                    <header className="gf-rel-fin__header">
+                      <h2 className="gf-rel-fin__title">{safeT?.controleIVA || 'CONTROLE DE IVA'}</h2>
+                      <p className="gf-rel-fin__hint">
+                        {txIva.ivaControleAutoHint ||
+                          'Valores calculados automaticamente a partir de faturas de peças, ordens de serviço e fechamentos na biblioteca com IVA ativo no fecho.'}
+                      </p>
+                      <p className="gf-fin-periodo-shared__hint gf-fin-periodo-shared__hint--inline">
+                        {txIva.ivaControlePeriodoSelecionadoHint ||
+                          `A mostrar IVA do período ${financeiroPeriodoAtivo.periodo} (${financeiroPeriodoAtivo.dataInicio.toLocaleDateString(locIva)} – ${financeiroPeriodoAtivo.dataFim.toLocaleDateString(locIva)}).`}
+                      </p>
+                    </header>
+
+                    <div className="gf-rel-fin__metrics gf-rel-fin__metrics--iva-resumo">
+                      <article className="gf-rel-fin__metric gf-rel-fin__metric--vendas">
+                        <span className="gf-rel-fin__metric-label">{safeT?.IVACobrado || 'IVA Cobrado'}</span>
+                        <strong className="gf-rel-fin__metric-value">{fmtIva(totalCobrado)}</strong>
+                      </article>
+                      <article className="gf-rel-fin__metric gf-rel-fin__metric--recebido">
+                        <span className="gf-rel-fin__metric-label">{safeT?.IVAPago || 'IVA Pago'}</span>
+                        <strong className="gf-rel-fin__metric-value">{fmtIva(totalPago)}</strong>
+                      </article>
+                      <article className="gf-rel-fin__metric gf-rel-fin__metric--dev-val">
+                        <span className="gf-rel-fin__metric-label">{safeT?.IVAApagar || 'IVA a Pagar'}</span>
+                        <strong className="gf-rel-fin__metric-value">{fmtIva(totalApagar)}</strong>
+                      </article>
+                      <article className="gf-rel-fin__metric gf-rel-fin__metric--iva">
+                        <span className="gf-rel-fin__metric-label">{safeT?.periodosPendentes || 'Períodos Pendentes'}</span>
+                        <strong className="gf-rel-fin__metric-value">{ivasPendentes}</strong>
+                      </article>
+                    </div>
+
+                    <div className="gf-rel-fin__guardados-list">
+                      {ivasFiltrados
+                        .sort((a, b) => new Date(b.dataInicio).getTime() - new Date(a.dataInicio).getTime())
+                        .map(iva => (
+                          <article key={iva.id} className="gf-rel-fin__card gf-rel-fin__card--atual">
+                            <header className="gf-rel-fin__card-head">
+                              <div>
+                                <h4 className="gf-rel-fin__card-title">
+                                  {iva.tipoPeriodo.toUpperCase()}: {iva.periodo}
+                                  <span className="gf-rel-fin__card-badge">
+                                    {txIva.relatorioFinanceiroPeriodoSelecionado || 'Seleccionado'}
+                                  </span>
+                                </h4>
+                                <p className="gf-rel-fin__card-datas">
+                                  {new Date(iva.dataInicio).toLocaleDateString(locIva)} –{' '}
+                                  {new Date(iva.dataFim).toLocaleDateString(locIva)}
+                                </p>
+                              </div>
+                              <span
+                                className={`gf-rel-fin__iva-status gf-rel-fin__iva-status--${iva.status}`}
+                              >
+                                {iva.status}
+                              </span>
+                            </header>
+                            <div className="gf-rel-fin__card-metrics">
+                              <div className="gf-rel-fin__card-metric">
+                                <span>{safeT?.IVACobrado || 'IVA Cobrado'}</span>
+                                <strong>{fmtIva(iva.IVACobrado)}</strong>
+                              </div>
+                              <div className="gf-rel-fin__card-metric">
+                                <span>{safeT?.IVAPago || 'IVA Pago'}</span>
+                                <strong>{fmtIva(iva.IVAPago)}</strong>
+                              </div>
+                              <div className="gf-rel-fin__card-metric gf-rel-fin__card-metric--dev">
+                                <span>{safeT?.IVAApagar || 'IVA a Pagar'}</span>
+                                <strong>{fmtIva(iva.IVAApagar)}</strong>
+                              </div>
+                              <div className="gf-rel-fin__card-metric">
+                                <span>{safeT?.totalVendas || 'Total Vendas'}</span>
+                                <strong>{fmtIva(iva.valorTotalVendas)}</strong>
+                              </div>
+                            </div>
+                          </article>
+                        ))}
+                      {ivasFiltrados.length === 0 && (
+                        <div className="gf-rel-fin__empty">
+                          <p style={{ margin: '0 0 8px' }}>
+                            {safeT?.nenhumControleIVA || 'Nenhum IVA registado neste período.'}
+                          </p>
+                          <p style={{ margin: 0, fontSize: '12px' }}>
+                            {txIva.ivaControleHint ||
+                              'Inclui faturas de peças, ordens de serviço e fechamentos na biblioteca com IVA ativo no fecho.'}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  <p style={{ color: '#888', fontSize: '12px', margin: '0 0 16px', lineHeight: 1.45 }}>
-                    {(safeT as any)?.ivaControleAutoHint ||
-                      'Valores calculados automaticamente a partir de faturas de peças, ordens de serviço e fechamentos na biblioteca com IVA ativo no fecho.'}
-                  </p>
-
-                  {/* Resumo de IVA — padrão Visualizar Equipamento (card #484848, borda 1px) */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginBottom: '30px' }}>
-                    {(() => {
-                      const ivasFiltrados = ivaControlesEfetivos.filter(iv => iv.tipoPeriodo === filtroPeriodo)
-                      const totalCobrado = ivasFiltrados.reduce((sum, iv) => sum + iv.IVACobrado, 0)
-                      const totalPago = ivasFiltrados.reduce((sum, iv) => sum + iv.IVAPago, 0)
-                      const totalApagar = ivasFiltrados.reduce((sum, iv) => sum + iv.IVAApagar, 0)
-                      const ivasPendentes = ivasFiltrados.filter(iv => iv.status === 'aberto' || iv.status === 'fechado').length
-
-                      return (
-                        <>
-                          <div style={{ padding: '20px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
-                            <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.IVACobrado || 'IVA Cobrado'}</p>
-                            <p style={{ color: '#00c853', margin: 0, fontSize: '24px', fontWeight: 'bold' }}>€{totalCobrado.toFixed(2)}</p>
-                          </div>
-                          <div style={{ padding: '20px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
-                            <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.IVAPago || 'IVA Pago'}</p>
-                            <p style={{ color: '#66b3ff', margin: 0, fontSize: '24px', fontWeight: 'bold' }}>€{totalPago.toFixed(2)}</p>
-                          </div>
-                          <div style={{ padding: '20px', backgroundColor: '#484848', border: '1px solid rgba(255, 0, 0, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
-                            <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.IVAApagar || 'IVA a Pagar'}</p>
-                            <p style={{ color: '#ff0000', margin: 0, fontSize: '24px', fontWeight: 'bold' }}>€{totalApagar.toFixed(2)}</p>
-                          </div>
-                          <div style={{ padding: '20px', backgroundColor: '#484848', border: '1px solid rgba(255, 255, 0, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
-                            <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.periodosPendentes || 'Períodos Pendentes'}</p>
-                            <p style={{ color: '#ffff00', margin: 0, fontSize: '24px', fontWeight: 'bold' }}>{ivasPendentes}</p>
-                          </div>
-                        </>
-                      )
-                    })()}
-                  </div>
-
-                  {/* Lista de Controles de IVA — padrão Visualizar Equipamento */}
-                  <div style={{ display: 'grid', gap: '15px' }}>
-                    {ivaControlesEfetivos
-                      .filter(iv => iv.tipoPeriodo === filtroPeriodo)
-                      .sort((a, b) => new Date(b.dataInicio).getTime() - new Date(a.dataInicio).getTime())
-                      .map((iva) => (
-                        <div
-                          key={iva.id}
-                          style={{
-                            padding: '20px',
-                            backgroundColor: '#484848',
-                            border: '1px solid rgba(0, 200, 83, 0.2)',
-                            borderRadius: '8px'
-                          }}
-                        >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                            <div>
-                              <h3 style={{ color: '#00c853', margin: 0, fontSize: '18px' }}>
-                                {iva.tipoPeriodo.toUpperCase()}: {iva.periodo}
-                              </h3>
-                              <p style={{ color: '#ccc', margin: '5px 0', fontSize: '14px' }}>
-                                {new Date(iva.dataInicio).toLocaleDateString()} - {new Date(iva.dataFim).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <span style={{
-                              padding: '4px 12px',
-                              backgroundColor: iva.status === 'pago' ? 'rgba(0, 200, 83, 0.2)' : iva.status === 'fechado' ? 'rgba(255, 255, 0, 0.2)' : 'rgba(255, 0, 0, 0.2)',
-                              border: `1px solid ${iva.status === 'pago' ? 'rgba(0, 200, 83, 0.5)' : iva.status === 'fechado' ? 'rgba(255, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)'}`,
-                              borderRadius: '4px',
-                              color: iva.status === 'pago' ? '#00c853' : iva.status === 'fechado' ? '#ffff00' : '#ff0000',
-                              fontSize: '12px',
-                              textTransform: 'uppercase'
-                            }}>
-                              {iva.status}
-                            </span>
-                          </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginTop: '15px' }}>
-                            <div>
-                              <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.IVACobrado || 'IVA Cobrado'}</p>
-                              <p style={{ color: '#00c853', margin: 0, fontSize: '18px', fontWeight: 'bold' }}>€{iva.IVACobrado.toFixed(2)}</p>
-                            </div>
-                            <div>
-                              <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.IVAPago || 'IVA Pago'}</p>
-                              <p style={{ color: '#66b3ff', margin: 0, fontSize: '18px', fontWeight: 'bold' }}>€{iva.IVAPago.toFixed(2)}</p>
-                            </div>
-                            <div>
-                              <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.IVAApagar || 'IVA a Pagar'}</p>
-                              <p style={{ color: '#ff0000', margin: 0, fontSize: '18px', fontWeight: 'bold' }}>€{iva.IVAApagar.toFixed(2)}</p>
-                            </div>
-                            <div>
-                              <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.totalVendas || 'Total Vendas'}</p>
-                              <p style={{ color: '#ccc', margin: 0, fontSize: '18px', fontWeight: 'bold' }}>€{iva.valorTotalVendas.toFixed(2)}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    {ivaControlesEfetivos.filter(iv => iv.tipoPeriodo === filtroPeriodo).length === 0 && (
-                      <div style={{ textAlign: 'center', padding: '40px', color: '#ccc' }}>
-                        <p style={{ margin: '0 0 8px' }}>
-                          {safeT?.nenhumControleIVA || 'Nenhum IVA registado neste período.'}
-                        </p>
-                        <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>
-                          {(safeT as any)?.ivaControleHint ||
-                            'Inclui faturas de peças, ordens de serviço e fechamentos na biblioteca com IVA ativo no fecho.'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+                )
+              })()}
 
               {clientesFinanceiroActiveTab === 'relatorios' && (() => {
                 const txRf = safeT as Record<string, string>
                 const loc = localeDateShort(selectedLanguage)
                 const fmtMoeda = (n: number) =>
                   `€${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                const dataIni = new Date(relatorioFinanceiroVivo.dataInicio)
-                const dataFim = new Date(relatorioFinanceiroVivo.dataFim)
-                const anoAtual = new Date().getFullYear()
-                const anosDisponiveis: number[] = []
-                for (let a = anoAtual + 1; a >= 2020; a--) anosDisponiveis.push(a)
-                const resetPeriodoAtual = () => {
-                  const hoje = new Date()
-                  setFinanceiroRefMes(hoje.toISOString().slice(0, 7))
-                  setFinanceiroRefAno(hoje.getFullYear())
-                  setFinanceiroRefSemana(isoWeekStringFromDate(hoje))
-                }
                 const guardarRelatorioAtual = () => {
                   const novo = buildRelatorioFinanceiroPeriodo({
                     ...financeiroDadosBase,
@@ -60793,102 +60880,24 @@ A1;Peça exemplo;10`}
                   .sort((a, b) => new Date(b.dataGeracao).getTime() - new Date(a.dataGeracao).getTime())
                 return (
                   <div className="gf-rel-fin">
-                    <header className="gf-rel-fin__header">
-                      <h2 className="gf-rel-fin__title">
-                        {safeT?.relatoriosFinanceiros || 'RELATÓRIOS FINANCEIROS'}
-                      </h2>
-                      <p className="gf-rel-fin__hint">
-                        {txRf.relatorioFinanceiroHint ||
-                          'Escolha o tipo de período e o mês/semana/ano para ver rendimentos, pendentes e devedores. «Guardar relatório» grava uma cópia desse período.'}
-                      </p>
+                    <header className="gf-rel-fin__header gf-rel-fin__header--with-action">
+                      <div>
+                        <h2 className="gf-rel-fin__title">
+                          {safeT?.relatoriosFinanceiros || 'RELATÓRIOS FINANCEIROS'}
+                        </h2>
+                        <p className="gf-rel-fin__hint">
+                          {txRf.relatorioFinanceiroHint ||
+                            'Use o seletor de período acima (partilhado com IVA). «Guardar relatório» grava uma cópia desse período.'}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="gf-rel-fin__btn gf-rel-fin__btn--primary"
+                        onClick={guardarRelatorioAtual}
+                      >
+                        {txRf.guardarRelatorioFinanceiro || safeT?.gerarRelatorio || 'Guardar relatório'}
+                      </button>
                     </header>
-
-                    <div className="gf-rel-fin__toolbar" role="group" aria-label={txRf.relatorioFinanceiroSelecionarPeriodo || 'Selecionar período'}>
-                      <div className="gf-rel-fin__field">
-                        <label className="gf-rel-fin__label" htmlFor="gf-rel-fin-tipo">
-                          {txRf.relatorioFinanceiroTipoPeriodo || 'Tipo de período'}
-                        </label>
-                        <select
-                          id="gf-rel-fin-tipo"
-                          className="gf-rel-fin__select"
-                          value={filtroPeriodo}
-                          onChange={(e) => setFiltroPeriodo(e.target.value as 'semanal' | 'mensal' | 'anual')}
-                        >
-                          <option value="semanal">{safeT?.semanal || 'Semanal'}</option>
-                          <option value="mensal">{safeT?.mensal || 'Mensal'}</option>
-                          <option value="anual">{safeT?.anual || 'Anual'}</option>
-                        </select>
-                      </div>
-
-                      {filtroPeriodo === 'mensal' && (
-                        <div className="gf-rel-fin__field gf-rel-fin__field--destaque">
-                          <label className="gf-rel-fin__label" htmlFor="gf-rel-fin-mes">
-                            {txRf.relatorioFinanceiroSelecionarMes || 'Selecionar mês'}
-                          </label>
-                          <input
-                            id="gf-rel-fin-mes"
-                            type="month"
-                            className="gf-rel-fin__input gf-rel-fin__input--month"
-                            value={financeiroRefMes}
-                            onChange={(e) => setFinanceiroRefMes(e.target.value)}
-                          />
-                        </div>
-                      )}
-
-                      {filtroPeriodo === 'anual' && (
-                        <div className="gf-rel-fin__field gf-rel-fin__field--destaque">
-                          <label className="gf-rel-fin__label" htmlFor="gf-rel-fin-ano">
-                            {txRf.relatorioFinanceiroSelecionarAno || 'Selecionar ano'}
-                          </label>
-                          <select
-                            id="gf-rel-fin-ano"
-                            className="gf-rel-fin__select gf-rel-fin__select--destaque"
-                            value={financeiroRefAno}
-                            onChange={(e) => setFinanceiroRefAno(parseInt(e.target.value, 10))}
-                          >
-                            {anosDisponiveis.map(a => (
-                              <option key={a} value={a}>
-                                {a}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-
-                      {filtroPeriodo === 'semanal' && (
-                        <div className="gf-rel-fin__field gf-rel-fin__field--destaque">
-                          <label className="gf-rel-fin__label" htmlFor="gf-rel-fin-semana">
-                            {txRf.relatorioFinanceiroSelecionarSemana || 'Selecionar semana'}
-                          </label>
-                          <input
-                            id="gf-rel-fin-semana"
-                            type="week"
-                            className="gf-rel-fin__input gf-rel-fin__input--week"
-                            value={financeiroRefSemana}
-                            onChange={(e) => setFinanceiroRefSemana(e.target.value)}
-                          />
-                        </div>
-                      )}
-
-                      <div className="gf-rel-fin__toolbar-actions">
-                        <button type="button" className="gf-rel-fin__btn gf-rel-fin__btn--ghost" onClick={resetPeriodoAtual}>
-                          {txRf.relatorioFinanceiroPeriodoAtual || 'Período actual'}
-                        </button>
-                        <button type="button" className="gf-rel-fin__btn gf-rel-fin__btn--primary" onClick={guardarRelatorioAtual}>
-                          {txRf.guardarRelatorioFinanceiro || safeT?.gerarRelatorio || 'Guardar relatório'}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="gf-rel-fin__periodo-badge" aria-live="polite">
-                      <span className="gf-rel-fin__periodo-badge-label">
-                        {txRf.relatorioFinanceiroVivoTitulo || 'Resumo do período'}
-                      </span>
-                      <strong className="gf-rel-fin__periodo-badge-valor">{relatorioFinanceiroVivo.periodo}</strong>
-                      <span className="gf-rel-fin__periodo-badge-datas">
-                        {dataIni.toLocaleDateString(loc)} – {dataFim.toLocaleDateString(loc)}
-                      </span>
-                    </div>
 
                     <section className="gf-rel-fin__sec" aria-labelledby="gf-rel-fin-sec-rend">
                       <h3 id="gf-rel-fin-sec-rend" className="gf-rel-fin__sec-title gf-rel-fin__sec-title--rend">

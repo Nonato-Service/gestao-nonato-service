@@ -9109,6 +9109,65 @@ a:focus-visible {
   border: 1px dashed rgba(148, 163, 184, 0.35);
   background: rgba(15, 23, 42, 0.4);
 }
+.gf-fin-periodo-shared {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gf-fin-periodo-shared__hint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(226, 232, 240, 0.9);
+}
+.gf-fin-periodo-shared__hint--inline {
+  font-size: 12px;
+  color: #93c5fd;
+}
+.gf-rel-fin__toolbar--shared {
+  margin-bottom: 0;
+}
+.gf-rel-fin__header--with-action {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.gf-rel-fin__metrics--iva-resumo {
+  margin-bottom: 8px;
+}
+.gf-rel-fin__card-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.gf-rel-fin__iva-status {
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.gf-rel-fin__iva-status--pago {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+}
+.gf-rel-fin__iva-status--fechado {
+  color: #fde047;
+  background: rgba(253, 224, 71, 0.12);
+  border: 1px solid rgba(253, 224, 71, 0.4);
+}
+.gf-rel-fin__iva-status--aberto {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+}
 @media (max-width: 640px) {
   .gf-rel-fin__toolbar {
     padding: 14px;
