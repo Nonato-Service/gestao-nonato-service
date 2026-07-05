@@ -241,6 +241,13 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
     ? parentesChecklist.find((p) => p.id === selectedParenteIdForPainelGrupos) || null
     : null
 
+  const sortGrupoChecklist = (a: GrupoChecklist, b: GrupoChecklist) => {
+    const na = (a.numeroGrupo ?? '').trim() || a.nomeGrupo
+    const nb = (b.numeroGrupo ?? '').trim() || b.nomeGrupo
+    const cmp = na.localeCompare(nb, undefined, { sensitivity: 'base' })
+    return cmp !== 0 ? cmp : a.nomeGrupo.localeCompare(b.nomeGrupo, undefined, { sensitivity: 'base' })
+  }
+
   const gruposDestaFamilia = useMemo(() => {
     if (!selectedFamiliaForGrupos || !selectedParenteIdForPainelGrupos) return [] as GrupoChecklist[]
     return gruposChecklist
@@ -252,13 +259,6 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
     () => gruposDestaFamilia.reduce((acc, g) => acc + (g.itensTrabalho?.length || 0), 0),
     [gruposDestaFamilia]
   )
-
-  const sortGrupoChecklist = (a: GrupoChecklist, b: GrupoChecklist) => {
-    const na = (a.numeroGrupo ?? '').trim() || a.nomeGrupo
-    const nb = (b.numeroGrupo ?? '').trim() || b.nomeGrupo
-    const cmp = na.localeCompare(nb, undefined, { sensitivity: 'base' })
-    return cmp !== 0 ? cmp : a.nomeGrupo.localeCompare(b.nomeGrupo, undefined, { sensitivity: 'base' })
-  }
 
   const parentesDestaFamiliaSelecionada = useMemo(
     () =>
