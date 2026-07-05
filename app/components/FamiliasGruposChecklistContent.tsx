@@ -208,6 +208,8 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
 
   const [navSearch, setNavSearch] = useState('')
   const [workTab, setWorkTab] = useState<'add' | 'groups' | 'services'>('groups')
+  const [servicosScope, setServicosScope] = useState<'parente' | 'familia'>('parente')
+  const [servicosGrupoFilterId, setServicosGrupoFilterId] = useState<string | null>(null)
   const tr = (key: string, fallback: string) => safeT[key] || fallback
   const navQuery = navSearch.trim().toLowerCase()
 
@@ -243,18 +245,81 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
     if (!selectedFamiliaForGrupos || !selectedParenteIdForPainelGrupos) return [] as GrupoChecklist[]
     return gruposChecklist
       .filter((g) => g.familia === selectedFamiliaForGrupos && g.parenteId === selectedParenteIdForPainelGrupos)
-      .sort((a, b) => {
-        const na = (a.numeroGrupo ?? '').trim() || a.nomeGrupo
-        const nb = (b.numeroGrupo ?? '').trim() || b.nomeGrupo
-        const cmp = na.localeCompare(nb, undefined, { sensitivity: 'base' })
-        return cmp !== 0 ? cmp : a.nomeGrupo.localeCompare(b.nomeGrupo, undefined, { sensitivity: 'base' })
-      })
+      .sort(sortGrupoChecklist)
   }, [gruposChecklist, selectedFamiliaForGrupos, selectedParenteIdForPainelGrupos])
 
   const servicosParenteSelecionado = useMemo(
     () => gruposDestaFamilia.reduce((acc, g) => acc + (g.itensTrabalho?.length || 0), 0),
     [gruposDestaFamilia]
   )
+
+  const sortGrupoChecklist = (a: GrupoChecklist, b: GrupoChecklist) => {
+    const na = (a.numeroGrupo ?? '').trim() || a.nomeGrupo
+    const nb = (b.numeroGrupo ?? '').trim() || b.nomeGrupo
+    const cmp = na.localeCompare(nb, undefined, { sensitivity: 'base' })
+    return cmp !== 0 ? cmp : a.nomeGrupo.localeCompare(b.nomeGrupo, undefined, { sensitivity: 'base' })
+  }
+
+  const parentesDestaFamiliaSelecionada = useMemo(
+    () =>
+      selectedFamiliaForGrupos
+        ? parentesChecklist
+            .filter((p) => p.familia === selectedFamiliaForGrupos)
+            .sort((a, b) => a.nome.localeCompare(b.nome, undefined, { sensitivity: 'base' }))
+        : [],
+    [parentesChecklist, selectedFamiliaForGrupos]
+  )
+
+  const gruposTodaFamilia = useMemo(() => {
+    if (!selectedFamiliaForGrupos) return [] as GrupoChecklist[]
+    const lista = gruposChecklist.filter((g) => g.familia === selectedFamiliaForGrupos)
+    return [...lista].sort((a, b) => {
+      const pa = parentesChecklist.find((p) => p.id === a.parenteId)?.nome ?? ''
+      const pb = parentesChecklist.find((p) => p.id === b.parenteId)?.nome ?? ''
+      const cmpP = pa.localeCompare(pb, undefined, { sensitivity: 'base' })
+      if (cmpP !== 0) return cmpP
+      const na = (a.numeroGrupo ?? '').trim() || a.nomeGrupo
+      const nb = (b.numeroGrupo ?? '').trim() || b.nomeGrupo
+      const cmp = na.localeCompare(nb, undefined, { sensitivity: 'base' })
+      return cmp !== 0 ? cmp : a.nomeGrupo.localeCompare(b.nomeGrupo, undefined, { sensitivity: 'base' })
+    })
+  }, [gruposChecklist, selectedFamiliaForGrupos, parentesChecklist])
+
+  const gruposBaseServicos = servicosScope === 'familia' ? gruposTodaFamilia : gruposDestaFamilia
+
+  const gruposParaServicos = useMemo(() => {
+    if (!servicosGrupoFilterId) return gruposBaseServicos
+    return gruposBaseServicos.filter((g) => g.id === servicosGrupoFilterId)
+  }, [gruposBaseServicos, servicosGrupoFilterId])
+
+  const servicosTodaFamilia = useMemo(
+    () => gruposTodaFamilia.reduce((acc, g) => acc + (g.itensTrabalho?.length || 0), 0),
+    [gruposTodaFamilia]
+  )
+
+  const servicosVisiveisCount = useMemo(
+    () => gruposParaServicos.reduce((acc, g) => acc + (g.itensTrabalho?.length || 0), 0),
+    [gruposParaServicos]
+  )
+
+  const servicosTabCount = servicosScope === 'familia' ? servicosTodaFamilia : servicosParenteSelecionado
+
+  const parenteNomeById = (parenteId?: string) =>
+    parenteId ? parentesChecklist.find((p) => p.id === parenteId)?.nome ?? '' : ''
+
+  const openServicosView = (opts?: { scope?: 'parente' | 'familia'; grupoId?: string | null }) => {
+    if (opts?.scope) setServicosScope(opts.scope)
+    if (opts?.grupoId !== undefined) setServicosGrupoFilterId(opts.grupoId)
+    else if (opts?.scope) setServicosGrupoFilterId(null)
+    setWorkTab('services')
+  }
+
+  const grupoOptionLabel = (g: GrupoChecklist) => {
+    const base = `${g.numeroGrupo ? `${g.numeroGrupo} — ` : ''}${g.nomeGrupo}`
+    if (servicosScope !== 'familia') return base
+    const pn = parenteNomeById(g.parenteId)
+    return pn ? `${base} (${pn})` : base
+  }
 
   const selectParente = (familia: string, parenteId: string) => {
     setSelectedFamiliaForGrupos(familia)
@@ -371,6 +436,146 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
     codigoPeca: '',
     pecasManuais: [],
   })
+
+  const renderServicoGrupoBlock = (gr: GrupoChecklist) => {
+    const itens = gr.itensTrabalho || []
+    const isAdding = criacaoChecklistGrupoIdAddingItem === gr.id
+    const showForm =
+      isAdding || (criacaoChecklistEditingItemId && itens.some((i) => i.id === criacaoChecklistEditingItemId))
+    const cancelForm = () => {
+      setCriacaoChecklistGrupoIdAddingItem(null)
+      setCriacaoChecklistEditingItemId(null)
+      setCriacaoChecklistItemForm(defaultItemForm())
+    }
+    const saveItemTrabalho = () => {
+      const tipo = criacaoChecklistItemForm.tipo.trim() || tr('outro', 'Outro')
+      const descricaoTrabalho = criacaoChecklistItemForm.descricaoTrabalho.trim()
+      if (!descricaoTrabalho) return
+      const novoItem: ItemTrabalhoCriacao = {
+        id: criacaoChecklistEditingItemId || Date.now().toString(),
+        tipo,
+        descricaoTrabalho,
+        necessitaPecas: criacaoChecklistItemForm.necessitaPecas,
+        origemPecas: criacaoChecklistItemForm.necessitaPecas ? criacaoChecklistItemForm.origemPecas : undefined,
+        codigoPeca:
+          criacaoChecklistItemForm.necessitaPecas && criacaoChecklistItemForm.codigoPeca?.trim()
+            ? criacaoChecklistItemForm.codigoPeca.trim()
+            : undefined,
+        pecasManuais:
+          criacaoChecklistItemForm.necessitaPecas && criacaoChecklistItemForm.origemPecas === 'codigo-manual'
+            ? criacaoChecklistItemForm.pecasManuais.filter((p) => p.codigo.trim())
+            : undefined,
+        dataCriacao: new Date().toISOString(),
+      }
+      const nextGrupos = gruposChecklist.map((gItem) => {
+        if (gItem.id !== gr.id) return gItem
+        const lista = [...(gItem.itensTrabalho || [])]
+        const idx = lista.findIndex((i) => i.id === criacaoChecklistEditingItemId)
+        if (idx >= 0) lista[idx] = novoItem
+        else lista.push(novoItem)
+        return { ...gItem, itensTrabalho: lista }
+      })
+      setGruposChecklist(nextGrupos)
+      saveData('nonato-grupos-checklist', nextGrupos)
+      cancelForm()
+    }
+    return (
+      <article key={gr.id} className="fg-ck-shell__serv-block">
+        <header className="fg-ck-shell__serv-head">
+          <GrupoTitulo
+            numero={gr.numeroGrupo}
+            nome={gr.nomeGrupo}
+            numeroTitle={tr('numeroGrupo', 'Numero do grupo')}
+            className="fg-ck-shell__grupo-titulo"
+          />
+          <span className="fg-ck-shell__pill">
+            {itens.length} {tr('servicos', 'servicos')}
+          </span>
+          <button
+            type="button"
+            className="fg-ck-shell__btn fg-ck-shell__btn--sm"
+            onClick={() => {
+              if (isAdding) cancelForm()
+              else {
+                setCriacaoChecklistGrupoIdAddingItem(gr.id)
+                setCriacaoChecklistEditingItemId(null)
+                setCriacaoChecklistItemForm(defaultItemForm())
+              }
+            }}
+          >
+            {tr('adicionarServicos', 'Adicionar servico')}
+          </button>
+        </header>
+        {itens.length > 0 && (
+          <div className="fg-ck-shell__serv-grid">
+            {itens.map((item) => (
+              <div key={item.id} className="fg-ck-shell__serv-card">
+                <span className="fg-ck-shell__serv-type">{item.tipo}</span>
+                <p>{item.descricaoTrabalho}</p>
+                <div className="fg-checklist-pro__servico-actions">
+                  <button
+                    type="button"
+                    className="fg-checklist-pro__act"
+                    title={tr('edit', 'Editar')}
+                    aria-label={tr('edit', 'Editar')}
+                    onClick={() => {
+                      setCriacaoChecklistEditingItemId(item.id)
+                      setCriacaoChecklistGrupoIdAddingItem(null)
+                      setCriacaoChecklistItemForm({
+                        tipo: item.tipo,
+                        descricaoTrabalho: item.descricaoTrabalho,
+                        necessitaPecas: item.necessitaPecas,
+                        origemPecas: item.origemPecas,
+                        codigoPeca: item.codigoPeca || '',
+                        pecasManuais: item.pecasManuais?.length ? item.pecasManuais : [{ codigo: '', quantia: 1 }],
+                      })
+                    }}
+                  >
+                    <span aria-hidden>✎</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="fg-checklist-pro__act fg-checklist-pro__act--danger"
+                    title={tr('delete', 'Excluir')}
+                    aria-label={tr('delete', 'Excluir')}
+                    onClick={() => {
+                      const nextGrupos = gruposChecklist.map((gItem) => {
+                        if (gItem.id !== gr.id) return gItem
+                        return { ...gItem, itensTrabalho: (gItem.itensTrabalho || []).filter((i) => i.id !== item.id) }
+                      })
+                      setGruposChecklist(nextGrupos)
+                      saveData('nonato-grupos-checklist', nextGrupos)
+                      if (criacaoChecklistEditingItemId === item.id) cancelForm()
+                    }}
+                  >
+                    <span aria-hidden>×</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {showForm && (
+          <div className="fg-ck-shell__serv-form">
+            <input
+              type="text"
+              className="fg-ck-shell__input"
+              value={criacaoChecklistItemForm.descricaoTrabalho}
+              onChange={(e) => setCriacaoChecklistItemForm((f) => ({ ...f, descricaoTrabalho: e.target.value }))}
+              placeholder={tr('qualTrabalho', 'Descricao do servico...')}
+              onKeyDown={(e) => e.key === 'Enter' && saveItemTrabalho()}
+            />
+            <button type="button" className="fg-checklist-pro__act" onClick={saveItemTrabalho}>
+              {criacaoChecklistEditingItemId ? tr('save', 'Salvar') : tr('add', 'Adicionar')}
+            </button>
+            <button type="button" className="fg-checklist-pro__act fg-checklist-pro__act--muted" onClick={cancelForm}>
+              {tr('cancel', 'Cancelar')}
+            </button>
+          </div>
+        )}
+      </article>
+    )
+  }
 
   const progressStep =
     !selectedFamiliaForGrupos ? 1 : !selectedParenteIdForPainelGrupos ? 2 : workTab === 'services' ? 4 : 3
@@ -742,7 +947,7 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                   className={`fg-ck-shell__tab${workTab === 'services' ? ' is-active' : ''}`}
                   onClick={() => setWorkTab('services')}
                 >
-                  {tr('servicos', 'Servicos')} ({servicosParenteSelecionado})
+                  {tr('servicos', 'Servicos')} ({servicosTabCount})
                 </button>
               </nav>
 
@@ -885,6 +1090,13 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                               <span className="fg-ck-shell__pill">
                                 {servicosGrupo} {tr('servicos', 'servicos')}
                               </span>
+                              <button
+                                type="button"
+                                className="fg-ck-shell__btn fg-ck-shell__btn--sm fg-ck-shell__btn--ghost"
+                                onClick={() => openServicosView({ scope: 'parente', grupoId: g.id })}
+                              >
+                                {tr('fgChecklistVerServicosGrupo', 'Servicos')}
+                              </button>
                               <FgRowActions
                                 onEdit={(ev) => {
                                   ev.stopPropagation()
@@ -922,153 +1134,86 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                 <PanelHead
                   title={tr('criacaoChecklistPorGrupos', 'Servicos por grupo')}
                   desc={
-                    (safeT as Record<string, string>).criacaoChecklistPorGruposDesc ||
-                    tr('fgChecklistServicosDesc', 'Adicione servicos a cada grupo do parente selecionado.')
+                    servicosScope === 'familia'
+                      ? tr('fgChecklistServicosPorFamiliaDesc', 'Servicos de todos os grupos e parentes desta familia.')
+                      : servicosGrupoFilterId
+                        ? tr('fgChecklistServicosGrupoUnicoDesc', 'Servicos do grupo selecionado.')
+                        : tr('fgChecklistServicosDesc', 'Adicione servicos a cada grupo do parente selecionado.')
                   }
+                  count={servicosVisiveisCount}
                 />
-                {gruposDestaFamilia.length === 0 ? (
-                  <p className="fg-ck-shell__hint">{tr('nenhumGrupoNesteParente', 'Cadastre grupos acima primeiro.')}</p>
+
+                <div className="fg-ck-shell__serv-toolbar">
+                  <div className="fg-ck-shell__serv-scope" role="group" aria-label={tr('fgChecklistServicosScopeAria', 'Ver servicos por')}>
+                    <button
+                      type="button"
+                      className={`fg-ck-shell__scope-btn${servicosScope === 'parente' ? ' is-active' : ''}`}
+                      onClick={() => {
+                        setServicosScope('parente')
+                        setServicosGrupoFilterId(null)
+                      }}
+                    >
+                      {tr('fgChecklistServicosScopeParente', 'Parente actual')}
+                    </button>
+                    <button
+                      type="button"
+                      className={`fg-ck-shell__scope-btn${servicosScope === 'familia' ? ' is-active' : ''}`}
+                      onClick={() => {
+                        setServicosScope('familia')
+                        setServicosGrupoFilterId(null)
+                      }}
+                    >
+                      {tr('fgChecklistServicosScopeFamilia', 'Toda a familia')}
+                    </button>
+                  </div>
+
+                  {gruposBaseServicos.length > 0 ? (
+                    <label className="fg-ck-shell__serv-filter">
+                      <span className="fg-ck-shell__field-label">{tr('fgChecklistServicosFilterGrupo', 'Grupo')}</span>
+                      <select
+                        className="fg-ck-shell__select"
+                        value={servicosGrupoFilterId ?? ''}
+                        onChange={(e) => setServicosGrupoFilterId(e.target.value || null)}
+                      >
+                        <option value="">{tr('fgChecklistServicosTodosGrupos', 'Todos os grupos')}</option>
+                        {gruposBaseServicos.map((g) => (
+                          <option key={g.id} value={g.id}>
+                            {grupoOptionLabel(g)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                </div>
+
+                {gruposBaseServicos.length === 0 ? (
+                  <p className="fg-ck-shell__hint">
+                    {servicosScope === 'familia'
+                      ? tr('nenhumGrupoNestaFamilia', 'Nenhum grupo nesta familia.')
+                      : tr('nenhumGrupoNesteParente', 'Cadastre grupos acima primeiro.')}
+                  </p>
+                ) : gruposParaServicos.length === 0 ? (
+                  <p className="fg-ck-shell__hint">{tr('fgChecklistServicosGrupoNaoEncontrado', 'Grupo nao encontrado neste ambito.')}</p>
                 ) : (
                   <div className="fg-ck-shell__serv-list">
-                    {gruposDestaFamilia.map((gr) => {
-                      const itens = gr.itensTrabalho || []
-                      const isAdding = criacaoChecklistGrupoIdAddingItem === gr.id
-                      const showForm =
-                        isAdding || (criacaoChecklistEditingItemId && itens.some((i) => i.id === criacaoChecklistEditingItemId))
-                      const cancelForm = () => {
-                        setCriacaoChecklistGrupoIdAddingItem(null)
-                        setCriacaoChecklistEditingItemId(null)
-                        setCriacaoChecklistItemForm(defaultItemForm())
-                      }
-                      const saveItemTrabalho = () => {
-                        const tipo = criacaoChecklistItemForm.tipo.trim() || tr('outro', 'Outro')
-                        const descricaoTrabalho = criacaoChecklistItemForm.descricaoTrabalho.trim()
-                        if (!descricaoTrabalho) return
-                        const novoItem: ItemTrabalhoCriacao = {
-                          id: criacaoChecklistEditingItemId || Date.now().toString(),
-                          tipo,
-                          descricaoTrabalho,
-                          necessitaPecas: criacaoChecklistItemForm.necessitaPecas,
-                          origemPecas: criacaoChecklistItemForm.necessitaPecas ? criacaoChecklistItemForm.origemPecas : undefined,
-                          codigoPeca:
-                            criacaoChecklistItemForm.necessitaPecas && criacaoChecklistItemForm.codigoPeca?.trim()
-                              ? criacaoChecklistItemForm.codigoPeca.trim()
-                              : undefined,
-                          pecasManuais:
-                            criacaoChecklistItemForm.necessitaPecas && criacaoChecklistItemForm.origemPecas === 'codigo-manual'
-                              ? criacaoChecklistItemForm.pecasManuais.filter((p) => p.codigo.trim())
-                              : undefined,
-                          dataCriacao: new Date().toISOString(),
-                        }
-                        const nextGrupos = gruposChecklist.map((gItem) => {
-                          if (gItem.id !== gr.id) return gItem
-                          const lista = [...(gItem.itensTrabalho || [])]
-                          const idx = lista.findIndex((i) => i.id === criacaoChecklistEditingItemId)
-                          if (idx >= 0) lista[idx] = novoItem
-                          else lista.push(novoItem)
-                          return { ...gItem, itensTrabalho: lista }
+                    {servicosScope === 'familia' && !servicosGrupoFilterId
+                      ? parentesDestaFamiliaSelecionada.map((parente) => {
+                          const gruposParente = gruposParaServicos.filter((g) => g.parenteId === parente.id)
+                          if (gruposParente.length === 0) return null
+                          return (
+                            <div key={parente.id} className="fg-ck-shell__serv-parente-block">
+                              <header className="fg-ck-shell__serv-parente-head">
+                                <span className="fg-ck-shell__serv-parente-label">{tr('parente', 'Parente')}</span>
+                                <strong>{parente.nome}</strong>
+                                <span className="fg-ck-shell__pill">
+                                  {gruposParente.length} {tr('grupos', 'grupos')}
+                                </span>
+                              </header>
+                              {gruposParente.map((gr) => renderServicoGrupoBlock(gr))}
+                            </div>
+                          )
                         })
-                        setGruposChecklist(nextGrupos)
-                        saveData('nonato-grupos-checklist', nextGrupos)
-                        cancelForm()
-                      }
-                      return (
-                        <article key={gr.id} className="fg-ck-shell__serv-block">
-                          <header className="fg-ck-shell__serv-head">
-                            <GrupoTitulo
-                              numero={gr.numeroGrupo}
-                              nome={gr.nomeGrupo}
-                              numeroTitle={tr('numeroGrupo', 'Numero do grupo')}
-                              className="fg-ck-shell__grupo-titulo"
-                            />
-                            <span className="fg-ck-shell__pill">
-                              {itens.length} {tr('servicos', 'servicos')}
-                            </span>
-                            <button
-                              type="button"
-                              className="fg-ck-shell__btn fg-ck-shell__btn--sm"
-                              onClick={() => {
-                                if (isAdding) cancelForm()
-                                else {
-                                  setCriacaoChecklistGrupoIdAddingItem(gr.id)
-                                  setCriacaoChecklistEditingItemId(null)
-                                  setCriacaoChecklistItemForm(defaultItemForm())
-                                }
-                              }}
-                            >
-                              {tr('adicionarServicos', 'Adicionar servico')}
-                            </button>
-                          </header>
-                          {itens.length > 0 && (
-                            <div className="fg-ck-shell__serv-grid">
-                              {itens.map((item) => (
-                                <div key={item.id} className="fg-ck-shell__serv-card">
-                                  <span className="fg-ck-shell__serv-type">{item.tipo}</span>
-                                  <p>{item.descricaoTrabalho}</p>
-                                  <div className="fg-checklist-pro__servico-actions">
-                                    <button
-                                      type="button"
-                                      className="fg-checklist-pro__act"
-                                      title={tr('edit', 'Editar')}
-                                      aria-label={tr('edit', 'Editar')}
-                                      onClick={() => {
-                                        setCriacaoChecklistEditingItemId(item.id)
-                                        setCriacaoChecklistGrupoIdAddingItem(null)
-                                        setCriacaoChecklistItemForm({
-                                          tipo: item.tipo,
-                                          descricaoTrabalho: item.descricaoTrabalho,
-                                          necessitaPecas: item.necessitaPecas,
-                                          origemPecas: item.origemPecas,
-                                          codigoPeca: item.codigoPeca || '',
-                                          pecasManuais: item.pecasManuais?.length ? item.pecasManuais : [{ codigo: '', quantia: 1 }],
-                                        })
-                                      }}
-                                    >
-                                      <span aria-hidden>✎</span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="fg-checklist-pro__act fg-checklist-pro__act--danger"
-                                      title={tr('delete', 'Excluir')}
-                                      aria-label={tr('delete', 'Excluir')}
-                                      onClick={() => {
-                                        const nextGrupos = gruposChecklist.map((gItem) => {
-                                          if (gItem.id !== gr.id) return gItem
-                                          return { ...gItem, itensTrabalho: (gItem.itensTrabalho || []).filter((i) => i.id !== item.id) }
-                                        })
-                                        setGruposChecklist(nextGrupos)
-                                        saveData('nonato-grupos-checklist', nextGrupos)
-                                        if (criacaoChecklistEditingItemId === item.id) cancelForm()
-                                      }}
-                                    >
-                                      <span aria-hidden>×</span>
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          {showForm && (
-                            <div className="fg-ck-shell__serv-form">
-                              <input
-                                type="text"
-                                className="fg-ck-shell__input"
-                                value={criacaoChecklistItemForm.descricaoTrabalho}
-                                onChange={(e) => setCriacaoChecklistItemForm((f) => ({ ...f, descricaoTrabalho: e.target.value }))}
-                                placeholder={tr('qualTrabalho', 'Descricao do servico...')}
-                                onKeyDown={(e) => e.key === 'Enter' && saveItemTrabalho()}
-                              />
-                              <button type="button" className="fg-checklist-pro__act" onClick={saveItemTrabalho}>
-                                {criacaoChecklistEditingItemId ? tr('save', 'Salvar') : tr('add', 'Adicionar')}
-                              </button>
-                              <button type="button" className="fg-checklist-pro__act fg-checklist-pro__act--muted" onClick={cancelForm}>
-                                {tr('cancel', 'Cancelar')}
-                              </button>
-                            </div>
-                          )}
-                        </article>
-                      )
-                    })}
+                      : gruposParaServicos.map((gr) => renderServicoGrupoBlock(gr))}
                   </div>
                 )}
               </section>

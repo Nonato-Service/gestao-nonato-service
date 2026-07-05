@@ -33484,6 +33484,108 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   flex: 1 1 200px;
 }
 
+/* Servicos — ambito parente / familia / grupo */
+.fg-checklist-pro--reforma .fg-ck-shell__serv-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: var(--fg-ck-row);
+  border: 1px solid var(--fg-ck-border);
+}
+.fg-checklist-pro--reforma .fg-ck-shell__serv-scope {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.fg-checklist-pro--reforma .fg-ck-shell__scope-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--fg-ck-border);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.fg-checklist-pro--reforma .fg-ck-shell__scope-btn:hover {
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 200, 83, 0.28);
+}
+.fg-checklist-pro--reforma .fg-ck-shell__scope-btn.is-active {
+  color: var(--ns-btn-green-text-hover);
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover);
+  background: var(--ns-btn-green-bg);
+  border-color: var(--ns-btn-green-border);
+}
+.fg-checklist-pro--reforma .fg-ck-shell__serv-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: min(100%, 280px);
+  flex: 1 1 200px;
+}
+.fg-checklist-pro--reforma .fg-ck-shell__select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--fg-ck-border);
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+.fg-checklist-pro--reforma .fg-ck-shell__select:focus {
+  outline: none;
+  border-color: var(--ns-btn-green-border-hover);
+  box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.15);
+}
+.fg-checklist-pro--reforma .fg-ck-shell__serv-parente-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.14);
+  border: 1px solid var(--fg-ck-border);
+}
+.fg-checklist-pro--reforma .fg-ck-shell__serv-parente-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--fg-ck-border);
+}
+.fg-checklist-pro--reforma .fg-ck-shell__serv-parente-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.48);
+}
+.fg-checklist-pro--reforma .fg-ck-shell__serv-parente-head strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+.fg-checklist-pro--reforma .fg-ck-shell__btn--ghost {
+  background: rgba(0, 0, 0, 0.22);
+  border-color: var(--fg-ck-border);
+  color: rgba(255, 255, 255, 0.82);
+}
+.fg-checklist-pro--reforma .fg-ck-shell__btn--ghost:hover {
+  background: var(--ns-btn-green-bg);
+  border-color: var(--ns-btn-green-border);
+  color: var(--ns-btn-green-text-hover);
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover);
+}
+
 /* Empty state */
 .fg-checklist-pro--reforma .fg-ck-shell__empty {
   flex: 1;
