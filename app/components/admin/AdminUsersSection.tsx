@@ -126,7 +126,7 @@ export function AdminUsersSection({
                   </div>
                 </div>
                 <div className="admin-users-hub-card__actions">
-                  <button type="button" className="admin-users-hub-btn admin-users-hub-btn--sm" onClick={() => handleEditUser(user)}>
+                  <button type="button" className="admin-users-hub-btn admin-users-hub-btn--sm admin-users-hub-btn--secondary" onClick={() => handleEditUser(user)}>
                     {safeT?.edit || 'Editar'}
                   </button>
                   <button type="button" className="admin-users-hub-btn admin-users-hub-btn--sm admin-users-hub-btn--danger-outline" onClick={() => handleDeleteUser(user.id)}>
@@ -336,7 +336,7 @@ export function AdminUsersSection({
                   </div>
                 </div>
                 <div className="admin-users-hub-card__actions">
-                  <button type="button" className="admin-users-hub-btn admin-users-hub-btn--sm" onClick={() => handleEditUser(user)}>
+                  <button type="button" className="admin-users-hub-btn admin-users-hub-btn--sm admin-users-hub-btn--secondary" onClick={() => handleEditUser(user)}>
                     {safeT?.edit || 'Editar'}
                   </button>
                   {isConfirming ? (

@@ -336,7 +336,7 @@ export function AdminPasswordsSection(props: AdminPasswordsSectionProps) {
                 <div className="admin-passwords-hub-card__actions">
                   <button
                     type="button"
-                    className="admin-passwords-hub-btn admin-passwords-hub-btn--sm"
+                    className="admin-passwords-hub-btn admin-passwords-hub-btn--sm admin-passwords-hub-btn--secondary"
                     onClick={() => toggleVisible(entry.id)}
                     aria-pressed={visible}
                   >
@@ -344,7 +344,7 @@ export function AdminPasswordsSection(props: AdminPasswordsSectionProps) {
                   </button>
                   <button
                     type="button"
-                    className={`admin-passwords-hub-btn admin-passwords-hub-btn--sm${copied ? ' admin-passwords-hub-btn--success' : ''}`}
+                    className={`admin-passwords-hub-btn admin-passwords-hub-btn--sm admin-passwords-hub-btn--secondary${copied ? ' admin-passwords-hub-btn--success' : ''}`}
                     onClick={() => void copyPassword(entry)}
                   >
                     {copied ? tr(safeT, 'adminPasswordsCopied', 'Copiado!') : tr(safeT, 'copyPassword', 'Copiar')}
