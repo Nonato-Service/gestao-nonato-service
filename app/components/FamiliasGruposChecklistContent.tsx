@@ -732,8 +732,14 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                           ) : (
                             <>
                               <div className="fg-checklist-pro__grupo-info">
-                                {g.numeroGrupo && <span className="fg-checklist-pro__grupo-num">{g.numeroGrupo}</span>}
-                                <strong>{g.nomeGrupo}</strong>
+                                <div className="fg-checklist-pro__grupo-titulo">
+                                  {g.numeroGrupo?.trim() ? (
+                                    <span className="fg-checklist-pro__grupo-num-badge" title={tr('numeroGrupo', 'Numero do grupo')}>
+                                      {g.numeroGrupo.trim()}
+                                    </span>
+                                  ) : null}
+                                  <strong className="fg-checklist-pro__grupo-nome">{g.nomeGrupo}</strong>
+                                </div>
                                 <small>{(g.itensTrabalho?.length || 0)} {tr('servicos', 'servicos')}</small>
                               </div>
                               <FgRowActions
@@ -817,9 +823,13 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                       return (
                         <article key={gr.id} className="fg-checklist-pro__servico-block">
                           <header className="fg-checklist-pro__servico-head">
-                            <div>
-                              {gr.numeroGrupo && <span className="fg-checklist-pro__grupo-num">{gr.numeroGrupo}</span>}
-                              <strong>{gr.nomeGrupo}</strong>
+                            <div className="fg-checklist-pro__grupo-titulo fg-checklist-pro__grupo-titulo--servico">
+                              {gr.numeroGrupo?.trim() ? (
+                                <span className="fg-checklist-pro__grupo-num-badge" title={tr('numeroGrupo', 'Numero do grupo')}>
+                                  {gr.numeroGrupo.trim()}
+                                </span>
+                              ) : null}
+                              <strong className="fg-checklist-pro__grupo-nome">{gr.nomeGrupo}</strong>
                             </div>
                             <button
                               type="button"
