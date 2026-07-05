@@ -128,13 +128,15 @@ function GrupoTitulo(props: {
   )
 }
 
-function PanelHead(props: { step: string; title: string; desc?: string; count?: number }) {
+function PanelHead(props: { step?: string; title: string; desc?: string; count?: number }) {
   const { step, title, desc, count } = props
   return (
     <header className="fg-checklist-pro__panel-head">
-      <span className="fg-checklist-pro__panel-step" aria-hidden>
-        {step}
-      </span>
+      {step ? (
+        <span className="fg-checklist-pro__panel-step" aria-hidden>
+          {step}
+        </span>
+      ) : null}
       <div className="fg-checklist-pro__panel-head-body">
         <h3 className="fg-checklist-pro__panel-title">
           {title}
@@ -371,7 +373,7 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
   })
 
   return (
-    <div className="fg-checklist-pro fg-checklist-pro--modern">
+    <div className="fg-checklist-pro fg-checklist-pro--modern fg-checklist-pro--balance">
       <section className="fg-checklist-pro__hero">
         <div className="fg-checklist-pro__hero-glow" aria-hidden />
         <div className="fg-checklist-pro__hero-top">
@@ -659,95 +661,85 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
         </aside>
 
         <main className="fg-checklist-pro__main">
-          <header className="fg-checklist-pro__main-head">
-            <div>
-              <p className="fg-checklist-pro__breadcrumb-label">{tr('gruposPorFamilia', 'Grupos do parente')}</p>
-              <p className="fg-checklist-pro__breadcrumb">{breadcrumb}</p>
-            </div>
-          </header>
-
-          <nav className="fg-checklist-pro__fluxo" aria-label={tr('fgChecklistFluxoAria', 'Fluxo de cadastro')}>
-            <div className={`fg-checklist-pro__fluxo-step${selectedFamiliaForGrupos ? ' is-done' : ' is-current'}`}>
-              <span className="fg-checklist-pro__fluxo-num">1</span>
-              <span className="fg-checklist-pro__fluxo-label">{tr('familia', 'Família')}</span>
-            </div>
-            <span className="fg-checklist-pro__fluxo-sep" aria-hidden />
-            <div
-              className={`fg-checklist-pro__fluxo-step${
-                selectedParenteIdForPainelGrupos ? ' is-done' : selectedFamiliaForGrupos ? ' is-current' : ''
-              }`}
-            >
-              <span className="fg-checklist-pro__fluxo-num">2</span>
-              <span className="fg-checklist-pro__fluxo-label">{tr('parente', 'Parente')}</span>
-            </div>
-            <span className="fg-checklist-pro__fluxo-sep" aria-hidden />
-            <div
-              className={`fg-checklist-pro__fluxo-step${
-                selectedParenteIdForPainelGrupos && gruposDestaFamilia.length > 0
-                  ? ' is-done'
-                  : selectedParenteIdForPainelGrupos
-                    ? ' is-current'
-                    : ''
-              }`}
-            >
-              <span className="fg-checklist-pro__fluxo-num">3</span>
-              <span className="fg-checklist-pro__fluxo-label">{tr('grupos', 'Grupos')}</span>
-            </div>
-            <span className="fg-checklist-pro__fluxo-sep" aria-hidden />
-            <div
-              className={`fg-checklist-pro__fluxo-step${
-                selectedParenteIdForPainelGrupos && servicosParenteSelecionado > 0 ? ' is-current' : ''
-              }`}
-            >
-              <span className="fg-checklist-pro__fluxo-num">4</span>
-              <span className="fg-checklist-pro__fluxo-label">{tr('servicos', 'Serviços')}</span>
-            </div>
-          </nav>
-
           {!selectedFamiliaForGrupos || !selectedParenteIdForPainelGrupos ? (
-            <div className="fg-checklist-pro__placeholder">
-              <div className="fg-checklist-pro__placeholder-icon">CK</div>
-              <h3>{tr('gruposPorFamilia', 'Grupos da familia')}</h3>
-              <p>
-                {familiasList.length === 0
-                  ? tr('cadastreFamiliaPrimeiro', 'Adicione uma familia na estrutura a esquerda.')
-                  : tr('selecioneFamiliaEsquerda', 'Selecione uma familia e um parente para gerir grupos e servicos.')}
-              </p>
-              <ol className="fg-checklist-pro__placeholder-steps">
-                <li>{tr('fgChecklistPlaceholderStep1', 'Crie ou escolha uma família na coluna esquerda.')}</li>
-                <li>{tr('fgChecklistPlaceholderStep2', 'Adicione um parente (modelo) dentro da família.')}</li>
-                <li>{tr('fgChecklistPlaceholderStep3', 'Cadastre grupos com número e nome.')}</li>
-                <li>{tr('fgChecklistPlaceholderStep4', 'Associe serviços de checklist a cada grupo.')}</li>
-              </ol>
-            </div>
+            <>
+              <header className="fg-checklist-pro__main-head">
+                <div>
+                  <p className="fg-checklist-pro__breadcrumb-label">{tr('gruposPorFamilia', 'Grupos do parente')}</p>
+                  <p className="fg-checklist-pro__breadcrumb">{breadcrumb}</p>
+                </div>
+              </header>
+
+              <nav className="fg-checklist-pro__fluxo" aria-label={tr('fgChecklistFluxoAria', 'Fluxo de cadastro')}>
+                <div className={`fg-checklist-pro__fluxo-step${selectedFamiliaForGrupos ? ' is-done' : ' is-current'}`}>
+                  <span className="fg-checklist-pro__fluxo-num">1</span>
+                  <span className="fg-checklist-pro__fluxo-label">{tr('familia', 'Família')}</span>
+                </div>
+                <span className="fg-checklist-pro__fluxo-sep" aria-hidden />
+                <div
+                  className={`fg-checklist-pro__fluxo-step${
+                    selectedParenteIdForPainelGrupos ? ' is-done' : selectedFamiliaForGrupos ? ' is-current' : ''
+                  }`}
+                >
+                  <span className="fg-checklist-pro__fluxo-num">2</span>
+                  <span className="fg-checklist-pro__fluxo-label">{tr('parente', 'Parente')}</span>
+                </div>
+                <span className="fg-checklist-pro__fluxo-sep" aria-hidden />
+                <div className="fg-checklist-pro__fluxo-step">
+                  <span className="fg-checklist-pro__fluxo-num">3</span>
+                  <span className="fg-checklist-pro__fluxo-label">{tr('grupos', 'Grupos')}</span>
+                </div>
+                <span className="fg-checklist-pro__fluxo-sep" aria-hidden />
+                <div className="fg-checklist-pro__fluxo-step">
+                  <span className="fg-checklist-pro__fluxo-num">4</span>
+                  <span className="fg-checklist-pro__fluxo-label">{tr('servicos', 'Serviços')}</span>
+                </div>
+              </nav>
+
+              <div className="fg-checklist-pro__placeholder">
+                <div className="fg-checklist-pro__placeholder-icon">CK</div>
+                <h3>{tr('gruposPorFamilia', 'Grupos da familia')}</h3>
+                <p>
+                  {familiasList.length === 0
+                    ? tr('cadastreFamiliaPrimeiro', 'Adicione uma familia na estrutura a esquerda.')
+                    : tr('selecioneFamiliaEsquerda', 'Selecione uma familia e um parente para gerir grupos e servicos.')}
+                </p>
+                <ol className="fg-checklist-pro__placeholder-steps">
+                  <li>{tr('fgChecklistPlaceholderStep1', 'Crie ou escolha uma família na coluna esquerda.')}</li>
+                  <li>{tr('fgChecklistPlaceholderStep2', 'Adicione um parente (modelo) dentro da família.')}</li>
+                  <li>{tr('fgChecklistPlaceholderStep3', 'Cadastre grupos com número e nome.')}</li>
+                  <li>{tr('fgChecklistPlaceholderStep4', 'Associe serviços de checklist a cada grupo.')}</li>
+                </ol>
+              </div>
+            </>
           ) : (
             <>
-              <div className="fg-checklist-pro__context-bar">
-                <span className="fg-checklist-pro__context-chip">{selectedFamiliaForGrupos}</span>
-                <span className="fg-checklist-pro__context-sep" aria-hidden>
-                  ›
-                </span>
-                <span className="fg-checklist-pro__context-chip fg-checklist-pro__context-chip--active">
-                  {selectedParente?.nome}
-                </span>
-                <span className="fg-checklist-pro__context-stat">
-                  {gruposDestaFamilia.length} {tr('grupos', 'grupos')} · {servicosParenteSelecionado}{' '}
-                  {tr('servicos', 'servicos')}
-                </span>
-              </div>
+              <header className="fg-checklist-pro__workspace-head">
+                <div className="fg-checklist-pro__workspace-title">
+                  <p className="fg-checklist-pro__workspace-label">{tr('gruposPorFamilia', 'Grupos do parente')}</p>
+                  <h2 className="fg-checklist-pro__workspace-breadcrumb">{breadcrumb}</h2>
+                </div>
+                <div className="fg-checklist-pro__workspace-stats">
+                  <span className="fg-checklist-pro__workspace-stat">
+                    <strong>{gruposDestaFamilia.length}</strong> {tr('grupos', 'grupos')}
+                  </span>
+                  <span className="fg-checklist-pro__workspace-stat">
+                    <strong>{servicosParenteSelecionado}</strong> {tr('servicos', 'servicos')}
+                  </span>
+                </div>
+              </header>
 
-              <div className="fg-checklist-pro__work-tabs" role="tablist" aria-label={tr('fgChecklistSecNavAria', 'Secoes de trabalho')}>
+              <nav className="fg-checklist-pro__tabs" role="tablist" aria-label={tr('fgChecklistSecNavAria', 'Secoes de trabalho')}>
                 <button
                   type="button"
                   role="tab"
                   id="fg-ck-tab-add"
                   aria-selected={workTab === 'add'}
                   aria-controls="fg-ck-add"
-                  className={`fg-checklist-pro__work-tab${workTab === 'add' ? ' is-active' : ''}`}
+                  className={`fg-checklist-pro__tab${workTab === 'add' ? ' is-active' : ''}`}
                   onClick={() => setWorkTab('add')}
                 >
-                  <span className="fg-checklist-pro__work-tab-num">3</span>
-                  <span className="fg-checklist-pro__work-tab-label">+ {tr('addGrupo', 'Adicionar grupo')}</span>
+                  {tr('addGrupo', 'Adicionar grupo')}
                 </button>
                 <button
                   type="button"
@@ -755,11 +747,10 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                   id="fg-ck-tab-list"
                   aria-selected={workTab === 'groups'}
                   aria-controls="fg-ck-list"
-                  className={`fg-checklist-pro__work-tab${workTab === 'groups' ? ' is-active' : ''}`}
+                  className={`fg-checklist-pro__tab${workTab === 'groups' ? ' is-active' : ''}`}
                   onClick={() => setWorkTab('groups')}
                 >
-                  <span className="fg-checklist-pro__work-tab-num">{gruposDestaFamilia.length}</span>
-                  <span className="fg-checklist-pro__work-tab-label">{tr('grupos', 'Grupos')}</span>
+                  {tr('grupos', 'Grupos')} ({gruposDestaFamilia.length})
                 </button>
                 <button
                   type="button"
@@ -767,13 +758,12 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                   id="fg-ck-tab-serv"
                   aria-selected={workTab === 'services'}
                   aria-controls="fg-ck-serv"
-                  className={`fg-checklist-pro__work-tab${workTab === 'services' ? ' is-active' : ''}`}
+                  className={`fg-checklist-pro__tab${workTab === 'services' ? ' is-active' : ''}`}
                   onClick={() => setWorkTab('services')}
                 >
-                  <span className="fg-checklist-pro__work-tab-num">{servicosParenteSelecionado}</span>
-                  <span className="fg-checklist-pro__work-tab-label">{tr('servicos', 'Servicos')}</span>
+                  {tr('servicos', 'Servicos')} ({servicosParenteSelecionado})
                 </button>
-              </div>
+              </nav>
 
             <div className="fg-checklist-pro__panels">
               {workTab === 'add' ? (
@@ -784,7 +774,6 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                 className="fg-checklist-pro__panel fg-checklist-pro__panel--full fg-checklist-pro__panel--accent"
               >
                 <PanelHead
-                  step="3"
                   title={tr('addGrupo', 'Adicionar grupo')}
                   desc={tr('fgChecklistAddGrupoDesc', 'Indique o número (código) e o nome do grupo. Ambos aparecem destacados na lista.')}
                 />
@@ -828,7 +817,6 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                 className="fg-checklist-pro__panel fg-checklist-pro__panel--full"
               >
                 <PanelHead
-                  step="3"
                   title={`${tr('gruposDe', 'Grupos de')} ${selectedParente?.nome ?? ''}`}
                   desc={tr('fgChecklistListaGruposDesc', 'Lista de grupos do parente selecionado — número, nome, imagem e quantidade de serviços.')}
                   count={gruposDestaFamilia.length}
@@ -836,112 +824,105 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                 {gruposDestaFamilia.length === 0 ? (
                   <p className="fg-checklist-pro__empty-hint">{tr('nenhumGrupoNestaFamilia', 'Nenhum grupo. Use o formulario acima.')}</p>
                 ) : (
-                  <div className="fg-checklist-pro__grupo-grid">
+                  <div className="fg-checklist-pro__grupo-list fg-checklist-pro__grupo-list--rows">
                     {gruposDestaFamilia.map((g, idx) => {
                       const isEditing = editingGrupoFamilia === selectedFamiliaForGrupos && editingGrupoNome === g.nomeGrupo
                       const servicosGrupo = g.itensTrabalho?.length || 0
                       return (
-                        <article key={g.id} className="fg-checklist-pro__grupo-card fg-checklist-pro__grupo-card--modern">
-                          <div className="fg-checklist-pro__grupo-card-accent" aria-hidden />
-                          <div className="fg-checklist-pro__grupo-card-inner">
-                            <div className="fg-checklist-pro__grupo-card-top">
-                              <span className="fg-checklist-pro__grupo-index" title={tr('ordem', 'Ordem')}>
-                                {idx + 1}
-                              </span>
-                              <label className="fg-checklist-pro__grupo-img" title={tr('adicionarImagem', 'Imagem')}>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(ev) => {
-                                    const file = ev.target.files?.[0]
-                                    if (file) {
-                                      const r = new FileReader()
-                                      r.onload = () => {
-                                        const next = gruposChecklist.map((x) => (x.id === g.id ? { ...x, imagem: r.result as string } : x))
-                                        setGruposChecklist(next)
-                                        saveData('nonato-grupos-checklist', next)
-                                      }
-                                      r.readAsDataURL(file)
-                                    }
-                                    ev.target.value = ''
-                                  }}
-                                />
-                                <ProImageHoverPreview
-                                  src={g.imagem}
-                                  alt={g.nomeGrupo}
-                                  label={`${g.numeroGrupo ? `${g.numeroGrupo} — ` : ''}${g.nomeGrupo}`}
-                                  thumbClassName="fg-pro-preview__thumb fg-pro-preview__thumb--fill"
-                                >
-                                  {(g.numeroGrupo || g.nomeGrupo || '?').charAt(0)}
-                                </ProImageHoverPreview>
-                              </label>
-                              {!isEditing ? (
-                                <FgRowActions
-                                  onEdit={(ev) => {
-                                    ev.stopPropagation()
-                                    setEditingGrupoFamilia(selectedFamiliaForGrupos)
-                                    setEditingGrupoNome(g.nomeGrupo)
-                                    setEditGrupoValue(g.nomeGrupo)
-                                    setEditGrupoNumeroValue((g.numeroGrupo ?? '').trim())
-                                  }}
-                                  onDelete={(ev) => {
-                                    ev.stopPropagation()
-                                    const next = gruposChecklist.filter((gr) => gr.id !== g.id)
+                        <article key={g.id} className="fg-checklist-pro__grupo-row">
+                          <span className="fg-checklist-pro__grupo-index" title={tr('ordem', 'Ordem')}>
+                            {idx + 1}
+                          </span>
+                          <label className="fg-checklist-pro__grupo-img" title={tr('adicionarImagem', 'Imagem')}>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(ev) => {
+                                const file = ev.target.files?.[0]
+                                if (file) {
+                                  const r = new FileReader()
+                                  r.onload = () => {
+                                    const next = gruposChecklist.map((x) => (x.id === g.id ? { ...x, imagem: r.result as string } : x))
                                     setGruposChecklist(next)
                                     saveData('nonato-grupos-checklist', next)
-                                  }}
-                                  editTitle={tr('edit', 'Editar')}
-                                  deleteTitle={tr('delete', 'Excluir')}
-                                />
-                              ) : null}
+                                  }
+                                  r.readAsDataURL(file)
+                                }
+                                ev.target.value = ''
+                              }}
+                            />
+                            <ProImageHoverPreview
+                              src={g.imagem}
+                              alt={g.nomeGrupo}
+                              label={`${g.numeroGrupo ? `${g.numeroGrupo} — ` : ''}${g.nomeGrupo}`}
+                              thumbClassName="fg-pro-preview__thumb fg-pro-preview__thumb--fill"
+                            >
+                              {(g.numeroGrupo || g.nomeGrupo || '?').charAt(0)}
+                            </ProImageHoverPreview>
+                          </label>
+                          {isEditing ? (
+                            <div className="fg-checklist-pro__grupo-edit fg-checklist-pro__grupo-edit--row">
+                              <input
+                                className="fg-checklist-pro__input fg-checklist-pro__input--num"
+                                value={editGrupoNumeroValue}
+                                onChange={(e) => setEditGrupoNumeroValue(e.target.value)}
+                                placeholder={tr('numeroGrupoShort', 'Nº')}
+                              />
+                              <input
+                                className="fg-checklist-pro__input"
+                                value={editGrupoValue}
+                                onChange={(e) => setEditGrupoValue(e.target.value)}
+                                placeholder={tr('nomeDoGrupo', 'Nome do grupo')}
+                                autoFocus
+                              />
+                              <button
+                                type="button"
+                                className="fg-checklist-pro__act"
+                                onClick={() => {
+                                  const nome = editGrupoValue.trim()
+                                  if (!nome || gruposDestaFamilia.some((x) => x.nomeGrupo === nome && x.id !== g.id)) return
+                                  const next = gruposChecklist.map((gr) =>
+                                    gr.id === g.id ? { ...gr, numeroGrupo: editGrupoNumeroValue.trim(), nomeGrupo: nome } : gr
+                                  )
+                                  setGruposChecklist(next)
+                                  saveData('nonato-grupos-checklist', next)
+                                  setEditingGrupoFamilia(null)
+                                  setEditingGrupoNome(null)
+                                }}
+                              >
+                                OK
+                              </button>
                             </div>
-                            {isEditing ? (
-                              <div className="fg-checklist-pro__grupo-edit fg-checklist-pro__grupo-edit--card">
-                                <input
-                                  className="fg-checklist-pro__input fg-checklist-pro__input--num"
-                                  value={editGrupoNumeroValue}
-                                  onChange={(e) => setEditGrupoNumeroValue(e.target.value)}
-                                  placeholder={tr('numeroGrupoShort', 'Nº')}
-                                />
-                                <input
-                                  className="fg-checklist-pro__input"
-                                  value={editGrupoValue}
-                                  onChange={(e) => setEditGrupoValue(e.target.value)}
-                                  placeholder={tr('nomeDoGrupo', 'Nome do grupo')}
-                                  autoFocus
-                                />
-                                <button
-                                  type="button"
-                                  className="fg-checklist-pro__act"
-                                  onClick={() => {
-                                    const nome = editGrupoValue.trim()
-                                    if (!nome || gruposDestaFamilia.some((x) => x.nomeGrupo === nome && x.id !== g.id)) return
-                                    const next = gruposChecklist.map((gr) =>
-                                      gr.id === g.id ? { ...gr, numeroGrupo: editGrupoNumeroValue.trim(), nomeGrupo: nome } : gr
-                                    )
-                                    setGruposChecklist(next)
-                                    saveData('nonato-grupos-checklist', next)
-                                    setEditingGrupoFamilia(null)
-                                    setEditingGrupoNome(null)
-                                  }}
-                                >
-                                  OK
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="fg-checklist-pro__grupo-card-body">
-                                <GrupoTitulo
-                                  layout="stacked"
-                                  numero={g.numeroGrupo}
-                                  nome={g.nomeGrupo}
-                                  numeroTitle={tr('numeroGrupo', 'Numero do grupo')}
-                                />
-                                <span className="fg-checklist-pro__grupo-meta-pill">
-                                  {servicosGrupo} {tr('servicos', 'servicos')}
-                                </span>
-                              </div>
-                            )}
-                          </div>
+                          ) : (
+                            <>
+                              <GrupoTitulo
+                                numero={g.numeroGrupo}
+                                nome={g.nomeGrupo}
+                                numeroTitle={tr('numeroGrupo', 'Numero do grupo')}
+                                className="fg-checklist-pro__grupo-titulo--row"
+                              />
+                              <span className="fg-checklist-pro__grupo-meta-pill">
+                                {servicosGrupo} {tr('servicos', 'servicos')}
+                              </span>
+                              <FgRowActions
+                                onEdit={(ev) => {
+                                  ev.stopPropagation()
+                                  setEditingGrupoFamilia(selectedFamiliaForGrupos)
+                                  setEditingGrupoNome(g.nomeGrupo)
+                                  setEditGrupoValue(g.nomeGrupo)
+                                  setEditGrupoNumeroValue((g.numeroGrupo ?? '').trim())
+                                }}
+                                onDelete={(ev) => {
+                                  ev.stopPropagation()
+                                  const next = gruposChecklist.filter((gr) => gr.id !== g.id)
+                                  setGruposChecklist(next)
+                                  saveData('nonato-grupos-checklist', next)
+                                }}
+                                editTitle={tr('edit', 'Editar')}
+                                deleteTitle={tr('delete', 'Excluir')}
+                              />
+                            </>
+                          )}
                         </article>
                       )
                     })}
@@ -958,7 +939,6 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                 className="fg-checklist-pro__panel fg-checklist-pro__panel--full fg-checklist-pro__panel--services"
               >
                 <PanelHead
-                  step="4"
                   title={tr('criacaoChecklistPorGrupos', 'Servicos por grupo')}
                   desc={
                     (safeT as Record<string, string>).criacaoChecklistPorGruposDesc ||
