@@ -34945,6 +34945,19 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   min-height: 120px;
   padding-top: 14px;
 }
+.op-pro__input::placeholder,
+.op-pro__search::placeholder,
+.op-pro__textarea::placeholder {
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 1;
+}
+.op-pro__input::-webkit-input-placeholder,
+.op-pro__search::-webkit-input-placeholder,
+.op-pro__textarea::-webkit-input-placeholder {
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 1;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.92);
+}
 .op-pro__check {
   display: inline-flex;
   align-items: center;
@@ -35368,6 +35381,29 @@ html body .op-pro .op-pro__section-title {
 html body .op-pro .op-pro__toggle-label {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+}
+
+html body .op-pro .op-pro__input,
+html body .op-pro .op-pro__search,
+html body .op-pro .op-pro__textarea {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body .op-pro .op-pro__input::placeholder,
+html body .op-pro .op-pro__search::placeholder,
+html body .op-pro .op-pro__textarea::placeholder {
+  color: rgba(255, 255, 255, 0.92) !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
+}
+
+html body .op-pro .op-pro__input::-webkit-input-placeholder,
+html body .op-pro .op-pro__search::-webkit-input-placeholder,
+html body .op-pro .op-pro__textarea::-webkit-input-placeholder {
+  color: rgba(255, 255, 255, 0.92) !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
 }
 
 /* —— Checklist Básico (campo) —— */
