@@ -33473,15 +33473,32 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
 }
 .fg-checklist-pro--reforma .fg-ck-shell__serv-form {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 12px;
   align-items: center;
   margin-top: 12px;
-  padding-top: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--fg-ck-border);
   border-top: 1px solid var(--fg-ck-border);
 }
-.fg-checklist-pro--reforma .fg-ck-shell__serv-form .fg-ck-shell__input {
-  flex: 1 1 200px;
+.fg-checklist-pro--reforma .fg-ck-shell__serv-form .fg-ck-shell__input--serv-form {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  min-height: 42px;
+}
+.fg-checklist-pro--reforma .fg-ck-shell__serv-form-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+.fg-checklist-pro--reforma .fg-ck-shell__serv-form-actions .fg-ck-shell__btn {
+  min-width: 96px;
+  padding: 0 16px;
+  white-space: nowrap;
 }
 
 /* Servicos — ambito parente / familia / grupo */
@@ -33687,6 +33704,17 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   }
   .fg-checklist-pro--reforma .fg-ck-shell__grupo-row .fg-checklist-pro__row-actions {
     margin-left: 0;
+  }
+  .fg-checklist-pro--reforma .fg-ck-shell__serv-form {
+    flex-wrap: wrap;
+  }
+  .fg-checklist-pro--reforma .fg-ck-shell__serv-form .fg-ck-shell__input--serv-form {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .fg-checklist-pro--reforma .fg-ck-shell__serv-form-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
 }
 

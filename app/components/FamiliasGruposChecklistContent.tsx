@@ -559,18 +559,20 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
           <div className="fg-ck-shell__serv-form">
             <input
               type="text"
-              className="fg-ck-shell__input"
+              className="fg-ck-shell__input fg-ck-shell__input--serv-form"
               value={criacaoChecklistItemForm.descricaoTrabalho}
               onChange={(e) => setCriacaoChecklistItemForm((f) => ({ ...f, descricaoTrabalho: e.target.value }))}
               placeholder={tr('qualTrabalho', 'Descricao do servico...')}
               onKeyDown={(e) => e.key === 'Enter' && saveItemTrabalho()}
             />
-            <button type="button" className="fg-checklist-pro__act" onClick={saveItemTrabalho}>
-              {criacaoChecklistEditingItemId ? tr('save', 'Salvar') : tr('add', 'Adicionar')}
-            </button>
-            <button type="button" className="fg-checklist-pro__act fg-checklist-pro__act--muted" onClick={cancelForm}>
-              {tr('cancel', 'Cancelar')}
-            </button>
+            <div className="fg-ck-shell__serv-form-actions">
+              <button type="button" className="fg-ck-shell__btn fg-ck-shell__btn--sm fg-ck-shell__btn--primary" onClick={saveItemTrabalho}>
+                {criacaoChecklistEditingItemId ? tr('save', 'Salvar') : tr('add', 'Adicionar')}
+              </button>
+              <button type="button" className="fg-ck-shell__btn fg-ck-shell__btn--sm fg-ck-shell__btn--ghost" onClick={cancelForm}>
+                {tr('cancel', 'Cancelar')}
+              </button>
+            </div>
           </div>
         )}
       </article>
