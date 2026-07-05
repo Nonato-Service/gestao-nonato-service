@@ -31307,12 +31307,27 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 .fg-checklist-pro__sidebar-title {
-  margin: 0 0 10px;
+  margin: 0 0 6px;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(110, 231, 183, 0.9);
+}
+.fg-checklist-pro__sidebar-step {
+  margin: 0 0 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ns-btn-green-text);
+  -webkit-text-fill-color: var(--ns-btn-green-text);
+}
+.fg-checklist-pro__sidebar-hint {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.52);
 }
 .fg-checklist-pro__search {
   width: 100%;
@@ -31620,6 +31635,81 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   font-size: 1rem;
   font-weight: 700;
   color: #ecfdf5;
+  line-height: 1.35;
+  word-break: break-word;
+}
+.fg-checklist-pro__fluxo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 4px;
+  margin: 0 14px 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 200, 83, 0.2);
+  background: rgba(2, 6, 23, 0.45);
+}
+.fg-checklist-pro__fluxo-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.55);
+  opacity: 0.55;
+}
+.fg-checklist-pro__fluxo-step.is-current {
+  opacity: 1;
+  border-color: var(--ns-btn-green-border);
+  background: var(--ns-btn-green-bg);
+}
+.fg-checklist-pro__fluxo-step.is-done {
+  opacity: 1;
+  border-color: rgba(0, 200, 83, 0.35);
+}
+.fg-checklist-pro__fluxo-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--ns-btn-green-text);
+  -webkit-text-fill-color: var(--ns-btn-green-text);
+  background: rgba(0, 200, 83, 0.12);
+  border: 1px solid var(--ns-btn-green-border);
+}
+.fg-checklist-pro__fluxo-step.is-current .fg-checklist-pro__fluxo-num {
+  background: var(--ns-btn-green-bg-hover);
+  color: var(--ns-btn-green-text-hover);
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover);
+}
+.fg-checklist-pro__fluxo-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+.fg-checklist-pro__fluxo-sep {
+  width: 14px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+.fg-checklist-pro__placeholder-steps {
+  margin: 16px 0 0;
+  padding-left: 1.2rem;
+  max-width: 42ch;
+  text-align: left;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+.fg-checklist-pro__placeholder-steps li + li {
+  margin-top: 6px;
 }
 .fg-checklist-pro__placeholder {
   flex: 1;
@@ -31653,41 +31743,77 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   gap: 14px;
 }
 .fg-checklist-pro__panel {
-  padding: 14px 16px;
-  border-radius: 12px;
+  padding: 16px 18px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(2, 6, 23, 0.45);
+  box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.06);
+}
+.fg-checklist-pro__panel--accent {
+  border-color: rgba(0, 200, 83, 0.22);
+  box-shadow: inset 3px 0 0 var(--ns-btn-green-border);
+  background: linear-gradient(90deg, rgba(0, 200, 83, 0.06) 0%, rgba(2, 6, 23, 0.45) 28%);
 }
 .fg-checklist-pro__panel--full { width: 100%; box-sizing: border-box; }
-.fg-checklist-pro__panel--services { border-color: rgba(0, 200, 83, 0.18); }
+.fg-checklist-pro__panel--services {
+  border-color: rgba(0, 200, 83, 0.22);
+  box-shadow: inset 3px 0 0 rgba(0, 200, 83, 0.35);
+}
+.fg-checklist-pro__panel-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.fg-checklist-pro__panel-step {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--ns-btn-green-text);
+  -webkit-text-fill-color: var(--ns-btn-green-text);
+  background: var(--ns-btn-green-bg);
+  border: 1px solid var(--ns-btn-green-border);
+}
+.fg-checklist-pro__panel-head-body {
+  min-width: 0;
+  flex: 1;
+}
 .fg-checklist-pro__panel-title {
-  margin: 0 0 12px;
-  font-size: 0.82rem;
+  margin: 0;
+  font-size: 0.86rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(110, 231, 183, 0.9);
+  color: rgba(110, 231, 183, 0.95);
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 .fg-checklist-pro__panel-count {
   font-size: 0.72rem;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(0, 200, 83, 0.15);
-  color: #6ee7b7;
+  background: var(--ns-btn-green-bg);
+  border: 1px solid var(--ns-btn-green-border);
+  color: var(--ns-btn-green-text);
+  -webkit-text-fill-color: var(--ns-btn-green-text);
 }
 .fg-checklist-pro__panel-desc {
-  margin: -6px 0 12px;
+  margin: 6px 0 0;
   font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.5);
   line-height: 1.5;
 }
 .fg-checklist-pro__form-grid {
   display: grid;
-  grid-template-columns: 140px 1fr auto;
-  gap: 10px;
+  grid-template-columns: minmax(120px, 160px) minmax(0, 1fr) auto;
+  gap: 12px;
   align-items: end;
 }
 .fg-checklist-pro__field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -31704,12 +31830,13 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 40px;
+  height: 42px;
   padding: 0 18px;
   border-radius: 10px;
-  border: 1px solid rgba(0, 200, 83, 0.45);
-  background: rgba(0, 200, 83, 0.16);
-  color: #a7f3d0;
+  border: 1px solid var(--ns-btn-green-border);
+  background: var(--ns-btn-green-bg);
+  color: var(--ns-btn-green-text);
+  -webkit-text-fill-color: var(--ns-btn-green-text);
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
@@ -31717,9 +31844,10 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
 .fg-checklist-pro__btn-add:hover {
-  background: rgba(0, 200, 83, 0.28);
-  border-color: rgba(52, 211, 153, 0.65);
-  box-shadow: 0 8px 20px rgba(0, 200, 83, 0.12);
+  background: var(--ns-btn-green-bg-hover);
+  border-color: var(--ns-btn-green-border-hover);
+  color: var(--ns-btn-green-text-hover);
+  -webkit-text-fill-color: var(--ns-btn-green-text-hover);
   transform: translateY(-1px);
 }
 .fg-checklist-pro__btn-add--sm {
@@ -31727,28 +31855,51 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   padding: 0 14px;
   font-size: 0.76rem;
 }
-.fg-checklist-pro__grupo-list { display: flex; flex-direction: column; gap: 12px; }
+.fg-checklist-pro__grupo-list { display: flex; flex-direction: column; gap: 14px; }
 .fg-checklist-pro__grupo-card {
-  display: grid;
-  grid-template-columns: 32px 48px minmax(0, 1fr) auto;
-  gap: 14px 16px;
+  display: flex;
   align-items: center;
+  gap: 16px;
   padding: 16px 18px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid rgba(0, 200, 83, 0.22);
   background: rgba(15, 23, 42, 0.72);
+  flex-wrap: wrap;
+}
+.fg-checklist-pro__grupo-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.fg-checklist-pro__grupo-card-body {
+  flex: 1 1 200px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
 }
 .fg-checklist-pro__grupo-card .fg-checklist-pro__row-actions {
-  justify-self: end;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 .fg-checklist-pro__grupo-index {
-  font-size: 0.82rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
   font-weight: 800;
-  color: rgba(110, 231, 183, 0.85);
+  color: var(--ns-btn-green-text);
+  -webkit-text-fill-color: var(--ns-btn-green-text);
+  background: var(--ns-btn-green-bg);
+  border: 1px solid var(--ns-btn-green-border);
 }
 .fg-checklist-pro__grupo-img {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 8px;
   overflow: hidden;
   display: grid;
@@ -31770,12 +31921,13 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
 .fg-checklist-pro__grupo-titulo {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   min-width: 0;
   flex-wrap: wrap;
+  width: 100%;
 }
 .fg-checklist-pro__grupo-titulo--servico {
-  flex: 1 1 auto;
+  flex: 1 1 220px;
   min-width: min(100%, 220px);
 }
 .fg-checklist-pro__grupo-num-badge {
@@ -31783,42 +31935,50 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 56px;
-  padding: 7px 14px;
-  font-size: clamp(1rem, 2.4vw, 1.2rem);
+  min-width: 58px;
+  padding: 8px 16px;
+  font-size: clamp(1.05rem, 2.5vw, 1.28rem);
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   line-height: 1.1;
-  color: #052e16;
-  background: linear-gradient(180deg, #4ade80 0%, #22c55e 100%);
-  border: 1px solid rgba(134, 239, 172, 0.75);
+  color: var(--ns-btn-green-text);
+  -webkit-text-fill-color: var(--ns-btn-green-text);
+  background: var(--ns-btn-green-bg);
+  border: 1px solid var(--ns-btn-green-border);
   border-radius: 10px;
-  box-shadow:
-    0 0 0 1px rgba(74, 222, 128, 0.15),
-    0 4px 14px rgba(74, 222, 128, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 .fg-checklist-pro__grupo-nome {
-  font-size: clamp(1.02rem, 2.5vw, 1.22rem);
+  font-size: clamp(1.08rem, 2.6vw, 1.28rem);
   font-weight: 750;
   color: #f8fafc;
-  line-height: 1.25;
+  line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
-  flex: 1 1 120px;
+  flex: 1 1 140px;
 }
-.fg-checklist-pro__grupo-info small {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.5);
-  padding-left: 2px;
+.fg-checklist-pro__grupo-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
-.fg-checklist-pro__grupo-num {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #34d399;
+.fg-checklist-pro__grupo-edit { display: flex; gap: 10px; align-items: center; min-width: 0; flex: 1 1 100%; }
+.fg-checklist-pro__grupo-edit--card {
+  flex: 1 1 280px;
 }
-.fg-checklist-pro__grupo-edit { display: flex; gap: 8px; align-items: center; grid-column: 3 / -1; min-width: 0; }
+.fg-checklist-pro__input--num {
+  max-width: 120px;
+  flex: 0 0 120px;
+}
 .fg-checklist-pro__servicos-stack { display: flex; flex-direction: column; gap: 14px; }
 .fg-checklist-pro__servico-block {
   padding: 16px 18px;
@@ -31830,27 +31990,26 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
+  gap: 14px 16px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(74, 222, 128, 0.12);
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(0, 200, 83, 0.15);
 }
 .fg-checklist-pro__servico-head .fg-checklist-pro__grupo-nome {
   white-space: normal;
   word-break: break-word;
 }
 .fg-checklist-pro__servico-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
 }
 .fg-checklist-pro__servico-card {
-  min-width: 180px;
-  max-width: 260px;
-  padding: 12px;
-  border-radius: 8px;
+  min-width: 0;
+  padding: 14px;
+  border-radius: 10px;
   border: 1px solid rgba(0, 200, 83, 0.2);
   background: rgba(2, 6, 23, 0.65);
 }
@@ -31899,11 +32058,13 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
 }
 @media (max-width: 640px) {
   .fg-checklist-pro__kpis { grid-template-columns: 1fr 1fr; }
-  .fg-checklist-pro__grupo-card { grid-template-columns: 24px 40px minmax(0, 1fr); }
+  .fg-checklist-pro__fluxo-sep { display: none; }
+  .fg-checklist-pro__grupo-card {
+    align-items: flex-start;
+  }
   .fg-checklist-pro__grupo-card .fg-checklist-pro__row-actions {
-    grid-column: 2 / -1;
+    width: 100%;
     justify-content: flex-end;
-    justify-self: stretch;
   }
   .fg-checklist-pro__row--parente {
     flex-wrap: wrap;
