@@ -372,76 +372,94 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
     pecasManuais: [],
   })
 
+  const progressStep =
+    !selectedFamiliaForGrupos ? 1 : !selectedParenteIdForPainelGrupos ? 2 : workTab === 'services' ? 4 : 3
+
+  const progressSteps = [
+    { n: 1, label: tr('familia', 'Familia') },
+    { n: 2, label: tr('parente', 'Parente') },
+    { n: 3, label: tr('grupos', 'Grupos') },
+    { n: 4, label: tr('servicos', 'Servicos') },
+  ]
+
   return (
-    <div className="fg-checklist-pro fg-checklist-pro--modern fg-checklist-pro--balance">
-      <section className="fg-checklist-pro__hero">
-        <div className="fg-checklist-pro__hero-glow" aria-hidden />
-        <div className="fg-checklist-pro__hero-top">
-          <div className="fg-checklist-pro__hero-brand">
-            <span className="fg-checklist-pro__hero-icon" aria-hidden>
-              CK
-            </span>
-            <div>
-              <p className="fg-checklist-pro__eyebrow">{tr('checklistHubStep1', 'Gestao de checklist')}</p>
-              <h1 className="fg-checklist-pro__title">{tr('familiasGruposTitle', 'Cadastro de Familias e Grupos para Checklist')}</h1>
-              <p className="fg-checklist-pro__lead">
-                {tr('familiasGruposDesc', 'Organize familias, parentes (modelos) e grupos de checklist de forma clara.')}
-              </p>
-            </div>
-          </div>
-          <div className="fg-checklist-pro__hero-actions">
-            <LogoComponent size="small" />
-            <button type="button" className="fg-checklist-pro__tool-btn" onClick={() => closeTab(activeTabId || '')} title={tr('voltar', 'Voltar')}>
-              &larr;
-            </button>
-            <button type="button" className="fg-checklist-pro__tool-btn fg-checklist-pro__tool-btn--accent" onClick={voltarPaginaInicial} title={tr('paginaInicial', 'Pagina Inicial')}>
-              Home
-            </button>
-          </div>
+    <div className="fg-checklist-pro fg-checklist-pro--reforma">
+      <header className="fg-ck-shell__topbar">
+        <div className="fg-ck-shell__topbar-main">
+          <p className="fg-ck-shell__eyebrow">{tr('checklistHubStep1', 'Gestao de checklist')}</p>
+          <h1 className="fg-ck-shell__title">{tr('familiasGruposTitle', 'Cadastro de Familias e Grupos para Checklist')}</h1>
+          <p className="fg-ck-shell__subtitle">
+            {tr('familiasGruposDesc', 'Organize familias, parentes (modelos) e grupos de checklist de forma clara.')}
+          </p>
         </div>
-        <div className="fg-checklist-pro__kpis">
-          <div className="fg-checklist-pro__kpi">
+        <div className="fg-ck-shell__topbar-kpis">
+          <div className="fg-ck-shell__kpi">
             <span>{tr('familia', 'Familias')}</span>
             <strong>{familiasList.length}</strong>
           </div>
-          <div className="fg-checklist-pro__kpi">
+          <div className="fg-ck-shell__kpi">
             <span>{tr('parente', 'Parentes')}</span>
             <strong>{parentesCount}</strong>
           </div>
-          <div className="fg-checklist-pro__kpi">
+          <div className="fg-ck-shell__kpi">
             <span>{tr('grupos', 'Grupos')}</span>
             <strong>{gruposCount}</strong>
           </div>
-          <div className="fg-checklist-pro__kpi">
+          <div className="fg-ck-shell__kpi">
             <span>{tr('servicos', 'Servicos')}</span>
             <strong>{servicosCount}</strong>
           </div>
         </div>
-      </section>
+        <div className="fg-ck-shell__topbar-actions">
+          <LogoComponent size="small" />
+          <button type="button" className="fg-ck-shell__tool-btn" onClick={() => closeTab(activeTabId || '')} title={tr('voltar', 'Voltar')}>
+            &larr; {tr('voltar', 'Voltar')}
+          </button>
+          <button type="button" className="fg-ck-shell__tool-btn fg-ck-shell__tool-btn--accent" onClick={voltarPaginaInicial} title={tr('paginaInicial', 'Pagina Inicial')}>
+            {tr('paginaInicial', 'Pagina Inicial')}
+          </button>
+        </div>
+      </header>
 
-      <div className="fg-checklist-pro__layout">
-        <aside className="fg-checklist-pro__sidebar">
-          <div className="fg-checklist-pro__sidebar-head">
-            <p className="fg-checklist-pro__sidebar-step">{tr('fgChecklistPassoSidebar', 'Passos 1 e 2')}</p>
-            <h2 className="fg-checklist-pro__sidebar-title">{tr('estrutura', 'Estrutura')}</h2>
-            <p className="fg-checklist-pro__sidebar-hint">
-              {tr('fgChecklistSidebarHint', 'Família → parente (modelo). Selecione um parente para gerir grupos à direita.')}
+      <nav className="fg-ck-shell__progress" aria-label={tr('fgChecklistFluxoAria', 'Fluxo de cadastro')}>
+        {progressSteps.map((s, i) => (
+          <React.Fragment key={s.n}>
+            <div
+              className={`fg-ck-shell__progress-step${
+                progressStep === s.n ? ' is-current' : progressStep > s.n ? ' is-done' : ''
+              }`}
+            >
+              <span className="fg-ck-shell__progress-num">{s.n}</span>
+              <span className="fg-ck-shell__progress-label">{s.label}</span>
+            </div>
+            {i < progressSteps.length - 1 ? <span className="fg-ck-shell__progress-line" aria-hidden /> : null}
+          </React.Fragment>
+        ))}
+      </nav>
+
+      <div className="fg-ck-shell__workspace">
+        <aside className="fg-ck-shell__nav">
+          <div className="fg-ck-shell__nav-head">
+            <span className="fg-ck-shell__nav-badge">1–2</span>
+            <h2 className="fg-ck-shell__nav-title">{tr('estrutura', 'Estrutura')}</h2>
+            <p className="fg-ck-shell__nav-hint">
+              {tr('fgChecklistSidebarHint', 'Familia → parente (modelo). Selecione um parente para gerir grupos a direita.')}
             </p>
             <input
               type="search"
-              className="fg-checklist-pro__search"
+              className="fg-ck-shell__search"
               value={navSearch}
               onChange={(e) => setNavSearch(e.target.value)}
               placeholder={tr('pesquisarFamiliaParente', 'Pesquisar familia, parente ou grupo...')}
             />
           </div>
 
-          <div className="fg-checklist-pro__quick-add">
-            <label className="fg-checklist-pro__label">{tr('novaFamilia', 'Nova familia')}</label>
-            <div className="fg-checklist-pro__quick-row">
+          <div className="fg-ck-shell__nav-add">
+            <label className="fg-ck-shell__field-label">{tr('novaFamilia', 'Nova familia')}</label>
+            <div className="fg-ck-shell__field-row">
               <input
                 type="text"
-                className="fg-checklist-pro__input"
+                className="fg-ck-shell__input"
                 value={novaFamiliaEquipamento}
                 onChange={(e) => setNovaFamiliaEquipamento(e.target.value)}
                 placeholder={tr('novaFamilia', 'Nome da nova familia...')}
@@ -449,19 +467,19 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
               />
               <button
                 type="button"
-                className="fg-checklist-pro__btn fg-checklist-pro__btn--primary"
+                className="fg-ck-shell__btn fg-ck-shell__btn--icon"
                 onClick={handleAddFamilia}
                 title={tr('add', 'Adicionar')}
                 aria-label={tr('add', 'Adicionar')}
               >
-                <span aria-hidden>+</span>
+                +
               </button>
             </div>
           </div>
 
-          <div className="fg-checklist-pro__tree">
+          <div className="fg-ck-shell__tree">
             {filteredFamilias.length === 0 ? (
-              <p className="fg-checklist-pro__empty-hint">{tr('nenhumaFamilia', 'Nenhuma familia. Crie uma acima.')}</p>
+              <p className="fg-ck-shell__empty-tree">{tr('nenhumaFamilia', 'Nenhuma familia. Crie uma acima.')}</p>
             ) : (
               filteredFamilias.map((familia) => {
                 const parentesDestaFamilia = parentesChecklist.filter((p) => p.familia === familia)
@@ -469,8 +487,8 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                 const famExpanded = familiaExpandidaChecklist === familia || selectedFamiliaForGrupos === familia
                 const isFamActive = selectedFamiliaForGrupos === familia
                 return (
-                  <div key={familia} className="fg-checklist-pro__tree-block">
-                    <div className={`fg-checklist-pro__row fg-checklist-pro__row--familia ${isFamActive ? 'is-active' : ''}`}>
+                  <div key={familia} className="fg-ck-shell__fam-block">
+                    <div className={`fg-ck-shell__fam-card fg-checklist-pro__row fg-checklist-pro__row--familia ${isFamActive ? 'is-active' : ''}`}>
                       <button
                         type="button"
                         className="fg-checklist-pro__expand"
@@ -527,12 +545,12 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                     </div>
 
                     {famExpanded && (
-                      <div className="fg-checklist-pro__tree-nested">
+                      <div className="fg-ck-shell__parent-list fg-checklist-pro__tree-nested">
                         {parentesDestaFamilia.map((p) => {
                           const isParenteActive = selectedParenteIdForPainelGrupos === p.id && selectedFamiliaForGrupos === familia
                           const gruposParente = gruposChecklist.filter((g) => g.parenteId === p.id).length
                           return (
-                            <div key={p.id} className={`fg-checklist-pro__row fg-checklist-pro__row--parente ${isParenteActive ? 'is-active' : ''}`}>
+                            <div key={p.id} className={`fg-ck-shell__parent-card fg-checklist-pro__row fg-checklist-pro__row--parente ${isParenteActive ? 'is-active' : ''}`}>
                               {editingParenteId === p.id ? (
                                 <>
                                   <input
@@ -632,10 +650,10 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                             </div>
                           )
                         })}
-                        <div className="fg-checklist-pro__quick-row fg-checklist-pro__quick-row--nested">
+                        <div className="fg-ck-shell__field-row fg-ck-shell__field-row--nested">
                           <input
                             type="text"
-                            className="fg-checklist-pro__input"
+                            className="fg-ck-shell__input"
                             value={novoParenteNomePorFamilia[familia] ?? ''}
                             onChange={(e) => setNovoParenteNomePorFamilia((prev) => ({ ...prev, [familia]: e.target.value }))}
                             placeholder={tr('nomeDoParente', 'Nome do parente...')}
@@ -643,12 +661,12 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                           />
                           <button
                             type="button"
-                            className="fg-checklist-pro__btn fg-checklist-pro__btn--primary"
+                            className="fg-ck-shell__btn fg-ck-shell__btn--icon"
                             onClick={() => handleAddParente(familia)}
                             title={tr('add', 'Adicionar')}
                             aria-label={tr('add', 'Adicionar')}
                           >
-                            <span aria-hidden>+</span>
+                            +
                           </button>
                         </div>
                       </div>
@@ -660,83 +678,46 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
           </div>
         </aside>
 
-        <main className="fg-checklist-pro__main">
+        <section className="fg-ck-shell__panel">
           {!selectedFamiliaForGrupos || !selectedParenteIdForPainelGrupos ? (
-            <>
-              <header className="fg-checklist-pro__main-head">
-                <div>
-                  <p className="fg-checklist-pro__breadcrumb-label">{tr('gruposPorFamilia', 'Grupos do parente')}</p>
-                  <p className="fg-checklist-pro__breadcrumb">{breadcrumb}</p>
-                </div>
-              </header>
-
-              <nav className="fg-checklist-pro__fluxo" aria-label={tr('fgChecklistFluxoAria', 'Fluxo de cadastro')}>
-                <div className={`fg-checklist-pro__fluxo-step${selectedFamiliaForGrupos ? ' is-done' : ' is-current'}`}>
-                  <span className="fg-checklist-pro__fluxo-num">1</span>
-                  <span className="fg-checklist-pro__fluxo-label">{tr('familia', 'Família')}</span>
-                </div>
-                <span className="fg-checklist-pro__fluxo-sep" aria-hidden />
-                <div
-                  className={`fg-checklist-pro__fluxo-step${
-                    selectedParenteIdForPainelGrupos ? ' is-done' : selectedFamiliaForGrupos ? ' is-current' : ''
-                  }`}
-                >
-                  <span className="fg-checklist-pro__fluxo-num">2</span>
-                  <span className="fg-checklist-pro__fluxo-label">{tr('parente', 'Parente')}</span>
-                </div>
-                <span className="fg-checklist-pro__fluxo-sep" aria-hidden />
-                <div className="fg-checklist-pro__fluxo-step">
-                  <span className="fg-checklist-pro__fluxo-num">3</span>
-                  <span className="fg-checklist-pro__fluxo-label">{tr('grupos', 'Grupos')}</span>
-                </div>
-                <span className="fg-checklist-pro__fluxo-sep" aria-hidden />
-                <div className="fg-checklist-pro__fluxo-step">
-                  <span className="fg-checklist-pro__fluxo-num">4</span>
-                  <span className="fg-checklist-pro__fluxo-label">{tr('servicos', 'Serviços')}</span>
-                </div>
-              </nav>
-
-              <div className="fg-checklist-pro__placeholder">
-                <div className="fg-checklist-pro__placeholder-icon">CK</div>
-                <h3>{tr('gruposPorFamilia', 'Grupos da familia')}</h3>
-                <p>
-                  {familiasList.length === 0
-                    ? tr('cadastreFamiliaPrimeiro', 'Adicione uma familia na estrutura a esquerda.')
-                    : tr('selecioneFamiliaEsquerda', 'Selecione uma familia e um parente para gerir grupos e servicos.')}
-                </p>
-                <ol className="fg-checklist-pro__placeholder-steps">
-                  <li>{tr('fgChecklistPlaceholderStep1', 'Crie ou escolha uma família na coluna esquerda.')}</li>
-                  <li>{tr('fgChecklistPlaceholderStep2', 'Adicione um parente (modelo) dentro da família.')}</li>
-                  <li>{tr('fgChecklistPlaceholderStep3', 'Cadastre grupos com número e nome.')}</li>
-                  <li>{tr('fgChecklistPlaceholderStep4', 'Associe serviços de checklist a cada grupo.')}</li>
-                </ol>
+            <div className="fg-ck-shell__empty">
+              <div className="fg-ck-shell__empty-icon">3–4</div>
+              <h2>{tr('gruposPorFamilia', 'Grupos e servicos')}</h2>
+              <p>
+                {familiasList.length === 0
+                  ? tr('cadastreFamiliaPrimeiro', 'Adicione uma familia na estrutura a esquerda.')
+                  : tr('selecioneFamiliaEsquerda', 'Selecione uma familia e um parente para gerir grupos e servicos.')}
+              </p>
+              <div className="fg-ck-shell__empty-steps">
+                {progressSteps.map((s) => (
+                  <div key={s.n} className={`fg-ck-shell__empty-step${progressStep >= s.n ? ' is-active' : ''}`}>
+                    <span className="fg-ck-shell__empty-step-num">{s.n}</span>
+                    <span>{s.label}</span>
+                  </div>
+                ))}
               </div>
-            </>
+            </div>
           ) : (
             <>
-              <header className="fg-checklist-pro__workspace-head">
-                <div className="fg-checklist-pro__workspace-title">
-                  <p className="fg-checklist-pro__workspace-label">{tr('gruposPorFamilia', 'Grupos do parente')}</p>
-                  <h2 className="fg-checklist-pro__workspace-breadcrumb">{breadcrumb}</h2>
+              <header className="fg-ck-shell__panel-head">
+                <div>
+                  <p className="fg-ck-shell__panel-label">{tr('gruposPorFamilia', 'Area de trabalho')}</p>
+                  <h2 className="fg-ck-shell__panel-title">{breadcrumb}</h2>
                 </div>
-                <div className="fg-checklist-pro__workspace-stats">
-                  <span className="fg-checklist-pro__workspace-stat">
-                    <strong>{gruposDestaFamilia.length}</strong> {tr('grupos', 'grupos')}
-                  </span>
-                  <span className="fg-checklist-pro__workspace-stat">
-                    <strong>{servicosParenteSelecionado}</strong> {tr('servicos', 'servicos')}
-                  </span>
+                <div className="fg-ck-shell__panel-stats">
+                  <span><strong>{gruposDestaFamilia.length}</strong> {tr('grupos', 'grupos')}</span>
+                  <span><strong>{servicosParenteSelecionado}</strong> {tr('servicos', 'servicos')}</span>
                 </div>
               </header>
 
-              <nav className="fg-checklist-pro__tabs" role="tablist" aria-label={tr('fgChecklistSecNavAria', 'Secoes de trabalho')}>
+              <nav className="fg-ck-shell__tabs" role="tablist" aria-label={tr('fgChecklistSecNavAria', 'Secoes de trabalho')}>
                 <button
                   type="button"
                   role="tab"
                   id="fg-ck-tab-add"
                   aria-selected={workTab === 'add'}
                   aria-controls="fg-ck-add"
-                  className={`fg-checklist-pro__tab${workTab === 'add' ? ' is-active' : ''}`}
+                  className={`fg-ck-shell__tab${workTab === 'add' ? ' is-active' : ''}`}
                   onClick={() => setWorkTab('add')}
                 >
                   {tr('addGrupo', 'Adicionar grupo')}
@@ -747,7 +728,7 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                   id="fg-ck-tab-list"
                   aria-selected={workTab === 'groups'}
                   aria-controls="fg-ck-list"
-                  className={`fg-checklist-pro__tab${workTab === 'groups' ? ' is-active' : ''}`}
+                  className={`fg-ck-shell__tab${workTab === 'groups' ? ' is-active' : ''}`}
                   onClick={() => setWorkTab('groups')}
                 >
                   {tr('grupos', 'Grupos')} ({gruposDestaFamilia.length})
@@ -758,31 +739,31 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                   id="fg-ck-tab-serv"
                   aria-selected={workTab === 'services'}
                   aria-controls="fg-ck-serv"
-                  className={`fg-checklist-pro__tab${workTab === 'services' ? ' is-active' : ''}`}
+                  className={`fg-ck-shell__tab${workTab === 'services' ? ' is-active' : ''}`}
                   onClick={() => setWorkTab('services')}
                 >
                   {tr('servicos', 'Servicos')} ({servicosParenteSelecionado})
                 </button>
               </nav>
 
-            <div className="fg-checklist-pro__panels">
+            <div className="fg-ck-shell__body">
               {workTab === 'add' ? (
               <section
                 id="fg-ck-add"
                 role="tabpanel"
                 aria-labelledby="fg-ck-tab-add"
-                className="fg-checklist-pro__panel fg-checklist-pro__panel--full fg-checklist-pro__panel--accent"
+                className="fg-ck-shell__section fg-ck-shell__section--form"
               >
                 <PanelHead
                   title={tr('addGrupo', 'Adicionar grupo')}
-                  desc={tr('fgChecklistAddGrupoDesc', 'Indique o número (código) e o nome do grupo. Ambos aparecem destacados na lista.')}
+                  desc={tr('fgChecklistAddGrupoDesc', 'Indique o numero (codigo) e o nome do grupo. Ambos aparecem destacados na lista.')}
                 />
-                <div className="fg-checklist-pro__form-grid">
-                  <div className="fg-checklist-pro__field">
-                    <label>{tr('numeroGrupo', 'Numero do grupo')}</label>
+                <div className="fg-ck-shell__form">
+                  <div className="fg-ck-shell__form-field fg-ck-shell__form-field--num">
+                    <label className="fg-ck-shell__field-label">{tr('numeroGrupo', 'Numero do grupo')}</label>
                     <input
                       type="text"
-                      className="fg-checklist-pro__input"
+                      className="fg-ck-shell__input"
                       value={novoNumeroGrupoPorFamilia[selectedFamiliaForGrupos] ?? ''}
                       onChange={(e) =>
                         setNovoNumeroGrupoPorFamilia((prev) => ({ ...prev, [selectedFamiliaForGrupos]: e.target.value }))
@@ -791,18 +772,18 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                       onKeyDown={(e) => e.key === 'Enter' && handleAddGrupo()}
                     />
                   </div>
-                  <div className="fg-checklist-pro__field fg-checklist-pro__field--grow">
-                    <label>{tr('nomeDoGrupo', 'Nome do grupo')}</label>
+                  <div className="fg-ck-shell__form-field fg-ck-shell__form-field--grow">
+                    <label className="fg-ck-shell__field-label">{tr('nomeDoGrupo', 'Nome do grupo')}</label>
                     <input
                       type="text"
-                      className="fg-checklist-pro__input"
+                      className="fg-ck-shell__input"
                       value={novoGrupoPorFamilia[selectedFamiliaForGrupos] ?? ''}
                       onChange={(e) => setNovoGrupoPorFamilia((prev) => ({ ...prev, [selectedFamiliaForGrupos]: e.target.value }))}
                       placeholder={tr('novoGrupoNestaFamilia', 'Nome do novo grupo...')}
                       onKeyDown={(e) => e.key === 'Enter' && handleAddGrupo()}
                     />
                   </div>
-                  <button type="button" className="fg-checklist-pro__btn-add" onClick={handleAddGrupo}>
+                  <button type="button" className="fg-ck-shell__btn fg-ck-shell__btn--primary" onClick={handleAddGrupo}>
                     + {tr('addGrupo', 'Adicionar grupo')}
                   </button>
                 </div>
@@ -814,7 +795,7 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                 id="fg-ck-list"
                 role="tabpanel"
                 aria-labelledby="fg-ck-tab-list"
-                className="fg-checklist-pro__panel fg-checklist-pro__panel--full"
+                className="fg-ck-shell__section"
               >
                 <PanelHead
                   title={`${tr('gruposDe', 'Grupos de')} ${selectedParente?.nome ?? ''}`}
@@ -822,18 +803,18 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                   count={gruposDestaFamilia.length}
                 />
                 {gruposDestaFamilia.length === 0 ? (
-                  <p className="fg-checklist-pro__empty-hint">{tr('nenhumGrupoNestaFamilia', 'Nenhum grupo. Use o formulario acima.')}</p>
+                  <p className="fg-ck-shell__hint">{tr('nenhumGrupoNestaFamilia', 'Nenhum grupo. Use o formulario acima.')}</p>
                 ) : (
-                  <div className="fg-checklist-pro__grupo-list fg-checklist-pro__grupo-list--rows">
+                  <div className="fg-ck-shell__grupo-list">
                     {gruposDestaFamilia.map((g, idx) => {
                       const isEditing = editingGrupoFamilia === selectedFamiliaForGrupos && editingGrupoNome === g.nomeGrupo
                       const servicosGrupo = g.itensTrabalho?.length || 0
                       return (
-                        <article key={g.id} className="fg-checklist-pro__grupo-row">
-                          <span className="fg-checklist-pro__grupo-index" title={tr('ordem', 'Ordem')}>
+                        <article key={g.id} className="fg-ck-shell__grupo-row">
+                          <span className="fg-ck-shell__grupo-ordem" title={tr('ordem', 'Ordem')}>
                             {idx + 1}
                           </span>
-                          <label className="fg-checklist-pro__grupo-img" title={tr('adicionarImagem', 'Imagem')}>
+                          <label className="fg-ck-shell__grupo-thumb" title={tr('adicionarImagem', 'Imagem')}>
                             <input
                               type="file"
                               accept="image/*"
@@ -861,15 +842,15 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                             </ProImageHoverPreview>
                           </label>
                           {isEditing ? (
-                            <div className="fg-checklist-pro__grupo-edit fg-checklist-pro__grupo-edit--row">
+                            <div className="fg-ck-shell__grupo-edit">
                               <input
-                                className="fg-checklist-pro__input fg-checklist-pro__input--num"
+                                className="fg-ck-shell__input fg-ck-shell__input--num"
                                 value={editGrupoNumeroValue}
                                 onChange={(e) => setEditGrupoNumeroValue(e.target.value)}
                                 placeholder={tr('numeroGrupoShort', 'Nº')}
                               />
                               <input
-                                className="fg-checklist-pro__input"
+                                className="fg-ck-shell__input"
                                 value={editGrupoValue}
                                 onChange={(e) => setEditGrupoValue(e.target.value)}
                                 placeholder={tr('nomeDoGrupo', 'Nome do grupo')}
@@ -899,9 +880,9 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                                 numero={g.numeroGrupo}
                                 nome={g.nomeGrupo}
                                 numeroTitle={tr('numeroGrupo', 'Numero do grupo')}
-                                className="fg-checklist-pro__grupo-titulo--row"
+                                className="fg-ck-shell__grupo-titulo"
                               />
-                              <span className="fg-checklist-pro__grupo-meta-pill">
+                              <span className="fg-ck-shell__pill">
                                 {servicosGrupo} {tr('servicos', 'servicos')}
                               </span>
                               <FgRowActions
@@ -936,7 +917,7 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                 id="fg-ck-serv"
                 role="tabpanel"
                 aria-labelledby="fg-ck-tab-serv"
-                className="fg-checklist-pro__panel fg-checklist-pro__panel--full fg-checklist-pro__panel--services"
+                className="fg-ck-shell__section fg-ck-shell__section--services"
               >
                 <PanelHead
                   title={tr('criacaoChecklistPorGrupos', 'Servicos por grupo')}
@@ -946,9 +927,9 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                   }
                 />
                 {gruposDestaFamilia.length === 0 ? (
-                  <p className="fg-checklist-pro__empty-hint">{tr('nenhumGrupoNesteParente', 'Cadastre grupos acima primeiro.')}</p>
+                  <p className="fg-ck-shell__hint">{tr('nenhumGrupoNesteParente', 'Cadastre grupos acima primeiro.')}</p>
                 ) : (
-                  <div className="fg-checklist-pro__servicos-stack">
+                  <div className="fg-ck-shell__serv-list">
                     {gruposDestaFamilia.map((gr) => {
                       const itens = gr.itensTrabalho || []
                       const isAdding = criacaoChecklistGrupoIdAddingItem === gr.id
@@ -992,20 +973,20 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                         cancelForm()
                       }
                       return (
-                        <article key={gr.id} className="fg-checklist-pro__servico-block">
-                          <header className="fg-checklist-pro__servico-head">
+                        <article key={gr.id} className="fg-ck-shell__serv-block">
+                          <header className="fg-ck-shell__serv-head">
                             <GrupoTitulo
                               numero={gr.numeroGrupo}
                               nome={gr.nomeGrupo}
                               numeroTitle={tr('numeroGrupo', 'Numero do grupo')}
-                              className="fg-checklist-pro__grupo-titulo--servico"
+                              className="fg-ck-shell__grupo-titulo"
                             />
-                            <span className="fg-checklist-pro__grupo-meta-pill">
+                            <span className="fg-ck-shell__pill">
                               {itens.length} {tr('servicos', 'servicos')}
                             </span>
                             <button
                               type="button"
-                              className="fg-checklist-pro__btn-add fg-checklist-pro__btn-add--sm"
+                              className="fg-ck-shell__btn fg-ck-shell__btn--sm"
                               onClick={() => {
                                 if (isAdding) cancelForm()
                                 else {
@@ -1019,10 +1000,10 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                             </button>
                           </header>
                           {itens.length > 0 && (
-                            <div className="fg-checklist-pro__servico-grid">
+                            <div className="fg-ck-shell__serv-grid">
                               {itens.map((item) => (
-                                <div key={item.id} className="fg-checklist-pro__servico-card">
-                                  <span className="fg-checklist-pro__servico-type">{item.tipo}</span>
+                                <div key={item.id} className="fg-ck-shell__serv-card">
+                                  <span className="fg-ck-shell__serv-type">{item.tipo}</span>
                                   <p>{item.descricaoTrabalho}</p>
                                   <div className="fg-checklist-pro__servico-actions">
                                     <button
@@ -1068,10 +1049,10 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                             </div>
                           )}
                           {showForm && (
-                            <div className="fg-checklist-pro__servico-form">
+                            <div className="fg-ck-shell__serv-form">
                               <input
                                 type="text"
-                                className="fg-checklist-pro__input"
+                                className="fg-ck-shell__input"
                                 value={criacaoChecklistItemForm.descricaoTrabalho}
                                 onChange={(e) => setCriacaoChecklistItemForm((f) => ({ ...f, descricaoTrabalho: e.target.value }))}
                                 placeholder={tr('qualTrabalho', 'Descricao do servico...')}
@@ -1095,7 +1076,7 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
             </div>
             </>
           )}
-        </main>
+        </section>
       </div>
     </div>
   )
