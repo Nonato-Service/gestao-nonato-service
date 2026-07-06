@@ -18,6 +18,7 @@ import {
   mergePecasBibliotecaArrays,
   pecasBibliotecaArraysDiffer,
 } from '../lib/mergePecasBiblioteca'
+import { mergeNonatoClientesDeferServerLocal } from '../lib/clienteMergeUtils'
 import {
   canAutoPullServerChanges,
 } from './syncDiff'
@@ -916,11 +917,30 @@ async function writeLocalFromServerPull(key: string, value: unknown): Promise<vo
     return
   }
   if (key === CLIENTES_KEY) {
+    let localParsed: unknown = null
+    const raw = localStorage.getItem(key)
+    if (raw) {
+      try {
+        localParsed = JSON.parse(raw)
+      } catch {
+        /* ignorar */
+      }
+    }
+    const merged = mergeNonatoClientesDeferServerLocal(value, localParsed)
     try {
-      await saveKv(key, value)
+      await saveKv(key, merged)
     } catch {
       /* ignorar */
     }
+    writeLocalStorageValue(key, merged)
+    try {
+      if (JSON.stringify(merged) !== JSON.stringify(value)) {
+        scheduleServerMigrationPush(key, merged)
+      }
+    } catch {
+      /* ignorar */
+    }
+    return
   }
   writeLocalStorageValue(key, value)
 }
@@ -948,6 +968,11 @@ export async function applySilentServerSync(server: Record<string, unknown>): Pr
     if (same) continue
     await writeLocalFromServerPull(key, s)
     changedKeys.push(key)
+    try {
+      window.dispatchEvent(new CustomEvent('nonato-data-local-changed', { detail: { key } }))
+    } catch {
+      /* ignorar */
+    }
   }
   return changedKeys
 }

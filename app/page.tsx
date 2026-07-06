@@ -36,7 +36,7 @@ import {
   requestDiarioNotificationPermission,
   showDiarioBrowserNotification,
 } from './lib/diarioLembrete'
-import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer } from './lib/mergePecasBiblioteca'
+import { mergeNonatoClientesDeferServerLocal } from './lib/clienteMergeUtils'
 import {
   collectFullBackupData,
   buildBackupEnvelope,
@@ -3248,19 +3248,6 @@ function nomeGrupoTarifaServico(servicoGrupos: ServicoCadastroGrupo[], grupoId?:
   return servicoGrupos.find((g) => g.id === grupoId)?.nome || ''
 }
 
-/**
- * Com `deferServerMerge`, o arranque não substitui chaves inteiras pelo servidor se o local já tem JSON —
- * mas `nonato-clientes` fica preso a cópias antigas (ex.: cliente sem equipamentos no tablet enquanto o PC já gravou no servidor).
- * Funde por id de cliente: campos do servidor prevalecem em conflito; equipamentos = união por n.º de série (servidor ganha em duplicado).
- */
-function equipamentoClienteDedupeKey(e: EquipamentoCliente): string {
-  const s = String(e?.numeroSerie ?? '').trim()
-  if (s) return `s:${s}`
-  const id = String(e?.id ?? '').trim()
-  if (id) return `i:${id}`
-  return `h:${JSON.stringify({ m: e?.modelo, t: e?.tipoEquipamento })}`
-}
-
 /** true = ID gerado pela app (UUID ou prefixo eqc-), não código próprio do utilizador. */
 function equipamentoClienteIdETecnicoGerado(id: string | undefined): boolean {
   const t = String(id ?? '').trim()
@@ -3273,44 +3260,6 @@ function equipamentoClienteIdETecnicoGerado(id: string | undefined): boolean {
 function idEquipamentoVisivelParaProtocolo(eq: EquipamentoCliente | undefined, equipamentosArmazem: Equipamento[]): string {
   if (!eq) return ''
   return resolverIdEquipamentoVisivelCliente(eq, equipamentosArmazem)
-}
-
-function mergeEquipamentosClienteLists(
-  serverEq: EquipamentoCliente[] | undefined,
-  localEq: EquipamentoCliente[] | undefined
-): EquipamentoCliente[] {
-  const sm = Array.isArray(serverEq) ? serverEq : []
-  const lm = Array.isArray(localEq) ? localEq : []
-  const by = new Map<string, EquipamentoCliente>()
-  for (const e of lm) by.set(equipamentoClienteDedupeKey(e), e)
-  for (const e of sm) by.set(equipamentoClienteDedupeKey(e), e)
-  return Array.from(by.values())
-}
-
-function mergeNonatoClientesDeferServerLocal(serverList: unknown, localList: unknown): Cliente[] {
-  if (!Array.isArray(serverList)) return Array.isArray(localList) ? (localList as Cliente[]) : []
-  if (!Array.isArray(localList)) return serverList as Cliente[]
-  const srv = serverList as Cliente[]
-  const loc = localList as Cliente[]
-  const localById = new Map(loc.map(c => [c.id, c]))
-  const serverIds = new Set(srv.map(c => c.id))
-  const out: Cliente[] = []
-  for (const sc of srv) {
-    const lc = localById.get(sc.id)
-    if (!lc) {
-      out.push(sc)
-    } else {
-      out.push({
-        ...lc,
-        ...sc,
-        equipamentos: mergeEquipamentosClienteLists(sc.equipamentos, lc.equipamentos),
-      })
-    }
-  }
-  for (const lc of loc) {
-    if (!serverIds.has(lc.id)) out.push(lc)
-  }
-  return out
 }
 
 function cmpClienteRelatorioFinanceiro(a: string, b: string): number {
@@ -7753,6 +7702,40 @@ export default function Dashboard() {
       ),
     [relatoriosServico, clientes, fechamentosGuardadosBibliotecaIds, fechamentosRelatorios]
   )
+  /** Modal de equipamentos do cliente: recarregar lista quando sync/outro separador altera `nonato-clientes`. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onDataChanged = async (ev: Event) => {
+      const key = (ev as CustomEvent<{ key?: string }>)?.detail?.key
+      if (key !== 'nonato-clientes') return
+      try {
+        let saved: unknown = null
+        const raw = localStorage.getItem('nonato-clientes')
+        if (raw) {
+          saved = JSON.parse(raw)
+        } else {
+          const fromIdb = await getKv('nonato-clientes')
+          saved = fromIdb
+        }
+        if (!Array.isArray(saved)) return
+        const base = (saved as Cliente[]).map((c) => ({
+          ...c,
+          equipamentos: Array.isArray(c.equipamentos) ? c.equipamentos : [],
+          relatorios:
+            c.relatorios && typeof c.relatorios === 'object' && !Array.isArray(c.relatorios)
+              ? c.relatorios
+              : {},
+        }))
+        const { lista: normalized } = garantirCodigosClientes(base)
+        setClientes(normalized)
+      } catch {
+        /* ignorar */
+      }
+    }
+    window.addEventListener('nonato-data-local-changed', onDataChanged)
+    return () => window.removeEventListener('nonato-data-local-changed', onDataChanged)
+  }, [])
+
   /** Modal de equipamentos do cliente: quando `clientes` muda (sync / outro separador), manter a lista alinhada ao estado global. */
   const equipModalClienteId = selectedClienteForEquipamento?.id
   useEffect(() => {
@@ -17763,35 +17746,37 @@ export default function Dashboard() {
     })
   }
 
-  const handleDeleteEquipamentoCliente = (clienteId: string, index: number) => {
+  const handleDeleteEquipamentoCliente = async (clienteId: string, index: number) => {
     const confirmMsg =
       safeT?.confirmDeleteEquipamentoCliente ||
       safeT?.confirmDeleteEquipamento ||
       t.confirmDeleteEquipamento ||
       'Tem certeza que deseja excluir este equipamento?'
-    if (window.confirm(confirmMsg)) {
-      const cliente = clientes.find(c => c.id === clienteId)
-      if (cliente) {
-        const updatedEquipamentos = [...cliente.equipamentos]
-        updatedEquipamentos.splice(index, 1)
-        const updatedClientes = clientes.map(c =>
-          c.id === clienteId ? { ...c, equipamentos: updatedEquipamentos } : c
-        )
-        setClientes(updatedClientes)
-        void saveData('nonato-clientes', updatedClientes)
-        try {
-          localStorage.setItem('nonato-clientes', JSON.stringify(updatedClientes))
-        } catch {
-          /* ignore */
-        }
-        const refreshed = updatedClientes.find(c => c.id === clienteId)
-        if (refreshed) setSelectedClienteForEquipamento(refreshed)
-        setEquipamentoClienteGuardadoMsg('')
-      }
+    if (!window.confirm(confirmMsg)) return
+    const cliente = clientes.find((c) => c.id === clienteId)
+    if (!cliente) return
+    const previousClientes = clientes
+    const updatedEquipamentos = [...cliente.equipamentos]
+    updatedEquipamentos.splice(index, 1)
+    const updatedClientes = clientes.map((c) =>
+      c.id === clienteId ? { ...c, equipamentos: updatedEquipamentos } : c
+    )
+    setClientes(updatedClientes)
+    try {
+      await saveData('nonato-clientes', updatedClientes, true, false)
+    } catch (err) {
+      console.error('Erro ao excluir equipamento localmente:', err)
+      setClientes(previousClientes)
+      alert((t as any).erroSalvar || 'Erro ao salvar. Tente novamente.')
+      return
     }
+    void saveData('nonato-clientes', updatedClientes, false, true).catch(() => {})
+    const refreshed = updatedClientes.find((c) => c.id === clienteId)
+    if (refreshed) setSelectedClienteForEquipamento(refreshed)
+    setEquipamentoClienteGuardadoMsg('')
   }
 
-  const handleSaveEquipamentoCliente = () => {
+  const handleSaveEquipamentoCliente = async () => {
     if (!selectedClienteForEquipamento) return
     if (isSavingEquipamentoCliente) return
 
@@ -17871,6 +17856,7 @@ export default function Dashboard() {
           id: idFinal
         }
 
+    const previousClientes = clientes
     const updatedClientes = clientes.map((c) => {
       if (c.id !== selectedClienteForEquipamento.id) return c
       if (editingEquipamentoCliente) {
@@ -17904,12 +17890,18 @@ export default function Dashboard() {
     })
 
     setClientes(updatedClientes)
+
     try {
-      localStorage.setItem('nonato-clientes', JSON.stringify(updatedClientes))
-    } catch {
-      /* ignore */
+      await saveData('nonato-clientes', updatedClientes, true, false)
+    } catch (err) {
+      console.error('Erro ao salvar equipamento localmente:', err)
+      setClientes(previousClientes)
+      alert((t as any).erroSalvar || 'Erro ao salvar. Tente novamente.')
+      setIsSavingEquipamentoCliente(false)
+      return
     }
-    void saveData('nonato-clientes', updatedClientes)
+
+    const serverOk = await saveData('nonato-clientes', updatedClientes, false, true).catch(() => false)
 
     const refreshed = updatedClientes.find((c) => c.id === selectedClienteForEquipamento.id)
     if (refreshed) setSelectedClienteForEquipamento(refreshed)
@@ -17923,7 +17915,14 @@ export default function Dashboard() {
     const msg = wasEditing
       ? (safeT as any)?.equipamentoClienteUpdated || 'Equipamento atualizado com sucesso!'
       : (safeT as any)?.equipamentoClienteSaved || 'Equipamento cadastrado com sucesso!'
-    setEquipamentoClienteGuardadoMsg(msg)
+    if (serverOk) {
+      setEquipamentoClienteGuardadoMsg(msg)
+    } else {
+      alert(
+        (safeT as any)?.equipamentoClienteGravadoServidorFalha ||
+          'Equipamento gravado neste aparelho, mas não foi possível enviar ao servidor. Verifique a ligação e toque em Salvar outra vez.'
+      )
+    }
     window.setTimeout(() => setIsSavingEquipamentoCliente(false), 700)
   }
 
