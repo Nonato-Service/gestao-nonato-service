@@ -20,6 +20,10 @@ import {
 } from '../lib/mergePecasBiblioteca'
 import { mergeNonatoClientesDeferServerLocal } from '../lib/clienteMergeUtils'
 import {
+  mergeSidebarButtonsDeferLocal,
+  repairSidebarButtonsFromCatalog,
+} from '../lib/sidebarMergeUtils'
+import {
   canAutoPullServerChanges,
 } from './syncDiff'
 
@@ -388,6 +392,7 @@ const MANUAIS_KEY = 'nonato-manuais-familias-grupos'
 const CONHECIMENTO_TECNICO_KEY = 'nonato-conhecimento-tecnico-unificado'
 const BIBLIA_NONATO_KEY = 'nonato-biblia-nonato-service'
 const CLIENTES_KEY = 'nonato-clientes'
+const SIDEBAR_BUTTONS_KEY = 'nonato-sidebar-buttons'
 
 const MANUAIS_OBJECT_KEYS_BLOCK_EMPTY_OVERWRITE = new Set([
   MANUAIS_KEY,
@@ -927,6 +932,34 @@ async function writeLocalFromServerPull(key: string, value: unknown): Promise<vo
       }
     }
     const merged = mergeNonatoClientesDeferServerLocal(value, localParsed)
+    try {
+      await saveKv(key, merged)
+    } catch {
+      /* ignorar */
+    }
+    writeLocalStorageValue(key, merged)
+    try {
+      if (JSON.stringify(merged) !== JSON.stringify(value)) {
+        scheduleServerMigrationPush(key, merged)
+      }
+    } catch {
+      /* ignorar */
+    }
+    return
+  }
+  if (key === SIDEBAR_BUTTONS_KEY) {
+    let localParsed: unknown = null
+    const raw = localStorage.getItem(key)
+    if (raw) {
+      try {
+        localParsed = JSON.parse(raw)
+      } catch {
+        /* ignorar */
+      }
+    }
+    const merged = repairSidebarButtonsFromCatalog(
+      mergeSidebarButtonsDeferLocal(value, localParsed)
+    )
     try {
       await saveKv(key, merged)
     } catch {

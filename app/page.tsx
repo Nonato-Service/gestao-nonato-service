@@ -38,6 +38,10 @@ import {
 } from './lib/diarioLembrete'
 import { mergeNonatoClientesDeferServerLocal } from './lib/clienteMergeUtils'
 import {
+  mergeSidebarButtonsDeferLocal,
+  repairSidebarButtonsFromCatalog,
+} from './lib/sidebarMergeUtils'
+import {
   collectFullBackupData,
   buildBackupEnvelope,
   normalizeBackupFile,
@@ -4933,6 +4937,19 @@ export default function Dashboard() {
   }, [syncPendingRemote?.revision])
   /** Primeira carga: pedidos ao servidor + fusão de dados (evita parecer que «não termina»). */
   const [appInitialLoading, setAppInitialLoading] = useState(true)
+
+  /** Repor botões da barra lateral em falta após arranque (ex.: sync apagou entradas). */
+  useEffect(() => {
+    if (typeof window === 'undefined' || appInitialLoading) return
+    setSidebarButtons((prev) => {
+      if (!Array.isArray(prev) || prev.length === 0) return prev
+      const repaired = repairSidebarButtonsFromCatalog(prev) as SidebarButton[]
+      if (JSON.stringify(repaired) === JSON.stringify(prev)) return prev
+      void saveData('nonato-sidebar-buttons', repaired, true, false)
+      return repaired
+    })
+  }, [appInitialLoading])
+
   const [bootstrapOfflineMode, setBootstrapOfflineMode] = useState(false)
   const [cadastroRestoredNotice, setCadastroRestoredNotice] = useState(0)
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
@@ -7734,6 +7751,37 @@ export default function Dashboard() {
     }
     window.addEventListener('nonato-data-local-changed', onDataChanged)
     return () => window.removeEventListener('nonato-data-local-changed', onDataChanged)
+  }, [])
+
+  /** Barra lateral: recarregar e repor botões em falta após sync automática. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onSidebarChanged = async (ev: Event) => {
+      const key = (ev as CustomEvent<{ key?: string }>)?.detail?.key
+      if (key !== 'nonato-sidebar-buttons') return
+      try {
+        let saved: unknown = null
+        const raw = localStorage.getItem('nonato-sidebar-buttons')
+        if (raw) {
+          saved = JSON.parse(raw)
+        } else {
+          saved = await getKv('nonato-sidebar-buttons')
+        }
+        if (!Array.isArray(saved)) return
+        setSidebarButtons((prev) => {
+          const merged = repairSidebarButtonsFromCatalog(
+            mergeSidebarButtonsDeferLocal(saved, prev)
+          ) as SidebarButton[]
+          if (JSON.stringify(merged) === JSON.stringify(prev)) return prev
+          void saveData('nonato-sidebar-buttons', merged, true, false)
+          return merged
+        })
+      } catch {
+        /* ignorar */
+      }
+    }
+    window.addEventListener('nonato-data-local-changed', onSidebarChanged)
+    return () => window.removeEventListener('nonato-data-local-changed', onSidebarChanged)
   }, [])
 
   /** Modal de equipamentos do cliente: quando `clientes` muda (sync / outro separador), manter a lista alinhada ao estado global. */
@@ -11023,7 +11071,14 @@ export default function Dashboard() {
       // Carregar botões da sidebar
       // Evitar executar múltiplas vezes se já foi inicializado
       if (!buttonsInitialized.current) {
-      const savedButtons = getData('nonato-sidebar-buttons')
+      let savedButtons = getData('nonato-sidebar-buttons')
+      if (
+        (!savedButtons || (Array.isArray(savedButtons) && savedButtons.length === 0)) &&
+        Array.isArray(serverData?.['nonato-sidebar-buttons']) &&
+        (serverData['nonato-sidebar-buttons'] as unknown[]).length > 0
+      ) {
+        savedButtons = serverData['nonato-sidebar-buttons']
+      }
     if (savedButtons) {
       // getData já retorna o objeto parseado quando parseJson=true (padrão)
       // Mas vamos garantir que seja um array
@@ -12610,7 +12665,9 @@ export default function Dashboard() {
       const sortedButtons = filteredButtons.sort((a: SidebarButton, b: SidebarButton) => a.order - b.order)
       
       // Reordenar para garantir ordem sequencial
-      const reordered = sortedButtons.map((btn: SidebarButton, idx: number) => ({ ...btn, order: idx }))
+      const reordered = repairSidebarButtonsFromCatalog(
+        sortedButtons.map((btn: SidebarButton, idx: number) => ({ ...btn, order: idx }))
+      ) as SidebarButton[]
       
       // Verificar se realmente houve mudança antes de atualizar para evitar loop infinito
       const currentButtonsStr = JSON.stringify(sidebarButtons)
@@ -12622,145 +12679,10 @@ export default function Dashboard() {
         buttonsInitialized.current = true
       }
     } else {
-      // Botões padrão
-      const defaultButtons: SidebarButton[] = [
-        {
-          id: 'cadastro-nonato-service-default',
-          name: 'CADASTRO DA NONATO SERVICE',
-          action: 'open-cadastro-nonato-service',
-          order: 9998,
-          translationKey: 'cadastroNonatoServiceTitle',
-          group: 'outros'
-        },
-        {
-          id: 'administrador-default',
-          name: 'ADMINISTRADOR',
-          action: 'open-administrador',
-          order: 9999, // Ordem alta para ficar por último
-          translationKey: 'administrador'
-        },
-        {
-          id: 'gestores-default',
-          name: 'CADASTRO DE GESTORES TECNICOS INTERNOS E EXTERNOS',
-          action: 'open-gestores',
-          order: 1,
-          translationKey: 'gestoresTitle',
-          group: 'gestao-tecnica'
-        },
-        {
-          id: 'familias-grupos-default',
-          name: 'CADASTRO DE FAMÍLIAS E GRUPOS PARA CHECKLIST',
-          action: 'open-familias-grupos',
-          order: 2,
-          translationKey: 'familiasGruposTitle',
-          group: 'checklist-group'
-        },
-        {
-          id: 'familias-grupos-equipamentos-default',
-          name: 'CADASTRO DE FAMÍLIAS E GRUPOS PARA OS EQUIPAMENTOS',
-          action: 'open-familias-grupos-equipamentos',
-          order: 2.5,
-          translationKey: 'familiasGruposEquipamentosTitle',
-          group: 'gestao-industrial'
-        },
-        {
-          id: 'equipamentos-default',
-          name: 'CADASTRAR EQUIPAMENTOS E VISUALIZAR EQUIPAMENTOS DO ARMAZÉM',
-          action: 'open-equipamentos',
-          order: 3,
-          translationKey: 'equipamentosTitle',
-          group: 'gestao-industrial'
-        },
-        {
-          id: 'clientes-default',
-          name: 'CADASTRO DE CLIENTES',
-          action: 'open-clientes',
-          order: 4,
-          translationKey: 'clientesTitle',
-          group: 'gestao-tecnica'
-        },
-        {
-          id: 'fornecedores-default',
-          name: 'FORNECEDORES',
-          action: 'open-fornecedores',
-          order: 5,
-          translationKey: 'fornecedoresTitle',
-          group: 'gestao-tecnica'
-        },
-        {
-          id: 'relatorio-servico-default',
-          name: 'RELATÓRIO DE SERVIÇO',
-          action: 'open-relatorio-servico',
-          order: 6,
-          translationKey: 'relatorioServicoTitle',
-          group: 'gestao-tecnica'
-        },
-        {
-          id: 'biblioteca-pecas-default',
-          name: 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS',
-          action: 'open-biblioteca-hub',
-          order: 7,
-          translationKey: 'cadastroPecasBibliotecaTitle',
-          group: 'pecas-biblioteca'
-        },
-        {
-          id: 'agenda-default',
-          name: 'AGENDA TÉCNICA',
-          action: 'open-agenda',
-          order: 8,
-          translationKey: 'agendaTitle',
-          group: 'gestao-tecnica'
-        },
-        {
-          id: 'estado-visual-tecnico-default',
-          name: 'ESTADO VISUAL DO TÉCNICO',
-          action: 'open-estado-visual-tecnico',
-          order: 9,
-          translationKey: 'estadoVisualTecnico',
-          group: 'gestao-tecnica'
-        },
-        {
-          id: 'informacoes-conhecimento-tecnicos-default',
-          name: 'INFORMAÇÕES DE CONHECIMENTO DOS TÉCNICOS',
-          action: 'open-informacoes-conhecimento-tecnicos',
-          order: 9.5,
-          translationKey: 'informacoesConhecimentoTecnicosTitle',
-          group: 'gestao-tecnica'
-        },
-        {
-          id: 'desmontados-default',
-          name: 'CADASTRO DE GRUPOS DE EQUIPAMENTOS DESMONTADOS',
-          action: 'open-desmontados',
-          order: 10,
-          translationKey: 'desmontadosTitle',
-          group: 'gestao-industrial'
-        },
-        {
-          id: 'cadastro-servicos-default',
-          name: 'CADASTRO DE SERVIÇOS / VALORES',
-          action: 'open-cadastro-servicos',
-          order: 11,
-          translationKey: 'cadastroServicosTitle',
-          group: 'gestao-tecnica'
-        },
-        {
-          id: 'fechamento-relatorios-servicos-default',
-          name: 'FECHAMENTO DOS RELATÓRIOS DE SERVIÇOS',
-          action: 'open-fechamento-relatorios-servicos',
-          order: 11.5,
-          translationKey: 'fechamentoRelatoriosServicosTitle',
-          group: 'documentacao-relatorios'
-        },
-      ]
-      // Verificar se realmente houve mudança antes de atualizar para evitar loop infinito
-      const currentButtonsStr = JSON.stringify(sidebarButtons)
-      const newButtonsStr = JSON.stringify(defaultButtons)
-      
-      if (currentButtonsStr !== newButtonsStr || sidebarButtons.length === 0) {
-        setSidebarButtons(defaultButtons)
-        saveData('nonato-sidebar-buttons', defaultButtons)
-        buttonsInitialized.current = true
-      }
+      const defaultButtons = repairSidebarButtonsFromCatalog([]) as SidebarButton[]
+      setSidebarButtons(defaultButtons)
+      saveData('nonato-sidebar-buttons', defaultButtons)
+      buttonsInitialized.current = true
     } // Fim do if (savedButtons)
     } // Fim do if (!buttonsInitialized.current)
       /**
