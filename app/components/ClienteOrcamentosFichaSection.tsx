@@ -9,12 +9,18 @@ import {
   pedidoRelatorioCorrespondeEquipamento,
   pedidoAvulsoCorrespondeEquipamento,
   orcamentoGeradoCorrespondeEquipamento,
+  pedidoRelatorioCorrespondeCliente,
+  pedidoAvulsoCorrespondeCliente,
+  orcamentoGeradoCorrespondeCliente,
   pedidoRelatorioPendente,
   pedidoRelatorioAprovado,
   pedidoAvulsoPendente,
   pedidoAvulsoAprovado,
   orcamentoGeradoPendente,
   orcamentoGeradoAprovado,
+  rotuloEquipamentoPedidoRelatorio,
+  rotuloEquipamentoPedidoAvulso,
+  rotuloEquipamentoOrcamentoGerado,
 } from '../lib/clienteEquipamentoOrcamentos'
 
 type FiltroOrigem = 'todos' | 'relatorio' | 'avulso'
@@ -23,8 +29,7 @@ type FiltroEstado = 'todos' | 'pendentes' | 'aprovados'
 type Props = {
   clienteId: string
   clienteNome: string
-  equipamento: EquipamentoClienteRef
-  equipamentoIndex: number
+  equipamentos: EquipamentoClienteRef[]
   pedidosRelatorio: PedidoOrcamentoRef[]
   safeT: Record<string, string | undefined>
   loadData?: (key: string) => Promise<unknown>
@@ -38,11 +43,10 @@ type Props = {
 const PEDIDOS_AVULSO_KEY = 'nonato-pedidos-orcamento-avulso'
 const ORCAMENTOS_AVULSO_KEY = 'nonato-orcamentos-avulso'
 
-export function ClienteEquipamentoOrcamentosPanel({
+export function ClienteOrcamentosFichaSection({
   clienteId,
   clienteNome,
-  equipamento,
-  equipamentoIndex,
+  equipamentos,
   pedidosRelatorio,
   safeT,
   loadData,
@@ -54,6 +58,7 @@ export function ClienteEquipamentoOrcamentosPanel({
 }: Props) {
   const [filtroOrigem, setFiltroOrigem] = useState<FiltroOrigem>('todos')
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>('todos')
+  const [filtroEquipamento, setFiltroEquipamento] = useState<string>('todos')
   const [pedidosAvulso, setPedidosAvulso] = useState<PedidoAvulsoRef[]>([])
   const [orcamentosGerados, setOrcamentosGerados] = useState<OrcamentoGeradoRef[]>([])
 
@@ -69,80 +74,112 @@ export function ClienteEquipamentoOrcamentosPanel({
         if (Array.isArray(data)) setOrcamentosGerados(data as OrcamentoGeradoRef[])
       })
       .catch(() => {})
-  }, [loadData, clienteId, equipamentoIndex])
+  }, [loadData, clienteId])
 
-  const pedidosRelatorioFiltrados = useMemo(
-    () =>
-      pedidosRelatorio.filter((p) =>
-        pedidoRelatorioCorrespondeEquipamento(p, clienteId, equipamento, equipamentoIndex, clienteNome)
-      ),
-    [pedidosRelatorio, clienteId, equipamento, equipamentoIndex, clienteNome]
+  const pedidosRelatorioCliente = useMemo(
+    () => pedidosRelatorio.filter((p) => pedidoRelatorioCorrespondeCliente(p, clienteId, clienteNome)),
+    [pedidosRelatorio, clienteId, clienteNome]
   )
 
-  const pedidosAvulsoFiltrados = useMemo(
-    () =>
-      pedidosAvulso.filter((p) =>
-        pedidoAvulsoCorrespondeEquipamento(p, clienteId, equipamento, equipamentoIndex, clienteNome)
-      ),
-    [pedidosAvulso, clienteId, equipamento, equipamentoIndex, clienteNome]
+  const pedidosAvulsoCliente = useMemo(
+    () => pedidosAvulso.filter((p) => pedidoAvulsoCorrespondeCliente(p, clienteId, clienteNome)),
+    [pedidosAvulso, clienteId, clienteNome]
   )
 
-  const numerosRelatorio = useMemo(
-    () => pedidosRelatorioFiltrados.map((p) => p.numeroRelatorio),
-    [pedidosRelatorioFiltrados]
+  const orcamentosGeradosCliente = useMemo(
+    () => orcamentosGerados.filter((o) => orcamentoGeradoCorrespondeCliente(o, clienteId, clienteNome)),
+    [orcamentosGerados, clienteId, clienteNome]
   )
+
+  const numerosRelatorioCliente = useMemo(
+    () => pedidosRelatorioCliente.map((p) => p.numeroRelatorio),
+    [pedidosRelatorioCliente]
+  )
+
+  const passaFiltroEquipamento = (
+    eqIndex: number,
+    equipamento: EquipamentoClienteRef,
+    pedidoRel?: PedidoOrcamentoRef,
+    pedidoAv?: PedidoAvulsoRef,
+    orc?: OrcamentoGeradoRef
+  ) => {
+    if (filtroEquipamento === 'todos') return true
+    const idx = parseInt(filtroEquipamento, 10)
+    if (Number.isNaN(idx)) return true
+    if (pedidoRel) {
+      return pedidoRelatorioCorrespondeEquipamento(pedidoRel, clienteId, equipamento, idx, clienteNome)
+    }
+    if (pedidoAv) {
+      return pedidoAvulsoCorrespondeEquipamento(pedidoAv, clienteId, equipamento, idx, clienteNome)
+    }
+    if (orc) {
+      return orcamentoGeradoCorrespondeEquipamento(
+        orc,
+        clienteId,
+        equipamento,
+        idx,
+        clienteNome,
+        numerosRelatorioCliente
+      )
+    }
+    return eqIndex === idx
+  }
 
   const orcamentosRelatorio = useMemo(
     () =>
-      orcamentosGerados.filter(
+      orcamentosGeradosCliente.filter(
         (o) =>
-          (o.tipo === 'orcamento-relatorio' ||
-            o.tipo === 'cliente-cadastrado' ||
-            Boolean(o.relatorioId || o.relatorioNumero)) &&
-          orcamentoGeradoCorrespondeEquipamento(
-            o,
-            clienteId,
-            equipamento,
-            equipamentoIndex,
-            clienteNome,
-            numerosRelatorio
-          )
+          o.tipo === 'orcamento-relatorio' ||
+          o.tipo === 'cliente-cadastrado' ||
+          Boolean(o.relatorioId || o.relatorioNumero)
       ),
-    [orcamentosGerados, clienteId, equipamento, equipamentoIndex, clienteNome, numerosRelatorio]
+    [orcamentosGeradosCliente]
   )
 
   const orcamentosAvulso = useMemo(
-    () =>
-      orcamentosGerados.filter(
-        (o) =>
-          o.tipo === 'pedido-avulso' &&
-          orcamentoGeradoCorrespondeEquipamento(
-            o,
-            clienteId,
-            equipamento,
-            equipamentoIndex,
-            clienteNome
-          )
-      ),
-    [orcamentosGerados, clienteId, equipamento, equipamentoIndex, clienteNome]
+    () => orcamentosGeradosCliente.filter((o) => o.tipo === 'pedido-avulso'),
+    [orcamentosGeradosCliente]
   )
 
   const itensVisiveis = useMemo(() => {
     type Item =
-      | { kind: 'relatorio-pedido'; data: PedidoOrcamentoRef }
-      | { kind: 'avulso-pedido'; data: PedidoAvulsoRef }
-      | { kind: 'relatorio-orc'; data: OrcamentoGeradoRef }
-      | { kind: 'avulso-orc'; data: OrcamentoGeradoRef }
+      | { kind: 'relatorio-pedido'; data: PedidoOrcamentoRef; equipLabel: string }
+      | { kind: 'avulso-pedido'; data: PedidoAvulsoRef; equipLabel: string }
+      | { kind: 'relatorio-orc'; data: OrcamentoGeradoRef; equipLabel: string }
+      | { kind: 'avulso-orc'; data: OrcamentoGeradoRef; equipLabel: string }
 
     const items: Item[] = []
 
+    const encaixaEquipamento = (
+      pedidoRel?: PedidoOrcamentoRef,
+      pedidoAv?: PedidoAvulsoRef,
+      orc?: OrcamentoGeradoRef
+    ) => {
+      if (filtroEquipamento === 'todos') return true
+      const idx = parseInt(filtroEquipamento, 10)
+      if (Number.isNaN(idx) || !equipamentos[idx]) return false
+      return passaFiltroEquipamento(idx, equipamentos[idx], pedidoRel, pedidoAv, orc)
+    }
+
     if (filtroOrigem === 'todos' || filtroOrigem === 'relatorio') {
-      pedidosRelatorioFiltrados.forEach((p) => items.push({ kind: 'relatorio-pedido', data: p }))
-      orcamentosRelatorio.forEach((o) => items.push({ kind: 'relatorio-orc', data: o }))
+      pedidosRelatorioCliente.forEach((p) => {
+        if (!encaixaEquipamento(p)) return
+        items.push({ kind: 'relatorio-pedido', data: p, equipLabel: rotuloEquipamentoPedidoRelatorio(p) })
+      })
+      orcamentosRelatorio.forEach((o) => {
+        if (!encaixaEquipamento(undefined, undefined, o)) return
+        items.push({ kind: 'relatorio-orc', data: o, equipLabel: rotuloEquipamentoOrcamentoGerado(o) })
+      })
     }
     if (filtroOrigem === 'todos' || filtroOrigem === 'avulso') {
-      pedidosAvulsoFiltrados.forEach((p) => items.push({ kind: 'avulso-pedido', data: p }))
-      orcamentosAvulso.forEach((o) => items.push({ kind: 'avulso-orc', data: o }))
+      pedidosAvulsoCliente.forEach((p) => {
+        if (!encaixaEquipamento(undefined, p)) return
+        items.push({ kind: 'avulso-pedido', data: p, equipLabel: rotuloEquipamentoPedidoAvulso(p) })
+      })
+      orcamentosAvulso.forEach((o) => {
+        if (!encaixaEquipamento(undefined, undefined, o)) return
+        items.push({ kind: 'avulso-orc', data: o, equipLabel: rotuloEquipamentoOrcamentoGerado(o) })
+      })
     }
 
     return items.filter((item) => {
@@ -164,14 +201,16 @@ export function ClienteEquipamentoOrcamentosPanel({
   }, [
     filtroOrigem,
     filtroEstado,
-    pedidosRelatorioFiltrados,
-    pedidosAvulsoFiltrados,
+    filtroEquipamento,
+    pedidosRelatorioCliente,
+    pedidosAvulsoCliente,
     orcamentosRelatorio,
     orcamentosAvulso,
+    equipamentos,
   ])
 
-  const totalRelatorio = pedidosRelatorioFiltrados.length + orcamentosRelatorio.length
-  const totalAvulso = pedidosAvulsoFiltrados.length + orcamentosAvulso.length
+  const totalRelatorio = pedidosRelatorioCliente.length + orcamentosRelatorio.length
+  const totalAvulso = pedidosAvulsoCliente.length + orcamentosAvulso.length
 
   const atualizarStatusAvulso = async (codigo: string, status: PedidoAvulsoRef['status']) => {
     const novos = pedidosAvulso.map((p) => (p.codigo === codigo ? { ...p, status } : p))
@@ -201,13 +240,38 @@ export function ClienteEquipamentoOrcamentosPanel({
   }
 
   return (
-    <div className="cliente-equip-orcamentos">
-      <h4 className="cliente-equip-orcamentos__title">
-        💰 {safeT?.orcamentosEquipamento || 'Orçamentos deste equipamento'}
-      </h4>
-      <p className="cliente-equip-orcamentos__meta">
+    <section className="cliente-detalhe-v2__card cliente-detalhe-v2__orcamentos">
+      <h3 className="cliente-detalhe-v2__section-title cliente-detalhe-v2__section-title--solo">
+        <span className="cliente-detalhe-v2__euro-icon">💰</span>
+        {safeT?.orcamentosClienteTitulo || 'Orçamentos do cliente'}
+      </h3>
+      <p className="cliente-detalhe-v2__orcamentos-meta">
         {totalRelatorio} {safeT?.doRelatorio || 'do relatório'} · {totalAvulso} {safeT?.avulsos || 'avulsos'}
       </p>
+
+      {equipamentos.length > 0 && (
+        <div className="cliente-detalhe-v2__orcamentos-equip-filter">
+          <label htmlFor="cliente-orc-equip-filter">{safeT?.filtrarPorEquipamento || 'Filtrar por equipamento'}</label>
+          <select
+            id="cliente-orc-equip-filter"
+            className="cliente-detalhe-v2__orcamentos-select"
+            value={filtroEquipamento}
+            onChange={(e) => setFiltroEquipamento(e.target.value)}
+          >
+            <option value="todos">{safeT?.todosEquipamentos || 'Todos os equipamentos'}</option>
+            {equipamentos.map((eq, index) => {
+              const label = [eq.marca, eq.modelo].filter(Boolean).join(' ') || eq.tipoEquipamento || `#${index + 1}`
+              const serie = eq.numeroSerie ? ` · ${eq.numeroSerie}` : ''
+              return (
+                <option key={eq.id || `${eq.numeroSerie}-${index}`} value={String(index)}>
+                  {label}
+                  {serie}
+                </option>
+              )
+            })}
+          </select>
+        </div>
+      )}
 
       <div className="cliente-equip-orcamentos__filters">
         <div className="cliente-equip-orcamentos__filter-row">
@@ -246,14 +310,15 @@ export function ClienteEquipamentoOrcamentosPanel({
 
       {totalRelatorio === 0 && totalAvulso === 0 ? (
         <p className="cliente-equip-orcamentos__empty">
-          {safeT?.nenhumOrcamentoEquipamento || 'Ainda não há orçamentos deste equipamento. Gere a partir do relatório de serviço ou em Pedido de Orçamentos Avulso.'}
+          {safeT?.nenhumOrcamentoCliente || safeT?.nenhumOrcamentoEquipamento ||
+            'Ainda não há orçamentos deste cliente. Gere a partir do relatório de serviço ou em Pedido de Orçamentos Avulso.'}
         </p>
       ) : itensVisiveis.length === 0 ? (
         <p className="cliente-equip-orcamentos__empty">
           {safeT?.nenhumOrcamentoFiltro || 'Nenhum orçamento com estes filtros.'}
         </p>
       ) : (
-        <div className="cliente-equip-orcamentos__list">
+        <div className="cliente-equip-orcamentos__list cliente-detalhe-v2__orcamentos-list">
           {itensVisiveis.map((item) => {
             if (item.kind === 'relatorio-pedido') {
               const p = item.data
@@ -269,6 +334,9 @@ export function ClienteEquipamentoOrcamentosPanel({
                       {badge.label}
                     </span>
                   </div>
+                  <p className="cliente-equip-orcamentos__line">
+                    {safeT?.equipamento || 'Equipamento'}: {item.equipLabel}
+                  </p>
                   <p className="cliente-equip-orcamentos__line">
                     {safeT?.numeroRelatorio || 'Relatório'}: {p.numeroRelatorio}
                   </p>
@@ -317,6 +385,9 @@ export function ClienteEquipamentoOrcamentosPanel({
                     </span>
                   </div>
                   <p className="cliente-equip-orcamentos__line">
+                    {safeT?.equipamento || 'Equipamento'}: {item.equipLabel}
+                  </p>
+                  <p className="cliente-equip-orcamentos__line">
                     {safeT?.nomeNoDocumento || 'Nome no documento'}:{' '}
                     {p.emitirComoCliente === 'nonato-service'
                       ? safeT?.nomeNonatoService || 'NONATO SERVICE'
@@ -362,6 +433,9 @@ export function ClienteEquipamentoOrcamentosPanel({
                     {badge.label}
                   </span>
                 </div>
+                <p className="cliente-equip-orcamentos__line">
+                  {safeT?.equipamento || 'Equipamento'}: {item.equipLabel}
+                </p>
                 {o.relatorioNumero && (
                   <p className="cliente-equip-orcamentos__line">
                     {safeT?.numeroRelatorio || 'Relatório'}: {o.relatorioNumero}
@@ -377,6 +451,6 @@ export function ClienteEquipamentoOrcamentosPanel({
           })}
         </div>
       )}
-    </div>
+    </section>
   )
 }

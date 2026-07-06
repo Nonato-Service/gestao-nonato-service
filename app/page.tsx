@@ -36890,6 +36890,17 @@ export default function Dashboard() {
                       onDelete={() => handleDeleteCliente(clientesParaDetalhe[0].id)}
                       onAddEquipamento={() => handleAddEquipamentoCliente(clientesParaDetalhe[0])}
                       onViewEquipamentos={() => handleViewClienteEquipamentos(clientesParaDetalhe[0])}
+                      pedidosRelatorio={pedidosOrcamento}
+                      loadData={loadData}
+                      onUpdatePedidoRelatorioStatus={atualizarStatusPedidoOrcamento}
+                      onVisualizarPdfRelatorio={abrirPdfPedidoOrcamentoRelatorio}
+                      onVisualizarPdfAvulso={abrirPdfPedidoOrcamentoAvulso}
+                      onAtualizarPedidoAvulso={async (pedidos) => {
+                        await saveData('nonato-pedidos-orcamento-avulso', pedidos)
+                      }}
+                      onAtualizarOrcamentosGerados={async (orcamentos) => {
+                        await saveData('nonato-orcamentos-avulso', orcamentos)
+                      }}
                     />
                   )
                 ) : (
@@ -46398,7 +46409,7 @@ A1;Peça exemplo;10`}
                                   fontWeight: 'bold',
                                 }}
                               >
-                                👁️ PDF
+                                👁️ {safeT?.visualizarPdfPedido || safeT?.visualizar || 'PDF'}
                               </button>
                               {pedido.status !== 'aprovado' && (
                                 <button
@@ -76573,10 +76584,10 @@ A1;Peça exemplo;10`}
 
             <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
               <h3 style={{ margin: '0 0 12px', color: '#00c853', fontSize: '14px' }}>
-                {(safeT as any)?.gerarDocumentoComo || 'Ao gerar documento'}
+                {safeT?.gerarDocumentoComo || 'Ao gerar documento'}
               </h3>
               <p style={{ margin: '0 0 12px', fontSize: '13px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>
-                {(safeT as any)?.desejaGerarComNomeClienteOuNonato ||
+                {safeT?.desejaGerarComNomeClienteOuNonato ||
                   'Deseja gerar com o nome do cliente ou com o nome da NONATO SERVICE?'}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -76587,7 +76598,7 @@ A1;Peça exemplo;10`}
                     checked={pedidoOrcamentoEmitirComo === 'cliente'}
                     onChange={() => setPedidoOrcamentoEmitirComo('cliente')}
                   />
-                  <span>{(safeT as any)?.gerarComNomeCliente || 'Com nome do cliente'}</span>
+                  <span>{safeT?.gerarComNomeCliente || 'Com nome do cliente'}</span>
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#fff' }}>
                   <input
@@ -76596,11 +76607,11 @@ A1;Peça exemplo;10`}
                     checked={pedidoOrcamentoEmitirComo === 'nonato-service'}
                     onChange={() => setPedidoOrcamentoEmitirComo('nonato-service')}
                   />
-                  <span>{(safeT as any)?.gerarComNomeNonatoService || 'Com nome da NONATO SERVICE'}</span>
+                  <span>{safeT?.gerarComNomeNonatoService || 'Com nome da NONATO SERVICE'}</span>
                 </label>
               </div>
               <p style={{ margin: '12px 0 0', fontSize: '12px', color: '#ffaa00' }}>
-                {(safeT as any)?.nomeNoDocumento || 'Nome no documento'}: <strong>{nomeNoDocPreview}</strong>
+                {safeT?.nomeNoDocumento || 'Nome no documento'}: <strong>{nomeNoDocPreview}</strong>
               </p>
             </div>
 

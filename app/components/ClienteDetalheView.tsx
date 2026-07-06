@@ -21,7 +21,8 @@ import {
   type RelatorioClienteLike,
 } from '../lib/clienteDetalheUtils'
 import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
-import { isClienteMarcadoDevedor } from '../lib/clienteDevedorUtils'
+import { ClienteOrcamentosFichaSection } from './ClienteOrcamentosFichaSection'
+import type { PedidoOrcamentoRef, PedidoAvulsoRef, OrcamentoGeradoRef } from '../lib/clienteEquipamentoOrcamentos'
 
 function useDetalheTr(language: string) {
   return useMemo(() => {
@@ -69,6 +70,13 @@ type Props = {
   onDelete: () => void
   onAddEquipamento: () => void
   onViewEquipamentos: () => void
+  pedidosRelatorio?: PedidoOrcamentoRef[]
+  loadData?: (key: string) => Promise<unknown>
+  onUpdatePedidoRelatorioStatus?: (id: string, status: PedidoOrcamentoRef['status']) => void
+  onVisualizarPdfRelatorio?: (pedido: PedidoOrcamentoRef) => void
+  onVisualizarPdfAvulso?: (pedido: PedidoAvulsoRef) => void
+  onAtualizarPedidoAvulso?: (pedidos: PedidoAvulsoRef[]) => void
+  onAtualizarOrcamentosGerados?: (orcamentos: OrcamentoGeradoRef[]) => void
 }
 
 function IconArrowLeft({ className }: { className?: string }) {
@@ -212,8 +220,22 @@ export function ClienteDetalheView({
   onDelete,
   onAddEquipamento,
   onViewEquipamentos,
+  pedidosRelatorio = [],
+  loadData,
+  onUpdatePedidoRelatorioStatus,
+  onVisualizarPdfRelatorio,
+  onVisualizarPdfAvulso,
+  onAtualizarPedidoAvulso,
+  onAtualizarOrcamentosGerados,
 }: Props) {
   const tr = useDetalheTr(language)
+
+  const safeT = useMemo(() => {
+    return (translations[translationBundleKey(language)] || translations['pt-BR']) as Record<
+      string,
+      string | undefined
+    >
+  }, [language])
 
   const relatorios = useMemo(() => coletarRelatoriosCliente(cliente.relatorios), [cliente.relatorios])
   const relatorioIds = useMemo(() => relatorios.map((r) => r.id), [relatorios])
@@ -422,6 +444,20 @@ export function ClienteDetalheView({
           </div>
         )}
       </section>
+
+      <ClienteOrcamentosFichaSection
+        clienteId={cliente.id}
+        clienteNome={cliente.nomeEmpresa}
+        equipamentos={equipamentos}
+        pedidosRelatorio={pedidosRelatorio}
+        safeT={safeT}
+        loadData={loadData}
+        onUpdatePedidoRelatorioStatus={onUpdatePedidoRelatorioStatus}
+        onVisualizarPdfRelatorio={onVisualizarPdfRelatorio}
+        onVisualizarPdfAvulso={onVisualizarPdfAvulso}
+        onAtualizarPedidoAvulso={onAtualizarPedidoAvulso}
+        onAtualizarOrcamentosGerados={onAtualizarOrcamentosGerados}
+      />
 
       <section className="cliente-detalhe-v2__card">
         <h3 className="cliente-detalhe-v2__section-title cliente-detalhe-v2__section-title--solo">

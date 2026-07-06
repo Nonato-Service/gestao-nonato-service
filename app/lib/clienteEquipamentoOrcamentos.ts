@@ -184,3 +184,53 @@ export function gerarProximoCodigoPedidoRelatorio(pedidos: PedidoOrcamentoRef[])
   const next = (nums.length ? Math.max(...nums) : 0) + 1
   return `${prefix}${String(next).padStart(4, '0')}`
 }
+
+export function clienteCorrespondeRegistro(
+  clienteId: string,
+  clienteNome: string,
+  registroClienteId?: string,
+  registroClienteNome?: string
+): boolean {
+  const cid = String(clienteId).trim()
+  const rid = String(registroClienteId ?? '').trim()
+  if (rid && rid === cid) return true
+  const nome = String(clienteNome ?? '').trim().toLowerCase()
+  const rnome = String(registroClienteNome ?? '').trim().toLowerCase()
+  return Boolean(nome && rnome && nome === rnome)
+}
+
+export function pedidoRelatorioCorrespondeCliente(
+  pedido: PedidoOrcamentoRef,
+  clienteId: string,
+  clienteNome?: string
+): boolean {
+  return clienteCorrespondeRegistro(clienteId, clienteNome || '', pedido.clienteId, pedido.cliente)
+}
+
+export function pedidoAvulsoCorrespondeCliente(
+  pedido: PedidoAvulsoRef,
+  clienteId: string,
+  clienteNome?: string
+): boolean {
+  return clienteCorrespondeRegistro(clienteId, clienteNome || '', pedido.clienteId, pedido.clienteNomeReal)
+}
+
+export function orcamentoGeradoCorrespondeCliente(
+  orc: OrcamentoGeradoRef,
+  clienteId: string,
+  clienteNome?: string
+): boolean {
+  return clienteCorrespondeRegistro(clienteId, clienteNome || '', orc.clienteId, orc.clienteNome)
+}
+
+export function rotuloEquipamentoPedidoRelatorio(pedido: PedidoOrcamentoRef): string {
+  return `${pedido.maquinaModelo || ''}${pedido.numeroMaquina ? ` (${pedido.numeroMaquina})` : ''}`.trim() || '—'
+}
+
+export function rotuloEquipamentoPedidoAvulso(pedido: PedidoAvulsoRef): string {
+  return String(pedido.equipamentoTexto || '—').trim() || '—'
+}
+
+export function rotuloEquipamentoOrcamentoGerado(orc: OrcamentoGeradoRef): string {
+  return String(orc.descricao || '—').trim() || '—'
+}

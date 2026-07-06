@@ -29256,6 +29256,43 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   color: rgba(255, 255, 255, 0.45);
 }
 
+.cliente-detalhe-v2__orcamentos-meta {
+  margin: -4px 0 16px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.cliente-detalhe-v2__orcamentos-equip-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.cliente-detalhe-v2__orcamentos-equip-filter label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cliente-detalhe-v2__orcamentos-select {
+  width: 100%;
+  max-width: 420px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 170, 0, 0.25);
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+}
+
+.cliente-detalhe-v2__orcamentos-list {
+  max-height: 420px;
+}
+
 @media (max-width: 1024px) {
   .cliente-detalhe-v2__info-grid {
     grid-template-columns: 1fr;
