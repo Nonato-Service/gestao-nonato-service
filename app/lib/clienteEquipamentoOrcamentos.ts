@@ -48,6 +48,8 @@ export type OrcamentoGeradoRef = {
   clienteNome?: string
   relatorioId?: string
   relatorioNumero?: string
+  equipamentoChave?: string
+  equipamentoNumeroSerie?: string
   dataCriacao?: string
   total?: number
 }
@@ -141,6 +143,15 @@ export function orcamentoGeradoCorrespondeEquipamento(
       String(orc.clienteNome ?? '').trim().toLowerCase() === clienteNome.trim().toLowerCase())
   if (!nomeOk) return false
   if (orc.relatorioNumero && numerosRelatorio?.includes(orc.relatorioNumero)) return true
+  if (
+    orc.equipamentoChave &&
+    equipamentoCorrespondeChave(equipamento, equipamentoIndex, orc.equipamentoChave)
+  ) {
+    return true
+  }
+  const orcSerie = String(orc.equipamentoNumeroSerie ?? '').trim().toLowerCase()
+  const eqSerie = String(equipamento.numeroSerie ?? '').trim().toLowerCase()
+  if (orcSerie && eqSerie && orcSerie === eqSerie) return true
   const desc = String(orc.descricao ?? '').toLowerCase()
   const modelo = String(equipamento.modelo ?? '').trim().toLowerCase()
   const serie = String(equipamento.numeroSerie ?? '').trim().toLowerCase()
@@ -232,5 +243,30 @@ export function rotuloEquipamentoPedidoAvulso(pedido: PedidoAvulsoRef): string {
 }
 
 export function rotuloEquipamentoOrcamentoGerado(orc: OrcamentoGeradoRef): string {
-  return String(orc.descricao || '—').trim() || '—'
+  const serie = String(orc.equipamentoNumeroSerie ?? '').trim()
+  const desc = String(orc.descricao || '—').trim() || '—'
+  if (serie) {
+    return desc !== '—' ? `${desc} · Nº Série: ${serie}` : `Nº Série: ${serie}`
+  }
+  return desc
+}
+
+/** Repõe n.º de série/chave em orçamentos avulsos antigos a partir dos pedidos guardados. */
+export function enrichOrcamentosGeradosComPedidosAvulsos<T extends OrcamentoGeradoRef>(
+  orcamentos: T[],
+  pedidos: PedidoAvulsoRef[]
+): T[] {
+  if (!Array.isArray(orcamentos) || orcamentos.length === 0) return orcamentos
+  return orcamentos.map((o) => {
+    if (o.equipamentoNumeroSerie || o.equipamentoChave) return o
+    if (o.tipo !== 'pedido-avulso') return o
+    const codigo = o.id?.startsWith('avulso-') ? o.id.slice('avulso-'.length) : o.numeroOrcamento
+    const ped = pedidos.find((p) => p.codigo === codigo || p.codigo === o.numeroOrcamento)
+    if (!ped) return o
+    return {
+      ...o,
+      equipamentoNumeroSerie: ped.equipamentoNumeroSerie,
+      equipamentoChave: ped.equipamentoChave,
+    }
+  })
 }

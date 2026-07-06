@@ -441,6 +441,11 @@ export function ClienteOrcamentosFichaSection({
                     {safeT?.numeroRelatorio || 'Relatório'}: {o.relatorioNumero}
                   </p>
                 )}
+                {String(o.equipamentoNumeroSerie ?? '').trim() && (
+                  <p className="cliente-equip-orcamentos__line">
+                    {safeT?.numeroSerie || 'Número de Série'}: {String(o.equipamentoNumeroSerie).trim()}
+                  </p>
+                )}
                 <p className="cliente-equip-orcamentos__line">{o.descricao || '—'}</p>
                 <p className="cliente-equip-orcamentos__line">
                   {new Date(o.dataCriacao || o.data).toLocaleDateString('pt-BR')}

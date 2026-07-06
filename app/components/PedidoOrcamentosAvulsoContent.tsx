@@ -267,7 +267,14 @@ export function PedidoOrcamentosAvulsoContent({
       return null
     }
     const equipamentoTexto = equipamentoSelecionado
-      ? `${equipamentoSelecionado.tipoEquipamento} ${equipamentoSelecionado.modelo || ''} - ${equipamentoSelecionado.marca}`
+      ? [
+          `${equipamentoSelecionado.tipoEquipamento} ${equipamentoSelecionado.modelo || ''} - ${equipamentoSelecionado.marca}`.trim(),
+          equipamentoSelecionado.numeroSerie
+            ? `${safeT?.numeroSerie || 'Nº Série'}: ${equipamentoSelecionado.numeroSerie}`
+            : '',
+        ]
+          .filter(Boolean)
+          .join(' · ')
       : equipamentoManual || '—'
     const nomeNoDoc =
       emitirComoCliente === 'nonato-service'
@@ -375,6 +382,8 @@ export function PedidoOrcamentosAvulsoContent({
           status: 'pendente' as const,
           clienteId: clienteSelecionado?.id,
           clienteNome: nomeNoDocPdf,
+          equipamentoChave: novo.equipamentoChave,
+          equipamentoNumeroSerie: novo.equipamentoNumeroSerie,
           itens: pecasPedido.map((p) => ({
             descricao: p.nome,
             quantidade: p.quantidade,

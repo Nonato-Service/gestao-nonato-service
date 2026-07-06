@@ -183,7 +183,7 @@ import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/F
 import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { ClienteEquipamentoOrcamentosPanel } from './components/ClienteEquipamentoOrcamentosPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
-import { gerarProximoCodigoPedidoRelatorio } from './lib/clienteEquipamentoOrcamentos'
+import { enrichOrcamentosGeradosComPedidosAvulsos, gerarProximoCodigoPedidoRelatorio } from './lib/clienteEquipamentoOrcamentos'
 import type { PedidoAvulsoGuardado } from './components/PedidoOrcamentosAvulsoContent'
 import { rotuloIdEquipamentoCliente } from './lib/clienteDetalheUtils'
 import { ClienteGpsNavButton } from './components/ClienteGpsNavButton'
@@ -62975,6 +62975,8 @@ A1;Peça exemplo;10`}
     safeT,
     pedidosSeparacao,
     setPedidosSeparacao,
+    rascunho,
+    setRascunho,
     initialTipoOrcamento,
     onOrcamentosGeradosViewShown
   }: { 
@@ -62983,6 +62985,8 @@ A1;Peça exemplo;10`}
     pecasBiblioteca: PecaBiblioteca[]
     relatoriosServico: RelatorioServico[]
     safeT: any
+    rascunho: OrcamentoAvulsoRascunhoPersist
+    setRascunho: React.Dispatch<React.SetStateAction<OrcamentoAvulsoRascunhoPersist>>
     pedidosSeparacao: Array<{
       id: string
       numeroOrcamento: string
@@ -63024,33 +63028,31 @@ A1;Peça exemplo;10`}
     initialTipoOrcamento?: 'orcamentos-gerados'
     onOrcamentosGeradosViewShown?: () => void
   }) => {
-    const [tipoOrcamento, setTipoOrcamento] = useState<'dados-fixos' | 'cliente-cadastrado' | 'orcamento-relatorio' | 'cliente-prioritario-fixo' | 'cliente-prioritario-valores' | 'orcamentos-gerados'>('dados-fixos')
-    const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null)
-    const [buscaCliente, setBuscaCliente] = useState('')
-    /** Cliente Prioritário (Fixo): opcional — dados do cadastro geral para e-mail/WhatsApp neste orçamento */
-    const [clienteCadastroPrioritarioFixo, setClienteCadastroPrioritarioFixo] = useState<Cliente | null>(null)
-    const [buscaClientePrioritarioFixo, setBuscaClientePrioritarioFixo] = useState('')
-    const [relatorioSelecionado, setRelatorioSelecionado] = useState<RelatorioServico | null>(null)
-    const [buscaRelatorio, setBuscaRelatorio] = useState('')
-    const [dadosOrcamento, setDadosOrcamento] = useState({
-      numeroOrcamento: '',
-      data: new Date().toISOString().split('T')[0],
-      validade: '',
-      descricao: '',
-      observacoes: '',
-      itens: [] as Array<{ 
-        id?: string
-        descricao: string, 
-        quantidade: number, 
-        precoUnitario: number, 
-        total: number,
-        codigo?: string,
-        tipoItem?: 'sem-valor' | 'com-valor',
-        iva?: number,
-        pecaId?: string,
-        imagem?: string
-      }>
+    const [tipoOrcamento, setTipoOrcamento] = useState<OrcamentoAvulsoTipoRascunho>(
+      rascunho.tipoOrcamento || 'dados-fixos'
+    )
+    const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(() => {
+      if (!rascunho.clienteSelecionadoId) return null
+      return clientes.find((c) => c.id === rascunho.clienteSelecionadoId) ?? null
     })
+    const [buscaCliente, setBuscaCliente] = useState(rascunho.buscaCliente || '')
+    /** Cliente Prioritário (Fixo): opcional — dados do cadastro geral para e-mail/WhatsApp neste orçamento */
+    const [clienteCadastroPrioritarioFixo, setClienteCadastroPrioritarioFixo] = useState<Cliente | null>(() => {
+      if (!rascunho.clienteCadastroPrioritarioFixoId) return null
+      return clientes.find((c) => c.id === rascunho.clienteCadastroPrioritarioFixoId) ?? null
+    })
+    const [buscaClientePrioritarioFixo, setBuscaClientePrioritarioFixo] = useState(
+      rascunho.buscaClientePrioritarioFixo || ''
+    )
+    const [relatorioSelecionado, setRelatorioSelecionado] = useState<RelatorioServico | null>(() => {
+      if (!rascunho.relatorioSelecionadoId) return null
+      return relatoriosServico.find((r) => r.id === rascunho.relatorioSelecionadoId) ?? null
+    })
+    const [buscaRelatorio, setBuscaRelatorio] = useState(rascunho.buscaRelatorio || '')
+    const [dadosOrcamento, setDadosOrcamento] = useState(() => ({
+      ...rascunho.dadosOrcamento,
+      itens: Array.isArray(rascunho.dadosOrcamento.itens) ? rascunho.dadosOrcamento.itens : [],
+    }))
     const [showItemForm, setShowItemForm] = useState(false)
     const [itemFormMode, setItemFormMode] = useState<'biblioteca' | 'manual' | null>(null)
     const [itemForm, setItemForm] = useState({
@@ -63066,7 +63068,9 @@ A1;Peça exemplo;10`}
     const [buscaCodigoPeca, setBuscaCodigoPeca] = useState('')
     const [pecasFiltradas, setPecasFiltradas] = useState<PecaBiblioteca[]>([])
     const [orcamentoEditando, setOrcamentoEditando] = useState<string | null>(null)
-    const [numeroOrcamentoManual, setNumeroOrcamentoManual] = useState(false)
+    const [numeroOrcamentoManual, setNumeroOrcamentoManual] = useState(
+      Boolean(rascunho.numeroOrcamentoManual)
+    )
     const [itemEditando, setItemEditando] = useState<{orcamentoId: string, itemIndex: number} | null>(null)
     const [itemEditForm, setItemEditForm] = useState({
       precoUnitario: 0,
@@ -63093,6 +63097,8 @@ A1;Peça exemplo;10`}
       clienteNome?: string
       relatorioId?: string
       relatorioNumero?: string
+      equipamentoChave?: string
+      equipamentoNumeroSerie?: string
       dadosCliente?: any
       itens: Array<{ 
         descricao: string, 
@@ -63111,13 +63117,79 @@ A1;Peça exemplo;10`}
       dataCriacao: string
     }>>([])
 
+    /** Persistir rascunho no pai (sessionStorage) — evita perder número/itens ao re-renderizar a página. */
+    useEffect(() => {
+      setRascunho({
+        v: 1,
+        dadosOrcamento,
+        tipoOrcamento,
+        clienteSelecionadoId: clienteSelecionado?.id ?? null,
+        relatorioSelecionadoId: relatorioSelecionado?.id ?? null,
+        clienteCadastroPrioritarioFixoId: clienteCadastroPrioritarioFixo?.id ?? null,
+        numeroOrcamentoManual,
+        buscaCliente,
+        buscaRelatorio,
+        buscaClientePrioritarioFixo,
+      })
+    }, [
+      dadosOrcamento,
+      tipoOrcamento,
+      clienteSelecionado,
+      relatorioSelecionado,
+      clienteCadastroPrioritarioFixo,
+      numeroOrcamentoManual,
+      buscaCliente,
+      buscaRelatorio,
+      buscaClientePrioritarioFixo,
+      setRascunho,
+    ])
+
+    const carregarOrcamentoNoFormulario = (orcamento: (typeof orcamentosGerados)[number]) => {
+      setOrcamentoEditando(orcamento.id)
+      setNumeroOrcamentoManual(true)
+      setTipoOrcamento(
+        (orcamento.tipo as OrcamentoAvulsoTipoRascunho) || 'dados-fixos'
+      )
+      setDadosOrcamento({
+        numeroOrcamento: orcamento.numeroOrcamento || '',
+        data: orcamento.data || new Date().toISOString().split('T')[0],
+        validade: orcamento.validade || '',
+        descricao: orcamento.descricao || '',
+        observacoes: orcamento.observacoes || '',
+        itens: Array.isArray(orcamento.itens) ? [...orcamento.itens] : [],
+      })
+      if (orcamento.clienteId) {
+        const cl = clientes.find((c) => c.id === orcamento.clienteId)
+        if (cl) setClienteSelecionado(cl)
+      }
+      if (orcamento.relatorioId) {
+        const rel = relatoriosServico.find((r) => r.id === orcamento.relatorioId)
+        if (rel) setRelatorioSelecionado(rel)
+      }
+    }
+
     // Carregar orçamentos salvos
     const loadOrcamentos = async () => {
       try {
+        let pedidosAvulso: PedidoAvulsoGuardado[] = []
+        try {
+          const pedRaw = await loadData('nonato-pedidos-orcamento-avulso')
+          if (Array.isArray(pedRaw)) pedidosAvulso = pedRaw as PedidoAvulsoGuardado[]
+        } catch {
+          /* ignorar */
+        }
+        const aplicarEnriquecimento = (lista: typeof orcamentosGerados) => {
+          const enriquecida = enrichOrcamentosGeradosComPedidosAvulsos(lista, pedidosAvulso)
+          const mudou = JSON.stringify(enriquecida) !== JSON.stringify(lista)
+          setOrcamentosGerados(enriquecida)
+          if (mudou && enriquecida.length > 0) {
+            void saveData('nonato-orcamentos-avulso', enriquecida, true, false)
+          }
+        }
         // Tentar carregar usando a função loadData primeiro
         const dataFromLoadData = await loadData('nonato-orcamentos-avulso')
         if (dataFromLoadData && Array.isArray(dataFromLoadData)) {
-          setOrcamentosGerados(dataFromLoadData)
+          aplicarEnriquecimento(dataFromLoadData as typeof orcamentosGerados)
           return
         }
         
@@ -63129,9 +63201,9 @@ A1;Peça exemplo;10`}
         if (response.ok) {
           const data = await response.json()
           if (data && data.data && Array.isArray(data.data)) {
-            setOrcamentosGerados(data.data)
+            aplicarEnriquecimento(data.data as typeof orcamentosGerados)
           } else if (data && Array.isArray(data)) {
-            setOrcamentosGerados(data)
+            aplicarEnriquecimento(data as typeof orcamentosGerados)
           }
         }
       } catch (error) {
@@ -63163,6 +63235,32 @@ A1;Peça exemplo;10`}
       const data = dataIso || dadosOrcamento.data || new Date().toISOString().split('T')[0]
       const prox = gerarProximoNumeroOrcamentoAvulso(data, orcamentosGerados, orcamentoEditando || undefined)
       setDadosOrcamento((prev) => ({ ...prev, numeroOrcamento: prox, data }))
+    }
+
+    const confirmarNumeroOrcamentoManual = () => {
+      const num = String(dadosOrcamento.numeroOrcamento ?? '').trim()
+      if (!num) {
+        setNumeroOrcamentoManual(false)
+        aplicarProximoNumeroOrcamento(dadosOrcamento.data, true)
+        return
+      }
+      setNumeroOrcamentoManual(true)
+      const existente = orcamentosGerados.find(
+        (o) => String(o.numeroOrcamento ?? '').trim() === num && o.id !== orcamentoEditando
+      )
+      if (existente) {
+        const msg =
+          (safeT as any)?.orcamentoNumeroJaExisteCarregar ||
+          `Já existe um orçamento com o número «${num}». Deseja carregar esse orçamento para editar?`
+        if (window.confirm(msg)) {
+          carregarOrcamentoNoFormulario(existente)
+        }
+        return
+      }
+      alert(
+        (safeT as any)?.orcamentoNumeroConfirmado ||
+          `Número do orçamento definido: ${num}`
+      )
     }
 
     useEffect(() => {
@@ -64320,6 +64418,17 @@ A1;Peça exemplo;10`}
                       setNumeroOrcamentoManual(true)
                       setDadosOrcamento(prev => ({ ...prev, numeroOrcamento: e.target.value }))
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        confirmarNumeroOrcamentoManual()
+                      }
+                    }}
+                    onBlur={() => {
+                      if (String(dadosOrcamento.numeroOrcamento ?? '').trim()) {
+                        setNumeroOrcamentoManual(true)
+                      }
+                    }}
                     placeholder={(safeT as any)?.numeroOrcamentoExemplo || 'Ex: 06/2026 ou 06-1/2026'}
                     style={{
                       flex: 1,
@@ -64351,7 +64460,30 @@ A1;Peça exemplo;10`}
                   >
                     ↻ {(safeT as any)?.numeroOrcamentoAuto || 'Auto'}
                   </button>
+                  <button
+                    type="button"
+                    onClick={confirmarNumeroOrcamentoManual}
+                    title={(safeT as any)?.orcamentoNumeroConfirmar || 'Confirmar número do orçamento'}
+                    style={{
+                      padding: '8px 12px',
+                      backgroundColor: 'rgba(0, 200, 83, 0.2)',
+                      border: '1px solid rgba(0, 200, 83, 0.55)',
+                      borderRadius: '6px',
+                      color: '#00c853',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    ✓ {(safeT as any)?.orcamentoNumeroConfirmarBtn || 'OK'}
+                  </button>
                 </div>
+                {String(dadosOrcamento.numeroOrcamento ?? '').trim() && (
+                  <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#00c853', lineHeight: 1.4 }}>
+                    {(safeT as any)?.orcamentoNumeroAtual || 'Número actual'}:{' '}
+                    <strong>{String(dadosOrcamento.numeroOrcamento).trim()}</strong>
+                  </p>
+                )}
                 <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>
                   {(safeT as any)?.numeroOrcamentoSequenciaAjuda ||
                     'Sequência automática: 1.º do dia → DD/AAAA (ex.: 06/2026). No mesmo dia → DD-1/AAAA, DD-2/AAAA…'}
@@ -65316,7 +65448,7 @@ A1;Peça exemplo;10`}
                   )
 
                   const novoOrcamento = {
-                    id: Date.now().toString(),
+                    id: orcamentoEditando || Date.now().toString(),
                     numeroOrcamento: numeroFinal,
                     data: dataOrc,
                     validade: dadosOrcamento.validade,
@@ -65332,15 +65464,23 @@ A1;Peça exemplo;10`}
                     total: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? 0 : calcularTotal(),
                     totalSemIva: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? 0 : calcularTotalSemIva(),
                     totalIva: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? 0 : calcularTotalIva(),
-                    dataCriacao: new Date().toISOString()
+                    dataCriacao: orcamentoEditando
+                      ? orcamentosGerados.find((o) => o.id === orcamentoEditando)?.dataCriacao ||
+                        new Date().toISOString()
+                      : new Date().toISOString()
                   }
                   
-                  const novosOrcamentos = [...orcamentosGerados, novoOrcamento]
+                  const novosOrcamentos = orcamentoEditando
+                    ? orcamentosGerados.map((o) =>
+                        o.id === orcamentoEditando ? { ...novoOrcamento, id: orcamentoEditando } : o
+                      )
+                    : [...orcamentosGerados, novoOrcamento]
                   setOrcamentosGerados(novosOrcamentos)
                   
                   try {
                     await saveData('nonato-orcamentos-avulso', novosOrcamentos)
                     alert(safeT?.orcamentoSalvo || 'Orçamento salvo com sucesso!')
+                    setOrcamentoEditando(null)
                     setNumeroOrcamentoManual(false)
                     const dataHoje = new Date().toISOString().split('T')[0]
                     const proxNum = gerarProximoNumeroOrcamentoAvulso(dataHoje, novosOrcamentos)
@@ -65755,6 +65895,12 @@ A1;Peça exemplo;10`}
                           {orcamento.clienteNome && (
                             <div style={{ color: '#ccc', fontSize: '14px', marginBottom: '5px' }}>
                               <strong>{safeT?.cliente || 'Cliente'}:</strong> {orcamento.clienteNome}
+                            </div>
+                          )}
+                          {String(orcamento.equipamentoNumeroSerie ?? '').trim() && (
+                            <div style={{ color: '#ccc', fontSize: '14px', marginBottom: '5px' }}>
+                              <strong>{safeT?.numeroSerie || 'Número de Série'}:</strong>{' '}
+                              {String(orcamento.equipamentoNumeroSerie).trim()}
                             </div>
                           )}
                           {orcamento.dadosCliente && (
