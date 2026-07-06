@@ -4941,13 +4941,39 @@ export default function Dashboard() {
   /** Repor botões da barra lateral em falta após arranque (ex.: sync apagou entradas). */
   useEffect(() => {
     if (typeof window === 'undefined' || appInitialLoading) return
-    setSidebarButtons((prev) => {
-      if (!Array.isArray(prev) || prev.length === 0) return prev
-      const repaired = repairSidebarButtonsFromCatalog(prev) as SidebarButton[]
-      if (JSON.stringify(repaired) === JSON.stringify(prev)) return prev
-      void saveData('nonato-sidebar-buttons', repaired, true, false)
-      return repaired
-    })
+    ;(async () => {
+      try {
+        let stored: unknown = null
+        const raw = localStorage.getItem('nonato-sidebar-buttons')
+        if (raw) {
+          try {
+            stored = JSON.parse(raw)
+          } catch {
+            stored = null
+          }
+        }
+        if (!Array.isArray(stored) || stored.length === 0) {
+          stored = await getKv('nonato-sidebar-buttons')
+        }
+        setSidebarButtons((prev) => {
+          const base =
+            Array.isArray(prev) && prev.length > 0
+              ? prev
+              : Array.isArray(stored)
+                ? stored
+                : []
+          const repaired = repairSidebarButtonsFromCatalog(
+            mergeSidebarButtonsDeferLocal(base, prev)
+          ) as SidebarButton[]
+          if (repaired.length === 0) return prev
+          if (JSON.stringify(repaired) === JSON.stringify(prev)) return prev
+          void saveData('nonato-sidebar-buttons', repaired, true, false)
+          return repaired
+        })
+      } catch {
+        /* ignorar */
+      }
+    })()
   }, [appInitialLoading])
 
   const [bootstrapOfflineMode, setBootstrapOfflineMode] = useState(false)

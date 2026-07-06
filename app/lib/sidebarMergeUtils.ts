@@ -448,6 +448,14 @@ export const SIDEBAR_BUTTON_CATALOG: SidebarButtonMerge[] = [
     group: 'gestao-industrial',
   },
   {
+    id: 'pecas-substituicao-default',
+    name: 'PEÇAS DE SUBSTITUIÇÃO',
+    action: 'open-pecas-substituicao',
+    order: 7.5,
+    translationKey: 'pecasSubstituicaoTitle',
+    group: 'pecas-biblioteca',
+  },
+  {
     id: 'gestao-tecnica-default',
     name: 'GESTÃO TÉCNICA',
     action: 'open-gestao-tecnica',
