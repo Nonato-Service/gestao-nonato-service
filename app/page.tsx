@@ -46629,7 +46629,6 @@ A1;Peça exemplo;10`}
           pedidosSeparacao={pedidosSeparacao}
           setPedidosSeparacao={setPedidosSeparacao}
           rascunho={orcamentoAvulsoRascunho}
-          setRascunho={setOrcamentoAvulsoRascunho}
           initialTipoOrcamento={openOrcamentosGeradosView ? 'orcamentos-gerados' : undefined}
           onOrcamentosGeradosViewShown={() => setOpenOrcamentosGeradosView(false)}
         />
@@ -62976,7 +62975,6 @@ A1;Peça exemplo;10`}
     pedidosSeparacao,
     setPedidosSeparacao,
     rascunho,
-    setRascunho,
     initialTipoOrcamento,
     onOrcamentosGeradosViewShown
   }: { 
@@ -62986,7 +62984,6 @@ A1;Peça exemplo;10`}
     relatoriosServico: RelatorioServico[]
     safeT: any
     rascunho: OrcamentoAvulsoRascunhoPersist
-    setRascunho: React.Dispatch<React.SetStateAction<OrcamentoAvulsoRascunhoPersist>>
     pedidosSeparacao: Array<{
       id: string
       numeroOrcamento: string
@@ -63117,9 +63114,9 @@ A1;Peça exemplo;10`}
       dataCriacao: string
     }>>([])
 
-    /** Persistir rascunho no pai (sessionStorage) — evita perder número/itens ao re-renderizar a página. */
+    /** Persistir rascunho em sessionStorage — sem actualizar estado do pai (evita remontar o painel e bloquear botões). */
     useEffect(() => {
-      setRascunho({
+      gravarOrcamentoAvulsoRascunhoSession({
         v: 1,
         dadosOrcamento,
         tipoOrcamento,
@@ -63141,7 +63138,6 @@ A1;Peça exemplo;10`}
       buscaCliente,
       buscaRelatorio,
       buscaClientePrioritarioFixo,
-      setRascunho,
     ])
 
     const carregarOrcamentoNoFormulario = (orcamento: (typeof orcamentosGerados)[number]) => {
