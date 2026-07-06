@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useId } from 'react'
 import { openPedidoOrcamentoAvulsoPdf } from '../lib/pedidoOrcamentoAvulsoPdf'
+import { resolverIdEquipamentoCliente } from '../lib/relatorioServicoEquipamentos'
 import { ProImageHoverPreview } from './ProImageHoverPreview'
 
 export type ClientePedido = {
@@ -40,8 +41,11 @@ export type PedidoAvulsoGuardado = {
   codigo: string
   dataGeracao: string
   clienteNomeReal: string
+  clienteId?: string
   emitirComoCliente: 'cliente' | 'nonato-service'
   equipamentoTexto: string
+  equipamentoChave?: string
+  equipamentoNumeroSerie?: string
   pecas: PecaPedido[]
   status?: StatusPedidoAvulso
 }
@@ -320,13 +324,27 @@ export function PedidoOrcamentosAvulsoContent({
     if (!dados) return
     const { nomeReal, equipamentoTexto, nomeNoDoc } = dados
     const codigo = gerarProximoCodigo()
+    const equipamentoIdx = equipamentoSelecionado
+      ? equipamentosDoCliente.findIndex(
+          (eq) =>
+            eq.modelo === equipamentoSelecionado.modelo &&
+            eq.numeroSerie === equipamentoSelecionado.numeroSerie
+        )
+      : -1
     const novo: PedidoAvulsoGuardado = {
       codigo,
       dataGeracao: new Date().toISOString(),
       clienteNomeReal: nomeReal,
+      clienteId: clienteSelecionado?.id,
       emitirComoCliente,
       equipamentoTexto,
-      pecas: [...pecasPedido]
+      equipamentoChave:
+        equipamentoSelecionado && equipamentoIdx >= 0
+          ? resolverIdEquipamentoCliente(equipamentoSelecionado, equipamentoIdx)
+          : undefined,
+      equipamentoNumeroSerie: equipamentoSelecionado?.numeroSerie,
+      pecas: [...pecasPedido],
+      status: 'pendente',
     }
     const atualizados = [...pedidosGerados, novo]
     setPedidosGerados(atualizados)
@@ -354,6 +372,8 @@ export function PedidoOrcamentosAvulsoContent({
           descricao: equipamentoTexto,
           observacoes: '',
           tipo: 'pedido-avulso' as const,
+          status: 'pendente' as const,
+          clienteId: clienteSelecionado?.id,
           clienteNome: nomeNoDocPdf,
           itens: pecasPedido.map((p) => ({
             descricao: p.nome,

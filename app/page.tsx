@@ -176,6 +176,10 @@ import { ClienteIdentidadeChips, formatClienteIdentidadeTexto, formatNifClienteE
 import { ClienteListaLinhas } from './components/ClienteListaLinhas'
 import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
+import { ClienteEquipamentoOrcamentosPanel } from './components/ClienteEquipamentoOrcamentosPanel'
+import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
+import { gerarProximoCodigoPedidoRelatorio } from './lib/clienteEquipamentoOrcamentos'
+import type { PedidoAvulsoGuardado } from './components/PedidoOrcamentosAvulsoContent'
 import { rotuloIdEquipamentoCliente } from './lib/clienteDetalheUtils'
 import { ClienteGpsNavButton } from './components/ClienteGpsNavButton'
 import { TEMPLATE_SERVICOS_PADRAO } from './lib/servicosCadastroUtils'
@@ -2610,6 +2614,7 @@ type RelatoriosExcluidosClientesStorage = { pastas: Record<string, PastaRelatori
 
 type PedidoOrcamento = {
   id: string
+  codigo?: string
   numeroRelatorio: string
   cliente: string
   clienteId?: string
@@ -2620,6 +2625,8 @@ type PedidoOrcamento = {
   dataGeracao: string
   pecas: PecaSubstituicao[]
   status: 'pendente' | 'enviado' | 'recebido' | 'aprovado' | 'rejeitado'
+  emitirComoCliente?: 'cliente' | 'nonato-service'
+  relatorioId?: string
   observacoes?: string
 }
 
@@ -4660,6 +4667,8 @@ export default function Dashboard() {
   /** true = um único logo para todos os PDFs; false = escolha por tipo (relatórios, fechamentos, orçamento, protocolo) */
   const [pdfLogosModoUnificado, setPdfLogosModoUnificado] = useState(false)
   const [showPedidoOrcamentoModal, setShowPedidoOrcamentoModal] = useState(false) // Modal para pedido de orçamento
+  const [pedidoOrcamentoEmitirComo, setPedidoOrcamentoEmitirComo] = useState<'cliente' | 'nonato-service'>('cliente')
+  const [relatorioParaPedidoOrcamento, setRelatorioParaPedidoOrcamento] = useState<RelatorioServico | null>(null)
   const [pedidosOrcamento, setPedidosOrcamento] = useState<PedidoOrcamento[]>([]) // Lista de pedidos de orçamento
   const [showListaPecasOrcamento, setShowListaPecasOrcamento] = useState(false) // Controla exibição da lista de peças para orçamento
   const [gestores, setGestores] = useState<Gestor[]>([])
@@ -23629,23 +23638,35 @@ export default function Dashboard() {
       }
     })
 
-  const criarPedidoOrcamentoDoRelatorio = async (rel: RelatorioServico) => {
+  const criarPedidoOrcamentoDoRelatorio = async (
+    rel: RelatorioServico,
+    opts?: { emitirComoCliente?: 'cliente' | 'nonato-service' }
+  ) => {
     if (!rel.pecasSubstituicao?.length) {
       alert((safeT as any)?.relatorioSemPecasParaOrcamento || 'Adicione peças ao relatório antes de gerar o pedido de orçamento.')
       return
     }
+    const emitirComo = opts?.emitirComoCliente ?? 'cliente'
+    const codigo = gerarProximoCodigoPedidoRelatorio(pedidosOrcamento)
+    const nomeNoDoc =
+      emitirComo === 'nonato-service'
+        ? (safeT as any)?.nomeNonatoService || 'NONATO SERVICE'
+        : rel.cliente
     const novoPedido: PedidoOrcamento = {
       id: Date.now().toString(),
+      codigo,
       numeroRelatorio: rel.numero,
       cliente: rel.cliente,
       clienteId: rel.clienteId,
       equipamentoId: rel.equipamentoId,
+      relatorioId: rel.id,
       maquinaModelo: rel.maquinaModelo,
       numeroMaquina: rel.numeroMaquina,
       data: rel.data,
       dataGeracao: new Date().toISOString(),
       pecas: rel.pecasSubstituicao,
       status: 'pendente',
+      emitirComoCliente: emitirComo,
     }
     const updatedPedidos = [...pedidosOrcamento, novoPedido]
     setPedidosOrcamento(updatedPedidos)
@@ -23664,19 +23685,23 @@ export default function Dashboard() {
           quantidade,
           precoUnitario,
           total: quantidade * precoUnitario,
+          codigo: peca.codigo,
         }
       })
       const totalOrcamento = itensOrcamento.reduce((sum, item) => sum + item.total, 0)
       const novoOrcamento = {
-        id: `orc-${Date.now()}`,
-        numeroOrcamento: rel.numero || `ORC-${Date.now()}`,
+        id: `rel-${novoPedido.id}`,
+        numeroOrcamento: codigo,
         data: rel.data || new Date().toISOString().split('T')[0],
         validade: '',
-        descricao: `${safeT?.relatorioServico || 'Relatório'}: ${rel.numero} - ${rel.maquinaModelo || ''}`,
-        observacoes: `${safeT?.cliente || 'Cliente'}: ${rel.cliente || ''}`,
-        tipo: rel.clienteId ? ('cliente-cadastrado' as const) : ('dados-fixos' as const),
+        descricao: `${rel.maquinaModelo || ''}${rel.numeroMaquina ? ` (${rel.numeroMaquina})` : ''}`.trim() || rel.numero,
+        observacoes: `${safeT?.numeroRelatorio || 'Relatório'}: ${rel.numero}`,
+        tipo: 'orcamento-relatorio' as const,
+        status: 'pendente' as const,
         clienteId: rel.clienteId,
-        clienteNome: rel.cliente,
+        clienteNome: nomeNoDoc,
+        relatorioId: rel.id,
+        relatorioNumero: rel.numero,
         dadosCliente: rel.clienteId ? clientes.find((c) => c.id === rel.clienteId) : null,
         itens: itensOrcamento,
         total: totalOrcamento,
@@ -23686,6 +23711,95 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Erro ao criar orçamento:', error)
     }
+    return novoPedido
+  }
+
+  const abrirPdfPedidoOrcamentoRelatorio = (pedido: PedidoOrcamento) => {
+    const nomeNoDoc =
+      pedido.emitirComoCliente === 'nonato-service'
+        ? (safeT as any)?.nomeNonatoService || 'NONATO SERVICE'
+        : pedido.cliente
+    const equipamentoTexto = `${pedido.maquinaModelo || ''}${pedido.numeroMaquina ? ` - ${pedido.numeroMaquina}` : ''}`.trim() || '—'
+    openPedidoOrcamentoAvulsoPdf({
+      codigo: pedido.codigo || pedido.numeroRelatorio,
+      preview: false,
+      dataIso: pedido.dataGeracao,
+      clienteNomeDoc: nomeNoDoc,
+      equipamentoTexto,
+      pecas: (pedido.pecas || []).map((p) => {
+        const bib = pecasBiblioteca.find((b) => b.codigo === p.codigo)
+        return {
+          codigo: p.codigo,
+          nome: p.descricao,
+          quantidade: parseFloat(String(p.quantidade)) || 1,
+          imagem: bib?.imagem,
+        }
+      }),
+      logoHtml: getLogoHtmlForReport(),
+      labels: {
+        titulo: (safeT as any)?.pedidoOrcamentoPdfTitulo || 'PEDIDO DE ORÇAMENTO',
+        codigo: safeT?.codigoOrcamento || 'Código',
+        data: safeT?.data || 'Data',
+        cliente: safeT?.cliente || 'Cliente',
+        equipamento: safeT?.equipamento || 'Equipamento',
+        colImagem: safeT?.imagem || 'Imagem',
+        colDescricao: safeT?.descricaoItem || 'Descrição',
+        colCodigo: safeT?.codigo || 'Código',
+        colQtd: safeT?.quantidade || 'Qtd',
+        imprimir: safeT?.imprimirOrcamento || 'Imprimir / Guardar PDF',
+        fechar: safeT?.fechar || 'Fechar',
+      },
+    })
+  }
+
+  const abrirPdfPedidoOrcamentoAvulso = (pedido: PedidoAvulsoGuardado) => {
+    const nomeNoDoc =
+      pedido.emitirComoCliente === 'nonato-service'
+        ? (safeT as any)?.nomeNonatoService || 'NONATO SERVICE'
+        : pedido.clienteNomeReal
+    openPedidoOrcamentoAvulsoPdf({
+      codigo: pedido.codigo,
+      preview: false,
+      dataIso: pedido.dataGeracao,
+      clienteNomeDoc: nomeNoDoc,
+      equipamentoTexto: pedido.equipamentoTexto,
+      pecas: pedido.pecas.map((p) => ({
+        codigo: p.codigo,
+        nome: p.nome,
+        quantidade: p.quantidade,
+        imagem: p.imagem,
+      })),
+      logoHtml: getLogoHtmlForReport(),
+      labels: {
+        titulo: (safeT as any)?.pedidoOrcamentoPdfTitulo || 'PEDIDO DE ORÇAMENTO',
+        codigo: safeT?.codigoOrcamento || 'Código',
+        data: safeT?.data || 'Data',
+        cliente: safeT?.cliente || 'Cliente',
+        equipamento: safeT?.equipamento || 'Equipamento',
+        colImagem: safeT?.imagem || 'Imagem',
+        colDescricao: safeT?.descricaoItem || 'Descrição',
+        colCodigo: safeT?.codigo || 'Código',
+        colQtd: safeT?.quantidade || 'Qtd',
+        imprimir: safeT?.imprimirOrcamento || 'Imprimir / Guardar PDF',
+        fechar: safeT?.fechar || 'Fechar',
+      },
+    })
+  }
+
+  const atualizarStatusPedidoOrcamento = async (id: string, status: PedidoOrcamento['status']) => {
+    const updatedPedidos = pedidosOrcamento.map((p) => (p.id === id ? { ...p, status } : p))
+    setPedidosOrcamento(updatedPedidos)
+    await saveData('nonato-pedidos-orcamento', updatedPedidos)
+    try {
+      const orcamentosExistentesData = await loadData('nonato-orcamentos-avulso')
+      const orcamentosExistentes: any[] = Array.isArray(orcamentosExistentesData) ? orcamentosExistentesData : []
+      const statusOrc =
+        status === 'aprovado' ? 'aprovado' : status === 'rejeitado' ? 'cancelado' : 'pendente'
+      const novosOrcamentos = orcamentosExistentes.map((o) =>
+        o.id === `rel-${id}` ? { ...o, status: statusOrc } : o
+      )
+      await saveData('nonato-orcamentos-avulso', novosOrcamentos)
+    } catch (_) {}
   }
 
   const imprimirRelatorioPecasEDespesas = (rel: RelatorioServico) => {
@@ -23750,11 +23864,10 @@ export default function Dashboard() {
         alert((safeT as any)?.relatorioSemPecasParaOrcamento || 'Adicione peças ao relatório antes de gerar o pedido de orçamento.')
         return
       }
-      await criarPedidoOrcamentoDoRelatorio(rel)
-      setShowListaPecasOrcamento(true)
-      openTab('gestao-custos', getTabTitle('gestao-custos'))
+      setRelatorioParaPedidoOrcamento(rel)
+      setPedidoOrcamentoEmitirComo('cliente')
+      setShowPedidoOrcamentoModal(true)
       fecharFormularioRelatorioServico()
-      alert(safeT?.pedidoOrcamentoGerado || 'Pedido de orçamento gerado com sucesso!')
       return
     }
 
@@ -35256,7 +35369,11 @@ export default function Dashboard() {
                     {sec.mostrarOrcamento && sec.lista.length > 0 && (
                       <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                         <button 
-                          onClick={() => setShowPedidoOrcamentoModal(true)}
+                          onClick={() => {
+                            setRelatorioParaPedidoOrcamento(relatorioServicoForm)
+                            setPedidoOrcamentoEmitirComo('cliente')
+                            setShowPedidoOrcamentoModal(true)
+                          }}
                           style={{ 
                             width: '100%', 
                             padding: '10px 20px', 
@@ -46265,13 +46382,49 @@ A1;Peça exemplo;10`}
                                 </div>
                               </div>
                             </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                              <button
+                                className="btn-primary"
+                                onClick={() => abrirPdfPedidoOrcamentoRelatorio(pedido)}
+                                style={{
+                                  padding: '8px 12px',
+                                  fontSize: '12px',
+                                  minWidth: '80px',
+                                  backgroundColor: 'rgba(0, 200, 83, 0.15)',
+                                  border: '1px solid rgba(0, 200, 83, 0.45)',
+                                  borderRadius: '6px',
+                                  color: '#00c853',
+                                  cursor: 'pointer',
+                                  fontWeight: 'bold',
+                                }}
+                              >
+                                👁️ PDF
+                              </button>
+                              {pedido.status !== 'aprovado' && (
+                                <button
+                                  className="btn-primary"
+                                  onClick={() => atualizarStatusPedidoOrcamento(pedido.id, 'aprovado')}
+                                  style={{
+                                    padding: '8px 12px',
+                                    fontSize: '12px',
+                                    minWidth: '80px',
+                                    backgroundColor: 'rgba(0, 200, 83, 0.25)',
+                                    border: '1px solid rgba(0, 200, 83, 0.55)',
+                                    borderRadius: '6px',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                  }}
+                                >
+                                  ✓ {safeT?.aprovar || 'Aprovar'}
+                                </button>
+                              )}
                             <button
                               className="btn-danger"
                               onClick={async () => {
                                 if (window.confirm(safeT?.confirmDeletePedidoOrcamento || 'Tem certeza que deseja excluir este pedido de orçamento?')) {
                                   const updatedPedidos = pedidosOrcamento.filter(p => p.id !== pedido.id)
                                   setPedidosOrcamento(updatedPedidos)
-                                  // saveData já salva no localStorage e servidor
                                   saveData('nonato-pedidos-orcamento', updatedPedidos).catch(error => {
                                     console.error('Erro ao salvar após deletar:', error)
                                   })
@@ -46291,6 +46444,7 @@ A1;Peça exemplo;10`}
                             >
                               🗑️ {safeT?.delete || 'Excluir'}
                             </button>
+                            </div>
                           </div>
                           
                           <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#404040', borderRadius: '4px' }}>
@@ -75417,6 +75571,27 @@ A1;Peça exemplo;10`}
                               </div>
                             )}
 
+                            {selectedClienteForEquipamento && (
+                              <ClienteEquipamentoOrcamentosPanel
+                                clienteId={selectedClienteForEquipamento.id}
+                                clienteNome={selectedClienteForEquipamento.nomeEmpresa}
+                                equipamento={equipamento}
+                                equipamentoIndex={index}
+                                pedidosRelatorio={pedidosOrcamento}
+                                safeT={safeT as Record<string, string | undefined>}
+                                loadData={loadData}
+                                onUpdatePedidoRelatorioStatus={atualizarStatusPedidoOrcamento}
+                                onVisualizarPdfRelatorio={abrirPdfPedidoOrcamentoRelatorio}
+                                onVisualizarPdfAvulso={abrirPdfPedidoOrcamentoAvulso}
+                                onAtualizarPedidoAvulso={async (pedidos) => {
+                                  await saveData('nonato-pedidos-orcamento-avulso', pedidos)
+                                }}
+                                onAtualizarOrcamentosGerados={async (orcamentos) => {
+                                  await saveData('nonato-orcamentos-avulso', orcamentos)
+                                }}
+                              />
+                            )}
+
                             {/* Botões de acção */}
                             <div className="equipamento-cliente-card-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                               <button type="button" className="btn-primary equipamento-cliente-card-action" onClick={() => handleEditEquipamentoCliente(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 200, 83, 0.4)', background: 'rgba(0, 200, 83, 0.12)', color: '#00c853', flex: 1, minWidth: '100px' }}>✏️ {safeT?.edit || 'Editar'}</button>
@@ -76347,7 +76522,14 @@ A1;Peça exemplo;10`}
       )}
 
       {/* Modal de Pedido de Orçamento */}
-      {showPedidoOrcamentoModal && (
+      {showPedidoOrcamentoModal && (() => {
+        const relAtivo = relatorioParaPedidoOrcamento ?? relatorioServicoForm
+        const nomeNoDocPreview =
+          pedidoOrcamentoEmitirComo === 'nonato-service'
+            ? (safeT as any)?.nomeNonatoService || 'NONATO SERVICE'
+            : relAtivo.cliente
+        const equipamentoTextoPreview = `${relAtivo.maquinaModelo || ''}${relAtivo.numeroMaquina ? ` - ${relAtivo.numeroMaquina}` : ''}`.trim() || '—'
+        return (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -76376,16 +76558,49 @@ A1;Peça exemplo;10`}
             
             <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
               <h3 style={{ marginBottom: '15px', color: '#00c853' }}>
-                {safeT?.cliente || 'Cliente'}: {relatorioServicoForm.cliente}
+                {safeT?.cliente || 'Cliente'}: {relAtivo.cliente}
               </h3>
               <p style={{ marginBottom: '10px' }}>
-                <strong>{safeT?.maquinaModelo || 'Máquina'}:</strong> {relatorioServicoForm.maquinaModelo}
+                <strong>{safeT?.maquinaModelo || 'Máquina'}:</strong> {relAtivo.maquinaModelo}
               </p>
               <p style={{ marginBottom: '10px' }}>
-                <strong>{safeT?.numeroRelatorio || 'Número do Relatório'}:</strong> {relatorioServicoForm.numero}
+                <strong>{safeT?.numeroRelatorio || 'Número do Relatório'}:</strong> {relAtivo.numero}
               </p>
               <p style={{ marginBottom: '10px' }}>
-                <strong>{safeT?.data || 'Data'}:</strong> {new Date(relatorioServicoForm.data).toLocaleDateString('pt-BR')}
+                <strong>{safeT?.data || 'Data'}:</strong> {new Date(relAtivo.data).toLocaleDateString('pt-BR')}
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
+              <h3 style={{ margin: '0 0 12px', color: '#00c853', fontSize: '14px' }}>
+                {(safeT as any)?.gerarDocumentoComo || 'Ao gerar documento'}
+              </h3>
+              <p style={{ margin: '0 0 12px', fontSize: '13px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>
+                {(safeT as any)?.desejaGerarComNomeClienteOuNonato ||
+                  'Deseja gerar com o nome do cliente ou com o nome da NONATO SERVICE?'}
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#fff' }}>
+                  <input
+                    type="radio"
+                    name="pedidoOrcamentoEmitirComo"
+                    checked={pedidoOrcamentoEmitirComo === 'cliente'}
+                    onChange={() => setPedidoOrcamentoEmitirComo('cliente')}
+                  />
+                  <span>{(safeT as any)?.gerarComNomeCliente || 'Com nome do cliente'}</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#fff' }}>
+                  <input
+                    type="radio"
+                    name="pedidoOrcamentoEmitirComo"
+                    checked={pedidoOrcamentoEmitirComo === 'nonato-service'}
+                    onChange={() => setPedidoOrcamentoEmitirComo('nonato-service')}
+                  />
+                  <span>{(safeT as any)?.gerarComNomeNonatoService || 'Com nome da NONATO SERVICE'}</span>
+                </label>
+              </div>
+              <p style={{ margin: '12px 0 0', fontSize: '12px', color: '#ffaa00' }}>
+                {(safeT as any)?.nomeNoDocumento || 'Nome no documento'}: <strong>{nomeNoDocPreview}</strong>
               </p>
             </div>
 
@@ -76408,7 +76623,7 @@ A1;Peça exemplo;10`}
                   </tr>
                 </thead>
                 <tbody>
-                  {relatorioServicoForm.pecasSubstituicao.map((peca, index) => (
+                  {relAtivo.pecasSubstituicao.map((peca, index) => (
                     <tr key={peca.id || index} style={{ borderBottom: '1px solid rgba(0, 200, 83, 0.1)' }}>
                       <td style={{ padding: '10px' }}>{peca.descricao}</td>
                       <td style={{ padding: '10px' }}>{peca.codigo}</td>
@@ -76419,13 +76634,16 @@ A1;Peça exemplo;10`}
               </table>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
               <button
                 className="btn-primary"
                 onClick={async () => {
-                  await criarPedidoOrcamentoDoRelatorio(relatorioServicoForm)
+                  await criarPedidoOrcamentoDoRelatorio(relAtivo, { emitirComoCliente: pedidoOrcamentoEmitirComo })
                   alert(safeT?.pedidoOrcamentoGerado || 'Pedido de orçamento gerado com sucesso!')
                   setShowPedidoOrcamentoModal(false)
+                  setRelatorioParaPedidoOrcamento(null)
+                  setShowListaPecasOrcamento(true)
+                  openTab('gestao-custos', getTabTitle('gestao-custos'))
                 }}
                 style={{ padding: '10px 20px', backgroundColor: 'rgba(255, 165, 0, 0.3)', borderColor: 'rgba(255, 165, 0, 0.5)', color: '#ffaa00' }}
               >
@@ -76434,16 +76652,48 @@ A1;Peça exemplo;10`}
               <button
                 className="btn-primary"
                 onClick={() => {
-                  // Gerar PDF do pedido
-                  window.print()
+                  openPedidoOrcamentoAvulsoPdf({
+                    codigo: `${gerarProximoCodigoPedidoRelatorio(pedidosOrcamento)} (${(safeT as any)?.provvisorio || 'prov.'})`,
+                    preview: true,
+                    dataIso: new Date().toISOString(),
+                    clienteNomeDoc: nomeNoDocPreview,
+                    equipamentoTexto: equipamentoTextoPreview,
+                    pecas: relAtivo.pecasSubstituicao.map((p) => {
+                      const bib = pecasBiblioteca.find((b) => b.codigo === p.codigo)
+                      return {
+                        codigo: p.codigo,
+                        nome: p.descricao,
+                        quantidade: parseFloat(String(p.quantidade)) || 1,
+                        imagem: bib?.imagem,
+                      }
+                    }),
+                    logoHtml: getLogoHtmlForReport(),
+                    labels: {
+                      titulo: (safeT as any)?.pedidoOrcamentoPdfTitulo || 'PEDIDO DE ORÇAMENTO',
+                      previewBanner: (safeT as any)?.pedidoOrcamentoPreviewBanner || 'Pré-visualização',
+                      codigo: safeT?.codigoOrcamento || 'Código',
+                      data: safeT?.data || 'Data',
+                      cliente: safeT?.cliente || 'Cliente',
+                      equipamento: safeT?.equipamento || 'Equipamento',
+                      colImagem: safeT?.imagem || 'Imagem',
+                      colDescricao: safeT?.descricaoItem || 'Descrição',
+                      colCodigo: safeT?.codigo || 'Código',
+                      colQtd: safeT?.quantidade || 'Qtd',
+                      imprimir: safeT?.imprimirOrcamento || 'Imprimir / Guardar PDF',
+                      fechar: safeT?.fechar || 'Fechar',
+                    },
+                  })
                 }}
                 style={{ padding: '10px 20px', backgroundColor: 'rgba(0, 100, 255, 0.3)', borderColor: 'rgba(0, 100, 255, 0.5)', color: '#00c853' }}
               >
-                {safeT?.gerarPDF || 'Gerar PDF'}
+                👁️ {safeT?.visualizarPdfPedido || safeT?.gerarPDF || 'Visualizar PDF'}
               </button>
               <button
                 className="btn-primary"
-                onClick={() => setShowPedidoOrcamentoModal(false)}
+                onClick={() => {
+                  setShowPedidoOrcamentoModal(false)
+                  setRelatorioParaPedidoOrcamento(null)
+                }}
                 style={{ padding: '10px 20px' }}
               >
                 {safeT?.close || 'Fechar'}
@@ -76451,7 +76701,8 @@ A1;Peça exemplo;10`}
             </div>
           </div>
         </div>
-      )}
+        )
+      })()}
 
       {/* Modal de Visualização Completa do Relatório de Serviço */}
       {viewingRelatorioServico && (
