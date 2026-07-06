@@ -21,6 +21,7 @@ import {
   type RelatorioClienteLike,
 } from '../lib/clienteDetalheUtils'
 import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
+import { isClienteMarcadoDevedor } from '../lib/clienteDevedorUtils'
 import { ClienteOrcamentosFichaSection } from './ClienteOrcamentosFichaSection'
 import type { PedidoOrcamentoRef, PedidoAvulsoRef, OrcamentoGeradoRef } from '../lib/clienteEquipamentoOrcamentos'
 
