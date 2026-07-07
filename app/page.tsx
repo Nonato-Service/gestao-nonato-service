@@ -23700,10 +23700,18 @@ export default function Dashboard() {
     if (pedido.maquinaModelo?.trim()) {
       camposRel.push({ label: safeT?.modelo || 'Modelo', value: pedido.maquinaModelo.trim() })
     }
-    if (pedido.numeroMaquina?.trim()) {
+    const numEqRel = String(pedido.equipamentoId ?? '').trim()
+    const numSerRel = pedido.numeroMaquina?.trim() || ''
+    if (numEqRel && numEqRel.toLowerCase() !== numSerRel.toLowerCase()) {
+      camposRel.push({
+        label: (safeT as any)?.numeroEquipamento || 'Número do Equipamento',
+        value: numEqRel,
+      })
+    }
+    if (numSerRel) {
       camposRel.push({
         label: safeT?.numeroSerie || 'Nº Série',
-        value: pedido.numeroMaquina.trim(),
+        value: numSerRel,
       })
     }
     openPedidoOrcamentoAvulsoPdf({
@@ -23715,7 +23723,9 @@ export default function Dashboard() {
       equipamentosBlocos: [
         {
           titulo: `${safeT?.equipamento || 'Equipamento'} 1${pedido.maquinaModelo ? ` — ${pedido.maquinaModelo}` : ''}`,
-          numeroSerie: pedido.numeroMaquina?.trim() || undefined,
+          numeroEquipamento:
+            numEqRel && numEqRel.toLowerCase() !== numSerRel.toLowerCase() ? numEqRel : numSerRel || undefined,
+          numeroSerie: numSerRel && numEqRel && numEqRel.toLowerCase() !== numSerRel.toLowerCase() ? numSerRel : undefined,
           campos: camposRel,
           pecas: pecasPdf,
         },
@@ -23777,18 +23787,18 @@ export default function Dashboard() {
       if (eq) {
         if (eq.marca) campos.push({ label: safeT?.marca || 'Marca', value: eq.marca })
         if (eq.modelo) campos.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
+        const numeroEq = resolverNumeroEquipamentoPdf(eq)
+        if (numeroEq) {
+          campos.push({
+            label: (safeT as any)?.numeroEquipamento || 'Número do Equipamento',
+            value: numeroEq,
+          })
+        }
         const serieEq = resolverSerieEquipamentoPdf(eq)
         if (serieEq) {
           campos.push({
             label: safeT?.numeroSerie || 'Nº Série',
             value: serieEq,
-          })
-        }
-        const numeroEq = resolverNumeroEquipamentoPdf(eq)
-        if (numeroEq && numeroEq !== serieEq) {
-          campos.push({
-            label: (safeT as any)?.numeroEquipamento || 'Número do Equipamento',
-            value: numeroEq,
           })
         }
         if (eq.tipoEquipamento) campos.push({ label: safeT?.tipoEquipamento || 'Tipo', value: eq.tipoEquipamento })
@@ -23799,6 +23809,7 @@ export default function Dashboard() {
       }
       return {
         titulo: `${(safeT as any)?.poaEquipamentoNumero || safeT?.equipamento || 'Equipamento'} ${i + 1}${nomeEquip ? ` — ${nomeEquip}` : ''}`,
+        numeroEquipamento: eq ? resolverNumeroEquipamentoPdf(eq) || undefined : undefined,
         numeroSerie: eq ? resolverSerieEquipamentoPdf(eq) || undefined : pedido.equipamentoNumeroSerie?.trim() || undefined,
         campos,
         pecas: (b.pecas || []).map((p) => ({
@@ -76594,10 +76605,18 @@ A1;Peça exemplo;10`}
         if (relAtivo.maquinaModelo?.trim()) {
           camposEquipPreview.push({ label: safeT?.modelo || 'Modelo', value: relAtivo.maquinaModelo.trim() })
         }
-        if (relAtivo.numeroMaquina?.trim()) {
+        const numEqRelPreview = String(relAtivo.equipamentoId ?? '').trim()
+        const numSerRelPreview = relAtivo.numeroMaquina?.trim() || ''
+        if (numEqRelPreview && numEqRelPreview.toLowerCase() !== numSerRelPreview.toLowerCase()) {
+          camposEquipPreview.push({
+            label: (safeT as any)?.numeroEquipamento || 'Número do Equipamento',
+            value: numEqRelPreview,
+          })
+        }
+        if (numSerRelPreview) {
           camposEquipPreview.push({
             label: safeT?.numeroSerie || 'Nº Série',
-            value: relAtivo.numeroMaquina.trim(),
+            value: numSerRelPreview,
           })
         }
         return (
@@ -76744,7 +76763,16 @@ A1;Peça exemplo;10`}
                     equipamentosBlocos: [
                       {
                         titulo: `${safeT?.equipamento || 'Equipamento'} 1${relAtivo.maquinaModelo ? ` — ${relAtivo.maquinaModelo}` : ''}`,
-                        numeroSerie: relAtivo.numeroMaquina?.trim() || undefined,
+                        numeroEquipamento:
+                          numEqRelPreview && numEqRelPreview.toLowerCase() !== numSerRelPreview.toLowerCase()
+                            ? numEqRelPreview
+                            : numSerRelPreview || undefined,
+                        numeroSerie:
+                          numSerRelPreview &&
+                          numEqRelPreview &&
+                          numEqRelPreview.toLowerCase() !== numSerRelPreview.toLowerCase()
+                            ? numSerRelPreview
+                            : undefined,
                         campos: camposEquipPreview,
                         pecas: pecasPdfPreview,
                       },

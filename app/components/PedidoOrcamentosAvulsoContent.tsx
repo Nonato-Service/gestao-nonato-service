@@ -131,18 +131,18 @@ function detalhesEquipamentoBloco(
   const linhas: Array<{ label: string; value: string }> = []
   if (eq.marca) linhas.push({ label: safeT?.marca || 'Marca', value: eq.marca })
   if (eq.modelo) linhas.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
+  const numeroEq = resolverNumeroEquipamentoPdf(eq)
+  if (numeroEq) {
+    linhas.push({
+      label: safeT?.numeroEquipamento || 'Número do Equipamento',
+      value: numeroEq,
+    })
+  }
   const serieEq = resolverSerieEquipamentoPdf(eq)
   if (serieEq) {
     linhas.push({
       label: safeT?.numeroSerie || 'Nº Série',
       value: serieEq,
-    })
-  }
-  const numeroEq = resolverNumeroEquipamentoPdf(eq)
-  if (numeroEq && numeroEq !== serieEq) {
-    linhas.push({
-      label: safeT?.numeroEquipamento || 'Número do Equipamento',
-      value: numeroEq,
     })
   }
   if (eq.tipoEquipamento) linhas.push({ label: safeT?.tipoEquipamento || 'Tipo', value: eq.tipoEquipamento })
@@ -490,6 +490,9 @@ export function PedidoOrcamentosAvulsoContent({
       return {
         titulo: `${safeT?.poaEquipamentoNumero || 'Equipamento'} ${i + 1}${nomeEquip ? ` — ${nomeEquip}` : ''}`,
         detalhes: textoEquipamentoBloco(b, safeT),
+        numeroEquipamento: b.equipamento
+          ? resolverNumeroEquipamentoPdf(b.equipamento) || undefined
+          : undefined,
         numeroSerie: b.equipamento ? resolverSerieEquipamentoPdf(b.equipamento) || undefined : undefined,
         campos: detalhesEquipamentoBloco(b, safeT),
         pecas: b.pecas.map((p) => ({

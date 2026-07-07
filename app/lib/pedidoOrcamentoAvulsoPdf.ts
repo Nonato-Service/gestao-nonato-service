@@ -16,6 +16,8 @@ export type PedidoAvulsoPdfPeca = {
 export type PedidoAvulsoPdfEquipamentoBloco = {
   titulo: string
   detalhes?: string
+  /** ID / código visível do equipamento (distinto do n.º de série quando existir). */
+  numeroEquipamento?: string
   numeroSerie?: string
   campos?: Array<{ label: string; value: string }>
   pecas: PedidoAvulsoPdfPeca[]
@@ -84,40 +86,47 @@ function renderTabelaPecas(pecas: PedidoAvulsoPdfPeca[], L: PedidoAvulsoPdfData[
   </table>`
 }
 
-function resolverSerieBlocoPdf(
-  bloco: PedidoAvulsoPdfEquipamentoBloco,
-  L: PedidoAvulsoPdfData['labels']
-): string {
-  const direto = String(bloco.numeroSerie ?? '').trim()
-  if (direto) return direto
-  const lblNum = L?.numeroEquipamento || 'Número do Equipamento'
-  for (const c of bloco.campos || []) {
-    if (c.label === lblNum) {
-      const v = String(c.value ?? '').trim()
-      if (v) return v
-    }
-  }
-  return ''
-}
-
 function renderEquipInfoGrid(
   bloco: PedidoAvulsoPdfEquipamentoBloco,
   L: PedidoAvulsoPdfData['labels']
 ): string {
   const partes: string[] = []
-  const serie = resolverSerieBlocoPdf(bloco, L)
-  if (serie) {
-    partes.push(
-      `<div class="orc-pdf-pro__equip-sn">${escapePdfHtml(L?.numeroEquipamento || 'Número do Equipamento')}: <strong>${escapePdfHtml(serie)}</strong></div>`
+  const lblNum = L?.numeroEquipamento || 'Número do Equipamento'
+  const lblSerie = L?.numeroSerie || 'Nº Série'
+
+  let numEq = String(bloco.numeroEquipamento ?? '').trim()
+  let numSer = String(bloco.numeroSerie ?? '').trim()
+
+  if (!numEq || !numSer) {
+    for (const c of bloco.campos || []) {
+      const v = String(c.value ?? '').trim()
+      if (!v) continue
+      if (!numEq && c.label === lblNum) numEq = v
+      if (!numSer && c.label === lblSerie) numSer = v
+    }
+  }
+
+  const idsHtml: string[] = []
+  if (numEq) {
+    idsHtml.push(
+      `<div class="orc-pdf-pro__equip-sn">${escapePdfHtml(lblNum)}: <strong>${escapePdfHtml(numEq)}</strong></div>`
     )
   }
+  if (numSer && numSer.toLowerCase() !== numEq.toLowerCase()) {
+    idsHtml.push(
+      `<div class="orc-pdf-pro__equip-sn">${escapePdfHtml(lblSerie)}: <strong>${escapePdfHtml(numSer)}</strong></div>`
+    )
+  }
+  if (idsHtml.length > 0) partes.push(idsHtml.join(''))
+
+  const valoresOmitir = new Set([numEq, numSer].filter(Boolean).map((v) => v.toLowerCase()))
+  const labelsOmitir = new Set([lblNum, lblSerie])
+
   const campos = (bloco.campos || []).filter((c) => {
     const v = String(c.value ?? '').trim()
     if (!v) return false
-    if (serie && v === serie) return false
-    const lblNum = L?.numeroEquipamento || ''
-    const lblSerie = L?.numeroSerie || ''
-    if (serie && (c.label === lblNum || c.label === lblSerie)) return false
+    if (labelsOmitir.has(c.label)) return false
+    if (valoresOmitir.has(v.toLowerCase())) return false
     return true
   })
   if (campos.length > 0) {
