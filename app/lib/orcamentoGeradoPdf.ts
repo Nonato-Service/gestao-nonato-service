@@ -25,6 +25,8 @@ export type OrcamentoGeradoPdfData = {
   descricao?: string
   observacoes?: string
   relatorioNumero?: string
+  equipamentoNumeroSerie?: string
+  equipamentoDescricao?: string
   clienteNome: string
   clienteEmail?: string
   clienteTelefone?: string
@@ -87,6 +89,16 @@ export function buildOrcamentoGeradoPdfHtml(data: OrcamentoGeradoPdfData): strin
   if (data.clienteMorada) metaFields.push({ label: L.morada || 'Morada', value: data.clienteMorada, fullWidth: true })
   if (data.clienteNif) metaFields.push({ label: L.contribuicaoFiscal || 'NIF', value: data.clienteNif })
   if (data.relatorioNumero) metaFields.push({ label: L.numeroRelatorio || 'N.º Relatório', value: data.relatorioNumero, fullWidth: true })
+  if (data.equipamentoNumeroSerie?.trim()) {
+    metaFields.push({
+      label: L.numeroEquipamento || L.numeroSerie || 'Número do Equipamento',
+      value: data.equipamentoNumeroSerie.trim(),
+      fullWidth: true,
+    })
+  }
+  if (data.equipamentoDescricao?.trim()) {
+    metaFields.push({ label: L.equipamento || 'Equipamento', value: data.equipamentoDescricao.trim(), fullWidth: true })
+  }
 
   const itensHtml = data.itens.map((item, idx) => renderItemRow(item, idx, data)).join('')
 

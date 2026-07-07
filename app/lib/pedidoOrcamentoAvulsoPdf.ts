@@ -16,6 +16,8 @@ export type PedidoAvulsoPdfPeca = {
 export type PedidoAvulsoPdfEquipamentoBloco = {
   titulo: string
   detalhes?: string
+  numeroSerie?: string
+  campos?: Array<{ label: string; value: string }>
   pecas: PedidoAvulsoPdfPeca[]
 }
 
@@ -37,6 +39,8 @@ export type PedidoAvulsoPdfData = {
     cliente?: string
     equipamento?: string
     equipamentoNumero?: string
+    numeroEquipamento?: string
+    numeroSerie?: string
     colImagem?: string
     colDescricao?: string
     colCodigo?: string
@@ -80,6 +84,41 @@ function renderTabelaPecas(pecas: PedidoAvulsoPdfPeca[], L: PedidoAvulsoPdfData[
   </table>`
 }
 
+function renderEquipInfoGrid(
+  bloco: PedidoAvulsoPdfEquipamentoBloco,
+  L: PedidoAvulsoPdfData['labels']
+): string {
+  const partes: string[] = []
+  const serie = String(bloco.numeroSerie ?? '').trim()
+  if (serie) {
+    partes.push(
+      `<div class="orc-pdf-pro__equip-sn">${escapePdfHtml(L?.numeroEquipamento || L?.numeroSerie || 'Número do Equipamento')}: <strong>${escapePdfHtml(serie)}</strong></div>`
+    )
+  }
+  const campos = (bloco.campos || []).filter((c) => {
+    const v = String(c.value ?? '').trim()
+    if (!v) return false
+    if (serie && v === serie) return false
+    return true
+  })
+  if (campos.length > 0) {
+    partes.push(
+      `<div class="orc-pdf-pro__equip-info">${campos
+        .map((c) => {
+          const full = c.label === (L?.numeroEquipamento || '') || c.label === (L?.numeroSerie || '')
+          return `<div class="orc-pdf-pro__equip-field${full ? ' orc-pdf-pro__equip-field--full' : ''}">
+            <span class="lbl">${escapePdfHtml(c.label)}</span>
+            <span class="val">${escapePdfHtml(c.value)}</span>
+          </div>`
+        })
+        .join('')}</div>`
+    )
+  } else if (bloco.detalhes) {
+    partes.push(`<div class="orc-pdf-pro__equip-info"><div class="orc-pdf-pro__equip-field orc-pdf-pro__equip-field--full"><span class="lbl">${escapePdfHtml(L?.equipamento || 'Equipamento')}</span><span class="val">${escapePdfHtml(bloco.detalhes)}</span></div></div>`)
+  }
+  return partes.join('')
+}
+
 function renderBlocoEquipamento(
   bloco: PedidoAvulsoPdfEquipamentoBloco,
   index: number,
@@ -90,9 +129,9 @@ function renderBlocoEquipamento(
       <div class="orc-pdf-pro__equip-num">${index + 1}</div>
       <div>
         <h3 class="orc-pdf-pro__equip-title">${escapePdfHtml(bloco.titulo)}</h3>
-        ${bloco.detalhes ? `<p class="orc-pdf-pro__equip-detail">${escapePdfHtml(bloco.detalhes)}</p>` : ''}
       </div>
     </div>
+    ${renderEquipInfoGrid(bloco, L)}
     <div class="orc-pdf-pro__equip-body">
       ${renderTabelaPecas(bloco.pecas, L)}
     </div>

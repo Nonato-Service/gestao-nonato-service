@@ -146,6 +146,57 @@ body.orc-pdf-pro {
   line-height: 1.4;
 }
 
+.orc-pdf-pro__equip-sn {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  background: rgba(13, 122, 61, 0.12);
+  border: 1px solid rgba(13, 122, 61, 0.35);
+  border-radius: 8px;
+  font-size: 11px;
+  color: var(--orc-brand-dark);
+}
+
+.orc-pdf-pro__equip-sn strong {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+}
+
+.orc-pdf-pro__equip-info {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 12px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--orc-border);
+}
+
+.orc-pdf-pro__equip-field {
+  min-width: 0;
+}
+
+.orc-pdf-pro__equip-field .lbl {
+  display: block;
+  font-size: 7.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--orc-muted);
+  margin-bottom: 2px;
+}
+
+.orc-pdf-pro__equip-field .val {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #1e293b;
+  word-break: break-word;
+}
+
+.orc-pdf-pro__equip-field--full {
+  grid-column: 1 / -1;
+}
+
 .orc-pdf-pro__equip-body { padding: 0; }
 
 .orc-pdf-pro__table {

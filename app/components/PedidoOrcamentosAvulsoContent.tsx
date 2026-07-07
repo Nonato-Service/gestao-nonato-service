@@ -125,7 +125,12 @@ function detalhesEquipamentoBloco(
   if (eq.tipoEquipamento) linhas.push({ label: safeT?.tipoEquipamento || 'Tipo', value: eq.tipoEquipamento })
   if (eq.marca) linhas.push({ label: safeT?.marca || 'Marca', value: eq.marca })
   if (eq.modelo) linhas.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
-  if (eq.numeroSerie) linhas.push({ label: safeT?.numeroSerie || 'Nº Série', value: eq.numeroSerie })
+  if (eq.numeroSerie) {
+    linhas.push({
+      label: safeT?.numeroEquipamento || safeT?.numeroSerie || 'Número do Equipamento',
+      value: eq.numeroSerie,
+    })
+  }
   if (eq.familia) linhas.push({ label: safeT?.familia || 'Família', value: eq.familia })
   if (eq.grupo) linhas.push({ label: safeT?.grupo || 'Grupo', value: eq.grupo })
   if (eq.id) linhas.push({ label: safeT?.idEquipamento || 'ID', value: eq.id })
@@ -399,6 +404,8 @@ export function PedidoOrcamentosAvulsoContent({
     imprimir: safeT?.imprimirOrcamento || 'Imprimir / Guardar PDF',
     fechar: safeT?.fechar || 'Fechar',
     equipamentoNumero: safeT?.poaEquipamentoNumero || 'Equipamento',
+    numeroEquipamento: safeT?.numeroEquipamento || 'Número do Equipamento',
+    numeroSerie: safeT?.numeroSerie || 'Nº Série',
     metaTitulo: safeT?.pedidoOrcamentoPdfMetaTitulo || 'Dados do pedido',
     pecasSolicitadas: safeT?.pecasSolicitadas || 'Referências',
     totalPecas: safeT?.poaPdfTotalUnidades || 'Unidades',
@@ -441,16 +448,24 @@ export function PedidoOrcamentosAvulsoContent({
     dataIso,
     clienteNomeDoc: nomeNoDoc,
     equipamentoTexto: textoEquipamentosAgregado(blocos, safeT),
-    equipamentosBlocos: blocos.map((b, i) => ({
-      titulo: `${safeT?.poaEquipamentoNumero || 'Equipamento'} ${i + 1}`,
-      detalhes: textoEquipamentoBloco(b, safeT),
-      pecas: b.pecas.map((p) => ({
-        codigo: p.codigo,
-        nome: p.nome,
-        quantidade: p.quantidade,
-        imagem: p.imagem,
-      })),
-    })),
+    equipamentosBlocos: blocos.map((b, i) => {
+      const nomeEquip = b.equipamento
+        ? [b.equipamento.marca, b.equipamento.modelo].filter(Boolean).join(' ').trim() ||
+          b.equipamento.tipoEquipamento
+        : b.equipamentoManual.trim()
+      return {
+        titulo: `${safeT?.poaEquipamentoNumero || 'Equipamento'} ${i + 1}${nomeEquip ? ` — ${nomeEquip}` : ''}`,
+        detalhes: textoEquipamentoBloco(b, safeT),
+        numeroSerie: b.equipamento?.numeroSerie?.trim() || undefined,
+        campos: detalhesEquipamentoBloco(b, safeT),
+        pecas: b.pecas.map((p) => ({
+          codigo: p.codigo,
+          nome: p.nome,
+          quantidade: p.quantidade,
+          imagem: p.imagem,
+        })),
+      }
+    }),
     pecas: todasPecasDosBlocos(blocos).map((p) => ({
       codigo: p.codigo,
       nome: p.nome,

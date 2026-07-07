@@ -23671,21 +23671,38 @@ export default function Dashboard() {
         ? (safeT as any)?.nomeNonatoService || 'NONATO SERVICE'
         : pedido.cliente
     const equipamentoTexto = `${pedido.maquinaModelo || ''}${pedido.numeroMaquina ? ` - ${pedido.numeroMaquina}` : ''}`.trim() || '—'
+    const pecasPdf = (pedido.pecas || []).map((p) => {
+      const bib = pecasBiblioteca.find((b) => b.codigo === p.codigo)
+      return {
+        codigo: p.codigo,
+        nome: p.descricao,
+        quantidade: parseFloat(String(p.quantidade)) || 1,
+        imagem: bib?.imagem,
+      }
+    })
+    const camposRel: Array<{ label: string; value: string }> = []
+    if (pedido.maquinaModelo?.trim()) camposRel.push({ label: safeT?.maquinaModelo || 'Máquina/Modelo', value: pedido.maquinaModelo.trim() })
+    if (pedido.numeroMaquina?.trim()) {
+      camposRel.push({
+        label: (safeT as any)?.numeroEquipamento || safeT?.numeroSerie || 'Número do Equipamento',
+        value: pedido.numeroMaquina.trim(),
+      })
+    }
     openPedidoOrcamentoAvulsoPdf({
       codigo: pedido.codigo || pedido.numeroRelatorio,
       preview: false,
       dataIso: pedido.dataGeracao,
       clienteNomeDoc: nomeNoDoc,
       equipamentoTexto,
-      pecas: (pedido.pecas || []).map((p) => {
-        const bib = pecasBiblioteca.find((b) => b.codigo === p.codigo)
-        return {
-          codigo: p.codigo,
-          nome: p.descricao,
-          quantidade: parseFloat(String(p.quantidade)) || 1,
-          imagem: bib?.imagem,
-        }
-      }),
+      equipamentosBlocos: [
+        {
+          titulo: `${safeT?.equipamento || 'Equipamento'} 1${pedido.maquinaModelo ? ` — ${pedido.maquinaModelo}` : ''}`,
+          numeroSerie: pedido.numeroMaquina?.trim() || undefined,
+          campos: camposRel,
+          pecas: pecasPdf,
+        },
+      ],
+      pecas: pecasPdf,
       logoHtml: getLogoHtmlForReport(),
       labels: {
         titulo: (safeT as any)?.pedidoOrcamentoPdfTitulo || 'PEDIDO DE ORÇAMENTO',
@@ -23693,6 +23710,8 @@ export default function Dashboard() {
         data: safeT?.data || 'Data',
         cliente: safeT?.cliente || 'Cliente',
         equipamento: safeT?.equipamento || 'Equipamento',
+        numeroEquipamento: (safeT as any)?.numeroEquipamento || 'Número do Equipamento',
+        numeroSerie: safeT?.numeroSerie || 'Nº Série',
         colImagem: safeT?.imagem || 'Imagem',
         colDescricao: safeT?.descricaoItem || 'Descrição',
         colCodigo: safeT?.codigo || 'Código',
@@ -23708,12 +23727,58 @@ export default function Dashboard() {
       pedido.emitirComoCliente === 'nonato-service'
         ? (safeT as any)?.nomeNonatoService || 'NONATO SERVICE'
         : pedido.clienteNomeReal
+    const blocosFonte =
+      pedido.equipamentosBlocos && pedido.equipamentosBlocos.length > 0
+        ? pedido.equipamentosBlocos
+        : [
+            {
+              id: 'legado-' + pedido.codigo,
+              equipamento: null,
+              equipamentoManual: pedido.equipamentoTexto || '',
+              pecas: pedido.pecas,
+            },
+          ]
+    const equipamentosBlocos = blocosFonte.map((b, i) => {
+      const eq = b.equipamento
+      const nomeEquip = eq
+        ? [eq.marca, eq.modelo].filter(Boolean).join(' ').trim() || eq.tipoEquipamento
+        : (b.equipamentoManual || '').trim()
+      const campos: Array<{ label: string; value: string }> = []
+      if (eq) {
+        if (eq.tipoEquipamento) campos.push({ label: safeT?.tipoEquipamento || 'Tipo', value: eq.tipoEquipamento })
+        if (eq.marca) campos.push({ label: safeT?.marca || 'Marca', value: eq.marca })
+        if (eq.modelo) campos.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
+        if (eq.numeroSerie?.trim()) {
+          campos.push({
+            label: (safeT as any)?.numeroEquipamento || safeT?.numeroSerie || 'Número do Equipamento',
+            value: eq.numeroSerie.trim(),
+          })
+        }
+        if (eq.familia) campos.push({ label: safeT?.familia || 'Família', value: eq.familia })
+        if (eq.grupo) campos.push({ label: safeT?.grupo || 'Grupo', value: eq.grupo })
+        if (eq.id) campos.push({ label: (safeT as any)?.idEquipamento || 'ID', value: eq.id })
+      } else if (b.equipamentoManual?.trim()) {
+        campos.push({ label: safeT?.descricao || 'Descrição', value: b.equipamentoManual.trim() })
+      }
+      return {
+        titulo: `${(safeT as any)?.poaEquipamentoNumero || safeT?.equipamento || 'Equipamento'} ${i + 1}${nomeEquip ? ` — ${nomeEquip}` : ''}`,
+        numeroSerie: eq?.numeroSerie?.trim() || pedido.equipamentoNumeroSerie?.trim() || undefined,
+        campos,
+        pecas: (b.pecas || []).map((p) => ({
+          codigo: p.codigo,
+          nome: p.nome,
+          quantidade: p.quantidade,
+          imagem: p.imagem,
+        })),
+      }
+    })
     openPedidoOrcamentoAvulsoPdf({
       codigo: pedido.codigo,
       preview: false,
       dataIso: pedido.dataGeracao,
       clienteNomeDoc: nomeNoDoc,
       equipamentoTexto: pedido.equipamentoTexto,
+      equipamentosBlocos,
       pecas: pedido.pecas.map((p) => ({
         codigo: p.codigo,
         nome: p.nome,
@@ -23727,6 +23792,8 @@ export default function Dashboard() {
         data: safeT?.data || 'Data',
         cliente: safeT?.cliente || 'Cliente',
         equipamento: safeT?.equipamento || 'Equipamento',
+        numeroEquipamento: (safeT as any)?.numeroEquipamento || 'Número do Equipamento',
+        numeroSerie: safeT?.numeroSerie || 'Nº Série',
         colImagem: safeT?.imagem || 'Imagem',
         colDescricao: safeT?.descricaoItem || 'Descrição',
         colCodigo: safeT?.codigo || 'Código',
@@ -63753,6 +63820,8 @@ A1;Peça exemplo;10`}
         descricao: orcamento.descricao,
         observacoes: orcamento.observacoes,
         relatorioNumero: orcamento.relatorioNumero,
+        equipamentoNumeroSerie: orcamento.equipamentoNumeroSerie,
+        equipamentoDescricao: orcamento.descricao,
         clienteNome,
         clienteEmail: dadosCliente.email,
         clienteTelefone: dadosCliente.telefones,
@@ -63777,6 +63846,9 @@ A1;Peça exemplo;10`}
           morada: safeT?.morada,
           contribuicaoFiscal: safeT?.contribuicaoFiscal,
           numeroRelatorio: safeT?.numeroRelatorio,
+          numeroEquipamento: safeT?.numeroEquipamento,
+          numeroSerie: safeT?.numeroSerie,
+          equipamento: safeT?.equipamento,
           imagem: safeT?.imagem,
           descricao: safeT?.descricao,
           codigo: safeT?.codigo,
