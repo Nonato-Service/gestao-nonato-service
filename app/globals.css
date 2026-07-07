@@ -37220,3 +37220,280 @@ html body .alerta-mensagens-shell .alerta-mensagens-hero-actions .comunicacao-he
   -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
 }
 
+/* ── Pedido Orçamentos Avulso (poa-pro) — UI moderna ── */
+.poa-pro__hero {
+  border-color: rgba(59, 130, 246, 0.32);
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.45) 0%, rgba(15, 23, 42, 0.85) 55%, rgba(6, 78, 59, 0.2) 100%);
+}
+.poa-pro__hero-icon {
+  color: #93c5fd !important;
+  border-color: rgba(147, 197, 253, 0.4) !important;
+  background: rgba(59, 130, 246, 0.15) !important;
+}
+.poa-pro__kpis {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.poa-pro__steps {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.poa-pro__step {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.5);
+}
+.poa-pro__step.is-active {
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.55);
+  background: rgba(59, 130, 246, 0.18);
+}
+.poa-pro__step.is-done {
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.poa-pro__layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.poa-pro__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 12px;
+}
+.poa-pro__panel {
+  border-color: rgba(59, 130, 246, 0.2);
+}
+.poa-pro__client-list {
+  max-height: 220px;
+}
+.poa-pro__pick-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.45);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.poa-pro__pick-btn strong {
+  display: block;
+  font-size: 0.85rem;
+  color: #e2e8f0;
+}
+.poa-pro__pick-btn small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+.poa-pro__pick-btn.is-active,
+.poa-pro__pick-btn:hover {
+  border-color: rgba(59, 130, 246, 0.55);
+  background: rgba(59, 130, 246, 0.14);
+}
+.poa-pro__client-card {
+  border-color: rgba(16, 185, 129, 0.28) !important;
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.06) 0%, rgba(2, 6, 23, 0.55) 100%) !important;
+}
+.poa-pro__client-card-hint {
+  margin: 0 0 12px;
+  font-size: 0.72rem;
+  color: rgba(167, 243, 208, 0.65);
+}
+.poa-pro__info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin: 0;
+}
+.poa-pro__info-grid dt {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.45);
+}
+.poa-pro__info-grid dd {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  word-break: break-word;
+}
+.poa-pro__info-grid--equip dd {
+  color: #bae6fd;
+}
+.poa-pro__main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.poa-pro__section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.poa-pro__section-head .orc-pro__panel-title {
+  margin-bottom: 4px;
+}
+.poa-pro__blocos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.poa-pro__bloco {
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.4);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.poa-pro__bloco.is-active {
+  border-color: rgba(59, 130, 246, 0.55);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.15), 0 8px 28px rgba(37, 99, 235, 0.12);
+  background: rgba(30, 58, 138, 0.12);
+}
+.poa-pro__bloco-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.poa-pro__bloco-num {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #93c5fd;
+}
+.poa-pro__bloco-meta {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-left: auto;
+}
+.poa-pro__bloco-remove {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+.poa-pro__sub-label {
+  margin: 0 0 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.45);
+}
+.poa-pro__equip-picker {
+  margin-bottom: 12px;
+}
+.poa-pro__equip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+.poa-pro__equip-btn {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(2, 6, 23, 0.5);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  transition: border-color 0.2s, background 0.2s;
+}
+.poa-pro__equip-btn strong {
+  display: block;
+  font-size: 0.78rem;
+  color: #e2e8f0;
+}
+.poa-pro__equip-btn small {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+.poa-pro__equip-btn.is-active,
+.poa-pro__equip-btn:hover {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.1);
+}
+.poa-pro__equip-detalhe {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.06);
+}
+.poa-pro__pecas-zone {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.poa-pro__pecas-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.poa-pro__pecas-head h4 {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #93c5fd;
+}
+.poa-pro__gerar {
+  border-color: rgba(16, 185, 129, 0.28) !important;
+}
+.poa-pro__gerar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+@media (max-width: 1024px) {
+  .poa-pro__layout {
+    grid-template-columns: 1fr;
+  }
+  .poa-pro__aside {
+    position: static;
+  }
+}
+@media (max-width: 640px) {
+  .poa-pro__kpis {
+    grid-template-columns: 1fr;
+  }
+  .poa-pro__info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

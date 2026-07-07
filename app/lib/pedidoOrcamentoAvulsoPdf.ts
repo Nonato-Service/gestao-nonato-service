@@ -5,6 +5,12 @@ export type PedidoAvulsoPdfPeca = {
   imagem?: string
 }
 
+export type PedidoAvulsoPdfEquipamentoBloco = {
+  titulo: string
+  detalhes?: string
+  pecas: PedidoAvulsoPdfPeca[]
+}
+
 export type PedidoAvulsoPdfData = {
   codigo: string
   preview?: boolean
@@ -12,6 +18,7 @@ export type PedidoAvulsoPdfData = {
   clienteNomeDoc: string
   equipamentoTexto: string
   pecas: PedidoAvulsoPdfPeca[]
+  equipamentosBlocos?: PedidoAvulsoPdfEquipamentoBloco[]
   logoHtml?: string
   labels?: {
     titulo?: string
@@ -20,6 +27,7 @@ export type PedidoAvulsoPdfData = {
     data?: string
     cliente?: string
     equipamento?: string
+    equipamentoNumero?: string
     colImagem?: string
     colDescricao?: string
     colCodigo?: string
@@ -37,14 +45,11 @@ function esc(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
-export function buildPedidoOrcamentoAvulsoPdfHtml(data: PedidoAvulsoPdfData): string {
-  const L = data.labels || {}
-  const titulo = L.titulo || 'PEDIDO DE ORÇAMENTO'
-  const dataFmt = data.dataIso
-    ? new Date(data.dataIso.includes('T') ? data.dataIso : data.dataIso + 'T12:00:00').toLocaleDateString('pt-BR')
-    : new Date().toLocaleDateString('pt-BR')
-
-  const linhas = data.pecas
+function renderTabelaPecas(
+  pecas: PedidoAvulsoPdfPeca[],
+  L: PedidoAvulsoPdfData['labels']
+): string {
+  const linhas = pecas
     .map((p) => {
       const img = p.imagem
         ? `<img src="${String(p.imagem).replace(/"/g, '&quot;')}" alt="" class="item-image" onerror="this.style.display='none'" />`
@@ -57,6 +62,46 @@ export function buildPedidoOrcamentoAvulsoPdfHtml(data: PedidoAvulsoPdfData): st
       </tr>`
     })
     .join('')
+  return `<table>
+      <thead>
+        <tr>
+          <th>${esc(L?.colImagem || 'Imagem')}</th>
+          <th>${esc(L?.colDescricao || 'Descrição')}</th>
+          <th>${esc(L?.colCodigo || 'Código')}</th>
+          <th>${esc(L?.colQtd || 'Qtd')}</th>
+        </tr>
+      </thead>
+      <tbody>${linhas || `<tr><td colspan="4" style="text-align:center;color:#64748b;">—</td></tr>`}</tbody>
+    </table>`
+}
+
+export function buildPedidoOrcamentoAvulsoPdfHtml(data: PedidoAvulsoPdfData): string {
+  const L = data.labels || {}
+  const titulo = L.titulo || 'PEDIDO DE ORÇAMENTO'
+  const dataFmt = data.dataIso
+    ? new Date(data.dataIso.includes('T') ? data.dataIso : data.dataIso + 'T12:00:00').toLocaleDateString('pt-BR')
+    : new Date().toLocaleDateString('pt-BR')
+
+  const blocos = data.equipamentosBlocos?.filter((b) => b.pecas.length > 0) || []
+  const secoesEquipamento =
+    blocos.length > 0
+      ? blocos
+          .map(
+            (b) => `<div class="section section-equip">
+    <h3>${esc(b.titulo)}</h3>
+    ${b.detalhes ? `<p class="equip-detalhe">${esc(b.detalhes)}</p>` : ''}
+    ${renderTabelaPecas(b.pecas, L)}
+  </div>`
+          )
+          .join('')
+      : `<div class="section">
+    <h3>${esc(L.equipamento || 'Equipamento')}</h3>
+    <p>${esc(data.equipamentoTexto || '—')}</p>
+  </div>
+  <div class="section">
+    <h3>${esc(L.colDescricao || 'Peças solicitadas')}</h3>
+    ${renderTabelaPecas(data.pecas, L)}
+  </div>`
 
   const previewBanner = data.preview
     ? `<div class="preview-banner">${esc(L.previewBanner || 'Pré-visualização — o número definitivo é atribuído ao gerar o pedido')}</div>`
@@ -76,9 +121,10 @@ export function buildPedidoOrcamentoAvulsoPdfHtml(data: PedidoAvulsoPdfData): st
     .header { text-align: center; margin-bottom: 22px; padding-bottom: 16px; border-bottom: 2px solid #166534; }
     .header h1 { margin: 8px 0 4px; font-size: 22px; letter-spacing: 0.06em; color: #14532d; }
     .header .meta { font-size: 13px; color: #334155; }
-    .section { margin-bottom: 16px; }
+    .section { margin-bottom: 16px; page-break-inside: avoid; }
     .section h3 { margin: 0 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #14532d; background: #ecfdf5; padding: 8px 10px; border-left: 4px solid #166534; }
     .section p { margin: 4px 0; }
+    .equip-detalhe { font-size: 11px; color: #475569; margin-bottom: 8px !important; }
     table { width: 100%; border-collapse: collapse; margin-top: 8px; }
     th, td { border: 1px solid #cbd5e1; padding: 8px; vertical-align: middle; }
     th { background: #166534; color: #fff; font-size: 11px; text-transform: uppercase; }
@@ -105,24 +151,7 @@ export function buildPedidoOrcamentoAvulsoPdfHtml(data: PedidoAvulsoPdfData): st
     <h3>${esc(L.cliente || 'Cliente')}</h3>
     <p><strong>${esc(data.clienteNomeDoc)}</strong></p>
   </div>
-  <div class="section">
-    <h3>${esc(L.equipamento || 'Equipamento')}</h3>
-    <p>${esc(data.equipamentoTexto || '—')}</p>
-  </div>
-  <div class="section">
-    <h3>${esc(L.colDescricao || 'Peças solicitadas')}</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>${esc(L.colImagem || 'Imagem')}</th>
-          <th>${esc(L.colDescricao || 'Descrição')}</th>
-          <th>${esc(L.colCodigo || 'Código')}</th>
-          <th>${esc(L.colQtd || 'Qtd')}</th>
-        </tr>
-      </thead>
-      <tbody>${linhas || `<tr><td colspan="4" style="text-align:center;color:#64748b;">—</td></tr>`}</tbody>
-    </table>
-  </div>
+  ${secoesEquipamento}
   <div class="actions no-print">
     <button type="button" class="btn-print" onclick="window.print()">🖨️ ${esc(L.imprimir || 'Imprimir / Guardar PDF')}</button>
     <button type="button" class="btn-close" onclick="window.close()">${esc(L.fechar || 'Fechar')}</button>

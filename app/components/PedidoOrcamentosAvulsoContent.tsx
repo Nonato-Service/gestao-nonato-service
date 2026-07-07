@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useState, useMemo, useEffect, useId } from 'react'
+import React, { useState, useMemo, useEffect, useId, useCallback } from 'react'
 import { openPedidoOrcamentoAvulsoPdf } from '../lib/pedidoOrcamentoAvulsoPdf'
 import { resolverIdEquipamentoCliente } from '../lib/relatorioServicoEquipamentos'
 import { ProImageHoverPreview } from './ProImageHoverPreview'
 
 export type ClientePedido = {
   id: string
+  codigoCliente?: string
   nomeEmpresa: string
   morada?: string
   conselho?: string
@@ -14,10 +15,13 @@ export type ClientePedido = {
   pais?: string
   email?: string
   telefones?: string
+  contato?: string
+  numeroContribuicaoFiscal?: string
   equipamentos: EquipamentoClientePedido[]
 }
 
 export type EquipamentoClientePedido = {
+  id?: string
   tipoEquipamento: string
   modelo: string
   marca: string
@@ -35,6 +39,14 @@ export type PecaPedido = {
   pecaId?: string
 }
 
+export type EquipamentoBlocoPedido = {
+  id: string
+  equipamentoIdx?: number
+  equipamento: EquipamentoClientePedido | null
+  equipamentoManual: string
+  pecas: PecaPedido[]
+}
+
 export type StatusPedidoAvulso = 'pendente' | 'cancelado' | 'concluido' | 'aprovado' | 'entregue'
 
 export type PedidoAvulsoGuardado = {
@@ -47,6 +59,7 @@ export type PedidoAvulsoGuardado = {
   equipamentoChave?: string
   equipamentoNumeroSerie?: string
   pecas: PecaPedido[]
+  equipamentosBlocos?: EquipamentoBlocoPedido[]
   status?: StatusPedidoAvulso
 }
 
@@ -65,8 +78,89 @@ type Props = {
 }
 
 const PEDIDOS_AVULSO_KEY = 'nonato-pedidos-orcamento-avulso'
-
 const ORCAMENTOS_AVULSO_KEY = 'nonato-orcamentos-avulso'
+
+function criarBlocoEquipamentoVazio(): EquipamentoBlocoPedido {
+  return {
+    id: 'bloco-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+    equipamento: null,
+    equipamentoManual: '',
+    pecas: [],
+  }
+}
+
+function textoEquipamentoBloco(
+  bloco: EquipamentoBlocoPedido,
+  safeT: Record<string, string | undefined>
+): string {
+  if (bloco.equipamento) {
+    const eq = bloco.equipamento
+    return [
+      [eq.tipoEquipamento, eq.modelo, eq.marca].filter(Boolean).join(' ').trim(),
+      eq.numeroSerie ? `${safeT?.numeroSerie || 'Nº Série'}: ${eq.numeroSerie}` : '',
+      eq.familia ? `${safeT?.familia || 'Família'}: ${eq.familia}` : '',
+      eq.grupo ? `${safeT?.grupo || 'Grupo'}: ${eq.grupo}` : '',
+    ]
+      .filter(Boolean)
+      .join(' · ')
+  }
+  return (bloco.equipamentoManual || '').trim() || '—'
+}
+
+function detalhesEquipamentoBloco(
+  bloco: EquipamentoBlocoPedido,
+  safeT: Record<string, string | undefined>
+): Array<{ label: string; value: string }> {
+  if (!bloco.equipamento) {
+    if (bloco.equipamentoManual.trim()) {
+      return [{ label: safeT?.descricao || 'Descrição', value: bloco.equipamentoManual.trim() }]
+    }
+    return []
+  }
+  const eq = bloco.equipamento
+  const linhas: Array<{ label: string; value: string }> = []
+  if (eq.tipoEquipamento) linhas.push({ label: safeT?.tipoEquipamento || 'Tipo', value: eq.tipoEquipamento })
+  if (eq.marca) linhas.push({ label: safeT?.marca || 'Marca', value: eq.marca })
+  if (eq.modelo) linhas.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
+  if (eq.numeroSerie) linhas.push({ label: safeT?.numeroSerie || 'Nº Série', value: eq.numeroSerie })
+  if (eq.familia) linhas.push({ label: safeT?.familia || 'Família', value: eq.familia })
+  if (eq.grupo) linhas.push({ label: safeT?.grupo || 'Grupo', value: eq.grupo })
+  if (eq.id) linhas.push({ label: safeT?.idEquipamento || 'ID', value: eq.id })
+  return linhas
+}
+
+function todasPecasDosBlocos(blocos: EquipamentoBlocoPedido[]): PecaPedido[] {
+  return blocos.flatMap((b) => b.pecas)
+}
+
+function textoEquipamentosAgregado(
+  blocos: EquipamentoBlocoPedido[],
+  safeT: Record<string, string | undefined>
+): string {
+  return blocos
+    .map((b, i) => {
+      const t = textoEquipamentoBloco(b, safeT)
+      if (!t || t === '—') return ''
+      return `${safeT?.equipamento || 'Equipamento'} ${i + 1}: ${t}`
+    })
+    .filter(Boolean)
+    .join('\n')
+}
+
+function normalizarPedidoCarregado(p: PedidoAvulsoGuardado): PedidoAvulsoGuardado {
+  if (p.equipamentosBlocos && p.equipamentosBlocos.length > 0) return p
+  return {
+    ...p,
+    equipamentosBlocos: [
+      {
+        id: 'bloco-legado-' + p.codigo,
+        equipamento: null,
+        equipamentoManual: p.equipamentoTexto || '',
+        pecas: Array.isArray(p.pecas) ? [...p.pecas] : [],
+      },
+    ],
+  }
+}
 
 export function PedidoOrcamentosAvulsoContent({
   clientes,
@@ -79,13 +173,12 @@ export function PedidoOrcamentosAvulsoContent({
   saveData,
   loadData,
   onGerarOrcamento,
-  logoHtml = ''
+  logoHtml = '',
 }: Props) {
   const [clienteSelecionado, setClienteSelecionado] = useState<ClientePedido | null>(null)
   const [clienteNomeManual, setClienteNomeManual] = useState('')
-  const [equipamentoSelecionado, setEquipamentoSelecionado] = useState<EquipamentoClientePedido | null>(null)
-  const [equipamentoManual, setEquipamentoManual] = useState('')
-  const [pecasPedido, setPecasPedido] = useState<PecaPedido[]>([])
+  const [blocosEquipamento, setBlocosEquipamento] = useState<EquipamentoBlocoPedido[]>([criarBlocoEquipamentoVazio()])
+  const [blocoAtivoId, setBlocoAtivoId] = useState<string>(() => blocosEquipamento[0]?.id || '')
   const [buscaCliente, setBuscaCliente] = useState('')
   const [buscaPeca, setBuscaPeca] = useState('')
   const [codigoManualPeca, setCodigoManualPeca] = useState('')
@@ -102,9 +195,13 @@ export function PedidoOrcamentosAvulsoContent({
 
   useEffect(() => {
     if (!loadData) return
-    loadData(PEDIDOS_AVULSO_KEY).then((data) => {
-      if (data && Array.isArray(data)) setPedidosGerados(data as PedidoAvulsoGuardado[])
-    }).catch(() => {})
+    loadData(PEDIDOS_AVULSO_KEY)
+      .then((data) => {
+        if (data && Array.isArray(data)) {
+          setPedidosGerados((data as PedidoAvulsoGuardado[]).map(normalizarPedidoCarregado))
+        }
+      })
+      .catch(() => {})
   }, [loadData])
 
   const clientesFiltrados = useMemo(() => {
@@ -115,10 +212,8 @@ export function PedidoOrcamentosAvulsoContent({
         c.nomeEmpresa?.toLowerCase().includes(b) ||
         c.email?.toLowerCase().includes(b) ||
         c.telefones?.toLowerCase().includes(b) ||
-        c.morada?.toLowerCase().includes(b) ||
-        c.codigoPostal?.toLowerCase().includes(b) ||
-        c.conselho?.toLowerCase().includes(b) ||
-        c.pais?.toLowerCase().includes(b)
+        c.contato?.toLowerCase().includes(b) ||
+        c.codigoCliente?.toLowerCase().includes(b)
     )
   }, [clientes, buscaCliente])
 
@@ -134,26 +229,70 @@ export function PedidoOrcamentosAvulsoContent({
 
   const nomeClienteExibido = clienteSelecionado ? clienteSelecionado.nomeEmpresa : clienteNomeManual || '—'
   const equipamentosDoCliente = clienteSelecionado?.equipamentos || []
+  const blocoAtivo = blocosEquipamento.find((b) => b.id === blocoAtivoId) || blocosEquipamento[0]
+  const totalPecas = todasPecasDosBlocos(blocosEquipamento).length
+
+  const atualizarBloco = useCallback(
+    (id: string, patch: Partial<EquipamentoBlocoPedido>) => {
+      setBlocosEquipamento((prev) => prev.map((b) => (b.id === id ? { ...b, ...patch } : b)))
+    },
+    []
+  )
+
+  const adicionarBlocoEquipamento = () => {
+    const novo = criarBlocoEquipamentoVazio()
+    setBlocosEquipamento((prev) => [...prev, novo])
+    setBlocoAtivoId(novo.id)
+  }
+
+  const removerBlocoEquipamento = (id: string) => {
+    if (blocosEquipamento.length <= 1) return
+    setBlocosEquipamento((prev) => {
+      const filtrados = prev.filter((b) => b.id !== id)
+      if (blocoAtivoId === id && filtrados.length > 0) {
+        setBlocoAtivoId(filtrados[filtrados.length - 1].id)
+      }
+      return filtrados
+    })
+  }
+
+  const selecionarEquipamentoNoBloco = (
+    blocoId: string,
+    eq: EquipamentoClientePedido,
+    idx: number
+  ) => {
+    atualizarBloco(blocoId, { equipamento: eq, equipamentoIdx: idx, equipamentoManual: '' })
+  }
+
+  const adicionarPecaAoBlocoAtivo = (peca: Omit<PecaPedido, 'id'> & { id?: string }) => {
+    if (!blocoAtivo) return
+    const nova: PecaPedido = { ...peca, id: peca.id || 'peca-' + Date.now() }
+    setBlocosEquipamento((prev) =>
+      prev.map((b) => {
+        if (b.id !== blocoAtivo.id) return b
+        const existente = b.pecas.find((p) => p.codigo && p.codigo === nova.codigo)
+        if (existente && nova.codigo) {
+          return {
+            ...b,
+            pecas: b.pecas.map((p) =>
+              p.codigo === nova.codigo ? { ...p, quantidade: p.quantidade + nova.quantidade } : p
+            ),
+          }
+        }
+        return { ...b, pecas: [...b.pecas, nova] }
+      })
+    )
+  }
 
   const adicionarPecaDaBiblioteca = (peca: { id: string; codigo: string; nome: string; imagem?: string }) => {
-    const existente = pecasPedido.find((p) => p.codigo === peca.codigo)
-    if (existente) {
-      setPecasPedido((prev) =>
-        prev.map((p) => (p.codigo === peca.codigo ? { ...p, quantidade: p.quantidade + 1 } : p))
-      )
-    } else {
-      setPecasPedido((prev) => [
-        ...prev,
-        {
-          id: peca.id + '-' + Date.now(),
-          codigo: peca.codigo,
-          nome: peca.nome,
-          imagem: peca.imagem,
-          quantidade: 1,
-          pecaId: peca.id
-        }
-      ])
-    }
+    adicionarPecaAoBlocoAtivo({
+      id: peca.id + '-' + Date.now(),
+      codigo: peca.codigo,
+      nome: peca.nome,
+      imagem: peca.imagem,
+      quantidade: 1,
+      pecaId: peca.id,
+    })
     setBuscaPeca('')
     setMostrarFormPeca(false)
     setModoPeca(null)
@@ -193,38 +332,38 @@ export function PedidoOrcamentosAvulsoContent({
     const nome = (nomeManualPeca || '').trim() || codigo || (safeT?.pecaManual || 'Peça manual')
     const imagem = resolverImagemManualPeca()
     if (!codigo && !nome) return
-    const existente = pecasPedido.find((p) => p.codigo === codigo && codigo)
-    if (existente && codigo) {
-      setPecasPedido((prev) =>
-        prev.map((p) => (p.codigo === codigo ? { ...p, quantidade: p.quantidade + quantidadeNovaPeca } : p))
-      )
-    } else {
-      setPecasPedido((prev) => [
-        ...prev,
-        {
-          id: 'manual-' + Date.now(),
-          codigo: codigo || nome.slice(0, 20),
-          nome,
-          imagem,
-          quantidade: quantidadeNovaPeca
-        }
-      ])
-    }
+    adicionarPecaAoBlocoAtivo({
+      id: 'manual-' + Date.now(),
+      codigo: codigo || nome.slice(0, 20),
+      nome,
+      imagem,
+      quantidade: quantidadeNovaPeca,
+    })
     limparFormularioPecaManual()
     setMostrarFormPeca(false)
     setModoPeca(null)
   }
 
-  const removerPeca = (id: string) => {
-    setPecasPedido((prev) => prev.filter((p) => p.id !== id))
+  const removerPeca = (blocoId: string, pecaId: string) => {
+    setBlocosEquipamento((prev) =>
+      prev.map((b) =>
+        b.id === blocoId ? { ...b, pecas: b.pecas.filter((p) => p.id !== pecaId) } : b
+      )
+    )
   }
 
-  const alterarQuantidadePeca = (id: string, delta: number) => {
-    setPecasPedido((prev) =>
-      prev.map((p) => {
-        if (p.id !== id) return p
-        const nova = p.quantidade + delta
-        return { ...p, quantidade: nova < 1 ? 1 : nova }
+  const alterarQuantidadePeca = (blocoId: string, pecaId: string, delta: number) => {
+    setBlocosEquipamento((prev) =>
+      prev.map((b) => {
+        if (b.id !== blocoId) return b
+        return {
+          ...b,
+          pecas: b.pecas.map((p) => {
+            if (p.id !== pecaId) return p
+            const nova = p.quantidade + delta
+            return { ...p, quantidade: nova < 1 ? 1 : nova }
+          }),
+        }
       })
     )
   }
@@ -243,7 +382,9 @@ export function PedidoOrcamentosAvulsoContent({
 
   const pdfLabels = {
     titulo: safeT?.pedidoOrcamentoPdfTitulo || 'PEDIDO DE ORÇAMENTO',
-    previewBanner: safeT?.pedidoOrcamentoPreviewBanner || 'Pré-visualização — o número definitivo é atribuído ao gerar o pedido',
+    previewBanner:
+      safeT?.pedidoOrcamentoPreviewBanner ||
+      'Pré-visualização — o número definitivo é atribuído ao gerar o pedido',
     codigo: safeT?.codigoOrcamento || 'Código',
     data: safeT?.data || 'Data',
     cliente: safeT?.cliente || 'Cliente',
@@ -254,6 +395,7 @@ export function PedidoOrcamentosAvulsoContent({
     colQtd: safeT?.quantidade || 'Qtd',
     imprimir: safeT?.imprimirOrcamento || 'Imprimir / Guardar PDF',
     fechar: safeT?.fechar || 'Fechar',
+    equipamentoNumero: safeT?.poaEquipamentoNumero || 'Equipamento',
   }
 
   function resolverDadosPedidoPdf() {
@@ -262,97 +404,114 @@ export function PedidoOrcamentosAvulsoContent({
       alert(safeT?.selecioneOuDigiteCliente || 'Selecione ou digite o nome do cliente.')
       return null
     }
-    if (pecasPedido.length === 0) {
+    const pecasTotais = todasPecasDosBlocos(blocosEquipamento)
+    if (pecasTotais.length === 0) {
       alert(safeT?.adicionePeloMenosUmaPeca || 'Adicione pelo menos uma peça ao pedido.')
       return null
     }
-    const equipamentoTexto = equipamentoSelecionado
-      ? [
-          `${equipamentoSelecionado.tipoEquipamento} ${equipamentoSelecionado.modelo || ''} - ${equipamentoSelecionado.marca}`.trim(),
-          equipamentoSelecionado.numeroSerie
-            ? `${safeT?.numeroSerie || 'Nº Série'}: ${equipamentoSelecionado.numeroSerie}`
-            : '',
-        ]
-          .filter(Boolean)
-          .join(' · ')
-      : equipamentoManual || '—'
+    const blocosValidos = blocosEquipamento.filter(
+      (b) => b.pecas.length > 0 || b.equipamento || b.equipamentoManual.trim()
+    )
     const nomeNoDoc =
       emitirComoCliente === 'nonato-service'
         ? safeT?.nomeNonatoService || 'NONATO SERVICE'
         : nomeReal
-    return { nomeReal, equipamentoTexto, nomeNoDoc }
+    return { nomeReal, nomeNoDoc, blocosValidos, pecasTotais }
   }
+
+  const montarPdfPayload = (
+    codigo: string,
+    preview: boolean,
+    dataIso: string,
+    nomeNoDoc: string,
+    blocos: EquipamentoBlocoPedido[]
+  ) => ({
+    codigo,
+    preview,
+    dataIso,
+    clienteNomeDoc: nomeNoDoc,
+    equipamentoTexto: textoEquipamentosAgregado(blocos, safeT),
+    equipamentosBlocos: blocos.map((b, i) => ({
+      titulo: `${safeT?.poaEquipamentoNumero || 'Equipamento'} ${i + 1}`,
+      detalhes: textoEquipamentoBloco(b, safeT),
+      pecas: b.pecas.map((p) => ({
+        codigo: p.codigo,
+        nome: p.nome,
+        quantidade: p.quantidade,
+        imagem: p.imagem,
+      })),
+    })),
+    pecas: todasPecasDosBlocos(blocos).map((p) => ({
+      codigo: p.codigo,
+      nome: p.nome,
+      quantidade: p.quantidade,
+      imagem: p.imagem,
+    })),
+    logoHtml,
+    labels: pdfLabels,
+  })
 
   const handleVisualizarPdf = () => {
     const dados = resolverDadosPedidoPdf()
     if (!dados) return
     const codigoProv = gerarProximoCodigo()
-    openPedidoOrcamentoAvulsoPdf({
-      codigo: `${codigoProv} (${safeT?.provvisorio || 'prov.'})`,
-      preview: true,
-      dataIso: new Date().toISOString(),
-      clienteNomeDoc: dados.nomeNoDoc,
-      equipamentoTexto: dados.equipamentoTexto,
-      pecas: pecasPedido.map((p) => ({
-        codigo: p.codigo,
-        nome: p.nome,
-        quantidade: p.quantidade,
-        imagem: p.imagem,
-      })),
-      logoHtml,
-      labels: pdfLabels,
-    })
+    openPedidoOrcamentoAvulsoPdf(
+      montarPdfPayload(
+        `${codigoProv} (${safeT?.provvisorio || 'prov.'})`,
+        true,
+        new Date().toISOString(),
+        dados.nomeNoDoc,
+        dados.blocosValidos
+      )
+    )
   }
 
   const handleVisualizarPdfGuardado = (pedido: PedidoAvulsoGuardado) => {
+    const normalizado = normalizarPedidoCarregado(pedido)
     const nomeNoDoc =
       pedido.emitirComoCliente === 'nonato-service'
         ? safeT?.nomeNonatoService || 'NONATO SERVICE'
         : pedido.clienteNomeReal
-    openPedidoOrcamentoAvulsoPdf({
-      codigo: pedido.codigo,
-      preview: false,
-      dataIso: pedido.dataGeracao,
-      clienteNomeDoc: nomeNoDoc,
-      equipamentoTexto: pedido.equipamentoTexto,
-      pecas: pedido.pecas.map((p) => ({
-        codigo: p.codigo,
-        nome: p.nome,
-        quantidade: p.quantidade,
-        imagem: p.imagem,
-      })),
-      logoHtml,
-      labels: pdfLabels,
-    })
+    openPedidoOrcamentoAvulsoPdf(
+      montarPdfPayload(
+        pedido.codigo,
+        false,
+        pedido.dataGeracao,
+        nomeNoDoc,
+        normalizado.equipamentosBlocos || []
+      )
+    )
   }
 
   const handleGerarPedido = async () => {
     const dados = resolverDadosPedidoPdf()
     if (!dados) return
-    const { nomeReal, equipamentoTexto, nomeNoDoc } = dados
+    const { nomeReal, nomeNoDoc, blocosValidos, pecasTotais } = dados
     const codigo = gerarProximoCodigo()
-    const equipamentoIdx = equipamentoSelecionado
-      ? equipamentosDoCliente.findIndex(
-          (eq) =>
-            eq.modelo === equipamentoSelecionado.modelo &&
-            eq.numeroSerie === equipamentoSelecionado.numeroSerie
-        )
-      : -1
+    const primeiroComEquip = blocosValidos.find((b) => b.equipamento || b.equipamentoManual.trim())
+    const eqRef = primeiroComEquip?.equipamento
+    const eqIdx = primeiroComEquip?.equipamentoIdx
+
     const novo: PedidoAvulsoGuardado = {
       codigo,
       dataGeracao: new Date().toISOString(),
       clienteNomeReal: nomeReal,
       clienteId: clienteSelecionado?.id,
       emitirComoCliente,
-      equipamentoTexto,
+      equipamentoTexto: textoEquipamentosAgregado(blocosValidos, safeT),
       equipamentoChave:
-        equipamentoSelecionado && equipamentoIdx >= 0
-          ? resolverIdEquipamentoCliente(equipamentoSelecionado, equipamentoIdx)
+        eqRef && eqIdx !== undefined && eqIdx >= 0
+          ? resolverIdEquipamentoCliente(eqRef, eqIdx)
           : undefined,
-      equipamentoNumeroSerie: equipamentoSelecionado?.numeroSerie,
-      pecas: [...pecasPedido],
+      equipamentoNumeroSerie: eqRef?.numeroSerie,
+      pecas: [...pecasTotais],
+      equipamentosBlocos: blocosValidos.map((b) => ({
+        ...b,
+        pecas: [...b.pecas],
+      })),
       status: 'pendente',
     }
+
     const atualizados = [...pedidosGerados, novo]
     setPedidosGerados(atualizados)
     setCodigoUltimoGerado(codigo)
@@ -362,11 +521,6 @@ export function PedidoOrcamentosAvulsoContent({
       } catch (_) {}
     }
 
-    // Gravar também em Orçamentos Gerados (barra lateral > Orçamentos > Orçamentos Gerados)
-    const nomeNoDocPdf =
-      emitirComoCliente === 'nonato-service'
-        ? safeT?.nomeNonatoService || 'NONATO SERVICE'
-        : nomeReal
     if (saveData && loadData) {
       try {
         const existentes: any[] = (await loadData(ORCAMENTOS_AVULSO_KEY)) || []
@@ -376,15 +530,15 @@ export function PedidoOrcamentosAvulsoContent({
           numeroOrcamento: codigo,
           data: new Date().toISOString().split('T')[0],
           validade: '',
-          descricao: equipamentoTexto,
+          descricao: novo.equipamentoTexto,
           observacoes: '',
           tipo: 'pedido-avulso' as const,
           status: 'pendente' as const,
           clienteId: clienteSelecionado?.id,
-          clienteNome: nomeNoDocPdf,
+          clienteNome: nomeNoDoc,
           equipamentoChave: novo.equipamentoChave,
           equipamentoNumeroSerie: novo.equipamentoNumeroSerie,
-          itens: pecasPedido.map((p) => ({
+          itens: pecasTotais.map((p) => ({
             descricao: p.nome,
             quantidade: p.quantidade,
             precoUnitario: 0,
@@ -393,23 +547,34 @@ export function PedidoOrcamentosAvulsoContent({
             tipoItem: 'sem-valor' as const,
             iva: 0,
             pecaId: p.pecaId,
-            imagem: p.imagem
+            imagem: p.imagem,
           })),
           total: 0,
           totalSemIva: 0,
           totalIva: 0,
-          dataCriacao: new Date().toISOString()
+          dataCriacao: new Date().toISOString(),
         }
         await saveData(ORCAMENTOS_AVULSO_KEY, [...listaOrcamentos, orcamentoGerado])
       } catch (_) {}
     }
 
     alert(
-      (safeT?.pedidoGeradoComSucesso || 'Pedido gerado com sucesso!') + '\n\n' +
-      (safeT?.codigoOrcamento || 'Código do orçamento') + ': ' + codigo + '\n\n' +
-      (safeT?.nomeNoDocumento || 'Nome no documento') + ': ' + nomeNoDoc + '\n\n' +
-      (safeT?.guardeCodigoParaLocalizar || 'Guarde este código para localizar o orçamento depois.')
+      (safeT?.pedidoGeradoComSucesso || 'Pedido gerado com sucesso!') +
+        '\n\n' +
+        (safeT?.codigoOrcamento || 'Código do orçamento') +
+        ': ' +
+        codigo +
+        '\n\n' +
+        (safeT?.nomeNoDocumento || 'Nome no documento') +
+        ': ' +
+        nomeNoDoc +
+        '\n\n' +
+        (safeT?.guardeCodigoParaLocalizar || 'Guarde este código para localizar o orçamento depois.')
     )
+
+    const blocoReset = criarBlocoEquipamentoVazio()
+    setBlocosEquipamento([blocoReset])
+    setBlocoAtivoId(blocoReset.id)
     onGerarOrcamento?.()
   }
 
@@ -429,12 +594,22 @@ export function PedidoOrcamentosAvulsoContent({
     return safeT?.pendente || 'Pendente'
   }
 
+  const limparNovoPedido = () => {
+    setClienteSelecionado(null)
+    setClienteNomeManual('')
+    const bloco = criarBlocoEquipamentoVazio()
+    setBlocosEquipamento([bloco])
+    setBlocoAtivoId(bloco.id)
+    setMostrarFormPeca(false)
+    setModoPeca(null)
+  }
+
   return (
-    <div className="orc-pro">
-      <section className="orc-pro__hero">
+    <div className="orc-pro poa-pro">
+      <section className="orc-pro__hero poa-pro__hero">
         <div className="orc-pro__hero-top">
           <div className="orc-pro__hero-brand">
-            <span className="orc-pro__hero-icon" aria-hidden>
+            <span className="orc-pro__hero-icon poa-pro__hero-icon" aria-hidden>
               POA
             </span>
             <div>
@@ -443,34 +618,30 @@ export function PedidoOrcamentosAvulsoContent({
                 {safeT?.pedidoOrcamentosAvulsoTitle || 'Pedido de Orçamentos Avulso'}
               </h1>
               <p className="orc-pro__lead">
-                {safeT?.pedidoOrcamentoAvulsoDesc || 'Monte pedidos com cliente, equipamento e peças de forma rápida e organizada.'}
+                {safeT?.poaDescricaoNova ||
+                  safeT?.pedidoOrcamentoAvulsoDesc ||
+                  'Monte pedidos profissionais com cliente, vários equipamentos e peças por equipamento.'}
               </p>
             </div>
           </div>
           <div className="orc-pro__hero-actions">
             <LogoComponent size="small" />
-            <button
-              type="button"
-              className="orc-pro__btn"
-              onClick={() => closeTab(activeTabId)}
-              title={safeT?.voltar || 'Voltar'}
-            >
+            <button type="button" className="orc-pro__btn" onClick={() => closeTab(activeTabId)} title={safeT?.voltar || 'Voltar'}>
               &larr;
             </button>
-            <button
-              type="button"
-              className="orc-pro__btn orc-pro__btn--secondary"
-              onClick={voltarPaginaInicial}
-              title={safeT?.voltarInicio || 'Voltar ao Início'}
-            >
+            <button type="button" className="orc-pro__btn orc-pro__btn--secondary" onClick={voltarPaginaInicial} title={safeT?.voltarInicio || 'Voltar ao Início'}>
               Home
             </button>
           </div>
         </div>
-        <div className="orc-pro__kpis">
+        <div className="orc-pro__kpis poa-pro__kpis">
+          <div className="orc-pro__kpi">
+            <span>{safeT?.equipamentos || 'Equipamentos'}</span>
+            <strong>{blocosEquipamento.length}</strong>
+          </div>
           <div className="orc-pro__kpi">
             <span>{safeT?.pecasNoPedido || 'Peças no pedido'}</span>
-            <strong>{pecasPedido.length}</strong>
+            <strong>{totalPecas}</strong>
           </div>
           <div className="orc-pro__kpi">
             <span>{safeT?.ultimosPedidosGerados || 'Pedidos gerados'}</span>
@@ -479,43 +650,46 @@ export function PedidoOrcamentosAvulsoContent({
         </div>
       </section>
 
-      <div className="orc-pro__layout">
-        <aside className="orc-pro__sidebar">
-          <section className="orc-pro__panel">
+      <div className="poa-pro__steps" aria-hidden>
+        <span className="poa-pro__step is-done">1. {safeT?.cliente || 'Cliente'}</span>
+        <span className="poa-pro__step is-active">2. {safeT?.equipamentos || 'Equipamentos'}</span>
+        <span className="poa-pro__step">3. {safeT?.gerarPedido || 'Gerar'}</span>
+      </div>
+
+      <div className="poa-pro__layout">
+        <aside className="poa-pro__aside">
+          <section className="orc-pro__panel poa-pro__panel">
             <h3 className="orc-pro__panel-title">{safeT?.cliente || 'Cliente'}</h3>
             <p className="orc-pro__panel-desc">
-              {safeT?.buscarClienteOuDigitar || 'Selecione um cliente cadastrado ou digite o nome manualmente.'}
+              {safeT?.poaClienteBuscaDesc || safeT?.buscarClienteOuDigitar || 'Selecione um cliente cadastrado ou digite o nome.'}
             </p>
             <input
               type="text"
               className="orc-pro__search"
-              placeholder={safeT?.buscarCliente || 'Buscar cliente por nome ou email...'}
+              placeholder={safeT?.buscarCliente || 'Buscar por nome, e-mail ou contacto...'}
               value={buscaCliente}
               onChange={(e) => setBuscaCliente(e.target.value)}
             />
-            <div className="orc-pro__list">
+            <div className="orc-pro__list poa-pro__client-list">
               {clientesFiltrados.length === 0 ? (
-                <p className="orc-pro__empty-hint">
-                  {safeT?.nenhumClienteEncontrado || 'Nenhum cliente encontrado'}
-                </p>
+                <p className="orc-pro__empty-hint">{safeT?.nenhumClienteEncontrado || 'Nenhum cliente encontrado'}</p>
               ) : (
                 clientesFiltrados.map((cliente) => (
-                  <div
+                  <button
+                    type="button"
                     key={cliente.id}
-                    className={`orc-pro__list-item ${clienteSelecionado?.id === cliente.id ? 'is-active' : ''}`}
+                    className={`poa-pro__pick-btn ${clienteSelecionado?.id === cliente.id ? 'is-active' : ''}`}
                     onClick={() => {
                       setClienteSelecionado(cliente)
                       setClienteNomeManual('')
-                      setEquipamentoSelecionado(null)
+                      const bloco = criarBlocoEquipamentoVazio()
+                      setBlocosEquipamento([bloco])
+                      setBlocoAtivoId(bloco.id)
                     }}
                   >
                     <strong>{cliente.nomeEmpresa}</strong>
-                    {(cliente.morada || cliente.codigoPostal || cliente.conselho || cliente.email) && (
-                      <small>
-                        {[cliente.morada, cliente.codigoPostal, cliente.conselho, cliente.email].filter(Boolean).join(' · ')}
-                      </small>
-                    )}
-                  </div>
+                    {cliente.codigoCliente && <small>{cliente.codigoCliente}</small>}
+                  </button>
                 ))
               )}
             </div>
@@ -532,285 +706,319 @@ export function PedidoOrcamentosAvulsoContent({
                 }}
               />
             </div>
-            {(clienteSelecionado || clienteNomeManual) && (
-              <div className="orc-pro__chip">
-                <strong>{safeT?.clienteSelecionado || 'Cliente'}:</strong> {nomeClienteExibido}
-              </div>
-            )}
           </section>
 
-          <section className="orc-pro__panel">
-            <h3 className="orc-pro__panel-title">{safeT?.equipamento || 'Equipamento'}</h3>
-            <p className="orc-pro__panel-desc">
-              {safeT?.equipamentoDescPedido || 'Se o cliente for cadastrado, escolha um equipamento ou descreva manualmente.'}
-            </p>
-            {equipamentosDoCliente.length > 0 && (
-              <div className="orc-pro__list orc-pro__list--equip">
-                {equipamentosDoCliente.map((eq, idx) => (
-                  <div
-                    key={idx}
-                    className={`orc-pro__list-item orc-pro__list-item--equip ${equipamentoSelecionado === eq ? 'is-active' : ''}`}
-                    onClick={() => {
-                      setEquipamentoSelecionado(eq)
-                      setEquipamentoManual('')
-                    }}
-                  >
-                    <strong>
-                      {eq.tipoEquipamento} {eq.modelo && `- ${eq.modelo}`}
-                    </strong>
-                    <small>
-                      {eq.marca} {eq.numeroSerie && `· Nº Série: ${eq.numeroSerie}`}
-                    </small>
+          {(clienteSelecionado || clienteNomeManual.trim()) && (
+            <section className="orc-pro__panel poa-pro__panel poa-pro__client-card">
+              <h3 className="orc-pro__panel-title">{safeT?.poaDadosCliente || 'Dados do cliente'}</h3>
+              <p className="poa-pro__client-card-hint">
+                {safeT?.poaSemMoradaAviso || 'Contacto e identificação — sem morada no pedido.'}
+              </p>
+              <dl className="poa-pro__info-grid">
+                <div>
+                  <dt>{safeT?.empresa || 'Empresa'}</dt>
+                  <dd>{nomeClienteExibido}</dd>
+                </div>
+                {clienteSelecionado?.codigoCliente && (
+                  <div>
+                    <dt>{safeT?.clienteCodigoLabel || 'Código'}</dt>
+                    <dd>{clienteSelecionado.codigoCliente}</dd>
                   </div>
-                ))}
-              </div>
-            )}
-            <div className="orc-pro__field">
-              <label>{safeT?.descricaoManualEquipamento || 'Descrição manual do equipamento (opcional)'}</label>
-              <input
-                type="text"
-                className="orc-pro__input"
-                placeholder={safeT?.equipamentoManualPlaceholder || 'Ex: Seccionadora HPP 250'}
-                value={equipamentoManual}
-                onChange={(e) => {
-                  setEquipamentoManual(e.target.value)
-                  if (e.target.value) setEquipamentoSelecionado(null)
-                }}
-              />
-            </div>
-            {(equipamentoSelecionado || equipamentoManual) && (
-              <div className="orc-pro__chip">
-                <strong>{safeT?.equipamento || 'Equipamento'}:</strong>{' '}
-                {equipamentoSelecionado
-                  ? `${equipamentoSelecionado.tipoEquipamento} ${equipamentoSelecionado.modelo || ''} - ${equipamentoSelecionado.marca}`
-                  : equipamentoManual}
-              </div>
-            )}
-          </section>
+                )}
+                {clienteSelecionado?.contato && (
+                  <div>
+                    <dt>{safeT?.contato || 'Contato'}</dt>
+                    <dd>{clienteSelecionado.contato}</dd>
+                  </div>
+                )}
+                {clienteSelecionado?.email && (
+                  <div>
+                    <dt>{safeT?.email || 'E-mail'}</dt>
+                    <dd>{clienteSelecionado.email}</dd>
+                  </div>
+                )}
+                {clienteSelecionado?.telefones && (
+                  <div>
+                    <dt>{safeT?.telefone || 'Telefone'}</dt>
+                    <dd>{clienteSelecionado.telefones}</dd>
+                  </div>
+                )}
+                {clienteSelecionado?.numeroContribuicaoFiscal && (
+                  <div>
+                    <dt>{safeT?.contribuicaoFiscal || 'NIF'}</dt>
+                    <dd>{clienteSelecionado.numeroContribuicaoFiscal}</dd>
+                  </div>
+                )}
+              </dl>
+            </section>
+          )}
         </aside>
 
-        <main className="orc-pro__main">
-          <section className="orc-pro__panel">
-            <h3 className="orc-pro__panel-title">{safeT?.adicionarPecas || 'Adicionar peças'}</h3>
-            <p className="orc-pro__panel-desc">
-              {safeT?.adicionarPecasDesc || 'Busque na Biblioteca de Peças por código/nome ou digite o código manualmente.'}
-            </p>
-            {!mostrarFormPeca ? (
-              <div className="orc-pro__actions-bar">
-                <button
-                  type="button"
-                  className="orc-pro__btn orc-pro__btn--primary"
-                  onClick={() => { setMostrarFormPeca(true); setModoPeca('biblioteca'); setBuscaPeca(''); }}
-                >
-                  📚 {safeT?.orcamentoBuscarBibliotecaPecas || 'Buscar na Biblioteca de Peças'}
-                </button>
-                <button
-                  type="button"
-                  className="orc-pro__btn orc-pro__btn--secondary"
-                  onClick={() => { setMostrarFormPeca(true); setModoPeca('manual'); limparFormularioPecaManual(); }}
-                >
-                  ✏️ {safeT?.digitarCodigoManual || 'Digitar código / peça manual'}
-                </button>
+        <main className="poa-pro__main">
+          <section className="orc-pro__panel poa-pro__panel">
+            <div className="poa-pro__section-head">
+              <div>
+                <h3 className="orc-pro__panel-title">{safeT?.poaEquipamentosTitulo || 'Equipamentos e peças'}</h3>
+                <p className="orc-pro__panel-desc">
+                  {safeT?.poaEquipamentosDesc ||
+                    'Adicione um ou vários equipamentos. Em cada um, seleccione do cadastro ou descreva manualmente e adicione as peças necessárias.'}
+                </p>
               </div>
-            ) : (
-              <div className="orc-pro__form-box">
-                {modoPeca === 'biblioteca' && (
-                  <>
-                    <div className="orc-pro__field">
-                      <label>{safeT?.buscarPorCodigoOuNome || safeT?.buscarPorCodigo || 'Buscar por código ou nome'}</label>
+              <button type="button" className="orc-pro__btn orc-pro__btn--primary" onClick={adicionarBlocoEquipamento}>
+                + {safeT?.poaAdicionarEquipamento || 'Adicionar equipamento'}
+              </button>
+            </div>
+
+            <div className="poa-pro__blocos">
+              {blocosEquipamento.map((bloco, blocoIndex) => {
+                const isAtivo = bloco.id === blocoAtivoId
+                const detalhes = detalhesEquipamentoBloco(bloco, safeT)
+                return (
+                  <article
+                    key={bloco.id}
+                    className={`poa-pro__bloco ${isAtivo ? 'is-active' : ''}`}
+                    onClick={() => setBlocoAtivoId(bloco.id)}
+                  >
+                    <header className="poa-pro__bloco-head">
+                      <span className="poa-pro__bloco-num">
+                        {safeT?.poaEquipamentoNumero || 'Equipamento'} {blocoIndex + 1}
+                      </span>
+                      <span className="poa-pro__bloco-meta">
+                        {bloco.pecas.length} {safeT?.pecas || 'peças'}
+                      </span>
+                      {blocosEquipamento.length > 1 && (
+                        <button
+                          type="button"
+                          className="poa-pro__bloco-remove"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            removerBlocoEquipamento(bloco.id)
+                          }}
+                          title={safeT?.poaRemoverEquipamento || 'Remover equipamento'}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </header>
+
+                    {equipamentosDoCliente.length > 0 && (
+                      <div className="poa-pro__equip-picker">
+                        <p className="poa-pro__sub-label">{safeT?.selecionarEquipamentoCadastro || 'Do cadastro do cliente'}</p>
+                        <div className="poa-pro__equip-grid">
+                          {equipamentosDoCliente.map((eq, idx) => (
+                            <button
+                              type="button"
+                              key={idx}
+                              className={`poa-pro__equip-btn ${
+                                bloco.equipamento === eq && bloco.equipamentoIdx === idx ? 'is-active' : ''
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                selecionarEquipamentoNoBloco(bloco.id, eq, idx)
+                                setBlocoAtivoId(bloco.id)
+                              }}
+                            >
+                              <strong>{[eq.marca, eq.modelo].filter(Boolean).join(' ') || eq.tipoEquipamento}</strong>
+                              <small>{eq.numeroSerie || eq.tipoEquipamento}</small>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="orc-pro__field" onClick={(e) => e.stopPropagation()}>
+                      <label>{safeT?.descricaoManualEquipamento || 'Descrição manual (opcional)'}</label>
                       <input
                         type="text"
                         className="orc-pro__input"
-                        value={buscaPeca}
-                        onChange={(e) => setBuscaPeca(e.target.value)}
-                        placeholder={safeT?.codigoPecaBiblioteca || 'Código'}
-                        autoFocus
+                        placeholder={safeT?.equipamentoManualPlaceholder || 'Ex: Seccionadora HPP 250'}
+                        value={bloco.equipamentoManual}
+                        onChange={(e) =>
+                          atualizarBloco(bloco.id, {
+                            equipamentoManual: e.target.value,
+                            equipamento: e.target.value ? null : bloco.equipamento,
+                          })
+                        }
+                        onFocus={() => setBlocoAtivoId(bloco.id)}
                       />
                     </div>
-                    <div className="orc-pro__list">
-                      {pecasFiltradas.length === 0 ? (
-                        <p className="orc-pro__empty-hint">{safeT?.nenhumaPecaEncontrada || 'Nenhuma peça encontrada'}</p>
-                      ) : (
-                        pecasFiltradas.map((peca) => (
-                          <div
-                            key={peca.id}
-                            className="orc-pro__list-item orc-pro__list-item--peca"
-                            onClick={() => adicionarPecaDaBiblioteca(peca)}
-                          >
-                            <ProImageHoverPreview
-                              src={peca.imagem}
-                              alt={peca.nome}
-                              label={`${peca.codigo} — ${peca.nome}`}
-                              disablePreview={!peca.imagem}
-                              thumbClassName="orc-pro__peca-thumb"
-                            >
-                              —
-                            </ProImageHoverPreview>
-                            <div className="orc-pro__peca-info">
-                              <strong>{peca.nome}</strong>
-                              <small>{peca.codigo}</small>
+
+                    {detalhes.length > 0 && (
+                      <div className="poa-pro__equip-detalhe">
+                        <p className="poa-pro__sub-label">{safeT?.poaEquipamentoDetalhes || 'Informação do equipamento'}</p>
+                        <dl className="poa-pro__info-grid poa-pro__info-grid--equip">
+                          {detalhes.map((d) => (
+                            <div key={d.label}>
+                              <dt>{d.label}</dt>
+                              <dd>{d.value}</dd>
                             </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </>
-                )}
-                {modoPeca === 'manual' && (
-                  <>
-                    <input
-                      type="text"
-                      className="orc-pro__input"
-                      value={codigoManualPeca}
-                      onChange={(e) => setCodigoManualPeca(e.target.value)}
-                      placeholder={safeT?.codigoPecaBiblioteca || 'Código'}
-                    />
-                    <input
-                      type="text"
-                      className="orc-pro__input"
-                      value={nomeManualPeca}
-                      onChange={(e) => setNomeManualPeca(e.target.value)}
-                      placeholder={safeT?.nomePecaBiblioteca || 'Nome da peça'}
-                    />
-                    <div className="orc-pro__field">
-                      <label>{safeT?.quantidade || 'Quantidade'}</label>
-                      <input
-                        type="number"
-                        min={1}
-                        className="orc-pro__input orc-pro__input--qty"
-                        value={quantidadeNovaPeca}
-                        onChange={(e) => setQuantidadeNovaPeca(parseInt(e.target.value, 10) || 1)}
-                      />
-                    </div>
-                    <div className="orc-pro__imagem-manual">
-                      <label>{safeT?.imagemPecaBiblioteca || safeT?.imagem || 'Imagem da peça'}</label>
-                      <p className="orc-pro__imagem-manual-hint">
-                        {safeT?.pedidoAvulsoImagemManualAjuda ||
-                          safeT?.orcamentoItemManualImagemAjuda ||
-                          'Opcional: carregue uma foto do dispositivo ou cole o URL de uma imagem.'}
-                      </p>
-                      <input
-                        id={imagemManualUploadId}
-                        type="file"
-                        accept="image/*"
-                        className="orc-pro__imagem-manual-file"
-                        onChange={handleImagemManualFile}
-                      />
-                      {(imagemManualPeca || urlImagemManualPeca.trim()) && (
-                        <div className="orc-pro__imagem-manual-preview">
-                          <ProImageHoverPreview
-                            src={imagemManualPeca || urlImagemManualPeca.trim()}
-                            alt={nomeManualPeca || codigoManualPeca || (safeT?.imagemPeca || 'Imagem da peça')}
-                            label={nomeManualPeca || codigoManualPeca || (safeT?.imagemPeca || 'Imagem da peça')}
-                            thumbClassName="orc-pro__peca-thumb orc-pro__peca-thumb--lg"
-                          />
+                          ))}
+                        </dl>
+                      </div>
+                    )}
+
+                    {isAtivo && (
+                      <div className="poa-pro__pecas-zone" onClick={(e) => e.stopPropagation()}>
+                        <div className="poa-pro__pecas-head">
+                          <h4>{safeT?.pecasDesteEquipamento || 'Peças deste equipamento'}</h4>
+                          {!mostrarFormPeca ? (
+                            <div className="orc-pro__actions-bar orc-pro__actions-bar--sm">
+                              <button
+                                type="button"
+                                className="orc-pro__btn orc-pro__btn--primary"
+                                onClick={() => {
+                                  setMostrarFormPeca(true)
+                                  setModoPeca('biblioteca')
+                                  setBuscaPeca('')
+                                }}
+                              >
+                                📚 {safeT?.orcamentoBuscarBibliotecaPecas || 'Biblioteca'}
+                              </button>
+                              <button
+                                type="button"
+                                className="orc-pro__btn orc-pro__btn--secondary"
+                                onClick={() => {
+                                  setMostrarFormPeca(true)
+                                  setModoPeca('manual')
+                                  limparFormularioPecaManual()
+                                }}
+                              >
+                                ✏️ {safeT?.digitarCodigoManual || 'Manual'}
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="orc-pro__form-box">
+                              {modoPeca === 'biblioteca' && (
+                                <>
+                                  <input
+                                    type="text"
+                                    className="orc-pro__input"
+                                    value={buscaPeca}
+                                    onChange={(e) => setBuscaPeca(e.target.value)}
+                                    placeholder={safeT?.buscarPorCodigoOuNome || 'Buscar código ou nome'}
+                                    autoFocus
+                                  />
+                                  <div className="orc-pro__list">
+                                    {pecasFiltradas.map((peca) => (
+                                      <div
+                                        key={peca.id}
+                                        className="orc-pro__list-item orc-pro__list-item--peca"
+                                        onClick={() => adicionarPecaDaBiblioteca(peca)}
+                                      >
+                                        <ProImageHoverPreview
+                                          src={peca.imagem}
+                                          alt={peca.nome}
+                                          label={`${peca.codigo} — ${peca.nome}`}
+                                          disablePreview={!peca.imagem}
+                                          thumbClassName="orc-pro__peca-thumb"
+                                        >
+                                          —
+                                        </ProImageHoverPreview>
+                                        <div className="orc-pro__peca-info">
+                                          <strong>{peca.nome}</strong>
+                                          <small>{peca.codigo}</small>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </>
+                              )}
+                              {modoPeca === 'manual' && (
+                                <>
+                                  <input
+                                    type="text"
+                                    className="orc-pro__input"
+                                    value={codigoManualPeca}
+                                    onChange={(e) => setCodigoManualPeca(e.target.value)}
+                                    placeholder={safeT?.codigoPecaBiblioteca || 'Código'}
+                                  />
+                                  <input
+                                    type="text"
+                                    className="orc-pro__input"
+                                    value={nomeManualPeca}
+                                    onChange={(e) => setNomeManualPeca(e.target.value)}
+                                    placeholder={safeT?.nomePecaBiblioteca || 'Nome'}
+                                  />
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    className="orc-pro__input orc-pro__input--qty"
+                                    value={quantidadeNovaPeca}
+                                    onChange={(e) => setQuantidadeNovaPeca(parseInt(e.target.value, 10) || 1)}
+                                  />
+                                  <input
+                                    id={imagemManualUploadId}
+                                    type="file"
+                                    accept="image/*"
+                                    className="orc-pro__imagem-manual-file"
+                                    onChange={handleImagemManualFile}
+                                  />
+                                  <button type="button" className="orc-pro__btn orc-pro__btn--primary" onClick={adicionarPecaManual}>
+                                    {safeT?.adicionar || 'Adicionar'}
+                                  </button>
+                                </>
+                              )}
+                              <button
+                                type="button"
+                                className="orc-pro__btn"
+                                onClick={() => {
+                                  setMostrarFormPeca(false)
+                                  setModoPeca(null)
+                                }}
+                              >
+                                {safeT?.cancel || 'Cancelar'}
+                              </button>
+                            </div>
+                          )}
                         </div>
-                      )}
-                      <div className="orc-pro__imagem-manual-actions">
-                        <button
-                          type="button"
-                          className="orc-pro__btn orc-pro__btn--secondary"
-                          onClick={() => document.getElementById(imagemManualUploadId)?.click()}
-                        >
-                          📷 {safeT?.selectPhoto || 'Selecionar foto'}
-                        </button>
-                        {(imagemManualPeca || urlImagemManualPeca.trim()) && (
-                          <button
-                            type="button"
-                            className="orc-pro__btn orc-pro__btn--danger"
-                            onClick={() => {
-                              setImagemManualPeca('')
-                              setUrlImagemManualPeca('')
-                            }}
-                          >
-                            {safeT?.removerImagem || 'Remover imagem'}
-                          </button>
+
+                        {bloco.pecas.length > 0 && (
+                          <div className="orc-pro__pecas-stack">
+                            {bloco.pecas.map((p) => (
+                              <div key={p.id} className="orc-pro__peca-card">
+                                <ProImageHoverPreview
+                                  src={p.imagem}
+                                  alt={p.nome}
+                                  label={`${p.codigo} — ${p.nome}`}
+                                  disablePreview={!p.imagem}
+                                  thumbClassName="orc-pro__peca-thumb orc-pro__peca-thumb--lg"
+                                >
+                                  —
+                                </ProImageHoverPreview>
+                                <div className="orc-pro__peca-info">
+                                  <strong>{p.nome}</strong>
+                                  <small>{p.codigo}</small>
+                                </div>
+                                <div className="orc-pro__peca-qty">
+                                  <button type="button" className="orc-pro__act" onClick={() => alterarQuantidadePeca(bloco.id, p.id, -1)}>
+                                    −
+                                  </button>
+                                  <span>{p.quantidade}</span>
+                                  <button type="button" className="orc-pro__act" onClick={() => alterarQuantidadePeca(bloco.id, p.id, 1)}>
+                                    +
+                                  </button>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="orc-pro__act orc-pro__act--danger"
+                                  onClick={() => removerPeca(bloco.id, p.id)}
+                                >
+                                  X
+                                </button>
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
-                      <input
-                        type="url"
-                        className="orc-pro__input"
-                        value={urlImagemManualPeca}
-                        onChange={(e) => {
-                          setUrlImagemManualPeca(e.target.value)
-                          if (e.target.value.trim()) setImagemManualPeca('')
-                        }}
-                        placeholder={safeT?.pecaBibliotecaUrlPlaceholder || 'https://... (URL da imagem)'}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      className="orc-pro__btn orc-pro__btn--primary"
-                      onClick={adicionarPecaManual}
-                    >
-                      {safeT?.adicionar || 'Adicionar'}
-                    </button>
-                  </>
-                )}
-                <button
-                  type="button"
-                  className="orc-pro__btn"
-                  onClick={() => { setMostrarFormPeca(false); setModoPeca(null); }}
-                >
-                  {safeT?.cancel || 'Cancelar'}
-                </button>
-              </div>
-            )}
-
-            {pecasPedido.length > 0 && (
-              <div className="orc-pro__pecas-stack">
-                <h4 className="orc-pro__panel-title">{safeT?.pecasNoPedido || 'Peças no pedido'}</h4>
-                {pecasPedido.map((p) => (
-                  <div key={p.id} className="orc-pro__peca-card">
-                    <ProImageHoverPreview
-                      src={p.imagem}
-                      alt={p.nome}
-                      label={`${p.codigo} — ${p.nome}`}
-                      disablePreview={!p.imagem}
-                      thumbClassName="orc-pro__peca-thumb orc-pro__peca-thumb--lg"
-                    >
-                      —
-                    </ProImageHoverPreview>
-                    <div className="orc-pro__peca-info">
-                      <strong>{p.nome}</strong>
-                      <small>{p.codigo}</small>
-                    </div>
-                    <div className="orc-pro__peca-qty">
-                      <button
-                        type="button"
-                        className="orc-pro__act"
-                        onClick={() => alterarQuantidadePeca(p.id, -1)}
-                      >
-                        −
-                      </button>
-                      <span>{p.quantidade}</span>
-                      <button
-                        type="button"
-                        className="orc-pro__act"
-                        onClick={() => alterarQuantidadePeca(p.id, 1)}
-                      >
-                        +
-                      </button>
-                    </div>
-                    <button
-                      type="button"
-                      className="orc-pro__act orc-pro__act--danger"
-                      onClick={() => removerPeca(p.id)}
-                      title={safeT?.delete || 'Remover'}
-                    >
-                      X
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                    )}
+                  </article>
+                )
+              })}
+            </div>
           </section>
 
-          <section className="orc-pro__panel">
+          <section className="orc-pro__panel poa-pro__panel poa-pro__gerar">
             <h3 className="orc-pro__panel-title">{safeT?.gerarDocumentoComo || 'Ao gerar documento'}</h3>
-            <p className="orc-pro__panel-desc">
-              {safeT?.desejaGerarComNomeClienteOuNonato || 'Deseja gerar com o nome do cliente ou com o nome da NONATO SERVICE? Se escolher NONATO SERVICE, no documento enviado ao revendedor aparecerá apenas o nome NONATO SERVICE; o resto mantém-se (equipamento, peças).'}
-            </p>
             <div className="orc-pro__radio-row">
               <label>
                 <input
@@ -831,112 +1039,55 @@ export function PedidoOrcamentosAvulsoContent({
                 <span>{safeT?.gerarComNomeNonatoService || 'Com nome da NONATO SERVICE'}</span>
               </label>
             </div>
-            <div className="orc-pro__actions-bar">
-              <button
-                type="button"
-                className="orc-pro__btn orc-pro__btn--secondary"
-                onClick={handleVisualizarPdf}
-              >
-                👁️ {safeT?.visualizarPdfPedido || safeT?.visualizar || 'Visualizar PDF'}
+            <div className="poa-pro__gerar-actions">
+              <button type="button" className="orc-pro__btn orc-pro__btn--secondary" onClick={limparNovoPedido}>
+                {safeT?.limpar || 'Limpar'}
               </button>
-              <button
-                type="button"
-                className="orc-pro__btn orc-pro__btn--primary"
-                onClick={handleGerarPedido}
-              >
+              <button type="button" className="orc-pro__btn orc-pro__btn--secondary" onClick={handleVisualizarPdf}>
+                👁️ {safeT?.visualizarPdfPedido || 'Visualizar PDF'}
+              </button>
+              <button type="button" className="orc-pro__btn orc-pro__btn--primary" onClick={handleGerarPedido}>
                 {safeT?.gerarPedido || 'Gerar pedido'}
               </button>
             </div>
-            <p className="orc-pro__hint">
-              {safeT?.pedidoOrcamentoPreviewHint || 'Use «Visualizar PDF» para ver o documento antes de gerar. Depois imprima ou guarde como PDF no browser.'}
-            </p>
             {codigoUltimoGerado && (
               <div className="orc-pro__chip orc-pro__chip--success">
-                <strong>{safeT?.codigoOrcamento || 'Código do orçamento'}:</strong> {codigoUltimoGerado}
-                <br />
-                <small>{safeT?.guardeCodigoParaLocalizar || 'Guarde este código para localizar o orçamento depois.'}</small>
+                <strong>{safeT?.codigoOrcamento || 'Código'}:</strong> {codigoUltimoGerado}
               </div>
             )}
           </section>
 
           {pedidosGerados.length > 0 && (
-            <section className="orc-pro__panel">
-              <h3 className="orc-pro__panel-title">
-                {safeT?.ultimosPedidosGerados || 'Últimos pedidos (localizar por código)'}
-              </h3>
+            <section className="orc-pro__panel poa-pro__panel">
+              <h3 className="orc-pro__panel-title">{safeT?.ultimosPedidosGerados || 'Histórico de pedidos'}</h3>
               <div className="orc-pro__history-list">
                 {[...pedidosGerados].reverse().slice(0, 50).map((p) => (
                   <div key={p.codigo} className="orc-pro__history-card">
                     <div className="orc-pro__history-head">
                       <span className="orc-pro__history-code">{p.codigo}</span>
                       <span className="orc-pro__history-meta">
-                        {p.emitirComoCliente === 'nonato-service' ? (safeT?.nomeNonatoService || 'NONATO SERVICE') : p.clienteNomeReal}
-                      </span>
-                      <span className="orc-pro__history-meta">
-                        {new Date(p.dataGeracao).toLocaleDateString('pt-BR')}
+                        {p.emitirComoCliente === 'nonato-service'
+                          ? safeT?.nomeNonatoService || 'NONATO SERVICE'
+                          : p.clienteNomeReal}
                       </span>
                       <span className={statusBadgeClass(p.status)}>{statusLabel(p.status)}</span>
                     </div>
                     <div className="orc-pro__actions-bar orc-pro__actions-bar--sm">
-                      <button
-                        type="button"
-                        className="orc-pro__act"
-                        onClick={() => handleVisualizarPdfGuardado(p)}
-                      >
+                      <button type="button" className="orc-pro__act" onClick={() => handleVisualizarPdfGuardado(p)}>
                         👁️ PDF
-                      </button>
-                      <button
-                        type="button"
-                        className="orc-pro__act"
-                        onClick={async () => {
-                          if (saveData) await saveData(PEDIDOS_AVULSO_KEY, pedidosGerados)
-                          alert(safeT?.orcamentoSalvo || 'Orçamento salvo com sucesso!')
-                        }}
-                      >
-                        💾 {safeT?.guardar || 'Guardar'}
                       </button>
                       <button
                         type="button"
                         className="orc-pro__act orc-pro__act--danger"
                         onClick={async () => {
-                          if (!confirm(safeT?.confirmarExcluirPedidoOrcamento || safeT?.confirmarExcluirOrcamento || 'Deseja realmente excluir este pedido?')) return
+                          if (!confirm(safeT?.confirmarExcluirPedidoOrcamento || 'Excluir este pedido?')) return
                           const atualizados = pedidosGerados.filter((x) => x.codigo !== p.codigo)
                           setPedidosGerados(atualizados)
                           if (saveData) await saveData(PEDIDOS_AVULSO_KEY, atualizados)
-                          if (loadData && saveData) {
-                            try {
-                              const orcamentos: any[] = (await loadData(ORCAMENTOS_AVULSO_KEY)) || []
-                              const lista = Array.isArray(orcamentos) ? orcamentos : []
-                              const semEste = lista.filter((o: any) => o.id !== 'avulso-' + p.codigo)
-                              await saveData(ORCAMENTOS_AVULSO_KEY, semEste)
-                            } catch (_) {}
-                          }
                         }}
                       >
                         🗑️ {safeT?.deletar || 'Deletar'}
                       </button>
-                      {(['cancelado', 'concluido', 'aprovado', 'entregue'] as const).map((status) => (
-                        <button
-                          key={status}
-                          type="button"
-                          className={`orc-pro__status-chip orc-pro__status-chip--${status} ${p.status === status ? 'is-active' : ''}`}
-                          onClick={async () => {
-                            const atualizados = pedidosGerados.map((x) => (x.codigo === p.codigo ? { ...x, status } : x))
-                            setPedidosGerados(atualizados)
-                            if (saveData) await saveData(PEDIDOS_AVULSO_KEY, atualizados)
-                            if (loadData && saveData) {
-                              try {
-                                const orcamentos: any[] = (await loadData(ORCAMENTOS_AVULSO_KEY)) || []
-                                const lista = Array.isArray(orcamentos) ? orcamentos : []
-                                const atualizadosOrc = lista.map((o: any) => (o.id === 'avulso-' + p.codigo ? { ...o, status } : o))
-                                await saveData(ORCAMENTOS_AVULSO_KEY, atualizadosOrc)
-                              } catch (_) {}
-                            }
-                          }}
-                        >
-                          {status === 'cancelado' ? (safeT?.pedidoCancelado || 'Pedido Cancelado') : status === 'concluido' ? (safeT?.concluido || 'Concluído') : status === 'aprovado' ? (safeT?.aprovado || 'Aprovado') : (safeT?.entregue || 'Entregue')}
-                        </button>
-                      ))}
                     </div>
                   </div>
                 ))}
