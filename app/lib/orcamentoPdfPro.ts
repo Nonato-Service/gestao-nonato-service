@@ -9,8 +9,27 @@ import {
   escapePdfHtml,
   type PdfMetaField,
 } from './pdfDocumentLayout'
+import {
+  equipamentoIdETecnicoGerado,
+  resolverIdEquipamentoVisivelCliente,
+} from './relatorioServicoEquipamentos'
 
 export { escapePdfHtml, buildPdfDocumentFooterHtml }
+
+/** Número do equipamento visível no PDF: série, código do cliente ou ID não técnico. */
+export function resolverNumeroEquipamentoPdf(eq?: {
+  id?: string
+  numeroSerie?: string
+} | null): string {
+  if (!eq) return ''
+  const serie = String(eq.numeroSerie ?? '').trim()
+  if (serie) return serie
+  const idVisivel = resolverIdEquipamentoVisivelCliente(eq)
+  if (idVisivel) return idVisivel
+  const id = String(eq.id ?? '').trim()
+  if (id && !equipamentoIdETecnicoGerado(id)) return id
+  return ''
+}
 
 export const ORCAMENTO_PDF_PRO_CSS = `
 ${PDF_DOCUMENT_LAYOUT_CSS}
@@ -330,6 +349,40 @@ body.orc-pdf-pro {
   color: var(--orc-muted);
 }
 
+.orc-pdf-pro__toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: linear-gradient(90deg, #14532d 0%, #0d7a3d 55%, #14532d 100%);
+  padding: 10px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.2);
+}
+
+.orc-pdf-pro__toolbar-title {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.orc-pdf-pro__toolbar-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  width: 100%;
+}
+
+.orc-pdf-pro__toolbar .orc-pdf-pro__btn {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
 .orc-pdf-pro__actions {
   margin-top: 22px;
   padding-top: 16px;
@@ -449,6 +502,10 @@ export function buildOrcamentoPdfShell(options: {
 
   const empresa = buildEmpresaBlockHtml(options.empresa, {})
 
+  const actionsBlock = options.actionsHtml
+    ? `<div class="orc-pdf-pro__toolbar-btns">${options.actionsHtml}</div>`
+    : ''
+
   return `<!DOCTYPE html>
 <html lang="pt-PT">
 <head>
@@ -457,7 +514,8 @@ export function buildOrcamentoPdfShell(options: {
   <title>${escapePdfHtml(options.title)} — ${escapePdfHtml(options.reportNumber)}</title>
   <style>${ORCAMENTO_PDF_PRO_CSS}</style>
 </head>
-<body class="orc-pdf-pro">
+<body class="orc-pdf-pro${options.actionsHtml ? ' orc-pdf-pro--with-actions' : ''}">
+  ${options.actionsHtml ? `<div class="orc-pdf-pro__toolbar no-print"><p class="orc-pdf-pro__toolbar-title">Opções de impressão</p>${actionsBlock}</div>` : ''}
   <div class="orc-pdf-pro__page">
     ${options.previewBanner ? `<div class="orc-pdf-pro__preview">${escapePdfHtml(options.previewBanner)}</div>` : ''}
     ${header}
@@ -466,7 +524,7 @@ export function buildOrcamentoPdfShell(options: {
     ${meta}
     ${options.bodyHtml}
     ${buildPdfDocumentFooterHtml(options.footerText)}
-    ${options.actionsHtml ? `<div class="orc-pdf-pro__actions no-print">${options.actionsHtml}</div>` : ''}
+    ${options.actionsHtml ? `<div class="orc-pdf-pro__actions no-print">${actionsBlock}</div>` : ''}
   </div>
 </body>
 </html>`

@@ -137,6 +137,10 @@ export function buildOrcamentoGeradoPdfHtml(data: OrcamentoGeradoPdfData): strin
     ? `<div class="orc-pdf-pro__notes"><p class="orc-pdf-pro__notes-title">${escapePdfHtml(L.descricao || 'Descrição')}</p>${escapePdfHtml(data.descricao)}</div>`
     : ''
 
+  const equipNumeroBlock = data.equipamentoNumeroSerie?.trim()
+    ? `<div class="orc-pdf-pro__equip-sn" style="margin-bottom:14px;">${escapePdfHtml(L.numeroEquipamento || L.numeroSerie || 'Número do Equipamento')}: <strong>${escapePdfHtml(data.equipamentoNumeroSerie.trim())}</strong></div>`
+    : ''
+
   const obsBlock = data.observacoes?.trim()
     ? `<div class="orc-pdf-pro__notes"><p class="orc-pdf-pro__notes-title">${escapePdfHtml(L.observacoes || 'Observações')}</p>${escapePdfHtml(data.observacoes)}</div>`
     : ''
@@ -157,7 +161,7 @@ export function buildOrcamentoGeradoPdfHtml(data: OrcamentoGeradoPdfData): strin
       : L.badgeSemValores || 'Orçamento sem valores',
     metaTitle: L.dadosCliente || 'Dados do cliente',
     metaFields,
-    bodyHtml: `${descricaoBlock}${tabela}${summary}${obsBlock}`,
+    bodyHtml: `${equipNumeroBlock}${descricaoBlock}${tabela}${summary}${obsBlock}`,
     footerText:
       L.rodapeOrcamento ||
       `NONATO SERVICE — ${L.emitidoEm || 'Emitido em'} ${dataFmt}. ${L.rodapeLegal || 'Documento válido mediante aceitação do cliente.'}`,

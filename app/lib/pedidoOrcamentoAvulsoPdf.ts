@@ -84,12 +84,36 @@ function renderTabelaPecas(pecas: PedidoAvulsoPdfPeca[], L: PedidoAvulsoPdfData[
   </table>`
 }
 
+function resolverSerieBlocoPdf(
+  bloco: PedidoAvulsoPdfEquipamentoBloco,
+  L: PedidoAvulsoPdfData['labels']
+): string {
+  const direto = String(bloco.numeroSerie ?? '').trim()
+  if (direto) return direto
+  const lblNum =
+    L?.numeroEquipamento || L?.numeroSerie || 'Número do Equipamento'
+  const lblSerie = L?.numeroSerie || 'Nº Série'
+  for (const c of bloco.campos || []) {
+    if (c.label === lblNum || c.label === lblSerie) {
+      const v = String(c.value ?? '').trim()
+      if (v) return v
+    }
+  }
+  if (bloco.detalhes) {
+    const m = bloco.detalhes.match(
+      /(?:N[º°]\s*S[ée]rie|Número do Equipamento|Numero do Equipamento)\s*:\s*([^·\n]+)/i
+    )
+    if (m?.[1]) return m[1].trim()
+  }
+  return ''
+}
+
 function renderEquipInfoGrid(
   bloco: PedidoAvulsoPdfEquipamentoBloco,
   L: PedidoAvulsoPdfData['labels']
 ): string {
   const partes: string[] = []
-  const serie = String(bloco.numeroSerie ?? '').trim()
+  const serie = resolverSerieBlocoPdf(bloco, L)
   if (serie) {
     partes.push(
       `<div class="orc-pdf-pro__equip-sn">${escapePdfHtml(L?.numeroEquipamento || L?.numeroSerie || 'Número do Equipamento')}: <strong>${escapePdfHtml(serie)}</strong></div>`
@@ -99,6 +123,9 @@ function renderEquipInfoGrid(
     const v = String(c.value ?? '').trim()
     if (!v) return false
     if (serie && v === serie) return false
+    const lblNum = L?.numeroEquipamento || ''
+    const lblSerie = L?.numeroSerie || ''
+    if (serie && (c.label === lblNum || c.label === lblSerie)) return false
     return true
   })
   if (campos.length > 0) {

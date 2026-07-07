@@ -186,6 +186,7 @@ import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import { ClienteEquipamentoOrcamentosPanel } from './components/ClienteEquipamentoOrcamentosPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
 import { openOrcamentoGeradoPdf } from './lib/orcamentoGeradoPdf'
+import { resolverNumeroEquipamentoPdf } from './lib/orcamentoPdfPro'
 import { enrichOrcamentosGeradosComPedidosAvulsos, gerarProximoCodigoPedidoRelatorio } from './lib/clienteEquipamentoOrcamentos'
 import type { PedidoAvulsoGuardado } from './components/PedidoOrcamentosAvulsoContent'
 import { rotuloIdEquipamentoCliente } from './lib/clienteDetalheUtils'
@@ -23745,24 +23746,31 @@ export default function Dashboard() {
         : (b.equipamentoManual || '').trim()
       const campos: Array<{ label: string; value: string }> = []
       if (eq) {
+        const numeroEq = resolverNumeroEquipamentoPdf(eq)
+        if (numeroEq) {
+          campos.push({
+            label: (safeT as any)?.numeroEquipamento || safeT?.numeroSerie || 'Número do Equipamento',
+            value: numeroEq,
+          })
+        }
         if (eq.tipoEquipamento) campos.push({ label: safeT?.tipoEquipamento || 'Tipo', value: eq.tipoEquipamento })
         if (eq.marca) campos.push({ label: safeT?.marca || 'Marca', value: eq.marca })
         if (eq.modelo) campos.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
-        if (eq.numeroSerie?.trim()) {
-          campos.push({
-            label: (safeT as any)?.numeroEquipamento || safeT?.numeroSerie || 'Número do Equipamento',
-            value: eq.numeroSerie.trim(),
-          })
-        }
         if (eq.familia) campos.push({ label: safeT?.familia || 'Família', value: eq.familia })
         if (eq.grupo) campos.push({ label: safeT?.grupo || 'Grupo', value: eq.grupo })
-        if (eq.id) campos.push({ label: (safeT as any)?.idEquipamento || 'ID', value: eq.id })
+        const idEq = String(eq.id ?? '').trim()
+        if (idEq && idEq !== numeroEq) {
+          campos.push({ label: (safeT as any)?.idEquipamento || 'ID', value: idEq })
+        }
       } else if (b.equipamentoManual?.trim()) {
         campos.push({ label: safeT?.descricao || 'Descrição', value: b.equipamentoManual.trim() })
       }
       return {
         titulo: `${(safeT as any)?.poaEquipamentoNumero || safeT?.equipamento || 'Equipamento'} ${i + 1}${nomeEquip ? ` — ${nomeEquip}` : ''}`,
-        numeroSerie: eq?.numeroSerie?.trim() || pedido.equipamentoNumeroSerie?.trim() || undefined,
+        numeroSerie:
+          (eq ? resolverNumeroEquipamentoPdf(eq) : '') ||
+          pedido.equipamentoNumeroSerie?.trim() ||
+          undefined,
         campos,
         pecas: (b.pecas || []).map((p) => ({
           codigo: p.codigo,
@@ -63806,6 +63814,41 @@ A1;Peça exemplo;10`}
       const clienteNome = orcamento.clienteNome || dadosCliente.nomeEmpresa || 'NONATO SERVICE'
       const orcId = String(orcamento.id).replace(/'/g, "\\'")
 
+      const resolverNumeroEquipamentoOrcamento = (): string | undefined => {
+        const direto = String(orcamento.equipamentoNumeroSerie ?? '').trim()
+        if (direto) return direto
+        const blocos = orcamento.equipamentosBlocos
+        if (Array.isArray(blocos) && blocos.length > 0) {
+          const nums = blocos
+            .map((b: { equipamento?: { id?: string; numeroSerie?: string }; equipamentoManual?: string }) => {
+              if (b.equipamento) return resolverNumeroEquipamentoPdf(b.equipamento)
+              return String(b.equipamentoManual ?? '').trim()
+            })
+            .filter(Boolean)
+          if (nums.length) return nums.join(' · ')
+        }
+        if (orcamento.clienteId && orcamento.equipamentoChave) {
+          const cli = clientes.find((c) => c.id === orcamento.clienteId)
+          const chave = String(orcamento.equipamentoChave).trim()
+          const eqHit = cli?.equipamentos?.find(
+            (e, idx) =>
+              String(e.id ?? '').trim() === chave ||
+              String(e.numeroSerie ?? '').trim() === chave ||
+              resolverIdEquipamentoCliente(e, idx) === chave
+          )
+          if (eqHit) {
+            const n = resolverNumeroEquipamentoPdf(eqHit)
+            if (n) return n
+          }
+        }
+        const desc = String(orcamento.descricao ?? '')
+        const m = desc.match(
+          /(?:N[º°]\s*S[ée]rie|Número do Equipamento|Numero do Equipamento)\s*:\s*([^·\n]+)/i
+        )
+        if (m?.[1]) return m[1].trim()
+        return undefined
+      }
+
       const actionsHtml = `
         <button type="button" class="orc-pdf-pro__btn orc-pdf-pro__btn--email" onclick="if(window.opener){window.opener.postMessage({type:'sendEmail',orcamentoId:'${orcId}'},'*')}">📧 ${(safeT?.enviarPorEmail || 'Enviar por Email').replace(/'/g, "\\'")}</button>
         <button type="button" class="orc-pdf-pro__btn orc-pdf-pro__btn--wa" onclick="if(window.opener){window.opener.postMessage({type:'sendWhatsApp',orcamentoId:'${orcId}'},'*')}">💬 ${(safeT?.enviarPorWhatsApp || 'Enviar por WhatsApp').replace(/'/g, "\\'")}</button>
@@ -63820,8 +63863,8 @@ A1;Peça exemplo;10`}
         descricao: orcamento.descricao,
         observacoes: orcamento.observacoes,
         relatorioNumero: orcamento.relatorioNumero,
-        equipamentoNumeroSerie: orcamento.equipamentoNumeroSerie,
-        equipamentoDescricao: orcamento.descricao,
+        equipamentoNumeroSerie: resolverNumeroEquipamentoOrcamento(),
+        equipamentoDescricao: orcamento.equipamentoDescricao || orcamento.descricao,
         clienteNome,
         clienteEmail: dadosCliente.email,
         clienteTelefone: dadosCliente.telefones,

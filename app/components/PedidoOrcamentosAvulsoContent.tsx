@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useId, useCallback } from 'react'
 import { openPedidoOrcamentoAvulsoPdf } from '../lib/pedidoOrcamentoAvulsoPdf'
+import { resolverNumeroEquipamentoPdf } from '../lib/orcamentoPdfPro'
 import { resolverIdEquipamentoCliente } from '../lib/relatorioServicoEquipamentos'
 import { ProImageHoverPreview } from './ProImageHoverPreview'
 
@@ -122,18 +123,22 @@ function detalhesEquipamentoBloco(
   }
   const eq = bloco.equipamento
   const linhas: Array<{ label: string; value: string }> = []
+  const numeroEq = resolverNumeroEquipamentoPdf(eq)
+  if (numeroEq) {
+    linhas.push({
+      label: safeT?.numeroEquipamento || safeT?.numeroSerie || 'Número do Equipamento',
+      value: numeroEq,
+    })
+  }
   if (eq.tipoEquipamento) linhas.push({ label: safeT?.tipoEquipamento || 'Tipo', value: eq.tipoEquipamento })
   if (eq.marca) linhas.push({ label: safeT?.marca || 'Marca', value: eq.marca })
   if (eq.modelo) linhas.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
-  if (eq.numeroSerie) {
-    linhas.push({
-      label: safeT?.numeroEquipamento || safeT?.numeroSerie || 'Número do Equipamento',
-      value: eq.numeroSerie,
-    })
-  }
   if (eq.familia) linhas.push({ label: safeT?.familia || 'Família', value: eq.familia })
   if (eq.grupo) linhas.push({ label: safeT?.grupo || 'Grupo', value: eq.grupo })
-  if (eq.id) linhas.push({ label: safeT?.idEquipamento || 'ID', value: eq.id })
+  const idEq = String(eq.id ?? '').trim()
+  if (idEq && idEq !== numeroEq) {
+    linhas.push({ label: safeT?.idEquipamento || 'ID', value: idEq })
+  }
   return linhas
 }
 
@@ -456,7 +461,10 @@ export function PedidoOrcamentosAvulsoContent({
       return {
         titulo: `${safeT?.poaEquipamentoNumero || 'Equipamento'} ${i + 1}${nomeEquip ? ` — ${nomeEquip}` : ''}`,
         detalhes: textoEquipamentoBloco(b, safeT),
-        numeroSerie: b.equipamento?.numeroSerie?.trim() || undefined,
+        numeroSerie:
+          (b.equipamento ? resolverNumeroEquipamentoPdf(b.equipamento) : '') ||
+          b.equipamentoManual.trim() ||
+          undefined,
         campos: detalhesEquipamentoBloco(b, safeT),
         pecas: b.pecas.map((p) => ({
           codigo: p.codigo,
@@ -528,7 +536,15 @@ export function PedidoOrcamentosAvulsoContent({
         eqRef && eqIdx !== undefined && eqIdx >= 0
           ? resolverIdEquipamentoCliente(eqRef, eqIdx)
           : undefined,
-      equipamentoNumeroSerie: eqRef?.numeroSerie,
+      equipamentoNumeroSerie:
+        blocosValidos
+          .map((b) =>
+            b.equipamento
+              ? resolverNumeroEquipamentoPdf(b.equipamento)
+              : b.equipamentoManual.trim()
+          )
+          .filter(Boolean)
+          .join(' · ') || undefined,
       pecas: [...pecasTotais],
       equipamentosBlocos: blocosValidos.map((b) => ({
         ...b,
@@ -564,6 +580,7 @@ export function PedidoOrcamentosAvulsoContent({
           clienteNome: nomeNoDoc,
           equipamentoChave: novo.equipamentoChave,
           equipamentoNumeroSerie: novo.equipamentoNumeroSerie,
+          equipamentosBlocos: novo.equipamentosBlocos,
           geradoEm: novo.geradoEm,
           itens: pecasTotais.map((p) => ({
             descricao: p.nome,
