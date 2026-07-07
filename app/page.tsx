@@ -76718,7 +76718,15 @@ A1;Peça exemplo;10`}
                 </label>
               </div>
               <p style={{ margin: '12px 0 0', fontSize: '12px', color: '#ffaa00' }}>
-                {safeT?.cliente || 'Cliente do pedido'}: <strong>{relAtivo.cliente}</strong>
+                {pedidoOrcamentoEmitirComo === 'cliente' ? (
+                  <>
+                    {safeT?.cliente || 'Cliente do pedido'}: <strong>{relAtivo.cliente}</strong>
+                  </>
+                ) : (
+                  <>
+                    {(safeT as any)?.poaPdfSomenteNonato || 'Documento emitido apenas com dados da NONATO SERVICE'}
+                  </>
+                )}
               </p>
               <div style={{ marginTop: '12px', padding: '10px 12px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', fontSize: '12px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>
                 <p style={{ margin: '0 0 6px', color: '#00c853', fontWeight: 600 }}>

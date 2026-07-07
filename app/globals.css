@@ -34825,6 +34825,15 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   flex-wrap: wrap;
   gap: 8px;
 }
+.orc-pro__imagem-manual--inline {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+.orc-pro__act--sm {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  padding: 4px 8px;
+}
 .orc-pro__pecas-stack {
   display: flex;
   flex-direction: column;

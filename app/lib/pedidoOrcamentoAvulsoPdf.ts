@@ -264,20 +264,17 @@ export function buildPedidoOrcamentoAvulsoPdfHtml(data: PedidoAvulsoPdfData): st
     L.rodape ||
     `NONATO SERVICE — Documento gerado automaticamente. ${L.emitidoEm || 'Emitido em'} ${dataFmt}.`
 
-  const metaFields = [
-    { label: L.cliente || 'Cliente', value: data.clienteNomeDoc, fullWidth: true },
-    ...(data.emitirComo === 'nonato-service'
+  const metaFields =
+    data.emitirComo === 'nonato-service'
       ? [
-          {
-            label: L.emitente || 'Emitente / cabeçalho',
-            value: data.empresa?.nomeEmpresa || 'NONATO SERVICE',
-            fullWidth: true,
-          },
+          { label: L.data || 'Data', value: dataFmt },
+          { label: L.codigo || 'Código', value: data.codigo },
         ]
-      : []),
-    { label: L.data || 'Data', value: dataFmt },
-    { label: L.codigo || 'Código', value: data.codigo },
-  ]
+      : [
+          { label: L.cliente || 'Cliente', value: data.clienteNomeDoc, fullWidth: true },
+          { label: L.data || 'Data', value: dataFmt },
+          { label: L.codigo || 'Código', value: data.codigo },
+        ]
 
   return buildOrcamentoPdfShell({
     title: titulo,

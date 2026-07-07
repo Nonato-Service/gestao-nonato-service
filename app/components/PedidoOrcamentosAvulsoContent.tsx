@@ -196,6 +196,9 @@ export function PedidoOrcamentosAvulsoContent({
   const [urlImagemManualPeca, setUrlImagemManualPeca] = useState('')
   const [quantidadeNovaPeca, setQuantidadeNovaPeca] = useState(1)
   const imagemManualUploadId = useId()
+  const imagemPecaEditUploadId = useId()
+  const [pecaEditandoImagemId, setPecaEditandoImagemId] = useState<string | null>(null)
+  const [urlImagemPecaEditando, setUrlImagemPecaEditando] = useState('')
   const [mostrarFormPeca, setMostrarFormPeca] = useState(false)
   const [modoPeca, setModoPeca] = useState<'biblioteca' | 'manual' | null>(null)
   const [emitirComoCliente, setEmitirComoCliente] = useState<'cliente' | 'nonato-service'>('cliente')
@@ -334,6 +337,47 @@ export function PedidoOrcamentosAvulsoContent({
     }
     reader.readAsDataURL(file)
     e.target.value = ''
+  }
+
+  const alterarImagemPeca = (blocoId: string, pecaId: string, imagem?: string) => {
+    setBlocosEquipamento((prev) =>
+      prev.map((b) =>
+        b.id === blocoId
+          ? {
+              ...b,
+              pecas: b.pecas.map((p) => (p.id === pecaId ? { ...p, imagem: imagem || undefined } : p)),
+            }
+          : b
+      )
+    )
+  }
+
+  const handleImagemPecaEditFile = (
+    blocoId: string,
+    pecaId: string,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file || !file.type.startsWith('image/')) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const result = event.target?.result
+      if (typeof result === 'string') {
+        alterarImagemPeca(blocoId, pecaId, result)
+        setPecaEditandoImagemId(null)
+        setUrlImagemPecaEditando('')
+      }
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  const aplicarUrlImagemPecaEditando = (blocoId: string, pecaId: string) => {
+    const url = urlImagemPecaEditando.trim()
+    if (!url) return
+    alterarImagemPeca(blocoId, pecaId, url)
+    setPecaEditandoImagemId(null)
+    setUrlImagemPecaEditando('')
   }
 
   const adicionarPecaManual = () => {
@@ -1046,13 +1090,61 @@ export function PedidoOrcamentosAvulsoContent({
                                     value={quantidadeNovaPeca}
                                     onChange={(e) => setQuantidadeNovaPeca(parseInt(e.target.value, 10) || 1)}
                                   />
-                                  <input
-                                    id={imagemManualUploadId}
-                                    type="file"
-                                    accept="image/*"
-                                    className="orc-pro__imagem-manual-file"
-                                    onChange={handleImagemManualFile}
-                                  />
+                                  <div className="orc-pro__imagem-manual">
+                                    <label htmlFor={imagemManualUploadId}>
+                                      {safeT?.imagem || 'Imagem da peça'} ({safeT?.opcional || 'opcional'})
+                                    </label>
+                                    <p className="orc-pro__imagem-manual-hint">
+                                      {safeT?.poaImagemPecaHint ||
+                                        'Carregue uma foto ou cole o URL da imagem para aparecer no PDF.'}
+                                    </p>
+                                    <input
+                                      id={imagemManualUploadId}
+                                      type="file"
+                                      accept="image/*"
+                                      className="orc-pro__imagem-manual-file"
+                                      onChange={handleImagemManualFile}
+                                    />
+                                    <div className="orc-pro__imagem-manual-actions">
+                                      <label htmlFor={imagemManualUploadId} className="orc-pro__btn orc-pro__btn--secondary">
+                                        📷 {safeT?.carregarImagem || 'Carregar imagem'}
+                                      </label>
+                                      {(imagemManualPeca || urlImagemManualPeca) && (
+                                        <button
+                                          type="button"
+                                          className="orc-pro__btn"
+                                          onClick={() => {
+                                            setImagemManualPeca('')
+                                            setUrlImagemManualPeca('')
+                                          }}
+                                        >
+                                          {safeT?.removerImagem || 'Remover imagem'}
+                                        </button>
+                                      )}
+                                    </div>
+                                    <input
+                                      type="url"
+                                      className="orc-pro__input"
+                                      value={urlImagemManualPeca}
+                                      onChange={(e) => {
+                                        setUrlImagemManualPeca(e.target.value)
+                                        if (e.target.value.trim()) setImagemManualPeca('')
+                                      }}
+                                      placeholder={safeT?.urlImagem || 'URL da imagem (https://...)'}
+                                    />
+                                    {(imagemManualPeca || urlImagemManualPeca) && (
+                                      <div className="orc-pro__imagem-manual-preview">
+                                        <ProImageHoverPreview
+                                          src={resolverImagemManualPeca()}
+                                          alt={nomeManualPeca || codigoManualPeca || 'Peça'}
+                                          label={safeT?.imagem || 'Imagem'}
+                                          thumbClassName="orc-pro__peca-thumb orc-pro__peca-thumb--lg"
+                                        >
+                                          —
+                                        </ProImageHoverPreview>
+                                      </div>
+                                    )}
+                                  </div>
                                   <button type="button" className="orc-pro__btn orc-pro__btn--primary" onClick={adicionarPecaManual}>
                                     {safeT?.adicionar || 'Adicionar'}
                                   </button>
@@ -1088,6 +1180,61 @@ export function PedidoOrcamentosAvulsoContent({
                                 <div className="orc-pro__peca-info">
                                   <strong>{p.nome}</strong>
                                   <small>{p.codigo}</small>
+                                  <button
+                                    type="button"
+                                    className="orc-pro__act orc-pro__act--sm"
+                                    onClick={() => {
+                                      setPecaEditandoImagemId(pecaEditandoImagemId === p.id ? null : p.id)
+                                      setUrlImagemPecaEditando(p.imagem?.startsWith('http') ? p.imagem : '')
+                                    }}
+                                  >
+                                    📷 {p.imagem ? safeT?.alterarImagem || 'Alterar imagem' : safeT?.adicionarImagem || 'Adicionar imagem'}
+                                  </button>
+                                  {pecaEditandoImagemId === p.id && (
+                                    <div className="orc-pro__imagem-manual orc-pro__imagem-manual--inline">
+                                      <input
+                                        id={`${imagemPecaEditUploadId}-${p.id}`}
+                                        type="file"
+                                        accept="image/*"
+                                        className="orc-pro__imagem-manual-file"
+                                        onChange={(e) => handleImagemPecaEditFile(bloco.id, p.id, e)}
+                                      />
+                                      <div className="orc-pro__imagem-manual-actions">
+                                        <label
+                                          htmlFor={`${imagemPecaEditUploadId}-${p.id}`}
+                                          className="orc-pro__btn orc-pro__btn--secondary"
+                                        >
+                                          📷 {safeT?.carregarImagem || 'Carregar'}
+                                        </label>
+                                        {p.imagem && (
+                                          <button
+                                            type="button"
+                                            className="orc-pro__btn"
+                                            onClick={() => {
+                                              alterarImagemPeca(bloco.id, p.id, undefined)
+                                              setPecaEditandoImagemId(null)
+                                            }}
+                                          >
+                                            {safeT?.removerImagem || 'Remover'}
+                                          </button>
+                                        )}
+                                      </div>
+                                      <input
+                                        type="url"
+                                        className="orc-pro__input"
+                                        value={urlImagemPecaEditando}
+                                        onChange={(e) => setUrlImagemPecaEditando(e.target.value)}
+                                        placeholder={safeT?.urlImagem || 'URL da imagem'}
+                                      />
+                                      <button
+                                        type="button"
+                                        className="orc-pro__btn orc-pro__btn--primary"
+                                        onClick={() => aplicarUrlImagemPecaEditando(bloco.id, p.id)}
+                                      >
+                                        {safeT?.aplicar || 'Aplicar URL'}
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="orc-pro__peca-qty">
                                   <button type="button" className="orc-pro__act" onClick={() => alterarQuantidadePeca(bloco.id, p.id, -1)}>
@@ -1140,16 +1287,20 @@ export function PedidoOrcamentosAvulsoContent({
               </label>
             </div>
             <div className="poa-pro__emitente-preview">
-              <p className="poa-pro__emitente-preview-title">
-                {(safeT as Record<string, string | undefined>)?.poaPdfClientePedido ||
-                  safeT?.cliente ||
-                  'Cliente do pedido'}
-                :
-              </p>
-              <p className="poa-pro__emitente-preview-nome">
-                <strong>{nomeClienteExibido}</strong>
-              </p>
-              <p className="poa-pro__emitente-preview-title" style={{ marginTop: '12px' }}>
+              {emitirComoCliente === 'cliente' ? (
+                <>
+                  <p className="poa-pro__emitente-preview-title">
+                    {(safeT as Record<string, string | undefined>)?.poaPdfClientePedido ||
+                      safeT?.cliente ||
+                      'Cliente do pedido'}
+                    :
+                  </p>
+                  <p className="poa-pro__emitente-preview-nome">
+                    <strong>{nomeClienteExibido}</strong>
+                  </p>
+                </>
+              ) : null}
+              <p className="poa-pro__emitente-preview-title" style={{ marginTop: emitirComoCliente === 'cliente' ? '12px' : 0 }}>
                 {safeT?.dadosEmitenteDocumento || 'Cabeçalho do documento (emitente)'}:
               </p>
               <p className="poa-pro__emitente-preview-nome">
