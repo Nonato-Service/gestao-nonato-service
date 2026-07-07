@@ -3,6 +3,10 @@
 import React, { useState, useMemo, useEffect, useId, useCallback } from 'react'
 import { openPedidoOrcamentoAvulsoPdf } from '../lib/pedidoOrcamentoAvulsoPdf'
 import {
+  enriquecerBlocoEquipamentoPedido,
+  montarCamposEquipamentoPedidoPdf,
+} from '../lib/pedidoOrcamentoAvulsoEquipamento'
+import {
   resolverEmpresaPedidoOrcamentoPdf,
   resolverNumeroEquipamentoPdf,
   resolverSerieEquipamentoPdf,
@@ -121,34 +125,16 @@ function detalhesEquipamentoBloco(
   bloco: EquipamentoBlocoPedido,
   safeT: Record<string, string | undefined>
 ): Array<{ label: string; value: string }> {
-  if (!bloco.equipamento) {
-    if (bloco.equipamentoManual.trim()) {
-      return [{ label: safeT?.descricao || 'Descrição', value: bloco.equipamentoManual.trim() }]
-    }
-    return []
-  }
-  const eq = bloco.equipamento
-  const linhas: Array<{ label: string; value: string }> = []
-  if (eq.marca) linhas.push({ label: safeT?.marca || 'Marca', value: eq.marca })
-  if (eq.modelo) linhas.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
-  const numeroEq = resolverNumeroEquipamentoPdf(eq)
-  if (numeroEq) {
-    linhas.push({
-      label: safeT?.numeroEquipamento || 'Número do Equipamento',
-      value: numeroEq,
-    })
-  }
-  const serieEq = resolverSerieEquipamentoPdf(eq)
-  if (serieEq) {
-    linhas.push({
-      label: safeT?.numeroSerie || 'Nº Série',
-      value: serieEq,
-    })
-  }
-  if (eq.tipoEquipamento) linhas.push({ label: safeT?.tipoEquipamento || 'Tipo', value: eq.tipoEquipamento })
-  if (eq.familia) linhas.push({ label: safeT?.familia || 'Família', value: eq.familia })
-  if (eq.grupo) linhas.push({ label: safeT?.grupo || 'Grupo', value: eq.grupo })
-  return linhas
+  return montarCamposEquipamentoPedidoPdf(bloco.equipamento, bloco.equipamentoManual, {
+    marca: safeT?.marca,
+    modelo: safeT?.modelo,
+    tipoEquipamento: safeT?.tipoEquipamento,
+    numeroEquipamento: safeT?.numeroEquipamento,
+    numeroSerie: safeT?.numeroSerie,
+    familia: safeT?.familia,
+    grupo: safeT?.grupo,
+    descricao: safeT?.descricao,
+  })
 }
 
 function todasPecasDosBlocos(blocos: EquipamentoBlocoPedido[]): PecaPedido[] {
@@ -421,6 +407,12 @@ export function PedidoOrcamentosAvulsoContent({
     equipamentoNumero: safeT?.poaEquipamentoNumero || 'Equipamento',
     numeroEquipamento: safeT?.numeroEquipamento || 'Número do Equipamento',
     numeroSerie: safeT?.numeroSerie || 'Nº Série',
+    marca: safeT?.marca || 'Marca',
+    modelo: safeT?.modelo || 'Modelo',
+    tipoEquipamento: safeT?.tipoEquipamento || 'Tipo',
+    familia: safeT?.familia || 'Família',
+    grupo: safeT?.grupo || 'Grupo',
+    descricao: safeT?.descricao || 'Descrição',
     metaTitulo: safeT?.pedidoOrcamentoPdfMetaTitulo || 'Dados do pedido',
     pecasSolicitadas: safeT?.pecasSolicitadas || 'Referências',
     totalPecas: safeT?.poaPdfTotalUnidades || 'Unidades',
@@ -483,18 +475,23 @@ export function PedidoOrcamentosAvulsoContent({
     clienteNomeDoc: nomeNoDoc,
     equipamentoTexto: textoEquipamentosAgregado(blocos, safeT),
     equipamentosBlocos: blocos.map((b, i) => {
-      const nomeEquip = b.equipamento
-        ? [b.equipamento.marca, b.equipamento.modelo].filter(Boolean).join(' ').trim() ||
-          b.equipamento.tipoEquipamento
-        : b.equipamentoManual.trim()
+      const blocoEnriquecido = enriquecerBlocoEquipamentoPedido(
+        b,
+        clienteRef?.equipamentos,
+        undefined
+      )
+      const eq = blocoEnriquecido.equipamento
+      const nomeEquip = eq
+        ? [eq.marca, eq.modelo].filter(Boolean).join(' ').trim() ||
+          eq.tipoEquipamento
+        : blocoEnriquecido.equipamentoManual.trim()
+      const campos = detalhesEquipamentoBloco(blocoEnriquecido, safeT)
       return {
         titulo: `${safeT?.poaEquipamentoNumero || 'Equipamento'} ${i + 1}${nomeEquip ? ` — ${nomeEquip}` : ''}`,
-        detalhes: textoEquipamentoBloco(b, safeT),
-        numeroEquipamento: b.equipamento
-          ? resolverNumeroEquipamentoPdf(b.equipamento) || undefined
-          : undefined,
-        numeroSerie: b.equipamento ? resolverSerieEquipamentoPdf(b.equipamento) || undefined : undefined,
-        campos: detalhesEquipamentoBloco(b, safeT),
+        detalhes: textoEquipamentoBloco(blocoEnriquecido, safeT),
+        numeroEquipamento: eq ? resolverNumeroEquipamentoPdf(eq) || undefined : undefined,
+        numeroSerie: eq ? resolverSerieEquipamentoPdf(eq) || undefined : undefined,
+        campos,
         pecas: b.pecas.map((p) => ({
           codigo: p.codigo,
           nome: p.nome,
@@ -545,13 +542,16 @@ export function PedidoOrcamentosAvulsoContent({
             (c) => c.nomeEmpresa?.trim().toLowerCase() === pedido.clienteNomeReal.trim().toLowerCase()
           ) || null
         : null)
+    const blocosEnriquecidos = (normalizado.equipamentosBlocos || []).map((b) =>
+      enriquecerBlocoEquipamentoPedido(b, clientePedido?.equipamentos, pedido.equipamentoChave)
+    )
     openPedidoOrcamentoAvulsoPdf(
       montarPdfPayload(
         pedido.codigo,
         false,
         pedido.dataGeracao,
         nomeNoDoc,
-        normalizado.equipamentosBlocos || [],
+        blocosEnriquecidos,
         pedido.emitirComoCliente,
         clientePedido,
         pedido.clienteNomeReal
@@ -617,6 +617,7 @@ export function PedidoOrcamentosAvulsoContent({
           status: 'pendente' as const,
           clienteId: clienteSelecionado?.id,
           clienteNome: nomeNoDoc,
+          emitirComoCliente,
           equipamentoChave: novo.equipamentoChave,
           equipamentoNumeroSerie: novo.equipamentoNumeroSerie,
           equipamentosBlocos: novo.equipamentosBlocos,
@@ -932,7 +933,6 @@ export function PedidoOrcamentosAvulsoContent({
                         onChange={(e) =>
                           atualizarBloco(bloco.id, {
                             equipamentoManual: e.target.value,
-                            equipamento: e.target.value ? null : bloco.equipamento,
                           })
                         }
                         onFocus={() => setBlocoAtivoId(bloco.id)}

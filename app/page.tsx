@@ -185,6 +185,10 @@ import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import { ClienteEquipamentoOrcamentosPanel } from './components/ClienteEquipamentoOrcamentosPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
+import {
+  enriquecerBlocoEquipamentoPedido,
+  montarCamposEquipamentoPedidoPdf,
+} from './lib/pedidoOrcamentoAvulsoEquipamento'
 import { openOrcamentoGeradoPdf } from './lib/orcamentoGeradoPdf'
 import {
   fichaCadastralParaEmpresaPdf,
@@ -23778,37 +23782,34 @@ export default function Dashboard() {
               pecas: pedido.pecas,
             },
           ]
+    const pdfEquipLabels = {
+      marca: safeT?.marca,
+      modelo: safeT?.modelo,
+      tipoEquipamento: safeT?.tipoEquipamento,
+      numeroEquipamento: (safeT as any)?.numeroEquipamento,
+      numeroSerie: safeT?.numeroSerie,
+      familia: safeT?.familia,
+      grupo: safeT?.grupo,
+      descricao: safeT?.descricao,
+    }
     const equipamentosBlocos = blocosFonte.map((b, i) => {
-      const eq = b.equipamento
+      const blocoEnriquecido = enriquecerBlocoEquipamentoPedido(
+        b,
+        clientePedido?.equipamentos,
+        pedido.equipamentoChave
+      )
+      const eq = blocoEnriquecido.equipamento
       const nomeEquip = eq
         ? [eq.marca, eq.modelo].filter(Boolean).join(' ').trim() || eq.tipoEquipamento
-        : (b.equipamentoManual || '').trim()
-      const campos: Array<{ label: string; value: string }> = []
-      if (eq) {
-        if (eq.marca) campos.push({ label: safeT?.marca || 'Marca', value: eq.marca })
-        if (eq.modelo) campos.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
-        const numeroEq = resolverNumeroEquipamentoPdf(eq)
-        if (numeroEq) {
-          campos.push({
-            label: (safeT as any)?.numeroEquipamento || 'Número do Equipamento',
-            value: numeroEq,
-          })
-        }
-        const serieEq = resolverSerieEquipamentoPdf(eq)
-        if (serieEq) {
-          campos.push({
-            label: safeT?.numeroSerie || 'Nº Série',
-            value: serieEq,
-          })
-        }
-        if (eq.tipoEquipamento) campos.push({ label: safeT?.tipoEquipamento || 'Tipo', value: eq.tipoEquipamento })
-        if (eq.familia) campos.push({ label: safeT?.familia || 'Família', value: eq.familia })
-        if (eq.grupo) campos.push({ label: safeT?.grupo || 'Grupo', value: eq.grupo })
-      } else if (b.equipamentoManual?.trim()) {
-        campos.push({ label: safeT?.descricao || 'Descrição', value: b.equipamentoManual.trim() })
-      }
+        : (blocoEnriquecido.equipamentoManual || '').trim()
+      const campos = montarCamposEquipamentoPedidoPdf(
+        eq,
+        blocoEnriquecido.equipamentoManual || '',
+        pdfEquipLabels
+      )
       return {
         titulo: `${(safeT as any)?.poaEquipamentoNumero || safeT?.equipamento || 'Equipamento'} ${i + 1}${nomeEquip ? ` — ${nomeEquip}` : ''}`,
+        detalhes: campos.map((c) => `${c.label}: ${c.value}`).join(' · ') || blocoEnriquecido.equipamentoManual || '—',
         numeroEquipamento: eq ? resolverNumeroEquipamentoPdf(eq) || undefined : undefined,
         numeroSerie: eq ? resolverSerieEquipamentoPdf(eq) || undefined : pedido.equipamentoNumeroSerie?.trim() || undefined,
         campos,
@@ -23843,6 +23844,12 @@ export default function Dashboard() {
         equipamento: safeT?.equipamento || 'Equipamento',
         numeroEquipamento: (safeT as any)?.numeroEquipamento || 'Número do Equipamento',
         numeroSerie: safeT?.numeroSerie || 'Nº Série',
+        marca: safeT?.marca || 'Marca',
+        modelo: safeT?.modelo || 'Modelo',
+        tipoEquipamento: safeT?.tipoEquipamento || 'Tipo',
+        familia: safeT?.familia || 'Família',
+        grupo: safeT?.grupo || 'Grupo',
+        descricao: safeT?.descricao || 'Descrição',
         colImagem: safeT?.imagem || 'Imagem',
         colDescricao: safeT?.descricaoItem || 'Descrição',
         colCodigo: safeT?.codigo || 'Código',
@@ -63852,6 +63859,37 @@ A1;Peça exemplo;10`}
     }
 
     const handleImprimirOrcamento = (orcamento: any) => {
+      if (orcamento.tipo === 'pedido-avulso') {
+        void loadData('nonato-pedidos-orcamento-avulso').then((raw) => {
+          const pedidos = Array.isArray(raw) ? (raw as PedidoAvulsoGuardado[]) : []
+          const pedido =
+            pedidos.find((p) => p.codigo === orcamento.numeroOrcamento) ||
+            ({
+              codigo: orcamento.numeroOrcamento,
+              dataGeracao: orcamento.geradoEm || orcamento.dataCriacao || orcamento.data,
+              clienteNomeReal:
+                orcamento.clienteNome ||
+                clientes.find((c) => c.id === orcamento.clienteId)?.nomeEmpresa ||
+                '',
+              clienteId: orcamento.clienteId,
+              emitirComoCliente: 'cliente',
+              equipamentoTexto: orcamento.descricao || '',
+              equipamentoChave: orcamento.equipamentoChave,
+              equipamentoNumeroSerie: orcamento.equipamentoNumeroSerie,
+              equipamentosBlocos: orcamento.equipamentosBlocos,
+              pecas: (Array.isArray(orcamento.itens) ? orcamento.itens : []).map((item: any) => ({
+                id: item.pecaId || item.codigo || item.descricao,
+                codigo: item.codigo || '',
+                nome: item.descricao || item.nome || '',
+                quantidade: item.quantidade || 1,
+                imagem: item.imagem,
+              })),
+            } satisfies PedidoAvulsoGuardado)
+          abrirPdfPedidoOrcamentoAvulso(pedido)
+        })
+        return
+      }
+
       const dadosCliente = orcamento.dadosCliente || {}
       const clienteNome = orcamento.clienteNome || dadosCliente.nomeEmpresa || 'NONATO SERVICE'
       const orcId = String(orcamento.id).replace(/'/g, "\\'")

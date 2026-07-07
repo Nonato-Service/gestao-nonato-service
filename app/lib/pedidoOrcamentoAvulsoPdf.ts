@@ -43,6 +43,12 @@ export type PedidoAvulsoPdfData = {
     equipamentoNumero?: string
     numeroEquipamento?: string
     numeroSerie?: string
+    marca?: string
+    modelo?: string
+    tipoEquipamento?: string
+    familia?: string
+    grupo?: string
+    descricao?: string
     colImagem?: string
     colDescricao?: string
     colCodigo?: string
@@ -86,41 +92,65 @@ function renderTabelaPecas(pecas: PedidoAvulsoPdfPeca[], L: PedidoAvulsoPdfData[
   </table>`
 }
 
+function valorCampoEquipamento(
+  bloco: PedidoAvulsoPdfEquipamentoBloco,
+  ...labels: string[]
+): string {
+  for (const lbl of labels) {
+    if (!lbl) continue
+    const hit = bloco.campos?.find((c) => c.label === lbl)
+    const v = String(hit?.value ?? '').trim()
+    if (v) return v
+  }
+  return ''
+}
+
 function renderEquipInfoGrid(
   bloco: PedidoAvulsoPdfEquipamentoBloco,
   L: PedidoAvulsoPdfData['labels']
 ): string {
   const partes: string[] = []
+  const lblMarca = L?.marca || 'Marca'
+  const lblModelo = L?.modelo || 'Modelo'
   const lblNum = L?.numeroEquipamento || 'Número do Equipamento'
   const lblSerie = L?.numeroSerie || 'Nº Série'
+  const lblTipo = L?.tipoEquipamento || 'Tipo'
 
-  let numEq = String(bloco.numeroEquipamento ?? '').trim()
-  let numSer = String(bloco.numeroSerie ?? '').trim()
+  const marca =
+    valorCampoEquipamento(bloco, lblMarca, 'Marca') ||
+    String((bloco as { marca?: string }).marca ?? '').trim()
+  const modelo =
+    valorCampoEquipamento(bloco, lblModelo, 'Modelo') ||
+    String((bloco as { modelo?: string }).modelo ?? '').trim()
+  let numEq = String(bloco.numeroEquipamento ?? '').trim() || valorCampoEquipamento(bloco, lblNum, 'Número do Equipamento')
+  let numSer = String(bloco.numeroSerie ?? '').trim() || valorCampoEquipamento(bloco, lblSerie, 'Nº Série', 'Número de Série')
+  const tipo = valorCampoEquipamento(bloco, lblTipo, 'Tipo')
 
-  if (!numEq || !numSer) {
-    for (const c of bloco.campos || []) {
-      const v = String(c.value ?? '').trim()
-      if (!v) continue
-      if (!numEq && c.label === lblNum) numEq = v
-      if (!numSer && c.label === lblSerie) numSer = v
-    }
-  }
+  const linhasIdentidade: Array<[string, string]> = []
+  if (marca) linhasIdentidade.push([lblMarca, marca])
+  if (modelo) linhasIdentidade.push([lblModelo, modelo])
+  if (!marca && !modelo && tipo) linhasIdentidade.push([lblTipo, tipo])
+  if (numEq) linhasIdentidade.push([lblNum, numEq])
+  if (numSer && numSer.toLowerCase() !== numEq.toLowerCase()) linhasIdentidade.push([lblSerie, numSer])
 
-  const idsHtml: string[] = []
-  if (numEq) {
-    idsHtml.push(
-      `<div class="orc-pdf-pro__equip-sn">${escapePdfHtml(lblNum)}: <strong>${escapePdfHtml(numEq)}</strong></div>`
+  if (linhasIdentidade.length > 0) {
+    partes.push(
+      `<div class="orc-pdf-pro__equip-info orc-pdf-pro__equip-info--identity">${linhasIdentidade
+        .map(
+          ([lbl, val]) =>
+            `<div class="orc-pdf-pro__equip-field orc-pdf-pro__equip-field--full">
+            <span class="lbl">${escapePdfHtml(lbl)}</span>
+            <span class="val">${escapePdfHtml(val)}</span>
+          </div>`
+        )
+        .join('')}</div>`
     )
   }
-  if (numSer && numSer.toLowerCase() !== numEq.toLowerCase()) {
-    idsHtml.push(
-      `<div class="orc-pdf-pro__equip-sn">${escapePdfHtml(lblSerie)}: <strong>${escapePdfHtml(numSer)}</strong></div>`
-    )
-  }
-  if (idsHtml.length > 0) partes.push(idsHtml.join(''))
 
-  const valoresOmitir = new Set([numEq, numSer].filter(Boolean).map((v) => v.toLowerCase()))
-  const labelsOmitir = new Set([lblNum, lblSerie])
+  const valoresOmitir = new Set(
+    [...linhasIdentidade.map(([, v]) => v), numEq, numSer].filter(Boolean).map((v) => v.toLowerCase())
+  )
+  const labelsOmitir = new Set([lblMarca, lblModelo, lblNum, lblSerie, lblTipo, L?.descricao || 'Descrição'])
 
   const campos = (bloco.campos || []).filter((c) => {
     const v = String(c.value ?? '').trim()
