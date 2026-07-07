@@ -37696,6 +37696,31 @@ html body .alerta-mensagens-shell .alerta-mensagens-hero-actions .comunicacao-he
   justify-content: flex-end;
   margin-top: 16px;
 }
+.poa-pro__emitente-preview {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.35);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: rgba(226, 232, 240, 0.92);
+}
+.poa-pro__emitente-preview-title {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6ee7b7;
+}
+.poa-pro__emitente-preview-nome {
+  margin: 0 0 4px;
+  color: #f8fafc;
+}
+.poa-pro__emitente-preview p {
+  margin: 2px 0 0;
+}
 @media (max-width: 1024px) {
   .poa-pro__layout {
     grid-template-columns: 1fr;

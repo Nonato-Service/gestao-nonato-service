@@ -2,7 +2,12 @@
 
 import React, { useState, useMemo, useEffect, useId, useCallback } from 'react'
 import { openPedidoOrcamentoAvulsoPdf } from '../lib/pedidoOrcamentoAvulsoPdf'
-import { resolverNumeroEquipamentoPdf, resolverSerieEquipamentoPdf } from '../lib/orcamentoPdfPro'
+import {
+  resolverEmpresaPedidoOrcamentoPdf,
+  resolverNumeroEquipamentoPdf,
+  resolverSerieEquipamentoPdf,
+  type OrcamentoPdfEmpresa,
+} from '../lib/orcamentoPdfPro'
 import { resolverIdEquipamentoCliente } from '../lib/relatorioServicoEquipamentos'
 import { ProImageHoverPreview } from './ProImageHoverPreview'
 
@@ -79,6 +84,7 @@ type Props = {
   loadData?: (key: string) => Promise<any>
   onGerarOrcamento?: () => void
   logoHtml?: string
+  empresaNonato?: OrcamentoPdfEmpresa
 }
 
 const PEDIDOS_AVULSO_KEY = 'nonato-pedidos-orcamento-avulso'
@@ -123,23 +129,23 @@ function detalhesEquipamentoBloco(
   }
   const eq = bloco.equipamento
   const linhas: Array<{ label: string; value: string }> = []
-  const numeroEq = resolverNumeroEquipamentoPdf(eq)
+  if (eq.marca) linhas.push({ label: safeT?.marca || 'Marca', value: eq.marca })
+  if (eq.modelo) linhas.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
   const serieEq = resolverSerieEquipamentoPdf(eq)
-  if (numeroEq) {
-    linhas.push({
-      label: safeT?.numeroEquipamento || 'Número do Equipamento',
-      value: numeroEq,
-    })
-  }
   if (serieEq) {
     linhas.push({
       label: safeT?.numeroSerie || 'Nº Série',
       value: serieEq,
     })
   }
+  const numeroEq = resolverNumeroEquipamentoPdf(eq)
+  if (numeroEq && numeroEq !== serieEq) {
+    linhas.push({
+      label: safeT?.numeroEquipamento || 'Número do Equipamento',
+      value: numeroEq,
+    })
+  }
   if (eq.tipoEquipamento) linhas.push({ label: safeT?.tipoEquipamento || 'Tipo', value: eq.tipoEquipamento })
-  if (eq.marca) linhas.push({ label: safeT?.marca || 'Marca', value: eq.marca })
-  if (eq.modelo) linhas.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
   if (eq.familia) linhas.push({ label: safeT?.familia || 'Família', value: eq.familia })
   if (eq.grupo) linhas.push({ label: safeT?.grupo || 'Grupo', value: eq.grupo })
   return linhas
@@ -190,6 +196,7 @@ export function PedidoOrcamentosAvulsoContent({
   loadData,
   onGerarOrcamento,
   logoHtml = '',
+  empresaNonato,
 }: Props) {
   const [clienteSelecionado, setClienteSelecionado] = useState<ClientePedido | null>(null)
   const [clienteNomeManual, setClienteNomeManual] = useState('')
@@ -444,12 +451,31 @@ export function PedidoOrcamentosAvulsoContent({
     return { nomeReal, nomeNoDoc, blocosValidos, pecasTotais }
   }
 
+  const resolverEmpresaPdf = (
+    emitirComo: 'cliente' | 'nonato-service',
+    clienteRef: ClientePedido | null,
+    nomeManual: string
+  ) =>
+    resolverEmpresaPedidoOrcamentoPdf(emitirComo, {
+      empresaNonato: empresaNonato || { nomeEmpresa: safeT?.nomeNonatoService || 'NONATO SERVICE' },
+      cliente: clienteRef || undefined,
+      nomeClienteFallback: clienteRef?.nomeEmpresa || nomeManual,
+    })
+
+  const empresaPdfPreview = useMemo(
+    () => resolverEmpresaPdf(emitirComoCliente, clienteSelecionado, clienteNomeManual),
+    [emitirComoCliente, clienteSelecionado, clienteNomeManual, empresaNonato, safeT?.nomeNonatoService]
+  )
+
   const montarPdfPayload = (
     codigo: string,
     preview: boolean,
     dataIso: string,
     nomeNoDoc: string,
-    blocos: EquipamentoBlocoPedido[]
+    blocos: EquipamentoBlocoPedido[],
+    emitirComo: 'cliente' | 'nonato-service',
+    clienteRef: ClientePedido | null,
+    nomeManual: string
   ) => ({
     codigo,
     preview,
@@ -464,7 +490,7 @@ export function PedidoOrcamentosAvulsoContent({
       return {
         titulo: `${safeT?.poaEquipamentoNumero || 'Equipamento'} ${i + 1}${nomeEquip ? ` — ${nomeEquip}` : ''}`,
         detalhes: textoEquipamentoBloco(b, safeT),
-        numeroSerie: b.equipamento ? resolverNumeroEquipamentoPdf(b.equipamento) || undefined : undefined,
+        numeroSerie: b.equipamento ? resolverSerieEquipamentoPdf(b.equipamento) || undefined : undefined,
         campos: detalhesEquipamentoBloco(b, safeT),
         pecas: b.pecas.map((p) => ({
           codigo: p.codigo,
@@ -481,6 +507,7 @@ export function PedidoOrcamentosAvulsoContent({
       imagem: p.imagem,
     })),
     logoHtml,
+    empresa: resolverEmpresaPdf(emitirComo, clienteRef, nomeManual),
     labels: pdfLabels,
   })
 
@@ -494,7 +521,10 @@ export function PedidoOrcamentosAvulsoContent({
         true,
         new Date().toISOString(),
         dados.nomeNoDoc,
-        dados.blocosValidos
+        dados.blocosValidos,
+        emitirComoCliente,
+        clienteSelecionado,
+        clienteNomeManual
       )
     )
   }
@@ -505,13 +535,23 @@ export function PedidoOrcamentosAvulsoContent({
       pedido.emitirComoCliente === 'nonato-service'
         ? safeT?.nomeNonatoService || 'NONATO SERVICE'
         : pedido.clienteNomeReal
+    const clientePedido =
+      (pedido.clienteId ? clientes.find((c) => c.id === pedido.clienteId) : null) ||
+      (pedido.clienteNomeReal
+        ? clientes.find(
+            (c) => c.nomeEmpresa?.trim().toLowerCase() === pedido.clienteNomeReal.trim().toLowerCase()
+          ) || null
+        : null)
     openPedidoOrcamentoAvulsoPdf(
       montarPdfPayload(
         pedido.codigo,
         false,
         pedido.dataGeracao,
         nomeNoDoc,
-        normalizado.equipamentosBlocos || []
+        normalizado.equipamentosBlocos || [],
+        pedido.emitirComoCliente,
+        clientePedido,
+        pedido.clienteNomeReal
       )
     )
   }
@@ -599,7 +639,16 @@ export function PedidoOrcamentosAvulsoContent({
     }
 
     openPedidoOrcamentoAvulsoPdf(
-      montarPdfPayload(codigo, false, novo.dataGeracao, nomeNoDoc, blocosValidos)
+      montarPdfPayload(
+        codigo,
+        false,
+        novo.dataGeracao,
+        nomeNoDoc,
+        blocosValidos,
+        emitirComoCliente,
+        clienteSelecionado,
+        clienteNomeManual
+      )
     )
 
     alert(
@@ -1082,6 +1131,26 @@ export function PedidoOrcamentosAvulsoContent({
                 />
                 <span>{safeT?.gerarComNomeNonatoService || 'Com nome da NONATO SERVICE'}</span>
               </label>
+            </div>
+            <div className="poa-pro__emitente-preview">
+              <p className="poa-pro__emitente-preview-title">
+                {safeT?.dadosEmitenteDocumento || 'Dados no documento (cabeçalho)'}:
+              </p>
+              <p className="poa-pro__emitente-preview-nome">
+                <strong>{empresaPdfPreview.nomeEmpresa || '—'}</strong>
+              </p>
+              {empresaPdfPreview.morada ? <p>{empresaPdfPreview.morada}</p> : null}
+              {empresaPdfPreview.nif ? (
+                <p>
+                  {(safeT?.identificacaoFiscal || safeT?.nif || 'NIF') + ': ' + empresaPdfPreview.nif}
+                </p>
+              ) : null}
+              {empresaPdfPreview.telefone ? (
+                <p>{(safeT?.telefone || safeT?.telefones || 'Telefone') + ': ' + empresaPdfPreview.telefone}</p>
+              ) : null}
+              {empresaPdfPreview.email ? (
+                <p>{(safeT?.email || 'E-mail') + ': ' + empresaPdfPreview.email}</p>
+              ) : null}
             </div>
             <div className="poa-pro__gerar-actions">
               <button type="button" className="orc-pro__btn orc-pro__btn--secondary" onClick={limparNovoPedido}>

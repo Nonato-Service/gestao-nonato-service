@@ -601,3 +601,76 @@ export const EMPRESA_NONATO_DEFAULT: OrcamentoPdfEmpresa = {
   morada: 'Portugal',
   website: 'www.nonatoservice.pt',
 }
+
+type ClienteEmpresaPdfOrigem = {
+  nomeEmpresa?: string
+  morada?: string
+  codigoPostal?: string
+  conselho?: string
+  pais?: string
+  numeroContribuicaoFiscal?: string
+  telefones?: string
+  email?: string
+}
+
+type FichaCadastralEmpresaPdfOrigem = {
+  nomeEmpresa?: string
+  morada?: string
+  nif?: string
+  telefone?: string
+  email?: string
+}
+
+/** Converte cadastro de cliente para bloco de empresa no PDF. */
+export function clienteParaEmpresaPdf(cliente: ClienteEmpresaPdfOrigem): OrcamentoPdfEmpresa {
+  const moradaLinha = [
+    String(cliente.morada ?? '').trim(),
+    [String(cliente.codigoPostal ?? '').trim(), String(cliente.conselho ?? '').trim()]
+      .filter(Boolean)
+      .join(' '),
+    String(cliente.pais ?? '').trim(),
+  ]
+    .filter(Boolean)
+    .join(', ')
+  return {
+    nomeEmpresa: String(cliente.nomeEmpresa ?? '').trim(),
+    morada: moradaLinha,
+    nif: String(cliente.numeroContribuicaoFiscal ?? '').trim(),
+    telefone: String(cliente.telefones ?? '').trim(),
+    email: String(cliente.email ?? '').trim(),
+  }
+}
+
+/** Converte ficha cadastral da Nonato Service para bloco de empresa no PDF. */
+export function fichaCadastralParaEmpresaPdf(
+  ficha: FichaCadastralEmpresaPdfOrigem
+): OrcamentoPdfEmpresa {
+  return {
+    nomeEmpresa: String(ficha.nomeEmpresa ?? '').trim() || 'NONATO SERVICE',
+    morada: String(ficha.morada ?? '').trim(),
+    nif: String(ficha.nif ?? '').trim(),
+    telefone: String(ficha.telefone ?? '').trim(),
+    email: String(ficha.email ?? '').trim(),
+    website: 'www.nonatoservice.pt',
+  }
+}
+
+/** Define qual entidade aparece no cabeçalho do PDF conforme «emitir como». */
+export function resolverEmpresaPedidoOrcamentoPdf(
+  emitirComo: 'cliente' | 'nonato-service',
+  opts: {
+    empresaNonato: OrcamentoPdfEmpresa
+    cliente?: ClienteEmpresaPdfOrigem | null
+    nomeClienteFallback?: string
+  }
+): OrcamentoPdfEmpresa {
+  if (emitirComo === 'nonato-service') {
+    return opts.empresaNonato
+  }
+  if (opts.cliente && String(opts.cliente.nomeEmpresa ?? '').trim()) {
+    return clienteParaEmpresaPdf(opts.cliente)
+  }
+  return {
+    nomeEmpresa: String(opts.nomeClienteFallback ?? '').trim(),
+  }
+}

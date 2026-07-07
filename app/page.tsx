@@ -186,7 +186,12 @@ import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import { ClienteEquipamentoOrcamentosPanel } from './components/ClienteEquipamentoOrcamentosPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
 import { openOrcamentoGeradoPdf } from './lib/orcamentoGeradoPdf'
-import { resolverNumeroEquipamentoPdf, resolverSerieEquipamentoPdf } from './lib/orcamentoPdfPro'
+import {
+  fichaCadastralParaEmpresaPdf,
+  resolverEmpresaPedidoOrcamentoPdf,
+  resolverNumeroEquipamentoPdf,
+  resolverSerieEquipamentoPdf,
+} from './lib/orcamentoPdfPro'
 import { enrichOrcamentosGeradosComPedidosAvulsos, gerarProximoCodigoPedidoRelatorio } from './lib/clienteEquipamentoOrcamentos'
 import type { PedidoAvulsoGuardado } from './components/PedidoOrcamentosAvulsoContent'
 import { rotuloIdEquipamentoCliente } from './lib/clienteDetalheUtils'
@@ -23671,6 +23676,16 @@ export default function Dashboard() {
       pedido.emitirComoCliente === 'nonato-service'
         ? (safeT as any)?.nomeNonatoService || 'NONATO SERVICE'
         : pedido.cliente
+    const clientePedido = pedido.clienteId
+      ? clientes.find((c) => c.id === pedido.clienteId)
+      : clientes.find(
+          (c) => (c.nomeEmpresa || '').trim().toLowerCase() === (pedido.cliente || '').trim().toLowerCase()
+        )
+    const empresaPdf = resolverEmpresaPedidoOrcamentoPdf(pedido.emitirComoCliente || 'cliente', {
+      empresaNonato: fichaCadastralParaEmpresaPdf(fichaCadastral),
+      cliente: clientePedido,
+      nomeClienteFallback: pedido.cliente,
+    })
     const equipamentoTexto = `${pedido.maquinaModelo || ''}${pedido.numeroMaquina ? ` - ${pedido.numeroMaquina}` : ''}`.trim() || '—'
     const pecasPdf = (pedido.pecas || []).map((p) => {
       const bib = pecasBiblioteca.find((b) => b.codigo === p.codigo)
@@ -23682,10 +23697,12 @@ export default function Dashboard() {
       }
     })
     const camposRel: Array<{ label: string; value: string }> = []
-    if (pedido.maquinaModelo?.trim()) camposRel.push({ label: safeT?.maquinaModelo || 'Máquina/Modelo', value: pedido.maquinaModelo.trim() })
+    if (pedido.maquinaModelo?.trim()) {
+      camposRel.push({ label: safeT?.modelo || 'Modelo', value: pedido.maquinaModelo.trim() })
+    }
     if (pedido.numeroMaquina?.trim()) {
       camposRel.push({
-        label: (safeT as any)?.numeroEquipamento || safeT?.numeroSerie || 'Número do Equipamento',
+        label: safeT?.numeroSerie || 'Nº Série',
         value: pedido.numeroMaquina.trim(),
       })
     }
@@ -23705,6 +23722,7 @@ export default function Dashboard() {
       ],
       pecas: pecasPdf,
       logoHtml: getLogoHtmlForReport(),
+      empresa: empresaPdf,
       labels: {
         titulo: (safeT as any)?.pedidoOrcamentoPdfTitulo || 'PEDIDO DE ORÇAMENTO',
         codigo: safeT?.codigoOrcamento || 'Código',
@@ -23728,6 +23746,17 @@ export default function Dashboard() {
       pedido.emitirComoCliente === 'nonato-service'
         ? (safeT as any)?.nomeNonatoService || 'NONATO SERVICE'
         : pedido.clienteNomeReal
+    const clientePedido = pedido.clienteId
+      ? clientes.find((c) => c.id === pedido.clienteId)
+      : clientes.find(
+          (c) =>
+            (c.nomeEmpresa || '').trim().toLowerCase() === (pedido.clienteNomeReal || '').trim().toLowerCase()
+        )
+    const empresaPdf = resolverEmpresaPedidoOrcamentoPdf(pedido.emitirComoCliente || 'cliente', {
+      empresaNonato: fichaCadastralParaEmpresaPdf(fichaCadastral),
+      cliente: clientePedido,
+      nomeClienteFallback: pedido.clienteNomeReal,
+    })
     const blocosFonte =
       pedido.equipamentosBlocos && pedido.equipamentosBlocos.length > 0
         ? pedido.equipamentosBlocos
@@ -23746,23 +23775,23 @@ export default function Dashboard() {
         : (b.equipamentoManual || '').trim()
       const campos: Array<{ label: string; value: string }> = []
       if (eq) {
-        const numeroEq = resolverNumeroEquipamentoPdf(eq)
+        if (eq.marca) campos.push({ label: safeT?.marca || 'Marca', value: eq.marca })
+        if (eq.modelo) campos.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
         const serieEq = resolverSerieEquipamentoPdf(eq)
-        if (numeroEq) {
-          campos.push({
-            label: (safeT as any)?.numeroEquipamento || 'Número do Equipamento',
-            value: numeroEq,
-          })
-        }
         if (serieEq) {
           campos.push({
             label: safeT?.numeroSerie || 'Nº Série',
             value: serieEq,
           })
         }
+        const numeroEq = resolverNumeroEquipamentoPdf(eq)
+        if (numeroEq && numeroEq !== serieEq) {
+          campos.push({
+            label: (safeT as any)?.numeroEquipamento || 'Número do Equipamento',
+            value: numeroEq,
+          })
+        }
         if (eq.tipoEquipamento) campos.push({ label: safeT?.tipoEquipamento || 'Tipo', value: eq.tipoEquipamento })
-        if (eq.marca) campos.push({ label: safeT?.marca || 'Marca', value: eq.marca })
-        if (eq.modelo) campos.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
         if (eq.familia) campos.push({ label: safeT?.familia || 'Família', value: eq.familia })
         if (eq.grupo) campos.push({ label: safeT?.grupo || 'Grupo', value: eq.grupo })
       } else if (b.equipamentoManual?.trim()) {
@@ -23770,7 +23799,7 @@ export default function Dashboard() {
       }
       return {
         titulo: `${(safeT as any)?.poaEquipamentoNumero || safeT?.equipamento || 'Equipamento'} ${i + 1}${nomeEquip ? ` — ${nomeEquip}` : ''}`,
-        numeroSerie: eq ? resolverNumeroEquipamentoPdf(eq) || undefined : pedido.equipamentoNumeroSerie?.trim() || undefined,
+        numeroSerie: eq ? resolverSerieEquipamentoPdf(eq) || undefined : pedido.equipamentoNumeroSerie?.trim() || undefined,
         campos,
         pecas: (b.pecas || []).map((p) => ({
           codigo: p.codigo,
@@ -23794,6 +23823,7 @@ export default function Dashboard() {
         imagem: p.imagem,
       })),
       logoHtml: getLogoHtmlForReport(),
+      empresa: empresaPdf,
       labels: {
         titulo: (safeT as any)?.pedidoOrcamentoPdfTitulo || 'PEDIDO DE ORÇAMENTO',
         codigo: safeT?.codigoOrcamento || 'Código',
@@ -46744,6 +46774,7 @@ A1;Peça exemplo;10`}
               openTab('orcamentos-avulso', getTabTitle('orcamentos-avulso'))
             }}
             logoHtml={getLogoHtmlForOrcamento()}
+            empresaNonato={fichaCadastralParaEmpresaPdf(fichaCadastral)}
           />
         )
 
@@ -76540,6 +76571,35 @@ A1;Peça exemplo;10`}
             ? (safeT as any)?.nomeNonatoService || 'NONATO SERVICE'
             : relAtivo.cliente
         const equipamentoTextoPreview = `${relAtivo.maquinaModelo || ''}${relAtivo.numeroMaquina ? ` - ${relAtivo.numeroMaquina}` : ''}`.trim() || '—'
+        const clienteRelPreview = relAtivo.clienteId
+          ? clientes.find((c) => c.id === relAtivo.clienteId)
+          : clientes.find(
+              (c) => (c.nomeEmpresa || '').trim().toLowerCase() === (relAtivo.cliente || '').trim().toLowerCase()
+            )
+        const empresaPdfPreview = resolverEmpresaPedidoOrcamentoPdf(pedidoOrcamentoEmitirComo, {
+          empresaNonato: fichaCadastralParaEmpresaPdf(fichaCadastral),
+          cliente: clienteRelPreview,
+          nomeClienteFallback: relAtivo.cliente,
+        })
+        const pecasPdfPreview = relAtivo.pecasSubstituicao.map((p) => {
+          const bib = pecasBiblioteca.find((b) => b.codigo === p.codigo)
+          return {
+            codigo: p.codigo,
+            nome: p.descricao,
+            quantidade: parseFloat(String(p.quantidade)) || 1,
+            imagem: bib?.imagem,
+          }
+        })
+        const camposEquipPreview: Array<{ label: string; value: string }> = []
+        if (relAtivo.maquinaModelo?.trim()) {
+          camposEquipPreview.push({ label: safeT?.modelo || 'Modelo', value: relAtivo.maquinaModelo.trim() })
+        }
+        if (relAtivo.numeroMaquina?.trim()) {
+          camposEquipPreview.push({
+            label: safeT?.numeroSerie || 'Nº Série',
+            value: relAtivo.numeroMaquina.trim(),
+          })
+        }
         return (
         <div style={{
           position: 'fixed',
@@ -76613,6 +76673,18 @@ A1;Peça exemplo;10`}
               <p style={{ margin: '12px 0 0', fontSize: '12px', color: '#ffaa00' }}>
                 {safeT?.nomeNoDocumento || 'Nome no documento'}: <strong>{nomeNoDocPreview}</strong>
               </p>
+              <div style={{ marginTop: '12px', padding: '10px 12px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', fontSize: '12px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>
+                <p style={{ margin: '0 0 6px', color: '#00c853', fontWeight: 600 }}>
+                  {(safeT as any)?.dadosEmitenteDocumento || 'Dados no documento (cabeçalho)'}:
+                </p>
+                <p style={{ margin: 0 }}><strong>{empresaPdfPreview.nomeEmpresa || '—'}</strong></p>
+                {empresaPdfPreview.morada ? <p style={{ margin: '4px 0 0' }}>{empresaPdfPreview.morada}</p> : null}
+                {empresaPdfPreview.nif ? (
+                  <p style={{ margin: '4px 0 0' }}>
+                    {(safeT?.identificacaoFiscal || safeT?.nif || 'NIF') + ': ' + empresaPdfPreview.nif}
+                  </p>
+                ) : null}
+              </div>
             </div>
 
             <div style={{ marginBottom: '20px' }}>
@@ -76669,16 +76741,17 @@ A1;Peça exemplo;10`}
                     dataIso: new Date().toISOString(),
                     clienteNomeDoc: nomeNoDocPreview,
                     equipamentoTexto: equipamentoTextoPreview,
-                    pecas: relAtivo.pecasSubstituicao.map((p) => {
-                      const bib = pecasBiblioteca.find((b) => b.codigo === p.codigo)
-                      return {
-                        codigo: p.codigo,
-                        nome: p.descricao,
-                        quantidade: parseFloat(String(p.quantidade)) || 1,
-                        imagem: bib?.imagem,
-                      }
-                    }),
+                    equipamentosBlocos: [
+                      {
+                        titulo: `${safeT?.equipamento || 'Equipamento'} 1${relAtivo.maquinaModelo ? ` — ${relAtivo.maquinaModelo}` : ''}`,
+                        numeroSerie: relAtivo.numeroMaquina?.trim() || undefined,
+                        campos: camposEquipPreview,
+                        pecas: pecasPdfPreview,
+                      },
+                    ],
+                    pecas: pecasPdfPreview,
                     logoHtml: getLogoHtmlForReport(),
+                    empresa: empresaPdfPreview,
                     labels: {
                       titulo: (safeT as any)?.pedidoOrcamentoPdfTitulo || 'PEDIDO DE ORÇAMENTO',
                       previewBanner: (safeT as any)?.pedidoOrcamentoPreviewBanner || 'Pré-visualização',
@@ -76686,6 +76759,8 @@ A1;Peça exemplo;10`}
                       data: safeT?.data || 'Data',
                       cliente: safeT?.cliente || 'Cliente',
                       equipamento: safeT?.equipamento || 'Equipamento',
+                      numeroEquipamento: (safeT as any)?.numeroEquipamento || 'Número do Equipamento',
+                      numeroSerie: safeT?.numeroSerie || 'Nº Série',
                       colImagem: safeT?.imagem || 'Imagem',
                       colDescricao: safeT?.descricaoItem || 'Descrição',
                       colCodigo: safeT?.codigo || 'Código',
