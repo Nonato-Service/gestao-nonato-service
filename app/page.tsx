@@ -182,6 +182,7 @@ import { ClienteIdentidadeChips, formatClienteIdentidadeTexto, formatNifClienteE
 import { ClienteListaLinhas } from './components/ClienteListaLinhas'
 import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
+import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import { ClienteEquipamentoOrcamentosPanel } from './components/ClienteEquipamentoOrcamentosPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
 import { enrichOrcamentosGeradosComPedidosAvulsos, gerarProximoCodigoPedidoRelatorio } from './lib/clienteEquipamentoOrcamentos'
@@ -63097,6 +63098,9 @@ A1;Peça exemplo;10`}
       relatorioNumero?: string
       equipamentoChave?: string
       equipamentoNumeroSerie?: string
+      numeroNotaFiscalEntrega?: string
+      entregaConfirmadaEm?: string
+      geradoEm?: string
       dadosCliente?: any
       itens: Array<{ 
         descricao: string, 
@@ -65735,8 +65739,17 @@ A1;Peça exemplo;10`}
                 </p>
               </div>
             ) : (
+              <OrcamentosGeradosBrowse
+                orcamentos={orcamentosGerados}
+                clientes={clientes.map((c) => ({ id: c.id, nomeEmpresa: c.nomeEmpresa }))}
+                safeT={safeT}
+                saveData={saveData}
+                loadData={loadData}
+                onOrcamentosChange={setOrcamentosGerados}
+              >
+                {(filtrados) => (
               <div className="orc-pro__history-list">
-                {orcamentosGerados
+                {filtrados
                   .sort((a, b) => new Date(b.dataCriacao).getTime() - new Date(a.dataCriacao).getTime())
                   .map((orcamento) => (
                     <div
@@ -66476,6 +66489,8 @@ A1;Peça exemplo;10`}
                     </div>
                   ))}
               </div>
+                )}
+              </OrcamentosGeradosBrowse>
             )}
           </div>
         )}

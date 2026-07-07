@@ -61,6 +61,9 @@ export type PedidoAvulsoGuardado = {
   pecas: PecaPedido[]
   equipamentosBlocos?: EquipamentoBlocoPedido[]
   status?: StatusPedidoAvulso
+  numeroNotaFiscalEntrega?: string
+  entregaConfirmadaEm?: string
+  geradoEm?: string
 }
 
 type Props = {
@@ -510,6 +513,7 @@ export function PedidoOrcamentosAvulsoContent({
         pecas: [...b.pecas],
       })),
       status: 'pendente',
+      geradoEm: new Date().toISOString(),
     }
 
     const atualizados = [...pedidosGerados, novo]
@@ -538,6 +542,7 @@ export function PedidoOrcamentosAvulsoContent({
           clienteNome: nomeNoDoc,
           equipamentoChave: novo.equipamentoChave,
           equipamentoNumeroSerie: novo.equipamentoNumeroSerie,
+          geradoEm: novo.geradoEm,
           itens: pecasTotais.map((p) => ({
             descricao: p.nome,
             quantidade: p.quantidade,
@@ -558,8 +563,12 @@ export function PedidoOrcamentosAvulsoContent({
       } catch (_) {}
     }
 
+    openPedidoOrcamentoAvulsoPdf(
+      montarPdfPayload(codigo, false, novo.dataGeracao, nomeNoDoc, blocosValidos)
+    )
+
     alert(
-      (safeT?.pedidoGeradoComSucesso || 'Pedido gerado com sucesso!') +
+      (safeT?.orcamentoSalvoGerado || safeT?.pedidoGeradoComSucesso || 'Orçamento salvo e gerado com sucesso!') +
         '\n\n' +
         (safeT?.codigoOrcamento || 'Código do orçamento') +
         ': ' +

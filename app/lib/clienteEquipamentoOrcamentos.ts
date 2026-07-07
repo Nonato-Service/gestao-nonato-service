@@ -34,6 +34,9 @@ export type PedidoAvulsoRef = {
   equipamentoNumeroSerie?: string
   emitirComoCliente: 'cliente' | 'nonato-service'
   status?: 'pendente' | 'cancelado' | 'concluido' | 'aprovado' | 'entregue'
+  numeroNotaFiscalEntrega?: string
+  entregaConfirmadaEm?: string
+  geradoEm?: string
   pecas?: Array<{ codigo: string; nome: string; quantidade: number; imagem?: string }>
 }
 
@@ -51,6 +54,9 @@ export type OrcamentoGeradoRef = {
   equipamentoChave?: string
   equipamentoNumeroSerie?: string
   dataCriacao?: string
+  geradoEm?: string
+  numeroNotaFiscalEntrega?: string
+  entregaConfirmadaEm?: string
   total?: number
 }
 
@@ -182,6 +188,22 @@ export function orcamentoGeradoPendente(status?: OrcamentoGeradoRef['status']): 
 
 export function orcamentoGeradoAprovado(status?: OrcamentoGeradoRef['status']): boolean {
   return status === 'aprovado' || status === 'concluido' || status === 'entregue'
+}
+
+export function pedidoAvulsoEntregaAguardandoNotaFiscal(pedido: PedidoAvulsoRef): boolean {
+  return pedido.status === 'entregue' && !String(pedido.numeroNotaFiscalEntrega ?? '').trim()
+}
+
+export function orcamentoEntregaAguardandoNotaFiscal(orc: OrcamentoGeradoRef): boolean {
+  return orc.status === 'entregue' && !String(orc.numeroNotaFiscalEntrega ?? '').trim()
+}
+
+export function pedidoAvulsoAprovadoSemEntrega(status?: PedidoAvulsoRef['status']): boolean {
+  return status === 'aprovado' || status === 'concluido'
+}
+
+export function orcamentoGeradoAprovadoSemEntrega(status?: OrcamentoGeradoRef['status']): boolean {
+  return status === 'aprovado' || status === 'concluido'
 }
 
 export function gerarProximoCodigoPedidoRelatorio(pedidos: PedidoOrcamentoRef[]): string {

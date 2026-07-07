@@ -5220,6 +5220,222 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   color: #fff;
 }
 
+/* Pastas de orçamentos no cadastro do cliente */
+@keyframes piscar-vermelho {
+  0%, 100% {
+    border-color: #ff4444;
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.45);
+  }
+  50% {
+    border-color: rgba(255, 68, 68, 0.45);
+    box-shadow: 0 0 25px rgba(255, 68, 68, 0.75), 0 0 35px rgba(255, 68, 68, 0.3);
+  }
+}
+
+.cliente-orc-pastas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.cliente-orc-pasta {
+  border: 2px solid;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cliente-orc-pasta--aguardando {
+  animation: piscar-amarelo 1.4s ease-in-out infinite;
+  border-color: #ffc107;
+  background: rgba(255, 193, 7, 0.07);
+}
+
+.cliente-orc-pasta--entrega {
+  animation: piscar-vermelho 1.4s ease-in-out infinite;
+  border-color: #ff4444;
+  background: rgba(255, 68, 68, 0.07);
+}
+
+.cliente-orc-pasta__summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  list-style: none;
+  user-select: none;
+}
+
+.cliente-orc-pasta__summary::-webkit-details-marker {
+  display: none;
+}
+
+.cliente-orc-pasta--aguardando .cliente-orc-pasta__summary {
+  color: #ffc107;
+}
+
+.cliente-orc-pasta--entrega .cliente-orc-pasta__summary {
+  color: #ff6666;
+}
+
+.cliente-orc-pasta__icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.cliente-orc-pasta__count {
+  margin-left: auto;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.cliente-orc-pasta--aguardando .cliente-orc-pasta__count {
+  background: rgba(255, 193, 7, 0.25);
+  color: #ffc107;
+}
+
+.cliente-orc-pasta--entrega .cliente-orc-pasta__count {
+  background: rgba(255, 68, 68, 0.25);
+  color: #ff8888;
+}
+
+.cliente-orc-pasta__body {
+  padding: 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cliente-orc-pasta__empty {
+  margin: 0;
+  padding: 8px 4px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.cliente-orc-pasta__nf-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.cliente-orc-pasta__nf-input {
+  flex: 1;
+  min-width: 140px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 68, 68, 0.45);
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-size: 12px;
+}
+
+.cliente-equip-orcamentos__btn--entrega {
+  border-color: rgba(255, 68, 68, 0.45);
+  background: rgba(255, 68, 68, 0.18);
+  color: #ff8888;
+}
+
+.cliente-equip-orcamentos__btn--nf {
+  border-color: rgba(255, 68, 68, 0.55);
+  background: rgba(255, 68, 68, 0.28);
+  color: #fff;
+}
+
+/* Orçamentos Gerados — busca + alfabeto */
+.orc-gerados-browse {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.orc-gerados-browse__search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.orc-gerados-browse__search {
+  flex: 1;
+  min-width: 220px;
+}
+
+.orc-gerados-browse__clear {
+  flex-shrink: 0;
+}
+
+.orc-gerados-browse__pastas {
+  margin-bottom: 0;
+}
+
+.orc-gerados-browse__alfa {
+  margin-top: 4px;
+}
+
+.orc-gerados-browse__meta {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  background: rgba(72, 72, 72, 0.65);
+  border-radius: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.orc-gerados-browse__hint {
+  margin: 0 0 10px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.orc-gerados-browse__cliente-count {
+  display: block;
+  font-size: 11px;
+  opacity: 0.75;
+  margin-top: 2px;
+}
+
+.orc-gerados-browse__voltar {
+  margin-top: 12px;
+}
+
+.orc-gerados-browse__cliente-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.orc-gerados-browse__cliente-ativo {
+  font-size: 14px;
+  font-weight: 700;
+  color: #66b3ff;
+}
+
+.orc-gerados-browse__pasta-card {
+  margin: 0;
+}
+
+.cliente-detalhe-v2__orcamentos-meta--visual {
+  font-size: 12px;
+  opacity: 0.75;
+  font-style: italic;
+}
+
 /* ========== Layout compacto (≤1024px): menu em gaveta, área principal a largura total ========== */
 .app-compact-layout {
   flex-direction: column !important;

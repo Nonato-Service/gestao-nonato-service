@@ -245,6 +245,10 @@ export function ClienteOrcamentosFichaSection({
         <span className="cliente-detalhe-v2__euro-icon">💰</span>
         {safeT?.orcamentosClienteTitulo || 'Orçamentos do cliente'}
       </h3>
+      <p className="cliente-detalhe-v2__orcamentos-meta cliente-detalhe-v2__orcamentos-meta--visual">
+        {safeT?.orcamentosClienteSomenteVisual ||
+          'Consulta visual — gerir orçamentos em Orçamentos → Orçamentos Gerados.'}
+      </p>
       <p className="cliente-detalhe-v2__orcamentos-meta">
         {totalRelatorio} {safeT?.doRelatorio || 'do relatório'} · {totalAvulso} {safeT?.avulsos || 'avulsos'}
       </p>
@@ -338,34 +342,8 @@ export function ClienteOrcamentosFichaSection({
                     {safeT?.equipamento || 'Equipamento'}: {item.equipLabel}
                   </p>
                   <p className="cliente-equip-orcamentos__line">
-                    {safeT?.numeroRelatorio || 'Relatório'}: {p.numeroRelatorio}
+                    {new Date(p.dataGeracao).toLocaleDateString('pt-BR')}
                   </p>
-                  <p className="cliente-equip-orcamentos__line">
-                    {safeT?.nomeNoDocumento || 'Nome no documento'}:{' '}
-                    {p.emitirComoCliente === 'nonato-service'
-                      ? safeT?.nomeNonatoService || 'NONATO SERVICE'
-                      : p.cliente}
-                  </p>
-                  <p className="cliente-equip-orcamentos__line">
-                    {new Date(p.dataGeracao).toLocaleDateString('pt-BR')} · {p.pecas?.length ?? 0}{' '}
-                    {safeT?.pecas || 'peças'}
-                  </p>
-                  <div className="cliente-equip-orcamentos__actions">
-                    {onVisualizarPdfRelatorio && (
-                      <button type="button" className="cliente-equip-orcamentos__btn" onClick={() => onVisualizarPdfRelatorio(p)}>
-                        👁️ {safeT?.visualizarPdfPedido || safeT?.visualizar || 'PDF'}
-                      </button>
-                    )}
-                    {onUpdatePedidoRelatorioStatus && p.status !== 'aprovado' && (
-                      <button
-                        type="button"
-                        className="cliente-equip-orcamentos__btn cliente-equip-orcamentos__btn--ok"
-                        onClick={() => onUpdatePedidoRelatorioStatus(p.id, 'aprovado')}
-                      >
-                        ✓ {safeT?.aprovar || 'Aprovar'}
-                      </button>
-                    )}
-                  </div>
                 </div>
               )
             }
@@ -388,31 +366,8 @@ export function ClienteOrcamentosFichaSection({
                     {safeT?.equipamento || 'Equipamento'}: {item.equipLabel}
                   </p>
                   <p className="cliente-equip-orcamentos__line">
-                    {safeT?.nomeNoDocumento || 'Nome no documento'}:{' '}
-                    {p.emitirComoCliente === 'nonato-service'
-                      ? safeT?.nomeNonatoService || 'NONATO SERVICE'
-                      : p.clienteNomeReal}
+                    {new Date(p.dataGeracao).toLocaleDateString('pt-BR')}
                   </p>
-                  <p className="cliente-equip-orcamentos__line">
-                    {new Date(p.dataGeracao).toLocaleDateString('pt-BR')} · {p.pecas?.length ?? 0}{' '}
-                    {safeT?.pecas || 'peças'}
-                  </p>
-                  <div className="cliente-equip-orcamentos__actions">
-                    {onVisualizarPdfAvulso && (
-                      <button type="button" className="cliente-equip-orcamentos__btn" onClick={() => onVisualizarPdfAvulso(p)}>
-                        👁️ {safeT?.visualizarPdfPedido || safeT?.visualizar || 'PDF'}
-                      </button>
-                    )}
-                    {pedidoAvulsoPendente(p.status) && (
-                      <button
-                        type="button"
-                        className="cliente-equip-orcamentos__btn cliente-equip-orcamentos__btn--ok"
-                        onClick={() => atualizarStatusAvulso(p.codigo, 'aprovado')}
-                      >
-                        ✓ {safeT?.aprovar || 'Aprovar'}
-                      </button>
-                    )}
-                  </div>
                 </div>
               )
             }
@@ -436,20 +391,8 @@ export function ClienteOrcamentosFichaSection({
                 <p className="cliente-equip-orcamentos__line">
                   {safeT?.equipamento || 'Equipamento'}: {item.equipLabel}
                 </p>
-                {o.relatorioNumero && (
-                  <p className="cliente-equip-orcamentos__line">
-                    {safeT?.numeroRelatorio || 'Relatório'}: {o.relatorioNumero}
-                  </p>
-                )}
-                {String(o.equipamentoNumeroSerie ?? '').trim() && (
-                  <p className="cliente-equip-orcamentos__line">
-                    {safeT?.numeroSerie || 'Número de Série'}: {String(o.equipamentoNumeroSerie).trim()}
-                  </p>
-                )}
-                <p className="cliente-equip-orcamentos__line">{o.descricao || '—'}</p>
                 <p className="cliente-equip-orcamentos__line">
                   {new Date(o.dataCriacao || o.data).toLocaleDateString('pt-BR')}
-                  {typeof o.total === 'number' && o.total > 0 ? ` · ${o.total.toFixed(2)} €` : ''}
                 </p>
               </div>
             )
