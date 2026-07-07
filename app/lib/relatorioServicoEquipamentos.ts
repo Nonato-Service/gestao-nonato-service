@@ -349,7 +349,7 @@ function equipamentoClienteCorrespondeRelatorio(
   const snCli = String(e.numeroSerie ?? '').trim()
   const key = resolverIdEquipamentoCliente(e, idx)
   const vis = resolverIdEquipamentoVisivelCliente(e, equipamentosArmazem)
-  return (
+  return Boolean(
     (idStored &&
       (idCli === idStored ||
         snCli === idStored ||
@@ -724,14 +724,18 @@ type ClienteRelatoriosHost = {
   relatorios?: Record<string, Array<{ id: string; data: string; numero: string }>>
 }
 
-export function aplicarRelatorioNaBibliotecaCliente<T extends ClienteRelatoriosHost, R extends { id: string; data: string; numero: string } & RelatorioServicoEquipamentosHost>(
+export function aplicarRelatorioNaBibliotecaCliente<
+  T extends ClienteRelatoriosHost,
+  R extends { id: string; data: string; numero: string; clienteId?: string; cliente?: string } & RelatorioServicoEquipamentosHost
+>(
   clientes: T[],
   savedRelatorio: R,
   equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): T[] {
-  if (!savedRelatorio.clienteId) return clientes
+  const clienteId = resolverClienteIdRelatorio(savedRelatorio, clientes)
+  if (!clienteId) return clientes
 
-  const clienteIndex = clientes.findIndex((c) => c.id === savedRelatorio.clienteId)
+  const clienteIndex = clientes.findIndex((c) => c.id === clienteId)
   if (clienteIndex === -1) return clientes
 
   const clienteOrig = clientes[clienteIndex]

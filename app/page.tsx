@@ -37,6 +37,7 @@ import {
   showDiarioBrowserNotification,
 } from './lib/diarioLembrete'
 import { mergeNonatoClientesDeferServerLocal } from './lib/clienteMergeUtils'
+import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer } from './lib/mergePecasBiblioteca'
 import {
   mergeSidebarButtonsDeferLocal,
   repairSidebarButtonsFromCatalog,
@@ -64044,6 +64045,80 @@ A1;Peça exemplo;10`}
       setShowWhatsAppModal(true)
     }
 
+    const labelTipoOrcamentoAtual = (key: string): string => {
+      const labels: Record<string, string | undefined> = {
+        'dados-fixos': safeT?.dadosFixosNonato,
+        'cliente-cadastrado': safeT?.selecionarCliente,
+        'orcamento-relatorio': safeT?.orcamentoRelatorio,
+        'cliente-prioritario-fixo': safeT?.orcamentoClientePrioritarioFixo,
+        'cliente-prioritario-valores': safeT?.orcamentoClientePrioritarioValores,
+        'orcamentos-gerados': safeT?.orcamentosGerados,
+      }
+      return labels[key] || key.replace(/-/g, ' ')
+    }
+
+    const mudarTipoOrcamento = (key: OrcamentoAvulsoTipoRascunho | 'orcamentos-gerados') => {
+      if (key === 'orcamentos-gerados') {
+        setTipoOrcamento('orcamentos-gerados')
+        setClienteCadastroPrioritarioFixo(null)
+        return
+      }
+      if (key === 'cliente-prioritario-fixo') {
+        setTipoOrcamento('cliente-prioritario-fixo')
+        setClienteSelecionado(null)
+        setRelatorioSelecionado(null)
+        return
+      }
+      if (key === 'cliente-prioritario-valores') {
+        setTipoOrcamento('cliente-prioritario-valores')
+        setClienteSelecionado(null)
+        setRelatorioSelecionado(null)
+        setClienteCadastroPrioritarioFixo(null)
+        return
+      }
+      if (key === 'dados-fixos') {
+        setTipoOrcamento('dados-fixos')
+        setClienteSelecionado(null)
+        setRelatorioSelecionado(null)
+        setClienteCadastroPrioritarioFixo(null)
+        return
+      }
+      if (key === 'cliente-cadastrado') {
+        setTipoOrcamento('cliente-cadastrado')
+        setRelatorioSelecionado(null)
+        setClienteCadastroPrioritarioFixo(null)
+        return
+      }
+      setTipoOrcamento('orcamento-relatorio')
+      setClienteSelecionado(null)
+      setClienteCadastroPrioritarioFixo(null)
+    }
+
+    const sidebarSelecaoVisivel =
+      tipoOrcamento === 'orcamento-relatorio' ||
+      tipoOrcamento === 'cliente-cadastrado' ||
+      tipoOrcamento === 'cliente-prioritario-fixo'
+
+    const formularioOrcamentoVisivel =
+      tipoOrcamento === 'dados-fixos' ||
+      (tipoOrcamento === 'cliente-cadastrado' && clienteSelecionado) ||
+      (tipoOrcamento === 'orcamento-relatorio' && relatorioSelecionado) ||
+      tipoOrcamento === 'cliente-prioritario-fixo' ||
+      tipoOrcamento === 'cliente-prioritario-valores'
+
+    const opcoesTipoCriar: Array<{
+      key: OrcamentoAvulsoTipoRascunho
+      label: string
+      tone: 'blue' | 'amber'
+      hint?: string
+    }> = [
+      { key: 'dados-fixos', label: safeT?.dadosFixosNonato || 'Dados Fixos - NONATO SERVICE', tone: 'blue', hint: safeT?.orcamentoTipoDadosFixosHint },
+      { key: 'cliente-cadastrado', label: safeT?.selecionarCliente || 'Selecionar Cliente Cadastrado', tone: 'blue', hint: safeT?.orcamentoTipoClienteHint },
+      { key: 'orcamento-relatorio', label: safeT?.orcamentoRelatorio || 'Orçamento do Relatório', tone: 'blue', hint: safeT?.orcamentoTipoRelatorioHint },
+      { key: 'cliente-prioritario-fixo', label: safeT?.orcamentoClientePrioritarioFixo || 'Cliente Prioritário (Fixo)', tone: 'amber', hint: safeT?.orcamentoTipoPrioritarioFixoHint },
+      { key: 'cliente-prioritario-valores', label: safeT?.orcamentoClientePrioritarioValores || 'Cliente Prioritário (com Valores)', tone: 'amber', hint: safeT?.orcamentoTipoPrioritarioValoresHint },
+    ]
+
     return (
       <div className="orc-pro orcamentos-avulso-page">
         <section className="orc-pro__hero orc-pro__hero--orc">
@@ -64088,8 +64163,8 @@ A1;Peça exemplo;10`}
               <strong>{orcamentosGerados.length}</strong>
             </div>
             <div className="orc-pro__kpi">
-              <span>{safeT?.tipoOrcamento || 'Modo atual'}</span>
-              <strong className="orc-pro__kpi-mode">{tipoOrcamento.replace(/-/g, ' ')}</strong>
+              <span>{safeT?.orcamentoModoAtualLabel || safeT?.tipoOrcamento || 'Modo atual'}</span>
+              <strong className="orc-pro__kpi-mode">{labelTipoOrcamentoAtual(tipoOrcamento)}</strong>
             </div>
             <div className="orc-pro__kpi">
               <span>{safeT?.itens || 'Itens no rascunho'}</span>
@@ -64098,61 +64173,75 @@ A1;Peça exemplo;10`}
           </div>
         </section>
 
-        <nav className="orc-pro__tipo-nav" aria-label={safeT?.tipoOrcamento || 'Tipo de Orçamento'}>
-          <h3 className="orc-pro__tipo-nav-title">{safeT?.tipoOrcamento || 'Tipo de Orçamento'}</h3>
-          <div className="orc-pro__tipo-grid">
-            {[
-              { key: 'dados-fixos' as const, label: safeT?.dadosFixosNonato || 'Dados Fixos - NONATO SERVICE', tone: 'blue' as const },
-              { key: 'cliente-cadastrado' as const, label: safeT?.selecionarCliente || 'Selecionar Cliente Cadastrado', tone: 'blue' as const },
-              { key: 'orcamento-relatorio' as const, label: safeT?.orcamentoRelatorio || 'Orçamento do Relatório', tone: 'blue' as const },
-              { key: 'cliente-prioritario-fixo' as const, label: safeT?.orcamentoClientePrioritarioFixo || 'Cliente Prioritário (Fixo)', tone: 'amber' as const },
-              { key: 'cliente-prioritario-valores' as const, label: safeT?.orcamentoClientePrioritarioValores || 'Cliente Prioritário (com Valores)', tone: 'amber' as const },
-              { key: 'orcamentos-gerados' as const, label: safeT?.orcamentosGerados || 'Orçamentos Gerados', tone: 'blue' as const },
-            ].map(({ key, label, tone }) => (
+        <nav className="orc-pro__tipo-nav orc-pro__tipo-nav--grouped" aria-label={safeT?.tipoOrcamento || 'Tipo de Orçamento'}>
+          <div className="orc-pro__tipo-groups">
+            <div className="orc-pro__tipo-group">
+              <h3 className="orc-pro__tipo-nav-title">{safeT?.orcamentoNavCriarTitulo || 'Criar orçamento'}</h3>
+              <div className="orc-pro__tipo-grid orc-pro__tipo-grid--2">
+                {opcoesTipoCriar.map(({ key, label, tone, hint }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`orc-pro__tipo-btn orc-pro__tipo-btn--${tone} ${tipoOrcamento === key ? 'is-active' : ''}`}
+                    onClick={() => mudarTipoOrcamento(key)}
+                    title={hint || label}
+                  >
+                    {tipoOrcamento === key ? <span className="orc-pro__tipo-check">OK</span> : null}
+                    <span className="orc-pro__tipo-btn-label">{label}</span>
+                    {hint ? <span className="orc-pro__tipo-btn-hint">{hint}</span> : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="orc-pro__tipo-group orc-pro__tipo-group--history">
+              <h3 className="orc-pro__tipo-nav-title">{safeT?.orcamentoNavHistoricoTitulo || 'Histórico'}</h3>
               <button
-                key={key}
                 type="button"
-                className={`orc-pro__tipo-btn orc-pro__tipo-btn--${tone} ${tipoOrcamento === key ? 'is-active' : ''}`}
-                onClick={() => {
-                  if (key === 'orcamentos-gerados') {
-                    setTipoOrcamento('orcamentos-gerados')
-                    setClienteCadastroPrioritarioFixo(null)
-                  } else if (key === 'cliente-prioritario-fixo') {
-                    setTipoOrcamento('cliente-prioritario-fixo')
-                    setClienteSelecionado(null)
-                    setRelatorioSelecionado(null)
-                  } else if (key === 'cliente-prioritario-valores') {
-                    setTipoOrcamento('cliente-prioritario-valores')
-                    setClienteSelecionado(null)
-                    setRelatorioSelecionado(null)
-                    setClienteCadastroPrioritarioFixo(null)
-                  } else if (key === 'dados-fixos') {
-                    setTipoOrcamento('dados-fixos')
-                    setClienteSelecionado(null)
-                    setRelatorioSelecionado(null)
-                    setClienteCadastroPrioritarioFixo(null)
-                  } else if (key === 'cliente-cadastrado') {
-                    setTipoOrcamento('cliente-cadastrado')
-                    setRelatorioSelecionado(null)
-                    setClienteCadastroPrioritarioFixo(null)
-                  } else {
-                    setTipoOrcamento('orcamento-relatorio')
-                    setClienteSelecionado(null)
-                    setClienteCadastroPrioritarioFixo(null)
-                  }
-                }}
+                className={`orc-pro__tipo-btn orc-pro__tipo-btn--history ${tipoOrcamento === 'orcamentos-gerados' ? 'is-active' : ''}`}
+                onClick={() => mudarTipoOrcamento('orcamentos-gerados')}
               >
-                {tipoOrcamento === key ? <span className="orc-pro__tipo-check">OK</span> : null}
-                {label}
+                {tipoOrcamento === 'orcamentos-gerados' ? <span className="orc-pro__tipo-check">OK</span> : null}
+                <span className="orc-pro__tipo-btn-label">{safeT?.orcamentosGerados || 'Orçamentos Gerados'}</span>
+                <span className="orc-pro__tipo-btn-hint">
+                  {(safeT?.orcamentoNavHistoricoHint || '{{n}} gravados').replace('{{n}}', String(orcamentosGerados.length))}
+                </span>
               </button>
-            ))}
+            </div>
           </div>
         </nav>
 
-        <div className="orc-pro__workspace">
-        {/* Seleção de Relatório (se opção orcamento-relatorio) - padrão 1px */}
+        <div
+          className={`orc-pro__workspace ${tipoOrcamento !== 'orcamentos-gerados' ? 'orc-pro__workspace--create' : 'orc-pro__workspace--history'} ${sidebarSelecaoVisivel ? 'orc-pro__workspace--has-sidebar' : ''}`}
+        >
+        {tipoOrcamento !== 'orcamentos-gerados' && !sidebarSelecaoVisivel && (
+          <div className="orc-pro__panel orc-pro__panel--context orc-pro__panel--select">
+            <h3 className="orc-pro__panel-title orc-pro__panel-title--blue">
+              {safeT?.orcamentoSecaoContexto || 'Contexto do orçamento'}
+            </h3>
+            <p className="orc-pro__panel-desc">
+              {tipoOrcamento === 'dados-fixos'
+                ? (safeT?.orcamentoTipoDadosFixosHint || 'Orçamento com dados fixos da NONATO SERVICE.')
+                : (safeT?.orcamentoTipoPrioritarioValoresHint || 'Orçamento para cliente prioritário com linhas e valores.')}
+            </p>
+          </div>
+        )}
+
+        {tipoOrcamento !== 'orcamentos-gerados' && !formularioOrcamentoVisivel && sidebarSelecaoVisivel && (
+          <div className="orc-pro__panel orc-pro__panel--placeholder orc-pro__panel--form">
+            <h3 className="orc-pro__panel-title orc-pro__panel-title--blue">
+              {safeT?.orcamentoSecaoFormulario || 'Formulário do orçamento'}
+            </h3>
+            <p className="orc-pro__empty-hint orc-pro__empty-hint--lg">
+              {tipoOrcamento === 'cliente-cadastrado'
+                ? (safeT?.orcamentoSelecioneClientePrimeiro || 'Selecione um cliente na coluna à esquerda para continuar.')
+                : (safeT?.orcamentoSelecioneRelatorioPrimeiro || 'Selecione um relatório na coluna à esquerda para continuar.')}
+            </p>
+          </div>
+        )}
+
+        {/* Seleção de Relatório (se opção orcamento-relatorio) */}
         {tipoOrcamento === 'orcamento-relatorio' && (
-          <div className="orc-pro__panel">
+          <div className="orc-pro__panel orc-pro__panel--select">
             <h3 className="orc-pro__panel-title">
               {safeT?.selecionarRelatorio || 'Selecionar Relatório'}
             </h3>
@@ -64176,41 +64265,30 @@ A1;Peça exemplo;10`}
                   rel.numero.toLowerCase().includes(buscaRelatorio.toLowerCase()) ||
                   rel.cliente.toLowerCase().includes(buscaRelatorio.toLowerCase())
                 ).map(relatorio => (
-                  <div
+                  <button
+                    type="button"
                     key={relatorio.id}
                     onClick={() => setRelatorioSelecionado(relatorio)}
-                    style={{
-                      padding: '15px',
-                      marginBottom: '10px',
-                      backgroundColor: relatorioSelecionado?.id === relatorio.id ? 'rgba(0, 200, 83, 0.2)' : '#484848',
-                      border: `1px solid ${relatorioSelecionado?.id === relatorio.id ? 'rgba(0, 200, 83, 0.5)' : 'rgba(0, 200, 83, 0.2)'}`,
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
+                    className={`orc-pro__pick-card orc-pro__pick-card--green ${relatorioSelecionado?.id === relatorio.id ? 'is-active' : ''}`}
                   >
-                    <div style={{ fontWeight: 'bold', color: '#00c853', marginBottom: '5px' }}>
+                    <div className="orc-pro__pick-card-title">
                       {safeT?.numeroRelatorio || 'Nº Relatório'}: {relatorio.numero}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#ccc', marginBottom: '3px' }}>
-                      {safeT?.cliente || 'Cliente'}: {relatorio.cliente}
+                    <div className="orc-pro__pick-card-meta">
+                      <span>{safeT?.cliente || 'Cliente'}: {relatorio.cliente}</span>
+                      <span>{safeT?.data || 'Data'}: {new Date(relatorio.data).toLocaleDateString('pt-BR')}</span>
+                      <span>{safeT?.tecnico || 'Técnico'}: {relatorio.tecnico}</span>
                     </div>
-                    <div style={{ fontSize: '12px', color: '#ccc', marginBottom: '3px' }}>
-                      {safeT?.data || 'Data'}: {new Date(relatorio.data).toLocaleDateString('pt-BR')}
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#ccc' }}>
-                      {safeT?.tecnico || 'Técnico'}: {relatorio.tecnico}
-                    </div>
-                  </div>
+                  </button>
                 ))
               )}
             </div>
           </div>
         )}
 
-        {/* Seleção de Cliente (se opção cliente-cadastrado) - padrão 1px */}
+        {/* Seleção de Cliente (se opção cliente-cadastrado) */}
         {tipoOrcamento === 'cliente-cadastrado' && (
-          <div className="orc-pro__panel">
+          <div className="orc-pro__panel orc-pro__panel--select orc-pro__panel--blue">
             <h3 className="orc-pro__panel-title orc-pro__panel-title--blue">
               {safeT?.selecionarCliente || 'Selecionar Cliente'}
             </h3>
@@ -64228,33 +64306,24 @@ A1;Peça exemplo;10`}
                 </p>
               ) : (
                 clientesFiltrados.map(cliente => (
-                  <div
+                  <button
+                    type="button"
                     key={cliente.id}
                     onClick={() => setClienteSelecionado(cliente)}
-                    style={{
-                      padding: '15px',
-                      marginBottom: '10px',
-                      backgroundColor: clienteSelecionado?.id === cliente.id ? 'rgba(0, 100, 255, 0.2)' : '#484848',
-                      border: `1px solid ${clienteSelecionado?.id === cliente.id ? 'rgba(0, 100, 255, 0.5)' : 'rgba(0, 100, 255, 0.2)'}`,
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
+                    className={`orc-pro__pick-card orc-pro__pick-card--blue ${clienteSelecionado?.id === cliente.id ? 'is-active' : ''}`}
                   >
-                    <div style={{ fontWeight: 'bold', color: '#66b3ff', marginBottom: '8px', fontSize: '15px' }}>
-                      {cliente.nomeEmpresa || '—'}
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px', fontSize: '12px', color: '#ccc' }}>
-                      <div><span style={{ color: '#888' }}>{safeT?.contato || 'Contato'}:</span> {(cliente.contato || '').trim() || '—'}</div>
-                      <div><span style={{ color: '#888' }}>{safeT?.email || 'E-mail'}:</span> {(cliente.email || '').trim() || '—'}</div>
-                      <div style={{ gridColumn: '1 / -1' }}><span style={{ color: '#888' }}>{safeT?.telefone || 'Telefone'}:</span> {(cliente.telefones || '').trim() || '—'}</div>
+                    <div className="orc-pro__pick-card-title">{cliente.nomeEmpresa || '—'}</div>
+                    <div className="orc-pro__pick-card-grid">
+                      <div><span>{safeT?.contato || 'Contato'}:</span> {(cliente.contato || '').trim() || '—'}</div>
+                      <div><span>{safeT?.email || 'E-mail'}:</span> {(cliente.email || '').trim() || '—'}</div>
+                      <div className="orc-pro__pick-card-grid--full"><span>{safeT?.telefone || 'Telefone'}:</span> {(cliente.telefones || '').trim() || '—'}</div>
                       {(cliente.morada || cliente.codigoPostal) && (
-                        <div style={{ gridColumn: '1 / -1', marginTop: '4px', paddingTop: '8px', borderTop: '1px solid rgba(100,100,100,0.35)', fontSize: '11px', color: '#b0b0b0' }}>
+                        <div className="orc-pro__pick-card-grid--full orc-pro__pick-card-address">
                           {[cliente.morada, cliente.codigoPostal].filter(Boolean).join(' · ')}
                         </div>
                       )}
                     </div>
-                  </div>
+                  </button>
                 ))
               )}
             </div>
@@ -64263,11 +64332,11 @@ A1;Peça exemplo;10`}
 
         {/* Cliente Prioritário (Fixo): opcional — cliente do cadastro para e-mail / WhatsApp */}
         {tipoOrcamento === 'cliente-prioritario-fixo' && (
-          <div className="orc-pro__panel orc-pro__panel--amber">
+          <div className="orc-pro__panel orc-pro__panel--select orc-pro__panel--amber">
             <h3 className="orc-pro__panel-title orc-pro__panel-title--amber">
               {safeT?.orcamentoPrioritarioFixoSecaoCadastro || 'Cliente do cadastro (opcional)'}
             </h3>
-            <p style={{ fontSize: '12px', color: '#aaa', marginBottom: '14px', lineHeight: 1.5 }}>
+            <p className="orc-pro__panel-desc">
               {safeT?.orcamentoPrioritarioFixoSecaoCadastroDesc || 'O orçamento continua a ser do tipo Cliente Prioritário (Fixo). Pode escolher um cliente da lista para usar o e-mail e telefone ao guardar e ao enviar. Se não escolher, usam-se os dados do cliente prioritário.'}
             </p>
             <input
@@ -64279,44 +64348,30 @@ A1;Peça exemplo;10`}
             />
             <div className="orc-pro__scroll-list orc-pro__scroll-list--sm">
               {clientesFiltradosPrioritarioFixo.length === 0 ? (
-                <p className="orc-pro__empty-hint">>{safeT?.nenhumClienteEncontrado || 'Nenhum cliente encontrado'}</p>
+                <p className="orc-pro__empty-hint">{safeT?.nenhumClienteEncontrado || 'Nenhum cliente encontrado'}</p>
               ) : (
                 clientesFiltradosPrioritarioFixo.map(cliente => (
-                  <div
+                  <button
+                    type="button"
                     key={cliente.id}
                     onClick={() => setClienteCadastroPrioritarioFixo(cliente)}
-                    style={{
-                      padding: '14px',
-                      marginBottom: '8px',
-                      backgroundColor: clienteCadastroPrioritarioFixo?.id === cliente.id ? 'rgba(255, 165, 0, 0.22)' : '#484848',
-                      border: `1px solid ${clienteCadastroPrioritarioFixo?.id === cliente.id ? 'rgba(255, 165, 0, 0.6)' : 'rgba(255, 165, 0, 0.2)'}`,
-                      borderRadius: '6px',
-                      cursor: 'pointer'
-                    }}
+                    className={`orc-pro__pick-card orc-pro__pick-card--amber ${clienteCadastroPrioritarioFixo?.id === cliente.id ? 'is-active' : ''}`}
                   >
-                    <div style={{ fontWeight: 'bold', color: '#ffa500', marginBottom: '6px' }}>{cliente.nomeEmpresa || '—'}</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px', fontSize: '12px', color: '#ccc' }}>
-                      <div><span style={{ color: '#888' }}>{safeT?.contato || 'Contato'}:</span> {(cliente.contato || '').trim() || '—'}</div>
-                      <div><span style={{ color: '#888' }}>{safeT?.email || 'E-mail'}:</span> {(cliente.email || '').trim() || '—'}</div>
-                      <div style={{ gridColumn: '1 / -1' }}><span style={{ color: '#888' }}>{safeT?.telefone || 'Telefone'}:</span> {(cliente.telefones || '').trim() || '—'}</div>
+                    <div className="orc-pro__pick-card-title">{cliente.nomeEmpresa || '—'}</div>
+                    <div className="orc-pro__pick-card-grid">
+                      <div><span>{safeT?.contato || 'Contato'}:</span> {(cliente.contato || '').trim() || '—'}</div>
+                      <div><span>{safeT?.email || 'E-mail'}:</span> {(cliente.email || '').trim() || '—'}</div>
+                      <div className="orc-pro__pick-card-grid--full"><span>{safeT?.telefone || 'Telefone'}:</span> {(cliente.telefones || '').trim() || '—'}</div>
                     </div>
-                  </div>
+                  </button>
                 ))
               )}
             </div>
             {clienteCadastroPrioritarioFixo && (
               <button
                 type="button"
+                className="orc-pro__btn orc-pro__btn--secondary"
                 onClick={() => setClienteCadastroPrioritarioFixo(null)}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '13px',
-                  backgroundColor: 'rgba(100, 100, 100, 0.3)',
-                  border: '1px solid rgba(150, 150, 150, 0.5)',
-                  borderRadius: '6px',
-                  color: '#ccc',
-                  cursor: 'pointer'
-                }}
               >
                 {safeT?.orcamentoPrioritarioFixoLimparClienteCadastro || 'Usar só dados do cliente prioritário'}
               </button>
@@ -64324,12 +64379,8 @@ A1;Peça exemplo;10`}
           </div>
         )}
 
-        {/* Formulário do Orçamento - padrão Visualizar Equipamento (1px, #00c853) */}
-        {(tipoOrcamento === 'dados-fixos' || 
-          (tipoOrcamento === 'cliente-cadastrado' && clienteSelecionado) ||
-          (tipoOrcamento === 'orcamento-relatorio' && relatorioSelecionado) ||
-          tipoOrcamento === 'cliente-prioritario-fixo' ||
-          tipoOrcamento === 'cliente-prioritario-valores') && (
+        {/* Formulário do Orçamento */}
+        {formularioOrcamentoVisivel && (
           <div className="orc-pro__panel orc-pro__panel--form">
             <h3 className="orc-pro__panel-title orc-pro__panel-title--blue orc-pro__panel-title--lg">
               {safeT?.dadosOrcamento || 'Dados do Orçamento'}
@@ -65296,87 +65347,20 @@ A1;Peça exemplo;10`}
               />
             </div>
 
-            {/* Botões de Ação - fundo verde, borda verde, texto branco, hover iluminado */}
-            <div style={{ display: 'flex', gap: '15px', marginTop: '30px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-              <button
-                onClick={handleImprimirOrcamentoAtual}
-                style={{
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  backgroundColor: 'rgba(0, 200, 83, 0.2)',
-                  border: '1px solid rgba(0, 200, 83, 0.85)',
-                  borderRadius: '8px',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 0 18px rgba(0, 200, 83, 0.5)'
-                  e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.9)'
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.35)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none'
-                  e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.85)'
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.2)'
-                }}
-              >
+            {/* Botões de Ação */}
+            <div className="orc-pro__actions-bar orc-pro__actions-bar--form">
+              <button type="button" className="orc-pro__act" onClick={handleImprimirOrcamentoAtual}>
                 🖨️ {safeT?.imprimirOrcamento || 'Imprimir/PDF'}
               </button>
-              <button
-                onClick={handleEnviarEmailAtual}
-                style={{
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  backgroundColor: 'rgba(0, 200, 83, 0.2)',
-                  border: '1px solid rgba(0, 200, 83, 0.85)',
-                  borderRadius: '8px',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 0 18px rgba(0, 200, 83, 0.5)'
-                  e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.9)'
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.35)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none'
-                  e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.85)'
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.2)'
-                }}
-              >
+              <button type="button" className="orc-pro__act" onClick={handleEnviarEmailAtual}>
                 📧 {safeT?.enviarPorEmail || 'Enviar por Email'}
               </button>
-              <button
-                onClick={handleEnviarWhatsAppAtual}
-                style={{
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  backgroundColor: 'rgba(0, 200, 83, 0.2)',
-                  border: '1px solid rgba(0, 200, 83, 0.85)',
-                  borderRadius: '8px',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 0 18px rgba(0, 200, 83, 0.5)'
-                  e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.9)'
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.35)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none'
-                  e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.85)'
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.2)'
-                }}
-              >
+              <button type="button" className="orc-pro__act" onClick={handleEnviarWhatsAppAtual}>
                 💬 {safeT?.enviarPorWhatsApp || 'Enviar por WhatsApp'}
               </button>
               <button
+                type="button"
+                className="orc-pro__act orc-pro__act--muted"
                 onClick={() => {
                   setNumeroOrcamentoManual(false)
                   const dataHoje = new Date().toISOString().split('T')[0]
@@ -65391,32 +65375,12 @@ A1;Peça exemplo;10`}
                   })
                   setClienteSelecionado(null)
                 }}
-                style={{
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  backgroundColor: 'rgba(0, 200, 83, 0.2)',
-                  border: '1px solid rgba(0, 200, 83, 0.85)',
-                  borderRadius: '8px',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 0 18px rgba(0, 200, 83, 0.5)'
-                  e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.9)'
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.35)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none'
-                  e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.85)'
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.2)'
-                }}
               >
                 {safeT?.limpar || 'Limpar'}
               </button>
               <button
-                className="btn-primary"
+                type="button"
+                className="orc-pro__act orc-pro__act--primary"
                 onClick={async () => {
                   // Validação de itens só para tipos que permitem itens
                   if ((tipoOrcamento === 'dados-fixos' || tipoOrcamento === 'cliente-cadastrado' || tipoOrcamento === 'cliente-prioritario-valores') && dadosOrcamento.itens.length === 0) {
@@ -65497,53 +65461,20 @@ A1;Peça exemplo;10`}
                     alert(safeT?.erroSalvarOrcamento || 'Erro ao salvar orçamento!')
                   }
                 }}
-                style={{
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  backgroundColor: 'rgba(0, 200, 83, 0.2)',
-                  border: '1px solid rgba(0, 200, 83, 0.85)',
-                  borderRadius: '8px',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 0 18px rgba(0, 200, 83, 0.5)'
-                  e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.9)'
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.35)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none'
-                  e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.85)'
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.2)'
-                }}
               >
                 💾 {safeT?.salvarOrcamento || 'Salvar Orçamento'}
               </button>
             </div>
 
-            {/* ========================================== */}
-            {/* BOTÕES DE PDF - 6 IDIOMAS */}
-            {/* ========================================== */}
-            <div style={{ 
-              marginTop: '30px', 
-              padding: '25px', 
-              backgroundColor: 'rgba(0, 200, 83, 0.05)', 
-              borderRadius: '12px', 
-              border: '1px solid rgba(0, 200, 83, 0.3)'
-            }}>
-              <div style={{ 
-                textAlign: 'center', 
-                marginBottom: '20px',
-                paddingBottom: '20px',
-                borderBottom: '1px solid rgba(0, 200, 83, 0.3)'
-              }}>
-                <h4 style={{ color: '#00c853', fontSize: '18px', margin: 0, marginBottom: '15px', fontWeight: 'bold' }}>
+            {/* Documentos PDF multilíngue */}
+            <div className="orc-pro__pdf-panel">
+              <div className="orc-pro__pdf-panel-head">
+                <h4 className="orc-pro__pdf-panel-title">
                   📄 {safeT?.gerarDocumentosPdf || 'GERAR DOCUMENTOS PDF'} (6 {safeT?.idiomas || 'IDIOMAS'})
                 </h4>
                 <select
                   id="idioma-selector-form"
+                  className="orc-pro__pdf-lang-select"
                   onChange={(e) => {
                     const lang = e.target.value
                     const btnOS = document.getElementById('btn-os-form')
@@ -65561,17 +65492,6 @@ A1;Peça exemplo;10`}
                     if (btnOrc) btnOrc.textContent = `📄 ${t?.confirmacaoOrcamento || 'Confirmação do Orçamento de Número'} ${numOrc}`
                     if (btnSep) btnSep.textContent = `📄 ${t?.pedidoSeparacaoEnvio || 'Pedido de Separação e Envio ao Cliente'}`
                   }}
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#484848',
-                    border: '1px solid rgba(0, 200, 83, 0.5)',
-                    borderRadius: '8px',
-                    color: '#00c853',
-                    fontSize: '15px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    minWidth: '200px'
-                  }}
                   defaultValue={selectedLanguage}
                 >
                   <option value="pt-BR">🇧🇷 Português</option>
@@ -65584,7 +65504,7 @@ A1;Peça exemplo;10`}
                 </select>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div className="orc-pro__pdf-actions">
                 {/* Botão 1: Confirmação de Pedido OS (só aparece se houver relatório) */}
                 {(tipoOrcamento === 'orcamento-relatorio' && relatorioSelecionado) && (
                   <button
