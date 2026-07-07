@@ -64173,40 +64173,38 @@ A1;Peça exemplo;10`}
           </div>
         </section>
 
-        <nav className="orc-pro__tipo-nav orc-pro__tipo-nav--grouped" aria-label={safeT?.tipoOrcamento || 'Tipo de Orçamento'}>
-          <div className="orc-pro__tipo-groups">
-            <div className="orc-pro__tipo-group">
-              <h3 className="orc-pro__tipo-nav-title">{safeT?.orcamentoNavCriarTitulo || 'Criar orçamento'}</h3>
-              <div className="orc-pro__tipo-grid orc-pro__tipo-grid--2">
-                {opcoesTipoCriar.map(({ key, label, tone, hint }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    className={`orc-pro__tipo-btn orc-pro__tipo-btn--${tone} ${tipoOrcamento === key ? 'is-active' : ''}`}
-                    onClick={() => mudarTipoOrcamento(key)}
-                    title={hint || label}
-                  >
-                    {tipoOrcamento === key ? <span className="orc-pro__tipo-check">OK</span> : null}
-                    <span className="orc-pro__tipo-btn-label">{label}</span>
-                    {hint ? <span className="orc-pro__tipo-btn-hint">{hint}</span> : null}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="orc-pro__tipo-group orc-pro__tipo-group--history">
-              <h3 className="orc-pro__tipo-nav-title">{safeT?.orcamentoNavHistoricoTitulo || 'Histórico'}</h3>
+        <nav className="orc-pro__tipo-nav orc-pro__tipo-nav--toolbar" aria-label={safeT?.tipoOrcamento || 'Tipo de Orçamento'}>
+          <div className="orc-pro__tipo-toolbar-head">
+            <h3 className="orc-pro__tipo-nav-title">{safeT?.tipoOrcamento || 'Tipo de Orçamento'}</h3>
+            <span className="orc-pro__tipo-toolbar-active">
+              {safeT?.orcamentoModoAtualLabel || 'Modo'}: <strong>{labelTipoOrcamentoAtual(tipoOrcamento)}</strong>
+            </span>
+          </div>
+          <div className="orc-pro__tipo-toolbar">
+            {opcoesTipoCriar.map(({ key, label, tone, hint }) => (
               <button
+                key={key}
                 type="button"
-                className={`orc-pro__tipo-btn orc-pro__tipo-btn--history ${tipoOrcamento === 'orcamentos-gerados' ? 'is-active' : ''}`}
-                onClick={() => mudarTipoOrcamento('orcamentos-gerados')}
+                className={`orc-pro__tipo-btn orc-pro__tipo-btn--compact orc-pro__tipo-btn--${tone} ${tipoOrcamento === key ? 'is-active' : ''}`}
+                onClick={() => mudarTipoOrcamento(key)}
+                title={hint ? `${label} — ${hint}` : label}
               >
-                {tipoOrcamento === 'orcamentos-gerados' ? <span className="orc-pro__tipo-check">OK</span> : null}
-                <span className="orc-pro__tipo-btn-label">{safeT?.orcamentosGerados || 'Orçamentos Gerados'}</span>
-                <span className="orc-pro__tipo-btn-hint">
-                  {(safeT?.orcamentoNavHistoricoHint || '{{n}} gravados').replace('{{n}}', String(orcamentosGerados.length))}
-                </span>
+                {tipoOrcamento === key ? <span className="orc-pro__tipo-check">OK</span> : null}
+                <span className="orc-pro__tipo-btn-label">{label}</span>
               </button>
-            </div>
+            ))}
+            <button
+              type="button"
+              className={`orc-pro__tipo-btn orc-pro__tipo-btn--compact orc-pro__tipo-btn--history ${tipoOrcamento === 'orcamentos-gerados' ? 'is-active' : ''}`}
+              onClick={() => mudarTipoOrcamento('orcamentos-gerados')}
+              title={safeT?.orcamentosGerados || 'Orçamentos Gerados'}
+            >
+              {tipoOrcamento === 'orcamentos-gerados' ? <span className="orc-pro__tipo-check">OK</span> : null}
+              <span className="orc-pro__tipo-btn-label">{safeT?.orcamentosGerados || 'Orçamentos Gerados'}</span>
+              <span className="orc-pro__tipo-badge" aria-label={(safeT?.orcamentoNavHistoricoHint || '{{n}} gravados').replace('{{n}}', String(orcamentosGerados.length))}>
+                {orcamentosGerados.length}
+              </span>
+            </button>
           </div>
         </nav>
 
