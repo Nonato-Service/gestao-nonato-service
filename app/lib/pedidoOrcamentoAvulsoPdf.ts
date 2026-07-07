@@ -77,7 +77,7 @@ function renderTabelaPecas(pecas: PedidoAvulsoPdfPeca[], L: PedidoAvulsoPdfData[
         <th class="orc-pdf-pro__col-img">${escapePdfHtml(L?.colImagem || 'Imagem')}</th>
         <th>${escapePdfHtml(L?.colDescricao || 'Descrição')}</th>
         <th class="orc-pdf-pro__col-cod">${escapePdfHtml(L?.colCodigo || 'Código')}</th>
-        <th class="orc-pdf-pro__col-qtd">${escapePdfHtml(L?.colQtd || 'Qtd')}</th>
+        <th class="orc-pdf-pro__col-qtd">${escapePdfHtml(L?.colQtd || 'Quantia')}</th>
       </tr>
     </thead>
     <tbody>${linhas || `<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:14px;">—</td></tr>`}</tbody>
@@ -90,20 +90,12 @@ function resolverSerieBlocoPdf(
 ): string {
   const direto = String(bloco.numeroSerie ?? '').trim()
   if (direto) return direto
-  const lblNum =
-    L?.numeroEquipamento || L?.numeroSerie || 'Número do Equipamento'
-  const lblSerie = L?.numeroSerie || 'Nº Série'
+  const lblNum = L?.numeroEquipamento || 'Número do Equipamento'
   for (const c of bloco.campos || []) {
-    if (c.label === lblNum || c.label === lblSerie) {
+    if (c.label === lblNum) {
       const v = String(c.value ?? '').trim()
       if (v) return v
     }
-  }
-  if (bloco.detalhes) {
-    const m = bloco.detalhes.match(
-      /(?:N[º°]\s*S[ée]rie|Número do Equipamento|Numero do Equipamento)\s*:\s*([^·\n]+)/i
-    )
-    if (m?.[1]) return m[1].trim()
   }
   return ''
 }
@@ -116,7 +108,7 @@ function renderEquipInfoGrid(
   const serie = resolverSerieBlocoPdf(bloco, L)
   if (serie) {
     partes.push(
-      `<div class="orc-pdf-pro__equip-sn">${escapePdfHtml(L?.numeroEquipamento || L?.numeroSerie || 'Número do Equipamento')}: <strong>${escapePdfHtml(serie)}</strong></div>`
+      `<div class="orc-pdf-pro__equip-sn">${escapePdfHtml(L?.numeroEquipamento || 'Número do Equipamento')}: <strong>${escapePdfHtml(serie)}</strong></div>`
     )
   }
   const campos = (bloco.campos || []).filter((c) => {

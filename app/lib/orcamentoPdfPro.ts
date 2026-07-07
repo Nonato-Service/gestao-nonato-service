@@ -16,19 +16,31 @@ import {
 
 export { escapePdfHtml, buildPdfDocumentFooterHtml }
 
-/** Número do equipamento visível no PDF: série, código do cliente ou ID não técnico. */
+/** Número do equipamento visível no PDF: código/ID do cliente (não modelo nem descrição). */
 export function resolverNumeroEquipamentoPdf(eq?: {
   id?: string
   numeroSerie?: string
+  modelo?: string
 } | null): string {
   if (!eq) return ''
-  const serie = String(eq.numeroSerie ?? '').trim()
-  if (serie) return serie
   const idVisivel = resolverIdEquipamentoVisivelCliente(eq)
   if (idVisivel) return idVisivel
   const id = String(eq.id ?? '').trim()
   if (id && !equipamentoIdETecnicoGerado(id)) return id
   return ''
+}
+
+/** N.º de série do equipamento (campo separado do número/ID). */
+export function resolverSerieEquipamentoPdf(eq?: {
+  id?: string
+  numeroSerie?: string
+} | null): string {
+  if (!eq) return ''
+  const serie = String(eq.numeroSerie ?? '').trim()
+  if (!serie) return ''
+  const codigo = resolverNumeroEquipamentoPdf(eq)
+  if (codigo && serie.toLowerCase() === codigo.toLowerCase()) return ''
+  return serie
 }
 
 export const ORCAMENTO_PDF_PRO_CSS = `
@@ -229,11 +241,23 @@ body.orc-pdf-pro {
   color: var(--orc-accent);
   font-size: 8px;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 9px 8px;
+  padding: 9px 6px;
   border-bottom: 2px solid var(--orc-brand);
   text-align: left;
+  vertical-align: bottom;
+}
+
+.orc-pdf-pro__table th.orc-pdf-pro__col-qtd {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 8.5px;
+  line-height: 1.2;
+  white-space: normal;
+  word-break: break-word;
+  text-align: center;
+  padding: 6px 4px;
 }
 
 .orc-pdf-pro__table td {
@@ -247,7 +271,14 @@ body.orc-pdf-pro {
 .orc-pdf-pro__table tbody tr:last-child td { border-bottom: none; }
 
 .orc-pdf-pro__col-img { width: 58px; text-align: center; }
-.orc-pdf-pro__col-qtd { width: 44px; text-align: center; font-weight: 800; color: var(--orc-brand-dark); }
+.orc-pdf-pro__col-qtd {
+  width: 56px;
+  min-width: 52px;
+  text-align: center;
+  font-weight: 800;
+  color: var(--orc-brand-dark);
+  overflow: visible;
+}
 .orc-pdf-pro__col-cod { width: 88px; font-family: ui-monospace, monospace; font-size: 9px; color: #475569; }
 .orc-pdf-pro__col-preco { width: 72px; text-align: right; white-space: nowrap; }
 .orc-pdf-pro__col-iva { width: 64px; text-align: right; font-size: 9px; }
@@ -344,9 +375,12 @@ body.orc-pdf-pro {
   margin-top: 3px;
   font-size: 8px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-transform: none;
   color: var(--orc-muted);
+  line-height: 1.25;
+  white-space: normal;
+  overflow: visible;
 }
 
 .orc-pdf-pro__toolbar {

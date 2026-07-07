@@ -108,7 +108,7 @@ export function buildOrcamentoGeradoPdfHtml(data: OrcamentoGeradoPdfData): strin
         <th class="orc-pdf-pro__col-img">${escapePdfHtml(L.imagem || 'Img.')}</th>
         <th>${escapePdfHtml(L.descricao || 'Descrição')}</th>
         <th class="orc-pdf-pro__col-cod">${escapePdfHtml(L.codigo || 'Código')}</th>
-        <th class="orc-pdf-pro__col-qtd">${escapePdfHtml(L.quantidade || 'Qtd')}</th>
+        <th class="orc-pdf-pro__col-qtd">${escapePdfHtml(L.quantidade || L.poaPdfColQtd || 'Quantia')}</th>
         <th class="orc-pdf-pro__col-preco">${escapePdfHtml(L.precoUnitario || 'Preço un.')}</th>
         <th class="orc-pdf-pro__col-preco">${escapePdfHtml(L.subtotal || 'Subtotal')}</th>
         ${temIvaCol ? `<th class="orc-pdf-pro__col-iva">${escapePdfHtml(L.iva || 'IVA')}</th>` : ''}

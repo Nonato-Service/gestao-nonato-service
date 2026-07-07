@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useId, useCallback } from 'react'
 import { openPedidoOrcamentoAvulsoPdf } from '../lib/pedidoOrcamentoAvulsoPdf'
-import { resolverNumeroEquipamentoPdf } from '../lib/orcamentoPdfPro'
+import { resolverNumeroEquipamentoPdf, resolverSerieEquipamentoPdf } from '../lib/orcamentoPdfPro'
 import { resolverIdEquipamentoCliente } from '../lib/relatorioServicoEquipamentos'
 import { ProImageHoverPreview } from './ProImageHoverPreview'
 
@@ -124,10 +124,17 @@ function detalhesEquipamentoBloco(
   const eq = bloco.equipamento
   const linhas: Array<{ label: string; value: string }> = []
   const numeroEq = resolverNumeroEquipamentoPdf(eq)
+  const serieEq = resolverSerieEquipamentoPdf(eq)
   if (numeroEq) {
     linhas.push({
-      label: safeT?.numeroEquipamento || safeT?.numeroSerie || 'Número do Equipamento',
+      label: safeT?.numeroEquipamento || 'Número do Equipamento',
       value: numeroEq,
+    })
+  }
+  if (serieEq) {
+    linhas.push({
+      label: safeT?.numeroSerie || 'Nº Série',
+      value: serieEq,
     })
   }
   if (eq.tipoEquipamento) linhas.push({ label: safeT?.tipoEquipamento || 'Tipo', value: eq.tipoEquipamento })
@@ -135,10 +142,6 @@ function detalhesEquipamentoBloco(
   if (eq.modelo) linhas.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
   if (eq.familia) linhas.push({ label: safeT?.familia || 'Família', value: eq.familia })
   if (eq.grupo) linhas.push({ label: safeT?.grupo || 'Grupo', value: eq.grupo })
-  const idEq = String(eq.id ?? '').trim()
-  if (idEq && idEq !== numeroEq) {
-    linhas.push({ label: safeT?.idEquipamento || 'ID', value: idEq })
-  }
   return linhas
 }
 
@@ -405,7 +408,7 @@ export function PedidoOrcamentosAvulsoContent({
     colImagem: safeT?.imagem || 'Imagem',
     colDescricao: safeT?.descricao || 'Descrição',
     colCodigo: safeT?.codigo || 'Código',
-    colQtd: safeT?.quantidade || 'Qtd',
+    colQtd: (safeT as Record<string, string | undefined>)?.poaPdfColQtd || safeT?.quantidade || 'Quantia',
     imprimir: safeT?.imprimirOrcamento || 'Imprimir / Guardar PDF',
     fechar: safeT?.fechar || 'Fechar',
     equipamentoNumero: safeT?.poaEquipamentoNumero || 'Equipamento',
@@ -461,10 +464,7 @@ export function PedidoOrcamentosAvulsoContent({
       return {
         titulo: `${safeT?.poaEquipamentoNumero || 'Equipamento'} ${i + 1}${nomeEquip ? ` — ${nomeEquip}` : ''}`,
         detalhes: textoEquipamentoBloco(b, safeT),
-        numeroSerie:
-          (b.equipamento ? resolverNumeroEquipamentoPdf(b.equipamento) : '') ||
-          b.equipamentoManual.trim() ||
-          undefined,
+        numeroSerie: b.equipamento ? resolverNumeroEquipamentoPdf(b.equipamento) || undefined : undefined,
         campos: detalhesEquipamentoBloco(b, safeT),
         pecas: b.pecas.map((p) => ({
           codigo: p.codigo,
@@ -538,11 +538,7 @@ export function PedidoOrcamentosAvulsoContent({
           : undefined,
       equipamentoNumeroSerie:
         blocosValidos
-          .map((b) =>
-            b.equipamento
-              ? resolverNumeroEquipamentoPdf(b.equipamento)
-              : b.equipamentoManual.trim()
-          )
+          .map((b) => (b.equipamento ? resolverNumeroEquipamentoPdf(b.equipamento) : ''))
           .filter(Boolean)
           .join(' · ') || undefined,
       pecas: [...pecasTotais],

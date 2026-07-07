@@ -186,7 +186,7 @@ import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import { ClienteEquipamentoOrcamentosPanel } from './components/ClienteEquipamentoOrcamentosPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
 import { openOrcamentoGeradoPdf } from './lib/orcamentoGeradoPdf'
-import { resolverNumeroEquipamentoPdf } from './lib/orcamentoPdfPro'
+import { resolverNumeroEquipamentoPdf, resolverSerieEquipamentoPdf } from './lib/orcamentoPdfPro'
 import { enrichOrcamentosGeradosComPedidosAvulsos, gerarProximoCodigoPedidoRelatorio } from './lib/clienteEquipamentoOrcamentos'
 import type { PedidoAvulsoGuardado } from './components/PedidoOrcamentosAvulsoContent'
 import { rotuloIdEquipamentoCliente } from './lib/clienteDetalheUtils'
@@ -23716,7 +23716,7 @@ export default function Dashboard() {
         colImagem: safeT?.imagem || 'Imagem',
         colDescricao: safeT?.descricaoItem || 'Descrição',
         colCodigo: safeT?.codigo || 'Código',
-        colQtd: safeT?.quantidade || 'Qtd',
+        colQtd: (safeT as Record<string, string | undefined>)?.poaPdfColQtd || safeT?.quantidade || 'Quantia',
         imprimir: safeT?.imprimirOrcamento || 'Imprimir / Guardar PDF',
         fechar: safeT?.fechar || 'Fechar',
       },
@@ -23747,10 +23747,17 @@ export default function Dashboard() {
       const campos: Array<{ label: string; value: string }> = []
       if (eq) {
         const numeroEq = resolverNumeroEquipamentoPdf(eq)
+        const serieEq = resolverSerieEquipamentoPdf(eq)
         if (numeroEq) {
           campos.push({
-            label: (safeT as any)?.numeroEquipamento || safeT?.numeroSerie || 'Número do Equipamento',
+            label: (safeT as any)?.numeroEquipamento || 'Número do Equipamento',
             value: numeroEq,
+          })
+        }
+        if (serieEq) {
+          campos.push({
+            label: safeT?.numeroSerie || 'Nº Série',
+            value: serieEq,
           })
         }
         if (eq.tipoEquipamento) campos.push({ label: safeT?.tipoEquipamento || 'Tipo', value: eq.tipoEquipamento })
@@ -23758,19 +23765,12 @@ export default function Dashboard() {
         if (eq.modelo) campos.push({ label: safeT?.modelo || 'Modelo', value: eq.modelo })
         if (eq.familia) campos.push({ label: safeT?.familia || 'Família', value: eq.familia })
         if (eq.grupo) campos.push({ label: safeT?.grupo || 'Grupo', value: eq.grupo })
-        const idEq = String(eq.id ?? '').trim()
-        if (idEq && idEq !== numeroEq) {
-          campos.push({ label: (safeT as any)?.idEquipamento || 'ID', value: idEq })
-        }
       } else if (b.equipamentoManual?.trim()) {
         campos.push({ label: safeT?.descricao || 'Descrição', value: b.equipamentoManual.trim() })
       }
       return {
         titulo: `${(safeT as any)?.poaEquipamentoNumero || safeT?.equipamento || 'Equipamento'} ${i + 1}${nomeEquip ? ` — ${nomeEquip}` : ''}`,
-        numeroSerie:
-          (eq ? resolverNumeroEquipamentoPdf(eq) : '') ||
-          pedido.equipamentoNumeroSerie?.trim() ||
-          undefined,
+        numeroSerie: eq ? resolverNumeroEquipamentoPdf(eq) || undefined : pedido.equipamentoNumeroSerie?.trim() || undefined,
         campos,
         pecas: (b.pecas || []).map((p) => ({
           codigo: p.codigo,
@@ -23805,7 +23805,7 @@ export default function Dashboard() {
         colImagem: safeT?.imagem || 'Imagem',
         colDescricao: safeT?.descricaoItem || 'Descrição',
         colCodigo: safeT?.codigo || 'Código',
-        colQtd: safeT?.quantidade || 'Qtd',
+        colQtd: (safeT as Record<string, string | undefined>)?.poaPdfColQtd || safeT?.quantidade || 'Quantia',
         imprimir: safeT?.imprimirOrcamento || 'Imprimir / Guardar PDF',
         fechar: safeT?.fechar || 'Fechar',
       },
@@ -63820,9 +63820,9 @@ A1;Peça exemplo;10`}
         const blocos = orcamento.equipamentosBlocos
         if (Array.isArray(blocos) && blocos.length > 0) {
           const nums = blocos
-            .map((b: { equipamento?: { id?: string; numeroSerie?: string }; equipamentoManual?: string }) => {
+            .map((b: { equipamento?: { id?: string; numeroSerie?: string } }) => {
               if (b.equipamento) return resolverNumeroEquipamentoPdf(b.equipamento)
-              return String(b.equipamentoManual ?? '').trim()
+              return ''
             })
             .filter(Boolean)
           if (nums.length) return nums.join(' · ')
@@ -63841,11 +63841,6 @@ A1;Peça exemplo;10`}
             if (n) return n
           }
         }
-        const desc = String(orcamento.descricao ?? '')
-        const m = desc.match(
-          /(?:N[º°]\s*S[ée]rie|Número do Equipamento|Numero do Equipamento)\s*:\s*([^·\n]+)/i
-        )
-        if (m?.[1]) return m[1].trim()
         return undefined
       }
 
@@ -63895,7 +63890,7 @@ A1;Peça exemplo;10`}
           imagem: safeT?.imagem,
           descricao: safeT?.descricao,
           codigo: safeT?.codigo,
-          quantidade: safeT?.quantidade,
+          quantidade: (safeT as Record<string, string | undefined>)?.poaPdfColQtd || safeT?.quantidade,
           precoUnitario: safeT?.precoUnitario,
           subtotal: safeT?.totalSemIva || 'Subtotal',
           iva: safeT?.iva,
@@ -76694,7 +76689,7 @@ A1;Peça exemplo;10`}
                       colImagem: safeT?.imagem || 'Imagem',
                       colDescricao: safeT?.descricaoItem || 'Descrição',
                       colCodigo: safeT?.codigo || 'Código',
-                      colQtd: safeT?.quantidade || 'Qtd',
+                      colQtd: (safeT as Record<string, string | undefined>)?.poaPdfColQtd || safeT?.quantidade || 'Quantia',
                       imprimir: safeT?.imprimirOrcamento || 'Imprimir / Guardar PDF',
                       fechar: safeT?.fechar || 'Fechar',
                     },
