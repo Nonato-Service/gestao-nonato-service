@@ -185,6 +185,7 @@ import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import { ClienteEquipamentoOrcamentosPanel } from './components/ClienteEquipamentoOrcamentosPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
+import { openOrcamentoGeradoPdf } from './lib/orcamentoGeradoPdf'
 import { enrichOrcamentosGeradosComPedidosAvulsos, gerarProximoCodigoPedidoRelatorio } from './lib/clienteEquipamentoOrcamentos'
 import type { PedidoAvulsoGuardado } from './components/PedidoOrcamentosAvulsoContent'
 import { rotuloIdEquipamentoCliente } from './lib/clienteDetalheUtils'
@@ -63734,223 +63735,89 @@ A1;Peça exemplo;10`}
     }
 
     const handleImprimirOrcamento = (orcamento: any) => {
-      // Criar uma nova janela para impressão
-      const printWindow = window.open('', '_blank')
-      if (!printWindow) return
-      
       const dadosCliente = orcamento.dadosCliente || {}
       const clienteNome = orcamento.clienteNome || dadosCliente.nomeEmpresa || 'NONATO SERVICE'
-      const clienteEmail = dadosCliente.email || ''
-      const clienteTelefone = dadosCliente.telefones || ''
-      
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>ORÇAMENTO - ${orcamento.numeroOrcamento}</title>
-          <style>
-            @media print {
-              .no-print { display: none !important; }
-            }
-            body {
-              font-family: Arial, sans-serif;
-              margin: 20px;
-              color: #000;
-            }
-            .header {
-              text-align: center;
-              margin-bottom: 30px;
-              border-bottom: 2px solid #000;
-              padding-bottom: 20px;
-            }
-            .header h1 {
-              margin: 0;
-              font-size: 28px;
-            }
-            .info-section {
-              margin-bottom: 20px;
-            }
-            .info-section h3 {
-              background-color: #f0f0f0;
-              padding: 10px;
-              margin: 0 0 10px 0;
-            }
-            .info-row {
-              display: flex;
-              margin-bottom: 5px;
-            }
-            .info-label {
-              font-weight: bold;
-              width: 150px;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin: 20px 0;
-            }
-            th, td {
-              border: 1px solid #000;
-              padding: 8px;
-              text-align: left;
-            }
-            th {
-              background-color: #f0f0f0;
-              font-weight: bold;
-            }
-            .item-image {
-              width: 50px;
-              height: 50px;
-              object-fit: cover;
-            }
-            .total-section {
-              text-align: right;
-              margin-top: 20px;
-              font-size: 18px;
-              font-weight: bold;
-            }
-            .action-buttons {
-              margin-top: 30px;
-              text-align: center;
-              padding: 20px;
-              border-top: 2px solid #000;
-            }
-            .action-buttons button {
-              margin: 5px;
-              padding: 10px 20px;
-              font-size: 16px;
-              cursor: pointer;
-              border: none;
-              border-radius: 5px;
-            }
-            .btn-email {
-              background-color: #0066cc;
-              color: white;
-            }
-            .btn-whatsapp {
-              background-color: #25D366;
-              color: white;
-            }
-            .btn-print {
-              background-color: #666;
-              color: white;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            ${getLogoHtmlForOrcamento() ? `<div style="margin-bottom:15px;display:flex;justify-content:center;">${getLogoHtmlForOrcamento()}</div>` : ''}
-            <h1>ORÇAMENTO</h1>
-            <p><strong>N°: ${orcamento.numeroOrcamento}</strong></p>
-            <p>DATA: ${new Date(orcamento.data).toLocaleDateString('pt-BR')}</p>
-            ${orcamento.validade ? `<p>VALIDADE: ${orcamento.validade} ${safeT?.dias || 'dias'}</p>` : ''}
-          </div>
-          
-          <div class="info-section">
-            <h3>CLIENTE:</h3>
-            <div class="info-row"><span class="info-label">Nome:</span> ${clienteNome}</div>
-            ${clienteEmail ? `<div class="info-row"><span class="info-label">Email:</span> ${clienteEmail}</div>` : ''}
-            ${clienteTelefone ? `<div class="info-row"><span class="info-label">Telefone:</span> ${clienteTelefone}</div>` : ''}
-            ${dadosCliente.morada ? `<div class="info-row"><span class="info-label">Morada:</span> ${dadosCliente.morada}</div>` : ''}
-            ${dadosCliente.conselho ? `<div class="info-row"><span class="info-label">Conselho:</span> ${dadosCliente.conselho}</div>` : ''}
-            ${dadosCliente.codigoPostal ? `<div class="info-row"><span class="info-label">Código Postal:</span> ${dadosCliente.codigoPostal}</div>` : ''}
-          </div>
-          
-          ${orcamento.relatorioNumero ? `
-          <div class="info-section">
-            <h3>RELATÓRIO:</h3>
-            <div class="info-row"><span class="info-label">Nº Relatório:</span> ${orcamento.relatorioNumero}</div>
-          </div>
-          ` : ''}
-          
-          ${orcamento.descricao ? `
-          <div class="info-section">
-            <h3>DESCRIÇÃO:</h3>
-            <p>${orcamento.descricao}</p>
-          </div>
-          ` : ''}
-          
-          <table>
-            <thead>
-              <tr>
-                <th>Imagem</th>
-                <th>Descrição</th>
-                <th>Código</th>
-                <th>Qtd</th>
-                <th>Preço Un.</th>
-                <th>Subtotal</th>
-                ${orcamento.itens.some((item: any) => item.iva && item.iva > 0) ? '<th>IVA</th>' : ''}
-              </tr>
-            </thead>
-            <tbody>
-              ${orcamento.itens.map((item: any) => {
-                const subtotal = item.total || 0
-                const valorIva = item.iva ? (subtotal * item.iva / 100) : 0
-                const precoUnitario = item.precoUnitario || 0
-                const temValor = item.tipoItem === 'com-valor' && precoUnitario > 0
-                const srcImagem = resolveImagemItemOrcamentoDisplay(item, pecasBiblioteca)
-                
-                return `
-                  <tr>
-                    <td>
-                      ${srcImagem 
-                        ? `<img src="${srcImagem.replace(/"/g, '&quot;')}" alt="${String(item.descricao || '').replace(/"/g, '&quot;')}" class="item-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                         <span style="display:none;">N/A</span>`
-                        : '<span>N/A</span>'}
-                    </td>
-                    <td>${item.descricao}</td>
-                    <td>${item.codigo || '-'}</td>
-                    <td>${item.quantidade}</td>
-                    <td>${temValor ? `€ ${precoUnitario.toFixed(2)}` : (safeT?.aDefinir || 'A definir')}</td>
-                    <td>${temValor ? `€ ${subtotal.toFixed(2)}` : (safeT?.aDefinir || 'A definir')}</td>
-                    ${item.iva && item.iva > 0 ? `<td>${item.iva}% (€ ${valorIva.toFixed(2)})</td>` : ''}
-                  </tr>
-                `
-              }).join('')}
-            </tbody>
-          </table>
-          
-          ${orcamento.total > 0 ? `
-          <div class="total-section">
-            <p>Total sem IVA: € ${(orcamento.totalSemIva || 0).toFixed(2)}</p>
-            ${orcamento.totalIva > 0 ? `<p>IVA: € ${(orcamento.totalIva || 0).toFixed(2)}</p>` : ''}
-            <p>Total com IVA: € ${orcamento.total.toFixed(2)}</p>
-          </div>
-          ` : ''}
-          
-          ${orcamento.observacoes ? `
-          <div class="info-section">
-            <h3>OBSERVAÇÕES:</h3>
-            <p>${orcamento.observacoes}</p>
-          </div>
-          ` : ''}
-          
-          <div class="action-buttons no-print">
-            <button class="btn-email" onclick="window.parent.postMessage({type: 'sendEmail', orcamentoId: '${orcamento.id}'}, '*')">
-              📧 ${safeT?.enviarPorEmail || 'Enviar por Email'}
-            </button>
-            <button class="btn-whatsapp" onclick="window.parent.postMessage({type: 'sendWhatsApp', orcamentoId: '${orcamento.id}'}, '*')">
-              💬 ${safeT?.enviarPorWhatsApp || 'Enviar por WhatsApp'}
-            </button>
-            <button class="btn-print" onclick="window.print()">
-              🖨️ ${safeT?.imprimirOrcamento || 'Imprimir'}
-            </button>
-          </div>
-        </body>
-        </html>
-      `)
-      
-      printWindow.document.close()
-      
-      // Escutar mensagens do iframe
-      window.addEventListener('message', (event) => {
-        if (event.data.type === 'sendEmail' && event.data.orcamentoId === orcamento.id) {
+      const orcId = String(orcamento.id).replace(/'/g, "\\'")
+
+      const actionsHtml = `
+        <button type="button" class="orc-pdf-pro__btn orc-pdf-pro__btn--email" onclick="if(window.opener){window.opener.postMessage({type:'sendEmail',orcamentoId:'${orcId}'},'*')}">📧 ${(safeT?.enviarPorEmail || 'Enviar por Email').replace(/'/g, "\\'")}</button>
+        <button type="button" class="orc-pdf-pro__btn orc-pdf-pro__btn--wa" onclick="if(window.opener){window.opener.postMessage({type:'sendWhatsApp',orcamentoId:'${orcId}'},'*')}">💬 ${(safeT?.enviarPorWhatsApp || 'Enviar por WhatsApp').replace(/'/g, "\\'")}</button>
+        <button type="button" class="orc-pdf-pro__btn orc-pdf-pro__btn--print" onclick="window.print()">🖨️ ${(safeT?.imprimirOrcamento || 'Imprimir').replace(/'/g, "\\'")}</button>
+      `
+
+      const aberto = openOrcamentoGeradoPdf({
+        id: orcamento.id,
+        numeroOrcamento: orcamento.numeroOrcamento,
+        data: orcamento.data,
+        validade: orcamento.validade,
+        descricao: orcamento.descricao,
+        observacoes: orcamento.observacoes,
+        relatorioNumero: orcamento.relatorioNumero,
+        clienteNome,
+        clienteEmail: dadosCliente.email,
+        clienteTelefone: dadosCliente.telefones,
+        clienteMorada: dadosCliente.morada,
+        clienteConselho: dadosCliente.conselho,
+        clienteCodigoPostal: dadosCliente.codigoPostal,
+        clienteNif: dadosCliente.numeroContribuicaoFiscal,
+        itens: Array.isArray(orcamento.itens) ? orcamento.itens : [],
+        total: orcamento.total,
+        totalSemIva: orcamento.totalSemIva,
+        totalIva: orcamento.totalIva,
+        logoHtml: getLogoHtmlForOrcamento(),
+        labels: {
+          titulo: safeT?.orcamentoPdfTitulo || 'ORÇAMENTO',
+          subtituloOrcamento: safeT?.orcamentoPdfSubtitulo || 'Proposta comercial',
+          cliente: safeT?.cliente,
+          data: safeT?.data,
+          validade: safeT?.validade,
+          dias: safeT?.dias,
+          email: safeT?.email,
+          telefone: safeT?.telefone,
+          morada: safeT?.morada,
+          contribuicaoFiscal: safeT?.contribuicaoFiscal,
+          numeroRelatorio: safeT?.numeroRelatorio,
+          imagem: safeT?.imagem,
+          descricao: safeT?.descricao,
+          codigo: safeT?.codigo,
+          quantidade: safeT?.quantidade,
+          precoUnitario: safeT?.precoUnitario,
+          subtotal: safeT?.totalSemIva || 'Subtotal',
+          iva: safeT?.iva,
+          totalSemIva: safeT?.totalSemIva,
+          totalComIva: safeT?.totalComIva || safeT?.total,
+          total: safeT?.total,
+          itemSemValor: safeT?.itemSemValor,
+          itens: safeT?.itens,
+          observacoes: safeT?.observacoes,
+          dadosCliente: safeT?.dadosClienteGuardados || safeT?.dadosCliente || 'Dados do cliente',
+          badgeComValores: safeT?.orcamentoPdfBadgeComValores || 'Orçamento com valores',
+          badgeSemValores: safeT?.orcamentoPdfBadgeSemValores || 'Orçamento sem valores',
+          aDefinir: safeT?.aDefinir,
+          imprimirOrcamento: safeT?.imprimirOrcamento,
+          rodapeOrcamento: safeT?.orcamentoPdfRodape,
+          rodapeLegal: safeT?.orcamentoPdfRodapeLegal,
+          emitidoEm: safeT?.orcamentoPdfEmitidoEm || 'Emitido em',
+        },
+        resolveImagem: (item) => resolveImagemItemOrcamentoDisplay(item, pecasBiblioteca),
+        actionsHtml,
+      })
+
+      if (!aberto) return
+
+      const onMessage = (event: MessageEvent) => {
+        if (event.data?.orcamentoId !== orcamento.id) return
+        if (event.data.type === 'sendEmail') {
           prepararEnvioOrcamentoComCliente(orcamento)
           setShowEmailModal(true)
-        } else if (event.data.type === 'sendWhatsApp' && event.data.orcamentoId === orcamento.id) {
+          window.removeEventListener('message', onMessage)
+        } else if (event.data.type === 'sendWhatsApp') {
           prepararEnvioOrcamentoComCliente(orcamento)
           setShowWhatsAppModal(true)
+          window.removeEventListener('message', onMessage)
         }
-      })
+      }
+      window.addEventListener('message', onMessage)
     }
 
     const handleEnviarEmail = () => {

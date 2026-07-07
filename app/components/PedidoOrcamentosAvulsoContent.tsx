@@ -399,6 +399,13 @@ export function PedidoOrcamentosAvulsoContent({
     imprimir: safeT?.imprimirOrcamento || 'Imprimir / Guardar PDF',
     fechar: safeT?.fechar || 'Fechar',
     equipamentoNumero: safeT?.poaEquipamentoNumero || 'Equipamento',
+    metaTitulo: safeT?.pedidoOrcamentoPdfMetaTitulo || 'Dados do pedido',
+    pecasSolicitadas: safeT?.pecasSolicitadas || 'Referências',
+    totalPecas: safeT?.poaPdfTotalUnidades || 'Unidades',
+    totalEquipamentos: safeT?.poaPdfTotalEquipamentos || 'Equipamentos',
+    documentoSemValor: safeT?.poaPdfSemValores || 'Pedido sem valores — aguarda orçamento',
+    rodape: safeT?.pedidoOrcamentoPdfRodape || 'NONATO SERVICE — Documento gerado automaticamente.',
+    emitidoEm: safeT?.orcamentoPdfEmitidoEm || 'Emitido em',
   }
 
   function resolverDadosPedidoPdf() {

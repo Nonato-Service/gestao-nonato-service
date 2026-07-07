@@ -1,3 +1,11 @@
+import {
+  buildOrcamentoPdfShell,
+  EMPRESA_NONATO_DEFAULT,
+  escapePdfHtml,
+  fmtDataPdf,
+  type OrcamentoPdfEmpresa,
+} from './orcamentoPdfPro'
+
 export type PedidoAvulsoPdfPeca = {
   codigo: string
   nome: string
@@ -20,6 +28,7 @@ export type PedidoAvulsoPdfData = {
   pecas: PedidoAvulsoPdfPeca[]
   equipamentosBlocos?: PedidoAvulsoPdfEquipamentoBloco[]
   logoHtml?: string
+  empresa?: OrcamentoPdfEmpresa
   labels?: {
     titulo?: string
     previewBanner?: string
@@ -34,130 +43,146 @@ export type PedidoAvulsoPdfData = {
     colQtd?: string
     imprimir?: string
     fechar?: string
+    metaTitulo?: string
+    pecasSolicitadas?: string
+    totalPecas?: string
+    totalEquipamentos?: string
+    documentoSemValor?: string
+    rodape?: string
+    emitidoEm?: string
   }
 }
 
-function esc(s: string): string {
-  return String(s ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+function renderLinhaPeca(p: PedidoAvulsoPdfPeca, L: PedidoAvulsoPdfData['labels']): string {
+  const img = p.imagem
+    ? `<img src="${String(p.imagem).replace(/"/g, '&quot;')}" alt="" class="orc-pdf-pro__thumb" onerror="this.outerHTML='<span class=\\'orc-pdf-pro__na\\'>—</span>'" />`
+    : '<span class="orc-pdf-pro__na">—</span>'
+  return `<tr>
+    <td class="orc-pdf-pro__col-img">${img}</td>
+    <td class="orc-pdf-pro__desc-cell">${escapePdfHtml(p.nome)}</td>
+    <td class="orc-pdf-pro__col-cod">${escapePdfHtml(p.codigo || '—')}</td>
+    <td class="orc-pdf-pro__col-qtd">${p.quantidade}</td>
+  </tr>`
 }
 
-function renderTabelaPecas(
-  pecas: PedidoAvulsoPdfPeca[],
+function renderTabelaPecas(pecas: PedidoAvulsoPdfPeca[], L: PedidoAvulsoPdfData['labels']): string {
+  const linhas = pecas.map((p) => renderLinhaPeca(p, L)).join('')
+  return `<table class="orc-pdf-pro__table">
+    <thead>
+      <tr>
+        <th class="orc-pdf-pro__col-img">${escapePdfHtml(L?.colImagem || 'Imagem')}</th>
+        <th>${escapePdfHtml(L?.colDescricao || 'Descrição')}</th>
+        <th class="orc-pdf-pro__col-cod">${escapePdfHtml(L?.colCodigo || 'Código')}</th>
+        <th class="orc-pdf-pro__col-qtd">${escapePdfHtml(L?.colQtd || 'Qtd')}</th>
+      </tr>
+    </thead>
+    <tbody>${linhas || `<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:14px;">—</td></tr>`}</tbody>
+  </table>`
+}
+
+function renderBlocoEquipamento(
+  bloco: PedidoAvulsoPdfEquipamentoBloco,
+  index: number,
   L: PedidoAvulsoPdfData['labels']
 ): string {
-  const linhas = pecas
-    .map((p) => {
-      const img = p.imagem
-        ? `<img src="${String(p.imagem).replace(/"/g, '&quot;')}" alt="" class="item-image" onerror="this.style.display='none'" />`
-        : '<span class="na">—</span>'
-      return `<tr>
-        <td class="col-img">${img}</td>
-        <td>${esc(p.nome)}</td>
-        <td>${esc(p.codigo || '—')}</td>
-        <td class="col-qtd">${p.quantidade}</td>
-      </tr>`
-    })
-    .join('')
-  return `<table>
-      <thead>
-        <tr>
-          <th>${esc(L?.colImagem || 'Imagem')}</th>
-          <th>${esc(L?.colDescricao || 'Descrição')}</th>
-          <th>${esc(L?.colCodigo || 'Código')}</th>
-          <th>${esc(L?.colQtd || 'Qtd')}</th>
-        </tr>
-      </thead>
-      <tbody>${linhas || `<tr><td colspan="4" style="text-align:center;color:#64748b;">—</td></tr>`}</tbody>
-    </table>`
+  return `<div class="orc-pdf-pro__equip-block">
+    <div class="orc-pdf-pro__equip-head">
+      <div class="orc-pdf-pro__equip-num">${index + 1}</div>
+      <div>
+        <h3 class="orc-pdf-pro__equip-title">${escapePdfHtml(bloco.titulo)}</h3>
+        ${bloco.detalhes ? `<p class="orc-pdf-pro__equip-detail">${escapePdfHtml(bloco.detalhes)}</p>` : ''}
+      </div>
+    </div>
+    <div class="orc-pdf-pro__equip-body">
+      ${renderTabelaPecas(bloco.pecas, L)}
+    </div>
+  </div>`
 }
 
 export function buildPedidoOrcamentoAvulsoPdfHtml(data: PedidoAvulsoPdfData): string {
   const L = data.labels || {}
   const titulo = L.titulo || 'PEDIDO DE ORÇAMENTO'
-  const dataFmt = data.dataIso
-    ? new Date(data.dataIso.includes('T') ? data.dataIso : data.dataIso + 'T12:00:00').toLocaleDateString('pt-BR')
-    : new Date().toLocaleDateString('pt-BR')
-
+  const dataFmt = fmtDataPdf(data.dataIso)
   const blocos = data.equipamentosBlocos?.filter((b) => b.pecas.length > 0) || []
+  const totalPecas = blocos.length > 0
+    ? blocos.reduce((s, b) => s + b.pecas.length, 0)
+    : data.pecas.length
+  const totalQtd = (blocos.length > 0 ? blocos.flatMap((b) => b.pecas) : data.pecas).reduce(
+    (s, p) => s + (p.quantidade || 0),
+    0
+  )
+  const numEquip = blocos.length > 0 ? blocos.length : 1
+
   const secoesEquipamento =
     blocos.length > 0
-      ? blocos
-          .map(
-            (b) => `<div class="section section-equip">
-    <h3>${esc(b.titulo)}</h3>
-    ${b.detalhes ? `<p class="equip-detalhe">${esc(b.detalhes)}</p>` : ''}
-    ${renderTabelaPecas(b.pecas, L)}
-  </div>`
-          )
-          .join('')
-      : `<div class="section">
-    <h3>${esc(L.equipamento || 'Equipamento')}</h3>
-    <p>${esc(data.equipamentoTexto || '—')}</p>
-  </div>
-  <div class="section">
-    <h3>${esc(L.colDescricao || 'Peças solicitadas')}</h3>
-    ${renderTabelaPecas(data.pecas, L)}
+      ? blocos.map((b, i) => renderBlocoEquipamento(b, i, L)).join('')
+      : `<div class="orc-pdf-pro__equip-block">
+    <div class="orc-pdf-pro__equip-head">
+      <div class="orc-pdf-pro__equip-num">1</div>
+      <div>
+        <h3 class="orc-pdf-pro__equip-title">${escapePdfHtml(L.equipamento || 'Equipamento')}</h3>
+        <p class="orc-pdf-pro__equip-detail">${escapePdfHtml(data.equipamentoTexto || '—')}</p>
+      </div>
+    </div>
+    <div class="orc-pdf-pro__equip-body">${renderTabelaPecas(data.pecas, L)}</div>
   </div>`
 
-  const previewBanner = data.preview
-    ? `<div class="preview-banner">${esc(L.previewBanner || 'Pré-visualização — o número definitivo é atribuído ao gerar o pedido')}</div>`
-    : ''
+  const kpiStrip = `<div class="orc-pdf-pro__kpi-strip">
+    <div class="orc-pdf-pro__kpi">
+      <span class="orc-pdf-pro__kpi-val">${numEquip}</span>
+      <span class="orc-pdf-pro__kpi-lbl">${escapePdfHtml(L.totalEquipamentos || 'Equipamentos')}</span>
+    </div>
+    <div class="orc-pdf-pro__kpi">
+      <span class="orc-pdf-pro__kpi-val">${totalPecas}</span>
+      <span class="orc-pdf-pro__kpi-lbl">${escapePdfHtml(L.pecasSolicitadas || 'Referências')}</span>
+    </div>
+    <div class="orc-pdf-pro__kpi">
+      <span class="orc-pdf-pro__kpi-val">${totalQtd}</span>
+      <span class="orc-pdf-pro__kpi-lbl">${escapePdfHtml(L.totalPecas || 'Unidades')}</span>
+    </div>
+  </div>`
 
-  return `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <title>${esc(titulo)} — ${esc(data.codigo)}</title>
-  <style>
-    @page { size: A4 portrait; margin: 12mm; }
-    @media print { .no-print { display: none !important; } .preview-banner { border-style: solid; } }
-    * { box-sizing: border-box; }
-    body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; padding: 20px; color: #111; font-size: 12px; line-height: 1.45; }
-    .preview-banner { background: #fff8e1; border: 2px dashed #f59e0b; color: #92400e; padding: 10px 14px; margin-bottom: 18px; border-radius: 8px; font-weight: 600; text-align: center; }
-    .header { text-align: center; margin-bottom: 22px; padding-bottom: 16px; border-bottom: 2px solid #166534; }
-    .header h1 { margin: 8px 0 4px; font-size: 22px; letter-spacing: 0.06em; color: #14532d; }
-    .header .meta { font-size: 13px; color: #334155; }
-    .section { margin-bottom: 16px; page-break-inside: avoid; }
-    .section h3 { margin: 0 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #14532d; background: #ecfdf5; padding: 8px 10px; border-left: 4px solid #166534; }
-    .section p { margin: 4px 0; }
-    .equip-detalhe { font-size: 11px; color: #475569; margin-bottom: 8px !important; }
-    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-    th, td { border: 1px solid #cbd5e1; padding: 8px; vertical-align: middle; }
-    th { background: #166534; color: #fff; font-size: 11px; text-transform: uppercase; }
-    tbody tr:nth-child(even) td { background: #f8fafc; }
-    .col-img { width: 64px; text-align: center; }
-    .col-qtd { width: 56px; text-align: center; font-weight: 700; }
-    .item-image { width: 48px; height: 48px; object-fit: cover; border-radius: 4px; }
-    .na { color: #94a3b8; }
-    .actions { margin-top: 24px; text-align: center; padding-top: 16px; border-top: 1px solid #e2e8f0; }
-    .actions button { margin: 4px 8px; padding: 10px 20px; font-size: 14px; cursor: pointer; border: none; border-radius: 6px; font-weight: 700; }
-    .btn-print { background: #166534; color: #fff; }
-    .btn-close { background: #64748b; color: #fff; }
-  </style>
-</head>
-<body>
-  ${previewBanner}
-  <div class="header">
-    ${data.logoHtml ? `<div style="margin-bottom:12px;display:flex;justify-content:center;">${data.logoHtml}</div>` : ''}
-    <h1>${esc(titulo)}</h1>
-    <div class="meta"><strong>${esc(L.codigo || 'Código')}:</strong> ${esc(data.codigo)}</div>
-    <div class="meta"><strong>${esc(L.data || 'Data')}:</strong> ${esc(dataFmt)}</div>
-  </div>
-  <div class="section">
-    <h3>${esc(L.cliente || 'Cliente')}</h3>
-    <p><strong>${esc(data.clienteNomeDoc)}</strong></p>
-  </div>
-  ${secoesEquipamento}
-  <div class="actions no-print">
-    <button type="button" class="btn-print" onclick="window.print()">🖨️ ${esc(L.imprimir || 'Imprimir / Guardar PDF')}</button>
-    <button type="button" class="btn-close" onclick="window.close()">${esc(L.fechar || 'Fechar')}</button>
-  </div>
-</body>
-</html>`
+  const bodyHtml = `${kpiStrip}${secoesEquipamento}
+  <div class="orc-pdf-pro__summary">
+    <div class="orc-pdf-pro__summary-row">
+      <span class="orc-pdf-pro__summary-label">${escapePdfHtml(L.documentoSemValor || 'Documento de pedido de orçamento')}</span>
+      <span class="orc-pdf-pro__summary-value">${escapePdfHtml(L.emitidoEm || 'Emitido em')} ${escapePdfHtml(dataFmt)}</span>
+    </div>
+    <div class="orc-pdf-pro__summary-row orc-pdf-pro__summary-row--total">
+      <span class="orc-pdf-pro__summary-label">${escapePdfHtml(L.totalPecas || 'Total de unidades solicitadas')}</span>
+      <span class="orc-pdf-pro__summary-value">${totalQtd}</span>
+    </div>
+  </div>`
+
+  const actionsHtml = `
+    <button type="button" class="orc-pdf-pro__btn orc-pdf-pro__btn--print" onclick="window.print()">🖨️ ${escapePdfHtml(L.imprimir || 'Imprimir / Guardar PDF')}</button>
+    <button type="button" class="orc-pdf-pro__btn orc-pdf-pro__btn--sec" onclick="window.close()">${escapePdfHtml(L.fechar || 'Fechar')}</button>
+  `
+
+  const rodape =
+    L.rodape ||
+    `NONATO SERVICE — Documento gerado automaticamente. ${L.emitidoEm || 'Emitido em'} ${dataFmt}.`
+
+  return buildOrcamentoPdfShell({
+    title: titulo,
+    reportNumber: data.codigo,
+    subtitle: L.pecasSolicitadas || 'Pedido de peças e equipamentos',
+    logoHtml: data.logoHtml,
+    empresa: data.empresa || EMPRESA_NONATO_DEFAULT,
+    previewBanner: data.preview
+      ? L.previewBanner || 'Pré-visualização — o número definitivo é atribuído ao gerar o pedido'
+      : undefined,
+    badgeDoc: L.documentoSemValor || 'Pedido sem valores — aguarda orçamento',
+    metaTitle: L.metaTitulo || L.cliente || 'Dados do pedido',
+    metaFields: [
+      { label: L.cliente || 'Cliente', value: data.clienteNomeDoc, fullWidth: true },
+      { label: L.data || 'Data', value: dataFmt },
+      { label: L.codigo || 'Código', value: data.codigo },
+    ],
+    bodyHtml,
+    footerText: rodape,
+    actionsHtml,
+  })
 }
 
 export function openPedidoOrcamentoAvulsoPdf(data: PedidoAvulsoPdfData): boolean {
