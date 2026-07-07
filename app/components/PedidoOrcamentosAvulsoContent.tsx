@@ -420,6 +420,7 @@ export function PedidoOrcamentosAvulsoContent({
     documentoSemValor: safeT?.poaPdfSemValores || 'Pedido sem valores — aguarda orçamento',
     rodape: safeT?.pedidoOrcamentoPdfRodape || 'NONATO SERVICE — Documento gerado automaticamente.',
     emitidoEm: safeT?.orcamentoPdfEmitidoEm || 'Emitido em',
+    emitente: safeT?.poaPdfEmitente || 'Emitente / cabeçalho',
   }
 
   function resolverDadosPedidoPdf() {
@@ -436,11 +437,7 @@ export function PedidoOrcamentosAvulsoContent({
     const blocosValidos = blocosEquipamento.filter(
       (b) => b.pecas.length > 0 || b.equipamento || b.equipamentoManual.trim()
     )
-    const nomeNoDoc =
-      emitirComoCliente === 'nonato-service'
-        ? safeT?.nomeNonatoService || 'NONATO SERVICE'
-        : nomeReal
-    return { nomeReal, nomeNoDoc, blocosValidos, pecasTotais }
+    return { nomeReal, blocosValidos, pecasTotais }
   }
 
   const resolverEmpresaPdf = (
@@ -463,7 +460,7 @@ export function PedidoOrcamentosAvulsoContent({
     codigo: string,
     preview: boolean,
     dataIso: string,
-    nomeNoDoc: string,
+    nomeClienteReal: string,
     blocos: EquipamentoBlocoPedido[],
     emitirComo: 'cliente' | 'nonato-service',
     clienteRef: ClientePedido | null,
@@ -472,7 +469,8 @@ export function PedidoOrcamentosAvulsoContent({
     codigo,
     preview,
     dataIso,
-    clienteNomeDoc: nomeNoDoc,
+    clienteNomeDoc: nomeClienteReal,
+    emitirComo,
     equipamentoTexto: textoEquipamentosAgregado(blocos, safeT),
     equipamentosBlocos: blocos.map((b, i) => {
       const blocoEnriquecido = enriquecerBlocoEquipamentoPedido(
@@ -508,6 +506,7 @@ export function PedidoOrcamentosAvulsoContent({
     })),
     logoHtml,
     empresa: resolverEmpresaPdf(emitirComo, clienteRef, nomeManual),
+    emitirComo,
     labels: pdfLabels,
   })
 
@@ -520,7 +519,7 @@ export function PedidoOrcamentosAvulsoContent({
         `${codigoProv} (${safeT?.provvisorio || 'prov.'})`,
         true,
         new Date().toISOString(),
-        dados.nomeNoDoc,
+        dados.nomeReal,
         dados.blocosValidos,
         emitirComoCliente,
         clienteSelecionado,
@@ -531,10 +530,6 @@ export function PedidoOrcamentosAvulsoContent({
 
   const handleVisualizarPdfGuardado = (pedido: PedidoAvulsoGuardado) => {
     const normalizado = normalizarPedidoCarregado(pedido)
-    const nomeNoDoc =
-      pedido.emitirComoCliente === 'nonato-service'
-        ? safeT?.nomeNonatoService || 'NONATO SERVICE'
-        : pedido.clienteNomeReal
     const clientePedido =
       (pedido.clienteId ? clientes.find((c) => c.id === pedido.clienteId) : null) ||
       (pedido.clienteNomeReal
@@ -550,9 +545,9 @@ export function PedidoOrcamentosAvulsoContent({
         pedido.codigo,
         false,
         pedido.dataGeracao,
-        nomeNoDoc,
+        pedido.clienteNomeReal,
         blocosEnriquecidos,
-        pedido.emitirComoCliente,
+        pedido.emitirComoCliente || 'cliente',
         clientePedido,
         pedido.clienteNomeReal
       )
@@ -562,7 +557,7 @@ export function PedidoOrcamentosAvulsoContent({
   const handleGerarPedido = async () => {
     const dados = resolverDadosPedidoPdf()
     if (!dados) return
-    const { nomeReal, nomeNoDoc, blocosValidos, pecasTotais } = dados
+    const { nomeReal, blocosValidos, pecasTotais } = dados
     const codigo = gerarProximoCodigo()
     const primeiroComEquip = blocosValidos.find((b) => b.equipamento || b.equipamentoManual.trim())
     const eqRef = primeiroComEquip?.equipamento
@@ -616,7 +611,7 @@ export function PedidoOrcamentosAvulsoContent({
           tipo: 'pedido-avulso' as const,
           status: 'pendente' as const,
           clienteId: clienteSelecionado?.id,
-          clienteNome: nomeNoDoc,
+          clienteNome: nomeReal,
           emitirComoCliente,
           equipamentoChave: novo.equipamentoChave,
           equipamentoNumeroSerie: novo.equipamentoNumeroSerie,
@@ -647,13 +642,18 @@ export function PedidoOrcamentosAvulsoContent({
         codigo,
         false,
         novo.dataGeracao,
-        nomeNoDoc,
+        nomeReal,
         blocosValidos,
         emitirComoCliente,
         clienteSelecionado,
         clienteNomeManual
       )
     )
+
+    const emitenteDoc =
+      emitirComoCliente === 'nonato-service'
+        ? empresaPdfPreview.nomeEmpresa || safeT?.nomeNonatoService || 'NONATO SERVICE'
+        : nomeReal
 
     alert(
       (safeT?.orcamentoSalvoGerado || safeT?.pedidoGeradoComSucesso || 'Orçamento salvo e gerado com sucesso!') +
@@ -662,9 +662,13 @@ export function PedidoOrcamentosAvulsoContent({
         ': ' +
         codigo +
         '\n\n' +
-        (safeT?.nomeNoDocumento || 'Nome no documento') +
+        (safeT?.cliente || 'Cliente') +
         ': ' +
-        nomeNoDoc +
+        nomeReal +
+        '\n\n' +
+        (safeT?.nomeNoDocumento || 'Emitente no cabeçalho') +
+        ': ' +
+        emitenteDoc +
         '\n\n' +
         (safeT?.guardeCodigoParaLocalizar || 'Guarde este código para localizar o orçamento depois.')
     )
@@ -1137,7 +1141,16 @@ export function PedidoOrcamentosAvulsoContent({
             </div>
             <div className="poa-pro__emitente-preview">
               <p className="poa-pro__emitente-preview-title">
-                {safeT?.dadosEmitenteDocumento || 'Dados no documento (cabeçalho)'}:
+                {(safeT as Record<string, string | undefined>)?.poaPdfClientePedido ||
+                  safeT?.cliente ||
+                  'Cliente do pedido'}
+                :
+              </p>
+              <p className="poa-pro__emitente-preview-nome">
+                <strong>{nomeClienteExibido}</strong>
+              </p>
+              <p className="poa-pro__emitente-preview-title" style={{ marginTop: '12px' }}>
+                {safeT?.dadosEmitenteDocumento || 'Cabeçalho do documento (emitente)'}:
               </p>
               <p className="poa-pro__emitente-preview-nome">
                 <strong>{empresaPdfPreview.nomeEmpresa || '—'}</strong>

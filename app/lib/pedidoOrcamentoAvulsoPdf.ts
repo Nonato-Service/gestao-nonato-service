@@ -27,7 +27,10 @@ export type PedidoAvulsoPdfData = {
   codigo: string
   preview?: boolean
   dataIso?: string
+  /** Nome real do cliente (sempre o destinatário do pedido). */
   clienteNomeDoc: string
+  /** Quem aparece no cabeçalho: cliente ou Nonato Service. */
+  emitirComo?: 'cliente' | 'nonato-service'
   equipamentoTexto: string
   pecas: PedidoAvulsoPdfPeca[]
   equipamentosBlocos?: PedidoAvulsoPdfEquipamentoBloco[]
@@ -62,6 +65,7 @@ export type PedidoAvulsoPdfData = {
     documentoSemValor?: string
     rodape?: string
     emitidoEm?: string
+    emitente?: string
   }
 }
 
@@ -260,6 +264,21 @@ export function buildPedidoOrcamentoAvulsoPdfHtml(data: PedidoAvulsoPdfData): st
     L.rodape ||
     `NONATO SERVICE — Documento gerado automaticamente. ${L.emitidoEm || 'Emitido em'} ${dataFmt}.`
 
+  const metaFields = [
+    { label: L.cliente || 'Cliente', value: data.clienteNomeDoc, fullWidth: true },
+    ...(data.emitirComo === 'nonato-service'
+      ? [
+          {
+            label: L.emitente || 'Emitente / cabeçalho',
+            value: data.empresa?.nomeEmpresa || 'NONATO SERVICE',
+            fullWidth: true,
+          },
+        ]
+      : []),
+    { label: L.data || 'Data', value: dataFmt },
+    { label: L.codigo || 'Código', value: data.codigo },
+  ]
+
   return buildOrcamentoPdfShell({
     title: titulo,
     reportNumber: data.codigo,
@@ -271,11 +290,7 @@ export function buildPedidoOrcamentoAvulsoPdfHtml(data: PedidoAvulsoPdfData): st
       : undefined,
     badgeDoc: L.documentoSemValor || 'Pedido sem valores — aguarda orçamento',
     metaTitle: L.metaTitulo || L.cliente || 'Dados do pedido',
-    metaFields: [
-      { label: L.cliente || 'Cliente', value: data.clienteNomeDoc, fullWidth: true },
-      { label: L.data || 'Data', value: dataFmt },
-      { label: L.codigo || 'Código', value: data.codigo },
-    ],
+    metaFields,
     bodyHtml,
     footerText: rodape,
     actionsHtml,

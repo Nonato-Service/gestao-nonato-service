@@ -23609,10 +23609,6 @@ export default function Dashboard() {
     }
     const emitirComo = opts?.emitirComoCliente ?? 'cliente'
     const codigo = gerarProximoCodigoPedidoRelatorio(pedidosOrcamento)
-    const nomeNoDoc =
-      emitirComo === 'nonato-service'
-        ? (safeT as any)?.nomeNonatoService || 'NONATO SERVICE'
-        : rel.cliente
     const novoPedido: PedidoOrcamento = {
       id: Date.now().toString(),
       codigo,
@@ -23660,7 +23656,7 @@ export default function Dashboard() {
         tipo: 'orcamento-relatorio' as const,
         status: 'pendente' as const,
         clienteId: rel.clienteId,
-        clienteNome: nomeNoDoc,
+        clienteNome: rel.cliente,
         relatorioId: rel.id,
         relatorioNumero: rel.numero,
         dadosCliente: rel.clienteId ? clientes.find((c) => c.id === rel.clienteId) : null,
@@ -23676,16 +23672,13 @@ export default function Dashboard() {
   }
 
   const abrirPdfPedidoOrcamentoRelatorio = (pedido: PedidoOrcamento) => {
-    const nomeNoDoc =
-      pedido.emitirComoCliente === 'nonato-service'
-        ? (safeT as any)?.nomeNonatoService || 'NONATO SERVICE'
-        : pedido.cliente
+    const emitirComo = pedido.emitirComoCliente || 'cliente'
     const clientePedido = pedido.clienteId
       ? clientes.find((c) => c.id === pedido.clienteId)
       : clientes.find(
           (c) => (c.nomeEmpresa || '').trim().toLowerCase() === (pedido.cliente || '').trim().toLowerCase()
         )
-    const empresaPdf = resolverEmpresaPedidoOrcamentoPdf(pedido.emitirComoCliente || 'cliente', {
+    const empresaPdf = resolverEmpresaPedidoOrcamentoPdf(emitirComo, {
       empresaNonato: fichaCadastralParaEmpresaPdf(fichaCadastral),
       cliente: clientePedido,
       nomeClienteFallback: pedido.cliente,
@@ -23722,7 +23715,8 @@ export default function Dashboard() {
       codigo: pedido.codigo || pedido.numeroRelatorio,
       preview: false,
       dataIso: pedido.dataGeracao,
-      clienteNomeDoc: nomeNoDoc,
+      clienteNomeDoc: pedido.cliente,
+      emitirComo,
       equipamentoTexto,
       equipamentosBlocos: [
         {
@@ -23745,6 +23739,7 @@ export default function Dashboard() {
         equipamento: safeT?.equipamento || 'Equipamento',
         numeroEquipamento: (safeT as any)?.numeroEquipamento || 'Número do Equipamento',
         numeroSerie: safeT?.numeroSerie || 'Nº Série',
+        emitente: (safeT as any)?.poaPdfEmitente || 'Emitente / cabeçalho',
         colImagem: safeT?.imagem || 'Imagem',
         colDescricao: safeT?.descricaoItem || 'Descrição',
         colCodigo: safeT?.codigo || 'Código',
@@ -23756,17 +23751,14 @@ export default function Dashboard() {
   }
 
   const abrirPdfPedidoOrcamentoAvulso = (pedido: PedidoAvulsoGuardado) => {
-    const nomeNoDoc =
-      pedido.emitirComoCliente === 'nonato-service'
-        ? (safeT as any)?.nomeNonatoService || 'NONATO SERVICE'
-        : pedido.clienteNomeReal
+    const emitirComo = pedido.emitirComoCliente || 'cliente'
     const clientePedido = pedido.clienteId
       ? clientes.find((c) => c.id === pedido.clienteId)
       : clientes.find(
           (c) =>
             (c.nomeEmpresa || '').trim().toLowerCase() === (pedido.clienteNomeReal || '').trim().toLowerCase()
         )
-    const empresaPdf = resolverEmpresaPedidoOrcamentoPdf(pedido.emitirComoCliente || 'cliente', {
+    const empresaPdf = resolverEmpresaPedidoOrcamentoPdf(emitirComo, {
       empresaNonato: fichaCadastralParaEmpresaPdf(fichaCadastral),
       cliente: clientePedido,
       nomeClienteFallback: pedido.clienteNomeReal,
@@ -23825,7 +23817,8 @@ export default function Dashboard() {
       codigo: pedido.codigo,
       preview: false,
       dataIso: pedido.dataGeracao,
-      clienteNomeDoc: nomeNoDoc,
+      clienteNomeDoc: pedido.clienteNomeReal,
+      emitirComo,
       equipamentoTexto: pedido.equipamentoTexto,
       equipamentosBlocos,
       pecas: pedido.pecas.map((p) => ({
@@ -23850,6 +23843,7 @@ export default function Dashboard() {
         familia: safeT?.familia || 'Família',
         grupo: safeT?.grupo || 'Grupo',
         descricao: safeT?.descricao || 'Descrição',
+        emitente: (safeT as any)?.poaPdfEmitente || 'Emitente / cabeçalho',
         colImagem: safeT?.imagem || 'Imagem',
         colDescricao: safeT?.descricaoItem || 'Descrição',
         colCodigo: safeT?.codigo || 'Código',
@@ -76615,10 +76609,6 @@ A1;Peça exemplo;10`}
       {/* Modal de Pedido de Orçamento */}
       {showPedidoOrcamentoModal && (() => {
         const relAtivo = relatorioParaPedidoOrcamento ?? relatorioServicoForm
-        const nomeNoDocPreview =
-          pedidoOrcamentoEmitirComo === 'nonato-service'
-            ? (safeT as any)?.nomeNonatoService || 'NONATO SERVICE'
-            : relAtivo.cliente
         const equipamentoTextoPreview = `${relAtivo.maquinaModelo || ''}${relAtivo.numeroMaquina ? ` - ${relAtivo.numeroMaquina}` : ''}`.trim() || '—'
         const clienteRelPreview = relAtivo.clienteId
           ? clientes.find((c) => c.id === relAtivo.clienteId)
@@ -76728,11 +76718,11 @@ A1;Peça exemplo;10`}
                 </label>
               </div>
               <p style={{ margin: '12px 0 0', fontSize: '12px', color: '#ffaa00' }}>
-                {safeT?.nomeNoDocumento || 'Nome no documento'}: <strong>{nomeNoDocPreview}</strong>
+                {safeT?.cliente || 'Cliente do pedido'}: <strong>{relAtivo.cliente}</strong>
               </p>
               <div style={{ marginTop: '12px', padding: '10px 12px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', fontSize: '12px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>
                 <p style={{ margin: '0 0 6px', color: '#00c853', fontWeight: 600 }}>
-                  {(safeT as any)?.dadosEmitenteDocumento || 'Dados no documento (cabeçalho)'}:
+                  {(safeT as any)?.dadosEmitenteDocumento || 'Cabeçalho do documento (emitente)'}:
                 </p>
                 <p style={{ margin: 0 }}><strong>{empresaPdfPreview.nomeEmpresa || '—'}</strong></p>
                 {empresaPdfPreview.morada ? <p style={{ margin: '4px 0 0' }}>{empresaPdfPreview.morada}</p> : null}
@@ -76796,7 +76786,8 @@ A1;Peça exemplo;10`}
                     codigo: `${gerarProximoCodigoPedidoRelatorio(pedidosOrcamento)} (${(safeT as any)?.provvisorio || 'prov.'})`,
                     preview: true,
                     dataIso: new Date().toISOString(),
-                    clienteNomeDoc: nomeNoDocPreview,
+                    clienteNomeDoc: relAtivo.cliente,
+                    emitirComo: pedidoOrcamentoEmitirComo,
                     equipamentoTexto: equipamentoTextoPreview,
                     equipamentosBlocos: [
                       {
