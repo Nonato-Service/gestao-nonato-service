@@ -9,6 +9,8 @@ import {
   escapePdfHtml,
   type PdfMetaField,
 } from './pdfDocumentLayout'
+import { normalizePdfModelo, pdfModeloBodyClass } from './pdfModelTypes'
+import { orcamentoPdfThemeCss } from './pdfDocumentThemes'
 import {
   equipamentoIdETecnicoGerado,
   resolverIdEquipamentoVisivelCliente,
@@ -549,7 +551,10 @@ export function buildOrcamentoPdfShell(options: {
   previewBanner?: string
   badgeDoc?: string
   actionsHtml?: string
+  pdfModelo?: string
 }): string {
+  const pdfModelo = normalizePdfModelo(options.pdfModelo)
+  const themeCss = orcamentoPdfThemeCss(pdfModelo)
   const header = buildPdfDocumentHeaderHtml({
     logoContent: options.logoHtml || '<span class="ns-pdf-header__logo-text">NONATO SERVICE</span>',
     title: options.title,
@@ -578,9 +583,9 @@ export function buildOrcamentoPdfShell(options: {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${escapePdfHtml(options.title)} — ${escapePdfHtml(options.reportNumber)}</title>
-  <style>${ORCAMENTO_PDF_PRO_CSS}</style>
+  <style>${ORCAMENTO_PDF_PRO_CSS}${themeCss}</style>
 </head>
-<body class="orc-pdf-pro${options.actionsHtml ? ' orc-pdf-pro--with-actions' : ''}">
+<body class="${pdfModeloBodyClass(pdfModelo, 'orc-pdf-pro')}${options.actionsHtml ? ' orc-pdf-pro--with-actions' : ''}">
   ${options.actionsHtml ? `<div class="orc-pdf-pro__toolbar no-print"><p class="orc-pdf-pro__toolbar-title">Opções de impressão</p>${actionsBlock}</div>` : ''}
   <div class="orc-pdf-pro__page">
     ${options.previewBanner ? `<div class="orc-pdf-pro__preview">${escapePdfHtml(options.previewBanner)}</div>` : ''}

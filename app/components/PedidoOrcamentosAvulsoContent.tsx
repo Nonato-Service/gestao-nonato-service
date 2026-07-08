@@ -6,6 +6,8 @@ import {
   enriquecerBlocoEquipamentoPedido,
   montarCamposEquipamentoPedidoPdf,
 } from '../lib/pedidoOrcamentoAvulsoEquipamento'
+import { PdfModeloPickerField } from './PdfModeloPickerField'
+import { loadPdfModeloPadrao, persistPdfModeloPadrao } from '../lib/pdfModelStorage'
 import {
   resolverEmpresaPedidoOrcamentoPdf,
   resolverNumeroEquipamentoPdf,
@@ -202,6 +204,7 @@ export function PedidoOrcamentosAvulsoContent({
   const [mostrarFormPeca, setMostrarFormPeca] = useState(false)
   const [modoPeca, setModoPeca] = useState<'biblioteca' | 'manual' | null>(null)
   const [emitirComoCliente, setEmitirComoCliente] = useState<'cliente' | 'nonato-service'>('cliente')
+  const [pdfModelo, setPdfModelo] = useState(() => loadPdfModeloPadrao('pedidoAvulso'))
   const [pedidosGerados, setPedidosGerados] = useState<PedidoAvulsoGuardado[]>([])
   const [codigoUltimoGerado, setCodigoUltimoGerado] = useState<string | null>(null)
 
@@ -551,6 +554,7 @@ export function PedidoOrcamentosAvulsoContent({
     logoHtml,
     empresa: resolverEmpresaPdf(emitirComo, clienteRef, nomeManual),
     emitirComo,
+    pdfModelo,
     labels: pdfLabels,
   })
 
@@ -1286,6 +1290,22 @@ export function PedidoOrcamentosAvulsoContent({
 
           <section className="orc-pro__panel poa-pro__panel poa-pro__gerar">
             <h3 className="orc-pro__panel-title">{safeT?.gerarDocumentoComo || 'Ao gerar documento'}</h3>
+            <PdfModeloPickerField
+              value={pdfModelo}
+              onChange={(model) =>
+                setPdfModelo(
+                  persistPdfModeloPadrao('pedidoAvulso', model, saveData as ((k: string, d: unknown) => Promise<unknown>) | undefined)
+                )
+              }
+              labels={safeT}
+              label={safeT?.selecioneModeloPDF || 'Modelo de PDF'}
+              hint={
+                (safeT as Record<string, string | undefined>)?.orcamentoPdfModeloHint ||
+                'Estilo visual do pedido (como nos relatórios de serviço).'
+              }
+              compact
+              className="poa-pro__pdf-modelo"
+            />
             <div className="orc-pro__radio-row">
               <label>
                 <input

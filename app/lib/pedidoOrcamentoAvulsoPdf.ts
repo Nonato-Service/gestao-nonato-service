@@ -36,6 +36,7 @@ export type PedidoAvulsoPdfData = {
   equipamentosBlocos?: PedidoAvulsoPdfEquipamentoBloco[]
   logoHtml?: string
   empresa?: OrcamentoPdfEmpresa
+  pdfModelo?: string
   labels?: {
     titulo?: string
     previewBanner?: string
@@ -291,6 +292,7 @@ export function buildPedidoOrcamentoAvulsoPdfHtml(data: PedidoAvulsoPdfData): st
     bodyHtml,
     footerText: rodape,
     actionsHtml,
+    pdfModelo: data.pdfModelo,
   })
 }
 

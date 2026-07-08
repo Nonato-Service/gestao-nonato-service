@@ -185,6 +185,11 @@ import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import { ClienteEquipamentoOrcamentosPanel } from './components/ClienteEquipamentoOrcamentosPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
+import { wrapRelatorioServicoPrintDocument } from './lib/relatorioServicoPdfShell'
+import { pdfModeloBodyClass } from './lib/pdfModelTypes'
+import { PdfModeloPickerField } from './components/PdfModeloPickerField'
+import { loadPdfModeloPadrao, persistPdfModeloPadrao } from './lib/pdfModelStorage'
+import { protocoloNumToPdfModelo, pdfModeloToProtocoloNum } from './lib/pdfModelProtocoloMap'
 import {
   enriquecerBlocoEquipamentoPedido,
   montarCamposEquipamentoPedidoPdf,
@@ -8201,9 +8206,10 @@ export default function Dashboard() {
   const [showPecasSubstituicaoModal, setShowPecasSubstituicaoModal] = useState(false)
   const [showPDFFormatMenu, setShowPDFFormatMenu] = useState<string | null>(null) // ID do relatório para mostrar menu
   const [pdfMenuPosition, setPdfMenuPosition] = useState<{ top: number; left: number; width: number } | null>(null)
-  const [selectedPDFModel, setSelectedPDFModel] = useState<string>('classico') // Modelo de PDF selecionado
+  const [selectedPDFModel, setSelectedPDFModel] = useState<string>('profissional') // Modelo de PDF selecionado
+  const [pdfModeloFechamento, setPdfModeloFechamento] = useState(() => loadPdfModeloPadrao('fechamentoDespesas'))
   const [pdfModelPorRelatorioId, setPdfModelPorRelatorioId] = useState<Record<string, string>>({})
-  const selectedPDFModelRef = useRef<string>('classico')
+  const selectedPDFModelRef = useRef<string>('profissional')
   const pdfModelPorRelatorioIdRef = useRef<Record<string, string>>({})
   const [protocolosServico, setProtocolosServico] = useState<ProtocoloServico[]>([])
   const [editingProtocoloServicoId, setEditingProtocoloServicoId] = useState<string | null>(null)
@@ -18795,9 +18801,20 @@ export default function Dashboard() {
         : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#0d7a3d">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#0d7a3d">${totalCobranca.toFixed(2)} €</td></tr>`
     const tableContent = `<div style="margin:8px 0 24px;border-radius:8px;overflow:hidden;border:1px solid #c8e6c9"><table class="fech-pdf-itens" style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdf}</tfoot></table></div>`
     const rodape = buildPdfDocumentFooterHtml(`${esc(docGeradoEm)} ${dataHoraGerado} · Nonato Service`)
-    const btnsNoPrint = `<div class="no-print" style="margin-bottom:20px"><button onclick="window.print()" style="padding:12px 24px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">${esc(lblImprimir)}</button> <button onclick="window.close()" style="padding:12px 20px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer">${esc(lblFechar)}</button></div>`
-    const pdfRowStyles = `.pdf-tbody tr:nth-child(odd){background:#fff}.pdf-tbody tr:nth-child(even){background:#f1f8e9}`
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(titFechamento)} - ${esc(relatorio.numero)}</title><style>@page{size:A4;margin:12mm}${PDF_DOCUMENT_LAYOUT_CSS}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:24px;font-size:12px;background:#fff;max-width:100%;box-sizing:border-box}${pdfRowStyles}.fech-pdf-itens{min-width:0}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none!important}.fech-pdf-itens{font-size:10px}.fech-pdf-itens th,.fech-pdf-itens td{padding:8px 10px!important}}.no-print{display:block}</style></head><body>${btnsNoPrint}${headerHtml}${infoMetaBib}${tableContent}${rodape}</body></html>`
+    const pdfRowStyles = `.pdf-tbody tr:nth-child(odd){background:#fff}.pdf-tbody tr:nth-child(even){background:#f1f8e9}.fech-pdf-itens{min-width:0;width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 24px;border-radius:8px;overflow:hidden;border:1px solid #c8e6c9}.fech-pdf-itens th{padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase}.fech-pdf-itens td{padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px}`
+    const bodyHtml = `${headerHtml}${infoMetaBib}${tableContent}${rodape}`
+    const html = wrapRelatorioServicoPrintDocument({
+      title: `${titFechamento} - ${relatorio.numero}`,
+      bodyClass: pdfModeloBodyClass(pdfModeloFechamento, 'rs-pdf'),
+      baseCss: `${PDF_DOCUMENT_LAYOUT_CSS}${RELATORIO_SERVICO_PDF_PRINT_CSS}${pdfRowStyles}`,
+      bodyHtml,
+      pdfModelo: pdfModeloFechamento,
+      toolbarLabels: {
+        titulo: titFechamento,
+        imprimir: lblImprimir,
+        fechar: lblFechar,
+      },
+    })
     const printWin = window.open('', '_blank')
     if (!printWin) { alert(tAny.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.'); return }
     printWin.document.write(html)
@@ -18824,15 +18841,7 @@ export default function Dashboard() {
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
-      const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>Relatório de Serviço - ${relatorio.numero}</title>
-          <style>${RELATORIO_SERVICO_PDF_PRINT_CSS}</style>
-        </head>
-        <body class="rs-pdf rs-pdf--classic">
+      const bodyHtml = `
           ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
 
           ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada)}
@@ -18984,9 +18993,19 @@ export default function Dashboard() {
           ` : ''}
 
           ${renderReportAssinaturaCliente(relatorio)}
-        </body>
-      </html>
     `;
+      const htmlContent = wrapRelatorioServicoPrintDocument({
+        title: `Relatório de Serviço — ${relatorio.numero}`,
+        bodyClass: pdfModeloBodyClass('classico', 'rs-pdf'),
+        baseCss: RELATORIO_SERVICO_PDF_PRINT_CSS,
+        bodyHtml,
+        pdfModelo: 'classico',
+        toolbarLabels: {
+          titulo: t.relatorioServicoTitle || 'Relatório de Serviço',
+          imprimir: t.imprimirOrcamento || t.gerarPDF || 'Imprimir / Guardar PDF',
+          fechar: t.fechar || 'Fechar',
+        },
+      });
 
       printWindow.document.write(htmlContent);
       printWindow.document.close();
@@ -21285,7 +21304,7 @@ export default function Dashboard() {
     if (per && RELATORIO_SERVICO_PDF_MODELOS.has(per)) return per
     const padrao = selectedPDFModelRef.current || selectedPDFModel
     if (RELATORIO_SERVICO_PDF_MODELOS.has(padrao)) return padrao
-    return 'classico'
+    return 'profissional'
   }
 
   const escolherModeloPdfRelatorio = (relatorioId: string | null, model: string) => {
@@ -21968,31 +21987,29 @@ export default function Dashboard() {
       if (!printWindow) { alert('Por favor, permita pop-ups para gerar o PDF.'); return; }
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeReport) : '-';
-      const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${relatorio.numero}</title><style>
-        ${RELATORIO_SERVICO_PDF_HEADER_CSS}
-        @page{size:A4;margin:15mm}*{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#3a3a3a;background:#fff;padding:20px;line-height:1.5}
-        .report-section{margin-bottom:18px;padding:14px;background:#f8fafc;border-left:3px solid #1e3a5f;border-radius:2px}
-        .report-section h3{font-family:Georgia,serif;font-size:11px;margin-bottom:10px;color:#1e293b;text-transform:uppercase;letter-spacing:0.1em;border-bottom:1px solid #e2e8f0;padding-bottom:8px}
-        table{width:100%;border-collapse:collapse;font-size:10px}
-        th,td{border:1px solid #e2e8f0;padding:8px;text-align:left}
-        th{background:#1e293b;color:#f8fafc;font-weight:600}
-        .report-summary{display:flex;gap:20px;margin-top:12px;font-size:11px;font-weight:500;color:#1e3a5f}
-        .report-resultados{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;font-size:10px}
-        .chk{width:14px;height:14px;border:2px solid #94a3b8;display:inline-block;margin-right:8px;vertical-align:middle;border-radius:2px}
-        .chk.checked{background:#1e293b;border-color:#1e293b}
-        @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
-      </style></head><body>
+      const bodyHtml = `
         ${buildPdfHeaderForRelatorio(relatorio, 'detailed')}
         ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada)}
         ${renderReportDiasTable(relatorio, totais)}
-        <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
-        ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes || 'Observações'}</h3><p>${relatorio.observacoes}</p></div>` : ''}
-        ${relatorio.pontosAberto ? `<div class="report-section"><h3>${t.pontosAberto || 'Pontos em Aberto'}</h3><p>${relatorio.pontosAberto}</p></div>` : ''}
+        <div class="info-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
+        ${relatorio.observacoes ? `<div class="info-section observacoes"><h3>${t.observacoes || 'Observações'}</h3><p>${escapePdfHtml(relatorio.observacoes)}</p></div>` : ''}
+        ${relatorio.pontosAberto ? `<div class="info-section"><h3>${t.pontosAberto || 'Pontos em Aberto'}</h3><p>${escapePdfHtml(relatorio.pontosAberto)}</p></div>` : ''}
         ${renderReportPecas(relatorio)}
         ${renderReportPecasInstaladas(relatorio)}
         ${renderReportAssinaturaCliente(relatorio)}
-      </body></html>`;
+      `;
+      const htmlContent = wrapRelatorioServicoPrintDocument({
+        title: `Relatório de Serviço — ${relatorio.numero}`,
+        bodyClass: `${pdfModeloBodyClass('profissional', 'rs-pdf')} rs-pdf--detailed`,
+        baseCss: RELATORIO_SERVICO_PDF_PRINT_CSS,
+        bodyHtml,
+        pdfModelo: 'profissional',
+        toolbarLabels: {
+          titulo: t.relatorioServicoTitle || 'Relatório de Serviço',
+          imprimir: t.imprimirOrcamento || t.gerarPDF || 'Imprimir / Guardar PDF',
+          fechar: t.fechar || 'Fechar',
+        },
+      });
       printWindow.document.write(htmlContent);
       printWindow.document.close();
       setTimeout(() => printWindow.print(), 250);
@@ -32427,12 +32444,22 @@ export default function Dashboard() {
                       </select>
                     </div>
                     <div style={{ gridColumn: '1 / -1', maxWidth: '560px' }}>
-                      <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoSecPdf || 'Modelo do PDF'}</label>
-                      <select value={String(protocoloServicoForm.pdfModelo)} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, pdfModelo: clampProtocoloPdfModelo(parseInt(e.target.value, 10) || 1) }))} style={inputBase}>
-                        {Array.from({ length: PROTOCOLO_SERVICO_PDF_MODELOS_MAX }, (_, i) => i + 1).map((n) => (
-                          <option key={n} value={n}>{(protoT as Record<string, string>)?.[`protocolosServicoPdfModelo${n}`] || `Modelo ${n}`}</option>
-                        ))}
-                      </select>
+                      <PdfModeloPickerField
+                        value={protocoloNumToPdfModelo(protocoloServicoForm.pdfModelo)}
+                        onChange={(model) =>
+                          setProtocoloServicoForm((prev) => ({
+                            ...prev,
+                            pdfModelo: pdfModeloToProtocoloNum(model),
+                          }))
+                        }
+                        labels={protoT as Record<string, string>}
+                        label={protoT?.protocolosServicoSecPdf || protoT?.selecioneModeloPDF || 'Modelo do PDF'}
+                        hint={
+                          (protoT as Record<string, string | undefined>)?.orcamentoPdfModeloHint ||
+                          'Mesmos estilos dos relatórios de serviço (Clássico, Profissional, Moderno…).'
+                        }
+                        compact
+                      />
                     </div>
                   </div>
                   {protocoloServicoForm.clienteId ? (
@@ -61741,6 +61768,16 @@ A1;Peça exemplo;10`}
                       groupRecomendados={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados'}
                       groupOutros={safeT?.relatorioPdfOptgroupOutros || 'Outros'}
                     />
+                    <PdfModeloPickerField
+                      className="biblioteca-relatorios-toolbar__modelo biblioteca-relatorios-toolbar__modelo--fechamento"
+                      value={pdfModeloFechamento}
+                      onChange={(model) =>
+                        setPdfModeloFechamento(persistPdfModeloPadrao('fechamentoDespesas', model, saveData))
+                      }
+                      labels={safeT as Record<string, string>}
+                      label={(safeT as Record<string, string>).fechamentoPdfModeloLabel || 'PDF fechamento despesas'}
+                      compact
+                    />
                     <button
                       type="button"
                       className="biblioteca-relatorios-toolbar__btn"
@@ -63158,6 +63195,7 @@ A1;Peça exemplo;10`}
       return clientes.find((c) => c.id === rascunho.clienteSelecionadoId) ?? null
     })
     const [buscaCliente, setBuscaCliente] = useState(rascunho.buscaCliente || '')
+    const [pdfModeloOrcamento, setPdfModeloOrcamento] = useState(() => loadPdfModeloPadrao('orcamentos'))
     /** Cliente Prioritário (Fixo): opcional — dados do cadastro geral para e-mail/WhatsApp neste orçamento */
     const [clienteCadastroPrioritarioFixo, setClienteCadastroPrioritarioFixo] = useState<Cliente | null>(() => {
       if (!rascunho.clienteCadastroPrioritarioFixoId) return null
@@ -64028,6 +64066,7 @@ A1;Peça exemplo;10`}
         },
         resolveImagem: (item) => resolveImagemItemOrcamentoDisplay(item, pecasBiblioteca),
         actionsHtml,
+        pdfModelo: pdfModeloOrcamento,
       })
 
       if (!aberto) return
@@ -65440,6 +65479,20 @@ A1;Peça exemplo;10`}
                   fontSize: '14px',
                   resize: 'vertical'
                 }}
+              />
+            </div>
+
+            <div className="orc-pro__panel orc-pro__panel--pdf-modelo" style={{ marginTop: '20px' }}>
+              <PdfModeloPickerField
+                value={pdfModeloOrcamento}
+                onChange={(model) => setPdfModeloOrcamento(persistPdfModeloPadrao('orcamentos', model, saveData))}
+                labels={safeT as Record<string, string>}
+                label={safeT?.selecioneModeloPDF || 'Modelo de PDF'}
+                hint={
+                  (safeT as Record<string, string | undefined>)?.orcamentoPdfModeloHint ||
+                  'Escolha o estilo visual do documento (igual aos relatórios de serviço).'
+                }
+                compact
               />
             </div>
 

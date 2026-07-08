@@ -43,6 +43,7 @@ export type OrcamentoGeradoPdfData = {
   labels?: Record<string, string | undefined>
   resolveImagem?: (item: OrcamentoGeradoPdfItem) => string | undefined
   actionsHtml?: string
+  pdfModelo?: string
 }
 
 function renderItemRow(
@@ -166,6 +167,7 @@ export function buildOrcamentoGeradoPdfHtml(data: OrcamentoGeradoPdfData): strin
       L.rodapeOrcamento ||
       `NONATO SERVICE — ${L.emitidoEm || 'Emitido em'} ${dataFmt}. ${L.rodapeLegal || 'Documento válido mediante aceitação do cliente.'}`,
     actionsHtml: data.actionsHtml || defaultActions,
+    pdfModelo: data.pdfModelo,
   })
 }
 

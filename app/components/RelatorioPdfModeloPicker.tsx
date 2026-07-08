@@ -3,33 +3,11 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-export const RELATORIO_PDF_MODELO_LABEL_KEYS: Record<string, string> = {
-  classico: 'modeloClassico',
-  detalhado: 'modeloDetalhado',
-  compacto: 'modeloCompacto',
-  moderno: 'modeloModerno',
-  profissional: 'modeloProfissional',
-  minimalista: 'modeloMinimalista',
-  tecnico: 'modeloTecnico',
-  executivo: 'modeloExecutivo',
-  negro: 'modeloNegro',
-  ferwood: 'modeloFerwood',
-  resumido: 'modeloResumido',
-  colorido: 'modeloColorido',
-  formal: 'modeloFormal',
-  lista: 'modeloLista',
-}
+import { PDF_MODELO_GROUPS, PDF_MODELO_LABEL_KEYS } from '../lib/pdfModelTypes'
 
-const RELATORIO_PDF_MODELO_GROUPS = [
-  {
-    id: 'recomendados' as const,
-    models: ['classico', 'detalhado', 'compacto', 'moderno', 'profissional'],
-  },
-  {
-    id: 'outros' as const,
-    models: ['minimalista', 'tecnico', 'executivo', 'negro', 'ferwood', 'resumido', 'colorido', 'formal', 'lista'],
-  },
-]
+export const RELATORIO_PDF_MODELO_LABEL_KEYS = PDF_MODELO_LABEL_KEYS
+
+const RELATORIO_PDF_MODELO_GROUPS = PDF_MODELO_GROUPS
 
 type RelatorioPdfModeloPickerProps = {
   value: string

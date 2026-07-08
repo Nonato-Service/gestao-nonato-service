@@ -42,7 +42,11 @@ export type OrcamentoPecasEspeciaisPdfData = {
   empresa?: OrcamentoPecasEspeciaisEmpresaPdf
   labels?: Record<string, string | undefined>
   preview?: boolean
+  pdfModelo?: string
 }
+
+import { orcamentoPdfThemeCss } from './pdfDocumentThemes'
+import { normalizePdfModelo } from './pdfModelTypes'
 
 function esc(s: string): string {
   return String(s ?? '')
@@ -156,12 +160,15 @@ export function buildOrcamentoPecasEspeciaisPdfHtml(data: OrcamentoPecasEspeciai
        <div class="summary-row summary-row--total"><span>${esc(L.totalComIvaLabel || 'Total com IVA')}</span><span>${esc(data.totalComIva || data.totalLiquido || '—')}</span></div>`
     : `<div class="summary-row summary-row--total"><span>${esc(L.totalLiquidoLabel || 'Total EUR líquido')}</span><span>${esc(data.totalLiquido || '—')}</span></div>`
 
+  const themeCss = orcamentoPdfThemeCss(normalizePdfModelo(data.pdfModelo))
+
   return `<!DOCTYPE html>
 <html lang="pt-PT">
 <head>
   <meta charset="UTF-8" />
   <title>${esc(titulo)} — ${esc(data.numeroOferta)}</title>
   <style>
+    ${themeCss}
     @page { size: A4 portrait; margin: 12mm; }
     @media print { .no-print { display: none !important; } }
     * { box-sizing: border-box; }

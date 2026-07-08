@@ -13,6 +13,8 @@ import {
 export type ModoCalculoTotalPecasEsp = 'linhas' | 'valor-final'
 import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
 import { formatClienteIdentidadeTexto } from './ClienteIdentidadeChips'
+import { PdfModeloPickerField } from './PdfModeloPickerField'
+import { loadPdfModeloPadrao, persistPdfModeloPadrao } from '../lib/pdfModelStorage'
 
 export type ClienteOrcamentoPecasEsp = {
   id: string
@@ -224,6 +226,7 @@ export function OrcamentoPecasEspeciaisContent({
   const [contactoTelefone, setContactoTelefone] = useState('')
   const [contactoEmail, setContactoEmail] = useState('')
   const [linhas, setLinhas] = useState<LinhaOrcamentoPecasEsp[]>([novaLinhaVazia()])
+  const [pdfModelo, setPdfModelo] = useState(() => loadPdfModeloPadrao('pecasEspeciais'))
   const [linhaEmbalagemTitulo, setLinhaEmbalagemTitulo] = useState(
     () => t.orcamentoPecasEspEmbalagemTituloPadrao || 'Embalagem e envio'
   )
@@ -617,6 +620,7 @@ export function OrcamentoPecasEspeciaisContent({
     empresa: empresaPdf,
     labels: labelsPdf,
     preview,
+    pdfModelo,
   })
 
   const abrirPdf = (preview: boolean) => {
@@ -1265,6 +1269,22 @@ export function OrcamentoPecasEspeciaisContent({
             onChange={(e) => setNotasRodape(e.target.value)}
             className="orcamento-pecas-especiais-textarea"
             rows={2}
+          />
+        </div>
+
+        <div className="orcamento-pecas-especiais-pdf-modelo">
+          <PdfModeloPickerField
+            value={pdfModelo}
+            onChange={(model) =>
+              setPdfModelo(persistPdfModeloPadrao('pecasEspeciais', model, saveData))
+            }
+            labels={t as Record<string, string>}
+            label={t.selecioneModeloPDF || 'Modelo de PDF'}
+            hint={
+              (t as Record<string, string | undefined>).orcamentoPdfModeloHint ||
+              'Estilo visual do orçamento (mesmas opções dos relatórios).'
+            }
+            compact
           />
         </div>
 
