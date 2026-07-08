@@ -91,7 +91,7 @@ import {
   hashImagemComprovante,
   mensagemDuplicadoComprovante,
 } from './lib/comprovanteDuplicado'
-import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, buildRelatorioServicoPdfMetaSectionHtml, buildFechamentoDespesasRelatorioInfoHtml, type RelatorioServicoPdfHeaderVariant, type RelatorioServicoPdfMetaLabels } from './lib/relatorioServicoPdfPrintCss'
+import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, buildRelatorioServicoPdfMetaSectionHtml, buildFechamentoDespesasRelatorioInfoHtml, buildFechamentoDespesasClienteMetaFields, type RelatorioServicoPdfHeaderVariant, type RelatorioServicoPdfMetaLabels } from './lib/relatorioServicoPdfPrintCss'
 import { PDF_DOCUMENT_LAYOUT_CSS, buildPdfDocumentHeaderHtml, buildPdfDocumentFooterHtml, buildPdfMetaSectionHtml } from './lib/pdfDocumentLayout'
 import {
   MAX_EQUIPAMENTOS_RELATORIO,
@@ -8195,6 +8195,7 @@ export default function Dashboard() {
   const [modalPecasFechamentoLinhas, setModalPecasFechamentoLinhas] = useState<FechamentoPecaModalLinha[] | null>(null)
   // Biblioteca de Relatórios: pesquisa por cliente e expandir/retrair todos
   const [buscaBibliotecaRelatoriosCliente, setBuscaBibliotecaRelatoriosCliente] = useState('')
+  const [bibliotecaRelatoriosAlfaLetraFiltro, setBibliotecaRelatoriosAlfaLetraFiltro] = useState<string | null>(null)
   const [bibliotecaRelatoriosClientesExpandidos, setBibliotecaRelatoriosClientesExpandidos] = useState<Set<string>>(new Set())
   const [bibliotecaRelatoriosEquipExpandidos, setBibliotecaRelatoriosEquipExpandidos] = useState<Set<string>>(new Set())
   const [showRelatorioServicoModal, setShowRelatorioServicoModal] = useState(false)
@@ -18763,6 +18764,7 @@ export default function Dashboard() {
     const logoPart = logoSrc ? `<img src="${esc(logoSrc)}" alt="Logo" style="max-height:80px;max-width:220px;object-fit:contain;display:block"/>` : ''
     const numVal = esc(relatorio.numero)
     const clEqBib = equipamentosClienteDoRelatorioDespesas(relatorio, clientes)
+    const clientePdf = findClienteByRelatorio(clientes, relatorio)
     const dataVal = esc(relatorio.data)
     const tituloDoc = esc(titFechamento)
     const localeStr = localeForLongDatetime(selectedLanguage)
@@ -18781,6 +18783,7 @@ export default function Dashboard() {
     const infoMetaBib = buildFechamentoDespesasRelatorioInfoHtml({
       relatorio,
       title: tAny.dadosClienteEquipamento || tAny.dadosRelatorio || 'Dados do relatório',
+      clienteCadastro: clientePdf,
       labels: {
         cliente: tAny.cliente || 'Cliente',
         numeroRelatorio: tAny.numeroRelatorio || 'Nº Relatório',
@@ -18790,6 +18793,13 @@ export default function Dashboard() {
         equipamentoId: tAny.equipamentoId || 'ID equipamento',
         numeroMaquina: tAny.numeroMaquina || 'N.º máquina',
         maquinaModelo: tAny.maquinaModelo || 'Máquina/Modelo',
+        codigoCliente: tAny.clienteCodigoLabel || tAny.codigoCliente || 'Cód. cliente',
+        morada: tAny.morada || 'Morada',
+        telefone: tAny.telefone || 'Telefone',
+        email: tAny.email || 'E-mail',
+        contribuicaoFiscal: tAny.contribuicaoFiscal || tAny.nif || 'NIF',
+        contato: tAny.contato || 'Contacto',
+        cidade: tAny.cidade || 'Cidade',
       },
       esc,
       equipamentosArmazem: equipamentos,
@@ -47350,7 +47360,8 @@ A1;Peça exemplo;10`}
           const modelo = fechamentoPdfModelo
           const logoPart = logoSrc ? '<img src="' + esc(logoSrc) + '" alt="Logo" style="max-height:80px;max-width:220px;object-fit:contain;display:block"/>' : ''
           const lblRelatorio = (safeT as any)?.relatorio || 'Relatório'
-          const clienteVal = esc(relatorioSelecionado.cliente)
+          const clientePdfFech = findClienteByRelatorio(clientes, relatorioSelecionado)
+          const clienteVal = esc(clientePdfFech?.nomeEmpresa || relatorioSelecionado.cliente)
           const numVal = esc(relatorioSelecionado.numero)
           const clEqFech = equipamentosClienteDoRelatorioDespesas(relatorioSelecionado, clientes)
           const cabEqFech = getRelatorioCabecalhoEquipamentoDados(
@@ -47392,6 +47403,22 @@ A1;Peça exemplo;10`}
               const bb = last ? 'none' : `1px solid ${sepColor}`
               return `<tr><th scope="row" style="width:30%;padding:12px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${labelColor};vertical-align:top;border-bottom:${bb};background:${cellBg}">${esc(lbl)}</th><td style="padding:12px 14px;font-size:14px;font-weight:600;color:${valueColor};vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;border-bottom:${bb};background:${cellBg}">${valEsc}</td></tr>`
             }
+            const clienteExtraRows = buildFechamentoDespesasClienteMetaFields(
+              relatorioSelecionado,
+              clientePdfFech,
+              {
+                codigoCliente: (safeT as any)?.clienteCodigoLabel || (safeT as any)?.codigoCliente || 'Cód. cliente',
+                morada: (safeT as any)?.morada || 'Morada',
+                telefone: (safeT as any)?.telefone || 'Telefone',
+                email: (safeT as any)?.email || 'E-mail',
+                contribuicaoFiscal: (safeT as any)?.contribuicaoFiscal || (safeT as any)?.nif || 'NIF',
+                contato: (safeT as any)?.contato || 'Contacto',
+                cidade: (safeT as any)?.cidade || 'Cidade',
+              },
+              (s) => String(s ?? '').trim()
+            )
+              .map((f) => row(String(f.label), esc(String(f.value)), false))
+              .join('')
             const equipRows =
               cabEqFech.multiplos && cabEqFech.linhas.length > 1
                 ? cabEqFech.linhas
@@ -47411,7 +47438,7 @@ A1;Peça exemplo;10`}
                     })
                     .join('')
                 : row(lblEquipamento, equipVal, false)
-            return `<table role="presentation" class="fech-pdf-meta" style="width:100%;max-width:100%;border-collapse:collapse;margin:0 0 18px;border:1px solid ${sepColor};border-radius:10px;overflow:hidden;box-sizing:border-box"><tbody>${row(lblCliente, clienteVal, false)}${row(lblNumRelatorio, numVal, false)}${equipRows}${row(lblData, dataVal, true)}</tbody></table>`
+            return `<table role="presentation" class="fech-pdf-meta" style="width:100%;max-width:100%;border-collapse:collapse;margin:0 0 18px;border:1px solid ${sepColor};border-radius:10px;overflow:hidden;box-sizing:border-box"><tbody>${row(lblCliente, clienteVal, false)}${clienteExtraRows}${row(lblNumRelatorio, numVal, false)}${equipRows}${row(lblData, dataVal, true)}</tbody></table>`
           }
           if (modelo === 1) {
             bodyBg = '#fff'; bodyColor = '#111'; thBg = '#00a650'; thColor = '#fff'; footBg = '#e8f5e9'; footColor = '#00a650'; borderColor = '#a5d6a7'; rowBgEven = '#ffffff'; rowBgOdd = '#f1f8e9'
@@ -61689,6 +61716,24 @@ A1;Peça exemplo;10`}
         const bibliotecaFiltrada = relatoriosPorCliente.filter(row =>
           bibliotecaRelatoriosRowMatchesBusca(row, buscaBibliotecaRelatoriosCliente)
         )
+        const buscaBibliotecaAtiva = buscaBibliotecaRelatoriosCliente.trim().length > 0
+        const bibliotecaPorLetra = new Map<string, typeof bibliotecaFiltrada>()
+        for (const row of bibliotecaFiltrada) {
+          const letra = getClienteLetraAlfabeto(row.cliente.nomeEmpresa)
+          if (!bibliotecaPorLetra.has(letra)) bibliotecaPorLetra.set(letra, [])
+          bibliotecaPorLetra.get(letra)!.push(row)
+        }
+        const bibliotecaLetraAtiva =
+          !buscaBibliotecaAtiva &&
+          bibliotecaRelatoriosAlfaLetraFiltro &&
+          (bibliotecaPorLetra.get(bibliotecaRelatoriosAlfaLetraFiltro)?.length ?? 0) > 0
+            ? bibliotecaRelatoriosAlfaLetraFiltro
+            : null
+        const bibliotecaListaRender = buscaBibliotecaAtiva
+          ? bibliotecaFiltrada
+          : bibliotecaLetraAtiva
+            ? (bibliotecaPorLetra.get(bibliotecaLetraAtiva) ?? [])
+            : []
         const bibliotecaEquipKey = (clienteId: string, equipamentoKey: string) =>
           `${clienteId}::${equipamentoKey}`
         const tplBibliotecaHeroTotais = String(safeT?.bibliotecaRelatoriosHeroTotais || '')
@@ -61740,7 +61785,10 @@ A1;Peça exemplo;10`}
                           (buscaBibliotecaRelatoriosCliente.trim() ? ' biblioteca-relatorios-search__input--clear' : '')
                         }
                         value={buscaBibliotecaRelatoriosCliente}
-                        onChange={(e) => setBuscaBibliotecaRelatoriosCliente(e.target.value)}
+                        onChange={(e) => {
+                          setBuscaBibliotecaRelatoriosCliente(e.target.value)
+                          setBibliotecaRelatoriosAlfaLetraFiltro(null)
+                        }}
                         placeholder={
                           (safeT as any)?.bibliotecaRelatoriosBuscaPlaceholder ||
                           (safeT as any)?.buscarClientePlaceholder ||
@@ -61885,6 +61933,85 @@ A1;Peça exemplo;10`}
                 </p>
               </div>
             ) : (
+              <>
+                {!buscaBibliotecaAtiva && bibliotecaFiltrada.length > 0 ? (
+                  <div className="biblioteca-relatorios-alfa-bar">
+                    <div
+                      className="biblioteca-relatorios-alfa-meta"
+                      style={{
+                        marginBottom: '10px',
+                        padding: '10px',
+                        backgroundColor: '#484848',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        color: '#fff',
+                      }}
+                    >
+                      {bibliotecaLetraAtiva
+                        ? `${(bibliotecaPorLetra.get(bibliotecaLetraAtiva) ?? []).length} ${safeT?.clientes || 'cliente(s)'} ${safeT?.clientesAlfabetoComInicial || 'com inicial'} «${bibliotecaLetraAtiva === '#' ? (safeT?.clientesAlfabetoOutros || 'Outros') : bibliotecaLetraAtiva}»`
+                        : `${safeT?.mostrando || 'Mostrando'} ${bibliotecaFiltrada.length} ${safeT?.de || 'de'} ${relatoriosPorCliente.length} ${safeT?.clientes || 'cliente(s)'} — ${safeT?.clientesAlfabetoSelecioneLetra || 'selecione uma letra abaixo'}`}
+                    </div>
+                    <div className="clientes-alfa-wrap biblioteca-relatorios-alfa-wrap">
+                      <nav
+                        className="clientes-alfa-jump clientes-alfa-jump--modern"
+                        aria-label={safeT?.clientesAlfabetoIndice || 'Índice A–Z'}
+                      >
+                        {CLIENTES_ALFABETO_INDICE.map((letra) => {
+                          const count = bibliotecaPorLetra.get(letra)?.length ?? 0
+                          const temClientes = count > 0
+                          const active = bibliotecaLetraAtiva === letra
+                          return (
+                            <button
+                              key={letra}
+                              type="button"
+                              className={`clientes-alfa-jump-btn${active ? ' is-active' : ''}${!temClientes ? ' is-empty' : ''}`}
+                              disabled={!temClientes}
+                              aria-pressed={active}
+                              title={
+                                temClientes
+                                  ? `${count} ${safeT?.clientes || 'cliente(s)'}`
+                                  : safeT?.clientesAlfabetoSemClientes || 'Sem clientes nesta letra'
+                              }
+                              onClick={() => setBibliotecaRelatoriosAlfaLetraFiltro(letra)}
+                            >
+                              <span className="clientes-alfa-jump-btn__letter">{letra === '#' ? '#' : letra}</span>
+                              {temClientes ? (
+                                <span className="clientes-alfa-jump-btn__count" aria-hidden>
+                                  {count}
+                                </span>
+                              ) : null}
+                            </button>
+                          )
+                        })}
+                      </nav>
+                      {!bibliotecaLetraAtiva ? (
+                        <p className="clientes-alfa-prompt">
+                          {(safeT as any)?.bibliotecaRelatoriosAlfabetoPrompt ||
+                            safeT?.clientesAlfabetoPrompt ||
+                            'Toque numa letra acima para ver as pastas dos clientes com essa inicial.'}
+                        </p>
+                      ) : (
+                        <section className="clientes-alfa-secao biblioteca-relatorios-letra-secao">
+                          <h3 className="clientes-alfa-letra">
+                            {bibliotecaLetraAtiva === '#'
+                              ? safeT?.clientesAlfabetoOutros || 'Outros'
+                              : bibliotecaLetraAtiva}
+                            <span className="clientes-alfa-letra__count">
+                              {(bibliotecaPorLetra.get(bibliotecaLetraAtiva) ?? []).length}
+                            </span>
+                          </h3>
+                        </section>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+                {buscaBibliotecaAtiva && bibliotecaFiltrada.length > 0 ? (
+                  <p className="biblioteca-relatorios-busca-meta" style={{ margin: '0 0 12px', fontSize: '14px', opacity: 0.9 }}>
+                    {String(
+                      (safeT as any)?.bibliotecaRelatoriosBuscaResultados || '{n} cliente(s) encontrado(s)'
+                    ).replace(/\{n\}/g, String(bibliotecaFiltrada.length))}
+                  </p>
+                ) : null}
               <div className="biblioteca-relatorios-client-list">
                 {buscaBibliotecaRelatoriosCliente.trim() !== '' && bibliotecaFiltrada.length === 0 ? (
                   <p className="biblioteca-relatorios-empty-busca">
@@ -61892,7 +62019,7 @@ A1;Peça exemplo;10`}
                       'Nenhum resultado para esta pesquisa. Tente outro termo.'}
                   </p>
                 ) : null}
-                {bibliotecaFiltrada.map(({ cliente, equipamentos, despesas: despesasCliente }) => {
+                {bibliotecaListaRender.map(({ cliente, equipamentos, despesas: despesasCliente }) => {
                   const txBib = safeT as Record<string, string>
                   const numEquip = equipamentos.length
                   const totalRelatoriosServicoCliente = equipamentos.reduce(
@@ -62191,29 +62318,29 @@ A1;Peça exemplo;10`}
                                                   itens: itensDespesasVisiveis,
                                                 })
                                               }
-                                            >
-                                              Ver
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="bib-acao bib-acao--edit"
-                                              title={txBib.editarRelatorioDespesas ?? safeT?.edit ?? 'Editar'}
-                                              onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)}
-                                            >
-                                              Ed.
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="bib-acao bib-acao--pdf"
-                                              title={txBib.gerarPDF || 'PDF'}
-                                              onClick={() =>
-                                                imprimirPDFDespesasDaBiblioteca(
-                                                  relatorio,
-                                                  itensDespesasVisiveis
-                                                )
-                                              }
-                                            >
-                                              PDF
+                            >
+                              {txBib.view || safeT?.view || 'Ver'}
+                            </button>
+                            <button
+                              type="button"
+                              className="bib-acao bib-acao--edit"
+                              title={txBib.editarRelatorioDespesas ?? safeT?.edit ?? 'Editar'}
+                              onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)}
+                            >
+                              {txBib.edit || safeT?.edit || 'Ed.'}
+                            </button>
+                            <button
+                              type="button"
+                              className="bib-acao bib-acao--pdf"
+                              title={txBib.gerarPDF || 'PDF'}
+                              onClick={() =>
+                                imprimirPDFDespesasDaBiblioteca(
+                                  relatorio,
+                                  itensDespesasVisiveis
+                                )
+                              }
+                            >
+                              {txBib.gerarPDF || 'PDF'}
                                             </button>
                                             <button
                                               type="button"
@@ -62238,6 +62365,7 @@ A1;Peça exemplo;10`}
                   )
                 })}
               </div>
+              </>
             )}
           </div>
           </>

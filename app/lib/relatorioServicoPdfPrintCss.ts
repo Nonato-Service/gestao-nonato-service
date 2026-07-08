@@ -81,8 +81,96 @@ function buildPdfEquipamentosRelatorioTableHtml(
 }
 
 /** Meta (cliente + equipamentos) para PDF de fechamento / despesas — lista todos os equipamentos se > 1. */
+export type FechamentoClienteCadastroRef = {
+  codigoCliente?: string
+  nomeEmpresa?: string
+  morada?: string
+  localidade?: string
+  conselho?: string
+  codigoPostal?: string
+  pais?: string
+  numeroContribuicaoFiscal?: string
+  telefones?: string
+  email?: string
+  contato?: string
+}
+
+function montarMoradaClientePdf(c: FechamentoClienteCadastroRef): string {
+  return [
+    c.morada,
+    [c.codigoPostal, c.localidade].filter(Boolean).join(' '),
+    c.conselho,
+    c.pais,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+
+/** Campos extra do cadastro do cliente (morada, telefone, NIF, etc.). */
+export function buildFechamentoDespesasClienteMetaFields(
+  relatorio: { telefone?: string; cidade?: string },
+  clienteCadastro: FechamentoClienteCadastroRef | null | undefined,
+  labels: {
+    codigoCliente?: string
+    morada?: string
+    telefone?: string
+    email?: string
+    contribuicaoFiscal?: string
+    contato?: string
+    cidade?: string
+  },
+  esc: (s: string | undefined | null) => string
+): PdfMetaField[] {
+  const fields: PdfMetaField[] = []
+  if (clienteCadastro) {
+    const cod = String(clienteCadastro.codigoCliente ?? '').trim()
+    if (cod) {
+      fields.push({ label: esc(labels.codigoCliente || 'Cód. cliente'), value: esc(cod) })
+    }
+    const morada = montarMoradaClientePdf(clienteCadastro)
+    if (morada) {
+      fields.push({ label: esc(labels.morada || 'Morada'), value: esc(morada), fullWidth: true })
+    }
+    const tel = String(clienteCadastro.telefones || relatorio.telefone || '').trim()
+    if (tel) {
+      fields.push({ label: esc(labels.telefone || 'Telefone'), value: esc(tel) })
+    }
+    const email = String(clienteCadastro.email ?? '').trim()
+    if (email) {
+      fields.push({ label: esc(labels.email || 'E-mail'), value: esc(email) })
+    }
+    const nif = String(clienteCadastro.numeroContribuicaoFiscal ?? '').trim()
+    if (nif) {
+      fields.push({
+        label: esc(labels.contribuicaoFiscal || 'NIF'),
+        value: esc(nif),
+      })
+    }
+    const contato = String(clienteCadastro.contato ?? '').trim()
+    if (contato) {
+      fields.push({ label: esc(labels.contato || 'Contacto'), value: esc(contato) })
+    }
+  } else {
+    const tel = String(relatorio.telefone ?? '').trim()
+    if (tel) {
+      fields.push({ label: esc(labels.telefone || 'Telefone'), value: esc(tel) })
+    }
+    const cid = String(relatorio.cidade ?? '').trim()
+    if (cid) {
+      fields.push({ label: esc(labels.cidade || 'Cidade'), value: esc(cid) })
+    }
+  }
+  return fields
+}
+
 export function buildFechamentoDespesasRelatorioInfoHtml(options: {
-  relatorio: RelatorioServicoEquipamentosHost & { cliente?: string; data?: string; numero?: string }
+  relatorio: RelatorioServicoEquipamentosHost & {
+    cliente?: string
+    data?: string
+    numero?: string
+    telefone?: string
+    cidade?: string
+  }
   title: string
   labels: {
     cliente: string
@@ -93,7 +181,15 @@ export function buildFechamentoDespesasRelatorioInfoHtml(options: {
     equipamentoId: string
     numeroMaquina: string
     maquinaModelo: string
+    codigoCliente?: string
+    morada?: string
+    telefone?: string
+    email?: string
+    contribuicaoFiscal?: string
+    contato?: string
+    cidade?: string
   }
+  clienteCadastro?: FechamentoClienteCadastroRef | null
   esc?: (s: string | undefined | null) => string
   equipamentosArmazem?: EquipamentoArmazemIdLookup[]
   equipamentosCliente?: EquipamentoClienteIdLookup[]
@@ -102,13 +198,19 @@ export function buildFechamentoDespesasRelatorioInfoHtml(options: {
     relatorio,
     title,
     labels,
+    clienteCadastro,
     esc = escapePdfHtml,
     equipamentosArmazem = [],
     equipamentosCliente = [],
   } = options
   const cab = getRelatorioCabecalhoEquipamentoDados(relatorio, equipamentosArmazem, equipamentosCliente)
+  const nomeCliente =
+    String(clienteCadastro?.nomeEmpresa ?? '').trim() ||
+    String(relatorio.cliente ?? '').trim() ||
+    '—'
   const fields: PdfMetaField[] = [
-    { label: esc(labels.cliente), value: esc(relatorio.cliente) },
+    { label: esc(labels.cliente), value: esc(nomeCliente), fullWidth: true },
+    ...buildFechamentoDespesasClienteMetaFields(relatorio, clienteCadastro, labels, esc),
     { label: esc(labels.numeroRelatorio), value: esc(relatorio.numero) },
   ]
   if (!cab.multiplos || cab.linhas.length <= 1) {
