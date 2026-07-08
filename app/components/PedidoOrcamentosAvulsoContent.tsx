@@ -637,14 +637,32 @@ export function PedidoOrcamentosAvulsoContent({
     setCodigoUltimoGerado(codigo)
     if (saveData) {
       try {
-        await saveData(PEDIDOS_AVULSO_KEY, atualizados)
-      } catch (_) {}
+        await saveData(PEDIDOS_AVULSO_KEY, atualizados, true, true)
+      } catch (err) {
+        console.error('Erro ao guardar pedido avulso:', err)
+      }
     }
 
     if (saveData && loadData) {
       try {
+        let localLista: any[] = []
+        if (typeof window !== 'undefined') {
+          try {
+            const raw = localStorage.getItem(ORCAMENTOS_AVULSO_KEY)
+            if (raw) {
+              const parsed = JSON.parse(raw)
+              if (Array.isArray(parsed)) localLista = parsed
+            }
+          } catch {
+            /* ignorar */
+          }
+        }
         const existentes: any[] = (await loadData(ORCAMENTOS_AVULSO_KEY)) || []
-        const listaOrcamentos = Array.isArray(existentes) ? existentes : []
+        const serverLista = Array.isArray(existentes) ? existentes : []
+        const listaOrcamentos = [...serverLista]
+        for (const o of localLista) {
+          if (o?.id && !listaOrcamentos.some((x) => x.id === o.id)) listaOrcamentos.push(o)
+        }
         const orcamentoGerado = {
           id: 'avulso-' + codigo,
           numeroOrcamento: codigo,
@@ -677,8 +695,10 @@ export function PedidoOrcamentosAvulsoContent({
           totalIva: 0,
           dataCriacao: new Date().toISOString(),
         }
-        await saveData(ORCAMENTOS_AVULSO_KEY, [...listaOrcamentos, orcamentoGerado])
-      } catch (_) {}
+        await saveData(ORCAMENTOS_AVULSO_KEY, [...listaOrcamentos, orcamentoGerado], true, true)
+      } catch (err) {
+        console.error('Erro ao guardar orçamento gerado:', err)
+      }
     }
 
     openPedidoOrcamentoAvulsoPdf(

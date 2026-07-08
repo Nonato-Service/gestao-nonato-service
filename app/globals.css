@@ -5386,6 +5386,17 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   margin-top: 4px;
 }
 
+.orc-gerados-browse__recentes {
+  margin-bottom: 1.25rem;
+}
+
+.orc-gerados-browse__recentes-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #66b3ff;
+}
+
 .orc-gerados-browse__meta {
   margin: 0 0 10px;
   padding: 10px 12px;

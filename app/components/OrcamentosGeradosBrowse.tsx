@@ -140,16 +140,29 @@ export function OrcamentosGeradosBrowse({
     [orcamentosPosBusca]
   )
 
+  const orcamentosRecentes = useMemo(
+    () =>
+      [...orcamentos].sort(
+        (a, b) =>
+          new Date(b.dataCriacao || b.geradoEm || 0).getTime() -
+          new Date(a.dataCriacao || a.geradoEm || 0).getTime()
+      ).slice(0, 25),
+    [orcamentos]
+  )
+
   const orcamentosVisiveis = useMemo(() => {
     if (buscaAtiva) return orcamentosPosBusca
-    if (!letraAtiva || !clienteChave) return []
-    return orcamentosPosBusca.filter((o) => {
-      const nome = resolverNomeCliente(o, clientes) || '—'
-      const chave = chaveClienteOrcamento(o.clienteId, nome !== '—' ? nome : undefined, o.id)
-      const letra = getClienteLetraAlfabeto(nome)
-      return letra === letraAtiva && chave === clienteChave
-    })
-  }, [buscaAtiva, orcamentosPosBusca, letraAtiva, clienteChave, clientes])
+    if (letraAtiva && clienteChave) {
+      return orcamentosPosBusca.filter((o) => {
+        const nome = resolverNomeCliente(o, clientes) || '—'
+        const chave = chaveClienteOrcamento(o.clienteId, nome !== '—' ? nome : undefined, o.id)
+        const letra = getClienteLetraAlfabeto(nome)
+        return letra === letraAtiva && chave === clienteChave
+      })
+    }
+    if (!letraAtiva) return orcamentosRecentes
+    return []
+  }, [buscaAtiva, orcamentosPosBusca, letraAtiva, clienteChave, clientes, orcamentosRecentes])
 
   const sincronizarPedidoAvulso = async (
     codigo: string,
@@ -322,13 +335,22 @@ export function OrcamentosGeradosBrowse({
         </details>
       </div>
 
+      {!buscaAtiva && !letraAtiva && orcamentosVisiveis.length > 0 ? (
+        <section className="orc-gerados-browse__recentes">
+          <h3 className="orc-gerados-browse__recentes-title">
+            {safeT?.orcamentosRecentes || 'Orçamentos recentes'}
+          </h3>
+          {children(orcamentosVisiveis)}
+        </section>
+      ) : null}
+
       {!buscaAtiva && (
         <div className="clientes-alfa-wrap orc-gerados-browse__alfa">
           <p className="orc-gerados-browse__meta">
             {orcamentos.length} {safeT?.orcamentosGerados || 'orçamentos gerados'}
             {letraAtiva
               ? ` · ${clientesPorLetra.get(letraAtiva)?.length ?? 0} ${safeT?.clientes || 'cliente(s)'} ${safeT?.clientesAlfabetoComInicial || 'com inicial'} «${letraAtiva === '#' ? safeT?.clientesAlfabetoOutros || 'Outros' : letraAtiva}»`
-              : ` — ${safeT?.clientesAlfabetoSelecioneLetra || 'selecione uma letra abaixo'}`}
+              : ` — ${orcamentosRecentes.length} ${safeT?.recentes || 'recentes'}`}
           </p>
           <nav
             className="clientes-alfa-jump clientes-alfa-jump--modern"
@@ -368,9 +390,8 @@ export function OrcamentosGeradosBrowse({
 
           {!letraAtiva ? (
             <p className="clientes-alfa-prompt">
-              {safeT?.orcamentosGeradosAlfabetoPrompt ||
-                safeT?.clientesAlfabetoPrompt ||
-                'Toque numa letra acima para ver os clientes com orçamentos nessa inicial.'}
+              {safeT?.orcamentosGeradosRecentesHint ||
+                'Os orçamentos mais recentes aparecem abaixo. Use o alfabeto para filtrar por cliente.'}
             </p>
           ) : !clienteChave ? (
             <section className="clientes-alfa-secao">

@@ -273,6 +273,32 @@ export function rotuloEquipamentoOrcamentoGerado(orc: OrcamentoGeradoRef): strin
   return desc
 }
 
+/** Funde listas local/servidor sem perder orçamentos ainda não sincronizados. */
+export function mergeOrcamentosGeradosArrays<T extends OrcamentoGeradoRef>(
+  server: T[],
+  local: T[]
+): T[] {
+  const map = new Map<string, T>()
+  const registrar = (o: T) => {
+    if (!o?.id) return
+    const prev = map.get(o.id)
+    if (!prev) {
+      map.set(o.id, o)
+      return
+    }
+    const tPrev = new Date(prev.dataCriacao || prev.geradoEm || 0).getTime()
+    const tNew = new Date(o.dataCriacao || o.geradoEm || 0).getTime()
+    map.set(o.id, tNew >= tPrev ? { ...prev, ...o } : prev)
+  }
+  for (const o of server) registrar(o)
+  for (const o of local) registrar(o)
+  return [...map.values()].sort(
+    (a, b) =>
+      new Date(b.dataCriacao || b.geradoEm || 0).getTime() -
+      new Date(a.dataCriacao || a.geradoEm || 0).getTime()
+  )
+}
+
 /** Repõe n.º de série/chave em orçamentos avulsos antigos a partir dos pedidos guardados. */
 export function enrichOrcamentosGeradosComPedidosAvulsos<T extends OrcamentoGeradoRef>(
   orcamentos: T[],

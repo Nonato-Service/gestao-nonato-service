@@ -196,7 +196,11 @@ import {
   resolverNumeroEquipamentoPdf,
   resolverSerieEquipamentoPdf,
 } from './lib/orcamentoPdfPro'
-import { enrichOrcamentosGeradosComPedidosAvulsos, gerarProximoCodigoPedidoRelatorio } from './lib/clienteEquipamentoOrcamentos'
+import {
+  enrichOrcamentosGeradosComPedidosAvulsos,
+  gerarProximoCodigoPedidoRelatorio,
+  mergeOrcamentosGeradosArrays,
+} from './lib/clienteEquipamentoOrcamentos'
 import type { PedidoAvulsoGuardado } from './components/PedidoOrcamentosAvulsoContent'
 import { rotuloIdEquipamentoCliente } from './lib/clienteDetalheUtils'
 import { ClienteGpsNavButton } from './components/ClienteGpsNavButton'
@@ -63288,9 +63292,22 @@ A1;Peça exemplo;10`}
       }
     }
 
-    // Carregar orçamentos salvos
+    const lerOrcamentosLocalStorage = (): typeof orcamentosGerados => {
+      if (typeof window === 'undefined') return []
+      try {
+        const raw = localStorage.getItem('nonato-orcamentos-avulso')
+        if (!raw) return []
+        const parsed = JSON.parse(raw)
+        return Array.isArray(parsed) ? (parsed as typeof orcamentosGerados) : []
+      } catch {
+        return []
+      }
+    }
+
+    // Carregar orçamentos salvos (fundir local + servidor para não perder gravações recentes)
     const loadOrcamentos = async () => {
       try {
+        const localAntes = lerOrcamentosLocalStorage()
         let pedidosAvulso: PedidoAvulsoGuardado[] = []
         try {
           const pedRaw = await loadData('nonato-pedidos-orcamento-avulso')
@@ -63298,32 +63315,42 @@ A1;Peça exemplo;10`}
         } catch {
           /* ignorar */
         }
-        const aplicarEnriquecimento = (lista: typeof orcamentosGerados) => {
+        const aplicarEnriquecimento = (lista: typeof orcamentosGerados, baseServidor?: typeof orcamentosGerados) => {
           const enriquecida = enrichOrcamentosGeradosComPedidosAvulsos(lista, pedidosAvulso)
-          const mudou = JSON.stringify(enriquecida) !== JSON.stringify(lista)
           setOrcamentosGerados(enriquecida)
-          if (mudou && enriquecida.length > 0) {
+          const refServidor = baseServidor ?? lista
+          if (JSON.stringify(enriquecida) !== JSON.stringify(refServidor) && enriquecida.length > 0) {
             void saveData('nonato-orcamentos-avulso', enriquecida, true, false)
           }
         }
-        // Tentar carregar usando a função loadData primeiro
         const dataFromLoadData = await loadData('nonato-orcamentos-avulso')
         if (dataFromLoadData && Array.isArray(dataFromLoadData)) {
-          aplicarEnriquecimento(dataFromLoadData as typeof orcamentosGerados)
+          const serverList = dataFromLoadData as typeof orcamentosGerados
+          const merged = mergeOrcamentosGeradosArrays(serverList, localAntes)
+          aplicarEnriquecimento(merged, serverList)
           return
         }
-        
-        // Fallback: tentar carregar via API direta
+
+        if (localAntes.length > 0) {
+          aplicarEnriquecimento(localAntes)
+          return
+        }
+
         if (isNonatoDemoBuild()) {
           return
         }
         const response = await fetch('/api/data/load?key=nonato-orcamentos-avulso')
         if (response.ok) {
           const data = await response.json()
-          if (data && data.data && Array.isArray(data.data)) {
-            aplicarEnriquecimento(data.data as typeof orcamentosGerados)
-          } else if (data && Array.isArray(data)) {
-            aplicarEnriquecimento(data as typeof orcamentosGerados)
+          const serverList =
+            data && data.data && Array.isArray(data.data)
+              ? (data.data as typeof orcamentosGerados)
+              : data && Array.isArray(data)
+                ? (data as typeof orcamentosGerados)
+                : []
+          if (serverList.length > 0 || localAntes.length > 0) {
+            const merged = mergeOrcamentosGeradosArrays(serverList, localAntes)
+            aplicarEnriquecimento(merged, serverList)
           }
         }
       } catch (error) {
@@ -63333,7 +63360,6 @@ A1;Peça exemplo;10`}
 
     useEffect(() => {
       loadOrcamentos()
-      // Recarregar a cada 5 segundos quando a aba estiver ativa
       const interval = setInterval(() => {
         if (activeTabId === 'orcamentos-avulso') {
           loadOrcamentos()
@@ -63341,6 +63367,23 @@ A1;Peça exemplo;10`}
       }, 5000)
       return () => clearInterval(interval)
     }, [activeTabId])
+
+    useEffect(() => {
+      if (tipoOrcamento === 'orcamentos-gerados') {
+        loadOrcamentos()
+      }
+    }, [tipoOrcamento])
+
+    useEffect(() => {
+      const onDataChange = (ev: Event) => {
+        const key = (ev as CustomEvent<{ key?: string }>).detail?.key
+        if (key === 'nonato-orcamentos-avulso' || key === 'nonato-pedidos-orcamento-avulso') {
+          loadOrcamentos()
+        }
+      }
+      window.addEventListener('nonato-data-local-changed', onDataChange)
+      return () => window.removeEventListener('nonato-data-local-changed', onDataChange)
+    }, [])
 
     // Abrir diretamente a vista "Orçamentos Gerados" quando vem do Pedido de Orçamentos Avulsos
     useEffect(() => {
