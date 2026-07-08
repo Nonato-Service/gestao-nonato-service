@@ -171,6 +171,19 @@ import {
 } from './lib/clienteCodigoUtils'
 import { isClienteMarcadoDevedor } from './lib/clienteDevedorUtils'
 import {
+  getEstadoCobrancaFinanceiraVisual,
+  getEstadoCobrancaFinanceiraGrupo,
+  getEstadoCobrancaFinanceiraGrupoExibicao,
+  getFechamentoFluxoFase,
+  fechamentoFluxoFasePisca,
+  classNameFinanceiroDespesasBibCardPorEstado,
+  classNameFinanceiroDespesasBibGrupoPorEstado,
+  ORDEM_ESTADOS_COBRANCA_FINANCEIRA,
+  type EstadoCobrancaFinanceiraVisual,
+  type EstadoCobrancaFinanceiraGrupoExibicao,
+} from './lib/fechamentoFluxoFinanceiroUi'
+import { FechamentoFluxoPagamentoBar } from './components/FechamentoFluxoPagamentoBar'
+import {
   encontrarClienteDuplicadoCadastro,
   encontrarClienteDuplicadoCadastroAntecipado,
   listarClientesNomeSimilarCadastro,
@@ -2359,70 +2372,6 @@ function relatorioServicoFluxoFinanceiroPendente(fr: unknown): boolean {
     fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
   if (!frObj) return false
   return frObj.situacaoFatura === 'nao_paga' || frObj.pagamento === 'devedor'
-}
-
-/** Cores do fluxo de cobrança na Gestão financeira (despesas biblioteca): amarelo → azul → verde / vermelho. */
-type EstadoCobrancaFinanceiraVisual = 'amarelo' | 'azul' | 'verde' | 'vermelho'
-
-function getEstadoCobrancaFinanceiraVisual(fr: unknown): EstadoCobrancaFinanceiraVisual {
-  const frObj =
-    fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
-  if (!frObj) return 'amarelo'
-  if (frObj.pagamento === 'pago' || frObj.situacaoFatura === 'paga') return 'verde'
-  if (frObj.pagamento === 'devedor' || frObj.situacaoFatura === 'nao_paga') return 'vermelho'
-  if (frObj.etapa === 'enviado_fatura') return 'azul'
-  if (
-    frObj.etapa === 'controlo_pagamento' &&
-    frObj.pagamento === 'pendente' &&
-    (frObj.situacaoFatura === 'emitida' || frObj.situacaoFatura === 'no_prazo')
-  ) {
-    return 'azul'
-  }
-  return 'amarelo'
-}
-
-function classNameFinanceiroDespesasBibCardPorEstado(estado: EstadoCobrancaFinanceiraVisual): string {
-  return `financeiro-despesas-bib-card financeiro-despesas-bib-card--${estado}`
-}
-
-/** Situação do cliente no agrupamento: prioriza o estado mais urgente entre os fechamentos. */
-function getEstadoCobrancaFinanceiraGrupo(
-  relatorioIds: string[],
-  fluxoPorId: Record<string, unknown>
-): EstadoCobrancaFinanceiraVisual {
-  if (!relatorioIds.length) return 'amarelo'
-  const estados = relatorioIds.map(id => getEstadoCobrancaFinanceiraVisual(fluxoPorId[id]))
-  const prioridade: EstadoCobrancaFinanceiraVisual[] = ['vermelho', 'amarelo', 'azul', 'verde']
-  for (const p of prioridade) {
-    if (estados.includes(p)) return p
-  }
-  return 'amarelo'
-}
-
-type EstadoCobrancaFinanceiraGrupoExibicao = EstadoCobrancaFinanceiraVisual | 'misto'
-
-const ORDEM_ESTADOS_COBRANCA_FINANCEIRA: EstadoCobrancaFinanceiraVisual[] = [
-  'vermelho',
-  'amarelo',
-  'azul',
-  'verde',
-]
-
-/** Cor do bloco do cliente: uma só cor se todos os fechamentos coincidem; senão «misto» (neutro). */
-function getEstadoCobrancaFinanceiraGrupoExibicao(
-  relatorioIds: string[],
-  fluxoPorId: Record<string, unknown>
-): EstadoCobrancaFinanceiraGrupoExibicao {
-  if (!relatorioIds.length) return 'amarelo'
-  const unicos = new Set(
-    relatorioIds.map(id => getEstadoCobrancaFinanceiraVisual(fluxoPorId[id]))
-  )
-  if (unicos.size <= 1) return [...unicos][0] ?? 'amarelo'
-  return 'misto'
-}
-
-function classNameFinanceiroDespesasBibGrupoPorEstado(estado: EstadoCobrancaFinanceiraGrupoExibicao): string {
-  return `financeiro-despesas-bib-grupo financeiro-despesas-bib-grupo--${estado}`
 }
 
 type PasswordEntry = {
@@ -9315,6 +9264,27 @@ export default function Dashboard() {
     return () => cancelAnimationFrame(raf)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- atualizarClientesDevedores usa estado atual; não incluir na deps (identidade instável).
   }, [faturasPecas, clientes, relatoriosServico, fechamentoFluxoFinanceiroPorRelatorioId])
+
+  useEffect(() => {
+    if (!fechamentosGuardadosBibliotecaIds.length) return
+    setFechamentoFluxoFinanceiroPorRelatorioId((prev) => {
+      let changed = false
+      const next = { ...prev }
+      for (const id of fechamentosGuardadosBibliotecaIds) {
+        const curr = next[id]
+        if (curr && typeof curr === 'object' && !Array.isArray(curr)) continue
+        next[id] = {
+          etapa: 'controlo_pagamento',
+          modo: 'com_fatura',
+          pagamento: 'pendente',
+          updatedAt: new Date().toISOString(),
+        }
+        changed = true
+      }
+      if (changed) void saveData(FECHAMENTO_FLUXO_FINANCEIRO_KEY, next)
+      return changed ? next : prev
+    })
+  }, [fechamentosGuardadosBibliotecaIds])
 
   useEffect(() => {
     // Garantir que só executa no cliente
@@ -16473,6 +16443,18 @@ export default function Dashboard() {
     await saveData('nonato-fechamentos-relatorios', nextFech)
     await saveData('nonato-fechamentos-guardados-biblioteca', nextGuard)
 
+    const fluxoAtual = fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]
+    const temFluxo =
+      fluxoAtual &&
+      typeof fluxoAtual === 'object' &&
+      !Array.isArray(fluxoAtual)
+    if (!temFluxo) {
+      setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', {
+        modo: 'com_fatura',
+        pagamento: 'pendente',
+      })
+    }
+
     setFechamentoEditandoDespesasBibliotecaId(null)
     setFechamentoRelatorioSelecionadoId(null)
 
@@ -17155,6 +17137,37 @@ export default function Dashboard() {
   const marcarFechamentoBibliotecaNaoPago = (relatorioId: string) => {
     aplicarSituacaoFaturaNoRelatorio(relatorioId, 'nao_paga')
   }
+
+  const guardarNumeroFaturaFechamento = (relatorioId: string, numero: string) => {
+    const n = String(numero ?? '').trim()
+    if (!n) return
+    setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', {
+      modo: 'com_fatura',
+      pagamento: 'pendente',
+      numeroFatura: n,
+      situacaoFatura: 'emitida',
+    })
+  }
+
+  const fluxoNumeroFaturaRelatorio = (relatorioId: string): string => {
+    const fr = fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]
+    const frObj =
+      fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
+    return String(frObj?.numeroFatura ?? '').trim()
+  }
+
+  const renderBarraFluxoFechamento = (relatorioId: string, compact?: boolean) => (
+    <FechamentoFluxoPagamentoBar
+      relatorioId={relatorioId}
+      fluxo={fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]}
+      labels={safeT as Record<string, string | undefined>}
+      numeroFaturaAtual={fluxoNumeroFaturaRelatorio(relatorioId)}
+      onGuardarNumeroFatura={guardarNumeroFaturaFechamento}
+      onMarcarPago={marcarFechamentoBibliotecaPago}
+      onMarcarNaoPago={marcarFechamentoBibliotecaNaoPago}
+      compact={compact}
+    />
+  )
 
   const handleSaveFatura = () => {
     const ft = safeT as Record<string, string | undefined>
@@ -48392,6 +48405,13 @@ A1;Peça exemplo;10`}
                       )}
                     </div>
                   </div>
+                  {relatorioSelecionado &&
+                  (fechamentosGuardadosBibliotecaIds.includes(relatorioSelecionado.id) ||
+                    fechamentoEditandoDespesasBibliotecaId === relatorioSelecionado.id) ? (
+                    <div style={{ marginTop: 16, marginBottom: 8 }}>
+                      {renderBarraFluxoFechamento(relatorioSelecionado.id)}
+                    </div>
+                  ) : null}
                   <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(0, 200, 83, 0.2)', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
                     <button type="button" className="btn-primary" onClick={handleSalvarFechamentoNaBiblioteca} style={{ padding: '10px 20px', fontSize: '13px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(0, 200, 83, 0.25)', border: '1px solid rgba(0, 200, 83, 0.6)', color: '#00c853', fontWeight: '600' }}>
                       💾{' '}
@@ -61396,15 +61416,27 @@ A1;Peça exemplo;10`}
                   )
                   return totaisFechamentoLiquidoComIva(itensVis, fechamentoIvaPorRelatorioId[rel.id]).comIva
                 }
-                const labelEstadoCobranca = (estado: EstadoCobrancaFinanceiraVisual) => {
-                  if (estado === 'amarelo') return tx.financeiroDespesasBadgePendente || 'Pendente — enviar cobrança'
-                  if (estado === 'azul') return tx.financeiroDespesasBadgeCobrancaEnviada || 'Cobrança enviada'
-                  if (estado === 'verde') return tx.financeiroDespesasBadgePago || 'Pago'
+                const labelEstadoCobranca = (frFluxo: unknown) => {
+                  const fase = getFechamentoFluxoFase(frFluxo)
+                  if (fase === 'sem_numero_fatura') {
+                    return tx.fechamentoFluxoFavorAdicionarFatura || 'Favor adicionar número da fatura'
+                  }
+                  if (fase === 'aguardar_pagamento') {
+                    return tx.fechamentoFluxoAguardarPagamento || 'Aguardar confirmação de pagamento'
+                  }
+                  if (fase === 'pago') return tx.financeiroDespesasBadgePago || 'Pago'
                   return tx.financeiroDespesasBadgeNaoPago || 'Não pago'
                 }
                 const labelEstadoCobrancaGrupo = (estado: EstadoCobrancaFinanceiraGrupoExibicao) => {
                   if (estado === 'misto') return tx.financeiroDespesasEstadoMisto || 'Vários estados'
-                  return labelEstadoCobranca(estado)
+                  if (estado === 'amarelo') {
+                    return tx.fechamentoFluxoFavorAdicionarFatura || 'Favor adicionar número da fatura'
+                  }
+                  if (estado === 'azul') {
+                    return tx.fechamentoFluxoAguardarPagamento || 'Aguardar confirmação de pagamento'
+                  }
+                  if (estado === 'verde') return tx.financeiroDespesasBadgePago || 'Pago'
+                  return tx.financeiroDespesasBadgeNaoPago || 'Não pago'
                 }
                 const renderFechamentoDespesaCard = (rel: RelatorioServico) => {
                   const itens = fechamentosRelatorios[rel.id] || []
@@ -61416,12 +61448,14 @@ A1;Peça exemplo;10`}
                   const tot = totVisRel(rel)
                   const frFluxo = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
                   const estadoCob = getEstadoCobrancaFinanceiraVisual(frFluxo)
+                  const faseFluxo = getFechamentoFluxoFase(frFluxo)
+                  const piscaFluxo = fechamentoFluxoFasePisca(faseFluxo)
                   const nomeCli =
                     clientes.find(c => c.id === rel.clienteId)?.nomeEmpresa || rel.cliente || '—'
                   return (
                     <div
                       key={rel.id}
-                      className={classNameFinanceiroDespesasBibCardPorEstado(estadoCob)}
+                      className={`${classNameFinanceiroDespesasBibCardPorEstado(estadoCob)}${piscaFluxo ? ' fechamento-fluxo-card-wrap--pisca' : ''}`}
                     >
                       <div className="financeiro-despesas-bib-card__head">
                         <div>
@@ -61431,9 +61465,9 @@ A1;Peça exemplo;10`}
                               {(tx.relatorioNumeroLabel || 'Rel.')} {rel.numero}
                             </span>
                             <span
-                              className={`financeiro-despesas-bib-card__badge financeiro-despesas-bib-card__badge--${estadoCob}`}
+                              className={`financeiro-despesas-bib-card__badge financeiro-despesas-bib-card__badge--${estadoCob}${piscaFluxo ? ' fechamento-fluxo-badge--pisca' : ''}`}
                             >
-                              {labelEstadoCobranca(estadoCob)}
+                              {labelEstadoCobranca(frFluxo)}
                             </span>
                           </div>
                           <div className="financeiro-despesas-bib-card__sub">
@@ -61450,59 +61484,8 @@ A1;Peça exemplo;10`}
                           </div>
                         </div>
                       </div>
+                      <div style={{ margin: '0 0 10px' }}>{renderBarraFluxoFechamento(rel.id)}</div>
                       <div className="financeiro-despesas-bib-card__actions">
-                        {estadoCob === 'amarelo' ? (
-                          <>
-                            <button
-                              type="button"
-                              className="financeiro-despesas-bib-btn"
-                              onClick={() => handleEnvioCobrancaFechamentoBiblioteca('email', rel, tot)}
-                            >
-                              {tx.financeiroDespesasBtnEnviarCobrancaEmail || 'Cobrança (email)'}
-                            </button>
-                            <button
-                              type="button"
-                              className="financeiro-despesas-bib-btn"
-                              onClick={() => handleEnvioCobrancaFechamentoBiblioteca('whatsapp', rel, tot)}
-                            >
-                              {tx.financeiroDespesasBtnEnviarCobrancaWhatsapp || 'Cobrança (WhatsApp)'}
-                            </button>
-                            <button
-                              type="button"
-                              className="financeiro-despesas-bib-btn"
-                              onClick={() => marcarCobrancaEnviadaFechamentoBiblioteca(rel.id)}
-                            >
-                              {tx.financeiroDespesasBtnMarcarCobrancaEnviada || 'Marcar cobrança enviada'}
-                            </button>
-                          </>
-                        ) : null}
-                        {estadoCob === 'azul' ? (
-                          <>
-                            <button
-                              type="button"
-                              className="financeiro-despesas-bib-btn"
-                              onClick={() => marcarFechamentoBibliotecaPago(rel.id)}
-                            >
-                              {tx.financeiroDespesasBtnPago || 'Informar pago'}
-                            </button>
-                            <button
-                              type="button"
-                              className="financeiro-despesas-bib-btn"
-                              onClick={() => marcarFechamentoBibliotecaNaoPago(rel.id)}
-                            >
-                              {tx.financeiroDespesasBtnNaoPago || 'N\u00e3o pagou'}
-                            </button>
-                          </>
-                        ) : null}
-                        {estadoCob === 'vermelho' ? (
-                          <button
-                            type="button"
-                            className="financeiro-despesas-bib-btn"
-                            onClick={() => marcarFechamentoBibliotecaPago(rel.id)}
-                          >
-                            {tx.financeiroDespesasBtnPago || 'Informar pago'}
-                          </button>
-                        ) : null}
                         <button
                           type="button"
                           className="financeiro-despesas-bib-btn"
@@ -62289,6 +62272,9 @@ A1;Peça exemplo;10`}
                                     <th className="bib-col-rel">{txBib.relatorioNumeroLabel || 'Rel.'}</th>
                                     <th className="bib-col-equip">{txBib.maquinaModelo || 'Equipamento'}</th>
                                     <th className="bib-col-total">{txBib.total || 'Total'}</th>
+                                    <th className="bib-col-fluxo">
+                                      {(txBib as any).fechamentoFluxoTitulo || 'Fatura / Pagamento'}
+                                    </th>
                                     <th className="bib-col-acoes">{txBib.acoes || 'Ações'}</th>
                                   </tr>
                                 </thead>
@@ -62314,6 +62300,7 @@ A1;Peça exemplo;10`}
                                           />
                                         </td>
                                         <td className="bib-col-num bib-col-total">€{totalCobranca.toFixed(2)}</td>
+                                        <td className="bib-col-fluxo">{renderBarraFluxoFechamento(relatorio.id, true)}</td>
                                         <td className="bib-col-acoes">
                                           <div className="bib-acoes-icones">
                                             <button

@@ -7200,12 +7200,12 @@ a:focus-visible {
 
 /* Cliente devedor — fundo vermelho transparente (lista, cadastro, detalhe) */
 .clientes-alfa-nome-btn--devedor {
-  background: rgba(180, 24, 24, 0.22) !important;
   border-color: rgba(248, 113, 113, 0.55) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  background: rgba(248, 113, 113, 0.12) !important;
+  color: #fecaca !important;
 }
 .clientes-alfa-nome-btn--devedor:hover {
-  background: rgba(180, 24, 24, 0.32) !important;
+  background: rgba(248, 113, 113, 0.2) !important;
   border-color: rgba(248, 113, 113, 0.72) !important;
 }
 .clientes-cadastrados-lista .clientes-alfa-nome-btn:not(.clientes-alfa-nome-btn--devedor):hover {
@@ -10347,20 +10347,212 @@ button.dia-trabalho-acao-btn--del:hover {
 .clientes-financeiro-panel {
   --fin-cor-amarelo: #facc15;
   --fin-cor-amarelo-texto: #fef08a;
-  --fin-cor-amarelo-fundo: rgba(250, 204, 21, 0.22);
-  --fin-cor-amarelo-borda: rgba(250, 204, 21, 0.85);
+  --fin-cor-amarelo-fundo: rgba(250, 204, 21, 0.12);
+  --fin-cor-amarelo-borda: rgba(250, 204, 21, 0.5);
   --fin-cor-azul: #38bdf8;
   --fin-cor-azul-texto: #bae6fd;
-  --fin-cor-azul-fundo: rgba(56, 189, 248, 0.22);
-  --fin-cor-azul-borda: rgba(56, 189, 248, 0.85);
+  --fin-cor-azul-fundo: rgba(56, 189, 248, 0.12);
+  --fin-cor-azul-borda: rgba(56, 189, 248, 0.5);
   --fin-cor-verde: #4ade80;
   --fin-cor-verde-texto: #bbf7d0;
-  --fin-cor-verde-fundo: rgba(74, 222, 128, 0.2);
-  --fin-cor-verde-borda: rgba(74, 222, 128, 0.85);
+  --fin-cor-verde-fundo: rgba(74, 222, 128, 0.12);
+  --fin-cor-verde-borda: rgba(74, 222, 128, 0.5);
   --fin-cor-vermelho: #f87171;
   --fin-cor-vermelho-texto: #fecaca;
-  --fin-cor-vermelho-fundo: rgba(248, 113, 113, 0.24);
-  --fin-cor-vermelho-borda: rgba(248, 113, 113, 0.9);
+  --fin-cor-vermelho-fundo: rgba(248, 113, 113, 0.12);
+  --fin-cor-vermelho-borda: rgba(248, 113, 113, 0.5);
+}
+
+@keyframes fechamento-fluxo-pulse-vermelho {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.12);
+    border-color: rgba(248, 113, 113, 0.42);
+    background-color: rgba(248, 113, 113, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 18px 2px rgba(248, 113, 113, 0.32);
+    border-color: rgba(248, 113, 113, 0.72);
+    background-color: rgba(248, 113, 113, 0.16);
+  }
+}
+@keyframes fechamento-fluxo-pulse-azul {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.4);
+    background-color: rgba(56, 189, 248, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 18px 2px rgba(56, 189, 248, 0.3);
+    border-color: rgba(56, 189, 248, 0.7);
+    background-color: rgba(56, 189, 248, 0.16);
+  }
+}
+.fechamento-fluxo-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.35);
+  box-sizing: border-box;
+  backdrop-filter: blur(4px);
+}
+.fechamento-fluxo-bar--compact {
+  padding: 6px 8px;
+  gap: 6px;
+  font-size: 11px;
+}
+.fechamento-fluxo-bar--sem-numero-fatura.fechamento-fluxo-bar--pisca {
+  border-color: rgba(248, 113, 113, 0.48);
+  background: rgba(248, 113, 113, 0.1);
+  animation: fechamento-fluxo-pulse-vermelho 1.35s ease-in-out infinite;
+}
+.fechamento-fluxo-bar--aguardar-pagamento.fechamento-fluxo-bar--pisca {
+  border-color: rgba(56, 189, 248, 0.48);
+  background: rgba(56, 189, 248, 0.1);
+  animation: fechamento-fluxo-pulse-azul 1.35s ease-in-out infinite;
+}
+.fechamento-fluxo-bar--pago.fechamento-fluxo-bar--fixo {
+  border-color: rgba(74, 222, 128, 0.52);
+  background: rgba(74, 222, 128, 0.1);
+}
+.fechamento-fluxo-bar--nao-pago.fechamento-fluxo-bar--fixo {
+  border-color: rgba(248, 113, 113, 0.52);
+  background: rgba(248, 113, 113, 0.12);
+}
+.fechamento-fluxo-bar__cta {
+  width: 100%;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(248, 113, 113, 0.55);
+  background: rgba(248, 113, 113, 0.14);
+  color: #fecaca;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+.fechamento-fluxo-bar--compact .fechamento-fluxo-bar__cta {
+  font-size: 10px;
+  padding: 6px 8px;
+}
+.fechamento-fluxo-bar__cta:hover {
+  filter: brightness(1.08);
+}
+.fechamento-fluxo-bar__fatura-row,
+.fechamento-fluxo-bar__pagamento-row,
+.fechamento-fluxo-bar__fixo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.fechamento-fluxo-bar__status {
+  flex: 1 1 100%;
+  font-size: 11px;
+  font-weight: 700;
+  color: #bae6fd;
+}
+.fechamento-fluxo-bar__fatura-label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1 1 120px;
+  min-width: 0;
+}
+.fechamento-fluxo-bar__fatura-label-text {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(226, 232, 240, 0.75);
+}
+.fechamento-fluxo-bar__fatura-input {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(30, 41, 59, 0.9);
+  color: #f8fafc;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+.fechamento-fluxo-bar--compact .fechamento-fluxo-bar__fatura-input {
+  font-size: 11px;
+  padding: 4px 6px;
+}
+.fechamento-fluxo-bar__btn {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(30, 41, 59, 0.85);
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fechamento-fluxo-bar__btn--save {
+  border-color: rgba(74, 222, 128, 0.55);
+  color: #bbf7d0;
+}
+.fechamento-fluxo-bar__btn--pago {
+  border-color: rgba(74, 222, 128, 0.55);
+  background: rgba(74, 222, 128, 0.14);
+  color: #bbf7d0;
+}
+.fechamento-fluxo-bar__btn--nao-pago {
+  border-color: rgba(248, 113, 113, 0.55);
+  background: rgba(248, 113, 113, 0.14);
+  color: #fecaca;
+}
+.fechamento-fluxo-bar__btn--ghost {
+  background: transparent;
+  border-color: rgba(148, 163, 184, 0.35);
+  color: rgba(226, 232, 240, 0.85);
+}
+.fechamento-fluxo-bar__btn--mini {
+  padding: 4px 7px;
+  font-size: 12px;
+}
+.fechamento-fluxo-bar__fixo-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+.fechamento-fluxo-bar--pago .fechamento-fluxo-bar__fixo-label {
+  color: #86efac;
+}
+.fechamento-fluxo-bar--nao-pago .fechamento-fluxo-bar__fixo-label {
+  color: #fecaca;
+}
+.fechamento-fluxo-bar__fixo-fatura {
+  font-size: 11px;
+  color: rgba(226, 232, 240, 0.85);
+  font-variant-numeric: tabular-nums;
+}
+.biblioteca-relatorios-tabela--desp .bib-col-fluxo {
+  width: min(280px, 36vw);
+  min-width: 180px;
+  vertical-align: middle;
+}
+.biblioteca-relatorios-desp-fluxo-row td {
+  padding-top: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.financeiro-despesas-bib-card--vermelho.fechamento-fluxo-card-wrap--pisca,
+.financeiro-despesas-bib-card__badge--vermelho.fechamento-fluxo-badge--pisca {
+  animation: fechamento-fluxo-pulse-vermelho 1.35s ease-in-out infinite;
+}
+.financeiro-despesas-bib-card--azul.fechamento-fluxo-card-wrap--pisca,
+.financeiro-despesas-bib-card__badge--azul.fechamento-fluxo-badge--pisca {
+  animation: fechamento-fluxo-pulse-azul 1.35s ease-in-out infinite;
 }
 
 /* Clientes/Financeiro › Despesas na biblioteca — grupos expansíveis */
@@ -10408,36 +10600,37 @@ button.dia-trabalho-acao-btn--del:hover {
 }
 .financeiro-despesas-bib-grupo {
   border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  border: 1px solid rgba(148, 163, 184, 0.28);
   border-left-width: 6px;
   border-left-color: rgba(148, 163, 184, 0.45);
-  background: rgba(15, 17, 22, 0.92);
+  background: rgba(15, 17, 22, 0.55);
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(3px);
 }
 .financeiro-despesas-bib-grupo--amarelo {
   border-left-color: var(--fin-cor-amarelo);
   border-color: var(--fin-cor-amarelo-borda);
-  background: linear-gradient(90deg, var(--fin-cor-amarelo-fundo) 0%, rgba(15, 17, 22, 0.95) 28%);
-  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.15), 0 4px 14px rgba(250, 204, 21, 0.12);
+  background: linear-gradient(90deg, var(--fin-cor-amarelo-fundo) 0%, rgba(15, 17, 22, 0.62) 28%);
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.1), 0 4px 14px rgba(250, 204, 21, 0.08);
 }
 .financeiro-despesas-bib-grupo--azul {
   border-left-color: var(--fin-cor-azul);
   border-color: var(--fin-cor-azul-borda);
-  background: linear-gradient(90deg, var(--fin-cor-azul-fundo) 0%, rgba(15, 17, 22, 0.95) 28%);
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.15), 0 4px 14px rgba(56, 189, 248, 0.12);
+  background: linear-gradient(90deg, var(--fin-cor-azul-fundo) 0%, rgba(15, 17, 22, 0.62) 28%);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.1), 0 4px 14px rgba(56, 189, 248, 0.08);
 }
 .financeiro-despesas-bib-grupo--verde {
   border-left-color: var(--fin-cor-verde);
   border-color: var(--fin-cor-verde-borda);
-  background: linear-gradient(90deg, var(--fin-cor-verde-fundo) 0%, rgba(15, 17, 22, 0.95) 28%);
-  box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.15), 0 4px 14px rgba(74, 222, 128, 0.12);
+  background: linear-gradient(90deg, var(--fin-cor-verde-fundo) 0%, rgba(15, 17, 22, 0.62) 28%);
+  box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.1), 0 4px 14px rgba(74, 222, 128, 0.08);
 }
 .financeiro-despesas-bib-grupo--vermelho {
   border-left-color: var(--fin-cor-vermelho);
   border-color: var(--fin-cor-vermelho-borda);
-  background: linear-gradient(90deg, var(--fin-cor-vermelho-fundo) 0%, rgba(15, 17, 22, 0.95) 28%);
-  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.18), 0 4px 14px rgba(248, 113, 113, 0.14);
+  background: linear-gradient(90deg, var(--fin-cor-vermelho-fundo) 0%, rgba(15, 17, 22, 0.62) 28%);
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.12), 0 4px 14px rgba(248, 113, 113, 0.1);
 }
 .financeiro-despesas-bib-grupo--misto {
   border-left-color: rgba(148, 163, 184, 0.55);
@@ -10446,7 +10639,7 @@ button.dia-trabalho-acao-btn--del:hover {
 .financeiro-despesas-bib-grupo--alerta-devedor:not(.financeiro-despesas-bib-grupo--misto) {
   border-left-color: var(--fin-cor-vermelho);
   border-color: var(--fin-cor-vermelho-borda);
-  background: linear-gradient(90deg, var(--fin-cor-vermelho-fundo) 0%, rgba(15, 17, 22, 0.95) 28%);
+  background: linear-gradient(90deg, var(--fin-cor-vermelho-fundo) 0%, rgba(15, 17, 22, 0.62) 28%);
 }
 .financeiro-despesas-bib-grupo--misto .financeiro-despesas-bib-grupo__header {
   background: rgba(30, 35, 45, 0.55);
@@ -10627,30 +10820,31 @@ button.dia-trabalho-acao-btn--del:hover {
 .financeiro-despesas-bib-card {
   padding: 14px 16px;
   border-radius: 10px;
-  background: #464646;
+  background: rgba(70, 70, 70, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-left-width: 5px;
   border-left-color: rgba(148, 163, 184, 0.45);
+  backdrop-filter: blur(3px);
 }
 .financeiro-despesas-bib-card--amarelo {
   border-left-color: var(--fin-cor-amarelo);
   border-color: var(--fin-cor-amarelo-borda);
-  background: linear-gradient(90deg, rgba(250, 204, 21, 0.14) 0%, #464646 24%);
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.1) 0%, rgba(70, 70, 70, 0.72) 28%);
 }
 .financeiro-despesas-bib-card--azul {
   border-left-color: var(--fin-cor-azul);
   border-color: var(--fin-cor-azul-borda);
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.14) 0%, #464646 24%);
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.1) 0%, rgba(70, 70, 70, 0.72) 28%);
 }
 .financeiro-despesas-bib-card--verde {
   border-left-color: var(--fin-cor-verde);
   border-color: var(--fin-cor-verde-borda);
-  background: linear-gradient(90deg, rgba(74, 222, 128, 0.12) 0%, #464646 24%);
+  background: linear-gradient(90deg, rgba(74, 222, 128, 0.1) 0%, rgba(70, 70, 70, 0.72) 28%);
 }
 .financeiro-despesas-bib-card--vermelho {
   border-left-color: var(--fin-cor-vermelho);
   border-color: var(--fin-cor-vermelho-borda);
-  background: linear-gradient(90deg, rgba(248, 113, 113, 0.16) 0%, #464646 24%);
+  background: linear-gradient(90deg, rgba(248, 113, 113, 0.1) 0%, rgba(70, 70, 70, 0.72) 28%);
 }
 .financeiro-despesas-bib-card__badge {
   display: inline-flex;
