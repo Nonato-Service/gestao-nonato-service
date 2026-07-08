@@ -62201,20 +62201,26 @@ A1;Peça exemplo;10`}
                                                     />
                                                     <button
                                                       type="button"
-                                                      className="bib-acao bib-acao--ver"
+                                                      className="bib-acao bib-acao--ver bib-acao--compact"
                                                       title={safeT?.view || 'Ver'}
+                                                      aria-label={safeT?.view || 'Ver'}
                                                       onClick={() =>
                                                         setViewingRelatorioServico(
                                                           resolverRelatorioServicoDono(relatorio)
                                                         )
                                                       }
                                                     >
-                                                      Ver
+                                                      👁
                                                     </button>
                                                     <button
                                                       type="button"
-                                                      className="bib-acao bib-acao--edit"
+                                                      className="bib-acao bib-acao--edit bib-acao--compact"
                                                       title={
+                                                        (txBib as any).editarRelatorioServicoBiblioteca ??
+                                                        safeT?.edit ??
+                                                        'Editar'
+                                                      }
+                                                      aria-label={
                                                         (txBib as any).editarRelatorioServicoBiblioteca ??
                                                         safeT?.edit ??
                                                         'Editar'
@@ -62223,20 +62229,22 @@ A1;Peça exemplo;10`}
                                                         handleEditarRelatorioServicoNaBiblioteca(relatorio)
                                                       }
                                                     >
-                                                      Ed.
+                                                      ✏️
                                                     </button>
                                                     <button
                                                       type="button"
-                                                      className="bib-acao bib-acao--pdf"
+                                                      className="bib-acao bib-acao--pdf bib-acao--compact"
                                                       title={safeT?.gerarPDF || 'PDF'}
+                                                      aria-label={safeT?.gerarPDF || 'PDF'}
                                                       onClick={() => handlePrintRelatorio(relatorio, getPdfModelForRelatorio(relatorio.id))}
                                                     >
-                                                      PDF
+                                                      📄
                                                     </button>
                                                     <button
                                                       type="button"
-                                                      className="bib-acao bib-acao--del"
+                                                      className="bib-acao bib-acao--del bib-acao--compact"
                                                       title={safeT?.delete || 'Excluir'}
+                                                      aria-label={safeT?.delete || 'Excluir'}
                                                       onClick={() =>
                                                         handleDeleteRelatorioServico(relatorio.id, {
                                                           clienteId: cliente.id,
@@ -62245,7 +62253,7 @@ A1;Peça exemplo;10`}
                                                         })
                                                       }
                                                     >
-                                                      ×
+                                                      ✕
                                                     </button>
                                                   </div>
                                                 </td>
@@ -62278,9 +62286,9 @@ A1;Peça exemplo;10`}
                               <table className="biblioteca-relatorios-tabela biblioteca-relatorios-tabela--desp">
                                 <thead>
                                   <tr>
-                                    <th>{txBib.relatorioNumeroLabel || 'Rel.'}</th>
-                                    <th>{txBib.maquinaModelo || 'Equipamento'}</th>
-                                    <th>{txBib.total || 'Total'}</th>
+                                    <th className="bib-col-rel">{txBib.relatorioNumeroLabel || 'Rel.'}</th>
+                                    <th className="bib-col-equip">{txBib.maquinaModelo || 'Equipamento'}</th>
+                                    <th className="bib-col-total">{txBib.total || 'Total'}</th>
                                     <th className="bib-col-acoes">{txBib.acoes || 'Ações'}</th>
                                   </tr>
                                 </thead>
@@ -62297,58 +62305,62 @@ A1;Peça exemplo;10`}
                                     ).comIva
                                     return (
                                       <tr key={relatorio.id}>
-                                        <td className="bib-col-num">{relatorio.numero}</td>
-                                        <td>
+                                        <td className="bib-col-num bib-col-rel">{relatorio.numero}</td>
+                                        <td className="bib-col-equip">
                                           <EquipamentosRelatorioDespesasInline
                                             relatorio={relatorio}
                                             clientes={clientes}
                                             equipamentosArmazem={equipamentos}
                                           />
                                         </td>
-                                        <td className="bib-col-num">€{totalCobranca.toFixed(2)}</td>
+                                        <td className="bib-col-num bib-col-total">€{totalCobranca.toFixed(2)}</td>
                                         <td className="bib-col-acoes">
                                           <div className="bib-acoes-icones">
                                             <button
                                               type="button"
-                                              className="bib-acao bib-acao--ver"
+                                              className="bib-acao bib-acao--ver bib-acao--compact"
                                               title={txBib.visualizarDespesasBiblioteca ?? safeT?.view ?? 'Ver'}
+                                              aria-label={txBib.visualizarDespesasBiblioteca ?? safeT?.view ?? 'Ver'}
                                               onClick={() =>
                                                 setModalVisualizarDespesasBiblioteca({
                                                   relatorio,
                                                   itens: itensDespesasVisiveis,
                                                 })
                                               }
-                            >
-                              {txBib.view || safeT?.view || 'Ver'}
-                            </button>
-                            <button
-                              type="button"
-                              className="bib-acao bib-acao--edit"
-                              title={txBib.editarRelatorioDespesas ?? safeT?.edit ?? 'Editar'}
-                              onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)}
-                            >
-                              {txBib.edit || safeT?.edit || 'Ed.'}
-                            </button>
-                            <button
-                              type="button"
-                              className="bib-acao bib-acao--pdf"
-                              title={txBib.gerarPDF || 'PDF'}
-                              onClick={() =>
-                                imprimirPDFDespesasDaBiblioteca(
-                                  relatorio,
-                                  itensDespesasVisiveis
-                                )
-                              }
-                            >
-                              {txBib.gerarPDF || 'PDF'}
+                                            >
+                                              👁
                                             </button>
                                             <button
                                               type="button"
-                                              className="bib-acao bib-acao--del"
+                                              className="bib-acao bib-acao--edit bib-acao--compact"
+                                              title={txBib.editarRelatorioDespesas ?? safeT?.edit ?? 'Editar'}
+                                              aria-label={txBib.editarRelatorioDespesas ?? safeT?.edit ?? 'Editar'}
+                                              onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)}
+                                            >
+                                              ✏️
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="bib-acao bib-acao--pdf bib-acao--compact"
+                                              title={txBib.gerarPDF || 'PDF'}
+                                              aria-label={txBib.gerarPDF || 'PDF'}
+                                              onClick={() =>
+                                                imprimirPDFDespesasDaBiblioteca(
+                                                  relatorio,
+                                                  itensDespesasVisiveis
+                                                )
+                                              }
+                                            >
+                                              📄
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="bib-acao bib-acao--del bib-acao--compact"
                                               title={safeT?.delete || 'Excluir'}
+                                              aria-label={safeT?.delete || 'Excluir'}
                                               onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)}
                                             >
-                                              ×
+                                              ✕
                                             </button>
                                           </div>
                                         </td>
