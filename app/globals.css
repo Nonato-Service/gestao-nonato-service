@@ -29895,6 +29895,21 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   gap: 10px;
 }
 
+.cliente-detalhe-v2__hist-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.cliente-detalhe-v2__hist-group-title {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
 .cliente-detalhe-v2__hist-item {
   display: flex;
   align-items: center;

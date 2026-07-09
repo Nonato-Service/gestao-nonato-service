@@ -198,6 +198,41 @@ export type RelatorioServicoFinanceiroLike = {
   servicoConcluido?: boolean
 }
 
+function relatorioClienteFromServico(rel: RelatorioServicoFinanceiroLike): RelatorioClienteLike {
+  return {
+    id: rel.id,
+    numero: String(rel.numero ?? '').trim() || rel.id,
+    data: String(rel.data ?? '').trim(),
+    tipoServico: String(rel.tipoServico ?? rel.numero ?? '').trim() || rel.id,
+    servicoConcluido: Boolean(rel.servicoConcluido),
+    maquinaModelo: undefined,
+    numeroMaquina: undefined,
+  }
+}
+
+/** Histórico de serviços — prioriza `relatoriosServico` (fonte de verdade global). */
+export function coletarRelatoriosServicoCliente(params: {
+  relatoriosCliente?: Record<string, RelatorioClienteLike[]>
+  relatoriosServico?: RelatorioServicoFinanceiroLike[]
+}): RelatorioClienteLike[] {
+  const map = new Map<string, RelatorioClienteLike>()
+  for (const r of coletarRelatoriosCliente(params.relatoriosCliente)) {
+    map.set(r.id, r)
+  }
+  for (const rel of params.relatoriosServico ?? []) {
+    if (!rel?.id) continue
+    map.set(rel.id, relatorioClienteFromServico(rel))
+  }
+  return Array.from(map.values()).sort((a, b) => {
+    const cmpData = (b.data || '').localeCompare(a.data || '')
+    if (cmpData !== 0) return cmpData
+    return String(b.numero ?? '').localeCompare(String(a.numero ?? ''), undefined, {
+      sensitivity: 'base',
+      numeric: true,
+    })
+  })
+}
+
 /** Relatórios com fechamento na biblioteca — fonte: cadastro do cliente + lista global de relatórios. */
 export function coletarRelatoriosFinanceirosCliente(params: {
   relatoriosCliente?: Record<string, RelatorioClienteLike[]>
@@ -206,7 +241,10 @@ export function coletarRelatoriosFinanceirosCliente(params: {
   fechamentosRelatorios: Record<string, FechamentoItemLike[] | undefined>
 }): RelatorioClienteLike[] {
   const map = new Map<string, RelatorioClienteLike>()
-  for (const r of coletarRelatoriosCliente(params.relatoriosCliente)) {
+  for (const r of coletarRelatoriosServicoCliente({
+    relatoriosCliente: params.relatoriosCliente,
+    relatoriosServico: params.relatoriosServico,
+  })) {
     map.set(r.id, r)
   }
 
@@ -215,15 +253,7 @@ export function coletarRelatoriosFinanceirosCliente(params: {
     if (!rel?.id || !bibSet.has(rel.id)) continue
     const itens = params.fechamentosRelatorios[rel.id]
     if (!itens?.length) continue
-    map.set(rel.id, {
-      id: rel.id,
-      numero: rel.numero,
-      data: rel.data,
-      tipoServico: rel.tipoServico || rel.numero,
-      servicoConcluido: Boolean(rel.servicoConcluido),
-      maquinaModelo: undefined,
-      numeroMaquina: undefined,
-    })
+    map.set(rel.id, relatorioClienteFromServico(rel))
   }
 
   return Array.from(map.values()).sort((a, b) => (b.data || '').localeCompare(a.data || ''))

@@ -37019,7 +37019,16 @@ export default function Dashboard() {
                       key={
                         selectedLanguage +
                         clientesParaDetalhe[0].id +
-                        Object.keys(fechamentoFluxoFinanceiroPorRelatorioId).length
+                        '-' +
+                        relatoriosServico.filter(
+                          (r) =>
+                            r.clienteId === clientesParaDetalhe[0].id ||
+                            resolverClienteIdRelatorioFlexivel(r, clientes) === clientesParaDetalhe[0].id ||
+                            nomesClienteCorrespondem(
+                              String(r.cliente ?? ''),
+                              String(clientesParaDetalhe[0].nomeEmpresa ?? '')
+                            )
+                        ).length
                       }
                       cliente={clientesParaDetalhe[0]}
                       language={selectedLanguage}

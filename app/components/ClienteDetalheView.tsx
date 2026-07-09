@@ -9,6 +9,7 @@ import {
   calcularResumoFinanceiroCliente,
   coletarRelatoriosCliente,
   coletarRelatoriosFinanceirosCliente,
+  coletarRelatoriosServicoCliente,
   dataClienteDesde,
   type RelatorioServicoFinanceiroLike,
   fmtEuro,
@@ -242,7 +243,14 @@ export function ClienteDetalheView({
     >
   }, [language])
 
-  const relatorios = useMemo(() => coletarRelatoriosCliente(cliente.relatorios), [cliente.relatorios])
+  const relatorios = useMemo(
+    () =>
+      coletarRelatoriosServicoCliente({
+        relatoriosCliente: cliente.relatorios,
+        relatoriosServico,
+      }),
+    [cliente.relatorios, relatoriosServico]
+  )
   const relatoriosFinanceiros = useMemo(
     () =>
       coletarRelatoriosFinanceirosCliente({
@@ -301,6 +309,15 @@ export function ClienteDetalheView({
     ]
   )
 
+  const relatoriosConcluidos = useMemo(
+    () => relatorios.filter((r) => r.servicoConcluido),
+    [relatorios]
+  )
+  const relatoriosEmAberto = useMemo(
+    () => relatorios.filter((r) => !r.servicoConcluido),
+    [relatorios]
+  )
+
   const iniciais = useMemo(() => {
     const palavras = cliente.nomeEmpresa.trim().split(/\s+/)
     if (palavras.length >= 2) return (palavras[0][0] + palavras[1][0]).toUpperCase()
@@ -319,6 +336,30 @@ export function ClienteDetalheView({
 
   const codigoExib = codigoClienteExibicao(cliente)
   const devedor = isClienteMarcadoDevedor(cliente)
+
+  const renderHistoricoLista = (items: typeof relatorios) => (
+    <ul className="cliente-detalhe-v2__hist-list">
+      {items.map((rel) => (
+        <li key={rel.id} className="cliente-detalhe-v2__hist-item">
+          <div className="cliente-detalhe-v2__hist-main">
+            <strong>{rel.tipoServico || rel.numero}</strong>
+            <span className="cliente-detalhe-v2__hist-id">{rel.numero}</span>
+            <span className="cliente-detalhe-v2__hist-date">{fmtData(rel.data)}</span>
+          </div>
+          <span
+            className={
+              'cliente-detalhe-v2__status-pill' +
+              (rel.servicoConcluido
+                ? ' cliente-detalhe-v2__status-pill--pago'
+                : ' cliente-detalhe-v2__status-pill--pendente')
+            }
+          >
+            {rel.servicoConcluido ? tr('fechado') : tr('pendenteStatus')}
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
 
   return (
     <div className={`cliente-detalhe-v2${devedor ? ' cliente-detalhe-v2--devedor' : ''}`}>
@@ -555,27 +596,24 @@ export function ClienteDetalheView({
         {relatorios.length === 0 ? (
           <p className="cliente-detalhe-v2__empty">{tr('noHistoricoServicos')}</p>
         ) : (
-          <ul className="cliente-detalhe-v2__hist-list">
-            {relatorios.map((rel) => (
-              <li key={rel.id} className="cliente-detalhe-v2__hist-item">
-                <div className="cliente-detalhe-v2__hist-main">
-                  <strong>{rel.tipoServico || rel.numero}</strong>
-                  <span className="cliente-detalhe-v2__hist-id">{rel.numero}</span>
-                  <span className="cliente-detalhe-v2__hist-date">{fmtData(rel.data)}</span>
-                </div>
-                <span
-                  className={
-                    'cliente-detalhe-v2__status-pill' +
-                    (rel.servicoConcluido
-                      ? ' cliente-detalhe-v2__status-pill--pago'
-                      : ' cliente-detalhe-v2__status-pill--pendente')
-                  }
-                >
-                  {rel.servicoConcluido ? tr('fechado') : tr('pendenteStatus')}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div className="cliente-detalhe-v2__hist-groups">
+            {relatoriosConcluidos.length > 0 ? (
+              <div className="cliente-detalhe-v2__hist-group">
+                <h4 className="cliente-detalhe-v2__hist-group-title">
+                  {tr('servicoConcluido') || tr('fechado') || 'Concluídos'} ({relatoriosConcluidos.length})
+                </h4>
+                {renderHistoricoLista(relatoriosConcluidos)}
+              </div>
+            ) : null}
+            {relatoriosEmAberto.length > 0 ? (
+              <div className="cliente-detalhe-v2__hist-group">
+                <h4 className="cliente-detalhe-v2__hist-group-title">
+                  {tr('pendenteStatus') || 'Sem conclusão'} ({relatoriosEmAberto.length})
+                </h4>
+                {renderHistoricoLista(relatoriosEmAberto)}
+              </div>
+            ) : null}
+          </div>
         )}
       </section>
     </div>
