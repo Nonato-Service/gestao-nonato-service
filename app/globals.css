@@ -8434,7 +8434,7 @@ a:focus-visible {
 
 .biblioteca-relatorios-cliente {
   border-radius: 12px;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: #3e3e3e;
   box-sizing: border-box;
@@ -8443,61 +8443,72 @@ a:focus-visible {
 /* Fluxo fatura/pagamento — destaque em TODO o botão do cliente (summary + cartão) */
 .biblioteca-relatorios-cliente--fluxo {
   border-width: 1px;
-  border-left-width: 6px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  border-left-width: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.22);
 }
 .biblioteca-relatorios-cliente--fluxo-vermelho {
-  border-color: var(--fin-cor-vermelho-borda);
+  border-color: rgba(248, 113, 113, 0.72);
   border-left-color: var(--fin-cor-vermelho);
-  background: linear-gradient(90deg, var(--fin-cor-vermelho-fundo) 0%, #3e3e3e 32%);
+  background: linear-gradient(90deg, rgba(248, 113, 113, 0.34) 0%, rgba(248, 113, 113, 0.14) 22%, #3e3e3e 46%);
+  box-shadow: inset 5px 0 14px rgba(248, 113, 113, 0.18), 0 2px 12px rgba(0, 0, 0, 0.22);
 }
 .biblioteca-relatorios-cliente--fluxo-azul {
-  border-color: var(--fin-cor-azul-borda);
+  border-color: rgba(56, 189, 248, 0.72);
   border-left-color: var(--fin-cor-azul);
-  background: linear-gradient(90deg, var(--fin-cor-azul-fundo) 0%, #3e3e3e 32%);
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.34) 0%, rgba(56, 189, 248, 0.14) 22%, #3e3e3e 46%);
+  box-shadow: inset 5px 0 14px rgba(56, 189, 248, 0.16), 0 2px 12px rgba(0, 0, 0, 0.22);
 }
 .biblioteca-relatorios-cliente--fluxo-verde {
-  border-color: var(--fin-cor-verde-borda);
+  border-color: rgba(74, 222, 128, 0.72);
   border-left-color: var(--fin-cor-verde);
-  background: linear-gradient(90deg, var(--fin-cor-verde-fundo) 0%, #3e3e3e 32%);
+  background: linear-gradient(90deg, rgba(74, 222, 128, 0.32) 0%, rgba(74, 222, 128, 0.12) 22%, #3e3e3e 46%);
+  box-shadow: inset 5px 0 14px rgba(74, 222, 128, 0.14), 0 2px 12px rgba(0, 0, 0, 0.22);
 }
 .biblioteca-relatorios-cliente--fluxo-amarelo {
-  border-color: var(--fin-cor-amarelo-borda);
+  border-color: rgba(250, 204, 21, 0.72);
   border-left-color: var(--fin-cor-amarelo);
-  background: linear-gradient(90deg, var(--fin-cor-amarelo-fundo) 0%, #3e3e3e 32%);
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.3) 0%, rgba(250, 204, 21, 0.12) 22%, #3e3e3e 46%);
+  box-shadow: inset 5px 0 14px rgba(250, 204, 21, 0.14), 0 2px 12px rgba(0, 0, 0, 0.22);
 }
 .biblioteca-relatorios-cliente--fluxo-misto {
-  border-left-color: rgba(148, 163, 184, 0.55);
+  border-left-color: rgba(148, 163, 184, 0.75);
+  border-color: rgba(148, 163, 184, 0.45);
 }
 .biblioteca-relatorios-cliente--fluxo-vermelho.biblioteca-relatorios-cliente--fluxo-pisca {
-  animation: fechamento-fluxo-pulse-vermelho 1.35s ease-in-out infinite;
+  animation: biblioteca-cliente-fluxo-pulse-vermelho 1.35s ease-in-out infinite;
 }
 .biblioteca-relatorios-cliente--fluxo-azul.biblioteca-relatorios-cliente--fluxo-pisca {
-  animation: fechamento-fluxo-pulse-azul 1.35s ease-in-out infinite;
+  animation: biblioteca-cliente-fluxo-pulse-azul 1.35s ease-in-out infinite;
 }
 .biblioteca-relatorios-cliente--fluxo .biblioteca-relatorios-cliente__summary {
   background: transparent;
 }
-.biblioteca-relatorios-cliente--fluxo-vermelho .biblioteca-relatorios-cliente__title {
-  color: var(--fin-cor-vermelho-texto);
-}
-.biblioteca-relatorios-cliente--fluxo-azul .biblioteca-relatorios-cliente__title {
-  color: var(--fin-cor-azul-texto);
-}
-.biblioteca-relatorios-cliente--fluxo-verde .biblioteca-relatorios-cliente__title {
-  color: var(--fin-cor-verde-texto);
-}
 .biblioteca-relatorios-cliente--fluxo-vermelho .biblioteca-relatorios-cliente__summary {
-  border-bottom-color: var(--fin-cor-vermelho-borda);
+  background: linear-gradient(180deg, rgba(248, 113, 113, 0.22) 0%, rgba(56, 56, 56, 0.92) 100%);
 }
 .biblioteca-relatorios-cliente--fluxo-azul .biblioteca-relatorios-cliente__summary {
-  border-bottom-color: var(--fin-cor-azul-borda);
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.2) 0%, rgba(56, 56, 56, 0.92) 100%);
 }
 .biblioteca-relatorios-cliente--fluxo-verde .biblioteca-relatorios-cliente__summary {
-  border-bottom-color: var(--fin-cor-verde-borda);
+  background: linear-gradient(180deg, rgba(74, 222, 128, 0.18) 0%, rgba(56, 56, 56, 0.92) 100%);
 }
-.biblioteca-relatorios-cliente--fluxo-pisca .fechamento-fluxo-bar--pisca {
-  animation: none;
+.biblioteca-relatorios-cliente--fluxo-vermelho .biblioteca-relatorios-cliente__title {
+  color: #fecaca;
+}
+.biblioteca-relatorios-cliente--fluxo-azul .biblioteca-relatorios-cliente__title {
+  color: #bae6fd;
+}
+.biblioteca-relatorios-cliente--fluxo-verde .biblioteca-relatorios-cliente__title {
+  color: #bbf7d0;
+}
+.biblioteca-relatorios-cliente--fluxo-vermelho .biblioteca-relatorios-cliente__summary {
+  border-bottom-color: rgba(248, 113, 113, 0.45);
+}
+.biblioteca-relatorios-cliente--fluxo-azul .biblioteca-relatorios-cliente__summary {
+  border-bottom-color: rgba(56, 189, 248, 0.45);
+}
+.biblioteca-relatorios-cliente--fluxo-verde .biblioteca-relatorios-cliente__summary {
+  border-bottom-color: rgba(74, 222, 128, 0.45);
 }
 
 .biblioteca-relatorios-cliente__summary {
@@ -10408,20 +10419,43 @@ button.dia-trabalho-acao-btn--del:hover {
 .clientes-financeiro-panel {
   --fin-cor-amarelo: #facc15;
   --fin-cor-amarelo-texto: #fef08a;
-  --fin-cor-amarelo-fundo: rgba(250, 204, 21, 0.12);
-  --fin-cor-amarelo-borda: rgba(250, 204, 21, 0.5);
+  --fin-cor-amarelo-fundo: rgba(250, 204, 21, 0.22);
+  --fin-cor-amarelo-borda: rgba(250, 204, 21, 0.68);
   --fin-cor-azul: #38bdf8;
   --fin-cor-azul-texto: #bae6fd;
-  --fin-cor-azul-fundo: rgba(56, 189, 248, 0.12);
-  --fin-cor-azul-borda: rgba(56, 189, 248, 0.5);
+  --fin-cor-azul-fundo: rgba(56, 189, 248, 0.22);
+  --fin-cor-azul-borda: rgba(56, 189, 248, 0.68);
   --fin-cor-verde: #4ade80;
   --fin-cor-verde-texto: #bbf7d0;
-  --fin-cor-verde-fundo: rgba(74, 222, 128, 0.12);
-  --fin-cor-verde-borda: rgba(74, 222, 128, 0.5);
+  --fin-cor-verde-fundo: rgba(74, 222, 128, 0.22);
+  --fin-cor-verde-borda: rgba(74, 222, 128, 0.68);
   --fin-cor-vermelho: #f87171;
   --fin-cor-vermelho-texto: #fecaca;
-  --fin-cor-vermelho-fundo: rgba(248, 113, 113, 0.12);
-  --fin-cor-vermelho-borda: rgba(248, 113, 113, 0.5);
+  --fin-cor-vermelho-fundo: rgba(248, 113, 113, 0.22);
+  --fin-cor-vermelho-borda: rgba(248, 113, 113, 0.68);
+}
+
+@keyframes biblioteca-cliente-fluxo-pulse-vermelho {
+  0%,
+  100% {
+    box-shadow: inset 8px 0 0 var(--fin-cor-vermelho), 0 0 0 0 rgba(248, 113, 113, 0.12);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: inset 8px 0 0 var(--fin-cor-vermelho), 0 0 24px 4px rgba(248, 113, 113, 0.42);
+    filter: brightness(1.06);
+  }
+}
+@keyframes biblioteca-cliente-fluxo-pulse-azul {
+  0%,
+  100% {
+    box-shadow: inset 8px 0 0 var(--fin-cor-azul), 0 0 0 0 rgba(56, 189, 248, 0.1);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: inset 8px 0 0 var(--fin-cor-azul), 0 0 24px 4px rgba(56, 189, 248, 0.38);
+    filter: brightness(1.06);
+  }
 }
 
 @keyframes fechamento-fluxo-pulse-vermelho {
@@ -10602,6 +10636,22 @@ button.dia-trabalho-acao-btn--del:hover {
   width: min(280px, 36vw);
   min-width: 180px;
   vertical-align: middle;
+  position: relative;
+  z-index: 2;
+  overflow: visible;
+}
+.biblioteca-relatorios-tabela--desp .bib-col-fluxo .fechamento-fluxo-bar {
+  position: relative;
+  z-index: 3;
+  pointer-events: auto;
+}
+.biblioteca-relatorios-tabela--desp .fechamento-fluxo-bar--compact {
+  min-width: 0;
+}
+.biblioteca-relatorios-tabela--desp .fechamento-fluxo-bar__fatura-input,
+.biblioteca-relatorios-tabela--desp .fechamento-fluxo-bar__btn {
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 .biblioteca-relatorios-desp-fluxo-row td {
   padding-top: 0;

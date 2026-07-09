@@ -42,7 +42,7 @@ export function FechamentoFluxoPagamentoBar({
   compact,
 }: Props) {
   const fase = getFechamentoFluxoFase(fluxo)
-  const [editandoFatura, setEditandoFatura] = useState(false)
+  const [editandoFatura, setEditandoFatura] = useState(() => compact && fase === 'sem_numero_fatura')
   const [numeroInput, setNumeroInput] = useState('')
 
   useEffect(() => {
@@ -51,13 +51,14 @@ export function FechamentoFluxoPagamentoBar({
 
   useEffect(() => {
     if (fase !== 'sem_numero_fatura') setEditandoFatura(false)
-  }, [fase])
+    else if (compact) setEditandoFatura(true)
+  }, [fase, compact])
 
   const guardarNumero = () => {
     const n = numeroInput.trim()
     if (!n) return
     onGuardarNumeroFatura(relatorioId, n)
-    setEditandoFatura(false)
+    if (!compact) setEditandoFatura(false)
   }
 
   const abrirEdicaoFatura = () => {
@@ -65,9 +66,22 @@ export function FechamentoFluxoPagamentoBar({
     setEditandoFatura(true)
   }
 
+  const mostrarCtaSemFatura = fase === 'sem_numero_fatura' && !editandoFatura && !compact
+  const mostrarLinhaFatura =
+    (fase === 'sem_numero_fatura' && editandoFatura) || fase === 'aguardar_pagamento'
+
+  const pararPropagacaoInteracao = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation()
+  }
+
   return (
-    <div className={classNameFechamentoFluxoBar(fase, compact)}>
-      {fase === 'sem_numero_fatura' && !editandoFatura ? (
+    <div
+      className={classNameFechamentoFluxoBar(fase, compact)}
+      onClick={pararPropagacaoInteracao}
+      onMouseDown={pararPropagacaoInteracao}
+      onKeyDown={pararPropagacaoInteracao}
+    >
+      {mostrarCtaSemFatura ? (
         <button
           type="button"
           className="fechamento-fluxo-bar__cta fechamento-fluxo-bar__cta--alerta"
@@ -78,7 +92,7 @@ export function FechamentoFluxoPagamentoBar({
         </button>
       ) : null}
 
-      {(fase === 'sem_numero_fatura' && editandoFatura) || fase === 'aguardar_pagamento' ? (
+      {mostrarLinhaFatura ? (
         <div className="fechamento-fluxo-bar__fatura-row">
           {fase === 'aguardar_pagamento' ? (
             <span className="fechamento-fluxo-bar__status">{labelFase(fase, labels)}</span>
@@ -101,7 +115,7 @@ export function FechamentoFluxoPagamentoBar({
           <button type="button" className="fechamento-fluxo-bar__btn fechamento-fluxo-bar__btn--save" onClick={guardarNumero}>
             {labels.fechamentoFluxoGuardarNumeroFatura || labels.salvar || 'Guardar'}
           </button>
-          {fase === 'sem_numero_fatura' && editandoFatura ? (
+          {fase === 'sem_numero_fatura' && editandoFatura && !compact ? (
             <button
               type="button"
               className="fechamento-fluxo-bar__btn fechamento-fluxo-bar__btn--ghost"
