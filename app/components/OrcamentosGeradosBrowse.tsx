@@ -6,6 +6,8 @@ import {
   orcamentoEntregaAguardandoNotaFiscal,
   orcamentoGeradoAprovadoSemEntrega,
   PedidoAvulsoRef,
+  PedidoOrcamentoRef,
+  aplicarPatchPedidoFromOrcamentoGerado,
 } from '../lib/clienteEquipamentoOrcamentos'
 import {
   ORCAMENTOS_ALFABETO_INDICE,
@@ -50,6 +52,7 @@ type Props = {
 
 const PEDIDOS_AVULSO_KEY = 'nonato-pedidos-orcamento-avulso'
 const ORCAMENTOS_AVULSO_KEY = 'nonato-orcamentos-avulso'
+const PEDIDOS_RELATORIO_KEY = 'nonato-pedidos-orcamento'
 
 function resolverNomeCliente(orc: OrcamentoGeradoItem, clientes: ClienteRef[]): string {
   const nome = String(orc.clienteNome ?? '').trim()
@@ -173,6 +176,23 @@ export function OrcamentosGeradosBrowse({
     if (saveData) await saveData(PEDIDOS_AVULSO_KEY, novos)
   }
 
+  const sincronizarPedidoRelatorio = async (orc: OrcamentoGeradoItem, patch: Partial<OrcamentoGeradoItem>) => {
+    const isRel =
+      orc.tipo === 'orcamento-relatorio' ||
+      orc.tipo === 'cliente-cadastrado' ||
+      Boolean(orc.relatorioId || orc.relatorioNumero)
+    if (!isRel || !loadData || !saveData) return
+    try {
+      const raw = await loadData(PEDIDOS_RELATORIO_KEY)
+      const pedidos: PedidoOrcamentoRef[] = Array.isArray(raw) ? raw : []
+      const merged = { ...orc, ...patch }
+      const updated = aplicarPatchPedidoFromOrcamentoGerado(merged, pedidos, patch.status ?? orc.status)
+      if (updated !== pedidos) {
+        await saveData(PEDIDOS_RELATORIO_KEY, updated)
+      }
+    } catch (_) {}
+  }
+
   const atualizarOrcamento = async (id: string, patch: Partial<OrcamentoGeradoItem>) => {
     const novos = orcamentos.map((o) => (o.id === id ? { ...o, ...patch } : o))
     onOrcamentosChange(novos)
@@ -181,6 +201,8 @@ export function OrcamentosGeradosBrowse({
     if (orc?.tipo === 'pedido-avulso') {
       const codigo = orc.numeroOrcamento
       await sincronizarPedidoAvulso(codigo, patch as Partial<PedidoAvulsoRef>)
+    } else if (orc) {
+      await sincronizarPedidoRelatorio(orc, patch)
     }
   }
 

@@ -20,6 +20,7 @@ export type PedidoOrcamentoRef = {
   data: string
   dataGeracao: string
   status: 'pendente' | 'enviado' | 'recebido' | 'aprovado' | 'rejeitado'
+  relatorioId?: string
   emitirComoCliente?: 'cliente' | 'nonato-service'
   pecas?: Array<{ codigo: string; descricao: string; quantidade: number | string }>
 }
@@ -164,6 +165,179 @@ export function orcamentoGeradoCorrespondeEquipamento(
   if (modelo && desc.includes(modelo)) return true
   if (serie && desc.includes(serie)) return true
   return false
+}
+
+export function orcamentoStatusParaPedidoRelatorio(
+  status?: OrcamentoGeradoRef['status']
+): PedidoOrcamentoRef['status'] | null {
+  if (!status) return null
+  if (status === 'aprovado' || status === 'concluido' || status === 'entregue') return 'aprovado'
+  if (status === 'cancelado') return 'rejeitado'
+  return null
+}
+
+export function findOrcamentoGeradoParaPedidoRelatorio(
+  pedido: PedidoOrcamentoRef,
+  orcamentos: OrcamentoGeradoRef[]
+): OrcamentoGeradoRef | undefined {
+  const byId = orcamentos.find((o) => o.id === `rel-${pedido.id}`)
+  if (byId) return byId
+  const num = String(pedido.numeroRelatorio ?? '').trim()
+  if (!num) return undefined
+  return orcamentos.find((o) => String(o.relatorioNumero ?? '').trim() === num)
+}
+
+/** Estado real do pedido — considera orçamento gerado ligado (ex.: aprovado em Orçamentos Gerados). */
+export function statusEfetivoPedidoRelatorio(
+  pedido: PedidoOrcamentoRef,
+  orcamento?: OrcamentoGeradoRef | null
+): PedidoOrcamentoRef['status'] {
+  const rank: Record<PedidoOrcamentoRef['status'], number> = {
+    pendente: 0,
+    enviado: 1,
+    recebido: 2,
+    aprovado: 4,
+    rejeitado: 3,
+  }
+  let best = pedido.status
+  const fromOrc = orcamentoStatusParaPedidoRelatorio(orcamento?.status)
+  if (fromOrc && rank[fromOrc] > rank[best]) best = fromOrc
+  return best
+}
+
+export function pedidoRelatorioPendenteComOrcamento(
+  pedido: PedidoOrcamentoRef,
+  orcamento?: OrcamentoGeradoRef | null
+): boolean {
+  return pedidoRelatorioPendente(statusEfetivoPedidoRelatorio(pedido, orcamento))
+}
+
+export function pedidoRelatorioAprovadoComOrcamento(
+  pedido: PedidoOrcamentoRef,
+  orcamento?: OrcamentoGeradoRef | null
+): boolean {
+  return pedidoRelatorioAprovado(statusEfetivoPedidoRelatorio(pedido, orcamento))
+}
+
+/** Remove pedidos duplicados do mesmo relatório/equipamento (fica o mais avançado ou o mais recente). */
+export function dedupePedidosRelatorioCliente(pedidos: PedidoOrcamentoRef[]): PedidoOrcamentoRef[] {
+  const rank = (s: PedidoOrcamentoRef['status']) =>
+    s === 'aprovado' ? 4 : s === 'rejeitado' ? 3 : s === 'recebido' ? 2 : s === 'enviado' ? 1 : 0
+  const map = new Map<string, PedidoOrcamentoRef>()
+  for (const p of pedidos) {
+    const key = [
+      String(p.numeroRelatorio ?? '').trim(),
+      String(p.relatorioId ?? '').trim(),
+      String(p.equipamentoId ?? '').trim(),
+      String(p.maquinaModelo ?? '').trim(),
+      String(p.numeroMaquina ?? '').trim(),
+    ].join('::')
+    const prev = map.get(key)
+    if (!prev) {
+      map.set(key, p)
+      continue
+    }
+    if (rank(p.status) > rank(prev.status)) {
+      map.set(key, p)
+      continue
+    }
+    if (rank(p.status) === rank(prev.status) && String(p.dataGeracao) > String(prev.dataGeracao)) {
+      map.set(key, p)
+    }
+  }
+  return [...map.values()]
+}
+
+export function chaveOrcamentoRelatorioJaTemPedido(
+  orc: OrcamentoGeradoRef,
+  pedidos: PedidoOrcamentoRef[]
+): boolean {
+  if (orc.id.startsWith('rel-')) {
+    const pid = orc.id.slice(4)
+    if (pedidos.some((p) => p.id === pid)) return true
+  }
+  const num = String(orc.relatorioNumero ?? '').trim()
+  if (num && pedidos.some((p) => String(p.numeroRelatorio ?? '').trim() === num)) return true
+  return false
+}
+
+export function aprovarPedidosOrcamentoRelatorio(
+  pedidos: PedidoOrcamentoRef[],
+  opts: { relatorioId?: string; numeroRelatorio?: string }
+): PedidoOrcamentoRef[] {
+  const rid = String(opts.relatorioId ?? '').trim()
+  const num = String(opts.numeroRelatorio ?? '').trim()
+  if (!rid && !num) return pedidos
+  let changed = false
+  const next = pedidos.map((p) => {
+    const match =
+      (rid && String(p.relatorioId ?? '').trim() === rid) ||
+      (num && String(p.numeroRelatorio ?? '').trim() === num)
+    if (!match || p.status === 'aprovado' || p.status === 'rejeitado') return p
+    changed = true
+    return { ...p, status: 'aprovado' as const }
+  })
+  return changed ? next : pedidos
+}
+
+export function aprovarOrcamentosGeradosRelatorio(
+  orcamentos: OrcamentoGeradoRef[],
+  opts: { relatorioId?: string; numeroRelatorio?: string }
+): OrcamentoGeradoRef[] {
+  const rid = String(opts.relatorioId ?? '').trim()
+  const num = String(opts.numeroRelatorio ?? '').trim()
+  if (!rid && !num) return orcamentos
+  let changed = false
+  const next = orcamentos.map((o) => {
+    const isRel =
+      o.tipo === 'orcamento-relatorio' ||
+      o.tipo === 'cliente-cadastrado' ||
+      Boolean(o.relatorioId || o.relatorioNumero)
+    if (!isRel) return o
+    const match =
+      (rid && String(o.relatorioId ?? '').trim() === rid) ||
+      (num && String(o.relatorioNumero ?? '').trim() === num)
+    if (!match) return o
+    const st = o.status
+    if (st === 'aprovado' || st === 'concluido' || st === 'entregue' || st === 'cancelado') return o
+    changed = true
+    return { ...o, status: 'aprovado' as const }
+  })
+  return changed ? next : orcamentos
+}
+
+export function aplicarPatchPedidoFromOrcamentoGerado(
+  orc: OrcamentoGeradoRef,
+  pedidos: PedidoOrcamentoRef[],
+  statusOrc?: OrcamentoGeradoRef['status']
+): PedidoOrcamentoRef[] {
+  const novoStatus = orcamentoStatusParaPedidoRelatorio(statusOrc ?? orc.status)
+  if (!novoStatus) return pedidos
+
+  const pedidoId = orc.id.startsWith('rel-') ? orc.id.slice(4) : ''
+  const numRel = String(orc.relatorioNumero ?? '').trim()
+  const relId = String(orc.relatorioId ?? '').trim()
+  const rank: Record<PedidoOrcamentoRef['status'], number> = {
+    pendente: 0,
+    enviado: 1,
+    recebido: 2,
+    rejeitado: 3,
+    aprovado: 4,
+  }
+
+  let changed = false
+  const next = pedidos.map((p) => {
+    const match =
+      (pedidoId && p.id === pedidoId) ||
+      (numRel && String(p.numeroRelatorio ?? '').trim() === numRel) ||
+      (relId && String(p.relatorioId ?? '').trim() === relId)
+    if (!match) return p
+    if (p.status === novoStatus) return p
+    if (rank[novoStatus] < rank[p.status]) return p
+    changed = true
+    return { ...p, status: novoStatus }
+  })
+  return changed ? next : pedidos
 }
 
 export function pedidoRelatorioPendente(status: PedidoOrcamentoRef['status']): boolean {

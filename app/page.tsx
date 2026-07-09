@@ -228,6 +228,8 @@ import {
   enrichOrcamentosGeradosComPedidosAvulsos,
   gerarProximoCodigoPedidoRelatorio,
   mergeOrcamentosGeradosArrays,
+  aprovarPedidosOrcamentoRelatorio,
+  aprovarOrcamentosGeradosRelatorio,
 } from './lib/clienteEquipamentoOrcamentos'
 import type { PedidoAvulsoGuardado } from './components/PedidoOrcamentosAvulsoContent'
 import { rotuloIdEquipamentoCliente, getPagamentoRelatorio } from './lib/clienteDetalheUtils'
@@ -10913,8 +10915,39 @@ export default function Dashboard() {
       
       // Carregar pedidos de orçamento
       const savedPedidosOrcamento = getData('nonato-pedidos-orcamento')
-      if (savedPedidosOrcamento) {
-        setPedidosOrcamento(savedPedidosOrcamento)
+      if (savedPedidosOrcamento && Array.isArray(savedPedidosOrcamento)) {
+        const guardArrBoot = getData('nonato-fechamentos-guardados-biblioteca')
+        const guardIdsBoot = Array.isArray(guardArrBoot) ? guardArrBoot : []
+        const relsBootOrc = getData('nonato-relatorios-servico') as RelatorioServico[] | null
+        const relsOrc = Array.isArray(relsBootOrc) ? relsBootOrc : []
+        let pedidosCarregados = savedPedidosOrcamento as PedidoOrcamento[]
+        for (const rid of guardIdsBoot) {
+          const rel = relsOrc.find((r) => r.id === rid)
+          pedidosCarregados = aprovarPedidosOrcamentoRelatorio(pedidosCarregados, {
+            relatorioId: rid,
+            numeroRelatorio: rel?.numero,
+          })
+        }
+        setPedidosOrcamento(pedidosCarregados)
+        if (pedidosCarregados !== savedPedidosOrcamento) {
+          saveData('nonato-pedidos-orcamento', pedidosCarregados).catch(() => {})
+        }
+        if (guardIdsBoot.length > 0) {
+          const orcRawBoot = getData('nonato-orcamentos-avulso')
+          if (Array.isArray(orcRawBoot)) {
+            let orcsBoot = orcRawBoot as any[]
+            for (const rid of guardIdsBoot) {
+              const rel = relsOrc.find((r) => r.id === rid)
+              orcsBoot = aprovarOrcamentosGeradosRelatorio(orcsBoot, {
+                relatorioId: rid,
+                numeroRelatorio: rel?.numero,
+              })
+            }
+            if (orcsBoot !== orcRawBoot) {
+              saveData('nonato-orcamentos-avulso', orcsBoot).catch(() => {})
+            }
+          }
+        }
       }
 
       const savedProtocolosServico = getData('nonato-protocolos-servico')
@@ -16625,6 +16658,29 @@ export default function Dashboard() {
               'Guardado na Biblioteca de Relatórios. Pode visualizar ou editar em «Biblioteca de Relatórios».'
       )
     }
+
+    const relBiblioteca = relatoriosServico.find((r) => r.id === relatorioId)
+    const pedidosAprovados = aprovarPedidosOrcamentoRelatorio(pedidosOrcamento, {
+      relatorioId,
+      numeroRelatorio: relBiblioteca?.numero,
+    })
+    if (pedidosAprovados !== pedidosOrcamento) {
+      setPedidosOrcamento(pedidosAprovados)
+      await saveData('nonato-pedidos-orcamento', pedidosAprovados)
+    }
+    try {
+      const orcamentosExistentesData = await loadData('nonato-orcamentos-avulso')
+      const orcamentosExistentes: unknown[] = Array.isArray(orcamentosExistentesData)
+        ? orcamentosExistentesData
+        : []
+      const orcsAprovados = aprovarOrcamentosGeradosRelatorio(orcamentosExistentes as any[], {
+        relatorioId,
+        numeroRelatorio: relBiblioteca?.numero,
+      })
+      if (orcsAprovados !== orcamentosExistentes) {
+        await saveData('nonato-orcamentos-avulso', orcsAprovados)
+      }
+    } catch (_) {}
   }
 
   const handleEditarDespesasNaBiblioteca = (relatorioId: string) => {

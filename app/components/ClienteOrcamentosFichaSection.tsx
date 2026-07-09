@@ -12,8 +12,8 @@ import {
   pedidoRelatorioCorrespondeCliente,
   pedidoAvulsoCorrespondeCliente,
   orcamentoGeradoCorrespondeCliente,
-  pedidoRelatorioPendente,
-  pedidoRelatorioAprovado,
+  pedidoRelatorioPendenteComOrcamento,
+  pedidoRelatorioAprovadoComOrcamento,
   pedidoAvulsoPendente,
   pedidoAvulsoAprovado,
   orcamentoGeradoPendente,
@@ -21,6 +21,10 @@ import {
   rotuloEquipamentoPedidoRelatorio,
   rotuloEquipamentoPedidoAvulso,
   rotuloEquipamentoOrcamentoGerado,
+  dedupePedidosRelatorioCliente,
+  findOrcamentoGeradoParaPedidoRelatorio,
+  statusEfetivoPedidoRelatorio,
+  chaveOrcamentoRelatorioJaTemPedido,
 } from '../lib/clienteEquipamentoOrcamentos'
 
 type FiltroOrigem = 'todos' | 'relatorio' | 'avulso'
@@ -77,7 +81,10 @@ export function ClienteOrcamentosFichaSection({
   }, [loadData, clienteId])
 
   const pedidosRelatorioCliente = useMemo(
-    () => pedidosRelatorio.filter((p) => pedidoRelatorioCorrespondeCliente(p, clienteId, clienteNome)),
+    () =>
+      dedupePedidosRelatorioCliente(
+        pedidosRelatorio.filter((p) => pedidoRelatorioCorrespondeCliente(p, clienteId, clienteNome))
+      ),
     [pedidosRelatorio, clienteId, clienteNome]
   )
 
@@ -143,9 +150,14 @@ export function ClienteOrcamentosFichaSection({
 
   const itensVisiveis = useMemo(() => {
     type Item =
-      | { kind: 'relatorio-pedido'; data: PedidoOrcamentoRef; equipLabel: string }
+      | {
+          kind: 'relatorio-unificado'
+          pedido: PedidoOrcamentoRef
+          orcamento?: OrcamentoGeradoRef
+          equipLabel: string
+        }
+      | { kind: 'relatorio-orc-solo'; data: OrcamentoGeradoRef; equipLabel: string }
       | { kind: 'avulso-pedido'; data: PedidoAvulsoRef; equipLabel: string }
-      | { kind: 'relatorio-orc'; data: OrcamentoGeradoRef; equipLabel: string }
       | { kind: 'avulso-orc'; data: OrcamentoGeradoRef; equipLabel: string }
 
     const items: Item[] = []
@@ -163,12 +175,23 @@ export function ClienteOrcamentosFichaSection({
 
     if (filtroOrigem === 'todos' || filtroOrigem === 'relatorio') {
       pedidosRelatorioCliente.forEach((p) => {
-        if (!encaixaEquipamento(p)) return
-        items.push({ kind: 'relatorio-pedido', data: p, equipLabel: rotuloEquipamentoPedidoRelatorio(p) })
+        const orc = findOrcamentoGeradoParaPedidoRelatorio(p, orcamentosRelatorio)
+        if (!encaixaEquipamento(p, undefined, orc)) return
+        items.push({
+          kind: 'relatorio-unificado',
+          pedido: p,
+          orcamento: orc,
+          equipLabel: rotuloEquipamentoPedidoRelatorio(p),
+        })
       })
       orcamentosRelatorio.forEach((o) => {
+        if (chaveOrcamentoRelatorioJaTemPedido(o, pedidosRelatorioCliente)) return
         if (!encaixaEquipamento(undefined, undefined, o)) return
-        items.push({ kind: 'relatorio-orc', data: o, equipLabel: rotuloEquipamentoOrcamentoGerado(o) })
+        items.push({
+          kind: 'relatorio-orc-solo',
+          data: o,
+          equipLabel: rotuloEquipamentoOrcamentoGerado(o),
+        })
       })
     }
     if (filtroOrigem === 'todos' || filtroOrigem === 'avulso') {
@@ -184,10 +207,15 @@ export function ClienteOrcamentosFichaSection({
 
     return items.filter((item) => {
       if (filtroEstado === 'todos') return true
-      if (item.kind === 'relatorio-pedido') {
+      if (item.kind === 'relatorio-unificado') {
         return filtroEstado === 'pendentes'
-          ? pedidoRelatorioPendente(item.data.status)
-          : pedidoRelatorioAprovado(item.data.status)
+          ? pedidoRelatorioPendenteComOrcamento(item.pedido, item.orcamento)
+          : pedidoRelatorioAprovadoComOrcamento(item.pedido, item.orcamento)
+      }
+      if (item.kind === 'relatorio-orc-solo') {
+        return filtroEstado === 'pendentes'
+          ? orcamentoGeradoPendente(item.data.status)
+          : orcamentoGeradoAprovado(item.data.status)
       }
       if (item.kind === 'avulso-pedido') {
         return filtroEstado === 'pendentes'
@@ -209,7 +237,19 @@ export function ClienteOrcamentosFichaSection({
     equipamentos,
   ])
 
-  const totalRelatorio = pedidosRelatorioCliente.length + orcamentosRelatorio.length
+  const totalRelatorio = useMemo(() => {
+    const pedidosKeys = new Set(
+      pedidosRelatorioCliente.map((p) =>
+        [
+          String(p.numeroRelatorio ?? '').trim(),
+          String(p.relatorioId ?? '').trim(),
+          String(p.equipamentoId ?? '').trim(),
+        ].join('::')
+      )
+    )
+    const orfaos = orcamentosRelatorio.filter((o) => !chaveOrcamentoRelatorioJaTemPedido(o, pedidosRelatorioCliente)).length
+    return pedidosKeys.size + orfaos
+  }, [pedidosRelatorioCliente, orcamentosRelatorio])
   const totalAvulso = pedidosAvulsoCliente.length + orcamentosAvulso.length
 
   const atualizarStatusAvulso = async (codigo: string, status: PedidoAvulsoRef['status']) => {
@@ -228,7 +268,11 @@ export function ClienteOrcamentosFichaSection({
     if (status === 'rejeitado') return { bg: 'rgba(255,68,68,0.15)', color: '#ff6666', label: safeT?.rejeitado || 'Rejeitado' }
     if (status === 'enviado') return { bg: 'rgba(77,166,255,0.15)', color: '#4da6ff', label: safeT?.statusEnviado || 'Enviado' }
     if (status === 'recebido') return { bg: 'rgba(0,200,83,0.1)', color: '#7dd3a8', label: safeT?.statusRecebido || 'Recebido' }
-    return { bg: 'rgba(255,170,0,0.15)', color: '#ffaa00', label: safeT?.pendente || 'Pendente' }
+    return {
+      bg: 'rgba(255,170,0,0.15)',
+      color: '#ffaa00',
+      label: safeT?.aguardaAprovacao || safeT?.pendentesAprovacao || 'Aguarda aprovação',
+    }
   }
 
   const badgeAvulso = (status?: PedidoAvulsoRef['status']) => {
@@ -324,14 +368,15 @@ export function ClienteOrcamentosFichaSection({
       ) : (
         <div className="cliente-equip-orcamentos__list cliente-detalhe-v2__orcamentos-list">
           {itensVisiveis.map((item) => {
-            if (item.kind === 'relatorio-pedido') {
-              const p = item.data
-              const badge = badgeRelatorio(p.status)
+            if (item.kind === 'relatorio-unificado') {
+              const p = item.pedido
+              const statusEfetivo = statusEfetivoPedidoRelatorio(p, item.orcamento)
+              const badge = badgeRelatorio(statusEfetivo)
               return (
                 <div key={`rel-${p.id}`} className="cliente-equip-orcamentos__card">
                   <div className="cliente-equip-orcamentos__card-head">
                     <span className="cliente-equip-orcamentos__tag cliente-equip-orcamentos__tag--rel">
-                      {safeT?.doRelatorio || 'Relatório'}
+                      {safeT?.doRelatorio || 'Do relatório'}
                     </span>
                     <strong>{p.codigo || p.numeroRelatorio}</strong>
                     <span className="cliente-equip-orcamentos__badge" style={{ background: badge.bg, color: badge.color }}>
@@ -343,6 +388,30 @@ export function ClienteOrcamentosFichaSection({
                   </p>
                   <p className="cliente-equip-orcamentos__line">
                     {new Date(p.dataGeracao).toLocaleDateString('pt-BR')}
+                  </p>
+                </div>
+              )
+            }
+
+            if (item.kind === 'relatorio-orc-solo') {
+              const o = item.data
+              const badge = badgeAvulso(o.status)
+              return (
+                <div key={`orc-solo-${o.id}`} className="cliente-equip-orcamentos__card">
+                  <div className="cliente-equip-orcamentos__card-head">
+                    <span className="cliente-equip-orcamentos__tag cliente-equip-orcamentos__tag--rel">
+                      {safeT?.doRelatorio || 'Do relatório'}
+                    </span>
+                    <strong>{o.numeroOrcamento}</strong>
+                    <span className="cliente-equip-orcamentos__badge" style={{ background: badge.bg, color: badge.color }}>
+                      {badge.label}
+                    </span>
+                  </div>
+                  <p className="cliente-equip-orcamentos__line">
+                    {safeT?.equipamento || 'Equipamento'}: {item.equipLabel}
+                  </p>
+                  <p className="cliente-equip-orcamentos__line">
+                    {new Date(o.dataCriacao || o.data).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
               )
@@ -374,14 +443,11 @@ export function ClienteOrcamentosFichaSection({
 
             const o = item.data
             const badge = badgeAvulso(o.status)
-            const isRel = item.kind === 'relatorio-orc'
             return (
               <div key={`orc-${o.id}`} className="cliente-equip-orcamentos__card">
                 <div className="cliente-equip-orcamentos__card-head">
-                  <span
-                    className={`cliente-equip-orcamentos__tag ${isRel ? 'cliente-equip-orcamentos__tag--rel' : 'cliente-equip-orcamentos__tag--av'}`}
-                  >
-                    {isRel ? safeT?.orcamentoGerado || 'Orçamento gerado' : safeT?.avulso || 'Avulso'}
+                  <span className="cliente-equip-orcamentos__tag cliente-equip-orcamentos__tag--av">
+                    {safeT?.avulso || 'Avulso'}
                   </span>
                   <strong>{o.numeroOrcamento}</strong>
                   <span className="cliente-equip-orcamentos__badge" style={{ background: badge.bg, color: badge.color }}>
