@@ -91,7 +91,7 @@ import {
   hashImagemComprovante,
   mensagemDuplicadoComprovante,
 } from './lib/comprovanteDuplicado'
-import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, buildRelatorioServicoPdfMetaSectionHtml, buildFechamentoDespesasRelatorioInfoHtml, buildFechamentoDespesasClienteMetaFields, type RelatorioServicoPdfHeaderVariant, type RelatorioServicoPdfMetaLabels } from './lib/relatorioServicoPdfPrintCss'
+import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, buildRelatorioServicoPdfMetaSectionHtml, buildFechamentoDespesasRelatorioInfoHtml, buildFechamentoDespesasClienteMetaFields, buildRelatorioServicoSummaryCardsHtml, type RelatorioServicoPdfHeaderVariant, type RelatorioServicoPdfMetaLabels } from './lib/relatorioServicoPdfPrintCss'
 import { PDF_DOCUMENT_LAYOUT_CSS, buildPdfDocumentHeaderHtml, buildPdfDocumentFooterHtml, buildPdfMetaSectionHtml } from './lib/pdfDocumentLayout'
 import {
   MAX_EQUIPAMENTOS_RELATORIO,
@@ -19063,32 +19063,7 @@ export default function Dashboard() {
             </table>
           </div>
 
-          <div class="summary">
-            <div class="summary-card">
-              <h4>${t.horasTrabalho || 'Horas de Trabalho'}</h4>
-              <div class="value">${totais.horasTrabalho}h</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.kmsPercorridos || 'Km\'s Percorridos'}</h4>
-              <div class="value">${totais.kmsPercorridos} km</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.horasViagem || 'Horas de Viagem'}</h4>
-              <div class="value">${totais.horasViagem}h</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.diarias || 'DIÁRIAS'}</h4>
-              <div class="value">${relatorio.diasTrabalho.length}</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.horasViagemIda || 'Horas de Viagem de Ida'}</h4>
-              <div class="value">${totais.horasViagemIda ?? '-'}</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.horasViagemRetorno || 'Horas de Viagem de Retorno'}</h4>
-              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
-            </div>
-          </div>
+          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>)}
           ` : ''}
 
           <div class="info-section">
@@ -19244,32 +19219,7 @@ export default function Dashboard() {
             </table>
           </div>
 
-          <div class="summary">
-            <div class="summary-card">
-              <h4>${t.horasTrabalho || 'Horas'}</h4>
-              <div class="value">${totais.horasTrabalho}h</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.kmsPercorridos || 'KM'}</h4>
-              <div class="value">${totais.kmsPercorridos}</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.horasViagem || 'Viagem'}</h4>
-              <div class="value">${totais.horasViagem}h</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.diarias || 'Dias'}</h4>
-              <div class="value">${relatorio.diasTrabalho.length}</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.horasViagemIda || 'H. Ida'}</h4>
-              <div class="value">${totais.horasViagemIda ?? '-'}</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.horasViagemRetorno || 'H. Retorno'}</h4>
-              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
-            </div>
-          </div>
+          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>)}
           ` : ''}
 
           <div class="info-section">
@@ -19428,32 +19378,7 @@ export default function Dashboard() {
             </table>
           </div>
 
-          <div class="summary">
-            <div class="summary-card">
-              <h4>${t.horasTrabalho || 'Horas de Trabalho'}</h4>
-              <div class="value">${totais.horasTrabalho}h</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.kmsPercorridos || 'Km\'s Percorridos'}</h4>
-              <div class="value">${totais.kmsPercorridos} km</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.horasViagem || 'Horas de Viagem'}</h4>
-              <div class="value">${totais.horasViagem}h</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.diarias || 'DIÁRIAS'}</h4>
-              <div class="value">${relatorio.diasTrabalho.length}</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.horasViagemIda || 'Horas de Viagem de Ida'}</h4>
-              <div class="value">${totais.horasViagemIda ?? '-'}</div>
-            </div>
-            <div class="summary-card">
-              <h4>${t.horasViagemRetorno || 'Horas de Viagem de Retorno'}</h4>
-              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
-            </div>
-          </div>
+          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>)}
           ` : ''}
 
           <div class="info-section">
@@ -19695,10 +19620,12 @@ export default function Dashboard() {
               letter-spacing: 0.06em;
             }
             .summary-card-modern .value {
-              font-family: Georgia, "Times New Roman", serif;
-              font-size: 24px;
+              font-family: "Segoe UI", system-ui, Arial, sans-serif;
+              font-size: 22px;
               font-weight: 700;
               color: #1e3a5f;
+              font-variant-numeric: tabular-nums lining-nums;
+              letter-spacing: -0.02em;
             }
             .checkbox-modern {
               width: 14px;
@@ -19820,32 +19747,10 @@ export default function Dashboard() {
             </table>
           </div>
 
-          <div class="summary-modern">
-            <div class="summary-card-modern">
-              <h4>${t.horasTrabalho || 'Horas de Trabalho'}</h4>
-              <div class="value">${totais.horasTrabalho}h</div>
-            </div>
-            <div class="summary-card-modern">
-              <h4>${t.kmsPercorridos || 'Km\'s Percorridos'}</h4>
-              <div class="value">${totais.kmsPercorridos} km</div>
-            </div>
-            <div class="summary-card-modern">
-              <h4>${t.horasViagem || 'Horas de Viagem'}</h4>
-              <div class="value">${totais.horasViagem}h</div>
-            </div>
-            <div class="summary-card-modern">
-              <h4>${t.diarias || 'DIÁRIAS'}</h4>
-              <div class="value">${relatorio.diasTrabalho.length}</div>
-            </div>
-            <div class="summary-card-modern">
-              <h4>${t.horasViagemIda || 'Horas de Viagem de Ida'}</h4>
-              <div class="value">${totais.horasViagemIda ?? '-'}</div>
-            </div>
-            <div class="summary-card-modern">
-              <h4>${t.horasViagemRetorno || 'Horas de Viagem de Retorno'}</h4>
-              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
-            </div>
-          </div>
+          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>, {
+            wrapperClass: 'summary-modern',
+            cardClass: 'summary-card-modern',
+          })}
           ` : ''}
 
           <div class="info-card">
@@ -20180,32 +20085,12 @@ export default function Dashboard() {
             </table>
           </div>
 
-          <div class="summary-minimal">
-            <div class="summary-item">
-              <div class="label">${t.horasTrabalho || 'Horas de Trabalho'}</div>
-              <div class="value">${totais.horasTrabalho}h</div>
-            </div>
-            <div class="summary-item">
-              <div class="label">${t.kmsPercorridos || 'Km\'s Percorridos'}</div>
-              <div class="value">${totais.kmsPercorridos} km</div>
-            </div>
-            <div class="summary-item">
-              <div class="label">${t.horasViagem || 'Horas de Viagem'}</div>
-              <div class="value">${totais.horasViagem}h</div>
-            </div>
-            <div class="summary-item">
-              <div class="label">${t.diarias || 'DIÁRIAS'}</div>
-              <div class="value">${relatorio.diasTrabalho.length}</div>
-            </div>
-            <div class="summary-item">
-              <div class="label">${t.horasViagemIda || 'Horas de Viagem de Ida'}</div>
-              <div class="value">${totais.horasViagemIda ?? '-'}</div>
-            </div>
-            <div class="summary-item">
-              <div class="label">${t.horasViagemRetorno || 'Horas de Viagem de Retorno'}</div>
-              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
-            </div>
-          </div>
+          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>, {
+            wrapperClass: 'summary-minimal',
+            cardClass: 'summary-item',
+            labelAs: 'div',
+            labelClass: 'label',
+          })}
           ` : ''}
 
           <div class="section-minimal">
@@ -20441,9 +20326,11 @@ export default function Dashboard() {
               text-transform: uppercase;
             }
             .summary-card-tecnico .value {
-              font-size: 20px;
-              font-weight: bold;
+              font-family: "Segoe UI", system-ui, Arial, sans-serif;
+              font-size: 18px;
+              font-weight: 700;
               color: #000;
+              font-variant-numeric: tabular-nums lining-nums;
             }
             .checkbox-tecnico {
               width: 10px;
@@ -20551,32 +20438,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div class="summary-tecnico">
-            <div class="summary-card-tecnico">
-              <h4>${t.horasTrabalho || 'Horas de Trabalho'}</h4>
-              <div class="value">${totais.horasTrabalho}h</div>
-            </div>
-            <div class="summary-card-tecnico">
-              <h4>${t.kmsPercorridos || 'Km\'s Percorridos'}</h4>
-              <div class="value">${totais.kmsPercorridos} km</div>
-            </div>
-            <div class="summary-card-tecnico">
-              <h4>${t.horasViagem || 'Horas de Viagem'}</h4>
-              <div class="value">${totais.horasViagem}h</div>
-            </div>
-            <div class="summary-card-tecnico">
-              <h4>${t.diarias || 'DIÁRIAS'}</h4>
-              <div class="value">${relatorio.diasTrabalho.length}</div>
-            </div>
-            <div class="summary-card-tecnico">
-              <h4>${t.horasViagemIda || 'Horas de Viagem de Ida'}</h4>
-              <div class="value">${totais.horasViagemIda ?? '-'}</div>
-            </div>
-            <div class="summary-card-tecnico">
-              <h4>${t.horasViagemRetorno || 'Horas de Viagem de Retorno'}</h4>
-              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
-            </div>
-          </div>
+          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>, {
+            wrapperClass: 'summary-tecnico',
+            cardClass: 'summary-card-tecnico',
+          })}
           ` : ''}
 
           <div class="section-tecnico">
@@ -20926,32 +20791,12 @@ export default function Dashboard() {
             </table>
           </div>
 
-          <div class="summary-executivo">
-            <div class="summary-item-executivo">
-              <div class="label">${t.horasTrabalho || 'Horas de Trabalho'}</div>
-              <div class="value">${totais.horasTrabalho}h</div>
-            </div>
-            <div class="summary-item-executivo">
-              <div class="label">${t.kmsPercorridos || 'Km\'s Percorridos'}</div>
-              <div class="value">${totais.kmsPercorridos} km</div>
-            </div>
-            <div class="summary-item-executivo">
-              <div class="label">${t.horasViagem || 'Horas de Viagem'}</div>
-              <div class="value">${totais.horasViagem}h</div>
-            </div>
-            <div class="summary-item-executivo">
-              <div class="label">${t.diarias || 'DIÁRIAS'}</div>
-              <div class="value">${relatorio.diasTrabalho.length}</div>
-            </div>
-            <div class="summary-item-executivo">
-              <div class="label">${t.horasViagemIda || 'Horas de Viagem de Ida'}</div>
-              <div class="value">${totais.horasViagemIda ?? '-'}</div>
-            </div>
-            <div class="summary-item-executivo">
-              <div class="label">${t.horasViagemRetorno || 'Horas de Viagem de Retorno'}</div>
-              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
-            </div>
-          </div>
+          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>, {
+            wrapperClass: 'summary-executivo',
+            cardClass: 'summary-item-executivo',
+            labelAs: 'div',
+            labelClass: 'label',
+          })}
           ` : ''}
 
           <div class="section-executivo">
@@ -21201,9 +21046,14 @@ export default function Dashboard() {
               letter-spacing: 1px;
             }
             .summary-card-negro .value {
-              font-size: 28px;
-              font-weight: bold;
+              font-family: "Segoe UI", system-ui, Arial, sans-serif;
+              font-size: 24px;
+              font-weight: 700;
               color: #fff;
+              font-variant-numeric: tabular-nums lining-nums;
+            }
+            .summary-card-negro .rs-resumo-un {
+              color: rgba(255, 255, 255, 0.72);
             }
             .checkbox-negro {
               width: 14px;
@@ -21326,32 +21176,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div class="summary-negro">
-            <div class="summary-card-negro">
-              <h4>${t.horasTrabalho || 'Horas de Trabalho'}</h4>
-              <div class="value">${totais.horasTrabalho}h</div>
-            </div>
-            <div class="summary-card-negro">
-              <h4>${t.kmsPercorridos || 'Km\'s Percorridos'}</h4>
-              <div class="value">${totais.kmsPercorridos} km</div>
-            </div>
-            <div class="summary-card-negro">
-              <h4>${t.horasViagem || 'Horas de Viagem'}</h4>
-              <div class="value">${totais.horasViagem}h</div>
-            </div>
-            <div class="summary-card-negro">
-              <h4>${t.diarias || 'DIÁRIAS'}</h4>
-              <div class="value">${relatorio.diasTrabalho.length}</div>
-            </div>
-            <div class="summary-card-negro">
-              <h4>${t.horasViagemIda || 'Horas de Viagem de Ida'}</h4>
-              <div class="value">${totais.horasViagemIda ?? '-'}</div>
-            </div>
-            <div class="summary-card-negro">
-              <h4>${t.horasViagemRetorno || 'Horas de Viagem de Retorno'}</h4>
-              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
-            </div>
-          </div>
+          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>, {
+            wrapperClass: 'summary-negro',
+            cardClass: 'summary-card-negro',
+          })}
           ` : ''}
 
           <div class="section-negro">
@@ -22057,8 +21885,6 @@ export default function Dashboard() {
   const renderReportDiasTable = (relatorio: RelatorioServico, totais: { horasTrabalho: string; kmsPercorridos: string; horasViagem: string; horasViagemIda?: string; horasViagemRetorno?: string }) => {
     if (!relatorio.diasTrabalho || relatorio.diasTrabalho.length === 0) return '';
     const numDiarias = relatorio.diasTrabalho.length;
-    const hIda = totais.horasViagemIda ?? '-';
-    const hRet = totais.horasViagemRetorno ?? '-';
     return `
     <div class="report-section">
       <h3>${t.controleHorasDeslocamentos || 'CONTROLE DE HORAS E DESLOCAMENTOS'}</h3>
@@ -22078,14 +21904,7 @@ export default function Dashboard() {
           }).join('')}
         </tbody>
       </table>
-      <div class="report-summary">
-        <span>${t.horasTrabalho || 'Horas'}: ${totais.horasTrabalho}h</span>
-        <span>${t.kmsPercorridos || 'KM'}: ${totais.kmsPercorridos}</span>
-        <span>${t.horasViagem || 'Viagem'}: ${totais.horasViagem}h</span>
-        <span>${t.diarias || 'Diárias'}: ${numDiarias}</span>
-        <span>${t.horasViagemIda || 'H. Ida'}: ${hIda}</span>
-        <span>${t.horasViagemRetorno || 'H. Retorno'}: ${hRet}</span>
-      </div>
+      ${buildRelatorioServicoSummaryCardsHtml(totais, numDiarias, t as Record<string, string | undefined>)}
     </div>`;
   };
 

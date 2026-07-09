@@ -319,6 +319,81 @@ export const RELATORIO_SERVICO_PDF_HEADER_CSS_LEGACY = `
 .pdf-header { margin-bottom: 18px; }
 `.trim()
 
+export type RelatorioServicoTotaisResumo = {
+  horasTrabalho: string
+  kmsPercorridos: string
+  horasViagem: string
+  horasViagemIda?: string
+  horasViagemRetorno?: string
+}
+
+/** Horas HH:MM → valor tipográfico consistente (ex.: 8:30h). */
+export function formatHorasResumoPdf(hhmm: string | undefined | null): string {
+  const s = String(hhmm ?? '').trim()
+  if (!s || s === '-') return '—'
+  const m = s.match(/^(\d+):(\d{1,2})$/)
+  if (!m) return escapePdfHtml(s)
+  const h = parseInt(m[1], 10) || 0
+  const min = parseInt(m[2], 10) || 0
+  return `<span class="rs-resumo-valor rs-resumo-valor--horas"><span class="rs-resumo-num">${h}</span><span class="rs-resumo-sep">:</span><span class="rs-resumo-num rs-resumo-num--min">${String(min).padStart(2, '0')}</span><span class="rs-resumo-un">h</span></span>`
+}
+
+/** KM sem zeros desnecessários (352 em vez de 352,00). */
+export function formatKmResumoPdf(km: string | number | undefined | null): string {
+  const raw = typeof km === 'number' ? km : parseFloat(String(km ?? '').replace(',', '.').replace(/[^\d.-]/g, ''))
+  if (!Number.isFinite(raw)) return '—'
+  const rounded = Math.round(raw * 10) / 10
+  const isWhole = Math.abs(rounded - Math.round(rounded)) < 0.05
+  const numStr = isWhole
+    ? new Intl.NumberFormat('pt-PT', { maximumFractionDigits: 0 }).format(Math.round(rounded))
+    : new Intl.NumberFormat('pt-PT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(rounded)
+  return `<span class="rs-resumo-valor rs-resumo-valor--km"><span class="rs-resumo-num">${numStr}</span><span class="rs-resumo-un">km</span></span>`
+}
+
+export function formatDiariasResumoPdf(n: number): string {
+  return `<span class="rs-resumo-valor rs-resumo-valor--diarias"><span class="rs-resumo-num">${n}</span></span>`
+}
+
+/** Grelha de totais (horas, km, diárias) — formatação uniforme em todos os modelos PDF. */
+export function buildRelatorioServicoSummaryCardsHtml(
+  totais: RelatorioServicoTotaisResumo,
+  numDiarias: number,
+  labels: Record<string, string | undefined>,
+  opts?: {
+    wrapperClass?: string
+    cardClass?: string
+    labelClass?: string
+    /** `h4` (default) ou `div` com classe `.label` */
+    labelAs?: 'h4' | 'div'
+  }
+): string {
+  const wrap = opts?.wrapperClass ?? 'summary'
+  const card = opts?.cardClass ?? 'summary-card'
+  const labelAs = opts?.labelAs ?? 'h4'
+  const labelCls = opts?.labelClass ?? (labelAs === 'div' ? 'label' : '')
+  const items = [
+    { label: labels.horasTrabalho || 'Horas de Trabalho', html: formatHorasResumoPdf(totais.horasTrabalho) },
+    { label: labels.kmsPercorridos || "Km's Percorridos", html: formatKmResumoPdf(totais.kmsPercorridos) },
+    { label: labels.horasViagem || 'Horas de Viagem', html: formatHorasResumoPdf(totais.horasViagem) },
+    { label: labels.diarias || 'DIÁRIAS', html: formatDiariasResumoPdf(numDiarias) },
+    { label: labels.horasViagemIda || 'Horas de Viagem de Ida', html: formatHorasResumoPdf(totais.horasViagemIda) },
+    {
+      label: labels.horasViagemRetorno || 'Horas de Viagem de Retorno',
+      html: formatHorasResumoPdf(totais.horasViagemRetorno),
+    },
+  ]
+  return `<div class="${wrap}">${items
+    .map((it) => {
+      const labelAttr = labelCls ? ` class="${labelCls}"` : ''
+      const labelHtml =
+        labelAs === 'div'
+          ? `<div${labelAttr}>${escapePdfHtml(it.label)}</div>`
+          : `<h4${labelAttr}>${escapePdfHtml(it.label)}</h4>`
+      return `<div class="${card}">${labelHtml}<div class="value">${it.html}</div></div>`
+    })
+    .join('')}</div>`
+}
+
 export const RELATORIO_SERVICO_PDF_PRINT_CSS = `
 @page { size: A4 portrait; margin: 12mm; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -449,31 +524,68 @@ ${PDF_DOCUMENT_LAYOUT_CSS}
 .rs-pdf .summary {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 10px;
-  margin: 16px 0;
+  gap: 8px;
+  margin: 14px 0 4px;
 }
 .rs-pdf .summary-card {
   border: 1px solid #e2e8f0;
-  border-top: 2px solid #1e3a5f;
-  border-radius: 2px;
-  padding: 12px 8px;
+  border-top: 3px solid #1e3a5f;
+  border-radius: 4px;
+  padding: 10px 6px 12px;
   text-align: center;
-  background: #fff;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 .rs-pdf .summary-card h4 {
-  font-size: 0.78em;
-  margin-bottom: 8px;
-  font-weight: 600;
+  font-size: 0.68em;
+  margin-bottom: 6px;
+  font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
+  line-height: 1.25;
+  max-width: 100%;
 }
 .rs-pdf .summary-card .value {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.65em;
+  font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  font-size: 1.45em;
   font-weight: 700;
   color: #1e3a5f;
   line-height: 1.1;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.02em;
+}
+.rs-pdf .rs-resumo-valor,
+.rs-resumo-valor {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 0;
+}
+.rs-pdf .rs-resumo-num,
+.rs-resumo-num {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.rs-pdf .rs-resumo-sep,
+.rs-resumo-sep {
+  opacity: 0.45;
+  font-weight: 600;
+  padding: 0 1px;
+}
+.rs-pdf .rs-resumo-un,
+.rs-resumo-un {
+  font-size: 0.58em;
+  font-weight: 600;
+  color: #64748b;
+  margin-left: 0.2em;
+  letter-spacing: 0.03em;
+  text-transform: lowercase;
 }
 
 .rs-pdf .resultados-grid {
