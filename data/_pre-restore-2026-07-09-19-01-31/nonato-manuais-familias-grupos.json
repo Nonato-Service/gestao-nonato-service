@@ -1,0 +1,29 @@
+{
+  "familias": [
+    "SECCIONADORAS"
+  ],
+  "grupos": [
+    {
+      "id": "a26b4bab-b26e-490e-97e6-848f5415718e",
+      "nome": "HOLZMA",
+      "familia": "SECCIONADORAS"
+    }
+  ],
+  "modelos": [
+    {
+      "id": "4e2f9cbe-6624-4b3d-b187-2caa0693a8aa",
+      "nome": "HPP 250",
+      "grupoId": "a26b4bab-b26e-490e-97e6-848f5415718e"
+    },
+    {
+      "id": "8a00925e-9080-49ed-b737-c656e55d5205",
+      "nome": "HPP 230",
+      "grupoId": "a26b4bab-b26e-490e-97e6-848f5415718e"
+    },
+    {
+      "id": "1cc7d047-b2b1-4946-af16-f562eacbc281",
+      "nome": "HPP 350",
+      "grupoId": "a26b4bab-b26e-490e-97e6-848f5415718e"
+    }
+  ]
+}

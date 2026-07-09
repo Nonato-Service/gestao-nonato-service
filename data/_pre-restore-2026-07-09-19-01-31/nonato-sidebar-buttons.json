@@ -1,0 +1,399 @@
+[
+  {
+    "id": "gestao-financeira-default",
+    "name": "GESTÃO FINANCEIRA",
+    "action": "open-gestao-financeira",
+    "order": 1,
+    "translationKey": "gestaoFinanceiraTitle"
+  },
+  {
+    "id": "clientes-financeiro-default",
+    "name": "CLIENTES / FINANCEIRO",
+    "action": "open-clientes-financeiro",
+    "order": 2,
+    "translationKey": "clientesFinanceiroTitle",
+    "group": "gestao-financeira"
+  },
+  {
+    "id": "comprovantes-despesas-default",
+    "name": "REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS",
+    "action": "open-comprovantes-despesas",
+    "order": 3,
+    "translationKey": "comprovantesDespesasTitle",
+    "group": "gestao-financeira"
+  },
+  {
+    "id": "pagamentos-contador-default",
+    "name": "PAGAMENTOS AO CONTADOR",
+    "action": "open-pagamentos-contador",
+    "order": 4,
+    "translationKey": "pagamentosContadorTitle",
+    "group": "gestao-financeira"
+  },
+  {
+    "id": "administrador-default",
+    "name": "ADMINISTRADOR",
+    "action": "open-administrador",
+    "order": 5,
+    "translationKey": "administrador"
+  },
+  {
+    "id": "cadastro-nonato-service-default",
+    "name": "CADASTRO DA NONATO SERVICE",
+    "action": "open-cadastro-nonato-service",
+    "order": 6,
+    "translationKey": "cadastroNonatoServiceTitle",
+    "group": "empresa-institucional"
+  },
+  {
+    "id": "ficha-pagamento-transferencia-default",
+    "name": "FICHA PARA TRANSFERÊNCIA / PAGAMENTO",
+    "action": "open-ficha-pagamento-transferencia",
+    "order": 7,
+    "translationKey": "fichaPagamentoTransferenciaTitle",
+    "group": "empresa-institucional"
+  },
+  {
+    "id": "ficha-fatura-cliente-default",
+    "name": "FICHA PARA O CLIENTE EMITIR FATURA",
+    "action": "open-ficha-fatura-cliente",
+    "order": 8,
+    "translationKey": "fichaFaturaClienteTitle",
+    "group": "empresa-institucional"
+  },
+  {
+    "id": "gestores-default",
+    "name": "CADASTRO DE GESTORES TECNICOS INTERNOS E EXTERNOS",
+    "action": "open-gestores",
+    "order": 9,
+    "translationKey": "gestoresTitle",
+    "group": "gestao-tecnica"
+  },
+  {
+    "id": "familias-grupos-default",
+    "name": "CADASTRO DE FAMÍLIAS E GRUPOS PARA CHECKLIST",
+    "action": "open-familias-grupos",
+    "order": 11.5,
+    "translationKey": "familiasGruposTitle",
+    "group": "checklist-group"
+  },
+  {
+    "id": "familias-grupos-equipamentos-default",
+    "name": "CADASTRO DE FAMÍLIAS E GRUPOS PARA OS EQUIPAMENTOS",
+    "action": "open-familias-grupos-equipamentos",
+    "order": 9.5,
+    "translationKey": "familiasGruposEquipamentosTitle",
+    "group": "gestao-industrial"
+  },
+  {
+    "id": "equipamentos-default",
+    "name": "CADASTRO DE EQUIPAMENTOS DO ARMAZÉM",
+    "action": "open-equipamentos",
+    "order": 10,
+    "translationKey": "equipamentosTitle",
+    "group": "gestao-industrial"
+  },
+  {
+    "id": "checklist-group-default",
+    "name": "GESTÃO DOS CHECKLIST",
+    "action": "open-checklist-group",
+    "order": 11,
+    "translationKey": "checklistGroupTitle",
+    "group": "checklist-group"
+  },
+  {
+    "id": "pre-checklist-default",
+    "name": "PRÉ-CHECKLIST",
+    "action": "open-pre-checklist",
+    "order": 12,
+    "translationKey": "preChecklistSubTitle",
+    "group": "checklist-group"
+  },
+  {
+    "id": "checklist-default",
+    "name": "CHECKLIST",
+    "action": "open-checklist",
+    "order": 13,
+    "translationKey": "checklistSubTitle",
+    "group": "checklist-group"
+  },
+  {
+    "id": "gestao-grupos-checklist-default",
+    "name": "GESTÃO DOS GRUPOS PARA CHECKLIST (CHECKLIST FINAL PARA A ENTREGA)",
+    "action": "open-gestao-grupos-checklist",
+    "order": 14,
+    "translationKey": "gestaoGruposChecklistTitle",
+    "group": "checklist-group"
+  },
+  {
+    "id": "ordem-preparacao-default",
+    "name": "ORDEM DE PREPARAÇÃO",
+    "action": "open-ordem-preparacao",
+    "order": 15,
+    "translationKey": "ordemPreparacaoTitle",
+    "group": "checklist-group"
+  },
+  {
+    "id": "formularios-checklist-tecnicos-default",
+    "name": "FORMULARIOS E CHECKLIST P/ TECNICOS",
+    "action": "open-formularios-checklist-tecnicos",
+    "order": 16,
+    "translationKey": "formulariosChecklistTecnicosTitle",
+    "group": "checklist-group"
+  },
+  {
+    "id": "verificacao-final-entrega-default",
+    "name": "VERIFICAÇÃO FINAL ANTES DA ENTREGA DO EQUIPAMENTO P/ O CLIENTE",
+    "action": "open-verificacao-final-entrega",
+    "order": 17,
+    "translationKey": "verificacaoFinalEntregaTitle",
+    "group": "checklist-group"
+  },
+  {
+    "id": "comunicacao-interna-default",
+    "name": "COMUNICAÇÃO INTERNA C/ GESTORES E TECNICOS",
+    "action": "open-comunicacao-interna",
+    "order": 18,
+    "translationKey": "comunicacaoInternaTitle"
+  },
+  {
+    "id": "mensagens-internas-default",
+    "name": "MENSAGENS INTERNAS",
+    "action": "open-mensagens-internas",
+    "order": 19,
+    "translationKey": "mensagensInternas"
+  },
+  {
+    "id": "alerta-mensagens-default",
+    "name": "ALERTA DE MENSAGENS",
+    "action": "open-alerta-mensagens",
+    "order": 20,
+    "translationKey": "alertaMensagens"
+  },
+  {
+    "id": "mensagens-internas-tecnicos-default",
+    "name": "MENSAGENS INTERNAS / TÉCNICOS",
+    "action": "open-mensagens-internas-tecnicos",
+    "order": 21,
+    "translationKey": "mensagensInternasTecnicos"
+  },
+  {
+    "id": "clientes-default",
+    "name": "CADASTRO DE CLIENTES",
+    "action": "open-clientes",
+    "order": 22,
+    "translationKey": "clientesTitle",
+    "group": "parceiros-comercial"
+  },
+  {
+    "id": "fornecedores-default",
+    "name": "FORNECEDORES",
+    "action": "open-fornecedores",
+    "order": 23,
+    "translationKey": "fornecedoresTitle",
+    "group": "parceiros-comercial"
+  },
+  {
+    "id": "relatorio-servico-default",
+    "name": "RELATÓRIO DE SERVIÇO",
+    "action": "open-relatorio-servico",
+    "order": 24,
+    "translationKey": "relatorioServicoTitle",
+    "group": "documentacao-relatorios"
+  },
+  {
+    "id": "biblioteca-relatorios-default",
+    "name": "BIBLIOTECA DE RELATÓRIOS SALVOS",
+    "action": "open-biblioteca-relatorios",
+    "order": 25,
+    "translationKey": "bibliotecaRelatoriosTitle",
+    "group": "documentacao-relatorios"
+  },
+  {
+    "id": "relatorios-excluidos-clientes-default",
+    "name": "RELATÓRIOS EXCLUÍDOS / CLIENTES",
+    "action": "open-relatorios-excluidos-clientes",
+    "order": 26,
+    "translationKey": "relatoriosExcluidosClientesTitle",
+    "group": "documentacao-relatorios"
+  },
+  {
+    "id": "biblioteca-pecas-default",
+    "name": "CADASTRO DE PEÇAS E BIBLIOTECA",
+    "action": "open-biblioteca-hub",
+    "order": 27,
+    "translationKey": "cadastroPecasBibliotecaTitle",
+    "group": "pecas-biblioteca"
+  },
+  {
+    "id": "solicitacao-servico-tecnico-default",
+    "name": "SOLICITAÇÃO DE SERVIÇO TÉCNICO",
+    "action": "open-solicitacao-servico-tecnico",
+    "order": 30,
+    "translationKey": "solicitacaoServicoTecnicoTitle",
+    "group": "empresa-institucional"
+  },
+  {
+    "id": "agenda-default",
+    "name": "AGENDA TÉCNICA",
+    "action": "open-agenda",
+    "order": 29,
+    "translationKey": "agendaTitle",
+    "group": "gestao-tecnica"
+  },
+  {
+    "id": "diario-pedidos-dia-default",
+    "name": "DIÁRIO DE ANOTAÇÃO",
+    "action": "open-diario-pedidos-dia",
+    "order": 30,
+    "translationKey": "diarioPedidosTitle",
+    "group": "gestao-tecnica"
+  },
+  {
+    "id": "estado-visual-tecnico-default",
+    "name": "ESTADO VISUAL DO TÉCNICO",
+    "action": "open-estado-visual-tecnico",
+    "order": 31,
+    "translationKey": "estadoVisualTecnico",
+    "group": "gestao-tecnica"
+  },
+  {
+    "id": "informacoes-conhecimento-tecnicos-default",
+    "name": "INFORMAÇÕES DE CONHECIMENTO DOS TÉCNICOS",
+    "action": "open-informacoes-conhecimento-tecnicos",
+    "order": 32,
+    "translationKey": "informacoesConhecimentoTecnicosTitle",
+    "group": "gestao-tecnica"
+  },
+  {
+    "id": "cadastro-servicos-default",
+    "name": "CADASTRO DE SERVIÇOS / VALORES",
+    "action": "open-cadastro-servicos",
+    "order": 33,
+    "translationKey": "cadastroServicosTitle",
+    "group": "gestao-tecnica",
+    "customName": false
+  },
+  {
+    "id": "fechamento-relatorios-servicos-default",
+    "name": "FECHAMENTO DOS RELATÓRIOS DE SERVIÇOS",
+    "action": "open-fechamento-relatorios-servicos",
+    "order": 34,
+    "translationKey": "fechamentoRelatoriosServicosTitle",
+    "group": "documentacao-relatorios"
+  },
+  {
+    "id": "orcamentos-avulso-default",
+    "name": "ORÇAMENTOS",
+    "action": "open-orcamentos-avulso",
+    "order": 35,
+    "translationKey": "orcamentosAvulsoTitle",
+    "group": "gestao-custos"
+  },
+  {
+    "id": "pedido-orcamentos-avulso-default",
+    "name": "PEDIDO DE ORÇAMENTOS AVULSO",
+    "action": "open-pedido-orcamentos-avulso",
+    "order": 36,
+    "translationKey": "pedidoOrcamentosAvulsoTitle",
+    "group": "gestao-custos"
+  },
+  {
+    "id": "orcamento-servico-tecnico-default",
+    "name": "ORÇAMENTO DE SERVIÇO TÉCNICO",
+    "action": "open-orcamento-servico-tecnico",
+    "order": 37,
+    "translationKey": "orcamentoServicoTecnicoTitle",
+    "group": "gestao-custos"
+  },
+  {
+    "id": "registro-despesas-default",
+    "name": "REGISTRO DE DESPESAS",
+    "action": "open-registro-despesas",
+    "order": 38,
+    "translationKey": "registroDespesasTitle",
+    "group": "gestao-financeira"
+  },
+  {
+    "id": "mapa-visual-separacao-pecas-default",
+    "name": "MAPA VISUAL DE SEPARAÇÃO DE PEÇAS / CLIENTE",
+    "action": "open-mapa-visual-separacao-pecas",
+    "order": 39,
+    "translationKey": "mapaVisualSeparacaoPecasTitle",
+    "group": "almoxarifado-armazem"
+  },
+  {
+    "id": "desmontados-default",
+    "name": "CADASTRO DE GRUPOS DE EQUIPAMENTOS DESMONTADOS",
+    "action": "open-desmontados",
+    "order": 40,
+    "translationKey": "desmontadosTitle",
+    "group": "gestao-industrial"
+  },
+  {
+    "id": "gestao-tecnica-default",
+    "name": "GESTÃO TÉCNICA",
+    "action": "open-gestao-tecnica",
+    "order": 43,
+    "translationKey": "gestaoTecnicaTitle"
+  },
+  {
+    "id": "parceiros-comercial-default",
+    "name": "CLIENTES E FORNECEDORES",
+    "action": "open-parceiros-comercial",
+    "order": 43.45,
+    "translationKey": "parceirosComercialTitle"
+  },
+  {
+    "id": "documentacao-relatorios-default",
+    "name": "DOCUMENTAÇÃO E RELATÓRIOS",
+    "action": "open-documentacao-relatorios",
+    "order": 43.900000000000006,
+    "translationKey": "documentacaoRelatoriosTitle"
+  },
+  {
+    "id": "pecas-biblioteca-default",
+    "name": "PEÇAS E BIBLIOTECA",
+    "action": "open-pecas-biblioteca",
+    "order": 43.95,
+    "translationKey": "pecasBibliotecaTitle"
+  },
+  {
+    "id": "gestao-industrial-default",
+    "name": "GESTÃO INDUSTRIAL",
+    "action": "open-gestao-industrial",
+    "order": 46,
+    "translationKey": "gestaoIndustrialTitle"
+  },
+  {
+    "id": "manuais-informacoes-tecnicas-default",
+    "name": "MANUAIS E INFORMAÇÕES TÉCNICA DOS EQUIPAMENTOS",
+    "action": "open-manuais-informacoes-tecnicas",
+    "order": 46.5,
+    "translationKey": "manuaisInformacoesTecnicasTitle"
+  },
+  {
+    "id": "biblia-nonato-service-default",
+    "name": "BÍBLIA DA NONATO SERVICE",
+    "action": "open-biblia-nonato-service",
+    "order": 47.55,
+    "translationKey": "bibliaNonatoServiceTitle",
+    "group": "biblia-nonato-service",
+    "customName": false
+  },
+  {
+    "id": "almoxarifado-armazem-default",
+    "name": "ALMOXARIFADO / ARMAZEM",
+    "action": "open-almoxarifado-armazem",
+    "order": 49,
+    "translationKey": "almoxarifadoArmazemTitle",
+    "group": "almoxarifado-armazem"
+  },
+  {
+    "id": "pecas-substituicao-default",
+    "name": "PEÇAS QUE NECESSITAM DE SER SUBSTITUÍDAS",
+    "action": "open-pecas-substituicao",
+    "order": 50,
+    "translationKey": "pecasSubstituicao"
+  }
+]

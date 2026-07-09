@@ -1,0 +1,82 @@
+[
+  {
+    "id": "176807057078193jbl4tg1",
+    "cod": "HTT",
+    "nome": "Hora técnica trabalhada",
+    "descricao": "HORA TECNICA TRABALHADA",
+    "valor": 50,
+    "tipoCobranca": "hora",
+    "categoria": "servico",
+    "grupoId": "servico-grupo-geral"
+  },
+  {
+    "id": "1768070619123hsalk8oeb",
+    "cod": "HVI",
+    "nome": "Horas viagem de ida",
+    "descricao": "HORA VIAGEM DE IDA",
+    "valor": 50,
+    "tipoCobranca": "hora",
+    "categoria": "servico",
+    "grupoId": "servico-grupo-geral"
+  },
+  {
+    "id": "1768070619123hsalk8oeh",
+    "cod": "HVR",
+    "nome": "Horas viagem de retorno",
+    "descricao": "HORA VIAGEM DE RETORNO",
+    "valor": 50,
+    "tipoCobranca": "hora",
+    "categoria": "servico",
+    "grupoId": "servico-grupo-geral"
+  },
+  {
+    "id": "1768162869413xsvgj3piv",
+    "cod": "KRC",
+    "nome": "Kilómetro rodado / cliente",
+    "descricao": "KILOMETRO RODADO / CLIENTE",
+    "valor": 0.5,
+    "tipoCobranca": "km",
+    "categoria": "servico",
+    "grupoId": "servico-grupo-geral"
+  },
+  {
+    "id": "1768163098223a9gpmf97q",
+    "cod": "DFC",
+    "nome": "Diárias fixas combinadas",
+    "descricao": "DIARIAS FIXAS COMBINADAS",
+    "valor": 50,
+    "tipoCobranca": "diarias",
+    "categoria": "servico",
+    "grupoId": "servico-grupo-geral"
+  },
+  {
+    "id": "1768163098223ddt0001",
+    "cod": "DDT",
+    "nome": "Despesa diária do técnico",
+    "descricao": "DESPESA DIARIA DO TECNICO",
+    "valor": 50,
+    "tipoCobranca": "diarias",
+    "categoria": "despesa",
+    "grupoId": "servico-grupo-geral"
+  },
+  {
+    "id": "1768163258278kd575a7ki",
+    "cod": "DDH",
+    "nome": "Despesas de hospedagem",
+    "descricao": "DESPESAS DE HOSPEDAGEM",
+    "valor": 0,
+    "tipoCobranca": "diarias",
+    "categoria": "despesa",
+    "grupoId": "servico-grupo-geral"
+  },
+  {
+    "id": "1768163542013eboucx0te",
+    "cod": "DCC",
+    "nome": "Despesas com combustível",
+    "descricao": "DESPESAS COM COMBUSTIVEL",
+    "valor": 0,
+    "tipoCobranca": "extras",
+    "categoria": "despesa",
+    "grupoId": "servico-grupo-geral"
+  }
+]

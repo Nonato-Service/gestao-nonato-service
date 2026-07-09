@@ -1,0 +1,20 @@
+[
+  {
+    "id": "rel-1769626169500",
+    "tipo": "mensal",
+    "periodo": "2026-01",
+    "dataInicio": "2026-01-01T00:00:00.000Z",
+    "dataFim": "2026-01-28T18:49:29.500Z",
+    "totalVendas": 0,
+    "totalCompras": 0,
+    "totalRecebido": 0,
+    "totalPago": 0,
+    "saldo": 0,
+    "totalIVA": 0,
+    "numeroOS": 0,
+    "numeroFaturas": 0,
+    "clientesDevedores": 0,
+    "valorTotalDevedores": 0,
+    "dataGeracao": "2026-01-28T18:49:29.500Z"
+  }
+]

@@ -186,6 +186,8 @@ import {
   fechamentoFluxoFasePisca,
   classNameFinanceiroDespesasBibCardPorEstado,
   classNameFinanceiroDespesasBibGrupoPorEstado,
+  classNameBibliotecaClienteFluxoFinanceiro,
+  financeiroDespesasBibGrupoDevePiscar,
   ORDEM_ESTADOS_COBRANCA_FINANCEIRA,
   type EstadoCobrancaFinanceiraVisual,
   type EstadoCobrancaFinanceiraGrupoExibicao,
@@ -61748,6 +61750,12 @@ A1;Peça exemplo;10`}
                             )
                             const grupoVariosEstados = estadosNoGrupo.length > 1
                             const grupoTemEstadoVermelho = estadosNoGrupo.includes('vermelho')
+                            const grupoRelIds = grupo.rels.map((r) => r.id)
+                            const grupoDevePiscar = financeiroDespesasBibGrupoDevePiscar(
+                              grupoRelIds,
+                              fechamentoFluxoFinanceiroPorRelatorioId,
+                              grupoVariosEstados
+                            )
                             return (
                               <div
                                 key={grupo.key}
@@ -61755,6 +61763,7 @@ A1;Peça exemplo;10`}
                                   classNameFinanceiroDespesasBibGrupoPorEstado(
                                     grupoVariosEstados ? 'misto' : estadoGrupo
                                   ),
+                                  grupoDevePiscar ? 'financeiro-despesas-bib-grupo--pisca' : '',
                                   clienteGrupoDevedor &&
                                   !grupoVariosEstados &&
                                   grupoTemEstadoVermelho
@@ -62235,10 +62244,15 @@ A1;Peça exemplo;10`}
                     String(
                       txBib.bibliotecaRelatoriosRelatoriosPorEquip || '{n} relatório(s)'
                     ).replace(/\{n\}/g, String(n))
+                  const despesasRelIds = despesasCliente.map(({ relatorio }) => relatorio.id)
+                  const classeFluxoCliente = classNameBibliotecaClienteFluxoFinanceiro(
+                    despesasRelIds,
+                    fechamentoFluxoFinanceiroPorRelatorioId
+                  )
                   return (
                     <details
                       key={cliente.id}
-                      className="biblioteca-relatorios-cliente"
+                      className={['biblioteca-relatorios-cliente', classeFluxoCliente].filter(Boolean).join(' ')}
                       open={bibliotecaRelatoriosClientesExpandidos.has(cliente.id)}
                       onToggle={e => {
                         const opened = (e.currentTarget as HTMLDetailsElement).open

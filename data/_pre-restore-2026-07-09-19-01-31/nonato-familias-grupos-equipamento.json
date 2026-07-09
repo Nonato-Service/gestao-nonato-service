@@ -1,0 +1,78 @@
+{
+  "familias": [
+    "CNC",
+    "COLADEIRAS",
+    "FURADEIRAS",
+    "SECCIONADORAS"
+  ],
+  "grupos": [
+    {
+      "nome": "HOLZMA",
+      "familia": "Geral",
+      "numerosGrupo": [],
+      "numeroGrupo": ""
+    },
+    {
+      "nome": "WEEKE",
+      "familia": "Geral",
+      "numerosGrupo": [],
+      "numeroGrupo": ""
+    },
+    {
+      "nome": "HOMAG",
+      "familia": "CNC",
+      "numerosGrupo": [],
+      "numeroGrupo": ""
+    },
+    {
+      "nome": "WEEKE",
+      "familia": "CNC",
+      "numerosGrupo": [],
+      "numeroGrupo": ""
+    },
+    {
+      "numeroGrupo": "",
+      "nome": "RETIFICADORES",
+      "familia": "BRANDT",
+      "numerosGrupo": [
+        "111L"
+      ]
+    },
+    {
+      "numeroGrupo": "111l",
+      "nome": "ANTIADERENTE",
+      "familia": "KAL HOMAG",
+      "numerosGrupo": []
+    },
+    {
+      "numeroGrupo": "111L",
+      "nome": "RETIFICADORES",
+      "familia": "KAL HOMAG",
+      "numerosGrupo": []
+    },
+    {
+      "numeroGrupo": "004",
+      "nome": "HOLZMA",
+      "familia": "SECCIONADORAS",
+      "numerosGrupo": []
+    },
+    {
+      "numeroGrupo": "",
+      "nome": "HOMAG",
+      "familia": "COLADEIRAS",
+      "numerosGrupo": []
+    },
+    {
+      "numeroGrupo": "",
+      "nome": "BRANDT",
+      "familia": "COLADEIRAS",
+      "numerosGrupo": []
+    },
+    {
+      "numeroGrupo": "",
+      "nome": "WEEKE",
+      "familia": "FURADEIRAS",
+      "numerosGrupo": []
+    }
+  ]
+}

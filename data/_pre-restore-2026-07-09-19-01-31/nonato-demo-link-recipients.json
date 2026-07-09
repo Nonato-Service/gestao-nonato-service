@@ -1,0 +1,16 @@
+[
+  {
+    "id": "demo-test-123",
+    "nome": "Teste",
+    "email": "t@x.com",
+    "dataEnvio": "2026-06-08T20:00:00.000Z",
+    "demoModules": {
+      "open-clientes": "active"
+    },
+    "demoPreset": "commercial",
+    "firstAccessAt": "2026-06-08T20:40:35.025Z",
+    "lastAccessAt": "2026-06-08T20:40:35.025Z",
+    "activationCount": 1,
+    "dataExpiracao": "2026-06-23T20:40:35.025Z"
+  }
+]

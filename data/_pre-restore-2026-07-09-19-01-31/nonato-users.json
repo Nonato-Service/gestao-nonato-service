@@ -1,0 +1,22 @@
+[
+  {
+    "id": "1767982221470",
+    "name": "NONATO SERVICE",
+    "email": "nonato.service@gmail.com",
+    "role": "ADMIN",
+    "password": "23093110",
+    "isAdmin": true,
+    "permissions": {
+      "gestores": false,
+      "equipamentos": false,
+      "clientes": false,
+      "fornecedores": false,
+      "relatorioServico": false,
+      "bibliotecaPecas": false,
+      "agenda": false,
+      "desmontados": false,
+      "cadastroServicos": false,
+      "extras": false
+    }
+  }
+]

@@ -1,0 +1,43 @@
+[
+  {
+    "id": "1768060557557",
+    "tipo": "agendamento-tecnico",
+    "tecnico": "NONATO",
+    "cliente": "NONATO SERVICE",
+    "clienteId": "1767916890389",
+    "equipamento": "HPL 380",
+    "equipamentoId": "0001",
+    "data": "2026-01-19",
+    "hora": "09:00",
+    "duracaoEstimada": "2",
+    "tipoServico": "",
+    "observacoes": "",
+    "status": "pendente",
+    "telefone": "911115479",
+    "endereco": "RUA DAS MIMOSAS 303",
+    "cidade": "VIANA DO CASTELO",
+    "dataCriacao": "2026-01-10T15:54:51.828Z"
+  },
+  {
+    "id": "1768064100501",
+    "tipo": "agendamento-tecnico",
+    "tecnico": "wwww",
+    "cliente": "NONATO SERVICE",
+    "clienteId": "1767916890389",
+    "equipamento": "HPL 380",
+    "equipamentoId": "0001",
+    "data": "2026-01-26",
+    "hora": "09:00",
+    "duracaoEstimada": "5",
+    "tipoServico": "assissssss",
+    "observacoesTecnicas": "",
+    "necessidadePecas": false,
+    "codigoNotaFiscal": "",
+    "pecasAnexadas": [],
+    "status": "pendente",
+    "telefone": "911115479",
+    "endereco": "RUA DAS MIMOSAS 303",
+    "cidade": "VIANA DO CASTELO",
+    "dataCriacao": "2026-01-10T16:54:17.781Z"
+  }
+]

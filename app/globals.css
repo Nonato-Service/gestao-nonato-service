@@ -8437,6 +8437,67 @@ a:focus-visible {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: #3e3e3e;
+  box-sizing: border-box;
+}
+
+/* Fluxo fatura/pagamento — destaque em TODO o botão do cliente (summary + cartão) */
+.biblioteca-relatorios-cliente--fluxo {
+  border-width: 1px;
+  border-left-width: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+.biblioteca-relatorios-cliente--fluxo-vermelho {
+  border-color: var(--fin-cor-vermelho-borda);
+  border-left-color: var(--fin-cor-vermelho);
+  background: linear-gradient(90deg, var(--fin-cor-vermelho-fundo) 0%, #3e3e3e 32%);
+}
+.biblioteca-relatorios-cliente--fluxo-azul {
+  border-color: var(--fin-cor-azul-borda);
+  border-left-color: var(--fin-cor-azul);
+  background: linear-gradient(90deg, var(--fin-cor-azul-fundo) 0%, #3e3e3e 32%);
+}
+.biblioteca-relatorios-cliente--fluxo-verde {
+  border-color: var(--fin-cor-verde-borda);
+  border-left-color: var(--fin-cor-verde);
+  background: linear-gradient(90deg, var(--fin-cor-verde-fundo) 0%, #3e3e3e 32%);
+}
+.biblioteca-relatorios-cliente--fluxo-amarelo {
+  border-color: var(--fin-cor-amarelo-borda);
+  border-left-color: var(--fin-cor-amarelo);
+  background: linear-gradient(90deg, var(--fin-cor-amarelo-fundo) 0%, #3e3e3e 32%);
+}
+.biblioteca-relatorios-cliente--fluxo-misto {
+  border-left-color: rgba(148, 163, 184, 0.55);
+}
+.biblioteca-relatorios-cliente--fluxo-vermelho.biblioteca-relatorios-cliente--fluxo-pisca {
+  animation: fechamento-fluxo-pulse-vermelho 1.35s ease-in-out infinite;
+}
+.biblioteca-relatorios-cliente--fluxo-azul.biblioteca-relatorios-cliente--fluxo-pisca {
+  animation: fechamento-fluxo-pulse-azul 1.35s ease-in-out infinite;
+}
+.biblioteca-relatorios-cliente--fluxo .biblioteca-relatorios-cliente__summary {
+  background: transparent;
+}
+.biblioteca-relatorios-cliente--fluxo-vermelho .biblioteca-relatorios-cliente__title {
+  color: var(--fin-cor-vermelho-texto);
+}
+.biblioteca-relatorios-cliente--fluxo-azul .biblioteca-relatorios-cliente__title {
+  color: var(--fin-cor-azul-texto);
+}
+.biblioteca-relatorios-cliente--fluxo-verde .biblioteca-relatorios-cliente__title {
+  color: var(--fin-cor-verde-texto);
+}
+.biblioteca-relatorios-cliente--fluxo-vermelho .biblioteca-relatorios-cliente__summary {
+  border-bottom-color: var(--fin-cor-vermelho-borda);
+}
+.biblioteca-relatorios-cliente--fluxo-azul .biblioteca-relatorios-cliente__summary {
+  border-bottom-color: var(--fin-cor-azul-borda);
+}
+.biblioteca-relatorios-cliente--fluxo-verde .biblioteca-relatorios-cliente__summary {
+  border-bottom-color: var(--fin-cor-verde-borda);
+}
+.biblioteca-relatorios-cliente--fluxo-pisca .fechamento-fluxo-bar--pisca {
+  animation: none;
 }
 
 .biblioteca-relatorios-cliente__summary {
@@ -10652,6 +10713,32 @@ button.dia-trabalho-acao-btn--del:hover {
 }
 .financeiro-despesas-bib-grupo--alerta-devedor:not(.financeiro-despesas-bib-grupo--misto) .financeiro-despesas-bib-grupo__nome {
   color: var(--fin-cor-vermelho-texto);
+}
+.financeiro-despesas-bib-grupo--azul.financeiro-despesas-bib-grupo--pisca,
+.financeiro-despesas-bib-grupo--vermelho.financeiro-despesas-bib-grupo--pisca {
+  animation-duration: 1.35s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+.financeiro-despesas-bib-grupo--azul.financeiro-despesas-bib-grupo--pisca {
+  animation-name: fechamento-fluxo-pulse-azul;
+}
+.financeiro-despesas-bib-grupo--vermelho.financeiro-despesas-bib-grupo--pisca {
+  animation-name: fechamento-fluxo-pulse-vermelho;
+}
+.financeiro-despesas-bib-grupo--azul .financeiro-despesas-bib-grupo__header,
+.financeiro-despesas-bib-grupo--vermelho .financeiro-despesas-bib-grupo__header,
+.financeiro-despesas-bib-grupo--verde .financeiro-despesas-bib-grupo__header,
+.financeiro-despesas-bib-grupo--amarelo .financeiro-despesas-bib-grupo__header,
+.financeiro-despesas-bib-grupo--alerta-devedor:not(.financeiro-despesas-bib-grupo--misto)
+  .financeiro-despesas-bib-grupo__header {
+  background: transparent;
+}
+.financeiro-despesas-bib-grupo--azul .financeiro-despesas-bib-grupo__header:hover,
+.financeiro-despesas-bib-grupo--vermelho .financeiro-despesas-bib-grupo__header:hover,
+.financeiro-despesas-bib-grupo--verde .financeiro-despesas-bib-grupo__header:hover,
+.financeiro-despesas-bib-grupo--amarelo .financeiro-despesas-bib-grupo__header:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 .financeiro-despesas-bib-subgrupo {
   border-radius: 0;

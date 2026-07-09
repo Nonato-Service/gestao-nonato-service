@@ -92,3 +92,30 @@ export function getEstadoCobrancaFinanceiraGrupoExibicao(
   if (unicos.size <= 1) return [...unicos][0] ?? 'vermelho'
   return 'misto'
 }
+
+/** Pasta cliente na Biblioteca — destaque em todo o botão/cartão (não só na coluna fatura). */
+export function classNameBibliotecaClienteFluxoFinanceiro(
+  relatorioIds: string[],
+  fluxoPorId: Record<string, unknown>
+): string {
+  if (!relatorioIds.length) return ''
+  const estado = getEstadoCobrancaFinanceiraGrupoExibicao(relatorioIds, fluxoPorId)
+  const fases = relatorioIds.map((id) => getFechamentoFluxoFase(fluxoPorId[id]))
+  const pisca =
+    estado !== 'misto' && fases.some((f) => fechamentoFluxoFasePisca(f))
+  return [
+    'biblioteca-relatorios-cliente--fluxo',
+    `biblioteca-relatorios-cliente--fluxo-${estado}`,
+    pisca ? 'biblioteca-relatorios-cliente--fluxo-pisca' : 'biblioteca-relatorios-cliente--fluxo-fixo',
+  ].join(' ')
+}
+
+/** Grupo cliente em Gestão Financeira — animação no cartão inteiro quando falta fatura ou aguarda pagamento. */
+export function financeiroDespesasBibGrupoDevePiscar(
+  relatorioIds: string[],
+  fluxoPorId: Record<string, unknown>,
+  variosEstados: boolean
+): boolean {
+  if (variosEstados || !relatorioIds.length) return false
+  return relatorioIds.some((id) => fechamentoFluxoFasePisca(getFechamentoFluxoFase(fluxoPorId[id])))
+}

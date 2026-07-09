@@ -1,0 +1,22 @@
+[
+  {
+    "id": "ct-1771718536666-jcnfmmfkjcs",
+    "tecnicoId": "1769119498360",
+    "equipamentoTipoId": "CNC|HOMAG",
+    "equipamentoTipoNome": "CNC › HOMAG",
+    "mecanico": 1,
+    "eletrico": 3,
+    "software": 0,
+    "programacao": 0
+  },
+  {
+    "id": "ct-1771718565274-9p4jj45501o",
+    "tecnicoId": "1769119498360",
+    "equipamentoTipoId": "CNC|WEEKE",
+    "equipamentoTipoNome": "CNC › WEEKE",
+    "mecanico": 0,
+    "eletrico": 0,
+    "software": 0,
+    "programacao": 0
+  }
+]
