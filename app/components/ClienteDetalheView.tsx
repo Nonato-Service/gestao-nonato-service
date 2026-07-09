@@ -8,7 +8,9 @@ import {
   buildServicosFinanceirosCliente,
   calcularResumoFinanceiroCliente,
   coletarRelatoriosCliente,
+  coletarRelatoriosFinanceirosCliente,
   dataClienteDesde,
+  type RelatorioServicoFinanceiroLike,
   fmtEuro,
   formatarData,
   idClienteExibicao,
@@ -61,6 +63,7 @@ type Props = {
   language: string
   equipamentosArmazem?: EquipamentoArmazemIdLookup[]
   faturasPecas: FaturaPecasLike[]
+  relatoriosServico?: RelatorioServicoFinanceiroLike[]
   fechamentosGuardadosBibliotecaIds: string[]
   fechamentosRelatorios: Record<string, FechamentoItemLike[]>
   fechamentoFluxoFinanceiroPorRelatorioId: Record<string, unknown>
@@ -211,6 +214,7 @@ export function ClienteDetalheView({
   language,
   equipamentosArmazem = [],
   faturasPecas,
+  relatoriosServico = [],
   fechamentosGuardadosBibliotecaIds,
   fechamentosRelatorios,
   fechamentoFluxoFinanceiroPorRelatorioId,
@@ -239,7 +243,17 @@ export function ClienteDetalheView({
   }, [language])
 
   const relatorios = useMemo(() => coletarRelatoriosCliente(cliente.relatorios), [cliente.relatorios])
-  const relatorioIds = useMemo(() => relatorios.map((r) => r.id), [relatorios])
+  const relatoriosFinanceiros = useMemo(
+    () =>
+      coletarRelatoriosFinanceirosCliente({
+        relatoriosCliente: cliente.relatorios,
+        relatoriosServico,
+        fechamentosGuardadosBibliotecaIds,
+        fechamentosRelatorios,
+      }),
+    [cliente.relatorios, relatoriosServico, fechamentosGuardadosBibliotecaIds, fechamentosRelatorios]
+  )
+  const relatorioIds = useMemo(() => relatoriosFinanceiros.map((r) => r.id), [relatoriosFinanceiros])
 
   const resumoFinanceiro = useMemo(
     () =>
@@ -270,7 +284,7 @@ export function ClienteDetalheView({
   const servicosFinanceiros = useMemo(
     () =>
       buildServicosFinanceirosCliente({
-        relatorios,
+        relatorios: relatoriosFinanceiros,
         fechamentosGuardadosBibliotecaIds,
         fechamentosRelatorios,
         fechamentoFluxoFinanceiroPorRelatorioId,
@@ -278,7 +292,7 @@ export function ClienteDetalheView({
         fechamentoItensOmitidosPorRelatorio,
       }),
     [
-      relatorios,
+      relatoriosFinanceiros,
       fechamentosGuardadosBibliotecaIds,
       fechamentosRelatorios,
       fechamentoFluxoFinanceiroPorRelatorioId,

@@ -190,6 +190,45 @@ export function coletarRelatoriosCliente(
   return Array.from(map.values()).sort((a, b) => (b.data || '').localeCompare(a.data || ''))
 }
 
+export type RelatorioServicoFinanceiroLike = {
+  id: string
+  numero: string
+  data: string
+  tipoServico?: string
+  servicoConcluido?: boolean
+}
+
+/** Relatórios com fechamento na biblioteca — fonte: cadastro do cliente + lista global de relatórios. */
+export function coletarRelatoriosFinanceirosCliente(params: {
+  relatoriosCliente?: Record<string, RelatorioClienteLike[]>
+  relatoriosServico?: RelatorioServicoFinanceiroLike[]
+  fechamentosGuardadosBibliotecaIds: string[]
+  fechamentosRelatorios: Record<string, FechamentoItemLike[] | undefined>
+}): RelatorioClienteLike[] {
+  const map = new Map<string, RelatorioClienteLike>()
+  for (const r of coletarRelatoriosCliente(params.relatoriosCliente)) {
+    map.set(r.id, r)
+  }
+
+  const bibSet = new Set(params.fechamentosGuardadosBibliotecaIds)
+  for (const rel of params.relatoriosServico ?? []) {
+    if (!rel?.id || !bibSet.has(rel.id)) continue
+    const itens = params.fechamentosRelatorios[rel.id]
+    if (!itens?.length) continue
+    map.set(rel.id, {
+      id: rel.id,
+      numero: rel.numero,
+      data: rel.data,
+      tipoServico: rel.tipoServico || rel.numero,
+      servicoConcluido: Boolean(rel.servicoConcluido),
+      maquinaModelo: undefined,
+      numeroMaquina: undefined,
+    })
+  }
+
+  return Array.from(map.values()).sort((a, b) => (b.data || '').localeCompare(a.data || ''))
+}
+
 export function dataClienteDesde(relatorios: RelatorioClienteLike[], language: string, vazio = '—'): string {
   if (!relatorios.length) return vazio
   const datas = relatorios.map((r) => r.data).filter(Boolean).sort()

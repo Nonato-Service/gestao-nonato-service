@@ -230,7 +230,7 @@ import {
   mergeOrcamentosGeradosArrays,
 } from './lib/clienteEquipamentoOrcamentos'
 import type { PedidoAvulsoGuardado } from './components/PedidoOrcamentosAvulsoContent'
-import { rotuloIdEquipamentoCliente } from './lib/clienteDetalheUtils'
+import { rotuloIdEquipamentoCliente, getPagamentoRelatorio } from './lib/clienteDetalheUtils'
 import { ClienteGpsNavButton } from './components/ClienteGpsNavButton'
 import { TEMPLATE_SERVICOS_PADRAO } from './lib/servicosCadastroUtils'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
@@ -17532,7 +17532,13 @@ export default function Dashboard() {
       const naoPagoRel =
         frObj.situacaoFatura === 'nao_paga' || frObj.pagamento === 'devedor'
       if (!naoPagoRel) continue
-      const clienteId = String(rel.clienteId ?? '').trim()
+      const clienteId =
+        String(rel.clienteId ?? '').trim() ||
+        resolverClienteIdRelatorioFlexivel(rel, clientes) ||
+        clientes.find((c) =>
+          nomesClienteCorrespondem(String(rel.cliente ?? ''), String(c.nomeEmpresa ?? ''))
+        )?.id ||
+        ''
       if (!clienteId) continue
       if (!relatoriosNaoPagoPorCliente.has(clienteId)) relatoriosNaoPagoPorCliente.set(clienteId, [])
       relatoriosNaoPagoPorCliente.get(clienteId)!.push(rel)
@@ -17603,6 +17609,11 @@ export default function Dashboard() {
       lastClientesDevedoresHash.current = newHash
       setClientes(clientesAtualizados)
       saveData('nonato-clientes', clientesAtualizados)
+      setEditingCliente((prev) => {
+        if (!prev) return prev
+        const atualizado = clientesAtualizados.find((c) => c.id === prev.id)
+        return atualizado ? { ...prev, ...atualizado } : prev
+      })
     }
   }
 
@@ -36729,6 +36740,22 @@ export default function Dashboard() {
                                 const itens = fechamentosRelatorios[rel.id] || []
                                 const itensVis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, rel.id, itens)
                                 const tot = totaisFechamentoLiquidoComIva(itensVis, fechamentoIvaPorRelatorioId[rel.id]).comIva
+                                const pag = getPagamentoRelatorio(fechamentoFluxoFinanceiroPorRelatorioId[rel.id])
+                                const pagLabel =
+                                  pag === 'pago'
+                                    ? txc.pagoStatus || 'Pago'
+                                    : pag === 'devedor'
+                                      ? txc.devedorStatus || 'Devedor'
+                                      : txc.pendenteStatus || 'Pendente'
+                                const pagColor =
+                                  pag === 'pago' ? '#86efac' : pag === 'devedor' ? '#fca5a5' : '#fde68a'
+                                const frObj =
+                                  fechamentoFluxoFinanceiroPorRelatorioId[rel.id] &&
+                                  typeof fechamentoFluxoFinanceiroPorRelatorioId[rel.id] === 'object' &&
+                                  !Array.isArray(fechamentoFluxoFinanceiroPorRelatorioId[rel.id])
+                                    ? (fechamentoFluxoFinanceiroPorRelatorioId[rel.id] as FechamentoFluxoFinanceiroEntry)
+                                    : null
+                                const numFat = String(frObj?.numeroFatura ?? '').trim()
                                 return (
                                   <div key={rel.id} style={{ padding: '12px 14px', borderRadius: '8px', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255, 200, 120, 0.25)' }}>
                                     <div style={{ fontWeight: 700, color: '#fff', fontSize: '13px', marginBottom: '4px' }}>
@@ -36739,11 +36766,28 @@ export default function Dashboard() {
                                       <span style={{ fontWeight: 600, color: '#fbbf77', marginLeft: '8px' }}>
                                         · {txc.total || 'Total'} €{tot.toFixed(2)}
                                       </span>
+                                      <span
+                                        style={{
+                                          marginLeft: '8px',
+                                          fontSize: '11px',
+                                          fontWeight: 800,
+                                          color: pagColor,
+                                          letterSpacing: '0.04em',
+                                        }}
+                                      >
+                                        · {pagLabel}
+                                      </span>
                                     </div>
                                     <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.75)', marginBottom: '8px' }}>
                                       <EquipamentosRelatorioDespesasInline relatorio={rel} clientes={clientes} equipamentosArmazem={equipamentos} />
                                       {' · '}
                                       {rel.data}
+                                      {numFat ? (
+                                        <>
+                                          {' · '}
+                                          {(txc.numeroFatura || 'Nº fatura')}: {numFat}
+                                        </>
+                                      ) : null}
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
                                       <button type="button" className="btn-primary" style={{ padding: '6px 10px', fontSize: '11px' }} onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio: rel, itens: itensVis })}>
@@ -36972,11 +37016,24 @@ export default function Dashboard() {
                     </p>
                   ) : (
                     <ClienteDetalheView
-                      key={selectedLanguage + clientesParaDetalhe[0].id}
+                      key={
+                        selectedLanguage +
+                        clientesParaDetalhe[0].id +
+                        Object.keys(fechamentoFluxoFinanceiroPorRelatorioId).length
+                      }
                       cliente={clientesParaDetalhe[0]}
                       language={selectedLanguage}
                       equipamentosArmazem={equipamentos}
                       faturasPecas={faturasPecas}
+                      relatoriosServico={relatoriosServico.filter(
+                        (r) =>
+                          r.clienteId === clientesParaDetalhe[0].id ||
+                          resolverClienteIdRelatorioFlexivel(r, clientes) === clientesParaDetalhe[0].id ||
+                          nomesClienteCorrespondem(
+                            String(r.cliente ?? ''),
+                            String(clientesParaDetalhe[0].nomeEmpresa ?? '')
+                          )
+                      )}
                       fechamentosGuardadosBibliotecaIds={fechamentosGuardadosBibliotecaIds}
                       fechamentosRelatorios={fechamentosRelatorios}
                       fechamentoFluxoFinanceiroPorRelatorioId={fechamentoFluxoFinanceiroPorRelatorioId}
