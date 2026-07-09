@@ -17302,18 +17302,30 @@ export default function Dashboard() {
     return String(frObj?.numeroFatura ?? '').trim()
   }
 
-  const renderBarraFluxoFechamento = (relatorioId: string, compact?: boolean) => (
-    <FechamentoFluxoPagamentoBar
-      relatorioId={relatorioId}
-      fluxo={fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]}
-      labels={safeT as Record<string, string | undefined>}
-      numeroFaturaAtual={fluxoNumeroFaturaRelatorio(relatorioId)}
-      onGuardarNumeroFatura={guardarNumeroFaturaFechamento}
-      onMarcarPago={marcarFechamentoBibliotecaPago}
-      onMarcarNaoPago={marcarFechamentoBibliotecaNaoPago}
-      compact={compact}
-    />
-  )
+  const renderBarraFluxoFechamento = (relatorioId: string, compact?: boolean) => {
+    const fluxoAtual = fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]
+    const numFatura = fluxoNumeroFaturaRelatorio(relatorioId)
+    return (
+      <div
+        className="bib-fluxo-fechamento-wrap"
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <FechamentoFluxoPagamentoBar
+          key={`${relatorioId}::${numFatura}::${getFechamentoFluxoFase(fluxoAtual)}`}
+          relatorioId={relatorioId}
+          fluxo={fluxoAtual}
+          labels={safeT as Record<string, string | undefined>}
+          numeroFaturaAtual={numFatura}
+          onGuardarNumeroFatura={guardarNumeroFaturaFechamento}
+          onMarcarPago={marcarFechamentoBibliotecaPago}
+          onMarcarNaoPago={marcarFechamentoBibliotecaNaoPago}
+          compact={compact}
+        />
+      </div>
+    )
+  }
 
   const handleSaveFatura = () => {
     const ft = safeT as Record<string, string | undefined>

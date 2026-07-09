@@ -4254,11 +4254,37 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
     min-width: 0 !important;
     width: 100% !important;
   }
-  .tab-content-wrapper table,
-  .main-content-area table {
+  .tab-content-wrapper table:not(.biblioteca-relatorios-tabela),
+  .main-content-area table:not(.biblioteca-relatorios-tabela) {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
+  }
+  .tab-content-wrapper .biblioteca-relatorios-tabela-wrap,
+  .main-content-area .biblioteca-relatorios-tabela-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab-content-wrapper .biblioteca-relatorios-tabela,
+  .main-content-area .biblioteca-relatorios-tabela {
+    display: table !important;
+    width: 100%;
+    white-space: normal !important;
+  }
+  .tab-content-wrapper .biblioteca-relatorios-tabela thead,
+  .tab-content-wrapper .biblioteca-relatorios-tabela tbody,
+  .tab-content-wrapper .biblioteca-relatorios-tabela tr,
+  .main-content-area .biblioteca-relatorios-tabela thead,
+  .main-content-area .biblioteca-relatorios-tabela tbody,
+  .main-content-area .biblioteca-relatorios-tabela tr {
+    display: table-row !important;
+  }
+  .tab-content-wrapper .biblioteca-relatorios-tabela th,
+  .tab-content-wrapper .biblioteca-relatorios-tabela td,
+  .main-content-area .biblioteca-relatorios-tabela th,
+  .main-content-area .biblioteca-relatorios-tabela td {
+    display: table-cell !important;
+    white-space: normal !important;
   }
 }
 
@@ -10539,6 +10565,7 @@ button.dia-trabalho-acao-btn--del:hover {
 .fechamento-fluxo-bar__cta:hover {
   filter: brightness(1.08);
 }
+.fechamento-fluxo-bar__fatura-form,
 .fechamento-fluxo-bar__fatura-row,
 .fechamento-fluxo-bar__pagamento-row,
 .fechamento-fluxo-bar__fixo {
@@ -10546,6 +10573,10 @@ button.dia-trabalho-acao-btn--del:hover {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+}
+.fechamento-fluxo-bar__fatura-form {
+  width: 100%;
+  margin: 0;
 }
 .fechamento-fluxo-bar__status {
   flex: 1 1 100%;
@@ -10632,13 +10663,21 @@ button.dia-trabalho-acao-btn--del:hover {
   color: rgba(226, 232, 240, 0.85);
   font-variant-numeric: tabular-nums;
 }
+.bib-fluxo-fechamento-wrap {
+  position: relative;
+  z-index: 4;
+  pointer-events: auto;
+  touch-action: manipulation;
+  isolation: isolate;
+}
 .biblioteca-relatorios-tabela--desp .bib-col-fluxo {
-  width: min(280px, 36vw);
-  min-width: 180px;
-  vertical-align: middle;
+  width: min(320px, 42vw);
+  min-width: 200px;
+  vertical-align: top;
   position: relative;
   z-index: 2;
   overflow: visible;
+  white-space: normal;
 }
 .biblioteca-relatorios-tabela--desp .bib-col-fluxo .fechamento-fluxo-bar {
   position: relative;
@@ -10649,9 +10688,17 @@ button.dia-trabalho-acao-btn--del:hover {
   min-width: 0;
 }
 .biblioteca-relatorios-tabela--desp .fechamento-fluxo-bar__fatura-input,
-.biblioteca-relatorios-tabela--desp .fechamento-fluxo-bar__btn {
+.biblioteca-relatorios-tabela--desp .fechamento-fluxo-bar__btn,
+.biblioteca-relatorios-tabela--desp .fechamento-fluxo-bar__fatura-form {
   pointer-events: auto;
   touch-action: manipulation;
+}
+.biblioteca-relatorios-tabela--desp .fechamento-fluxo-bar__fatura-input {
+  min-width: 88px;
+  min-height: 32px;
+}
+.biblioteca-relatorios-tabela--desp .fechamento-fluxo-bar__btn--save {
+  min-height: 32px;
 }
 .biblioteca-relatorios-desp-fluxo-row td {
   padding-top: 0;
