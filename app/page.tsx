@@ -120,6 +120,13 @@ import {
   type EquipamentoArmazemIdLookup,
   type EquipamentoArmazemVendidoInfo,
 } from './lib/relatorioServicoEquipamentos'
+import {
+  resolverClienteIdRelatorioFlexivel,
+  recuperarRelatoriosServicoPerdidos,
+  relatoriosServicoOrfaosNaBiblioteca,
+  agruparRelatoriosOrfaosPorNome,
+  nomesClienteCorrespondem,
+} from './lib/bibliotecaRelatoriosRecovery'
 import { mergeManuaisFamiliasGrupos, manuaisPayloadHasRichContent } from './utils/manuaisMerge'
 import {
   buildManuaisFromSources,
@@ -3356,6 +3363,7 @@ function bibliotecaRelatoriosRowMatchesBusca(row: BibliotecaRelatoriosClienteRow
   const telefones = String((cliente as { telefones?: string }).telefones || '').toLowerCase()
   const email = String((cliente as { email?: string }).email || '').toLowerCase()
   if (nome.includes(nq) || nif.includes(nq) || telefones.includes(nq) || email.includes(nq)) return true
+  if (nomesClienteCorrespondem(nq, cliente.nomeEmpresa || '')) return true
   for (const eq of equipamentos) {
     const eqLabel = `${eq.equipamento.modelo || ''} ${eq.equipamento.marca || ''} ${eq.equipamento.numeroSerie || ''} ${eq.equipamentoKey || ''}`.toLowerCase()
     if (eqLabel.includes(nq)) return true
@@ -3462,14 +3470,14 @@ function buildBibliotecaRelatoriosPorCliente(
     })
 
     const relatoriosDoCliente = relatoriosServico.filter(
-      (r) => r.clienteId === cliente.id || resolverClienteIdRelatorio(r, clientes) === cliente.id
+      (r) =>
+        r.clienteId === cliente.id ||
+        resolverClienteIdRelatorioFlexivel(r, clientes) === cliente.id ||
+        nomesClienteCorrespondem(String(r.cliente ?? ''), String(cliente.nomeEmpresa ?? ''))
     )
 
     /** Garante relatórios de serviço na pasta (fonte: relatoriosServico, não só cliente.relatorios). */
     for (const rel of relatoriosDoCliente) {
-      const naBiblioteca = fechamentosGuardadosBibliotecaIds.includes(rel.id)
-      if (!naBiblioteca && !rel.servicoConcluido) continue
-
       let keys = equipamentosClienteParaBiblioteca(
         normalizarEquipamentosRelatorio(rel),
         equipamentosArmazem,
@@ -3522,6 +3530,63 @@ function buildBibliotecaRelatoriosPorCliente(
     )
 
     rows.push({ cliente, equipamentos, despesas })
+  }
+
+  const idsIndexados = new Set<string>()
+  for (const row of rows) {
+    for (const eq of row.equipamentos) {
+      for (const r of eq.relatorios) idsIndexados.add(r.id)
+    }
+    for (const d of row.despesas) idsIndexados.add(d.relatorio.id)
+  }
+
+  const orfaos = relatoriosServicoOrfaosNaBiblioteca(relatoriosServico, idsIndexados)
+  const orfaosPorNome = agruparRelatoriosOrfaosPorNome(orfaos)
+  for (const [, relsOrfaos] of orfaosPorNome) {
+    if (!relsOrfaos.length) continue
+    const nomeOrfaos = String(relsOrfaos[0]?.cliente ?? '').trim() || 'Relatórios recuperados'
+    const clienteOrfaos: Cliente = {
+      id: `bib-orfaos-${nomeOrfaos.toLowerCase().replace(/\s+/g, '-').slice(0, 48)}`,
+      nomeEmpresa: nomeOrfaos,
+      equipamentos: [],
+      relatorios: {},
+    } as Cliente
+    const equipMapOrfaos = new Map<
+      string,
+      { equipamento: EquipamentoCliente; equipamentoKey: string; relatorios: RelatorioServico[] }
+    >()
+    for (const rel of relsOrfaos) {
+      const k =
+        String(rel.numeroMaquina ?? '').trim() ||
+        String(rel.maquinaModelo ?? '').trim() ||
+        String(rel.equipamentoId ?? '').trim() ||
+        '—'
+      if (!equipMapOrfaos.has(k)) {
+        equipMapOrfaos.set(k, {
+          equipamento: {
+            id: `orph-eq-${k}`,
+            modelo: k === '—' ? 'Equipamento' : k,
+            marca: '',
+            numeroSerie: k === '—' ? '' : k,
+          } as EquipamentoCliente,
+          equipamentoKey: k,
+          relatorios: [],
+        })
+      }
+      const entry = equipMapOrfaos.get(k)!
+      if (!entry.relatorios.some((item) => item.id === rel.id)) {
+        entry.relatorios = ordenarRelatoriosBiblioteca([...entry.relatorios, rel])
+      }
+    }
+    const equipamentosOrfaos = Array.from(equipMapOrfaos.values())
+    const despesasOrfaos: Array<{ relatorio: RelatorioServico; itens: FechamentoItem[] }> = []
+    for (const rel of relsOrfaos) {
+      const itens = fechamentosRelatorios[rel.id]
+      if (itens && itens.length > 0 && fechamentosGuardadosBibliotecaIds.includes(rel.id)) {
+        despesasOrfaos.push({ relatorio: rel, itens })
+      }
+    }
+    rows.push({ cliente: clienteOrfaos, equipamentos: equipamentosOrfaos, despesas: despesasOrfaos })
   }
 
   rows.sort((x, y) => cmpBibliotecaLocale(x.cliente.nomeEmpresa || '', y.cliente.nomeEmpresa || ''))
@@ -8179,6 +8244,35 @@ export default function Dashboard() {
     bibliotecaGuardReparadoRef.current = true
   }, [relatoriosServico, fechamentosRelatorios, fechamentosGuardadosBibliotecaIds])
 
+  const relatoriosRecuperacaoBootRef = useRef(false)
+  useEffect(() => {
+    if (relatoriosRecuperacaoBootRef.current) return
+    if (clientes.length === 0 && relatoriosServico.length === 0) return
+    relatoriosRecuperacaoBootRef.current = true
+    const rec = recuperarRelatoriosServicoPerdidos(clientes, relatoriosServico)
+    if (!rec.alterou) return
+    setRelatoriosServico(rec.relatorios as RelatorioServico[])
+    void saveData('nonato-relatorios-servico', rec.relatorios)
+  }, [clientes, relatoriosServico])
+
+  const handleRecuperarRelatoriosPerdidos = useCallback(() => {
+    const rec = recuperarRelatoriosServicoPerdidos(clientes, relatoriosServico)
+    if (!rec.alterou) {
+      alert(
+        (safeT as any)?.bibliotecaRecuperarRelatoriosNada ||
+          'Nenhum relatório adicional encontrado nas pastas dos clientes. Verifique também «Relatórios Excluídos / Clientes» no menu.'
+      )
+      return
+    }
+    setRelatoriosServico(rec.relatorios as RelatorioServico[])
+    void saveData('nonato-relatorios-servico', rec.relatorios)
+    const tpl =
+      (safeT as any)?.bibliotecaRecuperarRelatoriosOk ||
+      'Recuperados {n} relatório(s) guardados nas pastas dos clientes.'
+    alert(tpl.replace(/\{n\}/g, String(rec.adicionadosDeClientes + rec.clienteIdsReparados)))
+    setBibliotecaRelatoriosAlfaLetraFiltro(null)
+  }, [clientes, relatoriosServico, safeT])
+
   const [relatoriosExcluidosClientes, setRelatoriosExcluidosClientes] = useState<RelatoriosExcluidosClientesStorage>({ pastas: {} })
   const [pastasExcluidasExpandidas, setPastasExcluidasExpandidas] = useState<Set<string>>(new Set())
   const [modalNotaExcluida, setModalNotaExcluida] = useState<ItemRelatorioExcluidoArquivo | null>(null)
@@ -10520,24 +10614,18 @@ export default function Dashboard() {
         }
       }
 
-      // Carregar relatórios de serviço — órfãos (cliente removido por sync / cópia antiga) alinham ao mesmo critério que handleDeleteCliente
+      // Carregar relatórios de serviço — reparar clienteId inválido (nunca apagar relatórios)
       const savedRelatoriosServicoRaw = getData('nonato-relatorios-servico')
       const removedRelatorioIds = new Set<string>()
       if (savedRelatoriosServicoRaw && Array.isArray(savedRelatoriosServicoRaw)) {
         let relatoriosOk = savedRelatoriosServicoRaw as RelatorioServico[]
         if (Array.isArray(savedClientes)) {
-          const idsCliente = new Set(savedClientes.map((c: Cliente) => c.id).filter(Boolean))
-          for (const r of relatoriosOk) {
-            // Só órfão quando há vínculo explícito a um cliente que já não existe (legado sem clienteId mantém-se)
-            if (r?.id && r.clienteId && !idsCliente.has(r.clienteId)) {
-              removedRelatorioIds.add(r.id)
-            }
-          }
-          relatoriosOk = relatoriosOk.filter(
-            (r: RelatorioServico) =>
-              r && (!r.clienteId || idsCliente.has(r.clienteId))
+          const recBoot = recuperarRelatoriosServicoPerdidos(
+            savedClientes as Cliente[],
+            relatoriosOk
           )
-          if (removedRelatorioIds.size > 0) {
+          relatoriosOk = recBoot.relatorios as RelatorioServico[]
+          if (recBoot.alterou) {
             saveData('nonato-relatorios-servico', relatoriosOk).catch(() => {})
           }
         }
@@ -61969,11 +62057,37 @@ A1;Peça exemplo;10`}
               }}>
                 <div style={{ fontSize: '48px', marginBottom: '20px' }}>📋</div>
                 <p style={{ color: '#ffffff', opacity: 0.95, fontSize: '18px', marginBottom: '10px' }}>
-                  {safeT?.nenhumRelatorioSalvo || 'Nenhum relatório salvo ainda.'}
+                  {(safeT as any)?.bibliotecaRecuperarRelatoriosTitulo ||
+                    safeT?.nenhumRelatorioSalvo ||
+                    'Nenhum relatório visível na biblioteca.'}
                 </p>
-                <p style={{ color: '#ffffff', opacity: 0.88, fontSize: '14px' }}>
-                  {safeT?.relatoriosOrganizadosPorCliente || 'Crie um cliente em Gestão Técnica → Clientes; cada cliente terá aqui uma pasta com Relatórios de Serviço e Relatórios de Despesas.'}
+                <p style={{ color: '#ffffff', opacity: 0.88, fontSize: '14px', marginBottom: '20px', maxWidth: '560px', marginLeft: 'auto', marginRight: 'auto' }}>
+                  {(safeT as any)?.bibliotecaRecuperarRelatoriosHint ||
+                    'Os seus dados não foram apagados — podem estar nas pastas dos clientes ou na cópia de segurança. Use os botões abaixo para recuperar.'}
                 </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={handleRecuperarRelatoriosPerdidos}
+                    style={{ padding: '10px 22px', borderRadius: '10px' }}
+                  >
+                    ♻️ {(safeT as any)?.bibliotecaRecuperarRelatoriosBtn || 'Recuperar relatórios perdidos'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => openTab('relatorios-excluidos-clientes', getTabTitle('relatorios-excluidos-clientes'))}
+                    style={{
+                      padding: '10px 22px',
+                      borderRadius: '10px',
+                      backgroundColor: 'rgba(0, 150, 255, 0.1)',
+                      border: '1px solid rgba(0, 150, 255, 0.58)',
+                    }}
+                  >
+                    🗃️ {(safeT as any)?.bibliotecaVerRelatoriosExcluidos || 'Ver relatórios excluídos'}
+                  </button>
+                </div>
               </div>
             ) : (
               <>
@@ -62057,10 +62171,52 @@ A1;Peça exemplo;10`}
                 ) : null}
               <div className="biblioteca-relatorios-client-list">
                 {buscaBibliotecaRelatoriosCliente.trim() !== '' && bibliotecaFiltrada.length === 0 ? (
-                  <p className="biblioteca-relatorios-empty-busca">
-                    {(safeT as any)?.bibliotecaRelatoriosSemResultadosBusca ||
-                      'Nenhum resultado para esta pesquisa. Tente outro termo.'}
-                  </p>
+                  <div className="biblioteca-relatorios-empty-busca" style={{ textAlign: 'center', padding: '24px 16px' }}>
+                    <p style={{ marginBottom: '16px' }}>
+                      {(safeT as any)?.bibliotecaRelatoriosSemResultadosBusca ||
+                        'Nenhum resultado para esta pesquisa. Tente outro termo.'}
+                    </p>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={handleRecuperarRelatoriosPerdidos}
+                      style={{ padding: '8px 18px', borderRadius: '8px', marginRight: '10px' }}
+                    >
+                      ♻️ {(safeT as any)?.bibliotecaRecuperarRelatoriosBtn || 'Recuperar relatórios perdidos'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => openTab('relatorios-excluidos-clientes', getTabTitle('relatorios-excluidos-clientes'))}
+                      style={{
+                        padding: '8px 18px',
+                        borderRadius: '8px',
+                        backgroundColor: 'rgba(0, 150, 255, 0.1)',
+                        border: '1px solid rgba(0, 150, 255, 0.58)',
+                      }}
+                    >
+                      🗃️ {(safeT as any)?.bibliotecaVerRelatoriosExcluidos || 'Ver excluídos'}
+                    </button>
+                  </div>
+                ) : null}
+                {bibliotecaListaRender.length === 0 &&
+                buscaBibliotecaRelatoriosCliente.trim() === '' &&
+                bibliotecaFiltradaComConteudo.length === 0 &&
+                relatoriosServico.length > 0 ? (
+                  <div style={{ textAlign: 'center', padding: '32px 16px', marginBottom: '16px' }}>
+                    <p style={{ marginBottom: '14px', opacity: 0.9 }}>
+                      {(safeT as any)?.bibliotecaRecuperarRelatoriosHint ||
+                        'Existem relatórios guardados mas não aparecem nas pastas. Clique para sincronizar.'}
+                    </p>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={handleRecuperarRelatoriosPerdidos}
+                      style={{ padding: '10px 22px', borderRadius: '10px' }}
+                    >
+                      ♻️ {(safeT as any)?.bibliotecaRecuperarRelatoriosBtn || 'Recuperar relatórios perdidos'}
+                    </button>
+                  </div>
                 ) : null}
                 {bibliotecaListaRender.map(({ cliente, equipamentos, despesas: despesasCliente }) => {
                   const txBib = safeT as Record<string, string>

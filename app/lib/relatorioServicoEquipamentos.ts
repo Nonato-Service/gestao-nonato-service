@@ -216,14 +216,34 @@ export function resolverClienteIdRelatorio(
 ): string {
   const cid = String(rel.clienteId ?? '').trim()
   if (cid && clientes.some((c) => c.id === cid)) return cid
-  const nome = String(rel.cliente ?? '')
-    .trim()
-    .toLowerCase()
+  const nome = String(rel.cliente ?? '').trim()
   if (!nome) return cid
-  const hit = clientes.find(
-    (c) => String(c.nomeEmpresa ?? '').trim().toLowerCase() === nome
+  const nomeNorm = nome.toLowerCase()
+  const hitExact = clientes.find(
+    (c) => String(c.nomeEmpresa ?? '').trim().toLowerCase() === nomeNorm
   )
-  return hit?.id || cid
+  if (hitExact) return hitExact.id
+  // Correspondência parcial (ex.: «Ferwood» ↔ «FERWOOD THOMAS»)
+  const tokens = nomeNorm
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .split(/\s+/)
+    .filter((w) => w.length >= 3)
+  if (tokens.length > 0) {
+    const hitPartial = clientes.find((c) => {
+      const cn = String(c.nomeEmpresa ?? '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/\p{M}/gu, '')
+      if (!cn) return false
+      if (cn.includes(nomeNorm) || nomeNorm.includes(cn)) return true
+      const ct = cn.split(/\s+/).filter((w) => w.length >= 3)
+      return tokens.some((t) => ct.includes(t)) || ct.some((t) => tokens.includes(t))
+    })
+    if (hitPartial) return hitPartial.id
+  }
+  return cid
 }
 
 /** Chave interna do select (UUID / id / série) a partir do ID visível ou técnico guardado. */
