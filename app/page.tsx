@@ -111,6 +111,7 @@ import {
   resolverEquipamentoRelatorioParaExibicao,
   resolverClienteIdRelatorio,
   resolverChaveEquipamentoClienteRelatorio,
+  equipamentosClienteParaBiblioteca,
   prepararEquipamentosRelatorioParaEdicao,
   aplicarBaixaVendaEquipamentosArmazemRelatorio,
   encontrarEquipamentoArmazemCorrespondenteCliente,
@@ -3390,12 +3391,19 @@ function ordenarRelatoriosBiblioteca(relatorios: RelatorioServico[]): RelatorioS
   })
 }
 
+/** Cliente com pelo menos um relatório de serviço ou de despesas na biblioteca. */
+function bibliotecaRowTemConteudo(row: BibliotecaRelatoriosClienteRow): boolean {
+  if (row.despesas.length > 0) return true
+  return row.equipamentos.some((eq) => eq.relatorios.length > 0)
+}
+
 /** Monta a árvore cliente → equipamentos (todos os registados) → relatórios de serviço + despesas. */
 function buildBibliotecaRelatoriosPorCliente(
   clientes: Cliente[],
   relatoriosServico: RelatorioServico[],
   fechamentosRelatorios: Record<string, FechamentoItem[] | undefined>,
-  fechamentosGuardadosBibliotecaIds: string[]
+  fechamentosGuardadosBibliotecaIds: string[],
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): BibliotecaRelatoriosClienteRow[] {
   const rows: BibliotecaRelatoriosClienteRow[] = []
 
@@ -3453,7 +3461,55 @@ function buildBibliotecaRelatoriosPorCliente(
       return cmpBibliotecaLocale(sa, sb)
     })
 
-    const relatoriosDoCliente = relatoriosServico.filter(r => r.clienteId === cliente.id)
+    const relatoriosDoCliente = relatoriosServico.filter(
+      (r) => r.clienteId === cliente.id || resolverClienteIdRelatorio(r, clientes) === cliente.id
+    )
+
+    /** Garante relatórios de serviço na pasta (fonte: relatoriosServico, não só cliente.relatorios). */
+    for (const rel of relatoriosDoCliente) {
+      const naBiblioteca = fechamentosGuardadosBibliotecaIds.includes(rel.id)
+      if (!naBiblioteca && !rel.servicoConcluido) continue
+
+      let keys = equipamentosClienteParaBiblioteca(
+        normalizarEquipamentosRelatorio(rel),
+        equipamentosArmazem,
+        cliente.equipamentos ?? []
+      )
+      if (keys.length === 0) {
+        const legadoSn = String(rel.numeroMaquina ?? '').trim()
+        const legadoMod = String(rel.maquinaModelo ?? '').trim()
+        const legadoId = String(rel.equipamentoId ?? '').trim()
+        if (legadoSn) keys = [legadoSn]
+        else if (legadoMod) keys = [legadoMod]
+        else if (legadoId) keys = [legadoId]
+        else keys = ['—']
+      }
+
+      for (const key of keys) {
+        const k = String(key || '').trim() || '—'
+        if (!equipMap.has(k)) {
+          const equipamento =
+            cliente.equipamentos?.find(
+              (eq) =>
+                eq.numeroSerie === k ||
+                `${String(eq.modelo || '').trim()} ${String(eq.marca || '').trim()}`.trim() === k
+            ) ||
+            ({
+              id: `bib-${cliente.id}-${k}`,
+              modelo: k === '—' ? 'Equipamento' : k,
+              marca: '',
+              numeroSerie: k === '—' ? '' : k,
+            } as EquipamentoCliente)
+          equipMap.set(k, { equipamento, equipamentoKey: k, relatorios: [] })
+        }
+        const entry = equipMap.get(k)!
+        const ja = entry.relatorios.some((item) => item.id === rel.id)
+        entry.relatorios = ordenarRelatoriosBiblioteca(
+          ja ? entry.relatorios.map((item) => (item.id === rel.id ? rel : item)) : [...entry.relatorios, rel]
+        )
+      }
+    }
+
     const despesas: Array<{ relatorio: RelatorioServico; itens: FechamentoItem[] }> = []
     for (const rel of relatoriosDoCliente) {
       const itens = fechamentosRelatorios[rel.id]
@@ -33835,11 +33891,12 @@ export default function Dashboard() {
       case 'relatorio-servico': {
         const qRelLista = buscaRelatorioServicoLista.toLowerCase()
         const relatoriosListaFiltrados = relatoriosServicoListaPrincipal
-          .filter(r =>
-            (r.cliente || '').toLowerCase().includes(qRelLista) ||
-            (r.numero || '').toLowerCase().includes(qRelLista) ||
-            (r.tecnico || '').toLowerCase().includes(qRelLista)
-          )
+          .filter(r => {
+            const nomeCadastro =
+              (r.clienteId ? clientes.find((c) => c.id === r.clienteId)?.nomeEmpresa : '') || ''
+            const blob = `${nomeCadastro} ${r.cliente || ''} ${r.numero || ''} ${r.tecnico || ''}`.toLowerCase()
+            return blob.includes(qRelLista)
+          })
           .sort((a, b) => {
             const cmpCliente = (a.cliente || '').localeCompare(b.cliente || '', 'pt-BR')
             if (cmpCliente !== 0) return cmpCliente
@@ -35859,8 +35916,9 @@ export default function Dashboard() {
                 {relatoriosServico.length > 0 ? (
                   <>
                     <p style={{ fontSize: '18px', marginBottom: '10px', color: '#ffffff', opacity: 0.95 }}>
-                      {(safeT as any)?.todosRelatoriosNaBibliotecaLista ||
-                        'Todos os relatórios com fechamento estão na Biblioteca. A lista fica só com trabalhos em aberto.'}
+                      {(safeT as any)?.relatorioServicoNaBibliotecaAviso ||
+                        (safeT as any)?.todosRelatoriosNaBibliotecaLista ||
+                        'Os relatórios concluídos estão na Biblioteca. Pesquise pelo cliente (ex.: Ferwood).'}
                     </p>
                     <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.55)', marginBottom: '18px' }}>
                       {(safeT as any)?.abrirBibliotecaParaVerRelatorios ||
@@ -61687,7 +61745,8 @@ A1;Peça exemplo;10`}
           clientes,
           relatoriosServico,
           fechamentosRelatorios,
-          fechamentosGuardadosBibliotecaIds
+          fechamentosGuardadosBibliotecaIds,
+          equipamentos
         )
         const totalRelatorios = relatoriosPorCliente.reduce(
           (s, row) => s + row.equipamentos.reduce((se, eq) => se + eq.relatorios.length, 0),
@@ -61700,8 +61759,9 @@ A1;Peça exemplo;10`}
           bibliotecaRelatoriosRowMatchesBusca(row, buscaBibliotecaRelatoriosCliente)
         )
         const buscaBibliotecaAtiva = buscaBibliotecaRelatoriosCliente.trim().length > 0
-        const bibliotecaPorLetra = new Map<string, typeof bibliotecaFiltrada>()
-        for (const row of bibliotecaFiltrada) {
+        const bibliotecaFiltradaComConteudo = bibliotecaFiltrada.filter(bibliotecaRowTemConteudo)
+        const bibliotecaPorLetra = new Map<string, typeof bibliotecaFiltradaComConteudo>()
+        for (const row of bibliotecaFiltradaComConteudo) {
           const letra = getClienteLetraAlfabeto(row.cliente.nomeEmpresa)
           if (!bibliotecaPorLetra.has(letra)) bibliotecaPorLetra.set(letra, [])
           bibliotecaPorLetra.get(letra)!.push(row)
@@ -61713,10 +61773,10 @@ A1;Peça exemplo;10`}
             ? bibliotecaRelatoriosAlfaLetraFiltro
             : null
         const bibliotecaListaRender = buscaBibliotecaAtiva
-          ? bibliotecaFiltrada
+          ? bibliotecaFiltradaComConteudo
           : bibliotecaLetraAtiva
             ? (bibliotecaPorLetra.get(bibliotecaLetraAtiva) ?? [])
-            : []
+            : bibliotecaFiltradaComConteudo
         const bibliotecaEquipKey = (clienteId: string, equipamentoKey: string) =>
           `${clienteId}::${equipamentoKey}`
         const tplBibliotecaHeroTotais = String(safeT?.bibliotecaRelatoriosHeroTotais || '')
@@ -61932,7 +61992,7 @@ A1;Peça exemplo;10`}
                     >
                       {bibliotecaLetraAtiva
                         ? `${(bibliotecaPorLetra.get(bibliotecaLetraAtiva) ?? []).length} ${safeT?.clientes || 'cliente(s)'} ${safeT?.clientesAlfabetoComInicial || 'com inicial'} «${bibliotecaLetraAtiva === '#' ? (safeT?.clientesAlfabetoOutros || 'Outros') : bibliotecaLetraAtiva}»`
-                        : `${safeT?.mostrando || 'Mostrando'} ${bibliotecaFiltrada.length} ${safeT?.de || 'de'} ${relatoriosPorCliente.length} ${safeT?.clientes || 'cliente(s)'} — ${safeT?.clientesAlfabetoSelecioneLetra || 'selecione uma letra abaixo'}`}
+                        : `${safeT?.mostrando || 'Mostrando'} ${bibliotecaFiltradaComConteudo.length} ${safeT?.clientes || 'cliente(s)'} ${(safeT as any)?.bibliotecaRelatoriosComRelatorios || 'com relatórios'} — ${(safeT as any)?.bibliotecaRelatoriosAlfabetoFiltrarOpcional || 'toque numa letra para filtrar'}`}
                     </div>
                     <div className="clientes-alfa-wrap biblioteca-relatorios-alfa-wrap">
                       <nav
@@ -61970,8 +62030,8 @@ A1;Peça exemplo;10`}
                       {!bibliotecaLetraAtiva ? (
                         <p className="clientes-alfa-prompt">
                           {(safeT as any)?.bibliotecaRelatoriosAlfabetoPrompt ||
-                            safeT?.clientesAlfabetoPrompt ||
-                            'Toque numa letra acima para ver as pastas dos clientes com essa inicial.'}
+                            (safeT as any)?.bibliotecaRelatoriosListaCompletaHint ||
+                            'Todos os clientes com relatórios aparecem abaixo. Toque numa letra para filtrar por inicial (ex.: F para Ferwood).'}
                         </p>
                       ) : (
                         <section className="clientes-alfa-secao biblioteca-relatorios-letra-secao">
