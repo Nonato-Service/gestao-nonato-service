@@ -30012,6 +30012,125 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   max-height: 420px;
 }
 
+/* Filtros orçamentos — ficha cliente (painel organizado) */
+.cliente-orc-ficha-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.18) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.cliente-orc-ficha-filters__duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+}
+
+.cliente-orc-ficha-filters__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cliente-orc-ficha-filters__group--equip {
+  padding-bottom: 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.cliente-orc-ficha-filters__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.cliente-orc-ficha-filters__select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 170, 0, 0.22);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.cliente-orc-ficha-filters__select:hover,
+.cliente-orc-ficha-filters__select:focus {
+  outline: none;
+  border-color: rgba(255, 170, 0, 0.45);
+  box-shadow: 0 0 0 2px rgba(255, 170, 0, 0.12);
+}
+
+.cliente-orc-ficha-filters__segmented {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cliente-orc-ficha-filters__segment-btn {
+  min-height: 38px;
+  padding: 8px 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.68);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, color 0.18s, box-shadow 0.18s;
+}
+
+.cliente-orc-ficha-filters__segment-btn:hover:not(.is-active) {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.cliente-orc-ficha-filters__segmented--origem .cliente-orc-ficha-filters__segment-btn.is-active {
+  background: rgba(255, 170, 0, 0.2);
+  border-color: rgba(255, 170, 0, 0.42);
+  color: #ffcc66;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(255, 170, 0, 0.15);
+}
+
+.cliente-orc-ficha-filters__segmented--estado .cliente-orc-ficha-filters__segment-btn.is-active {
+  background: rgba(0, 200, 83, 0.18);
+  border-color: rgba(0, 200, 83, 0.42);
+  color: #7ee8a8;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(0, 200, 83, 0.12);
+}
+
+@media (max-width: 720px) {
+  .cliente-orc-ficha-filters__duo {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .cliente-orc-ficha-filters__segment-btn {
+    font-size: 10px;
+    min-height: 40px;
+    padding: 8px 4px;
+  }
+}
+
 @media (max-width: 1024px) {
   .cliente-detalhe-v2__info-grid {
     grid-template-columns: 1fr;

@@ -297,62 +297,83 @@ export function ClienteOrcamentosFichaSection({
         {totalRelatorio} {safeT?.doRelatorio || 'do relatório'} · {totalAvulso} {safeT?.avulsos || 'avulsos'}
       </p>
 
-      {equipamentos.length > 0 && (
-        <div className="cliente-detalhe-v2__orcamentos-equip-filter">
-          <label htmlFor="cliente-orc-equip-filter">{safeT?.filtrarPorEquipamento || 'Filtrar por equipamento'}</label>
-          <select
-            id="cliente-orc-equip-filter"
-            className="cliente-detalhe-v2__orcamentos-select"
-            value={filtroEquipamento}
-            onChange={(e) => setFiltroEquipamento(e.target.value)}
-          >
-            <option value="todos">{safeT?.todosEquipamentos || 'Todos os equipamentos'}</option>
-            {equipamentos.map((eq, index) => {
-              const label = [eq.marca, eq.modelo].filter(Boolean).join(' ') || eq.tipoEquipamento || `#${index + 1}`
-              const serie = eq.numeroSerie ? ` · ${eq.numeroSerie}` : ''
-              return (
-                <option key={eq.id || `${eq.numeroSerie}-${index}`} value={String(index)}>
-                  {label}
-                  {serie}
-                </option>
-              )
-            })}
-          </select>
-        </div>
-      )}
+      <div className="cliente-orc-ficha-filters">
+        {equipamentos.length > 0 && (
+          <div className="cliente-orc-ficha-filters__group cliente-orc-ficha-filters__group--equip">
+            <label className="cliente-orc-ficha-filters__label" htmlFor="cliente-orc-equip-filter">
+              {safeT?.filtrarPorEquipamento || 'Filtrar por equipamento'}
+            </label>
+            <select
+              id="cliente-orc-equip-filter"
+              className="cliente-orc-ficha-filters__select"
+              value={filtroEquipamento}
+              onChange={(e) => setFiltroEquipamento(e.target.value)}
+            >
+              <option value="todos">{safeT?.todosEquipamentos || 'Todos os equipamentos'}</option>
+              {equipamentos.map((eq, index) => {
+                const label = [eq.marca, eq.modelo].filter(Boolean).join(' ') || eq.tipoEquipamento || `#${index + 1}`
+                const serie = eq.numeroSerie ? ` · ${eq.numeroSerie}` : ''
+                return (
+                  <option key={eq.id || `${eq.numeroSerie}-${index}`} value={String(index)}>
+                    {label}
+                    {serie}
+                  </option>
+                )
+              })}
+            </select>
+          </div>
+        )}
 
-      <div className="cliente-equip-orcamentos__filters">
-        <div className="cliente-equip-orcamentos__filter-row">
-          {(['todos', 'relatorio', 'avulso'] as FiltroOrigem[]).map((f) => (
-            <button
-              key={f}
-              type="button"
-              className={`cliente-equip-orcamentos__chip${filtroOrigem === f ? ' is-active' : ''}`}
-              onClick={() => setFiltroOrigem(f)}
+        <div className="cliente-orc-ficha-filters__duo">
+          <div className="cliente-orc-ficha-filters__group">
+            <span className="cliente-orc-ficha-filters__label">{safeT?.tipoOrigem || 'Origem'}</span>
+            <div
+              className="cliente-orc-ficha-filters__segmented cliente-orc-ficha-filters__segmented--origem"
+              role="group"
+              aria-label={safeT?.tipoOrigem || 'Origem'}
             >
-              {f === 'todos'
-                ? safeT?.todos || 'Todos'
-                : f === 'relatorio'
-                  ? safeT?.orcamentosDoRelatorio || 'Do relatório'
-                  : safeT?.orcamentosAvulsos || 'Avulsos'}
-            </button>
-          ))}
-        </div>
-        <div className="cliente-equip-orcamentos__filter-row">
-          {(['todos', 'pendentes', 'aprovados'] as FiltroEstado[]).map((f) => (
-            <button
-              key={f}
-              type="button"
-              className={`cliente-equip-orcamentos__chip cliente-equip-orcamentos__chip--sub${filtroEstado === f ? ' is-active' : ''}`}
-              onClick={() => setFiltroEstado(f)}
+              {(['todos', 'relatorio', 'avulso'] as FiltroOrigem[]).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  className={`cliente-orc-ficha-filters__segment-btn${filtroOrigem === f ? ' is-active' : ''}`}
+                  onClick={() => setFiltroOrigem(f)}
+                  aria-pressed={filtroOrigem === f}
+                >
+                  {f === 'todos'
+                    ? safeT?.todos || 'Todos'
+                    : f === 'relatorio'
+                      ? safeT?.orcamentosDoRelatorio || 'Do relatório'
+                      : safeT?.orcamentosAvulsos || 'Avulsos'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="cliente-orc-ficha-filters__group">
+            <span className="cliente-orc-ficha-filters__label">{safeT?.estado || 'Estado'}</span>
+            <div
+              className="cliente-orc-ficha-filters__segmented cliente-orc-ficha-filters__segmented--estado"
+              role="group"
+              aria-label={safeT?.estado || 'Estado'}
             >
-              {f === 'todos'
-                ? safeT?.todosEstados || 'Todos os estados'
-                : f === 'pendentes'
-                  ? safeT?.pendentesAprovacao || 'Pendentes de aprovação'
-                  : safeT?.aprovados || 'Aprovados'}
-            </button>
-          ))}
+              {(['todos', 'pendentes', 'aprovados'] as FiltroEstado[]).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  className={`cliente-orc-ficha-filters__segment-btn${filtroEstado === f ? ' is-active' : ''}`}
+                  onClick={() => setFiltroEstado(f)}
+                  aria-pressed={filtroEstado === f}
+                >
+                  {f === 'todos'
+                    ? safeT?.todosEstados || 'Todos'
+                    : f === 'pendentes'
+                      ? safeT?.pendentesAprovacao || 'Pendentes'
+                      : safeT?.aprovados || 'Aprovados'}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
