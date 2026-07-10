@@ -112,6 +112,7 @@ import {
   resolverClienteIdRelatorio,
   resolverChaveEquipamentoClienteRelatorio,
   equipamentosClienteParaBiblioteca,
+  coletarRelatoriosServicoPorEquipamentoCliente,
   prepararEquipamentosRelatorioParaEdicao,
   aplicarBaixaVendaEquipamentosArmazemRelatorio,
   encontrarEquipamentoArmazemCorrespondenteCliente,
@@ -75934,8 +75935,15 @@ A1;Peça exemplo;10`}
               {selectedClienteForEquipamento.equipamentos && selectedClienteForEquipamento.equipamentos.length > 0 ? (
                 <div className="equipamentos-cliente-lista" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   {selectedClienteForEquipamento.equipamentos.map((equipamento, index) => {
-                    const equipamentoId = equipamento.numeroSerie || equipamento.modelo || index.toString()
-                    const relatoriosServicoEquipamento = selectedClienteForEquipamento.relatorios?.[equipamentoId] || []
+                    const relatoriosServicoEquipamento = coletarRelatoriosServicoPorEquipamentoCliente({
+                      cliente: selectedClienteForEquipamento,
+                      equipamento,
+                      equipamentoIndex: index,
+                      relatoriosServico,
+                      equipamentosArmazem: equipamentos,
+                      clientes,
+                    })
+                    const numerosRelatorioEquipamento = relatoriosServicoEquipamento.map((r) => r.numero)
                     const equipamentoPhoto = equipamento.photo || equipamento.coverPhoto
                     return (
                       <div
@@ -76001,12 +76009,17 @@ A1;Peça exemplo;10`}
                             </div>
 
                             {/* Relatórios de Serviço */}
-                            {relatoriosServicoEquipamento.length > 0 && (
-                              <div style={{ padding: '14px 16px', borderRadius: '12px', background: 'rgba(0, 200, 83, 0.05)', border: '1px solid rgba(0, 200, 83, 0.12)' }}>
-                                <h4 style={{ fontSize: '12px', fontWeight: '600', color: '#00c853', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                  📋 {safeT?.relatoriosServico || 'Relatórios de Serviço'} ({relatoriosServicoEquipamento.length})
-                                </h4>
-                                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                            <div style={{ padding: '14px 16px', borderRadius: '12px', background: 'rgba(0, 200, 83, 0.05)', border: '1px solid rgba(0, 200, 83, 0.12)' }}>
+                              <h4 style={{ fontSize: '12px', fontWeight: '600', color: '#00c853', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                📋 {safeT?.relatoriosServico || 'Relatórios de Serviço'} ({relatoriosServicoEquipamento.length})
+                              </h4>
+                              {relatoriosServicoEquipamento.length === 0 ? (
+                                <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>
+                                  {(safeT as any)?.nenhumRelatorioEquipamento ||
+                                    'Nenhum relatório de serviço ligado a este equipamento.'}
+                                </p>
+                              ) : (
+                              <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                   {(() => {
                                     const relatoriosPorData: { [data: string]: RelatorioServico[] } = {}
                                     relatoriosServicoEquipamento.forEach(relatorio => {
@@ -76059,8 +76072,8 @@ A1;Peça exemplo;10`}
                                     ))
                                   })()}
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
 
                             {selectedClienteForEquipamento && (
                               <ClienteEquipamentoOrcamentosPanel
@@ -76069,6 +76082,8 @@ A1;Peça exemplo;10`}
                                 equipamento={equipamento}
                                 equipamentoIndex={index}
                                 pedidosRelatorio={pedidosOrcamento}
+                                numerosRelatorioEquipamento={numerosRelatorioEquipamento}
+                                equipamentosArmazem={equipamentos}
                                 safeT={safeT as Record<string, string | undefined>}
                                 loadData={loadData}
                                 onUpdatePedidoRelatorioStatus={atualizarStatusPedidoOrcamento}

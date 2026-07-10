@@ -6,6 +6,7 @@ import {
   PedidoAvulsoRef,
   PedidoOrcamentoRef,
   EquipamentoClienteRef,
+  EquipamentoArmazemRef,
   pedidoRelatorioCorrespondeEquipamento,
   pedidoAvulsoCorrespondeEquipamento,
   orcamentoGeradoCorrespondeEquipamento,
@@ -34,6 +35,7 @@ type Props = {
   clienteId: string
   clienteNome: string
   equipamentos: EquipamentoClienteRef[]
+  equipamentosArmazem?: EquipamentoArmazemRef[]
   pedidosRelatorio: PedidoOrcamentoRef[]
   safeT: Record<string, string | undefined>
   loadData?: (key: string) => Promise<unknown>
@@ -51,6 +53,7 @@ export function ClienteOrcamentosFichaSection({
   clienteId,
   clienteNome,
   equipamentos,
+  equipamentosArmazem = [],
   pedidosRelatorio,
   safeT,
   loadData,
@@ -114,10 +117,25 @@ export function ClienteOrcamentosFichaSection({
     const idx = parseInt(filtroEquipamento, 10)
     if (Number.isNaN(idx)) return true
     if (pedidoRel) {
-      return pedidoRelatorioCorrespondeEquipamento(pedidoRel, clienteId, equipamento, idx, clienteNome)
+      return pedidoRelatorioCorrespondeEquipamento(
+        pedidoRel,
+        clienteId,
+        equipamento,
+        idx,
+        clienteNome,
+        equipamentosArmazem,
+        numerosRelatorioCliente
+      )
     }
     if (pedidoAv) {
-      return pedidoAvulsoCorrespondeEquipamento(pedidoAv, clienteId, equipamento, idx, clienteNome)
+      return pedidoAvulsoCorrespondeEquipamento(
+        pedidoAv,
+        clienteId,
+        equipamento,
+        idx,
+        clienteNome,
+        equipamentosArmazem
+      )
     }
     if (orc) {
       return orcamentoGeradoCorrespondeEquipamento(
@@ -126,7 +144,8 @@ export function ClienteOrcamentosFichaSection({
         equipamento,
         idx,
         clienteNome,
-        numerosRelatorioCliente
+        numerosRelatorioCliente,
+        equipamentosArmazem
       )
     }
     return eqIndex === idx

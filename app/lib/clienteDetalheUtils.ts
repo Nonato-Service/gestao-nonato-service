@@ -20,6 +20,7 @@ import {
   equipamentoIdETecnicoGerado,
   resolverIdEquipamentoCliente,
   resolverIdEquipamentoVisivelCliente,
+  chavesLookupEquipamentoCliente,
   type EquipamentoArmazemIdLookup,
 } from './relatorioServicoEquipamentos'
 
@@ -270,10 +271,20 @@ export function dataEquipamentoAdicionado(
   index: number,
   relatorios: Record<string, RelatorioClienteLike[]> | undefined,
   language: string,
-  vazio = '—'
+  vazio = '—',
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): string {
-  const equipamentoId = equipamento.numeroSerie || equipamento.modelo || String(index)
-  const rels = relatorios?.[equipamentoId] || []
+  const chaves = chavesLookupEquipamentoCliente(equipamento, index, equipamentosArmazem)
+  const rels: RelatorioClienteLike[] = []
+  const vistos = new Set<string>()
+  for (const k of chaves) {
+    for (const r of relatorios?.[k] ?? []) {
+      if (r?.id && !vistos.has(r.id)) {
+        vistos.add(r.id)
+        rels.push(r)
+      }
+    }
+  }
   if (!rels.length) return vazio
   const datas = rels.map((r) => r.data).filter(Boolean).sort()
   return formatarData(datas[0], language, vazio)

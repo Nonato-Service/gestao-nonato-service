@@ -1,4 +1,9 @@
-import { resolverIdEquipamentoCliente } from './relatorioServicoEquipamentos'
+import { resolverIdEquipamentoCliente, resolverIdEquipamentoVisivelCliente } from './relatorioServicoEquipamentos'
+
+export type EquipamentoArmazemRef = {
+  id?: string
+  numeroSerie?: string
+}
 
 export type EquipamentoClienteRef = {
   id?: string
@@ -71,19 +76,26 @@ export function resolverChaveEquipamentoCliente(
 export function equipamentoCorrespondeChave(
   equipamento: EquipamentoClienteRef,
   index: number,
-  chaveAlvo: string | undefined
+  chaveAlvo: string | undefined,
+  equipamentosArmazem: EquipamentoArmazemRef[] = []
 ): boolean {
   const alvo = String(chaveAlvo ?? '').trim()
   if (!alvo) return false
   const chave = resolverChaveEquipamentoCliente(equipamento, index)
+  const vis = resolverIdEquipamentoVisivelCliente(equipamento, equipamentosArmazem)
   const serie = String(equipamento.numeroSerie ?? '').trim()
   const modelo = String(equipamento.modelo ?? '').trim()
+  const marca = String(equipamento.marca ?? '').trim()
   const id = String(equipamento.id ?? '').trim()
+  const modeloMarca = `${modelo} ${marca}`.trim()
   return (
     chave === alvo ||
+    vis === alvo ||
     serie === alvo ||
     modelo === alvo ||
-    id === alvo
+    id === alvo ||
+    modeloMarca === alvo ||
+    String(index) === alvo
   )
 }
 
@@ -92,7 +104,9 @@ export function pedidoRelatorioCorrespondeEquipamento(
   clienteId: string,
   equipamento: EquipamentoClienteRef,
   equipamentoIndex: number,
-  clienteNome?: string
+  clienteNome?: string,
+  equipamentosArmazem: EquipamentoArmazemRef[] = [],
+  numerosRelatorio?: string[]
 ): boolean {
   const cid = String(clienteId).trim()
   const pedidoClienteId = String(pedido.clienteId ?? '').trim()
@@ -102,7 +116,9 @@ export function pedidoRelatorioCorrespondeEquipamento(
       clienteNome &&
       String(pedido.cliente ?? '').trim().toLowerCase() === clienteNome.trim().toLowerCase())
   if (!nomeOk) return false
-  return equipamentoCorrespondeChave(equipamento, equipamentoIndex, pedido.equipamentoId)
+  const numRel = String(pedido.numeroRelatorio ?? '').trim()
+  if (numRel && numerosRelatorio?.includes(numRel)) return true
+  return equipamentoCorrespondeChave(equipamento, equipamentoIndex, pedido.equipamentoId, equipamentosArmazem)
 }
 
 export function pedidoAvulsoCorrespondeEquipamento(
@@ -110,7 +126,8 @@ export function pedidoAvulsoCorrespondeEquipamento(
   clienteId: string,
   equipamento: EquipamentoClienteRef,
   equipamentoIndex: number,
-  clienteNome?: string
+  clienteNome?: string,
+  equipamentosArmazem: EquipamentoArmazemRef[] = []
 ): boolean {
   const cid = String(clienteId).trim()
   const pedidoClienteId = String(pedido.clienteId ?? '').trim()
@@ -120,7 +137,10 @@ export function pedidoAvulsoCorrespondeEquipamento(
       clienteNome &&
       String(pedido.clienteNomeReal ?? '').trim().toLowerCase() === clienteNome.trim().toLowerCase())
   if (!nomeOk) return false
-  if (pedido.equipamentoChave && equipamentoCorrespondeChave(equipamento, equipamentoIndex, pedido.equipamentoChave)) {
+  if (
+    pedido.equipamentoChave &&
+    equipamentoCorrespondeChave(equipamento, equipamentoIndex, pedido.equipamentoChave, equipamentosArmazem)
+  ) {
     return true
   }
   const texto = String(pedido.equipamentoTexto ?? '').toLowerCase()
@@ -139,7 +159,8 @@ export function orcamentoGeradoCorrespondeEquipamento(
   equipamento: EquipamentoClienteRef,
   equipamentoIndex: number,
   clienteNome?: string,
-  numerosRelatorio?: string[]
+  numerosRelatorio?: string[],
+  equipamentosArmazem: EquipamentoArmazemRef[] = []
 ): boolean {
   const cid = String(clienteId).trim()
   const orcClienteId = String(orc.clienteId ?? '').trim()
@@ -152,7 +173,7 @@ export function orcamentoGeradoCorrespondeEquipamento(
   if (orc.relatorioNumero && numerosRelatorio?.includes(orc.relatorioNumero)) return true
   if (
     orc.equipamentoChave &&
-    equipamentoCorrespondeChave(equipamento, equipamentoIndex, orc.equipamentoChave)
+    equipamentoCorrespondeChave(equipamento, equipamentoIndex, orc.equipamentoChave, equipamentosArmazem)
   ) {
     return true
   }

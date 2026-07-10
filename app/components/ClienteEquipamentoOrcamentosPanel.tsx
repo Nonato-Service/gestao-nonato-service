@@ -6,6 +6,7 @@ import {
   PedidoAvulsoRef,
   PedidoOrcamentoRef,
   EquipamentoClienteRef,
+  EquipamentoArmazemRef,
   pedidoRelatorioCorrespondeEquipamento,
   pedidoAvulsoCorrespondeEquipamento,
   orcamentoGeradoCorrespondeEquipamento,
@@ -26,6 +27,8 @@ type Props = {
   equipamento: EquipamentoClienteRef
   equipamentoIndex: number
   pedidosRelatorio: PedidoOrcamentoRef[]
+  numerosRelatorioEquipamento?: string[]
+  equipamentosArmazem?: EquipamentoArmazemRef[]
   safeT: Record<string, string | undefined>
   loadData?: (key: string) => Promise<unknown>
   onUpdatePedidoRelatorioStatus?: (id: string, status: PedidoOrcamentoRef['status']) => void
@@ -44,6 +47,8 @@ export function ClienteEquipamentoOrcamentosPanel({
   equipamento,
   equipamentoIndex,
   pedidosRelatorio,
+  numerosRelatorioEquipamento = [],
+  equipamentosArmazem = [],
   safeT,
   loadData,
   onUpdatePedidoRelatorioStatus,
@@ -74,22 +79,51 @@ export function ClienteEquipamentoOrcamentosPanel({
   const pedidosRelatorioFiltrados = useMemo(
     () =>
       pedidosRelatorio.filter((p) =>
-        pedidoRelatorioCorrespondeEquipamento(p, clienteId, equipamento, equipamentoIndex, clienteNome)
+        pedidoRelatorioCorrespondeEquipamento(
+          p,
+          clienteId,
+          equipamento,
+          equipamentoIndex,
+          clienteNome,
+          equipamentosArmazem,
+          numerosRelatorioEquipamento
+        )
       ),
-    [pedidosRelatorio, clienteId, equipamento, equipamentoIndex, clienteNome]
+    [
+      pedidosRelatorio,
+      clienteId,
+      equipamento,
+      equipamentoIndex,
+      clienteNome,
+      equipamentosArmazem,
+      numerosRelatorioEquipamento,
+    ]
   )
 
   const pedidosAvulsoFiltrados = useMemo(
     () =>
       pedidosAvulso.filter((p) =>
-        pedidoAvulsoCorrespondeEquipamento(p, clienteId, equipamento, equipamentoIndex, clienteNome)
+        pedidoAvulsoCorrespondeEquipamento(
+          p,
+          clienteId,
+          equipamento,
+          equipamentoIndex,
+          clienteNome,
+          equipamentosArmazem
+        )
       ),
-    [pedidosAvulso, clienteId, equipamento, equipamentoIndex, clienteNome]
+    [pedidosAvulso, clienteId, equipamento, equipamentoIndex, clienteNome, equipamentosArmazem]
   )
 
   const numerosRelatorio = useMemo(
-    () => pedidosRelatorioFiltrados.map((p) => p.numeroRelatorio),
-    [pedidosRelatorioFiltrados]
+    () =>
+      [
+        ...new Set([
+          ...numerosRelatorioEquipamento,
+          ...pedidosRelatorioFiltrados.map((p) => p.numeroRelatorio),
+        ]),
+      ].filter(Boolean),
+    [numerosRelatorioEquipamento, pedidosRelatorioFiltrados]
   )
 
   const orcamentosRelatorio = useMemo(
@@ -105,10 +139,19 @@ export function ClienteEquipamentoOrcamentosPanel({
             equipamento,
             equipamentoIndex,
             clienteNome,
-            numerosRelatorio
+            numerosRelatorio,
+            equipamentosArmazem
           )
       ),
-    [orcamentosGerados, clienteId, equipamento, equipamentoIndex, clienteNome, numerosRelatorio]
+    [
+      orcamentosGerados,
+      clienteId,
+      equipamento,
+      equipamentoIndex,
+      clienteNome,
+      numerosRelatorio,
+      equipamentosArmazem,
+    ]
   )
 
   const orcamentosAvulso = useMemo(
@@ -121,10 +164,20 @@ export function ClienteEquipamentoOrcamentosPanel({
             clienteId,
             equipamento,
             equipamentoIndex,
-            clienteNome
+            clienteNome,
+            numerosRelatorio,
+            equipamentosArmazem
           )
       ),
-    [orcamentosGerados, clienteId, equipamento, equipamentoIndex, clienteNome]
+    [
+      orcamentosGerados,
+      clienteId,
+      equipamento,
+      equipamentoIndex,
+      clienteNome,
+      numerosRelatorio,
+      equipamentosArmazem,
+    ]
   )
 
   const itensVisiveis = useMemo(() => {

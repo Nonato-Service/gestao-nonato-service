@@ -357,7 +357,7 @@ export function resolverEquipamentoRelatorioParaExibicao(
   return equipamentoIdETecnicoGerado(idStored) ? '' : idStored
 }
 
-function equipamentoClienteCorrespondeRelatorio(
+export function equipamentoClienteCorrespondeRelatorio(
   eq: RelatorioEquipamentoRef,
   e: EquipamentoClienteIdLookup,
   idx: number,
@@ -736,6 +736,87 @@ export function equipamentosClienteParaBiblioteca(
         .filter(Boolean)
     ),
   ]
+}
+
+/** Chaves possíveis em `cliente.relatorios` para um equipamento do cadastro. */
+export function chavesLookupEquipamentoCliente(
+  equipamento: EquipamentoClienteIdLookup,
+  equipamentoIndex: number,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+): string[] {
+  const vis = resolverIdEquipamentoVisivelCliente(equipamento, equipamentosArmazem)
+  const key = resolverIdEquipamentoCliente(equipamento, equipamentoIndex)
+  const serie = String(equipamento.numeroSerie ?? '').trim()
+  const modelo = String(equipamento.modelo ?? '').trim()
+  const marca = String(equipamento.marca ?? '').trim()
+  const id = String(equipamento.id ?? '').trim()
+  const modeloMarca = `${modelo} ${marca}`.trim()
+  return [
+    ...new Set(
+      [vis, key, serie, id, modelo, modeloMarca, String(equipamentoIndex)].filter(Boolean)
+    ),
+  ]
+}
+
+/** Relatórios de serviço ligados a um equipamento — mescla `cliente.relatorios` + `relatoriosServico`. */
+export function coletarRelatoriosServicoPorEquipamentoCliente<
+  R extends { id: string; data: string; numero: string; clienteId?: string; cliente?: string } & RelatorioServicoEquipamentosHost
+>(params: {
+  cliente: {
+    id: string
+    nomeEmpresa?: string
+    relatorios?: Record<string, R[]>
+    equipamentos?: EquipamentoClienteIdLookup[]
+  }
+  equipamento: EquipamentoClienteIdLookup
+  equipamentoIndex: number
+  relatoriosServico?: R[]
+  equipamentosArmazem?: EquipamentoArmazemIdLookup[]
+  clientes?: { id: string; nomeEmpresa?: string }[]
+}): R[] {
+  const map = new Map<string, R>()
+  const armazem = params.equipamentosArmazem ?? []
+  const eq = params.equipamento
+  const idx = params.equipamentoIndex
+  const clientes = params.clientes ?? [{ id: params.cliente.id, nomeEmpresa: params.cliente.nomeEmpresa }]
+
+  for (const k of chavesLookupEquipamentoCliente(eq, idx, armazem)) {
+    for (const r of params.cliente.relatorios?.[k] ?? []) {
+      if (r?.id) map.set(r.id, r)
+    }
+  }
+
+  const relatorioCasaComEquipamento = (rel: R): boolean => {
+    const eqs = normalizarEquipamentosRelatorio(rel)
+    if (eqs.length === 0) {
+      const legado: RelatorioEquipamentoRef = {
+        uid: 'legado',
+        equipamentoOrigem: 'cliente',
+        equipamentoId: String(rel.equipamentoId ?? ''),
+        maquinaModelo: String(rel.maquinaModelo ?? ''),
+        numeroMaquina: String(rel.numeroMaquina ?? ''),
+      }
+      return equipamentoClienteCorrespondeRelatorio(legado, eq, idx, armazem)
+    }
+    return eqs.some((eqRef) => equipamentoClienteCorrespondeRelatorio(eqRef, eq, idx, armazem))
+  }
+
+  for (const rel of params.relatoriosServico ?? []) {
+    const cid = resolverClienteIdRelatorio(rel, clientes)
+    if (cid !== params.cliente.id) continue
+    if (relatorioCasaComEquipamento(rel)) map.set(rel.id, rel)
+  }
+
+  for (const rel of params.relatoriosServico ?? []) {
+    if (map.has(rel.id)) map.set(rel.id, rel)
+  }
+
+  return Array.from(map.values()).sort((a, b) => {
+    const dataA = new Date(a.data).getTime()
+    const dataB = new Date(b.data).getTime()
+    if (dataA === dataB) return b.numero.localeCompare(a.numero)
+    return dataB - dataA
+  })
 }
 
 type ClienteRelatoriosHost = {

@@ -505,6 +505,7 @@ export function ClienteDetalheView({
         clienteId={cliente.id}
         clienteNome={cliente.nomeEmpresa}
         equipamentos={equipamentos}
+        equipamentosArmazem={equipamentosArmazem}
         pedidosRelatorio={pedidosRelatorio}
         safeT={safeT}
         loadData={loadData}
