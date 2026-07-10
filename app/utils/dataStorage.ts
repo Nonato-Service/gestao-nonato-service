@@ -692,14 +692,22 @@ async function forceLoadCadastroFromServer(key: string): Promise<any | null> {
   }
 }
 
+function isLocalDevBrowser(): boolean {
+  if (typeof window === 'undefined') return false
+  const h = window.location.hostname.toLowerCase()
+  return h === 'localhost' || h === '127.0.0.1'
+}
+
 async function fetchPecasBibliotecaRepairPaginated(
   onProgress?: (loaded: number, total: number) => void
 ): Promise<unknown[] | null> {
   /** Modo lite: catálogo completo ~160 KB (sem fotos base64). Algumas peças têm fotos de 3+ MB. */
   serverOffline = false
-  const authed = await waitForDataApiAuth()
-  if (!authed) {
-    throw new Error('auth_required')
+  if (!isLocalDevBrowser()) {
+    const authed = await waitForDataApiAuth()
+    if (!authed) {
+      throw new Error('auth_required')
+    }
   }
 
   const limit = 500

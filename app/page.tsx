@@ -26429,7 +26429,13 @@ export default function Dashboard() {
       if (!reparadas || reparadas.length <= 0) {
         alert(
           (safeT as any)?.bibliotecaReparoNenhumaPeca ||
-            'Não foi possível repor o catálogo. Verifique se iniciou sessão (utilizador + senha) e se o servidor está a correr.'
+            'Não foi possível repor. No PC: reinicie o servidor (INICIAR-SERVIDOR-SIMPLES.bat), abra http://localhost:3001 e clique outra vez.'
+        )
+        return
+      }
+      if (reparadas.length <= pecasBiblioteca.length && pecasBiblioteca.length >= 10) {
+        alert(
+          `O servidor devolveu ${reparadas.length} peça(s). Recarregue a página (F5). Se continuar igual, reinicie o servidor.`
         )
         return
       }
