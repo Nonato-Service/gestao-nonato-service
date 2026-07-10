@@ -695,24 +695,24 @@ async function forceLoadCadastroFromServer(key: string): Promise<any | null> {
 }
 
 async function fetchPecasLiteFileFromServer(): Promise<unknown[] | null> {
-  try {
-    const res = await dataApiFetch(
-      `${API_BASE}/load?key=${encodeURIComponent(PECAS_BIBLIOTECA_LITE_KEY)}`,
-      {
-        method: 'GET',
-        signal: createTimeoutSignal(45_000),
-      }
-    )
-    if (res.ok) {
+  const url = `${API_BASE}/load?key=${encodeURIComponent(PECAS_BIBLIOTECA_LITE_KEY)}`
+  const attempts: Array<() => Promise<Response>> = [
+    () => dataApiFetch(url, { method: 'GET', signal: createTimeoutSignal(45_000) }),
+    () => fetch(url, { method: 'GET', credentials: 'same-origin', cache: 'no-store', signal: createTimeoutSignal(45_000) }),
+  ]
+  for (const attempt of attempts) {
+    try {
+      const res = await attempt()
+      if (!res.ok) continue
       const json = (await res.json()) as { data?: unknown; error?: string }
-      if (json?.error === 'auth_required') return null
+      if (json?.error === 'auth_required') continue
       if (Array.isArray(json?.data) && json.data.length > 0) {
         console.info(`[Nonato] Catálogo lite (ficheiro): ${json.data.length} peça(s).`)
         return json.data
       }
+    } catch (e) {
+      console.warn('[Nonato] Falha ao carregar ficheiro lite de peças:', e)
     }
-  } catch (e) {
-    console.warn('[Nonato] Falha ao carregar ficheiro lite de peças:', e)
   }
   return null
 }
@@ -772,8 +772,9 @@ async function fetchPecasBibliotecaRepairPaginated(
     }
     if (res.status === 401) {
       if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-        console.warn('[Nonato] Reparo peças: 401 ignorado em dev')
-        break
+        console.warn('[Nonato] Reparo peças: 401 em dev — a tentar ficheiro lite')
+        const lite = await fetchPecasLiteFileFromServer()
+        if (Array.isArray(lite) && lite.length > 0) return lite
       }
       throw new Error('auth_required')
     }

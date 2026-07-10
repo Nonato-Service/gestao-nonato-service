@@ -11095,8 +11095,23 @@ export default function Dashboard() {
         setCategoriasPecas(savedCategoriasPecas)
       }
 
-      // Carregar peças biblioteca — API lite directa quando catálogo parcial (362 peças no disco)
-      let savedPecasBiblioteca = await bootstrapLoadPecasBiblioteca(catsInicial.length)
+      // Carregar peças biblioteca — usar bundle do servidor (lite) quando disponível
+      let savedPecasBiblioteca: unknown[] | null = null
+      const liteBoot = serverData['nonato-pecas-biblioteca-lite']
+      const fullBoot = serverData['nonato-pecas-biblioteca']
+      if (Array.isArray(liteBoot) && liteBoot.length >= 50) {
+        await clearPecasBibliotecaLocal()
+        savedPecasBiblioteca = liteBoot
+        await savePecasBibliotecaLocally(liteBoot)
+        console.info(`[Nonato] Biblioteca do bundle lite: ${liteBoot.length} peça(s).`)
+      } else if (Array.isArray(fullBoot) && fullBoot.length >= 50) {
+        await clearPecasBibliotecaLocal()
+        savedPecasBiblioteca = fullBoot
+        await savePecasBibliotecaLocally(fullBoot)
+        console.info(`[Nonato] Biblioteca do bundle completo: ${fullBoot.length} peça(s).`)
+      } else {
+        savedPecasBiblioteca = await bootstrapLoadPecasBiblioteca(catsInicial.length)
+      }
       const minPecasOk = Math.max(15, Math.min(catsInicial.length, 80))
       const pecasIncompletas =
         !Array.isArray(savedPecasBiblioteca) ||
@@ -26406,15 +26421,22 @@ export default function Dashboard() {
     setPecasBibliotecaReparoProgress('A ligar ao servidor…')
     try {
       await clearPecasBibliotecaLocal()
-      const fromServer = await forceReporPecasBibliotecaFromServer(pecasBiblioteca, (p) => {
+      let fromServer = await fetchPecasBibliotecaLiteFromServer((loaded, total) => {
         setPecasBibliotecaReparoProgress(
-          p.phase === 'images'
-            ? `Fotos: ${p.loaded}${p.total ? ` / ${p.total}` : ''}…`
-            : p.total > 0
-              ? `${p.loaded} / ${p.total} peças…`
-              : `${p.loaded} peças…`
+          total > 0 ? `${loaded} / ${total} peças…` : `${loaded} peças…`
         )
       })
+      if (!Array.isArray(fromServer) || fromServer.length < 50) {
+        fromServer = await forceReporPecasBibliotecaFromServer(pecasBiblioteca, (p) => {
+          setPecasBibliotecaReparoProgress(
+            p.phase === 'images'
+              ? `Fotos: ${p.loaded}${p.total ? ` / ${p.total}` : ''}…`
+              : p.total > 0
+                ? `${p.loaded} / ${p.total} peças…`
+                : `${p.loaded} peças…`
+          )
+        })
+      }
       if (!Array.isArray(fromServer) || fromServer.length === 0) {
         alert(
           `Não foi possível carregar peças do servidor.\n\nConfirme:\n• Servidor a correr (janela preta aberta)\n• Endereço: http://localhost:${typeof window !== 'undefined' ? window.location.port || '3000' : '3000'}\n• Faça Ctrl+F5 para actualizar a página`
@@ -26456,15 +26478,21 @@ export default function Dashboard() {
       setPecasBibliotecaReparoProgress('A repor catálogo do servidor…')
       try {
         await clearPecasBibliotecaLocal()
-        const from = await forceReporPecasBibliotecaFromServer(pecasBiblioteca)
+        let from = await fetchPecasBibliotecaLiteFromServer()
+        if (!Array.isArray(from) || from.length <= pecasBiblioteca.length) {
+          from = await forceReporPecasBibliotecaFromServer(pecasBiblioteca)
+        }
         if (Array.isArray(from) && from.length > pecasBiblioteca.length) {
           const raw = (from as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
           const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
           await savePecasBibliotecaLocally(lista as unknown[])
           setPecasBiblioteca(lista)
           console.info(`[Nonato] Auto-reparo biblioteca: ${pecasBiblioteca.length} → ${lista.length} peça(s).`)
+        } else {
+          pecasAutoReporFeitoRef.current = false
         }
       } catch (e) {
+        pecasAutoReporFeitoRef.current = false
         console.warn('[Nonato] Auto-reparo biblioteca falhou:', e)
       } finally {
         setPecasBibliotecaReparoLoading(false)
