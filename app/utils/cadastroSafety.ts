@@ -11,6 +11,32 @@ import { getKv, saveKv } from './manuaisIndexedDb'
 
 const BACKUP_KEY = 'nonato-cadastro-safety-backup'
 const RESTORED_FLAG = 'nonato-cadastro-safety-restored-count'
+const PECAS_BIBLIOTECA_KEY = 'nonato-pecas-biblioteca'
+const CATEGORIAS_PECAS_KEY = 'nonato-categorias-pecas'
+
+function countPecasInRaw(raw: string | null | undefined): number {
+  if (!raw?.trim()) return 0
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    return Array.isArray(parsed) ? parsed.length : 0
+  } catch {
+    return 0
+  }
+}
+
+function countCategoriasPecasLocal(): number {
+  if (typeof window === 'undefined') return 0
+  return countPecasInRaw(localStorage.getItem(CATEGORIAS_PECAS_KEY))
+}
+
+/** Cópia parcial (ex.: 2 peças com dezenas de categorias) — não usar como backup de segurança. */
+function isPecasBibliotecaBackupSuspeito(raw: string | null | undefined): boolean {
+  const n = countPecasInRaw(raw)
+  if (n === 0) return false
+  const catN = countCategoriasPecasLocal()
+  if (catN < 10) return false
+  return n < Math.max(15, Math.min(catN, 80))
+}
 
 export function hasMeaningfulCadastroInLocalStorage(): boolean {
   if (typeof window === 'undefined') return false
@@ -29,6 +55,7 @@ export async function backupCriticalCadastroToIdb(): Promise<void> {
   const backup: Record<string, string> = {}
   for (const key of NONATO_CRITICAL_CADASTRO_KEYS) {
     const raw = localStorage.getItem(key)
+    if (key === PECAS_BIBLIOTECA_KEY && isPecasBibliotecaBackupSuspeito(raw)) continue
     if (localStorageKeyHasMeaningfulCadastro(raw)) {
       backup[key] = raw!
     }
@@ -58,8 +85,13 @@ export async function restoreCriticalCadastroFromIdbIfNeeded(): Promise<number> 
   let restored = 0
   for (const key of NONATO_CRITICAL_CADASTRO_KEYS) {
     const current = localStorage.getItem(key)
-    if (localStorageKeyHasMeaningfulCadastro(current)) continue
+    if (key === PECAS_BIBLIOTECA_KEY && isPecasBibliotecaBackupSuspeito(current)) {
+      /* cópia parcial — não bloquear reparo posterior */
+    } else if (localStorageKeyHasMeaningfulCadastro(current)) {
+      continue
+    }
     const fromBackup = backup[key]
+    if (key === PECAS_BIBLIOTECA_KEY && isPecasBibliotecaBackupSuspeito(fromBackup)) continue
     if (!localStorageKeyHasMeaningfulCadastro(fromBackup)) continue
     try {
       localStorage.setItem(key, fromBackup)
@@ -112,6 +144,7 @@ export async function mergeSafetyBackupIntoServerData(
   for (const key of NONATO_CRITICAL_CADASTRO_KEYS) {
     if (serverKeyHasMeaningfulData(merged[key])) continue
     const fromBackup = backup[key]
+    if (key === PECAS_BIBLIOTECA_KEY && isPecasBibliotecaBackupSuspeito(fromBackup)) continue
     if (!localStorageKeyHasMeaningfulCadastro(fromBackup)) continue
     try {
       merged[key] = JSON.parse(fromBackup)

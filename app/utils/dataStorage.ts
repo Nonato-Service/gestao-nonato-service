@@ -640,7 +640,6 @@ async function fetchServerKeyPayload(key: string, timeoutMs: number): Promise<an
   return result?.data ?? null
 }
 
-/** Carrega uma chave do servidor ignorando flag serverOffline (reparo de cadastros). */
 async function forceLoadCadastroFromServer(key: string): Promise<any | null> {
   if (!isOnline()) return null
   const slowKey = key === PECAS_BIBLIOTECA_KEY || key === MANUAIS_KEY
@@ -663,6 +662,25 @@ async function forceLoadCadastroFromServer(key: string): Promise<any | null> {
   } catch {
     return null
   }
+}
+
+/** Lê biblioteca de peças directamente do disco via API dedicada (reparo). */
+async function fetchPecasBibliotecaRepairFromServer(): Promise<unknown[] | null> {
+  try {
+    const res = await dataApiFetch(`${API_BASE}/repair-pecas-biblioteca`, {
+      method: 'POST',
+      signal: createTimeoutSignal(120_000),
+    })
+    if (!res.ok) return null
+    const json = (await res.json()) as { success?: boolean; pecas?: unknown[]; error?: string }
+    if (json?.error === 'auth_required') return null
+    if (json?.success && Array.isArray(json.pecas) && json.pecas.length > 0) {
+      return json.pecas
+    }
+  } catch {
+    /* ignorar */
+  }
+  return null
 }
 
 // Carregar um item específico
@@ -747,9 +765,14 @@ export async function repairPecasBibliotecaIfStale(
     /* ignorar */
   }
 
-  const fromServer = await forceLoadCadastroFromServer(PECAS_BIBLIOTECA_KEY)
+  const fromServer = await fetchPecasBibliotecaRepairFromServer()
   if (Array.isArray(fromServer) && fromServer.length > 0) {
     best = mergePecasBibliotecaArrays(fromServer, best) as unknown[]
+  } else {
+    const fromLoad = await forceLoadCadastroFromServer(PECAS_BIBLIOTECA_KEY)
+    if (Array.isArray(fromLoad) && fromLoad.length > 0) {
+      best = mergePecasBibliotecaArrays(fromLoad, best) as unknown[]
+    }
   }
 
   if (best.length <= local.length) return null

@@ -7447,7 +7447,7 @@ export default function Dashboard() {
     void saveData('nonato-pecas-biblioteca', lista)
   }, [pecasBiblioteca, categoriasPecas])
 
-  /** Segunda tentativa: repor catálogo completo se ainda aparecer cópia parcial (ex.: 2 peças / 38 categorias). */
+  /** Segunda tentativa + reparo automático ao abrir biblioteca com catálogo parcial. */
   const pecasReparoPosBootRef = useRef(false)
   useEffect(() => {
     if (appInitialLoading || pecasReparoPosBootRef.current) return
@@ -38506,6 +38506,27 @@ export default function Dashboard() {
                 {hubT.bibliotecaVisaoGeralSub ||
                   'Resumo do volume de peças e da árvore de grupos (categorias e subcategorias).'}
               </p>
+              {catalogoPecasSuspeitoParcial ? (
+                <div className="biblioteca-pecas-hub__warn-banner" style={{ marginBottom: 14 }}>
+                  <div className="biblioteca-pecas-hub__warn-banner-title">
+                    ⚠️ {(safeT as any)?.bibliotecaReparoTitulo || 'Catálogo incompleto — só 2 peças visíveis'}
+                  </div>
+                  <p className="biblioteca-pecas-hub__warn-banner-body" style={{ marginBottom: 10 }}>
+                    {(safeT as any)?.bibliotecaReparoDescVisaoGeral ||
+                      `O servidor tem centenas de peças guardadas; este aparelho carregou apenas ${pecasBiblioteca.length}. Clique para repor (aguarde 1–2 min).`}
+                  </p>
+                  <button
+                    type="button"
+                    className="biblioteca-btn--green"
+                    disabled={pecasBibliotecaReparoLoading}
+                    onClick={() => void handleReporPecasBibliotecaDoServidor()}
+                  >
+                    {pecasBibliotecaReparoLoading
+                      ? (safeT as any)?.bibliotecaReparoAguarde || 'A carregar catálogo…'
+                      : (safeT as any)?.bibliotecaReparoBtn || 'Repor biblioteca do servidor'}
+                  </button>
+                </div>
+              ) : null}
             <div className="biblioteca-pecas-hub__kpi-grid">
               <div
                 className="biblioteca-pecas-hub__kpi"
