@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
+import { localeDatetimeGeneral } from '../translations'
 import {
   PedidoOrcamentoRef,
   PedidoAvulsoRef,
@@ -35,8 +36,8 @@ type Props = {
   equipamento: EquipamentoClienteRef
   equipamentoIndex: number
   pedidosRelatorio: PedidoOrcamentoRef[]
-  numerosRelatorioEquipamento?: string[]
   equipamentosArmazem?: EquipamentoArmazemRef[]
+  language?: string
   safeT: Record<string, string | undefined>
   loadData?: (key: string) => Promise<unknown>
   relatorioComDivida?: (relatorioId: string) => boolean
@@ -73,14 +74,6 @@ function todasPecasRelatorio(rel: RelatorioEquipamentoHistorico) {
   return [...map.values()]
 }
 
-function badgePedido(status: PedidoOrcamentoRef['status'], safeT: Record<string, string | undefined>) {
-  if (status === 'aprovado') return { cls: 'is-aprovado', label: safeT.aprovado || 'Aprovado' }
-  if (status === 'rejeitado') return { cls: 'is-rejeitado', label: safeT.rejeitado || 'Rejeitado' }
-  if (status === 'enviado') return { cls: 'is-enviado', label: safeT.statusEnviado || 'Enviado' }
-  if (status === 'recebido') return { cls: 'is-recebido', label: safeT.statusRecebido || 'Recebido' }
-  return { cls: 'is-pendente', label: safeT.aguardaAprovacao || safeT.pendente || 'Aguarda aprovação' }
-}
-
 export function ClienteEquipamentoHistoricoPanel({
   relatorios,
   clienteId,
@@ -88,8 +81,8 @@ export function ClienteEquipamentoHistoricoPanel({
   equipamento,
   equipamentoIndex,
   pedidosRelatorio,
-  numerosRelatorioEquipamento = [],
   equipamentosArmazem = [],
+  language = 'pt-BR',
   safeT,
   loadData,
   relatorioComDivida,
@@ -97,8 +90,26 @@ export function ClienteEquipamentoHistoricoPanel({
   onUpdatePedidoRelatorioStatus,
   onVisualizarPdfRelatorio,
   onVisualizarPdfAvulso,
-  onAtualizarPedidoAvulso,
 }: Props) {
+  const tr = (key: string) => safeT[key] ?? key
+  const locale = localeDatetimeGeneral(language)
+
+  const fmtDate = (d: string) => {
+    try {
+      return new Date(d).toLocaleDateString(locale)
+    } catch {
+      return d
+    }
+  }
+
+  const badgePedido = (status: PedidoOrcamentoRef['status']) => {
+    if (status === 'aprovado') return { cls: 'is-aprovado', label: tr('aprovado') }
+    if (status === 'rejeitado') return { cls: 'is-rejeitado', label: tr('rejeitado') }
+    if (status === 'enviado') return { cls: 'is-enviado', label: tr('statusEnviado') }
+    if (status === 'recebido') return { cls: 'is-recebido', label: tr('statusRecebido') }
+    return { cls: 'is-pendente', label: tr('aguardaAprovacao') }
+  }
+
   const [pedidosAvulso, setPedidosAvulso] = useState<PedidoAvulsoRef[]>([])
   const [orcamentosGerados, setOrcamentosGerados] = useState<OrcamentoGeradoRef[]>([])
 
@@ -126,20 +137,11 @@ export function ClienteEquipamentoHistoricoPanel({
             equipamento,
             equipamentoIndex,
             clienteNome,
-            equipamentosArmazem,
-            numerosRelatorioEquipamento
+            equipamentosArmazem
           )
         )
       ),
-    [
-      pedidosRelatorio,
-      clienteId,
-      equipamento,
-      equipamentoIndex,
-      clienteNome,
-      equipamentosArmazem,
-      numerosRelatorioEquipamento,
-    ]
+    [pedidosRelatorio, clienteId, equipamento, equipamentoIndex, clienteNome, equipamentosArmazem]
   )
 
   const pedidosAvulsoFiltrados = useMemo(
@@ -177,12 +179,10 @@ export function ClienteEquipamentoHistoricoPanel({
     }
 
     for (const pedido of pedidosFiltrados) {
-      const g = ensure(pedido.numeroRelatorio)
+      const num = String(pedido.numeroRelatorio ?? '').trim()
+      if (!num) continue
+      const g = ensure(num)
       g.pedidosPecas.push(pedido)
-    }
-
-    for (const num of numerosRelatorioEquipamento) {
-      if (String(num).trim()) ensure(String(num).trim())
     }
 
     return [...map.values()]
@@ -193,7 +193,11 @@ export function ClienteEquipamentoHistoricoPanel({
         if (da && db) return db.localeCompare(da)
         return b.numero.localeCompare(a.numero)
       })
-  }, [relatorios, pedidosFiltrados, numerosRelatorioEquipamento])
+  }, [relatorios, pedidosFiltrados])
+
+  const equipLabel = [equipamento.modelo, equipamento.marca, equipamento.numeroSerie]
+    .filter(Boolean)
+    .join(' · ')
 
   const renderListaPecas = (
     pecas: Array<{ codigo: string; descricao: string; quantidade: number | string }>,
@@ -210,17 +214,10 @@ export function ClienteEquipamentoHistoricoPanel({
     </ul>
   )
 
-  if (
-    gruposPorNumero.length === 0 &&
-    pedidosAvulsoFiltrados.length === 0 &&
-    relatorios.length === 0
-  ) {
+  if (gruposPorNumero.length === 0 && pedidosAvulsoFiltrados.length === 0) {
     return (
       <div className="cliente-equip-hist cliente-equip-hist--empty">
-        <p className="cliente-equip-hist__empty">
-          {safeT.nenhumHistoricoEquipamento ||
-            'Ainda não há relatórios, serviços ou peças ligados a este equipamento.'}
-        </p>
+        <p className="cliente-equip-hist__empty">{tr('nenhumHistoricoEquipamento')}</p>
       </div>
     )
   }
@@ -228,13 +225,12 @@ export function ClienteEquipamentoHistoricoPanel({
   return (
     <div className="cliente-equip-hist">
       <div className="cliente-equip-hist__header">
-        <h4 className="cliente-equip-hist__title">
-          📂 {safeT.historicoEquipamento || 'Histórico do equipamento'}
-        </h4>
+        <h4 className="cliente-equip-hist__title">📂 {tr('equipHistoricoDesteEquipamento')}</h4>
+        {equipLabel && <p className="cliente-equip-hist__equip-label">{equipLabel}</p>}
+        <p className="cliente-equip-hist__hint">{tr('equipHistoricoIsoladoHint')}</p>
         <p className="cliente-equip-hist__meta">
-          {gruposPorNumero.length}{' '}
-          {safeT.relatoriosNumerados || 'relatório(s) numerado(s)'} · {pedidosAvulsoFiltrados.length}{' '}
-          {safeT.avulsos || 'avulso(s)'}
+          {gruposPorNumero.length} {tr('relatoriosNumerados')} · {pedidosAvulsoFiltrados.length}{' '}
+          {tr('avulsos')}
         </p>
       </div>
 
@@ -244,55 +240,46 @@ export function ClienteEquipamentoHistoricoPanel({
           const temPecasNoRel = rel ? relatorioTemPecas(rel) : false
           const pecasRel = rel ? todasPecasRelatorio(rel) : []
           const divida = rel && relatorioComDivida?.(rel.id)
+          const pecasLabel =
+            pecasRel.length === 1 ? tr('pecaSingular') : tr('pecasPlural')
 
           return (
             <article key={grupo.numero} className="cliente-equip-hist__grupo">
               <header className="cliente-equip-hist__grupo-head">
                 <span className="cliente-equip-hist__grupo-num">
-                  {safeT.numeroRelatorio || 'Relatório'} <strong>{grupo.numero}</strong>
+                  {tr('numeroRelatorio')} <strong>{grupo.numero}</strong>
                 </span>
                 {rel?.data && (
-                  <span className="cliente-equip-hist__grupo-data">
-                    {new Date(rel.data).toLocaleDateString('pt-BR')}
-                  </span>
+                  <span className="cliente-equip-hist__grupo-data">{fmtDate(rel.data)}</span>
                 )}
                 {divida && (
-                  <span className="cliente-equip-hist__grupo-alerta">
-                    {safeT.clienteRelatorioDivida || 'Situação financeira pendente'}
-                  </span>
+                  <span className="cliente-equip-hist__grupo-alerta">{tr('clienteRelatorioDivida')}</span>
                 )}
               </header>
 
               <div className="cliente-equip-hist__cols">
-                {/* Coluna 1 — Relatório de serviço (sem peças ou resumo do serviço) */}
                 <section className="cliente-equip-hist__col cliente-equip-hist__col--servico">
                   <h5 className="cliente-equip-hist__col-title">
-                    📋 {safeT.relatorioServico || 'Relatório de serviço'}
+                    📋 {tr('relatorioServico')}
                   </h5>
                   {!rel ? (
-                    <p className="cliente-equip-hist__col-empty">
-                      {safeT.relatorioNaoEncontrado || 'Relatório não encontrado na lista de serviços.'}
-                    </p>
+                    <p className="cliente-equip-hist__col-empty">{tr('relatorioNaoEncontrado')}</p>
                   ) : (
                     <div className={`cliente-equip-hist__servico-card${divida ? ' is-divida' : ''}`}>
                       <p className="cliente-equip-hist__line">
-                        <span>{safeT.tecnico || 'Técnico'}:</span> {rel.tecnico || '—'}
+                        <span>{tr('tecnico')}:</span> {rel.tecnico || '—'}
                       </p>
                       {rel.tipoServico && (
                         <p className="cliente-equip-hist__line">
-                          <span>{safeT.tipoServico || 'Tipo'}:</span> {rel.tipoServico}
+                          <span>{tr('tipoServico')}:</span> {rel.tipoServico}
                         </p>
                       )}
                       <p className="cliente-equip-hist__line">
-                        <span>{safeT.estado || 'Estado'}:</span>{' '}
-                        {rel.servicoConcluido
-                          ? safeT.concluido || 'Concluído'
-                          : safeT.emAberto || 'Em aberto'}
+                        <span>{tr('estado')}:</span>{' '}
+                        {rel.servicoConcluido ? tr('concluido') : tr('emAberto')}
                       </p>
                       {!temPecasNoRel && (
-                        <p className="cliente-equip-hist__col-hint">
-                          {safeT.relatorioSomenteServico || 'Serviço sem peças registadas.'}
-                        </p>
+                        <p className="cliente-equip-hist__col-hint">{tr('relatorioSomenteServico')}</p>
                       )}
                       {onVerRelatorio && (
                         <button
@@ -300,49 +287,41 @@ export function ClienteEquipamentoHistoricoPanel({
                           className="cliente-equip-hist__btn cliente-equip-hist__btn--ver"
                           onClick={() => onVerRelatorio(rel)}
                         >
-                          👁️ {safeT.verRelatorio || safeT.ver || 'Ver relatório'}
+                          👁️ {tr('verRelatorio')}
                         </button>
                       )}
                     </div>
                   )}
                 </section>
 
-                {/* Coluna 2 — Relatório com peças */}
                 <section className="cliente-equip-hist__col cliente-equip-hist__col--com-pecas">
                   <h5 className="cliente-equip-hist__col-title">
-                    🔧 {safeT.relatorioComPecas || 'Relatório com peças'}
+                    🔧 {tr('relatorioComPecas')}
                   </h5>
                   {!temPecasNoRel || pecasRel.length === 0 ? (
-                    <p className="cliente-equip-hist__col-empty">
-                      {safeT.semPecasNoRelatorio || 'Este relatório não regista peças no serviço.'}
-                    </p>
+                    <p className="cliente-equip-hist__col-empty">{tr('semPecasNoRelatorio')}</p>
                   ) : (
                     <div className="cliente-equip-hist__pecas-block">
                       <p className="cliente-equip-hist__pecas-ref">
-                        {safeT.referenteRelatorio || 'Referente ao relatório'}{' '}
-                        <strong>{grupo.numero}</strong> · {pecasRel.length}{' '}
-                        {safeT.pecas || 'peça(s)'}
+                        {tr('referenteRelatorio')} <strong>{grupo.numero}</strong> · {pecasRel.length}{' '}
+                        {pecasLabel}
                       </p>
                       {renderListaPecas(pecasRel, `rel-${grupo.numero}`)}
                     </div>
                   )}
                 </section>
 
-                {/* Coluna 3 — Somente peças (pedido de orçamento) */}
                 <section className="cliente-equip-hist__col cliente-equip-hist__col--somente-pecas">
                   <h5 className="cliente-equip-hist__col-title">
-                    📦 {safeT.somentePecas || 'Somente peças (orçamento)'}
+                    📦 {tr('somentePecas')}
                   </h5>
                   {grupo.pedidosPecas.length === 0 ? (
-                    <p className="cliente-equip-hist__col-empty">
-                      {safeT.semPedidoPecasRelatorio ||
-                        'Sem pedido de orçamento de peças para este número de relatório.'}
-                    </p>
+                    <p className="cliente-equip-hist__col-empty">{tr('semPedidoPecasRelatorio')}</p>
                   ) : (
                     grupo.pedidosPecas.map((pedido) => {
                       const orc = findOrcamentoGeradoParaPedidoRelatorio(pedido, orcamentosGerados)
                       const status = statusEfetivoPedidoRelatorio(pedido, orc)
-                      const badge = badgePedido(status, safeT)
+                      const badge = badgePedido(status)
                       const pecas = pedido.pecas ?? []
                       return (
                         <div key={pedido.id} className="cliente-equip-hist__pedido-card">
@@ -353,15 +332,12 @@ export function ClienteEquipamentoHistoricoPanel({
                             <span className={`cliente-equip-hist__badge ${badge.cls}`}>{badge.label}</span>
                           </div>
                           <p className="cliente-equip-hist__pecas-ref">
-                            {safeT.referenteRelatorio || 'Referente ao relatório'}{' '}
-                            <strong>{pedido.numeroRelatorio}</strong>
+                            {tr('referenteRelatorio')} <strong>{pedido.numeroRelatorio}</strong>
                           </p>
                           {pecas.length > 0 ? (
                             renderListaPecas(pecas, `ped-${pedido.id}`)
                           ) : (
-                            <p className="cliente-equip-hist__col-empty">
-                              {safeT.pedidoSemPecas || 'Pedido sem lista de peças.'}
-                            </p>
+                            <p className="cliente-equip-hist__col-empty">{tr('pedidoSemPecas')}</p>
                           )}
                           <div className="cliente-equip-hist__pedido-actions">
                             {onVisualizarPdfRelatorio && (
@@ -370,18 +346,18 @@ export function ClienteEquipamentoHistoricoPanel({
                                 className="cliente-equip-hist__btn"
                                 onClick={() => onVisualizarPdfRelatorio(pedido)}
                               >
-                                👁️ PDF
+                                👁️ {tr('visualizarPdfBtn')}
                               </button>
                             )}
                             {onUpdatePedidoRelatorioStatus && pedidoRelatorioPendente(status) && (
-                                <button
-                                  type="button"
-                                  className="cliente-equip-hist__btn cliente-equip-hist__btn--ok"
-                                  onClick={() => onUpdatePedidoRelatorioStatus(pedido.id, 'aprovado')}
-                                >
-                                  ✓ {safeT.aprovar || 'Aprovar'}
-                                </button>
-                              )}
+                              <button
+                                type="button"
+                                className="cliente-equip-hist__btn cliente-equip-hist__btn--ok"
+                                onClick={() => onUpdatePedidoRelatorioStatus(pedido.id, 'aprovado')}
+                              >
+                                ✓ {tr('aprovar')}
+                              </button>
+                            )}
                           </div>
                         </div>
                       )
@@ -394,21 +370,18 @@ export function ClienteEquipamentoHistoricoPanel({
         })}
       </div>
 
-      {/* Relatórios só serviço agrupados sem número duplicado — já cobertos acima */}
-
       {pedidosAvulsoFiltrados.length > 0 && (
         <section className="cliente-equip-hist__avulsos">
-          <h4 className="cliente-equip-hist__avulsos-title">
-            🧩 {safeT.pecasAvulsas || 'Peças avulsas (sem relatório de serviço)'}
-          </h4>
+          <h4 className="cliente-equip-hist__avulsos-title">🧩 {tr('pecasAvulsas')}</h4>
           <div className="cliente-equip-hist__avulsos-list">
             {pedidosAvulsoFiltrados.map((p) => {
-              const badge = p.status === 'aprovado' ? safeT.aprovado : safeT.pendente
+              const badge =
+                p.status === 'aprovado' ? tr('aprovado') : tr('aguardaAprovacao')
               return (
                 <div key={p.codigo} className="cliente-equip-hist__pedido-card">
                   <div className="cliente-equip-hist__pedido-head">
                     <span className="cliente-equip-hist__pedido-cod">{p.codigo}</span>
-                    <span className="cliente-equip-hist__badge is-pendente">{badge || 'Pendente'}</span>
+                    <span className="cliente-equip-hist__badge is-pendente">{badge}</span>
                   </div>
                   {(p.pecas?.length ?? 0) > 0 && renderListaPecas(p.pecas!, `av-${p.codigo}`)}
                   <div className="cliente-equip-hist__pedido-actions">
@@ -418,7 +391,7 @@ export function ClienteEquipamentoHistoricoPanel({
                         className="cliente-equip-hist__btn"
                         onClick={() => onVisualizarPdfAvulso(p)}
                       >
-                        👁️ PDF
+                        👁️ {tr('visualizarPdfBtn')}
                       </button>
                     )}
                   </div>

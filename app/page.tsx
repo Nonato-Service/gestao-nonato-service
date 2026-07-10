@@ -75706,7 +75706,7 @@ A1;Peça exemplo;10`}
       {/* Modal de Equipamentos do Cliente - Layout profissional com imagem */}
       {selectedClienteForEquipamento && (
         <div className="modal-overlay" onClick={() => { setSelectedClienteForEquipamento(null); setShowEquipamentoClienteForm(false); setEquipamentoClienteTemCodigoProprio(false); }}>
-          <div className="modal modal-equipamentos-cliente" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1180px', width: '98%', maxHeight: '96vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #3c3c3c 0%, #363636 100%)', borderRadius: '20px', border: '1px solid rgba(0, 200, 83, 0.2)', boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,200,83,0.06)' }}>
+          <div className="modal modal-equipamentos-cliente" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1400px', width: '99%', maxHeight: '96vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #3c3c3c 0%, #363636 100%)', borderRadius: '20px', border: '1px solid rgba(0, 200, 83, 0.2)', boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,200,83,0.06)' }}>
             {/* Cabeçalho */}
             <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(0, 200, 83, 0.12)', background: 'linear-gradient(135deg, rgba(0, 200, 83, 0.06) 0%, transparent 100%)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
@@ -75943,7 +75943,6 @@ A1;Peça exemplo;10`}
                       equipamentosArmazem: equipamentos,
                       clientes,
                     })
-                    const numerosRelatorioEquipamento = relatoriosServicoEquipamento.map((r) => r.numero)
                     const equipamentoPhoto = equipamento.photo || equipamento.coverPhoto
                     return (
                       <div
@@ -76010,7 +76009,7 @@ A1;Peça exemplo;10`}
 
                             <div className="equipamento-cliente-card-toolbar">
                               <button type="button" className="btn-primary equipamento-cliente-card-action" onClick={() => handleEditEquipamentoCliente(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 16px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 200, 83, 0.4)', background: 'rgba(0, 200, 83, 0.12)', color: '#00c853' }}>✏️ {safeT?.edit || 'Editar'}</button>
-                              <button type="button" className="btn-primary equipamento-cliente-card-action" onClick={() => handleOpenRelatorios(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 16px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 200, 83, 0.35)', background: 'rgba(0, 200, 83, 0.08)', color: '#00c853' }}>📝 {safeT?.notasEquipamento || safeT?.relatorios || 'Notas'}</button>
+                              <button type="button" className="btn-primary equipamento-cliente-card-action" onClick={() => handleOpenRelatorios(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 16px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 200, 83, 0.35)', background: 'rgba(0, 200, 83, 0.08)', color: '#00c853' }}>📝 {(safeT as any)?.notasEquipamento || safeT?.relatorios || 'Notas'}</button>
                               <button type="button" className="btn-danger equipamento-cliente-card-action" onClick={() => handleDeleteEquipamentoCliente(selectedClienteForEquipamento.id, index)} style={{ padding: '11px 16px', fontSize: '13px', borderRadius: '12px', fontWeight: '600' }}>🗑️ {safeT?.delete || 'Excluir'}</button>
                             </div>
 
@@ -76021,8 +76020,8 @@ A1;Peça exemplo;10`}
                               equipamento={equipamento}
                               equipamentoIndex={index}
                               pedidosRelatorio={pedidosOrcamento}
-                              numerosRelatorioEquipamento={numerosRelatorioEquipamento}
                               equipamentosArmazem={equipamentos}
+                              language={selectedLanguage}
                               safeT={safeT as Record<string, string | undefined>}
                               loadData={loadData}
                               relatorioComDivida={(relatorioId) =>

@@ -116,9 +116,26 @@ export function pedidoRelatorioCorrespondeEquipamento(
       clienteNome &&
       String(pedido.cliente ?? '').trim().toLowerCase() === clienteNome.trim().toLowerCase())
   if (!nomeOk) return false
-  const numRel = String(pedido.numeroRelatorio ?? '').trim()
-  if (numRel && numerosRelatorio?.includes(numRel)) return true
-  return equipamentoCorrespondeChave(equipamento, equipamentoIndex, pedido.equipamentoId, equipamentosArmazem)
+  if (
+    equipamentoCorrespondeChave(
+      equipamento,
+      equipamentoIndex,
+      pedido.equipamentoId,
+      equipamentosArmazem
+    )
+  ) {
+    return true
+  }
+  const serieEq = String(equipamento.numeroSerie ?? '').trim().toLowerCase()
+  const seriePed = String(pedido.numeroMaquina ?? '').trim().toLowerCase()
+  if (serieEq && seriePed && serieEq === seriePed) return true
+  const modeloEq = String(equipamento.modelo ?? '').trim().toLowerCase()
+  const modeloPed = String(pedido.maquinaModelo ?? '').trim().toLowerCase()
+  if (modeloEq && modeloPed && modeloEq === modeloPed) {
+    if (!serieEq || !seriePed) return true
+    return serieEq === seriePed
+  }
+  return false
 }
 
 export function pedidoAvulsoCorrespondeEquipamento(
@@ -170,7 +187,6 @@ export function orcamentoGeradoCorrespondeEquipamento(
       clienteNome &&
       String(orc.clienteNome ?? '').trim().toLowerCase() === clienteNome.trim().toLowerCase())
   if (!nomeOk) return false
-  if (orc.relatorioNumero && numerosRelatorio?.includes(orc.relatorioNumero)) return true
   if (
     orc.equipamentoChave &&
     equipamentoCorrespondeChave(equipamento, equipamentoIndex, orc.equipamentoChave, equipamentosArmazem)
@@ -183,7 +199,9 @@ export function orcamentoGeradoCorrespondeEquipamento(
   const desc = String(orc.descricao ?? '').toLowerCase()
   const modelo = String(equipamento.modelo ?? '').trim().toLowerCase()
   const serie = String(equipamento.numeroSerie ?? '').trim().toLowerCase()
-  if (modelo && desc.includes(modelo)) return true
+  if (modelo && desc.includes(modelo)) {
+    if (!serie || desc.includes(serie)) return true
+  }
   if (serie && desc.includes(serie)) return true
   return false
 }

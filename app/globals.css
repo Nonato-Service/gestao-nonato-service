@@ -5024,12 +5024,12 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
 }
 
 .modal-equipamentos-cliente {
-  width: min(98vw, 1180px) !important;
-  max-width: min(98vw, 1180px) !important;
+  width: min(99vw, 1400px) !important;
+  max-width: min(99vw, 1400px) !important;
 }
 
 .equipamentos-cliente-modal-body {
-  padding: 24px 28px;
+  padding: 28px 32px;
 }
 
 .equipamentos-cliente-lista {
@@ -5082,6 +5082,20 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.55);
   font-style: italic;
+}
+
+.cliente-equip-hist__hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: rgba(255, 204, 102, 0.75);
+  line-height: 1.45;
+}
+
+.cliente-equip-hist__equip-label {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(200, 255, 220, 0.95);
 }
 
 .cliente-equip-hist__header {
@@ -5248,7 +5262,7 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   list-style: none;
   margin: 0;
   padding: 0;
-  max-height: 220px;
+  max-height: 280px;
   overflow-y: auto;
 }
 
@@ -5431,8 +5445,8 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
 
 @media (max-width: 768px) {
   .modal.modal-equipamentos-cliente {
-    width: min(100vw - 8px, 1180px) !important;
-    max-width: min(100vw - 8px, 1180px) !important;
+    width: min(100vw - 8px, 1400px) !important;
+    max-width: min(100vw - 8px, 1400px) !important;
     margin: 0 auto 8px !important;
     border-radius: 14px !important;
   }

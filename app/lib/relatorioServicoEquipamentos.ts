@@ -780,12 +780,6 @@ export function coletarRelatoriosServicoPorEquipamentoCliente<
   const idx = params.equipamentoIndex
   const clientes = params.clientes ?? [{ id: params.cliente.id, nomeEmpresa: params.cliente.nomeEmpresa }]
 
-  for (const k of chavesLookupEquipamentoCliente(eq, idx, armazem)) {
-    for (const r of params.cliente.relatorios?.[k] ?? []) {
-      if (r?.id) map.set(r.id, r)
-    }
-  }
-
   const relatorioCasaComEquipamento = (rel: R): boolean => {
     const eqs = normalizarEquipamentosRelatorio(rel)
     if (eqs.length === 0) {
@@ -799,6 +793,12 @@ export function coletarRelatoriosServicoPorEquipamentoCliente<
       return equipamentoClienteCorrespondeRelatorio(legado, eq, idx, armazem)
     }
     return eqs.some((eqRef) => equipamentoClienteCorrespondeRelatorio(eqRef, eq, idx, armazem))
+  }
+
+  for (const k of chavesLookupEquipamentoCliente(eq, idx, armazem)) {
+    for (const r of params.cliente.relatorios?.[k] ?? []) {
+      if (r?.id && relatorioCasaComEquipamento(r)) map.set(r.id, r)
+    }
   }
 
   for (const rel of params.relatoriosServico ?? []) {
