@@ -720,14 +720,7 @@ async function fetchPecasBibliotecaRepairPaginated(
     /* continuar sem total */
   }
 
-  const isLocalBrowser =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      window.location.hostname === '[::1]' ||
-      process.env.NODE_ENV === 'development')
-
-  if (authRequired && !isLocalBrowser) {
+  if (authRequired && typeof window !== 'undefined' && process.env.NODE_ENV !== 'development') {
     throw new Error('auth_required')
   }
 
@@ -881,6 +874,41 @@ export async function fetchPecasBibliotecaLiteFromServer(
   onProgress?: (loaded: number, total: number) => void
 ): Promise<unknown[] | null> {
   return fetchPecasBibliotecaRepairPaginated(onProgress)
+}
+
+/** Arranque / botão repor: prioriza API lite (362 peças ~160 KB), ignora cópia parcial no browser. */
+export async function bootstrapLoadPecasBiblioteca(categoriasCount: number): Promise<unknown[] | null> {
+  const threshold = Math.max(15, Math.min(categoriasCount, 80))
+  const isPartial = (n: number) => categoriasCount >= 10 && n < threshold
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 900 * attempt))
+    try {
+      const fromRepair = await fetchPecasBibliotecaLiteFromServer()
+      if (Array.isArray(fromRepair) && fromRepair.length > 0 && !isPartial(fromRepair.length)) {
+        await savePecasBibliotecaLocally(fromRepair)
+        console.info(`[Nonato] Biblioteca carregada do servidor (lite): ${fromRepair.length} peça(s).`)
+        return fromRepair
+      }
+    } catch (e) {
+      console.warn('[Nonato] bootstrapLoadPecasBiblioteca tentativa', attempt + 1, e)
+    }
+  }
+
+  const fromLoad = await loadData(PECAS_BIBLIOTECA_KEY)
+  const loadCount = Array.isArray(fromLoad) ? fromLoad.length : 0
+  if (!isPartial(loadCount)) return fromLoad
+
+  try {
+    const lastTry = await fetchPecasBibliotecaLiteFromServer()
+    if (Array.isArray(lastTry) && lastTry.length > loadCount) {
+      await savePecasBibliotecaLocally(lastTry)
+      return lastTry
+    }
+  } catch {
+    /* ignorar */
+  }
+  return fromLoad
 }
 
 /**
@@ -1466,6 +1494,8 @@ export async function applySilentServerSync(server: Record<string, unknown>): Pr
     ) {
       const snap = await readLocalValueForLoad(key, true)
       if (Array.isArray(snap.parsed) && snap.parsed.length > s.length) continue
+      /* Nunca aplicar cópia parcial (2 peças) vinda do bundle sync */
+      continue
     }
     const raw = localStorage.getItem(key)
     let same = false

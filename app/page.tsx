@@ -23,6 +23,7 @@ import {
   repairPecasBibliotecaIfStale,
   forceReporPecasBibliotecaFromServer,
   fetchPecasBibliotecaLiteFromServer,
+  bootstrapLoadPecasBiblioteca,
   clearPecasBibliotecaLocal,
   savePecasBibliotecaLocally,
   setBlockImplicitServerPushDuringBootstrap,
@@ -9927,7 +9928,7 @@ export default function Dashboard() {
         ) {
           const serverValue = serverData[key]
           const localData = localStorage.getItem(key)
-          if (Array.isArray(serverValue) && serverValue.length > 0) {
+          if (Array.isArray(serverValue) && serverValue.length >= 50) {
             let localParsed: unknown = null
             if (localData !== null && localData !== '') {
               try {
@@ -9943,7 +9944,7 @@ export default function Dashboard() {
             }
             return merged
           }
-          // Bundle completo pode falhar/timeout — reparo async carrega directamente do ficheiro no servidor
+          /* Cópia parcial no bundle sync (<50) — bootstrapLoadPecasBiblioteca usa repair API */
         }
         // Clientes: com divergência de revisão o local «conta» como não vazio e bloqueava o servidor inteiro —
         // fundir para trazer equipamentos/alterações gravadas noutro aparelho sem apagar clientes só locais.
@@ -11077,37 +11078,8 @@ export default function Dashboard() {
         setCategoriasPecas(savedCategoriasPecas)
       }
 
-      // Carregar peças biblioteca — se catálogo parcial, ir directo ao servidor (362 peças lite)
-      let savedPecasBiblioteca = await loadData('nonato-pecas-biblioteca')
-      const pecasCountBoot = Array.isArray(savedPecasBiblioteca) ? savedPecasBiblioteca.length : 0
-      const catalogoParcialBoot =
-        catsInicial.length >= 10 &&
-        pecasCountBoot < Math.max(15, Math.min(catsInicial.length, 80))
-      if (catalogoParcialBoot) {
-        const fromServer = await fetchPecasBibliotecaLiteFromServer()
-        if (Array.isArray(fromServer) && fromServer.length > pecasCountBoot) {
-          savedPecasBiblioteca = fromServer
-          await savePecasBibliotecaLocally(fromServer as unknown[])
-        }
-      }
-      const repostoOk = (() => {
-        try {
-          return Number.parseInt(sessionStorage.getItem('nonato-pecas-reposto-ok') || '0', 10)
-        } catch {
-          return 0
-        }
-      })()
-      if (repostoOk > 0) {
-        try {
-          sessionStorage.removeItem('nonato-pecas-reposto-ok')
-        } catch {
-          /* ignorar */
-        }
-        const idbSnap = await loadData('nonato-pecas-biblioteca')
-        if (Array.isArray(idbSnap) && idbSnap.length >= repostoOk) {
-          savedPecasBiblioteca = idbSnap
-        }
-      }
+      // Carregar peças biblioteca — API lite directa quando catálogo parcial (362 peças no disco)
+      let savedPecasBiblioteca = await bootstrapLoadPecasBiblioteca(catsInicial.length)
       if (savedPecasBiblioteca && Array.isArray(savedPecasBiblioteca)) {
         const raw = (savedPecasBiblioteca as PecaBiblioteca[]).map((peca) =>
           sanitizarPecaBibliotecaImportacaoFlag(peca)
