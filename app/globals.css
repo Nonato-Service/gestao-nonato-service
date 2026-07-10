@@ -5024,7 +5024,8 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
 }
 
 .modal-equipamentos-cliente {
-  width: min(96vw, 920px) !important;
+  width: min(98vw, 1180px) !important;
+  max-width: min(98vw, 1180px) !important;
 }
 
 .equipamentos-cliente-modal-body {
@@ -5062,10 +5063,376 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   min-width: 0 !important;
 }
 
+/* Histórico equipamento — relatório / com peças / somente peças */
+.cliente-equip-hist {
+  margin-top: 4px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cliente-equip-hist--empty {
+  padding: 20px;
+  text-align: center;
+}
+
+.cliente-equip-hist__empty {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  font-style: italic;
+}
+
+.cliente-equip-hist__header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cliente-equip-hist__title {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffcc66;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cliente-equip-hist__meta {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.cliente-equip-hist__grupos {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.cliente-equip-hist__grupo {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 200, 83, 0.2);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.cliente-equip-hist__grupo-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, rgba(0, 200, 83, 0.12) 0%, rgba(0, 200, 83, 0.04) 100%);
+  border-bottom: 1px solid rgba(0, 200, 83, 0.15);
+}
+
+.cliente-equip-hist__grupo-num {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.cliente-equip-hist__grupo-num strong {
+  font-size: 15px;
+  color: #7ee8a8;
+  font-variant-numeric: tabular-nums;
+}
+
+.cliente-equip-hist__grupo-data {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.cliente-equip-hist__grupo-alerta {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fca5a5;
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.cliente-equip-hist__cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+}
+
+.cliente-equip-hist__col {
+  padding: 14px 16px;
+  min-width: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cliente-equip-hist__col:last-child {
+  border-right: none;
+}
+
+.cliente-equip-hist__col--servico {
+  background: rgba(0, 200, 83, 0.04);
+}
+
+.cliente-equip-hist__col--com-pecas {
+  background: rgba(77, 166, 255, 0.04);
+}
+
+.cliente-equip-hist__col--somente-pecas {
+  background: rgba(255, 170, 0, 0.05);
+}
+
+.cliente-equip-hist__col-title {
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.cliente-equip-hist__col-empty {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  font-style: italic;
+  line-height: 1.45;
+}
+
+.cliente-equip-hist__col-hint {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  font-style: italic;
+}
+
+.cliente-equip-hist__servico-card {
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(0, 200, 83, 0.12);
+}
+
+.cliente-equip-hist__servico-card.is-divida {
+  border-color: rgba(248, 113, 113, 0.35);
+  background: rgba(60, 12, 12, 0.25);
+}
+
+.cliente-equip-hist__line {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.4;
+}
+
+.cliente-equip-hist__line span {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.cliente-equip-hist__pecas-ref {
+  margin: 0 0 10px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.cliente-equip-hist__pecas-ref strong {
+  color: #ffcc66;
+  font-variant-numeric: tabular-nums;
+}
+
+.cliente-equip-hist__pecas-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.cliente-equip-hist__peca-item {
+  display: grid;
+  grid-template-columns: minmax(56px, 0.7fr) 1fr auto;
+  gap: 8px;
+  align-items: start;
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+}
+
+.cliente-equip-hist__peca-cod {
+  font-weight: 700;
+  color: #7dd3a8;
+  font-variant-numeric: tabular-nums;
+}
+
+.cliente-equip-hist__peca-desc {
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.35;
+}
+
+.cliente-equip-hist__peca-qtd {
+  font-weight: 700;
+  color: #ffcc66;
+  white-space: nowrap;
+}
+
+.cliente-equip-hist__pedido-card {
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 170, 0, 0.18);
+}
+
+.cliente-equip-hist__pedido-card:last-child {
+  margin-bottom: 0;
+}
+
+.cliente-equip-hist__pedido-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cliente-equip-hist__pedido-cod {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.cliente-equip-hist__badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.cliente-equip-hist__badge.is-aprovado {
+  background: rgba(0, 200, 83, 0.18);
+  color: #7ee8a8;
+}
+
+.cliente-equip-hist__badge.is-pendente {
+  background: rgba(255, 170, 0, 0.18);
+  color: #ffcc66;
+}
+
+.cliente-equip-hist__badge.is-rejeitado {
+  background: rgba(255, 68, 68, 0.18);
+  color: #ff8888;
+}
+
+.cliente-equip-hist__badge.is-enviado {
+  background: rgba(77, 166, 255, 0.18);
+  color: #8ec5ff;
+}
+
+.cliente-equip-hist__badge.is-recebido {
+  background: rgba(0, 200, 83, 0.12);
+  color: #7dd3a8;
+}
+
+.cliente-equip-hist__pedido-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.cliente-equip-hist__btn {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.88);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.cliente-equip-hist__btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.cliente-equip-hist__btn--ver {
+  margin-top: 10px;
+  width: 100%;
+  border-color: rgba(0, 200, 83, 0.4);
+  color: #7ee8a8;
+}
+
+.cliente-equip-hist__btn--ok {
+  border-color: rgba(0, 200, 83, 0.45);
+  color: #00c853;
+  background: rgba(0, 200, 83, 0.1);
+}
+
+.cliente-equip-hist__avulsos {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.cliente-equip-hist__avulsos-title {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.cliente-equip-hist__avulsos-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.equipamento-cliente-card-toolbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+.equipamento-cliente-card-toolbar .equipamento-cliente-card-action {
+  width: 100% !important;
+  flex: unset !important;
+  min-height: 42px;
+}
+
+@media (max-width: 960px) {
+  .cliente-equip-hist__cols {
+    grid-template-columns: 1fr;
+  }
+
+  .cliente-equip-hist__col {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .cliente-equip-hist__col:last-child {
+    border-bottom: none;
+  }
+
+  .equipamento-cliente-card-toolbar {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
   .modal.modal-equipamentos-cliente {
-    width: min(100vw - 8px, 920px) !important;
-    max-width: min(100vw - 8px, 920px) !important;
+    width: min(100vw - 8px, 1180px) !important;
+    max-width: min(100vw - 8px, 1180px) !important;
     margin: 0 auto 8px !important;
     border-radius: 14px !important;
   }

@@ -207,7 +207,7 @@ import { ClienteListaLinhas } from './components/ClienteListaLinhas'
 import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
-import { ClienteEquipamentoOrcamentosPanel } from './components/ClienteEquipamentoOrcamentosPanel'
+import { ClienteEquipamentoHistoricoPanel } from './components/ClienteEquipamentoHistoricoPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
 import { wrapRelatorioServicoPrintDocument } from './lib/relatorioServicoPdfShell'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
@@ -75706,7 +75706,7 @@ A1;Peça exemplo;10`}
       {/* Modal de Equipamentos do Cliente - Layout profissional com imagem */}
       {selectedClienteForEquipamento && (
         <div className="modal-overlay" onClick={() => { setSelectedClienteForEquipamento(null); setShowEquipamentoClienteForm(false); setEquipamentoClienteTemCodigoProprio(false); }}>
-          <div className="modal modal-equipamentos-cliente" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '920px', width: '96%', maxHeight: '94vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #3c3c3c 0%, #363636 100%)', borderRadius: '20px', border: '1px solid rgba(0, 200, 83, 0.2)', boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,200,83,0.06)' }}>
+          <div className="modal modal-equipamentos-cliente" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1180px', width: '98%', maxHeight: '96vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #3c3c3c 0%, #363636 100%)', borderRadius: '20px', border: '1px solid rgba(0, 200, 83, 0.2)', boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,200,83,0.06)' }}>
             {/* Cabeçalho */}
             <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(0, 200, 83, 0.12)', background: 'linear-gradient(135deg, rgba(0, 200, 83, 0.06) 0%, transparent 100%)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
@@ -76008,102 +76008,38 @@ A1;Peça exemplo;10`}
                               <p style={{ margin: 0, fontSize: '14px', color: 'rgba(255,255,255,0.78)' }}>{equipamento.marca}{equipamento.numeroSerie ? ` · ${equipamento.numeroSerie}` : ''}</p>
                             </div>
 
-                            {/* Relatórios de Serviço */}
-                            <div style={{ padding: '14px 16px', borderRadius: '12px', background: 'rgba(0, 200, 83, 0.05)', border: '1px solid rgba(0, 200, 83, 0.12)' }}>
-                              <h4 style={{ fontSize: '12px', fontWeight: '600', color: '#00c853', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                📋 {safeT?.relatoriosServico || 'Relatórios de Serviço'} ({relatoriosServicoEquipamento.length})
-                              </h4>
-                              {relatoriosServicoEquipamento.length === 0 ? (
-                                <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>
-                                  {(safeT as any)?.nenhumRelatorioEquipamento ||
-                                    'Nenhum relatório de serviço ligado a este equipamento.'}
-                                </p>
-                              ) : (
-                              <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                                  {(() => {
-                                    const relatoriosPorData: { [data: string]: RelatorioServico[] } = {}
-                                    relatoriosServicoEquipamento.forEach(relatorio => {
-                                      const dataKey = new Date(relatorio.data).toLocaleDateString('pt-BR')
-                                      if (!relatoriosPorData[dataKey]) relatoriosPorData[dataKey] = []
-                                      relatoriosPorData[dataKey].push(relatorio)
-                                    })
-                                    const datasOrdenadas = Object.keys(relatoriosPorData).sort((a, b) => new Date(b.split('/').reverse().join('-')).getTime() - new Date(a.split('/').reverse().join('-')).getTime())
-                                    return datasOrdenadas.map(dataKey => (
-                                      <div key={dataKey} style={{ marginBottom: '10px' }}>
-                                        <p style={{ fontSize: '10px', fontWeight: '600', color: 'rgba(0, 200, 83, 0.85)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📅 {dataKey}</p>
-                                        {relatoriosPorData[dataKey].map((relatorio) => {
-                                          const marcaRelatorioDivida = relatorioServicoFluxoFinanceiroPendente(
-                                            fechamentoFluxoFinanceiroPorRelatorioId[relatorio.id]
-                                          )
-                                          return (
-                                          <div
-                                            key={relatorio.id}
-                                            className={marcaRelatorioDivida ? 'cliente-relatorio-linha-divida' : undefined}
-                                            style={{
-                                              padding: '10px 12px',
-                                              marginBottom: '6px',
-                                              borderRadius: '8px',
-                                              background: marcaRelatorioDivida
-                                                ? 'rgba(60, 12, 12, 0.35)'
-                                                : 'rgba(0,0,0,0.2)',
-                                              border: marcaRelatorioDivida
-                                                ? '1px solid rgba(248, 113, 113, 0.35)'
-                                                : '1px solid rgba(0, 200, 83, 0.08)',
-                                            }}
-                                            title={
-                                              marcaRelatorioDivida
-                                                ? (safeT as any)?.clienteRelatorioDividaTooltip ||
-                                                  'Último relatório com situação «não pago» / devedor no fluxo financeiro. Quando regularizar, o destaque desaparece.'
-                                                : undefined
-                                            }
-                                          >
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-                                              <div>
-                                                <p style={{ margin: 0, fontSize: '12px', fontWeight: '600', color: '#00c853' }}>{relatorio.numero}</p>
-                                                <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>👤 {relatorio.tecnico}</p>
-                                                {relatorio.tipoServico && <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.65)' }}>🔧 {relatorio.tipoServico}</p>}
-                                              </div>
-                                              <button className="btn-primary" onClick={() => setViewingRelatorioServico(resolverRelatorioServicoDono(relatorio))} style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '8px', flexShrink: 0, backgroundColor: 'rgba(0, 200, 83, 0.2)', border: '1px solid rgba(0, 200, 83, 0.6)', color: '#fff' }}>👁️ {safeT?.ver || 'Ver'}</button>
-                                            </div>
-                                          </div>
-                                          )
-                                        })}
-                                      </div>
-                                    ))
-                                  })()}
-                                </div>
-                              )}
+                            <div className="equipamento-cliente-card-toolbar">
+                              <button type="button" className="btn-primary equipamento-cliente-card-action" onClick={() => handleEditEquipamentoCliente(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 16px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 200, 83, 0.4)', background: 'rgba(0, 200, 83, 0.12)', color: '#00c853' }}>✏️ {safeT?.edit || 'Editar'}</button>
+                              <button type="button" className="btn-primary equipamento-cliente-card-action" onClick={() => handleOpenRelatorios(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 16px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 200, 83, 0.35)', background: 'rgba(0, 200, 83, 0.08)', color: '#00c853' }}>📝 {safeT?.notasEquipamento || safeT?.relatorios || 'Notas'}</button>
+                              <button type="button" className="btn-danger equipamento-cliente-card-action" onClick={() => handleDeleteEquipamentoCliente(selectedClienteForEquipamento.id, index)} style={{ padding: '11px 16px', fontSize: '13px', borderRadius: '12px', fontWeight: '600' }}>🗑️ {safeT?.delete || 'Excluir'}</button>
                             </div>
 
-                            {selectedClienteForEquipamento && (
-                              <ClienteEquipamentoOrcamentosPanel
-                                clienteId={selectedClienteForEquipamento.id}
-                                clienteNome={selectedClienteForEquipamento.nomeEmpresa}
-                                equipamento={equipamento}
-                                equipamentoIndex={index}
-                                pedidosRelatorio={pedidosOrcamento}
-                                numerosRelatorioEquipamento={numerosRelatorioEquipamento}
-                                equipamentosArmazem={equipamentos}
-                                safeT={safeT as Record<string, string | undefined>}
-                                loadData={loadData}
-                                onUpdatePedidoRelatorioStatus={atualizarStatusPedidoOrcamento}
-                                onVisualizarPdfRelatorio={abrirPdfPedidoOrcamentoRelatorio}
-                                onVisualizarPdfAvulso={abrirPdfPedidoOrcamentoAvulso}
-                                onAtualizarPedidoAvulso={async (pedidos) => {
-                                  await saveData('nonato-pedidos-orcamento-avulso', pedidos)
-                                }}
-                                onAtualizarOrcamentosGerados={async (orcamentos) => {
-                                  await saveData('nonato-orcamentos-avulso', orcamentos)
-                                }}
-                              />
-                            )}
-
-                            {/* Botões de acção */}
-                            <div className="equipamento-cliente-card-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                              <button type="button" className="btn-primary equipamento-cliente-card-action" onClick={() => handleEditEquipamentoCliente(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 200, 83, 0.4)', background: 'rgba(0, 200, 83, 0.12)', color: '#00c853', flex: 1, minWidth: '100px' }}>✏️ {safeT?.edit || 'Editar'}</button>
-                              <button className="btn-primary equipamento-cliente-card-action" onClick={() => handleOpenRelatorios(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 200, 83, 0.35)', background: 'rgba(0, 200, 83, 0.08)', color: '#00c853', flex: 1, minWidth: '100px' }}>📋 {safeT?.relatorios || 'Relatórios'}</button>
-                              <button className="btn-danger equipamento-cliente-card-action" onClick={() => handleDeleteEquipamentoCliente(selectedClienteForEquipamento.id, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', flex: 1, minWidth: '100px' }}>🗑️ {safeT?.delete || 'Excluir'}</button>
-                            </div>
+                            <ClienteEquipamentoHistoricoPanel
+                              relatorios={relatoriosServicoEquipamento}
+                              clienteId={selectedClienteForEquipamento.id}
+                              clienteNome={selectedClienteForEquipamento.nomeEmpresa}
+                              equipamento={equipamento}
+                              equipamentoIndex={index}
+                              pedidosRelatorio={pedidosOrcamento}
+                              numerosRelatorioEquipamento={numerosRelatorioEquipamento}
+                              equipamentosArmazem={equipamentos}
+                              safeT={safeT as Record<string, string | undefined>}
+                              loadData={loadData}
+                              relatorioComDivida={(relatorioId) =>
+                                relatorioServicoFluxoFinanceiroPendente(
+                                  fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]
+                                )
+                              }
+                              onVerRelatorio={(relatorio) =>
+                                setViewingRelatorioServico(resolverRelatorioServicoDono(relatorio as RelatorioServico))
+                              }
+                              onUpdatePedidoRelatorioStatus={atualizarStatusPedidoOrcamento}
+                              onVisualizarPdfRelatorio={abrirPdfPedidoOrcamentoRelatorio}
+                              onVisualizarPdfAvulso={abrirPdfPedidoOrcamentoAvulso}
+                              onAtualizarPedidoAvulso={async (pedidos) => {
+                                await saveData('nonato-pedidos-orcamento-avulso', pedidos)
+                              }}
+                            />
                           </div>
                         </div>
                       </div>
