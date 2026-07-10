@@ -692,23 +692,11 @@ async function forceLoadCadastroFromServer(key: string): Promise<any | null> {
   }
 }
 
-function isLocalDevBrowser(): boolean {
-  if (typeof window === 'undefined') return false
-  const h = window.location.hostname.toLowerCase()
-  return h === 'localhost' || h === '127.0.0.1'
-}
-
 async function fetchPecasBibliotecaRepairPaginated(
   onProgress?: (loaded: number, total: number) => void
 ): Promise<unknown[] | null> {
   /** Modo lite: catálogo completo ~160 KB (sem fotos base64). Algumas peças têm fotos de 3+ MB. */
   serverOffline = false
-  if (!isLocalDevBrowser()) {
-    const authed = await waitForDataApiAuth()
-    if (!authed) {
-      throw new Error('auth_required')
-    }
-  }
 
   const limit = 500
   let offset = 0
@@ -879,6 +867,16 @@ export async function forceReporPecasBibliotecaFromServer(
 ): Promise<unknown[] | null> {
   const local = Array.isArray(current) ? current : []
   let best: unknown[] = [...local]
+
+  /** Limpar cópia parcial (2 peças) que bloqueia o browser. */
+  if (typeof window !== 'undefined' && local.length < 50) {
+    try {
+      localStorage.removeItem(PECAS_BIBLIOTECA_KEY)
+      localStorage.removeItem(`${PECAS_BIBLIOTECA_KEY}--idb`)
+    } catch {
+      /* ignorar */
+    }
+  }
 
   try {
     const fromKv = await getKv(PECAS_BIBLIOTECA_KEY)

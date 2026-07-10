@@ -7450,16 +7450,22 @@ export default function Dashboard() {
     void saveData('nonato-pecas-biblioteca', lista)
   }, [pecasBiblioteca, categoriasPecas])
 
-  /** Reparo automático após login quando o catálogo ficou com cópia parcial (ex.: 2 peças). */
+  /** Reparo automático quando o catálogo ficou com cópia parcial (ex.: 2 peças). */
   const pecasReparoPosBootRef = useRef(false)
+  const isPcLocalHost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === '[::1]')
   useEffect(() => {
-    if (appInitialLoading || !loginUser || pecasReparoPosBootRef.current) return
+    if (appInitialLoading || pecasReparoPosBootRef.current) return
+    if (!loginUser && !isPcLocalHost) return
     if (categoriasPecas.length < 10) return
     if (pecasBiblioteca.length >= Math.max(20, Math.min(categoriasPecas.length, 80))) return
     pecasReparoPosBootRef.current = true
     void (async () => {
       setPecasBibliotecaReparoLoading(true)
-      setPecasBibliotecaReparoProgress('A ligar ao servidor…')
+      setPecasBibliotecaReparoProgress('A carregar catálogo do servidor…')
       try {
         const reparadas = await forceReporPecasBibliotecaFromServer(pecasBiblioteca, (p) => {
           setPecasBibliotecaReparoProgress(
@@ -7470,19 +7476,24 @@ export default function Dashboard() {
                 : `${p.loaded} peças…`
           )
         })
-        if (!reparadas || reparadas.length <= pecasBiblioteca.length) return
+        if (!reparadas || reparadas.length <= pecasBiblioteca.length) {
+          pecasReparoPosBootRef.current = false
+          return
+        }
         const raw = (reparadas as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
         const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
         setPecasBiblioteca(lista)
-        void savePecasBibliotecaLocally(lista)
+        await savePecasBibliotecaLocally(lista)
+        window.location.reload()
       } catch (e) {
         console.error('[reparo auto biblioteca]', e)
+        pecasReparoPosBootRef.current = false
       } finally {
         setPecasBibliotecaReparoLoading(false)
         setPecasBibliotecaReparoProgress('')
       }
     })()
-  }, [appInitialLoading, loginUser, pecasBiblioteca, categoriasPecas])
+  }, [appInitialLoading, loginUser, isPcLocalHost, pecasBiblioteca, categoriasPecas])
 
   /** Atualiza UI quando fotos chegam em segundo plano após repor catálogo lite. */
   useEffect(() => {
@@ -26429,7 +26440,7 @@ export default function Dashboard() {
       if (!reparadas || reparadas.length <= 0) {
         alert(
           (safeT as any)?.bibliotecaReparoNenhumaPeca ||
-            'Não foi possível repor. No PC: reinicie o servidor (INICIAR-SERVIDOR-SIMPLES.bat), abra http://localhost:3001 e clique outra vez.'
+            'Não foi possível repor. Confirme que o servidor está a correr em http://localhost:3000 e clique outra vez.'
         )
         return
       }
@@ -26446,9 +26457,10 @@ export default function Dashboard() {
       alert(
         String(
           (safeT as any)?.bibliotecaReparoOk ||
-            'Biblioteca reposta: {n} peça(s). As fotos continuam a carregar em segundo plano (1–3 min).'
+            'Biblioteca reposta: {n} peça(s). A página vai recarregar…'
         ).replace('{n}', String(lista.length))
       )
+      window.location.reload()
     } catch (e) {
       console.error('[repor biblioteca]', e)
       const msg =
