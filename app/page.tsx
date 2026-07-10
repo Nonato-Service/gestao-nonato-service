@@ -1338,7 +1338,7 @@ function extractSidebarButtonTip(btn: HTMLButtonElement): { title: string; desc:
     btn.querySelector('.sidebar-nav-label-text')
   let title = (labelEl?.textContent ?? '').replace(/\s+/g, ' ').trim()
   if (!title) {
-    title = (btn.getAttribute('title') ?? btn.getAttribute('aria-label') ?? '').trim()
+    title = (btn.getAttribute('aria-label') ?? '').trim()
   }
   if (!title) {
     title = (btn.textContent ?? '')
@@ -4947,6 +4947,26 @@ export default function Dashboard() {
     top: number
   } | null>(null)
   const sidebarTipFlyoutRef = useRef<HTMLDivElement | null>(null)
+  const sidebarRootRef = useRef<HTMLDivElement | null>(null)
+  /** Evita tooltip nativo branco do browser — só o balão cinza (.sidebar-tip-flyout). */
+  useEffect(() => {
+    const root = sidebarRootRef.current
+    if (!root) return
+    const stripNativeTitleTips = () => {
+      root.querySelectorAll('[title]').forEach((el) => {
+        el.removeAttribute('title')
+      })
+    }
+    stripNativeTitleTips()
+    const observer = new MutationObserver(stripNativeTitleTips)
+    observer.observe(root, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['title'],
+    })
+    return () => observer.disconnect()
+  }, [sidebarButtons, expandedGroups, selectedLanguage])
   const sidebarTipCanHoverFine = useCallback(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return true
     // Em touch (tablet/telemóvel), o "hover" não é fiável e o balão pode ficar preso.
@@ -4958,6 +4978,7 @@ export default function Dashboard() {
         setSidebarTipFlyout(null)
         return
       }
+      btn.removeAttribute('title')
       const { title, desc } = extractSidebarButtonTip(btn)
       if (!title && !desc) {
         setSidebarTipFlyout(null)
@@ -4966,13 +4987,13 @@ export default function Dashboard() {
       const r = btn.getBoundingClientRect()
       const pad = 8
       const vw = typeof window !== 'undefined' ? window.innerWidth : 1920
-      const flyoutW = Math.min(300, vw - 20)
-      let left = r.right + 10
+      const flyoutW = Math.min(400, vw - 24)
+      let left = r.right + 12
       left = Math.min(left, vw - flyoutW - pad)
       left = Math.max(pad, left)
       let top = r.top + r.height / 2
       const vh = typeof window !== 'undefined' ? window.innerHeight : 1080
-      const halfGuess = desc ? 130 : 48
+      const halfGuess = desc ? 170 : 62
       top = Math.min(vh - pad - halfGuess, Math.max(pad + halfGuess, top))
       setSidebarTipFlyout({ title: title || desc, desc: title ? desc : '', left, top })
     },
@@ -68034,6 +68055,7 @@ A1;Peça exemplo;10`}
       )}
       {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css). Classe extra na vista de entrada: esconde de forma fiável face a media queries. */}
       <div
+        ref={sidebarRootRef}
         className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}${hideSidebarForEntryDashboard ? ' sidebar--hidden-entry' : ''}`}
         aria-hidden={hideSidebarForEntryDashboard ? true : undefined}
         onPointerMoveCapture={hideSidebarForEntryDashboard ? undefined : handleSidebarTipPointerCapture}
@@ -68111,11 +68133,6 @@ A1;Peça exemplo;10`}
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-tecnica' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-tecnica')}
-            title={
-              String((safeT as any)?.sidebarGroupGestaoTecnicaDesc || '').trim()
-                ? String((safeT as any)?.sidebarGroupGestaoTecnicaDesc)
-                : undefined
-            }
           >
             {selectedSidebarButton === 'open-gestao-tecnica' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -68245,11 +68262,6 @@ A1;Peça exemplo;10`}
               type="button"
               className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-parceiros-comercial' ? ' sidebar-group-btn-selected' : ''}`}
               onClick={() => handleButtonClick('open-parceiros-comercial')}
-              title={
-                String((safeT as any)?.sidebarGroupParceirosDesc || '').trim()
-                  ? String((safeT as any)?.sidebarGroupParceirosDesc)
-                  : undefined
-              }
             >
               {selectedSidebarButton === 'open-parceiros-comercial' && (
                 <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -68572,11 +68584,6 @@ A1;Peça exemplo;10`}
               type="button"
               className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-documentacao-relatorios' ? ' sidebar-group-btn-selected' : ''}`}
               onClick={() => handleButtonClick('open-documentacao-relatorios')}
-              title={
-                String((safeT as any)?.sidebarGroupDocumentacaoDesc || '').trim()
-                  ? String((safeT as any)?.sidebarGroupDocumentacaoDesc)
-                  : undefined
-              }
             >
               {selectedSidebarButton === 'open-documentacao-relatorios' && (
                 <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -68819,11 +68826,6 @@ A1;Peça exemplo;10`}
               type="button"
               className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-pecas-biblioteca' ? ' sidebar-group-btn-selected' : ''}`}
               onClick={() => handleButtonClick('open-pecas-biblioteca')}
-              title={
-                String((safeT as any)?.sidebarGroupPecasBibliotecaDesc || '').trim()
-                  ? String((safeT as any)?.sidebarGroupPecasBibliotecaDesc)
-                  : undefined
-              }
             >
               {selectedSidebarButton === 'open-pecas-biblioteca' && (
                 <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -69099,7 +69101,6 @@ A1;Peça exemplo;10`}
                         isSelected ? ' sidebar-action-btn-active' : ''
                       }`}
                       onClick={() => handleButtonClick(action)}
-                      title={comSub?.trim() ? comSub : undefined}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -69655,7 +69656,6 @@ A1;Peça exemplo;10`}
                 type="button"
                 className="btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry"
                 onClick={() => openWritingAssistStandalone()}
-                title={(safeT as any)?.writingAssistFabTitle || 'Assistente de escrita (Ctrl+Shift+L)'}
               >
                 <span className="sidebar-empresa-entry-row">
                   <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
@@ -69684,7 +69684,6 @@ A1;Peça exemplo;10`}
                   type="button"
                   className="btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry"
                   onClick={() => installPrompt.openInstallModal()}
-                  title={installPrompt.installDesc}
                 >
                   <span className="sidebar-empresa-entry-row">
                     <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
@@ -69862,7 +69861,7 @@ A1;Peça exemplo;10`}
           onClick={handleSairDoSistema}
           className="btn-primary sidebar-logout-btn"
         >
-          <span style={{ fontSize: '16px', lineHeight: 1 }} aria-hidden title={safeT?.sairDoSistema || 'Sair do Sistema'}>🚪</span>
+          <span style={{ fontSize: '16px', lineHeight: 1 }} aria-hidden>🚪</span>
           <span>{safeT?.sairDoSistema || 'Sair do Sistema'}</span>
         </button>
         </div>
