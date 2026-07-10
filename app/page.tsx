@@ -21,6 +21,7 @@ import {
   loadFromServer,
   pushAllLocalStorageToServer,
   repairPecasBibliotecaIfStale,
+  savePecasBibliotecaLocally,
   setBlockImplicitServerPushDuringBootstrap,
   markDataBootstrapComplete,
   waitForDataBootstrapComplete,
@@ -7312,6 +7313,7 @@ export default function Dashboard() {
   // Estados para Biblioteca de Peças
   const [pecasBiblioteca, setPecasBiblioteca] = useState<PecaBiblioteca[]>([])
   const [pecasBibliotecaReparoLoading, setPecasBibliotecaReparoLoading] = useState(false)
+  const [pecasBibliotecaReparoProgress, setPecasBibliotecaReparoProgress] = useState('')
   const [categoriasPecas, setCategoriasPecas] = useState<CategoriaPeca[]>([])
   const [showBibliotecaPecasModal, setShowBibliotecaPecasModal] = useState(false)
   const [showBibliotecaPecasForm, setShowBibliotecaPecasForm] = useState(false)
@@ -7460,7 +7462,7 @@ export default function Dashboard() {
       const raw = (reparadas as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
       const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
       setPecasBiblioteca(lista)
-      void saveData('nonato-pecas-biblioteca', lista, true, false)
+      void savePecasBibliotecaLocally(lista)
     })()
   }, [appInitialLoading, pecasBiblioteca, categoriasPecas])
   const [selecaoPecasBibliotecaIds, setSelecaoPecasBibliotecaIds] = useState<string[]>([])
@@ -9936,11 +9938,7 @@ export default function Dashboard() {
               }
             }
             const merged = mergePecasBibliotecaArrays(serverValue, localParsed)
-            try {
-              localStorage.setItem(key, JSON.stringify(merged))
-            } catch (e) {
-              console.error('Erro ao gravar peças fundidas no localStorage:', e)
-            }
+            void savePecasBibliotecaLocally(merged as unknown[])
             if (!deferServerMerge && pecasBibliotecaArraysDiffer(merged, serverValue)) {
               void saveData(key, merged, false, true)
             }
@@ -11057,8 +11055,8 @@ export default function Dashboard() {
         setCategoriasPecas(savedCategoriasPecas)
       }
 
-      // Carregar peças biblioteca
-      let savedPecasBiblioteca = getData('nonato-pecas-biblioteca')
+      // Carregar peças biblioteca (IndexedDB + localStorage; servidor em páginas se incompleto)
+      let savedPecasBiblioteca = await loadData('nonato-pecas-biblioteca')
       const reparadas = await repairPecasBibliotecaIfStale(savedPecasBiblioteca, catsInicial.length)
       if (reparadas) {
         savedPecasBiblioteca = reparadas
@@ -11069,9 +11067,7 @@ export default function Dashboard() {
         )
         const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, catsInicial)
         setPecasBiblioteca(lista)
-        if (lista.length >= (Array.isArray(savedPecasBiblioteca) ? savedPecasBiblioteca.length : 0)) {
-          void saveData('nonato-pecas-biblioteca', lista, true, false)
-        }
+        void savePecasBibliotecaLocally(lista)
       }
 
       const savedPecaLookupTpl = getData(NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY)
@@ -26359,27 +26355,46 @@ export default function Dashboard() {
 
   const handleReporPecasBibliotecaDoServidor = useCallback(async () => {
     setPecasBibliotecaReparoLoading(true)
+    setPecasBibliotecaReparoProgress('')
     try {
-      const reparadas = await repairPecasBibliotecaIfStale(pecasBiblioteca, categoriasPecas.length)
+      const reparadas = await repairPecasBibliotecaIfStale(
+        pecasBiblioteca,
+        categoriasPecas.length,
+        (loaded, total) => {
+          setPecasBibliotecaReparoProgress(
+            total > 0 ? `${loaded} / ${total} peças…` : `${loaded} peças…`
+          )
+        }
+      )
       if (!reparadas || reparadas.length <= pecasBiblioteca.length) {
         alert(
           (safeT as any)?.bibliotecaReparoNenhumaPeca ||
-            'Não foi possível repor o catálogo a partir do servidor. Aguarde até 2 minutos (ficheiro grande) e tente novamente com sessão iniciada.'
+            'Não foi possível repor o catálogo. Verifique a sessão iniciada e aguarde — o ficheiro é grande e carrega em várias páginas (~2 min).'
         )
         return
       }
       const raw = (reparadas as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
       const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
       setPecasBiblioteca(lista)
-      await saveData('nonato-pecas-biblioteca', lista, true, true)
+      await savePecasBibliotecaLocally(lista)
       alert(
         String((safeT as any)?.bibliotecaReparoOk || 'Biblioteca reposta com sucesso: {n} peça(s).').replace(
           '{n}',
           String(lista.length)
         )
       )
+    } catch (e) {
+      console.error('[repor biblioteca]', e)
+      const msg =
+        e instanceof Error && e.message === 'auth_required'
+          ? (safeT as any)?.bibliotecaReparoSemSessao ||
+            'Inicie sessão (utilizador e senha) antes de repor o catálogo do servidor.'
+          : (safeT as any)?.bibliotecaReparoErro ||
+            'Erro ao repor biblioteca. Os dados podem ter sido parcialmente carregados — recarregue a página (F5).'
+      alert(msg)
     } finally {
       setPecasBibliotecaReparoLoading(false)
+      setPecasBibliotecaReparoProgress('')
     }
   }, [pecasBiblioteca, categoriasPecas, safeT])
 
@@ -38413,7 +38428,9 @@ export default function Dashboard() {
                         onClick={() => void handleReporPecasBibliotecaDoServidor()}
                       >
                         {pecasBibliotecaReparoLoading
-                          ? (safeT as any)?.bibliotecaReparoAguarde || 'A carregar catálogo…'
+                          ? pecasBibliotecaReparoProgress ||
+                            (safeT as any)?.bibliotecaReparoAguarde ||
+                            'A carregar catálogo (páginas)…'
                           : (safeT as any)?.bibliotecaReparoBtn || 'Repor biblioteca do servidor'}
                       </button>
                     </div>
@@ -38522,7 +38539,9 @@ export default function Dashboard() {
                     onClick={() => void handleReporPecasBibliotecaDoServidor()}
                   >
                     {pecasBibliotecaReparoLoading
-                      ? (safeT as any)?.bibliotecaReparoAguarde || 'A carregar catálogo…'
+                      ? pecasBibliotecaReparoProgress ||
+                        (safeT as any)?.bibliotecaReparoAguarde ||
+                        'A carregar catálogo (páginas)…'
                       : (safeT as any)?.bibliotecaReparoBtn || 'Repor biblioteca do servidor'}
                   </button>
                 </div>

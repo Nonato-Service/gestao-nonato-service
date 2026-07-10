@@ -664,23 +664,96 @@ async function forceLoadCadastroFromServer(key: string): Promise<any | null> {
   }
 }
 
-/** Lê biblioteca de peças directamente do disco via API dedicada (reparo). */
-async function fetchPecasBibliotecaRepairFromServer(): Promise<unknown[] | null> {
+async function fetchPecasBibliotecaRepairPaginated(
+  onProgress?: (loaded: number, total: number) => void
+): Promise<unknown[] | null> {
+  const limit = 25
+  let offset = 0
+  let total = 0
+  const all: unknown[] = []
+  let authRequired = false
+
   try {
-    const res = await dataApiFetch(`${API_BASE}/repair-pecas-biblioteca`, {
-      method: 'POST',
-      signal: createTimeoutSignal(120_000),
+    const metaRes = await dataApiFetch(`${API_BASE}/repair-pecas-biblioteca?meta=1`, {
+      method: 'GET',
+      signal: createTimeoutSignal(30_000),
     })
-    if (!res.ok) return null
-    const json = (await res.json()) as { success?: boolean; pecas?: unknown[]; error?: string }
-    if (json?.error === 'auth_required') return null
-    if (json?.success && Array.isArray(json.pecas) && json.pecas.length > 0) {
-      return json.pecas
+    if (metaRes.status === 401) authRequired = true
+    if (metaRes.ok) {
+      const meta = (await metaRes.json()) as { total?: number; error?: string }
+      if (meta?.error === 'auth_required') authRequired = true
+      if (typeof meta.total === 'number') total = meta.total
     }
   } catch {
-    /* ignorar */
+    /* continuar sem total */
   }
-  return null
+
+  if (authRequired) {
+    throw new Error('auth_required')
+  }
+
+  while (true) {
+    const res = await dataApiFetch(
+      `${API_BASE}/repair-pecas-biblioteca?offset=${offset}&limit=${limit}`,
+      {
+        method: 'GET',
+        signal: createTimeoutSignal(90_000),
+      }
+    )
+    if (res.status === 401) {
+      throw new Error('auth_required')
+    }
+    if (!res.ok) {
+      console.warn('[Nonato] Reparo peças: página falhou', offset, res.status)
+      break
+    }
+    const json = (await res.json()) as {
+      success?: boolean
+      pecas?: unknown[]
+      hasMore?: boolean
+      total?: number
+      error?: string
+    }
+    if (json?.error === 'auth_required') {
+      throw new Error('auth_required')
+    }
+    if (!json?.success || !Array.isArray(json.pecas)) break
+    if (typeof json.total === 'number') total = json.total
+    all.push(...json.pecas)
+    onProgress?.(all.length, total || all.length)
+    if (!json.hasMore || json.pecas.length === 0) break
+    offset += json.pecas.length
+    if (total > 0 && all.length >= total) break
+  }
+
+  return all.length > 0 ? all : null
+}
+
+/** Grava biblioteca de peças: IndexedDB primeiro (suporta ~10 MB+); localStorage se couber. */
+export async function savePecasBibliotecaLocally(value: unknown[]): Promise<'ls' | 'idb'> {
+  try {
+    await saveKv(PECAS_BIBLIOTECA_KEY, value)
+  } catch (e) {
+    console.error('[Nonato] Falha ao gravar peças em IndexedDB:', e)
+  }
+  const serialized = JSON.stringify(value)
+  try {
+    setItemWithQuotaRecovery(PECAS_BIBLIOTECA_KEY, serialized)
+    try {
+      localStorage.removeItem(`${PECAS_BIBLIOTECA_KEY}--idb`)
+    } catch {
+      /* ignorar */
+    }
+    return 'ls'
+  } catch {
+    try {
+      localStorage.setItem(`${PECAS_BIBLIOTECA_KEY}--idb`, '1')
+      localStorage.removeItem(PECAS_BIBLIOTECA_KEY)
+    } catch {
+      /* ignorar */
+    }
+    return 'idb'
+  }
 }
 
 // Carregar um item específico
@@ -734,7 +807,8 @@ export async function loadFromServer(key: string): Promise<any | null> {
  */
 export async function repairPecasBibliotecaIfStale(
   current: unknown,
-  categoriasCount: number
+  categoriasCount: number,
+  onProgress?: (loaded: number, total: number) => void
 ): Promise<unknown[] | null> {
   const local = Array.isArray(current) ? current : []
   if (categoriasCount < 5) return null
@@ -765,7 +839,7 @@ export async function repairPecasBibliotecaIfStale(
     /* ignorar */
   }
 
-  const fromServer = await fetchPecasBibliotecaRepairFromServer()
+  const fromServer = await fetchPecasBibliotecaRepairPaginated(onProgress)
   if (Array.isArray(fromServer) && fromServer.length > 0) {
     best = mergePecasBibliotecaArrays(fromServer, best) as unknown[]
   } else {
@@ -777,17 +851,8 @@ export async function repairPecasBibliotecaIfStale(
 
   if (best.length <= local.length) return null
 
-  try {
-    writeLocalStorageValue(PECAS_BIBLIOTECA_KEY, best)
-  } catch {
-    /* quota */
-  }
-  try {
-    await saveKv(PECAS_BIBLIOTECA_KEY, best)
-  } catch {
-    /* ignorar */
-  }
-  if (!shouldDeferImplicitServerPush() && pecasBibliotecaArraysDiffer(best, fromServer)) {
+  await savePecasBibliotecaLocally(best)
+  if (!shouldDeferImplicitServerPush() && Array.isArray(fromServer) && pecasBibliotecaArraysDiffer(best, fromServer)) {
     scheduleServerMigrationPush(PECAS_BIBLIOTECA_KEY, best)
   }
   console.info(
@@ -956,6 +1021,17 @@ export async function collectAllLocalNonatoDataForSync(): Promise<Record<string,
     if (manuaisMerged !== null && typeof manuaisMerged === 'object') {
       out[MANUAIS_KEY] = manuaisMerged
     }
+  }
+
+  /** Peças podem estar só em IndexedDB quando localStorage encheu (--idb). */
+  keys.delete(PECAS_BIBLIOTECA_KEY)
+  try {
+    const pecasSnap = await readLocalValueForLoad(PECAS_BIBLIOTECA_KEY, true)
+    if (Array.isArray(pecasSnap.parsed) && pecasSnap.parsed.length > 0) {
+      out[PECAS_BIBLIOTECA_KEY] = pecasSnap.parsed
+    }
+  } catch {
+    /* ignorar */
   }
 
   for (const key of Array.from(keys)) {
@@ -1324,6 +1400,23 @@ export async function saveData(
     return manuaisServerOk
   }
 
+  /** Biblioteca de peças (~10 MB com imagens): IndexedDB primeiro; localStorage se couber. */
+  if (key === PECAS_BIBLIOTECA_KEY && typeof window !== 'undefined' && Array.isArray(value)) {
+    await savePecasBibliotecaLocally(value)
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('nonato-data-local-changed', { detail: { key } }))
+      } catch {
+        /* ignorar */
+      }
+    }
+    if (!shouldDeferImplicitServerPush()) {
+      const p = saveToServer(key, value).catch(() => false)
+      if (awaitServer) return (await p) === true
+    }
+    return true
+  }
+
   // Salvar no localStorage (para acesso rápido) — quota: libertar backups automáticos e voltar a tentar; último recurso: IndexedDB
   if (saveToLocalStorage && typeof window !== 'undefined') {
     const serialized = typeof value === 'string' ? value : JSON.stringify(value)
@@ -1383,6 +1476,34 @@ async function readLocalValueForLoad(
   parseJson: boolean
 ): Promise<{ parsed: unknown; raw: string | null }> {
   if (typeof window === 'undefined') return { parsed: null, raw: null }
+
+  if (key === PECAS_BIBLIOTECA_KEY && parseJson) {
+    let fromLs: unknown[] | null = null
+    const raw = localStorage.getItem(key)
+    if (raw !== null && raw !== '') {
+      try {
+        const parsed = JSON.parse(raw) as unknown
+        if (Array.isArray(parsed)) fromLs = parsed
+      } catch {
+        /* ignorar */
+      }
+    }
+    let fromIdb: unknown[] | null = null
+    try {
+      const idb = await getKv(key)
+      if (Array.isArray(idb)) fromIdb = idb
+    } catch {
+      /* ignorar */
+    }
+    const best =
+      fromLs && fromIdb
+        ? fromIdb.length >= fromLs.length
+          ? fromIdb
+          : fromLs
+        : fromIdb || fromLs
+    if (best) return { parsed: best, raw }
+  }
+
   const raw = localStorage.getItem(key)
   if (raw !== null && raw !== '') {
     if (!parseJson) return { parsed: raw, raw }
@@ -1523,7 +1644,7 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
           Array.isArray(localSnapshot.parsed)
         ) {
           const merged = mergePecasBibliotecaArrays(serverData, localSnapshot.parsed)
-          writeLocalStorageValue(key, merged)
+          void savePecasBibliotecaLocally(merged as unknown[])
           if (pecasBibliotecaArraysDiffer(merged, serverData)) {
             scheduleServerMigrationPush(key, merged)
           }
@@ -1553,8 +1674,14 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
     }
   }
 
-  // Se não encontrou no servidor ou servidor está offline, tentar localStorage
+  // Se não encontrou no servidor ou servidor está offline, tentar localStorage / IndexedDB
   if (typeof window !== 'undefined') {
+    if (key === PECAS_BIBLIOTECA_KEY && parseJson) {
+      const pecasSnap = await readLocalValueForLoad(key, true)
+      if (Array.isArray(pecasSnap.parsed)) {
+        return pecasSnap.parsed
+      }
+    }
     try {
       const localData = localStorage.getItem(key)
       if (localData !== null && localData !== '') {
