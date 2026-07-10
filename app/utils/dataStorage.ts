@@ -43,6 +43,34 @@ function dataApiFetch(input: string, init?: RequestInit): Promise<Response> {
   })
 }
 
+/** Aguarda sessão (login) antes de chamar APIs de dados — o arranque muitas vezes corre antes do cookie existir. */
+async function waitForDataApiAuth(maxMs = 20_000): Promise<boolean> {
+  if (typeof window === 'undefined') return false
+  const start = Date.now()
+  while (Date.now() - start < maxMs) {
+    try {
+      const res = await fetch('/api/auth/status', { credentials: 'include', cache: 'no-store' })
+      if (res.ok) {
+        const json = (await res.json()) as { authenticated?: boolean }
+        if (json.authenticated) return true
+      }
+      const demoRes = await fetch('/api/demo/status', { credentials: 'include', cache: 'no-store' })
+      if (demoRes.ok) {
+        const demo = (await demoRes.json()) as { isDemo?: boolean; expired?: boolean }
+        if (demo.isDemo && !demo.expired) return true
+      }
+    } catch {
+      /* retry */
+    }
+    await new Promise((r) => setTimeout(r, 350))
+  }
+  return false
+}
+
+function isPecasBibliotecaLocalParcial(value: unknown): boolean {
+  return Array.isArray(value) && value.length > 0 && value.length < 50
+}
+
 /** Durante a carga inicial da página: não enviar migrações «só servidor» (saveToLocalStorage=false) nem pushes implícitos em loadData — evita revisões e payloads diferentes por aparelho. */
 let blockImplicitServerPushDuringBootstrap = false
 
@@ -668,6 +696,12 @@ async function fetchPecasBibliotecaRepairPaginated(
   onProgress?: (loaded: number, total: number) => void
 ): Promise<unknown[] | null> {
   /** Modo lite: catálogo completo ~160 KB (sem fotos base64). Algumas peças têm fotos de 3+ MB. */
+  serverOffline = false
+  const authed = await waitForDataApiAuth()
+  if (!authed) {
+    throw new Error('auth_required')
+  }
+
   const limit = 500
   let offset = 0
   let total = 0
@@ -1825,7 +1859,7 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
   if (typeof window !== 'undefined') {
     if (key === PECAS_BIBLIOTECA_KEY && parseJson) {
       const pecasSnap = await readLocalValueForLoad(key, true)
-      if (Array.isArray(pecasSnap.parsed)) {
+      if (Array.isArray(pecasSnap.parsed) && !isPecasBibliotecaLocalParcial(pecasSnap.parsed)) {
         return pecasSnap.parsed
       }
     }
@@ -1833,27 +1867,28 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
       const localData = localStorage.getItem(key)
       if (localData !== null && localData !== '') {
         if (parseJson) {
-          // Tentar fazer parse do JSON
           try {
             const parsed = JSON.parse(localData)
-            if (key === MANUAIS_KEY && typeof parsed === 'object' && parsed !== null) {
-              try {
-                const idb = await loadManuaisFamiliasGruposFromIdb()
-                const merged = mergeManuaisFamiliasGrupos(parsed, idb || {})
-                saveManuaisFamiliasGruposToIdb(merged).catch(() => {})
-                return merged
-              } catch {
-                /* fallback ao parsed só com localStorage */
+            if (key === PECAS_BIBLIOTECA_KEY && isPecasBibliotecaLocalParcial(parsed)) {
+              /* ignorar cópia parcial — preferir IndexedDB abaixo ou reparo do servidor */
+            } else {
+              if (key === MANUAIS_KEY && typeof parsed === 'object' && parsed !== null) {
+                try {
+                  const idb = await loadManuaisFamiliasGruposFromIdb()
+                  const merged = mergeManuaisFamiliasGrupos(parsed, idb || {})
+                  saveManuaisFamiliasGruposToIdb(merged).catch(() => {})
+                  return merged
+                } catch {
+                  /* fallback ao parsed só com localStorage */
+                }
               }
+              if (!serverOffline && !blockImplicitServerPushDuringBootstrap) {
+                saveToServer(key, parsed).catch(() => {
+                  /* Ignorar erros de salvamento no servidor */
+                })
+              }
+              return parsed
             }
-            // Se encontrou no localStorage e servidor está online, também salvar no servidor (migração)
-            // Mas não bloquear se o servidor estiver offline
-            if (!serverOffline && !blockImplicitServerPushDuringBootstrap) {
-              saveToServer(key, parsed).catch(() => {
-                // Ignorar erros de salvamento no servidor
-              })
-            }
-            return parsed
           } catch (parseError) {
             console.error(`Erro ao fazer parse do JSON (${key}):`, parseError)
             return null

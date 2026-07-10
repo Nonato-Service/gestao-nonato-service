@@ -7450,22 +7450,39 @@ export default function Dashboard() {
     void saveData('nonato-pecas-biblioteca', lista)
   }, [pecasBiblioteca, categoriasPecas])
 
-  /** Segunda tentativa + reparo automático ao abrir biblioteca com catálogo parcial. */
+  /** Reparo automático após login quando o catálogo ficou com cópia parcial (ex.: 2 peças). */
   const pecasReparoPosBootRef = useRef(false)
   useEffect(() => {
-    if (appInitialLoading || pecasReparoPosBootRef.current) return
+    if (appInitialLoading || !loginUser || pecasReparoPosBootRef.current) return
     if (categoriasPecas.length < 10) return
     if (pecasBiblioteca.length >= Math.max(20, Math.min(categoriasPecas.length, 80))) return
     pecasReparoPosBootRef.current = true
     void (async () => {
-      const reparadas = await repairPecasBibliotecaIfStale(pecasBiblioteca, categoriasPecas.length)
-      if (!reparadas || reparadas.length <= pecasBiblioteca.length) return
-      const raw = (reparadas as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
-      const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
-      setPecasBiblioteca(lista)
-      void savePecasBibliotecaLocally(lista)
+      setPecasBibliotecaReparoLoading(true)
+      setPecasBibliotecaReparoProgress('A ligar ao servidor…')
+      try {
+        const reparadas = await forceReporPecasBibliotecaFromServer(pecasBiblioteca, (p) => {
+          setPecasBibliotecaReparoProgress(
+            p.phase === 'images'
+              ? `Fotos ${p.loaded} / ${p.total}…`
+              : p.total > 0
+                ? `${p.loaded} / ${p.total} peças…`
+                : `${p.loaded} peças…`
+          )
+        })
+        if (!reparadas || reparadas.length <= pecasBiblioteca.length) return
+        const raw = (reparadas as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+        const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
+        setPecasBiblioteca(lista)
+        void savePecasBibliotecaLocally(lista)
+      } catch (e) {
+        console.error('[reparo auto biblioteca]', e)
+      } finally {
+        setPecasBibliotecaReparoLoading(false)
+        setPecasBibliotecaReparoProgress('')
+      }
     })()
-  }, [appInitialLoading, pecasBiblioteca, categoriasPecas])
+  }, [appInitialLoading, loginUser, pecasBiblioteca, categoriasPecas])
 
   /** Atualiza UI quando fotos chegam em segundo plano após repor catálogo lite. */
   useEffect(() => {
@@ -9999,7 +10016,14 @@ export default function Dashboard() {
               try {
                 const parsed = JSON.parse(localData)
                 if (Array.isArray(parsed) && parsed.length > 0) {
-                  return parsed
+                  if (
+                    key === 'nonato-pecas-biblioteca' &&
+                    parsed.length < 50
+                  ) {
+                    /* cópia parcial — não usar */
+                  } else {
+                    return parsed
+                  }
                 }
               } catch (e) {
                 // Ignorar erro de parse
@@ -10040,14 +10064,30 @@ export default function Dashboard() {
                   // Verificar se realmente tem dados (não é array/objeto vazio)
                   const hasData = Array.isArray(parsed) ? parsed.length > 0 : 
                                   (typeof parsed === 'object' ? Object.keys(parsed).length > 0 : parsed !== '')
-                  if (hasData && !deferServerMerge) {
+                  if (
+                    key === 'nonato-pecas-biblioteca' &&
+                    Array.isArray(parsed) &&
+                    parsed.length > 0 &&
+                    parsed.length < 50
+                  ) {
+                    /* cópia parcial no browser — ignorar */
+                  } else if (hasData && !deferServerMerge) {
                     // Salvar no servidor em background (não bloquear) — não enviar se há conflito multi-dispositivo por resolver
                     saveData(key, parsed, false).catch(() => {
                       // Ignorar erros de salvamento no servidor
                     })
                   }
+                  if (
+                    !(
+                      key === 'nonato-pecas-biblioteca' &&
+                      Array.isArray(parsed) &&
+                      parsed.length > 0 &&
+                      parsed.length < 50
+                    )
+                  ) {
+                    return parsed
+                  }
                 }
-                return parsed
               } catch (error) {
                 console.error(`Erro ao fazer parse do JSON (${key}):`, error)
                 return null
@@ -11069,9 +11109,15 @@ export default function Dashboard() {
         setCategoriasPecas(savedCategoriasPecas)
       }
 
-      // Carregar peças biblioteca (IndexedDB + localStorage; servidor em páginas se incompleto)
+      // Carregar peças biblioteca (IndexedDB + localStorage; servidor lite se incompleto)
       let savedPecasBiblioteca = await loadData('nonato-pecas-biblioteca')
-      const reparadas = await repairPecasBibliotecaIfStale(savedPecasBiblioteca, catsInicial.length)
+      const catalogoParcialBoot =
+        catsInicial.length >= 10 &&
+        (!Array.isArray(savedPecasBiblioteca) ||
+          savedPecasBiblioteca.length < Math.max(15, Math.min(catsInicial.length, 80)))
+      const reparadas = catalogoParcialBoot
+        ? await forceReporPecasBibliotecaFromServer(savedPecasBiblioteca || [])
+        : await repairPecasBibliotecaIfStale(savedPecasBiblioteca, catsInicial.length)
       if (reparadas) {
         savedPecasBiblioteca = reparadas
       }
