@@ -1329,6 +1329,27 @@ function sidebarGroupChevronClass(isExpanded: boolean): string {
   return `sidebar-nav-chevron${isExpanded ? ' sidebar-nav-chevron--expanded' : ''}`
 }
 
+/** Texto do balão ao pairar na sidebar — título visível + descrição opcional. */
+function extractSidebarButtonTip(btn: HTMLButtonElement): { title: string; desc: string } {
+  const bubble = btn.querySelector('.sidebar-tip-bubble')
+  const descRaw = (bubble?.textContent ?? '').replace(/\s+/g, ' ').trim()
+  const labelEl =
+    btn.querySelector('.sidebar-empresa-entry-title') ||
+    btn.querySelector('.sidebar-nav-label-text')
+  let title = (labelEl?.textContent ?? '').replace(/\s+/g, ' ').trim()
+  if (!title) {
+    title = (btn.getAttribute('title') ?? btn.getAttribute('aria-label') ?? '').trim()
+  }
+  if (!title) {
+    title = (btn.textContent ?? '')
+      .replace(/[✓›▸▾]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+  const desc = descRaw && descRaw !== title ? descRaw : ''
+  return { title, desc }
+}
+
 function SidebarSectionSep({ id, label }: { id: string; label: string }) {
   return (
     <div className="sidebar-section-sep" data-section={id} role="presentation">
@@ -4920,7 +4941,8 @@ export default function Dashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   /** Dica da sidebar à direita do botão (fixed + portal — evita corte por overflow-y na lista rolável). */
   const [sidebarTipFlyout, setSidebarTipFlyout] = useState<{
-    text: string
+    title: string
+    desc: string
     left: number
     top: number
   } | null>(null)
@@ -4930,65 +4952,83 @@ export default function Dashboard() {
     // Em touch (tablet/telemóvel), o "hover" não é fiável e o balão pode ficar preso.
     return window.matchMedia('(hover: hover) and (pointer: fine)').matches
   }, [])
-  const handleSidebarTipPointerCapture = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (!sidebarTipCanHoverFine()) {
-      setSidebarTipFlyout(null)
-      return
-    }
-    const root = e.currentTarget
-    const native = e.nativeEvent as Event & { composedPath?: () => EventTarget[] }
-    const path = typeof native.composedPath === 'function' ? native.composedPath() : []
-    if (
-      path.some(
-        (n: EventTarget) =>
-          n instanceof HTMLElement &&
-          (n.classList.contains('sidebar-tip-flyout') || n.closest('.sidebar-tip-flyout'))
-      )
-    ) {
-      return
-    }
-    const stack = typeof document !== 'undefined' ? document.elementsFromPoint(e.clientX, e.clientY) : []
-    if (
-      stack.some(
-        (n) =>
-          n instanceof HTMLElement &&
-          (n.classList.contains('sidebar-tip-flyout') || n.closest('.sidebar-tip-flyout'))
-      )
-    ) {
-      return
-    }
-    let btn: HTMLButtonElement | null = null
-    for (const node of stack) {
-      if (!(node instanceof Element)) continue
-      const b = node.closest('button')
-      if (b instanceof HTMLButtonElement && root.contains(b) && b.closest('.sidebar-scroll-inner')) {
-        btn = b
-        break
+  const positionSidebarTipForButton = useCallback(
+    (btn: HTMLButtonElement | null) => {
+      if (!btn || !sidebarTipCanHoverFine()) {
+        setSidebarTipFlyout(null)
+        return
       }
-    }
-    if (!btn) {
-      setSidebarTipFlyout(null)
-      return
-    }
-    const bubble = btn.querySelector('.sidebar-tip-bubble')
-    const text = (bubble?.textContent ?? '').replace(/\s+/g, ' ').trim()
-    if (!text) {
-      setSidebarTipFlyout(null)
-      return
-    }
-    const r = btn.getBoundingClientRect()
-    const pad = 8
-    const vw = typeof window !== 'undefined' ? window.innerWidth : 1920
-    const flyoutW = Math.min(280, vw - 20)
-    let left = r.right + 10
-    left = Math.min(left, vw - flyoutW - pad)
-    left = Math.max(pad, left)
-    let top = r.top + r.height / 2
-    const vh = typeof window !== 'undefined' ? window.innerHeight : 1080
-    const halfGuess = 110
-    top = Math.min(vh - pad - halfGuess, Math.max(pad + halfGuess, top))
-    setSidebarTipFlyout({ text, left, top })
-  }, [sidebarTipCanHoverFine])
+      const { title, desc } = extractSidebarButtonTip(btn)
+      if (!title && !desc) {
+        setSidebarTipFlyout(null)
+        return
+      }
+      const r = btn.getBoundingClientRect()
+      const pad = 8
+      const vw = typeof window !== 'undefined' ? window.innerWidth : 1920
+      const flyoutW = Math.min(300, vw - 20)
+      let left = r.right + 10
+      left = Math.min(left, vw - flyoutW - pad)
+      left = Math.max(pad, left)
+      let top = r.top + r.height / 2
+      const vh = typeof window !== 'undefined' ? window.innerHeight : 1080
+      const halfGuess = desc ? 130 : 48
+      top = Math.min(vh - pad - halfGuess, Math.max(pad + halfGuess, top))
+      setSidebarTipFlyout({ title: title || desc, desc: title ? desc : '', left, top })
+    },
+    [sidebarTipCanHoverFine]
+  )
+  const findSidebarButtonAtPoint = useCallback(
+    (root: HTMLElement, clientX: number, clientY: number): HTMLButtonElement | null => {
+      const stack =
+        typeof document !== 'undefined' ? document.elementsFromPoint(clientX, clientY) : []
+      for (const node of stack) {
+        if (!(node instanceof Element)) continue
+        const b = node.closest('button')
+        if (b instanceof HTMLButtonElement && root.contains(b)) return b
+      }
+      return null
+    },
+    []
+  )
+  const handleSidebarTipPointerCapture = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!sidebarTipCanHoverFine()) {
+        setSidebarTipFlyout(null)
+        return
+      }
+      const root = e.currentTarget
+      const native = e.nativeEvent as Event & { composedPath?: () => EventTarget[] }
+      const path = typeof native.composedPath === 'function' ? native.composedPath() : []
+      if (
+        path.some(
+          (n: EventTarget) =>
+            n instanceof HTMLElement &&
+            (n.classList.contains('sidebar-tip-flyout') || n.closest('.sidebar-tip-flyout'))
+        )
+      ) {
+        return
+      }
+      const btn = findSidebarButtonAtPoint(root, e.clientX, e.clientY)
+      if (!btn) {
+        setSidebarTipFlyout(null)
+        return
+      }
+      positionSidebarTipForButton(btn)
+    },
+    [sidebarTipCanHoverFine, findSidebarButtonAtPoint, positionSidebarTipForButton]
+  )
+  const handleSidebarTipMouseOver = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!sidebarTipCanHoverFine()) return
+      const btn = (e.target as Element).closest('button')
+      const root = e.currentTarget
+      if (btn instanceof HTMLButtonElement && root.contains(btn)) {
+        positionSidebarTipForButton(btn)
+      }
+    },
+    [sidebarTipCanHoverFine, positionSidebarTipForButton]
+  )
   /** Servidor tem revisão mais recente — modal único com resumo e escolha carregar / enviar. */
   const [syncPendingRemote, setSyncPendingRemote] = useState<{
     revision: number
@@ -67997,8 +68037,10 @@ A1;Peça exemplo;10`}
         className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}${hideSidebarForEntryDashboard ? ' sidebar--hidden-entry' : ''}`}
         aria-hidden={hideSidebarForEntryDashboard ? true : undefined}
         onPointerMoveCapture={hideSidebarForEntryDashboard ? undefined : handleSidebarTipPointerCapture}
+        onMouseOver={hideSidebarForEntryDashboard ? undefined : handleSidebarTipMouseOver}
         onPointerDownCapture={hideSidebarForEntryDashboard ? undefined : () => setSidebarTipFlyout(null)}
         onPointerLeave={hideSidebarForEntryDashboard ? undefined : () => setSidebarTipFlyout(null)}
+        onMouseLeave={hideSidebarForEntryDashboard ? undefined : () => setSidebarTipFlyout(null)}
       >
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
         <div className={`sidebar-brand${logoUrl ? ' sidebar-brand--has-media' : ''}`}>
@@ -77942,7 +77984,10 @@ A1;Peça exemplo;10`}
               zIndex: 2147483646,
             }}
           >
-            {sidebarTipFlyout.text}
+            <span className="sidebar-tip-flyout__title">{sidebarTipFlyout.title}</span>
+            {sidebarTipFlyout.desc ? (
+              <span className="sidebar-tip-flyout__desc">{sidebarTipFlyout.desc}</span>
+            ) : null}
           </div>,
           document.body
         )}

@@ -2076,7 +2076,7 @@ body,
 /* Balão fixo no viewport — à direita do botão, sem ser cortado pelo overflow da lista. */
 .sidebar-tip-flyout {
   box-sizing: border-box;
-  max-width: min(280px, calc(100vw - 20px));
+  max-width: min(300px, calc(100vw - 20px));
   padding: 11px 12px 11px 13px;
   border-radius: 12px;
   background-color: rgba(42, 42, 42, 0.98);
@@ -2105,6 +2105,30 @@ body,
   pointer-events: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+.sidebar-tip-flyout__title {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.96);
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.96);
+  line-height: 1.35;
+  margin-bottom: 0;
+}
+
+.sidebar-tip-flyout__desc {
+  display: block;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.42;
+  color: rgba(255, 255, 255, 0.78);
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.78);
+}
+
 .sidebar-tip-flyout::-webkit-scrollbar {
   width: 6px;
 }
