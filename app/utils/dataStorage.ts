@@ -1015,12 +1015,21 @@ export async function forceReporPecasBibliotecaFromServer(
   return best
 }
 
-/** Remove cópia parcial da biblioteca (localStorage + IndexedDB). */
+/** Remove cópia parcial da biblioteca (localStorage + IndexedDB + fila sync). */
 export async function clearPecasBibliotecaLocal(): Promise<void> {
   if (typeof window === 'undefined') return
   try {
     localStorage.removeItem(PECAS_BIBLIOTECA_KEY)
     localStorage.removeItem(`${PECAS_BIBLIOTECA_KEY}--idb`)
+    const raw = localStorage.getItem(SYNC_QUEUE_KEY)
+    if (raw) {
+      const q = JSON.parse(raw) as Array<{ key: string }>
+      if (Array.isArray(q)) {
+        const filtered = q.filter((item) => item.key !== PECAS_BIBLIOTECA_KEY)
+        if (filtered.length === 0) localStorage.removeItem(SYNC_QUEUE_KEY)
+        else localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(filtered))
+      }
+    }
   } catch {
     /* ignorar */
   }
@@ -1029,6 +1038,71 @@ export async function clearPecasBibliotecaLocal(): Promise<void> {
   } catch {
     /* ignorar */
   }
+}
+
+/**
+ * Reposição de emergência — fetch directo ao ficheiro lite, sem heurísticas que falhavam no browser.
+ */
+export async function reporPecasBibliotecaEmergencia(
+  onProgress?: (msg: string) => void
+): Promise<unknown[] | null> {
+  serverOffline = false
+  onProgress?.('A limpar cópia antiga…')
+  await clearPecasBibliotecaLocal()
+
+  const cacheBust = Date.now()
+  const urls = [
+    `${API_BASE}/load?key=${encodeURIComponent(PECAS_BIBLIOTECA_LITE_KEY)}&_=${cacheBust}`,
+    `${API_BASE}/repair-pecas-biblioteca?lite=1&offset=0&limit=500&_=${cacheBust}`,
+  ]
+
+  onProgress?.('A carregar catálogo do servidor…')
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {
+        method: 'GET',
+        credentials: 'same-origin',
+        cache: 'no-store',
+      })
+      if (!res.ok) continue
+      const json = (await res.json()) as {
+        data?: unknown
+        pecas?: unknown
+        error?: string
+        success?: boolean
+      }
+      if (json?.error === 'auth_required') continue
+      const data = Array.isArray(json?.data)
+        ? json.data
+        : Array.isArray(json?.pecas)
+          ? json.pecas
+          : null
+      if (!data || data.length < 50) continue
+      onProgress?.(`${data.length} peças — a gravar…`)
+      await savePecasBibliotecaLocally(data)
+      try {
+        const snap = await getKv(OFFLINE_SNAPSHOT_KEY)
+        const base =
+          snap && typeof snap === 'object' && !Array.isArray(snap)
+            ? (snap as Record<string, unknown>)
+            : {}
+        await saveKv(OFFLINE_SNAPSHOT_KEY, {
+          ...base,
+          [PECAS_BIBLIOTECA_KEY]: data,
+          [PECAS_BIBLIOTECA_LITE_KEY]: data,
+        })
+      } catch {
+        /* ignorar */
+      }
+      console.info(`[Nonato] Reposição emergência: ${data.length} peça(s).`)
+      return data
+    } catch (e) {
+      console.warn('[Nonato] reporPecasBibliotecaEmergencia tentativa falhou:', url, e)
+    }
+  }
+
+  return null
 }
 
 /** Grava biblioteca de peças: IndexedDB primeiro (suporta ~10 MB+); localStorage se couber. */

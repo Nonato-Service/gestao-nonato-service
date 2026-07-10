@@ -22,6 +22,7 @@ import {
   pushAllLocalStorageToServer,
   repairPecasBibliotecaIfStale,
   forceReporPecasBibliotecaFromServer,
+  reporPecasBibliotecaEmergencia,
   fetchPecasBibliotecaLiteFromServer,
   bootstrapLoadPecasBiblioteca,
   clearPecasBibliotecaLocal,
@@ -11117,8 +11118,7 @@ export default function Dashboard() {
         !Array.isArray(savedPecasBiblioteca) ||
         (catsInicial.length >= 10 && savedPecasBiblioteca.length < minPecasOk)
       if (pecasIncompletas) {
-        await clearPecasBibliotecaLocal()
-        const reposto = await forceReporPecasBibliotecaFromServer(savedPecasBiblioteca ?? [])
+        const reposto = await reporPecasBibliotecaEmergencia()
         if (Array.isArray(reposto) && reposto.length > 0) {
           savedPecasBiblioteca = reposto
           console.info(`[Nonato] Biblioteca reposta no arranque: ${reposto.length} peça(s).`)
@@ -26416,95 +26416,39 @@ export default function Dashboard() {
     categoriasPecas.length >= 10 &&
     pecasBiblioteca.length < Math.max(15, Math.min(categoriasPecas.length, 80))
 
+  const pecasReporManualLockRef = useRef(false)
+
   const handleReporPecasBibliotecaDoServidor = useCallback(async () => {
+    if (pecasReporManualLockRef.current || pecasBibliotecaReparoLoading) return
+    pecasReporManualLockRef.current = true
     setPecasBibliotecaReparoLoading(true)
     setPecasBibliotecaReparoProgress('A ligar ao servidor…')
     try {
-      await clearPecasBibliotecaLocal()
-      let fromServer = await fetchPecasBibliotecaLiteFromServer((loaded, total) => {
-        setPecasBibliotecaReparoProgress(
-          total > 0 ? `${loaded} / ${total} peças…` : `${loaded} peças…`
-        )
+      const fromServer = await reporPecasBibliotecaEmergencia((msg) => {
+        setPecasBibliotecaReparoProgress(msg)
       })
       if (!Array.isArray(fromServer) || fromServer.length < 50) {
-        fromServer = await forceReporPecasBibliotecaFromServer(pecasBiblioteca, (p) => {
-          setPecasBibliotecaReparoProgress(
-            p.phase === 'images'
-              ? `Fotos: ${p.loaded}${p.total ? ` / ${p.total}` : ''}…`
-              : p.total > 0
-                ? `${p.loaded} / ${p.total} peças…`
-                : `${p.loaded} peças…`
-          )
-        })
-      }
-      if (!Array.isArray(fromServer) || fromServer.length === 0) {
         alert(
-          `Não foi possível carregar peças do servidor.\n\nConfirme:\n• Servidor a correr (janela preta aberta)\n• Endereço: http://localhost:${typeof window !== 'undefined' ? window.location.port || '3000' : '3000'}\n• Faça Ctrl+F5 para actualizar a página`
+          `Não foi possível carregar as peças do servidor.\n\nVerifique:\n• A janela do servidor está aberta (npm run dev)\n• O endereço é http://localhost:3000\n• Prima Ctrl+Shift+R e tente outra vez`
         )
         return
       }
       const raw = (fromServer as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
       const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
-      await savePecasBibliotecaLocally(lista as unknown[])
       setPecasBiblioteca(lista)
-      alert(
-        String(
-          (safeT as any)?.bibliotecaReparoOk || 'Biblioteca reposta com sucesso: {n} peça(s).'
-        ).replace('{n}', String(lista.length))
-      )
+      await savePecasBibliotecaLocally(lista as unknown[])
+      alert(`Biblioteca reposta: ${lista.length} peça(s).`)
     } catch (e) {
       console.error('[repor biblioteca]', e)
       alert(
-        `Erro ao repor: ${e instanceof Error ? e.message : String(e)}\n\nTente Ctrl+F5 para recarregar sem cache.`
+        `Erro ao repor: ${e instanceof Error ? e.message : String(e)}\n\nPrima Ctrl+Shift+R e clique outra vez em Repor biblioteca.`
       )
     } finally {
+      pecasReporManualLockRef.current = false
       setPecasBibliotecaReparoLoading(false)
       setPecasBibliotecaReparoProgress('')
     }
-  }, [categoriasPecas, pecasBiblioteca, safeT])
-
-  /** Reposição automática uma vez após arranque se o catálogo local estiver incompleto (sem recarregar a página). */
-  const pecasAutoReporFeitoRef = useRef(false)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (appInitialLoading) return
-    if (pecasAutoReporFeitoRef.current || pecasBibliotecaReparoLoading) return
-    if (categoriasPecas.length < 10) return
-    const minOk = Math.max(15, Math.min(categoriasPecas.length, 80))
-    if (pecasBiblioteca.length >= minOk) return
-    pecasAutoReporFeitoRef.current = true
-    void (async () => {
-      setPecasBibliotecaReparoLoading(true)
-      setPecasBibliotecaReparoProgress('A repor catálogo do servidor…')
-      try {
-        await clearPecasBibliotecaLocal()
-        let from = await fetchPecasBibliotecaLiteFromServer()
-        if (!Array.isArray(from) || from.length <= pecasBiblioteca.length) {
-          from = await forceReporPecasBibliotecaFromServer(pecasBiblioteca)
-        }
-        if (Array.isArray(from) && from.length > pecasBiblioteca.length) {
-          const raw = (from as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
-          const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
-          await savePecasBibliotecaLocally(lista as unknown[])
-          setPecasBiblioteca(lista)
-          console.info(`[Nonato] Auto-reparo biblioteca: ${pecasBiblioteca.length} → ${lista.length} peça(s).`)
-        } else {
-          pecasAutoReporFeitoRef.current = false
-        }
-      } catch (e) {
-        pecasAutoReporFeitoRef.current = false
-        console.warn('[Nonato] Auto-reparo biblioteca falhou:', e)
-      } finally {
-        setPecasBibliotecaReparoLoading(false)
-        setPecasBibliotecaReparoProgress('')
-      }
-    })()
-  }, [
-    appInitialLoading,
-    categoriasPecas,
-    pecasBiblioteca.length,
-    pecasBibliotecaReparoLoading,
-  ])
+  }, [categoriasPecas, pecasBibliotecaReparoLoading])
 
   const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
     const normalizado = next.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
