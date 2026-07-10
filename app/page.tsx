@@ -21,6 +21,7 @@ import {
   loadFromServer,
   pushAllLocalStorageToServer,
   repairPecasBibliotecaIfStale,
+  forceReporPecasBibliotecaFromServer,
   savePecasBibliotecaLocally,
   setBlockImplicitServerPushDuringBootstrap,
   markDataBootstrapComplete,
@@ -7465,6 +7466,19 @@ export default function Dashboard() {
       void savePecasBibliotecaLocally(lista)
     })()
   }, [appInitialLoading, pecasBiblioteca, categoriasPecas])
+
+  /** Atualiza UI quando fotos chegam em segundo plano após repor catálogo lite. */
+  useEffect(() => {
+    const onImagens = (ev: Event) => {
+      const pecas = (ev as CustomEvent<{ pecas?: unknown[] }>).detail?.pecas
+      if (!Array.isArray(pecas) || pecas.length === 0) return
+      const raw = (pecas as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+      const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
+      setPecasBiblioteca(lista)
+    }
+    window.addEventListener('nonato-pecas-imagens-hidratadas', onImagens)
+    return () => window.removeEventListener('nonato-pecas-imagens-hidratadas', onImagens)
+  }, [categoriasPecas])
   const [selecaoPecasBibliotecaIds, setSelecaoPecasBibliotecaIds] = useState<string[]>([])
   const [classificacaoLoteCategoriaId, setClassificacaoLoteCategoriaId] = useState('')
   const [classificacaoLoteSubcategoriaId, setClassificacaoLoteSubcategoriaId] = useState('')
@@ -26357,19 +26371,19 @@ export default function Dashboard() {
     setPecasBibliotecaReparoLoading(true)
     setPecasBibliotecaReparoProgress('')
     try {
-      const reparadas = await repairPecasBibliotecaIfStale(
-        pecasBiblioteca,
-        categoriasPecas.length,
-        (loaded, total) => {
-          setPecasBibliotecaReparoProgress(
-            total > 0 ? `${loaded} / ${total} peças…` : `${loaded} peças…`
-          )
-        }
-      )
-      if (!reparadas || reparadas.length <= pecasBiblioteca.length) {
+      const reparadas = await forceReporPecasBibliotecaFromServer(pecasBiblioteca, (p) => {
+        setPecasBibliotecaReparoProgress(
+          p.phase === 'images'
+            ? `Fotos ${p.loaded} / ${p.total}…`
+            : p.total > 0
+              ? `${p.loaded} / ${p.total} peças…`
+              : `${p.loaded} peças…`
+        )
+      })
+      if (!reparadas || reparadas.length <= 0) {
         alert(
           (safeT as any)?.bibliotecaReparoNenhumaPeca ||
-            'Não foi possível repor o catálogo. Verifique a sessão iniciada e aguarde — o ficheiro é grande e carrega em várias páginas (~2 min).'
+            'Não foi possível repor o catálogo. Verifique se iniciou sessão (utilizador + senha) e se o servidor está a correr.'
         )
         return
       }
@@ -26378,10 +26392,10 @@ export default function Dashboard() {
       setPecasBiblioteca(lista)
       await savePecasBibliotecaLocally(lista)
       alert(
-        String((safeT as any)?.bibliotecaReparoOk || 'Biblioteca reposta com sucesso: {n} peça(s).').replace(
-          '{n}',
-          String(lista.length)
-        )
+        String(
+          (safeT as any)?.bibliotecaReparoOk ||
+            'Biblioteca reposta: {n} peça(s). As fotos continuam a carregar em segundo plano (1–3 min).'
+        ).replace('{n}', String(lista.length))
       )
     } catch (e) {
       console.error('[repor biblioteca]', e)

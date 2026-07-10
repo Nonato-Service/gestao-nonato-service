@@ -667,14 +667,15 @@ async function forceLoadCadastroFromServer(key: string): Promise<any | null> {
 async function fetchPecasBibliotecaRepairPaginated(
   onProgress?: (loaded: number, total: number) => void
 ): Promise<unknown[] | null> {
-  const limit = 25
+  /** Modo lite: catálogo completo ~160 KB (sem fotos base64). Algumas peças têm fotos de 3+ MB. */
+  const limit = 500
   let offset = 0
   let total = 0
   const all: unknown[] = []
   let authRequired = false
 
   try {
-    const metaRes = await dataApiFetch(`${API_BASE}/repair-pecas-biblioteca?meta=1`, {
+    const metaRes = await dataApiFetch(`${API_BASE}/repair-pecas-biblioteca?meta=1&lite=1`, {
       method: 'GET',
       signal: createTimeoutSignal(30_000),
     })
@@ -693,13 +694,19 @@ async function fetchPecasBibliotecaRepairPaginated(
   }
 
   while (true) {
-    const res = await dataApiFetch(
-      `${API_BASE}/repair-pecas-biblioteca?offset=${offset}&limit=${limit}`,
-      {
-        method: 'GET',
-        signal: createTimeoutSignal(90_000),
-      }
-    )
+    let res: Response
+    try {
+      res = await dataApiFetch(
+        `${API_BASE}/repair-pecas-biblioteca?lite=1&offset=${offset}&limit=${limit}`,
+        {
+          method: 'GET',
+          signal: createTimeoutSignal(60_000),
+        }
+      )
+    } catch (e) {
+      console.warn('[Nonato] Reparo peças: rede falhou', offset, e)
+      break
+    }
     if (res.status === 401) {
       throw new Error('auth_required')
     }
@@ -707,12 +714,18 @@ async function fetchPecasBibliotecaRepairPaginated(
       console.warn('[Nonato] Reparo peças: página falhou', offset, res.status)
       break
     }
-    const json = (await res.json()) as {
+    let json: {
       success?: boolean
       pecas?: unknown[]
       hasMore?: boolean
       total?: number
       error?: string
+    }
+    try {
+      json = (await res.json()) as typeof json
+    } catch (e) {
+      console.warn('[Nonato] Reparo peças: JSON inválido na página', offset, e)
+      break
     }
     if (json?.error === 'auth_required') {
       throw new Error('auth_required')
@@ -727,6 +740,138 @@ async function fetchPecasBibliotecaRepairPaginated(
   }
 
   return all.length > 0 ? all : null
+}
+
+export type PecasBibliotecaRepairProgress = {
+  phase: 'catalog' | 'images'
+  loaded: number
+  total: number
+}
+
+/** Carrega fotos uma a uma (algumas têm 3+ MB em base64). */
+export async function hydratePecasBibliotecaImagensFromServer(
+  pecas: unknown[],
+  onProgress?: (p: PecasBibliotecaRepairProgress) => void
+): Promise<unknown[]> {
+  if (!Array.isArray(pecas) || pecas.length === 0) return pecas
+
+  let totalImages = 0
+  try {
+    const metaRes = await dataApiFetch(`${API_BASE}/repair-pecas-biblioteca?meta=1`, {
+      method: 'GET',
+      signal: createTimeoutSignal(20_000),
+    })
+    if (metaRes.ok) {
+      const meta = (await metaRes.json()) as { totalImages?: number }
+      if (typeof meta.totalImages === 'number') totalImages = meta.totalImages
+    }
+  } catch {
+    /* ignorar */
+  }
+
+  if (totalImages <= 0) return pecas
+
+  const byId = new Map<string, Record<string, unknown>>()
+  for (const p of pecas) {
+    if (p && typeof p === 'object' && 'id' in p) {
+      byId.set(String((p as { id: unknown }).id), p as Record<string, unknown>)
+    }
+  }
+
+  let offset = 0
+  let loaded = 0
+  while (offset < totalImages) {
+    const res = await dataApiFetch(
+      `${API_BASE}/repair-pecas-biblioteca?images=1&offset=${offset}&limit=1`,
+      {
+        method: 'GET',
+        signal: createTimeoutSignal(120_000),
+      }
+    )
+    if (res.status === 401) throw new Error('auth_required')
+    if (!res.ok) break
+    const json = (await res.json()) as {
+      success?: boolean
+      imagens?: Array<{ id?: string; imagem?: string }>
+      hasMore?: boolean
+      total?: number
+    }
+    if (!json?.success || !Array.isArray(json.imagens) || json.imagens.length === 0) break
+    if (typeof json.total === 'number') totalImages = json.total
+    for (const row of json.imagens) {
+      const id = String(row.id ?? '')
+      const img = typeof row.imagem === 'string' ? row.imagem : ''
+      const peca = byId.get(id)
+      if (peca && img) {
+        peca.imagem = img
+        delete peca.temImagemServidor
+      }
+      loaded++
+      onProgress?.({ phase: 'images', loaded, total: totalImages })
+    }
+    offset += json.imagens.length
+    if (loaded % 15 === 0 || !json.hasMore) {
+      const snapshot = Array.from(byId.values())
+      try {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('nonato-pecas-imagens-hidratadas', { detail: { pecas: snapshot } })
+          )
+        }
+      } catch {
+        /* ignorar */
+      }
+    }
+    if (!json.hasMore) break
+  }
+
+  return Array.from(byId.values())
+}
+
+/**
+ * Reposição forçada (botão «Repor biblioteca»): ignora heurística de catálogo parcial.
+ */
+export async function forceReporPecasBibliotecaFromServer(
+  current: unknown,
+  onProgress?: (p: PecasBibliotecaRepairProgress) => void
+): Promise<unknown[] | null> {
+  const local = Array.isArray(current) ? current : []
+  let best: unknown[] = [...local]
+
+  try {
+    const fromKv = await getKv(PECAS_BIBLIOTECA_KEY)
+    if (Array.isArray(fromKv) && fromKv.length > best.length) {
+      best = fromKv as unknown[]
+    }
+  } catch {
+    /* ignorar */
+  }
+
+  const fromServer = await fetchPecasBibliotecaRepairPaginated((loaded, total) => {
+    onProgress?.({ phase: 'catalog', loaded, total })
+  })
+
+  if (!Array.isArray(fromServer) || fromServer.length === 0) {
+    return null
+  }
+
+  best = mergePecasBibliotecaArrays(fromServer, best) as unknown[]
+  await savePecasBibliotecaLocally(best)
+  console.info(`[Nonato] Catálogo reposto (lite): ${local.length} → ${best.length} peças.`)
+
+  void (async () => {
+    try {
+      const withImages = await hydratePecasBibliotecaImagensFromServer(best, onProgress)
+      if (withImages.length > 0) {
+        await savePecasBibliotecaLocally(withImages)
+        console.info(`[Nonato] Fotos da biblioteca hidratadas: ${withImages.filter((p) => p && typeof p === 'object' && (p as { imagem?: string }).imagem).length} peça(s) com imagem.`)
+      }
+    } catch (e) {
+      console.warn('[Nonato] Hidratação de fotos interrompida:', e)
+    }
+  })()
+
+  return best
 }
 
 /** Grava biblioteca de peças: IndexedDB primeiro (suporta ~10 MB+); localStorage se couber. */
@@ -839,7 +984,9 @@ export async function repairPecasBibliotecaIfStale(
     /* ignorar */
   }
 
-  const fromServer = await fetchPecasBibliotecaRepairPaginated(onProgress)
+  const fromServer = await fetchPecasBibliotecaRepairPaginated((loaded, total) => {
+    onProgress?.(loaded, total)
+  })
   if (Array.isArray(fromServer) && fromServer.length > 0) {
     best = mergePecasBibliotecaArrays(fromServer, best) as unknown[]
   } else {
