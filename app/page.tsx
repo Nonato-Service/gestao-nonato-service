@@ -7450,51 +7450,6 @@ export default function Dashboard() {
     void saveData('nonato-pecas-biblioteca', lista)
   }, [pecasBiblioteca, categoriasPecas])
 
-  /** Reparo automático quando o catálogo ficou com cópia parcial (ex.: 2 peças). */
-  const pecasReparoPosBootRef = useRef(false)
-  const isPcLocalHost =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      window.location.hostname === '[::1]')
-  useEffect(() => {
-    if (appInitialLoading || pecasReparoPosBootRef.current) return
-    if (!loginUser && !isPcLocalHost) return
-    if (categoriasPecas.length < 10) return
-    if (pecasBiblioteca.length >= Math.max(20, Math.min(categoriasPecas.length, 80))) return
-    pecasReparoPosBootRef.current = true
-    void (async () => {
-      setPecasBibliotecaReparoLoading(true)
-      setPecasBibliotecaReparoProgress('A carregar catálogo do servidor…')
-      try {
-        const reparadas = await forceReporPecasBibliotecaFromServer(pecasBiblioteca, (p) => {
-          setPecasBibliotecaReparoProgress(
-            p.phase === 'images'
-              ? `Fotos ${p.loaded} / ${p.total}…`
-              : p.total > 0
-                ? `${p.loaded} / ${p.total} peças…`
-                : `${p.loaded} peças…`
-          )
-        })
-        if (!reparadas || reparadas.length <= pecasBiblioteca.length) {
-          pecasReparoPosBootRef.current = false
-          return
-        }
-        const raw = (reparadas as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
-        const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
-        setPecasBiblioteca(lista)
-        await savePecasBibliotecaLocally(lista)
-        window.location.reload()
-      } catch (e) {
-        console.error('[reparo auto biblioteca]', e)
-        pecasReparoPosBootRef.current = false
-      } finally {
-        setPecasBibliotecaReparoLoading(false)
-        setPecasBibliotecaReparoProgress('')
-      }
-    })()
-  }, [appInitialLoading, loginUser, isPcLocalHost, pecasBiblioteca, categoriasPecas])
-
   /** Atualiza UI quando fotos chegam em segundo plano após repor catálogo lite. */
   useEffect(() => {
     const onImagens = (ev: Event) => {
@@ -11120,17 +11075,17 @@ export default function Dashboard() {
         setCategoriasPecas(savedCategoriasPecas)
       }
 
-      // Carregar peças biblioteca (IndexedDB + localStorage; servidor lite se incompleto)
+      // Carregar peças biblioteca — se catálogo parcial, ir directo ao servidor (362 peças lite)
       let savedPecasBiblioteca = await loadData('nonato-pecas-biblioteca')
+      const pecasCountBoot = Array.isArray(savedPecasBiblioteca) ? savedPecasBiblioteca.length : 0
       const catalogoParcialBoot =
         catsInicial.length >= 10 &&
-        (!Array.isArray(savedPecasBiblioteca) ||
-          savedPecasBiblioteca.length < Math.max(15, Math.min(catsInicial.length, 80)))
-      const reparadas = catalogoParcialBoot
-        ? await forceReporPecasBibliotecaFromServer(savedPecasBiblioteca || [])
-        : await repairPecasBibliotecaIfStale(savedPecasBiblioteca, catsInicial.length)
-      if (reparadas) {
-        savedPecasBiblioteca = reparadas
+        pecasCountBoot < Math.max(15, Math.min(catsInicial.length, 80))
+      if (catalogoParcialBoot) {
+        const reparadas = await forceReporPecasBibliotecaFromServer(savedPecasBiblioteca || [])
+        if (reparadas && reparadas.length > pecasCountBoot) {
+          savedPecasBiblioteca = reparadas
+        }
       }
       if (savedPecasBiblioteca && Array.isArray(savedPecasBiblioteca)) {
         const raw = (savedPecasBiblioteca as PecaBiblioteca[]).map((peca) =>
@@ -26457,10 +26412,9 @@ export default function Dashboard() {
       alert(
         String(
           (safeT as any)?.bibliotecaReparoOk ||
-            'Biblioteca reposta: {n} peça(s). A página vai recarregar…'
+            'Biblioteca reposta: {n} peça(s).'
         ).replace('{n}', String(lista.length))
       )
-      window.location.reload()
     } catch (e) {
       console.error('[repor biblioteca]', e)
       const msg =

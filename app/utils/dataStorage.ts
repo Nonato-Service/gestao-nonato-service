@@ -723,6 +723,14 @@ async function fetchPecasBibliotecaRepairPaginated(
     throw new Error('auth_required')
   }
 
+  const maxAttempts = 4
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    if (attempt > 0) {
+      await new Promise((r) => setTimeout(r, 800 * attempt))
+      all.length = 0
+      offset = 0
+    }
+
   while (true) {
     let res: Response
     try {
@@ -767,6 +775,9 @@ async function fetchPecasBibliotecaRepairPaginated(
     if (!json.hasMore || json.pecas.length === 0) break
     offset += json.pecas.length
     if (total > 0 && all.length >= total) break
+  }
+
+    if (all.length > 0) break
   }
 
   return all.length > 0 ? all : null
@@ -873,9 +884,11 @@ export async function forceReporPecasBibliotecaFromServer(
     try {
       localStorage.removeItem(PECAS_BIBLIOTECA_KEY)
       localStorage.removeItem(`${PECAS_BIBLIOTECA_KEY}--idb`)
+      await saveKv(PECAS_BIBLIOTECA_KEY, [])
     } catch {
       /* ignorar */
     }
+    best = []
   }
 
   try {
@@ -897,6 +910,11 @@ export async function forceReporPecasBibliotecaFromServer(
 
   best = mergePecasBibliotecaArrays(fromServer, best) as unknown[]
   await savePecasBibliotecaLocally(best)
+  try {
+    sessionStorage.setItem('nonato-pecas-biblioteca-count', String(best.length))
+  } catch {
+    /* ignorar */
+  }
   console.info(`[Nonato] Catálogo reposto (lite): ${local.length} → ${best.length} peças.`)
 
   void (async () => {
