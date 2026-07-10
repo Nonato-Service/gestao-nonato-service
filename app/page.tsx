@@ -20,6 +20,7 @@ import {
   isOnline,
   loadFromServer,
   pushAllLocalStorageToServer,
+  repairPecasBibliotecaIfStale,
   setBlockImplicitServerPushDuringBootstrap,
   markDataBootstrapComplete,
   waitForDataBootstrapComplete,
@@ -9901,7 +9902,7 @@ export default function Dashboard() {
         ) {
           const serverValue = serverData[key]
           const localData = localStorage.getItem(key)
-          if (Array.isArray(serverValue) || (localData !== null && localData !== '')) {
+          if (Array.isArray(serverValue) && serverValue.length > 0) {
             let localParsed: unknown = null
             if (localData !== null && localData !== '') {
               try {
@@ -9921,6 +9922,7 @@ export default function Dashboard() {
             }
             return merged
           }
+          // Bundle completo pode falhar/timeout — reparo async carrega directamente do ficheiro no servidor
         }
         // Clientes: com divergência de revisão o local «conta» como não vazio e bloqueava o servidor inteiro —
         // fundir para trazer equipamentos/alterações gravadas noutro aparelho sem apagar clientes só locais.
@@ -11032,14 +11034,20 @@ export default function Dashboard() {
       }
 
       // Carregar peças biblioteca
-      const savedPecasBiblioteca = getData('nonato-pecas-biblioteca')
+      let savedPecasBiblioteca = getData('nonato-pecas-biblioteca')
+      const reparadas = await repairPecasBibliotecaIfStale(savedPecasBiblioteca, catsInicial.length)
+      if (reparadas) {
+        savedPecasBiblioteca = reparadas
+      }
       if (savedPecasBiblioteca && Array.isArray(savedPecasBiblioteca)) {
         const raw = (savedPecasBiblioteca as PecaBiblioteca[]).map((peca) =>
           sanitizarPecaBibliotecaImportacaoFlag(peca)
         )
         const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, catsInicial)
         setPecasBiblioteca(lista)
-        void saveData('nonato-pecas-biblioteca', lista)
+        if (lista.length >= (Array.isArray(savedPecasBiblioteca) ? savedPecasBiblioteca.length : 0)) {
+          void saveData('nonato-pecas-biblioteca', lista, true, false)
+        }
       }
 
       const savedPecaLookupTpl = getData(NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY)

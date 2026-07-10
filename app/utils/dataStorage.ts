@@ -448,6 +448,23 @@ function manuaisLikePayloadHasContent(value: unknown): boolean {
   return (v.modelos?.length ?? 0) > 0
 }
 
+/** Evita que uma lista menor (ex.: 2 peças após restore parcial) apague centenas no servidor. */
+async function shouldBlockShrinkServerOverwrite(key: string, value: unknown): Promise<boolean> {
+  if (key !== PECAS_BIBLIOTECA_KEY) return false
+  if (!Array.isArray(value)) return false
+  try {
+    const existing = await loadFromServer(key)
+    if (!Array.isArray(existing) || existing.length === 0) return false
+    if (value.length >= existing.length) return false
+    console.warn(
+      `[Nonato] Gravação ignorada: «${key}» tem ${value.length} item(ns) — o servidor tem ${existing.length}; não substituir catálogo maior.`
+    )
+    return true
+  } catch {
+    return false
+  }
+}
+
 /** Evita que uma lista vazia (sync/atualização) apague dados já guardados no servidor. */
 async function shouldBlockEmptyServerOverwrite(key: string, value: unknown): Promise<boolean> {
   if (MANUAIS_OBJECT_KEYS_BLOCK_EMPTY_OVERWRITE.has(key)) {
@@ -489,6 +506,9 @@ async function _doSaveToServer(key: string, value: any): Promise<boolean> {
     )
     return true
   }
+  if (await shouldBlockShrinkServerOverwrite(key, value)) {
+    return true
+  }
   try {
     const payloadStr = typeof value === 'string' ? value : JSON.stringify(value)
     const isLargeString =
@@ -505,8 +525,14 @@ async function _doSaveToServer(key: string, value: any): Promise<boolean> {
     const isLargeManuaisJson = key === MANUAIS_KEY && payloadStr.length > 80000
     /** Biblioteca de logos PDF: várias imagens base64 — mesmo tratamento que manuais grandes */
     const isLargeLogosRelatoriosJson = key === 'nonato-logos-relatorios' && payloadStr.length > 80000
+    /** Biblioteca de peças com imagens base64 — payload grande */
+    const isLargePecasBibliotecaJson = key === PECAS_BIBLIOTECA_KEY && payloadStr.length > 80000
     const useTextEndpoint =
-      isLargeString || isLargeManuaisJson || isLargeLogosRelatoriosJson || useSaveTextForLogo
+      isLargeString ||
+      isLargeManuaisJson ||
+      isLargeLogosRelatoriosJson ||
+      isLargePecasBibliotecaJson ||
+      useSaveTextForLogo
     const endpoint = useTextEndpoint ? `${API_BASE}/save-text` : `${API_BASE}/save`
     const body =
       (isLargeManuaisJson && typeof value === 'object') || isLargeLogosRelatoriosJson
@@ -515,6 +541,7 @@ async function _doSaveToServer(key: string, value: any): Promise<boolean> {
     const payloadNeedsSlowUpload =
       isLargeManuaisJson ||
       isLargeLogosRelatoriosJson ||
+      isLargePecasBibliotecaJson ||
       isLargeString ||
       (useSaveTextForLogo && typeof value === 'string' && value.length > 40000)
     const response = await fetch(endpoint, {
@@ -594,6 +621,16 @@ export async function saveToServer(key: string, value: any): Promise<boolean> {
   return requestPromise
 }
 
+async function fetchServerKeyPayload(key: string, timeoutMs: number): Promise<any | null> {
+  const response = await fetch(`${API_BASE}/load-text?key=${encodeURIComponent(key)}`, {
+    signal: createTimeoutSignal(timeoutMs),
+    cache: 'no-store',
+  })
+  if (!response.ok) return null
+  const result = await response.json()
+  return result?.data ?? null
+}
+
 // Carregar um item específico
 export async function loadFromServer(key: string): Promise<any | null> {
   if (!isOnline()) {
@@ -605,35 +642,70 @@ export async function loadFromServer(key: string): Promise<any | null> {
     if (!ok) return null
   }
 
+  const slowKey = key === PECAS_BIBLIOTECA_KEY || key === MANUAIS_KEY
+  const timeoutMs = slowKey ? 90_000 : 5000
+
   try {
-    // Tentar carregar como texto primeiro (para vídeos/imagens grandes)
-    const response = await fetch(`${API_BASE}/load-text?key=${encodeURIComponent(key)}`, {
-      signal: createTimeoutSignal(5000), // Timeout de 5 segundos (compatível com todos os navegadores)
-      cache: 'no-store',
-    })
-    
-    if (!response.ok) {
+    let data = await fetchServerKeyPayload(key, timeoutMs)
+    if (data == null && slowKey) {
+      const response = await fetch(`${API_BASE}/load?key=${encodeURIComponent(key)}`, {
+        signal: createTimeoutSignal(timeoutMs),
+        cache: 'no-store',
+      })
+      if (response.ok) {
+        const result = await response.json()
+        data = result?.data ?? null
+      }
+    }
+    if (data == null) {
       serverOffline = true
       return null
     }
-
-    const result = await response.json()
     serverOffline = false
-    return result.data
+    return data
   } catch (error: any) {
-    // Detectar erros de conexão
     if (
-      error instanceof TypeError && 
-      (error.message.includes('NetworkError') || 
-       error.message.includes('Failed to fetch') ||
-       error.message.includes('CONNECTION_REFUSED') ||
-       error.name === 'AbortError')
+      error instanceof TypeError &&
+      (error.message.includes('NetworkError') ||
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('CONNECTION_REFUSED') ||
+        error.name === 'AbortError')
     ) {
       serverOffline = true
-      return null
     }
     return null
   }
+}
+
+/**
+ * Repõe biblioteca de peças quando o browser ficou com cópia mínima (ex.: restore/sync parcial)
+ * mas o servidor ainda tem o catálogo completo.
+ */
+export async function repairPecasBibliotecaIfStale(
+  current: unknown,
+  categoriasCount: number
+): Promise<unknown[] | null> {
+  const local = Array.isArray(current) ? current : []
+  const estruturaGrande = categoriasCount >= 10
+  if (!estruturaGrande || local.length >= 20) return null
+
+  const fromServer = await loadFromServer(PECAS_BIBLIOTECA_KEY)
+  if (!Array.isArray(fromServer) || fromServer.length <= local.length) return null
+
+  const merged = mergePecasBibliotecaArrays(fromServer, local)
+  writeLocalStorageValue(PECAS_BIBLIOTECA_KEY, merged)
+  try {
+    await saveKv(PECAS_BIBLIOTECA_KEY, merged)
+  } catch {
+    /* ignorar */
+  }
+  if (!shouldDeferImplicitServerPush() && pecasBibliotecaArraysDiffer(merged, fromServer)) {
+    scheduleServerMigrationPush(PECAS_BIBLIOTECA_KEY, merged)
+  }
+  console.info(
+    `[Nonato] Biblioteca de peças reposta: ${local.length} → ${merged.length} (servidor tinha ${fromServer.length}).`
+  )
+  return merged
 }
 
 /** Resultado de carregar o bundle completo: `ok` distingue rede/HTTP bem-sucedidos de falha (timeout, offline). */
@@ -684,7 +756,7 @@ export async function loadAllForBootstrap(
     }
   }
 
-  const server = await loadAllFromServerOnce()
+  const server = await loadAllFromServer()
   if (server.ok && Object.keys(server.data).length > 0) {
     void saveOfflineServerSnapshot(server.data)
     return { ...server, source: 'server' }
@@ -698,7 +770,7 @@ export async function loadAllForBootstrap(
   return { ...server, source: 'server' }
 }
 
-const LOAD_ALL_TIMEOUT_MS = 25_000
+const LOAD_ALL_TIMEOUT_MS = 60_000
 
 async function loadAllFromServerOnce(): Promise<LoadAllFromServerResult> {
   if (isNonatoDemoBuild()) {
