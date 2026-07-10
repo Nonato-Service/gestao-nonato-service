@@ -935,14 +935,20 @@ export async function bootstrapLoadPecasBiblioteca(categoriasCount: number): Pro
   try {
     await clearPecasBibliotecaLocal()
     const lastTry = await fetchPecasBibliotecaLiteFromServer()
-    if (Array.isArray(lastTry) && lastTry.length > loadCount) {
+    if (Array.isArray(lastTry) && isComplete(lastTry.length)) {
       await savePecasBibliotecaLocally(lastTry)
       return lastTry
+    }
+    const repaired = await fetchPecasBibliotecaRepairPaginated()
+    if (Array.isArray(repaired) && isComplete(repaired.length)) {
+      await savePecasBibliotecaLocally(repaired)
+      return repaired
     }
   } catch {
     /* ignorar */
   }
-  return fromLoad
+  if (isComplete(loadCount)) return fromLoad
+  return null
 }
 
 /**
@@ -1171,7 +1177,19 @@ export async function loadAllFromLocalCache(): Promise<Record<string, any>> {
   try {
     const snap = await getKv(OFFLINE_SNAPSHOT_KEY)
     if (snap && typeof snap === 'object' && !Array.isArray(snap)) {
-      return { ...(snap as Record<string, any>), ...fromLs }
+      const merged = { ...(snap as Record<string, any>), ...fromLs }
+      const snapPecas = (snap as Record<string, unknown>)[PECAS_BIBLIOTECA_KEY]
+      const localPecas = fromLs[PECAS_BIBLIOTECA_KEY]
+      const snapCount = Array.isArray(snapPecas) ? snapPecas.length : 0
+      const localCount = Array.isArray(localPecas) ? localPecas.length : 0
+      if (snapCount >= 50 && snapCount > localCount) {
+        merged[PECAS_BIBLIOTECA_KEY] = snapPecas
+      } else if (localCount > 0 && isPecasBibliotecaLocalParcial(localPecas) && snapCount >= 50) {
+        merged[PECAS_BIBLIOTECA_KEY] = snapPecas
+      } else if (localCount > 0 && isPecasBibliotecaLocalParcial(localPecas)) {
+        delete merged[PECAS_BIBLIOTECA_KEY]
+      }
+      return merged
     }
   } catch {
     /* ignorar */
@@ -1324,7 +1342,11 @@ export async function collectAllLocalNonatoDataForSync(): Promise<Record<string,
   keys.delete(PECAS_BIBLIOTECA_KEY)
   try {
     const pecasSnap = await readLocalValueForLoad(PECAS_BIBLIOTECA_KEY, true)
-    if (Array.isArray(pecasSnap.parsed) && pecasSnap.parsed.length > 0) {
+    if (
+      Array.isArray(pecasSnap.parsed) &&
+      pecasSnap.parsed.length > 0 &&
+      !isPecasBibliotecaLocalParcial(pecasSnap.parsed)
+    ) {
       out[PECAS_BIBLIOTECA_KEY] = pecasSnap.parsed
     }
   } catch {
@@ -2049,6 +2071,9 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
   try {
     const fromKv = await getKv(key)
     if (fromKv !== null && fromKv !== undefined) {
+      if (key === PECAS_BIBLIOTECA_KEY && Array.isArray(fromKv) && isPecasBibliotecaLocalParcial(fromKv)) {
+        return null
+      }
       return fromKv
     }
   } catch {

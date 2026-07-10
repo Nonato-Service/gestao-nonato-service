@@ -10024,8 +10024,17 @@ export default function Dashboard() {
             // Se localStorage também está vazio, retornar objeto vazio do servidor
             return serverValue
           } else {
-            // Dados válidos do servidor
-            return serverValue
+            // Dados válidos do servidor — nunca aceitar cópia parcial da biblioteca (ex.: 2 peças)
+            if (
+              key === 'nonato-pecas-biblioteca' &&
+              Array.isArray(serverValue) &&
+              serverValue.length > 0 &&
+              serverValue.length < 50
+            ) {
+              /* ignorar — bootstrap/reparo carrega do ficheiro lite */
+            } else {
+              return serverValue
+            }
           }
         }
         
@@ -11088,6 +11097,18 @@ export default function Dashboard() {
 
       // Carregar peças biblioteca — API lite directa quando catálogo parcial (362 peças no disco)
       let savedPecasBiblioteca = await bootstrapLoadPecasBiblioteca(catsInicial.length)
+      const minPecasOk = Math.max(15, Math.min(catsInicial.length, 80))
+      const pecasIncompletas =
+        !Array.isArray(savedPecasBiblioteca) ||
+        (catsInicial.length >= 10 && savedPecasBiblioteca.length < minPecasOk)
+      if (pecasIncompletas) {
+        await clearPecasBibliotecaLocal()
+        const reposto = await forceReporPecasBibliotecaFromServer(savedPecasBiblioteca ?? [])
+        if (Array.isArray(reposto) && reposto.length > 0) {
+          savedPecasBiblioteca = reposto
+          console.info(`[Nonato] Biblioteca reposta no arranque: ${reposto.length} peça(s).`)
+        }
+      }
       if (savedPecasBiblioteca && Array.isArray(savedPecasBiblioteca)) {
         const raw = (savedPecasBiblioteca as PecaBiblioteca[]).map((peca) =>
           sanitizarPecaBibliotecaImportacaoFlag(peca)
@@ -26384,9 +26405,14 @@ export default function Dashboard() {
     setPecasBibliotecaReparoLoading(true)
     setPecasBibliotecaReparoProgress('A ligar ao servidor…')
     try {
-      const fromServer = await fetchPecasBibliotecaLiteFromServer((loaded, total) => {
+      await clearPecasBibliotecaLocal()
+      const fromServer = await forceReporPecasBibliotecaFromServer(pecasBiblioteca, (p) => {
         setPecasBibliotecaReparoProgress(
-          total > 0 ? `${loaded} / ${total} peças…` : `${loaded} peças…`
+          p.phase === 'images'
+            ? `Fotos: ${p.loaded}${p.total ? ` / ${p.total}` : ''}…`
+            : p.total > 0
+              ? `${p.loaded} / ${p.total} peças…`
+              : `${p.loaded} peças…`
         )
       })
       if (!Array.isArray(fromServer) || fromServer.length === 0) {
@@ -26395,7 +26421,6 @@ export default function Dashboard() {
         )
         return
       }
-      await clearPecasBibliotecaLocal()
       const raw = (fromServer as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
       const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
       await savePecasBibliotecaLocally(lista as unknown[])
@@ -26414,7 +26439,7 @@ export default function Dashboard() {
       setPecasBibliotecaReparoLoading(false)
       setPecasBibliotecaReparoProgress('')
     }
-  }, [categoriasPecas, safeT])
+  }, [categoriasPecas, pecasBiblioteca, safeT])
 
   /** Reposição automática uma vez após arranque se o catálogo local estiver incompleto (sem recarregar a página). */
   const pecasAutoReporFeitoRef = useRef(false)
@@ -26430,7 +26455,8 @@ export default function Dashboard() {
       setPecasBibliotecaReparoLoading(true)
       setPecasBibliotecaReparoProgress('A repor catálogo do servidor…')
       try {
-        const from = await bootstrapLoadPecasBiblioteca(categoriasPecas.length)
+        await clearPecasBibliotecaLocal()
+        const from = await forceReporPecasBibliotecaFromServer(pecasBiblioteca)
         if (Array.isArray(from) && from.length > pecasBiblioteca.length) {
           const raw = (from as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
           const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)

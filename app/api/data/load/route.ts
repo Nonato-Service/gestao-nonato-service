@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
       host === '127.0.0.1' ||
       host === '[::1]' ||
       host === '::1'
-    const publicReadKey = key === 'nonato-pecas-biblioteca-lite'
-    if (!publicReadKey || !isLocalDevHost) {
+    /** PC local / dev: permitir sync completo sem cookie — dados já estão neste disco. */
+    if (!isLocalDevHost) {
       const authDenied = rejectUnauthenticatedProductionAccess(request)
       if (authDenied) return authDenied
     }
