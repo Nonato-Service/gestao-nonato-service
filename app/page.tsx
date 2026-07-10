@@ -7311,6 +7311,7 @@ export default function Dashboard() {
 
   // Estados para Biblioteca de Peças
   const [pecasBiblioteca, setPecasBiblioteca] = useState<PecaBiblioteca[]>([])
+  const [pecasBibliotecaReparoLoading, setPecasBibliotecaReparoLoading] = useState(false)
   const [categoriasPecas, setCategoriasPecas] = useState<CategoriaPeca[]>([])
   const [showBibliotecaPecasModal, setShowBibliotecaPecasModal] = useState(false)
   const [showBibliotecaPecasForm, setShowBibliotecaPecasForm] = useState(false)
@@ -7445,6 +7446,23 @@ export default function Dashboard() {
     setPecasBiblioteca(lista)
     void saveData('nonato-pecas-biblioteca', lista)
   }, [pecasBiblioteca, categoriasPecas])
+
+  /** Segunda tentativa: repor catálogo completo se ainda aparecer cópia parcial (ex.: 2 peças / 38 categorias). */
+  const pecasReparoPosBootRef = useRef(false)
+  useEffect(() => {
+    if (appInitialLoading || pecasReparoPosBootRef.current) return
+    if (categoriasPecas.length < 10) return
+    if (pecasBiblioteca.length >= Math.max(20, Math.min(categoriasPecas.length, 80))) return
+    pecasReparoPosBootRef.current = true
+    void (async () => {
+      const reparadas = await repairPecasBibliotecaIfStale(pecasBiblioteca, categoriasPecas.length)
+      if (!reparadas || reparadas.length <= pecasBiblioteca.length) return
+      const raw = (reparadas as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+      const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
+      setPecasBiblioteca(lista)
+      void saveData('nonato-pecas-biblioteca', lista, true, false)
+    })()
+  }, [appInitialLoading, pecasBiblioteca, categoriasPecas])
   const [selecaoPecasBibliotecaIds, setSelecaoPecasBibliotecaIds] = useState<string[]>([])
   const [classificacaoLoteCategoriaId, setClassificacaoLoteCategoriaId] = useState('')
   const [classificacaoLoteSubcategoriaId, setClassificacaoLoteSubcategoriaId] = useState('')
@@ -9828,10 +9846,16 @@ export default function Dashboard() {
               try {
                 const parsed = JSON.parse(localData)
                 if (serverKeyHasMeaningfulData(parsed)) {
-                  if (!deferServerMerge) {
-                    saveData(key, parsed, false).catch(() => {})
+                  const pecasParcial =
+                    key === 'nonato-pecas-biblioteca' &&
+                    Array.isArray(parsed) &&
+                    parsed.length < 50
+                  if (!pecasParcial) {
+                    if (!deferServerMerge) {
+                      saveData(key, parsed, false).catch(() => {})
+                    }
+                    return parsed
                   }
-                  return parsed
                 }
               } catch {
                 /* continuar */
@@ -26329,6 +26353,36 @@ export default function Dashboard() {
     return () => window.clearTimeout(timer)
   }, [importacaoTextoColado, processarTextoImportacaoPecas, processarDuplicadosImportacao])
 
+  const catalogoPecasSuspeitoParcial =
+    categoriasPecas.length >= 10 &&
+    pecasBiblioteca.length < Math.max(15, Math.min(categoriasPecas.length, 80))
+
+  const handleReporPecasBibliotecaDoServidor = useCallback(async () => {
+    setPecasBibliotecaReparoLoading(true)
+    try {
+      const reparadas = await repairPecasBibliotecaIfStale(pecasBiblioteca, categoriasPecas.length)
+      if (!reparadas || reparadas.length <= pecasBiblioteca.length) {
+        alert(
+          (safeT as any)?.bibliotecaReparoNenhumaPeca ||
+            'Não foi possível repor o catálogo a partir do servidor. Aguarde até 2 minutos (ficheiro grande) e tente novamente com sessão iniciada.'
+        )
+        return
+      }
+      const raw = (reparadas as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+      const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
+      setPecasBiblioteca(lista)
+      await saveData('nonato-pecas-biblioteca', lista, true, true)
+      alert(
+        String((safeT as any)?.bibliotecaReparoOk || 'Biblioteca reposta com sucesso: {n} peça(s).').replace(
+          '{n}',
+          String(lista.length)
+        )
+      )
+    } finally {
+      setPecasBibliotecaReparoLoading(false)
+    }
+  }, [pecasBiblioteca, categoriasPecas, safeT])
+
   const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
     const normalizado = next.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
     const codigosVistos = new Set<string>()
@@ -38339,6 +38393,31 @@ export default function Dashboard() {
                   <p className="tab-glass-hero-meta" style={{ fontSize: '12px', opacity: 0.92, fontWeight: 600 }}>
                     {pecasBiblioteca.length} {safeT?.pecasCadastradas || 'peça(s) cadastrada(s)'}
                   </p>
+                  {catalogoPecasSuspeitoParcial ? (
+                    <div
+                      className="biblioteca-pecas-hub__warn-banner"
+                      style={{ marginTop: 12, maxWidth: 680 }}
+                    >
+                      <div className="biblioteca-pecas-hub__warn-banner-title">
+                        {(safeT as any)?.bibliotecaReparoTitulo ||
+                          'Catálogo incompleto neste aparelho'}
+                      </div>
+                      <p className="biblioteca-pecas-hub__warn-banner-body" style={{ marginBottom: 10 }}>
+                        {(safeT as any)?.bibliotecaReparoDesc ||
+                          `Só ${pecasBiblioteca.length} peça(s) carregada(s), mas existem ${categoriasPecas.length} categorias. O servidor guarda o catálogo completo — clique para repor (pode demorar ~1–2 min).`}
+                      </p>
+                      <button
+                        type="button"
+                        className="biblioteca-btn--green"
+                        disabled={pecasBibliotecaReparoLoading}
+                        onClick={() => void handleReporPecasBibliotecaDoServidor()}
+                      >
+                        {pecasBibliotecaReparoLoading
+                          ? (safeT as any)?.bibliotecaReparoAguarde || 'A carregar catálogo…'
+                          : (safeT as any)?.bibliotecaReparoBtn || 'Repor biblioteca do servidor'}
+                      </button>
+                    </div>
+                  ) : null}
                   <p style={{ fontSize: '11px', opacity: 0.88, maxWidth: 640, lineHeight: 1.45, margin: '8px 0 0', fontWeight: 600 }}>
                     {hubT.bibliotecaHubTagline || 'Catálogo unificado e grupos claros.'}
                   </p>

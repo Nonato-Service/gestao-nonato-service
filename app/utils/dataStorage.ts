@@ -34,6 +34,15 @@ const SYNC_QUEUE_KEY = 'nonato-sync-queue'
 /** Cópia completa do servidor em IndexedDB — permite arranque offline após uma visita online. */
 const OFFLINE_SNAPSHOT_KEY = 'nonato-offline-server-snapshot'
 
+/** Fetch autenticado (sessão) para APIs /api/data — cookies incluídos. */
+function dataApiFetch(input: string, init?: RequestInit): Promise<Response> {
+  return fetch(input, {
+    ...init,
+    credentials: 'include',
+    cache: 'no-store',
+  })
+}
+
 /** Durante a carga inicial da página: não enviar migrações «só servidor» (saveToLocalStorage=false) nem pushes implícitos em loadData — evita revisões e payloads diferentes por aparelho. */
 let blockImplicitServerPushDuringBootstrap = false
 
@@ -247,9 +256,9 @@ async function checkServerOnline(): Promise<boolean> {
   }
   lastServerCheck = now
   try {
-    const response = await fetch(`${API_BASE}/load?key=__health_check__`, {
+    const response = await dataApiFetch(`${API_BASE}/load?key=__health_check__`, {
       method: 'GET',
-      signal: createTimeoutSignal(3000)
+      signal: createTimeoutSignal(3000),
     })
     serverOffline = false
     return true
@@ -453,7 +462,7 @@ async function shouldBlockShrinkServerOverwrite(key: string, value: unknown): Pr
   if (key !== PECAS_BIBLIOTECA_KEY) return false
   if (!Array.isArray(value)) return false
   try {
-    const existing = await loadFromServer(key)
+    const existing = await forceLoadCadastroFromServer(key)
     if (!Array.isArray(existing) || existing.length === 0) return false
     if (value.length >= existing.length) return false
     console.warn(
@@ -479,7 +488,7 @@ async function shouldBlockEmptyServerOverwrite(key: string, value: unknown): Pro
   if (!NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE.has(key)) return false
   if (!isEmptyDataArray(value)) return false
   try {
-    const existing = await loadFromServer(key)
+    const existing = await forceLoadCadastroFromServer(key)
     return Array.isArray(existing) && existing.length > 0
   } catch {
     return false
@@ -544,11 +553,11 @@ async function _doSaveToServer(key: string, value: any): Promise<boolean> {
       isLargePecasBibliotecaJson ||
       isLargeString ||
       (useSaveTextForLogo && typeof value === 'string' && value.length > 40000)
-    const response = await fetch(endpoint, {
+    const response = await dataApiFetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body,
-      signal: createTimeoutSignal(payloadNeedsSlowUpload ? 120000 : 5000)
+      signal: createTimeoutSignal(payloadNeedsSlowUpload ? 120000 : 5000),
     })
     if (response.ok) {
       serverOffline = false
@@ -622,13 +631,38 @@ export async function saveToServer(key: string, value: any): Promise<boolean> {
 }
 
 async function fetchServerKeyPayload(key: string, timeoutMs: number): Promise<any | null> {
-  const response = await fetch(`${API_BASE}/load-text?key=${encodeURIComponent(key)}`, {
+  const response = await dataApiFetch(`${API_BASE}/load-text?key=${encodeURIComponent(key)}`, {
     signal: createTimeoutSignal(timeoutMs),
-    cache: 'no-store',
   })
   if (!response.ok) return null
   const result = await response.json()
+  if (result?.error === 'auth_required') return null
   return result?.data ?? null
+}
+
+/** Carrega uma chave do servidor ignorando flag serverOffline (reparo de cadastros). */
+async function forceLoadCadastroFromServer(key: string): Promise<any | null> {
+  if (!isOnline()) return null
+  const slowKey = key === PECAS_BIBLIOTECA_KEY || key === MANUAIS_KEY
+  const timeoutMs = slowKey ? 120_000 : 15_000
+  try {
+    let data = await fetchServerKeyPayload(key, timeoutMs)
+    if (data == null && slowKey) {
+      const response = await dataApiFetch(`${API_BASE}/load?key=${encodeURIComponent(key)}`, {
+        signal: createTimeoutSignal(timeoutMs),
+      })
+      if (response.ok) {
+        const result = await response.json()
+        if (result?.error !== 'auth_required') {
+          data = result?.data ?? null
+        }
+      }
+    }
+    if (data != null) serverOffline = false
+    return data
+  } catch {
+    return null
+  }
 }
 
 // Carregar um item específico
@@ -648,9 +682,8 @@ export async function loadFromServer(key: string): Promise<any | null> {
   try {
     let data = await fetchServerKeyPayload(key, timeoutMs)
     if (data == null && slowKey) {
-      const response = await fetch(`${API_BASE}/load?key=${encodeURIComponent(key)}`, {
+      const response = await dataApiFetch(`${API_BASE}/load?key=${encodeURIComponent(key)}`, {
         signal: createTimeoutSignal(timeoutMs),
-        cache: 'no-store',
       })
       if (response.ok) {
         const result = await response.json()
@@ -686,26 +719,58 @@ export async function repairPecasBibliotecaIfStale(
   categoriasCount: number
 ): Promise<unknown[] | null> {
   const local = Array.isArray(current) ? current : []
-  const estruturaGrande = categoriasCount >= 10
-  if (!estruturaGrande || local.length >= 20) return null
+  if (categoriasCount < 5) return null
+  /** Muitas categorias com catálogo minúsculo = cópia parcial (ex.: restore a 9/07). */
+  const suspectPartial = local.length < Math.max(15, Math.min(categoriasCount, 80))
+  if (!suspectPartial) return null
 
-  const fromServer = await loadFromServer(PECAS_BIBLIOTECA_KEY)
-  if (!Array.isArray(fromServer) || fromServer.length <= local.length) return null
+  let best: unknown[] = [...local]
 
-  const merged = mergePecasBibliotecaArrays(fromServer, local)
-  writeLocalStorageValue(PECAS_BIBLIOTECA_KEY, merged)
   try {
-    await saveKv(PECAS_BIBLIOTECA_KEY, merged)
+    const snap = await getKv(OFFLINE_SNAPSHOT_KEY)
+    if (snap && typeof snap === 'object' && !Array.isArray(snap)) {
+      const fromSnap = (snap as Record<string, unknown>)[PECAS_BIBLIOTECA_KEY]
+      if (Array.isArray(fromSnap) && fromSnap.length > best.length) {
+        best = fromSnap as unknown[]
+      }
+    }
   } catch {
     /* ignorar */
   }
-  if (!shouldDeferImplicitServerPush() && pecasBibliotecaArraysDiffer(merged, fromServer)) {
-    scheduleServerMigrationPush(PECAS_BIBLIOTECA_KEY, merged)
+
+  try {
+    const fromKv = await getKv(PECAS_BIBLIOTECA_KEY)
+    if (Array.isArray(fromKv) && fromKv.length > best.length) {
+      best = fromKv as unknown[]
+    }
+  } catch {
+    /* ignorar */
+  }
+
+  const fromServer = await forceLoadCadastroFromServer(PECAS_BIBLIOTECA_KEY)
+  if (Array.isArray(fromServer) && fromServer.length > 0) {
+    best = mergePecasBibliotecaArrays(fromServer, best) as unknown[]
+  }
+
+  if (best.length <= local.length) return null
+
+  try {
+    writeLocalStorageValue(PECAS_BIBLIOTECA_KEY, best)
+  } catch {
+    /* quota */
+  }
+  try {
+    await saveKv(PECAS_BIBLIOTECA_KEY, best)
+  } catch {
+    /* ignorar */
+  }
+  if (!shouldDeferImplicitServerPush() && pecasBibliotecaArraysDiffer(best, fromServer)) {
+    scheduleServerMigrationPush(PECAS_BIBLIOTECA_KEY, best)
   }
   console.info(
-    `[Nonato] Biblioteca de peças reposta: ${local.length} → ${merged.length} (servidor tinha ${fromServer.length}).`
+    `[Nonato] Biblioteca de peças reposta: ${local.length} → ${best.length}${Array.isArray(fromServer) ? ` (servidor: ${fromServer.length})` : ''}.`
   )
-  return merged
+  return best
 }
 
 /** Resultado de carregar o bundle completo: `ok` distingue rede/HTTP bem-sucedidos de falha (timeout, offline). */
@@ -783,9 +848,8 @@ async function loadAllFromServerOnce(): Promise<LoadAllFromServerResult> {
 
   try {
     // Não abortar aqui só porque `serverOffline` — evita ficar preso a `{}` durante ~30s após um timeout.
-    const response = await fetch(`${API_BASE}/load`, {
+    const response = await dataApiFetch(`${API_BASE}/load`, {
       signal: createTimeoutSignal(LOAD_ALL_TIMEOUT_MS),
-      cache: 'no-store',
     })
 
     if (!response.ok) {
