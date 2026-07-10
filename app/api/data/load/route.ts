@@ -30,8 +30,20 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
-    const authDenied = rejectUnauthenticatedProductionAccess(request)
-    if (authDenied) return authDenied
+    const { searchParams } = new URL(request.url)
+    const key = searchParams.get('key')
+    const host = (request.headers.get('host') || '').split(':')[0].toLowerCase()
+    const isLocalDevHost =
+      process.env.NODE_ENV === 'development' ||
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '[::1]' ||
+      host === '::1'
+    const publicReadKey = key === 'nonato-pecas-biblioteca-lite'
+    if (!publicReadKey || !isLocalDevHost) {
+      const authDenied = rejectUnauthenticatedProductionAccess(request)
+      if (authDenied) return authDenied
+    }
 
     const { isDemo, expired, dataDir } = getDemoContext(request)
     if (isDemo && expired) {
@@ -42,9 +54,6 @@ export async function GET(request: NextRequest) {
     }
     ensureDataDir()
     ensureDemoDataDir(dataDir)
-
-    const { searchParams } = new URL(request.url)
-    const key = searchParams.get('key')
 
     if (!key) {
       // Retornar todos os dados disponíveis

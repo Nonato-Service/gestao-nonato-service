@@ -9926,7 +9926,15 @@ export default function Dashboard() {
           !preferServerOnlyAfterFullPullWipe &&
           typeof window !== 'undefined'
         ) {
+          const liteValue = serverData['nonato-pecas-biblioteca-lite']
           const serverValue = serverData[key]
+          if (Array.isArray(liteValue) && liteValue.length >= 50) {
+            const fullCount = Array.isArray(serverValue) ? serverValue.length : 0
+            if (fullCount < liteValue.length) {
+              void savePecasBibliotecaLocally(liteValue as unknown[])
+              return liteValue
+            }
+          }
           const localData = localStorage.getItem(key)
           if (Array.isArray(serverValue) && serverValue.length >= 50) {
             let localParsed: unknown = null
@@ -26392,18 +26400,11 @@ export default function Dashboard() {
       const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
       await savePecasBibliotecaLocally(lista as unknown[])
       setPecasBiblioteca(lista)
-      try {
-        sessionStorage.setItem('nonato-pecas-biblioteca-count', String(lista.length))
-        sessionStorage.setItem('nonato-pecas-reposto-ok', String(lista.length))
-      } catch {
-        /* ignorar */
-      }
       alert(
         String(
-          (safeT as any)?.bibliotecaReparoOk || 'Biblioteca reposta com sucesso: {n} peça(s). A página vai recarregar.'
+          (safeT as any)?.bibliotecaReparoOk || 'Biblioteca reposta com sucesso: {n} peça(s).'
         ).replace('{n}', String(lista.length))
       )
-      window.location.reload()
     } catch (e) {
       console.error('[repor biblioteca]', e)
       alert(
@@ -26414,6 +26415,42 @@ export default function Dashboard() {
       setPecasBibliotecaReparoProgress('')
     }
   }, [categoriasPecas, safeT])
+
+  /** Reposição automática uma vez após arranque se o catálogo local estiver incompleto (sem recarregar a página). */
+  const pecasAutoReporFeitoRef = useRef(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (appInitialLoading) return
+    if (pecasAutoReporFeitoRef.current || pecasBibliotecaReparoLoading) return
+    if (categoriasPecas.length < 10) return
+    const minOk = Math.max(15, Math.min(categoriasPecas.length, 80))
+    if (pecasBiblioteca.length >= minOk) return
+    pecasAutoReporFeitoRef.current = true
+    void (async () => {
+      setPecasBibliotecaReparoLoading(true)
+      setPecasBibliotecaReparoProgress('A repor catálogo do servidor…')
+      try {
+        const from = await bootstrapLoadPecasBiblioteca(categoriasPecas.length)
+        if (Array.isArray(from) && from.length > pecasBiblioteca.length) {
+          const raw = (from as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+          const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
+          await savePecasBibliotecaLocally(lista as unknown[])
+          setPecasBiblioteca(lista)
+          console.info(`[Nonato] Auto-reparo biblioteca: ${pecasBiblioteca.length} → ${lista.length} peça(s).`)
+        }
+      } catch (e) {
+        console.warn('[Nonato] Auto-reparo biblioteca falhou:', e)
+      } finally {
+        setPecasBibliotecaReparoLoading(false)
+        setPecasBibliotecaReparoProgress('')
+      }
+    })()
+  }, [
+    appInitialLoading,
+    categoriasPecas,
+    pecasBiblioteca.length,
+    pecasBibliotecaReparoLoading,
+  ])
 
   const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
     const normalizado = next.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))

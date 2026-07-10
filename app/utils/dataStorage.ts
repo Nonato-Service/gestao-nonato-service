@@ -29,6 +29,7 @@ import {
 } from './syncDiff'
 
 const PECAS_BIBLIOTECA_KEY = 'nonato-pecas-biblioteca'
+const PECAS_BIBLIOTECA_LITE_KEY = 'nonato-pecas-biblioteca-lite'
 
 const API_BASE = '/api/data'
 const SYNC_QUEUE_KEY = 'nonato-sync-queue'
@@ -693,6 +694,29 @@ async function forceLoadCadastroFromServer(key: string): Promise<any | null> {
   }
 }
 
+async function fetchPecasLiteFileFromServer(): Promise<unknown[] | null> {
+  try {
+    const res = await dataApiFetch(
+      `${API_BASE}/load?key=${encodeURIComponent(PECAS_BIBLIOTECA_LITE_KEY)}`,
+      {
+        method: 'GET',
+        signal: createTimeoutSignal(45_000),
+      }
+    )
+    if (res.ok) {
+      const json = (await res.json()) as { data?: unknown; error?: string }
+      if (json?.error === 'auth_required') return null
+      if (Array.isArray(json?.data) && json.data.length > 0) {
+        console.info(`[Nonato] Catálogo lite (ficheiro): ${json.data.length} peça(s).`)
+        return json.data
+      }
+    }
+  } catch (e) {
+    console.warn('[Nonato] Falha ao carregar ficheiro lite de peças:', e)
+  }
+  return null
+}
+
 async function fetchPecasBibliotecaRepairPaginated(
   onProgress?: (loaded: number, total: number) => void
 ): Promise<unknown[] | null> {
@@ -747,6 +771,10 @@ async function fetchPecasBibliotecaRepairPaginated(
       break
     }
     if (res.status === 401) {
+      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+        console.warn('[Nonato] Reparo peças: 401 ignorado em dev')
+        break
+      }
       throw new Error('auth_required')
     }
     if (!res.ok) {
@@ -873,22 +901,27 @@ export async function hydratePecasBibliotecaImagensFromServer(
 export async function fetchPecasBibliotecaLiteFromServer(
   onProgress?: (loaded: number, total: number) => void
 ): Promise<unknown[] | null> {
+  const fromFile = await fetchPecasLiteFileFromServer()
+  if (Array.isArray(fromFile) && fromFile.length > 0) {
+    onProgress?.(fromFile.length, fromFile.length)
+    return fromFile
+  }
   return fetchPecasBibliotecaRepairPaginated(onProgress)
 }
 
-/** Arranque / botão repor: prioriza API lite (362 peças ~160 KB), ignora cópia parcial no browser. */
+/** Arranque / botão repor: prioriza ficheiro lite (~157 KB), ignora cópia parcial no browser. */
 export async function bootstrapLoadPecasBiblioteca(categoriasCount: number): Promise<unknown[] | null> {
   const threshold = Math.max(15, Math.min(categoriasCount, 80))
-  const isPartial = (n: number) => categoriasCount >= 10 && n < threshold
+  const isComplete = (n: number) => n >= 50 || (categoriasCount >= 10 && n >= threshold)
 
   for (let attempt = 0; attempt < 3; attempt++) {
-    if (attempt > 0) await new Promise((r) => setTimeout(r, 900 * attempt))
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 700 * attempt))
     try {
-      const fromRepair = await fetchPecasBibliotecaLiteFromServer()
-      if (Array.isArray(fromRepair) && fromRepair.length > 0 && !isPartial(fromRepair.length)) {
-        await savePecasBibliotecaLocally(fromRepair)
-        console.info(`[Nonato] Biblioteca carregada do servidor (lite): ${fromRepair.length} peça(s).`)
-        return fromRepair
+      const fromServer = await fetchPecasBibliotecaLiteFromServer()
+      if (Array.isArray(fromServer) && isComplete(fromServer.length)) {
+        await savePecasBibliotecaLocally(fromServer)
+        console.info(`[Nonato] Biblioteca carregada: ${fromServer.length} peça(s).`)
+        return fromServer
       }
     } catch (e) {
       console.warn('[Nonato] bootstrapLoadPecasBiblioteca tentativa', attempt + 1, e)
@@ -897,9 +930,10 @@ export async function bootstrapLoadPecasBiblioteca(categoriasCount: number): Pro
 
   const fromLoad = await loadData(PECAS_BIBLIOTECA_KEY)
   const loadCount = Array.isArray(fromLoad) ? fromLoad.length : 0
-  if (!isPartial(loadCount)) return fromLoad
+  if (isComplete(loadCount)) return fromLoad
 
   try {
+    await clearPecasBibliotecaLocal()
     const lastTry = await fetchPecasBibliotecaLiteFromServer()
     if (Array.isArray(lastTry) && lastTry.length > loadCount) {
       await savePecasBibliotecaLocally(lastTry)
