@@ -126,10 +126,15 @@ function parsePageParams(searchParams: URLSearchParams): {
 
 async function handleRepairRequest(request: NextRequest) {
 
-  /** PC local (localhost): permitir repor catálogo sem cookie — dados já estão neste disco. */
+  /** PC local / dev: permitir repor catálogo sem cookie — dados já estão neste disco. */
   const host = (request.headers.get('host') || '').split(':')[0].toLowerCase()
-  const isLocalHost = host === 'localhost' || host === '127.0.0.1'
-  if (!isLocalHost) {
+  const isLocalDevHost =
+    process.env.NODE_ENV === 'development' ||
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '[::1]' ||
+    host === '::1'
+  if (!isLocalDevHost) {
     const authDenied = rejectUnauthenticatedProductionAccess(request)
     if (authDenied) return authDenied
   }

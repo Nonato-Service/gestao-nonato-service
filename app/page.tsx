@@ -22,6 +22,8 @@ import {
   pushAllLocalStorageToServer,
   repairPecasBibliotecaIfStale,
   forceReporPecasBibliotecaFromServer,
+  fetchPecasBibliotecaLiteFromServer,
+  clearPecasBibliotecaLocal,
   savePecasBibliotecaLocally,
   setBlockImplicitServerPushDuringBootstrap,
   markDataBootstrapComplete,
@@ -7447,7 +7449,7 @@ export default function Dashboard() {
     const { lista, alterou } = garantirNumerosSequenciaPecaBiblioteca(pecasBiblioteca, categoriasPecas)
     if (!alterou) return
     setPecasBiblioteca(lista)
-    void saveData('nonato-pecas-biblioteca', lista)
+    void savePecasBibliotecaLocally(lista as unknown[])
   }, [pecasBiblioteca, categoriasPecas])
 
   /** Atualiza UI quando fotos chegam em segundo plano após repor catálogo lite. */
@@ -11082,9 +11084,28 @@ export default function Dashboard() {
         catsInicial.length >= 10 &&
         pecasCountBoot < Math.max(15, Math.min(catsInicial.length, 80))
       if (catalogoParcialBoot) {
-        const reparadas = await forceReporPecasBibliotecaFromServer(savedPecasBiblioteca || [])
-        if (reparadas && reparadas.length > pecasCountBoot) {
-          savedPecasBiblioteca = reparadas
+        const fromServer = await fetchPecasBibliotecaLiteFromServer()
+        if (Array.isArray(fromServer) && fromServer.length > pecasCountBoot) {
+          savedPecasBiblioteca = fromServer
+          await savePecasBibliotecaLocally(fromServer as unknown[])
+        }
+      }
+      const repostoOk = (() => {
+        try {
+          return Number.parseInt(sessionStorage.getItem('nonato-pecas-reposto-ok') || '0', 10)
+        } catch {
+          return 0
+        }
+      })()
+      if (repostoOk > 0) {
+        try {
+          sessionStorage.removeItem('nonato-pecas-reposto-ok')
+        } catch {
+          /* ignorar */
+        }
+        const idbSnap = await loadData('nonato-pecas-biblioteca')
+        if (Array.isArray(idbSnap) && idbSnap.length >= repostoOk) {
+          savedPecasBiblioteca = idbSnap
         }
       }
       if (savedPecasBiblioteca && Array.isArray(savedPecasBiblioteca)) {
@@ -26381,54 +26402,46 @@ export default function Dashboard() {
 
   const handleReporPecasBibliotecaDoServidor = useCallback(async () => {
     setPecasBibliotecaReparoLoading(true)
-    setPecasBibliotecaReparoProgress('')
+    setPecasBibliotecaReparoProgress('A ligar ao servidor…')
     try {
-      const reparadas = await forceReporPecasBibliotecaFromServer(pecasBiblioteca, (p) => {
+      const fromServer = await fetchPecasBibliotecaLiteFromServer((loaded, total) => {
         setPecasBibliotecaReparoProgress(
-          p.phase === 'images'
-            ? `Fotos ${p.loaded} / ${p.total}…`
-            : p.total > 0
-              ? `${p.loaded} / ${p.total} peças…`
-              : `${p.loaded} peças…`
+          total > 0 ? `${loaded} / ${total} peças…` : `${loaded} peças…`
         )
       })
-      if (!reparadas || reparadas.length <= 0) {
+      if (!Array.isArray(fromServer) || fromServer.length === 0) {
         alert(
-          (safeT as any)?.bibliotecaReparoNenhumaPeca ||
-            'Não foi possível repor. Confirme que o servidor está a correr em http://localhost:3000 e clique outra vez.'
+          `Não foi possível carregar peças do servidor.\n\nConfirme:\n• Servidor a correr (janela preta aberta)\n• Endereço: http://localhost:${typeof window !== 'undefined' ? window.location.port || '3000' : '3000'}\n• Faça Ctrl+F5 para actualizar a página`
         )
         return
       }
-      if (reparadas.length <= pecasBiblioteca.length && pecasBiblioteca.length >= 10) {
-        alert(
-          `O servidor devolveu ${reparadas.length} peça(s). Recarregue a página (F5). Se continuar igual, reinicie o servidor.`
-        )
-        return
-      }
-      const raw = (reparadas as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+      await clearPecasBibliotecaLocal()
+      const raw = (fromServer as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
       const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
+      await savePecasBibliotecaLocally(lista as unknown[])
       setPecasBiblioteca(lista)
-      await savePecasBibliotecaLocally(lista)
+      try {
+        sessionStorage.setItem('nonato-pecas-biblioteca-count', String(lista.length))
+        sessionStorage.setItem('nonato-pecas-reposto-ok', String(lista.length))
+      } catch {
+        /* ignorar */
+      }
       alert(
         String(
-          (safeT as any)?.bibliotecaReparoOk ||
-            'Biblioteca reposta: {n} peça(s).'
+          (safeT as any)?.bibliotecaReparoOk || 'Biblioteca reposta com sucesso: {n} peça(s). A página vai recarregar.'
         ).replace('{n}', String(lista.length))
       )
+      window.location.reload()
     } catch (e) {
       console.error('[repor biblioteca]', e)
-      const msg =
-        e instanceof Error && e.message === 'auth_required'
-          ? (safeT as any)?.bibliotecaReparoSemSessao ||
-            'Inicie sessão (utilizador e senha) antes de repor o catálogo do servidor.'
-          : (safeT as any)?.bibliotecaReparoErro ||
-            'Erro ao repor biblioteca. Os dados podem ter sido parcialmente carregados — recarregue a página (F5).'
-      alert(msg)
+      alert(
+        `Erro ao repor: ${e instanceof Error ? e.message : String(e)}\n\nTente Ctrl+F5 para recarregar sem cache.`
+      )
     } finally {
       setPecasBibliotecaReparoLoading(false)
       setPecasBibliotecaReparoProgress('')
     }
-  }, [pecasBiblioteca, categoriasPecas, safeT])
+  }, [categoriasPecas, safeT])
 
   const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
     const normalizado = next.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))

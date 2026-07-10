@@ -9,6 +9,7 @@ import {
   loadManuaisFamiliasGruposFromIdb,
   saveKv,
   getKv,
+  deleteKv,
 } from './manuaisIndexedDb'
 import {
   NONATO_CRITICAL_CADASTRO_KEYS,
@@ -719,7 +720,14 @@ async function fetchPecasBibliotecaRepairPaginated(
     /* continuar sem total */
   }
 
-  if (authRequired) {
+  const isLocalBrowser =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === '[::1]' ||
+      process.env.NODE_ENV === 'development')
+
+  if (authRequired && !isLocalBrowser) {
     throw new Error('auth_required')
   }
 
@@ -869,6 +877,12 @@ export async function hydratePecasBibliotecaImagensFromServer(
   return Array.from(byId.values())
 }
 
+export async function fetchPecasBibliotecaLiteFromServer(
+  onProgress?: (loaded: number, total: number) => void
+): Promise<unknown[] | null> {
+  return fetchPecasBibliotecaRepairPaginated(onProgress)
+}
+
 /**
  * Reposição forçada (botão «Repor biblioteca»): ignora heurística de catálogo parcial.
  */
@@ -930,6 +944,22 @@ export async function forceReporPecasBibliotecaFromServer(
   })()
 
   return best
+}
+
+/** Remove cópia parcial da biblioteca (localStorage + IndexedDB). */
+export async function clearPecasBibliotecaLocal(): Promise<void> {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.removeItem(PECAS_BIBLIOTECA_KEY)
+    localStorage.removeItem(`${PECAS_BIBLIOTECA_KEY}--idb`)
+  } catch {
+    /* ignorar */
+  }
+  try {
+    await deleteKv(PECAS_BIBLIOTECA_KEY)
+  } catch {
+    /* ignorar */
+  }
 }
 
 /** Grava biblioteca de peças: IndexedDB primeiro (suporta ~10 MB+); localStorage se couber. */
@@ -1332,17 +1362,17 @@ function collectLocalNonatoSnapshotForPull(): Record<string, unknown> {
 async function writeLocalFromServerPull(key: string, value: unknown): Promise<void> {
   if (typeof window === 'undefined') return
   if (key === PECAS_BIBLIOTECA_KEY && Array.isArray(value)) {
-    let localParsed: unknown = null
-    const raw = localStorage.getItem(key)
-    if (raw) {
-      try {
-        localParsed = JSON.parse(raw)
-      } catch {
-        /* ignorar */
-      }
+    const snap = await readLocalValueForLoad(key, true)
+    const localCount = Array.isArray(snap.parsed) ? snap.parsed.length : 0
+    if (localCount > value.length && localCount >= 15) {
+      console.warn(
+        `[Nonato] Sync ignorada: «${key}» no servidor (${value.length}) é menor que local (${localCount}).`
+      )
+      return
     }
+    let localParsed: unknown = snap.parsed
     const merged = mergePecasBibliotecaArrays(value, localParsed)
-    writeLocalStorageValue(key, merged)
+    await savePecasBibliotecaLocally(merged as unknown[])
     if (pecasBibliotecaArraysDiffer(merged, value)) {
       scheduleServerMigrationPush(key, merged)
     }
@@ -1429,6 +1459,14 @@ export async function applySilentServerSync(server: Record<string, unknown>): Pr
     if (!key.startsWith('nonato-') || SKIP_PULL_KEYS.has(key) || key.endsWith('.json')) continue
     const s = server[key]
     if (serverPullValueIsEmpty(s)) continue
+    if (
+      key === PECAS_BIBLIOTECA_KEY &&
+      Array.isArray(s) &&
+      s.length < 50
+    ) {
+      const snap = await readLocalValueForLoad(key, true)
+      if (Array.isArray(snap.parsed) && snap.parsed.length > s.length) continue
+    }
     const raw = localStorage.getItem(key)
     let same = false
     if (raw !== null && raw !== '') {

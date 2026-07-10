@@ -55,6 +55,22 @@ export async function getKv(key: string): Promise<any | null> {
   }
 }
 
+export async function deleteKv(key: string): Promise<void> {
+  try {
+    const db = await openDb()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite')
+      const req = tx.objectStore(STORE).delete(key)
+      req.onerror = () => reject(req.error ?? new Error('IDB delete falhou'))
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error ?? new Error('transação IDB falhou'))
+      tx.onabort = () => reject(tx.error ?? new Error('transação IDB abortada'))
+    })
+  } catch {
+    /* ignorar */
+  }
+}
+
 export async function saveKv(key: string, value: unknown): Promise<void> {
   let safe: any
   try {

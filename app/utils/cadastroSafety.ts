@@ -7,6 +7,7 @@ import {
   serverKeyHasMeaningfulData,
   serverCadastroBundleIsEmpty,
 } from '../lib/criticalCadastroKeys'
+import { mergePecasBibliotecaArrays } from '../lib/mergePecasBiblioteca'
 import { getKv, saveKv } from './manuaisIndexedDb'
 
 const BACKUP_KEY = 'nonato-cadastro-safety-backup'
@@ -186,8 +187,20 @@ export async function safeMergeOfflineSnapshot(data: Record<string, any>): Promi
     if (newCount < oldCount) return
   }
 
+  let payload: Record<string, unknown> = existing ? { ...existing, ...data } : { ...data }
+  const incomingPecas = data[PECAS_BIBLIOTECA_KEY]
+  const existingPecas = existing?.[PECAS_BIBLIOTECA_KEY]
+  if (
+    Array.isArray(incomingPecas) &&
+    Array.isArray(existingPecas) &&
+    incomingPecas.length < existingPecas.length &&
+    existingPecas.length >= 15
+  ) {
+    payload[PECAS_BIBLIOTECA_KEY] = mergePecasBibliotecaArrays(incomingPecas, existingPecas)
+  }
+
   try {
-    await saveKv(SNAPSHOT_KEY, existing ? { ...existing, ...data } : data)
+    await saveKv(SNAPSHOT_KEY, payload)
   } catch (e) {
     console.warn('[Nonato] Falha ao guardar snapshot offline seguro:', e)
   }
