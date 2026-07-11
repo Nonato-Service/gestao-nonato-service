@@ -1048,6 +1048,15 @@ export async function forceReporPecasBibliotecaFromServer(
   return best
 }
 
+/** Lê biblioteca já gravada neste browser (IndexedDB ou localStorage) — prioridade após recuperação. */
+export async function loadPecasBibliotecaFromBrowserStorage(): Promise<unknown[] | null> {
+  const snap = await readLocalValueForLoad(PECAS_BIBLIOTECA_KEY, true)
+  if (Array.isArray(snap.parsed) && snap.parsed.length >= 50 && !isPecasBibliotecaLocalParcial(snap.parsed)) {
+    return snap.parsed as unknown[]
+  }
+  return null
+}
+
 /** Remove cópia parcial da biblioteca (localStorage + IndexedDB + fila sync). */
 export async function clearPecasBibliotecaLocal(): Promise<void> {
   if (typeof window === 'undefined') return
