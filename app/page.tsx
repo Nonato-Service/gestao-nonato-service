@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { PecasBibliotecaUrgentLoader } from './components/PecasBibliotecaUrgentLoader'
 import {
   translations,
   translationBundleKey,
@@ -7322,6 +7323,15 @@ export default function Dashboard() {
   const [pecasBibliotecaReparoLoading, setPecasBibliotecaReparoLoading] = useState(false)
   const [pecasBibliotecaReparoProgress, setPecasBibliotecaReparoProgress] = useState('')
   const [categoriasPecas, setCategoriasPecas] = useState<CategoriaPeca[]>([])
+  const handleUrgentPecasLoaded = useCallback(
+    (pecas: PecaBiblioteca[]) => {
+      const raw = pecas.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+      const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
+      setPecasBiblioteca(lista)
+      void savePecasBibliotecaLocally(lista as unknown[])
+    },
+    [categoriasPecas]
+  )
   const [showBibliotecaPecasModal, setShowBibliotecaPecasModal] = useState(false)
   const [showBibliotecaPecasForm, setShowBibliotecaPecasForm] = useState(false)
   const [editingPecaBiblioteca, setEditingPecaBiblioteca] = useState<PecaBiblioteca | null>(null)
@@ -68132,6 +68142,11 @@ A1;Peça exemplo;10`}
       }}
     >
       <WritingAssistFieldContext.Provider value={writingAssistFieldApi}>
+      <PecasBibliotecaUrgentLoader
+        pecasCount={pecasBiblioteca.length}
+        onLoaded={handleUrgentPecasLoaded}
+        onProgress={setPecasBibliotecaReparoProgress}
+      />
       {bootLoadingOverlay}
       {cadastroRestoredNotice > 0 && (
         <div

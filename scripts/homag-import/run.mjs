@@ -388,9 +388,17 @@ async function main() {
     const outFile = path.join(OUT_DIR, 'export.json')
     fs.writeFileSync(outFile, JSON.stringify(out, null, 2), 'utf8')
     console.log(`\n[HOMAG] Concluído: ${items.length} itens -> ${outFile}`)
-    console.log(
-      '[HOMAG] Na app: Biblioteca de Peças → Importação → Carregar export.json (ou cole o JSON).\n'
-    )
+    if (process.env.HOMAG_AUTO_MERGE !== '0') {
+      const { spawnSync } = await import('node:child_process')
+      const mergeScript = path.join(__dirname, 'merge-export-para-biblioteca.mjs')
+      console.log('[HOMAG] A gravar na biblioteca do servidor…')
+      const r = spawnSync(process.execPath, [mergeScript, outFile], { stdio: 'inherit' })
+      if (r.status !== 0) {
+        console.warn('[HOMAG] merge falhou — importe manualmente com: npm run homag:merge')
+      }
+    } else {
+      console.log('[HOMAG] Na app: Biblioteca → Importação → Carregar export.json\n')
+    }
   } finally {
     await browser.close()
   }
