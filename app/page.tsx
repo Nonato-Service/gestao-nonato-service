@@ -23,6 +23,7 @@ import {
   repairPecasBibliotecaIfStale,
   forceReporPecasBibliotecaFromServer,
   reporPecasBibliotecaEmergencia,
+  hydratePecasBibliotecaImagensFromServer,
   fetchPecasBibliotecaLiteFromServer,
   bootstrapLoadPecasBiblioteca,
   clearPecasBibliotecaLocal,
@@ -11101,14 +11102,10 @@ export default function Dashboard() {
       const liteBoot = serverData['nonato-pecas-biblioteca-lite']
       const fullBoot = serverData['nonato-pecas-biblioteca']
       if (Array.isArray(liteBoot) && liteBoot.length >= 50) {
-        await clearPecasBibliotecaLocal()
         savedPecasBiblioteca = liteBoot
-        await savePecasBibliotecaLocally(liteBoot)
         console.info(`[Nonato] Biblioteca do bundle lite: ${liteBoot.length} peça(s).`)
       } else if (Array.isArray(fullBoot) && fullBoot.length >= 50) {
-        await clearPecasBibliotecaLocal()
         savedPecasBiblioteca = fullBoot
-        await savePecasBibliotecaLocally(fullBoot)
         console.info(`[Nonato] Biblioteca do bundle completo: ${fullBoot.length} peça(s).`)
       } else {
         savedPecasBiblioteca = await bootstrapLoadPecasBiblioteca(catsInicial.length)
@@ -11124,13 +11121,36 @@ export default function Dashboard() {
           console.info(`[Nonato] Biblioteca reposta no arranque: ${reposto.length} peça(s).`)
         }
       }
-      if (savedPecasBiblioteca && Array.isArray(savedPecasBiblioteca)) {
+      if (savedPecasBiblioteca && Array.isArray(savedPecasBiblioteca) && savedPecasBiblioteca.length > 0) {
+        await clearPecasBibliotecaLocal()
         const raw = (savedPecasBiblioteca as PecaBiblioteca[]).map((peca) =>
           sanitizarPecaBibliotecaImportacaoFlag(peca)
         )
         const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, catsInicial)
         setPecasBiblioteca(lista)
         void savePecasBibliotecaLocally(lista)
+        const faltamFotos = lista.filter(
+          (p) =>
+            (p as PecaBiblioteca & { temImagemServidor?: boolean }).temImagemServidor &&
+            !(typeof p.imagem === 'string' && p.imagem.startsWith('data:'))
+        ).length
+        if (faltamFotos >= 5) {
+          void (async () => {
+            try {
+              const comFotos = await hydratePecasBibliotecaImagensFromServer(lista as unknown[])
+              if (Array.isArray(comFotos) && comFotos.length > 0) {
+                await savePecasBibliotecaLocally(comFotos)
+                const rawF = (comFotos as PecaBiblioteca[]).map((peca) =>
+                  sanitizarPecaBibliotecaImportacaoFlag(peca)
+                )
+                const { lista: listaF } = garantirNumerosSequenciaPecaBiblioteca(rawF, catsInicial)
+                setPecasBiblioteca(listaF)
+              }
+            } catch (e) {
+              console.warn('[Nonato] Hidratação de fotos no arranque:', e)
+            }
+          })()
+        }
       }
 
       const savedPecaLookupTpl = getData(NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY)
@@ -26437,7 +26457,7 @@ export default function Dashboard() {
       const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
       setPecasBiblioteca(lista)
       await savePecasBibliotecaLocally(lista as unknown[])
-      alert(`Biblioteca reposta: ${lista.length} peça(s).`)
+      alert(`Biblioteca reposta: ${lista.length} peça(s) com nomes, códigos e fotos do servidor.\n\nNão precisa ir buscar nada ao site outra vez.`)
     } catch (e) {
       console.error('[repor biblioteca]', e)
       alert(

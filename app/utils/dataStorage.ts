@@ -488,6 +488,36 @@ function manuaisLikePayloadHasContent(value: unknown): boolean {
 }
 
 /** Evita que uma lista menor (ex.: 2 peças após restore parcial) apague centenas no servidor. */
+function countPecasComImagemBase64(value: unknown): number {
+  if (!Array.isArray(value)) return 0
+  return value.filter(
+    (p) =>
+      p &&
+      typeof p === 'object' &&
+      typeof (p as { imagem?: string }).imagem === 'string' &&
+      (p as { imagem: string }).imagem.startsWith('data:')
+  ).length
+}
+
+async function shouldBlockPecasImageStripOverwrite(key: string, value: unknown): Promise<boolean> {
+  if (key !== PECAS_BIBLIOTECA_KEY || !Array.isArray(value)) return false
+  try {
+    const existing = await forceLoadCadastroFromServer(key)
+    if (!Array.isArray(existing) || existing.length === 0) return false
+    const oldImg = countPecasComImagemBase64(existing)
+    const newImg = countPecasComImagemBase64(value)
+    if (oldImg >= 10 && newImg < oldImg - 3) {
+      console.warn(
+        `[Nonato] Gravação bloqueada: «${key}» perderia fotos (${newImg} vs ${oldImg} no servidor).`
+      )
+      return true
+    }
+  } catch {
+    /* ignorar */
+  }
+  return false
+}
+
 async function shouldBlockShrinkServerOverwrite(key: string, value: unknown): Promise<boolean> {
   if (key !== PECAS_BIBLIOTECA_KEY) return false
   if (!Array.isArray(value)) return false
@@ -546,6 +576,9 @@ async function _doSaveToServer(key: string, value: any): Promise<boolean> {
     return true
   }
   if (await shouldBlockShrinkServerOverwrite(key, value)) {
+    return true
+  }
+  if (await shouldBlockPecasImageStripOverwrite(key, value)) {
     return true
   }
   try {
@@ -1041,14 +1074,13 @@ export async function clearPecasBibliotecaLocal(): Promise<void> {
 }
 
 /**
- * Reposição de emergência — fetch directo ao ficheiro lite, sem heurísticas que falhavam no browser.
+ * Reposição de emergência — catálogo lite + recuperação de fotos já guardadas no servidor (não do site).
  */
 export async function reporPecasBibliotecaEmergencia(
   onProgress?: (msg: string) => void
 ): Promise<unknown[] | null> {
   serverOffline = false
-  onProgress?.('A limpar cópia antiga…')
-  await clearPecasBibliotecaLocal()
+  onProgress?.('A carregar catálogo do servidor…')
 
   const cacheBust = Date.now()
   const urls = [
@@ -1056,8 +1088,7 @@ export async function reporPecasBibliotecaEmergencia(
     `${API_BASE}/repair-pecas-biblioteca?lite=1&offset=0&limit=500&_=${cacheBust}`,
   ]
 
-  onProgress?.('A carregar catálogo do servidor…')
-
+  let catalog: unknown[] | null = null
   for (const url of urls) {
     try {
       const res = await fetch(url, {
@@ -1079,30 +1110,46 @@ export async function reporPecasBibliotecaEmergencia(
           ? json.pecas
           : null
       if (!data || data.length < 50) continue
-      onProgress?.(`${data.length} peças — a gravar…`)
-      await savePecasBibliotecaLocally(data)
-      try {
-        const snap = await getKv(OFFLINE_SNAPSHOT_KEY)
-        const base =
-          snap && typeof snap === 'object' && !Array.isArray(snap)
-            ? (snap as Record<string, unknown>)
-            : {}
-        await saveKv(OFFLINE_SNAPSHOT_KEY, {
-          ...base,
-          [PECAS_BIBLIOTECA_KEY]: data,
-          [PECAS_BIBLIOTECA_LITE_KEY]: data,
-        })
-      } catch {
-        /* ignorar */
-      }
-      console.info(`[Nonato] Reposição emergência: ${data.length} peça(s).`)
-      return data
+      catalog = data
+      break
     } catch (e) {
       console.warn('[Nonato] reporPecasBibliotecaEmergencia tentativa falhou:', url, e)
     }
   }
 
-  return null
+  if (!catalog) return null
+
+  await clearPecasBibliotecaLocal()
+  onProgress?.(`${catalog.length} peças — a recuperar fotos do servidor…`)
+  await savePecasBibliotecaLocally(catalog)
+
+  let finalCatalog: unknown[] = catalog
+  try {
+    finalCatalog = await hydratePecasBibliotecaImagensFromServer(catalog, (p) => {
+      if (p.phase === 'images') {
+        onProgress?.(`Fotos: ${p.loaded} / ${p.total}…`)
+      }
+    })
+    await savePecasBibliotecaLocally(finalCatalog)
+    const comFoto = countPecasComImagemBase64(finalCatalog)
+    console.info(`[Nonato] Reposição emergência: ${finalCatalog.length} peça(s), ${comFoto} com foto.`)
+    onProgress?.(`Concluído: ${finalCatalog.length} peças, ${comFoto} fotos.`)
+  } catch (e) {
+    console.warn('[Nonato] Hidratação de fotos falhou parcialmente:', e)
+    onProgress?.(`${catalog.length} peças (fotos incompletas — tente Repor outra vez).`)
+  }
+
+  try {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('nonato-pecas-imagens-hidratadas', { detail: { pecas: finalCatalog } })
+      )
+    }
+  } catch {
+    /* ignorar */
+  }
+
+  return finalCatalog
 }
 
 /** Grava biblioteca de peças: IndexedDB primeiro (suporta ~10 MB+); localStorage se couber. */

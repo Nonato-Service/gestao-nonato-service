@@ -1,17 +1,16 @@
 @echo off
 chcp 65001 >nul
-title NONATO - Recuperar 362 peças
+title NONATO - Recuperar peças E FOTOS (sem ir ao site)
 cd /d "%~dp0"
 
 echo.
-echo  Biblioteca de peças — recuperação directa
-echo  ========================================
-echo  O servidor deste PC tem 362 peças guardadas.
-echo  Esta página grava-as no browser (substitui as 2 peças erradas).
+echo  RECUPERAR BIBLIOTECA COMPLETA
+echo  =============================
+echo  362 peças + 208 fotos estão guardadas NESTE PC.
+echo  NÃO precisa ir buscar nada ao site outra vez.
+echo  Aguarde 2-5 minutos enquanto as fotos carregam.
 echo.
 
 start "" "http://localhost:3000/recuperar-biblioteca.html"
-echo Abriu http://localhost:3000/recuperar-biblioteca.html
-echo Se o site nao abrir, inicie primeiro REINICIAR-E-ABRIR-3000.bat
 echo.
 pause
