@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recuperar biblioteca de peças — Nonato</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 520px; margin: 2rem auto; padding: 0 1rem; background: #0f1419; color: #e8eef4; }
+    h1 { font-size: 1.25rem; }
+    #status { margin: 1rem 0; padding: 1rem; border-radius: 8px; background: #1a2332; line-height: 1.5; }
+    .ok { border: 1px solid #3d9a5a; }
+    .err { border: 1px solid #c44; }
+    a { color: #7dffb0; }
+  </style>
+</head>
+<body>
+  <h1>Recuperar biblioteca de peças</h1>
+  <p>Esta página grava no seu browser as <strong>362 peças</strong> guardadas no servidor deste PC (ficheiro lite, sem bloquear por tamanho).</p>
+  <div id="status">A ligar ao servidor…</div>
+  <p><a href="/">← Voltar à aplicação</a></p>
+  <script>
+    (async function () {
+      const el = document.getElementById('status');
+      const KEY = 'nonato-pecas-biblioteca';
+      const DB = 'nonato-gestao-tecnica-v1';
+      const STORE = 'kv';
+
+      function setMsg(html, ok) {
+        el.innerHTML = html;
+        el.className = ok ? 'ok' : 'err';
+      }
+
+      try {
+        const res = await fetch('/api/data/load?key=nonato-pecas-biblioteca-lite', { cache: 'no-store', credentials: 'include' });
+        if (!res.ok) throw new Error('Servidor respondeu ' + res.status + '. Confirme que npm run dev está a correr em localhost:3000');
+        const json = await res.json();
+        const pecas = json && json.data;
+        if (!Array.isArray(pecas) || pecas.length < 50) {
+          throw new Error('Catálogo inválido no servidor (' + (pecas ? pecas.length : 0) + ' peças).');
+        }
+
+        try {
+          localStorage.removeItem(KEY);
+          localStorage.removeItem(KEY + '--idb');
+          localStorage.setItem(KEY, JSON.stringify(pecas));
+        } catch (e) {
+          console.warn('localStorage:', e);
+        }
+
+        if (typeof indexedDB !== 'undefined') {
+          const db = await new Promise(function (resolve, reject) {
+            const req = indexedDB.open(DB, 2);
+            req.onerror = function () { reject(req.error); };
+            req.onsuccess = function () { resolve(req.result); };
+            req.onupgradeneeded = function () {
+              const d = req.result;
+              if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE);
+            };
+          });
+          const safe = JSON.parse(JSON.stringify(pecas));
+          await new Promise(function (resolve, reject) {
+            const tx = db.transaction(STORE, 'readwrite');
+            tx.objectStore(STORE).put(safe, KEY);
+            tx.oncomplete = resolve;
+            tx.onerror = function () { reject(tx.error); };
+          });
+        }
+
+        try {
+          sessionStorage.setItem('nonato-pecas-biblioteca-count', String(pecas.length));
+        } catch (_) {}
+
+        setMsg(
+          '✓ <strong>' + pecas.length + ' peça(s)</strong> gravadas neste browser.<br><br>' +
+          'A abrir a aplicação em 3 segundos…<br>' +
+          'Se ainda vir poucas peças, prima <strong>Ctrl+Shift+R</strong> na biblioteca.',
+          true
+        );
+        setTimeout(function () { window.location.href = '/'; }, 3000);
+      } catch (e) {
+        setMsg('Erro: ' + (e && e.message ? e.message : String(e)), false);
+      }
+    })();
+  </script>
+</body>
+</html>
