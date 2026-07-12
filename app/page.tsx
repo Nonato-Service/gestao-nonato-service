@@ -39166,6 +39166,24 @@ export default function Dashboard() {
             </div>
             </div>
 
+            {(abaBibliotecaPecas === 'biblioteca' || abaBibliotecaPecas === 'biblioteca-gestao') && (
+              <div className="biblioteca-preco-olho-bar" role="region" aria-label="Preços da biblioteca">
+                <BibliotecaPrecoOlhoToggle
+                  ativo={mostrarPrecosBiblioteca}
+                  onToggle={toggleMostrarPrecosBiblioteca}
+                  labelMostrar={(safeT as any)?.bibliotecaVerPrecos || 'Ver preços'}
+                  labelOcultar={(safeT as any)?.bibliotecaOcultarPrecos || 'Ocultar preços'}
+                />
+                <span className="biblioteca-preco-olho-bar__hint">
+                  {(safeT as any)?.bibliotecaPrecoOlhoHintCurto ||
+                    'Clique no olho para mostrar ou ocultar preços (€). Só peças com preço guardado.'}
+                  {mostrarPrecosBiblioteca ? (
+                    <strong className="biblioteca-preco-olho-bar__estado"> — {(safeT as any)?.bibliotecaPrecosVisiveis || 'Preços visíveis'}</strong>
+                  ) : null}
+                </span>
+              </div>
+            )}
+
             {/* Banner: a selecionar peça para o checklist (veio do Criação de Checklist) */}
             {criacaoChecklistPendentePeca?.origem === 'biblioteca' && (
               <div className="biblioteca-pecas-hub__banner">
@@ -40156,19 +40174,6 @@ export default function Dashboard() {
                   </p>
                 )}
                 {somenteLeituraBiblioteca ? (
-                  <>
-                    <div className="biblioteca-preco-olho-toolbar">
-                      <BibliotecaPrecoOlhoToggle
-                        ativo={mostrarPrecosBiblioteca}
-                        onToggle={toggleMostrarPrecosBiblioteca}
-                        labelMostrar={(safeT as any)?.bibliotecaVerPrecos || 'Ver preços'}
-                        labelOcultar={(safeT as any)?.bibliotecaOcultarPrecos || 'Ocultar preços'}
-                      />
-                      <span className="biblioteca-preco-olho-toolbar__hint">
-                        {(safeT as any)?.bibliotecaPrecoOlhoHint ||
-                          'Os preços só aparecem quando a peça tem valor guardado (campo Preço ou importação HOMAG).'}
-                      </span>
-                    </div>
                   <BibliotecaPecasGaleriaCategorias
                     categorias={categoriasPecasAlfabeto}
                     pecasCatalogo={pecasCatalogoBiblioteca}
@@ -40224,7 +40229,6 @@ export default function Dashboard() {
                     }}
                     mostrarPrecos={mostrarPrecosBiblioteca}
                   />
-                  </>
                 ) : (
                 <>
                 {/* Controles de visualização — painel único */}
@@ -40276,6 +40280,12 @@ export default function Dashboard() {
                       />
                     </div>
                     <div className="biblioteca-hub-toolbar__sync-actions">
+                      <BibliotecaPrecoOlhoToggle
+                        ativo={mostrarPrecosBiblioteca}
+                        onToggle={toggleMostrarPrecosBiblioteca}
+                        labelMostrar={(safeT as any)?.bibliotecaVerPrecos || 'Ver preços'}
+                        labelOcultar={(safeT as any)?.bibliotecaOcultarPrecos || 'Ocultar preços'}
+                      />
                       <button
                         type="button"
                         className="biblioteca-btn--green biblioteca-hub-toolbar__sync-btn"

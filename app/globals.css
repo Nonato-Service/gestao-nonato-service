@@ -38902,21 +38902,50 @@ html body .alerta-mensagens-shell .alerta-mensagens-hero-actions .comunicacao-he
   font-size: 12px !important;
 }
 
+.biblioteca-preco-olho-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 193, 7, 0.55);
+  background: linear-gradient(90deg, rgba(255, 193, 7, 0.14), rgba(255, 140, 0, 0.06));
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25) inset;
+}
+
+.biblioteca-preco-olho-bar__hint {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #ffe8a8;
+  flex: 1 1 200px;
+}
+
+.biblioteca-preco-olho-bar__estado {
+  color: #9dffd0;
+}
+
 .biblioteca-preco-olho-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 6px 10px;
+  gap: 8px;
+  padding: 8px 14px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 193, 7, 0.35);
-  background: rgba(0, 0, 0, 0.22);
-  color: #ffe8a8;
+  border: 2px solid rgba(255, 193, 7, 0.65);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff3c4;
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   line-height: 1;
-  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  min-height: 38px;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.12s ease;
+}
+
+.biblioteca-preco-olho-btn:active {
+  transform: scale(0.98);
 }
 
 .biblioteca-preco-olho-btn:hover {
@@ -38938,9 +38967,15 @@ html body .alerta-mensagens-shell .alerta-mensagens-hero-actions .comunicacao-he
 }
 
 .biblioteca-preco-olho-btn--compact {
-  padding: 5px 7px;
-  min-width: 32px;
-  min-height: 32px;
+  padding: 6px 10px;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.biblioteca-preco-olho-btn__text--compact {
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 0.85;
 }
 
 .biblioteca-preco-olho-btn__icon {
