@@ -6,6 +6,7 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { extractHomagPrecoFromExportItem, formatHomagPreco } from './homag-preco.mjs'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DATA = path.join(root, 'data')
@@ -68,11 +69,12 @@ function homagItemToPeca(item, seq) {
   const nome = String(item.nome ?? item.descricao ?? codigo ?? `Peça ${seq + 1}`).trim()
   const descricao = String(item.descricao ?? nome).trim()
   const imagemFinal = imagemFromHomagExportItem(item)
+  const preco = formatHomagPreco(extractHomagPrecoFromExportItem(item))
   return {
     id: `import-homag-${Date.now()}-${seq}-${Math.random().toString(36).slice(2, 9)}`,
     nome,
     codigo,
-    preco: '',
+    preco,
     descricao,
     categoria: '',
     categoriaId: '',
@@ -105,6 +107,7 @@ function mergeIntoBiblioteca(existing, incoming) {
 
   let added = 0
   let updated = 0
+  let updatedPrecos = 0
   incoming.forEach((item, idx) => {
     const peca = homagItemToPeca(item, idx)
     const c = normCodigo(peca.codigo)
@@ -120,6 +123,14 @@ function mergeIntoBiblioteca(existing, incoming) {
       }
       if ((!ex.nome || !String(ex.nome).trim()) && peca.nome) ex.nome = peca.nome
       if ((!ex.descricao || !String(ex.descricao).trim()) && peca.descricao) ex.descricao = peca.descricao
+      if (peca.preco) {
+        const falta = !ex.preco || !String(ex.preco).trim()
+        const substituir = process.env.HOMAG_MERGE_REPLACE_PRICES === '1'
+        if ((falta || substituir) && ex.preco !== peca.preco) {
+          ex.preco = peca.preco
+          updatedPrecos++
+        }
+      }
       return
     }
     list.push(peca)
@@ -128,7 +139,7 @@ function mergeIntoBiblioteca(existing, incoming) {
     added++
   })
 
-  return { list, added, updated }
+  return { list, added, updated, updatedPrecos }
 }
 
 const exportPath = process.argv[2] ? path.resolve(process.argv[2]) : EXPORT_DEFAULT
@@ -159,7 +170,7 @@ const backupDir = path.join(DATA, `_pre-homag-merge-${stamp}`)
 fs.mkdirSync(backupDir, { recursive: true })
 if (fs.existsSync(SRC)) fs.copyFileSync(SRC, path.join(backupDir, `${KEY}.json`))
 
-const { list, added, updated } = mergeIntoBiblioteca(existing, incoming)
+const { list, added, updated, updatedPrecos } = mergeIntoBiblioteca(existing, incoming)
 fs.writeFileSync(SRC, JSON.stringify(list, null, 2) + '\n', 'utf-8')
 fs.writeFileSync(LITE, JSON.stringify(list.map(toLite), null, 2) + '\n', 'utf-8')
 
@@ -167,6 +178,7 @@ console.log('')
 console.log('=== Biblioteca actualizada ===')
 console.log(`  Importados (novos): ${added}`)
 console.log(`  Actualizados (fotos/dados): ${updated}`)
+console.log(`  Preços preenchidos/actualizados: ${updatedPrecos}`)
 console.log(`  Total no disco (este PC): ${list.length} peça(s)`)
 console.log(`  Backup: ${backupDir}`)
 console.log('')

@@ -18,6 +18,7 @@
 import fs from 'fs'
 import path from 'path'
 import readline from 'node:readline'
+import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'url'
 import { chromium } from 'playwright'
 import { goToNextHomagPage, dismissCookieBanner, waitForHomagRange, installHomagPaginationGuard, forceHomagGridAtPage } from './pagination.mjs'
@@ -160,10 +161,12 @@ async function buildItemFromDiscovered(
     }
   }
   const imagemDataUrl = embedLocalIfNeeded(imagemLocal, imagemUrl, embedOff, maxEmbed)
+  const preco = String(meta.preco ?? '').trim()
   return {
     codigo: String(meta.codigo || '').trim(),
     nome,
     descricao,
+    preco,
     imagem: imagemDataUrl,
     imagem_url: imagemUrl,
     imagem_local: imagemLocal,
@@ -1052,6 +1055,12 @@ async function main() {
     }
   } finally {
     await browser.close()
+  }
+  try {
+    const notifyScript = path.join(__dirname, 'notify-homag-conclusao.mjs')
+    spawnSync(process.execPath, [notifyScript, String(exitCode)], { stdio: 'inherit', windowsHide: true })
+  } catch {
+    /* ignore */
   }
   process.exit(exitCode)
 }

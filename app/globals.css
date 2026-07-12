@@ -38851,3 +38851,53 @@ html body .alerta-mensagens-shell .alerta-mensagens-hero-actions .comunicacao-he
   }
 }
 
+/* Avisos automáticos — biblioteca HOMAG / Railway */
+.sidebar-biblioteca-aviso-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  margin-left: 0.45rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: #ffc107;
+  color: #1a1200;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: middle;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.sidebar-biblioteca-aviso-badge--sm {
+  min-width: 1.2rem;
+  height: 1.2rem;
+  font-size: 0.62rem;
+  margin-left: 0.35rem;
+}
+
+.biblioteca-aviso-global {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 193, 7, 0.45);
+  background: linear-gradient(90deg, rgba(255, 193, 7, 0.16), rgba(255, 140, 0, 0.08));
+  color: #ffe8a8;
+  font-size: 13px;
+  line-height: 1.45;
+  flex-shrink: 0;
+}
+
+.biblioteca-aviso-global__text {
+  flex: 1 1 220px;
+}
+
+.biblioteca-aviso-global__btn {
+  flex-shrink: 0;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+}

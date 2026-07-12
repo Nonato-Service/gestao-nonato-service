@@ -72,7 +72,7 @@ function baseInput(session, categoryId, searchTerm = '') {
     refinements: [],
     fields: session.searchInputTemplate?.fields || ['Name', 'StockKeepingUnit', 'From_price__c'],
     includeQuantityRule: true,
-    includePrices: false,
+    includePrices: true,
   }
 }
 
@@ -157,28 +157,41 @@ function bucketKey(b) {
   return `${b.categoryId}|${b.searchTerm}`
 }
 
-async function backfillMissingImages(context, page, products, items, buildItemFromDiscovered, embedOff, maxEmbed) {
+async function backfillHomagFieldsOnExisting(context, page, products, items, buildItemFromDiscovered, embedOff, maxEmbed) {
   let photos = 0
   for (const meta of products) {
     const codKey = normCodigo(meta.codigo)
-    if (!codKey || !meta.imagemUrl) continue
+    if (!codKey) continue
     const idx = items.findIndex((it) => normCodigo(it.codigo) === codKey)
     const cur = idx >= 0 ? items[idx] : null
     if (!cur) continue
-    const hasFile =
-      cur.imagem_local && fs.existsSync(cur.imagem_local) && fs.statSync(cur.imagem_local).size > 500
-    if (hasFile && (cur.imagem || cur.imagem_url)) continue
-    const it = await buildItemFromDiscovered(context, page, meta, idx, embedOff, maxEmbed)
-    if (!it.imagem && !it.imagem_url) continue
-    items[idx] = {
-      ...cur,
-      nome: cur.nome || it.nome,
-      descricao: cur.descricao || it.descricao,
-      imagem: it.imagem || cur.imagem,
-      imagem_url: it.imagem_url || cur.imagem_url,
-      imagem_local: it.imagem_local || cur.imagem_local,
+
+    let next = cur
+    if ((!cur.preco || !String(cur.preco).trim()) && meta.preco) {
+      next = { ...next, preco: meta.preco }
     }
-    photos++
+
+    if (meta.imagemUrl) {
+      const hasFile =
+        cur.imagem_local && fs.existsSync(cur.imagem_local) && fs.statSync(cur.imagem_local).size > 500
+      if (!hasFile || !(cur.imagem || cur.imagem_url)) {
+        const it = await buildItemFromDiscovered(context, page, meta, idx, embedOff, maxEmbed)
+        if (it.imagem || it.imagem_url) {
+          next = {
+            ...next,
+            nome: next.nome || it.nome,
+            descricao: next.descricao || it.descricao,
+            preco: next.preco || it.preco || '',
+            imagem: it.imagem || next.imagem,
+            imagem_url: it.imagem_url || next.imagem_url,
+            imagem_local: it.imagem_local || next.imagem_local,
+          }
+          photos++
+        }
+      }
+    }
+
+    if (next !== cur) items[idx] = next
   }
   return photos
 }
@@ -256,7 +269,7 @@ export async function runHomagApiImport(opts) {
         if (!codKey) continue
 
         if (codigosVistos.has(codKey)) {
-          const n = await backfillMissingImages(
+          const n = await backfillHomagFieldsOnExisting(
             context,
             page,
             [meta],
@@ -323,7 +336,7 @@ export async function runHomagApiImport(opts) {
       const label = bucket.searchTerm ? `"${bucket.searchTerm}"` : '(todos)'
       let bucketPhotos = 0
       await fetchAllBucketProducts(context, session, bucket, async (pg, pgTotal, products) => {
-        bucketPhotos += await backfillMissingImages(
+        bucketPhotos += await backfillHomagFieldsOnExisting(
           context,
           page,
           products,

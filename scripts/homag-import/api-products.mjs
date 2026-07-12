@@ -3,6 +3,7 @@
  * Página UI 1-based → searchInput.page 0-based.
  */
 import { absHomagUrl, decodeHtmlText } from './images.mjs'
+import { extractHomagPrecoFromProduct, formatHomagPreco } from './homag-preco.mjs'
 
 const DEFAULT_FIELDS = ['Name', 'StockKeepingUnit', 'From_price__c']
 
@@ -38,7 +39,8 @@ export function parseHomagAuraProducts(body) {
           p?.fields?.Image_URL__c?.value ||
           ''
       )
-      return { codigo, descricao: nome, imagemUrl }
+      const preco = formatHomagPreco(extractHomagPrecoFromProduct(p))
+      return { codigo, descricao: nome, imagemUrl, preco }
     }).filter((p) => /^[1-9]\d{9}$/.test(p.codigo))
     return {
       products,
@@ -103,7 +105,7 @@ function buildSearchInput(session, pageNum) {
     fields: session.searchInputTemplate?.fields ?? DEFAULT_FIELDS,
     page: pageIndex,
     includeQuantityRule: true,
-    includePrices: false,
+    includePrices: true,
   }
 }
 

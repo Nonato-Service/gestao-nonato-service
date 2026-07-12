@@ -51,6 +51,14 @@ import { mergeNonatoClientesDeferServerLocal } from './lib/clienteMergeUtils'
 import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer } from './lib/mergePecasBiblioteca'
 import { mergeHomagExportIntoBiblioteca, parseHomagExportJson } from './lib/mergeHomagExport'
 import {
+  BIBLIOTECA_AVISO_POLL_MS,
+  formatBibliotecaNovidadesMsg,
+  gravarUltimoServidorTotalAvisado,
+  lerUltimoServidorTotalAvisado,
+  pedirPermissaoAvisoBibliotecaSeNecessario,
+  showBibliotecaBrowserNotification,
+} from './lib/bibliotecaAviso'
+import {
   mergeSidebarButtonsDeferLocal,
   repairSidebarButtonsFromCatalog,
 } from './lib/sidebarMergeUtils'
@@ -7567,6 +7575,7 @@ export default function Dashboard() {
     added: number
     updatedImages: number
     updatedNames: number
+    updatedPrecos: number
     total: number
     at: string
   } | null>(null)
@@ -26596,6 +26605,7 @@ export default function Dashboard() {
       setPecasBiblioteca(lista)
       await savePecasBibliotecaLocally(lista as unknown[])
       gravarBibliotecaUltimaSyncServidor()
+      gravarUltimoServidorTotalAvisado(lista.length)
       void refreshBibliotecaServidorMeta()
       alert(`Biblioteca reposta: ${lista.length} peça(s) com nomes, códigos e fotos do servidor.\n\nNão precisa ir buscar nada ao site outra vez.`)
     } catch (e) {
@@ -26707,15 +26717,17 @@ export default function Dashboard() {
             added: result.added,
             updatedImages: result.updatedImages,
             updatedNames: result.updatedNames,
+            updatedPrecos: result.updatedPrecos,
             total: result.list.length,
             at: new Date().toLocaleString('pt-PT'),
           })
           const msg = String(
             (t as any)?.homagSyncSucesso ||
-              'Actualização HOMAG concluída:\n\n• {added} peça(s) nova(s)\n• {fotos} foto(s) actualizada(s)\n• {nomes} nome(s) preenchido(s)\n• Total no catálogo: {total}'
+              'Actualização HOMAG concluída:\n\n• {added} peça(s) nova(s)\n• {fotos} foto(s) actualizada(s)\n• {precos} preço(s) actualizado(s)\n• {nomes} nome(s) preenchido(s)\n• Total no catálogo: {total}'
           )
             .replace('{added}', String(result.added))
             .replace('{fotos}', String(result.updatedImages))
+            .replace('{precos}', String(result.updatedPrecos))
             .replace('{nomes}', String(result.updatedNames))
             .replace('{total}', String(result.list.length))
           alert(msg)
@@ -26825,6 +26837,11 @@ export default function Dashboard() {
     [pecasBiblioteca]
   )
 
+  const pecasCatalogoBibliotecaCountRef = useRef(0)
+  useEffect(() => {
+    pecasCatalogoBibliotecaCountRef.current = pecasCatalogoBiblioteca.length
+  }, [pecasCatalogoBiblioteca.length])
+
   useEffect(() => {
     const tab = openTabs.find((t) => t.id === activeTabId)
     if (tab?.type !== 'biblioteca-pecas') return
@@ -26835,6 +26852,49 @@ export default function Dashboard() {
     bibliotecaServidorMeta && bibliotecaServidorMeta.total > pecasCatalogoBiblioteca.length
       ? bibliotecaServidorMeta.total - pecasCatalogoBiblioteca.length
       : 0
+
+  /** Verifica periodicamente se o Railway tem mais peças que este browser e avisa (badge + notificação). */
+  useEffect(() => {
+    if (typeof window === 'undefined' || appInitialLoading || isDemoMode) return
+
+    let cancelled = false
+
+    const verificarNovidadesServidor = async () => {
+      try {
+        const meta = await fetchPecasBibliotecaServerMeta()
+        if (cancelled || !meta) return
+
+        setBibliotecaServidorMeta({ total: meta.total, totalImages: meta.totalImages })
+
+        const local = pecasCatalogoBibliotecaCountRef.current
+        const novidades = meta.total > local ? meta.total - local : 0
+
+        if (novidades <= 0) {
+          gravarUltimoServidorTotalAvisado(meta.total)
+          return
+        }
+
+        const ultimoAvisado = lerUltimoServidorTotalAvisado()
+        if (meta.total <= ultimoAvisado) return
+
+        await pedirPermissaoAvisoBibliotecaSeNecessario()
+        showBibliotecaBrowserNotification(
+          (safeT as any)?.bibliotecaSyncNovidadesTitulo || 'Biblioteca — novidades no servidor',
+          formatBibliotecaNovidadesMsg(novidades, meta.total)
+        )
+        gravarUltimoServidorTotalAvisado(meta.total)
+      } catch {
+        /* ignore */
+      }
+    }
+
+    void verificarNovidadesServidor()
+    const timer = window.setInterval(() => void verificarNovidadesServidor(), BIBLIOTECA_AVISO_POLL_MS)
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+    }
+  }, [appInitialLoading, isDemoMode, safeT])
 
   const pecasImportadasPendentes = useMemo(
     () => pecasBiblioteca.filter((peca) => ehImportacaoPendenteStrict(peca)),
@@ -27740,9 +27800,9 @@ export default function Dashboard() {
     } else if (action === 'open-manual-programa') {
       openTab('manual-programa', getTabTitle('manual-programa'))
     } else if (action === 'open-biblioteca-hub') {
-      // Um único botão: abre direto a tela com Cadastro de Peças | Biblioteca | Gerenciar Categorias | Importação
-      setAbaBibliotecaPecas('biblioteca')
-      setBibliotecaAgruparPorCategoria(true)
+      // Abre directamente «Editar biblioteca» (busca, actualizar, grelha completa)
+      setAbaBibliotecaPecas('biblioteca-gestao')
+      setBibliotecaAgruparPorCategoria(false)
       setVisualizacaoBiblioteca('grid')
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
     } else if (action === 'open-biblioteca-pecas') {
@@ -41686,6 +41746,7 @@ export default function Dashboard() {
                       <strong>{homagUltimoSync.at}</strong> — +{homagUltimoSync.added}{' '}
                       {(safeT as any)?.homagSyncNovas || 'novas'},{' '}
                       {homagUltimoSync.updatedImages} {(safeT as any)?.homagSyncFotos || 'fotos'},{' '}
+                      {homagUltimoSync.updatedPrecos} {(safeT as any)?.homagSyncPrecos || 'preços'},{' '}
                       {homagUltimoSync.total} {(safeT as any)?.homagSyncTotalCatalogo || 'no catálogo'}
                     </div>
                   ) : null}
@@ -69588,6 +69649,17 @@ A1;Peça exemplo;10`}
                 <span className="sidebar-nav-label-stack">
                   <span className="sidebar-nav-label-text">
                     {(safeT as any)?.pecasBibliotecaTitle || 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS'}
+                    {bibliotecaNovidadesServidor > 0 ? (
+                      <span
+                        className="sidebar-biblioteca-aviso-badge"
+                        title={formatBibliotecaNovidadesMsg(
+                          bibliotecaNovidadesServidor,
+                          bibliotecaServidorMeta?.total ?? 0
+                        )}
+                      >
+                        +{bibliotecaNovidadesServidor}
+                      </span>
+                    ) : null}
                   </span>
                 </span>
               </span>
@@ -69631,7 +69703,14 @@ A1;Peça exemplo;10`}
                                 🔩
                               </span>
                               <span className="sidebar-empresa-entry-text">
-                                <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                                <span className="sidebar-empresa-entry-title">
+                                  {getButtonName(button)}
+                                  {bibliotecaNovidadesServidor > 0 ? (
+                                    <span className="sidebar-biblioteca-aviso-badge sidebar-biblioteca-aviso-badge--sm">
+                                      +{bibliotecaNovidadesServidor}
+                                    </span>
+                                  ) : null}
+                                </span>
                               </span>
                             </span>
                             <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
@@ -70620,6 +70699,28 @@ A1;Peça exemplo;10`}
 
       {/* Área Principal */}
       <div className="main-app-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, minHeight: 0 }}>
+        {bibliotecaNovidadesServidor > 0 && !isDemoMode ? (
+          <div className="biblioteca-aviso-global" role="status">
+            <span className="biblioteca-aviso-global__text">
+              <strong>{(safeT as any)?.bibliotecaSyncAvisoToolbar || '⚠ Servidor mais recente:'}</strong>{' '}
+              +{bibliotecaNovidadesServidor}{' '}
+              {(safeT as any)?.bibliotecaSyncAvisoToolbarPeças || 'peça(s) — '}
+              {(safeT as any)?.bibliotecaAvisoGlobalDesc ||
+                'actualize a biblioteca para ver novidades da HOMAG.'}
+            </span>
+            <button
+              type="button"
+              className="biblioteca-btn--green biblioteca-aviso-global__btn"
+              disabled={pecasBibliotecaReparoLoading}
+              onClick={() => {
+                handleButtonClick('open-biblioteca-hub')
+                void handleReporPecasBibliotecaDoServidor()
+              }}
+            >
+              {(safeT as any)?.bibliotecaSyncBtnAtualizar || 'Actualizar agora'}
+            </button>
+          </div>
+        ) : null}
         {/* Conteúdo da Aba Ativa ou Dashboard */}
         <div
           ref={mainContentAreaRef}

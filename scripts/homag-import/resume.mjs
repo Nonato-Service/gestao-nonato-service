@@ -15,6 +15,7 @@ export function exportItemLite(item) {
     descricao: String(item?.descricao ?? item?.nome ?? item?.codigo ?? '').trim(),
     imagem_url: String(item?.imagem_url ?? '').trim(),
     imagem_local: String(item?.imagem_local ?? '').trim(),
+    preco: String(item?.preco ?? '').trim(),
     imagem: '',
   }
   const img = item?.imagem

@@ -22,6 +22,10 @@ export type MergeHomagExportOptions = {
   atualizarFotosEmFalta?: boolean
   /** Substitui foto mesmo quando já existe (ex.: HOMAG mudou imagem). */
   substituirFotosExistentes?: boolean
+  /** Preenche preço quando a peça existente não tem preço (default: true). */
+  atualizarPrecosEmFalta?: boolean
+  /** Substitui preço mesmo quando já existe. */
+  substituirPrecosExistentes?: boolean
   /** Preenche nome/descrição vazios (default: true). */
   atualizarTextosVazios?: boolean
   /** Novas peças entram directo no catálogo, não na fila amarela (default: true). */
@@ -34,6 +38,7 @@ export type MergeHomagExportResult = {
   updatedImages: number
   updatedNames: number
   updatedDescricoes: number
+  updatedPrecos: number
   unchanged: number
 }
 
@@ -42,6 +47,44 @@ export function normCodigoHomag(c: string | undefined | null): string {
     .trim()
     .toLowerCase()
     .replace(/\s+/g, '')
+}
+
+function parsePrecoNumero(raw: unknown): number {
+  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : NaN
+  const t = String(raw ?? '')
+    .trim()
+    .replace(/[€$£\s]/g, '')
+  if (!t) return NaN
+  if (t.includes(',') && t.includes('.')) {
+    if (t.lastIndexOf(',') > t.lastIndexOf('.')) {
+      return parseFloat(t.replace(/\./g, '').replace(',', '.'))
+    }
+    return parseFloat(t.replace(/,/g, ''))
+  }
+  if (t.includes(',')) return parseFloat(t.replace(',', '.'))
+  return parseFloat(t)
+}
+
+export function formatHomagPreco(raw: unknown): string {
+  if (raw == null || raw === '') return ''
+  let v: unknown = raw
+  if (typeof raw === 'object' && raw !== null && 'value' in raw) {
+    v = (raw as { value?: unknown }).value
+  }
+  const n = parsePrecoNumero(v)
+  if (!Number.isFinite(n) || n < 0) return ''
+  return n.toFixed(2).replace('.', ',')
+}
+
+export function extrairPrecoHomagItem(item: Record<string, unknown>): string {
+  const fields = item.fields
+  const fromFields =
+    fields && typeof fields === 'object'
+      ? (fields as Record<string, unknown>).From_price__c ??
+        (fields as Record<string, unknown>).from_price__c
+      : undefined
+  const raw = item.preco ?? item.price ?? item.From_price__c ?? fromFields ?? ''
+  return formatHomagPreco(raw)
 }
 
 export function extrairImagemHomagItem(item: Record<string, unknown>): string {
@@ -71,11 +114,12 @@ export function homagItemToPecaMerge(item: Record<string, unknown>, seq: number)
   let nome = String(item.nome ?? item.name ?? '').trim()
   if (!nome) nome = descricao || codigo || `Peça ${seq + 1}`
   const imagem = extrairImagemHomagItem(item)
+  const preco = extrairPrecoHomagItem(item)
   return {
     id: `import-homag-${Date.now()}-${seq}-${Math.random().toString(36).slice(2, 9)}`,
     nome,
     codigo,
-    preco: '',
+    preco,
     descricao: descricao || nome,
     categoria: '',
     categoriaId: '',
@@ -120,6 +164,8 @@ export function mergeHomagExportIntoBiblioteca<T extends PecaHomagMerge>(
 ): MergeHomagExportResult & { list: T[] } {
   const atualizarFotosEmFalta = opts.atualizarFotosEmFalta !== false
   const substituirFotos = opts.substituirFotosExistentes === true
+  const atualizarPrecosEmFalta = opts.atualizarPrecosEmFalta !== false
+  const substituirPrecos = opts.substituirPrecosExistentes === true
   const atualizarTextosVazios = opts.atualizarTextosVazios !== false
   const novosDirectoCatalogo = opts.novosDirectoCatalogo !== false
 
@@ -134,6 +180,7 @@ export function mergeHomagExportIntoBiblioteca<T extends PecaHomagMerge>(
   let updatedImages = 0
   let updatedNames = 0
   let updatedDescricoes = 0
+  let updatedPrecos = 0
   let unchanged = 0
 
   incomingRaw.forEach((item, idx) => {
@@ -174,6 +221,16 @@ export function mergeHomagExportIntoBiblioteca<T extends PecaHomagMerge>(
         }
       }
 
+      if (incoming.preco) {
+        const falta = !ex.preco || !String(ex.preco).trim()
+        const substituir = substituirPrecos && ex.preco !== incoming.preco
+        if ((atualizarPrecosEmFalta && falta) || substituir) {
+          ex.preco = incoming.preco
+          updatedPrecos++
+          mudou = true
+        }
+      }
+
       if (!mudou) unchanged++
       return
     }
@@ -183,5 +240,5 @@ export function mergeHomagExportIntoBiblioteca<T extends PecaHomagMerge>(
     added++
   })
 
-  return { list, added, updatedImages, updatedNames, updatedDescricoes, unchanged }
+  return { list, added, updatedImages, updatedNames, updatedDescricoes, updatedPrecos, unchanged }
 }
