@@ -33,8 +33,23 @@ export function extractHomagPrecoFromProduct(p) {
   if (!p || typeof p !== 'object') return ''
   const fields = p.fields
   if (fields && typeof fields === 'object') {
-    const fp = fields.From_price__c ?? fields.from_price__c
-    if (fp != null && fp !== '') return fp
+    for (const key of ['From_price__c', 'from_price__c', 'UnitPrice', 'ListPrice']) {
+      const fp = fields[key]
+      if (fp != null && fp !== '') return fp
+    }
+  }
+  const prices = p.prices
+  if (prices && typeof prices === 'object') {
+    for (const key of ['unitPrice', 'listPrice', 'negotiatedPrice', 'price', 'amount']) {
+      const v = prices[key]
+      if (v != null && v !== '') return v
+    }
+  }
+  if (p.pricing && typeof p.pricing === 'object') {
+    for (const key of ['unitPrice', 'listPrice', 'price']) {
+      const v = p.pricing[key]
+      if (v != null && v !== '') return v
+    }
   }
   if (p.From_price__c != null && p.From_price__c !== '') return p.From_price__c
   if (p.preco != null && String(p.preco).trim()) return p.preco

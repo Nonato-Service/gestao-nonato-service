@@ -9,13 +9,31 @@ import {
   parseHomagAuraProducts,
   parseCategoryIdFromUrl,
   catalogMaxPage,
+  DEFAULT_FIELDS,
 } from './api-products.mjs'
 
 const API_MAX_PAGE_INDEX = 249
 const API_PAGE_SIZE = 20
 const API_MAX_ITEMS_PER_QUERY = (API_MAX_PAGE_INDEX + 1) * API_PAGE_SIZE
 
-async function auraSearch(context, session, searchInput) {
+function mergeSearchFields(templateFields) {
+  const base = Array.isArray(templateFields) && templateFields.length ? templateFields : DEFAULT_FIELDS
+  return [...new Set([...base, 'Name', 'StockKeepingUnit', 'From_price__c'])]
+}
+
+export function baseInput(session, categoryId, searchTerm = '') {
+  return {
+    ...session.searchInputTemplate,
+    categoryId,
+    searchTerm: searchTerm || '',
+    refinements: [],
+    fields: mergeSearchFields(session.searchInputTemplate?.fields),
+    includeQuantityRule: true,
+    includePrices: true,
+  }
+}
+
+export async function auraSearch(context, session, searchInput) {
   const message = {
     actions: [
       {
@@ -28,7 +46,7 @@ async function auraSearch(context, session, searchInput) {
           method: 'searchProducts',
           params: {
             webstoreId: session.webstoreId,
-            effectiveAccountId: null,
+            effectiveAccountId: session.effectiveAccountId ?? null,
             searchInput,
           },
           cacheable: false,
@@ -62,18 +80,6 @@ async function auraSearch(context, session, searchInput) {
     throw new Error(`[HOMAG API] ${msg}`)
   }
   return parseHomagAuraProducts(text)
-}
-
-function baseInput(session, categoryId, searchTerm = '') {
-  return {
-    ...session.searchInputTemplate,
-    categoryId,
-    searchTerm: searchTerm || '',
-    refinements: [],
-    fields: session.searchInputTemplate?.fields || ['Name', 'StockKeepingUnit', 'From_price__c'],
-    includeQuantityRule: true,
-    includePrices: true,
-  }
 }
 
 export async function fetchCategoryTree(context, session, categoryId) {
@@ -196,6 +202,36 @@ async function backfillHomagFieldsOnExisting(context, page, products, items, bui
   return photos
 }
 
+function dedupeBuckets(allBuckets) {
+  const dedup = []
+  const seen = new Set()
+  for (const b of allBuckets) {
+    const k = bucketKey(b)
+    if (seen.has(k)) continue
+    seen.add(k)
+    dedup.push(b)
+  }
+  return dedup
+}
+
+function backfillPrecosOnExisting(products, items) {
+  let count = 0
+  for (const meta of products) {
+    const codKey = normCodigo(meta.codigo)
+    if (!codKey || !meta.preco) continue
+    const idx = items.findIndex((it) => normCodigo(it.codigo) === codKey)
+    if (idx < 0) continue
+    const cur = items[idx]
+    const substituir = process.env.HOMAG_MERGE_REPLACE_PRICES === '1'
+    const falta = !cur.preco || !String(cur.preco).trim()
+    if ((falta || substituir) && cur.preco !== meta.preco) {
+      items[idx] = { ...cur, preco: meta.preco }
+      count++
+    }
+  }
+  return count
+}
+
 /**
  * Importação completa via API — buckets por prefixo + subcategorias.
  */
@@ -216,8 +252,14 @@ export async function runHomagApiImport(opts) {
   } = opts
 
   let globalSeq = items.length
+  const pricesOnly = process.env.HOMAG_PRICES_ONLY === '1'
   const session = await initHomagApiSession(page, startUrl)
   const rootId = session.categoryId
+  if (session.effectiveAccountId) {
+    console.log(`[HOMAG API] Conta efectiva (preços): ${session.effectiveAccountId}`)
+  } else if (pricesOnly || process.env.HOMAG_API_BACKFILL_PRICES === '1') {
+    console.warn('[HOMAG API] AVISO: sessão sem conta B2B — preços podem ficar vazios. Use HOMAG_USER/HOMAG_PASS.')
+  }
 
   const first = await auraSearch(context, session, { ...baseInput(session, rootId), page: 0 })
   const subs = listSubcategories(first.rawCategories)
@@ -233,16 +275,24 @@ export async function runHomagApiImport(opts) {
     allBuckets.push(...subBuckets)
   }
 
-  const seenBucket = new Set(apiState.doneBuckets || [])
+  const allBucketsUnique = dedupeBuckets(allBuckets)
+  const forceAllBuckets = process.env.HOMAG_FORCE_ALL_BUCKETS === '1'
+  const seenBucket = forceAllBuckets ? new Set() : new Set(apiState.doneBuckets || [])
   const uniqueBuckets = []
-  for (const b of allBuckets) {
+  for (const b of allBucketsUnique) {
     const k = bucketKey(b)
     if (seenBucket.has(k)) continue
-    if (uniqueBuckets.some((x) => bucketKey(x) === k)) continue
     uniqueBuckets.push(b)
   }
 
-  console.log(`[HOMAG API] ${uniqueBuckets.length} buckets a importar (${seenBucket.size} já feitos)`)
+  console.log(
+    `[HOMAG API] Catálogo HOMAG: ${first.total} itens · ${allBucketsUnique.length} buckets únicos · ${uniqueBuckets.length} a processar (${seenBucket.size} já feitos${forceAllBuckets ? ', FORÇAR TODOS' : ''})`
+  )
+  if (uniqueBuckets.length < allBucketsUnique.length && !forceAllBuckets) {
+    console.log(
+      `[HOMAG API] AVISO: faltam ${allBucketsUnique.length - uniqueBuckets.length} bucket(s) — execute COMPLEMENTAR-HOMAG-FALTANTES.bat para ~31k peças`
+    )
+  }
 
   const maxBuckets = Number(process.env.HOMAG_API_MAX_BUCKETS) || 0
   if (maxBuckets > 0 && uniqueBuckets.length > maxBuckets) {
@@ -251,8 +301,9 @@ export async function runHomagApiImport(opts) {
   }
 
   let totalNew = 0
-  let bucketsDone = [...(apiState.doneBuckets || [])]
+  let bucketsDone = forceAllBuckets ? [] : [...(apiState.doneBuckets || [])]
 
+  if (!pricesOnly) {
   for (let bi = 0; bi < uniqueBuckets.length; bi++) {
     const bucket = uniqueBuckets[bi]
     const bk = bucketKey(bucket)
@@ -319,20 +370,15 @@ export async function runHomagApiImport(opts) {
     console.log(`[HOMAG API] Bucket ${label} concluído (+${bucketNew} novas, +${bucketPhotos} fotos)`)
     await sleep(300)
   }
+  }
+
+  const dedupBuckets = dedupeBuckets(allBuckets)
 
   if (process.env.HOMAG_API_BACKFILL_IMAGES === '1') {
-    const dedup = []
-    const seen = new Set()
-    for (const b of allBuckets) {
-      const k = bucketKey(b)
-      if (seen.has(k)) continue
-      seen.add(k)
-      dedup.push(b)
-    }
-    console.log(`\n[HOMAG API] Backfill de imagens — ${dedup.length} buckets (peças sem foto)…`)
+    console.log(`\n[HOMAG API] Backfill de imagens — ${dedupBuckets.length} buckets (peças sem foto)…`)
     let backfillTotal = 0
-    for (let bi = 0; bi < dedup.length; bi++) {
-      const bucket = dedup[bi]
+    for (let bi = 0; bi < dedupBuckets.length; bi++) {
+      const bucket = dedupBuckets[bi]
       const label = bucket.searchTerm ? `"${bucket.searchTerm}"` : '(todos)'
       let bucketPhotos = 0
       await fetchAllBucketProducts(context, session, bucket, async (pg, pgTotal, products) => {
@@ -356,7 +402,7 @@ export async function runHomagApiImport(opts) {
             items,
             startUrl: url,
             pageNum: 0,
-            range: `API backfill imagens ${bi + 1}/${dedup.length} ${label}`,
+            range: `API backfill imagens ${bi + 1}/${dedupBuckets.length} ${label}`,
             interactive,
             apiMode: true,
             apiDoneBuckets: bucketsDone,
@@ -366,7 +412,38 @@ export async function runHomagApiImport(opts) {
         }
       }
     }
-    console.log(`[HOMAG API] Backfill concluído — +${backfillTotal} fotos`)
+    console.log(`[HOMAG API] Backfill imagens concluído — +${backfillTotal} fotos`)
+  }
+
+  if (process.env.HOMAG_API_BACKFILL_PRICES === '1') {
+    console.log(`\n[HOMAG API] Backfill de preços — ${dedupBuckets.length} buckets…`)
+    let backfillPrecosTotal = 0
+    for (let bi = 0; bi < dedupBuckets.length; bi++) {
+      const bucket = dedupBuckets[bi]
+      const label = bucket.searchTerm ? `"${bucket.searchTerm}"` : '(todos)'
+      let bucketPrecos = 0
+      await fetchAllBucketProducts(context, session, bucket, async (pg, pgTotal, products) => {
+        bucketPrecos += backfillPrecosOnExisting(products, items)
+        if (pg % 25 === 0 || pg === pgTotal) {
+          console.log(`[HOMAG API]   preços ${label} pág.${pg}/${pgTotal} — +${bucketPrecos} preços`)
+        }
+      })
+      backfillPrecosTotal += bucketPrecos
+      try {
+        saveResumeFn({
+          items,
+          startUrl: url,
+          pageNum: 0,
+          range: `API backfill preços ${bi + 1}/${dedupBuckets.length} ${label}`,
+          interactive,
+          apiMode: true,
+          apiDoneBuckets: bucketsDone,
+        })
+      } catch (e) {
+        console.warn(`[HOMAG API] Aviso ao guardar preços: ${e?.message || e}`)
+      }
+    }
+    console.log(`[HOMAG API] Backfill preços concluído — +${backfillPrecosTotal} actualizados`)
   }
 
   return { items, totalNew, bucketsDone, completedFully: true }

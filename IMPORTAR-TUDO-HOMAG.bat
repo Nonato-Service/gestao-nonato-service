@@ -30,6 +30,8 @@ if errorlevel 1 (
 call npm install >nul 2>&1
 call npx playwright install chromium
 
+if exist "%~dp0homag-login.env" call "%~dp0homag-login.env"
+
 set HOMAG_USE_API=1
 set HOMAG_HEADLESS=0
 set HOMAG_EMBED_IMAGES=0

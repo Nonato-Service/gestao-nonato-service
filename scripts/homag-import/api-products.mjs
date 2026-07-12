@@ -5,7 +5,7 @@
 import { absHomagUrl, decodeHtmlText } from './images.mjs'
 import { extractHomagPrecoFromProduct, formatHomagPreco } from './homag-preco.mjs'
 
-const DEFAULT_FIELDS = ['Name', 'StockKeepingUnit', 'From_price__c']
+export const DEFAULT_FIELDS = ['Name', 'StockKeepingUnit', 'From_price__c']
 
 export function parseCategoryIdFromUrl(startUrl) {
   const m = String(startUrl || '').match(/\/category\/[^/]+\/([0-9A-Za-z]{18})/)
@@ -73,6 +73,7 @@ export async function captureAuraSession(page, startUrl) {
         captured = {
           categoryId,
           webstoreId: action.params.params.webstoreId,
+          effectiveAccountId: action.params.params.effectiveAccountId ?? null,
           searchInputTemplate: action.params.params.searchInput,
           auraContext,
           pageURI,
@@ -127,7 +128,7 @@ export async function fetchHomagProductsViaApi(context, session, pageNum) {
           method: 'searchProducts',
           params: {
             webstoreId: session.webstoreId,
-            effectiveAccountId: null,
+            effectiveAccountId: session.effectiveAccountId ?? null,
             searchInput: buildSearchInput(session, pageNum),
           },
           cacheable: false,
