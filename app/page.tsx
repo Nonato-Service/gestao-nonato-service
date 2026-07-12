@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef, useDeferredValue } from 'react'
 import { createPortal } from 'react-dom'
 import { PecasBibliotecaUrgentLoader } from './components/PecasBibliotecaUrgentLoader'
 import {
@@ -98,13 +98,16 @@ import { assessPullServerRisk, type PullRiskSeverity } from './utils/syncRisk'
 import {
   parseTotalEurosFromReceiptText,
   parseDataReciboIso,
+  parseHoraRecibo,
   extrairDescricaoRecibo,
 } from './lib/reciboComprovanteParser'
 import {
   resolverClientesAtivosComprovanteHoje,
-  estadoClienteReciboRapido,
+  resolverEstadoClienteComprovanteRecibo,
+  horaAtualLocal,
   labelOrigemClienteComprovante,
   type ClienteAtivoComprovante,
+  type MotivoAssociacaoRecibo,
 } from './lib/comprovanteClientesAtivosHoje'
 import {
   encontrarComprovanteDuplicado,
@@ -235,6 +238,7 @@ import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import { ClienteEquipamentoHistoricoPanel } from './components/ClienteEquipamentoHistoricoPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
+import { filtrarPecasBibliotecaPorBusca } from './lib/pecaCodigoBusca'
 import { wrapRelatorioServicoPrintDocument } from './lib/relatorioServicoPdfShell'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
 import { PdfModeloPickerField } from './components/PdfModeloPickerField'
@@ -2432,6 +2436,8 @@ function buildPecaCatalogoUrlFromTemplate(template: string, codigo: string): str
 }
 /** Valor do `<select>` de grupo na biblioteca: só peças sem `categoriaId` (continuam a aparecer na vista normal quando o filtro é «todos»). */
 const BIBLIOTECA_FILTRO_SEM_CATEGORIA = '__sem_categoria__'
+/** Peças visíveis de cada vez na gestão (evita 21k+ nós DOM no tablet). */
+const BIBLIOTECA_ITENS_POR_LOTE = 48
 /** Decisão «cobrar / não cobrar» no resumo do relatório (por id do relatório) */
 const RESUMO_COBRANCA_DECISAO_KEY = 'nonato-resumo-cobranca-decisao'
 /** Linhas fixas do fechamento (resumo) que podem ser retiradas da cobrança e restauradas depois */
@@ -7228,6 +7234,7 @@ export default function Dashboard() {
   
   // Ficha Cadastral da Nonato Service (nome empresa, NIF, NIB, SWIFT, logo)
   const [fichaCadastral, setFichaCadastral] = useState<FichaCadastral>({ nomeEmpresa: '', nif: '', nib: '', swift: '' })
+  const [pdfModeloCadastroNonato, setPdfModeloCadastroNonato] = useState(() => loadPdfModeloPadrao('cadastroNonato'))
   /** Destino opcional para envio do PDF (cadastro Nonato) — e-mail e WhatsApp do cliente (manual ou a partir do cadastro) */
   const [cadastroNonatoEnvioCliente, setCadastroNonatoEnvioCliente] = useState<{ emailDestino: string; telefoneWhats: string; clienteId: string }>({ emailDestino: '', telefoneWhats: '', clienteId: '' })
   /** Último HTML do documento de dados de depósito guardado para anexar no envio (localStorage + blob URL) */
@@ -7277,7 +7284,7 @@ export default function Dashboard() {
       const r = await fetch('/api/pdf/dados-deposito-nonato', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fichaCadastral),
+        body: JSON.stringify({ ...fichaCadastral, pdfModelo: pdfModeloCadastroNonato }),
       })
       if (!r.ok) {
         window.alert(
@@ -7352,6 +7359,7 @@ export default function Dashboard() {
         telefone: fichaCadastral.telefone,
         email: fichaCadastral.email,
         logo: fichaCadastral.logo,
+        pdfModelo: pdfModeloCadastroNonato,
       }
       const r = await fetch('/api/pdf/dados-fatura-nonato', {
         method: 'POST',
@@ -7421,7 +7429,10 @@ export default function Dashboard() {
     })
   }, [])
   /** Biblioteca: grade em secções por categoria vs lista única (com filtro). */
-  const [bibliotecaAgruparPorCategoria, setBibliotecaAgruparPorCategoria] = useState(false)
+  const [bibliotecaAgruparPorCategoria, setBibliotecaAgruparPorCategoria] = useState(true)
+  const [paginaBibliotecaFlat, setPaginaBibliotecaFlat] = useState(0)
+  const [bibliotecaSecaoLimites, setBibliotecaSecaoLimites] = useState<Record<string, number>>({})
+  const buscaBibliotecaDeferred = useDeferredValue(buscaCodigoBiblioteca)
   /** Pré-visualização ampliada ao passar o rato sobre fotos no catálogo (grade/lista). */
   const [bibliotecaImageHoverPreview, setBibliotecaImageHoverPreview] = useState<{
     src: string
@@ -7799,20 +7810,26 @@ export default function Dashboard() {
     tipo: 'cliente' | 'pessoal'
     cliente: string
     data: string
+    horaUsada: string
     mesCompetencia: string
     valorUnitario: number
     quantidade: number
     descricao: string
     imagemBase64: string
+    clientesSugeridos: ClienteAtivoComprovante[]
+    motivoAssociacao: MotivoAssociacaoRecibo
   }>({
     tipo: 'cliente',
     cliente: '',
     data: new Date().toISOString().slice(0, 10),
+    horaUsada: horaAtualLocal(),
     mesCompetencia: new Date().toISOString().slice(0, 7),
     valorUnitario: 0,
     quantidade: 1,
     descricao: '',
     imagemBase64: '',
+    clientesSugeridos: [],
+    motivoAssociacao: 'perguntar',
   })
   const [showFormComp, setShowFormComp] = useState(false)
   /** Foto de recibo → OCR → pré-visualização antes de gravar comprovante */
@@ -7831,6 +7848,9 @@ export default function Dashboard() {
         tipoSelecionado: 'cliente' | 'pessoal'
         clienteSelecionado: string
         clienteIdSelecionado: string
+        horaUsada: string | null
+        horaOrigem: 'recibo' | 'foto' | null
+        motivoAssociacao: MotivoAssociacaoRecibo
       }
   >(null)
   const [comprovanteImagemAmpliada, setComprovanteImagemAmpliada] = useState<ComprovanteDespesa | null>(null)
@@ -26854,6 +26874,42 @@ export default function Dashboard() {
     [pecasBiblioteca]
   )
 
+  const pecasCatalogoFiltradasGestao = useMemo(() => {
+    const isFiltroSoSemCategoria = filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA
+    const q = buscaBibliotecaDeferred.trim().toLowerCase()
+    const filtered = pecasBiblioteca.filter((peca) => {
+      if (isFiltroSoSemCategoria) {
+        if (peca.categoriaId) return false
+      } else if (filtroGrupoBiblioteca && peca.categoriaId !== filtroGrupoBiblioteca) {
+        return false
+      }
+      if (filtroSubgrupoBiblioteca && peca.subcategoriaId !== filtroSubgrupoBiblioteca) return false
+      if (q && !pecaPassaBuscaBibliotecaTexto(peca, q, buscaBibliotecaModo)) return false
+      return true
+    })
+    return ordenarPecasBibliotecaParaExibicao(filtered, categoriasPecasAlfabeto).filter(
+      (p) => !ehImportacaoPendenteStrict(p)
+    )
+  }, [
+    pecasBiblioteca,
+    buscaBibliotecaDeferred,
+    buscaBibliotecaModo,
+    filtroGrupoBiblioteca,
+    filtroSubgrupoBiblioteca,
+    categoriasPecasAlfabeto,
+  ])
+
+  useEffect(() => {
+    setPaginaBibliotecaFlat(0)
+    setBibliotecaSecaoLimites({})
+  }, [
+    buscaBibliotecaDeferred,
+    filtroGrupoBiblioteca,
+    filtroSubgrupoBiblioteca,
+    bibliotecaAgruparPorCategoria,
+    visualizacaoBiblioteca,
+  ])
+
   const pecasCatalogoBibliotecaCountRef = useRef(0)
   useEffect(() => {
     pecasCatalogoBibliotecaCountRef.current = pecasCatalogoBiblioteca.length
@@ -30062,6 +30118,16 @@ export default function Dashboard() {
               <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', marginBottom: '20px', lineHeight: 1.5 }}>
                 {safeT?.cadastroNonatoServiceInfo || 'Preencha os dados acima. Ao gerar o PDF, o cliente receberá um documento claro com os dados bancários e contacto para efetuar o depósito ou transferência do pagamento à Nonato Service.'}
               </p>
+              <div style={{ maxWidth: '420px', marginBottom: '18px' }}>
+                <PdfModeloPickerField
+                  value={pdfModeloCadastroNonato}
+                  onChange={(model) => setPdfModeloCadastroNonato(persistPdfModeloPadrao('cadastroNonato', model, saveData))}
+                  labels={safeT as Record<string, string>}
+                  label={safeT?.selecioneModeloPDF || 'Modelo de PDF'}
+                  hint="Estilo visual do documento (Profissional, Clássico, Moderno, etc.)."
+                  compact
+                />
+              </div>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <button className="btn-primary" onClick={() => saveData('nonato-ficha-cadastral', fichaCadastral)} style={{ padding: '12px 24px', backgroundColor: 'rgba(0, 200, 83, 0.2)', border: '1px solid rgba(0, 200, 83, 0.5)', color: '#00c853', fontWeight: 'bold', borderRadius: '8px', cursor: 'pointer' }}>
                   {safeT?.fichaCadastralGuardar || safeT?.save || 'Guardar'}
@@ -30510,6 +30576,16 @@ export default function Dashboard() {
                   <img src={fichaCadastral.logo} alt="" style={{ maxWidth: '200px', maxHeight: '90px', objectFit: 'contain', border: '1px solid rgba(80,160,255,0.35)', borderRadius: '8px', background: '#fff', padding: '4px' }} />
                 </div>
               ) : null}
+            </div>
+            <div style={{ maxWidth: '420px', marginBottom: '16px' }}>
+              <PdfModeloPickerField
+                value={pdfModeloCadastroNonato}
+                onChange={(model) => setPdfModeloCadastroNonato(persistPdfModeloPadrao('cadastroNonato', model, saveData))}
+                labels={safeT as Record<string, string>}
+                label={safeT?.selecioneModeloPDF || 'Modelo de PDF'}
+                hint="Mesmo estilo visual usado nos outros documentos da empresa."
+                compact
+              />
             </div>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '18px' }}>
               <button
@@ -40487,22 +40563,86 @@ export default function Dashboard() {
                   const visBiblioteca =
                     somenteLeituraBiblioteca && visualizacaoBiblioteca === 'lista' ? 'grid' : visualizacaoBiblioteca
                   const isFiltroSoSemCategoria = filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA
-                  const passaFiltroBiblioteca = (peca: PecaBiblioteca) => {
-                    if (isFiltroSoSemCategoria) {
-                      if (peca.categoriaId) return false
-                    } else if (filtroGrupoBiblioteca && peca.categoriaId !== filtroGrupoBiblioteca) {
-                      return false
-                    }
-                    if (filtroSubgrupoBiblioteca && peca.subcategoriaId !== filtroSubgrupoBiblioteca) return false
-                    const q = buscaCodigoBiblioteca.trim().toLowerCase()
-                    if (q && !pecaPassaBuscaBibliotecaTexto(peca, q, buscaBibliotecaModo)) return false
-                    return true
-                  }
-                  const pecasVisiveisParaLote = ordenarPecasBibliotecaParaExibicao(
-                    pecasBiblioteca.filter(passaFiltroBiblioteca),
-                    categoriasPecasAlfabeto
+                  const pecasCatalogoFiltradas = pecasCatalogoFiltradasGestao
+                  const totalFlat = pecasCatalogoFiltradas.length
+                  const totalPaginasFlat = Math.max(1, Math.ceil(totalFlat / BIBLIOTECA_ITENS_POR_LOTE))
+                  const paginaFlatClamped = Math.min(paginaBibliotecaFlat, totalPaginasFlat - 1)
+                  const inicioFlat = paginaFlatClamped * BIBLIOTECA_ITENS_POR_LOTE
+                  const pecasPaginaFlat = pecasCatalogoFiltradas.slice(
+                    inicioFlat,
+                    inicioFlat + BIBLIOTECA_ITENS_POR_LOTE
                   )
-                  const pecasCatalogoFiltradas = pecasVisiveisParaLote.filter((p) => !ehImportacaoPendenteStrict(p))
+                  const limiteSecaoBiblioteca = (key: string) =>
+                    bibliotecaSecaoLimites[key] ?? BIBLIOTECA_ITENS_POR_LOTE
+                  const carregarMaisSecao = (key: string) =>
+                    setBibliotecaSecaoLimites((prev) => ({
+                      ...prev,
+                      [key]: limiteSecaoBiblioteca(key) + BIBLIOTECA_ITENS_POR_LOTE,
+                    }))
+                  const barraPaginacaoFlat =
+                    totalFlat > BIBLIOTECA_ITENS_POR_LOTE ? (
+                      <div
+                        className="biblioteca-pecas-hub__paginacao"
+                        style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 10,
+                          margin: '16px 0 8px',
+                          padding: '12px',
+                          borderRadius: 10,
+                          background: 'rgba(0,0,0,0.25)',
+                          border: '1px solid rgba(0,200,83,0.2)',
+                        }}
+                      >
+                        <button
+                          type="button"
+                          className="biblioteca-btn--ghost"
+                          disabled={paginaFlatClamped <= 0}
+                          onClick={() => setPaginaBibliotecaFlat((p) => Math.max(0, p - 1))}
+                          style={{ minHeight: 44, minWidth: 44, padding: '8px 14px' }}
+                        >
+                          ← {(safeT as any)?.bibliotecaPaginaAnterior || 'Anterior'}
+                        </button>
+                        <span style={{ fontSize: 13, color: '#ccc', textAlign: 'center' }}>
+                          {(
+                            (safeT as any)?.bibliotecaPaginaDe ||
+                            'Página {pagina} de {total} · {de}-{ate} de {pecas}'
+                          )
+                            .replace('{pagina}', String(paginaFlatClamped + 1))
+                            .replace('{total}', String(totalPaginasFlat))
+                            .replace('{de}', String(inicioFlat + 1))
+                            .replace('{ate}', String(Math.min(inicioFlat + BIBLIOTECA_ITENS_POR_LOTE, totalFlat)))
+                            .replace('{pecas}', String(totalFlat))}
+                        </span>
+                        <button
+                          type="button"
+                          className="biblioteca-btn--ghost"
+                          disabled={paginaFlatClamped >= totalPaginasFlat - 1}
+                          onClick={() =>
+                            setPaginaBibliotecaFlat((p) => Math.min(totalPaginasFlat - 1, p + 1))
+                          }
+                          style={{ minHeight: 44, minWidth: 44, padding: '8px 14px' }}
+                        >
+                          {(safeT as any)?.bibliotecaPaginaSeguinte || 'Seguinte'} →
+                        </button>
+                      </div>
+                    ) : null
+                  const botaoMaisSecao = (key: string, total: number, visiveis: number) =>
+                    total > visiveis ? (
+                      <button
+                        type="button"
+                        className="biblioteca-btn--green"
+                        onClick={() => carregarMaisSecao(key)}
+                        style={{ marginTop: 12, minHeight: 44, padding: '10px 16px', width: '100%' }}
+                      >
+                        {(
+                          (safeT as any)?.bibliotecaCarregarMaisSecao ||
+                          'Mostrar mais ({restantes} restantes neste grupo)'
+                        ).replace('{restantes}', String(total - visiveis))}
+                      </button>
+                    ) : null
 
                   const renderPecaBibliotecaGridCell = (peca: PecaBiblioteca) => {
                     const grupoNome = peca.categoriaId ? categoriasPecas.find((c) => c.id === peca.categoriaId)?.nome : null
@@ -40541,6 +40681,8 @@ export default function Dashboard() {
                           <img
                             src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
                             alt={peca.nome}
+                            loading="lazy"
+                            decoding="async"
                             title={hubT.bibliotecaImagemHoverTitle || ''}
                             className={
                               pecaBibliotecaTemImagemPropria(peca.imagem)
@@ -40983,8 +41125,9 @@ export default function Dashboard() {
                               }
                             >
                               <div className="biblioteca-pecas-hub__piece-grid">
-                                {semCat.map((peca) => renderPecaBibliotecaGridCell(peca))}
+                                {semCat.slice(0, limiteSecaoBiblioteca('__sem__')).map((peca) => renderPecaBibliotecaGridCell(peca))}
                               </div>
+                              {botaoMaisSecao('__sem__', semCat.length, limiteSecaoBiblioteca('__sem__'))}
                             </BibliotecaSecaoCategoria>
                           </>
                         )
@@ -40996,6 +41139,7 @@ export default function Dashboard() {
                             {ordemIds.map((catId) => {
                               const cat = categoriasPecas.find((x) => x.id === catId)
                               const lista = pecasCatalogoFiltradas.filter((p) => p.categoriaId === catId)
+                              const limite = limiteSecaoBiblioteca(catId)
                               return (
                                 <BibliotecaSecaoCategoria
                                   key={catId}
@@ -41004,8 +41148,9 @@ export default function Dashboard() {
                                   variant="grupo"
                                 >
                                   <div className="biblioteca-pecas-hub__piece-grid">
-                                    {lista.map((peca) => renderPecaBibliotecaGridCell(peca))}
+                                    {lista.slice(0, limite).map((peca) => renderPecaBibliotecaGridCell(peca))}
                                   </div>
+                                  {botaoMaisSecao(catId, lista.length, limite)}
                                 </BibliotecaSecaoCategoria>
                               )
                             })}
@@ -41017,8 +41162,9 @@ export default function Dashboard() {
                                 variant="sem"
                               >
                                 <div className="biblioteca-pecas-hub__piece-grid">
-                                  {semCat.map((peca) => renderPecaBibliotecaGridCell(peca))}
+                                  {semCat.slice(0, limiteSecaoBiblioteca('__sem__')).map((peca) => renderPecaBibliotecaGridCell(peca))}
                                 </div>
+                                {botaoMaisSecao('__sem__', semCat.length, limiteSecaoBiblioteca('__sem__'))}
                               </BibliotecaSecaoCategoria>
                             ) : null}
                           </div>
@@ -41029,8 +41175,9 @@ export default function Dashboard() {
                       <>
                         {!somenteLeituraBiblioteca && painelClassificacaoLote}
                         <div className="biblioteca-pecas-hub__piece-grid">
-                          {pecasCatalogoFiltradas.map((peca) => renderPecaBibliotecaGridCell(peca))}
+                          {pecasPaginaFlat.map((peca) => renderPecaBibliotecaGridCell(peca))}
                         </div>
+                        {barraPaginacaoFlat}
                       </>
                     )
                   }
@@ -41107,7 +41254,7 @@ export default function Dashboard() {
                             </tr>
                           </thead>
                           <tbody>
-                            {pecasCatalogoFiltradas.map((peca, idx) => {
+                            {pecasPaginaFlat.map((peca, idx) => {
                               const grupoNome = peca.categoriaId ? categoriasPecas.find((c) => c.id === peca.categoriaId)?.nome : null
                               const isPendingChecklist = criacaoChecklistPendentePeca?.origem === 'biblioteca'
                               const isPendingRelatorio = selecionarPecaParaRelatorioServico
@@ -41150,6 +41297,8 @@ export default function Dashboard() {
                                     <img
                                       src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
                                       alt={peca.nome}
+                                      loading="lazy"
+                                      decoding="async"
                                       className={`biblioteca-pecas-hub__catalog-img${pecaBibliotecaTemImagemPropria(peca.imagem) ? '' : ' biblioteca-pecas-hub__catalog-img--padrao'}`}
                                       title={hubT.bibliotecaImagemHoverTitle || ''}
                                       style={{
@@ -41253,6 +41402,7 @@ export default function Dashboard() {
                           </tbody>
                         </table>
                       </div>
+                      {barraPaginacaoFlat}
                     </>
                   )
                 })()}
@@ -47866,7 +48016,7 @@ A1;Peça exemplo;10`}
         return (
           <PedidoOrcamentosAvulsoContent
             clientes={clientesOrdenadosAlfabeticamente}
-            pecasBiblioteca={pecasBiblioteca}
+            pecasBiblioteca={pecasBiblioteca.filter((p) => !ehImportacaoPendenteStrict(p))}
             safeT={safeT}
             closeTab={closeTab}
             activeTabId={activeTabId || ''}
@@ -49784,6 +49934,13 @@ A1;Peça exemplo;10`}
             clienteId: r.clienteId,
             data: r.data,
             numero: r.numero,
+            diasTrabalho: diasTrabalhoRelatorioOrdenados(r).map((d) => ({
+              data: d.data,
+              idaChegada: d.idaChegada,
+              horasInicio: d.horasInicio,
+              horasFim: d.horasFim,
+              retornoSaida: d.retornoSaida,
+            })),
           })),
           relatoriosFechados: relatoriosServico
             .filter((r) => r.servicoConcluido)
@@ -49794,6 +49951,13 @@ A1;Peça exemplo;10`}
               data: r.data,
               numero: r.numero,
               servicoConcluido: r.servicoConcluido,
+              diasTrabalho: diasTrabalhoRelatorioOrdenados(r).map((d) => ({
+                data: d.data,
+                idaChegada: d.idaChegada,
+                horasInicio: d.horasInicio,
+                horasFim: d.horasFim,
+                retornoSaida: d.retornoSaida,
+              })),
             })),
           agendamentos: agendamentos.map((a) => ({
             id: a.id,
@@ -49801,7 +49965,9 @@ A1;Peça exemplo;10`}
             clienteId: a.clienteId,
             data: a.data,
             hora: a.hora,
+            duracaoEstimada: a.duracaoEstimada,
             status: a.status,
+            categoria: a.categoria,
           })),
         })
         const resolverClientesComprovantePorData = (dataIso: string) =>
@@ -49809,8 +49975,45 @@ A1;Peça exemplo;10`}
             dataReferencia: dataIso,
             ...paramsClientesComprovante(),
           })
-        const estadoClienteParaDataRecibo = (dataIso: string) =>
-          estadoClienteReciboRapido(resolverClientesComprovantePorData(dataIso))
+        const estadoClienteParaRecibo = (dataIso: string, horaIso?: string | null) =>
+          resolverEstadoClienteComprovanteRecibo({
+            dataReferencia: dataIso,
+            horaReferencia: horaIso,
+            ...paramsClientesComprovante(),
+          })
+        const formCompComClienteSugerido = (
+          dataIso: string,
+          horaIso: string | null | undefined,
+          base?: Partial<typeof formComp>
+        ) => {
+          const data = String(dataIso || '').slice(0, 10)
+          const hora = horaIso?.trim() || horaAtualLocal()
+          const estado = estadoClienteParaRecibo(data, hora)
+          return {
+            tipo: (estado.tipoSelecionado === 'pessoal' ? 'pessoal' : 'cliente') as 'cliente' | 'pessoal',
+            cliente: base?.cliente?.trim() ? base.cliente : estado.clienteSelecionado || '',
+            data: data || new Date().toISOString().slice(0, 10),
+            horaUsada: estado.horaUsada || hora,
+            mesCompetencia:
+              typeof base?.mesCompetencia === 'string' && /^\d{4}-\d{2}$/.test(base.mesCompetencia)
+                ? base.mesCompetencia
+                : (data || new Date().toISOString().slice(0, 10)).slice(0, 7),
+            valorUnitario: base?.valorUnitario ?? 0,
+            quantidade: base?.quantidade ?? 1,
+            descricao: base?.descricao ?? '',
+            imagemBase64: base?.imagemBase64 ?? '',
+            clientesSugeridos: estado.clientesSugeridos,
+            motivoAssociacao: estado.motivoAssociacao,
+          }
+        }
+        const abrirFormCompManual = (base?: Partial<typeof formComp>) => {
+          const hoje = new Date().toISOString().slice(0, 10)
+          setFormComp(formCompComClienteSugerido(base?.data || hoje, base?.horaUsada || horaAtualLocal(), base))
+          setShowFormComp(true)
+        }
+        const syncFormCompDataHora = (dataIso: string, horaIso: string) => {
+          setFormComp((prev) => formCompComClienteSugerido(dataIso, horaIso, prev))
+        }
         const clientesAtivosPainel = resolverClientesComprovantePorData(new Date().toISOString().slice(0, 10))
         const mapGrupoComprovantes = (() => {
           const m = new Map<string, ComprovanteDespesa[]>()
@@ -50048,11 +50251,14 @@ A1;Peça exemplo;10`}
             tipo: 'cliente',
             cliente: '',
             data: hoje,
+            horaUsada: horaAtualLocal(),
             mesCompetencia: mesHoje,
             valorUnitario: 0,
             quantidade: 1,
             descricao: '',
             imagemBase64: '',
+            clientesSugeridos: [],
+            motivoAssociacao: 'perguntar',
           })
           setShowFormComp(false)
         }
@@ -50161,7 +50367,8 @@ A1;Peça exemplo;10`}
                       const data = dataParsed || new Date().toISOString().slice(0, 10)
                       const mesCompetencia = (dataParsed || data).slice(0, 7)
                       const descricao = extrairDescricaoRecibo(text)
-                      const estadoCliente = estadoClienteParaDataRecibo(data)
+                      const horaRecibo = parseHoraRecibo(text)
+                      const estadoCliente = estadoClienteParaRecibo(data, horaRecibo)
                       setComprovanteReciboRapido({
                         step: 'preview',
                         imagemBase64,
@@ -50198,7 +50405,7 @@ A1;Peça exemplo;10`}
                 >
                   {(safeT as any)?.comprovantesReciboRapidoBtn || '📷 Foto do recibo → registo'}
                 </button>
-                <button onClick={() => setShowFormComp(true)} style={{ padding: '10px 20px', background: 'rgba(0,200,83,0.2)', border: '1px solid #00c853', borderRadius: '8px', color: '#00c853', fontWeight: 600, cursor: 'pointer' }}>
+                <button onClick={() => abrirFormCompManual()} style={{ padding: '10px 20px', background: 'rgba(0,200,83,0.2)', border: '1px solid #00c853', borderRadius: '8px', color: '#00c853', fontWeight: 600, cursor: 'pointer' }}>
                   + {(safeT as any)?.comprovantesAdicionar || 'Adicionar comprovante'}
                 </button>
                 <button onClick={() => setShowEnvioModal(true)} style={{ padding: '10px 20px', background: 'rgba(0,200,100,0.2)', border: '1px solid #00c864', borderRadius: '8px', color: '#00e676', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -50209,7 +50416,7 @@ A1;Peça exemplo;10`}
             <p style={{ color: '#aaa', marginBottom: '20px', fontSize: '14px' }}>
               {(safeT as any)?.comprovantesDespesasDescPainel ||
                 (safeT as any)?.comprovantesDespesasDesc ||
-                'Clientes ativos e comprovantes visíveis por cliente. Despesas pessoais ficam em NONATO SERVICE. Use os filtros só se tiver dúvidas.'}
+                'Foto do recibo: o sistema associa ao cliente pela data e hora (agenda ou relatório). Dois clientes no mesmo dia? A hora decide; se houver dúvida, pergunta.'}
             </p>
             <details
               style={{
@@ -50454,7 +50661,7 @@ A1;Peça exemplo;10`}
                     <div style={{ color: '#00c853', fontSize: '12px', marginBottom: '6px' }}>{(safeT as any)?.comprovantesTipoDespesa || 'Tipo de despesa'}</div>
                     <div style={{ display: 'flex', gap: '12px' }}>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: '#ccc' }}>
-                        <input type="radio" name="tipoComp" checked={formComp.tipo === 'cliente'} onChange={() => setFormComp(prev => ({ ...prev, tipo: 'cliente' }))} />
+                        <input type="radio" name="tipoComp" checked={formComp.tipo === 'cliente'} onChange={() => syncFormCompDataHora(formComp.data, formComp.horaUsada)} />
                         {(safeT as any)?.comprovantesCliente || 'Cliente'}
                       </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: '#ccc' }}>
@@ -50465,7 +50672,76 @@ A1;Peça exemplo;10`}
                   </div>
                   {formComp.tipo === 'cliente' && (
                     <div style={{ marginBottom: '10px' }}>
-                      <div style={{ color: '#00c853', fontSize: '12px', marginBottom: '6px' }}>{(safeT as any)?.comprovantesCliente || 'Cliente'}</div>
+                      <div style={{ marginBottom: '10px', padding: '10px', background: '#333', borderRadius: '8px', border: '1px solid rgba(147,197,253,0.2)' }}>
+                        <div style={{ color: '#93c5fd', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>
+                          {(safeT as any)?.comprovantesClientesAtivosTitulo || 'Associar a'}
+                        </div>
+                        {formComp.clientesSugeridos.length === 0 ? (
+                          <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>
+                            {(safeT as any)?.comprovantesManualSemClienteDia ||
+                              'Nenhum cliente na agenda/relatório neste dia e hora. Escolha abaixo ou marque despesa pessoal.'}
+                          </p>
+                        ) : formComp.clientesSugeridos.length === 1 &&
+                          (formComp.motivoAssociacao === 'hora' || formComp.motivoAssociacao === 'unico') ? (
+                          <p style={{ margin: 0, fontSize: '12px', color: '#bbf7d0' }}>
+                            {formComp.motivoAssociacao === 'hora'
+                              ? (
+                                  (safeT as any)?.comprovantesClientesAtivosAutoHora ||
+                                  'Às {hora} estava com {cliente}.'
+                                )
+                                  .replace('{hora}', formComp.horaUsada)
+                                  .replace('{cliente}', formComp.clientesSugeridos[0].clienteNome)
+                              : (
+                                  (safeT as any)?.comprovantesClientesAtivosAutoData ||
+                                  'Cliente do dia: {cliente}'
+                                ).replace('{cliente}', formComp.clientesSugeridos[0].clienteNome)}
+                          </p>
+                        ) : formComp.clientesSugeridos.length > 1 ? (
+                          <>
+                            <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#aaa' }}>
+                              {(
+                                (safeT as any)?.comprovantesClientesAtivosEscolhaHora ||
+                                'Vários clientes no dia. Às {hora} qual deles?'
+                              )
+                                .replace('{hora}', formComp.horaUsada)
+                                .replace('{data}', formatarDataListaComprovante(formComp.data))}
+                            </p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
+                              {formComp.clientesSugeridos.map((cl) => {
+                                const sel = formComp.cliente === cl.clienteNome
+                                return (
+                                  <button
+                                    key={`${cl.clienteId}-${cl.origem}`}
+                                    type="button"
+                                    onClick={() =>
+                                      setFormComp((prev) => ({ ...prev, tipo: 'cliente', cliente: cl.clienteNome }))
+                                    }
+                                    style={{
+                                      textAlign: 'left',
+                                      padding: '8px 10px',
+                                      background: sel ? 'rgba(34,197,94,0.2)' : '#222',
+                                      border: sel ? '1px solid #22c55e' : '1px solid #444',
+                                      borderRadius: '6px',
+                                      color: '#fff',
+                                      cursor: 'pointer',
+                                      fontSize: '13px',
+                                    }}
+                                  >
+                                    <strong>{cl.clienteNome}</strong>
+                                    <span style={{ display: 'block', fontSize: '11px', color: '#888', marginTop: '2px' }}>
+                                      {labelOrigemClienteComprovante(cl.origem, safeT as Record<string, string | undefined>)}
+                                      {cl.detalhe ? ` · ${cl.detalhe}` : ''}
+                                    </span>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </>
+                        ) : null}
+                      </div>
+                      <div style={{ color: '#00c853', fontSize: '12px', marginBottom: '6px' }}>
+                        {(safeT as any)?.comprovantesCliente || 'Cliente'} ({(safeT as any)?.comprovantesManualOuLista || 'ou lista manual'})
+                      </div>
                       {clientes.length === 0 ? (
                         <p style={{ color: '#ffaa66', fontSize: '13px', margin: 0, padding: '10px', background: '#3a3a3a', borderRadius: '6px', border: '1px solid rgba(255,170,102,0.35)' }}>
                           {(safeT as any)?.comprovantesNenhumClienteCadastrado || 'Não há clientes cadastrados. Cadastre clientes em Gestão técnica → Clientes antes de adicionar comprovantes por cliente.'}
@@ -50473,7 +50749,7 @@ A1;Peça exemplo;10`}
                       ) : (
                         <select
                           value={formComp.cliente}
-                          onChange={e => setFormComp(prev => ({ ...prev, cliente: e.target.value }))}
+                          onChange={e => setFormComp(prev => ({ ...prev, cliente: e.target.value, tipo: 'cliente' }))}
                           style={{ width: '100%', padding: '10px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }}
                         >
                           <option value="">{(safeT as any)?.comprovantesSelecioneClientePlaceholder || 'Selecione um cliente…'}</option>
@@ -50487,7 +50763,25 @@ A1;Peça exemplo;10`}
                   <label style={{ display: 'block', color: '#00c853', fontSize: '12px', marginBottom: '6px' }}>
                     {(safeT as any)?.comprovantesDataRecibo || 'Data do recibo (no documento / PDF)'}
                   </label>
-                  <input type="date" value={formComp.data} onChange={e => setFormComp(prev => ({ ...prev, data: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }} />
+                  <input
+                    type="date"
+                    value={formComp.data}
+                    onChange={e => syncFormCompDataHora(e.target.value, formComp.horaUsada)}
+                    style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }}
+                  />
+                  <label style={{ display: 'block', color: '#00c853', fontSize: '12px', marginBottom: '6px' }}>
+                    {(safeT as any)?.comprovantesHoraRecibo || 'Hora da despesa'}
+                  </label>
+                  <input
+                    type="time"
+                    value={formComp.horaUsada}
+                    onChange={e => syncFormCompDataHora(formComp.data, e.target.value)}
+                    style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }}
+                  />
+                  <p style={{ margin: '0 0 12px', fontSize: '11px', color: '#888', lineHeight: 1.4 }}>
+                    {(safeT as any)?.comprovantesManualHoraHint ||
+                      'Data e hora definem o cliente (agenda/relatório). Ajuste se o almoço ou a despesa foi noutro momento.'}
+                  </p>
                   <label style={{ display: 'block', color: '#00c853', fontSize: '12px', marginBottom: '6px' }}>
                     {(safeT as any)?.comprovantesMesArquivo || 'Mês de arquivo (IRS / filtro por mês)'}
                   </label>
@@ -50676,7 +50970,7 @@ A1;Peça exemplo;10`}
                           const novaData = e.target.value
                           setComprovanteReciboRapido(prev => {
                             if (!prev || prev.step !== 'preview') return prev
-                            const estado = estadoClienteParaDataRecibo(novaData)
+                            const estado = estadoClienteParaRecibo(novaData, prev.horaUsada)
                             return {
                               ...prev,
                               data: novaData,
@@ -50687,6 +50981,31 @@ A1;Peça exemplo;10`}
                         }}
                         style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#111', border: '1px solid rgba(147,197,253,0.35)', borderRadius: '8px', color: '#fff' }}
                       />
+                      <label style={{ display: 'block', color: '#93c5fd', fontSize: '12px', marginBottom: '4px' }}>
+                        {(safeT as any)?.comprovantesHoraRecibo || 'Hora do recibo / foto'}
+                      </label>
+                      <input
+                        type="time"
+                        value={comprovanteReciboRapido.horaUsada || ''}
+                        onChange={e => {
+                          const novaHora = e.target.value
+                          setComprovanteReciboRapido(prev => {
+                            if (!prev || prev.step !== 'preview') return prev
+                            const estado = estadoClienteParaRecibo(String(prev.data || '').slice(0, 10), novaHora)
+                            return { ...prev, ...estado, horaUsada: novaHora, horaOrigem: 'recibo' as const }
+                          })
+                        }}
+                        style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#111', border: '1px solid rgba(147,197,253,0.35)', borderRadius: '8px', color: '#fff' }}
+                      />
+                      {comprovanteReciboRapido.horaUsada ? (
+                        <p style={{ fontSize: '11px', color: '#78716c', margin: '0 0 12px', lineHeight: 1.45 }}>
+                          {comprovanteReciboRapido.horaOrigem === 'recibo'
+                            ? (safeT as any)?.comprovantesHoraDoRecibo ||
+                              'Hora lida do recibo (OCR). Ajuste se necessário — define o cliente do dia.'
+                            : (safeT as any)?.comprovantesHoraDaFoto ||
+                              'Hora da foto (recibo sem hora legível). Usada para saber em que cliente estava.'}
+                        </p>
+                      ) : null}
                       <label style={{ display: 'block', color: '#93c5fd', fontSize: '12px', marginBottom: '4px' }}>
                         {(safeT as any)?.comprovantesMesArquivo || 'Mês de arquivo (filtro por mês / IRS)'}
                       </label>
@@ -50752,30 +51071,53 @@ A1;Peça exemplo;10`}
                           </p>
                         ) : comprovanteReciboRapido.clientesSugeridos.length === 1 ? (
                           <p style={{ margin: 0, fontSize: '12px', color: '#bbf7d0', lineHeight: 1.45 }}>
-                            {(
-                              (safeT as any)?.comprovantesClientesAtivosAutoData ||
-                              'Para o dia {data}: {cliente} ({origem})'
-                            )
-                              .replace('{data}', formatarDataListaComprovante(String(comprovanteReciboRapido.data || '').slice(0, 10)))
-                              .replace('{cliente}', comprovanteReciboRapido.clientesSugeridos[0].clienteNome)
-                              .replace(
-                                '{origem}',
-                                labelOrigemClienteComprovante(
-                                  comprovanteReciboRapido.clientesSugeridos[0].origem,
-                                  safeT as Record<string, string | undefined>
+                            {comprovanteReciboRapido.motivoAssociacao === 'hora' ? (
+                              (
+                                (safeT as any)?.comprovantesClientesAtivosAutoHora ||
+                                'Às {hora} estava com {cliente} ({origem}).'
+                              )
+                                .replace('{hora}', comprovanteReciboRapido.horaUsada || '—')
+                                .replace('{cliente}', comprovanteReciboRapido.clientesSugeridos[0].clienteNome)
+                                .replace(
+                                  '{origem}',
+                                  labelOrigemClienteComprovante(
+                                    comprovanteReciboRapido.clientesSugeridos[0].origem,
+                                    safeT as Record<string, string | undefined>
+                                  )
                                 )
-                              )}
+                            ) : (
+                              (
+                                (safeT as any)?.comprovantesClientesAtivosAutoData ||
+                                'Para o dia {data}: {cliente} ({origem})'
+                              )
+                                .replace('{data}', formatarDataListaComprovante(String(comprovanteReciboRapido.data || '').slice(0, 10)))
+                                .replace('{cliente}', comprovanteReciboRapido.clientesSugeridos[0].clienteNome)
+                                .replace(
+                                  '{origem}',
+                                  labelOrigemClienteComprovante(
+                                    comprovanteReciboRapido.clientesSugeridos[0].origem,
+                                    safeT as Record<string, string | undefined>
+                                  )
+                                )
+                            )}
                           </p>
                         ) : (
                           <>
                             <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#aaa' }}>
-                              {(
-                                (safeT as any)?.comprovantesClientesAtivosEscolhaData ||
-                                'Vários clientes no dia {data}. Qual deles?'
-                              ).replace(
-                                '{data}',
-                                formatarDataListaComprovante(String(comprovanteReciboRapido.data || '').slice(0, 10))
-                              )}
+                              {comprovanteReciboRapido.horaUsada
+                                ? (
+                                    (safeT as any)?.comprovantesClientesAtivosEscolhaHora ||
+                                    'Vários clientes no dia {data}. Às {hora} qual deles? (mais próximo primeiro)'
+                                  )
+                                    .replace('{data}', formatarDataListaComprovante(String(comprovanteReciboRapido.data || '').slice(0, 10)))
+                                    .replace('{hora}', comprovanteReciboRapido.horaUsada)
+                                : (
+                                    (safeT as any)?.comprovantesClientesAtivosEscolhaData ||
+                                    'Vários clientes no dia {data}. Qual deles?'
+                                  ).replace(
+                                    '{data}',
+                                    formatarDataListaComprovante(String(comprovanteReciboRapido.data || '').slice(0, 10))
+                                  )}
                             </p>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                               {comprovanteReciboRapido.clientesSugeridos.map((cl) => {
@@ -50812,8 +51154,10 @@ A1;Peça exemplo;10`}
                                     <strong>{cl.clienteNome}</strong>
                                     <span style={{ display: 'block', fontSize: '11px', color: '#888', marginTop: '2px' }}>
                                       {labelOrigemClienteComprovante(cl.origem, safeT as Record<string, string | undefined>)}
-                                      {' · '}
-                                      {cl.detalhe}
+                                      {cl.detalhe ? ` · ${cl.detalhe}` : ''}
+                                      {cl.distanciaMinutos != null && cl.distanciaMinutos > 0
+                                        ? ` · ~${cl.distanciaMinutos} min da hora`
+                                        : ''}
                                     </span>
                                   </button>
                                 )
@@ -50867,7 +51211,7 @@ A1;Peça exemplo;10`}
                           onClick={() => {
                             const p = comprovanteReciboRapido
                             if (p.step !== 'preview') return
-                            setFormComp({
+                            abrirFormCompManual({
                               tipo:
                                 p.tipoSelecionado === 'cliente' && p.clienteSelecionado.trim()
                                   ? 'cliente'
@@ -50877,6 +51221,7 @@ A1;Peça exemplo;10`}
                                   ? p.clienteSelecionado.trim()
                                   : '',
                               data: String(p.data || '').slice(0, 10),
+                              horaUsada: p.horaUsada || horaAtualLocal(),
                               mesCompetencia:
                                 typeof p.mesCompetencia === 'string' && /^\d{4}-\d{2}$/.test(p.mesCompetencia)
                                   ? p.mesCompetencia
@@ -50887,7 +51232,6 @@ A1;Peça exemplo;10`}
                               imagemBase64: p.imagemBase64,
                             })
                             setComprovanteReciboRapido(null)
-                            setShowFormComp(true)
                           }}
                           style={{
                             padding: '10px 16px',
@@ -64813,11 +65157,7 @@ A1;Peça exemplo;10`}
         setPecasFiltradas([])
         return
       }
-      const filtradas = pecasBiblioteca.filter(peca => 
-        peca.codigo.toLowerCase().includes(codigo.toLowerCase()) ||
-        peca.nome.toLowerCase().includes(codigo.toLowerCase())
-      )
-      setPecasFiltradas(filtradas)
+      setPecasFiltradas(filtrarPecasBibliotecaPorBusca(pecasBiblioteca, codigo, 40))
     }
 
     const normalizarItensOrcamentoGravados = (itens: typeof dadosOrcamento.itens) =>
@@ -66388,6 +66728,12 @@ A1;Peça exemplo;10`}
                           color: '#fff'
                         }}
                       />
+                      {buscaCodigoPeca.trim() && pecasFiltradas.length === 0 ? (
+                        <p style={{ marginTop: '10px', fontSize: '12px', color: '#aaa', lineHeight: 1.45 }}>
+                          {safeT?.orcamentoBibliotecaNenhumaPeca ||
+                            'Nenhuma peça encontrada. A busca aceita código com ou sem hífens. Se não existir na biblioteca, use entrada manual ou cadastre na Biblioteca de Peças.'}
+                        </p>
+                      ) : null}
                       {pecasFiltradas.length > 0 && (
                         <div style={{ 
                           marginTop: '10px', 
@@ -66928,7 +67274,7 @@ A1;Peça exemplo;10`}
                       // Salvar temporariamente e gerar PDF
                       const novosOrcamentos = [...orcamentosGerados, orcamentoTemp]
                       saveData('nonato-orcamentos-avulso', novosOrcamentos).then(() => {
-                        window.open(`/api/pdf/confirmacao-pedido-os/${orcamentoTemp.id}?lang=${lang}`, '_blank')
+                        window.open(`/api/pdf/confirmacao-pedido-os/${orcamentoTemp.id}?lang=${lang}&modelo=${encodeURIComponent(pdfModeloOrcamento)}`, '_blank')
                         // Remover temporário após um delay
                         setTimeout(() => {
                           const semTemp = orcamentosGerados.filter(o => !o.id.startsWith('temp-'))
@@ -66986,7 +67332,7 @@ A1;Peça exemplo;10`}
                     // Salvar temporariamente e gerar PDF
                     const novosOrcamentos = [...orcamentosGerados, orcamentoTemp]
                     saveData('nonato-orcamentos-avulso', novosOrcamentos).then(() => {
-                      window.open(`/api/pdf/confirmacao-orcamento/${orcamentoTemp.id}?lang=${lang}`, '_blank')
+                      window.open(`/api/pdf/confirmacao-orcamento/${orcamentoTemp.id}?lang=${lang}&modelo=${encodeURIComponent(pdfModeloOrcamento)}`, '_blank')
                       // Remover temporário após um delay
                       setTimeout(() => {
                         const semTemp = orcamentosGerados.filter(o => !o.id.startsWith('temp-'))
@@ -67082,7 +67428,7 @@ A1;Peça exemplo;10`}
                     }
                     const novosOrcamentos = [...orcamentosGerados, orcamentoTemp]
                     saveData('nonato-orcamentos-avulso', novosOrcamentos).then(() => {
-                      window.open(`/api/pdf/pedido-separacao-envio/${orcamentoTemp.id}?lang=${lang}`, '_blank')
+                      window.open(`/api/pdf/pedido-separacao-envio/${orcamentoTemp.id}?lang=${lang}&modelo=${encodeURIComponent(pdfModeloOrcamento)}`, '_blank')
                       setTimeout(() => {
                         const semTemp = orcamentosGerados.filter(o => !o.id.startsWith('temp-'))
                         saveData('nonato-orcamentos-avulso', semTemp)
@@ -67477,7 +67823,7 @@ A1;Peça exemplo;10`}
                               onClick={() => {
                                 const selector = document.getElementById(`idioma-selector-${orcamento.id}`) as HTMLSelectElement
                                 const lang = selector?.value || 'pt-BR'
-                                window.open(`/api/pdf/confirmacao-pedido-os/${orcamento.id}?lang=${lang}`, '_blank')
+                                window.open(`/api/pdf/confirmacao-pedido-os/${orcamento.id}?lang=${lang}&modelo=${encodeURIComponent(pdfModeloOrcamento)}`, '_blank')
                               }}
                               style={{
                                 width: '100%',
@@ -67515,7 +67861,7 @@ A1;Peça exemplo;10`}
                             onClick={() => {
                               const selector = document.getElementById(`idioma-selector-${orcamento.id}`) as HTMLSelectElement
                               const lang = selector?.value || 'pt-BR'
-                              window.open(`/api/pdf/confirmacao-orcamento/${orcamento.id}?lang=${lang}`, '_blank')
+                              window.open(`/api/pdf/confirmacao-orcamento/${orcamento.id}?lang=${lang}&modelo=${encodeURIComponent(pdfModeloOrcamento)}`, '_blank')
                             }}
                             style={{
                               width: '100%',
@@ -67575,7 +67921,7 @@ A1;Peça exemplo;10`}
                               alert(safeT?.pedidoEnviadoAlmoxarifado || 'Pedido enviado para o Almoxarifado com sucesso!')
                               const selector = document.getElementById(`idioma-selector-${orcamento.id}`) as HTMLSelectElement
                               const lang = selector?.value || 'pt-BR'
-                              window.open(`/api/pdf/pedido-separacao-envio/${orcamento.id}?lang=${lang}`, '_blank')
+                              window.open(`/api/pdf/pedido-separacao-envio/${orcamento.id}?lang=${lang}&modelo=${encodeURIComponent(pdfModeloOrcamento)}`, '_blank')
                             }}
                             style={{
                               width: '100%',

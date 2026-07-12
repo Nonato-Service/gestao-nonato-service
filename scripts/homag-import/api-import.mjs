@@ -12,7 +12,8 @@ import {
   DEFAULT_FIELDS,
 } from './api-products.mjs'
 
-const API_MAX_PAGE_INDEX = 249
+/** API HOMAG aceita páginas 0–250 (251×20 = 5020 itens por query). */
+const API_MAX_PAGE_INDEX = 250
 const API_PAGE_SIZE = 20
 const API_MAX_ITEMS_PER_QUERY = (API_MAX_PAGE_INDEX + 1) * API_PAGE_SIZE
 

@@ -92,3 +92,88 @@ export function relatorioPdfThemeCss(model: string): string {
   }
   return themes[m] || themes.profissional
 }
+
+/** Temas visuais para documentos genéricos (cadastro, contador, confirmações). */
+export function documentPdfThemeCss(
+  model: string,
+  docTheme: 'service' | 'expense' | 'billing' | 'cadastro' = 'service'
+): string {
+  const m = normalizePdfModelo(model)
+  const brandByTheme: Record<string, { main: string; dark: string; light: string }> = {
+    service: { main: '#1e3a5f', dark: '#0f172a', light: '#f1f5f9' },
+    expense: { main: '#0d7a3d', dark: '#14532d', light: '#ecfdf5' },
+    billing: { main: '#1565c0', dark: '#0d47a1', light: '#e3f2fd' },
+    cadastro: { main: '#0d7a3d', dark: '#14532d', light: '#ecfdf5' },
+  }
+  const brand = brandByTheme[docTheme] || brandByTheme.service
+
+  const base = `
+    :root {
+      --ns-pdf-brand: ${brand.main};
+      --ns-pdf-brand-dark: ${brand.dark};
+      --ns-pdf-brand-light: ${brand.light};
+    }
+    .ns-pdf-header__bar {
+      background: linear-gradient(90deg, ${brand.main} 0%, ${brand.dark} 50%, ${brand.main} 100%);
+    }
+    .ns-pdf-header__badge-v { color: ${brand.main}; }
+    .ns-pdf-section-title { color: ${brand.main}; }
+  `
+
+  const themes: Record<string, string> = {
+    profissional: base,
+    classico: `
+      ${base}
+      .ns-pdf-header__title { color: ${brand.main}; }
+    `,
+    moderno: `
+      ${base}
+      .ns-pdf-header__row {
+        background: linear-gradient(135deg, ${brand.dark} 0%, ${brand.main} 100%);
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 8px;
+      }
+      .ns-pdf-header__title, .ns-pdf-header__subtitle, .ns-pdf-header__badge-k, .ns-pdf-header__badge-v {
+        color: #fff !important;
+      }
+      .ns-pdf-header__badge { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
+      .ns-pdf-header__bar { display: none; }
+    `,
+    detalhado: `
+      ${base}
+      .ns-pdf-header__title { font-size: 20px; }
+      .ns-pdf-card { padding: 20px 22px; }
+    `,
+    compacto: `
+      ${base}
+      body.ns-pdf-doc { font-size: 9pt; padding: 12px 14px 18px; }
+      .ns-pdf-card { padding: 12px 14px; }
+    `,
+    minimalista: `
+      ${base}
+      .ns-pdf-card { background: #fff; border-color: #e5e5e5; box-shadow: none; }
+      .ns-pdf-table th { background: #fafafa; color: #171717; border-color: #e5e5e5; }
+    `,
+    executivo: `
+      ${base}
+      .ns-pdf-header__title { font-family: Georgia, "Times New Roman", serif; letter-spacing: 0.04em; }
+    `,
+    formal: `
+      ${base}
+      .ns-pdf-header__title { font-family: Georgia, "Times New Roman", serif; text-transform: uppercase; letter-spacing: 0.08em; font-size: 15px; }
+    `,
+    colorido: `
+      ${base}
+      .ns-pdf-table th { background: linear-gradient(90deg, #7c3aed, #db2777); }
+    `,
+    negro: `
+      ${base}
+      body.ns-pdf-doc { background: #111; color: #eee; }
+      .ns-pdf-card { background: #1a1a1a; border-color: #333; }
+      .ns-pdf-card__value { color: #eee; }
+      .ns-pdf-meta { border-color: #333; background: #1a1a1a; }
+    `,
+  }
+  return themes[m] || themes.profissional
+}

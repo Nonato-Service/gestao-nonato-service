@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect, useId, useCallback } from 'react'
+import { filtrarPecasBibliotecaPorBusca } from '../lib/pecaCodigoBusca'
 import { openPedidoOrcamentoAvulsoPdf } from '../lib/pedidoOrcamentoAvulsoPdf'
 import {
   enriquecerBlocoEquipamentoPedido,
@@ -232,15 +233,10 @@ export function PedidoOrcamentosAvulsoContent({
     )
   }, [clientes, buscaCliente])
 
-  const pecasFiltradas = useMemo(() => {
-    if (!buscaPeca.trim()) return pecasBiblioteca.slice(0, 50)
-    const b = buscaPeca.toLowerCase()
-    return pecasBiblioteca.filter(
-      (p) =>
-        (p.codigo || '').toLowerCase().includes(b) ||
-        (p.nome || '').toLowerCase().includes(b)
-    )
-  }, [pecasBiblioteca, buscaPeca])
+  const pecasFiltradas = useMemo(
+    () => filtrarPecasBibliotecaPorBusca(pecasBiblioteca, buscaPeca, 50),
+    [pecasBiblioteca, buscaPeca]
+  )
 
   const nomeClienteExibido = clienteSelecionado ? clienteSelecionado.nomeEmpresa : clienteNomeManual || '—'
   const equipamentosDoCliente = clienteSelecionado?.equipamentos || []
@@ -1067,6 +1063,12 @@ export function PedidoOrcamentosAvulsoContent({
                                     autoFocus
                                   />
                                   <div className="orc-pro__list">
+                                    {pecasFiltradas.length === 0 && buscaPeca.trim() ? (
+                                      <p className="orc-pro__list-empty">
+                                        {safeT?.orcamentoBibliotecaNenhumaPeca ||
+                                          'Nenhuma peça encontrada. A busca aceita código com ou sem hífens (ex.: 2-029-95-0951). Se não existir na biblioteca, use «Manual» ou cadastre na Biblioteca de Peças.'}
+                                      </p>
+                                    ) : null}
                                     {pecasFiltradas.map((peca) => (
                                       <div
                                         key={peca.id}

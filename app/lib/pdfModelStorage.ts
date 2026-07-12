@@ -7,6 +7,8 @@ export const PDF_STORAGE_KEYS = {
   pedidoAvulso: 'nonato-pedido-avulso-pdf-modelo',
   pecasEspeciais: 'nonato-pecas-especiais-pdf-modelo',
   fechamentoDespesas: 'nonato-fechamento-despesas-pdf-modelo',
+  cadastroNonato: 'nonato-cadastro-nonato-pdf-modelo',
+  pagamentosContador: 'nonato-pagamentos-contador-pdf-modelo',
 } as const
 
 export type PdfStorageDomain = keyof typeof PDF_STORAGE_KEYS

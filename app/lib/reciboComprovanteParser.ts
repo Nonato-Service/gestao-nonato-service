@@ -57,6 +57,33 @@ export function parseDataReciboIso(text: string): string | null {
   return null
 }
 
+/** Hora HH:MM (24h) a partir do OCR — recibos PT/ES comuns. */
+export function parseHoraRecibo(text: string): string | null {
+  const lines = text.split(/\n/)
+  for (const raw of lines) {
+    const line = raw.trim()
+    if (!line) continue
+    // 13:45 ou 13.45 ou 13-45
+    const m24 = line.match(/\b([01]?\d|2[0-3])[:.\-hH]([0-5]\d)\b/)
+    if (m24) {
+      const h = String(parseInt(m24[1], 10)).padStart(2, '0')
+      const min = String(parseInt(m24[2], 10)).padStart(2, '0')
+      return `${h}:${min}`
+    }
+    // 1:45 PM / 01:45 pm
+    const m12 = line.match(/\b(0?\d|1[0-2])[:.\-]([0-5]\d)\s*(AM|PM|am|pm|A\.M\.|P\.M\.)\b/i)
+    if (m12) {
+      let h = parseInt(m12[1], 10)
+      const min = String(parseInt(m12[2], 10)).padStart(2, '0')
+      const pm = /p/i.test(m12[3])
+      if (pm && h < 12) h += 12
+      if (!pm && h === 12) h = 0
+      return `${String(h).padStart(2, '0')}:${min}`
+    }
+  }
+  return null
+}
+
 /** Primeira linha com texto «humano» (nome de estabelecimento). */
 export function extrairDescricaoRecibo(text: string): string {
   const lines = text

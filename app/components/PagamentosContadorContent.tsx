@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { documentPdfDateLocale, localeDateShort, localeForLongDatetime } from '../translations'
+import { PdfModeloPickerField } from './PdfModeloPickerField'
+import { loadPdfModeloPadrao, persistPdfModeloPadrao } from '../lib/pdfModelStorage'
 
 const STORAGE_ENTIDADES = 'nonato-contador-entidades'
 const STORAGE_PAGAMENTOS = 'nonato-contador-pagamentos'
@@ -247,6 +249,7 @@ export function PagamentosContadorContent({
   const [filtroDataFim, setFiltroDataFim] = useState('')
   const [filtroStatus, setFiltroStatus] = useState<'todos' | 'pago' | 'pendente'>('todos')
   const [busca, setBusca] = useState('')
+  const [pdfModeloContador, setPdfModeloContador] = useState(() => loadPdfModeloPadrao('pagamentosContador'))
 
   const [showPagamentoForm, setShowPagamentoForm] = useState(false)
   const [editingPagamentoId, setEditingPagamentoId] = useState<string | null>(null)
@@ -598,6 +601,7 @@ export function PagamentosContadorContent({
       locale: pdfDateLocale,
       htmlLang: pdfDateLocale,
       labels: buildPdfLabels(safeT),
+      pdfModelo: pdfModeloContador,
     }
     try {
       const res = await fetch('/api/pdf/pagamentos-contador', {
@@ -868,6 +872,23 @@ export function PagamentosContadorContent({
             >
               📄 {tx(safeT, 'pagamentosContadorExportarPdf', 'Exportar PDF p/ contador')}
             </button>
+          </div>
+          <div style={{ maxWidth: '380px', margin: '0 0 12px' }}>
+            <PdfModeloPickerField
+              value={pdfModeloContador}
+              onChange={(model) => {
+                const next = persistPdfModeloPadrao('pagamentosContador', model, saveData)
+                setPdfModeloContador(next)
+              }}
+              labels={safeT as Record<string, string>}
+              label={tx(safeT, 'selecioneModeloPDF', 'Modelo de PDF')}
+              hint={tx(
+                safeT,
+                'pagamentosContadorPdfModeloHint',
+                'Estilo visual do relatório (Profissional, Clássico, Moderno, etc.).'
+              )}
+              compact
+            />
           </div>
           <p className="pagamentos-contador-toolbar-hint">
             {tx(

@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useState, useMemo, useEffect, useId, useCallback } from 'react'
+import { filtrarPecasBibliotecaPorBusca } from '../lib/pecaCodigoBusca'
 import {
   calcularTotaisDesdeValorFinalComIva,
   calcularTotaisIvaPecasEspeciais,
@@ -482,18 +483,7 @@ export function OrcamentoPecasEspeciaisContent({
   const totalComIvaFmt = useMemo(() => formatarPrecoOrcamentoEur(totaisIva.comIva), [totaisIva.comIva])
 
   const filtrarPecasBiblioteca = useCallback(
-    (q: string) => {
-      const b = q.trim().toLowerCase()
-      if (!b) return pecasBiblioteca.slice(0, 8)
-      return pecasBiblioteca
-        .filter(
-          (p) =>
-            (p.codigo || '').toLowerCase().includes(b) ||
-            (p.nome || '').toLowerCase().includes(b) ||
-            (p.descricao || '').toLowerCase().includes(b)
-        )
-        .slice(0, 8)
-    },
+    (q: string) => filtrarPecasBibliotecaPorBusca(pecasBiblioteca, q, 8),
     [pecasBiblioteca]
   )
 

@@ -914,7 +914,7 @@ export async function hydratePecasBibliotecaImagensFromServer(
       onProgress?.({ phase: 'images', loaded, total: totalImages })
     }
     offset += json.imagens.length
-    if (loaded % 15 === 0 || !json.hasMore) {
+    if (loaded % 120 === 0 || !json.hasMore) {
       const snapshot = Array.from(byId.values())
       try {
         if (typeof window !== 'undefined') {
