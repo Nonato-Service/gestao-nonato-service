@@ -15,6 +15,7 @@ import {
   fmtEuro,
   formatarData,
   idClienteExibicao,
+  relatorioServicoConsideradoConcluido,
   rotuloIdEquipamentoCliente,
   type EquipamentoArmazemIdLookup,
   type EquipamentoClienteLike,
@@ -190,7 +191,7 @@ function StatRow({ icon, label, value }: { icon: React.ReactNode; label: string;
 function PagamentoPills({ pagamento, tr }: { pagamento: 'pago' | 'pendente' | 'devedor'; tr: (k: string) => string }) {
   const items: Array<{ key: 'pago' | 'pendente' | 'devedor'; label: string }> = [
     { key: 'pago', label: tr('pagoStatus') },
-    { key: 'pendente', label: tr('pendenteStatus') },
+    { key: 'pendente', label: tr('pagamentoPendenteStatus') || tr('pendenteStatus') },
     { key: 'devedor', label: tr('devedorStatus') },
   ]
   return (
@@ -310,12 +311,18 @@ export function ClienteDetalheView({
   )
 
   const relatoriosConcluidos = useMemo(
-    () => relatorios.filter((r) => r.servicoConcluido),
-    [relatorios]
+    () =>
+      relatorios.filter((r) =>
+        relatorioServicoConsideradoConcluido(r, fechamentosGuardadosBibliotecaIds)
+      ),
+    [relatorios, fechamentosGuardadosBibliotecaIds]
   )
   const relatoriosEmAberto = useMemo(
-    () => relatorios.filter((r) => !r.servicoConcluido),
-    [relatorios]
+    () =>
+      relatorios.filter(
+        (r) => !relatorioServicoConsideradoConcluido(r, fechamentosGuardadosBibliotecaIds)
+      ),
+    [relatorios, fechamentosGuardadosBibliotecaIds]
   )
 
   const iniciais = useMemo(() => {
@@ -330,7 +337,11 @@ export function ClienteDetalheView({
   const fmtData = (d: string | undefined) => formatarData(d, language, vazio)
 
   const pagamentoLabel = (pag: 'pago' | 'pendente' | 'devedor') =>
-    pag === 'pago' ? tr('pagoStatus') : pag === 'devedor' ? tr('devedorStatus') : tr('pendenteStatus')
+    pag === 'pago'
+      ? tr('pagoStatus')
+      : pag === 'devedor'
+        ? tr('devedorStatus')
+        : tr('pagamentoPendenteStatus') || tr('pendenteStatus')
 
   const cidadeExibicao = [cliente.localidade, cliente.conselho].map((s) => String(s || '').trim()).filter(Boolean).join(' · ')
 
@@ -563,6 +574,14 @@ export function ClienteDetalheView({
                   <div>
                     <strong>{srv.titulo}</strong>
                     <span className="cliente-detalhe-v2__fin-servico-id">{srv.numero}</span>
+                    {srv.servicoConcluido ? (
+                      <span
+                        className="cliente-detalhe-v2__status-pill cliente-detalhe-v2__status-pill--pago"
+                        style={{ marginLeft: 8, fontSize: '0.72rem' }}
+                      >
+                        {tr('servicoConcluido') || 'Serviço concluído'}
+                      </span>
+                    ) : null}
                   </div>
                   <span className={`cliente-detalhe-v2__status-pill cliente-detalhe-v2__status-pill--${srv.pagamento}`}>
                     {pagamentoLabel(srv.pagamento)}

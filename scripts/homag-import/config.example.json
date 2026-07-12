@@ -1,18 +1,19 @@
 {
   "startUrl": "https://shop.homag.com/s/category/spare-parts/0ZG0900000059puGAA?language=en_US",
-  "maxPages": 50,
+  "maxPages": 1600,
   "login": {
     "userSelector": "#username",
     "passSelector": "#password",
     "submitSelector": "button[type=\"submit\"]"
   },
   "list": {
-    "itemSelector": "commerce_product-tile, [data-product-code], .product-tile, [data-product], tr[data-row]",
-    "codeSelector": "[data-product-code], .sku, [data-sku], .product-code",
-    "descSelector": ".product-name, .title, .description, h2, h3, td:nth-child(2)",
-    "imgSelector": "img"
+    "itemSelector": "commerce_product-tile, commerce-product-tile, [data-product-code], [data-productid], .product-tile, [data-product], article[class*=\"product\"], tr[data-row]",
+    "codeSelector": "[data-product-code], .sku, [data-sku], .product-code, [data-productid]",
+    "descSelector": ".product-name, .product-title, .title, .description, h2, h3, td:nth-child(2)",
+    "imgSelector": "img[src], img[data-src]"
   },
   "pagination": {
-    "nextSelector": "button[aria-label=\"Next\"], a[rel=\"next\"], .pagination .next:not(.disabled), lightning-button[title=\"Next\"]"
+    "nextSelector": "button[aria-label=\"Next\"], a[aria-label=\"Next\"], button[title=\"Next\"], a[title=\"Next\"], lightning-button[title=\"Next\"] button, lightning-button[aria-label=\"Next\"] button, commerce_search-paging button:last-child, .pagination li.nextpage a, a.next, button.next:not([disabled])",
+    "loadMoreSelector": "button:has-text(\"Load more\"), button:has-text(\"Show more\"), button:has-text(\"Mehr\")"
   }
 }

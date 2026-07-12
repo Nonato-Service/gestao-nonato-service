@@ -24317,6 +24317,51 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   margin: 0 0 12px;
 }
 
+.biblioteca-hub-toolbar__search-sync-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 200, 120, 0.35);
+  background: rgba(0, 60, 36, 0.35);
+}
+
+.biblioteca-busca-codigo--toolbar {
+  flex: 1 1 280px;
+  min-width: 240px;
+  max-width: 520px;
+}
+
+.biblioteca-hub-toolbar__sync-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.biblioteca-hub-toolbar__sync-btn {
+  padding: 10px 16px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+}
+
+.biblioteca-busca-codigo__modo-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
 .biblioteca-busca-codigo {
   min-width: 200px;
   flex: 1 1 220px;
@@ -24328,6 +24373,37 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   font-size: 11px;
   color: rgba(255, 255, 255, 0.75);
   margin-bottom: 4px;
+}
+
+.biblioteca-busca-codigo__modo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.biblioteca-busca-codigo__modo-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.biblioteca-busca-codigo__modo-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(0, 168, 107, 0.35);
+}
+
+.biblioteca-busca-codigo__modo-btn--active {
+  background: rgba(0, 168, 107, 0.32);
+  border-color: rgba(0, 220, 130, 0.65);
+  color: #c8ffe0;
+  box-shadow: 0 0 0 1px rgba(0, 220, 130, 0.25);
 }
 
 .biblioteca-busca-codigo__row {

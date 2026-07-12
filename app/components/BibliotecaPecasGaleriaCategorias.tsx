@@ -17,7 +17,22 @@ function parseNumeroSequenciaGaleria(val?: string | null): number {
   return Number.isFinite(n) && n > 0 ? n : 0
 }
 
-function compararPecasGaleriaPorNumero(a: PecaBibliotecaGaleria, b: PecaBibliotecaGaleria): number {
+function indiceOrdemCategoriaGaleria(categoriaId: string | undefined, categorias: CategoriaPecaGaleria[]): number {
+  const catId = String(categoriaId || '').trim()
+  if (!catId) return categorias.length + 1
+  const idx = categorias.findIndex((c) => c.id === catId)
+  return idx >= 0 ? idx : categorias.length
+}
+
+function compararPecasGaleriaPorNumero(
+  a: PecaBibliotecaGaleria,
+  b: PecaBibliotecaGaleria,
+  categorias: CategoriaPecaGaleria[] = []
+): number {
+  const ca = indiceOrdemCategoriaGaleria(a.categoriaId, categorias)
+  const cb = indiceOrdemCategoriaGaleria(b.categoriaId, categorias)
+  if (ca !== cb) return ca - cb
+
   const na = parseNumeroSequenciaGaleria(a.numeroSequenciaGrupo)
   const nb = parseNumeroSequenciaGaleria(b.numeroSequenciaGrupo)
   if (na && nb && na !== nb) return na - nb
@@ -38,12 +53,19 @@ type GaleriaTranslations = {
   codigo?: string
   semPecasCategoria?: string
   buscarPorCodigo?: string
-  buscaHint?: string
+  buscarPorNome?: string
+  buscaModoCodigo?: string
+  buscaModoNome?: string
   buscarPlaceholder?: string
+  buscarPlaceholderNome?: string
   buscaResultados?: string
+  buscaResultadosNome?: string
   buscaVazio?: string
+  buscaVazioNome?: string
   limparBusca?: string
 }
+
+type BuscaGaleriaModo = 'codigo' | 'nome'
 
 type Props = {
   categorias: CategoriaPecaGaleria[]
@@ -56,6 +78,8 @@ type Props = {
   onThumbEnter?: (ev: React.MouseEvent, src: string, label: string) => void
   onThumbLeave?: () => void
   buscaCodigo?: string
+  buscaModo?: BuscaGaleriaModo
+  onBuscaModoChange?: (modo: BuscaGaleriaModo) => void
   onBuscaCodigoChange?: (value: string) => void
   modoAnexarRelatorio?: boolean
   pecaSelecionadaId?: string | null
@@ -190,6 +214,8 @@ export function BibliotecaPecasGaleriaCategorias({
   onThumbEnter,
   onThumbLeave,
   buscaCodigo = '',
+  buscaModo = 'codigo',
+  onBuscaModoChange,
   onBuscaCodigoChange,
   modoAnexarRelatorio = false,
   pecaSelecionadaId = null,
@@ -220,17 +246,41 @@ export function BibliotecaPecasGaleriaCategorias({
   const barraBusca =
     onBuscaCodigoChange != null ? (
       <div className="biblioteca-busca-codigo biblioteca-galeria-categorias__search-wrap" role="search">
+        {onBuscaModoChange ? (
+          <div className="biblioteca-busca-codigo__modo" role="group" aria-label="Tipo de busca">
+            <button
+              type="button"
+              className={`biblioteca-busca-codigo__modo-btn${buscaModo === 'codigo' ? ' biblioteca-busca-codigo__modo-btn--active' : ''}`}
+              onClick={() => onBuscaModoChange('codigo')}
+            >
+              {t.buscaModoCodigo || 'Código'}
+            </button>
+            <button
+              type="button"
+              className={`biblioteca-busca-codigo__modo-btn${buscaModo === 'nome' ? ' biblioteca-busca-codigo__modo-btn--active' : ''}`}
+              onClick={() => onBuscaModoChange('nome')}
+            >
+              {t.buscaModoNome || 'Nome'}
+            </button>
+          </div>
+        ) : null}
         <label htmlFor="biblioteca-galeria-busca-codigo" className="biblioteca-busca-codigo__label">
-          {t.buscarPorCodigo || 'Buscar peça por código'}
+          {buscaModo === 'nome'
+            ? t.buscarPorNome || 'Buscar por nome'
+            : t.buscarPorCodigo || 'Buscar peça por código'}
         </label>
         <div className="biblioteca-busca-codigo__row">
           <input
             id="biblioteca-galeria-busca-codigo"
             type="search"
             className="biblioteca-busca-codigo__input"
-            value={buscaCodigo}
+            value={buscaCodigo === 'null' || buscaCodigo === 'undefined' ? '' : buscaCodigo}
             onChange={(e) => onBuscaCodigoChange(e.target.value)}
-            placeholder={t.buscarPlaceholder || 'Ex: 700030001 ou FO-123'}
+            placeholder={
+              buscaModo === 'nome'
+                ? t.buscarPlaceholderNome || 'Ex: suction cup, cilindro…'
+                : t.buscarPlaceholder || 'Ex: 700030001'
+            }
             autoComplete="off"
             enterKeyHint="search"
           />
@@ -249,25 +299,38 @@ export function BibliotecaPecasGaleriaCategorias({
 
   if (emBusca) {
     const resultados = [...pecasCatalogo]
-      .filter((peca) =>
-        String(peca.codigo ?? '')
+      .filter((peca) => {
+        if (buscaModo === 'nome') {
+          const nome = String(peca.nome ?? '')
+            .trim()
+            .toLowerCase()
+          return nome.includes(q)
+        }
+        return String(peca.codigo ?? '')
           .trim()
           .toLowerCase()
           .includes(q)
-      )
-      .sort(compararPecasGaleriaPorNumero)
+      })
+      .sort((a, b) => compararPecasGaleriaPorNumero(a, b, categorias))
 
     return (
       <div className="biblioteca-galeria-categorias">
         {barraBusca}
         <p className="biblioteca-galeria-categorias__lead biblioteca-galeria-categorias__search-results">
-          {String(t.buscaResultados || '{count} peça(s) encontrada(s) para «{codigo}»')
+          {String(
+            buscaModo === 'nome'
+              ? t.buscaResultadosNome || '{count} peça(s) encontrada(s) para o nome «{termo}»'
+              : t.buscaResultados || '{count} peça(s) encontrada(s) para «{codigo}»'
+          )
             .replace('{count}', String(resultados.length))
-            .replace('{codigo}', buscaCodigo.trim())}
+            .replace('{codigo}', buscaCodigo.trim())
+            .replace('{termo}', buscaCodigo.trim())}
         </p>
         {resultados.length === 0 ? (
           <p className="biblioteca-galeria-categorias__empty">
-            {t.buscaVazio || 'Nenhuma peça com este código no catálogo.'}
+            {buscaModo === 'nome'
+              ? t.buscaVazioNome || 'Nenhuma peça com este nome no catálogo.'
+              : t.buscaVazio || 'Nenhuma peça com este código no catálogo.'}
           </p>
         ) : (
           <div className="biblioteca-pecas-hub__piece-grid biblioteca-galeria-categorias__grid-pecas">
@@ -282,7 +345,7 @@ export function BibliotecaPecasGaleriaCategorias({
     const categoria = categorias.find((c) => c.id === categoriaSelecionadaId)
     const pecasCategoria = pecasCatalogo
       .filter((p) => p.categoriaId === categoriaSelecionadaId)
-      .sort(compararPecasGaleriaPorNumero)
+      .sort((a, b) => compararPecasGaleriaPorNumero(a, b, categorias))
 
     return (
       <div className="biblioteca-galeria-categorias">

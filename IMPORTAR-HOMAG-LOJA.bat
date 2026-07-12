@@ -4,22 +4,47 @@ title NONATO - Importar peças HOMAG
 cd /d "%~dp0"
 
 echo.
-echo  IMPORTAR DA HOMAG eShop
-echo  =======================
-echo  URL: spare-parts (shop.homag.com)
-echo.
-echo  1. Abre o browser Chromium
-echo  2. Faca LOGIN na HOMAG
-echo  3. Va a lista de spare parts
-echo  4. Volte aqui e prima ENTER
+echo  IMPORTAR DA HOMAG eShop (mesmas regras que IMPORTAR-TUDO-HOMAG)
+echo  ================================================================
+echo  RETOMA automatica — paginacao segura (max clique directo: 250)
+echo  Use IMPORTAR-TUDO-HOMAG.bat para importacao completa + Railway
 echo.
 
-set HOMAG_MANUAL=1
+where node >nul 2>&1
+if errorlevel 1 (
+  echo ERRO: Node.js nao encontrado.
+  pause
+  exit /b 1
+)
+
+call npm install >nul 2>&1
+call npx playwright install chromium
+
 set HOMAG_HEADLESS=0
-npm run homag:import
+set HOMAG_AUTO_MERGE=1
+set HOMAG_AUTO_RAILWAY=0
+set HOMAG_RESUME=1
+set HOMAG_MAX_PAGES=1600
+set HOMAG_RAILWAY_EVERY=500
+
+call npm run homag:import
+set HOMAG_RC=%ERRORLEVEL%
+
+if %HOMAG_RC%==1 (
+  echo.
+  echo Falhou — execute outra vez para RETOMAR.
+  pause
+  exit /b 1
+)
+
+if %HOMAG_RC%==2 (
+  echo.
+  echo PAROU A MEIO — progresso guardado. Execute outra vez para CONTINUAR.
+  pause
+  exit /b 2
+)
 
 echo.
-echo  Depois: Biblioteca de Pecas - Importacao - Carregar
-echo  scripts\homag-import\out\export.json
+echo Depois: Biblioteca de Pecas - Importacao - Carregar scripts\homag-import\out\export.json
 echo.
 pause

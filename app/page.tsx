@@ -27,6 +27,7 @@ import {
   hydratePecasBibliotecaImagensFromServer,
   loadPecasBibliotecaFromBrowserStorage,
   fetchPecasBibliotecaLiteFromServer,
+  fetchPecasBibliotecaServerMeta,
   bootstrapLoadPecasBiblioteca,
   clearPecasBibliotecaLocal,
   savePecasBibliotecaLocally,
@@ -48,6 +49,7 @@ import {
 } from './lib/diarioLembrete'
 import { mergeNonatoClientesDeferServerLocal } from './lib/clienteMergeUtils'
 import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer } from './lib/mergePecasBiblioteca'
+import { mergeHomagExportIntoBiblioteca, parseHomagExportJson } from './lib/mergeHomagExport'
 import {
   mergeSidebarButtonsDeferLocal,
   repairSidebarButtonsFromCatalog,
@@ -424,6 +426,27 @@ function pecaBibliotecaTemImagemPropria(imagem: string | undefined | null): bool
 
 function pecaBibliotecaSrcImagemDisplay(imagem: string | undefined | null): string {
   return pecaBibliotecaTemImagemPropria(imagem) ? String(imagem).trim() : PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC
+}
+
+type BuscaBibliotecaModo = 'codigo' | 'nome'
+
+function pecaPassaBuscaBibliotecaTexto(
+  peca: { codigo?: string; nome?: string; descricao?: string },
+  q: string,
+  modo: BuscaBibliotecaModo
+): boolean {
+  const ql = q.trim().toLowerCase()
+  if (!ql) return true
+  if (modo === 'nome') {
+    const nome = String(peca.nome ?? peca.descricao ?? '')
+      .trim()
+      .toLowerCase()
+    return nome.includes(ql)
+  }
+  const cod = String(peca.codigo ?? '')
+    .trim()
+    .toLowerCase()
+  return cod.includes(ql)
 }
 
 /** Imagem gravada no item do orçamento (só foto real da peça / upload manual — não o logo padrão). */
@@ -2224,7 +2247,26 @@ function chavePecaBibliotecaSequenciaPreview(p: { codigo?: string; nome?: string
   return nome ? `n:${nome}` : ''
 }
 
-function compararPecasBibliotecaPorNumeroSequencia(a: PecaBiblioteca, b: PecaBiblioteca): number {
+function indiceOrdemCategoriaPecaBiblioteca(
+  p: Pick<PecaBiblioteca, 'categoriaId'>,
+  categorias?: CategoriaRefSequencia[]
+): number {
+  const catId = String(p.categoriaId || '').trim()
+  if (!catId) return (categorias?.length ?? 0) + 1
+  if (!categorias?.length) return 0
+  const idx = categorias.findIndex((c) => c.id === catId)
+  return idx >= 0 ? idx : categorias.length
+}
+
+function compararPecasBibliotecaPorNumeroSequencia(
+  a: PecaBiblioteca,
+  b: PecaBiblioteca,
+  categorias?: CategoriaRefSequencia[]
+): number {
+  const ca = indiceOrdemCategoriaPecaBiblioteca(a, categorias)
+  const cb = indiceOrdemCategoriaPecaBiblioteca(b, categorias)
+  if (ca !== cb) return ca - cb
+
   const na = parseNumeroSequenciaPecaBiblioteca(a.numeroSequenciaGrupo)
   const nb = parseNumeroSequenciaPecaBiblioteca(b.numeroSequenciaGrupo)
   if (na && nb && na !== nb) return na - nb
@@ -2235,8 +2277,11 @@ function compararPecasBibliotecaPorNumeroSequencia(a: PecaBiblioteca, b: PecaBib
   })
 }
 
-function ordenarPecasBibliotecaParaExibicao(pecas: PecaBiblioteca[]): PecaBiblioteca[] {
-  return [...pecas].sort(compararPecasBibliotecaPorNumeroSequencia)
+function ordenarPecasBibliotecaParaExibicao(
+  pecas: PecaBiblioteca[],
+  categorias?: CategoriaRefSequencia[]
+): PecaBiblioteca[] {
+  return [...pecas].sort((a, b) => compararPecasBibliotecaPorNumeroSequencia(a, b, categorias))
 }
 
 function atribuirNumerosSequenciaNovasPecas(
@@ -5146,6 +5191,11 @@ export default function Dashboard() {
   }, [appInitialLoading])
 
   const [bootstrapOfflineMode, setBootstrapOfflineMode] = useState(false)
+  /** Evita erro de hidratação: isOnline()/offline só após mount no browser. */
+  const [browserMounted, setBrowserMounted] = useState(false)
+  useEffect(() => {
+    setBrowserMounted(true)
+  }, [])
   const [cadastroRestoredNotice, setCadastroRestoredNotice] = useState(0)
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
   /** Vista resumida no painel inicial; «Entrar no sistema» mostra métricas, atalhos e inventário. */
@@ -7339,6 +7389,7 @@ export default function Dashboard() {
   const [filtroSubgrupoBiblioteca, setFiltroSubgrupoBiblioteca] = useState<string>('')
   /** Biblioteca: filtra peças cujo código contém o texto (sem distinção maiúsculas/minúsculas). */
   const [buscaCodigoBiblioteca, setBuscaCodigoBiblioteca] = useState<string>('')
+  const [buscaBibliotecaModo, setBuscaBibliotecaModo] = useState<BuscaBibliotecaModo>('codigo')
   const [abaBibliotecaPecas, setAbaBibliotecaPecas] = useState<'cadastro' | 'biblioteca' | 'biblioteca-gestao' | 'grupos' | 'importacao'>('cadastro')
   const [bibliotecaGaleriaCategoriaId, setBibliotecaGaleriaCategoriaId] = useState<string | null>(null)
   /** Se a peça foi aberta a partir da fila de importação, após Salvar regressa à aba Importação (não à Biblioteca). */
@@ -7509,6 +7560,27 @@ export default function Dashboard() {
   const [importacaoGuiaPlataforma, setImportacaoGuiaPlataforma] = useState<'windows' | 'android' | 'ipad'>('windows')
   const [filtroImportacaoPendente, setFiltroImportacaoPendente] = useState<'todos' | 'sem-grupo' | 'sem-subgrupo'>('todos')
   const importacaoFileInputRef = useRef<HTMLInputElement>(null)
+  const homagExportFileInputRef = useRef<HTMLInputElement>(null)
+  const [homagMergeLoading, setHomagMergeLoading] = useState(false)
+  const [homagSubstituirFotos, setHomagSubstituirFotos] = useState(false)
+  const [homagUltimoSync, setHomagUltimoSync] = useState<{
+    added: number
+    updatedImages: number
+    updatedNames: number
+    total: number
+    at: string
+  } | null>(null)
+  const BIBLIOTECA_ULTIMA_SYNC_KEY = 'nonato-biblioteca-ultima-sync'
+  const [bibliotecaUltimaSyncServidor, setBibliotecaUltimaSyncServidor] = useState<string>(() => {
+    if (typeof window === 'undefined') return ''
+    const v = localStorage.getItem('nonato-biblioteca-ultima-sync')
+    return v && v !== 'null' ? v : ''
+  })
+  const [bibliotecaServidorMeta, setBibliotecaServidorMeta] = useState<{
+    total: number
+    totalImages: number
+  } | null>(null)
+  const [bibliotecaServidorMetaLoading, setBibliotecaServidorMetaLoading] = useState(false)
   const DEMO_MODULE_CATALOG = useMemo(
     () => [
       { action: 'open-gestores', label: 'Gestores e Técnicos' },
@@ -11142,7 +11214,7 @@ export default function Dashboard() {
           sanitizarPecaBibliotecaImportacaoFlag(peca)
         )
         const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, catsInicial)
-        setPecasBiblioteca(lista)
+        setPecasBiblioteca((prev) => (prev.length >= 50 && lista.length < prev.length ? prev : lista))
         void savePecasBibliotecaLocally(lista)
         const faltamFotos = lista.filter(
           (p) =>
@@ -16809,6 +16881,15 @@ export default function Dashboard() {
     setFechamentosGuardadosBibliotecaIds(nextGuard)
     await saveData('nonato-fechamentos-relatorios', nextFech)
     await saveData('nonato-fechamentos-guardados-biblioteca', nextGuard)
+
+    const relAtual = relatoriosServico.find((r) => r.id === relatorioId)
+    if (relAtual && !relAtual.servicoConcluido) {
+      const relatoriosAtualizados = relatoriosServico.map((r) =>
+        r.id === relatorioId ? { ...r, servicoConcluido: true } : r
+      )
+      setRelatoriosServico(relatoriosAtualizados)
+      await saveData('nonato-relatorios-servico', relatoriosAtualizados)
+    }
 
     const fluxoAtual = fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]
     const temFluxo =
@@ -23827,6 +23908,15 @@ export default function Dashboard() {
   useEffect(() => {
     if (concluidosReparadosRef.current) return
     if (relatoriosServico.length === 0) return
+    const bibSet = new Set(fechamentosGuardadosBibliotecaIds)
+    const semFlagConcluido = relatoriosServico.filter((r) => bibSet.has(r.id) && !r.servicoConcluido)
+    if (semFlagConcluido.length > 0) {
+      const relatoriosCorrigidos = relatoriosServico.map((r) =>
+        bibSet.has(r.id) && !r.servicoConcluido ? { ...r, servicoConcluido: true } : r
+      )
+      setRelatoriosServico(relatoriosCorrigidos)
+      void saveData('nonato-relatorios-servico', relatoriosCorrigidos)
+    }
     const pendentes = relatoriosServico.filter(
       (r) => r.servicoConcluido && !fechamentosGuardadosBibliotecaIds.includes(r.id)
     )
@@ -26453,6 +26543,39 @@ export default function Dashboard() {
 
   const pecasReporManualLockRef = useRef(false)
 
+  const gravarBibliotecaUltimaSyncServidor = useCallback((iso?: string) => {
+    const at = iso || new Date().toISOString()
+    try {
+      localStorage.setItem(BIBLIOTECA_ULTIMA_SYNC_KEY, at)
+    } catch {
+      /* ignore */
+    }
+    setBibliotecaUltimaSyncServidor(at)
+  }, [])
+
+  const formatBibliotecaSyncData = useCallback((iso: string) => {
+    if (!iso || iso === 'null') return ''
+    try {
+      return new Date(iso).toLocaleString('pt-PT')
+    } catch {
+      return iso
+    }
+  }, [])
+
+  const refreshBibliotecaServidorMeta = useCallback(async () => {
+    setBibliotecaServidorMetaLoading(true)
+    try {
+      const meta = await fetchPecasBibliotecaServerMeta()
+      if (meta) {
+        setBibliotecaServidorMeta({ total: meta.total, totalImages: meta.totalImages })
+      } else {
+        setBibliotecaServidorMeta(null)
+      }
+    } finally {
+      setBibliotecaServidorMetaLoading(false)
+    }
+  }, [])
+
   const handleReporPecasBibliotecaDoServidor = useCallback(async () => {
     if (pecasReporManualLockRef.current || pecasBibliotecaReparoLoading) return
     pecasReporManualLockRef.current = true
@@ -26472,6 +26595,8 @@ export default function Dashboard() {
       const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
       setPecasBiblioteca(lista)
       await savePecasBibliotecaLocally(lista as unknown[])
+      gravarBibliotecaUltimaSyncServidor()
+      void refreshBibliotecaServidorMeta()
       alert(`Biblioteca reposta: ${lista.length} peça(s) com nomes, códigos e fotos do servidor.\n\nNão precisa ir buscar nada ao site outra vez.`)
     } catch (e) {
       console.error('[repor biblioteca]', e)
@@ -26483,7 +26608,7 @@ export default function Dashboard() {
       setPecasBibliotecaReparoLoading(false)
       setPecasBibliotecaReparoProgress('')
     }
-  }, [categoriasPecas, pecasBibliotecaReparoLoading])
+  }, [categoriasPecas, pecasBibliotecaReparoLoading, gravarBibliotecaUltimaSyncServidor, refreshBibliotecaServidorMeta])
 
   /** Se o arranque ficou com 0 peças mas o recuperador gravou no browser, repor na hora. */
   const pecasPosBootReporRef = useRef(false)
@@ -26554,6 +26679,58 @@ export default function Dashboard() {
       )
     })
   }, [t, categoriasPecas])
+
+  const handleHomagExportMergeFicheiro = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file) return
+      setHomagMergeLoading(true)
+      setImportacaoUrlError(null)
+      const reader = new FileReader()
+      reader.onload = () => {
+        try {
+          const incoming = parseHomagExportJson(String(reader.result ?? ''))
+          if (incoming.length === 0) {
+            alert(
+              (t as any)?.homagSyncExportVazio ||
+                'O ficheiro export.json está vazio. Execute primeiro IMPORTAR-TUDO-HOMAG.bat no PC.'
+            )
+            return
+          }
+          const filaPendente = pecasBiblioteca.filter((p) => ehImportacaoPendenteStrict(p))
+          const catalogo = pecasBiblioteca.filter(pecaBibliotecaEstaNoCatalogo)
+          const result = mergeHomagExportIntoBiblioteca(catalogo, incoming, {
+            substituirFotosExistentes: homagSubstituirFotos,
+          })
+          persistPecasBiblioteca([...result.list, ...filaPendente])
+          setHomagUltimoSync({
+            added: result.added,
+            updatedImages: result.updatedImages,
+            updatedNames: result.updatedNames,
+            total: result.list.length,
+            at: new Date().toLocaleString('pt-PT'),
+          })
+          const msg = String(
+            (t as any)?.homagSyncSucesso ||
+              'Actualização HOMAG concluída:\n\n• {added} peça(s) nova(s)\n• {fotos} foto(s) actualizada(s)\n• {nomes} nome(s) preenchido(s)\n• Total no catálogo: {total}'
+          )
+            .replace('{added}', String(result.added))
+            .replace('{fotos}', String(result.updatedImages))
+            .replace('{nomes}', String(result.updatedNames))
+            .replace('{total}', String(result.list.length))
+          alert(msg)
+        } catch (err: unknown) {
+          const m = err instanceof Error ? err.message : String(err)
+          alert(`${(t as any)?.homagSyncErro || 'Erro ao actualizar com export HOMAG:'}\n\n${m}`)
+        } finally {
+          setHomagMergeLoading(false)
+        }
+      }
+      reader.readAsText(file, 'UTF-8')
+      e.target.value = ''
+    },
+    [pecasBiblioteca, homagSubstituirFotos, persistPecasBiblioteca, t]
+  )
 
   const handleDeletePecaBiblioteca = useCallback(
     (pecaId: string) => {
@@ -26647,6 +26824,17 @@ export default function Dashboard() {
     () => pecasBiblioteca.filter((p) => !ehImportacaoPendenteStrict(p)),
     [pecasBiblioteca]
   )
+
+  useEffect(() => {
+    const tab = openTabs.find((t) => t.id === activeTabId)
+    if (tab?.type !== 'biblioteca-pecas') return
+    void refreshBibliotecaServidorMeta()
+  }, [activeTabId, openTabs, abaBibliotecaPecas, refreshBibliotecaServidorMeta])
+
+  const bibliotecaNovidadesServidor =
+    bibliotecaServidorMeta && bibliotecaServidorMeta.total > pecasCatalogoBiblioteca.length
+      ? bibliotecaServidorMeta.total - pecasCatalogoBiblioteca.length
+      : 0
 
   const pecasImportadasPendentes = useMemo(
     () => pecasBiblioteca.filter((peca) => ehImportacaoPendenteStrict(peca)),
@@ -38530,8 +38718,20 @@ export default function Dashboard() {
                     {safeT?.cadastroPecasBibliotecaTitle || 'BIBLIOTECA DE PEÇAS'}
                   </h1>
                   <p className="tab-glass-hero-meta" style={{ fontSize: '12px', opacity: 0.92, fontWeight: 600 }}>
-                    {pecasBiblioteca.length} {safeT?.pecasCadastradas || 'peça(s) cadastrada(s)'}
+                    {pecasCatalogoBiblioteca.length} {safeT?.pecasCadastradas || 'peça(s) cadastrada(s)'}
+                    {bibliotecaServidorMeta && bibliotecaServidorMeta.total !== pecasCatalogoBiblioteca.length ? (
+                      <span style={{ opacity: 0.78, fontWeight: 500 }}>
+                        {' '}
+                        · {(safeT as any)?.bibliotecaSyncServidorResumo || 'servidor:'} {bibliotecaServidorMeta.total}
+                      </span>
+                    ) : null}
                   </p>
+                  {bibliotecaUltimaSyncServidor ? (
+                    <p style={{ fontSize: '11px', opacity: 0.78, margin: '4px 0 0', fontWeight: 500 }}>
+                      {(safeT as any)?.bibliotecaUltimaSync || 'Última sync servidor:'}{' '}
+                      {formatBibliotecaSyncData(bibliotecaUltimaSyncServidor)}
+                    </p>
+                  ) : null}
                   {catalogoPecasSuspeitoParcial ? (
                     <div
                       className="biblioteca-pecas-hub__warn-banner"
@@ -38670,6 +38870,91 @@ export default function Dashboard() {
                   </button>
                 </div>
               ) : null}
+              <div style={{ marginBottom: 14, maxWidth: 520 }}>
+                <button
+                  type="button"
+                  className="biblioteca-btn--green"
+                  disabled={pecasBibliotecaReparoLoading}
+                  onClick={() => void handleReporPecasBibliotecaDoServidor()}
+                  style={{ width: '100%', maxWidth: 360 }}
+                >
+                  {pecasBibliotecaReparoLoading
+                    ? pecasBibliotecaReparoProgress || 'A carregar catálogo…'
+                    : '🔄 Atualizar biblioteca do servidor'}
+                </button>
+                <p style={{ fontSize: 11, opacity: 0.82, margin: '8px 0 0', lineHeight: 1.45 }}>
+                  Carrega todas as peças guardadas na nuvem neste browser (aguarde 1–2 min).
+                </p>
+              </div>
+              <div
+                style={{
+                  marginBottom: 14,
+                  maxWidth: 560,
+                  padding: '12px 14px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(0, 200, 120, 0.28)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.18)',
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#9dffd0', marginBottom: 8 }}>
+                  {(safeT as any)?.bibliotecaSyncStatusTitulo || 'Estado HOMAG / Railway'}
+                </div>
+                {bibliotecaServidorMetaLoading ? (
+                  <p style={{ fontSize: 11, margin: 0, opacity: 0.85, color: '#d0f5dc' }}>
+                    {(safeT as any)?.bibliotecaSyncVerificando || 'A verificar servidor…'}
+                  </p>
+                ) : bibliotecaServidorMeta ? (
+                  <p style={{ fontSize: 11, margin: 0, lineHeight: 1.55, color: 'rgba(220, 245, 230, 0.95)' }}>
+                    {String(
+                      (safeT as any)?.bibliotecaSyncLocalServidor ||
+                        'Neste browser: {local} peças · Servidor Railway: {servidor} peças ({fotos} com foto)'
+                    )
+                      .replace('{local}', String(pecasCatalogoBiblioteca.length))
+                      .replace('{servidor}', String(bibliotecaServidorMeta.total))
+                      .replace('{fotos}', String(bibliotecaServidorMeta.totalImages))}
+                  </p>
+                ) : (
+                  <p style={{ fontSize: 11, margin: 0, opacity: 0.82, color: '#d0d0d0' }}>
+                    {(safeT as any)?.bibliotecaSyncOffline || 'Servidor indisponível — verifique ligação ou login.'}
+                  </p>
+                )}
+                {bibliotecaNovidadesServidor > 0 ? (
+                  <div className="biblioteca-pecas-hub__warn-banner" style={{ marginTop: 10, marginBottom: 0 }}>
+                    <div className="biblioteca-pecas-hub__warn-banner-title">
+                      {(safeT as any)?.bibliotecaSyncNovidadesTitulo || 'Novidades no servidor'}
+                    </div>
+                    <p className="biblioteca-pecas-hub__warn-banner-body" style={{ marginBottom: 8 }}>
+                      {String(
+                        (safeT as any)?.bibliotecaSyncNovidadesDesc ||
+                          'O Railway tem +{count} peça(s) a mais que este browser. Clique «Actualizar biblioteca do servidor» ou importe da HOMAG na aba Importação.'
+                      ).replace('{count}', String(bibliotecaNovidadesServidor))}
+                    </p>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="biblioteca-btn--green"
+                        disabled={pecasBibliotecaReparoLoading}
+                        onClick={() => void handleReporPecasBibliotecaDoServidor()}
+                        style={{ padding: '6px 12px', fontSize: 12 }}
+                      >
+                        {(safeT as any)?.bibliotecaSyncBtnAtualizar || 'Actualizar agora'}
+                      </button>
+                      <button
+                        type="button"
+                        className="biblioteca-btn--ghost"
+                        onClick={() => setAbaBibliotecaPecas('importacao')}
+                        style={{ padding: '6px 12px', fontSize: 12 }}
+                      >
+                        {(safeT as any)?.bibliotecaSyncBtnImportacao || 'Sync HOMAG → Importação'}
+                      </button>
+                    </div>
+                  </div>
+                ) : bibliotecaServidorMeta && !bibliotecaServidorMetaLoading ? (
+                  <p style={{ fontSize: 11, margin: '8px 0 0', color: '#8ef0b0', fontWeight: 600 }}>
+                    {(safeT as any)?.bibliotecaSyncOk || '✓ Catálogo sincronizado com o servidor.'}
+                  </p>
+                ) : null}
+              </div>
             <div className="biblioteca-pecas-hub__kpi-grid">
               <div
                 className="biblioteca-pecas-hub__kpi"
@@ -39805,6 +40090,8 @@ export default function Dashboard() {
                     onThumbEnter={(ev, src, label) => showBibliotecaImgPreview(ev, src, label)}
                     onThumbLeave={hideBibliotecaImgPreview}
                     buscaCodigo={buscaCodigoBiblioteca}
+                    buscaModo={buscaBibliotecaModo}
+                    onBuscaModoChange={setBuscaBibliotecaModo}
                     onBuscaCodigoChange={(value) => {
                       setBuscaCodigoBiblioteca(value)
                       if (value.trim()) setBibliotecaGaleriaCategoriaId(null)
@@ -39833,6 +40120,11 @@ export default function Dashboard() {
                       semPecasCategoria: (safeT as any)?.bibliotecaGaleriaSemPecasCategoria,
                       buscarPorCodigo:
                         (safeT as any)?.bibliotecaGaleriaBuscaTitulo || safeT?.bibliotecaBuscarPorCodigo,
+                      buscarPorNome: (safeT as any)?.bibliotecaBuscarPorNome || 'Buscar por nome',
+                      buscaModoCodigo: (safeT as any)?.bibliotecaBuscaModoCodigo || 'Código',
+                      buscaModoNome: (safeT as any)?.bibliotecaBuscaModoNome || 'Nome',
+                      buscarPlaceholderNome:
+                        (safeT as any)?.bibliotecaBuscaNomePlaceholder || 'Ex: suction cup, cilindro…',
                       buscaHint: (safeT as any)?.bibliotecaGaleriaBuscaHint,
                       buscarPlaceholder: safeT?.codigoPecaBibliotecaPlaceholder || 'Ex: 700030001',
                       buscaResultados: (safeT as any)?.bibliotecaBuscaCodigoResultados,
@@ -39847,6 +40139,112 @@ export default function Dashboard() {
                   <div className="biblioteca-hub-toolbar__title">
                     {hubT.bibliotecaCatalogoToolbarTitulo || 'Catálogo — filtros, visualização e grupos'}
                   </div>
+
+                  {/* Busca + actualizar — linha sempre visível */}
+                  <div className="biblioteca-hub-toolbar__search-sync-row">
+                    <div className="biblioteca-busca-codigo biblioteca-busca-codigo--toolbar">
+                      <div className="biblioteca-busca-codigo__modo" role="group" aria-label="Tipo de busca">
+                        <button
+                          type="button"
+                          className={`biblioteca-busca-codigo__modo-btn${buscaBibliotecaModo === 'codigo' ? ' biblioteca-busca-codigo__modo-btn--active' : ''}`}
+                          onClick={() => setBuscaBibliotecaModo('codigo')}
+                        >
+                          {(safeT as any)?.bibliotecaBuscaModoCodigo || 'Código'}
+                        </button>
+                        <button
+                          type="button"
+                          className={`biblioteca-busca-codigo__modo-btn${buscaBibliotecaModo === 'nome' ? ' biblioteca-busca-codigo__modo-btn--active' : ''}`}
+                          onClick={() => setBuscaBibliotecaModo('nome')}
+                        >
+                          {(safeT as any)?.bibliotecaBuscaModoNome || 'Nome'}
+                        </button>
+                      </div>
+                      <label htmlFor="biblioteca-busca-codigo" className="biblioteca-busca-codigo__label">
+                        {buscaBibliotecaModo === 'nome'
+                          ? (safeT as any)?.bibliotecaBuscarPorNome || 'Buscar por nome'
+                          : safeT?.bibliotecaBuscarPorCodigo || 'Buscar por código'}
+                      </label>
+                      <input
+                        id="biblioteca-busca-codigo"
+                        type="search"
+                        className="biblioteca-busca-codigo__input"
+                        value={
+                          buscaCodigoBiblioteca === 'null' || buscaCodigoBiblioteca === 'undefined'
+                            ? ''
+                            : buscaCodigoBiblioteca
+                        }
+                        onChange={(e) => setBuscaCodigoBiblioteca(e.target.value)}
+                        placeholder={
+                          buscaBibliotecaModo === 'nome'
+                            ? (safeT as any)?.bibliotecaBuscaNomePlaceholder || 'Ex: suction cup, cilindro…'
+                            : safeT?.codigoPecaBibliotecaPlaceholder || 'Ex: 700030001'
+                        }
+                        autoComplete="off"
+                      />
+                    </div>
+                    <div className="biblioteca-hub-toolbar__sync-actions">
+                      <button
+                        type="button"
+                        className="biblioteca-btn--green biblioteca-hub-toolbar__sync-btn"
+                        disabled={pecasBibliotecaReparoLoading}
+                        onClick={() => void handleReporPecasBibliotecaDoServidor()}
+                      >
+                        {pecasBibliotecaReparoLoading
+                          ? pecasBibliotecaReparoProgress || 'A carregar…'
+                          : (safeT as any)?.bibliotecaBtnAtualizarToolbar || '🔄 Atualizar biblioteca'}
+                      </button>
+                      <button
+                        type="button"
+                        className="biblioteca-btn--green biblioteca-hub-toolbar__sync-btn"
+                        onClick={() => setAbaBibliotecaPecas('importacao')}
+                      >
+                        {(safeT as any)?.bibliotecaSyncBtnImportacaoCurto || '📡 Sync HOMAG'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {(bibliotecaNovidadesServidor > 0 || bibliotecaUltimaSyncServidor || bibliotecaServidorMeta) && (
+                    <div
+                      style={{
+                        width: '100%',
+                        marginBottom: 12,
+                        padding: '10px 12px',
+                        borderRadius: 8,
+                        border: `1px solid ${bibliotecaNovidadesServidor > 0 ? 'rgba(255, 193, 7, 0.45)' : 'rgba(0, 200, 120, 0.3)'}`,
+                        backgroundColor:
+                          bibliotecaNovidadesServidor > 0 ? 'rgba(255, 193, 7, 0.1)' : 'rgba(0, 168, 107, 0.08)',
+                        fontSize: 12,
+                        lineHeight: 1.5,
+                        color: bibliotecaNovidadesServidor > 0 ? '#ffe8a8' : '#c8f5dc',
+                      }}
+                    >
+                      {bibliotecaNovidadesServidor > 0 ? (
+                        <>
+                          <strong>{(safeT as any)?.bibliotecaSyncAvisoToolbar || '⚠ Servidor mais recente:'}</strong>{' '}
+                          +{bibliotecaNovidadesServidor}{' '}
+                          {(safeT as any)?.bibliotecaSyncAvisoToolbarPeças || 'peça(s) — '}
+                          <button
+                            type="button"
+                            className="biblioteca-btn--green"
+                            style={{ marginLeft: 6, padding: '4px 10px', fontSize: 11, verticalAlign: 'middle' }}
+                            disabled={pecasBibliotecaReparoLoading}
+                            onClick={() => void handleReporPecasBibliotecaDoServidor()}
+                          >
+                            {(safeT as any)?.bibliotecaSyncBtnAtualizar || 'Actualizar'}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {(safeT as any)?.bibliotecaSyncToolbarOk || '✓ Sincronizado'}
+                          {bibliotecaUltimaSyncServidor
+                            ? ` · ${formatBibliotecaSyncData(bibliotecaUltimaSyncServidor)}`
+                            : bibliotecaServidorMeta
+                              ? ` · ${pecasCatalogoBiblioteca.length}/${bibliotecaServidorMeta.total}`
+                              : ''}
+                        </>
+                      )}
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                   {!somenteLeituraBiblioteca ? (
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -39949,20 +40347,6 @@ export default function Dashboard() {
                       </select>
                     </div>
                   ) : null}
-                  <div className="biblioteca-busca-codigo">
-                    <label htmlFor="biblioteca-busca-codigo" className="biblioteca-busca-codigo__label">
-                      {safeT?.bibliotecaBuscarPorCodigo || 'Buscar por código'}
-                    </label>
-                    <input
-                      id="biblioteca-busca-codigo"
-                      type="search"
-                      className="biblioteca-busca-codigo__input"
-                      value={buscaCodigoBiblioteca}
-                      onChange={(e) => setBuscaCodigoBiblioteca(e.target.value)}
-                      placeholder={safeT?.codigoPecaBibliotecaPlaceholder || 'Ex: FO-123-ABC'}
-                      autoComplete="off"
-                    />
-                  </div>
                   <div className="biblioteca-hub-toolbar__actions">
                     <button
                       type="button"
@@ -40001,15 +40385,13 @@ export default function Dashboard() {
                     }
                     if (filtroSubgrupoBiblioteca && peca.subcategoriaId !== filtroSubgrupoBiblioteca) return false
                     const q = buscaCodigoBiblioteca.trim().toLowerCase()
-                    if (q) {
-                      const cod = String(peca.codigo ?? '')
-                        .trim()
-                        .toLowerCase()
-                      if (!cod.includes(q)) return false
-                    }
+                    if (q && !pecaPassaBuscaBibliotecaTexto(peca, q, buscaBibliotecaModo)) return false
                     return true
                   }
-                  const pecasVisiveisParaLote = ordenarPecasBibliotecaParaExibicao(pecasBiblioteca.filter(passaFiltroBiblioteca))
+                  const pecasVisiveisParaLote = ordenarPecasBibliotecaParaExibicao(
+                    pecasBiblioteca.filter(passaFiltroBiblioteca),
+                    categoriasPecasAlfabeto
+                  )
                   const pecasCatalogoFiltradas = pecasVisiveisParaLote.filter((p) => !ehImportacaoPendenteStrict(p))
 
                   const renderPecaBibliotecaGridCell = (peca: PecaBiblioteca) => {
@@ -41197,6 +41579,118 @@ export default function Dashboard() {
                 <p className="biblioteca-pecas-hub__import-hint">
                   {safeT?.importacaoNotaHomag || 'Nota: A loja Homag (shop.homag.com) carrega os dados por JavaScript; use antes exportação/ficheiro CSV ou JSON se tiver.'}
                 </p>
+
+                <div
+                  style={{
+                    marginBottom: '22px',
+                    padding: '18px 20px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(0, 200, 120, 0.45)',
+                    background: 'linear-gradient(135deg, rgba(0, 168, 107, 0.14) 0%, rgba(0, 90, 60, 0.08) 100%)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '22px' }} aria-hidden>
+                      📡
+                    </span>
+                    <div style={{ flex: 1, minWidth: '240px' }}>
+                      <h4 style={{ margin: 0, color: '#9dffd0', fontSize: '16px', fontWeight: 700 }}>
+                        {(safeT as any)?.homagSyncTitle || 'Actualizar catálogo HOMAG (novos itens e fotos)'}
+                      </h4>
+                      <p style={{ margin: '8px 0 0', fontSize: '13px', lineHeight: 1.55, color: 'rgba(220, 245, 230, 0.95)' }}>
+                        {(safeT as any)?.homagSyncDesc ||
+                          'Quando a HOMAG adicionar peças ou imagens novas, use o fluxo abaixo. Peças já existentes mantêm-se; só entram novidades e fotos em falta.'}
+                      </p>
+                    </div>
+                  </div>
+                  <ol style={{ margin: '0 0 14px', paddingLeft: '20px', color: '#c8f5dc', fontSize: '12px', lineHeight: 1.65 }}>
+                    <li>
+                      {(safeT as any)?.homagSyncPasso1 ||
+                        'No PC (pasta do projecto): execute IMPORTAR-TUDO-HOMAG.bat — importa novidades da loja e envia ao Railway.'}
+                    </li>
+                    <li>
+                      {(safeT as any)?.homagSyncPasso2 ||
+                        'Só fotos em falta: PREENCHER-FOTOS-HOMAG.bat (demora algumas horas, pode correr à noite).'}
+                    </li>
+                    <li>
+                      {(safeT as any)?.homagSyncPasso3 ||
+                        'Neste browser: clique «Actualizar do servidor» (abaixo) para trazer o catálogo actualizado do Railway.'}
+                    </li>
+                    <li>
+                      {(safeT as any)?.homagSyncPasso4 ||
+                        'Alternativa: carregue scripts/homag-import/out/export.json com «Carregar export HOMAG» — merge directo neste aparelho.'}
+                    </li>
+                  </ol>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '12px' }}>
+                    <input
+                      type="file"
+                      ref={homagExportFileInputRef}
+                      accept=".json,application/json"
+                      onChange={handleHomagExportMergeFicheiro}
+                      style={{ display: 'none' }}
+                    />
+                    <button
+                      type="button"
+                      className="biblioteca-btn--green"
+                      disabled={homagMergeLoading}
+                      onClick={() => homagExportFileInputRef.current?.click()}
+                      style={{ padding: '10px 16px', fontSize: '13px', fontWeight: 700, opacity: homagMergeLoading ? 0.65 : 1 }}
+                    >
+                      {homagMergeLoading
+                        ? (safeT as any)?.homagSyncAProcessar || 'A actualizar…'
+                        : (safeT as any)?.homagSyncCarregarExport || '📂 Carregar export.json HOMAG'}
+                    </button>
+                    <button
+                      type="button"
+                      className="biblioteca-btn--green"
+                      disabled={pecasBibliotecaReparoLoading}
+                      onClick={() => void handleReporPecasBibliotecaDoServidor()}
+                      style={{ padding: '10px 16px', fontSize: '13px', fontWeight: 700 }}
+                    >
+                      {pecasBibliotecaReparoLoading
+                        ? pecasBibliotecaReparoProgress || 'A ligar…'
+                        : (safeT as any)?.homagSyncAtualizarServidor || '☁️ Actualizar do servidor Railway'}
+                    </button>
+                  </div>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px',
+                      color: '#dfffe8',
+                      cursor: 'pointer',
+                      marginBottom: homagUltimoSync ? '10px' : 0,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={homagSubstituirFotos}
+                      onChange={(e) => setHomagSubstituirFotos(e.target.checked)}
+                    />
+                    {(safeT as any)?.homagSyncSubstituirFotos ||
+                      'Substituir fotos existentes se a HOMAG tiver imagem nova (cuidado: sobrescreve fotos manuais)'}
+                  </label>
+                  {homagUltimoSync ? (
+                    <div
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.22)',
+                        fontSize: '12px',
+                        color: '#b8f0cc',
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {(safeT as any)?.homagSyncUltimoResultado || 'Última actualização local:'}{' '}
+                      <strong>{homagUltimoSync.at}</strong> — +{homagUltimoSync.added}{' '}
+                      {(safeT as any)?.homagSyncNovas || 'novas'},{' '}
+                      {homagUltimoSync.updatedImages} {(safeT as any)?.homagSyncFotos || 'fotos'},{' '}
+                      {homagUltimoSync.total} {(safeT as any)?.homagSyncTotalCatalogo || 'no catálogo'}
+                    </div>
+                  ) : null}
+                </div>
+
                 <div className="biblioteca-pecas-hub__import-assist">
                   <div>
                     🧭 {(safeT as any)?.importacaoAssistenteHomagTitle || 'Assistente HOMAG (rápido e seguro)'}
@@ -67526,6 +68020,7 @@ A1;Peça exemplo;10`}
     )
   }
 
+  const bootUsesOfflineCopy = browserMounted && (bootstrapOfflineMode || !isOnline())
   const bootLoadingOverlay =
     appInitialLoading ? (
       <div className="ns-boot-overlay" aria-busy={true} aria-live="polite" role="status">
@@ -67543,7 +68038,7 @@ A1;Peça exemplo;10`}
           />
           <p className="ns-boot-card__label">
             {(safeT as any)?.bootOverlayLabel ||
-              (bootstrapOfflineMode || !isOnline()
+              (bootUsesOfflineCopy
                 ? (safeT as any)?.syncInitialLoadOfflineTitle || 'A carregar dados locais (modo offline)…'
                 : (safeT as any)?.syncInitialLoadTitle || 'A carregar dados do servidor…')}
           </p>
@@ -67556,8 +68051,8 @@ A1;Peça exemplo;10`}
           >
             {syncBootstrapPercent}%
           </p>
-          <p className="ns-boot-card__hint">
-            {bootstrapOfflineMode || !isOnline()
+          <p className="ns-boot-card__hint" suppressHydrationWarning>
+            {bootUsesOfflineCopy
               ? (safeT as any)?.syncInitialLoadOfflineHint ||
                 'Sem ligação ao servidor — a usar cópia guardada neste aparelho.'
               : (safeT as any)?.syncInitialLoadHint || 'Aguarde até esta mensagem desaparecer.'}

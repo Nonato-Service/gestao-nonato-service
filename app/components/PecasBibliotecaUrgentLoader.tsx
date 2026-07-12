@@ -38,12 +38,12 @@ export function PecasBibliotecaUrgentLoader({ pecasCount, onLoaded, onProgress }
         }
 
         const res = await fetch(
-          `/api/data/load?key=nonato-pecas-biblioteca-lite&_=${Date.now()}`,
+          `/api/data/pecas-fix?_=${Date.now()}`,
           { cache: 'no-store', credentials: 'same-origin' }
         )
         if (!res.ok) throw new Error(`Servidor respondeu ${res.status}`)
-        const json = (await res.json()) as { data?: unknown }
-        const data = json?.data
+        const json = (await res.json()) as { success?: boolean; pecas?: unknown; total?: number; message?: string }
+        const data = json?.pecas
         if (!Array.isArray(data) || data.length < 50) {
           throw new Error(`Catálogo inválido (${Array.isArray(data) ? data.length : 0} peças)`)
         }

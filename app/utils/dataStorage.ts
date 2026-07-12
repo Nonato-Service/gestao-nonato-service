@@ -943,6 +943,38 @@ export async function fetchPecasBibliotecaLiteFromServer(
   return fetchPecasBibliotecaRepairPaginated(onProgress)
 }
 
+export type PecasBibliotecaServerMeta = {
+  total: number
+  totalImages: number
+  message?: string
+}
+
+/** Contagem no servidor (Railway) — para comparar com o catálogo local. */
+export async function fetchPecasBibliotecaServerMeta(): Promise<PecasBibliotecaServerMeta | null> {
+  try {
+    const metaRes = await dataApiFetch(`${API_BASE}/repair-pecas-biblioteca?meta=1&lite=1`, {
+      method: 'GET',
+      signal: createTimeoutSignal(20_000),
+    })
+    if (!metaRes.ok) return null
+    const meta = (await metaRes.json()) as {
+      total?: number
+      totalImages?: number
+      message?: string
+      error?: string
+    }
+    if (meta?.error === 'auth_required') return null
+    if (typeof meta.total !== 'number') return null
+    return {
+      total: meta.total,
+      totalImages: typeof meta.totalImages === 'number' ? meta.totalImages : 0,
+      message: typeof meta.message === 'string' ? meta.message : undefined,
+    }
+  } catch {
+    return null
+  }
+}
+
 /** Arranque / botão repor: prioriza ficheiro lite (~157 KB), ignora cópia parcial no browser. */
 export async function bootstrapLoadPecasBiblioteca(categoriasCount: number): Promise<unknown[] | null> {
   const threshold = Math.max(15, Math.min(categoriasCount, 80))

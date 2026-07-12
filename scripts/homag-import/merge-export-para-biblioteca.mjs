@@ -31,11 +31,43 @@ function toLite(p) {
   return out
 }
 
+function imagemFromHomagExportItem(item) {
+  const img = item?.imagem
+  if (typeof img === 'string' && img.startsWith('data:')) return img
+  if (typeof img === 'string' && img.startsWith('http')) return img
+  const urlImg =
+    typeof item?.imagem_url === 'string' && item.imagem_url.startsWith('http')
+      ? item.imagem_url
+      : ''
+  if (urlImg) return urlImg
+  const local = String(item?.imagem_local ?? '').trim()
+  if (local && fs.existsSync(local)) {
+    try {
+      const st = fs.statSync(local)
+      if (st.size > 0 && st.size <= 800000) {
+        const ext = path.extname(local).toLowerCase()
+        const mime =
+          ext === '.jpg' || ext === '.jpeg'
+            ? 'image/jpeg'
+            : ext === '.webp'
+              ? 'image/webp'
+              : ext === '.gif'
+                ? 'image/gif'
+                : 'image/png'
+        return `data:${mime};base64,${fs.readFileSync(local).toString('base64')}`
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return ''
+}
+
 function homagItemToPeca(item, seq) {
   const codigo = String(item.codigo ?? item.code ?? '').trim()
   const nome = String(item.nome ?? item.descricao ?? codigo ?? `Peça ${seq + 1}`).trim()
   const descricao = String(item.descricao ?? nome).trim()
-  const imagem = typeof item.imagem === 'string' && item.imagem.startsWith('data:') ? item.imagem : ''
+  const imagemFinal = imagemFromHomagExportItem(item)
   return {
     id: `import-homag-${Date.now()}-${seq}-${Math.random().toString(36).slice(2, 9)}`,
     nome,
@@ -47,7 +79,7 @@ function homagItemToPeca(item, seq) {
     subcategoria: '',
     subcategoriaId: '',
     importacaoPendente: false,
-    imagem,
+    imagem: imagemFinal,
     dataCriacao: new Date().toISOString(),
   }
 }
@@ -78,8 +110,12 @@ function mergeIntoBiblioteca(existing, incoming) {
     const c = normCodigo(peca.codigo)
     const ex = c ? byCodigo.get(c) : null
     if (ex) {
-      if (!ex.imagem && peca.imagem) {
-        ex.imagem = peca.imagem
+      const incImg = peca.imagem || ''
+      if (!ex.imagem && incImg) {
+        ex.imagem = incImg
+        updated++
+      } else if (process.env.HOMAG_MERGE_REPLACE_IMAGES === '1' && incImg && ex.imagem !== incImg) {
+        ex.imagem = incImg
         updated++
       }
       if ((!ex.nome || !String(ex.nome).trim()) && peca.nome) ex.nome = peca.nome
@@ -131,9 +167,10 @@ console.log('')
 console.log('=== Biblioteca actualizada ===')
 console.log(`  Importados (novos): ${added}`)
 console.log(`  Actualizados (fotos/dados): ${updated}`)
-console.log(`  Total no servidor: ${list.length} peça(s)`)
+console.log(`  Total no disco (este PC): ${list.length} peça(s)`)
 console.log(`  Backup: ${backupDir}`)
 console.log('')
-console.log('Próximo passo: abra http://localhost:3000/recuperar-biblioteca.html')
-console.log('(ou Ctrl+Shift+R na Biblioteca de Peças)')
+console.log('  Gravado em: data/nonato-pecas-biblioteca.json (PC local)')
+console.log('  Para Railway: execute ENVIAR-362-PECAS-RAILWAY.bat')
+console.log('  (IMPORTAR-TUDO-HOMAG.bat envia ao Railway automaticamente no fim)')
 console.log('')

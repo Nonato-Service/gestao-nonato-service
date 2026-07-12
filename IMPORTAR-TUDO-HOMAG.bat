@@ -8,52 +8,59 @@ echo  ============================================================
 echo   IMPORTAR TUDO DA LOJA HOMAG
 echo  ============================================================
 echo.
-echo  URL: spare-parts (shop.homag.com)
+echo  1580 paginas x 20 pecas = ~31 600 pecas (limite: 1600 paginas)
 echo.
-echo  PASSOS:
-echo   1. Abre o browser Chromium
-echo   2. FACA LOGIN na HOMAG (obrigatorio)
-echo   3. Va a lista de spare parts
-echo   4. Volte AQUI e prima ENTER
-echo   5. O script importa e grava na biblioteca automaticamente
-echo   6. No fim abre a pagina para ver as pecas na app
+echo  MODO API activo — importa via SearchController (todo o catalogo)
+echo  RETOMA RAPIDA — continua buckets em falta (ver import-state.json)
+echo  Veja: "RETOMA RAPIDA" e "Paginacao visivel" (nao "Ainda a carregar 119s")
+echo  Grava: PC + Railway (checkpoints a cada 500 pecas)
+echo  Fotos em scripts/homag-import/out/images/ (export.json leve, sem base64)
+echo  COM IMAGENS — pode demorar 6 a 12 HORAS. NAO FECHE a janela.
 echo.
 echo  ============================================================
 echo.
 
 where node >nul 2>&1
 if errorlevel 1 (
-  echo ERRO: Node.js nao encontrado. Instale Node.js primeiro.
+  echo ERRO: Node.js nao encontrado.
   pause
   exit /b 1
 )
 
-echo A preparar Playwright (primeira vez pode demorar)...
 call npm install >nul 2>&1
 call npx playwright install chromium
 
-echo.
-echo A abrir importador HOMAG...
-echo.
-
-set HOMAG_MANUAL=1
+set HOMAG_USE_API=1
 set HOMAG_HEADLESS=0
+set HOMAG_EMBED_IMAGES=0
 set HOMAG_AUTO_MERGE=1
-call npm run homag:import
+set HOMAG_AUTO_RAILWAY=1
+set HOMAG_RESUME=1
+set HOMAG_MAX_PAGES=1580
+set HOMAG_RAILWAY_EVERY=500
+set RAILWAY_URL=https://gest-o-nonato-gestao.up.railway.app
 
-if errorlevel 1 (
+call npm run homag:import
+set HOMAG_RC=%ERRORLEVEL%
+
+if %HOMAG_RC%==1 (
   echo.
-  echo Importacao falhou. Verifique login e lista de pecas na HOMAG.
+  echo Falhou ou parou — execute o BAT outra vez para RETOMAR de onde parou.
   pause
   exit /b 1
 )
 
-echo.
-echo A abrir recuperador para mostrar pecas na app...
-timeout /t 2 /nobreak >nul
-start "" "http://localhost:3000/recuperar-biblioteca.html"
+if %HOMAG_RC%==2 (
+  echo.
+  echo  ============================================================
+  echo   PAROU A MEIO — progresso GUARDADO (nao perdeu pecas)
+  echo   Execute este BAT outra vez para CONTINUAR (pagina em import-state.json)
+  echo  ============================================================
+  pause
+  exit /b 2
+)
 
+call scripts\abrir-edge.bat "https://gest-o-nonato-gestao.up.railway.app/"
 echo.
-echo CONCLUIDO. Aguarde as fotos carregarem na pagina que abriu.
-echo.
+echo CONCLUIDO — importacao completa.
 pause

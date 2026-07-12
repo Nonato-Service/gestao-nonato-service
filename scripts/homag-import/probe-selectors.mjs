@@ -7,6 +7,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { chromium } from 'playwright'
+import { probePaginationCandidates } from './pagination.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const configPath = process.env.HOMAG_CONFIG || path.join(__dirname, 'config.json')
@@ -22,8 +23,11 @@ const page = await browser.newPage()
 await page.goto(startUrl, { waitUntil: 'domcontentloaded', timeout: 90000 })
 
 if (process.env.HOMAG_MANUAL === '1') {
-  process.stdout.write('\nFaça login e abra a lista de peças. Prima Enter no terminal...\n')
+  process.stdout.write('\nLogin NÃO é obrigatório. Quando vir a lista de peças, prima Enter...\n')
   await new Promise((r) => process.stdin.once('data', r))
+} else {
+  process.stdout.write('\nA aguardar catálogo (sem login)...\n')
+  await page.waitForTimeout(8000)
 }
 
 await page.waitForTimeout(3000)
@@ -55,5 +59,8 @@ const report = await page.evaluate(() => {
   return { title: document.title, url: location.href, candidates: out, sampleImgSrc: imgs }
 })
 
-console.log(JSON.stringify(report, null, 2))
+const pagination = await probePaginationCandidates(page)
+
+console.log(JSON.stringify({ ...report, pagination }, null, 2))
+console.log('\nSe pagination estiver vazio, a HOMAG pode usar scroll infinito — o importador tenta scroll automaticamente.')
 await browser.close()

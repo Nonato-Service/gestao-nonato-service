@@ -99,12 +99,12 @@
       }
 
       try {
-        setMsg('A carregar catálogo (362 peças)…');
-        const res = await fetch('/api/data/load?key=nonato-pecas-biblioteca-lite', { cache: 'no-store', credentials: 'include' });
+        setMsg('A carregar catálogo do disco deste PC…');
+        const res = await fetch('/api/data/pecas-fix?_=' + Date.now(), { cache: 'no-store' });
         if (!res.ok) throw new Error('Servidor respondeu ' + res.status);
         const json = await res.json();
-        let pecas = json && json.data;
-        if (!Array.isArray(pecas) || pecas.length < 50) {
+        let pecas = json && json.pecas;
+        if (!json.success || !Array.isArray(pecas) || pecas.length < 50) {
           throw new Error('Catálogo inválido (' + (pecas ? pecas.length : 0) + ' peças).');
         }
 

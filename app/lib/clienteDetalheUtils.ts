@@ -94,6 +94,7 @@ export type ClienteDetalheServicoFinanceiro = {
   iva: number
   total: number
   pagamento: 'pago' | 'pendente' | 'devedor'
+  servicoConcluido: boolean
 }
 
 function localeFromLanguage(language: string): string {
@@ -175,6 +176,15 @@ export function getPagamentoRelatorio(fr: unknown): 'pago' | 'pendente' | 'deved
   if (frObj.pagamento === 'pago' || frObj.situacaoFatura === 'paga') return 'pago'
   if (frObj.pagamento === 'devedor' || frObj.situacaoFatura === 'nao_paga') return 'devedor'
   return 'pendente'
+}
+
+/** Serviço concluído no relatório OU fechamento já guardado na biblioteca (serviço executado). */
+export function relatorioServicoConsideradoConcluido(
+  rel: { id: string; servicoConcluido?: boolean },
+  fechamentosGuardadosBibliotecaIds: string[]
+): boolean {
+  if (rel.servicoConcluido) return true
+  return fechamentosGuardadosBibliotecaIds.includes(rel.id)
 }
 
 export function coletarRelatoriosCliente(
@@ -386,6 +396,7 @@ export function buildServicosFinanceirosCliente(params: {
       iva: tot.iva,
       total: tot.comIva,
       pagamento: getPagamentoRelatorio(params.fechamentoFluxoFinanceiroPorRelatorioId[rel.id]),
+      servicoConcluido: relatorioServicoConsideradoConcluido(rel, params.fechamentosGuardadosBibliotecaIds),
     })
   }
 
