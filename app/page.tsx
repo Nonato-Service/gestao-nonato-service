@@ -188,6 +188,12 @@ import { FamiliasGruposEquipamentosContent } from './components/FamiliasGruposEq
 import { EquipamentosArmazemMenu } from './components/EquipamentosArmazemMenu'
 import { ContextualBackBar } from './components/ContextualBackBar'
 import { BibliotecaPecasGaleriaCategorias } from './components/BibliotecaPecasGaleriaCategorias'
+import {
+  BibliotecaPrecoOlhoToggle,
+  formatPrecoBibliotecaExibicao,
+  gravarMostrarPrecosBiblioteca,
+  lerMostrarPrecosBiblioteca,
+} from './components/BibliotecaPrecoOlhoToggle'
 import { DEMO_VISITOR_USER } from './lib/demoManagement'
 import { AdministradorContent } from './components/admin/AdministradorContent'
 import { AdminUserFormPanel } from './components/admin/AdminUserFormPanel'
@@ -7403,6 +7409,17 @@ export default function Dashboard() {
   /** Se a peça foi aberta a partir da fila de importação, após Salvar regressa à aba Importação (não à Biblioteca). */
   const [salvarPecaBibliotecaVoltaParaImportacao, setSalvarPecaBibliotecaVoltaParaImportacao] = useState(false)
   const [visualizacaoBiblioteca, setVisualizacaoBiblioteca] = useState<'grid' | 'lista'>('grid')
+  const [mostrarPrecosBiblioteca, setMostrarPrecosBiblioteca] = useState(false)
+  useEffect(() => {
+    setMostrarPrecosBiblioteca(lerMostrarPrecosBiblioteca())
+  }, [])
+  const toggleMostrarPrecosBiblioteca = useCallback(() => {
+    setMostrarPrecosBiblioteca((prev) => {
+      const next = !prev
+      gravarMostrarPrecosBiblioteca(next)
+      return next
+    })
+  }, [])
   /** Biblioteca: grade em secções por categoria vs lista única (com filtro). */
   const [bibliotecaAgruparPorCategoria, setBibliotecaAgruparPorCategoria] = useState(false)
   /** Pré-visualização ampliada ao passar o rato sobre fotos no catálogo (grade/lista). */
@@ -40139,6 +40156,19 @@ export default function Dashboard() {
                   </p>
                 )}
                 {somenteLeituraBiblioteca ? (
+                  <>
+                    <div className="biblioteca-preco-olho-toolbar">
+                      <BibliotecaPrecoOlhoToggle
+                        ativo={mostrarPrecosBiblioteca}
+                        onToggle={toggleMostrarPrecosBiblioteca}
+                        labelMostrar={(safeT as any)?.bibliotecaVerPrecos || 'Ver preços'}
+                        labelOcultar={(safeT as any)?.bibliotecaOcultarPrecos || 'Ocultar preços'}
+                      />
+                      <span className="biblioteca-preco-olho-toolbar__hint">
+                        {(safeT as any)?.bibliotecaPrecoOlhoHint ||
+                          'Os preços só aparecem quando a peça tem valor guardado (campo Preço ou importação HOMAG).'}
+                      </span>
+                    </div>
                   <BibliotecaPecasGaleriaCategorias
                     categorias={categoriasPecasAlfabeto}
                     pecasCatalogo={pecasCatalogoBiblioteca}
@@ -40190,8 +40220,11 @@ export default function Dashboard() {
                       buscaResultados: (safeT as any)?.bibliotecaBuscaCodigoResultados,
                       buscaVazio: (safeT as any)?.bibliotecaBuscaCodigoVazio,
                       limparBusca: safeT?.limparFiltros || 'Limpar busca',
+                      preco: safeT?.preco || 'Preço',
                     }}
+                    mostrarPrecos={mostrarPrecosBiblioteca}
                   />
+                  </>
                 ) : (
                 <>
                 {/* Controles de visualização — painel único */}
@@ -40322,6 +40355,13 @@ export default function Dashboard() {
                     >
                       {safeT?.visualizacaoLista || 'Lista'}
                     </button>
+                    <BibliotecaPrecoOlhoToggle
+                      ativo={mostrarPrecosBiblioteca}
+                      onToggle={toggleMostrarPrecosBiblioteca}
+                      labelMostrar={(safeT as any)?.bibliotecaVerPrecos || 'Ver preços'}
+                      labelOcultar={(safeT as any)?.bibliotecaOcultarPrecos || 'Ocultar preços'}
+                      compacto
+                    />
                     <button
                       type="button"
                       onClick={() => setBibliotecaAgruparPorCategoria(true)}
@@ -40534,6 +40574,21 @@ export default function Dashboard() {
                               title={rotuloNumeroSequenciaPecaBiblioteca(peca, categoriasPecas, subcategoriasPecas)}
                               size="sm"
                             />
+                          ) : null}
+                          {String(peca.preco ?? '').trim() ? (
+                            <span
+                              className={`biblioteca-pecas-hub__piece-chip biblioteca-pecas-hub__piece-chip--price${mostrarPrecosBiblioteca ? '' : ' biblioteca-pecas-hub__piece-chip--price-hidden'}`}
+                              title={
+                                mostrarPrecosBiblioteca
+                                  ? `${safeT?.preco || 'Preço'}: ${formatPrecoBibliotecaExibicao(peca.preco, true)}`
+                                  : (safeT as any)?.bibliotecaVerPrecos || 'Clique no olho para ver preços'
+                              }
+                            >
+                              <span className="biblioteca-pecas-hub__piece-chip-k">{safeT?.preco || 'Preço'}</span>
+                              <span className="biblioteca-pecas-hub__piece-chip-v">
+                                {formatPrecoBibliotecaExibicao(peca.preco, mostrarPrecosBiblioteca)}
+                              </span>
+                            </span>
                           ) : null}
                         </div>
                         {!somenteLeituraBiblioteca ? (
@@ -41022,8 +41077,15 @@ export default function Dashboard() {
                                 </span>
                               </th>
                               <th className="biblioteca-pecas-hub__catalog-th biblioteca-pecas-hub__catalog-th--right">
-                                <span className="biblioteca-pecas-hub__catalog-th-label biblioteca-pecas-hub__catalog-th-label--end">
+                                <span className="biblioteca-pecas-hub__catalog-th-label biblioteca-pecas-hub__catalog-th-label--end biblioteca-pecas-hub__catalog-th-label--preco">
                                   {safeT?.preco || 'Preço'}
+                                  <BibliotecaPrecoOlhoToggle
+                                    ativo={mostrarPrecosBiblioteca}
+                                    onToggle={toggleMostrarPrecosBiblioteca}
+                                    labelMostrar={(safeT as any)?.bibliotecaVerPrecos || 'Ver preços'}
+                                    labelOcultar={(safeT as any)?.bibliotecaOcultarPrecos || 'Ocultar preços'}
+                                    compacto
+                                  />
                                   {headerFilter}
                                 </span>
                               </th>
@@ -41119,7 +41181,7 @@ export default function Dashboard() {
                                   </td>
                                   <td className="biblioteca-pecas-hub__catalog-td">{peca.subcategoria || '—'}</td>
                                   <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--price">
-                                    {peca.preco ? `${peca.preco}€` : '—'}
+                                    {formatPrecoBibliotecaExibicao(peca.preco, mostrarPrecosBiblioteca)}
                                   </td>
                                   {!somenteLeituraBiblioteca ? (
                                   <td

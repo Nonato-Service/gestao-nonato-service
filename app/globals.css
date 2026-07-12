@@ -38901,3 +38901,88 @@ html body .alerta-mensagens-shell .alerta-mensagens-hero-actions .comunicacao-he
   padding: 6px 12px !important;
   font-size: 12px !important;
 }
+
+.biblioteca-preco-olho-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  background: rgba(0, 0, 0, 0.22);
+  color: #ffe8a8;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.biblioteca-preco-olho-btn:hover {
+  border-color: rgba(255, 193, 7, 0.65);
+  background: rgba(255, 193, 7, 0.12);
+  color: #fff3c4;
+}
+
+.biblioteca-preco-olho-btn--on {
+  border-color: rgba(0, 200, 120, 0.55);
+  background: rgba(0, 168, 107, 0.16);
+  color: #b8f5cc;
+}
+
+.biblioteca-preco-olho-btn--on:hover {
+  border-color: rgba(0, 255, 140, 0.75);
+  background: rgba(0, 168, 107, 0.24);
+  color: #d8ffe6;
+}
+
+.biblioteca-preco-olho-btn--compact {
+  padding: 5px 7px;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.biblioteca-preco-olho-btn__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.biblioteca-preco-olho-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-bottom: 14px;
+}
+
+.biblioteca-preco-olho-toolbar__hint {
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(210, 240, 220, 0.88);
+  max-width: 520px;
+}
+
+.biblioteca-pecas-hub__catalog-th-label--preco {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.biblioteca-pecas-hub__piece-chip--price {
+  border-color: rgba(255, 193, 7, 0.35);
+  background: rgba(255, 193, 7, 0.08);
+}
+
+.biblioteca-pecas-hub__piece-chip--price-hidden .biblioteca-pecas-hub__piece-chip-v {
+  letter-spacing: 0.12em;
+  opacity: 0.75;
+}
+
+.biblioteca-pecas-hub__catalog-td--price {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #ffe8a8;
+}

@@ -1,11 +1,16 @@
 'use client'
 
+import {
+  formatPrecoBibliotecaExibicao,
+} from './BibliotecaPrecoOlhoToggle'
+
 type CategoriaPecaGaleria = { id: string; nome: string }
 
 type PecaBibliotecaGaleria = {
   id: string
   nome: string
   codigo: string
+  preco?: string
   categoriaId?: string
   categoria?: string
   imagem?: string
@@ -63,6 +68,7 @@ type GaleriaTranslations = {
   buscaVazio?: string
   buscaVazioNome?: string
   limparBusca?: string
+  preco?: string
 }
 
 type BuscaGaleriaModo = 'codigo' | 'nome'
@@ -86,6 +92,7 @@ type Props = {
   onSelecionarPeca?: (peca: PecaBibliotecaGaleria) => void
   onAnexarPeca?: (peca: PecaBibliotecaGaleria) => void
   labelAnexar?: string
+  mostrarPrecos?: boolean
   t?: GaleriaTranslations
 }
 
@@ -115,6 +122,8 @@ function renderPecaCard(
     onSelecionar?: () => void
     onAnexar?: () => void
     labelAnexar?: string
+    mostrarPrecos?: boolean
+    precoLabel?: string
   }
 ) {
   const {
@@ -128,6 +137,8 @@ function renderPecaCard(
     onSelecionar,
     onAnexar,
     labelAnexar = 'Anexar ao relatório',
+    mostrarPrecos = false,
+    precoLabel = 'Preço',
   } = opts
   return (
     <article
@@ -188,6 +199,16 @@ function renderPecaCard(
           <span className="biblioteca-pecas-hub__piece-chip-k">{codigoLabel}</span>
           <span className="biblioteca-pecas-hub__piece-chip-v">{peca.codigo || '—'}</span>
         </span>
+        {String(peca.preco ?? '').trim() ? (
+          <span
+            className={`biblioteca-pecas-hub__piece-chip biblioteca-pecas-hub__piece-chip--price${mostrarPrecos ? '' : ' biblioteca-pecas-hub__piece-chip--price-hidden'}`}
+          >
+            <span className="biblioteca-pecas-hub__piece-chip-k">{precoLabel}</span>
+            <span className="biblioteca-pecas-hub__piece-chip-v">
+              {formatPrecoBibliotecaExibicao(peca.preco, mostrarPrecos)}
+            </span>
+          </span>
+        ) : null}
       </div>
       {modoAnexarRelatorio ? (
         <div
@@ -222,6 +243,7 @@ export function BibliotecaPecasGaleriaCategorias({
   onSelecionarPeca,
   onAnexarPeca,
   labelAnexar,
+  mostrarPrecos = false,
   t = {},
 }: Props) {
   const categoriasOrdenadas = [...categorias].sort((a, b) =>
@@ -239,6 +261,8 @@ export function BibliotecaPecasGaleriaCategorias({
     onSelecionar: () => onSelecionarPeca?.(peca),
     onAnexar: () => onAnexarPeca?.(peca),
     labelAnexar: labelAnexar || 'Anexar ao relatório',
+    mostrarPrecos,
+    precoLabel: t.preco || 'Preço',
   })
   const q = buscaCodigo.trim().toLowerCase()
   const emBusca = q.length > 0
