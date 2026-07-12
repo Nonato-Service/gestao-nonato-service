@@ -239,6 +239,7 @@ import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import { ClienteEquipamentoHistoricoPanel } from './components/ClienteEquipamentoHistoricoPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
 import { filtrarPecasBibliotecaPorBusca } from './lib/pecaCodigoBusca'
+import { buscarPecaBibliotecaNoServidor } from './lib/buscarPecaBibliotecaRemoto'
 import { wrapRelatorioServicoPrintDocument } from './lib/relatorioServicoPdfShell'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
 import { PdfModeloPickerField } from './components/PdfModeloPickerField'
@@ -65157,7 +65158,13 @@ A1;Peça exemplo;10`}
         setPecasFiltradas([])
         return
       }
-      setPecasFiltradas(filtrarPecasBibliotecaPorBusca(pecasBiblioteca, codigo, 40))
+      const local = filtrarPecasBibliotecaPorBusca(pecasBiblioteca, codigo, 40)
+      setPecasFiltradas(local)
+      if (local.length === 0) {
+        void buscarPecaBibliotecaNoServidor(codigo, 40).then((remoto) => {
+          if (remoto.length > 0) setPecasFiltradas(remoto as PecaBiblioteca[])
+        })
+      }
     }
 
     const normalizarItensOrcamentoGravados = (itens: typeof dadosOrcamento.itens) =>

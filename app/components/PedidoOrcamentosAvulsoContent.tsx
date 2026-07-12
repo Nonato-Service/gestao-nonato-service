@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect, useId, useCallback } from 'react'
-import { filtrarPecasBibliotecaPorBusca } from '../lib/pecaCodigoBusca'
+import { useBuscaPecaBibliotecaComServidor } from '../lib/useBuscaPecaBibliotecaComServidor'
 import { openPedidoOrcamentoAvulsoPdf } from '../lib/pedidoOrcamentoAvulsoPdf'
 import {
   enriquecerBlocoEquipamentoPedido,
@@ -233,10 +233,8 @@ export function PedidoOrcamentosAvulsoContent({
     )
   }, [clientes, buscaCliente])
 
-  const pecasFiltradas = useMemo(
-    () => filtrarPecasBibliotecaPorBusca(pecasBiblioteca, buscaPeca, 50),
-    [pecasBiblioteca, buscaPeca]
-  )
+  const { resultados: pecasFiltradas, servidorLoading: buscaPecaServidorLoading } =
+    useBuscaPecaBibliotecaComServidor(pecasBiblioteca, buscaPeca, 50)
 
   const nomeClienteExibido = clienteSelecionado ? clienteSelecionado.nomeEmpresa : clienteNomeManual || '—'
   const equipamentosDoCliente = clienteSelecionado?.equipamentos || []
@@ -1063,7 +1061,10 @@ export function PedidoOrcamentosAvulsoContent({
                                     autoFocus
                                   />
                                   <div className="orc-pro__list">
-                                    {pecasFiltradas.length === 0 && buscaPeca.trim() ? (
+                                    {buscaPecaServidorLoading ? (
+                                      <p className="orc-pro__list-empty">A procurar no catálogo completo do servidor…</p>
+                                    ) : null}
+                                    {pecasFiltradas.length === 0 && buscaPeca.trim() && !buscaPecaServidorLoading ? (
                                       <p className="orc-pro__list-empty">
                                         {safeT?.orcamentoBibliotecaNenhumaPeca ||
                                           'Nenhuma peça encontrada. A busca aceita código com ou sem hífens (ex.: 2-029-95-0951). Se não existir na biblioteca, use «Manual» ou cadastre na Biblioteca de Peças.'}
