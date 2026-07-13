@@ -6659,6 +6659,16 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   .app-compact-layout .main-content-area {
     overflow-x: hidden;
   }
+
+  /* Com zoom activo: anular overflow-x hidden do layout compacto (vem acima e bloqueava pan lateral) */
+  html.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll,
+  html.mobile-browser-zoomed .app-compact-layout .main-content-area,
+  body.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll,
+  body.mobile-browser-zoomed .app-compact-layout .main-content-area {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+  }
   .app-compact-layout .tab-content-wrapper table,
   .app-compact-layout .main-content-area table {
     display: block;
