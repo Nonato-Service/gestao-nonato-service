@@ -4,11 +4,66 @@
  * Regras HOMAG:
  *   • Referência normal: 3-835-16-6080 = 3835166080 (remove hífens)
  *   • Família especial 2-029-95-0XXX: 2-029-95-0951 → 2029951380 (SKU ≠ referência compacta)
+ *   • Substituições: código antigo → SKU novo (índice homag-substituicoes-indice.json)
  */
+
+export type IndiceSubstituicaoHomag = Record<string, string>
+
+let indiceSubstituicoesHomag: IndiceSubstituicaoHomag = {}
+
+export function setIndiceSubstituicoesHomag(indice: IndiceSubstituicaoHomag): void {
+  indiceSubstituicoesHomag = { ...indice }
+}
+
+export function getIndiceSubstituicoesHomag(): IndiceSubstituicaoHomag {
+  return indiceSubstituicoesHomag
+}
+
+export function construirIndiceSubstituicoesHomag(
+  subs: Array<{ codigoAntigo?: string; referenciaAntiga?: string; codigoNovo: string }>,
+  pecas: Array<{ codigo?: string; referenciasAntigas?: string[]; codigosAntigos?: string[] }> = []
+): IndiceSubstituicaoHomag {
+  const out: IndiceSubstituicaoHomag = {}
+  const add = (chave: string, novo: string) => {
+    const k = chave.trim()
+    const n = compactPecaCodigo(novo)
+    if (!k || !n) return
+    out[k.toLowerCase()] = n
+    out[compactPecaCodigo(k)] = n
+  }
+  for (const s of subs) {
+    if (s.codigoAntigo) add(s.codigoAntigo, s.codigoNovo)
+    if (s.referenciaAntiga) add(s.referenciaAntiga, s.codigoNovo)
+    add(s.codigoNovo, s.codigoNovo)
+  }
+  for (const p of pecas) {
+    const novo = compactPecaCodigo(p.codigo)
+    if (!novo) continue
+    for (const r of p.referenciasAntigas || []) add(r, novo)
+    for (const c of p.codigosAntigos || []) add(c, novo)
+  }
+  return out
+}
+
+function expandirSkusComIndiceSubstituicao(skus: string[], query: string): string[] {
+  const out = new Set(skus.map(compactPecaCodigo))
+  const indice = indiceSubstituicoesHomag
+  const q = query.trim()
+  const chaves = [
+    q.toLowerCase(),
+    compactPecaCodigo(q),
+    referenciaHomagDeTexto(q)?.toLowerCase(),
+    referenciaHomagDeTexto(q) ? compactPecaCodigo(referenciaHomagDeTexto(q)!) : '',
+  ].filter(Boolean)
+  for (const ch of chaves) {
+    const alvo = indice[ch] || indice[compactPecaCodigo(ch)]
+    if (alvo) out.add(compactPecaCodigo(alvo))
+  }
+  return [...out].filter(Boolean)
+}
 
 const HOMAG_REF_RE = /^(\d)-(\d{3})-(\d{2})-(\d{3,4})$/
 const HOMAG_REF_COMPACT_RE = /^(\d)(\d{3})(\d{2})(\d{3,4})$/
-/** Só esta família tem SKU diferente dos dígitos da referência (ex.: …-0951 → …1380) */
 const HOMAG_REF_SKU_ESPECIAL_RE = /^2-029-95-0\d{3}$/
 
 export function compactPecaCodigo(c: string | undefined | null): string {
@@ -23,7 +78,6 @@ export function referenciaHomagDeTexto(texto: string): string | null {
   const comHifens = t.match(HOMAG_REF_RE)
   if (comHifens) return comHifens[0]
 
-  // Só reconstruir referência a partir de dígitos se parecer referência HOMAG (não SKU solto parcial)
   const compact = compactPecaCodigo(t)
   if (compact.length < 9 || compact.length > 11) return null
   const semHifens = compact.match(HOMAG_REF_COMPACT_RE)
@@ -52,7 +106,14 @@ function homagFamilia202995ParaCodigoSku(ref: string): string | null {
   return `${prefix}${String(suffix).padStart(3, '0')}`
 }
 
-/** SKU(s) exactos a procurar no campo codigo da peça */
+export function homagReferenciaParaCodigoSku(referencia: string): string | null {
+  const ref = referenciaHomagDeTexto(referencia)
+  if (!ref) return null
+  const especial = homagFamilia202995ParaCodigoSku(ref)
+  if (especial) return especial
+  return referenciaHomagParaCodigoDireto(referencia)
+}
+
 export function codigosSkuAlvoParaBusca(query: string): string[] {
   const out = new Set<string>()
   const q = query.trim()
@@ -69,19 +130,43 @@ export function codigosSkuAlvoParaBusca(query: string): string[] {
     if (especial) out.add(compactPecaCodigo(especial))
   }
 
-  return [...out].filter(Boolean)
+  return expandirSkusComIndiceSubstituicao([...out].filter(Boolean), q)
 }
 
-export function homagReferenciaParaCodigoSku(referencia: string): string | null {
-  const ref = referenciaHomagDeTexto(referencia)
-  if (!ref) return null
-  const especial = homagFamilia202995ParaCodigoSku(ref)
-  if (especial) return especial
-  return referenciaHomagParaCodigoDireto(referencia)
+export function pecaTemCodigoAntigoRegistado(
+  peca: { referenciasAntigas?: string[]; codigosAntigos?: string[] },
+  query: string
+): boolean {
+  const q = query.trim()
+  if (!q) return false
+  const qLower = q.toLowerCase()
+  const qCompact = compactPecaCodigo(q)
+  const ref = referenciaHomagDeTexto(q)
+
+  for (const r of peca.referenciasAntigas || []) {
+    if (r.toLowerCase() === qLower) return true
+    if (ref && r.toLowerCase() === ref.toLowerCase()) return true
+  }
+  for (const c of peca.codigosAntigos || []) {
+    if (compactPecaCodigo(c) === qCompact) return true
+  }
+  if (ref) {
+    const refCompact = compactPecaCodigo(ref)
+    for (const r of peca.referenciasAntigas || []) {
+      if (compactPecaCodigo(r) === refCompact) return true
+    }
+  }
+  return false
 }
 
 export function pecaBibliotecaMatchesBusca(
-  peca: { codigo?: string; nome?: string; descricao?: string },
+  peca: {
+    codigo?: string
+    nome?: string
+    descricao?: string
+    referenciasAntigas?: string[]
+    codigosAntigos?: string[]
+  },
   query: string
 ): boolean {
   const q = query.trim()
@@ -96,7 +181,8 @@ export function pecaBibliotecaMatchesBusca(
     return true
   }
 
-  // Referência HOMAG guardada no nome/descrição (ex.: "REF HOMAG 3-835-16-6080")
+  if (pecaTemCodigoAntigoRegistado(peca, q)) return true
+
   const ref = referenciaHomagDeTexto(q)
   if (ref) {
     const nome = (peca.nome || '').toLowerCase()
@@ -107,7 +193,6 @@ export function pecaBibliotecaMatchesBusca(
     if (refCompact && (nome.includes(refCompact) || descricao.includes(refCompact))) return true
   }
 
-  // Código exacto com hífens no texto (nome/descrição)
   if (q.includes('-') && q.length >= 5) {
     const nome = (peca.nome || '').toLowerCase()
     const descricao = (peca.descricao || '').toLowerCase()
@@ -118,7 +203,13 @@ export function pecaBibliotecaMatchesBusca(
 }
 
 export function filtrarPecasBibliotecaPorBusca<
-  T extends { codigo?: string; nome?: string; descricao?: string },
+  T extends {
+    codigo?: string
+    nome?: string
+    descricao?: string
+    referenciasAntigas?: string[]
+    codigosAntigos?: string[]
+  },
 >(pecas: T[], query: string, limit = 50): T[] {
   const q = query.trim()
   if (!q) return pecas.slice(0, limit)

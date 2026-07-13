@@ -238,7 +238,11 @@ import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import { ClienteEquipamentoHistoricoPanel } from './components/ClienteEquipamentoHistoricoPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
-import { filtrarPecasBibliotecaPorBusca, pecaBibliotecaMatchesBusca } from './lib/pecaCodigoBusca'
+import {
+  filtrarPecasBibliotecaPorBusca,
+  pecaBibliotecaMatchesBusca,
+  setIndiceSubstituicoesHomag,
+} from './lib/pecaCodigoBusca'
 import { buscarPecaBibliotecaNoServidor } from './lib/buscarPecaBibliotecaRemoto'
 import { wrapRelatorioServicoPrintDocument } from './lib/relatorioServicoPdfShell'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
@@ -13226,6 +13230,13 @@ export default function Dashboard() {
         }
         dataBootstrapCompleteRef.current = true
         markDataBootstrapComplete()
+        void loadData('homag-substituicoes-indice')
+          .then((raw) => {
+            if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+              setIndiceSubstituicoesHomag(raw as Record<string, string>)
+            }
+          })
+          .catch(() => {})
         if (!bootstrapLoadErrored) {
           setSyncBootstrapPercent(100)
           if (Object.keys(serverData).length > 0) {

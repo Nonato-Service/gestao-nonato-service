@@ -3,7 +3,8 @@ import fs from 'fs'
 import path from 'path'
 
 import { filtrarPecasBibliotecaPorBusca } from '../../../lib/pecaCodigoBusca'
-import { ensureDataDir, resolveDataDirForKey } from '../shared'
+import { setIndiceSubstituicoesHomag } from '../../../lib/pecaCodigoBusca'
+import { ensureDataDir, resolveDataDirForKey, DATA_DIR } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 
@@ -75,6 +76,16 @@ export async function GET(request: NextRequest) {
 
     ensureDataDir()
     ensureDemoDataDir(dataDir)
+
+    const indicePath = path.join(DATA_DIR, 'homag-substituicoes-indice.json')
+    if (fs.existsSync(indicePath)) {
+      try {
+        const indice = JSON.parse(fs.readFileSync(indicePath, 'utf-8'))
+        if (indice && typeof indice === 'object') setIndiceSubstituicoesHomag(indice)
+      } catch {
+        /* ignorar */
+      }
+    }
 
     const lite = readPecasJson(dataDir, KEY_LITE)
     const full = lite && lite.length >= 50 ? null : readPecasJson(dataDir, KEY_FULL)

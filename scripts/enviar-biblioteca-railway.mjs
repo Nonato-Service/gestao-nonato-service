@@ -151,6 +151,16 @@ async function main() {
     console.log('✓ Catálogo completo gravado no Railway (com fotos).')
   }
 
+  const indicePath = path.join(DATA, 'homag-substituicoes-indice.json')
+  if (fs.existsSync(indicePath)) {
+    const indice = JSON.parse(fs.readFileSync(indicePath, 'utf-8'))
+    if (indice && typeof indice === 'object' && !Array.isArray(indice)) {
+      console.log(`A enviar índice substituições HOMAG (${Object.keys(indice).length} entradas)…`)
+      await saveKey(cookie, 'homag-substituicoes-indice', indice, apiSecret)
+      console.log('✓ Índice substituições gravado no Railway.')
+    }
+  }
+
   const after = await countOnServer(cookie, apiSecret)
   if (after !== null) console.log(`Peças no Railway (depois): ${after}`)
 
