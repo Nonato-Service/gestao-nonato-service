@@ -238,7 +238,7 @@ import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import { ClienteEquipamentoHistoricoPanel } from './components/ClienteEquipamentoHistoricoPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
-import { filtrarPecasBibliotecaPorBusca } from './lib/pecaCodigoBusca'
+import { filtrarPecasBibliotecaPorBusca, pecaBibliotecaMatchesBusca } from './lib/pecaCodigoBusca'
 import { buscarPecaBibliotecaNoServidor } from './lib/buscarPecaBibliotecaRemoto'
 import { wrapRelatorioServicoPrintDocument } from './lib/relatorioServicoPdfShell'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
@@ -462,10 +462,7 @@ function pecaPassaBuscaBibliotecaTexto(
       .toLowerCase()
     return nome.includes(ql)
   }
-  const cod = String(peca.codigo ?? '')
-    .trim()
-    .toLowerCase()
-  return cod.includes(ql)
+  return pecaBibliotecaMatchesBusca(peca, q)
 }
 
 /** Imagem gravada no item do orçamento (só foto real da peça / upload manual — não o logo padrão). */
@@ -55702,9 +55699,8 @@ A1;Peça exemplo;10`}
                               padding: '10px'
                             }}>
                               {pecasBiblioteca
-                                .filter(peca => 
-                                  peca.codigo.toLowerCase().includes(buscaPecaManutencao.toLowerCase()) ||
-                                  peca.nome.toLowerCase().includes(buscaPecaManutencao.toLowerCase())
+                                .filter((peca) =>
+                                  pecaBibliotecaMatchesBusca(peca, buscaPecaManutencao)
                                 )
                                 .slice(0, 10)
                                 .map(peca => (
@@ -55773,9 +55769,8 @@ A1;Peça exemplo;10`}
                                     </button>
                                   </div>
                                 ))}
-                              {pecasBiblioteca.filter(peca => 
-                                peca.codigo.toLowerCase().includes(buscaPecaManutencao.toLowerCase()) ||
-                                peca.nome.toLowerCase().includes(buscaPecaManutencao.toLowerCase())
+                              {pecasBiblioteca.filter((peca) =>
+                                pecaBibliotecaMatchesBusca(peca, buscaPecaManutencao)
                               ).length === 0 && (
                                 <div style={{ textAlign: 'center', color: '#909090', padding: '20px' }}>
                                   {safeT?.nenhumaPecaEncontrada || 'Nenhuma peça encontrada'}

@@ -1,9 +1,10 @@
 /**
- * Busca de peças na biblioteca — aceita códigos HOMAG com ou sem hífens
- * e referências HOMAG (ex.: 2-029-95-0951 → código real 2029951380).
+ * Busca de peças na biblioteca — aceita códigos com ou sem hífens, espaços ou pontuação.
+ * Referências HOMAG (ex.: 2-029-95-0951 ou 2029950951) convertem para SKU (2029951380).
  */
 
 const HOMAG_REF_RE = /^(\d)-(\d{3})-(\d{2})-(\d{3,4})$/
+const HOMAG_REF_COMPACT_RE = /^(\d)(\d{3})(\d{2})(\d{3,4})$/
 
 export function compactPecaCodigo(c: string | undefined | null): string {
   return String(c ?? '')
@@ -12,12 +13,26 @@ export function compactPecaCodigo(c: string | undefined | null): string {
     .replace(/[^a-z0-9]/g, '')
 }
 
+/** Normaliza referência HOMAG com ou sem hífens → formato 2-029-95-0951 */
+export function referenciaHomagDeTexto(texto: string): string | null {
+  const t = texto.trim()
+  const comHifens = t.match(HOMAG_REF_RE)
+  if (comHifens) return comHifens[0]
+
+  const compact = compactPecaCodigo(t)
+  const semHifens = compact.match(HOMAG_REF_COMPACT_RE)
+  if (!semHifens) return null
+  return `${semHifens[1]}-${semHifens[2]}-${semHifens[3]}-${semHifens[4]}`
+}
+
 /**
- * Converte referência HOMAG com hífens para o código SKU de 10 dígitos quando possível.
- * Ex.: 2-029-95-0951 → 2029951380 | 2-029-95-0950 → 2029951370
+ * Converte referência HOMAG (com ou sem hífens) para código SKU de 10 dígitos.
+ * Ex.: 2-029-95-0951 | 2029950951 → 2029951380
  */
 export function homagReferenciaParaCodigoSku(referencia: string): string | null {
-  const m = referencia.trim().match(HOMAG_REF_RE)
+  const ref = referenciaHomagDeTexto(referencia)
+  if (!ref) return null
+  const m = ref.match(HOMAG_REF_RE)
   if (!m) return null
   const [, g1, g2, g3, g4] = m
   const prefix = `${g1}${g2}${g3}1`
@@ -30,9 +45,74 @@ export function homagReferenciaParaCodigoSku(referencia: string): string | null 
 
 /** Prefixo de família a partir da referência (ex.: 2-029-95-0951 → 2029951). */
 export function homagReferenciaParaPrefixoFamilia(referencia: string): string | null {
-  const m = referencia.trim().match(HOMAG_REF_RE)
+  const ref = referenciaHomagDeTexto(referencia)
+  if (!ref) return null
+  const m = ref.match(HOMAG_REF_RE)
   if (!m) return null
   return `${m[1]}${m[2]}${m[3]}1`
+}
+
+/** Variantes compactas equivalentes para comparar busca ↔ peça (com/sem hífens). */
+export function variantesBuscaCodigoPeca(query: string): string[] {
+  const out = new Set<string>()
+  const q = query.trim().toLowerCase()
+  if (!q) return []
+
+  out.add(q)
+  const qCompact = compactPecaCodigo(q)
+  if (qCompact.length >= 3) out.add(qCompact)
+
+  const ref = referenciaHomagDeTexto(q)
+  if (ref) {
+    out.add(ref.toLowerCase())
+    out.add(compactPecaCodigo(ref))
+  }
+
+  const skuHomag = homagReferenciaParaCodigoSku(q)
+  if (skuHomag) {
+    out.add(skuHomag.toLowerCase())
+    out.add(compactPecaCodigo(skuHomag))
+  }
+
+  return [...out].filter((v) => v.length >= 3)
+}
+
+function compactosPecaParaBusca(peca: {
+  codigo?: string
+  nome?: string
+  descricao?: string
+}): string[] {
+  const out = new Set<string>()
+  for (const campo of [peca.codigo, peca.nome, peca.descricao]) {
+    const raw = String(campo ?? '').trim().toLowerCase()
+    if (!raw) continue
+    out.add(raw)
+    const compact = compactPecaCodigo(raw)
+    if (compact.length >= 3) out.add(compact)
+    const ref = referenciaHomagDeTexto(raw)
+    if (ref) {
+      out.add(ref.toLowerCase())
+      out.add(compactPecaCodigo(ref))
+    }
+    const sku = homagReferenciaParaCodigoSku(raw)
+    if (sku) out.add(compactPecaCodigo(sku))
+  }
+  return [...out]
+}
+
+function codigosEquivalentes(a: string, b: string): boolean {
+  if (!a || !b) return false
+  if (a === b) return true
+  const va = variantesBuscaCodigoPeca(a)
+  const vb = variantesBuscaCodigoPeca(b)
+  if (va.some((x) => vb.includes(x))) return true
+  const ca = compactPecaCodigo(a)
+  const cb = compactPecaCodigo(b)
+  if (ca.length >= 3 && cb.length >= 3) {
+    if (ca === cb) return true
+    if (ca.length >= 8 && cb.length >= 8 && (ca.includes(cb) || cb.includes(ca))) return true
+  }
+  return false
 }
 
 export function pecaBibliotecaMatchesBusca(
@@ -41,6 +121,13 @@ export function pecaBibliotecaMatchesBusca(
 ): boolean {
   const q = query.trim().toLowerCase()
   if (!q) return true
+
+  const alvos = variantesBuscaCodigoPeca(q)
+  const campos = compactosPecaParaBusca(peca)
+
+  if (alvos.some((alvo) => campos.some((c) => c.includes(alvo) || alvo.includes(c)))) {
+    return true
+  }
 
   const codigo = (peca.codigo || '').toLowerCase()
   const nome = (peca.nome || '').toLowerCase()
@@ -52,18 +139,18 @@ export function pecaBibliotecaMatchesBusca(
   if (qCompact.length < 3) return false
 
   const codigoCompact = compactPecaCodigo(peca.codigo)
-  if (!codigoCompact) return false
+  if (codigoCompact && codigosEquivalentes(q, peca.codigo || '')) return true
 
-  if (codigoCompact.includes(qCompact) || qCompact.includes(codigoCompact)) return true
-
-  const skuFromHomagRef = homagReferenciaParaCodigoSku(query)
+  const skuFromHomagRef = homagReferenciaParaCodigoSku(q)
   if (skuFromHomagRef && codigoCompact === compactPecaCodigo(skuFromHomagRef)) return true
 
-  const familiaPrefix = homagReferenciaParaPrefixoFamilia(query)
-  if (familiaPrefix && codigoCompact.startsWith(familiaPrefix)) {
-    if (skuFromHomagRef) return codigoCompact === compactPecaCodigo(skuFromHomagRef)
-    const lastSeg = query.trim().match(HOMAG_REF_RE)?.[4]
-    if (lastSeg && (nome.includes(lastSeg) || descricao.includes(lastSeg))) return true
+  const nomeCompact = compactPecaCodigo(peca.nome)
+  const descCompact = compactPecaCodigo(peca.descricao)
+  if (
+    (nomeCompact && (nomeCompact.includes(qCompact) || qCompact.includes(nomeCompact))) ||
+    (descCompact && (descCompact.includes(qCompact) || qCompact.includes(descCompact)))
+  ) {
+    return true
   }
 
   return false
@@ -77,16 +164,18 @@ export function filtrarPecasBibliotecaPorBusca<
   return pecas.filter((p) => pecaBibliotecaMatchesBusca(p, q)).slice(0, limit)
 }
 
-/** Encontra peça por código exato (com normalização de hífens/espaços e referência HOMAG). */
+/** Encontra peça por código exato (com/sem hífens e referência HOMAG). */
 export function encontrarPecaBibliotecaPorCodigo<
-  T extends { codigo?: string },
+  T extends { codigo?: string; nome?: string; descricao?: string },
 >(pecas: T[], codigo: string): T | undefined {
   const alvo = compactPecaCodigo(codigo)
   if (!alvo) return undefined
-  const fromHomag = homagReferenciaParaCodigoSku(codigo)
-  const alvoHomag = fromHomag ? compactPecaCodigo(fromHomag) : null
+  const alvos = new Set(variantesBuscaCodigoPeca(codigo).map(compactPecaCodigo))
+  alvos.add(alvo)
+
   return pecas.find((p) => {
     const c = compactPecaCodigo(p.codigo)
-    return c === alvo || (alvoHomag != null && c === alvoHomag)
+    if (c && alvos.has(c)) return true
+    return pecaBibliotecaMatchesBusca(p, codigo) && codigosEquivalentes(codigo, p.codigo || '')
   })
 }

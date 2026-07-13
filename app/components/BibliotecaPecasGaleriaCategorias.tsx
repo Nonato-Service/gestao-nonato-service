@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { pecaBibliotecaMatchesBusca } from '../lib/pecaCodigoBusca'
 import {
   formatPrecoBibliotecaExibicao,
 } from './BibliotecaPrecoOlhoToggle'
@@ -304,10 +305,7 @@ export function BibliotecaPecasGaleriaCategorias({
             .toLowerCase()
             .includes(q)
         }
-        return String(peca.codigo ?? '')
-          .trim()
-          .toLowerCase()
-          .includes(q)
+        return pecaBibliotecaMatchesBusca(peca, buscaCodigo)
       })
       .sort((a, b) => compararPecasGaleriaPorNumero(a, b, categorias))
   }, [pecasCatalogo, buscaModo, q, categorias, emBusca])
