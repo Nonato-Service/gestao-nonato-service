@@ -4536,7 +4536,7 @@ function resolveActionCardDescription(
 
 type ComprovanteDespesa = {
   id: string
-  tipo: 'cliente' | 'pessoal'  // cliente = despesa por cliente; pessoal = despesas pessoais
+  tipo: 'cliente' | 'pessoal'  // cliente = despesa por cliente; pessoal = Despesas da NONATO SERVICE (campo interno)
   cliente: string
   clienteId?: string
   /** Data da transação / no recibo (YYYY-MM-DD) — aparece no PDF e na lista por dia */
@@ -49854,8 +49854,8 @@ A1;Peça exemplo;10`}
       }
 
       case 'comprovantes-despesas': {
-        const labelPessoal = (safeT as any)?.despesasPessoais || 'Despesas Pessoais'
-        const labelGrupoNonato = (safeT as any)?.comprovantesGrupoNonatoService || 'NONATO SERVICE'
+        const labelPessoal = (safeT as any)?.despesasPessoais || 'Despesas da NONATO SERVICE'
+        const labelGrupoNonato = (safeT as any)?.comprovantesGrupoNonatoService || 'Despesas da NONATO SERVICE'
         const chaveGrupoComprovante = (c: ComprovanteDespesa) =>
           c.tipo === 'pessoal' ? labelGrupoNonato : String(c.cliente || '—').trim() || '—'
         const confirmarSeNaoDuplicadoComprovante = (candidato: {
@@ -50507,7 +50507,7 @@ A1;Peça exemplo;10`}
             <p style={{ color: '#aaa', marginBottom: '20px', fontSize: '14px' }}>
               {(safeT as any)?.comprovantesDespesasDescPainel ||
                 (safeT as any)?.comprovantesDespesasDesc ||
-                'Foto do recibo: primeiro escolhe Cliente ou Pessoal; depois o sistema lê valor e data e associa ao cliente do dia (se for cliente).'}
+                'Foto do recibo: primeiro escolhe Cliente ou Despesas da NONATO SERVICE; depois o sistema lê valor e data e associa ao cliente do dia (se for cliente).'}
             </p>
             <details
               style={{
@@ -50607,7 +50607,7 @@ A1;Peça exemplo;10`}
                   <strong style={{ color: '#bbf7d0' }}>{totalDespesasClientes.toFixed(2)} €</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', color: '#d1d5db' }}>
-                  <span>{(safeT as any)?.comprovantesFechamentoPessoais || 'Despesas pessoais (NONATO SERVICE)'}</span>
+                  <span>{(safeT as any)?.comprovantesFechamentoPessoais || 'Despesas da NONATO SERVICE'}</span>
                   <strong style={{ color: '#fde68a' }}>{totalDespesasPessoais.toFixed(2)} €</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', color: '#fff', fontWeight: 700, marginTop: '4px' }}>
@@ -50803,7 +50803,7 @@ A1;Peça exemplo;10`}
                       </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: '#ccc' }}>
                         <input type="radio" name="tipoComp" checked={formComp.tipo === 'pessoal'} onChange={() => setFormComp(prev => ({ ...prev, tipo: 'pessoal', cliente: '' }))} />
-                        {(safeT as any)?.despesasPessoais || 'Despesas Pessoais'}
+                        {(safeT as any)?.despesasPessoais || 'Despesas da NONATO SERVICE'}
                       </label>
                     </div>
                   </div>
@@ -50816,7 +50816,7 @@ A1;Peça exemplo;10`}
                         {formComp.clientesSugeridos.length === 0 ? (
                           <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>
                             {(safeT as any)?.comprovantesManualSemClienteDia ||
-                              'Nenhum cliente na agenda/relatório neste dia e hora. Escolha abaixo ou marque despesa pessoal.'}
+                              'Nenhum cliente na agenda/relatório neste dia e hora. Escolha abaixo ou marque Despesas da NONATO SERVICE.'}
                           </p>
                         ) : formComp.clientesSugeridos.length === 1 &&
                           (formComp.motivoAssociacao === 'hora' || formComp.motivoAssociacao === 'unico') ? (
@@ -51042,11 +51042,11 @@ A1;Peça exemplo;10`}
                   {comprovanteReciboRapido.step === 'escolher-tipo' ? (
                     <>
                       <h3 style={{ margin: '0 0 12px', color: '#93c5fd' }}>
-                        {(safeT as any)?.comprovantesReciboRapidoEscolherTipoTitulo || 'Cliente ou pessoal?'}
+                        {(safeT as any)?.comprovantesReciboRapidoEscolherTipoTitulo || 'Cliente ou Despesas NONATO SERVICE?'}
                       </h3>
                       <p style={{ color: '#aaa', fontSize: '13px', marginBottom: '16px', lineHeight: 1.45 }}>
                         {(safeT as any)?.comprovantesReciboRapidoEscolherTipoDesc ||
-                          'Antes de ler o recibo, indique se esta despesa é de um cliente (obra/serviço) ou pessoal (IRS).'}
+                          'Antes de ler o recibo, indique se esta despesa é de um cliente (obra/serviço) ou Despesas da NONATO SERVICE.'}
                       </p>
                       <img
                         src={comprovanteReciboRapido.imagemBase64}
@@ -51092,7 +51092,7 @@ A1;Peça exemplo;10`}
                             fontSize: '15px',
                           }}
                         >
-                          {(safeT as any)?.comprovantesReciboRapidoEscolherPessoal || '🏠 Pessoal (NONATO SERVICE / IRS)'}
+                          {(safeT as any)?.comprovantesReciboRapidoEscolherPessoal || '🏢 Despesas da NONATO SERVICE'}
                         </button>
                       </div>
                       <button
@@ -51284,13 +51284,13 @@ A1;Peça exemplo;10`}
                         {comprovanteReciboRapido.tipoDestino === 'pessoal' ? (
                           <p style={{ margin: 0, fontSize: '12px', color: '#fde68a', lineHeight: 1.45 }}>
                             {(safeT as any)?.comprovantesReciboRapidoDestinoPessoal ||
-                              'Despesa pessoal — entra em NONATO SERVICE para fechamento semanal, mensal e anual.'}
+                              'Despesas da NONATO SERVICE — entram no fechamento semanal, mensal e anual.'}
                           </p>
                         ) : comprovanteReciboRapido.clientesSugeridos.length === 0 ? (
                           <p style={{ margin: 0, fontSize: '12px', color: '#888', lineHeight: 1.45 }}>
                             {(
                               (safeT as any)?.comprovantesClientesAtivosNenhumData ||
-                              'Nenhum cliente com relatório ou agenda no dia {data}. Será despesa pessoal ou escolha manualmente.'
+                              'Nenhum cliente com relatório ou agenda no dia {data}. Serão Despesas da NONATO SERVICE ou escolha manualmente.'
                             ).replace(
                               '{data}',
                               formatarDataListaComprovante(String(comprovanteReciboRapido.data || '').slice(0, 10))
@@ -51416,7 +51416,7 @@ A1;Peça exemplo;10`}
                               )
                             }
                           />
-                          {(safeT as any)?.comprovantesDespesaPessoalOpcao || 'Despesa pessoal (IRS)'}
+                          {(safeT as any)?.comprovantesDespesaPessoalOpcao || 'Despesas da NONATO SERVICE'}
                         </label>
                         ) : null}
                       </div>
@@ -51532,7 +51532,7 @@ A1;Peça exemplo;10`}
                             } else {
                               alert(
                                 (safeT as any)?.comprovantesReciboRapidoOk ||
-                                  'Comprovante guardado como despesa pessoal. Confira o valor na lista.'
+                                  'Comprovante guardado em Despesas da NONATO SERVICE. Confira o valor na lista.'
                               )
                             }
                           }}
@@ -51552,7 +51552,7 @@ A1;Peça exemplo;10`}
                                 'Guardar ({cliente})'
                               ).replace('{cliente}', comprovanteReciboRapido.clienteSelecionado)
                             : comprovanteReciboRapido.tipoSelecionado === 'pessoal'
-                              ? (safeT as any)?.comprovantesReciboRapidoGuardarPessoal || 'Guardar (pessoal)'
+                              ? (safeT as any)?.comprovantesReciboRapidoGuardarPessoal || 'Guardar (NONATO SERVICE)'
                               : (safeT as any)?.comprovantesReciboRapidoGuardar || 'Guardar'}
                         </button>
                       </div>
