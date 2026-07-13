@@ -11,6 +11,7 @@ import { captureAuraSession, parseCategoryIdFromUrl } from './api-products.mjs'
 import { auraSearch, baseInput } from './api-import.mjs'
 import { downloadHomagImage } from './images.mjs'
 import { formatHomagPreco } from './homag-preco.mjs'
+import { enriquecerPecaHomagComReferencias } from './homag-codigo-ref.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.join(__dirname, '..', '..')
@@ -141,7 +142,7 @@ async function main() {
 
     const refComHifens = termosBusca(codigoArg).find((t) => t.includes('-')) || ''
     const nomeHomag = String(found.descricao || found.codigo || '').trim()
-    const incoming = {
+    const incoming = enriquecerPecaHomagComReferencias({
       id: `import-homag-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       nome: nomeHomag,
       codigo: found.codigo,
@@ -154,7 +155,7 @@ async function main() {
       importacaoPendente: false,
       imagem,
       dataCriacao: new Date().toISOString(),
-    }
+    })
 
     const existing = fs.existsSync(BIB) ? JSON.parse(fs.readFileSync(BIB, 'utf8')) : []
     const { list, added, peca } = mergePeca(existing, incoming)

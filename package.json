@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "apply-layout": "node apply-layout-criacao-checklist.js",
     "homag:import": "node scripts/homag-import/run.mjs",
+    "homag:import-faltantes": "node scripts/homag-import/importar-faltantes-homag.mjs",
     "homag:merge": "node scripts/homag-import/merge-export-para-biblioteca.mjs",
     "homag:import-tudo": "node scripts/homag-import/run.mjs && node scripts/homag-import/merge-export-para-biblioteca.mjs",
     "homag:import:probe": "node scripts/homag-import/probe-selectors.mjs",

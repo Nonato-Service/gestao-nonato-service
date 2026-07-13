@@ -7,6 +7,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { extractHomagPrecoFromExportItem, formatHomagPreco } from './homag-preco.mjs'
+import { enriquecerPecaHomagComReferencias } from './homag-codigo-ref.mjs'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DATA = path.join(root, 'data')
@@ -70,7 +71,7 @@ function homagItemToPeca(item, seq) {
   const descricao = String(item.descricao ?? nome).trim()
   const imagemFinal = imagemFromHomagExportItem(item)
   const preco = formatHomagPreco(extractHomagPrecoFromExportItem(item))
-  return {
+  return enriquecerPecaHomagComReferencias({
     id: `import-homag-${Date.now()}-${seq}-${Math.random().toString(36).slice(2, 9)}`,
     nome,
     codigo,
@@ -83,7 +84,7 @@ function homagItemToPeca(item, seq) {
     importacaoPendente: false,
     imagem: imagemFinal,
     dataCriacao: new Date().toISOString(),
-  }
+  })
 }
 
 function loadExport(file) {

@@ -1034,7 +1034,7 @@ export function PedidoOrcamentosAvulsoContent({
                                   setBuscaPeca('')
                                 }}
                               >
-                                📚 {safeT?.orcamentoBuscarBibliotecaPecas || 'Biblioteca'}
+                                + {safeT?.adicionarPeca || 'Adicionar peça'}
                               </button>
                               <button
                                 type="button"
@@ -1052,6 +1052,10 @@ export function PedidoOrcamentosAvulsoContent({
                             <div className="orc-pro__form-box">
                               {modoPeca === 'biblioteca' && (
                                 <>
+                                  <p className="orc-pro__list-hint">
+                                    {(safeT as any)?.poaBuscaPecaHint ||
+                                      'Pesquise por código (com ou sem hífen) ou nome e clique em «Adicionar» na peça.'}
+                                  </p>
                                   <input
                                     type="text"
                                     className="orc-pro__input"
@@ -1074,7 +1078,6 @@ export function PedidoOrcamentosAvulsoContent({
                                       <div
                                         key={peca.id}
                                         className="orc-pro__list-item orc-pro__list-item--peca"
-                                        onClick={() => adicionarPecaDaBiblioteca(peca)}
                                       >
                                         <ProImageHoverPreview
                                           src={peca.imagem}
@@ -1085,10 +1088,17 @@ export function PedidoOrcamentosAvulsoContent({
                                         >
                                           —
                                         </ProImageHoverPreview>
-                                        <div className="orc-pro__peca-info">
+                                        <div className="orc-pro__peca-info orc-pro__peca-info--grow">
                                           <strong>{peca.nome}</strong>
                                           <small>{peca.codigo}</small>
                                         </div>
+                                        <button
+                                          type="button"
+                                          className="orc-pro__btn orc-pro__btn--primary orc-pro__btn--sm"
+                                          onClick={() => adicionarPecaDaBiblioteca(peca)}
+                                        >
+                                          + {safeT?.adicionar || 'Adicionar'}
+                                        </button>
                                       </div>
                                     ))}
                                   </div>
@@ -1190,6 +1200,13 @@ export function PedidoOrcamentosAvulsoContent({
                             </div>
                           )}
                         </div>
+
+                        {bloco.pecas.length === 0 && !mostrarFormPeca && (
+                          <p className="poa-pro__pecas-empty">
+                            {(safeT as any)?.poaNenhumaPecaEquipamento ||
+                              'Nenhuma peça neste equipamento. Clique em «+ Adicionar peça» acima.'}
+                          </p>
+                        )}
 
                         {bloco.pecas.length > 0 && (
                           <div className="orc-pro__pecas-stack">

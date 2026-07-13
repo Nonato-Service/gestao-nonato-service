@@ -35696,6 +35696,31 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
 .orc-pro__list-item--peca:hover {
   background: rgba(255, 255, 255, 0.03);
 }
+.orc-pro__list-item--peca .orc-pro__btn--sm {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+.orc-pro__peca-info--grow {
+  flex: 1;
+  min-width: 0;
+}
+.orc-pro__list-hint {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.45;
+}
+.poa-pro__pecas-empty {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+}
 .orc-pro__peca-card {
   display: flex;
   align-items: center;
