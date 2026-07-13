@@ -1022,39 +1022,51 @@ export function PedidoOrcamentosAvulsoContent({
                     {isAtivo && (
                       <div className="poa-pro__pecas-zone" onClick={(e) => e.stopPropagation()}>
                         <div className="poa-pro__pecas-head">
-                          <h4>{safeT?.pecasDesteEquipamento || 'Peças deste equipamento'}</h4>
-                          {!mostrarFormPeca ? (
-                            <div className="orc-pro__actions-bar orc-pro__actions-bar--sm">
-                              <button
-                                type="button"
-                                className="orc-pro__btn orc-pro__btn--primary"
-                                onClick={() => {
-                                  setMostrarFormPeca(true)
-                                  setModoPeca('biblioteca')
-                                  setBuscaPeca('')
-                                }}
-                              >
-                                + {safeT?.adicionarPeca || 'Adicionar peça'}
-                              </button>
-                              <button
-                                type="button"
-                                className="orc-pro__btn orc-pro__btn--secondary"
-                                onClick={() => {
-                                  setMostrarFormPeca(true)
-                                  setModoPeca('manual')
-                                  limparFormularioPecaManual()
-                                }}
-                              >
-                                ✏️ {safeT?.digitarCodigoManual || 'Manual'}
-                              </button>
-                            </div>
-                          ) : (
+                          <div>
+                            <h4>{safeT?.pecasDesteEquipamento || 'Peças deste equipamento'}</h4>
+                            <p className="poa-pro__pecas-desc">
+                              {safeT?.adicionarPecasDesc ||
+                                'Busque na Biblioteca de Peças por código/nome ou digite o código manualmente.'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="orc-pro__actions-bar orc-pro__actions-bar--sm poa-pro__pecas-actions">
+                          <button
+                            type="button"
+                            className={`orc-pro__btn orc-pro__btn--primary${
+                              mostrarFormPeca && modoPeca === 'biblioteca' ? ' is-active' : ''
+                            }`}
+                            onClick={() => {
+                              setMostrarFormPeca(true)
+                              setModoPeca('biblioteca')
+                              if (!buscaPeca.trim()) setBuscaPeca('')
+                            }}
+                          >
+                            📚 {safeT?.orcamentoBuscarBibliotecaPecas || 'Buscar na Biblioteca de Peças'}
+                          </button>
+                          <button
+                            type="button"
+                            className={`orc-pro__btn orc-pro__btn--secondary${
+                              mostrarFormPeca && modoPeca === 'manual' ? ' is-active' : ''
+                            }`}
+                            onClick={() => {
+                              setMostrarFormPeca(true)
+                              setModoPeca('manual')
+                              limparFormularioPecaManual()
+                            }}
+                          >
+                            ✏️ {safeT?.digitarCodigoManual || 'Digitar código / peça manual'}
+                          </button>
+                        </div>
+
+                        {mostrarFormPeca ? (
                             <div className="orc-pro__form-box">
                               {modoPeca === 'biblioteca' && (
                                 <>
                                   <p className="orc-pro__list-hint">
                                     {(safeT as any)?.poaBuscaPecaHint ||
-                                      'Pesquise por código (com ou sem hífen) ou nome e clique em «Adicionar» na peça.'}
+                                      'Pesquise por código (com ou sem hífen) ou nome e clique em «Adicionar peça».'}
                                   </p>
                                   <input
                                     type="text"
@@ -1097,7 +1109,7 @@ export function PedidoOrcamentosAvulsoContent({
                                           className="orc-pro__btn orc-pro__btn--primary orc-pro__btn--sm"
                                           onClick={() => adicionarPecaDaBiblioteca(peca)}
                                         >
-                                          + {safeT?.adicionar || 'Adicionar'}
+                                          + {safeT?.adicionarPeca || 'Adicionar peça'}
                                         </button>
                                       </div>
                                     ))}
@@ -1183,7 +1195,7 @@ export function PedidoOrcamentosAvulsoContent({
                                     )}
                                   </div>
                                   <button type="button" className="orc-pro__btn orc-pro__btn--primary" onClick={adicionarPecaManual}>
-                                    {safeT?.adicionar || 'Adicionar'}
+                                    + {safeT?.adicionarPeca || 'Adicionar peça'}
                                   </button>
                                 </>
                               )}
@@ -1198,13 +1210,12 @@ export function PedidoOrcamentosAvulsoContent({
                                 {safeT?.cancel || 'Cancelar'}
                               </button>
                             </div>
-                          )}
-                        </div>
+                        ) : null}
 
                         {bloco.pecas.length === 0 && !mostrarFormPeca && (
                           <p className="poa-pro__pecas-empty">
                             {(safeT as any)?.poaNenhumaPecaEquipamento ||
-                              'Nenhuma peça neste equipamento. Clique em «+ Adicionar peça» acima.'}
+                              'Nenhuma peça neste equipamento. Use «Buscar na Biblioteca de Peças» ou «Digitar código / peça manual».'}
                           </p>
                         )}
 

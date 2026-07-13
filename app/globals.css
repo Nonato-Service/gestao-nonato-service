@@ -35712,6 +35712,19 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   color: rgba(255, 255, 255, 0.55);
   line-height: 1.45;
 }
+.poa-pro__pecas-desc {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.45;
+  max-width: 520px;
+}
+.poa-pro__pecas-actions {
+  margin-bottom: 12px;
+}
+.poa-pro__pecas-actions .orc-pro__btn.is-active {
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.55);
+}
 .poa-pro__pecas-empty {
   margin: 8px 0 0;
   padding: 12px 14px;
