@@ -1291,22 +1291,45 @@ export function PedidoOrcamentosAvulsoContent({
                                     </div>
                                   )}
                                 </div>
-                                <div className="orc-pro__peca-qty">
-                                  <button type="button" className="orc-pro__act" onClick={() => alterarQuantidadePeca(bloco.id, p.id, -1)}>
-                                    −
-                                  </button>
-                                  <span>{p.quantidade}</span>
-                                  <button type="button" className="orc-pro__act" onClick={() => alterarQuantidadePeca(bloco.id, p.id, 1)}>
-                                    +
+                                <div className="orc-pro__peca-actions">
+                                  <div className="orc-pro__peca-qty">
+                                    <button
+                                      type="button"
+                                      className="orc-pro__act"
+                                      title={safeT?.diminuirQuantidade || 'Diminuir quantidade'}
+                                      onClick={() => alterarQuantidadePeca(bloco.id, p.id, -1)}
+                                    >
+                                      −
+                                    </button>
+                                    <span>{p.quantidade}</span>
+                                    <button
+                                      type="button"
+                                      className="orc-pro__act"
+                                      title={safeT?.aumentarQuantidade || 'Aumentar quantidade'}
+                                      onClick={() => alterarQuantidadePeca(bloco.id, p.id, 1)}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="orc-pro__btn orc-pro__btn--danger orc-pro__btn--sm"
+                                    title={safeT?.delete || 'Excluir'}
+                                    onClick={() => {
+                                      if (
+                                        !confirm(
+                                          (safeT as any)?.confirmarExcluirPecaEquipamento ||
+                                            'Retirar esta peça deste equipamento?'
+                                        )
+                                      ) {
+                                        return
+                                      }
+                                      removerPeca(bloco.id, p.id)
+                                    }}
+                                  >
+                                    🗑️ {safeT?.delete || 'Excluir'}
                                   </button>
                                 </div>
-                                <button
-                                  type="button"
-                                  className="orc-pro__act orc-pro__act--danger"
-                                  onClick={() => removerPeca(bloco.id, p.id)}
-                                >
-                                  X
-                                </button>
                               </div>
                             ))}
                           </div>
