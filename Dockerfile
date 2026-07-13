@@ -1,19 +1,28 @@
-# Build e deploy no Railway (evita erro do nixpacks.toml)
-FROM node:20-alpine
-
+# Build e deploy no Railway — modo standalone (menos RAM em runtime)
+FROM node:20-alpine AS deps
 WORKDIR /app
-
-# Dependências
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-# Código e build
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm run build
 
-# Railway usa PORT; o script start-server.js já lê process.env.PORT
+FROM node:20-alpine AS runner
+WORKDIR /app
+
 ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+# Runtime: servidor leve (app principal carrega só no browser). 512 MB pode bastar; 1 GB recomendado.
+ENV NODE_OPTIONS=--max-old-space-size=460
+
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/scripts/start-server.js ./scripts/start-server.js
+
 EXPOSE 3000
-# Evita npm como PID 1 (SIGTERM/restarts no Railway ficam mais limpos que com "npm start")
 CMD ["node", "scripts/start-server.js"]

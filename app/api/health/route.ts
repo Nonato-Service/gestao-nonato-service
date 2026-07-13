@@ -19,9 +19,8 @@ function hasClientesFile(): boolean {
   try {
     const p = path.join(DATA_DIR, 'nonato-clientes.json')
     if (!fs.existsSync(p)) return false
-    const raw = fs.readFileSync(p, 'utf8')
-    const parsed = JSON.parse(raw) as unknown
-    return Array.isArray(parsed) && parsed.length > 0
+    const stat = fs.statSync(p)
+    return stat.size > 4
   } catch {
     return false
   }

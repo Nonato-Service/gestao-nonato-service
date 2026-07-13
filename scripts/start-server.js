@@ -4,12 +4,27 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+const appRoot = path.join(__dirname, '..');
 const port = process.env.PORT || 3000;
-const nextBin = path.join(__dirname, '..', 'node_modules', 'next', 'dist', 'bin', 'next');
+const nextBin = path.join(appRoot, 'node_modules', 'next', 'dist', 'bin', 'next');
+const standaloneCandidates = [
+  path.join(appRoot, 'server.js'),
+  path.join(appRoot, '.next', 'standalone', 'server.js'),
+];
+const standaloneServer = standaloneCandidates.find((p) => fs.existsSync(p));
+const standaloneCwd = standaloneServer
+  ? standaloneServer.includes(`${path.sep}.next${path.sep}standalone${path.sep}`)
+    ? path.join(appRoot, '.next', 'standalone')
+    : appRoot
+  : appRoot;
 const dataDir =
   process.env.RAILWAY_VOLUME_MOUNT_PATH ||
   process.env.DATA_DIR ||
-  path.join(__dirname, '..', 'data');
+  path.join(appRoot, 'data');
+
+console.log('[start-server] NODE_ENV:', process.env.NODE_ENV || 'production');
+console.log('[start-server] PORT:', port);
+console.log('[start-server] NODE_OPTIONS:', process.env.NODE_OPTIONS || '(default)');
 
 try {
   if (!fs.existsSync(dataDir)) {
@@ -20,24 +35,41 @@ try {
   console.log('[start-server] Ficheiros de dados:', files.length);
   if (files.length < 3) {
     console.warn(
-      '[start-server] AVISO: poucos ficheiros em DATA_DIR — configure volume Railway (/app/data) e DATA_DIR=/app/data para não perder cadastros após deploy.'
+      '[start-server] AVISO: poucos ficheiros em DATA_DIR — configure volume Railway e DATA_DIR (ex.: /data ou /app/data).'
     );
   }
 } catch (e) {
   console.warn('[start-server] Não foi possível verificar DATA_DIR:', e);
 }
 
-if (!fs.existsSync(nextBin)) {
-  console.error('[start-server] Next.js não encontrado em:', nextBin);
-  console.error('[start-server] Execute npm ci && npm run build no contentor.');
+const useStandalone = Boolean(standaloneServer);
+if (useStandalone) {
+  console.log('[start-server] Modo: standalone (menos memória)', standaloneServer);
+} else if (!fs.existsSync(nextBin)) {
+  console.error('[start-server] Next.js não encontrado. Execute npm ci && npm run build.');
   process.exit(1);
+} else {
+  console.log('[start-server] Modo: next start');
 }
 
-const child = spawn(process.execPath, [nextBin, 'start', '-H', '0.0.0.0', '-p', String(port)], {
-  stdio: 'inherit',
-  cwd: path.join(__dirname, '..'),
-  env: { ...process.env, NODE_ENV: process.env.NODE_ENV || 'production' },
-});
+const childEnv = {
+  ...process.env,
+  NODE_ENV: process.env.NODE_ENV || 'production',
+  PORT: String(port),
+  HOSTNAME: '0.0.0.0',
+};
+
+const child = useStandalone
+  ? spawn(process.execPath, [standaloneServer], {
+      stdio: 'inherit',
+      cwd: standaloneCwd,
+      env: childEnv,
+    })
+  : spawn(process.execPath, [nextBin, 'start', '-H', '0.0.0.0', '-p', String(port)], {
+      stdio: 'inherit',
+      cwd: appRoot,
+      env: childEnv,
+    });
 
 function forwardSignal(sig) {
   if (child.exitCode === null && child.signalCode === null) {

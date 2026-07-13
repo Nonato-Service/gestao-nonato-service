@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Imagem Docker mais leve — menos RAM em runtime (Railway)
+  output: 'standalone',
   // Reduz uso de memória no build (importante para Railway plano gratuito)
   productionBrowserSourceMaps: false,
   async redirects() {
