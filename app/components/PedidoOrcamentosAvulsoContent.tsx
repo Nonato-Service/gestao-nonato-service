@@ -87,8 +87,13 @@ type Props = {
   activeTabId: string
   voltarPaginaInicial: () => void
   LogoComponent: React.ComponentType<{ size?: 'small' | 'medium' | 'large' }>
-  saveData?: (key: string, data: any) => Promise<void>
-  loadData?: (key: string) => Promise<any>
+  saveData?: (
+    key: string,
+    data: unknown,
+    saveToLocalStorage?: boolean,
+    awaitServer?: boolean
+  ) => Promise<void>
+  loadData?: (key: string) => Promise<unknown>
   onGerarOrcamento?: () => void
   logoHtml?: string
   empresaNonato?: OrcamentoPdfEmpresa
@@ -173,6 +178,55 @@ function normalizarPedidoCarregado(p: PedidoAvulsoGuardado): PedidoAvulsoGuardad
   }
 }
 
+function lerPedidosLocalStorage(): PedidoAvulsoGuardado[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(PEDIDOS_AVULSO_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as unknown
+    return Array.isArray(parsed) ? parsed.map((p) => normalizarPedidoCarregado(p as PedidoAvulsoGuardado)) : []
+  } catch {
+    return []
+  }
+}
+
+function mergePedidosArrays(
+  server: PedidoAvulsoGuardado[],
+  local: PedidoAvulsoGuardado[]
+): PedidoAvulsoGuardado[] {
+  const map = new Map<string, PedidoAvulsoGuardado>()
+  for (const p of server) {
+    if (p?.codigo) map.set(p.codigo, normalizarPedidoCarregado(p))
+  }
+  for (const p of local) {
+    if (!p?.codigo) continue
+    const prev = map.get(p.codigo)
+    const tPrev = prev ? new Date(prev.geradoEm || prev.dataGeracao || 0).getTime() : 0
+    const tNew = new Date(p.geradoEm || p.dataGeracao || 0).getTime()
+    if (!prev || tNew >= tPrev) map.set(p.codigo, normalizarPedidoCarregado(p))
+  }
+  return [...map.values()].sort(
+    (a, b) =>
+      new Date(b.dataGeracao || b.geradoEm || 0).getTime() -
+      new Date(a.dataGeracao || a.geradoEm || 0).getTime()
+  )
+}
+
+function formatarDataPedido(iso?: string): string {
+  if (!iso) return '—'
+  try {
+    return new Date(iso).toLocaleDateString('pt-PT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return iso
+  }
+}
+
 export function PedidoOrcamentosAvulsoContent({
   clientes,
   pecasBiblioteca,
@@ -206,19 +260,44 @@ export function PedidoOrcamentosAvulsoContent({
   const [modoPeca, setModoPeca] = useState<'biblioteca' | 'manual' | null>(null)
   const [emitirComoCliente, setEmitirComoCliente] = useState<'cliente' | 'nonato-service'>('cliente')
   const [pdfModelo, setPdfModelo] = useState(() => loadPdfModeloPadrao('pedidoAvulso'))
-  const [pedidosGerados, setPedidosGerados] = useState<PedidoAvulsoGuardado[]>([])
+  const [pedidosGerados, setPedidosGerados] = useState<PedidoAvulsoGuardado[]>(() => lerPedidosLocalStorage())
   const [codigoUltimoGerado, setCodigoUltimoGerado] = useState<string | null>(null)
+  const [buscaHistorico, setBuscaHistorico] = useState('')
+  const [historicoCarregando, setHistoricoCarregando] = useState(false)
+
+  const carregarPedidos = useCallback(async () => {
+    const local = lerPedidosLocalStorage()
+    if (!loadData) {
+      if (local.length > 0) setPedidosGerados(local)
+      return
+    }
+    setHistoricoCarregando(true)
+    try {
+      const raw = await loadData(PEDIDOS_AVULSO_KEY)
+      const server = Array.isArray(raw) ? (raw as PedidoAvulsoGuardado[]).map(normalizarPedidoCarregado) : []
+      setPedidosGerados(mergePedidosArrays(server, local))
+    } catch {
+      if (local.length > 0) setPedidosGerados(local)
+    } finally {
+      setHistoricoCarregando(false)
+    }
+  }, [loadData])
 
   useEffect(() => {
-    if (!loadData) return
-    loadData(PEDIDOS_AVULSO_KEY)
-      .then((data) => {
-        if (data && Array.isArray(data)) {
-          setPedidosGerados((data as PedidoAvulsoGuardado[]).map(normalizarPedidoCarregado))
-        }
-      })
-      .catch(() => {})
-  }, [loadData])
+    void carregarPedidos()
+  }, [carregarPedidos])
+
+  const pedidosHistoricoFiltrados = useMemo(() => {
+    const q = buscaHistorico.trim().toLowerCase()
+    const lista = [...pedidosGerados]
+    if (!q) return lista
+    return lista.filter((p) => {
+      const codigo = String(p.codigo ?? '').toLowerCase()
+      const cliente = String(p.clienteNomeReal ?? '').toLowerCase()
+      const equip = String(p.equipamentoTexto ?? '').toLowerCase()
+      return codigo.includes(q) || cliente.includes(q) || equip.includes(q)
+    })
+  }, [pedidosGerados, buscaHistorico])
 
   const clientesFiltrados = useMemo(() => {
     if (!buscaCliente.trim()) return clientes
@@ -596,6 +675,101 @@ export function PedidoOrcamentosAvulsoContent({
     )
   }
 
+  const handleReabrirPedido = (pedido: PedidoAvulsoGuardado) => {
+    const normalizado = normalizarPedidoCarregado(pedido)
+    if (pedido.clienteId) {
+      const cl = clientes.find((c) => c.id === pedido.clienteId)
+      if (cl) {
+        setClienteSelecionado(cl)
+        setClienteNomeManual('')
+      } else {
+        setClienteSelecionado(null)
+        setClienteNomeManual(pedido.clienteNomeReal || '')
+      }
+    } else {
+      setClienteSelecionado(null)
+      setClienteNomeManual(pedido.clienteNomeReal || '')
+    }
+    setEmitirComoCliente(pedido.emitirComoCliente || 'cliente')
+    const blocos =
+      normalizado.equipamentosBlocos && normalizado.equipamentosBlocos.length > 0
+        ? normalizado.equipamentosBlocos.map((b) => ({
+            ...b,
+            pecas: [...(b.pecas || [])],
+            id: b.id || 'bloco-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+          }))
+        : [criarBlocoEquipamentoVazio()]
+    setBlocosEquipamento(blocos)
+    setBlocoAtivoId(blocos[0].id)
+    setCodigoUltimoGerado(null)
+    setMostrarFormPeca(false)
+    setModoPeca(null)
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  const handleConverterParaCliente = async (pedido: PedidoAvulsoGuardado) => {
+    if (pedido.emitirComoCliente !== 'nonato-service') {
+      alert(
+        (safeT as Record<string, string | undefined>)?.poaJaEmitidoCliente ||
+          'Este pedido já está configurado para emitir com o nome do cliente.'
+      )
+      return
+    }
+    const msg =
+      (safeT as Record<string, string | undefined>)?.poaConfirmarConverterCliente ||
+      `Converter o pedido ${pedido.codigo} para emitir com o nome do cliente "${pedido.clienteNomeReal}"?\n\nDepois pode aplicar os valores em Orçamentos Avulso.`
+    if (!confirm(msg)) return
+
+    const atualizado: PedidoAvulsoGuardado = { ...pedido, emitirComoCliente: 'cliente' }
+    const atualizados = pedidosGerados.map((p) => (p.codigo === pedido.codigo ? atualizado : p))
+    setPedidosGerados(atualizados)
+    if (saveData) {
+      try {
+        await saveData(PEDIDOS_AVULSO_KEY, atualizados, true, true)
+      } catch (err) {
+        console.error('Erro ao guardar pedido convertido:', err)
+      }
+    }
+
+    if (loadData && saveData) {
+      try {
+        const raw = await loadData(ORCAMENTOS_AVULSO_KEY)
+        const lista = Array.isArray(raw) ? raw : []
+        const orcId = 'avulso-' + pedido.codigo
+        const novosOrc = lista.map((o: { id?: string; numeroOrcamento?: string; emitirComoCliente?: string }) =>
+          o.id === orcId || o.numeroOrcamento === pedido.codigo
+            ? { ...o, emitirComoCliente: 'cliente' as const }
+            : o
+        )
+        await saveData(ORCAMENTOS_AVULSO_KEY, novosOrc, true, true)
+      } catch (err) {
+        console.error('Erro ao actualizar orçamento avulso:', err)
+      }
+    }
+
+    handleVisualizarPdfGuardado(atualizado)
+    alert(
+      (safeT as Record<string, string | undefined>)?.poaConvertidoAbrirOrcamentos ||
+        `Pedido ${pedido.codigo} convertido.\n\nAbra «Orçamentos Avulso» para aplicar os valores correctos às peças.`
+    )
+    onGerarOrcamento?.()
+  }
+
+  const handleExcluirPedido = async (codigo: string) => {
+    if (!confirm(safeT?.confirmarExcluirPedidoOrcamento || 'Excluir este pedido?')) return
+    const atualizados = pedidosGerados.filter((x) => x.codigo !== codigo)
+    setPedidosGerados(atualizados)
+    if (saveData) {
+      try {
+        await saveData(PEDIDOS_AVULSO_KEY, atualizados, true, true)
+      } catch (err) {
+        console.error('Erro ao excluir pedido:', err)
+      }
+    }
+  }
+
   const handleGerarPedido = async () => {
     const dados = resolverDadosPedidoPdf()
     if (!dados) return
@@ -811,6 +985,103 @@ export function PedidoOrcamentosAvulsoContent({
             <strong>{pedidosGerados.length}</strong>
           </div>
         </div>
+      </section>
+
+      <section className="orc-pro__panel poa-pro__panel poa-pro__historico-top">
+        <div className="poa-pro__section-head">
+          <div>
+            <h3 className="orc-pro__panel-title">
+              {safeT?.ultimosPedidosGerados || 'Histórico de pedidos'}
+            </h3>
+            <p className="orc-pro__panel-desc">
+              {(safeT as Record<string, string | undefined>)?.poaHistoricoDesc ||
+                'Consulte pedidos já gerados. Pode reabrir para editar, emitir PDF, converter de NONATO SERVICE para o cliente, ou aplicar valores em Orçamentos Avulso.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="orc-pro__btn orc-pro__btn--secondary"
+            onClick={() => void carregarPedidos()}
+            disabled={historicoCarregando}
+            title={safeT?.atualizar || 'Actualizar'}
+          >
+            {historicoCarregando ? '…' : '↻'} {safeT?.atualizar || 'Actualizar'}
+          </button>
+        </div>
+        <input
+          type="text"
+          className="orc-pro__search poa-pro__historico-search"
+          placeholder={
+            (safeT as Record<string, string | undefined>)?.poaBuscarHistorico ||
+            'Buscar por código, cliente ou equipamento…'
+          }
+          value={buscaHistorico}
+          onChange={(e) => setBuscaHistorico(e.target.value)}
+        />
+        {pedidosHistoricoFiltrados.length === 0 ? (
+          <p className="orc-pro__empty-hint">
+            {historicoCarregando
+              ? safeT?.carregando || 'A carregar…'
+              : pedidosGerados.length === 0
+                ? (safeT as Record<string, string | undefined>)?.poaHistoricoVazio ||
+                  'Ainda não há pedidos guardados. Gere um pedido abaixo — ficará listado aqui.'
+                : (safeT as Record<string, string | undefined>)?.poaHistoricoSemResultados ||
+                  'Nenhum pedido corresponde à busca.'}
+          </p>
+        ) : (
+          <div className="orc-pro__history-list">
+            {pedidosHistoricoFiltrados.slice(0, 50).map((p) => (
+              <div key={p.codigo} className="orc-pro__history-card">
+                <div className="orc-pro__history-head">
+                  <span className="orc-pro__history-code">{p.codigo}</span>
+                  <span className="orc-pro__history-meta">{formatarDataPedido(p.dataGeracao)}</span>
+                  <span className="orc-pro__history-meta">{p.clienteNomeReal}</span>
+                  <span
+                    className={`orc-pro__badge ${p.emitirComoCliente === 'nonato-service' ? 'orc-pro__badge--aprovado' : ''}`}
+                    title={safeT?.nomeNoDocumento || 'Emitente no cabeçalho'}
+                  >
+                    {p.emitirComoCliente === 'nonato-service'
+                      ? safeT?.nomeNonatoService || 'NONATO SERVICE'
+                      : safeT?.cliente || 'Cliente'}
+                  </span>
+                  <span className={statusBadgeClass(p.status)}>{statusLabel(p.status)}</span>
+                </div>
+                {p.equipamentoTexto ? (
+                  <p className="orc-pro__hint poa-pro__historico-equip">{p.equipamentoTexto.split('\n')[0]}</p>
+                ) : null}
+                <div className="orc-pro__actions-bar orc-pro__actions-bar--sm poa-pro__historico-actions">
+                  <button type="button" className="orc-pro__act" onClick={() => handleReabrirPedido(p)}>
+                    ↩ {safeT?.reabrir || 'Reabrir'}
+                  </button>
+                  <button type="button" className="orc-pro__act" onClick={() => handleVisualizarPdfGuardado(p)}>
+                    👁️ PDF
+                  </button>
+                  {p.emitirComoCliente === 'nonato-service' ? (
+                    <button
+                      type="button"
+                      className="orc-pro__act orc-pro__act--primary"
+                      onClick={() => void handleConverterParaCliente(p)}
+                    >
+                      {(safeT as Record<string, string | undefined>)?.poaConverterParaCliente ||
+                        'Converter p/ cliente'}
+                    </button>
+                  ) : null}
+                  <button type="button" className="orc-pro__act" onClick={() => onGerarOrcamento?.()}>
+                    {(safeT as Record<string, string | undefined>)?.poaAbrirOrcamentosAvulso ||
+                      'Orçamentos Avulso'}
+                  </button>
+                  <button
+                    type="button"
+                    className="orc-pro__act orc-pro__act--danger"
+                    onClick={() => void handleExcluirPedido(p.codigo)}
+                  >
+                    🗑️ {safeT?.deletar || 'Deletar'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <div className="poa-pro__steps" aria-hidden>
@@ -1430,44 +1701,6 @@ export function PedidoOrcamentosAvulsoContent({
               </div>
             )}
           </section>
-
-          {pedidosGerados.length > 0 && (
-            <section className="orc-pro__panel poa-pro__panel">
-              <h3 className="orc-pro__panel-title">{safeT?.ultimosPedidosGerados || 'Histórico de pedidos'}</h3>
-              <div className="orc-pro__history-list">
-                {[...pedidosGerados].reverse().slice(0, 50).map((p) => (
-                  <div key={p.codigo} className="orc-pro__history-card">
-                    <div className="orc-pro__history-head">
-                      <span className="orc-pro__history-code">{p.codigo}</span>
-                      <span className="orc-pro__history-meta">
-                        {p.emitirComoCliente === 'nonato-service'
-                          ? safeT?.nomeNonatoService || 'NONATO SERVICE'
-                          : p.clienteNomeReal}
-                      </span>
-                      <span className={statusBadgeClass(p.status)}>{statusLabel(p.status)}</span>
-                    </div>
-                    <div className="orc-pro__actions-bar orc-pro__actions-bar--sm">
-                      <button type="button" className="orc-pro__act" onClick={() => handleVisualizarPdfGuardado(p)}>
-                        👁️ PDF
-                      </button>
-                      <button
-                        type="button"
-                        className="orc-pro__act orc-pro__act--danger"
-                        onClick={async () => {
-                          if (!confirm(safeT?.confirmarExcluirPedidoOrcamento || 'Excluir este pedido?')) return
-                          const atualizados = pedidosGerados.filter((x) => x.codigo !== p.codigo)
-                          setPedidosGerados(atualizados)
-                          if (saveData) await saveData(PEDIDOS_AVULSO_KEY, atualizados)
-                        }}
-                      >
-                        🗑️ {safeT?.deletar || 'Deletar'}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
         </main>
       </div>
     </div>

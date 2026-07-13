@@ -48056,9 +48056,7 @@ A1;Peça exemplo;10`}
             activeTabId={activeTabId || ''}
             voltarPaginaInicial={voltarPaginaInicial}
             LogoComponent={LogoComponent}
-            saveData={async (key, data) => {
-              await saveData(key, data)
-            }}
+            saveData={saveData}
             loadData={loadData}
             onGerarOrcamento={() => {
               setOpenOrcamentosGeradosView(true)

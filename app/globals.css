@@ -38736,6 +38736,19 @@ html body .alerta-mensagens-shell .alerta-mensagens-hero-actions .comunicacao-he
   gap: 14px;
   min-width: 0;
 }
+.poa-pro__historico-top {
+  margin: 0 0 4px;
+}
+.poa-pro__historico-search {
+  margin-bottom: 12px;
+}
+.poa-pro__historico-equip {
+  margin: 0 0 8px;
+  padding-left: 2px;
+}
+.poa-pro__historico-actions {
+  flex-wrap: wrap;
+}
 .poa-pro__section-head {
   display: flex;
   align-items: flex-start;
