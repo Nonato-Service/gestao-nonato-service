@@ -14,8 +14,8 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   minimumScale: 1,
-  maximumScale: 5,
-  userScalable: true,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: '#00c853',
   viewportFit: 'cover',
 }
@@ -50,7 +50,7 @@ export default function RootLayout({
           }}
         />
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -61,9 +61,11 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body suppressHydrationWarning>
-        <InstallPromptProvider>
-          {children}
-        </InstallPromptProvider>
+        <div id="mobile-pan-root" className="mobile-pan-root">
+          <InstallPromptProvider>
+            {children}
+          </InstallPromptProvider>
+        </div>
         <AdicionarServicosStyle />
         <RegisterSW />
         <OfflineIndicator />

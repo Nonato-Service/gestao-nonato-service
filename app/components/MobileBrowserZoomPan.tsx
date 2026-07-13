@@ -2,52 +2,43 @@
 
 import { useEffect, useRef } from 'react'
 
-const PAN_ROOT = '.app-layout'
+const PAN_ROOT_ID = 'mobile-pan-root'
+const MIN_SCALE = 1
+const MAX_SCALE = 4
 
-type PanState = {
+type TouchGesture = {
   mode: 'one' | 'two'
-  x: number
-  y: number
-  sx: number
-  sy: number
-  pinchDist: number
-  locked: boolean
+  startX: number
+  startY: number
+  startMidX: number
+  startMidY: number
+  startDist: number
+  startPanX: number
+  startPanY: number
+  startScale: number
+  originX: number
+  originY: number
 }
 
 /**
- * Telemóvel/tablet: após pinch-zoom do browser, arrastar a vista (1 ou 2 dedos) com transform.
- * O scroll nativo falha com overflow-x:hidden; translate no .app-layout funciona em iOS/Android.
+ * Telemóvel/tablet (Android Chrome, ex. Ulefone Armor 33 Pro):
+ * zoom + arrastar com 2 dedos via transform — não depende do pinch do browser.
  */
 export function MobileBrowserZoomPan() {
-  const zoomedRef = useRef(false)
-  const panRef = useRef<PanState | null>(null)
-  const panOffsetRef = useRef({ x: 0, y: 0 })
-  const gestureScaleRef = useRef(1)
-  const savedOverflowRef = useRef<{ html: string; body: string } | null>(null)
+  const scaleRef = useRef(1)
+  const panRef = useRef({ x: 0, y: 0 })
+  const gestureRef = useRef<TouchGesture | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const vv = window.visualViewport
-    if (!vv) return
+    const isTouchMobile = () =>
+      window.innerWidth <= 1024 &&
+      (window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window)
 
-    const isCompact = () => window.innerWidth <= 1024
+    const panRoot = () => document.getElementById(PAN_ROOT_ID)
 
-    const panRoot = () => document.querySelector<HTMLElement>(PAN_ROOT)
-
-    const toggleLayoutClass = (zoomed: boolean) => {
-      document.documentElement.classList.toggle('mobile-browser-zoomed', zoomed)
-      document.body.classList.toggle('mobile-browser-zoomed', zoomed)
-      document.querySelectorAll('.app-layout, .app-compact-layout').forEach((el) => {
-        el.classList.toggle('mobile-browser-zoomed', zoomed)
-      })
-    }
-
-    const readScale = () => {
-      const vvScale = vv.scale || 1
-      const layoutScale = vv.width > 0 ? window.innerWidth / vv.width : 1
-      return Math.max(vvScale, layoutScale, gestureScaleRef.current)
-    }
+    const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 
     const touchMidpoint = (touches: TouchList) => ({
       x: (touches[0].clientX + touches[1].clientX) / 2,
@@ -57,208 +48,189 @@ export function MobileBrowserZoomPan() {
     const touchDistance = (touches: TouchList) =>
       Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY)
 
-    const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
-
-    const panLimits = () => {
-      const scale = readScale()
-      const margin = Math.max(80, window.innerWidth * (scale - 1) * 1.2 + window.innerWidth * 0.35)
-      return { x: margin, y: margin }
+    const setZoomedClass = (zoomed: boolean) => {
+      document.documentElement.classList.toggle('mobile-browser-zoomed', zoomed)
+      document.body.classList.toggle('mobile-browser-zoomed', zoomed)
     }
 
-    const applyPanTransform = () => {
+    const applyTransform = () => {
       const root = panRoot()
       if (!root) return
-      const lim = panLimits()
-      const x = clamp(panOffsetRef.current.x, -lim.x, lim.x)
-      const y = clamp(panOffsetRef.current.y, -lim.y, lim.y)
-      panOffsetRef.current = { x, y }
-      root.style.transform = x || y ? `translate3d(${x}px, ${y}px, 0)` : ''
-      root.style.willChange = x || y ? 'transform' : ''
-    }
 
-    const resetPanTransform = () => {
-      panOffsetRef.current = { x: 0, y: 0 }
-      const root = panRoot()
-      if (root) {
-        root.style.transform = ''
-        root.style.willChange = ''
-      }
-    }
+      const scale = scaleRef.current
+      const { x, y } = panRef.current
+      const zoomed = scale > 1.004
 
-    const setZoomed = (zoomed: boolean) => {
-      if (zoomedRef.current === zoomed) return
-      zoomedRef.current = zoomed
-      toggleLayoutClass(zoomed)
+      setZoomedClass(zoomed)
 
       if (zoomed) {
-        savedOverflowRef.current = {
-          html: document.documentElement.style.overflow,
-          body: document.body.style.overflow,
-        }
-        document.documentElement.style.overflow = 'auto'
-        document.body.style.overflow = 'auto'
+        root.style.transformOrigin = `${gestureRef.current?.originX ?? 0}px ${gestureRef.current?.originY ?? 0}px`
+        root.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`
+        root.style.willChange = 'transform'
       } else {
-        panRef.current = null
-        resetPanTransform()
-        if (savedOverflowRef.current) {
-          document.documentElement.style.overflow = savedOverflowRef.current.html
-          document.body.style.overflow = savedOverflowRef.current.body
-          savedOverflowRef.current = null
-        }
+        root.style.transform = ''
+        root.style.transformOrigin = ''
+        root.style.willChange = ''
+        panRef.current = { x: 0, y: 0 }
       }
     }
 
-    const apply = () => {
-      if (!isCompact()) {
-        setZoomed(false)
-        gestureScaleRef.current = 1
-        return
+    const resetView = () => {
+      scaleRef.current = 1
+      panRef.current = { x: 0, y: 0 }
+      gestureRef.current = null
+      applyTransform()
+    }
+
+    const panLimits = (scale: number) => {
+      const base = Math.max(window.innerWidth, window.innerHeight)
+      const extra = base * (scale - 1) * 1.35 + base * 0.25
+      return { x: extra, y: extra }
+    }
+
+    const clampPan = (x: number, y: number, scale: number) => {
+      const lim = panLimits(scale)
+      return {
+        x: clamp(x, -lim.x, lim.x),
+        y: clamp(y, -lim.y, lim.y),
       }
-      const scale = readScale()
-      const next = zoomedRef.current ? scale > 1.002 : scale > 1.008
-      setZoomed(next)
     }
 
-    let debounce: ReturnType<typeof setTimeout> | undefined
-    const schedule = () => {
-      if (debounce) clearTimeout(debounce)
-      debounce = setTimeout(apply, 16)
+    const originFromMid = (midX: number, midY: number) => {
+      const root = panRoot()
+      if (!root) return { x: midX, y: midY }
+      const rect = root.getBoundingClientRect()
+      return { x: midX - rect.left, y: midY - rect.top }
     }
 
-    const ensureZoomedForGesture = () => {
-      if (!isCompact()) return
-      const scale = readScale()
-      if (scale > 1.002 && !zoomedRef.current) setZoomed(true)
-    }
+    const beginGesture = (e: TouchEvent) => {
+      if (!isTouchMobile()) return
 
-    const beginPan = (e: TouchEvent) => {
-      ensureZoomedForGesture()
-      if (!zoomedRef.current) return
+      const root = panRoot()
+      if (!root) return
 
-      const off = panOffsetRef.current
-
-      if (e.touches.length === 1) {
-        panRef.current = {
-          mode: 'one',
-          x: e.touches[0].clientX,
-          y: e.touches[0].clientY,
-          sx: off.x,
-          sy: off.y,
-          pinchDist: 0,
-          locked: false,
-        }
-        return
-      }
+      const { x: panX, y: panY } = panRef.current
+      const scale = scaleRef.current
 
       if (e.touches.length === 2) {
         const mid = touchMidpoint(e.touches)
-        panRef.current = {
+        const origin = originFromMid(mid.x, mid.y)
+        gestureRef.current = {
           mode: 'two',
-          x: mid.x,
-          y: mid.y,
-          sx: off.x,
-          sy: off.y,
-          pinchDist: touchDistance(e.touches),
-          locked: false,
+          startX: 0,
+          startY: 0,
+          startMidX: mid.x,
+          startMidY: mid.y,
+          startDist: Math.max(touchDistance(e.touches), 24),
+          startPanX: panX,
+          startPanY: panY,
+          startScale: scale,
+          originX: origin.x,
+          originY: origin.y,
+        }
+        return
+      }
+
+      if (e.touches.length === 1 && scale > 1.004) {
+        gestureRef.current = {
+          mode: 'one',
+          startX: e.touches[0].clientX,
+          startY: e.touches[0].clientY,
+          startMidX: 0,
+          startMidY: 0,
+          startDist: 0,
+          startPanX: panX,
+          startPanY: panY,
+          startScale: scale,
+          originX: 0,
+          originY: 0,
         }
       }
     }
 
     const onTouchMove = (e: TouchEvent) => {
-      ensureZoomedForGesture()
-      if (!zoomedRef.current || !panRef.current) return
+      if (!isTouchMobile() || !gestureRef.current) return
 
-      const p = panRef.current
+      const g = gestureRef.current
 
-      if (p.mode === 'two' && e.touches.length === 2) {
+      if (g.mode === 'two' && e.touches.length === 2) {
         const mid = touchMidpoint(e.touches)
-        const moveX = Math.abs(mid.x - p.x)
-        const moveY = Math.abs(mid.y - p.y)
+        const dist = Math.max(touchDistance(e.touches), 24)
+        const ratio = dist / g.startDist
+        const nextScale = clamp(g.startScale * ratio, MIN_SCALE, MAX_SCALE)
 
-        if (!p.locked) {
-          if (moveX + moveY < 6) return
-          const distDelta = Math.abs(touchDistance(e.touches) - p.pinchDist)
-          if (distDelta > moveX + moveY) return
-          p.locked = true
-        }
+        const panX = g.startPanX + (mid.x - g.startMidX)
+        const panY = g.startPanY + (mid.y - g.startMidY)
 
-        const dx = p.x - mid.x
-        const dy = p.y - mid.y
-        if (Math.abs(dx) < 0.3 && Math.abs(dy) < 0.3) return
+        const origin = originFromMid(g.startMidX, g.startMidY)
+        g.originX = origin.x
+        g.originY = origin.y
+
+        scaleRef.current = nextScale
+        panRef.current = clampPan(panX, panY, nextScale)
 
         e.preventDefault()
-        e.stopPropagation()
-        panOffsetRef.current = { x: p.sx + dx, y: p.sy + dy }
-        applyPanTransform()
+        applyTransform()
         return
       }
 
-      if (p.mode === 'one' && e.touches.length === 1) {
-        const dx = p.x - e.touches[0].clientX
-        const dy = p.y - e.touches[0].clientY
-        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return
+      if (g.mode === 'one' && e.touches.length === 1 && scaleRef.current > 1.004) {
+        const dx = e.touches[0].clientX - g.startX
+        const dy = e.touches[0].clientY - g.startY
+        if (Math.abs(dx) < 0.4 && Math.abs(dy) < 0.4) return
+
+        panRef.current = clampPan(g.startPanX + dx, g.startPanY + dy, scaleRef.current)
         e.preventDefault()
-        e.stopPropagation()
-        panOffsetRef.current = { x: p.sx + dx, y: p.sy + dy }
-        applyPanTransform()
+        applyTransform()
       }
     }
 
     const onTouchEnd = (e: TouchEvent) => {
       if (e.touches.length === 0) {
-        panRef.current = null
-        schedule()
+        gestureRef.current = null
+        if (scaleRef.current <= 1.004) resetView()
         return
       }
-      if (zoomedRef.current && e.touches.length === 1) {
-        beginPan(e)
+      if (e.touches.length === 1 && scaleRef.current > 1.004) {
+        gestureRef.current = {
+          mode: 'one',
+          startX: e.touches[0].clientX,
+          startY: e.touches[0].clientY,
+          startMidX: 0,
+          startMidY: 0,
+          startDist: 0,
+          startPanX: panRef.current.x,
+          startPanY: panRef.current.y,
+          startScale: scaleRef.current,
+          originX: 0,
+          originY: 0,
+        }
+        return
+      }
+      if (e.touches.length === 2) {
+        beginGesture(e)
       }
     }
 
-    const onGestureStart = (e: Event) => {
-      const ge = e as Event & { scale?: number }
-      gestureScaleRef.current = ge.scale || 1
-      ensureZoomedForGesture()
+    const onResize = () => {
+      if (!isTouchMobile()) resetView()
     }
 
-    const onGestureChange = (e: Event) => {
-      const ge = e as Event & { scale?: number }
-      gestureScaleRef.current = ge.scale || 1
-      ensureZoomedForGesture()
-    }
-
-    const onGestureEnd = () => {
-      gestureScaleRef.current = 1
-      schedule()
-    }
-
-    apply()
-    vv.addEventListener('resize', schedule)
-    vv.addEventListener('scroll', schedule)
-    window.addEventListener('orientationchange', schedule)
-    window.addEventListener('resize', schedule)
-    document.addEventListener('gesturestart', onGestureStart, { capture: true })
-    document.addEventListener('gesturechange', onGestureChange, { capture: true })
-    document.addEventListener('gestureend', onGestureEnd, { capture: true })
-    document.addEventListener('touchstart', beginPan, { passive: true, capture: true })
+    document.addEventListener('touchstart', beginGesture, { passive: true, capture: true })
     document.addEventListener('touchmove', onTouchMove, { passive: false, capture: true })
     document.addEventListener('touchend', onTouchEnd, { capture: true })
     document.addEventListener('touchcancel', onTouchEnd, { capture: true })
+    window.addEventListener('orientationchange', onResize)
+    window.addEventListener('resize', onResize)
 
     return () => {
-      if (debounce) clearTimeout(debounce)
-      vv.removeEventListener('resize', schedule)
-      vv.removeEventListener('scroll', schedule)
-      window.removeEventListener('orientationchange', schedule)
-      window.removeEventListener('resize', schedule)
-      document.removeEventListener('gesturestart', onGestureStart, true)
-      document.removeEventListener('gesturechange', onGestureChange, true)
-      document.removeEventListener('gestureend', onGestureEnd, true)
-      document.removeEventListener('touchstart', beginPan, true)
+      document.removeEventListener('touchstart', beginGesture, true)
       document.removeEventListener('touchmove', onTouchMove, true)
       document.removeEventListener('touchend', onTouchEnd, true)
       document.removeEventListener('touchcancel', onTouchEnd, true)
-      setZoomed(false)
+      window.removeEventListener('orientationchange', onResize)
+      window.removeEventListener('resize', onResize)
+      resetView()
     }
   }, [])
 

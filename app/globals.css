@@ -340,6 +340,19 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Telemóvel: contentor para zoom/arrastar com 2 dedos (Android Chrome, ex. Armor 33 Pro) */
+.mobile-pan-root {
+  min-height: 100dvh;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  html.mobile-browser-zoomed .mobile-pan-root {
+    touch-action: none;
+    overflow: visible;
+  }
+}
+
 /* Foco visível — acessibilidade + acabamento “produto” */
 :focus {
   outline: none;
