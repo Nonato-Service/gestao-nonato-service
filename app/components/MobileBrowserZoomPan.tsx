@@ -5,6 +5,13 @@ import { useEffect, useRef } from 'react'
 const PAN_ROOT_ID = 'mobile-pan-root'
 const MIN_SCALE = 1
 const MAX_SCALE = 4
+/** Menor = pinch mais suave (0.35 lento … 1.0 linear). */
+const ZOOM_SENSITIVITY = 0.4
+
+const scaleFromPinch = (startScale: number, fingerRatio: number) => {
+  const dampedRatio = 1 + (fingerRatio - 1) * ZOOM_SENSITIVITY
+  return Math.min(MAX_SCALE, Math.max(MIN_SCALE, startScale * dampedRatio))
+}
 
 type TouchGesture = {
   mode: 'one' | 'two'
@@ -121,7 +128,7 @@ export function MobileBrowserZoomPan() {
           startY: 0,
           startMidX: mid.x,
           startMidY: mid.y,
-          startDist: Math.max(touchDistance(e.touches), 24),
+          startDist: Math.max(touchDistance(e.touches), 48),
           startPanX: panX,
           startPanY: panY,
           startScale: scale,
@@ -155,9 +162,9 @@ export function MobileBrowserZoomPan() {
 
       if (g.mode === 'two' && e.touches.length === 2) {
         const mid = touchMidpoint(e.touches)
-        const dist = Math.max(touchDistance(e.touches), 24)
+        const dist = Math.max(touchDistance(e.touches), 48)
         const ratio = dist / g.startDist
-        const nextScale = clamp(g.startScale * ratio, MIN_SCALE, MAX_SCALE)
+        const nextScale = scaleFromPinch(g.startScale, ratio)
 
         const panX = g.startPanX + (mid.x - g.startMidX)
         const panY = g.startPanY + (mid.y - g.startMidY)
