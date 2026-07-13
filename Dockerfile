@@ -16,8 +16,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
-# Runtime: servidor leve (app principal carrega só no browser). 512 MB pode bastar; 1 GB recomendado.
-ENV NODE_OPTIONS=--max-old-space-size=460
+# Runtime: contentor pode ter até 8 GB no Railway — dar heap generoso ao Node
+ENV NODE_OPTIONS=--max-old-space-size=6144
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
