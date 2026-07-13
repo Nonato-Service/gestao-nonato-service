@@ -12,10 +12,11 @@ type Props = {
   pecasCount: number
   onLoaded: (pecas: PecaLike[]) => void
   onProgress?: (msg: string) => void
+  loadingMessage?: string
 }
 
 /** Carrega 362 peças do servidor IMEDIATAMENTE — não espera o bootstrap lento. */
-export function PecasBibliotecaUrgentLoader({ pecasCount, onLoaded, onProgress }: Props) {
+export function PecasBibliotecaUrgentLoader({ pecasCount, onLoaded, onProgress, loadingMessage }: Props) {
   const doneRef = useRef(false)
 
   useLayoutEffect(() => {
@@ -28,7 +29,7 @@ export function PecasBibliotecaUrgentLoader({ pecasCount, onLoaded, onProgress }
 
     void (async () => {
       try {
-        onProgress?.('A carregar as suas peças do servidor…')
+        onProgress?.(loadingMessage || 'Loading parts from server…')
         const local = await loadPecasBibliotecaFromBrowserStorage()
         if (cancelled) return
         if (local && local.length >= 50) {

@@ -26989,8 +26989,13 @@ export default function Dashboard() {
 
         await pedirPermissaoAvisoBibliotecaSeNecessario()
         showBibliotecaBrowserNotification(
-          (safeT as any)?.bibliotecaSyncNovidadesTitulo || 'Biblioteca — novidades no servidor',
-          formatBibliotecaNovidadesMsg(novidades, meta.total)
+          (safeT as any)?.bibliotecaNovidadesNotifTitulo ||
+            (safeT as any)?.bibliotecaSyncNovidadesTitulo ||
+            'Biblioteca — novidades no servidor',
+          formatBibliotecaNovidadesMsg(novidades, meta.total, {
+            one: (safeT as any)?.bibliotecaNovidadesNotifUma,
+            many: (safeT as any)?.bibliotecaNovidadesNotifVarias,
+          })
         )
         gravarUltimoServidorTotalAvisado(meta.total)
       } catch {
@@ -40328,17 +40333,20 @@ export default function Dashboard() {
                       semPecasCategoria: (safeT as any)?.bibliotecaGaleriaSemPecasCategoria,
                       buscarPorCodigo:
                         (safeT as any)?.bibliotecaGaleriaBuscaTitulo || safeT?.bibliotecaBuscarPorCodigo,
-                      buscarPorNome: (safeT as any)?.bibliotecaBuscarPorNome || 'Buscar por nome',
-                      buscaModoCodigo: (safeT as any)?.bibliotecaBuscaModoCodigo || 'Código',
-                      buscaModoNome: (safeT as any)?.bibliotecaBuscaModoNome || 'Nome',
-                      buscarPlaceholderNome:
-                        (safeT as any)?.bibliotecaBuscaNomePlaceholder || 'Ex: suction cup, cilindro…',
+                      buscarPorNome: (safeT as any)?.bibliotecaBuscarPorNome,
+                      buscaModoCodigo: (safeT as any)?.bibliotecaBuscaModoCodigo,
+                      buscaModoNome: (safeT as any)?.bibliotecaBuscaModoNome,
+                      buscarPlaceholderNome: (safeT as any)?.bibliotecaBuscaNomePlaceholder,
                       buscaHint: (safeT as any)?.bibliotecaGaleriaBuscaHint,
-                      buscarPlaceholder: safeT?.codigoPecaBibliotecaPlaceholder || 'Ex: 700030001',
+                      buscarPlaceholder: safeT?.codigoPecaBibliotecaPlaceholder,
                       buscaResultados: (safeT as any)?.bibliotecaBuscaCodigoResultados,
+                      buscaResultadosNome: (safeT as any)?.bibliotecaBuscaResultadosNome,
                       buscaVazio: (safeT as any)?.bibliotecaBuscaCodigoVazio,
-                      limparBusca: safeT?.limparFiltros || 'Limpar busca',
-                      preco: safeT?.preco || 'Preço',
+                      buscaVazioNome: (safeT as any)?.bibliotecaBuscaVazioNome,
+                      buscaLimite: (safeT as any)?.bibliotecaBuscaLimite,
+                      carregarMais: (safeT as any)?.bibliotecaCarregarMais,
+                      limparBusca: safeT?.limparFiltros,
+                      preco: safeT?.preco,
                     }}
                     mostrarPrecos={mostrarPrecosBiblioteca}
                   />
@@ -40438,7 +40446,9 @@ export default function Dashboard() {
                         <>
                           <strong>{(safeT as any)?.bibliotecaSyncAvisoToolbar || '⚠ Servidor mais recente:'}</strong>{' '}
                           +{bibliotecaNovidadesServidor}{' '}
-                          {(safeT as any)?.bibliotecaSyncAvisoToolbarPeças || 'peça(s) — '}
+                          {(safeT as any)?.bibliotecaSyncAvisoToolbarPecas ||
+                            (safeT as any)?.bibliotecaSyncAvisoToolbarPeças ||
+                            'peça(s) — '}
                           <button
                             type="button"
                             className="biblioteca-btn--green"
@@ -69343,6 +69353,7 @@ A1;Peça exemplo;10`}
         pecasCount={pecasBiblioteca.length}
         onLoaded={handleUrgentPecasLoaded}
         onProgress={setPecasBibliotecaReparoProgress}
+        loadingMessage={(safeT as any)?.bibliotecaUrgentLoaderCarregando}
       />
       {bootLoadingOverlay}
       {cadastroRestoredNotice > 0 && (
@@ -71345,7 +71356,9 @@ A1;Peça exemplo;10`}
             <span className="biblioteca-aviso-global__text">
               <strong>{(safeT as any)?.bibliotecaSyncAvisoToolbar || '⚠ Servidor mais recente:'}</strong>{' '}
               +{bibliotecaNovidadesServidor}{' '}
-              {(safeT as any)?.bibliotecaSyncAvisoToolbarPeças || 'peça(s) — '}
+              {(safeT as any)?.bibliotecaSyncAvisoToolbarPecas ||
+                (safeT as any)?.bibliotecaSyncAvisoToolbarPeças ||
+                'peça(s) — '}
               {(safeT as any)?.bibliotecaAvisoGlobalDesc ||
                 'actualize a biblioteca para ver novidades da HOMAG.'}
             </span>
