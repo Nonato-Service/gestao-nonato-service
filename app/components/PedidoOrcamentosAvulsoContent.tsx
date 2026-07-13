@@ -275,13 +275,59 @@ export function PedidoOrcamentosAvulsoContent({
     try {
       const raw = await loadData(PEDIDOS_AVULSO_KEY)
       const server = Array.isArray(raw) ? (raw as PedidoAvulsoGuardado[]).map(normalizarPedidoCarregado) : []
-      setPedidosGerados(mergePedidosArrays(server, local))
+      const merged = mergePedidosArrays(server, local)
+      setPedidosGerados(merged)
+      if (merged.length === 0 && typeof fetch !== 'undefined') {
+        try {
+          const res = await fetch('/api/data/recuperar-pedidos-avulsos', { method: 'POST' })
+          if (res.ok) {
+            const body = (await res.json()) as { ok?: boolean; pedidos?: PedidoAvulsoGuardado[] }
+            if (body.ok) {
+              const raw2 = await loadData(PEDIDOS_AVULSO_KEY)
+              const server2 = Array.isArray(raw2)
+                ? (raw2 as PedidoAvulsoGuardado[]).map(normalizarPedidoCarregado)
+                : []
+              setPedidosGerados(mergePedidosArrays(server2, local))
+            }
+          }
+        } catch {
+          /* ignorar — recuperação automática opcional */
+        }
+      }
     } catch {
       if (local.length > 0) setPedidosGerados(local)
     } finally {
       setHistoricoCarregando(false)
     }
   }, [loadData])
+
+  const handleRecuperarPedidosBackup = async () => {
+    setHistoricoCarregando(true)
+    try {
+      const res = await fetch('/api/data/recuperar-pedidos-avulsos', { method: 'POST' })
+      const body = (await res.json()) as {
+        ok?: boolean
+        message?: string
+        pedidos?: Array<{ codigo: string; clienteNomeReal: string }>
+      }
+      if (!res.ok || !body.ok) {
+        alert(body.message || safeT?.poaRecuperarSemDados || 'Não foi encontrado nenhum pedido para recuperar.')
+        return
+      }
+      await carregarPedidos()
+      const lista = (body.pedidos || []).map((p) => `${p.codigo} — ${p.clienteNomeReal}`).join('\n')
+      alert(
+        ((safeT as Record<string, string | undefined>)?.poaRecuperarOk ||
+          'Pedidos recuperados com sucesso!') +
+          (lista ? '\n\n' + lista : '')
+      )
+    } catch (err) {
+      console.error(err)
+      alert(safeT?.erroRecuperarPedidos || 'Erro ao recuperar pedidos. Tente RECUPERAR-PEDIDOS-AVULSOS.bat no PC.')
+    } finally {
+      setHistoricoCarregando(false)
+    }
+  }
 
   useEffect(() => {
     void carregarPedidos()
@@ -1006,6 +1052,18 @@ export function PedidoOrcamentosAvulsoContent({
             title={safeT?.atualizar || 'Actualizar'}
           >
             {historicoCarregando ? '…' : '↻'} {safeT?.atualizar || 'Actualizar'}
+          </button>
+          <button
+            type="button"
+            className="orc-pro__btn orc-pro__btn--secondary"
+            onClick={() => void handleRecuperarPedidosBackup()}
+            disabled={historicoCarregando}
+            title={
+              (safeT as Record<string, string | undefined>)?.poaRecuperarTitulo ||
+              'Recuperar pedidos do snapshot/backups'
+            }
+          >
+            {(safeT as Record<string, string | undefined>)?.poaRecuperarBackup || 'Recuperar backup'}
           </button>
         </div>
         <input

@@ -17,6 +17,7 @@
     "homag:import:probe": "node scripts/homag-import/probe-selectors.mjs",
     "restaurar:cadastro": "node scripts/restaurar-cadastro-servicos.mjs",
     "restaurar:dados": "node scripts/restaurar-dados-backup.mjs",
+    "recuperar:pedidos-avulsos": "node scripts/recuperar-pedidos-avulsos.mjs",
     "i18n:check": "node scripts/check-i18n-keys.mjs",
     "i18n:sync": "node scripts/sync-i18n-full.mjs"
   },
