@@ -7804,7 +7804,8 @@ export default function Dashboard() {
   const [comprovantesDespesas, setComprovantesDespesas] = useState<ComprovanteDespesa[]>([])
   const [comprovantesFiltroMes, setComprovantesFiltroMes] = useState<string>('')
   const [comprovantesFiltroSemana, setComprovantesFiltroSemana] = useState<string>('')
-  const [comprovantesFiltroPeriodoView, setComprovantesFiltroPeriodoView] = useState<'semanal' | 'mensal'>('mensal')
+  const [comprovantesFiltroPeriodoView, setComprovantesFiltroPeriodoView] = useState<'semanal' | 'mensal' | 'anual'>('mensal')
+  const [comprovantesFiltroAno, setComprovantesFiltroAno] = useState<string>('')
   const [comprovantesFiltroCliente, setComprovantesFiltroCliente] = useState<string>('')
   const [comprovantesForm, setComprovantesForm] = useState({ cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
   const [showComprovantesForm, setShowComprovantesForm] = useState(false)
@@ -7837,10 +7838,12 @@ export default function Dashboard() {
   /** Foto de recibo → OCR → pré-visualização antes de gravar comprovante */
   const [comprovanteReciboRapido, setComprovanteReciboRapido] = useState<
     | null
-    | { step: 'ocr'; imagemBase64: string }
+    | { step: 'escolher-tipo'; imagemBase64: string }
+    | { step: 'ocr'; imagemBase64: string; tipoDestino: 'cliente' | 'pessoal' }
     | {
         step: 'preview'
         imagemBase64: string
+        tipoDestino: 'cliente' | 'pessoal'
         valorUnitario: number
         data: string
         mesCompetencia: string
@@ -7857,6 +7860,7 @@ export default function Dashboard() {
   >(null)
   const [comprovanteImagemAmpliada, setComprovanteImagemAmpliada] = useState<ComprovanteDespesa | null>(null)
   const reciboRapidoFileRef = useRef<HTMLInputElement>(null)
+  const reciboRapidoPendingFileRef = useRef<File | null>(null)
   const [showEnvioModal, setShowEnvioModal] = useState(false)
   const [envioForm, setEnvioForm] = useState<{ templateId: 1|2|3|4|5; whatsapp: boolean; email: boolean; telefone: string; emailDestino: string; tecnicoId: string }>({ templateId: 1, whatsapp: true, email: false, telefone: '', emailDestino: '', tecnicoId: '' })
   const [buscaOS, setBuscaOS] = useState('')
@@ -49883,8 +49887,15 @@ A1;Peça exemplo;10`}
         const setFiltroSemana = setComprovantesFiltroSemana
         const filtroPeriodoView = comprovantesFiltroPeriodoView
         const setFiltroPeriodoView = setComprovantesFiltroPeriodoView
+        const filtroAno = comprovantesFiltroAno
+        const setFiltroAno = setComprovantesFiltroAno
         const filtroCliente = comprovantesFiltroCliente
         const setFiltroCliente = setComprovantesFiltroCliente
+        const anoCompetenciaKey = (c: ComprovanteDespesa) => {
+          const m = mesCompetenciaKey(c)
+          if (m.length >= 4) return m.slice(0, 4)
+          return String(c.data ?? '').trim().slice(0, 4)
+        }
         const mesesDosRegistos = comprovantesDespesas.map(mesCompetenciaKey).filter(Boolean)
         const mesesRolling: string[] = []
         for (let i = 0; i < 30; i++) {
@@ -49893,6 +49904,12 @@ A1;Peça exemplo;10`}
           mesesRolling.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
         }
         const mesesAnos = Array.from(new Set([...mesesDosRegistos, ...mesesRolling])).sort().reverse()
+        const anosDisponiveis = Array.from(
+          new Set([
+            ...comprovantesDespesas.map(anoCompetenciaKey).filter((y) => /^\d{4}$/.test(y)),
+            String(new Date().getFullYear()),
+          ])
+        ).sort().reverse()
         const semanasDisponiveis = Array.from(new Set(comprovantesDespesas.map(c => getWeekKey(c.data)))).sort().reverse()
         const getClienteOuPessoal = (c: ComprovanteDespesa) =>
           c.tipo === 'pessoal' ? labelGrupoNonato : c.cliente || '—'
@@ -49907,8 +49924,10 @@ A1;Peça exemplo;10`}
         const filtrados = comprovantesDespesas.filter((c) => {
           const mesAno = mesCompetenciaKey(c)
           const semanaKey = getWeekKey(c.data)
+          const anoKey = anoCompetenciaKey(c)
           if (filtroPeriodoView === 'mensal' && filtroMes && mesAno !== filtroMes) return false
           if (filtroPeriodoView === 'semanal' && filtroSemana && semanaKey !== filtroSemana) return false
+          if (filtroPeriodoView === 'anual' && filtroAno && anoKey !== filtroAno) return false
           const grupo = chaveGrupoComprovante(c)
           if (filtroCliente && grupo !== filtroCliente) return false
           return true
@@ -50013,6 +50032,60 @@ A1;Peça exemplo;10`}
             horaReferencia: horaIso,
             ...paramsClientesComprovante(),
           })
+        const estadoReciboPessoal = (dataIso: string, horaIso?: string | null) => {
+          const hora = horaIso?.trim() || horaAtualLocal()
+          return {
+            clientesSugeridos: [] as ClienteAtivoComprovante[],
+            tipoSelecionado: 'pessoal' as const,
+            clienteSelecionado: '',
+            clienteIdSelecionado: '',
+            horaUsada: hora,
+            horaOrigem: (horaIso?.trim() ? 'recibo' : 'foto') as 'recibo' | 'foto',
+            motivoAssociacao: 'pessoal' as const,
+          }
+        }
+        const estadoReciboPorDestino = (
+          tipoDestino: 'cliente' | 'pessoal',
+          dataIso: string,
+          horaIso?: string | null
+        ) => (tipoDestino === 'pessoal' ? estadoReciboPessoal(dataIso, horaIso) : estadoClienteParaRecibo(dataIso, horaIso))
+        const iniciarOcrReciboRapido = async (tipoDestino: 'cliente' | 'pessoal', file: File, imagemBase64: string) => {
+          setComprovanteReciboRapido({ step: 'ocr', imagemBase64, tipoDestino })
+          try {
+            const { createWorker } = await import('tesseract.js')
+            const worker = await createWorker('por+eng')
+            const r = await worker.recognize(file)
+            await worker.terminate()
+            const text = r.data.text || ''
+            const valorUnitario = parseTotalEurosFromReceiptText(text)
+            const dataParsed = parseDataReciboIso(text)
+            const data = dataParsed || new Date().toISOString().slice(0, 10)
+            const mesCompetencia = (dataParsed || data).slice(0, 7)
+            const descricao = extrairDescricaoRecibo(text)
+            const horaRecibo = parseHoraRecibo(text)
+            const estadoCliente = estadoReciboPorDestino(tipoDestino, data, horaRecibo)
+            setComprovanteReciboRapido({
+              step: 'preview',
+              imagemBase64,
+              tipoDestino,
+              valorUnitario,
+              data,
+              mesCompetencia,
+              descricao,
+              ocrSnippet: text.slice(0, 500),
+              ...estadoCliente,
+            })
+          } catch (err) {
+            console.error(err)
+            alert(
+              (safeT as any)?.comprovantesReciboRapidoErroOcr ||
+                'Não foi possível ler a imagem. Tente melhor luz e foco, ou use «Adicionar comprovante».'
+            )
+            setComprovanteReciboRapido(null)
+          } finally {
+            reciboRapidoPendingFileRef.current = null
+          }
+        }
         const formCompComClienteSugerido = (
           dataIso: string,
           horaIso: string | null | undefined,
@@ -50209,6 +50282,12 @@ A1;Peça exemplo;10`}
           </div>
         )
         const totalGeral = filtrados.reduce((s, c) => s + c.valorTotal, 0)
+        const totalDespesasClientes = filtrados
+          .filter((c) => c.tipo === 'cliente')
+          .reduce((s, c) => s + (Number(c.valorTotal) || 0), 0)
+        const totalDespesasPessoais = filtrados
+          .filter((c) => c.tipo === 'pessoal')
+          .reduce((s, c) => s + (Number(c.valorTotal) || 0), 0)
         const totalPorMes = filtrados.reduce((acc, c) => {
           const key = mesCompetenciaKey(c)
           if (!key) return acc
@@ -50296,7 +50375,7 @@ A1;Peça exemplo;10`}
         }
         const tituloRelatorio = (safeT as any)?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS'
         const getMensagemEnvio = (templateId: 1|2|3|4|5): string => {
-          const periodo = filtroPeriodoView === 'mensal' && filtroMes ? filtroMes : filtroPeriodoView === 'semanal' && filtroSemana ? filtroSemana : (safeT as any)?.comprovantesTodosMeses || 'Todos'
+          const periodo = filtroPeriodoView === 'mensal' && filtroMes ? filtroMes : filtroPeriodoView === 'semanal' && filtroSemana ? filtroSemana : filtroPeriodoView === 'anual' && filtroAno ? filtroAno : (safeT as any)?.comprovantesTodosMeses || 'Todos'
           if (templateId === 1) {
             let msg = `${tituloRelatorio}\n\nTotal geral: ${totalGeral.toFixed(2)} €\n\n`
             Object.entries(totalPorCliente).sort((a, b) => b[1] - a[1]).forEach(([nome, tot]) => { msg += `${nome}: ${tot.toFixed(2)} €\n` })
@@ -50387,38 +50466,8 @@ A1;Peça exemplo;10`}
                       reader.onerror = () => reject(new Error('read'))
                       reader.readAsDataURL(file)
                     })
-                    setComprovanteReciboRapido({ step: 'ocr', imagemBase64 })
-                    try {
-                      const { createWorker } = await import('tesseract.js')
-                      const worker = await createWorker('por+eng')
-                      const r = await worker.recognize(file)
-                      await worker.terminate()
-                      const text = r.data.text || ''
-                      const valorUnitario = parseTotalEurosFromReceiptText(text)
-                      const dataParsed = parseDataReciboIso(text)
-                      const data = dataParsed || new Date().toISOString().slice(0, 10)
-                      const mesCompetencia = (dataParsed || data).slice(0, 7)
-                      const descricao = extrairDescricaoRecibo(text)
-                      const horaRecibo = parseHoraRecibo(text)
-                      const estadoCliente = estadoClienteParaRecibo(data, horaRecibo)
-                      setComprovanteReciboRapido({
-                        step: 'preview',
-                        imagemBase64,
-                        valorUnitario,
-                        data,
-                        mesCompetencia,
-                        descricao,
-                        ocrSnippet: text.slice(0, 500),
-                        ...estadoCliente,
-                      })
-                    } catch (err) {
-                      console.error(err)
-                      alert(
-                        (safeT as any)?.comprovantesReciboRapidoErroOcr ||
-                          'Não foi possível ler a imagem. Tente melhor luz e foco, ou use «Adicionar comprovante».'
-                      )
-                      setComprovanteReciboRapido(null)
-                    }
+                    reciboRapidoPendingFileRef.current = file
+                    setComprovanteReciboRapido({ step: 'escolher-tipo', imagemBase64 })
                   }}
                 />
                 <button
@@ -50448,7 +50497,7 @@ A1;Peça exemplo;10`}
             <p style={{ color: '#aaa', marginBottom: '20px', fontSize: '14px' }}>
               {(safeT as any)?.comprovantesDespesasDescPainel ||
                 (safeT as any)?.comprovantesDespesasDesc ||
-                'Foto do recibo: o sistema associa ao cliente pela data e hora (agenda ou relatório). Dois clientes no mesmo dia? A hora decide; se houver dúvida, pergunta.'}
+                'Foto do recibo: primeiro escolhe Cliente ou Pessoal; depois o sistema lê valor e data e associa ao cliente do dia (se for cliente).'}
             </p>
             <details
               style={{
@@ -50465,8 +50514,18 @@ A1;Peça exemplo;10`}
             {/* Filtros: Ver por Semanal / Mensal */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '14px' }}>
               <span style={{ color: '#00c853', fontSize: '13px', marginRight: '8px' }}>{(safeT as any)?.comprovantesVerPor || 'Ver por'}:</span>
-              <button type="button" onClick={() => { setFiltroPeriodoView('semanal'); setFiltroMes(''); }} style={{ padding: '8px 14px', background: filtroPeriodoView === 'semanal' ? 'rgba(0,200,83,0.25)' : '#222', border: '1px solid rgba(0,200,83,0.4)', borderRadius: '6px', color: '#00c853', cursor: 'pointer', fontWeight: filtroPeriodoView === 'semanal' ? 700 : 400 }}>{(safeT as any)?.comprovantesSemanal || 'Semanal'}</button>
-              <button type="button" onClick={() => { setFiltroPeriodoView('mensal'); setFiltroSemana(''); }} style={{ padding: '8px 14px', background: filtroPeriodoView === 'mensal' ? 'rgba(0,200,83,0.25)' : '#222', border: '1px solid rgba(0,200,83,0.4)', borderRadius: '6px', color: '#00c853', cursor: 'pointer', fontWeight: filtroPeriodoView === 'mensal' ? 700 : 400 }}>{(safeT as any)?.comprovantesMensal || 'Mensal'}</button>
+              <button type="button" onClick={() => { setFiltroPeriodoView('semanal'); setFiltroMes(''); setFiltroAno(''); }} style={{ padding: '8px 14px', background: filtroPeriodoView === 'semanal' ? 'rgba(0,200,83,0.25)' : '#222', border: '1px solid rgba(0,200,83,0.4)', borderRadius: '6px', color: '#00c853', cursor: 'pointer', fontWeight: filtroPeriodoView === 'semanal' ? 700 : 400 }}>{(safeT as any)?.comprovantesSemanal || 'Semanal'}</button>
+              <button type="button" onClick={() => { setFiltroPeriodoView('mensal'); setFiltroSemana(''); setFiltroAno(''); }} style={{ padding: '8px 14px', background: filtroPeriodoView === 'mensal' ? 'rgba(0,200,83,0.25)' : '#222', border: '1px solid rgba(0,200,83,0.4)', borderRadius: '6px', color: '#00c853', cursor: 'pointer', fontWeight: filtroPeriodoView === 'mensal' ? 700 : 400 }}>{(safeT as any)?.comprovantesMensal || 'Mensal'}</button>
+              <button type="button" onClick={() => { setFiltroPeriodoView('anual'); setFiltroMes(''); setFiltroSemana(''); }} style={{ padding: '8px 14px', background: filtroPeriodoView === 'anual' ? 'rgba(0,200,83,0.25)' : '#222', border: '1px solid rgba(0,200,83,0.4)', borderRadius: '6px', color: '#00c853', cursor: 'pointer', fontWeight: filtroPeriodoView === 'anual' ? 700 : 400 }}>{(safeT as any)?.comprovantesAnual || 'Anual'}</button>
+              {filtroPeriodoView === 'anual' && (
+                <>
+                  <label style={{ color: '#00c853', fontSize: '13px', marginLeft: '12px' }}>{(safeT as any)?.comprovantesFiltroAno || 'Ano'}</label>
+                  <select value={filtroAno} onChange={(e) => setFiltroAno(e.target.value)} style={{ padding: '8px 12px', background: '#222', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff', minWidth: '120px' }}>
+                    <option value="">{(safeT as any)?.comprovantesTodosAnos || 'Todos os anos'}</option>
+                    {anosDisponiveis.map((a) => (<option key={a} value={a}>{a}</option>))}
+                  </select>
+                </>
+              )}
               {filtroPeriodoView === 'mensal' && (
                 <>
                   <label style={{ color: '#00c853', fontSize: '13px', marginLeft: '12px' }}>{(safeT as any)?.comprovantesFiltroMes || 'Filtrar por mês'}</label>
@@ -50498,11 +50557,21 @@ A1;Peça exemplo;10`}
               ) : null}
             </div>
             </details>
-            {/* Total do período */}
+            {/* Total do período + fechamento pessoal/cliente */}
             <div style={{ marginBottom: '20px', padding: '14px 16px', backgroundColor: '#404040', borderRadius: '10px', border: '1px solid rgba(0,200,83,0.25)' }}>
               {filtroPeriodoView === 'mensal' && filtroMes ? (
                 <span style={{ color: '#fde68a', fontWeight: 700, fontSize: '18px' }}>
                   {(safeT as any)?.comprovantesTotalMesDestaque || 'Total do mês selecionado'} ({filtroMes}):{' '}
+                  <strong style={{ color: '#00c853' }}>{totalGeral.toFixed(2)} €</strong>
+                </span>
+              ) : filtroPeriodoView === 'semanal' && filtroSemana ? (
+                <span style={{ color: '#fde68a', fontWeight: 700, fontSize: '18px' }}>
+                  {(safeT as any)?.comprovantesTotalSemanaDestaque || 'Total da semana'} ({filtroSemana}):{' '}
+                  <strong style={{ color: '#00c853' }}>{totalGeral.toFixed(2)} €</strong>
+                </span>
+              ) : filtroPeriodoView === 'anual' && filtroAno ? (
+                <span style={{ color: '#fde68a', fontWeight: 700, fontSize: '18px' }}>
+                  {(safeT as any)?.comprovantesTotalAnoDestaque || 'Total do ano'} ({filtroAno}):{' '}
                   <strong style={{ color: '#00c853' }}>{totalGeral.toFixed(2)} €</strong>
                 </span>
               ) : (
@@ -50510,6 +50579,32 @@ A1;Peça exemplo;10`}
                   {(safeT as any)?.comprovantesTotalGeral || 'Total geral'}: {totalGeral.toFixed(2)} €
                 </span>
               )}
+              <div
+                style={{
+                  marginTop: '12px',
+                  paddingTop: '12px',
+                  borderTop: '1px solid rgba(0,200,83,0.2)',
+                  display: 'grid',
+                  gap: '6px',
+                  fontSize: '14px',
+                }}
+              >
+                <div style={{ color: '#86efac', fontWeight: 700, fontSize: '13px' }}>
+                  {(safeT as any)?.comprovantesFechamentoTitulo || 'Fechamento do período'}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', color: '#d1d5db' }}>
+                  <span>{(safeT as any)?.comprovantesFechamentoClientes || 'Despesas de clientes'}</span>
+                  <strong style={{ color: '#bbf7d0' }}>{totalDespesasClientes.toFixed(2)} €</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', color: '#d1d5db' }}>
+                  <span>{(safeT as any)?.comprovantesFechamentoPessoais || 'Despesas pessoais (NONATO SERVICE)'}</span>
+                  <strong style={{ color: '#fde68a' }}>{totalDespesasPessoais.toFixed(2)} €</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', color: '#fff', fontWeight: 700, marginTop: '4px' }}>
+                  <span>{(safeT as any)?.comprovantesFechamentoTotal || 'Total fechamento'}</span>
+                  <strong style={{ color: '#00c853' }}>{totalGeral.toFixed(2)} €</strong>
+                </div>
+              </div>
             </div>
             {/* Painel principal — clientes ativos + comprovantes por cliente / NONATO SERVICE */}
             <div style={{ marginBottom: '10px' }}>
@@ -50911,7 +51006,13 @@ A1;Peça exemplo;10`}
                   zIndex: 10002,
                 }}
                 onClick={() => {
-                  if (comprovanteReciboRapido.step === 'preview') setComprovanteReciboRapido(null)
+                  if (
+                    comprovanteReciboRapido.step === 'preview' ||
+                    comprovanteReciboRapido.step === 'escolher-tipo'
+                  ) {
+                    reciboRapidoPendingFileRef.current = null
+                    setComprovanteReciboRapido(null)
+                  }
                 }}
               >
                 <div
@@ -50928,7 +51029,82 @@ A1;Peça exemplo;10`}
                   }}
                   onClick={(ev) => ev.stopPropagation()}
                 >
-                  {comprovanteReciboRapido.step === 'ocr' ? (
+                  {comprovanteReciboRapido.step === 'escolher-tipo' ? (
+                    <>
+                      <h3 style={{ margin: '0 0 12px', color: '#93c5fd' }}>
+                        {(safeT as any)?.comprovantesReciboRapidoEscolherTipoTitulo || 'Cliente ou pessoal?'}
+                      </h3>
+                      <p style={{ color: '#aaa', fontSize: '13px', marginBottom: '16px', lineHeight: 1.45 }}>
+                        {(safeT as any)?.comprovantesReciboRapidoEscolherTipoDesc ||
+                          'Antes de ler o recibo, indique se esta despesa é de um cliente (obra/serviço) ou pessoal (IRS).'}
+                      </p>
+                      <img
+                        src={comprovanteReciboRapido.imagemBase64}
+                        alt=""
+                        style={{ width: '100%', maxHeight: 220, objectFit: 'contain', borderRadius: '8px', marginBottom: '16px' }}
+                      />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const file = reciboRapidoPendingFileRef.current
+                            if (!file) return
+                            void iniciarOcrReciboRapido('cliente', file, comprovanteReciboRapido.imagemBase64)
+                          }}
+                          style={{
+                            padding: '14px 16px',
+                            background: 'rgba(34,197,94,0.2)',
+                            border: '1px solid #22c55e',
+                            borderRadius: '10px',
+                            color: '#bbf7d0',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            fontSize: '15px',
+                          }}
+                        >
+                          {(safeT as any)?.comprovantesReciboRapidoEscolherCliente || '👤 Cliente (associa ao cliente do dia)'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const file = reciboRapidoPendingFileRef.current
+                            if (!file) return
+                            void iniciarOcrReciboRapido('pessoal', file, comprovanteReciboRapido.imagemBase64)
+                          }}
+                          style={{
+                            padding: '14px 16px',
+                            background: 'rgba(251, 191, 36, 0.15)',
+                            border: '1px solid rgba(251, 191, 36, 0.55)',
+                            borderRadius: '10px',
+                            color: '#fde68a',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            fontSize: '15px',
+                          }}
+                        >
+                          {(safeT as any)?.comprovantesReciboRapidoEscolherPessoal || '🏠 Pessoal (NONATO SERVICE / IRS)'}
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          reciboRapidoPendingFileRef.current = null
+                          setComprovanteReciboRapido(null)
+                        }}
+                        style={{
+                          marginTop: '14px',
+                          padding: '8px 14px',
+                          background: 'transparent',
+                          border: '1px solid #666',
+                          borderRadius: '8px',
+                          color: '#ccc',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {(safeT as any)?.comprovantesReciboRapidoCancelarOcr || 'Cancelar'}
+                      </button>
+                    </>
+                  ) : comprovanteReciboRapido.step === 'ocr' ? (
                     <>
                       <h3 style={{ margin: '0 0 12px', color: '#93c5fd' }}>
                         {(safeT as any)?.comprovantesReciboRapidoTitulo || 'Foto do recibo'}
@@ -51002,7 +51178,7 @@ A1;Peça exemplo;10`}
                           const novaData = e.target.value
                           setComprovanteReciboRapido(prev => {
                             if (!prev || prev.step !== 'preview') return prev
-                            const estado = estadoClienteParaRecibo(novaData, prev.horaUsada)
+                            const estado = estadoReciboPorDestino(prev.tipoDestino, novaData, prev.horaUsada)
                             return {
                               ...prev,
                               data: novaData,
@@ -51023,7 +51199,11 @@ A1;Peça exemplo;10`}
                           const novaHora = e.target.value
                           setComprovanteReciboRapido(prev => {
                             if (!prev || prev.step !== 'preview') return prev
-                            const estado = estadoClienteParaRecibo(String(prev.data || '').slice(0, 10), novaHora)
+                            const estado = estadoReciboPorDestino(
+                              prev.tipoDestino,
+                              String(prev.data || '').slice(0, 10),
+                              novaHora
+                            )
                             return { ...prev, ...estado, horaUsada: novaHora, horaOrigem: 'recibo' as const }
                           })
                         }}
@@ -51091,7 +51271,12 @@ A1;Peça exemplo;10`}
                         <div style={{ color: '#93c5fd', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
                           {(safeT as any)?.comprovantesClientesAtivosTitulo || 'Associar a'}
                         </div>
-                        {comprovanteReciboRapido.clientesSugeridos.length === 0 ? (
+                        {comprovanteReciboRapido.tipoDestino === 'pessoal' ? (
+                          <p style={{ margin: 0, fontSize: '12px', color: '#fde68a', lineHeight: 1.45 }}>
+                            {(safeT as any)?.comprovantesReciboRapidoDestinoPessoal ||
+                              'Despesa pessoal — entra em NONATO SERVICE para fechamento semanal, mensal e anual.'}
+                          </p>
+                        ) : comprovanteReciboRapido.clientesSugeridos.length === 0 ? (
                           <p style={{ margin: 0, fontSize: '12px', color: '#888', lineHeight: 1.45 }}>
                             {(
                               (safeT as any)?.comprovantesClientesAtivosNenhumData ||
@@ -51197,6 +51382,7 @@ A1;Peça exemplo;10`}
                             </div>
                           </>
                         )}
+                        {comprovanteReciboRapido.tipoDestino === 'cliente' ? (
                         <label
                           style={{
                             display: 'flex',
@@ -51222,6 +51408,7 @@ A1;Peça exemplo;10`}
                           />
                           {(safeT as any)?.comprovantesDespesaPessoalOpcao || 'Despesa pessoal (IRS)'}
                         </label>
+                        ) : null}
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-end' }}>
                         <button
@@ -51281,7 +51468,7 @@ A1;Peça exemplo;10`}
                           onClick={() => {
                             const p = comprovanteReciboRapido
                             if (p.step !== 'preview') return
-                            if (p.tipoSelecionado === 'cliente' && !p.clienteSelecionado.trim()) {
+                            if (p.tipoDestino === 'cliente' && p.tipoSelecionado === 'cliente' && !p.clienteSelecionado.trim()) {
                               alert(
                                 (safeT as any)?.comprovantesSelecioneClienteRecibo ||
                                   'Selecione o cliente antes de guardar.'
