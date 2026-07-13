@@ -4,43 +4,109 @@
  * Regras HOMAG:
  *   • Referência normal: 3-835-16-6080 = 3835166080 (remove hífens)
  *   • Família especial 2-029-95-0XXX: 2-029-95-0951 → 2029951380 (SKU ≠ referência compacta)
- *   • Substituições: código antigo → SKU novo (índice homag-substituicoes-indice.json)
+ *   • Códigos alternativos: máq. antiga + máq. nova (índice homag-substituicoes-indice.json)
  */
 
-export type IndiceSubstituicaoHomag = Record<string, string>
+export type IndiceSubstituicaoHomag = Record<string, string[] | string>
 
-let indiceSubstituicoesHomag: IndiceSubstituicaoHomag = {}
+let indiceSubstituicoesHomag: Record<string, string[]> = {}
 
-export function setIndiceSubstituicoesHomag(indice: IndiceSubstituicaoHomag): void {
-  indiceSubstituicoesHomag = { ...indice }
+function normalizarIndiceSubstituicoes(raw: IndiceSubstituicaoHomag): Record<string, string[]> {
+  const out: Record<string, string[]> = {}
+  for (const [k, v] of Object.entries(raw || {})) {
+    if (!k) continue
+    const lista = Array.isArray(v) ? v : v ? [v] : []
+    const norm = [...new Set(lista.map(compactPecaCodigo).filter(Boolean))]
+    if (norm.length > 0) out[k.toLowerCase()] = norm
+  }
+  return out
 }
 
-export function getIndiceSubstituicoesHomag(): IndiceSubstituicaoHomag {
+export function setIndiceSubstituicoesHomag(indice: IndiceSubstituicaoHomag): void {
+  indiceSubstituicoesHomag = normalizarIndiceSubstituicoes(indice)
+}
+
+export function getIndiceSubstituicoesHomag(): Record<string, string[]> {
   return indiceSubstituicoesHomag
 }
 
+function uniteCodigos(parent: Map<string, string>, a: string, b: string): void {
+  const ca = compactPecaCodigo(a)
+  const cb = compactPecaCodigo(b)
+  if (!ca || !cb) return
+  if (!parent.has(ca)) parent.set(ca, ca)
+  if (!parent.has(cb)) parent.set(cb, cb)
+  const find = (x: string): string => {
+    const p = parent.get(x)
+    if (!p || p === x) return x
+    const r = find(p)
+    parent.set(x, r)
+    return r
+  }
+  const ra = find(ca)
+  const rb = find(cb)
+  if (ra !== rb) parent.set(ra, rb)
+}
+
 export function construirIndiceSubstituicoesHomag(
-  subs: Array<{ codigoAntigo?: string; referenciaAntiga?: string; codigoNovo: string }>,
-  pecas: Array<{ codigo?: string; referenciasAntigas?: string[]; codigosAntigos?: string[] }> = []
-): IndiceSubstituicaoHomag {
-  const out: IndiceSubstituicaoHomag = {}
-  const add = (chave: string, novo: string) => {
-    const k = chave.trim()
-    const n = compactPecaCodigo(novo)
-    if (!k || !n) return
-    out[k.toLowerCase()] = n
-    out[compactPecaCodigo(k)] = n
+  ligs: Array<{ codigoAntigo?: string; referenciaAntiga?: string; codigoNovo: string; referenciaNova?: string }>,
+  pecas: Array<{
+    codigo?: string
+    codigosAlternativos?: string[]
+    referenciasAlternativas?: string[]
+    referenciasAntigas?: string[]
+    codigosAntigos?: string[]
+  }> = []
+): Record<string, string[]> {
+  const parent = new Map<string, string>()
+
+  const link = (a: string, b: string) => uniteCodigos(parent, a, b)
+
+  for (const l of ligs) {
+    if (l.codigoAntigo) link(l.codigoAntigo, l.codigoNovo)
+    if (l.referenciaAntiga) link(l.referenciaAntiga, l.codigoNovo)
+    if (l.referenciaNova) link(l.referenciaNova, l.codigoNovo)
+    if (l.codigoAntigo && l.referenciaNova) link(l.codigoAntigo, l.referenciaNova)
   }
-  for (const s of subs) {
-    if (s.codigoAntigo) add(s.codigoAntigo, s.codigoNovo)
-    if (s.referenciaAntiga) add(s.referenciaAntiga, s.codigoNovo)
-    add(s.codigoNovo, s.codigoNovo)
-  }
+
   for (const p of pecas) {
-    const novo = compactPecaCodigo(p.codigo)
-    if (!novo) continue
-    for (const r of p.referenciasAntigas || []) add(r, novo)
-    for (const c of p.codigosAntigos || []) add(c, novo)
+    const principal = compactPecaCodigo(p.codigo)
+    if (!principal) continue
+    parent.set(principal, parent.get(principal) || principal)
+    const alternativos = [
+      ...(p.codigosAlternativos || []),
+      ...(p.codigosAntigos || []),
+      ...(p.referenciasAlternativas || []),
+      ...(p.referenciasAntigas || []),
+    ]
+    for (const alt of alternativos) link(principal, alt)
+  }
+
+  const find = (x: string): string => {
+    const p = parent.get(x)
+    if (!p || p === x) return x
+    const r = find(p)
+    parent.set(x, r)
+    return r
+  }
+
+  const grupos = new Map<string, Set<string>>()
+  for (const k of parent.keys()) {
+    const root = find(k)
+    if (!grupos.has(root)) grupos.set(root, new Set())
+    grupos.get(root)!.add(k)
+  }
+
+  const out: Record<string, string[]> = {}
+  for (const members of grupos.values()) {
+    const skus = [...members].map(compactPecaCodigo).filter(Boolean)
+    if (skus.length < 2) continue
+    for (const m of members) {
+      const key = m.toLowerCase()
+      out[key] = skus
+      const ref = referenciaHomagDeTexto(m)
+      if (ref) out[ref.toLowerCase()] = skus
+    }
   }
   return out
 }
@@ -56,8 +122,9 @@ function expandirSkusComIndiceSubstituicao(skus: string[], query: string): strin
     referenciaHomagDeTexto(q) ? compactPecaCodigo(referenciaHomagDeTexto(q)!) : '',
   ].filter(Boolean)
   for (const ch of chaves) {
-    const alvo = indice[ch] || indice[compactPecaCodigo(ch)]
-    if (alvo) out.add(compactPecaCodigo(alvo))
+    const alvos = indice[ch] || indice[compactPecaCodigo(ch)]
+    if (!alvos) continue
+    for (const alvo of alvos) out.add(compactPecaCodigo(alvo))
   }
   return [...out].filter(Boolean)
 }
@@ -133,8 +200,13 @@ export function codigosSkuAlvoParaBusca(query: string): string[] {
   return expandirSkusComIndiceSubstituicao([...out].filter(Boolean), q)
 }
 
-export function pecaTemCodigoAntigoRegistado(
-  peca: { referenciasAntigas?: string[]; codigosAntigos?: string[] },
+export function pecaTemCodigoAlternativoRegistado(
+  peca: {
+    codigosAlternativos?: string[]
+    referenciasAlternativas?: string[]
+    referenciasAntigas?: string[]
+    codigosAntigos?: string[]
+  },
   query: string
 ): boolean {
   const q = query.trim()
@@ -143,27 +215,35 @@ export function pecaTemCodigoAntigoRegistado(
   const qCompact = compactPecaCodigo(q)
   const ref = referenciaHomagDeTexto(q)
 
-  for (const r of peca.referenciasAntigas || []) {
+  const refs = [...(peca.referenciasAlternativas || []), ...(peca.referenciasAntigas || [])]
+  const cods = [...(peca.codigosAlternativos || []), ...(peca.codigosAntigos || [])]
+
+  for (const r of refs) {
     if (r.toLowerCase() === qLower) return true
     if (ref && r.toLowerCase() === ref.toLowerCase()) return true
   }
-  for (const c of peca.codigosAntigos || []) {
+  for (const c of cods) {
     if (compactPecaCodigo(c) === qCompact) return true
   }
   if (ref) {
     const refCompact = compactPecaCodigo(ref)
-    for (const r of peca.referenciasAntigas || []) {
+    for (const r of refs) {
       if (compactPecaCodigo(r) === refCompact) return true
     }
   }
   return false
 }
 
+/** @deprecated Use pecaTemCodigoAlternativoRegistado */
+export const pecaTemCodigoAntigoRegistado = pecaTemCodigoAlternativoRegistado
+
 export function pecaBibliotecaMatchesBusca(
   peca: {
     codigo?: string
     nome?: string
     descricao?: string
+    codigosAlternativos?: string[]
+    referenciasAlternativas?: string[]
     referenciasAntigas?: string[]
     codigosAntigos?: string[]
   },
@@ -181,7 +261,7 @@ export function pecaBibliotecaMatchesBusca(
     return true
   }
 
-  if (pecaTemCodigoAntigoRegistado(peca, q)) return true
+  if (pecaTemCodigoAlternativoRegistado(peca, q)) return true
 
   const ref = referenciaHomagDeTexto(q)
   if (ref) {
@@ -217,8 +297,18 @@ export function filtrarPecasBibliotecaPorBusca<
 }
 
 export function encontrarPecaBibliotecaPorCodigo<
-  T extends { codigo?: string; nome?: string; descricao?: string },
+  T extends {
+    codigo?: string
+    nome?: string
+    descricao?: string
+    codigosAlternativos?: string[]
+    referenciasAlternativas?: string[]
+    referenciasAntigas?: string[]
+    codigosAntigos?: string[]
+  },
 >(pecas: T[], codigo: string): T | undefined {
+  const direct = pecas.find((p) => pecaBibliotecaMatchesBusca(p, codigo))
+  if (direct) return direct
   const skus = new Set(codigosSkuAlvoParaBusca(codigo))
   if (skus.size === 0) return undefined
   return pecas.find((p) => {

@@ -1,6 +1,6 @@
 /**
- * Substituições de códigos HOMAG (REPLACED BY / código antigo → SKU novo).
- * Se a imagem da peça antiga corresponde à nova, mantém-se na peça nova.
+ * Ligação de códigos HOMAG — máquina antiga + máquina nova (mesma peça, referências diferentes).
+ * NÃO remove nem substitui entradas: os dois códigos ficam no catálogo.
  */
 
 import {
@@ -10,18 +10,21 @@ import {
   referenciaHomagParaCodigoDireto,
 } from './pecaCodigoBusca.ts'
 
-export type PecaComSubstituicao = {
+export type PecaComCodigosAlternativos = {
   id?: string
   codigo?: string
   nome?: string
   descricao?: string
   imagem?: string
+  codigosAlternativos?: string[]
+  referenciasAlternativas?: string[]
+  /** Legado — mantido em sync com codigosAlternativos */
   referenciasAntigas?: string[]
   codigosAntigos?: string[]
   substituidaPor?: string
 }
 
-export type SubstituicaoHomag = {
+export type LigacaoCodigosHomag = {
   codigoAntigo: string
   referenciaAntiga?: string
   codigoNovo: string
@@ -54,7 +57,7 @@ export function pecaTemImagemUtil(imagem: unknown): boolean {
   return s.length > 0 && s !== 'false'
 }
 
-export function parseSubstituicaoHomagDeTexto(texto: string): string | null {
+export function parseCodigoNovoHomagDeTexto(texto: string): string | null {
   const t = String(texto || '')
   REPLACED_BY_RE.lastIndex = 0
   const m = REPLACED_BY_RE.exec(t)
@@ -75,20 +78,39 @@ function uniqStrings(list: string[]): string[] {
   return [...new Set(list.map((s) => s.trim()).filter(Boolean))]
 }
 
+type ManualLigacao = {
+  referenciaAntiga?: string
+  referenciaMaquinaAntiga?: string
+  codigoAntigo?: string
+  codigoMaquinaAntiga?: string
+  referenciaNova?: string
+  referenciaMaquinaNova?: string
+  codigoNovo?: string
+  codigoMaquinaNova?: string
+}
+
+/** @deprecated Use detectarLigacoesCodigosHomag */
 export function detectarSubstituicoesHomag(
-  pecas: PecaComSubstituicao[],
-  manual: Array<{ referenciaAntiga?: string; codigoAntigo?: string; codigoNovo: string }> = []
-): SubstituicaoHomag[] {
-  const out: SubstituicaoHomag[] = []
+  pecas: PecaComCodigosAlternativos[],
+  manual: ManualLigacao[] = []
+): LigacaoCodigosHomag[] {
+  return detectarLigacoesCodigosHomag(pecas, manual)
+}
+
+export function detectarLigacoesCodigosHomag(
+  pecas: PecaComCodigosAlternativos[],
+  manual: ManualLigacao[] = []
+): LigacaoCodigosHomag[] {
+  const out: LigacaoCodigosHomag[] = []
   const seen = new Set<string>()
 
   for (const p of pecas) {
     const antigo = compactPecaCodigo(p.codigo)
     if (!antigo) continue
     const texto = `${p.nome || ''} ${p.descricao || ''}`
-    const novo = parseSubstituicaoHomagDeTexto(texto)
+    const novo = parseCodigoNovoHomagDeTexto(texto)
     if (!novo || novo === antigo) continue
-    const key = `${antigo}->${novo}`
+    const key = [antigo, novo].sort().join('<->')
     if (seen.has(key)) continue
     seen.add(key)
     const refAntiga = referenciaHomagDeTexto(antigo) || referenciaHomagDeTexto(texto)
@@ -102,21 +124,27 @@ export function detectarSubstituicoesHomag(
   }
 
   for (const m of manual) {
-    const novo = resolverSkuHomag(m.codigoNovo)
+    const refAntigaRaw = (m.referenciaMaquinaAntiga || m.referenciaAntiga || '').trim()
+    const refNovaRaw = (m.referenciaMaquinaNova || m.referenciaNova || '').trim()
+    const codAntigoRaw = (m.codigoMaquinaAntiga || m.codigoAntigo || refAntigaRaw).trim()
+    const codNovoRaw = (m.codigoMaquinaNova || m.codigoNovo || refNovaRaw).trim()
+    const novo = resolverSkuHomag(codNovoRaw)
     if (!novo) continue
     const antigo =
-      resolverSkuHomag(m.codigoAntigo || '') ||
-      (m.referenciaAntiga ? referenciaHomagParaCodigoDireto(m.referenciaAntiga) : null)
-    const refAntiga = m.referenciaAntiga?.trim() || referenciaHomagDeTexto(m.referenciaAntiga || '')
+      resolverSkuHomag(codAntigoRaw) ||
+      (refAntigaRaw ? referenciaHomagParaCodigoDireto(refAntigaRaw) : null)
+    const refAntiga = refAntigaRaw || referenciaHomagDeTexto(codAntigoRaw) || undefined
+    const refNova = refNovaRaw || referenciaHomagDeTexto(novo) || undefined
     const codigoAntigo = antigo ? compactPecaCodigo(antigo) : refAntiga ? compactPecaCodigo(refAntiga) : ''
-    const key = `${refAntiga || codigoAntigo}->${novo}`
+    if (!codigoAntigo || codigoAntigo === novo) continue
+    const key = [codigoAntigo, novo].sort().join('<->')
     if (seen.has(key)) continue
     seen.add(key)
     out.push({
-      codigoAntigo: codigoAntigo || compactPecaCodigo(refAntiga || ''),
-      referenciaAntiga: refAntiga || undefined,
+      codigoAntigo,
+      referenciaAntiga: refAntiga,
       codigoNovo: novo,
-      referenciaNova: referenciaHomagDeTexto(novo) || undefined,
+      referenciaNova: refNova,
       fonte: 'manual',
     })
   }
@@ -124,73 +152,80 @@ export function detectarSubstituicoesHomag(
   return out
 }
 
-function adicionarAntigo(peca: PecaComSubstituicao, sub: SubstituicaoHomag): void {
-  const refs = [...(peca.referenciasAntigas || [])]
-  const cods = [...(peca.codigosAntigos || [])]
-  if (sub.referenciaAntiga) refs.push(sub.referenciaAntiga)
-  if (sub.codigoAntigo) cods.push(sub.codigoAntigo)
-  const refDoAntigo = referenciaHomagDeTexto(sub.codigoAntigo)
-  if (refDoAntigo) refs.push(refDoAntigo)
-  peca.referenciasAntigas = uniqStrings(refs)
-  peca.codigosAntigos = uniqStrings(cods.map(compactPecaCodigo))
+function adicionarCodigoAlternativo(
+  peca: PecaComCodigosAlternativos,
+  codigo: string,
+  referencia?: string
+): void {
+  const refExtra = referenciaHomagDeTexto(codigo)
+  const cods = uniqStrings([
+    ...(peca.codigosAlternativos || []),
+    ...(peca.codigosAntigos || []),
+    compactPecaCodigo(codigo),
+  ])
+  const refs = uniqStrings([
+    ...(peca.referenciasAlternativas || []),
+    ...(peca.referenciasAntigas || []),
+    ...(referencia ? [referencia] : []),
+    ...(refExtra ? [refExtra] : []),
+  ])
+  peca.codigosAlternativos = cods
+  peca.referenciasAlternativas = refs
+  peca.codigosAntigos = cods
+  peca.referenciasAntigas = refs
+  delete peca.substituidaPor
 }
 
-export function aplicarSubstituicoesHomagNoCatalogo<T extends PecaComSubstituicao>(
+/** @deprecated Use aplicarLigacoesCodigosHomagNoCatalogo */
+export function aplicarSubstituicoesHomagNoCatalogo<T extends PecaComCodigosAlternativos>(
   pecas: T[],
-  manual: Array<{ referenciaAntiga?: string; codigoAntigo?: string; codigoNovo: string }> = []
+  manual: ManualLigacao[] = []
 ): { pecas: T[]; stats: { aplicadas: number; imagensMantidas: number; removidas: number } } {
-  const subs = detectarSubstituicoesHomag(pecas, manual)
+  return aplicarLigacoesCodigosHomagNoCatalogo(pecas, manual)
+}
+
+export function aplicarLigacoesCodigosHomagNoCatalogo<T extends PecaComCodigosAlternativos>(
+  pecas: T[],
+  manual: ManualLigacao[] = []
+): { pecas: T[]; stats: { aplicadas: number; imagensMantidas: number; removidas: number } } {
+  const ligs = detectarLigacoesCodigosHomag(pecas, manual)
   const byCodigo = new Map<string, T>()
   for (const p of pecas) {
     const c = compactPecaCodigo(p.codigo)
     if (c) byCodigo.set(c, p)
   }
 
-  const remover = new Set<string>()
   let aplicadas = 0
   let imagensMantidas = 0
 
-  for (const sub of subs) {
-    const antiga = byCodigo.get(sub.codigoAntigo)
-    const nova = byCodigo.get(sub.codigoNovo)
+  for (const lig of ligs) {
+    const pecaAntiga = byCodigo.get(lig.codigoAntigo)
+    const pecaNova = byCodigo.get(lig.codigoNovo)
 
-    if (nova) {
-      adicionarAntigo(nova, sub)
-      if (antiga) {
-        const imgAntiga = antiga.imagem
-        const imgNova = nova.imagem
-        const mesmaImagem = imagensPecaCorrespondem(imgAntiga, imgNova)
-        const novaSemFoto = !pecaTemImagemUtil(imgNova)
-        if (antiga.nome && (!nova.nome || /replaced by/i.test(nova.nome))) {
-          nova.nome = antiga.nome.replace(/\s*replaced\s+by.*/i, '').trim() || nova.nome
-        }
-        if (mesmaImagem || (novaSemFoto && pecaTemImagemUtil(imgAntiga))) {
-          nova.imagem = imgAntiga
+    if (pecaNova) {
+      adicionarCodigoAlternativo(pecaNova, lig.codigoAntigo, lig.referenciaAntiga)
+    }
+    if (pecaAntiga) {
+      adicionarCodigoAlternativo(pecaAntiga, lig.codigoNovo, lig.referenciaNova)
+      if (pecaNova) {
+        const mesmaImagem = imagensPecaCorrespondem(pecaAntiga.imagem, pecaNova.imagem)
+        const novaSemFoto = !pecaTemImagemUtil(pecaNova.imagem)
+        const antigaSemFoto = !pecaTemImagemUtil(pecaAntiga.imagem)
+        if (mesmaImagem || (novaSemFoto && pecaTemImagemUtil(pecaAntiga.imagem))) {
+          pecaNova.imagem = pecaAntiga.imagem
+          imagensMantidas++
+        } else if (mesmaImagem || (antigaSemFoto && pecaTemImagemUtil(pecaNova.imagem))) {
+          pecaAntiga.imagem = pecaNova.imagem
           imagensMantidas++
         }
-        antiga.substituidaPor = sub.codigoNovo
-        remover.add(sub.codigoAntigo)
       }
-      aplicadas++
-    } else if (antiga) {
-      adicionarAntigo(antiga, sub)
-      antiga.substituidaPor = sub.codigoNovo
-      if (!antiga.descricao?.includes('SUBSTITUÍDO POR')) {
-        antiga.descricao = `${antiga.descricao || antiga.nome || ''} | SUBSTITUÍDO POR ${sub.codigoNovo}${sub.referenciaAntiga ? ` (ref. antiga ${sub.referenciaAntiga})` : ''}`.trim()
-      }
-      aplicadas++
-    } else if (sub.fonte === 'manual' && sub.referenciaAntiga) {
-      aplicadas++
     }
+
+    if (pecaAntiga || pecaNova) aplicadas++
   }
 
-  const filtradas = pecas.filter((p) => {
-    const c = compactPecaCodigo(p.codigo)
-    return !c || !remover.has(c)
-  })
-
   return {
-    pecas: filtradas,
-    stats: { aplicadas, imagensMantidas, removidas: remover.size },
+    pecas,
+    stats: { aplicadas, imagensMantidas, removidas: 0 },
   }
 }

@@ -26908,6 +26908,30 @@ export default function Dashboard() {
     categoriasPecasAlfabeto,
   ])
 
+  /** Peças visíveis com filtros actuais (inclui importações pendentes — classificação em lote). */
+  const pecasVisiveisParaLoteGestao = useMemo(() => {
+    const isFiltroSoSemCategoria = filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA
+    const q = buscaBibliotecaDeferred.trim().toLowerCase()
+    const filtered = pecasBiblioteca.filter((peca) => {
+      if (isFiltroSoSemCategoria) {
+        if (peca.categoriaId) return false
+      } else if (filtroGrupoBiblioteca && peca.categoriaId !== filtroGrupoBiblioteca) {
+        return false
+      }
+      if (filtroSubgrupoBiblioteca && peca.subcategoriaId !== filtroSubgrupoBiblioteca) return false
+      if (q && !pecaPassaBuscaBibliotecaTexto(peca, q, buscaBibliotecaModo)) return false
+      return true
+    })
+    return ordenarPecasBibliotecaParaExibicao(filtered, categoriasPecasAlfabeto)
+  }, [
+    pecasBiblioteca,
+    buscaBibliotecaDeferred,
+    buscaBibliotecaModo,
+    filtroGrupoBiblioteca,
+    filtroSubgrupoBiblioteca,
+    categoriasPecasAlfabeto,
+  ])
+
   useEffect(() => {
     setPaginaBibliotecaFlat(0)
     setBibliotecaSecaoLimites({})
@@ -40573,6 +40597,7 @@ export default function Dashboard() {
                     somenteLeituraBiblioteca && visualizacaoBiblioteca === 'lista' ? 'grid' : visualizacaoBiblioteca
                   const isFiltroSoSemCategoria = filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA
                   const pecasCatalogoFiltradas = pecasCatalogoFiltradasGestao
+                  const pecasVisiveisParaLote = pecasVisiveisParaLoteGestao
                   const totalFlat = pecasCatalogoFiltradas.length
                   const totalPaginasFlat = Math.max(1, Math.ceil(totalFlat / BIBLIOTECA_ITENS_POR_LOTE))
                   const paginaFlatClamped = Math.min(paginaBibliotecaFlat, totalPaginasFlat - 1)
@@ -40877,10 +40902,10 @@ export default function Dashboard() {
                           <button
                             type="button"
                             className="biblioteca-btn--ghost"
-                            onClick={() => setSelecaoPecasBibliotecaIds(pecasVisiveisParaLote.map((peca) => peca.id))}
+                            onClick={() => setSelecaoPecasBibliotecaIds(pecasCatalogoFiltradas.map((peca) => peca.id))}
                             style={{ padding: '8px 12px', fontSize: '12px' }}
                           >
-                            {safeT?.classificacaoLoteSelecionarVisiveis || 'Selecionar visíveis'} ({pecasVisiveisParaLote.length})
+                            {safeT?.classificacaoLoteSelecionarVisiveis || 'Selecionar visíveis'} ({pecasCatalogoFiltradas.length})
                           </button>
                           <button
                             type="button"
@@ -40997,7 +41022,7 @@ export default function Dashboard() {
                               className="btn-primary"
                               onClick={() =>
                                 handleAplicarClassificacaoLote(
-                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasVisiveisParaLote.map((peca) => peca.id)
+                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasCatalogoFiltradas.map((peca) => peca.id)
                                 )
                               }
                               style={{ padding: '10px 14px', fontSize: '12px' }}
@@ -41009,7 +41034,7 @@ export default function Dashboard() {
                               className="btn-secondary"
                               onClick={() =>
                                 handleAplicarPalavrasClassificacaoLote(
-                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasVisiveisParaLote.map((peca) => peca.id)
+                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasCatalogoFiltradas.map((peca) => peca.id)
                                 )
                               }
                               style={{ padding: '10px 14px', fontSize: '12px' }}
@@ -41027,7 +41052,7 @@ export default function Dashboard() {
                               className="btn-secondary"
                               onClick={() =>
                                 handleAplicarRegrasSalvas(
-                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasVisiveisParaLote.map((peca) => peca.id)
+                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasCatalogoFiltradas.map((peca) => peca.id)
                                 )
                               }
                               style={{ padding: '9px 12px', fontSize: '12px' }}
