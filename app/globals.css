@@ -335,8 +335,8 @@ body {
   overflow-x: hidden;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-  /* pan-y + pinch: rolagem vertical com um dedo; pinch-zoom mantido. Evita só "manipulation" em body + área interna com pan-y (casos em que o scroll não era atribuído ao contentor certo). */
-  touch-action: pan-y pinch-zoom;
+  /* pan-x + pan-y + pinch: rolagem e arrastar lateral no telemóvel */
+  touch-action: pan-x pan-y pinch-zoom;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -369,13 +369,13 @@ body,
 .main-content-area {
   min-height: 0;
   -webkit-overflow-scrolling: touch;
-  /* pan-y sem pinch-zoom bloqueava zoom com dois dedos no Chrome/Android nos contentores de scroll */
-  touch-action: pan-y pinch-zoom;
+  /* pan-x + pan-y + pinch no telemóvel */
+  touch-action: pan-x pan-y pinch-zoom;
 }
 .tab-inner-scroll {
   min-height: 0;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y pinch-zoom;
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 /* Desktop com rato: touch-action: pan-y em contentores com overflow pode, em alguns Chromium/Windows,

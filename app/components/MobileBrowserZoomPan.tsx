@@ -10,12 +10,21 @@ const PAN_TARGETS = [
   '.tab-inner-scroll',
 ]
 
+type PanState = {
+  mode: 'one' | 'two'
+  x: number
+  y: number
+  sx: number
+  sy: number
+  pinchDist: number
+}
+
 /**
- * Telemóvel/tablet: após pinch-zoom, permite arrastar a vista em X e Y.
+ * Telemóvel/tablet: após pinch-zoom, arrastar a vista com 1 ou 2 dedos (X e Y).
  */
 export function MobileBrowserZoomPan() {
   const zoomedRef = useRef(false)
-  const panRef = useRef<{ x: number; y: number; sx: number; sy: number } | null>(null)
+  const panRef = useRef<PanState | null>(null)
   const savedOverflowRef = useRef<{ html: string; body: string } | null>(null)
   const styledElsRef = useRef<HTMLElement[]>([])
 
@@ -61,9 +70,11 @@ export function MobileBrowserZoomPan() {
 
     const getMaxScroll = () => {
       const se = scrollEl()
+      const vw = window.innerWidth
+      const vh = window.innerHeight
       return {
-        x: Math.max(0, se.scrollWidth - window.innerWidth),
-        y: Math.max(0, se.scrollHeight - window.innerHeight),
+        x: Math.max(0, se.scrollWidth - vw),
+        y: Math.max(0, se.scrollHeight - vh),
       }
     }
 
@@ -78,6 +89,14 @@ export function MobileBrowserZoomPan() {
       se.scrollTop = ny
       window.scrollTo(nx, ny)
     }
+
+    const touchMidpoint = (touches: TouchList) => ({
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2,
+    })
+
+    const touchDistance = (touches: TouchList) =>
+      Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY)
 
     const clearPanStyles = () => {
       for (const el of styledElsRef.current) {
@@ -95,10 +114,10 @@ export function MobileBrowserZoomPan() {
 
     const updateScrollExtent = () => {
       const scale = readScale()
-      if (scale <= 1.01) return
-      const pad = 128
-      const w = Math.ceil(Math.max(window.innerWidth * scale, vv.width * scale) + pad)
-      const h = Math.ceil(Math.max(window.innerHeight * scale, vv.height * scale) + pad)
+      if (scale <= 1.008) return
+      const pad = 160
+      const w = Math.ceil(Math.max(window.innerWidth * scale * 2.2, vv.width * scale * 1.5) + pad)
+      const h = Math.ceil(Math.max(window.innerHeight * scale * 2.2, vv.height * scale * 1.5) + pad)
 
       const els = panTargets()
       styledElsRef.current = els
@@ -142,7 +161,7 @@ export function MobileBrowserZoomPan() {
         return
       }
       const scale = readScale()
-      const next = zoomedRef.current ? scale > 1.005 : scale > 1.015
+      const next = zoomedRef.current ? scale > 1.003 : scale > 1.01
       setZoomed(next)
       if (next) updateScrollExtent()
     }
@@ -150,34 +169,80 @@ export function MobileBrowserZoomPan() {
     let debounce: ReturnType<typeof setTimeout> | undefined
     const schedule = () => {
       if (debounce) clearTimeout(debounce)
-      debounce = setTimeout(apply, 40)
+      debounce = setTimeout(apply, 30)
     }
 
-    const onTouchStart = (e: TouchEvent) => {
-      if (!zoomedRef.current || e.touches.length !== 1) return
+    const beginPan = (e: TouchEvent) => {
+      if (!zoomedRef.current) return
       const pos = getScrollPos()
-      panRef.current = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-        sx: pos.x,
-        sy: pos.y,
+
+      if (e.touches.length === 1) {
+        panRef.current = {
+          mode: 'one',
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
+          sx: pos.x,
+          sy: pos.y,
+          pinchDist: 0,
+        }
+        return
+      }
+
+      if (e.touches.length === 2) {
+        const mid = touchMidpoint(e.touches)
+        panRef.current = {
+          mode: 'two',
+          x: mid.x,
+          y: mid.y,
+          sx: pos.x,
+          sy: pos.y,
+          pinchDist: touchDistance(e.touches),
+        }
       }
     }
 
     const onTouchMove = (e: TouchEvent) => {
-      if (!zoomedRef.current || !panRef.current || e.touches.length !== 1) return
+      if (!zoomedRef.current || !panRef.current) return
+
       const p = panRef.current
-      const dx = p.x - e.touches[0].clientX
-      const dy = p.y - e.touches[0].clientY
-      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return
-      e.preventDefault()
-      e.stopPropagation()
-      applyScroll(p.sx + dx, p.sy + dy)
+
+      if (p.mode === 'two' && e.touches.length === 2) {
+        const dist = touchDistance(e.touches)
+        const distDelta = Math.abs(dist - p.pinchDist)
+        if (distDelta > 14) {
+          p.pinchDist = dist
+          schedule()
+          return
+        }
+        const mid = touchMidpoint(e.touches)
+        const dx = p.x - mid.x
+        const dy = p.y - mid.y
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return
+        e.preventDefault()
+        e.stopPropagation()
+        applyScroll(p.sx + dx, p.sy + dy)
+        return
+      }
+
+      if (p.mode === 'one' && e.touches.length === 1) {
+        const dx = p.x - e.touches[0].clientX
+        const dy = p.y - e.touches[0].clientY
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return
+        e.preventDefault()
+        e.stopPropagation()
+        applyScroll(p.sx + dx, p.sy + dy)
+      }
     }
 
     const onTouchEnd = (e: TouchEvent) => {
-      panRef.current = null
-      if (e.touches.length === 0) schedule()
+      if (e.touches.length === 0) {
+        panRef.current = null
+        schedule()
+        return
+      }
+      if (zoomedRef.current && e.touches.length === 1) {
+        beginPan(e)
+      }
     }
 
     apply()
@@ -185,7 +250,7 @@ export function MobileBrowserZoomPan() {
     vv.addEventListener('scroll', schedule)
     window.addEventListener('orientationchange', schedule)
     window.addEventListener('resize', schedule)
-    document.addEventListener('touchstart', onTouchStart, { passive: true, capture: true })
+    document.addEventListener('touchstart', beginPan, { passive: true, capture: true })
     document.addEventListener('touchmove', onTouchMove, { passive: false, capture: true })
     document.addEventListener('touchend', onTouchEnd, { capture: true })
     document.addEventListener('touchcancel', onTouchEnd, { capture: true })
@@ -196,7 +261,7 @@ export function MobileBrowserZoomPan() {
       vv.removeEventListener('scroll', schedule)
       window.removeEventListener('orientationchange', schedule)
       window.removeEventListener('resize', schedule)
-      document.removeEventListener('touchstart', onTouchStart, true)
+      document.removeEventListener('touchstart', beginPan, true)
       document.removeEventListener('touchmove', onTouchMove, true)
       document.removeEventListener('touchend', onTouchEnd, true)
       document.removeEventListener('touchcancel', onTouchEnd, true)
