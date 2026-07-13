@@ -105,35 +105,48 @@ async function main() {
       console.log(`[HOMAG] Busca "${term}": ${r.products.length} resultado(s)`)
       for (const p of r.products) {
         const c = normCodigo(p.codigo)
-        if (alvos.has(c) || termosBusca(p.codigo).some((t) => alvos.has(normCodigo(t)))) {
-          found = p
-          break
-        }
+        if (!c || !alvos.has(c)) continue
+        found = p
+        console.log(`[HOMAG] Correspondência exacta: SKU ${p.codigo} — ${p.descricao}`)
+        break
       }
       if (found) break
     }
 
     if (!found) {
-      console.error('[HOMAG] Peça não encontrada na loja. Verifique login HOMAG no browser (HOMAG_HEADLESS=0).')
+      console.error(
+        '[HOMAG] Peça não encontrada com código exacto na loja HOMAG.\n' +
+          '        Não foi criada nenhuma peça inventada — só entram dados confirmados pela HOMAG.'
+      )
       process.exit(2)
     }
 
     let imagem = ''
     if (found.imagemUrl) {
+      const imgDir = path.join(__dirname, 'out', 'images')
+      fs.mkdirSync(imgDir, { recursive: true })
+      const imgPath = path.join(imgDir, `${normCodigo(found.codigo)}.png`)
       try {
-        imagem = await downloadHomagImage(context, found.imagemUrl)
+        const ok = await downloadHomagImage(context, found.imagemUrl, imgPath)
+        if (ok && fs.existsSync(imgPath)) {
+          const buf = fs.readFileSync(imgPath)
+          if (buf.length > 0 && buf.length <= 800000) {
+            imagem = `data:image/png;base64,${buf.toString('base64')}`
+          }
+        }
       } catch {
-        imagem = found.imagemUrl
+        /* sem foto */
       }
     }
 
     const refComHifens = termosBusca(codigoArg).find((t) => t.includes('-')) || ''
+    const nomeHomag = String(found.descricao || found.codigo || '').trim()
     const incoming = {
       id: `import-homag-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-      nome: found.descricao || 'PIASTRA',
+      nome: nomeHomag,
       codigo: found.codigo,
       preco: found.preco || '',
-      descricao: `${found.descricao || 'PIASTRA'}${refComHifens ? ` | REF HOMAG ${refComHifens}` : ''}`,
+      descricao: `${nomeHomag}${refComHifens ? ` | REF HOMAG ${refComHifens}` : ''}`,
       categoria: '',
       categoriaId: '',
       subcategoria: '',
