@@ -15,6 +15,7 @@ export type OrcamentoGeradoPdfItem = {
   tipoItem?: 'sem-valor' | 'com-valor'
   iva?: number
   imagem?: string
+  observacao?: string
 }
 
 export type OrcamentoGeradoPdfData = {
@@ -57,6 +58,10 @@ function renderItemRow(
   const precoUnitario = item.precoUnitario || 0
   const temValor = item.tipoItem === 'com-valor' && precoUnitario > 0
   const srcImg = data.resolveImagem?.(item)
+  const obsLinha =
+    item.observacao?.trim()
+      ? `<div class="orc-pdf-pro__item-obs"><strong>${escapePdfHtml(L.pecaObservacao || 'Obs.')}</strong> ${escapePdfHtml(item.observacao.trim())}</div>`
+      : ''
   const img = srcImg
     ? `<img src="${String(srcImg).replace(/"/g, '&quot;')}" alt="" class="orc-pdf-pro__thumb" onerror="this.outerHTML='<span class=\\'orc-pdf-pro__na\\'>—</span>'" />`
     : '<span class="orc-pdf-pro__na">—</span>'
@@ -64,7 +69,7 @@ function renderItemRow(
 
   return `<tr>
     <td class="orc-pdf-pro__col-img">${img}</td>
-    <td class="orc-pdf-pro__desc-cell">${escapePdfHtml(item.descricao)}</td>
+    <td class="orc-pdf-pro__desc-cell">${escapePdfHtml(item.descricao)}${obsLinha}</td>
     <td class="orc-pdf-pro__col-cod">${escapePdfHtml(item.codigo || '—')}</td>
     <td class="orc-pdf-pro__col-qtd">${item.quantidade}</td>
     <td class="orc-pdf-pro__col-preco">${temValor ? `€ ${precoUnitario.toFixed(2)}` : escapePdfHtml(L.aDefinir || 'A definir')}</td>

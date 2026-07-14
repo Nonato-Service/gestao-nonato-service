@@ -8,6 +8,7 @@ import {
   montarCamposEquipamentoPedidoPdf,
 } from '../lib/pedidoOrcamentoAvulsoEquipamento'
 import { PdfModeloPickerField } from './PdfModeloPickerField'
+import { PecaObservacaoToggle } from './PecaObservacaoToggle'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from '../lib/pdfModelStorage'
 import {
   resolverEmpresaPedidoOrcamentoPdf,
@@ -50,6 +51,8 @@ export type PecaPedido = {
   imagem?: string
   quantidade: number
   pecaId?: string
+  incluirObservacao?: boolean
+  observacao?: string
 }
 
 export type EquipamentoBlocoPedido = {
@@ -543,6 +546,32 @@ export function PedidoOrcamentosAvulsoContent({
     )
   }
 
+  const atualizarObservacaoPeca = (
+    blocoId: string,
+    pecaId: string,
+    incluir: boolean,
+    texto?: string
+  ) => {
+    setBlocosEquipamento((prev) =>
+      prev.map((b) =>
+        b.id !== blocoId
+          ? b
+          : {
+              ...b,
+              pecas: b.pecas.map((p) =>
+                p.id === pecaId
+                  ? {
+                      ...p,
+                      incluirObservacao: incluir,
+                      observacao: incluir ? (texto ?? p.observacao ?? '') : undefined,
+                    }
+                  : p
+              ),
+            }
+      )
+    )
+  }
+
   const gerarProximoCodigo = (): string => {
     const ano = new Date().getFullYear()
     const prefix = `POA-${ano}-`
@@ -587,6 +616,7 @@ export function PedidoOrcamentosAvulsoContent({
     rodape: safeT?.pedidoOrcamentoPdfRodape || 'NONATO SERVICE — Documento gerado automaticamente.',
     emitidoEm: safeT?.orcamentoPdfEmitidoEm || 'Emitido em',
     emitente: safeT?.poaPdfEmitente || 'Emitente / cabeçalho',
+    pecaObservacao: safeT?.pecaObservacao || 'Obs.',
   }
 
   function resolverDadosPedidoPdf() {
@@ -661,6 +691,7 @@ export function PedidoOrcamentosAvulsoContent({
           nome: p.nome,
           quantidade: p.quantidade,
           imagem: p.imagem,
+          observacao: p.incluirObservacao && p.observacao?.trim() ? p.observacao.trim() : undefined,
         })),
       }
     }),
@@ -669,6 +700,7 @@ export function PedidoOrcamentosAvulsoContent({
       nome: p.nome,
       quantidade: p.quantidade,
       imagem: p.imagem,
+      observacao: p.incluirObservacao && p.observacao?.trim() ? p.observacao.trim() : undefined,
     })),
     logoHtml,
     empresa: resolverEmpresaPdf(emitirComo, clienteRef, nomeManual),
@@ -907,6 +939,8 @@ export function PedidoOrcamentosAvulsoContent({
             iva: 0,
             pecaId: p.pecaId,
             imagem: p.imagem,
+            incluirObservacao: p.incluirObservacao,
+            observacao: p.incluirObservacao && p.observacao?.trim() ? p.observacao.trim() : undefined,
           })),
           total: 0,
           totalSemIva: 0,
@@ -1619,6 +1653,17 @@ export function PedidoOrcamentosAvulsoContent({
                                       </button>
                                     </div>
                                   )}
+                                  <PecaObservacaoToggle
+                                    incluir={Boolean(p.incluirObservacao)}
+                                    texto={p.observacao || ''}
+                                    safeT={safeT}
+                                    onIncluirChange={(sim) =>
+                                      atualizarObservacaoPeca(bloco.id, p.id, sim, sim ? p.observacao : '')
+                                    }
+                                    onTextoChange={(texto) =>
+                                      atualizarObservacaoPeca(bloco.id, p.id, true, texto)
+                                    }
+                                  />
                                 </div>
                                 <div className="orc-pro__peca-actions">
                                   <div className="orc-pro__peca-qty">

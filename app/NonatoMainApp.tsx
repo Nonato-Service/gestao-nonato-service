@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef, useDeferredValue } from 'react'
 import { createPortal } from 'react-dom'
 import { PecasBibliotecaUrgentLoader } from './components/PecasBibliotecaUrgentLoader'
+import { PecaObservacaoToggle } from './components/PecaObservacaoToggle'
 import {
   translations,
   translationBundleKey,
@@ -638,6 +639,8 @@ type OrcamentoAvulsoItemRascunho = {
   iva?: number
   pecaId?: string
   imagem?: string
+  incluirObservacao?: boolean
+  observacao?: string
 }
 
 export type OrcamentoAvulsoRascunhoPersist = {
@@ -24267,6 +24270,7 @@ export default function Dashboard() {
           nome: p.nome,
           quantidade: p.quantidade,
           imagem: p.imagem,
+          observacao: p.incluirObservacao && p.observacao?.trim() ? p.observacao.trim() : undefined,
         })),
       }
     })
@@ -24283,6 +24287,7 @@ export default function Dashboard() {
         nome: p.nome,
         quantidade: p.quantidade,
         imagem: p.imagem,
+        observacao: p.incluirObservacao && p.observacao?.trim() ? p.observacao.trim() : undefined,
       })),
       logoHtml: getLogoHtmlForReport(),
       empresa: empresaPdf,
@@ -24307,6 +24312,7 @@ export default function Dashboard() {
         colQtd: (safeT as Record<string, string | undefined>)?.poaPdfColQtd || safeT?.quantidade || 'Quantia',
         imprimir: safeT?.imprimirOrcamento || 'Imprimir / Guardar PDF',
         fechar: safeT?.fechar || 'Fechar',
+        pecaObservacao: safeT?.pecaObservacao || 'Obs.',
       },
     })
   }
@@ -65986,6 +65992,8 @@ A1;Peça exemplo;10`}
                 nome: item.descricao || item.nome || '',
                 quantidade: item.quantidade || 1,
                 imagem: item.imagem,
+                incluirObservacao: item.incluirObservacao,
+                observacao: item.observacao,
               })),
             } satisfies PedidoAvulsoGuardado)
           abrirPdfPedidoOrcamentoAvulso(pedido)
@@ -66083,6 +66091,7 @@ A1;Peça exemplo;10`}
           itemSemValor: safeT?.itemSemValor,
           itens: safeT?.itens,
           observacoes: safeT?.observacoes,
+          pecaObservacao: safeT?.pecaObservacao,
           dadosCliente: safeT?.dadosClienteGuardados || safeT?.dadosCliente || 'Dados do cliente',
           badgeComValores: safeT?.orcamentoPdfBadgeComValores || 'Orçamento com valores',
           badgeSemValores: safeT?.orcamentoPdfBadgeSemValores || 'Orçamento sem valores',
@@ -66998,6 +67007,16 @@ A1;Peça exemplo;10`}
                                 ✕
                               </button>
                             </div>
+                            <PecaObservacaoToggle
+                              incluir={Boolean(item.incluirObservacao)}
+                              texto={item.observacao || ''}
+                              safeT={safeT}
+                              onIncluirChange={(sim) => {
+                                atualizarItem(index, 'incluirObservacao', sim)
+                                if (!sim) atualizarItem(index, 'observacao', '')
+                              }}
+                              onTextoChange={(texto) => atualizarItem(index, 'observacao', texto)}
+                            />
                           </div>
                         </div>
                       </div>

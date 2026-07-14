@@ -35806,6 +35806,53 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   border: 1px solid rgba(0, 200, 83, 0.2);
   background: rgba(2, 6, 23, 0.55);
 }
+.orc-pro__peca-obs {
+  width: 100%;
+  flex-basis: 100%;
+  margin-top: 4px;
+}
+.orc-pro__peca-obs-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.orc-pro__peca-obs-label {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 600;
+}
+.orc-pro__peca-obs-btn {
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+}
+.orc-pro__peca-obs-btn--active {
+  border-color: rgba(0, 200, 83, 0.55);
+  background: rgba(0, 200, 83, 0.18);
+  color: #7dffb0;
+}
+.orc-pro__peca-obs-field {
+  width: 100%;
+  min-height: 52px;
+  resize: vertical;
+  font-size: 0.82rem;
+}
+.orc-pdf-pro__item-obs {
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: #475569;
+  line-height: 1.35;
+}
+.orc-pdf-pro__item-obs strong {
+  color: #334155;
+  font-weight: 700;
+}
 .orc-pro__peca-actions {
   display: flex;
   flex-direction: column;

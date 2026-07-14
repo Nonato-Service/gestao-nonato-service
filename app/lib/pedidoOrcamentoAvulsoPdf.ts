@@ -11,6 +11,7 @@ export type PedidoAvulsoPdfPeca = {
   nome: string
   quantidade: number
   imagem?: string
+  observacao?: string
 }
 
 export type PedidoAvulsoPdfEquipamentoBloco = {
@@ -74,9 +75,12 @@ function renderLinhaPeca(p: PedidoAvulsoPdfPeca, L: PedidoAvulsoPdfData['labels'
   const img = p.imagem
     ? `<img src="${String(p.imagem).replace(/"/g, '&quot;')}" alt="" class="orc-pdf-pro__thumb" onerror="this.outerHTML='<span class=\\'orc-pdf-pro__na\\'>—</span>'" />`
     : '<span class="orc-pdf-pro__na">—</span>'
+  const obsLinha = p.observacao?.trim()
+    ? `<div class="orc-pdf-pro__item-obs"><strong>${escapePdfHtml(L?.pecaObservacao || 'Obs.')}</strong> ${escapePdfHtml(p.observacao.trim())}</div>`
+    : ''
   return `<tr>
     <td class="orc-pdf-pro__col-img">${img}</td>
-    <td class="orc-pdf-pro__desc-cell">${escapePdfHtml(p.nome)}</td>
+    <td class="orc-pdf-pro__desc-cell">${escapePdfHtml(p.nome)}${obsLinha}</td>
     <td class="orc-pdf-pro__col-cod">${escapePdfHtml(p.codigo || '—')}</td>
     <td class="orc-pdf-pro__col-qtd">${p.quantidade}</td>
   </tr>`
