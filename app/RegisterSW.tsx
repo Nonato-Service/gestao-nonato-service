@@ -5,7 +5,7 @@ import { setupAutoSyncOnReconnect, setupFlushSyncOnPageHide } from './utils/data
 import { getStoredUiString } from './translations'
 
 // Bumpar este número em cada deploy para forçar atualização no telemóvel/tablet
-const SW_VERSION = 46
+const SW_VERSION = 47
 const SW_DISMISSED_SESSION_KEY = 'nonato-pwa-update-dismissed-v'
 const UI_LANGUAGE_EVENT = 'nonato-ui-language'
 
@@ -53,26 +53,18 @@ export function RegisterSW() {
         .then((reg) => {
           setRegistration(reg)
 
-          const applyWaitingWorker = () => {
-            const waiting = reg.waiting
-            if (!waiting) return false
-            userConfirmedUpdate.current = true
-            waiting.postMessage({ type: 'SKIP_WAITING' })
-            setTimeout(() => {
-              if (!reloadHandled.current) window.location.reload()
-            }, 900)
-            return true
+          // Não recarregar automaticamente — o utilizador escolhe «Atualizar» no banner.
+          if (reg.waiting && navigator.serviceWorker.controller) {
+            markUpdateAvailable()
+            return
           }
-
-          // Actualização crítica: aplicar logo (evita ficar preso em versão antiga em cache)
-          if (applyWaitingWorker()) return
 
           reg.addEventListener('updatefound', () => {
             const newWorker = reg.installing
             if (!newWorker) return
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                if (!applyWaitingWorker()) markUpdateAvailable()
+                markUpdateAvailable()
               }
             })
           })

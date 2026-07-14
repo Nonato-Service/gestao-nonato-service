@@ -5,12 +5,15 @@ import { useEffect, useRef } from 'react'
 const PAN_ROOT_ID = 'mobile-pan-root'
 const MIN_SCALE = 1
 const MAX_SCALE = 4
-/** Menor = pinch mais suave. 0.15 ≈ muito lento; 0.4 = sensível. */
-const ZOOM_SENSITIVITY = 0.15
-const MIN_PINCH_DIST = 88
+/** Menor = pinch mais suave. 0.08 ≈ muito lento; 0.4 = sensível. */
+const ZOOM_SENSITIVITY = 0.08
+const MIN_PINCH_DIST = 120
+
+/** Áreas com scroll nativo — não capturar pan com 1 dedo quando há zoom. */
+const SCROLL_NATIVE_SELECTORS = ['.sidebar-scroll-inner', '.sidebar']
 
 const scaleFromPinch = (startScale: number, fingerRatio: number) => {
-  if (Math.abs(fingerRatio - 1) < 0.015) return startScale
+  if (Math.abs(fingerRatio - 1) < 0.028) return startScale
   const dampedRatio = 1 + (fingerRatio - 1) * ZOOM_SENSITIVITY
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, startScale * dampedRatio))
 }
@@ -112,6 +115,11 @@ export function MobileBrowserZoomPan() {
       return { x: midX - rect.left, y: midY - rect.top }
     }
 
+    const isNativeScrollTarget = (target: EventTarget | null) => {
+      if (!(target instanceof Element)) return false
+      return SCROLL_NATIVE_SELECTORS.some((sel) => target.closest(sel))
+    }
+
     const beginGesture = (e: TouchEvent) => {
       if (!isTouchMobile()) return
 
@@ -120,8 +128,12 @@ export function MobileBrowserZoomPan() {
 
       const { x: panX, y: panY } = panRef.current
       const scale = scaleRef.current
+      const inScrollArea = isNativeScrollTarget(e.target)
+
+      if (e.touches.length === 1 && inScrollArea) return
 
       if (e.touches.length === 2) {
+        if (inScrollArea) return
         const mid = touchMidpoint(e.touches)
         const origin = originFromMid(mid.x, mid.y)
         gestureRef.current = {
@@ -159,6 +171,7 @@ export function MobileBrowserZoomPan() {
 
     const onTouchMove = (e: TouchEvent) => {
       if (!isTouchMobile() || !gestureRef.current) return
+      if (isNativeScrollTarget(e.target)) return
 
       const g = gestureRef.current
 

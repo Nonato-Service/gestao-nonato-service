@@ -351,6 +351,15 @@ body {
     touch-action: none;
     overflow: visible;
   }
+
+  html.mobile-browser-zoomed .sidebar .sidebar-scroll-inner,
+  body.mobile-browser-zoomed .sidebar .sidebar-scroll-inner {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+  }
 }
 
 /* Foco visível — acessibilidade + acabamento “produto” */

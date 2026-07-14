@@ -338,6 +338,16 @@ let manuaisSaveAlertShownOnce = false
 
 /** Persistido até a carga terminar: se a flag for limpa cedo demais, o 2.º arranque (Strict Mode) deixa de fazer o wipe. */
 const NONATO_PENDING_FULL_SERVER_REPLACE_LS = 'nonato-pending-full-server-replace'
+const NONATO_WARM_SESSION_KEY = 'nonato-warm-session-v1'
+
+function isWarmSessionResume(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    return sessionStorage.getItem(NONATO_WARM_SESSION_KEY) === '1'
+  } catch {
+    return false
+  }
+}
 /** Cadastros — cópia de segurança antes de «substituir tudo pelo servidor» (servidor vazio apagava dados após deploy). */
 const NONATO_CADASTRO_KEYS_BACKUP_ON_FULL_PULL = NONATO_CRITICAL_CADASTRO_KEYS
 
@@ -5177,7 +5187,10 @@ export default function Dashboard() {
     setSyncDecisionModalOpen(false)
   }, [syncPendingRemote?.revision])
   /** Primeira carga: pedidos ao servidor + fusão de dados (evita parecer que «não termina»). */
-  const [appInitialLoading, setAppInitialLoading] = useState(true)
+  const [appInitialLoading, setAppInitialLoading] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return !isWarmSessionResume()
+  })
 
   /** Repor botões da barra lateral em falta após arranque (ex.: sync apagou entradas). */
   useEffect(() => {
@@ -9081,7 +9094,7 @@ export default function Dashboard() {
     if (isCompactLayout && activeTabId) setMobileMenuOpen(false)
   }, [isCompactLayout, activeTabId])
 
-  const dataBootstrapCompleteRef = useRef(false)
+  const dataBootstrapCompleteRef = useRef(isWarmSessionResume())
   /** Formulário inline da Agenda fica acima da vista em lista; ao editar, levar o ecrã até ao formulário. */
   const agendaInlineFormRef = useRef<HTMLDivElement | null>(null)
 
@@ -9669,10 +9682,19 @@ export default function Dashboard() {
     // Garantir que só executa no cliente
     if (typeof window === 'undefined') return
 
+    const warmResume = isWarmSessionResume()
+    if (warmResume) {
+      dataBootstrapCompleteRef.current = true
+      markDataBootstrapComplete()
+    }
+
     const loadAllData = async () => {
-      setAppInitialLoading(true)
-      setSyncBootstrapPercent(2)
+      if (!warmResume) {
+        setAppInitialLoading(true)
+        setSyncBootstrapPercent(2)
+      }
       const reportBoot = async (p: number) => {
+        if (warmResume) return
         setSyncBootstrapPercent((prev) => Math.max(prev, Math.min(100, Math.round(p))))
         await new Promise((r) => setTimeout(r, 0))
       }
@@ -13239,6 +13261,11 @@ export default function Dashboard() {
         }
         dataBootstrapCompleteRef.current = true
         markDataBootstrapComplete()
+        try {
+          sessionStorage.setItem(NONATO_WARM_SESSION_KEY, '1')
+        } catch {
+          /* ignorar */
+        }
         void loadData('homag-substituicoes-indice')
           .then((raw) => {
             if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
