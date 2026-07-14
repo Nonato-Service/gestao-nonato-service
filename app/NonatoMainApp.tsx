@@ -110,7 +110,12 @@ import {
   type MotivoAssociacaoRecibo,
 } from './lib/comprovanteClientesAtivosHoje'
 import {
+  abrirFolhaSemanalContadorPdf,
+  buildFolhaSemanalContadorHtml,
+} from './lib/comprovantesFolhaSemanalPdf'
+import {
   encontrarComprovanteDuplicado,
+  encontrarDuplicadoImagemComprovante,
   hashImagemComprovante,
   mensagemDuplicadoComprovante,
 } from './lib/comprovanteDuplicado'
@@ -49858,7 +49863,7 @@ A1;Peça exemplo;10`}
         const labelGrupoNonato = (safeT as any)?.comprovantesGrupoNonatoService || 'Despesas da NONATO SERVICE'
         const chaveGrupoComprovante = (c: ComprovanteDespesa) =>
           c.tipo === 'pessoal' ? labelGrupoNonato : String(c.cliente || '—').trim() || '—'
-        const confirmarSeNaoDuplicadoComprovante = (candidato: {
+        const bloquearSeDuplicadoComprovante = (candidato: {
           imagemBase64?: string
           data: string
           valorTotal: number
@@ -49868,12 +49873,13 @@ A1;Peça exemplo;10`}
           const dup = encontrarComprovanteDuplicado(candidato, comprovantesDespesas, {
             labelNonato: labelGrupoNonato,
           })
-          if (!dup) return true
-          return window.confirm(
+          if (!dup) return false
+          alert(
             mensagemDuplicadoComprovante(dup, safeT as Record<string, string | undefined>, (c) =>
               chaveGrupoComprovante(c as ComprovanteDespesa)
             )
           )
+          return true
         }
         const getWeekKey = (dateStr: string) => {
           const d = new Date(dateStr + 'T12:00:00')
@@ -50064,6 +50070,9 @@ A1;Peça exemplo;10`}
           try {
             const { createWorker } = await import('tesseract.js')
             const worker = await createWorker('por+eng')
+            await worker.setParameters({
+              tessedit_pageseg_mode: '6',
+            })
             const r = await worker.recognize(file)
             await worker.terminate()
             const text = r.data.text || ''
@@ -50335,7 +50344,7 @@ A1;Peça exemplo;10`}
               : mesFromData
           const nomeClienteForm = formComp.tipo === 'cliente' ? formComp.cliente.trim() : ''
           if (
-            !confirmarSeNaoDuplicadoComprovante({
+            bloquearSeDuplicadoComprovante({
               imagemBase64: formComp.imagemBase64 || undefined,
               data: dataNorm,
               valorTotal,
@@ -50451,6 +50460,79 @@ A1;Peça exemplo;10`}
             if (w) { w.document.write(html); w.document.close() } else alert((safeT as any)?.comprovantesPermitaPopups || 'Permita pop-ups para abrir o PDF.')
           } catch (e) { console.error(e); alert((safeT as any)?.comprovantesErroPDF || 'Erro ao gerar PDF. Tente novamente.') }
         }
+        const handleGerarFolhaSemanalContador = () => {
+          const hojeIso = new Date().toISOString().slice(0, 10)
+          const semanaAtual = getWeekKey(hojeIso)
+          const semanaAlvo =
+            filtroPeriodoView === 'semanal' && filtroSemana
+              ? filtroSemana
+              : comprovantesDespesas.some((c) => getWeekKey(c.data) === semanaAtual)
+                ? semanaAtual
+                : semanasDisponiveis[0] || semanaAtual
+          const daSemana = comprovantesDespesas.filter((c) => getWeekKey(c.data) === semanaAlvo)
+          if (!daSemana.length) {
+            alert(
+              (safeT as any)?.comprovantesFolhaSemanalSemDados ||
+                `Nenhum comprovante na semana ${semanaAlvo}. Registe despesas ou escolha outra semana no filtro.`
+            )
+            return
+          }
+          const totGeral = daSemana.reduce((s, c) => s + (Number(c.valorTotal) || 0), 0)
+          const totClientes = daSemana
+            .filter((c) => c.tipo === 'cliente')
+            .reduce((s, c) => s + (Number(c.valorTotal) || 0), 0)
+          const totNonato = daSemana
+            .filter((c) => c.tipo === 'pessoal')
+            .reduce((s, c) => s + (Number(c.valorTotal) || 0), 0)
+          const totPorCli = daSemana.reduce((acc, c) => {
+            const k = chaveGrupoComprovante(c)
+            acc[k] = (acc[k] || 0) + (Number(c.valorTotal) || 0)
+            return acc
+          }, {} as Record<string, number>)
+          const tr = safeT as Record<string, string | undefined>
+          const html = buildFolhaSemanalContadorHtml({
+            semana: semanaAlvo,
+            comprovantes: daSemana.map((c) => ({
+              id: c.id,
+              tipo: c.tipo,
+              cliente: c.cliente,
+              data: c.data,
+              mesCompetencia: mesCompetenciaKey(c),
+              valorTotal: c.valorTotal,
+              descricao: c.descricao,
+              imagemBase64: c.imagemBase64,
+            })),
+            labelNonato: labelGrupoNonato,
+            titulo: tr.comprovantesFolhaSemanalTitulo || 'FOLHA SEMANAL DE DESPESAS — CONTABILISTA',
+            labels: {
+              periodo: tr.comprovantesSemana || 'Semana',
+              totalGeral: tr.comprovantesTotalGeral || 'Total geral',
+              despesasClientes: tr.comprovantesFechamentoClientes || 'Despesas de clientes',
+              despesasNonato: tr.comprovantesFechamentoPessoais || 'Despesas da NONATO SERVICE',
+              dataRecibo: tr.comprovantesDataRecibo || 'Data do recibo',
+              mesArquivo: tr.comprovantesMesArquivo || 'Mês de arquivo',
+              cliente: tr.comprovantesCliente || 'Cliente',
+              valor: tr.comprovantesReciboRapidoValor?.replace(/\s*\(€\)\s*/i, '') || 'Valor',
+              descricao: tr.comprovantesDescricao || 'Descrição',
+              semImagem: tr.comprovantesFolhaSemanalSemImagem || 'Sem imagem anexada',
+              instrucoes:
+                tr.comprovantesFolhaSemanalInstrucoes ||
+                'Use Ctrl+P (Imprimir) → Guardar como PDF. Envie este ficheiro ao contabilista.',
+              resumoTitulo: tr.comprovantesFolhaSemanalResumo || 'Resumo da semana',
+              anexosTitulo: tr.comprovantesFolhaSemanalAnexos || 'Comprovantes (imagens)',
+              quantidade: tr.comprovantesFolhaSemanalQuantidade || 'Comprovantes',
+              tipo: tr.comprovantesTipoDespesa || 'Tipo',
+              reciboNum: tr.comprovantesFolhaSemanalRecibo || 'Recibo',
+            },
+            totalGeral: totGeral,
+            totalClientes: totClientes,
+            totalNonato: totNonato,
+            totalPorCliente: totPorCli,
+          })
+          if (!abrirFolhaSemanalContadorPdf(html)) {
+            alert(tr.comprovantesPermitaPopups || 'Permita pop-ups para abrir o PDF.')
+          }
+        }
         return (
           <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }}>
             <div style={{ marginBottom: '24px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
@@ -50477,6 +50559,18 @@ A1;Peça exemplo;10`}
                       reader.readAsDataURL(file)
                     })
                     reciboRapidoPendingFileRef.current = file
+                    const dupImg = encontrarDuplicadoImagemComprovante(imagemBase64, comprovantesDespesas)
+                    if (dupImg) {
+                      alert(
+                        mensagemDuplicadoComprovante(
+                          dupImg,
+                          safeT as Record<string, string | undefined>,
+                          (c) => chaveGrupoComprovante(c as ComprovanteDespesa)
+                        )
+                      )
+                      reciboRapidoPendingFileRef.current = null
+                      return
+                    }
                     setComprovanteReciboRapido({ step: 'escolher-tipo', imagemBase64 })
                   }}
                 />
@@ -50501,6 +50595,22 @@ A1;Peça exemplo;10`}
                 </button>
                 <button onClick={() => setShowEnvioModal(true)} style={{ padding: '10px 20px', background: 'rgba(0,200,100,0.2)', border: '1px solid #00c864', borderRadius: '8px', color: '#00e676', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   📤 {(safeT as any)?.comprovantesEnvioTitulo || 'Enviar por WhatsApp e Email'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGerarFolhaSemanalContador}
+                  title={(safeT as any)?.comprovantesFolhaSemanalContadorHint || ''}
+                  style={{
+                    padding: '10px 20px',
+                    background: 'rgba(251, 191, 36, 0.15)',
+                    border: '1px solid rgba(251, 191, 36, 0.65)',
+                    borderRadius: '8px',
+                    color: '#fde68a',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  📄 {(safeT as any)?.comprovantesFolhaSemanalContadorBtn || 'Folha semanal PDF (contador)'}
                 </button>
               </div>
             </div>
@@ -50908,17 +51018,38 @@ A1;Peça exemplo;10`}
                   />
                   <label style={{ display: 'block', color: '#00c853', fontSize: '12px', marginBottom: '6px' }}>
                     {(safeT as any)?.comprovantesHoraRecibo || 'Hora da despesa'}
+                    {formComp.tipo === 'cliente' && formComp.clientesSugeridos.length > 1 ? (
+                      <span style={{ color: '#fde68a', marginLeft: '6px' }}>*</span>
+                    ) : null}
                   </label>
                   <input
                     type="time"
                     value={formComp.horaUsada}
                     onChange={e => syncFormCompDataHora(formComp.data, e.target.value)}
-                    style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      marginBottom: '10px',
+                      background: '#3a3a3a',
+                      border:
+                        formComp.tipo === 'cliente' && formComp.clientesSugeridos.length > 1
+                          ? '2px solid rgba(251, 191, 36, 0.75)'
+                          : '1px solid rgba(0,200,83,0.3)',
+                      borderRadius: '6px',
+                      color: '#fff',
+                    }}
                   />
+                  {formComp.tipo === 'cliente' && formComp.clientesSugeridos.length > 1 ? (
+                    <p style={{ margin: '0 0 12px', fontSize: '12px', color: '#fde68a', lineHeight: 1.4 }}>
+                      {(safeT as any)?.comprovantesVariosClientesAjusteHora ||
+                        'Vários clientes neste dia. Ajuste a hora do recibo para associar ao cliente certo.'}
+                    </p>
+                  ) : (
                   <p style={{ margin: '0 0 12px', fontSize: '11px', color: '#888', lineHeight: 1.4 }}>
                     {(safeT as any)?.comprovantesManualHoraHint ||
                       'Data e hora definem o cliente (agenda/relatório). Ajuste se o almoço ou a despesa foi noutro momento.'}
                   </p>
+                  )}
                   <label style={{ display: 'block', color: '#00c853', fontSize: '12px', marginBottom: '6px' }}>
                     {(safeT as any)?.comprovantesMesArquivo || 'Mês de arquivo (IRS / filtro por mês)'}
                   </label>
@@ -51201,6 +51332,10 @@ A1;Peça exemplo;10`}
                       />
                       <label style={{ display: 'block', color: '#93c5fd', fontSize: '12px', marginBottom: '4px' }}>
                         {(safeT as any)?.comprovantesHoraRecibo || 'Hora do recibo / foto'}
+                        {comprovanteReciboRapido.tipoDestino === 'cliente' &&
+                        comprovanteReciboRapido.clientesSugeridos.length > 1 ? (
+                          <span style={{ color: '#fde68a', marginLeft: '6px' }}>*</span>
+                        ) : null}
                       </label>
                       <input
                         type="time"
@@ -51217,9 +51352,38 @@ A1;Peça exemplo;10`}
                             return { ...prev, ...estado, horaUsada: novaHora, horaOrigem: 'recibo' as const }
                           })
                         }}
-                        style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#111', border: '1px solid rgba(147,197,253,0.35)', borderRadius: '8px', color: '#fff' }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          marginBottom: '10px',
+                          background: '#111',
+                          border:
+                            comprovanteReciboRapido.tipoDestino === 'cliente' &&
+                            comprovanteReciboRapido.clientesSugeridos.length > 1
+                              ? '2px solid rgba(251, 191, 36, 0.75)'
+                              : '1px solid rgba(147,197,253,0.35)',
+                          borderRadius: '8px',
+                          color: '#fff',
+                        }}
                       />
-                      {comprovanteReciboRapido.horaUsada ? (
+                      {comprovanteReciboRapido.tipoDestino === 'cliente' &&
+                      comprovanteReciboRapido.clientesSugeridos.length > 1 ? (
+                        <p
+                          style={{
+                            fontSize: '12px',
+                            color: '#fde68a',
+                            margin: '0 0 12px',
+                            lineHeight: 1.45,
+                            padding: '8px 10px',
+                            background: 'rgba(251, 191, 36, 0.08)',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(251, 191, 36, 0.35)',
+                          }}
+                        >
+                          {(safeT as any)?.comprovantesVariosClientesAjusteHora ||
+                            'Vários clientes neste dia. Ajuste a hora do recibo para o sistema associar ao cliente certo (ex.: almoço às 13:00 com Cliente A, combustível às 18:00 com Cliente B).'}
+                        </p>
+                      ) : comprovanteReciboRapido.horaUsada ? (
                         <p style={{ fontSize: '11px', color: '#78716c', margin: '0 0 12px', lineHeight: 1.45 }}>
                           {comprovanteReciboRapido.horaOrigem === 'recibo'
                             ? (safeT as any)?.comprovantesHoraDoRecibo ||
@@ -51480,8 +51644,22 @@ A1;Peça exemplo;10`}
                             if (p.step !== 'preview') return
                             if (p.tipoDestino === 'cliente' && p.tipoSelecionado === 'cliente' && !p.clienteSelecionado.trim()) {
                               alert(
-                                (safeT as any)?.comprovantesSelecioneClienteRecibo ||
-                                  'Selecione o cliente antes de guardar.'
+                                p.clientesSugeridos.length > 1
+                                  ? (safeT as any)?.comprovantesSelecioneClienteOuHora ||
+                                      'Vários clientes neste dia. Ajuste a hora do recibo ou escolha o cliente manualmente.'
+                                  : (safeT as any)?.comprovantesSelecioneClienteRecibo ||
+                                      'Selecione o cliente antes de guardar.'
+                              )
+                              return
+                            }
+                            if (
+                              p.tipoDestino === 'cliente' &&
+                              p.clientesSugeridos.length > 1 &&
+                              !String(p.horaUsada || '').trim()
+                            ) {
+                              alert(
+                                (safeT as any)?.comprovantesHoraObrigatoriaVariosClientes ||
+                                  'Indique a hora do recibo para separar despesas quando há mais do que um cliente no mesmo dia.'
                               )
                               return
                             }
@@ -51494,7 +51672,7 @@ A1;Peça exemplo;10`}
                             const isCliente = p.tipoSelecionado === 'cliente'
                             const nomeCliente = isCliente ? p.clienteSelecionado.trim() : ''
                             if (
-                              !confirmarSeNaoDuplicadoComprovante({
+                              bloquearSeDuplicadoComprovante({
                                 imagemBase64: p.imagemBase64,
                                 data: dataNorm,
                                 valorTotal: p.valorUnitario,

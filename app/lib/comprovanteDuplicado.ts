@@ -88,7 +88,7 @@ export function mensagemDuplicadoComprovante(
   if (dup.grau === 'imagem') {
     return (
       t.comprovantesDuplicadoImagem ||
-      `Esta foto já foi registada (${cliente}, ${data}, ${valor} €). Deseja registar mesmo assim?`
+      `Esta foto já foi registada (${cliente}, ${data}, ${valor} €). Não é possível registar o mesmo recibo duas vezes.`
     )
       .replace('{cliente}', cliente)
       .replace('{data}', data)
@@ -96,9 +96,23 @@ export function mensagemDuplicadoComprovante(
   }
   return (
     t.comprovantesDuplicadoDados ||
-    `Já existe um comprovante igual (${cliente}, ${data}, ${valor} €). Deseja registar mesmo assim?`
+    `Já existe um comprovante igual (${cliente}, ${data}, ${valor} €). Não é possível repetir o mesmo registo.`
   )
     .replace('{cliente}', cliente)
     .replace('{data}', data)
     .replace('{valor}', valor)
+}
+
+/** Devolve duplicado se a mesma imagem já foi registada (antes do OCR). */
+export function encontrarDuplicadoImagemComprovante(
+  imagemBase64: string,
+  existentes: ComprovanteDespesaRef[],
+  opts?: { excluirId?: string }
+): DuplicadoComprovanteResultado {
+  const hash = hashImagemComprovante(imagemBase64)
+  return encontrarComprovanteDuplicado(
+    { imagemHash: hash, data: '', valorTotal: 0, tipo: 'pessoal', cliente: '' },
+    existentes,
+    opts
+  )
 }
