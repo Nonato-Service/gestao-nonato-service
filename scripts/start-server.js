@@ -24,7 +24,36 @@ const dataDir =
 
 console.log('[start-server] NODE_ENV:', process.env.NODE_ENV || 'production');
 console.log('[start-server] PORT:', port);
-console.log('[start-server] NODE_OPTIONS:', process.env.NODE_OPTIONS || '(default)');
+
+/** Railway costuma ter NODE_OPTIONS=384 (build) — insuficiente em runtime ao carregar ~94 JSON. */
+function resolveRuntimeNodeOptions(raw) {
+  const MIN_RUNTIME_MB = 512;
+  const TARGET_RUNTIME_MB = 768;
+  const source = (raw || '').trim();
+  const match = source.match(/--max-old-space-size=(\d+)/);
+  const currentMb = match ? parseInt(match[1], 10) : 0;
+
+  if (currentMb > 0 && currentMb < MIN_RUNTIME_MB) {
+    return source.replace(/--max-old-space-size=\d+/, `--max-old-space-size=${TARGET_RUNTIME_MB}`);
+  }
+  if (!currentMb) {
+    return source
+      ? `${source} --max-old-space-size=${TARGET_RUNTIME_MB}`
+      : `--max-old-space-size=${TARGET_RUNTIME_MB}`;
+  }
+  return source;
+}
+
+const runtimeNodeOptions = resolveRuntimeNodeOptions(process.env.NODE_OPTIONS);
+if (runtimeNodeOptions !== (process.env.NODE_OPTIONS || '').trim()) {
+  console.log(
+    '[start-server] NODE_OPTIONS runtime:',
+    runtimeNodeOptions,
+    `(Railway/build: ${process.env.NODE_OPTIONS || '(default)'})`
+  );
+} else {
+  console.log('[start-server] NODE_OPTIONS:', runtimeNodeOptions || '(default)');
+}
 
 try {
   if (!fs.existsSync(dataDir)) {
@@ -55,6 +84,7 @@ if (useStandalone) {
 const childEnv = {
   ...process.env,
   NODE_ENV: process.env.NODE_ENV || 'production',
+  NODE_OPTIONS: runtimeNodeOptions,
   PORT: String(port),
   HOSTNAME: '0.0.0.0',
 };
