@@ -117,6 +117,39 @@ export function recuperarRelatoriosServicoPerdidos(
   return { relatorios, adicionadosDeClientes, clienteIdsReparados, alterou }
 }
 
+function relatorioCompletenessScore(r: RelatorioServicoMin): number {
+  const days = Array.isArray(r.diasTrabalho) ? r.diasTrabalho.length : 0
+  const idNum = parseInt(String(r.id ?? ''), 10)
+  const idScore = Number.isFinite(idNum) ? idNum : 0
+  return days * 1e15 + idScore
+}
+
+/** Funde servidor + local por `id` — nunca descarta relatórios só locais (evita sync apagar dados). */
+export function mergeRelatoriosServicoDeferServerLocal(
+  server: unknown,
+  local: unknown
+): RelatorioServicoMin[] {
+  const sArr = Array.isArray(server) ? (server as RelatorioServicoMin[]) : []
+  const lArr = Array.isArray(local) ? (local as RelatorioServicoMin[]) : []
+  const byId = new Map<string, RelatorioServicoMin>()
+  for (const r of sArr) {
+    if (r?.id) byId.set(String(r.id), r)
+  }
+  for (const r of lArr) {
+    if (!r?.id) continue
+    const id = String(r.id)
+    const existing = byId.get(id)
+    if (!existing) {
+      byId.set(id, r)
+      continue
+    }
+    if (relatorioCompletenessScore(r) >= relatorioCompletenessScore(existing)) {
+      byId.set(id, r)
+    }
+  }
+  return Array.from(byId.values())
+}
+
 /** Relatórios globais que não entraram em nenhuma pasta de cliente. */
 export function relatoriosServicoOrfaosNaBiblioteca(
   relatoriosServico: RelatorioServicoMin[],

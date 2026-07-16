@@ -153,6 +153,7 @@ import {
 import {
   resolverClienteIdRelatorioFlexivel,
   recuperarRelatoriosServicoPerdidos,
+  mergeRelatoriosServicoDeferServerLocal,
   relatoriosServicoOrfaosNaBiblioteca,
   agruparRelatoriosOrfaosPorNome,
   nomesClienteCorrespondem,
@@ -10146,6 +10147,33 @@ export default function Dashboard() {
             }
           }
         }
+        if (
+          key === 'nonato-relatorios-servico' &&
+          !preferServerOnlyAfterFullPullWipe &&
+          typeof window !== 'undefined'
+        ) {
+          const serverValue = serverData[key]
+          const localData = localStorage.getItem(key)
+          if (serverValue != null && Array.isArray(serverValue) && localData !== null && localData !== '') {
+            try {
+              const local = JSON.parse(localData)
+              if (Array.isArray(local)) {
+                const merged = mergeRelatoriosServicoDeferServerLocal(serverValue, local)
+                try {
+                  localStorage.setItem(key, JSON.stringify(merged))
+                } catch (e) {
+                  console.error('Erro ao gravar relatórios fundidos no localStorage:', e)
+                }
+                if (!deferServerMerge) {
+                  saveData(key, merged, false).catch(() => {})
+                }
+                return merged
+              }
+            } catch {
+              /* continuar com a lógica normal */
+            }
+          }
+        }
         // Verificar dados do servidor primeiro (com divergência multi-dispositivo: só ignorar servidor nesta chave se o local já tem conteúdo)
         if (shouldPreferServerForKey && serverData[key] !== undefined && serverData[key] !== null) {
           const serverValue = serverData[key]
@@ -18917,6 +18945,22 @@ export default function Dashboard() {
     if (equipamentosEdit.length === 0) {
       equipamentosEdit = [criarEquipamentoRelatorioVazio('cliente')]
     }
+    let diasTrabalhoEdit = sortDiasTrabalhoCronologicamente(
+      normalizarDiasTrabalhoParaPersist(r.diasTrabalho ? [...r.diasTrabalho] : [])
+    )
+    if (clienteResolvido) {
+      const { kmIda, kmRetorno } = getKmPadraoDoCliente(clienteResolvido)
+      if (kmIda || kmRetorno) {
+        diasTrabalhoEdit = diasTrabalhoEdit.map((dia) =>
+          atualizarCalculosDia({
+            ...dia,
+            kmIda: kmIda || dia.kmIda,
+            kmRetorno: kmRetorno || dia.kmRetorno,
+          })
+        )
+      }
+    }
+    const totaisKmEdit = calcularTotais(diasTrabalhoEdit)
     setRelatorioServicoForm({
       ...r,
       clienteId,
@@ -18929,9 +18973,8 @@ export default function Dashboard() {
       telefone: r.telefone || clienteResolvido?.telefones || '',
       ...sincronizarCamposLegadoEquipamentos(equipamentosEdit, equipamentos),
       equipamentoOrigem: r.equipamentoOrigem === 'armazem' ? 'armazem' : 'cliente',
-      diasTrabalho: sortDiasTrabalhoCronologicamente(
-        normalizarDiasTrabalhoParaPersist(r.diasTrabalho ? [...r.diasTrabalho] : [])
-      ),
+      diasTrabalho: diasTrabalhoEdit,
+      kmsPercorridos: totaisKmEdit.kmsPercorridos,
       pecasSubstituicao: r.pecasSubstituicao ? [...r.pecasSubstituicao] : [],
       pecasInstaladas: r.pecasInstaladas ? [...r.pecasInstaladas] : [],
       pecasInstaladasSubstituidas: r.pecasInstaladasSubstituidas ?? (r.pecasInstaladas?.length ?? 0) > 0,
@@ -18940,15 +18983,13 @@ export default function Dashboard() {
       const { kmIda, kmRetorno } = getKmPadraoDoCliente(clienteResolvido)
       if (kmIda || kmRetorno) {
         setNovoDiaTrabalho((prev) => {
-          const next = {
+          const next = atualizarCalculosDia({
             ...prev,
             data: prev.data || new Date().toISOString().split('T')[0],
-            kmIda: isKmFieldEmpty(prev.kmIda) && kmIda ? kmIda : prev.kmIda,
-            kmRetorno: isKmFieldEmpty(prev.kmRetorno) && kmRetorno ? kmRetorno : prev.kmRetorno,
-          }
-          const kmIdaNum = parseFloat(next.kmIda) || 0
-          const kmRetornoNum = parseFloat(next.kmRetorno) || 0
-          return { ...next, kmTotal: String(kmIdaNum + kmRetornoNum) }
+            kmIda: kmIda || prev.kmIda,
+            kmRetorno: kmRetorno || prev.kmRetorno,
+          })
+          return next
         })
       }
     }
@@ -22976,15 +23017,15 @@ export default function Dashboard() {
   }
 
   const applyKmClienteAoRelatorio = useCallback(
-    (cliente?: Cliente | null) => {
+    (cliente?: Cliente | null, forcar = false) => {
       const { kmIda, kmRetorno } = getKmPadraoDoCliente(cliente)
       if (!kmIda && !kmRetorno) return
 
       setNovoDiaTrabalho((prev) =>
         atualizarCalculosDia({
           ...prev,
-          kmIda: isKmFieldEmpty(prev.kmIda) && kmIda ? kmIda : prev.kmIda,
-          kmRetorno: isKmFieldEmpty(prev.kmRetorno) && kmRetorno ? kmRetorno : prev.kmRetorno,
+          kmIda: (forcar || isKmFieldEmpty(prev.kmIda)) && kmIda ? kmIda : prev.kmIda,
+          kmRetorno: (forcar || isKmFieldEmpty(prev.kmRetorno)) && kmRetorno ? kmRetorno : prev.kmRetorno,
         })
       )
 
@@ -22993,11 +23034,11 @@ export default function Dashboard() {
         const dias = prev.diasTrabalho.map((dia) => {
           let next = dia
           let diaChanged = false
-          if (kmIda && isKmFieldEmpty(dia.kmIda)) {
+          if (kmIda && (forcar || isKmFieldEmpty(dia.kmIda))) {
             next = { ...next, kmIda }
             diaChanged = true
           }
-          if (kmRetorno && isKmFieldEmpty(dia.kmRetorno)) {
+          if (kmRetorno && (forcar || isKmFieldEmpty(dia.kmRetorno))) {
             next = { ...next, kmRetorno }
             diaChanged = true
           }
@@ -23021,13 +23062,16 @@ export default function Dashboard() {
       clientes.find((c) => c.id === relatorioServicoForm.clienteId) ||
       findClienteByRelatorio(clientes, relatorioServicoForm)
     if (!cliente) return
-    applyKmClienteAoRelatorio(cliente)
+    applyKmClienteAoRelatorio(cliente, Boolean(editingRelatorioServico))
   }, [
     showRelatorioServicoForm,
+    editingRelatorioServico?.id,
     relatorioServicoForm.clienteId,
     relatorioServicoForm.cliente,
     clientes,
     applyKmClienteAoRelatorio,
+    clientes.find((c) => c.id === relatorioServicoForm.clienteId)?.kmIdaPadrao,
+    clientes.find((c) => c.id === relatorioServicoForm.clienteId)?.kmRetornoPadrao,
   ])
 
   const alertarEquipamentosVendidosArmazem = (
@@ -23306,7 +23350,7 @@ export default function Dashboard() {
     }
 
     setRelatoriosServico(updatedRelatorios)
-    saveData('nonato-relatorios-servico', updatedRelatorios)
+    void saveData('nonato-relatorios-servico', updatedRelatorios, true, true)
 
     // Biblioteca por cliente: indexa em cada equipamento do cliente (até 5)
     if (savedRelatorio.clienteId) {
