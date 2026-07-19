@@ -25,6 +25,7 @@ const DEFAULT_PAGE_SIZE = 25
 const MAX_PAGE_SIZE_FULL = 10
 
 const MAX_PAGE_SIZE_LITE = 500
+const MAX_PAGE_SIZE_IMAGES = 5
 
 
 
@@ -72,6 +73,88 @@ function pecaTemImagemGrande(p: PecaRecord): boolean {
 
 
 
+function isPlaceholderImagem(img: string): boolean {
+
+  return /default-product-image\.svg/i.test(img)
+
+}
+
+
+
+function pecaTemUrlHomag(p: PecaRecord): boolean {
+
+  const img = typeof p.imagem === 'string' ? p.imagem.trim() : ''
+
+  return img.length > 0 && /^https?:\/\//i.test(img) && !isPlaceholderImagem(img)
+
+}
+
+
+
+function pecaTemPlaceholder(p: PecaRecord): boolean {
+
+  const img = typeof p.imagem === 'string' ? p.imagem.trim() : ''
+
+  return isPlaceholderImagem(img)
+
+}
+
+
+
+function pecaSemImagem(p: PecaRecord): boolean {
+
+  const img = typeof p.imagem === 'string' ? p.imagem.trim() : ''
+
+  return !img
+
+}
+
+
+
+function computePecasImagemStats(pecas: PecaRecord[]) {
+
+  let totalBase64 = 0
+
+  let totalUrl = 0
+
+  let totalPlaceholder = 0
+
+  let totalSemImagem = 0
+
+  for (const p of pecas) {
+
+    if (pecaTemImagemGrande(p)) totalBase64++
+
+    else if (pecaTemUrlHomag(p)) totalUrl++
+
+    else if (pecaTemPlaceholder(p)) totalPlaceholder++
+
+    else if (pecaSemImagem(p)) totalSemImagem++
+
+  }
+
+  const comFotoReal = totalBase64 + totalUrl
+
+  return {
+
+    totalBase64,
+
+    totalUrl,
+
+    totalPlaceholder,
+
+    totalSemImagem,
+
+    totalFaltamFoto: pecas.length - comFotoReal,
+
+    comFotoReal,
+
+  }
+
+}
+
+
+
 function toLitePeca(p: PecaRecord): PecaRecord {
 
   const out = { ...p }
@@ -114,7 +197,7 @@ function parsePageParams(searchParams: URLSearchParams): {
 
   const limitRaw = Number.parseInt(searchParams.get('limit') || String(DEFAULT_PAGE_SIZE), 10) || DEFAULT_PAGE_SIZE
 
-  const maxLimit = imagesOnly ? 1 : lite ? MAX_PAGE_SIZE_LITE : MAX_PAGE_SIZE_FULL
+  const maxLimit = imagesOnly ? MAX_PAGE_SIZE_IMAGES : lite ? MAX_PAGE_SIZE_LITE : MAX_PAGE_SIZE_FULL
 
   const limit = Math.min(maxLimit, Math.max(1, limitRaw))
 
@@ -191,6 +274,8 @@ async function handleRepairRequest(request: NextRequest) {
 
   const pecasComImagem = pecas.filter(pecaTemImagemGrande)
 
+  const imagemStats = computePecasImagemStats(pecas)
+
 
 
   if (metaOnly) {
@@ -205,11 +290,23 @@ async function handleRepairRequest(request: NextRequest) {
 
         totalImages: pecasComImagem.length,
 
+        totalBase64: imagemStats.totalBase64,
+
+        totalUrl: imagemStats.totalUrl,
+
+        totalPlaceholder: imagemStats.totalPlaceholder,
+
+        totalSemImagem: imagemStats.totalSemImagem,
+
+        totalFaltamFoto: imagemStats.totalFaltamFoto,
+
+        comFotoReal: imagemStats.comFotoReal,
+
         pageSize: limit,
 
         lite,
 
-        message: `Catálogo no servidor: ${pecas.length} peça(s), ${pecasComImagem.length} com foto.`,
+        message: `Catálogo no servidor: ${pecas.length} peça(s), ${imagemStats.comFotoReal} com foto (${pecasComImagem.length} guardadas em base64). Faltam ${imagemStats.totalFaltamFoto}.`,
 
       },
 

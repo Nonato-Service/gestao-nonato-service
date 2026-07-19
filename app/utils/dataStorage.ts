@@ -912,12 +912,13 @@ export async function hydratePecasBibliotecaImagensFromServer(
 
   let offset = 0
   let loaded = 0
+  const batchLimit = 5
   while (offset < totalImages) {
     const res = await dataApiFetch(
-      `${API_BASE}/repair-pecas-biblioteca?images=1&offset=${offset}&limit=1`,
+      `${API_BASE}/repair-pecas-biblioteca?images=1&offset=${offset}&limit=${batchLimit}`,
       {
         method: 'GET',
-        signal: createTimeoutSignal(120_000),
+        signal: createTimeoutSignal(180_000),
       }
     )
     if (res.status === 401) throw new Error('auth_required')
@@ -957,7 +958,18 @@ export async function hydratePecasBibliotecaImagensFromServer(
     if (!json.hasMore) break
   }
 
-  return Array.from(byId.values())
+  const finalSnapshot = Array.from(byId.values())
+  try {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('nonato-pecas-imagens-hidratadas', { detail: { pecas: finalSnapshot } })
+      )
+    }
+  } catch {
+    /* ignorar */
+  }
+
+  return finalSnapshot
 }
 
 export async function fetchPecasBibliotecaLiteFromServer(
@@ -974,6 +986,12 @@ export async function fetchPecasBibliotecaLiteFromServer(
 export type PecasBibliotecaServerMeta = {
   total: number
   totalImages: number
+  totalBase64?: number
+  totalUrl?: number
+  totalPlaceholder?: number
+  totalSemImagem?: number
+  totalFaltamFoto?: number
+  comFotoReal?: number
   message?: string
 }
 
@@ -988,6 +1006,12 @@ export async function fetchPecasBibliotecaServerMeta(): Promise<PecasBibliotecaS
     const meta = (await metaRes.json()) as {
       total?: number
       totalImages?: number
+      totalBase64?: number
+      totalUrl?: number
+      totalPlaceholder?: number
+      totalSemImagem?: number
+      totalFaltamFoto?: number
+      comFotoReal?: number
       message?: string
       error?: string
     }
@@ -996,6 +1020,12 @@ export async function fetchPecasBibliotecaServerMeta(): Promise<PecasBibliotecaS
     return {
       total: meta.total,
       totalImages: typeof meta.totalImages === 'number' ? meta.totalImages : 0,
+      totalBase64: typeof meta.totalBase64 === 'number' ? meta.totalBase64 : undefined,
+      totalUrl: typeof meta.totalUrl === 'number' ? meta.totalUrl : undefined,
+      totalPlaceholder: typeof meta.totalPlaceholder === 'number' ? meta.totalPlaceholder : undefined,
+      totalSemImagem: typeof meta.totalSemImagem === 'number' ? meta.totalSemImagem : undefined,
+      totalFaltamFoto: typeof meta.totalFaltamFoto === 'number' ? meta.totalFaltamFoto : undefined,
+      comFotoReal: typeof meta.comFotoReal === 'number' ? meta.comFotoReal : undefined,
       message: typeof meta.message === 'string' ? meta.message : undefined,
     }
   } catch {

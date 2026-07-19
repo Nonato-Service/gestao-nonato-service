@@ -52,6 +52,11 @@ import { mergeNonatoClientesDeferServerLocal } from './lib/clienteMergeUtils'
 import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer } from './lib/mergePecasBiblioteca'
 import { mergeHomagExportIntoBiblioteca, parseHomagExportJson } from './lib/mergeHomagExport'
 import {
+  calcularPecasBibliotecaImagemStats,
+  pecaBibliotecaTemImagemPropria,
+  resolvePecaBibliotecaImagemSrcForDisplay,
+} from './lib/pecaBibliotecaImagemStats'
+import {
   BIBLIOTECA_AVISO_POLL_MS,
   formatBibliotecaNovidadesMsg,
   gravarUltimoServidorTotalAvisado,
@@ -467,12 +472,8 @@ function normalizePdfModeloPorRelatorioMap(raw: unknown): Record<string, string>
   return out
 }
 
-function pecaBibliotecaTemImagemPropria(imagem: string | undefined | null): boolean {
-  return Boolean(imagem && String(imagem).trim() !== '')
-}
-
 function pecaBibliotecaSrcImagemDisplay(imagem: string | undefined | null): string {
-  return pecaBibliotecaTemImagemPropria(imagem) ? String(imagem).trim() : PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC
+  return resolvePecaBibliotecaImagemSrcForDisplay(imagem, PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC)
 }
 
 type BuscaBibliotecaModo = 'codigo' | 'nome'
@@ -2131,10 +2132,7 @@ function ehImportacaoPendenteStrict(peca: PecaBiblioteca): boolean {
 
 function sanitizarPecaBibliotecaImportacaoFlag(peca: PecaBiblioteca): PecaBiblioteca {
   const img = typeof peca.imagem === 'string' ? peca.imagem.trim() : ''
-  const imagem =
-    img === PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC
-      ? ''
-      : peca.imagem
+  const imagem = img === PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC ? '' : peca.imagem
   return { ...peca, imagem, importacaoPendente: ehImportacaoPendenteStrict(peca) }
 }
 
@@ -7647,6 +7645,12 @@ export default function Dashboard() {
   const [bibliotecaServidorMeta, setBibliotecaServidorMeta] = useState<{
     total: number
     totalImages: number
+    totalBase64?: number
+    totalUrl?: number
+    totalPlaceholder?: number
+    totalSemImagem?: number
+    totalFaltamFoto?: number
+    comFotoReal?: number
   } | null>(null)
   const [bibliotecaServidorMetaLoading, setBibliotecaServidorMetaLoading] = useState(false)
   const DEMO_MODULE_CATALOG = useMemo(
@@ -26973,7 +26977,16 @@ export default function Dashboard() {
     try {
       const meta = await fetchPecasBibliotecaServerMeta()
       if (meta) {
-        setBibliotecaServidorMeta({ total: meta.total, totalImages: meta.totalImages })
+        setBibliotecaServidorMeta({
+          total: meta.total,
+          totalImages: meta.totalImages,
+          totalBase64: meta.totalBase64,
+          totalUrl: meta.totalUrl,
+          totalPlaceholder: meta.totalPlaceholder,
+          totalSemImagem: meta.totalSemImagem,
+          totalFaltamFoto: meta.totalFaltamFoto,
+          comFotoReal: meta.comFotoReal,
+        })
       } else {
         setBibliotecaServidorMeta(null)
       }
@@ -27234,6 +27247,66 @@ export default function Dashboard() {
     [pecasBiblioteca]
   )
 
+  const pecasBibliotecaImagemStats = useMemo(
+    () => calcularPecasBibliotecaImagemStats(pecasCatalogoBiblioteca),
+    [pecasCatalogoBiblioteca]
+  )
+
+  const handleCompletarFotosBibliotecaDoServidor = useCallback(async () => {
+    if (pecasReporManualLockRef.current || pecasBibliotecaReparoLoading) return
+    if (pecasBiblioteca.length < 1) {
+      alert('Carregue primeiro o catálogo de peças (botão «Actualizar biblioteca do servidor»).')
+      return
+    }
+    const statsAntes = pecasBibliotecaImagemStats
+    if (statsAntes.pendenteServidor < 1 && statsAntes.faltam > 0) {
+      const faltamServidor = bibliotecaServidorMeta?.totalFaltamFoto
+      const msgServidor =
+        typeof faltamServidor === 'number' && faltamServidor > statsAntes.faltam
+          ? `\n\nNo servidor Railway também faltam cerca de ${faltamServidor.toLocaleString('pt-PT')} foto(s) guardadas.\nPara encher a nuvem, no PC execute: PREENCHER-FOTOS-HOMAG.bat`
+          : ''
+      const ok = window.confirm(
+        `Neste browser já tem ${statsAntes.comFotoReal.toLocaleString('pt-PT')} de ${statsAntes.total.toLocaleString('pt-PT')} peças com foto.\n\nFaltam ${statsAntes.faltam.toLocaleString('pt-PT')} — a maioria ainda não está guardada no servidor (só no site HOMAG).${msgServidor}\n\nDeseja mesmo assim transferir as ${bibliotecaServidorMeta?.totalImages ?? statsAntes.pendenteServidor} foto(s) que o Railway já tem?`
+      )
+      if (!ok) return
+    }
+    pecasReporManualLockRef.current = true
+    setPecasBibliotecaReparoLoading(true)
+    setPecasBibliotecaReparoProgress('A preparar download de fotos…')
+    try {
+      const comFotos = await hydratePecasBibliotecaImagensFromServer(pecasBiblioteca as unknown[], (p) => {
+        if (p.phase === 'images') {
+          setPecasBibliotecaReparoProgress(`Fotos: ${p.loaded.toLocaleString('pt-PT')} / ${p.total.toLocaleString('pt-PT')}`)
+        }
+      })
+      const raw = (comFotos as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+      const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
+      setPecasBiblioteca(lista)
+      await savePecasBibliotecaLocally(lista as unknown[])
+      void refreshBibliotecaServidorMeta()
+      const statsDepois = calcularPecasBibliotecaImagemStats(lista)
+      alert(
+        `Transferência concluída.\n\nCom foto neste browser: ${statsDepois.comFotoReal.toLocaleString('pt-PT')} de ${statsDepois.total.toLocaleString('pt-PT')}\nAinda faltam: ${statsDepois.faltam.toLocaleString('pt-PT')}\n\nPara as restantes, no PC execute PREENCHER-FOTOS-HOMAG.bat (descarrega da loja HOMAG para o Railway).`
+      )
+    } catch (e) {
+      console.error('[completar fotos biblioteca]', e)
+      alert(
+        `Erro ao transferir fotos: ${e instanceof Error ? e.message : String(e)}\n\nVerifique ligação e login.`
+      )
+    } finally {
+      pecasReporManualLockRef.current = false
+      setPecasBibliotecaReparoLoading(false)
+      setPecasBibliotecaReparoProgress('')
+    }
+  }, [
+    bibliotecaServidorMeta,
+    categoriasPecas,
+    pecasBiblioteca,
+    pecasBibliotecaImagemStats,
+    pecasBibliotecaReparoLoading,
+    refreshBibliotecaServidorMeta,
+  ])
+
   const pecasCatalogoFiltradasGestao = useMemo(() => {
     const isFiltroSoSemCategoria = filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA
     const q = buscaBibliotecaDeferred.trim().toLowerCase()
@@ -27321,7 +27394,16 @@ export default function Dashboard() {
         const meta = await fetchPecasBibliotecaServerMeta()
         if (cancelled || !meta) return
 
-        setBibliotecaServidorMeta({ total: meta.total, totalImages: meta.totalImages })
+        setBibliotecaServidorMeta({
+          total: meta.total,
+          totalImages: meta.totalImages,
+          totalBase64: meta.totalBase64,
+          totalUrl: meta.totalUrl,
+          totalPlaceholder: meta.totalPlaceholder,
+          totalSemImagem: meta.totalSemImagem,
+          totalFaltamFoto: meta.totalFaltamFoto,
+          comFotoReal: meta.comFotoReal,
+        })
 
         const local = pecasCatalogoBibliotecaCountRef.current
         const novidades = meta.total > local ? meta.total - local : 0
@@ -39717,15 +39799,24 @@ export default function Dashboard() {
                     {(safeT as any)?.bibliotecaSyncVerificando || 'A verificar servidor…'}
                   </p>
                 ) : bibliotecaServidorMeta ? (
-                  <p style={{ fontSize: 11, margin: 0, lineHeight: 1.55, color: 'rgba(220, 245, 230, 0.95)' }}>
-                    {String(
-                      (safeT as any)?.bibliotecaSyncLocalServidor ||
-                        'Neste browser: {local} peças · Servidor Railway: {servidor} peças ({fotos} com foto)'
-                    )
-                      .replace('{local}', String(pecasCatalogoBiblioteca.length))
-                      .replace('{servidor}', String(bibliotecaServidorMeta.total))
-                      .replace('{fotos}', String(bibliotecaServidorMeta.totalImages))}
-                  </p>
+                  <>
+                    <p style={{ fontSize: 11, margin: 0, lineHeight: 1.55, color: 'rgba(220, 245, 230, 0.95)' }}>
+                      {String(
+                        (safeT as any)?.bibliotecaSyncLocalServidor ||
+                          'Neste browser: {local} peças · Servidor Railway: {servidor} peças ({fotos} com foto)'
+                      )
+                        .replace('{local}', String(pecasCatalogoBiblioteca.length))
+                        .replace('{servidor}', String(bibliotecaServidorMeta.total))
+                        .replace('{fotos}', String(bibliotecaServidorMeta.comFotoReal ?? bibliotecaServidorMeta.totalImages))}
+                    </p>
+                    {typeof bibliotecaServidorMeta.totalFaltamFoto === 'number' && bibliotecaServidorMeta.totalFaltamFoto > 0 ? (
+                      <p style={{ fontSize: 11, margin: '6px 0 0', lineHeight: 1.5, color: '#ffd89a' }}>
+                        Servidor: faltam {bibliotecaServidorMeta.totalFaltamFoto.toLocaleString('pt-PT')} foto(s) ·{' '}
+                        {bibliotecaServidorMeta.totalBase64?.toLocaleString('pt-PT') ?? bibliotecaServidorMeta.totalImages.toLocaleString('pt-PT')}{' '}
+                        em base64 · {bibliotecaServidorMeta.totalUrl?.toLocaleString('pt-PT') ?? '0'} URL HOMAG
+                      </p>
+                    ) : null}
+                  </>
                 ) : (
                   <p style={{ fontSize: 11, margin: 0, opacity: 0.82, color: '#d0d0d0' }}>
                     {(safeT as any)?.bibliotecaSyncOffline || 'Servidor indisponível — verifique ligação ou login.'}
@@ -39767,6 +39858,71 @@ export default function Dashboard() {
                     {(safeT as any)?.bibliotecaSyncOk || '✓ Catálogo sincronizado com o servidor.'}
                   </p>
                 ) : null}
+              </div>
+              <div
+                style={{
+                  marginBottom: 14,
+                  maxWidth: 620,
+                  padding: '14px 16px',
+                  borderRadius: '10px',
+                  border: pecasBibliotecaImagemStats.faltam > 0 ? '1px solid rgba(255, 180, 80, 0.45)' : '1px solid rgba(0, 200, 120, 0.35)',
+                  backgroundColor: pecasBibliotecaImagemStats.faltam > 0 ? 'rgba(80, 45, 0, 0.22)' : 'rgba(0, 40, 20, 0.25)',
+                }}
+              >
+                <div style={{ fontSize: 13, fontWeight: 700, color: pecasBibliotecaImagemStats.faltam > 0 ? '#ffd080' : '#9dffd0', marginBottom: 8 }}>
+                  📷 Fotos da biblioteca
+                </div>
+                <p style={{ fontSize: 12, margin: '0 0 10px', lineHeight: 1.55, color: 'rgba(240, 245, 250, 0.95)' }}>
+                  <strong style={{ color: '#fff' }}>
+                    {pecasBibliotecaImagemStats.comFotoReal.toLocaleString('pt-PT')} de {pecasBibliotecaImagemStats.total.toLocaleString('pt-PT')}
+                  </strong>{' '}
+                  peças com foto ·{' '}
+                  <strong style={{ color: pecasBibliotecaImagemStats.faltam > 0 ? '#ffb870' : '#8ef0b0' }}>
+                    faltam {pecasBibliotecaImagemStats.faltam.toLocaleString('pt-PT')}
+                  </strong>
+                </p>
+                <p style={{ fontSize: 10, margin: '0 0 12px', lineHeight: 1.5, opacity: 0.88, color: '#d8e8dc' }}>
+                  {pecasBibliotecaImagemStats.comBase64.toLocaleString('pt-PT')} guardadas ·{' '}
+                  {pecasBibliotecaImagemStats.comUrlHomag.toLocaleString('pt-PT')} URL HOMAG ·{' '}
+                  {pecasBibliotecaImagemStats.placeholder.toLocaleString('pt-PT')} placeholder ·{' '}
+                  {pecasBibliotecaImagemStats.semImagem.toLocaleString('pt-PT')} sem imagem
+                  {pecasBibliotecaImagemStats.pendenteServidor > 0
+                    ? ` · ${pecasBibliotecaImagemStats.pendenteServidor.toLocaleString('pt-PT')} a transferir do servidor`
+                    : ''}
+                </p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="biblioteca-btn--green"
+                    disabled={pecasBibliotecaReparoLoading}
+                    onClick={() => void handleCompletarFotosBibliotecaDoServidor()}
+                    style={{ padding: '8px 14px', fontSize: 12 }}
+                  >
+                    {pecasBibliotecaReparoLoading && pecasBibliotecaReparoProgress.startsWith('Fotos:')
+                      ? pecasBibliotecaReparoProgress
+                      : '📥 Baixar fotos do servidor'}
+                  </button>
+                  {pecasBibliotecaImagemStats.faltam > 0 ? (
+                    <button
+                      type="button"
+                      className="biblioteca-btn--ghost"
+                      onClick={() => setAbaBibliotecaPecas('importacao')}
+                      style={{ padding: '8px 14px', fontSize: 12 }}
+                    >
+                      HOMAG → Importação
+                    </button>
+                  ) : null}
+                </div>
+                {pecasBibliotecaImagemStats.faltam > 0 ? (
+                  <p style={{ fontSize: 10, margin: '10px 0 0', lineHeight: 1.5, color: '#ffc896' }}>
+                    Para encher <strong>todas</strong> as fotos em falta no Railway: no PC abra{' '}
+                    <code style={{ fontSize: 10 }}>PREENCHER-FOTOS-HOMAG.bat</code> (pasta do projeto). Depois use «Baixar fotos do servidor» aqui.
+                  </p>
+                ) : (
+                  <p style={{ fontSize: 10, margin: '10px 0 0', lineHeight: 1.5, color: '#8ef0b0' }}>
+                    ✓ Todas as peças do catálogo têm foto visível neste browser.
+                  </p>
+                )}
               </div>
             <div className="biblioteca-pecas-hub__kpi-grid">
               <div
@@ -39824,6 +39980,44 @@ export default function Dashboard() {
                 <div style={{ textAlign: 'left' }}>
                   <div className="biblioteca-pecas-hub__kpi-label">{safeT?.quantidadeSubcategorias || 'Subcategorias'}</div>
                   <div className="biblioteca-pecas-hub__kpi-value">{subcategoriasPecas.length}</div>
+                </div>
+              </div>
+              <div
+                className="biblioteca-pecas-hub__kpi"
+                style={{
+                ...glassCardStyle(ACCENT_GREEN, { padding: '12px 14px', radius: '10px', borderAlpha: 0.2 }),
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                justifyContent: 'center'
+              }}
+              onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
+              onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
+              >
+                <span style={{ fontSize: '18px', opacity: 0.9 }}>📷</span>
+                <div style={{ textAlign: 'left' }}>
+                  <div className="biblioteca-pecas-hub__kpi-label">Com foto</div>
+                  <div className="biblioteca-pecas-hub__kpi-value">{pecasBibliotecaImagemStats.comFotoReal.toLocaleString('pt-PT')}</div>
+                </div>
+              </div>
+              <div
+                className="biblioteca-pecas-hub__kpi"
+                style={{
+                ...glassCardStyle(pecasBibliotecaImagemStats.faltam > 0 ? '#ffb040' : ACCENT_GREEN, { padding: '12px 14px', radius: '10px', borderAlpha: 0.2 }),
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                justifyContent: 'center'
+              }}
+              onMouseEnter={(e) => glassCardHover(e.currentTarget, pecasBibliotecaImagemStats.faltam > 0 ? '#ffb040' : ACCENT_GREEN, true)}
+              onMouseLeave={(e) => glassCardHover(e.currentTarget, pecasBibliotecaImagemStats.faltam > 0 ? '#ffb040' : ACCENT_GREEN, false)}
+              >
+                <span style={{ fontSize: '18px', opacity: 0.9 }}>{pecasBibliotecaImagemStats.faltam > 0 ? '⚠️' : '✓'}</span>
+                <div style={{ textAlign: 'left' }}>
+                  <div className="biblioteca-pecas-hub__kpi-label">Faltam foto</div>
+                  <div className="biblioteca-pecas-hub__kpi-value">{pecasBibliotecaImagemStats.faltam.toLocaleString('pt-PT')}</div>
                 </div>
               </div>
             </div>
@@ -40909,6 +41103,58 @@ export default function Dashboard() {
                       'Vista só por categoria (consulta). Para alterar nomes, preços, classificar em lote ou excluir, abra «Editar biblioteca».'}
                   </p>
                 )}
+                <div
+                  style={{
+                    margin: '0 0 16px',
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border:
+                      pecasBibliotecaImagemStats.faltam > 0
+                        ? '1px solid rgba(255, 180, 80, 0.5)'
+                        : '1px solid rgba(0, 200, 120, 0.35)',
+                    backgroundColor:
+                      pecasBibliotecaImagemStats.faltam > 0 ? 'rgba(60, 35, 0, 0.35)' : 'rgba(0, 35, 18, 0.35)',
+                  }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 6 }}>
+                    📷 Fotos: {pecasBibliotecaImagemStats.comFotoReal.toLocaleString('pt-PT')} de{' '}
+                    {pecasBibliotecaImagemStats.total.toLocaleString('pt-PT')} · faltam{' '}
+                    <span style={{ color: pecasBibliotecaImagemStats.faltam > 0 ? '#ffb870' : '#8ef0b0' }}>
+                      {pecasBibliotecaImagemStats.faltam.toLocaleString('pt-PT')}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 11, margin: '0 0 10px', lineHeight: 1.5, opacity: 0.9, color: '#e8f5ec' }}>
+                    {pecasBibliotecaImagemStats.pendenteServidor > 0
+                      ? `${pecasBibliotecaImagemStats.pendenteServidor.toLocaleString('pt-PT')} foto(s) prontas no servidor para transferir.`
+                      : pecasBibliotecaImagemStats.faltam > 0
+                        ? 'Milhares de fotos ainda só existem na loja HOMAG — use PREENCHER-FOTOS-HOMAG.bat no PC.'
+                        : 'Catálogo completo com fotos neste browser.'}
+                  </p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      className="biblioteca-btn--green"
+                      disabled={pecasBibliotecaReparoLoading}
+                      onClick={() => void handleReporPecasBibliotecaDoServidor()}
+                      style={{ padding: '6px 12px', fontSize: 12 }}
+                    >
+                      {pecasBibliotecaReparoLoading && !pecasBibliotecaReparoProgress.startsWith('Fotos:')
+                        ? pecasBibliotecaReparoProgress || 'A sincronizar…'
+                        : '🔄 Sincronizar catálogo'}
+                    </button>
+                    <button
+                      type="button"
+                      className="biblioteca-btn--green"
+                      disabled={pecasBibliotecaReparoLoading}
+                      onClick={() => void handleCompletarFotosBibliotecaDoServidor()}
+                      style={{ padding: '6px 12px', fontSize: 12 }}
+                    >
+                      {pecasBibliotecaReparoLoading && pecasBibliotecaReparoProgress.startsWith('Fotos:')
+                        ? pecasBibliotecaReparoProgress
+                        : '📥 Baixar fotos do servidor'}
+                    </button>
+                  </div>
+                </div>
                 {somenteLeituraBiblioteca ? (
                   <BibliotecaPecasGaleriaCategorias
                     categorias={categoriasPecasAlfabeto}

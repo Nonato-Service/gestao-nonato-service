@@ -1,6 +1,11 @@
 /**
  * Merge export.json HOMAG → biblioteca local (novos + fotos/nomes em falta).
  */
+import {
+  isPecaBibliotecaImagemPlaceholder,
+  pecaBibliotecaTemImagemPropria,
+} from './pecaBibliotecaImagemStats'
+
 export type PecaHomagMerge = {
   id: string
   nome: string
@@ -105,6 +110,7 @@ export function extrairImagemHomagItem(item: Record<string, unknown>): string {
   if (imagem.startsWith('/') && !imagem.startsWith('//')) {
     imagem = `https://shop.homag.com${imagem}`
   }
+  if (isPecaBibliotecaImagemPlaceholder(imagem)) return ''
   return imagem
 }
 
@@ -144,8 +150,7 @@ export function parseHomagExportJson(raw: string): Record<string, unknown>[] {
 }
 
 function pecaTemImagemUtil(imagem: string | undefined | null): boolean {
-  const s = String(imagem ?? '').trim()
-  return s.length > 0
+  return pecaBibliotecaTemImagemPropria(imagem)
 }
 
 function imagensDiferentes(a: string | undefined, b: string | undefined): boolean {
