@@ -8534,6 +8534,7 @@ export default function Dashboard() {
     candidatos: RelatorioServico[]
     ausentes: number
   }>({ open: false, candidatos: [], ausentes: 0 })
+  const [recuperacaoRelatoriosBusca, setRecuperacaoRelatoriosBusca] = useState('')
 
   const executarRecuperacaoRelatorios = useCallback(
     (lista: RelatorioServico[], silencioso = false) => {
@@ -8606,14 +8607,39 @@ export default function Dashboard() {
       )
       return
     }
+    setRecuperacaoRelatoriosBusca('')
     setRecuperacaoRelatoriosModal({ open: true, candidatos, ausentes: ausentes.length })
   }, [clientes, relatoriosServico, safeT])
+
+  const fecharRecuperacaoRelatoriosModal = useCallback(() => {
+    setRecuperacaoRelatoriosBusca('')
+    setRecuperacaoRelatoriosModal({ open: false, candidatos: [], ausentes: 0 })
+  }, [])
+
+  const relatorioMatchesRecuperacaoBusca = useCallback((rel: RelatorioServico, q: string): boolean => {
+    const nq = q.trim().toLowerCase()
+    if (!nq) return true
+    const cliente = String(rel.cliente ?? '')
+    if (nomesClienteCorrespondem(nq, cliente)) return true
+    const hay = [
+      cliente,
+      String(rel.numero ?? ''),
+      String(rel.data ?? ''),
+      String(rel.tecnico ?? ''),
+      String(rel.tipoServico ?? ''),
+      String(rel.maquinaModelo ?? ''),
+    ]
+      .join(' ')
+      .toLowerCase()
+    return hay.includes(nq)
+  }, [])
 
   const aplicarRecuperacaoRelatoriosModal = useCallback(
     (candidatos: RelatorioServico[]) => {
       setRelatoriosServico(candidatos)
       snapshotRelatoriosServicoBackup(candidatos)
       void saveData('nonato-relatorios-servico', candidatos, true, true)
+      setRecuperacaoRelatoriosBusca('')
       setRecuperacaoRelatoriosModal({ open: false, candidatos: [], ausentes: 0 })
       alert(
         (
@@ -29811,11 +29837,15 @@ export default function Dashboard() {
     const tm = safeT as Record<string, string>
     const idsLista = new Set(relatoriosServicoListaPrincipal.map((r) => String(r.id)))
     const idsTodos = new Set(relatoriosServico.map((r) => String(r.id)))
+    const buscaAtiva = recuperacaoRelatoriosBusca.trim().length > 0
+    const candidatosFiltrados = buscaAtiva
+      ? candidatos.filter((rel) => relatorioMatchesRecuperacaoBusca(rel, recuperacaoRelatoriosBusca))
+      : candidatos
 
     return createPortal(
       <div
         className="biblioteca-despesas-modal-overlay"
-        onClick={() => setRecuperacaoRelatoriosModal({ open: false, candidatos: [], ausentes: 0 })}
+        onClick={fecharRecuperacaoRelatoriosModal}
         role="presentation"
       >
         <div
@@ -29848,6 +29878,26 @@ export default function Dashboard() {
               ).replace(/\{n\}/g, String(ausentes))}
             </p>
           )}
+          <input
+            type="search"
+            value={recuperacaoRelatoriosBusca}
+            onChange={(e) => setRecuperacaoRelatoriosBusca(e.target.value)}
+            placeholder={
+              tm.recuperarRelatoriosBuscaPlaceholder || 'Pesquisar cliente, OS, data… (ex.: LISOBITO)'
+            }
+            autoFocus
+            style={{
+              width: '100%',
+              boxSizing: 'border-box',
+              marginBottom: '12px',
+              padding: '10px 12px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 170, 0, 0.55)',
+              background: 'rgba(0, 0, 0, 0.35)',
+              color: '#fff',
+              fontSize: '14px',
+            }}
+          />
           <div
             style={{
               flex: '1 1 auto',
@@ -29858,13 +29908,15 @@ export default function Dashboard() {
               background: 'rgba(0, 0, 0, 0.25)',
             }}
           >
-            {candidatos.length === 0 ? (
+            {candidatosFiltrados.length === 0 ? (
               <p style={{ color: '#fff', padding: '16px', margin: 0, opacity: 0.85 }}>
-                {tm.recuperarRelatoriosModalVazio || 'Nenhuma cópia encontrada neste aparelho.'}
+                {buscaAtiva
+                  ? (tm.recuperarRelatoriosBuscaVazio || 'Nenhum relatório corresponde à pesquisa.')
+                  : tm.recuperarRelatoriosModalVazio || 'Nenhuma cópia encontrada neste aparelho.'}
               </p>
             ) : (
               <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                {candidatos.map((rel) => {
+                {candidatosFiltrados.map((rel) => {
                   const id = String(rel.id)
                   const naLista = idsLista.has(id)
                   const naBiblioteca = !naLista && idsTodos.has(id)
@@ -29923,7 +29975,7 @@ export default function Dashboard() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'flex-end' }}>
             <button
               type="button"
-              onClick={() => setRecuperacaoRelatoriosModal({ open: false, candidatos: [], ausentes: 0 })}
+              onClick={fecharRecuperacaoRelatoriosModal}
               style={{
                 padding: '10px 20px',
                 borderRadius: '8px',
