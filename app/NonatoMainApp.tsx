@@ -37,6 +37,7 @@ import {
   waitForDataBootstrapComplete,
   runSilentServerSync,
   applySilentServerSync,
+  getPendingSyncCount,
 } from './utils/dataStorage'
 import {
   applyDiarioLembretePatch,
@@ -28164,6 +28165,12 @@ export default function Dashboard() {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       if (allowUnsafeBrowserExitRef.current) return
       if (!sessaoPrincipalAtiva) return
+      const pending = getPendingSyncCount()
+      if (pending > 0) {
+        e.preventDefault()
+        e.returnValue = ''
+        return
+      }
       e.preventDefault()
       e.returnValue = ''
     }

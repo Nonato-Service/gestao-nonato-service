@@ -255,17 +255,59 @@ function getSyncQueue(): Array<{ key: string; value: any; timestamp: number }> {
   if (typeof window === 'undefined') return []
   try {
     const raw = localStorage.getItem(SYNC_QUEUE_KEY)
-    return raw ? JSON.parse(raw) : []
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed : []
   } catch {
     return []
   }
 }
 
-function setSyncQueue(queue: Array<{ key: string; value: any; timestamp: number }>): void {
+async function mirrorSyncQueueToIdb(queue: Array<{ key: string; value: any; timestamp: number }>): Promise<void> {
   if (typeof window === 'undefined') return
   try {
+    await saveKv(SYNC_QUEUE_IDB_KEY, queue)
+  } catch {
+    /* ignorar */
+  }
+}
+
+function setSyncQueue(queue: Array<{ key: string; value: any; timestamp: number }>): void {
+  if (typeof window === 'undefined') return
+  let persisted = false
+  try {
     localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue))
-  } catch {}
+    persisted = true
+  } catch (e) {
+    console.error('[Nonato] Falha ao gravar fila de sync no localStorage:', e)
+    try {
+      window.dispatchEvent(
+        new CustomEvent('nonato-sync-queue-error', {
+          detail: { message: 'Fila offline só em memória — copia de segurança em IndexedDB.' },
+        })
+      )
+    } catch {
+      /* ignorar */
+    }
+  }
+  void mirrorSyncQueueToIdb(queue)
+  if (!persisted && queue.length > 0) {
+    void mirrorSyncQueueToIdb(queue)
+  }
+}
+
+/** Repõe fila offline se o localStorage foi limpo mas o espelho IndexedDB ainda existe. */
+export async function hydrateSyncQueueFromIdb(): Promise<number> {
+  if (typeof window === 'undefined') return 0
+  try {
+    const fromIdb = (await getKv(SYNC_QUEUE_IDB_KEY)) as Array<{ key: string; value: unknown; timestamp: number }> | null
+    if (!Array.isArray(fromIdb) || fromIdb.length === 0) return 0
+    const local = getSyncQueue()
+    if (local.length >= fromIdb.length) return 0
+    setSyncQueue(fromIdb)
+    return fromIdb.length
+  } catch {
+    return 0
+  }
 }
 
 /** Último valor por chave — evita fila com dezenas de gravações repetidas offline. */
@@ -373,6 +415,10 @@ export async function autoSyncPendingChanges(): Promise<{ synced: number; failed
 export function setupAutoSyncOnReconnect(): () => void {
   if (typeof window === 'undefined') return () => {}
 
+  void hydrateSyncQueueFromIdb().then((n) => {
+    if (n > 0) void autoSyncPendingChanges()
+  })
+
   const run = () => {
     if (isOnline()) void autoSyncPendingChanges()
   }
@@ -450,6 +496,18 @@ const CONHECIMENTO_TECNICO_KEY = 'nonato-conhecimento-tecnico-unificado'
 const BIBLIA_NONATO_KEY = 'nonato-biblia-nonato-service'
 const CLIENTES_KEY = 'nonato-clientes'
 const RELATORIOS_SERVICO_KEY = 'nonato-relatorios-servico'
+/** Gravações que devem confirmar no Railway antes de dar por concluído (não inclui biblioteca — payload grande). */
+const KEYS_AUTO_AWAIT_SERVER = new Set([
+  RELATORIOS_SERVICO_KEY,
+  CLIENTES_KEY,
+  'nonato-fechamentos-relatorios',
+  'nonato-fechamentos-guardados-biblioteca',
+  'nonato-protocolos-servico',
+  'nonato-comprovantes-despesas',
+  'nonato-agendamentos',
+  'nonato-ordens-servico',
+])
+const SYNC_QUEUE_IDB_KEY = 'nonato-sync-queue-mirror'
 const SIDEBAR_BUTTONS_KEY = 'nonato-sidebar-buttons'
 
 const MANUAIS_OBJECT_KEYS_BLOCK_EMPTY_OVERWRITE = new Set([
@@ -1995,6 +2053,9 @@ export async function saveData(
   saveToLocalStorage = true,
   awaitServer = false
 ): Promise<boolean> {
+  const effectiveAwaitServer =
+    awaitServer ||
+    (!shouldDeferImplicitServerPush() && KEYS_AUTO_AWAIT_SERVER.has(key))
   /** Manuais: IndexedDB primeiro (PDFs grandes); localStorage é opcional; não falhar se quota estourar */
   if (key === MANUAIS_KEY && typeof window !== 'undefined') {
     /** IndexedDB é a fonte de verdade local; o servidor pode ser lento ou falhar (413, rede) — não bloquear a UI */
@@ -2014,7 +2075,7 @@ export async function saveData(
     let manuaisServerOk = true
     if (!shouldDeferImplicitServerPush()) {
       const p = saveToServer(key, value).catch(() => false)
-      if (awaitServer) manuaisServerOk = (await p) === true
+      if (effectiveAwaitServer) manuaisServerOk = (await p) === true
     }
     if (typeof window !== 'undefined') {
       try {
@@ -2038,7 +2099,7 @@ export async function saveData(
     }
     if (!shouldDeferImplicitServerPush()) {
       const p = saveToServer(key, value).catch(() => false)
-      if (awaitServer) return (await p) === true
+      if (effectiveAwaitServer) return (await p) === true
     }
     return true
   }
@@ -2087,7 +2148,7 @@ export async function saveData(
   let serverOk = true
   if (!shouldDeferImplicitServerPush()) {
     const p = saveToServer(key, value).catch(() => false)
-    if (awaitServer) {
+    if (effectiveAwaitServer) {
       serverOk = (await p) === true
     } else {
       void p
@@ -2101,7 +2162,7 @@ export async function saveData(
       /* ignorar */
     }
   }
-  if (awaitServer && typeof window !== 'undefined') {
+  if (effectiveAwaitServer && typeof window !== 'undefined') {
     dispatchSaveServerResult(key, serverOk)
   }
   return serverOk

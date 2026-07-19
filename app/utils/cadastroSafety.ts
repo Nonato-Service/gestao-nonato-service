@@ -50,13 +50,34 @@ export function countMeaningfulCadastroInRecord(data: Record<string, unknown>): 
   return NONATO_CRITICAL_CADASTRO_KEYS.filter((key) => serverKeyHasMeaningfulData(data[key])).length
 }
 
+/** Lê peças da biblioteca para backup — localStorage ou IndexedDB (--idb). */
+async function readPecasBibliotecaRawForBackup(): Promise<string | null> {
+  if (typeof window === 'undefined') return null
+  const fromLs = localStorage.getItem(PECAS_BIBLIOTECA_KEY)
+  if (fromLs && !isPecasBibliotecaBackupSuspeito(fromLs)) return fromLs
+  try {
+    const fromIdb = (await getKv(PECAS_BIBLIOTECA_KEY)) as unknown
+    if (Array.isArray(fromIdb) && fromIdb.length > 0) {
+      const serialized = JSON.stringify(fromIdb)
+      if (!isPecasBibliotecaBackupSuspeito(serialized)) return serialized
+    }
+  } catch {
+    /* ignorar */
+  }
+  return fromLs && !isPecasBibliotecaBackupSuspeito(fromLs) ? fromLs : null
+}
+
 /** Guarda cópia de segurança no IndexedDB antes de qualquer arranque / wipe / deploy. */
 export async function backupCriticalCadastroToIdb(): Promise<void> {
   if (typeof window === 'undefined') return
   const backup: Record<string, string> = {}
   for (const key of NONATO_CRITICAL_CADASTRO_KEYS) {
+    if (key === PECAS_BIBLIOTECA_KEY) {
+      const raw = await readPecasBibliotecaRawForBackup()
+      if (raw && localStorageKeyHasMeaningfulCadastro(raw)) backup[key] = raw
+      continue
+    }
     const raw = localStorage.getItem(key)
-    if (key === PECAS_BIBLIOTECA_KEY && isPecasBibliotecaBackupSuspeito(raw)) continue
     if (localStorageKeyHasMeaningfulCadastro(raw)) {
       backup[key] = raw!
     }

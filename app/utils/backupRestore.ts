@@ -7,10 +7,12 @@ import { collectAllLocalNonatoDataForSync, saveAllToServer, saveData } from './d
 import {
   collectAllNonatoKvFromIdb,
   saveManuaisFamiliasGruposToIdb,
+  saveKv,
 } from './manuaisIndexedDb'
 
 export const BACKUP_VERSION = '2.0.0'
 export const AUTO_BACKUP_STORAGE_KEY = 'nonato-auto-backups'
+export const AUTO_BACKUP_IDB_MIRROR_KEY = 'nonato-auto-backups-idb-mirror'
 export const MAX_AUTO_BACKUPS = 5
 export const MAX_MANUAL_DATA_BACKUPS = 5
 export const MANUAL_DATA_BACKUP_STORAGE_KEY = 'nonato-manual-data-backups'
@@ -299,7 +301,13 @@ export async function createAutoBackupEntry(): Promise<boolean> {
   backups.sort((a, b) => b.timestamp - a.timestamp)
   if (backups.length > MAX_AUTO_BACKUPS) backups = backups.slice(0, MAX_AUTO_BACKUPS)
   const persisted = tryPersistAutoBackups(backups)
-  return persisted.ok
+  try {
+    await saveKv(AUTO_BACKUP_IDB_MIRROR_KEY, backups)
+  } catch {
+    /* espelho IDB opcional */
+  }
+  if (persisted.ok) return true
+  return backups.length > 0
 }
 
 export type StoredBackupEntry = { timestamp: number; data: unknown }
