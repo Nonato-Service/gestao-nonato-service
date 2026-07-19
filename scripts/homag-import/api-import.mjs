@@ -3,6 +3,7 @@
  */
 import fs from 'fs'
 import { normCodigo } from './resume.mjs'
+import { homagExportItemPrecisaFoto } from './imagem-util.mjs'
 import {
   captureAuraSession,
   fetchHomagProductsViaApi,
@@ -181,7 +182,7 @@ async function backfillHomagFieldsOnExisting(context, page, products, items, bui
     if (meta.imagemUrl) {
       const hasFile =
         cur.imagem_local && fs.existsSync(cur.imagem_local) && fs.statSync(cur.imagem_local).size > 500
-      if (!hasFile || !(cur.imagem || cur.imagem_url)) {
+      if (!hasFile || homagExportItemPrecisaFoto(cur)) {
         const it = await buildItemFromDiscovered(context, page, meta, idx, embedOff, maxEmbed)
         if (it.imagem || it.imagem_url) {
           next = {

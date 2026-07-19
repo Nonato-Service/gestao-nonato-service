@@ -39912,8 +39912,10 @@ export default function Dashboard() {
                 </div>
                 {pecasBibliotecaImagemStats.faltam > 0 ? (
                   <p style={{ fontSize: 10, margin: '10px 0 0', lineHeight: 1.5, color: '#ffc896' }}>
-                    Para encher <strong>todas</strong> as fotos em falta no Railway: no PC abra{' '}
-                    <code style={{ fontSize: 10 }}>PREENCHER-FOTOS-HOMAG.bat</code> (pasta do projeto). Depois use «Baixar fotos do servidor» aqui.
+                    <strong>Deploy (GitHub) nao envia fotos.</strong> No PC execute{' '}
+                    <code style={{ fontSize: 10 }}>CORRIGIR-E-ENVIAR-BIBLIOTECA.bat</code> ou{' '}
+                    <code style={{ fontSize: 10 }}>ENVIAR-PECAS-RAILWAY.bat</code> — depois «Sincronizar catálogo» aqui.
+                    Para encher fotos em falta: <code style={{ fontSize: 10 }}>PREENCHER-FOTOS-HOMAG.bat</code>
                   </p>
                 ) : (
                   <p style={{ fontSize: 10, margin: '10px 0 0', lineHeight: 1.5, color: '#8ef0b0' }}>

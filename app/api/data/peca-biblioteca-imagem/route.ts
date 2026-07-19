@@ -8,8 +8,6 @@ import { ensureDataDir, resolveDataDirForKey } from '../shared'
 
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 
-import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
-
 export const runtime = 'nodejs'
 
 export const dynamic = 'force-dynamic'
@@ -51,18 +49,6 @@ function decodeDataUrlImagem(imagem: string): { mime: string; bytes: Buffer } | 
 }
 
 export async function GET(request: NextRequest) {
-  const host = (request.headers.get('host') || '').split(':')[0].toLowerCase()
-  const isLocalDevHost =
-    process.env.NODE_ENV === 'development' ||
-    host === 'localhost' ||
-    host === '127.0.0.1' ||
-    host === '[::1]' ||
-    host === '::1'
-  if (!isLocalDevHost) {
-    const authDenied = rejectUnauthenticatedProductionAccess(request)
-    if (authDenied) return authDenied
-  }
-
   const { isDemo, expired, dataDir } = getDemoContext(request)
   if (isDemo && expired) {
     return new NextResponse(null, { status: 403, headers: NO_STORE_HEADERS })

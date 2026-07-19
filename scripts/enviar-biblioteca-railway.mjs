@@ -76,7 +76,7 @@ async function countOnServer(cookie, apiSecret) {
   const res = await fetch(`${BASE}/api/data/repair-pecas-biblioteca?meta=1`, { headers, cache: 'no-store' })
   if (!res.ok) return null
   const json = await res.json()
-  return typeof json.totalPecas === 'number' ? json.totalPecas : null
+  return typeof json.total === 'number' ? json.total : null
 }
 
 async function main() {

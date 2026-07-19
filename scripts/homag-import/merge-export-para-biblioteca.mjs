@@ -8,6 +8,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { extractHomagPrecoFromExportItem, formatHomagPreco } from './homag-preco.mjs'
 import { enriquecerPecaHomagComReferencias } from './homag-codigo-ref.mjs'
+import { bibliotecaPecaPrecisaFoto } from './imagem-util.mjs'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DATA = path.join(root, 'data')
@@ -115,12 +116,12 @@ function mergeIntoBiblioteca(existing, incoming) {
     const ex = c ? byCodigo.get(c) : null
     if (ex) {
       const incImg = peca.imagem || ''
-      if (!ex.imagem && incImg) {
-        ex.imagem = incImg
-        updated++
-      } else if (process.env.HOMAG_MERGE_REPLACE_IMAGES === '1' && incImg && ex.imagem !== incImg) {
-        ex.imagem = incImg
-        updated++
+      const faltaOuPlaceholder = bibliotecaPecaPrecisaFoto(ex.imagem)
+      if (incImg && (faltaOuPlaceholder || process.env.HOMAG_MERGE_REPLACE_IMAGES === '1')) {
+        if (ex.imagem !== incImg) {
+          ex.imagem = incImg
+          updated++
+        }
       }
       if ((!ex.nome || !String(ex.nome).trim()) && peca.nome) ex.nome = peca.nome
       if ((!ex.descricao || !String(ex.descricao).trim()) && peca.descricao) ex.descricao = peca.descricao

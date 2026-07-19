@@ -10,7 +10,8 @@ echo  ============================================================
 echo.
 echo  Revisa TODOS os buckets da API e descarrega fotos em falta.
 echo  Ficheiros: codigo_NOME_DA_PECA.jpg em scripts/homag-import/out/images/
-echo  Nao apaga pecas — so completa imagem_url e imagem_local.
+echo  Depois do import, envia automaticamente para Railway.
+echo  Se falhar o envio automatico, execute: ENVIAR-PECAS-RAILWAY.bat
 echo.
 echo  ============================================================
 echo.
@@ -25,6 +26,7 @@ if errorlevel 1 (
 call npm install >nul 2>&1
 call npx playwright install chromium
 
+set HOMAG_MERGE_REPLACE_IMAGES=1
 set HOMAG_USE_API=1
 set HOMAG_API_BACKFILL_IMAGES=1
 set HOMAG_HEADLESS=0

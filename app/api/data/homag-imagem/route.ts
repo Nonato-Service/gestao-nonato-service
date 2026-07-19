@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
-
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
@@ -23,19 +21,8 @@ function isAllowedHomagUrl(raw: string): boolean {
   }
 }
 
+/** Proxy público só para URLs shop.homag.com — permite <img> sem bloqueio de sessão. */
 export async function GET(request: NextRequest) {
-  const host = (request.headers.get('host') || '').split(':')[0].toLowerCase()
-  const isLocalDevHost =
-    process.env.NODE_ENV === 'development' ||
-    host === 'localhost' ||
-    host === '127.0.0.1' ||
-    host === '[::1]' ||
-    host === '::1'
-  if (!isLocalDevHost) {
-    const authDenied = rejectUnauthenticatedProductionAccess(request)
-    if (authDenied) return authDenied
-  }
-
   const url = (new URL(request.url).searchParams.get('url') || '').trim()
   if (!url || !isAllowedHomagUrl(url)) {
     return NextResponse.json({ error: 'invalid_url' }, { status: 400, headers: NO_STORE_HEADERS })
@@ -61,7 +48,7 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'private, max-age=86400, stale-while-revalidate=604800',
+        'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
       },
     })
   } catch {
