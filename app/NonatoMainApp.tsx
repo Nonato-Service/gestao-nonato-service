@@ -8886,6 +8886,7 @@ export default function Dashboard() {
   const [bibliotecaRelatoriosClientesExpandidos, setBibliotecaRelatoriosClientesExpandidos] = useState<Set<string>>(new Set())
   const [bibliotecaRelatoriosEquipExpandidos, setBibliotecaRelatoriosEquipExpandidos] = useState<Set<string>>(new Set())
   const [bibliotecaSecaoFechadosExpandida, setBibliotecaSecaoFechadosExpandida] = useState(false)
+  const [bibliotecaSecaoClientesExpandida, setBibliotecaSecaoClientesExpandida] = useState(false)
   const [bibliotecaFechadosClientesExpandidos, setBibliotecaFechadosClientesExpandidos] = useState<Set<string>>(
     new Set()
   )
@@ -64713,6 +64714,7 @@ A1;Peça exemplo;10`}
                       type="button"
                       className="biblioteca-relatorios-toolbar__btn"
                       onClick={() => {
+                        setBibliotecaSecaoClientesExpandida(true)
                         setBibliotecaRelatoriosClientesExpandidos(new Set(relatoriosPorCliente.map(r => r.cliente.id)))
                         const allEq = new Set<string>()
                         relatoriosPorCliente.forEach(row => {
@@ -64736,6 +64738,7 @@ A1;Peça exemplo;10`}
                       type="button"
                       className="biblioteca-relatorios-toolbar__btn biblioteca-relatorios-toolbar__btn--muted"
                       onClick={() => {
+                        setBibliotecaSecaoClientesExpandida(false)
                         setBibliotecaRelatoriosClientesExpandidos(new Set())
                         setBibliotecaRelatoriosEquipExpandidos(new Set())
                         setBibliotecaSecaoFechadosExpandida(false)
@@ -65053,8 +65056,65 @@ A1;Peça exemplo;10`}
                   </button>
                 </div>
               </div>
-            ) : (
-              <>
+            ) : relatoriosPorCliente.length > 0 ||
+              buscaBibliotecaRelatoriosCliente.trim() !== '' ||
+              bibliotecaFiltradaComConteudo.length > 0 ? (
+              <details
+                className="biblioteca-relatorios-clientes-block"
+                open={bibliotecaSecaoClientesExpandida}
+                onToggle={(e) =>
+                  setBibliotecaSecaoClientesExpandida((e.currentTarget as HTMLDetailsElement).open)
+                }
+              >
+                <summary className="biblioteca-relatorios-clientes-block__summary">
+                  <span className="biblioteca-relatorios-clientes-block__chevron" aria-hidden>
+                    ▶
+                  </span>
+                  <span className="biblioteca-relatorios-clientes-block__title">
+                    📂{' '}
+                    {txBibHero.bibliotecaRelatoriosPastasClientesTitulo ||
+                      'Pastas dos clientes'}
+                  </span>
+                  <span className="biblioteca-relatorios-clientes-block__count">
+                    {bibliotecaFiltradaComConteudo.length || relatoriosPorCliente.length}
+                  </span>
+                  <span className="biblioteca-relatorios-clientes-block__hint">
+                    {txBibHero.bibliotecaRelatoriosPastasClientesHint ||
+                      'Clique para expandir. Abra cada cliente para ver equipamentos, relatórios e despesas.'}
+                  </span>
+                </summary>
+                <div className="biblioteca-relatorios-clientes-block__body">
+                  <div className="biblioteca-relatorios-clientes-block__toolbar">
+                    <button
+                      type="button"
+                      className="biblioteca-relatorios-toolbar__btn"
+                      onClick={() => {
+                        setBibliotecaSecaoClientesExpandida(true)
+                        setBibliotecaRelatoriosClientesExpandidos(
+                          new Set(relatoriosPorCliente.map(r => r.cliente.id))
+                        )
+                        const allEq = new Set<string>()
+                        relatoriosPorCliente.forEach(row => {
+                          row.equipamentos.forEach(eq =>
+                            allEq.add(bibliotecaEquipKey(row.cliente.id, eq.equipamentoKey))
+                          )
+                        })
+                        setBibliotecaRelatoriosEquipExpandidos(allEq)
+                      }}
+                    >
+                      {(safeT as any)?.expandirTodos || 'Expandir todos'}
+                    </button>
+                    <button
+                      type="button"
+                      className="biblioteca-relatorios-toolbar__btn biblioteca-relatorios-toolbar__btn--muted"
+                      onClick={() => {
+                        setBibliotecaRelatoriosClientesExpandidos(new Set())
+                        setBibliotecaRelatoriosEquipExpandidos(new Set())
+                      }}
+                    >
+                      {(safeT as any)?.retrairTodos || 'Retrair todos'}
+                    </button>
+                  </div>
                 {!buscaBibliotecaAtiva && bibliotecaFiltrada.length > 0 ? (
                   <div className="biblioteca-relatorios-alfa-bar">
                     <div
@@ -65588,8 +65648,9 @@ A1;Peça exemplo;10`}
                   )
                 })}
               </div>
-              </>
-            )}
+                </div>
+              </details>
+            ) : null}
           </div>
           </>
         )
