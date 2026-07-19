@@ -18,6 +18,7 @@ import {
   saveData,
   loadAllFromServer,
   loadAllForBootstrap,
+  loadAllFromLocalCache,
   saveOfflineServerSnapshot,
   isOnline,
   loadFromServer,
@@ -87,7 +88,7 @@ import {
   pushManualDataBackupFromEnvelope,
 } from './utils/backupRestore'
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
-import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
+import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, loadUiSessionSnapshot, saveUiSessionSnapshot } from './utils/syncRevision'
 import { cmpNomeCliente, ordenarClientesPorNome, localeOrdenacaoClientes } from './lib/ordenarClientes'
 import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasStrictMenuPolicy, normalizeMenuItems, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
@@ -357,16 +358,6 @@ let manuaisSaveAlertShownOnce = false
 
 /** Persistido até a carga terminar: se a flag for limpa cedo demais, o 2.º arranque (Strict Mode) deixa de fazer o wipe. */
 const NONATO_PENDING_FULL_SERVER_REPLACE_LS = 'nonato-pending-full-server-replace'
-const NONATO_WARM_SESSION_KEY = 'nonato-warm-session-v1'
-
-function isWarmSessionResume(): boolean {
-  if (typeof window === 'undefined') return false
-  try {
-    return sessionStorage.getItem(NONATO_WARM_SESSION_KEY) === '1'
-  } catch {
-    return false
-  }
-}
 /** Cadastros — cópia de segurança antes de «substituir tudo pelo servidor» (servidor vazio apagava dados após deploy). */
 const NONATO_CADASTRO_KEYS_BACKUP_ON_FULL_PULL = NONATO_CRITICAL_CADASTRO_KEYS
 
@@ -4666,6 +4657,10 @@ const getLanguages = (t: any): Language[] => {
 }
 
 export default function Dashboard() {
+  const initialUiSession = useMemo(
+    () => (typeof window !== 'undefined' ? loadUiSessionSnapshot() : null),
+    []
+  )
   const createEmptyUserForm = (): UserFormState => ({
     name: '',
     email: '',
@@ -5316,7 +5311,9 @@ export default function Dashboard() {
   const [cadastroRestoredNotice, setCadastroRestoredNotice] = useState(0)
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
   /** Vista resumida no painel inicial; «Entrar no sistema» mostra métricas, atalhos e inventário. */
-  const [dashboardWorkspaceExpanded, setDashboardWorkspaceExpanded] = useState(false)
+  const [dashboardWorkspaceExpanded, setDashboardWorkspaceExpanded] = useState(
+    () => initialUiSession?.dashboardWorkspaceExpanded ?? false
+  )
   /** No painel completo (sem aba): mostrar grelha só com os botões do grupo expandido na barra lateral. */
   const [dashboardMainHubId, setDashboardMainHubId] = useState<string | null>(null)
   const [showTranslatorModal, setShowTranslatorModal] = useState(false)
@@ -5533,8 +5530,8 @@ export default function Dashboard() {
 
 
   // Sistema de múltiplas páginas/abas
-  const [openTabs, setOpenTabs] = useState<Tab[]>([])
-  const [activeTabId, setActiveTabId] = useState<string | null>(null)
+  const [openTabs, setOpenTabs] = useState<Tab[]>(() => (initialUiSession?.openTabs as Tab[]) ?? [])
+  const [activeTabId, setActiveTabId] = useState<string | null>(() => initialUiSession?.activeTabId ?? null)
   const [bottomTabsDraggingId, setBottomTabsDraggingId] = useState<string | null>(null)
   const [bottomTabsDragOverId, setBottomTabsDragOverId] = useState<string | null>(null)
   const [bottomTabsSavedOrder, setBottomTabsSavedOrder] = useState<string[] | null>(null)
@@ -5573,6 +5570,22 @@ export default function Dashboard() {
       // ignore
     }
   }, [])
+
+  /** Restaurar abas ao voltar do email/outra app no tablet (SO mata a aba → reload). */
+  useEffect(() => {
+    if (typeof window === 'undefined' || appInitialLoading) return
+    saveUiSessionSnapshot({
+      openTabs: openTabs.map(({ id, type, title, icon, returnHubId }) => ({
+        id,
+        type,
+        title,
+        icon,
+        returnHubId,
+      })),
+      activeTabId,
+      dashboardWorkspaceExpanded,
+    })
+  }, [openTabs, activeTabId, dashboardWorkspaceExpanded, appInitialLoading])
 
   const refreshBottomTabsScrollHints = useCallback(() => {
     const el = bottomTabsScrollRef.current
@@ -10269,7 +10282,14 @@ export default function Dashboard() {
         if (syncSt) serverRevision = syncSt.revision
 
         // Primeiro, tentar carregar tudo do servidor (ou reutilizar bundle do full-pull já obtido antes do wipe)
-        const bootLoad = await loadAllForBootstrap(serverDataFromFullPullPrefetch)
+        const bootLoad =
+          warmResume && !serverDataFromFullPullPrefetch
+            ? {
+                data: await loadAllFromLocalCache(),
+                ok: false as const,
+                source: 'local' as const,
+              }
+            : await loadAllForBootstrap(serverDataFromFullPullPrefetch)
         serverData = await mergeSafetyBackupIntoServerData(bootLoad.data)
         if (!bootLoad.ok) setBootstrapOfflineMode(true)
         await reportBoot(28)
@@ -13643,11 +13663,7 @@ export default function Dashboard() {
         }
         dataBootstrapCompleteRef.current = true
         markDataBootstrapComplete()
-        try {
-          sessionStorage.setItem(NONATO_WARM_SESSION_KEY, '1')
-        } catch {
-          /* ignorar */
-        }
+        markWarmSessionComplete()
         void loadData('homag-substituicoes-indice')
           .then((raw) => {
             if (raw && typeof raw === 'object' && !Array.isArray(raw)) {

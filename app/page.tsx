@@ -1,16 +1,9 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { isWarmSessionResume } from './utils/syncRevision'
 
-const warmSessionResume =
-  typeof window !== 'undefined' &&
-  (() => {
-    try {
-      return sessionStorage.getItem('nonato-warm-session-v1') === '1'
-    } catch {
-      return false
-    }
-  })()
+const warmSessionResume = typeof window !== 'undefined' && isWarmSessionResume()
 
 const NonatoMainApp = dynamic(() => import('./NonatoMainApp'), {
   ssr: false,

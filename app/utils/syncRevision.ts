@@ -85,3 +85,131 @@ export function applyRevisionFromSaveResponse(body: unknown): void {
   const r = (body as { revision?: number }).revision
   if (typeof r === 'number' && r >= 0) setLastAcceptedRevision(r)
 }
+
+/** sessionStorage — sobrevive a refresh na mesma aba, mas não quando o SO mata o processo (tablet → email). */
+export const NONATO_WARM_SESSION_KEY = 'nonato-warm-session-v1'
+/** localStorage — marca bootstrap concluído neste aparelho (retoma rápida após background kill). */
+const NONATO_WARM_BOOTSTRAP_AT_LS = 'nonato-warm-bootstrap-at-v1'
+export const NONATO_UI_SESSION_LS = 'nonato-ui-session-v1'
+const WARM_BOOTSTRAP_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
+
+export type UiSessionTabSnapshot = {
+  id: string
+  type: string
+  title: string
+  icon?: string
+  returnHubId?: string | null
+}
+
+export type UiSessionSnapshot = {
+  openTabs: UiSessionTabSnapshot[]
+  activeTabId: string | null
+  dashboardWorkspaceExpanded: boolean
+}
+
+function parseUiSessionSnapshot(raw: string | null): UiSessionSnapshot | null {
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw) as Partial<UiSessionSnapshot>
+    if (!parsed || typeof parsed !== 'object') return null
+    const openTabs = Array.isArray(parsed.openTabs)
+      ? parsed.openTabs
+          .filter(
+            (t): t is UiSessionTabSnapshot =>
+              !!t &&
+              typeof t === 'object' &&
+              typeof (t as UiSessionTabSnapshot).id === 'string' &&
+              typeof (t as UiSessionTabSnapshot).type === 'string' &&
+              typeof (t as UiSessionTabSnapshot).title === 'string'
+          )
+          .slice(0, 12)
+      : []
+    const activeTabId =
+      typeof parsed.activeTabId === 'string' && openTabs.some((t) => t.id === parsed.activeTabId)
+        ? parsed.activeTabId
+        : openTabs.length > 0
+          ? openTabs[openTabs.length - 1].id
+          : null
+    return {
+      openTabs,
+      activeTabId,
+      dashboardWorkspaceExpanded: parsed.dashboardWorkspaceExpanded === true,
+    }
+  } catch {
+    return null
+  }
+}
+
+/** Retoma rápida: mesma aba (sessionStorage) ou reload após background no tablet (localStorage + dados locais). */
+export function isWarmSessionResume(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    if (sessionStorage.getItem(NONATO_WARM_SESSION_KEY) === '1') return true
+  } catch {
+    /* ignorar */
+  }
+  try {
+    const at = localStorage.getItem(NONATO_WARM_BOOTSTRAP_AT_LS)
+    if (!at) return false
+    const ts = Date.parse(at)
+    if (!Number.isFinite(ts) || Date.now() - ts > WARM_BOOTSTRAP_MAX_AGE_MS) return false
+    return hasMeaningfulLocalData()
+  } catch {
+    return false
+  }
+}
+
+export function markWarmSessionComplete(): void {
+  if (typeof window === 'undefined') return
+  try {
+    sessionStorage.setItem(NONATO_WARM_SESSION_KEY, '1')
+  } catch {
+    /* ignorar */
+  }
+  try {
+    localStorage.setItem(NONATO_WARM_BOOTSTRAP_AT_LS, new Date().toISOString())
+  } catch {
+    /* ignorar */
+  }
+}
+
+export function clearWarmSessionMarkers(): void {
+  if (typeof window === 'undefined') return
+  try {
+    sessionStorage.removeItem(NONATO_WARM_SESSION_KEY)
+  } catch {
+    /* ignorar */
+  }
+  try {
+    localStorage.removeItem(NONATO_WARM_BOOTSTRAP_AT_LS)
+    localStorage.removeItem(NONATO_UI_SESSION_LS)
+  } catch {
+    /* ignorar */
+  }
+}
+
+export function loadUiSessionSnapshot(): UiSessionSnapshot | null {
+  if (typeof window === 'undefined' || !isWarmSessionResume()) return null
+  try {
+    return parseUiSessionSnapshot(localStorage.getItem(NONATO_UI_SESSION_LS))
+  } catch {
+    return null
+  }
+}
+
+export function saveUiSessionSnapshot(snapshot: UiSessionSnapshot): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(
+      NONATO_UI_SESSION_LS,
+      JSON.stringify({
+        openTabs: snapshot.openTabs.slice(0, 12),
+        activeTabId: snapshot.activeTabId,
+        dashboardWorkspaceExpanded: snapshot.dashboardWorkspaceExpanded,
+        savedAt: new Date().toISOString(),
+      })
+    )
+  } catch {
+    /* ignorar quota */
+  }
+}
