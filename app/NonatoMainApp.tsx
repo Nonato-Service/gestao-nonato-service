@@ -64917,8 +64917,8 @@ A1;Peça exemplo;10`}
                                     ▶
                                   </span>
                                   <span className="bib-rel-num">{rel.numero}</span>
-                                  <span className="bib-tag-fechado" title="Fechado na biblioteca">
-                                    FECHADO
+                                  <span className="bib-tag-fechado" title={txBibHero.bibTagFechadoTitle || 'Fechado na biblioteca'}>
+                                    {txBibHero.bibTagFechado || 'FECHADO'}
                                   </span>
                                   <span className="biblioteca-relatorios-fechado-item__meta">{dataFmt}</span>
                                   <span className="biblioteca-relatorios-fechado-item__meta">
