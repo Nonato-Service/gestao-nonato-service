@@ -107,6 +107,33 @@ export type UiSessionSnapshot = {
   dashboardWorkspaceExpanded: boolean
 }
 
+/** Utilizador autenticado em cache — retoma instantânea no telemóvel sem esperar /api/auth/status. */
+const NONATO_LAST_AUTH_USER_LS = 'nonato-last-auth-user-v1'
+
+export type CachedAuthUser = {
+  id: string
+  name: string
+  email: string
+  role: string
+  isAdmin?: boolean
+  linkedProfileType?: 'gestor' | 'tecnico' | ''
+  linkedProfileId?: string
+  menuItems?: Record<string, boolean>
+  menuItemsConfigured?: boolean
+}
+
+function uiSessionSnapshotIsFresh(raw: string | null): boolean {
+  if (!raw) return false
+  try {
+    const parsed = JSON.parse(raw) as { savedAt?: string }
+    const savedAt = parsed?.savedAt ? Date.parse(parsed.savedAt) : NaN
+    if (!Number.isFinite(savedAt) || Date.now() - savedAt > WARM_BOOTSTRAP_MAX_AGE_MS) return false
+    return hasMeaningfulLocalData() || !!localStorage.getItem(NONATO_WARM_BOOTSTRAP_AT_LS)
+  } catch {
+    return false
+  }
+}
+
 function parseUiSessionSnapshot(raw: string | null): UiSessionSnapshot | null {
   if (!raw) return null
   try {
@@ -140,7 +167,7 @@ function parseUiSessionSnapshot(raw: string | null): UiSessionSnapshot | null {
   }
 }
 
-/** Retoma rápida: mesma aba (sessionStorage) ou reload após background no tablet (localStorage + dados locais). */
+/** Retoma rápida: mesma aba (sessionStorage) ou reload após background no telemóvel/tablet (localStorage + dados locais). */
 export function isWarmSessionResume(): boolean {
   if (typeof window === 'undefined') return false
   try {
@@ -173,6 +200,76 @@ export function markWarmSessionComplete(): void {
   }
 }
 
+/** Atualiza marca de sessão quente (ex.: ao ir para o email no telemóvel). */
+export function touchWarmSessionMarker(): void {
+  markWarmSessionComplete()
+}
+
+export function saveLastAuthUser(user: CachedAuthUser): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(
+      NONATO_LAST_AUTH_USER_LS,
+      JSON.stringify({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isAdmin: user.isAdmin === true,
+        linkedProfileType: user.linkedProfileType || '',
+        linkedProfileId: user.linkedProfileId || '',
+        menuItems: user.menuItems && typeof user.menuItems === 'object' ? user.menuItems : undefined,
+        menuItemsConfigured: user.menuItemsConfigured === true,
+        savedAt: new Date().toISOString(),
+      })
+    )
+  } catch {
+    /* ignorar quota */
+  }
+}
+
+export function loadLastAuthUser(): CachedAuthUser | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(NONATO_LAST_AUTH_USER_LS)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<CachedAuthUser> & { savedAt?: string }
+    if (
+      !parsed ||
+      typeof parsed.id !== 'string' ||
+      typeof parsed.name !== 'string' ||
+      typeof parsed.email !== 'string' ||
+      typeof parsed.role !== 'string'
+    ) {
+      return null
+    }
+    const savedAt = parsed.savedAt ? Date.parse(parsed.savedAt) : NaN
+    if (!Number.isFinite(savedAt) || Date.now() - savedAt > WARM_BOOTSTRAP_MAX_AGE_MS) return null
+    return {
+      id: parsed.id,
+      name: parsed.name,
+      email: parsed.email,
+      role: parsed.role,
+      isAdmin: parsed.isAdmin === true,
+      linkedProfileType: parsed.linkedProfileType || '',
+      linkedProfileId: parsed.linkedProfileId || '',
+      menuItems: parsed.menuItems,
+      menuItemsConfigured: parsed.menuItemsConfigured === true,
+    }
+  } catch {
+    return null
+  }
+}
+
+export function clearLastAuthUser(): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.removeItem(NONATO_LAST_AUTH_USER_LS)
+  } catch {
+    /* ignorar */
+  }
+}
+
 export function clearWarmSessionMarkers(): void {
   if (typeof window === 'undefined') return
   try {
@@ -183,15 +280,18 @@ export function clearWarmSessionMarkers(): void {
   try {
     localStorage.removeItem(NONATO_WARM_BOOTSTRAP_AT_LS)
     localStorage.removeItem(NONATO_UI_SESSION_LS)
+    localStorage.removeItem(NONATO_LAST_AUTH_USER_LS)
   } catch {
     /* ignorar */
   }
 }
 
 export function loadUiSessionSnapshot(): UiSessionSnapshot | null {
-  if (typeof window === 'undefined' || !isWarmSessionResume()) return null
+  if (typeof window === 'undefined') return null
   try {
-    return parseUiSessionSnapshot(localStorage.getItem(NONATO_UI_SESSION_LS))
+    const raw = localStorage.getItem(NONATO_UI_SESSION_LS)
+    if (!uiSessionSnapshotIsFresh(raw)) return null
+    return parseUiSessionSnapshot(raw)
   } catch {
     return null
   }

@@ -3,12 +3,11 @@
 import dynamic from 'next/dynamic'
 import { isWarmSessionResume } from './utils/syncRevision'
 
-const warmSessionResume = typeof window !== 'undefined' && isWarmSessionResume()
-
 const NonatoMainApp = dynamic(() => import('./NonatoMainApp'), {
   ssr: false,
-  loading: () =>
-    warmSessionResume ? null : (
+  loading: () => {
+    if (typeof window !== 'undefined' && isWarmSessionResume()) return null
+    return (
       <div
         style={{
           minHeight: '100dvh',
@@ -44,7 +43,8 @@ const NonatoMainApp = dynamic(() => import('./NonatoMainApp'), {
         <p style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>NONATO SERVICE</p>
         <p style={{ margin: 0, fontSize: 14, opacity: 0.75 }}>A carregar…</p>
       </div>
-    ),
+    )
+  },
 })
 
 export default function Page() {

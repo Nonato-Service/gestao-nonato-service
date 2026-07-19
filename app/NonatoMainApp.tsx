@@ -88,7 +88,7 @@ import {
   pushManualDataBackupFromEnvelope,
 } from './utils/backupRestore'
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
-import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, loadUiSessionSnapshot, saveUiSessionSnapshot } from './utils/syncRevision'
+import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser } from './utils/syncRevision'
 import { cmpNomeCliente, ordenarClientesPorNome, localeOrdenacaoClientes } from './lib/ordenarClientes'
 import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasStrictMenuPolicy, normalizeMenuItems, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
@@ -4657,10 +4657,8 @@ const getLanguages = (t: any): Language[] => {
 }
 
 export default function Dashboard() {
-  const initialUiSession = useMemo(
-    () => (typeof window !== 'undefined' ? loadUiSessionSnapshot() : null),
-    []
-  )
+  const warmOnMount = useMemo(() => isWarmSessionResume(), [])
+  const initialUiSession = useMemo(() => loadUiSessionSnapshot(), [])
   const createEmptyUserForm = (): UserFormState => ({
     name: '',
     email: '',
@@ -4878,7 +4876,7 @@ export default function Dashboard() {
   const [gestaoCustosButtons, setGestaoCustosButtons] = useState<SidebarButton[]>([]) // Botões do grupo GESTÃO DE CUSTOS
   const [selectedSidebarButton, setSelectedSidebarButton] = useState<string | null>(null) // Botão selecionado na sidebar
   const [familiasGruposModalVariant, setFamiliasGruposModalVariant] = useState<'checklist' | 'equipamentos'>('checklist') // Título do modal Famílias e Grupos
-  const [showSplashInicial, setShowSplashInicial] = useState(true) // Tela inicial preta com logo (verde transparente)
+  const [showSplashInicial, setShowSplashInicial] = useState(() => !warmOnMount) // Tela inicial preta com logo (verde transparente)
   const [openOrcamentosGeradosView, setOpenOrcamentosGeradosView] = useState(false) // Ao gerar pedido avulso, abrir Orçamentos > Orçamentos Gerados
   /** Rascunho do orçamento avulso no pai — evita perder itens quando o painel re-renderiza */
   const [orcamentoAvulsoRascunho, setOrcamentoAvulsoRascunho] = useState<OrcamentoAvulsoRascunhoPersist>(
@@ -4891,7 +4889,11 @@ export default function Dashboard() {
   const [loginUsuarioInput, setLoginUsuarioInput] = useState('') // Usuário (e-mail ou nome) no login
   const [senhaInicialInput, setSenhaInicialInput] = useState('') // Senha no login
   // Acesso direto sem login: utilizador inicial = Administrador (para não pedir senha)
-  const [loginUser, setLoginUser] = useState<User | null>(null)
+  const [loginUser, setLoginUser] = useState<User | null>(() => {
+    if (!warmOnMount) return null
+    const cached = loadLastAuthUser()
+    return cached ? ({ ...cached } as User) : null
+  })
   const [incluirLogoNosRelatorios, setIncluirLogoNosRelatorios] = useState<boolean>(true) // Incluir logo nos PDFs (Administrador)
   const [logosRelatorios, setLogosRelatorios] = useState<LogoRelatorio[]>([]) // Logos disponíveis para escolha nos relatórios
   const [pdfLogoSelectedIds, setPdfLogoSelectedIds] = useState<Record<PdfLogoSituationId, string>>(() =>
@@ -5571,7 +5573,56 @@ export default function Dashboard() {
     }
   }, [])
 
-  /** Restaurar abas ao voltar do email/outra app no tablet (SO mata a aba → reload). */
+  /** Restaurar abas ao voltar do email/outra app no telemóvel/tablet (SO mata a aba → reload). */
+  const uiSessionPersistRef = useRef({
+    openTabs: [] as Tab[],
+    activeTabId: null as string | null,
+    dashboardWorkspaceExpanded: false,
+    ready: false,
+  })
+
+  useEffect(() => {
+    uiSessionPersistRef.current = {
+      openTabs,
+      activeTabId,
+      dashboardWorkspaceExpanded,
+      ready: !appInitialLoading,
+    }
+  }, [openTabs, activeTabId, dashboardWorkspaceExpanded, appInitialLoading])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const flushUiSessionNow = () => {
+      const snap = uiSessionPersistRef.current
+      if (!snap.ready) return
+      saveUiSessionSnapshot({
+        openTabs: snap.openTabs.map(({ id, type, title, icon, returnHubId }) => ({
+          id,
+          type,
+          title,
+          icon,
+          returnHubId,
+        })),
+        activeTabId: snap.activeTabId,
+        dashboardWorkspaceExpanded: snap.dashboardWorkspaceExpanded,
+      })
+      touchWarmSessionMarker()
+    }
+
+    const onPageHide = () => flushUiSessionNow()
+    const onVisHidden = () => {
+      if (document.visibilityState === 'hidden') flushUiSessionNow()
+    }
+
+    window.addEventListener('pagehide', onPageHide)
+    document.addEventListener('visibilitychange', onVisHidden)
+    return () => {
+      window.removeEventListener('pagehide', onPageHide)
+      document.removeEventListener('visibilitychange', onVisHidden)
+    }
+  }, [])
+
   useEffect(() => {
     if (typeof window === 'undefined' || appInitialLoading) return
     saveUiSessionSnapshot({
@@ -9931,6 +9982,7 @@ export default function Dashboard() {
           setDemoDaysLeft(null)
           setDemoModuleConfig({})
           setLoginUser(auth.user)
+          saveLastAuthUser(auth.user)
           setShowSplashInicial(false)
           setShowPasswordScreen(false)
           return
@@ -9981,6 +10033,7 @@ export default function Dashboard() {
                 clearDemoCookiesClient()
               } else if (auth.authenticated && auth.user) {
                 setLoginUser(auth.user)
+                saveLastAuthUser(auth.user)
                 setShowSplashInicial(false)
                 setShowPasswordScreen(false)
               }
@@ -10048,6 +10101,7 @@ export default function Dashboard() {
     if (warmResume) {
       dataBootstrapCompleteRef.current = true
       markDataBootstrapComplete()
+      markWarmSessionComplete()
     }
 
     const loadAllData = async () => {
@@ -28364,6 +28418,7 @@ export default function Dashboard() {
       allowUnsafeBrowserExitRef.current = true
       if (!isDemoMode) {
         void fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {})
+        clearLastAuthUser()
         setLoginUser(null)
         setShowSplashInicial(true)
         setShowPasswordScreen(false)
@@ -70844,6 +70899,7 @@ A1;Peça exemplo;10`}
         return
       }
       setLoginUser(data.user)
+      if (data.user && !data.demoGuest) saveLastAuthUser(data.user)
       setShowPasswordScreen(false)
       setShowSplashInicial(false)
       setLoginUsuarioInput('')
