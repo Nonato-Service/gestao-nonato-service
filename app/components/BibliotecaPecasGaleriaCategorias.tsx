@@ -16,6 +16,7 @@ type PecaBibliotecaGaleria = {
   categoriaId?: string
   categoria?: string
   imagem?: string
+  temImagemServidor?: boolean
   numeroSequenciaGrupo?: string
 }
 
@@ -87,8 +88,8 @@ type Props = {
   categoriaSelecionadaId: string | null
   onSelecionarCategoria: (categoriaId: string) => void
   onVoltarCategorias: () => void
-  srcImagem: (imagem: string | undefined | null) => string
-  temImagemPropria: (imagem: string | undefined | null) => boolean
+  srcImagem: (input: PecaBibliotecaGaleria | string | undefined | null) => string
+  temImagemPropria: (peca: PecaBibliotecaGaleria) => boolean
   onThumbEnter?: (ev: React.MouseEvent, src: string, label: string) => void
   onThumbLeave?: () => void
   buscaCodigo?: string
@@ -107,8 +108,8 @@ type Props = {
 function renderPecaCard(
   peca: PecaBibliotecaGaleria,
   opts: {
-    srcImagem: (imagem: string | undefined | null) => string
-    temImagemPropria: (imagem: string | undefined | null) => boolean
+    srcImagem: (input: PecaBibliotecaGaleria | string | undefined | null) => string
+    temImagemPropria: (peca: PecaBibliotecaGaleria) => boolean
     onThumbEnter?: (ev: React.MouseEvent, src: string, label: string) => void
     onThumbLeave?: () => void
     codigoLabel: string
@@ -152,8 +153,8 @@ function renderPecaCard(
       <div
         className="biblioteca-pecas-hub__piece-thumb"
         onMouseEnter={(ev) => {
-          if (!temImagemPropria(peca.imagem) || !onThumbEnter) return
-          onThumbEnter(ev, String(peca.imagem).trim(), peca.nome)
+          if (!temImagemPropria(peca) || !onThumbEnter) return
+          onThumbEnter(ev, srcImagem(peca), peca.nome)
           const img = ev.currentTarget.querySelector('img')
           if (img instanceof HTMLImageElement) img.style.transform = 'scale(1.08)'
         }}
@@ -164,11 +165,11 @@ function renderPecaCard(
         }}
       >
         <img
-          src={srcImagem(peca.imagem)}
+          src={srcImagem(peca)}
           alt={peca.nome}
           loading="lazy"
           decoding="async"
-          className={temImagemPropria(peca.imagem) ? undefined : 'biblioteca-pecas-hub__piece-img--padrao'}
+          className={temImagemPropria(peca) ? undefined : 'biblioteca-pecas-hub__piece-img--padrao'}
           style={{
             width: '100%',
             height: '100%',

@@ -47,7 +47,7 @@ function dataApiFetch(input: string, init?: RequestInit): Promise<Response> {
 }
 
 /** Aguarda sessão (login) antes de chamar APIs de dados — o arranque muitas vezes corre antes do cookie existir. */
-async function waitForDataApiAuth(maxMs = 20_000): Promise<boolean> {
+export async function waitForDataApiAuth(maxMs = 20_000): Promise<boolean> {
   if (typeof window === 'undefined') return false
   const start = Date.now()
   while (Date.now() - start < maxMs) {
@@ -887,21 +887,38 @@ export async function hydratePecasBibliotecaImagensFromServer(
 ): Promise<unknown[]> {
   if (!Array.isArray(pecas) || pecas.length === 0) return pecas
 
+  const authed = await waitForDataApiAuth(25_000)
+  if (!authed) {
+    throw new Error('auth_required')
+  }
+
   let totalImages = 0
+  let metaMessage = ''
   try {
     const metaRes = await dataApiFetch(`${API_BASE}/repair-pecas-biblioteca?meta=1`, {
       method: 'GET',
-      signal: createTimeoutSignal(20_000),
+      signal: createTimeoutSignal(30_000),
     })
-    if (metaRes.ok) {
-      const meta = (await metaRes.json()) as { totalImages?: number }
-      if (typeof meta.totalImages === 'number') totalImages = meta.totalImages
+    if (metaRes.status === 401) {
+      throw new Error('auth_required')
     }
-  } catch {
-    /* ignorar */
+    if (metaRes.ok) {
+      const meta = (await metaRes.json()) as { totalImages?: number; message?: string; error?: string }
+      if (meta?.error === 'auth_required') throw new Error('auth_required')
+      if (typeof meta.totalImages === 'number') totalImages = meta.totalImages
+      if (typeof meta.message === 'string') metaMessage = meta.message
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message === 'auth_required') throw e
+    /* continuar — tentativa abaixo */
   }
 
-  if (totalImages <= 0) return pecas
+  if (totalImages <= 0) {
+    throw new Error(
+      metaMessage ||
+        'O servidor não tem fotos em base64 para transferir. Execute PREENCHER-FOTOS-HOMAG.bat no PC para encher a nuvem.'
+    )
+  }
 
   const byId = new Map<string, Record<string, unknown>>()
   for (const p of pecas) {
@@ -912,15 +929,26 @@ export async function hydratePecasBibliotecaImagensFromServer(
 
   let offset = 0
   let loaded = 0
-  const batchLimit = 5
+  let applied = 0
+  const batchLimit = 1
   while (offset < totalImages) {
-    const res = await dataApiFetch(
-      `${API_BASE}/repair-pecas-biblioteca?images=1&offset=${offset}&limit=${batchLimit}`,
-      {
-        method: 'GET',
-        signal: createTimeoutSignal(180_000),
+    let res: Response | null = null
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        res = await dataApiFetch(
+          `${API_BASE}/repair-pecas-biblioteca?images=1&offset=${offset}&limit=${batchLimit}`,
+          {
+            method: 'GET',
+            signal: createTimeoutSignal(240_000),
+          }
+        )
+        if (res.ok || res.status === 401) break
+      } catch {
+        res = null
       }
-    )
+      if (attempt < 2) await new Promise((r) => setTimeout(r, 800 * (attempt + 1)))
+    }
+    if (!res) break
     if (res.status === 401) throw new Error('auth_required')
     if (!res.ok) break
     const json = (await res.json()) as {
@@ -938,6 +966,7 @@ export async function hydratePecasBibliotecaImagensFromServer(
       if (peca && img) {
         peca.imagem = img
         delete peca.temImagemServidor
+        applied++
       }
       loaded++
       onProgress?.({ phase: 'images', loaded, total: totalImages })
@@ -956,6 +985,12 @@ export async function hydratePecasBibliotecaImagensFromServer(
       }
     }
     if (!json.hasMore) break
+  }
+
+  if (applied <= 0) {
+    throw new Error(
+      'Nenhuma foto chegou do servidor. Verifique ligação, login, ou se o Railway tem fotos guardadas (meta totalImages).'
+    )
   }
 
   const finalSnapshot = Array.from(byId.values())

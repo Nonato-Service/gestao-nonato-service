@@ -21,8 +21,19 @@ export type PecaBibliotecaImagemStats = {
 }
 
 export type PecaBibliotecaImagemInput = {
+  id?: unknown
   imagem?: unknown
   temImagemServidor?: unknown
+}
+
+export function pecaBibliotecaTemImagemNoServidor(peca: PecaBibliotecaImagemInput): boolean {
+  const v = peca.temImagemServidor
+  return v === true || v === 'true' || v === 1 || v === '1'
+}
+
+/** Peça mostra foto na grelha (local, URL HOMAG ou pendente no Railway). */
+export function pecaBibliotecaTemFotoVisivel(peca: PecaBibliotecaImagemInput): boolean {
+  return pecaBibliotecaTemImagemPropria(typeof peca.imagem === 'string' ? peca.imagem : '') || pecaBibliotecaTemImagemNoServidor(peca)
 }
 
 export function isPecaBibliotecaImagemPlaceholder(imagem: string | undefined | null): boolean {
@@ -110,13 +121,7 @@ export function pecaBibliotecaTemFotoReal(peca: PecaBibliotecaImagemInput): bool
 
 const HOMAG_IMG_HOST = /^(shop\.)?homag\.com$/i
 
-/** Src para <img>: proxy same-origin para URLs HOMAG (Referer / cookies). */
-export function resolvePecaBibliotecaImagemSrcForDisplay(
-  imagem: string | undefined | null,
-  fallbackSrc = '/brand/nonato-logo-original.png'
-): string {
-  if (!pecaBibliotecaTemImagemPropria(imagem)) return fallbackSrc
-  const s = String(imagem).trim()
+function resolveHomagOrDirectSrc(s: string, fallbackSrc: string): string {
   if (s.startsWith('data:') || s.startsWith('/')) return s
   if (/^https?:\/\//i.test(s)) {
     try {
@@ -130,4 +135,25 @@ export function resolvePecaBibliotecaImagemSrcForDisplay(
     return s
   }
   return fallbackSrc
+}
+
+/** Src para <img>: proxy HOMAG, foto no Railway por id, ou logo padrão. */
+export function resolvePecaBibliotecaImagemSrcForDisplay(
+  input: string | undefined | null | PecaBibliotecaImagemInput,
+  fallbackSrc = '/brand/nonato-logo-original.png'
+): string {
+  if (input && typeof input === 'object') {
+    const peca = input
+    const img = typeof peca.imagem === 'string' ? peca.imagem.trim() : ''
+    if (pecaBibliotecaTemImagemPropria(img)) {
+      return resolveHomagOrDirectSrc(img, fallbackSrc)
+    }
+    if (pecaBibliotecaTemImagemNoServidor(peca) && peca.id) {
+      return `/api/data/peca-biblioteca-imagem?id=${encodeURIComponent(String(peca.id))}`
+    }
+    return fallbackSrc
+  }
+  const imagem = input
+  if (!pecaBibliotecaTemImagemPropria(imagem)) return fallbackSrc
+  return resolveHomagOrDirectSrc(String(imagem).trim(), fallbackSrc)
 }

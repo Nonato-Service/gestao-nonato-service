@@ -53,6 +53,7 @@ import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer } from './lib/m
 import { mergeHomagExportIntoBiblioteca, parseHomagExportJson } from './lib/mergeHomagExport'
 import {
   calcularPecasBibliotecaImagemStats,
+  pecaBibliotecaTemFotoVisivel,
   pecaBibliotecaTemImagemPropria,
   resolvePecaBibliotecaImagemSrcForDisplay,
 } from './lib/pecaBibliotecaImagemStats'
@@ -472,8 +473,10 @@ function normalizePdfModeloPorRelatorioMap(raw: unknown): Record<string, string>
   return out
 }
 
-function pecaBibliotecaSrcImagemDisplay(imagem: string | undefined | null): string {
-  return resolvePecaBibliotecaImagemSrcForDisplay(imagem, PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC)
+function pecaBibliotecaSrcImagemDisplay(
+  imagemOuPeca: string | undefined | null | { imagem?: string; id?: string; temImagemServidor?: boolean }
+): string {
+  return resolvePecaBibliotecaImagemSrcForDisplay(imagemOuPeca, PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC)
 }
 
 type BuscaBibliotecaModo = 'codigo' | 'nome'
@@ -27255,24 +27258,13 @@ export default function Dashboard() {
   const handleCompletarFotosBibliotecaDoServidor = useCallback(async () => {
     if (pecasReporManualLockRef.current || pecasBibliotecaReparoLoading) return
     if (pecasBiblioteca.length < 1) {
-      alert('Carregue primeiro o catálogo de peças (botão «Actualizar biblioteca do servidor»).')
+      alert('Carregue primeiro o catálogo de peças (botão «Sincronizar catálogo»).')
       return
     }
-    const statsAntes = pecasBibliotecaImagemStats
-    if (statsAntes.pendenteServidor < 1 && statsAntes.faltam > 0) {
-      const faltamServidor = bibliotecaServidorMeta?.totalFaltamFoto
-      const msgServidor =
-        typeof faltamServidor === 'number' && faltamServidor > statsAntes.faltam
-          ? `\n\nNo servidor Railway também faltam cerca de ${faltamServidor.toLocaleString('pt-PT')} foto(s) guardadas.\nPara encher a nuvem, no PC execute: PREENCHER-FOTOS-HOMAG.bat`
-          : ''
-      const ok = window.confirm(
-        `Neste browser já tem ${statsAntes.comFotoReal.toLocaleString('pt-PT')} de ${statsAntes.total.toLocaleString('pt-PT')} peças com foto.\n\nFaltam ${statsAntes.faltam.toLocaleString('pt-PT')} — a maioria ainda não está guardada no servidor (só no site HOMAG).${msgServidor}\n\nDeseja mesmo assim transferir as ${bibliotecaServidorMeta?.totalImages ?? statsAntes.pendenteServidor} foto(s) que o Railway já tem?`
-      )
-      if (!ok) return
-    }
+    const base64Antes = pecasBibliotecaImagemStats.comBase64
     pecasReporManualLockRef.current = true
     setPecasBibliotecaReparoLoading(true)
-    setPecasBibliotecaReparoProgress('A preparar download de fotos…')
+    setPecasBibliotecaReparoProgress('A verificar login e servidor…')
     try {
       const comFotos = await hydratePecasBibliotecaImagensFromServer(pecasBiblioteca as unknown[], (p) => {
         if (p.phase === 'images') {
@@ -27285,13 +27277,19 @@ export default function Dashboard() {
       await savePecasBibliotecaLocally(lista as unknown[])
       void refreshBibliotecaServidorMeta()
       const statsDepois = calcularPecasBibliotecaImagemStats(lista)
+      const novasBase64 = statsDepois.comBase64 - base64Antes
       alert(
-        `Transferência concluída.\n\nCom foto neste browser: ${statsDepois.comFotoReal.toLocaleString('pt-PT')} de ${statsDepois.total.toLocaleString('pt-PT')}\nAinda faltam: ${statsDepois.faltam.toLocaleString('pt-PT')}\n\nPara as restantes, no PC execute PREENCHER-FOTOS-HOMAG.bat (descarrega da loja HOMAG para o Railway).`
+        novasBase64 > 0
+          ? `Transferência concluída.\n\n+${novasBase64.toLocaleString('pt-PT')} foto(s) guardadas neste browser.\nCom foto: ${statsDepois.comFotoReal.toLocaleString('pt-PT')} de ${statsDepois.total.toLocaleString('pt-PT')}\nAinda faltam: ${statsDepois.faltam.toLocaleString('pt-PT')}`
+          : `As fotos do servidor já estavam visíveis (URL HOMAG ou carregamento directo).\n\nCom foto: ${statsDepois.comFotoReal.toLocaleString('pt-PT')} de ${statsDepois.total.toLocaleString('pt-PT')}\nPendente servidor: ${statsDepois.pendenteServidor.toLocaleString('pt-PT')}\n\nPara encher a nuvem: PREENCHER-FOTOS-HOMAG.bat no PC.`
       )
     } catch (e) {
       console.error('[completar fotos biblioteca]', e)
+      const msg = e instanceof Error ? e.message : String(e)
       alert(
-        `Erro ao transferir fotos: ${e instanceof Error ? e.message : String(e)}\n\nVerifique ligação e login.`
+        msg === 'auth_required'
+          ? 'Sessão expirada — faça login outra vez e clique «Baixar fotos do servidor».'
+          : `Não foi possível transferir fotos:\n\n${msg}\n\nTente: 1) Sincronizar catálogo  2) Login  3) Ctrl+Shift+R`
       )
     } finally {
       pecasReporManualLockRef.current = false
@@ -27299,7 +27297,6 @@ export default function Dashboard() {
       setPecasBibliotecaReparoProgress('')
     }
   }, [
-    bibliotecaServidorMeta,
     categoriasPecas,
     pecasBiblioteca,
     pecasBibliotecaImagemStats,
@@ -41125,7 +41122,7 @@ export default function Dashboard() {
                   </div>
                   <p style={{ fontSize: 11, margin: '0 0 10px', lineHeight: 1.5, opacity: 0.9, color: '#e8f5ec' }}>
                     {pecasBibliotecaImagemStats.pendenteServidor > 0
-                      ? `${pecasBibliotecaImagemStats.pendenteServidor.toLocaleString('pt-PT')} foto(s) prontas no servidor para transferir.`
+                      ? `${pecasBibliotecaImagemStats.pendenteServidor.toLocaleString('pt-PT')} foto(s) no Railway — aparecem ao abrir o catálogo (carregamento directo). «Baixar» grava no browser (demora ~30 min).`
                       : pecasBibliotecaImagemStats.faltam > 0
                         ? 'Milhares de fotos ainda só existem na loja HOMAG — use PREENCHER-FOTOS-HOMAG.bat no PC.'
                         : 'Catálogo completo com fotos neste browser.'}
@@ -41163,7 +41160,7 @@ export default function Dashboard() {
                     onSelecionarCategoria={setBibliotecaGaleriaCategoriaId}
                     onVoltarCategorias={() => setBibliotecaGaleriaCategoriaId(null)}
                     srcImagem={pecaBibliotecaSrcImagemDisplay}
-                    temImagemPropria={pecaBibliotecaTemImagemPropria}
+                    temImagemPropria={(peca) => pecaBibliotecaTemFotoVisivel(peca)}
                     onThumbEnter={(ev, src, label) => showBibliotecaImgPreview(ev, src, label)}
                     onThumbLeave={hideBibliotecaImgPreview}
                     buscaCodigo={buscaCodigoBiblioteca}
