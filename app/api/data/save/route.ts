@@ -6,7 +6,7 @@ import { ensureDataDir, resolveDataDirForKey } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
-import { jsonFileContentUnchanged, serializeJsonForDisk } from '../writeIfChanged'
+import { jsonFileContentUnchanged, writeJsonFileAtomic } from '../writeIfChanged'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         revision = meta.revision
         updatedAt = meta.updatedAt
       } else {
-        fs.writeFileSync(filePath, serializeJsonForDisk(value), 'utf-8')
+        writeJsonFileAtomic(filePath, value)
         const meta = bumpSyncMeta(dataDir)
         revision = meta.revision
         updatedAt = meta.updatedAt

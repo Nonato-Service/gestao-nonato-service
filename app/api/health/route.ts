@@ -34,13 +34,16 @@ export async function GET() {
   const dataDirEnv = process.env.DATA_DIR || null
 
   const persistenceOk =
-    fileCount > 2 ||
     clientesPersistidos ||
+    (fileCount > 5 && Boolean(volumeMount)) ||
     Boolean(volumeMount && dataDirEnv && volumeMount === dataDirEnv)
+
+  const isRailway = Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID)
+  const httpStatus = isRailway && !persistenceOk ? 503 : 200
 
   return new Response(
     JSON.stringify({
-      ok: true,
+      ok: httpStatus === 200,
       persistence: {
         dataDir,
         fileCount,
@@ -54,7 +57,7 @@ export async function GET() {
       },
     }),
     {
-      status: 200,
+      status: httpStatus,
       headers: { 'Content-Type': 'application/json' },
     }
   )

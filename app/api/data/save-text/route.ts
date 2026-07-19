@@ -5,7 +5,7 @@ import { ensureDataDir, resolveDataDirForKey } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
-import { textFileContentUnchanged } from '../writeIfChanged'
+import { textFileContentUnchanged, writeTextFileAtomic } from '../writeIfChanged'
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
         revision = meta.revision
         updatedAt = meta.updatedAt
       } else {
-        fs.writeFileSync(filePath, textPayload, 'utf-8')
+        writeTextFileAtomic(filePath, textPayload)
         const meta = bumpSyncMeta(dataDir)
         revision = meta.revision
         updatedAt = meta.updatedAt

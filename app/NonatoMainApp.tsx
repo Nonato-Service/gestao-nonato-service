@@ -5000,8 +5000,8 @@ export default function Dashboard() {
   const [searchedEquipamento, setSearchedEquipamento] = useState<Equipamento | null>(null)
   const [backupMethod, setBackupMethod] = useState<'local' | 'server'>('local')
   const [backupServerUrl, setBackupServerUrl] = useState<string>('')
-  const [autoBackupEnabled, setAutoBackupEnabled] = useState<boolean>(false)
-  const [autoBackupInterval, setAutoBackupInterval] = useState<number>(60) // minutos
+  const [autoBackupEnabled, setAutoBackupEnabled] = useState<boolean>(true)
+  const [autoBackupInterval, setAutoBackupInterval] = useState<number>(30) // minutos
   const [translatorText, setTranslatorText] = useState('')
   const [translatorFrom, setTranslatorFrom] = useState<string>('pt-BR')
   const [translatorTo, setTranslatorTo] = useState<string>('en')
@@ -11757,13 +11757,15 @@ export default function Dashboard() {
 
       // Carregar configurações de backup automático
       const savedAutoBackupEnabled = getData('nonato-auto-backup-enabled', false)
-      if (savedAutoBackupEnabled) {
-        setAutoBackupEnabled(savedAutoBackupEnabled === 'true')
+      if (savedAutoBackupEnabled === 'false') {
+        setAutoBackupEnabled(false)
+      } else {
+        setAutoBackupEnabled(true)
       }
 
       const savedAutoBackupInterval = getData('nonato-auto-backup-interval', false)
       if (savedAutoBackupInterval) {
-        setAutoBackupInterval(parseInt(savedAutoBackupInterval, 10))
+        setAutoBackupInterval(parseInt(savedAutoBackupInterval, 10) || 30)
       }
 
       /** Hub / armazém: mesmo snapshot `serverData` + getData que o resto (evita corrida com loadData em paralelo). */
@@ -23597,23 +23599,32 @@ export default function Dashboard() {
     setRelatoriosServico(updatedRelatorios)
     snapshotRelatoriosServicoBackup(updatedRelatorios)
     void (async () => {
-      const ok = await saveData('nonato-relatorios-servico', updatedRelatorios, true, true)
-      if (!ok && !opts?.silencioso) {
+      const okRel = await saveData('nonato-relatorios-servico', updatedRelatorios, true, true)
+      let okCli = true
+      if (savedRelatorio.clienteId) {
+        const updatedClientes = aplicarRelatorioNaBibliotecaCliente(clientes, savedRelatorio, equipamentos)
+        if (updatedClientes !== clientes) {
+          setClientes(updatedClientes)
+          okCli = await saveData('nonato-clientes', updatedClientes, true, true)
+        }
+      }
+      if ((!okRel || !okCli) && !opts?.silencioso) {
         alert(
           (safeT as any)?.relatorioServicoGuardadoSoLocal ||
-            'Relatório guardado neste aparelho. O servidor ainda não confirmou — os dados estão no backup local.'
+            '⚠️ Relatório guardado neste aparelho. O servidor ainda NÃO confirmou — ligue-se à internet e aguarde a sincronização (indicador no canto inferior).'
         )
+      } else if (okRel && okCli && !opts?.silencioso && !editingRelatorioServico) {
+        try {
+          window.dispatchEvent(
+            new CustomEvent('nonato-save-server-result', {
+              detail: { key: 'nonato-relatorios-servico', ok: true, confirmed: true },
+            })
+          )
+        } catch {
+          /* ignorar */
+        }
       }
     })()
-
-    // Biblioteca por cliente: indexa em cada equipamento do cliente (até 5)
-    if (savedRelatorio.clienteId) {
-      const updatedClientes = aplicarRelatorioNaBibliotecaCliente(clientes, savedRelatorio, equipamentos)
-      if (updatedClientes !== clientes) {
-        setClientes(updatedClientes)
-        saveData('nonato-clientes', updatedClientes)
-      }
-    }
 
     const vendidosArmazem = aplicarBaixaArmazemPorVendaRelatorio(savedRelatorio)
     if (vendidosArmazem.length > 0) {
@@ -35146,6 +35157,24 @@ export default function Dashboard() {
                           {(safeT as any)?.relatoriosNaBibliotecaContagem || 'na Biblioteca'}
                         </>
                       )}
+                    </p>
+                  )}
+                  {fechamentosGuardadosBibliotecaIds.length > 0 && relatoriosServicoListaPrincipal.length === 0 && (
+                    <p
+                      style={{
+                        margin: '8px 0 0',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        background: 'rgba(0, 150, 255, 0.12)',
+                        border: '1px solid rgba(0, 150, 255, 0.45)',
+                        color: '#bae6fd',
+                        fontSize: '13px',
+                        lineHeight: 1.45,
+                      }}
+                    >
+                      📚{' '}
+                      {(safeT as any)?.relatoriosArquivadosBibliotecaAviso ||
+                        `${fechamentosGuardadosBibliotecaIds.length} relatório(s) concluído(s) estão na Biblioteca — não desapareceram. Toque em «Biblioteca» para ver.`}
                     </p>
                   )}
                 </div>

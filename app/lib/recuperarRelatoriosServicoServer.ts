@@ -132,14 +132,21 @@ function coletarFontesRelatorios(dataDir: string, projectRoot: string): Relatori
   fontes.push(...extrairRelatoriosDeClientes(readJson(path.join(dataDir, `${CLIENTES_KEY}.json`))))
   fontes.push(...extrairRelatoriosExcluidos(readJson(path.join(dataDir, `${EXCLUIDOS_KEY}.json`))))
 
-  const backupsDir = path.join(projectRoot, 'backups', 'json')
-  if (fs.existsSync(backupsDir)) {
+  const backupDirs = [
+    path.join(dataDir, 'backups', 'json'),
+    path.join(projectRoot, 'backups', 'json'),
+  ]
+  const seenBackupFiles = new Set<string>()
+  for (const backupsDir of backupDirs) {
+    if (!fs.existsSync(backupsDir)) continue
     const backups = fs
       .readdirSync(backupsDir)
       .filter((f) => f.startsWith('backup-dados-') && f.endsWith('.json'))
       .map((f) => ({ f, m: fs.statSync(path.join(backupsDir, f)).mtimeMs }))
       .sort((a, b) => b.m - a.m)
     for (const { f } of backups.slice(0, 30)) {
+      if (seenBackupFiles.has(f)) continue
+      seenBackupFiles.add(f)
       const j = readJson(path.join(backupsDir, f)) as { data?: Record<string, unknown> } | null
       if (!j?.data) continue
       pushArray(`backup ${f}`, extrairRelatoriosArray(j.data[RELATORIOS_KEY]))

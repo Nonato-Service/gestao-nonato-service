@@ -124,7 +124,15 @@ export async function collectFullBackupData(opts?: {
     if (opts?.stripPhotos && (key === 'nonato-gestores' || key === 'nonato-tecnicos')) {
       v = stripPhotosFromPeople(v)
     }
-    if (opts?.forAuto && serializeSize(v) > MAX_AUTO_VALUE_CHARS) continue
+    if (opts?.forAuto && serializeSize(v) > MAX_AUTO_VALUE_CHARS) {
+      if (
+        key !== 'nonato-relatorios-servico' &&
+        key !== 'nonato-clientes' &&
+        key !== 'nonato-fechamentos-relatorios'
+      ) {
+        continue
+      }
+    }
     trimmed[key] = v
   }
   return trimmed

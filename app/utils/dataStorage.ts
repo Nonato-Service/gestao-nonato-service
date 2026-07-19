@@ -196,25 +196,15 @@ function setItemWithQuotaRecovery(key: string, serialized: string): void {
     if (!isQuotaExceededError(error)) throw error
   }
   console.warn(
-    '[saveData] localStorage sem espaço após libertar backups automáticos; a tentar fila de sync e código.'
+    '[saveData] localStorage sem espaço após libertar backups automáticos; fila de sync mantida intacta.'
   )
   try {
     localStorage.removeItem('nonato-code-backups')
   } catch {
     /* ignorar */
   }
-  try {
-    const q = getSyncQueue()
-    if (q.length > 0) {
-      setSyncQueue(q.slice(Math.floor(q.length / 2)))
-    }
-  } catch {
-    /* ignorar */
-  }
-  try {
-    localStorage.removeItem(SYNC_QUEUE_KEY)
-  } catch {
-    /* ignorar */
+  if (key === SYNC_QUEUE_KEY) {
+    throw error
   }
   localStorage.setItem(key, serialized)
 }
@@ -223,6 +213,31 @@ function setItemWithQuotaRecovery(key: string, serialized: string): void {
 const pendingSaveByKey = new Map<string, Promise<boolean>>()
 /** Enquanto um POST está em curso para `key`, guarda o último valor pedido para enviar a seguir (last-write-wins). */
 const coalesceNextValueByKey = new Map<string, any>()
+
+// Resultado interno do POST ao servidor
+type SaveServerResult = 'ok' | 'blocked' | 'fail'
+
+function dispatchSyncBlocked(key: string, reason: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.dispatchEvent(
+      new CustomEvent('nonato-sync-blocked', { detail: { key, reason } })
+    )
+  } catch {
+    /* ignorar */
+  }
+}
+
+function dispatchSaveServerResult(key: string, ok: boolean): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.dispatchEvent(
+      new CustomEvent('nonato-save-server-result', { detail: { key, ok } })
+    )
+  } catch {
+    /* ignorar */
+  }
+}
 
 // Flag para detectar se o servidor está offline
 let serverOffline = false
@@ -315,12 +330,13 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
     if (!prev || item.timestamp >= prev.timestamp) latestByKey.set(item.key, item)
   }
   for (const item of latestByKey.values()) {
-    const ok = await _doSaveToServer(item.key, item.value)
-    if (ok) synced++
-    else {
+    const result = await _doSaveToServer(item.key, item.value)
+    if (result === 'ok') synced++
+    else if (result === 'fail') {
       failed++
       remaining.push(item)
     }
+    /* blocked: não reenviar — servidor tem versão mais completa */
   }
   setSyncQueue(remaining)
   serverOffline = failed > 0
@@ -398,6 +414,7 @@ function flushPendingSyncWithKeepalive(): void {
       void fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: isLarge ? JSON.stringify({ key: item.key, value: payloadStr }) : body,
         keepalive: true,
       }).catch(() => {})
@@ -569,19 +586,22 @@ export function omitEmptyProtectedKeysForServerPush(data: Record<string, any>): 
   return out
 }
 
-async function _doSaveToServer(key: string, value: any): Promise<boolean> {
-  if (isNonatoDemoBuild()) return true
+async function _doSaveToServer(key: string, value: any): Promise<SaveServerResult> {
+  if (isNonatoDemoBuild()) return 'ok'
   if (await shouldBlockEmptyServerOverwrite(key, value)) {
     console.warn(
       `[Nonato] Gravação ignorada: «${key}» vazio não pode substituir o cadastro já guardado no servidor.`
     )
-    return true
+    dispatchSyncBlocked(key, 'empty')
+    return 'blocked'
   }
   if (await shouldBlockShrinkServerOverwrite(key, value)) {
-    return true
+    dispatchSyncBlocked(key, 'shrink')
+    return 'blocked'
   }
   if (await shouldBlockPecasImageStripOverwrite(key, value)) {
-    return true
+    dispatchSyncBlocked(key, 'pecas')
+    return 'blocked'
   }
   try {
     const payloadStr = typeof value === 'string' ? value : JSON.stringify(value)
@@ -632,11 +652,11 @@ async function _doSaveToServer(key: string, value: any): Promise<boolean> {
       } catch {
         /* resposta sem JSON */
       }
-      return true
+      return 'ok'
     }
-    return false
+    return 'fail'
   } catch {
-    return false
+    return 'fail'
   }
 }
 
@@ -667,8 +687,14 @@ export async function saveToServer(key: string, value: any): Promise<boolean> {
           return false
         }
         try {
-          lastOk = await _doSaveToServer(key, current)
-          if (!lastOk) {
+          const result = await _doSaveToServer(key, current)
+          if (result === 'ok') {
+            lastOk = true
+          } else if (result === 'blocked') {
+            lastOk = false
+            dispatchSaveServerResult(key, false)
+          } else {
+            lastOk = false
             serverOffline = true
             enqueueSyncItem(key, current)
           }
@@ -2009,6 +2035,9 @@ export async function saveData(
     } catch {
       /* ignorar */
     }
+  }
+  if (awaitServer && typeof window !== 'undefined') {
+    dispatchSaveServerResult(key, serverOk)
   }
   return serverOk
 }

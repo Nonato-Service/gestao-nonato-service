@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import { DATA_DIR } from '../data/shared'
 
 export const MAX_JSON_BACKUPS_ON_DISK = 30
 export const MAX_CODIGO_ZIP_ON_DISK = 15
@@ -11,6 +12,14 @@ export function getBackupsRoot(projectRoot: string): string {
 
 export function getJsonBackupsDir(projectRoot: string): string {
   return path.join(getBackupsRoot(projectRoot), 'json')
+}
+
+/** Backups JSON no volume persistente (Railway) — sobrevivem a redeploys. */
+export function getPersistentJsonBackupsDir(projectRoot: string): string {
+  if (process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.DATA_DIR) {
+    return path.join(DATA_DIR, 'backups', 'json')
+  }
+  return getJsonBackupsDir(projectRoot)
 }
 
 export function getCodigoBackupsDir(projectRoot: string): string {
@@ -28,7 +37,7 @@ export function ensureBackupLayout(projectRoot: string): {
   codigoDir: string
 } {
   const root = getBackupsRoot(projectRoot)
-  const jsonDir = getJsonBackupsDir(projectRoot)
+  const jsonDir = getPersistentJsonBackupsDir(projectRoot)
   const codigoDir = getCodigoBackupsDir(projectRoot)
   for (const dir of [root, jsonDir, codigoDir]) {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })

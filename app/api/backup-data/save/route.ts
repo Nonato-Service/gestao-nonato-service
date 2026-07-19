@@ -6,10 +6,11 @@ import { getProjectRoot } from '../../backup-code/project-root'
 import {
   ensureBackupLayout,
   formatBackupStamp,
-  getJsonBackupsDir,
+  getPersistentJsonBackupsDir,
   MAX_JSON_BACKUPS_ON_DISK,
   pruneFilesInDir,
 } from '../../backup-code/backup-paths'
+import { writeJsonFileAtomic } from '../../data/writeIfChanged'
 
 export const runtime = 'nodejs'
 
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
     const filePath = path.join(jsonDir, fileName)
     const jsonStr = JSON.stringify(body, null, 2)
 
-    fs.writeFileSync(filePath, jsonStr, 'utf-8')
+    writeJsonFileAtomic(filePath, body)
 
     pruneFilesInDir(
       jsonDir,
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const projectRoot = path.resolve(getProjectRoot())
-    const jsonDir = getJsonBackupsDir(projectRoot)
+    const jsonDir = getPersistentJsonBackupsDir(projectRoot)
     if (!fs.existsSync(jsonDir)) {
       return NextResponse.json({ files: [], jsonFolder: path.resolve(jsonDir) })
     }
