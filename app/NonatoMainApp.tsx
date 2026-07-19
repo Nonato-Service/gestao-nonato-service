@@ -3480,6 +3480,39 @@ function relatoriosComFechamentoNaBibliotecaOrdenados(
     })
 }
 
+type RelatorioFechadoBibliotecaRow = {
+  relatorio: RelatorioServico
+  clienteNome: string
+  itens: FechamentoItem[]
+}
+
+/** Todos os relatórios já fechados / arquivados na biblioteca — para secção «Ver» e «Editar». */
+function buildRelatoriosFechadosBibliotecaLista(
+  relatoriosServico: RelatorioServico[],
+  clientes: Cliente[],
+  fechamentosGuardadosBibliotecaIds: string[],
+  fechamentosRelatorios: Record<string, FechamentoItem[] | undefined>
+): RelatorioFechadoBibliotecaRow[] {
+  const idSet = new Set(fechamentosGuardadosBibliotecaIds)
+  return relatoriosServico
+    .filter((r) => idSet.has(r.id))
+    .map((r) => {
+      const cliente =
+        clientes.find((c) => c.id === r.clienteId) ||
+        findClienteByRelatorio(clientes, r)
+      return {
+        relatorio: r,
+        clienteNome: String(cliente?.nomeEmpresa || r.cliente || '—').trim() || '—',
+        itens: Array.isArray(fechamentosRelatorios[r.id]) ? fechamentosRelatorios[r.id]! : [],
+      }
+    })
+    .sort((a, b) => {
+      const byC = cmpBibliotecaLocale(a.clienteNome, b.clienteNome)
+      if (byC !== 0) return byC
+      return cmpBibliotecaLocale(String(a.relatorio.numero ?? ''), String(b.relatorio.numero ?? ''))
+    })
+}
+
 type BibliotecaRelatoriosClienteRow = {
   cliente: Cliente
   equipamentos: Array<{ equipamento: EquipamentoCliente; equipamentoKey: string; relatorios: RelatorioServico[] }>
@@ -8826,6 +8859,7 @@ export default function Dashboard() {
   const [bibliotecaRelatoriosAlfaLetraFiltro, setBibliotecaRelatoriosAlfaLetraFiltro] = useState<string | null>(null)
   const [bibliotecaRelatoriosClientesExpandidos, setBibliotecaRelatoriosClientesExpandidos] = useState<Set<string>>(new Set())
   const [bibliotecaRelatoriosEquipExpandidos, setBibliotecaRelatoriosEquipExpandidos] = useState<Set<string>>(new Set())
+  const [bibliotecaSecaoFechadosExpandida, setBibliotecaSecaoFechadosExpandida] = useState(true)
   const [showRelatorioServicoModal, setShowRelatorioServicoModal] = useState(false)
   const [showRelatorioServicoForm, setShowRelatorioServicoForm] = useState(false)
   const [editingRelatorioServico, setEditingRelatorioServico] = useState<RelatorioServico | null>(null)
@@ -30124,6 +30158,24 @@ export default function Dashboard() {
               }}
             >
               📄 {tm.gerarPDF || 'PDF'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setModalVisualizarDespesasBiblioteca(null)
+                setViewingRelatorioServico(resolverRelatorioServicoDono(relV))
+              }}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '8px',
+                border: '2px solid rgba(74, 222, 128, 0.55)',
+                background: 'rgba(26, 28, 26, 0.92)',
+                color: '#bbf7d0',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              👁 {tm.verRelatorioServicoBiblioteca ?? 'Ver relatório de serviço'}
             </button>
             <button
               type="button"
@@ -64538,6 +64590,13 @@ A1;Peça exemplo;10`}
           tplBibliotecaHeroTotais.trim() !== ''
             ? tplBibliotecaHeroTotais
             : `${totalRelatorios} relatório(s) de serviço · ${totalRelatoriosDespesasBiblioteca} relatório(s) de despesas · ${relatoriosPorCliente.length} cliente(s)`
+        const relatoriosFechadosLista = buildRelatoriosFechadosBibliotecaLista(
+          relatoriosServico,
+          clientes,
+          fechamentosGuardadosBibliotecaIds,
+          fechamentosRelatorios
+        )
+        const txBibHero = safeT as Record<string, string>
 
         return (
           <>
@@ -64713,7 +64772,153 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
-            {relatoriosPorCliente.length === 0 ? (
+            {relatoriosFechadosLista.length > 0 ? (
+              <details
+                className="biblioteca-relatorios-fechados-block"
+                open={bibliotecaSecaoFechadosExpandida}
+                onToggle={(e) =>
+                  setBibliotecaSecaoFechadosExpandida((e.currentTarget as HTMLDetailsElement).open)
+                }
+              >
+                <summary className="biblioteca-relatorios-fechados-block__summary">
+                  <span className="biblioteca-relatorios-fechados-block__title">
+                    📁{' '}
+                    {txBibHero.bibliotecaRelatoriosFechadosTitulo ||
+                      'Relatórios fechados na biblioteca'}
+                  </span>
+                  <span className="biblioteca-relatorios-fechados-block__count">
+                    {relatoriosFechadosLista.length}
+                  </span>
+                  <span className="biblioteca-relatorios-fechados-block__hint">
+                    {txBibHero.bibliotecaRelatoriosFechadosHint ||
+                      'Visualize o relatório completo ou edite o serviço e as despesas quando necessário.'}
+                  </span>
+                </summary>
+                <div className="biblioteca-relatorios-tabela-wrap biblioteca-relatorios-fechados-block__table">
+                  <table className="biblioteca-relatorios-tabela biblioteca-relatorios-tabela--fechados">
+                    <thead>
+                      <tr>
+                        <th>{txBibHero.cliente || 'Cliente'}</th>
+                        <th>{txBibHero.relatorioNumeroLabel || 'Rel.'}</th>
+                        <th>{txBibHero.data || 'Data'}</th>
+                        <th>{txBibHero.tecnico || 'Técnico'}</th>
+                        <th className="bib-col-total">{txBibHero.total || 'Total'}</th>
+                        <th className="bib-col-acoes">{txBibHero.acoes || 'Ações'}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {relatoriosFechadosLista.map(({ relatorio, clienteNome, itens }) => {
+                        const rel = resolverRelatorioServicoDono(relatorio)
+                        const itensVis = filtrarFechamentoItensPorOmitidos(
+                          fechamentoItensOmitidosPorRelatorio,
+                          rel.id,
+                          itens
+                        )
+                        const totalDesp = itensVis.length
+                          ? totaisFechamentoLiquidoComIva(
+                              itensVis,
+                              fechamentoIvaPorRelatorioId[rel.id]
+                            ).comIva
+                          : null
+                        const dataFmt = rel.data
+                          ? new Date(rel.data).toLocaleDateString('pt-PT', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                            })
+                          : '—'
+                        return (
+                          <tr key={`fechado-${rel.id}`}>
+                            <td>{clienteNome}</td>
+                            <td className="bib-col-num">
+                              <span className="bib-rel-num">{rel.numero}</span>
+                              <span className="bib-tag-fechado" title="Fechado na biblioteca">
+                                FECHADO
+                              </span>
+                            </td>
+                            <td>{dataFmt}</td>
+                            <td>{rel.tecnico || '—'}</td>
+                            <td className="bib-col-num bib-col-total">
+                              {totalDesp != null ? `€${totalDesp.toFixed(2)}` : '—'}
+                            </td>
+                            <td className="bib-col-acoes">
+                              <div className="bib-acoes-icones bib-acoes-icones--fechados">
+                                <button
+                                  type="button"
+                                  className="bib-acao bib-acao--ver"
+                                  title={txBibHero.verRelatorioServicoBiblioteca || 'Ver relatório de serviço'}
+                                  onClick={() => setViewingRelatorioServico(rel)}
+                                >
+                                  👁{' '}
+                                  <span className="bib-acao__label">
+                                    {txBibHero.verRelatorioServicoBiblioteca || 'Ver relatório'}
+                                  </span>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="bib-acao bib-acao--edit"
+                                  title={txBibHero.editarRelatorioServicoBiblioteca || 'Editar relatório'}
+                                  onClick={() => handleEditarRelatorioServicoNaBiblioteca(rel)}
+                                >
+                                  ✏️{' '}
+                                  <span className="bib-acao__label">
+                                    {txBibHero.editarRelatorioServicoBiblioteca || 'Editar relatório'}
+                                  </span>
+                                </button>
+                                {itensVis.length > 0 ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="bib-acao bib-acao--ver"
+                                      title={txBibHero.visualizarDespesasBiblioteca || 'Ver despesas'}
+                                      onClick={() =>
+                                        setModalVisualizarDespesasBiblioteca({
+                                          relatorio: rel,
+                                          itens: itensVis,
+                                        })
+                                      }
+                                    >
+                                      💰{' '}
+                                      <span className="bib-acao__label">
+                                        {txBibHero.visualizarDespesasBiblioteca || 'Ver despesas'}
+                                      </span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="bib-acao bib-acao--edit"
+                                      title={txBibHero.editarRelatorioDespesas || 'Editar despesas'}
+                                      onClick={() => handleEditarDespesasNaBiblioteca(rel.id)}
+                                    >
+                                      ✏️{' '}
+                                      <span className="bib-acao__label">
+                                        {txBibHero.editarRelatorioDespesas || 'Editar despesas'}
+                                      </span>
+                                    </button>
+                                  </>
+                                ) : null}
+                                <button
+                                  type="button"
+                                  className="bib-acao bib-acao--pdf"
+                                  title={txBibHero.gerarPDF || 'PDF'}
+                                  onClick={() =>
+                                    handlePrintRelatorio(rel, getPdfModelForRelatorio(rel.id))
+                                  }
+                                >
+                                  📄{' '}
+                                  <span className="bib-acao__label">{txBibHero.gerarPDF || 'PDF'}</span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            ) : null}
+
+            {relatoriosPorCliente.length === 0 && relatoriosFechadosLista.length === 0 ? (
               <div style={{ 
                 ...glassCardStyle(ACCENT_GREEN, { padding: '60px 40px', radius: '12px', borderAlpha: 0.2, borderWidth: '1px' }),
                 textAlign: 'center'
@@ -65047,6 +65252,11 @@ A1;Peça exemplo;10`}
                                                       OK
                                                     </span>
                                                   ) : null}
+                                                  {fechamentosGuardadosBibliotecaIds.includes(relatorio.id) ? (
+                                                    <span className="bib-tag-fechado" title="Fechado na biblioteca">
+                                                      FECHADO
+                                                    </span>
+                                                  ) : null}
                                                 </td>
                                                 <td>{relatorio.tipoServico || '—'}</td>
                                                 <td>{dataFormatada}</td>
@@ -65068,27 +65278,30 @@ A1;Peça exemplo;10`}
                                                     />
                                                     <button
                                                       type="button"
-                                                      className="bib-acao bib-acao--ver bib-acao--compact"
-                                                      title={safeT?.view || 'Ver'}
-                                                      aria-label={safeT?.view || 'Ver'}
+                                                      className="bib-acao bib-acao--ver"
+                                                      title={txBib.verRelatorioServicoBiblioteca ?? safeT?.view ?? 'Ver relatório'}
+                                                      aria-label={txBib.verRelatorioServicoBiblioteca ?? safeT?.view ?? 'Ver relatório'}
                                                       onClick={() =>
                                                         setViewingRelatorioServico(
                                                           resolverRelatorioServicoDono(relatorio)
                                                         )
                                                       }
                                                     >
-                                                      👁
+                                                      👁{' '}
+                                                      <span className="bib-acao__label">
+                                                        {txBib.verRelatorioServicoBiblioteca ?? safeT?.view ?? 'Ver'}
+                                                      </span>
                                                     </button>
                                                     <button
                                                       type="button"
-                                                      className="bib-acao bib-acao--edit bib-acao--compact"
+                                                      className="bib-acao bib-acao--edit"
                                                       title={
-                                                        (txBib as any).editarRelatorioServicoBiblioteca ??
+                                                        txBib.editarRelatorioServicoBiblioteca ??
                                                         safeT?.edit ??
                                                         'Editar'
                                                       }
                                                       aria-label={
-                                                        (txBib as any).editarRelatorioServicoBiblioteca ??
+                                                        txBib.editarRelatorioServicoBiblioteca ??
                                                         safeT?.edit ??
                                                         'Editar'
                                                       }
@@ -65096,7 +65309,12 @@ A1;Peça exemplo;10`}
                                                         handleEditarRelatorioServicoNaBiblioteca(relatorio)
                                                       }
                                                     >
-                                                      ✏️
+                                                      ✏️{' '}
+                                                      <span className="bib-acao__label">
+                                                        {txBib.editarRelatorioServicoBiblioteca ??
+                                                          safeT?.edit ??
+                                                          'Editar'}
+                                                      </span>
                                                     </button>
                                                     <button
                                                       type="button"
@@ -65189,9 +65407,9 @@ A1;Peça exemplo;10`}
                                           <div className="bib-acoes-icones">
                                             <button
                                               type="button"
-                                              className="bib-acao bib-acao--ver bib-acao--compact"
-                                              title={txBib.visualizarDespesasBiblioteca ?? safeT?.view ?? 'Ver'}
-                                              aria-label={txBib.visualizarDespesasBiblioteca ?? safeT?.view ?? 'Ver'}
+                                              className="bib-acao bib-acao--ver"
+                                              title={txBib.visualizarDespesasBiblioteca ?? safeT?.view ?? 'Ver despesas'}
+                                              aria-label={txBib.visualizarDespesasBiblioteca ?? safeT?.view ?? 'Ver despesas'}
                                               onClick={() =>
                                                 setModalVisualizarDespesasBiblioteca({
                                                   relatorio,
@@ -65199,16 +65417,22 @@ A1;Peça exemplo;10`}
                                                 })
                                               }
                                             >
-                                              👁
+                                              👁{' '}
+                                              <span className="bib-acao__label">
+                                                {txBib.visualizarDespesasBiblioteca ?? safeT?.view ?? 'Ver'}
+                                              </span>
                                             </button>
                                             <button
                                               type="button"
-                                              className="bib-acao bib-acao--edit bib-acao--compact"
-                                              title={txBib.editarRelatorioDespesas ?? safeT?.edit ?? 'Editar'}
-                                              aria-label={txBib.editarRelatorioDespesas ?? safeT?.edit ?? 'Editar'}
+                                              className="bib-acao bib-acao--edit"
+                                              title={txBib.editarRelatorioDespesas ?? safeT?.edit ?? 'Editar despesas'}
+                                              aria-label={txBib.editarRelatorioDespesas ?? safeT?.edit ?? 'Editar despesas'}
                                               onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)}
                                             >
-                                              ✏️
+                                              ✏️{' '}
+                                              <span className="bib-acao__label">
+                                                {txBib.editarRelatorioDespesas ?? safeT?.edit ?? 'Editar'}
+                                              </span>
                                             </button>
                                             <button
                                               type="button"
