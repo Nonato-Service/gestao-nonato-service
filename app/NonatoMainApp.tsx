@@ -36,6 +36,7 @@ import {
   markDataBootstrapComplete,
   waitForDataBootstrapComplete,
   runSilentServerSync,
+  pullServerUpdatesIfNewer,
   applySilentServerSync,
   getPendingSyncCount,
 } from './utils/dataStorage'
@@ -5234,6 +5235,8 @@ export default function Dashboard() {
   const [syncPendingPullRisk, setSyncPendingPullRisk] = useState<PullRiskSeverity>('none')
   /** Sync automática falhou (rede/servidor) — semáforo amarelo; modal só se o utilizador abrir Admin. */
   const [syncAutoSyncFailed, setSyncAutoSyncFailed] = useState(false)
+  const [serverAutoPullActive, setServerAutoPullActive] = useState(false)
+  const serverAutoPullInFlightRef = useRef(false)
   const SYNC_MODAL_SNOOZE_LS = 'nonato-sync-modal-snooze-until'
   const SYNC_MODAL_DISMISSED_REV_LS = 'nonato-sync-modal-dismissed-rev'
   const isSyncModalSnoozed = useCallback(() => {
@@ -8838,29 +8841,6 @@ export default function Dashboard() {
     [aplicarRecuperacaoRelatoriosModal]
   )
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || appInitialLoading) return
-    try {
-      if (sessionStorage.getItem('nonato-recuperacao-rel-sugerida-v1')) return
-    } catch {
-      /* ignorar */
-    }
-    const ausentes = relatoriosAusentesNaLista(relatoriosServico, clientes)
-    if (ausentes.length === 0) return
-    try {
-      sessionStorage.setItem('nonato-recuperacao-rel-sugerida-v1', '1')
-    } catch {
-      /* ignorar */
-    }
-    const msg = (
-      (safeT as any)?.recuperarRelatoriosSugestaoAuto ||
-      'Encontrámos {n} relatório(s) guardado(s) neste aparelho que não estão na lista. Deseja ver e recuperar?'
-    ).replace(/\{n\}/g, String(ausentes.length))
-    if (window.confirm(msg)) {
-      void handleRecuperarRelatoriosPerdidos()
-    }
-  }, [appInitialLoading, clientes, relatoriosServico, safeT, handleRecuperarRelatoriosPerdidos])
-
   const [relatoriosExcluidosClientes, setRelatoriosExcluidosClientes] = useState<RelatoriosExcluidosClientesStorage>({ pastas: {} })
   const [pastasExcluidasExpandidas, setPastasExcluidasExpandidas] = useState<Set<string>>(new Set())
   const [modalNotaExcluida, setModalNotaExcluida] = useState<ItemRelatorioExcluidoArquivo | null>(null)
@@ -9490,45 +9470,43 @@ export default function Dashboard() {
     }
   }, [])
 
-  /** Servidor: sync silenciosa em fundo e ao voltar ao ecrã. */
+  const runAutoServerPull = useCallback(async () => {
+    if (typeof window === 'undefined') return
+    if (appInitialLoading || isNonatoDemoBuild()) return
+    if (serverAutoPullInFlightRef.current) return
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return
+    if (!dataBootstrapCompleteRef.current) return
+    serverAutoPullInFlightRef.current = true
+    setServerAutoPullActive(true)
+    try {
+      const pulled = await pullServerUpdatesIfNewer()
+      if (pulled.status === 'fail') setSyncAutoSyncFailed(true)
+      else if (pulled.status === 'ok') {
+        setSyncAutoSyncFailed(false)
+        setSyncPendingRemote(null)
+        setSyncDecisionModalOpen(false)
+      } else if (pulled.status === 'noop') {
+        setSyncAutoSyncFailed(false)
+      }
+    } catch {
+      setSyncAutoSyncFailed(true)
+    } finally {
+      serverAutoPullInFlightRef.current = false
+      setServerAutoPullActive(false)
+    }
+  }, [appInitialLoading])
+
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (appInitialLoading) return
     if (isNonatoDemoBuild()) return
 
     let cancelled = false
-    let syncInFlight = false
-    const POLL_MS = 45_000
+    const POLL_MS = 12_000
 
     const runCheck = async () => {
-      if (cancelled || syncInFlight) return
-      if (typeof navigator !== 'undefined' && !navigator.onLine) return
-      if (!dataBootstrapCompleteRef.current) return
-      syncInFlight = true
-      try {
-        const st = await fetchSyncStatus()
-        if (cancelled || !st) return
-        const lastAcc = getLastAcceptedRevision()
-        if (st.revision <= lastAcc) {
-          setSyncAutoSyncFailed(false)
-          setSyncPendingRemote(null)
-          return
-        }
-        if (!hasMeaningfulLocalData()) return
-        const result = await runSilentServerSync(st.revision)
-        if (cancelled) return
-        if (result === 'fail') {
-          setSyncAutoSyncFailed(true)
-          return
-        }
-        setSyncAutoSyncFailed(false)
-        setSyncPendingRemote(null)
-        setSyncDecisionModalOpen(false)
-      } catch {
-        if (!cancelled) setSyncAutoSyncFailed(true)
-      } finally {
-        syncInFlight = false
-      }
+      if (cancelled) return
+      await runAutoServerPull()
     }
 
     const tid = window.setInterval(runCheck, POLL_MS)
@@ -9546,7 +9524,27 @@ export default function Dashboard() {
       document.removeEventListener('visibilitychange', onVis)
       window.removeEventListener('focus', onFocus)
     }
-  }, [appInitialLoading])
+  }, [appInitialLoading, runAutoServerPull])
+
+  const activeTabType = openTabs.find((t) => t.id === activeTabId)?.type ?? null
+  useEffect(() => {
+    if (appInitialLoading) return
+    if (
+      activeTabType !== 'biblioteca-relatorios' &&
+      activeTabType !== 'relatorio-servico' &&
+      activeTabType !== 'fechamento-relatorios-servicos'
+    ) {
+      return
+    }
+    void runAutoServerPull()
+    const tid = window.setInterval(() => void runAutoServerPull(), 10_000)
+    return () => window.clearInterval(tid)
+  }, [activeTabType, appInitialLoading, runAutoServerPull])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || appInitialLoading) return
+    void runAutoServerPull()
+  }, [appInitialLoading, runAutoServerPull])
 
   const aceitarSincronizacaoServidor = useCallback(async () => {
     if (typeof window === 'undefined') return
@@ -35494,6 +35492,7 @@ export default function Dashboard() {
                   )}
                 </div>
                 <div className="relatorio-servico-hero-actions">
+                  {!serverAutoPullActive ? (
                   <button
                     type="button"
                     className="btn-primary"
@@ -35510,6 +35509,15 @@ export default function Dashboard() {
                   >
                     🔄 {(safeT as any)?.recuperarRelatoriosBtn || 'Recuperar relatório'}
                   </button>
+                  ) : (
+                    <span
+                      className="relatorio-servico-sync-updating"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      🔄 {(safeT as any)?.syncUpdatingNewInfo || 'A atualizar novas informações do servidor…'}
+                    </span>
+                  )}
                   <button 
                     className="btn-primary" 
                     onClick={() => openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))} 
@@ -64631,7 +64639,18 @@ A1;Peça exemplo;10`}
 
         return (
           <>
-            <div className="biblioteca-relatorios-root">
+          <div className="biblioteca-relatorios-root">
+            {serverAutoPullActive ? (
+              <div className="biblioteca-sync-updating-banner" role="status" aria-live="polite">
+                <span className="biblioteca-sync-updating-banner__icon" aria-hidden>
+                  🔄
+                </span>
+                <span className="biblioteca-sync-updating-banner__text">
+                  {txBibHero.syncUpdatingNewInfo ||
+                    'A atualizar novas informações do servidor…'}
+                </span>
+              </div>
+            ) : null}
             {/* Cabeçalho Profissional — responsivo (globals.css .biblioteca-relatorios-hero*) */}
             <div className="biblioteca-relatorios-hero">
               <div className="biblioteca-relatorios-hero-top">
@@ -65022,6 +65041,20 @@ A1;Peça exemplo;10`}
                 ...glassCardStyle(ACCENT_GREEN, { padding: '60px 40px', radius: '12px', borderAlpha: 0.2, borderWidth: '1px' }),
                 textAlign: 'center'
               }}>
+                {serverAutoPullActive ? (
+                  <>
+                    <div style={{ fontSize: '48px', marginBottom: '20px' }}>🔄</div>
+                    <p style={{ color: '#ffffff', opacity: 0.95, fontSize: '18px', marginBottom: '10px' }}>
+                      {txBibHero.syncUpdatingNewInfo ||
+                        'A atualizar novas informações do servidor…'}
+                    </p>
+                    <p style={{ color: '#ffffff', opacity: 0.78, fontSize: '14px', maxWidth: '520px', margin: '0 auto' }}>
+                      {txBibHero.syncUpdatingNewInfoHint ||
+                        'Os relatórios criados noutro aparelho aparecem aqui automaticamente.'}
+                    </p>
+                  </>
+                ) : (
+                  <>
                 <div style={{ fontSize: '48px', marginBottom: '20px' }}>📋</div>
                 <p style={{ color: '#ffffff', opacity: 0.95, fontSize: '18px', marginBottom: '10px' }}>
                   {(safeT as any)?.bibliotecaRecuperarRelatoriosTitulo ||
@@ -65055,6 +65088,8 @@ A1;Peça exemplo;10`}
                     🗃️ {(safeT as any)?.bibliotecaVerRelatoriosExcluidos || 'Ver relatórios excluídos'}
                   </button>
                 </div>
+                  </>
+                )}
               </div>
             ) : relatoriosPorCliente.length > 0 ||
               buscaBibliotecaRelatoriosCliente.trim() !== '' ||
@@ -65409,8 +65444,8 @@ A1;Peça exemplo;10`}
                                                     </span>
                                                   ) : null}
                                                   {fechamentosGuardadosBibliotecaIds.includes(relatorio.id) ? (
-                                                    <span className="bib-tag-fechado" title="Fechado na biblioteca">
-                                                      FECHADO
+                                                    <span className="bib-tag-fechado" title={txBib.bibTagFechadoTitle || 'Fechado na biblioteca'}>
+                                                      {txBib.bibTagFechado || 'FECHADO'}
                                                     </span>
                                                   ) : null}
                                                 </td>
@@ -70383,7 +70418,7 @@ A1;Peça exemplo;10`}
   const trSync = safeT as Record<string, string | undefined>
   const syncTrafficPhase: 'boot' | 'syncing' | 'pending' | 'ok' = appInitialLoading
     ? 'boot'
-    : syncPullChecking || syncPushLoading
+    : syncPullChecking || syncPushLoading || serverAutoPullActive
       ? 'syncing'
       : syncAutoSyncFailed
         ? 'pending'
@@ -70403,7 +70438,7 @@ A1;Peça exemplo;10`}
     syncTrafficPhase === 'boot'
       ? trSync.syncTrafficBoot || 'A preparar ligação ao servidor…'
       : syncTrafficPhase === 'syncing'
-        ? trSync.syncTrafficBlue || 'A sincronizar…'
+        ? trSync.syncUpdatingNewInfo || trSync.syncTrafficBlue || 'A atualizar novas informações…'
         : syncAutoSyncFailed
           ? trSync.syncTrafficAutoFail || 'Não foi possível sincronizar automaticamente — verifique a ligação ou use Administrador.'
           : `${trSync.syncTrafficGreen || 'Atualizado — alinhado com o servidor.'} ${trSync.syncTrafficAutoSave || 'Guarda automática — não precisa de botão «Salvar».'}`

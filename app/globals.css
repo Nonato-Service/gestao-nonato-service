@@ -9859,6 +9859,53 @@ a:focus-visible {
   gap: 8px;
   margin: 0 4px 12px;
 }
+.biblioteca-sync-updating-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: linear-gradient(90deg, rgba(14, 116, 144, 0.35) 0%, rgba(18, 18, 18, 0.85) 100%);
+  color: #bae6fd;
+  font-size: 14px;
+  font-weight: 600;
+  animation: biblioteca-sync-pulse 1.6s ease-in-out infinite;
+}
+.biblioteca-sync-updating-banner__icon {
+  display: inline-flex;
+  animation: biblioteca-sync-spin 1.2s linear infinite;
+}
+@keyframes biblioteca-sync-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes biblioteca-sync-pulse {
+  0%,
+  100% {
+    opacity: 0.88;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.relatorio-servico-sync-updating {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: rgba(14, 116, 144, 0.25);
+  color: #bae6fd;
+  font-size: 13px;
+  font-weight: 600;
+}
 @media (max-width: 720px) {
   .bib-acao__label {
     display: none;

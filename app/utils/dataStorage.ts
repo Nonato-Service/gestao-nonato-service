@@ -1931,24 +1931,52 @@ export async function applySilentServerSync(server: Record<string, unknown>): Pr
 
 export type SilentServerSyncResult = 'noop' | 'ok' | 'fail'
 
+export type PullServerUpdatesResult = {
+  status: SilentServerSyncResult | 'offline'
+  changedKeys: string[]
+}
+
+/** Puxa servidor → local quando a revisão remota é mais recente (multi-dispositivo). */
+export async function pullServerUpdatesIfNewer(): Promise<PullServerUpdatesResult> {
+  if (typeof window === 'undefined') return { status: 'fail', changedKeys: [] }
+  if (isNonatoDemoBuild()) return { status: 'noop', changedKeys: [] }
+  if (!isOnline()) return { status: 'offline', changedKeys: [] }
+  try {
+    const st = await fetchSyncStatus()
+    if (!st) return { status: 'fail', changedKeys: [] }
+    const lastAcc = getLastAcceptedRevision()
+    if (st.revision <= lastAcc) return { status: 'noop', changedKeys: [] }
+    const { data: serverData, ok } = await loadAllFromServer()
+    if (!ok || Object.keys(serverData).length === 0) return { status: 'fail', changedKeys: [] }
+    const changedKeys = await applySilentServerSync(serverData as Record<string, unknown>)
+    const stAfter = await fetchSyncStatus()
+    const rev = Math.max(st.revision, stAfter?.revision ?? 0)
+    if (Number.isFinite(rev) && rev > 0) setLastAcceptedRevision(rev)
+    if (changedKeys.length > 0) {
+      try {
+        window.dispatchEvent(
+          new CustomEvent('nonato-server-pull-complete', { detail: { changedKeys } })
+        )
+      } catch {
+        /* ignorar */
+      }
+    }
+    return { status: changedKeys.length > 0 ? 'ok' : 'noop', changedKeys }
+  } catch {
+    return { status: 'fail', changedKeys: [] }
+  }
+}
+
 /** Puxa servidor → local, alinha revisão; não recarrega a página (evita reinício inesperado). */
 export async function runSilentServerSync(expectedRevision?: number): Promise<SilentServerSyncResult> {
-  if (typeof window === 'undefined') return 'fail'
-  if (isNonatoDemoBuild()) return 'noop'
-  try {
-    const { data: serverData, ok } = await loadAllFromServer()
-    if (!ok || Object.keys(serverData).length === 0) return 'fail'
-    const changedKeys = await applySilentServerSync(serverData as Record<string, unknown>)
-    const st = await fetchSyncStatus()
-    const rev = Math.max(expectedRevision ?? 0, st?.revision ?? 0)
-    if (Number.isFinite(rev) && rev > 0) {
-      setLastAcceptedRevision(rev)
-    }
-    if (changedKeys.length === 0) return 'noop'
-    return 'ok'
-  } catch {
-    return 'fail'
+  const pulled = await pullServerUpdatesIfNewer()
+  if (pulled.status === 'offline') return 'fail'
+  if (pulled.status === 'fail') return 'fail'
+  if (pulled.status === 'ok') return 'ok'
+  if (expectedRevision != null && expectedRevision > getLastAcceptedRevision()) {
+    setLastAcceptedRevision(expectedRevision)
   }
+  return 'noop'
 }
 
 /** Envia toda a cópia local para o servidor (substitui ficheiros no servidor pelos deste aparelho). Uma revisão. */
