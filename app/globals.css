@@ -9547,6 +9547,15 @@ a:focus-visible {
 .biblioteca-relatorios-fechados-block__summary::-webkit-details-marker {
   display: none;
 }
+.biblioteca-relatorios-fechados-block__chevron {
+  display: inline-flex;
+  font-size: 11px;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.biblioteca-relatorios-fechados-block[open] .biblioteca-relatorios-fechados-block__chevron {
+  transform: rotate(90deg);
+}
 .biblioteca-relatorios-fechados-block__title {
   font-size: 15px;
 }
@@ -9570,25 +9579,182 @@ a:focus-visible {
   color: rgba(255, 255, 255, 0.78);
   line-height: 1.4;
 }
-.biblioteca-relatorios-fechados-block__table {
+.biblioteca-relatorios-fechados-block__body {
   padding: 0 12px 14px;
 }
-.bib-acoes-icones--fechados {
+.biblioteca-relatorios-fechados-block__toolbar {
+  display: flex;
   flex-wrap: wrap;
-  max-width: 420px;
+  gap: 8px;
+  margin: 0 4px 12px;
 }
-.biblioteca-relatorios-tabela--fechados .bib-col-acoes {
-  min-width: 280px;
+.biblioteca-relatorios-fechados-client-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.biblioteca-relatorios-fechados-cliente {
+  border-radius: 10px;
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  background: rgba(18, 18, 18, 0.72);
+  overflow: hidden;
+}
+.biblioteca-relatorios-fechados-cliente > summary::-webkit-details-marker {
+  display: none;
+}
+.biblioteca-relatorios-fechados-cliente__summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 14px;
+  background: rgba(40, 32, 12, 0.35);
+}
+.biblioteca-relatorios-fechados-cliente[open] .biblioteca-relatorios-fechados-cliente__chevron {
+  transform: rotate(90deg);
+}
+.biblioteca-relatorios-fechados-cliente__chevron {
+  font-size: 10px;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  color: #fde68a;
+}
+.biblioteca-relatorios-fechados-cliente__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fef3c7;
+  flex: 1 1 160px;
+}
+.biblioteca-relatorios-fechados-cliente__count {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+.biblioteca-relatorios-fechados-cliente__body {
+  padding: 8px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.biblioteca-relatorios-fechado-item {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(30, 30, 30, 0.85);
+  overflow: hidden;
+}
+.biblioteca-relatorios-fechado-item > summary::-webkit-details-marker {
+  display: none;
+}
+.biblioteca-relatorios-fechado-item__summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+.biblioteca-relatorios-fechado-item[open] .biblioteca-relatorios-fechado-item__chev {
+  transform: rotate(90deg);
+}
+.biblioteca-relatorios-fechado-item__chev {
+  font-size: 9px;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  color: #fde68a;
+}
+.biblioteca-relatorios-fechado-item__meta {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.78);
+}
+.biblioteca-relatorios-fechado-item__total {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: #bbf7d0;
+}
+.bib-acoes-panel {
+  padding: 10px 12px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 15, 15, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bib-acoes-panel--inline {
+  padding: 8px;
+  border-top: none;
+  background: transparent;
+}
+.bib-acoes-panel__group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bib-acoes-panel__label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.55);
+}
+.bib-acoes-panel__btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.bib-acoes-panel__btns--wrap {
+  max-width: 100%;
+}
+.bib-row-acoes {
+  display: inline-block;
+  min-width: 72px;
+}
+.bib-row-acoes > summary::-webkit-details-marker {
+  display: none;
+}
+.bib-row-acoes__summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: #fde68a;
+  background: rgba(40, 32, 12, 0.45);
+  white-space: nowrap;
+}
+.bib-row-acoes[open] .bib-row-acoes__chev {
+  transform: rotate(90deg);
+}
+.bib-row-acoes__chev {
+  font-size: 8px;
+  transition: transform 0.2s ease;
+}
+.bib-row-acoes[open] .bib-row-acoes__summary {
+  margin-bottom: 6px;
+}
+.biblioteca-relatorios-tabela .bib-col-acoes {
+  min-width: 88px;
+  vertical-align: top;
 }
 @media (max-width: 720px) {
   .bib-acao__label {
     display: none;
   }
-  .bib-acoes-icones--fechados {
-    max-width: 100%;
-  }
-}
-@media (max-width: 720px) {
   .biblioteca-relatorios-cliente__summary-kpis {
     margin-left: 0;
     width: 100%;

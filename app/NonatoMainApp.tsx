@@ -3513,6 +3513,32 @@ function buildRelatoriosFechadosBibliotecaLista(
     })
 }
 
+type RelatorioFechadoBibliotecaGrupo = {
+  key: string
+  clienteNome: string
+  rows: RelatorioFechadoBibliotecaRow[]
+}
+
+function groupRelatoriosFechadosPorCliente(
+  lista: RelatorioFechadoBibliotecaRow[]
+): RelatorioFechadoBibliotecaGrupo[] {
+  const map = new Map<string, RelatorioFechadoBibliotecaRow[]>()
+  for (const row of lista) {
+    const key = (row.clienteNome || '—').trim().toLowerCase()
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(row)
+  }
+  return Array.from(map.entries())
+    .map(([key, rows]) => ({
+      key,
+      clienteNome: rows[0]?.clienteNome || '—',
+      rows: [...rows].sort((a, b) =>
+        cmpBibliotecaLocale(String(a.relatorio.numero ?? ''), String(b.relatorio.numero ?? ''))
+      ),
+    }))
+    .sort((a, b) => cmpBibliotecaLocale(a.clienteNome, b.clienteNome))
+}
+
 type BibliotecaRelatoriosClienteRow = {
   cliente: Cliente
   equipamentos: Array<{ equipamento: EquipamentoCliente; equipamentoKey: string; relatorios: RelatorioServico[] }>
@@ -8859,7 +8885,10 @@ export default function Dashboard() {
   const [bibliotecaRelatoriosAlfaLetraFiltro, setBibliotecaRelatoriosAlfaLetraFiltro] = useState<string | null>(null)
   const [bibliotecaRelatoriosClientesExpandidos, setBibliotecaRelatoriosClientesExpandidos] = useState<Set<string>>(new Set())
   const [bibliotecaRelatoriosEquipExpandidos, setBibliotecaRelatoriosEquipExpandidos] = useState<Set<string>>(new Set())
-  const [bibliotecaSecaoFechadosExpandida, setBibliotecaSecaoFechadosExpandida] = useState(true)
+  const [bibliotecaSecaoFechadosExpandida, setBibliotecaSecaoFechadosExpandida] = useState(false)
+  const [bibliotecaFechadosClientesExpandidos, setBibliotecaFechadosClientesExpandidos] = useState<Set<string>>(
+    new Set()
+  )
   const [showRelatorioServicoModal, setShowRelatorioServicoModal] = useState(false)
   const [showRelatorioServicoForm, setShowRelatorioServicoForm] = useState(false)
   const [editingRelatorioServico, setEditingRelatorioServico] = useState<RelatorioServico | null>(null)
@@ -64596,6 +64625,7 @@ A1;Peça exemplo;10`}
           fechamentosGuardadosBibliotecaIds,
           fechamentosRelatorios
         )
+        const relatoriosFechadosPorCliente = groupRelatoriosFechadosPorCliente(relatoriosFechadosLista)
         const txBibHero = safeT as Record<string, string>
 
         return (
@@ -64691,6 +64721,12 @@ A1;Peça exemplo;10`}
                           )
                         })
                         setBibliotecaRelatoriosEquipExpandidos(allEq)
+                        if (relatoriosFechadosPorCliente.length > 0) {
+                          setBibliotecaSecaoFechadosExpandida(true)
+                          setBibliotecaFechadosClientesExpandidos(
+                            new Set(relatoriosFechadosPorCliente.map(g => g.key))
+                          )
+                        }
                       }}
                       title={(safeT as any)?.expandirTodos || 'Expandir todos'}
                     >
@@ -64702,6 +64738,8 @@ A1;Peça exemplo;10`}
                       onClick={() => {
                         setBibliotecaRelatoriosClientesExpandidos(new Set())
                         setBibliotecaRelatoriosEquipExpandidos(new Set())
+                        setBibliotecaSecaoFechadosExpandida(false)
+                        setBibliotecaFechadosClientesExpandidos(new Set())
                       }}
                       title={(safeT as any)?.retrairTodos || 'Retrair todos'}
                     >
@@ -64781,6 +64819,9 @@ A1;Peça exemplo;10`}
                 }
               >
                 <summary className="biblioteca-relatorios-fechados-block__summary">
+                  <span className="biblioteca-relatorios-fechados-block__chevron" aria-hidden>
+                    ▶
+                  </span>
                   <span className="biblioteca-relatorios-fechados-block__title">
                     📁{' '}
                     {txBibHero.bibliotecaRelatoriosFechadosTitulo ||
@@ -64791,129 +64832,184 @@ A1;Peça exemplo;10`}
                   </span>
                   <span className="biblioteca-relatorios-fechados-block__hint">
                     {txBibHero.bibliotecaRelatoriosFechadosHint ||
-                      'Visualize o relatório completo ou edite o serviço e as despesas quando necessário.'}
+                      'Clique para expandir. Por cliente: abra cada relatório para ver ou editar.'}
                   </span>
                 </summary>
-                <div className="biblioteca-relatorios-tabela-wrap biblioteca-relatorios-fechados-block__table">
-                  <table className="biblioteca-relatorios-tabela biblioteca-relatorios-tabela--fechados">
-                    <thead>
-                      <tr>
-                        <th>{txBibHero.cliente || 'Cliente'}</th>
-                        <th>{txBibHero.relatorioNumeroLabel || 'Rel.'}</th>
-                        <th>{txBibHero.data || 'Data'}</th>
-                        <th>{txBibHero.tecnico || 'Técnico'}</th>
-                        <th className="bib-col-total">{txBibHero.total || 'Total'}</th>
-                        <th className="bib-col-acoes">{txBibHero.acoes || 'Ações'}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {relatoriosFechadosLista.map(({ relatorio, clienteNome, itens }) => {
-                        const rel = resolverRelatorioServicoDono(relatorio)
-                        const itensVis = filtrarFechamentoItensPorOmitidos(
-                          fechamentoItensOmitidosPorRelatorio,
-                          rel.id,
-                          itens
+                <div className="biblioteca-relatorios-fechados-block__body">
+                  <div className="biblioteca-relatorios-fechados-block__toolbar">
+                    <button
+                      type="button"
+                      className="biblioteca-relatorios-toolbar__btn"
+                      onClick={() => {
+                        setBibliotecaSecaoFechadosExpandida(true)
+                        setBibliotecaFechadosClientesExpandidos(
+                          new Set(relatoriosFechadosPorCliente.map(g => g.key))
                         )
-                        const totalDesp = itensVis.length
-                          ? totaisFechamentoLiquidoComIva(
-                              itensVis,
-                              fechamentoIvaPorRelatorioId[rel.id]
-                            ).comIva
-                          : null
-                        const dataFmt = rel.data
-                          ? new Date(rel.data).toLocaleDateString('pt-PT', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                            })
-                          : '—'
-                        return (
-                          <tr key={`fechado-${rel.id}`}>
-                            <td>{clienteNome}</td>
-                            <td className="bib-col-num">
-                              <span className="bib-rel-num">{rel.numero}</span>
-                              <span className="bib-tag-fechado" title="Fechado na biblioteca">
-                                FECHADO
-                              </span>
-                            </td>
-                            <td>{dataFmt}</td>
-                            <td>{rel.tecnico || '—'}</td>
-                            <td className="bib-col-num bib-col-total">
-                              {totalDesp != null ? `€${totalDesp.toFixed(2)}` : '—'}
-                            </td>
-                            <td className="bib-col-acoes">
-                              <div className="bib-acoes-icones bib-acoes-icones--fechados">
-                                <button
-                                  type="button"
-                                  className="bib-acao bib-acao--ver"
-                                  title={txBibHero.verRelatorioServicoBiblioteca || 'Ver relatório de serviço'}
-                                  onClick={() => setViewingRelatorioServico(rel)}
-                                >
-                                  👁{' '}
-                                  <span className="bib-acao__label">
-                                    {txBibHero.verRelatorioServicoBiblioteca || 'Ver relatório'}
+                      }}
+                    >
+                      {(safeT as any)?.expandirTodos || 'Expandir todos'}
+                    </button>
+                    <button
+                      type="button"
+                      className="biblioteca-relatorios-toolbar__btn biblioteca-relatorios-toolbar__btn--muted"
+                      onClick={() => setBibliotecaFechadosClientesExpandidos(new Set())}
+                    >
+                      {(safeT as any)?.retrairTodos || 'Retrair todos'}
+                    </button>
+                  </div>
+                  <div className="biblioteca-relatorios-fechados-client-list">
+                    {relatoriosFechadosPorCliente.map(({ key, clienteNome, rows }) => (
+                      <details
+                        key={key}
+                        className="biblioteca-relatorios-fechados-cliente"
+                        open={bibliotecaFechadosClientesExpandidos.has(key)}
+                        onToggle={e => {
+                          const opened = (e.currentTarget as HTMLDetailsElement).open
+                          setBibliotecaFechadosClientesExpandidos(prev => {
+                            const next = new Set(prev)
+                            if (opened) next.add(key)
+                            else next.delete(key)
+                            return next
+                          })
+                        }}
+                      >
+                        <summary className="biblioteca-relatorios-fechados-cliente__summary">
+                          <span className="biblioteca-relatorios-fechados-cliente__chevron" aria-hidden>
+                            ▶
+                          </span>
+                          <h3 className="biblioteca-relatorios-fechados-cliente__title">{clienteNome}</h3>
+                          <span className="biblioteca-relatorios-fechados-cliente__count">
+                            {rows.length}{' '}
+                            {rows.length === 1
+                              ? txBibHero.relatorioNumeroLabel || 'rel.'
+                              : txBibHero.bibliotecaRelatoriosRelatoriosPorEquip?.replace(/\{n\}/g, String(rows.length)) ||
+                                'relatórios'}
+                          </span>
+                        </summary>
+                        <div className="biblioteca-relatorios-fechados-cliente__body">
+                          {rows.map(({ relatorio, itens }) => {
+                            const rel = resolverRelatorioServicoDono(relatorio)
+                            const itensVis = filtrarFechamentoItensPorOmitidos(
+                              fechamentoItensOmitidosPorRelatorio,
+                              rel.id,
+                              itens
+                            )
+                            const totalDesp = itensVis.length
+                              ? totaisFechamentoLiquidoComIva(
+                                  itensVis,
+                                  fechamentoIvaPorRelatorioId[rel.id]
+                                ).comIva
+                              : null
+                            const dataFmt = rel.data
+                              ? new Date(rel.data).toLocaleDateString('pt-PT', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                })
+                              : '—'
+                            return (
+                              <details key={`fechado-${rel.id}`} className="biblioteca-relatorios-fechado-item">
+                                <summary className="biblioteca-relatorios-fechado-item__summary">
+                                  <span className="biblioteca-relatorios-fechado-item__chev" aria-hidden>
+                                    ▶
                                   </span>
-                                </button>
-                                <button
-                                  type="button"
-                                  className="bib-acao bib-acao--edit"
-                                  title={txBibHero.editarRelatorioServicoBiblioteca || 'Editar relatório'}
-                                  onClick={() => handleEditarRelatorioServicoNaBiblioteca(rel)}
-                                >
-                                  ✏️{' '}
-                                  <span className="bib-acao__label">
-                                    {txBibHero.editarRelatorioServicoBiblioteca || 'Editar relatório'}
+                                  <span className="bib-rel-num">{rel.numero}</span>
+                                  <span className="bib-tag-fechado" title="Fechado na biblioteca">
+                                    FECHADO
                                   </span>
-                                </button>
-                                {itensVis.length > 0 ? (
-                                  <>
-                                    <button
-                                      type="button"
-                                      className="bib-acao bib-acao--ver"
-                                      title={txBibHero.visualizarDespesasBiblioteca || 'Ver despesas'}
-                                      onClick={() =>
-                                        setModalVisualizarDespesasBiblioteca({
-                                          relatorio: rel,
-                                          itens: itensVis,
-                                        })
-                                      }
-                                    >
-                                      💰{' '}
-                                      <span className="bib-acao__label">
-                                        {txBibHero.visualizarDespesasBiblioteca || 'Ver despesas'}
+                                  <span className="biblioteca-relatorios-fechado-item__meta">{dataFmt}</span>
+                                  <span className="biblioteca-relatorios-fechado-item__meta">
+                                    {rel.tecnico || '—'}
+                                  </span>
+                                  <span className="biblioteca-relatorios-fechado-item__total">
+                                    {totalDesp != null ? `€${totalDesp.toFixed(2)}` : '—'}
+                                  </span>
+                                </summary>
+                                <div className="bib-acoes-panel">
+                                  <div className="bib-acoes-panel__group">
+                                    <span className="bib-acoes-panel__label">
+                                      {txBibHero.relatoriosServicoTitle || 'Relatório de serviço'}
+                                    </span>
+                                    <div className="bib-acoes-panel__btns">
+                                      <button
+                                        type="button"
+                                        className="bib-acao bib-acao--ver"
+                                        title={txBibHero.verRelatorioServicoBiblioteca || 'Ver relatório de serviço'}
+                                        onClick={() => setViewingRelatorioServico(rel)}
+                                      >
+                                        👁{' '}
+                                        <span className="bib-acao__label">
+                                          {txBibHero.verRelatorioServicoBiblioteca || 'Ver relatório'}
+                                        </span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="bib-acao bib-acao--edit"
+                                        title={txBibHero.editarRelatorioServicoBiblioteca || 'Editar relatório'}
+                                        onClick={() => handleEditarRelatorioServicoNaBiblioteca(rel)}
+                                      >
+                                        ✏️{' '}
+                                        <span className="bib-acao__label">
+                                          {txBibHero.editarRelatorioServicoBiblioteca || 'Editar relatório'}
+                                        </span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="bib-acao bib-acao--pdf"
+                                        title={txBibHero.gerarPDF || 'PDF'}
+                                        onClick={() =>
+                                          handlePrintRelatorio(rel, getPdfModelForRelatorio(rel.id))
+                                        }
+                                      >
+                                        📄{' '}
+                                        <span className="bib-acao__label">{txBibHero.gerarPDF || 'PDF'}</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                  {itensVis.length > 0 ? (
+                                    <div className="bib-acoes-panel__group">
+                                      <span className="bib-acoes-panel__label">
+                                        {txBibHero.relatoriosDespesasTitle || 'Despesas'}
                                       </span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="bib-acao bib-acao--edit"
-                                      title={txBibHero.editarRelatorioDespesas || 'Editar despesas'}
-                                      onClick={() => handleEditarDespesasNaBiblioteca(rel.id)}
-                                    >
-                                      ✏️{' '}
-                                      <span className="bib-acao__label">
-                                        {txBibHero.editarRelatorioDespesas || 'Editar despesas'}
-                                      </span>
-                                    </button>
-                                  </>
-                                ) : null}
-                                <button
-                                  type="button"
-                                  className="bib-acao bib-acao--pdf"
-                                  title={txBibHero.gerarPDF || 'PDF'}
-                                  onClick={() =>
-                                    handlePrintRelatorio(rel, getPdfModelForRelatorio(rel.id))
-                                  }
-                                >
-                                  📄{' '}
-                                  <span className="bib-acao__label">{txBibHero.gerarPDF || 'PDF'}</span>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+                                      <div className="bib-acoes-panel__btns">
+                                        <button
+                                          type="button"
+                                          className="bib-acao bib-acao--ver"
+                                          title={txBibHero.visualizarDespesasBiblioteca || 'Ver despesas'}
+                                          onClick={() =>
+                                            setModalVisualizarDespesasBiblioteca({
+                                              relatorio: rel,
+                                              itens: itensVis,
+                                            })
+                                          }
+                                        >
+                                          💰{' '}
+                                          <span className="bib-acao__label">
+                                            {txBibHero.visualizarDespesasBiblioteca || 'Ver despesas'}
+                                          </span>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="bib-acao bib-acao--edit"
+                                          title={txBibHero.editarRelatorioDespesas || 'Editar despesas'}
+                                          onClick={() => handleEditarDespesasNaBiblioteca(rel.id)}
+                                        >
+                                          ✏️{' '}
+                                          <span className="bib-acao__label">
+                                            {txBibHero.editarRelatorioDespesas || 'Editar despesas'}
+                                          </span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </details>
+                            )
+                          })}
+                        </div>
+                      </details>
+                    ))}
+                  </div>
                 </div>
               </details>
             ) : null}
@@ -65264,7 +65360,15 @@ A1;Peça exemplo;10`}
                                                 <td className="bib-col-num">{totais.horasTrabalho}h</td>
                                                 <td className="bib-col-num">{totais.kmsPercorridos}</td>
                                                 <td className="bib-col-acoes">
-                                                  <div className="bib-acoes-icones">
+                                                  <details className="bib-row-acoes">
+                                                    <summary className="bib-row-acoes__summary">
+                                                      <span className="bib-row-acoes__chev" aria-hidden>
+                                                        ▶
+                                                      </span>
+                                                      {txBib.acoes || 'Ações'}
+                                                    </summary>
+                                                    <div className="bib-acoes-panel bib-acoes-panel--inline">
+                                                      <div className="bib-acoes-panel__btns bib-acoes-panel__btns--wrap">
                                                     <RelatorioPdfModeloPicker
                                                       compact
                                                       value={getPdfModelForRelatorio(relatorio.id)}
@@ -65340,7 +65444,9 @@ A1;Peça exemplo;10`}
                                                     >
                                                       ✕
                                                     </button>
-                                                  </div>
+                                                      </div>
+                                                    </div>
+                                                  </details>
                                                 </td>
                                               </tr>
                                             )
@@ -65404,7 +65510,15 @@ A1;Peça exemplo;10`}
                                         <td className="bib-col-num bib-col-total">€{totalCobranca.toFixed(2)}</td>
                                         <td className="bib-col-fluxo">{renderBarraFluxoFechamento(relatorio.id, true)}</td>
                                         <td className="bib-col-acoes">
-                                          <div className="bib-acoes-icones">
+                                          <details className="bib-row-acoes">
+                                            <summary className="bib-row-acoes__summary">
+                                              <span className="bib-row-acoes__chev" aria-hidden>
+                                                ▶
+                                              </span>
+                                              {txBib.acoes || 'Ações'}
+                                            </summary>
+                                            <div className="bib-acoes-panel bib-acoes-panel--inline">
+                                              <div className="bib-acoes-panel__btns bib-acoes-panel__btns--wrap">
                                             <button
                                               type="button"
                                               className="bib-acao bib-acao--ver"
@@ -65457,7 +65571,9 @@ A1;Peça exemplo;10`}
                                             >
                                               ✕
                                             </button>
-                                          </div>
+                                              </div>
+                                            </div>
+                                          </details>
                                         </td>
                                       </tr>
                                     )
