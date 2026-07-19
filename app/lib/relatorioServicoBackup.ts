@@ -1,4 +1,9 @@
-import { mergeRelatoriosServicoDeferServerLocal, type RelatorioServicoMin } from './bibliotecaRelatoriosRecovery'
+import {
+  mergeRelatoriosServicoDeferServerLocal,
+  recuperarRelatoriosServicoPerdidos,
+  type ClienteMin,
+  type RelatorioServicoMin,
+} from './bibliotecaRelatoriosRecovery'
 
 const BACKUP_KEY = 'nonato-relatorios-servico-backup-v1'
 const MAX_SNAPSHOTS = 40
@@ -66,4 +71,42 @@ export function restaurarRelatoriosDeBackupsLocais(
   } catch {
     return { relatorios: actuais, recuperados: 0 }
   }
+}
+
+/** Lista legível — cliente, OS, data, técnico (sem precisar de saber o número de memória). */
+export function formatRelatorioRecuperacaoLabel(r: RelatorioServicoMin): string {
+  const cliente = String(r.cliente ?? '—').trim() || '—'
+  const num = String(r.numero ?? '—').trim() || '—'
+  const data = String(r.data ?? '').trim() || '—'
+  const tec = String(r.tecnico ?? '').trim()
+  return `${cliente} · OS ${num} · ${data}${tec ? ` · ${tec}` : ''}`
+}
+
+/** Todos os relatórios em backup + extras + pastas de clientes. */
+export function coletarRelatoriosDeTodasFontes(
+  actuais: RelatorioServicoMin[],
+  clientes: ClienteMin[],
+  extras: RelatorioServicoMin[] = []
+): RelatorioServicoMin[] {
+  let merged = mergeRelatoriosServicoDeferServerLocal(extras, actuais)
+  const backupAll = restaurarRelatoriosDeBackupsLocais([]).relatorios
+  merged = mergeRelatoriosServicoDeferServerLocal(backupAll, merged)
+  const rec = recuperarRelatoriosServicoPerdidos(clientes, merged)
+  return rec.relatorios.sort((a, b) => {
+    const da = String(a.data ?? '')
+    const db = String(b.data ?? '')
+    if (da !== db) return db.localeCompare(da)
+    return String(b.id ?? '').localeCompare(String(a.id ?? ''))
+  })
+}
+
+/** Relatórios nas cópias que não estão na lista actual. */
+export function relatoriosAusentesNaLista(
+  actuais: RelatorioServicoMin[],
+  clientes: ClienteMin[],
+  extras: RelatorioServicoMin[] = []
+): RelatorioServicoMin[] {
+  const todos = coletarRelatoriosDeTodasFontes(actuais, clientes, extras)
+  const ids = new Set(actuais.filter((r) => r?.id).map((r) => String(r.id)))
+  return todos.filter((r) => r?.id && !ids.has(String(r.id)))
 }

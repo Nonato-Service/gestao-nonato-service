@@ -161,6 +161,9 @@ import {
 import {
   snapshotRelatoriosServicoBackup,
   restaurarRelatoriosDeBackupsLocais,
+  coletarRelatoriosDeTodasFontes,
+  relatoriosAusentesNaLista,
+  formatRelatorioRecuperacaoLabel,
 } from './lib/relatorioServicoBackup'
 import { mergeManuaisFamiliasGrupos, manuaisPayloadHasRichContent } from './utils/manuaisMerge'
 import {
@@ -8525,6 +8528,12 @@ export default function Dashboard() {
 
   const relatoriosRecuperacaoBootRef = useRef(false)
   const relatoriosCountAnteriorRef = useRef(0)
+  const editRelatorioServicoRef = useRef<(r: RelatorioServico) => void>(() => {})
+  const [recuperacaoRelatoriosModal, setRecuperacaoRelatoriosModal] = useState<{
+    open: boolean
+    candidatos: RelatorioServico[]
+    ausentes: number
+  }>({ open: false, candidatos: [], ausentes: 0 })
 
   const executarRecuperacaoRelatorios = useCallback(
     (lista: RelatorioServico[], silencioso = false) => {
@@ -8567,17 +8576,86 @@ export default function Dashboard() {
     }
   }, [clientes, relatoriosServico, executarRecuperacaoRelatorios])
 
-  const handleRecuperarRelatoriosPerdidos = useCallback(() => {
-    const n = executarRecuperacaoRelatorios(relatoriosServico, false)
-    if (n === 0) {
+  const handleRecuperarRelatoriosPerdidos = useCallback(async () => {
+    const extras: RelatorioServico[] = []
+    try {
+      const raw = localStorage.getItem('nonato-relatorios-servico')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) extras.push(...(parsed as RelatorioServico[]))
+      }
+    } catch {
+      /* ignorar */
+    }
+    try {
+      const idb = await getKv('nonato-relatorios-servico')
+      if (Array.isArray(idb)) extras.push(...(idb as RelatorioServico[]))
+    } catch {
+      /* ignorar */
+    }
+    const candidatos = coletarRelatoriosDeTodasFontes(
+      relatoriosServico,
+      clientes,
+      extras
+    ) as RelatorioServico[]
+    const ausentes = relatoriosAusentesNaLista(relatoriosServico, clientes, extras)
+    if (candidatos.length === 0) {
       alert(
         (safeT as any)?.bibliotecaRecuperarRelatoriosNada ||
-          'Nenhum relatório adicional encontrado. Verifique «Biblioteca de Relatórios» ou backups automáticos.'
+          'Não encontrámos cópias deste aparelho. Tente «Biblioteca de Relatórios» ou o mesmo browser onde criou o relatório.'
       )
       return
     }
-    setBibliotecaRelatoriosAlfaLetraFiltro(null)
-  }, [clientes, relatoriosServico, safeT, executarRecuperacaoRelatorios])
+    setRecuperacaoRelatoriosModal({ open: true, candidatos, ausentes: ausentes.length })
+  }, [clientes, relatoriosServico, safeT])
+
+  const aplicarRecuperacaoRelatoriosModal = useCallback(
+    (candidatos: RelatorioServico[]) => {
+      setRelatoriosServico(candidatos)
+      snapshotRelatoriosServicoBackup(candidatos)
+      void saveData('nonato-relatorios-servico', candidatos, true, true)
+      setRecuperacaoRelatoriosModal({ open: false, candidatos: [], ausentes: 0 })
+      alert(
+        (
+          ((safeT as any)?.recuperarRelatoriosRestaurados ||
+            'Foram repostos {n} relatório(s). Procure na lista abaixo ou na Biblioteca.') as string
+        ).replace(/\{n\}/g, String(candidatos.length))
+      )
+      setBibliotecaRelatoriosAlfaLetraFiltro(null)
+    },
+    [safeT]
+  )
+
+  const abrirRelatorioRecuperado = useCallback(
+    (rel: RelatorioServico, candidatos: RelatorioServico[]) => {
+      aplicarRecuperacaoRelatoriosModal(candidatos)
+      setTimeout(() => editRelatorioServicoRef.current(rel), 150)
+    },
+    [aplicarRecuperacaoRelatoriosModal]
+  )
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || appInitialLoading) return
+    try {
+      if (sessionStorage.getItem('nonato-recuperacao-rel-sugerida-v1')) return
+    } catch {
+      /* ignorar */
+    }
+    const ausentes = relatoriosAusentesNaLista(relatoriosServico, clientes)
+    if (ausentes.length === 0) return
+    try {
+      sessionStorage.setItem('nonato-recuperacao-rel-sugerida-v1', '1')
+    } catch {
+      /* ignorar */
+    }
+    const msg = (
+      (safeT as any)?.recuperarRelatoriosSugestaoAuto ||
+      'Encontrámos {n} relatório(s) guardado(s) neste aparelho que não estão na lista. Deseja ver e recuperar?'
+    ).replace(/\{n\}/g, String(ausentes.length))
+    if (window.confirm(msg)) {
+      void handleRecuperarRelatoriosPerdidos()
+    }
+  }, [appInitialLoading, clientes, relatoriosServico, safeT, handleRecuperarRelatoriosPerdidos])
 
   const [relatoriosExcluidosClientes, setRelatoriosExcluidosClientes] = useState<RelatoriosExcluidosClientesStorage>({ pastas: {} })
   const [pastasExcluidasExpandidas, setPastasExcluidasExpandidas] = useState<Set<string>>(new Set())
@@ -19060,6 +19138,7 @@ export default function Dashboard() {
     setShowRelatorioServicoForm(true)
     scrollRelatorioServicoFormIntoView()
   }
+  editRelatorioServicoRef.current = handleEditRelatorioServico
 
   const handleEditarRelatorioServicoNaBiblioteca = (relatorio: RelatorioServico) => {
     const r = resolverRelatorioServicoDono(relatorio)
@@ -29725,6 +29804,176 @@ export default function Dashboard() {
     )
   }
 
+  /** Modal «Recuperar relatório» — lista por cliente/OS/data (não precisa saber o número). */
+  const renderRecuperacaoRelatoriosModalOverlay = () => {
+    if (!recuperacaoRelatoriosModal.open || typeof document === 'undefined') return null
+    const { candidatos, ausentes } = recuperacaoRelatoriosModal
+    const tm = safeT as Record<string, string>
+    const idsLista = new Set(relatoriosServicoListaPrincipal.map((r) => String(r.id)))
+    const idsTodos = new Set(relatoriosServico.map((r) => String(r.id)))
+
+    return createPortal(
+      <div
+        className="biblioteca-despesas-modal-overlay"
+        onClick={() => setRecuperacaoRelatoriosModal({ open: false, candidatos: [], ausentes: 0 })}
+        role="presentation"
+      >
+        <div
+          className="biblioteca-despesas-modal-inner"
+          onClick={(e) => e.stopPropagation()}
+          style={{ maxWidth: 'min(560px, 96vw)', maxHeight: 'min(85vh, 720px)', display: 'flex', flexDirection: 'column' }}
+        >
+          <h3 style={{ color: '#fff', margin: '0 0 8px', fontSize: 'clamp(16px, 4vw, 18px)' }}>
+            🔄 {tm.recuperarRelatoriosModalTitulo || 'Recuperar relatório'}
+          </h3>
+          <p style={{ color: '#fff', opacity: 0.92, fontSize: '13px', margin: '0 0 12px', lineHeight: 1.5 }}>
+            {tm.recuperarRelatoriosModalDesc ||
+              'Não precisa saber o número. Escolha pelo cliente, OS e data. Se estiver na Biblioteca, use o botão «Biblioteca».'}
+          </p>
+          {ausentes > 0 && (
+            <p
+              style={{
+                color: '#ffcc80',
+                fontSize: '13px',
+                margin: '0 0 12px',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                background: 'rgba(255, 140, 0, 0.15)',
+                border: '1px solid rgba(255, 160, 0, 0.45)',
+              }}
+            >
+              {(
+                tm.recuperarRelatoriosAusentes ||
+                '{n} relatório(s) encontrado(s) neste aparelho que não estão na lista.'
+              ).replace(/\{n\}/g, String(ausentes))}
+            </p>
+          )}
+          <div
+            style={{
+              flex: '1 1 auto',
+              overflowY: 'auto',
+              marginBottom: '12px',
+              border: '1px solid rgba(255, 170, 0, 0.35)',
+              borderRadius: '8px',
+              background: 'rgba(0, 0, 0, 0.25)',
+            }}
+          >
+            {candidatos.length === 0 ? (
+              <p style={{ color: '#fff', padding: '16px', margin: 0, opacity: 0.85 }}>
+                {tm.recuperarRelatoriosModalVazio || 'Nenhuma cópia encontrada neste aparelho.'}
+              </p>
+            ) : (
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                {candidatos.map((rel) => {
+                  const id = String(rel.id)
+                  const naLista = idsLista.has(id)
+                  const naBiblioteca = !naLista && idsTodos.has(id)
+                  const badge = naLista
+                    ? tm.recuperarRelatoriosNaLista || 'Na lista'
+                    : naBiblioteca
+                      ? tm.recuperarRelatoriosNaBiblioteca || 'Na Biblioteca'
+                      : tm.recuperarRelatoriosRecuperavel || 'Recuperável'
+                  const badgeColor = naLista ? '#86efac' : naBiblioteca ? '#7dd3fc' : '#fdba74'
+                  return (
+                    <li
+                      key={id}
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '8px',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 14px',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                      }}
+                    >
+                      <div style={{ flex: '1 1 180px', minWidth: 0 }}>
+                        <div style={{ color: '#fff', fontSize: '14px', wordBreak: 'break-word' }}>
+                          {formatRelatorioRecuperacaoLabel(rel)}
+                        </div>
+                        <div style={{ color: badgeColor, fontSize: '12px', marginTop: '4px', fontWeight: 600 }}>
+                          {badge}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => abrirRelatorioRecuperado(rel, candidatos)}
+                        style={{
+                          padding: '8px 14px',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(255, 170, 0, 0.75)',
+                          background: 'rgba(26, 28, 26, 0.92)',
+                          color: '#ffaa00',
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                          fontSize: '13px',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {naBiblioteca
+                          ? tm.recuperarRelatoriosAbrirBiblioteca || 'Abrir / Biblioteca'
+                          : tm.recuperarRelatoriosAbrir || 'Abrir'}
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              onClick={() => setRecuperacaoRelatoriosModal({ open: false, candidatos: [], ausentes: 0 })}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '8px',
+                border: '1px solid rgba(102, 102, 102, 0.92)',
+                background: 'rgba(51, 51, 51, 0.96)',
+                color: '#ffffff',
+                cursor: 'pointer',
+              }}
+            >
+              {safeT?.close || 'Fechar'}
+            </button>
+            {candidatos.length > 0 && (
+              <button
+                type="button"
+                onClick={() => aplicarRecuperacaoRelatoriosModal(candidatos)}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '2px solid rgba(255, 170, 0, 0.75)',
+                  background: 'rgba(255, 120, 0, 0.22)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                {tm.recuperarRelatoriosRestaurarTodos || 'Restaurar todos'}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '8px',
+                border: '1px solid rgba(0, 150, 255, 0.58)',
+                background: 'rgba(0, 150, 255, 0.15)',
+                color: '#fff',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              📚 {safeT?.biblioteca || 'Biblioteca'}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )
+  }
+
   // Função para renderizar conteúdo da aba
   const renderTabContent = (tab: Tab) => {
     switch (tab.type) {
@@ -34740,6 +34989,22 @@ export default function Dashboard() {
                   )}
                 </div>
                 <div className="relatorio-servico-hero-actions">
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => void handleRecuperarRelatoriosPerdidos()}
+                    style={{
+                      padding: '10px 16px',
+                      backgroundColor: 'rgba(255, 120, 0, 0.22)',
+                      border: '1px solid rgba(255, 160, 0, 0.65)',
+                      color: '#fff',
+                      fontWeight: 'bold',
+                      fontSize: '13px',
+                    }}
+                    title="Procura relatórios guardados neste aparelho — não precisa saber o número"
+                  >
+                    🔄 {(safeT as any)?.recuperarRelatoriosBtn || 'Recuperar relatório'}
+                  </button>
                   <button 
                     className="btn-primary" 
                     onClick={() => openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))} 
@@ -71899,6 +72164,7 @@ A1;Peça exemplo;10`}
                     <>
                       {renderTabContent(activeTab)}
                       {renderModalVisualizarDespesasBibliotecaOverlay()}
+                      {renderRecuperacaoRelatoriosModalOverlay()}
                     </>
                   )
                 })()}
