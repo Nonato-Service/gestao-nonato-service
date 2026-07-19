@@ -8577,7 +8577,7 @@ export default function Dashboard() {
     }
   }, [clientes, relatoriosServico, executarRecuperacaoRelatorios])
 
-  const handleRecuperarRelatoriosPerdidos = useCallback(async () => {
+  const handleRecuperarRelatoriosPerdidos = useCallback(async (buscaInicial = '') => {
     const extras: RelatorioServico[] = []
     try {
       const raw = localStorage.getItem('nonato-relatorios-servico')
@@ -8594,6 +8594,34 @@ export default function Dashboard() {
     } catch {
       /* ignorar */
     }
+
+    let extrasServidor: RelatorioServico[] = []
+    const qServidor = buscaInicial.trim()
+    try {
+      const res = await fetch('/api/data/recuperar-relatorios-servico', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cliente: qServidor || undefined, aplicar: true }),
+      })
+      if (res.ok) {
+        const json = (await res.json()) as {
+          ok?: boolean
+          encontrados?: Array<{ relatorio?: RelatorioServico }>
+        }
+        if (json.ok && Array.isArray(json.encontrados)) {
+          extrasServidor = json.encontrados
+            .map((e) => e.relatorio)
+            .filter((r): r is RelatorioServico => Boolean(r?.id))
+        }
+      }
+    } catch {
+      /* offline — continuar só com fontes locais */
+    }
+
+    if (extrasServidor.length > 0) {
+      extras.push(...extrasServidor)
+    }
+
     const candidatos = coletarRelatoriosDeTodasFontes(
       relatoriosServico,
       clientes,
@@ -8603,11 +8631,11 @@ export default function Dashboard() {
     if (candidatos.length === 0) {
       alert(
         (safeT as any)?.bibliotecaRecuperarRelatoriosNada ||
-          'Não encontrámos cópias deste aparelho. Tente «Biblioteca de Relatórios» ou o mesmo browser onde criou o relatório.'
+          'Não encontrámos cópias neste aparelho nem no servidor. Verifique «Relatórios Excluídos» ou contacte suporte com o nome do cliente (LISOBITO).'
       )
       return
     }
-    setRecuperacaoRelatoriosBusca('')
+    setRecuperacaoRelatoriosBusca(buscaInicial.trim())
     setRecuperacaoRelatoriosModal({ open: true, candidatos, ausentes: ausentes.length })
   }, [clientes, relatoriosServico, safeT])
 
@@ -29990,6 +30018,23 @@ export default function Dashboard() {
             {candidatos.length > 0 && (
               <button
                 type="button"
+                onClick={() => void handleRecuperarRelatoriosPerdidos(recuperacaoRelatoriosBusca)}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(0, 200, 120, 0.55)',
+                  background: 'rgba(0, 180, 90, 0.18)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                {tm.recuperarRelatoriosServidor || '🔍 Procurar no servidor'}
+              </button>
+            )}
+            {candidatos.length > 0 && (
+              <button
+                type="button"
                 onClick={() => aplicarRecuperacaoRelatoriosModal(candidatos)}
                 style={{
                   padding: '10px 20px',
@@ -37050,7 +37095,7 @@ export default function Dashboard() {
                     <button
                       type="button"
                       className="btn-secondary"
-                      onClick={handleRecuperarRelatoriosPerdidos}
+                      onClick={() => void handleRecuperarRelatoriosPerdidos()}
                       style={{ padding: '10px 18px', borderRadius: '10px' }}
                     >
                       🔄 {(safeT as any)?.recuperarRelatoriosBackup || 'Recuperar relatórios (backup local)'}
@@ -64195,7 +64240,7 @@ A1;Peça exemplo;10`}
                   <button
                     type="button"
                     className="btn-primary"
-                    onClick={handleRecuperarRelatoriosPerdidos}
+                    onClick={() => void handleRecuperarRelatoriosPerdidos()}
                     style={{ padding: '10px 22px', borderRadius: '10px' }}
                   >
                     ♻️ {(safeT as any)?.bibliotecaRecuperarRelatoriosBtn || 'Recuperar relatórios perdidos'}
@@ -64305,7 +64350,7 @@ A1;Peça exemplo;10`}
                     <button
                       type="button"
                       className="btn-primary"
-                      onClick={handleRecuperarRelatoriosPerdidos}
+                      onClick={() => void handleRecuperarRelatoriosPerdidos()}
                       style={{ padding: '8px 18px', borderRadius: '8px', marginRight: '10px' }}
                     >
                       ♻️ {(safeT as any)?.bibliotecaRecuperarRelatoriosBtn || 'Recuperar relatórios perdidos'}
@@ -64337,7 +64382,7 @@ A1;Peça exemplo;10`}
                     <button
                       type="button"
                       className="btn-primary"
-                      onClick={handleRecuperarRelatoriosPerdidos}
+                      onClick={() => void handleRecuperarRelatoriosPerdidos()}
                       style={{ padding: '10px 22px', borderRadius: '10px' }}
                     >
                       ♻️ {(safeT as any)?.bibliotecaRecuperarRelatoriosBtn || 'Recuperar relatórios perdidos'}
