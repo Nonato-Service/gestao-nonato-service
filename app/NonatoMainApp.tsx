@@ -158,6 +158,10 @@ import {
   agruparRelatoriosOrfaosPorNome,
   nomesClienteCorrespondem,
 } from './lib/bibliotecaRelatoriosRecovery'
+import {
+  snapshotRelatoriosServicoBackup,
+  restaurarRelatoriosDeBackupsLocais,
+} from './lib/relatorioServicoBackup'
 import { mergeManuaisFamiliasGrupos, manuaisPayloadHasRichContent } from './utils/manuaisMerge'
 import {
   buildManuaisFromSources,
@@ -8118,6 +8122,35 @@ export default function Dashboard() {
     return () => window.removeEventListener('nonato-data-local-changed', onDataChanged)
   }, [])
 
+  /** Após sync: nunca reduzir relatórios em memória — fundir com local/IndexedDB. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onRelSync = async (ev: Event) => {
+      const key = (ev as CustomEvent<{ key?: string }>)?.detail?.key
+      if (key !== 'nonato-relatorios-servico') return
+      try {
+        let parsed: RelatorioServico[] | null = null
+        const raw = localStorage.getItem('nonato-relatorios-servico')
+        if (raw) {
+          parsed = JSON.parse(raw) as RelatorioServico[]
+        } else {
+          const idb = await getKv('nonato-relatorios-servico')
+          if (Array.isArray(idb)) parsed = idb as RelatorioServico[]
+        }
+        if (!Array.isArray(parsed)) return
+        setRelatoriosServico((prev) => {
+          const merged = mergeRelatoriosServicoDeferServerLocal(parsed, prev) as RelatorioServico[]
+          if (merged.length >= prev.length) return merged
+          return mergeRelatoriosServicoDeferServerLocal(prev, parsed) as RelatorioServico[]
+        })
+      } catch {
+        /* ignorar */
+      }
+    }
+    window.addEventListener('nonato-data-local-changed', onRelSync)
+    return () => window.removeEventListener('nonato-data-local-changed', onRelSync)
+  }, [])
+
   /** Barra lateral: recarregar e repor botões em falta após sync automática. */
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -8491,33 +8524,60 @@ export default function Dashboard() {
   }, [relatoriosServico, fechamentosRelatorios, fechamentosGuardadosBibliotecaIds])
 
   const relatoriosRecuperacaoBootRef = useRef(false)
+  const relatoriosCountAnteriorRef = useRef(0)
+
+  const executarRecuperacaoRelatorios = useCallback(
+    (lista: RelatorioServico[], silencioso = false) => {
+      let relatoriosOk = lista
+      let recuperadosBackup = 0
+      const backupRec = restaurarRelatoriosDeBackupsLocais(relatoriosOk)
+      if (backupRec.recuperados > 0) {
+        recuperadosBackup = backupRec.recuperados
+        relatoriosOk = backupRec.relatorios as RelatorioServico[]
+      }
+      const rec = recuperarRelatoriosServicoPerdidos(clientes, relatoriosOk)
+      const totalRecuperados = recuperadosBackup + rec.adicionadosDeClientes + rec.clienteIdsReparados
+      if (!rec.alterou && recuperadosBackup === 0) return 0
+      setRelatoriosServico(rec.relatorios as RelatorioServico[])
+      void saveData('nonato-relatorios-servico', rec.relatorios, true, true)
+      if (!silencioso && totalRecuperados > 0) {
+        const tpl =
+          (safeT as any)?.bibliotecaRecuperarRelatoriosOk ||
+          'Recuperados {n} relatório(s) (backup local ou pastas de clientes).'
+        alert(tpl.replace(/\{n\}/g, String(totalRecuperados)))
+      }
+      return totalRecuperados
+    },
+    [clientes, safeT]
+  )
+
   useEffect(() => {
-    if (relatoriosRecuperacaoBootRef.current) return
     if (clientes.length === 0 && relatoriosServico.length === 0) return
-    relatoriosRecuperacaoBootRef.current = true
-    const rec = recuperarRelatoriosServicoPerdidos(clientes, relatoriosServico)
-    if (!rec.alterou) return
-    setRelatoriosServico(rec.relatorios as RelatorioServico[])
-    void saveData('nonato-relatorios-servico', rec.relatorios)
-  }, [clientes, relatoriosServico])
+
+    const countDesceu = relatoriosServico.length < relatoriosCountAnteriorRef.current
+    relatoriosCountAnteriorRef.current = relatoriosServico.length
+
+    if (!relatoriosRecuperacaoBootRef.current) {
+      relatoriosRecuperacaoBootRef.current = true
+      executarRecuperacaoRelatorios(relatoriosServico, true)
+      return
+    }
+    if (countDesceu) {
+      executarRecuperacaoRelatorios(relatoriosServico, true)
+    }
+  }, [clientes, relatoriosServico, executarRecuperacaoRelatorios])
 
   const handleRecuperarRelatoriosPerdidos = useCallback(() => {
-    const rec = recuperarRelatoriosServicoPerdidos(clientes, relatoriosServico)
-    if (!rec.alterou) {
+    const n = executarRecuperacaoRelatorios(relatoriosServico, false)
+    if (n === 0) {
       alert(
         (safeT as any)?.bibliotecaRecuperarRelatoriosNada ||
-          'Nenhum relatório adicional encontrado nas pastas dos clientes. Verifique também «Relatórios Excluídos / Clientes» no menu.'
+          'Nenhum relatório adicional encontrado. Verifique «Biblioteca de Relatórios» ou backups automáticos.'
       )
       return
     }
-    setRelatoriosServico(rec.relatorios as RelatorioServico[])
-    void saveData('nonato-relatorios-servico', rec.relatorios)
-    const tpl =
-      (safeT as any)?.bibliotecaRecuperarRelatoriosOk ||
-      'Recuperados {n} relatório(s) guardados nas pastas dos clientes.'
-    alert(tpl.replace(/\{n\}/g, String(rec.adicionadosDeClientes + rec.clienteIdsReparados)))
     setBibliotecaRelatoriosAlfaLetraFiltro(null)
-  }, [clientes, relatoriosServico, safeT])
+  }, [clientes, relatoriosServico, safeT, executarRecuperacaoRelatorios])
 
   const [relatoriosExcluidosClientes, setRelatoriosExcluidosClientes] = useState<RelatoriosExcluidosClientesStorage>({ pastas: {} })
   const [pastasExcluidasExpandidas, setPastasExcluidasExpandidas] = useState<Set<string>>(new Set())
@@ -10944,6 +11004,10 @@ export default function Dashboard() {
       const removedRelatorioIds = new Set<string>()
       if (savedRelatoriosServicoRaw && Array.isArray(savedRelatoriosServicoRaw)) {
         let relatoriosOk = savedRelatoriosServicoRaw as RelatorioServico[]
+        const backupBoot = restaurarRelatoriosDeBackupsLocais(relatoriosOk)
+        if (backupBoot.recuperados > 0) {
+          relatoriosOk = backupBoot.relatorios as RelatorioServico[]
+        }
         if (Array.isArray(savedClientes)) {
           const recBoot = recuperarRelatoriosServicoPerdidos(
             savedClientes as Cliente[],
@@ -23350,7 +23414,16 @@ export default function Dashboard() {
     }
 
     setRelatoriosServico(updatedRelatorios)
-    void saveData('nonato-relatorios-servico', updatedRelatorios, true, true)
+    snapshotRelatoriosServicoBackup(updatedRelatorios)
+    void (async () => {
+      const ok = await saveData('nonato-relatorios-servico', updatedRelatorios, true, true)
+      if (!ok && !opts?.silencioso) {
+        alert(
+          (safeT as any)?.relatorioServicoGuardadoSoLocal ||
+            'Relatório guardado neste aparelho. O servidor ainda não confirmou — os dados estão no backup local.'
+        )
+      }
+    })()
 
     // Biblioteca por cliente: indexa em cada equipamento do cliente (até 5)
     if (savedRelatorio.clienteId) {
@@ -36654,9 +36727,17 @@ export default function Dashboard() {
                     <p style={{ fontSize: '18px', marginBottom: '10px', color: '#ffffff', opacity: 0.95 }}>
                       {safeT?.noRelatoriosServico || 'Nenhum relatório de serviço cadastrado.'}
                     </p>
-                    <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.55)' }}>
+                    <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.55)', marginBottom: '16px' }}>
                       {safeT?.criePrimeiroRelatorio || 'Clique em "Adicionar Relatório de Serviço" para começar.'}
                     </p>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={handleRecuperarRelatoriosPerdidos}
+                      style={{ padding: '10px 18px', borderRadius: '10px' }}
+                    >
+                      🔄 {(safeT as any)?.recuperarRelatoriosBackup || 'Recuperar relatórios (backup local)'}
+                    </button>
                   </>
                 )}
               </div>

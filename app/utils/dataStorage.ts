@@ -1750,6 +1750,15 @@ export async function applySilentServerSync(server: Record<string, unknown>): Pr
       /* Nunca aplicar cópia parcial (2 peças) vinda do bundle sync */
       continue
     }
+    if (key === RELATORIOS_SERVICO_KEY && Array.isArray(s)) {
+      const snap = await readLocalValueForLoad(key, true)
+      const localLen = Array.isArray(snap.parsed) ? snap.parsed.length : 0
+      if (localLen > s.length && localLen >= 1) {
+        console.warn(
+          `[Nonato] Sync: servidor tem ${s.length} relatório(s), local ${localLen} — a fundir (não substituir).`
+        )
+      }
+    }
     const raw = localStorage.getItem(key)
     let same = false
     if (raw !== null && raw !== '') {
@@ -1968,6 +1977,13 @@ export async function saveData(
         console.warn(`[saveData] espelho IndexedDB falhou para ${key}`, idbErr)
       }
     }
+    if (key === RELATORIOS_SERVICO_KEY && Array.isArray(value)) {
+      try {
+        await saveKv(key, value)
+      } catch (idbErr) {
+        console.warn(`[saveData] espelho IndexedDB falhou para ${key}`, idbErr)
+      }
+    }
   } else if (key === CLIENTES_KEY && typeof window !== 'undefined') {
     try {
       await saveKv(key, value)
@@ -2003,7 +2019,7 @@ async function readLocalValueForLoad(
 ): Promise<{ parsed: unknown; raw: string | null }> {
   if (typeof window === 'undefined') return { parsed: null, raw: null }
 
-  if (key === PECAS_BIBLIOTECA_KEY && parseJson) {
+  const readArrayBestOfLsIdb = async (): Promise<{ parsed: unknown; raw: string | null }> => {
     let fromLs: unknown[] | null = null
     const raw = localStorage.getItem(key)
     if (raw !== null && raw !== '') {
@@ -2028,6 +2044,11 @@ async function readLocalValueForLoad(
           : fromLs
         : fromIdb || fromLs
     if (best) return { parsed: best, raw }
+    return { parsed: null, raw: null }
+  }
+
+  if ((key === PECAS_BIBLIOTECA_KEY || key === RELATORIOS_SERVICO_KEY) && parseJson) {
+    return readArrayBestOfLsIdb()
   }
 
   const raw = localStorage.getItem(key)
@@ -2066,6 +2087,14 @@ function shouldPreferLocalOverServerOnLoad(key: string, serverValue: unknown, lo
   }
   if (
     key === PECAS_BIBLIOTECA_KEY &&
+    Array.isArray(serverValue) &&
+    Array.isArray(localParsed) &&
+    localParsed.length > serverValue.length
+  ) {
+    return true
+  }
+  if (
+    key === RELATORIOS_SERVICO_KEY &&
     Array.isArray(serverValue) &&
     Array.isArray(localParsed) &&
     localParsed.length > serverValue.length
