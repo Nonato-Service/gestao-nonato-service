@@ -8535,6 +8535,7 @@ export default function Dashboard() {
     ausentes: number
   }>({ open: false, candidatos: [], ausentes: 0 })
   const [recuperacaoRelatoriosBusca, setRecuperacaoRelatoriosBusca] = useState('')
+  const [recuperacaoRelatoriosAviso, setRecuperacaoRelatoriosAviso] = useState('')
 
   const executarRecuperacaoRelatorios = useCallback(
     (lista: RelatorioServico[], silencioso = false) => {
@@ -8577,73 +8578,6 @@ export default function Dashboard() {
     }
   }, [clientes, relatoriosServico, executarRecuperacaoRelatorios])
 
-  const handleRecuperarRelatoriosPerdidos = useCallback(async (buscaInicial = '') => {
-    const extras: RelatorioServico[] = []
-    try {
-      const raw = localStorage.getItem('nonato-relatorios-servico')
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (Array.isArray(parsed)) extras.push(...(parsed as RelatorioServico[]))
-      }
-    } catch {
-      /* ignorar */
-    }
-    try {
-      const idb = await getKv('nonato-relatorios-servico')
-      if (Array.isArray(idb)) extras.push(...(idb as RelatorioServico[]))
-    } catch {
-      /* ignorar */
-    }
-
-    let extrasServidor: RelatorioServico[] = []
-    const qServidor = buscaInicial.trim()
-    try {
-      const res = await fetch('/api/data/recuperar-relatorios-servico', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cliente: qServidor || undefined, aplicar: true }),
-      })
-      if (res.ok) {
-        const json = (await res.json()) as {
-          ok?: boolean
-          encontrados?: Array<{ relatorio?: RelatorioServico }>
-        }
-        if (json.ok && Array.isArray(json.encontrados)) {
-          extrasServidor = json.encontrados
-            .map((e) => e.relatorio)
-            .filter((r): r is RelatorioServico => Boolean(r?.id))
-        }
-      }
-    } catch {
-      /* offline — continuar só com fontes locais */
-    }
-
-    if (extrasServidor.length > 0) {
-      extras.push(...extrasServidor)
-    }
-
-    const candidatos = coletarRelatoriosDeTodasFontes(
-      relatoriosServico,
-      clientes,
-      extras
-    ) as RelatorioServico[]
-    const ausentes = relatoriosAusentesNaLista(relatoriosServico, clientes, extras)
-    if (candidatos.length === 0) {
-      alert(
-        (safeT as any)?.bibliotecaRecuperarRelatoriosNada ||
-          'Não encontrámos cópias neste aparelho nem no servidor. Verifique «Relatórios Excluídos» ou contacte suporte com o nome do cliente (LISOBITO).'
-      )
-      return
-    }
-    setRecuperacaoRelatoriosBusca(buscaInicial.trim())
-    setRecuperacaoRelatoriosModal({ open: true, candidatos, ausentes: ausentes.length })
-  }, [clientes, relatoriosServico, safeT])
-
-  const fecharRecuperacaoRelatoriosModal = useCallback(() => {
-    setRecuperacaoRelatoriosBusca('')
-    setRecuperacaoRelatoriosModal({ open: false, candidatos: [], ausentes: 0 })
-  }, [])
-
   const relatorioMatchesRecuperacaoBusca = useCallback((rel: RelatorioServico, q: string): boolean => {
     const nq = q.trim().toLowerCase()
     if (!nq) return true
@@ -8662,12 +8596,126 @@ export default function Dashboard() {
     return hay.includes(nq)
   }, [])
 
+  const handleRecuperarRelatoriosPerdidos = useCallback(async (buscaInicial = '') => {
+    const extras: RelatorioServico[] = []
+    try {
+      const raw = localStorage.getItem('nonato-relatorios-servico')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) extras.push(...(parsed as RelatorioServico[]))
+      }
+    } catch {
+      /* ignorar */
+    }
+    try {
+      const idb = await getKv('nonato-relatorios-servico')
+      if (Array.isArray(idb)) extras.push(...(idb as RelatorioServico[]))
+    } catch {
+      /* ignorar */
+    }
+
+    const qServidor = String(buscaInicial || '').trim()
+    let extrasServidor: RelatorioServico[] = []
+    let servidorMsg = ''
+    let servidorAuth = false
+
+    const fetchServidor = async (cliente?: string) => {
+      const res = await fetch('/api/data/recuperar-relatorios-servico', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ cliente: cliente || undefined, aplicar: true }),
+      })
+      if (res.status === 401) {
+        servidorAuth = true
+        return [] as RelatorioServico[]
+      }
+      const json = (await res.json()) as {
+        ok?: boolean
+        message?: string
+        encontrados?: Array<{ relatorio?: RelatorioServico }>
+      }
+      if (json.message) servidorMsg = json.message
+      if (!res.ok || !json.ok || !Array.isArray(json.encontrados)) return [] as RelatorioServico[]
+      return json.encontrados
+        .map((e) => e.relatorio)
+        .filter((r): r is RelatorioServico => Boolean(r?.id))
+    }
+
+    try {
+      extrasServidor = await fetchServidor(qServidor || undefined)
+      if (extrasServidor.length === 0 && qServidor) {
+        extrasServidor = await fetchServidor(undefined)
+        if (extrasServidor.length > 0) {
+          servidorMsg =
+            (servidorMsg ? servidorMsg + ' ' : '') +
+            `«${qServidor}» não encontrado — a mostrar todos os relatórios do servidor (${extrasServidor.length}).`
+        }
+      }
+    } catch {
+      servidorMsg = 'Sem ligação ao servidor. A procurar só neste aparelho.'
+    }
+
+    if (extrasServidor.length > 0) {
+      extras.push(...extrasServidor)
+    }
+
+    const candidatos = coletarRelatoriosDeTodasFontes(
+      relatoriosServico,
+      clientes,
+      extras
+    ) as RelatorioServico[]
+    const ausentes = relatoriosAusentesNaLista(relatoriosServico, clientes, extras)
+
+    if (candidatos.length === 0) {
+      const sugestoes = clientes
+        .filter((c) => /liso|bito/i.test(String(c.nomeEmpresa ?? '')))
+        .map((c) => String(c.nomeEmpresa ?? '').trim())
+        .filter(Boolean)
+      const sugestoesTxt =
+        sugestoes.length > 0
+          ? `\n\nClientes parecidos no sistema: ${sugestoes.join(', ')}`
+          : '\n\nNão existe cliente «LISOBITO» no cadastro — o nome no relatório pode ser diferente.'
+      if (servidorAuth) {
+        alert(
+          'Sessão expirada. Faça login de novo e tente «Recuperar relatório» outra vez.'
+        )
+        return
+      }
+      alert(
+        (servidorMsg ||
+          (safeT as any)?.bibliotecaRecuperarRelatoriosNada ||
+          'Não encontrámos cópias neste aparelho nem no servidor.') +
+          sugestoesTxt +
+          '\n\nVerifique também: Relatórios Excluídos · Biblioteca · Clientes (letra L).'
+      )
+      return
+    }
+
+    if (qServidor && !candidatos.some((r) => relatorioMatchesRecuperacaoBusca(r, qServidor))) {
+      servidorMsg =
+        (servidorMsg ? servidorMsg + ' ' : '') +
+        `«${qServidor}» não encontrado — veja a lista completa abaixo (${candidatos.length} relatório(s)).`
+    }
+
+    setRecuperacaoRelatoriosBusca(qServidor)
+    setRecuperacaoRelatoriosAviso(servidorMsg)
+    setRecuperacaoRelatoriosModal({ open: true, candidatos, ausentes: ausentes.length })
+  }, [clientes, relatoriosServico, safeT, relatorioMatchesRecuperacaoBusca])
+
+  const fecharRecuperacaoRelatoriosModal = useCallback(() => {
+    setRecuperacaoRelatoriosBusca('')
+    setRecuperacaoRelatoriosAviso('')
+    setRecuperacaoRelatoriosModal({ open: false, candidatos: [], ausentes: 0 })
+  }, [])
+
   const aplicarRecuperacaoRelatoriosModal = useCallback(
     (candidatos: RelatorioServico[]) => {
       setRelatoriosServico(candidatos)
       snapshotRelatoriosServicoBackup(candidatos)
       void saveData('nonato-relatorios-servico', candidatos, true, true)
       setRecuperacaoRelatoriosBusca('')
+      setRecuperacaoRelatoriosAviso('')
       setRecuperacaoRelatoriosModal({ open: false, candidatos: [], ausentes: 0 })
       alert(
         (
@@ -29888,6 +29936,22 @@ export default function Dashboard() {
             {tm.recuperarRelatoriosModalDesc ||
               'Não precisa saber o número. Escolha pelo cliente, OS e data. Se estiver na Biblioteca, use o botão «Biblioteca».'}
           </p>
+          {recuperacaoRelatoriosAviso && (
+            <p
+              style={{
+                color: '#bae6fd',
+                fontSize: '13px',
+                margin: '0 0 12px',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                background: 'rgba(0, 150, 255, 0.12)',
+                border: '1px solid rgba(0, 150, 255, 0.4)',
+                lineHeight: 1.5,
+              }}
+            >
+              {recuperacaoRelatoriosAviso}
+            </p>
+          )}
           {ausentes > 0 && (
             <p
               style={{
