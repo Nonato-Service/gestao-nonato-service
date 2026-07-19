@@ -8308,6 +8308,47 @@ a:focus-visible {
 }
 
 /* Biblioteca de Relatórios: acordeão por cliente */
+@keyframes ui-expand-chevron-pulse {
+  0%,
+  100% {
+    opacity: 0.58;
+    filter: brightness(1);
+    text-shadow: none;
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.75);
+    text-shadow:
+      0 0 5px currentColor,
+      0 0 10px currentColor;
+  }
+}
+/* Setas ▶ de expandir — pulso na cor original quando retraído */
+.biblioteca-relatorios-fechados-block:not([open]) .biblioteca-relatorios-fechados-block__chevron,
+.biblioteca-relatorios-fechados-cliente:not([open]) .biblioteca-relatorios-fechados-cliente__chevron,
+.biblioteca-relatorios-fechado-item:not([open]) .biblioteca-relatorios-fechado-item__chev,
+.biblioteca-relatorios-clientes-block:not([open]) .biblioteca-relatorios-clientes-block__chevron,
+.biblioteca-relatorios-cliente:not([open]) > summary .biblioteca-relatorios-cliente__chevron,
+.biblioteca-relatorios-equip:not([open]) .biblioteca-relatorios-equip__chev,
+.bib-row-acoes:not([open]) .bib-row-acoes__chev,
+.financeiro-despesas-bib-grupo__header[aria-expanded='false'] .financeiro-despesas-bib-grupo__chev,
+.admin-disclosure:not([open]) .admin-disclosure__chev {
+  animation: ui-expand-chevron-pulse 1.65s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .biblioteca-relatorios-fechados-block:not([open]) .biblioteca-relatorios-fechados-block__chevron,
+  .biblioteca-relatorios-fechados-cliente:not([open]) .biblioteca-relatorios-fechados-cliente__chevron,
+  .biblioteca-relatorios-fechado-item:not([open]) .biblioteca-relatorios-fechado-item__chev,
+  .biblioteca-relatorios-clientes-block:not([open]) .biblioteca-relatorios-clientes-block__chevron,
+  .biblioteca-relatorios-cliente:not([open]) > summary .biblioteca-relatorios-cliente__chevron,
+  .biblioteca-relatorios-equip:not([open]) .biblioteca-relatorios-equip__chev,
+  .bib-row-acoes:not([open]) .bib-row-acoes__chev,
+  .financeiro-despesas-bib-grupo__header[aria-expanded='false'] .financeiro-despesas-bib-grupo__chev,
+  .admin-disclosure:not([open]) .admin-disclosure__chev {
+    animation: none;
+    opacity: 0.92;
+  }
+}
 .biblioteca-relatorios-cliente > summary::-webkit-details-marker {
   display: none;
 }
@@ -9352,6 +9393,7 @@ a:focus-visible {
   font-size: 10px;
   opacity: 0.85;
   transition: transform 0.15s ease;
+  color: #6ee7a8;
 }
 .biblioteca-relatorios-equip__nome {
   font-weight: 700;
@@ -9552,6 +9594,7 @@ a:focus-visible {
   font-size: 11px;
   transition: transform 0.2s ease;
   flex-shrink: 0;
+  color: #fde68a;
 }
 .biblioteca-relatorios-fechados-block[open] .biblioteca-relatorios-fechados-block__chevron {
   transform: rotate(90deg);
@@ -9743,6 +9786,7 @@ a:focus-visible {
 .bib-row-acoes__chev {
   font-size: 8px;
   transition: transform 0.2s ease;
+  color: #fde68a;
 }
 .bib-row-acoes[open] .bib-row-acoes__summary {
   margin-bottom: 6px;
@@ -11671,6 +11715,7 @@ button.dia-trabalho-acao-btn--del:hover {
   font-size: 11px;
   opacity: 0.85;
   min-width: 1.1em;
+  color: #93c5fd;
 }
 .financeiro-despesas-bib-grupo__nome {
   font-weight: 800;
