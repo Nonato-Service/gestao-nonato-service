@@ -39,6 +39,8 @@ import {
   applySilentServerSync,
   getPendingSyncCount,
 } from './utils/dataStorage'
+import { confirmBeforeLeaveUnsaved, hasUnsavedChanges, setUnsavedFormBaseline } from './utils/unsavedChangesGuard'
+import { useUnsavedFormGuard } from './hooks/useUnsavedFormGuard'
 import {
   applyDiarioLembretePatch,
   advanceDiarioLembreteAfterFire,
@@ -5740,7 +5742,7 @@ export default function Dashboard() {
   }, [dashboardWorkspaceExpanded])
 
   // Funções para gerenciar abas
-  const openTab = (type: TabType, title: string, icon?: string, explicitReturnHub?: string | null) => {
+  const openTabUnsafe = (type: TabType, title: string, icon?: string, explicitReturnHub?: string | null) => {
     const DEMO_BLOCKED_TABS: TabType[] = ['administrador', 'gestao-demos']
     if (isDemoMode && DEMO_BLOCKED_TABS.includes(type)) {
       window.alert('O Administrador e a gestão interna não estão disponíveis na versão de demonstração.')
@@ -5774,8 +5776,15 @@ export default function Dashboard() {
       return [...prev, newTab]
     })
   }
-  
-  const closeTab = (tabId: string) => {
+
+  const openTab = (type: TabType, title: string, icon?: string, explicitReturnHub?: string | null) => {
+    void (async () => {
+      if (!(await confirmBeforeLeaveUnsaved())) return
+      openTabUnsafe(type, title, icon, explicitReturnHub)
+    })()
+  }
+
+  const closeTabUnsafe = (tabId: string) => {
     setOpenTabs(prev => {
       const filtered = prev.filter(t => t.id !== tabId)
       if (activeTabId === tabId) {
@@ -5784,6 +5793,24 @@ export default function Dashboard() {
       }
       return filtered
     })
+  }
+
+  const closeTab = (tabId: string) => {
+    void (async () => {
+      if (activeTabId === tabId) {
+        if (!(await confirmBeforeLeaveUnsaved())) return
+      }
+      closeTabUnsafe(tabId)
+    })()
+  }
+
+  const switchActiveTab = (tabId: string) => {
+    void (async () => {
+      if (tabId !== activeTabId) {
+        if (!(await confirmBeforeLeaveUnsaved())) return
+      }
+      setActiveTabId(tabId)
+    })()
   }
 
   // Destacar na sidebar o botão correspondente ao separador ativo (ex.: abrir Biblioteca a partir do Fechamento)
@@ -7791,7 +7818,15 @@ export default function Dashboard() {
   const [buscaCliente, setBuscaCliente] = useState('')
   const [clienteListaDetalheId, setClienteListaDetalheId] = useState<string | null>(null)
   const [clientesAlfaLetraFiltro, setClientesAlfaLetraFiltro] = useState<string | null>(null)
-  const [clientesActiveTab, setClientesActiveTab] = useState<'cadastrar' | 'listar' | 'grupos'>('cadastrar')
+  const [clientesActiveTab, setClientesActiveTabState] = useState<'cadastrar' | 'listar' | 'grupos'>('cadastrar')
+  const setClientesActiveTab = useCallback((tab: 'cadastrar' | 'listar' | 'grupos') => {
+    void (async () => {
+      if (tab !== clientesActiveTab) {
+        if (!(await confirmBeforeLeaveUnsaved())) return
+      }
+      setClientesActiveTabState(tab)
+    })()
+  }, [clientesActiveTab])
   const [fornecedoresActiveTab, setFornecedoresActiveTab] = useState<'cadastrar' | 'listar'>('cadastrar')
   const [clienteGrupoTarifaSelecionadoId, setClienteGrupoTarifaSelecionadoId] = useState<string | null>(null)
   const [clienteForm, setClienteForm] = useState<ClienteFormState>(() => emptyClienteFormState())
@@ -14479,10 +14514,10 @@ export default function Dashboard() {
     }
   }
 
-  const handleSaveGestor = () => {
+  const handleSaveGestor = (): boolean => {
     if (!gestorForm.name || !gestorForm.email || !gestorForm.phone) {
       alert(t.fillAllFields)
-      return
+      return false
     }
 
     const savedGestor: Gestor = editingGestor
@@ -14510,6 +14545,7 @@ export default function Dashboard() {
     const primeiroTipo = tiposGestores.length > 0 ? tiposGestores[0].id : 'assistencia-tecnica'
     setGestorForm({ name: '', email: '', phone: '', address: '', area: primeiroTipo, photo: '' })
     alert(isNewGestor ? (t.gestorSaved || 'Gestor cadastrado com sucesso.') : (t.gestorUpdated || 'Gestor atualizado com sucesso.'))
+    return true
   }
 
   // Funções para gerenciar tipos de gestores
@@ -14635,10 +14671,10 @@ export default function Dashboard() {
     setTecnicoForm({ ...tecnicoForm, photo: '' })
   }
 
-  const handleSaveTecnico = () => {
+  const handleSaveTecnico = (): boolean => {
     if (!tecnicoForm.name || !tecnicoForm.email || !tecnicoForm.phone) {
       alert(t.fillAllFields)
-      return
+      return false
     }
 
     const savedTecnico: Tecnico = editingTecnico
@@ -14677,6 +14713,8 @@ export default function Dashboard() {
     }
     setTecnicoForm({ name: savedTecnico.name, email: savedTecnico.email, phone: savedTecnico.phone, address: savedTecnico.address, type: savedTecnico.type, photo: savedTecnico.photo || '' })
     setEditingTecnico(savedTecnico)
+    setUnsavedFormBaseline('tecnico', savedTecnico)
+    return true
   }
 
   // Função para criar backup completo (v2 — todas as chaves nonato-* + IndexedDB)
@@ -15301,10 +15339,10 @@ export default function Dashboard() {
     setEquipamentoForm({ ...equipamentoForm, manualPdf: '' })
   }
 
-  const handleSaveEquipamento = async () => {
+  const handleSaveEquipamento = async (): Promise<boolean> => {
     if (!equipamentoForm.id || !equipamentoForm.tipoEquipamento || !equipamentoForm.modelo || !equipamentoForm.marca || !equipamentoForm.numeroSerie || !equipamentoForm.familia || !equipamentoForm.grupo) {
       alert(t.fillAllFields)
-      return
+      return false
     }
 
     // Verificar se o ID já existe (apenas para novos equipamentos)
@@ -15312,7 +15350,7 @@ export default function Dashboard() {
       const idExists = equipamentos.some(e => e.id === equipamentoForm.id)
       if (idExists) {
         alert(t.equipamentoIdExists)
-        return
+        return false
       }
     } else {
       // Se está editando, verificar se o ID mudou e se o novo ID já existe
@@ -15320,7 +15358,7 @@ export default function Dashboard() {
         const idExists = equipamentos.some(e => e.id === equipamentoForm.id && e.id !== editingEquipamento.id)
         if (idExists) {
           alert(t.equipamentoIdExists)
-          return
+          return false
         }
       }
     }
@@ -15354,9 +15392,11 @@ export default function Dashboard() {
     }
     setEquipamentoForm(equipamentoToFormState(savedEquipamento))
     setEditingEquipamento(savedEquipamento)
+    setUnsavedFormBaseline('equipamento', equipamentoToFormState(savedEquipamento))
 
     // Mostrar mensagem de sucesso
     alert((t as any).equipamentoSaved || 'Equipamento salvo com sucesso!')
+    return true
   }
 
   const handleAddItem = () => {
@@ -15420,7 +15460,7 @@ export default function Dashboard() {
     if (showClientesModal) {
       setShowClienteForm(false)
     } else {
-      setClientesActiveTab('listar')
+      setClientesActiveTabState('listar')
       setClienteListaDetalheId(null)
     }
   }
@@ -16309,15 +16349,15 @@ export default function Dashboard() {
     setShowAgendaForm(true)
   }
 
-  const handleSaveAgendamento = () => {
+  const handleSaveAgendamento = (): boolean => {
     const pessoal = isAgendamentoPessoal(agendaForm)
     if (!agendaForm.data || !agendaForm.hora) {
       alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
-      return
+      return false
     }
     if (!pessoal && (!agendaForm.tecnico || !agendaForm.cliente)) {
       alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
-      return
+      return false
     }
 
     const formSanitizado: Agendamento = {
@@ -16383,7 +16423,9 @@ export default function Dashboard() {
     setEditingAgendamento(savedAgendamento)
     setAgendaForm(savedAgendamento)
     setAgendaDiasRascunho(savedAgendamento.diasSelecionados?.length ? [...savedAgendamento.diasSelecionados].sort() : [])
+    setUnsavedFormBaseline('agenda', savedAgendamento)
     alert(safeT?.saveSuccess || 'Agendamento salvo com sucesso!')
+    return true
   }
 
   const handleDeleteAgendamento = (id: string) => {
@@ -17372,12 +17414,12 @@ export default function Dashboard() {
     [clientes, clienteForm.nomeEmpresa, editingCliente, clienteDuplicadoCadastro]
   )
 
-  const handleSaveCliente = async () => {
-    if (clienteSaveInFlightRef.current) return
+  const handleSaveCliente = async (): Promise<boolean> => {
+    if (clienteSaveInFlightRef.current) return false
 
     if (!clienteForm.nomeEmpresa?.trim() || !clienteForm.morada?.trim()) {
       alert(t.fillAllFields)
-      return
+      return false
     }
 
     const duplicado = encontrarClienteDuplicadoCadastro(clientes, {
@@ -17399,7 +17441,7 @@ export default function Dashboard() {
       } else {
         alert((tr.clienteJaExistenteNome ?? '').replace('{nome}', nomeDup))
       }
-      return
+      return false
     }
 
     clienteSaveInFlightRef.current = true
@@ -17443,13 +17485,13 @@ export default function Dashboard() {
         console.error('Erro ao salvar clientes localmente:', err)
         setClientes(previousClientes)
         alert((t as any).erroSalvar || 'Erro ao salvar. Tente novamente.')
-        return
+        return false
       }
 
       void saveData('nonato-clientes', updatedClientes, false, true).catch(() => {})
 
       createAutoBackupBeforeOperation()
-      setClienteForm({
+      const syncedForm = {
         nomeEmpresa: savedCliente.nomeEmpresa,
         morada: savedCliente.morada,
         localidade: savedCliente.localidade,
@@ -17466,8 +17508,10 @@ export default function Dashboard() {
         kmIdaPadrao: kmStringForNumberField(savedCliente.kmIdaPadrao),
         kmRetornoPadrao: kmStringForNumberField(savedCliente.kmRetornoPadrao),
         tipoCliente: savedCliente.tipoCliente === 'juridica' ? 'juridica' : 'fisica',
-      })
+      }
+      setClienteForm(syncedForm)
       setEditingCliente(savedCliente)
+      setUnsavedFormBaseline('cliente', syncedForm)
       const trSave = t as Record<string, string | undefined>
       alert(
         `${trSave.clienteSaved || 'Cliente salvo com sucesso!'}\n\n${formatClienteIdentidadeTexto(savedCliente, {
@@ -17475,14 +17519,110 @@ export default function Dashboard() {
           nome: trSave.clienteIdentTagNome,
         })}`
       )
+      return true
     } catch (err) {
       console.error('Erro ao salvar clientes:', err)
       alert((t as any).erroSalvar || 'Erro ao salvar. Tente novamente.')
+      return false
     } finally {
       clienteSaveInFlightRef.current = false
       setClienteSaveInFlight(false)
     }
   }
+
+  // Aviso «Deseja guardar antes de sair?» — formulários principais
+  useUnsavedFormGuard({
+    id: 'relatorio-servico',
+    label: 'Relatório de Serviço',
+    enabled: showRelatorioServicoForm,
+    sessionKey: String(editingRelatorioServico?.id ?? 'novo'),
+    current: relatorioServicoForm,
+    save: () => salvarRelatorioServicoAtual({ silencioso: true }) != null,
+    discard: () => {
+      setShowRelatorioServicoForm(false)
+      setEditingRelatorioServico(null)
+    },
+  })
+
+  useUnsavedFormGuard({
+    id: 'cliente',
+    label: 'Cliente',
+    enabled: showClienteForm,
+    sessionKey: String(editingCliente?.id ?? 'novo'),
+    current: clienteForm,
+    save: () => handleSaveCliente(),
+    discard: () => {
+      setShowClienteForm(false)
+      setEditingCliente(null)
+      setClientesActiveTabState('listar')
+      setClienteListaDetalheId(null)
+    },
+  })
+
+  useUnsavedFormGuard({
+    id: 'agenda',
+    label: 'Agenda',
+    enabled: showAgendaForm,
+    sessionKey: String(editingAgendamento?.id ?? 'novo'),
+    current: { ...agendaForm, diasSelecionados: agendaDiasRascunho },
+    save: () => handleSaveAgendamento(),
+    discard: () => {
+      setShowAgendaForm(false)
+      setEditingAgendamento(null)
+    },
+  })
+
+  useUnsavedFormGuard({
+    id: 'biblioteca-peca',
+    label: 'Peça da biblioteca',
+    enabled: showBibliotecaPecasForm,
+    sessionKey: String(editingPecaBiblioteca?.id ?? 'novo'),
+    current: pecaBibliotecaForm,
+    save: () => handleAddPecaBiblioteca(),
+    discard: () => {
+      setShowBibliotecaPecasForm(false)
+      setEditingPecaBiblioteca(null)
+    },
+  })
+
+  useUnsavedFormGuard({
+    id: 'gestor',
+    label: 'Gestor',
+    enabled: showGestorForm,
+    sessionKey: String(editingGestor?.id ?? 'novo'),
+    current: gestorForm,
+    save: () => handleSaveGestor(),
+    discard: () => {
+      setShowGestorForm(false)
+      setEditingGestor(null)
+    },
+  })
+
+  useUnsavedFormGuard({
+    id: 'tecnico',
+    label: 'Técnico',
+    enabled: showTecnicoForm,
+    sessionKey: String(editingTecnico?.id ?? 'novo'),
+    current: tecnicoForm,
+    save: () => handleSaveTecnico(),
+    discard: () => {
+      setShowTecnicoForm(false)
+      setEditingTecnico(null)
+    },
+  })
+
+  useUnsavedFormGuard({
+    id: 'equipamento',
+    label: 'Equipamento',
+    enabled: showEquipamentoForm,
+    sessionKey: String(editingEquipamento?.id ?? 'novo'),
+    current: equipamentoForm,
+    save: () => handleSaveEquipamento(),
+    discard: () => {
+      setShowEquipamentoForm(false)
+      setEditingEquipamento(null)
+    },
+  })
 
   // Funções para gerenciar Cliente Prioritário
   const handleAddClientePrioritario = () => {
@@ -19050,19 +19190,23 @@ export default function Dashboard() {
 
   /** Lista → detalhe → editar: um «Voltar» fecha o formulário e regressa à lista alfabética. */
   const voltarNavegacaoRelatorioServico = useCallback(() => {
-    const tinhaForm = showRelatorioServicoForm
-    const tinhaDetalhe = !!relatorioServicoListaDetalheId
+    void (async () => {
+      if (!(await confirmBeforeLeaveUnsaved())) return
 
-    if (tinhaForm) {
-      setShowRelatorioServicoForm(false)
-      setEditingRelatorioServico(null)
-    }
-    if (tinhaDetalhe) {
-      setRelatorioServicoListaDetalheId(null)
-    }
-    if (tinhaForm || tinhaDetalhe) {
-      scrollRelatorioServicoListaIntoView()
-    }
+      const tinhaForm = showRelatorioServicoForm
+      const tinhaDetalhe = !!relatorioServicoListaDetalheId
+
+      if (tinhaForm) {
+        setShowRelatorioServicoForm(false)
+        setEditingRelatorioServico(null)
+      }
+      if (tinhaDetalhe) {
+        setRelatorioServicoListaDetalheId(null)
+      }
+      if (tinhaForm || tinhaDetalhe) {
+        scrollRelatorioServicoListaIntoView()
+      }
+    })()
   }, [
     showRelatorioServicoForm,
     relatorioServicoListaDetalheId,
@@ -23910,6 +24054,7 @@ export default function Dashboard() {
     void createAutoBackup()
     setRelatorioServicoForm(savedRelatorio)
     setEditingRelatorioServico(savedRelatorio)
+    setUnsavedFormBaseline('relatorio-servico', savedRelatorio)
     const modelEscolhido = getPdfModelSelecionadoNoFormulario()
     handlePrintRelatorio(savedRelatorio, modelEscolhido)
     garantirPdfModeloGravadoParaRelatorio(savedRelatorio.id, modelEscolhido)
@@ -24779,14 +24924,14 @@ export default function Dashboard() {
     }
   }
 
-  const handleAddPecaBiblioteca = () => {
+  const handleAddPecaBiblioteca = (): boolean => {
     if (!pecaBibliotecaForm.nome || !pecaBibliotecaForm.codigo) {
       alert(t.fillAllFields || 'Preencha todos os campos obrigatórios')
-      return
+      return false
     }
     if (pecaBibliotecaCodigoDuplicado(pecaBibliotecaForm.codigo, editingPecaBiblioteca?.id)) {
       alert(t.codigoPecaBibliotecaDuplicado || 'Já existe uma peça com este código. Indique outro código.')
-      return
+      return false
     }
 
     const numeroSeq = resolverNumeroSequenciaAoSalvarPecaBiblioteca(
@@ -24844,6 +24989,7 @@ export default function Dashboard() {
     setPecaBibliotecaPickerSubcategoriaAberto(false)
     navegarBibliotecaAposSalvarPeca(grupoParaManter)
     alert(t.pecaBibliotecaSaved || 'Peça salva com sucesso!')
+    return true
   }
 
   const handleEditPecaBiblioteca = (peca: PecaBiblioteca) => {
@@ -28166,7 +28312,8 @@ export default function Dashboard() {
       if (allowUnsafeBrowserExitRef.current) return
       if (!sessaoPrincipalAtiva) return
       const pending = getPendingSyncCount()
-      if (pending > 0) {
+      const dirtyForms = hasUnsavedChanges()
+      if (pending > 0 || dirtyForms) {
         e.preventDefault()
         e.returnValue = ''
         return
@@ -72998,7 +73145,7 @@ A1;Peça exemplo;10`}
                     setBottomTabsDragOverId(null)
                   }}
                   className={`bottom-tab-item ${activeTabId === tab.id ? 'active' : ''} ${getBottomTabAccentClass(tab.type)}${bottomTabsDraggingId === tab.id ? ' is-dragging' : ''}${bottomTabsDragOverId === tab.id ? ' is-drop-target' : ''}`}
-                  onClick={() => setActiveTabId(tab.id)}
+                  onClick={() => switchActiveTab(tab.id)}
                   title={tab.title}
                 >
                   {tab.icon ? (

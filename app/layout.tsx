@@ -3,6 +3,7 @@ import './globals.css'
 import { AdicionarServicosStyle } from './AdicionarServicosStyle'
 import { RegisterSW } from './RegisterSW'
 import { OfflineIndicator } from './components/OfflineIndicator'
+import { UnsavedChangesDialog } from './components/UnsavedChangesDialog'
 import { InstallPromptProvider } from './components/InstallPrompt'
 import { NonatoDemoShell } from './components/NonatoDemoShell'
 import { MobileBrowserZoomPan } from './components/MobileBrowserZoomPan'
@@ -69,6 +70,7 @@ export default function RootLayout({
         <AdicionarServicosStyle />
         <RegisterSW />
         <OfflineIndicator />
+        <UnsavedChangesDialog />
         <NonatoDemoShell />
         <MobileBrowserZoomPan />
       </body>
