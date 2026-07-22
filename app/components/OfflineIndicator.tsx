@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   isOnline,
-  autoSyncPendingChanges,
+  forceSyncPendingChanges,
+  clearPendingSyncQueue,
   getPendingSyncCount,
   setupAutoSyncOnReconnect,
 } from '../utils/dataStorage'
@@ -17,17 +18,40 @@ export function OfflineIndicator() {
   const [lastFailed, setLastFailed] = useState<number | null>(null)
   const [lastConfirmed, setLastConfirmed] = useState<string | null>(null)
   const [blockedMsg, setBlockedMsg] = useState<string | null>(null)
+  const lastTapAtRef = useRef(0)
 
   const refreshPending = () => setPendingCount(getPendingSyncCount())
 
   const runSync = () => {
     setSyncing(true)
-    autoSyncPendingChanges().then(({ synced, failed }) => {
+    forceSyncPendingChanges().then(({ synced, failed, discarded }) => {
       refreshPending()
       setSyncing(false)
-      if (synced > 0) setLastSync(Date.now())
+      if (synced > 0 || discarded > 0) setLastSync(Date.now())
       if (failed > 0) setLastFailed(Date.now())
+      if (getPendingSyncCount() === 0) setLastFailed(null)
     })
+  }
+
+  const tryDismissStuckQueue = () => {
+    const now = Date.now()
+    if (now - lastTapAtRef.current < 700) {
+      const ok = window.confirm(
+        getStoredUiString(
+          'offlineSyncDismissConfirm',
+          'Ignorar alteração pendente neste aparelho? (Não será enviada ao servidor.)'
+        )
+      )
+      if (ok) {
+        clearPendingSyncQueue()
+        refreshPending()
+        setLastFailed(null)
+      }
+      lastTapAtRef.current = 0
+      return true
+    }
+    lastTapAtRef.current = now
+    return false
   }
 
   useEffect(() => {
@@ -199,11 +223,18 @@ export function OfflineIndicator() {
           cursor: pendingCount > 0 || showFailed ? 'pointer' : undefined,
         }}
         onClick={() => {
-          if (online && (pendingCount > 0 || showFailed)) runSync()
+          if (!online || !(pendingCount > 0 || showFailed)) return
+          if (showFailed && tryDismissStuckQueue()) return
+          runSync()
         }}
         title={
           pendingCount > 0 || showFailed
-            ? getStoredUiString('offlineTapToSync', 'Toque para tentar sincronizar agora')
+            ? showFailed
+              ? getStoredUiString(
+                  'offlineTapToSyncOrDismiss',
+                  'Toque para tentar de novo; toque 2× para ignorar'
+                )
+              : getStoredUiString('offlineTapToSync', 'Toque para tentar sincronizar agora')
             : undefined
         }
       >

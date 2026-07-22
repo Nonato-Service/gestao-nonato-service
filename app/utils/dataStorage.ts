@@ -258,7 +258,7 @@ type SyncQueueItem = {
   failCount?: number
 }
 
-const SYNC_QUEUE_MAX_FAILS = 3
+const SYNC_QUEUE_MAX_FAILS = 2
 const SYNC_QUEUE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 
 /** Cache em memória quando localStorage enche — fila continua válida + espelho IndexedDB. */
@@ -445,25 +445,46 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
     /* blocked: não reenviar — servidor tem versão mais completa */
   }
   setSyncQueue(remaining)
-  serverOffline = failed > 0
   if (synced > 0 || remaining.length === 0) serverOffline = false
   return { synced, failed, discarded }
 }
 
+/** Limpa fila offline presa (ex.: item obsoleto que não consegue gravar). */
+export function clearPendingSyncQueue(): void {
+  setSyncQueue([])
+  serverOffline = false
+  lastServerCheck = 0
+  dispatchSyncCompleted({ synced: 0, failed: 0, discarded: 0 })
+}
+
 let autoSyncInFlight = false
 
+/** Envia alterações pendentes — tenta gravar mesmo após falha anterior (sem bloqueio de 30s). */
+export async function forceSyncPendingChanges(): Promise<{
+  synced: number
+  failed: number
+  discarded: number
+}> {
+  if (isNonatoDemoBuild() || !isOnline()) return { synced: 0, failed: 0, discarded: 0 }
+  serverOffline = false
+  lastServerCheck = 0
+  return autoSyncPendingChanges()
+}
+
 /** Envia alterações pendentes ao servidor — chamado ao voltar online ou periodicamente. */
-export async function autoSyncPendingChanges(): Promise<{ synced: number; failed: number }> {
-  if (isNonatoDemoBuild() || !isOnline()) return { synced: 0, failed: 0 }
-  if (autoSyncInFlight) return { synced: 0, failed: 0 }
-  if (getPendingSyncCount() === 0) return { synced: 0, failed: 0 }
+export async function autoSyncPendingChanges(): Promise<{
+  synced: number
+  failed: number
+  discarded: number
+}> {
+  if (isNonatoDemoBuild() || !isOnline()) return { synced: 0, failed: 0, discarded: 0 }
+  if (autoSyncInFlight) return { synced: 0, failed: 0, discarded: 0 }
+  if (getPendingSyncCount() === 0) return { synced: 0, failed: 0, discarded: 0 }
   autoSyncInFlight = true
   try {
-    const online = await checkServerOnline()
-    if (!online) return { synced: 0, failed: 0 }
     const result = await processSyncQueue()
     if (typeof window !== 'undefined') {
-      if (result.synced > 0 || getPendingSyncCount() === 0) {
+      if (result.synced > 0 || result.discarded > 0 || getPendingSyncCount() === 0) {
         dispatchSyncCompleted(result)
       }
     }
