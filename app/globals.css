@@ -385,17 +385,28 @@ body {
     touch-action: none !important;
     max-height: 100% !important;
   }
+}
 
-  /* Zoom local dentro da aba (biblioteca e restantes): não altera html/body */
-  .tab-inner-scroll.mobile-local-zoom-active {
-    overflow: hidden !important;
-    touch-action: none !important;
-    overscroll-behavior: contain !important;
-  }
+/* Zoom local (abas): pan lateral visível também no PC com ecrã táctil */
+html.mobile-local-zoom-active,
+body.mobile-local-zoom-active {
+  overflow: visible !important;
+}
 
-  .tab-inner-scroll.mobile-local-zoom-active > * {
-    touch-action: none !important;
-  }
+html.mobile-local-zoom-active .main-content-area.main-content-area-tab-open,
+body.mobile-local-zoom-active .main-content-area.main-content-area-tab-open {
+  overflow: visible !important;
+}
+
+.tab-inner-scroll.mobile-local-zoom-active {
+  overflow: visible !important;
+  touch-action: none !important;
+  position: relative;
+  z-index: 2;
+}
+
+.tab-inner-scroll.mobile-local-zoom-active > * {
+  touch-action: none !important;
 }
 
 /* Foco visível — acessibilidade + acabamento “produto” */
@@ -25014,6 +25025,34 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 .biblioteca-pecas-hub__seg--active:hover {
   background: var(--bib-green-hover);
   border-color: color-mix(in srgb, var(--bib-green-hover) 90%, #ffffff 10%);
+}
+
+/* Toolbar biblioteca — coluna (Firefox/Edge/Chrome alinhados; evita cortar categorias) */
+.biblioteca-pecas-hub__toolbar-row {
+  width: 100%;
+  box-sizing: border-box;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 12px !important;
+}
+
+.biblioteca-pecas-hub__toolbar-segs,
+.biblioteca-pecas-hub__toolbar-filters {
+  width: 100%;
+  min-width: 0;
+}
+
+.biblioteca-pecas-hub__toolbar-filters .biblioteca-pecas-hub__select,
+.biblioteca-pecas-hub__toolbar-filters select {
+  width: 100%;
+  min-width: 0 !important;
+}
+
+.biblioteca-hub-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
 }
 
 .biblioteca-pecas-hub__select {

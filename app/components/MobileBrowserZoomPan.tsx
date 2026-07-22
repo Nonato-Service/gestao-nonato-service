@@ -69,8 +69,9 @@ export function MobileBrowserZoomPan() {
     if (typeof window === 'undefined') return
 
     const isTouchMobile = () => {
-      if (window.innerWidth > 1024) return false
-      return window.matchMedia('(pointer: coarse)').matches
+      if (window.innerWidth > 1280) return false
+      if (window.matchMedia('(pointer: coarse)').matches) return true
+      return navigator.maxTouchPoints > 0
     }
 
     const panRoot = () => document.getElementById(PAN_ROOT_ID)
@@ -105,6 +106,11 @@ export function MobileBrowserZoomPan() {
     const setGlobalZoomedClass = (zoomed: boolean) => {
       document.documentElement.classList.toggle('mobile-browser-zoomed', zoomed)
       document.body.classList.toggle('mobile-browser-zoomed', zoomed)
+    }
+
+    const setLocalZoomedClass = (zoomed: boolean) => {
+      document.documentElement.classList.toggle('mobile-local-zoom-active', zoomed)
+      document.body.classList.toggle('mobile-local-zoom-active', zoomed)
     }
 
     const originFromMid = (midX: number, midY: number, el: HTMLElement) => {
@@ -170,7 +176,6 @@ export function MobileBrowserZoomPan() {
         scrollEl.dataset.nsZoomScrollLeft = String(scrollEl.scrollLeft)
       }
       scrollEl.classList.add('mobile-local-zoom-active')
-      scrollEl.style.overflow = 'hidden'
       restoreScrollSnapshot()
     }
 
@@ -202,8 +207,10 @@ export function MobileBrowserZoomPan() {
 
       if (surface.mode === 'root') {
         setGlobalZoomedClass(zoomed)
+        setLocalZoomedClass(false)
       } else if (surface.scrollEl) {
         setGlobalZoomedClass(false)
+        setLocalZoomedClass(zoomed)
         if (zoomed) {
           lockLocalScroll(surface.scrollEl)
         } else {
@@ -231,6 +238,7 @@ export function MobileBrowserZoomPan() {
 
     const resetAllSurfaces = () => {
       setGlobalZoomedClass(false)
+      setLocalZoomedClass(false)
       const root = panRoot()
       if (root) clearTransform(root)
       document.querySelectorAll<HTMLElement>('.tab-inner-scroll').forEach((scrollEl) => {
@@ -253,9 +261,20 @@ export function MobileBrowserZoomPan() {
     }
 
     const panLimits = (scale: number, surface: ZoomSurface) => {
+      if (surface.mode === 'local') {
+        const content = surface.transformEl
+        const viewW = surface.scrollEl?.clientWidth ?? window.innerWidth
+        const viewH = surface.scrollEl?.clientHeight ?? window.innerHeight
+        const contentW = content.scrollWidth || content.offsetWidth || viewW
+        const contentH = content.scrollHeight || content.offsetHeight || viewH
+        const extraX = Math.max(viewW * 0.35, (contentW * scale - viewW) * 0.55 + viewW * 0.2)
+        const extraY = Math.max(viewH * 0.35, (contentH * scale - viewH) * 0.55 + viewH * 0.2)
+        return { x: extraX, y: extraY }
+      }
+
       const baseEl = surface.scrollEl ?? surface.transformEl
       const base = Math.max(baseEl.clientWidth || window.innerWidth, baseEl.clientHeight || window.innerHeight)
-      const extra = base * (scale - 1) * 1.35 + base * 0.25
+      const extra = base * (scale - 1) * 1.65 + base * 0.35
       return { x: extra, y: extra }
     }
 
@@ -312,10 +331,8 @@ export function MobileBrowserZoomPan() {
 
       if (e.touches.length >= 2) {
         armTwoFingerGesture(e)
-        if (surface?.mode === 'root') {
-          e.preventDefault()
-          restoreScrollSnapshot()
-        }
+        e.preventDefault()
+        restoreScrollSnapshot()
         return
       }
 
