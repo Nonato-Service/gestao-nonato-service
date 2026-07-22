@@ -282,6 +282,37 @@ export function pecaBibliotecaMatchesBusca(
   return false
 }
 
+/** Correspondência parcial em nome ou descrição (várias palavras = todas devem aparecer). */
+export function pecaBibliotecaMatchesNome(
+  peca: { nome?: string; descricao?: string },
+  query: string
+): boolean {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  const haystack = `${peca.nome ?? ''} ${peca.descricao ?? ''}`.trim().toLowerCase()
+  if (!haystack) return false
+  const tokens = q.split(/\s+/).filter(Boolean)
+  return tokens.every((t) => haystack.includes(t))
+}
+
+/** Código (exacto/HOMAG/substituições) ou nome/descrição. */
+export function pecaBibliotecaMatchesBuscaCompleta(
+  peca: {
+    codigo?: string
+    nome?: string
+    descricao?: string
+    codigosAlternativos?: string[]
+    referenciasAlternativas?: string[]
+    referenciasAntigas?: string[]
+    codigosAntigos?: string[]
+  },
+  query: string
+): boolean {
+  const q = query.trim()
+  if (!q) return true
+  return pecaBibliotecaMatchesBusca(peca, q) || pecaBibliotecaMatchesNome(peca, q)
+}
+
 export function filtrarPecasBibliotecaPorBusca<
   T extends {
     codigo?: string
@@ -293,7 +324,7 @@ export function filtrarPecasBibliotecaPorBusca<
 >(pecas: T[], query: string, limit = 50): T[] {
   const q = query.trim()
   if (!q) return pecas.slice(0, limit)
-  return pecas.filter((p) => pecaBibliotecaMatchesBusca(p, q)).slice(0, limit)
+  return pecas.filter((p) => pecaBibliotecaMatchesBuscaCompleta(p, q)).slice(0, limit)
 }
 
 export function encontrarPecaBibliotecaPorCodigo<

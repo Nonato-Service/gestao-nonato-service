@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { pecaBibliotecaMatchesBusca } from '../lib/pecaCodigoBusca'
+import { pecaBibliotecaMatchesBuscaCompleta } from '../lib/pecaCodigoBusca'
 import {
   formatPrecoBibliotecaExibicao,
 } from './BibliotecaPrecoOlhoToggle'
@@ -66,10 +66,12 @@ type GaleriaTranslations = {
   semPecasCategoria?: string
   buscarPorCodigo?: string
   buscarPorNome?: string
+  buscarCodigoOuNome?: string
   buscaModoCodigo?: string
   buscaModoNome?: string
   buscarPlaceholder?: string
   buscarPlaceholderNome?: string
+  buscarPlaceholderCodigoOuNome?: string
   buscaResultados?: string
   buscaResultadosNome?: string
   buscaVazio?: string
@@ -299,17 +301,9 @@ export function BibliotecaPecasGaleriaCategorias({
   const resultadosBuscaCompletos = useMemo(() => {
     if (!emBusca) return []
     return [...pecasCatalogo]
-      .filter((peca) => {
-        if (buscaModo === 'nome') {
-          return String(peca.nome ?? '')
-            .trim()
-            .toLowerCase()
-            .includes(q)
-        }
-        return pecaBibliotecaMatchesBusca(peca, buscaCodigo)
-      })
+      .filter((peca) => pecaBibliotecaMatchesBuscaCompleta(peca, buscaCodigo))
       .sort((a, b) => compararPecasGaleriaPorNumero(a, b, categorias))
-  }, [pecasCatalogo, buscaModo, q, categorias, emBusca])
+  }, [pecasCatalogo, buscaCodigo, categorias, emBusca])
 
   const pecasCategoriaSelecionada = useMemo(() => {
     if (!categoriaSelecionadaId) return []
@@ -320,28 +314,8 @@ export function BibliotecaPecasGaleriaCategorias({
   const barraBusca =
     onBuscaCodigoChange != null ? (
       <div className="biblioteca-busca-codigo biblioteca-galeria-categorias__search-wrap" role="search">
-        {onBuscaModoChange ? (
-          <div className="biblioteca-busca-codigo__modo" role="group" aria-label="Tipo de busca">
-            <button
-              type="button"
-              className={`biblioteca-busca-codigo__modo-btn${buscaModo === 'codigo' ? ' biblioteca-busca-codigo__modo-btn--active' : ''}`}
-              onClick={() => onBuscaModoChange('codigo')}
-            >
-              {t.buscaModoCodigo || 'Código'}
-            </button>
-            <button
-              type="button"
-              className={`biblioteca-busca-codigo__modo-btn${buscaModo === 'nome' ? ' biblioteca-busca-codigo__modo-btn--active' : ''}`}
-              onClick={() => onBuscaModoChange('nome')}
-            >
-              {t.buscaModoNome || 'Nome'}
-            </button>
-          </div>
-        ) : null}
         <label htmlFor="biblioteca-galeria-busca-codigo" className="biblioteca-busca-codigo__label">
-          {buscaModo === 'nome'
-            ? t.buscarPorNome || 'Buscar por nome'
-            : t.buscarPorCodigo || 'Buscar peça por código'}
+          {t.buscarCodigoOuNome || t.buscarPorCodigo || 'Buscar por código ou nome'}
         </label>
         <div className="biblioteca-busca-codigo__row">
           <input
@@ -351,9 +325,9 @@ export function BibliotecaPecasGaleriaCategorias({
             value={buscaCodigo === 'null' || buscaCodigo === 'undefined' ? '' : buscaCodigo}
             onChange={(e) => onBuscaCodigoChange(e.target.value)}
             placeholder={
-              buscaModo === 'nome'
-                ? t.buscarPlaceholderNome || 'Ex: suction cup, cilindro…'
-                : t.buscarPlaceholder || 'Ex: 700030001'
+              t.buscarPlaceholderCodigoOuNome ||
+              t.buscarPlaceholder ||
+              'Ex: 700030001, suction cup, cilindro…'
             }
             autoComplete="off"
             enterKeyHint="search"
@@ -395,9 +369,7 @@ export function BibliotecaPecasGaleriaCategorias({
         {barraBusca}
         <p className="biblioteca-galeria-categorias__lead biblioteca-galeria-categorias__search-results">
           {String(
-            buscaModo === 'nome'
-              ? t.buscaResultadosNome || '{count} peça(s) encontrada(s) para o nome «{termo}»'
-              : t.buscaResultados || '{count} peça(s) encontrada(s) para «{codigo}»'
+            t.buscaResultados || '{count} peça(s) encontrada(s) para «{termo}»'
           )
             .replace('{count}', String(resultadosBuscaCompletos.length))
             .replace('{termo}', buscaCodigo.trim())
@@ -408,9 +380,7 @@ export function BibliotecaPecasGaleriaCategorias({
         </p>
         {resultados.length === 0 ? (
           <p className="biblioteca-galeria-categorias__empty">
-            {buscaModo === 'nome'
-              ? t.buscaVazioNome || 'Nenhuma peça com esse nome.'
-              : t.buscaVazio || 'Nenhuma peça com esse código.'}
+            {t.buscaVazio || 'Nenhuma peça encontrada para esta busca.'}
           </p>
         ) : (
           <div className="biblioteca-pecas-hub__piece-grid biblioteca-galeria-categorias__grid-pecas">

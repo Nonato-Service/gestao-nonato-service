@@ -266,6 +266,7 @@ import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
 import {
   filtrarPecasBibliotecaPorBusca,
   pecaBibliotecaMatchesBusca,
+  pecaBibliotecaMatchesBuscaCompleta,
   setIndiceSubstituicoesHomag,
 } from './lib/pecaCodigoBusca'
 import { buscarPecaBibliotecaNoServidor } from './lib/buscarPecaBibliotecaRemoto'
@@ -474,22 +475,20 @@ function pecaBibliotecaSrcImagemDisplay(
   return resolvePecaBibliotecaImagemSrcForDisplay(imagemOuPeca, PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC)
 }
 
-type BuscaBibliotecaModo = 'codigo' | 'nome'
-
 function pecaPassaBuscaBibliotecaTexto(
-  peca: { codigo?: string; nome?: string; descricao?: string },
-  q: string,
-  modo: BuscaBibliotecaModo
+  peca: {
+    codigo?: string
+    nome?: string
+    descricao?: string
+    codigosAlternativos?: string[]
+    referenciasAlternativas?: string[]
+    referenciasAntigas?: string[]
+    codigosAntigos?: string[]
+  },
+  q: string
 ): boolean {
-  const ql = q.trim().toLowerCase()
-  if (!ql) return true
-  if (modo === 'nome') {
-    const nome = String(peca.nome ?? peca.descricao ?? '')
-      .trim()
-      .toLowerCase()
-    return nome.includes(ql)
-  }
-  return pecaBibliotecaMatchesBusca(peca, q)
+  if (!q.trim()) return true
+  return pecaBibliotecaMatchesBuscaCompleta(peca, q)
 }
 
 /** Imagem gravada no item do orçamento (só foto real da peça / upload manual — não o logo padrão). */
@@ -7619,7 +7618,6 @@ export default function Dashboard() {
   const [filtroSubgrupoBiblioteca, setFiltroSubgrupoBiblioteca] = useState<string>('')
   /** Biblioteca: filtra peças cujo código contém o texto (sem distinção maiúsculas/minúsculas). */
   const [buscaCodigoBiblioteca, setBuscaCodigoBiblioteca] = useState<string>('')
-  const [buscaBibliotecaModo, setBuscaBibliotecaModo] = useState<BuscaBibliotecaModo>('codigo')
   const [abaBibliotecaPecas, setAbaBibliotecaPecas] = useState<'cadastro' | 'biblioteca' | 'biblioteca-gestao' | 'grupos' | 'importacao'>('cadastro')
   const [bibliotecaGaleriaCategoriaId, setBibliotecaGaleriaCategoriaId] = useState<string | null>(null)
   /** Se a peça foi aberta a partir da fila de importação, após Salvar regressa à aba Importação (não à Biblioteca). */
@@ -27625,7 +27623,7 @@ export default function Dashboard() {
 
   const pecasCatalogoFiltradasGestao = useMemo(() => {
     const isFiltroSoSemCategoria = filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA
-    const q = buscaBibliotecaDeferred.trim().toLowerCase()
+    const q = buscaBibliotecaDeferred.trim()
     const filtered = pecasBiblioteca.filter((peca) => {
       if (isFiltroSoSemCategoria) {
         if (peca.categoriaId) return false
@@ -27633,7 +27631,7 @@ export default function Dashboard() {
         return false
       }
       if (filtroSubgrupoBiblioteca && peca.subcategoriaId !== filtroSubgrupoBiblioteca) return false
-      if (q && !pecaPassaBuscaBibliotecaTexto(peca, q, buscaBibliotecaModo)) return false
+      if (q && !pecaPassaBuscaBibliotecaTexto(peca, q)) return false
       return true
     })
     return ordenarPecasBibliotecaParaExibicao(filtered, categoriasPecasAlfabeto).filter(
@@ -27642,7 +27640,6 @@ export default function Dashboard() {
   }, [
     pecasBiblioteca,
     buscaBibliotecaDeferred,
-    buscaBibliotecaModo,
     filtroGrupoBiblioteca,
     filtroSubgrupoBiblioteca,
     categoriasPecasAlfabeto,
@@ -27651,7 +27648,7 @@ export default function Dashboard() {
   /** Peças visíveis com filtros actuais (inclui importações pendentes — classificação em lote). */
   const pecasVisiveisParaLoteGestao = useMemo(() => {
     const isFiltroSoSemCategoria = filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA
-    const q = buscaBibliotecaDeferred.trim().toLowerCase()
+    const q = buscaBibliotecaDeferred.trim()
     const filtered = pecasBiblioteca.filter((peca) => {
       if (isFiltroSoSemCategoria) {
         if (peca.categoriaId) return false
@@ -27659,14 +27656,13 @@ export default function Dashboard() {
         return false
       }
       if (filtroSubgrupoBiblioteca && peca.subcategoriaId !== filtroSubgrupoBiblioteca) return false
-      if (q && !pecaPassaBuscaBibliotecaTexto(peca, q, buscaBibliotecaModo)) return false
+      if (q && !pecaPassaBuscaBibliotecaTexto(peca, q)) return false
       return true
     })
     return ordenarPecasBibliotecaParaExibicao(filtered, categoriasPecasAlfabeto)
   }, [
     pecasBiblioteca,
     buscaBibliotecaDeferred,
-    buscaBibliotecaModo,
     filtroGrupoBiblioteca,
     filtroSubgrupoBiblioteca,
     categoriasPecasAlfabeto,
@@ -41521,8 +41517,6 @@ export default function Dashboard() {
                     onThumbEnter={(ev, src, label) => showBibliotecaImgPreview(ev, src, label)}
                     onThumbLeave={hideBibliotecaImgPreview}
                     buscaCodigo={buscaCodigoBiblioteca}
-                    buscaModo={buscaBibliotecaModo}
-                    onBuscaModoChange={setBuscaBibliotecaModo}
                     onBuscaCodigoChange={(value) => {
                       setBuscaCodigoBiblioteca(value)
                       if (value.trim()) setBibliotecaGaleriaCategoriaId(null)
@@ -41549,6 +41543,8 @@ export default function Dashboard() {
                       cliqueAbrir: (safeT as any)?.bibliotecaGaleriaCliqueCategoria,
                       codigo: safeT?.codigoPecaBiblioteca || safeT?.codigo,
                       semPecasCategoria: (safeT as any)?.bibliotecaGaleriaSemPecasCategoria,
+                      buscarCodigoOuNome:
+                        (safeT as any)?.bibliotecaBuscarCodigoOuNome || 'Buscar por código ou nome',
                       buscarPorCodigo:
                         (safeT as any)?.bibliotecaGaleriaBuscaTitulo || safeT?.bibliotecaBuscarPorCodigo,
                       buscarPorNome: (safeT as any)?.bibliotecaBuscarPorNome,
@@ -41556,6 +41552,8 @@ export default function Dashboard() {
                       buscaModoNome: (safeT as any)?.bibliotecaBuscaModoNome,
                       buscarPlaceholderNome: (safeT as any)?.bibliotecaBuscaNomePlaceholder,
                       buscaHint: (safeT as any)?.bibliotecaGaleriaBuscaHint,
+                      buscarPlaceholderCodigoOuNome:
+                        (safeT as any)?.bibliotecaBuscaCodigoOuNomePlaceholder,
                       buscarPlaceholder: safeT?.codigoPecaBibliotecaPlaceholder,
                       buscaResultados: (safeT as any)?.bibliotecaBuscaCodigoResultados,
                       buscaResultadosNome: (safeT as any)?.bibliotecaBuscaResultadosNome,
@@ -41579,26 +41577,9 @@ export default function Dashboard() {
                   {/* Busca + actualizar — linha sempre visível */}
                   <div className="biblioteca-hub-toolbar__search-sync-row">
                     <div className="biblioteca-busca-codigo biblioteca-busca-codigo--toolbar">
-                      <div className="biblioteca-busca-codigo__modo" role="group" aria-label="Tipo de busca">
-                        <button
-                          type="button"
-                          className={`biblioteca-busca-codigo__modo-btn${buscaBibliotecaModo === 'codigo' ? ' biblioteca-busca-codigo__modo-btn--active' : ''}`}
-                          onClick={() => setBuscaBibliotecaModo('codigo')}
-                        >
-                          {(safeT as any)?.bibliotecaBuscaModoCodigo || 'Código'}
-                        </button>
-                        <button
-                          type="button"
-                          className={`biblioteca-busca-codigo__modo-btn${buscaBibliotecaModo === 'nome' ? ' biblioteca-busca-codigo__modo-btn--active' : ''}`}
-                          onClick={() => setBuscaBibliotecaModo('nome')}
-                        >
-                          {(safeT as any)?.bibliotecaBuscaModoNome || 'Nome'}
-                        </button>
-                      </div>
                       <label htmlFor="biblioteca-busca-codigo" className="biblioteca-busca-codigo__label">
-                        {buscaBibliotecaModo === 'nome'
-                          ? (safeT as any)?.bibliotecaBuscarPorNome || 'Buscar por nome'
-                          : safeT?.bibliotecaBuscarPorCodigo || 'Buscar por código'}
+                        {(safeT as any)?.bibliotecaBuscarCodigoOuNome ||
+                          'Buscar por código ou nome'}
                       </label>
                       <input
                         id="biblioteca-busca-codigo"
@@ -41611,9 +41592,8 @@ export default function Dashboard() {
                         }
                         onChange={(e) => setBuscaCodigoBiblioteca(e.target.value)}
                         placeholder={
-                          buscaBibliotecaModo === 'nome'
-                            ? (safeT as any)?.bibliotecaBuscaNomePlaceholder || 'Ex: suction cup, cilindro…'
-                            : safeT?.codigoPecaBibliotecaPlaceholder || 'Ex: 700030001'
+                          (safeT as any)?.bibliotecaBuscaCodigoOuNomePlaceholder ||
+                          'Ex: 700030001, suction cup, cilindro…'
                         }
                         autoComplete="off"
                       />
@@ -57322,7 +57302,7 @@ A1;Peça exemplo;10`}
                             }}>
                               {pecasBiblioteca
                                 .filter((peca) =>
-                                  pecaBibliotecaMatchesBusca(peca, buscaPecaManutencao)
+                                  pecaBibliotecaMatchesBuscaCompleta(peca, buscaPecaManutencao)
                                 )
                                 .slice(0, 10)
                                 .map(peca => (
@@ -57392,7 +57372,7 @@ A1;Peça exemplo;10`}
                                   </div>
                                 ))}
                               {pecasBiblioteca.filter((peca) =>
-                                pecaBibliotecaMatchesBusca(peca, buscaPecaManutencao)
+                                pecaBibliotecaMatchesBuscaCompleta(peca, buscaPecaManutencao)
                               ).length === 0 && (
                                 <div style={{ textAlign: 'center', color: '#909090', padding: '20px' }}>
                                   {safeT?.nenhumaPecaEncontrada || 'Nenhuma peça encontrada'}
