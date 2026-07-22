@@ -6856,7 +6856,7 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
     justify-content: center !important;
   }
   .app-compact-layout .biblioteca-pecas-hub__piece-grid {
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 168px), 1fr)) !important;
   }
   .app-compact-layout .biblioteca-pecas-hub__kpi-grid {
     grid-template-columns: 1fr !important;
@@ -25439,6 +25439,10 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   background: rgba(5, 46, 22, 0.38);
   border-color: rgba(20, 83, 45, 0.55);
   color: #ffffff;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  row-gap: 4px;
+  border-radius: 12px;
 }
 
 .biblioteca-pecas-hub__piece-chip--group .biblioteca-pecas-hub__piece-chip-k,
@@ -25448,31 +25452,49 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 
 .biblioteca-pecas-hub__piece-chip--group .biblioteca-pecas-hub__piece-chip-k {
+  flex: 0 0 auto;
   font-weight: 500;
   font-size: 12px;
 }
 
 .biblioteca-pecas-hub__piece-chip--group .biblioteca-pecas-hub__piece-chip-v {
+  flex: 1 1 100%;
+  min-width: 0;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  word-break: break-word;
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: none;
+  white-space: normal;
+  line-height: 1.35;
 }
 
 .biblioteca-pecas-hub__piece-chip--group-muted {
   background: #262626;
   border-color: #404040;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  row-gap: 4px;
+  border-radius: 12px;
 }
 
 .biblioteca-pecas-hub__piece-chip--group-muted .biblioteca-pecas-hub__piece-chip-k {
+  flex: 0 0 auto;
   color: rgba(255, 255, 255, 0.55);
   font-weight: 500;
 }
 
 .biblioteca-pecas-hub__piece-chip--group-muted .biblioteca-pecas-hub__piece-chip-v {
+  flex: 1 1 100%;
+  min-width: 0;
   color: #d4d4d4;
   font-weight: 700;
   text-transform: uppercase;
+  word-break: normal;
+  overflow-wrap: break-word;
+  white-space: normal;
+  line-height: 1.35;
 }
 
 /* Secção por categoria (ex.: ACIONAMENTOS / MOTORES) */
