@@ -478,6 +478,7 @@ export function MobileBrowserZoomPan() {
     document.addEventListener('touchcancel', onTouchEnd, { capture: true })
     window.addEventListener('orientationchange', onResize)
     window.addEventListener('resize', onResize)
+    window.addEventListener('wheel', onWheel, { passive: true, capture: true })
 
     return () => {
       document.removeEventListener('touchstart', onTouchStart, true)
@@ -486,6 +487,7 @@ export function MobileBrowserZoomPan() {
       document.removeEventListener('touchcancel', onTouchEnd, true)
       window.removeEventListener('orientationchange', onResize)
       window.removeEventListener('resize', onResize)
+      window.removeEventListener('wheel', onWheel, true)
       resetView()
     }
   }, [])
