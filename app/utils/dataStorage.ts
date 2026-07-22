@@ -1943,7 +1943,7 @@ export async function pullServerUpdatesIfNewer(): Promise<PullServerUpdatesResul
   if (!isOnline()) return { status: 'offline', changedKeys: [] }
   try {
     const st = await fetchSyncStatus()
-    if (!st) return { status: 'fail', changedKeys: [] }
+    if (!st) return { status: 'offline', changedKeys: [] }
     const lastAcc = getLastAcceptedRevision()
     if (st.revision <= lastAcc) return { status: 'noop', changedKeys: [] }
     const { data: serverData, ok } = await loadAllFromServer()

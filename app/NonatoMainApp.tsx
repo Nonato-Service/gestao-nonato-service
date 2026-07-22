@@ -5234,6 +5234,7 @@ export default function Dashboard() {
   const [syncAutoSyncFailed, setSyncAutoSyncFailed] = useState(false)
   const [serverAutoPullActive, setServerAutoPullActive] = useState(false)
   const serverAutoPullInFlightRef = useRef(false)
+  const syncAutoFailStreakRef = useRef(0)
   const SYNC_MODAL_SNOOZE_LS = 'nonato-sync-modal-snooze-until'
   const SYNC_MODAL_DISMISSED_REV_LS = 'nonato-sync-modal-dismissed-rev'
   const isSyncModalSnoozed = useCallback(() => {
@@ -9562,19 +9563,37 @@ export default function Dashboard() {
     if (typeof navigator !== 'undefined' && !navigator.onLine) return
     if (!dataBootstrapCompleteRef.current) return
     serverAutoPullInFlightRef.current = true
-    setServerAutoPullActive(true)
     try {
-      const pulled = await pullServerUpdatesIfNewer()
-      if (pulled.status === 'fail') setSyncAutoSyncFailed(true)
-      else if (pulled.status === 'ok') {
-        setSyncAutoSyncFailed(false)
-        setSyncPendingRemote(null)
-        setSyncDecisionModalOpen(false)
-      } else if (pulled.status === 'noop') {
-        setSyncAutoSyncFailed(false)
+      const st = await fetchSyncStatus()
+      if (!st) {
+        syncAutoFailStreakRef.current += 1
+        if (syncAutoFailStreakRef.current >= 4) setSyncAutoSyncFailed(true)
+        return
       }
+      const lastAcc = getLastAcceptedRevision()
+      if (st.revision <= lastAcc) {
+        syncAutoFailStreakRef.current = 0
+        setSyncAutoSyncFailed(false)
+        return
+      }
+      setServerAutoPullActive(true)
+      const { data: serverData, ok } = await loadAllFromServer()
+      if (!ok || Object.keys(serverData).length === 0) {
+        syncAutoFailStreakRef.current += 1
+        if (syncAutoFailStreakRef.current >= 2) setSyncAutoSyncFailed(true)
+        return
+      }
+      await applySilentServerSync(serverData as Record<string, unknown>)
+      const stAfter = await fetchSyncStatus()
+      const rev = Math.max(st.revision, stAfter?.revision ?? 0)
+      if (Number.isFinite(rev) && rev > 0) setLastAcceptedRevision(rev)
+      syncAutoFailStreakRef.current = 0
+      setSyncAutoSyncFailed(false)
+      setSyncPendingRemote(null)
+      setSyncDecisionModalOpen(false)
     } catch {
-      setSyncAutoSyncFailed(true)
+      syncAutoFailStreakRef.current += 1
+      if (syncAutoFailStreakRef.current >= 3) setSyncAutoSyncFailed(true)
     } finally {
       serverAutoPullInFlightRef.current = false
       setServerAutoPullActive(false)
@@ -70534,6 +70553,15 @@ A1;Peça exemplo;10`}
         : syncAutoSyncFailed
           ? trSync.syncTrafficAutoFail || 'Não foi possível sincronizar automaticamente — verifique a ligação ou use Administrador.'
           : `${trSync.syncTrafficGreen || 'Atualizado — alinhado com o servidor.'} ${trSync.syncTrafficAutoSave || 'Guarda automática — não precisa de botão «Salvar».'}`
+  /** Texto curto na barra lateral — altura fixa, evita saltos ao mudar cor. */
+  const syncTrafficSidebarCaption =
+    syncTrafficPhase === 'boot'
+      ? trSync.syncTrafficBootShort || 'A preparar…'
+      : syncTrafficPhase === 'syncing'
+        ? trSync.syncTrafficBlueShort || 'A atualizar…'
+        : syncAutoSyncFailed
+          ? trSync.syncTrafficAutoFailShort || 'Sem ligação'
+          : trSync.syncTrafficGreenShort || 'Sincronizado'
   const syncTrafficTitle = trSync.syncTrafficTitle || 'Sincronização'
   const syncTrafficLightsRow = (
     <div className="ns-sync-traffic__row" aria-hidden>
@@ -70600,15 +70628,19 @@ A1;Peça exemplo;10`}
       {syncTrafficLightsPanelInner}
     </div>
   )
-  /** Área autenticada: barra lateral, abaixo do logo e acima de «Gestão Técnica» (telefone e PC). */
+  /** Área autenticada: barra lateral, abaixo do logo (altura fixa — não move o menu). */
   const syncTrafficLightsSidebarEmbed = (
     <div
       className="ns-sync-traffic ns-sync-traffic--panel ns-sync-traffic--sidebar-embed"
       role="status"
-      aria-live="polite"
-      aria-label={`${syncTrafficTitle}. ${syncTrafficStatusText}`}
+      aria-live="off"
+      aria-label={`${syncTrafficTitle}. ${syncTrafficSidebarCaption}`}
     >
-      {syncTrafficLightsPanelInner}
+      <div className="ns-sync-traffic__head">
+        <span className="ns-sync-traffic__title">{syncTrafficTitle}</span>
+        {syncTrafficLightsRow}
+      </div>
+      <div className="ns-sync-traffic__caption ns-sync-traffic__caption--sidebar-fixed">{syncTrafficSidebarCaption}</div>
     </div>
   )
 
