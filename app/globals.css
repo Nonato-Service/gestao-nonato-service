@@ -385,6 +385,17 @@ body {
     touch-action: none !important;
     max-height: 100% !important;
   }
+
+  /* Zoom local dentro da aba (biblioteca e restantes): não altera html/body */
+  .tab-inner-scroll.mobile-local-zoom-active {
+    overflow: hidden !important;
+    touch-action: none !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .tab-inner-scroll.mobile-local-zoom-active > * {
+    touch-action: none !important;
+  }
 }
 
 /* Foco visível — acessibilidade + acabamento “produto” */
