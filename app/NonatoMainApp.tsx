@@ -41689,9 +41689,9 @@ export default function Dashboard() {
                       )}
                     </div>
                   )}
-                  <div className="biblioteca-pecas-hub__toolbar-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                   {!somenteLeituraBiblioteca ? (
-                  <div className="biblioteca-pecas-hub__toolbar-segs" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <button
                       type="button"
                       onClick={() => setVisualizacaoBiblioteca('grid')}
@@ -41741,8 +41741,7 @@ export default function Dashboard() {
                   )}
 
                   {/* Filtro por grupo */}
-                  <div className="biblioteca-pecas-hub__toolbar-filters" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', flex: '1 1 100%', minWidth: 0 }}>
-                  <div style={{ minWidth: '200px', flex: '1 1 200px' }}>
+                  <div style={{ minWidth: '200px' }}>
                     <select
                       className="biblioteca-pecas-hub__select"
                       value={filtroGrupoBiblioteca || ''}
@@ -41820,7 +41819,6 @@ export default function Dashboard() {
                         {safeT?.limparFiltros || 'Limpar Filtros'}
                       </button>
                     ) : null}
-                  </div>
                   </div>
                 </div>
                 </div>

@@ -37,22 +37,9 @@ type TouchGesture = {
   startScale: number
 }
 
-type ZoomSurface = {
-  mode: 'root' | 'local'
-  transformEl: HTMLElement
-  scrollEl: HTMLElement | null
-}
-
-type ScrollSnapshot = {
-  windowX: number
-  windowY: number
-  containers: Array<{ el: HTMLElement; top: number; left: number }>
-}
-
 /**
  * Telemóvel/tablet touch (pointer: coarse, ≤1024px):
  * zoom + arrastar com 2 dedos via transform.
- * Abas com scroll interno (.tab-inner-scroll): zoom local no conteúdo (evita saltar ao topo).
  */
 export function MobileBrowserZoomPan() {
   const scaleRef = useRef(1)
@@ -60,18 +47,16 @@ export function MobileBrowserZoomPan() {
   const originRef = useRef({ x: 0, y: 0 })
   const lastPinchMidRef = useRef({ x: 0, y: 0 })
   const gestureRef = useRef<TouchGesture | null>(null)
-  const zoomSurfaceRef = useRef<ZoomSurface | null>(null)
+  /** Distância inicial quando o 2.º dedo toca — pinch só activo após delta mínimo. */
   const pinchArmDistRef = useRef(0)
   const pinchCapturedRef = useRef(false)
-  const scrollSnapshotRef = useRef<ScrollSnapshot | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
 
     const isTouchMobile = () => {
-      if (window.innerWidth > 1280) return false
-      if (window.matchMedia('(pointer: coarse)').matches) return true
-      return navigator.maxTouchPoints > 0
+      if (window.innerWidth > 1024) return false
+      return window.matchMedia('(pointer: coarse)').matches
     }
 
     const panRoot = () => document.getElementById(PAN_ROOT_ID)
@@ -86,166 +71,40 @@ export function MobileBrowserZoomPan() {
     const touchDistance = (touches: TouchList) =>
       Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY)
 
-    const resolveZoomSurface = (target: EventTarget | null): ZoomSurface | null => {
-      const root = panRoot()
-      if (!root) return null
-
-      if (target instanceof Element) {
-        const scrollEl = target.closest('.tab-inner-scroll')
-        if (scrollEl instanceof HTMLElement) {
-          const contentEl = scrollEl.firstElementChild
-          if (contentEl instanceof HTMLElement) {
-            return { mode: 'local', transformEl: contentEl, scrollEl }
-          }
-        }
-      }
-
-      return { mode: 'root', transformEl: root, scrollEl: null }
-    }
-
-    const setGlobalZoomedClass = (zoomed: boolean) => {
+    const setZoomedClass = (zoomed: boolean) => {
       document.documentElement.classList.toggle('mobile-browser-zoomed', zoomed)
       document.body.classList.toggle('mobile-browser-zoomed', zoomed)
     }
 
-    const setLocalZoomedClass = (zoomed: boolean) => {
-      document.documentElement.classList.toggle('mobile-local-zoom-active', zoomed)
-      document.body.classList.toggle('mobile-local-zoom-active', zoomed)
-    }
-
-    const originFromMid = (midX: number, midY: number, el: HTMLElement) => {
-      const rect = el.getBoundingClientRect()
+    const originFromMid = (midX: number, midY: number) => {
+      const root = panRoot()
+      if (!root) return { x: midX, y: midY }
+      const rect = root.getBoundingClientRect()
       return { x: midX - rect.left, y: midY - rect.top }
     }
 
-    const isScrollableEl = (el: HTMLElement) => {
-      const style = window.getComputedStyle(el)
-      const oy = style.overflowY
-      const ox = style.overflowX
-      const scrollableY =
-        (oy === 'auto' || oy === 'scroll' || oy === 'overlay') && el.scrollHeight > el.clientHeight + 1
-      const scrollableX =
-        (ox === 'auto' || ox === 'scroll' || ox === 'overlay') && el.scrollWidth > el.clientWidth + 1
-      return scrollableY || scrollableX
-    }
-
-    const collectScrollSnapshot = (target: EventTarget | null): ScrollSnapshot => {
-      const containers: ScrollSnapshot['containers'] = []
-      const seen = new Set<HTMLElement>()
-
-      const pushEl = (el: HTMLElement) => {
-        if (seen.has(el) || !el.isConnected) return
-        if (!isScrollableEl(el)) return
-        seen.add(el)
-        containers.push({ el, top: el.scrollTop, left: el.scrollLeft })
-      }
-
-      if (target instanceof Element) {
-        let node: Element | null = target
-        while (node) {
-          if (node instanceof HTMLElement) pushEl(node)
-          node = node.parentElement
-        }
-      }
-
-      document.querySelectorAll<HTMLElement>('.tab-inner-scroll, .biblioteca-pecas-hub__grupos-scroll, .biblioteca-pecas-hub__catalog-table-wrap').forEach(pushEl)
-
-      return { windowX: window.scrollX, windowY: window.scrollY, containers }
-    }
-
-    const saveScrollSnapshot = (target: EventTarget | null) => {
-      scrollSnapshotRef.current = collectScrollSnapshot(target)
-    }
-
-    const restoreScrollSnapshot = () => {
-      const snap = scrollSnapshotRef.current
-      if (!snap) return
-      for (const { el, top, left } of snap.containers) {
-        if (!el.isConnected) continue
-        if (el.scrollTop !== top) el.scrollTop = top
-        if (el.scrollLeft !== left) el.scrollLeft = left
-      }
-      if (window.scrollX !== snap.windowX || window.scrollY !== snap.windowY) {
-        window.scrollTo(snap.windowX, snap.windowY)
-      }
-    }
-
-    const lockLocalScroll = (scrollEl: HTMLElement) => {
-      if (!scrollEl.dataset.nsZoomScrollTop) {
-        scrollEl.dataset.nsZoomScrollTop = String(scrollEl.scrollTop)
-        scrollEl.dataset.nsZoomScrollLeft = String(scrollEl.scrollLeft)
-      }
-      scrollEl.classList.add('mobile-local-zoom-active')
-      restoreScrollSnapshot()
-    }
-
-    const unlockLocalScroll = (scrollEl: HTMLElement) => {
-      const top = Number(scrollEl.dataset.nsZoomScrollTop ?? scrollEl.scrollTop)
-      const left = Number(scrollEl.dataset.nsZoomScrollLeft ?? scrollEl.scrollLeft)
-      scrollEl.classList.remove('mobile-local-zoom-active')
-      scrollEl.style.overflow = ''
-      scrollEl.scrollTop = top
-      scrollEl.scrollLeft = left
-      delete scrollEl.dataset.nsZoomScrollTop
-      delete scrollEl.dataset.nsZoomScrollLeft
-    }
-
-    const clearTransform = (el: HTMLElement) => {
-      el.style.transform = ''
-      el.style.transformOrigin = ''
-      el.style.willChange = ''
-    }
-
     const applyTransform = () => {
-      const surface = zoomSurfaceRef.current ?? (panRoot() ? { mode: 'root' as const, transformEl: panRoot()!, scrollEl: null } : null)
-      if (!surface) return
+      const root = panRoot()
+      if (!root) return
 
       const scale = scaleRef.current
       const { x, y } = panRef.current
       const { x: ox, y: oy } = originRef.current
       const zoomed = scale > 1.008
 
-      if (surface.mode === 'root') {
-        setGlobalZoomedClass(zoomed)
-        setLocalZoomedClass(false)
-      } else if (surface.scrollEl) {
-        setGlobalZoomedClass(false)
-        setLocalZoomedClass(zoomed)
-        if (zoomed) {
-          lockLocalScroll(surface.scrollEl)
-        } else {
-          unlockLocalScroll(surface.scrollEl)
-        }
-      }
+      setZoomedClass(zoomed)
 
       if (zoomed) {
-        surface.transformEl.style.transformOrigin = `${ox}px ${oy}px`
-        surface.transformEl.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`
-        surface.transformEl.style.willChange = 'transform'
+        root.style.transformOrigin = `${ox}px ${oy}px`
+        root.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`
+        root.style.willChange = 'transform'
       } else {
-        clearTransform(surface.transformEl)
-        if (surface.mode === 'root') {
-          panRef.current = { x: 0, y: 0 }
-          originRef.current = { x: 0, y: 0 }
-        }
+        root.style.transform = ''
+        root.style.transformOrigin = ''
+        root.style.willChange = ''
+        panRef.current = { x: 0, y: 0 }
+        originRef.current = { x: 0, y: 0 }
       }
-
-      if (zoomed && surface.mode === 'root') {
-        restoreScrollSnapshot()
-        requestAnimationFrame(restoreScrollSnapshot)
-      }
-    }
-
-    const resetAllSurfaces = () => {
-      setGlobalZoomedClass(false)
-      setLocalZoomedClass(false)
-      const root = panRoot()
-      if (root) clearTransform(root)
-      document.querySelectorAll<HTMLElement>('.tab-inner-scroll').forEach((scrollEl) => {
-        unlockLocalScroll(scrollEl)
-        const child = scrollEl.firstElementChild
-        if (child instanceof HTMLElement) clearTransform(child)
-      })
     }
 
     const resetView = () => {
@@ -253,33 +112,19 @@ export function MobileBrowserZoomPan() {
       panRef.current = { x: 0, y: 0 }
       originRef.current = { x: 0, y: 0 }
       gestureRef.current = null
-      zoomSurfaceRef.current = null
       pinchCapturedRef.current = false
       pinchArmDistRef.current = 0
-      scrollSnapshotRef.current = null
-      resetAllSurfaces()
+      applyTransform()
     }
 
-    const panLimits = (scale: number, surface: ZoomSurface) => {
-      if (surface.mode === 'local') {
-        const content = surface.transformEl
-        const viewW = surface.scrollEl?.clientWidth ?? window.innerWidth
-        const viewH = surface.scrollEl?.clientHeight ?? window.innerHeight
-        const contentW = content.scrollWidth || content.offsetWidth || viewW
-        const contentH = content.scrollHeight || content.offsetHeight || viewH
-        const extraX = Math.max(viewW * 0.35, (contentW * scale - viewW) * 0.55 + viewW * 0.2)
-        const extraY = Math.max(viewH * 0.35, (contentH * scale - viewH) * 0.55 + viewH * 0.2)
-        return { x: extraX, y: extraY }
-      }
-
-      const baseEl = surface.scrollEl ?? surface.transformEl
-      const base = Math.max(baseEl.clientWidth || window.innerWidth, baseEl.clientHeight || window.innerHeight)
-      const extra = base * (scale - 1) * 1.65 + base * 0.35
+    const panLimits = (scale: number) => {
+      const base = Math.max(window.innerWidth, window.innerHeight)
+      const extra = base * (scale - 1) * 1.35 + base * 0.25
       return { x: extra, y: extra }
     }
 
-    const clampPan = (x: number, y: number, scale: number, surface: ZoomSurface) => {
-      const lim = panLimits(scale, surface)
+    const clampPan = (x: number, y: number, scale: number) => {
+      const lim = panLimits(scale)
       return {
         x: clamp(x, -lim.x, lim.x),
         y: clamp(y, -lim.y, lim.y),
@@ -292,18 +137,11 @@ export function MobileBrowserZoomPan() {
     }
 
     const armTwoFingerGesture = (e: TouchEvent) => {
-      const surface = resolveZoomSurface(e.target)
-      if (!surface) return
-
-      zoomSurfaceRef.current = surface
-      saveScrollSnapshot(e.target)
-
       const { x: panX, y: panY } = panRef.current
       const scale = scaleRef.current
       const mid = touchMidpoint(e.touches)
       const dist = Math.max(touchDistance(e.touches), MIN_PINCH_DIST)
-
-      originRef.current = originFromMid(mid.x, mid.y, surface.transformEl)
+      originRef.current = originFromMid(mid.x, mid.y)
       lastPinchMidRef.current = mid
       pinchArmDistRef.current = dist
       pinchCapturedRef.current = false
@@ -322,26 +160,23 @@ export function MobileBrowserZoomPan() {
 
     const onTouchStart = (e: TouchEvent) => {
       if (!isTouchMobile()) return
-      if (!panRoot()) return
+
+      const root = panRoot()
+      if (!root) return
 
       const { x: panX, y: panY } = panRef.current
       const scale = scaleRef.current
       const inScrollArea = isNativeScrollTarget(e.target)
-      const surface = resolveZoomSurface(e.target)
 
       if (e.touches.length >= 2) {
-        armTwoFingerGesture(e)
         e.preventDefault()
-        restoreScrollSnapshot()
+        armTwoFingerGesture(e)
         return
       }
 
       if (e.touches.length === 1 && inScrollArea && scale <= 1.008) return
 
       if (e.touches.length === 1 && scale > 1.008) {
-        if (!zoomSurfaceRef.current) {
-          zoomSurfaceRef.current = surface
-        }
         gestureRef.current = {
           mode: 'one',
           startX: e.touches[0].clientX,
@@ -366,17 +201,12 @@ export function MobileBrowserZoomPan() {
       if (!gestureRef.current) return
 
       const g = gestureRef.current
-      const surface = zoomSurfaceRef.current
-      if (!surface) return
 
       if (g.mode === 'two' && e.touches.length === 2) {
         const dist = Math.max(touchDistance(e.touches), MIN_PINCH_DIST)
         if (!pinchCapturedRef.current) {
           if (Math.abs(dist - pinchArmDistRef.current) < PINCH_CAPTURE_DELTA_PX) return
           pinchCapturedRef.current = true
-          if (surface.mode === 'local' && surface.scrollEl) {
-            lockLocalScroll(surface.scrollEl)
-          }
         }
 
         const mid = touchMidpoint(e.touches)
@@ -387,14 +217,13 @@ export function MobileBrowserZoomPan() {
         const panY = g.startPanY + (mid.y - g.startMidY)
 
         lastPinchMidRef.current = mid
-        originRef.current = originFromMid(g.startMidX, g.startMidY, surface.transformEl)
+        originRef.current = originFromMid(g.startMidX, g.startMidY)
 
         scaleRef.current = nextScale
-        panRef.current = clampPan(panX, panY, nextScale, surface)
+        panRef.current = clampPan(panX, panY, nextScale)
 
         e.preventDefault()
         applyTransform()
-        if (surface.mode === 'local') restoreScrollSnapshot()
         return
       }
 
@@ -403,22 +232,19 @@ export function MobileBrowserZoomPan() {
         const dy = e.touches[0].clientY - g.startY
         if (Math.abs(dx) < 0.4 && Math.abs(dy) < 0.4) return
 
-        panRef.current = clampPan(g.startPanX + dx, g.startPanY + dy, scaleRef.current, surface)
+        panRef.current = clampPan(g.startPanX + dx, g.startPanY + dy, scaleRef.current)
         e.preventDefault()
         applyTransform()
       }
     }
 
     const onTouchEnd = (e: TouchEvent) => {
-      const surface = zoomSurfaceRef.current
-
       if (e.touches.length === 0) {
-        if (gestureRef.current?.mode === 'two' && surface) {
+        if (gestureRef.current?.mode === 'two') {
           const mid = lastPinchMidRef.current
           originRef.current = originFromMid(
             mid.x || gestureRef.current.startMidX,
-            mid.y || gestureRef.current.startMidY,
-            surface.transformEl
+            mid.y || gestureRef.current.startMidY
           )
         }
         gestureRef.current = null

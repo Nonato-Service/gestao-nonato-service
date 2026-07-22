@@ -378,35 +378,15 @@ body {
     scrollbar-color: rgba(0, 230, 150, 0.88) rgba(24, 28, 26, 0.98);
   }
 
-  /* Com zoom activo: congelar scroll da biblioteca (evita saltar ao topo no pinch) */
+  /* Com zoom activo: manter scroll interno na biblioteca de peças */
   html.mobile-browser-zoomed .tab-inner-scroll:has(.biblioteca-pecas-hub),
   body.mobile-browser-zoomed .tab-inner-scroll:has(.biblioteca-pecas-hub) {
-    overflow: hidden !important;
-    touch-action: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y pinch-zoom !important;
     max-height: 100% !important;
   }
-}
-
-/* Zoom local (abas): pan lateral visível também no PC com ecrã táctil */
-html.mobile-local-zoom-active,
-body.mobile-local-zoom-active {
-  overflow: visible !important;
-}
-
-html.mobile-local-zoom-active .main-content-area.main-content-area-tab-open,
-body.mobile-local-zoom-active .main-content-area.main-content-area-tab-open {
-  overflow: visible !important;
-}
-
-.tab-inner-scroll.mobile-local-zoom-active {
-  overflow: visible !important;
-  touch-action: none !important;
-  position: relative;
-  z-index: 2;
-}
-
-.tab-inner-scroll.mobile-local-zoom-active > * {
-  touch-action: none !important;
 }
 
 /* Foco visível — acessibilidade + acabamento “produto” */
@@ -572,7 +552,8 @@ body {
   body.mobile-browser-zoomed .tab-inner-scroll:has(.biblioteca-pecas-hub),
   html.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:has(.biblioteca-pecas-hub),
   body.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:has(.biblioteca-pecas-hub) {
-    overflow: hidden !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     max-height: 100% !important;
     height: auto !important;
     min-height: 0 !important;
@@ -580,7 +561,8 @@ body {
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
-    touch-action: none !important;
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   html.mobile-browser-zoomed .main-content-area *,
@@ -6782,9 +6764,11 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
 
   html.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:has(.biblioteca-pecas-hub),
   body.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:has(.biblioteca-pecas-hub) {
-    overflow: hidden !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     max-height: 100% !important;
-    touch-action: none !important;
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
   }
   .app-compact-layout .tab-content-wrapper table,
   .app-compact-layout .main-content-area table {
@@ -25025,34 +25009,6 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 .biblioteca-pecas-hub__seg--active:hover {
   background: var(--bib-green-hover);
   border-color: color-mix(in srgb, var(--bib-green-hover) 90%, #ffffff 10%);
-}
-
-/* Toolbar biblioteca — coluna (Firefox/Edge/Chrome alinhados; evita cortar categorias) */
-.biblioteca-pecas-hub__toolbar-row {
-  width: 100%;
-  box-sizing: border-box;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  gap: 12px !important;
-}
-
-.biblioteca-pecas-hub__toolbar-segs,
-.biblioteca-pecas-hub__toolbar-filters {
-  width: 100%;
-  min-width: 0;
-}
-
-.biblioteca-pecas-hub__toolbar-filters .biblioteca-pecas-hub__select,
-.biblioteca-pecas-hub__toolbar-filters select {
-  width: 100%;
-  min-width: 0 !important;
-}
-
-.biblioteca-hub-toolbar__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  width: 100%;
 }
 
 .biblioteca-pecas-hub__select {
