@@ -9,15 +9,36 @@ const MAX_SCALE = 4
 const ZOOM_SENSITIVITY = 0.05
 const MIN_PINCH_DIST = 80
 
-/** Áreas com scroll nativo — com zoom=1 não capturar 1 dedo (sidebar + conteúdo das abas). */
+/** Áreas com scroll nativo — só libertar 1 dedo sem zoom (sidebar + listas internas). */
 const SCROLL_NATIVE_SELECTORS = [
   '.sidebar-scroll-inner',
   '.sidebar',
   '.tab-inner-scroll',
-  '.biblioteca-pecas-hub',
   '.biblioteca-pecas-hub__grupos-scroll',
   '.biblioteca-pecas-hub__catalog-table-wrap',
 ]
+
+const startTwoFingerGesture = (
+  e: TouchEvent,
+  panX: number,
+  panY: number,
+  scale: number,
+  touchMidpoint: (touches: TouchList) => { x: number; y: number },
+  touchDistance: (touches: TouchList) => number
+): TouchGesture => {
+  const mid = touchMidpoint(e.touches)
+  return {
+    mode: 'two',
+    startX: 0,
+    startY: 0,
+    startMidX: mid.x,
+    startMidY: mid.y,
+    startDist: Math.max(touchDistance(e.touches), MIN_PINCH_DIST),
+    startPanX: panX,
+    startPanY: panY,
+    startScale: scale,
+  }
+}
 
 const scaleFromPinch = (startScale: number, fingerRatio: number) => {
   if (Math.abs(fingerRatio - 1) < 0.012) return startScale
@@ -146,17 +167,8 @@ export function MobileBrowserZoomPan() {
       if (e.touches.length === 2) {
         const mid = touchMidpoint(e.touches)
         originRef.current = originFromMid(mid.x, mid.y)
-        gestureRef.current = {
-          mode: 'two',
-          startX: 0,
-          startY: 0,
-          startMidX: mid.x,
-          startMidY: mid.y,
-          startDist: Math.max(touchDistance(e.touches), MIN_PINCH_DIST),
-          startPanX: panX,
-          startPanY: panY,
-          startScale: scale,
-        }
+        lastPinchMidRef.current = mid
+        gestureRef.current = startTwoFingerGesture(e, panX, panY, scale, touchMidpoint, touchDistance)
         return
       }
 
@@ -176,8 +188,19 @@ export function MobileBrowserZoomPan() {
     }
 
     const onTouchMove = (e: TouchEvent) => {
-      if (!isTouchMobile() || !gestureRef.current) return
-      if (isNativeScrollTarget(e.target) && scaleRef.current <= 1.004) return
+      if (!isTouchMobile()) return
+
+      // Android: 2.º dedo muitas vezes não dispara touchstart — iniciar pinch aqui
+      if (e.touches.length === 2 && !gestureRef.current) {
+        const { x: panX, y: panY } = panRef.current
+        const scale = scaleRef.current
+        const mid = touchMidpoint(e.touches)
+        originRef.current = originFromMid(mid.x, mid.y)
+        lastPinchMidRef.current = mid
+        gestureRef.current = startTwoFingerGesture(e, panX, panY, scale, touchMidpoint, touchDistance)
+      }
+
+      if (!gestureRef.current) return
 
       const g = gestureRef.current
 
@@ -209,7 +232,11 @@ export function MobileBrowserZoomPan() {
         panRef.current = clampPan(g.startPanX + dx, g.startPanY + dy, scaleRef.current)
         e.preventDefault()
         applyTransform()
+        return
       }
+
+      // 1 dedo sem zoom: deixar scroll nativo nas áreas roláveis
+      if (g.mode !== 'two' && isNativeScrollTarget(e.target) && scaleRef.current <= 1.004) return
     }
 
     const onTouchEnd = (e: TouchEvent) => {

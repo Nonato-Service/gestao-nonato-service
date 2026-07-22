@@ -6100,6 +6100,7 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
 
   .app-compact-layout .tab-inner-scroll {
     padding: 6px max(4px, env(safe-area-inset-left, 0px)) 8px max(4px, env(safe-area-inset-right, 0px)) !important;
+    touch-action: pan-y pinch-zoom;
   }
 
   .app-compact-layout .mobile-toolbar-btn {
@@ -39657,7 +39658,7 @@ html body .alerta-mensagens-shell .alerta-mensagens-hero-actions .comunicacao-he
     padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    touch-action: pan-y;
+    touch-action: pan-y pinch-zoom;
     overflow-y: auto !important;
     min-height: 0;
   }
