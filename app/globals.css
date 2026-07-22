@@ -378,13 +378,11 @@ body {
     scrollbar-color: rgba(0, 230, 150, 0.88) rgba(24, 28, 26, 0.98);
   }
 
-  /* Com zoom activo: manter scroll interno na biblioteca de peças */
+  /* Com zoom activo: congelar scroll da biblioteca (evita saltar ao topo no pinch) */
   html.mobile-browser-zoomed .tab-inner-scroll:has(.biblioteca-pecas-hub),
   body.mobile-browser-zoomed .tab-inner-scroll:has(.biblioteca-pecas-hub) {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-y pinch-zoom !important;
+    overflow: hidden !important;
+    touch-action: none !important;
     max-height: 100% !important;
   }
 }
@@ -552,8 +550,7 @@ body {
   body.mobile-browser-zoomed .tab-inner-scroll:has(.biblioteca-pecas-hub),
   html.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:has(.biblioteca-pecas-hub),
   body.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:has(.biblioteca-pecas-hub) {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow: hidden !important;
     max-height: 100% !important;
     height: auto !important;
     min-height: 0 !important;
@@ -561,8 +558,7 @@ body {
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
-    touch-action: pan-y !important;
-    -webkit-overflow-scrolling: touch !important;
+    touch-action: none !important;
   }
 
   html.mobile-browser-zoomed .main-content-area *,
@@ -6764,11 +6760,9 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
 
   html.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:has(.biblioteca-pecas-hub),
   body.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:has(.biblioteca-pecas-hub) {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow: hidden !important;
     max-height: 100% !important;
-    touch-action: pan-y !important;
-    -webkit-overflow-scrolling: touch !important;
+    touch-action: none !important;
   }
   .app-compact-layout .tab-content-wrapper table,
   .app-compact-layout .main-content-area table {

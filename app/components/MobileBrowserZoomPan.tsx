@@ -37,6 +37,12 @@ type TouchGesture = {
   startScale: number
 }
 
+type ScrollSnapshot = {
+  windowX: number
+  windowY: number
+  containers: Array<{ el: HTMLElement; top: number; left: number }>
+}
+
 /**
  * Telemóvel/tablet touch (pointer: coarse, ≤1024px):
  * zoom + arrastar com 2 dedos via transform.
@@ -50,6 +56,8 @@ export function MobileBrowserZoomPan() {
   /** Distância inicial quando o 2.º dedo toca — pinch só activo após delta mínimo. */
   const pinchArmDistRef = useRef(0)
   const pinchCapturedRef = useRef(false)
+  /** Posição de scroll antes do pinch — evita saltar ao topo (ex.: última peça da biblioteca). */
+  const scrollSnapshotRef = useRef<ScrollSnapshot | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -83,6 +91,66 @@ export function MobileBrowserZoomPan() {
       return { x: midX - rect.left, y: midY - rect.top }
     }
 
+    const isScrollableEl = (el: HTMLElement) => {
+      const style = window.getComputedStyle(el)
+      const oy = style.overflowY
+      const ox = style.overflowX
+      const scrollableY =
+        (oy === 'auto' || oy === 'scroll' || oy === 'overlay') && el.scrollHeight > el.clientHeight + 1
+      const scrollableX =
+        (ox === 'auto' || ox === 'scroll' || ox === 'overlay') && el.scrollWidth > el.clientWidth + 1
+      return scrollableY || scrollableX
+    }
+
+    const collectScrollSnapshot = (target: EventTarget | null): ScrollSnapshot => {
+      const containers: ScrollSnapshot['containers'] = []
+      const seen = new Set<HTMLElement>()
+
+      const pushEl = (el: HTMLElement) => {
+        if (seen.has(el) || !el.isConnected) return
+        if (!isScrollableEl(el)) return
+        seen.add(el)
+        containers.push({ el, top: el.scrollTop, left: el.scrollLeft })
+      }
+
+      if (target instanceof Element) {
+        let node: Element | null = target
+        while (node) {
+          if (node instanceof HTMLElement) pushEl(node)
+          node = node.parentElement
+        }
+      }
+
+      document.querySelectorAll<HTMLElement>('.tab-inner-scroll, .biblioteca-pecas-hub__grupos-scroll, .biblioteca-pecas-hub__catalog-table-wrap').forEach(pushEl)
+
+      return { windowX: window.scrollX, windowY: window.scrollY, containers }
+    }
+
+    const saveScrollSnapshot = (target: EventTarget | null) => {
+      scrollSnapshotRef.current = collectScrollSnapshot(target)
+    }
+
+    const restoreScrollSnapshot = () => {
+      const snap = scrollSnapshotRef.current
+      if (!snap) return
+      for (const { el, top, left } of snap.containers) {
+        if (!el.isConnected) continue
+        if (el.scrollTop !== top) el.scrollTop = top
+        if (el.scrollLeft !== left) el.scrollLeft = left
+      }
+      if (window.scrollX !== snap.windowX || window.scrollY !== snap.windowY) {
+        window.scrollTo(snap.windowX, snap.windowY)
+      }
+    }
+
+    const scheduleScrollRestore = () => {
+      restoreScrollSnapshot()
+      requestAnimationFrame(() => {
+        restoreScrollSnapshot()
+        requestAnimationFrame(restoreScrollSnapshot)
+      })
+    }
+
     const applyTransform = () => {
       const root = panRoot()
       if (!root) return
@@ -105,6 +173,8 @@ export function MobileBrowserZoomPan() {
         panRef.current = { x: 0, y: 0 }
         originRef.current = { x: 0, y: 0 }
       }
+
+      if (zoomed) scheduleScrollRestore()
     }
 
     const resetView = () => {
@@ -114,6 +184,7 @@ export function MobileBrowserZoomPan() {
       gestureRef.current = null
       pinchCapturedRef.current = false
       pinchArmDistRef.current = 0
+      scrollSnapshotRef.current = null
       applyTransform()
     }
 
@@ -137,6 +208,7 @@ export function MobileBrowserZoomPan() {
     }
 
     const armTwoFingerGesture = (e: TouchEvent) => {
+      saveScrollSnapshot(e.target)
       const { x: panX, y: panY } = panRef.current
       const scale = scaleRef.current
       const mid = touchMidpoint(e.touches)
@@ -169,7 +241,9 @@ export function MobileBrowserZoomPan() {
       const inScrollArea = isNativeScrollTarget(e.target)
 
       if (e.touches.length >= 2) {
+        saveScrollSnapshot(e.target)
         e.preventDefault()
+        scheduleScrollRestore()
         armTwoFingerGesture(e)
         return
       }
@@ -224,6 +298,7 @@ export function MobileBrowserZoomPan() {
 
         e.preventDefault()
         applyTransform()
+        restoreScrollSnapshot()
         return
       }
 
