@@ -376,6 +376,7 @@ body {
   html:not(.mobile-browser-zoomed) .app-compact-layout .main-content-area.main-content-area-tab-open .tab-inner-scroll:has(.biblioteca-pecas-hub) {
     scrollbar-width: auto;
     scrollbar-color: rgba(0, 230, 150, 0.88) rgba(24, 28, 26, 0.98);
+    overflow-anchor: auto;
   }
 
   /* Com zoom activo: manter scroll interno na biblioteca de peças */
@@ -386,6 +387,24 @@ body {
     -webkit-overflow-scrolling: touch !important;
     touch-action: pan-y pinch-zoom !important;
     max-height: 100% !important;
+  }
+
+  /* Zoom local só na biblioteca — não activa mobile-browser-zoomed global */
+  html.mobile-biblioteca-local-zoomed .tab-inner-scroll:has(.biblioteca-pecas-hub),
+  body.mobile-biblioteca-local-zoomed .tab-inner-scroll:has(.biblioteca-pecas-hub) {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    flex: 1 1 auto !important;
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+  }
+
+  html.mobile-biblioteca-local-zoomed .tab-inner-scroll.mobile-local-zoom-active:has(.biblioteca-pecas-hub),
+  body.mobile-biblioteca-local-zoomed .tab-inner-scroll.mobile-local-zoom-active:has(.biblioteca-pecas-hub) {
+    overflow: hidden !important;
   }
 }
 
