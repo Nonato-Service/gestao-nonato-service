@@ -361,8 +361,8 @@ body {
     overscroll-behavior: contain !important;
   }
 
-  /* Sem zoom: rolagem vertical nas peças (1 dedo) */
-  html:not(.mobile-browser-zoomed) .app-compact-layout .main-content-area.main-content-area-tab-open .tab-inner-scroll:has(.biblioteca-pecas-hub) {
+  /* Sem zoom: rolagem vertical nas abas no telemóvel */
+  html:not(.mobile-browser-zoomed) .app-compact-layout .main-content-area.main-content-area-tab-open .tab-inner-scroll {
     flex: 1 1 auto !important;
     min-height: 0 !important;
     max-height: 100% !important;
@@ -370,7 +370,12 @@ body {
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior-y: contain !important;
-    touch-action: pan-y !important;
+    touch-action: pan-y pinch-zoom !important;
+  }
+
+  html:not(.mobile-browser-zoomed) .app-compact-layout .main-content-area.main-content-area-tab-open .tab-inner-scroll:has(.biblioteca-pecas-hub) {
+    scrollbar-width: auto;
+    scrollbar-color: rgba(0, 230, 150, 0.88) rgba(24, 28, 26, 0.98);
   }
 
   /* Com zoom activo: manter scroll interno na biblioteca de peças */
@@ -379,7 +384,7 @@ body {
     overflow-y: auto !important;
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-y !important;
+    touch-action: pan-y pinch-zoom !important;
     max-height: 100% !important;
   }
 }
@@ -401,12 +406,12 @@ body {
 
 /* Scroll normal, sem gesto de "puxar para atualizar" no topo */
 html,
-body,
-.app-layout,
-.main-app-column,
+body {
+  overscroll-behavior-y: none;
+}
 .main-content-area,
 .tab-inner-scroll {
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: contain;
 }
 
 /* Área principal: sem aba = rolar aqui. Com aba = overflow hidden aqui e rolar no .tab-inner-scroll (page.tsx). min-height:0 na cadeia flex permite overflow-y: auto. */
@@ -426,11 +431,15 @@ body,
    atrapalhar a roda do rato no contentor de rolagem. Em pointer fino usamos auto; em touch mantém-se pan-y.
    overscroll-behavior: contain evita encadear o scroll ao documento (menos “saltos” e gestos que parecem atualizar a página). */
 @media (pointer: fine) and (hover: hover) {
+  .sidebar .sidebar-scroll-inner {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: auto;
+  }
+  /* Com aba aberta o scroll é só no filho — o pai flex também precisa de touch-action:auto para a roda não ficar “presa”. */
   .main-content-area:not(.main-content-area-tab-open) {
     touch-action: auto;
     overscroll-behavior-y: contain;
   }
-  /* Com aba aberta o scroll é só no filho — o pai flex também precisa de touch-action:auto para a roda não ficar “presa”. */
   .main-content-area.main-content-area-tab-open {
     touch-action: auto;
   }
@@ -1836,7 +1845,7 @@ body,
   overflow-x: visible;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
+  scrollbar-gutter: auto;
   -webkit-overflow-scrolling: touch;
   padding-right: 2px;
 }
@@ -6101,6 +6110,27 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   .app-compact-layout .tab-inner-scroll {
     padding: 6px max(4px, env(safe-area-inset-left, 0px)) 8px max(4px, env(safe-area-inset-right, 0px)) !important;
     touch-action: pan-y pinch-zoom;
+  }
+
+  /* Telemóvel pequeno: scroll visível em todas as abas */
+  .app-compact-layout .main-content-area.main-content-area-tab-open .tab-inner-scroll {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
+    touch-action: pan-y pinch-zoom !important;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 210, 130, 0.75) rgba(0, 0, 0, 0.25);
+  }
+
+  .app-compact-layout .main-content-area.main-content-area-tab-open .tab-inner-scroll::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .app-compact-layout .main-content-area.main-content-area-tab-open .tab-inner-scroll::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background: rgba(0, 210, 130, 0.72);
   }
 
   .app-compact-layout .mobile-toolbar-btn {

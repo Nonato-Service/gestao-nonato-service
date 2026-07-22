@@ -5552,6 +5552,8 @@ export default function Dashboard() {
     setSidebarTipFlyout(null)
   }, [activeTabId, mobileMenuOpen, selectedSidebarButton])
   const mainContentAreaRef = useRef<HTMLDivElement>(null)
+  const sidebarScrollInnerRef = useRef<HTMLDivElement>(null)
+  const sidebarScrollTopSavedRef = useRef(0)
   const [showHelpModal, setShowHelpModal] = useState(false)
   /** Origem do modal de ajuda: painel inicial ou tipo da aba (texto contextual). */
   const [helpModalSource, setHelpModalSource] = useState<'dashboard' | TabType | null>(null)
@@ -5845,6 +5847,25 @@ export default function Dashboard() {
       // ignore
     }
   }, [openTabs, bottomTabsSavedOrder])
+
+  /** Evita a barra lateral “saltar” ao re-render (notebook/tablet). */
+  useLayoutEffect(() => {
+    const el = sidebarScrollInnerRef.current
+    if (!el || sidebarScrollTopSavedRef.current <= 0) return
+    if (el.scrollTop === 0) {
+      el.scrollTop = sidebarScrollTopSavedRef.current
+    }
+  }, [sidebarButtons, expandedGroups, selectedLanguage])
+
+  useEffect(() => {
+    const el = sidebarScrollInnerRef.current
+    if (!el) return
+    const onScroll = () => {
+      sidebarScrollTopSavedRef.current = el.scrollTop
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [])
 
   // Ao mudar de aba ou abrir uma nova: scroll apenas da área CENTRAL (não mexer na barra lateral nem na janela)
   useEffect(() => {
@@ -71294,7 +71315,7 @@ A1;Peça exemplo;10`}
 
         {syncTrafficLightsSidebarEmbed}
 
-        <div className="sidebar-scroll-inner">
+        <div className="sidebar-scroll-inner" ref={sidebarScrollInnerRef}>
         {/* Botões da Sidebar - Organizados por Grupos */}
         
         {/* Grupo: GESTÃO TÉCNICA — só mostra se o usuário tiver permissão em algum botão */}

@@ -5,43 +5,22 @@ import { useEffect, useRef } from 'react'
 const PAN_ROOT_ID = 'mobile-pan-root'
 const MIN_SCALE = 1
 const MAX_SCALE = 4
-/** Menor = pinch mais suave (0.05 ≈ lento e controlado no telemóvel). */
-const ZOOM_SENSITIVITY = 0.05
-const MIN_PINCH_DIST = 80
+/** Equilíbrio entre controlo e resposta (0.05=lento, 0.08=rápido). */
+const ZOOM_SENSITIVITY = 0.075
+const MIN_PINCH_DIST = 72
+/** Mínimo movimento entre dedos antes de capturar o pinch (evita bloquear scroll). */
+const PINCH_CAPTURE_DELTA_PX = 14
 
-/** Áreas com scroll nativo — só libertar 1 dedo sem zoom (sidebar + listas internas). */
+/** Só sidebar e listas internas pequenas — NÃO tab-inner-scroll (bloqueava pinch e scroll). */
 const SCROLL_NATIVE_SELECTORS = [
   '.sidebar-scroll-inner',
   '.sidebar',
-  '.tab-inner-scroll',
   '.biblioteca-pecas-hub__grupos-scroll',
   '.biblioteca-pecas-hub__catalog-table-wrap',
 ]
 
-const startTwoFingerGesture = (
-  e: TouchEvent,
-  panX: number,
-  panY: number,
-  scale: number,
-  touchMidpoint: (touches: TouchList) => { x: number; y: number },
-  touchDistance: (touches: TouchList) => number
-): TouchGesture => {
-  const mid = touchMidpoint(e.touches)
-  return {
-    mode: 'two',
-    startX: 0,
-    startY: 0,
-    startMidX: mid.x,
-    startMidY: mid.y,
-    startDist: Math.max(touchDistance(e.touches), MIN_PINCH_DIST),
-    startPanX: panX,
-    startPanY: panY,
-    startScale: scale,
-  }
-}
-
 const scaleFromPinch = (startScale: number, fingerRatio: number) => {
-  if (Math.abs(fingerRatio - 1) < 0.012) return startScale
+  if (Math.abs(fingerRatio - 1) < 0.01) return startScale
   const dampedRatio = 1 + (fingerRatio - 1) * ZOOM_SENSITIVITY
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, startScale * dampedRatio))
 }
@@ -59,23 +38,26 @@ type TouchGesture = {
 }
 
 /**
- * Telemóvel/tablet (Android Chrome, ex. Ulefone Armor 33 Pro):
- * zoom + arrastar com 2 dedos via transform — não depende do pinch do browser.
+ * Telemóvel/tablet touch (pointer: coarse, ≤1024px):
+ * zoom + arrastar com 2 dedos via transform.
  */
 export function MobileBrowserZoomPan() {
   const scaleRef = useRef(1)
   const panRef = useRef({ x: 0, y: 0 })
-  /** Origem do scale — persiste após soltar os dedos (evita “saltar” ao fim do pinch). */
   const originRef = useRef({ x: 0, y: 0 })
   const lastPinchMidRef = useRef({ x: 0, y: 0 })
   const gestureRef = useRef<TouchGesture | null>(null)
+  /** Distância inicial quando o 2.º dedo toca — pinch só activo após delta mínimo. */
+  const pinchArmDistRef = useRef(0)
+  const pinchCapturedRef = useRef(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const isTouchMobile = () =>
-      window.innerWidth <= 1024 &&
-      (window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window)
+    const isTouchMobile = () => {
+      if (window.innerWidth > 1024) return false
+      return window.matchMedia('(pointer: coarse)').matches
+    }
 
     const panRoot = () => document.getElementById(PAN_ROOT_ID)
 
@@ -108,7 +90,7 @@ export function MobileBrowserZoomPan() {
       const scale = scaleRef.current
       const { x, y } = panRef.current
       const { x: ox, y: oy } = originRef.current
-      const zoomed = scale > 1.004
+      const zoomed = scale > 1.008
 
       setZoomedClass(zoomed)
 
@@ -130,6 +112,8 @@ export function MobileBrowserZoomPan() {
       panRef.current = { x: 0, y: 0 }
       originRef.current = { x: 0, y: 0 }
       gestureRef.current = null
+      pinchCapturedRef.current = false
+      pinchArmDistRef.current = 0
       applyTransform()
     }
 
@@ -152,7 +136,29 @@ export function MobileBrowserZoomPan() {
       return SCROLL_NATIVE_SELECTORS.some((sel) => target.closest(sel))
     }
 
-    const beginGesture = (e: TouchEvent) => {
+    const armTwoFingerGesture = (e: TouchEvent) => {
+      const { x: panX, y: panY } = panRef.current
+      const scale = scaleRef.current
+      const mid = touchMidpoint(e.touches)
+      const dist = Math.max(touchDistance(e.touches), MIN_PINCH_DIST)
+      originRef.current = originFromMid(mid.x, mid.y)
+      lastPinchMidRef.current = mid
+      pinchArmDistRef.current = dist
+      pinchCapturedRef.current = false
+      gestureRef.current = {
+        mode: 'two',
+        startX: 0,
+        startY: 0,
+        startMidX: mid.x,
+        startMidY: mid.y,
+        startDist: dist,
+        startPanX: panX,
+        startPanY: panY,
+        startScale: scale,
+      }
+    }
+
+    const onTouchStart = (e: TouchEvent) => {
       if (!isTouchMobile()) return
 
       const root = panRoot()
@@ -162,17 +168,15 @@ export function MobileBrowserZoomPan() {
       const scale = scaleRef.current
       const inScrollArea = isNativeScrollTarget(e.target)
 
-      if (e.touches.length === 1 && inScrollArea && scale <= 1.004) return
-
-      if (e.touches.length === 2) {
-        const mid = touchMidpoint(e.touches)
-        originRef.current = originFromMid(mid.x, mid.y)
-        lastPinchMidRef.current = mid
-        gestureRef.current = startTwoFingerGesture(e, panX, panY, scale, touchMidpoint, touchDistance)
+      if (e.touches.length >= 2) {
+        e.preventDefault()
+        armTwoFingerGesture(e)
         return
       }
 
-      if (e.touches.length === 1 && scale > 1.004) {
+      if (e.touches.length === 1 && inScrollArea && scale <= 1.008) return
+
+      if (e.touches.length === 1 && scale > 1.008) {
         gestureRef.current = {
           mode: 'one',
           startX: e.touches[0].clientX,
@@ -190,14 +194,8 @@ export function MobileBrowserZoomPan() {
     const onTouchMove = (e: TouchEvent) => {
       if (!isTouchMobile()) return
 
-      // Android: 2.º dedo muitas vezes não dispara touchstart — iniciar pinch aqui
       if (e.touches.length === 2 && !gestureRef.current) {
-        const { x: panX, y: panY } = panRef.current
-        const scale = scaleRef.current
-        const mid = touchMidpoint(e.touches)
-        originRef.current = originFromMid(mid.x, mid.y)
-        lastPinchMidRef.current = mid
-        gestureRef.current = startTwoFingerGesture(e, panX, panY, scale, touchMidpoint, touchDistance)
+        armTwoFingerGesture(e)
       }
 
       if (!gestureRef.current) return
@@ -205,8 +203,13 @@ export function MobileBrowserZoomPan() {
       const g = gestureRef.current
 
       if (g.mode === 'two' && e.touches.length === 2) {
-        const mid = touchMidpoint(e.touches)
         const dist = Math.max(touchDistance(e.touches), MIN_PINCH_DIST)
+        if (!pinchCapturedRef.current) {
+          if (Math.abs(dist - pinchArmDistRef.current) < PINCH_CAPTURE_DELTA_PX) return
+          pinchCapturedRef.current = true
+        }
+
+        const mid = touchMidpoint(e.touches)
         const ratio = dist / g.startDist
         const nextScale = scaleFromPinch(g.startScale, ratio)
 
@@ -224,7 +227,7 @@ export function MobileBrowserZoomPan() {
         return
       }
 
-      if (g.mode === 'one' && e.touches.length === 1 && scaleRef.current > 1.004) {
+      if (g.mode === 'one' && e.touches.length === 1 && scaleRef.current > 1.008) {
         const dx = e.touches[0].clientX - g.startX
         const dy = e.touches[0].clientY - g.startY
         if (Math.abs(dx) < 0.4 && Math.abs(dy) < 0.4) return
@@ -232,25 +235,26 @@ export function MobileBrowserZoomPan() {
         panRef.current = clampPan(g.startPanX + dx, g.startPanY + dy, scaleRef.current)
         e.preventDefault()
         applyTransform()
-        return
       }
-
-      // 1 dedo sem zoom: deixar scroll nativo nas áreas roláveis
-      if (g.mode !== 'two' && isNativeScrollTarget(e.target) && scaleRef.current <= 1.004) return
     }
 
     const onTouchEnd = (e: TouchEvent) => {
       if (e.touches.length === 0) {
         if (gestureRef.current?.mode === 'two') {
           const mid = lastPinchMidRef.current
-          originRef.current = originFromMid(mid.x || gestureRef.current.startMidX, mid.y || gestureRef.current.startMidY)
+          originRef.current = originFromMid(
+            mid.x || gestureRef.current.startMidX,
+            mid.y || gestureRef.current.startMidY
+          )
         }
         gestureRef.current = null
+        pinchCapturedRef.current = false
+        pinchArmDistRef.current = 0
         applyTransform()
-        if (scaleRef.current <= 1.004) resetView()
+        if (scaleRef.current <= 1.008) resetView()
         return
       }
-      if (e.touches.length === 1 && scaleRef.current > 1.004) {
+      if (e.touches.length === 1 && scaleRef.current > 1.008) {
         gestureRef.current = {
           mode: 'one',
           startX: e.touches[0].clientX,
@@ -262,10 +266,11 @@ export function MobileBrowserZoomPan() {
           startPanY: panRef.current.y,
           startScale: scaleRef.current,
         }
+        pinchCapturedRef.current = false
         return
       }
       if (e.touches.length === 2) {
-        beginGesture(e)
+        onTouchStart(e)
       }
     }
 
@@ -273,7 +278,7 @@ export function MobileBrowserZoomPan() {
       if (!isTouchMobile()) resetView()
     }
 
-    document.addEventListener('touchstart', beginGesture, { passive: true, capture: true })
+    document.addEventListener('touchstart', onTouchStart, { passive: false, capture: true })
     document.addEventListener('touchmove', onTouchMove, { passive: false, capture: true })
     document.addEventListener('touchend', onTouchEnd, { capture: true })
     document.addEventListener('touchcancel', onTouchEnd, { capture: true })
@@ -281,7 +286,7 @@ export function MobileBrowserZoomPan() {
     window.addEventListener('resize', onResize)
 
     return () => {
-      document.removeEventListener('touchstart', beginGesture, true)
+      document.removeEventListener('touchstart', onTouchStart, true)
       document.removeEventListener('touchmove', onTouchMove, true)
       document.removeEventListener('touchend', onTouchEnd, true)
       document.removeEventListener('touchcancel', onTouchEnd, true)
