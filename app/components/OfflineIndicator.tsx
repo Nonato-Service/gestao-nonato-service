@@ -17,7 +17,6 @@ export function OfflineIndicator() {
   const [lastFailed, setLastFailed] = useState<number | null>(null)
   const [lastConfirmed, setLastConfirmed] = useState<string | null>(null)
   const [blockedMsg, setBlockedMsg] = useState<string | null>(null)
-  const [queueMirrorMsg, setQueueMirrorMsg] = useState<string | null>(null)
 
   const refreshPending = () => setPendingCount(getPendingSyncCount())
 
@@ -75,27 +74,21 @@ export function OfflineIndicator() {
       )
     }
 
-    const handleQueueMirror = (e: Event) => {
-      const detail = (e as CustomEvent<{ message?: string }>).detail
-      setQueueMirrorMsg(
-        detail?.message ||
-          'Fila offline guardada só em IndexedDB — aguarde sincronização com internet.'
-      )
-    }
+    const handleQueueHydrated = () => refreshPending()
 
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
     window.addEventListener('nonato-sync-completed', handleSyncCompleted)
     window.addEventListener('nonato-save-server-result', handleSaveResult)
     window.addEventListener('nonato-sync-blocked', handleBlocked)
-    window.addEventListener('nonato-sync-queue-error', handleQueueMirror)
+    window.addEventListener('nonato-sync-queue-hydrated', handleQueueHydrated)
     return () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
       window.removeEventListener('nonato-sync-completed', handleSyncCompleted)
       window.removeEventListener('nonato-save-server-result', handleSaveResult)
       window.removeEventListener('nonato-sync-blocked', handleBlocked)
-      window.removeEventListener('nonato-sync-queue-error', handleQueueMirror)
+      window.removeEventListener('nonato-sync-queue-hydrated', handleQueueHydrated)
       teardownAutoSync()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runSync estável o suficiente para este efeito
@@ -127,39 +120,16 @@ export function OfflineIndicator() {
     }
   }, [blockedMsg])
 
-  useEffect(() => {
-    if (queueMirrorMsg) {
-      const t = setTimeout(() => setQueueMirrorMsg(null), 12000)
-      return () => clearTimeout(t)
-    }
-  }, [queueMirrorMsg])
-
   const showFailed = lastFailed && pendingCount > 0
-  const showUrgentTop = !online || pendingCount > 0 || showFailed
+
   const hidden =
-    !showUrgentTop &&
+    online &&
     !syncing &&
     !lastSync &&
     !lastConfirmed &&
     !blockedMsg &&
-    !queueMirrorMsg
-
-  const topMsg = !online
-    ? getStoredUiString(
-        'offlineModeBanner',
-        'Modo offline — alterações serão enviadas quando voltar a ligar.'
-      )
-      : showFailed
-        ? getStoredUiString(
-            'offlineSyncFailed',
-            '⚠ {n} alteração(ões) NÃO confirmada(s) no servidor — toque para sincronizar'
-          ).replace('{n}', String(pendingCount))
-        : pendingCount > 0
-          ? getStoredUiString(
-              'offlineSyncPending',
-              '{n} alteração(ões) pendente(s) — aguarde confirmação no servidor'
-            ).replace('{n}', String(pendingCount))
-          : null
+    pendingCount === 0 &&
+    !showFailed
 
   if (hidden) return null
 
@@ -173,11 +143,13 @@ export function OfflineIndicator() {
           ? 'rgba(0, 180, 90, 0.95)'
           : blockedMsg
             ? 'rgba(180, 100, 0, 0.95)'
-            : 'rgba(0, 200, 100, 0.9)'
+            : pendingCount > 0
+              ? 'rgba(0, 130, 220, 0.92)'
+              : 'rgba(0, 200, 100, 0.9)'
 
   return (
     <>
-      {showUrgentTop && topMsg ? (
+      {!online ? (
         <div
           role="alert"
           style={{
@@ -190,79 +162,76 @@ export function OfflineIndicator() {
             fontSize: 14,
             fontWeight: 600,
             textAlign: 'center',
-            backgroundColor: !online || showFailed ? '#b71c1c' : '#e65100',
+            backgroundColor: '#b71c1c',
             color: '#fff',
             boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
-            cursor: online && (pendingCount > 0 || showFailed) ? 'pointer' : undefined,
-          }}
-          onClick={() => {
-            if (online && (pendingCount > 0 || showFailed)) runSync()
           }}
         >
-          {topMsg}
-        </div>
-      ) : null}
-      <div
-      role="status"
-      style={{
-        position: 'fixed',
-        bottom: 16,
-        right: 16,
-        zIndex: 9999,
-        padding: '10px 16px',
-        borderRadius: 8,
-        fontSize: 13,
-        fontWeight: 500,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-        maxWidth: 'min(92vw, 360px)',
-        backgroundColor: bg,
-        color: '#fff',
-        cursor: pendingCount > 0 || showFailed ? 'pointer' : undefined,
-      }}
-      onClick={() => {
-        if (online && (pendingCount > 0 || showFailed)) runSync()
-      }}
-      title={
-        pendingCount > 0 || showFailed
-          ? getStoredUiString('offlineTapToSync', 'Toque para tentar sincronizar agora')
-          : undefined
-      }
-    >
-      {!online ? (
-        <>
           {getStoredUiString(
             'offlineModeBanner',
             'Modo offline — alterações serão enviadas quando voltar a ligar.'
           )}
-        </>
-      ) : blockedMsg ? (
-        <>{blockedMsg}</>
-      ) : queueMirrorMsg ? (
-        <>{queueMirrorMsg}</>
-      ) : lastConfirmed ? (
-        <>{lastConfirmed}</>
-      ) : syncing ? (
-        <>{getStoredUiString('offlineSyncing', 'A sincronizar com o servidor…')}</>
-      ) : showFailed ? (
-        <>
-          {getStoredUiString(
-            'offlineSyncFailed',
-            '⚠ {n} alteração(ões) NÃO confirmada(s) no servidor — toque para tentar de novo'
-          ).replace('{n}', String(pendingCount))}
-        </>
-      ) : pendingCount > 0 ? (
-        <>
-          {getStoredUiString(
-            'offlineSyncPending',
-            '{n} alteração(ões) pendente(s) — a enviar ao servidor…'
-          ).replace('{n}', String(pendingCount))}
-        </>
-      ) : lastSync ? (
-        <>{getStoredUiString('offlineSyncDone', 'Sincronizado com o servidor')}</>
+        </div>
       ) : null}
+      <div
+        role="status"
+        style={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          zIndex: 9999,
+          padding: '10px 16px',
+          borderRadius: 8,
+          fontSize: 13,
+          fontWeight: 500,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          maxWidth: 'min(92vw, 360px)',
+          backgroundColor: bg,
+          color: '#fff',
+          cursor: pendingCount > 0 || showFailed ? 'pointer' : undefined,
+        }}
+        onClick={() => {
+          if (online && (pendingCount > 0 || showFailed)) runSync()
+        }}
+        title={
+          pendingCount > 0 || showFailed
+            ? getStoredUiString('offlineTapToSync', 'Toque para tentar sincronizar agora')
+            : undefined
+        }
+      >
+        {!online ? (
+          <>
+            {getStoredUiString(
+              'offlineModeBanner',
+              'Modo offline — alterações serão enviadas quando voltar a ligar.'
+            )}
+          </>
+        ) : blockedMsg ? (
+          <>{blockedMsg}</>
+        ) : lastConfirmed ? (
+          <>{lastConfirmed}</>
+        ) : syncing ? (
+          <>{getStoredUiString('offlineSyncing', 'A sincronizar com o servidor…')}</>
+        ) : showFailed ? (
+          <>
+            {getStoredUiString(
+              'offlineSyncFailed',
+              '⚠ {n} alteração(ões) NÃO confirmada(s) no servidor — toque para tentar de novo'
+            ).replace('{n}', String(pendingCount))}
+          </>
+        ) : pendingCount > 0 ? (
+          <>
+            {getStoredUiString(
+              'offlineSyncPending',
+              '{n} alteração(ões) pendente(s) — a enviar ao servidor…'
+            ).replace('{n}', String(pendingCount))}
+          </>
+        ) : lastSync ? (
+          <>{getStoredUiString('offlineSyncDone', 'Sincronizado com o servidor')}</>
+        ) : null}
       </div>
     </>
   )

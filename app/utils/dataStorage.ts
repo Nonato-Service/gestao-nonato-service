@@ -254,14 +254,23 @@ export function isOnline(): boolean {
 /** Cache em memória quando localStorage enche — fila continua válida + espelho IndexedDB. */
 let syncQueueMemoryCache: Array<{ key: string; value: any; timestamp: number }> | null = null
 
+function dispatchSyncQueueHydrated(): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.dispatchEvent(new CustomEvent('nonato-sync-queue-hydrated'))
+  } catch {
+    /* ignorar */
+  }
+}
+
 function getSyncQueue(): Array<{ key: string; value: any; timestamp: number }> {
   if (typeof window === 'undefined') return []
-  if (syncQueueMemoryCache) return syncQueueMemoryCache
+  if (syncQueueMemoryCache !== null) return syncQueueMemoryCache
   try {
     const raw = localStorage.getItem(SYNC_QUEUE_KEY)
     const parsed = raw ? JSON.parse(raw) : []
     const queue = Array.isArray(parsed) ? parsed : []
-    if (queue.length > 0) syncQueueMemoryCache = queue
+    syncQueueMemoryCache = queue
     return queue
   } catch {
     return syncQueueMemoryCache ?? []
@@ -286,23 +295,22 @@ function setSyncQueue(queue: Array<{ key: string; value: any; timestamp: number 
     setItemWithQuotaRecovery(SYNC_QUEUE_KEY, JSON.stringify(queue))
     lsOk = true
   } catch (e) {
-    console.warn('[Nonato] Fila offline: localStorage cheio — cópia em IndexedDB.', e)
+    console.warn('[Nonato] Fila offline: localStorage cheio — só IndexedDB + memória.', e)
+    try {
+      localStorage.removeItem(SYNC_QUEUE_KEY)
+    } catch {
+      /* ignorar */
+    }
   }
   void mirrorSyncQueueToIdb(queue).then((idbOk) => {
-    if (!lsOk && !idbOk && queue.length > 0) {
+    if (idbOk && !lsOk) {
       try {
-        window.dispatchEvent(
-          new CustomEvent('nonato-sync-queue-error', {
-            detail: {
-              message:
-                'Armazenamento do browser cheio — ligue à internet e sincronize o mais rápido possível.',
-            },
-          })
-        )
+        localStorage.removeItem(SYNC_QUEUE_KEY)
       } catch {
         /* ignorar */
       }
     }
+    dispatchSyncQueueHydrated()
   })
 }
 
@@ -428,6 +436,7 @@ export function setupAutoSyncOnReconnect(): () => void {
   if (typeof window === 'undefined') return () => {}
 
   void hydrateSyncQueueFromIdb().then((n) => {
+    dispatchSyncQueueHydrated()
     if (n > 0) void autoSyncPendingChanges()
   })
 
