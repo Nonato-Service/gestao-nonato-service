@@ -135,22 +135,20 @@ export function OfflineIndicator() {
   }, [queueMirrorMsg])
 
   const showFailed = lastFailed && pendingCount > 0
-  const showUrgentTop =
-    !online || pendingCount > 0 || showFailed || Boolean(queueMirrorMsg)
+  const showUrgentTop = !online || pendingCount > 0 || showFailed
   const hidden =
     !showUrgentTop &&
     !syncing &&
     !lastSync &&
     !lastConfirmed &&
-    !blockedMsg
+    !blockedMsg &&
+    !queueMirrorMsg
 
   const topMsg = !online
     ? getStoredUiString(
         'offlineModeBanner',
         'Modo offline — alterações serão enviadas quando voltar a ligar.'
       )
-    : queueMirrorMsg
-      ? queueMirrorMsg
       : showFailed
         ? getStoredUiString(
             'offlineSyncFailed',
@@ -242,6 +240,8 @@ export function OfflineIndicator() {
         </>
       ) : blockedMsg ? (
         <>{blockedMsg}</>
+      ) : queueMirrorMsg ? (
+        <>{queueMirrorMsg}</>
       ) : lastConfirmed ? (
         <>{lastConfirmed}</>
       ) : syncing ? (

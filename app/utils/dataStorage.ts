@@ -251,48 +251,59 @@ export function isOnline(): boolean {
 }
 
 // Fila de sincronização (para quando estiver offline)
+/** Cache em memória quando localStorage enche — fila continua válida + espelho IndexedDB. */
+let syncQueueMemoryCache: Array<{ key: string; value: any; timestamp: number }> | null = null
+
 function getSyncQueue(): Array<{ key: string; value: any; timestamp: number }> {
   if (typeof window === 'undefined') return []
+  if (syncQueueMemoryCache) return syncQueueMemoryCache
   try {
     const raw = localStorage.getItem(SYNC_QUEUE_KEY)
     const parsed = raw ? JSON.parse(raw) : []
-    return Array.isArray(parsed) ? parsed : []
+    const queue = Array.isArray(parsed) ? parsed : []
+    if (queue.length > 0) syncQueueMemoryCache = queue
+    return queue
   } catch {
-    return []
+    return syncQueueMemoryCache ?? []
   }
 }
 
-async function mirrorSyncQueueToIdb(queue: Array<{ key: string; value: any; timestamp: number }>): Promise<void> {
-  if (typeof window === 'undefined') return
+async function mirrorSyncQueueToIdb(queue: Array<{ key: string; value: any; timestamp: number }>): Promise<boolean> {
+  if (typeof window === 'undefined') return false
   try {
     await saveKv(SYNC_QUEUE_IDB_KEY, queue)
+    return true
   } catch {
-    /* ignorar */
+    return false
   }
 }
 
 function setSyncQueue(queue: Array<{ key: string; value: any; timestamp: number }>): void {
   if (typeof window === 'undefined') return
-  let persisted = false
+  syncQueueMemoryCache = queue
+  let lsOk = false
   try {
-    localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue))
-    persisted = true
+    setItemWithQuotaRecovery(SYNC_QUEUE_KEY, JSON.stringify(queue))
+    lsOk = true
   } catch (e) {
-    console.error('[Nonato] Falha ao gravar fila de sync no localStorage:', e)
-    try {
-      window.dispatchEvent(
-        new CustomEvent('nonato-sync-queue-error', {
-          detail: { message: 'Fila offline só em memória — copia de segurança em IndexedDB.' },
-        })
-      )
-    } catch {
-      /* ignorar */
+    console.warn('[Nonato] Fila offline: localStorage cheio — cópia em IndexedDB.', e)
+  }
+  void mirrorSyncQueueToIdb(queue).then((idbOk) => {
+    if (!lsOk && !idbOk && queue.length > 0) {
+      try {
+        window.dispatchEvent(
+          new CustomEvent('nonato-sync-queue-error', {
+            detail: {
+              message:
+                'Armazenamento do browser cheio — ligue à internet e sincronize o mais rápido possível.',
+            },
+          })
+        )
+      } catch {
+        /* ignorar */
+      }
     }
-  }
-  void mirrorSyncQueueToIdb(queue)
-  if (!persisted && queue.length > 0) {
-    void mirrorSyncQueueToIdb(queue)
-  }
+  })
 }
 
 /** Repõe fila offline se o localStorage foi limpo mas o espelho IndexedDB ainda existe. */
@@ -303,6 +314,7 @@ export async function hydrateSyncQueueFromIdb(): Promise<number> {
     if (!Array.isArray(fromIdb) || fromIdb.length === 0) return 0
     const local = getSyncQueue()
     if (local.length >= fromIdb.length) return 0
+    syncQueueMemoryCache = fromIdb
     setSyncQueue(fromIdb)
     return fromIdb.length
   } catch {
