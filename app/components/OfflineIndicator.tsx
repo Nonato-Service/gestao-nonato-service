@@ -48,6 +48,7 @@ export function OfflineIndicator() {
     const handleSyncCompleted = () => {
       refreshPending()
       setLastSync(Date.now())
+      setLastFailed(null)
       setSyncing(false)
     }
 
@@ -98,6 +99,10 @@ export function OfflineIndicator() {
     const interval = setInterval(refreshPending, 5000)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    if (pendingCount === 0) setLastFailed(null)
+  }, [pendingCount])
 
   useEffect(() => {
     if (lastSync && online && pendingCount === 0 && !syncing && !lastFailed) {

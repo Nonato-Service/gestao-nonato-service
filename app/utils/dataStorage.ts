@@ -251,8 +251,18 @@ export function isOnline(): boolean {
 }
 
 // Fila de sincronização (para quando estiver offline)
+type SyncQueueItem = {
+  key: string
+  value: unknown
+  timestamp: number
+  failCount?: number
+}
+
+const SYNC_QUEUE_MAX_FAILS = 3
+const SYNC_QUEUE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
+
 /** Cache em memória quando localStorage enche — fila continua válida + espelho IndexedDB. */
-let syncQueueMemoryCache: Array<{ key: string; value: any; timestamp: number }> | null = null
+let syncQueueMemoryCache: SyncQueueItem[] | null = null
 
 function dispatchSyncQueueHydrated(): void {
   if (typeof window === 'undefined') return
@@ -263,7 +273,7 @@ function dispatchSyncQueueHydrated(): void {
   }
 }
 
-function getSyncQueue(): Array<{ key: string; value: any; timestamp: number }> {
+function getSyncQueue(): SyncQueueItem[] {
   if (typeof window === 'undefined') return []
   if (syncQueueMemoryCache !== null) return syncQueueMemoryCache
   try {
@@ -277,7 +287,7 @@ function getSyncQueue(): Array<{ key: string; value: any; timestamp: number }> {
   }
 }
 
-async function mirrorSyncQueueToIdb(queue: Array<{ key: string; value: any; timestamp: number }>): Promise<boolean> {
+async function mirrorSyncQueueToIdb(queue: SyncQueueItem[]): Promise<boolean> {
   if (typeof window === 'undefined') return false
   try {
     await saveKv(SYNC_QUEUE_IDB_KEY, queue)
@@ -287,7 +297,7 @@ async function mirrorSyncQueueToIdb(queue: Array<{ key: string; value: any; time
   }
 }
 
-function setSyncQueue(queue: Array<{ key: string; value: any; timestamp: number }>): void {
+function setSyncQueue(queue: SyncQueueItem[]): void {
   if (typeof window === 'undefined') return
   syncQueueMemoryCache = queue
   let lsOk = false
@@ -318,7 +328,7 @@ function setSyncQueue(queue: Array<{ key: string; value: any; timestamp: number 
 export async function hydrateSyncQueueFromIdb(): Promise<number> {
   if (typeof window === 'undefined') return 0
   try {
-    const fromIdb = (await getKv(SYNC_QUEUE_IDB_KEY)) as Array<{ key: string; value: unknown; timestamp: number }> | null
+    const fromIdb = (await getKv(SYNC_QUEUE_IDB_KEY)) as SyncQueueItem[] | null
     if (!Array.isArray(fromIdb) || fromIdb.length === 0) return 0
     const local = getSyncQueue()
     if (local.length >= fromIdb.length) return 0
@@ -333,8 +343,24 @@ export async function hydrateSyncQueueFromIdb(): Promise<number> {
 /** Último valor por chave — evita fila com dezenas de gravações repetidas offline. */
 function enqueueSyncItem(key: string, value: any): void {
   const queue = getSyncQueue().filter((item) => item.key !== key)
-  queue.push({ key, value, timestamp: Date.now() })
+  queue.push({ key, value, timestamp: Date.now(), failCount: 0 })
   setSyncQueue(queue)
+}
+
+function dispatchSyncCompleted(detail: { synced: number; failed: number; discarded?: number }): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.dispatchEvent(new CustomEvent('nonato-sync-completed', { detail }))
+  } catch {
+    /* ignorar */
+  }
+}
+
+function shouldDiscardSyncQueueItem(item: SyncQueueItem, now: number): boolean {
+  const failCount = item.failCount ?? 0
+  if (failCount >= SYNC_QUEUE_MAX_FAILS) return true
+  if (now - item.timestamp > SYNC_QUEUE_MAX_AGE_MS) return true
+  return false
 }
 
 // Helper para criar AbortSignal com timeout (compatibilidade)
@@ -377,33 +403,51 @@ async function checkServerOnline(): Promise<boolean> {
 }
 
 // Processar fila de sincronização (quando voltar online)
-export async function processSyncQueue(): Promise<{ synced: number; failed: number }> {
-  if (isNonatoDemoBuild()) return { synced: 0, failed: 0 }
-  if (!isOnline()) return { synced: 0, failed: 0 }
+export async function processSyncQueue(): Promise<{ synced: number; failed: number; discarded: number }> {
+  if (isNonatoDemoBuild()) return { synced: 0, failed: 0, discarded: 0 }
+  if (!isOnline()) return { synced: 0, failed: 0, discarded: 0 }
   const queue = getSyncQueue()
-  if (queue.length === 0) return { synced: 0, failed: 0 }
+  if (queue.length === 0) return { synced: 0, failed: 0, discarded: 0 }
   let synced = 0
   let failed = 0
-  const remaining: typeof queue = []
+  let discarded = 0
+  const remaining: SyncQueueItem[] = []
+  const now = Date.now()
   /** Por chave, só enviar o item mais recente (último timestamp). */
-  const latestByKey = new Map<string, (typeof queue)[number]>()
+  const latestByKey = new Map<string, SyncQueueItem>()
   for (const item of queue) {
     const prev = latestByKey.get(item.key)
     if (!prev || item.timestamp >= prev.timestamp) latestByKey.set(item.key, item)
   }
   for (const item of latestByKey.values()) {
-    const result = await _doSaveToServer(item.key, item.value)
+    if (shouldDiscardSyncQueueItem(item, now)) {
+      discarded++
+      console.warn(`[Nonato] Fila offline: descartado «${item.key}» (falhas=${item.failCount ?? 0}, idade=${Math.round((now - item.timestamp) / 3600000)}h)`)
+      continue
+    }
+    const payloadStr = typeof item.value === 'string' ? item.value : JSON.stringify(item.value)
+    const slowUpload =
+      payloadStr.length > 80000 ||
+      (typeof item.value === 'string' &&
+        item.value.length > 100000 &&
+        (item.value.startsWith('data:image/') ||
+          item.value.startsWith('data:video/') ||
+          item.value.startsWith('data:application/pdf')))
+    let result = await _doSaveToServer(item.key, item.value, { timeoutMs: slowUpload ? 120000 : 45000 })
+    if (result === 'fail' && slowUpload) {
+      result = await _doSaveToServer(item.key, item.value, { timeoutMs: 180000 })
+    }
     if (result === 'ok') synced++
     else if (result === 'fail') {
       failed++
-      remaining.push(item)
+      remaining.push({ ...item, failCount: (item.failCount ?? 0) + 1 })
     }
     /* blocked: não reenviar — servidor tem versão mais completa */
   }
   setSyncQueue(remaining)
   serverOffline = failed > 0
-  if (synced > 0) serverOffline = false
-  return { synced, failed }
+  if (synced > 0 || remaining.length === 0) serverOffline = false
+  return { synced, failed, discarded }
 }
 
 let autoSyncInFlight = false
@@ -418,11 +462,9 @@ export async function autoSyncPendingChanges(): Promise<{ synced: number; failed
     const online = await checkServerOnline()
     if (!online) return { synced: 0, failed: 0 }
     const result = await processSyncQueue()
-    if (typeof window !== 'undefined' && result.synced > 0) {
-      try {
-        window.dispatchEvent(new CustomEvent('nonato-sync-completed', { detail: result }))
-      } catch {
-        /* ignorar */
+    if (typeof window !== 'undefined') {
+      if (result.synced > 0 || getPendingSyncCount() === 0) {
+        dispatchSyncCompleted(result)
       }
     }
     return result
@@ -665,7 +707,11 @@ export function omitEmptyProtectedKeysForServerPush(data: Record<string, any>): 
   return out
 }
 
-async function _doSaveToServer(key: string, value: any): Promise<SaveServerResult> {
+async function _doSaveToServer(
+  key: string,
+  value: any,
+  opts?: { timeoutMs?: number }
+): Promise<SaveServerResult> {
   if (isNonatoDemoBuild()) return 'ok'
   if (await shouldBlockEmptyServerOverwrite(key, value)) {
     console.warn(
@@ -721,7 +767,9 @@ async function _doSaveToServer(key: string, value: any): Promise<SaveServerResul
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body,
-      signal: createTimeoutSignal(payloadNeedsSlowUpload ? 120000 : 5000),
+      signal: createTimeoutSignal(
+        opts?.timeoutMs ?? (payloadNeedsSlowUpload ? 120000 : 5000)
+      ),
     })
     if (response.ok) {
       serverOffline = false
