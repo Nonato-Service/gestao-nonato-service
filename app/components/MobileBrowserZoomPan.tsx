@@ -5,15 +5,22 @@ import { useEffect, useRef } from 'react'
 const PAN_ROOT_ID = 'mobile-pan-root'
 const MIN_SCALE = 1
 const MAX_SCALE = 4
-/** Menor = pinch mais suave. 0.08 ≈ muito lento; 0.4 = sensível. */
-const ZOOM_SENSITIVITY = 0.08
-const MIN_PINCH_DIST = 120
+/** Menor = pinch mais suave (0.05 ≈ lento e controlado no telemóvel). */
+const ZOOM_SENSITIVITY = 0.05
+const MIN_PINCH_DIST = 80
 
-/** Áreas com scroll nativo — não capturar pan com 1 dedo quando há zoom. */
-const SCROLL_NATIVE_SELECTORS = ['.sidebar-scroll-inner', '.sidebar']
+/** Áreas com scroll nativo — com zoom=1 não capturar 1 dedo (sidebar + conteúdo das abas). */
+const SCROLL_NATIVE_SELECTORS = [
+  '.sidebar-scroll-inner',
+  '.sidebar',
+  '.tab-inner-scroll',
+  '.biblioteca-pecas-hub',
+  '.biblioteca-pecas-hub__grupos-scroll',
+  '.biblioteca-pecas-hub__catalog-table-wrap',
+]
 
 const scaleFromPinch = (startScale: number, fingerRatio: number) => {
-  if (Math.abs(fingerRatio - 1) < 0.028) return startScale
+  if (Math.abs(fingerRatio - 1) < 0.012) return startScale
   const dampedRatio = 1 + (fingerRatio - 1) * ZOOM_SENSITIVITY
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, startScale * dampedRatio))
 }
@@ -28,8 +35,6 @@ type TouchGesture = {
   startPanX: number
   startPanY: number
   startScale: number
-  originX: number
-  originY: number
 }
 
 /**
@@ -39,6 +44,9 @@ type TouchGesture = {
 export function MobileBrowserZoomPan() {
   const scaleRef = useRef(1)
   const panRef = useRef({ x: 0, y: 0 })
+  /** Origem do scale — persiste após soltar os dedos (evita “saltar” ao fim do pinch). */
+  const originRef = useRef({ x: 0, y: 0 })
+  const lastPinchMidRef = useRef({ x: 0, y: 0 })
   const gestureRef = useRef<TouchGesture | null>(null)
 
   useEffect(() => {
@@ -65,18 +73,26 @@ export function MobileBrowserZoomPan() {
       document.body.classList.toggle('mobile-browser-zoomed', zoomed)
     }
 
+    const originFromMid = (midX: number, midY: number) => {
+      const root = panRoot()
+      if (!root) return { x: midX, y: midY }
+      const rect = root.getBoundingClientRect()
+      return { x: midX - rect.left, y: midY - rect.top }
+    }
+
     const applyTransform = () => {
       const root = panRoot()
       if (!root) return
 
       const scale = scaleRef.current
       const { x, y } = panRef.current
+      const { x: ox, y: oy } = originRef.current
       const zoomed = scale > 1.004
 
       setZoomedClass(zoomed)
 
       if (zoomed) {
-        root.style.transformOrigin = `${gestureRef.current?.originX ?? 0}px ${gestureRef.current?.originY ?? 0}px`
+        root.style.transformOrigin = `${ox}px ${oy}px`
         root.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`
         root.style.willChange = 'transform'
       } else {
@@ -84,12 +100,14 @@ export function MobileBrowserZoomPan() {
         root.style.transformOrigin = ''
         root.style.willChange = ''
         panRef.current = { x: 0, y: 0 }
+        originRef.current = { x: 0, y: 0 }
       }
     }
 
     const resetView = () => {
       scaleRef.current = 1
       panRef.current = { x: 0, y: 0 }
+      originRef.current = { x: 0, y: 0 }
       gestureRef.current = null
       applyTransform()
     }
@@ -108,13 +126,6 @@ export function MobileBrowserZoomPan() {
       }
     }
 
-    const originFromMid = (midX: number, midY: number) => {
-      const root = panRoot()
-      if (!root) return { x: midX, y: midY }
-      const rect = root.getBoundingClientRect()
-      return { x: midX - rect.left, y: midY - rect.top }
-    }
-
     const isNativeScrollTarget = (target: EventTarget | null) => {
       if (!(target instanceof Element)) return false
       return SCROLL_NATIVE_SELECTORS.some((sel) => target.closest(sel))
@@ -130,12 +141,11 @@ export function MobileBrowserZoomPan() {
       const scale = scaleRef.current
       const inScrollArea = isNativeScrollTarget(e.target)
 
-      if (e.touches.length === 1 && inScrollArea) return
+      if (e.touches.length === 1 && inScrollArea && scale <= 1.004) return
 
       if (e.touches.length === 2) {
-        if (inScrollArea) return
         const mid = touchMidpoint(e.touches)
-        const origin = originFromMid(mid.x, mid.y)
+        originRef.current = originFromMid(mid.x, mid.y)
         gestureRef.current = {
           mode: 'two',
           startX: 0,
@@ -146,8 +156,6 @@ export function MobileBrowserZoomPan() {
           startPanX: panX,
           startPanY: panY,
           startScale: scale,
-          originX: origin.x,
-          originY: origin.y,
         }
         return
       }
@@ -163,15 +171,13 @@ export function MobileBrowserZoomPan() {
           startPanX: panX,
           startPanY: panY,
           startScale: scale,
-          originX: 0,
-          originY: 0,
         }
       }
     }
 
     const onTouchMove = (e: TouchEvent) => {
       if (!isTouchMobile() || !gestureRef.current) return
-      if (isNativeScrollTarget(e.target)) return
+      if (isNativeScrollTarget(e.target) && scaleRef.current <= 1.004) return
 
       const g = gestureRef.current
 
@@ -184,9 +190,8 @@ export function MobileBrowserZoomPan() {
         const panX = g.startPanX + (mid.x - g.startMidX)
         const panY = g.startPanY + (mid.y - g.startMidY)
 
-        const origin = originFromMid(g.startMidX, g.startMidY)
-        g.originX = origin.x
-        g.originY = origin.y
+        lastPinchMidRef.current = mid
+        originRef.current = originFromMid(g.startMidX, g.startMidY)
 
         scaleRef.current = nextScale
         panRef.current = clampPan(panX, panY, nextScale)
@@ -209,7 +214,12 @@ export function MobileBrowserZoomPan() {
 
     const onTouchEnd = (e: TouchEvent) => {
       if (e.touches.length === 0) {
+        if (gestureRef.current?.mode === 'two') {
+          const mid = lastPinchMidRef.current
+          originRef.current = originFromMid(mid.x || gestureRef.current.startMidX, mid.y || gestureRef.current.startMidY)
+        }
         gestureRef.current = null
+        applyTransform()
         if (scaleRef.current <= 1.004) resetView()
         return
       }
@@ -224,8 +234,6 @@ export function MobileBrowserZoomPan() {
           startPanX: panRef.current.x,
           startPanY: panRef.current.y,
           startScale: scaleRef.current,
-          originX: 0,
-          originY: 0,
         }
         return
       }

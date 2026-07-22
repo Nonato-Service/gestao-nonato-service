@@ -360,6 +360,28 @@ body {
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior: contain !important;
   }
+
+  /* Sem zoom: rolagem vertical nas peças (1 dedo) */
+  html:not(.mobile-browser-zoomed) .app-compact-layout .main-content-area.main-content-area-tab-open .tab-inner-scroll:has(.biblioteca-pecas-hub) {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
+    touch-action: pan-y !important;
+  }
+
+  /* Com zoom activo: manter scroll interno na biblioteca de peças */
+  html.mobile-browser-zoomed .tab-inner-scroll:has(.biblioteca-pecas-hub),
+  body.mobile-browser-zoomed .tab-inner-scroll:has(.biblioteca-pecas-hub) {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    max-height: 100% !important;
+  }
 }
 
 /* Foco visível — acessibilidade + acabamento “produto” */
@@ -472,14 +494,14 @@ body,
   html.mobile-browser-zoomed .main-app-column,
   html.mobile-browser-zoomed .tab-content-wrapper,
   html.mobile-browser-zoomed .app-compact-layout .main-content-area,
-  html.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll,
+  html.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:not(:has(.biblioteca-pecas-hub)),
   html.mobile-browser-zoomed .main-content-area,
-  html.mobile-browser-zoomed .tab-inner-scroll,
+  html.mobile-browser-zoomed .tab-inner-scroll:not(:has(.biblioteca-pecas-hub)),
   html.mobile-browser-zoomed .main-content-area.main-content-area-tab-open,
   body.mobile-browser-zoomed .main-app-column,
   body.mobile-browser-zoomed .tab-content-wrapper,
   body.mobile-browser-zoomed .main-content-area,
-  body.mobile-browser-zoomed .tab-inner-scroll,
+  body.mobile-browser-zoomed .tab-inner-scroll:not(:has(.biblioteca-pecas-hub)),
   body.mobile-browser-zoomed .main-content-area.main-content-area-tab-open {
     overflow: visible !important;
     overflow-x: visible !important;
@@ -506,15 +528,32 @@ body,
 
   html.mobile-browser-zoomed .app-compact-layout .main-content-area,
   html.mobile-browser-zoomed .app-compact-layout .main-content-area.main-content-area-tab-open,
-  html.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll,
+  html.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:not(:has(.biblioteca-pecas-hub)),
   body.mobile-browser-zoomed .app-compact-layout .main-content-area,
   body.mobile-browser-zoomed .app-compact-layout .main-content-area.main-content-area-tab-open,
-  body.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll {
+  body.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:not(:has(.biblioteca-pecas-hub)) {
     overflow: visible !important;
     overflow-x: visible !important;
     max-width: none !important;
     width: auto !important;
     min-width: 100% !important;
+  }
+
+  html.mobile-browser-zoomed .tab-inner-scroll:has(.biblioteca-pecas-hub),
+  body.mobile-browser-zoomed .tab-inner-scroll:has(.biblioteca-pecas-hub),
+  html.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:has(.biblioteca-pecas-hub),
+  body.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:has(.biblioteca-pecas-hub) {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    max-height: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   html.mobile-browser-zoomed .main-content-area *,
@@ -6683,13 +6722,22 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   }
 
   /* Com zoom activo: anular overflow-x hidden do layout compacto (vem acima e bloqueava pan lateral) */
-  html.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll,
+  html.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:not(:has(.biblioteca-pecas-hub)),
   html.mobile-browser-zoomed .app-compact-layout .main-content-area,
-  body.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll,
+  body.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:not(:has(.biblioteca-pecas-hub)),
   body.mobile-browser-zoomed .app-compact-layout .main-content-area {
     overflow: visible !important;
     overflow-x: visible !important;
     overflow-y: visible !important;
+  }
+
+  html.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:has(.biblioteca-pecas-hub),
+  body.mobile-browser-zoomed .app-compact-layout .tab-inner-scroll:has(.biblioteca-pecas-hub) {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    max-height: 100% !important;
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
   }
   .app-compact-layout .tab-content-wrapper table,
   .app-compact-layout .main-content-area table {
@@ -24999,8 +25047,8 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 
 .biblioteca-pecas-hub__piece-card {
-  content-visibility: auto;
-  contain-intrinsic-size: 280px 320px;
+  content-visibility: visible;
+  contain-intrinsic-size: auto;
   position: relative;
   background: #444444;
   padding: 14px;
@@ -39609,7 +39657,9 @@ html body .alerta-mensagens-shell .alerta-mensagens-hero-actions .comunicacao-he
     padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    touch-action: pan-x pan-y pinch-zoom;
+    touch-action: pan-y;
+    overflow-y: auto !important;
+    min-height: 0;
   }
 
   .tab-inner-scroll:has(.biblioteca-pecas-hub)::-webkit-scrollbar {
