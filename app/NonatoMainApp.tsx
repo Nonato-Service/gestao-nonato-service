@@ -1445,9 +1445,11 @@ function extractSidebarButtonTip(btn: HTMLButtonElement): { title: string; desc:
 
 function SidebarSectionSep({ id, label }: { id: string; label: string }) {
   return (
-    <div className="sidebar-section-sep" data-section={id} role="presentation">
-      <span className="sidebar-section-sep__line" aria-hidden />
-      <span className="sidebar-section-sep__label">{label}</span>
+    <div className="sidebar-section-sep" data-section={id} role="presentation" aria-label={label}>
+      <div className="sidebar-section-sep__row">
+        <span className="sidebar-section-sep__accent" aria-hidden />
+        <span className="sidebar-section-sep__label">{label}</span>
+      </div>
       <span className="sidebar-section-sep__line" aria-hidden />
     </div>
   )
@@ -3104,6 +3106,9 @@ const AGENDA_CONCLUIDOS_LISTA_MAX = 60
 const AGENDA_PAINEL_CONCLUIDOS_MAX = 40
 const AGENDA_PAINEL_CANCELADOS_MAX = 40
 const LS_AGENDA_CAL_CONCLUIDOS = 'nonato-agenda-cal-concluidos'
+
+type AgendaListaSecaoId = 'exec' | 'agend' | 'pre' | 'pessoal' | 'pend' | 'canc' | 'done' | 'dia'
+const AGENDA_LISTA_SECAO_IDS: AgendaListaSecaoId[] = ['exec', 'agend', 'pre', 'pessoal', 'pend', 'canc', 'done', 'dia']
 
 /** Normaliza chave YYYY-MM-DD (evita falha em includes por zeros à esquerda). */
 function normalizeDataKeyAgenda(s: string): string {
@@ -7418,9 +7423,23 @@ export default function Dashboard() {
   const [pecasSelecionadasAgenda, setPecasSelecionadasAgenda] = useState<PecaBiblioteca[]>([])
   const [showAgendaLembreteModal, setShowAgendaLembreteModal] = useState(false)
   const [agendaHistoricoConcluidosAberto, setAgendaHistoricoConcluidosAberto] = useState(false)
+  const [agendaListaSecoesAbertas, setAgendaListaSecoesAbertas] = useState<Set<AgendaListaSecaoId>>(
+    () => new Set<AgendaListaSecaoId>(['exec'])
+  )
+  const [agendaListaCardsExpandidos, setAgendaListaCardsExpandidos] = useState<Set<string>>(() => new Set())
   const [buscaAgendaHistoricoConcluidos, setBuscaAgendaHistoricoConcluidos] = useState('')
   const [historicoConcluidoDataDesde, setHistoricoConcluidoDataDesde] = useState('')
   const [historicoConcluidoDataAte, setHistoricoConcluidoDataAte] = useState('')
+
+  useEffect(() => {
+    if (!filtroDataAgenda) return
+    setAgendaListaSecoesAbertas((prev) => {
+      if (prev.has('dia')) return prev
+      const next = new Set(prev)
+      next.add('dia')
+      return next
+    })
+  }, [filtroDataAgenda])
   
   const emptySolicitacaoServicoTecnicoFormState = (): Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'> => ({
     clienteId: undefined,
@@ -16715,6 +16734,33 @@ export default function Dashboard() {
     }
     setShowAgendaForm(true)
   }
+
+  const toggleAgendaListaSecao = useCallback((id: AgendaListaSecaoId) => {
+    setAgendaListaSecoesAbertas((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
+  const expandirTodasSecoesAgendaLista = useCallback(() => {
+    setAgendaListaSecoesAbertas(new Set(AGENDA_LISTA_SECAO_IDS))
+  }, [])
+
+  const retrairTodasSecoesAgendaLista = useCallback(() => {
+    setAgendaListaSecoesAbertas(new Set())
+    setAgendaListaCardsExpandidos(new Set())
+  }, [])
+
+  const toggleAgendaListaCardExpandido = useCallback((id: string) => {
+    setAgendaListaCardsExpandidos((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
 
   const handleSaveAgendamento = (): boolean => {
     const pessoal = isAgendamentoPessoal(agendaForm)
@@ -48051,10 +48097,12 @@ A1;Peça exemplo;10`}
                     .filter((ag) => normalizeStatusAgendamento(ag) === 'cancelado')
                     .sort(ordenarAgenda)
 
-                  const renderAgendaCard = (agendamento: Agendamento, accent: string, pulseClass?: string, opts?: { muted?: boolean }) => {
+                  const renderAgendaCard = (agendamento: Agendamento, accent: string, pulseClass?: string, opts?: { muted?: boolean; listaModo?: boolean }) => {
                     const cancelado = isAgendamentoCancelado(agendamento)
                     const trAg = safeT as Record<string, string | undefined>
                     const st = normalizeStatusAgendamento(agendamento)
+                    const listaModo = opts?.listaModo === true
+                    const cardExpandido = !listaModo || agendaListaCardsExpandidos.has(agendamento.id)
                     const statusLabel =
                       st === 'concluido'
                         ? safeT?.concluido || 'Concluído'
@@ -48076,12 +48124,24 @@ A1;Peça exemplo;10`}
                       key={agendamento.id}
                       role="button"
                       tabIndex={0}
-                      title={(safeT as any)?.agendaCardClickToEditHint || 'Clique para editar (ou use o botão Editar)'}
-                      className={['agenda-lista-card', pulseClass || '', cancelado ? 'agenda-lista-card-cancelado' : ''].filter(Boolean).join(' ') || undefined}
+                      title={
+                        listaModo && !cardExpandido
+                          ? (trAg.agendaCardClickToExpandHint || 'Clique para ver detalhes (ou use Editar)')
+                          : (safeT as any)?.agendaCardClickToEditHint || 'Clique para editar (ou use o botão Editar)'
+                      }
+                      className={[
+                        'agenda-lista-card',
+                        pulseClass || '',
+                        cancelado ? 'agenda-lista-card-cancelado' : '',
+                        listaModo && !cardExpandido ? 'agenda-lista-card--compact' : '',
+                        listaModo && cardExpandido ? 'agenda-lista-card--expanded' : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ') || undefined}
                       style={{
                         backgroundColor: cancelado ? undefined : '#404040',
                         background: cancelado ? AGENDA_CANCELADO_BG : undefined,
-                        padding: '20px',
+                        padding: listaModo && !cardExpandido ? '14px 16px' : '20px',
                         borderRadius: '10px',
                         border: cancelado ? `2px solid ${AGENDA_CANCELADO_BORDA}` : `1px solid ${accent}`,
                         borderLeft: cancelado ? `6px solid ${AGENDA_CANCELADO_BORDA}` : `6px solid ${accent}`,
@@ -48093,15 +48153,38 @@ A1;Peça exemplo;10`}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault()
-                          handleEditAgendamento(agendamento)
+                          if (listaModo && !cardExpandido) toggleAgendaListaCardExpandido(agendamento.id)
+                          else handleEditAgendamento(agendamento)
                         }
                       }}
                       onClick={(e) => {
                         if ((e.target as HTMLElement).closest('button')) return
+                        if (listaModo && !cardExpandido) {
+                          toggleAgendaListaCardExpandido(agendamento.id)
+                          return
+                        }
                         handleEditAgendamento(agendamento)
                       }}
                     >
                       <div className="agenda-card__header">
+                        {listaModo ? (
+                          <button
+                            type="button"
+                            className="agenda-card__expand-btn ui-expand-chevron"
+                            aria-expanded={cardExpandido}
+                            aria-label={
+                              cardExpandido
+                                ? trAg.agendaCardRetrairDetalhe || 'Retrair detalhe'
+                                : trAg.agendaCardExpandirDetalhe || 'Expandir detalhe'
+                            }
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleAgendaListaCardExpandido(agendamento.id)
+                            }}
+                          >
+                            {cardExpandido ? '▼' : '▶'}
+                          </button>
+                        ) : null}
                         <div className="agenda-card__header-main">
                           <h3
                             className="agenda-card__title"
@@ -48116,12 +48199,26 @@ A1;Peça exemplo;10`}
                                 : trAg.agendaPessoal || 'Pessoal'}
                             </p>
                           ) : null}
+                          {listaModo && !cardExpandido ? (
+                            <p className="agenda-card__compact-meta">
+                              {new Date(agendamento.data + 'T12:00:00').toLocaleDateString('pt-BR')}
+                              {' · '}
+                              {agendamento.hora}
+                              {!isAgendamentoPessoal(agendamento) && agendamento.tecnico
+                                ? ` · ${agendamento.tecnico}`
+                                : ''}
+                              {agendamento.tipoServico && !isAgendamentoPessoal(agendamento)
+                                ? ` · ${agendamento.tipoServico}`
+                                : ''}
+                            </p>
+                          ) : null}
                         </div>
                         <span className="agenda-card__status-badge" style={{ borderColor: `${accent}66`, color: accent }}>
                           {statusLabel}
                         </span>
                       </div>
 
+                      {cardExpandido ? (
                       <div className="agenda-card__sections">
                         <section className="agenda-card__section agenda-card__section--agendamento">
                           <div className="agenda-card__section-head">
@@ -48245,11 +48342,14 @@ A1;Peça exemplo;10`}
                           </section>
                         ) : null}
                       </div>
+                      ) : null}
 
-                      <div className="agenda-card__footer">
-                        <div className="agenda-card__footer-label">
-                          {trAg.agendaCardSecaoAcoes || 'Ações'}
-                        </div>
+                      <div className={`agenda-card__footer${listaModo && !cardExpandido ? ' agenda-card__footer--compact' : ''}`}>
+                        {cardExpandido ? (
+                          <div className="agenda-card__footer-label">
+                            {trAg.agendaCardSecaoAcoes || 'Ações'}
+                          </div>
+                        ) : null}
                         <div className="agenda-card-actions">
                           <button
                             type="button"
@@ -48277,23 +48377,51 @@ A1;Peça exemplo;10`}
                   )
                   }
 
+                  const renderAgendaListaToolbar = () => (
+                    <div className="agenda-lista-toolbar">
+                      <p className="agenda-lista-toolbar__hint">
+                        {(safeT as any)?.agendaListaExpandirHint ||
+                          'Secções e cartões recolhíveis — expanda só o que precisa. Ideal para listas longas.'}
+                      </p>
+                      <div className="agenda-lista-toolbar__actions">
+                        <button
+                          type="button"
+                          className="btn-secondary agenda-lista-toolbar__btn"
+                          onClick={expandirTodasSecoesAgendaLista}
+                        >
+                          {(safeT as any)?.expandirTodos || 'Expandir todos'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-secondary agenda-lista-toolbar__btn"
+                          onClick={retrairTodasSecoesAgendaLista}
+                        >
+                          {(safeT as any)?.retrairTodos || 'Retrair todos'}
+                        </button>
+                      </div>
+                    </div>
+                  )
+
                   const renderAgendaSection = (
+                    secaoId: AgendaListaSecaoId,
                     titulo: string,
                     cor: string,
                     itens: Agendamento[],
                     hint?: string,
                     pulse?: 'pendencias' | 'pre',
                     mutedCards?: boolean,
-                    contagemBadge?: number
+                    contagemBadge?: number,
+                    corPorItem?: (ag: Agendamento) => string
                   ) => {
                     if (itens.length === 0) return null
                     const nBadge = typeof contagemBadge === 'number' ? contagemBadge : itens.length
+                    const secaoAberta = agendaListaSecoesAbertas.has(secaoId)
                     const headerPulseClass =
                       pulse === 'pendencias'
                         ? 'agenda-section-header agenda-section-header--pulse-pendencias'
                         : pulse === 'pre'
                           ? 'agenda-section-header agenda-section-header--pulse-pre'
-                          : undefined
+                          : 'agenda-section-header'
                     const dotPulseClass =
                       pulse === 'pendencias'
                         ? 'agenda-section-dot agenda-section-dot--pulse-pendencias'
@@ -48303,20 +48431,30 @@ A1;Peça exemplo;10`}
                     const cardPulseClass =
                       pulse === 'pendencias' ? 'agenda-card--pulse-pendencias' : pulse === 'pre' ? 'agenda-card--pulse-pre' : undefined
                     return (
-                      <div className="agenda-section-block">
-                        <div
-                          className={headerPulseClass}
+                      <div className={`agenda-section-block${secaoAberta ? ' agenda-section-block--open' : ' agenda-section-block--closed'}`}>
+                        <button
+                          type="button"
+                          className={`${headerPulseClass} agenda-section-header--toggle`}
+                          aria-expanded={secaoAberta}
+                          onClick={() => toggleAgendaListaSecao(secaoId)}
                           style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '12px',
-                          padding: '12px 14px',
-                          borderRadius: '12px',
-                          backgroundColor: 'rgba(20,20,20,0.92)',
-                          border: `1px solid ${cor}55`,
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '12px',
+                            width: '100%',
+                            padding: '12px 14px',
+                            borderRadius: '12px',
+                            backgroundColor: 'rgba(20,20,20,0.92)',
+                            border: `1px solid ${cor}55`,
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                          }}
+                        >
+                          <span className="agenda-section-header__left">
+                            <span className="ui-expand-chevron agenda-section-header__chevron" aria-hidden>
+                              {secaoAberta ? '▼' : '▶'}
+                            </span>
                             <span
                               className={dotPulseClass}
                               style={{
@@ -48328,20 +48466,42 @@ A1;Peça exemplo;10`}
                               }}
                               aria-hidden
                             />
-                            <span style={{ fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fff', fontSize: '12px' }}>
-                              {titulo}
-                            </span>
+                            <span className="agenda-section-header__title">{titulo}</span>
                             {hint ? (
-                              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>{hint}</span>
+                              <span className="agenda-section-header__hint">{hint}</span>
                             ) : null}
-                          </div>
-                          <span style={{ padding: '6px 10px', borderRadius: 999, backgroundColor: `${cor}22`, border: `1px solid ${cor}55`, color: '#fff', fontSize: '12px', fontWeight: 800 }}>
+                          </span>
+                          <span
+                            className="agenda-section-header__badge"
+                            style={{
+                              padding: '6px 10px',
+                              borderRadius: 999,
+                              backgroundColor: `${cor}22`,
+                              border: `1px solid ${cor}55`,
+                              color: '#fff',
+                              fontSize: '12px',
+                              fontWeight: 800,
+                            }}
+                          >
                             {nBadge}
                           </span>
-                        </div>
-                        <div className="agenda-section-cards">
-                          {itens.map((ag) => renderAgendaCard(ag, cor, cardPulseClass, mutedCards ? { muted: true } : undefined))}
-                        </div>
+                        </button>
+                        {secaoAberta ? (
+                          <div className="agenda-section-cards">
+                            {itens.map((ag) =>
+                              renderAgendaCard(ag, corPorItem ? corPorItem(ag) : cor, cardPulseClass, {
+                                muted: mutedCards || normalizeStatusAgendamento(ag) === 'cancelado',
+                                listaModo: true,
+                              })
+                            )}
+                          </div>
+                        ) : (
+                          <p className="agenda-section-collapsed-hint">
+                            {(safeT as any)?.agendaListaSecaoRetraidaHint ||
+                              '{n} registo(s) oculto(s) — clique no cabeçalho para expandir'
+                            ).replace('{n}', String(nBadge))}
+                          </p>
+                        )}
                       </div>
                     )
                   }
@@ -48399,20 +48559,25 @@ A1;Peça exemplo;10`}
                             </p>
                           </div>
                         ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '18px' }}>
-                            {agDoDiaAtivos.map((ag) =>
-                              renderAgendaCard(
-                                ag,
-                                accentCorAgendamentoLista(ag),
-                                undefined,
-                                normalizeStatusAgendamento(ag) === 'cancelado' ? { muted: true } : undefined
-                              )
+                          <>
+                            {renderAgendaListaToolbar()}
+                            {renderAgendaSection(
+                              'dia',
+                              (safeT as any)?.agendaListaSecaoDia || 'Compromissos do dia',
+                              'rgba(168, 85, 247, 0.92)',
+                              agDoDiaAtivos,
+                              undefined,
+                              undefined,
+                              false,
+                              agDoDiaAtivos.length,
+                              accentCorAgendamentoLista
                             )}
-                          </div>
+                          </>
                         )}
                         {agConcluidosLista.length > 0 ? (
                           <div style={{ marginBottom: '18px' }}>
                             {renderAgendaSection(
+                              'done',
                               (safeT as any)?.agendaListaSecaoConcluidos || (safeT as any)?.agendaPainelConcluidosRecentes || 'Concluídos (recentes)',
                               'rgba(34, 197, 94, 0.88)',
                               agConcluidosLista,
@@ -48449,19 +48614,23 @@ A1;Peça exemplo;10`}
                           </p>
                         </div>
                       ) : null}
+                      {renderAgendaListaToolbar()}
                       {renderAgendaSection(
+                        'exec',
                         (safeT as any)?.agendaSecaoEmExecucao || (safeT as any)?.agendaPainelEmExecucao || 'Em execução',
                         'rgba(255, 107, 45, 0.92)',
                         agEmExecucao,
                         (safeT as any)?.agendaSecaoEmExecucaoHint || 'Ao vivo — agendamento técnico em andamento'
                       )}
                       {renderAgendaSection(
+                        'agend',
                         (safeT as any)?.agendaSecaoConfirmados || (safeT as any)?.agendaPainelAgendados || 'Agendados (confirmados)',
                         'rgba(55, 130, 235, 0.92)',
                         agConfirmadosSomente,
                         (safeT as any)?.agendaSecaoAgendadoHint || 'Confirmado — ainda não iniciado'
                       )}
                       {renderAgendaSection(
+                        'pre',
                         (safeT as any)?.agendaSecaoPreAgendamento || (safeT as any)?.agendaPainelPreAgendados || (safeT?.preAgendamento || 'Pré-Agendamento'),
                         'rgba(255, 190, 50, 0.95)',
                         agPreAgendamento,
@@ -48469,12 +48638,14 @@ A1;Peça exemplo;10`}
                         'pre'
                       )}
                       {renderAgendaSection(
+                        'pessoal',
                         (safeT as any)?.agendaSecaoAssuntosPessoais || (safeT as any)?.agendaPainelAssuntosPessoais || 'Assuntos pessoais',
                         'rgba(168, 85, 247, 0.92)',
                         agAssuntosPessoais,
                         (safeT as any)?.agendaSecaoAssuntosPessoaisHint || 'Compromissos pessoais ou visitas técnicas — sem cliente nem equipamento'
                       )}
                       {renderAgendaSection(
+                        'pend',
                         (safeT as any)?.agendaSecaoPendencias || (safeT as any)?.agendaPainelPendentes || 'Pendentes',
                         'rgba(234, 88, 12, 0.92)',
                         agPendencias,
@@ -48482,6 +48653,7 @@ A1;Peça exemplo;10`}
                         'pendencias'
                       )}
                       {renderAgendaSection(
+                        'canc',
                         (safeT as any)?.agendaSecaoCancelados || (safeT as any)?.agendaPainelCancelados || (safeT?.cancelado || 'Cancelados'),
                         '#f87171',
                         agCancelados,
@@ -48492,6 +48664,7 @@ A1;Peça exemplo;10`}
                       {agConcluidosLista.length > 0 ? (
                         <div style={{ marginBottom: '18px' }}>
                           {renderAgendaSection(
+                            'done',
                             (safeT as any)?.agendaListaSecaoConcluidos || (safeT as any)?.agendaPainelConcluidosRecentes || 'Concluídos (recentes)',
                             'rgba(34, 197, 94, 0.88)',
                             agConcluidosLista,

@@ -1871,78 +1871,134 @@ body {
 
 /* Separadores de zona — hierarquia visual da navegação */
 .sidebar-section-sep {
+  --sidebar-sep-accent: rgba(255, 255, 255, 0.42);
+  --sidebar-sep-accent-soft: rgba(255, 255, 255, 0.1);
+  --sidebar-sep-glow: transparent;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 16px 6px 8px;
+  flex-direction: column;
+  gap: 7px;
+  margin: 20px 2px 10px;
+  padding: 0 4px;
   user-select: none;
   flex-shrink: 0;
 }
 .sidebar-section-sep:first-child {
-  margin-top: 2px;
+  margin-top: 4px;
 }
-.sidebar-section-sep__line {
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+.sidebar-section-sep__row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.sidebar-section-sep__accent {
+  flex-shrink: 0;
+  width: 3px;
+  height: 15px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    var(--sidebar-sep-accent) 0%,
+    color-mix(in srgb, var(--sidebar-sep-accent) 55%, transparent) 100%
+  );
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--sidebar-sep-accent) 22%, transparent),
+    0 0 14px var(--sidebar-sep-glow);
 }
 .sidebar-section-sep__label {
-  flex-shrink: 0;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.42);
-  padding: 4px 10px;
+  line-height: 1.15;
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+.sidebar-section-sep__line {
+  display: block;
+  width: 100%;
+  height: 1px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(0, 0, 0, 0.22);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  background: linear-gradient(
+    90deg,
+    var(--sidebar-sep-accent-soft) 0%,
+    rgba(255, 255, 255, 0.07) 42%,
+    transparent 100%
+  );
+}
+.sidebar-section-sep[data-section='operacao'] {
+  --sidebar-sep-accent: var(--sidebar-zone-operacao);
+  --sidebar-sep-accent-soft: rgba(0, 200, 83, 0.28);
+  --sidebar-sep-glow: rgba(0, 200, 83, 0.22);
 }
 .sidebar-section-sep[data-section='operacao'] .sidebar-section-sep__label {
-  color: rgba(110, 231, 183, 0.78);
-  border-color: rgba(0, 200, 83, 0.18);
-  background: rgba(0, 200, 83, 0.06);
+  color: rgba(182, 255, 214, 0.92);
+}
+.sidebar-section-sep[data-section='comercial'] {
+  --sidebar-sep-accent: var(--sidebar-zone-comercial);
+  --sidebar-sep-accent-soft: rgba(56, 189, 248, 0.26);
+  --sidebar-sep-glow: rgba(56, 189, 248, 0.18);
 }
 .sidebar-section-sep[data-section='comercial'] .sidebar-section-sep__label {
-  color: rgba(125, 211, 252, 0.78);
-  border-color: rgba(56, 189, 248, 0.18);
-  background: rgba(56, 189, 248, 0.06);
+  color: rgba(186, 230, 253, 0.92);
+}
+.sidebar-section-sep[data-section='documentacao'] {
+  --sidebar-sep-accent: var(--sidebar-zone-documentacao);
+  --sidebar-sep-accent-soft: rgba(167, 139, 250, 0.26);
+  --sidebar-sep-glow: rgba(167, 139, 250, 0.18);
 }
 .sidebar-section-sep[data-section='documentacao'] .sidebar-section-sep__label {
-  color: rgba(196, 181, 253, 0.78);
-  border-color: rgba(167, 139, 250, 0.18);
-  background: rgba(167, 139, 250, 0.06);
+  color: rgba(221, 214, 254, 0.92);
+}
+.sidebar-section-sep[data-section='comunicacao'] {
+  --sidebar-sep-accent: var(--sidebar-zone-comunicacao);
+  --sidebar-sep-accent-soft: rgba(244, 114, 182, 0.24);
+  --sidebar-sep-glow: rgba(244, 114, 182, 0.16);
 }
 .sidebar-section-sep[data-section='comunicacao'] .sidebar-section-sep__label {
-  color: rgba(249, 168, 212, 0.78);
-  border-color: rgba(244, 114, 182, 0.18);
-  background: rgba(244, 114, 182, 0.06);
+  color: rgba(251, 207, 232, 0.92);
+}
+.sidebar-section-sep[data-section='industrial'] {
+  --sidebar-sep-accent: #fb923c;
+  --sidebar-sep-accent-soft: rgba(251, 146, 60, 0.26);
+  --sidebar-sep-glow: rgba(251, 146, 60, 0.18);
 }
 .sidebar-section-sep[data-section='industrial'] .sidebar-section-sep__label {
-  color: rgba(253, 186, 116, 0.88);
-  border-color: rgba(251, 146, 60, 0.22);
-  background: rgba(251, 146, 60, 0.07);
+  color: rgba(254, 215, 170, 0.94);
+}
+.sidebar-section-sep[data-section='checklist'] {
+  --sidebar-sep-accent: #34d399;
+  --sidebar-sep-accent-soft: rgba(52, 211, 153, 0.24);
+  --sidebar-sep-glow: rgba(52, 211, 153, 0.16);
 }
 .sidebar-section-sep[data-section='checklist'] .sidebar-section-sep__label {
-  color: rgba(134, 239, 172, 0.88);
-  border-color: rgba(0, 200, 83, 0.28);
-  background: rgba(0, 200, 83, 0.08);
+  color: rgba(167, 243, 208, 0.92);
+}
+.sidebar-section-sep[data-section='pecas-armazem'] {
+  --sidebar-sep-accent: #60a5fa;
+  --sidebar-sep-accent-soft: rgba(96, 165, 250, 0.24);
+  --sidebar-sep-glow: rgba(96, 165, 250, 0.16);
 }
 .sidebar-section-sep[data-section='pecas-armazem'] .sidebar-section-sep__label {
-  color: rgba(147, 197, 253, 0.88);
-  border-color: rgba(59, 130, 246, 0.22);
-  background: rgba(59, 130, 246, 0.07);
+  color: rgba(191, 219, 254, 0.92);
+}
+.sidebar-section-sep[data-section='institucional'] {
+  --sidebar-sep-accent: var(--sidebar-zone-institucional);
+  --sidebar-sep-accent-soft: rgba(251, 191, 36, 0.24);
+  --sidebar-sep-glow: rgba(251, 191, 36, 0.16);
 }
 .sidebar-section-sep[data-section='institucional'] .sidebar-section-sep__label {
-  color: rgba(253, 224, 71, 0.78);
-  border-color: rgba(251, 191, 36, 0.18);
-  background: rgba(251, 191, 36, 0.06);
+  color: rgba(253, 230, 138, 0.94);
+}
+.sidebar-section-sep[data-section='sistema'] {
+  --sidebar-sep-accent: var(--sidebar-zone-sistema);
+  --sidebar-sep-accent-soft: rgba(251, 113, 133, 0.24);
+  --sidebar-sep-glow: rgba(251, 113, 133, 0.16);
 }
 .sidebar-section-sep[data-section='sistema'] .sidebar-section-sep__label {
-  color: rgba(253, 164, 175, 0.78);
-  border-color: rgba(251, 113, 133, 0.18);
-  background: rgba(251, 113, 133, 0.06);
+  color: rgba(254, 205, 211, 0.92);
 }
 
 /* Painel de idioma dentro de Extras */
@@ -32811,11 +32867,135 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   border-bottom: none;
 }
 
+.agenda-section-block--closed {
+  margin-bottom: 14px;
+}
+
+.agenda-section-header--toggle {
+  font: inherit;
+  color: inherit;
+  transition: filter 0.15s ease, background 0.15s ease;
+}
+
+.agenda-section-header--toggle:hover {
+  filter: brightness(1.06);
+}
+
+.agenda-section-header__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.agenda-section-header__chevron.ui-expand-chevron {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  font-size: 16px;
+}
+
+.agenda-section-header__title {
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  font-size: 12px;
+}
+
+.agenda-section-header__hint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.agenda-section-header__badge {
+  flex-shrink: 0;
+}
+
+.agenda-section-collapsed-hint {
+  margin: 8px 4px 0;
+  padding: 10px 4px 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.4;
+}
+
 .agenda-section-cards {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-top: 12px;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.agenda-lista-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.agenda-lista-toolbar__hint {
+  margin: 0;
+  flex: 1 1 220px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.agenda-lista-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.agenda-lista-toolbar__btn {
+  min-height: 40px !important;
+  padding: 8px 14px !important;
+  font-size: 12px !important;
+  border-radius: 10px !important;
+}
+
+.agenda-lista-card--compact {
+  padding: 14px 16px !important;
+}
+
+.agenda-lista-card--compact .agenda-card__header {
+  margin-bottom: 10px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.agenda-card__expand-btn {
+  flex-shrink: 0;
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  font-size: 16px !important;
+  padding: 0 !important;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.agenda-card__compact-meta {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.agenda-card__footer--compact {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 /* Calendário — visual moderno (células separadas, data no canto superior direito) */
