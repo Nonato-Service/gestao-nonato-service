@@ -25475,9 +25475,18 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   flex-shrink: 0;
 }
 
-.biblioteca-pecas-hub__grupo-acoes .btn-primary,
-.biblioteca-pecas-hub__grupo-acoes .btn-danger {
-  min-height: 40px;
+.biblioteca-wizard-classificacao__selects select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #3a3a3a;
+}
+
+.biblioteca-pecas-hub__grupos-voltar {
+  min-height: 44px;
+  padding: 10px 16px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  white-space: nowrap;
 }
 
 .biblioteca-classificacao-avancada {

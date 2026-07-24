@@ -2394,6 +2394,8 @@ export const translations = {
     gerenciarCategoriasLegendaEditar: "Editar — muda o nome",
     gerenciarCategoriasLegendaExcluir: "Excluir — remove (peças ficam sem essa categoria)",
     gerenciarCategoriasEditarCategoria: "Renomear categoria",
+    classificacaoLoteEscolhaGrupoPrimeiro: "Primeiro escolha um grupo",
+    bibliotecaVoltarEditarBiblioteca: "Voltar ao Editar biblioteca",
     gerenciarCategoriasMostrarSubcategorias: "Mostrar subcategorias",
     gerenciarCategoriasOcultarSubcategorias: "Ocultar subcategorias",
     semImagem: "Sem Imagem",

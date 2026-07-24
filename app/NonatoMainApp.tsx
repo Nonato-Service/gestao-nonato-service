@@ -42016,30 +42016,33 @@ export default function Dashboard() {
                               <span>{safeT?.classificacaoLoteSubgrupoDestino || 'Subgrupo de destino'}</span>
                               <select
                                 value={classificacaoLoteSubcategoriaId}
+                                disabled={!classificacaoLoteCategoriaId}
                                 onChange={(e) => {
                                   const subId = e.target.value
-                                  const sub = subcategoriasPecas.find((item) => item.id === subId)
-                                  if (sub?.categoriaId) setClassificacaoLoteCategoriaId(sub.categoriaId)
                                   setClassificacaoLoteSubcategoriaId(subId)
                                 }}
                               >
-                                <option value="">{safeT?.classificacaoLoteEscolherSubgrupo || 'Escolher subgrupo'}</option>
-                                {subcategoriasPecas
-                                  .filter(
-                                    (sub) =>
-                                      !classificacaoLoteCategoriaId || sub.categoriaId === classificacaoLoteCategoriaId
-                                  )
-                                  .sort((a, b) =>
-                                    (a.nome || '').localeCompare(b.nome || '', undefined, {
-                                      sensitivity: 'base',
-                                      numeric: true,
-                                    })
-                                  )
-                                  .map((sub) => (
-                                    <option key={sub.id} value={sub.id}>
-                                      {sub.nome}
-                                    </option>
-                                  ))}
+                                <option value="">
+                                  {!classificacaoLoteCategoriaId
+                                    ? (safeT as any)?.classificacaoLoteEscolhaGrupoPrimeiro ||
+                                      'Primeiro escolha um grupo'
+                                    : safeT?.classificacaoLoteEscolherSubgrupo || 'Escolher subgrupo'}
+                                </option>
+                                {classificacaoLoteCategoriaId
+                                  ? subcategoriasPecas
+                                      .filter((sub) => sub.categoriaId === classificacaoLoteCategoriaId)
+                                      .sort((a, b) =>
+                                        (a.nome || '').localeCompare(b.nome || '', undefined, {
+                                          sensitivity: 'base',
+                                          numeric: true,
+                                        })
+                                      )
+                                      .map((sub) => (
+                                        <option key={sub.id} value={sub.id}>
+                                          {sub.nome}
+                                        </option>
+                                      ))
+                                  : null}
                               </select>
                             </label>
                           </div>
@@ -42951,6 +42954,13 @@ export default function Dashboard() {
                     </ul>
                   </div>
                   <div className="biblioteca-pecas-hub__grupos-header-acoes">
+                  <button
+                    type="button"
+                    className="biblioteca-btn--ghost biblioteca-pecas-hub__grupos-voltar"
+                    onClick={() => setAbaBibliotecaPecas('biblioteca-gestao')}
+                  >
+                    ← {(safeT as any)?.bibliotecaVoltarEditarBiblioteca || 'Voltar ao Editar biblioteca'}
+                  </button>
                   <button
                     className="btn-primary"
                     onClick={() => {
