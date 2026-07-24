@@ -26388,6 +26388,52 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   align-items: center;
 }
 
+.biblioteca-pecas-hub__selecao-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 200, 83, 0.28);
+  background: linear-gradient(135deg, rgba(6, 40, 22, 0.55), rgba(8, 18, 28, 0.85));
+}
+
+.biblioteca-pecas-hub__selecao-bar__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.biblioteca-pecas-hub__selecao-bar__info strong {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #86efac;
+}
+
+.biblioteca-pecas-hub__selecao-bar__info span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.biblioteca-pecas-hub__selecao-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.biblioteca-pecas-hub__selecao-bar__btn {
+  min-height: 40px !important;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
 .biblioteca-wizard-classificacao__contagem {
   margin: 10px 0 0;
   font-size: 13px;

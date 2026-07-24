@@ -27964,6 +27964,40 @@ export default function Dashboard() {
     categoriasPecasAlfabeto,
   ])
 
+  /** IDs das peças visíveis na página actual da listagem filtrada (48 por página). */
+  const pecasIdsPaginaBiblioteca = useMemo(() => {
+    const total = pecasCatalogoFiltradasGestao.length
+    const totalPaginas = Math.max(1, Math.ceil(total / BIBLIOTECA_ITENS_POR_LOTE))
+    const pagina = Math.min(paginaBibliotecaFlat, totalPaginas - 1)
+    const inicio = pagina * BIBLIOTECA_ITENS_POR_LOTE
+    return pecasCatalogoFiltradasGestao.slice(inicio, inicio + BIBLIOTECA_ITENS_POR_LOTE).map((p) => p.id)
+  }, [pecasCatalogoFiltradasGestao, paginaBibliotecaFlat])
+
+  const paginaBibliotecaTodaSelecionada = useMemo(
+    () =>
+      pecasIdsPaginaBiblioteca.length > 0 &&
+      pecasIdsPaginaBiblioteca.every((id) => selecaoPecasBibliotecaIds.includes(id)),
+    [pecasIdsPaginaBiblioteca, selecaoPecasBibliotecaIds]
+  )
+
+  const toggleSelecionarPaginaBiblioteca = useCallback(() => {
+    setModoSelecaoPecasBiblioteca(true)
+    setSelecaoPecasBibliotecaIds((prev) => {
+      const pageIds = pecasIdsPaginaBiblioteca
+      if (pageIds.length === 0) return prev
+      const allOnPage = pageIds.every((id) => prev.includes(id))
+      if (allOnPage) {
+        return prev.filter((id) => !pageIds.includes(id))
+      }
+      return [...new Set([...prev, ...pageIds])]
+    })
+  }, [pecasIdsPaginaBiblioteca])
+
+  const selecionarTodasPaginaBiblioteca = useCallback(() => {
+    setModoSelecaoPecasBiblioteca(true)
+    setSelecaoPecasBibliotecaIds((prev) => [...new Set([...prev, ...pecasIdsPaginaBiblioteca])])
+  }, [pecasIdsPaginaBiblioteca])
+
   /** Peças visíveis com filtros actuais (inclui importações pendentes — classificação em lote). */
   const pecasVisiveisParaLoteGestao = useMemo(() => {
     const isFiltroSoSemCategoria = filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA
@@ -42257,7 +42291,10 @@ export default function Dashboard() {
                         <span className="biblioteca-wizard-classificacao__num">2</span>
                         <div className="biblioteca-wizard-classificacao__corpo">
                           <strong>{(safeT as any)?.bibliotecaWizardPasso2Titulo || 'Marque as peças na grelha'}</strong>
-                          <p>{(safeT as any)?.bibliotecaWizardPasso2Desc || 'Clique nos cartões abaixo (ficam com borda verde). Pode marcar quantas quiser.'}</p>
+                          <p>
+                            {(safeT as any)?.bibliotecaWizardPasso2Desc ||
+                              'Individual: clique nos cartões ou nas caixas. Página: marque só as peças visíveis na página actual. Filtradas: todas as peças do filtro activo.'}
+                          </p>
                           <div className="biblioteca-wizard-classificacao__acoes">
                             <button
                               type="button"
@@ -42275,8 +42312,17 @@ export default function Dashboard() {
                               }}
                             >
                               {modoSelecaoPecasBiblioteca
-                                ? (safeT as any)?.bibliotecaWizardPasso2Ativo || '✓ A marcar peças — clique nos cartões abaixo'
-                                : (safeT as any)?.bibliotecaWizardPasso2Iniciar || 'Começar a marcar peças'}
+                                ? (safeT as any)?.bibliotecaWizardPasso2Ativo || '✓ Modo seleção — clique peça a peça'
+                                : (safeT as any)?.bibliotecaWizardPasso2Iniciar || 'Seleção individual'}
+                            </button>
+                            <button
+                              type="button"
+                              className={`biblioteca-btn--ghost${paginaBibliotecaTodaSelecionada ? ' biblioteca-btn--green' : ''}`}
+                              onClick={toggleSelecionarPaginaBiblioteca}
+                              disabled={pecasIdsPaginaBiblioteca.length === 0}
+                            >
+                              {(safeT as any)?.classificacaoLoteSelecionarPagina || 'Página actual'} (
+                              {pecasIdsPaginaBiblioteca.length})
                             </button>
                             <button
                               type="button"
@@ -42286,7 +42332,7 @@ export default function Dashboard() {
                                 setSelecaoPecasBibliotecaIds(pecasCatalogoFiltradasGestao.map((peca) => peca.id))
                               }}
                             >
-                              {(safeT as any)?.classificacaoLoteSelecionarFiltradas || 'Selecionar todas filtradas'} (
+                              {(safeT as any)?.classificacaoLoteSelecionarFiltradas || 'Todas filtradas'} (
                               {pecasCatalogoFiltradasGestao.length})
                             </button>
                             <button
@@ -42375,6 +42421,47 @@ export default function Dashboard() {
                     inicioFlat,
                     inicioFlat + BIBLIOTECA_ITENS_POR_LOTE
                   )
+                  const idsPaginaFlat = pecasPaginaFlat.map((p) => p.id)
+                  const selecionadasNaPagina = idsPaginaFlat.filter((id) => selecaoPecasBibliotecaIds.includes(id)).length
+                  const paginaFlatTodaSelecionada =
+                    idsPaginaFlat.length > 0 && selecionadasNaPagina === idsPaginaFlat.length
+                  const renderBarraSelecaoLoteBiblioteca = () =>
+                    !modoSelecaoPecasBiblioteca || somenteLeituraBiblioteca ? null : (
+                      <div className="biblioteca-pecas-hub__selecao-bar" role="region" aria-label={(safeT as any)?.bibliotecaBarraSelecaoTitulo || 'Seleção para classificação'}>
+                        <div className="biblioteca-pecas-hub__selecao-bar__info">
+                          <strong>{(safeT as any)?.bibliotecaBarraSelecaoTitulo || 'Seleção'}</strong>
+                          <span>
+                            {(
+                              (safeT as any)?.bibliotecaBarraSelecaoResumo ||
+                              '{pagina} na página · {total} no total'
+                            )
+                              .replace('{pagina}', String(selecionadasNaPagina))
+                              .replace('{total}', String(selecaoPecasBibliotecaIds.length))}
+                          </span>
+                        </div>
+                        <div className="biblioteca-pecas-hub__selecao-bar__actions">
+                          <button
+                            type="button"
+                            className={`biblioteca-btn--ghost biblioteca-pecas-hub__selecao-bar__btn${paginaFlatTodaSelecionada ? ' biblioteca-btn--green' : ''}`}
+                            onClick={toggleSelecionarPaginaBiblioteca}
+                            disabled={idsPaginaFlat.length === 0}
+                          >
+                            {paginaFlatTodaSelecionada
+                              ? (safeT as any)?.bibliotecaDesmarcarPagina || 'Desmarcar página'
+                              : (safeT as any)?.bibliotecaSelecionarPaginaAtual || 'Marcar página actual'}{' '}
+                            ({idsPaginaFlat.length})
+                          </button>
+                          <button
+                            type="button"
+                            className="biblioteca-btn--ghost biblioteca-pecas-hub__selecao-bar__btn"
+                            onClick={() => setSelecaoPecasBibliotecaIds([])}
+                            disabled={selecaoPecasBibliotecaIds.length === 0}
+                          >
+                            {safeT?.classificacaoLoteLimparSelecao || 'Limpar'}
+                          </button>
+                        </div>
+                      </div>
+                    )
                   const limiteSecaoBiblioteca = (key: string) =>
                     bibliotecaSecaoLimites[key] ?? BIBLIOTECA_ITENS_POR_LOTE
                   const carregarMaisSecao = (key: string) =>
@@ -42779,6 +42866,7 @@ export default function Dashboard() {
                         return (
                           <>
                             {!somenteLeituraBiblioteca && painelClassificacaoLote}
+                            {renderBarraSelecaoLoteBiblioteca()}
                             <BibliotecaSecaoCategoria
                               titulo={safeT?.bibliotecaGrupoSemCategoria || 'Sem categoria'}
                               count={semCat.length}
@@ -42799,6 +42887,7 @@ export default function Dashboard() {
                       return (
                         <>
                           {!somenteLeituraBiblioteca && painelClassificacaoLote}
+                          {renderBarraSelecaoLoteBiblioteca()}
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
                             {ordemIds.map((catId) => {
                               const cat = categoriasPecas.find((x) => x.id === catId)
@@ -42838,6 +42927,7 @@ export default function Dashboard() {
                     return (
                       <>
                         {!somenteLeituraBiblioteca && painelClassificacaoLote}
+                        {renderBarraSelecaoLoteBiblioteca()}
                         <div className="biblioteca-pecas-hub__piece-grid">
                           {pecasPaginaFlat.map((peca) => renderPecaBibliotecaGridCell(peca))}
                         </div>
@@ -42854,6 +42944,7 @@ export default function Dashboard() {
                   return (
                     <>
                       {!somenteLeituraBiblioteca && painelClassificacaoLote}
+                      {renderBarraSelecaoLoteBiblioteca()}
                       <div className="biblioteca-pecas-hub__catalog-table-wrap">
                         <table
                           className="biblioteca-pecas-hub__catalog-table"
@@ -42872,16 +42963,17 @@ export default function Dashboard() {
                                       pecasPaginaFlat.length > 0 &&
                                       pecasPaginaFlat.every((p) => selecaoPecasBibliotecaIds.includes(p.id))
                                     }
-                                    onChange={() => {
-                                      const pageIds = pecasPaginaFlat.map((p) => p.id)
-                                      const allOnPage = pageIds.every((id) => selecaoPecasBibliotecaIds.includes(id))
-                                      if (allOnPage) {
-                                        setSelecaoPecasBibliotecaIds((prev) => prev.filter((id) => !pageIds.includes(id)))
-                                      } else {
-                                        setSelecaoPecasBibliotecaIds((prev) => [...new Set([...prev, ...pageIds])])
-                                      }
-                                    }}
-                                    aria-label={(safeT as any)?.bibliotecaSelecionarPaginaAtual || 'Página actual'}
+                                    onChange={toggleSelecionarPaginaBiblioteca}
+                                    aria-label={
+                                      paginaFlatTodaSelecionada
+                                        ? (safeT as any)?.bibliotecaDesmarcarPagina || 'Desmarcar página actual'
+                                        : (safeT as any)?.bibliotecaSelecionarPaginaAtual || 'Marcar todas desta página'
+                                    }
+                                    title={
+                                      paginaFlatTodaSelecionada
+                                        ? (safeT as any)?.bibliotecaDesmarcarPagina || 'Desmarcar página actual'
+                                        : (safeT as any)?.bibliotecaSelecionarPaginaAtual || 'Marcar todas desta página'
+                                    }
                                   />
                                 </th>
                               ) : null}
