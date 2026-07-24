@@ -9058,6 +9058,40 @@ export default function Dashboard() {
   const [viewingRelatorioServico, setViewingRelatorioServico] = useState<RelatorioServico | null>(null)
   const [relatorioServicoListaDetalheId, setRelatorioServicoListaDetalheId] = useState<string | null>(null)
   const [buscaRelatorioServicoLista, setBuscaRelatorioServicoLista] = useState('')
+  const RELATORIO_SERVICO_PAINEL_IDS = [
+    'rs-lista-kpis',
+    'rs-form-basicas',
+    'rs-form-dias',
+    'rs-form-textos',
+    'rs-form-assinatura',
+    'rs-form-pecas',
+    'rs-form-resumo',
+    'rs-form-status',
+  ] as const
+  const [relatorioServicoPainelResetToken, setRelatorioServicoPainelResetToken] = useState(0)
+  const [relatorioServicoModoCompacto, setRelatorioServicoModoCompacto] = useState(() => {
+    if (typeof window === 'undefined') return false
+    try {
+      return localStorage.getItem('nonato-relatorio-servico-modo-compacto') === '1'
+    } catch {
+      return false
+    }
+  })
+  const toggleRelatorioServicoModoCompacto = useCallback(() => {
+    setRelatorioServicoModoCompacto((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem('nonato-relatorio-servico-modo-compacto', next ? '1' : '0')
+      } catch {
+        /* ignorar */
+      }
+      if (next) {
+        fecharTodosBibliotecaPaineis([...RELATORIO_SERVICO_PAINEL_IDS], 'relatorio-servico')
+        setRelatorioServicoPainelResetToken((t) => t + 1)
+      }
+      return next
+    })
+  }, [])
   const [showPecasSubstituicaoModal, setShowPecasSubstituicaoModal] = useState(false)
   const [showPDFFormatMenu, setShowPDFFormatMenu] = useState<string | null>(null) // ID do relatório para mostrar menu
   const [pdfMenuPosition, setPdfMenuPosition] = useState<{ top: number; left: number; width: number } | null>(null)
@@ -35916,6 +35950,23 @@ export default function Dashboard() {
                   >
                     ➕ {safeT?.addRelatorioServico || 'Adicionar Relatório de Serviço'}
                   </button>
+                  <button
+                    type="button"
+                    className={`biblioteca-hub-nav__compacto relatorio-servico-modo-compacto-btn${relatorioServicoModoCompacto ? ' biblioteca-hub-nav__compacto--ativo' : ''}`}
+                    onClick={toggleRelatorioServicoModoCompacto}
+                    title={
+                      relatorioServicoModoCompacto
+                        ? (safeT as any)?.relatorioModoCompactoHint ||
+                          'Recolhe secções grandes; clique num painel para expandir'
+                        : (safeT as any)?.relatorioModoExpandidoHint ||
+                          'Mostra secções expandidas por defeito'
+                    }
+                    aria-pressed={relatorioServicoModoCompacto}
+                  >
+                    {relatorioServicoModoCompacto
+                      ? (safeT as any)?.relatorioModoExpandido || 'Modo expandido'
+                      : (safeT as any)?.relatorioModoCompacto || 'Modo compacto'}
+                  </button>
                   <div className="relatorio-servico-hero-actions-row">
                     <button 
                       onClick={() => {
@@ -36041,9 +36092,19 @@ export default function Dashboard() {
                     </div>
                   )}
                 
-                {/* Informações Básicas */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
-                  <h4 style={{ marginBottom: '15px', color: '#00c853' }}>{safeT?.informacoesBasicas || 'Informações Básicas'}</h4>
+                <div className={`relatorio-servico-paineis-stack${relatorioServicoModoCompacto ? ' biblioteca-hub-paineis-stack--compacto' : ''}`}>
+                <BibliotecaHubPainelRecolhivel
+                  modulo="relatorio-servico"
+                  id="rs-form-basicas"
+                  titulo={safeT?.informacoesBasicas || 'Informações Básicas'}
+                  resumo={`${relatorioServicoForm.numero || '—'} · ${relatorioServicoForm.cliente || (safeT?.selecioneCliente || 'Cliente')}`}
+                  icone="📋"
+                  defaultAberto
+                  resetToken={relatorioServicoPainelResetToken}
+                  labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
+                  labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
+                >
+                <div style={{ padding: '4px 0' }}>
                   <div className="relatorio-servico-form-grid-2" style={{ gap: '15px' }}>
                     <div>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.numeroRelatorio || 'Número do Relatório'}</label>
@@ -36444,12 +36505,21 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
+                </BibliotecaHubPainelRecolhivel>
 
-                {/* Dias de Trabalho */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
-                  <h4 style={{ marginBottom: '15px', color: '#00c853' }}>{safeT?.diasTrabalho || 'Dias de Trabalho'}</h4>
-                  
-                  {/* Formulário para adicionar novo dia - Formato da Foto */}
+                <BibliotecaHubPainelRecolhivel
+                  modulo="relatorio-servico"
+                  id="rs-form-dias"
+                  titulo={safeT?.diasTrabalho || 'Dias de Trabalho'}
+                  resumo={`${relatorioServicoForm.diasTrabalho?.length ?? 0} ${(safeT as any)?.relatorioPainelDiasResumo || 'dia(s) registado(s)'}`}
+                  icone="📅"
+                  defaultAberto={!relatorioServicoModoCompacto}
+                  resetToken={relatorioServicoPainelResetToken}
+                  variant="wizard"
+                  labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
+                  labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
+                >
+                <div style={{ padding: '4px 0' }}>
                   <div
                     id="relatorio-servico-dia-trabalho-editor"
                     className="relatorio-servico-dia-trabalho-editor"
@@ -37104,12 +37174,24 @@ export default function Dashboard() {
                   </div>
                   )}
                 </div>
+                </BibliotecaHubPainelRecolhivel>
 
+                <BibliotecaHubPainelRecolhivel
+                  modulo="relatorio-servico"
+                  id="rs-form-textos"
+                  titulo={(safeT as any)?.relatorioPainelTextos || 'Observações e pontos em aberto'}
+                  resumo={(safeT as any)?.relatorioPainelTextosResumo || 'Notas finais do serviço'}
+                  icone="📝"
+                  defaultAberto={false}
+                  resetToken={relatorioServicoPainelResetToken}
+                  labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
+                  labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
+                >
+                <div style={{ padding: '4px 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {/* Observações */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
-                  <h4 style={{ marginBottom: '15px', color: '#00c853' }}>{t?.observacoes || 'Observações'}</h4>
+                <div>
+                  <h4 style={{ marginBottom: '10px', color: '#00c853', fontSize: '14px' }}>{t?.observacoes || 'Observações'}</h4>
                   <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{t?.observacoes || 'Observações'}</label>
                     <AssistTextarea
                       value={relatorioServicoForm.observacoes}
                       onValueChange={(v) => setRelatorioServicoForm({ ...relatorioServicoForm, observacoes: v })}
@@ -37129,10 +37211,9 @@ export default function Dashboard() {
                 </div>
 
                 {/* Pontos em Aberto */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
-                  <h4 style={{ marginBottom: '15px', color: '#00c853' }}>{t?.pontosAberto || 'Pontos em Aberto'}</h4>
+                <div>
+                  <h4 style={{ marginBottom: '10px', color: '#00c853', fontSize: '14px' }}>{t?.pontosAberto || 'Pontos em Aberto'}</h4>
                   <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{t?.pontosAberto || 'Pontos em Aberto'}</label>
                     <AssistTextarea
                       value={relatorioServicoForm.pontosAberto}
                       onValueChange={(v) => setRelatorioServicoForm({ ...relatorioServicoForm, pontosAberto: v })}
@@ -37150,11 +37231,24 @@ export default function Dashboard() {
                     />
                   </div>
                 </div>
+                </div>
+                </BibliotecaHubPainelRecolhivel>
 
+                <BibliotecaHubPainelRecolhivel
+                  modulo="relatorio-servico"
+                  id="rs-form-assinatura"
+                  titulo={safeT?.assinaturaCliente || 'Assinatura do Cliente'}
+                  resumo={relatorioServicoForm.assinaturaCliente ? (safeT as any)?.relatorioPainelAssinaturaOk || 'Assinatura guardada' : (safeT as any)?.relatorioPainelAssinaturaPendente || 'Sem assinatura'}
+                  icone="✍"
+                  defaultAberto={false}
+                  resetToken={relatorioServicoPainelResetToken}
+                  labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
+                  labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
+                >
+                <div style={{ padding: '4px 0' }}>
+                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginBottom: '12px' }}>{safeT?.assinaturaClienteDesc || 'O cliente pode assinar aqui quando utilizar tablet ou telemóvel.'}</p>
                 {/* Assinatura do Cliente - confirmação do serviço */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.3)' }}>
-                    <h4 style={{ marginBottom: '10px', color: '#00c853' }}>{safeT?.assinaturaCliente || 'Assinatura do Cliente'}</h4>
-                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginBottom: '12px' }}>{safeT?.assinaturaClienteDesc || 'O cliente pode assinar aqui quando utilizar tablet ou telemóvel.'}</p>
+                <div style={{ border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', padding: '12px' }}>
                     {relatorioServicoForm.assinaturaCliente && !mostrarCanvasAssinatura ? (
                       <div>
                         <img src={relatorioServicoForm.assinaturaCliente} alt="Assinatura" style={{ maxWidth: '100%', maxHeight: '120px', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '4px', background: '#fff' }} />
@@ -37253,7 +37347,21 @@ export default function Dashboard() {
                       </div>
                     )}
                   </div>
+                </div>
+                </BibliotecaHubPainelRecolhivel>
 
+                <BibliotecaHubPainelRecolhivel
+                  modulo="relatorio-servico"
+                  id="rs-form-pecas"
+                  titulo={(safeT as any)?.relatorioPainelPecas || 'Peças do relatório'}
+                  resumo={`${(relatorioServicoForm.pecasSubstituicao?.length ?? 0) + (relatorioServicoForm.pecasInstaladas?.length ?? 0)} ${(safeT as any)?.relatorioPainelPecasResumo || 'linha(s)'}`}
+                  icone="⚙"
+                  defaultAberto={false}
+                  resetToken={relatorioServicoPainelResetToken}
+                  labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
+                  labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
+                >
+                <div style={{ padding: '4px 0' }}>
                 {/* Peças — necessárias vs instaladas/substituídas */}
                 {(
                   [
@@ -37510,6 +37618,26 @@ export default function Dashboard() {
                   </div>
                 ))}
 
+                </div>
+                </BibliotecaHubPainelRecolhivel>
+
+                <BibliotecaHubPainelRecolhivel
+                  modulo="relatorio-servico"
+                  id="rs-form-resumo"
+                  titulo={safeT?.resumoHorasDeslocamentos || 'Resumo de horas e deslocamentos'}
+                  resumo={
+                    relatorioServicoForm.diasTrabalho?.length
+                      ? `${relatorioServicoForm.diasTrabalho.length} ${(safeT as any)?.relatorioPainelDiasResumo || 'dia(s)'} · ${calcularTotais(relatorioServicoForm.diasTrabalho).horasTrabalho}h`
+                      : (safeT as any)?.relatorioPainelResumoVazio || 'Adicione dias de trabalho'
+                  }
+                  icone="📊"
+                  defaultAberto={!relatorioServicoModoCompacto && (relatorioServicoForm.diasTrabalho?.length ?? 0) > 0}
+                  resetToken={relatorioServicoPainelResetToken}
+                  variant="stats"
+                  labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
+                  labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
+                >
+                <div style={{ padding: '4px 0' }}>
                 {/* Resumo Final - Cálculos Finais - Organizado e Compacto */}
                 {relatorioServicoForm.diasTrabalho && relatorioServicoForm.diasTrabalho.length > 0 ? (
                   (() => {
@@ -37567,10 +37695,29 @@ export default function Dashboard() {
                   </div>
                 )}
 
+                </div>
+                </BibliotecaHubPainelRecolhivel>
+
+                <BibliotecaHubPainelRecolhivel
+                  modulo="relatorio-servico"
+                  id="rs-form-status"
+                  titulo={safeT?.statusServico || 'Status do Serviço'}
+                  resumo={[
+                    relatorioServicoForm.servicoConcluido ? (safeT?.servicoConcluido || 'Concluído') : null,
+                    relatorioServicoForm.retornoNecessario ? (safeT?.retornoNecessario || 'Retorno') : null,
+                    relatorioServicoForm.necessarioTrocaPecas ? (safeT?.necessarioTrocaPecas || 'Peças') : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ') || (safeT as any)?.relatorioPainelStatusResumo || 'Marcar estado do serviço'}
+                  icone="✓"
+                  defaultAberto={false}
+                  resetToken={relatorioServicoPainelResetToken}
+                  labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
+                  labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
+                >
+                <div style={{ padding: '4px 0' }}>
                 {/* Status do Serviço */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#484848', borderRadius: '6px' }}>
-                  <h4 style={{ marginBottom: '15px', color: '#00c853' }}>{safeT?.statusServico || 'Status do Serviço'}</h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                       <input
                         type="checkbox"
@@ -37642,6 +37789,8 @@ export default function Dashboard() {
                       </span>
                     </label>
                   </div>
+                </div>
+                </BibliotecaHubPainelRecolhivel>
                 </div>
                 
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'space-between', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -37745,11 +37894,22 @@ export default function Dashboard() {
             
             {/* Estatísticas Rápidas */}
             {relatoriosServicoListaPrincipal.length > 0 && (
+              <BibliotecaHubPainelRecolhivel
+                modulo="relatorio-servico"
+                id="rs-lista-kpis"
+                titulo={(safeT as any)?.relatorioPainelKpis || 'Resumo dos relatórios'}
+                resumo={`${relatoriosServicoListaPrincipal.length} ${(safeT as any)?.relatoriosAtivosLista || 'em aberto'} · ${relatoriosServicoListaPrincipal.filter(r => r.servicoConcluido).length} ${safeT?.concluidos || 'concluídos'}`}
+                icone="📊"
+                defaultAberto={!relatorioServicoModoCompacto}
+                resetToken={relatorioServicoPainelResetToken}
+                variant="stats"
+                labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
+                labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
+              >
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                 gap: '15px',
-                marginBottom: '20px'
               }}>
                 <div style={{
                   ...glassCardStyle(ACCENT_GREEN, { padding: '12px 15px', radius: '10px', borderAlpha: 0.2 }),
@@ -37818,6 +37978,7 @@ export default function Dashboard() {
                   </p>
                 </div>
               </div>
+              </BibliotecaHubPainelRecolhivel>
             )}
 
             {relatoriosServicoListaPrincipal.length > 0 && (

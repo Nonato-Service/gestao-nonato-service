@@ -2,12 +2,25 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const LS_PREFIX = 'nonato-biblioteca-painel-'
+export type HubPainelModulo = 'biblioteca' | 'relatorio-servico'
 
-export function readBibliotecaPainelAberto(id: string, defaultAberto = false): boolean {
+const LS_PREFIX_BY_MODULO: Record<HubPainelModulo, string> = {
+  biblioteca: 'nonato-biblioteca-painel-',
+  'relatorio-servico': 'nonato-relatorio-servico-painel-',
+}
+
+function lsPrefix(modulo: HubPainelModulo): string {
+  return LS_PREFIX_BY_MODULO[modulo]
+}
+
+export function readBibliotecaPainelAberto(
+  id: string,
+  defaultAberto = false,
+  modulo: HubPainelModulo = 'biblioteca'
+): boolean {
   if (typeof window === 'undefined') return defaultAberto
   try {
-    const v = localStorage.getItem(`${LS_PREFIX}${id}`)
+    const v = localStorage.getItem(`${lsPrefix(modulo)}${id}`)
     if (v === '1') return true
     if (v === '0') return false
   } catch {
@@ -16,17 +29,24 @@ export function readBibliotecaPainelAberto(id: string, defaultAberto = false): b
   return defaultAberto
 }
 
-export function setBibliotecaPainelAbertoPersist(id: string, aberto: boolean): void {
+export function setBibliotecaPainelAbertoPersist(
+  id: string,
+  aberto: boolean,
+  modulo: HubPainelModulo = 'biblioteca'
+): void {
   if (typeof window === 'undefined') return
   try {
-    localStorage.setItem(`${LS_PREFIX}${id}`, aberto ? '1' : '0')
+    localStorage.setItem(`${lsPrefix(modulo)}${id}`, aberto ? '1' : '0')
   } catch {
     /* ignorar */
   }
 }
 
-export function fecharTodosBibliotecaPaineis(ids: string[]): void {
-  for (const id of ids) setBibliotecaPainelAbertoPersist(id, false)
+export function fecharTodosBibliotecaPaineis(
+  ids: string[],
+  modulo: HubPainelModulo = 'biblioteca'
+): void {
+  for (const id of ids) setBibliotecaPainelAbertoPersist(id, false, modulo)
 }
 
 type Props = {
@@ -41,6 +61,7 @@ type Props = {
   className?: string
   labelExpandir?: string
   labelRetrair?: string
+  modulo?: HubPainelModulo
   children: React.ReactNode
 }
 
@@ -55,9 +76,10 @@ export function BibliotecaHubPainelRecolhivel({
   className = '',
   labelExpandir = 'Expandir',
   labelRetrair = 'Retrair',
+  modulo = 'biblioteca',
   children,
 }: Props) {
-  const [aberto, setAberto] = useState(() => readBibliotecaPainelAberto(id, defaultAberto))
+  const [aberto, setAberto] = useState(() => readBibliotecaPainelAberto(id, defaultAberto, modulo))
   const ultimoResetRef = useRef(resetToken)
 
   useEffect(() => {
@@ -67,14 +89,15 @@ export function BibliotecaHubPainelRecolhivel({
   }, [resetToken])
 
   useEffect(() => {
-    setBibliotecaPainelAbertoPersist(id, aberto)
-  }, [id, aberto])
+    setBibliotecaPainelAbertoPersist(id, aberto, modulo)
+  }, [id, aberto, modulo])
 
   const toggle = useCallback(() => {
     setAberto((v) => !v)
   }, [])
 
   const fechado = !aberto
+  const panelDomId = `${modulo}-painel-${id}`
 
   return (
     <section
@@ -92,7 +115,7 @@ export function BibliotecaHubPainelRecolhivel({
         className="biblioteca-hub-painel__cabecalho"
         onClick={toggle}
         aria-expanded={!fechado}
-        aria-controls={`biblioteca-painel-${id}`}
+        aria-controls={panelDomId}
         aria-label={fechado ? `${labelExpandir}: ${titulo}` : `${labelRetrair}: ${titulo}`}
       >
         <span className="biblioteca-hub-painel__chevron" aria-hidden>
@@ -105,7 +128,7 @@ export function BibliotecaHubPainelRecolhivel({
         {fechado && resumo ? <span className="biblioteca-hub-painel__resumo">{resumo}</span> : null}
       </button>
       <div
-        id={`biblioteca-painel-${id}`}
+        id={panelDomId}
         className={`biblioteca-hub-painel__corpo-wrap${fechado ? ' biblioteca-hub-painel__corpo-wrap--fechado' : ''}`}
         aria-hidden={fechado}
       >

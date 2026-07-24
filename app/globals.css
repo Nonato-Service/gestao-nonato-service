@@ -7901,6 +7901,26 @@ a:focus-visible {
   border-radius: clamp(8px, 1.5vw, 16px);
 }
 
+.relatorio-servico-paineis-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.relatorio-servico-root .biblioteca-hub-painel {
+  margin-bottom: 0;
+}
+
+.relatorio-servico-root .biblioteca-hub-painel__corpo .relatorio-servico-form-grid-2,
+.relatorio-servico-root .biblioteca-hub-painel__corpo .relatorio-equipamentos-block {
+  margin-bottom: 0;
+}
+
+.relatorio-servico-hero-actions .relatorio-servico-modo-compacto-btn {
+  flex-shrink: 0;
+}
+
 .relatorio-servico-hero {
   margin-bottom: clamp(16px, 4vw, 40px);
   padding: clamp(12px, 3vw, 30px);
