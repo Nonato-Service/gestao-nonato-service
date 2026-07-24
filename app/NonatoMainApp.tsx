@@ -220,6 +220,10 @@ import { EquipamentosArmazemMenu } from './components/EquipamentosArmazemMenu'
 import { ContextualBackBar } from './components/ContextualBackBar'
 import { BibliotecaPecasGaleriaCategorias } from './components/BibliotecaPecasGaleriaCategorias'
 import {
+  BibliotecaHubPainelRecolhivel,
+  fecharTodosBibliotecaPaineis,
+} from './components/BibliotecaHubPainelRecolhivel'
+import {
   BibliotecaPrecoOlhoToggle,
   formatPrecoBibliotecaExibicao,
   gravarMostrarPrecosBiblioteca,
@@ -7633,6 +7637,34 @@ export default function Dashboard() {
   /** Biblioteca: filtra peças cujo código contém o texto (sem distinção maiúsculas/minúsculas). */
   const [buscaCodigoBiblioteca, setBuscaCodigoBiblioteca] = useState<string>('')
   const [abaBibliotecaPecas, setAbaBibliotecaPecas] = useState<'cadastro' | 'biblioteca' | 'biblioteca-gestao' | 'grupos' | 'importacao'>('cadastro')
+  const BIBLIOTECA_PAINEL_IDS = [
+    'intro-hero',
+    'stats-visao',
+    'fotos-sync',
+    'filtros-toolbar',
+    'wizard-classificacao',
+  ] as const
+  const [bibliotecaModoCompacto, setBibliotecaModoCompacto] = useState(() => {
+    if (typeof window === 'undefined') return true
+    try {
+      const v = localStorage.getItem('nonato-biblioteca-modo-compacto')
+      return v !== '0'
+    } catch {
+      return true
+    }
+  })
+  const toggleBibliotecaModoCompacto = useCallback(() => {
+    setBibliotecaModoCompacto((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem('nonato-biblioteca-modo-compacto', next ? '1' : '0')
+      } catch {
+        /* ignorar */
+      }
+      if (next) fecharTodosBibliotecaPaineis([...BIBLIOTECA_PAINEL_IDS])
+      return next
+    })
+  }, [])
   const [bibliotecaGaleriaCategoriaId, setBibliotecaGaleriaCategoriaId] = useState<string | null>(null)
   /** Se a peça foi aberta a partir da fila de importação, após Salvar regressa à aba Importação (não à Biblioteca). */
   const [salvarPecaBibliotecaVoltaParaImportacao, setSalvarPecaBibliotecaVoltaParaImportacao] = useState(false)
@@ -40193,10 +40225,23 @@ export default function Dashboard() {
                   <p style={{ fontSize: '11px', opacity: 0.88, maxWidth: 640, lineHeight: 1.45, margin: '8px 0 0', fontWeight: 600 }}>
                     {hubT.bibliotecaHubTagline || 'Catálogo unificado e grupos claros.'}
                   </p>
-                  <p style={{ fontSize: '11px', opacity: 0.78, maxWidth: 680, lineHeight: 1.55, margin: '6px 0 0' }}>
-                    {hubT.bibliotecaHubIntroBody ||
-                      'Organize por categorias e subcategorias; use as abas para cadastrar, consultar, editar, gerir grupos ou importar. Passe o rato sobre as miniaturas na biblioteca para ver a imagem ampliada.'}
-                  </p>
+                  <BibliotecaHubPainelRecolhivel
+                    id="intro-hero"
+                    titulo={(safeT as any)?.bibliotecaPainelIntro || 'Guia rápido da biblioteca'}
+                    resumo={(safeT as any)?.bibliotecaPainelIntroResumo || 'Como usar cadastro, consulta e importação'}
+                    icone="📖"
+                    defaultAberto={false}
+                    forcarFechado={bibliotecaModoCompacto}
+                    variant="default"
+                    className="biblioteca-hub-painel--hero-intro"
+                    labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
+                    labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
+                  >
+                    <p style={{ fontSize: '11px', opacity: 0.78, maxWidth: 680, lineHeight: 1.55, margin: 0 }}>
+                      {hubT.bibliotecaHubIntroBody ||
+                        'Organize por categorias e subcategorias; use as abas para cadastrar, consultar, editar, gerir grupos ou importar. Passe o rato sobre as miniaturas na biblioteca para ver a imagem ampliada.'}
+                    </p>
+                  </BibliotecaHubPainelRecolhivel>
                 </div>
                 <div className="tab-glass-hero-actions">
                   <div className="biblioteca-pecas-hub__hero-actions">
@@ -40269,7 +40314,18 @@ export default function Dashboard() {
             </div>
             </div>
 
-            {/* Painel de Estatísticas — visão geral */}
+            {/* Painel de Estatísticas — visão geral (recolhível) */}
+            <BibliotecaHubPainelRecolhivel
+              id="stats-visao"
+              titulo={(safeT as any)?.bibliotecaPainelVisaoGeral || hubT.bibliotecaVisaoGeral || 'Visão geral e sync'}
+              resumo={`${pecasBiblioteca.length} peças · ${categoriasPecas.length} cat. · ${pecasBibliotecaImagemStats.faltam > 0 ? `${pecasBibliotecaImagemStats.faltam} s/ foto` : 'fotos OK'}`}
+              icone="📊"
+              defaultAberto={false}
+              forcarFechado={bibliotecaModoCompacto}
+              variant="stats"
+              labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
+              labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
+            >
             <div className="biblioteca-pecas-hub__stats-panel">
               <p className="biblioteca-pecas-hub__eyebrow">
                 {hubT.bibliotecaVisaoGeral || 'Visão geral'}
@@ -40560,6 +40616,7 @@ export default function Dashboard() {
               </div>
             </div>
             </div>
+            </BibliotecaHubPainelRecolhivel>
 
             {/* Abas + atalho loja (navegação) */}
             <div className="biblioteca-hub-nav">
@@ -40623,6 +40680,23 @@ export default function Dashboard() {
               </button>
             </div>
             <div className="biblioteca-hub-nav__aux">
+              <button
+                type="button"
+                className={`biblioteca-hub-nav__compacto${bibliotecaModoCompacto ? ' biblioteca-hub-nav__compacto--ativo' : ''}`}
+                onClick={toggleBibliotecaModoCompacto}
+                title={
+                  bibliotecaModoCompacto
+                    ? (safeT as any)?.bibliotecaModoCompactoHint ||
+                      'Recolhe painéis grandes; clique num painel para expandir'
+                    : (safeT as any)?.bibliotecaModoExpandidoHint ||
+                      'Mostra painéis expandidos por defeito'
+                }
+                aria-pressed={bibliotecaModoCompacto}
+              >
+                {bibliotecaModoCompacto
+                  ? (safeT as any)?.bibliotecaModoExpandido || 'Modo expandido'
+                  : (safeT as any)?.bibliotecaModoCompacto || 'Modo compacto'}
+              </button>
               <a
                 href={HOMAG_SHOP_PECAS_URL}
                 target="_blank"
@@ -41725,9 +41799,20 @@ export default function Dashboard() {
                       'Vista só por categoria (consulta). Para alterar nomes, preços, classificar em lote ou excluir, abra «Editar biblioteca».'}
                   </p>
                 )}
+                <BibliotecaHubPainelRecolhivel
+                  id="fotos-sync"
+                  titulo={(safeT as any)?.bibliotecaPainelFotosSync || 'Fotos e sincronização'}
+                  resumo={`${pecasBibliotecaImagemStats.comFotoReal.toLocaleString('pt-PT')}/${pecasBibliotecaImagemStats.total.toLocaleString('pt-PT')} · ${pecasBibliotecaImagemStats.faltam > 0 ? `${pecasBibliotecaImagemStats.faltam.toLocaleString('pt-PT')} s/ foto` : 'fotos OK'}`}
+                  icone="📷"
+                  defaultAberto={false}
+                  forcarFechado={bibliotecaModoCompacto}
+                  variant="default"
+                  labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
+                  labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
+                >
                 <div
+                  className="biblioteca-hub-painel__fotos-sync"
                   style={{
-                    margin: '0 0 16px',
                     padding: '12px 14px',
                     borderRadius: 10,
                     border:
@@ -41777,6 +41862,7 @@ export default function Dashboard() {
                     </button>
                   </div>
                 </div>
+                </BibliotecaHubPainelRecolhivel>
                 {somenteLeituraBiblioteca ? (
                   <BibliotecaPecasGaleriaCategorias
                     categorias={categoriasPecasAlfabeto}
@@ -41840,8 +41926,29 @@ export default function Dashboard() {
                   />
                 ) : (
                 <>
+                <BibliotecaHubPainelRecolhivel
+                  id="filtros-toolbar"
+                  titulo={(safeT as any)?.bibliotecaPainelFiltros || hubT.bibliotecaCatalogoToolbarTitulo || 'Filtros e visualização'}
+                  resumo={[
+                    buscaCodigoBiblioteca.trim() ? `"${buscaCodigoBiblioteca.trim().slice(0, 24)}${buscaCodigoBiblioteca.trim().length > 24 ? '…' : ''}"` : null,
+                    filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA
+                      ? (safeT as any)?.bibliotecaFiltroApenasSemCategoria || 'Sem categoria'
+                      : filtroGrupoBiblioteca
+                        ? categoriasPecasAlfabeto.find((c) => c.id === filtroGrupoBiblioteca)?.nome || 'Grupo'
+                        : null,
+                    visualizacaoBiblioteca === 'lista' ? (safeT?.visualizacaoLista || 'Lista') : (safeT?.visualizacaoGrid || 'Grade'),
+                  ]
+                    .filter(Boolean)
+                    .join(' · ') || (safeT as any)?.bibliotecaPainelFiltrosResumo || 'Busca, filtros e vista do catálogo'}
+                  icone="⚙"
+                  defaultAberto={false}
+                  forcarFechado={bibliotecaModoCompacto}
+                  variant="toolbar"
+                  labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
+                  labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
+                >
                 {/* Controles de visualização — painel único */}
-                <div className="biblioteca-hub-toolbar">
+                <div className="biblioteca-hub-toolbar biblioteca-hub-toolbar--em-painel">
                   <div className="biblioteca-hub-toolbar__title">
                     {hubT.bibliotecaCatalogoToolbarTitulo || 'Catálogo — filtros, visualização e grupos'}
                   </div>
@@ -42074,11 +42181,27 @@ export default function Dashboard() {
                   </div>
                 </div>
                 </div>
+                </BibliotecaHubPainelRecolhivel>
 
                 {!somenteLeituraBiblioteca ? (
+                  <BibliotecaHubPainelRecolhivel
+                    id="wizard-classificacao"
+                    titulo={(safeT as any)?.bibliotecaPainelWizard || (safeT as any)?.bibliotecaWizardClassificacaoTitulo || 'Classificação em lote'}
+                    resumo={
+                      selecaoPecasBibliotecaIds.length > 0
+                        ? `${selecaoPecasBibliotecaIds.length} ${(safeT as any)?.bibliotecaPainelWizardResumoSelecionadas || 'selecionada(s)'} · 3 ${(safeT as any)?.bibliotecaPainelWizardPassos || 'passos'}`
+                        : (safeT as any)?.bibliotecaPainelWizardResumo || '3 passos — marcar peças e aplicar categoria'
+                    }
+                    icone="🧩"
+                    defaultAberto={false}
+                    forcarFechado={bibliotecaModoCompacto}
+                    variant="wizard"
+                    labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
+                    labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
+                  >
                   <div
                     ref={classificacaoLotePanelRef}
-                    className="biblioteca-wizard-classificacao"
+                    className="biblioteca-wizard-classificacao biblioteca-wizard-classificacao--em-painel"
                     role="region"
                     aria-label={(safeT as any)?.bibliotecaWizardClassificacaoTitulo || 'Classificar várias peças'}
                   >
@@ -42272,6 +42395,7 @@ export default function Dashboard() {
                       </li>
                     </ol>
                   </div>
+                  </BibliotecaHubPainelRecolhivel>
                 ) : null}
 
                 {/* Visualização das peças */}

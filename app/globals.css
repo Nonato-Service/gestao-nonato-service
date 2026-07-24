@@ -24802,7 +24802,195 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   flex: 0 1 auto;
   display: flex;
   align-items: center;
+  gap: 10px;
   padding: 4px 0;
+}
+
+.biblioteca-hub-nav__compacto {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(160, 120, 255, 0.38);
+  background: linear-gradient(180deg, rgba(80, 40, 140, 0.22) 0%, rgba(0, 0, 0, 0.28) 100%);
+  color: rgba(230, 210, 255, 0.95);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease;
+}
+
+.biblioteca-hub-nav__compacto:hover {
+  border-color: rgba(190, 160, 255, 0.55);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(100, 60, 180, 0.25);
+}
+
+.biblioteca-hub-nav__compacto--ativo {
+  border-color: rgba(0, 255, 140, 0.45);
+  background: linear-gradient(180deg, rgba(0, 90, 50, 0.35) 0%, rgba(0, 0, 0, 0.28) 100%);
+  color: rgba(190, 255, 210, 0.98);
+}
+
+.biblioteca-hub-nav__compacto--ativo:hover {
+  border-color: rgba(120, 255, 180, 0.55);
+  box-shadow: 0 4px 18px rgba(0, 180, 90, 0.2);
+}
+
+/* Painéis recolhíveis do hub da biblioteca */
+.biblioteca-hub-painel {
+  margin-bottom: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 200, 120, 0.18);
+  background: linear-gradient(108deg, rgba(0, 32, 20, 0.42), rgba(6, 10, 9, 0.88));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 8px 28px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.biblioteca-hub-painel--fechado {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(108deg, rgba(0, 24, 16, 0.28), rgba(4, 8, 7, 0.72));
+}
+
+.biblioteca-hub-painel--aberto {
+  border-color: rgba(0, 210, 120, 0.28);
+}
+
+.biblioteca-hub-painel__cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 10px 14px;
+  width: 100%;
+  padding: 11px 16px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.15s ease;
+}
+
+.biblioteca-hub-painel__cabecalho:hover {
+  background: rgba(0, 255, 140, 0.06);
+}
+
+.biblioteca-hub-painel--fechado .biblioteca-hub-painel__cabecalho:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.biblioteca-hub-painel__icone {
+  flex: 0 0 auto;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.92;
+}
+
+.biblioteca-hub-painel__titulo {
+  flex: 0 1 auto;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+}
+
+.biblioteca-hub-painel__resumo {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(180, 220, 195, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.biblioteca-hub-painel__toggle {
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 200, 120, 0.35);
+  background: rgba(0, 60, 36, 0.45);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(170, 255, 200, 0.95);
+}
+
+.biblioteca-hub-painel--fechado .biblioteca-hub-painel__toggle {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(220, 220, 220, 0.88);
+}
+
+.biblioteca-hub-painel__corpo {
+  padding: 0 16px 16px;
+  border-top: 1px solid rgba(0, 200, 120, 0.12);
+}
+
+.biblioteca-hub-painel--stats .biblioteca-hub-painel__corpo {
+  padding-top: 4px;
+}
+
+.biblioteca-hub-painel--hero-intro {
+  margin-top: 10px;
+}
+
+.biblioteca-hub-painel--hero-intro.biblioteca-hub-painel--fechado {
+  margin-bottom: 8px;
+}
+
+.biblioteca-hub-toolbar--em-painel {
+  margin-bottom: 0;
+  padding: 14px 0 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.biblioteca-wizard-classificacao--em-painel {
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.biblioteca-hub-painel--wizard.biblioteca-hub-painel--fechado {
+  border-color: rgba(160, 120, 255, 0.2);
+}
+
+.biblioteca-hub-painel--wizard.biblioteca-hub-painel--aberto {
+  border-color: rgba(160, 120, 255, 0.32);
+}
+
+.biblioteca-hub-painel--toolbar.biblioteca-hub-painel--aberto .biblioteca-hub-painel__corpo {
+  padding-bottom: 4px;
+}
+
+@media (max-width: 640px) {
+  .biblioteca-hub-painel__cabecalho {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+
+  .biblioteca-hub-painel__resumo {
+    flex: 1 1 100%;
+    order: 3;
+    padding-left: 26px;
+  }
+
+  .biblioteca-hub-painel__toggle {
+    order: 2;
+  }
 }
 
 .biblioteca-hub-tab--external {
