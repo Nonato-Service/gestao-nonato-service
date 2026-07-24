@@ -25187,6 +25187,97 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
     0 18px 48px rgba(0, 72, 42, 0.42);
 }
 
+.biblioteca-btn--selecao-lote {
+  min-height: 44px;
+  padding: 10px 16px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+}
+
+.biblioteca-gestao-classificacao-intro {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 168, 107, 0.22);
+  background: rgba(0, 40, 24, 0.35);
+  color: rgba(210, 248, 226, 0.92);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.biblioteca-selecao-lote-banner {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 130, 0.45);
+  background: linear-gradient(135deg, rgba(0, 72, 42, 0.55), rgba(8, 18, 14, 0.95));
+  box-shadow: 0 8px 24px rgba(0, 48, 28, 0.35);
+}
+
+.biblioteca-selecao-lote-banner__title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #b8ffd0;
+  margin-bottom: 6px;
+}
+
+.biblioteca-selecao-lote-banner__text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(220, 245, 228, 0.92);
+}
+
+.biblioteca-selecao-lote-banner__count {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #7dffb0;
+}
+
+.biblioteca-selecao-lote-float {
+  position: sticky;
+  bottom: 12px;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 255, 130, 0.5);
+  background: rgba(8, 18, 14, 0.96);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(0, 255, 120, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.biblioteca-selecao-lote-float__count {
+  flex: 1 1 100%;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #7dffb0;
+}
+
+.biblioteca-selecao-lote-float .biblioteca-btn--green,
+.biblioteca-selecao-lote-float .biblioteca-btn--ghost,
+.biblioteca-selecao-lote-float .biblioteca-btn--orange {
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.biblioteca-classificacao-lote-panel {
+  scroll-margin-top: 88px;
+}
+
 .biblioteca-pecas-hub__piece-check {
   position: absolute;
   top: 8px;
