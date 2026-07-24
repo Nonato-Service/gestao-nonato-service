@@ -4,6 +4,8 @@
 
 export type ProtocoloIntelFiltroChip = 'todos' | 'ultimos7d' | 'com_fotos' | 'com_pecas' | 'incompletos'
 
+export type ProtocoloEstadoAcao = 'bom' | 'reparar' | 'substituir' | 'nd'
+
 export type ProtocoloBlocoMin = {
   id?: string
   tipo?: string
@@ -11,6 +13,8 @@ export type ProtocoloBlocoMin = {
   texto?: string
   imagens?: string[]
   ordemConteudo?: string
+  /** Apenas `acao`: estado técnico (Bom / Reparar / Substituir / N/D). */
+  estadoAcao?: ProtocoloEstadoAcao
 }
 
 export type ProtocoloFormMin = {

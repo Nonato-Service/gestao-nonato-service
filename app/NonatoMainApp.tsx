@@ -3858,6 +3858,8 @@ type ProtocoloBloco = {
   imagens?: string[] // máx. 2, uma ao lado da outra (bloco imagens ou acção)
   /** Apenas `acao`: ordem entre quadro de imagens e balão de texto. */
   ordemConteudo?: 'texto_primeiro' | 'imagens_primeiro'
+  /** Apenas `acao`: estado técnico visível no PDF (Bom / Reparar / Substituir / N/D). */
+  estadoAcao?: 'bom' | 'reparar' | 'substituir' | 'nd'
 }
 
 function newProtocoloBlocoId(): string {
@@ -3879,6 +3881,10 @@ function ensureProtocoloBlocosIds(blocos: ProtocoloBloco[]): ProtocoloBloco[] {
           : tipo === 'acao'
             ? 'texto_primeiro'
             : undefined,
+      estadoAcao:
+        tipo === 'acao' && (b.estadoAcao === 'bom' || b.estadoAcao === 'reparar' || b.estadoAcao === 'substituir' || b.estadoAcao === 'nd')
+          ? b.estadoAcao
+          : undefined,
     }
     return base.id ? base : { ...base, id: newProtocoloBlocoId() }
   })
@@ -33673,6 +33679,7 @@ export default function Dashboard() {
               tipoEquipamento: protoT?.tipoEquipamento,
               modelo: protoT?.modelo,
               marca: protoT?.marca,
+              observacao: 'Observação',
             },
             dateLocale: documentPdfDateLocale(selectedLanguage),
             modeloOverride,
@@ -34877,6 +34884,54 @@ export default function Dashboard() {
                               <option value="texto_primeiro">{protoT?.protocolosServicoOrdemTextoPrimeiro || 'Texto (balão) primeiro'}</option>
                               <option value="imagens_primeiro">{protoT?.protocolosServicoOrdemImagensPrimeiro || 'Imagens (quadro) primeiro'}</option>
                             </select>
+                          </div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+                            <span style={{ display: 'block', color: '#94a3b8', fontSize: '11px', fontWeight: 600, margin: 0 }}>
+                              Estado no PDF
+                            </span>
+                            {(
+                              [
+                                { id: 'bom' as const, label: 'Bom', bg: 'rgba(34,197,94,0.22)', border: 'rgba(74,222,128,0.55)', color: '#86efac' },
+                                { id: 'reparar' as const, label: 'Reparar', bg: 'rgba(234,88,12,0.2)', border: 'rgba(251,146,60,0.55)', color: '#fdba74' },
+                                { id: 'substituir' as const, label: 'Substituir', bg: 'rgba(220,38,38,0.2)', border: 'rgba(248,113,113,0.55)', color: '#fca5a5' },
+                                { id: 'nd' as const, label: 'N/D', bg: 'rgba(100,116,139,0.22)', border: 'rgba(148,163,184,0.55)', color: '#cbd5e1' },
+                              ] as const
+                            ).map((est) => {
+                              const active = bloco.estadoAcao === est.id
+                              return (
+                                <button
+                                  key={est.id}
+                                  type="button"
+                                  onClick={() =>
+                                    setProtocoloServicoForm((prev) => ({
+                                      ...prev,
+                                      blocos: prev.blocos.map((b, i) =>
+                                        bloco.id
+                                          ? b.id === bloco.id
+                                            ? { ...b, estadoAcao: active ? undefined : est.id }
+                                            : b
+                                          : i === idx
+                                            ? { ...b, estadoAcao: active ? undefined : est.id }
+                                            : b
+                                      ),
+                                    }))
+                                  }
+                                  style={{
+                                    padding: '7px 12px',
+                                    borderRadius: 999,
+                                    border: `1px solid ${active ? est.border : 'rgba(148,163,184,0.35)'}`,
+                                    background: active ? est.bg : 'rgba(15,23,42,0.35)',
+                                    color: active ? est.color : '#94a3b8',
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    letterSpacing: '0.04em',
+                                  }}
+                                >
+                                  {est.label}
+                                </button>
+                              )
+                            })}
                           </div>
                           {bloco.ordemConteudo === 'imagens_primeiro' ? (
                             <>

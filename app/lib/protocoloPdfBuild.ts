@@ -4,10 +4,14 @@ import {
   clampProtocoloPdfModelo,
   getProtocoloPdfDynamicStyles,
 } from '../utils/protocoloServicoPdfThemes'
-import type { ProtocoloBlocoMin } from './protocoloInteligente'
+import type { ProtocoloBlocoMin, ProtocoloEstadoAcao } from './protocoloInteligente'
 
 function escHtml(s: string): string {
   return (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\n/g, '<br/>')
+}
+
+function escAttr(s: string): string {
+  return (s || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 }
 
 type EqCliente = {
@@ -31,6 +35,81 @@ function idEquipamentoVisivel(eq: EqCliente | undefined, equipamentosArmazem: Ar
   }
   const id = String(eq.id || '').trim()
   return id || ''
+}
+
+const ESTADOS_ACAO: Array<{ id: ProtocoloEstadoAcao; label: string }> = [
+  { id: 'bom', label: 'Bom' },
+  { id: 'reparar', label: 'Reparar' },
+  { id: 'substituir', label: 'Substituir' },
+  { id: 'nd', label: 'N/D' },
+]
+
+function normalizarEstadoAcao(v: unknown): ProtocoloEstadoAcao | undefined {
+  return v === 'bom' || v === 'reparar' || v === 'substituir' || v === 'nd' ? v : undefined
+}
+
+function estadoGridHtml(estado: ProtocoloEstadoAcao | undefined, esc: (s: string) => string): string {
+  return `<div class="proto-estado-grid" role="group" aria-label="Estado">${ESTADOS_ACAO.map((e) => {
+    const active = estado === e.id
+    const mark = active ? '✓' : ''
+    return `<span class="proto-estado proto-estado--${e.id}${active ? ' proto-estado--active' : ''}"><span class="proto-estado__mark" aria-hidden="true">${mark}</span>${esc(e.label)}</span>`
+  }).join('')}</div>`
+}
+
+function imagensGaleriaHtml(imgs: string[], soloClass = false): string {
+  const list = (imgs || []).slice(0, 2).filter(Boolean)
+  if (!list.length) return ''
+  const solo = soloClass || list.length === 1
+  const cells = list
+    .map((src) => `<figure class="proto-img-gallery__cell"><img src="${escAttr(src)}" alt="" /></figure>`)
+    .join('')
+  return `<div class="proto-img-gallery${solo ? ' proto-img-gallery--solo' : ''}">${cells}</div>`
+}
+
+function imagensAcaoMediaHtml(imgs: string[]): string {
+  const list = (imgs || []).slice(0, 2).filter(Boolean)
+  if (!list.length) return ''
+  const solo = list.length === 1
+  const cells = list
+    .map((src) => `<figure class="proto-acao-card__media-cell"><img src="${escAttr(src)}" alt="" /></figure>`)
+    .join('')
+  return `<div class="proto-acao-card__media-grid${solo ? ' proto-acao-card__media-grid--solo' : ''}">${cells}</div>`
+}
+
+function acaoCardHtml(
+  b: ProtocoloBlocoMin,
+  esc: (s: string) => string,
+  acaoNum: number,
+  labels: { observacao?: string }
+): string {
+  const imgs = b.imagens || []
+  const txt = (b.texto || '').trim()
+  const titulo = (b.titulo || '').trim()
+  const estado = normalizarEstadoAcao(b.estadoAcao)
+  const ordem = b.ordemConteudo === 'imagens_primeiro' ? 'imagens_primeiro' : 'texto_primeiro'
+  const temTexto = Boolean(txt)
+  const temImgs = imgs.length > 0
+  if (!titulo && !temTexto && !temImgs) return ''
+
+  const tituloHtml = titulo
+    ? `<h4 class="proto-acao-card__titulo"><span class="proto-acao-card__num">A${acaoNum}</span>${esc(titulo)}</h4>`
+    : `<h4 class="proto-acao-card__titulo"><span class="proto-acao-card__num">A${acaoNum}</span>${esc('Intervenção')}</h4>`
+
+  const textoHtml = temTexto
+    ? `<div class="proto-acao-card__texto"><p class="proto-acao-card__texto-label">${esc(labels.observacao || 'Observação')}</p>${esc(txt)}</div>`
+    : ''
+
+  const mediaHtml = temImgs ? `<div class="proto-acao-card__media">${imagensAcaoMediaHtml(imgs)}</div>` : ''
+
+  const bodyClasses = [
+    'proto-acao-card__body',
+    !temTexto || !temImgs ? 'proto-acao-card__body--solo' : '',
+    ordem === 'imagens_primeiro' && temTexto && temImgs ? 'proto-acao-card__body--imgs-first' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  return `<article class="proto-acao-card">${`<header class="proto-acao-card__head">${tituloHtml}${estadoGridHtml(estado, esc)}</header>`}<div class="${bodyClasses}">${textoHtml}${mediaHtml}</div></article>`
 }
 
 export type ProtocoloPdfBuildInput = {
@@ -61,6 +140,7 @@ export type ProtocoloPdfBuildInput = {
     tipoEquipamento?: string
     modelo?: string
     marca?: string
+    observacao?: string
   }
   dateLocale: string
   modeloOverride?: number
@@ -76,44 +156,22 @@ export function buildProtocoloServicoPdfHtmlFromProtocolo(input: ProtocoloPdfBui
   const bts = PROTOCOLO_PDF_BLOCO_STYLES[idx] || PROTOCOLO_PDF_BLOCO_STYLES[0]
   const dyn = getProtocoloPdfDynamicStyles(idx)
 
-  const tituloBlocoHtml = (t?: string) =>
-    (t || '').trim() ? `<div style="${dyn.tituloBloco}">${esc((t || '').trim())}</div>` : ''
-
-  const imgsFlexHtml = (imgs: string[]) => {
-    if (!imgs.length) return ''
-    let h = `<div style="display:flex;gap:14px;margin:0;flex-wrap:wrap;justify-content:center;align-items:center;width:100%;box-sizing:border-box;">`
-    imgs.slice(0, 2).forEach((src) => {
-      h += `<img src="${(src || '').replace(/"/g, '&quot;')}" alt="" style="${dyn.imgStyle}" />`
-    })
-    h += '</div>'
-    return h
-  }
-
-  const quadroImagensHtml = (imgs: string[]) => {
-    const inner = imgsFlexHtml(imgs)
-    if (!inner) return ''
-    return `<div style="${dyn.quadroImagens}">${inner}</div>`
-  }
-
-  const balaoTextoHtml = (txt: string) => (txt.trim() ? `<div style="${dyn.balaoTexto}">${esc(txt)}</div>` : '')
+  const tituloSecaoHtml = (t?: string) =>
+    (t || '').trim() ? `<h3 class="proto-sec-titulo">${esc((t || '').trim())}</h3>` : ''
 
   let blocosHtml = ''
+  let acaoNum = 0
   ;(p.blocos || []).forEach((b) => {
     if (b.tipo === 'texto' && b.texto?.trim()) {
-      blocosHtml += `<div style="${bts}">${tituloBlocoHtml(b.titulo)}${esc(b.texto)}</div>`
+      blocosHtml += `<div class="proto-bloco-texto" style="${bts}">${tituloSecaoHtml(b.titulo)}${esc(b.texto)}</div>`
     }
     if (b.tipo === 'imagens' && b.imagens?.length) {
-      blocosHtml += `<div style="margin:14px 0;">${tituloBlocoHtml(b.titulo)}${quadroImagensHtml(b.imagens)}</div>`
+      const gallery = imagensGaleriaHtml(b.imagens)
+      blocosHtml += `<section class="proto-img-sec">${tituloSecaoHtml(b.titulo)}${gallery}</section>`
     }
     if (b.tipo === 'acao') {
-      const imgs = b.imagens || []
-      const txt = b.texto || ''
-      const ordem = b.ordemConteudo === 'imagens_primeiro' ? 'imagens_primeiro' : 'texto_primeiro'
-      const q = quadroImagensHtml(imgs)
-      const bal = balaoTextoHtml(txt)
-      if (!b.titulo?.trim() && !q && !bal) return
-      const corpo = ordem === 'imagens_primeiro' ? `${q}${bal}` : `${bal}${q}`
-      blocosHtml += `<div style="margin:16px 0;padding:4px 0;">${tituloBlocoHtml(b.titulo)}${corpo}</div>`
+      acaoNum += 1
+      blocosHtml += acaoCardHtml(b, esc, acaoNum, { observacao: L.observacao })
     }
   })
 
