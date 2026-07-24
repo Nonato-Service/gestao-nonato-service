@@ -25439,6 +25439,47 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   max-width: 420px;
 }
 
+.biblioteca-wizard-classificacao__gerir-categorias {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.14);
+}
+
+.biblioteca-wizard-classificacao__gerir-categorias p {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(210, 235, 218, 0.88);
+}
+
+.biblioteca-wizard-classificacao__btn-gerir {
+  min-height: 44px;
+  padding: 10px 16px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+.biblioteca-pecas-hub__grupos-legenda {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(180, 220, 195, 0.92);
+}
+
+.biblioteca-pecas-hub__grupos-header-acoes {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.biblioteca-pecas-hub__grupo-acoes .btn-primary,
+.biblioteca-pecas-hub__grupo-acoes .btn-danger {
+  min-height: 40px;
+}
+
 .biblioteca-classificacao-avancada {
   margin: 0 0 16px;
   padding: 0 12px 12px;

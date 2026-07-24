@@ -27889,6 +27889,21 @@ export default function Dashboard() {
     return () => window.clearTimeout(timer)
   }, [modoSelecaoPecasBiblioteca])
 
+  useEffect(() => {
+    if (abaBibliotecaPecas !== 'grupos' || categoriasPecas.length === 0) return
+    setGerenciarCategoriasGrupoAberto((prev) => {
+      const next = { ...prev }
+      let changed = false
+      for (const c of categoriasPecas) {
+        if (next[c.id] !== true) {
+          next[c.id] = true
+          changed = true
+        }
+      }
+      return changed ? next : prev
+    })
+  }, [abaBibliotecaPecas, categoriasPecas])
+
   const handleAplicarClassificacaoLote = useCallback((ids: string[]) => {
     if (ids.length === 0) {
       alert('Selecione pelo menos uma peça.')
@@ -40482,10 +40497,7 @@ export default function Dashboard() {
                 role="tab"
                 className={bibliotecaHubTabClass(abaBibliotecaPecas === 'biblioteca-gestao')}
                 aria-selected={abaBibliotecaPecas === 'biblioteca-gestao'}
-                onClick={() => {
-                  setAbaBibliotecaPecas('biblioteca-gestao')
-                  setClassificacaoLoteExpanded(true)
-                }}
+                onClick={() => setAbaBibliotecaPecas('biblioteca-gestao')}
               >
                 ✏️ {(safeT as any)?.bibliotecaGestaoEditarTitulo || 'Editar biblioteca'}
               </button>
@@ -40496,7 +40508,7 @@ export default function Dashboard() {
                 aria-selected={abaBibliotecaPecas === 'grupos'}
                 onClick={() => setAbaBibliotecaPecas('grupos')}
               >
-                {safeT?.gerenciarCategorias || 'Gerenciar Categorias'}
+                📁 {(safeT as any)?.bibliotecaAbaGerirCategorias || 'Categorias e subcategorias'}
               </button>
               <button
                 type="button"
@@ -42031,6 +42043,21 @@ export default function Dashboard() {
                               </select>
                             </label>
                           </div>
+                          <div className="biblioteca-wizard-classificacao__gerir-categorias">
+                            <p>
+                              {(safeT as any)?.bibliotecaWizardGerirCategoriasHint ||
+                                'Precisa criar, renomear ou apagar categorias? Use o ecrã dedicado — cada grupo e subgrupo tem botões Editar e Excluir.'}
+                            </p>
+                            <button
+                              type="button"
+                              className="biblioteca-btn--purple biblioteca-wizard-classificacao__btn-gerir"
+                              onClick={() => setAbaBibliotecaPecas('grupos')}
+                            >
+                              📁{' '}
+                              {(safeT as any)?.bibliotecaAbrirGerirCategorias ||
+                                'Abrir gestão de categorias (editar / excluir)'}
+                            </button>
+                          </div>
                         </div>
                       </li>
 
@@ -42916,9 +42943,14 @@ export default function Dashboard() {
                     </p>
                     <p className="biblioteca-pecas-hub__grupos-desc">
                       {(safeT as any).gerenciarCategoriasSubtitulo ||
-                        'Cada grupo tem Editar e Excluir; dentro dele, cada subcategoria também. Ao renomear, as peças e regras automáticas passam a mostrar o novo nome.'}
+                        'Cada categoria tem: + Nova subcategoria · Editar · Excluir. Cada subcategoria também tem Editar e Excluir. Ao renomear, as peças passam a mostrar o novo nome.'}
                     </p>
+                    <ul className="biblioteca-pecas-hub__grupos-legenda">
+                      <li>{(safeT as any)?.gerenciarCategoriasLegendaEditar || 'Editar — muda o nome'}</li>
+                      <li>{(safeT as any)?.gerenciarCategoriasLegendaExcluir || 'Excluir — remove (peças ficam sem essa categoria)'}</li>
+                    </ul>
                   </div>
+                  <div className="biblioteca-pecas-hub__grupos-header-acoes">
                   <button
                     className="btn-primary"
                     onClick={() => {
@@ -42930,6 +42962,7 @@ export default function Dashboard() {
                   >
                     + {safeT?.novaCategoria || 'Nova Categoria'}
                   </button>
+                  </div>
                 </div>
 
                 {/* Área rolável da lista de categorias */}
@@ -42949,7 +42982,7 @@ export default function Dashboard() {
                         const editandoSubNestaCategoria =
                           editingSubcategoria != null && subcategoriasDoGrupo.some((s) => s.id === editingSubcategoria.id)
                         const subcategoriasVisiveis =
-                          editandoSubNestaCategoria || gerenciarCategoriasGrupoAberto[categoria.id] === true
+                          editandoSubNestaCategoria || gerenciarCategoriasGrupoAberto[categoria.id] !== false
                         /* Zebra nas linhas da tabela; cartão exterior usa classes do hub. */
                         const rowLine = '#555555'
                         const excelHeaderBg = '#2f2f2f'
@@ -43078,10 +43111,11 @@ export default function Dashboard() {
                                   >
                                     {editingCategoria?.id !== categoria.id && (
                                       <div
+                                        className="biblioteca-pecas-hub__grupo-acoes"
                                         style={{
                                           display: 'flex',
                                           flexDirection: 'row',
-                                          flexWrap: 'nowrap',
+                                          flexWrap: 'wrap',
                                           alignItems: 'center',
                                           gap: '8px',
                                           justifyContent: 'flex-end',
@@ -43109,8 +43143,9 @@ export default function Dashboard() {
                                             setNovaCategoriaNome(categoria.nome)
                                           }}
                                           style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                                          title={(safeT as any)?.gerenciarCategoriasEditarCategoria || 'Renomear categoria'}
                                         >
-                                          {safeT?.edit || 'Editar'}
+                                          ✏️ {safeT?.edit || 'Editar'}
                                         </button>
                                         <button
                                           type="button"
@@ -43143,7 +43178,7 @@ export default function Dashboard() {
                                           }}
                                           style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
                                         >
-                                          {safeT?.delete || 'Excluir'}
+                                          🗑 {safeT?.delete || 'Excluir'}
                                         </button>
                                       </div>
                                     )}
@@ -43293,9 +43328,9 @@ export default function Dashboard() {
                                                   setNovaSubcategoriaNome(subcategoria.nome)
                                                 }}
                                                 style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
-                                                title={safeT?.edit || 'Editar'}
+                                                title={safeT?.edit || 'Editar subcategoria'}
                                               >
-                                                {safeT?.edit || 'Editar'}
+                                                ✏️ {safeT?.edit || 'Editar'}
                                               </button>
                                               <button
                                                 type="button"
@@ -43317,9 +43352,9 @@ export default function Dashboard() {
                                                   }
                                                 }}
                                                 style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
-                                                title={safeT?.delete || 'Excluir'}
+                                                title={safeT?.delete || 'Excluir subcategoria'}
                                               >
-                                                {safeT?.delete || 'Excluir'}
+                                                🗑 {safeT?.delete || 'Excluir'}
                                               </button>
                                             </div>
                                           )}
