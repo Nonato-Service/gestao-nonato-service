@@ -46702,7 +46702,8 @@ A1;Peça exemplo;10`}
                 const cabecalhoPainelColuna = (
                   variant: 'exec' | 'agend' | 'pre' | 'pend' | 'pessoal' | 'canc' | 'done',
                   titulo: string,
-                  n: number
+                  n: number,
+                  modoMenu = false
                 ) => {
                   const trAny = safeT as Record<string, string | undefined>
                   let cfg: {
@@ -46794,83 +46795,114 @@ A1;Peça exemplo;10`}
                   }
                   return (
                     <div
+                      className={modoMenu ? 'agenda-painel-situacao-head' : undefined}
                       style={{
-                        margin: '0 0 12px 0',
+                        margin: modoMenu ? 0 : '0 0 12px 0',
                         borderRadius: '0',
                         borderTop: `4px solid ${cfg.bar}`,
                         background: cfg.grad,
+                        ...(modoMenu ? { minHeight: '100%', flex: 1, display: 'flex', flexDirection: 'column' as const } : {}),
                       }}
                     >
                       <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '12px',
-                          padding: '12px 14px',
-                        }}
+                        className={modoMenu ? 'agenda-painel-situacao-head__row' : undefined}
+                        style={
+                          modoMenu
+                            ? undefined
+                            : {
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '12px',
+                                padding: '12px 14px',
+                              }
+                        }
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+                        <div className={modoMenu ? 'agenda-painel-situacao-head__main' : undefined} style={modoMenu ? undefined : { display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
                           <span
                             aria-hidden
-                            style={{
-                              flexShrink: 0,
-                              width: 40,
-                              height: 40,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '11px',
-                              backgroundColor: cfg.iconBox,
-                              border: cfg.iconBorder,
-                              fontSize: '17px',
-                              fontWeight: 900,
-                              color: cfg.titleTint,
-                              lineHeight: 1,
-                            }}
+                            className={modoMenu ? 'agenda-painel-situacao-head__icon' : undefined}
+                            style={
+                              modoMenu
+                                ? {
+                                    backgroundColor: cfg.iconBox,
+                                    border: cfg.iconBorder,
+                                    color: cfg.titleTint,
+                                  }
+                                : {
+                                    flexShrink: 0,
+                                    width: 40,
+                                    height: 40,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: '11px',
+                                    backgroundColor: cfg.iconBox,
+                                    border: cfg.iconBorder,
+                                    fontSize: '17px',
+                                    fontWeight: 900,
+                                    color: cfg.titleTint,
+                                    lineHeight: 1,
+                                  }
+                            }
                           >
                             {cfg.icon}
                           </span>
-                          <div style={{ minWidth: 0 }}>
+                          <div className={modoMenu ? 'agenda-painel-situacao-head__text' : undefined} style={modoMenu ? undefined : { minWidth: 0 }}>
                             <div
-                              style={{
-                                fontSize: '10px',
-                                fontWeight: 900,
-                                letterSpacing: '0.16em',
-                                color: 'rgba(255,255,255,0.42)',
-                                textTransform: 'uppercase',
-                                marginBottom: '3px',
-                              }}
+                              className={modoMenu ? 'agenda-painel-situacao-head__tag' : undefined}
+                              style={
+                                modoMenu
+                                  ? undefined
+                                  : {
+                                      fontSize: '10px',
+                                      fontWeight: 900,
+                                      letterSpacing: '0.16em',
+                                      color: 'rgba(255,255,255,0.42)',
+                                      textTransform: 'uppercase',
+                                      marginBottom: '3px',
+                                    }
+                              }
                             >
                               {cfg.tag}
                             </div>
                             <div
-                              style={{
-                                fontSize: '14px',
-                                fontWeight: 900,
-                                color: '#fff',
-                                letterSpacing: '0.02em',
-                                lineHeight: 1.25,
-                              }}
+                              className={modoMenu ? 'agenda-painel-situacao-head__title' : undefined}
+                              style={
+                                modoMenu
+                                  ? undefined
+                                  : {
+                                      fontSize: '14px',
+                                      fontWeight: 900,
+                                      color: '#fff',
+                                      letterSpacing: '0.02em',
+                                      lineHeight: 1.25,
+                                    }
+                              }
                             >
                               {titulo}
                             </div>
                           </div>
                         </div>
                         <span
-                          style={{
-                            flexShrink: 0,
-                            minWidth: 36,
-                            padding: '7px 12px',
-                            borderRadius: '999px',
-                            backgroundColor: 'rgba(0,0,0,0.35)',
-                            border: cfg.iconBorder,
-                            fontSize: '14px',
-                            fontWeight: 900,
-                            color: '#fff',
-                            textAlign: 'center',
-                            boxShadow: '0 0 0 1px rgba(0,0,0,0.2)',
-                          }}
+                          className={modoMenu ? 'agenda-painel-situacao-head__count' : undefined}
+                          style={
+                            modoMenu
+                              ? { border: cfg.iconBorder }
+                              : {
+                                  flexShrink: 0,
+                                  minWidth: 36,
+                                  padding: '7px 12px',
+                                  borderRadius: '999px',
+                                  backgroundColor: 'rgba(0,0,0,0.35)',
+                                  border: cfg.iconBorder,
+                                  fontSize: '14px',
+                                  fontWeight: 900,
+                                  color: '#fff',
+                                  textAlign: 'center',
+                                  boxShadow: '0 0 0 1px rgba(0,0,0,0.2)',
+                                }
+                          }
                         >
                           {n}
                         </span>
@@ -47060,36 +47092,16 @@ A1;Peça exemplo;10`}
 
                 if (!agendaPainelSituacaoSelecionada) {
                   return (
-                    <div
-                      className="agenda-tecnica-painel-grid agenda-tecnica-painel-grid--menu"
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                        gap: '14px',
-                        marginBottom: '18px',
-                      }}
-                    >
+                    <div className="agenda-tecnica-painel-grid agenda-tecnica-painel-grid--menu">
                       {painelSituacoes.map((sit) => (
                         <button
                           key={sit.id}
                           type="button"
                           className="agenda-painel-situacao-btn"
                           onClick={() => setAgendaPainelSituacaoSelecionada(sit.id)}
-                          style={{
-                            padding: 0,
-                            margin: 0,
-                            border: 'none',
-                            background: 'transparent',
-                            cursor: 'pointer',
-                            textAlign: 'left',
-                            borderRadius: '12px',
-                            overflow: 'hidden',
-                            width: '100%',
-                            transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-                          }}
                         >
-                          <div style={{ borderRadius: '12px', overflow: 'hidden', ...sit.wrapStyle }}>
-                            {cabecalhoPainelColuna(sit.id, sit.titulo, sit.count)}
+                          <div className="agenda-painel-situacao-card" style={sit.wrapStyle}>
+                            {cabecalhoPainelColuna(sit.id, sit.titulo, sit.count, true)}
                           </div>
                         </button>
                       ))}

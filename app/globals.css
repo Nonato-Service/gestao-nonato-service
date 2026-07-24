@@ -32353,6 +32353,155 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   outline: 2px solid rgba(0, 200, 83, 0.65) !important;
 }
 
+/* Grelha uniforme — Situação operacional (menu) */
+.agenda-tecnica-painel-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.agenda-tecnica-painel-grid--menu {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 18px;
+  align-items: stretch;
+}
+
+.agenda-tecnica-painel-grid--menu .agenda-painel-situacao-btn {
+  display: flex;
+  width: 100%;
+  min-height: 108px;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.agenda-tecnica-painel-grid--menu .agenda-painel-situacao-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 108px;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.agenda-painel-situacao-head {
+  flex: 1;
+  min-height: 108px;
+}
+
+.agenda-painel-situacao-head__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  min-height: 104px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.agenda-painel-situacao-head__main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.agenda-painel-situacao-head__icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.agenda-painel-situacao-head__text {
+  min-width: 0;
+  flex: 1;
+}
+
+.agenda-painel-situacao-head__tag {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.42);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agenda-painel-situacao-head__title {
+  font-size: 13px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.6em;
+  max-height: 2.6em;
+}
+
+.agenda-painel-situacao-head__count {
+  flex-shrink: 0;
+  min-width: 36px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background-color: rgba(0, 0, 0, 0.35);
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 1200px) {
+  .agenda-tecnica-painel-grid--menu {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .agenda-tecnica-painel-grid--menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .agenda-tecnica-painel-grid--menu {
+    grid-template-columns: 1fr;
+  }
+
+  .agenda-tecnica-painel-grid--menu .agenda-painel-situacao-btn,
+  .agenda-tecnica-painel-grid--menu .agenda-painel-situacao-card,
+  .agenda-painel-situacao-head {
+    min-height: 96px;
+  }
+
+  .agenda-painel-situacao-head__row {
+    min-height: 92px;
+  }
+}
+
 /* Formulário inline */
 .agenda-tecnica-form {
   background: #484848 !important;
