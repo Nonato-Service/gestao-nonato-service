@@ -8320,7 +8320,11 @@ export default function Dashboard() {
               : {},
         }))
         const { lista: normalized } = garantirCodigosClientes(base)
-        setClientes(normalized)
+        setClientes((prev) => {
+          const merged = mergeNonatoClientesDeferServerLocal(normalized, prev) as Cliente[]
+          if (merged.length >= prev.length || prev.length === 0) return merged
+          return mergeNonatoClientesDeferServerLocal(prev, normalized) as Cliente[]
+        })
       } catch {
         /* ignorar */
       }
@@ -10598,25 +10602,33 @@ export default function Dashboard() {
         // fundir para trazer equipamentos/alterações gravadas noutro aparelho sem apagar clientes só locais.
         if (key === 'nonato-clientes' && !preferServerOnlyAfterFullPullWipe && typeof window !== 'undefined') {
           const serverValue = serverData[key]
-          const localData = localStorage.getItem(key)
-          if (serverValue != null && Array.isArray(serverValue) && localData !== null && localData !== '') {
-            try {
-              const local = JSON.parse(localData) as Cliente[]
-              if (Array.isArray(local)) {
-                const merged = mergeNonatoClientesDeferServerLocal(serverValue, local)
-                try {
-                  localStorage.setItem(key, JSON.stringify(merged))
-                } catch (e) {
-                  console.error('Erro ao gravar clientes fundidos no localStorage:', e)
-                }
-                if (!deferServerMerge) {
-                  saveData(key, merged, false).catch(() => {})
-                }
-                return merged
+          if (serverValue != null && Array.isArray(serverValue) && serverValue.length > 0) {
+            let local: Cliente[] | null = null
+            const localData = localStorage.getItem(key)
+            if (localData !== null && localData !== '') {
+              try {
+                const parsed = JSON.parse(localData) as Cliente[]
+                if (Array.isArray(parsed)) local = parsed
+              } catch {
+                /* continuar */
               }
-            } catch (e) {
-              /* continuar com a lógica normal */
             }
+            if (Array.isArray(local) && local.length > 0) {
+              const merged = mergeNonatoClientesDeferServerLocal(serverValue, local)
+              try {
+                localStorage.setItem(key, JSON.stringify(merged))
+              } catch (e) {
+                console.error('Erro ao gravar clientes fundidos no localStorage:', e)
+              }
+              if (!deferServerMerge) {
+                saveData(key, merged, false).catch(() => {})
+              }
+              return merged
+            }
+            if (!deferServerMerge) {
+              saveData(key, serverValue, false).catch(() => {})
+            }
+            return serverValue
           }
         }
         if (
@@ -11304,6 +11316,19 @@ export default function Dashboard() {
           /* ignorar */
         }
       }
+      if ((!savedClientes || !Array.isArray(savedClientes) || savedClientes.length === 0) && typeof window !== 'undefined') {
+        const fromBundle = serverData['nonato-clientes']
+        if (Array.isArray(fromBundle) && fromBundle.length > 0) {
+          savedClientes = fromBundle
+        } else {
+          try {
+            const fromLoad = await loadData('nonato-clientes')
+            if (Array.isArray(fromLoad) && fromLoad.length > 0) savedClientes = fromLoad
+          } catch {
+            /* ignorar */
+          }
+        }
+      }
       const normalizeClienteEquipamentos = (arr: Cliente[]) =>
         arr.map((c: Cliente) => ({
           ...c,
@@ -11314,7 +11339,7 @@ export default function Dashboard() {
         const base = normalizeClienteEquipamentos(savedClientes as Cliente[])
         const { lista: normalized, alterou: codigosAlterados } = garantirCodigosClientes(base)
         setClientes(normalized)
-        if (codigosAlterados) {
+        if (codigosAlterados || normalized.length > 0) {
           saveData('nonato-clientes', normalized, true, false).catch(() => {})
         }
       } else if (savedClientes && Array.isArray(savedClientes)) {

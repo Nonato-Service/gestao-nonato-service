@@ -13,6 +13,7 @@ import { getKv, saveKv } from './manuaisIndexedDb'
 const BACKUP_KEY = 'nonato-cadastro-safety-backup'
 const RESTORED_FLAG = 'nonato-cadastro-safety-restored-count'
 const PECAS_BIBLIOTECA_KEY = 'nonato-pecas-biblioteca'
+const CLIENTES_KEY = 'nonato-clientes'
 const CATEGORIAS_PECAS_KEY = 'nonato-categorias-pecas'
 
 function countPecasInRaw(raw: string | null | undefined): number {
@@ -67,6 +68,22 @@ async function readPecasBibliotecaRawForBackup(): Promise<string | null> {
   return fromLs && !isPecasBibliotecaBackupSuspeito(fromLs) ? fromLs : null
 }
 
+/** Lê clientes para backup — localStorage ou IndexedDB quando LS encheu. */
+async function readClientesRawForBackup(): Promise<string | null> {
+  if (typeof window === 'undefined') return null
+  const fromLs = localStorage.getItem(CLIENTES_KEY)
+  if (localStorageKeyHasMeaningfulCadastro(fromLs)) return fromLs
+  try {
+    const fromIdb = (await getKv(CLIENTES_KEY)) as unknown
+    if (Array.isArray(fromIdb) && fromIdb.length > 0) {
+      return JSON.stringify(fromIdb)
+    }
+  } catch {
+    /* ignorar */
+  }
+  return null
+}
+
 /** Guarda cópia de segurança no IndexedDB antes de qualquer arranque / wipe / deploy. */
 export async function backupCriticalCadastroToIdb(): Promise<void> {
   if (typeof window === 'undefined') return
@@ -74,6 +91,11 @@ export async function backupCriticalCadastroToIdb(): Promise<void> {
   for (const key of NONATO_CRITICAL_CADASTRO_KEYS) {
     if (key === PECAS_BIBLIOTECA_KEY) {
       const raw = await readPecasBibliotecaRawForBackup()
+      if (raw && localStorageKeyHasMeaningfulCadastro(raw)) backup[key] = raw
+      continue
+    }
+    if (key === CLIENTES_KEY) {
+      const raw = await readClientesRawForBackup()
       if (raw && localStorageKeyHasMeaningfulCadastro(raw)) backup[key] = raw
       continue
     }
@@ -120,6 +142,22 @@ export async function restoreCriticalCadastroFromIdbIfNeeded(): Promise<number> 
       restored++
     } catch {
       /* ignorar quota */
+    }
+  }
+
+  if (!localStorageKeyHasMeaningfulCadastro(localStorage.getItem(CLIENTES_KEY))) {
+    try {
+      const fromIdb = (await getKv(CLIENTES_KEY)) as unknown
+      if (Array.isArray(fromIdb) && fromIdb.length > 0) {
+        try {
+          localStorage.setItem(CLIENTES_KEY, JSON.stringify(fromIdb))
+          restored++
+        } catch {
+          /* ignorar quota — dados permanecem no IndexedDB */
+        }
+      }
+    } catch {
+      /* ignorar */
     }
   }
 

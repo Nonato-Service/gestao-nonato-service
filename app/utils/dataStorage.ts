@@ -1593,6 +1593,13 @@ export async function loadAllFromLocalCache(): Promise<Record<string, any>> {
       } else if (localCount > 0 && isPecasBibliotecaLocalParcial(localPecas)) {
         delete merged[PECAS_BIBLIOTECA_KEY]
       }
+      const snapClientes = (snap as Record<string, unknown>)[CLIENTES_KEY]
+      const localClientes = fromLs[CLIENTES_KEY]
+      const snapClientesCount = Array.isArray(snapClientes) ? snapClientes.length : 0
+      const localClientesCount = Array.isArray(localClientes) ? localClientes.length : 0
+      if (snapClientesCount > localClientesCount) {
+        merged[CLIENTES_KEY] = snapClientes
+      }
       return merged
     }
   } catch {
@@ -1757,6 +1764,17 @@ export async function collectAllLocalNonatoDataForSync(): Promise<Record<string,
     /* ignorar */
   }
 
+  /** Clientes podem estar só em IndexedDB quando localStorage encheu. */
+  keys.delete(CLIENTES_KEY)
+  try {
+    const clientesSnap = await readLocalValueForLoad(CLIENTES_KEY, true)
+    if (Array.isArray(clientesSnap.parsed) && clientesSnap.parsed.length > 0) {
+      out[CLIENTES_KEY] = clientesSnap.parsed
+    }
+  } catch {
+    /* ignorar */
+  }
+
   for (const key of Array.from(keys)) {
     const raw = localStorage.getItem(key)
     if (raw === null || raw === '') continue
@@ -1880,15 +1898,8 @@ async function writeLocalFromServerPull(key: string, value: unknown): Promise<vo
     return
   }
   if (key === CLIENTES_KEY) {
-    let localParsed: unknown = null
-    const raw = localStorage.getItem(key)
-    if (raw) {
-      try {
-        localParsed = JSON.parse(raw)
-      } catch {
-        /* ignorar */
-      }
-    }
+    const localSnapshot = await readLocalValueForLoad(key, true)
+    const localParsed = localSnapshot.parsed
     const merged = mergeNonatoClientesDeferServerLocal(value, localParsed)
     try {
       await saveKv(key, merged)
@@ -2320,7 +2331,7 @@ async function readLocalValueForLoad(
     return { parsed: null, raw: null }
   }
 
-  if ((key === PECAS_BIBLIOTECA_KEY || key === RELATORIOS_SERVICO_KEY) && parseJson) {
+  if ((key === PECAS_BIBLIOTECA_KEY || key === RELATORIOS_SERVICO_KEY || key === CLIENTES_KEY) && parseJson) {
     return readArrayBestOfLsIdb()
   }
 
@@ -2368,6 +2379,14 @@ function shouldPreferLocalOverServerOnLoad(key: string, serverValue: unknown, lo
   }
   if (
     key === RELATORIOS_SERVICO_KEY &&
+    Array.isArray(serverValue) &&
+    Array.isArray(localParsed) &&
+    localParsed.length > serverValue.length
+  ) {
+    return true
+  }
+  if (
+    key === CLIENTES_KEY &&
     Array.isArray(serverValue) &&
     Array.isArray(localParsed) &&
     localParsed.length > serverValue.length
@@ -2474,6 +2493,27 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
           const merged = mergePecasBibliotecaArrays(serverData, localSnapshot.parsed)
           void savePecasBibliotecaLocally(merged as unknown[])
           if (pecasBibliotecaArraysDiffer(merged, serverData)) {
+            scheduleServerMigrationPush(key, merged)
+          }
+          return merged
+        }
+
+        if (
+          key === CLIENTES_KEY &&
+          parseJson &&
+          Array.isArray(serverData) &&
+          localSnapshot.parsed !== null &&
+          localSnapshot.parsed !== undefined &&
+          Array.isArray(localSnapshot.parsed)
+        ) {
+          const merged = mergeNonatoClientesDeferServerLocal(serverData, localSnapshot.parsed)
+          writeLocalStorageValue(key, merged)
+          try {
+            await saveKv(key, merged)
+          } catch {
+            /* ignorar */
+          }
+          if (JSON.stringify(merged) !== JSON.stringify(serverData)) {
             scheduleServerMigrationPush(key, merged)
           }
           return merged
