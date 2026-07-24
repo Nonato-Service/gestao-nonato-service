@@ -2,6 +2,16 @@
 
 export const PECA_BIBLIOTECA_PLACEHOLDER_PATTERNS = [/default-product-image\.svg/i]
 
+/** Logo Nonato na grelha quando a peça não tem foto própria (não gravar como `imagem` da peça). */
+export const PECA_BIBLIOTECA_LOGO_PADRAO_SRC = '/brand/nonato-logo-original.png'
+
+export function pecaBibliotecaSrcEhLogoPadrao(src: string | undefined | null): boolean {
+  const s = String(src ?? '').trim()
+  if (!s) return false
+  if (s === PECA_BIBLIOTECA_LOGO_PADRAO_SRC) return true
+  return /\/nonato-logo-original\.png(?:\?.*)?$/i.test(s)
+}
+
 export type PecaBibliotecaImagemKind =
   | 'base64'
   | 'url'
@@ -44,10 +54,11 @@ export function isPecaBibliotecaImagemPlaceholder(imagem: string | undefined | n
   return PECA_BIBLIOTECA_PLACEHOLDER_PATTERNS.some((re) => re.test(s))
 }
 
-/** Foto própria da peça (não placeholder HOMAG nem string vazia). Inclui URL https e base64. */
+/** Foto própria da peça (não placeholder HOMAG, logo padrão nem string vazia). Inclui URL https e base64. */
 export function pecaBibliotecaTemImagemPropria(imagem: string | undefined | null): boolean {
   const s = String(imagem ?? '').trim()
   if (!s) return false
+  if (pecaBibliotecaSrcEhLogoPadrao(s)) return false
   if (isPecaBibliotecaImagemPlaceholder(s)) return false
   return true
 }
@@ -142,7 +153,7 @@ function resolveHomagOrDirectSrc(s: string, fallbackSrc: string): string {
 /** Src para <img>: proxy HOMAG, foto no Railway por id, ou logo padrão. */
 export function resolvePecaBibliotecaImagemSrcForDisplay(
   input: string | undefined | null | PecaBibliotecaImagemInput,
-  fallbackSrc = '/brand/nonato-logo-original.png'
+  fallbackSrc = PECA_BIBLIOTECA_LOGO_PADRAO_SRC
 ): string {
   if (input && typeof input === 'object') {
     const peca = input
@@ -163,7 +174,7 @@ export function resolvePecaBibliotecaImagemSrcForDisplay(
 /** Miniatura na grelha: `imagemCapa` personalizada, senão foto da peça / servidor. */
 export function resolvePecaBibliotecaCapaSrcForDisplay(
   peca: PecaBibliotecaImagemInput,
-  fallbackSrc = '/brand/nonato-logo-original.png'
+  fallbackSrc = PECA_BIBLIOTECA_LOGO_PADRAO_SRC
 ): string {
   const capa = typeof peca.imagemCapa === 'string' ? peca.imagemCapa.trim() : ''
   if (pecaBibliotecaTemImagemPropria(capa)) {
@@ -177,4 +188,9 @@ export function pecaBibliotecaTemCapaOuFotoVisivel(peca: PecaBibliotecaImagemInp
   const capa = typeof peca.imagemCapa === 'string' ? peca.imagemCapa : ''
   if (pecaBibliotecaTemImagemPropria(capa)) return true
   return pecaBibliotecaTemFotoVisivel(peca)
+}
+
+/** Miniatura na grelha deve usar estilo do logo (contain + margem), não crop. */
+export function pecaBibliotecaUsarEstiloLogoPadrao(peca: PecaBibliotecaImagemInput): boolean {
+  return !pecaBibliotecaTemCapaOuFotoVisivel(peca)
 }

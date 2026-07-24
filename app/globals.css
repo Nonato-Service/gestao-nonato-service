@@ -25171,9 +25171,12 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 /* Miniatura na grelha: logo Nonato quando a peça não tem foto própria */
 .biblioteca-pecas-hub__piece-thumb img.biblioteca-pecas-hub__piece-img--padrao {
   object-fit: contain !important;
-  padding: 24px 20px;
+  object-position: center center;
+  padding: 34px 30px;
   box-sizing: border-box;
   background: #ffffff;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .biblioteca-pecas-hub__piece-card--lote-selecionada {
@@ -26388,10 +26391,20 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 
 .biblioteca-pecas-hub__catalog-img--padrao {
   object-fit: contain !important;
-  padding: 10px 8px;
+  object-position: center center;
+  padding: 14px 12px;
   box-sizing: border-box;
-  background: radial-gradient(circle at 50% 35%, rgba(28, 44, 34, 0.75), #0a0e0c 85%);
+  background: #ffffff;
+  border-color: rgba(255, 255, 255, 0.18);
   cursor: default;
+}
+
+.biblioteca-galeria-categorias__card-img.biblioteca-pecas-hub__piece-img--padrao {
+  object-fit: contain !important;
+  object-position: center center;
+  padding: 28px 24px;
+  box-sizing: border-box;
+  background: #ffffff;
 }
 
 .biblioteca-pecas-hub__catalog-img-ph {
