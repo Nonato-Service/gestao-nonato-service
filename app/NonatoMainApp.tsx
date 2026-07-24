@@ -7790,8 +7790,7 @@ export default function Dashboard() {
   const [classificacaoLoteCategoriaId, setClassificacaoLoteCategoriaId] = useState('')
   const [classificacaoLoteSubcategoriaId, setClassificacaoLoteSubcategoriaId] = useState('')
   const [classificacaoLotePalavras, setClassificacaoLotePalavras] = useState('')
-  const [classificacaoLoteSomenteSemGrupo, setClassificacaoLoteSomenteSemGrupo] = useState(true)
-  const [classificacaoLoteExpanded, setClassificacaoLoteExpanded] = useState(false)
+  const [classificacaoLoteSomenteSemGrupo, setClassificacaoLoteSomenteSemGrupo] = useState(false)
   const classificacaoLotePanelRef = useRef<HTMLDivElement | null>(null)
   const [regrasClassificacaoPecas, setRegrasClassificacaoPecas] = useState<RegraClassificacaoPeca[]>([])
   // Importação de peças por URL (lista de um site)
@@ -41916,29 +41915,6 @@ export default function Dashboard() {
                   >
                     {(safeT as any).bibliotecaBotaoIrSemCategoria || 'Ver só sem categoria'}
                   </button>
-                  {!somenteLeituraBiblioteca ? (
-                    <button
-                      type="button"
-                      className={
-                        modoSelecaoPecasBiblioteca
-                          ? 'biblioteca-btn--green biblioteca-btn--selecao-lote'
-                          : 'biblioteca-btn--purple biblioteca-btn--selecao-lote'
-                      }
-                      onClick={() => {
-                        setModoSelecaoPecasBiblioteca((prev) => {
-                          const next = !prev
-                          if (next) setClassificacaoLoteExpanded(true)
-                          else setSelecaoPecasBibliotecaIds([])
-                          return next
-                        })
-                      }}
-                      title={(safeT as any).bibliotecaModoSelecaoHint || 'Clique nas peças para marcar ou desmarcar. Depois escolha grupo/subgrupo no painel abaixo.'}
-                    >
-                      {modoSelecaoPecasBiblioteca
-                        ? `${(safeT as any).bibliotecaModoSelecaoAtivo || 'Seleção ativa'} (${selecaoPecasBibliotecaIds.length})`
-                        : (safeT as any).bibliotecaModoSelecaoAtivar || 'Selecionar várias peças'}
-                    </button>
-                  ) : null}
                   {filtroGrupoBiblioteca && filtroGrupoBiblioteca !== BIBLIOTECA_FILTRO_SEM_CATEGORIA ? (
                     <div style={{ minWidth: '200px' }}>
                       <select
@@ -41985,65 +41961,184 @@ export default function Dashboard() {
                 </div>
                 </div>
 
-                {!somenteLeituraBiblioteca && modoSelecaoPecasBiblioteca ? (
-                  <div className="biblioteca-selecao-lote-banner" role="status">
-                    <div className="biblioteca-selecao-lote-banner__title">
-                      {(safeT as any)?.bibliotecaSelecaoLoteBannerTitulo || 'Modo seleção — classificar várias peças'}
-                    </div>
-                    <p className="biblioteca-selecao-lote-banner__text">
-                      {(safeT as any)?.bibliotecaSelecaoLoteBannerPassos ||
-                        '1) Clique nas peças para marcar · 2) Escolha grupo e subgrupo no painel abaixo · 3) «Aplicar em lote»'}
+                {!somenteLeituraBiblioteca ? (
+                  <div
+                    ref={classificacaoLotePanelRef}
+                    className="biblioteca-wizard-classificacao"
+                    role="region"
+                    aria-label={(safeT as any)?.bibliotecaWizardClassificacaoTitulo || 'Classificar várias peças'}
+                  >
+                    <h3 className="biblioteca-wizard-classificacao__titulo">
+                      {(safeT as any)?.bibliotecaWizardClassificacaoTitulo || 'Classificar várias peças de uma vez'}
+                    </h3>
+                    <p className="biblioteca-wizard-classificacao__subtitulo">
+                      {(safeT as any)?.bibliotecaWizardClassificacaoSubtitulo ||
+                        'Escolha a categoria, marque as peças na grelha abaixo e aplique — sem editar uma a uma.'}
                     </p>
-                    {selecaoPecasBibliotecaIds.length > 0 ? (
-                      <p className="biblioteca-selecao-lote-banner__count">
-                        {(
-                          (safeT as any)?.bibliotecaPecasSelecionadasCount || '{n} peça(s) selecionada(s)'
-                        ).replace('{n}', String(selecaoPecasBibliotecaIds.length))}
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
 
-                {!somenteLeituraBiblioteca && !modoSelecaoPecasBiblioteca ? (
-                  <p className="biblioteca-gestao-classificacao-intro">
-                    {(safeT as any)?.bibliotecaGestaoClassificacaoIntro ||
-                      'Para classificar várias peças de uma vez: clique «Selecionar várias peças», marque os itens e use «Classificação rápida em lote».'}
-                  </p>
-                ) : null}
+                    <ol className="biblioteca-wizard-classificacao__passos">
+                      <li className="biblioteca-wizard-classificacao__passo">
+                        <span className="biblioteca-wizard-classificacao__num">1</span>
+                        <div className="biblioteca-wizard-classificacao__corpo">
+                          <strong>{(safeT as any)?.bibliotecaWizardPasso1Titulo || 'Escolha categoria e subcategoria'}</strong>
+                          <p>{(safeT as any)?.bibliotecaWizardPasso1Desc || 'Para onde vão as peças que marcar no passo 2.'}</p>
+                          <div className="biblioteca-wizard-classificacao__selects">
+                            <label>
+                              <span>{safeT?.classificacaoLoteGrupoDestino || 'Grupo de destino'}</span>
+                              <select
+                                value={classificacaoLoteCategoriaId}
+                                onChange={(e) => {
+                                  setClassificacaoLoteCategoriaId(e.target.value)
+                                  setClassificacaoLoteSubcategoriaId('')
+                                }}
+                              >
+                                <option value="">{safeT?.classificacaoLoteEscolherGrupo || 'Escolher grupo'}</option>
+                                {categoriasPecasAlfabeto.map((cat) => (
+                                  <option key={cat.id} value={cat.id}>
+                                    {cat.nome}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label>
+                              <span>{safeT?.classificacaoLoteSubgrupoDestino || 'Subgrupo de destino'}</span>
+                              <select
+                                value={classificacaoLoteSubcategoriaId}
+                                onChange={(e) => {
+                                  const subId = e.target.value
+                                  const sub = subcategoriasPecas.find((item) => item.id === subId)
+                                  if (sub?.categoriaId) setClassificacaoLoteCategoriaId(sub.categoriaId)
+                                  setClassificacaoLoteSubcategoriaId(subId)
+                                }}
+                              >
+                                <option value="">{safeT?.classificacaoLoteEscolherSubgrupo || 'Escolher subgrupo'}</option>
+                                {subcategoriasPecas
+                                  .filter(
+                                    (sub) =>
+                                      !classificacaoLoteCategoriaId || sub.categoriaId === classificacaoLoteCategoriaId
+                                  )
+                                  .sort((a, b) =>
+                                    (a.nome || '').localeCompare(b.nome || '', undefined, {
+                                      sensitivity: 'base',
+                                      numeric: true,
+                                    })
+                                  )
+                                  .map((sub) => (
+                                    <option key={sub.id} value={sub.id}>
+                                      {sub.nome}
+                                    </option>
+                                  ))}
+                              </select>
+                            </label>
+                          </div>
+                        </div>
+                      </li>
 
-                {!somenteLeituraBiblioteca &&
-                modoSelecaoPecasBiblioteca &&
-                selecaoPecasBibliotecaIds.length > 0 ? (
-                  <div className="biblioteca-selecao-lote-float" role="toolbar">
-                    <span className="biblioteca-selecao-lote-float__count">
-                      {(
-                        (safeT as any)?.bibliotecaPecasSelecionadasCount || '{n} peça(s) selecionada(s)'
-                      ).replace('{n}', String(selecaoPecasBibliotecaIds.length))}
-                    </span>
-                    <button
-                      type="button"
-                      className="biblioteca-btn--green"
-                      onClick={() => handleAplicarClassificacaoLote(selecaoPecasBibliotecaIds)}
-                    >
-                      {safeT?.classificacaoLoteAplicarLote || 'Aplicar em lote'}
-                    </button>
-                    <button
-                      type="button"
-                      className="biblioteca-btn--ghost"
-                      onClick={() => setSelecaoPecasBibliotecaIds([])}
-                    >
-                      {safeT?.classificacaoLoteLimparSelecao || 'Limpar seleção'}
-                    </button>
-                    <button
-                      type="button"
-                      className="biblioteca-btn--orange"
-                      onClick={() => {
-                        setModoSelecaoPecasBiblioteca(false)
-                        setSelecaoPecasBibliotecaIds([])
-                      }}
-                    >
-                      {(safeT as any)?.bibliotecaModoSelecaoTerminar || 'Terminar seleção'}
-                    </button>
+                      <li
+                        className={`biblioteca-wizard-classificacao__passo${modoSelecaoPecasBiblioteca ? ' biblioteca-wizard-classificacao__passo--ativo' : ''}`}
+                      >
+                        <span className="biblioteca-wizard-classificacao__num">2</span>
+                        <div className="biblioteca-wizard-classificacao__corpo">
+                          <strong>{(safeT as any)?.bibliotecaWizardPasso2Titulo || 'Marque as peças na grelha'}</strong>
+                          <p>{(safeT as any)?.bibliotecaWizardPasso2Desc || 'Clique nos cartões abaixo (ficam com borda verde). Pode marcar quantas quiser.'}</p>
+                          <div className="biblioteca-wizard-classificacao__acoes">
+                            <button
+                              type="button"
+                              className={
+                                modoSelecaoPecasBiblioteca
+                                  ? 'biblioteca-btn--green biblioteca-btn--selecao-lote'
+                                  : 'biblioteca-btn--purple biblioteca-btn--selecao-lote'
+                              }
+                              onClick={() => {
+                                setModoSelecaoPecasBiblioteca((prev) => {
+                                  const next = !prev
+                                  if (!next) setSelecaoPecasBibliotecaIds([])
+                                  return next
+                                })
+                              }}
+                            >
+                              {modoSelecaoPecasBiblioteca
+                                ? (safeT as any)?.bibliotecaWizardPasso2Ativo || '✓ A marcar peças — clique nos cartões abaixo'
+                                : (safeT as any)?.bibliotecaWizardPasso2Iniciar || 'Começar a marcar peças'}
+                            </button>
+                            <button
+                              type="button"
+                              className="biblioteca-btn--ghost"
+                              onClick={() => {
+                                setModoSelecaoPecasBiblioteca(true)
+                                setSelecaoPecasBibliotecaIds(pecasCatalogoFiltradasGestao.map((peca) => peca.id))
+                              }}
+                            >
+                              {(safeT as any)?.classificacaoLoteSelecionarFiltradas || 'Selecionar todas filtradas'} (
+                              {pecasCatalogoFiltradasGestao.length})
+                            </button>
+                            <button
+                              type="button"
+                              className="biblioteca-btn--orange"
+                              onClick={() => setSelecaoPecasBibliotecaIds([])}
+                              disabled={selecaoPecasBibliotecaIds.length === 0}
+                            >
+                              {safeT?.classificacaoLoteLimparSelecao || 'Limpar seleção'}
+                            </button>
+                          </div>
+                          {selecaoPecasBibliotecaIds.length > 0 ? (
+                            <p className="biblioteca-wizard-classificacao__contagem">
+                              {(
+                                (safeT as any)?.bibliotecaPecasSelecionadasCount || '{n} peça(s) selecionada(s)'
+                              ).replace('{n}', String(selecaoPecasBibliotecaIds.length))}
+                            </p>
+                          ) : modoSelecaoPecasBiblioteca ? (
+                            <p className="biblioteca-wizard-classificacao__contagem biblioteca-wizard-classificacao__contagem--aviso">
+                              {(safeT as any)?.bibliotecaWizardNenhumaMarcada || 'Nenhuma peça marcada ainda — clique nos cartões abaixo.'}
+                            </p>
+                          ) : null}
+                        </div>
+                      </li>
+
+                      <li className="biblioteca-wizard-classificacao__passo">
+                        <span className="biblioteca-wizard-classificacao__num">3</span>
+                        <div className="biblioteca-wizard-classificacao__corpo">
+                          <strong>{(safeT as any)?.bibliotecaWizardPasso3Titulo || 'Aplicar categoria às peças marcadas'}</strong>
+                          <label className="biblioteca-wizard-classificacao__checkbox">
+                            <input
+                              type="checkbox"
+                              checked={classificacaoLoteSomenteSemGrupo}
+                              onChange={(e) => setClassificacaoLoteSomenteSemGrupo(e.target.checked)}
+                            />
+                            {safeT?.classificacaoLoteSomenteSemGrupo || 'Aplicar somente às peças sem grupo'}
+                          </label>
+                          <button
+                            type="button"
+                            className="biblioteca-btn--green biblioteca-wizard-classificacao__aplicar"
+                            onClick={() => {
+                              if (!classificacaoLoteCategoriaId && !classificacaoLoteSubcategoriaId) {
+                                alert(
+                                  (safeT as any)?.bibliotecaWizardEscolhaCategoria ||
+                                    'Passo 1: escolha o grupo ou subgrupo de destino.'
+                                )
+                                return
+                              }
+                              if (selecaoPecasBibliotecaIds.length === 0) {
+                                alert(
+                                  (safeT as any)?.bibliotecaWizardMarquePecas ||
+                                    'Passo 2: marque as peças na grelha (botão «Começar a marcar peças»).'
+                                )
+                                setModoSelecaoPecasBiblioteca(true)
+                                return
+                              }
+                              handleAplicarClassificacaoLote(selecaoPecasBibliotecaIds)
+                            }}
+                          >
+                            {(safeT as any)?.bibliotecaWizardAplicarCategoria ||
+                              safeT?.classificacaoLoteAplicarLote ||
+                              'Aplicar categoria às peças marcadas'}
+                            {selecaoPecasBibliotecaIds.length > 0
+                              ? ` (${selecaoPecasBibliotecaIds.length})`
+                              : ''}
+                          </button>
+                        </div>
+                      </li>
+                    </ol>
                   </div>
                 ) : null}
 
@@ -42316,189 +42411,13 @@ export default function Dashboard() {
                   }
 
                   const painelClassificacaoLote = (
-                    <div
-                      ref={classificacaoLotePanelRef}
-                      className="biblioteca-classificacao-lote-panel"
-                      style={{
-                        ...glassCardStyle(ACCENT_GREEN, { padding: '16px', radius: '12px', borderAlpha: 0.2 }),
-                        marginBottom: '16px',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'stretch',
-                          gap: '12px',
-                          flexWrap: 'wrap',
-                          marginBottom: '12px',
-                        }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => setClassificacaoLoteExpanded((prev) => !prev)}
-                          title={
-                            classificacaoLoteExpanded
-                              ? safeT?.classificacaoLoteRetrairTitle || 'Retrair classificação rápida em lote'
-                              : safeT?.classificacaoLoteExpandirTitle || 'Expandir classificação rápida em lote'
-                          }
-                          style={{
-                            flex: 1,
-                            minWidth: '220px',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            gap: '12px',
-                            padding: '10px 12px',
-                            borderRadius: '10px',
-                            border: '1px solid rgba(0, 168, 107, 0.14)',
-                            background: 'rgba(255,255,255,0.025)',
-                            cursor: 'pointer',
-                            textAlign: 'left',
-                          }}
-                        >
-                          <div>
-                            <h3 style={{ margin: 0, fontSize: '15px', color: '#00a86b', fontWeight: '600' }}>
-                              {safeT?.classificacaoLoteTitulo || 'Classificação rápida em lote'}
-                            </h3>
-                            <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#b9c3b9' }}>
-                              {modoSelecaoPecasBiblioteca
-                                ? (safeT as any)?.bibliotecaModoSelecaoHint ||
-                                  'Clique nas peças para marcar ou desmarcar. Depois escolha grupo/subgrupo e aplique em lote.'
-                                : safeT?.classificacaoLoteDesc ||
-                                  'Selecione peças ou use os filtros acima. Depois aplique grupo/subgrupo de uma vez.'}
-                            </p>
-                            {selecaoPecasBibliotecaIds.length > 0 ? (
-                              <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#7dffb0', fontWeight: 700 }}>
-                                {(
-                                  (safeT as any)?.bibliotecaPecasSelecionadasCount ||
-                                  '{n} peça(s) selecionada(s)'
-                                ).replace('{n}', String(selecaoPecasBibliotecaIds.length))}
-                              </p>
-                            ) : null}
-                          </div>
-                          <span style={{ color: '#00a86b', fontSize: '14px', fontWeight: 700, minWidth: '18px', textAlign: 'center' }}>
-                            {classificacaoLoteExpanded ? '▲' : '▼'}
-                          </span>
-                        </button>
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                          <button
-                            type="button"
-                            className="biblioteca-btn--ghost"
-                            onClick={() => setSelecaoPecasBibliotecaIds(pecasCatalogoFiltradas.map((peca) => peca.id))}
-                            style={{ padding: '8px 12px', fontSize: '12px' }}
-                          >
-                            {(safeT as any)?.classificacaoLoteSelecionarFiltradas ||
-                              safeT?.classificacaoLoteSelecionarVisiveis ||
-                              'Selecionar todas filtradas'} ({pecasCatalogoFiltradas.length})
-                          </button>
-                          {modoSelecaoPecasBiblioteca && !agruparBibliotecaEfetivo && visBiblioteca === 'grid' ? (
-                            <button
-                              type="button"
-                              className="biblioteca-btn--ghost"
-                              onClick={() =>
-                                setSelecaoPecasBibliotecaIds((prev) => {
-                                  const pageIds = pecasPaginaFlat.map((p) => p.id)
-                                  const allOnPage = pageIds.every((id) => prev.includes(id))
-                                  if (allOnPage) return prev.filter((id) => !pageIds.includes(id))
-                                  return [...new Set([...prev, ...pageIds])]
-                                })
-                              }
-                              style={{ padding: '8px 12px', fontSize: '12px' }}
-                            >
-                              {(safeT as any)?.bibliotecaSelecionarPaginaAtual || 'Página actual'} ({pecasPaginaFlat.length})
-                            </button>
-                          ) : null}
-                          <button
-                            type="button"
-                            className="biblioteca-btn--orange"
-                            onClick={() => setSelecaoPecasBibliotecaIds([])}
-                            style={{ padding: '8px 12px', fontSize: '12px' }}
-                          >
-                            {safeT?.classificacaoLoteLimparSelecao || 'Limpar seleção'} ({selecaoPecasBibliotecaIds.length})
-                          </button>
-                        </div>
-                      </div>
-
-                      {classificacaoLoteExpanded && (
-                        <>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '12px' }}>
-                            <div>
-                              <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', opacity: 0.85 }}>
-                                {safeT?.classificacaoLoteGrupoDestino || 'Grupo de destino'}
-                              </label>
-                              <select
-                                value={classificacaoLoteCategoriaId}
-                                onChange={(e) => {
-                                  setClassificacaoLoteCategoriaId(e.target.value)
-                                  setClassificacaoLoteSubcategoriaId('')
-                                }}
-                                style={{
-                                  width: '100%',
-                                  padding: '10px',
-                                  backgroundColor: '#484848',
-                                  color: '#fff',
-                                  border: '1px solid rgba(0, 168, 107, 0.3)',
-                                  borderRadius: '6px',
-                                  fontSize: '13px',
-                                }}
-                              >
-                                <option value="">{safeT?.classificacaoLoteEscolherGrupo || 'Escolher grupo'}</option>
-                                {categoriasPecasAlfabeto.map((cat) => (
-                                  <option key={cat.id} value={cat.id}>
-                                    {cat.nome}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-
-                            <div>
-                              <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', opacity: 0.85 }}>
-                                {safeT?.classificacaoLoteSubgrupoDestino || 'Subgrupo de destino'}
-                              </label>
-                              <select
-                                value={classificacaoLoteSubcategoriaId}
-                                onChange={(e) => {
-                                  const subId = e.target.value
-                                  const sub = subcategoriasPecas.find((item) => item.id === subId)
-                                  if (sub?.categoriaId) setClassificacaoLoteCategoriaId(sub.categoriaId)
-                                  setClassificacaoLoteSubcategoriaId(subId)
-                                }}
-                                style={{
-                                  width: '100%',
-                                  padding: '10px',
-                                  backgroundColor: '#484848',
-                                  color: '#fff',
-                                  border: '1px solid rgba(0, 168, 107, 0.3)',
-                                  borderRadius: '6px',
-                                  fontSize: '13px',
-                                }}
-                              >
-                                <option value="">{safeT?.classificacaoLoteEscolherSubgrupo || 'Escolher subgrupo'}</option>
-                                {subcategoriasPecas
-                                  .filter((sub) => !classificacaoLoteCategoriaId || sub.categoriaId === classificacaoLoteCategoriaId)
-                                  .sort((a, b) => (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true }))
-                                  .map((sub) => (
-                                    <option key={sub.id} value={sub.id}>
-                                      {sub.nome}
-                                    </option>
-                                  ))}
-                              </select>
-                            </div>
-                          </div>
-
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#d7e2d7' }}>
-                              <input
-                                type="checkbox"
-                                checked={classificacaoLoteSomenteSemGrupo}
-                                onChange={(e) => setClassificacaoLoteSomenteSemGrupo(e.target.checked)}
-                              />
-                              {safeT?.classificacaoLoteSomenteSemGrupo || 'Aplicar somente às peças sem grupo'}
-                            </label>
-                          </div>
-
-                          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1fr) auto auto', gap: '10px', alignItems: 'end' }}>
+                    <details className="biblioteca-classificacao-avancada">
+                      <summary className="biblioteca-classificacao-avancada__summary">
+                        {(safeT as any)?.bibliotecaClassificacaoAvancadaTitulo ||
+                          'Opções avançadas (palavras-chave, regras automáticas)'}
+                      </summary>
+                      <div className="biblioteca-classificacao-avancada__corpo">
+                          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1fr) auto auto', gap: '10px', alignItems: 'end', marginTop: 12 }}>
                             <div>
                               <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', opacity: 0.85 }}>
                                 {safeT?.classificacaoLotePalavrasChave || 'Palavras-chave para classificação automática'}
@@ -42523,41 +42442,10 @@ export default function Dashboard() {
                               type="button"
                               className="btn-primary"
                               onClick={() => {
-                                const ids = modoSelecaoPecasBiblioteca
-                                  ? selecaoPecasBibliotecaIds
-                                  : selecaoPecasBibliotecaIds.length > 0
+                                const ids =
+                                  selecaoPecasBibliotecaIds.length > 0
                                     ? selecaoPecasBibliotecaIds
                                     : pecasCatalogoFiltradas.map((peca) => peca.id)
-                                if (modoSelecaoPecasBiblioteca && ids.length === 0) {
-                                  alert(
-                                    (safeT as any)?.bibliotecaSelecionePecasPrimeiro ||
-                                      'Selecione pelo menos uma peça (clique nas peças ou use «Selecionar todas filtradas»).'
-                                  )
-                                  return
-                                }
-                                handleAplicarClassificacaoLote(ids)
-                              }}
-                              style={{ padding: '10px 14px', fontSize: '12px' }}
-                            >
-                              {safeT?.classificacaoLoteAplicarLote || 'Aplicar em lote'}
-                              {selecaoPecasBibliotecaIds.length > 0 ? ` (${selecaoPecasBibliotecaIds.length})` : ''}
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-secondary"
-                              onClick={() => {
-                                const ids = modoSelecaoPecasBiblioteca
-                                  ? selecaoPecasBibliotecaIds
-                                  : selecaoPecasBibliotecaIds.length > 0
-                                    ? selecaoPecasBibliotecaIds
-                                    : pecasCatalogoFiltradas.map((peca) => peca.id)
-                                if (modoSelecaoPecasBiblioteca && ids.length === 0) {
-                                  alert(
-                                    (safeT as any)?.bibliotecaSelecionePecasPrimeiro ||
-                                      'Selecione pelo menos uma peça (clique nas peças ou use «Selecionar todas filtradas»).'
-                                  )
-                                  return
-                                }
                                 handleAplicarPalavrasClassificacaoLote(ids)
                               }}
                               style={{ padding: '10px 14px', fontSize: '12px' }}
@@ -42574,18 +42462,10 @@ export default function Dashboard() {
                               type="button"
                               className="btn-secondary"
                               onClick={() => {
-                                const ids = modoSelecaoPecasBiblioteca
-                                  ? selecaoPecasBibliotecaIds
-                                  : selecaoPecasBibliotecaIds.length > 0
+                                const ids =
+                                  selecaoPecasBibliotecaIds.length > 0
                                     ? selecaoPecasBibliotecaIds
                                     : pecasCatalogoFiltradas.map((peca) => peca.id)
-                                if (modoSelecaoPecasBiblioteca && ids.length === 0) {
-                                  alert(
-                                    (safeT as any)?.bibliotecaSelecionePecasPrimeiro ||
-                                      'Selecione pelo menos uma peça (clique nas peças ou use «Selecionar todas filtradas»).'
-                                  )
-                                  return
-                                }
                                 handleAplicarRegrasSalvas(ids)
                               }}
                               style={{ padding: '9px 12px', fontSize: '12px' }}
@@ -42629,9 +42509,8 @@ export default function Dashboard() {
                               ))}
                             </div>
                           )}
-                        </>
-                      )}
-                    </div>
+                      </div>
+                    </details>
                   )
 
                   const vazioMsg = (

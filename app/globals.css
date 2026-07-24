@@ -25290,6 +25290,180 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   scroll-margin-top: 88px;
 }
 
+.biblioteca-wizard-classificacao {
+  margin: 0 0 18px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 2px solid rgba(0, 255, 130, 0.45);
+  background: linear-gradient(145deg, rgba(0, 56, 34, 0.72), rgba(8, 16, 12, 0.98));
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  scroll-margin-top: 72px;
+}
+
+.biblioteca-wizard-classificacao__titulo {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #b8ffd0;
+  letter-spacing: 0.02em;
+}
+
+.biblioteca-wizard-classificacao__subtitulo {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(220, 245, 228, 0.9);
+}
+
+.biblioteca-wizard-classificacao__passos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.biblioteca-wizard-classificacao__passo {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.biblioteca-wizard-classificacao__passo--ativo {
+  border-color: rgba(0, 255, 130, 0.55);
+  background: rgba(0, 72, 42, 0.35);
+  box-shadow: 0 0 0 1px rgba(0, 255, 120, 0.12);
+}
+
+.biblioteca-wizard-classificacao__num {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #052e16;
+  background: linear-gradient(180deg, #7dffb0, #00c853);
+}
+
+.biblioteca-wizard-classificacao__corpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.biblioteca-wizard-classificacao__corpo strong {
+  display: block;
+  font-size: 14px;
+  color: #eafff0;
+  margin-bottom: 4px;
+}
+
+.biblioteca-wizard-classificacao__corpo p {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(210, 235, 218, 0.88);
+}
+
+.biblioteca-wizard-classificacao__selects {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.biblioteca-wizard-classificacao__selects label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.biblioteca-wizard-classificacao__selects label span {
+  font-size: 12px;
+  color: rgba(210, 235, 218, 0.85);
+}
+
+.biblioteca-wizard-classificacao__selects select {
+  width: 100%;
+  padding: 10px;
+  background: #484848;
+  color: #fff;
+  border: 1px solid rgba(0, 168, 107, 0.35);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.biblioteca-wizard-classificacao__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.biblioteca-wizard-classificacao__contagem {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #7dffb0;
+}
+
+.biblioteca-wizard-classificacao__contagem--aviso {
+  color: #ffd080;
+  font-weight: 600;
+}
+
+.biblioteca-wizard-classificacao__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: #d7e2d7;
+}
+
+.biblioteca-wizard-classificacao__aplicar {
+  min-height: 48px;
+  padding: 12px 18px !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  width: 100%;
+  max-width: 420px;
+}
+
+.biblioteca-classificacao-avancada {
+  margin: 0 0 16px;
+  padding: 0 12px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 168, 107, 0.18);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.biblioteca-classificacao-avancada__summary {
+  cursor: pointer;
+  padding: 12px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(180, 230, 200, 0.9);
+  list-style: none;
+}
+
+.biblioteca-classificacao-avancada__summary::-webkit-details-marker {
+  display: none;
+}
+
+.biblioteca-classificacao-avancada__corpo {
+  padding-top: 4px;
+}
+
 .biblioteca-pecas-hub__piece-check {
   position: absolute;
   top: 8px;
