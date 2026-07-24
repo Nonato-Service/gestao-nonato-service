@@ -36252,27 +36252,7 @@ export default function Dashboard() {
                                   </div>
 
                                   <div className="relatorio-equipamento-card__grid">
-                                    <div>
-                                      <label className="relatorio-equipamento-card__label relatorio-equipamento-card__label--id">
-                                        {safeT?.relatorioEquipamentoIdLabel || 'ID do equipamento'}
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={eq.equipamentoId || ''}
-                                        placeholder={safeT?.relatorioEquipamentoIdPlaceholder || 'ID interno, armazém ou n.º série'}
-                                        onChange={(e) => {
-                                          const next = equipamentosForm.map(item =>
-                                            item.uid === eq.uid
-                                              ? { ...item, equipamentoId: e.target.value.trim() }
-                                              : item
-                                          )
-                                          atualizarEquipamentos(next)
-                                        }}
-                                        className="relatorio-equipamento-card__input relatorio-equipamento-card__input--id"
-                                      />
-                                    </div>
-
-                                    <div>
+                                    <div className="relatorio-equipamento-card__field--full">
                                       <span className="relatorio-equipamento-card__label relatorio-equipamento-card__label--blue">
                                         {safeT?.relatorioEquipamentoOrigem || 'Origem do equipamento'}
                                       </span>
@@ -36320,7 +36300,7 @@ export default function Dashboard() {
                                       </div>
                                     </div>
 
-                                    <div style={{ gridColumn: '1 / -1' }}>
+                                    <div className="relatorio-equipamento-card__field--full">
                                       <label className="relatorio-equipamento-card__label">
                                         {eq.equipamentoOrigem === 'armazem'
                                           ? (safeT?.equipamentoArmazemRelatorio || 'Equipamento do armazém')
@@ -36435,6 +36415,26 @@ export default function Dashboard() {
                                       )}
                                     </div>
 
+                                    <div className="relatorio-equipamento-card__field--full">
+                                      <label className="relatorio-equipamento-card__label relatorio-equipamento-card__label--id">
+                                        {safeT?.relatorioEquipamentoIdLabel || 'ID do equipamento'}
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={eq.equipamentoId || ''}
+                                        placeholder={safeT?.relatorioEquipamentoIdPlaceholder || 'ID interno, armazém ou n.º série'}
+                                        onChange={(e) => {
+                                          const next = equipamentosForm.map(item =>
+                                            item.uid === eq.uid
+                                              ? { ...item, equipamentoId: e.target.value.trim() }
+                                              : item
+                                          )
+                                          atualizarEquipamentos(next)
+                                        }}
+                                        className="relatorio-equipamento-card__input relatorio-equipamento-card__input--id"
+                                      />
+                                    </div>
+
                                     {eq.equipamentoOrigem === 'cliente' &&
                                       (eq.equipamentoId || eq.numeroMaquina) &&
                                       (() => {
@@ -36445,8 +36445,7 @@ export default function Dashboard() {
                                         if (!matchArmazem) return null
                                         return (
                                           <div
-                                            className="relatorio-equipamento-card__venda-aviso"
-                                            style={{ gridColumn: '1 / -1' }}
+                                            className="relatorio-equipamento-card__venda-aviso relatorio-equipamento-card__field--full"
                                           >
                                             {(safeT as any)?.relatorioEquipVendaDetectada ||
                                               'Este ID coincide com um equipamento ativo no armazém. Ao guardar o relatório, será dada baixa automática (EQUIPAMENTO VENDIDO).'}

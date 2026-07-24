@@ -8149,9 +8149,13 @@ a:focus-visible {
 }
 
 .relatorio-equipamento-card__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.relatorio-equipamento-card__field--full {
+  width: 100%;
 }
 
 .relatorio-equipamento-card__label {
@@ -8306,10 +8310,6 @@ a:focus-visible {
 }
 
 @media (max-width: 640px) {
-  .relatorio-equipamento-card__grid {
-    grid-template-columns: 1fr;
-  }
-
   .relatorio-equipamento-card__head {
     gap: 8px;
   }
