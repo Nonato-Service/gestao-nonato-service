@@ -48497,7 +48497,8 @@ A1;Peça exemplo;10`}
                           </div>
                         ) : (
                           <p className="agenda-section-collapsed-hint">
-                            {(safeT as any)?.agendaListaSecaoRetraidaHint ||
+                            {(
+                              (safeT as any)?.agendaListaSecaoRetraidaHint ||
                               '{n} registo(s) oculto(s) — clique no cabeçalho para expandir'
                             ).replace('{n}', String(nBadge))}
                           </p>
