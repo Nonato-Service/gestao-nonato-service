@@ -27889,20 +27889,17 @@ export default function Dashboard() {
     return () => window.clearTimeout(timer)
   }, [modoSelecaoPecasBiblioteca])
 
-  useEffect(() => {
-    if (abaBibliotecaPecas !== 'grupos' || categoriasPecas.length === 0) return
-    setGerenciarCategoriasGrupoAberto((prev) => {
-      const next = { ...prev }
-      let changed = false
-      for (const c of categoriasPecas) {
-        if (next[c.id] !== true) {
-          next[c.id] = true
-          changed = true
-        }
-      }
-      return changed ? next : prev
-    })
-  }, [abaBibliotecaPecas, categoriasPecas])
+  const expandirTodasCategoriasGestao = useCallback(() => {
+    const next: Record<string, boolean> = {}
+    for (const c of categoriasPecas) next[c.id] = true
+    setGerenciarCategoriasGrupoAberto(next)
+  }, [categoriasPecas])
+
+  const retrairTodasCategoriasGestao = useCallback(() => {
+    const next: Record<string, boolean> = {}
+    for (const c of categoriasPecas) next[c.id] = false
+    setGerenciarCategoriasGrupoAberto(next)
+  }, [categoriasPecas])
 
   const handleAplicarClassificacaoLote = useCallback((ids: string[]) => {
     if (ids.length === 0) {
@@ -42975,6 +42972,44 @@ export default function Dashboard() {
                   </div>
                 </div>
 
+                {categoriasPecas.length > 0 ? (
+                  <div className="biblioteca-pecas-hub__grupos-toolbar">
+                    <span className="biblioteca-pecas-hub__grupos-toolbar-hint">
+                      {(safeT as any)?.gerenciarCategoriasToolbarHint ||
+                        'Use ▶/▼ em cada categoria ou os botões abaixo para ver só o que precisa.'}
+                    </span>
+                    <div className="biblioteca-pecas-hub__grupos-toolbar-acoes">
+                      <button
+                        type="button"
+                        className="biblioteca-btn--green"
+                        onClick={expandirTodasCategoriasGestao}
+                      >
+                        {(safeT as any)?.gerenciarCategoriasExpandirTodas || 'Expandir todas'}
+                      </button>
+                      <button
+                        type="button"
+                        className="biblioteca-btn--ghost"
+                        onClick={retrairTodasCategoriasGestao}
+                      >
+                        {(safeT as any)?.gerenciarCategoriasRetrairTodas || 'Retrair todas'}
+                      </button>
+                      <span className="biblioteca-pecas-hub__grupos-toolbar-count">
+                        {(
+                          (safeT as any)?.gerenciarCategoriasExpandidasCount ||
+                          '{n} de {total} expandida(s)'
+                        )
+                          .replace(
+                            '{n}',
+                            String(
+                              categoriasPecas.filter((c) => gerenciarCategoriasGrupoAberto[c.id] === true).length
+                            )
+                          )
+                          .replace('{total}', String(categoriasPecas.length))}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+
                 {/* Área rolável da lista de categorias */}
                 <div className="biblioteca-pecas-hub__grupos-scroll">
                   {categoriasPecas.length === 0 ? (
@@ -42992,7 +43027,7 @@ export default function Dashboard() {
                         const editandoSubNestaCategoria =
                           editingSubcategoria != null && subcategoriasDoGrupo.some((s) => s.id === editingSubcategoria.id)
                         const subcategoriasVisiveis =
-                          editandoSubNestaCategoria || gerenciarCategoriasGrupoAberto[categoria.id] !== false
+                          editandoSubNestaCategoria || gerenciarCategoriasGrupoAberto[categoria.id] === true
                         /* Zebra nas linhas da tabela; cartão exterior usa classes do hub. */
                         const rowLine = '#555555'
                         const excelHeaderBg = '#2f2f2f'
@@ -43006,7 +43041,7 @@ export default function Dashboard() {
                         return (
                           <div
                             key={categoria.id}
-                            className={`biblioteca-pecas-hub__grupo-card${catIndex % 2 === 0 ? ' biblioteca-pecas-hub__grupo-card--a' : ' biblioteca-pecas-hub__grupo-card--b'}`}
+                            className={`biblioteca-pecas-hub__grupo-card${catIndex % 2 === 0 ? ' biblioteca-pecas-hub__grupo-card--a' : ' biblioteca-pecas-hub__grupo-card--b'}${subcategoriasVisiveis ? '' : ' biblioteca-pecas-hub__grupo-card--retraido'}`}
                           >
                             {/* Cabeçalho da categoria (como linha de título Excel) */}
                             <table className="biblioteca-pecas-hub__grupo-table" style={{ tableLayout: 'auto' }}>
@@ -43079,7 +43114,7 @@ export default function Dashboard() {
                                             onClick={() =>
                                               setGerenciarCategoriasGrupoAberto((prev) => ({
                                                 ...prev,
-                                                [categoria.id]: !prev[categoria.id],
+                                                [categoria.id]: prev[categoria.id] === true ? false : true,
                                               }))
                                             }
                                             style={{

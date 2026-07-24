@@ -26107,6 +26107,57 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 .biblioteca-pecas-hub__grupo-card--a {
   background: linear-gradient(180deg, rgba(30, 34, 32, 0.99), rgba(16, 18, 17, 0.99));
 }
+.biblioteca-pecas-hub__grupo-card--retraido {
+  opacity: 0.92;
+}
+
+.biblioteca-pecas-hub__grupo-card--retraido .biblioteca-pecas-hub__grupo-table thead tr {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.biblioteca-pecas-hub__grupos-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 200, 120, 0.22);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.biblioteca-pecas-hub__grupos-toolbar-hint {
+  flex: 1 1 220px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(210, 235, 218, 0.88);
+}
+
+.biblioteca-pecas-hub__grupos-toolbar-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.biblioteca-pecas-hub__grupos-toolbar-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(180, 230, 200, 0.9);
+  padding: 0 4px;
+}
+
+.biblioteca-pecas-hub__grupos-toolbar .biblioteca-btn--green,
+.biblioteca-pecas-hub__grupos-toolbar .biblioteca-btn--ghost {
+  min-height: 40px;
+  padding: 8px 14px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
 .biblioteca-pecas-hub__grupo-card--b {
   background: linear-gradient(180deg, rgba(34, 38, 36, 0.99), rgba(18, 20, 19, 0.99));
 }
