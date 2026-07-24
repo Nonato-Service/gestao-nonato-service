@@ -271,15 +271,15 @@ export function BibliotecaPecasGaleriaCategorias({
       const lista = porCat.get(cat.id) || []
       let capa: string | undefined
       for (const p of lista) {
-        if (temImagemPropria(p.imagem)) {
-          capa = String(p.imagem).trim()
+        if (temImagemPropria(p)) {
+          capa = srcImagem(p)
           break
         }
       }
       meta.set(cat.id, { total: lista.length, capa })
     }
     return { meta, semCat, porCat }
-  }, [pecasCatalogo, categoriasOrdenadas, temImagemPropria])
+  }, [pecasCatalogo, categoriasOrdenadas, temImagemPropria, srcImagem])
 
   const codigoLabel = t.codigo || 'Código'
   const cardOptsFor = (peca: PecaBibliotecaGaleria) => ({
@@ -461,7 +461,7 @@ export function BibliotecaPecasGaleriaCategorias({
                 <div className="biblioteca-galeria-categorias__card-media">
                   {capa ? (
                     <img
-                      src={srcImagem(capa)}
+                      src={capa}
                       alt=""
                       loading="lazy"
                       decoding="async"
