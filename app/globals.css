@@ -25170,9 +25170,40 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 
 /* Miniatura na grelha: logo Nonato quando a peça não tem foto própria */
 .biblioteca-pecas-hub__piece-thumb img.biblioteca-pecas-hub__piece-img--padrao {
-  object-fit: contain;
-  padding: 12px 10px;
+  object-fit: contain !important;
+  padding: 24px 20px;
+  box-sizing: border-box;
   background: #ffffff;
+}
+
+.biblioteca-pecas-hub__piece-card--lote-selecionada {
+  border-color: rgba(0, 255, 150, 0.75);
+  background: linear-gradient(165deg, rgba(0, 52, 32, 0.55), rgba(12, 20, 16, 0.96));
+  box-shadow:
+    0 0 0 2px rgba(0, 255, 120, 0.18),
+    0 18px 48px rgba(0, 72, 42, 0.42);
+}
+
+.biblioteca-pecas-hub__piece-check {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 3;
+  width: 22px;
+  height: 22px;
+  accent-color: #00c853;
+  cursor: pointer;
+}
+
+.biblioteca-pecas-hub__catalog-row--lote-selecionada {
+  background: rgba(0, 88, 52, 0.28) !important;
+}
+
+.biblioteca-pecas-hub__catalog-check {
+  width: 18px;
+  height: 18px;
+  accent-color: #00c853;
+  cursor: pointer;
 }
 
 .biblioteca-pecas-hub__piece-name {
@@ -26356,8 +26387,9 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 
 .biblioteca-pecas-hub__catalog-img--padrao {
-  object-fit: contain;
-  padding: 4px;
+  object-fit: contain !important;
+  padding: 10px 8px;
+  box-sizing: border-box;
   background: radial-gradient(circle at 50% 35%, rgba(28, 44, 34, 0.75), #0a0e0c 85%);
   cursor: default;
 }

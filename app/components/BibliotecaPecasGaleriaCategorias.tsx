@@ -16,6 +16,7 @@ type PecaBibliotecaGaleria = {
   categoriaId?: string
   categoria?: string
   imagem?: string
+  imagemCapa?: string
   temImagemServidor?: boolean
   numeroSequenciaGrupo?: string
 }
@@ -175,7 +176,7 @@ function renderPecaCard(
           style={{
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
+            objectFit: temImagemPropria(peca) ? 'cover' : 'contain',
             display: 'block',
             transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
           }}

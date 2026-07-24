@@ -61,6 +61,8 @@ import {
   pecaBibliotecaTemFotoVisivel,
   pecaBibliotecaTemImagemPropria,
   resolvePecaBibliotecaImagemSrcForDisplay,
+  resolvePecaBibliotecaCapaSrcForDisplay,
+  pecaBibliotecaTemCapaOuFotoVisivel,
 } from './lib/pecaBibliotecaImagemStats'
 import {
   BIBLIOTECA_AVISO_POLL_MS,
@@ -473,6 +475,15 @@ function pecaBibliotecaSrcImagemDisplay(
   imagemOuPeca: string | undefined | null | { imagem?: string; id?: string; temImagemServidor?: boolean }
 ): string {
   return resolvePecaBibliotecaImagemSrcForDisplay(imagemOuPeca, PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC)
+}
+
+function pecaBibliotecaSrcCapaDisplay(
+  peca: string | undefined | null | { imagem?: string; imagemCapa?: string; id?: string; temImagemServidor?: boolean }
+): string {
+  if (peca && typeof peca === 'object') {
+    return resolvePecaBibliotecaCapaSrcForDisplay(peca, PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC)
+  }
+  return resolvePecaBibliotecaImagemSrcForDisplay(peca, PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC)
 }
 
 function pecaPassaBuscaBibliotecaTexto(
@@ -2022,6 +2033,8 @@ type PecaBiblioteca = {
   subcategoria?: string
   subcategoriaId?: string
   imagem?: string
+  /** Miniatura opcional na grelha da biblioteca; se vazia, usa `imagem`. */
+  imagemCapa?: string
   quantidade?: number
   dataCriacao?: string
   importacaoPendente?: boolean
@@ -7675,6 +7688,7 @@ export default function Dashboard() {
   })
   /** Rascunho do campo «URL da imagem» no formulário da biblioteca de peças */
   const [pecaBibliotecaImagemUrlDraft, setPecaBibliotecaImagemUrlDraft] = useState('')
+  const [pecaBibliotecaImagemCapaUrlDraft, setPecaBibliotecaImagemCapaUrlDraft] = useState('')
   /** Contentor do formulário da peça — listener nativo `paste` em captura (mais fiável que só React) */
   const pecaBibliotecaFormPasteRootRef = useRef<HTMLDivElement | null>(null)
   const importacaoPreviewPanelRef = useRef<HTMLDivElement | null>(null)
@@ -7772,6 +7786,7 @@ export default function Dashboard() {
     return () => window.removeEventListener('nonato-pecas-imagens-hidratadas', onImagens)
   }, [categoriasPecas])
   const [selecaoPecasBibliotecaIds, setSelecaoPecasBibliotecaIds] = useState<string[]>([])
+  const [modoSelecaoPecasBiblioteca, setModoSelecaoPecasBiblioteca] = useState(false)
   const [classificacaoLoteCategoriaId, setClassificacaoLoteCategoriaId] = useState('')
   const [classificacaoLoteSubcategoriaId, setClassificacaoLoteSubcategoriaId] = useState('')
   const [classificacaoLotePalavras, setClassificacaoLotePalavras] = useState('')
@@ -25151,9 +25166,11 @@ export default function Dashboard() {
       subcategoria: subcategoriaSelecionada?.nome || '',
       subcategoriaId: subgrupoParaManter,
       imagem: '',
+      imagemCapa: '',
       dataCriacao: new Date().toISOString()
     })
     setPecaBibliotecaImagemUrlDraft('')
+    setPecaBibliotecaImagemCapaUrlDraft('')
     setEditingPecaBiblioteca(null)
     setPecaBibliotecaPickerCategoriaAberto(false)
     setPecaBibliotecaPickerSubcategoriaAberto(false)
@@ -25166,6 +25183,7 @@ export default function Dashboard() {
     setSalvarPecaBibliotecaVoltaParaImportacao(false)
     setEditingPecaBiblioteca(peca)
     setPecaBibliotecaImagemUrlDraft('')
+    setPecaBibliotecaImagemCapaUrlDraft('')
     const resolv = normalizarUltimaSelecaoBiblioteca(peca, categoriasPecas, subcategoriasPecas)
     const catNome = resolv.categoriaId ? categoriasPecas.find((c) => c.id === resolv.categoriaId)?.nome : undefined
     const subNome =
@@ -25226,6 +25244,45 @@ export default function Dashboard() {
         (t as any).pecaBibliotecaImagemUrlExterna ||
           'A imagem ficou guardada como link (URL). Se não aparecer na pré-visualização, o site de origem pode bloquear o uso externo — nesse caso descarregue a imagem e use «Selecionar foto».'
       )
+      return
+    }
+    alert((t as any).pecaBibliotecaUrlInvalida || 'Endereço inválido. Use um URL que comece por http:// ou https://')
+  }, [t])
+
+  /** URL ou ficheiro → imagem de capa (miniatura na grelha da biblioteca). */
+  const aplicarImagemCapaPecaBibliotecaDeUrl = useCallback(async (urlRaw: string) => {
+    const url = urlRaw.trim()
+    if (!url) {
+      alert(t.fillAllFields || 'Indique um endereço ou cole uma imagem.')
+      return
+    }
+    if (url.startsWith('data:image')) {
+      setPecaBibliotecaForm((prev) => ({ ...prev, imagemCapa: url }))
+      setPecaBibliotecaImagemCapaUrlDraft('')
+      return
+    }
+    if (/^https?:\/\//i.test(url)) {
+      try {
+        const res = await fetch(url, { mode: 'cors' })
+        if (res.ok) {
+          const blob = await res.blob()
+          if (blob.type.startsWith('image/')) {
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+              const r = new FileReader()
+              r.onload = () => resolve(r.result as string)
+              r.onerror = () => reject(new Error('read'))
+              r.readAsDataURL(blob)
+            })
+            setPecaBibliotecaForm((prev) => ({ ...prev, imagemCapa: dataUrl }))
+            setPecaBibliotecaImagemCapaUrlDraft('')
+            return
+          }
+        }
+      } catch {
+        /* CORS */
+      }
+      setPecaBibliotecaForm((prev) => ({ ...prev, imagemCapa: url }))
+      setPecaBibliotecaImagemCapaUrlDraft('')
       return
     }
     alert((t as any).pecaBibliotecaUrlInvalida || 'Endereço inválido. Use um URL que comece por http:// ou https://')
@@ -27817,6 +27874,12 @@ export default function Dashboard() {
 
     return { lista: updated, alteradas }
   }
+
+  const toggleSelecaoPecaBiblioteca = useCallback((pecaId: string) => {
+    setSelecaoPecasBibliotecaIds((prev) =>
+      prev.includes(pecaId) ? prev.filter((id) => id !== pecaId) : [...prev, pecaId]
+    )
+  }, [])
 
   const handleAplicarClassificacaoLote = useCallback((ids: string[]) => {
     if (ids.length === 0) {
@@ -40786,6 +40849,90 @@ export default function Dashboard() {
                     </button>
                   ) : null}
                 </div>
+
+                <div className="biblioteca-pecas-form__field" style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+                  <label className="biblioteca-pecas-form__label">
+                    {(safeT as any)?.pecaBibliotecaImagemCapaTitulo || 'Imagem de início (catálogo)'}
+                  </label>
+                  <p style={{ fontSize: 12, color: '#b8c4bc', margin: '0 0 10px', lineHeight: 1.45 }}>
+                    {(safeT as any)?.pecaBibliotecaImagemCapaHint ||
+                      'Opcional. Aparece na grelha da biblioteca. Se vazia, usa a foto do produto acima.'}
+                  </p>
+                  <input
+                    id="peca-biblioteca-capa-upload-tab"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file && file.type.startsWith('image/')) {
+                        const reader = new FileReader()
+                        reader.onload = (event) => {
+                          const result = event.target?.result as string
+                          setPecaBibliotecaForm({ ...pecaBibliotecaForm, imagemCapa: result })
+                        }
+                        reader.readAsDataURL(file)
+                      }
+                    }}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => document.getElementById('peca-biblioteca-capa-upload-tab')?.click()}
+                    style={{ marginBottom: 10, padding: '8px 15px', fontSize: '13px' }}
+                  >
+                    {(safeT as any)?.pecaBibliotecaSelecionarCapa || 'Selecionar imagem de início'}
+                  </button>
+                  <div className="biblioteca-pecas-form__url-row">
+                    <input
+                      type="url"
+                      className="biblioteca-pecas-form__input biblioteca-pecas-form__url-input"
+                      placeholder={(safeT as any)?.pecaBibliotecaCapaUrlPlaceholder || 'https://... (URL da capa)'}
+                      value={pecaBibliotecaImagemCapaUrlDraft}
+                      onChange={(e) => setPecaBibliotecaImagemCapaUrlDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          void aplicarImagemCapaPecaBibliotecaDeUrl(pecaBibliotecaImagemCapaUrlDraft)
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => void aplicarImagemCapaPecaBibliotecaDeUrl(pecaBibliotecaImagemCapaUrlDraft)}
+                      style={{ padding: '8px 14px', fontSize: '12px' }}
+                    >
+                      {(safeT as any)?.pecaBibliotecaAplicarUrl || 'Aplicar URL'}
+                    </button>
+                  </div>
+                  <div className="biblioteca-pecas-form__preview-wrap" style={{ marginTop: 10 }}>
+                    <div className="biblioteca-pecas-form__preview-frame">
+                      <img
+                        src={pecaBibliotecaSrcCapaDisplay(pecaBibliotecaForm)}
+                        alt={(safeT as any)?.pecaBibliotecaImagemCapaTitulo || 'Capa catálogo'}
+                        className={
+                          pecaBibliotecaTemCapaOuFotoVisivel(pecaBibliotecaForm)
+                            ? undefined
+                            : 'biblioteca-pecas-form__preview-img--padrao'
+                        }
+                        style={{ width: '100%', maxHeight: 140, objectFit: 'cover', display: 'block' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginTop: 8 }}>
+                      {pecaBibliotecaTemImagemPropria(pecaBibliotecaForm.imagemCapa) ? (
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          onClick={() => setPecaBibliotecaForm({ ...pecaBibliotecaForm, imagemCapa: '' })}
+                          style={{ padding: '5px 10px', fontSize: '12px' }}
+                        >
+                          {(safeT as any)?.pecaBibliotecaUsarFotoProduto || 'Usar foto do produto'}
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
                 
                 <div className="biblioteca-pecas-form__field">
                   <label className="biblioteca-pecas-form__label">
@@ -41512,8 +41659,8 @@ export default function Dashboard() {
                     categoriaSelecionadaId={bibliotecaGaleriaCategoriaId}
                     onSelecionarCategoria={setBibliotecaGaleriaCategoriaId}
                     onVoltarCategorias={() => setBibliotecaGaleriaCategoriaId(null)}
-                    srcImagem={pecaBibliotecaSrcImagemDisplay}
-                    temImagemPropria={(peca) => pecaBibliotecaTemFotoVisivel(peca)}
+                    srcImagem={(peca) => pecaBibliotecaSrcCapaDisplay(peca)}
+                    temImagemPropria={(peca) => pecaBibliotecaTemCapaOuFotoVisivel(peca)}
                     onThumbEnter={(ev, src, label) => showBibliotecaImgPreview(ev, src, label)}
                     onThumbLeave={hideBibliotecaImgPreview}
                     buscaCodigo={buscaCodigoBiblioteca}
@@ -41757,6 +41904,30 @@ export default function Dashboard() {
                   >
                     {(safeT as any).bibliotecaBotaoIrSemCategoria || 'Ver só sem categoria'}
                   </button>
+                  {!somenteLeituraBiblioteca ? (
+                    <button
+                      type="button"
+                      className={modoSelecaoPecasBiblioteca ? 'biblioteca-btn--green' : 'biblioteca-btn--purple'}
+                      onClick={() => {
+                        setModoSelecaoPecasBiblioteca((prev) => {
+                          const next = !prev
+                          if (next) setClassificacaoLoteExpanded(true)
+                          return next
+                        })
+                      }}
+                      style={{
+                        padding: '8px 12px',
+                        fontSize: '12px',
+                        whiteSpace: 'nowrap',
+                        fontWeight: modoSelecaoPecasBiblioteca ? 700 : 600,
+                      }}
+                      title={(safeT as any).bibliotecaModoSelecaoHint || 'Clique nas peças para marcar ou desmarcar. Depois escolha grupo/subgrupo no painel abaixo.'}
+                    >
+                      {modoSelecaoPecasBiblioteca
+                        ? `${(safeT as any).bibliotecaModoSelecaoAtivo || 'Seleção ativa'} (${selecaoPecasBibliotecaIds.length})`
+                        : (safeT as any).bibliotecaModoSelecaoAtivar || 'Selecionar várias peças'}
+                    </button>
+                  ) : null}
                   {filtroGrupoBiblioteca && filtroGrupoBiblioteca !== BIBLIOTECA_FILTRO_SEM_CATEGORIA ? (
                     <div style={{ minWidth: '200px' }}>
                       <select
@@ -41895,26 +42066,34 @@ export default function Dashboard() {
                     const isPendingChecklist = criacaoChecklistPendentePeca?.origem === 'biblioteca'
                     const isPendingRelatorio = selecionarPecaParaRelatorioServico
                     const isPickable = isPendingChecklist || isPendingRelatorio
+                    const isSelecionadaLote = selecaoPecasBibliotecaIds.includes(peca.id)
                     const isSelected =
+                      isSelecionadaLote ||
                       (isPendingChecklist && pecaSelecionadaParaChecklist?.id === peca.id) ||
                       (isPendingRelatorio && pecaSelecionadaParaRelatorio?.id === peca.id)
+                    const temFotoVisivel = pecaBibliotecaTemCapaOuFotoVisivel(peca)
                     return (
                       <div
                         key={peca.id}
-                        className={`biblioteca-pecas-hub__piece-card${isSelected ? ' biblioteca-pecas-hub__piece-card--selected' : ''}${isPickable ? ' biblioteca-pecas-hub__piece-card--pickable' : ''}`}
+                        className={`biblioteca-pecas-hub__piece-card${isSelected ? ' biblioteca-pecas-hub__piece-card--selected' : ''}${isSelecionadaLote ? ' biblioteca-pecas-hub__piece-card--lote-selecionada' : ''}${isPickable ? ' biblioteca-pecas-hub__piece-card--pickable' : ''}${modoSelecaoPecasBiblioteca && !isPickable ? ' biblioteca-pecas-hub__piece-card--pickable' : ''}`}
                         onClick={() => {
+                          if (modoSelecaoPecasBiblioteca && !isPickable) {
+                            toggleSelecaoPecaBiblioteca(peca.id)
+                            return
+                          }
                           if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca)
                           else if (isPendingRelatorio) setPecaSelecionadaParaRelatorio(peca)
                         }}
                         onDoubleClick={() => {
+                          if (modoSelecaoPecasBiblioteca) return
                           if (!isPickable && (!somenteLeituraBiblioteca || isFiltroSoSemCategoria)) handleEditPecaBiblioteca(peca)
                         }}
                       >
                         <div
                           className="biblioteca-pecas-hub__piece-thumb"
                           onMouseEnter={(ev) => {
-                            if (!pecaBibliotecaTemImagemPropria(peca.imagem)) return
-                            showBibliotecaImgPreview(ev, String(peca.imagem).trim(), peca.nome)
+                            if (!temFotoVisivel) return
+                            showBibliotecaImgPreview(ev, pecaBibliotecaSrcCapaDisplay(peca), peca.nome)
                             const img = ev.currentTarget.querySelector('img')
                             if (img instanceof HTMLImageElement) img.style.transform = 'scale(1.08)'
                           }}
@@ -41924,21 +42103,27 @@ export default function Dashboard() {
                             if (img instanceof HTMLImageElement) img.style.transform = 'scale(1)'
                           }}
                         >
+                          {modoSelecaoPecasBiblioteca && !isPickable ? (
+                            <input
+                              type="checkbox"
+                              className="biblioteca-pecas-hub__piece-check"
+                              checked={isSelecionadaLote}
+                              onChange={() => toggleSelecaoPecaBiblioteca(peca.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              aria-label={`${safeT?.selecionar || 'Selecionar'} ${peca.nome}`}
+                            />
+                          ) : null}
                           <img
-                            src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                            src={pecaBibliotecaSrcCapaDisplay(peca)}
                             alt={peca.nome}
                             loading="lazy"
                             decoding="async"
                             title={hubT.bibliotecaImagemHoverTitle || ''}
-                            className={
-                              pecaBibliotecaTemImagemPropria(peca.imagem)
-                                ? undefined
-                                : 'biblioteca-pecas-hub__piece-img--padrao'
-                            }
+                            className={temFotoVisivel ? undefined : 'biblioteca-pecas-hub__piece-img--padrao'}
                             style={{
                               width: '100%',
                               height: '100%',
-                              objectFit: 'cover',
+                              objectFit: temFotoVisivel ? 'cover' : 'contain',
                               display: 'block',
                               transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
                             }}
@@ -41989,7 +42174,7 @@ export default function Dashboard() {
                             </span>
                           ) : null}
                         </div>
-                        {!somenteLeituraBiblioteca ? (
+                        {!somenteLeituraBiblioteca && !modoSelecaoPecasBiblioteca ? (
                         <div
                           style={{ display: 'flex', gap: '6px', marginTop: '12px', flexWrap: 'wrap' }}
                           onClick={(e) => e.stopPropagation()}
@@ -42102,9 +42287,20 @@ export default function Dashboard() {
                               {safeT?.classificacaoLoteTitulo || 'Classificação rápida em lote'}
                             </h3>
                             <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#b9c3b9' }}>
-                              {safeT?.classificacaoLoteDesc ||
-                                'Selecione peças ou use os filtros acima. Depois aplique grupo/subgrupo de uma vez.'}
+                              {modoSelecaoPecasBiblioteca
+                                ? (safeT as any)?.bibliotecaModoSelecaoHint ||
+                                  'Clique nas peças para marcar ou desmarcar. Depois escolha grupo/subgrupo e aplique em lote.'
+                                : safeT?.classificacaoLoteDesc ||
+                                  'Selecione peças ou use os filtros acima. Depois aplique grupo/subgrupo de uma vez.'}
                             </p>
+                            {selecaoPecasBibliotecaIds.length > 0 ? (
+                              <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#7dffb0', fontWeight: 700 }}>
+                                {(
+                                  (safeT as any)?.bibliotecaPecasSelecionadasCount ||
+                                  '{n} peça(s) selecionada(s)'
+                                ).replace('{n}', String(selecaoPecasBibliotecaIds.length))}
+                              </p>
+                            ) : null}
                           </div>
                           <span style={{ color: '#00a86b', fontSize: '14px', fontWeight: 700, minWidth: '18px', textAlign: 'center' }}>
                             {classificacaoLoteExpanded ? '▲' : '▼'}
@@ -42117,8 +42313,27 @@ export default function Dashboard() {
                             onClick={() => setSelecaoPecasBibliotecaIds(pecasCatalogoFiltradas.map((peca) => peca.id))}
                             style={{ padding: '8px 12px', fontSize: '12px' }}
                           >
-                            {safeT?.classificacaoLoteSelecionarVisiveis || 'Selecionar visíveis'} ({pecasCatalogoFiltradas.length})
+                            {(safeT as any)?.classificacaoLoteSelecionarFiltradas ||
+                              safeT?.classificacaoLoteSelecionarVisiveis ||
+                              'Selecionar todas filtradas'} ({pecasCatalogoFiltradas.length})
                           </button>
+                          {modoSelecaoPecasBiblioteca && !agruparBibliotecaEfetivo && visBiblioteca === 'grid' ? (
+                            <button
+                              type="button"
+                              className="biblioteca-btn--ghost"
+                              onClick={() =>
+                                setSelecaoPecasBibliotecaIds((prev) => {
+                                  const pageIds = pecasPaginaFlat.map((p) => p.id)
+                                  const allOnPage = pageIds.every((id) => prev.includes(id))
+                                  if (allOnPage) return prev.filter((id) => !pageIds.includes(id))
+                                  return [...new Set([...prev, ...pageIds])]
+                                })
+                              }
+                              style={{ padding: '8px 12px', fontSize: '12px' }}
+                            >
+                              {(safeT as any)?.bibliotecaSelecionarPaginaAtual || 'Página actual'} ({pecasPaginaFlat.length})
+                            </button>
+                          ) : null}
                           <button
                             type="button"
                             className="biblioteca-btn--orange"
@@ -42232,23 +42447,44 @@ export default function Dashboard() {
                             <button
                               type="button"
                               className="btn-primary"
-                              onClick={() =>
-                                handleAplicarClassificacaoLote(
-                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasCatalogoFiltradas.map((peca) => peca.id)
-                                )
-                              }
+                              onClick={() => {
+                                const ids = modoSelecaoPecasBiblioteca
+                                  ? selecaoPecasBibliotecaIds
+                                  : selecaoPecasBibliotecaIds.length > 0
+                                    ? selecaoPecasBibliotecaIds
+                                    : pecasCatalogoFiltradas.map((peca) => peca.id)
+                                if (modoSelecaoPecasBiblioteca && ids.length === 0) {
+                                  alert(
+                                    (safeT as any)?.bibliotecaSelecionePecasPrimeiro ||
+                                      'Selecione pelo menos uma peça (clique nas peças ou use «Selecionar todas filtradas»).'
+                                  )
+                                  return
+                                }
+                                handleAplicarClassificacaoLote(ids)
+                              }}
                               style={{ padding: '10px 14px', fontSize: '12px' }}
                             >
                               {safeT?.classificacaoLoteAplicarLote || 'Aplicar em lote'}
+                              {selecaoPecasBibliotecaIds.length > 0 ? ` (${selecaoPecasBibliotecaIds.length})` : ''}
                             </button>
                             <button
                               type="button"
                               className="btn-secondary"
-                              onClick={() =>
-                                handleAplicarPalavrasClassificacaoLote(
-                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasCatalogoFiltradas.map((peca) => peca.id)
-                                )
-                              }
+                              onClick={() => {
+                                const ids = modoSelecaoPecasBiblioteca
+                                  ? selecaoPecasBibliotecaIds
+                                  : selecaoPecasBibliotecaIds.length > 0
+                                    ? selecaoPecasBibliotecaIds
+                                    : pecasCatalogoFiltradas.map((peca) => peca.id)
+                                if (modoSelecaoPecasBiblioteca && ids.length === 0) {
+                                  alert(
+                                    (safeT as any)?.bibliotecaSelecionePecasPrimeiro ||
+                                      'Selecione pelo menos uma peça (clique nas peças ou use «Selecionar todas filtradas»).'
+                                  )
+                                  return
+                                }
+                                handleAplicarPalavrasClassificacaoLote(ids)
+                              }}
                               style={{ padding: '10px 14px', fontSize: '12px' }}
                             >
                               {safeT?.classificacaoLoteAplicarPorPalavras || 'Aplicar por palavras'}
@@ -42262,11 +42498,21 @@ export default function Dashboard() {
                             <button
                               type="button"
                               className="btn-secondary"
-                              onClick={() =>
-                                handleAplicarRegrasSalvas(
-                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasCatalogoFiltradas.map((peca) => peca.id)
-                                )
-                              }
+                              onClick={() => {
+                                const ids = modoSelecaoPecasBiblioteca
+                                  ? selecaoPecasBibliotecaIds
+                                  : selecaoPecasBibliotecaIds.length > 0
+                                    ? selecaoPecasBibliotecaIds
+                                    : pecasCatalogoFiltradas.map((peca) => peca.id)
+                                if (modoSelecaoPecasBiblioteca && ids.length === 0) {
+                                  alert(
+                                    (safeT as any)?.bibliotecaSelecionePecasPrimeiro ||
+                                      'Selecione pelo menos uma peça (clique nas peças ou use «Selecionar todas filtradas»).'
+                                  )
+                                  return
+                                }
+                                handleAplicarRegrasSalvas(ids)
+                              }}
                               style={{ padding: '9px 12px', fontSize: '12px' }}
                             >
                               {safeT?.classificacaoLoteAplicarRegrasSalvas || 'Aplicar regras salvas'}
@@ -42445,6 +42691,28 @@ export default function Dashboard() {
                         >
                           <thead>
                             <tr>
+                              {modoSelecaoPecasBiblioteca && !somenteLeituraBiblioteca ? (
+                                <th className="biblioteca-pecas-hub__catalog-th biblioteca-pecas-hub__catalog-th--check">
+                                  <input
+                                    type="checkbox"
+                                    className="biblioteca-pecas-hub__catalog-check"
+                                    checked={
+                                      pecasPaginaFlat.length > 0 &&
+                                      pecasPaginaFlat.every((p) => selecaoPecasBibliotecaIds.includes(p.id))
+                                    }
+                                    onChange={() => {
+                                      const pageIds = pecasPaginaFlat.map((p) => p.id)
+                                      const allOnPage = pageIds.every((id) => selecaoPecasBibliotecaIds.includes(id))
+                                      if (allOnPage) {
+                                        setSelecaoPecasBibliotecaIds((prev) => prev.filter((id) => !pageIds.includes(id)))
+                                      } else {
+                                        setSelecaoPecasBibliotecaIds((prev) => [...new Set([...prev, ...pageIds])])
+                                      }
+                                    }}
+                                    aria-label={(safeT as any)?.bibliotecaSelecionarPaginaAtual || 'Página actual'}
+                                  />
+                                </th>
+                              ) : null}
                               <th className="biblioteca-pecas-hub__catalog-th biblioteca-pecas-hub__catalog-th--thumb">
                                 <span className="biblioteca-pecas-hub__catalog-th-label">
                                   {(safeT as any)?.fotoColunaBiblioteca || 'Foto'}
@@ -42505,26 +42773,48 @@ export default function Dashboard() {
                               const isPendingChecklist = criacaoChecklistPendentePeca?.origem === 'biblioteca'
                               const isPendingRelatorio = selecionarPecaParaRelatorioServico
                               const isPickable = isPendingChecklist || isPendingRelatorio
+                              const isSelecionadaLote = selecaoPecasBibliotecaIds.includes(peca.id)
                               const isSelected =
+                                isSelecionadaLote ||
                                 (isPendingChecklist && pecaSelecionadaParaChecklist?.id === peca.id) ||
                                 (isPendingRelatorio && pecaSelecionadaParaRelatorio?.id === peca.id)
+                              const temFotoVisivel = pecaBibliotecaTemCapaOuFotoVisivel(peca)
                               return (
                                 <tr
                                   key={peca.id}
-                                  className={`biblioteca-pecas-hub__catalog-row${idx % 2 === 0 ? ' biblioteca-pecas-hub__catalog-row--a' : ' biblioteca-pecas-hub__catalog-row--b'}${isSelected ? ' biblioteca-pecas-hub__catalog-row--selected' : ''}${isPickable ? ' biblioteca-pecas-hub__catalog-row--pickable' : ''}`}
+                                  className={`biblioteca-pecas-hub__catalog-row${idx % 2 === 0 ? ' biblioteca-pecas-hub__catalog-row--a' : ' biblioteca-pecas-hub__catalog-row--b'}${isSelected ? ' biblioteca-pecas-hub__catalog-row--selected' : ''}${isSelecionadaLote ? ' biblioteca-pecas-hub__catalog-row--lote-selecionada' : ''}${isPickable ? ' biblioteca-pecas-hub__catalog-row--pickable' : ''}`}
                                   onClick={() => {
+                                    if (modoSelecaoPecasBiblioteca && !isPickable) {
+                                      toggleSelecaoPecaBiblioteca(peca.id)
+                                      return
+                                    }
                                     if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca)
                                     else if (isPendingRelatorio) setPecaSelecionadaParaRelatorio(peca)
                                   }}
                                   onDoubleClick={() => {
+                                    if (modoSelecaoPecasBiblioteca) return
                                     if (!isPickable && (!somenteLeituraBiblioteca || isFiltroSoSemCategoria)) handleEditPecaBiblioteca(peca)
                                   }}
                                 >
+                                  {modoSelecaoPecasBiblioteca && !somenteLeituraBiblioteca ? (
+                                    <td
+                                      className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--check"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        className="biblioteca-pecas-hub__catalog-check"
+                                        checked={isSelecionadaLote}
+                                        onChange={() => toggleSelecaoPecaBiblioteca(peca.id)}
+                                        aria-label={`${safeT?.selecionar || 'Selecionar'} ${peca.nome}`}
+                                      />
+                                    </td>
+                                  ) : null}
                                   <td
                                     className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--thumb"
                                     onMouseEnter={(ev) => {
-                                      if (!pecaBibliotecaTemImagemPropria(peca.imagem)) return
-                                      showBibliotecaImgPreview(ev, String(peca.imagem).trim(), peca.nome)
+                                      if (!pecaBibliotecaTemCapaOuFotoVisivel(peca)) return
+                                      showBibliotecaImgPreview(ev, pecaBibliotecaSrcCapaDisplay(peca), peca.nome)
                                       const img = ev.currentTarget.querySelector('img')
                                       if (img instanceof HTMLImageElement) {
                                         img.style.transform = 'scale(1.12)'
@@ -42541,14 +42831,15 @@ export default function Dashboard() {
                                     }}
                                   >
                                     <img
-                                      src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                                      src={pecaBibliotecaSrcCapaDisplay(peca)}
                                       alt={peca.nome}
                                       loading="lazy"
                                       decoding="async"
-                                      className={`biblioteca-pecas-hub__catalog-img${pecaBibliotecaTemImagemPropria(peca.imagem) ? '' : ' biblioteca-pecas-hub__catalog-img--padrao'}`}
+                                      className={`biblioteca-pecas-hub__catalog-img${temFotoVisivel ? '' : ' biblioteca-pecas-hub__catalog-img--padrao'}`}
                                       title={hubT.bibliotecaImagemHoverTitle || ''}
                                       style={{
                                         transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                                        objectFit: temFotoVisivel ? 'cover' : 'contain',
                                       }}
                                     />
                                   </td>
@@ -47116,14 +47407,14 @@ A1;Peça exemplo;10`}
                                   <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', backgroundColor: '#484848', borderRadius: '3px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
                                       <img
-                                        src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                                        src={pecaBibliotecaSrcCapaDisplay(peca)}
                                         alt={peca.nome}
                                         style={{
                                           width: '40px',
                                           height: '40px',
-                                          objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                                          objectFit: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? 'cover' : 'contain',
                                           borderRadius: '4px',
-                                          backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
+                                          backgroundColor: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? undefined : '#363636',
                                           flexShrink: 0,
                                         }}
                                       />
@@ -47460,14 +47751,14 @@ A1;Peça exemplo;10`}
                                       return (
                                         <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '10px' }}>
                                           <img
-                                            src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                                            src={pecaBibliotecaSrcCapaDisplay(peca)}
                                             alt={peca.nome}
                                             style={{
                                               width: '30px',
                                               height: '30px',
-                                              objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                                              objectFit: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? 'cover' : 'contain',
                                               borderRadius: '4px',
-                                              backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
+                                              backgroundColor: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? undefined : '#363636',
                                               flexShrink: 0,
                                             }}
                                           />
@@ -57331,15 +57622,15 @@ A1;Peça exemplo;10`}
                                     }}
                                   >
                                     <img
-                                      src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                                      src={pecaBibliotecaSrcCapaDisplay(peca)}
                                       alt={peca.nome}
                                       style={{
                                         width: '50px',
                                         height: '50px',
-                                        objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                                        objectFit: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? 'cover' : 'contain',
                                         borderRadius: '4px',
                                         border: '1px solid rgba(0, 200, 83, 0.2)',
-                                        backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
+                                        backgroundColor: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? undefined : '#363636',
                                         flexShrink: 0,
                                       }}
                                     />
@@ -57408,15 +57699,15 @@ A1;Peça exemplo;10`}
                                   }}
                                 >
                                   <img
-                                    src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                                    src={pecaBibliotecaSrcCapaDisplay(peca)}
                                     alt={peca.nome}
                                     style={{
                                       width: '50px',
                                       height: '50px',
-                                      objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                                      objectFit: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? 'cover' : 'contain',
                                       borderRadius: '4px',
                                       border: '1px solid rgba(0, 200, 83, 0.2)',
-                                      backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
+                                      backgroundColor: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? undefined : '#363636',
                                       flexShrink: 0,
                                     }}
                                   />
@@ -68726,10 +69017,10 @@ A1;Peça exemplo;10`}
                               }}
                             >
                               <ProImageHoverPreview
-                                src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                                src={pecaBibliotecaSrcCapaDisplay(peca)}
                                 alt={peca.nome}
                                 label={`${peca.codigo} — ${peca.nome}`}
-                                disablePreview={!pecaBibliotecaTemImagemPropria(peca.imagem)}
+                                disablePreview={!pecaBibliotecaTemCapaOuFotoVisivel(peca)}
                                 thumbClassName="fg-pro-preview__thumb fg-pro-preview__thumb--peca-sm"
                               />
                               <div style={{ flex: 1 }}>
@@ -77717,6 +78008,89 @@ A1;Peça exemplo;10`}
                     </button>
                   ) : null}
                 </div>
+
+                <div className="biblioteca-pecas-form__field" style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                  <label className="biblioteca-pecas-form__label" style={{ fontSize: 12 }}>
+                    {(safeT as any)?.pecaBibliotecaImagemCapaTitulo || 'Imagem de início (catálogo)'}
+                  </label>
+                  <p style={{ fontSize: 10, color: '#b8c4bc', margin: '0 0 8px', lineHeight: 1.4 }}>
+                    {(safeT as any)?.pecaBibliotecaImagemCapaHint ||
+                      'Opcional. Aparece na grelha. Se vazia, usa a foto do produto.'}
+                  </p>
+                  <input
+                    id="peca-biblioteca-capa-upload-compact"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file && file.type.startsWith('image/')) {
+                        const reader = new FileReader()
+                        reader.onload = (event) => {
+                          const result = event.target?.result as string
+                          setPecaBibliotecaForm({ ...pecaBibliotecaForm, imagemCapa: result })
+                        }
+                        reader.readAsDataURL(file)
+                      }
+                    }}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => document.getElementById('peca-biblioteca-capa-upload-compact')?.click()}
+                    style={{ marginBottom: 8, padding: '5px 10px', fontSize: '11px' }}
+                  >
+                    {(safeT as any)?.pecaBibliotecaSelecionarCapa || 'Selecionar imagem de início'}
+                  </button>
+                  <div className="biblioteca-pecas-form__url-row" style={{ marginBottom: 8 }}>
+                    <input
+                      type="url"
+                      className="biblioteca-pecas-form__input biblioteca-pecas-form__url-input"
+                      placeholder={(safeT as any)?.pecaBibliotecaCapaUrlPlaceholder || 'https://... (URL da capa)'}
+                      value={pecaBibliotecaImagemCapaUrlDraft}
+                      onChange={(e) => setPecaBibliotecaImagemCapaUrlDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          void aplicarImagemCapaPecaBibliotecaDeUrl(pecaBibliotecaImagemCapaUrlDraft)
+                        }
+                      }}
+                      style={{ fontSize: '11px' }}
+                    />
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => void aplicarImagemCapaPecaBibliotecaDeUrl(pecaBibliotecaImagemCapaUrlDraft)}
+                      style={{ padding: '5px 8px', fontSize: '10px' }}
+                    >
+                      {(safeT as any)?.pecaBibliotecaAplicarUrl || 'Aplicar URL'}
+                    </button>
+                  </div>
+                  <div className="biblioteca-pecas-form__preview-wrap">
+                    <div className="biblioteca-pecas-form__preview-frame" style={{ maxWidth: 120 }}>
+                      <img
+                        src={pecaBibliotecaSrcCapaDisplay(pecaBibliotecaForm)}
+                        alt={(safeT as any)?.pecaBibliotecaImagemCapaTitulo || 'Capa catálogo'}
+                        className={
+                          pecaBibliotecaTemCapaOuFotoVisivel(pecaBibliotecaForm)
+                            ? undefined
+                            : 'biblioteca-pecas-form__preview-img--padrao'
+                        }
+                        style={{ width: '100%', maxHeight: 90, objectFit: 'cover', display: 'block' }}
+                      />
+                    </div>
+                    {pecaBibliotecaTemImagemPropria(pecaBibliotecaForm.imagemCapa) ? (
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => setPecaBibliotecaForm({ ...pecaBibliotecaForm, imagemCapa: '' })}
+                        style={{ display: 'block', margin: '6px auto 0', padding: '4px 8px', fontSize: '10px' }}
+                      >
+                        {(safeT as any)?.pecaBibliotecaUsarFotoProduto || 'Usar foto do produto'}
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
                 <div className="biblioteca-pecas-form__field">
                   <input
                     type="text"
@@ -77866,14 +78240,14 @@ A1;Peça exemplo;10`}
                 {pecasBiblioteca.map(peca => (
                   <div key={peca.id} style={{ backgroundColor: '#404040', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                     <img
-                      src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                      src={pecaBibliotecaSrcCapaDisplay(peca)}
                       alt="Imagem da Peça"
                       style={{
                         maxWidth: '100%',
                         maxHeight: '100px',
-                        objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                        objectFit: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? 'cover' : 'contain',
                         marginBottom: '10px',
-                        backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
+                        backgroundColor: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? undefined : '#363636',
                         borderRadius: '4px',
                       }}
                     />
@@ -77960,15 +78334,15 @@ A1;Peça exemplo;10`}
                       >
                         <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                           <img
-                            src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                            src={pecaBibliotecaSrcCapaDisplay(peca)}
                             alt={peca.nome}
                             style={{
                               width: '60px',
                               height: '60px',
-                              objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                              objectFit: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? 'cover' : 'contain',
                               borderRadius: '4px',
-                              backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
-                              padding: pecaBibliotecaTemImagemPropria(peca.imagem) ? 0 : '4px',
+                              backgroundColor: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? undefined : '#363636',
+                              padding: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? 0 : '4px',
                               boxSizing: 'border-box',
                             }}
                           />
@@ -80801,15 +81175,15 @@ A1;Peça exemplo;10`}
                   {viewingRelatorioServico.pecasSubstituicao.map((peca, index) => (
                     <div key={peca.id || index} style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                       <img
-                        src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                        src={pecaBibliotecaSrcCapaDisplay(peca)}
                         alt={peca.descricao}
                         style={{
                           width: '100%',
                           maxHeight: '100px',
-                          objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                          objectFit: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? 'cover' : 'contain',
                           borderRadius: '4px',
                           marginBottom: '8px',
-                          backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
+                          backgroundColor: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? undefined : '#363636',
                         }}
                       />
                       <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>{peca.descricao}</p>
@@ -80831,15 +81205,15 @@ A1;Peça exemplo;10`}
                   {viewingRelatorioServico.pecasInstaladas.map((peca, index) => (
                     <div key={peca.id || index} style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 168, 107, 0.25)' }}>
                       <img
-                        src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                        src={pecaBibliotecaSrcCapaDisplay(peca)}
                         alt={peca.descricao}
                         style={{
                           width: '100%',
                           maxHeight: '100px',
-                          objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                          objectFit: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? 'cover' : 'contain',
                           borderRadius: '4px',
                           marginBottom: '8px',
-                          backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#363636',
+                          backgroundColor: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? undefined : '#363636',
                         }}
                       />
                       <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>{peca.descricao}</p>

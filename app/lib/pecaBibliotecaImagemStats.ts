@@ -23,6 +23,8 @@ export type PecaBibliotecaImagemStats = {
 export type PecaBibliotecaImagemInput = {
   id?: unknown
   imagem?: unknown
+  /** Miniatura opcional na grelha da biblioteca; se vazia, usa `imagem`. */
+  imagemCapa?: unknown
   temImagemServidor?: unknown
 }
 
@@ -156,4 +158,23 @@ export function resolvePecaBibliotecaImagemSrcForDisplay(
   const imagem = input
   if (!pecaBibliotecaTemImagemPropria(imagem)) return fallbackSrc
   return resolveHomagOrDirectSrc(String(imagem).trim(), fallbackSrc)
+}
+
+/** Miniatura na grelha: `imagemCapa` personalizada, senão foto da peça / servidor. */
+export function resolvePecaBibliotecaCapaSrcForDisplay(
+  peca: PecaBibliotecaImagemInput,
+  fallbackSrc = '/brand/nonato-logo-original.png'
+): string {
+  const capa = typeof peca.imagemCapa === 'string' ? peca.imagemCapa.trim() : ''
+  if (pecaBibliotecaTemImagemPropria(capa)) {
+    return resolveHomagOrDirectSrc(capa, fallbackSrc)
+  }
+  return resolvePecaBibliotecaImagemSrcForDisplay(peca, fallbackSrc)
+}
+
+/** Há imagem para mostrar na grelha (capa, foto local ou pendente no servidor). */
+export function pecaBibliotecaTemCapaOuFotoVisivel(peca: PecaBibliotecaImagemInput): boolean {
+  const capa = typeof peca.imagemCapa === 'string' ? peca.imagemCapa : ''
+  if (pecaBibliotecaTemImagemPropria(capa)) return true
+  return pecaBibliotecaTemFotoVisivel(peca)
 }
