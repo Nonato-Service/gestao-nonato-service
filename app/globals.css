@@ -24987,17 +24987,59 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   background: rgba(0, 255, 140, 0.07);
 }
 
+@keyframes biblioteca-hub-painel-chevron-glow {
+  0%,
+  100% {
+    opacity: 0.42;
+    filter: brightness(0.9);
+    text-shadow:
+      0 0 4px rgba(255, 255, 255, 0.25),
+      0 0 8px rgba(255, 255, 255, 0.12);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.35);
+    text-shadow:
+      0 0 6px rgba(255, 255, 255, 0.95),
+      0 0 14px rgba(255, 255, 255, 0.75),
+      0 0 26px rgba(255, 255, 255, 0.45),
+      0 0 40px rgba(255, 255, 255, 0.2);
+  }
+}
+
 .biblioteca-hub-painel__chevron {
   flex: 0 0 auto;
-  width: 18px;
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  font-size: 22px;
+  font-weight: 700;
   line-height: 1;
-  color: rgba(170, 255, 200, 0.9);
+  color: #fff;
   text-align: center;
+  animation: biblioteca-hub-painel-chevron-glow 1.8s ease-in-out infinite;
+  will-change: opacity, filter, text-shadow;
 }
 
 .biblioteca-hub-painel--fechado .biblioteca-hub-painel__chevron {
-  color: rgba(200, 200, 200, 0.75);
+  color: #fff;
+}
+
+.biblioteca-hub-painel--aberto .biblioteca-hub-painel__chevron {
+  color: #fff;
+  animation-duration: 2.1s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .biblioteca-hub-painel__chevron {
+    animation: none;
+    opacity: 0.95;
+    filter: none;
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.55);
+  }
 }
 
 .biblioteca-hub-painel__icone {

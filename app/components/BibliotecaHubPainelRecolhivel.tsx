@@ -119,7 +119,7 @@ export function BibliotecaHubPainelRecolhivel({
         aria-label={fechado ? `${labelExpandir}: ${titulo}` : `${labelRetrair}: ${titulo}`}
       >
         <span className="biblioteca-hub-painel__chevron" aria-hidden>
-          {fechado ? '▸' : '▾'}
+          {fechado ? '▶' : '▼'}
         </span>
         <span className="biblioteca-hub-painel__icone" aria-hidden>
           {icone}
