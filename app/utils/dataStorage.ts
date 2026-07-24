@@ -13,8 +13,10 @@ import {
 } from './manuaisIndexedDb'
 import {
   NONATO_CRITICAL_CADASTRO_KEYS,
+  NONATO_PROTECTED_ARRAY_KEYS,
   serverKeyHasMeaningfulData,
 } from '../lib/criticalCadastroKeys'
+import { mergeArraysByIdDeferServerLocal } from '../lib/mergeArraysById'
 import {
   mergePecasBibliotecaArrays,
   pecasBibliotecaArraysDiffer,
@@ -680,14 +682,14 @@ async function shouldBlockPecasImageStripOverwrite(key: string, value: unknown):
 }
 
 async function shouldBlockShrinkServerOverwrite(key: string, value: unknown): Promise<boolean> {
-  if (key !== PECAS_BIBLIOTECA_KEY) return false
+  if (!NONATO_PROTECTED_ARRAY_KEYS.has(key)) return false
   if (!Array.isArray(value)) return false
   try {
     const existing = await forceLoadCadastroFromServer(key)
     if (!Array.isArray(existing) || existing.length === 0) return false
     if (value.length >= existing.length) return false
     console.warn(
-      `[Nonato] Gravação ignorada: «${key}» tem ${value.length} item(ns) — o servidor tem ${existing.length}; não substituir catálogo maior.`
+      `[Nonato] Gravação ignorada: «${key}» tem ${value.length} item(ns) — o servidor tem ${existing.length}; não substituir cadastro maior.`
     )
     return true
   } catch {
@@ -706,7 +708,7 @@ async function shouldBlockEmptyServerOverwrite(key: string, value: unknown): Pro
       return false
     }
   }
-  if (!NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE.has(key)) return false
+  if (!NONATO_PROTECTED_ARRAY_KEYS.has(key) && !NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE.has(key)) return false
   if (!isEmptyDataArray(value)) return false
   try {
     const existing = await forceLoadCadastroFromServer(key)
@@ -719,6 +721,9 @@ async function shouldBlockEmptyServerOverwrite(key: string, value: unknown): Pro
 /** Remove listas vazias protegidas do payload de «Enviar tudo» para não apagar o servidor. */
 export function omitEmptyProtectedKeysForServerPush(data: Record<string, any>): Record<string, any> {
   const out: Record<string, any> = { ...data }
+  for (const key of NONATO_PROTECTED_ARRAY_KEYS) {
+    if (isEmptyDataArray(out[key])) delete out[key]
+  }
   for (const key of NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE) {
     if (isEmptyDataArray(out[key])) delete out[key]
   }
@@ -1775,6 +1780,17 @@ export async function collectAllLocalNonatoDataForSync(): Promise<Record<string,
     /* ignorar */
   }
 
+  /** Relatórios podem estar só em IndexedDB quando localStorage encheu. */
+  keys.delete(RELATORIOS_SERVICO_KEY)
+  try {
+    const relSnap = await readLocalValueForLoad(RELATORIOS_SERVICO_KEY, true)
+    if (Array.isArray(relSnap.parsed) && relSnap.parsed.length > 0) {
+      out[RELATORIOS_SERVICO_KEY] = relSnap.parsed
+    }
+  } catch {
+    /* ignorar */
+  }
+
   for (const key of Array.from(keys)) {
     const raw = localStorage.getItem(key)
     if (raw === null || raw === '') continue
@@ -1945,15 +1961,8 @@ async function writeLocalFromServerPull(key: string, value: unknown): Promise<vo
     return
   }
   if (key === RELATORIOS_SERVICO_KEY && Array.isArray(value)) {
-    let localParsed: unknown = null
-    const raw = localStorage.getItem(key)
-    if (raw) {
-      try {
-        localParsed = JSON.parse(raw)
-      } catch {
-        /* ignorar */
-      }
-    }
+    const snap = await readLocalValueForLoad(key, true)
+    const localParsed = snap.parsed
     const localCount = Array.isArray(localParsed) ? localParsed.length : 0
     if (localCount > value.length && localCount >= 1) {
       console.warn(
@@ -1961,6 +1970,31 @@ async function writeLocalFromServerPull(key: string, value: unknown): Promise<vo
       )
     }
     const merged = mergeRelatoriosServicoDeferServerLocal(value, localParsed)
+    try {
+      await saveKv(key, merged)
+    } catch {
+      /* ignorar */
+    }
+    writeLocalStorageValue(key, merged)
+    try {
+      if (JSON.stringify(merged) !== JSON.stringify(value)) {
+        scheduleServerMigrationPush(key, merged)
+      }
+    } catch {
+      /* ignorar */
+    }
+    return
+  }
+  if (NONATO_PROTECTED_ARRAY_KEYS.has(key) && Array.isArray(value)) {
+    const snap = await readLocalValueForLoad(key, true)
+    const localParsed = snap.parsed
+    const localCount = Array.isArray(localParsed) ? localParsed.length : 0
+    if (localCount > value.length && localCount >= 1) {
+      console.warn(
+        `[Nonato] Sync «${key}»: servidor (${value.length}) < local (${localCount}) — a fundir por id.`
+      )
+    }
+    const merged = mergeArraysByIdDeferServerLocal(value, localParsed)
     try {
       await saveKv(key, merged)
     } catch {
@@ -2006,6 +2040,15 @@ export async function applySilentServerSync(server: Record<string, unknown>): Pr
       if (localLen > s.length && localLen >= 1) {
         console.warn(
           `[Nonato] Sync: servidor tem ${s.length} relatório(s), local ${localLen} — a fundir (não substituir).`
+        )
+      }
+    }
+    if (NONATO_PROTECTED_ARRAY_KEYS.has(key) && Array.isArray(s)) {
+      const snap = await readLocalValueForLoad(key, true)
+      const localLen = Array.isArray(snap.parsed) ? snap.parsed.length : 0
+      if (localLen > s.length && localLen >= 1) {
+        console.warn(
+          `[Nonato] Sync «${key}»: servidor ${s.length} < local ${localLen} — a fundir (não substituir).`
         )
       }
     }
@@ -2129,6 +2172,12 @@ export async function saveAllToServer(
         console.warn(
           `[Nonato] save-all: «${key}» vazio ignorado — mantém-se o cadastro no servidor.`
         )
+        continue
+      }
+      if (await shouldBlockShrinkServerOverwrite(key, value)) {
+        continue
+      }
+      if (await shouldBlockPecasImageStripOverwrite(key, value)) {
         continue
       }
       safeData[key] = value

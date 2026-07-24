@@ -6,6 +6,7 @@ import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
 import { textFileContentUnchanged, writeTextFileAtomic } from '../writeIfChanged'
+import { assessServerCadastroTextWrite } from '../../../lib/serverCadastroGuard'
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     const filePath = path.join(dataDir, `${key}.txt`)
+    const jsonGuardPath = path.join(resolveDataDirForKey(key, dataDir), `${key}.json`)
     const textPayload = typeof value === 'string' ? value : String(value)
 
     let revision: number | undefined
@@ -41,6 +43,22 @@ export async function POST(request: NextRequest) {
         revision = meta.revision
         updatedAt = meta.updatedAt
       } else {
+        const guard = assessServerCadastroTextWrite(key, textPayload, jsonGuardPath)
+        if (!guard.allowed) {
+          console.warn(
+            `[Nonato API save-text] Bloqueado (${guard.reason}): ${key} — servidor ${guard.existingCount}, pedido ${guard.newCount}`
+          )
+          return NextResponse.json(
+            {
+              error: 'cadastro_protected',
+              reason: guard.reason,
+              key,
+              existingCount: guard.existingCount,
+              newCount: guard.newCount,
+            },
+            { status: 409 }
+          )
+        }
         writeTextFileAtomic(filePath, textPayload)
         const meta = bumpSyncMeta(dataDir)
         revision = meta.revision

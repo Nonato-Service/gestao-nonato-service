@@ -105,6 +105,7 @@ import {
   backupCriticalCadastroToIdb,
   restoreCriticalCadastroFromIdbIfNeeded,
   mergeSafetyBackupIntoServerData,
+  recoverCriticalCadastroGapsFromIdbAndSnapshot,
   hasMeaningfulCadastroInLocalStorage,
   consumeCadastroRestoredNoticeCount,
 } from './utils/cadastroSafety'
@@ -8362,6 +8363,41 @@ export default function Dashboard() {
     return () => window.removeEventListener('nonato-data-local-changed', onRelSync)
   }, [])
 
+  /** Vigilância pós-arranque: se clientes ficarem a zero, tentar recuperar uma vez do servidor. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (appInitialLoading) return
+    if (clientes.length > 0) return
+    let cancelled = false
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        if (cancelled || clientes.length > 0) return
+        try {
+          const fromLoad = await loadData('nonato-clientes')
+          if (cancelled || !Array.isArray(fromLoad) || fromLoad.length === 0) return
+          const base = (fromLoad as Cliente[]).map((c) => ({
+            ...c,
+            equipamentos: Array.isArray(c.equipamentos) ? c.equipamentos : [],
+            relatorios:
+              c.relatorios && typeof c.relatorios === 'object' && !Array.isArray(c.relatorios)
+                ? c.relatorios
+                : {},
+          }))
+          const { lista: normalized } = garantirCodigosClientes(base)
+          setClientes(normalized)
+          await saveData('nonato-clientes', normalized, true, false)
+          setCadastroRestoredNotice((prev) => (prev && prev > 0 ? prev : 1))
+        } catch {
+          /* ignorar */
+        }
+      })()
+    }, 2500)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [appInitialLoading, clientes.length])
+
   /** Barra lateral: recarregar e repor botões em falta após sync automática. */
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -10247,11 +10283,29 @@ export default function Dashboard() {
               } else {
                 const postDemoWipe = document.cookie.split(';').some((c) => c.trim().startsWith('nonato_post_demo_wipe=1'))
                 if (demoSt.isDemo && !demoSt.expired) {
-                  await wipeLocalNonatoForBootstrap(true)
-                  preferServerOnlyAfterFullPullWipe = true
+                  const preDemo = await loadAllForBootstrap()
+                  if (preDemo.ok && !serverCadastroBundleIsEmpty(preDemo.data as Record<string, unknown>)) {
+                    await backupCriticalCadastroToIdb()
+                    await wipeLocalNonatoForBootstrap(true)
+                    serverDataFromFullPullPrefetch = preDemo.data
+                    preferServerOnlyAfterFullPullWipe = true
+                  } else {
+                    console.warn(
+                      '[Nonato] Demo: servidor indisponível ou sem cadastro — dados locais mantidos (protecção anti-perda).'
+                    )
+                  }
                 } else if (postDemoWipe && !demoSt.isDemo && !demoSt.guestLock) {
-                  await wipeLocalNonatoForBootstrap(true)
-                  preferServerOnlyAfterFullPullWipe = true
+                  const prePostDemo = await loadAllForBootstrap()
+                  if (prePostDemo.ok && !serverCadastroBundleIsEmpty(prePostDemo.data as Record<string, unknown>)) {
+                    await backupCriticalCadastroToIdb()
+                    await wipeLocalNonatoForBootstrap(true)
+                    serverDataFromFullPullPrefetch = prePostDemo.data
+                    preferServerOnlyAfterFullPullWipe = true
+                  } else {
+                    console.warn(
+                      '[Nonato] Pós-demo: servidor indisponível — dados locais mantidos (protecção anti-perda).'
+                    )
+                  }
                   document.cookie = 'nonato_post_demo_wipe=; path=/; max-age=0'
                 }
               }
@@ -13778,6 +13832,32 @@ export default function Dashboard() {
         console.error('Erro ao carregar dados iniciais:', error)
       } finally {
         setBlockImplicitServerPushDuringBootstrap(false)
+        if (!bootstrapLoadErrored && typeof window !== 'undefined') {
+          await restoreCriticalCadastroFromIdbIfNeeded()
+          const gapRestored = await recoverCriticalCadastroGapsFromIdbAndSnapshot()
+          if (gapRestored > 0) {
+            try {
+              const raw = localStorage.getItem('nonato-clientes')
+              if (raw) {
+                const parsed = JSON.parse(raw) as Cliente[]
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                  const base = parsed.map((c: Cliente) => ({
+                    ...c,
+                    equipamentos: Array.isArray(c.equipamentos) ? c.equipamentos : [],
+                    relatorios:
+                      c.relatorios && typeof c.relatorios === 'object' && !Array.isArray(c.relatorios)
+                        ? c.relatorios
+                        : {},
+                  }))
+                  const { lista: normalized } = garantirCodigosClientes(base)
+                  setClientes(normalized)
+                }
+              }
+            } catch {
+              /* ignorar */
+            }
+          }
+        }
         if (
           !bootstrapLoadErrored &&
           typeof window !== 'undefined' &&

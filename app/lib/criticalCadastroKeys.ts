@@ -21,6 +21,23 @@ export const NONATO_CRITICAL_CADASTRO_KEYS = [
 
 export type NonatoCriticalCadastroKey = (typeof NONATO_CRITICAL_CADASTRO_KEYS)[number]
 
+/** Todas as chaves-array que nunca podem ser apagadas ou encolhidas no servidor. */
+export const NONATO_PROTECTED_ARRAY_KEYS = new Set<string>([
+  ...NONATO_CRITICAL_CADASTRO_KEYS,
+  'nonato-biblioteca-pecas',
+  'nonato-diario-pedidos-dia',
+  'nonato-conhecimento-tecnicos',
+  'nonato-checklist-basico-instancias',
+  'nonato-fechamentos-relatorios',
+  'nonato-fechamentos-guardados-biblioteca',
+])
+
+/** Chaves IndexedDB que nunca apagar durante wipe/sync total. */
+export const NONATO_IDB_KEYS_NEVER_DELETE = new Set<string>([
+  'nonato-cadastro-safety-backup',
+  'nonato-offline-server-snapshot',
+])
+
 export function serverKeyHasMeaningfulData(value: unknown): boolean {
   if (value == null || value === '') return false
   if (Array.isArray(value)) return value.length > 0

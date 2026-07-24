@@ -2,6 +2,8 @@
  * Armazenamento dos manuais em IndexedDB — o localStorage (~5MB) enche com PDFs em base64.
  */
 
+import { NONATO_IDB_KEYS_NEVER_DELETE } from '../lib/criticalCadastroKeys'
+
 const DB_NAME = 'nonato-gestao-tecnica-v1'
 const STORE = 'kv'
 const KEY = 'nonato-manuais-familias-grupos'
@@ -106,6 +108,10 @@ export async function deleteAllNonatoKvFromIdb(): Promise<void> {
         }
         const key = c.key
         if (typeof key === 'string' && key.startsWith('nonato-')) {
+          if (NONATO_IDB_KEYS_NEVER_DELETE.has(key)) {
+            c.continue()
+            return
+          }
           c.delete()
         }
         c.continue()

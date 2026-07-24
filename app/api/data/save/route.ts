@@ -7,6 +7,7 @@ import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
 import { jsonFileContentUnchanged, writeJsonFileAtomic } from '../writeIfChanged'
+import { assessServerCadastroWrite } from '../../../lib/serverCadastroGuard'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -64,6 +65,26 @@ export async function POST(request: NextRequest) {
         revision = meta.revision
         updatedAt = meta.updatedAt
       } else {
+        const guard = assessServerCadastroWrite(key, value, filePath)
+        if (!guard.allowed) {
+          console.warn(
+            `[Nonato API] Gravação bloqueada (${guard.reason}): ${key} — servidor ${guard.existingCount}, pedido ${guard.newCount}`
+          )
+          return NextResponse.json(
+            {
+              error: 'cadastro_protected',
+              reason: guard.reason,
+              key,
+              existingCount: guard.existingCount,
+              newCount: guard.newCount,
+              message:
+                guard.reason === 'empty_overwrite'
+                  ? `Não é permitido apagar «${key}» com lista vazia enquanto existirem ${guard.existingCount} registo(s) no servidor.`
+                  : `Não é permitido reduzir «${key}» de ${guard.existingCount} para ${guard.newCount} registo(s).`,
+            },
+            { status: 409, headers: jsonHeaders() }
+          )
+        }
         writeJsonFileAtomic(filePath, value)
         const meta = bumpSyncMeta(dataDir)
         revision = meta.revision

@@ -11,6 +11,7 @@ import { mergePecasBibliotecaArrays } from '../lib/mergePecasBiblioteca'
 import { getKv, saveKv } from './manuaisIndexedDb'
 
 const BACKUP_KEY = 'nonato-cadastro-safety-backup'
+const SNAPSHOT_KEY = 'nonato-offline-server-snapshot'
 const RESTORED_FLAG = 'nonato-cadastro-safety-restored-count'
 const PECAS_BIBLIOTECA_KEY = 'nonato-pecas-biblioteca'
 const CLIENTES_KEY = 'nonato-clientes'
@@ -224,12 +225,96 @@ export async function mergeSafetyBackupIntoServerData(
   return merged
 }
 
+/**
+ * Segunda passagem no arranque: repõe chaves críticas vazias no LS a partir do snapshot offline ou backup IDB.
+ */
+export async function recoverCriticalCadastroGapsFromIdbAndSnapshot(): Promise<number> {
+  if (typeof window === 'undefined') return 0
+  let snapshot: Record<string, unknown> | null = null
+  try {
+    const raw = await getKv(SNAPSHOT_KEY)
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+      snapshot = raw as Record<string, unknown>
+    }
+  } catch {
+    /* ignorar */
+  }
+  let backup: Record<string, string> | null = null
+  try {
+    backup = (await getKv(BACKUP_KEY)) as Record<string, string> | null
+  } catch {
+    /* ignorar */
+  }
+
+  let restored = 0
+  for (const key of NONATO_CRITICAL_CADASTRO_KEYS) {
+    if (localStorageKeyHasMeaningfulCadastro(localStorage.getItem(key))) continue
+
+    let payload: unknown = null
+    const snapVal = snapshot?.[key]
+    if (serverKeyHasMeaningfulData(snapVal)) {
+      payload = snapVal
+    } else {
+      const fromBackup = backup?.[key]
+      if (localStorageKeyHasMeaningfulCadastro(fromBackup)) {
+        try {
+          payload = JSON.parse(fromBackup!)
+        } catch {
+          payload = fromBackup
+        }
+      } else {
+        try {
+          const fromIdb = await getKv(key)
+          if (serverKeyHasMeaningfulData(fromIdb)) payload = fromIdb
+        } catch {
+          /* ignorar */
+        }
+      }
+    }
+
+    if (!serverKeyHasMeaningfulData(payload)) continue
+    try {
+      localStorage.setItem(key, JSON.stringify(payload))
+      restored++
+      try {
+        await saveKv(key, payload)
+      } catch {
+        /* ignorar */
+      }
+      try {
+        window.dispatchEvent(new CustomEvent('nonato-data-local-changed', { detail: { key } }))
+      } catch {
+        /* ignorar */
+      }
+    } catch {
+      try {
+        await saveKv(key, payload)
+        restored++
+        try {
+          window.dispatchEvent(new CustomEvent('nonato-data-local-changed', { detail: { key } }))
+        } catch {
+          /* ignorar */
+        }
+      } catch {
+        /* ignorar */
+      }
+    }
+  }
+  if (restored > 0) {
+    try {
+      sessionStorage.setItem(RESTORED_FLAG, String(restored))
+    } catch {
+      /* ignorar */
+    }
+  }
+  return restored
+}
+
 /** Nunca gravar snapshot offline mais vazio do que o que já existe. */
 export async function safeMergeOfflineSnapshot(data: Record<string, any>): Promise<void> {
   if (typeof window === 'undefined' || Object.keys(data).length === 0) return
   if (serverCadastroBundleIsEmpty(data as Record<string, unknown>)) return
 
-  const SNAPSHOT_KEY = 'nonato-offline-server-snapshot'
   let existing: Record<string, unknown> | null = null
   try {
     const raw = await getKv(SNAPSHOT_KEY)

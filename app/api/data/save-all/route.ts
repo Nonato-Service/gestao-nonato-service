@@ -7,6 +7,7 @@ import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
 import { jsonFileContentUnchanged, writeJsonFileAtomic } from '../writeIfChanged'
+import { assessServerCadastroWrite } from '../../../lib/serverCadastroGuard'
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,6 +46,16 @@ export async function POST(request: NextRequest) {
         ensureDemoDataDir(targetDir)
         const filePath = path.join(targetDir, `${key}.json`)
         if (jsonFileContentUnchanged(filePath, value)) {
+          continue
+        }
+        const guard = assessServerCadastroWrite(key, value, filePath)
+        if (!guard.allowed) {
+          console.warn(
+            `[Nonato API save-all] Bloqueado (${guard.reason}): ${key} — servidor ${guard.existingCount}, pedido ${guard.newCount}`
+          )
+          errors.push(
+            `${key}: protegido (${guard.reason === 'empty_overwrite' ? 'lista vazia' : 'lista menor'})`
+          )
           continue
         }
         writeJsonFileAtomic(filePath, value)
