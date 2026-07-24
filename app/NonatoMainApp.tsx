@@ -42163,7 +42163,7 @@ export default function Dashboard() {
                         }}
                       >
                         <div
-                          className="biblioteca-pecas-hub__piece-thumb"
+                          className={`biblioteca-pecas-hub__piece-thumb${!temFotoVisivel ? ' biblioteca-pecas-hub__piece-thumb--padrao' : ''}`}
                           onMouseEnter={(ev) => {
                             if (!temFotoVisivel) return
                             showBibliotecaImgPreview(ev, pecaBibliotecaSrcCapaDisplay(peca), peca.nome)
@@ -42194,9 +42194,9 @@ export default function Dashboard() {
                             title={hubT.bibliotecaImagemHoverTitle || ''}
                             className={temFotoVisivel ? undefined : 'biblioteca-pecas-hub__piece-img--padrao'}
                             style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: temFotoVisivel ? 'cover' : 'contain',
+                              ...(temFotoVisivel
+                                ? { width: '100%', height: '100%', objectFit: 'cover' as const }
+                                : {}),
                               display: 'block',
                               transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
                             }}

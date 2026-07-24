@@ -154,7 +154,7 @@ function renderPecaCard(
       }}
     >
       <div
-        className="biblioteca-pecas-hub__piece-thumb"
+        className={`biblioteca-pecas-hub__piece-thumb${!temImagemPropria(peca) ? ' biblioteca-pecas-hub__piece-thumb--padrao' : ''}`}
         onMouseEnter={(ev) => {
           if (!temImagemPropria(peca) || !onThumbEnter) return
           onThumbEnter(ev, srcImagem(peca), peca.nome)
@@ -174,9 +174,9 @@ function renderPecaCard(
           decoding="async"
           className={temImagemPropria(peca) ? undefined : 'biblioteca-pecas-hub__piece-img--padrao'}
           style={{
-            width: '100%',
-            height: '100%',
-            objectFit: temImagemPropria(peca) ? 'cover' : 'contain',
+            ...(temImagemPropria(peca)
+              ? { width: '100%', height: '100%', objectFit: 'cover' as const }
+              : {}),
             display: 'block',
             transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
           }}
