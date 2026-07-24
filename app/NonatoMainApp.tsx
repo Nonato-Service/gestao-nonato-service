@@ -7638,19 +7638,19 @@ export default function Dashboard() {
   const [buscaCodigoBiblioteca, setBuscaCodigoBiblioteca] = useState<string>('')
   const [abaBibliotecaPecas, setAbaBibliotecaPecas] = useState<'cadastro' | 'biblioteca' | 'biblioteca-gestao' | 'grupos' | 'importacao'>('cadastro')
   const BIBLIOTECA_PAINEL_IDS = [
-    'intro-hero',
     'stats-visao',
     'fotos-sync',
     'filtros-toolbar',
     'wizard-classificacao',
   ] as const
+  const [bibliotecaPainelResetToken, setBibliotecaPainelResetToken] = useState(0)
   const [bibliotecaModoCompacto, setBibliotecaModoCompacto] = useState(() => {
-    if (typeof window === 'undefined') return true
+    if (typeof window === 'undefined') return false
     try {
       const v = localStorage.getItem('nonato-biblioteca-modo-compacto')
-      return v !== '0'
+      return v === '1'
     } catch {
-      return true
+      return false
     }
   })
   const toggleBibliotecaModoCompacto = useCallback(() => {
@@ -7661,7 +7661,10 @@ export default function Dashboard() {
       } catch {
         /* ignorar */
       }
-      if (next) fecharTodosBibliotecaPaineis([...BIBLIOTECA_PAINEL_IDS])
+      if (next) {
+        fecharTodosBibliotecaPaineis([...BIBLIOTECA_PAINEL_IDS])
+        setBibliotecaPainelResetToken((t) => t + 1)
+      }
       return next
     })
   }, [])
@@ -40225,23 +40228,22 @@ export default function Dashboard() {
                   <p style={{ fontSize: '11px', opacity: 0.88, maxWidth: 640, lineHeight: 1.45, margin: '8px 0 0', fontWeight: 600 }}>
                     {hubT.bibliotecaHubTagline || 'Catálogo unificado e grupos claros.'}
                   </p>
-                  <BibliotecaHubPainelRecolhivel
-                    id="intro-hero"
-                    titulo={(safeT as any)?.bibliotecaPainelIntro || 'Guia rápido da biblioteca'}
-                    resumo={(safeT as any)?.bibliotecaPainelIntroResumo || 'Como usar cadastro, consulta e importação'}
-                    icone="📖"
-                    defaultAberto={false}
-                    forcarFechado={bibliotecaModoCompacto}
-                    variant="default"
-                    className="biblioteca-hub-painel--hero-intro"
-                    labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
-                    labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
-                  >
-                    <p style={{ fontSize: '11px', opacity: 0.78, maxWidth: 680, lineHeight: 1.55, margin: 0 }}>
-                      {hubT.bibliotecaHubIntroBody ||
-                        'Organize por categorias e subcategorias; use as abas para cadastrar, consultar, editar, gerir grupos ou importar. Passe o rato sobre as miniaturas na biblioteca para ver a imagem ampliada.'}
-                    </p>
-                  </BibliotecaHubPainelRecolhivel>
+                  <div className="biblioteca-hub-resumo-chips" aria-label={hubT.bibliotecaVisaoGeral || 'Visão geral'}>
+                    <span className="biblioteca-hub-resumo-chip">
+                      📦 {pecasCatalogoBiblioteca.length.toLocaleString('pt-PT')} {safeT?.pecasCadastradas || 'peça(s)'}
+                    </span>
+                    <span className="biblioteca-hub-resumo-chip">
+                      📁 {categoriasPecas.length} {(safeT as any)?.bibliotecaResumoCategorias || 'categorias'}
+                    </span>
+                    <span
+                      className={`biblioteca-hub-resumo-chip${pecasBibliotecaImagemStats.faltam > 0 ? ' biblioteca-hub-resumo-chip--warn' : ''}`}
+                    >
+                      📷{' '}
+                      {pecasBibliotecaImagemStats.faltam > 0
+                        ? `${pecasBibliotecaImagemStats.faltam.toLocaleString('pt-PT')} ${(safeT as any)?.bibliotecaResumoSemFoto || 's/ foto'}`
+                        : (safeT as any)?.bibliotecaResumoFotosOk || 'fotos OK'}
+                    </span>
+                  </div>
                 </div>
                 <div className="tab-glass-hero-actions">
                   <div className="biblioteca-pecas-hub__hero-actions">
@@ -40315,18 +40317,23 @@ export default function Dashboard() {
             </div>
 
             {/* Painel de Estatísticas — visão geral (recolhível) */}
+            <div className={`biblioteca-hub-paineis-stack${bibliotecaModoCompacto ? ' biblioteca-hub-paineis-stack--compacto' : ''}`}>
             <BibliotecaHubPainelRecolhivel
               id="stats-visao"
               titulo={(safeT as any)?.bibliotecaPainelVisaoGeral || hubT.bibliotecaVisaoGeral || 'Visão geral e sync'}
-              resumo={`${pecasBiblioteca.length} peças · ${categoriasPecas.length} cat. · ${pecasBibliotecaImagemStats.faltam > 0 ? `${pecasBibliotecaImagemStats.faltam} s/ foto` : 'fotos OK'}`}
+              resumo={(safeT as any)?.bibliotecaPainelVisaoGeralResumo || 'KPIs, sync servidor e guia rápido'}
               icone="📊"
               defaultAberto={false}
-              forcarFechado={bibliotecaModoCompacto}
+              resetToken={bibliotecaPainelResetToken}
               variant="stats"
               labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
               labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
             >
             <div className="biblioteca-pecas-hub__stats-panel">
+              <p style={{ fontSize: '11px', opacity: 0.78, maxWidth: 680, lineHeight: 1.55, margin: '0 0 12px' }}>
+                {hubT.bibliotecaHubIntroBody ||
+                  'Organize por categorias e subcategorias; use as abas para cadastrar, consultar, editar, gerir grupos ou importar.'}
+              </p>
               <p className="biblioteca-pecas-hub__eyebrow">
                 {hubT.bibliotecaVisaoGeral || 'Visão geral'}
               </p>
@@ -40617,6 +40624,7 @@ export default function Dashboard() {
             </div>
             </div>
             </BibliotecaHubPainelRecolhivel>
+            </div>
 
             {/* Abas + atalho loja (navegação) */}
             <div className="biblioteca-hub-nav">
@@ -41805,7 +41813,7 @@ export default function Dashboard() {
                   resumo={`${pecasBibliotecaImagemStats.comFotoReal.toLocaleString('pt-PT')}/${pecasBibliotecaImagemStats.total.toLocaleString('pt-PT')} · ${pecasBibliotecaImagemStats.faltam > 0 ? `${pecasBibliotecaImagemStats.faltam.toLocaleString('pt-PT')} s/ foto` : 'fotos OK'}`}
                   icone="📷"
                   defaultAberto={false}
-                  forcarFechado={bibliotecaModoCompacto}
+                  resetToken={bibliotecaPainelResetToken}
                   variant="default"
                   labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
                   labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
@@ -41942,7 +41950,7 @@ export default function Dashboard() {
                     .join(' · ') || (safeT as any)?.bibliotecaPainelFiltrosResumo || 'Busca, filtros e vista do catálogo'}
                   icone="⚙"
                   defaultAberto={false}
-                  forcarFechado={bibliotecaModoCompacto}
+                  resetToken={bibliotecaPainelResetToken}
                   variant="toolbar"
                   labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
                   labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
@@ -42194,7 +42202,7 @@ export default function Dashboard() {
                     }
                     icone="🧩"
                     defaultAberto={false}
-                    forcarFechado={bibliotecaModoCompacto}
+                    resetToken={bibliotecaPainelResetToken}
                     variant="wizard"
                     labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
                     labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}

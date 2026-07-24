@@ -24524,8 +24524,8 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 
 /* —— Hub «Biblioteca de peças»: abas (Cadastro, Biblioteca, Editar, Categorias, Importação) —— */
 .biblioteca-hub-tablist {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 20px;
   padding: 10px 12px;
@@ -24535,23 +24535,42 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
 }
 
+@media (max-width: 900px) {
+  .biblioteca-hub-tablist {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .biblioteca-hub-tablist {
+    grid-template-columns: 1fr;
+  }
+}
+
 .biblioteca-hub-tab {
   appearance: none;
   -webkit-appearance: none;
   margin: 0;
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: 0.01em;
   color: rgba(255, 255, 255, 0.88);
   cursor: pointer;
   outline: none;
-  padding: 10px 16px;
+  padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.04);
   box-shadow: none;
+  text-align: center;
+  justify-content: center;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease,
@@ -24845,32 +24864,70 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 
 /* Painéis recolhíveis do hub da biblioteca */
+.biblioteca-hub-paineis-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.biblioteca-hub-paineis-stack--compacto {
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.biblioteca-hub-resumo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.biblioteca-hub-resumo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 200, 120, 0.28);
+  background: rgba(0, 48, 28, 0.35);
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(210, 255, 225, 0.95);
+  letter-spacing: 0.01em;
+}
+
+.biblioteca-hub-resumo-chip--warn {
+  border-color: rgba(255, 180, 80, 0.45);
+  background: rgba(80, 45, 0, 0.35);
+  color: #ffd8a8;
+}
+
 .biblioteca-hub-painel {
-  margin-bottom: 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 200, 120, 0.18);
-  background: linear-gradient(108deg, rgba(0, 32, 20, 0.42), rgba(6, 10, 9, 0.88));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.03),
-    0 8px 28px rgba(0, 0, 0, 0.22);
+  margin-bottom: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   overflow: hidden;
 }
 
 .biblioteca-hub-painel--fechado {
   border-color: rgba(255, 255, 255, 0.08);
-  background: linear-gradient(108deg, rgba(0, 24, 16, 0.28), rgba(4, 8, 7, 0.72));
+  background: rgba(0, 0, 0, 0.16);
 }
 
 .biblioteca-hub-painel--aberto {
-  border-color: rgba(0, 210, 120, 0.28);
+  border-color: rgba(0, 210, 120, 0.32);
+  background: rgba(0, 28, 18, 0.28);
 }
 
 .biblioteca-hub-painel__cabecalho {
   display: flex;
   align-items: center;
-  gap: 10px 14px;
+  gap: 8px 12px;
   width: 100%;
-  padding: 11px 16px;
+  padding: 9px 14px;
   border: none;
   background: transparent;
   color: inherit;
@@ -24881,91 +24938,86 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 
 .biblioteca-hub-painel__cabecalho:hover {
-  background: rgba(0, 255, 140, 0.06);
+  background: rgba(0, 255, 140, 0.07);
 }
 
-.biblioteca-hub-painel--fechado .biblioteca-hub-painel__cabecalho:hover {
-  background: rgba(255, 255, 255, 0.04);
+.biblioteca-hub-painel__chevron {
+  flex: 0 0 auto;
+  width: 18px;
+  font-size: 11px;
+  line-height: 1;
+  color: rgba(170, 255, 200, 0.9);
+  text-align: center;
+}
+
+.biblioteca-hub-painel--fechado .biblioteca-hub-painel__chevron {
+  color: rgba(200, 200, 200, 0.75);
 }
 
 .biblioteca-hub-painel__icone {
   flex: 0 0 auto;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1;
   opacity: 0.92;
 }
 
 .biblioteca-hub-painel__titulo {
   flex: 0 1 auto;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.02em;
-  color: #fff;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .biblioteca-hub-painel__resumo {
   flex: 1 1 auto;
   min-width: 0;
   font-size: 11px;
-  font-weight: 600;
-  color: rgba(180, 220, 195, 0.82);
+  font-weight: 500;
+  color: rgba(170, 190, 180, 0.78);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.biblioteca-hub-painel__toggle {
-  flex: 0 0 auto;
-  margin-left: auto;
-  padding: 5px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 200, 120, 0.35);
-  background: rgba(0, 60, 36, 0.45);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(170, 255, 200, 0.95);
+.biblioteca-hub-painel__corpo-wrap {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.22s ease, opacity 0.18s ease;
 }
 
-.biblioteca-hub-painel--fechado .biblioteca-hub-painel__toggle {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(220, 220, 220, 0.88);
+.biblioteca-hub-painel__corpo-wrap--fechado {
+  grid-template-rows: 0fr;
+  opacity: 0;
 }
 
 .biblioteca-hub-painel__corpo {
-  padding: 0 16px 16px;
-  border-top: 1px solid rgba(0, 200, 120, 0.12);
+  overflow: hidden;
+  padding: 0 14px 14px;
+  border-top: 1px solid rgba(0, 200, 120, 0.1);
+}
+
+.biblioteca-hub-painel__corpo-wrap--fechado .biblioteca-hub-painel__corpo {
+  padding-top: 0;
+  padding-bottom: 0;
+  border-top-color: transparent;
 }
 
 .biblioteca-hub-painel--stats .biblioteca-hub-painel__corpo {
-  padding-top: 4px;
-}
-
-.biblioteca-hub-painel--hero-intro {
-  margin-top: 10px;
-}
-
-.biblioteca-hub-painel--hero-intro.biblioteca-hub-painel--fechado {
-  margin-bottom: 8px;
+  padding-top: 2px;
 }
 
 .biblioteca-hub-toolbar--em-painel {
   margin-bottom: 0;
-  padding: 14px 0 0;
+  padding: 12px 0 0;
   border: none;
   background: transparent;
   box-shadow: none;
 }
 
 .biblioteca-wizard-classificacao--em-painel {
-  margin-top: 4px;
+  margin-top: 2px;
   margin-bottom: 0;
-}
-
-.biblioteca-hub-painel--wizard.biblioteca-hub-painel--fechado {
-  border-color: rgba(160, 120, 255, 0.2);
 }
 
 .biblioteca-hub-painel--wizard.biblioteca-hub-painel--aberto {
@@ -24979,17 +25031,13 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 @media (max-width: 640px) {
   .biblioteca-hub-painel__cabecalho {
     flex-wrap: wrap;
-    padding: 10px 12px;
+    padding: 8px 12px;
   }
 
   .biblioteca-hub-painel__resumo {
     flex: 1 1 100%;
     order: 3;
-    padding-left: 26px;
-  }
-
-  .biblioteca-hub-painel__toggle {
-    order: 2;
+    padding-left: 30px;
   }
 }
 

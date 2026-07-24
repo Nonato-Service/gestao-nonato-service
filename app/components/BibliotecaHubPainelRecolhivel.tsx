@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 const LS_PREFIX = 'nonato-biblioteca-painel-'
 
@@ -35,7 +35,8 @@ type Props = {
   resumo?: string
   icone?: string
   defaultAberto?: boolean
-  forcarFechado?: boolean
+  /** Incrementa ao activar modo compacto — fecha painéis uma vez, sem bloquear reabrir. */
+  resetToken?: number
   variant?: 'default' | 'wizard' | 'toolbar' | 'stats'
   className?: string
   labelExpandir?: string
@@ -49,7 +50,7 @@ export function BibliotecaHubPainelRecolhivel({
   resumo,
   icone = '◫',
   defaultAberto = false,
-  forcarFechado = false,
+  resetToken = 0,
   variant = 'default',
   className = '',
   labelExpandir = 'Expandir',
@@ -57,10 +58,13 @@ export function BibliotecaHubPainelRecolhivel({
   children,
 }: Props) {
   const [aberto, setAberto] = useState(() => readBibliotecaPainelAberto(id, defaultAberto))
+  const ultimoResetRef = useRef(resetToken)
 
   useEffect(() => {
-    if (forcarFechado && aberto) setAberto(false)
-  }, [forcarFechado, aberto])
+    if (resetToken <= 0 || resetToken === ultimoResetRef.current) return
+    ultimoResetRef.current = resetToken
+    setAberto(false)
+  }, [resetToken])
 
   useEffect(() => {
     setBibliotecaPainelAbertoPersist(id, aberto)
@@ -89,21 +93,24 @@ export function BibliotecaHubPainelRecolhivel({
         onClick={toggle}
         aria-expanded={!fechado}
         aria-controls={`biblioteca-painel-${id}`}
+        aria-label={fechado ? `${labelExpandir}: ${titulo}` : `${labelRetrair}: ${titulo}`}
       >
+        <span className="biblioteca-hub-painel__chevron" aria-hidden>
+          {fechado ? '▸' : '▾'}
+        </span>
         <span className="biblioteca-hub-painel__icone" aria-hidden>
           {icone}
         </span>
         <span className="biblioteca-hub-painel__titulo">{titulo}</span>
         {fechado && resumo ? <span className="biblioteca-hub-painel__resumo">{resumo}</span> : null}
-        <span className="biblioteca-hub-painel__toggle" aria-hidden>
-          {fechado ? labelExpandir : labelRetrair}
-        </span>
       </button>
-      {!fechado ? (
-        <div id={`biblioteca-painel-${id}`} className="biblioteca-hub-painel__corpo">
-          {children}
-        </div>
-      ) : null}
+      <div
+        id={`biblioteca-painel-${id}`}
+        className={`biblioteca-hub-painel__corpo-wrap${fechado ? ' biblioteca-hub-painel__corpo-wrap--fechado' : ''}`}
+        aria-hidden={fechado}
+      >
+        <div className="biblioteca-hub-painel__corpo">{children}</div>
+      </div>
     </section>
   )
 }
