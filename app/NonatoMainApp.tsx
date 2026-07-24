@@ -7671,6 +7671,14 @@ export default function Dashboard() {
   const [bibliotecaGaleriaCategoriaId, setBibliotecaGaleriaCategoriaId] = useState<string | null>(null)
   /** Se a peça foi aberta a partir da fila de importação, após Salvar regressa à aba Importação (não à Biblioteca). */
   const [salvarPecaBibliotecaVoltaParaImportacao, setSalvarPecaBibliotecaVoltaParaImportacao] = useState(false)
+  /** Aba e filtros activos antes de abrir o formulário de edição — restaurados após Salvar/Cancelar. */
+  const bibliotecaContextoAntesEditarRef = useRef<{
+    aba: 'cadastro' | 'biblioteca' | 'biblioteca-gestao' | 'grupos' | 'importacao'
+    filtroGrupo: string
+    filtroSubgrupo: string
+    agruparPorCategoria: boolean
+    visualizacao: 'grid' | 'lista'
+  } | null>(null)
   const [visualizacaoBiblioteca, setVisualizacaoBiblioteca] = useState<'grid' | 'lista'>('grid')
   const [mostrarPrecosBiblioteca, setMostrarPrecosBiblioteca] = useState(false)
   useEffect(() => {
@@ -25249,6 +25257,31 @@ export default function Dashboard() {
     }
   }
 
+  /** Restaura aba/filtros de onde veio a edição; senão mantém comportamento legado (ir à Biblioteca). */
+  const concluirEdicaoPecaBibliotecaNavegacao = (opts: {
+    voltarImportacao?: boolean
+    categoriaIdSalva?: string
+  }) => {
+    if (opts.voltarImportacao) {
+      bibliotecaContextoAntesEditarRef.current = null
+      setAbaBibliotecaPecas('importacao')
+      return
+    }
+    const ctx = bibliotecaContextoAntesEditarRef.current
+    bibliotecaContextoAntesEditarRef.current = null
+    if (ctx) {
+      setAbaBibliotecaPecas(ctx.aba)
+      setFiltroGrupoBiblioteca(ctx.filtroGrupo)
+      setFiltroSubgrupoBiblioteca(ctx.filtroSubgrupo)
+      setBibliotecaAgruparPorCategoria(ctx.agruparPorCategoria)
+      setVisualizacaoBiblioteca(ctx.visualizacao)
+      return
+    }
+    if (opts.categoriaIdSalva !== undefined) {
+      navegarBibliotecaAposSalvarPeca(opts.categoriaIdSalva)
+    }
+  }
+
   const handleAddPecaBiblioteca = (): boolean => {
     if (!pecaBibliotecaForm.nome || !pecaBibliotecaForm.codigo) {
       alert(t.fillAllFields || 'Preencha todos os campos obrigatórios')
@@ -25321,6 +25354,13 @@ export default function Dashboard() {
 
   const handleEditPecaBiblioteca = (peca: PecaBiblioteca) => {
     setSalvarPecaBibliotecaVoltaParaImportacao(false)
+    bibliotecaContextoAntesEditarRef.current = {
+      aba: abaBibliotecaPecas,
+      filtroGrupo: filtroGrupoBiblioteca,
+      filtroSubgrupo: filtroSubgrupoBiblioteca,
+      agruparPorCategoria: bibliotecaAgruparPorCategoria,
+      visualizacao: visualizacaoBiblioteca,
+    }
     setEditingPecaBiblioteca(peca)
     setPecaBibliotecaImagemUrlDraft('')
     setPecaBibliotecaImagemCapaUrlDraft('')
@@ -41681,11 +41721,10 @@ export default function Dashboard() {
                       setPecaBibliotecaPickerSubcategoriaAberto(false)
                       setShowBibliotecaPecasForm(false)
                       setSalvarPecaBibliotecaVoltaParaImportacao(false)
-                      if (voltaImportacaoAposSalvar) {
-                        setAbaBibliotecaPecas('importacao')
-                      } else {
-                        navegarBibliotecaAposSalvarPeca(grupoMantido)
-                      }
+                      concluirEdicaoPecaBibliotecaNavegacao({
+                        voltarImportacao: voltaImportacaoAposSalvar,
+                        categoriaIdSalva: grupoMantido,
+                      })
                       setTimeout(() => {
                         alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
                       }, 0)
@@ -41698,7 +41737,6 @@ export default function Dashboard() {
                     onClick={() => { 
                       const voltarImportacao = salvarPecaBibliotecaVoltaParaImportacao
                       setSalvarPecaBibliotecaVoltaParaImportacao(false)
-                      if (voltarImportacao) setAbaBibliotecaPecas('importacao')
                       setShowBibliotecaPecasForm(false); 
                       setEditingPecaBiblioteca(null);
                       // Manter categoria/subcategoria do formulário para a próxima «Nova peça»
@@ -41724,6 +41762,7 @@ export default function Dashboard() {
                       }); 
                       setPecaBibliotecaPickerCategoriaAberto(false)
                       setPecaBibliotecaPickerSubcategoriaAberto(false)
+                      concluirEdicaoPecaBibliotecaNavegacao({ voltarImportacao })
                     }}
                   >
                     {safeT?.cancel || 'Cancelar'}
@@ -78459,11 +78498,10 @@ A1;Peça exemplo;10`}
                     setPecaBibliotecaPickerSubcategoriaAberto(false)
                     setShowBibliotecaPecasForm(false)
                     setSalvarPecaBibliotecaVoltaParaImportacao(false)
-                    if (voltaImportacaoModal) {
-                      setAbaBibliotecaPecas('importacao')
-                    } else {
-                      navegarBibliotecaAposSalvarPeca(gM)
-                    }
+                    concluirEdicaoPecaBibliotecaNavegacao({
+                      voltarImportacao: voltaImportacaoModal,
+                      categoriaIdSalva: gM,
+                    })
                     setTimeout(() => {
                       alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
                     }, 0)
@@ -78473,7 +78511,6 @@ A1;Peça exemplo;10`}
                   <button className="btn-secondary" onClick={() => {
                     const voltarImportacao = salvarPecaBibliotecaVoltaParaImportacao
                     setSalvarPecaBibliotecaVoltaParaImportacao(false)
-                    if (voltarImportacao) setAbaBibliotecaPecas('importacao')
                     setShowBibliotecaPecasForm(false)
                     setEditingPecaBiblioteca(null)
                     setPecaBibliotecaImagemUrlDraft('')
@@ -78498,6 +78535,7 @@ A1;Peça exemplo;10`}
                     })
                     setPecaBibliotecaPickerCategoriaAberto(false)
                     setPecaBibliotecaPickerSubcategoriaAberto(false)
+                    concluirEdicaoPecaBibliotecaNavegacao({ voltarImportacao })
                   }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
