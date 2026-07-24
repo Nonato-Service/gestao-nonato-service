@@ -48053,6 +48053,24 @@ A1;Peça exemplo;10`}
 
                   const renderAgendaCard = (agendamento: Agendamento, accent: string, pulseClass?: string, opts?: { muted?: boolean }) => {
                     const cancelado = isAgendamentoCancelado(agendamento)
+                    const trAg = safeT as Record<string, string | undefined>
+                    const st = normalizeStatusAgendamento(agendamento)
+                    const statusLabel =
+                      st === 'concluido'
+                        ? safeT?.concluido || 'Concluído'
+                        : st === 'cancelado'
+                          ? safeT?.cancelado || 'Cancelado'
+                          : st === 'em-andamento'
+                            ? safeT?.emAndamento || 'Em Andamento'
+                            : st === 'confirmado'
+                              ? safeT?.confirmado || 'Confirmado'
+                              : safeT?.pendente || 'Pendente'
+                    const agendaCardField = (label: string, value: React.ReactNode) => (
+                      <p className="agenda-card__field">
+                        <strong>{label}</strong>
+                        <span>{value}</span>
+                      </p>
+                    )
                     return (
                     <div
                       key={agendamento.id}
@@ -48083,196 +48101,173 @@ A1;Peça exemplo;10`}
                         handleEditAgendamento(agendamento)
                       }}
                     >
-                      <div className="agenda-card-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="agenda-card__header">
+                        <div className="agenda-card__header-main">
                           <h3
-                            style={{
-                              marginBottom: '8px',
-                              fontSize: '18px',
-                              color: '#ffffff',
-                              textDecoration: opts?.muted ? 'line-through' : undefined,
-                            }}
+                            className="agenda-card__title"
+                            style={{ textDecoration: opts?.muted ? 'line-through' : undefined }}
                           >
-                            {rotuloTituloAgendamento(agendamento, safeT as Record<string, string | undefined>)}
+                            {rotuloTituloAgendamento(agendamento, trAg)}
                           </h3>
                           {isAgendamentoPessoal(agendamento) ? (
-                            <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#d8b4fe', fontWeight: 700 }}>
+                            <p className="agenda-card__tipo-pessoal">
                               {agendamento.subtipoPessoal === 'visita-tecnica'
-                                ? (safeT as any)?.agendaVisitaTecnica || 'Visita técnica'
-                                : (safeT as any)?.agendaPessoal || 'Pessoal'}
+                                ? trAg.agendaVisitaTecnica || 'Visita técnica'
+                                : trAg.agendaPessoal || 'Pessoal'}
                             </p>
                           ) : null}
-                          <div className="agenda-card-meta-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', fontSize: '14px', marginBottom: '10px' }}>
-                            {!isAgendamentoPessoal(agendamento) ? (
-                              <p style={{ margin: 0, opacity: 0.86 }}>
-                                <strong>{safeT?.tecnico || 'Técnico'}:</strong> {agendamento.tecnico}
-                              </p>
-                            ) : null}
-                            {isAgendamentoPessoal(agendamento) && agendamento.assunto ? (
-                              <p style={{ margin: 0, opacity: 0.86 }}>
-                                <strong>{(safeT as any)?.agendaAssunto || 'Assunto / descrição'}:</strong> {agendamento.assunto}
-                              </p>
-                            ) : null}
-                            <p style={{ margin: 0, opacity: 0.86 }}>
-                              <strong>{safeT?.data || 'Data'}:</strong> {new Date(agendamento.data + 'T12:00:00').toLocaleDateString('pt-BR')}
-                            </p>
-                            <p style={{ margin: 0, opacity: 0.86 }}>
-                              <strong>{safeT?.hora || 'Hora'}:</strong> {agendamento.hora}
-                            </p>
-                            {agendamento.duracaoEstimada && (
-                              <p style={{ margin: 0, opacity: 0.86 }}>
-                                <strong>{safeT?.duracaoEstimada || 'Duração'}:</strong> {agendamento.duracaoEstimada} {agendamento.duracaoEstimada === '1' ? (safeT?.dia || 'dia') : (safeT?.dias || 'dias')}
-                              </p>
-                            )}
-                            {!isAgendamentoPessoal(agendamento) ? (
-                              <p style={{ margin: 0, opacity: 0.86 }}>
-                                <strong>{safeT?.tipoAgendamento || 'Tipo'}:</strong> {normalizeTipoAgendamento(agendamento) === 'pre-agendamento' ? (safeT?.preAgendamento || 'Pré-Agendamento') : (safeT?.agendamentoTecnico || 'Agendamento Técnico')}
-                              </p>
-                            ) : null}
-                            {agendamento.tipoServico && !isAgendamentoPessoal(agendamento) && (
-                              <p style={{ margin: 0, opacity: 0.86 }}>
-                                <strong>{safeT?.tipoServico || 'Tipo de Serviço'}:</strong> {agendamento.tipoServico}
-                              </p>
-                            )}
-                            {agendamento.equipamento && !isAgendamentoPessoal(agendamento) && (
-                              <p style={{ margin: 0, opacity: 0.86 }}>
-                                <strong>{safeT?.equipamento || 'Equipamento'}:</strong> {agendamento.equipamento}
-                              </p>
-                            )}
-                            <p style={{ margin: 0, opacity: 0.9 }}>
-                              <strong>{safeT?.status || 'Status'}:</strong>
-                              <span style={{ marginLeft: '6px', fontWeight: 800, color: accent }}>
-                                {(() => {
-                                  const st = normalizeStatusAgendamento(agendamento)
-                                  if (st === 'concluido') return safeT?.concluido || 'Concluído'
-                                  if (st === 'cancelado') return safeT?.cancelado || 'Cancelado'
-                                  if (st === 'em-andamento') return safeT?.emAndamento || 'Em Andamento'
-                                  if (st === 'confirmado') return safeT?.confirmado || 'Confirmado'
-                                  return safeT?.pendente || 'Pendente'
-                                })()}
-                              </span>
-                            </p>
-                          </div>
-
-                          {(agendamento.telefone || agendamento.endereco || agendamento.cidade) && !isAgendamentoPessoal(agendamento) && (
-                            <div style={{ padding: '10px', backgroundColor: '#484848', borderRadius: '8px', marginBottom: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                              <h4 style={{ fontSize: '13px', marginBottom: '8px', color: '#e8ffe8' }}>{safeT?.informacoesContato || 'Informações de Contato'}</h4>
-                              <div className="agenda-card-meta-grid agenda-card-meta-grid--contato" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px', fontSize: '13px' }}>
-                                {agendamento.telefone && (
-                                  <p style={{ margin: 0, opacity: 0.86 }}>
-                                    <strong>{safeT?.telefone || 'Telefone'}:</strong> {agendamento.telefone}
-                                  </p>
-                                )}
-                                {agendamento.endereco && (
-                                  <p style={{ margin: 0, opacity: 0.86 }}>
-                                    <strong>{safeT?.endereco || 'Endereço'}:</strong> {agendamento.endereco}
-                                  </p>
-                                )}
-                                {agendamento.cidade && (
-                                  <p style={{ margin: 0, opacity: 0.86 }}>
-                                    <strong>{safeT?.cidade || 'Cidade'}:</strong> {agendamento.cidade}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {agendamento.observacoesTecnicas && (
-                            <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                              <p style={{ margin: 0, fontSize: '13px', opacity: 0.9 }}>
-                                <strong style={{ color: '#e8ffe8' }}>{safeT?.observacaoTecnica || 'Observação Técnica'}:</strong>
-                                <span style={{ marginLeft: '8px', fontStyle: 'italic', color: 'rgba(255,255,255,0.85)' }}>{agendamento.observacoesTecnicas}</span>
-                              </p>
-                            </div>
-                          )}
-
-                          {(normalizeStatusAgendamento(agendamento) === 'concluido' ||
-                            (agendamento.relatorioTrabalhoExecutado && String(agendamento.relatorioTrabalhoExecutado).trim())) ? (
-                            <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#152018', borderRadius: '8px', border: '1px solid rgba(0, 200, 90, 0.22)' }}>
-                              <p style={{ margin: 0, fontSize: '13px', opacity: 0.95 }}>
-                                <strong style={{ color: '#8ef5b2' }}>
-                                  {(safeT as any)?.agendaRelatorioTrabalhoExecutado || 'Trabalho executado / relatório do serviço'}:
-                                </strong>
-                                <span style={{ marginLeft: '8px', color: 'rgba(255,255,255,0.9)' }}>
-                                  {(agendamento.relatorioTrabalhoExecutado && String(agendamento.relatorioTrabalhoExecutado).trim()) ||
-                                    (safeT as any)?.agendaSemRegistoTrabalho ||
-                                    '—'}
-                                </span>
-                              </p>
-                              {agendamento.dataRegistoConclusao && (
-                                <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#6abf7a' }}>
-                                  {(safeT as any)?.agendaDataRegistoConclusao || 'Concluído registado em'}:{' '}
-                                  {new Date(agendamento.dataRegistoConclusao).toLocaleString('pt-PT')}
-                                </p>
-                              )}
-                            </div>
-                          ) : null}
-
-                          {agendamento.necessidadePecas && (
-                            <div style={{ marginTop: '10px', padding: '10px', backgroundColor: 'rgba(255, 165, 0, 0.08)', borderRadius: '8px', border: '1px solid rgba(255, 165, 0, 0.28)' }}>
-                              <p style={{ margin: 0, fontSize: '13px', marginBottom: '8px', color: '#ffa500' }}>
-                                <strong>{safeT?.necessidadePecas || 'Há necessidade de levar alguma peça'}:</strong> {safeT?.sim || 'Sim'}
-                              </p>
-                              {agendamento.codigoNotaFiscal && (
-                                <p style={{ margin: 0, fontSize: '13px', opacity: 0.9, marginBottom: '5px' }}>
-                                  <strong>{safeT?.codigoNotaFiscal || 'Código da Nota Fiscal'}:</strong> {agendamento.codigoNotaFiscal}
-                                </p>
-                              )}
-                              {agendamento.pecasAnexadas && agendamento.pecasAnexadas.length > 0 && (
-                                <div style={{ marginTop: '8px' }}>
-                                  <p style={{ margin: 0, fontSize: '12px', marginBottom: '5px', opacity: 0.9 }}>
-                                    <strong>{safeT?.pecasAnexadas || 'Peças selecionadas'}:</strong>
-                                  </p>
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    {agendamento.pecasAnexadas.map((pecaId, index) => {
-                                      const peca = pecasBiblioteca.find(p => p.id === pecaId)
-                                      if (!peca) return null
-                                      return (
-                                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '10px' }}>
-                                          <img
-                                            src={pecaBibliotecaSrcCapaDisplay(peca)}
-                                            alt={peca.nome}
-                                            style={{
-                                              width: '30px',
-                                              height: '30px',
-                                              objectFit: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? 'cover' : 'contain',
-                                              borderRadius: '4px',
-                                              backgroundColor: pecaBibliotecaTemCapaOuFotoVisivel(peca) ? undefined : '#363636',
-                                              flexShrink: 0,
-                                            }}
-                                          />
-                                          <span style={{ fontSize: '12px', opacity: 0.85 }}>
-                                            • {peca.nome} ({peca.codigo})
-                                          </span>
-                                        </div>
-                                      )
-                                    })}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
                         </div>
-                        <div className="agenda-card-actions" style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
+                        <span className="agenda-card__status-badge" style={{ borderColor: `${accent}66`, color: accent }}>
+                          {statusLabel}
+                        </span>
+                      </div>
+
+                      <div className="agenda-card__sections">
+                        <section className="agenda-card__section agenda-card__section--agendamento">
+                          <div className="agenda-card__section-head">
+                            {trAg.agendaCardSecaoAgendamento || 'Agendamento'}
+                          </div>
+                          <div className="agenda-card__fields">
+                            {!isAgendamentoPessoal(agendamento)
+                              ? agendaCardField(safeT?.tecnico || 'Técnico', agendamento.tecnico)
+                              : null}
+                            {isAgendamentoPessoal(agendamento) && agendamento.assunto
+                              ? agendaCardField(trAg.agendaAssunto || 'Assunto / descrição', agendamento.assunto)
+                              : null}
+                            {agendaCardField(
+                              safeT?.data || 'Data',
+                              new Date(agendamento.data + 'T12:00:00').toLocaleDateString('pt-BR')
+                            )}
+                            {agendaCardField(safeT?.hora || 'Hora', agendamento.hora)}
+                            {agendamento.duracaoEstimada
+                              ? agendaCardField(
+                                  safeT?.duracaoEstimada || 'Duração',
+                                  `${agendamento.duracaoEstimada} ${agendamento.duracaoEstimada === '1' ? safeT?.dia || 'dia' : safeT?.dias || 'dias'}`
+                                )
+                              : null}
+                            {!isAgendamentoPessoal(agendamento)
+                              ? agendaCardField(
+                                  safeT?.tipoAgendamento || 'Tipo',
+                                  normalizeTipoAgendamento(agendamento) === 'pre-agendamento'
+                                    ? safeT?.preAgendamento || 'Pré-Agendamento'
+                                    : safeT?.agendamentoTecnico || 'Agendamento Técnico'
+                                )
+                              : null}
+                            {agendamento.tipoServico && !isAgendamentoPessoal(agendamento)
+                              ? agendaCardField(safeT?.tipoServico || 'Tipo de Serviço', agendamento.tipoServico)
+                              : null}
+                            {agendamento.equipamento && !isAgendamentoPessoal(agendamento)
+                              ? agendaCardField(safeT?.equipamento || 'Equipamento', agendamento.equipamento)
+                              : null}
+                          </div>
+                        </section>
+
+                        {(agendamento.telefone || agendamento.endereco || agendamento.cidade) &&
+                        !isAgendamentoPessoal(agendamento) ? (
+                          <section className="agenda-card__section agenda-card__section--contato">
+                            <div className="agenda-card__section-head">
+                              {safeT?.informacoesContato || 'Informações de Contato'}
+                            </div>
+                            <div className="agenda-card__fields">
+                              {agendamento.telefone
+                                ? agendaCardField(safeT?.telefone || 'Telefone', agendamento.telefone)
+                                : null}
+                              {agendamento.endereco
+                                ? agendaCardField(safeT?.endereco || 'Endereço', agendamento.endereco)
+                                : null}
+                              {agendamento.cidade
+                                ? agendaCardField(safeT?.cidade || 'Cidade', agendamento.cidade)
+                                : null}
+                            </div>
+                          </section>
+                        ) : null}
+
+                        {agendamento.observacoesTecnicas ? (
+                          <section className="agenda-card__section agenda-card__section--obs">
+                            <div className="agenda-card__section-head">
+                              {safeT?.observacaoTecnica || 'Observação Técnica'}
+                            </div>
+                            <p className="agenda-card__text-block">{agendamento.observacoesTecnicas}</p>
+                          </section>
+                        ) : null}
+
+                        {st === 'concluido' ||
+                        (agendamento.relatorioTrabalhoExecutado && String(agendamento.relatorioTrabalhoExecutado).trim()) ? (
+                          <section className="agenda-card__section agenda-card__section--execucao">
+                            <div className="agenda-card__section-head">
+                              {trAg.agendaRelatorioTrabalhoExecutado || 'Trabalho executado / relatório do serviço'}
+                            </div>
+                            <p className="agenda-card__text-block">
+                              {(agendamento.relatorioTrabalhoExecutado && String(agendamento.relatorioTrabalhoExecutado).trim()) ||
+                                trAg.agendaSemRegistoTrabalho ||
+                                '—'}
+                            </p>
+                            {agendamento.dataRegistoConclusao ? (
+                              <p className="agenda-card__meta-note">
+                                {trAg.agendaDataRegistoConclusao || 'Concluído registado em'}:{' '}
+                                {new Date(agendamento.dataRegistoConclusao).toLocaleString('pt-PT')}
+                              </p>
+                            ) : null}
+                          </section>
+                        ) : null}
+
+                        {agendamento.necessidadePecas ? (
+                          <section className="agenda-card__section agenda-card__section--pecas">
+                            <div className="agenda-card__section-head">
+                              {safeT?.necessidadePecas || 'Peças necessárias'}
+                            </div>
+                            <p className="agenda-card__text-block agenda-card__text-block--warn">
+                              {safeT?.sim || 'Sim'}
+                              {agendamento.codigoNotaFiscal
+                                ? ` · ${safeT?.codigoNotaFiscal || 'Código da Nota Fiscal'}: ${agendamento.codigoNotaFiscal}`
+                                : ''}
+                            </p>
+                            {agendamento.pecasAnexadas && agendamento.pecasAnexadas.length > 0 ? (
+                              <div className="agenda-card__pecas-list">
+                                {agendamento.pecasAnexadas.map((pecaId, index) => {
+                                  const peca = pecasBiblioteca.find((p) => p.id === pecaId)
+                                  if (!peca) return null
+                                  return (
+                                    <div key={index} className="agenda-card__peca-item">
+                                      <img
+                                        src={pecaBibliotecaSrcCapaDisplay(peca)}
+                                        alt={peca.nome}
+                                        className="agenda-card__peca-thumb"
+                                      />
+                                      <span>
+                                        {peca.nome} ({peca.codigo})
+                                      </span>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            ) : null}
+                          </section>
+                        ) : null}
+                      </div>
+
+                      <div className="agenda-card__footer">
+                        <div className="agenda-card__footer-label">
+                          {trAg.agendaCardSecaoAcoes || 'Ações'}
+                        </div>
+                        <div className="agenda-card-actions">
                           <button
                             type="button"
-                            className="btn-primary"
+                            className="btn-primary agenda-card-action-btn agenda-card-action-btn--edit"
                             onClick={(e) => {
                               e.stopPropagation()
                               handleEditAgendamento(agendamento)
                             }}
-                            style={{ padding: '8px 15px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '80px' }}
                           >
                             {safeT?.edit || 'Editar'}
                           </button>
                           <button
                             type="button"
-                            className="btn-danger"
+                            className="btn-danger agenda-card-action-btn agenda-card-action-btn--delete"
                             onClick={(e) => {
                               e.stopPropagation()
                               handleDeleteAgendamento(agendamento.id)
                             }}
-                            style={{ padding: '8px 15px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '80px' }}
                           >
                             {safeT?.delete || 'Excluir'}
                           </button>
@@ -48308,7 +48303,7 @@ A1;Peça exemplo;10`}
                     const cardPulseClass =
                       pulse === 'pendencias' ? 'agenda-card--pulse-pendencias' : pulse === 'pre' ? 'agenda-card--pulse-pre' : undefined
                     return (
-                      <div style={{ marginBottom: '18px' }}>
+                      <div className="agenda-section-block">
                         <div
                           className={headerPulseClass}
                           style={{
@@ -48320,7 +48315,6 @@ A1;Peça exemplo;10`}
                           borderRadius: '12px',
                           backgroundColor: 'rgba(20,20,20,0.92)',
                           border: `1px solid ${cor}55`,
-                          marginBottom: '12px'
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                             <span
@@ -48345,7 +48339,7 @@ A1;Peça exemplo;10`}
                             {nBadge}
                           </span>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div className="agenda-section-cards">
                           {itens.map((ag) => renderAgendaCard(ag, cor, cardPulseClass, mutedCards ? { muted: true } : undefined))}
                         </div>
                       </div>
