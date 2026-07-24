@@ -1222,7 +1222,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                         onClick={() => setExpandedFamilias((p) => ({ ...p, [familia]: !famExpanded }))}
                         aria-expanded={famExpanded}
                       >
-                        {famExpanded ? 'v' : '>'}
+                        {famExpanded ? '▼' : '▶'}
                       </button>
                       {editingFamiliaManuais === familia ? (
                         <>
@@ -1296,7 +1296,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                                 onClick={() => setExpandedGrupos((p) => ({ ...p, [grupo.id]: !grpExpanded }))}
                                 aria-expanded={grpExpanded}
                               >
-                                {grpExpanded ? 'v' : '>'}
+                                {grpExpanded ? '▼' : '▶'}
                               </button>
                               {editingGrupoManuaisId === grupo.id ? (
                                 <>

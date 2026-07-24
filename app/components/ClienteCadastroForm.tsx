@@ -533,7 +533,7 @@ export function ClienteCadastroForm({
           aria-expanded={detalhesAbertos}
         >
           <span>{tr('detalhesAdicionaisCliente')}</span>
-          <span aria-hidden>{detalhesAbertos ? '▾' : '▸'}</span>
+          <span className="ui-expand-chevron" aria-hidden>{detalhesAbertos ? '▼' : '▶'}</span>
         </button>
 
         {detalhesAbertos ? (

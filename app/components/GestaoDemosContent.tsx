@@ -490,7 +490,8 @@ export function GestaoDemosContent({
         onClick={() => setShowFullModuleGrid((v) => !v)}
         style={{ padding: '8px 14px', background: 'transparent', border: '1px solid rgba(0,180,255,0.35)', color: '#8cd8ff', borderRadius: '8px', cursor: 'pointer', fontSize: '12px' }}
       >
-        {showFullModuleGrid ? '▼ Ocultar lista de módulos' : '▶ Ver ou ajustar módulos na lista'}
+        <span className="ui-expand-chevron" aria-hidden>{showFullModuleGrid ? '▼' : '▶'}</span>{' '}
+        {showFullModuleGrid ? 'Ocultar lista de módulos' : 'Ver ou ajustar módulos na lista'}
       </button>
       {showFullModuleGrid && renderAdvancedGrid()}
     </>
@@ -674,7 +675,8 @@ export function GestaoDemosContent({
                 onClick={() => setGroupsExpanded((p) => ({ ...p, [groupId]: !p[groupId] }))}
                 style={{ width: '100%', textAlign: 'left', padding: '8px 10px', background: 'rgba(0,180,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#d7f4ff', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
               >
-                {open ? '▼' : '▶'} {DEMO_MODULE_GROUP_LABELS[groupId]} ({items.length})
+                <span className="ui-expand-chevron" aria-hidden>{open ? '▼' : '▶'}</span>{' '}
+                {DEMO_MODULE_GROUP_LABELS[groupId]} ({items.length})
               </button>
               {open && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px', marginTop: '8px' }}>

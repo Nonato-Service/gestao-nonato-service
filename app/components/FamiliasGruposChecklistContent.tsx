@@ -702,7 +702,7 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                         onClick={() => setFamiliaExpandidaChecklist((prev) => (prev === familia ? null : familia))}
                         aria-expanded={famExpanded}
                       >
-                        {famExpanded ? '▾' : '▸'}
+                        {famExpanded ? '▼' : '▶'}
                       </button>
                       {editingFamiliaNome === familia ? (
                         <>

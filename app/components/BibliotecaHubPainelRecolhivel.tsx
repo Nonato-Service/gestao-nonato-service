@@ -118,7 +118,7 @@ export function BibliotecaHubPainelRecolhivel({
         aria-controls={panelDomId}
         aria-label={fechado ? `${labelExpandir}: ${titulo}` : `${labelRetrair}: ${titulo}`}
       >
-        <span className="biblioteca-hub-painel__chevron" aria-hidden>
+        <span className="biblioteca-hub-painel__chevron ui-expand-chevron" aria-hidden>
           {fechado ? '▶' : '▼'}
         </span>
         <span className="biblioteca-hub-painel__icone" aria-hidden>

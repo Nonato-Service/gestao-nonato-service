@@ -20,7 +20,7 @@ export function AdminDisclosure({ id, icon, title, sub, toneClass, children }: P
           <span className="admin-disclosure__title">{title}</span>
           <span className="admin-disclosure__sub">{sub}</span>
         </span>
-        <span className="admin-disclosure__chev" aria-hidden>▼</span>
+        <span className="admin-disclosure__chev ui-expand-chevron" aria-hidden>▶</span>
       </summary>
       <div className="admin-disclosure__body">{children}</div>
     </details>

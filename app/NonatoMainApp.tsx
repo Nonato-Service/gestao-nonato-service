@@ -35738,7 +35738,7 @@ export default function Dashboard() {
                             {filtroLista || filtroClienteRaw ? ` · ${totalExecutados} ${protoT?.protocolosServicoListaTotal || 'no total'}` : ''}
                           </span>
                         </span>
-                        <span style={{ fontSize: 18, color: '#94a3b8', flexShrink: 0 }}>{protocoloSecaoArquivoAberta ? '▾' : '▸'}</span>
+                        <span className="ui-expand-chevron" aria-hidden>{protocoloSecaoArquivoAberta ? '▼' : '▶'}</span>
                       </button>
 
                       {protocoloSecaoArquivoAberta ? (
@@ -41488,8 +41488,8 @@ export default function Dashboard() {
                         </span>
                       )}
                     </span>
-                    <span style={{ flexShrink: 0, opacity: 0.85, fontSize: '12px' }} aria-hidden>
-                      {pecaBibliotecaPickerCategoriaAberto ? '▲' : '▼'}
+                    <span className="ui-expand-chevron" style={{ flexShrink: 0 }} aria-hidden>
+                      {pecaBibliotecaPickerCategoriaAberto ? '▼' : '▶'}
                     </span>
                   </button>
                   {pecaBibliotecaPickerCategoriaAberto && (() => {
@@ -41669,8 +41669,8 @@ export default function Dashboard() {
                           </span>
                         )}
                       </span>
-                      <span style={{ flexShrink: 0, opacity: 0.85, fontSize: '12px' }} aria-hidden>
-                        {pecaBibliotecaPickerSubcategoriaAberto ? '▲' : '▼'}
+                      <span className="ui-expand-chevron" style={{ flexShrink: 0 }} aria-hidden>
+                        {pecaBibliotecaPickerSubcategoriaAberto ? '▼' : '▶'}
                       </span>
                     </button>
                     {pecaBibliotecaPickerSubcategoriaAberto && (() => {
@@ -43553,15 +43553,12 @@ export default function Dashboard() {
                                                 [categoria.id]: prev[categoria.id] === true ? false : true,
                                               }))
                                             }
+                                            className="ui-expand-chevron"
                                             style={{
                                               background: 'rgba(255,255,255,0.08)',
                                               border: '1px solid rgba(255,255,255,0.2)',
                                               borderRadius: '4px',
-                                              color: '#fff',
                                               cursor: 'pointer',
-                                              padding: '4px 8px',
-                                              fontSize: '11px',
-                                              lineHeight: 1,
                                               flexShrink: 0,
                                             }}
                                           >
@@ -47152,7 +47149,7 @@ A1;Peça exemplo;10`}
                 }}
               >
                 <span>{(safeT as any)?.agendaHistoricoConcluidosTitulo || 'Histórico — trabalhos concluídos (pesquisa)'}</span>
-                <span aria-hidden>{agendaHistoricoConcluidosAberto ? '▲' : '▼'}</span>
+                <span className="ui-expand-chevron" aria-hidden>{agendaHistoricoConcluidosAberto ? '▼' : '▶'}</span>
               </button>
               {agendaHistoricoConcluidosAberto && (
                 <div style={{ marginTop: '14px' }}>
@@ -66609,7 +66606,12 @@ A1;Peça exemplo;10`}
                         }}
                       >
                         <span>📁 {pasta.clienteNome}</span>
-                        <span style={{ fontSize: '13px', opacity: 0.85 }}>{pasta.itens.length} · {pastasExcluidasExpandidas.has(pastaKey) ? '▼' : '▶'}</span>
+                        <span style={{ fontSize: '13px', opacity: 0.85 }}>
+                          {pasta.itens.length} ·{' '}
+                          <span className="ui-expand-chevron" aria-hidden>
+                            {pastasExcluidasExpandidas.has(pastaKey) ? '▼' : '▶'}
+                          </span>
+                        </span>
                       </button>
                       {pastasExcluidasExpandidas.has(pastaKey) && (
                         <div style={{ padding: '12px 14px 18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -73979,7 +73981,7 @@ A1;Peça exemplo;10`}
                             {activeTab.title}
                           </span>
                         </span>
-                        <span style={{ fontSize: 14, lineHeight: 1, color: '#7dff9a', flexShrink: 0 }} aria-hidden>
+                        <span className="ui-expand-chevron" style={{ flexShrink: 0 }} aria-hidden>
                           {mainModuleIntroExpanded ? '▼' : '▶'}
                         </span>
                       </button>

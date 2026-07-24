@@ -162,8 +162,8 @@ export function RelatorioPdfModeloPicker({
           onClick={toggle}
         >
           <span className="relatorio-servico-pdf-modelo-picker__value">{labelFor(value)}</span>
-          <span className="relatorio-servico-pdf-modelo-picker__chevron" aria-hidden>
-            ▾
+          <span className="relatorio-servico-pdf-modelo-picker__chevron ui-expand-chevron" aria-hidden>
+            {open ? '▼' : '▶'}
           </span>
         </button>
       </div>
