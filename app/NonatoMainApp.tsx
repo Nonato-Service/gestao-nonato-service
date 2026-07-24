@@ -9140,6 +9140,8 @@ export default function Dashboard() {
   const [protocoloServicoFiltroChip, setProtocoloServicoFiltroChip] = useState<ProtocoloIntelFiltroChip>('todos')
   const [protocoloFormPassoAtivo, setProtocoloFormPassoAtivo] = useState(1)
   const [protocoloPreviewAberto, setProtocoloPreviewAberto] = useState(true)
+  const [protocoloHubVista, setProtocoloHubVista] = useState<'exec' | 'arquivo'>('exec')
+  const [protocoloCardAcoesId, setProtocoloCardAcoesId] = useState<string | null>(null)
   const PROTOCOLO_SERVICO_DRAFT_KEY = 'nonato-protocolo-servico-draft'
   /** Valor do <select> «Filtrar por cliente» que esconde todos os cartões (lista vazia). */
   const PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM = '__proto_cliente_nenhum__'
@@ -33977,232 +33979,49 @@ export default function Dashboard() {
             ),
           }))
         }
-        const renderProtocoloListaCard = (p: ProtocoloServico) => {
+        const abrirEdicaoProtocolo = (pr: ProtocoloServico) => {
+          setProtocoloServicoForm({
+            clienteId: pr.clienteId,
+            equipamentoNumeroSerie: pr.equipamentoNumeroSerie,
+            situacaoDescricao: typeof pr.situacaoDescricao === 'string' ? pr.situacaoDescricao : '',
+            textoInicial: pr.textoInicial,
+            blocos: ensureProtocoloBlocosIds(pr.blocos || []),
+            pecasTrocadasCodigos: pr.pecasTrocadasCodigos,
+            pdfModelo: clampProtocoloPdfModelo(pr.pdfModelo),
+            relatorioServicoId: typeof pr.relatorioServicoId === 'string' ? pr.relatorioServicoId : '',
+          })
+          setProtocoloFormPassoAtivo(1)
+          setEditingProtocoloServicoId(pr.id)
+          setProtocoloCardAcoesId(null)
+        }
+        const iniciarNovoProtocolo = () => {
+          setEditingProtocoloServicoId('new')
+          setProtocoloFormPassoAtivo(1)
+          setProtocoloServicoForm({
+            clienteId: '',
+            equipamentoNumeroSerie: '',
+            situacaoDescricao: '',
+            textoInicial: '',
+            blocos: [],
+            pecasTrocadasCodigos: [],
+            pdfModelo: PROTOCOLO_PDF_MODELO_PADRAO,
+            relatorioServicoId: '',
+          })
+        }
+        const renderProtocoloCard = (p: ProtocoloServico, lane: 'exec' | 'arquivo') => {
           const cl = clientes.find((c) => c.id === p.clienteId)
           const eq = cl?.equipamentos?.find((e) => e.numeroSerie === p.equipamentoNumeroSerie)
-          const dataStr = new Date(p.dataCriacao).toLocaleDateString(
-            documentPdfDateLocale(selectedLanguage)
-          )
+          const dataBase = lane === 'arquivo' ? p.dataConclusao || p.dataCriacao : p.dataCriacao
+          const dataStr = new Date(dataBase).toLocaleDateString(documentPdfDateLocale(selectedLanguage))
           const modeloGuardado = clampProtocoloPdfModelo(p.pdfModelo)
           const modeloImpressao =
             protocoloModeloImpressaoLista[p.id] !== undefined && protocoloModeloImpressaoLista[p.id] !== null
               ? clampProtocoloPdfModelo(protocoloModeloImpressaoLista[p.id])
               : modeloGuardado
           const modeloLabel =
-            (protoT as Record<string, string>)?.[`protocolosServicoPdfModelo${modeloGuardado}`] || `M${p.pdfModelo || 1}`
+            (protoT as Record<string, string>)?.[`protocolosServicoPdfModelo${modeloGuardado}`] || `M${modeloGuardado}`
           const nBlocos = p.blocos?.length ?? 0
           const nPecas = p.pecasTrocadasCodigos?.filter((c) => c.trim()).length ?? 0
-          return (
-            <div key={p.id} className="protocolo-servico-lista-card">
-              <div
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 5,
-                  background: 'linear-gradient(180deg, #5dffe8, #00a0c8, #8860ff)',
-                  opacity: 0.95,
-                }}
-              />
-              <div style={{ minWidth: 0, paddingLeft: 12 }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 12px', marginBottom: 10 }}>
-                  <strong style={{ color: '#fff', fontSize: 'clamp(15px, 2.5vw, 18px)', fontWeight: 800 }}>{cl?.nomeEmpresa || '—'}</strong>
-                  <span
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 900,
-                      letterSpacing: '0.08em',
-                      color: '#031018',
-                      background: 'linear-gradient(90deg, #7dffe8, #5ec4ff)',
-                      padding: '5px 12px',
-                      borderRadius: 999,
-                    }}
-                    title={protoT?.protocolosServicoSecPdf || 'Modelo do PDF'}
-                  >
-                    {modeloLabel}
-                  </span>
-                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', color: 'rgba(160, 200, 255, 0.7)' }}>{dataStr}</span>
-                </div>
-                {eq ? (
-                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.88)', fontSize: 14, lineHeight: 1.55 }}>
-                    <span style={{ color: '#8dffe0', fontWeight: 700 }}>{eq.tipoEquipamento}</span>
-                    {eq.marca ? <span style={{ color: 'rgba(180,200,220,0.65)' }}> · {eq.marca}</span> : null}
-                    {eq.modelo ? <span style={{ color: 'rgba(180,200,220,0.65)' }}> · {eq.modelo}</span> : null}
-                  </p>
-                ) : (p.situacaoDescricao || '').trim() ? (
-                  <p
-                    style={{
-                      margin: 0,
-                      color: 'rgba(255,255,255,0.88)',
-                      fontSize: 13,
-                      lineHeight: 1.55,
-                      whiteSpace: 'pre-wrap',
-                      maxHeight: 72,
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <span style={{ color: '#8dffe0', fontWeight: 700 }}>
-                      {protoT?.protocolosServicoInformacaoSituacao || 'Situação'}
-                    </span>
-                    <span style={{ color: 'rgba(180,200,220,0.75)' }}>
-                      {' '}
-                      — {(p.situacaoDescricao || '').trim().slice(0, 220)}
-                      {(p.situacaoDescricao || '').trim().length > 220 ? '…' : ''}
-                    </span>
-                  </p>
-                ) : null}
-                {(eq || (p.equipamentoNumeroSerie || '').trim()) ? (
-                  <p style={{ margin: '8px 0 0', fontSize: 12, color: 'rgba(140, 180, 210, 0.85)', fontFamily: 'ui-monospace, monospace' }}>
-                    {eq?.numeroSerie || p.equipamentoNumeroSerie || '—'}
-                  </p>
-                ) : null}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      padding: '6px 11px',
-                      borderRadius: 999,
-                      background: 'rgba(0, 80, 70, 0.45)',
-                      border: '1px solid rgba(0, 255, 200, 0.2)',
-                      color: '#b8fff0',
-                    }}
-                  >
-                    {(protoT?.protocolosServicoResumoBlocos || '{n} blocos').replace('{n}', String(nBlocos))}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      padding: '6px 11px',
-                      borderRadius: 999,
-                      background: 'rgba(40, 60, 100, 0.45)',
-                      border: '1px solid rgba(100, 180, 255, 0.22)',
-                      color: '#c8e4ff',
-                    }}
-                  >
-                    {(protoT?.protocolosServicoResumoPecas || '{n} peças').replace('{n}', String(nPecas))}
-                  </span>
-                </div>
-              </div>
-              <div className="protocolo-servico-card__actions">
-                <div className="protocolo-servico-card__actions-row protocolo-servico-card__actions-row--modelo-select">
-                  <label className="protocolo-servico-card__modelo-field">
-                    <span className="protocolo-servico-card__modelo-label">
-                      {protoT?.protocolosServicoModeloImpressao || 'Modelo para impressão'}
-                    </span>
-                    <select
-                      className="protocolo-servico-card__modelo-select"
-                      value={String(modeloImpressao)}
-                      onChange={(e) =>
-                        setProtocoloModeloImpressaoLista((prev) => ({
-                          ...prev,
-                          [p.id]: clampProtocoloPdfModelo(parseInt(e.target.value, 10) || 1),
-                        }))
-                      }
-                      aria-label={protoT?.protocolosServicoModeloImpressao || 'Modelo para impressão'}
-                    >
-                      {Array.from({ length: PROTOCOLO_SERVICO_PDF_MODELOS_MAX }, (_, i) => i + 1).map((n) => (
-                        <option key={n} value={n}>
-                          {(protoT as Record<string, string>)?.[`protocolosServicoPdfModelo${n}`] || `Modelo ${n}`}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-                <div className="protocolo-servico-card__actions-row protocolo-servico-card__actions-row--exports">
-                  <button
-                    type="button"
-                    className="btn-primary protocolo-servico-card__btn--pdf"
-                    onClick={() => gerarPDFProtocolo(p, modeloImpressao)}
-                  >
-                    {protoT?.protocolosServicoGerarPDF || 'PDF'}
-                  </button>
-                  <button type="button" className="btn-primary protocolo-servico-card__btn--email" onClick={() => enviarEmailProtocolo(p)}>
-                    {protoT?.protocolosServicoEnviarEmail || 'Email'}
-                  </button>
-                  <button type="button" className="btn-primary protocolo-servico-card__btn--wa" onClick={() => enviarWhatsAppProtocolo(p)}>
-                    {protoT?.protocolosServicoEnviarWhatsApp || 'WhatsApp'}
-                  </button>
-                </div>
-                {p.relatorioServicoId ? (
-                  <button
-                    type="button"
-                    className="btn-primary protocolo-servico-card__btn--relatorio"
-                    style={{ marginTop: 8, width: '100%' }}
-                    onClick={() => abrirRelatorioServicoLigado(p.relatorioServicoId!)}
-                  >
-                    📋 {protoT?.protocolosServicoRelatorioAbrir || 'Abrir Relatório de Serviço'}
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  className="btn-primary protocolo-servico-card__btn--concluir"
-                  style={{ marginTop: 8, width: '100%', background: 'linear-gradient(90deg, #059669, #047857)', borderColor: 'rgba(34, 197, 94, 0.45)' }}
-                  onClick={() => {
-                    const msg =
-                      protoT?.protocolosServicoConcluirConfirm ||
-                      'Concluir e mover para «Protocolos Executados e Enviados»?'
-                    if (!window.confirm(msg)) return
-                    marcarProtocoloExecutado(p.id, 'manual')
-                  }}
-                >
-                  ✓ {protoT?.protocolosServicoConcluirArquivar || 'Concluir e arquivar'}
-                </button>
-                <div className="protocolo-servico-card__actions-row protocolo-servico-card__actions-row--manage">
-                  <button
-                    type="button"
-                    className="btn-primary protocolo-servico-card__btn--edit"
-                    onClick={() => {
-                      const pr = protocolosServico.find((x) => x.id === p.id)
-                      if (pr) {
-                        setProtocoloServicoForm({
-                          clienteId: pr.clienteId,
-                          equipamentoNumeroSerie: pr.equipamentoNumeroSerie,
-                          situacaoDescricao: typeof pr.situacaoDescricao === 'string' ? pr.situacaoDescricao : '',
-                          textoInicial: pr.textoInicial,
-                          blocos: ensureProtocoloBlocosIds(pr.blocos || []),
-                          pecasTrocadasCodigos: pr.pecasTrocadasCodigos,
-                          pdfModelo: clampProtocoloPdfModelo(pr.pdfModelo),
-                          relatorioServicoId: typeof pr.relatorioServicoId === 'string' ? pr.relatorioServicoId : '',
-                        })
-                        setProtocoloFormPassoAtivo(1)
-                        setEditingProtocoloServicoId(pr.id)
-                      }
-                    }}
-                  >
-                    {protoT?.protocolosServicoEditar || 'Editar'}
-                  </button>
-                  <button
-                    type="button"
-                    title={protoT?.protocolosServicoExcluir || 'Excluir'}
-                    aria-label={protoT?.protocolosServicoExcluir || 'Excluir'}
-                    className="btn-danger btn-danger--inline protocolo-servico-card__btn--del"
-                    onClick={() => {
-                      if (window.confirm(protoT?.protocolosServicoConfirmarExcluir || 'Excluir este protocolo?')) {
-                        const next = protocolosServico.filter((x) => x.id !== p.id)
-                        setProtocolosServico(next)
-                        saveData('nonato-protocolos-servico', next)
-                        setProtocoloModeloImpressaoLista((prev) => {
-                          const { [p.id]: _, ...rest } = prev
-                          return rest
-                        })
-                      }
-                    }}
-                  >
-                    {protoT?.protocolosServicoExcluir || 'Excluir'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )
-        }
-        const renderProtocoloArquivoCard = (p: ProtocoloServico) => {
-          const cl = clientes.find((c) => c.id === p.clienteId)
-          const eq = cl?.equipamentos?.find((e) => e.numeroSerie === p.equipamentoNumeroSerie)
-          const dataArquivo = p.dataConclusao || p.dataCriacao
-          const dataStr = new Date(dataArquivo).toLocaleDateString(documentPdfDateLocale(selectedLanguage))
           const viaLabel =
             p.enviadoVia === 'email'
               ? protoT?.protocolosServicoEnviadoViaEmail || 'E-mail'
@@ -34211,102 +34030,165 @@ export default function Dashboard() {
                 : p.enviadoVia === 'manual'
                   ? protoT?.protocolosServicoEnviadoViaManual || 'Manual'
                   : ''
-          const modeloGuardado = clampProtocoloPdfModelo(p.pdfModelo)
-          const modeloImpressao =
-            protocoloModeloImpressaoLista[p.id] !== undefined && protocoloModeloImpressaoLista[p.id] !== null
-              ? clampProtocoloPdfModelo(protocoloModeloImpressaoLista[p.id])
-              : modeloGuardado
+          const acoesAbertas = protocoloCardAcoesId === p.id
+          const assuntoEquip = eq
+            ? [eq.tipoEquipamento, eq.marca, eq.modelo].filter(Boolean).join(' · ')
+            : (p.situacaoDescricao || '').trim().slice(0, 180)
           return (
-            <div
-              key={p.id}
-              className="protocolo-servico-lista-card protocolo-servico-lista-card--arquivo"
-              style={{ borderColor: 'rgba(148, 163, 184, 0.22)' }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 5,
-                  background: 'linear-gradient(180deg, #94a3b8, #64748b)',
-                  opacity: 0.85,
-                }}
-              />
-              <div style={{ minWidth: 0, paddingLeft: 12, flex: 1 }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 10px', marginBottom: 6 }}>
-                  <strong style={{ color: '#e2e8f0', fontSize: 15, fontWeight: 700 }}>{eq?.tipoEquipamento || (p.situacaoDescricao || '').trim().slice(0, 60) || '—'}</strong>
-                  {viaLabel ? (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: 'rgba(51, 65, 85, 0.6)', color: '#cbd5e1' }}>
-                      {viaLabel}
-                    </span>
-                  ) : null}
+            <article key={p.id} className={`proto-cockpit-card proto-cockpit-card--${lane}`}>
+              <div className="proto-cockpit-card__main">
+                <div className="proto-cockpit-card__row">
+                  <span className="proto-cockpit-card__client">{cl?.nomeEmpresa || '—'}</span>
+                  <span className="proto-cockpit-card__date">{dataStr}</span>
                 </div>
-                <p style={{ margin: 0, fontSize: 12, color: '#94a3b8', fontFamily: 'ui-monospace, monospace' }}>
-                  {eq?.numeroSerie || p.equipamentoNumeroSerie || '—'} · {dataStr}
-                </p>
+                {assuntoEquip ? (
+                  <p className="proto-cockpit-card__subject">
+                    {eq ? <strong>{eq.tipoEquipamento}</strong> : null}
+                    {eq?.marca || eq?.modelo ? (
+                      <span>
+                        {eq ? ' · ' : ''}
+                        {[eq?.marca, eq?.modelo].filter(Boolean).join(' · ')}
+                      </span>
+                    ) : !eq && (p.situacaoDescricao || '').trim() ? (
+                      <span>{(p.situacaoDescricao || '').trim()}</span>
+                    ) : null}
+                  </p>
+                ) : null}
+                {(eq || (p.equipamentoNumeroSerie || '').trim()) ? (
+                  <p className="proto-cockpit-card__mono">{eq?.numeroSerie || p.equipamentoNumeroSerie || '—'}</p>
+                ) : null}
+                <div className="proto-cockpit-card__tags">
+                  <span className="proto-cockpit-tag proto-cockpit-tag--model">{modeloLabel}</span>
+                  <span className="proto-cockpit-tag">
+                    {(protoT?.protocolosServicoResumoBlocos || '{n} blocos').replace('{n}', String(nBlocos))}
+                  </span>
+                  <span className="proto-cockpit-tag">
+                    {(protoT?.protocolosServicoResumoPecas || '{n} peças').replace('{n}', String(nPecas))}
+                  </span>
+                  {viaLabel ? <span className="proto-cockpit-tag proto-cockpit-tag--via">{viaLabel}</span> : null}
+                </div>
               </div>
-              <div className="protocolo-servico-card__actions" style={{ minWidth: 180 }}>
-                <button type="button" className="btn-primary protocolo-servico-card__btn--pdf" onClick={() => gerarPDFProtocolo(p, modeloImpressao)}>
-                  {protoT?.protocolosServicoGerarPDF || 'PDF'}
-                </button>
-                <button
-                  type="button"
-                  className="btn-primary protocolo-servico-card__btn--edit"
-                  style={{ marginTop: 8, width: '100%' }}
-                  onClick={() => reabrirProtocoloExecucao(p.id)}
+              <div className="proto-cockpit-card__rail">
+                <select
+                  className="proto-cockpit-card__model"
+                  value={String(modeloImpressao)}
+                  onChange={(e) =>
+                    setProtocoloModeloImpressaoLista((prev) => ({
+                      ...prev,
+                      [p.id]: clampProtocoloPdfModelo(parseInt(e.target.value, 10) || 1),
+                    }))
+                  }
+                  aria-label={protoT?.protocolosServicoModeloImpressao || 'Modelo PDF'}
                 >
-                  ↩ {protoT?.protocolosServicoReabrirExecucao || 'Reabrir execução'}
-                </button>
+                  {Array.from({ length: PROTOCOLO_SERVICO_PDF_MODELOS_MAX }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>
+                      {(protoT as Record<string, string>)?.[`protocolosServicoPdfModelo${n}`] || `Modelo ${n}`}
+                    </option>
+                  ))}
+                </select>
+                <div className={`proto-cockpit-card__quick${lane === 'arquivo' ? ' proto-cockpit-card__quick--dual' : ''}`}>
+                  <button
+                    type="button"
+                    className="btn-primary proto-cockpit-btn proto-cockpit-btn--pdf"
+                    onClick={() => gerarPDFProtocolo(p, modeloImpressao)}
+                  >
+                    PDF
+                  </button>
+                  {lane === 'exec' ? (
+                    <>
+                      <button type="button" className="btn-primary proto-cockpit-btn proto-cockpit-btn--email" onClick={() => enviarEmailProtocolo(p)}>
+                        Email
+                      </button>
+                      <button type="button" className="btn-primary proto-cockpit-btn proto-cockpit-btn--wa" onClick={() => enviarWhatsAppProtocolo(p)}>
+                        WA
+                      </button>
+                    </>
+                  ) : (
+                    <button type="button" className="btn-primary proto-cockpit-btn proto-cockpit-btn--ghost" onClick={() => reabrirProtocoloExecucao(p.id)}>
+                      ↩ {protoT?.protocolosServicoReabrirExecucao || 'Reabrir'}
+                    </button>
+                  )}
+                </div>
+                {lane === 'exec' ? (
+                  <>
+                    <button
+                      type="button"
+                      className={`proto-cockpit-card__more${acoesAbertas ? ' is-open' : ''}`}
+                      aria-expanded={acoesAbertas}
+                      onClick={() => setProtocoloCardAcoesId(acoesAbertas ? null : p.id)}
+                    >
+                      {acoesAbertas ? '▲ ' : '▼ '}
+                      {protoT?.protocolosServicoMaisAcoes || 'Mais ações'}
+                    </button>
+                    {acoesAbertas ? (
+                      <div className="proto-cockpit-card__drawer">
+                        {p.relatorioServicoId ? (
+                          <button type="button" className="btn-primary proto-cockpit-btn proto-cockpit-btn--ghost" onClick={() => abrirRelatorioServicoLigado(p.relatorioServicoId!)}>
+                            📋 {protoT?.protocolosServicoRelatorioAbrir || 'Relatório ligado'}
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="btn-primary proto-cockpit-btn proto-cockpit-btn--ghost"
+                          onClick={() => {
+                            const msg =
+                              protoT?.protocolosServicoConcluirConfirm ||
+                              'Concluir e mover para arquivo?'
+                            if (!window.confirm(msg)) return
+                            marcarProtocoloExecutado(p.id, 'manual')
+                            setProtocoloCardAcoesId(null)
+                          }}
+                        >
+                          ✓ {protoT?.protocolosServicoConcluirArquivar || 'Concluir'}
+                        </button>
+                        <button type="button" className="btn-primary proto-cockpit-btn proto-cockpit-btn--ghost" onClick={() => abrirEdicaoProtocolo(p)}>
+                          {protoT?.protocolosServicoEditar || 'Editar'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-danger btn-danger--inline proto-cockpit-btn"
+                          onClick={() => {
+                            if (window.confirm(protoT?.protocolosServicoConfirmarExcluir || 'Excluir este protocolo?')) {
+                              const next = protocolosServico.filter((x) => x.id !== p.id)
+                              setProtocolosServico(next)
+                              saveData('nonato-protocolos-servico', next)
+                              setProtocoloModeloImpressaoLista((prev) => {
+                                const { [p.id]: _, ...rest } = prev
+                                return rest
+                              })
+                              setProtocoloCardAcoesId(null)
+                            }
+                          }}
+                        >
+                          {protoT?.protocolosServicoExcluir || 'Excluir'}
+                        </button>
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <button type="button" className="btn-primary proto-cockpit-btn proto-cockpit-btn--ghost" onClick={() => abrirEdicaoProtocolo(p)}>
+                    {protoT?.protocolosServicoEditar || 'Editar'}
+                  </button>
+                )}
               </div>
-            </div>
+            </article>
           )
         }
         return (
-          <div style={{ padding: '24px 20px 40px', maxWidth: '1100px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }} className="tab-content-wrapper protocolos-servico-pro">
+          <div style={{ padding: '24px 20px 40px', maxWidth: '1380px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }} className="tab-content-wrapper protocolos-servico-pro proto-cockpit">
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
             </div>
-            <div
-              className="protocolo-servico-hero"
-              style={{
-                marginBottom: 24,
-                padding: '22px 26px',
-                borderRadius: 12,
-                background: 'linear-gradient(135deg, rgba(6, 40, 22, 0.95) 0%, rgba(8, 18, 28, 0.98) 45%, rgba(4, 12, 20, 1) 100%)',
-                border: '1px solid rgba(34, 197, 94, 0.35)',
-                borderLeft: '5px solid #22c55e',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(34, 197, 94, 0.08), inset 0 1px 0 rgba(74, 222, 128, 0.12)',
-              }}
-            >
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
-                <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flex: '1 1 280px', minWidth: 0 }}>
-                  <LogoComponent size="small" />
-                  <div style={{ minWidth: 0 }}>
-                    <div className="proto-intel-hero-badge">
-                      ✦ {protoT?.protocolosServicoIntelBadge || 'Assistente inteligente'}
-                    </div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#4ade80', marginBottom: 6, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                      {protoT?.protocolosServicoHeroBadge || 'Documentação técnica'}
-                    </div>
-                    <h1 style={{ margin: 0, fontSize: 'clamp(1.35rem, 3.2vw, 1.85rem)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.15, color: '#f0fdf4' }}>
-                      {tituloProto}
-                    </h1>
-                    <p style={{ margin: '10px 0 0', fontSize: 14, color: '#94a3b8', lineHeight: 1.6, maxWidth: 560 }}>
-                      {descProto}
-                    </p>
-                    <p style={{ margin: '8px 0 0', fontSize: 13, color: '#64748b', maxWidth: 560, lineHeight: 1.55 }}>
-                      {protoT?.protocolosServicoHeroTagline ||
-                        'Um fluxo só: cliente + equipamento → blocos texto/imagem → peças → PDF / email / WhatsApp.'}
-                    </p>
-                  </div>
-                </div>
-                {!mostrarFormulario && (
+            {mostrarFormulario ? (
+              <div className={`proto-cockpit-editor proto-editor-layout${protocoloPreviewAberto ? ' proto-editor-layout--preview' : ''}`}>
+                <aside className="proto-cockpit-rail">
                   <button
                     type="button"
+                    className="proto-cockpit-rail__back"
                     onClick={() => {
-                      setEditingProtocoloServicoId('new')
+                      if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
+                      setEditingProtocoloServicoId(null)
                       setProtocoloFormPassoAtivo(1)
                       setProtocoloServicoForm({
                         clienteId: '',
@@ -34319,119 +34201,44 @@ export default function Dashboard() {
                         relatorioServicoId: '',
                       })
                     }}
-                    style={{
-                      padding: '11px 20px',
-                      fontWeight: 600,
-                      borderRadius: 8,
-                      border: '1px solid rgba(13, 148, 136, 0.45)',
-                      cursor: 'pointer',
-                      color: '#ecfdf5',
-                      fontSize: 14,
-                      whiteSpace: 'nowrap',
-                      background: '#0f766e',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
-                    }}
                   >
-                    + {protoT?.protocolosServicoNovo || 'Novo protocolo'}
+                    ← {protoT?.protocolosServicoVoltarLista || 'Lista'}
                   </button>
-                )}
-              </div>
-            </div>
-
-            {mostrarFormulario ? (
-              <div className={`proto-editor-layout${protocoloPreviewAberto ? ' proto-editor-layout--preview' : ''}`}>
-                <div className="proto-editor-main">
-                <div
-                  style={{
-                    marginBottom: 20,
-                    padding: '18px 20px',
-                    borderRadius: 10,
-                    border: '1px solid rgba(148, 163, 184, 0.16)',
-                    background: '#121922',
-                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.28)',
-                  }}
-                >
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14, marginBottom: 12 }}>
-                    <div style={{ minWidth: 0, flex: '1 1 220px' }}>
-                      <h2 style={{ margin: 0, fontSize: 'clamp(1.05rem, 2.5vw, 1.25rem)', color: '#f1f5f9', fontWeight: 700, letterSpacing: '-0.02em' }}>
-                        {editingProtocoloServicoId === 'new'
-                          ? protoT?.protocolosServicoFormTituloNovo || protoT?.protocolosServicoNovo || 'Novo protocolo de serviço'
-                          : protoT?.protocolosServicoFormTituloEditar || protoT?.protocolosServicoEditar || 'Editar protocolo'}
-                      </h2>
-                      <p style={{ margin: '6px 0 0', fontSize: 13, color: '#94a3b8' }}>{protoT?.protocolosServicoFormSub || 'Preencha por secções. Guarde ao final para ficar na lista.'}</p>
-                    </div>
-                    <button
-                      type="button"
-                      style={{
-                        padding: '9px 16px',
-                        borderRadius: 8,
-                        border: '1px solid rgba(148, 163, 184, 0.28)',
-                        background: '#0f1419',
-                        color: '#e2e8f0',
-                        fontWeight: 600,
-                        fontSize: 13,
-                        cursor: 'pointer',
-                      }}
-                      onClick={() => {
-                        if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
-                        setEditingProtocoloServicoId(null)
-                        setProtocoloFormPassoAtivo(1)
-                        setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: PROTOCOLO_PDF_MODELO_PADRAO, relatorioServicoId: '' })
-                      }}
-                    >
-                      ← {protoT?.protocolosServicoVoltarLista || 'Voltar à lista'}
-                    </button>
-                  </div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>
-                    {protoT?.protocolosServicoFormPassosLabel || 'Fluxo do formulário'}
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px 10px', fontSize: 12, color: '#94a3b8' }}>
-                    {protoSteps.map((lab, si) => (
-                      <React.Fragment key={lab + si}>
-                        {si > 0 && <span style={{ color: '#475569', userSelect: 'none' }} aria-hidden>→</span>}
-                        <span style={{ fontWeight: 600, color: '#cbd5e1' }}>
-                          {si + 1}. {lab}
-                        </span>
-                      </React.Fragment>
+                  <h2 className="proto-cockpit-rail__title">
+                    {editingProtocoloServicoId === 'new'
+                      ? protoT?.protocolosServicoFormTituloNovo || protoT?.protocolosServicoNovo || 'Novo protocolo'
+                      : protoT?.protocolosServicoFormTituloEditar || protoT?.protocolosServicoEditar || 'Editar protocolo'}
+                  </h2>
+                  <div className="proto-cockpit-rail__steps" role="tablist" aria-label={protoT?.protocolosServicoFormPassosLabel || 'Passos'}>
+                    {protoWizardLabels.map((lab, wi) => (
+                      <button
+                        key={lab + wi}
+                        type="button"
+                        role="tab"
+                        aria-selected={protocoloFormPassoAtivo === wi + 1}
+                        className={`proto-cockpit-rail__step${protocoloFormPassoAtivo === wi + 1 ? ' is-active' : ''}`}
+                        onClick={() => setProtocoloFormPassoAtivo(wi + 1)}
+                      >
+                        <span className="proto-cockpit-rail__num">{wi + 1}</span>
+                        <span>{lab}</span>
+                      </button>
                     ))}
                   </div>
-                  <p style={{ margin: '10px 0 0', fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
-                    {protoT?.protocolosServicoFormPassos || 'Identificação → conteúdo → peças → guardar na lista.'}
-                  </p>
-                </div>
-
-                <div className="proto-wizard" role="tablist" aria-label={protoT?.protocolosServicoFormPassosLabel || 'Fluxo do formulário'}>
-                  {protoWizardLabels.map((lab, wi) => (
-                    <button
-                      key={lab + wi}
-                      type="button"
-                      role="tab"
-                      aria-selected={protocoloFormPassoAtivo === wi + 1}
-                      className={`proto-wizard__step${protocoloFormPassoAtivo === wi + 1 ? ' is-active' : ''}`}
-                      onClick={() => setProtocoloFormPassoAtivo(wi + 1)}
-                    >
-                      <span className="proto-wizard__num">{wi + 1}</span>
-                      <span>{lab}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="proto-completude" aria-live="polite">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8' }}>
-                      {protoT?.protocolosServicoCompletude || 'Completude do protocolo'}
-                    </span>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: protoCompletude.pronto ? '#4ade80' : '#fbbf24' }}>
-                      {protoCompletude.percent}% · {protoCompletude.pronto
-                        ? (protoT?.protocolosServicoCompletudePronto || 'Pronto para guardar')
-                        : (protoT?.protocolosServicoCompletudePendente || 'Faltam dados obrigatórios')}
-                    </span>
+                  <div className="proto-completude" aria-live="polite">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                        {protoT?.protocolosServicoCompletude || 'Completude'}
+                      </span>
+                      <span style={{ fontSize: 12, fontWeight: 900, color: protoCompletude.pronto ? '#4ade80' : '#fbbf24' }}>
+                        {protoCompletude.percent}%
+                      </span>
+                    </div>
+                    <div className="proto-completude__bar">
+                      <div className="proto-completude__fill" style={{ width: `${protoCompletude.percent}%` }} />
+                    </div>
                   </div>
-                  <div className="proto-completude__bar">
-                    <div className="proto-completude__fill" style={{ width: `${protoCompletude.percent}%` }} />
-                  </div>
-                </div>
-
+                </aside>
+                <div className="proto-editor-main">
                 {protocoloFormPassoAtivo === 1 ? (
                 <div style={secCard}>
                   <h3 style={secTitle}>
@@ -35582,267 +35389,169 @@ export default function Dashboard() {
                 )}
               </div>
             ) : (
-              <div
-                style={{
-                  padding: '22px 22px 26px',
-                  borderRadius: 10,
-                  background: '#121922',
-                  border: '1px solid rgba(148, 163, 184, 0.14)',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
-                }}
-              >
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 22 }}>
-                    <div className="protocolo-kpi-card" style={{ padding: '14px 16px', borderRadius: 10, background: 'linear-gradient(145deg, rgba(6, 40, 22, 0.85), rgba(8, 18, 28, 0.95))', border: '1px solid rgba(34, 197, 94, 0.35)' }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#86efac', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{protoT?.protocolosServicoHubKpiArquivo || 'Arquivo'}</div>
-                      <div style={{ fontSize: 28, fontWeight: 800, color: '#f0fdf4', marginTop: 6, lineHeight: 1 }}>{totalProto}</div>
-                      <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiArquivoSub || 'protocolos guardados'}</div>
-                    </div>
-                    <div className="protocolo-kpi-card" style={{ padding: '14px 16px', borderRadius: 10, background: 'linear-gradient(145deg, rgba(15, 30, 55, 0.9), rgba(8, 14, 24, 0.98))', border: '1px solid rgba(56, 189, 248, 0.28)' }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#7dd3fc', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{protoT?.protocolosServicoHubKpiEmExecucao || 'Em execução'}</div>
-                      <div style={{ fontSize: 28, fontWeight: 800, color: '#f0f9ff', marginTop: 6, lineHeight: 1 }}>{totalEmExecucao}</div>
-                      <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
-                        {visivelProto !== totalEmExecucao
-                          ? (protoT?.protocolosServicoHubKpiEmExecucaoFiltro || '{n} visíveis com filtro').replace('{n}', String(visivelProto))
-                          : (protoT?.protocolosServicoHubKpiEmExecucaoSub || 'protocolos abertos agora')}
+              <>
+                <header className="proto-cockpit-head">
+                  <div className="proto-cockpit-head__brand">
+                    <LogoComponent size="small" />
+                    <div>
+                      <h1 className="proto-cockpit-head__title">{tituloProto}</h1>
+                      <div className="proto-cockpit-head__stats">
+                        <span className="proto-cockpit-stat proto-cockpit-stat--exec">
+                          {protoT?.protocolosServicoHubKpiEmExecucao || 'Exec'} <strong>{visivelProto}</strong>
+                        </span>
+                        <span className="proto-cockpit-stat proto-cockpit-stat--done">
+                          {protoT?.protocolosServicoHubKpiExecutados || 'Arquivo'} <strong>{visivelExecutados}</strong>
+                        </span>
+                        <span className="proto-cockpit-stat proto-cockpit-stat--all">
+                          Total <strong>{totalProto}</strong>
+                        </span>
                       </div>
                     </div>
-                    <div className="protocolo-kpi-card" style={{ padding: '14px 16px', borderRadius: 10, background: 'linear-gradient(145deg, rgba(40, 30, 8, 0.88), rgba(12, 10, 6, 0.98))', border: '1px solid rgba(251, 191, 36, 0.32)' }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#fcd34d', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{protoT?.protocolosServicoHubKpiExecutados || 'Executados e enviados'}</div>
-                      <div style={{ fontSize: 28, fontWeight: 800, color: '#fffbeb', marginTop: 6, lineHeight: 1 }}>{totalExecutados}</div>
-                      <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiExecutadosSub || 'concluídos ou enviados ao cliente'}</div>
-                    </div>
                   </div>
-                  {protoT?.protocolosServicoPainelIntro ? (
-                    <p style={{ margin: '0 0 20px', fontSize: 12, color: '#64748b', lineHeight: 1.55, maxWidth: 720 }}>{protoT.protocolosServicoPainelIntro}</p>
-                  ) : null}
+                  <button type="button" className="btn-primary proto-cockpit-head__cta" onClick={iniciarNovoProtocolo}>
+                    + {protoT?.protocolosServicoNovo || 'Novo protocolo'}
+                  </button>
+                </header>
 
-                  <div className="proto-intel-chips" role="group" aria-label={protoT?.protocolosServicoIntelBadge || 'Filtros inteligentes'}>
-                    {PROTOCOLO_FILTRO_CHIPS.map((chip) => (
-                      <button
-                        key={chip}
-                        type="button"
-                        className={`proto-intel-chip${protocoloServicoFiltroChip === chip ? ' is-active' : ''}`}
-                        onClick={() => setProtocoloServicoFiltroChip(chip)}
-                      >
-                        {protoChipLabel(chip)}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
-                    <div>
-                      <h2 style={{ margin: 0, fontSize: 'clamp(1rem, 2.4vw, 1.15rem)', color: '#f1f5f9', fontWeight: 700, letterSpacing: '-0.02em' }}>{protoT?.protocolosServicoListaTituloEmExecucao || 'Protocolos em execução'}</h2>
-                      <p style={{ margin: '8px 0 0', fontSize: 13, color: '#94a3b8' }}>
-                        {(protoT?.protocolosServicoListaContagemEmExecucao || '{n} em execução').replace('{n}', String(protocolosEmExecucao.length))}
-                        {filtroLista || filtroClienteRaw
-                          ? ` · ${protocolosServico.filter((p) => protocoloEstaEmExecucao(p)).length} ${protoT?.protocolosServicoListaTotal || 'no total'}`
-                          : ''}
-                      </p>
-                    </div>
+                <div className="proto-cockpit-command">
+                  <label className="proto-cockpit-command__field">
+                    <span className="proto-cockpit-command__label">{protoT?.protocolosServicoBuscaPlaceholder || 'Pesquisar'}</span>
                     <input
                       type="search"
+                      className="proto-cockpit-command__input"
                       value={protocoloServicoFiltroLista}
                       onChange={(e) => setProtocoloServicoFiltroLista(e.target.value)}
-                      placeholder={protoT?.protocolosServicoBuscaPlaceholder || 'Pesquisar por cliente, equipamento, série…'}
-                      style={{ ...inputBase, maxWidth: '380px', minWidth: '200px', flex: '1 1 220px' }}
+                      placeholder={protoT?.protocolosServicoBuscaPlaceholder || 'Cliente, equipamento, série…'}
                     />
-                  </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      alignItems: 'flex-end',
-                      gap: 16,
-                      marginBottom: 16,
-                      padding: '14px 16px',
-                      borderRadius: 10,
-                      border: '1px solid rgba(148, 163, 184, 0.14)',
-                      background: '#0f1419',
-                    }}
-                  >
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: '200px', flex: '1 1 220px' }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b', letterSpacing: '0.06em' }}>
-                        {protoT?.protocolosServicoFiltroClienteLabel || 'Filtrar por cliente'}
-                      </span>
-                      <select
-                        value={protocoloServicoClienteFiltroLista}
-                        onChange={(e) => setProtocoloServicoClienteFiltroLista(e.target.value)}
-                        style={{ ...inputBase, padding: '10px 12px' }}
-                      >
-                        <option value="">{safeT?.comprovantesTodosClientes || 'Todos os clientes'}</option>
-                        <option value={PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM}>
-                          {protoT?.protocolosServicoFiltroClienteOpcaoNenhum || 'Nenhum'}
-                        </option>
-                        {clientesComProtocolo.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.nomeEmpresa}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none', paddingBottom: 4 }}>
-                      <input
-                        type="checkbox"
-                        checked={protocoloServicoAgruparPorCliente}
-                        onChange={(e) => setProtocoloServicoAgruparPorCliente(e.target.checked)}
-                      />
-                      <span style={{ fontSize: 13, color: '#e2e8f0', fontWeight: 600 }}>
-                        {protoT?.protocolosServicoAgruparPorCliente || 'Agrupar por cliente'}
-                      </span>
-                    </label>
-                  </div>
-                  {protoT?.protocolosServicoListaHint ? (
-                    <p style={{ margin: '0 0 18px', fontSize: 12, color: '#64748b', lineHeight: 1.55, maxWidth: 720 }}>{protoT.protocolosServicoListaHint}</p>
-                  ) : null}
-
-                  {protocolosServico.length === 0 ? (
-                    <div style={{ padding: '36px 22px', textAlign: 'center', borderRadius: 16, border: '1px dashed rgba(0, 220, 255, 0.25)', background: 'rgba(0, 30, 40, 0.35)' }}>
-                      <p style={{ color: 'rgba(230, 245, 255, 0.82)', lineHeight: 1.65, margin: 0, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto', fontSize: 14 }}>{protoT?.protocolosServicoSemProtocolos || 'Ainda não há protocolos.'}</p>
-                    </div>
-                  ) : protocolosEmExecucao.length === 0 ? (
-                    filtroClienteNenhum ? (
-                      <div style={{ minHeight: 120 }} aria-hidden />
-                    ) : filtroLista || filtroClienteRaw || protocoloServicoFiltroChip !== 'todos' ? (
-                      <p style={{ color: 'rgba(200, 210, 230, 0.75)', padding: '24px 8px', fontSize: 14 }}>{protoT?.protocolosServicoListaVaziaFiltro || 'Nenhum protocolo corresponde à pesquisa.'}</p>
-                    ) : (
-                      <div style={{ padding: '32px 22px', textAlign: 'center', borderRadius: 14, border: '1px dashed rgba(34, 197, 94, 0.28)', background: 'rgba(6, 40, 22, 0.35)', marginBottom: 24 }}>
-                        <p style={{ color: '#86efac', lineHeight: 1.65, margin: 0, fontSize: 15, fontWeight: 600 }}>
-                          {protoT?.protocolosServicoSemEmExecucao || 'Não há protocolos em execução'}
-                        </p>
-                      </div>
-                    )
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 28 }}>
-                      {protocoloServicoAgruparPorCliente
-                        ? gruposProtocolosLista.map((grupo) => (
-                            <div
-                              key={grupo.clienteId}
-                              style={{
-                                borderRadius: 12,
-                                border: '1px solid rgba(45, 212, 191, 0.18)',
-                                background: 'rgba(6, 18, 16, 0.45)',
-                                padding: '14px 14px 16px',
-                                boxSizing: 'border-box',
-                              }}
-                            >
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  flexWrap: 'wrap',
-                                  alignItems: 'baseline',
-                                  justifyContent: 'space-between',
-                                  gap: 10,
-                                  marginBottom: 12,
-                                  paddingBottom: 10,
-                                  borderBottom: '1px solid rgba(148, 163, 184, 0.14)',
-                                }}
-                              >
-                                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#ecfdf5', letterSpacing: '-0.02em' }}>{grupo.nomeGrupo}</h3>
-                                <span style={{ fontSize: 12, fontWeight: 600, color: '#5eead4' }}>
-                                  {(protoT?.protocolosServicoListaContagemEmExecucao || '{n} em execução').replace('{n}', String(grupo.itens.length))}
-                                </span>
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>{grupo.itens.map((p) => renderProtocoloListaCard(p))}</div>
-                            </div>
-                          ))
-                        : protocolosEmExecucao.map((p) => renderProtocoloListaCard(p))}
-                    </div>
-                  )}
-
-                  {protocolosServico.length > 0 && totalExecutados > 0 ? (
-                    <div
-                      style={{
-                        marginTop: 8,
-                        paddingTop: 22,
-                        borderTop: '1px solid rgba(148, 163, 184, 0.18)',
-                      }}
+                  </label>
+                  <label className="proto-cockpit-command__field">
+                    <span className="proto-cockpit-command__label">{protoT?.protocolosServicoFiltroClienteLabel || 'Cliente'}</span>
+                    <select
+                      className="proto-cockpit-command__select"
+                      value={protocoloServicoClienteFiltroLista}
+                      onChange={(e) => setProtocoloServicoClienteFiltroLista(e.target.value)}
                     >
-                      <button
-                        type="button"
-                        onClick={() => setProtocoloSecaoArquivoAberta((v) => !v)}
-                        style={{
-                          display: 'flex',
-                          width: '100%',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: 12,
-                          padding: '14px 16px',
-                          borderRadius: 10,
-                          border: '1px solid rgba(148, 163, 184, 0.22)',
-                          background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95))',
-                          color: '#e2e8f0',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                        }}
-                      >
-                        <span>
-                          <span style={{ display: 'block', fontSize: 'clamp(1rem, 2.2vw, 1.12rem)', fontWeight: 800, letterSpacing: '-0.02em' }}>
-                            {protoT?.protocolosServicoExecutadosTitulo || 'Protocolos Executados e Enviados'}
-                          </span>
-                          <span style={{ display: 'block', marginTop: 6, fontSize: 13, color: '#94a3b8' }}>
-                            {(protoT?.protocolosServicoExecutadosContagem || '{n} concluídos').replace('{n}', String(visivelExecutados))}
-                            {filtroLista || filtroClienteRaw ? ` · ${totalExecutados} ${protoT?.protocolosServicoListaTotal || 'no total'}` : ''}
-                          </span>
-                        </span>
-                        <span className="ui-expand-chevron" aria-hidden>{protocoloSecaoArquivoAberta ? '▼' : '▶'}</span>
-                      </button>
-
-                      {protocoloSecaoArquivoAberta ? (
-                        protocolosExecutadosFiltrados.length === 0 ? (
-                          <p style={{ color: '#94a3b8', padding: '20px 8px', fontSize: 14, margin: 0 }}>
-                            {protoT?.protocolosServicoExecutadosVazioFiltro || 'Nenhum protocolo concluído corresponde aos filtros actuais.'}
-                          </p>
-                        ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 22, marginTop: 18 }}>
-                            {gruposProtocolosArquivo.map((grupoCliente) => (
-                              <div
-                                key={grupoCliente.clienteId}
-                                style={{
-                                  borderRadius: 12,
-                                  border: '1px solid rgba(148, 163, 184, 0.2)',
-                                  background: 'rgba(15, 23, 42, 0.55)',
-                                  padding: '14px 14px 16px',
-                                }}
-                              >
-                                <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em', paddingBottom: 10, borderBottom: '1px solid rgba(148, 163, 184, 0.14)' }}>
-                                  {grupoCliente.nomeCliente}
-                                </h3>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                                  {grupoCliente.porData.map((grupoData) => {
-                                    const dataLabel =
-                                      grupoData.dataKey === '—'
-                                        ? '—'
-                                        : new Date(grupoData.dataKey + 'T12:00:00').toLocaleDateString(documentPdfDateLocale(selectedLanguage), {
-                                            weekday: 'short',
-                                            day: '2-digit',
-                                            month: 'long',
-                                            year: 'numeric',
-                                          })
-                                    return (
-                                      <div key={`${grupoCliente.clienteId}-${grupoData.dataKey}`}>
-                                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
-                                          <span style={{ fontSize: 12, fontWeight: 800, color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                                            {protoT?.protocolosServicoExecutadosDataLabel || 'Data'} · {dataLabel}
-                                          </span>
-                                          <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>
-                                            {(protoT?.protocolosServicoExecutadosDataContagem || '{n} protocolo(s)').replace('{n}', String(grupoData.itens.length))}
-                                          </span>
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                          {grupoData.itens.map((p) => renderProtocoloArquivoCard(p))}
-                                        </div>
-                                      </div>
-                                    )
-                                  })}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )
-                      ) : null}
-                    </div>
-                  ) : null}
+                      <option value="">{safeT?.comprovantesTodosClientes || 'Todos'}</option>
+                      <option value={PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM}>
+                        {protoT?.protocolosServicoFiltroClienteOpcaoNenhum || 'Nenhum'}
+                      </option>
+                      {clientesComProtocolo.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.nomeEmpresa}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="proto-cockpit-command__check">
+                    <input
+                      type="checkbox"
+                      checked={protocoloServicoAgruparPorCliente}
+                      onChange={(e) => setProtocoloServicoAgruparPorCliente(e.target.checked)}
+                    />
+                    {protoT?.protocolosServicoAgruparPorCliente || 'Agrupar por cliente'}
+                  </label>
                 </div>
+
+                <div className="proto-intel-chips" role="group" aria-label={protoT?.protocolosServicoIntelBadge || 'Filtros'}>
+                  {PROTOCOLO_FILTRO_CHIPS.map((chip) => (
+                    <button
+                      key={chip}
+                      type="button"
+                      className={`proto-intel-chip${protocoloServicoFiltroChip === chip ? ' is-active' : ''}`}
+                      onClick={() => setProtocoloServicoFiltroChip(chip)}
+                    >
+                      {protoChipLabel(chip)}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="proto-cockpit-lanes" role="tablist">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={protocoloHubVista === 'exec'}
+                    className={`proto-cockpit-lane${protocoloHubVista === 'exec' ? ' is-active' : ''}`}
+                    onClick={() => setProtocoloHubVista('exec')}
+                  >
+                    {protoT?.protocolosServicoListaTituloEmExecucao || 'Em execução'}
+                    <span className="proto-cockpit-lane__count">{protocolosEmExecucao.length}</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={protocoloHubVista === 'arquivo'}
+                    className={`proto-cockpit-lane${protocoloHubVista === 'arquivo' ? ' is-active is-active--done' : ''}`}
+                    onClick={() => setProtocoloHubVista('arquivo')}
+                  >
+                    {protoT?.protocolosServicoExecutadosTitulo || 'Arquivo'}
+                    <span className="proto-cockpit-lane__count">{protocolosExecutadosFiltrados.length}</span>
+                  </button>
+                </div>
+
+                <div className="proto-cockpit-feed">
+                  {protocolosServico.length === 0 ? (
+                    <div className="proto-cockpit-empty">{protoT?.protocolosServicoSemProtocolos || 'Ainda não há protocolos.'}</div>
+                  ) : protocoloHubVista === 'exec' ? (
+                    protocolosEmExecucao.length === 0 ? (
+                      filtroClienteNenhum ? (
+                        <div className="proto-cockpit-empty" aria-hidden />
+                      ) : (
+                        <div className="proto-cockpit-empty">
+                          {filtroLista || filtroClienteRaw || protocoloServicoFiltroChip !== 'todos'
+                            ? protoT?.protocolosServicoListaVaziaFiltro || 'Nenhum protocolo corresponde à pesquisa.'
+                            : protoT?.protocolosServicoSemEmExecucao || 'Não há protocolos em execução.'}
+                        </div>
+                      )
+                    ) : protocoloServicoAgruparPorCliente ? (
+                      gruposProtocolosLista.map((grupo) => (
+                        <section key={grupo.clienteId} className="proto-cockpit-group">
+                          <div className="proto-cockpit-group__head">
+                            <h3 className="proto-cockpit-group__title">{grupo.nomeGrupo}</h3>
+                            <span className="proto-cockpit-group__sub">{grupo.itens.length}</span>
+                          </div>
+                          <div className="proto-cockpit-feed">{grupo.itens.map((p) => renderProtocoloCard(p, 'exec'))}</div>
+                        </section>
+                      ))
+                    ) : (
+                      protocolosEmExecucao.map((p) => renderProtocoloCard(p, 'exec'))
+                    )
+                  ) : protocolosExecutadosFiltrados.length === 0 ? (
+                    <div className="proto-cockpit-empty">
+                      {protoT?.protocolosServicoExecutadosVazioFiltro || 'Nenhum protocolo concluído com estes filtros.'}
+                    </div>
+                  ) : (
+                    gruposProtocolosArquivo.map((grupoCliente) => (
+                      <section key={grupoCliente.clienteId} className="proto-cockpit-group">
+                        <div className="proto-cockpit-group__head">
+                          <h3 className="proto-cockpit-group__title">{grupoCliente.nomeCliente}</h3>
+                          <span className="proto-cockpit-group__sub">
+                            {grupoCliente.porData.reduce((n, g) => n + g.itens.length, 0)}
+                          </span>
+                        </div>
+                        {grupoCliente.porData.map((grupoData) => {
+                          const dataLabel =
+                            grupoData.dataKey === '—'
+                              ? '—'
+                              : new Date(grupoData.dataKey + 'T12:00:00').toLocaleDateString(documentPdfDateLocale(selectedLanguage), {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })
+                          return (
+                            <div key={`${grupoCliente.clienteId}-${grupoData.dataKey}`} style={{ marginBottom: 12 }}>
+                              <div className="proto-cockpit-group__head" style={{ marginBottom: 8, paddingBottom: 6 }}>
+                                <span className="proto-cockpit-group__sub">{dataLabel}</span>
+                                <span className="proto-cockpit-group__sub">{grupoData.itens.length}</span>
+                              </div>
+                              <div className="proto-cockpit-feed">{grupoData.itens.map((p) => renderProtocoloCard(p, 'arquivo'))}</div>
+                            </div>
+                          )
+                        })}
+                      </section>
+                    ))
+                  )}
+                </div>
+              </>
             )}
           </div>
         )
