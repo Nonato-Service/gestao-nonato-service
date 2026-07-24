@@ -31,53 +31,60 @@ function escAttr(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
-/** Layout do cabeçalho: tabela para impressão estável; visual tipo documento corporativo */
+/** Layout do cabeçalho v2 — alinhado aos cartões de acção do corpo */
 const HDR_LAYOUT_CSS = `
-.pdf-header.hdr-doc{margin:0 0 24px;padding:0;background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;box-sizing:border-box;box-shadow:0 4px 22px rgba(15,23,42,0.07);}
-.hdr-table{width:100%;border-collapse:collapse;table-layout:fixed;margin:0;}
-.hdr-table td{vertical-align:top;padding:0;}
-.hdr-td-logo{width:34%;padding:20px 20px 20px 22px;border-right:1px solid #e2e8f0;box-sizing:border-box;}
-.hdr-td-main{padding:20px 24px 20px 24px;box-sizing:border-box;}
-.hdr-logo-box{min-height:50px;display:flex;align-items:center;justify-content:flex-start;}
-.hdr-logo-box img{max-height:54px;max-width:200px;width:auto;height:auto;object-fit:contain;display:block;}
-.logo-fallback{font-family:'Segoe UI',system-ui,sans-serif;font-size:12px;font-weight:800;color:#334155;letter-spacing:0.08em;line-height:1.25;display:block;}
-.hdr-empresa{margin:10px 0 0;font-size:7.5pt;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#64748b;line-height:1.45;}
-.hdr-etiq{margin:0 0 7px;font-size:7.5pt;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#64748b;}
-.hdr-titulo{margin:0;font-size:16pt;font-weight:700;color:#0f172a;line-height:1.2;letter-spacing:-0.025em;}
-.hdr-data{margin:11px 0 0;font-size:9.5pt;color:#475569;font-weight:500;}
-.hdr-data .hdr-data-lbl{font-weight:600;color:#64748b;margin-right:6px;}
-.hdr-linha{height:3px;margin:0;width:100%;clear:both;border:0;}
+.pdf-header.hdr-pro{margin:0 0 22px;padding:0;background:#fff;border:2px solid #0f172a;border-radius:10px;overflow:hidden;box-sizing:border-box;box-shadow:0 4px 18px rgba(15,23,42,0.08);}
+.hdr-pro__inner{display:flex;flex-wrap:nowrap;align-items:stretch;justify-content:space-between;gap:0;min-height:92px;width:100%;}
+.hdr-pro__brand{display:flex;align-items:center;gap:14px;padding:16px 18px;background:linear-gradient(180deg,#f8fafc 0%,#eef2f7 100%);border-right:1px solid #cbd5e1;flex:0 0 248px;width:248px;box-sizing:border-box;}
+.hdr-pro__logo{display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;min-width:74px;min-height:54px;box-sizing:border-box;flex-shrink:0;}
+.hdr-pro__logo img{max-height:46px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;background:transparent;}
+.hdr-pro__logo .logo-fallback{font-size:8.5px;font-weight:800;color:#14532d;letter-spacing:0.1em;text-align:center;line-height:1.35;display:block;}
+.hdr-pro__company{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.hdr-pro__company-name{font-size:10pt;font-weight:900;color:#0f172a;letter-spacing:0.03em;line-height:1.2;}
+.hdr-pro__company-tag{font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#64748b;line-height:1.3;}
+.hdr-pro__doc{flex:1 1 auto;padding:16px 22px;display:flex;flex-direction:column;justify-content:center;gap:5px;box-sizing:border-box;min-width:0;}
+.hdr-pro__kicker{margin:0;font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.16em;color:#15803d;line-height:1.3;}
+.hdr-pro__title{margin:0;font-size:16pt;font-weight:800;color:#0f172a;line-height:1.22;letter-spacing:-0.02em;text-transform:none;}
+.hdr-pro__meta{margin:4px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;}
+.hdr-pro__meta-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid #e2e8f0;background:#f8fafc;font-size:9pt;line-height:1.2;}
+.hdr-pro__meta-label{font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;}
+.hdr-pro__meta-value{font-size:9.5pt;font-weight:700;color:#0f172a;}
+.hdr-pro__accent{height:4px;background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);border:0;margin:0;width:100%;}
+@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}}
 `
 
-/** Por modelo: faixa superior, coluna do logo, linha inferior e acentos de texto */
+/** Por modelo: acentos de cor no cabeçalho v2 */
 const HDR_VARIANT_CSS: string[] = [
-  '.hdr-v1.pdf-header.hdr-doc{border-color:#cbd5e1;border-top:4px solid #15803d;}.hdr-v1 .hdr-td-logo{background:linear-gradient(180deg,#f0fdf4 0%,#ecfdf5 100%);border-right-color:#86efac;}.hdr-v1 .hdr-linha{background:linear-gradient(90deg,#15803d,#22c55e,#15803d);}.hdr-v1 .hdr-etiq{color:#166534;}',
-  '.hdr-v2.pdf-header.hdr-doc{border-color:#bfdbfe;border-top:4px solid #2563eb;}.hdr-v2 .hdr-td-logo{background:linear-gradient(180deg,#f8fafc 0%,#eff6ff 100%);border-right-color:#93c5fd;}.hdr-v2 .hdr-linha{background:linear-gradient(90deg,#1d4ed8,#3b82f6,#1d4ed8);}.hdr-v2 .hdr-titulo{color:#1e3a8a;}',
-  '.hdr-v3.pdf-header.hdr-doc{border-color:#fed7aa;border-top:4px solid #ea580c;}.hdr-v3 .hdr-td-logo{background:linear-gradient(180deg,#fffbeb 0%,#ffedd5 100%);border-right-color:#fdba74;}.hdr-v3 .hdr-linha{background:linear-gradient(90deg,#9a3412,#ea580c,#9a3412);}.hdr-v3 .hdr-etiq{color:#9a3412;}',
-  '.hdr-v4.pdf-header.hdr-doc{border-color:#99f6e4;border-top:4px solid #0d9488;}.hdr-v4 .hdr-td-logo{background:linear-gradient(180deg,#f0fdfa 0%,#ccfbf1 100%);border-right-color:#5eead4;}.hdr-v4 .hdr-linha{background:linear-gradient(90deg,#0f766e,#14b8a6,#0f766e);}.hdr-v4 .hdr-titulo{color:#115e59;}',
-  '.hdr-v5.pdf-header.hdr-doc{border-color:#d1d5db;border-top:4px solid #374151;}.hdr-v5 .hdr-td-logo{background:#f3f4f6;border-right-color:#9ca3af;}.hdr-v5 .hdr-linha{background:#1f2937;}.hdr-v5 .hdr-titulo{font-family:Consolas,ui-monospace,monospace;font-size:13pt;letter-spacing:-0.03em;}',
-  '.hdr-v6.pdf-header.hdr-doc{border-color:#e7d5c4;border-top:4px solid #b45309;}.hdr-v6 .hdr-td-logo{background:linear-gradient(180deg,#fffbeb 0%,#fef3c7 100%);border-right-color:#fcd34d;}.hdr-v6 .hdr-linha{background:linear-gradient(90deg,#92400e,#d97706,#92400e);}.hdr-v6 .hdr-titulo{font-family:Georgia,ui-serif,serif;color:#78350f;font-size:15pt;}',
-  '.hdr-v7.pdf-header.hdr-doc{border-color:#cbd5e1;border-top:4px solid #475569;}.hdr-v7 .hdr-td-logo{background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);border-right-color:#94a3b8;}.hdr-v7 .hdr-linha{background:#475569;}.hdr-v7 .hdr-etiq{color:#475569;}',
-  '.hdr-v8.pdf-header.hdr-doc{border:2px solid #334155;border-top:6px solid #1e293b;border-radius:8px;}.hdr-v8 .hdr-td-logo{background:#fff;border-right:2px solid #1e293b;padding-left:18px;}.hdr-v8 .hdr-linha{background:#0f172a;height:4px;}.hdr-v8 .hdr-titulo{letter-spacing:-0.025em;}',
-  '.hdr-v9.pdf-header.hdr-doc{border-color:#93c5fd;border-top:4px solid #1d4ed8;}.hdr-v9 .hdr-td-logo{background:linear-gradient(180deg,#eff6ff 0%,#dbeafe 100%);border-right-color:#60a5fa;}.hdr-v9 .hdr-linha{background:linear-gradient(90deg,#1e40af,#2563eb,#1e40af);}.hdr-v9 .hdr-titulo{color:#1e40af;}',
-  '.hdr-v10.pdf-header.hdr-doc{border-color:#d4d4d8;border-top:4px solid #ca8a04;background:linear-gradient(180deg,#fafafa 0%,#fff 12%);}.hdr-v10 .hdr-td-logo{background:#f4f4f5;border-right-color:#a1a1aa;}.hdr-v10 .hdr-linha{background:linear-gradient(90deg,#713f12,#ca8a04,#713f12);height:4px;}.hdr-v10 .hdr-titulo{color:#18181b;}',
-  '.hdr-v11.pdf-header.hdr-doc{border-color:#c7d2fe;border-top:4px solid #4f46e5;}.hdr-v11 .hdr-td-logo{background:linear-gradient(135deg,#eef2ff 0%,#e0e7ff 100%);border-right-color:#a5b4fc;}.hdr-v11 .hdr-linha{background:linear-gradient(90deg,#3730a3,#6366f1,#3730a3);}.hdr-v11 .hdr-titulo{color:#312e81;}',
-  '.hdr-v12.pdf-header.hdr-doc{border-color:#9ca3af;border-top:4px solid #111827;border-radius:4px;}.hdr-v12 .hdr-td-logo{background:#f9fafb;border-right:1px solid #6b7280;}.hdr-v12 .hdr-linha{background:#111827;}.hdr-v12 .hdr-titulo,.hdr-v12 .hdr-data,.hdr-v12 .hdr-etiq,.hdr-v12 .hdr-empresa{font-family:Consolas,ui-monospace,monospace;}.hdr-v12 .hdr-titulo{font-size:12.5pt;}',
-  /* 13 — Executive: cabeçalho escuro, faixa dourada, forte hierarquia */
-  '.hdr-v13.pdf-header.hdr-doc{border-color:#1e293b;border-radius:14px;box-shadow:0 10px 40px rgba(15,23,42,0.18);border-top:none;}.hdr-v13 .hdr-td-logo{background:linear-gradient(165deg,#0f172a 0%,#1e293b 55%,#334155 100%);border-right:1px solid #475569;}.hdr-v13 .hdr-td-main{background:linear-gradient(180deg,#1e293b 0%,#0f172a 100%);}.hdr-v13 .hdr-logo-box img{filter:brightness(1.08) contrast(1.05);}.hdr-v13 .logo-fallback{color:#fbbf24;}.hdr-v13 .hdr-empresa{color:#94a3b8;}.hdr-v13 .hdr-etiq{color:#cbd5e1;}.hdr-v13 .hdr-titulo{color:#f8fafc;font-size:17pt;font-weight:750;letter-spacing:-0.03em;}.hdr-v13 .hdr-data{color:#94a3b8;}.hdr-v13 .hdr-data .hdr-data-lbl{color:#cbd5e1;}.hdr-v13 .hdr-linha{background:linear-gradient(90deg,#92400e 0%,#fbbf24 35%,#f59e0b 65%,#92400e 100%);height:4px;}',
-  /* 14 — Moderno: clínico / SaaS, muito branco, acento teal */
-  '.hdr-v14.pdf-header.hdr-doc{border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 2px 8px rgba(15,23,42,0.05);border-top:none;}.hdr-v14 .hdr-td-logo{background:linear-gradient(180deg,#fafbfc 0%,#f1f5f9 100%);border-right:1px solid #e2e8f0;}.hdr-v14 .hdr-td-main{background:#fff;}.hdr-v14 .hdr-etiq{color:#0d9488;letter-spacing:0.2em;}.hdr-v14 .hdr-titulo{color:#0f172a;font-size:16.5pt;font-weight:750;letter-spacing:-0.035em;}.hdr-v14 .hdr-data{color:#64748b;}.hdr-v14 .hdr-linha{background:linear-gradient(90deg,#0f766e 0%,#14b8a6 50%,#0d9488 100%);height:4px;border-radius:0 0 3px 3px;}',
-  /* 15 — Impacto Nonato: navy + verde elétrico, presença forte */
-  '.hdr-v15.pdf-header.hdr-doc{border:none;border-radius:2px;box-shadow:0 10px 36px rgba(0,0,0,0.38);overflow:hidden;}.hdr-v15 .hdr-table{background:#0a0f0a;}.hdr-v15 .hdr-td-logo{background:linear-gradient(145deg,#052e16 0%,#0f172a 55%,#14532d 100%);border-right:4px solid #22c55e;padding:22px 20px 22px 22px;}.hdr-v15 .hdr-td-main{background:linear-gradient(180deg,#0f172a 0%,#020617 100%);padding:22px 26px 22px 24px;}.hdr-v15 .hdr-logo-box img{filter:brightness(1.12) contrast(1.08);max-height:58px;}.hdr-v15 .logo-fallback{color:#4ade80;font-size:13px;font-weight:900;letter-spacing:0.14em;}.hdr-v15 .hdr-empresa{color:#86efac;font-weight:800;letter-spacing:0.22em;}.hdr-v15 .hdr-etiq{color:#4ade80;font-size:8pt;font-weight:900;letter-spacing:0.26em;}.hdr-v15 .hdr-titulo{color:#fff;font-size:19pt;font-weight:900;letter-spacing:0.02em;text-transform:uppercase;line-height:1.12;}.hdr-v15 .hdr-data{color:#bbf7d0;font-size:10pt;font-weight:700;}.hdr-v15 .hdr-data .hdr-data-lbl{color:#86efac;}.hdr-v15 .hdr-linha{background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);height:6px;}',
+  '.hdr-v1.hdr-pro .hdr-pro__kicker{color:#15803d;}.hdr-v1.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#15803d,#22c55e,#15803d);}',
+  '.hdr-v2.hdr-pro{border-color:#2563eb;}.hdr-v2.hdr-pro .hdr-pro__kicker{color:#1d4ed8;}.hdr-v2.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#1d4ed8,#3b82f6,#1d4ed8);}',
+  '.hdr-v3.hdr-pro{border-color:#ea580c;}.hdr-v3.hdr-pro .hdr-pro__kicker{color:#9a3412;}.hdr-v3.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#9a3412,#ea580c,#9a3412);}',
+  '.hdr-v4.hdr-pro{border-color:#0d9488;}.hdr-v4.hdr-pro .hdr-pro__kicker{color:#0f766e;}.hdr-v4.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#0f766e,#14b8a6,#0f766e);}',
+  '.hdr-v5.hdr-pro{border-color:#374151;}.hdr-v5.hdr-pro .hdr-pro__kicker{color:#374151;}.hdr-v5.hdr-pro .hdr-pro__title{font-family:Consolas,ui-monospace,monospace;font-size:14pt;}.hdr-v5.hdr-pro .hdr-pro__accent{background:#1f2937;}',
+  '.hdr-v6.hdr-pro{border-color:#b45309;}.hdr-v6.hdr-pro .hdr-pro__kicker{color:#92400e;}.hdr-v6.hdr-pro .hdr-pro__title{font-family:Georgia,ui-serif,serif;color:#78350f;}.hdr-v6.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#92400e,#d97706,#92400e);}',
+  '.hdr-v7.hdr-pro{border-color:#475569;}.hdr-v7.hdr-pro .hdr-pro__kicker{color:#475569;}.hdr-v7.hdr-pro .hdr-pro__accent{background:#475569;}',
+  '.hdr-v8.hdr-pro{border-width:2px;border-color:#1e293b;border-radius:8px;}.hdr-v8.hdr-pro .hdr-pro__accent{height:5px;background:#0f172a;}',
+  '.hdr-v9.hdr-pro{border-color:#2563eb;}.hdr-v9.hdr-pro .hdr-pro__kicker{color:#1e40af;}.hdr-v9.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#1e40af,#2563eb,#1e40af);}',
+  '.hdr-v10.hdr-pro{border-color:#ca8a04;}.hdr-v10.hdr-pro .hdr-pro__kicker{color:#713f12;}.hdr-v10.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#713f12,#ca8a04,#713f12);height:5px;}',
+  '.hdr-v11.hdr-pro{border-color:#4f46e5;}.hdr-v11.hdr-pro .hdr-pro__kicker{color:#4338ca;}.hdr-v11.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#3730a3,#6366f1,#3730a3);}',
+  '.hdr-v12.hdr-pro{border-color:#111827;border-radius:4px;}.hdr-v12.hdr-pro .hdr-pro__kicker,.hdr-v12.hdr-pro .hdr-pro__title,.hdr-v12.hdr-pro .hdr-pro__meta-label,.hdr-v12.hdr-pro .hdr-pro__meta-value{font-family:Consolas,ui-monospace,monospace;}.hdr-v12.hdr-pro .hdr-pro__title{font-size:14pt;}.hdr-v12.hdr-pro .hdr-pro__accent{background:#111827;height:5px;}',
+  '.hdr-v13.hdr-pro{border-color:#1e293b;box-shadow:0 6px 24px rgba(15,23,42,0.14);}.hdr-v13.hdr-pro .hdr-pro__brand{background:linear-gradient(180deg,#f8fafc 0%,#e2e8f0 100%);}.hdr-v13.hdr-pro .hdr-pro__kicker{color:#0f172a;}.hdr-v13.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#92400e,#fbbf24,#92400e);height:5px;}',
+  '.hdr-v14.hdr-pro{border-color:#e2e8f0;border-radius:12px;box-shadow:0 2px 10px rgba(15,23,42,0.06);}.hdr-v14.hdr-pro .hdr-pro__kicker{color:#0d9488;letter-spacing:0.18em;}.hdr-v14.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#0f766e,#14b8a6,#0d9488);}',
+  '.hdr-v15.hdr-pro{border-color:#0f172a;box-shadow:0 6px 22px rgba(21,128,61,0.12);}.hdr-v15.hdr-pro .hdr-pro__brand{border-right:3px solid #22c55e;}.hdr-v15.hdr-pro .hdr-pro__kicker{color:#14532d;}.hdr-v15.hdr-pro .hdr-pro__title{color:#0f172a;}.hdr-v15.hdr-pro .hdr-pro__accent{height:5px;background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);}',
 ]
 
+function headerDisplayTitle(raw: string): string {
+  const t = String(raw || '').trim()
+  if (!t) return 'Relatório de intervenção técnica'
+  if (/^protocolos?\s+de\s+servi[cç]o$/i.test(t)) return 'Relatório de intervenção técnica'
+  return t
+}
+
 function buildHeaderHtml(variantIndex: number, o: HeaderOpts): string {
-  const t = escAttr(o.tituloProto)
+  const t = escAttr(headerDisplayTitle(o.tituloProto))
   const d = escAttr(o.dataDoc)
   const L = logoOrName(o.logoHtml)
   const v = variantIndex + 1
-  const etiq = v === 15 ? 'Documento técnico oficial' : 'Protocolo de serviço'
-  return `<header class="pdf-header hdr-doc hdr-v${v}" role="banner"><table class="hdr-table" role="presentation"><tr><td class="hdr-td-logo"><div class="hdr-logo-box">${L}</div><p class="hdr-empresa">Nonato Service</p></td><td class="hdr-td-main"><p class="hdr-etiq">${etiq}</p><h1 class="hdr-titulo">${t}</h1><p class="hdr-data"><span class="hdr-data-lbl">Emitido em</span>${d}</p></td></tr></table><div class="hdr-linha" aria-hidden="true"></div></header>`
+  return `<header class="pdf-header hdr-pro hdr-v${v}" role="banner"><div class="hdr-pro__inner"><div class="hdr-pro__brand"><div class="hdr-pro__logo">${L}</div><div class="hdr-pro__company"><span class="hdr-pro__company-name">Nonato Service</span><span class="hdr-pro__company-tag">Assistência técnica</span></div></div><div class="hdr-pro__doc"><p class="hdr-pro__kicker">Protocolo de serviço</p><h1 class="hdr-pro__title">${t}</h1><div class="hdr-pro__meta"><span class="hdr-pro__meta-chip"><span class="hdr-pro__meta-label">Emitido em</span><span class="hdr-pro__meta-value">${d}</span></span></div></div></div><div class="hdr-pro__accent" aria-hidden="true"></div></header>`
 }
 
 function buildHeaderFragments(o: HeaderOpts): string[] {
