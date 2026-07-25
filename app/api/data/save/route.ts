@@ -8,6 +8,7 @@ import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
 import { jsonFileContentUnchanged, writeJsonFileAtomic } from '../writeIfChanged'
 import { assessServerCadastroWrite } from '../../../lib/serverCadastroGuard'
+import { buildPecasBibliotecaLite } from '../../../lib/pecasBibliotecaLite'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -86,6 +87,14 @@ export async function POST(request: NextRequest) {
           )
         }
         writeJsonFileAtomic(filePath, value)
+        if (key === 'nonato-pecas-biblioteca' && Array.isArray(value)) {
+          try {
+            const litePath = path.join(targetDir, 'nonato-pecas-biblioteca-lite.json')
+            writeJsonFileAtomic(litePath, buildPecasBibliotecaLite(value))
+          } catch (liteErr) {
+            console.warn('[Nonato API] Falha ao gerar nonato-pecas-biblioteca-lite:', liteErr)
+          }
+        }
         const meta = bumpSyncMeta(dataDir)
         revision = meta.revision
         updatedAt = meta.updatedAt

@@ -1369,6 +1369,13 @@ export async function reporPecasBibliotecaEmergencia(
   serverOffline = false
   onProgress?.('A carregar catálogo do servidor…')
 
+  let localBefore: unknown[] | null = null
+  try {
+    localBefore = await loadPecasBibliotecaFromBrowserStorage()
+  } catch {
+    /* ignorar */
+  }
+
   const cacheBust = Date.now()
   const urls = [
     `${API_BASE}/load?key=${encodeURIComponent(PECAS_BIBLIOTECA_LITE_KEY)}&_=${cacheBust}`,
@@ -1424,6 +1431,14 @@ export async function reporPecasBibliotecaEmergencia(
   } catch (e) {
     console.warn('[Nonato] Hidratação de fotos falhou parcialmente:', e)
     onProgress?.(`${catalog.length} peças (fotos incompletas — tente Repor outra vez).`)
+  }
+
+  if (localBefore && Array.isArray(localBefore) && localBefore.length > 0) {
+    finalCatalog = mergePecasBibliotecaArrays(finalCatalog, localBefore)
+    await savePecasBibliotecaLocally(finalCatalog)
+    console.info(
+      `[Nonato] Reposição emergência fundida com local: ${finalCatalog.length} peça(s) (classificações locais preservadas).`
+    )
   }
 
   try {

@@ -54,7 +54,7 @@ import {
   showDiarioBrowserNotification,
 } from './lib/diarioLembrete'
 import { mergeNonatoClientesDeferServerLocal } from './lib/clienteMergeUtils'
-import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer } from './lib/mergePecasBiblioteca'
+import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer, deduplicarPecasBibliotecaPorCodigo } from './lib/mergePecasBiblioteca'
 import { mergeHomagExportIntoBiblioteca, parseHomagExportJson } from './lib/mergeHomagExport'
 import {
   calcularPecasBibliotecaImagemStats,
@@ -2049,6 +2049,8 @@ type PecaBiblioteca = {
   imagemCapa?: string
   quantidade?: number
   dataCriacao?: string
+  /** Marca de revisão local — classificação em lote, edição manual, etc. */
+  dataAtualizacao?: string
   importacaoPendente?: boolean
   /** Número sequencial dentro da categoria (01, 02, 03… — ignora subcategoria). */
   numeroSequenciaGrupo?: string
@@ -7860,14 +7862,17 @@ export default function Dashboard() {
     void savePecasBibliotecaLocally(lista as unknown[])
   }, [pecasBiblioteca, categoriasPecas])
 
-  /** Atualiza UI quando fotos chegam em segundo plano após repor catálogo lite. */
+  /** Atualiza UI quando fotos chegam em segundo plano — funde com estado local (não substitui classificações). */
   useEffect(() => {
     const onImagens = (ev: Event) => {
       const pecas = (ev as CustomEvent<{ pecas?: unknown[] }>).detail?.pecas
       if (!Array.isArray(pecas) || pecas.length === 0) return
-      const raw = (pecas as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
-      const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
-      setPecasBiblioteca(lista)
+      setPecasBiblioteca((prev) => {
+        const raw = (pecas as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+        const merged = mergePecasBibliotecaArrays(raw, prev) as PecaBiblioteca[]
+        const { lista } = garantirNumerosSequenciaPecaBiblioteca(merged, categoriasPecas)
+        return lista
+      })
     }
     window.addEventListener('nonato-pecas-imagens-hidratadas', onImagens)
     return () => window.removeEventListener('nonato-pecas-imagens-hidratadas', onImagens)
@@ -10775,9 +10780,19 @@ export default function Dashboard() {
           const serverValue = serverData[key]
           if (Array.isArray(liteValue) && liteValue.length >= 50) {
             const fullCount = Array.isArray(serverValue) ? serverValue.length : 0
+            const localData = localStorage.getItem(key)
+            let localParsed: unknown = null
+            if (localData !== null && localData !== '') {
+              try {
+                localParsed = JSON.parse(localData)
+              } catch {
+                /* continuar */
+              }
+            }
             if (fullCount < liteValue.length) {
-              void savePecasBibliotecaLocally(liteValue as unknown[])
-              return liteValue
+              const merged = mergePecasBibliotecaArrays(liteValue, localParsed ?? [])
+              void savePecasBibliotecaLocally(merged as unknown[])
+              return merged
             }
           }
           const localData = localStorage.getItem(key)
@@ -27767,24 +27782,11 @@ export default function Dashboard() {
 
   const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
     const normalizado = next.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
-    const codigosVistos = new Set<string>()
-    const semCodigoRepetido: PecaBiblioteca[] = []
-    let rejeitadosPorCodigo = 0
-    for (const peca of normalizado) {
-      const variantes = variantesCodigoPecaBiblioteca(peca.codigo)
-      if (variantes.length > 0) {
-        if (variantes.some((v) => codigosVistos.has(v))) {
-          rejeitadosPorCodigo++
-          continue
-        }
-        variantes.forEach((v) => codigosVistos.add(v))
-      }
-      semCodigoRepetido.push(peca)
-    }
+    const semCodigoRepetido = deduplicarPecasBibliotecaPorCodigo(normalizado)
+    const rejeitadosPorCodigo = normalizado.length - semCodigoRepetido.length
     if (rejeitadosPorCodigo > 0) {
-      alert(
-        (t as any).codigoPecaBibliotecaDuplicado ||
-          'Já existe uma peça com este código. Não são permitidas peças repetidas na biblioteca.'
+      console.info(
+        `[pecas biblioteca] ${rejeitadosPorCodigo} duplicado(s) por código fundido(s) — classificação preservada.`
       )
     }
     const { lista: comNumeros } = garantirNumerosSequenciaPecaBiblioteca(semCodigoRepetido, categoriasPecas)
@@ -28222,9 +28224,10 @@ export default function Dashboard() {
 
       alteradas++
       const categoriaMudou = proximaPeca.categoriaId !== (peca.categoriaId || '')
+      const agora = new Date().toISOString()
       return categoriaMudou
-        ? { ...proximaPeca, numeroSequenciaGrupo: '' }
-        : proximaPeca
+        ? { ...proximaPeca, numeroSequenciaGrupo: '', dataAtualizacao: agora }
+        : { ...proximaPeca, dataAtualizacao: agora }
     })
 
     return { lista: updated, alteradas }
@@ -28300,9 +28303,10 @@ export default function Dashboard() {
 
       alteradas++
       const categoriaMudou = proximaPeca.categoriaId !== (peca.categoriaId || '')
+      const agora = new Date().toISOString()
       return categoriaMudou
-        ? { ...proximaPeca, numeroSequenciaGrupo: '' }
-        : proximaPeca
+        ? { ...proximaPeca, numeroSequenciaGrupo: '', dataAtualizacao: agora }
+        : { ...proximaPeca, dataAtualizacao: agora }
     })
 
     if (alteradas === 0) {
@@ -28382,7 +28386,11 @@ export default function Dashboard() {
       }
 
       alteradas++
-      return proximaPeca
+      const categoriaMudou = proximaPeca.categoriaId !== (peca.categoriaId || '')
+      const agora = new Date().toISOString()
+      return categoriaMudou
+        ? { ...proximaPeca, numeroSequenciaGrupo: '', dataAtualizacao: agora }
+        : { ...proximaPeca, dataAtualizacao: agora }
     })
 
     if (alteradas === 0) {
