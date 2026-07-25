@@ -46,8 +46,8 @@ function escAttr(s: string): string {
 /** Layout do cabeçalho v3 — sem logo; dados do cliente e equipamento em destaque */
 const HDR_LAYOUT_CSS = `
 .pdf-watermark{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
-.pdf-watermark__center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6mm;box-sizing:border-box;}
-.pdf-watermark__logo{width:min(78vw,620px);height:min(82vh,720px);max-width:620px;object-fit:contain;opacity:0.14;transform:rotate(-18deg);display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact;background:transparent!important;}
+.pdf-watermark__center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6mm;box-sizing:border-box;background:transparent!important;}
+.pdf-watermark__logo{width:min(78vw,620px);height:min(82vh,720px);max-width:620px;object-fit:contain;opacity:0.14;transform:rotate(-18deg);display:block;border:none!important;outline:none!important;box-shadow:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;background:transparent!important;background-color:transparent!important;}
 .pdf-page-content{position:relative;z-index:1;}
 .pdf-header.hdr-pro{position:relative;z-index:1;}
 body{position:relative;background:#fff;}
@@ -131,7 +131,7 @@ function buildWatermarkHtml(watermarkSrc?: string): string {
   const imgSrc = String(watermarkSrc || '').trim() || PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
   const safeSrc = imgSrc.replace(/"/g, '&quot;').replace(/'/g, '&#39;')
   const inlineStyle =
-    'width:min(78vw,620px);height:min(82vh,720px);max-width:620px;object-fit:contain;opacity:0.14;transform:rotate(-18deg);display:block;background:transparent;'
+    'width:min(78vw,620px);height:min(82vh,720px);max-width:620px;object-fit:contain;opacity:0.14;transform:rotate(-18deg);display:block;border:0;outline:0;box-shadow:none;background:transparent;background-color:transparent;'
   return `<div class="pdf-watermark" aria-hidden="true"><div class="pdf-watermark__center"><img class="pdf-watermark__logo" style="${inlineStyle}" src="${safeSrc}" alt="" /></div></div>`
 }
 

@@ -10,56 +10,192 @@ export function extractImgSrcFromLogoHtml(logoHtml: string): string {
   return m?.[2]?.trim() || ''
 }
 
-function isBackgroundPixel(r: number, g: number, b: number, threshold: number): boolean {
-  const max = Math.max(r, g, b)
-  const min = Math.min(r, g, b)
-  const sat = max === 0 ? 0 : (max - min) / max
-  if (max >= threshold && sat < 0.14) return true
-  return r >= threshold && g >= threshold && b >= threshold
-}
+type Rgb = { r: number; g: number; b: number }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image()
+    img.crossOrigin = 'anonymous'
     img.onload = () => resolve(img)
     img.onerror = () => reject(new Error('logo watermark load failed'))
     img.src = src
   })
 }
 
-/** Remove fundo branco/claro do PNG — fica só o desenho com transparência */
-export async function stripLogoBackgroundForWatermark(
-  src: string,
-  threshold = 236
-): Promise<string> {
-  if (typeof document === 'undefined') return src
+function sampleCornerColor(data: Uint8ClampedArray, width: number, height: number): Rgb {
+  const pts: Array<[number, number]> = [
+    [0, 0],
+    [width - 1, 0],
+    [0, height - 1],
+    [width - 1, height - 1],
+    [Math.floor(width / 2), 0],
+    [0, Math.floor(height / 2)],
+  ]
+  let r = 0
+  let g = 0
+  let b = 0
+  let n = 0
+  for (const [x, y] of pts) {
+    const i = (y * width + x) * 4
+    r += data[i]
+    g += data[i + 1]
+    b += data[i + 2]
+    n += 1
+  }
+  return { r: r / n, g: g / n, b: b / n }
+}
+
+function colorDistance(r: number, g: number, b: number, c: Rgb): number {
+  return Math.abs(r - c.r) + Math.abs(g - c.g) + Math.abs(b - c.b)
+}
+
+function isBgLike(r: number, g: number, b: number, corner: Rgb, tol: number): boolean {
+  if (colorDistance(r, g, b, corner) <= tol) return true
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const sat = max === 0 ? 0 : (max - min) / max
+  return max >= 210 && sat < 0.2
+}
+
+/** Remove fundo ligado às bordas (flood fill) — típico de PNG com retângulo branco */
+function floodFillEdgeBackground(data: Uint8ClampedArray, width: number, height: number, corner: Rgb, tol: number): void {
+  const visited = new Uint8Array(width * height)
+  const stack: number[] = []
+
+  const tryPush = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) return
+    const pi = y * width + x
+    if (visited[pi]) return
+    const i = pi * 4
+    if (!isBgLike(data[i], data[i + 1], data[i + 2], corner, tol)) return
+    visited[pi] = 1
+    stack.push(pi)
+  }
+
+  for (let x = 0; x < width; x++) {
+    tryPush(x, 0)
+    tryPush(x, height - 1)
+  }
+  for (let y = 0; y < height; y++) {
+    tryPush(0, y)
+    tryPush(width - 1, y)
+  }
+
+  while (stack.length) {
+    const pi = stack.pop()!
+    const i = pi * 4
+    data[i + 3] = 0
+    const x = pi % width
+    const y = (pi / width) | 0
+    tryPush(x - 1, y)
+    tryPush(x + 1, y)
+    tryPush(x, y - 1)
+    tryPush(x, y + 1)
+  }
+}
+
+function trimTransparentBounds(data: Uint8ClampedArray, width: number, height: number) {
+  let minX = width
+  let minY = height
+  let maxX = 0
+  let maxY = 0
+  let visible = 0
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const a = data[(y * width + x) * 4 + 3]
+      if (a > 12) {
+        visible += 1
+        if (x < minX) minX = x
+        if (y < minY) minY = y
+        if (x > maxX) maxX = x
+        if (y > maxY) maxY = y
+      }
+    }
+  }
+  if (!visible) return null
+  return { minX, minY, maxX, maxY, visible }
+}
+
+function cropCanvasToBounds(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  bounds: { minX: number; minY: number; maxX: number; maxY: number }
+): HTMLCanvasElement {
+  const w = bounds.maxX - bounds.minX + 1
+  const h = bounds.maxY - bounds.minY + 1
+  const out = document.createElement('canvas')
+  out.width = w
+  out.height = h
+  const octx = out.getContext('2d')
+  if (!octx) return canvas
+  octx.drawImage(canvas, bounds.minX, bounds.minY, w, h, 0, 0, w, h)
+  return out
+}
+
+/** Logos verticais (ícone + texto): usa só a parte superior com o desenho */
+function cropTopIconRegion(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): HTMLCanvasElement {
+  const w = canvas.width
+  const h = canvas.height
+  if (h / w < 1.12) return canvas
+  const cropH = Math.max(1, Math.round(h * 0.52))
+  const out = document.createElement('canvas')
+  out.width = w
+  out.height = cropH
+  const octx = out.getContext('2d')
+  if (!octx) return canvas
+  octx.drawImage(canvas, 0, 0, w, cropH, 0, 0, w, cropH)
+  return out
+}
+
+/** Remove fundo branco/claro — flood fill + recorte; fallback se falhar */
+export async function stripLogoBackgroundForWatermark(src: string): Promise<string> {
+  if (typeof document === 'undefined') return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
   const img = await loadImage(src)
-  const canvas = document.createElement('canvas')
+  let canvas = document.createElement('canvas')
   canvas.width = img.naturalWidth || img.width
   canvas.height = img.naturalHeight || img.height
-  const ctx = canvas.getContext('2d')
-  if (!ctx || canvas.width < 1 || canvas.height < 1) return src
+  let ctx = canvas.getContext('2d', { willReadFrequently: true })
+  if (!ctx || canvas.width < 2 || canvas.height < 2) return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
 
   ctx.drawImage(img, 0, 0)
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  canvas = cropTopIconRegion(canvas, ctx)
+  ctx = canvas.getContext('2d', { willReadFrequently: true })
+  if (!ctx) return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
+
+  const width = canvas.width
+  const height = canvas.height
+  const imageData = ctx.getImageData(0, 0, width, height)
   const d = imageData.data
+  const corner = sampleCornerColor(d, width, height)
+
+  floodFillEdgeBackground(d, width, height, corner, 42)
+
   for (let i = 0; i < d.length; i += 4) {
-    if (isBackgroundPixel(d[i], d[i + 1], d[i + 2], threshold)) {
+    if (d[i + 3] === 0) continue
+    if (isBgLike(d[i], d[i + 1], d[i + 2], corner, 36)) {
       d[i + 3] = 0
     }
   }
+
   ctx.putImageData(imageData, 0, 0)
-  return canvas.toDataURL('image/png')
+  const bounds = trimTransparentBounds(d, width, height)
+  if (!bounds || bounds.visible < width * height * 0.004) {
+    return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
+  }
+
+  const trimmed = cropCanvasToBounds(canvas, ctx, bounds)
+  return trimmed.toDataURL('image/png')
 }
 
-/** Prepara URL da marca d'água: logo do admin sem fundo, ou SVG de fallback */
+/** Prepara URL da marca d'água: logo do admin sem fundo, ou SVG transparente */
 export async function prepareProtocoloWatermarkSrc(logoHtml: string): Promise<string> {
   const raw = extractImgSrcFromLogoHtml(logoHtml)
   if (!raw) return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
-  if (typeof document === 'undefined') return raw
+  if (typeof document === 'undefined') return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
   try {
-    return await stripLogoBackgroundForWatermark(raw)
+    const stripped = await stripLogoBackgroundForWatermark(raw)
+    return stripped || PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
   } catch {
-    return raw.startsWith('data:') ? raw : PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
+    return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
   }
 }
