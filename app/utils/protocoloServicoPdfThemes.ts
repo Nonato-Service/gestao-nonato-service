@@ -44,7 +44,7 @@ function escAttr(s: string): string {
 /** Layout do cabeçalho v3 — sem logo; dados do cliente e equipamento em destaque */
 const HDR_LAYOUT_CSS = `
 .pdf-watermark{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
-.pdf-watermark__mosaic{position:absolute;inset:-35%;background-repeat:repeat;background-size:185px 185px;background-position:center;opacity:0.042;transform:rotate(-28deg);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.pdf-watermark__mosaic{position:absolute;inset:-40%;background-repeat:repeat;background-size:160px 160px;background-position:center;opacity:0.055;transform:rotate(-28deg);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 .pdf-page-content{position:relative;z-index:1;}
 .pdf-header.hdr-pro{position:relative;z-index:1;}
 body{position:relative;background:#fff;}
@@ -70,7 +70,7 @@ body{position:relative;background:#fff;}
 .hdr-pro__meta-label{font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;}
 .hdr-pro__meta-value{font-size:9.5pt;font-weight:700;color:#0f172a;}
 .hdr-pro__accent{height:4px;background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);border:0;margin:0;width:100%;}
-@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark{position:fixed;inset:0;z-index:0;}.pdf-watermark__mosaic{opacity:0.035;}}
+@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark{position:fixed;inset:0;z-index:0;}.pdf-watermark__mosaic{opacity:0.045;}}
 `
 
 /** Por modelo: acentos de cor no cabeçalho v2 */
@@ -124,12 +124,15 @@ function buildHeaderHtml(variantIndex: number, o: HeaderOpts): string {
   return `<header class="pdf-header hdr-pro hdr-v${v}" role="banner"><div class="hdr-pro__inner"><div class="hdr-pro__top"><div class="hdr-pro__company-block"><span class="hdr-pro__company-name">Nonato Service</span><span class="hdr-pro__company-tag">Assistência técnica</span></div><div class="hdr-pro__doc-meta"><p class="hdr-pro__kicker">Protocolo de serviço</p><div class="hdr-pro__meta"><span class="hdr-pro__meta-chip"><span class="hdr-pro__meta-label">Emitido em</span><span class="hdr-pro__meta-value">${d}</span></span></div></div></div><div class="hdr-pro__client-block"><span class="hdr-pro__client-label">${clienteLabel}</span>${clienteHtml}</div>${equipHtml}</div><div class="hdr-pro__accent" aria-hidden="true"></div></header>`
 }
 
-/** Ícone só com engrenagens (sem texto) — marca d'água do protocolo */
-const PROTOCOLO_WATERMARK_ICON_SVG = '/brand/nonato-watermark-gears.svg'
+/** SVG só engrenagens — embutido (funciona em about:blank ao imprimir; sem PNG/fundo branco) */
+const PROTOCOLO_WATERMARK_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="30 15 250 290"><defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></linearGradient></defs><path d="M248 78C272 118 284 162 276 206C266 252 228 286 182 298C132 310 78 292 48 252C18 212 12 154 34 104C56 54 108 22 162 24C198 26 228 44 248 78" fill="none" stroke="url(#g1)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/><g transform="translate(118 168)"><circle r="46" fill="url(#g1)"/><circle r="18" fill="#ecfdf5"/><g fill="url(#g1)"><rect x="-7" y="-58" width="14" height="18" rx="3"/><rect x="-7" y="40" width="14" height="18" rx="3"/><rect x="-58" y="-7" width="18" height="14" rx="3"/><rect x="40" y="-7" width="18" height="14" rx="3"/><rect x="-41" y="-41" width="14" height="18" rx="3" transform="rotate(-45)"/><rect x="27" y="27" width="14" height="18" rx="3" transform="rotate(-45)"/><rect x="27" y="-41" width="14" height="18" rx="3" transform="rotate(45)"/><rect x="-41" y="27" width="14" height="18" rx="3" transform="rotate(45)"/></g></g><g transform="translate(196 108)"><circle r="30" fill="url(#g1)"/><circle r="11" fill="#ecfdf5"/><g fill="url(#g1)"><rect x="-5" y="-38" width="10" height="12" rx="2"/><rect x="-5" y="26" width="10" height="12" rx="2"/><rect x="-38" y="-5" width="12" height="10" rx="2"/><rect x="26" y="-5" width="12" height="10" rx="2"/></g></g></svg>'
+
+const PROTOCOLO_WATERMARK_DATA_URI = `data:image/svg+xml,${encodeURIComponent(PROTOCOLO_WATERMARK_SVG)}`
 
 function buildWatermarkHtml(_logoHtml: string): string {
-  const iconUrl = PROTOCOLO_WATERMARK_ICON_SVG
-  return `<div class="pdf-watermark" aria-hidden="true"><div class="pdf-watermark__mosaic" style="background-image:url('${iconUrl}')"></div></div>`
+  /* Nunca usar logoHtml (PNG com fundo branco do administrador) — só engrenagens transparentes */
+  return `<div class="pdf-watermark" aria-hidden="true"><div class="pdf-watermark__mosaic" style="background-image:url('${PROTOCOLO_WATERMARK_DATA_URI}')"></div></div>`
 }
 
 function buildHeaderFragments(o: HeaderOpts): string[] {
