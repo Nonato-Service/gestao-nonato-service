@@ -266,6 +266,7 @@ import { ClienteCadastroForm, emptyClienteFormState, type ClienteFormState } fro
 import { ClienteIdentidadeChips, formatClienteIdentidadeTexto, formatNifClienteExibicao } from './components/ClienteIdentidadeChips'
 import { ClienteListaLinhas } from './components/ClienteListaLinhas'
 import { ClienteAlfabetoPicker } from './components/ClienteAlfabetoPicker'
+import { AlfabetoIndiceBusca } from './components/AlfabetoIndiceBusca'
 import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
@@ -278,6 +279,7 @@ import {
   setIndiceSubstituicoesHomag,
 } from './lib/pecaCodigoBusca'
 import { buscarPecaBibliotecaNoServidor } from './lib/buscarPecaBibliotecaRemoto'
+import { filtrarPorNomeBusca, getLetraAlfabetoNome } from './lib/nomeAlfabetoBusca'
 import { wrapRelatorioServicoPrintDocument } from './lib/relatorioServicoPdfShell'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
 import { PdfModeloPickerField } from './components/PdfModeloPickerField'
@@ -7748,6 +7750,8 @@ export default function Dashboard() {
   const [pecaBibliotecaPickerSubcategoriaAberto, setPecaBibliotecaPickerSubcategoriaAberto] = useState(false)
   /** Gerenciar Categorias: subcategorias retraídas por grupo até expandir. */
   const [gerenciarCategoriasGrupoAberto, setGerenciarCategoriasGrupoAberto] = useState<Record<string, boolean>>({})
+  const [gerenciarCategoriasBusca, setGerenciarCategoriasBusca] = useState('')
+  const [gerenciarCategoriasLetra, setGerenciarCategoriasLetra] = useState<string | null>(null)
   const [pecaBibliotecaForm, setPecaBibliotecaForm] = useState<PecaBiblioteca>({
     id: '',
     nome: '',
@@ -7780,6 +7784,13 @@ export default function Dashboard() {
       ),
     [categoriasPecas]
   )
+  const categoriasGestaoFiltradas = useMemo(() => {
+    let list = filtrarPorNomeBusca(categoriasPecasAlfabeto, gerenciarCategoriasBusca)
+    if (gerenciarCategoriasLetra) {
+      list = list.filter((c) => getLetraAlfabetoNome(c.nome) === gerenciarCategoriasLetra)
+    }
+    return list
+  }, [categoriasPecasAlfabeto, gerenciarCategoriasBusca, gerenciarCategoriasLetra])
   const primeiraExecUltimaSelecaoBiblioteca = useRef(true)
   useEffect(() => {
     if (primeiraExecUltimaSelecaoBiblioteca.current) {
@@ -43712,15 +43723,42 @@ export default function Dashboard() {
                   </div>
                 ) : null}
 
+                {categoriasPecas.length > 0 ? (
+                  <AlfabetoIndiceBusca
+                    className="biblioteca-pecas-hub__grupos-alfabeto"
+                    items={categoriasPecasAlfabeto}
+                    busca={gerenciarCategoriasBusca}
+                    onBuscaChange={setGerenciarCategoriasBusca}
+                    letraFiltro={gerenciarCategoriasLetra}
+                    onLetraFiltroChange={setGerenciarCategoriasLetra}
+                    itemLabel={safeT?.quantidadeCategorias || 'categoria(s)'}
+                    searchPlaceholder={
+                      (safeT as any)?.gerenciarCategoriasBuscarPlaceholder || 'Buscar categoria por nome...'
+                    }
+                    labels={{
+                      promptLetra:
+                        (safeT as any)?.gerenciarCategoriasPromptLetra ||
+                        'Toque numa letra acima para ver apenas as categorias com essa inicial.',
+                      nenhumEncontrado: (safeT as any)?.gerenciarCategoriasBuscaVazio || 'Nenhuma categoria encontrada',
+                      limpar: safeT?.limparFiltros || 'Limpar busca e letra',
+                    }}
+                  />
+                ) : null}
+
                 {/* Área rolável da lista de categorias */}
                 <div className="biblioteca-pecas-hub__grupos-scroll">
                   {categoriasPecas.length === 0 ? (
                     <div className="biblioteca-pecas-hub__grupos-empty">
                       {safeT?.nenhumaCategoria || 'Nenhuma categoria cadastrada. Clique em "Nova Categoria" para começar.'}
                     </div>
+                  ) : categoriasGestaoFiltradas.length === 0 ? (
+                    <div className="biblioteca-pecas-hub__grupos-empty">
+                      {(safeT as any)?.gerenciarCategoriasBuscaVazio ||
+                        'Nenhuma categoria corresponde à pesquisa ou à letra selecionada.'}
+                    </div>
                   ) : (
                     <div className="biblioteca-pecas-hub__grupo-list">
-                      {categoriasPecasAlfabeto.map((categoria, catIndex) => {
+                      {categoriasGestaoFiltradas.map((categoria, catIndex) => {
                         const subcategoriasDoGrupo = subcategoriasPecas
                           .filter(sub => sub.categoriaId === categoria.id)
                           .sort((a, b) =>
