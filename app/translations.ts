@@ -2654,6 +2654,10 @@ export const translations = {
     diarioPedidosBuscaVazio: "Nenhuma anotação corresponde à pesquisa ou ao filtro seleccionado.",
     diarioPedidosFiltroTodos: "Todos",
     diarioPedidosFiltrosAria: "Filtrar anotações por estado",
+    importacaoHomagCodigosNaPagina:
+      "A página colada contém cerca de {detectados} código(s) HOMAG; o sistema reconheceu {reconhecidas} peça(s).",
+    importacaoHomagDuplicadasExplicacao:
+      "Peças «ignoradas» porque o código já existe no catálogo ou na fila amarela — não é falha de cópia.",
     diarioPedidosBtnEditarTexto: "Editar",
     diarioPedidosBtnGuardarTexto: "Guardar texto",
     diarioPedidosBtnCancelarEdicao: "Cancelar",

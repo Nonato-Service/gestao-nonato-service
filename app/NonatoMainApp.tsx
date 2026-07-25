@@ -57,6 +57,12 @@ import { mergeNonatoClientesDeferServerLocal } from './lib/clienteMergeUtils'
 import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer, deduplicarPecasBibliotecaPorCodigo } from './lib/mergePecasBiblioteca'
 import { mergeHomagExportIntoBiblioteca, parseHomagExportJson } from './lib/mergeHomagExport'
 import {
+  countHomagCodesInText,
+  looksLikeHomagClipboard,
+  mergeHomagClipboardItems,
+  parseHomagPlainTextCatalog,
+} from './lib/parseHomagClipboard'
+import {
   calcularPecasBibliotecaImagemStats,
   pecaBibliotecaTemFotoVisivel,
   pecaBibliotecaTemImagemPropria,
@@ -2187,6 +2193,8 @@ function pickBestCatalogRawFromClipboard(html: string, plain: string): { raw: st
   const p = String(plain || '').trim()
   if (!h && !p) return { raw: '', plainFallback: '' }
   if (/^https?:\/\//i.test(p) && !p.includes('\n') && h.length < 40) return { raw: p, plainFallback: p }
+  /** HOMAG: texto plano com códigos 10 dígitos é mais fiável que HTML Salesforce/LWC. */
+  if (countHomagCodesInText(p) >= 3) return { raw: p, plainFallback: p }
   if (h.length >= 40 && /<table\b/i.test(h)) return { raw: h, plainFallback: p }
   if (h.length >= 40 && p.length >= 20) {
     const plainLines = p.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
@@ -2194,10 +2202,10 @@ function pickBestCatalogRawFromClipboard(html: string, plain: string): { raw: st
       /<table\b/i.test(h) ||
       /<tr\b/i.test(h) ||
       (/<img\b/i.test(h) && plainLines.length >= 2)
-    if (htmlLooksUseful) return { raw: h, plainFallback: p }
+    if (htmlLooksUseful && countHomagCodesInText(p) < 3) return { raw: h, plainFallback: p }
     if (plainLines.length >= 2) return { raw: p, plainFallback: p }
   }
-  if (h.length >= 40) return { raw: h, plainFallback: p }
+  if (h.length >= 40 && countHomagCodesInText(p) < 3) return { raw: h, plainFallback: p }
   return { raw: p, plainFallback: p }
 }
 
@@ -26026,8 +26034,27 @@ export default function Dashboard() {
           .replace('{novas}', String(novas.length))
           .replace('{ignoradas}', String(duplicadas.length + semCodigo.length))
         const codes = listarCodigosPecasImport([...duplicadasCatalogo, ...duplicadasFila, ...duplicadasLote])
+        const detectadosHomag = countHomagCodesInText(importacaoTextoColado)
+        const homagHint =
+          detectadosHomag >= 3 && detectadosHomag > pecas.length
+            ? String(
+                (t as any)?.importacaoHomagCodigosNaPagina ??
+                  'A página colada contém cerca de {detectados} código(s) HOMAG; o sistema reconheceu {reconhecidas} peça(s).'
+              )
+                .replace('{detectados}', String(detectadosHomag))
+                .replace('{reconhecidas}', String(pecas.length))
+            : ''
+        const dupHint =
+          duplicadasCatalogo.length > 0
+            ? String(
+                (t as any)?.importacaoHomagDuplicadasExplicacao ??
+                  'Peças «ignoradas» porque o código já existe no catálogo ou na fila amarela — não é falha de cópia.'
+              )
+            : ''
         alert(
           `${msg}${detalheIgnoradas ? `\n\n${detalheIgnoradas}` : ''}${
+            homagHint ? `\n\n${homagHint}` : ''
+          }${dupHint ? `\n\n${dupHint}` : ''}${
             codes
               ? `\n\n${(t as any)?.importacaoCodigosIgnorados || 'Códigos ignorados:'} ${codes}`
               : ''
@@ -26074,7 +26101,7 @@ export default function Dashboard() {
       setImportacaoUrlError(null)
       return { ok: true as const, novas: novasComNumero, duplicadas, duplicadasCatalogo, duplicadasFila }
     },
-    [separarPecasImportacao, montarMensagemImportacaoIgnoradas, t, pecasBiblioteca, categoriasPecas]
+    [separarPecasImportacao, montarMensagemImportacaoIgnoradas, t, pecasBiblioteca, categoriasPecas, importacaoTextoColado]
   )
 
   const aplicarPreviewImportacaoFiltrado = useCallback(
@@ -26518,6 +26545,9 @@ export default function Dashboard() {
             .replace(/\r/g, '')
             .trim()
           if (textFromHtml.length >= 12) {
+            if (looksLikeHomagClipboard(textFromHtml)) {
+              itens = parseHomagPlainTextCatalog(textFromHtml)
+            } else {
             const innerLines = textFromHtml.split(/\n/).map((l) => l.trim()).filter(Boolean)
             if (innerLines.length >= 2) {
               const homagNumericLine = /^\d{7,14}$/
@@ -26537,6 +26567,24 @@ export default function Dashboard() {
                 }
               }
             }
+            }
+          }
+        }
+        if (itens.length > 0 && looksLikeHomagClipboard(doc.body?.innerText || '')) {
+          const homagFromText = parseHomagPlainTextCatalog(doc.body?.innerText || '')
+          if (homagFromText.length > itens.length) {
+            itens = homagFromText
+          } else if (homagFromText.length > 0) {
+            itens = mergeHomagClipboardItems(
+              itens.map((x) => ({
+                codigo: String(x?.codigo ?? ''),
+                nome: String(x?.nome ?? x?.name ?? ''),
+                descricao: String(x?.descricao ?? x?.description ?? ''),
+                preco: x?.preco != null ? String(x.preco) : undefined,
+                imagem: x?.imagem != null ? String(x.imagem) : undefined,
+              })),
+              homagFromText
+            )
           }
         }
       } catch {
@@ -26579,6 +26627,10 @@ export default function Dashboard() {
           itens.push(obj)
         }
       } else {
+        if (looksLikeHomagClipboard(raw)) {
+          itens = parseHomagPlainTextCatalog(raw)
+        }
+        if (itens.length === 0) {
         // HOMAG / catálogos: várias linhas de descrição seguidas de uma linha só com código numérico (7–14 dígitos)
         const homagNumericLine = /^\d{7,14}$/
         const homagItemsParsed: Array<{ codigo: string; nome: string; descricao: string }> = []
@@ -26723,6 +26775,7 @@ export default function Dashboard() {
 
         flushCurrent()
         }
+        }
       }
     }
     // Normaliza e remove duplicados da própria importação.
@@ -26773,6 +26826,32 @@ export default function Dashboard() {
 
       let pecas = tryParse(trimmed)
       const fb = plainFallback.trim()
+      const plainForHomag = fb || trimmed
+      if (looksLikeHomagClipboard(plainForHomag)) {
+        const homagItens = parseHomagPlainTextCatalog(plainForHomag)
+        if (homagItens.length > 0) {
+          const homagPecas = homagItens.map((item, idx) =>
+            mapItemToPecaBiblioteca(item, idx)
+          )
+          if (homagPecas.length > pecas.length) {
+            pecas = homagPecas
+          } else if (pecas.length > 0) {
+            const merged = mergeHomagClipboardItems(
+              pecas.map((p) => ({
+                codigo: p.codigo,
+                nome: p.nome,
+                descricao: p.descricao,
+                preco: p.preco,
+                imagem: p.imagem,
+              })),
+              homagItens
+            )
+            pecas = merged.map((item, idx) => mapItemToPecaBiblioteca(item, idx))
+          } else {
+            pecas = homagPecas
+          }
+        }
+      }
       if (pecas.length === 0 && fb && fb !== trimmed) {
         pecas = tryParse(fb)
       }
