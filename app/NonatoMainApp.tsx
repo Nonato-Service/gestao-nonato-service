@@ -4502,7 +4502,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-pagamento-transferencia' | 'ficha-fatura-cliente' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamentos-pecas-especiais' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'pagamentos-contador' | 'manuais-informacoes-tecnicas' | 'biblia-nonato-service' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-basico' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa' | 'informacoes-mecanicas-eletricas'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-pagamento-transferencia' | 'ficha-fatura-cliente' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'diario-pedidos-dia' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamentos-pecas-especiais' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'pagamentos-contador' | 'manuais-informacoes-tecnicas' | 'biblia-nonato-service' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-basico' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa' | 'informacoes-mecanicas-eletricas'
 
 type Tab = {
   id: string
@@ -4517,6 +4517,7 @@ type Tab = {
 const TAB_DEFAULT_PARENT_HUB: Partial<Record<TabType, string>> = {
   gestores: 'gestao-tecnica',
   agenda: 'gestao-tecnica',
+  'diario-pedidos-dia': 'gestao-tecnica',
   'estado-visual-tecnico': 'gestao-tecnica',
   'informacoes-conhecimento-tecnicos': 'gestao-tecnica',
   'cadastro-servicos': 'gestao-tecnica',
@@ -4867,7 +4868,6 @@ export default function Dashboard() {
   const [passwordForm, setPasswordForm] = useState({ tecnicoName: '', password: '' })
   const [showChecklistAccessModal, setShowChecklistAccessModal] = useState(false)
   const [diarioPedidosItems, setDiarioPedidosItems] = useState<DiarioPedidoItem[]>([])
-  const [showDiarioPedidosModal, setShowDiarioPedidosModal] = useState(false)
   const [diarioPedidoDraft, setDiarioPedidoDraft] = useState('')
   const [diarioPedidoEditandoId, setDiarioPedidoEditandoId] = useState<string | null>(null)
   const [diarioPedidoEditDraft, setDiarioPedidoEditDraft] = useState('')
@@ -4875,6 +4875,7 @@ export default function Dashboard() {
   const [diarioPedidoEditAnexos, setDiarioPedidoEditAnexos] = useState<DiarioPedidoAnexo[]>([])
   const [diarioPedidoImgBusy, setDiarioPedidoImgBusy] = useState(false)
   const [diarioPedidosBusca, setDiarioPedidosBusca] = useState('')
+  const [diarioPedidosFiltroStatus, setDiarioPedidosFiltroStatus] = useState<'todos' | DiarioPedidoStatus>('todos')
   const [diarioComposeClienteSel, setDiarioComposeClienteSel] = useState<string>('')
   const [diarioComposeClienteNomeLivre, setDiarioComposeClienteNomeLivre] = useState('')
   const [diarioPedidosModalTopoRetraido, setDiarioPedidosModalTopoRetraido] = useState(false)
@@ -5776,11 +5777,12 @@ export default function Dashboard() {
     }
   }, [])
 
-  /** Ao abrir: cabeçalho recolhido por defeito — mais espaço para registo + quadro. */
+  /** Ao abrir a aba: cabeçalho recolhido por defeito — mais espaço para registo + quadro. */
   useEffect(() => {
-    if (!showDiarioPedidosModal || typeof window === 'undefined') return
+    const tabAtiva = openTabs.find((t) => t.id === activeTabId)?.type === 'diario-pedidos-dia'
+    if (!tabAtiva || typeof window === 'undefined') return
     setDiarioPedidosModalTopoRetraido(true)
-  }, [showDiarioPedidosModal])
+  }, [activeTabId, openTabs])
 
   useEffect(() => {
     if (!diarioPedidosHydratedRef.current) return
@@ -6026,6 +6028,7 @@ export default function Dashboard() {
       'importacao-pecas': 'open-importacao-pecas',
       'solicitacao-servico-tecnico': 'open-solicitacao-servico-tecnico',
       agenda: 'open-agenda',
+      'diario-pedidos-dia': 'open-diario-pedidos-dia',
       desmontados: 'open-desmontados',
       'cadastro-servicos': 'open-cadastro-servicos',
       'fechamento-relatorios-servicos': 'open-fechamento-relatorios-servicos',
@@ -7102,6 +7105,7 @@ export default function Dashboard() {
       'importacao-pecas': t?.importacaoPecas || 'Importação de Peças',
       'solicitacao-servico-tecnico': t?.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO',
       'agenda': t?.agenda || 'Agenda',
+      'diario-pedidos-dia': (t as any)?.diarioPedidosTitle || 'DIÁRIO DE ANOTAÇÃO',
       'desmontados': t?.desmontados || 'Desmontados',
       'cadastro-servicos': t?.cadastroServicos || 'Cadastro de Serviços / Valores',
       'fechamento-relatorios-servicos': t?.fechamentoRelatoriosServicosTitle || 'Fechamento dos Relatórios de Serviços',
@@ -7275,6 +7279,7 @@ export default function Dashboard() {
       translator: ['quickAccessTranslatorDesc'],
       'checklist-hub': ['quickAccessChecklistHubDesc'],
       agenda: ['quickAccessAgendaDesc'],
+      'diario-pedidos-dia': ['diarioPedidosHubCardDesc'],
       'estado-visual-tecnico': ['estadoVisualHubCardDesc'],
       'relatorios-excluidos-clientes': ['relatoriosExcluidosClientesDesc'],
       'fechamento-relatorios-servicos': ['fechamentoRelatoriosServicosDesc'],
@@ -28747,13 +28752,27 @@ export default function Dashboard() {
   }, [diarioPedidosItems])
 
   const diarioPedidosOrdenadosFiltrados = useMemo(() => {
+    let list = diarioPedidosOrdenados
+    if (diarioPedidosFiltroStatus !== 'todos') {
+      list = list.filter((i) => i.status === diarioPedidosFiltroStatus)
+    }
     const q = diarioPedidosBusca.trim().toLowerCase()
-    if (q.length < 2) return diarioPedidosOrdenados
-    return diarioPedidosOrdenados.filter((i) => {
+    if (q.length < 2) return list
+    return list.filter((i) => {
       if ((i.texto || '').toLowerCase().includes(q)) return true
       return (i.anexos || []).some((a) => (a.nome || '').toLowerCase().includes(q))
     })
-  }, [diarioPedidosOrdenados, diarioPedidosBusca])
+  }, [diarioPedidosOrdenados, diarioPedidosBusca, diarioPedidosFiltroStatus])
+
+  const diarioPedidosContagensStatus = useMemo(() => {
+    const list = diarioPedidosItems
+    return {
+      todos: list.length,
+      planeado: list.filter((i) => i.status === 'planeado').length,
+      em_curso: list.filter((i) => i.status === 'em_curso').length,
+      concluido: list.filter((i) => i.status === 'concluido').length,
+    }
+  }, [diarioPedidosItems])
 
   const diarioPedidosResumo = useMemo(() => {
     const list = diarioPedidosItems
@@ -28793,7 +28812,10 @@ export default function Dashboard() {
       }),
       hora: d.toLocaleTimeString(diarioPedidosLocale, { hour: '2-digit', minute: '2-digit' }),
     }
-  }, [diarioPedidosLocale, showDiarioPedidosModal])
+  }, [diarioPedidosLocale])
+
+  const diarioPedidosTabAtiva =
+    openTabs.find((t) => t.id === activeTabId)?.type === 'diario-pedidos-dia'
 
   const handleDiarioEscolherImagem = useCallback((target: 'composer' | 'edit') => {
     if (target === 'edit' && !diarioPedidoEditandoId) return
@@ -28849,7 +28871,7 @@ export default function Dashboard() {
   )
 
   useEffect(() => {
-    if (!showDiarioPedidosModal) return
+    if (!diarioPedidosTabAtiva) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       e.preventDefault()
@@ -28859,14 +28881,14 @@ export default function Dashboard() {
         setDiarioPedidoEditAnexos([])
         return
       }
-      setShowDiarioPedidosModal(false)
+      closeTab(activeTabId || '')
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [showDiarioPedidosModal, diarioPedidoEditandoId])
+  }, [diarioPedidosTabAtiva, diarioPedidoEditandoId, activeTabId])
 
   useEffect(() => {
-    if (showDiarioPedidosModal) return
+    if (diarioPedidosTabAtiva) return
     setDiarioPedidoComposerAnexos([])
     setDiarioPedidoEditAnexos([])
     setDiarioPedidoImgBusy(false)
@@ -28877,7 +28899,7 @@ export default function Dashboard() {
     setDiarioComposeClienteNomeLivre('')
     setDiarioComposeLembreteAtivo(false)
     setDiarioComposeLembreteMinutos(60)
-  }, [showDiarioPedidosModal])
+  }, [diarioPedidosTabAtiva])
 
   // Marcar como lidas as mensagens destinadas ao usuário atual do Hub quando ele abre uma conversa
   useEffect(() => {
@@ -29131,7 +29153,7 @@ export default function Dashboard() {
     } else if (action === 'open-agenda') {
       openTab('agenda', getTabTitle('agenda'))
     } else if (action === 'open-diario-pedidos-dia') {
-      setShowDiarioPedidosModal(true)
+      openTab('diario-pedidos-dia', getTabTitle('diario-pedidos-dia'))
     } else if (action === 'open-estado-visual-tecnico') {
       openTab('estado-visual-tecnico', getTabTitle('estado-visual-tecnico'))
     } else if (action === 'open-informacoes-conhecimento-tecnicos') {
@@ -31016,9 +31038,1035 @@ export default function Dashboard() {
     )
   }
 
+  const renderDiarioPedidosPanel = () => (
+    <div className="tab-content-wrapper tab-glass-root ns-ui-v2 ns-diario-tab-root">
+    <div
+      className={`diario-pedidos-modal-shell ns-diario-modal ns-diario-modal--workspace ns-diario-modal--tab${diarioPedidosModalTopoRetraido ? ' ns-diario-modal--topo-retraido' : ''}`}
+          >
+      <input
+        ref={diarioPedidoImgInputRef}
+        type="file"
+        accept="image/*"
+        className="ns-diario-file-input-hidden"
+        onChange={handleDiarioImagemSelecionada}
+        aria-hidden
+      />
+      <div className="ns-diario-modal__topbar ns-diario-modal__topbar--tab">
+        <div className="ns-diario-modal__topbar-start">
+          <button
+            type="button"
+            className="ns-diario-btn ns-diario-btn--ghost ns-diario-modal__toggle-topo"
+            onClick={() => {
+              setDiarioPedidosModalTopoRetraido((v) => {
+                const next = !v
+                void saveData(DIARIO_PEDIDOS_MODAL_TOPO_RETRAIDO_KEY, next)
+                return next
+              })
+            }}
+            title={
+              diarioPedidosModalTopoRetraido
+                ? (safeT as any)?.diarioPedidosBtnExpandirTopo || 'Mostrar cabeçalho e resumo'
+                : (safeT as any)?.diarioPedidosBtnRetrairTopo || 'Retrair cabeçalho (mais espaço para o quadro)'
+            }
+            aria-expanded={!diarioPedidosModalTopoRetraido}
+            aria-controls="diario-pedidos-modal-collapse-region"
+          >
+            {diarioPedidosModalTopoRetraido
+              ? (safeT as any)?.diarioPedidosBtnExpandirTopo || 'Expandir'
+              : (safeT as any)?.diarioPedidosBtnRetrairTopo || 'Retrair'}
+          </button>
+          <div className="ns-diario-topbar-tools">
+            <label className="ns-diario-topbar-search-label" htmlFor="ns-diario-busca-input">
+              <span className="ns-diario-sr-only">{(safeT as any)?.diarioPedidosBuscaLabel || 'Pesquisar no quadro'}</span>
+              <input
+                id="ns-diario-busca-input"
+                type="search"
+                className="ns-diario-topbar-search-input"
+                value={diarioPedidosBusca}
+                onChange={(e) => setDiarioPedidosBusca(e.target.value)}
+                placeholder={(safeT as any)?.diarioPedidosBuscaPlaceholder || 'Filtrar por texto (mín. 2 caracteres)…'}
+                autoComplete="off"
+              />
+            </label>
+            <div
+              className="ns-diario-filtros"
+              role="tablist"
+              aria-label={(safeT as any)?.diarioPedidosFiltrosAria || 'Filtrar por estado'}
+            >
+              {(
+                [
+                  ['todos', (safeT as any)?.diarioPedidosFiltroTodos || 'Todos'],
+                  ['planeado', (safeT as any)?.diarioPedidosStatusPlaneado || 'Planeado'],
+                  ['em_curso', (safeT as any)?.diarioPedidosStatusEmCurso || 'Em execução'],
+                  ['concluido', (safeT as any)?.diarioPedidosStatusConcluido || 'Concluído'],
+                ] as const
+              ).map(([status, label]) => {
+                const active = diarioPedidosFiltroStatus === status
+                const count =
+                  status === 'todos'
+                    ? diarioPedidosContagensStatus.todos
+                    : diarioPedidosContagensStatus[status]
+                return (
+                  <button
+                    key={status}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    className={`ns-diario-filtro-chip${active ? ' ns-diario-filtro-chip--active' : ''}${status === 'em_curso' ? ' ns-diario-filtro-chip--progress' : ''}${status === 'concluido' ? ' ns-diario-filtro-chip--done' : ''}`}
+                    onClick={() => setDiarioPedidosFiltroStatus(status)}
+                  >
+                    {label}
+                    <span className="ns-diario-filtro-chip__count">{count}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+          <div className="ns-diario-topbar-resumo" aria-label={(safeT as any)?.diarioPedidosResumoAria || 'Resumo'}>
+            <span className="ns-diario-topbar-resumo__chip ns-diario-topbar-resumo__chip--total">
+              {diarioPedidosResumo.total} {(safeT as any)?.diarioPedidosResumoTotal || 'Total'}
+            </span>
+            <span className="ns-diario-topbar-resumo__chip ns-diario-topbar-resumo__chip--abertas">
+              {diarioPedidosResumo.abertas} {(safeT as any)?.diarioPedidosResumoAbertas || 'Em aberto'}
+            </span>
+            <span className="ns-diario-topbar-resumo__chip ns-diario-topbar-resumo__chip--ok">
+              {diarioPedidosResumo.resolvidas} {(safeT as any)?.diarioPedidosResumoResolvidas || 'Resolvidas'}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div id="diario-pedidos-modal-collapse-region" className="ns-diario-modal__collapse-region">
+        <header className="ns-diario-modal__hero">
+        <div className="ns-diario-modal__title-wrap">
+          <div className="ns-diario-modal__eyebrow">{(safeT as any)?.diarioPedidosTitle || 'DIÁRIO DE ANOTAÇÃO'}</div>
+          <h2 id="diario-pedidos-modal-title" className="ns-diario-modal__title">
+            {(safeT as any)?.diarioPedidosModalTitulo || 'Diário de anotação'}
+          </h2>
+          <p className="ns-diario-modal__subtitle">
+            {(safeT as any)?.diarioPedidosModalSub ||
+              'Anote o que não pode esquecer. O botão na barra lateral mantém o código de cores: neutro, amarelo quando há algo em execução, verde quando todas as anotações estão concluídas.'}
+          </p>
+        </div>
+        <div className="ns-diario-modal__date-card" aria-live="polite">
+          <div className="ns-diario-modal__date-card-icon" aria-hidden>
+            <IconCalendar size={22} />
+          </div>
+          <div className="ns-diario-modal__date-card-body">
+            <div className="ns-diario-modal__date-label">{(safeT as any)?.diarioPedidosDataHoje || 'Data'}</div>
+            <div className="ns-diario-modal__date-long">{diarioPedidosHeaderData.dataLonga}</div>
+            <div className="ns-diario-modal__date-time">
+              {(safeT as any)?.diarioPedidosHoraRef || 'Referência'}: {diarioPedidosHeaderData.hora}
+            </div>
+          </div>
+        </div>
+        </header>
+
+        <div className="ns-diario-resumo" role="group" aria-label={(safeT as any)?.diarioPedidosResumoAria || 'Resumo das anotações'}>
+        <div className="ns-diario-resumo__card ns-diario-resumo__card--total">
+          <span className="ns-diario-resumo__value" aria-hidden>
+            {diarioPedidosResumo.total}
+          </span>
+          <span className="ns-diario-resumo__label">{(safeT as any)?.diarioPedidosResumoTotal || 'Total'}</span>
+          <span className="ns-diario-resumo__hint">{(safeT as any)?.diarioPedidosResumoTotalHint || 'registadas'}</span>
+        </div>
+        <div className="ns-diario-resumo__card ns-diario-resumo__card--abertas">
+          <span className="ns-diario-resumo__value" aria-hidden>
+            {diarioPedidosResumo.abertas}
+          </span>
+          <span className="ns-diario-resumo__label">{(safeT as any)?.diarioPedidosResumoAbertas || 'Em aberto'}</span>
+          <span className="ns-diario-resumo__hint">{(safeT as any)?.diarioPedidosResumoAbertasHint || 'planeadas ou em execução'}</span>
+        </div>
+        <div className="ns-diario-resumo__card ns-diario-resumo__card--resolvidas">
+          <span className="ns-diario-resumo__value" aria-hidden>
+            {diarioPedidosResumo.resolvidas}
+          </span>
+          <span className="ns-diario-resumo__label">{(safeT as any)?.diarioPedidosResumoResolvidas || 'Resolvidas'}</span>
+          <span className="ns-diario-resumo__hint">{(safeT as any)?.diarioPedidosResumoResolvidasHint || 'concluídas'}</span>
+        </div>
+        </div>
+      </div>
+
+      <div className="ns-diario-modal__main-scroll">
+      <div className="ns-diario-workspace">
+      <section className="ns-diario-composer" aria-label={(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}>
+        <div className="ns-diario-composer__label">{(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}</div>
+        <p className="ns-diario-composer__format-hint">
+          {(safeT as any)?.diarioPedidosDicaPrimeiraLinha ||
+            'Escolha o cliente (cadastro ou outro nome). Depois uma linha por tarefa; no quadro aparecem com marca à frente.'}
+        </p>
+        <div className="ns-diario-composer__cliente-row">
+          <label className="ns-diario-composer__sublabel" htmlFor="ns-diario-composer-cliente">
+            {(safeT as any)?.diarioPedidosLabelCliente || 'Cliente'}
+          </label>
+          <ClienteAlfabetoPicker
+            clientes={clientesOrdenadosAlfabeticamente}
+            selectedId={diarioComposeClienteSel && diarioComposeClienteSel !== '__livre__' ? diarioComposeClienteSel : ''}
+            language={selectedLanguage}
+            labels={clientePickerLabels}
+            listMaxHeight={240}
+            isDevedor={isClienteMarcadoDevedor}
+            headerActions={[
+              {
+                id: 'livre',
+                label: (safeT as any)?.diarioPedidosClienteOutro || 'Outro (não está no cadastro)',
+                active: diarioComposeClienteSel === '__livre__',
+                onClick: () => {
+                  setDiarioComposeClienteSel('__livre__')
+                  setDiarioComposeClienteNomeLivre('')
+                },
+              },
+            ]}
+            onSelect={(c) => {
+              setDiarioComposeClienteSel(c.id)
+              setDiarioComposeClienteNomeLivre('')
+            }}
+            onClear={() => {
+              setDiarioComposeClienteSel('')
+              setDiarioComposeClienteNomeLivre('')
+            }}
+          />
+          {diarioComposeClienteSel === '__livre__' ? (
+            <input
+              type="text"
+              className="ns-diario-composer__cliente-livre"
+              value={diarioComposeClienteNomeLivre}
+              onChange={(e) => setDiarioComposeClienteNomeLivre(e.target.value)}
+              placeholder={(safeT as any)?.diarioPedidosClienteNomeLivrePlaceholder || 'Nome do cliente ou empresa'}
+              autoComplete="off"
+            />
+          ) : null}
+        </div>
+        <p className="ns-diario-composer__format-hint ns-diario-composer__format-hint--secondary">
+          {(safeT as any)?.diarioPedidosDicaTarefasLinhas ||
+            'Uma linha por tarefa; no quadro cada linha aparece com uma bolinha.'}
+        </p>
+        <textarea
+          className="ns-diario-composer__input"
+          value={diarioPedidoDraft}
+          onChange={(e) => setDiarioPedidoDraft(e.target.value)}
+          rows={6}
+          placeholder={
+            (safeT as any)?.diarioPedidosPlaceholderTarefas ||
+            (safeT as any)?.diarioPedidosPlaceholder ||
+            'Ex.: confirmar visita\nenviar orçamento'
+          }
+        />
+        {diarioPedidoComposerAnexos.length > 0 ? (
+          <ul
+            className="ns-diario-anexos"
+            aria-label={(safeT as any)?.diarioPedidosAnexosListaAria || 'Imagens anexadas'}
+          >
+            {diarioPedidoComposerAnexos.map((imx) => (
+              <li key={imx.id} className="ns-diario-anexo">
+                <img src={imx.dataUrl} alt="" className="ns-diario-anexo__thumb" />
+                <button
+                  type="button"
+                  className="ns-diario-anexo__remove"
+                  onClick={() => setDiarioPedidoComposerAnexos((p) => p.filter((x) => x.id !== imx.id))}
+                  aria-label={(safeT as any)?.diarioPedidosAnexoRemover || 'Remover imagem'}
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <div className="ns-diario-lembrete">
+          <label className="ns-diario-lembrete__toggle">
+            <input
+              type="checkbox"
+              checked={diarioComposeLembreteAtivo}
+              onChange={async (e) => {
+                const checked = e.target.checked
+                if (checked) {
+                  await requestDiarioNotificationPermission()
+                }
+                setDiarioComposeLembreteAtivo(checked)
+              }}
+            />
+            <span>{(safeT as any)?.diarioPedidosLembreteAtivar || 'Activar lembrete periódico'}</span>
+          </label>
+          {diarioComposeLembreteAtivo ? (
+            <div className="ns-diario-lembrete__row">
+              <span className="ns-diario-lembrete__label">
+                {(safeT as any)?.diarioPedidosLembreteIntervalo || 'Repetir a cada'}
+              </span>
+              <DiarioLembreteIntervalPicker
+                minutes={diarioComposeLembreteMinutos}
+                onMinutesChange={setDiarioComposeLembreteMinutos}
+                safeT={safeT as Record<string, string>}
+                idPrefix="ns-diario-compose-lembrete"
+              />
+            </div>
+          ) : null}
+          <p className="ns-diario-lembrete__hint">
+            {(safeT as any)?.diarioPedidosLembreteHint ||
+              'Enquanto a anotação não estiver concluída, o sistema recorda no intervalo escolhido.'}
+          </p>
+        </div>
+        <div className="ns-diario-composer__actions">
+          <button
+            type="button"
+            className="btn-primary ns-diario-btn ns-diario-btn--ghost"
+            disabled={diarioPedidoImgBusy || diarioPedidoComposerAnexos.length >= DIARIO_PEDIDO_ANEXOS_MAX}
+            onClick={() => handleDiarioEscolherImagem('composer')}
+          >
+            {diarioPedidoImgBusy
+              ? (safeT as any)?.diarioPedidosAnexoProcessando || 'A processar…'
+              : (safeT as any)?.diarioPedidosAnexoAdicionar || 'Anexar imagem'}
+          </button>
+          <button
+            type="button"
+            className="btn-primary ns-diario-btn ns-diario-btn--primary"
+            onClick={() => {
+              const tarefasBloco = diarioPedidoDraft.trim()
+              if (!tarefasBloco && diarioPedidoComposerAnexos.length === 0) return
+              let nomeCliente = ''
+              let clienteCadastroId: string | undefined
+              if (diarioComposeClienteSel && diarioComposeClienteSel !== '__livre__') {
+                const cli = clientes.find((c) => c.id === diarioComposeClienteSel)
+                if (!cli) {
+                  window.alert(
+                    (safeT as any)?.diarioPedidosErroCliente ||
+                      'Escolha um cliente do cadastro ou indique o nome em «Outro».'
+                  )
+                  return
+                }
+                nomeCliente = (cli.nomeEmpresa || '').trim() || cli.id
+                clienteCadastroId = cli.id
+              } else if (diarioComposeClienteSel === '__livre__') {
+                nomeCliente = diarioComposeClienteNomeLivre.trim()
+                if (!nomeCliente) {
+                  window.alert(
+                    (safeT as any)?.diarioPedidosErroCliente ||
+                      'Escolha um cliente do cadastro ou indique o nome em «Outro».'
+                  )
+                  return
+                }
+              } else {
+                window.alert(
+                  (safeT as any)?.diarioPedidosErroCliente ||
+                    'Escolha um cliente do cadastro ou indique o nome em «Outro».'
+                )
+                return
+              }
+              const texto =
+                tarefasBloco.length > 0 ? `${nomeCliente}\n${tarefasBloco}` : `${nomeCliente}\n`
+              const id = `dp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+              const criadoEm = new Date().toISOString()
+              const anexos =
+                diarioPedidoComposerAnexos.length > 0
+                  ? diarioPedidoComposerAnexos.map((a) => ({ ...a }))
+                  : undefined
+              const lembreteFields = diarioComposeLembreteAtivo
+                ? applyDiarioLembretePatch(
+                    {},
+                    {
+                      ativo: true,
+                      intervaloMinutos: diarioComposeLembreteMinutos,
+                      reagendarAgora: true,
+                    }
+                  )
+                : { lembreteAtivo: false as const }
+              setDiarioPedidoEditandoId(null)
+              setDiarioPedidoEditDraft('')
+              setDiarioPedidoEditAnexos([])
+              setDiarioPedidosItems((p) => [
+                ...p,
+                {
+                  id,
+                  texto,
+                  status: 'planeado',
+                  criadoEm,
+                  anexos,
+                  ...(clienteCadastroId ? { clienteCadastroId } : {}),
+                  ...lembreteFields,
+                },
+              ])
+              setDiarioPedidoDraft('')
+              setDiarioPedidoComposerAnexos([])
+              setDiarioComposeClienteSel('')
+              setDiarioComposeClienteNomeLivre('')
+              setDiarioComposeLembreteAtivo(false)
+              setDiarioComposeLembreteMinutos(60)
+            }}
+          >
+            {(safeT as any)?.diarioPedidosAdicionar || 'Registar anotação'}
+          </button>
+          <button
+            type="button"
+            className="btn-primary ns-diario-btn ns-diario-btn--ghost"
+            onClick={() => setDiarioPedidosItems((p) => p.filter((i) => i.status !== 'concluido'))}
+          >
+            {(safeT as any)?.diarioPedidosLimparConcluidos || 'Arquivar concluídos'}
+          </button>
+        </div>
+        <p className="ns-diario-composer__hint">
+          {(safeT as any)?.diarioPedidosAnexosHint ||
+            `Até ${DIARIO_PEDIDO_ANEXOS_MAX} imagens por anotação (comprimidas automaticamente). Pode registar só texto, só imagens ou ambos.`}
+        </p>
+      </section>
+
+      <section className="ns-diario-list-wrap" aria-label={(safeT as any)?.diarioPedidosSecLista || 'Quadro do dia'}>
+        <div className="ns-diario-list__head">
+          <span className="ns-diario-list__label">{(safeT as any)?.diarioPedidosSecLista || 'Quadro do dia'}</span>
+        <span className="ns-diario-list__count">
+          {(diarioPedidosBusca.trim().length >= 2 || diarioPedidosFiltroStatus !== 'todos')
+            ? `${diarioPedidosOrdenadosFiltrados.length}/${diarioPedidosOrdenados.length}`
+            : diarioPedidosOrdenados.length}{' '}
+            {diarioPedidosOrdenados.length === 1
+              ? (safeT as any)?.diarioPedidosCountOne || 'anotação'
+              : (safeT as any)?.diarioPedidosCountMany || 'anotações'}
+          </span>
+      </div>
+      {diarioPedidosOrdenados.length === 0 ? (
+          <div className="ns-diario-empty">
+            <p className="ns-diario-empty__text">
+              {(safeT as any)?.diarioPedidosVazio ||
+                'Nenhuma anotação no quadro. Utilize o campo acima para registar a primeira.'}
+            </p>
+          </div>
+        ) : diarioPedidosOrdenadosFiltrados.length === 0 ? (
+          <div className="ns-diario-empty">
+            <p className="ns-diario-empty__text">
+              {(safeT as any)?.diarioPedidosBuscaVazio ||
+                'Nenhuma anotação corresponde à pesquisa. Limpe o filtro ou altere o texto.'}
+            </p>
+          </div>
+        ) : (
+          <ul className="ns-diario-list">
+            {diarioPedidosOrdenadosFiltrados.map((item) => {
+              const statusLabel =
+                item.status === 'em_curso'
+                  ? (safeT as any)?.diarioPedidosStatusEmCurso || 'Em execução'
+                  : item.status === 'concluido'
+                    ? (safeT as any)?.diarioPedidosStatusConcluido || 'Concluído'
+                    : (safeT as any)?.diarioPedidosStatusPlaneado || 'Planeado'
+              let criadoFmt = '—'
+              try {
+                criadoFmt = new Date(item.criadoEm).toLocaleString(diarioPedidosLocale, {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })
+              } catch {
+                criadoFmt = '—'
+              }
+              const cardTone =
+                item.status === 'em_curso'
+                  ? 'diario-pedido-card diario-pedido-card--em-curso'
+                  : item.status === 'concluido'
+                    ? 'diario-pedido-card diario-pedido-card--concluido'
+                    : 'diario-pedido-card diario-pedido-card--planeado'
+              const isEditing = diarioPedidoEditandoId === item.id
+              let atualizadoFmt = '—'
+              if (item.atualizadoEm) {
+                try {
+                  atualizadoFmt = new Date(item.atualizadoEm).toLocaleString(diarioPedidosLocale, {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                } catch {
+                  atualizadoFmt = '—'
+                }
+              }
+              const { titulo: diarioTituloLinha, corpo: diarioCorpoTexto } = diarioPedidoTituloECorpo(item.texto)
+              const diarioNAnexos = item.anexos?.length ?? 0
+              const diarioTituloLista =
+                diarioTituloLinha ||
+                (diarioNAnexos > 0
+                  ? (safeT as any)?.diarioPedidosTituloSoImagem || 'Anotação com imagens'
+                  : '')
+              const diarioLinhasTarefa = diarioPedidoLinhasTarefas(diarioCorpoTexto)
+              /** Na lista colapsada: só o nome do cliente (ou rótulo mínimo se só imagens; notas antigas: 1.ª tarefa). */
+              const diarioNomeListaSobrio =
+                diarioTituloLinha.trim() ||
+                (diarioNAnexos > 0 ? (safeT as any)?.diarioPedidosTituloSoImagem || '…' : '') ||
+                (diarioLinhasTarefa[0] ? diarioLinhasTarefa[0] : '')
+              const diarioClienteFicha =
+                item.clienteCadastroId != null && item.clienteCadastroId !== ''
+                  ? clientes.find((c) => c.id === item.clienteCadastroId)
+                  : undefined
+              const diarioPrecisaExpandir =
+                diarioTituloLinha.trim().length > 0 ||
+                diarioCorpoTexto.length > 0 ||
+                diarioNAnexos > 0 ||
+                (item.clienteCadastroId != null && item.clienteCadastroId !== '')
+              const diarioDetalheAberto = diarioPedidoExpandidoId === item.id
+              let lembreteProximoFmt = '—'
+              if (item.lembreteAtivo && item.lembreteProximoEm) {
+                try {
+                  lembreteProximoFmt = new Date(item.lembreteProximoEm).toLocaleString(diarioPedidosLocale, {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                } catch {
+                  lembreteProximoFmt = '—'
+                }
+              }
+              let lembreteUltimoFmt = '—'
+              if (item.lembreteUltimoEm) {
+                try {
+                  lembreteUltimoFmt = new Date(item.lembreteUltimoEm).toLocaleString(diarioPedidosLocale, {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                } catch {
+                  lembreteUltimoFmt = '—'
+                }
+              }
+              return (
+                <li key={item.id} className={`ns-diario-entry ${cardTone}`}>
+                  <div className="ns-diario-entry__head">
+                    <div className="ns-diario-entry__head-main">
+                      <span
+                        className={
+                          item.status === 'em_curso'
+                            ? 'ns-diario-badge ns-diario-badge--progress'
+                            : item.status === 'concluido'
+                              ? 'ns-diario-badge ns-diario-badge--done'
+                              : 'ns-diario-badge ns-diario-badge--todo'
+                        }
+                      >
+                        {statusLabel}
+                      </span>
+                      {item.lembreteAtivo && item.status !== 'concluido' ? (
+                        <span
+                          className="ns-diario-lembrete-badge"
+                          title={
+                            (safeT as any)?.diarioPedidosLembreteBadge ||
+                            `Lembrete: ${formatDiarioLembreteIntervalo(item.lembreteIntervaloMinutos ?? 60, safeT as Record<string, string>)}`
+                          }
+                        >
+                          🔔{' '}
+                          {formatDiarioLembreteIntervalo(
+                            item.lembreteIntervaloMinutos ?? 60,
+                            safeT as Record<string, string>
+                          )}
+                        </span>
+                      ) : null}
+                      {diarioPrecisaExpandir && diarioNomeListaSobrio ? (
+                        <button
+                          type="button"
+                          className="ns-diario-entry__titulo-btn ns-diario-entry__titulo-btn--nome-so"
+                          onClick={() =>
+                            setDiarioPedidoExpandidoId((cur) => (cur === item.id ? null : item.id))
+                          }
+                          aria-expanded={diarioDetalheAberto}
+                          aria-label={`${diarioNomeListaSobrio}. ${
+                            diarioDetalheAberto
+                              ? (safeT as any)?.diarioPedidosOcultarDetalhe || 'Ocultar detalhe'
+                              : (safeT as any)?.diarioPedidosVerDetalhe || 'Ver informação completa'
+                          }`}
+                          title={
+                            diarioDetalheAberto
+                              ? (safeT as any)?.diarioPedidosOcultarDetalhe || 'Ocultar detalhe'
+                              : (safeT as any)?.diarioPedidosVerDetalhe || 'Ver informação completa'
+                          }
+                        >
+                          <span className="ns-diario-entry__titulo">{diarioNomeListaSobrio}</span>
+                        </button>
+                      ) : diarioNomeListaSobrio ? (
+                        <span className="ns-diario-entry__titulo ns-diario-entry__titulo--so">{diarioNomeListaSobrio}</span>
+                      ) : null}
+                    </div>
+                    <div className="ns-diario-entry__head-actions">
+                      {!isEditing ? (
+                        <button
+                          type="button"
+                          className="ns-diario-btn ns-diario-btn--ghost"
+                          onClick={() => {
+                            setDiarioPedidoExpandidoId(item.id)
+                            setDiarioPedidoEditandoId(item.id)
+                            setDiarioPedidoEditDraft(item.texto)
+                            setDiarioPedidoEditAnexos((item.anexos || []).map((a) => ({ ...a })))
+                          }}
+                          title={(safeT as any)?.diarioPedidosBtnEditarTexto || 'Editar texto'}
+                        >
+                          {(safeT as any)?.diarioPedidosBtnEditarTexto || 'Editar'}
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="ns-diario-btn ns-diario-btn--danger-ghost"
+                        onClick={() => {
+                          if (diarioPedidoEditandoId === item.id) {
+                            setDiarioPedidoEditandoId(null)
+                            setDiarioPedidoEditDraft('')
+                          }
+                          setDiarioPedidoExpandidoId((cur) => (cur === item.id ? null : cur))
+                          setDiarioPedidosItems((p) => p.filter((x) => x.id !== item.id))
+                        }}
+                        title={safeT?.delete || 'Eliminar'}
+                      >
+                        {(safeT as any)?.diarioPedidosBtnRemover || 'Eliminar'}
+                      </button>
+                    </div>
+                  </div>
+                  {isEditing ? (
+                    <>
+                      <textarea
+                        className="ns-diario-entry__input"
+                        value={diarioPedidoEditDraft}
+                        onChange={(e) => setDiarioPedidoEditDraft(e.target.value)}
+                        rows={5}
+                        aria-label={(safeT as any)?.diarioPedidosEditarAria || 'Editar anotação'}
+                      />
+                      {diarioPedidoEditAnexos.length > 0 ? (
+                        <ul
+                          className="ns-diario-anexos ns-diario-anexos--edit"
+                          aria-label={(safeT as any)?.diarioPedidosAnexosListaAria || 'Imagens anexadas'}
+                        >
+                          {diarioPedidoEditAnexos.map((imx) => (
+                            <li key={imx.id} className="ns-diario-anexo">
+                              <img src={imx.dataUrl} alt="" className="ns-diario-anexo__thumb" />
+                              <button
+                                type="button"
+                                className="ns-diario-anexo__remove"
+                                onClick={() => setDiarioPedidoEditAnexos((p) => p.filter((x) => x.id !== imx.id))}
+                                aria-label={(safeT as any)?.diarioPedidosAnexoRemover || 'Remover imagem'}
+                              >
+                                ×
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                      <div className="ns-diario-entry__edit-actions">
+                        <button
+                          type="button"
+                          className="btn-primary ns-diario-btn ns-diario-btn--ghost"
+                          disabled={
+                            diarioPedidoImgBusy || diarioPedidoEditAnexos.length >= DIARIO_PEDIDO_ANEXOS_MAX
+                          }
+                          onClick={() => handleDiarioEscolherImagem('edit')}
+                        >
+                          {diarioPedidoImgBusy
+                            ? (safeT as any)?.diarioPedidosAnexoProcessando || 'A processar…'
+                            : (safeT as any)?.diarioPedidosAnexoAdicionar || 'Anexar imagem'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-primary ns-diario-btn ns-diario-btn--primary"
+                          onClick={() => {
+                            const texto = diarioPedidoEditDraft.trim()
+                            if (!texto && diarioPedidoEditAnexos.length === 0) {
+                              window.alert(
+                                (safeT as any)?.diarioPedidosTextoVazioEdit ||
+                                  'Escreva texto ou anexe pelo menos uma imagem antes de guardar.'
+                              )
+                              return
+                            }
+                            const { titulo: titEdit } = diarioPedidoTituloECorpo(texto)
+                            const titNorm = titEdit.trim().toLowerCase()
+                            const matchedCli =
+                              titNorm.length > 0
+                                ? clientes.find((c) => (c.nomeEmpresa || '').trim().toLowerCase() === titNorm)
+                                : undefined
+                            const clienteCadastroIdNext = matchedCli?.id
+                            const anexos =
+                              diarioPedidoEditAnexos.length > 0
+                                ? diarioPedidoEditAnexos.map((a) => ({ ...a }))
+                                : undefined
+                            setDiarioPedidosItems((p) =>
+                              p.map((x) =>
+                                x.id === item.id
+                                  ? {
+                                      ...x,
+                                      texto,
+                                      anexos,
+                                      atualizadoEm: new Date().toISOString(),
+                                      ...(clienteCadastroIdNext
+                                        ? { clienteCadastroId: clienteCadastroIdNext }
+                                        : { clienteCadastroId: undefined }),
+                                    }
+                                  : x
+                              )
+                            )
+                            setDiarioPedidoEditandoId(null)
+                            setDiarioPedidoEditDraft('')
+                            setDiarioPedidoEditAnexos([])
+                          }}
+                        >
+                          {(safeT as any)?.diarioPedidosBtnGuardarTexto || 'Guardar texto'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-primary ns-diario-btn ns-diario-btn--ghost"
+                          onClick={() => {
+                            setDiarioPedidoEditandoId(null)
+                            setDiarioPedidoEditDraft('')
+                            setDiarioPedidoEditAnexos([])
+                          }}
+                        >
+                          {(safeT as any)?.diarioPedidosBtnCancelarEdicao || 'Cancelar'}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {diarioPrecisaExpandir && !diarioDetalheAberto ? null : (
+                        <>
+                          {item.clienteCadastroId ? (
+                            diarioClienteFicha ? (
+                              <div className="ns-diario-entry__ficha">
+                                <div className="ns-diario-entry__ficha-title">
+                                  {(safeT as any)?.diarioPedidosSecFichaCliente ||
+                                    'Dados para concluir o serviço'}
+                                </div>
+                                <dl className="ns-diario-entry__ficha-dl">
+                                  {(diarioClienteFicha.nomeEmpresa || '').trim() ? (
+                                    <>
+                                      <dt className="ns-diario-entry__ficha-dt">
+                                        {(safeT as any)?.diarioPedidosFichaEmpresa || 'Empresa'}
+                                      </dt>
+                                      <dd className="ns-diario-entry__ficha-dd">{diarioClienteFicha.nomeEmpresa}</dd>
+                                    </>
+                                  ) : null}
+                                  {(diarioClienteFicha.morada || '').trim() ||
+                                  (diarioClienteFicha.codigoPostal || '').trim() ||
+                                  (diarioClienteFicha.localidade || '').trim() ? (
+                                    <>
+                                      <dt className="ns-diario-entry__ficha-dt">
+                                        {(safeT as any)?.diarioPedidosFichaMorada || 'Morada'}
+                                      </dt>
+                                      <dd className="ns-diario-entry__ficha-dd">
+                                        {[
+                                          diarioClienteFicha.morada,
+                                          [diarioClienteFicha.codigoPostal, diarioClienteFicha.localidade]
+                                            .filter(Boolean)
+                                            .join(' ')
+                                            .trim(),
+                                          diarioClienteFicha.conselho,
+                                          diarioClienteFicha.pais,
+                                        ]
+                                          .filter((x) => String(x || '').trim())
+                                          .join(' · ')}
+                                      </dd>
+                                    </>
+                                  ) : null}
+                                  {(diarioClienteFicha.telefones || '').trim() ? (
+                                    <>
+                                      <dt className="ns-diario-entry__ficha-dt">
+                                        {(safeT as any)?.diarioPedidosFichaTelefones || 'Telefones'}
+                                      </dt>
+                                      <dd className="ns-diario-entry__ficha-dd">{diarioClienteFicha.telefones}</dd>
+                                    </>
+                                  ) : null}
+                                  {(diarioClienteFicha.email || '').trim() ? (
+                                    <>
+                                      <dt className="ns-diario-entry__ficha-dt">
+                                        {(safeT as any)?.diarioPedidosFichaEmail || 'E-mail'}
+                                      </dt>
+                                      <dd className="ns-diario-entry__ficha-dd">{diarioClienteFicha.email}</dd>
+                                    </>
+                                  ) : null}
+                                  {(diarioClienteFicha.contato || '').trim() ? (
+                                    <>
+                                      <dt className="ns-diario-entry__ficha-dt">
+                                        {(safeT as any)?.diarioPedidosFichaContato || 'Contacto'}
+                                      </dt>
+                                      <dd className="ns-diario-entry__ficha-dd">{diarioClienteFicha.contato}</dd>
+                                    </>
+                                  ) : null}
+                                  {(diarioClienteFicha.numeroContribuicaoFiscal || '').trim() ? (
+                                    <>
+                                      <dt className="ns-diario-entry__ficha-dt">
+                                        {(safeT as any)?.diarioPedidosFichaNif || 'NIF'}
+                                      </dt>
+                                      <dd className="ns-diario-entry__ficha-dd">
+                                        {diarioClienteFicha.numeroContribuicaoFiscal}
+                                      </dd>
+                                    </>
+                                  ) : null}
+                                </dl>
+                              </div>
+                            ) : (
+                              <div className="ns-diario-entry__ficha ns-diario-entry__ficha--aviso">
+                                {(safeT as any)?.diarioPedidosClienteCadastroRemovido ||
+                                  'Este cliente já não está no cadastro. Use as tarefas abaixo e o histórico local se precisar.'}
+                              </div>
+                            )
+                          ) : diarioTituloLinha.trim() ? (
+                            <div className="ns-diario-entry__ficha ns-diario-entry__ficha--aviso">
+                              {(safeT as any)?.diarioPedidosClienteNaoCadastro ||
+                                'Cliente não cadastrado — use as tarefas em baixo; pode criar a ficha em Cadastro de clientes se precisar.'}
+                            </div>
+                          ) : null}
+                          {diarioLinhasTarefa.length > 0 ? (
+                            <>
+                              <div className="ns-diario-entry__ficha-title ns-diario-entry__ficha-title--tasks">
+                                {(safeT as any)?.diarioPedidosSecTarefas || 'O que fazer'}
+                              </div>
+                              <ul className="ns-diario-entry__tasks">
+                                {diarioLinhasTarefa.map((ln, idx) => (
+                                  <li key={`${item.id}-t-${idx}`}>{ln}</li>
+                                ))}
+                              </ul>
+                            </>
+                          ) : diarioCorpoTexto.trim() ? (
+                            <p className="ns-diario-entry__text">{diarioCorpoTexto}</p>
+                          ) : null}
+                        </>
+                      )}
+                      {diarioPrecisaExpandir && !diarioDetalheAberto
+                        ? null
+                        : item.anexos?.length
+                          ? (
+                              <ul
+                                className="ns-diario-anexos ns-diario-anexos--readonly"
+                                aria-label={(safeT as any)?.diarioPedidosAnexosListaAria || 'Imagens anexadas'}
+                              >
+                                {item.anexos.map((imx) => (
+                                  <li key={imx.id} className="ns-diario-anexo">
+                                    <a
+                                      href={imx.dataUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="ns-diario-anexo__link"
+                                      title={(safeT as any)?.diarioPedidosAnexoAbrir || 'Abrir imagem'}
+                                    >
+                                      <img src={imx.dataUrl} alt={imx.nome} className="ns-diario-anexo__thumb" />
+                                    </a>
+                                  </li>
+                                ))}
+                              </ul>
+                            )
+                          : null}
+                      {!item.texto.trim() && !item.anexos?.length ? (
+                        <p className="ns-diario-entry__text ns-diario-entry__text--muted">—</p>
+                      ) : diarioPrecisaExpandir && !diarioDetalheAberto ? (
+                        <p className="ns-diario-entry__peek-hint">
+                          {(safeT as any)?.diarioPedidosDicaListaRecolhida ||
+                            'Toque no título acima para ver o que falta fazer e as imagens.'}
+                        </p>
+                      ) : null}
+                    </>
+                  )}
+                  {!isEditing ? (
+                    <div className="ns-diario-lembrete ns-diario-lembrete--entry">
+                      <div className="ns-diario-lembrete__head">
+                        <span className="ns-diario-lembrete__title">
+                          {(safeT as any)?.diarioPedidosLembreteTitulo || 'Lembrete'}
+                        </span>
+                      </div>
+                      <label className="ns-diario-lembrete__toggle">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(item.lembreteAtivo && item.status !== 'concluido')}
+                          disabled={item.status === 'concluido'}
+                          onChange={async (e) => {
+                            const checked = e.target.checked
+                            if (checked) {
+                              await requestDiarioNotificationPermission()
+                            }
+                            setDiarioPedidosItems((p) =>
+                              p.map((x) =>
+                                x.id === item.id
+                                  ? {
+                                      ...x,
+                                      ...applyDiarioLembretePatch(x, {
+                                        ativo: checked,
+                                        intervaloMinutos: x.lembreteIntervaloMinutos ?? 60,
+                                        reagendarAgora: checked,
+                                      }),
+                                      atualizadoEm: new Date().toISOString(),
+                                    }
+                                  : x
+                              )
+                            )
+                          }}
+                        />
+                        <span>{(safeT as any)?.diarioPedidosLembreteAtivar || 'Activar lembrete periódico'}</span>
+                      </label>
+                      {item.lembreteAtivo && item.status !== 'concluido' ? (
+                        <>
+                          <div className="ns-diario-lembrete__row">
+                            <span className="ns-diario-lembrete__label">
+                              {(safeT as any)?.diarioPedidosLembreteIntervalo || 'Repetir a cada'}
+                            </span>
+                            <DiarioLembreteIntervalPicker
+                              minutes={item.lembreteIntervaloMinutos ?? 60}
+                              onMinutesChange={(min) =>
+                                setDiarioPedidosItems((p) =>
+                                  p.map((x) =>
+                                    x.id === item.id
+                                      ? {
+                                          ...x,
+                                          ...applyDiarioLembretePatch(x, {
+                                            ativo: true,
+                                            intervaloMinutos: min,
+                                            reagendarAgora: true,
+                                          }),
+                                          atualizadoEm: new Date().toISOString(),
+                                        }
+                                      : x
+                                  )
+                                )
+                              }
+                              safeT={safeT as Record<string, string>}
+                              idPrefix={`ns-diario-lembrete-${item.id}`}
+                            />
+                          </div>
+                          <div className="ns-diario-lembrete__meta">
+                            <span className="ns-diario-lembrete__meta-label">
+                              {(safeT as any)?.diarioPedidosLembreteProximo || 'Próximo lembrete'}
+                            </span>
+                            <span className="ns-diario-lembrete__meta-value">{lembreteProximoFmt}</span>
+                            {item.lembreteUltimoEm ? (
+                              <>
+                                <span className="ns-diario-lembrete__meta-sep" aria-hidden>
+                                  ·
+                                </span>
+                                <span className="ns-diario-lembrete__meta-label">
+                                  {(safeT as any)?.diarioPedidosLembreteUltimo || 'Último lembrete'}
+                                </span>
+                                <span className="ns-diario-lembrete__meta-value">{lembreteUltimoFmt}</span>
+                              </>
+                            ) : null}
+                          </div>
+                          <button
+                            type="button"
+                            className="ns-diario-btn ns-diario-btn--ghost ns-diario-lembrete__reagendar"
+                            onClick={() =>
+                              setDiarioPedidosItems((p) =>
+                                p.map((x) =>
+                                  x.id === item.id
+                                    ? {
+                                        ...x,
+                                        ...applyDiarioLembretePatch(x, {
+                                          ativo: true,
+                                          intervaloMinutos: x.lembreteIntervaloMinutos ?? 60,
+                                          reagendarAgora: true,
+                                        }),
+                                        atualizadoEm: new Date().toISOString(),
+                                      }
+                                    : x
+                                )
+                              )
+                            }
+                          >
+                            {(safeT as any)?.diarioPedidosLembreteReagendar || 'Reagendar a partir de agora'}
+                          </button>
+                        </>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <div className="ns-diario-entry__meta">
+                    <span className="ns-diario-entry__meta-label">{(safeT as any)?.diarioPedidosMetaCriado || 'Registado'}</span>
+                    <span className="ns-diario-entry__meta-value">{criadoFmt}</span>
+                    {item.atualizadoEm ? (
+                      <>
+                        <span className="ns-diario-entry__meta-sep" aria-hidden>
+                          ·
+                        </span>
+                        <span className="ns-diario-entry__meta-label">
+                          {(safeT as any)?.diarioPedidosMetaAtualizado || 'Última alteração'}
+                        </span>
+                        <span className="ns-diario-entry__meta-value">{atualizadoFmt}</span>
+                      </>
+                    ) : null}
+                  </div>
+                  {!isEditing ? (
+                    <div className="ns-diario-entry__toolbar">
+                      {item.status === 'planeado' && (
+                        <button
+                          type="button"
+                          className="btn-primary ns-diario-btn ns-diario-btn--accent"
+                          onClick={() =>
+                            setDiarioPedidosItems((p) =>
+                              p.map((x) =>
+                                x.id === item.id ? { ...x, status: 'em_curso' as const, atualizadoEm: new Date().toISOString() } : x
+                              )
+                            )
+                          }
+                        >
+                          {(safeT as any)?.diarioPedidosBtnIniciar || 'Marcar em execução'}
+                        </button>
+                      )}
+                      {item.status === 'em_curso' && (
+                        <>
+                          <button
+                            type="button"
+                            className="btn-primary ns-diario-btn ns-diario-btn--accent"
+                          onClick={() =>
+                            setDiarioPedidosItems((p) =>
+                              p.map((x) =>
+                                x.id === item.id
+                                  ? {
+                                      ...x,
+                                      status: 'concluido' as const,
+                                      atualizadoEm: new Date().toISOString(),
+                                      ...clearDiarioLembreteOnConcluido(x),
+                                    }
+                                  : x
+                              )
+                            )
+                          }
+                          >
+                            {(safeT as any)?.diarioPedidosBtnConcluir || 'Marcar concluído'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-primary ns-diario-btn ns-diario-btn--ghost"
+                            onClick={() =>
+                              setDiarioPedidosItems((p) =>
+                                p.map((x) =>
+                                  x.id === item.id ? { ...x, status: 'planeado' as const, atualizadoEm: new Date().toISOString() } : x
+                                )
+                              )
+                            }
+                          >
+                            {(safeT as any)?.diarioPedidosBtnVoltarPlaneado || 'Voltar a planeado'}
+                          </button>
+                        </>
+                      )}
+                      {item.status === 'concluido' && (
+                        <button
+                          type="button"
+                          className="btn-primary ns-diario-btn ns-diario-btn--ghost"
+                          onClick={() =>
+                            setDiarioPedidosItems((p) =>
+                              p.map((x) =>
+                                x.id === item.id ? { ...x, status: 'em_curso' as const, atualizadoEm: new Date().toISOString() } : x
+                              )
+                            )
+                          }
+                        >
+                          {(safeT as any)?.diarioPedidosBtnReabrir || 'Reabrir'}
+                        </button>
+                      )}
+                    </div>
+                  ) : null}
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </section>
+      </div>
+      </div>
+    </div>
+    </div>
+  )
+
   // Função para renderizar conteúdo da aba
   const renderTabContent = (tab: Tab) => {
     switch (tab.type) {
+      case 'diario-pedidos-dia':
+        return renderDiarioPedidosPanel()
+
       case 'gestores':
         return (
           <div className="tab-content-wrapper tab-glass-root ns-ui-v2">
@@ -75045,1023 +76093,6 @@ A1;Peça exemplo;10`}
         </div>
       )}
 
-      {showDiarioPedidosModal && (
-        <div
-          className="modal-overlay ns-diario-overlay ns-diario-overlay--fullscreen"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="diario-pedidos-modal-title"
-          onClick={() => setShowDiarioPedidosModal(false)}
-        >
-          <div
-            className={`modal diario-pedidos-modal-shell ns-diario-modal ns-diario-modal--workspace${diarioPedidosModalTopoRetraido ? ' ns-diario-modal--topo-retraido' : ''}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <input
-              ref={diarioPedidoImgInputRef}
-              type="file"
-              accept="image/*"
-              className="ns-diario-file-input-hidden"
-              onChange={handleDiarioImagemSelecionada}
-              aria-hidden
-            />
-            <div className="ns-diario-modal__topbar">
-              <div className="ns-diario-modal__topbar-start">
-                <button
-                  type="button"
-                  className="ns-diario-btn ns-diario-btn--ghost ns-diario-modal__toggle-topo"
-                  onClick={() => {
-                    setDiarioPedidosModalTopoRetraido((v) => {
-                      const next = !v
-                      void saveData(DIARIO_PEDIDOS_MODAL_TOPO_RETRAIDO_KEY, next)
-                      return next
-                    })
-                  }}
-                  title={
-                    diarioPedidosModalTopoRetraido
-                      ? (safeT as any)?.diarioPedidosBtnExpandirTopo || 'Mostrar cabeçalho e resumo'
-                      : (safeT as any)?.diarioPedidosBtnRetrairTopo || 'Retrair cabeçalho (mais espaço para o quadro)'
-                  }
-                  aria-expanded={!diarioPedidosModalTopoRetraido}
-                  aria-controls="diario-pedidos-modal-collapse-region"
-                >
-                  {diarioPedidosModalTopoRetraido
-                    ? (safeT as any)?.diarioPedidosBtnExpandirTopo || 'Expandir'
-                    : (safeT as any)?.diarioPedidosBtnRetrairTopo || 'Retrair'}
-                </button>
-                {diarioPedidosModalTopoRetraido ? (
-                  <div className="ns-diario-topbar-resumo" aria-label={(safeT as any)?.diarioPedidosResumoAria || 'Resumo'}>
-                    <span className="ns-diario-topbar-resumo__chip ns-diario-topbar-resumo__chip--total">
-                      {diarioPedidosResumo.total} {(safeT as any)?.diarioPedidosResumoTotal || 'Total'}
-                    </span>
-                    <span className="ns-diario-topbar-resumo__chip ns-diario-topbar-resumo__chip--abertas">
-                      {diarioPedidosResumo.abertas} {(safeT as any)?.diarioPedidosResumoAbertas || 'Em aberto'}
-                    </span>
-                    <span className="ns-diario-topbar-resumo__chip ns-diario-topbar-resumo__chip--ok">
-                      {diarioPedidosResumo.resolvidas} {(safeT as any)?.diarioPedidosResumoResolvidas || 'Resolvidas'}
-                    </span>
-                  </div>
-                ) : null}
-              </div>
-              <button
-                type="button"
-                className="ns-diario-btn ns-diario-btn--ghost ns-diario-modal__sair"
-                onClick={() => setShowDiarioPedidosModal(false)}
-                title={(safeT as any)?.diarioPedidosBtnSair || 'Sair'}
-                aria-label={(safeT as any)?.diarioPedidosBtnSair || 'Sair'}
-              >
-                {(safeT as any)?.diarioPedidosBtnSair || 'Sair'}
-              </button>
-            </div>
-            <div id="diario-pedidos-modal-collapse-region" className="ns-diario-modal__collapse-region">
-              <header className="ns-diario-modal__hero">
-              <div className="ns-diario-modal__title-wrap">
-                <div className="ns-diario-modal__eyebrow">{(safeT as any)?.diarioPedidosTitle || 'DIÁRIO DE ANOTAÇÃO'}</div>
-                <h2 id="diario-pedidos-modal-title" className="ns-diario-modal__title">
-                  {(safeT as any)?.diarioPedidosModalTitulo || 'Diário de anotação'}
-                </h2>
-                <p className="ns-diario-modal__subtitle">
-                  {(safeT as any)?.diarioPedidosModalSub ||
-                    'Anote o que não pode esquecer. O botão na barra lateral mantém o código de cores: neutro, amarelo quando há algo em execução, verde quando todas as anotações estão concluídas.'}
-                </p>
-              </div>
-              <div className="ns-diario-modal__date-card" aria-live="polite">
-                <div className="ns-diario-modal__date-card-icon" aria-hidden>
-                  <IconCalendar size={22} />
-                </div>
-                <div className="ns-diario-modal__date-card-body">
-                  <div className="ns-diario-modal__date-label">{(safeT as any)?.diarioPedidosDataHoje || 'Data'}</div>
-                  <div className="ns-diario-modal__date-long">{diarioPedidosHeaderData.dataLonga}</div>
-                  <div className="ns-diario-modal__date-time">
-                    {(safeT as any)?.diarioPedidosHoraRef || 'Referência'}: {diarioPedidosHeaderData.hora}
-                  </div>
-                </div>
-              </div>
-              </header>
-
-              <div className="ns-diario-resumo" role="group" aria-label={(safeT as any)?.diarioPedidosResumoAria || 'Resumo das anotações'}>
-              <div className="ns-diario-resumo__card ns-diario-resumo__card--total">
-                <span className="ns-diario-resumo__value" aria-hidden>
-                  {diarioPedidosResumo.total}
-                </span>
-                <span className="ns-diario-resumo__label">{(safeT as any)?.diarioPedidosResumoTotal || 'Total'}</span>
-                <span className="ns-diario-resumo__hint">{(safeT as any)?.diarioPedidosResumoTotalHint || 'registadas'}</span>
-              </div>
-              <div className="ns-diario-resumo__card ns-diario-resumo__card--abertas">
-                <span className="ns-diario-resumo__value" aria-hidden>
-                  {diarioPedidosResumo.abertas}
-                </span>
-                <span className="ns-diario-resumo__label">{(safeT as any)?.diarioPedidosResumoAbertas || 'Em aberto'}</span>
-                <span className="ns-diario-resumo__hint">{(safeT as any)?.diarioPedidosResumoAbertasHint || 'planeadas ou em execução'}</span>
-              </div>
-              <div className="ns-diario-resumo__card ns-diario-resumo__card--resolvidas">
-                <span className="ns-diario-resumo__value" aria-hidden>
-                  {diarioPedidosResumo.resolvidas}
-                </span>
-                <span className="ns-diario-resumo__label">{(safeT as any)?.diarioPedidosResumoResolvidas || 'Resolvidas'}</span>
-                <span className="ns-diario-resumo__hint">{(safeT as any)?.diarioPedidosResumoResolvidasHint || 'concluídas'}</span>
-              </div>
-              </div>
-            </div>
-
-            <div className="ns-diario-modal__main-scroll">
-            <div className="ns-diario-workspace">
-            <section className="ns-diario-composer" aria-label={(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}>
-              <div className="ns-diario-composer__label">{(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}</div>
-              <p className="ns-diario-composer__format-hint">
-                {(safeT as any)?.diarioPedidosDicaPrimeiraLinha ||
-                  'Escolha o cliente (cadastro ou outro nome). Depois uma linha por tarefa; no quadro aparecem com marca à frente.'}
-              </p>
-              <div className="ns-diario-composer__cliente-row">
-                <label className="ns-diario-composer__sublabel" htmlFor="ns-diario-composer-cliente">
-                  {(safeT as any)?.diarioPedidosLabelCliente || 'Cliente'}
-                </label>
-                <ClienteAlfabetoPicker
-                  clientes={clientesOrdenadosAlfabeticamente}
-                  selectedId={diarioComposeClienteSel && diarioComposeClienteSel !== '__livre__' ? diarioComposeClienteSel : ''}
-                  language={selectedLanguage}
-                  labels={clientePickerLabels}
-                  listMaxHeight={240}
-                  isDevedor={isClienteMarcadoDevedor}
-                  headerActions={[
-                    {
-                      id: 'livre',
-                      label: (safeT as any)?.diarioPedidosClienteOutro || 'Outro (não está no cadastro)',
-                      active: diarioComposeClienteSel === '__livre__',
-                      onClick: () => {
-                        setDiarioComposeClienteSel('__livre__')
-                        setDiarioComposeClienteNomeLivre('')
-                      },
-                    },
-                  ]}
-                  onSelect={(c) => {
-                    setDiarioComposeClienteSel(c.id)
-                    setDiarioComposeClienteNomeLivre('')
-                  }}
-                  onClear={() => {
-                    setDiarioComposeClienteSel('')
-                    setDiarioComposeClienteNomeLivre('')
-                  }}
-                />
-                {diarioComposeClienteSel === '__livre__' ? (
-                  <input
-                    type="text"
-                    className="ns-diario-composer__cliente-livre"
-                    value={diarioComposeClienteNomeLivre}
-                    onChange={(e) => setDiarioComposeClienteNomeLivre(e.target.value)}
-                    placeholder={(safeT as any)?.diarioPedidosClienteNomeLivrePlaceholder || 'Nome do cliente ou empresa'}
-                    autoComplete="off"
-                  />
-                ) : null}
-              </div>
-              <p className="ns-diario-composer__format-hint ns-diario-composer__format-hint--secondary">
-                {(safeT as any)?.diarioPedidosDicaTarefasLinhas ||
-                  'Uma linha por tarefa; no quadro cada linha aparece com uma bolinha.'}
-              </p>
-              <textarea
-                className="ns-diario-composer__input"
-                value={diarioPedidoDraft}
-                onChange={(e) => setDiarioPedidoDraft(e.target.value)}
-                rows={6}
-                placeholder={
-                  (safeT as any)?.diarioPedidosPlaceholderTarefas ||
-                  (safeT as any)?.diarioPedidosPlaceholder ||
-                  'Ex.: confirmar visita\nenviar orçamento'
-                }
-              />
-              {diarioPedidoComposerAnexos.length > 0 ? (
-                <ul
-                  className="ns-diario-anexos"
-                  aria-label={(safeT as any)?.diarioPedidosAnexosListaAria || 'Imagens anexadas'}
-                >
-                  {diarioPedidoComposerAnexos.map((imx) => (
-                    <li key={imx.id} className="ns-diario-anexo">
-                      <img src={imx.dataUrl} alt="" className="ns-diario-anexo__thumb" />
-                      <button
-                        type="button"
-                        className="ns-diario-anexo__remove"
-                        onClick={() => setDiarioPedidoComposerAnexos((p) => p.filter((x) => x.id !== imx.id))}
-                        aria-label={(safeT as any)?.diarioPedidosAnexoRemover || 'Remover imagem'}
-                      >
-                        ×
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-              <div className="ns-diario-lembrete">
-                <label className="ns-diario-lembrete__toggle">
-                  <input
-                    type="checkbox"
-                    checked={diarioComposeLembreteAtivo}
-                    onChange={async (e) => {
-                      const checked = e.target.checked
-                      if (checked) {
-                        await requestDiarioNotificationPermission()
-                      }
-                      setDiarioComposeLembreteAtivo(checked)
-                    }}
-                  />
-                  <span>{(safeT as any)?.diarioPedidosLembreteAtivar || 'Activar lembrete periódico'}</span>
-                </label>
-                {diarioComposeLembreteAtivo ? (
-                  <div className="ns-diario-lembrete__row">
-                    <span className="ns-diario-lembrete__label">
-                      {(safeT as any)?.diarioPedidosLembreteIntervalo || 'Repetir a cada'}
-                    </span>
-                    <DiarioLembreteIntervalPicker
-                      minutes={diarioComposeLembreteMinutos}
-                      onMinutesChange={setDiarioComposeLembreteMinutos}
-                      safeT={safeT as Record<string, string>}
-                      idPrefix="ns-diario-compose-lembrete"
-                    />
-                  </div>
-                ) : null}
-                <p className="ns-diario-lembrete__hint">
-                  {(safeT as any)?.diarioPedidosLembreteHint ||
-                    'Enquanto a anotação não estiver concluída, o sistema recorda no intervalo escolhido.'}
-                </p>
-              </div>
-              <div className="ns-diario-composer__actions">
-                <button
-                  type="button"
-                  className="btn-primary ns-diario-btn ns-diario-btn--ghost"
-                  disabled={diarioPedidoImgBusy || diarioPedidoComposerAnexos.length >= DIARIO_PEDIDO_ANEXOS_MAX}
-                  onClick={() => handleDiarioEscolherImagem('composer')}
-                >
-                  {diarioPedidoImgBusy
-                    ? (safeT as any)?.diarioPedidosAnexoProcessando || 'A processar…'
-                    : (safeT as any)?.diarioPedidosAnexoAdicionar || 'Anexar imagem'}
-                </button>
-                <button
-                  type="button"
-                  className="btn-primary ns-diario-btn ns-diario-btn--primary"
-                  onClick={() => {
-                    const tarefasBloco = diarioPedidoDraft.trim()
-                    if (!tarefasBloco && diarioPedidoComposerAnexos.length === 0) return
-                    let nomeCliente = ''
-                    let clienteCadastroId: string | undefined
-                    if (diarioComposeClienteSel && diarioComposeClienteSel !== '__livre__') {
-                      const cli = clientes.find((c) => c.id === diarioComposeClienteSel)
-                      if (!cli) {
-                        window.alert(
-                          (safeT as any)?.diarioPedidosErroCliente ||
-                            'Escolha um cliente do cadastro ou indique o nome em «Outro».'
-                        )
-                        return
-                      }
-                      nomeCliente = (cli.nomeEmpresa || '').trim() || cli.id
-                      clienteCadastroId = cli.id
-                    } else if (diarioComposeClienteSel === '__livre__') {
-                      nomeCliente = diarioComposeClienteNomeLivre.trim()
-                      if (!nomeCliente) {
-                        window.alert(
-                          (safeT as any)?.diarioPedidosErroCliente ||
-                            'Escolha um cliente do cadastro ou indique o nome em «Outro».'
-                        )
-                        return
-                      }
-                    } else {
-                      window.alert(
-                        (safeT as any)?.diarioPedidosErroCliente ||
-                          'Escolha um cliente do cadastro ou indique o nome em «Outro».'
-                      )
-                      return
-                    }
-                    const texto =
-                      tarefasBloco.length > 0 ? `${nomeCliente}\n${tarefasBloco}` : `${nomeCliente}\n`
-                    const id = `dp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-                    const criadoEm = new Date().toISOString()
-                    const anexos =
-                      diarioPedidoComposerAnexos.length > 0
-                        ? diarioPedidoComposerAnexos.map((a) => ({ ...a }))
-                        : undefined
-                    const lembreteFields = diarioComposeLembreteAtivo
-                      ? applyDiarioLembretePatch(
-                          {},
-                          {
-                            ativo: true,
-                            intervaloMinutos: diarioComposeLembreteMinutos,
-                            reagendarAgora: true,
-                          }
-                        )
-                      : { lembreteAtivo: false as const }
-                    setDiarioPedidoEditandoId(null)
-                    setDiarioPedidoEditDraft('')
-                    setDiarioPedidoEditAnexos([])
-                    setDiarioPedidosItems((p) => [
-                      ...p,
-                      {
-                        id,
-                        texto,
-                        status: 'planeado',
-                        criadoEm,
-                        anexos,
-                        ...(clienteCadastroId ? { clienteCadastroId } : {}),
-                        ...lembreteFields,
-                      },
-                    ])
-                    setDiarioPedidoDraft('')
-                    setDiarioPedidoComposerAnexos([])
-                    setDiarioComposeClienteSel('')
-                    setDiarioComposeClienteNomeLivre('')
-                    setDiarioComposeLembreteAtivo(false)
-                    setDiarioComposeLembreteMinutos(60)
-                  }}
-                >
-                  {(safeT as any)?.diarioPedidosAdicionar || 'Registar anotação'}
-                </button>
-                <button
-                  type="button"
-                  className="btn-primary ns-diario-btn ns-diario-btn--ghost"
-                  onClick={() => setDiarioPedidosItems((p) => p.filter((i) => i.status !== 'concluido'))}
-                >
-                  {(safeT as any)?.diarioPedidosLimparConcluidos || 'Arquivar concluídos'}
-                </button>
-              </div>
-              <p className="ns-diario-composer__hint">
-                {(safeT as any)?.diarioPedidosAnexosHint ||
-                  `Até ${DIARIO_PEDIDO_ANEXOS_MAX} imagens por anotação (comprimidas automaticamente). Pode registar só texto, só imagens ou ambos.`}
-              </p>
-            </section>
-
-            <section className="ns-diario-list-wrap" aria-label={(safeT as any)?.diarioPedidosSecLista || 'Quadro do dia'}>
-              <div className="ns-diario-list__head">
-                <span className="ns-diario-list__label">{(safeT as any)?.diarioPedidosSecLista || 'Quadro do dia'}</span>
-                <span className="ns-diario-list__count">
-                  {diarioPedidosBusca.trim().length >= 2
-                    ? `${diarioPedidosOrdenadosFiltrados.length}/${diarioPedidosOrdenados.length}`
-                    : diarioPedidosOrdenados.length}{' '}
-                  {diarioPedidosOrdenados.length === 1
-                    ? (safeT as any)?.diarioPedidosCountOne || 'anotação'
-                    : (safeT as any)?.diarioPedidosCountMany || 'anotações'}
-                </span>
-              </div>
-              <div className="ns-diario-list__search">
-                <label className="ns-diario-list__search-label" htmlFor="ns-diario-busca-input">
-                  {(safeT as any)?.diarioPedidosBuscaLabel || 'Pesquisar no quadro'}
-                </label>
-                <input
-                  id="ns-diario-busca-input"
-                  type="search"
-                  className="ns-diario-list__search-input"
-                  value={diarioPedidosBusca}
-                  onChange={(e) => setDiarioPedidosBusca(e.target.value)}
-                  placeholder={(safeT as any)?.diarioPedidosBuscaPlaceholder || 'Filtrar por texto (mín. 2 caracteres)…'}
-                  autoComplete="off"
-                />
-              </div>
-              {diarioPedidosOrdenados.length === 0 ? (
-                <div className="ns-diario-empty">
-                  <p className="ns-diario-empty__text">
-                    {(safeT as any)?.diarioPedidosVazio ||
-                      'Nenhuma anotação no quadro. Utilize o campo acima para registar a primeira.'}
-                  </p>
-                </div>
-              ) : diarioPedidosOrdenadosFiltrados.length === 0 ? (
-                <div className="ns-diario-empty">
-                  <p className="ns-diario-empty__text">
-                    {(safeT as any)?.diarioPedidosBuscaVazio ||
-                      'Nenhuma anotação corresponde à pesquisa. Limpe o filtro ou altere o texto.'}
-                  </p>
-                </div>
-              ) : (
-                <ul className="ns-diario-list">
-                  {diarioPedidosOrdenadosFiltrados.map((item) => {
-                    const statusLabel =
-                      item.status === 'em_curso'
-                        ? (safeT as any)?.diarioPedidosStatusEmCurso || 'Em execução'
-                        : item.status === 'concluido'
-                          ? (safeT as any)?.diarioPedidosStatusConcluido || 'Concluído'
-                          : (safeT as any)?.diarioPedidosStatusPlaneado || 'Planeado'
-                    let criadoFmt = '—'
-                    try {
-                      criadoFmt = new Date(item.criadoEm).toLocaleString(diarioPedidosLocale, {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })
-                    } catch {
-                      criadoFmt = '—'
-                    }
-                    const cardTone =
-                      item.status === 'em_curso'
-                        ? 'diario-pedido-card diario-pedido-card--em-curso'
-                        : item.status === 'concluido'
-                          ? 'diario-pedido-card diario-pedido-card--concluido'
-                          : 'diario-pedido-card diario-pedido-card--planeado'
-                    const isEditing = diarioPedidoEditandoId === item.id
-                    let atualizadoFmt = '—'
-                    if (item.atualizadoEm) {
-                      try {
-                        atualizadoFmt = new Date(item.atualizadoEm).toLocaleString(diarioPedidosLocale, {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      } catch {
-                        atualizadoFmt = '—'
-                      }
-                    }
-                    const { titulo: diarioTituloLinha, corpo: diarioCorpoTexto } = diarioPedidoTituloECorpo(item.texto)
-                    const diarioNAnexos = item.anexos?.length ?? 0
-                    const diarioTituloLista =
-                      diarioTituloLinha ||
-                      (diarioNAnexos > 0
-                        ? (safeT as any)?.diarioPedidosTituloSoImagem || 'Anotação com imagens'
-                        : '')
-                    const diarioLinhasTarefa = diarioPedidoLinhasTarefas(diarioCorpoTexto)
-                    /** Na lista colapsada: só o nome do cliente (ou rótulo mínimo se só imagens; notas antigas: 1.ª tarefa). */
-                    const diarioNomeListaSobrio =
-                      diarioTituloLinha.trim() ||
-                      (diarioNAnexos > 0 ? (safeT as any)?.diarioPedidosTituloSoImagem || '…' : '') ||
-                      (diarioLinhasTarefa[0] ? diarioLinhasTarefa[0] : '')
-                    const diarioClienteFicha =
-                      item.clienteCadastroId != null && item.clienteCadastroId !== ''
-                        ? clientes.find((c) => c.id === item.clienteCadastroId)
-                        : undefined
-                    const diarioPrecisaExpandir =
-                      diarioTituloLinha.trim().length > 0 ||
-                      diarioCorpoTexto.length > 0 ||
-                      diarioNAnexos > 0 ||
-                      (item.clienteCadastroId != null && item.clienteCadastroId !== '')
-                    const diarioDetalheAberto = diarioPedidoExpandidoId === item.id
-                    let lembreteProximoFmt = '—'
-                    if (item.lembreteAtivo && item.lembreteProximoEm) {
-                      try {
-                        lembreteProximoFmt = new Date(item.lembreteProximoEm).toLocaleString(diarioPedidosLocale, {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      } catch {
-                        lembreteProximoFmt = '—'
-                      }
-                    }
-                    let lembreteUltimoFmt = '—'
-                    if (item.lembreteUltimoEm) {
-                      try {
-                        lembreteUltimoFmt = new Date(item.lembreteUltimoEm).toLocaleString(diarioPedidosLocale, {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      } catch {
-                        lembreteUltimoFmt = '—'
-                      }
-                    }
-                    return (
-                      <li key={item.id} className={`ns-diario-entry ${cardTone}`}>
-                        <div className="ns-diario-entry__head">
-                          <div className="ns-diario-entry__head-main">
-                            <span
-                              className={
-                                item.status === 'em_curso'
-                                  ? 'ns-diario-badge ns-diario-badge--progress'
-                                  : item.status === 'concluido'
-                                    ? 'ns-diario-badge ns-diario-badge--done'
-                                    : 'ns-diario-badge ns-diario-badge--todo'
-                              }
-                            >
-                              {statusLabel}
-                            </span>
-                            {item.lembreteAtivo && item.status !== 'concluido' ? (
-                              <span
-                                className="ns-diario-lembrete-badge"
-                                title={
-                                  (safeT as any)?.diarioPedidosLembreteBadge ||
-                                  `Lembrete: ${formatDiarioLembreteIntervalo(item.lembreteIntervaloMinutos ?? 60, safeT as Record<string, string>)}`
-                                }
-                              >
-                                🔔{' '}
-                                {formatDiarioLembreteIntervalo(
-                                  item.lembreteIntervaloMinutos ?? 60,
-                                  safeT as Record<string, string>
-                                )}
-                              </span>
-                            ) : null}
-                            {diarioPrecisaExpandir && diarioNomeListaSobrio ? (
-                              <button
-                                type="button"
-                                className="ns-diario-entry__titulo-btn ns-diario-entry__titulo-btn--nome-so"
-                                onClick={() =>
-                                  setDiarioPedidoExpandidoId((cur) => (cur === item.id ? null : item.id))
-                                }
-                                aria-expanded={diarioDetalheAberto}
-                                aria-label={`${diarioNomeListaSobrio}. ${
-                                  diarioDetalheAberto
-                                    ? (safeT as any)?.diarioPedidosOcultarDetalhe || 'Ocultar detalhe'
-                                    : (safeT as any)?.diarioPedidosVerDetalhe || 'Ver informação completa'
-                                }`}
-                                title={
-                                  diarioDetalheAberto
-                                    ? (safeT as any)?.diarioPedidosOcultarDetalhe || 'Ocultar detalhe'
-                                    : (safeT as any)?.diarioPedidosVerDetalhe || 'Ver informação completa'
-                                }
-                              >
-                                <span className="ns-diario-entry__titulo">{diarioNomeListaSobrio}</span>
-                              </button>
-                            ) : diarioNomeListaSobrio ? (
-                              <span className="ns-diario-entry__titulo ns-diario-entry__titulo--so">{diarioNomeListaSobrio}</span>
-                            ) : null}
-                          </div>
-                          <div className="ns-diario-entry__head-actions">
-                            {!isEditing ? (
-                              <button
-                                type="button"
-                                className="ns-diario-btn ns-diario-btn--ghost"
-                                onClick={() => {
-                                  setDiarioPedidoExpandidoId(item.id)
-                                  setDiarioPedidoEditandoId(item.id)
-                                  setDiarioPedidoEditDraft(item.texto)
-                                  setDiarioPedidoEditAnexos((item.anexos || []).map((a) => ({ ...a })))
-                                }}
-                                title={(safeT as any)?.diarioPedidosBtnEditarTexto || 'Editar texto'}
-                              >
-                                {(safeT as any)?.diarioPedidosBtnEditarTexto || 'Editar'}
-                              </button>
-                            ) : null}
-                            <button
-                              type="button"
-                              className="ns-diario-btn ns-diario-btn--danger-ghost"
-                              onClick={() => {
-                                if (diarioPedidoEditandoId === item.id) {
-                                  setDiarioPedidoEditandoId(null)
-                                  setDiarioPedidoEditDraft('')
-                                }
-                                setDiarioPedidoExpandidoId((cur) => (cur === item.id ? null : cur))
-                                setDiarioPedidosItems((p) => p.filter((x) => x.id !== item.id))
-                              }}
-                              title={safeT?.delete || 'Eliminar'}
-                            >
-                              {(safeT as any)?.diarioPedidosBtnRemover || 'Eliminar'}
-                            </button>
-                          </div>
-                        </div>
-                        {isEditing ? (
-                          <>
-                            <textarea
-                              className="ns-diario-entry__input"
-                              value={diarioPedidoEditDraft}
-                              onChange={(e) => setDiarioPedidoEditDraft(e.target.value)}
-                              rows={5}
-                              aria-label={(safeT as any)?.diarioPedidosEditarAria || 'Editar anotação'}
-                            />
-                            {diarioPedidoEditAnexos.length > 0 ? (
-                              <ul
-                                className="ns-diario-anexos ns-diario-anexos--edit"
-                                aria-label={(safeT as any)?.diarioPedidosAnexosListaAria || 'Imagens anexadas'}
-                              >
-                                {diarioPedidoEditAnexos.map((imx) => (
-                                  <li key={imx.id} className="ns-diario-anexo">
-                                    <img src={imx.dataUrl} alt="" className="ns-diario-anexo__thumb" />
-                                    <button
-                                      type="button"
-                                      className="ns-diario-anexo__remove"
-                                      onClick={() => setDiarioPedidoEditAnexos((p) => p.filter((x) => x.id !== imx.id))}
-                                      aria-label={(safeT as any)?.diarioPedidosAnexoRemover || 'Remover imagem'}
-                                    >
-                                      ×
-                                    </button>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : null}
-                            <div className="ns-diario-entry__edit-actions">
-                              <button
-                                type="button"
-                                className="btn-primary ns-diario-btn ns-diario-btn--ghost"
-                                disabled={
-                                  diarioPedidoImgBusy || diarioPedidoEditAnexos.length >= DIARIO_PEDIDO_ANEXOS_MAX
-                                }
-                                onClick={() => handleDiarioEscolherImagem('edit')}
-                              >
-                                {diarioPedidoImgBusy
-                                  ? (safeT as any)?.diarioPedidosAnexoProcessando || 'A processar…'
-                                  : (safeT as any)?.diarioPedidosAnexoAdicionar || 'Anexar imagem'}
-                              </button>
-                              <button
-                                type="button"
-                                className="btn-primary ns-diario-btn ns-diario-btn--primary"
-                                onClick={() => {
-                                  const texto = diarioPedidoEditDraft.trim()
-                                  if (!texto && diarioPedidoEditAnexos.length === 0) {
-                                    window.alert(
-                                      (safeT as any)?.diarioPedidosTextoVazioEdit ||
-                                        'Escreva texto ou anexe pelo menos uma imagem antes de guardar.'
-                                    )
-                                    return
-                                  }
-                                  const { titulo: titEdit } = diarioPedidoTituloECorpo(texto)
-                                  const titNorm = titEdit.trim().toLowerCase()
-                                  const matchedCli =
-                                    titNorm.length > 0
-                                      ? clientes.find((c) => (c.nomeEmpresa || '').trim().toLowerCase() === titNorm)
-                                      : undefined
-                                  const clienteCadastroIdNext = matchedCli?.id
-                                  const anexos =
-                                    diarioPedidoEditAnexos.length > 0
-                                      ? diarioPedidoEditAnexos.map((a) => ({ ...a }))
-                                      : undefined
-                                  setDiarioPedidosItems((p) =>
-                                    p.map((x) =>
-                                      x.id === item.id
-                                        ? {
-                                            ...x,
-                                            texto,
-                                            anexos,
-                                            atualizadoEm: new Date().toISOString(),
-                                            ...(clienteCadastroIdNext
-                                              ? { clienteCadastroId: clienteCadastroIdNext }
-                                              : { clienteCadastroId: undefined }),
-                                          }
-                                        : x
-                                    )
-                                  )
-                                  setDiarioPedidoEditandoId(null)
-                                  setDiarioPedidoEditDraft('')
-                                  setDiarioPedidoEditAnexos([])
-                                }}
-                              >
-                                {(safeT as any)?.diarioPedidosBtnGuardarTexto || 'Guardar texto'}
-                              </button>
-                              <button
-                                type="button"
-                                className="btn-primary ns-diario-btn ns-diario-btn--ghost"
-                                onClick={() => {
-                                  setDiarioPedidoEditandoId(null)
-                                  setDiarioPedidoEditDraft('')
-                                  setDiarioPedidoEditAnexos([])
-                                }}
-                              >
-                                {(safeT as any)?.diarioPedidosBtnCancelarEdicao || 'Cancelar'}
-                              </button>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            {diarioPrecisaExpandir && !diarioDetalheAberto ? null : (
-                              <>
-                                {item.clienteCadastroId ? (
-                                  diarioClienteFicha ? (
-                                    <div className="ns-diario-entry__ficha">
-                                      <div className="ns-diario-entry__ficha-title">
-                                        {(safeT as any)?.diarioPedidosSecFichaCliente ||
-                                          'Dados para concluir o serviço'}
-                                      </div>
-                                      <dl className="ns-diario-entry__ficha-dl">
-                                        {(diarioClienteFicha.nomeEmpresa || '').trim() ? (
-                                          <>
-                                            <dt className="ns-diario-entry__ficha-dt">
-                                              {(safeT as any)?.diarioPedidosFichaEmpresa || 'Empresa'}
-                                            </dt>
-                                            <dd className="ns-diario-entry__ficha-dd">{diarioClienteFicha.nomeEmpresa}</dd>
-                                          </>
-                                        ) : null}
-                                        {(diarioClienteFicha.morada || '').trim() ||
-                                        (diarioClienteFicha.codigoPostal || '').trim() ||
-                                        (diarioClienteFicha.localidade || '').trim() ? (
-                                          <>
-                                            <dt className="ns-diario-entry__ficha-dt">
-                                              {(safeT as any)?.diarioPedidosFichaMorada || 'Morada'}
-                                            </dt>
-                                            <dd className="ns-diario-entry__ficha-dd">
-                                              {[
-                                                diarioClienteFicha.morada,
-                                                [diarioClienteFicha.codigoPostal, diarioClienteFicha.localidade]
-                                                  .filter(Boolean)
-                                                  .join(' ')
-                                                  .trim(),
-                                                diarioClienteFicha.conselho,
-                                                diarioClienteFicha.pais,
-                                              ]
-                                                .filter((x) => String(x || '').trim())
-                                                .join(' · ')}
-                                            </dd>
-                                          </>
-                                        ) : null}
-                                        {(diarioClienteFicha.telefones || '').trim() ? (
-                                          <>
-                                            <dt className="ns-diario-entry__ficha-dt">
-                                              {(safeT as any)?.diarioPedidosFichaTelefones || 'Telefones'}
-                                            </dt>
-                                            <dd className="ns-diario-entry__ficha-dd">{diarioClienteFicha.telefones}</dd>
-                                          </>
-                                        ) : null}
-                                        {(diarioClienteFicha.email || '').trim() ? (
-                                          <>
-                                            <dt className="ns-diario-entry__ficha-dt">
-                                              {(safeT as any)?.diarioPedidosFichaEmail || 'E-mail'}
-                                            </dt>
-                                            <dd className="ns-diario-entry__ficha-dd">{diarioClienteFicha.email}</dd>
-                                          </>
-                                        ) : null}
-                                        {(diarioClienteFicha.contato || '').trim() ? (
-                                          <>
-                                            <dt className="ns-diario-entry__ficha-dt">
-                                              {(safeT as any)?.diarioPedidosFichaContato || 'Contacto'}
-                                            </dt>
-                                            <dd className="ns-diario-entry__ficha-dd">{diarioClienteFicha.contato}</dd>
-                                          </>
-                                        ) : null}
-                                        {(diarioClienteFicha.numeroContribuicaoFiscal || '').trim() ? (
-                                          <>
-                                            <dt className="ns-diario-entry__ficha-dt">
-                                              {(safeT as any)?.diarioPedidosFichaNif || 'NIF'}
-                                            </dt>
-                                            <dd className="ns-diario-entry__ficha-dd">
-                                              {diarioClienteFicha.numeroContribuicaoFiscal}
-                                            </dd>
-                                          </>
-                                        ) : null}
-                                      </dl>
-                                    </div>
-                                  ) : (
-                                    <div className="ns-diario-entry__ficha ns-diario-entry__ficha--aviso">
-                                      {(safeT as any)?.diarioPedidosClienteCadastroRemovido ||
-                                        'Este cliente já não está no cadastro. Use as tarefas abaixo e o histórico local se precisar.'}
-                                    </div>
-                                  )
-                                ) : diarioTituloLinha.trim() ? (
-                                  <div className="ns-diario-entry__ficha ns-diario-entry__ficha--aviso">
-                                    {(safeT as any)?.diarioPedidosClienteNaoCadastro ||
-                                      'Cliente não cadastrado — use as tarefas em baixo; pode criar a ficha em Cadastro de clientes se precisar.'}
-                                  </div>
-                                ) : null}
-                                {diarioLinhasTarefa.length > 0 ? (
-                                  <>
-                                    <div className="ns-diario-entry__ficha-title ns-diario-entry__ficha-title--tasks">
-                                      {(safeT as any)?.diarioPedidosSecTarefas || 'O que fazer'}
-                                    </div>
-                                    <ul className="ns-diario-entry__tasks">
-                                      {diarioLinhasTarefa.map((ln, idx) => (
-                                        <li key={`${item.id}-t-${idx}`}>{ln}</li>
-                                      ))}
-                                    </ul>
-                                  </>
-                                ) : diarioCorpoTexto.trim() ? (
-                                  <p className="ns-diario-entry__text">{diarioCorpoTexto}</p>
-                                ) : null}
-                              </>
-                            )}
-                            {diarioPrecisaExpandir && !diarioDetalheAberto
-                              ? null
-                              : item.anexos?.length
-                                ? (
-                                    <ul
-                                      className="ns-diario-anexos ns-diario-anexos--readonly"
-                                      aria-label={(safeT as any)?.diarioPedidosAnexosListaAria || 'Imagens anexadas'}
-                                    >
-                                      {item.anexos.map((imx) => (
-                                        <li key={imx.id} className="ns-diario-anexo">
-                                          <a
-                                            href={imx.dataUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="ns-diario-anexo__link"
-                                            title={(safeT as any)?.diarioPedidosAnexoAbrir || 'Abrir imagem'}
-                                          >
-                                            <img src={imx.dataUrl} alt={imx.nome} className="ns-diario-anexo__thumb" />
-                                          </a>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  )
-                                : null}
-                            {!item.texto.trim() && !item.anexos?.length ? (
-                              <p className="ns-diario-entry__text ns-diario-entry__text--muted">—</p>
-                            ) : diarioPrecisaExpandir && !diarioDetalheAberto ? (
-                              <p className="ns-diario-entry__peek-hint">
-                                {(safeT as any)?.diarioPedidosDicaListaRecolhida ||
-                                  'Toque no título acima para ver o que falta fazer e as imagens.'}
-                              </p>
-                            ) : null}
-                          </>
-                        )}
-                        {!isEditing ? (
-                          <div className="ns-diario-lembrete ns-diario-lembrete--entry">
-                            <div className="ns-diario-lembrete__head">
-                              <span className="ns-diario-lembrete__title">
-                                {(safeT as any)?.diarioPedidosLembreteTitulo || 'Lembrete'}
-                              </span>
-                            </div>
-                            <label className="ns-diario-lembrete__toggle">
-                              <input
-                                type="checkbox"
-                                checked={Boolean(item.lembreteAtivo && item.status !== 'concluido')}
-                                disabled={item.status === 'concluido'}
-                                onChange={async (e) => {
-                                  const checked = e.target.checked
-                                  if (checked) {
-                                    await requestDiarioNotificationPermission()
-                                  }
-                                  setDiarioPedidosItems((p) =>
-                                    p.map((x) =>
-                                      x.id === item.id
-                                        ? {
-                                            ...x,
-                                            ...applyDiarioLembretePatch(x, {
-                                              ativo: checked,
-                                              intervaloMinutos: x.lembreteIntervaloMinutos ?? 60,
-                                              reagendarAgora: checked,
-                                            }),
-                                            atualizadoEm: new Date().toISOString(),
-                                          }
-                                        : x
-                                    )
-                                  )
-                                }}
-                              />
-                              <span>{(safeT as any)?.diarioPedidosLembreteAtivar || 'Activar lembrete periódico'}</span>
-                            </label>
-                            {item.lembreteAtivo && item.status !== 'concluido' ? (
-                              <>
-                                <div className="ns-diario-lembrete__row">
-                                  <span className="ns-diario-lembrete__label">
-                                    {(safeT as any)?.diarioPedidosLembreteIntervalo || 'Repetir a cada'}
-                                  </span>
-                                  <DiarioLembreteIntervalPicker
-                                    minutes={item.lembreteIntervaloMinutos ?? 60}
-                                    onMinutesChange={(min) =>
-                                      setDiarioPedidosItems((p) =>
-                                        p.map((x) =>
-                                          x.id === item.id
-                                            ? {
-                                                ...x,
-                                                ...applyDiarioLembretePatch(x, {
-                                                  ativo: true,
-                                                  intervaloMinutos: min,
-                                                  reagendarAgora: true,
-                                                }),
-                                                atualizadoEm: new Date().toISOString(),
-                                              }
-                                            : x
-                                        )
-                                      )
-                                    }
-                                    safeT={safeT as Record<string, string>}
-                                    idPrefix={`ns-diario-lembrete-${item.id}`}
-                                  />
-                                </div>
-                                <div className="ns-diario-lembrete__meta">
-                                  <span className="ns-diario-lembrete__meta-label">
-                                    {(safeT as any)?.diarioPedidosLembreteProximo || 'Próximo lembrete'}
-                                  </span>
-                                  <span className="ns-diario-lembrete__meta-value">{lembreteProximoFmt}</span>
-                                  {item.lembreteUltimoEm ? (
-                                    <>
-                                      <span className="ns-diario-lembrete__meta-sep" aria-hidden>
-                                        ·
-                                      </span>
-                                      <span className="ns-diario-lembrete__meta-label">
-                                        {(safeT as any)?.diarioPedidosLembreteUltimo || 'Último lembrete'}
-                                      </span>
-                                      <span className="ns-diario-lembrete__meta-value">{lembreteUltimoFmt}</span>
-                                    </>
-                                  ) : null}
-                                </div>
-                                <button
-                                  type="button"
-                                  className="ns-diario-btn ns-diario-btn--ghost ns-diario-lembrete__reagendar"
-                                  onClick={() =>
-                                    setDiarioPedidosItems((p) =>
-                                      p.map((x) =>
-                                        x.id === item.id
-                                          ? {
-                                              ...x,
-                                              ...applyDiarioLembretePatch(x, {
-                                                ativo: true,
-                                                intervaloMinutos: x.lembreteIntervaloMinutos ?? 60,
-                                                reagendarAgora: true,
-                                              }),
-                                              atualizadoEm: new Date().toISOString(),
-                                            }
-                                          : x
-                                      )
-                                    )
-                                  }
-                                >
-                                  {(safeT as any)?.diarioPedidosLembreteReagendar || 'Reagendar a partir de agora'}
-                                </button>
-                              </>
-                            ) : null}
-                          </div>
-                        ) : null}
-                        <div className="ns-diario-entry__meta">
-                          <span className="ns-diario-entry__meta-label">{(safeT as any)?.diarioPedidosMetaCriado || 'Registado'}</span>
-                          <span className="ns-diario-entry__meta-value">{criadoFmt}</span>
-                          {item.atualizadoEm ? (
-                            <>
-                              <span className="ns-diario-entry__meta-sep" aria-hidden>
-                                ·
-                              </span>
-                              <span className="ns-diario-entry__meta-label">
-                                {(safeT as any)?.diarioPedidosMetaAtualizado || 'Última alteração'}
-                              </span>
-                              <span className="ns-diario-entry__meta-value">{atualizadoFmt}</span>
-                            </>
-                          ) : null}
-                        </div>
-                        {!isEditing ? (
-                          <div className="ns-diario-entry__toolbar">
-                            {item.status === 'planeado' && (
-                              <button
-                                type="button"
-                                className="btn-primary ns-diario-btn ns-diario-btn--accent"
-                                onClick={() =>
-                                  setDiarioPedidosItems((p) =>
-                                    p.map((x) =>
-                                      x.id === item.id ? { ...x, status: 'em_curso' as const, atualizadoEm: new Date().toISOString() } : x
-                                    )
-                                  )
-                                }
-                              >
-                                {(safeT as any)?.diarioPedidosBtnIniciar || 'Marcar em execução'}
-                              </button>
-                            )}
-                            {item.status === 'em_curso' && (
-                              <>
-                                <button
-                                  type="button"
-                                  className="btn-primary ns-diario-btn ns-diario-btn--accent"
-                                onClick={() =>
-                                  setDiarioPedidosItems((p) =>
-                                    p.map((x) =>
-                                      x.id === item.id
-                                        ? {
-                                            ...x,
-                                            status: 'concluido' as const,
-                                            atualizadoEm: new Date().toISOString(),
-                                            ...clearDiarioLembreteOnConcluido(x),
-                                          }
-                                        : x
-                                    )
-                                  )
-                                }
-                                >
-                                  {(safeT as any)?.diarioPedidosBtnConcluir || 'Marcar concluído'}
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn-primary ns-diario-btn ns-diario-btn--ghost"
-                                  onClick={() =>
-                                    setDiarioPedidosItems((p) =>
-                                      p.map((x) =>
-                                        x.id === item.id ? { ...x, status: 'planeado' as const, atualizadoEm: new Date().toISOString() } : x
-                                      )
-                                    )
-                                  }
-                                >
-                                  {(safeT as any)?.diarioPedidosBtnVoltarPlaneado || 'Voltar a planeado'}
-                                </button>
-                              </>
-                            )}
-                            {item.status === 'concluido' && (
-                              <button
-                                type="button"
-                                className="btn-primary ns-diario-btn ns-diario-btn--ghost"
-                                onClick={() =>
-                                  setDiarioPedidosItems((p) =>
-                                    p.map((x) =>
-                                      x.id === item.id ? { ...x, status: 'em_curso' as const, atualizadoEm: new Date().toISOString() } : x
-                                    )
-                                  )
-                                }
-                              >
-                                {(safeT as any)?.diarioPedidosBtnReabrir || 'Reabrir'}
-                              </button>
-                            )}
-                          </div>
-                        ) : null}
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-            </section>
-            </div>
-            </div>
-
-            <footer className="ns-diario-modal__footer">
-              <button
-                type="button"
-                className="btn-primary ns-diario-btn ns-diario-btn--primary"
-                onClick={() => setShowDiarioPedidosModal(false)}
-              >
-                {(safeT as any)?.diarioPedidosBtnSair || safeT?.close || 'Sair'}
-              </button>
-            </footer>
-          </div>
-        </div>
-      )}
 
       {diarioLembretePulseActive ? (
         <div className="ns-diario-lembrete-pulse" aria-hidden />
@@ -76084,7 +76115,7 @@ A1;Peça exemplo;10`}
                   type="button"
                   className="ns-diario-btn ns-diario-btn--primary ns-diario-lembrete-toast__btn"
                   onClick={() => {
-                    setShowDiarioPedidosModal(true)
+                    openTab('diario-pedidos-dia', getTabTitle('diario-pedidos-dia'))
                     setDiarioPedidoExpandidoId(aviso.id)
                     setDiarioLembreteAvisos((p) => p.filter((a) => a.id !== aviso.id))
                   }}

@@ -29018,6 +29018,147 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   background: rgba(0, 0, 0, 0.32);
 }
 
+.ns-diario-tab-root {
+  padding: 0 !important;
+  max-width: none !important;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ns-diario-tab-root .diario-pedidos-modal-shell.ns-diario-modal--tab {
+  flex: 1 1 0;
+  min-height: 0;
+  max-width: none;
+  width: 100%;
+  max-height: none;
+  height: 100%;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+}
+
+.ns-diario-modal__topbar--tab {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.ns-diario-modal__topbar--tab .ns-diario-modal__topbar-start {
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.ns-diario-topbar-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+  width: 100%;
+}
+
+.ns-diario-topbar-search-label {
+  flex: 1 1 220px;
+  min-width: min(100%, 200px);
+  margin: 0;
+}
+
+.ns-diario-topbar-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 122, 0.22);
+  background: rgba(0, 0, 0, 0.35);
+  color: #e8fff0;
+  font-size: 13px;
+}
+
+.ns-diario-topbar-search-input:focus {
+  outline: none;
+  border-color: rgba(0, 255, 122, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 255, 122, 0.12);
+}
+
+.ns-diario-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.ns-diario-filtro-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 148, 0.28);
+  background: rgba(0, 0, 0, 0.28);
+  color: #d8e8dc;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.ns-diario-filtro-chip:hover {
+  border-color: rgba(0, 255, 122, 0.35);
+}
+
+.ns-diario-filtro-chip--active {
+  border-color: rgba(0, 255, 122, 0.55);
+  background: rgba(0, 255, 122, 0.12);
+  color: #eafff2;
+}
+
+.ns-diario-filtro-chip--progress.ns-diario-filtro-chip--active {
+  border-color: rgba(255, 210, 80, 0.65);
+  background: rgba(255, 200, 50, 0.14);
+  color: #fff3c4;
+}
+
+.ns-diario-filtro-chip--done.ns-diario-filtro-chip--active {
+  border-color: rgba(0, 220, 120, 0.55);
+  background: rgba(0, 200, 83, 0.14);
+}
+
+.ns-diario-filtro-chip__count {
+  display: inline-flex;
+  min-width: 1.4em;
+  justify-content: center;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ns-diario-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 720px) {
+  .ns-diario-topbar-tools {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ns-diario-filtros {
+    justify-content: flex-start;
+  }
+}
+
 .ns-diario-modal__toggle-topo {
   font-size: 11px !important;
   letter-spacing: 0.06em;
