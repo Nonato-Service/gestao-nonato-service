@@ -42371,3 +42371,45 @@ html body .alerta-mensagens-shell .alerta-mensagens-hero-actions .comunicacao-he
     gap: 10px;
   }
 }
+
+/* Protocolos — override final: texto branco nos botões (vence html body .btn-primary) */
+html body .protocolos-servico-pro button.btn-primary.proto-arquivo-row__btn,
+html body .protocolos-servico-pro button.btn-primary.proto-cockpit-btn,
+html body .tab-content-wrapper .protocolos-servico-pro button.btn-primary.proto-arquivo-row__btn {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body .protocolos-servico-pro button.btn-primary.proto-arquivo-row__btn:hover:not(:disabled),
+html body .protocolos-servico-pro button.btn-primary.proto-cockpit-btn:hover:not(:disabled),
+html body .tab-content-wrapper .protocolos-servico-pro button.btn-primary.proto-arquivo-row__btn:hover:not(:disabled) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body .protocolos-servico-pro button.btn-primary.proto-arquivo-row__btn--pdf,
+html body .tab-content-wrapper .protocolos-servico-pro button.btn-primary.proto-arquivo-row__btn--pdf {
+  background: linear-gradient(180deg, #0ea5e9, #0369a1) !important;
+  background-color: #0369a1 !important;
+  border-color: rgba(56, 189, 248, 0.55) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body .protocolos-servico-pro button.btn-primary.proto-arquivo-row__btn--ghost,
+html body .tab-content-wrapper .protocolos-servico-pro button.btn-primary.proto-arquivo-row__btn--ghost {
+  background: rgba(255, 255, 255, 0.06) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body .tab-content-wrapper .protocolo-servico-card__actions button.btn-primary.protocolo-servico-card__btn--pdf,
+html body .tab-content-wrapper .protocolo-servico-card__actions button.btn-primary.protocolo-servico-card__btn--email,
+html body .tab-content-wrapper .protocolo-servico-card__actions button.btn-primary.protocolo-servico-card__btn--wa,
+html body .tab-content-wrapper .protocolo-servico-card__actions button.btn-primary.protocolo-servico-card__btn--edit,
+html body .tab-content-wrapper .protocolo-servico-card__actions button.btn-danger.protocolo-servico-card__btn--del {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}

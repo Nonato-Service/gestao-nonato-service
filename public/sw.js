@@ -1,6 +1,6 @@
 // Service Worker - Gestão Técnica Nonato Service (PWA offline)
 // Bumpar CACHE_NAME em cada deploy que altere precache / lógica offline
-const CACHE_NAME = 'nonato-pwa-v76'
+const CACHE_NAME = 'nonato-pwa-v124'
 
 const PRECACHE_ASSETS = ['/icon.svg', '/manifest.json']
 
@@ -73,6 +73,25 @@ async function cacheFirst(request) {
   }
 }
 
+async function networkFirstStatic(request) {
+  if (self.navigator.onLine) {
+    try {
+      const r = await fetch(request, { cache: 'no-cache' })
+      return putInCache(request, r)
+    } catch {
+      /* cair para cache */
+    }
+  }
+  const cached = await caches.match(request, { ignoreSearch: true })
+  if (cached) return cached
+  try {
+    const r = await fetch(request, { cache: 'no-cache' })
+    return putInCache(request, r)
+  } catch {
+    return new Response('', { status: 503, statusText: 'Offline' })
+  }
+}
+
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
   if (url.origin !== self.location.origin) return
@@ -88,9 +107,9 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // JS/CSS do Next — cache-first para funcionar offline após uma visita online
+  // JS/CSS do Next — online: rede primeiro (actualizações); offline: cache
   if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/_next/image')) {
-    event.respondWith(cacheFirst(event.request))
+    event.respondWith(networkFirstStatic(event.request))
     return
   }
 
