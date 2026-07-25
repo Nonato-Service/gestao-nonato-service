@@ -9167,6 +9167,11 @@ export default function Dashboard() {
   const [protocoloPreviewAberto, setProtocoloPreviewAberto] = useState(true)
   const [protocoloHubVista, setProtocoloHubVista] = useState<'exec' | 'arquivo'>('exec')
   const [protocoloCardAcoesId, setProtocoloCardAcoesId] = useState<string | null>(null)
+  /** Acordeão do arquivo: quais clientes estão expandidos (por defeito só poucos grupos). */
+  const [protocoloArquivoAbertos, setProtocoloArquivoAbertos] = useState<Record<string, boolean>>({})
+  /** Ordenação da tabela do arquivo (executados). */
+  const [protocoloArquivoOrdemCol, setProtocoloArquivoOrdemCol] = useState<'equip' | 'serie' | 'data' | 'resumo'>('data')
+  const [protocoloArquivoOrdemDir, setProtocoloArquivoOrdemDir] = useState<'asc' | 'desc'>('desc')
   const PROTOCOLO_SERVICO_DRAFT_KEY = 'nonato-protocolo-servico-draft'
   /** Valor do <select> «Filtrar por cliente» que esconde todos os cartões (lista vazia). */
   const PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM = '__proto_cliente_nenhum__'
@@ -34224,6 +34229,193 @@ export default function Dashboard() {
             </article>
           )
         }
+        const renderProtocoloArquivoRow = (p: ProtocoloServico) => {
+          const cl = clientes.find((c) => c.id === p.clienteId)
+          const eq = cl?.equipamentos?.find((e) => e.numeroSerie === p.equipamentoNumeroSerie)
+          const dataBase = p.dataConclusao || p.dataCriacao
+          const dataStr = new Date(dataBase).toLocaleDateString(documentPdfDateLocale(selectedLanguage))
+          const modeloGuardado = clampProtocoloPdfModelo(p.pdfModelo)
+          const modeloImpressao =
+            protocoloModeloImpressaoLista[p.id] !== undefined && protocoloModeloImpressaoLista[p.id] !== null
+              ? clampProtocoloPdfModelo(protocoloModeloImpressaoLista[p.id])
+              : modeloGuardado
+          const nBlocos = p.blocos?.length ?? 0
+          const nPecas = p.pecasTrocadasCodigos?.filter((c) => c.trim()).length ?? 0
+          const viaLabel =
+            p.enviadoVia === 'email'
+              ? protoT?.protocolosServicoEnviadoViaEmail || 'E-mail'
+              : p.enviadoVia === 'whatsapp'
+                ? protoT?.protocolosServicoEnviadoViaWhatsApp || 'WA'
+                : p.enviadoVia === 'manual'
+                  ? protoT?.protocolosServicoEnviadoViaManual || 'Manual'
+                  : ''
+          const equipTitulo = eq?.tipoEquipamento || (p.situacaoDescricao || '').trim().slice(0, 72) || '—'
+          const equipSub = eq ? [eq.marca, eq.modelo].filter(Boolean).join(' · ') : ''
+          const serie = (eq?.numeroSerie || p.equipamentoNumeroSerie || '—').trim() || '—'
+          return (
+            <tr key={p.id} className="proto-arquivo-row">
+              <td className="proto-arquivo-row__equip" data-label={protoT?.protocolosServicoInformacaoEquipamento || 'Equipamento'}>
+                <span className="proto-arquivo-row__equip-main">{equipTitulo}</span>
+                {equipSub ? <span className="proto-arquivo-row__equip-sub">{equipSub}</span> : null}
+              </td>
+              <td className="proto-arquivo-row__serie" data-label={protoT?.numeroSerie || 'Série'}>
+                {serie}
+              </td>
+              <td className="proto-arquivo-row__date" data-label={protoT?.data || 'Data'}>
+                {dataStr}
+              </td>
+              <td className="proto-arquivo-row__resumo" data-label={protoT?.protocolosServicoResumoCol || 'Resumo'}>
+                <span className="proto-arquivo-row__resumo-main">
+                  {(protoT?.protocolosServicoResumoBlocos || '{n} blocos').replace('{n}', String(nBlocos))}
+                  {' · '}
+                  {(protoT?.protocolosServicoResumoPecas || '{n} peças').replace('{n}', String(nPecas))}
+                </span>
+                {viaLabel ? <span className="proto-arquivo-row__via">{viaLabel}</span> : null}
+              </td>
+              <td className="proto-arquivo-row__actions" data-label={protoT?.acoes || 'Ações'}>
+                <select
+                  className="proto-arquivo-row__model"
+                  value={String(modeloImpressao)}
+                  onChange={(e) =>
+                    setProtocoloModeloImpressaoLista((prev) => ({
+                      ...prev,
+                      [p.id]: clampProtocoloPdfModelo(parseInt(e.target.value, 10) || 1),
+                    }))
+                  }
+                  aria-label={protoT?.protocolosServicoModeloImpressao || 'Modelo PDF'}
+                  title={protoT?.protocolosServicoModeloImpressao || 'Modelo PDF'}
+                >
+                  {Array.from({ length: PROTOCOLO_SERVICO_PDF_MODELOS_MAX }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>
+                      M{n}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btn-primary proto-arquivo-row__btn proto-arquivo-row__btn--pdf"
+                  onClick={() => gerarPDFProtocolo(p, modeloImpressao)}
+                >
+                  PDF
+                </button>
+                <button type="button" className="btn-primary proto-arquivo-row__btn" onClick={() => abrirEdicaoProtocolo(p)}>
+                  {protoT?.protocolosServicoEditar || 'Editar'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary proto-arquivo-row__btn proto-arquivo-row__btn--ghost"
+                  onClick={() => reabrirProtocoloExecucao(p.id)}
+                  title={protoT?.protocolosServicoReabrirExecucao || 'Reabrir execução'}
+                >
+                  ↩
+                </button>
+              </td>
+            </tr>
+          )
+        }
+        const renderProtocoloArquivoTabela = (itens: ProtocoloServico[]) => {
+          const ordenarItensArquivo = (lista: ProtocoloServico[]) => {
+            const dir = protocoloArquivoOrdemDir === 'asc' ? 1 : -1
+            return [...lista].sort((a, b) => {
+              const clA = clientes.find((c) => c.id === a.clienteId)
+              const clB = clientes.find((c) => c.id === b.clienteId)
+              const eqA = clA?.equipamentos?.find((e) => e.numeroSerie === a.equipamentoNumeroSerie)
+              const eqB = clB?.equipamentos?.find((e) => e.numeroSerie === b.equipamentoNumeroSerie)
+              let cmp = 0
+              switch (protocoloArquivoOrdemCol) {
+                case 'equip': {
+                  const ta = (eqA?.tipoEquipamento || a.situacaoDescricao || '').trim().toLowerCase()
+                  const tb = (eqB?.tipoEquipamento || b.situacaoDescricao || '').trim().toLowerCase()
+                  cmp = ta.localeCompare(tb, undefined, { sensitivity: 'base' })
+                  break
+                }
+                case 'serie': {
+                  const sa = (eqA?.numeroSerie || a.equipamentoNumeroSerie || '').trim().toLowerCase()
+                  const sb = (eqB?.numeroSerie || b.equipamentoNumeroSerie || '').trim().toLowerCase()
+                  cmp = sa.localeCompare(sb, undefined, { sensitivity: 'base', numeric: true })
+                  break
+                }
+                case 'data': {
+                  const ta = new Date(a.dataConclusao || a.dataCriacao).getTime()
+                  const tb = new Date(b.dataConclusao || b.dataCriacao).getTime()
+                  cmp = (Number.isNaN(ta) ? 0 : ta) - (Number.isNaN(tb) ? 0 : tb)
+                  break
+                }
+                case 'resumo': {
+                  const ba = a.blocos?.length ?? 0
+                  const bb = b.blocos?.length ?? 0
+                  cmp = ba - bb
+                  if (cmp === 0) {
+                    const pa = a.pecasTrocadasCodigos?.filter((c) => c.trim()).length ?? 0
+                    const pb = b.pecasTrocadasCodigos?.filter((c) => c.trim()).length ?? 0
+                    cmp = pa - pb
+                  }
+                  break
+                }
+              }
+              return cmp * dir
+            })
+          }
+          const clicarOrdemArquivo = (col: 'equip' | 'serie' | 'data' | 'resumo') => {
+            if (protocoloArquivoOrdemCol === col) {
+              setProtocoloArquivoOrdemDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+            } else {
+              setProtocoloArquivoOrdemCol(col)
+              setProtocoloArquivoOrdemDir(col === 'data' ? 'desc' : 'asc')
+            }
+          }
+          const marcaOrdemArquivo = (col: 'equip' | 'serie' | 'data' | 'resumo') =>
+            protocoloArquivoOrdemCol === col ? (protocoloArquivoOrdemDir === 'asc' ? ' ↑' : ' ↓') : ''
+          const thSort = (col: 'equip' | 'serie' | 'data' | 'resumo', label: string) => (
+            <th key={col}>
+              <button
+                type="button"
+                className={`proto-arquivo-table__sort${protocoloArquivoOrdemCol === col ? ' is-active' : ''}`}
+                onClick={() => clicarOrdemArquivo(col)}
+                aria-sort={
+                  protocoloArquivoOrdemCol === col
+                    ? protocoloArquivoOrdemDir === 'asc'
+                      ? 'ascending'
+                      : 'descending'
+                    : 'none'
+                }
+              >
+                {label}
+                <span className="proto-arquivo-table__sort-mark" aria-hidden="true">
+                  {marcaOrdemArquivo(col) || ' ↕'}
+                </span>
+              </button>
+            </th>
+          )
+          return (
+            <div className="proto-arquivo-table-wrap">
+              <table className="proto-arquivo-table">
+                <thead>
+                  <tr>
+                    {thSort('equip', protoT?.protocolosServicoInformacaoEquipamento || 'Equipamento')}
+                    {thSort('serie', protoT?.numeroSerie || 'Nº série')}
+                    {thSort('data', protoT?.data || 'Data')}
+                    {thSort('resumo', protoT?.protocolosServicoResumoCol || 'Resumo')}
+                    <th>{protoT?.acoes || 'Ações'}</th>
+                  </tr>
+                </thead>
+                <tbody>{ordenarItensArquivo(itens).map((p) => renderProtocoloArquivoRow(p))}</tbody>
+              </table>
+            </div>
+          )
+        }
+        const clienteArquivoFiltrado = filtroClienteLista || ''
+        const arquivoClienteAberto = (clienteId: string) => {
+          if (clienteArquivoFiltrado) return clienteId === clienteArquivoFiltrado
+          if (protocoloArquivoAbertos[clienteId] !== undefined) return protocoloArquivoAbertos[clienteId]
+          return gruposProtocolosArquivo.length <= 2
+        }
+        const toggleArquivoCliente = (clienteId: string) => {
+          setProtocoloArquivoAbertos((prev) => ({
+            ...prev,
+            [clienteId]: !arquivoClienteAberto(clienteId),
+          }))
+        }
         return (
           <div style={{ padding: '24px 20px 40px', maxWidth: '1380px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }} className="tab-content-wrapper protocolos-servico-pro proto-cockpit">
             <div className="mobile-sticky-toolbar">
@@ -35582,26 +35774,30 @@ export default function Dashboard() {
             ) : (
               <>
                 <header className="proto-cockpit-head">
-                  <div className="proto-cockpit-head__brand">
-                    <LogoComponent size="small" />
-                    <div>
-                      <h1 className="proto-cockpit-head__title">{tituloProto}</h1>
-                      <div className="proto-cockpit-head__stats">
-                        <span className="proto-cockpit-stat proto-cockpit-stat--exec">
-                          {protoT?.protocolosServicoHubKpiEmExecucao || 'Exec'} <strong>{visivelProto}</strong>
-                        </span>
-                        <span className="proto-cockpit-stat proto-cockpit-stat--done">
-                          {protoT?.protocolosServicoHubKpiExecutados || 'Arquivo'} <strong>{visivelExecutados}</strong>
-                        </span>
-                        <span className="proto-cockpit-stat proto-cockpit-stat--all">
-                          Total <strong>{totalProto}</strong>
-                        </span>
-                      </div>
+                  <div className="proto-cockpit-head__top">
+                    <h1 className="proto-cockpit-head__title">{tituloProto}</h1>
+                    <button type="button" className="btn-primary proto-cockpit-head__cta" onClick={iniciarNovoProtocolo}>
+                      + {protoT?.protocolosServicoNovo || 'Novo protocolo'}
+                    </button>
+                  </div>
+                  <div className="proto-cockpit-head__metrics" role="group" aria-label={protoT?.protocolosServicoHubResumo || 'Resumo'}>
+                    <div className="proto-cockpit-metric">
+                      <span className="proto-cockpit-metric__value">{visivelProto}</span>
+                      <span className="proto-cockpit-metric__label">
+                        {protoT?.protocolosServicoHubKpiEmExecucao || 'Em execução'}
+                      </span>
+                    </div>
+                    <div className="proto-cockpit-metric">
+                      <span className="proto-cockpit-metric__value">{visivelExecutados}</span>
+                      <span className="proto-cockpit-metric__label">
+                        {protoT?.protocolosServicoHubKpiExecutados || 'Executados e enviados'}
+                      </span>
+                    </div>
+                    <div className="proto-cockpit-metric">
+                      <span className="proto-cockpit-metric__value">{totalProto}</span>
+                      <span className="proto-cockpit-metric__label">Total</span>
                     </div>
                   </div>
-                  <button type="button" className="btn-primary proto-cockpit-head__cta" onClick={iniciarNovoProtocolo}>
-                    + {protoT?.protocolosServicoNovo || 'Novo protocolo'}
-                  </button>
                 </header>
 
                 <div className="proto-cockpit-command">
@@ -35725,35 +35921,80 @@ export default function Dashboard() {
                       {protoT?.protocolosServicoExecutadosVazioFiltro || 'Nenhum protocolo concluído com estes filtros.'}
                     </div>
                   ) : (
-                    gruposProtocolosArquivo.map((grupoCliente) => (
-                      <section key={grupoCliente.clienteId} className="proto-cockpit-group">
-                        <div className="proto-cockpit-group__head">
-                          <h3 className="proto-cockpit-group__title">{grupoCliente.nomeCliente}</h3>
-                          <span className="proto-cockpit-group__sub">
-                            {grupoCliente.porData.reduce((n, g) => n + g.itens.length, 0)}
-                          </span>
-                        </div>
-                        {grupoCliente.porData.map((grupoData) => {
-                          const dataLabel =
-                            grupoData.dataKey === '—'
-                              ? '—'
-                              : new Date(grupoData.dataKey + 'T12:00:00').toLocaleDateString(documentPdfDateLocale(selectedLanguage), {
-                                  day: '2-digit',
-                                  month: 'short',
-                                  year: 'numeric',
-                                })
-                          return (
-                            <div key={`${grupoCliente.clienteId}-${grupoData.dataKey}`} style={{ marginBottom: 12 }}>
-                              <div className="proto-cockpit-group__head" style={{ marginBottom: 8, paddingBottom: 6 }}>
-                                <span className="proto-cockpit-group__sub">{dataLabel}</span>
-                                <span className="proto-cockpit-group__sub">{grupoData.itens.length}</span>
+                    <>
+                      {!clienteArquivoFiltrado && gruposProtocolosArquivo.length >= 4 ? (
+                        <nav className="proto-arquivo-nav" aria-label={protoT?.protocolosServicoArquivoNav || 'Ir para cliente'}>
+                          {gruposProtocolosArquivo.map((grupoCliente) => {
+                            const n = grupoCliente.porData.reduce((acc, g) => acc + g.itens.length, 0)
+                            const nomeCurto =
+                              grupoCliente.nomeCliente.length > 28
+                                ? `${grupoCliente.nomeCliente.slice(0, 28)}…`
+                                : grupoCliente.nomeCliente
+                            return (
+                              <button
+                                key={grupoCliente.clienteId}
+                                type="button"
+                                className="proto-arquivo-nav__pill"
+                                onClick={() => {
+                                  setProtocoloArquivoAbertos((prev) => ({ ...prev, [grupoCliente.clienteId]: true }))
+                                  document.getElementById(`proto-arq-${grupoCliente.clienteId}`)?.scrollIntoView({
+                                    behavior: 'smooth',
+                                    block: 'start',
+                                  })
+                                }}
+                              >
+                                {nomeCurto}
+                                <span className="proto-arquivo-nav__count">{n}</span>
+                              </button>
+                            )
+                          })}
+                        </nav>
+                      ) : null}
+                      {gruposProtocolosArquivo.map((grupoCliente) => {
+                        const itensCliente = grupoCliente.porData.flatMap((g) => g.itens)
+                        const totalItens = itensCliente.length
+                        const aberto = arquivoClienteAberto(grupoCliente.clienteId)
+                        const mostrarAcordeao = !clienteArquivoFiltrado && gruposProtocolosArquivo.length > 1
+                        return (
+                          <section
+                            key={grupoCliente.clienteId}
+                            id={`proto-arq-${grupoCliente.clienteId}`}
+                            className={`proto-arquivo-cliente${aberto ? ' is-open' : ''}`}
+                          >
+                            {mostrarAcordeao ? (
+                              <button
+                                type="button"
+                                className="proto-arquivo-cliente__head"
+                                aria-expanded={aberto}
+                                onClick={() => toggleArquivoCliente(grupoCliente.clienteId)}
+                              >
+                                <span className="proto-arquivo-cliente__name">{grupoCliente.nomeCliente}</span>
+                                <span className="proto-arquivo-cliente__meta">
+                                  {totalItens}{' '}
+                                  {totalItens === 1
+                                    ? protoT?.protocolosServicoArquivoUm || 'protocolo'
+                                    : protoT?.protocolosServicoArquivoVarios || 'protocolos'}
+                                </span>
+                                <span className="proto-arquivo-cliente__chev" aria-hidden="true">
+                                  {aberto ? '▾' : '▸'}
+                                </span>
+                              </button>
+                            ) : (
+                              <div className="proto-arquivo-cliente__head proto-arquivo-cliente__head--static">
+                                <span className="proto-arquivo-cliente__name">{grupoCliente.nomeCliente}</span>
+                                <span className="proto-arquivo-cliente__meta">
+                                  {totalItens}{' '}
+                                  {totalItens === 1
+                                    ? protoT?.protocolosServicoArquivoUm || 'protocolo'
+                                    : protoT?.protocolosServicoArquivoVarios || 'protocolos'}
+                                </span>
                               </div>
-                              <div className="proto-cockpit-feed">{grupoData.itens.map((p) => renderProtocoloCard(p, 'arquivo'))}</div>
-                            </div>
-                          )
-                        })}
-                      </section>
-                    ))
+                            )}
+                            {aberto ? renderProtocoloArquivoTabela(itensCliente) : null}
+                          </section>
+                        )
+                      })}
+                    </>
                   )}
                 </div>
               </>
