@@ -54,7 +54,28 @@ function isBgLike(r: number, g: number, b: number, corner: Rgb, tol: number): bo
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)
   const sat = max === 0 ? 0 : (max - min) / max
-  return max >= 210 && sat < 0.2
+  return max >= 205 && sat < 0.22
+}
+
+/** Remove todos os pixels claros (não só os ligados à borda) — elimina retângulo branco interno */
+function removeAllBackgroundPixels(data: Uint8ClampedArray, corner: Rgb, tol: number): void {
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 8) continue
+    if (isBgLike(data[i], data[i + 1], data[i + 2], corner, tol)) {
+      data[i + 3] = 0
+    }
+  }
+}
+
+function countOpaqueBackgroundPixels(data: Uint8ClampedArray, corner: Rgb, tol: number): { bg: number; total: number } {
+  let bg = 0
+  let total = 0
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 20) continue
+    total += 1
+    if (isBgLike(data[i], data[i + 1], data[i + 2], corner, tol)) bg += 1
+  }
+  return { bg, total }
 }
 
 /** Remove fundo ligado às bordas (flood fill) — típico de PNG com retângulo branco */
@@ -168,13 +189,12 @@ export async function stripLogoBackgroundForWatermark(src: string): Promise<stri
   const d = imageData.data
   const corner = sampleCornerColor(d, width, height)
 
-  floodFillEdgeBackground(d, width, height, corner, 42)
+  floodFillEdgeBackground(d, width, height, corner, 48)
+  removeAllBackgroundPixels(d, corner, 44)
 
-  for (let i = 0; i < d.length; i += 4) {
-    if (d[i + 3] === 0) continue
-    if (isBgLike(d[i], d[i + 1], d[i + 2], corner, 36)) {
-      d[i + 3] = 0
-    }
+  const remain = countOpaqueBackgroundPixels(d, corner, 38)
+  if (remain.total > 0 && remain.bg / remain.total > 0.06) {
+    return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
   }
 
   ctx.putImageData(imageData, 0, 0)
@@ -184,17 +204,29 @@ export async function stripLogoBackgroundForWatermark(src: string): Promise<stri
   }
 
   const trimmed = cropCanvasToBounds(canvas, ctx, bounds)
+  const tctx = trimmed.getContext('2d', { willReadFrequently: true })
+  if (!tctx) return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
+  const td = tctx.getImageData(0, 0, trimmed.width, trimmed.height).data
+  const after = countOpaqueBackgroundPixels(td, corner, 38)
+  if (after.total > 0 && after.bg / after.total > 0.04) {
+    return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
+  }
   return trimmed.toDataURL('image/png')
 }
 
-/** Prepara URL da marca d'água: logo do admin sem fundo, ou SVG transparente */
+/** Prepara URL da marca d'água: tenta logo do admin sem fundo; se restar branco, SVG só engrenagens */
 export async function prepareProtocoloWatermarkSrc(logoHtml: string): Promise<string> {
-  const raw = extractImgSrcFromLogoHtml(logoHtml)
-  if (!raw) return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
   if (typeof document === 'undefined') return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
+  const raw = extractImgSrcFromLogoHtml(logoHtml)
+  if (!raw || /^data:image\/jpe?g/i.test(raw)) {
+    return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
+  }
   try {
     const stripped = await stripLogoBackgroundForWatermark(raw)
-    return stripped || PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
+    if (!stripped || stripped === PROTOCOLO_WATERMARK_FALLBACK_DATA_URI) {
+      return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
+    }
+    return stripped
   } catch {
     return PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
   }
