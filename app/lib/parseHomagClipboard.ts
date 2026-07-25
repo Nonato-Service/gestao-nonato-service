@@ -1,7 +1,17 @@
 /** Parser de colagem HOMAG (shop.homag.com) — alinhado com scripts/homag-import/discover-products.mjs */
 
+import {
+  compactPecaCodigo,
+  nucleoCodigoHomag,
+  referenciaHomagDeTexto,
+  referenciaHomagParaCodigoDireto,
+  variantesCodigoHomagParaMatch,
+} from './pecaCodigoBusca'
+
 export const HOMAG_CODE_STRICT_RE = /^([1-9]\d{9})$/
 export const HOMAG_CODE_LOOSE_RE = /^(\d{7,14})$/
+/** SKU com R prefixo/sufixo: 2006808181R, R2006215960 */
+export const HOMAG_CODE_R_VARIANT_RE = /^R?(\d{7,11})R?$/i
 
 const HOMAG_RANGE_RE = /\d+\s*-\s*\d+\s+of\s+\d+\s+Items?/gi
 
@@ -45,6 +55,8 @@ export type HomagClipboardItem = {
   descricao: string
   preco?: string
   imagem?: string
+  referenciasAlternativas?: string[]
+  codigosAlternativos?: string[]
 }
 
 export function isHomagUiNoiseLine(line: string): boolean {
@@ -55,9 +67,18 @@ export function isHomagUiNoiseLine(line: string): boolean {
 }
 
 export function countHomagCodesInText(text: string): number {
+  const found = new Set<string>()
   const raw = String(text || '')
-  const strict = raw.match(/\b[1-9]\d{9}\b/g) || []
-  return new Set(strict).size
+
+  for (const m of raw.matchAll(/\bR?\d{7,11}R?\b/gi)) {
+    const n = nucleoCodigoHomag(m[0])
+    if (n) found.add(n)
+  }
+  for (const m of raw.matchAll(/\b\d-\d{3}-\d{2}-\d{3,4}\b/g)) {
+    const sku = referenciaHomagParaCodigoDireto(m[0])
+    if (sku) found.add(sku)
+  }
+  return found.size
 }
 
 export function looksLikeHomagClipboard(text: string): boolean {
@@ -82,17 +103,56 @@ export function extractHomagCatalogSection(text: string): string {
   return section.slice(0, 20000).trim()
 }
 
-function matchHomagCodeLine(line: string): string | null {
-  const t = String(line || '').trim().replace(/\s+/g, '')
-  const strict = t.match(HOMAG_CODE_STRICT_RE)
+/** Reconhece linha de código HOMAG (2006807481, 2-006-80-7481, 2006808181R, R2006215960). */
+export function matchHomagCodeLine(line: string): string | null {
+  const t = String(line || '').trim()
+  if (!t) return null
+
+  const ref = referenciaHomagDeTexto(t)
+  if (ref) {
+    const sku = referenciaHomagParaCodigoDireto(ref)
+    return sku || t.replace(/\s+/g, '')
+  }
+
+  const compact = t.replace(/\s+/g, '')
+  const rVar = compact.match(HOMAG_CODE_R_VARIANT_RE)
+  if (rVar) {
+    return compact.toUpperCase() === compact ? compact : compact.replace(/^r/i, 'R')
+  }
+
+  const strict = compact.match(HOMAG_CODE_STRICT_RE)
   if (strict) return strict[1]
-  const loose = t.match(HOMAG_CODE_LOOSE_RE)
-  if (loose && t.length >= 7 && t.length <= 14) return loose[1]
+
+  const loose = compact.match(HOMAG_CODE_LOOSE_RE)
+  if (loose && compact.length >= 7 && compact.length <= 14) return loose[1]
+
   return null
 }
 
 function isHomagCodeLine(line: string): boolean {
   return matchHomagCodeLine(line) != null
+}
+
+function alternativasHomagDeCodigo(codigo: string): {
+  referenciasAlternativas: string[]
+  codigosAlternativos: string[]
+} {
+  const refs = new Set<string>()
+  const cods = new Set<string>()
+  const ref = referenciaHomagDeTexto(codigo)
+  if (ref) refs.add(ref)
+  const nucleo = nucleoCodigoHomag(codigo)
+  if (nucleo) {
+    cods.add(nucleo)
+    const refN = referenciaHomagDeTexto(nucleo)
+    if (refN) refs.add(refN)
+  }
+  const compact = compactPecaCodigo(codigo)
+  if (compact) cods.add(compact)
+  return {
+    referenciasAlternativas: [...refs],
+    codigosAlternativos: [...cods],
+  }
 }
 
 /** Parse principal — uma peça por linha de código, nome nas linhas anteriores. */
@@ -104,11 +164,14 @@ export function parseHomagPlainTextCatalog(raw: string): HomagClipboardItem[] {
     .filter(Boolean)
 
   const items: HomagClipboardItem[] = []
-  const seen = new Set<string>()
+  const seenNucleo = new Set<string>()
 
   for (let i = 0; i < lines.length; i++) {
     const codigo = matchHomagCodeLine(lines[i])
-    if (!codigo || seen.has(codigo)) continue
+    if (!codigo) continue
+
+    const nucleo = nucleoCodigoHomag(codigo) || compactPecaCodigo(codigo)
+    if (!nucleo || seenNucleo.has(nucleo)) continue
 
     const textLines: string[] = []
     let imagem = ''
@@ -140,12 +203,15 @@ export function parseHomagPlainTextCatalog(raw: string): HomagClipboardItem[] {
 
     const nome = textLines[0] || codigo
     const descricao = textLines.slice(1).join(' ').trim() || nome
+    const alt = alternativasHomagDeCodigo(codigo)
 
-    seen.add(codigo)
+    seenNucleo.add(nucleo)
     items.push({
       codigo,
       nome,
       descricao,
+      referenciasAlternativas: alt.referenciasAlternativas,
+      codigosAlternativos: alt.codigosAlternativos,
       ...(preco ? { preco } : {}),
       ...(imagem ? { imagem } : {}),
     })
@@ -154,32 +220,45 @@ export function parseHomagPlainTextCatalog(raw: string): HomagClipboardItem[] {
   return items
 }
 
-/** Junta listas pelo código; preferência para entradas do parser HOMAG (nomes mais limpos). */
+/** Junta listas pelo núcleo do código; preferência para entradas do parser HOMAG. */
 export function mergeHomagClipboardItems(
   primary: HomagClipboardItem[],
   homag: HomagClipboardItem[]
 ): HomagClipboardItem[] {
   if (homag.length === 0) return primary
-  const byCode = new Map<string, HomagClipboardItem>()
+  const byNucleo = new Map<string, HomagClipboardItem>()
+
+  const keyOf = (item: HomagClipboardItem) =>
+    nucleoCodigoHomag(item.codigo) || compactPecaCodigo(item.codigo) || item.codigo
+
   for (const p of primary) {
-    const c = String(p.codigo || '').trim()
-    if (c) byCode.set(c, p)
+    const k = keyOf(p)
+    if (k) byNucleo.set(k, p)
   }
   for (const h of homag) {
-    const c = String(h.codigo || '').trim()
-    if (!c) continue
-    const existing = byCode.get(c)
+    const k = keyOf(h)
+    if (!k) continue
+    const existing = byNucleo.get(k)
     if (!existing) {
-      byCode.set(c, h)
+      byNucleo.set(k, h)
       continue
     }
-    byCode.set(c, {
+    byNucleo.set(k, {
       ...existing,
-      nome: h.nome && h.nome !== c ? h.nome : existing.nome,
+      nome: h.nome && h.nome !== h.codigo ? h.nome : existing.nome,
       descricao: h.descricao || existing.descricao,
       preco: existing.preco || h.preco,
       imagem: existing.imagem || h.imagem,
+      referenciasAlternativas: [
+        ...new Set([
+          ...(existing.referenciasAlternativas || []),
+          ...(h.referenciasAlternativas || []),
+        ]),
+      ],
+      codigosAlternativos: [
+        ...new Set([...(existing.codigosAlternativos || []), ...(h.codigosAlternativos || [])]),
+      ],
     })
   }
-  return [...byCode.values()]
+  return [...byNucleo.values()]
 }

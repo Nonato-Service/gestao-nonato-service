@@ -59,6 +59,7 @@ import { mergeHomagExportIntoBiblioteca, parseHomagExportJson } from './lib/merg
 import {
   countHomagCodesInText,
   looksLikeHomagClipboard,
+  matchHomagCodeLine,
   mergeHomagClipboardItems,
   parseHomagPlainTextCatalog,
 } from './lib/parseHomagClipboard'
@@ -285,6 +286,10 @@ import {
   pecaBibliotecaMatchesBusca,
   pecaBibliotecaMatchesBuscaCompleta,
   setIndiceSubstituicoesHomag,
+  variantesCodigoHomagParaMatch,
+  referenciaHomagDeTexto,
+  nucleoCodigoHomag,
+  compactPecaCodigo,
 } from './lib/pecaCodigoBusca'
 import { buscarPecaBibliotecaNoServidor } from './lib/buscarPecaBibliotecaRemoto'
 import { filtrarPorNomeBusca, getLetraAlfabetoNome } from './lib/nomeAlfabetoBusca'
@@ -2060,6 +2065,14 @@ type PecaBiblioteca = {
   /** Marca de revisão local — classificação em lote, edição manual, etc. */
   dataAtualizacao?: string
   importacaoPendente?: boolean
+  /** Referências HOMAG alternativas (ex.: 2-006-80-7481 quando codigo é 2006807481). */
+  referenciasAlternativas?: string[]
+  /** SKUs alternativos (ex.: R2006215960, 2006808181R). */
+  codigosAlternativos?: string[]
+  /** @deprecated Use referenciasAlternativas */
+  referenciasAntigas?: string[]
+  /** @deprecated Use codigosAlternativos */
+  codigosAntigos?: string[]
   /** Número sequencial dentro da categoria (01, 02, 03… — ignora subcategoria). */
   numeroSequenciaGrupo?: string
 }
@@ -25814,11 +25827,11 @@ export default function Dashboard() {
     return String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
   }
 
-  /** Variantes do código para detetar duplicados (espaços, pontuação, zeros à esquerda). */
+  /** Variantes do código para detetar duplicados (hífen, R prefixo/sufixo, zeros à esquerda). */
   function variantesCodigoPecaBiblioteca(codigo: string | undefined | null): string[] {
     const norm = normalizeImportKey(codigo)
-    if (!norm) return []
-    const out = new Set<string>([norm])
+    const out = new Set<string>(variantesCodigoHomagParaMatch(codigo))
+    if (norm) out.add(norm)
     const compact = norm.replace(/[^a-z0-9]/g, '')
     if (compact && compact !== norm && compact.length >= 3) {
       out.add(compact)
@@ -25830,6 +25843,18 @@ export default function Dashboard() {
     return [...out]
   }
 
+  function indiceVariantesPecaBiblioteca(p: PecaBiblioteca): string[] {
+    const out = new Set<string>()
+    for (const v of variantesCodigoPecaBiblioteca(p.codigo)) out.add(v)
+    for (const c of [...(p.codigosAlternativos || []), ...(p.codigosAntigos || [])]) {
+      for (const v of variantesCodigoPecaBiblioteca(c)) out.add(v)
+    }
+    for (const r of [...(p.referenciasAlternativas || []), ...(p.referenciasAntigas || [])]) {
+      for (const v of variantesCodigoPecaBiblioteca(r)) out.add(v)
+    }
+    return [...out]
+  }
+
   function pecaBibliotecaEstaNoCatalogo(p: PecaBiblioteca): boolean {
     return !ehImportacaoPendenteStrict(p)
   }
@@ -25837,7 +25862,7 @@ export default function Dashboard() {
   function construirIndiceCodigosBiblioteca(biblioteca: PecaBiblioteca[]): Set<string> {
     const idx = new Set<string>()
     for (const p of biblioteca) {
-      for (const v of variantesCodigoPecaBiblioteca(p.codigo)) idx.add(v)
+      for (const v of indiceVariantesPecaBiblioteca(p)) idx.add(v)
     }
     return idx
   }
@@ -25851,7 +25876,7 @@ export default function Dashboard() {
     if (alvo.length === 0) return false
     return biblioteca.some((p) => {
       if (excluirId && p.id === excluirId) return false
-      const existentes = variantesCodigoPecaBiblioteca(p.codigo)
+      const existentes = indiceVariantesPecaBiblioteca(p)
       return existentes.some((v) => alvo.includes(v))
     })
   }
@@ -26223,6 +26248,32 @@ export default function Dashboard() {
       }
     }
     if (imagem.startsWith('//')) imagem = `https:${imagem}`
+
+    const refsAlt = new Set<string>(
+      [...(item?.referenciasAlternativas || []), ...(item?.referenciasAntigas || [])]
+        .map((r: unknown) => String(r ?? '').trim())
+        .filter(Boolean)
+    )
+    const codsAlt = new Set<string>(
+      [...(item?.codigosAlternativos || []), ...(item?.codigosAntigos || [])]
+        .map((c: unknown) => String(c ?? '').trim())
+        .filter(Boolean)
+    )
+    if (codigo) {
+      const ref = referenciaHomagDeTexto(codigo)
+      if (ref) refsAlt.add(ref)
+      const nucleo = nucleoCodigoHomag(codigo)
+      if (nucleo) codsAlt.add(nucleo)
+      for (const v of variantesCodigoHomagParaMatch(codigo)) {
+        if (/^r?\d{7,11}r?$/i.test(v.replace(/[^a-z0-9]/g, ''))) codsAlt.add(v)
+        const r = referenciaHomagDeTexto(v)
+        if (r) refsAlt.add(r)
+      }
+    }
+    const codigoNorm = compactPecaCodigo(codigo)
+    const referenciasAlternativas = [...refsAlt].filter((r) => compactPecaCodigo(r) !== codigoNorm && r !== codigo)
+    const codigosAlternativos = [...codsAlt].filter((c) => compactPecaCodigo(c) !== codigoNorm)
+
     return {
       id: item?.id && typeof item.id === 'string' ? item.id : `import-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 9)}`,
       nome: nome || codigo || `Peça ${index + 1}`,
@@ -26235,6 +26286,8 @@ export default function Dashboard() {
       subcategoriaId: item?.subcategoriaId ?? item?.subcategoryId ?? '',
       importacaoPendente: Boolean(item?.importacaoPendente),
       imagem,
+      ...(referenciasAlternativas.length ? { referenciasAlternativas } : {}),
+      ...(codigosAlternativos.length ? { codigosAlternativos } : {}),
       dataCriacao: new Date().toISOString()
     }
   }
@@ -26550,13 +26603,13 @@ export default function Dashboard() {
             } else {
             const innerLines = textFromHtml.split(/\n/).map((l) => l.trim()).filter(Boolean)
             if (innerLines.length >= 2) {
-              const homagNumericLine = /^\d{7,14}$/
               let homagBuf: string[] = []
               for (const line of innerLines) {
-                if (homagNumericLine.test(line)) {
+                const codigoHomag = matchHomagCodeLine(line)
+                if (codigoHomag) {
                   if (homagBuf.length) {
                     pushIfValid({
-                      codigo: line,
+                      codigo: codigoHomag,
                       nome: homagBuf[0],
                       descricao: homagBuf.slice(1).join(' ').trim() || homagBuf[0],
                     })
@@ -26631,17 +26684,17 @@ export default function Dashboard() {
           itens = parseHomagPlainTextCatalog(raw)
         }
         if (itens.length === 0) {
-        // HOMAG / catálogos: várias linhas de descrição seguidas de uma linha só com código numérico (7–14 dígitos)
-        const homagNumericLine = /^\d{7,14}$/
+        // HOMAG / catálogos: descrição seguida de código (2006807481, 2-006-80-7481, 2006808181R, R2006215960)
         const homagItemsParsed: Array<{ codigo: string; nome: string; descricao: string }> = []
         let homagBuf: string[] = []
         for (const line of lines) {
           const t = line.trim()
           if (!t) continue
-          if (homagNumericLine.test(t)) {
+          const codigoHomag = matchHomagCodeLine(t)
+          if (codigoHomag) {
             if (homagBuf.length) {
               homagItemsParsed.push({
-                codigo: t,
+                codigo: codigoHomag,
                 nome: homagBuf[0],
                 descricao: homagBuf.slice(1).join(' ').trim() || homagBuf[0]
               })
@@ -26655,7 +26708,7 @@ export default function Dashboard() {
           const last = homagItemsParsed[homagItemsParsed.length - 1]
           last.descricao = [last.descricao, ...homagBuf].join(' ').trim()
         }
-        const homagCodeLineCount = lines.filter((l) => homagNumericLine.test(l.trim())).length
+        const homagCodeLineCount = lines.filter((l) => matchHomagCodeLine(l.trim()) != null).length
         const useHomagLinear =
           homagItemsParsed.length > 0 && homagItemsParsed.length === homagCodeLineCount
 

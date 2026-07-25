@@ -140,6 +140,66 @@ export function compactPecaCodigo(c: string | undefined | null): string {
     .replace(/[^a-z0-9]/g, '')
 }
 
+/** Núcleo numérico HOMAG — ignora hífens e R prefixo/sufixo (ex.: R2006215960, 2006808181R). */
+export function nucleoCodigoHomag(c: string | undefined | null): string {
+  let compact = compactPecaCodigo(c)
+  if (!compact) return ''
+  compact = compact.replace(/^r(?=\d)/, '')
+  compact = compact.replace(/(?<=\d)r$/, '')
+  if (/^\d{7,11}$/.test(compact)) return compact
+  const ref = referenciaHomagDeTexto(String(c ?? ''))
+  if (ref) {
+    const sku = referenciaHomagParaCodigoDireto(ref)
+    if (sku && /^\d{7,11}$/.test(sku)) return sku
+  }
+  return compact.replace(/[^0-9]/g, '')
+}
+
+/** Todas as variantes para busca, dedup e importação em massa. */
+export function variantesCodigoHomagParaMatch(c: string | undefined | null): string[] {
+  const raw = String(c ?? '').trim()
+  if (!raw) return []
+  const out = new Set<string>()
+
+  const push = (v: string | undefined | null) => {
+    const s = String(v ?? '').trim().toLowerCase()
+    if (s.length >= 3) out.add(s)
+  }
+
+  push(compactPecaCodigo(raw))
+  push(raw.toLowerCase())
+
+  const nucleo = nucleoCodigoHomag(raw)
+  if (nucleo) {
+    push(nucleo)
+    push(`r${nucleo}`)
+    push(`${nucleo}r`)
+    const ref = referenciaHomagDeTexto(nucleo)
+    if (ref) {
+      push(ref)
+      push(compactPecaCodigo(ref))
+      const sku = referenciaHomagParaCodigoDireto(ref)
+      if (sku) push(sku)
+    }
+  }
+
+  const refDirect = referenciaHomagDeTexto(raw)
+  if (refDirect) {
+    push(refDirect)
+    push(compactPecaCodigo(refDirect))
+    const sku = referenciaHomagParaCodigoDireto(refDirect)
+    if (sku) push(sku)
+  }
+
+  return [...out]
+}
+
+export function codigosHomagEquivalentes(a: string, b: string): boolean {
+  const va = variantesCodigoHomagParaMatch(a)
+  const vb = new Set(variantesCodigoHomagParaMatch(b))
+  return va.some((x) => vb.has(x))
+}
+
 export function referenciaHomagDeTexto(texto: string): string | null {
   const t = texto.trim()
   const comHifens = t.match(HOMAG_REF_RE)
@@ -186,8 +246,12 @@ export function codigosSkuAlvoParaBusca(query: string): string[] {
   const q = query.trim()
   if (!q) return []
 
+  for (const v of variantesCodigoHomagParaMatch(q)) out.add(v)
+
   const qCompact = compactPecaCodigo(q)
-  if (/^\d{9,11}$/.test(qCompact)) out.add(qCompact)
+  const nucleo = nucleoCodigoHomag(q)
+  if (/^\d{7,11}$/.test(nucleo)) out.add(nucleo)
+  if (/^\d{7,11}$/.test(qCompact)) out.add(qCompact)
 
   const ref = referenciaHomagDeTexto(q)
   if (ref) {
@@ -214,6 +278,7 @@ export function pecaTemCodigoAlternativoRegistado(
   const qLower = q.toLowerCase()
   const qCompact = compactPecaCodigo(q)
   const ref = referenciaHomagDeTexto(q)
+  const alvoSet = new Set(variantesCodigoHomagParaMatch(q))
 
   const refs = [...(peca.referenciasAlternativas || []), ...(peca.referenciasAntigas || [])]
   const cods = [...(peca.codigosAlternativos || []), ...(peca.codigosAntigos || [])]
@@ -221,9 +286,10 @@ export function pecaTemCodigoAlternativoRegistado(
   for (const r of refs) {
     if (r.toLowerCase() === qLower) return true
     if (ref && r.toLowerCase() === ref.toLowerCase()) return true
+    if (variantesCodigoHomagParaMatch(r).some((v) => alvoSet.has(v))) return true
   }
   for (const c of cods) {
-    if (compactPecaCodigo(c) === qCompact) return true
+    if (variantesCodigoHomagParaMatch(c).some((v) => alvoSet.has(v))) return true
   }
   if (ref) {
     const refCompact = compactPecaCodigo(ref)
@@ -257,7 +323,14 @@ export function pecaBibliotecaMatchesBusca(
   if (!codigoPeca) return false
 
   const skusAlvo = codigosSkuAlvoParaBusca(q)
-  if (skusAlvo.length > 0 && skusAlvo.some((sku) => sku === codigoPeca)) {
+  const alvoSet = new Set(skusAlvo)
+  const pecaVariantes = variantesCodigoHomagParaMatch(peca.codigo)
+  if (
+    skusAlvo.length > 0 &&
+    (skusAlvo.some((sku) => sku === codigoPeca) ||
+      pecaVariantes.some((v) => alvoSet.has(v)) ||
+      skusAlvo.some((sku) => pecaVariantes.includes(sku)))
+  ) {
     return true
   }
 

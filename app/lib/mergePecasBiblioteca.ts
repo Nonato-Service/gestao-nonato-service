@@ -1,4 +1,6 @@
 /** Peça mínima para fundir listas servidor + local sem perder cadastros recentes após deploy/sync. */
+import { variantesCodigoHomagParaMatch } from './pecaCodigoBusca'
+
 export type PecaBibliotecaMerge = {
   id: string
   codigo?: string
@@ -21,11 +23,12 @@ function normalizeImportKey(v: unknown): string {
     .replace(/\s+/g, ' ')
 }
 
-/** Variantes do código para detetar duplicados (espaços, pontuação, zeros à esquerda). */
+/** Variantes do código para detetar duplicados (espaços, pontuação, zeros à esquerda, HOMAG R/hífen). */
 export function variantesCodigoPecaBiblioteca(codigo: string | undefined | null): string[] {
   const norm = normalizeImportKey(codigo)
-  if (!norm) return []
-  const out = new Set<string>([norm])
+  const out = new Set<string>()
+  for (const v of variantesCodigoHomagParaMatch(codigo)) out.add(v)
+  if (norm) out.add(norm)
   const compact = norm.replace(/[^a-z0-9]/g, '')
   if (compact && compact !== norm && compact.length >= 3) {
     out.add(compact)
@@ -90,6 +93,13 @@ export function mergePecaBibliotecaFields(
     out.imagemCapa = older.imagemCapa
   }
 
+  const mergeStrList = (ka: string, kb: string) =>
+    [...new Set([...(Array.isArray(a[ka]) ? (a[ka] as string[]) : []), ...(Array.isArray(b[kb]) ? (b[kb] as string[]) : [])])]
+      .map((x) => String(x ?? '').trim())
+      .filter(Boolean)
+  out.referenciasAlternativas = mergeStrList('referenciasAlternativas', 'referenciasAlternativas')
+  out.codigosAlternativos = mergeStrList('codigosAlternativos', 'codigosAlternativos')
+
   out.dataAtualizacao =
     pecaRevisionScore(out) === scoreB ? String(newer.dataAtualizacao ?? '') : String(older.dataAtualizacao ?? '')
   if (!out.dataAtualizacao) {
@@ -105,7 +115,20 @@ export function deduplicarPecasBibliotecaPorCodigo<T extends PecaBibliotecaMerge
   const variantToKey = new Map<string, string>()
 
   for (const peca of pecas) {
-    const variantes = variantesCodigoPecaBiblioteca(peca.codigo)
+    const variantes = new Set<string>()
+    for (const v of variantesCodigoPecaBiblioteca(peca.codigo)) variantes.add(v)
+    for (const c of [
+      ...(Array.isArray(peca.codigosAlternativos) ? peca.codigosAlternativos : []),
+      ...(Array.isArray(peca.codigosAntigos) ? peca.codigosAntigos : []),
+    ]) {
+      for (const v of variantesCodigoPecaBiblioteca(String(c))) variantes.add(v)
+    }
+    for (const r of [
+      ...(Array.isArray(peca.referenciasAlternativas) ? peca.referenciasAlternativas : []),
+      ...(Array.isArray(peca.referenciasAntigas) ? peca.referenciasAntigas : []),
+    ]) {
+      for (const v of variantesCodigoPecaBiblioteca(String(r))) variantes.add(v)
+    }
     let key: string | null = null
     for (const v of variantes) {
       const existingKey = variantToKey.get(v)
