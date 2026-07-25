@@ -34155,22 +34155,22 @@ export default function Dashboard() {
                 <div className={`proto-cockpit-card__quick${lane === 'arquivo' ? ' proto-cockpit-card__quick--dual' : ''}`}>
                   <button
                     type="button"
-                    className="btn-primary proto-cockpit-btn proto-cockpit-btn--pdf"
+                    className="proto-action-btn proto-cockpit-btn proto-cockpit-btn--pdf"
                     onClick={() => gerarPDFProtocolo(p, modeloImpressao)}
                   >
                     PDF
                   </button>
                   {lane === 'exec' ? (
                     <>
-                      <button type="button" className="btn-primary proto-cockpit-btn proto-cockpit-btn--email" onClick={() => enviarEmailProtocolo(p)}>
+                      <button type="button" className="proto-action-btn proto-cockpit-btn proto-cockpit-btn--email" onClick={() => enviarEmailProtocolo(p)}>
                         Email
                       </button>
-                      <button type="button" className="btn-primary proto-cockpit-btn proto-cockpit-btn--wa" onClick={() => enviarWhatsAppProtocolo(p)}>
+                      <button type="button" className="proto-action-btn proto-cockpit-btn proto-cockpit-btn--wa" onClick={() => enviarWhatsAppProtocolo(p)}>
                         WA
                       </button>
                     </>
                   ) : (
-                    <button type="button" className="btn-primary proto-cockpit-btn proto-cockpit-btn--ghost" onClick={() => reabrirProtocoloExecucao(p.id)}>
+                    <button type="button" className="proto-action-btn proto-cockpit-btn proto-cockpit-btn--ghost" onClick={() => reabrirProtocoloExecucao(p.id)}>
                       ↩ {protoT?.protocolosServicoReabrirExecucao || 'Reabrir'}
                     </button>
                   )}
@@ -34189,13 +34189,13 @@ export default function Dashboard() {
                     {acoesAbertas ? (
                       <div className="proto-cockpit-card__drawer">
                         {p.relatorioServicoId ? (
-                          <button type="button" className="btn-primary proto-cockpit-btn proto-cockpit-btn--ghost" onClick={() => abrirRelatorioServicoLigado(p.relatorioServicoId!)}>
+                          <button type="button" className="proto-action-btn proto-cockpit-btn proto-cockpit-btn--ghost" onClick={() => abrirRelatorioServicoLigado(p.relatorioServicoId!)}>
                             📋 {protoT?.protocolosServicoRelatorioAbrir || 'Relatório ligado'}
                           </button>
                         ) : null}
                         <button
                           type="button"
-                          className="btn-primary proto-cockpit-btn proto-cockpit-btn--ghost"
+                          className="proto-action-btn proto-cockpit-btn proto-cockpit-btn--ghost"
                           onClick={() => {
                             const msg =
                               protoT?.protocolosServicoConcluirConfirm ||
@@ -34207,7 +34207,7 @@ export default function Dashboard() {
                         >
                           ✓ {protoT?.protocolosServicoConcluirArquivar || 'Concluir'}
                         </button>
-                        <button type="button" className="btn-primary proto-cockpit-btn proto-cockpit-btn--ghost" onClick={() => abrirEdicaoProtocolo(p)}>
+                        <button type="button" className="proto-action-btn proto-cockpit-btn proto-cockpit-btn--ghost" onClick={() => abrirEdicaoProtocolo(p)}>
                           {protoT?.protocolosServicoEditar || 'Editar'}
                         </button>
                         <button
@@ -34232,7 +34232,7 @@ export default function Dashboard() {
                     ) : null}
                   </>
                 ) : (
-                  <button type="button" className="btn-primary proto-cockpit-btn proto-cockpit-btn--ghost" onClick={() => abrirEdicaoProtocolo(p)}>
+                  <button type="button" className="proto-action-btn proto-cockpit-btn proto-cockpit-btn--ghost" onClick={() => abrirEdicaoProtocolo(p)}>
                     {protoT?.protocolosServicoEditar || 'Editar'}
                   </button>
                 )}
@@ -34304,17 +34304,17 @@ export default function Dashboard() {
                 </select>
                 <button
                   type="button"
-                  className="btn-primary proto-arquivo-row__btn proto-arquivo-row__btn--pdf"
+                  className="proto-action-btn proto-arquivo-row__btn proto-arquivo-row__btn--pdf"
                   onClick={() => gerarPDFProtocolo(p, modeloImpressao)}
                 >
                   PDF
                 </button>
-                <button type="button" className="btn-primary proto-arquivo-row__btn" onClick={() => abrirEdicaoProtocolo(p)}>
+                <button type="button" className="proto-action-btn proto-arquivo-row__btn" onClick={() => abrirEdicaoProtocolo(p)}>
                   {protoT?.protocolosServicoEditar || 'Editar'}
                 </button>
                 <button
                   type="button"
-                  className="btn-primary proto-arquivo-row__btn proto-arquivo-row__btn--ghost"
+                  className="proto-action-btn proto-arquivo-row__btn proto-arquivo-row__btn--ghost"
                   onClick={() => reabrirProtocoloExecucao(p.id)}
                   title={protoT?.protocolosServicoReabrirExecucao || 'Reabrir execução'}
                 >

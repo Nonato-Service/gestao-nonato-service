@@ -22218,6 +22218,26 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   vertical-align: middle;
 }
 
+/* Botões de protocolo — classe própria (sem btn-primary verde global) */
+.proto-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-sizing: border-box;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: rgba(21, 128, 61, 0.35);
+  border: 1px solid rgba(74, 222, 128, 0.55);
+  transition: filter 0.2s ease, background-color 0.2s ease;
+}
+
+.proto-action-btn:hover:not(:disabled) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  filter: brightness(1.12);
+}
+
 .proto-arquivo-row__btn {
   padding: 6px 10px !important;
   margin-right: 4px;
@@ -22438,7 +22458,7 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   -webkit-text-fill-color: #ffffff !important;
 }
 
-.proto-cockpit-btn:hover {
+.proto-cockpit-btn:hover:not(:disabled) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }

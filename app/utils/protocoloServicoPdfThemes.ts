@@ -44,19 +44,21 @@ function escAttr(s: string): string {
 /** Layout do cabeçalho v3 — sem logo; dados do cliente e equipamento em destaque */
 const HDR_LAYOUT_CSS = `
 .pdf-watermark{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
-.pdf-watermark__mosaic{position:absolute;inset:-45%;background-repeat:repeat;background-size:150px 150px;background-position:center;opacity:0.085;transform:rotate(-28deg);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.pdf-watermark__center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8mm;box-sizing:border-box;}
+.pdf-watermark__logo{width:min(92vw,720px);height:min(92vh,860px);max-width:720px;object-fit:contain;opacity:0.13;transform:rotate(-20deg);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.pdf-watermark__logo--user{mix-blend-mode:multiply;opacity:0.16;filter:contrast(1.04);}
 .pdf-page-content{position:relative;z-index:1;}
 .pdf-header.hdr-pro{position:relative;z-index:1;}
 body{position:relative;background:#fff;}
-body.pdf-has-watermark .pdf-header.hdr-pro{background:rgba(255,255,255,0.9)!important;}
-body.pdf-has-watermark .sec{background:rgba(255,255,255,0.9)!important;}
-body.pdf-has-watermark .proto-acao-card{background:rgba(255,255,255,0.91)!important;}
-body.pdf-has-watermark .proto-acao-card__head{background:linear-gradient(180deg,rgba(248,250,252,0.92),rgba(238,242,247,0.92))!important;}
-body.pdf-has-watermark .proto-acao-card__texto{background:rgba(255,255,255,0.88)!important;}
-body.pdf-has-watermark .proto-acao-card__media{background:rgba(248,250,252,0.88)!important;}
-body.pdf-has-watermark .proto-img-gallery{background:linear-gradient(180deg,rgba(248,250,252,0.9),rgba(241,245,249,0.9))!important;}
-body.pdf-has-watermark .proto-condicoes-card{background:rgba(255,255,255,0.91)!important;}
-body.pdf-has-watermark .proto-estado{background:rgba(255,255,255,0.92)!important;}
+body.pdf-has-watermark .pdf-header.hdr-pro{background:rgba(255,255,255,0.88)!important;}
+body.pdf-has-watermark .sec{background:rgba(255,255,255,0.88)!important;}
+body.pdf-has-watermark .proto-acao-card{background:rgba(255,255,255,0.9)!important;}
+body.pdf-has-watermark .proto-acao-card__head{background:linear-gradient(180deg,rgba(248,250,252,0.9),rgba(238,242,247,0.9))!important;}
+body.pdf-has-watermark .proto-acao-card__texto{background:rgba(255,255,255,0.86)!important;}
+body.pdf-has-watermark .proto-acao-card__media{background:rgba(248,250,252,0.86)!important;}
+body.pdf-has-watermark .proto-img-gallery{background:linear-gradient(180deg,rgba(248,250,252,0.88),rgba(241,245,249,0.88))!important;}
+body.pdf-has-watermark .proto-condicoes-card{background:rgba(255,255,255,0.9)!important;}
+body.pdf-has-watermark .proto-estado{background:rgba(255,255,255,0.9)!important;}
 .pdf-header.hdr-pro{margin:0 0 22px;padding:0;background:#fff;border:2px solid #0f172a;border-radius:10px;overflow:hidden;box-sizing:border-box;box-shadow:0 4px 18px rgba(15,23,42,0.08);}
 .hdr-pro__inner{display:flex;flex-direction:column;gap:14px;padding:18px 22px;box-sizing:border-box;width:100%;}
 .hdr-pro__top{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 20px;width:100%;}
@@ -79,7 +81,7 @@ body.pdf-has-watermark .proto-estado{background:rgba(255,255,255,0.92)!important
 .hdr-pro__meta-label{font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;}
 .hdr-pro__meta-value{font-size:9.5pt;font-weight:700;color:#0f172a;}
 .hdr-pro__accent{height:4px;background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);border:0;margin:0;width:100%;}
-@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark{position:fixed;inset:0;z-index:0;}.pdf-watermark__mosaic{opacity:0.07;}}
+@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark{position:fixed;inset:0;z-index:0;}.pdf-watermark__logo{opacity:0.11;}.pdf-watermark__logo--user{opacity:0.13;}}
 `
 
 /** Por modelo: acentos de cor no cabeçalho v2 */
@@ -139,10 +141,18 @@ const PROTOCOLO_WATERMARK_SVG =
 
 const PROTOCOLO_WATERMARK_DATA_URI = `data:image/svg+xml,${encodeURIComponent(PROTOCOLO_WATERMARK_SVG)}`
 
-function buildWatermarkHtml(_logoHtml: string): string {
-  /* Nunca usar logoHtml (PNG com fundo branco do administrador) — só engrenagens transparentes */
-  const uri = PROTOCOLO_WATERMARK_DATA_URI
-  return `<div class="pdf-watermark" aria-hidden="true"><div class="pdf-watermark__mosaic" style="background-image:url(&quot;${uri}&quot;)"></div></div>`
+function extractImgSrcFromLogoHtml(logoHtml: string): string {
+  const m = String(logoHtml || '').match(/\ssrc\s*=\s*(["'])([\s\S]*?)\1/i)
+  return m?.[2]?.trim() || ''
+}
+
+function buildWatermarkHtml(logoHtml: string): string {
+  const src = extractImgSrcFromLogoHtml(logoHtml)
+  const safeSrc = src ? src.replace(/"/g, '&quot;').replace(/'/g, '&#39;') : ''
+  const img = safeSrc
+    ? `<img class="pdf-watermark__logo pdf-watermark__logo--user" src="${safeSrc}" alt="" />`
+    : `<img class="pdf-watermark__logo" src="${PROTOCOLO_WATERMARK_DATA_URI}" alt="" />`
+  return `<div class="pdf-watermark" aria-hidden="true"><div class="pdf-watermark__center">${img}</div></div>`
 }
 
 function buildHeaderFragments(o: HeaderOpts): string[] {
