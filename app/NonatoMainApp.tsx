@@ -345,6 +345,7 @@ import {
   type ProtocoloTemplateId,
 } from './lib/protocoloInteligente'
 import { buildProtocoloServicoPdfHtmlFromProtocolo } from './lib/protocoloPdfBuild'
+import { prepareProtocoloWatermarkSrc } from './utils/protocoloPdfWatermark'
 import { PDF_LOGO_SITUATIONS, PDF_LOGO_LEGACY_STORAGE_KEYS, buildEmptyPdfLogoSelection, type PdfLogoSituationId } from './lib/adminPdfLogoSituations'
 import {
   buildSolicitacaoServicoTecnicoPrintHtml,
@@ -9183,6 +9184,8 @@ export default function Dashboard() {
   /** Ordenação da tabela do arquivo (executados). */
   const [protocoloArquivoOrdemCol, setProtocoloArquivoOrdemCol] = useState<'equip' | 'serie' | 'data' | 'resumo'>('data')
   const [protocoloArquivoOrdemDir, setProtocoloArquivoOrdemDir] = useState<'asc' | 'desc'>('desc')
+  /** Logo da marca d'água (PNG sem fundo branco) — preparado para PDF */
+  const [protocoloWatermarkSrc, setProtocoloWatermarkSrc] = useState('')
   const PROTOCOLO_SERVICO_DRAFT_KEY = 'nonato-protocolo-servico-draft'
   /** Valor do <select> «Filtrar por cliente» que esconde todos os cartões (lista vazia). */
   const PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM = '__proto_cliente_nenhum__'
@@ -19985,6 +19988,16 @@ export default function Dashboard() {
 
   // Helper: HTML do logo para PDF de Protocolos de Serviço (opção separada no Administrador)
   const getLogoHtmlForProtocoloServico = (): string => getLogoHtmlForSituation('protocolos')
+
+  useEffect(() => {
+    let cancelled = false
+    void prepareProtocoloWatermarkSrc(getLogoHtmlForProtocoloServico()).then((src) => {
+      if (!cancelled) setProtocoloWatermarkSrc(src)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [pdfLogoSelectedIds, pdfLogosModoUnificado])
 
   const getLogoHtmlForChecklist = (): string => getLogoHtmlForSituation('checklist')
 
@@ -33690,7 +33703,7 @@ export default function Dashboard() {
         )
         const serieProtocoloResumo = (equipamentoProto?.numeroSerie || protocoloServicoForm.equipamentoNumeroSerie || '').trim()
         const idEquipamentoVisivel = idEquipamentoVisivelParaProtocolo(equipamentoProto, equipamentos)
-        const montarHtmlPDFProtocolo = (p: ProtocoloServico, modeloOverride?: number) => {
+        const montarHtmlPDFProtocolo = (p: ProtocoloServico, modeloOverride?: number, watermarkSrc?: string) => {
           const cl = clientes.find((c) => c.id === p.clienteId)
           const snP = (p.equipamentoNumeroSerie || '').trim()
           const eq = cl?.equipamentos?.find((e) => (e.numeroSerie || '').trim() === snP)
@@ -33717,10 +33730,13 @@ export default function Dashboard() {
             dateLocale: documentPdfDateLocale(selectedLanguage),
             modeloOverride,
             pageOrigin: typeof window !== 'undefined' ? window.location.origin : '',
+            watermarkSrc: watermarkSrc || protocoloWatermarkSrc || undefined,
           })
         }
-        const gerarPDFProtocolo = (p: ProtocoloServico, modeloOverride?: number) => {
-          const html = montarHtmlPDFProtocolo(p, modeloOverride)
+        const gerarPDFProtocolo = async (p: ProtocoloServico, modeloOverride?: number) => {
+          const wm = await prepareProtocoloWatermarkSrc(getLogoHtmlForProtocoloServico())
+          setProtocoloWatermarkSrc(wm)
+          const html = montarHtmlPDFProtocolo(p, modeloOverride, wm)
           const w = window.open('', '_blank')
           if (w) {
             w.document.write(html)

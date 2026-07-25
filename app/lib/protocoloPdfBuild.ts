@@ -192,6 +192,7 @@ export type ProtocoloPdfBuildInput = {
   dateLocale: string
   modeloOverride?: number
   pageOrigin?: string
+  watermarkSrc?: string
 }
 
 export function buildProtocoloServicoPdfHtmlFromProtocolo(input: ProtocoloPdfBuildInput): string {
@@ -272,6 +273,7 @@ export function buildProtocoloServicoPdfHtmlFromProtocolo(input: ProtocoloPdfBui
       },
     },
     bodyInner,
-    input.pageOrigin
+    input.pageOrigin,
+    input.watermarkSrc
   )
 }

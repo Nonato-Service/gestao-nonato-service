@@ -3,6 +3,8 @@
  * Cabeçalho único, alinhado como documento profissional; modelos diferem só em cor/accento e corpo.
  */
 
+import { PROTOCOLO_WATERMARK_FALLBACK_DATA_URI } from './protocoloPdfWatermark'
+
 export const PROTOCOLO_SERVICO_PDF_MODELOS_MAX = 15
 /** Modelo recomendado para novos protocolos — visual forte (navy + verde). */
 export const PROTOCOLO_PDF_MODELO_PADRAO = 15
@@ -45,20 +47,10 @@ function escAttr(s: string): string {
 const HDR_LAYOUT_CSS = `
 .pdf-watermark{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
 .pdf-watermark__center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6mm;box-sizing:border-box;}
-.pdf-watermark__logo{width:min(78vw,620px);height:min(82vh,720px);max-width:620px;object-fit:contain;opacity:0.14;transform:rotate(-18deg);display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-.pdf-watermark__logo--user{mix-blend-mode:multiply;opacity:0.17;filter:contrast(1.04);}
+.pdf-watermark__logo{width:min(78vw,620px);height:min(82vh,720px);max-width:620px;object-fit:contain;opacity:0.14;transform:rotate(-18deg);display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact;background:transparent!important;}
 .pdf-page-content{position:relative;z-index:1;}
 .pdf-header.hdr-pro{position:relative;z-index:1;}
 body{position:relative;background:#fff;}
-body.pdf-has-watermark .pdf-header.hdr-pro{background:rgba(255,255,255,0.88)!important;}
-body.pdf-has-watermark .sec{background:rgba(255,255,255,0.88)!important;}
-body.pdf-has-watermark .proto-acao-card{background:rgba(255,255,255,0.9)!important;}
-body.pdf-has-watermark .proto-acao-card__head{background:linear-gradient(180deg,rgba(248,250,252,0.9),rgba(238,242,247,0.9))!important;}
-body.pdf-has-watermark .proto-acao-card__texto{background:rgba(255,255,255,0.86)!important;}
-body.pdf-has-watermark .proto-acao-card__media{background:rgba(248,250,252,0.86)!important;}
-body.pdf-has-watermark .proto-img-gallery{background:linear-gradient(180deg,rgba(248,250,252,0.88),rgba(241,245,249,0.88))!important;}
-body.pdf-has-watermark .proto-condicoes-card{background:rgba(255,255,255,0.9)!important;}
-body.pdf-has-watermark .proto-estado{background:rgba(255,255,255,0.9)!important;}
 .pdf-header.hdr-pro{margin:0 0 22px;padding:0;background:#fff;border:2px solid #0f172a;border-radius:10px;overflow:hidden;box-sizing:border-box;box-shadow:0 4px 18px rgba(15,23,42,0.08);}
 .hdr-pro__inner{display:flex;flex-direction:column;gap:14px;padding:18px 22px;box-sizing:border-box;width:100%;}
 .hdr-pro__top{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 20px;width:100%;}
@@ -81,7 +73,7 @@ body.pdf-has-watermark .proto-estado{background:rgba(255,255,255,0.9)!important;
 .hdr-pro__meta-label{font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;}
 .hdr-pro__meta-value{font-size:9.5pt;font-weight:700;color:#0f172a;}
 .hdr-pro__accent{height:4px;background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);border:0;margin:0;width:100%;}
-@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark{position:fixed;inset:0;z-index:0;}.pdf-watermark__logo{opacity:0.12;}.pdf-watermark__logo--user{opacity:0.15;}}
+@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark{position:fixed;inset:0;z-index:0;}.pdf-watermark__logo{opacity:0.12;background:transparent!important;}}
 `
 
 /** Por modelo: acentos de cor no cabeçalho v2 */
@@ -135,28 +127,12 @@ function buildHeaderHtml(variantIndex: number, o: HeaderOpts): string {
   return `<header class="pdf-header hdr-pro hdr-v${v}" role="banner"><div class="hdr-pro__inner"><div class="hdr-pro__top"><div class="hdr-pro__company-block"><span class="hdr-pro__company-name">Nonato Service</span><span class="hdr-pro__company-tag">Assistência técnica</span></div><div class="hdr-pro__doc-meta"><p class="hdr-pro__kicker">Protocolo de serviço</p><div class="hdr-pro__meta"><span class="hdr-pro__meta-chip"><span class="hdr-pro__meta-label">Emitido em</span><span class="hdr-pro__meta-value">${d}</span></span></div></div></div><div class="hdr-pro__client-block"><span class="hdr-pro__client-label">${clienteLabel}</span>${clienteHtml}</div>${equipHtml}</div><div class="hdr-pro__accent" aria-hidden="true"></div></header>`
 }
 
-/** SVG só engrenagens — embutido (funciona em about:blank ao imprimir; sem PNG/fundo branco) */
-const PROTOCOLO_WATERMARK_SVG =
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="30 15 250 290"><defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></linearGradient></defs><path d="M248 78C272 118 284 162 276 206C266 252 228 286 182 298C132 310 78 292 48 252C18 212 12 154 34 104C56 54 108 22 162 24C198 26 228 44 248 78" fill="none" stroke="url(#g1)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/><g transform="translate(118 168)"><circle r="46" fill="url(#g1)"/><circle r="18" fill="#ecfdf5"/><g fill="url(#g1)"><rect x="-7" y="-58" width="14" height="18" rx="3"/><rect x="-7" y="40" width="14" height="18" rx="3"/><rect x="-58" y="-7" width="18" height="14" rx="3"/><rect x="40" y="-7" width="18" height="14" rx="3"/><rect x="-41" y="-41" width="14" height="18" rx="3" transform="rotate(-45)"/><rect x="27" y="27" width="14" height="18" rx="3" transform="rotate(-45)"/><rect x="27" y="-41" width="14" height="18" rx="3" transform="rotate(45)"/><rect x="-41" y="27" width="14" height="18" rx="3" transform="rotate(45)"/></g></g><g transform="translate(196 108)"><circle r="30" fill="url(#g1)"/><circle r="11" fill="#ecfdf5"/><g fill="url(#g1)"><rect x="-5" y="-38" width="10" height="12" rx="2"/><rect x="-5" y="26" width="10" height="12" rx="2"/><rect x="-38" y="-5" width="12" height="10" rx="2"/><rect x="26" y="-5" width="12" height="10" rx="2"/></g></g></svg>'
-
-const PROTOCOLO_WATERMARK_DATA_URI = `data:image/svg+xml,${encodeURIComponent(PROTOCOLO_WATERMARK_SVG)}`
-
-function extractImgSrcFromLogoHtml(logoHtml: string): string {
-  const m = String(logoHtml || '').match(/\ssrc\s*=\s*(["'])([\s\S]*?)\1/i)
-  return m?.[2]?.trim() || ''
-}
-
-function buildWatermarkHtml(logoHtml: string): string {
-  const rawSrc = extractImgSrcFromLogoHtml(logoHtml)
-  const imgSrc = rawSrc || PROTOCOLO_WATERMARK_DATA_URI
-  const isUser = Boolean(rawSrc)
+function buildWatermarkHtml(watermarkSrc?: string): string {
+  const imgSrc = String(watermarkSrc || '').trim() || PROTOCOLO_WATERMARK_FALLBACK_DATA_URI
   const safeSrc = imgSrc.replace(/"/g, '&quot;').replace(/'/g, '&#39;')
-  const userClass = isUser ? ' pdf-watermark__logo--user' : ''
   const inlineStyle =
-    'width:min(78vw,620px);height:min(82vh,720px);max-width:620px;object-fit:contain;opacity:' +
-    (isUser ? '0.17' : '0.14') +
-    ';transform:rotate(-18deg);display:block;'
-  return `<div class="pdf-watermark" aria-hidden="true"><div class="pdf-watermark__center"><img class="pdf-watermark__logo${userClass}" style="${inlineStyle}" src="${safeSrc}" alt="" /></div></div>`
+    'width:min(78vw,620px);height:min(82vh,720px);max-width:620px;object-fit:contain;opacity:0.14;transform:rotate(-18deg);display:block;background:transparent;'
+  return `<div class="pdf-watermark" aria-hidden="true"><div class="pdf-watermark__center"><img class="pdf-watermark__logo" style="${inlineStyle}" src="${safeSrc}" alt="" /></div></div>`
 }
 
 function buildHeaderFragments(o: HeaderOpts): string[] {
@@ -333,12 +309,13 @@ export function buildProtocoloServicoPrintHtml(
   idx0: number,
   headerOpts: HeaderOpts,
   bodyInner: string,
-  pageOrigin?: string
+  pageOrigin?: string,
+  watermarkSrc?: string
 ): string {
   const idx = Math.max(0, Math.min(PROTOCOLO_SERVICO_PDF_MODELOS_MAX - 1, idx0))
   const css = getCssBlocks()[idx]
   const header = buildHeaderFragments(headerOpts)[idx]
-  const watermark = buildWatermarkHtml(headerOpts.logoHtml)
+  const watermark = buildWatermarkHtml(watermarkSrc)
   const titleSafe = headerOpts.tituloProto.replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const origin = String(pageOrigin || '').trim().replace(/\/$/, '')
   const baseTag = origin ? `<base href="${escAttr(origin)}/"/>` : ''
