@@ -43,11 +43,12 @@ function escAttr(s: string): string {
 
 /** Layout do cabeçalho v3 — sem logo; dados do cliente e equipamento em destaque */
 const HDR_LAYOUT_CSS = `
-.pdf-watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-28deg);z-index:0;pointer-events:none;width:72%;max-width:520px;text-align:center;opacity:0.07;}
-.pdf-watermark__inner{display:flex;align-items:center;justify-content:center;}
-.pdf-watermark img{max-width:100%;max-height:420px;width:auto;height:auto;object-fit:contain;display:block;}
-.pdf-watermark .logo-fallback{font-size:42px;font-weight:900;color:#14532d;letter-spacing:0.18em;line-height:1.2;}
+.pdf-watermark{position:fixed;inset:0;z-index:99999;pointer-events:none;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.pdf-watermark__inner{display:flex;align-items:center;justify-content:center;transform:rotate(-28deg);width:min(84%,580px);max-width:580px;opacity:0.13;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.pdf-watermark img{width:100%;max-height:520px;height:auto;object-fit:contain;display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.pdf-watermark .logo-fallback{font-size:46px;font-weight:900;color:#14532d;letter-spacing:0.18em;line-height:1.2;opacity:0.18;}
 .pdf-page-content{position:relative;z-index:1;}
+.pdf-header.hdr-pro{position:relative;z-index:1;}
 body{position:relative;}
 .pdf-header.hdr-pro{margin:0 0 22px;padding:0;background:#fff;border:2px solid #0f172a;border-radius:10px;overflow:hidden;box-sizing:border-box;box-shadow:0 4px 18px rgba(15,23,42,0.08);}
 .hdr-pro__inner{display:flex;flex-direction:column;gap:14px;padding:18px 22px;box-sizing:border-box;width:100%;}
@@ -71,7 +72,7 @@ body{position:relative;}
 .hdr-pro__meta-label{font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;}
 .hdr-pro__meta-value{font-size:9.5pt;font-weight:700;color:#0f172a;}
 .hdr-pro__accent{height:4px;background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);border:0;margin:0;width:100%;}
-@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark{opacity:0.06;}}
+@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark__inner{opacity:0.10;}.pdf-watermark{position:fixed;inset:0;}}
 `
 
 /** Por modelo: acentos de cor no cabeçalho v2 */
@@ -310,5 +311,5 @@ export function buildProtocoloServicoPrintHtml(
   const header = buildHeaderFragments(headerOpts)[idx]
   const watermark = buildWatermarkHtml(headerOpts.logoHtml)
   const titleSafe = headerOpts.tituloProto.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  return `<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${titleSafe}</title><style>${css}</style></head><body>${watermark}${header}<div class="body-wrap pdf-page-content">${bodyInner}</div></body></html>`
+  return `<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${titleSafe}</title><style>${css}</style></head><body class="pdf-has-watermark">${header}<div class="body-wrap pdf-page-content">${bodyInner}</div>${watermark}</body></html>`
 }
