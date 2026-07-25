@@ -191,6 +191,7 @@ export type ProtocoloPdfBuildInput = {
   }
   dateLocale: string
   modeloOverride?: number
+  pageOrigin?: string
 }
 
 export function buildProtocoloServicoPdfHtmlFromProtocolo(input: ProtocoloPdfBuildInput): string {
@@ -270,6 +271,7 @@ export function buildProtocoloServicoPdfHtmlFromProtocolo(input: ProtocoloPdfBui
         numeroSerie: L.numeroSerie,
       },
     },
-    bodyInner
+    bodyInner,
+    input.pageOrigin
   )
 }

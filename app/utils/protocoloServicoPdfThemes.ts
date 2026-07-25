@@ -44,9 +44,9 @@ function escAttr(s: string): string {
 /** Layout do cabeçalho v3 — sem logo; dados do cliente e equipamento em destaque */
 const HDR_LAYOUT_CSS = `
 .pdf-watermark{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
-.pdf-watermark__center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8mm;box-sizing:border-box;}
-.pdf-watermark__logo{width:min(92vw,720px);height:min(92vh,860px);max-width:720px;object-fit:contain;opacity:0.13;transform:rotate(-20deg);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-.pdf-watermark__logo--user{mix-blend-mode:multiply;opacity:0.16;filter:contrast(1.04);}
+.pdf-watermark__center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6mm;box-sizing:border-box;}
+.pdf-watermark__logo{width:min(96vw,820px);height:min(96vh,980px);max-width:820px;object-fit:contain;opacity:0.22;transform:rotate(-18deg);display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.pdf-watermark__logo--user{mix-blend-mode:multiply;opacity:0.26;filter:contrast(1.08);}
 .pdf-page-content{position:relative;z-index:1;}
 .pdf-header.hdr-pro{position:relative;z-index:1;}
 body{position:relative;background:#fff;}
@@ -81,7 +81,7 @@ body.pdf-has-watermark .proto-estado{background:rgba(255,255,255,0.9)!important;
 .hdr-pro__meta-label{font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;}
 .hdr-pro__meta-value{font-size:9.5pt;font-weight:700;color:#0f172a;}
 .hdr-pro__accent{height:4px;background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);border:0;margin:0;width:100%;}
-@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark{position:fixed;inset:0;z-index:0;}.pdf-watermark__logo{opacity:0.11;}.pdf-watermark__logo--user{opacity:0.13;}}
+@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark{position:fixed;inset:0;z-index:0;}.pdf-watermark__logo{opacity:0.18;}.pdf-watermark__logo--user{opacity:0.22;}}
 `
 
 /** Por modelo: acentos de cor no cabeçalho v2 */
@@ -147,12 +147,16 @@ function extractImgSrcFromLogoHtml(logoHtml: string): string {
 }
 
 function buildWatermarkHtml(logoHtml: string): string {
-  const src = extractImgSrcFromLogoHtml(logoHtml)
-  const safeSrc = src ? src.replace(/"/g, '&quot;').replace(/'/g, '&#39;') : ''
-  const img = safeSrc
-    ? `<img class="pdf-watermark__logo pdf-watermark__logo--user" src="${safeSrc}" alt="" />`
-    : `<img class="pdf-watermark__logo" src="${PROTOCOLO_WATERMARK_DATA_URI}" alt="" />`
-  return `<div class="pdf-watermark" aria-hidden="true"><div class="pdf-watermark__center">${img}</div></div>`
+  const rawSrc = extractImgSrcFromLogoHtml(logoHtml)
+  const imgSrc = rawSrc || PROTOCOLO_WATERMARK_DATA_URI
+  const isUser = Boolean(rawSrc)
+  const safeSrc = imgSrc.replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+  const userClass = isUser ? ' pdf-watermark__logo--user' : ''
+  const inlineStyle =
+    'width:min(96vw,820px);height:min(96vh,980px);max-width:820px;object-fit:contain;opacity:' +
+    (isUser ? '0.26' : '0.22') +
+    ';transform:rotate(-18deg);display:block;'
+  return `<div class="pdf-watermark" aria-hidden="true"><div class="pdf-watermark__center"><img class="pdf-watermark__logo${userClass}" style="${inlineStyle}" src="${safeSrc}" alt="" /></div></div>`
 }
 
 function buildHeaderFragments(o: HeaderOpts): string[] {
@@ -328,12 +332,15 @@ export function getProtocoloPdfDynamicStyles(idx0: number): {
 export function buildProtocoloServicoPrintHtml(
   idx0: number,
   headerOpts: HeaderOpts,
-  bodyInner: string
+  bodyInner: string,
+  pageOrigin?: string
 ): string {
   const idx = Math.max(0, Math.min(PROTOCOLO_SERVICO_PDF_MODELOS_MAX - 1, idx0))
   const css = getCssBlocks()[idx]
   const header = buildHeaderFragments(headerOpts)[idx]
   const watermark = buildWatermarkHtml(headerOpts.logoHtml)
   const titleSafe = headerOpts.tituloProto.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  return `<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${titleSafe}</title><style>${css}</style></head><body class="pdf-has-watermark">${watermark}${header}<div class="body-wrap pdf-page-content">${bodyInner}</div></body></html>`
+  const origin = String(pageOrigin || '').trim().replace(/\/$/, '')
+  const baseTag = origin ? `<base href="${escAttr(origin)}/"/>` : ''
+  return `<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>${baseTag}<title>${titleSafe}</title><style>${css}</style></head><body class="pdf-has-watermark">${watermark}${header}<div class="body-wrap pdf-page-content">${bodyInner}</div></body></html>`
 }

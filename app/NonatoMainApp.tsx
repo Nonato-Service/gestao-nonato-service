@@ -33716,6 +33716,7 @@ export default function Dashboard() {
             },
             dateLocale: documentPdfDateLocale(selectedLanguage),
             modeloOverride,
+            pageOrigin: typeof window !== 'undefined' ? window.location.origin : '',
           })
         }
         const gerarPDFProtocolo = (p: ProtocoloServico, modeloOverride?: number) => {
