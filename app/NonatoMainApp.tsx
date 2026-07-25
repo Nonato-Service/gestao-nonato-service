@@ -209,7 +209,9 @@ import { GestaoDemosContent } from './components/GestaoDemosContent'
 import { ManuaisInformacoesContent } from './components/ManuaisInformacoesContent'
 import ManualProgramaContent from './components/ManualProgramaContent'
 import type { ManualProgramaPageDef } from './lib/manualProgramaCatalog'
+import { GestoresTecnicosPanel } from './components/pessoas/GestoresTecnicosPanel'
 import { ConhecimentoTecnicosContent } from './components/ConhecimentoTecnicosContent'
+import type { GestorFormState, TecnicoFormState, TipoGestorFormState } from './lib/pessoaTypes'
 import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { DiarioLembreteIntervalPicker } from './components/DiarioLembreteIntervalPicker'
 import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'
@@ -14966,28 +14968,23 @@ export default function Dashboard() {
     }
   }
 
-  const handleSaveGestor = (): boolean => {
-    if (!gestorForm.name || !gestorForm.email || !gestorForm.phone) {
+  const handleSaveGestor = (formOverride?: GestorFormState, editingOverride?: Gestor | null): boolean => {
+    const form = formOverride ?? gestorForm
+    const editing = editingOverride !== undefined ? editingOverride : editingGestor
+    if (!form.name || !form.email || !form.phone) {
       alert(t.fillAllFields)
       return false
     }
 
-    const savedGestor: Gestor = editingGestor
-      ? { ...editingGestor, ...gestorForm }
-      : {
-          id: Date.now().toString(),
-          ...gestorForm
-        }
+    const agora = new Date().toISOString()
+    const savedGestor: Gestor = editing
+      ? { ...editing, ...form, dataAtualizacao: agora }
+      : { id: Date.now().toString(), ...form, dataAtualizacao: agora }
 
-    const isNewGestor = !editingGestor
-    let updatedGestores: Gestor[]
-    if (editingGestor) {
-      updatedGestores = gestores.map(g =>
-        g.id === editingGestor.id ? savedGestor : g
-      )
-    } else {
-      updatedGestores = [...gestores, savedGestor]
-    }
+    const isNewGestor = !editing
+    const updatedGestores = editing
+      ? gestores.map((g) => (g.id === editing.id ? savedGestor : g))
+      : [...gestores, savedGestor]
 
     setGestores(updatedGestores)
     void saveData('nonato-gestores', updatedGestores)
@@ -15028,30 +15025,28 @@ export default function Dashboard() {
     }
   }
 
-  const handleSaveTipoGestor = () => {
-    if (!tipoGestorForm.nome || !tipoGestorForm.id) {
+  const handleSaveTipoGestor = (formOverride?: TipoGestorFormState, editingOverride?: TipoGestor | null): boolean => {
+    const form = formOverride ?? tipoGestorForm
+    const editing = editingOverride !== undefined ? editingOverride : editingTipoGestor
+    if (!form.nome || !form.id) {
       alert('Preencha o nome e o ID do tipo')
-      return
+      return false
     }
 
-    const isEditingExisting = Boolean(
-      editingTipoGestor?.id && tiposGestores.some((t) => t.id === editingTipoGestor.id)
-    )
+    const isEditingExisting = Boolean(editing?.id && tiposGestores.some((t) => t.id === editing.id))
 
-    if (!isEditingExisting && tiposGestores.some((t) => t.id === tipoGestorForm.id)) {
+    if (!isEditingExisting && tiposGestores.some((t) => t.id === form.id)) {
       alert('Já existe um tipo com este ID. Escolha outro nome.')
-      return
+      return false
     }
 
-    const savedTipoGestor: TipoGestor = { ...tipoGestorForm }
+    const savedTipoGestor: TipoGestor = { ...form }
     let updatedTipos: TipoGestor[]
-    if (isEditingExisting && editingTipoGestor) {
-      updatedTipos = tiposGestores.map((t) =>
-        t.id === editingTipoGestor.id ? savedTipoGestor : t
-      )
-      if (editingTipoGestor.id !== tipoGestorForm.id) {
+    if (isEditingExisting && editing) {
+      updatedTipos = tiposGestores.map((t) => (t.id === editing.id ? savedTipoGestor : t))
+      if (editing.id !== form.id) {
         const updatedGestores = gestores.map((g) =>
-          g.area === editingTipoGestor.id ? { ...g, area: tipoGestorForm.id } : g
+          g.area === editing.id ? { ...g, area: form.id } : g
         )
         setGestores(updatedGestores)
         void saveData('nonato-gestores', updatedGestores)
@@ -15063,10 +15058,10 @@ export default function Dashboard() {
     setTiposGestores(updatedTipos)
     void saveData('nonato-tipos-gestores', updatedTipos)
     setEditingTipoGestor(null)
-    const novaOrdem =
-      updatedTipos.length > 0 ? Math.max(...updatedTipos.map((t) => t.ordem)) + 1 : 1
+    const novaOrdem = updatedTipos.length > 0 ? Math.max(...updatedTipos.map((t) => t.ordem)) + 1 : 1
     setTipoGestorForm({ id: '', nome: '', cor: '#00c853', icone: '👤', ordem: novaOrdem })
     alert(isEditingExisting ? 'Tipo de gestor atualizado com sucesso.' : 'Tipo de gestor cadastrado com sucesso.')
+    return true
   }
 
   // Função auxiliar para obter informações do tipo de gestor
@@ -15123,30 +15118,29 @@ export default function Dashboard() {
     setTecnicoForm({ ...tecnicoForm, photo: '' })
   }
 
-  const handleSaveTecnico = (): boolean => {
-    if (!tecnicoForm.name || !tecnicoForm.email || !tecnicoForm.phone) {
+  const handleSaveTecnico = (formOverride?: TecnicoFormState, editingOverride?: Tecnico | null): boolean => {
+    const form = formOverride ?? tecnicoForm
+    const editing = editingOverride !== undefined ? editingOverride : editingTecnico
+    if (!form.name || !form.email || !form.phone) {
       alert(t.fillAllFields)
       return false
     }
 
-    const savedTecnico: Tecnico = editingTecnico
-      ? { ...editingTecnico, ...tecnicoForm }
+    const agora = new Date().toISOString()
+    const savedTecnico: Tecnico = editing
+      ? { ...editing, ...form, dataAtualizacao: agora }
       : {
           id: Date.now().toString(),
-          ...tecnicoForm
+          ...form,
+          dataAtualizacao: agora,
         }
 
-    if (editingTecnico) {
-      const updatedTecnicos = tecnicos.map(t => 
-        t.id === editingTecnico.id 
-          ? savedTecnico
-          : t
-      )
+    if (editing) {
+      const updatedTecnicos = tecnicos.map((t) => (t.id === editing.id ? savedTecnico : t))
       setTecnicos(updatedTecnicos)
       saveData('nonato-tecnicos', updatedTecnicos)
     } else {
-      const newTecnico: Tecnico = savedTecnico
-      const updatedTecnicos = [...tecnicos, newTecnico]
+      const updatedTecnicos = [...tecnicos, savedTecnico]
       setTecnicos(updatedTecnicos)
       saveData('nonato-tecnicos', updatedTecnicos)
       
@@ -15159,13 +15153,25 @@ export default function Dashboard() {
       }
       // Selecionar o técnico recém-criado
       setTimeout(() => {
-        setTecnicoSelecionado(newTecnico.id)
+        setTecnicoSelecionado(savedTecnico.id)
         setComunicacaoTecnicoActiveTab('enviar')
       }, 100)
     }
-    setTecnicoForm({ name: savedTecnico.name, email: savedTecnico.email, phone: savedTecnico.phone, address: savedTecnico.address, type: savedTecnico.type, photo: savedTecnico.photo || '' })
-    setEditingTecnico(savedTecnico)
-    setUnsavedFormBaseline('tecnico', savedTecnico)
+    setShowTecnicoForm(false)
+    setEditingTecnico(null)
+    setTecnicoForm({
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+      type: 'internal',
+      photo: '',
+    })
+    alert(
+      editing
+        ? (t.tecnicoUpdated || 'Técnico atualizado com sucesso.')
+        : (t.tecnicoSaved || 'Técnico cadastrado com sucesso.')
+    )
     return true
   }
 
@@ -18067,7 +18073,7 @@ export default function Dashboard() {
   useUnsavedFormGuard({
     id: 'gestor',
     label: 'Gestor',
-    enabled: showGestorForm,
+    enabled: false,
     sessionKey: String(editingGestor?.id ?? 'novo'),
     current: gestorForm,
     save: () => handleSaveGestor(),
@@ -18080,7 +18086,7 @@ export default function Dashboard() {
   useUnsavedFormGuard({
     id: 'tecnico',
     label: 'Técnico',
-    enabled: showTecnicoForm,
+    enabled: false,
     sessionKey: String(editingTecnico?.id ?? 'novo'),
     current: tecnicoForm,
     save: () => handleSaveTecnico(),
@@ -31104,416 +31110,70 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Abas de Navegação - ocultas em mobile */}
-            <div className="tab-nav-desktop tab-glass-nav">
-              <button 
-                className={`btn-primary tab-glass-nav__tab${gestoresActiveTab === 'gestores' ? ' tab-glass-nav__tab--active' : ''}`}
-                onClick={() => setGestoresActiveTab('gestores')}
-                style={{
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  border: '1px solid',
-                  borderColor: gestoresActiveTab === 'gestores' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 200, 83, 0.22)',
-                  backgroundColor: gestoresActiveTab === 'gestores' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
-                  color: '#ffffff',
-                  transition: 'border-color 0.2s ease, background-color 0.2s ease',
-                  borderRadius: '8px',
-                  cursor: 'pointer'
-                }}
-              >
-                👨‍💼 {safeT?.gestoresTab || 'Gestores'} ({gestores.length})
-              </button>
-              <button 
-                className={`btn-primary tab-glass-nav__tab${gestoresActiveTab === 'tecnicos' ? ' tab-glass-nav__tab--active' : ''}`}
-                onClick={() => setGestoresActiveTab('tecnicos')}
-                style={{
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  border: '1px solid',
-                  borderColor: gestoresActiveTab === 'tecnicos' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 200, 83, 0.22)',
-                  backgroundColor: gestoresActiveTab === 'tecnicos' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
-                  color: '#ffffff',
-                  transition: 'border-color 0.2s ease, background-color 0.2s ease',
-                  borderRadius: '8px',
-                  cursor: 'pointer'
-                }}
-              >
-                🔧 {safeT?.tecnicosTab || 'Técnicos'} ({tecnicos.length})
-              </button>
-            </div>
-
-            {gestoresActiveTab === 'gestores' ? (
-              <div>
-                {/* Banner destacado para gerenciar tipos */}
-                <div style={{ 
-                  ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }),
-                  marginBottom: '25px', 
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: '20px'
-                }}>
-                  <div style={{ flex: 1, minWidth: '250px' }}>
-                    <h3 style={{ margin: 0, marginBottom: '8px', color: '#ffffff', fontSize: '18px', fontWeight: 'bold' }}>
-                      ⚙️ Gerenciar Áreas de Atuação
-                    </h3>
-                    <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.82)', lineHeight: '1.5' }}>
-                      Adicione novos tipos de gestores (ex: Gestor de Qualidade, Gestor de Vendas, etc.) ou edite os existentes. Clique no botão ao lado para começar.
-                    </p>
-                  </div>
-                  <button 
-                    className="btn-primary" 
-                    onClick={() => setShowGerenciarTiposGestores(true)}
-                    style={{
-                      padding: '14px 28px',
-                      fontSize: '16px',
-                      border: '1px solid rgba(0, 200, 80, 0.55)',
-                      backgroundColor: 'rgba(18, 52, 24, 0.96)',
-                      color: '#ffffff',
-                      fontWeight: 'bold',
-                      whiteSpace: 'nowrap',
-                      cursor: 'pointer',
-                      borderRadius: '8px'
-                    }}
-                  >
-                    ➕ Gerenciar Tipos de Gestores
-                  </button>
-                </div>
-
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
-                  <button className="btn-primary" onClick={handleAddGestor}>
-                    {safeT?.addGestor || 'Adicionar Gestor'}
-                  </button>
-                  
-                  {/* Filtro por Área de Atuação */}
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginLeft: 'auto', flexWrap: 'wrap' }}>
-                    <label style={{ fontSize: '14px', color: '#ccc' }}>{safeT?.filtrarPorArea || 'Filtrar por Área:'}</label>
-                    <select
-                      value={filtroAreaGestor}
-                      onChange={(e) => setFiltroAreaGestor(e.target.value)}
-                      style={{
-                        padding: '8px 12px',
-                        backgroundColor: '#484848',
-                        color: '#fff',
-                        border: '1px solid rgba(0, 200, 83, 0.3)',
-                        borderRadius: '4px',
-                        fontSize: '14px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <option value="todas">Todas as Áreas</option>
-                      {tiposGestores.sort((a, b) => a.ordem - b.ordem).map(tipo => (
-                        <option key={tipo.id} value={tipo.id}>{tipo.icone} {tipo.nome}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                
-                {showGestorForm && !editingGestor && (
-                  <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
-                    <h3 style={{ marginBottom: '15px' }}>{safeT?.addGestor || 'Adicionar Gestor'}</h3>
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
-                      <input type="text" value={gestorForm.name} onChange={(e) => setGestorForm({ ...gestorForm, name: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
-                    </div>
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
-                      <input type="email" value={gestorForm.email} onChange={(e) => setGestorForm({ ...gestorForm, email: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
-                    </div>
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.phone || 'Telefone'}</label>
-                      <input type="text" value={gestorForm.phone} onChange={(e) => setGestorForm({ ...gestorForm, phone: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
-                    </div>
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.address || 'Endereço'}</label>
-                      <input type="text" value={gestorForm.address} onChange={(e) => setGestorForm({ ...gestorForm, address: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
-                    </div>
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.areaAtuacao || 'Área de Atuação'}</label>
-                      <select value={gestorForm.area} onChange={(e) => setGestorForm({ ...gestorForm, area: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}>
-                        {tiposGestores.sort((a, b) => a.ordem - b.ordem).map(tipo => (
-                          <option key={tipo.id} value={tipo.id}>{tipo.icone} {tipo.nome}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.photo || 'Foto'}</label>
-                      <input type="file" accept="image/*" onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) {
-                          const reader = new FileReader()
-                          reader.onloadend = () => {
-                            setGestorForm({ ...gestorForm, photo: reader.result as string })
-                          }
-                          reader.readAsDataURL(file)
-                        }
-                      }} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button className="btn-primary" onClick={handleSaveGestor} style={{ flex: 1 }}>
-                        {safeT?.save || 'Salvar'}
-                      </button>
-                      <button className="btn-primary" onClick={() => {
-                        setShowGestorForm(false)
-                        setEditingGestor(null)
-                        setGestorForm({ name: '', email: '', phone: '', address: '', area: 'assistencia-tecnica', photo: '' })
-                      }} style={{ flex: 1 }}>
-                        {safeT?.cancel || 'Cancelar'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-                
-                {gestores.length === 0 ? (
-                  <p>{safeT?.noGestores || 'Nenhum gestor cadastrado'}</p>
-                ) : gestores.filter(gestor => filtroAreaGestor === 'todas' || gestor.area === filtroAreaGestor).length === 0 ? (
-                  <p>{safeT?.nenhumGestorFiltro || 'Nenhum gestor encontrado com o filtro selecionado'}</p>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
-                    {gestores
-                      .filter(gestor => filtroAreaGestor === 'todas' || gestor.area === filtroAreaGestor)
-                      .map(gestor => (
-                      <div key={gestor.id} style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }), height: 'fit-content' }} onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)} onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}>
-                        {gestor.photo && (
-                          <img src={gestor.photo} alt={gestor.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
-                        )}
-                        <h3 style={{ marginBottom: '10px' }}>{gestor.name}</h3>
-                        <p style={{ fontSize: '14px', marginBottom: '5px' }}>{gestor.email}</p>
-                        <p style={{ fontSize: '14px', marginBottom: '5px' }}>{gestor.phone}</p>
-                        {(() => {
-                          const tipoGestor = tiposGestores.find(t => t.id === gestor.area)
-                          if (!tipoGestor) {
-                            return (
-                              <div style={{
-                                padding: '6px 10px',
-                                borderRadius: '4px',
-                                marginBottom: '10px',
-                                fontSize: '12px',
-                                fontWeight: 'bold',
-                                textAlign: 'center',
-                                backgroundColor: 'rgba(128, 128, 128, 0.2)',
-                                border: '1px solid rgba(128, 128, 128, 0.4)',
-                                color: '#ccc'
-                              }}>
-                                ⚠️ Tipo não encontrado: {gestor.area}
-                              </div>
-                            )
-                          }
-                          const corRgb = tipoGestor.cor
-                          const corRgba = corRgb.replace('#', '').match(/.{2}/g)?.map(x => parseInt(x, 16)) || [0, 255, 0]
-                          return (
-                            <>
-                              <div style={{
-                                padding: '6px 10px',
-                                borderRadius: '4px',
-                                marginBottom: '10px',
-                                fontSize: '12px',
-                                fontWeight: 'bold',
-                                textAlign: 'center',
-                                backgroundColor: `rgba(${corRgba[0]}, ${corRgba[1]}, ${corRgba[2]}, 0.2)`,
-                                border: `1px solid rgba(${corRgba[0]}, ${corRgba[1]}, ${corRgba[2]}, 0.4)`,
-                                color: tipoGestor.cor
-                              }}>
-                                {tipoGestor.icone} {tipoGestor.nome}
-                              </div>
-                              {gestor.area === 'industrial' && (
-                                <div style={{ fontSize: '11px', color: '#888', marginBottom: '10px', padding: '6px 8px', backgroundColor: 'rgba(255, 193, 7, 0.08)', borderRadius: '4px', border: '1px solid rgba(255, 193, 7, 0.25)' }}>
-                                  📩 {safeT?.recebeAvisosOSConcluida || 'Recebe avisos automáticos quando uma ordem de serviço for concluída.'}
-                                </div>
-                              )}
-                            </>
-                          )
-                        })()}
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                          <button className="btn-primary" onClick={() => handleEditGestor(gestor)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
-                            {safeT?.edit || 'Editar'}
-                          </button>
-                          <button className="btn-danger" onClick={() => handleDeleteGestor(gestor.id)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
-                            {safeT?.delete || 'Excluir'}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div>
-                {/* Botões de filtro: Técnicos Internos e Externos */}
-                <div style={{
-                  display: 'flex',
-                  gap: '10px',
-                  marginBottom: '20px',
-                  paddingBottom: '15px',
-                  borderBottom: '1px solid rgba(0, 200, 83, 0.3)'
-                }}>
-                  <button 
-                    className="btn-primary"
-                    onClick={() => setTecnicosTipoTab('todos')}
-                    style={{
-                      padding: '12px 24px',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      backgroundColor: tecnicosTipoTab === 'todos' ? 'rgba(0, 100, 255, 0.3)' : '#484848',
-                      borderColor: tecnicosTipoTab === 'todos' ? 'rgba(0, 100, 255, 0.6)' : 'rgba(0, 100, 255, 0.3)',
-                      color: tecnicosTipoTab === 'todos' ? '#66b3ff' : '#fff',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    👥 Todos os Técnicos ({tecnicos.length})
-                  </button>
-                  <button 
-                    className="btn-primary"
-                    onClick={() => setTecnicosTipoTab('interno')}
-                    style={{
-                      padding: '12px 24px',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      border: '1px solid',
-                      borderColor: tecnicosTipoTab === 'interno' ? 'rgba(0, 200, 83, 0.5)' : 'rgba(0, 200, 83, 0.2)',
-                      backgroundColor: tecnicosTipoTab === 'interno' ? 'rgba(0, 200, 83, 0.2)' : '#484848',
-                      color: tecnicosTipoTab === 'interno' ? '#00c853' : '#fff',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    🏢 Técnicos Internos ({tecnicos.filter(t => t.type === 'internal').length})
-                  </button>
-                  <button 
-                    className="btn-primary"
-                    onClick={() => setTecnicosTipoTab('externo')}
-                    style={{
-                      padding: '12px 24px',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      border: '1px solid',
-                      borderColor: tecnicosTipoTab === 'externo' ? 'rgba(0, 200, 83, 0.5)' : 'rgba(0, 200, 83, 0.2)',
-                      backgroundColor: tecnicosTipoTab === 'externo' ? 'rgba(0, 200, 83, 0.2)' : '#484848',
-                      color: tecnicosTipoTab === 'externo' ? '#00c853' : '#fff',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    🌐 Técnicos Externos ({tecnicos.filter(t => t.type === 'external').length})
-                  </button>
-                </div>
-
-                <button className="btn-primary" onClick={handleAddTecnico} style={{ marginBottom: '20px' }}>
-                  {safeT?.addTecnico || 'Adicionar Técnico'}
-                </button>
-                
-                {showTecnicoForm && (
-                  <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
-                    <h3 style={{ marginBottom: '15px' }}>{editingTecnico ? (safeT?.editTecnico || 'Editar Técnico') : (safeT?.addTecnico || 'Adicionar Técnico')}</h3>
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
-                      <input type="text" value={tecnicoForm.name} onChange={(e) => setTecnicoForm({ ...tecnicoForm, name: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
-                    </div>
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
-                      <input type="email" value={tecnicoForm.email} onChange={(e) => setTecnicoForm({ ...tecnicoForm, email: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
-                    </div>
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.phone || 'Telefone'}</label>
-                      <input type="text" value={tecnicoForm.phone} onChange={(e) => setTecnicoForm({ ...tecnicoForm, phone: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
-                    </div>
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.address || 'Endereço'}</label>
-                      <input type="text" value={tecnicoForm.address} onChange={(e) => setTecnicoForm({ ...tecnicoForm, address: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
-                    </div>
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.type || 'Tipo'}</label>
-                      <select value={tecnicoForm.type} onChange={(e) => setTecnicoForm({ ...tecnicoForm, type: e.target.value as 'internal' | 'external' })} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}>
-                        <option value="internal">{safeT?.internal || 'Interno'}</option>
-                        <option value="external">{safeT?.external || 'Externo'}</option>
-                      </select>
-                    </div>
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.photo || 'Foto'}</label>
-                      <input type="file" accept="image/*" onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) {
-                          const reader = new FileReader()
-                          reader.onloadend = () => {
-                            setTecnicoForm({ ...tecnicoForm, photo: reader.result as string })
-                          }
-                          reader.readAsDataURL(file)
-                        }
-                      }} style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button className="btn-primary" onClick={handleSaveTecnico} style={{ flex: 1 }}>
-                        {safeT?.save || 'Salvar'}
-                      </button>
-                      <button className="btn-primary" onClick={() => {
-                        setShowTecnicoForm(false)
-                        setEditingTecnico(null)
-                        setTecnicoForm({ name: '', email: '', phone: '', address: '', type: 'internal', photo: '' })
-                      }} style={{ flex: 1 }}>
-                        {safeT?.cancel || 'Cancelar'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-                
-                {(() => {
-                  const tecnicosFiltrados = tecnicosTipoTab === 'todos' 
-                    ? tecnicos 
-                    : tecnicosTipoTab === 'interno' 
-                      ? tecnicos.filter(t => t.type === 'internal')
-                      : tecnicos.filter(t => t.type === 'external')
-                  
-                  if (tecnicosFiltrados.length === 0) {
-                    return (
-                      <p>
-                        {tecnicosTipoTab === 'todos' 
-                          ? safeT?.noTecnicos || 'Nenhum técnico cadastrado'
-                          : tecnicosTipoTab === 'interno'
-                            ? 'Nenhum técnico interno cadastrado'
-                            : 'Nenhum técnico externo cadastrado'}
-                      </p>
-                    )
-                  }
-                  
-                  return (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
-                      {tecnicosFiltrados.map(tecnico => (
-                        <div key={tecnico.id} style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }), height: 'fit-content' }} onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)} onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}>
-                          {tecnico.photo && (
-                            <img src={tecnico.photo} alt={tecnico.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
-                          )}
-                          <h3 style={{ marginBottom: '10px' }}>{tecnico.name}</h3>
-                          <p style={{ fontSize: '14px', marginBottom: '5px' }}>{tecnico.email}</p>
-                          <p style={{ fontSize: '14px', marginBottom: '5px' }}>{tecnico.phone}</p>
-                          <div style={{
-                            padding: '6px 10px',
-                            borderRadius: '4px',
-                            marginBottom: '10px',
-                            fontSize: '12px',
-                            fontWeight: 'bold',
-                            textAlign: 'center',
-                            backgroundColor: tecnico.type === 'internal' ? 'rgba(0, 200, 83, 0.2)' : 'rgba(255, 165, 0, 0.2)',
-                            border: `1px solid ${tecnico.type === 'internal' ? 'rgba(0, 200, 83, 0.4)' : 'rgba(255, 165, 0, 0.4)'}`,
-                            color: tecnico.type === 'internal' ? '#00c853' : '#ffaa00'
-                          }}>
-                            {tecnico.type === 'internal' ? '🏢 Técnico Interno' : '🌐 Técnico Externo'}
-                          </div>
-                          <div style={{ display: 'flex', gap: '5px' }}>
-                            <button className="btn-primary" onClick={() => handleEditTecnico(tecnico)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
-                              {safeT?.edit || 'Editar'}
-                            </button>
-                            <button className="btn-danger" onClick={() => handleDeleteTecnico(tecnico.id)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
-                              {safeT?.delete || 'Excluir'}
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )
-                })()}
-              </div>
-            )}
+            <GestoresTecnicosPanel
+              gestores={gestores}
+              tecnicos={tecnicos}
+              tiposGestores={tiposGestores}
+              activeSection={gestoresActiveTab}
+              onActiveSectionChange={setGestoresActiveTab}
+              defaultGestorArea={tiposGestores[0]?.id || 'assistencia-tecnica'}
+              onSaveGestor={handleSaveGestor}
+              onDeleteGestor={handleDeleteGestor}
+              onSaveTecnico={handleSaveTecnico}
+              onDeleteTecnico={handleDeleteTecnico}
+              onSaveTipoGestor={handleSaveTipoGestor}
+              onDeleteTipoGestor={handleDeleteTipoGestor}
+              labels={{
+                gestoresTitle: safeT?.gestoresTitle,
+                gestoresTab: safeT?.gestoresTab,
+                tecnicosTab: safeT?.tecnicosTab,
+                totalCadastrados: safeT?.totalCadastrados,
+                addGestor: safeT?.addGestor,
+                addTecnico: safeT?.addTecnico,
+                editGestor: safeT?.editGestor,
+                editTecnico: safeT?.editTecnico,
+                noGestores: safeT?.noGestores,
+                noTecnicos: safeT?.noTecnicos,
+                nenhumGestorFiltro: safeT?.nenhumGestorFiltro,
+                name: safeT?.name,
+                email: safeT?.email,
+                phone: safeT?.phone,
+                address: safeT?.address,
+                photo: safeT?.photo,
+                save: safeT?.save,
+                cancel: safeT?.cancel,
+                edit: safeT?.edit,
+                delete: safeT?.delete,
+                areaAtuacao: safeT?.areaAtuacao,
+                filtrarPorArea: safeT?.filtrarPorArea,
+                type: safeT?.type,
+                internal: safeT?.internal,
+                external: safeT?.external,
+                armazem: (safeT as any)?.tecnicoArmazem || 'Armazém',
+                searchPlaceholder: (safeT as any)?.gestoresBuscaPlaceholder || 'Buscar por nome, e-mail ou telefone…',
+                fotoPerfil: (safeT as any)?.fotoPerfil || safeT?.photo,
+                cliqueAdicionarFoto: (safeT as any)?.cliqueAdicionarFoto,
+                removePhoto: (safeT as any)?.removePhoto || safeT?.removeEquipamentoPhoto,
+                fotoHint: (safeT as any)?.gestoresFotoHint || 'Foto redimensionada automaticamente para perfil.',
+                fillAllFields: safeT?.fillAllFields,
+                confirmDeleteGestor: safeT?.confirmDeleteGestor,
+                confirmDeleteTecnico: safeT?.confirmDeleteTecnico,
+                gestorSaved: safeT?.gestorSaved,
+                gestorUpdated: safeT?.gestorUpdated,
+                recebeAvisosOS: safeT?.recebeAvisosOSConcluida,
+                esteGestorRecebeAvisosOS: safeT?.esteGestorRecebeAvisosOS,
+                gerenciarTiposTitulo: (safeT as any)?.gerenciarTiposGestoresTitulo || 'Áreas de atuação',
+                gerenciarTiposDesc: (safeT as any)?.gerenciarTiposGestoresDesc || 'Defina as áreas disponíveis para classificar gestores.',
+                gerenciarTiposBtn: (safeT as any)?.gerenciarTiposGestoresBtn || 'Áreas de atuação',
+                todosTecnicos: (safeT as any)?.todosTecnicos || 'Todos',
+                tecnicosInternos: (safeT as any)?.tecnicosInternosTab || 'Internos',
+                tecnicosExternos: (safeT as any)?.tecnicosExternosTab || 'Externos',
+                tecnicosArmazem: (safeT as any)?.tecnicoArmazem || 'Armazém',
+                fechar: safeT?.close,
+                novoCadastro: (safeT as any)?.novoCadastro || 'Novo cadastro',
+                editarCadastro: (safeT as any)?.editarCadastro || 'Editar cadastro',
+              }}
+            />
           </div>
         );
       
@@ -76846,655 +76506,6 @@ A1;Peça exemplo;10`}
                 {safeT?.save || 'Salvar'}
               </button>
               <button className="btn-primary" onClick={() => { setShowButtonForm(false); setEditingButton(null); setButtonForm({ name: '', action: '' }); }} style={{ flex: 1 }}>
-                {safeT?.cancel || 'Cancelar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de Gestores */}
-      {showGestoresModal && (
-        <div className="modal-overlay" onClick={() => setShowGestoresModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 200, 83, 0.2)', paddingBottom: '10px' }}>
-              <BotaoNavegacao onVoltar={() => setShowGestoresModal(false)} />
-              <h2 style={{ margin: 0 }}>{safeT?.gestoresTitle || 'Cadastro de Gestores e Técnicos'}</h2>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid rgba(0, 200, 83, 0.2)', paddingBottom: '10px' }}>
-              <button 
-                className={gestoresActiveTab === 'gestores' ? 'btn-primary' : 'btn-primary'}
-                onClick={() => setGestoresActiveTab('gestores')}
-                style={{ backgroundColor: gestoresActiveTab === 'gestores' ? 'rgba(0, 200, 83, 0.2)' : '#484848' }}
-              >
-                {safeT?.gestoresTab || 'Gestores'}
-              </button>
-              <button 
-                className={gestoresActiveTab === 'tecnicos' ? 'btn-primary' : 'btn-primary'}
-                onClick={() => setGestoresActiveTab('tecnicos')}
-                style={{ backgroundColor: gestoresActiveTab === 'tecnicos' ? 'rgba(0, 200, 83, 0.2)' : '#484848' }}
-              >
-                {safeT?.tecnicosTab || 'Técnicos'}
-              </button>
-            </div>
-
-            {gestoresActiveTab === 'gestores' ? (
-              <div>
-                {/* Banner destacado para gerenciar tipos */}
-                <div style={{ 
-                  ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }),
-                  marginBottom: '25px', 
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: '20px'
-                }}>
-                  <div style={{ flex: 1, minWidth: '250px' }}>
-                    <h3 style={{ margin: 0, marginBottom: '8px', color: '#ffffff', fontSize: '18px', fontWeight: 'bold' }}>
-                      ⚙️ Gerenciar Áreas de Atuação
-                    </h3>
-                    <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.82)', lineHeight: '1.5' }}>
-                      Adicione novos tipos de gestores (ex: Gestor de Qualidade, Gestor de Vendas, etc.) ou edite os existentes. Clique no botão ao lado para começar.
-                    </p>
-                  </div>
-                  <button 
-                    className="btn-primary" 
-                    onClick={() => setShowGerenciarTiposGestores(true)}
-                    style={{
-                      padding: '14px 28px',
-                      fontSize: '16px',
-                      border: '1px solid rgba(0, 200, 80, 0.55)',
-                      backgroundColor: 'rgba(18, 52, 24, 0.96)',
-                      color: '#ffffff',
-                      fontWeight: 'bold',
-                      whiteSpace: 'nowrap',
-                      cursor: 'pointer',
-                      borderRadius: '8px'
-                    }}
-                  >
-                    ➕ Gerenciar Tipos de Gestores
-                  </button>
-                </div>
-
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
-                  <button className="btn-primary" onClick={handleAddGestor}>
-                    {safeT?.addGestor || 'Adicionar Gestor'}
-                  </button>
-                  
-                  {/* Filtro por Área de Atuação */}
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginLeft: 'auto', flexWrap: 'wrap' }}>
-                    <label style={{ fontSize: '14px', color: '#ccc' }}>{safeT?.filtrarPorArea || 'Filtrar por Área:'}</label>
-                    <select
-                      value={filtroAreaGestor}
-                      onChange={(e) => setFiltroAreaGestor(e.target.value)}
-                      style={{
-                        padding: '8px 12px',
-                        backgroundColor: '#484848',
-                        color: '#fff',
-                        border: '1px solid rgba(0, 200, 83, 0.3)',
-                        borderRadius: '4px',
-                        fontSize: '14px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <option value="todas">Todas as Áreas</option>
-                      {tiposGestores.sort((a, b) => a.ordem - b.ordem).map(tipo => (
-                        <option key={tipo.id} value={tipo.id}>{tipo.icone} {tipo.nome}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                {gestores.length === 0 ? (
-                  <p>{safeT?.noGestores || 'Nenhum gestor cadastrado'}</p>
-                ) : gestores.filter(gestor => filtroAreaGestor === 'todas' || gestor.area === filtroAreaGestor).length === 0 ? (
-                  <p>{safeT?.nenhumGestorFiltro || 'Nenhum gestor encontrado com o filtro selecionado'}</p>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
-                    {gestores
-                      .filter(gestor => filtroAreaGestor === 'todas' || gestor.area === filtroAreaGestor)
-                      .map(gestor => (
-                      <div key={gestor.id} style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }), height: 'fit-content' }} onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)} onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}>
-                        {gestor.photo && (
-                          <img src={gestor.photo} alt={gestor.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
-                        )}
-                        <h3 style={{ marginBottom: '10px' }}>{gestor.name}</h3>
-                        <p style={{ fontSize: '14px', marginBottom: '5px' }}>{gestor.email}</p>
-                        <p style={{ fontSize: '14px', marginBottom: '5px' }}>{gestor.phone}</p>
-                        {(() => {
-                          const tipoGestor = tiposGestores.find(t => t.id === gestor.area)
-                          if (!tipoGestor) {
-                            return (
-                              <div style={{
-                                padding: '6px 10px',
-                                borderRadius: '4px',
-                                marginBottom: '10px',
-                                fontSize: '12px',
-                                fontWeight: 'bold',
-                                textAlign: 'center',
-                                backgroundColor: 'rgba(128, 128, 128, 0.2)',
-                                border: '1px solid rgba(128, 128, 128, 0.4)',
-                                color: '#ccc'
-                              }}>
-                                ⚠️ Tipo não encontrado: {gestor.area}
-                              </div>
-                            )
-                          }
-                          const corRgb = tipoGestor.cor
-                          const corRgba = corRgb.replace('#', '').match(/.{2}/g)?.map(x => parseInt(x, 16)) || [0, 255, 0]
-                          return (
-                            <>
-                              <div style={{
-                                padding: '6px 10px',
-                                borderRadius: '4px',
-                                marginBottom: '10px',
-                                fontSize: '12px',
-                                fontWeight: 'bold',
-                                textAlign: 'center',
-                                backgroundColor: `rgba(${corRgba[0]}, ${corRgba[1]}, ${corRgba[2]}, 0.2)`,
-                                border: `1px solid rgba(${corRgba[0]}, ${corRgba[1]}, ${corRgba[2]}, 0.4)`,
-                                color: tipoGestor.cor
-                              }}>
-                                {tipoGestor.icone} {tipoGestor.nome}
-                              </div>
-                              {gestor.area === 'industrial' && (
-                                <div style={{ fontSize: '11px', color: '#888', marginBottom: '10px', padding: '6px 8px', backgroundColor: 'rgba(255, 193, 7, 0.08)', borderRadius: '4px', border: '1px solid rgba(255, 193, 7, 0.25)' }}>
-                                  📩 {safeT?.recebeAvisosOSConcluida || 'Recebe avisos automáticos quando uma ordem de serviço for concluída.'}
-                                </div>
-                              )}
-                            </>
-                          )
-                        })()}
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                          <button className="btn-primary" onClick={() => handleEditGestor(gestor)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
-                            {safeT?.edit || 'Editar'}
-                          </button>
-                          <button className="btn-danger" onClick={() => handleDeleteGestor(gestor.id)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
-                            {safeT?.delete || 'Excluir'}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div>
-                {/* Botões de filtro: Técnicos Internos e Externos */}
-                <div style={{
-                  display: 'flex',
-                  gap: '10px',
-                  marginBottom: '20px',
-                  paddingBottom: '15px',
-                  borderBottom: '1px solid rgba(0, 200, 83, 0.3)'
-                }}>
-                  <button 
-                    className="btn-primary"
-                    onClick={() => setTecnicosTipoTab('todos')}
-                    style={{
-                      padding: '12px 24px',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      backgroundColor: tecnicosTipoTab === 'todos' ? 'rgba(0, 100, 255, 0.3)' : '#484848',
-                      borderColor: tecnicosTipoTab === 'todos' ? 'rgba(0, 100, 255, 0.6)' : 'rgba(0, 100, 255, 0.3)',
-                      color: tecnicosTipoTab === 'todos' ? '#66b3ff' : '#fff',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    👥 Todos os Técnicos ({tecnicos.length})
-                  </button>
-                  <button 
-                    className="btn-primary"
-                    onClick={() => setTecnicosTipoTab('interno')}
-                    style={{
-                      padding: '12px 24px',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      border: '1px solid',
-                      borderColor: tecnicosTipoTab === 'interno' ? 'rgba(0, 200, 83, 0.5)' : 'rgba(0, 200, 83, 0.2)',
-                      backgroundColor: tecnicosTipoTab === 'interno' ? 'rgba(0, 200, 83, 0.2)' : '#484848',
-                      color: tecnicosTipoTab === 'interno' ? '#00c853' : '#fff',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    🏢 Técnicos Internos ({tecnicos.filter(t => t.type === 'internal').length})
-                  </button>
-                  <button 
-                    className="btn-primary"
-                    onClick={() => setTecnicosTipoTab('externo')}
-                    style={{
-                      padding: '12px 24px',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      border: '1px solid',
-                      borderColor: tecnicosTipoTab === 'externo' ? 'rgba(0, 200, 83, 0.5)' : 'rgba(0, 200, 83, 0.2)',
-                      backgroundColor: tecnicosTipoTab === 'externo' ? 'rgba(0, 200, 83, 0.2)' : '#484848',
-                      color: tecnicosTipoTab === 'externo' ? '#00c853' : '#fff',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    🌐 Técnicos Externos ({tecnicos.filter(t => t.type === 'external').length})
-                  </button>
-                </div>
-
-                <button className="btn-primary" onClick={handleAddTecnico} style={{ marginBottom: '20px' }}>
-                  {safeT?.addTecnico || 'Adicionar Técnico'}
-                </button>
-                {(() => {
-                  const tecnicosFiltrados = tecnicosTipoTab === 'todos' 
-                    ? tecnicos 
-                    : tecnicosTipoTab === 'interno' 
-                      ? tecnicos.filter(t => t.type === 'internal')
-                      : tecnicos.filter(t => t.type === 'external')
-                  
-                  if (tecnicosFiltrados.length === 0) {
-                    return (
-                      <p>
-                        {tecnicosTipoTab === 'todos' 
-                          ? safeT?.noTecnicos || 'Nenhum técnico cadastrado'
-                          : tecnicosTipoTab === 'interno'
-                            ? 'Nenhum técnico interno cadastrado'
-                            : 'Nenhum técnico externo cadastrado'}
-                      </p>
-                    )
-                  }
-                  
-                  return (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
-                      {tecnicosFiltrados.map(tecnico => (
-                        <div key={tecnico.id} style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }), height: 'fit-content' }} onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)} onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}>
-                          {tecnico.photo && (
-                            <img src={tecnico.photo} alt={tecnico.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
-                          )}
-                          <h3 style={{ marginBottom: '10px' }}>{tecnico.name}</h3>
-                          <p style={{ fontSize: '14px', marginBottom: '5px' }}>{tecnico.email}</p>
-                          <p style={{ fontSize: '14px', marginBottom: '5px' }}>{tecnico.phone}</p>
-                          <div style={{
-                            padding: '6px 10px',
-                            borderRadius: '4px',
-                            marginBottom: '10px',
-                            fontSize: '12px',
-                            fontWeight: 'bold',
-                            textAlign: 'center',
-                            backgroundColor: tecnico.type === 'internal' ? 'rgba(0, 200, 83, 0.2)' : 'rgba(255, 165, 0, 0.2)',
-                            border: `1px solid ${tecnico.type === 'internal' ? 'rgba(0, 200, 83, 0.4)' : 'rgba(255, 165, 0, 0.4)'}`,
-                            color: tecnico.type === 'internal' ? '#00c853' : '#ffaa00'
-                          }}>
-                            {tecnico.type === 'internal' ? '🏢 Técnico Interno' : '🌐 Técnico Externo'}
-                          </div>
-                          <div style={{ display: 'flex', gap: '5px' }}>
-                            <button className="btn-primary" onClick={() => handleEditTecnico(tecnico)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
-                              {safeT?.edit || 'Editar'}
-                            </button>
-                            <button className="btn-danger" onClick={() => handleDeleteTecnico(tecnico.id)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
-                              {safeT?.delete || 'Excluir'}
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )
-                })()}
-              </div>
-            )}
-
-            <button className="btn-primary" onClick={() => setShowGestoresModal(false)} style={{ width: '100%', marginTop: '20px' }}>
-              {safeT?.close || 'Fechar'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de Formulário de Gestor - Sempre usar modal para edição e adição */}
-      {showGestorForm && (
-        <div className="modal-overlay" onClick={() => { setShowGestorForm(false); setEditingGestor(null); const primeiroTipo = tiposGestores.length > 0 ? tiposGestores[0].id : 'assistencia-tecnica'; setGestorForm({ name: '', email: '', phone: '', address: '', area: primeiroTipo, photo: '' }); }} style={{ zIndex: 10000 }}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ zIndex: 10001, position: 'relative' }}>
-            <h2>{editingGestor ? safeT?.editGestor : safeT?.addGestor}</h2>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
-              <input
-                type="text"
-                value={gestorForm.name}
-                onChange={(e) => setGestorForm({ ...gestorForm, name: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              />
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
-              <input
-                type="email"
-                value={gestorForm.email}
-                onChange={(e) => setGestorForm({ ...gestorForm, email: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              />
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.phone || 'Telefone'}</label>
-              <input
-                type="text"
-                value={gestorForm.phone}
-                onChange={(e) => setGestorForm({ ...gestorForm, phone: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              />
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.address || 'Endereço'}</label>
-              <input
-                type="text"
-                value={gestorForm.address}
-                onChange={(e) => setGestorForm({ ...gestorForm, address: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              />
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.areaAtuacao || 'Área de Atuação'}</label>
-              <select
-                value={gestorForm.area}
-                onChange={(e) => setGestorForm({ ...gestorForm, area: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              >
-                {tiposGestores.sort((a, b) => a.ordem - b.ordem).map(tipo => (
-                  <option key={tipo.id} value={tipo.id}>{tipo.icone} {tipo.nome}</option>
-                ))}
-              </select>
-              {gestorForm.area === 'industrial' && (
-                <div style={{ marginTop: '8px', fontSize: '12px', color: '#fbbf24', padding: '8px 10px', backgroundColor: 'rgba(255, 193, 7, 0.1)', borderRadius: '6px', border: '1px solid rgba(255, 193, 7, 0.3)' }}>
-                  📩 {safeT?.esteGestorRecebeAvisosOS || 'Este gestor receberá avisos automáticos quando uma ordem de serviço for concluída (informação enviada ao Gestor Industrial).'}
-                </div>
-              )}
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.photo || 'Foto'}</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleGestorPhotoChange}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              />
-              {gestorForm.photo && (
-                <div style={{ marginTop: '10px' }}>
-                  <img src={gestorForm.photo} alt="Preview" style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '4px' }} />
-                  <button className="btn-danger" onClick={handleRemoveGestorPhoto} style={{ marginLeft: '10px', padding: '5px 10px' }}>
-                    {safeT?.removeEquipamentoPhoto || 'Remover Foto'}
-                  </button>
-                </div>
-              )}
-            </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button className="btn-primary" onClick={handleSaveGestor} style={{ flex: 1 }}>
-                {safeT?.save || 'Salvar'}
-              </button>
-              <button className="btn-primary" onClick={() => { setShowGestorForm(false); setEditingGestor(null); const primeiroTipo = tiposGestores.length > 0 ? tiposGestores[0].id : 'assistencia-tecnica'; setGestorForm({ name: '', email: '', phone: '', address: '', area: primeiroTipo, photo: '' }); }} style={{ flex: 1 }}>
-                {safeT?.cancel || 'Cancelar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de Gerenciamento de Tipos de Gestores */}
-      {showGerenciarTiposGestores && (
-        <div className="modal-overlay" onClick={() => { setShowGerenciarTiposGestores(false); setEditingTipoGestor(null); setTipoGestorForm({ id: '', nome: '', cor: '#00c853', icone: '👤', ordem: 0 }); }}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(255, 165, 0, 0.2)', paddingBottom: '10px' }}>
-              <h2 style={{ margin: 0, color: '#ffaa00' }}>⚙️ Gerenciar Tipos de Gestores</h2>
-              <button 
-                className="btn-primary" 
-                onClick={() => { setShowGerenciarTiposGestores(false); setEditingTipoGestor(null); setTipoGestorForm({ id: '', nome: '', cor: '#00c853', icone: '👤', ordem: 0 }); }}
-                style={{ padding: '8px 12px', fontSize: '14px' }}
-              >
-                ✕ Fechar
-              </button>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <button className="btn-primary" onClick={handleAddTipoGestor} style={{ marginBottom: '15px' }}>
-                ➕ Adicionar Novo Tipo
-              </button>
-
-              {(editingTipoGestor !== null || tipoGestorForm.nome !== '') && (
-                <div style={{ border: '1px solid rgba(255, 165, 0, 0.3)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#404040' }}>
-                  <h3 style={{ marginBottom: '15px', color: '#ffaa00' }}>
-                    {editingTipoGestor && editingTipoGestor.id ? '✏️ Editar Tipo' : '➕ Adicionar Novo Tipo'}
-                  </h3>
-                  
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Nome do Tipo:</label>
-                    <input
-                      type="text"
-                      value={tipoGestorForm.nome}
-                      onChange={(e) => {
-                        const nome = e.target.value
-                        setTipoGestorForm({ 
-                          ...tipoGestorForm, 
-                          nome,
-                          id: (editingTipoGestor && editingTipoGestor.id) ? tipoGestorForm.id : nome.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-                        })
-                      }}
-                      placeholder="ex: Gestor de Qualidade"
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>ID (gerado automaticamente):</label>
-                    <input
-                      type="text"
-                      value={tipoGestorForm.id}
-                      onChange={(e) => setTipoGestorForm({ ...tipoGestorForm, id: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })}
-                      placeholder="ex: gestor-qualidade"
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                    <small style={{ color: '#b0b0b0', fontSize: '12px' }}>ID único usado internamente (sem espaços ou caracteres especiais)</small>
-                  </div>
-
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Ícone (Emoji):</label>
-                    <input
-                      type="text"
-                      value={tipoGestorForm.icone}
-                      onChange={(e) => setTipoGestorForm({ ...tipoGestorForm, icone: e.target.value })}
-                      placeholder="ex: 🎯"
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                    <small style={{ color: '#b0b0b0', fontSize: '12px' }}>Use um emoji para representar o tipo</small>
-                  </div>
-
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Cor (Hex):</label>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <input
-                        type="color"
-                        value={tipoGestorForm.cor}
-                        onChange={(e) => setTipoGestorForm({ ...tipoGestorForm, cor: e.target.value })}
-                        style={{ width: '60px', height: '40px', cursor: 'pointer' }}
-                      />
-                      <input
-                        type="text"
-                        value={tipoGestorForm.cor}
-                        onChange={(e) => setTipoGestorForm({ ...tipoGestorForm, cor: e.target.value })}
-                        placeholder="#00c853"
-                        style={{ flex: 1, padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Ordem de Exibição:</label>
-                    <input
-                      type="number"
-                      value={tipoGestorForm.ordem}
-                      onChange={(e) => setTipoGestorForm({ ...tipoGestorForm, ordem: parseInt(e.target.value) || 0 })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                    <small style={{ color: '#b0b0b0', fontSize: '12px' }}>Números menores aparecem primeiro</small>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button className="btn-primary" onClick={handleSaveTipoGestor} style={{ flex: 1, backgroundColor: 'rgba(255, 165, 0, 0.3)', borderColor: 'rgba(255, 165, 0, 0.5)', color: '#ffaa00' }}>
-                      💾 Salvar
-                    </button>
-                    <button 
-                      className="btn-primary" 
-                      onClick={() => { 
-                        setEditingTipoGestor(null); 
-                        setTipoGestorForm({ id: '', nome: '', cor: '#00c853', icone: '👤', ordem: 0 }); 
-                      }} 
-                      style={{ flex: 1 }}
-                    >
-                      ✕ Cancelar
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div style={{ marginTop: '20px' }}>
-                <h3 style={{ marginBottom: '15px' }}>Tipos Cadastrados ({tiposGestores.length}):</h3>
-                {tiposGestores.length === 0 ? (
-                  <p style={{ color: '#b0b0b0' }}>Nenhum tipo cadastrado</p>
-                ) : (
-                  <div style={{ display: 'grid', gap: '10px' }}>
-                    {tiposGestores.sort((a, b) => a.ordem - b.ordem).map(tipo => {
-                      const corRgb = tipo.cor.replace('#', '').match(/.{2}/g)?.map(x => parseInt(x, 16)) || [0, 255, 0]
-                      const gestoresUsando = gestores.filter(g => g.area === tipo.id).length
-                      return (
-                        <div 
-                          key={tipo.id} 
-                          style={{ 
-                            padding: '15px', 
-                            backgroundColor: '#404040', 
-                            borderRadius: '8px', 
-                            border: `1px solid rgba(${corRgb[0]}, ${corRgb[1]}, ${corRgb[2]}, 0.3)`,
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                          }}
-                        >
-                          <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flex: 1 }}>
-                            <div style={{
-                              width: '40px',
-                              height: '40px',
-                              borderRadius: '8px',
-                              backgroundColor: `rgba(${corRgb[0]}, ${corRgb[1]}, ${corRgb[2]}, 0.2)`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '20px'
-                            }}>
-                              {tipo.icone}
-                            </div>
-                            <div>
-                              <div style={{ fontWeight: 'bold', marginBottom: '5px', color: tipo.cor }}>
-                                {tipo.nome}
-                              </div>
-                              <div style={{ fontSize: '12px', color: '#b0b0b0' }}>
-                                ID: {tipo.id} | Ordem: {tipo.ordem} | {gestoresUsando} gestor(es) usando
-                              </div>
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', gap: '5px' }}>
-                            <button 
-                              className="btn-primary" 
-                              onClick={() => handleEditTipoGestor(tipo)}
-                              style={{ padding: '5px 10px', fontSize: '12px' }}
-                            >
-                              ✏️ Editar
-                            </button>
-                            <button 
-                              className="btn-danger" 
-                              onClick={() => handleDeleteTipoGestor(tipo.id)}
-                              style={{ padding: '5px 10px', fontSize: '12px' }}
-                              disabled={gestoresUsando > 0}
-                            >
-                              🗑️ Excluir
-                            </button>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de Formulário de Técnico */}
-      {showTecnicoForm && (
-        <div className="modal-overlay" onClick={() => { setShowTecnicoForm(false); setEditingTecnico(null); setTecnicoForm({ name: '', email: '', phone: '', address: '', type: 'internal', photo: '' }); }}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>{editingTecnico ? safeT?.editTecnico : safeT?.addTecnico}</h2>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
-              <input
-                type="text"
-                value={tecnicoForm.name}
-                onChange={(e) => setTecnicoForm({ ...tecnicoForm, name: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              />
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
-              <input
-                type="email"
-                value={tecnicoForm.email}
-                onChange={(e) => setTecnicoForm({ ...tecnicoForm, email: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              />
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.phone || 'Telefone'}</label>
-              <input
-                type="text"
-                value={tecnicoForm.phone}
-                onChange={(e) => setTecnicoForm({ ...tecnicoForm, phone: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              />
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.address || 'Endereço'}</label>
-              <input
-                type="text"
-                value={tecnicoForm.address}
-                onChange={(e) => setTecnicoForm({ ...tecnicoForm, address: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              />
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.type || 'Tipo'}</label>
-              <select
-                value={tecnicoForm.type}
-                onChange={(e) => setTecnicoForm({ ...tecnicoForm, type: e.target.value as 'internal' | 'external' })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              >
-                <option value="internal">{safeT?.internal || 'Interno'}</option>
-                <option value="external">{safeT?.external || 'Externo'}</option>
-              </select>
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.photo || 'Foto'}</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleTecnicoPhotoChange}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-              />
-              {tecnicoForm.photo && (
-                <div style={{ marginTop: '10px' }}>
-                  <img src={tecnicoForm.photo} alt="Preview" style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '4px' }} />
-                  <button className="btn-danger" onClick={handleRemoveTecnicoPhoto} style={{ marginLeft: '10px', padding: '5px 10px' }}>
-                    {safeT?.removeEquipamentoPhoto || 'Remover Foto'}
-                  </button>
-                </div>
-              )}
-            </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button className="btn-primary" onClick={handleSaveTecnico} style={{ flex: 1 }}>
-                {safeT?.save || 'Salvar'}
-              </button>
-              <button className="btn-primary" onClick={() => { setShowTecnicoForm(false); setEditingTecnico(null); setTecnicoForm({ name: '', email: '', phone: '', address: '', type: 'internal', photo: '' }); }} style={{ flex: 1 }}>
                 {safeT?.cancel || 'Cancelar'}
               </button>
             </div>
