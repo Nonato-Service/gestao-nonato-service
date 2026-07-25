@@ -45,8 +45,8 @@ function escAttr(s: string): string {
 const HDR_LAYOUT_CSS = `
 .pdf-watermark{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
 .pdf-watermark__center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6mm;box-sizing:border-box;}
-.pdf-watermark__logo{width:min(96vw,820px);height:min(96vh,980px);max-width:820px;object-fit:contain;opacity:0.22;transform:rotate(-18deg);display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-.pdf-watermark__logo--user{mix-blend-mode:multiply;opacity:0.26;filter:contrast(1.08);}
+.pdf-watermark__logo{width:min(78vw,620px);height:min(82vh,720px);max-width:620px;object-fit:contain;opacity:0.14;transform:rotate(-18deg);display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.pdf-watermark__logo--user{mix-blend-mode:multiply;opacity:0.17;filter:contrast(1.04);}
 .pdf-page-content{position:relative;z-index:1;}
 .pdf-header.hdr-pro{position:relative;z-index:1;}
 body{position:relative;background:#fff;}
@@ -81,7 +81,7 @@ body.pdf-has-watermark .proto-estado{background:rgba(255,255,255,0.9)!important;
 .hdr-pro__meta-label{font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;}
 .hdr-pro__meta-value{font-size:9.5pt;font-weight:700;color:#0f172a;}
 .hdr-pro__accent{height:4px;background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);border:0;margin:0;width:100%;}
-@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark{position:fixed;inset:0;z-index:0;}.pdf-watermark__logo{opacity:0.18;}.pdf-watermark__logo--user{opacity:0.22;}}
+@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark{position:fixed;inset:0;z-index:0;}.pdf-watermark__logo{opacity:0.12;}.pdf-watermark__logo--user{opacity:0.15;}}
 `
 
 /** Por modelo: acentos de cor no cabeçalho v2 */
@@ -153,8 +153,8 @@ function buildWatermarkHtml(logoHtml: string): string {
   const safeSrc = imgSrc.replace(/"/g, '&quot;').replace(/'/g, '&#39;')
   const userClass = isUser ? ' pdf-watermark__logo--user' : ''
   const inlineStyle =
-    'width:min(96vw,820px);height:min(96vh,980px);max-width:820px;object-fit:contain;opacity:' +
-    (isUser ? '0.26' : '0.22') +
+    'width:min(78vw,620px);height:min(82vh,720px);max-width:620px;object-fit:contain;opacity:' +
+    (isUser ? '0.17' : '0.14') +
     ';transform:rotate(-18deg);display:block;'
   return `<div class="pdf-watermark" aria-hidden="true"><div class="pdf-watermark__center"><img class="pdf-watermark__logo${userClass}" style="${inlineStyle}" src="${safeSrc}" alt="" /></div></div>`
 }
