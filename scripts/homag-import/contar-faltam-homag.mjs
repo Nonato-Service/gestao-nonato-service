@@ -13,6 +13,7 @@ import {
   baseInput,
 } from './api-import.mjs'
 import { normCodigo } from './resume.mjs'
+import { chavesDedupHomagPeca, normCodigoHomag } from './homag-codigo-ref.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.join(__dirname, '..', '..')
@@ -41,9 +42,12 @@ function dedupeBuckets(allBuckets) {
 }
 
 const bibPath = path.join(root, 'data', 'nonato-pecas-biblioteca.json')
-const local = new Set(
-  JSON.parse(fs.readFileSync(bibPath, 'utf8')).map((p) => normCodigo(p.codigo)).filter(Boolean)
-)
+const local = new Set()
+for (const p of JSON.parse(fs.readFileSync(bibPath, 'utf8'))) {
+  for (const k of chavesDedupHomagPeca(p)) local.add(k)
+  const c = normCodigoHomag(p.codigo)
+  if (c) local.add(c)
+}
 
 const browser = await chromium.launch({ headless: true })
 const context = await browser.newContext()
@@ -74,7 +78,7 @@ for (let i = 0; i < buckets.length; i++) {
   const prods = await fetchAllBucketProducts(context, session, b, async () => {})
   fetched += prods.length
   for (const p of prods) {
-    const c = normCodigo(p.codigo)
+    const c = normCodigoHomag(p.codigo)
     if (c) apiAll.add(c)
   }
   const missingNow = [...apiAll].filter((c) => !local.has(c)).length

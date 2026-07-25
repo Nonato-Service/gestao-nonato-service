@@ -7,7 +7,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { extractHomagPrecoFromExportItem, formatHomagPreco } from './homag-preco.mjs'
-import { enriquecerPecaHomagComReferencias } from './homag-codigo-ref.mjs'
+import { enriquecerPecaHomagComReferencias, chavesDedupHomagPeca, normCodigoHomag } from './homag-codigo-ref.mjs'
 import { bibliotecaPecaPrecisaFoto } from './imagem-util.mjs'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -18,10 +18,11 @@ const EXPORT_DEFAULT = path.join(root, 'scripts', 'homag-import', 'out', 'export
 const LITE = path.join(DATA, 'nonato-pecas-biblioteca-lite.json')
 
 function normCodigo(c) {
-  return String(c ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '')
+  return normCodigoHomag(c)
+}
+
+function indexPecaKeys(p) {
+  return chavesDedupHomagPeca(p)
 }
 
 function toLite(p) {
@@ -103,8 +104,7 @@ function mergeIntoBiblioteca(existing, incoming) {
   const byId = new Map()
   for (const p of list) {
     if (p && typeof p === 'object' && p.id) byId.set(String(p.id), p)
-    const c = normCodigo(p.codigo)
-    if (c) byCodigo.set(c, p)
+    for (const k of indexPecaKeys(p)) byCodigo.set(k, p)
   }
 
   let added = 0
@@ -112,8 +112,13 @@ function mergeIntoBiblioteca(existing, incoming) {
   let updatedPrecos = 0
   incoming.forEach((item, idx) => {
     const peca = homagItemToPeca(item, idx)
-    const c = normCodigo(peca.codigo)
-    const ex = c ? byCodigo.get(c) : null
+    let ex = null
+    for (const k of indexPecaKeys(peca)) {
+      if (byCodigo.has(k)) {
+        ex = byCodigo.get(k)
+        break
+      }
+    }
     if (ex) {
       const incImg = peca.imagem || ''
       const faltaOuPlaceholder = bibliotecaPecaPrecisaFoto(ex.imagem)
@@ -133,11 +138,16 @@ function mergeIntoBiblioteca(existing, incoming) {
           updatedPrecos++
         }
       }
+      const merged = enriquecerPecaHomagComReferencias(ex)
+      if (JSON.stringify(merged) !== JSON.stringify(ex)) {
+        Object.assign(ex, merged)
+        updated++
+      }
       return
     }
     list.push(peca)
     byId.set(String(peca.id), peca)
-    if (c) byCodigo.set(c, peca)
+    for (const k of indexPecaKeys(peca)) byCodigo.set(k, peca)
     added++
   })
 

@@ -1,5 +1,5 @@
 /**
- * Deteção HOMAG — nós folha com código 10 dígitos (ordenados por posição vertical).
+ * Deteção HOMAG — códigos 2006807481, 2-006-80-7481, 2006808181R, R2006215960.
  */
 
 export async function discoverHomagProducts(page) {
@@ -7,22 +7,73 @@ export async function discoverHomagProducts(page) {
   await page.waitForTimeout(400)
   return page.evaluate(() => {
     const items = []
-    const seen = new Set()
-    const CODE_RE = /^([1-9]\d{9})$/
+    const seenNucleo = new Set()
 
-    function push(codigo, nome, imagemUrl, top = 0) {
-      const c = String(codigo || '')
+    function compactCodigo(c) {
+      return String(c ?? '')
         .trim()
-        .replace(/\s+/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+    }
+
+    function referenciaHomagDeTexto(texto) {
+      const t = String(texto ?? '').trim()
+      const comHifens = t.match(/^(\d)-(\d{3})-(\d{2})-(\d{3,4})$/)
+      if (comHifens) return comHifens[0]
+      const compact = compactCodigo(t)
+      if (compact.length < 9 || compact.length > 11) return null
+      const semHifens = compact.match(/^(\d)(\d{3})(\d{2})(\d{3,4})$/)
+      if (!semHifens) return null
+      return `${semHifens[1]}-${semHifens[2]}-${semHifens[3]}-${semHifens[4]}`
+    }
+
+    function nucleoCodigoHomag(c) {
+      let compact = compactCodigo(c)
+      if (!compact) return ''
+      compact = compact.replace(/^r(?=\d)/, '')
+      compact = compact.replace(/(?<=\d)r$/, '')
+      if (/^\d{7,11}$/.test(compact)) return compact
+      const ref = referenciaHomagDeTexto(String(c ?? ''))
+      if (ref) {
+        const m = ref.match(/^(\d)-(\d{3})-(\d{2})-(\d{3,4})$/)
+        if (m) return `${m[1]}${m[2]}${m[3]}${m[4]}`
+      }
+      return compact.replace(/[^0-9]/g, '')
+    }
+
+    function matchHomagCodeLine(line) {
+      const t = String(line ?? '').trim()
+      if (!t) return null
+      const ref = referenciaHomagDeTexto(t)
+      if (ref) {
+        const m = ref.match(/^(\d)-(\d{3})-(\d{2})-(\d{3,4})$/)
+        if (m) return `${m[1]}${m[2]}${m[3]}${m[4]}`
+      }
+      const compact = t.replace(/\s+/g, '')
+      const rVar = compact.match(/^R?(\d{7,11})R?$/i)
+      if (rVar) return rVar[1]
+      if (/^[1-9]\d{9}$/.test(compact)) return compact
+      const loose = compact.match(/^(\d{7,14})$/)
+      if (loose) return loose[1]
+      return null
+    }
+
+    function isCodeLine(line) {
+      return matchHomagCodeLine(line) != null
+    }
+
+    function push(rawLine, nome, imagemUrl, top = 0) {
+      const codigo = matchHomagCodeLine(rawLine)
+      if (!codigo) return
+      const nucleo = nucleoCodigoHomag(codigo) || compactCodigo(codigo)
+      if (!nucleo || seenNucleo.has(nucleo)) return
+      seenNucleo.add(nucleo)
       let n = String(nome || codigo || '')
         .trim()
         .replace(/\s+/g, ' ')
         .replace(/>>+\s*$/, '')
         .trim()
-      if (!c || !/^[1-9]\d{9}$/.test(c)) return
-      if (seen.has(c)) return
-      seen.add(c)
-      items.push({ codigo: c, descricao: n || c, imagemUrl: imagemUrl || '', _top: top })
+      items.push({ codigo, descricao: n || codigo, imagemUrl: imagemUrl || '', _top: top })
     }
 
     function absUrl(src) {
@@ -47,17 +98,15 @@ export async function discoverHomagProducts(page) {
       : 1
     const currentPage = Math.max(1, Math.ceil(startItem / 20))
 
-    /** Estratégia principal: nós folha com código exacto (20 produtos visíveis). */
     const leafHits = []
     walkShadowRoots(document, (root) => {
       root.querySelectorAll?.('*')?.forEach?.((el) => {
         if (el.children?.length > 0) return
         const t = (el.textContent || '').trim()
-        const m = t.match(CODE_RE)
-        if (!m) return
+        if (!matchHomagCodeLine(t)) return
         const r = el.getBoundingClientRect?.()
         if (!r || r.width < 2 || r.height < 2) return
-        leafHits.push({ code: m[1], el, top: r.top, left: r.left })
+        leafHits.push({ line: t, el, top: r.top, left: r.left })
       })
     })
     leafHits.sort((a, b) => a.top - b.top || a.left - b.left)
@@ -73,11 +122,11 @@ export async function discoverHomagProducts(page) {
           .split('\n')
           .map((s) => s.trim())
           .filter(Boolean)
-        const idx = parts.findIndex((p) => p === hit.code)
+        const idx = parts.findIndex((p) => matchHomagCodeLine(p) === matchHomagCodeLine(hit.line))
         if (idx > 0) {
           for (let j = idx - 1; j >= 0; j--) {
             const prev = parts[j]
-            if (CODE_RE.test(prev)) break
+            if (isCodeLine(prev)) break
             if (skipLine.test(prev)) continue
             if (prev.length >= 3 && prev.length < 200) {
               nome = prev
@@ -88,11 +137,10 @@ export async function discoverHomagProducts(page) {
         if (nome) break
         el = el.parentElement
       }
-      push(hit.code, nome, '', hit.top)
+      push(hit.line, nome, '', hit.top)
       if (items.length >= 24) break
     }
 
-    /** Fallback: texto após último range. */
     if (items.length < 8) {
       const bodyText = document.body?.innerText || ''
       const rangeStart = rangeMatches.length ? rangeMatches[rangeMatches.length - 1].index : 0
@@ -105,24 +153,22 @@ export async function discoverHomagProducts(page) {
         .map((s) => s.trim())
         .filter(Boolean)
       for (let i = 0; i < lines.length; i++) {
-        const codeOnly = lines[i].match(/^([1-9]\d{9})$/)
-        if (!codeOnly) continue
+        if (!matchHomagCodeLine(lines[i])) continue
         let nome = ''
         for (let j = i - 1; j >= Math.max(0, i - 5); j--) {
           const prev = lines[j]
-          if (/^[1-9]\d{9}$/.test(prev)) break
+          if (isCodeLine(prev)) break
           if (skipLine.test(prev)) continue
           if (prev.length >= 3 && prev.length < 200) {
             nome = prev
             break
           }
         }
-        push(codeOnly[1], nome, '')
+        push(lines[i], nome, '')
         if (items.length >= 24) break
       }
     }
 
-    /** Imagens CMS só pág.≤250 (acima ficam stale). */
     if (currentPage <= 250 && items.length > 0) {
       const imgEls = []
       walkShadowRoots(document, (root) => {

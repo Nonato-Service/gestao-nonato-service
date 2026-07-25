@@ -4,6 +4,11 @@
 import fs from 'fs'
 import path from 'path'
 import { jumpToHomagPage } from './pagination.mjs'
+import {
+  chavesDedupHomagPeca,
+  nucleoCodigoHomag,
+  variantesCodigoHomagParaMatch,
+} from './homag-codigo-ref.mjs'
 
 const EXPORT_LITE_MIN_ITEMS = Number(process.env.HOMAG_EXPORT_LITE_MIN_ITEMS) || 200
 
@@ -65,10 +70,7 @@ function writeExportPayload(exportPath, payload, items) {
 }
 
 export function normCodigo(c) {
-  return String(c ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '')
+  return nucleoCodigoHomag(c) || String(c ?? '').trim().toLowerCase().replace(/\s+/g, '')
 }
 
 export function parseRangePage(range) {
@@ -157,14 +159,16 @@ export function loadResume(outDir, dataDir) {
       const bib = JSON.parse(fs.readFileSync(bibliotecaPath, 'utf8'))
       if (Array.isArray(bib) && bib.length > items.length) {
         const fromBib = bib
-          .filter((p) => p?.codigo && /^[1-9]\d{9}$/.test(String(p.codigo).replace(/\s/g, '')))
+          .filter((p) => p?.codigo && nucleoCodigoHomag(p.codigo))
           .map((p) => ({
-            codigo: String(p.codigo).trim(),
+            codigo: nucleoCodigoHomag(p.codigo) || String(p.codigo).trim(),
             nome: String(p.nome || p.descricao || p.codigo).trim(),
             descricao: String(p.descricao || p.nome || p.codigo).trim(),
             imagem: typeof p.imagem === 'string' && p.imagem.startsWith('data:') ? p.imagem : '',
             imagem_url: p.imagem_url || '',
             imagem_local: p.imagem_local || '',
+            referenciasAlternativas: p.referenciasAlternativas || p.referenciasAntigas || [],
+            codigosAlternativos: p.codigosAlternativos || p.codigosAntigos || [],
           }))
         if (fromBib.length > items.length) {
           items = fromBib
@@ -189,6 +193,7 @@ export function loadResume(outDir, dataDir) {
 
   const codigosVistos = new Set()
   for (const it of items) {
+    for (const k of chavesDedupHomagPeca(it)) codigosVistos.add(k)
     const c = normCodigo(it.codigo)
     if (c) codigosVistos.add(c)
   }

@@ -25,6 +25,7 @@ import { goToNextHomagPage, dismissCookieBanner, waitForHomagRange, installHomag
 import { discoverHomagProducts, waitForHomagProductsChange, waitForHomagProductsReady } from './discover-products.mjs'
 import { loadResume, saveResume, finalizeExport, skipToPage, parseRangePage, computeHomagTargetPage, normCodigo } from './resume.mjs'
 import { runHomagApiImport } from './api-import.mjs'
+import { chavesDedupHomagPeca, codigosHomagEquivalentes } from './homag-codigo-ref.mjs'
 import {
   absHomagUrl,
   decodeHtmlText,
@@ -170,6 +171,8 @@ async function buildItemFromDiscovered(
     imagem: imagemDataUrl,
     imagem_url: imagemUrl,
     imagem_local: imagemLocal,
+    ...(meta.referenciasAlternativas?.length ? { referenciasAlternativas: meta.referenciasAlternativas } : {}),
+    ...(meta.codigosAlternativos?.length ? { codigosAlternativos: meta.codigosAlternativos } : {}),
   }
 }
 
@@ -469,6 +472,15 @@ async function main() {
       lastSavedPageNum = resume.lastPageNum || 0
       lastSavedRange = `API: ${apiResult.bucketsDone.length} buckets, ${items.length} peças`
       console.log(`\n[HOMAG API] Concluído: +${apiResult.totalNew} novas, total ${items.length} peças`)
+      if (apiResult.totalNew === 0 && items.length > 0) {
+        console.log('')
+        console.log('============================================================')
+        console.log('  Nenhuma peça NOVA — catálogo API já está na biblioteca.')
+        console.log('  Foram actualizadas referências (hífen/R) e merge no PC.')
+        console.log('  Para confirmar: VERIFICAR-CATALOGO-HOMAG.bat')
+        console.log('============================================================')
+        console.log('')
+      }
     } else if (isResume) {
       const targetPage = computeHomagTargetPage(items, resume.lastPageNum, resume.lastRange)
       const rangeHint = resume.lastRange ? ` [${resume.lastRange}]` : ''
@@ -531,7 +543,12 @@ async function main() {
       if (!domItems?.length) return false
       return domItems.every((d) => {
         const c = normCodigo(d.codigo)
-        return c && codigosVistos.has(c)
+        return (
+          c &&
+          (codigosVistos.has(c) ||
+            [...chavesDedupHomagPeca(d)].some((k) => codigosVistos.has(k)) ||
+            items.some((it) => codigosHomagEquivalentes(it.codigo, d.codigo)))
+        )
       })
     }
 
@@ -692,13 +709,16 @@ async function main() {
         let addedThisPage = 0
         let imagensThisPage = 0
         for (const meta of domItems) {
-          const codKey = String(meta.codigo || '')
-            .trim()
-            .toLowerCase()
-          if (codKey && codigosVistos.has(codKey)) {
+          const codKey = normCodigo(meta.codigo)
+          const jaVisto =
+            codKey &&
+            ([...chavesDedupHomagPeca(meta)].some((k) => codigosVistos.has(k)) ||
+              codigosVistos.has(codKey) ||
+              items.some((it) => codigosHomagEquivalentes(it.codigo, meta.codigo)))
+          if (jaVisto) {
             /** Peça já existe — preencher imagem em falta (import antigo sem fotos). */
             if (meta.imagemUrl) {
-              const idx = items.findIndex((it) => String(it.codigo || '').trim().toLowerCase() === codKey)
+              const idx = items.findIndex((it) => codigosHomagEquivalentes(it.codigo, meta.codigo))
               const cur = idx >= 0 ? items[idx] : null
               if (cur && !cur.imagem && !cur.imagem_url) {
                 const it = await buildItemFromDiscovered(context, page, meta, globalSeq, embedOff, maxEmbed)
@@ -711,6 +731,7 @@ async function main() {
             continue
           }
           const it = await buildItemFromDiscovered(context, page, meta, globalSeq, embedOff, maxEmbed)
+          for (const k of chavesDedupHomagPeca(it)) codigosVistos.add(k)
           if (codKey) codigosVistos.add(codKey)
           items.push(it)
           globalSeq++
@@ -1040,7 +1061,12 @@ async function main() {
       const r = spawnSync(process.execPath, [mergeScript, outFile], { stdio: 'inherit' })
       if (r.status !== 0) {
         console.warn('[HOMAG] merge falhou — importe manualmente com: npm run homag:merge')
-      } else if (process.env.HOMAG_AUTO_RAILWAY !== '0') {
+      } else {
+        const enriquecerScript = path.join(__dirname, 'enriquecer-referencias-biblioteca.mjs')
+        console.log('[HOMAG] A enriquecer referências (hífen, R)…')
+        spawnSync(process.execPath, [enriquecerScript], { stdio: 'inherit' })
+      }
+      if (r.status === 0 && process.env.HOMAG_AUTO_RAILWAY !== '0') {
         const railwayScript = path.join(__dirname, '..', 'enviar-biblioteca-railway.mjs')
         const railwayUrl =
           process.env.RAILWAY_URL || 'https://gest-o-nonato-gestao.up.railway.app'

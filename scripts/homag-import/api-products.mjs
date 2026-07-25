@@ -4,6 +4,7 @@
  */
 import { absHomagUrl, decodeHtmlText } from './images.mjs'
 import { extractHomagPrecoFromProduct, formatHomagPreco } from './homag-preco.mjs'
+import { normalizarCodigoHomagProduto } from './homag-codigo-ref.mjs'
 
 export const DEFAULT_FIELDS = ['Name', 'StockKeepingUnit', 'From_price__c']
 
@@ -29,19 +30,32 @@ export function parseHomagAuraProducts(body) {
       act?.returnValue?.returnValue?.returnValue?.productsPage
     const categories = act?.returnValue?.returnValue?.categories || act?.returnValue?.categories
     if (!pp?.products) continue
-    const products = (pp.products || []).map((p) => {
-      const codigo = String(p?.fields?.StockKeepingUnit?.value || p?.fields?.sku?.value || '').trim()
-      const nome = decodeHtmlText(p?.fields?.Name?.value || p?.name || codigo)
-      let imagemUrl = absHomagUrl(
-        p?.defaultImage?.url ||
-          p?.defaultImage?.thumbnailUrl ||
-          p?.image?.url ||
-          p?.fields?.Image_URL__c?.value ||
-          ''
-      )
-      const preco = formatHomagPreco(extractHomagPrecoFromProduct(p))
-      return { codigo, descricao: nome, imagemUrl, preco }
-    }).filter((p) => /^[1-9]\d{9}$/.test(p.codigo))
+    const products = (pp.products || [])
+      .map((p) => {
+        const rawCodigo = String(p?.fields?.StockKeepingUnit?.value || p?.fields?.sku?.value || '').trim()
+        const norm = normalizarCodigoHomagProduto(rawCodigo)
+        if (!norm) return null
+        const codigo = norm.codigo
+        const nome = decodeHtmlText(p?.fields?.Name?.value || p?.name || codigo)
+        let imagemUrl = absHomagUrl(
+          p?.defaultImage?.url ||
+            p?.defaultImage?.thumbnailUrl ||
+            p?.image?.url ||
+            p?.fields?.Image_URL__c?.value ||
+            ''
+        )
+        const preco = formatHomagPreco(extractHomagPrecoFromProduct(p))
+        return {
+          codigo,
+          codigoOriginal: norm.codigoOriginal,
+          referenciasAlternativas: norm.referenciasAlternativas,
+          codigosAlternativos: norm.codigosAlternativos,
+          descricao: nome,
+          imagemUrl,
+          preco,
+        }
+      })
+      .filter(Boolean)
     return {
       products,
       total: Number(pp.total) || 0,

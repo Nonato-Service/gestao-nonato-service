@@ -3,6 +3,7 @@
  */
 import fs from 'fs'
 import { normCodigo } from './resume.mjs'
+import { chavesDedupHomagPeca, normCodigoHomag, variantesCodigoHomagParaMatch } from './homag-codigo-ref.mjs'
 import { homagExportItemPrecisaFoto } from './imagem-util.mjs'
 import {
   captureAuraSession,
@@ -151,6 +152,27 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms))
 }
 
+function codigoHomagJaVisto(codigosVistos, codigo) {
+  const keys = [...variantesCodigoHomagParaMatch(codigo), normCodigoHomag(codigo)].filter(Boolean)
+  return keys.some((k) => codigosVistos.has(k))
+}
+
+function marcarCodigoHomagVisto(codigosVistos, item) {
+  for (const k of chavesDedupHomagPeca(item)) codigosVistos.add(k)
+  const c = normCodigo(item?.codigo)
+  if (c) codigosVistos.add(c)
+}
+
+function indicePorCodigoHomag(items, codigo) {
+  const alvo = new Set([...variantesCodigoHomagParaMatch(codigo), normCodigoHomag(codigo)].filter(Boolean))
+  return items.findIndex((it) => {
+    for (const k of chavesDedupHomagPeca(it)) {
+      if (alvo.has(k)) return true
+    }
+    return alvo.has(normCodigo(it.codigo))
+  })
+}
+
 function listSubcategories(rawCategories) {
   const out = []
   for (const ch of rawCategories?.children || []) {
@@ -170,7 +192,7 @@ async function backfillHomagFieldsOnExisting(context, page, products, items, bui
   for (const meta of products) {
     const codKey = normCodigo(meta.codigo)
     if (!codKey) continue
-    const idx = items.findIndex((it) => normCodigo(it.codigo) === codKey)
+    const idx = indicePorCodigoHomag(items, meta.codigo)
     const cur = idx >= 0 ? items[idx] : null
     if (!cur) continue
 
@@ -221,7 +243,7 @@ function backfillPrecosOnExisting(products, items) {
   for (const meta of products) {
     const codKey = normCodigo(meta.codigo)
     if (!codKey || !meta.preco) continue
-    const idx = items.findIndex((it) => normCodigo(it.codigo) === codKey)
+    const idx = indicePorCodigoHomag(items, meta.codigo)
     if (idx < 0) continue
     const cur = items[idx]
     const substituir = process.env.HOMAG_MERGE_REPLACE_PRICES === '1'
@@ -321,7 +343,7 @@ export async function runHomagApiImport(opts) {
         const codKey = normCodigo(meta.codigo)
         if (!codKey) continue
 
-        if (codigosVistos.has(codKey)) {
+        if (codigoHomagJaVisto(codigosVistos, meta.codigo)) {
           const n = await backfillHomagFieldsOnExisting(
             context,
             page,
@@ -337,7 +359,12 @@ export async function runHomagApiImport(opts) {
         }
 
         const it = await buildItemFromDiscovered(context, page, meta, globalSeq, opts.embedOff, opts.maxEmbed)
-        codigosVistos.add(codKey)
+        if (meta.referenciasAlternativas?.length) it.referenciasAlternativas = meta.referenciasAlternativas
+        if (meta.codigosAlternativos?.length) it.codigosAlternativos = meta.codigosAlternativos
+        if (meta.codigoOriginal && meta.codigoOriginal !== it.codigo) {
+          it.codigosAlternativos = [...new Set([...(it.codigosAlternativos || []), meta.codigoOriginal])]
+        }
+        marcarCodigoHomagVisto(codigosVistos, it)
         items.push(it)
         globalSeq++
         added++
@@ -448,7 +475,7 @@ export async function runHomagApiImport(opts) {
     console.log(`[HOMAG API] Backfill preços concluído — +${backfillPrecosTotal} actualizados`)
   }
 
-  return { items, totalNew, bucketsDone, completedFully: true }
+  return { items, totalNew, bucketsDone, completedFully: true, bucketsTotal: dedupBuckets.length }
 }
 
 export async function initHomagApiSession(page, startUrl) {
