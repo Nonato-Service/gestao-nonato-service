@@ -23,6 +23,7 @@ import {
   type OstRascunhoAtual,
 } from './orcamentoOstPropostas'
 import { IconClipboardList, IconCoins, IconLayers } from './UiIcons'
+import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 
 export type ServicoOrcamentoLinha = {
   id: string
@@ -615,18 +616,29 @@ export function OrcamentoServicoTecnicoContent({
 
           <div className="papel-timbrado-field">
             <label>{t.orcamentoServicoTecnicoCliente || 'Cliente'}</label>
-            <select
-              value={clienteId}
-              onChange={(e) => setClienteId(e.target.value)}
-              style={{ width: '100%', boxSizing: 'border-box', borderRadius: 10, padding: '10px 12px', background: '#0b1220', color: '#f1f5f9', border: '1px solid rgba(148,163,184,0.28)' }}
-            >
-              <option value="">{t.orcamentoServicoTecnicoClientePlaceholder || 'Selecione um cliente cadastrado (opcional)…'}</option>
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nomeEmpresa}
-                </option>
-              ))}
-            </select>
+            <ClienteAlfabetoPicker
+              clientes={clientes}
+              selectedId={clienteId}
+              labels={{
+                buscar: t.buscarCliente,
+                nenhumEncontrado: t.nenhumEncontrado,
+                selecioneLetra: t.clientesAlfabetoSelecioneLetra,
+                prompt: t.clientesAlfabetoPrompt,
+                mostrando: t.mostrando,
+                de: t.de,
+                clientes: t.clientes,
+                comInicial: t.clientesAlfabetoComInicial,
+                outros: t.clientesAlfabetoOutros,
+                semClientesLetra: t.clientesAlfabetoSemClientes,
+                indiceAz: t.clientesAlfabetoIndice,
+                limpar: t.delete,
+                cliente: t.cliente,
+                filtrados: t.filtrados,
+              }}
+              listMaxHeight={280}
+              onSelect={(c) => setClienteId(c.id)}
+              onClear={() => setClienteId('')}
+            />
           </div>
           <div className="papel-timbrado-field">
             <label>{t.orcamentoServicoTecnicoClienteManual || 'Nome do cliente (se não estiver na lista)'}</label>

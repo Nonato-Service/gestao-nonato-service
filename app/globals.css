@@ -7544,6 +7544,114 @@ a:focus-visible {
   border-radius: 12px;
 }
 
+.clientes-alfa-nome-btn.is-selected,
+.cliente-alfabeto-picker .clientes-alfa-nome-btn.is-selected {
+  border-color: rgba(34, 197, 94, 0.75) !important;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.22);
+  background: rgba(34, 197, 94, 0.12) !important;
+}
+
+/* Picker reutilizável — busca + índice A–Z (formulários) */
+.cliente-alfabeto-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+.cliente-alfabeto-picker__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cliente-alfabeto-picker__action {
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.45);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cliente-alfabeto-picker__action.is-active {
+  border-color: rgba(74, 222, 128, 0.55);
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+}
+.cliente-alfabeto-picker__selected {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  background: rgba(34, 197, 94, 0.08);
+}
+.cliente-alfabeto-picker__selected-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #86efac;
+}
+.cliente-alfabeto-picker__selected-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ecfdf5;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.cliente-alfabeto-picker__clear {
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(127, 29, 29, 0.25);
+  color: #fca5a5;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cliente-alfabeto-picker__search {
+  width: 100%;
+  padding: 10px 12px;
+  background: #484848;
+  color: #fff;
+  border: 1px solid rgba(0, 200, 83, 0.3);
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.cliente-alfabeto-picker__meta {
+  padding: 10px 12px;
+  background: #484848;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #e2e8f0;
+  line-height: 1.45;
+}
+.cliente-alfabeto-picker__empty {
+  margin: 0;
+  padding: 14px;
+  text-align: center;
+  opacity: 0.75;
+  font-size: 13px;
+}
+.cliente-alfabeto-picker__wrap {
+  margin: 0;
+}
+.cliente-alfabeto-picker__list {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+}
+.cliente-alfabeto-picker .clientes-alfa-nome-btn {
+  background: var(--ns-cliente-inner-bg, rgba(15, 23, 42, 0.55));
+  border: 1px solid var(--ns-cliente-inner-border, rgba(148, 163, 184, 0.28));
+  border-radius: 12px;
+}
+
 /* Lista alfabética: Cód. = / Cliente = / Inf. adicional = */
 .cliente-lista-linhas {
   width: 100%;
@@ -21655,6 +21763,10 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   flex-direction: column;
   gap: 6px;
   min-width: 0;
+}
+
+.proto-cockpit-command__field--full {
+  grid-column: 1 / -1;
 }
 
 .proto-cockpit-command__label {

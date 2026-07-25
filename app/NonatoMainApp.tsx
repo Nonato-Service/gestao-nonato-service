@@ -265,6 +265,7 @@ import { CadastroServicosContent } from './components/CadastroServicosContent'
 import { ClienteCadastroForm, emptyClienteFormState, type ClienteFormState } from './components/ClienteCadastroForm'
 import { ClienteIdentidadeChips, formatClienteIdentidadeTexto, formatNifClienteExibicao } from './components/ClienteIdentidadeChips'
 import { ClienteListaLinhas } from './components/ClienteListaLinhas'
+import { ClienteAlfabetoPicker } from './components/ClienteAlfabetoPicker'
 import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
@@ -8071,6 +8072,26 @@ export default function Dashboard() {
   const localeOrdCli = useMemo(
     () => localeOrdenacaoClientes(selectedLanguage),
     [selectedLanguage]
+  )
+
+  const clientePickerLabels = useMemo(
+    () => ({
+      buscar: safeT?.buscarCliente,
+      nenhumEncontrado: safeT?.nenhumEncontrado,
+      selecioneLetra: safeT?.clientesAlfabetoSelecioneLetra,
+      prompt: safeT?.clientesAlfabetoPrompt,
+      mostrando: safeT?.mostrando,
+      de: safeT?.de,
+      clientes: safeT?.clientes,
+      comInicial: safeT?.clientesAlfabetoComInicial,
+      outros: safeT?.clientesAlfabetoOutros,
+      semClientesLetra: safeT?.clientesAlfabetoSemClientes,
+      indiceAz: safeT?.clientesAlfabetoIndice,
+      limpar: (safeT as Record<string, string | undefined>)?.limpar || safeT?.delete,
+      cliente: safeT?.cliente,
+      filtrados: safeT?.filtrados,
+    }),
+    [safeT]
   )
 
   useEffect(() => {
@@ -31662,31 +31683,24 @@ export default function Dashboard() {
                 </p>
                 <div style={{ marginBottom: '16px' }}>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.cadastroNonatoEnvioLabelCliente || 'Cliente'}</label>
-                  <select
-                    value={cadastroNonatoEnvioCliente.clienteId}
-                    onChange={e => {
-                      const id = e.target.value
-                      if (!id) {
-                        setCadastroNonatoEnvioCliente({ emailDestino: '', telefoneWhats: '', clienteId: '' })
-                        return
-                      }
-                      const c = clientes.find(x => x.id === id)
-                      if (!c) return
+                  <ClienteAlfabetoPicker
+                    clientes={clientesOrdenadosAlfabeticamente}
+                    selectedId={cadastroNonatoEnvioCliente.clienteId}
+                    language={selectedLanguage}
+                    labels={clientePickerLabels}
+                    listMaxHeight={280}
+                    isDevedor={isClienteMarcadoDevedor}
+                    onSelect={(c) => {
                       const telRaw = (c.telefones || '').trim()
                       const primeiroTel = telRaw.split(/[/|,;]/)[0].trim() || telRaw
                       setCadastroNonatoEnvioCliente({
-                        clienteId: id,
+                        clienteId: c.id,
                         emailDestino: (c.email || '').trim(),
-                        telefoneWhats: primeiroTel
+                        telefoneWhats: primeiroTel,
                       })
                     }}
-                    style={{ width: '100%', maxWidth: '100%', padding: '10px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.35)', borderRadius: '6px', cursor: 'pointer' }}
-                  >
-                    <option value="">{safeT?.cadastroNonatoEnvioPlaceholderCliente || '— Selecionar cliente do cadastro (preenche e-mail e telefone) —'}</option>
-                    {clientesOrdenadosAlfabeticamente.map(cli => (
-                      <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
-                    ))}
-                  </select>
+                    onClear={() => setCadastroNonatoEnvioCliente({ emailDestino: '', telefoneWhats: '', clienteId: '' })}
+                  />
                   <p style={{ fontSize: '11px', color: '#777', marginTop: '6px', marginBottom: 0 }}>
                     {safeT?.cadastroNonatoEnvioHintCliente || 'Os dados vêm do separador Clientes. Pode ajustar e-mail e telefone nos campos abaixo; ao editar manualmente, a ligação ao cliente seleccionado deixa de ser usada.'}
                   </p>
@@ -34290,27 +34304,34 @@ export default function Dashboard() {
                     <p style={{ margin: '0 0 14px', fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>{protoT.protocolosServicoSecIdentificacaoHint}</p>
                   ) : null}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '18px' }}>
-                    <div>
+                    <div style={{ gridColumn: '1 / -1' }}>
                       <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoCliente || 'Cliente'}</label>
-                      <select
-                        value={protocoloServicoForm.clienteId}
-                        onChange={(e) => {
-                          const v = e.target.value
-                          const cl = clientes.find((c) => c.id === v)
-                          const sug = sugerirRelatorioServicoId(relatoriosServico, v, cl?.nomeEmpresa || '', '')
+                      <ClienteAlfabetoPicker
+                        clientes={clientesOrdenadosAlfabeticamente}
+                        selectedId={protocoloServicoForm.clienteId}
+                        language={selectedLanguage}
+                        labels={clientePickerLabels}
+                        listMaxHeight={300}
+                        isDevedor={isClienteMarcadoDevedor}
+                        onSelect={(c) => {
+                          const sug = sugerirRelatorioServicoId(relatoriosServico, c.id, c.nomeEmpresa || '', '')
                           setProtocoloServicoForm((prev) => ({
                             ...prev,
-                            clienteId: v,
+                            clienteId: c.id,
                             equipamentoNumeroSerie: '',
                             situacaoDescricao: '',
                             relatorioServicoId: prev.relatorioServicoId || sug,
                           }))
                         }}
-                        style={inputBase}
-                      >
-                        <option value="">— {protoT?.protocolosServicoSelecionarCliente || 'Selecionar cliente'}</option>
-                        {clientesOrdenadosAlfabeticamente.map(c => <option key={c.id} value={c.id}>{c.nomeEmpresa}</option>)}
-                      </select>
+                        onClear={() =>
+                          setProtocoloServicoForm((prev) => ({
+                            ...prev,
+                            clienteId: '',
+                            equipamentoNumeroSerie: '',
+                            situacaoDescricao: '',
+                          }))
+                        }
+                      />
                     </div>
                     <div>
                       <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoEquipamento || 'Equipamento'}</label>
@@ -35513,24 +35534,38 @@ export default function Dashboard() {
                       placeholder={protoT?.protocolosServicoBuscaPlaceholder || 'Cliente, equipamento, série…'}
                     />
                   </label>
-                  <label className="proto-cockpit-command__field">
+                  <div className="proto-cockpit-command__field proto-cockpit-command__field--full">
                     <span className="proto-cockpit-command__label">{protoT?.protocolosServicoFiltroClienteLabel || 'Cliente'}</span>
-                    <select
-                      className="proto-cockpit-command__select"
-                      value={protocoloServicoClienteFiltroLista}
-                      onChange={(e) => setProtocoloServicoClienteFiltroLista(e.target.value)}
-                    >
-                      <option value="">{safeT?.comprovantesTodosClientes || 'Todos'}</option>
-                      <option value={PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM}>
-                        {protoT?.protocolosServicoFiltroClienteOpcaoNenhum || 'Nenhum'}
-                      </option>
-                      {clientesComProtocolo.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.nomeEmpresa}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                    <ClienteAlfabetoPicker
+                      clientes={clientesComProtocolo}
+                      selectedId={
+                        protocoloServicoClienteFiltroLista &&
+                        protocoloServicoClienteFiltroLista !== PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM
+                          ? protocoloServicoClienteFiltroLista
+                          : ''
+                      }
+                      language={selectedLanguage}
+                      labels={clientePickerLabels}
+                      listMaxHeight={260}
+                      isDevedor={isClienteMarcadoDevedor}
+                      headerActions={[
+                        {
+                          id: 'todos',
+                          label: safeT?.comprovantesTodosClientes || 'Todos',
+                          active: !protocoloServicoClienteFiltroLista,
+                          onClick: () => setProtocoloServicoClienteFiltroLista(''),
+                        },
+                        {
+                          id: 'nenhum',
+                          label: protoT?.protocolosServicoFiltroClienteOpcaoNenhum || 'Nenhum',
+                          active: protocoloServicoClienteFiltroLista === PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM,
+                          onClick: () => setProtocoloServicoClienteFiltroLista(PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM),
+                        },
+                      ]}
+                      onSelect={(c) => setProtocoloServicoClienteFiltroLista(c.id)}
+                      onClear={() => setProtocoloServicoClienteFiltroLista('')}
+                    />
+                  </div>
                   <label className="proto-cockpit-command__check">
                     <input
                       type="checkbox"
@@ -36002,12 +36037,16 @@ export default function Dashboard() {
 
                     <div style={{ gridColumn: '1 / -1' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.selecioneCliente || 'Cliente'}</label>
-                      <select
-                        value={relatorioServicoForm.clienteId || ''}
-                        onChange={(e) => {
-                          const selectedClient = clientes.find(c => c.id === e.target.value);
-                          setRelatorioServicoForm(prev => {
-                            const equipamentosAtuais = normalizarEquipamentosRelatorio(prev).map(eq =>
+                      <ClienteAlfabetoPicker
+                        clientes={clientesOrdenadosAlfabeticamente}
+                        selectedId={relatorioServicoForm.clienteId || ''}
+                        language={selectedLanguage}
+                        labels={clientePickerLabels}
+                        listMaxHeight={280}
+                        isDevedor={isClienteMarcadoDevedor}
+                        onSelect={(selectedClient) => {
+                          setRelatorioServicoForm((prev) => {
+                            const equipamentosAtuais = normalizarEquipamentosRelatorio(prev).map((eq) =>
                               eq.equipamentoOrigem === 'cliente'
                                 ? { ...eq, equipamentoId: '', numeroMaquina: '', maquinaModelo: '' }
                                 : eq
@@ -36015,21 +36054,24 @@ export default function Dashboard() {
                             return {
                               ...prev,
                               ...sincronizarCamposLegadoEquipamentos(equipamentosAtuais, equipamentos),
-                              cliente: selectedClient?.nomeEmpresa || '',
-                              clienteId: selectedClient?.id || '',
-                              cidade: selectedClient?.conselho || selectedClient?.localidade || '',
-                              telefone: selectedClient?.telefones || '',
+                              cliente: selectedClient.nomeEmpresa || '',
+                              clienteId: selectedClient.id || '',
+                              cidade: selectedClient.conselho || selectedClient.localidade || '',
+                              telefone: selectedClient.telefones || '',
                             }
                           })
-                          if (selectedClient) applyKmClienteAoRelatorio(selectedClient)
+                          applyKmClienteAoRelatorio(selectedClient)
                         }}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-                      >
-                        <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
-                        {clientesOrdenadosAlfabeticamente.map(cli => (
-                          <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
-                        ))}
-                      </select>
+                        onClear={() =>
+                          setRelatorioServicoForm((prev) => ({
+                            ...prev,
+                            cliente: '',
+                            clienteId: '',
+                            cidade: '',
+                            telefone: '',
+                          }))
+                        }
+                      />
                     </div>
 
                     {(() => {
@@ -45546,16 +45588,16 @@ A1;Peça exemplo;10`}
               </p>
               <div style={{ marginBottom: '14px' }}>
                 <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.solicitacaoServicoTecnicoClienteCadastrado || 'Cliente cadastrado (opcional)'}</label>
-                <select
-                  value={sstModeloBase.clienteId || ''}
-                  onChange={(e) => setSstModeloBase(mergeClienteSelecionadoSst(sstModeloBase, e.target.value || undefined))}
-                  style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
-                >
-                  <option value="">{(safeT as any)?.solicitacaoServicoTecnicoClienteCadastradoOpt || '— Nenhum —'}</option>
-                  {clientesOrdenadosAlfabeticamente.map((cli) => (
-                    <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
-                  ))}
-                </select>
+                <ClienteAlfabetoPicker
+                  clientes={clientesOrdenadosAlfabeticamente}
+                  selectedId={sstModeloBase.clienteId || ''}
+                  language={selectedLanguage}
+                  labels={clientePickerLabels}
+                  listMaxHeight={260}
+                  isDevedor={isClienteMarcadoDevedor}
+                  onSelect={(c) => setSstModeloBase(mergeClienteSelecionadoSst(sstModeloBase, c.id))}
+                  onClear={() => setSstModeloBase(mergeClienteSelecionadoSst(sstModeloBase, undefined))}
+                />
               </div>
               {(() => {
                 const cidMb = sstModeloBase.clienteId
@@ -45699,20 +45741,20 @@ A1;Peça exemplo;10`}
                 <h3 style={{ marginBottom: '20px', color: '#ffffff' }}>{editingSolicitacaoServicoTecnico ? (safeT?.editar || 'Editar') : (safeT?.solicitacaoServicoTecnicoNovaSolicitacao || 'Nova solicitação')}</h3>
                 <div style={{ marginBottom: '18px' }}>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.solicitacaoServicoTecnicoClienteCadastrado || 'Cliente cadastrado (opcional)'}</label>
-                  <select
-                    value={solicitacaoServicoTecnicoForm.clienteId || ''}
-                    onChange={(e) =>
-                      setSolicitacaoServicoTecnicoForm(
-                        mergeClienteSelecionadoSst(solicitacaoServicoTecnicoForm, e.target.value || undefined)
-                      )
+                  <ClienteAlfabetoPicker
+                    clientes={clientesOrdenadosAlfabeticamente}
+                    selectedId={solicitacaoServicoTecnicoForm.clienteId || ''}
+                    language={selectedLanguage}
+                    labels={clientePickerLabels}
+                    listMaxHeight={260}
+                    isDevedor={isClienteMarcadoDevedor}
+                    onSelect={(c) =>
+                      setSolicitacaoServicoTecnicoForm(mergeClienteSelecionadoSst(solicitacaoServicoTecnicoForm, c.id))
                     }
-                    style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
-                  >
-                    <option value="">{(safeT as any)?.solicitacaoServicoTecnicoClienteCadastradoOpt || '— Nenhum / preencher só o nome acima —'}</option>
-                    {clientesOrdenadosAlfabeticamente.map((cli) => (
-                      <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
-                    ))}
-                  </select>
+                    onClear={() =>
+                      setSolicitacaoServicoTecnicoForm(mergeClienteSelecionadoSst(solicitacaoServicoTecnicoForm, undefined))
+                    }
+                  />
                   <p style={{ margin: '8px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
                     {(safeT as any)?.solicitacaoServicoTecnicoClienteFolderHint || 'Se selecionar um cliente cadastrado, o documento que anexar como «devolvido» fica também na ficha desse cliente.'}
                   </p>
@@ -47370,28 +47412,38 @@ A1;Peça exemplo;10`}
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
                     {safeT?.cliente || 'Cliente'} <span style={{ color: '#ff0000' }}>*</span>
                   </label>
-                  <select
-                    value={agendaForm.clienteId}
-                    onChange={(e) => {
-                      const selectedClient = clientes.find(c => c.id === e.target.value);
+                  <ClienteAlfabetoPicker
+                    clientes={clientesOrdenadosAlfabeticamente}
+                    selectedId={agendaForm.clienteId}
+                    language={selectedLanguage}
+                    labels={clientePickerLabels}
+                    listMaxHeight={280}
+                    isDevedor={isClienteMarcadoDevedor}
+                    onSelect={(selectedClient) => {
                       setAgendaForm({
                         ...agendaForm,
-                        clienteId: selectedClient?.id || '',
-                        cliente: selectedClient?.nomeEmpresa || '',
-                        endereco: selectedClient?.morada || '',
-                        cidade: selectedClient?.conselho || selectedClient?.localidade || '',
-                        telefone: selectedClient?.telefones || '',
+                        clienteId: selectedClient.id || '',
+                        cliente: selectedClient.nomeEmpresa || '',
+                        endereco: selectedClient.morada || '',
+                        cidade: selectedClient.conselho || selectedClient.localidade || '',
+                        telefone: selectedClient.telefones || '',
                         equipamentoId: '',
                         equipamento: '',
-                      });
+                      })
                     }}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-                  >
-                    <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
-                    {clientesOrdenadosAlfabeticamente.map(cli => (
-                      <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
-                    ))}
-                  </select>
+                    onClear={() =>
+                      setAgendaForm({
+                        ...agendaForm,
+                        clienteId: '',
+                        cliente: '',
+                        endereco: '',
+                        cidade: '',
+                        telefone: '',
+                        equipamentoId: '',
+                        equipamento: '',
+                      })
+                    }
+                  />
                 </div>
                 ) : null}
 
@@ -52981,16 +53033,16 @@ A1;Peça exemplo;10`}
                           {(safeT as any)?.comprovantesNenhumClienteCadastrado || 'Não há clientes cadastrados. Cadastre clientes em Gestão técnica → Clientes antes de adicionar comprovantes por cliente.'}
                         </p>
                       ) : (
-                        <select
-                          value={formComp.cliente}
-                          onChange={e => setFormComp(prev => ({ ...prev, cliente: e.target.value, tipo: 'cliente' }))}
-                          style={{ width: '100%', padding: '10px', background: '#3a3a3a', border: '1px solid rgba(0,200,83,0.3)', borderRadius: '6px', color: '#fff' }}
-                        >
-                          <option value="">{(safeT as any)?.comprovantesSelecioneClientePlaceholder || 'Selecione um cliente…'}</option>
-                          {clientesOrdenadosAlfabeticamente.map(c => (
-                              <option key={c.id} value={c.nomeEmpresa}>{c.nomeEmpresa}</option>
-                            ))}
-                        </select>
+                        <ClienteAlfabetoPicker
+                          clientes={clientesOrdenadosAlfabeticamente}
+                          selectedId={clientes.find((c) => c.nomeEmpresa === formComp.cliente)?.id || ''}
+                          language={selectedLanguage}
+                          labels={clientePickerLabels}
+                          listMaxHeight={260}
+                          isDevedor={isClienteMarcadoDevedor}
+                          onSelect={(c) => setFormComp((prev) => ({ ...prev, tipo: 'cliente', cliente: c.nomeEmpresa }))}
+                          onClear={() => setFormComp((prev) => ({ ...prev, cliente: '' }))}
+                        />
                       )}
                     </div>
                   )}
@@ -68769,41 +68821,16 @@ A1;Peça exemplo;10`}
             <h3 className="orc-pro__panel-title orc-pro__panel-title--blue">
               {safeT?.selecionarCliente || 'Selecionar Cliente'}
             </h3>
-            <input
-              type="text"
-              placeholder={safeT?.buscarClienteOrcamentoAvulso || safeT?.buscarCliente || 'Buscar por nome, e-mail, telefone ou nome de contacto...'}
-              value={buscaCliente}
-              onChange={(e) => setBuscaCliente(e.target.value)}
-              className="orc-pro__search"
+            <ClienteAlfabetoPicker
+              clientes={clientes}
+              selectedId={clienteSelecionado?.id || ''}
+              language={selectedLanguage}
+              labels={clientePickerLabels}
+              listMaxHeight={320}
+              isDevedor={isClienteMarcadoDevedor}
+              onSelect={(c) => setClienteSelecionado(c as Cliente)}
+              onClear={() => setClienteSelecionado(null)}
             />
-            <div className="orc-pro__scroll-list">
-              {clientesFiltrados.length === 0 ? (
-                <p className="orc-pro__empty-hint">
-                  {safeT?.nenhumClienteEncontrado || 'Nenhum cliente encontrado'}
-                </p>
-              ) : (
-                clientesFiltrados.map(cliente => (
-                  <button
-                    type="button"
-                    key={cliente.id}
-                    onClick={() => setClienteSelecionado(cliente)}
-                    className={`orc-pro__pick-card orc-pro__pick-card--blue ${clienteSelecionado?.id === cliente.id ? 'is-active' : ''}`}
-                  >
-                    <div className="orc-pro__pick-card-title">{cliente.nomeEmpresa || '—'}</div>
-                    <div className="orc-pro__pick-card-grid">
-                      <div><span>{safeT?.contato || 'Contato'}:</span> {(cliente.contato || '').trim() || '—'}</div>
-                      <div><span>{safeT?.email || 'E-mail'}:</span> {(cliente.email || '').trim() || '—'}</div>
-                      <div className="orc-pro__pick-card-grid--full"><span>{safeT?.telefone || 'Telefone'}:</span> {(cliente.telefones || '').trim() || '—'}</div>
-                      {(cliente.morada || cliente.codigoPostal) && (
-                        <div className="orc-pro__pick-card-grid--full orc-pro__pick-card-address">
-                          {[cliente.morada, cliente.codigoPostal].filter(Boolean).join(' · ')}
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
           </div>
         )}
 
@@ -68816,34 +68843,16 @@ A1;Peça exemplo;10`}
             <p className="orc-pro__panel-desc">
               {safeT?.orcamentoPrioritarioFixoSecaoCadastroDesc || 'O orçamento continua a ser do tipo Cliente Prioritário (Fixo). Pode escolher um cliente da lista para usar o e-mail e telefone ao guardar e ao enviar. Se não escolher, usam-se os dados do cliente prioritário.'}
             </p>
-            <input
-              type="text"
-              placeholder={safeT?.buscarClienteOrcamentoAvulso || safeT?.buscarCliente || 'Buscar...'}
-              value={buscaClientePrioritarioFixo}
-              onChange={(e) => setBuscaClientePrioritarioFixo(e.target.value)}
-              className="orc-pro__search orc-pro__search--amber"
+            <ClienteAlfabetoPicker
+              clientes={clientes}
+              selectedId={clienteCadastroPrioritarioFixo?.id || ''}
+              language={selectedLanguage}
+              labels={clientePickerLabels}
+              listMaxHeight={260}
+              isDevedor={isClienteMarcadoDevedor}
+              onSelect={(c) => setClienteCadastroPrioritarioFixo(c as Cliente)}
+              onClear={() => setClienteCadastroPrioritarioFixo(null)}
             />
-            <div className="orc-pro__scroll-list orc-pro__scroll-list--sm">
-              {clientesFiltradosPrioritarioFixo.length === 0 ? (
-                <p className="orc-pro__empty-hint">{safeT?.nenhumClienteEncontrado || 'Nenhum cliente encontrado'}</p>
-              ) : (
-                clientesFiltradosPrioritarioFixo.map(cliente => (
-                  <button
-                    type="button"
-                    key={cliente.id}
-                    onClick={() => setClienteCadastroPrioritarioFixo(cliente)}
-                    className={`orc-pro__pick-card orc-pro__pick-card--amber ${clienteCadastroPrioritarioFixo?.id === cliente.id ? 'is-active' : ''}`}
-                  >
-                    <div className="orc-pro__pick-card-title">{cliente.nomeEmpresa || '—'}</div>
-                    <div className="orc-pro__pick-card-grid">
-                      <div><span>{safeT?.contato || 'Contato'}:</span> {(cliente.contato || '').trim() || '—'}</div>
-                      <div><span>{safeT?.email || 'E-mail'}:</span> {(cliente.email || '').trim() || '—'}</div>
-                      <div className="orc-pro__pick-card-grid--full"><span>{safeT?.telefone || 'Telefone'}:</span> {(cliente.telefones || '').trim() || '—'}</div>
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
             {clienteCadastroPrioritarioFixo && (
               <button
                 type="button"
@@ -75118,28 +75127,33 @@ A1;Peça exemplo;10`}
                 <label className="ns-diario-composer__sublabel" htmlFor="ns-diario-composer-cliente">
                   {(safeT as any)?.diarioPedidosLabelCliente || 'Cliente'}
                 </label>
-                <select
-                  id="ns-diario-composer-cliente"
-                  className="ns-diario-composer__select"
-                  value={diarioComposeClienteSel}
-                  onChange={(e) => {
-                    const v = e.target.value
-                    setDiarioComposeClienteSel(v)
-                    if (v !== '__livre__') setDiarioComposeClienteNomeLivre('')
+                <ClienteAlfabetoPicker
+                  clientes={clientesOrdenadosAlfabeticamente}
+                  selectedId={diarioComposeClienteSel && diarioComposeClienteSel !== '__livre__' ? diarioComposeClienteSel : ''}
+                  language={selectedLanguage}
+                  labels={clientePickerLabels}
+                  listMaxHeight={240}
+                  isDevedor={isClienteMarcadoDevedor}
+                  headerActions={[
+                    {
+                      id: 'livre',
+                      label: (safeT as any)?.diarioPedidosClienteOutro || 'Outro (não está no cadastro)',
+                      active: diarioComposeClienteSel === '__livre__',
+                      onClick: () => {
+                        setDiarioComposeClienteSel('__livre__')
+                        setDiarioComposeClienteNomeLivre('')
+                      },
+                    },
+                  ]}
+                  onSelect={(c) => {
+                    setDiarioComposeClienteSel(c.id)
+                    setDiarioComposeClienteNomeLivre('')
                   }}
-                >
-                  <option value="">
-                    {(safeT as any)?.diarioPedidosClienteEscolher || '— Escolher cliente —'}
-                  </option>
-                  {clientesOrdenadosAlfabeticamente.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.nomeEmpresa || c.id}
-                      </option>
-                    ))}
-                  <option value="__livre__">
-                    {(safeT as any)?.diarioPedidosClienteOutro || 'Outro (não está no cadastro)'}
-                  </option>
-                </select>
+                  onClear={() => {
+                    setDiarioComposeClienteSel('')
+                    setDiarioComposeClienteNomeLivre('')
+                  }}
+                />
                 {diarioComposeClienteSel === '__livre__' ? (
                   <input
                     type="text"
@@ -78250,26 +78264,33 @@ A1;Peça exemplo;10`}
                     <option key={tec.id} value={tec.name}>{tec.name}</option>
                   ))}
                 </select>
-                <select
-                  value={relatorioServicoForm.clienteId || ''}
-                  onChange={(e) => {
-                    const selectedClient = clientes.find(c => c.id === e.target.value);
-                    setRelatorioServicoForm(prev => ({
+                <ClienteAlfabetoPicker
+                  clientes={clientesOrdenadosAlfabeticamente}
+                  selectedId={relatorioServicoForm.clienteId || ''}
+                  language={selectedLanguage}
+                  labels={clientePickerLabels}
+                  listMaxHeight={220}
+                  isDevedor={isClienteMarcadoDevedor}
+                  onSelect={(selectedClient) => {
+                    setRelatorioServicoForm((prev) => ({
                       ...prev,
-                      cliente: selectedClient?.nomeEmpresa || '',
-                      clienteId: selectedClient?.id || '',
-                      cidade: selectedClient?.conselho || selectedClient?.localidade || '',
-                      telefone: selectedClient?.telefones || '',
-                    }));
-                    if (selectedClient) applyKmClienteAoRelatorio(selectedClient)
+                      cliente: selectedClient.nomeEmpresa || '',
+                      clienteId: selectedClient.id || '',
+                      cidade: selectedClient.conselho || selectedClient.localidade || '',
+                      telefone: selectedClient.telefones || '',
+                    }))
+                    applyKmClienteAoRelatorio(selectedClient)
                   }}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-                >
-                  <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
-                  {clientesOrdenadosAlfabeticamente.map(cli => (
-                    <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
-                  ))}
-                </select>
+                  onClear={() =>
+                    setRelatorioServicoForm((prev) => ({
+                      ...prev,
+                      cliente: '',
+                      clienteId: '',
+                      cidade: '',
+                      telefone: '',
+                    }))
+                  }
+                />
                 <input
                   type="date"
                   placeholder={safeT?.data || 'Data'}
@@ -79041,28 +79062,38 @@ A1;Peça exemplo;10`}
                     <option key={tec.id} value={tec.name}>{tec.name}</option>
                   ))}
                 </select>
-                <select
-                  value={agendaForm.clienteId}
-                  onChange={(e) => {
-                    const selectedClient = clientes.find(c => c.id === e.target.value);
+                <ClienteAlfabetoPicker
+                  clientes={clientesOrdenadosAlfabeticamente}
+                  selectedId={agendaForm.clienteId}
+                  language={selectedLanguage}
+                  labels={clientePickerLabels}
+                  listMaxHeight={220}
+                  isDevedor={isClienteMarcadoDevedor}
+                  onSelect={(selectedClient) => {
                     setAgendaForm({
                       ...agendaForm,
-                      clienteId: selectedClient?.id || '',
-                      cliente: selectedClient?.nomeEmpresa || '',
-                      endereco: selectedClient?.morada || '',
-                      cidade: selectedClient?.conselho || selectedClient?.localidade || '',
-                      telefone: selectedClient?.telefones || '',
+                      clienteId: selectedClient.id || '',
+                      cliente: selectedClient.nomeEmpresa || '',
+                      endereco: selectedClient.morada || '',
+                      cidade: selectedClient.conselho || selectedClient.localidade || '',
+                      telefone: selectedClient.telefones || '',
                       equipamentoId: '',
                       equipamento: '',
-                    });
+                    })
                   }}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-                >
-                  <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
-                  {clientesOrdenadosAlfabeticamente.map(cli => (
-                    <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
-                  ))}
-                </select>
+                  onClear={() =>
+                    setAgendaForm({
+                      ...agendaForm,
+                      clienteId: '',
+                      cliente: '',
+                      endereco: '',
+                      cidade: '',
+                      telefone: '',
+                      equipamentoId: '',
+                      equipamento: '',
+                    })
+                  }
+                />
                 <input
                   type="date"
                   placeholder={safeT?.data || 'Data'}
@@ -80371,18 +80402,24 @@ A1;Peça exemplo;10`}
                     ))}
                   </select>
                 ) : (
-                  <select
-                    value={faturaFornecedorForm.clienteId}
-                    onChange={e => {
-                      const id = e.target.value
-                      const cli = clientes.find(c => c.id === id)
-                      setFaturaFornecedorForm({ ...faturaFornecedorForm, clienteId: id, clienteNome: cli?.nomeEmpresa || '' })
-                    }}
-                    style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-                  >
-                    <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
-                    {clientesOrdenadosAlfabeticamente.map(cli => <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>)}
-                  </select>
+                  <ClienteAlfabetoPicker
+                    clientes={clientesOrdenadosAlfabeticamente}
+                    selectedId={faturaFornecedorForm.clienteId}
+                    language={selectedLanguage}
+                    labels={clientePickerLabels}
+                    listMaxHeight={220}
+                    isDevedor={isClienteMarcadoDevedor}
+                    onSelect={(cli) =>
+                      setFaturaFornecedorForm({
+                        ...faturaFornecedorForm,
+                        clienteId: cli.id,
+                        clienteNome: cli.nomeEmpresa || '',
+                      })
+                    }
+                    onClear={() =>
+                      setFaturaFornecedorForm({ ...faturaFornecedorForm, clienteId: '', clienteNome: '' })
+                    }
+                  />
                 )}
                 <input type="date" placeholder={safeT?.dataVencimento || 'Data de Vencimento'} value={faturaFornecedorForm.dataVencimento} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, dataVencimento: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
                 <select value={faturaFornecedorForm.status} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, status: e.target.value as 'pendente' | 'paga' | 'vencida' })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}>
@@ -80540,29 +80577,29 @@ A1;Peça exemplo;10`}
             <input type="text" value={faturaForm.numeroFatura} onChange={e => setFaturaForm({ ...faturaForm, numeroFatura: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }} />
 
             <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{safeT?.selecioneCliente || 'Cliente'} *</label>
-            <select
-              value={faturaForm.clienteId}
-              onChange={e => {
-                const id = e.target.value
-                const cli = clientes.find(c => c.id === id)
-                setFaturaForm(prev => {
-                  let next = { ...prev, clienteId: id, clienteNome: cli?.nomeEmpresa || '' }
+            <ClienteAlfabetoPicker
+              clientes={clientesOrdenadosAlfabeticamente}
+              selectedId={faturaForm.clienteId}
+              language={selectedLanguage}
+              labels={clientePickerLabels}
+              listMaxHeight={220}
+              isDevedor={isClienteMarcadoDevedor}
+              onSelect={(cli) =>
+                setFaturaForm((prev) => {
+                  let next = { ...prev, clienteId: cli.id, clienteNome: cli.nomeEmpresa || '' }
                   if (prev.ordemServicoId) {
-                    const os = ordensServico.find(o => o.id === prev.ordemServicoId)
-                    if (os && os.clienteId !== id) {
+                    const os = ordensServico.find((o) => o.id === prev.ordemServicoId)
+                    if (os && os.clienteId !== cli.id) {
                       next = { ...next, ordemServicoId: '', numeroOS: '' }
                     }
                   }
                   return next
                 })
-              }}
-              style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
-            >
-              <option value="">{(safeT as any)?.faturaSelecioneCliente || '— Selecione o cliente —'}</option>
-              {clientesOrdenadosAlfabeticamente.map(cli => (
-                <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
-              ))}
-            </select>
+              }
+              onClear={() =>
+                setFaturaForm((prev) => ({ ...prev, clienteId: '', clienteNome: '', ordemServicoId: '', numeroOS: '' }))
+              }
+            />
 
             <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{(safeT as any)?.faturaOsOpcional || 'Ordem de serviço (opcional)'}</label>
             <select

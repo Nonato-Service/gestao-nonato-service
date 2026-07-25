@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect, useId, useCallback } from 'react'
+import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 import { useBuscaPecaBibliotecaComServidor } from '../lib/useBuscaPecaBibliotecaComServidor'
 import { openPedidoOrcamentoAvulsoPdf } from '../lib/pedidoOrcamentoAvulsoPdf'
 import {
@@ -1189,36 +1190,38 @@ export function PedidoOrcamentosAvulsoContent({
             <p className="orc-pro__panel-desc">
               {safeT?.poaClienteBuscaDesc || safeT?.buscarClienteOuDigitar || 'Selecione um cliente cadastrado ou digite o nome.'}
             </p>
-            <input
-              type="text"
-              className="orc-pro__search"
-              placeholder={safeT?.buscarCliente || 'Buscar por nome, e-mail ou contacto...'}
-              value={buscaCliente}
-              onChange={(e) => setBuscaCliente(e.target.value)}
+            <ClienteAlfabetoPicker
+              clientes={clientes}
+              selectedId={clienteSelecionado?.id || ''}
+              labels={{
+                buscar: safeT.buscarCliente,
+                nenhumEncontrado: safeT.nenhumClienteEncontrado,
+                selecioneLetra: safeT.clientesAlfabetoSelecioneLetra,
+                prompt: safeT.clientesAlfabetoPrompt,
+                mostrando: safeT.mostrando,
+                de: safeT.de,
+                clientes: safeT.clientes,
+                comInicial: safeT.clientesAlfabetoComInicial,
+                outros: safeT.clientesAlfabetoOutros,
+                semClientesLetra: safeT.clientesAlfabetoSemClientes,
+                indiceAz: safeT.clientesAlfabetoIndice,
+                limpar: safeT.delete,
+                cliente: safeT.cliente,
+                filtrados: safeT.filtrados,
+              }}
+              listMaxHeight={300}
+              onSelect={(cliente) => {
+                setClienteSelecionado(cliente as ClientePedido)
+                setClienteNomeManual('')
+                const bloco = criarBlocoEquipamentoVazio()
+                setBlocosEquipamento([bloco])
+                setBlocoAtivoId(bloco.id)
+              }}
+              onClear={() => {
+                setClienteSelecionado(null)
+                setClienteNomeManual('')
+              }}
             />
-            <div className="orc-pro__list poa-pro__client-list">
-              {clientesFiltrados.length === 0 ? (
-                <p className="orc-pro__empty-hint">{safeT?.nenhumClienteEncontrado || 'Nenhum cliente encontrado'}</p>
-              ) : (
-                clientesFiltrados.map((cliente) => (
-                  <button
-                    type="button"
-                    key={cliente.id}
-                    className={`poa-pro__pick-btn ${clienteSelecionado?.id === cliente.id ? 'is-active' : ''}`}
-                    onClick={() => {
-                      setClienteSelecionado(cliente)
-                      setClienteNomeManual('')
-                      const bloco = criarBlocoEquipamentoVazio()
-                      setBlocosEquipamento([bloco])
-                      setBlocoAtivoId(bloco.id)
-                    }}
-                  >
-                    <strong>{cliente.nomeEmpresa}</strong>
-                    {cliente.codigoCliente && <small>{cliente.codigoCliente}</small>}
-                  </button>
-                ))
-              )}
-            </div>
             <div className="orc-pro__field">
               <label>{safeT?.ouNomeManualCliente || 'Ou nome do cliente (avulso)'}</label>
               <input

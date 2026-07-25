@@ -16,6 +16,7 @@ import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
 import { formatClienteIdentidadeTexto } from './ClienteIdentidadeChips'
 import { PdfModeloPickerField } from './PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from '../lib/pdfModelStorage'
+import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 
 export type ClienteOrcamentoPecasEsp = {
   id: string
@@ -957,37 +958,34 @@ export function OrcamentoPecasEspeciaisContent({
 
         <div className="orcamento-pecas-especiais-section">
           <h3>{t.cliente || 'Cliente'}</h3>
-          <input
-            type="search"
-            placeholder={t.buscarCliente || 'Buscar cliente…'}
-            value={buscaCliente}
-            onChange={(e) => setBuscaCliente(e.target.value)}
-            className="orcamento-pecas-especiais-input"
-          />
-          <select
-            value={clienteId}
-            onChange={(e) => {
-              const id = e.target.value
-              setClienteId(id)
-              const c = clientes.find((x) => x.id === id)
-              if (c) {
-                if (!contactoTelefone.trim()) setContactoTelefone(c.telefones || '')
-                if (!contactoEmail.trim()) setContactoEmail(c.email || '')
-                if (!contactoNome.trim()) setContactoNome(c.contato || '')
-              }
+          <ClienteAlfabetoPicker
+            clientes={clientes}
+            selectedId={clienteId}
+            labels={{
+              buscar: t.buscarCliente,
+              nenhumEncontrado: t.nenhumClienteEncontrado,
+              selecioneLetra: t.clientesAlfabetoSelecioneLetra,
+              prompt: t.clientesAlfabetoPrompt,
+              mostrando: t.mostrando,
+              de: t.de,
+              clientes: t.clientes,
+              comInicial: t.clientesAlfabetoComInicial,
+              outros: t.clientesAlfabetoOutros,
+              semClientesLetra: t.clientesAlfabetoSemClientes,
+              indiceAz: t.clientesAlfabetoIndice,
+              limpar: t.limpar || t.delete,
+              cliente: t.cliente,
+              filtrados: t.filtrados,
             }}
-            className="orcamento-pecas-especiais-input"
-          >
-            <option value="">{t.selecioneCliente || '— Selecionar cliente —'}</option>
-            {clientesFiltrados.map((c) => (
-              <option key={c.id} value={c.id}>
-                {formatClienteIdentidadeTexto(c, {
-                  cod: t.clienteIdentTagCod,
-                  nome: t.clienteIdentTagNome,
-                })}
-              </option>
-            ))}
-          </select>
+            listMaxHeight={280}
+            onSelect={(c) => {
+              setClienteId(c.id)
+              if (!contactoTelefone.trim()) setContactoTelefone(c.telefones || '')
+              if (!contactoEmail.trim()) setContactoEmail(c.email || '')
+              if (!contactoNome.trim()) setContactoNome(c.contato || '')
+            }}
+            onClear={() => setClienteId('')}
+          />
           {clienteSel ? (
             <p className="orcamento-pecas-especiais-hint">
               {t.orcamentoPecasEspCodCliente || 'Cod. cliente'}: <strong>{codigoClienteExibicao(clienteSel)}</strong>

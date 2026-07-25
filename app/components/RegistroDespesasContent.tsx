@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 import {
   parseTotalEurosFromReceiptText,
   parseDataReciboIso,
@@ -442,31 +443,29 @@ export function RegistroDespesasContent({
       {!docAtual ? (
         <div style={{ backgroundColor: '#484848', borderRadius: '8px', padding: '24px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
           <h3 style={{ marginTop: 0, color: '#00c853' }}>{safeT?.cliente || 'Cliente'} *</h3>
-          <input
-            type="text"
-            placeholder={safeT?.buscarCliente || 'Buscar cliente...'}
-            value={buscaCliente}
-            onChange={(e) => setBuscaCliente(e.target.value)}
-            style={{ width: '100%', padding: '10px', marginBottom: '12px', backgroundColor: '#3a3a3a', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
+          <ClienteAlfabetoPicker
+            clientes={clientes}
+            selectedId={clienteSelecionado?.id || ''}
+            labels={{
+              buscar: safeT?.buscarCliente,
+              nenhumEncontrado: safeT?.nenhumEncontrado,
+              selecioneLetra: safeT?.clientesAlfabetoSelecioneLetra,
+              prompt: safeT?.clientesAlfabetoPrompt,
+              mostrando: safeT?.mostrando,
+              de: safeT?.de,
+              clientes: safeT?.clientes,
+              comInicial: safeT?.clientesAlfabetoComInicial,
+              outros: safeT?.clientesAlfabetoOutros,
+              semClientesLetra: safeT?.clientesAlfabetoSemClientes,
+              indiceAz: safeT?.clientesAlfabetoIndice,
+              limpar: safeT?.delete,
+              cliente: safeT?.cliente,
+              filtrados: safeT?.filtrados,
+            }}
+            listMaxHeight={240}
+            onSelect={(c) => setClienteSelecionado(c as Cliente)}
+            onClear={() => setClienteSelecionado(null)}
           />
-          <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '20px' }}>
-            {clientesFiltrados.map(c => (
-              <div
-                key={c.id}
-                onClick={() => setClienteSelecionado(c)}
-                style={{
-                  padding: '10px 12px',
-                  marginBottom: '4px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  backgroundColor: clienteSelecionado?.id === c.id ? 'rgba(0, 200, 83, 0.2)' : '#3a3a3a',
-                  border: clienteSelecionado?.id === c.id ? '2px solid #00c853' : '1px solid #444'
-                }}
-              >
-                {c.nomeEmpresa}
-              </div>
-            ))}
-          </div>
 
           <h3 style={{ color: '#00c853' }}>{safeT?.relatorioServico || 'Relatório de Serviço'} ({safeT?.opcional || 'opcional'})</h3>
           <input

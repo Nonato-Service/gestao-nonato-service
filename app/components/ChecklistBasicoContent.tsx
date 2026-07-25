@@ -15,6 +15,7 @@ import {
   ChecklistBasicoItemStatus,
   newChecklistBasicoId,
 } from '../lib/checklistBasicoTypes'
+import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 
 type EquipamentoClienteResumo = {
   id?: string
@@ -548,23 +549,38 @@ export function ChecklistBasicoContent(props: ChecklistBasicoContentProps) {
       {!instancia ? (
         <section className="cb-pro__panel">
           <div className="cb-pro__grid-2">
-            <label className="cb-pro__field">
+            <div className="cb-pro__field cb-pro__field--full">
               <span>{safeT.checklistBasicoSelecionarCliente || 'Selecionar cliente'}</span>
-              <select
-                value={clienteId}
-                onChange={(e) => {
-                  setClienteId(e.target.value)
+              <ClienteAlfabetoPicker
+                clientes={clientesOrdenados}
+                selectedId={clienteId}
+                labels={{
+                  buscar: safeT.buscarCliente,
+                  nenhumEncontrado: safeT.nenhumEncontrado,
+                  selecioneLetra: safeT.clientesAlfabetoSelecioneLetra,
+                  prompt: safeT.clientesAlfabetoPrompt,
+                  mostrando: safeT.mostrando,
+                  de: safeT.de,
+                  clientes: safeT.clientes,
+                  comInicial: safeT.clientesAlfabetoComInicial,
+                  outros: safeT.clientesAlfabetoOutros,
+                  semClientesLetra: safeT.clientesAlfabetoSemClientes,
+                  indiceAz: safeT.clientesAlfabetoIndice,
+                  limpar: safeT.delete,
+                  cliente: safeT.cliente,
+                  filtrados: safeT.filtrados,
+                }}
+                listMaxHeight={280}
+                onSelect={(c) => {
+                  setClienteId(c.id)
                   setEquipamentoKey('')
                 }}
-              >
-                <option value="">—</option>
-                {clientesOrdenados.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nomeEmpresa}
-                  </option>
-                ))}
-              </select>
-            </label>
+                onClear={() => {
+                  setClienteId('')
+                  setEquipamentoKey('')
+                }}
+              />
+            </div>
 
             <label className="cb-pro__field">
               <span>{safeT.checklistBasicoSelecionarEquipamento || 'Selecionar equipamento'}</span>
