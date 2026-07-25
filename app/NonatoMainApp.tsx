@@ -329,6 +329,7 @@ import {
   avaliarCompletudeProtocolo,
   blocosDeTemplate,
   formRascunhoDeProtocolo,
+  protocoloFormVazio,
   historicoProtocolosCliente,
   pecasMaisUsadasHistorico,
   PROTOCOLO_FILTRO_CHIPS,
@@ -3924,6 +3925,10 @@ type ProtocoloServico = {
   status?: 'em_execucao' | 'executado_enviado'
   dataConclusao?: string
   enviadoVia?: 'email' | 'whatsapp' | 'manual'
+  condicaoGeral?: string
+  ativoSeguroUso?: 'sim' | 'nao'
+  manutencaoNecessaria?: 'sim' | 'nao'
+  observacaoCondicoes?: string
 }
 
 type ClientePrioritario = {
@@ -9148,16 +9153,9 @@ export default function Dashboard() {
   const pdfModelPorRelatorioIdRef = useRef<Record<string, string>>({})
   const [protocolosServico, setProtocolosServico] = useState<ProtocoloServico[]>([])
   const [editingProtocoloServicoId, setEditingProtocoloServicoId] = useState<string | null>(null)
-  const [protocoloServicoForm, setProtocoloServicoForm] = useState<{
-    clienteId: string
-    equipamentoNumeroSerie: string
-    situacaoDescricao: string
-    textoInicial: string
-    blocos: ProtocoloBloco[]
-    pecasTrocadasCodigos: string[]
-    pdfModelo: number
-    relatorioServicoId: string
-  }>({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: PROTOCOLO_PDF_MODELO_PADRAO, relatorioServicoId: '' })
+  const [protocoloServicoForm, setProtocoloServicoForm] = useState<
+    ReturnType<typeof protocoloFormVazio>
+  >(protocoloFormVazio(PROTOCOLO_PDF_MODELO_PADRAO))
   /** Filtro da lista na área Protocolos de Serviço (sem alterar dados guardados) */
   const [protocoloServicoFiltroLista, setProtocoloServicoFiltroLista] = useState('')
   const [protocoloServicoClienteFiltroLista, setProtocoloServicoClienteFiltroLista] = useState('')
@@ -10020,6 +10018,11 @@ export default function Dashboard() {
         pecasTrocadasCodigos: Array.isArray(parsed.pecasTrocadasCodigos) ? parsed.pecasTrocadasCodigos : [],
         pdfModelo: clampProtocoloPdfModelo(Number(parsed.pdfModelo)),
         relatorioServicoId: typeof parsed.relatorioServicoId === 'string' ? parsed.relatorioServicoId : '',
+        condicaoGeral: typeof parsed.condicaoGeral === 'string' ? parsed.condicaoGeral : '',
+        ativoSeguroUso: parsed.ativoSeguroUso === 'sim' || parsed.ativoSeguroUso === 'nao' ? parsed.ativoSeguroUso : '',
+        manutencaoNecessaria:
+          parsed.manutencaoNecessaria === 'sim' || parsed.manutencaoNecessaria === 'nao' ? parsed.manutencaoNecessaria : '',
+        observacaoCondicoes: typeof parsed.observacaoCondicoes === 'string' ? parsed.observacaoCondicoes : '',
       })
       const temConteudo = Boolean(
         parsed.clienteId ||
@@ -33959,6 +33962,16 @@ export default function Dashboard() {
                 dataCriacao: new Date().toISOString(),
                 pdfModelo: protocoloServicoForm.pdfModelo,
                 relatorioServicoId: protocoloServicoForm.relatorioServicoId || undefined,
+                condicaoGeral: protocoloServicoForm.condicaoGeral || undefined,
+                ativoSeguroUso:
+                  protocoloServicoForm.ativoSeguroUso === 'sim' || protocoloServicoForm.ativoSeguroUso === 'nao'
+                    ? protocoloServicoForm.ativoSeguroUso
+                    : undefined,
+                manutencaoNecessaria:
+                  protocoloServicoForm.manutencaoNecessaria === 'sim' || protocoloServicoForm.manutencaoNecessaria === 'nao'
+                    ? protocoloServicoForm.manutencaoNecessaria
+                    : undefined,
+                observacaoCondicoes: protocoloServicoForm.observacaoCondicoes || undefined,
               })
             : ''
         const protoChipLabel = (chip: ProtocoloIntelFiltroChip): string => {
@@ -34035,16 +34048,7 @@ export default function Dashboard() {
           }))
         }
         const abrirEdicaoProtocolo = (pr: ProtocoloServico) => {
-          setProtocoloServicoForm({
-            clienteId: pr.clienteId,
-            equipamentoNumeroSerie: pr.equipamentoNumeroSerie,
-            situacaoDescricao: typeof pr.situacaoDescricao === 'string' ? pr.situacaoDescricao : '',
-            textoInicial: pr.textoInicial,
-            blocos: ensureProtocoloBlocosIds(pr.blocos || []),
-            pecasTrocadasCodigos: pr.pecasTrocadasCodigos,
-            pdfModelo: clampProtocoloPdfModelo(pr.pdfModelo),
-            relatorioServicoId: typeof pr.relatorioServicoId === 'string' ? pr.relatorioServicoId : '',
-          })
+          setProtocoloServicoForm(formRascunhoDeProtocolo(pr, PROTOCOLO_PDF_MODELO_PADRAO))
           setProtocoloFormPassoAtivo(1)
           setEditingProtocoloServicoId(pr.id)
           setProtocoloCardAcoesId(null)
@@ -34052,16 +34056,7 @@ export default function Dashboard() {
         const iniciarNovoProtocolo = () => {
           setEditingProtocoloServicoId('new')
           setProtocoloFormPassoAtivo(1)
-          setProtocoloServicoForm({
-            clienteId: '',
-            equipamentoNumeroSerie: '',
-            situacaoDescricao: '',
-            textoInicial: '',
-            blocos: [],
-            pecasTrocadasCodigos: [],
-            pdfModelo: PROTOCOLO_PDF_MODELO_PADRAO,
-            relatorioServicoId: '',
-          })
+          setProtocoloServicoForm(protocoloFormVazio(PROTOCOLO_PDF_MODELO_PADRAO))
         }
         const renderProtocoloCard = (p: ProtocoloServico, lane: 'exec' | 'arquivo') => {
           const cl = clientes.find((c) => c.id === p.clienteId)
@@ -34245,16 +34240,7 @@ export default function Dashboard() {
                       if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
                       setEditingProtocoloServicoId(null)
                       setProtocoloFormPassoAtivo(1)
-                      setProtocoloServicoForm({
-                        clienteId: '',
-                        equipamentoNumeroSerie: '',
-                        situacaoDescricao: '',
-                        textoInicial: '',
-                        blocos: [],
-                        pecasTrocadasCodigos: [],
-                        pdfModelo: PROTOCOLO_PDF_MODELO_PADRAO,
-                        relatorioServicoId: '',
-                      })
+                      setProtocoloServicoForm(protocoloFormVazio(PROTOCOLO_PDF_MODELO_PADRAO))
                     }}
                   >
                     ← {protoT?.protocolosServicoVoltarLista || 'Lista'}
@@ -35351,6 +35337,78 @@ export default function Dashboard() {
                   <button type="button" className="btn-primary" style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px', marginTop: '4px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: [...prev.pecasTrocadasCodigos, ''] }))}>
                     + {protoT?.protocolosServicoAdicionarPeca || 'Código de peça'}
                   </button>
+                  <div style={{ marginTop: 28, paddingTop: 22, borderTop: '1px solid rgba(148,163,184,0.2)' }}>
+                    <h4 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 800, color: '#f1f5f9' }}>
+                      {protoT?.protocolosServicoCondicoesTitulo || 'Condições do equipamento'}
+                    </h4>
+                    <p style={{ margin: '0 0 16px', fontSize: 12, color: '#94a3b8', lineHeight: 1.5 }}>
+                      {protoT?.protocolosServicoCondicoesHint || 'Avaliação final após o serviço — aparece no final do PDF.'}
+                    </p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 14 }}>
+                      <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                          {protoT?.protocolosServicoCondicaoGeral || 'Condição geral'}
+                        </span>
+                        <select
+                          value={protocoloServicoForm.condicaoGeral || ''}
+                          onChange={(e) => setProtocoloServicoForm((prev) => ({ ...prev, condicaoGeral: e.target.value }))}
+                          style={{ ...inputBase, maxWidth: '100%' }}
+                        >
+                          <option value="">{protoT?.protocolosServicoCondicaoGeralSelecionar || '— Selecionar —'}</option>
+                          <option value="Boa condição">{protoT?.protocolosServicoCondicaoBoa || 'Boa condição'}</option>
+                          <option value="Condição regular">{protoT?.protocolosServicoCondicaoRegular || 'Condição regular'}</option>
+                          <option value="Má condição">{protoT?.protocolosServicoCondicaoMa || 'Má condição'}</option>
+                          <option value="Necessita reparação">{protoT?.protocolosServicoCondicaoReparacao || 'Necessita reparação'}</option>
+                          <option value="Fora de serviço">{protoT?.protocolosServicoCondicaoForaServico || 'Fora de serviço'}</option>
+                        </select>
+                      </label>
+                      <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                          {protoT?.protocolosServicoAtivoSeguro || 'Ativo seguro para uso'}
+                        </span>
+                        <select
+                          value={protocoloServicoForm.ativoSeguroUso || ''}
+                          onChange={(e) =>
+                            setProtocoloServicoForm((prev) => ({
+                              ...prev,
+                              ativoSeguroUso: e.target.value === 'sim' || e.target.value === 'nao' ? e.target.value : '',
+                            }))
+                          }
+                          style={{ ...inputBase, maxWidth: '100%' }}
+                        >
+                          <option value="">—</option>
+                          <option value="sim">{protoT?.sim || 'Sim'}</option>
+                          <option value="nao">{protoT?.nao || 'Não'}</option>
+                        </select>
+                      </label>
+                      <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                          {protoT?.protocolosServicoManutencaoNecessaria || 'Manutenção necessária'}
+                        </span>
+                        <select
+                          value={protocoloServicoForm.manutencaoNecessaria || ''}
+                          onChange={(e) =>
+                            setProtocoloServicoForm((prev) => ({
+                              ...prev,
+                              manutencaoNecessaria: e.target.value === 'sim' || e.target.value === 'nao' ? e.target.value : '',
+                            }))
+                          }
+                          style={{ ...inputBase, maxWidth: '100%' }}
+                        >
+                          <option value="">—</option>
+                          <option value="sim">{protoT?.sim || 'Sim'}</option>
+                          <option value="nao">{protoT?.nao || 'Não'}</option>
+                        </select>
+                      </label>
+                    </div>
+                    <AssistTextarea
+                      value={protocoloServicoForm.observacaoCondicoes || ''}
+                      onValueChange={(v) => setProtocoloServicoForm((prev) => ({ ...prev, observacaoCondicoes: v }))}
+                      placeholder={protoT?.protocolosServicoCondicoesObsPlaceholder || 'Observações adicionais sobre o estado do equipamento (opcional)...'}
+                      rows={3}
+                      style={{ ...inputBase, resize: 'vertical' as const, maxWidth: '100%' }}
+                    />
+                  </div>
                   <div className="proto-nav-passos">
                     <button type="button" className="btn-primary" style={{ padding: '10px 18px', borderRadius: 10, background: 'transparent', borderColor: 'rgba(148,163,184,0.35)', color: '#cbd5e1' }} onClick={() => setProtocoloFormPassoAtivo(2)}>
                       ← {protoT?.protocolosServicoWizardAnterior || 'Anterior'}
@@ -35388,6 +35446,19 @@ export default function Dashboard() {
                       <div style={{ fontSize: 10, fontWeight: 800, color: '#64748b', letterSpacing: '0.1em', marginBottom: 6 }}>PDF</div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>
                         {(protoT as Record<string, string>)?.[`protocolosServicoPdfModelo${protocoloServicoForm.pdfModelo}`] || `M${protocoloServicoForm.pdfModelo}`}
+                      </div>
+                    </div>
+                    <div style={{ padding: 12, borderRadius: 10, background: 'rgba(2,6,23,0.45)', border: '1px solid rgba(148,163,184,0.16)' }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, color: '#64748b', letterSpacing: '0.1em', marginBottom: 6 }}>
+                        {(protoT?.protocolosServicoCondicoesTitulo || 'Condições').toUpperCase()}
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', lineHeight: 1.45 }}>
+                        {protocoloServicoForm.condicaoGeral?.trim() || '—'}
+                        {(protocoloServicoForm.ativoSeguroUso === 'sim' || protocoloServicoForm.ativoSeguroUso === 'nao') ? (
+                          <span style={{ display: 'block', marginTop: 4, fontSize: 12, fontWeight: 600, color: '#94a3b8' }}>
+                            {protoT?.protocolosServicoAtivoSeguro || 'Seguro'}: {protocoloServicoForm.ativoSeguroUso === 'sim' ? (protoT?.sim || 'Sim') : (protoT?.nao || 'Não')}
+                          </span>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -35450,6 +35521,16 @@ export default function Dashboard() {
                           status: prevProto?.status === 'executado_enviado' ? 'executado_enviado' : 'em_execucao',
                           dataConclusao: prevProto?.status === 'executado_enviado' ? prevProto.dataConclusao : undefined,
                           enviadoVia: prevProto?.status === 'executado_enviado' ? prevProto.enviadoVia : undefined,
+                          condicaoGeral: (protocoloServicoForm.condicaoGeral || '').trim() || undefined,
+                          ativoSeguroUso:
+                            protocoloServicoForm.ativoSeguroUso === 'sim' || protocoloServicoForm.ativoSeguroUso === 'nao'
+                              ? protocoloServicoForm.ativoSeguroUso
+                              : undefined,
+                          manutencaoNecessaria:
+                            protocoloServicoForm.manutencaoNecessaria === 'sim' || protocoloServicoForm.manutencaoNecessaria === 'nao'
+                              ? protocoloServicoForm.manutencaoNecessaria
+                              : undefined,
+                          observacaoCondicoes: (protocoloServicoForm.observacaoCondicoes || '').trim() || undefined,
                         }
                         const next = editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? protocolosServico.map(p => p.id === novo.id ? novo : p) : [...protocolosServico, novo]
                         setProtocolosServico(next)
@@ -35457,7 +35538,7 @@ export default function Dashboard() {
                         if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
                         setEditingProtocoloServicoId(null)
                         setProtocoloFormPassoAtivo(1)
-                        setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: PROTOCOLO_PDF_MODELO_PADRAO, relatorioServicoId: '' })
+                        setProtocoloServicoForm(protocoloFormVazio(PROTOCOLO_PDF_MODELO_PADRAO))
                       }}
                       style={{ padding: '12px 28px', fontWeight: 700, borderRadius: '10px' }}
                     >
@@ -35467,7 +35548,7 @@ export default function Dashboard() {
                       type="button"
                       className="btn-primary"
                       style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.35)', color: '#bbb', padding: '12px 22px', borderRadius: '10px' }}
-                      onClick={() => { if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY); setEditingProtocoloServicoId(null); setProtocoloFormPassoAtivo(1); setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: PROTOCOLO_PDF_MODELO_PADRAO, relatorioServicoId: '' }) }}
+                      onClick={() => { if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY); setEditingProtocoloServicoId(null); setProtocoloFormPassoAtivo(1); setProtocoloServicoForm(protocoloFormVazio(PROTOCOLO_PDF_MODELO_PADRAO)) }}
                     >
                       {protoT?.protocolosServicoCancelar || 'Cancelar'}
                     </button>

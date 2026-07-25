@@ -112,6 +112,49 @@ function acaoCardHtml(
   return `<article class="proto-acao-card">${`<header class="proto-acao-card__head">${tituloHtml}${estadoGridHtml(estado, esc)}</header>`}<div class="${bodyClasses}">${textoHtml}${mediaHtml}</div></article>`
 }
 
+function simNaoBadge(v: unknown, esc: (s: string) => string): string {
+  if (v === 'sim') return '<span class="proto-simnao proto-simnao--sim">Sim</span>'
+  if (v === 'nao') return '<span class="proto-simnao proto-simnao--nao">Não</span>'
+  return '<span class="proto-simnao">—</span>'
+}
+
+function buildCondicoesEquipHtml(
+  p: {
+    condicaoGeral?: string
+    ativoSeguroUso?: string
+    manutencaoNecessaria?: string
+    observacaoCondicoes?: string
+  },
+  esc: (s: string) => string
+): string {
+  const condicao = String(p.condicaoGeral || '').trim()
+  const ativo = p.ativoSeguroUso
+  const manut = p.manutencaoNecessaria
+  const obs = String(p.observacaoCondicoes || '').trim()
+  if (!condicao && !ativo && !manut && !obs) return ''
+
+  const rows: string[] = []
+  if (condicao) {
+    rows.push(
+      `<tr><td class="proto-condicoes-label">Condição geral</td><td class="proto-condicoes-value proto-condicoes-value--destaque">${esc(condicao)}</td></tr>`
+    )
+  }
+  if (ativo === 'sim' || ativo === 'nao') {
+    rows.push(
+      `<tr><td class="proto-condicoes-label">Ativo seguro para uso</td><td class="proto-condicoes-value">${simNaoBadge(ativo, esc)}</td></tr>`
+    )
+  }
+  if (manut === 'sim' || manut === 'nao') {
+    rows.push(
+      `<tr><td class="proto-condicoes-label">Manutenção necessária</td><td class="proto-condicoes-value">${simNaoBadge(manut, esc)}</td></tr>`
+    )
+  }
+  const obsHtml = obs
+    ? `<div class="proto-condicoes-obs"><span class="proto-condicoes-obs-label">Observações</span><p class="proto-condicoes-obs-text">${esc(obs)}</p></div>`
+    : ''
+  return `<section class="sec proto-condicoes-equip"><h3 class="sec-title">Condições do equipamento</h3><div class="proto-condicoes-card"><table class="proto-condicoes-table">${rows.join('')}</table>${obsHtml}</div></section>`
+}
+
 export type ProtocoloPdfBuildInput = {
   protocolo: {
     id: string
@@ -123,6 +166,10 @@ export type ProtocoloPdfBuildInput = {
     pecasTrocadasCodigos: string[]
     dataCriacao: string
     pdfModelo?: number
+    condicaoGeral?: string
+    ativoSeguroUso?: string
+    manutencaoNecessaria?: string
+    observacaoCondicoes?: string
   }
   clienteNome: string
   equipamento?: EqCliente
@@ -202,7 +249,9 @@ export function buildProtocoloServicoPdfHtmlFromProtocolo(input: ProtocoloPdfBui
     ? `<div class="sec"><h3 class="sec-title">${esc(L.textoInicial || 'Texto inicial')}</h3><p class="texto-inicial">${esc(p.textoInicial)}</p></div>`
     : ''
 
-  const bodyInner = `${situacaoSection}${textoSection}${blocosHtml}${pecasStrong}<div class="footer-bar"><span class="footer-date">${dataDoc}</span><span class="doc-ref">${refDoc}</span></div>`
+  const condicoesSection = buildCondicoesEquipHtml(p, esc)
+
+  const bodyInner = `${situacaoSection}${textoSection}${blocosHtml}${pecasStrong}${condicoesSection}<div class="footer-bar"><span class="footer-date">${dataDoc}</span><span class="doc-ref">${refDoc}</span></div>`
 
   return buildProtocoloServicoPrintHtml(
     idx,

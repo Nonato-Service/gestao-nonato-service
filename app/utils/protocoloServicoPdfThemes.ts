@@ -41,32 +41,37 @@ function escAttr(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
-/** Layout do cabeçalho v2 — alinhado aos cartões de acção do corpo */
+/** Layout do cabeçalho v3 — sem logo; dados do cliente e equipamento em destaque */
 const HDR_LAYOUT_CSS = `
+.pdf-watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-28deg);z-index:0;pointer-events:none;width:72%;max-width:520px;text-align:center;opacity:0.07;}
+.pdf-watermark__inner{display:flex;align-items:center;justify-content:center;}
+.pdf-watermark img{max-width:100%;max-height:420px;width:auto;height:auto;object-fit:contain;display:block;}
+.pdf-watermark .logo-fallback{font-size:42px;font-weight:900;color:#14532d;letter-spacing:0.18em;line-height:1.2;}
+.pdf-page-content{position:relative;z-index:1;}
+body{position:relative;}
 .pdf-header.hdr-pro{margin:0 0 22px;padding:0;background:#fff;border:2px solid #0f172a;border-radius:10px;overflow:hidden;box-sizing:border-box;box-shadow:0 4px 18px rgba(15,23,42,0.08);}
-.hdr-pro__inner{display:flex;flex-wrap:nowrap;align-items:stretch;justify-content:space-between;gap:0;min-height:108px;width:100%;}
-.hdr-pro__brand{display:flex;align-items:center;gap:14px;padding:16px 18px;background:linear-gradient(180deg,#f8fafc 0%,#eef2f7 100%);border-right:1px solid #cbd5e1;flex:0 0 248px;width:248px;box-sizing:border-box;}
-.hdr-pro__logo{display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;min-width:74px;min-height:54px;box-sizing:border-box;flex-shrink:0;}
-.hdr-pro__logo img{max-height:46px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;background:transparent;}
-.hdr-pro__logo .logo-fallback{font-size:8.5px;font-weight:800;color:#14532d;letter-spacing:0.1em;text-align:center;line-height:1.35;display:block;}
-.hdr-pro__company{display:flex;flex-direction:column;gap:4px;min-width:0;}
-.hdr-pro__company-name{font-size:10pt;font-weight:900;color:#0f172a;letter-spacing:0.03em;line-height:1.2;}
+.hdr-pro__inner{display:flex;flex-direction:column;gap:14px;padding:18px 22px;box-sizing:border-box;width:100%;}
+.hdr-pro__top{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 20px;width:100%;}
+.hdr-pro__company-block{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.hdr-pro__company-name{font-size:11pt;font-weight:900;color:#0f172a;letter-spacing:0.04em;line-height:1.2;}
 .hdr-pro__company-tag{font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#64748b;line-height:1.3;}
-.hdr-pro__doc{flex:1 1 auto;padding:16px 22px;display:flex;flex-direction:column;justify-content:center;gap:8px;box-sizing:border-box;min-width:0;}
+.hdr-pro__doc-meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;min-width:0;}
 .hdr-pro__kicker{margin:0;font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.16em;color:#15803d;line-height:1.3;}
-.hdr-pro__cliente{margin:0;font-size:15pt;font-weight:800;color:#0f172a;line-height:1.25;letter-spacing:-0.02em;word-break:break-word;}
-.hdr-pro__equip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:2px 0 0;width:100%;}
+.hdr-pro__client-block{padding:12px 14px;border-radius:8px;border:1px solid #e2e8f0;background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);box-sizing:border-box;}
+.hdr-pro__client-label{display:block;margin:0 0 5px;font-size:7pt;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#64748b;line-height:1.2;}
+.hdr-pro__cliente{margin:0;font-size:16pt;font-weight:800;color:#0f172a;line-height:1.25;letter-spacing:-0.02em;word-break:break-word;}
+.hdr-pro__equip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0;width:100%;}
 .hdr-pro__equip--duo{grid-template-columns:repeat(2,minmax(0,1fr));}
 .hdr-pro__equip--solo{grid-template-columns:1fr;}
-.hdr-pro__equip-item{padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;box-sizing:border-box;min-width:0;}
+.hdr-pro__equip-item{padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;box-sizing:border-box;min-width:0;}
 .hdr-pro__equip-label{display:block;margin:0 0 4px;font-size:7pt;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;line-height:1.2;}
 .hdr-pro__equip-value{display:block;margin:0;font-size:10pt;font-weight:700;color:#0f172a;line-height:1.35;word-break:break-word;}
-.hdr-pro__meta{margin:2px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;}
+.hdr-pro__meta{margin:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px 14px;}
 .hdr-pro__meta-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid #e2e8f0;background:#f8fafc;font-size:9pt;line-height:1.2;}
 .hdr-pro__meta-label{font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;}
 .hdr-pro__meta-value{font-size:9.5pt;font-weight:700;color:#0f172a;}
 .hdr-pro__accent{height:4px;background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);border:0;margin:0;width:100%;}
-@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}}
+@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark{opacity:0.06;}}
 `
 
 /** Por modelo: acentos de cor no cabeçalho v2 */
@@ -83,9 +88,9 @@ const HDR_VARIANT_CSS: string[] = [
   '.hdr-v10.hdr-pro{border-color:#ca8a04;}.hdr-v10.hdr-pro .hdr-pro__kicker{color:#713f12;}.hdr-v10.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#713f12,#ca8a04,#713f12);height:5px;}',
   '.hdr-v11.hdr-pro{border-color:#4f46e5;}.hdr-v11.hdr-pro .hdr-pro__kicker{color:#4338ca;}.hdr-v11.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#3730a3,#6366f1,#3730a3);}',
   '.hdr-v12.hdr-pro{border-color:#111827;border-radius:4px;}.hdr-v12.hdr-pro .hdr-pro__kicker,.hdr-v12.hdr-pro .hdr-pro__cliente,.hdr-v12.hdr-pro .hdr-pro__equip-label,.hdr-v12.hdr-pro .hdr-pro__equip-value,.hdr-v12.hdr-pro .hdr-pro__meta-label,.hdr-v12.hdr-pro .hdr-pro__meta-value{font-family:Consolas,ui-monospace,monospace;}.hdr-v12.hdr-pro .hdr-pro__cliente{font-size:14pt;}.hdr-v12.hdr-pro .hdr-pro__accent{background:#111827;height:5px;}',
-  '.hdr-v13.hdr-pro{border-color:#1e293b;box-shadow:0 6px 24px rgba(15,23,42,0.14);}.hdr-v13.hdr-pro .hdr-pro__brand{background:linear-gradient(180deg,#f8fafc 0%,#e2e8f0 100%);}.hdr-v13.hdr-pro .hdr-pro__kicker{color:#0f172a;}.hdr-v13.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#92400e,#fbbf24,#92400e);height:5px;}',
+  '.hdr-v13.hdr-pro{border-color:#1e293b;box-shadow:0 6px 24px rgba(15,23,42,0.14);}.hdr-v13.hdr-pro .hdr-pro__kicker{color:#0f172a;}.hdr-v13.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#92400e,#fbbf24,#92400e);height:5px;}',
   '.hdr-v14.hdr-pro{border-color:#e2e8f0;border-radius:12px;box-shadow:0 2px 10px rgba(15,23,42,0.06);}.hdr-v14.hdr-pro .hdr-pro__kicker{color:#0d9488;letter-spacing:0.18em;}.hdr-v14.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#0f766e,#14b8a6,#0d9488);}',
-  '.hdr-v15.hdr-pro{border-color:#0f172a;box-shadow:0 6px 22px rgba(21,128,61,0.12);}.hdr-v15.hdr-pro .hdr-pro__brand{border-right:3px solid #22c55e;}.hdr-v15.hdr-pro .hdr-pro__kicker{color:#14532d;}.hdr-v15.hdr-pro .hdr-pro__cliente{color:#0f172a;}.hdr-v15.hdr-pro .hdr-pro__accent{height:5px;background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);}',
+  '.hdr-v15.hdr-pro{border-color:#0f172a;box-shadow:0 6px 22px rgba(21,128,61,0.12);}.hdr-v15.hdr-pro .hdr-pro__kicker{color:#14532d;}.hdr-v15.hdr-pro .hdr-pro__cliente{color:#0f172a;}.hdr-v15.hdr-pro .hdr-pro__accent{height:5px;background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);}',
 ]
 
 function buildEquipGridHtml(o: HeaderOpts): string {
@@ -110,14 +115,19 @@ function buildEquipGridHtml(o: HeaderOpts): string {
 
 function buildHeaderHtml(variantIndex: number, o: HeaderOpts): string {
   const d = escAttr(o.dataDoc)
-  const L = logoOrName(o.logoHtml)
   const v = variantIndex + 1
   const cliente = String(o.clienteNome || '').trim()
+  const clienteLabel = escAttr(o.labels?.cliente || 'Cliente')
   const clienteHtml = cliente
     ? `<p class="hdr-pro__cliente">${escAttr(cliente)}</p>`
-    : `<p class="hdr-pro__cliente">${escAttr(o.labels?.cliente || 'Cliente')}</p>`
+    : `<p class="hdr-pro__cliente">—</p>`
   const equipHtml = buildEquipGridHtml(o)
-  return `<header class="pdf-header hdr-pro hdr-v${v}" role="banner"><div class="hdr-pro__inner"><div class="hdr-pro__brand"><div class="hdr-pro__logo">${L}</div><div class="hdr-pro__company"><span class="hdr-pro__company-name">Nonato Service</span><span class="hdr-pro__company-tag">Assistência técnica</span></div></div><div class="hdr-pro__doc"><p class="hdr-pro__kicker">Protocolo de serviço</p>${clienteHtml}${equipHtml}<div class="hdr-pro__meta"><span class="hdr-pro__meta-chip"><span class="hdr-pro__meta-label">Emitido em</span><span class="hdr-pro__meta-value">${d}</span></span></div></div></div><div class="hdr-pro__accent" aria-hidden="true"></div></header>`
+  return `<header class="pdf-header hdr-pro hdr-v${v}" role="banner"><div class="hdr-pro__inner"><div class="hdr-pro__top"><div class="hdr-pro__company-block"><span class="hdr-pro__company-name">Nonato Service</span><span class="hdr-pro__company-tag">Assistência técnica</span></div><div class="hdr-pro__doc-meta"><p class="hdr-pro__kicker">Protocolo de serviço</p><div class="hdr-pro__meta"><span class="hdr-pro__meta-chip"><span class="hdr-pro__meta-label">Emitido em</span><span class="hdr-pro__meta-value">${d}</span></span></div></div></div><div class="hdr-pro__client-block"><span class="hdr-pro__client-label">${clienteLabel}</span>${clienteHtml}</div>${equipHtml}</div><div class="hdr-pro__accent" aria-hidden="true"></div></header>`
+}
+
+function buildWatermarkHtml(logoHtml: string): string {
+  const inner = logoOrName(logoHtml)
+  return `<div class="pdf-watermark" aria-hidden="true"><div class="pdf-watermark__inner">${inner}</div></div>`
 }
 
 function buildHeaderFragments(o: HeaderOpts): string[] {
@@ -189,7 +199,22 @@ export const PROTO_PDF_CONTENT_CSS = `
 .proto-acao-card__media-grid--solo{grid-template-columns:1fr;}
 .proto-acao-card__media-cell{margin:0;padding:0;border-radius:8px;border:2px solid #64748b;background:#fff;overflow:hidden;min-height:220px;display:flex;align-items:center;justify-content:center;}
 .proto-acao-card__media-cell img{display:block;width:100%;height:100%;min-height:220px;max-height:340px;object-fit:contain;object-position:center;}
-@media print{.proto-acao-card,.proto-img-sec,.proto-bloco-texto{break-inside:avoid;page-break-inside:avoid;}}
+.proto-condicoes-equip{margin:24px 0 8px;padding:0;border:none;border-radius:0;background:transparent;box-shadow:none;page-break-inside:avoid;}
+.proto-condicoes-equip .sec-title{margin:0 0 14px;font-size:9pt;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#0f172a;border-bottom:2px solid #22c55e;padding-bottom:8px;}
+.proto-condicoes-card{border:2px solid #0f172a;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 4px 16px rgba(15,23,42,0.08);}
+.proto-condicoes-table{width:100%;border-collapse:collapse;}
+.proto-condicoes-table tr{border-bottom:1px solid #e2e8f0;}
+.proto-condicoes-table tr:last-child{border-bottom:none;}
+.proto-condicoes-label{width:42%;padding:14px 16px;font-size:8.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;background:#f8fafc;vertical-align:middle;line-height:1.35;}
+.proto-condicoes-value{padding:14px 18px;font-size:11pt;font-weight:700;color:#0f172a;vertical-align:middle;line-height:1.4;}
+.proto-condicoes-value--destaque{font-size:12pt;font-weight:800;color:#14532d;}
+.proto-simnao{display:inline-flex;align-items:center;justify-content:center;min-width:52px;padding:6px 14px;border-radius:999px;font-size:9.5pt;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;border:2px solid #cbd5e1;background:#f8fafc;color:#64748b;}
+.proto-simnao--sim{border-color:#15803d;background:#dcfce7;color:#14532d;}
+.proto-simnao--nao{border-color:#dc2626;background:#fee2e2;color:#991b1b;}
+.proto-condicoes-obs{padding:14px 16px;border-top:1px solid #e2e8f0;background:#fafbfc;}
+.proto-condicoes-obs-label{display:block;margin:0 0 6px;font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;}
+.proto-condicoes-obs-text{margin:0;font-size:10.5pt;line-height:1.55;color:#334155;white-space:pre-wrap;}
+@media print{.proto-acao-card,.proto-img-sec,.proto-bloco-texto,.proto-condicoes-equip{break-inside:avoid;page-break-inside:avoid;}}
 `
 
 /** CSS do corpo + secções (sem cabeçalho) */
@@ -283,6 +308,7 @@ export function buildProtocoloServicoPrintHtml(
   const idx = Math.max(0, Math.min(PROTOCOLO_SERVICO_PDF_MODELOS_MAX - 1, idx0))
   const css = getCssBlocks()[idx]
   const header = buildHeaderFragments(headerOpts)[idx]
+  const watermark = buildWatermarkHtml(headerOpts.logoHtml)
   const titleSafe = headerOpts.tituloProto.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  return `<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${titleSafe}</title><style>${css}</style></head><body>${header}<div class="body-wrap">${bodyInner}</div></body></html>`
+  return `<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${titleSafe}</title><style>${css}</style></head><body>${watermark}${header}<div class="body-wrap pdf-page-content">${bodyInner}</div></body></html>`
 }

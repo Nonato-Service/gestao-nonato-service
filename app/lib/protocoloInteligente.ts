@@ -17,6 +17,8 @@ export type ProtocoloBlocoMin = {
   estadoAcao?: ProtocoloEstadoAcao
 }
 
+export type ProtocoloCondicaoSimNao = 'sim' | 'nao' | ''
+
 export type ProtocoloFormMin = {
   clienteId: string
   equipamentoNumeroSerie: string
@@ -25,6 +27,11 @@ export type ProtocoloFormMin = {
   blocos: ProtocoloBlocoMin[]
   pecasTrocadasCodigos: string[]
   pdfModelo: number
+  /** Condição geral do equipamento após o serviço (ex.: «Boa condição»). */
+  condicaoGeral?: string
+  ativoSeguroUso?: ProtocoloCondicaoSimNao
+  manutencaoNecessaria?: ProtocoloCondicaoSimNao
+  observacaoCondicoes?: string
 }
 
 export type ProtocoloServicoStatus = 'em_execucao' | 'executado_enviado'
@@ -172,6 +179,23 @@ export function pecasMaisUsadasHistorico(
     .map(([c]) => c)
 }
 
+export function protocoloFormVazio(pdfPadrao: number): ProtocoloFormMin & { relatorioServicoId: string } {
+  return {
+    clienteId: '',
+    equipamentoNumeroSerie: '',
+    situacaoDescricao: '',
+    textoInicial: '',
+    blocos: [],
+    pecasTrocadasCodigos: [],
+    pdfModelo: pdfPadrao,
+    relatorioServicoId: '',
+    condicaoGeral: '',
+    ativoSeguroUso: '',
+    manutencaoNecessaria: '',
+    observacaoCondicoes: '',
+  }
+}
+
 export function formRascunhoDeProtocolo(
   p: ProtocoloServicoMin & { relatorioServicoId?: string },
   pdfPadrao: number
@@ -185,6 +209,11 @@ export function formRascunhoDeProtocolo(
     pecasTrocadasCodigos: [...(p.pecasTrocadasCodigos || [])],
     pdfModelo: p.pdfModelo ?? pdfPadrao,
     relatorioServicoId: typeof p.relatorioServicoId === 'string' ? p.relatorioServicoId : '',
+    condicaoGeral: typeof p.condicaoGeral === 'string' ? p.condicaoGeral : '',
+    ativoSeguroUso: p.ativoSeguroUso === 'sim' || p.ativoSeguroUso === 'nao' ? p.ativoSeguroUso : '',
+    manutencaoNecessaria:
+      p.manutencaoNecessaria === 'sim' || p.manutencaoNecessaria === 'nao' ? p.manutencaoNecessaria : '',
+    observacaoCondicoes: typeof p.observacaoCondicoes === 'string' ? p.observacaoCondicoes : '',
   }
 }
 
