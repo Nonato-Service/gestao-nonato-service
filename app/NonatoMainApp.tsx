@@ -5776,12 +5776,10 @@ export default function Dashboard() {
     }
   }, [])
 
-  /** Telefone/tablet: cabeçalho do diário recolhido ao abrir — mais espaço para novo registo + quadro (área rolável). */
+  /** Ao abrir: cabeçalho recolhido por defeito — mais espaço para registo + quadro. */
   useEffect(() => {
     if (!showDiarioPedidosModal || typeof window === 'undefined') return
-    if (window.matchMedia('(max-width: 768px)').matches) {
-      setDiarioPedidosModalTopoRetraido(true)
-    }
+    setDiarioPedidosModalTopoRetraido(true)
   }, [showDiarioPedidosModal])
 
   useEffect(() => {
@@ -75049,24 +75047,14 @@ A1;Peça exemplo;10`}
 
       {showDiarioPedidosModal && (
         <div
-          className="modal-overlay ns-diario-overlay"
+          className="modal-overlay ns-diario-overlay ns-diario-overlay--fullscreen"
           role="dialog"
           aria-modal="true"
           aria-labelledby="diario-pedidos-modal-title"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.78)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 10000,
-            padding: 'max(12px, env(safe-area-inset-top, 0px)) 12px 12px',
-          }}
           onClick={() => setShowDiarioPedidosModal(false)}
         >
           <div
-            className={`modal diario-pedidos-modal-shell ns-diario-modal${diarioPedidosModalTopoRetraido ? ' ns-diario-modal--topo-retraido' : ''}`}
+            className={`modal diario-pedidos-modal-shell ns-diario-modal ns-diario-modal--workspace${diarioPedidosModalTopoRetraido ? ' ns-diario-modal--topo-retraido' : ''}`}
             onClick={(e) => e.stopPropagation()}
           >
             <input
@@ -75078,28 +75066,43 @@ A1;Peça exemplo;10`}
               aria-hidden
             />
             <div className="ns-diario-modal__topbar">
-              <button
-                type="button"
-                className="ns-diario-btn ns-diario-btn--ghost ns-diario-modal__toggle-topo"
-                onClick={() => {
-                  setDiarioPedidosModalTopoRetraido((v) => {
-                    const next = !v
-                    void saveData(DIARIO_PEDIDOS_MODAL_TOPO_RETRAIDO_KEY, next)
-                    return next
-                  })
-                }}
-                title={
-                  diarioPedidosModalTopoRetraido
-                    ? (safeT as any)?.diarioPedidosBtnExpandirTopo || 'Mostrar cabeçalho e resumo'
-                    : (safeT as any)?.diarioPedidosBtnRetrairTopo || 'Retrair cabeçalho (mais espaço para o quadro)'
-                }
-                aria-expanded={!diarioPedidosModalTopoRetraido}
-                aria-controls="diario-pedidos-modal-collapse-region"
-              >
-                {diarioPedidosModalTopoRetraido
-                  ? (safeT as any)?.diarioPedidosBtnExpandirTopo || 'Expandir'
-                  : (safeT as any)?.diarioPedidosBtnRetrairTopo || 'Retrair'}
-              </button>
+              <div className="ns-diario-modal__topbar-start">
+                <button
+                  type="button"
+                  className="ns-diario-btn ns-diario-btn--ghost ns-diario-modal__toggle-topo"
+                  onClick={() => {
+                    setDiarioPedidosModalTopoRetraido((v) => {
+                      const next = !v
+                      void saveData(DIARIO_PEDIDOS_MODAL_TOPO_RETRAIDO_KEY, next)
+                      return next
+                    })
+                  }}
+                  title={
+                    diarioPedidosModalTopoRetraido
+                      ? (safeT as any)?.diarioPedidosBtnExpandirTopo || 'Mostrar cabeçalho e resumo'
+                      : (safeT as any)?.diarioPedidosBtnRetrairTopo || 'Retrair cabeçalho (mais espaço para o quadro)'
+                  }
+                  aria-expanded={!diarioPedidosModalTopoRetraido}
+                  aria-controls="diario-pedidos-modal-collapse-region"
+                >
+                  {diarioPedidosModalTopoRetraido
+                    ? (safeT as any)?.diarioPedidosBtnExpandirTopo || 'Expandir'
+                    : (safeT as any)?.diarioPedidosBtnRetrairTopo || 'Retrair'}
+                </button>
+                {diarioPedidosModalTopoRetraido ? (
+                  <div className="ns-diario-topbar-resumo" aria-label={(safeT as any)?.diarioPedidosResumoAria || 'Resumo'}>
+                    <span className="ns-diario-topbar-resumo__chip ns-diario-topbar-resumo__chip--total">
+                      {diarioPedidosResumo.total} {(safeT as any)?.diarioPedidosResumoTotal || 'Total'}
+                    </span>
+                    <span className="ns-diario-topbar-resumo__chip ns-diario-topbar-resumo__chip--abertas">
+                      {diarioPedidosResumo.abertas} {(safeT as any)?.diarioPedidosResumoAbertas || 'Em aberto'}
+                    </span>
+                    <span className="ns-diario-topbar-resumo__chip ns-diario-topbar-resumo__chip--ok">
+                      {diarioPedidosResumo.resolvidas} {(safeT as any)?.diarioPedidosResumoResolvidas || 'Resolvidas'}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
               <button
                 type="button"
                 className="ns-diario-btn ns-diario-btn--ghost ns-diario-modal__sair"
@@ -75162,6 +75165,7 @@ A1;Peça exemplo;10`}
             </div>
 
             <div className="ns-diario-modal__main-scroll">
+            <div className="ns-diario-workspace">
             <section className="ns-diario-composer" aria-label={(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}>
               <div className="ns-diario-composer__label">{(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}</div>
               <p className="ns-diario-composer__format-hint">
@@ -75218,7 +75222,7 @@ A1;Peça exemplo;10`}
                 className="ns-diario-composer__input"
                 value={diarioPedidoDraft}
                 onChange={(e) => setDiarioPedidoDraft(e.target.value)}
-                rows={4}
+                rows={6}
                 placeholder={
                   (safeT as any)?.diarioPedidosPlaceholderTarefas ||
                   (safeT as any)?.diarioPedidosPlaceholder ||
@@ -76043,6 +76047,7 @@ A1;Peça exemplo;10`}
                 </ul>
               )}
             </section>
+            </div>
             </div>
 
             <footer className="ns-diario-modal__footer">

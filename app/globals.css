@@ -28776,26 +28776,171 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 
 .ns-diario-overlay {
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.ns-diario-overlay--fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10000 !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  padding: max(6px, env(safe-area-inset-top, 0px)) 6px max(6px, env(safe-area-inset-bottom, 0px)) !important;
+  background-color: rgba(0, 0, 0, 0.82) !important;
 }
 
 .ns-diario-modal.diario-pedidos-modal-shell {
-  max-width: min(760px, 96vw);
+  max-width: min(1680px, 99.5vw);
   width: 100%;
-  max-height: min(94vh, 920px);
+  max-height: min(98vh, 100dvh);
+  height: min(98vh, 100dvh);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   min-height: 0;
   padding: 0;
-  border-radius: 16px;
+  margin: 0 auto;
+  border-radius: 14px;
   border: 1px solid rgba(0, 255, 122, 0.22);
   background: linear-gradient(165deg, rgba(18, 28, 22, 0.98) 0%, rgba(8, 12, 10, 0.99) 100%);
   box-shadow:
     0 28px 64px rgba(0, 0, 0, 0.62),
     0 0 0 1px rgba(0, 255, 122, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.ns-diario-modal--workspace .ns-diario-modal__main-scroll {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.ns-diario-workspace {
+  display: grid;
+  grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+  flex: 1 1 0;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.ns-diario-modal--workspace .ns-diario-composer {
+  border-right: 1px solid rgba(0, 255, 122, 0.12);
+  border-bottom: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: none;
+  height: 100%;
+  padding: 16px 18px 18px;
+}
+
+.ns-diario-modal--workspace .ns-diario-list-wrap {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 20px max(18px, env(safe-area-inset-bottom, 0px));
+}
+
+.ns-diario-modal--workspace .ns-diario-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.ns-diario-modal--workspace .ns-diario-entry {
+  height: fit-content;
+}
+
+.ns-diario-modal__topbar-start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.ns-diario-topbar-resumo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.ns-diario-topbar-resumo__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.45);
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.ns-diario-topbar-resumo__chip--abertas {
+  border-color: rgba(250, 204, 21, 0.35);
+  color: #fde68a;
+}
+
+.ns-diario-topbar-resumo__chip--ok {
+  border-color: rgba(34, 197, 94, 0.35);
+  color: #bbf7d0;
+}
+
+.ns-diario-modal--workspace .ns-diario-composer__input {
+  min-height: 140px;
+  max-height: min(42vh, 360px);
+  resize: vertical;
+}
+
+.ns-diario-modal--workspace .ns-diario-modal__hero {
+  padding: 14px 20px 16px;
+  gap: 16px;
+}
+
+.ns-diario-modal--workspace .ns-diario-modal__subtitle {
+  max-width: 52rem;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ns-diario-modal--workspace .ns-diario-resumo {
+  padding: 0 20px 14px;
+  gap: 10px;
+}
+
+.ns-diario-modal--topo-retraido.ns-diario-modal--workspace .ns-diario-composer {
+  padding-top: 14px;
+}
+
+@media (max-width: 960px) {
+  .ns-diario-workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .ns-diario-modal--workspace .ns-diario-composer {
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 255, 122, 0.12);
+    max-height: min(46vh, 420px);
+    height: auto;
+  }
+
+  .ns-diario-modal.diario-pedidos-modal-shell {
+    max-height: min(99dvh, 100dvh);
+    height: min(99dvh, 100dvh);
+    border-radius: 10px;
+  }
 }
 
 .ns-diario-modal__main-scroll {
@@ -28809,12 +28954,15 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 
 @media (max-width: 768px) {
   .ns-diario-modal.diario-pedidos-modal-shell {
-    max-width: calc(100vw - 20px);
-    width: calc(100vw - 20px);
+    max-width: 100%;
+    width: 100%;
     max-height: calc(
-      100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px
+      100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 12px
     );
-    border-radius: 12px;
+    height: calc(
+      100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 12px
+    );
+    border-radius: 10px;
   }
 
   .ns-diario-modal__title-wrap {
