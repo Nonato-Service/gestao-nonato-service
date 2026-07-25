@@ -43,14 +43,11 @@ function escAttr(s: string): string {
 
 /** Layout do cabeçalho v3 — sem logo; dados do cliente e equipamento em destaque */
 const HDR_LAYOUT_CSS = `
-.pdf-watermark{position:fixed;inset:0;z-index:99999;pointer-events:none;overflow:hidden;}
-.pdf-watermark__mosaic{position:absolute;inset:-24%;background-repeat:repeat;background-size:min(34vw,250px) auto;background-position:center;opacity:0.06;transform:rotate(-32deg);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-.pdf-watermark__hero{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8mm;box-sizing:border-box;}
-.pdf-watermark__logo-icon{width:min(56vw,420px);height:min(56vw,420px);object-fit:contain;opacity:0.13;transform:rotate(-25deg);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-.pdf-watermark__logo-icon--clip{width:min(50vw,380px);height:min(28vw,220px);object-fit:cover;object-position:top center;opacity:0.14;transform:rotate(-25deg);mix-blend-mode:multiply;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.pdf-watermark{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.pdf-watermark__mosaic{position:absolute;inset:-35%;background-repeat:repeat;background-size:185px 185px;background-position:center;opacity:0.042;transform:rotate(-28deg);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 .pdf-page-content{position:relative;z-index:1;}
 .pdf-header.hdr-pro{position:relative;z-index:1;}
-body{position:relative;}
+body{position:relative;background:#fff;}
 .pdf-header.hdr-pro{margin:0 0 22px;padding:0;background:#fff;border:2px solid #0f172a;border-radius:10px;overflow:hidden;box-sizing:border-box;box-shadow:0 4px 18px rgba(15,23,42,0.08);}
 .hdr-pro__inner{display:flex;flex-direction:column;gap:14px;padding:18px 22px;box-sizing:border-box;width:100%;}
 .hdr-pro__top{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 20px;width:100%;}
@@ -73,7 +70,7 @@ body{position:relative;}
 .hdr-pro__meta-label{font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;}
 .hdr-pro__meta-value{font-size:9.5pt;font-weight:700;color:#0f172a;}
 .hdr-pro__accent{height:4px;background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);border:0;margin:0;width:100%;}
-@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark{position:fixed;inset:0;}.pdf-watermark__mosaic{opacity:0.05;}.pdf-watermark__logo-icon{opacity:0.11;}.pdf-watermark__logo-icon--clip{opacity:0.12;}}
+@media print{.pdf-header.hdr-pro{break-inside:avoid;page-break-inside:avoid;}.pdf-watermark{position:fixed;inset:0;z-index:0;}.pdf-watermark__mosaic{opacity:0.035;}}
 `
 
 /** Por modelo: acentos de cor no cabeçalho v2 */
@@ -127,23 +124,12 @@ function buildHeaderHtml(variantIndex: number, o: HeaderOpts): string {
   return `<header class="pdf-header hdr-pro hdr-v${v}" role="banner"><div class="hdr-pro__inner"><div class="hdr-pro__top"><div class="hdr-pro__company-block"><span class="hdr-pro__company-name">Nonato Service</span><span class="hdr-pro__company-tag">Assistência técnica</span></div><div class="hdr-pro__doc-meta"><p class="hdr-pro__kicker">Protocolo de serviço</p><div class="hdr-pro__meta"><span class="hdr-pro__meta-chip"><span class="hdr-pro__meta-label">Emitido em</span><span class="hdr-pro__meta-value">${d}</span></span></div></div></div><div class="hdr-pro__client-block"><span class="hdr-pro__client-label">${clienteLabel}</span>${clienteHtml}</div>${equipHtml}</div><div class="hdr-pro__accent" aria-hidden="true"></div></header>`
 }
 
-function extractImgSrcFromLogoHtml(logoHtml: string): string {
-  const m = String(logoHtml || '').match(/\ssrc\s*=\s*(["'])([\s\S]*?)\1/i)
-  return m?.[2]?.trim() || ''
-}
-
 /** Ícone só com engrenagens (sem texto) — marca d'água do protocolo */
 const PROTOCOLO_WATERMARK_ICON_SVG = '/brand/nonato-watermark-gears.svg'
 
-function buildWatermarkHtml(logoHtml: string): string {
-  const src = extractImgSrcFromLogoHtml(logoHtml)
-  const safeSrc = src ? src.replace(/"/g, '&quot;') : ''
+function buildWatermarkHtml(_logoHtml: string): string {
   const iconUrl = PROTOCOLO_WATERMARK_ICON_SVG
-  const mosaic = `<div class="pdf-watermark__mosaic" style="background-image:url('${iconUrl}')"></div>`
-  const center = safeSrc
-    ? `<img class="pdf-watermark__logo-icon pdf-watermark__logo-icon--clip" src="${safeSrc}" alt="" />`
-    : `<img class="pdf-watermark__logo-icon" src="${iconUrl}" alt="" />`
-  return `<div class="pdf-watermark" aria-hidden="true">${mosaic}<div class="pdf-watermark__hero">${center}</div></div>`
+  return `<div class="pdf-watermark" aria-hidden="true"><div class="pdf-watermark__mosaic" style="background-image:url('${iconUrl}')"></div></div>`
 }
 
 function buildHeaderFragments(o: HeaderOpts): string[] {
@@ -326,5 +312,5 @@ export function buildProtocoloServicoPrintHtml(
   const header = buildHeaderFragments(headerOpts)[idx]
   const watermark = buildWatermarkHtml(headerOpts.logoHtml)
   const titleSafe = headerOpts.tituloProto.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  return `<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${titleSafe}</title><style>${css}</style></head><body class="pdf-has-watermark">${header}<div class="body-wrap pdf-page-content">${bodyInner}</div>${watermark}</body></html>`
+  return `<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${titleSafe}</title><style>${css}</style></head><body class="pdf-has-watermark">${watermark}${header}<div class="body-wrap pdf-page-content">${bodyInner}</div></body></html>`
 }
