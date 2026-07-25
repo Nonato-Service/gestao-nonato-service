@@ -22227,17 +22227,27 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   letter-spacing: 0.03em;
   min-height: 30px;
   vertical-align: middle;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.proto-arquivo-row__btn:hover {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .proto-arquivo-row__btn--pdf {
   background: linear-gradient(180deg, #0ea5e9, #0369a1) !important;
   border-color: rgba(56, 189, 248, 0.45) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .proto-arquivo-row__btn--ghost {
   background: rgba(255, 255, 255, 0.04) !important;
   border-color: rgba(255, 255, 255, 0.14) !important;
-  color: rgba(255, 255, 255, 0.75) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   min-width: 34px;
   padding-left: 8px !important;
   padding-right: 8px !important;
@@ -22424,11 +22434,20 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   letter-spacing: 0.04em;
   text-transform: uppercase;
   min-height: 36px;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.proto-cockpit-btn:hover {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .proto-cockpit-btn--pdf {
   background: linear-gradient(180deg, #0ea5e9, #0369a1) !important;
   border-color: rgba(56, 189, 248, 0.5) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .proto-cockpit-btn--email {
