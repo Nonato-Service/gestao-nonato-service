@@ -191,53 +191,36 @@ export function buildProtocoloServicoPdfHtmlFromProtocolo(input: ProtocoloPdfBui
   const refDoc = `REF-${String(p.id).replace(/[^a-zA-Z0-9]/g, '').slice(-12).toUpperCase() || 'NS'}`
   const nomeClientePdf = (input.clienteNome || '').trim()
   const idEqPdf = idEquipamentoVisivel(eq, input.equipamentosArmazem)
-  const rowIdPdf = idEqPdf
-    ? `<tr><td class="cl-label">${esc(L.idEquipamento || 'ID')}</td><td class="cl-value">${esc(idEqPdf)}</td></tr>`
-    : ''
-
-  const equipTableRows = eq
-    ? [
-        eq.tipoEquipamento ? `<tr><td class="cl-label">${esc(L.tipoEquipamento || 'Tipo')}</td><td class="cl-value">${esc(eq.tipoEquipamento)}</td></tr>` : '',
-        eq.modelo ? `<tr><td class="cl-label">${esc(L.modelo || 'Modelo')}</td><td class="cl-value">${esc(eq.modelo)}</td></tr>` : '',
-        eq.marca ? `<tr><td class="cl-label">${esc(L.marca || 'Marca')}</td><td class="cl-value">${esc(eq.marca)}</td></tr>` : '',
-        eq.numeroSerie ? `<tr><td class="cl-label">${esc(L.numeroSerie || 'Nº Série')}</td><td class="cl-value">${esc(eq.numeroSerie)}</td></tr>` : '',
-        rowIdPdf,
-      ]
-        .filter(Boolean)
-        .join('')
-    : ''
+  const modeloEqPdf = String(eq?.modelo || '').trim()
+  const snEqPdf = String(eq?.numeroSerie || p.equipamentoNumeroSerie || '').trim()
 
   const sitPdf = (p.situacaoDescricao || '').trim()
-  const identSectionParts: string[] = []
-  if (nomeClientePdf || equipTableRows || (sitPdf && !eq)) {
-    identSectionParts.push('<div class="sec sec-ident-compact">')
-    if (nomeClientePdf) {
-      identSectionParts.push(
-        `<p class="proto-cliente-linha"><span class="proto-cliente-etq">${esc(L.cliente || 'Cliente')}</span><span class="proto-cliente-nome">${esc(nomeClientePdf)}</span></p>`
-      )
-    }
-    if (equipTableRows) {
-      identSectionParts.push(
-        `<h3 class="sec-title sec-title-sub">${esc(L.equipamento || 'Equipamento')}</h3><table class="cl-table cl-table-compact">${equipTableRows}</table>`
-      )
-    } else if (sitPdf) {
-      identSectionParts.push(
-        `<h3 class="sec-title sec-title-sub">${esc(L.situacao || 'Situação / contexto')}</h3><p class="texto-inicial proto-situacao-compact">${esc(sitPdf)}</p>`
-      )
-    }
-    identSectionParts.push('</div>')
-  }
-
-  const identSection = identSectionParts.join('')
-  const situacaoSectionExtra =
-    sitPdf && eq
-      ? `<div class="sec sec-ident-compact"><h3 class="sec-title">${esc(L.situacao || 'Situação / contexto')}</h3><p class="texto-inicial proto-situacao-compact">${esc(sitPdf)}</p></div>`
-      : ''
+  const situacaoSection = sitPdf
+    ? `<div class="sec sec-ident-compact"><h3 class="sec-title">${esc(L.situacao || 'Situação / contexto')}</h3><p class="texto-inicial proto-situacao-compact">${esc(sitPdf)}</p></div>`
+    : ''
   const textoSection = p.textoInicial
     ? `<div class="sec"><h3 class="sec-title">${esc(L.textoInicial || 'Texto inicial')}</h3><p class="texto-inicial">${esc(p.textoInicial)}</p></div>`
     : ''
 
-  const bodyInner = `${identSection}${situacaoSectionExtra}${textoSection}${blocosHtml}${pecasStrong}<div class="footer-bar"><span class="footer-date">${dataDoc}</span><span class="doc-ref">${refDoc}</span></div>`
+  const bodyInner = `${situacaoSection}${textoSection}${blocosHtml}${pecasStrong}<div class="footer-bar"><span class="footer-date">${dataDoc}</span><span class="doc-ref">${refDoc}</span></div>`
 
-  return buildProtocoloServicoPrintHtml(idx, { tituloProto: input.tituloProto, dataDoc, logoHtml: input.logoHtml }, bodyInner)
+  return buildProtocoloServicoPrintHtml(
+    idx,
+    {
+      tituloProto: input.tituloProto,
+      dataDoc,
+      logoHtml: input.logoHtml,
+      clienteNome: nomeClientePdf,
+      equipamentoId: idEqPdf,
+      equipamentoModelo: modeloEqPdf,
+      equipamentoNumeroSerie: snEqPdf,
+      labels: {
+        cliente: L.cliente,
+        idEquipamento: L.idEquipamento,
+        modelo: L.modelo,
+        numeroSerie: L.numeroSerie,
+      },
+    },
+    bodyInner
+  )
 }

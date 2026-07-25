@@ -15,6 +15,16 @@ type HeaderOpts = {
   tituloProto: string
   dataDoc: string
   logoHtml: string
+  clienteNome?: string
+  equipamentoId?: string
+  equipamentoModelo?: string
+  equipamentoNumeroSerie?: string
+  labels?: {
+    cliente?: string
+    idEquipamento?: string
+    modelo?: string
+    numeroSerie?: string
+  }
 }
 
 const PRINT_SAFE = `@page{size:A4;margin:12mm}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}`
@@ -34,7 +44,7 @@ function escAttr(s: string): string {
 /** Layout do cabeçalho v2 — alinhado aos cartões de acção do corpo */
 const HDR_LAYOUT_CSS = `
 .pdf-header.hdr-pro{margin:0 0 22px;padding:0;background:#fff;border:2px solid #0f172a;border-radius:10px;overflow:hidden;box-sizing:border-box;box-shadow:0 4px 18px rgba(15,23,42,0.08);}
-.hdr-pro__inner{display:flex;flex-wrap:nowrap;align-items:stretch;justify-content:space-between;gap:0;min-height:92px;width:100%;}
+.hdr-pro__inner{display:flex;flex-wrap:nowrap;align-items:stretch;justify-content:space-between;gap:0;min-height:108px;width:100%;}
 .hdr-pro__brand{display:flex;align-items:center;gap:14px;padding:16px 18px;background:linear-gradient(180deg,#f8fafc 0%,#eef2f7 100%);border-right:1px solid #cbd5e1;flex:0 0 248px;width:248px;box-sizing:border-box;}
 .hdr-pro__logo{display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;min-width:74px;min-height:54px;box-sizing:border-box;flex-shrink:0;}
 .hdr-pro__logo img{max-height:46px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;background:transparent;}
@@ -42,10 +52,16 @@ const HDR_LAYOUT_CSS = `
 .hdr-pro__company{display:flex;flex-direction:column;gap:4px;min-width:0;}
 .hdr-pro__company-name{font-size:10pt;font-weight:900;color:#0f172a;letter-spacing:0.03em;line-height:1.2;}
 .hdr-pro__company-tag{font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#64748b;line-height:1.3;}
-.hdr-pro__doc{flex:1 1 auto;padding:16px 22px;display:flex;flex-direction:column;justify-content:center;gap:5px;box-sizing:border-box;min-width:0;}
+.hdr-pro__doc{flex:1 1 auto;padding:16px 22px;display:flex;flex-direction:column;justify-content:center;gap:8px;box-sizing:border-box;min-width:0;}
 .hdr-pro__kicker{margin:0;font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.16em;color:#15803d;line-height:1.3;}
-.hdr-pro__title{margin:0;font-size:16pt;font-weight:800;color:#0f172a;line-height:1.22;letter-spacing:-0.02em;text-transform:none;}
-.hdr-pro__meta{margin:4px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;}
+.hdr-pro__cliente{margin:0;font-size:15pt;font-weight:800;color:#0f172a;line-height:1.25;letter-spacing:-0.02em;word-break:break-word;}
+.hdr-pro__equip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:2px 0 0;width:100%;}
+.hdr-pro__equip--duo{grid-template-columns:repeat(2,minmax(0,1fr));}
+.hdr-pro__equip--solo{grid-template-columns:1fr;}
+.hdr-pro__equip-item{padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;box-sizing:border-box;min-width:0;}
+.hdr-pro__equip-label{display:block;margin:0 0 4px;font-size:7pt;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;line-height:1.2;}
+.hdr-pro__equip-value{display:block;margin:0;font-size:10pt;font-weight:700;color:#0f172a;line-height:1.35;word-break:break-word;}
+.hdr-pro__meta{margin:2px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;}
 .hdr-pro__meta-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid #e2e8f0;background:#f8fafc;font-size:9pt;line-height:1.2;}
 .hdr-pro__meta-label{font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;}
 .hdr-pro__meta-value{font-size:9.5pt;font-weight:700;color:#0f172a;}
@@ -59,32 +75,49 @@ const HDR_VARIANT_CSS: string[] = [
   '.hdr-v2.hdr-pro{border-color:#2563eb;}.hdr-v2.hdr-pro .hdr-pro__kicker{color:#1d4ed8;}.hdr-v2.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#1d4ed8,#3b82f6,#1d4ed8);}',
   '.hdr-v3.hdr-pro{border-color:#ea580c;}.hdr-v3.hdr-pro .hdr-pro__kicker{color:#9a3412;}.hdr-v3.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#9a3412,#ea580c,#9a3412);}',
   '.hdr-v4.hdr-pro{border-color:#0d9488;}.hdr-v4.hdr-pro .hdr-pro__kicker{color:#0f766e;}.hdr-v4.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#0f766e,#14b8a6,#0f766e);}',
-  '.hdr-v5.hdr-pro{border-color:#374151;}.hdr-v5.hdr-pro .hdr-pro__kicker{color:#374151;}.hdr-v5.hdr-pro .hdr-pro__title{font-family:Consolas,ui-monospace,monospace;font-size:14pt;}.hdr-v5.hdr-pro .hdr-pro__accent{background:#1f2937;}',
-  '.hdr-v6.hdr-pro{border-color:#b45309;}.hdr-v6.hdr-pro .hdr-pro__kicker{color:#92400e;}.hdr-v6.hdr-pro .hdr-pro__title{font-family:Georgia,ui-serif,serif;color:#78350f;}.hdr-v6.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#92400e,#d97706,#92400e);}',
+  '.hdr-v5.hdr-pro{border-color:#374151;}.hdr-v5.hdr-pro .hdr-pro__kicker{color:#374151;}.hdr-v5.hdr-pro .hdr-pro__cliente{font-family:Consolas,ui-monospace,monospace;font-size:14pt;}.hdr-v5.hdr-pro .hdr-pro__accent{background:#1f2937;}',
+  '.hdr-v6.hdr-pro{border-color:#b45309;}.hdr-v6.hdr-pro .hdr-pro__kicker{color:#92400e;}.hdr-v6.hdr-pro .hdr-pro__cliente{font-family:Georgia,ui-serif,serif;color:#78350f;}.hdr-v6.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#92400e,#d97706,#92400e);}',
   '.hdr-v7.hdr-pro{border-color:#475569;}.hdr-v7.hdr-pro .hdr-pro__kicker{color:#475569;}.hdr-v7.hdr-pro .hdr-pro__accent{background:#475569;}',
   '.hdr-v8.hdr-pro{border-width:2px;border-color:#1e293b;border-radius:8px;}.hdr-v8.hdr-pro .hdr-pro__accent{height:5px;background:#0f172a;}',
   '.hdr-v9.hdr-pro{border-color:#2563eb;}.hdr-v9.hdr-pro .hdr-pro__kicker{color:#1e40af;}.hdr-v9.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#1e40af,#2563eb,#1e40af);}',
   '.hdr-v10.hdr-pro{border-color:#ca8a04;}.hdr-v10.hdr-pro .hdr-pro__kicker{color:#713f12;}.hdr-v10.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#713f12,#ca8a04,#713f12);height:5px;}',
   '.hdr-v11.hdr-pro{border-color:#4f46e5;}.hdr-v11.hdr-pro .hdr-pro__kicker{color:#4338ca;}.hdr-v11.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#3730a3,#6366f1,#3730a3);}',
-  '.hdr-v12.hdr-pro{border-color:#111827;border-radius:4px;}.hdr-v12.hdr-pro .hdr-pro__kicker,.hdr-v12.hdr-pro .hdr-pro__title,.hdr-v12.hdr-pro .hdr-pro__meta-label,.hdr-v12.hdr-pro .hdr-pro__meta-value{font-family:Consolas,ui-monospace,monospace;}.hdr-v12.hdr-pro .hdr-pro__title{font-size:14pt;}.hdr-v12.hdr-pro .hdr-pro__accent{background:#111827;height:5px;}',
+  '.hdr-v12.hdr-pro{border-color:#111827;border-radius:4px;}.hdr-v12.hdr-pro .hdr-pro__kicker,.hdr-v12.hdr-pro .hdr-pro__cliente,.hdr-v12.hdr-pro .hdr-pro__equip-label,.hdr-v12.hdr-pro .hdr-pro__equip-value,.hdr-v12.hdr-pro .hdr-pro__meta-label,.hdr-v12.hdr-pro .hdr-pro__meta-value{font-family:Consolas,ui-monospace,monospace;}.hdr-v12.hdr-pro .hdr-pro__cliente{font-size:14pt;}.hdr-v12.hdr-pro .hdr-pro__accent{background:#111827;height:5px;}',
   '.hdr-v13.hdr-pro{border-color:#1e293b;box-shadow:0 6px 24px rgba(15,23,42,0.14);}.hdr-v13.hdr-pro .hdr-pro__brand{background:linear-gradient(180deg,#f8fafc 0%,#e2e8f0 100%);}.hdr-v13.hdr-pro .hdr-pro__kicker{color:#0f172a;}.hdr-v13.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#92400e,#fbbf24,#92400e);height:5px;}',
   '.hdr-v14.hdr-pro{border-color:#e2e8f0;border-radius:12px;box-shadow:0 2px 10px rgba(15,23,42,0.06);}.hdr-v14.hdr-pro .hdr-pro__kicker{color:#0d9488;letter-spacing:0.18em;}.hdr-v14.hdr-pro .hdr-pro__accent{background:linear-gradient(90deg,#0f766e,#14b8a6,#0d9488);}',
-  '.hdr-v15.hdr-pro{border-color:#0f172a;box-shadow:0 6px 22px rgba(21,128,61,0.12);}.hdr-v15.hdr-pro .hdr-pro__brand{border-right:3px solid #22c55e;}.hdr-v15.hdr-pro .hdr-pro__kicker{color:#14532d;}.hdr-v15.hdr-pro .hdr-pro__title{color:#0f172a;}.hdr-v15.hdr-pro .hdr-pro__accent{height:5px;background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);}',
+  '.hdr-v15.hdr-pro{border-color:#0f172a;box-shadow:0 6px 22px rgba(21,128,61,0.12);}.hdr-v15.hdr-pro .hdr-pro__brand{border-right:3px solid #22c55e;}.hdr-v15.hdr-pro .hdr-pro__kicker{color:#14532d;}.hdr-v15.hdr-pro .hdr-pro__cliente{color:#0f172a;}.hdr-v15.hdr-pro .hdr-pro__accent{height:5px;background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);}',
 ]
 
-function headerDisplayTitle(raw: string): string {
-  const t = String(raw || '').trim()
-  if (!t) return 'Relatório de intervenção técnica'
-  if (/^protocolos?\s+de\s+servi[cç]o$/i.test(t)) return 'Relatório de intervenção técnica'
-  return t
+function buildEquipGridHtml(o: HeaderOpts): string {
+  const L = o.labels || {}
+  const items: Array<{ label: string; value: string }> = []
+  const id = String(o.equipamentoId || '').trim()
+  const modelo = String(o.equipamentoModelo || '').trim()
+  const sn = String(o.equipamentoNumeroSerie || '').trim()
+  if (id) items.push({ label: L.idEquipamento || 'ID', value: id })
+  if (modelo) items.push({ label: L.modelo || 'Modelo', value: modelo })
+  if (sn) items.push({ label: L.numeroSerie || 'Nº Série', value: sn })
+  if (!items.length) return ''
+  const gridClass = items.length === 1 ? ' hdr-pro__equip--solo' : items.length === 2 ? ' hdr-pro__equip--duo' : ''
+  const cells = items
+    .map(
+      (it) =>
+        `<div class="hdr-pro__equip-item"><span class="hdr-pro__equip-label">${escAttr(it.label)}</span><span class="hdr-pro__equip-value">${escAttr(it.value)}</span></div>`
+    )
+    .join('')
+  return `<div class="hdr-pro__equip${gridClass}">${cells}</div>`
 }
 
 function buildHeaderHtml(variantIndex: number, o: HeaderOpts): string {
-  const t = escAttr(headerDisplayTitle(o.tituloProto))
   const d = escAttr(o.dataDoc)
   const L = logoOrName(o.logoHtml)
   const v = variantIndex + 1
-  return `<header class="pdf-header hdr-pro hdr-v${v}" role="banner"><div class="hdr-pro__inner"><div class="hdr-pro__brand"><div class="hdr-pro__logo">${L}</div><div class="hdr-pro__company"><span class="hdr-pro__company-name">Nonato Service</span><span class="hdr-pro__company-tag">Assistência técnica</span></div></div><div class="hdr-pro__doc"><p class="hdr-pro__kicker">Protocolo de serviço</p><h1 class="hdr-pro__title">${t}</h1><div class="hdr-pro__meta"><span class="hdr-pro__meta-chip"><span class="hdr-pro__meta-label">Emitido em</span><span class="hdr-pro__meta-value">${d}</span></span></div></div></div><div class="hdr-pro__accent" aria-hidden="true"></div></header>`
+  const cliente = String(o.clienteNome || '').trim()
+  const clienteHtml = cliente
+    ? `<p class="hdr-pro__cliente">${escAttr(cliente)}</p>`
+    : `<p class="hdr-pro__cliente">${escAttr(o.labels?.cliente || 'Cliente')}</p>`
+  const equipHtml = buildEquipGridHtml(o)
+  return `<header class="pdf-header hdr-pro hdr-v${v}" role="banner"><div class="hdr-pro__inner"><div class="hdr-pro__brand"><div class="hdr-pro__logo">${L}</div><div class="hdr-pro__company"><span class="hdr-pro__company-name">Nonato Service</span><span class="hdr-pro__company-tag">Assistência técnica</span></div></div><div class="hdr-pro__doc"><p class="hdr-pro__kicker">Protocolo de serviço</p>${clienteHtml}${equipHtml}<div class="hdr-pro__meta"><span class="hdr-pro__meta-chip"><span class="hdr-pro__meta-label">Emitido em</span><span class="hdr-pro__meta-value">${d}</span></span></div></div></div><div class="hdr-pro__accent" aria-hidden="true"></div></header>`
 }
 
 function buildHeaderFragments(o: HeaderOpts): string[] {
