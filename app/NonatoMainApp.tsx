@@ -4723,7 +4723,6 @@ const getLanguages = (t: any): Language[] => {
 export default function Dashboard() {
   const warmOnMount = useMemo(() => isWarmSessionResume(), [])
   const initialUiSession = useMemo(() => loadUiSessionSnapshot(), [])
-  const loginMenuSyncedRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -28822,13 +28821,10 @@ export default function Dashboard() {
     if (!loginUser?.id || loginUser.isAdmin) return
     const fresh = users.find((u) => u.id === loginUser.id)
     if (!fresh) return
-    const syncKey = `${loginUser.id}:${users.length}`
-    if (loginMenuSyncedRef.current === syncKey) return
     const next = ensureUserMenuPolicy(fresh)
     const menuChanged = JSON.stringify(next.menuItems) !== JSON.stringify(loginUser.menuItems)
     const permChanged = JSON.stringify(next.permissions) !== JSON.stringify(loginUser.permissions)
     const flagChanged = Boolean(next.menuItemsConfigured) !== Boolean(loginUser.menuItemsConfigured)
-    loginMenuSyncedRef.current = syncKey
     if (!menuChanged && !permChanged && !flagChanged) return
     setLoginUser((prev) =>
       prev
