@@ -67453,14 +67453,21 @@ A1;Peça exemplo;10`}
                         <span className="bib-relatorios-hub__row-chevron biblioteca-relatorios-cliente__chevron bib-relatorios-hub__row-chevron--green" aria-hidden />
                         <h3 className="biblioteca-relatorios-cliente__title bib-relatorios-hub__client-name">{cliente.nomeEmpresa}</h3>
                         <div className="biblioteca-relatorios-cliente__summary-kpis">
-                          <span className="bib-kpi bib-kpi--equip" title={labelEquip(numEquip)}>
+                          <span
+                            className={`bib-kpi bib-kpi--equip${numEquip === 0 ? ' bib-kpi--zero' : ''}`}
+                            title={labelEquip(numEquip)}
+                          >
                             {numEquip} {txBib.bibliotecaRelatoriosLegendaEquipamentos || 'equip.'}
                           </span>
-                          <span className="bib-kpi bib-kpi--serv">
+                          <span
+                            className={`bib-kpi bib-kpi--serv${totalRelatoriosServicoCliente === 0 ? ' bib-kpi--zero' : ''}`}
+                          >
                             {totalRelatoriosServicoCliente}{' '}
                             {txBib.bibliotecaRelatoriosLegendaServico ?? txBib.relatoriosServicoShort ?? 'serv.'}
                           </span>
-                          <span className="bib-kpi bib-kpi--desp">
+                          <span
+                            className={`bib-kpi bib-kpi--desp${totalRelatoriosDespesasCliente === 0 ? ' bib-kpi--zero' : ''}`}
+                          >
                             {totalRelatoriosDespesasCliente}{' '}
                             {txBib.bibliotecaRelatoriosLegendaDespesas ?? 'desp.'}
                           </span>
