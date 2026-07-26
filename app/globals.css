@@ -31861,6 +31861,204 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   grid-template-columns: 1fr 1fr;
 }
 
+/* ── Peças Especiais — painel IVA profissional ── */
+.orc-pe-iva {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.orc-pe-iva-card {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.orc-pe-iva-card + .orc-pe-iva-card,
+.orc-pe-iva-card + .orc-pe-iva-card--sub {
+  margin-top: 12px;
+}
+
+.orc-pe-iva-card--sub {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  box-shadow: none;
+}
+
+.orc-pe-iva-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 20px;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.orc-pe-iva-card__header--compact {
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: none;
+  flex-wrap: wrap;
+}
+
+.orc-pe-iva-card__heading {
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.orc-pe-iva-card__title {
+  margin: 0 0 6px;
+  color: #93c5fd;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.orc-pe-iva-card__status {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(134, 239, 172, 0.92);
+}
+
+.orc-pe-iva-card__status--com {
+  color: rgba(186, 230, 253, 0.95);
+}
+
+.orc-pe-iva-card__sub-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+  flex: 1 1 180px;
+}
+
+.orc-pe-iva-switch {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(108px, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  flex: 0 0 auto;
+}
+
+.orc-pe-iva-switch--wide {
+  grid-template-columns: repeat(2, minmax(132px, 1fr));
+}
+
+.orc-pe-iva-switch__btn {
+  min-height: 38px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.orc-pe-iva-switch__btn:hover:not(.is-active) {
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.orc-pe-iva-switch__btn.is-active {
+  background: #16a34a;
+  color: #f0fdf4;
+  box-shadow: 0 2px 10px rgba(22, 163, 74, 0.28);
+}
+
+.orc-pe-iva-switch__btn--com.is-active {
+  background: #0284c7;
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.28);
+}
+
+.orc-pe-iva-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 12px 18px 16px;
+}
+
+.orc-pe-iva-card__total {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.orc-pe-iva-card__total-label {
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.orc-pe-iva-card__total-value {
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #ecfdf5;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.orc-pe-iva-card__field {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.orc-pe-iva-card__field--block {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 0 16px 14px;
+}
+
+.orc-pe-iva-card__field--block .orcamento-pecas-especiais-input--valor-final {
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .orc-pe-iva-card__header,
+  .orc-pe-iva-card__header--compact {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .orc-pe-iva-switch,
+  .orc-pe-iva-switch--wide {
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .orc-pe-iva-card__meta {
+    justify-content: flex-start;
+  }
+
+  .orc-pe-iva-card__total {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .orc-pe-iva-card__field {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
 .orcamento-pecas-especiais-iva-row {
   display: flex;
   flex-wrap: nowrap;

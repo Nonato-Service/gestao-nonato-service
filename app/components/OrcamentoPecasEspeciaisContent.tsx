@@ -829,26 +829,27 @@ export function OrcamentoPecasEspeciaisContent({
           </div>
         </div>
 
-        <div className="orcamento-pecas-especiais-section orcamento-pecas-especiais-iva">
-          <div className="orcamento-pecas-especiais-iva-row orcamento-pecas-especiais-iva-row--main">
-            <h3 className="orcamento-pecas-especiais-iva-row__title">
-              {t.orcamentoPecasEspModoIvaTitulo || 'Preços no orçamento'}
-            </h3>
-            <div className="orcamento-pecas-especiais-iva-main-grid">
-              <span
-                className={`orcamento-pecas-especiais-iva-badge${incluirIva ? ' orcamento-pecas-especiais-iva-badge--com' : ''}`}
-              >
-                {incluirIva
-                  ? (t.orcamentoPecasEspBadgeComIva || 'Modo: com IVA a {{taxa}}%').replace(
-                      /\{\{taxa\}\}/g,
-                      String(taxaIva)
-                    )
-                  : t.orcamentoPecasEspBadgeSemIva || 'Modo: sem IVA — preços líquidos'}
-              </span>
-              <div className="orcamento-pecas-especiais-iva-actions">
+        <div className="orcamento-pecas-especiais-section orc-pe-iva">
+          <div className="orc-pe-iva-card">
+            <div className="orc-pe-iva-card__header">
+              <div className="orc-pe-iva-card__heading">
+                <h3 className="orc-pe-iva-card__title">
+                  {t.orcamentoPecasEspModoIvaTitulo || 'Preços no orçamento'}
+                </h3>
+                <p className={`orc-pe-iva-card__status${incluirIva ? ' orc-pe-iva-card__status--com' : ''}`}>
+                  {incluirIva
+                    ? (t.orcamentoPecasEspBadgeComIva || 'Modo: com IVA a {{taxa}}%').replace(
+                        /\{\{taxa\}\}/g,
+                        String(taxaIva)
+                      )
+                    : t.orcamentoPecasEspBadgeSemIva || 'Modo: sem IVA — preços líquidos'}
+                </p>
+              </div>
+              <div className="orc-pe-iva-switch" role="group" aria-label={t.orcamentoPecasEspModoIvaTitulo || 'Preços no orçamento'}>
                 <button
                   type="button"
-                  className={`orcamento-pecas-especiais-iva-btn ${!incluirIva ? 'is-active' : ''}`}
+                  className={`orc-pe-iva-switch__btn${!incluirIva ? ' is-active' : ''}`}
+                  aria-pressed={!incluirIva}
                   onClick={() => {
                     setIncluirIva(false)
                     setModoCalculoTotal('linhas')
@@ -858,14 +859,18 @@ export function OrcamentoPecasEspeciaisContent({
                 </button>
                 <button
                   type="button"
-                  className={`orcamento-pecas-especiais-iva-btn orcamento-pecas-especiais-iva-btn--com ${incluirIva ? 'is-active' : ''}`}
+                  className={`orc-pe-iva-switch__btn orc-pe-iva-switch__btn--com${incluirIva ? ' is-active' : ''}`}
+                  aria-pressed={incluirIva}
                   onClick={() => setIncluirIva(true)}
                 >
                   {t.orcamentoPecasEspComIvaBtn || 'Com IVA'}
                 </button>
               </div>
+            </div>
+
+            <div className="orc-pe-iva-card__meta">
               {incluirIva ? (
-                <label className="orcamento-pecas-especiais-iva-taxa orcamento-pecas-especiais-iva-taxa--inline">
+                <label className="orc-pe-iva-card__field">
                   <span>{t.orcamentoPecasEspIvaTaxaLabel || 'Taxa de IVA (%)'}</span>
                   <input
                     type="number"
@@ -878,41 +883,46 @@ export function OrcamentoPecasEspeciaisContent({
                   />
                 </label>
               ) : (
-                <span className="orcamento-pecas-especiais-iva-inline-total">
-                  {t.totalSemIva || 'Total sem IVA'}: <strong>{totalLiquidoFmt}</strong>
-                </span>
+                <div className="orc-pe-iva-card__total">
+                  <span className="orc-pe-iva-card__total-label">{t.totalSemIva || 'Total sem IVA'}</span>
+                  <strong className="orc-pe-iva-card__total-value">{totalLiquidoFmt}</strong>
+                </div>
               )}
             </div>
           </div>
 
           {incluirIva ? (
-            <div className="orcamento-pecas-especiais-iva-row orcamento-pecas-especiais-iva-row--calc">
-              <span className="orcamento-pecas-especiais-modo-calculo__label">
-                {t.orcamentoPecasEspModoCalculoTitulo || 'Como calcular o total'}
-              </span>
-              <div className="orcamento-pecas-especiais-modo-calculo__btns">
-                <button
-                  type="button"
-                  className={`orcamento-pecas-especiais-iva-btn ${modoCalculoTotal === 'linhas' ? 'is-active' : ''}`}
-                  onClick={() => setModoCalculoTotal('linhas')}
-                >
-                  {t.orcamentoPecasEspModoSomaLinhas || 'Soma das linhas'}
-                </button>
-                <button
-                  type="button"
-                  className={`orcamento-pecas-especiais-iva-btn orcamento-pecas-especiais-iva-btn--com ${modoCalculoTotal === 'valor-final' ? 'is-active' : ''}`}
-                  onClick={() => {
-                    setModoCalculoTotal('valor-final')
-                    if (!valorFinalComIva.trim() && totaisIva.comIva > 0) {
-                      setValorFinalComIva(String(Math.round(totaisIva.comIva * 100) / 100).replace('.', ','))
-                    }
-                  }}
-                >
-                  {t.orcamentoPecasEspModoValorFinal || 'Valor final acordado'}
-                </button>
+            <div className="orc-pe-iva-card orc-pe-iva-card--sub">
+              <div className="orc-pe-iva-card__header orc-pe-iva-card__header--compact">
+                <span className="orc-pe-iva-card__sub-label">
+                  {t.orcamentoPecasEspModoCalculoTitulo || 'Como calcular o total'}
+                </span>
+                <div className="orc-pe-iva-switch orc-pe-iva-switch--wide" role="group" aria-label={t.orcamentoPecasEspModoCalculoTitulo || 'Como calcular o total'}>
+                  <button
+                    type="button"
+                    className={`orc-pe-iva-switch__btn${modoCalculoTotal === 'linhas' ? ' is-active' : ''}`}
+                    aria-pressed={modoCalculoTotal === 'linhas'}
+                    onClick={() => setModoCalculoTotal('linhas')}
+                  >
+                    {t.orcamentoPecasEspModoSomaLinhas || 'Soma das linhas'}
+                  </button>
+                  <button
+                    type="button"
+                    className={`orc-pe-iva-switch__btn orc-pe-iva-switch__btn--com${modoCalculoTotal === 'valor-final' ? ' is-active' : ''}`}
+                    aria-pressed={modoCalculoTotal === 'valor-final'}
+                    onClick={() => {
+                      setModoCalculoTotal('valor-final')
+                      if (!valorFinalComIva.trim() && totaisIva.comIva > 0) {
+                        setValorFinalComIva(String(Math.round(totaisIva.comIva * 100) / 100).replace('.', ','))
+                      }
+                    }}
+                  >
+                    {t.orcamentoPecasEspModoValorFinal || 'Valor final acordado'}
+                  </button>
+                </div>
               </div>
               {modoCalculoTotal === 'valor-final' ? (
-                <label className="orcamento-pecas-especiais-valor-final-inline">
+                <label className="orc-pe-iva-card__field orc-pe-iva-card__field--block">
                   <span>{t.orcamentoPecasEspValorFinalLabel || 'Valor final com IVA (€)'}</span>
                   <input
                     type="text"
