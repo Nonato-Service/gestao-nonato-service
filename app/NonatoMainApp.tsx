@@ -47425,64 +47425,67 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
-            {/* Filtros */}
+            {/* Filtros — barra horizontal (Lista/Calendário ficam no cabeçalho) */}
             <div className="agenda-tecnica-toolbar">
-              <div className="agenda-tecnica-toolbar__filtros">
-              <div className="agenda-tecnica-filtros__field">
-                <select
-                  value={filtroAgenda}
-                  onChange={(e) => setFiltroAgenda(e.target.value as typeof filtroAgenda)}
-                >
-                  <option value="todos">{safeT?.todos || 'Todos'}</option>
-                  <option value="pre-agendamento">{safeT?.preAgendamento || 'Pré-Agendamento'}</option>
-                  <option value="agendamento-tecnico">{safeT?.agendamentoTecnico || 'Agendamento Técnico'}</option>
-                  <option value="assuntos-pessoais">{(safeT as any)?.agendaFiltroAssuntosPessoais || 'Assuntos pessoais'}</option>
-                  <option value="visita-tecnica">{(safeT as any)?.agendaFiltroVisitaTecnica || 'Visita técnica'}</option>
-                </select>
-              </div>
-              <div className="agenda-tecnica-filtros__field">
-                <select
-                  value={filtroTecnicoAgenda}
-                  onChange={(e) => setFiltroTecnicoAgenda(e.target.value)}
-                >
-                  <option value="">{safeT?.todosTecnicos || 'Todos os técnicos'}</option>
-                  {tecnicos.map(tec => (
-                    <option key={tec.id} value={tec.name}>{tec.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="agenda-tecnica-filtros__field">
-                <input
-                  type="date"
-                  value={filtroDataAgenda}
-                  onChange={(e) => setFiltroDataAgenda(e.target.value)}
-                />
-              </div>
-              <div className="agenda-tecnica-filtros__field agenda-tecnica-filtros__field--search">
-                <label className="agenda-tecnica-filtros__label">
-                  {(safeT as any)?.agendaBuscaRapidaLabel || 'Pesquisa na lista'}
-                </label>
-                <input
-                  type="search"
-                  value={buscaAgendaListaRapida}
-                  onChange={(e) => setBuscaAgendaListaRapida(e.target.value)}
-                  placeholder={(safeT as any)?.agendaBuscaRapidaPlaceholder || 'Cliente, técnico, serviço, equipamento…'}
-                />
-              </div>
-              {(filtroAgenda !== 'todos' || filtroTecnicoAgenda || filtroDataAgenda || buscaAgendaListaRapida.trim()) && (
-                <button
-                  type="button"
-                  className="btn-secondary agenda-tecnica-filtros__clear"
-                  onClick={() => {
-                    setFiltroAgenda('todos')
-                    setFiltroTecnicoAgenda('')
-                    setFiltroDataAgenda('')
-                    setBuscaAgendaListaRapida('')
-                  }}
-                >
-                  {safeT?.limparFiltros || 'Limpar Filtros'}
-                </button>
-              )}
+              <div className="agenda-tecnica-toolbar__filtros agenda-tecnica-filtros">
+                <div className="agenda-tecnica-filtros__field agenda-tecnica-filtros__field--status">
+                  <label className="agenda-tecnica-filtros__label">{safeT?.status || 'Status'}</label>
+                  <select
+                    value={filtroAgenda}
+                    onChange={(e) => setFiltroAgenda(e.target.value as typeof filtroAgenda)}
+                  >
+                    <option value="todos">{safeT?.todos || 'Todos'}</option>
+                    <option value="pre-agendamento">{safeT?.preAgendamento || 'Pré-Agendamento'}</option>
+                    <option value="agendamento-tecnico">{safeT?.agendamentoTecnico || 'Agendamento Técnico'}</option>
+                    <option value="assuntos-pessoais">{(safeT as any)?.agendaFiltroAssuntosPessoais || 'Assuntos pessoais'}</option>
+                    <option value="visita-tecnica">{(safeT as any)?.agendaFiltroVisitaTecnica || 'Visita técnica'}</option>
+                  </select>
+                </div>
+                <div className="agenda-tecnica-filtros__field agenda-tecnica-filtros__field--tecnico">
+                  <label className="agenda-tecnica-filtros__label">{safeT?.tecnico || 'Técnico'}</label>
+                  <select
+                    value={filtroTecnicoAgenda}
+                    onChange={(e) => setFiltroTecnicoAgenda(e.target.value)}
+                  >
+                    <option value="">{safeT?.todosTecnicos || 'Todos os técnicos'}</option>
+                    {tecnicos.map(tec => (
+                      <option key={tec.id} value={tec.name}>{tec.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="agenda-tecnica-filtros__field agenda-tecnica-filtros__field--data">
+                  <label className="agenda-tecnica-filtros__label">{safeT?.data || 'Data'}</label>
+                  <input
+                    type="date"
+                    value={filtroDataAgenda}
+                    onChange={(e) => setFiltroDataAgenda(e.target.value)}
+                  />
+                </div>
+                <div className="agenda-tecnica-filtros__field agenda-tecnica-filtros__field--search">
+                  <label className="agenda-tecnica-filtros__label">
+                    {(safeT as any)?.agendaBuscaRapidaLabel || 'Pesquisa na lista'}
+                  </label>
+                  <input
+                    type="search"
+                    value={buscaAgendaListaRapida}
+                    onChange={(e) => setBuscaAgendaListaRapida(e.target.value)}
+                    placeholder={(safeT as any)?.agendaBuscaRapidaPlaceholder || 'Cliente, técnico, serviço, equipamento…'}
+                  />
+                </div>
+                {(filtroAgenda !== 'todos' || filtroTecnicoAgenda || filtroDataAgenda || buscaAgendaListaRapida.trim()) ? (
+                  <button
+                    type="button"
+                    className="btn-secondary agenda-tecnica-filtros__clear"
+                    onClick={() => {
+                      setFiltroAgenda('todos')
+                      setFiltroTecnicoAgenda('')
+                      setFiltroDataAgenda('')
+                      setBuscaAgendaListaRapida('')
+                    }}
+                  >
+                    {safeT?.limparFiltros || 'Limpar Filtros'}
+                  </button>
+                ) : null}
               </div>
 
               {visualizacaoAgenda === 'calendario' ? (
