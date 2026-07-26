@@ -66565,17 +66565,17 @@ A1;Peça exemplo;10`}
                       <span className="financeiro-despesas-bib-legenda__titulo">
                         {tx.financeiroDespesasLegendaTitulo || 'Estados:'}
                       </span>
-                      <span className="financeiro-despesas-bib-legenda__item financeiro-despesas-bib-legenda__item--amarelo">
+                      <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--vermelho">
+                        {tx.financeiroDespesasEstadoVermelho || 'Vermelho — não pagou (cliente em alerta)'}
+                      </span>
+                      <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--amarelo">
                         {tx.financeiroDespesasEstadoAmarelo || 'Amarelo — pendente'}
                       </span>
-                      <span className="financeiro-despesas-bib-legenda__item financeiro-despesas-bib-legenda__item--azul">
+                      <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--azul">
                         {tx.financeiroDespesasEstadoAzul || 'Azul — cobrança enviada'}
                       </span>
-                      <span className="financeiro-despesas-bib-legenda__item financeiro-despesas-bib-legenda__item--verde">
+                      <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--verde">
                         {tx.financeiroDespesasEstadoVerde || 'Verde — pago'}
-                      </span>
-                      <span className="financeiro-despesas-bib-legenda__item financeiro-despesas-bib-legenda__item--vermelho">
-                        {tx.financeiroDespesasEstadoVermelho || 'Vermelho — não pagou (cliente em alerta)'}
                       </span>
                     </div>
                     {lista.length === 0 ? (
@@ -67332,6 +67332,11 @@ A1;Peça exemplo;10`}
                         <li className="bib-relatorios-hub__legenda-item">
                           <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--vermelho">
                             {txBibHero.financeiroDespesasEstadoVermelho || 'Vermelho — não pagou'}
+                          </span>
+                        </li>
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--amarelo">
+                            {txBibHero.financeiroDespesasEstadoAmarelo || 'Amarelo — pendente'}
                           </span>
                         </li>
                         <li className="bib-relatorios-hub__legenda-item">

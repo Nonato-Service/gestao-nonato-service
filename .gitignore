@@ -44,6 +44,7 @@ _command-history/ConsoleHost_history.txt
 
 # backups de código (evitar commit de pastas grandes)
 /backups
+/data/_pre-homag-merge-*/
 
 # importação local HOMAG / catálogo (imagens e JSON gerados)
 /scripts/homag-import/out/

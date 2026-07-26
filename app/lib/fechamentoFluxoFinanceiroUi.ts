@@ -34,7 +34,8 @@ export function fechamentoFluxoFasePisca(fase: FechamentoFluxoFase): boolean {
 export function getEstadoCobrancaFinanceiraVisual(fr: unknown): EstadoCobrancaFinanceiraVisual {
   const fase = getFechamentoFluxoFase(fr)
   if (fase === 'pago') return 'verde'
-  if (fase === 'nao_pago' || fase === 'sem_numero_fatura') return 'vermelho'
+  if (fase === 'nao_pago') return 'vermelho'
+  if (fase === 'sem_numero_fatura') return 'amarelo'
   return 'azul'
 }
 

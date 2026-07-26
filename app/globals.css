@@ -12253,35 +12253,9 @@ button.dia-trabalho-acao-btn--del:hover {
   color: #ccc;
   margin-right: 4px;
 }
-.financeiro-despesas-bib-legenda__item {
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-weight: 700;
-  border: 1px solid transparent;
-}
-.financeiro-despesas-bib-legenda__item--amarelo {
-  color: var(--fin-cor-amarelo-texto);
-  background: var(--fin-cor-amarelo-fundo);
-  border-color: var(--fin-cor-amarelo-borda);
-  box-shadow: 0 0 10px rgba(250, 204, 21, 0.2);
-}
-.financeiro-despesas-bib-legenda__item--azul {
-  color: var(--fin-cor-azul-texto);
-  background: var(--fin-cor-azul-fundo);
-  border-color: var(--fin-cor-azul-borda);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
-}
-.financeiro-despesas-bib-legenda__item--verde {
-  color: var(--fin-cor-verde-texto);
-  background: var(--fin-cor-verde-fundo);
-  border-color: var(--fin-cor-verde-borda);
-  box-shadow: 0 0 10px rgba(74, 222, 128, 0.2);
-}
-.financeiro-despesas-bib-legenda__item--vermelho {
-  color: var(--fin-cor-vermelho-texto);
-  background: var(--fin-cor-vermelho-fundo);
-  border-color: var(--fin-cor-vermelho-borda);
-  box-shadow: 0 0 10px rgba(248, 113, 113, 0.22);
+
+.financeiro-despesas-bib-legenda .bib-relatorios-hub__legenda-chip {
+  flex-shrink: 0;
 }
 .financeiro-despesas-bib-grupo__estado {
   padding: 3px 12px;
@@ -34226,6 +34200,10 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   border-color: rgba(187, 247, 208, 0.9);
 }
 
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente--fluxo-amarelo .bib-relatorios-hub__row-chevron--green {
+  border-color: rgba(254, 240, 138, 0.9);
+}
+
 .bib-relatorios-hub__legenda {
   display: flex;
   flex-direction: column;
@@ -34335,6 +34313,14 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     0 0 12px rgba(248, 113, 113, 0.28);
+}
+
+.bib-relatorios-hub__legenda-chip--amarelo {
+  background: linear-gradient(180deg, #eab308 0%, #a16207 100%);
+  border-color: rgba(253, 224, 71, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 12px rgba(250, 204, 21, 0.24);
 }
 
 .bib-relatorios-hub__legenda-chip--azul {
