@@ -362,7 +362,22 @@ async function main() {
 
   const headless = process.env.HOMAG_HEADLESS !== '0'
   const interactive = process.env.HOMAG_INTERACTIVE === '1'
-  const browser = await chromium.launch({ headless })
+  let browser
+  try {
+    browser = await chromium.launch({ headless })
+  } catch (e) {
+    console.error('')
+    console.error('============================================================')
+    console.error('  ERRO: Chromium / Playwright nao encontrado')
+    console.error('============================================================')
+    console.error('  Execute na pasta do projecto:')
+    console.error('    npx playwright install chromium')
+    console.error('')
+    console.error('  Depois volte a correr IMPORTAR-TUDO-HOMAG.bat')
+    console.error('============================================================')
+    console.error(String(e?.message || e))
+    process.exit(1)
+  }
   const context = await browser.newContext({
     viewport: { width: 1920, height: 1080 },
     locale: 'it-IT',
@@ -472,7 +487,9 @@ async function main() {
       lastSavedPageNum = resume.lastPageNum || 0
       lastSavedRange = `API: ${apiResult.bucketsDone.length} buckets, ${items.length} peças`
       console.log(`\n[HOMAG API] Concluído: +${apiResult.totalNew} novas, total ${items.length} peças`)
-      if (apiResult.totalNew === 0 && items.length > 0) {
+      if (apiResult.skippedComplete) {
+        console.log('[HOMAG API] Modo rápido activo — catálogo API já completo (ver auditoria).')
+      } else if (apiResult.totalNew === 0 && items.length > 0) {
         console.log('')
         console.log('============================================================')
         console.log('  Nenhuma peça NOVA — catálogo API já está na biblioteca.')

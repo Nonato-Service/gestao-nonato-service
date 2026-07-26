@@ -12,12 +12,29 @@ import {
   auraSearch,
   baseInput,
 } from './api-import.mjs'
-import { normCodigo } from './resume.mjs'
-import { chavesDedupHomagPeca, normCodigoHomag } from './homag-codigo-ref.mjs'
+import { normCodigoHomag } from './homag-codigo-ref.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.join(__dirname, '..', '..')
 const cfg = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8'))
+
+function buildLocalNucleoSet(pecas) {
+  const out = new Set()
+  for (const p of pecas) {
+    const c = normCodigoHomag(p.codigo)
+    if (c) out.add(c)
+    for (const alt of [
+      ...(p.codigosAlternativos || []),
+      ...(p.codigosAntigos || []),
+      ...(p.referenciasAlternativas || []),
+      ...(p.referenciasAntigas || []),
+    ]) {
+      const n = normCodigoHomag(alt)
+      if (n) out.add(n)
+    }
+  }
+  return out
+}
 
 function listSubcategories(rawCategories) {
   const out = []
@@ -42,12 +59,8 @@ function dedupeBuckets(allBuckets) {
 }
 
 const bibPath = path.join(root, 'data', 'nonato-pecas-biblioteca.json')
-const local = new Set()
-for (const p of JSON.parse(fs.readFileSync(bibPath, 'utf8'))) {
-  for (const k of chavesDedupHomagPeca(p)) local.add(k)
-  const c = normCodigoHomag(p.codigo)
-  if (c) local.add(c)
-}
+const pecasLocal = JSON.parse(fs.readFileSync(bibPath, 'utf8'))
+const local = buildLocalNucleoSet(pecasLocal)
 
 const browser = await chromium.launch({ headless: true })
 const context = await browser.newContext()
@@ -68,7 +81,7 @@ for (const sub of subs) {
 }
 const buckets = dedupeBuckets(allBuckets)
 
-console.log(`Local: ${local.size} | HOMAG reporta: ${first.total} | Buckets: ${buckets.length}`)
+console.log(`Local: ${pecasLocal.length} pecas (${local.size} nucleos) | HOMAG reporta: ${first.total} | Buckets: ${buckets.length}`)
 
 const apiAll = new Set()
 let fetched = 0
@@ -89,7 +102,7 @@ const faltam = [...apiAll].filter((c) => !local.has(c))
 const extrasLocal = [...local].filter((c) => !apiAll.has(c))
 console.log(`\n\n=== Resultado ===`)
 console.log(`Códigos únicos na API (todos buckets): ${apiAll.size}`)
-console.log(`Na biblioteca local: ${local.size}`)
+console.log(`Peças na biblioteca local: ${pecasLocal.length} (${local.size} núcleos de código)`)
 console.log(`Ainda em falta (API): ${faltam.length}`)
 console.log(`Só na biblioteca local (fora dos buckets API): ${extrasLocal.length}`)
 console.log(`HOMAG total UI: ${first.total} (contagem com duplicados entre categorias)`)
@@ -106,7 +119,8 @@ fs.writeFileSync(
       data: new Date().toISOString(),
       homagTotalUi: first.total,
       apiUnicos: apiAll.size,
-      bibliotecaLocal: local.size,
+      bibliotecaLocal: pecasLocal.length,
+      bibliotecaNucleos: local.size,
       faltamApi: faltam.length,
       extrasLocal: extrasLocal.length,
       buckets: buckets.length,

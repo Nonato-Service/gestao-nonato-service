@@ -8,19 +8,12 @@ echo  ============================================================
 echo   IMPORTAR TUDO DA LOJA HOMAG
 echo  ============================================================
 echo.
-echo  A HOMAG mostra ~31 000 linhas na loja, mas sao ~18 000
-echo  codigos UNICOS na API (duplicados entre categorias).
-echo  A biblioteca local ja tem ~21 400 pecas.
+echo  Codigos: 2006807481 ^| 2-006-80-7481 ^| 2006808181R ^| R2006215960
 echo.
-echo  Codigos aceites: 2006807481 | 2-006-80-7481 | 2006808181R | R2006215960
-echo.
-echo  MODO API — importa via SearchController (62 buckets)
-echo  RETOMA automatica — continua de export.json / import-state.json
-echo  Grava: PC + Railway (checkpoints a cada 500 pecas)
-echo  Demora 2 a 6 horas se faltarem pecas. NAO FECHE a janela.
-echo.
-echo  Dica: execute VERIFICAR-CATALOGO-HOMAG.bat antes para ver quantas faltam.
-echo  Se faltam 0, o import so actualiza fotos/precos/referencias.
+echo  Se VERIFICAR-CATALOGO-HOMAG.bat disser 0 em falta:
+echo    - Modo RAPIDO (~2 min): merge + referencias + Railway
+echo  Se faltarem pecas:
+echo    - Modo COMPLETO (2-6 horas): 62 buckets da API
 echo.
 echo  ============================================================
 echo.
@@ -39,13 +32,12 @@ if not exist "%~dp0scripts\homag-import\config.json" (
   exit /b 1
 )
 
+echo [1/3] Dependencias npm...
 call npm install >nul 2>&1
+
+echo [2/3] Playwright Chromium (1.ª vez demora ~3 min — nao feche)...
 call npx playwright install chromium
-if errorlevel 1 (
-  echo ERRO: Playwright/Chromium nao instalou. Execute: npx playwright install chromium
-  pause
-  exit /b 1
-)
+rem Nao abortar se install avisar — o import tenta abrir o browser na mesma
 
 if exist "%~dp0homag-login.env" call "%~dp0homag-login.env"
 
@@ -55,18 +47,25 @@ set HOMAG_EMBED_IMAGES=0
 set HOMAG_AUTO_MERGE=1
 set HOMAG_AUTO_RAILWAY=1
 set HOMAG_RESUME=1
+set HOMAG_FAST_IF_COMPLETE=1
 set HOMAG_MAX_PAGES=1580
 set HOMAG_RAILWAY_EVERY=500
 set RAILWAY_URL=https://gest-o-nonato-gestao.up.railway.app
 
+echo [3/3] Importacao HOMAG (abre browser HOMAG — aguarde)...
+echo.
 call npm run homag:import
 set HOMAG_RC=%ERRORLEVEL%
 
 if %HOMAG_RC%==1 (
   echo.
-  echo Falhou — veja a mensagem acima.
-  echo Se Playwright falhou: npx playwright install chromium
-  echo Se sessao Aura falhou: abra a loja HOMAG no browser e tente outra vez.
+  echo  ============================================================
+  echo   FALHOU — leia a mensagem acima
+  echo  ============================================================
+  echo   Chromium em falta: npx playwright install chromium
+  echo   Sessao Aura: deixe a pagina HOMAG carregar no browser
+  echo   Depois execute este BAT outra vez
+  echo  ============================================================
   pause
   exit /b 1
 )

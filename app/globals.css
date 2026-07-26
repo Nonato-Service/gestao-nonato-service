@@ -25974,6 +25974,221 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
+.biblioteca-pecas-hub__hero {
+  padding: clamp(14px, 2.5vw, 20px) clamp(14px, 2.8vw, 22px) !important;
+}
+
+.biblioteca-pecas-hub__hero-grid {
+  display: grid;
+  grid-template-columns: minmax(108px, 148px) minmax(0, 1fr) auto;
+  gap: clamp(12px, 2vw, 20px);
+  align-items: start;
+}
+
+.biblioteca-pecas-hub__hero-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.biblioteca-pecas-hub__hero-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 72px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.biblioteca-hub-resumo-chips--hero {
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  margin-top: 0;
+  gap: 7px;
+}
+
+.biblioteca-hub-resumo-chips--hero .biblioteca-hub-resumo-chip {
+  justify-content: flex-start;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
+.biblioteca-hub-resumo-chip__icon {
+  flex-shrink: 0;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.biblioteca-hub-resumo-chip--pecas {
+  border-color: rgba(0, 210, 120, 0.42);
+  background: linear-gradient(180deg, rgba(0, 88, 52, 0.55), rgba(0, 48, 28, 0.72));
+  color: #d4ffe8;
+}
+
+.biblioteca-hub-resumo-chip--cats {
+  border-color: rgba(250, 204, 21, 0.38);
+  background: linear-gradient(180deg, rgba(92, 68, 8, 0.55), rgba(58, 42, 4, 0.72));
+  color: #fef3c7;
+}
+
+.biblioteca-hub-resumo-chip--foto {
+  border-color: rgba(251, 146, 60, 0.42);
+  background: linear-gradient(180deg, rgba(124, 45, 8, 0.55), rgba(76, 28, 4, 0.72));
+  color: #ffedd5;
+}
+
+.biblioteca-hub-resumo-chip--foto-ok {
+  border-color: rgba(0, 210, 120, 0.35);
+  background: rgba(0, 48, 28, 0.45);
+  color: #bbf7d0;
+}
+
+.biblioteca-pecas-hub__hero-center {
+  text-align: center;
+  min-width: 0;
+  padding: 2px clamp(4px, 1.5vw, 12px) 0;
+}
+
+.biblioteca-pecas-hub__hero-title {
+  margin: 0 0 10px !important;
+  font-size: clamp(0.95rem, 2.2vw, 1.22rem) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.07em !important;
+  text-transform: uppercase;
+  color: #ffffff !important;
+  line-height: 1.25 !important;
+  text-shadow: none !important;
+}
+
+.biblioteca-pecas-hub__hero-meta {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(220, 245, 230, 0.88);
+  line-height: 1.45;
+}
+
+.biblioteca-pecas-hub__hero-meta-strong {
+  color: rgba(255, 255, 255, 0.94);
+  font-weight: 700;
+}
+
+.biblioteca-pecas-hub__hero-meta-sep {
+  opacity: 0.78;
+  font-weight: 500;
+}
+
+.biblioteca-pecas-hub__hero-sync {
+  margin: 5px 0 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(200, 230, 212, 0.72);
+  line-height: 1.4;
+}
+
+.biblioteca-pecas-hub__hero-tagline {
+  margin: 8px auto 0;
+  max-width: 36rem;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: rgba(190, 225, 205, 0.82);
+}
+
+.biblioteca-pecas-hub__warn-banner--hero {
+  margin: 14px auto 0;
+  max-width: 36rem;
+  text-align: left;
+}
+
+.biblioteca-pecas-hub__hero-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  min-width: min(100%, 220px);
+}
+
+.biblioteca-pecas-hub__hero-nav {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+@media (max-width: 960px) {
+  .biblioteca-pecas-hub__hero-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .biblioteca-pecas-hub__hero-brand {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .biblioteca-pecas-hub__hero-logo {
+    width: auto;
+    min-width: 88px;
+    min-height: 64px;
+    flex: 0 0 auto;
+  }
+
+  .biblioteca-hub-resumo-chips--hero {
+    flex: 1 1 200px;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .biblioteca-hub-resumo-chips--hero .biblioteca-hub-resumo-chip {
+    width: auto;
+    flex: 1 1 auto;
+  }
+
+  .biblioteca-pecas-hub__hero-toolbar {
+    align-items: stretch;
+  }
+
+  .biblioteca-pecas-hub__hero-actions {
+    justify-content: stretch;
+  }
+
+  .biblioteca-pecas-hub__hero-actions .biblioteca-btn--green,
+  .biblioteca-pecas-hub__hero-actions .biblioteca-btn--purple {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 140px;
+  }
+
+  .biblioteca-pecas-hub__hero-nav {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 520px) {
+  .biblioteca-pecas-hub__hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .biblioteca-pecas-hub__hero-actions .biblioteca-btn--green,
+  .biblioteca-pecas-hub__hero-actions .biblioteca-btn--purple {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+}
+
 .biblioteca-pecas-hub__icon-btn {
   appearance: none;
   margin: 0;

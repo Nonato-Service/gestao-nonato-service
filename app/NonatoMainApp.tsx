@@ -41454,42 +41454,66 @@ export default function Dashboard() {
                 </div>
               )
             })() : null}
-            {/* Cabeçalho — moldura em gradiente */}
+            {/* Cabeçalho profissional — logo + KPIs | título + sync | ações */}
             <div className="biblioteca-pecas-hub__hero-ring">
-            <div className="tab-glass-hero tab-glass-hero--compact">
-              <div className="tab-glass-hero-top" style={{ marginBottom: 0 }}>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <LogoComponent size="small" />
+            <div className="tab-glass-hero tab-glass-hero--compact biblioteca-pecas-hub__hero">
+              <div className="biblioteca-pecas-hub__hero-grid">
+                <div className="biblioteca-pecas-hub__hero-brand">
+                  <div className="biblioteca-pecas-hub__hero-logo">
+                    <LogoComponent size="small" />
+                  </div>
+                  <div className="biblioteca-hub-resumo-chips biblioteca-hub-resumo-chips--hero" aria-label={hubT.bibliotecaVisaoGeral || 'Visão geral'}>
+                    <span className="biblioteca-hub-resumo-chip biblioteca-hub-resumo-chip--pecas">
+                      <span className="biblioteca-hub-resumo-chip__icon" aria-hidden>📦</span>
+                      <span>{pecasCatalogoBiblioteca.length.toLocaleString('pt-PT')} {(safeT as any)?.bibliotecaResumoPecas || 'peça(s)'}</span>
+                    </span>
+                    <span className="biblioteca-hub-resumo-chip biblioteca-hub-resumo-chip--cats">
+                      <span className="biblioteca-hub-resumo-chip__icon" aria-hidden>📁</span>
+                      <span>{categoriasPecas.length} {(safeT as any)?.bibliotecaResumoCategorias || 'categorias'}</span>
+                    </span>
+                    <span
+                      className={`biblioteca-hub-resumo-chip biblioteca-hub-resumo-chip--foto${pecasBibliotecaImagemStats.faltam > 0 ? ' biblioteca-hub-resumo-chip--warn' : ' biblioteca-hub-resumo-chip--foto-ok'}`}
+                    >
+                      <span className="biblioteca-hub-resumo-chip__icon" aria-hidden>📷</span>
+                      <span>
+                        {pecasBibliotecaImagemStats.faltam > 0
+                          ? `${pecasBibliotecaImagemStats.faltam.toLocaleString('pt-PT')} ${(safeT as any)?.bibliotecaResumoSemFoto || 's/ foto'}`
+                          : (safeT as any)?.bibliotecaResumoFotosOk || 'fotos OK'}
+                      </span>
+                    </span>
+                  </div>
                 </div>
-                <div className="tab-glass-hero-heading">
-                  <h1 className="tab-glass-hero-title" style={{ fontSize: 'clamp(1.05rem, 3.6vw, 1.28rem)', letterSpacing: '0.06em' }}>
-                    {safeT?.cadastroPecasBibliotecaTitle || 'BIBLIOTECA DE PEÇAS'}
+
+                <div className="biblioteca-pecas-hub__hero-center">
+                  <h1 className="biblioteca-pecas-hub__hero-title">
+                    {(safeT as any)?.pecasBibliotecaTitle || safeT?.cadastroPecasBibliotecaTitle || 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS'}
                   </h1>
-                  <p className="tab-glass-hero-meta" style={{ fontSize: '12px', opacity: 0.92, fontWeight: 600 }}>
-                    {pecasCatalogoBiblioteca.length} {safeT?.pecasCadastradas || 'peça(s) cadastrada(s)'}
+                  <p className="biblioteca-pecas-hub__hero-meta">
+                    <span className="biblioteca-pecas-hub__hero-meta-strong">
+                      {pecasCatalogoBiblioteca.length.toLocaleString('pt-PT')} {safeT?.pecasCadastradas || 'peça(s) cadastrada(s)'}
+                    </span>
                     {bibliotecaServidorMeta && bibliotecaServidorMeta.total !== pecasCatalogoBiblioteca.length ? (
-                      <span style={{ opacity: 0.78, fontWeight: 500 }}>
-                        {' '}
-                        · {(safeT as any)?.bibliotecaSyncServidorResumo || 'servidor:'} {bibliotecaServidorMeta.total}
+                      <span className="biblioteca-pecas-hub__hero-meta-sep">
+                        · {(safeT as any)?.bibliotecaSyncServidorResumo || 'servidor:'}{' '}
+                        {bibliotecaServidorMeta.total.toLocaleString('pt-PT')}
                       </span>
                     ) : null}
                   </p>
                   {bibliotecaUltimaSyncServidor ? (
-                    <p style={{ fontSize: '11px', opacity: 0.78, margin: '4px 0 0', fontWeight: 500 }}>
+                    <p className="biblioteca-pecas-hub__hero-sync">
                       {(safeT as any)?.bibliotecaUltimaSync || 'Última sync servidor:'}{' '}
                       {formatBibliotecaSyncData(bibliotecaUltimaSyncServidor)}
                     </p>
                   ) : null}
+                  <p className="biblioteca-pecas-hub__hero-tagline">
+                    {hubT.bibliotecaHubTagline || 'Catálogo unificado, grupos claros e importação sob controlo.'}
+                  </p>
                   {catalogoPecasSuspeitoParcial ? (
-                    <div
-                      className="biblioteca-pecas-hub__warn-banner"
-                      style={{ marginTop: 12, maxWidth: 680 }}
-                    >
+                    <div className="biblioteca-pecas-hub__warn-banner biblioteca-pecas-hub__warn-banner--hero">
                       <div className="biblioteca-pecas-hub__warn-banner-title">
-                        {(safeT as any)?.bibliotecaReparoTitulo ||
-                          'Catálogo incompleto neste aparelho'}
+                        {(safeT as any)?.bibliotecaReparoTitulo || 'Catálogo incompleto neste aparelho'}
                       </div>
-                      <p className="biblioteca-pecas-hub__warn-banner-body" style={{ marginBottom: 10 }}>
+                      <p className="biblioteca-pecas-hub__warn-banner-body">
                         {(safeT as any)?.bibliotecaReparoDesc ||
                           `Só ${pecasBiblioteca.length} peça(s) carregada(s), mas existem ${categoriasPecas.length} categorias. O servidor guarda o catálogo completo — clique para repor (pode demorar ~1–2 min).`}
                       </p>
@@ -41507,27 +41531,9 @@ export default function Dashboard() {
                       </button>
                     </div>
                   ) : null}
-                  <p style={{ fontSize: '11px', opacity: 0.88, maxWidth: 640, lineHeight: 1.45, margin: '8px 0 0', fontWeight: 600 }}>
-                    {hubT.bibliotecaHubTagline || 'Catálogo unificado e grupos claros.'}
-                  </p>
-                  <div className="biblioteca-hub-resumo-chips" aria-label={hubT.bibliotecaVisaoGeral || 'Visão geral'}>
-                    <span className="biblioteca-hub-resumo-chip">
-                      📦 {pecasCatalogoBiblioteca.length.toLocaleString('pt-PT')} {safeT?.pecasCadastradas || 'peça(s)'}
-                    </span>
-                    <span className="biblioteca-hub-resumo-chip">
-                      📁 {categoriasPecas.length} {(safeT as any)?.bibliotecaResumoCategorias || 'categorias'}
-                    </span>
-                    <span
-                      className={`biblioteca-hub-resumo-chip${pecasBibliotecaImagemStats.faltam > 0 ? ' biblioteca-hub-resumo-chip--warn' : ''}`}
-                    >
-                      📷{' '}
-                      {pecasBibliotecaImagemStats.faltam > 0
-                        ? `${pecasBibliotecaImagemStats.faltam.toLocaleString('pt-PT')} ${(safeT as any)?.bibliotecaResumoSemFoto || 's/ foto'}`
-                        : (safeT as any)?.bibliotecaResumoFotosOk || 'fotos OK'}
-                    </span>
-                  </div>
                 </div>
-                <div className="tab-glass-hero-actions">
+
+                <div className="biblioteca-pecas-hub__hero-toolbar">
                   <div className="biblioteca-pecas-hub__hero-actions">
                     <button
                       type="button"
@@ -41575,23 +41581,25 @@ export default function Dashboard() {
                       {safeT?.gerenciarCategorias || 'Gerenciar Categorias'}
                     </button>
                   </div>
-                  <div className="tab-glass-hero-actions-row">
-                  <button
-                    type="button"
-                    className="biblioteca-pecas-hub__icon-btn biblioteca-pecas-hub__icon-btn--back"
-                    onClick={() => closeTab(activeTabId || '')}
-                    title={safeT?.voltar || 'Voltar'}
-                  >
-                    ↶
-                  </button>
-                  <button
-                    type="button"
-                    className="biblioteca-pecas-hub__icon-btn biblioteca-pecas-hub__icon-btn--home"
-                    onClick={voltarPaginaInicial}
-                    title={safeT?.paginaInicial || 'Página Inicial'}
-                  >
-                    🏠
-                  </button>
+                  <div className="biblioteca-pecas-hub__hero-nav">
+                    <button
+                      type="button"
+                      className="biblioteca-pecas-hub__icon-btn biblioteca-pecas-hub__icon-btn--back"
+                      onClick={() => closeTab(activeTabId || '')}
+                      title={safeT?.voltar || 'Voltar'}
+                      aria-label={safeT?.voltar || 'Voltar'}
+                    >
+                      ↶
+                    </button>
+                    <button
+                      type="button"
+                      className="biblioteca-pecas-hub__icon-btn biblioteca-pecas-hub__icon-btn--home"
+                      onClick={voltarPaginaInicial}
+                      title={safeT?.paginaInicial || 'Página Inicial'}
+                      aria-label={safeT?.paginaInicial || 'Página Inicial'}
+                    >
+                      🏠
+                    </button>
                   </div>
                 </div>
               </div>

@@ -2346,6 +2346,7 @@ export const translations = {
     bibliotecaPainelVisaoGeral: "Visão geral e sync",
     bibliotecaPainelVisaoGeralResumo: "KPIs, sync servidor e guia rápido",
     bibliotecaResumoCategorias: "categorias",
+    bibliotecaResumoPecas: "peça(s)",
     bibliotecaResumoSemFoto: "s/ foto",
     bibliotecaResumoFotosOk: "fotos OK",
     bibliotecaPainelFotosSync: "Fotos e sincronização",

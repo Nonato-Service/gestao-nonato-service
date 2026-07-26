@@ -2,6 +2,8 @@
  * Importação HOMAG via API Aura — contorna limite de 250 págs (5000 itens/query).
  */
 import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import { normCodigo } from './resume.mjs'
 import { chavesDedupHomagPeca, normCodigoHomag, variantesCodigoHomagParaMatch } from './homag-codigo-ref.mjs'
 import { homagExportItemPrecisaFoto } from './imagem-util.mjs'
@@ -13,6 +15,22 @@ import {
   catalogMaxPage,
   DEFAULT_FIELDS,
 } from './api-products.mjs'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const AUDIT_PATH = path.join(__dirname, '..', '..', 'data', 'homag-audit-result.json')
+const AUDIT_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000
+
+function lerAuditoriaHomagRecente() {
+  try {
+    if (!fs.existsSync(AUDIT_PATH)) return null
+    const j = JSON.parse(fs.readFileSync(AUDIT_PATH, 'utf8'))
+    const age = Date.now() - Date.parse(String(j.data || ''))
+    if (!Number.isFinite(age) || age > AUDIT_MAX_AGE_MS) return null
+    return j
+  } catch {
+    return null
+  }
+}
 
 /** API HOMAG aceita páginas 0–250 (251×20 = 5020 itens por query). */
 const API_MAX_PAGE_INDEX = 250
@@ -289,6 +307,38 @@ export async function runHomagApiImport(opts) {
   const subs = listSubcategories(first.rawCategories)
   console.log(`[HOMAG API] Catálogo: ${first.total} itens, ${subs.length} subcategorias`)
 
+  const forceAllBuckets = process.env.HOMAG_FORCE_ALL_BUCKETS === '1'
+  const maxBuckets = Number(process.env.HOMAG_API_MAX_BUCKETS) || 0
+  const audit = lerAuditoriaHomagRecente()
+  const fastIfComplete = process.env.HOMAG_FAST_IF_COMPLETE !== '0'
+
+  if (
+    fastIfComplete &&
+    !forceAllBuckets &&
+    maxBuckets <= 0 &&
+    audit &&
+    Number(audit.faltamApi) === 0
+  ) {
+    console.log('')
+    console.log('============================================================')
+    console.log('  MODO RAPIDO — auditoria recente: 0 pecas em falta na API')
+    console.log(`  Biblioteca local: ${audit.bibliotecaLocal ?? items.length} | API unicos: ${audit.apiUnicos ?? '?'}`)
+    console.log('  Salta varredura de 62 buckets (2-6 horas, quase tudo +0 novas).')
+    console.log('  Vai gravar merge + referencias (hifen/R) + Railway.')
+    console.log('  Varredura completa: COMPLEMENTAR-HOMAG-FALTANTES.bat')
+    console.log('  Nova auditoria: VERIFICAR-CATALOGO-HOMAG.bat')
+    console.log('============================================================')
+    console.log('')
+    return {
+      items,
+      totalNew: 0,
+      bucketsDone: forceAllBuckets ? [] : [...(apiState.doneBuckets || [])],
+      completedFully: true,
+      bucketsTotal: Number(audit.buckets) || 62,
+      skippedComplete: true,
+    }
+  }
+
   const allBuckets = []
   const rootBuckets = await buildSearchBuckets(context, session, rootId, '')
   allBuckets.push(...rootBuckets)
@@ -300,7 +350,6 @@ export async function runHomagApiImport(opts) {
   }
 
   const allBucketsUnique = dedupeBuckets(allBuckets)
-  const forceAllBuckets = process.env.HOMAG_FORCE_ALL_BUCKETS === '1'
   const seenBucket = forceAllBuckets ? new Set() : new Set(apiState.doneBuckets || [])
   const uniqueBuckets = []
   for (const b of allBucketsUnique) {
@@ -318,10 +367,10 @@ export async function runHomagApiImport(opts) {
     )
   }
 
-  const maxBuckets = Number(process.env.HOMAG_API_MAX_BUCKETS) || 0
-  if (maxBuckets > 0 && uniqueBuckets.length > maxBuckets) {
-    uniqueBuckets.length = maxBuckets
-    console.log(`[HOMAG API] Limite teste: ${maxBuckets} buckets`)
+  const maxBucketsLimit = Number(process.env.HOMAG_API_MAX_BUCKETS) || 0
+  if (maxBucketsLimit > 0 && uniqueBuckets.length > maxBucketsLimit) {
+    uniqueBuckets.length = maxBucketsLimit
+    console.log(`[HOMAG API] Limite teste: ${maxBucketsLimit} buckets`)
   }
 
   let totalNew = 0
@@ -475,7 +524,13 @@ export async function runHomagApiImport(opts) {
     console.log(`[HOMAG API] Backfill preços concluído — +${backfillPrecosTotal} actualizados`)
   }
 
-  return { items, totalNew, bucketsDone, completedFully: true, bucketsTotal: dedupBuckets.length }
+  return {
+    items,
+    totalNew,
+    bucketsDone,
+    completedFully: bucketsDone.length >= allBucketsUnique.length,
+    bucketsTotal: allBucketsUnique.length,
+  }
 }
 
 export async function initHomagApiSession(page, startUrl) {
