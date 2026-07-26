@@ -33901,7 +33901,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .biblioteca-relatorios-fechados-block__summary {
-  padding: 14px 16px;
+  padding: 16px 18px;
 }
 
 .biblioteca-relatorios-fechados-block__hint {
@@ -33915,12 +33915,224 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .biblioteca-relatorios-clientes-block__summary {
-  padding: 14px 16px;
+  padding: 16px 18px;
 }
 
 .biblioteca-relatorios-clientes-block__hint {
   flex: none;
   max-width: none;
+}
+
+/* ── Acordeões Fechados / Clientes (hub) ── */
+.bib-relatorios-hub__fechados {
+  border-color: rgba(251, 191, 36, 0.16) !important;
+  background: linear-gradient(168deg, rgba(22, 18, 8, 0.72), rgba(6, 6, 6, 0.94)) !important;
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.28);
+}
+
+.bib-relatorios-hub__fechados .bib-relatorios-hub__section-title {
+  color: #fde68a;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.bib-relatorios-hub__fechados .bib-relatorios-hub__section-chevron {
+  border-color: rgba(253, 230, 138, 0.85);
+}
+
+.bib-relatorios-hub__clientes {
+  border-color: rgba(74, 222, 128, 0.16) !important;
+  background: linear-gradient(168deg, rgba(8, 28, 18, 0.72), rgba(6, 6, 6, 0.94)) !important;
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.28);
+}
+
+.bib-relatorios-hub__clientes .bib-relatorios-hub__section-title {
+  color: #bbf7d0;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.bib-relatorios-hub__clientes .bib-relatorios-hub__section-chevron {
+  border-color: rgba(134, 239, 172, 0.85);
+}
+
+.bib-relatorios-hub__sec-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bib-relatorios-hub__btn--sec {
+  min-height: 34px;
+  padding: 0 14px;
+  font-size: 10px;
+  letter-spacing: 0.07em;
+}
+
+.bib-relatorios-hub__fechados .biblioteca-relatorios-fechados-block__body,
+.bib-relatorios-hub__clientes .biblioteca-relatorios-clientes-block__body {
+  padding: 4px 16px 18px;
+}
+
+.bib-relatorios-hub__row-chevron {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 1px;
+  border-right: 2px solid rgba(253, 230, 138, 0.8);
+  border-bottom: 2px solid rgba(253, 230, 138, 0.8);
+  transform: rotate(-45deg);
+  transition: transform 0.2s ease;
+}
+
+.bib-relatorios-hub__row-chevron--green {
+  border-color: rgba(134, 239, 172, 0.75);
+}
+
+.bib-relatorios-hub__row-chevron--sm {
+  width: 6px;
+  height: 6px;
+}
+
+.biblioteca-relatorios-fechados-cliente[open] .bib-relatorios-hub__row-chevron,
+.biblioteca-relatorios-cliente[open] .bib-relatorios-hub__row-chevron,
+.biblioteca-relatorios-equip[open] .bib-relatorios-hub__row-chevron,
+.biblioteca-relatorios-fechado-item[open] .bib-relatorios-hub__row-chevron {
+  transform: rotate(45deg);
+  margin-top: 0;
+}
+
+.bib-relatorios-hub__client-summary {
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.bib-relatorios-hub__client-name {
+  flex: 1 1 180px;
+  min-width: 0;
+  margin: 0;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+  line-height: 1.35 !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  word-break: break-word;
+}
+
+.bib-relatorios-hub__fechados .bib-relatorios-hub__client-name {
+  color: rgba(255, 248, 235, 0.94) !important;
+}
+
+.bib-relatorios-hub__client-badge {
+  flex-shrink: 0;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 4px 10px !important;
+  border-radius: 999px !important;
+}
+
+.bib-relatorios-hub__fechados .biblioteca-relatorios-fechados-cliente {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.2);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.bib-relatorios-hub__fechados .biblioteca-relatorios-fechados-cliente:hover {
+  border-color: rgba(251, 191, 36, 0.2);
+  background: rgba(251, 191, 36, 0.04);
+}
+
+.bib-relatorios-hub__fechados .biblioteca-relatorios-fechados-cliente[open] {
+  border-color: rgba(251, 191, 36, 0.26);
+  background: rgba(251, 191, 36, 0.06);
+}
+
+.bib-relatorios-hub__fechados .biblioteca-relatorios-fechados-cliente__summary {
+  padding: 11px 14px;
+  background: transparent;
+}
+
+.bib-relatorios-hub__fechados .biblioteca-relatorios-fechados-cliente__count {
+  color: rgba(253, 230, 138, 0.92);
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.22);
+}
+
+.bib-relatorios-hub__fechados .biblioteca-relatorios-fechados-client-list {
+  gap: 6px;
+}
+
+.bib-relatorios-hub__fechados .biblioteca-relatorios-fechado-item {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.26);
+}
+
+.bib-relatorios-hub__fechados .biblioteca-relatorios-fechado-item__summary {
+  padding: 10px 12px;
+  gap: 8px 12px;
+  align-items: center;
+}
+
+.bib-relatorios-hub__fechados .biblioteca-relatorios-fechado-item__meta {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.bib-relatorios-hub__fechados .biblioteca-relatorios-fechado-item__total {
+  font-size: 12px;
+  font-weight: 700;
+  color: #86efac;
+}
+
+.bib-relatorios-hub__fechados .bib-tag-fechado {
+  font-size: 9px;
+  padding: 2px 7px;
+  letter-spacing: 0.06em;
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente {
+  border-radius: 11px;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente:hover {
+  border-color: rgba(74, 222, 128, 0.2);
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente__summary {
+  padding: 11px 14px;
+  background: transparent;
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente__title {
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-client-list {
+  gap: 8px;
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-equip {
+  border-radius: 9px;
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-equip__summary {
+  padding: 9px 12px;
 }
 
 .bib-relatorios-hub__toolbar-actions {

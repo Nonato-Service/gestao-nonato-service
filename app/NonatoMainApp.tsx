@@ -66995,7 +66995,7 @@ A1;Peça exemplo;10`}
             <div className="bib-relatorios-hub__body">
             {relatoriosFechadosLista.length > 0 ? (
               <details
-                className="biblioteca-relatorios-fechados-block"
+                className="biblioteca-relatorios-fechados-block bib-relatorios-hub__fechados"
                 open={bibliotecaSecaoFechadosExpandida}
                 onToggle={(e) =>
                   setBibliotecaSecaoFechadosExpandida((e.currentTarget as HTMLDetailsElement).open)
@@ -67018,10 +67018,10 @@ A1;Peça exemplo;10`}
                   </span>
                 </summary>
                 <div className="biblioteca-relatorios-fechados-block__body">
-                  <div className="biblioteca-relatorios-fechados-block__toolbar">
+                  <div className="bib-relatorios-hub__sec-toolbar biblioteca-relatorios-fechados-block__toolbar">
                     <button
                       type="button"
-                      className="biblioteca-relatorios-toolbar__btn"
+                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--ghost bib-relatorios-hub__btn--sec"
                       onClick={() => {
                         setBibliotecaSecaoFechadosExpandida(true)
                         setBibliotecaFechadosClientesExpandidos(
@@ -67029,14 +67029,14 @@ A1;Peça exemplo;10`}
                         )
                       }}
                     >
-                      {(safeT as any)?.expandirTodos || 'Expandir todos'}
+                      {txBibHero.expandirTodos || 'Expandir todos'}
                     </button>
                     <button
                       type="button"
-                      className="biblioteca-relatorios-toolbar__btn biblioteca-relatorios-toolbar__btn--muted"
+                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--muted bib-relatorios-hub__btn--sec"
                       onClick={() => setBibliotecaFechadosClientesExpandidos(new Set())}
                     >
-                      {(safeT as any)?.retrairTodos || 'Retrair todos'}
+                      {txBibHero.retrairTodos || 'Retrair todos'}
                     </button>
                   </div>
                   <div className="biblioteca-relatorios-fechados-client-list">
@@ -67055,15 +67055,13 @@ A1;Peça exemplo;10`}
                           })
                         }}
                       >
-                        <summary className="biblioteca-relatorios-fechados-cliente__summary">
-                          <span className="biblioteca-relatorios-fechados-cliente__chevron" aria-hidden>
-                            ▶
-                          </span>
-                          <h3 className="biblioteca-relatorios-fechados-cliente__title">{clienteNome}</h3>
-                          <span className="biblioteca-relatorios-fechados-cliente__count">
+                        <summary className="biblioteca-relatorios-fechados-cliente__summary bib-relatorios-hub__client-summary">
+                          <span className="bib-relatorios-hub__row-chevron biblioteca-relatorios-fechados-cliente__chevron" aria-hidden />
+                          <h3 className="biblioteca-relatorios-fechados-cliente__title bib-relatorios-hub__client-name">{clienteNome}</h3>
+                          <span className="biblioteca-relatorios-fechados-cliente__count bib-relatorios-hub__client-badge">
                             {rows.length}{' '}
                             {rows.length === 1
-                              ? txBibHero.relatorioNumeroLabel || 'rel.'
+                              ? txBibHero.relatorioNumeroLabel || 'relatório'
                               : txBibHero.bibliotecaRelatoriosRelatoriosPorEquip?.replace(/\{n\}/g, String(rows.length)) ||
                                 'relatórios'}
                           </span>
@@ -67091,10 +67089,8 @@ A1;Peça exemplo;10`}
                               : '—'
                             return (
                               <details key={`fechado-${rel.id}`} className="biblioteca-relatorios-fechado-item">
-                                <summary className="biblioteca-relatorios-fechado-item__summary">
-                                  <span className="biblioteca-relatorios-fechado-item__chev" aria-hidden>
-                                    ▶
-                                  </span>
+                                <summary className="biblioteca-relatorios-fechado-item__summary bib-relatorios-hub__report-summary">
+                                  <span className="bib-relatorios-hub__row-chevron bib-relatorios-hub__row-chevron--sm biblioteca-relatorios-fechado-item__chev" aria-hidden />
                                   <span className="bib-rel-num">{rel.numero}</span>
                                   <span className="bib-tag-fechado" title={txBibHero.bibTagFechadoTitle || 'Fechado na biblioteca'}>
                                     {txBibHero.bibTagFechado || 'FECHADO'}
@@ -67245,7 +67241,7 @@ A1;Peça exemplo;10`}
               buscaBibliotecaRelatoriosCliente.trim() !== '' ||
               bibliotecaFiltradaComConteudo.length > 0 ? (
               <details
-                className="biblioteca-relatorios-clientes-block"
+                className="biblioteca-relatorios-clientes-block bib-relatorios-hub__clientes"
                 open={bibliotecaSecaoClientesExpandida}
                 onToggle={(e) =>
                   setBibliotecaSecaoClientesExpandida((e.currentTarget as HTMLDetailsElement).open)
@@ -67268,10 +67264,10 @@ A1;Peça exemplo;10`}
                   </span>
                 </summary>
                 <div className="biblioteca-relatorios-clientes-block__body">
-                  <div className="biblioteca-relatorios-clientes-block__toolbar">
+                  <div className="bib-relatorios-hub__sec-toolbar biblioteca-relatorios-clientes-block__toolbar">
                     <button
                       type="button"
-                      className="biblioteca-relatorios-toolbar__btn"
+                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--ghost bib-relatorios-hub__btn--sec"
                       onClick={() => {
                         setBibliotecaSecaoClientesExpandida(true)
                         setBibliotecaRelatoriosClientesExpandidos(
@@ -67286,17 +67282,17 @@ A1;Peça exemplo;10`}
                         setBibliotecaRelatoriosEquipExpandidos(allEq)
                       }}
                     >
-                      {(safeT as any)?.expandirTodos || 'Expandir todos'}
+                      {txBibHero.expandirTodos || 'Expandir todos'}
                     </button>
                     <button
                       type="button"
-                      className="biblioteca-relatorios-toolbar__btn biblioteca-relatorios-toolbar__btn--muted"
+                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--muted bib-relatorios-hub__btn--sec"
                       onClick={() => {
                         setBibliotecaRelatoriosClientesExpandidos(new Set())
                         setBibliotecaRelatoriosEquipExpandidos(new Set())
                       }}
                     >
-                      {(safeT as any)?.retrairTodos || 'Retrair todos'}
+                      {txBibHero.retrairTodos || 'Retrair todos'}
                     </button>
                   </div>
                 {!buscaBibliotecaAtiva && bibliotecaFiltrada.length > 0 ? (
@@ -67453,11 +67449,9 @@ A1;Peça exemplo;10`}
                         })
                       }}
                     >
-                      <summary className="biblioteca-relatorios-cliente__summary">
-                        <span className="biblioteca-relatorios-cliente__chevron" aria-hidden>
-                          ▶
-                        </span>
-                        <h3 className="biblioteca-relatorios-cliente__title">{cliente.nomeEmpresa}</h3>
+                      <summary className="biblioteca-relatorios-cliente__summary bib-relatorios-hub__client-summary">
+                        <span className="bib-relatorios-hub__row-chevron biblioteca-relatorios-cliente__chevron bib-relatorios-hub__row-chevron--green" aria-hidden />
+                        <h3 className="biblioteca-relatorios-cliente__title bib-relatorios-hub__client-name">{cliente.nomeEmpresa}</h3>
                         <div className="biblioteca-relatorios-cliente__summary-kpis">
                           <span className="bib-kpi bib-kpi--equip" title={labelEquip(numEquip)}>
                             {numEquip} {txBib.bibliotecaRelatoriosLegendaEquipamentos || 'equip.'}
@@ -67526,9 +67520,7 @@ A1;Peça exemplo;10`}
                                   }}
                                 >
                                   <summary className="biblioteca-relatorios-equip__summary">
-                                    <span className="biblioteca-relatorios-equip__chev" aria-hidden>
-                                      ▶
-                                    </span>
+                                    <span className="bib-relatorios-hub__row-chevron bib-relatorios-hub__row-chevron--sm bib-relatorios-hub__row-chevron--green biblioteca-relatorios-equip__chev" aria-hidden />
                                     <span className="biblioteca-relatorios-equip__nome">
                                       {eqLabel || equipamentoKey}
                                     </span>
