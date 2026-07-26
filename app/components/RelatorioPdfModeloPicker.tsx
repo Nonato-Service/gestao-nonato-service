@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-import { PDF_MODELO_GROUPS, PDF_MODELO_LABEL_KEYS } from '../lib/pdfModelTypes'
+import { PDF_MODELO_GROUPS, PDF_MODELO_LABEL_KEYS, normalizePdfModelo } from '../lib/pdfModelTypes'
 
 export const RELATORIO_PDF_MODELO_LABEL_KEYS = PDF_MODELO_LABEL_KEYS
 
@@ -38,8 +38,9 @@ export function RelatorioPdfModeloPicker({
   const menuRef = useRef<HTMLDivElement>(null)
 
   const labelFor = (model: string) => {
-    const key = RELATORIO_PDF_MODELO_LABEL_KEYS[model]
-    return (key && labels[key]) || model
+    const m = normalizePdfModelo(model)
+    const key = RELATORIO_PDF_MODELO_LABEL_KEYS[m]
+    return (key && labels[key]) || m
   }
 
   const groupLabel = (id: 'recomendados' | 'outros') =>

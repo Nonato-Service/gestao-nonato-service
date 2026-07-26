@@ -66907,25 +66907,46 @@ A1;Peça exemplo;10`}
                 </div>
                 <div className="bib-relatorios-hub__toolbar-actions">
                   <div className="bib-relatorios-hub__pdf-group">
-                    <RelatorioPdfModeloPicker
-                      className="biblioteca-relatorios-toolbar__modelo bib-relatorios-hub__pdf-picker"
-                      value={selectedPDFModel}
-                      onChange={(model) => escolherModeloPdfRelatorio(null, model)}
-                      title={txBibHero.bibliotecaRelatoriosModeloPdfPadrao || txBibHero.bibliotecaRelatoriosModeloPdf || 'Modelo PDF'}
-                      labels={txBibHero}
-                      groupRecomendados={txBibHero.relatorioPdfOptgroupRecomendados || 'Recomendados'}
-                      groupOutros={txBibHero.relatorioPdfOptgroupOutros || 'Outros'}
-                    />
-                    <PdfModeloPickerField
-                      className="biblioteca-relatorios-toolbar__modelo biblioteca-relatorios-toolbar__modelo--fechamento bib-relatorios-hub__pdf-picker"
-                      value={pdfModeloFechamento}
-                      onChange={(model) =>
-                        setPdfModeloFechamento(persistPdfModeloPadrao('fechamentoDespesas', model, saveData))
-                      }
-                      labels={txBibHero}
-                      label={txBibHero.fechamentoPdfModeloLabel || 'PDF fechamento despesas'}
-                      compact
-                    />
+                    <div className="bib-relatorios-hub__pdf-field">
+                      <span className="bib-relatorios-hub__pdf-label">
+                        {txBibHero.bibliotecaRelatoriosHubPdfRelatorio ||
+                          txBibHero.bibliotecaRelatoriosModeloPdf ||
+                          'Modelo PDF — relatório'}
+                      </span>
+                      <RelatorioPdfModeloPicker
+                        className="bib-relatorios-hub__pdf-picker"
+                        value={selectedPDFModel}
+                        compact
+                        onChange={(model) => escolherModeloPdfRelatorio(null, model)}
+                        title={
+                          txBibHero.bibliotecaRelatoriosModeloPdfPadrao ||
+                          txBibHero.bibliotecaRelatoriosModeloPdf ||
+                          'Modelo PDF'
+                        }
+                        labels={txBibHero}
+                        groupRecomendados={txBibHero.relatorioPdfOptgroupRecomendados || 'Recomendados'}
+                        groupOutros={txBibHero.relatorioPdfOptgroupOutros || 'Outros'}
+                      />
+                    </div>
+                    <div className="bib-relatorios-hub__pdf-field">
+                      <span className="bib-relatorios-hub__pdf-label">
+                        {txBibHero.bibliotecaRelatoriosHubPdfFechamento ||
+                          txBibHero.fechamentoPdfModeloLabel ||
+                          'Modelo PDF — fechamento'}
+                      </span>
+                      <RelatorioPdfModeloPicker
+                        className="bib-relatorios-hub__pdf-picker"
+                        value={pdfModeloFechamento}
+                        compact
+                        onChange={(model) =>
+                          setPdfModeloFechamento(persistPdfModeloPadrao('fechamentoDespesas', model, saveData))
+                        }
+                        title={txBibHero.fechamentoPdfModeloLabel || 'PDF fechamento despesas'}
+                        labels={txBibHero}
+                        groupRecomendados={txBibHero.relatorioPdfOptgroupRecomendados || 'Recomendados'}
+                        groupOutros={txBibHero.relatorioPdfOptgroupOutros || 'Outros'}
+                      />
+                    </div>
                   </div>
                   <div className="bib-relatorios-hub__toolbar-btns">
                     <button

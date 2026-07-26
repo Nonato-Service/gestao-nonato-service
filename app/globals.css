@@ -33676,34 +33676,68 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   border-radius: 10px !important;
 }
 
-.bib-relatorios-hub__toolbar-actions {
-  display: flex;
-  flex-wrap: wrap;
+.bib-relatorios-hub__pdf-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  align-items: flex-end;
-  justify-content: space-between;
+  flex: 1 1 360px;
+  min-width: 0;
 }
 
-.bib-relatorios-hub__pdf-group {
+.bib-relatorios-hub__pdf-field {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: flex-end;
-  flex: 1 1 260px;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.bib-relatorios-hub__pdf-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(190, 225, 210, 0.68);
+  line-height: 1.3;
 }
 
 .bib-relatorios-hub__pdf-picker {
-  min-width: 140px;
-  max-width: 220px;
+  width: 100%;
+  min-width: 0;
+  max-width: none !important;
+}
+
+.bib-relatorios-hub__pdf-picker.relatorio-servico-pdf-modelo-picker {
+  margin: 0;
+}
+
+.bib-relatorios-hub__pdf-picker .relatorio-servico-pdf-modelo-picker__trigger {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 12px !important;
+  border-radius: 10px !important;
+  border-color: rgba(52, 211, 153, 0.32) !important;
+  background: rgba(8, 14, 12, 0.88) !important;
+  font-size: 12px !important;
+}
+
+.bib-relatorios-hub__pdf-picker .relatorio-servico-pdf-modelo-picker__chevron {
+  font-size: 10px;
+  opacity: 0.75;
 }
 
 .bib-relatorios-hub__toolbar-btns {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  align-items: center;
-  justify-content: flex-end;
-  flex: 0 1 auto;
+  align-items: flex-end;
+  align-self: flex-end;
+  flex: 0 0 auto;
+}
+
+.bib-relatorios-hub__toolbar-btns .bib-relatorios-hub__btn {
+  min-height: 38px;
+  min-width: 120px;
 }
 
 .bib-relatorios-hub__btn {
@@ -33889,6 +33923,13 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   max-width: none;
 }
 
+.bib-relatorios-hub__toolbar-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
 @media (max-width: 960px) {
   .bib-relatorios-hub__hero-top {
     flex-direction: column;
@@ -33902,17 +33943,17 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   }
 
   .bib-relatorios-hub__toolbar-actions {
-    flex-direction: column;
-    align-items: stretch;
+    grid-template-columns: 1fr;
   }
 
   .bib-relatorios-hub__toolbar-btns {
     width: 100%;
-    justify-content: stretch;
+    align-self: stretch;
   }
 
   .bib-relatorios-hub__toolbar-btns .bib-relatorios-hub__btn {
-    flex: 1 1 auto;
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
   }
 }
 
@@ -33922,13 +33963,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   }
 
   .bib-relatorios-hub__pdf-group {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .bib-relatorios-hub__pdf-picker {
-    max-width: none;
-    width: 100%;
+    grid-template-columns: 1fr;
   }
 }
 
