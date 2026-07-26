@@ -46672,3 +46672,77 @@ html body .agenda-tecnica-page .agenda-tecnica-filtros__control--date,
 html body .agenda-tecnica-page .agenda-tecnica-filtros__field input[type='date'] {
   color-scheme: dark !important;
 }
+
+/* Agenda v176 — override final absoluto (filtros + situação operacional) */
+html body .agenda-tecnica-page .agenda-tecnica-toolbar select,
+html body .agenda-tecnica-page .agenda-tecnica-toolbar input[type='date'],
+html body .agenda-tecnica-page .agenda-tecnica-toolbar input[type='text'] {
+  display: block !important;
+  width: 100% !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  box-sizing: border-box !important;
+  padding: 0 14px !important;
+  margin: 0 !important;
+  background: #3a3a3a !important;
+  background-color: #3a3a3a !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 12px !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 14px !important;
+  line-height: normal !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  box-shadow: none !important;
+}
+
+html body .agenda-tecnica-page .agenda-tecnica-toolbar input[type='date'] {
+  color-scheme: dark !important;
+}
+
+html body .agenda-tecnica-page .agenda-tecnica-toolbar__filtros,
+html body .agenda-tecnica-page .agenda-tecnica-filtros {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: flex-end !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+html body .agenda-tecnica-page .agenda-tecnica-painel-grid--menu {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  gap: 14px !important;
+  margin-bottom: 18px !important;
+  width: 100% !important;
+  min-height: 120px !important;
+}
+
+html body .agenda-tecnica-page button.agenda-painel-situacao-btn {
+  display: flex !important;
+  width: 100% !important;
+  min-height: 108px !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  cursor: pointer !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+html body .agenda-tecnica-page button.agenda-painel-situacao-btn > .agenda-painel-situacao-card {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-height: 108px !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}

@@ -47376,7 +47376,7 @@ A1;Peça exemplo;10`}
 
       case 'agenda':
         return (
-          <div className="agenda-tecnica-page ns-ui-v2">
+          <div className="agenda-tecnica-page ns-ui-v2" data-agenda-ui="176">
             <div className="agenda-tecnica-hero">
               <div className="agenda-tecnica-hero__row">
                 <div className="agenda-tecnica-hero__brand">
