@@ -39555,11 +39555,14 @@ export default function Dashboard() {
         const clientesParaDetalhe = clienteListaDetalheId
           ? clientesFiltrados.filter(c => c.id === clienteListaDetalheId)
           : []
+        const clientesDevedoresCount = clientes.filter((c) => isClienteMarcadoDevedor(c)).length
+        const clientesHubLocale = localeForLongDatetime(selectedLanguage)
+        const clientesHubT = safeT as Record<string, string | undefined>
         
         return (
           <div
             className={
-              'tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 cadastro-valores-v2' +
+              'tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 cadastro-valores-v2 clientes-hub-page' +
               (clientesActiveTab === 'cadastrar' ? ' clientes-cadastro-page' : '') +
               (clienteListaDetalheId ? ' clientes-detalhe-page' : '')
             }
@@ -39653,212 +39656,177 @@ export default function Dashboard() {
                 </>
               )}
             </div>
-            {/* Cabeçalho Profissional - oculto em mobile (toolbar substitui) e na aba Cadastrar (formulário Novo Cliente) */}
-            {clientesActiveTab !== 'cadastrar' && !clienteListaDetalheId ? (
-            <div className="tab-header-desktop tab-glass-hero">
-              <div className="tab-glass-hero-top">
-                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                  <LogoComponent size="small" />
+            {/* Hub Clientes — cabeçalho, KPIs e abas (i18n) */}
+            {!clienteListaDetalheId ? (
+              <div className="clientes-hub">
+                <div className="clientes-hub__hero-ring">
+                  <div className="clientes-hub__hero">
+                    <div className="clientes-hub__hero-top">
+                      <div className="clientes-hub__hero-brand">
+                        <div className="clientes-hub__hero-logo" aria-hidden="true">
+                          <LogoComponent size="small" />
+                        </div>
+                        <div className="clientes-hub__hero-head">
+                          <p className="clientes-hub__eyebrow">
+                            {clientesHubT.clientesHubEyebrow || clientesHubT.clientesSubtitle || 'Gestão comercial'}
+                          </p>
+                          <h1 className="clientes-hub__title">
+                            {clientesHubT.clientesTitle || 'CADASTRO DE CLIENTES'}
+                          </h1>
+                          <p className="clientes-hub__tagline">
+                            {clientesHubT.clientesHubTagline ||
+                              'Cadastro, consulta alfabética, grupos tarifários e ligação ao financeiro.'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="clientes-hub__hero-actions">
+                        {clientesActiveTab === 'cadastrar' ? (
+                          <button
+                            type="button"
+                            className="clientes-hub__btn clientes-hub__btn--primary"
+                            onClick={handleAddCliente}
+                          >
+                            + {clientesHubT.addCliente || 'Adicionar Cliente'}
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="clientes-hub__nav-btn clientes-hub__nav-btn--icon"
+                          onClick={() => closeTab(activeTabId || '')}
+                          title={clientesHubT.voltar || 'Voltar'}
+                          aria-label={clientesHubT.voltar || 'Voltar'}
+                        >
+                          &larr;
+                        </button>
+                        <button
+                          type="button"
+                          className="clientes-hub__nav-btn clientes-hub__nav-btn--accent"
+                          onClick={voltarPaginaInicial}
+                          title={clientesHubT.paginaInicial || 'Página Inicial'}
+                        >
+                          {clientesHubT.paginaInicial || 'Início'}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="clientes-hub__kpis" aria-label={clientesHubT.clientesSubtitle || 'Clientes'}>
+                      <div className="clientes-hub__kpi clientes-hub__kpi--total">
+                        <span className="clientes-hub__kpi-label">
+                          {clientesHubT.clientesHubKpiTotal || clientesHubT.clientesCadastrados || 'Clientes'}
+                        </span>
+                        <span className="clientes-hub__kpi-value">{clientes.length.toLocaleString(clientesHubLocale)}</span>
+                      </div>
+                      <div
+                        className={`clientes-hub__kpi clientes-hub__kpi--devedores${clientesDevedoresCount > 0 ? ' clientes-hub__kpi--warn' : ''}`}
+                      >
+                        <span className="clientes-hub__kpi-label">
+                          {clientesHubT.clientesHubKpiDevedores || clientesHubT.clienteDevedorBadge || 'Devedores'}
+                        </span>
+                        <span className="clientes-hub__kpi-value">
+                          {clientesDevedoresCount.toLocaleString(clientesHubLocale)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="tab-glass-hero-heading">
-                  <h1 className="tab-glass-hero-title">
-                    {safeT?.clientesTitle || 'CLIENTES'}
-                  </h1>
-                  <p className="tab-glass-hero-meta">
-                    {clientes.length} {safeT?.clientesCadastrados || 'cliente(s) cadastrado(s)'}
-                  </p>
-                </div>
-                <div className="tab-glass-hero-actions">
-                  <div className="tab-glass-hero-actions-row">
-                  <button 
-                    onClick={() => closeTab(activeTabId || '')}
-                    style={{ 
-                      padding: '6px 8px', 
-                      fontSize: '16px',
-                      backgroundColor: 'rgba(0, 200, 83, 0.06)',
-                      border: '1px solid rgba(0, 200, 83, 0.55)',
-                      borderRadius: '4px',
-                      color: '#ffffff',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '32px',
-                      height: '32px'
-                    }}
-                    title={safeT?.voltar || 'Voltar'}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.12)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.72)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.06)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.55)'
+
+                <nav
+                  className="clientes-hub__tabs clientes-module-tabs tab-nav-desktop tab-glass-nav tab-glass-nav--clientes"
+                  aria-label={clientesHubT.clientesTitle || 'Clientes'}
+                >
+                  <button
+                    type="button"
+                    className={`clientes-hub__tab${clientesActiveTab === 'cadastrar' ? ' clientes-hub__tab--active' : ''}`}
+                    onClick={() => {
+                      setClientesActiveTab('cadastrar')
+                      setClienteListaDetalheId(null)
                     }}
                   >
-                    ↶
+                    <span className="clientes-hub__tab-label">{clientesHubT.cadastrarCliente || 'Cadastrar Cliente'}</span>
                   </button>
-                  <button 
-                    onClick={voltarPaginaInicial}
-                    style={{ 
-                      padding: '6px 8px', 
-                      fontSize: '16px',
-                      backgroundColor: 'rgba(0, 150, 255, 0.06)',
-                      border: '1px solid rgba(0, 150, 255, 0.55)',
-                      borderRadius: '4px',
-                      color: '#ffffff',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '32px',
-                      height: '32px'
-                    }}
-                    title={safeT?.paginaInicial || 'Página Inicial'}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.12)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.72)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.06)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.55)'
+                  <button
+                    type="button"
+                    className={`clientes-hub__tab${clientesActiveTab === 'listar' ? ' clientes-hub__tab--active' : ''}`}
+                    onClick={() => {
+                      setClientesActiveTab('listar')
+                      setClienteListaDetalheId(null)
                     }}
                   >
-                    🏠
+                    <span className="clientes-hub__tab-label">{clientesHubT.clientesCadastrados || 'Clientes Cadastrados'}</span>
+                    <span className="clientes-hub__tab-badge">{clientes.length.toLocaleString(clientesHubLocale)}</span>
                   </button>
+                  <button
+                    type="button"
+                    className={`clientes-hub__tab${clientesActiveTab === 'grupos' ? ' clientes-hub__tab--active' : ''}`}
+                    onClick={() => {
+                      setClientesActiveTab('grupos')
+                      setClienteListaDetalheId(null)
+                      if (!clienteGrupoTarifaSelecionadoId) {
+                        setClienteGrupoTarifaSelecionadoId(ordenarServicoGrupos(servicoGrupos)[0]?.id ?? null)
+                        setServicoGrupoSelecionadoId(ordenarServicoGrupos(servicoGrupos)[0]?.id ?? null)
+                        setServicoGrupoNomeEdicao(ordenarServicoGrupos(servicoGrupos)[0]?.nome ?? '')
+                      }
+                    }}
+                  >
+                    <span className="clientes-hub__tab-label">
+                      {clientesHubT.clientesPorGruposTab || 'Grupos / Tarifas'}
+                    </span>
+                  </button>
+                </nav>
+
+                {clientesActiveTab !== 'cadastrar' ? (
+                  <div className="clientes-hub__finance-banner">
+                    <p className="clientes-hub__finance-banner-text">
+                      {clientesHubT.clientesAvisoOndeFinanceiro ||
+                        'Pagamento, «não pago» e alerta de devedor: módulo Clientes / Financeiro → Ordem de serviço.'}
+                    </p>
+                    <button
+                      type="button"
+                      className="clientes-hub__btn clientes-hub__btn--ghost"
+                      onClick={() => handleButtonClick('open-clientes-financeiro')}
+                    >
+                      {clientesHubT.clientesFinanceiro || 'Clientes / Financeiro'}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <div className="clientes-hub clientes-hub--detalhe">
+                <div className="clientes-hub__detalhe-bar">
+                  <button
+                    type="button"
+                    className="clientes-hub__nav-btn clientes-hub__nav-btn--icon"
+                    onClick={() => setClienteListaDetalheId(null)}
+                    title={clientesHubT.voltar || 'Voltar'}
+                  >
+                    &larr;
+                  </button>
+                  <div className="clientes-hub__detalhe-title-wrap">
+                    <span className="clientes-hub__detalhe-eyebrow">{clientesHubT.detalhesCliente || 'Detalhes'}</span>
+                    <strong className="clientes-hub__detalhe-nome">
+                      {clientesParaDetalhe[0]?.nomeEmpresa || clientesHubT.cliente || 'Cliente'}
+                    </strong>
+                  </div>
+                  <div className="clientes-hub__detalhe-actions">
+                    {clientesParaDetalhe[0] && isClienteMarcadoDevedor(clientesParaDetalhe[0]) ? (
+                      <ClienteDevedorNomeTag label={clientesHubT.clienteDevedorBadge || 'Devedor'} variant="card" />
+                    ) : null}
+                    <button
+                      type="button"
+                      className="clientes-hub__btn clientes-hub__btn--ghost"
+                      onClick={() => {
+                        if (clientesParaDetalhe[0]) handleEditCliente(clientesParaDetalhe[0])
+                        setClientesActiveTab('cadastrar')
+                        setClienteListaDetalheId(null)
+                      }}
+                    >
+                      {clientesHubT.edit || 'Editar'}
+                    </button>
                   </div>
                 </div>
               </div>
-            </div>
-            ) : null}
+            )}
 
-            {/* Abas Listar / Grupos — ocultas na aba Cadastrar (layout Novo Cliente) */}
-            {!clienteListaDetalheId ? (
-            <div className="tab-nav-desktop tab-glass-nav tab-glass-nav--clientes clientes-module-tabs">
-              <button 
-                className={`btn-primary tab-glass-nav__tab${clientesActiveTab === 'cadastrar' ? ' tab-glass-nav__tab--active' : ''}`}
-                onClick={() => {
-                  setClientesActiveTab('cadastrar')
-                  setClienteListaDetalheId(null)
-                }}
-                style={{
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  border: '1px solid',
-                  borderColor: clientesActiveTab === 'cadastrar' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 200, 83, 0.22)',
-                  backgroundColor: clientesActiveTab === 'cadastrar' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
-                  color: '#ffffff',
-                  transition: 'border-color 0.2s ease, background-color 0.2s ease',
-                  borderRadius: '8px',
-                  cursor: 'pointer'
-                }}
-              >
-                ➕ {safeT?.cadastrarCliente || 'Cadastrar Cliente'}
-              </button>
-              <button 
-                className={`btn-primary tab-glass-nav__tab${clientesActiveTab === 'listar' ? ' tab-glass-nav__tab--active' : ''}`}
-                onClick={() => {
-                  setClientesActiveTab('listar')
-                  setClienteListaDetalheId(null)
-                }}
-                style={{
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  border: '1px solid',
-                  borderColor: clientesActiveTab === 'listar' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 200, 83, 0.22)',
-                  backgroundColor: clientesActiveTab === 'listar' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
-                  color: '#ffffff',
-                  transition: 'border-color 0.2s ease, background-color 0.2s ease',
-                  borderRadius: '8px',
-                  cursor: 'pointer'
-                }}
-              >
-                📋 {safeT?.clientesCadastrados || 'Clientes Cadastrados'} ({clientes.length})
-              </button>
-              <button
-                className={`btn-primary tab-glass-nav__tab${clientesActiveTab === 'grupos' ? ' tab-glass-nav__tab--active' : ''}`}
-                onClick={() => {
-                  setClientesActiveTab('grupos')
-                  setClienteListaDetalheId(null)
-                  if (!clienteGrupoTarifaSelecionadoId) {
-                    setClienteGrupoTarifaSelecionadoId(ordenarServicoGrupos(servicoGrupos)[0]?.id ?? null)
-                    setServicoGrupoSelecionadoId(ordenarServicoGrupos(servicoGrupos)[0]?.id ?? null)
-                    setServicoGrupoNomeEdicao(ordenarServicoGrupos(servicoGrupos)[0]?.nome ?? '')
-                  }
-                }}
-                style={{
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  border: '1px solid',
-                  borderColor: clientesActiveTab === 'grupos' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 200, 83, 0.22)',
-                  backgroundColor: clientesActiveTab === 'grupos' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
-                  color: '#ffffff',
-                  transition: 'border-color 0.2s ease, background-color 0.2s ease',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                }}
-              >
-                📁 {(safeT as any)?.clientesPorGruposTab || 'Grupos / Tarifas'}
-              </button>
-              {clientesActiveTab === 'cadastrar' && (
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={handleAddCliente}
-                  style={{
-                    padding: '12px 24px',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    border: '1px solid rgba(0, 255, 160, 0.45)',
-                    backgroundColor: 'rgba(0, 90, 55, 0.55)',
-                    color: '#ffffff',
-                    transition: 'border-color 0.2s ease, background-color 0.2s ease',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  ➕ {safeT?.addCliente || 'Adicionar Cliente'}
-                </button>
-              )}
-            </div>
-            ) : null}
-
-            {clientesActiveTab !== 'cadastrar' && !clienteListaDetalheId ? (
-            <div
-              className="clientes-financeiro-aviso"
-              style={{
-                margin: '12px 0 8px',
-                padding: '12px 14px',
-                borderRadius: '10px',
-                border: '1px solid rgba(251, 191, 36, 0.45)',
-                background: 'rgba(60, 45, 0, 0.35)',
-                display: 'flex',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-                gap: '10px',
-                justifyContent: 'space-between',
-              }}
-            >
-              <span style={{ color: '#fde68a', fontSize: '13px', lineHeight: 1.45 }}>
-                {(safeT as any)?.clientesAvisoOndeFinanceiro ||
-                  'Pagamento, «não pago» (com ou sem fatura) e alerta vermelho de devedor: use o módulo Clientes / Financeiro → separador Ordem de serviço (desça após a lista de OS). No menu lateral fica dentro de Gestão financeira.'}
-              </span>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => handleButtonClick('open-clientes-financeiro')}
-                style={{ padding: '8px 14px', fontSize: '13px', flexShrink: 0, whiteSpace: 'nowrap' }}
-              >
-                {safeT?.clientesFinanceiro || 'Clientes / Financeiro'}
-              </button>
-            </div>
-            ) : null}
-            
+            <div className="clientes-hub__body">
             {clientesActiveTab === 'cadastrar' ? (
               <div>
                 <ClienteCadastroForm
@@ -40329,40 +40297,32 @@ export default function Dashboard() {
                 ) : (
                   <>
                 {clientes.length > 0 && (
-                  <div style={{ marginBottom: '20px' }}>
+                  <div className="clientes-hub__search-wrap">
                     <input
-                      type="text"
-                      placeholder={`🔍 ${safeT?.buscarCliente || 'Buscar cliente por nome, morada, código postal, país, telefone, e-mail ou contato...'}`}
+                      type="search"
+                      className="clientes-hub__search"
+                      placeholder={clientesHubT.buscarCliente || 'Buscar cliente por nome, morada, telefone, e-mail…'}
                       value={buscaCliente}
                       onChange={(e) => {
                         setBuscaCliente(e.target.value)
                         setClienteListaDetalheId(null)
                         setClientesAlfaLetraFiltro(null)
                       }}
-                      style={{ 
-                        width: '100%', 
-                        padding: '10px', 
-                        backgroundColor: '#484848', 
-                        color: '#fff', 
-                        border: '1px solid rgba(0, 200, 83, 0.3)', 
-                        borderRadius: '4px',
-                        fontSize: '14px'
-                      }}
                     />
                   </div>
                 )}
                 
                 {clientes.length === 0 ? (
-                  <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>{safeT?.noClientes || 'Nenhum cliente cadastrado.'}</p>
+                  <p className="clientes-hub__empty">{clientesHubT.noClientes || 'Nenhum cliente cadastrado.'}</p>
                 ) : clientesFiltrados.length === 0 ? (
-                  <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>
-                    {safeT?.nenhumEncontrado || 'Nenhum encontrado com'} {safeT?.cliente || 'cliente'} "{buscaCliente}"
+                  <p className="clientes-hub__empty">
+                    {clientesHubT.nenhumEncontrado || 'Nenhum encontrado com'} {clientesHubT.cliente || 'cliente'} &quot;{buscaCliente}&quot;
                   </p>
                 ) : (
-                  <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#484848', borderRadius: '6px', fontSize: '14px' }}>
+                  <div className="clientes-hub__list-meta">
                     {clientesLetraAtiva
                       ? `${clientesListaFiltradaCount} ${safeT?.clientes || 'cliente(s)'} ${safeT?.clientesAlfabetoComInicial || 'com inicial'} «${clientesLetraAtiva === '#' ? (safeT?.clientesAlfabetoOutros || 'Outros') : clientesLetraAtiva}»${buscaCliente.trim() ? ` (${safeT?.de || 'de'} ${clientesFiltrados.length} ${safeT?.filtrados || 'filtrados'})` : ''}`
-                      : `${safeT?.mostrando || 'Mostrando'} ${clientesFiltrados.length} ${safeT?.de || 'de'} ${clientes.length} ${safeT?.clientes || 'cliente(s)'} — ${safeT?.clientesAlfabetoSelecioneLetra || 'selecione uma letra abaixo'}`}
+                      : `${clientesHubT.mostrando || 'Mostrando'} ${clientesFiltrados.length} ${clientesHubT.de || 'de'} ${clientes.length} ${clientesHubT.clientes || 'cliente(s)'} — ${clientesHubT.clientesAlfabetoSelecioneLetra || 'selecione uma letra abaixo'}`}
                   </div>
                 )}
 
@@ -40460,6 +40420,7 @@ export default function Dashboard() {
                 )}
               </div>
             )}
+            </div>
           </div>
         )
       
