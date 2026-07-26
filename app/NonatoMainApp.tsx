@@ -4723,6 +4723,27 @@ const getLanguages = (t: any): Language[] => {
 export default function Dashboard() {
   const warmOnMount = useMemo(() => isWarmSessionResume(), [])
   const initialUiSession = useMemo(() => loadUiSessionSnapshot(), [])
+  const loginMenuSyncedRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const CRASH_KEY = 'nonato-boot-crash-ts'
+    try {
+      const prev = Number(sessionStorage.getItem(CRASH_KEY) || '0')
+      const now = Date.now()
+      if (prev > 0 && now - prev < 5000) {
+        clearLastAuthUser()
+        clearWarmSessionMarkers()
+      }
+      sessionStorage.setItem(CRASH_KEY, String(now))
+      const timer = window.setTimeout(() => {
+        sessionStorage.removeItem(CRASH_KEY)
+      }, 8000)
+      return () => window.clearTimeout(timer)
+    } catch {
+      return undefined
+    }
+  }, [])
   const createEmptyUserForm = (): UserFormState => ({
     name: '',
     email: '',
@@ -4967,7 +4988,15 @@ export default function Dashboard() {
   const [loginUser, setLoginUser] = useState<User | null>(() => {
     if (!warmOnMount) return null
     const cached = loadLastAuthUser()
-    return cached ? ({ ...cached } as User) : null
+    if (!cached) return null
+    if (
+      cached.menuItems != null &&
+      (typeof cached.menuItems !== 'object' || Array.isArray(cached.menuItems))
+    ) {
+      clearLastAuthUser()
+      return null
+    }
+    return { ...cached } as User
   })
   const [incluirLogoNosRelatorios, setIncluirLogoNosRelatorios] = useState<boolean>(true) // Incluir logo nos PDFs (Administrador)
   const [logosRelatorios, setLogosRelatorios] = useState<LogoRelatorio[]>([]) // Logos disponíveis para escolha nos relatórios
@@ -10265,9 +10294,8 @@ export default function Dashboard() {
           setDemoExpired(false)
           setDemoDaysLeft(null)
           setDemoModuleConfig({})
-          const normalizedAuthUser = ensureUserMenuPolicy(auth.user)
-          setLoginUser(normalizedAuthUser)
-          saveLastAuthUser(normalizedAuthUser)
+          setLoginUser(auth.user)
+          saveLastAuthUser(auth.user)
           setShowSplashInicial(false)
           setShowPasswordScreen(false)
           return
@@ -10308,7 +10336,7 @@ export default function Dashboard() {
 
               if (d.isDemo && !d.expired) {
                 if (auth.authenticated && auth.user) {
-                  setLoginUser(ensureUserMenuPolicy(auth.user))
+                  setLoginUser(auth.user)
                 } else {
                   setLoginUser({ ...DEMO_VISITOR_USER } as User)
                 }
@@ -10317,9 +10345,8 @@ export default function Dashboard() {
               } else if (d.expired) {
                 clearDemoCookiesClient()
               } else if (auth.authenticated && auth.user) {
-                const normalizedAuthUser = ensureUserMenuPolicy(auth.user)
-                setLoginUser(normalizedAuthUser)
-                saveLastAuthUser(normalizedAuthUser)
+                setLoginUser(auth.user)
+                saveLastAuthUser(auth.user)
                 setShowSplashInicial(false)
                 setShowPasswordScreen(false)
               }
@@ -11301,8 +11328,9 @@ export default function Dashboard() {
       if (savedUsers && Array.isArray(savedUsers) && savedUsers.length > 0) {
         const normalizedUsers = savedUsers.map((u: User) => ensureUserMenuPolicy(u))
         setUsers(normalizedUsers)
-        // Garantir que está salvo no servidor
-        saveData('nonato-users', normalizedUsers, false).catch(() => {})
+        if (JSON.stringify(normalizedUsers) !== JSON.stringify(savedUsers)) {
+          saveData('nonato-users', normalizedUsers, false).catch(() => {})
+        }
       } else if (savedUsers && Array.isArray(savedUsers)) {
         // Array vazio - manter mas não salvar
         setUsers(savedUsers)
@@ -28793,11 +28821,14 @@ export default function Dashboard() {
   useEffect(() => {
     if (!loginUser?.id || loginUser.isAdmin) return
     const fresh = users.find((u) => u.id === loginUser.id)
-    const source = fresh || loginUser
-    const next = ensureUserMenuPolicy(source)
+    if (!fresh) return
+    const syncKey = `${loginUser.id}:${users.length}`
+    if (loginMenuSyncedRef.current === syncKey) return
+    const next = ensureUserMenuPolicy(fresh)
     const menuChanged = JSON.stringify(next.menuItems) !== JSON.stringify(loginUser.menuItems)
     const permChanged = JSON.stringify(next.permissions) !== JSON.stringify(loginUser.permissions)
     const flagChanged = Boolean(next.menuItemsConfigured) !== Boolean(loginUser.menuItemsConfigured)
+    loginMenuSyncedRef.current = syncKey
     if (!menuChanged && !permChanged && !flagChanged) return
     setLoginUser((prev) =>
       prev
@@ -28809,7 +28840,7 @@ export default function Dashboard() {
           }
         : prev
     )
-  }, [users, loginUser?.id, loginUser?.isAdmin])
+  }, [users, loginUser?.id, loginUser?.isAdmin, loginUser?.menuItems, loginUser?.permissions, loginUser?.menuItemsConfigured])
 
   const currentCommunicationIdentity = useMemo(() => {
     if (!loginUser || loginUser.isAdmin) return null
@@ -72984,9 +73015,8 @@ A1;Peça exemplo;10`}
         }
         return
       }
-      const normalizedLoginUser = ensureUserMenuPolicy(data.user)
-      setLoginUser(normalizedLoginUser)
-      if (data.user && !data.demoGuest) saveLastAuthUser(normalizedLoginUser)
+      setLoginUser(data.user)
+      if (data.user && !data.demoGuest) saveLastAuthUser(data.user)
       setShowPasswordScreen(false)
       setShowSplashInicial(false)
       setLoginUsuarioInput('')

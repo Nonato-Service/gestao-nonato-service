@@ -297,17 +297,14 @@ export function ensureUserMenuPolicy<
   if (user.isAdmin) return user
   const configured = inferMenuItemsConfigured(user.menuItems, user.menuItemsConfigured)
   if (!configured) return user
-  let baseMenuItems: Record<string, boolean>
-  if (user.permissions != null) {
-    baseMenuItems = normalizeMenuItemsWithLegacyFallback(user.menuItems, user.permissions)
-  } else if (user.menuItems && Object.keys(user.menuItems).length > 0) {
-    baseMenuItems = Object.fromEntries(
-      Object.entries(user.menuItems).map(([key, value]) => [key, Boolean(value)])
-    )
-  } else {
-    baseMenuItems = normalizeMenuItems(user.menuItems)
-  }
-  const menuItems = applyLinkedMenuItemAccess(baseMenuItems)
+  const menuItems =
+    user.permissions != null
+      ? normalizeMenuItemsWithLegacyFallback(user.menuItems, user.permissions)
+      : user.menuItems && Object.keys(user.menuItems).length > 0
+        ? Object.fromEntries(
+            Object.entries(user.menuItems).map(([key, value]) => [key, Boolean(value)])
+          )
+        : normalizeMenuItems(user.menuItems)
   return {
     ...user,
     menuItemsConfigured: true,

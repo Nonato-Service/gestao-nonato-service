@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { AppErrorRecovery } from './components/AppErrorRecovery'
 import { isWarmSessionResume } from './utils/syncRevision'
 
 const NonatoMainApp = dynamic(() => import('./NonatoMainApp'), {
@@ -48,5 +49,9 @@ const NonatoMainApp = dynamic(() => import('./NonatoMainApp'), {
 })
 
 export default function Page() {
-  return <NonatoMainApp />
+  return (
+    <AppErrorRecovery>
+      <NonatoMainApp />
+    </AppErrorRecovery>
+  )
 }
