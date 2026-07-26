@@ -43600,53 +43600,51 @@ export default function Dashboard() {
                     }))
                   const barraPaginacaoFlat =
                     totalFlat > BIBLIOTECA_ITENS_POR_LOTE ? (
-                      <div
-                        className="biblioteca-pecas-hub__paginacao"
-                        style={{
-                          display: 'flex',
-                          flexWrap: 'wrap',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 10,
-                          margin: '16px 0 8px',
-                          padding: '12px',
-                          borderRadius: 10,
-                          background: 'rgba(0,0,0,0.25)',
-                          border: '1px solid rgba(0,200,83,0.2)',
-                        }}
-                      >
-                        <button
-                          type="button"
-                          className="biblioteca-btn--ghost"
-                          disabled={paginaFlatClamped <= 0}
-                          onClick={() => setPaginaBibliotecaFlat((p) => Math.max(0, p - 1))}
-                          style={{ minHeight: 44, minWidth: 44, padding: '8px 14px' }}
+                      (pos: 'top' | 'bottom') => (
+                        <nav
+                          key={`bib-pag-${pos}`}
+                          className={`biblioteca-pecas-hub__paginacao biblioteca-pecas-hub__paginacao--${pos}`}
+                          aria-label={(safeT as any)?.bibliotecaPaginacaoAria || 'Paginação do catálogo'}
                         >
-                          ← {(safeT as any)?.bibliotecaPaginaAnterior || 'Anterior'}
-                        </button>
-                        <span style={{ fontSize: 13, color: '#ccc', textAlign: 'center' }}>
-                          {(
-                            (safeT as any)?.bibliotecaPaginaDe ||
-                            'Página {pagina} de {total} · {de}-{ate} de {pecas}'
-                          )
-                            .replace('{pagina}', String(paginaFlatClamped + 1))
-                            .replace('{total}', String(totalPaginasFlat))
-                            .replace('{de}', String(inicioFlat + 1))
-                            .replace('{ate}', String(Math.min(inicioFlat + BIBLIOTECA_ITENS_POR_LOTE, totalFlat)))
-                            .replace('{pecas}', String(totalFlat))}
-                        </span>
-                        <button
-                          type="button"
-                          className="biblioteca-btn--ghost"
-                          disabled={paginaFlatClamped >= totalPaginasFlat - 1}
-                          onClick={() =>
-                            setPaginaBibliotecaFlat((p) => Math.min(totalPaginasFlat - 1, p + 1))
-                          }
-                          style={{ minHeight: 44, minWidth: 44, padding: '8px 14px' }}
-                        >
-                          {(safeT as any)?.bibliotecaPaginaSeguinte || 'Seguinte'} →
-                        </button>
-                      </div>
+                          <button
+                            type="button"
+                            className="biblioteca-pecas-hub__paginacao-btn biblioteca-pecas-hub__paginacao-btn--prev biblioteca-btn--ghost"
+                            disabled={paginaFlatClamped <= 0}
+                            onClick={() => setPaginaBibliotecaFlat((p) => Math.max(0, p - 1))}
+                          >
+                            ← {(safeT as any)?.bibliotecaPaginaAnterior || 'Anterior'}
+                          </button>
+                          <div className="biblioteca-pecas-hub__paginacao-info">
+                            <span className="biblioteca-pecas-hub__paginacao-page">
+                              {(
+                                (safeT as any)?.bibliotecaPaginaDeCurto ||
+                                'Página {pagina} de {total}'
+                              )
+                                .replace('{pagina}', String(paginaFlatClamped + 1))
+                                .replace('{total}', String(totalPaginasFlat))}
+                            </span>
+                            <span className="biblioteca-pecas-hub__paginacao-range">
+                              {(
+                                (safeT as any)?.bibliotecaPaginaIntervalo ||
+                                '{de}–{ate} de {pecas} peças'
+                              )
+                                .replace('{de}', String(inicioFlat + 1))
+                                .replace('{ate}', String(Math.min(inicioFlat + BIBLIOTECA_ITENS_POR_LOTE, totalFlat)))
+                                .replace('{pecas}', String(totalFlat))}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            className="biblioteca-pecas-hub__paginacao-btn biblioteca-pecas-hub__paginacao-btn--next biblioteca-btn--ghost"
+                            disabled={paginaFlatClamped >= totalPaginasFlat - 1}
+                            onClick={() =>
+                              setPaginaBibliotecaFlat((p) => Math.min(totalPaginasFlat - 1, p + 1))
+                            }
+                          >
+                            {(safeT as any)?.bibliotecaPaginaSeguinte || 'Seguinte'} →
+                          </button>
+                        </nav>
+                      )
                     ) : null
                   const botaoMaisSecao = (key: string, total: number, visiveis: number) =>
                     total > visiveis ? (
@@ -44055,10 +44053,11 @@ export default function Dashboard() {
                       <>
                         {!somenteLeituraBiblioteca && painelClassificacaoLote}
                         {renderBarraSelecaoLoteBiblioteca()}
+                        {barraPaginacaoFlat?.('top')}
                         <div className="biblioteca-pecas-hub__piece-grid">
                           {pecasPaginaFlat.map((peca) => renderPecaBibliotecaGridCell(peca))}
                         </div>
-                        {barraPaginacaoFlat}
+                        {barraPaginacaoFlat?.('bottom')}
                       </>
                     )
                   }
@@ -44072,6 +44071,7 @@ export default function Dashboard() {
                     <>
                       {!somenteLeituraBiblioteca && painelClassificacaoLote}
                       {renderBarraSelecaoLoteBiblioteca()}
+                      {barraPaginacaoFlat?.('top')}
                       <div className="biblioteca-pecas-hub__catalog-table-wrap">
                         <table
                           className="biblioteca-pecas-hub__catalog-table"
@@ -44330,7 +44330,7 @@ export default function Dashboard() {
                           </tbody>
                         </table>
                       </div>
-                      {barraPaginacaoFlat}
+                      {barraPaginacaoFlat?.('bottom')}
                     </>
                   )
                 })()}

@@ -27335,6 +27335,100 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   align-items: stretch;
 }
 
+/* Paginação do catálogo — topo e fundo */
+.biblioteca-pecas-hub__paginacao {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(160px, 2fr) minmax(120px, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 210, 120, 0.24);
+  background: linear-gradient(168deg, rgba(12, 22, 18, 0.96), rgba(6, 10, 9, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.biblioteca-pecas-hub__paginacao--top {
+  margin: 0 0 16px;
+}
+
+.biblioteca-pecas-hub__paginacao--bottom {
+  margin: 16px 0 8px;
+}
+
+.biblioteca-pecas-hub__paginacao-btn {
+  min-height: 42px;
+  padding: 8px 14px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+  justify-self: stretch;
+}
+
+.biblioteca-pecas-hub__paginacao-btn--prev {
+  justify-self: start;
+}
+
+.biblioteca-pecas-hub__paginacao-btn--next {
+  justify-self: end;
+}
+
+.biblioteca-pecas-hub__paginacao-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.biblioteca-pecas-hub__paginacao-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  min-width: 0;
+}
+
+.biblioteca-pecas-hub__paginacao-page {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+.biblioteca-pecas-hub__paginacao-range {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.58);
+  letter-spacing: 0.03em;
+}
+
+@media (max-width: 640px) {
+  .biblioteca-pecas-hub__paginacao {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'info info'
+      'prev next';
+    gap: 10px;
+  }
+
+  .biblioteca-pecas-hub__paginacao-info {
+    grid-area: info;
+  }
+
+  .biblioteca-pecas-hub__paginacao-btn--prev {
+    grid-area: prev;
+    justify-self: stretch;
+  }
+
+  .biblioteca-pecas-hub__paginacao-btn--next {
+    grid-area: next;
+    justify-self: stretch;
+  }
+}
+
 .biblioteca-pecas-hub__piece-card {
   content-visibility: visible;
   contain-intrinsic-size: auto;
