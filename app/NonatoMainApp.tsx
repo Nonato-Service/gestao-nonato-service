@@ -66769,8 +66769,43 @@ A1;Peça exemplo;10`}
         const bibRelFechadosCount = relatoriosFechadosLista.length
 
         return (
-          <>
-          <div className="biblioteca-relatorios-root bib-relatorios-hub-page">
+          <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 bib-relatorios-hub-page biblioteca-relatorios-root">
+            <div className="mobile-sticky-toolbar bib-relatorios-hub__mobile-bar">
+              <button
+                type="button"
+                className="mobile-toolbar-btn mobile-toolbar-voltar"
+                onClick={() => closeTab(activeTabId || '')}
+                title={txBibHero.voltar || 'Voltar'}
+              >
+                ↶ {txBibHero.voltar || 'Voltar'}
+              </button>
+              <button
+                type="button"
+                className={`mobile-toolbar-btn${bibliotecaRelatoriosHubTab === 'clientes' ? ' active' : ''}`}
+                onClick={() => setBibliotecaRelatoriosHubTab('clientes')}
+              >
+                📁 {txBibHero.bibliotecaRelatoriosHubTabClientes || 'Pastas'}
+              </button>
+              {bibRelFechadosCount > 0 ? (
+                <button
+                  type="button"
+                  className={`mobile-toolbar-btn${bibliotecaRelatoriosHubTab === 'fechados' ? ' active' : ''}`}
+                  onClick={() => setBibliotecaRelatoriosHubTab('fechados')}
+                >
+                  📦 {bibRelFechadosCount}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="mobile-toolbar-btn mobile-toolbar-home"
+                onClick={voltarPaginaInicial}
+                title={txBibHero.paginaInicial || 'Página Inicial'}
+              >
+                🏠
+              </button>
+            </div>
+
+            <div className="bib-relatorios-hub-shell">
             {serverAutoPullActive ? (
               <div className="biblioteca-sync-updating-banner" role="status" aria-live="polite">
                 <span className="biblioteca-sync-updating-banner__icon" aria-hidden>
@@ -66794,6 +66829,9 @@ A1;Peça exemplo;10`}
                       <div className="bib-relatorios-hub__hero-head">
                         <p className="bib-relatorios-hub__eyebrow">
                           {txBibHero.bibliotecaRelatoriosHubEyebrow || 'Documentação e arquivo'}
+                          <span className="bib-relatorios-hub__version-badge" aria-hidden="true">
+                            HUB v2
+                          </span>
                         </p>
                         <h1 className="bib-relatorios-hub__title">
                           {txBibHero.bibliotecaRelatoriosTitle || 'BIBLIOTECA DE RELATÓRIOS'}
@@ -67876,8 +67914,8 @@ A1;Peça exemplo;10`}
               </section>
             ) : null}
             </div>
+            </div>
           </div>
-          </>
         )
       }
 
