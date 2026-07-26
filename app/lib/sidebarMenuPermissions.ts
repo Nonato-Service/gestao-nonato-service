@@ -258,15 +258,24 @@ export function hasStrictMenuPolicy(
 
 /** Normaliza política de menu ao carregar/gravar utilizadores não-admin. */
 export function ensureUserMenuPolicy<
-  T extends { menuItems?: Record<string, boolean | undefined>; menuItemsConfigured?: boolean; isAdmin?: boolean }
+  T extends {
+    menuItems?: Record<string, boolean | undefined>
+    menuItemsConfigured?: boolean
+    isAdmin?: boolean
+    permissions?: UserFormState['permissions']
+  }
 >(user: T): T {
   if (user.isAdmin) return user
   const configured = inferMenuItemsConfigured(user.menuItems, user.menuItemsConfigured)
   if (!configured) return user
+  const menuItems =
+    user.permissions != null
+      ? normalizeMenuItemsWithLegacyFallback(user.menuItems, user.permissions)
+      : normalizeMenuItems(user.menuItems)
   return {
     ...user,
     menuItemsConfigured: true,
-    menuItems: normalizeMenuItems(user.menuItems),
+    menuItems,
   }
 }
 
@@ -275,6 +284,26 @@ export function normalizeMenuItems(partial?: Record<string, boolean | undefined>
   const items: Record<string, boolean> = {}
   for (const id of ALL_MENU_ITEM_IDS) {
     items[id] = Boolean(partial?.[id])
+  }
+  return items
+}
+
+/**
+ * Preserva escolhas explícitas do administrador; chaves novas (ex.: peças especiais)
+ * herdam permissões legadas em vez de ficarem ocultas para utilizadores antigos.
+ */
+export function normalizeMenuItemsWithLegacyFallback(
+  partial: Record<string, boolean | undefined> | undefined,
+  permissions: UserFormState['permissions']
+): Record<string, boolean> {
+  const legacyDefaults = buildMenuItemsFromLegacyPermissions(permissions, partial)
+  const items: Record<string, boolean> = {}
+  for (const id of ALL_MENU_ITEM_IDS) {
+    if (partial && Object.prototype.hasOwnProperty.call(partial, id)) {
+      items[id] = Boolean(partial[id])
+    } else {
+      items[id] = Boolean(legacyDefaults[id])
+    }
   }
   return items
 }

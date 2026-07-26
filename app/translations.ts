@@ -4092,6 +4092,7 @@ export const translations = {
     pedidoOrcamentosAvulsoHubCardDesc: "Pedidos de orçamento desligados do fluxo normal de serviço.",
     orcamentoServicoTecnicoTitle: "ORÇAMENTO DE SERVIÇO TÉCNICO",
     orcamentoPecasEspeciaisTitle: "ORÇAMENTOS DE PEÇAS ESPECIAIS",
+    orcamentoNavPecasEspeciais: "Peças Especiais",
     orcamentoPecasEspeciaisDesc: "Propostas comerciais para peças especiais (modelo tipo oferta internacional), com logo Nonato Service e código do cliente.",
     orcamentoPecasEspeciaisHubCardDesc: "Orçamentos de peças especiais com tabela Pos/artigo/qtd/preço, embalagem e condições de pagamento.",
     clienteCodigoLabel: "Código do cliente",

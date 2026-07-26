@@ -99,7 +99,7 @@ import {
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser } from './utils/syncRevision'
 import { cmpNomeCliente, ordenarClientesPorNome, localeOrdenacaoClientes } from './lib/ordenarClientes'
-import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasStrictMenuPolicy, normalizeMenuItems, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
+import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasStrictMenuPolicy, normalizeMenuItems, normalizeMenuItemsWithLegacyFallback, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
   NONATO_CRITICAL_CADASTRO_KEYS,
   localStorageKeyHasMeaningfulCadastro,
@@ -4779,7 +4779,18 @@ export default function Dashboard() {
       extras: Boolean(user.permissions?.extras),
     },
     menuItems: user.menuItemsConfigured
-      ? normalizeMenuItems(user.menuItems)
+      ? normalizeMenuItemsWithLegacyFallback(user.menuItems, {
+          gestores: Boolean(user.permissions?.gestores),
+          equipamentos: Boolean(user.permissions?.equipamentos),
+          clientes: Boolean(user.permissions?.clientes),
+          fornecedores: Boolean(user.permissions?.fornecedores),
+          relatorioServico: Boolean(user.permissions?.relatorioServico),
+          bibliotecaPecas: Boolean(user.permissions?.bibliotecaPecas),
+          agenda: Boolean(user.permissions?.agenda),
+          desmontados: Boolean(user.permissions?.desmontados),
+          cadastroServicos: Boolean(user.permissions?.cadastroServicos),
+          extras: Boolean(user.permissions?.extras),
+        })
       : buildMenuItemsFromLegacyPermissions(
           {
             gestores: Boolean(user.permissions?.gestores),
@@ -69938,6 +69949,24 @@ A1;Peça exemplo;10`}
                 {orcamentosGerados.length}
               </span>
             </button>
+            {canAccessAction('open-orcamentos-pecas-especiais') ? (
+              <button
+                type="button"
+                className="orc-pro__tipo-btn orc-pro__tipo-btn--compact orc-pro__tipo-btn--pecas"
+                onClick={() => openTab('orcamentos-pecas-especiais', getTabTitle('orcamentos-pecas-especiais'))}
+                title={
+                  (safeT as any)?.orcamentoPecasEspeciaisDesc ||
+                  (safeT as any)?.orcamentoPecasEspeciaisTitle ||
+                  'Orçamentos de peças especiais'
+                }
+              >
+                <span className="orc-pro__tipo-btn-label">
+                  {(safeT as any)?.orcamentoNavPecasEspeciais ||
+                    (safeT as any)?.orcamentoPecasEspeciaisTitle ||
+                    'Peças Especiais'}
+                </span>
+              </button>
+            ) : null}
           </div>
         </nav>
 

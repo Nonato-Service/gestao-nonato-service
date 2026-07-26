@@ -42786,6 +42786,14 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
 .orc-pro__tipo-btn--history.is-active .orc-pro__tipo-badge {
   background: rgba(16, 185, 129, 0.85);
 }
+.orc-pro__tipo-btn--pecas {
+  border-color: rgba(167, 139, 250, 0.42);
+  background: rgba(91, 33, 182, 0.18);
+}
+.orc-pro__tipo-btn--pecas:hover {
+  border-color: rgba(196, 181, 253, 0.65);
+  background: rgba(91, 33, 182, 0.28);
+}
 .orc-pro__tipo-btn-label {
   display: block;
   font-weight: 700;
