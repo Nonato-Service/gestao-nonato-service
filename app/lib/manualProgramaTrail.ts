@@ -6,6 +6,8 @@ export type ManualTrailStepDef = {
   descKey: string
   fallbackTitle: string
   fallbackDesc: string
+  /** Página do manual a abrir ao clicar na trilha */
+  targetPageId: string
 }
 
 export const MANUAL_PROGRAMA_TRAIL: ManualTrailStepDef[] = [
@@ -16,6 +18,7 @@ export const MANUAL_PROGRAMA_TRAIL: ManualTrailStepDef[] = [
     descKey: 'manualSecaoInicioDesc',
     fallbackTitle: '1) Início rápido',
     fallbackDesc: 'Faça login, escolha o idioma, confirme as permissões e organize a sidebar.',
+    targetPageId: 'dashboard',
   },
   {
     id: 'cadastro',
@@ -24,6 +27,7 @@ export const MANUAL_PROGRAMA_TRAIL: ManualTrailStepDef[] = [
     descKey: 'manualSecaoCadastroDesc',
     fallbackTitle: '2) Cadastro base',
     fallbackDesc: 'Cadastre gestores, equipamentos, clientes e fornecedores.',
+    targetPageId: 'gestores-default',
   },
   {
     id: 'operacao',
@@ -32,6 +36,7 @@ export const MANUAL_PROGRAMA_TRAIL: ManualTrailStepDef[] = [
     descKey: 'manualSecaoOperacaoDesc',
     fallbackTitle: '3) Operação técnica',
     fallbackDesc: 'Relatórios, protocolos, agenda e checklist.',
+    targetPageId: 'agenda-default',
   },
   {
     id: 'pecas',
@@ -40,6 +45,7 @@ export const MANUAL_PROGRAMA_TRAIL: ManualTrailStepDef[] = [
     descKey: 'manualSecaoPecasDesc',
     fallbackTitle: '4) Peças e biblioteca',
     fallbackDesc: 'Biblioteca de peças e importação em lote.',
+    targetPageId: 'biblioteca-pecas-default',
   },
   {
     id: 'financeiro',
@@ -48,6 +54,7 @@ export const MANUAL_PROGRAMA_TRAIL: ManualTrailStepDef[] = [
     descKey: 'manualSecaoFinanceiroDesc',
     fallbackTitle: '5) Financeiro',
     fallbackDesc: 'Custos, despesas, comprovantes e fecho.',
+    targetPageId: 'gestao-financeira-default',
   },
   {
     id: 'ajuda',
@@ -56,6 +63,7 @@ export const MANUAL_PROGRAMA_TRAIL: ManualTrailStepDef[] = [
     descKey: 'manualSecaoAjudaDesc',
     fallbackTitle: '6) Ajuda e suporte',
     fallbackDesc: 'F1, HELP e este manual.',
+    targetPageId: 'dashboard',
   },
   {
     id: 'boas-praticas',
@@ -64,6 +72,7 @@ export const MANUAL_PROGRAMA_TRAIL: ManualTrailStepDef[] = [
     descKey: 'manualSecaoBoasPraticasDesc',
     fallbackTitle: '7) Boas práticas',
     fallbackDesc: 'Padronização e qualidade dos dados.',
+    targetPageId: 'clientes-default',
   },
   {
     id: 'seguranca',
@@ -72,5 +81,6 @@ export const MANUAL_PROGRAMA_TRAIL: ManualTrailStepDef[] = [
     descKey: 'manualSecaoSegurancaDesc',
     fallbackTitle: '8) Segurança e backup',
     fallbackDesc: 'Sincronização, actualização e cópias de segurança.',
+    targetPageId: 'administrador-default',
   },
 ]
