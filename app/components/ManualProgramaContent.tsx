@@ -12,6 +12,7 @@ import { ManualProgramaScreenPreview } from './ManualProgramaScreenPreview'
 
 type ManualProgramaContentProps = {
   tr: Record<string, string | undefined>
+  locale: string
   getHelpContent: (helpKey: string, page: ManualProgramaPageDef) => string
   getTabTitle: (tabType: string) => string
   onOpenModule: (tabType: string, action: string) => void
@@ -30,6 +31,7 @@ function formatProgress(template: string, current: number, total: number): strin
 
 export default function ManualProgramaContent({
   tr,
+  locale,
   getHelpContent,
   getTabTitle,
   onOpenModule,
@@ -284,7 +286,13 @@ export default function ManualProgramaContent({
               <ManualProgramaScreenPreview
                 page={selectedPage}
                 title={pageTitle}
+                locale={locale}
                 screenLabel={pickTr(tr, 'manualProScreenLabel', 'Ecrã do módulo')}
+                realScreenNote={pickTr(
+                  tr,
+                  'manualProScreenReal',
+                  'Captura real do ecrã deste módulo no sistema.'
+                )}
                 simulatedNote={pickTr(
                   tr,
                   'manualProScreenSimulated',

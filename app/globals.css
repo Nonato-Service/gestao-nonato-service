@@ -45650,6 +45650,19 @@ html body .op-pro .op-pro__textarea::-webkit-input-placeholder {
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.45);
 }
+.manual-pro-v2-screen__shot-wrap {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+.manual-pro-v2-screen__shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  vertical-align: top;
+}
 .manual-pro-page-preview__btn--gold {
   background: rgba(234, 179, 8, 0.18) !important;
   border-color: rgba(234, 179, 8, 0.4) !important;

@@ -36965,6 +36965,7 @@ export default function Dashboard() {
         return (
           <ManualProgramaContent
             tr={safeT as Record<string, string | undefined>}
+            locale={selectedLanguage}
             getHelpContent={getManualHelpContent}
             getTabTitle={(tabType) => getTabTitle(tabType as TabType)}
             onOpenModule={(tabType) => openTab(tabType as TabType, getTabTitle(tabType as TabType))}
