@@ -2,15 +2,36 @@ export type ParsedHelpContent = {
   purpose: string
   steps: string[]
   sections: Array<{ title: string; items: string[] }>
+  tips: string[]
+  warnings: string[]
 }
 
 const COMO_MARKER = '---COMO---'
+
+function isTipLine(line: string): boolean {
+  const t = line.trim()
+  return t.startsWith('💡') || /^(\[?DICA\]?:?|\[?TIP\]?:?)/i.test(t)
+}
+
+function isWarningLine(line: string): boolean {
+  const t = line.trim()
+  return t.startsWith('⚠') || /^(\[?ATEN[ÇC][ÃA]O\]?:?|\[?WARNING\]?:?|\[?AVISO\]?:?)/i.test(t)
+}
+
+function cleanMarkerLine(line: string): string {
+  return line
+    .trim()
+    .replace(/^💡\s*/, '')
+    .replace(/^⚠️?\s*/, '')
+    .replace(/^(\[?DICA\]?:?|\[?TIP\]?:?|\[?ATEN[ÇC][ÃA]O\]?:?|\[?WARNING\]?:?|\[?AVISO\]?:?)\s*/i, '')
+    .trim()
+}
 
 /** Divide textos F1 / manual no bloco «para que serve» e passos. */
 export function parseHelpContent(raw: string): ParsedHelpContent {
   const text = (raw || '').trim()
   if (!text) {
-    return { purpose: '', steps: [], sections: [] }
+    return { purpose: '', steps: [], sections: [], tips: [], warnings: [] }
   }
 
   const markerIdx = text.indexOf(COMO_MARKER)
@@ -19,11 +40,22 @@ export function parseHelpContent(raw: string): ParsedHelpContent {
 
   const lines = comoBlock.split('\n')
   const sections: Array<{ title: string; items: string[] }> = []
+  const tips: string[] = []
+  const warnings: string[] = []
   let current: { title: string; items: string[] } | null = null
 
   for (const line of lines) {
     const trimmed = line.trim()
     if (!trimmed) continue
+
+    if (isTipLine(trimmed)) {
+      tips.push(cleanMarkerLine(trimmed))
+      continue
+    }
+    if (isWarningLine(trimmed)) {
+      warnings.push(cleanMarkerLine(trimmed))
+      continue
+    }
 
     if (trimmed.startsWith('—') || trimmed.startsWith('- ')) {
       const title = trimmed.replace(/^—\s*/, '').replace(/^-\s*/, '').trim()
@@ -34,6 +66,14 @@ export function parseHelpContent(raw: string): ParsedHelpContent {
 
     if (trimmed.startsWith('•')) {
       const item = trimmed.replace(/^•\s*/, '').trim()
+      if (isTipLine(item)) {
+        tips.push(cleanMarkerLine(item))
+        continue
+      }
+      if (isWarningLine(item)) {
+        warnings.push(cleanMarkerLine(item))
+        continue
+      }
       if (current) current.items.push(item)
       else {
         current = { title: '', items: [item] }
@@ -50,7 +90,7 @@ export function parseHelpContent(raw: string): ParsedHelpContent {
   }
 
   const steps = sections.flatMap((s) => s.items)
-  return { purpose: purposeBlock, steps, sections }
+  return { purpose: purposeBlock, steps, sections, tips, warnings }
 }
 
 export function helpKeyFromTabType(tabType: string): string {

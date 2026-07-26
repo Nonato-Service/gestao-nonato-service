@@ -1,0 +1,120 @@
+'use client'
+
+import type { ManualProgramaPageDef } from '../lib/manualProgramaCatalog'
+import { previewConfigForPage } from '../lib/manualProgramaPreviews'
+
+type ManualProgramaScreenPreviewProps = {
+  page: ManualProgramaPageDef
+  title: string
+  screenLabel: string
+  simulatedNote: string
+}
+
+export function ManualProgramaScreenPreview({
+  page,
+  title,
+  screenLabel,
+  simulatedNote,
+}: ManualProgramaScreenPreviewProps) {
+  const config = previewConfigForPage(page, title)
+
+  return (
+    <figure className="manual-pro-v2-screen">
+      <figcaption className="manual-pro-v2-screen__caption">
+        <span className="manual-pro-v2-screen__caption-label">{screenLabel}</span>
+        <span className="manual-pro-v2-screen__caption-note">{simulatedNote}</span>
+      </figcaption>
+      <div className={`manual-pro-page-preview manual-pro-page-preview--${config.layout}`} aria-hidden="true">
+        <div className="manual-pro-page-preview__chrome">
+          <span className="manual-pro-page-preview__dot manual-pro-page-preview__dot--red" />
+          <span className="manual-pro-page-preview__dot manual-pro-page-preview__dot--yellow" />
+          <span className="manual-pro-page-preview__dot manual-pro-page-preview__dot--green" />
+          <span className="manual-pro-page-preview__path">{page.sidebarPath}</span>
+        </div>
+        <div className="manual-pro-page-preview__body">
+          <aside className="manual-pro-page-preview__sidebar">
+            <div className="manual-pro-page-preview__sidebar-item manual-pro-page-preview__sidebar-item--active">
+              <span>{page.icon}</span>
+              <span>{page.moduleTitle}</span>
+            </div>
+            <div className="manual-pro-page-preview__sidebar-item">
+              <span>📂</span>
+              <span>Menu</span>
+            </div>
+            <div className="manual-pro-page-preview__sidebar-item">
+              <span>❓</span>
+              <span>F1</span>
+            </div>
+          </aside>
+          <main className="manual-pro-page-preview__main">
+            <div className="manual-pro-page-preview__toolbar">
+              <span>F1 · HELP</span>
+              <span>🏠 Início</span>
+            </div>
+            <div className="manual-pro-page-preview__hero">
+              <span className="manual-pro-page-preview__hero-icon">{page.icon}</span>
+              <div>
+                <strong>{title}</strong>
+                <small>{config.heroSub || 'Módulo selecionado'}</small>
+              </div>
+            </div>
+            <div className="manual-pro-page-preview__actions">
+              {config.actions.map((action, i) => (
+                <span
+                  key={i}
+                  className={
+                    'manual-pro-page-preview__btn' +
+                    (action.variant === 'ghost'
+                      ? ' manual-pro-page-preview__btn--ghost'
+                      : action.variant === 'gold'
+                        ? ' manual-pro-page-preview__btn--gold'
+                        : action.variant === 'purple'
+                          ? ' manual-pro-page-preview__btn--purple'
+                          : '')
+                  }
+                >
+                  {action.label}
+                </span>
+              ))}
+            </div>
+            <div
+              className={
+                'manual-pro-page-preview__content' +
+                (config.layout === 'catalog' ? ' manual-pro-page-preview__content--grid' : '') +
+                (config.layout === 'agenda' ? ' manual-pro-page-preview__content--agenda' : '')
+              }
+            >
+              {config.blocks.map((block, i) => {
+                if (block.type === 'filter') {
+                  return (
+                    <div key={i} className="manual-pro-page-preview__filters">
+                      <span />
+                      <span />
+                      <span />
+                      <span className="manual-pro-page-preview__filters-search" />
+                    </div>
+                  )
+                }
+                if (block.type === 'stat') {
+                  return <div key={i} className="manual-pro-page-preview__stat" />
+                }
+                if (block.type === 'card') {
+                  return <div key={i} className="manual-pro-page-preview__card" />
+                }
+                return (
+                  <div
+                    key={i}
+                    className={
+                      'manual-pro-page-preview__row' +
+                      (block.width === 'short' ? ' manual-pro-page-preview__row--short' : '')
+                    }
+                  />
+                )
+              })}
+            </div>
+          </main>
+        </div>
+      </div>
+    </figure>
+  )
+}
