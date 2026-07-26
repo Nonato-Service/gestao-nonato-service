@@ -33466,6 +33466,10 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 /* ── Hub Biblioteca de Relatórios ── */
 .bib-relatorios-hub-page.biblioteca-relatorios-root {
+  --fin-cor-amarelo: #facc15;
+  --fin-cor-azul: #38bdf8;
+  --fin-cor-verde: #4ade80;
+  --fin-cor-vermelho: #f87171;
   padding: clamp(12px, 2vw, 24px);
 }
 
@@ -34289,15 +34293,15 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .bib-relatorios-hub__legenda-dot--vermelho {
-  background: var(--fin-cor-vermelho);
+  background: #f87171;
 }
 
 .bib-relatorios-hub__legenda-dot--azul {
-  background: var(--fin-cor-azul);
+  background: #38bdf8;
 }
 
 .bib-relatorios-hub__legenda-dot--verde {
-  background: var(--fin-cor-verde);
+  background: #4ade80;
 }
 
 .bib-relatorios-hub__legenda-dot--amarelo {
@@ -34305,7 +34309,62 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .bib-relatorios-hub__legenda-dot--misto {
-  background: linear-gradient(135deg, var(--fin-cor-vermelho) 0%, var(--fin-cor-azul) 50%, var(--fin-cor-verde) 100%);
+  background: linear-gradient(135deg, #f87171 0%, #38bdf8 50%, #4ade80 100%);
+}
+
+/* Chips da legenda financeira — cor de fundo + texto branco */
+.bib-relatorios-hub__legenda-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 1px solid transparent;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.bib-relatorios-hub__legenda-chip--vermelho {
+  background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
+  border-color: rgba(252, 165, 165, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 12px rgba(248, 113, 113, 0.28);
+}
+
+.bib-relatorios-hub__legenda-chip--azul {
+  background: linear-gradient(180deg, #0ea5e9 0%, #0369a1 100%);
+  border-color: rgba(125, 211, 252, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 12px rgba(56, 189, 248, 0.24);
+}
+
+.bib-relatorios-hub__legenda-chip--verde {
+  background: linear-gradient(180deg, #22c55e 0%, #15803d 100%);
+  border-color: rgba(134, 239, 172, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 12px rgba(74, 222, 128, 0.24);
+}
+
+.bib-relatorios-hub__legenda-chip--misto {
+  background: linear-gradient(
+    90deg,
+    #dc2626 0%,
+    #0284c7 50%,
+    #16a34a 100%
+  );
+  border-color: rgba(203, 213, 225, 0.65);
+}
+
+.bib-relatorios-hub__legenda-item:has(.bib-relatorios-hub__legenda-chip) {
+  gap: 0;
 }
 
 .bib-relatorios-hub__clientes .biblioteca-relatorios-client-list {

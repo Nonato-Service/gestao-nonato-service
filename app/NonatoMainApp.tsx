@@ -67330,20 +67330,24 @@ A1;Peça exemplo;10`}
                       </span>
                       <ul className="bib-relatorios-hub__legenda-items">
                         <li className="bib-relatorios-hub__legenda-item">
-                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--vermelho" aria-hidden />
-                          {txBibHero.financeiroDespesasEstadoVermelho || 'Vermelho — não pagou'}
+                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--vermelho">
+                            {txBibHero.financeiroDespesasEstadoVermelho || 'Vermelho — não pagou'}
+                          </span>
                         </li>
                         <li className="bib-relatorios-hub__legenda-item">
-                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--azul" aria-hidden />
-                          {txBibHero.financeiroDespesasEstadoAzul || 'Azul — cobrança enviada'}
+                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--azul">
+                            {txBibHero.financeiroDespesasEstadoAzul || 'Azul — cobrança enviada'}
+                          </span>
                         </li>
                         <li className="bib-relatorios-hub__legenda-item">
-                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--verde" aria-hidden />
-                          {txBibHero.financeiroDespesasEstadoVerde || 'Verde — pago'}
+                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--verde">
+                            {txBibHero.financeiroDespesasEstadoVerde || 'Verde — pago'}
+                          </span>
                         </li>
                         <li className="bib-relatorios-hub__legenda-item">
-                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--misto" aria-hidden />
-                          {txBibHero.financeiroDespesasEstadoMisto || 'Vários estados'}
+                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--misto">
+                            {txBibHero.financeiroDespesasEstadoMisto || 'Vários estados'}
+                          </span>
                         </li>
                       </ul>
                     </div>
