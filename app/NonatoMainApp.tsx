@@ -49238,7 +49238,7 @@ A1;Peça exemplo;10`}
                   const renderAgendaListaToolbar = () => (
                     <div className="agenda-lista-toolbar">
                       <p className="agenda-lista-toolbar__hint">
-                        {(safeT as any)?.agendaListaExpandirHint ||
+                        {safeT.agendaListaExpandirHint ||
                           'Secções e cartões recolhíveis — expanda só o que precisa. Ideal para listas longas.'}
                       </p>
                       <div className="agenda-lista-toolbar__actions">
