@@ -47348,208 +47348,68 @@ A1;Peça exemplo;10`}
 
       case 'agenda':
         return (
-          <div className="agenda-tecnica-page ns-ui-v2 cadastro-valores-v2" style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
-            {/* Cabeçalho Profissional */}
-            <div className="alerta-mensagens-hero agenda-tecnica-hero" style={{
-              marginBottom: '40px',
-              padding: '30px',
-              background: 'linear-gradient(135deg, rgba(0, 200, 83, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '20px',
-              border: '2px solid rgba(0, 200, 83, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 200, 83, 0.1)'
-            }}>
-              <div className="agenda-tecnica-hero__row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div className="agenda-tecnica-hero__brand" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+          <div className="agenda-tecnica-page ns-ui-v2">
+            <div className="agenda-tecnica-hero">
+              <div className="agenda-tecnica-hero__row">
+                <div className="agenda-tecnica-hero__brand">
                   <LogoComponent size="small" />
                 </div>
-                <div className="agenda-tecnica-hero__title" style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 className="agenda-tecnica-hero__h1" style={{
-                    margin: 0,
-                    fontSize: '32px',
-                    fontWeight: 'bold',
-                    color: '#00c853',
-                    letterSpacing: '3px',
-                    textShadow: '0 0 20px rgba(0, 200, 83, 0.3)',
-                    marginBottom: '8px'
-                  }}>
-                    {safeT?.agendaTitle || 'AGENDA TÉCNICA'}
-                  </h1>
-                  <p className="agenda-tecnica-hero__sub" style={{
-                    margin: 0,
-                    fontSize: '14px',
-                    color: '#ccc',
-                    opacity: 0.8
-                  }}>
+                <div className="agenda-tecnica-hero__title">
+                  <h1 className="agenda-tecnica-hero__h1">{safeT?.agendaTitle || 'AGENDA TÉCNICA'}</h1>
+                  <p className="agenda-tecnica-hero__sub">
                     {agendamentos.length} {safeT?.agendamentosCadastrados || 'agendamento(s) cadastrado(s)'}
                   </p>
                 </div>
-                <div className="agenda-tecnica-hero__actions" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <div className="agenda-tecnica-hero__actions-primary">
-                  <button 
-                    className="btn-primary" 
-                    onClick={() => handleAddAgendamento('servico')} 
-                    style={{ 
-                      padding: '10px 20px',
-                      backgroundColor: 'rgba(0, 200, 83, 0.2)',
-                      borderColor: 'rgba(0, 200, 83, 0.5)',
-                      color: '#00c853',
-                      fontWeight: 'bold',
-                      fontSize: '13px'
-                    }}
+                <div className="agenda-tecnica-hero__actions-nav">
+                  <button
+                    type="button"
+                    className="agenda-tecnica-hero__nav-btn"
+                    onClick={() => closeTab(activeTabId || '')}
+                    title={safeT?.voltar || 'Voltar'}
                   >
-                    ➕ {safeT?.novoAgendamento || 'Novo Agendamento'}
+                    ↶
                   </button>
                   <button
                     type="button"
-                    className="btn-primary"
-                    onClick={() => handleAddAgendamento('pessoal')}
-                    style={{
-                      padding: '10px 20px',
-                      backgroundColor: 'rgba(140, 80, 220, 0.18)',
-                      border: '1px solid rgba(180, 130, 255, 0.55)',
-                      color: '#d8b4fe',
-                      fontWeight: 'bold',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                    }}
+                    className="agenda-tecnica-hero__nav-btn agenda-tecnica-hero__nav-btn--home"
+                    onClick={voltarPaginaInicial}
+                    title={safeT?.paginaInicial || 'Página Inicial'}
                   >
-                    📌 {(safeT as any)?.agendaNovoAssuntoPessoal || 'Novo assunto pessoal'}
+                    🏠
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => handleButtonClick('open-estado-visual-tecnico', 'estado-visual-tecnico-default')}
-                    style={{
-                      padding: '10px 18px',
-                      backgroundColor: 'rgba(255, 200, 50, 0.16)',
-                      border: '1px solid rgba(255, 210, 80, 0.62)',
-                      borderRadius: '8px',
-                      color: '#fde68a',
-                      fontWeight: 'bold',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                    title={(safeT as any)?.agendaAbrirEstadoVisualHint || 'Mapa com cores dos técnicos: em atendimento, pré-agendamento, etc.'}
-                  >
-                    🎯 {safeT?.estadoVisualTecnico || 'Estado Visual do Técnico'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowAgendaLembreteModal(true)}
-                    style={{
-                      padding: '10px 18px',
-                      backgroundColor: 'rgba(37, 211, 102, 0.2)',
-                      border: '1px solid rgba(37, 211, 102, 0.6)',
-                      borderRadius: '8px',
-                      color: '#25d366',
-                      fontWeight: 'bold',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    💬 {safeT?.lembreteAgendaBotao || 'Lembretes do dia (WhatsApp)'}
-                  </button>
-                  </div>
-                  <div className="agenda-tecnica-hero__actions-nav" style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    <button 
-                      onClick={() => closeTab(activeTabId || '')}
-                      style={{ 
-                        padding: '6px 8px', 
-                        fontSize: '16px',
-                        backgroundColor: 'transparent',
-                        border: '1px solid rgba(0, 200, 83, 0.3)',
-                        borderRadius: '4px',
-                        color: '#00c853',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '32px',
-                        height: '32px'
-                      }}
-                      title={safeT?.voltar || 'Voltar'}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.1)'
-                        e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.5)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                        e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.3)'
-                      }}
-                    >
-                      ↶
-                    </button>
-                    <button 
-                      onClick={voltarPaginaInicial}
-                      style={{ 
-                        padding: '6px 8px', 
-                        fontSize: '16px',
-                        backgroundColor: 'transparent',
-                        border: '1px solid rgba(0, 150, 255, 0.3)',
-                        borderRadius: '4px',
-                        color: '#66b3ff',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '32px',
-                        height: '32px'
-                      }}
-                      title={safeT?.paginaInicial || 'Página Inicial'}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
-                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
-                      }}
-                    >
-                      🏠
-                    </button>
-                  </div>
                 </div>
+              </div>
+
+              <div className="agenda-tecnica-hero__actions-bar">
+                <button type="button" className="agenda-tecnica-hero__action-btn agenda-tecnica-hero__action-btn--green" onClick={() => handleAddAgendamento('servico')}>
+                  ➕ {safeT?.novoAgendamento || 'Novo Agendamento'}
+                </button>
+                <button type="button" className="agenda-tecnica-hero__action-btn agenda-tecnica-hero__action-btn--purple" onClick={() => handleAddAgendamento('pessoal')}>
+                  📌 {(safeT as any)?.agendaNovoAssuntoPessoal || 'Novo assunto pessoal'}
+                </button>
+                <button
+                  type="button"
+                  className="agenda-tecnica-hero__action-btn agenda-tecnica-hero__action-btn--gold"
+                  onClick={() => handleButtonClick('open-estado-visual-tecnico', 'estado-visual-tecnico-default')}
+                  title={(safeT as any)?.agendaAbrirEstadoVisualHint || 'Mapa com cores dos técnicos: em atendimento, pré-agendamento, etc.'}
+                >
+                  🎯 {safeT?.estadoVisualTecnico || 'Estado Visual do Técnico'}
+                </button>
+                <button type="button" className="agenda-tecnica-hero__action-btn agenda-tecnica-hero__action-btn--whatsapp" onClick={() => setShowAgendaLembreteModal(true)}>
+                  💬 {safeT?.lembreteAgendaBotao || 'Lembretes do dia (WhatsApp)'}
+                </button>
               </div>
             </div>
 
             {/* Controles de Visualização */}
-            <div className="agenda-tecnica-view-toggle" style={{
-              marginBottom: '30px',
-              padding: '20px',
-              backgroundColor: '#404040',
-              borderRadius: '12px',
-              border: '1px solid rgba(0, 200, 83, 0.2)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '15px'
-            }}>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="agenda-tecnica-view-toggle">
+              <div className="agenda-tecnica-view-toggle__tabs">
                 <button
                   type="button"
                   className={
                     'agenda-tecnica-view-btn' + (visualizacaoAgenda === 'lista' ? ' agenda-tecnica-view-btn--active' : '')
                   }
                   onClick={() => setVisualizacaoAgenda('lista')}
-                  style={{
-                    padding: '12px 24px',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    backgroundColor: visualizacaoAgenda === 'lista' ? 'rgba(0, 200, 83, 0.3)' : '#484848',
-                    border: visualizacaoAgenda === 'lista' ? '2px solid rgba(0, 200, 83, 0.6)' : '1px solid rgba(0, 200, 83, 0.3)',
-                    color: visualizacaoAgenda === 'lista' ? '#00c853' : '#fff',
-                    cursor: 'pointer',
-                    borderRadius: '8px',
-                    transition: 'all 0.3s ease'
-                  }}
                 >
                   📋 {safeT?.lista || 'Lista'}
                 </button>
@@ -47560,38 +47420,12 @@ A1;Peça exemplo;10`}
                     (visualizacaoAgenda === 'calendario' ? ' agenda-tecnica-view-btn--active' : '')
                   }
                   onClick={() => setVisualizacaoAgenda('calendario')}
-                  style={{
-                    padding: '12px 24px',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    backgroundColor: visualizacaoAgenda === 'calendario' ? 'rgba(0, 200, 83, 0.3)' : '#484848',
-                    border: visualizacaoAgenda === 'calendario' ? '2px solid rgba(0, 200, 83, 0.6)' : '1px solid rgba(0, 200, 83, 0.3)',
-                    color: visualizacaoAgenda === 'calendario' ? '#00c853' : '#fff',
-                    cursor: 'pointer',
-                    borderRadius: '8px',
-                    transition: 'all 0.3s ease'
-                  }}
                 >
                   📅 {safeT?.calendario || 'Calendário'}
                 </button>
               </div>
               {visualizacaoAgenda === 'calendario' ? (
-                <label
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    color: '#ddd',
-                    userSelect: 'none',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(0, 200, 83, 0.25)',
-                    backgroundColor: agendaCalendarioMostrarConcluidos ? 'rgba(0, 80, 40, 0.35)' : 'rgba(0,0,0,0.2)',
-                  }}
-                  title={(safeT as any)?.agendaCalendarioMostrarConcluidosHint || ''}
-                >
+                <label className="agenda-tecnica-view-toggle__check" title={(safeT as any)?.agendaCalendarioMostrarConcluidosHint || ''}>
                   <input
                     type="checkbox"
                     checked={agendaCalendarioMostrarConcluidos}
@@ -47604,7 +47438,7 @@ A1;Peça exemplo;10`}
                         /* ignorar */
                       }
                     }}
-                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#00c853' }}
+                    style={{ accentColor: '#00c853' }}
                   />
                   <span>{(safeT as any)?.agendaCalendarioMostrarConcluidos || 'Mostrar concluídos no calendário'}</span>
                 </label>
@@ -47612,12 +47446,11 @@ A1;Peça exemplo;10`}
             </div>
 
             {/* Filtros */}
-            <div className="agenda-tecnica-filtros" style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
-              <div className="agenda-tecnica-filtros__field" style={{ minWidth: '150px' }}>
+            <div className="agenda-tecnica-filtros">
+              <div className="agenda-tecnica-filtros__field">
                 <select
                   value={filtroAgenda}
                   onChange={(e) => setFiltroAgenda(e.target.value as typeof filtroAgenda)}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                 >
                   <option value="todos">{safeT?.todos || 'Todos'}</option>
                   <option value="pre-agendamento">{safeT?.preAgendamento || 'Pré-Agendamento'}</option>
@@ -47626,11 +47459,10 @@ A1;Peça exemplo;10`}
                   <option value="visita-tecnica">{(safeT as any)?.agendaFiltroVisitaTecnica || 'Visita técnica'}</option>
                 </select>
               </div>
-              <div className="agenda-tecnica-filtros__field" style={{ minWidth: '150px' }}>
+              <div className="agenda-tecnica-filtros__field">
                 <select
                   value={filtroTecnicoAgenda}
                   onChange={(e) => setFiltroTecnicoAgenda(e.target.value)}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                 >
                   <option value="">{safeT?.todosTecnicos || 'Todos os técnicos'}</option>
                   {tecnicos.map(tec => (
@@ -47638,16 +47470,15 @@ A1;Peça exemplo;10`}
                   ))}
                 </select>
               </div>
-              <div className="agenda-tecnica-filtros__field" style={{ minWidth: '150px' }}>
+              <div className="agenda-tecnica-filtros__field">
                 <input
                   type="date"
                   value={filtroDataAgenda}
                   onChange={(e) => setFiltroDataAgenda(e.target.value)}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                 />
               </div>
-              <div className="agenda-tecnica-filtros__field" style={{ flex: '1 1 220px', minWidth: '180px', maxWidth: '420px' }}>
-                <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>
+              <div className="agenda-tecnica-filtros__field agenda-tecnica-filtros__field--search">
+                <label className="agenda-tecnica-filtros__label">
                   {(safeT as any)?.agendaBuscaRapidaLabel || 'Pesquisa na lista'}
                 </label>
                 <input
@@ -47655,28 +47486,18 @@ A1;Peça exemplo;10`}
                   value={buscaAgendaListaRapida}
                   onChange={(e) => setBuscaAgendaListaRapida(e.target.value)}
                   placeholder={(safeT as any)?.agendaBuscaRapidaPlaceholder || 'Cliente, técnico, serviço, equipamento…'}
-                  style={{
-                    width: '100%',
-                    padding: '8px 10px',
-                    backgroundColor: '#484848',
-                    color: '#fff',
-                    border: '1px solid rgba(0, 200, 83, 0.3)',
-                    borderRadius: '4px',
-                    fontSize: '13px',
-                    boxSizing: 'border-box',
-                  }}
                 />
               </div>
               {(filtroAgenda !== 'todos' || filtroTecnicoAgenda || filtroDataAgenda || buscaAgendaListaRapida.trim()) && (
                 <button
-                  className="btn-secondary"
+                  type="button"
+                  className="btn-secondary agenda-tecnica-filtros__clear"
                   onClick={() => {
                     setFiltroAgenda('todos')
                     setFiltroTecnicoAgenda('')
                     setFiltroDataAgenda('')
                     setBuscaAgendaListaRapida('')
                   }}
-                  style={{ padding: '8px 15px', fontSize: '13px' }}
                 >
                   {safeT?.limparFiltros || 'Limpar Filtros'}
                 </button>
@@ -49423,14 +49244,14 @@ A1;Peça exemplo;10`}
                       <div className="agenda-lista-toolbar__actions">
                         <button
                           type="button"
-                          className="btn-secondary agenda-lista-toolbar__btn"
+                          className="agenda-lista-toolbar__btn"
                           onClick={expandirTodasSecoesAgendaLista}
                         >
                           {(safeT as any)?.expandirTodos || 'Expandir todos'}
                         </button>
                         <button
                           type="button"
-                          className="btn-secondary agenda-lista-toolbar__btn"
+                          className="agenda-lista-toolbar__btn agenda-lista-toolbar__btn--muted"
                           onClick={retrairTodasSecoesAgendaLista}
                         >
                           {(safeT as any)?.retrairTodos || 'Retrair todos'}

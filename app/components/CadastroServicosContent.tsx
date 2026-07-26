@@ -245,6 +245,20 @@ export function CadastroServicosContent(props: Props) {
       })
   }, [servicos, servicoGrupoSelecionadoId])
 
+  const statsGrupoSelecionado = useMemo(() => {
+    const itens = itensGrupoSelecionado
+    const semValor = itens.filter((s) => !s.valor || s.valor <= 0).length
+    const servicosCount = itens.filter((s) => s.categoria === 'servico').length
+    const despesasCount = itens.filter((s) => s.categoria === 'despesa').length
+    const clientesCount = servicoGrupoSelecionadoId ? clientesPorGrupo[servicoGrupoSelecionadoId] || 0 : 0
+    return { total: itens.length, semValor, servicosCount, despesasCount, clientesCount }
+  }, [itensGrupoSelecionado, servicoGrupoSelecionadoId, clientesPorGrupo])
+
+  const grupoSelecionado = useMemo(
+    () => gruposOrdenados.find((g) => g.id === servicoGrupoSelecionadoId) || null,
+    [gruposOrdenados, servicoGrupoSelecionadoId]
+  )
+
   const tabClass = (tab: TabId) =>
     'cadastro-valores-v2__tab' + (activeTab === tab ? ' cadastro-valores-v2__tab--active' : '')
 
@@ -345,9 +359,10 @@ export function CadastroServicosContent(props: Props) {
                 'Crie grupos (ex.: NONATO SERVICE, HOMAG USA). Em cada grupo, cadastre HTT e demais valores — os clientes do mesmo grupo usam esta tabela.'}
             </p>
             <div className="cadastro-valores-v2__grupo-list">
-              {gruposOrdenados.map((g) => {
+              {gruposOrdenados.map((g, index) => {
                 const nServ = servicos.filter((s) => s.grupoId === g.id).length
                 const nCli = clientesPorGrupo[g.id] || 0
+                const nZero = servicos.filter((s) => s.grupoId === g.id && (!s.valor || s.valor <= 0)).length
                 const sel = servicoGrupoSelecionadoId === g.id
                 return (
                   <button
@@ -360,9 +375,26 @@ export function CadastroServicosContent(props: Props) {
                       setDuplicarOrigemId(g.id)
                     }}
                   >
-                    <div className="cadastro-valores-v2__grupo-btn-name">{g.nome}</div>
-                    <div className="cadastro-valores-v2__grupo-btn-meta">
-                      {nServ} {safeT.servicosItensLabel || 'itens'} · {nCli} {safeT.servicosClientesLabel || 'clientes'}
+                    <div className="cadastro-valores-v2__grupo-btn-row">
+                      <span className="cadastro-valores-v2__grupo-btn-index" aria-hidden>
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <div className="cadastro-valores-v2__grupo-btn-body">
+                        <div className="cadastro-valores-v2__grupo-btn-name">{g.nome}</div>
+                        <div className="cadastro-valores-v2__grupo-btn-meta">
+                          <span className="cadastro-valores-v2__grupo-stat">
+                            {nServ} {safeT.servicosItensLabel || 'itens'}
+                          </span>
+                          <span className="cadastro-valores-v2__grupo-stat">
+                            {nCli} {safeT.servicosClientesLabel || 'clientes'}
+                          </span>
+                          {nZero > 0 ? (
+                            <span className="cadastro-valores-v2__grupo-stat cadastro-valores-v2__grupo-stat--warn">
+                              {nZero} {safeT.servicosSemValorLabel || 'sem valor'}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
                     </div>
                   </button>
                 )
@@ -420,43 +452,92 @@ export function CadastroServicosContent(props: Props) {
           </aside>
 
           <section className="cadastro-valores-v2__main">
-            {servicoGrupoSelecionadoId ? (
+            {servicoGrupoSelecionadoId && grupoSelecionado ? (
               <>
-                <div className="cadastro-valores-v2__card" style={{ marginBottom: '14px' }}>
-                  <div className="cadastro-valores-v2__section-label">{safeT.servicosRenomearGrupo || 'Nome do grupo'}</div>
-                  <div className="cadastro-valores-v2__rename-row">
-                    <input
-                      type="text"
-                      className="cadastro-valores-v2__input"
-                      value={servicoGrupoNomeEdicao}
-                      onChange={(e) => setServicoGrupoNomeEdicao(e.target.value)}
-                    />
-                    <button type="button" className="cadastro-valores-v2__btn-green cadastro-valores-v2__btn-sm" onClick={onSalvarNomeGrupo}>
-                      {safeT.save || 'Salvar'}
-                    </button>
-                    <button type="button" className="cadastro-valores-v2__btn-secondary cadastro-valores-v2__btn-sm" onClick={() => onMoveGrupo(servicoGrupoSelecionadoId, 'up')} title={safeT.servicosSubirGrupo || 'Subir'}>
-                      ↑
-                    </button>
-                    <button type="button" className="cadastro-valores-v2__btn-secondary cadastro-valores-v2__btn-sm" onClick={() => onMoveGrupo(servicoGrupoSelecionadoId, 'down')} title={safeT.servicosDescerGrupo || 'Descer'}>
-                      ↓
-                    </button>
-                    <button type="button" className="cadastro-valores-v2__btn-danger cadastro-valores-v2__btn-sm" onClick={() => onDeleteGrupo(servicoGrupoSelecionadoId)}>
-                      {safeT.servicosExcluirGrupo || 'Excluir grupo'}
-                    </button>
+                <div className="cadastro-valores-v2__group-panel">
+                  <div className="cadastro-valores-v2__group-panel-top">
+                    <div className="cadastro-valores-v2__group-panel-intro">
+                      <span className="cadastro-valores-v2__group-kicker">
+                        {safeT.servicosGrupoAtivoLabel || 'Grupo de tarifa activo'}
+                      </span>
+                      <h2 className="cadastro-valores-v2__group-name">{grupoSelecionado.nome}</h2>
+                      <p className="cadastro-valores-v2__group-report-hint">
+                        {safeT.servicosGrupoRelatorioHint ||
+                          'Os códigos (COD) e valores desta tabela são usados automaticamente nos relatórios de serviço dos clientes deste grupo.'}
+                      </p>
+                    </div>
+                    <div className="cadastro-valores-v2__group-summary">
+                      <div className="cadastro-valores-v2__group-summary-item">
+                        <span className="cadastro-valores-v2__group-summary-label">{safeT.servicosItensLabel || 'Itens'}</span>
+                        <strong>{statsGrupoSelecionado.total}</strong>
+                      </div>
+                      <div className="cadastro-valores-v2__group-summary-item">
+                        <span className="cadastro-valores-v2__group-summary-label">{safeT.servicosClientesLabel || 'Clientes'}</span>
+                        <strong>{statsGrupoSelecionado.clientesCount}</strong>
+                      </div>
+                      <div className="cadastro-valores-v2__group-summary-item">
+                        <span className="cadastro-valores-v2__group-summary-label">{safeT.servico || 'Serviços'}</span>
+                        <strong>{statsGrupoSelecionado.servicosCount}</strong>
+                      </div>
+                      <div className="cadastro-valores-v2__group-summary-item">
+                        <span className="cadastro-valores-v2__group-summary-label">{safeT.despesa || 'Despesas'}</span>
+                        <strong>{statsGrupoSelecionado.despesasCount}</strong>
+                      </div>
+                      {statsGrupoSelecionado.semValor > 0 ? (
+                        <div className="cadastro-valores-v2__group-summary-item cadastro-valores-v2__group-summary-item--warn">
+                          <span className="cadastro-valores-v2__group-summary-label">
+                            {safeT.servicosSemValorLabel || 'Sem valor'}
+                          </span>
+                          <strong>{statsGrupoSelecionado.semValor}</strong>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="cadastro-valores-v2__group-rename">
+                    <div className="cadastro-valores-v2__section-label">{safeT.servicosRenomearGrupo || 'Nome do grupo'}</div>
+                    <div className="cadastro-valores-v2__rename-row">
+                      <input
+                        type="text"
+                        className="cadastro-valores-v2__input"
+                        value={servicoGrupoNomeEdicao}
+                        onChange={(e) => setServicoGrupoNomeEdicao(e.target.value)}
+                      />
+                      <button type="button" className="cadastro-valores-v2__btn-green cadastro-valores-v2__btn-sm" onClick={onSalvarNomeGrupo}>
+                        {safeT.save || 'Salvar'}
+                      </button>
+                      <button type="button" className="cadastro-valores-v2__btn-secondary cadastro-valores-v2__btn-sm" onClick={() => onMoveGrupo(servicoGrupoSelecionadoId, 'up')} title={safeT.servicosSubirGrupo || 'Subir'}>
+                        ↑
+                      </button>
+                      <button type="button" className="cadastro-valores-v2__btn-secondary cadastro-valores-v2__btn-sm" onClick={() => onMoveGrupo(servicoGrupoSelecionadoId, 'down')} title={safeT.servicosDescerGrupo || 'Descer'}>
+                        ↓
+                      </button>
+                      <button type="button" className="cadastro-valores-v2__btn-danger cadastro-valores-v2__btn-sm" onClick={() => onDeleteGrupo(servicoGrupoSelecionadoId)}>
+                        {safeT.servicosExcluirGrupo || 'Excluir grupo'}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="cadastro-valores-v2__toolbar">
-                  <h3 className="cadastro-valores-v2__toolbar-title">{safeT.servicosItensDoGrupo || 'Trabalhos e valores'}</h3>
-                  <button type="button" className="cadastro-valores-v2__btn-green cadastro-valores-v2__btn-sm" onClick={onAddServico}>
-                    + {safeT.adicionarServico || 'Adicionar'}
-                  </button>
-                  <button type="button" className="cadastro-valores-v2__btn-info cadastro-valores-v2__btn-sm" onClick={() => onQuickAddHtt(servicoGrupoSelecionadoId || undefined)}>
-                    + HTT
-                  </button>
-                  <button type="button" className="cadastro-valores-v2__btn-warn cadastro-valores-v2__btn-sm" onClick={() => onAplicarTemplate(servicoGrupoSelecionadoId)}>
-                    ⚡ {safeT.servicosAplicarTemplate || 'Template padrão'}
-                  </button>
+                <div className="cadastro-valores-v2__toolbar cadastro-valores-v2__toolbar--items">
+                  <div className="cadastro-valores-v2__toolbar-copy">
+                    <h3 className="cadastro-valores-v2__toolbar-title">{safeT.servicosItensDoGrupo || 'Trabalhos e valores'}</h3>
+                    <p className="cadastro-valores-v2__toolbar-hint">
+                      {safeT.servicosTabelaHint ||
+                        'Mantenha COD único por grupo. O valor € alimenta linhas de serviço e despesas nos relatórios.'}
+                    </p>
+                  </div>
+                  <div className="cadastro-valores-v2__toolbar-actions">
+                    <button type="button" className="cadastro-valores-v2__btn-green cadastro-valores-v2__btn-sm" onClick={onAddServico}>
+                      + {safeT.adicionarServico || 'Adicionar'}
+                    </button>
+                    <button type="button" className="cadastro-valores-v2__btn-info cadastro-valores-v2__btn-sm" onClick={() => onQuickAddHtt(servicoGrupoSelecionadoId || undefined)}>
+                      + HTT
+                    </button>
+                    <button type="button" className="cadastro-valores-v2__btn-warn cadastro-valores-v2__btn-sm" onClick={() => onAplicarTemplate(servicoGrupoSelecionadoId)}>
+                      ⚡ {safeT.servicosAplicarTemplate || 'Template padrão'}
+                    </button>
+                  </div>
                 </div>
 
                 {showServicoForm && <ServicoFormBlock {...props} />}
@@ -467,33 +548,59 @@ export function CadastroServicosContent(props: Props) {
                     {safeT.servicosUseTemplateHint || 'Use «Template padrão» para criar HTT, KRC, diárias, etc.'}
                   </p>
                 ) : (
-                  <div className="cadastro-valores-v2__table-wrap">
-                    <table className="cadastro-valores-v2__table">
+                  <div className="cadastro-valores-v2__table-wrap cadastro-valores-v2__table-wrap--pro">
+                    <table className="cadastro-valores-v2__table cadastro-valores-v2__table--pro">
+                      <colgroup>
+                        <col className="cadastro-valores-v2__col-cod" />
+                        <col className="cadastro-valores-v2__col-nome" />
+                        <col className="cadastro-valores-v2__col-tipo" />
+                        <col className="cadastro-valores-v2__col-cobranca" />
+                        <col className="cadastro-valores-v2__col-valor" />
+                        <col className="cadastro-valores-v2__col-acoes" />
+                      </colgroup>
                       <thead>
                         <tr>
                           <th>COD</th>
-                          <th>{safeT.nomeServico || 'Nome'}</th>
+                          <th>{safeT.nomeServico || 'Nome do serviço / despesa'}</th>
                           <th>{safeT.tipo || 'Tipo'}</th>
-                          <th>{safeT.tipoCobranca || 'Cobrança'}</th>
-                          <th style={{ textAlign: 'right' }}>{safeT.valorServico || 'Valor €'}</th>
-                          <th style={{ width: '120px' }}>{safeT.acoes || 'Ações'}</th>
+                          <th>{safeT.tipoCobranca || 'Tipo de cobrança'}</th>
+                          <th className="cadastro-valores-v2__th-valor">{safeT.valorServico || 'Valor €'}</th>
+                          <th>{safeT.acoes || 'Ações'}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {itensGrupoSelecionado.map((servico) => {
                           const cod = servicoCodParaExibicao(servico)
+                          const valorZero = !servico.valor || servico.valor <= 0
                           return (
-                            <tr key={servico.id}>
+                            <tr key={servico.id} className={valorZero ? 'cadastro-valores-v2__row--warn' : undefined}>
                               <td className="cadastro-valores-v2__cod-cell">{cod || '—'}</td>
-                              <td>
-                                <div>{servico.nome}</div>
+                              <td className="cadastro-valores-v2__nome-cell">
+                                <div className="cadastro-valores-v2__nome-main">{servico.nome}</div>
                                 {servico.descricao?.trim() ? (
-                                  <div style={{ fontSize: '11px', opacity: 0.65 }}>{servico.descricao.trim()}</div>
+                                  <div className="cadastro-valores-v2__nome-desc">{servico.descricao.trim()}</div>
                                 ) : null}
                               </td>
-                              <td>{labelCategoria(servico.categoria, safeT)}</td>
-                              <td>{labelTipoCobranca(servico.tipoCobranca, safeT)}</td>
-                              <td className="cadastro-valores-v2__valor-cell">{formatServicoValorExibicao(servico.valor)} €</td>
+                              <td>
+                                <span
+                                  className={`cadastro-valores-v2__tipo-badge cadastro-valores-v2__tipo-badge--${servico.categoria}`}
+                                >
+                                  {labelCategoria(servico.categoria, safeT)}
+                                </span>
+                              </td>
+                              <td>
+                                <span className="cadastro-valores-v2__cobranca-badge">
+                                  {labelTipoCobranca(servico.tipoCobranca, safeT)}
+                                </span>
+                              </td>
+                              <td
+                                className={
+                                  'cadastro-valores-v2__valor-cell' +
+                                  (valorZero ? ' cadastro-valores-v2__valor-cell--zero' : '')
+                                }
+                              >
+                                {formatServicoValorExibicao(servico.valor)} €
+                              </td>
                               <td>
                                 <div className="cadastro-valores-v2__table-actions">
                                   <button type="button" className="cadastro-valores-v2__btn-green cadastro-valores-v2__btn-sm" onClick={() => onEditServico(servico)}>
@@ -513,28 +620,34 @@ export function CadastroServicosContent(props: Props) {
                 )}
               </>
             ) : (
-              <p className="cadastro-valores-v2__empty">{safeT.servicosEscolhaGrupo || 'Escolha um grupo à esquerda.'}</p>
+              <div className="cadastro-valores-v2__empty cadastro-valores-v2__empty--panel">
+                {safeT.servicosEscolhaGrupo || 'Escolha um grupo à esquerda para ver e editar os valores usados nos relatórios.'}
+              </div>
             )}
           </section>
         </div>
       )}
 
       {activeTab === 'matriz' && (
-        <div className="cadastro-valores-v2__card" style={{ marginTop: '14px' }}>
+        <div className="cadastro-valores-v2__card cadastro-valores-v2__matriz-panel">
           <h3 className="cadastro-valores-v2__card-title">{safeT.servicosMatrizTitulo || 'Comparar valores entre grupos'}</h3>
           <p className="cadastro-valores-v2__card-hint">
             {safeT.servicosMatrizAjuda || 'Visão geral: compare HTT, km, diárias e outros códigos em todos os grupos de tarifa.'}
           </p>
+          <p className="cadastro-valores-v2__toolbar-hint" style={{ marginBottom: '14px' }}>
+            {safeT.servicosMatrizRelatorioHint ||
+              'Valores a zero aparecem destacados — corrija no grupo antes de emitir relatórios. Clique no nome do grupo para editar a tabela.'}
+          </p>
           {gruposOrdenados.length === 0 || codigosMatriz.length === 0 ? (
             <p className="cadastro-valores-v2__empty">{safeT.servicosMatrizVazia || 'Cadastre grupos e serviços para ver a matriz.'}</p>
           ) : (
-            <div className="cadastro-valores-v2__table-wrap">
-              <table className="cadastro-valores-v2__table" style={{ minWidth: `${180 + gruposOrdenados.length * 100}px` }}>
+            <div className="cadastro-valores-v2__table-wrap cadastro-valores-v2__table-wrap--pro">
+              <table className="cadastro-valores-v2__table cadastro-valores-v2__table--pro" style={{ minWidth: `${180 + gruposOrdenados.length * 100}px` }}>
                 <thead>
                   <tr>
-                    <th style={{ position: 'sticky', left: 0, background: 'rgba(42, 42, 42, 0.98)', zIndex: 1 }}>COD</th>
+                    <th className="cadastro-valores-v2__matriz-th-sticky">COD</th>
                     {gruposOrdenados.map((g) => (
-                      <th key={g.id} style={{ textAlign: 'center', minWidth: '90px' }}>
+                      <th key={g.id} className="cadastro-valores-v2__matriz-th-group">
                         <button
                           type="button"
                           className="cadastro-valores-v2__matriz-link"
@@ -553,13 +666,19 @@ export function CadastroServicosContent(props: Props) {
                 <tbody>
                   {codigosMatriz.map((cod) => (
                     <tr key={cod}>
-                      <td className="cadastro-valores-v2__cod-cell" style={{ position: 'sticky', left: 0, background: 'rgba(42, 42, 42, 0.98)' }}>
-                        {cod}
-                      </td>
+                      <td className="cadastro-valores-v2__cod-cell cadastro-valores-v2__matriz-td-sticky">{cod}</td>
                       {gruposOrdenados.map((g) => {
                         const s = servicoPorCodNoGrupo(servicos, g.id, cod)
+                        const valorZero = s && (!s.valor || s.valor <= 0)
                         return (
-                          <td key={g.id} style={{ textAlign: 'center' }}>
+                          <td
+                            key={g.id}
+                            className={
+                              'cadastro-valores-v2__matriz-valor' +
+                              (!s ? ' cadastro-valores-v2__matriz-valor--missing' : '') +
+                              (valorZero ? ' cadastro-valores-v2__matriz-valor--zero' : '')
+                            }
+                          >
                             {s ? `${formatServicoValorExibicao(s.valor)} €` : '—'}
                           </td>
                         )
@@ -574,57 +693,102 @@ export function CadastroServicosContent(props: Props) {
       )}
 
       {activeTab === 'listar' && (
-        <div style={{ marginTop: '14px' }}>
+        <div className="cadastro-valores-v2__listar-panel">
           {servicos.length === 0 ? (
             <p className="cadastro-valores-v2__empty">{safeT.noServicos || 'Nenhum serviço ou despesa cadastrado.'}</p>
           ) : (
             <div className="cadastro-valores-v2__list-groups">
               {gruposOrdenados.map((g) => {
-                const itens = servicos.filter((s) => s.grupoId === g.id)
+                const itens = servicos
+                  .filter((s) => s.grupoId === g.id)
+                  .slice()
+                  .sort((a, b) => {
+                    const ca = servicoCodParaExibicao(a)
+                    const cb = servicoCodParaExibicao(b)
+                    if (ca && cb) return ca.localeCompare(cb)
+                    return a.nome.localeCompare(b.nome)
+                  })
                 if (itens.length === 0) return null
+                const nZero = itens.filter((s) => !s.valor || s.valor <= 0).length
+                const nCli = clientesPorGrupo[g.id] || 0
                 return (
                   <div key={g.id} className="cadastro-valores-v2__card">
-                    <h2 className="cadastro-valores-v2__list-group-title">
-                      {g.nome}
-                      <span className="cadastro-valores-v2__list-group-count">
-                        ({itens.length} {safeT.servicosItensLabel || 'itens'})
-                      </span>
-                    </h2>
-                    <div className="cadastro-valores-v2__table-wrap">
-                      <table className="cadastro-valores-v2__table">
+                    <div className="cadastro-valores-v2__list-group-header">
+                      <div>
+                        <span className="cadastro-valores-v2__group-kicker">{safeT.servicosGrupoAtivoLabel || 'Grupo de tarifa'}</span>
+                        <h2 className="cadastro-valores-v2__list-group-title">{g.nome}</h2>
+                      </div>
+                      <div className="cadastro-valores-v2__list-group-stats">
+                        <span className="cadastro-valores-v2__grupo-stat">
+                          {itens.length} {safeT.servicosItensLabel || 'itens'}
+                        </span>
+                        <span className="cadastro-valores-v2__grupo-stat">
+                          {nCli} {safeT.servicosClientesLabel || 'clientes'}
+                        </span>
+                        {nZero > 0 ? (
+                          <span className="cadastro-valores-v2__grupo-stat cadastro-valores-v2__grupo-stat--warn">
+                            {nZero} {safeT.servicosSemValorLabel || 'sem valor'}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                    <div className="cadastro-valores-v2__table-wrap cadastro-valores-v2__table-wrap--pro">
+                      <table className="cadastro-valores-v2__table cadastro-valores-v2__table--pro">
                         <thead>
                           <tr>
                             <th>COD</th>
                             <th>{safeT.nomeServico || 'Nome'}</th>
+                            <th>{safeT.tipo || 'Tipo'}</th>
                             <th>{safeT.tipoCobranca || 'Cobrança'}</th>
-                            <th style={{ textAlign: 'right' }}>{safeT.valorServico || 'Valor'}</th>
-                            <th style={{ width: '100px' }}>{safeT.acoes || 'Ações'}</th>
+                            <th className="cadastro-valores-v2__th-valor">{safeT.valorServico || 'Valor €'}</th>
+                            <th>{safeT.acoes || 'Ações'}</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {itens.map((servico) => (
-                            <tr key={servico.id}>
-                              <td className="cadastro-valores-v2__cod-cell">{servicoCodParaExibicao(servico) || '—'}</td>
-                              <td>{servico.nome}</td>
-                              <td>{labelTipoCobranca(servico.tipoCobranca, safeT)}</td>
-                              <td className="cadastro-valores-v2__valor-cell">{formatServicoValorExibicao(servico.valor)} €</td>
-                              <td>
-                                <button
-                                  type="button"
-                                  className="cadastro-valores-v2__btn-green cadastro-valores-v2__btn-sm"
-                                  onClick={() => {
-                                    setActiveTab('grupos')
-                                    setServicoGrupoSelecionadoId(servico.grupoId)
-                                    const gg = servicoGrupos.find((x) => x.id === servico.grupoId)
-                                    if (gg) setServicoGrupoNomeEdicao(gg.nome)
-                                    onEditServico(servico)
-                                  }}
+                          {itens.map((servico) => {
+                            const valorZero = !servico.valor || servico.valor <= 0
+                            return (
+                              <tr key={servico.id} className={valorZero ? 'cadastro-valores-v2__row--warn' : undefined}>
+                                <td className="cadastro-valores-v2__cod-cell">{servicoCodParaExibicao(servico) || '—'}</td>
+                                <td className="cadastro-valores-v2__nome-cell">
+                                  <div className="cadastro-valores-v2__nome-main">{servico.nome}</div>
+                                </td>
+                                <td>
+                                  <span className={`cadastro-valores-v2__tipo-badge cadastro-valores-v2__tipo-badge--${servico.categoria}`}>
+                                    {labelCategoria(servico.categoria, safeT)}
+                                  </span>
+                                </td>
+                                <td>
+                                  <span className="cadastro-valores-v2__cobranca-badge">
+                                    {labelTipoCobranca(servico.tipoCobranca, safeT)}
+                                  </span>
+                                </td>
+                                <td
+                                  className={
+                                    'cadastro-valores-v2__valor-cell' +
+                                    (valorZero ? ' cadastro-valores-v2__valor-cell--zero' : '')
+                                  }
                                 >
-                                  {safeT.edit || 'Editar'}
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
+                                  {formatServicoValorExibicao(servico.valor)} €
+                                </td>
+                                <td>
+                                  <button
+                                    type="button"
+                                    className="cadastro-valores-v2__btn-green cadastro-valores-v2__btn-sm"
+                                    onClick={() => {
+                                      setActiveTab('grupos')
+                                      setServicoGrupoSelecionadoId(servico.grupoId)
+                                      const gg = servicoGrupos.find((x) => x.id === servico.grupoId)
+                                      if (gg) setServicoGrupoNomeEdicao(gg.nome)
+                                      onEditServico(servico)
+                                    }}
+                                  >
+                                    {safeT.edit || 'Editar'}
+                                  </button>
+                                </td>
+                              </tr>
+                            )
+                          })}
                         </tbody>
                       </table>
                     </div>
