@@ -67295,6 +67295,59 @@ A1;Peça exemplo;10`}
                       {txBibHero.retrairTodos || 'Retrair todos'}
                     </button>
                   </div>
+                  <div className="bib-relatorios-hub__legenda" role="note">
+                    <div className="bib-relatorios-hub__legenda-block">
+                      <span className="bib-relatorios-hub__legenda-heading">
+                        {txBibHero.bibliotecaRelatoriosHubLegendaConteudo || 'Badges (conteúdo)'}
+                      </span>
+                      <ul className="bib-relatorios-hub__legenda-items">
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--equip" aria-hidden />
+                          <span className="bib-kpi bib-kpi--equip bib-kpi--legend">
+                            {txBibHero.bibliotecaRelatoriosLegendaEquipamentos || 'equip.'}
+                          </span>
+                          <span>{txBibHero.bibliotecaRelatoriosHubLegendaEquipDesc || 'Equipamentos'}</span>
+                        </li>
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--serv" aria-hidden />
+                          <span className="bib-kpi bib-kpi--serv bib-kpi--legend">
+                            {txBibHero.bibliotecaRelatoriosLegendaServico || 'serv.'}
+                          </span>
+                          <span>{txBibHero.relatoriosServicoTitle || 'Relatórios de serviço'}</span>
+                        </li>
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--desp" aria-hidden />
+                          <span className="bib-kpi bib-kpi--desp bib-kpi--legend">
+                            {txBibHero.bibliotecaRelatoriosLegendaDespesas || 'desp.'}
+                          </span>
+                          <span>{txBibHero.relatoriosDespesasTitle || 'Relatórios de despesas'}</span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="bib-relatorios-hub__legenda-block">
+                      <span className="bib-relatorios-hub__legenda-heading">
+                        {txBibHero.bibliotecaRelatoriosHubLegendaFinanceiro || 'Cor da pasta (cobrança)'}
+                      </span>
+                      <ul className="bib-relatorios-hub__legenda-items">
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--vermelho" aria-hidden />
+                          {txBibHero.financeiroDespesasEstadoVermelho || 'Vermelho — não pagou'}
+                        </li>
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--azul" aria-hidden />
+                          {txBibHero.financeiroDespesasEstadoAzul || 'Azul — cobrança enviada'}
+                        </li>
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--verde" aria-hidden />
+                          {txBibHero.financeiroDespesasEstadoVerde || 'Verde — pago'}
+                        </li>
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--misto" aria-hidden />
+                          {txBibHero.financeiroDespesasEstadoMisto || 'Vários estados'}
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
                 {!buscaBibliotecaAtiva && bibliotecaFiltrada.length > 0 ? (
                   <div className="biblioteca-relatorios-alfa-bar">
                     <div className="bib-relatorios-hub__list-meta biblioteca-relatorios-alfa-meta">

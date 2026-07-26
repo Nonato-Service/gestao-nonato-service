@@ -9772,32 +9772,41 @@ a:focus-visible {
   white-space: nowrap;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
-/* Equipamentos — verde suave (contorno) */
+/* Equipamentos — roxo (máquinas / equipamento registado) */
 .bib-kpi--equip {
-  background: rgba(6, 16, 10, 0.88);
-  border-color: rgba(52, 211, 153, 0.42);
+  background: rgba(91, 33, 182, 0.38);
+  border-color: rgba(167, 139, 250, 0.58);
 }
-/* Relatórios de serviço — verde médio */
+/* Relatórios de serviço — verde */
 .bib-kpi--serv {
-  background: rgba(14, 48, 28, 0.78);
+  background: rgba(22, 101, 52, 0.48);
   border-color: rgba(74, 222, 128, 0.58);
 }
-/* Relatórios de despesas — verde claro */
+/* Relatórios de despesas — âmbar (notas / fechamento despesas) */
 .bib-kpi--desp {
-  background: rgba(18, 42, 26, 0.82);
-  border-color: rgba(134, 239, 172, 0.52);
+  background: rgba(146, 88, 8, 0.48);
+  border-color: rgba(251, 191, 36, 0.58);
 }
-/* Sem registos — discreto, verde tenue */
+/* Sem registos — fundo neutro; borda mantém a cor do tipo */
 .bib-kpi--zero {
-  opacity: 0.65;
-  background: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(74, 222, 128, 0.16) !important;
+  opacity: 0.7;
+  background: rgba(255, 255, 255, 0.05) !important;
   box-shadow: none;
 }
-.bib-kpi--zero.bib-kpi--equip,
-.bib-kpi--zero.bib-kpi--serv,
+.bib-kpi--zero.bib-kpi--equip {
+  border-color: rgba(167, 139, 250, 0.22) !important;
+}
+.bib-kpi--zero.bib-kpi--serv {
+  border-color: rgba(74, 222, 128, 0.22) !important;
+}
 .bib-kpi--zero.bib-kpi--desp {
-  border-color: rgba(74, 222, 128, 0.16) !important;
+  border-color: rgba(251, 191, 36, 0.22) !important;
+}
+.bib-kpi--legend {
+  pointer-events: none;
+  min-height: 22px;
+  padding: 0 8px;
+  font-size: 10px;
 }
 .biblioteca-relatorios-cliente__body-toolbar {
   display: flex;
@@ -34120,44 +34129,26 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 .bib-relatorios-hub__clientes .biblioteca-relatorios-cliente {
   border-radius: 11px;
-  border: 1px solid rgba(74, 222, 128, 0.32);
-  border-left-width: 4px;
-  border-left-color: rgba(74, 222, 128, 0.88);
-  background: linear-gradient(
-    90deg,
-    rgba(74, 222, 128, 0.1) 0%,
-    rgba(74, 222, 128, 0.03) 14%,
-    rgba(14, 14, 14, 0.96) 28%,
-    rgba(10, 10, 10, 0.98) 100%
-  );
-  box-shadow:
-    inset 4px 0 14px rgba(74, 222, 128, 0.1),
-    0 0 0 1px rgba(74, 222, 128, 0.06),
-    0 2px 10px rgba(0, 0, 0, 0.32);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente:hover {
-  border-color: rgba(74, 222, 128, 0.45);
-  border-left-color: rgba(134, 239, 172, 0.95);
-  box-shadow:
-    inset 4px 0 16px rgba(74, 222, 128, 0.14),
-    0 0 0 1px rgba(74, 222, 128, 0.12),
-    0 4px 16px rgba(0, 0, 0, 0.36);
+/* Sem fluxo financeiro (sem despesas ligadas) — pasta neutra */
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente:not(.biblioteca-relatorios-cliente--fluxo) {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left-width: 3px;
+  border-left-color: rgba(148, 163, 184, 0.38);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0%, rgba(22, 22, 22, 0.96) 16%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
 }
 
-.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente[open] {
-  border-left-color: #4ade80;
-  box-shadow:
-    inset 4px 0 18px rgba(74, 222, 128, 0.16),
-    0 0 12px rgba(74, 222, 128, 0.08),
-    0 4px 14px rgba(0, 0, 0, 0.34);
+/* Fluxo financeiro — cores da borda/fundo vêm das classes --fluxo-* (vermelho/azul/verde/amarelo/misto) */
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente--fluxo {
+  border-left-width: 5px !important;
 }
 
 .bib-relatorios-hub__clientes .biblioteca-relatorios-cliente__summary {
   padding: 12px 14px;
   background: transparent !important;
-  border-bottom-color: rgba(74, 222, 128, 0.12);
 }
 
 .bib-relatorios-hub__clientes .biblioteca-relatorios-cliente__title,
@@ -34168,12 +34159,115 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   text-transform: none !important;
 }
 
-.bib-relatorios-hub__clientes .bib-relatorios-hub__row-chevron--green {
-  border-color: rgba(255, 255, 255, 0.88);
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente--fluxo-vermelho .biblioteca-relatorios-cliente__title,
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente--fluxo-azul .biblioteca-relatorios-cliente__title,
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente--fluxo-verde .biblioteca-relatorios-cliente__title,
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente--fluxo-amarelo .biblioteca-relatorios-cliente__title,
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente--fluxo-misto .biblioteca-relatorios-cliente__title {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
-.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente[open] .bib-relatorios-hub__row-chevron--green {
-  border-color: rgba(134, 239, 172, 0.95);
+.bib-relatorios-hub__clientes .bib-relatorios-hub__row-chevron--green {
+  border-color: rgba(255, 255, 255, 0.82);
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente--fluxo-vermelho .bib-relatorios-hub__row-chevron--green {
+  border-color: rgba(254, 202, 202, 0.9);
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente--fluxo-azul .bib-relatorios-hub__row-chevron--green {
+  border-color: rgba(186, 230, 253, 0.9);
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente--fluxo-verde .bib-relatorios-hub__row-chevron--green {
+  border-color: rgba(187, 247, 208, 0.9);
+}
+
+.bib-relatorios-hub__legenda {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.bib-relatorios-hub__legenda-block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.bib-relatorios-hub__legenda-heading {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.bib-relatorios-hub__legenda-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bib-relatorios-hub__legenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.3;
+}
+
+.bib-relatorios-hub__legenda-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.bib-relatorios-hub__legenda-dot--equip {
+  background: rgba(167, 139, 250, 0.85);
+}
+
+.bib-relatorios-hub__legenda-dot--serv {
+  background: rgba(74, 222, 128, 0.85);
+}
+
+.bib-relatorios-hub__legenda-dot--desp {
+  background: rgba(251, 191, 36, 0.9);
+}
+
+.bib-relatorios-hub__legenda-dot--vermelho {
+  background: var(--fin-cor-vermelho);
+}
+
+.bib-relatorios-hub__legenda-dot--azul {
+  background: var(--fin-cor-azul);
+}
+
+.bib-relatorios-hub__legenda-dot--verde {
+  background: var(--fin-cor-verde);
+}
+
+.bib-relatorios-hub__legenda-dot--amarelo {
+  background: var(--fin-cor-amarelo);
+}
+
+.bib-relatorios-hub__legenda-dot--misto {
+  background: linear-gradient(135deg, var(--fin-cor-vermelho) 0%, var(--fin-cor-azul) 50%, var(--fin-cor-verde) 100%);
 }
 
 .bib-relatorios-hub__clientes .biblioteca-relatorios-client-list {
