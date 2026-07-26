@@ -27820,11 +27820,11 @@ export default function Dashboard() {
   const formatBibliotecaSyncData = useCallback((iso: string) => {
     if (!iso || iso === 'null') return ''
     try {
-      return new Date(iso).toLocaleString('pt-PT')
+      return new Date(iso).toLocaleString(localeForLongDatetime(selectedLanguage))
     } catch {
       return iso
     }
-  }, [])
+  }, [selectedLanguage])
 
   const refreshBibliotecaServidorMeta = useCallback(async () => {
     setBibliotecaServidorMetaLoading(true)
@@ -41349,6 +41349,7 @@ export default function Dashboard() {
       
       case 'biblioteca-pecas': {
         const hubT: Record<string, string> = (safeT || {}) as Record<string, string>
+        const bibLocaleNum = localeForLongDatetime(selectedLanguage)
         const bibFmtCount = (n: number) =>
           String(hubT.bibliotecaContagemPecas || '{count}').replace('{count}', String(n))
         const bibliotecaHubTabClass = (active: boolean) =>
@@ -41454,37 +41455,25 @@ export default function Dashboard() {
                 </div>
               )
             })() : null}
-            {/* Cabeçalho — linha principal + barra KPI */}
+            {/* Cabeçalho — marca + KPIs (textos via hubT / idioma do programa) */}
             <div className="biblioteca-pecas-hub__hero-ring">
             <div className="tab-glass-hero tab-glass-hero--compact biblioteca-pecas-hub__hero">
               <div className="biblioteca-pecas-hub__hero-top">
-                <div className="biblioteca-pecas-hub__hero-logo" aria-hidden="true">
-                  <LogoComponent size="small" />
-                </div>
-                <div className="biblioteca-pecas-hub__hero-head">
-                  <h1 className="biblioteca-pecas-hub__hero-title">
-                    {(safeT as any)?.pecasBibliotecaTitle || safeT?.cadastroPecasBibliotecaTitle || 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS'}
-                  </h1>
-                  <p className="biblioteca-pecas-hub__hero-meta">
-                    {pecasCatalogoBiblioteca.length.toLocaleString('pt-PT')}{' '}
-                    {safeT?.pecasCadastradas || 'peça(s) cadastrada(s)'}
-                    {bibliotecaServidorMeta && bibliotecaServidorMeta.total !== pecasCatalogoBiblioteca.length ? (
-                      <>
-                        {' '}
-                        <span className="biblioteca-pecas-hub__hero-meta-dot">·</span> servidor:{' '}
-                        {bibliotecaServidorMeta.total.toLocaleString('pt-PT')}
-                      </>
-                    ) : null}
-                  </p>
-                  {bibliotecaUltimaSyncServidor ? (
-                    <p className="biblioteca-pecas-hub__hero-sync">
-                      {(safeT as any)?.bibliotecaUltimaSync || 'Última sync servidor:'}{' '}
-                      {formatBibliotecaSyncData(bibliotecaUltimaSyncServidor)}
+                <div className="biblioteca-pecas-hub__hero-brand">
+                  <div className="biblioteca-pecas-hub__hero-logo" aria-hidden="true">
+                    <LogoComponent size="small" />
+                  </div>
+                  <div className="biblioteca-pecas-hub__hero-head">
+                    <p className="biblioteca-pecas-hub__eyebrow biblioteca-pecas-hub__hero-eyebrow">
+                      {hubT.bibliotecaHeroEyebrow || hubT.bibliotecaPecas || 'Biblioteca de peças'}
                     </p>
-                  ) : null}
-                  <p className="biblioteca-pecas-hub__hero-tagline">
-                    {hubT.bibliotecaHubTagline || 'Catálogo unificado, grupos claros e importação sob controlo.'}
-                  </p>
+                    <h1 className="biblioteca-pecas-hub__hero-title">
+                      {hubT.pecasBibliotecaTitle || hubT.cadastroPecasBibliotecaTitle || 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS'}
+                    </h1>
+                    <p className="biblioteca-pecas-hub__hero-tagline">
+                      {hubT.bibliotecaHubTagline || 'Catálogo unificado, grupos claros e importação sob controlo.'}
+                    </p>
+                  </div>
                 </div>
                 <div className="biblioteca-pecas-hub__hero-actions">
                   <button
@@ -41523,68 +41512,88 @@ export default function Dashboard() {
                       setPecaBibliotecaPickerSubcategoriaAberto(false)
                     }}
                   >
-                    {safeT?.novaPecaBiblioteca || 'Nova Peça'}
+                    {hubT.novaPecaBiblioteca || 'Nova Peça'}
                   </button>
                   <button
                     type="button"
                     className="biblioteca-btn--purple"
                     onClick={() => setAbaBibliotecaPecas('grupos')}
                   >
-                    {safeT?.gerenciarCategorias || 'Gerenciar Categorias'}
+                    {hubT.gerenciarCategorias || 'Gerenciar Categorias'}
                   </button>
                   <button
                     type="button"
-                    className="biblioteca-pecas-hub__icon-btn biblioteca-pecas-hub__icon-btn--back"
+                    className="biblioteca-pecas-hub__nav-btn biblioteca-pecas-hub__nav-btn--icon"
                     onClick={() => closeTab(activeTabId || '')}
-                    title={safeT?.voltar || 'Voltar'}
-                    aria-label={safeT?.voltar || 'Voltar'}
+                    title={hubT.voltar || 'Voltar'}
+                    aria-label={hubT.voltar || 'Voltar'}
                   >
-                    ↶
+                    &larr;
                   </button>
                   <button
                     type="button"
-                    className="biblioteca-pecas-hub__icon-btn biblioteca-pecas-hub__icon-btn--home"
+                    className="biblioteca-pecas-hub__nav-btn biblioteca-pecas-hub__nav-btn--accent"
                     onClick={voltarPaginaInicial}
-                    title={safeT?.paginaInicial || 'Página Inicial'}
-                    aria-label={safeT?.paginaInicial || 'Página Inicial'}
+                    title={hubT.paginaInicial || 'Página Inicial'}
                   >
-                    🏠
+                    {hubT.paginaInicial || 'Início'}
                   </button>
                 </div>
               </div>
 
               <div className="biblioteca-pecas-hub__hero-kpis" aria-label={hubT.bibliotecaVisaoGeral || 'Visão geral'}>
                 <div className="biblioteca-pecas-hub__kpi-card biblioteca-pecas-hub__kpi-card--pecas">
-                  <span className="biblioteca-pecas-hub__kpi-label">{(safeT as any)?.bibliotecaResumoPecas || 'Peças no catálogo'}</span>
-                  <span className="biblioteca-pecas-hub__kpi-value">{pecasCatalogoBiblioteca.length.toLocaleString('pt-PT')}</span>
+                  <span className="biblioteca-pecas-hub__kpi-label">
+                    {hubT.bibliotecaHeroKpiPecas || hubT.quantidadePecas || 'Peças no catálogo'}
+                  </span>
+                  <span className="biblioteca-pecas-hub__kpi-value">
+                    {pecasCatalogoBiblioteca.length.toLocaleString(bibLocaleNum)}
+                  </span>
+                  {bibliotecaServidorMeta && bibliotecaServidorMeta.total !== pecasCatalogoBiblioteca.length ? (
+                    <span className="biblioteca-pecas-hub__kpi-sub">
+                      {hubT.bibliotecaSyncServidorResumo || 'servidor:'}{' '}
+                      {bibliotecaServidorMeta.total.toLocaleString(bibLocaleNum)}
+                    </span>
+                  ) : null}
                 </div>
                 <div className="biblioteca-pecas-hub__kpi-card biblioteca-pecas-hub__kpi-card--cats">
-                  <span className="biblioteca-pecas-hub__kpi-label">{(safeT as any)?.bibliotecaResumoCategorias || 'Categorias'}</span>
-                  <span className="biblioteca-pecas-hub__kpi-value">{categoriasPecas.length.toLocaleString('pt-PT')}</span>
+                  <span className="biblioteca-pecas-hub__kpi-label">
+                    {hubT.bibliotecaHeroKpiCategorias || hubT.quantidadeCategorias || 'Categorias'}
+                  </span>
+                  <span className="biblioteca-pecas-hub__kpi-value">
+                    {categoriasPecas.length.toLocaleString(bibLocaleNum)}
+                  </span>
                 </div>
                 <div
                   className={`biblioteca-pecas-hub__kpi-card biblioteca-pecas-hub__kpi-card--foto${pecasBibliotecaImagemStats.faltam > 0 ? ' biblioteca-pecas-hub__kpi-card--warn' : ''}`}
                 >
                   <span className="biblioteca-pecas-hub__kpi-label">
                     {pecasBibliotecaImagemStats.faltam > 0
-                      ? (safeT as any)?.bibliotecaResumoSemFoto || 'Sem foto'
-                      : (safeT as any)?.bibliotecaResumoFotosOk || 'Com foto'}
+                      ? hubT.bibliotecaHeroKpiSemFoto || hubT.bibliotecaResumoSemFoto || 'Sem foto'
+                      : hubT.bibliotecaHeroKpiComFoto || hubT.bibliotecaResumoFotosOk || 'Com foto'}
                   </span>
                   <span className="biblioteca-pecas-hub__kpi-value">
                     {pecasBibliotecaImagemStats.faltam > 0
-                      ? pecasBibliotecaImagemStats.faltam.toLocaleString('pt-PT')
-                      : pecasBibliotecaImagemStats.comFotoReal.toLocaleString('pt-PT')}
+                      ? pecasBibliotecaImagemStats.faltam.toLocaleString(bibLocaleNum)
+                      : pecasBibliotecaImagemStats.comFotoReal.toLocaleString(bibLocaleNum)}
                   </span>
                 </div>
               </div>
 
+              {bibliotecaUltimaSyncServidor ? (
+                <p className="biblioteca-pecas-hub__hero-sync">
+                  {hubT.bibliotecaUltimaSync || 'Última sync servidor:'}{' '}
+                  {formatBibliotecaSyncData(bibliotecaUltimaSyncServidor)}
+                </p>
+              ) : null}
+
               {catalogoPecasSuspeitoParcial ? (
                 <div className="biblioteca-pecas-hub__warn-banner biblioteca-pecas-hub__warn-banner--hero">
                   <div className="biblioteca-pecas-hub__warn-banner-title">
-                    {(safeT as any)?.bibliotecaReparoTitulo || 'Catálogo incompleto neste aparelho'}
+                    {hubT.bibliotecaReparoTitulo || 'Catálogo incompleto neste aparelho'}
                   </div>
                   <p className="biblioteca-pecas-hub__warn-banner-body">
-                    {(safeT as any)?.bibliotecaReparoDesc ||
+                    {hubT.bibliotecaReparoDesc ||
                       `Só ${pecasBiblioteca.length} peça(s) carregada(s), mas existem ${categoriasPecas.length} categorias. O servidor guarda o catálogo completo — clique para repor (pode demorar ~1–2 min).`}
                   </p>
                   <button
@@ -41595,9 +41604,9 @@ export default function Dashboard() {
                   >
                     {pecasBibliotecaReparoLoading
                       ? pecasBibliotecaReparoProgress ||
-                        (safeT as any)?.bibliotecaReparoAguarde ||
+                        hubT.bibliotecaReparoAguarde ||
                         'A carregar catálogo (páginas)…'
-                      : (safeT as any)?.bibliotecaReparoBtn || 'Repor biblioteca do servidor'}
+                      : hubT.bibliotecaReparoBtn || 'Repor biblioteca do servidor'}
                   </button>
                 </div>
               ) : null}
@@ -68199,9 +68208,18 @@ A1;Peça exemplo;10`}
     const cardHint = (tr as any).mainHubCardHint || 'Abrir no sistema.'
     const hubIntroDefault = (tr as any).mainHubIntro || tr.welcomeText2 || ''
     const hubIntro =
-      hubId === 'empresa-institucional-main' || hubId === 'cadastro-nonato-main' || hubId === 'empresa-institucional'
-        ? ((tr as any).empresaInstitucionalHubIntro as string) || hubIntroDefault
-        : hubIntroDefault
+      hubId === 'checklist-group'
+        ? ((tr as any).checklistHubIntro as string) ||
+          pickTrChain(tr, ['quickAccessChecklistHubDesc']) ||
+          hubIntroDefault
+        : hubId === 'empresa-institucional-main' || hubId === 'cadastro-nonato-main' || hubId === 'empresa-institucional'
+          ? ((tr as any).empresaInstitucionalHubIntro as string) || hubIntroDefault
+          : hubIntroDefault
+    const hubModulesTitle = (tr as any).mainHubModulesTitle || tr.acessoRapido || 'Módulos'
+    const hubEyebrow =
+      hubId === 'checklist-group'
+        ? ((tr as any).checklistHubEyebrow as string) || ''
+        : ((tr as any).dashboardShowcaseBadge as string) || ''
     type HubRow = {
       key: string
       title: string
@@ -68411,14 +68429,25 @@ A1;Peça exemplo;10`}
         })
       }
     } else if (hubId === 'checklist-group') {
+      const checklistHubIcon: Record<string, string> = {
+        'familias-grupos-default': '🏗️',
+        'pre-checklist-default': '🔎',
+        'checklist-basico-default': '⚡',
+        'checklist-default': '✅',
+        'gestao-grupos-checklist-default': '📋',
+        'ordem-preparacao-default': '📦',
+        'formularios-checklist-tecnicos-default': '📝',
+        'verificacao-final-entrega-default': '🎯',
+      }
       const sorted = [...getButtonsByGroup('checklist-group')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
+        if (button.id === 'checklist-group-default') continue
         if (!canAccessSidebarButton(button)) continue
         rows.push({
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          icon: '✅',
+          icon: checklistHubIcon[button.id || ''] || '📋',
           action: button.action,
           buttonId: button.id
         })
@@ -68609,7 +68638,7 @@ A1;Peça exemplo;10`}
     }
 
     return (
-      <div className="ns-hub-root">
+      <div className={`ns-hub-root${hubId === 'checklist-group' ? ' ns-hub-root--checklist' : ''}`}>
         <div className="ns-hub-toolbar">
           <button
             type="button"
@@ -68619,55 +68648,72 @@ A1;Peça exemplo;10`}
             ← {(tr as any).mainHubBackToDashboard || 'Voltar ao painel completo'}
           </button>
         </div>
-        <div className={`ns-hub-hero${isCompactLayout ? ' ns-hub-hero--compact' : ''}`}>
-          <h1 className="ns-hub-title">{getDashboardMainHubTitle(hubId)}</h1>
-          {hubIntro ? <p className="ns-hub-intro">{hubIntro}</p> : null}
+        <div
+          className={`ns-dashboard-full-hero ns-hub-root__hero${isCompactLayout ? ' ns-dashboard-full-hero--compact' : ''}`}
+        >
+          <div className="ns-dashboard-full-hero__backdrop" aria-hidden>
+            <div className="ns-dashboard-full-hero__orb ns-dashboard-full-hero__orb--a" />
+            <div className="ns-dashboard-full-hero__orb ns-dashboard-full-hero__orb--b" />
+          </div>
+          <div className="ns-dashboard-full-hero__content">
+            <div className="ns-dashboard-full-hero__brand">
+              <div className="ns-dashboard-full-hero__logo">
+                <LogoComponent size={isCompactLayout ? 'small' : 'medium'} />
+              </div>
+              {hubEyebrow ? <span className="ns-dashboard-full-hero__badge">{hubEyebrow}</span> : null}
+            </div>
+            <h1 className="ns-dashboard-full-title">{getDashboardMainHubTitle(hubId)}</h1>
+            {hubIntro ? <p className="ns-dashboard-full-lead ns-hub-root__intro">{hubIntro}</p> : null}
+          </div>
         </div>
         {rows.length === 0 ? (
           <p className="ns-hub-empty">{safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}</p>
         ) : (
-          <div className="ns-hub-grid">
-            {rows.map((row, idx) => {
-              const c = qaColors[idx % qaColors.length]
-              return (
-                <React.Fragment key={row.key}>
-                  {row.subsection ? (
-                    <h3 className="ns-hub-subsection-title">{row.subsection}</h3>
-                  ) : null}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    className="ns-hub-card"
-                    style={
-                      {
-                        '--hub-border': c.border,
-                        '--hub-border-h': c.borderH,
-                        '--hub-shadow': c.shadow,
-                        '--hub-glow': c.glow,
-                        '--hub-title': c.title
-                      } as React.CSSProperties
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        handleButtonClick(row.action, row.buttonId)
-                      }
-                    }}
-                    onClick={() => handleButtonClick(row.action, row.buttonId)}
-                  >
+          <>
+            <h2 className="ns-dashboard-section-title ns-hub-root__section-title">{hubModulesTitle}</h2>
+            <div className="ns-dashboard-qa-grid">
+              {rows.map((row, idx) => {
+                const c = qaColors[idx % qaColors.length]
+                return (
+                  <React.Fragment key={row.key}>
+                    {row.subsection ? (
+                      <h3 className="ns-hub-subsection-title">{row.subsection}</h3>
+                    ) : null}
                     <div
-                      className={`ns-hub-card-icon${row.iconCss ? ` ns-hub-card-icon--${row.iconCss}` : ''}`}
-                      aria-hidden
+                      role="button"
+                      tabIndex={0}
+                      className="ns-dashboard-qa-card"
+                      style={
+                        {
+                          '--qa-border': c.border,
+                          '--qa-border-h': c.borderH,
+                          '--qa-shadow': c.shadow,
+                          '--qa-glow': c.glow,
+                          '--qa-title': c.title
+                        } as React.CSSProperties
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleButtonClick(row.action, row.buttonId)
+                        }
+                      }}
+                      onClick={() => handleButtonClick(row.action, row.buttonId)}
                     >
-                      {row.iconNode ?? row.icon ?? null}
+                      <div
+                        className={`ns-dashboard-qa-card-icon${row.iconCss ? ` ns-hub-card-icon--${row.iconCss}` : ''}`}
+                        aria-hidden
+                      >
+                        {row.iconNode ?? row.icon ?? null}
+                      </div>
+                      <h3 className="ns-dashboard-qa-card-title">{row.title}</h3>
+                      <p className="ns-dashboard-qa-card-desc">{row.desc}</p>
                     </div>
-                    <h3 className="ns-hub-card-title">{row.title}</h3>
-                    <p className="ns-hub-card-desc">{row.desc}</p>
-                  </div>
-                </React.Fragment>
-              )
-            })}
-          </div>
+                  </React.Fragment>
+                )
+              })}
+            </div>
+          </>
         )}
       </div>
     )
