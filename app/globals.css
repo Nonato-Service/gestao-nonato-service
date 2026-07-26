@@ -33590,7 +33590,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 .bib-relatorios-hub__kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
   margin-top: 18px;
   padding-top: 16px;
@@ -33653,6 +33653,313 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   background: linear-gradient(165deg, rgba(72, 52, 8, 0.42), rgba(40, 28, 4, 0.52));
 }
 .bib-relatorios-hub__kpi--fechados .bib-relatorios-hub__kpi-value { color: #fde68a; }
+
+/* Command deck — barra sticky de pesquisa, tabs e ações */
+.bib-relatorios-hub__command-deck {
+  position: sticky;
+  top: 8px;
+  z-index: 24;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 200, 130, 0.16);
+  background: linear-gradient(168deg, rgba(8, 28, 24, 0.97), rgba(4, 10, 10, 0.98));
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+}
+
+.bib-relatorios-hub__command-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  min-width: 0;
+}
+
+.bib-relatorios-hub__command-row--search {
+  width: 100%;
+}
+
+.bib-relatorios-hub__command-row--nav {
+  justify-content: space-between;
+}
+
+.bib-relatorios-hub__search {
+  position: relative;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.bib-relatorios-hub__search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  color: rgba(140, 230, 190, 0.55);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bib-relatorios-hub__command-deck .bib-relatorios-hub__search-input {
+  padding-left: 40px !important;
+}
+
+.bib-relatorios-hub__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.bib-relatorios-hub__tab {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.bib-relatorios-hub__tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.bib-relatorios-hub__tab--active {
+  background: linear-gradient(180deg, rgba(0, 160, 90, 0.92), rgba(0, 110, 62, 0.96)) !important;
+  border-color: rgba(0, 220, 120, 0.48) !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.bib-relatorios-hub__tab--fechados.bib-relatorios-hub__tab--active {
+  background: linear-gradient(180deg, rgba(180, 120, 20, 0.92), rgba(120, 80, 10, 0.96)) !important;
+  border-color: rgba(251, 191, 36, 0.48) !important;
+}
+
+.bib-relatorios-hub__tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 10px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.bib-relatorios-hub__tab--active .bib-relatorios-hub__tab-badge {
+  background: rgba(0, 0, 0, 0.22);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.bib-relatorios-hub__quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.bib-relatorios-hub__btn--sm {
+  min-height: 34px !important;
+  min-width: 0 !important;
+  padding: 0 12px !important;
+  font-size: 10px !important;
+}
+
+.bib-relatorios-hub__pdf-prefs {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 10px;
+}
+
+.bib-relatorios-hub__pdf-prefs-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(190, 225, 210, 0.72);
+  list-style: none;
+  user-select: none;
+}
+
+.bib-relatorios-hub__pdf-prefs-summary::-webkit-details-marker {
+  display: none;
+}
+
+.bib-relatorios-hub__pdf-prefs-summary::before {
+  content: '▸';
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.bib-relatorios-hub__pdf-prefs[open] .bib-relatorios-hub__pdf-prefs-summary::before {
+  transform: rotate(90deg);
+}
+
+.bib-relatorios-hub__pdf-prefs[open] .bib-relatorios-hub__pdf-group {
+  margin-top: 12px;
+}
+
+.bib-relatorios-hub__legenda-strip {
+  margin-bottom: 12px;
+}
+
+.bib-relatorios-hub__legenda--compact {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.bib-relatorios-hub__alfa-sticky {
+  position: sticky;
+  top: calc(8px + 140px);
+  z-index: 20;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 200, 130, 0.12);
+  background: linear-gradient(168deg, rgba(6, 20, 18, 0.96), rgba(4, 8, 8, 0.98));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.bib-relatorios-hub__alfa-sticky .bib-relatorios-hub__list-meta {
+  margin-bottom: 10px;
+}
+
+.bib-relatorios-hub__alfa-prompt {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.bib-relatorios-hub__panel {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.bib-relatorios-hub__panel--fechados {
+  border-color: rgba(251, 191, 36, 0.22);
+  background: linear-gradient(168deg, rgba(40, 28, 6, 0.35), rgba(8, 8, 8, 0.92));
+}
+
+.bib-relatorios-hub__panel--clientes {
+  border-color: rgba(0, 200, 130, 0.16);
+  background: linear-gradient(168deg, rgba(6, 24, 18, 0.35), rgba(8, 8, 8, 0.92));
+}
+
+.bib-relatorios-hub__panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bib-relatorios-hub__panel-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.bib-relatorios-hub__panel-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.bib-relatorios-hub__panel-badge {
+  flex-shrink: 0;
+  min-width: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+  text-align: center;
+}
+
+.bib-relatorios-hub__panel--fechados .bib-relatorios-hub__panel-badge {
+  border-color: rgba(251, 191, 36, 0.35);
+  color: #fde68a;
+}
+
+.bib-relatorios-hub__panel .biblioteca-relatorios-clientes-block__body,
+.bib-relatorios-hub__panel .biblioteca-relatorios-fechados-block__body {
+  padding: 14px 16px 16px;
+}
+
+.bib-relatorios-hub__empty-search {
+  text-align: center;
+  padding: 28px 16px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.bib-relatorios-hub__empty-search-text {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.bib-relatorios-hub__recover-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(250, 204, 21, 0.22);
+  background: linear-gradient(165deg, rgba(72, 52, 8, 0.28), rgba(20, 16, 8, 0.42));
+}
+
+.bib-relatorios-hub__recover-banner-text {
+  margin: 0;
+  flex: 1 1 220px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(253, 230, 138, 0.88);
+}
 
 .bib-relatorios-hub__toolbar {
   display: flex;
@@ -34374,9 +34681,31 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 @media (max-width: 960px) {
+  .bib-relatorios-hub__kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .bib-relatorios-hub__hero-top {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .bib-relatorios-hub__command-row--nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bib-relatorios-hub__quick-actions {
+    width: 100%;
+  }
+
+  .bib-relatorios-hub__quick-actions .bib-relatorios-hub__btn {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+
+  .bib-relatorios-hub__alfa-sticky {
+    top: calc(8px + 200px);
   }
 
   .bib-relatorios-hub__hero-actions {

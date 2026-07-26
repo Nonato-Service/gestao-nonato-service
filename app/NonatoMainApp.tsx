@@ -9143,7 +9143,8 @@ export default function Dashboard() {
   const [bibliotecaRelatoriosClientesExpandidos, setBibliotecaRelatoriosClientesExpandidos] = useState<Set<string>>(new Set())
   const [bibliotecaRelatoriosEquipExpandidos, setBibliotecaRelatoriosEquipExpandidos] = useState<Set<string>>(new Set())
   const [bibliotecaSecaoFechadosExpandida, setBibliotecaSecaoFechadosExpandida] = useState(false)
-  const [bibliotecaSecaoClientesExpandida, setBibliotecaSecaoClientesExpandida] = useState(false)
+  const [bibliotecaSecaoClientesExpandida, setBibliotecaSecaoClientesExpandida] = useState(true)
+  const [bibliotecaRelatoriosHubTab, setBibliotecaRelatoriosHubTab] = useState<'clientes' | 'fechados'>('clientes')
   const [bibliotecaFechadosClientesExpandidos, setBibliotecaFechadosClientesExpandidos] = useState<Set<string>>(
     new Set()
   )
@@ -66858,23 +66859,23 @@ A1;Peça exemplo;10`}
                         {totalEquipamentosBiblioteca.toLocaleString(bibRelHubLocale)}
                       </span>
                     </div>
-                    {bibRelFechadosCount > 0 ? (
-                      <div className="bib-relatorios-hub__kpi bib-relatorios-hub__kpi--fechados">
-                        <span className="bib-relatorios-hub__kpi-label">
-                          {txBibHero.bibliotecaRelatoriosHubKpiFechados || 'Fechados na biblioteca'}
-                        </span>
-                        <span className="bib-relatorios-hub__kpi-value">
-                          {bibRelFechadosCount.toLocaleString(bibRelHubLocale)}
-                        </span>
-                      </div>
-                    ) : null}
+                    <div className="bib-relatorios-hub__kpi bib-relatorios-hub__kpi--fechados">
+                      <span className="bib-relatorios-hub__kpi-label">
+                        {txBibHero.bibliotecaRelatoriosHubKpiFechados || 'Fechados na biblioteca'}
+                      </span>
+                      <span className="bib-relatorios-hub__kpi-value">
+                        {bibRelFechadosCount.toLocaleString(bibRelHubLocale)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bib-relatorios-hub__toolbar">
-                <div className="bib-relatorios-hub__toolbar-search">
+              {(relatoriosPorCliente.length > 0 || relatoriosFechadosLista.length > 0 || buscaBibliotecaRelatoriosCliente.trim() !== '') ? (
+              <div className="bib-relatorios-hub__command-deck">
+                <div className="bib-relatorios-hub__command-row bib-relatorios-hub__command-row--search">
                   <div className="biblioteca-relatorios-search bib-relatorios-hub__search">
+                    <span className="bib-relatorios-hub__search-icon" aria-hidden="true">⌕</span>
                     <input
                       type="search"
                       className={
@@ -66885,6 +66886,7 @@ A1;Peça exemplo;10`}
                       onChange={(e) => {
                         setBuscaBibliotecaRelatoriosCliente(e.target.value)
                         setBibliotecaRelatoriosAlfaLetraFiltro(null)
+                        if (e.target.value.trim()) setBibliotecaRelatoriosHubTab('clientes')
                       }}
                       placeholder={
                         txBibHero.bibliotecaRelatoriosBuscaPlaceholder ||
@@ -66905,7 +66907,93 @@ A1;Peça exemplo;10`}
                     )}
                   </div>
                 </div>
-                <div className="bib-relatorios-hub__toolbar-actions">
+
+                <div className="bib-relatorios-hub__command-row bib-relatorios-hub__command-row--nav">
+                  <div className="bib-relatorios-hub__tabs" role="tablist" aria-label={txBibHero.bibliotecaRelatoriosTitle || 'Biblioteca'}>
+                    <button
+                      type="button"
+                      role="tab"
+                      id="bib-hub-tab-clientes"
+                      aria-selected={bibliotecaRelatoriosHubTab === 'clientes'}
+                      aria-controls="bib-hub-panel-clientes"
+                      className={
+                        'bib-relatorios-hub__tab' +
+                        (bibliotecaRelatoriosHubTab === 'clientes' ? ' bib-relatorios-hub__tab--active' : '')
+                      }
+                      onClick={() => setBibliotecaRelatoriosHubTab('clientes')}
+                    >
+                      {txBibHero.bibliotecaRelatoriosHubTabClientes || 'Pastas dos clientes'}
+                      <span className="bib-relatorios-hub__tab-badge">
+                        {bibliotecaFiltradaComConteudo.length || relatoriosPorCliente.length}
+                      </span>
+                    </button>
+                    {bibRelFechadosCount > 0 ? (
+                      <button
+                        type="button"
+                        role="tab"
+                        id="bib-hub-tab-fechados"
+                        aria-selected={bibliotecaRelatoriosHubTab === 'fechados'}
+                        aria-controls="bib-hub-panel-fechados"
+                        className={
+                          'bib-relatorios-hub__tab bib-relatorios-hub__tab--fechados' +
+                          (bibliotecaRelatoriosHubTab === 'fechados' ? ' bib-relatorios-hub__tab--active' : '')
+                        }
+                        onClick={() => setBibliotecaRelatoriosHubTab('fechados')}
+                      >
+                        {txBibHero.bibliotecaRelatoriosHubTabFechados || 'Relatórios fechados'}
+                        <span className="bib-relatorios-hub__tab-badge">{bibRelFechadosCount}</span>
+                      </button>
+                    ) : null}
+                  </div>
+
+                  <div className="bib-relatorios-hub__quick-actions">
+                    <button
+                      type="button"
+                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--ghost bib-relatorios-hub__btn--sm"
+                      onClick={() => {
+                        if (bibliotecaRelatoriosHubTab === 'fechados') {
+                          setBibliotecaSecaoFechadosExpandida(true)
+                          setBibliotecaFechadosClientesExpandidos(
+                            new Set(relatoriosFechadosPorCliente.map(g => g.key))
+                          )
+                          return
+                        }
+                        setBibliotecaSecaoClientesExpandida(true)
+                        setBibliotecaRelatoriosClientesExpandidos(new Set(relatoriosPorCliente.map(r => r.cliente.id)))
+                        const allEq = new Set<string>()
+                        relatoriosPorCliente.forEach(row => {
+                          row.equipamentos.forEach(eq =>
+                            allEq.add(bibliotecaEquipKey(row.cliente.id, eq.equipamentoKey))
+                          )
+                        })
+                        setBibliotecaRelatoriosEquipExpandidos(allEq)
+                      }}
+                      title={txBibHero.expandirTodos || 'Expandir todos'}
+                    >
+                      {txBibHero.expandirTodos || 'Expandir todos'}
+                    </button>
+                    <button
+                      type="button"
+                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--muted bib-relatorios-hub__btn--sm"
+                      onClick={() => {
+                        if (bibliotecaRelatoriosHubTab === 'fechados') {
+                          setBibliotecaFechadosClientesExpandidos(new Set())
+                          return
+                        }
+                        setBibliotecaRelatoriosClientesExpandidos(new Set())
+                        setBibliotecaRelatoriosEquipExpandidos(new Set())
+                      }}
+                      title={txBibHero.retrairTodos || 'Retrair todos'}
+                    >
+                      {txBibHero.retrairTodos || 'Retrair todos'}
+                    </button>
+                  </div>
+                </div>
+
+                <details className="bib-relatorios-hub__pdf-prefs">
+                  <summary className="bib-relatorios-hub__pdf-prefs-summary">
+                    {txBibHero.bibliotecaRelatoriosHubPdfPrefs || 'Preferências PDF'}
+                  </summary>
                   <div className="bib-relatorios-hub__pdf-group">
                     <div className="bib-relatorios-hub__pdf-field">
                       <span className="bib-relatorios-hub__pdf-label">
@@ -66948,97 +67036,165 @@ A1;Peça exemplo;10`}
                       />
                     </div>
                   </div>
-                  <div className="bib-relatorios-hub__toolbar-btns">
-                    <button
-                      type="button"
-                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--ghost"
-                      onClick={() => {
-                        setBibliotecaSecaoClientesExpandida(true)
-                        setBibliotecaRelatoriosClientesExpandidos(new Set(relatoriosPorCliente.map(r => r.cliente.id)))
-                        const allEq = new Set<string>()
-                        relatoriosPorCliente.forEach(row => {
-                          row.equipamentos.forEach(eq =>
-                            allEq.add(bibliotecaEquipKey(row.cliente.id, eq.equipamentoKey))
-                          )
-                        })
-                        setBibliotecaRelatoriosEquipExpandidos(allEq)
-                        if (relatoriosFechadosPorCliente.length > 0) {
-                          setBibliotecaSecaoFechadosExpandida(true)
-                          setBibliotecaFechadosClientesExpandidos(
-                            new Set(relatoriosFechadosPorCliente.map(g => g.key))
-                          )
-                        }
-                      }}
-                      title={txBibHero.expandirTodos || 'Expandir todos'}
-                    >
-                      {txBibHero.expandirTodos || 'Expandir todos'}
-                    </button>
-                    <button
-                      type="button"
-                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--muted"
-                      onClick={() => {
-                        setBibliotecaSecaoClientesExpandida(false)
-                        setBibliotecaRelatoriosClientesExpandidos(new Set())
-                        setBibliotecaRelatoriosEquipExpandidos(new Set())
-                        setBibliotecaSecaoFechadosExpandida(false)
-                        setBibliotecaFechadosClientesExpandidos(new Set())
-                      }}
-                      title={txBibHero.retrairTodos || 'Retrair todos'}
-                    >
-                      {txBibHero.retrairTodos || 'Retrair todos'}
-                    </button>
+                </details>
+              </div>
+              ) : null}
+
+              {(relatoriosPorCliente.length > 0 || relatoriosFechadosLista.length > 0) &&
+              bibliotecaRelatoriosHubTab === 'clientes' ? (
+                <div className="bib-relatorios-hub__legenda-strip" role="note">
+                  <div className="bib-relatorios-hub__legenda bib-relatorios-hub__legenda--compact">
+                    <div className="bib-relatorios-hub__legenda-block">
+                      <span className="bib-relatorios-hub__legenda-heading">
+                        {txBibHero.bibliotecaRelatoriosHubLegendaConteudo || 'Badges (conteúdo)'}
+                      </span>
+                      <ul className="bib-relatorios-hub__legenda-items">
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--equip" aria-hidden />
+                          <span className="bib-kpi bib-kpi--equip bib-kpi--legend">
+                            {txBibHero.bibliotecaRelatoriosLegendaEquipamentos || 'equip.'}
+                          </span>
+                          <span>{txBibHero.bibliotecaRelatoriosHubLegendaEquipDesc || 'Equipamentos'}</span>
+                        </li>
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--serv" aria-hidden />
+                          <span className="bib-kpi bib-kpi--serv bib-kpi--legend">
+                            {txBibHero.bibliotecaRelatoriosLegendaServico || 'serv.'}
+                          </span>
+                          <span>{txBibHero.relatoriosServicoTitle || 'Relatórios de serviço'}</span>
+                        </li>
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--desp" aria-hidden />
+                          <span className="bib-kpi bib-kpi--desp bib-kpi--legend">
+                            {txBibHero.bibliotecaRelatoriosLegendaDespesas || 'desp.'}
+                          </span>
+                          <span>{txBibHero.relatoriosDespesasTitle || 'Relatórios de despesas'}</span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="bib-relatorios-hub__legenda-block">
+                      <span className="bib-relatorios-hub__legenda-heading">
+                        {txBibHero.bibliotecaRelatoriosHubLegendaFinanceiro || 'Cor da pasta (cobrança)'}
+                      </span>
+                      <ul className="bib-relatorios-hub__legenda-items">
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--vermelho">
+                            {txBibHero.financeiroDespesasEstadoVermelho || 'Vermelho — não pagou'}
+                          </span>
+                        </li>
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--amarelo">
+                            {txBibHero.financeiroDespesasEstadoAmarelo || 'Amarelo — pendente'}
+                          </span>
+                        </li>
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--azul">
+                            {txBibHero.financeiroDespesasEstadoAzul || 'Azul — cobrança enviada'}
+                          </span>
+                        </li>
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--verde">
+                            {txBibHero.financeiroDespesasEstadoVerde || 'Verde — pago'}
+                          </span>
+                        </li>
+                        <li className="bib-relatorios-hub__legenda-item">
+                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--misto">
+                            {txBibHero.financeiroDespesasEstadoMisto || 'Vários estados'}
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : null}
+
+              {!buscaBibliotecaAtiva &&
+              bibliotecaRelatoriosHubTab === 'clientes' &&
+              bibliotecaFiltrada.length > 0 ? (
+                <div className="bib-relatorios-hub__alfa-sticky">
+                  <div className="bib-relatorios-hub__list-meta biblioteca-relatorios-alfa-meta">
+                    {bibliotecaLetraAtiva
+                      ? `${(bibliotecaPorLetra.get(bibliotecaLetraAtiva) ?? []).length} ${safeT?.clientes || 'cliente(s)'} ${safeT?.clientesAlfabetoComInicial || 'com inicial'} «${bibliotecaLetraAtiva === '#' ? (safeT?.clientesAlfabetoOutros || 'Outros') : bibliotecaLetraAtiva}»`
+                      : `${safeT?.mostrando || 'Mostrando'} ${bibliotecaFiltradaComConteudo.length} ${safeT?.clientes || 'cliente(s)'} ${txBibHero.bibliotecaRelatoriosComRelatorios || 'com relatórios'} — ${txBibHero.bibliotecaRelatoriosAlfabetoFiltrarOpcional || 'toque numa letra para filtrar'}`}
+                  </div>
+                  <div className="clientes-alfa-wrap biblioteca-relatorios-alfa-wrap">
+                    <nav
+                      className="clientes-alfa-jump clientes-alfa-jump--modern"
+                      aria-label={safeT?.clientesAlfabetoIndice || 'Índice A–Z'}
+                    >
+                      {CLIENTES_ALFABETO_INDICE.map((letra) => {
+                        const count = bibliotecaPorLetra.get(letra)?.length ?? 0
+                        const temClientes = count > 0
+                        const active = bibliotecaLetraAtiva === letra
+                        return (
+                          <button
+                            key={letra}
+                            type="button"
+                            className={`clientes-alfa-jump-btn${active ? ' is-active' : ''}${!temClientes ? ' is-empty' : ''}`}
+                            disabled={!temClientes}
+                            aria-pressed={active}
+                            title={
+                              temClientes
+                                ? `${count} ${safeT?.clientes || 'cliente(s)'}`
+                                : safeT?.clientesAlfabetoSemClientes || 'Sem clientes nesta letra'
+                            }
+                            onClick={() => setBibliotecaRelatoriosAlfaLetraFiltro(letra)}
+                          >
+                            <span className="clientes-alfa-jump-btn__letter">{letra === '#' ? '#' : letra}</span>
+                            {temClientes ? (
+                              <span className="clientes-alfa-jump-btn__count" aria-hidden>
+                                {count}
+                              </span>
+                            ) : null}
+                          </button>
+                        )
+                      })}
+                    </nav>
+                    {bibliotecaLetraAtiva ? (
+                      <section className="clientes-alfa-secao biblioteca-relatorios-letra-secao">
+                        <h3 className="clientes-alfa-letra">
+                          {bibliotecaLetraAtiva === '#'
+                            ? safeT?.clientesAlfabetoOutros || 'Outros'
+                            : bibliotecaLetraAtiva}
+                          <span className="clientes-alfa-letra__count">
+                            {(bibliotecaPorLetra.get(bibliotecaLetraAtiva) ?? []).length}
+                          </span>
+                        </h3>
+                      </section>
+                    ) : (
+                      <p className="clientes-alfa-prompt bib-relatorios-hub__alfa-prompt">
+                        {(safeT as any)?.bibliotecaRelatoriosAlfabetoPrompt ||
+                          (safeT as any)?.bibliotecaRelatoriosListaCompletaHint ||
+                          'Toque numa letra para filtrar por inicial (ex.: F para Ferwood).'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="bib-relatorios-hub__body">
-            {relatoriosFechadosLista.length > 0 ? (
-              <details
-                className="biblioteca-relatorios-fechados-block bib-relatorios-hub__fechados"
-                open={bibliotecaSecaoFechadosExpandida}
-                onToggle={(e) =>
-                  setBibliotecaSecaoFechadosExpandida((e.currentTarget as HTMLDetailsElement).open)
-                }
+            {bibliotecaRelatoriosHubTab === 'fechados' && relatoriosFechadosLista.length > 0 ? (
+              <section
+                id="bib-hub-panel-fechados"
+                role="tabpanel"
+                aria-labelledby="bib-hub-tab-fechados"
+                className="bib-relatorios-hub__panel bib-relatorios-hub__panel--fechados biblioteca-relatorios-fechados-block bib-relatorios-hub__fechados"
               >
-                <summary className="biblioteca-relatorios-fechados-block__summary bib-relatorios-hub__section-summary">
-                  <span className="bib-relatorios-hub__section-chevron biblioteca-relatorios-fechados-block__chevron" aria-hidden />
-                  <div className="bib-relatorios-hub__section-head">
-                    <span className="bib-relatorios-hub__section-title biblioteca-relatorios-fechados-block__title">
+                <header className="bib-relatorios-hub__panel-head">
+                  <div>
+                    <h2 className="bib-relatorios-hub__panel-title">
                       {txBibHero.bibliotecaRelatoriosFechadosTitulo ||
                         'Relatórios fechados na biblioteca'}
-                    </span>
-                    <span className="bib-relatorios-hub__section-hint biblioteca-relatorios-fechados-block__hint">
+                    </h2>
+                    <p className="bib-relatorios-hub__panel-hint">
                       {txBibHero.bibliotecaRelatoriosFechadosHint ||
                         'Por cliente: abra cada relatório para ver ou editar.'}
-                    </span>
+                    </p>
                   </div>
-                  <span className="bib-relatorios-hub__section-badge biblioteca-relatorios-fechados-block__count">
-                    {relatoriosFechadosLista.length}
-                  </span>
-                </summary>
+                  <span className="bib-relatorios-hub__panel-badge">{relatoriosFechadosLista.length}</span>
+                </header>
                 <div className="biblioteca-relatorios-fechados-block__body">
-                  <div className="bib-relatorios-hub__sec-toolbar biblioteca-relatorios-fechados-block__toolbar">
-                    <button
-                      type="button"
-                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--ghost bib-relatorios-hub__btn--sec"
-                      onClick={() => {
-                        setBibliotecaSecaoFechadosExpandida(true)
-                        setBibliotecaFechadosClientesExpandidos(
-                          new Set(relatoriosFechadosPorCliente.map(g => g.key))
-                        )
-                      }}
-                    >
-                      {txBibHero.expandirTodos || 'Expandir todos'}
-                    </button>
-                    <button
-                      type="button"
-                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--muted bib-relatorios-hub__btn--sec"
-                      onClick={() => setBibliotecaFechadosClientesExpandidos(new Set())}
-                    >
-                      {txBibHero.retrairTodos || 'Retrair todos'}
-                    </button>
-                  </div>
                   <div className="biblioteca-relatorios-fechados-client-list">
                     {relatoriosFechadosPorCliente.map(({ key, clienteNome, rows }) => (
                       <details
@@ -67189,7 +67345,7 @@ A1;Peça exemplo;10`}
                     ))}
                   </div>
                 </div>
-              </details>
+              </section>
             ) : null}
 
             {relatoriosPorCliente.length === 0 && relatoriosFechadosLista.length === 0 ? (
@@ -67237,187 +67393,17 @@ A1;Peça exemplo;10`}
                   </>
                 )}
               </div>
-            ) : relatoriosPorCliente.length > 0 ||
+            ) : bibliotecaRelatoriosHubTab === 'clientes' &&
+              (relatoriosPorCliente.length > 0 ||
               buscaBibliotecaRelatoriosCliente.trim() !== '' ||
-              bibliotecaFiltradaComConteudo.length > 0 ? (
-              <details
-                className="biblioteca-relatorios-clientes-block bib-relatorios-hub__clientes"
-                open={bibliotecaSecaoClientesExpandida}
-                onToggle={(e) =>
-                  setBibliotecaSecaoClientesExpandida((e.currentTarget as HTMLDetailsElement).open)
-                }
+              bibliotecaFiltradaComConteudo.length > 0) ? (
+              <section
+                id="bib-hub-panel-clientes"
+                role="tabpanel"
+                aria-labelledby="bib-hub-tab-clientes"
+                className="bib-relatorios-hub__panel bib-relatorios-hub__panel--clientes biblioteca-relatorios-clientes-block bib-relatorios-hub__clientes"
               >
-                <summary className="biblioteca-relatorios-clientes-block__summary bib-relatorios-hub__section-summary bib-relatorios-hub__section-summary--clientes">
-                  <span className="bib-relatorios-hub__section-chevron biblioteca-relatorios-clientes-block__chevron" aria-hidden />
-                  <div className="bib-relatorios-hub__section-head">
-                    <span className="bib-relatorios-hub__section-title biblioteca-relatorios-clientes-block__title">
-                      {txBibHero.bibliotecaRelatoriosPastasClientesTitulo ||
-                        'Pastas dos clientes'}
-                    </span>
-                    <span className="bib-relatorios-hub__section-hint biblioteca-relatorios-clientes-block__hint">
-                      {txBibHero.bibliotecaRelatoriosPastasClientesHint ||
-                        'Abra cada cliente para ver equipamentos, relatórios e despesas.'}
-                    </span>
-                  </div>
-                  <span className="bib-relatorios-hub__section-badge biblioteca-relatorios-clientes-block__count">
-                    {bibliotecaFiltradaComConteudo.length || relatoriosPorCliente.length}
-                  </span>
-                </summary>
                 <div className="biblioteca-relatorios-clientes-block__body">
-                  <div className="bib-relatorios-hub__sec-toolbar biblioteca-relatorios-clientes-block__toolbar">
-                    <button
-                      type="button"
-                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--ghost bib-relatorios-hub__btn--sec"
-                      onClick={() => {
-                        setBibliotecaSecaoClientesExpandida(true)
-                        setBibliotecaRelatoriosClientesExpandidos(
-                          new Set(relatoriosPorCliente.map(r => r.cliente.id))
-                        )
-                        const allEq = new Set<string>()
-                        relatoriosPorCliente.forEach(row => {
-                          row.equipamentos.forEach(eq =>
-                            allEq.add(bibliotecaEquipKey(row.cliente.id, eq.equipamentoKey))
-                          )
-                        })
-                        setBibliotecaRelatoriosEquipExpandidos(allEq)
-                      }}
-                    >
-                      {txBibHero.expandirTodos || 'Expandir todos'}
-                    </button>
-                    <button
-                      type="button"
-                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--muted bib-relatorios-hub__btn--sec"
-                      onClick={() => {
-                        setBibliotecaRelatoriosClientesExpandidos(new Set())
-                        setBibliotecaRelatoriosEquipExpandidos(new Set())
-                      }}
-                    >
-                      {txBibHero.retrairTodos || 'Retrair todos'}
-                    </button>
-                  </div>
-                  <div className="bib-relatorios-hub__legenda" role="note">
-                    <div className="bib-relatorios-hub__legenda-block">
-                      <span className="bib-relatorios-hub__legenda-heading">
-                        {txBibHero.bibliotecaRelatoriosHubLegendaConteudo || 'Badges (conteúdo)'}
-                      </span>
-                      <ul className="bib-relatorios-hub__legenda-items">
-                        <li className="bib-relatorios-hub__legenda-item">
-                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--equip" aria-hidden />
-                          <span className="bib-kpi bib-kpi--equip bib-kpi--legend">
-                            {txBibHero.bibliotecaRelatoriosLegendaEquipamentos || 'equip.'}
-                          </span>
-                          <span>{txBibHero.bibliotecaRelatoriosHubLegendaEquipDesc || 'Equipamentos'}</span>
-                        </li>
-                        <li className="bib-relatorios-hub__legenda-item">
-                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--serv" aria-hidden />
-                          <span className="bib-kpi bib-kpi--serv bib-kpi--legend">
-                            {txBibHero.bibliotecaRelatoriosLegendaServico || 'serv.'}
-                          </span>
-                          <span>{txBibHero.relatoriosServicoTitle || 'Relatórios de serviço'}</span>
-                        </li>
-                        <li className="bib-relatorios-hub__legenda-item">
-                          <span className="bib-relatorios-hub__legenda-dot bib-relatorios-hub__legenda-dot--desp" aria-hidden />
-                          <span className="bib-kpi bib-kpi--desp bib-kpi--legend">
-                            {txBibHero.bibliotecaRelatoriosLegendaDespesas || 'desp.'}
-                          </span>
-                          <span>{txBibHero.relatoriosDespesasTitle || 'Relatórios de despesas'}</span>
-                        </li>
-                      </ul>
-                    </div>
-                    <div className="bib-relatorios-hub__legenda-block">
-                      <span className="bib-relatorios-hub__legenda-heading">
-                        {txBibHero.bibliotecaRelatoriosHubLegendaFinanceiro || 'Cor da pasta (cobrança)'}
-                      </span>
-                      <ul className="bib-relatorios-hub__legenda-items">
-                        <li className="bib-relatorios-hub__legenda-item">
-                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--vermelho">
-                            {txBibHero.financeiroDespesasEstadoVermelho || 'Vermelho — não pagou'}
-                          </span>
-                        </li>
-                        <li className="bib-relatorios-hub__legenda-item">
-                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--amarelo">
-                            {txBibHero.financeiroDespesasEstadoAmarelo || 'Amarelo — pendente'}
-                          </span>
-                        </li>
-                        <li className="bib-relatorios-hub__legenda-item">
-                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--azul">
-                            {txBibHero.financeiroDespesasEstadoAzul || 'Azul — cobrança enviada'}
-                          </span>
-                        </li>
-                        <li className="bib-relatorios-hub__legenda-item">
-                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--verde">
-                            {txBibHero.financeiroDespesasEstadoVerde || 'Verde — pago'}
-                          </span>
-                        </li>
-                        <li className="bib-relatorios-hub__legenda-item">
-                          <span className="bib-relatorios-hub__legenda-chip bib-relatorios-hub__legenda-chip--misto">
-                            {txBibHero.financeiroDespesasEstadoMisto || 'Vários estados'}
-                          </span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                {!buscaBibliotecaAtiva && bibliotecaFiltrada.length > 0 ? (
-                  <div className="biblioteca-relatorios-alfa-bar">
-                    <div className="bib-relatorios-hub__list-meta biblioteca-relatorios-alfa-meta">
-                      {bibliotecaLetraAtiva
-                        ? `${(bibliotecaPorLetra.get(bibliotecaLetraAtiva) ?? []).length} ${safeT?.clientes || 'cliente(s)'} ${safeT?.clientesAlfabetoComInicial || 'com inicial'} «${bibliotecaLetraAtiva === '#' ? (safeT?.clientesAlfabetoOutros || 'Outros') : bibliotecaLetraAtiva}»`
-                        : `${safeT?.mostrando || 'Mostrando'} ${bibliotecaFiltradaComConteudo.length} ${safeT?.clientes || 'cliente(s)'} ${txBibHero.bibliotecaRelatoriosComRelatorios || 'com relatórios'} — ${txBibHero.bibliotecaRelatoriosAlfabetoFiltrarOpcional || 'toque numa letra para filtrar'}`}
-                    </div>
-                    <div className="clientes-alfa-wrap biblioteca-relatorios-alfa-wrap">
-                      <nav
-                        className="clientes-alfa-jump clientes-alfa-jump--modern"
-                        aria-label={safeT?.clientesAlfabetoIndice || 'Índice A–Z'}
-                      >
-                        {CLIENTES_ALFABETO_INDICE.map((letra) => {
-                          const count = bibliotecaPorLetra.get(letra)?.length ?? 0
-                          const temClientes = count > 0
-                          const active = bibliotecaLetraAtiva === letra
-                          return (
-                            <button
-                              key={letra}
-                              type="button"
-                              className={`clientes-alfa-jump-btn${active ? ' is-active' : ''}${!temClientes ? ' is-empty' : ''}`}
-                              disabled={!temClientes}
-                              aria-pressed={active}
-                              title={
-                                temClientes
-                                  ? `${count} ${safeT?.clientes || 'cliente(s)'}`
-                                  : safeT?.clientesAlfabetoSemClientes || 'Sem clientes nesta letra'
-                              }
-                              onClick={() => setBibliotecaRelatoriosAlfaLetraFiltro(letra)}
-                            >
-                              <span className="clientes-alfa-jump-btn__letter">{letra === '#' ? '#' : letra}</span>
-                              {temClientes ? (
-                                <span className="clientes-alfa-jump-btn__count" aria-hidden>
-                                  {count}
-                                </span>
-                              ) : null}
-                            </button>
-                          )
-                        })}
-                      </nav>
-                      {!bibliotecaLetraAtiva ? (
-                        <p className="clientes-alfa-prompt">
-                          {(safeT as any)?.bibliotecaRelatoriosAlfabetoPrompt ||
-                            (safeT as any)?.bibliotecaRelatoriosListaCompletaHint ||
-                            'Todos os clientes com relatórios aparecem abaixo. Toque numa letra para filtrar por inicial (ex.: F para Ferwood).'}
-                        </p>
-                      ) : (
-                        <section className="clientes-alfa-secao biblioteca-relatorios-letra-secao">
-                          <h3 className="clientes-alfa-letra">
-                            {bibliotecaLetraAtiva === '#'
-                              ? safeT?.clientesAlfabetoOutros || 'Outros'
-                              : bibliotecaLetraAtiva}
-                            <span className="clientes-alfa-letra__count">
-                              {(bibliotecaPorLetra.get(bibliotecaLetraAtiva) ?? []).length}
-                            </span>
-                          </h3>
-                        </section>
-                      )}
-                    </div>
-                  </div>
-                ) : null}
                 {buscaBibliotecaAtiva && bibliotecaFiltrada.length > 0 ? (
                   <p className="bib-relatorios-hub__list-meta biblioteca-relatorios-busca-meta">
                     {String(
@@ -67427,48 +67413,42 @@ A1;Peça exemplo;10`}
                 ) : null}
               <div className="biblioteca-relatorios-client-list">
                 {buscaBibliotecaRelatoriosCliente.trim() !== '' && bibliotecaFiltrada.length === 0 ? (
-                  <div className="biblioteca-relatorios-empty-busca" style={{ textAlign: 'center', padding: '24px 16px' }}>
-                    <p style={{ marginBottom: '16px' }}>
+                  <div className="bib-relatorios-hub__empty-search">
+                    <p className="bib-relatorios-hub__empty-search-text">
                       {(safeT as any)?.bibliotecaRelatoriosSemResultadosBusca ||
                         'Nenhum resultado para esta pesquisa. Tente outro termo.'}
                     </p>
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      onClick={() => void handleRecuperarRelatoriosPerdidos()}
-                      style={{ padding: '8px 18px', borderRadius: '8px', marginRight: '10px' }}
-                    >
-                      ♻️ {(safeT as any)?.bibliotecaRecuperarRelatoriosBtn || 'Recuperar relatórios perdidos'}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      onClick={() => openTab('relatorios-excluidos-clientes', getTabTitle('relatorios-excluidos-clientes'))}
-                      style={{
-                        padding: '8px 18px',
-                        borderRadius: '8px',
-                        backgroundColor: 'rgba(0, 150, 255, 0.1)',
-                        border: '1px solid rgba(0, 150, 255, 0.58)',
-                      }}
-                    >
-                      🗃️ {(safeT as any)?.bibliotecaVerRelatoriosExcluidos || 'Ver excluídos'}
-                    </button>
+                    <div className="bib-relatorios-hub__empty-actions">
+                      <button
+                        type="button"
+                        className="bib-relatorios-hub__btn bib-relatorios-hub__btn--primary"
+                        onClick={() => void handleRecuperarRelatoriosPerdidos()}
+                      >
+                        ♻️ {(safeT as any)?.bibliotecaRecuperarRelatoriosBtn || 'Recuperar relatórios perdidos'}
+                      </button>
+                      <button
+                        type="button"
+                        className="bib-relatorios-hub__btn bib-relatorios-hub__btn--ghost"
+                        onClick={() => openTab('relatorios-excluidos-clientes', getTabTitle('relatorios-excluidos-clientes'))}
+                      >
+                        🗃️ {(safeT as any)?.bibliotecaVerRelatoriosExcluidos || 'Ver excluídos'}
+                      </button>
+                    </div>
                   </div>
                 ) : null}
                 {bibliotecaListaRender.length === 0 &&
                 buscaBibliotecaRelatoriosCliente.trim() === '' &&
                 bibliotecaFiltradaComConteudo.length === 0 &&
                 relatoriosServico.length > 0 ? (
-                  <div style={{ textAlign: 'center', padding: '32px 16px', marginBottom: '16px' }}>
-                    <p style={{ marginBottom: '14px', opacity: 0.9 }}>
+                  <div className="bib-relatorios-hub__recover-banner">
+                    <p className="bib-relatorios-hub__recover-banner-text">
                       {(safeT as any)?.bibliotecaRecuperarRelatoriosHint ||
                         'Existem relatórios guardados mas não aparecem nas pastas. Clique para sincronizar.'}
                     </p>
                     <button
                       type="button"
-                      className="btn-primary"
+                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--primary"
                       onClick={() => void handleRecuperarRelatoriosPerdidos()}
-                      style={{ padding: '10px 22px', borderRadius: '10px' }}
                     >
                       ♻️ {(safeT as any)?.bibliotecaRecuperarRelatoriosBtn || 'Recuperar relatórios perdidos'}
                     </button>
@@ -67893,7 +67873,7 @@ A1;Peça exemplo;10`}
                 })}
               </div>
                 </div>
-              </details>
+              </section>
             ) : null}
             </div>
           </div>
