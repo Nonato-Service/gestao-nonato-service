@@ -42728,7 +42728,7 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
 }
 .orc-pro__tipo-toolbar {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 8px;
   align-items: stretch;
 }

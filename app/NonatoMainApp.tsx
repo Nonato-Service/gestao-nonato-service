@@ -99,7 +99,7 @@ import {
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser } from './utils/syncRevision'
 import { cmpNomeCliente, ordenarClientesPorNome, localeOrdenacaoClientes } from './lib/ordenarClientes'
-import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasStrictMenuPolicy, normalizeMenuItems, normalizeMenuItemsWithLegacyFallback, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
+import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasLinkedMenuAccess, hasStrictMenuPolicy, normalizeMenuItems, normalizeMenuItemsWithLegacyFallback, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
   NONATO_CRITICAL_CADASTRO_KEYS,
   localStorageKeyHasMeaningfulCadastro,
@@ -10265,8 +10265,9 @@ export default function Dashboard() {
           setDemoExpired(false)
           setDemoDaysLeft(null)
           setDemoModuleConfig({})
-          setLoginUser(auth.user)
-          saveLastAuthUser(auth.user)
+          const normalizedAuthUser = ensureUserMenuPolicy(auth.user)
+          setLoginUser(normalizedAuthUser)
+          saveLastAuthUser(normalizedAuthUser)
           setShowSplashInicial(false)
           setShowPasswordScreen(false)
           return
@@ -10307,7 +10308,7 @@ export default function Dashboard() {
 
               if (d.isDemo && !d.expired) {
                 if (auth.authenticated && auth.user) {
-                  setLoginUser(auth.user)
+                  setLoginUser(ensureUserMenuPolicy(auth.user))
                 } else {
                   setLoginUser({ ...DEMO_VISITOR_USER } as User)
                 }
@@ -10316,8 +10317,9 @@ export default function Dashboard() {
               } else if (d.expired) {
                 clearDemoCookiesClient()
               } else if (auth.authenticated && auth.user) {
-                setLoginUser(auth.user)
-                saveLastAuthUser(auth.user)
+                const normalizedAuthUser = ensureUserMenuPolicy(auth.user)
+                setLoginUser(normalizedAuthUser)
+                saveLastAuthUser(normalizedAuthUser)
                 setShowSplashInicial(false)
                 setShowPasswordScreen(false)
               }
@@ -14526,13 +14528,15 @@ export default function Dashboard() {
       setEditingUser(updatedUser)
       setUserForm(userToFormState(updatedUser, ''))
       if (loginUser?.id === updatedUser.id) {
-        setLoginUser({
-          ...loginUser,
-          permissions: updatedUser.permissions,
-          menuItems: updatedUser.menuItems,
-          menuItemsConfigured: updatedUser.menuItemsConfigured,
-          isAdmin: updatedUser.isAdmin,
-        })
+        setLoginUser(
+          ensureUserMenuPolicy({
+            ...loginUser,
+            permissions: updatedUser.permissions,
+            menuItems: updatedUser.menuItems,
+            menuItemsConfigured: updatedUser.menuItemsConfigured,
+            isAdmin: updatedUser.isAdmin,
+          })
+        )
       }
     } else {
       const newUser: User = ensureUserMenuPolicy({
@@ -28720,6 +28724,18 @@ export default function Dashboard() {
     if (isDemoMode && DEMO_HIDDEN_ACTIONS.has(action)) return false
     if (loginUser.isAdmin) return true
 
+    if (action === 'open-orcamentos-pecas-especiais') {
+      const pecasButtonId = 'orcamentos-pecas-especiais-default'
+      const avulsoButtonId = 'orcamentos-avulso-default'
+      if (hasStrictMenuPolicy(loginUser.menuItems, loginUser.menuItemsConfigured)) {
+        if (Boolean(loginUser.menuItems?.[pecasButtonId])) return true
+        if (Boolean(loginUser.menuItems?.[avulsoButtonId])) return true
+        if (hasLinkedMenuAccess(loginUser.menuItems, pecasButtonId)) return true
+      } else if (Boolean(loginUser.permissions?.cadastroServicos)) {
+        return true
+      }
+    }
+
     if (hasStrictMenuPolicy(loginUser.menuItems, loginUser.menuItemsConfigured)) {
       const buttonId = getButtonIdForAction(action)
       if (buttonId) {
@@ -28777,8 +28793,8 @@ export default function Dashboard() {
   useEffect(() => {
     if (!loginUser?.id || loginUser.isAdmin) return
     const fresh = users.find((u) => u.id === loginUser.id)
-    if (!fresh) return
-    const next = ensureUserMenuPolicy(fresh)
+    const source = fresh || loginUser
+    const next = ensureUserMenuPolicy(source)
     const menuChanged = JSON.stringify(next.menuItems) !== JSON.stringify(loginUser.menuItems)
     const permChanged = JSON.stringify(next.permissions) !== JSON.stringify(loginUser.permissions)
     const flagChanged = Boolean(next.menuItemsConfigured) !== Boolean(loginUser.menuItemsConfigured)
@@ -28787,13 +28803,13 @@ export default function Dashboard() {
       prev
         ? {
             ...prev,
-            permissions: next.permissions,
+            permissions: next.permissions ?? prev.permissions,
             menuItems: next.menuItems,
             menuItemsConfigured: next.menuItemsConfigured,
           }
         : prev
     )
-  }, [users, loginUser?.id, loginUser?.isAdmin, loginUser?.menuItems, loginUser?.permissions, loginUser?.menuItemsConfigured])
+  }, [users, loginUser?.id, loginUser?.isAdmin])
 
   const currentCommunicationIdentity = useMemo(() => {
     if (!loginUser || loginUser.isAdmin) return null
@@ -69949,24 +69965,22 @@ A1;Peça exemplo;10`}
                 {orcamentosGerados.length}
               </span>
             </button>
-            {canAccessAction('open-orcamentos-pecas-especiais') ? (
-              <button
-                type="button"
-                className="orc-pro__tipo-btn orc-pro__tipo-btn--compact orc-pro__tipo-btn--pecas"
-                onClick={() => openTab('orcamentos-pecas-especiais', getTabTitle('orcamentos-pecas-especiais'))}
-                title={
-                  (safeT as any)?.orcamentoPecasEspeciaisDesc ||
+            <button
+              type="button"
+              className="orc-pro__tipo-btn orc-pro__tipo-btn--compact orc-pro__tipo-btn--pecas"
+              onClick={() => openTab('orcamentos-pecas-especiais', getTabTitle('orcamentos-pecas-especiais'))}
+              title={
+                (safeT as any)?.orcamentoPecasEspeciaisDesc ||
+                (safeT as any)?.orcamentoPecasEspeciaisTitle ||
+                'Orçamentos de peças especiais'
+              }
+            >
+              <span className="orc-pro__tipo-btn-label">
+                {(safeT as any)?.orcamentoNavPecasEspeciais ||
                   (safeT as any)?.orcamentoPecasEspeciaisTitle ||
-                  'Orçamentos de peças especiais'
-                }
-              >
-                <span className="orc-pro__tipo-btn-label">
-                  {(safeT as any)?.orcamentoNavPecasEspeciais ||
-                    (safeT as any)?.orcamentoPecasEspeciaisTitle ||
-                    'Peças Especiais'}
-                </span>
-              </button>
-            ) : null}
+                  'Peças Especiais'}
+              </span>
+            </button>
           </div>
         </nav>
 
@@ -72970,8 +72984,9 @@ A1;Peça exemplo;10`}
         }
         return
       }
-      setLoginUser(data.user)
-      if (data.user && !data.demoGuest) saveLastAuthUser(data.user)
+      const normalizedLoginUser = ensureUserMenuPolicy(data.user)
+      setLoginUser(normalizedLoginUser)
+      if (data.user && !data.demoGuest) saveLastAuthUser(normalizedLoginUser)
       setShowPasswordScreen(false)
       setShowSplashInicial(false)
       setLoginUsuarioInput('')

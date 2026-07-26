@@ -118,6 +118,7 @@ export type CachedAuthUser = {
   isAdmin?: boolean
   linkedProfileType?: 'gestor' | 'tecnico' | ''
   linkedProfileId?: string
+  permissions?: Record<string, boolean>
   menuItems?: Record<string, boolean>
   menuItemsConfigured?: boolean
 }
@@ -218,6 +219,8 @@ export function saveLastAuthUser(user: CachedAuthUser): void {
         isAdmin: user.isAdmin === true,
         linkedProfileType: user.linkedProfileType || '',
         linkedProfileId: user.linkedProfileId || '',
+        permissions:
+          user.permissions && typeof user.permissions === 'object' ? user.permissions : undefined,
         menuItems: user.menuItems && typeof user.menuItems === 'object' ? user.menuItems : undefined,
         menuItemsConfigured: user.menuItemsConfigured === true,
         savedAt: new Date().toISOString(),
@@ -253,6 +256,10 @@ export function loadLastAuthUser(): CachedAuthUser | null {
       isAdmin: parsed.isAdmin === true,
       linkedProfileType: parsed.linkedProfileType || '',
       linkedProfileId: parsed.linkedProfileId || '',
+      permissions:
+        parsed.permissions && typeof parsed.permissions === 'object'
+          ? (parsed.permissions as Record<string, boolean>)
+          : undefined,
       menuItems: parsed.menuItems,
       menuItemsConfigured: parsed.menuItemsConfigured === true,
     }

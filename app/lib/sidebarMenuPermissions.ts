@@ -234,6 +234,35 @@ export function getButtonIdForAction(action: string): string | undefined {
   return ACTION_TO_BUTTON_ID[action]
 }
 
+/**
+ * Itens filhos que devem ficar visíveis quando o módulo pai está activo
+ * (ex.: peças especiais faz parte de Orçamentos Avulso).
+ */
+export const LINKED_MENU_PARENTS: Record<string, string[]> = {
+  'orcamentos-pecas-especiais-default': ['orcamentos-avulso-default'],
+}
+
+export function hasLinkedMenuAccess(
+  menuItems: Record<string, boolean | undefined> | undefined,
+  buttonId: string
+): boolean {
+  const parentIds = LINKED_MENU_PARENTS[buttonId]
+  if (!parentIds?.length || !menuItems) return false
+  return parentIds.some((parentId) => Boolean(menuItems[parentId]))
+}
+
+export function applyLinkedMenuItemAccess(
+  menuItems: Record<string, boolean>
+): Record<string, boolean> {
+  const next = { ...menuItems }
+  for (const [childId, parentIds] of Object.entries(LINKED_MENU_PARENTS)) {
+    if (parentIds.some((parentId) => next[parentId])) {
+      next[childId] = true
+    }
+  }
+  return next
+}
+
 /** Detecta menu personalizado mesmo em gravações antigas sem a flag explícita. */
 export function inferMenuItemsConfigured(
   menuItems?: Record<string, boolean | undefined>,
@@ -268,10 +297,17 @@ export function ensureUserMenuPolicy<
   if (user.isAdmin) return user
   const configured = inferMenuItemsConfigured(user.menuItems, user.menuItemsConfigured)
   if (!configured) return user
-  const menuItems =
-    user.permissions != null
-      ? normalizeMenuItemsWithLegacyFallback(user.menuItems, user.permissions)
-      : normalizeMenuItems(user.menuItems)
+  let baseMenuItems: Record<string, boolean>
+  if (user.permissions != null) {
+    baseMenuItems = normalizeMenuItemsWithLegacyFallback(user.menuItems, user.permissions)
+  } else if (user.menuItems && Object.keys(user.menuItems).length > 0) {
+    baseMenuItems = Object.fromEntries(
+      Object.entries(user.menuItems).map(([key, value]) => [key, Boolean(value)])
+    )
+  } else {
+    baseMenuItems = normalizeMenuItems(user.menuItems)
+  }
+  const menuItems = applyLinkedMenuItemAccess(baseMenuItems)
   return {
     ...user,
     menuItemsConfigured: true,
@@ -382,7 +418,8 @@ export function canAccessSidebarMenuItem(
   if (isAdmin) return true
 
   if (hasStrictMenuPolicy(menuItems, menuItemsConfigured)) {
-    return Boolean(menuItems?.[buttonId])
+    if (Boolean(menuItems?.[buttonId])) return true
+    return hasLinkedMenuAccess(menuItems, buttonId)
   }
 
   const def = getMenuItemDef(buttonId)
