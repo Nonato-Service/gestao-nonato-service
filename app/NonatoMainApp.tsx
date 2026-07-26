@@ -3303,6 +3303,34 @@ const AGENDA_CANCELADO_BG =
 const AGENDA_CANCELADO_BORDA = '#f87171'
 const AGENDA_CANCELADO_SOMBRA = '0 0 22px rgba(248, 113, 113, 0.42)'
 
+/** Estilo inline dos filtros da Agenda — garante visual mesmo com CSS/PWA em cache antigo */
+const AGENDA_FILTRO_CTRL_STYLE: React.CSSProperties = {
+  width: '100%',
+  height: 48,
+  minHeight: 48,
+  maxHeight: 48,
+  boxSizing: 'border-box',
+  padding: '0 14px',
+  margin: 0,
+  backgroundColor: '#3a3a3a',
+  border: '1px solid rgba(255,255,255,0.14)',
+  borderRadius: 12,
+  color: '#ffffff',
+  WebkitTextFillColor: '#ffffff',
+  fontSize: 14,
+  lineHeight: '46px',
+  appearance: 'none',
+  WebkitAppearance: 'none',
+}
+
+const AGENDA_FILTRO_BAR_STYLE: React.CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'flex-end',
+  gap: 12,
+  width: '100%',
+}
+
 function isAgendamentoCancelado(ag: Agendamento): boolean {
   return normalizeStatusAgendamento(ag) === 'cancelado'
 }
@@ -47427,10 +47455,10 @@ A1;Peça exemplo;10`}
 
             {/* Filtros — barra horizontal (Lista/Calendário ficam no cabeçalho) */}
             <div className="agenda-tecnica-toolbar">
-              <div className="agenda-tecnica-toolbar__filtros agenda-tecnica-filtros">
-                <div className="agenda-tecnica-filtros__field agenda-tecnica-filtros__field--status">
+              <div className="agenda-tecnica-toolbar__filtros agenda-tecnica-filtros" style={AGENDA_FILTRO_BAR_STYLE}>
+                <div style={{ flex: '1 1 160px', minWidth: 150, maxWidth: 220 }}>
                   <select
-                    className="agenda-tecnica-filtros__control"
+                    style={AGENDA_FILTRO_CTRL_STYLE}
                     value={filtroAgenda}
                     onChange={(e) => setFiltroAgenda(e.target.value as typeof filtroAgenda)}
                   >
@@ -47441,9 +47469,9 @@ A1;Peça exemplo;10`}
                     <option value="visita-tecnica">{(safeT as any)?.agendaFiltroVisitaTecnica || 'Visita técnica'}</option>
                   </select>
                 </div>
-                <div className="agenda-tecnica-filtros__field agenda-tecnica-filtros__field--tecnico">
+                <div style={{ flex: '1 1 175px', minWidth: 160, maxWidth: 240 }}>
                   <select
-                    className="agenda-tecnica-filtros__control"
+                    style={AGENDA_FILTRO_CTRL_STYLE}
                     value={filtroTecnicoAgenda}
                     onChange={(e) => setFiltroTecnicoAgenda(e.target.value)}
                   >
@@ -47453,20 +47481,20 @@ A1;Peça exemplo;10`}
                     ))}
                   </select>
                 </div>
-                <div className="agenda-tecnica-filtros__field agenda-tecnica-filtros__field--data">
+                <div style={{ flex: '0 1 170px', minWidth: 150, maxWidth: 190 }}>
                   <input
-                    className="agenda-tecnica-filtros__control agenda-tecnica-filtros__control--date"
+                    style={{ ...AGENDA_FILTRO_CTRL_STYLE, colorScheme: 'dark', lineHeight: 'normal', paddingTop: 10, paddingBottom: 10 }}
                     type="date"
                     value={filtroDataAgenda}
                     onChange={(e) => setFiltroDataAgenda(e.target.value)}
                   />
                 </div>
-                <label className="agenda-tecnica-filtros__label agenda-tecnica-filtros__label--search">
-                  {(safeT as any)?.agendaBuscaRapidaLabel || 'Pesquisa na lista'}
-                </label>
-                <div className="agenda-tecnica-filtros__field agenda-tecnica-filtros__field--search">
+                <div style={{ flex: '2 1 260px', minWidth: 220 }}>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: 6, lineHeight: 1.2 }}>
+                    {(safeT as any)?.agendaBuscaRapidaLabel || 'Pesquisa na lista'}
+                  </div>
                   <input
-                    className="agenda-tecnica-filtros__control agenda-tecnica-filtros__control--search"
+                    style={AGENDA_FILTRO_CTRL_STYLE}
                     type="text"
                     inputMode="search"
                     enterKeyHint="search"
@@ -47481,6 +47509,7 @@ A1;Peça exemplo;10`}
                   <button
                     type="button"
                     className="btn-secondary agenda-tecnica-filtros__clear"
+                    style={{ minHeight: 48, alignSelf: 'flex-end' }}
                     onClick={() => {
                       setFiltroAgenda('todos')
                       setFiltroTecnicoAgenda('')
@@ -47705,84 +47734,74 @@ A1;Peça exemplo;10`}
                         borderRadius: '0',
                         borderTop: `4px solid ${cfg.bar}`,
                         background: cfg.grad,
-                        ...(modoMenu ? { minHeight: '100%', flex: 1, display: 'flex', flexDirection: 'column' as const } : {}),
+                        minHeight: modoMenu ? 108 : undefined,
+                        flex: modoMenu ? 1 : undefined,
+                        display: modoMenu ? 'flex' : undefined,
+                        flexDirection: modoMenu ? 'column' : undefined,
                       }}
                     >
                       <div
                         className={modoMenu ? 'agenda-painel-situacao-head__row' : undefined}
-                        style={
-                          modoMenu
-                            ? undefined
-                            : {
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                gap: '12px',
-                                padding: '12px 14px',
-                              }
-                        }
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '10px',
+                          padding: '12px 14px',
+                          minHeight: modoMenu ? 104 : undefined,
+                          height: modoMenu ? '100%' : undefined,
+                          boxSizing: 'border-box',
+                        }}
                       >
-                        <div className={modoMenu ? 'agenda-painel-situacao-head__main' : undefined} style={modoMenu ? undefined : { display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+                        <div
+                          className={modoMenu ? 'agenda-painel-situacao-head__main' : undefined}
+                          style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}
+                        >
                           <span
                             aria-hidden
                             className={modoMenu ? 'agenda-painel-situacao-head__icon' : undefined}
-                            style={
-                              modoMenu
-                                ? {
-                                    backgroundColor: cfg.iconBox,
-                                    border: cfg.iconBorder,
-                                    color: cfg.titleTint,
-                                  }
-                                : {
-                                    flexShrink: 0,
-                                    width: 40,
-                                    height: 40,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    borderRadius: '11px',
-                                    backgroundColor: cfg.iconBox,
-                                    border: cfg.iconBorder,
-                                    fontSize: '17px',
-                                    fontWeight: 900,
-                                    color: cfg.titleTint,
-                                    lineHeight: 1,
-                                  }
-                            }
+                            style={{
+                              flexShrink: 0,
+                              width: 40,
+                              height: 40,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '11px',
+                              backgroundColor: cfg.iconBox,
+                              border: cfg.iconBorder,
+                              fontSize: '17px',
+                              fontWeight: 900,
+                              color: cfg.titleTint,
+                              lineHeight: 1,
+                            }}
                           >
                             {cfg.icon}
                           </span>
-                          <div className={modoMenu ? 'agenda-painel-situacao-head__text' : undefined} style={modoMenu ? undefined : { minWidth: 0 }}>
+                          <div className={modoMenu ? 'agenda-painel-situacao-head__text' : undefined} style={{ minWidth: 0, flex: 1 }}>
                             <div
                               className={modoMenu ? 'agenda-painel-situacao-head__tag' : undefined}
-                              style={
-                                modoMenu
-                                  ? undefined
-                                  : {
-                                      fontSize: '10px',
-                                      fontWeight: 900,
-                                      letterSpacing: '0.16em',
-                                      color: 'rgba(255,255,255,0.42)',
-                                      textTransform: 'uppercase',
-                                      marginBottom: '3px',
-                                    }
-                              }
+                              style={{
+                                fontSize: '10px',
+                                fontWeight: 900,
+                                letterSpacing: '0.16em',
+                                color: 'rgba(255,255,255,0.42)',
+                                textTransform: 'uppercase',
+                                marginBottom: '4px',
+                                lineHeight: 1.2,
+                              }}
                             >
                               {cfg.tag}
                             </div>
                             <div
                               className={modoMenu ? 'agenda-painel-situacao-head__title' : undefined}
-                              style={
-                                modoMenu
-                                  ? undefined
-                                  : {
-                                      fontSize: '14px',
-                                      fontWeight: 900,
-                                      color: '#fff',
-                                      letterSpacing: '0.02em',
-                                      lineHeight: 1.25,
-                                    }
-                              }
+                              style={{
+                                fontSize: modoMenu ? 13 : 14,
+                                fontWeight: 900,
+                                color: '#fff',
+                                letterSpacing: '0.02em',
+                                lineHeight: 1.3,
+                              }}
                             >
                               {titulo}
                             </div>
@@ -47790,23 +47809,19 @@ A1;Peça exemplo;10`}
                         </div>
                         <span
                           className={modoMenu ? 'agenda-painel-situacao-head__count' : undefined}
-                          style={
-                            modoMenu
-                              ? { border: cfg.iconBorder }
-                              : {
-                                  flexShrink: 0,
-                                  minWidth: 36,
-                                  padding: '7px 12px',
-                                  borderRadius: '999px',
-                                  backgroundColor: 'rgba(0,0,0,0.35)',
-                                  border: cfg.iconBorder,
-                                  fontSize: '14px',
-                                  fontWeight: 900,
-                                  color: '#fff',
-                                  textAlign: 'center',
-                                  boxShadow: '0 0 0 1px rgba(0,0,0,0.2)',
-                                }
-                          }
+                          style={{
+                            flexShrink: 0,
+                            minWidth: 36,
+                            padding: '7px 10px',
+                            borderRadius: '999px',
+                            backgroundColor: 'rgba(0,0,0,0.35)',
+                            border: cfg.iconBorder,
+                            fontSize: '14px',
+                            fontWeight: 900,
+                            color: '#fff',
+                            textAlign: 'center',
+                            boxShadow: '0 0 0 1px rgba(0,0,0,0.2)',
+                          }}
                         >
                           {n}
                         </span>
@@ -47996,15 +48011,37 @@ A1;Peça exemplo;10`}
 
                 if (!agendaPainelSituacaoSelecionada) {
                   return (
-                    <div className="agenda-tecnica-painel-grid agenda-tecnica-painel-grid--menu">
+                    <div
+                      className="agenda-tecnica-painel-grid agenda-tecnica-painel-grid--menu"
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                        gap: 14,
+                        marginBottom: 18,
+                        width: '100%',
+                      }}
+                    >
                       {painelSituacoes.map((sit) => (
                         <button
                           key={sit.id}
                           type="button"
                           className="agenda-painel-situacao-btn"
                           onClick={() => setAgendaPainelSituacaoSelecionada(sit.id)}
+                          style={{
+                            display: 'flex',
+                            width: '100%',
+                            minHeight: 108,
+                            padding: 0,
+                            margin: 0,
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            borderRadius: 12,
+                            overflow: 'hidden',
+                          }}
                         >
-                          <div className="agenda-painel-situacao-card" style={sit.wrapStyle}>
+                          <div className="agenda-painel-situacao-card" style={{ ...sit.wrapStyle, flex: 1, width: '100%', minHeight: 108, borderRadius: 12, overflow: 'hidden' }}>
                             {cabecalhoPainelColuna(sit.id, sit.titulo, sit.count, true)}
                           </div>
                         </button>
