@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useEffect, useId, useCallback } from 'react'
+import React, { useState, useMemo, useEffect, useId, useCallback, useRef } from 'react'
 import { filtrarPecasBibliotecaPorBusca } from '../lib/pecaCodigoBusca'
 import {
   calcularTotaisDesdeValorFinalComIva,
