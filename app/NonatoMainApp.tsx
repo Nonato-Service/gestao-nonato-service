@@ -66732,7 +66732,6 @@ A1;Peça exemplo;10`}
         )
         const totalRelatoriosDespesasBiblioteca = relatoriosPorCliente.reduce((s, row) => s + row.despesas.length, 0)
         const totalEquipamentosBiblioteca = relatoriosPorCliente.reduce((s, row) => s + row.equipamentos.length, 0)
-        const totalRelatoriosNaBiblioteca = totalRelatorios + totalRelatoriosDespesasBiblioteca
         const bibliotecaFiltrada = relatoriosPorCliente.filter(row =>
           bibliotecaRelatoriosRowMatchesBusca(row, buscaBibliotecaRelatoriosCliente)
         )
@@ -66757,14 +66756,6 @@ A1;Peça exemplo;10`}
             : bibliotecaFiltradaComConteudo
         const bibliotecaEquipKey = (clienteId: string, equipamentoKey: string) =>
           `${clienteId}::${equipamentoKey}`
-        const tplBibliotecaHeroTotais = String(safeT?.bibliotecaRelatoriosHeroTotais || '')
-          .replace(/\{ns\}/g, String(totalRelatorios))
-          .replace(/\{nd\}/g, String(totalRelatoriosDespesasBiblioteca))
-          .replace(/\{nc\}/g, String(relatoriosPorCliente.length))
-        const linhaHeroBibliotecaTotais =
-          tplBibliotecaHeroTotais.trim() !== ''
-            ? tplBibliotecaHeroTotais
-            : `${totalRelatorios} relatório(s) de serviço · ${totalRelatoriosDespesasBiblioteca} relatório(s) de despesas · ${relatoriosPorCliente.length} cliente(s)`
         const relatoriosFechadosLista = buildRelatoriosFechadosBibliotecaLista(
           relatoriosServico,
           clientes,
@@ -66773,10 +66764,12 @@ A1;Peça exemplo;10`}
         )
         const relatoriosFechadosPorCliente = groupRelatoriosFechadosPorCliente(relatoriosFechadosLista)
         const txBibHero = safeT as Record<string, string>
+        const bibRelHubLocale = localeForLongDatetime(selectedLanguage)
+        const bibRelFechadosCount = relatoriosFechadosLista.length
 
         return (
           <>
-          <div className="biblioteca-relatorios-root">
+          <div className="biblioteca-relatorios-root bib-relatorios-hub-page">
             {serverAutoPullActive ? (
               <div className="biblioteca-sync-updating-banner" role="status" aria-live="polite">
                 <span className="biblioteca-sync-updating-banner__icon" aria-hidden>
@@ -66788,87 +66781,156 @@ A1;Peça exemplo;10`}
                 </span>
               </div>
             ) : null}
-            {/* Cabeçalho Profissional — responsivo (globals.css .biblioteca-relatorios-hero*) */}
-            <div className="biblioteca-relatorios-hero">
-              <div className="biblioteca-relatorios-hero-top">
-                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                  <LogoComponent size="small" />
-                </div>
-                <div className="biblioteca-relatorios-hero-heading">
-                  <h1 className="biblioteca-relatorios-hero-title">
-                    {safeT?.bibliotecaRelatoriosTitle || 'BIBLIOTECA DE RELATÓRIOS'}
-                  </h1>
-                  {totalRelatoriosNaBiblioteca > 0 ? (
-                    <div className="biblioteca-relatorios-hero-subwrap">
-                      <p className="biblioteca-relatorios-hero-subtitle">
-                        {linhaHeroBibliotecaTotais}
-                      </p>
-                      <p className="biblioteca-relatorios-hero-hint">
-                        {safeT?.bibliotecaRelatoriosOrdemAlfabetica || 'Clientes, equipamentos e relatórios em ordem alfabética (A–Z).'}
-                      </p>
+
+            <div className="bib-relatorios-hub">
+              <div className="bib-relatorios-hub__hero-ring">
+                <div className="bib-relatorios-hub__hero">
+                  <div className="bib-relatorios-hub__hero-top">
+                    <div className="bib-relatorios-hub__hero-brand">
+                      <div className="bib-relatorios-hub__hero-logo" aria-hidden="true">
+                        <LogoComponent size="small" />
+                      </div>
+                      <div className="bib-relatorios-hub__hero-head">
+                        <p className="bib-relatorios-hub__eyebrow">
+                          {txBibHero.bibliotecaRelatoriosHubEyebrow || 'Documentação e arquivo'}
+                        </p>
+                        <h1 className="bib-relatorios-hub__title">
+                          {txBibHero.bibliotecaRelatoriosTitle || 'BIBLIOTECA DE RELATÓRIOS'}
+                        </h1>
+                        <p className="bib-relatorios-hub__tagline">
+                          {txBibHero.bibliotecaRelatoriosHubTagline ||
+                            txBibHero.bibliotecaRelatoriosOrdemAlfabetica ||
+                            'Relatórios por cliente em ordem alfabética (A–Z).'}
+                        </p>
+                      </div>
                     </div>
-                  ) : (
-                    <p className="biblioteca-relatorios-hero-subtitle biblioteca-relatorios-hero-subtitle--solo">
-                      {relatoriosPorCliente.length === 0
-                        ? (safeT?.nenhumClienteCadastrado || 'Nenhum cliente cadastrado. Crie um cliente para ver a pasta na biblioteca.')
-                        : (safeT?.nenhumRelatorioSalvo || 'Nenhum relatório salvo ainda. Cada cliente tem a sua pasta.')}
-                    </p>
-                  )}
-                </div>
-                <div className="biblioteca-relatorios-hero-actions">
-                  <div className="biblioteca-relatorios-toolbar">
-                    <div className="biblioteca-relatorios-search">
-                      <input
-                        type="text"
-                        className={
-                          'biblioteca-relatorios-search__input' +
-                          (buscaBibliotecaRelatoriosCliente.trim() ? ' biblioteca-relatorios-search__input--clear' : '')
-                        }
-                        value={buscaBibliotecaRelatoriosCliente}
-                        onChange={(e) => {
-                          setBuscaBibliotecaRelatoriosCliente(e.target.value)
-                          setBibliotecaRelatoriosAlfaLetraFiltro(null)
-                        }}
-                        placeholder={
-                          (safeT as any)?.bibliotecaRelatoriosBuscaPlaceholder ||
-                          (safeT as any)?.buscarClientePlaceholder ||
-                          'Buscar cliente, equipamento, n.º relatório ou técnico...'
-                        }
-                      />
-                      {buscaBibliotecaRelatoriosCliente.trim() !== '' && (
-                        <button
-                          type="button"
-                          className="biblioteca-relatorios-search__clear"
-                          onClick={() => setBuscaBibliotecaRelatoriosCliente('')}
-                          aria-label={(safeT as any)?.limparBusca || 'Limpar busca'}
-                          title={(safeT as any)?.limparBusca || 'Limpar busca'}
-                        >
-                          ×
-                        </button>
-                      )}
+                    <div className="bib-relatorios-hub__hero-actions">
+                      <button
+                        type="button"
+                        className="bib-relatorios-hub__nav-btn bib-relatorios-hub__nav-btn--icon"
+                        onClick={() => closeTab(activeTabId || '')}
+                        title={txBibHero.voltar || 'Voltar'}
+                        aria-label={txBibHero.voltar || 'Voltar'}
+                      >
+                        &larr;
+                      </button>
+                      <button
+                        type="button"
+                        className="bib-relatorios-hub__nav-btn bib-relatorios-hub__nav-btn--accent"
+                        onClick={voltarPaginaInicial}
+                        title={txBibHero.paginaInicial || 'Página Inicial'}
+                      >
+                        {txBibHero.paginaInicial || 'Início'}
+                      </button>
                     </div>
+                  </div>
+
+                  <div className="bib-relatorios-hub__kpis" aria-label={txBibHero.bibliotecaRelatoriosTitle || 'Biblioteca'}>
+                    <div className="bib-relatorios-hub__kpi bib-relatorios-hub__kpi--servico">
+                      <span className="bib-relatorios-hub__kpi-label">
+                        {txBibHero.bibliotecaRelatoriosHubKpiServico || 'Relatórios de serviço'}
+                      </span>
+                      <span className="bib-relatorios-hub__kpi-value">
+                        {totalRelatorios.toLocaleString(bibRelHubLocale)}
+                      </span>
+                    </div>
+                    <div className="bib-relatorios-hub__kpi bib-relatorios-hub__kpi--despesas">
+                      <span className="bib-relatorios-hub__kpi-label">
+                        {txBibHero.bibliotecaRelatoriosHubKpiDespesas || 'Relatórios de despesas'}
+                      </span>
+                      <span className="bib-relatorios-hub__kpi-value">
+                        {totalRelatoriosDespesasBiblioteca.toLocaleString(bibRelHubLocale)}
+                      </span>
+                    </div>
+                    <div className="bib-relatorios-hub__kpi bib-relatorios-hub__kpi--clientes">
+                      <span className="bib-relatorios-hub__kpi-label">
+                        {txBibHero.bibliotecaRelatoriosHubKpiClientes || 'Clientes com pasta'}
+                      </span>
+                      <span className="bib-relatorios-hub__kpi-value">
+                        {relatoriosPorCliente.length.toLocaleString(bibRelHubLocale)}
+                      </span>
+                    </div>
+                    <div className="bib-relatorios-hub__kpi bib-relatorios-hub__kpi--equip">
+                      <span className="bib-relatorios-hub__kpi-label">
+                        {txBibHero.bibliotecaRelatoriosHubKpiEquipamentos || 'Equipamentos'}
+                      </span>
+                      <span className="bib-relatorios-hub__kpi-value">
+                        {totalEquipamentosBiblioteca.toLocaleString(bibRelHubLocale)}
+                      </span>
+                    </div>
+                    {bibRelFechadosCount > 0 ? (
+                      <div className="bib-relatorios-hub__kpi bib-relatorios-hub__kpi--fechados">
+                        <span className="bib-relatorios-hub__kpi-label">
+                          {txBibHero.bibliotecaRelatoriosHubKpiFechados || 'Fechados na biblioteca'}
+                        </span>
+                        <span className="bib-relatorios-hub__kpi-value">
+                          {bibRelFechadosCount.toLocaleString(bibRelHubLocale)}
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bib-relatorios-hub__toolbar">
+                <div className="bib-relatorios-hub__toolbar-search">
+                  <div className="biblioteca-relatorios-search bib-relatorios-hub__search">
+                    <input
+                      type="search"
+                      className={
+                        'biblioteca-relatorios-search__input bib-relatorios-hub__search-input' +
+                        (buscaBibliotecaRelatoriosCliente.trim() ? ' biblioteca-relatorios-search__input--clear' : '')
+                      }
+                      value={buscaBibliotecaRelatoriosCliente}
+                      onChange={(e) => {
+                        setBuscaBibliotecaRelatoriosCliente(e.target.value)
+                        setBibliotecaRelatoriosAlfaLetraFiltro(null)
+                      }}
+                      placeholder={
+                        txBibHero.bibliotecaRelatoriosBuscaPlaceholder ||
+                        txBibHero.buscarClientePlaceholder ||
+                        'Buscar cliente, n.º de relatório, equipamento ou técnico...'
+                      }
+                    />
+                    {buscaBibliotecaRelatoriosCliente.trim() !== '' && (
+                      <button
+                        type="button"
+                        className="biblioteca-relatorios-search__clear"
+                        onClick={() => setBuscaBibliotecaRelatoriosCliente('')}
+                        aria-label={txBibHero.limparBusca || 'Limpar busca'}
+                        title={txBibHero.limparBusca || 'Limpar busca'}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="bib-relatorios-hub__toolbar-actions">
+                  <div className="bib-relatorios-hub__pdf-group">
                     <RelatorioPdfModeloPicker
-                      className="biblioteca-relatorios-toolbar__modelo"
+                      className="biblioteca-relatorios-toolbar__modelo bib-relatorios-hub__pdf-picker"
                       value={selectedPDFModel}
                       onChange={(model) => escolherModeloPdfRelatorio(null, model)}
-                      title={(safeT as Record<string, string>).bibliotecaRelatoriosModeloPdfPadrao || (safeT as Record<string, string>).bibliotecaRelatoriosModeloPdf || 'Modelo PDF'}
-                      labels={safeT as Record<string, string>}
-                      groupRecomendados={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados'}
-                      groupOutros={safeT?.relatorioPdfOptgroupOutros || 'Outros'}
+                      title={txBibHero.bibliotecaRelatoriosModeloPdfPadrao || txBibHero.bibliotecaRelatoriosModeloPdf || 'Modelo PDF'}
+                      labels={txBibHero}
+                      groupRecomendados={txBibHero.relatorioPdfOptgroupRecomendados || 'Recomendados'}
+                      groupOutros={txBibHero.relatorioPdfOptgroupOutros || 'Outros'}
                     />
                     <PdfModeloPickerField
-                      className="biblioteca-relatorios-toolbar__modelo biblioteca-relatorios-toolbar__modelo--fechamento"
+                      className="biblioteca-relatorios-toolbar__modelo biblioteca-relatorios-toolbar__modelo--fechamento bib-relatorios-hub__pdf-picker"
                       value={pdfModeloFechamento}
                       onChange={(model) =>
                         setPdfModeloFechamento(persistPdfModeloPadrao('fechamentoDespesas', model, saveData))
                       }
-                      labels={safeT as Record<string, string>}
-                      label={(safeT as Record<string, string>).fechamentoPdfModeloLabel || 'PDF fechamento despesas'}
+                      labels={txBibHero}
+                      label={txBibHero.fechamentoPdfModeloLabel || 'PDF fechamento despesas'}
                       compact
                     />
+                  </div>
+                  <div className="bib-relatorios-hub__toolbar-btns">
                     <button
                       type="button"
-                      className="biblioteca-relatorios-toolbar__btn"
+                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--ghost"
                       onClick={() => {
                         setBibliotecaSecaoClientesExpandida(true)
                         setBibliotecaRelatoriosClientesExpandidos(new Set(relatoriosPorCliente.map(r => r.cliente.id)))
@@ -66886,13 +66948,13 @@ A1;Peça exemplo;10`}
                           )
                         }
                       }}
-                      title={(safeT as any)?.expandirTodos || 'Expandir todos'}
+                      title={txBibHero.expandirTodos || 'Expandir todos'}
                     >
-                      {(safeT as any)?.expandirTodos || 'Expandir todos'}
+                      {txBibHero.expandirTodos || 'Expandir todos'}
                     </button>
                     <button
                       type="button"
-                      className="biblioteca-relatorios-toolbar__btn biblioteca-relatorios-toolbar__btn--muted"
+                      className="bib-relatorios-hub__btn bib-relatorios-hub__btn--muted"
                       onClick={() => {
                         setBibliotecaSecaoClientesExpandida(false)
                         setBibliotecaRelatoriosClientesExpandidos(new Set())
@@ -66900,75 +66962,16 @@ A1;Peça exemplo;10`}
                         setBibliotecaSecaoFechadosExpandida(false)
                         setBibliotecaFechadosClientesExpandidos(new Set())
                       }}
-                      title={(safeT as any)?.retrairTodos || 'Retrair todos'}
+                      title={txBibHero.retrairTodos || 'Retrair todos'}
                     >
-                      {(safeT as any)?.retrairTodos || 'Retrair todos'}
+                      {txBibHero.retrairTodos || 'Retrair todos'}
                     </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => closeTab(activeTabId || '')}
-                    style={{ 
-                      padding: '6px 8px', 
-                      fontSize: '16px',
-                      backgroundColor: 'rgba(0, 200, 83, 0.06)',
-                      border: '1px solid rgba(0, 200, 83, 0.55)',
-                      borderRadius: '4px',
-                      color: '#ffffff',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '32px',
-                      height: '32px'
-                    }}
-                    title={safeT?.voltar || 'Voltar'}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.12)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.72)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 200, 83, 0.06)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.55)'
-                    }}
-                  >
-                    ↶
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={voltarPaginaInicial}
-                    style={{ 
-                      padding: '6px 8px', 
-                      fontSize: '16px',
-                      backgroundColor: 'rgba(0, 150, 255, 0.06)',
-                      border: '1px solid rgba(0, 150, 255, 0.55)',
-                      borderRadius: '4px',
-                      color: '#ffffff',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '32px',
-                      height: '32px'
-                    }}
-                    title={safeT?.paginaInicial || 'Página Inicial'}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.12)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.72)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.06)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.55)'
-                    }}
-                  >
-                    🏠
-                  </button>
                 </div>
               </div>
             </div>
 
+            <div className="bib-relatorios-hub__body">
             {relatoriosFechadosLista.length > 0 ? (
               <details
                 className="biblioteca-relatorios-fechados-block"
@@ -66977,21 +66980,20 @@ A1;Peça exemplo;10`}
                   setBibliotecaSecaoFechadosExpandida((e.currentTarget as HTMLDetailsElement).open)
                 }
               >
-                <summary className="biblioteca-relatorios-fechados-block__summary">
-                  <span className="biblioteca-relatorios-fechados-block__chevron" aria-hidden>
-                    ▶
-                  </span>
-                  <span className="biblioteca-relatorios-fechados-block__title">
-                    📁{' '}
-                    {txBibHero.bibliotecaRelatoriosFechadosTitulo ||
-                      'Relatórios fechados na biblioteca'}
-                  </span>
-                  <span className="biblioteca-relatorios-fechados-block__count">
+                <summary className="biblioteca-relatorios-fechados-block__summary bib-relatorios-hub__section-summary">
+                  <span className="bib-relatorios-hub__section-chevron biblioteca-relatorios-fechados-block__chevron" aria-hidden />
+                  <div className="bib-relatorios-hub__section-head">
+                    <span className="bib-relatorios-hub__section-title biblioteca-relatorios-fechados-block__title">
+                      {txBibHero.bibliotecaRelatoriosFechadosTitulo ||
+                        'Relatórios fechados na biblioteca'}
+                    </span>
+                    <span className="bib-relatorios-hub__section-hint biblioteca-relatorios-fechados-block__hint">
+                      {txBibHero.bibliotecaRelatoriosFechadosHint ||
+                        'Por cliente: abra cada relatório para ver ou editar.'}
+                    </span>
+                  </div>
+                  <span className="bib-relatorios-hub__section-badge biblioteca-relatorios-fechados-block__count">
                     {relatoriosFechadosLista.length}
-                  </span>
-                  <span className="biblioteca-relatorios-fechados-block__hint">
-                    {txBibHero.bibliotecaRelatoriosFechadosHint ||
-                      'Clique para expandir. Por cliente: abra cada relatório para ver ou editar.'}
                   </span>
                 </summary>
                 <div className="biblioteca-relatorios-fechados-block__body">
@@ -67174,55 +67176,45 @@ A1;Peça exemplo;10`}
             ) : null}
 
             {relatoriosPorCliente.length === 0 && relatoriosFechadosLista.length === 0 ? (
-              <div style={{ 
-                ...glassCardStyle(ACCENT_GREEN, { padding: '60px 40px', radius: '12px', borderAlpha: 0.2, borderWidth: '1px' }),
-                textAlign: 'center'
-              }}>
+              <div className="bib-relatorios-hub__empty-state">
                 {serverAutoPullActive ? (
                   <>
-                    <div style={{ fontSize: '48px', marginBottom: '20px' }}>🔄</div>
-                    <p style={{ color: '#ffffff', opacity: 0.95, fontSize: '18px', marginBottom: '10px' }}>
+                    <div className="bib-relatorios-hub__empty-icon" aria-hidden>🔄</div>
+                    <p className="bib-relatorios-hub__empty-title">
                       {txBibHero.syncUpdatingNewInfo ||
                         'A atualizar novas informações do servidor…'}
                     </p>
-                    <p style={{ color: '#ffffff', opacity: 0.78, fontSize: '14px', maxWidth: '520px', margin: '0 auto' }}>
+                    <p className="bib-relatorios-hub__empty-hint">
                       {txBibHero.syncUpdatingNewInfoHint ||
                         'Os relatórios criados noutro aparelho aparecem aqui automaticamente.'}
                     </p>
                   </>
                 ) : (
                   <>
-                <div style={{ fontSize: '48px', marginBottom: '20px' }}>📋</div>
-                <p style={{ color: '#ffffff', opacity: 0.95, fontSize: '18px', marginBottom: '10px' }}>
-                  {(safeT as any)?.bibliotecaRecuperarRelatoriosTitulo ||
-                    safeT?.nenhumRelatorioSalvo ||
+                <div className="bib-relatorios-hub__empty-icon" aria-hidden>📋</div>
+                <p className="bib-relatorios-hub__empty-title">
+                  {txBibHero.bibliotecaRecuperarRelatoriosTitulo ||
+                    txBibHero.nenhumRelatorioSalvo ||
                     'Nenhum relatório visível na biblioteca.'}
                 </p>
-                <p style={{ color: '#ffffff', opacity: 0.88, fontSize: '14px', marginBottom: '20px', maxWidth: '560px', marginLeft: 'auto', marginRight: 'auto' }}>
-                  {(safeT as any)?.bibliotecaRecuperarRelatoriosHint ||
+                <p className="bib-relatorios-hub__empty-hint">
+                  {txBibHero.bibliotecaRecuperarRelatoriosHint ||
                     'Os seus dados não foram apagados — podem estar nas pastas dos clientes ou na cópia de segurança. Use os botões abaixo para recuperar.'}
                 </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
+                <div className="bib-relatorios-hub__empty-actions">
                   <button
                     type="button"
-                    className="btn-primary"
+                    className="bib-relatorios-hub__btn bib-relatorios-hub__btn--primary"
                     onClick={() => void handleRecuperarRelatoriosPerdidos()}
-                    style={{ padding: '10px 22px', borderRadius: '10px' }}
                   >
-                    ♻️ {(safeT as any)?.bibliotecaRecuperarRelatoriosBtn || 'Recuperar relatórios perdidos'}
+                    ♻️ {txBibHero.bibliotecaRecuperarRelatoriosBtn || 'Recuperar relatórios perdidos'}
                   </button>
                   <button
                     type="button"
-                    className="btn-primary"
+                    className="bib-relatorios-hub__btn bib-relatorios-hub__btn--ghost"
                     onClick={() => openTab('relatorios-excluidos-clientes', getTabTitle('relatorios-excluidos-clientes'))}
-                    style={{
-                      padding: '10px 22px',
-                      borderRadius: '10px',
-                      backgroundColor: 'rgba(0, 150, 255, 0.1)',
-                      border: '1px solid rgba(0, 150, 255, 0.58)',
-                    }}
                   >
-                    🗃️ {(safeT as any)?.bibliotecaVerRelatoriosExcluidos || 'Ver relatórios excluídos'}
+                    🗃️ {txBibHero.bibliotecaVerRelatoriosExcluidos || 'Ver relatórios excluídos'}
                   </button>
                 </div>
                   </>
@@ -67238,21 +67230,20 @@ A1;Peça exemplo;10`}
                   setBibliotecaSecaoClientesExpandida((e.currentTarget as HTMLDetailsElement).open)
                 }
               >
-                <summary className="biblioteca-relatorios-clientes-block__summary">
-                  <span className="biblioteca-relatorios-clientes-block__chevron" aria-hidden>
-                    ▶
-                  </span>
-                  <span className="biblioteca-relatorios-clientes-block__title">
-                    📂{' '}
-                    {txBibHero.bibliotecaRelatoriosPastasClientesTitulo ||
-                      'Pastas dos clientes'}
-                  </span>
-                  <span className="biblioteca-relatorios-clientes-block__count">
+                <summary className="biblioteca-relatorios-clientes-block__summary bib-relatorios-hub__section-summary bib-relatorios-hub__section-summary--clientes">
+                  <span className="bib-relatorios-hub__section-chevron biblioteca-relatorios-clientes-block__chevron" aria-hidden />
+                  <div className="bib-relatorios-hub__section-head">
+                    <span className="bib-relatorios-hub__section-title biblioteca-relatorios-clientes-block__title">
+                      {txBibHero.bibliotecaRelatoriosPastasClientesTitulo ||
+                        'Pastas dos clientes'}
+                    </span>
+                    <span className="bib-relatorios-hub__section-hint biblioteca-relatorios-clientes-block__hint">
+                      {txBibHero.bibliotecaRelatoriosPastasClientesHint ||
+                        'Abra cada cliente para ver equipamentos, relatórios e despesas.'}
+                    </span>
+                  </div>
+                  <span className="bib-relatorios-hub__section-badge biblioteca-relatorios-clientes-block__count">
                     {bibliotecaFiltradaComConteudo.length || relatoriosPorCliente.length}
-                  </span>
-                  <span className="biblioteca-relatorios-clientes-block__hint">
-                    {txBibHero.bibliotecaRelatoriosPastasClientesHint ||
-                      'Clique para expandir. Abra cada cliente para ver equipamentos, relatórios e despesas.'}
                   </span>
                 </summary>
                 <div className="biblioteca-relatorios-clientes-block__body">
@@ -67289,20 +67280,10 @@ A1;Peça exemplo;10`}
                   </div>
                 {!buscaBibliotecaAtiva && bibliotecaFiltrada.length > 0 ? (
                   <div className="biblioteca-relatorios-alfa-bar">
-                    <div
-                      className="biblioteca-relatorios-alfa-meta"
-                      style={{
-                        marginBottom: '10px',
-                        padding: '10px',
-                        backgroundColor: '#484848',
-                        borderRadius: '6px',
-                        fontSize: '14px',
-                        color: '#fff',
-                      }}
-                    >
+                    <div className="bib-relatorios-hub__list-meta biblioteca-relatorios-alfa-meta">
                       {bibliotecaLetraAtiva
                         ? `${(bibliotecaPorLetra.get(bibliotecaLetraAtiva) ?? []).length} ${safeT?.clientes || 'cliente(s)'} ${safeT?.clientesAlfabetoComInicial || 'com inicial'} «${bibliotecaLetraAtiva === '#' ? (safeT?.clientesAlfabetoOutros || 'Outros') : bibliotecaLetraAtiva}»`
-                        : `${safeT?.mostrando || 'Mostrando'} ${bibliotecaFiltradaComConteudo.length} ${safeT?.clientes || 'cliente(s)'} ${(safeT as any)?.bibliotecaRelatoriosComRelatorios || 'com relatórios'} — ${(safeT as any)?.bibliotecaRelatoriosAlfabetoFiltrarOpcional || 'toque numa letra para filtrar'}`}
+                        : `${safeT?.mostrando || 'Mostrando'} ${bibliotecaFiltradaComConteudo.length} ${safeT?.clientes || 'cliente(s)'} ${txBibHero.bibliotecaRelatoriosComRelatorios || 'com relatórios'} — ${txBibHero.bibliotecaRelatoriosAlfabetoFiltrarOpcional || 'toque numa letra para filtrar'}`}
                     </div>
                     <div className="clientes-alfa-wrap biblioteca-relatorios-alfa-wrap">
                       <nav
@@ -67359,9 +67340,9 @@ A1;Peça exemplo;10`}
                   </div>
                 ) : null}
                 {buscaBibliotecaAtiva && bibliotecaFiltrada.length > 0 ? (
-                  <p className="biblioteca-relatorios-busca-meta" style={{ margin: '0 0 12px', fontSize: '14px', opacity: 0.9 }}>
+                  <p className="bib-relatorios-hub__list-meta biblioteca-relatorios-busca-meta">
                     {String(
-                      (safeT as any)?.bibliotecaRelatoriosBuscaResultados || '{n} cliente(s) encontrado(s)'
+                      txBibHero.bibliotecaRelatoriosBuscaResultados || '{n} cliente(s) encontrado(s)'
                     ).replace(/\{n\}/g, String(bibliotecaFiltrada.length))}
                   </p>
                 ) : null}
@@ -67823,6 +67804,7 @@ A1;Peça exemplo;10`}
                 </div>
               </details>
             ) : null}
+            </div>
           </div>
           </>
         )
