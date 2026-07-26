@@ -9772,36 +9772,32 @@ a:focus-visible {
   white-space: nowrap;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
-/* Equipamentos — azul (máquinas / equipamento) */
+/* Equipamentos — verde suave (contorno) */
 .bib-kpi--equip {
-  background: linear-gradient(180deg, rgba(14, 116, 178, 0.55), rgba(8, 68, 120, 0.62));
-  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(6, 16, 10, 0.88);
+  border-color: rgba(52, 211, 153, 0.42);
 }
-/* Relatórios de serviço — verde */
+/* Relatórios de serviço — verde médio */
 .bib-kpi--serv {
-  background: linear-gradient(180deg, rgba(22, 101, 52, 0.58), rgba(12, 58, 32, 0.65));
-  border-color: rgba(74, 222, 128, 0.52);
+  background: rgba(14, 48, 28, 0.78);
+  border-color: rgba(74, 222, 128, 0.58);
 }
-/* Relatórios de despesas — âmbar */
+/* Relatórios de despesas — verde claro */
 .bib-kpi--desp {
-  background: linear-gradient(180deg, rgba(146, 88, 8, 0.58), rgba(92, 52, 4, 0.65));
-  border-color: rgba(251, 191, 36, 0.52);
+  background: rgba(18, 42, 26, 0.82);
+  border-color: rgba(134, 239, 172, 0.52);
 }
-/* Sem registos — mais discreto mas texto continua branco */
+/* Sem registos — discreto, verde tenue */
 .bib-kpi--zero {
-  opacity: 0.72;
-  background: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
+  opacity: 0.65;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(74, 222, 128, 0.16) !important;
   box-shadow: none;
 }
-.bib-kpi--zero.bib-kpi--equip {
-  border-color: rgba(56, 189, 248, 0.22) !important;
-}
-.bib-kpi--zero.bib-kpi--serv {
-  border-color: rgba(74, 222, 128, 0.22) !important;
-}
+.bib-kpi--zero.bib-kpi--equip,
+.bib-kpi--zero.bib-kpi--serv,
 .bib-kpi--zero.bib-kpi--desp {
-  border-color: rgba(251, 191, 36, 0.22) !important;
+  border-color: rgba(74, 222, 128, 0.16) !important;
 }
 .biblioteca-relatorios-cliente__body-toolbar {
   display: flex;
@@ -34124,24 +34120,60 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 .bib-relatorios-hub__clientes .biblioteca-relatorios-cliente {
   border-radius: 11px;
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.2);
-  transition: border-color 0.2s ease, background 0.2s ease;
+  border: 1px solid rgba(74, 222, 128, 0.32);
+  border-left-width: 4px;
+  border-left-color: rgba(74, 222, 128, 0.88);
+  background: linear-gradient(
+    90deg,
+    rgba(74, 222, 128, 0.1) 0%,
+    rgba(74, 222, 128, 0.03) 14%,
+    rgba(14, 14, 14, 0.96) 28%,
+    rgba(10, 10, 10, 0.98) 100%
+  );
+  box-shadow:
+    inset 4px 0 14px rgba(74, 222, 128, 0.1),
+    0 0 0 1px rgba(74, 222, 128, 0.06),
+    0 2px 10px rgba(0, 0, 0, 0.32);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .bib-relatorios-hub__clientes .biblioteca-relatorios-cliente:hover {
-  border-color: rgba(74, 222, 128, 0.2);
+  border-color: rgba(74, 222, 128, 0.45);
+  border-left-color: rgba(134, 239, 172, 0.95);
+  box-shadow:
+    inset 4px 0 16px rgba(74, 222, 128, 0.14),
+    0 0 0 1px rgba(74, 222, 128, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.36);
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente[open] {
+  border-left-color: #4ade80;
+  box-shadow:
+    inset 4px 0 18px rgba(74, 222, 128, 0.16),
+    0 0 12px rgba(74, 222, 128, 0.08),
+    0 4px 14px rgba(0, 0, 0, 0.34);
 }
 
 .bib-relatorios-hub__clientes .biblioteca-relatorios-cliente__summary {
-  padding: 11px 14px;
-  background: transparent;
+  padding: 12px 14px;
+  background: transparent !important;
+  border-bottom-color: rgba(74, 222, 128, 0.12);
 }
 
-.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente__title {
-  color: rgba(255, 255, 255, 0.92) !important;
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente__title,
+.bib-relatorios-hub__clientes .bib-relatorios-hub__client-name {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   font-weight: 600 !important;
   text-transform: none !important;
+}
+
+.bib-relatorios-hub__clientes .bib-relatorios-hub__row-chevron--green {
+  border-color: rgba(255, 255, 255, 0.88);
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente[open] .bib-relatorios-hub__row-chevron--green {
+  border-color: rgba(134, 239, 172, 0.95);
 }
 
 .bib-relatorios-hub__clientes .biblioteca-relatorios-client-list {
