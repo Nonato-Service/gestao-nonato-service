@@ -26,6 +26,7 @@ import {
 } from '../lib/clienteDetalheUtils'
 import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
 import { isClienteMarcadoDevedor } from '../lib/clienteDevedorUtils'
+import { ClienteDevedorNomeTag } from './ClienteDevedorNomeTag'
 import { ClienteOrcamentosFichaSection } from './ClienteOrcamentosFichaSection'
 import type { PedidoOrcamentoRef, PedidoAvulsoRef, OrcamentoGeradoRef } from '../lib/clienteEquipamentoOrcamentos'
 
@@ -429,7 +430,12 @@ export function ClienteDetalheView({
                 <span className="cliente-detalhe-v2__avatar-iniciais">{iniciais}</span>
               )}
             </div>
-            <h3 className="cliente-detalhe-v2__profile-name">{cliente.nomeEmpresa}</h3>
+            <h3 className="cliente-detalhe-v2__profile-name">
+              {devedor ? (
+                <ClienteDevedorNomeTag label={tr('clienteDevedorBadge')} variant="profile" />
+              ) : null}
+              <span className="cliente-devedor-nome-text">{cliente.nomeEmpresa}</span>
+            </h3>
             <p className="cliente-detalhe-v2__profile-nif">{tr('clienteCodigoLabel')}: {codigoExib}</p>
             {cliente.numeroContribuicaoFiscal ? (
               <p className="cliente-detalhe-v2__profile-nif">{cliente.numeroContribuicaoFiscal}</p>

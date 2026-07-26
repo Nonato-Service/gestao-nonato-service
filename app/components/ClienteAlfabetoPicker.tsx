@@ -9,6 +9,7 @@ import {
 } from '../lib/clienteAlfabetoBusca'
 import { localeOrdenacaoClientes } from '../lib/ordenarClientes'
 import { ClienteListaLinhas } from './ClienteListaLinhas'
+import { ClienteDevedorNomeTag } from './ClienteDevedorNomeTag'
 
 export type ClienteAlfabetoPickerLabels = {
   buscar?: string
@@ -25,6 +26,7 @@ export type ClienteAlfabetoPickerLabels = {
   limpar?: string
   cliente?: string
   filtrados?: string
+  devedor?: string
 }
 
 export type ClienteAlfabetoPickerAction = {
@@ -114,7 +116,15 @@ export function ClienteAlfabetoPicker({
       {showSelectedChip && selecionado ? (
         <div className="cliente-alfabeto-picker__selected">
           <span className="cliente-alfabeto-picker__selected-label">{L.cliente || 'Cliente'}:</span>
-          <strong className="cliente-alfabeto-picker__selected-name">{selecionado.nomeEmpresa}</strong>
+          <strong className="cliente-alfabeto-picker__selected-name">
+            {isDevedor?.(selecionado) ? (
+              <ClienteDevedorNomeTag
+                label={L.devedor || 'Devedor'}
+                variant="inline"
+              />
+            ) : null}
+            {selecionado.nomeEmpresa}
+          </strong>
           {onClear ? (
             <button type="button" className="cliente-alfabeto-picker__clear" onClick={limparSelecao}>
               {L.limpar || 'Limpar'}

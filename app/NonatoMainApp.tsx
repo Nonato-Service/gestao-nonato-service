@@ -274,6 +274,7 @@ import { CadastroServicosContent } from './components/CadastroServicosContent'
 import { ClienteCadastroForm, emptyClienteFormState, type ClienteFormState } from './components/ClienteCadastroForm'
 import { ClienteIdentidadeChips, formatClienteIdentidadeTexto, formatNifClienteExibicao } from './components/ClienteIdentidadeChips'
 import { ClienteListaLinhas } from './components/ClienteListaLinhas'
+import { ClienteDevedorNomeTag } from './components/ClienteDevedorNomeTag'
 import { ClienteAlfabetoPicker } from './components/ClienteAlfabetoPicker'
 import { AlfabetoIndiceBusca } from './components/AlfabetoIndiceBusca'
 import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/FornecedorCadastroForm'
@@ -77240,9 +77241,7 @@ A1;Peça exemplo;10`}
                       d.isDevedor &&
                       (d.saldoPendente > 0 || Number(d.relatoriosNaoPagoCount ?? 0) > 0)
                   )
-                  const ehDevedor =
-                    Boolean(cliente.isDevedor) &&
-                    (Number(cliente.saldoPendente ?? 0) > 0 || relNaoPagoCount > 0)
+                  const ehDevedor = isClienteMarcadoDevedor(cliente)
                   const highlightDevedor = ehDevedor || alertaDevedor
                   const valorDividaPecas =
                     devedorDetalhe?.saldoPendente ?? Number(cliente.saldoPendente ?? 0)
@@ -77339,9 +77338,21 @@ A1;Peça exemplo;10`}
                               fontWeight: 'bold',
                               whiteSpace: 'nowrap',
                               overflow: 'hidden',
-                              textOverflow: 'ellipsis'
+                              textOverflow: 'ellipsis',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              flexWrap: 'wrap',
                             }}>
-                              {cliente.nomeEmpresa}
+                              {ehDevedor ? (
+                                <ClienteDevedorNomeTag
+                                  label={(safeT as any)?.clienteDevedorBadge || 'Devedor'}
+                                  variant="card"
+                                />
+                              ) : null}
+                              <span className="cliente-devedor-nome-text" style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {cliente.nomeEmpresa}
+                              </span>
                             </h3>
                             <p
                               className="cliente-lista-card-sub"

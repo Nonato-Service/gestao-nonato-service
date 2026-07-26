@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
 import { translations, translationBundleKey } from '../translations'
+import { ClienteDevedorNomeTag } from './ClienteDevedorNomeTag'
 
 type ClienteIdentidade = {
   codigoCliente?: string
@@ -43,6 +44,7 @@ type Props = {
   /** list = lista compacta; banner = faixa após gravar; full = etiquetas explícitas */
   variant?: 'list' | 'banner' | 'full'
   codOnly?: boolean
+  devedor?: boolean
 }
 
 export function ClienteIdentidadeChips({
@@ -51,6 +53,7 @@ export function ClienteIdentidadeChips({
   className,
   variant = 'list',
   codOnly,
+  devedor = false,
 }: Props) {
   const tr = useIdentTr(language)
   const cod = codigoClienteExibicao(cliente)
@@ -90,7 +93,8 @@ export function ClienteIdentidadeChips({
         <span className="cliente-ident-line__nome-wrap">
           <span className="cliente-ident-line__nome-label">{lblNome}</span>
           <span className="cliente-ident-line__nome" title={`${lblNome}: ${nome}`}>
-            {nome}
+            {devedor ? <ClienteDevedorNomeTag label={tr('clienteDevedorBadge')} variant="inline" /> : null}
+            <span className="cliente-devedor-nome-text">{nome}</span>
           </span>
         </span>
       </span>
@@ -109,7 +113,10 @@ export function ClienteIdentidadeChips({
       <span className="cliente-ident-chips__item cliente-ident-chips__item--nome">
         <span className="cliente-ident-chips__label">{lblNome}</span>
         <span className="cliente-ident-chips__eq" aria-hidden>=</span>
-        <span className="cliente-ident-chips__value">{nome}</span>
+        <span className="cliente-ident-chips__value">
+          {devedor ? <ClienteDevedorNomeTag label={tr('clienteDevedorBadge')} variant="inline" /> : null}
+          <span className="cliente-devedor-nome-text">{nome}</span>
+        </span>
       </span>
     </span>
   )

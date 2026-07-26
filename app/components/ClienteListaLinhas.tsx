@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
 import { translations, translationBundleKey } from '../translations'
+import { ClienteDevedorNomeTag } from './ClienteDevedorNomeTag'
 import { formatNifClienteExibicao } from './ClienteIdentidadeChips'
 
 export type ClienteListaLinhasData = {
@@ -81,7 +82,12 @@ export function ClienteListaLinhas({ cliente, language = 'pt-BR', className, dev
         <span className="cliente-lista-linhas__eq" aria-hidden>
           =
         </span>
-        <span className="cliente-lista-linhas__value cliente-lista-linhas__value--nome">{nome}</span>
+        <span className="cliente-lista-linhas__value cliente-lista-linhas__value--nome">
+          {devedor ? (
+            <ClienteDevedorNomeTag label={tr('clienteDevedorBadge')} variant="inline" />
+          ) : null}
+          <span className="cliente-devedor-nome-text">{nome}</span>
+        </span>
       </div>
       {inf ? (
         <div className="cliente-lista-linhas__row cliente-lista-linhas__row--info">

@@ -13,6 +13,7 @@ import {
 } from '../lib/enderecoMapsUtils'
 import { ClienteEnderecoMapsActions } from './ClienteEnderecoMapsActions'
 import { ClienteIdentidadeChips } from './ClienteIdentidadeChips'
+import { isClienteMarcadoDevedor } from '../lib/clienteDevedorUtils'
 import { ordenarServicoGrupos, type ServicoCadastroGrupo } from '../lib/servicosCadastroUtils'
 import type { ClienteCadastroDuplicado } from '../lib/clienteCadastroDuplicadoUtils'
 
@@ -333,6 +334,7 @@ export function ClienteCadastroForm({
               }}
               language={language}
               variant="banner"
+              devedor={isClienteMarcadoDevedor(editingCliente)}
             />
           </div>
         ) : !editingCliente ? (
