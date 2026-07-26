@@ -43765,28 +43765,26 @@ export default function Dashboard() {
                         </div>
                         {!somenteLeituraBiblioteca && !modoSelecaoPecasBiblioteca ? (
                         <div
-                          style={{ display: 'flex', gap: '6px', marginTop: '12px', flexWrap: 'wrap' }}
+                          className="biblioteca-pecas-hub__piece-actions"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <button
                             type="button"
-                            className="btn-primary"
+                            className="biblioteca-pecas-hub__piece-action-btn biblioteca-pecas-hub__piece-action-btn--edit btn-primary"
                             onClick={(e) => {
                               e.stopPropagation()
                               handleEditPecaBiblioteca(peca)
                             }}
-                            style={{ flex: 1, minWidth: '72px', padding: '6px 8px', fontSize: '12px' }}
                           >
                             {safeT?.edit || 'Editar'}
                           </button>
                           <button
                             type="button"
-                            className="btn-danger"
+                            className="biblioteca-pecas-hub__piece-action-btn biblioteca-pecas-hub__piece-action-btn--delete btn-danger"
                             onClick={(e) => {
                               e.stopPropagation()
                               handleDeletePecaBiblioteca(peca.id)
                             }}
-                            style={{ flex: 1, minWidth: '72px', padding: '6px 8px', fontSize: '12px' }}
                           >
                             {safeT?.delete || 'Excluir'}
                           </button>
@@ -44223,7 +44221,7 @@ export default function Dashboard() {
                                       }}
                                     />
                                   </td>
-                                  <td className="biblioteca-pecas-hub__catalog-td">
+                                  <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--name">
                                     <span className="biblioteca-pecas-hub__catalog-name">{peca.nome}</span>
                                   </td>
                                   <td className="biblioteca-pecas-hub__catalog-td">
@@ -44267,14 +44265,14 @@ export default function Dashboard() {
                                     <div className="biblioteca-pecas-hub__catalog-actions">
                                       <button
                                         type="button"
-                                        className="btn-primary"
+                                        className="biblioteca-pecas-hub__catalog-btn biblioteca-pecas-hub__catalog-btn--edit btn-primary"
                                         onClick={() => handleEditPecaBiblioteca(peca)}
                                       >
                                         {safeT?.edit || 'Editar'}
                                       </button>
                                       <button
                                         type="button"
-                                        className="btn-danger"
+                                        className="biblioteca-pecas-hub__catalog-btn biblioteca-pecas-hub__catalog-btn--delete btn-danger"
                                         onClick={() => handleDeletePecaBiblioteca(peca.id)}
                                       >
                                         {safeT?.delete || 'Excluir'}
@@ -44580,14 +44578,6 @@ export default function Dashboard() {
                                     {editingCategoria?.id !== categoria.id && (
                                       <div
                                         className="biblioteca-pecas-hub__grupo-acoes"
-                                        style={{
-                                          display: 'flex',
-                                          flexDirection: 'row',
-                                          flexWrap: 'wrap',
-                                          alignItems: 'center',
-                                          gap: '8px',
-                                          justifyContent: 'flex-end',
-                                        }}
                                       >
                                         <button
                                           type="button"
@@ -44778,16 +44768,7 @@ export default function Dashboard() {
                                           }}
                                         >
                                           {editingSubcategoria?.id !== subcategoria.id && (
-                                            <div
-                                              style={{
-                                                display: 'inline-flex',
-                                                flexDirection: 'row',
-                                                flexWrap: 'nowrap',
-                                                alignItems: 'center',
-                                                justifyContent: 'flex-end',
-                                                gap: '8px',
-                                              }}
-                                            >
+                                            <div className="biblioteca-pecas-hub__grupo-acoes biblioteca-pecas-hub__grupo-acoes--sub">
                                               <button
                                                 type="button"
                                                 className="btn-primary"
