@@ -67483,10 +67483,19 @@ A1;Peça exemplo;10`}
                       txBib.bibliotecaRelatoriosRelatoriosPorEquip || '{n} relatório(s)'
                     ).replace(/\{n\}/g, String(n))
                   const despesasRelIds = despesasCliente.map(({ relatorio }) => relatorio.id)
-                  const classeFluxoCliente = classNameBibliotecaClienteFluxoFinanceiro(
+                  let classeFluxoCliente = classNameBibliotecaClienteFluxoFinanceiro(
                     despesasRelIds,
                     fechamentoFluxoFinanceiroPorRelatorioId
                   )
+                  /* Sem despesas na pasta = operação concluída (só serviço/equip.) → verde */
+                  if (
+                    !classeFluxoCliente &&
+                    despesasRelIds.length === 0 &&
+                    (totalRelatoriosServicoCliente > 0 || numEquip > 0)
+                  ) {
+                    classeFluxoCliente =
+                      'biblioteca-relatorios-cliente--fluxo biblioteca-relatorios-cliente--fluxo-verde biblioteca-relatorios-cliente--fluxo-fixo'
+                  }
                   return (
                     <details
                       key={cliente.id}

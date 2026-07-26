@@ -34146,6 +34146,44 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   border-left-width: 5px !important;
 }
 
+/* Concluídos / pagos — verde visível (como antes) */
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente--fluxo-verde {
+  border-color: rgba(74, 222, 128, 0.52) !important;
+  border-left-color: var(--fin-cor-verde) !important;
+  background: linear-gradient(
+    90deg,
+    rgba(74, 222, 128, 0.16) 0%,
+    rgba(74, 222, 128, 0.06) 16%,
+    rgba(10, 14, 12, 0.96) 30%,
+    rgba(8, 8, 8, 0.98) 100%
+  ) !important;
+  box-shadow:
+    inset 4px 0 16px rgba(74, 222, 128, 0.14),
+    0 0 0 1px rgba(74, 222, 128, 0.1),
+    0 2px 12px rgba(0, 0, 0, 0.32) !important;
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente--fluxo-verde:hover {
+  border-color: rgba(74, 222, 128, 0.65) !important;
+  box-shadow:
+    inset 4px 0 18px rgba(74, 222, 128, 0.18),
+    0 0 8px rgba(74, 222, 128, 0.1),
+    0 4px 14px rgba(0, 0, 0, 0.34) !important;
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente--fluxo-verde[open] {
+  border-left-color: #4ade80 !important;
+  box-shadow:
+    inset 4px 0 20px rgba(74, 222, 128, 0.2),
+    0 0 14px rgba(74, 222, 128, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.34) !important;
+}
+
+.bib-relatorios-hub__clientes .biblioteca-relatorios-cliente--fluxo-verde .biblioteca-relatorios-cliente__summary {
+  background: transparent !important;
+  border-bottom-color: rgba(74, 222, 128, 0.2) !important;
+}
+
 .bib-relatorios-hub__clientes .biblioteca-relatorios-cliente__summary {
   padding: 12px 14px;
   background: transparent !important;
