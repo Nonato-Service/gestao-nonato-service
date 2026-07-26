@@ -47381,27 +47381,51 @@ A1;Peça exemplo;10`}
               </div>
 
               <div className="agenda-tecnica-hero__actions-bar">
-                <button type="button" className="agenda-tecnica-hero__action-btn agenda-tecnica-hero__action-btn--green" onClick={() => handleAddAgendamento('servico')}>
-                  ➕ {safeT?.novoAgendamento || 'Novo Agendamento'}
-                </button>
-                <button type="button" className="agenda-tecnica-hero__action-btn agenda-tecnica-hero__action-btn--purple" onClick={() => handleAddAgendamento('pessoal')}>
-                  📌 {(safeT as any)?.agendaNovoAssuntoPessoal || 'Novo assunto pessoal'}
-                </button>
-                <button
-                  type="button"
-                  className="agenda-tecnica-hero__action-btn agenda-tecnica-hero__action-btn--gold"
-                  onClick={() => handleButtonClick('open-estado-visual-tecnico', 'estado-visual-tecnico-default')}
-                  title={(safeT as any)?.agendaAbrirEstadoVisualHint || 'Mapa com cores dos técnicos: em atendimento, pré-agendamento, etc.'}
-                >
-                  🎯 {safeT?.estadoVisualTecnico || 'Estado Visual do Técnico'}
-                </button>
-                <button type="button" className="agenda-tecnica-hero__action-btn agenda-tecnica-hero__action-btn--whatsapp" onClick={() => setShowAgendaLembreteModal(true)}>
-                  💬 {safeT?.lembreteAgendaBotao || 'Lembretes do dia (WhatsApp)'}
-                </button>
+                <div className="agenda-tecnica-hero__actions-primary">
+                  <button type="button" className="agenda-tecnica-hero__action-btn agenda-tecnica-hero__action-btn--green" onClick={() => handleAddAgendamento('servico')}>
+                    ➕ {safeT?.novoAgendamento || 'Novo Agendamento'}
+                  </button>
+                  <button type="button" className="agenda-tecnica-hero__action-btn agenda-tecnica-hero__action-btn--purple" onClick={() => handleAddAgendamento('pessoal')}>
+                    📌 {(safeT as any)?.agendaNovoAssuntoPessoal || 'Novo assunto pessoal'}
+                  </button>
+                  <button
+                    type="button"
+                    className="agenda-tecnica-hero__action-btn agenda-tecnica-hero__action-btn--gold"
+                    onClick={() => handleButtonClick('open-estado-visual-tecnico', 'estado-visual-tecnico-default')}
+                    title={(safeT as any)?.agendaAbrirEstadoVisualHint || 'Mapa com cores dos técnicos: em atendimento, pré-agendamento, etc.'}
+                  >
+                    🎯 {safeT?.estadoVisualTecnico || 'Estado Visual do Técnico'}
+                  </button>
+                  <button type="button" className="agenda-tecnica-hero__action-btn agenda-tecnica-hero__action-btn--whatsapp" onClick={() => setShowAgendaLembreteModal(true)}>
+                    💬 {safeT?.lembreteAgendaBotao || 'Lembretes do dia (WhatsApp)'}
+                  </button>
+                </div>
+
+                <div className="agenda-tecnica-hero__actions-view">
+                  <button
+                    type="button"
+                    className={
+                      'agenda-tecnica-view-btn' + (visualizacaoAgenda === 'lista' ? ' agenda-tecnica-view-btn--active' : '')
+                    }
+                    onClick={() => setVisualizacaoAgenda('lista')}
+                  >
+                    📋 {safeT?.lista || 'Lista'}
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      'agenda-tecnica-view-btn' +
+                      (visualizacaoAgenda === 'calendario' ? ' agenda-tecnica-view-btn--active' : '')
+                    }
+                    onClick={() => setVisualizacaoAgenda('calendario')}
+                  >
+                    📅 {safeT?.calendario || 'Calendário'}
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Filtros + Lista / Calendário num único painel */}
+            {/* Filtros */}
             <div className="agenda-tecnica-toolbar">
               <div className="agenda-tecnica-toolbar__filtros">
               <div className="agenda-tecnica-filtros__field">
@@ -47461,48 +47485,25 @@ A1;Peça exemplo;10`}
               )}
               </div>
 
-              <div className="agenda-tecnica-toolbar__view">
-                <div className="agenda-tecnica-view-toggle__tabs">
-                  <button
-                    type="button"
-                    className={
-                      'agenda-tecnica-view-btn' + (visualizacaoAgenda === 'lista' ? ' agenda-tecnica-view-btn--active' : '')
-                    }
-                    onClick={() => setVisualizacaoAgenda('lista')}
-                  >
-                    📋 {safeT?.lista || 'Lista'}
-                  </button>
-                  <button
-                    type="button"
-                    className={
-                      'agenda-tecnica-view-btn' +
-                      (visualizacaoAgenda === 'calendario' ? ' agenda-tecnica-view-btn--active' : '')
-                    }
-                    onClick={() => setVisualizacaoAgenda('calendario')}
-                  >
-                    📅 {safeT?.calendario || 'Calendário'}
-                  </button>
-                </div>
-                {visualizacaoAgenda === 'calendario' ? (
-                  <label className="agenda-tecnica-view-toggle__check" title={(safeT as any)?.agendaCalendarioMostrarConcluidosHint || ''}>
-                    <input
-                      type="checkbox"
-                      checked={agendaCalendarioMostrarConcluidos}
-                      onChange={(e) => {
-                        const v = e.target.checked
-                        setAgendaCalendarioMostrarConcluidos(v)
-                        try {
-                          window.localStorage.setItem(LS_AGENDA_CAL_CONCLUIDOS, v ? '1' : '0')
-                        } catch {
-                          /* ignorar */
-                        }
-                      }}
-                      style={{ accentColor: '#00c853' }}
-                    />
-                    <span>{(safeT as any)?.agendaCalendarioMostrarConcluidos || 'Mostrar concluídos no calendário'}</span>
-                  </label>
-                ) : null}
-              </div>
+              {visualizacaoAgenda === 'calendario' ? (
+                <label className="agenda-tecnica-view-toggle__check agenda-tecnica-toolbar__cal-check" title={(safeT as any)?.agendaCalendarioMostrarConcluidosHint || ''}>
+                  <input
+                    type="checkbox"
+                    checked={agendaCalendarioMostrarConcluidos}
+                    onChange={(e) => {
+                      const v = e.target.checked
+                      setAgendaCalendarioMostrarConcluidos(v)
+                      try {
+                        window.localStorage.setItem(LS_AGENDA_CAL_CONCLUIDOS, v ? '1' : '0')
+                      } catch {
+                        /* ignorar */
+                      }
+                    }}
+                    style={{ accentColor: '#00c853' }}
+                  />
+                  <span>{(safeT as any)?.agendaCalendarioMostrarConcluidos || 'Mostrar concluídos no calendário'}</span>
+                </label>
+              ) : null}
             </div>
 
             {/* Painel operacional: execução, agendados, pré-agendados, pendentes, cancelados, concluídos recentes */}
