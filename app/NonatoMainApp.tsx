@@ -36929,7 +36929,7 @@ export default function Dashboard() {
           ? relatoriosListaFiltrados.filter(r => r.id === relatorioServicoListaDetalheId)
           : []
         return (
-          <div className="tab-content-wrapper relatorio-servico-root" style={{ maxWidth: '1600px', margin: '0 auto' }}>
+          <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 rs-hub-page relatorio-servico-root">
             {/* Cabeçalho — responsivo (CSS: globals.css .relatorio-servico-hero*) */}
             <div className="relatorio-servico-hero">
               <div className="relatorio-servico-hero-top">
@@ -36939,6 +36939,7 @@ export default function Dashboard() {
                 <div className="relatorio-servico-hero-heading-wrap">
                   <h1 className="relatorio-servico-hero-title">
                     {safeT?.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}
+                    <span className="rs-hub__version-badge">LISTA v2</span>
                   </h1>
                   {(relatoriosServicoListaPrincipal.length > 0 || fechamentosGuardadosBibliotecaIds.length > 0) && (
                     <p className="relatorio-servico-hero-meta">
@@ -38975,116 +38976,37 @@ export default function Dashboard() {
               </div>
             )}
             
-            {/* Estatísticas Rápidas */}
             {relatoriosServicoListaPrincipal.length > 0 && (
-              <BibliotecaHubPainelRecolhivel
-                modulo="relatorio-servico"
-                id="rs-lista-kpis"
-                titulo={(safeT as any)?.relatorioPainelKpis || 'Resumo dos relatórios'}
-                resumo={`${relatoriosServicoListaPrincipal.length} ${(safeT as any)?.relatoriosAtivosLista || 'em aberto'} · ${relatoriosServicoListaPrincipal.filter(r => r.servicoConcluido).length} ${safeT?.concluidos || 'concluídos'}`}
-                icone="📊"
-                defaultAberto={!relatorioServicoModoCompacto}
-                resetToken={relatorioServicoPainelResetToken}
-                variant="stats"
-                labelExpandir={(safeT as any)?.bibliotecaPainelExpandir || 'Expandir'}
-                labelRetrair={(safeT as any)?.bibliotecaPainelRetrair || 'Retrair'}
-              >
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '15px',
-              }}>
-                <div style={{
-                  ...glassCardStyle(ACCENT_GREEN, { padding: '12px 15px', radius: '10px', borderAlpha: 0.2 }),
-                  textAlign: 'center',
-                  minHeight: '100px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '6px' }}>📋</div>
-                  <h3 style={{ color: '#ffffff', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', lineHeight: '1.3', opacity: 0.95 }}>
-                    {safeT?.totalRelatorios || 'Total de Relatórios'}
-                  </h3>
-                  <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>{relatoriosServicoListaPrincipal.length}</p>
+              <div className="rs-hub__command-deck">
+                <div className="rs-hub__command-row">
+                  <div className="rs-hub__kpis-inline">
+                    <span className="rs-hub__kpi-chip rs-hub__kpi-chip--total">
+                      <strong>{relatoriosServicoListaPrincipal.length}</strong>{' '}
+                      {(safeT as any)?.relatoriosAtivosLista || 'em aberto'}
+                    </span>
+                    <span className="rs-hub__kpi-chip rs-hub__kpi-chip--ok">
+                      <strong>{relatoriosServicoListaPrincipal.filter(r => r.servicoConcluido).length}</strong>{' '}
+                      {safeT?.concluidos || 'concluídos'}
+                    </span>
+                    <span className="rs-hub__kpi-chip rs-hub__kpi-chip--warn">
+                      <strong>{relatoriosServicoListaPrincipal.filter(r => r.retornoNecessario).length}</strong>{' '}
+                      {safeT?.retornoNecessario || 'retorno'}
+                    </span>
+                  </div>
                 </div>
-                <div style={{
-                  ...glassCardStyle(ACCENT_GREEN, { padding: '12px 15px', radius: '10px', borderAlpha: 0.2 }),
-                  textAlign: 'center',
-                  minHeight: '100px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '6px' }}>✅</div>
-                  <h3 style={{ color: '#ffffff', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', lineHeight: '1.3', opacity: 0.95 }}>
-                    {safeT?.concluidos || 'Concluídos'}
-                  </h3>
-                  <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>
-                    {relatoriosServicoListaPrincipal.filter(r => r.servicoConcluido).length}
-                  </p>
+                <div className="rs-hub__search-wrap">
+                  <span className="rs-hub__search-icon" aria-hidden>⌕</span>
+                  <input
+                    type="search"
+                    className="rs-hub__search-input"
+                    placeholder={(safeT as any)?.relatorioServicoBuscaLista || 'Buscar por cliente, n.º OS ou técnico...'}
+                    value={buscaRelatorioServicoLista}
+                    onChange={(e) => {
+                      setBuscaRelatorioServicoLista(e.target.value)
+                      setRelatorioServicoListaDetalheId(null)
+                    }}
+                  />
                 </div>
-                <div style={{
-                  ...glassCardStyle(ACCENT_AMBER, { padding: '12px 15px', radius: '10px', borderAlpha: 0.25 }),
-                  textAlign: 'center',
-                  minHeight: '100px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '6px' }}>↻</div>
-                  <h3 style={{ color: '#ffffff', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', lineHeight: '1.3', opacity: 0.95 }}>
-                    {safeT?.retornoNecessario || 'Retorno Necessário'}
-                  </h3>
-                  <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>
-                    {relatoriosServicoListaPrincipal.filter(r => r.retornoNecessario).length}
-                  </p>
-                </div>
-                <div style={{
-                  ...glassCardStyle({ r: 220, g: 72, b: 72 }, { padding: '12px 15px', radius: '10px', borderAlpha: 0.28 }),
-                  textAlign: 'center',
-                  minHeight: '100px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '6px' }}>⚙️</div>
-                  <h3 style={{ color: '#ffffff', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', lineHeight: '1.3', opacity: 0.95 }}>
-                    {safeT?.comPecas || 'Com Peças'}
-                  </h3>
-                  <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>
-                    {relatoriosServicoListaPrincipal.filter(r => r.necessarioTrocaPecas).length}
-                  </p>
-                </div>
-              </div>
-              </BibliotecaHubPainelRecolhivel>
-            )}
-
-            {relatoriosServicoListaPrincipal.length > 0 && (
-              <div style={{ marginBottom: '16px' }}>
-                <input
-                  type="text"
-                  placeholder={`🔍 ${(safeT as any)?.relatorioServicoBuscaLista || 'Buscar por cliente, n.º OS ou técnico...'}`}
-                  value={buscaRelatorioServicoLista}
-                  onChange={(e) => {
-                    setBuscaRelatorioServicoLista(e.target.value)
-                    setRelatorioServicoListaDetalheId(null)
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    backgroundColor: '#484848',
-                    color: '#fff',
-                    border: '1px solid rgba(0, 200, 83, 0.28)',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box',
-                  }}
-                />
               </div>
             )}
 
@@ -39137,82 +39059,14 @@ export default function Dashboard() {
               <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>
                 {safeT?.nenhumEncontrado || 'Nenhum encontrado com'} &quot;{buscaRelatorioServicoLista}&quot;
               </p>
-            ) : !relatorioServicoListaDetalheId ? (
+            ) : (
               <>
-                <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#484848', borderRadius: '6px', fontSize: '14px' }}>
+                <p className="rs-hub__list-meta">
                   {safeT?.mostrando || 'Mostrando'} {relatoriosListaFiltrados.length} {safeT?.de || 'de'}{' '}
                   {relatoriosServicoListaPrincipal.length} {safeT?.relatoriosServico || 'relatório(s)'}
-                </div>
-                <div className="clientes-alfa-wrap rs-relatorios-alfa-wrap">
-                  {relatoriosLetrasOrdem.length > 1 && (
-                    <nav
-                      className="clientes-alfa-jump"
-                      aria-label={safeT?.clientesAlfabetoIndice || 'Índice A–Z'}
-                    >
-                      {relatoriosLetrasOrdem.map(letra => (
-                        <a
-                          key={letra}
-                          href={`#relatorios-servico-letra-${letra}`}
-                          className="clientes-alfa-jump-link"
-                        >
-                          {letra === '#' ? '#' : letra}
-                        </a>
-                      ))}
-                    </nav>
-                  )}
-                  {relatoriosLetrasOrdem.map(letra => (
-                    <section
-                      key={letra}
-                      id={`relatorios-servico-letra-${letra}`}
-                      className="clientes-alfa-secao"
-                    >
-                      <h3 className="clientes-alfa-letra">
-                        {letra === '#'
-                          ? (safeT as any)?.clientesAlfabetoOutros || 'Outros'
-                          : letra}
-                      </h3>
-                      <ul className="clientes-alfa-nomes">
-                        {(relatoriosPorLetra.get(letra) ?? []).map(r => {
-                          const nomeCliente = (r.cliente && String(r.cliente).trim()) || '—'
-                          const pendenteCobranca = getResumoCobrancaVisualClass(r.id) === 'laranja'
-                          return (
-                            <li key={r.id}>
-                              <button
-                                type="button"
-                                className={[
-                                  'clientes-alfa-nome-btn',
-                                  'rs-relatorio-alfa-nome-btn',
-                                  pendenteCobranca && 'rs-relatorio-alfa-nome-btn--pulse',
-                                ]
-                                  .filter(Boolean)
-                                  .join(' ')}
-                                onClick={() => setRelatorioServicoListaDetalheId(r.id)}
-                                title={r.numero ? `OS ${r.numero}` : undefined}
-                                aria-label={
-                                  r.numero
-                                    ? `${nomeCliente} — ${safeT?.numeroRelatorio || 'N.º'} ${r.numero}`
-                                    : nomeCliente
-                                }
-                              >
-                                {nomeCliente}
-                              </button>
-                            </li>
-                          )
-                        })}
-                      </ul>
-                    </section>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div>
-                {relatoriosParaDetalhe.length === 0 ? (
-                  <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>
-                    {(safeT as any)?.relatorioServicoNaoEncontrado || 'Relatório não encontrado'}
-                  </p>
-                ) : (
-              <div className="relatorio-servico-cards-grid relatorio-servico-cards-grid--detalhe">
-                {relatoriosParaDetalhe
+                </p>
+                <div className="relatorio-servico-cards-grid rs-hub-cards-grid">
+                {relatoriosListaFiltrados
                   .map(relatorio => {
                     const totais = calcularTotais(relatorio.diasTrabalho)
                     const dataFormatada = formatDiaTrabalhoCurtoPt(relatorio.data)
@@ -39453,10 +39307,10 @@ export default function Dashboard() {
                           </div>
                         )}
 
-                        <div className="rs-card-acoes">
-                          <div className="relatorio-servico-card-acoes-linha">
+                        <div className="rs-card-acoes rs-card-acoes--v2">
+                          <div className="rs-card-acoes__row">
                             <RelatorioPdfModeloPicker
-                              className={`rs-card-select${btnPulseClass}`}
+                              className={`rs-card-select rs-card-select--v2${btnPulseClass}`}
                               compact
                               value={getPdfModelForRelatorio(relatorio.id)}
                               onChange={(model) => escolherModeloPdfRelatorio(relatorio.id, model)}
@@ -39465,58 +39319,49 @@ export default function Dashboard() {
                               groupRecomendados={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados para cliente'}
                               groupOutros={safeT?.relatorioPdfOptgroupOutros || 'Outros estilos'}
                             />
-                            <button 
-                              className={`relatorio-servico-card-btn relatorio-servico-card-btn--edit${btnPulseClass}`}
+                            <button
+                              className={`rs-card-btn rs-card-btn--edit${btnPulseClass}`}
                               type="button"
                               onClick={(e) => {
                                 e.preventDefault()
                                 e.stopPropagation()
                                 handleEditRelatorioServico(relatorio)
-                              }} 
+                              }}
                               title={safeT?.edit || 'Editar'}
                             >
-                              <span className="rs-btn-ico" aria-hidden>✏</span>
-                              <span>{safeT?.edit || 'Editar'}</span>
+                              {safeT?.edit || 'Editar'}
                             </button>
-                          </div>
-                          
-                          <div className="relatorio-servico-card-acoes-linha">
-                            <button 
-                              className={`relatorio-servico-card-btn relatorio-servico-card-btn--view${btnPulseClass}`}
+                            <button
+                              className={`rs-card-btn rs-card-btn--view${btnPulseClass}`}
                               type="button"
-                              onClick={() => setViewingRelatorioServico(resolverRelatorioServicoDono(relatorio))} 
+                              onClick={() => setViewingRelatorioServico(resolverRelatorioServicoDono(relatorio))}
                               title={safeT?.view || 'Ver'}
                             >
-                              <span className="rs-btn-ico" aria-hidden>👁</span>
-                              <span>{safeT?.view || 'Ver'}</span>
+                              {safeT?.view || 'Ver'}
                             </button>
-                            <button 
-                              className={`relatorio-servico-card-btn relatorio-servico-card-btn--pdf${btnPulseClass}`}
+                            <button
+                              className={`rs-card-btn rs-card-btn--pdf${btnPulseClass}`}
                               type="button"
-                              onClick={() => handlePrintRelatorio(relatorio, getPdfModelForRelatorio(relatorio.id))} 
+                              onClick={() => handlePrintRelatorio(relatorio, getPdfModelForRelatorio(relatorio.id))}
                               title={safeT?.gerarPDF || 'Gerar PDF'}
                             >
-                              <span className="rs-btn-ico" aria-hidden>📄</span>
-                              <span>{safeT?.gerarPDF || 'Gerar PDF'}</span>
+                              {safeT?.gerarPDF || 'Gerar PDF'}
                             </button>
                           </div>
-                          
-                          <button 
-                            className={`relatorio-servico-card-btn relatorio-servico-card-btn--delete${btnPulseClass}`}
+                          <button
+                            className={`rs-card-btn rs-card-btn--delete${btnPulseClass}`}
                             type="button"
-                            onClick={() => handleDeleteRelatorioServico(relatorio.id)} 
+                            onClick={() => handleDeleteRelatorioServico(relatorio.id)}
                             title={safeT?.delete || 'Excluir'}
                           >
-                            <span className="rs-btn-ico" aria-hidden>🗑</span>
-                            <span>{safeT?.delete || 'Excluir'}</span>
+                            {safeT?.delete || 'Excluir'}
                           </button>
                         </div>
                       </div>
                     )
                   })}
               </div>
-                )}
-              </div>
+              </>
             )}
           </div>
         )
