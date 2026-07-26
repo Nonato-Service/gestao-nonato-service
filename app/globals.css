@@ -26966,6 +26966,182 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   white-space: nowrap;
 }
 
+.biblioteca-hub-toolbar__status {
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.biblioteca-hub-toolbar__status--ok {
+  border: 1px solid rgba(0, 200, 120, 0.3);
+  background: rgba(0, 168, 107, 0.08);
+  color: #c8f5dc;
+}
+
+.biblioteca-hub-toolbar__status--warn {
+  border: 1px solid rgba(255, 193, 7, 0.45);
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffe8a8;
+}
+
+.biblioteca-hub-toolbar__status-btn {
+  margin-left: auto;
+  padding: 4px 10px !important;
+  font-size: 11px !important;
+}
+
+.biblioteca-hub-toolbar__deck {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.biblioteca-hub-toolbar__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.22);
+  min-height: 100%;
+}
+
+.biblioteca-hub-toolbar__panel-label {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(170, 235, 200, 0.88);
+}
+
+.biblioteca-hub-toolbar__panel-readonly {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(0, 255, 100, 0.95);
+}
+
+.biblioteca-hub-toolbar__seg-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.biblioteca-hub-toolbar__seg-caption {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.biblioteca-hub-toolbar__seg-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.biblioteca-hub-toolbar__seg-row .biblioteca-pecas-hub__seg {
+  width: 100%;
+  justify-content: center;
+}
+
+.biblioteca-hub-toolbar__filter-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.biblioteca-hub-toolbar__filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.biblioteca-hub-toolbar__filter-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.biblioteca-hub-toolbar__filter-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.biblioteca-hub-toolbar__filter-chip {
+  appearance: none;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.82);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.biblioteca-hub-toolbar__filter-chip:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+}
+
+.biblioteca-hub-toolbar__filter-chip--active {
+  border-color: rgba(251, 146, 60, 0.55);
+  background: rgba(120, 60, 10, 0.35);
+  color: #ffedd5;
+}
+
+.biblioteca-hub-toolbar__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.biblioteca-hub-toolbar__footer .biblioteca-hub-toolbar__actions {
+  justify-content: flex-end;
+  width: 100%;
+}
+
+@media (max-width: 820px) {
+  .biblioteca-hub-toolbar__deck {
+    grid-template-columns: 1fr;
+  }
+
+  .biblioteca-hub-toolbar__search-sync-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .biblioteca-hub-toolbar__sync-actions {
+    justify-content: stretch;
+  }
+
+  .biblioteca-hub-toolbar__sync-actions .biblioteca-hub-toolbar__sync-btn,
+  .biblioteca-hub-toolbar__sync-actions .biblioteca-preco-olho-toggle {
+    flex: 1 1 auto;
+  }
+}
+
 .biblioteca-busca-codigo__modo-btn {
   padding: 6px 14px;
   font-size: 12px;

@@ -43118,18 +43118,7 @@ export default function Dashboard() {
 
                   {(bibliotecaNovidadesServidor > 0 || bibliotecaUltimaSyncServidor || bibliotecaServidorMeta) && (
                     <div
-                      style={{
-                        width: '100%',
-                        marginBottom: 12,
-                        padding: '10px 12px',
-                        borderRadius: 8,
-                        border: `1px solid ${bibliotecaNovidadesServidor > 0 ? 'rgba(255, 193, 7, 0.45)' : 'rgba(0, 200, 120, 0.3)'}`,
-                        backgroundColor:
-                          bibliotecaNovidadesServidor > 0 ? 'rgba(255, 193, 7, 0.1)' : 'rgba(0, 168, 107, 0.08)',
-                        fontSize: 12,
-                        lineHeight: 1.5,
-                        color: bibliotecaNovidadesServidor > 0 ? '#ffe8a8' : '#c8f5dc',
-                      }}
+                      className={`biblioteca-hub-toolbar__status${bibliotecaNovidadesServidor > 0 ? ' biblioteca-hub-toolbar__status--warn' : ' biblioteca-hub-toolbar__status--ok'}`}
                     >
                       {bibliotecaNovidadesServidor > 0 ? (
                         <>
@@ -43140,8 +43129,7 @@ export default function Dashboard() {
                             'peça(s) — '}
                           <button
                             type="button"
-                            className="biblioteca-btn--green"
-                            style={{ marginLeft: 6, padding: '4px 10px', fontSize: 11, verticalAlign: 'middle' }}
+                            className="biblioteca-btn--green biblioteca-hub-toolbar__status-btn"
                             disabled={pecasBibliotecaReparoLoading}
                             onClick={() => void handleReporPecasBibliotecaDoServidor()}
                           >
@@ -43160,138 +43148,163 @@ export default function Dashboard() {
                       )}
                     </div>
                   )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
-                  {!somenteLeituraBiblioteca ? (
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      onClick={() => setVisualizacaoBiblioteca('grid')}
-                      className={`biblioteca-pecas-hub__seg${visualizacaoBiblioteca === 'grid' ? ' biblioteca-pecas-hub__seg--active' : ''}`}
-                    >
-                      {safeT?.visualizacaoGrid || 'Grade'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setVisualizacaoBiblioteca('lista')}
-                      className={`biblioteca-pecas-hub__seg${visualizacaoBiblioteca === 'lista' ? ' biblioteca-pecas-hub__seg--active' : ''}`}
-                    >
-                      {safeT?.visualizacaoLista || 'Lista'}
-                    </button>
-                    <BibliotecaPrecoOlhoToggle
-                      ativo={mostrarPrecosBiblioteca}
-                      onToggle={toggleMostrarPrecosBiblioteca}
-                      labelMostrar={(safeT as any)?.bibliotecaVerPrecos || 'Ver preços'}
-                      labelOcultar={(safeT as any)?.bibliotecaOcultarPrecos || 'Ocultar preços'}
-                      compacto
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setBibliotecaAgruparPorCategoria(true)}
-                      className={`biblioteca-pecas-hub__seg${bibliotecaAgruparPorCategoria ? ' biblioteca-pecas-hub__seg--active' : ''}`}
-                    >
-                      {safeT?.bibliotecaPorCategoria || 'Por categoria'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setBibliotecaAgruparPorCategoria(false)
-                        setFiltroGrupoBiblioteca('')
-                        setFiltroSubgrupoBiblioteca('')
-                      }}
-                      className={`biblioteca-pecas-hub__seg${!bibliotecaAgruparPorCategoria ? ' biblioteca-pecas-hub__seg--active' : ''}`}
-                    >
-                      {safeT?.bibliotecaTodasPecas || 'Todas as peças'}
-                    </button>
-                  </div>
-                  ) : (
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '13px', color: 'rgba(0, 255, 100, 0.95)', fontWeight: 600 }}>
-                      {safeT?.bibliotecaPorCategoria || 'Por categoria'}
-                    </span>
-                  </div>
-                  )}
 
-                  {/* Filtro por grupo */}
-                  <div style={{ minWidth: '200px' }}>
-                    <select
-                      className="biblioteca-pecas-hub__select"
-                      value={filtroGrupoBiblioteca || ''}
-                      onChange={(e) => {
-                        setFiltroGrupoBiblioteca(e.target.value)
-                        setFiltroSubgrupoBiblioteca('')
-                      }}
-                    >
-                      <option value="">{safeT?.todosGrupos || 'Todos os grupos'}</option>
-                      <option value={BIBLIOTECA_FILTRO_SEM_CATEGORIA}>
-                        {(safeT as any).bibliotecaFiltroApenasSemCategoria || 'Apenas peças sem categoria'}
-                      </option>
-                      {categoriasPecasAlfabeto.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.nome}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <button
-                    type="button"
-                    className={filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA ? 'biblioteca-btn--orange' : 'biblioteca-btn--ghost'}
-                    onClick={() => {
-                      setFiltroGrupoBiblioteca(BIBLIOTECA_FILTRO_SEM_CATEGORIA)
-                      setFiltroSubgrupoBiblioteca('')
-                    }}
-                    style={{
-                      padding: '8px 12px',
-                      fontSize: '12px',
-                      whiteSpace: 'nowrap',
-                      cursor: 'pointer',
-                      borderRadius: '6px',
-                      fontWeight: filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA ? 700 : 600,
-                    }}
-                  >
-                    {(safeT as any).bibliotecaBotaoIrSemCategoria || 'Ver só sem categoria'}
-                  </button>
-                  {filtroGrupoBiblioteca && filtroGrupoBiblioteca !== BIBLIOTECA_FILTRO_SEM_CATEGORIA ? (
-                    <div style={{ minWidth: '200px' }}>
-                      <select
-                        className="biblioteca-pecas-hub__select"
-                        value={filtroSubgrupoBiblioteca || ''}
-                        onChange={(e) => setFiltroSubgrupoBiblioteca(e.target.value)}
-                      >
-                        <option value="">{safeT?.todasSubcategorias || 'Todas as subcategorias'}</option>
-                        {subcategoriasPecas
-                          .filter((sub) => sub.categoriaId === filtroGrupoBiblioteca)
-                          .sort((a, b) =>
-                            (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
-                          )
-                          .map((sub) => (
-                            <option key={sub.id} value={sub.id}>
-                              {sub.nome}
+                  <div className="biblioteca-hub-toolbar__deck">
+                    {!somenteLeituraBiblioteca ? (
+                      <section className="biblioteca-hub-toolbar__panel biblioteca-hub-toolbar__panel--view" aria-label={(safeT as any)?.bibliotecaToolbarSecaoVista || 'Visualização'}>
+                        <h4 className="biblioteca-hub-toolbar__panel-label">
+                          {(safeT as any)?.bibliotecaToolbarSecaoVista || 'Visualização'}
+                        </h4>
+                        <div className="biblioteca-hub-toolbar__seg-group">
+                          <span className="biblioteca-hub-toolbar__seg-caption">
+                            {(safeT as any)?.bibliotecaToolbarVistaModo || 'Modo'}
+                          </span>
+                          <div className="biblioteca-hub-toolbar__seg-row">
+                            <button
+                              type="button"
+                              onClick={() => setVisualizacaoBiblioteca('grid')}
+                              className={`biblioteca-pecas-hub__seg${visualizacaoBiblioteca === 'grid' ? ' biblioteca-pecas-hub__seg--active' : ''}`}
+                            >
+                              {safeT?.visualizacaoGrid || 'Grade'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setVisualizacaoBiblioteca('lista')}
+                              className={`biblioteca-pecas-hub__seg${visualizacaoBiblioteca === 'lista' ? ' biblioteca-pecas-hub__seg--active' : ''}`}
+                            >
+                              {safeT?.visualizacaoLista || 'Lista'}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="biblioteca-hub-toolbar__seg-group">
+                          <span className="biblioteca-hub-toolbar__seg-caption">
+                            {(safeT as any)?.bibliotecaToolbarVistaAgrupamento || 'Agrupamento'}
+                          </span>
+                          <div className="biblioteca-hub-toolbar__seg-row">
+                            <button
+                              type="button"
+                              onClick={() => setBibliotecaAgruparPorCategoria(true)}
+                              className={`biblioteca-pecas-hub__seg${bibliotecaAgruparPorCategoria ? ' biblioteca-pecas-hub__seg--active' : ''}`}
+                            >
+                              {safeT?.bibliotecaPorCategoria || 'Por categoria'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setBibliotecaAgruparPorCategoria(false)
+                                setFiltroGrupoBiblioteca('')
+                                setFiltroSubgrupoBiblioteca('')
+                              }}
+                              className={`biblioteca-pecas-hub__seg${!bibliotecaAgruparPorCategoria ? ' biblioteca-pecas-hub__seg--active' : ''}`}
+                            >
+                              {safeT?.bibliotecaTodasPecas || 'Todas as peças'}
+                            </button>
+                          </div>
+                        </div>
+                      </section>
+                    ) : (
+                      <section className="biblioteca-hub-toolbar__panel biblioteca-hub-toolbar__panel--view">
+                        <h4 className="biblioteca-hub-toolbar__panel-label">
+                          {(safeT as any)?.bibliotecaToolbarSecaoVista || 'Visualização'}
+                        </h4>
+                        <p className="biblioteca-hub-toolbar__panel-readonly">
+                          {safeT?.bibliotecaPorCategoria || 'Por categoria'}
+                        </p>
+                      </section>
+                    )}
+
+                    <section className="biblioteca-hub-toolbar__panel biblioteca-hub-toolbar__panel--filters" aria-label={(safeT as any)?.bibliotecaToolbarSecaoGrupos || 'Grupos e filtros'}>
+                      <h4 className="biblioteca-hub-toolbar__panel-label">
+                        {(safeT as any)?.bibliotecaToolbarSecaoGrupos || 'Grupos e filtros'}
+                      </h4>
+                      <div className="biblioteca-hub-toolbar__filter-grid">
+                        <div className="biblioteca-hub-toolbar__filter-field">
+                          <label htmlFor="biblioteca-filtro-grupo" className="biblioteca-hub-toolbar__filter-label">
+                            {safeT?.categoriaPecaBiblioteca || 'Grupo'}
+                          </label>
+                          <select
+                            id="biblioteca-filtro-grupo"
+                            className="biblioteca-pecas-hub__select"
+                            value={filtroGrupoBiblioteca || ''}
+                            onChange={(e) => {
+                              setFiltroGrupoBiblioteca(e.target.value)
+                              setFiltroSubgrupoBiblioteca('')
+                            }}
+                          >
+                            <option value="">{safeT?.todosGrupos || 'Todos os grupos'}</option>
+                            <option value={BIBLIOTECA_FILTRO_SEM_CATEGORIA}>
+                              {(safeT as any).bibliotecaFiltroApenasSemCategoria || 'Apenas peças sem categoria'}
                             </option>
-                          ))}
-                      </select>
-                    </div>
-                  ) : null}
-                  <div className="biblioteca-hub-toolbar__actions">
-                    <button
-                      type="button"
-                      className="biblioteca-btn--purple"
-                      onClick={() => setAbaBibliotecaPecas('grupos')}
-                    >
-                      {safeT?.gerenciarCategorias || 'Gerenciar Categorias'}
-                    </button>
-                    {(filtroGrupoBiblioteca || filtroSubgrupoBiblioteca || buscaCodigoBiblioteca.trim()) ? (
+                            {categoriasPecasAlfabeto.map(cat => (
+                              <option key={cat.id} value={cat.id}>{cat.nome}</option>
+                            ))}
+                          </select>
+                        </div>
+                        {filtroGrupoBiblioteca && filtroGrupoBiblioteca !== BIBLIOTECA_FILTRO_SEM_CATEGORIA ? (
+                          <div className="biblioteca-hub-toolbar__filter-field">
+                            <label htmlFor="biblioteca-filtro-subgrupo" className="biblioteca-hub-toolbar__filter-label">
+                              {safeT?.subcategoriaPecaBiblioteca || 'Subcategoria'}
+                            </label>
+                            <select
+                              id="biblioteca-filtro-subgrupo"
+                              className="biblioteca-pecas-hub__select"
+                              value={filtroSubgrupoBiblioteca || ''}
+                              onChange={(e) => setFiltroSubgrupoBiblioteca(e.target.value)}
+                            >
+                              <option value="">{safeT?.todasSubcategorias || 'Todas as subcategorias'}</option>
+                              {subcategoriasPecas
+                                .filter((sub) => sub.categoriaId === filtroGrupoBiblioteca)
+                                .sort((a, b) =>
+                                  (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
+                                )
+                                .map((sub) => (
+                                  <option key={sub.id} value={sub.id}>
+                                    {sub.nome}
+                                  </option>
+                                ))}
+                            </select>
+                          </div>
+                        ) : null}
+                        <div className="biblioteca-hub-toolbar__filter-quick">
+                          <button
+                            type="button"
+                            className={`biblioteca-hub-toolbar__filter-chip${filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA ? ' biblioteca-hub-toolbar__filter-chip--active' : ''}`}
+                            onClick={() => {
+                              setFiltroGrupoBiblioteca(BIBLIOTECA_FILTRO_SEM_CATEGORIA)
+                              setFiltroSubgrupoBiblioteca('')
+                            }}
+                          >
+                            {(safeT as any).bibliotecaBotaoIrSemCategoria || 'Ver só sem categoria'}
+                          </button>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+
+                  <div className="biblioteca-hub-toolbar__footer">
+                    <div className="biblioteca-hub-toolbar__actions">
                       <button
                         type="button"
-                        className="biblioteca-btn--orange"
-                        onClick={() => {
-                          setFiltroGrupoBiblioteca('')
-                          setFiltroSubgrupoBiblioteca('')
-                          setBuscaCodigoBiblioteca('')
-                        }}
+                        className="biblioteca-btn--purple"
+                        onClick={() => setAbaBibliotecaPecas('grupos')}
                       >
-                        {safeT?.limparFiltros || 'Limpar Filtros'}
+                        {safeT?.gerenciarCategorias || 'Gerenciar Categorias'}
                       </button>
-                    ) : null}
+                      {(filtroGrupoBiblioteca || filtroSubgrupoBiblioteca || buscaCodigoBiblioteca.trim()) ? (
+                        <button
+                          type="button"
+                          className="biblioteca-btn--orange"
+                          onClick={() => {
+                            setFiltroGrupoBiblioteca('')
+                            setFiltroSubgrupoBiblioteca('')
+                            setBuscaCodigoBiblioteca('')
+                          }}
+                        >
+                          {safeT?.limparFiltros || 'Limpar Filtros'}
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
                 </div>
                 </BibliotecaHubPainelRecolhivel>
 
