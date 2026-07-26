@@ -41454,49 +41454,26 @@ export default function Dashboard() {
                 </div>
               )
             })() : null}
-            {/* Cabeçalho profissional — logo + KPIs | título + sync | ações */}
+            {/* Cabeçalho — linha principal + barra KPI */}
             <div className="biblioteca-pecas-hub__hero-ring">
             <div className="tab-glass-hero tab-glass-hero--compact biblioteca-pecas-hub__hero">
-              <div className="biblioteca-pecas-hub__hero-grid">
-                <div className="biblioteca-pecas-hub__hero-brand">
-                  <div className="biblioteca-pecas-hub__hero-logo">
-                    <LogoComponent size="small" />
-                  </div>
-                  <div className="biblioteca-hub-resumo-chips biblioteca-hub-resumo-chips--hero" aria-label={hubT.bibliotecaVisaoGeral || 'Visão geral'}>
-                    <span className="biblioteca-hub-resumo-chip biblioteca-hub-resumo-chip--pecas">
-                      <span className="biblioteca-hub-resumo-chip__icon" aria-hidden>📦</span>
-                      <span>{pecasCatalogoBiblioteca.length.toLocaleString('pt-PT')} {(safeT as any)?.bibliotecaResumoPecas || 'peça(s)'}</span>
-                    </span>
-                    <span className="biblioteca-hub-resumo-chip biblioteca-hub-resumo-chip--cats">
-                      <span className="biblioteca-hub-resumo-chip__icon" aria-hidden>📁</span>
-                      <span>{categoriasPecas.length} {(safeT as any)?.bibliotecaResumoCategorias || 'categorias'}</span>
-                    </span>
-                    <span
-                      className={`biblioteca-hub-resumo-chip biblioteca-hub-resumo-chip--foto${pecasBibliotecaImagemStats.faltam > 0 ? ' biblioteca-hub-resumo-chip--warn' : ' biblioteca-hub-resumo-chip--foto-ok'}`}
-                    >
-                      <span className="biblioteca-hub-resumo-chip__icon" aria-hidden>📷</span>
-                      <span>
-                        {pecasBibliotecaImagemStats.faltam > 0
-                          ? `${pecasBibliotecaImagemStats.faltam.toLocaleString('pt-PT')} ${(safeT as any)?.bibliotecaResumoSemFoto || 's/ foto'}`
-                          : (safeT as any)?.bibliotecaResumoFotosOk || 'fotos OK'}
-                      </span>
-                    </span>
-                  </div>
+              <div className="biblioteca-pecas-hub__hero-top">
+                <div className="biblioteca-pecas-hub__hero-logo" aria-hidden="true">
+                  <LogoComponent size="small" />
                 </div>
-
-                <div className="biblioteca-pecas-hub__hero-center">
+                <div className="biblioteca-pecas-hub__hero-head">
                   <h1 className="biblioteca-pecas-hub__hero-title">
                     {(safeT as any)?.pecasBibliotecaTitle || safeT?.cadastroPecasBibliotecaTitle || 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS'}
                   </h1>
                   <p className="biblioteca-pecas-hub__hero-meta">
-                    <span className="biblioteca-pecas-hub__hero-meta-strong">
-                      {pecasCatalogoBiblioteca.length.toLocaleString('pt-PT')} {safeT?.pecasCadastradas || 'peça(s) cadastrada(s)'}
-                    </span>
+                    {pecasCatalogoBiblioteca.length.toLocaleString('pt-PT')}{' '}
+                    {safeT?.pecasCadastradas || 'peça(s) cadastrada(s)'}
                     {bibliotecaServidorMeta && bibliotecaServidorMeta.total !== pecasCatalogoBiblioteca.length ? (
-                      <span className="biblioteca-pecas-hub__hero-meta-sep">
-                        · {(safeT as any)?.bibliotecaSyncServidorResumo || 'servidor:'}{' '}
+                      <>
+                        {' '}
+                        <span className="biblioteca-pecas-hub__hero-meta-dot">·</span> servidor:{' '}
                         {bibliotecaServidorMeta.total.toLocaleString('pt-PT')}
-                      </span>
+                      </>
                     ) : null}
                   </p>
                   {bibliotecaUltimaSyncServidor ? (
@@ -41508,101 +41485,122 @@ export default function Dashboard() {
                   <p className="biblioteca-pecas-hub__hero-tagline">
                     {hubT.bibliotecaHubTagline || 'Catálogo unificado, grupos claros e importação sob controlo.'}
                   </p>
-                  {catalogoPecasSuspeitoParcial ? (
-                    <div className="biblioteca-pecas-hub__warn-banner biblioteca-pecas-hub__warn-banner--hero">
-                      <div className="biblioteca-pecas-hub__warn-banner-title">
-                        {(safeT as any)?.bibliotecaReparoTitulo || 'Catálogo incompleto neste aparelho'}
-                      </div>
-                      <p className="biblioteca-pecas-hub__warn-banner-body">
-                        {(safeT as any)?.bibliotecaReparoDesc ||
-                          `Só ${pecasBiblioteca.length} peça(s) carregada(s), mas existem ${categoriasPecas.length} categorias. O servidor guarda o catálogo completo — clique para repor (pode demorar ~1–2 min).`}
-                      </p>
-                      <button
-                        type="button"
-                        className="biblioteca-btn--green"
-                        disabled={pecasBibliotecaReparoLoading}
-                        onClick={() => void handleReporPecasBibliotecaDoServidor()}
-                      >
-                        {pecasBibliotecaReparoLoading
-                          ? pecasBibliotecaReparoProgress ||
-                            (safeT as any)?.bibliotecaReparoAguarde ||
-                            'A carregar catálogo (páginas)…'
-                          : (safeT as any)?.bibliotecaReparoBtn || 'Repor biblioteca do servidor'}
-                      </button>
-                    </div>
-                  ) : null}
                 </div>
-
-                <div className="biblioteca-pecas-hub__hero-toolbar">
-                  <div className="biblioteca-pecas-hub__hero-actions">
-                    <button
-                      type="button"
-                      className="biblioteca-btn--green"
-                      onClick={() => {
-                        setAbaBibliotecaPecas('cadastro')
-                        setSalvarPecaBibliotecaVoltaParaImportacao(false)
-                        setShowBibliotecaPecasForm(true)
-                        setEditingPecaBiblioteca(null)
-                        const categoriaSelecionada = categoriasPecas.find(c => c.id === ultimoGrupoSelecionado)
-                        const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === ultimoSubgrupoSelecionado)
-                        const gid = ultimoGrupoSelecionado || ''
-                        const sid =
-                          gid && subcategoriaSelecionada && subcategoriaSelecionada.categoriaId === gid
-                            ? ultimoSubgrupoSelecionado
-                            : ''
-                        const subNome = sid ? subcategoriaSelecionada?.nome || '' : ''
-                        setPecaBibliotecaForm({
-                          id: '',
-                          nome: '',
-                          codigo: '',
-                          preco: '',
-                          descricao: '',
-                          categoria: categoriaSelecionada?.nome || '',
-                          categoriaId: gid,
-                          subcategoria: subNome,
-                          subcategoriaId: sid,
-                          imagem: '',
-                          dataCriacao: new Date().toISOString(),
-                        })
-                        setPecaBibliotecaImagemUrlDraft('')
-                        setUltimoGrupoSelecionado(gid)
-                        setUltimoSubgrupoSelecionado(sid)
-                        setPecaBibliotecaPickerCategoriaAberto(false)
-                        setPecaBibliotecaPickerSubcategoriaAberto(false)
-                      }}
-                    >
-                      {safeT?.novaPecaBiblioteca || 'Nova Peça'}
-                    </button>
-                    <button
-                      type="button"
-                      className="biblioteca-btn--purple"
-                      onClick={() => setAbaBibliotecaPecas('grupos')}
-                    >
-                      {safeT?.gerenciarCategorias || 'Gerenciar Categorias'}
-                    </button>
-                  </div>
-                  <div className="biblioteca-pecas-hub__hero-nav">
-                    <button
-                      type="button"
-                      className="biblioteca-pecas-hub__icon-btn biblioteca-pecas-hub__icon-btn--back"
-                      onClick={() => closeTab(activeTabId || '')}
-                      title={safeT?.voltar || 'Voltar'}
-                      aria-label={safeT?.voltar || 'Voltar'}
-                    >
-                      ↶
-                    </button>
-                    <button
-                      type="button"
-                      className="biblioteca-pecas-hub__icon-btn biblioteca-pecas-hub__icon-btn--home"
-                      onClick={voltarPaginaInicial}
-                      title={safeT?.paginaInicial || 'Página Inicial'}
-                      aria-label={safeT?.paginaInicial || 'Página Inicial'}
-                    >
-                      🏠
-                    </button>
-                  </div>
+                <div className="biblioteca-pecas-hub__hero-actions">
+                  <button
+                    type="button"
+                    className="biblioteca-btn--green"
+                    onClick={() => {
+                      setAbaBibliotecaPecas('cadastro')
+                      setSalvarPecaBibliotecaVoltaParaImportacao(false)
+                      setShowBibliotecaPecasForm(true)
+                      setEditingPecaBiblioteca(null)
+                      const categoriaSelecionada = categoriasPecas.find(c => c.id === ultimoGrupoSelecionado)
+                      const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === ultimoSubgrupoSelecionado)
+                      const gid = ultimoGrupoSelecionado || ''
+                      const sid =
+                        gid && subcategoriaSelecionada && subcategoriaSelecionada.categoriaId === gid
+                          ? ultimoSubgrupoSelecionado
+                          : ''
+                      const subNome = sid ? subcategoriaSelecionada?.nome || '' : ''
+                      setPecaBibliotecaForm({
+                        id: '',
+                        nome: '',
+                        codigo: '',
+                        preco: '',
+                        descricao: '',
+                        categoria: categoriaSelecionada?.nome || '',
+                        categoriaId: gid,
+                        subcategoria: subNome,
+                        subcategoriaId: sid,
+                        imagem: '',
+                        dataCriacao: new Date().toISOString(),
+                      })
+                      setPecaBibliotecaImagemUrlDraft('')
+                      setUltimoGrupoSelecionado(gid)
+                      setUltimoSubgrupoSelecionado(sid)
+                      setPecaBibliotecaPickerCategoriaAberto(false)
+                      setPecaBibliotecaPickerSubcategoriaAberto(false)
+                    }}
+                  >
+                    {safeT?.novaPecaBiblioteca || 'Nova Peça'}
+                  </button>
+                  <button
+                    type="button"
+                    className="biblioteca-btn--purple"
+                    onClick={() => setAbaBibliotecaPecas('grupos')}
+                  >
+                    {safeT?.gerenciarCategorias || 'Gerenciar Categorias'}
+                  </button>
+                  <button
+                    type="button"
+                    className="biblioteca-pecas-hub__icon-btn biblioteca-pecas-hub__icon-btn--back"
+                    onClick={() => closeTab(activeTabId || '')}
+                    title={safeT?.voltar || 'Voltar'}
+                    aria-label={safeT?.voltar || 'Voltar'}
+                  >
+                    ↶
+                  </button>
+                  <button
+                    type="button"
+                    className="biblioteca-pecas-hub__icon-btn biblioteca-pecas-hub__icon-btn--home"
+                    onClick={voltarPaginaInicial}
+                    title={safeT?.paginaInicial || 'Página Inicial'}
+                    aria-label={safeT?.paginaInicial || 'Página Inicial'}
+                  >
+                    🏠
+                  </button>
                 </div>
               </div>
+
+              <div className="biblioteca-pecas-hub__hero-kpis" aria-label={hubT.bibliotecaVisaoGeral || 'Visão geral'}>
+                <div className="biblioteca-pecas-hub__kpi-card biblioteca-pecas-hub__kpi-card--pecas">
+                  <span className="biblioteca-pecas-hub__kpi-label">{(safeT as any)?.bibliotecaResumoPecas || 'Peças no catálogo'}</span>
+                  <span className="biblioteca-pecas-hub__kpi-value">{pecasCatalogoBiblioteca.length.toLocaleString('pt-PT')}</span>
+                </div>
+                <div className="biblioteca-pecas-hub__kpi-card biblioteca-pecas-hub__kpi-card--cats">
+                  <span className="biblioteca-pecas-hub__kpi-label">{(safeT as any)?.bibliotecaResumoCategorias || 'Categorias'}</span>
+                  <span className="biblioteca-pecas-hub__kpi-value">{categoriasPecas.length.toLocaleString('pt-PT')}</span>
+                </div>
+                <div
+                  className={`biblioteca-pecas-hub__kpi-card biblioteca-pecas-hub__kpi-card--foto${pecasBibliotecaImagemStats.faltam > 0 ? ' biblioteca-pecas-hub__kpi-card--warn' : ''}`}
+                >
+                  <span className="biblioteca-pecas-hub__kpi-label">
+                    {pecasBibliotecaImagemStats.faltam > 0
+                      ? (safeT as any)?.bibliotecaResumoSemFoto || 'Sem foto'
+                      : (safeT as any)?.bibliotecaResumoFotosOk || 'Com foto'}
+                  </span>
+                  <span className="biblioteca-pecas-hub__kpi-value">
+                    {pecasBibliotecaImagemStats.faltam > 0
+                      ? pecasBibliotecaImagemStats.faltam.toLocaleString('pt-PT')
+                      : pecasBibliotecaImagemStats.comFotoReal.toLocaleString('pt-PT')}
+                  </span>
+                </div>
+              </div>
+
+              {catalogoPecasSuspeitoParcial ? (
+                <div className="biblioteca-pecas-hub__warn-banner biblioteca-pecas-hub__warn-banner--hero">
+                  <div className="biblioteca-pecas-hub__warn-banner-title">
+                    {(safeT as any)?.bibliotecaReparoTitulo || 'Catálogo incompleto neste aparelho'}
+                  </div>
+                  <p className="biblioteca-pecas-hub__warn-banner-body">
+                    {(safeT as any)?.bibliotecaReparoDesc ||
+                      `Só ${pecasBiblioteca.length} peça(s) carregada(s), mas existem ${categoriasPecas.length} categorias. O servidor guarda o catálogo completo — clique para repor (pode demorar ~1–2 min).`}
+                  </p>
+                  <button
+                    type="button"
+                    className="biblioteca-btn--green"
+                    disabled={pecasBibliotecaReparoLoading}
+                    onClick={() => void handleReporPecasBibliotecaDoServidor()}
+                  >
+                    {pecasBibliotecaReparoLoading
+                      ? pecasBibliotecaReparoProgress ||
+                        (safeT as any)?.bibliotecaReparoAguarde ||
+                        'A carregar catálogo (páginas)…'
+                      : (safeT as any)?.bibliotecaReparoBtn || 'Repor biblioteca do servidor'}
+                  </button>
+                </div>
+              ) : null}
             </div>
             </div>
 
