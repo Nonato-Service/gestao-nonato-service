@@ -47401,52 +47401,9 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
-            {/* Controles de Visualização */}
-            <div className="agenda-tecnica-view-toggle">
-              <div className="agenda-tecnica-view-toggle__tabs">
-                <button
-                  type="button"
-                  className={
-                    'agenda-tecnica-view-btn' + (visualizacaoAgenda === 'lista' ? ' agenda-tecnica-view-btn--active' : '')
-                  }
-                  onClick={() => setVisualizacaoAgenda('lista')}
-                >
-                  📋 {safeT?.lista || 'Lista'}
-                </button>
-                <button
-                  type="button"
-                  className={
-                    'agenda-tecnica-view-btn' +
-                    (visualizacaoAgenda === 'calendario' ? ' agenda-tecnica-view-btn--active' : '')
-                  }
-                  onClick={() => setVisualizacaoAgenda('calendario')}
-                >
-                  📅 {safeT?.calendario || 'Calendário'}
-                </button>
-              </div>
-              {visualizacaoAgenda === 'calendario' ? (
-                <label className="agenda-tecnica-view-toggle__check" title={(safeT as any)?.agendaCalendarioMostrarConcluidosHint || ''}>
-                  <input
-                    type="checkbox"
-                    checked={agendaCalendarioMostrarConcluidos}
-                    onChange={(e) => {
-                      const v = e.target.checked
-                      setAgendaCalendarioMostrarConcluidos(v)
-                      try {
-                        window.localStorage.setItem(LS_AGENDA_CAL_CONCLUIDOS, v ? '1' : '0')
-                      } catch {
-                        /* ignorar */
-                      }
-                    }}
-                    style={{ accentColor: '#00c853' }}
-                  />
-                  <span>{(safeT as any)?.agendaCalendarioMostrarConcluidos || 'Mostrar concluídos no calendário'}</span>
-                </label>
-              ) : null}
-            </div>
-
-            {/* Filtros */}
-            <div className="agenda-tecnica-filtros">
+            {/* Filtros + Lista / Calendário num único painel */}
+            <div className="agenda-tecnica-toolbar">
+              <div className="agenda-tecnica-toolbar__filtros">
               <div className="agenda-tecnica-filtros__field">
                 <select
                   value={filtroAgenda}
@@ -47502,6 +47459,50 @@ A1;Peça exemplo;10`}
                   {safeT?.limparFiltros || 'Limpar Filtros'}
                 </button>
               )}
+              </div>
+
+              <div className="agenda-tecnica-toolbar__view">
+                <div className="agenda-tecnica-view-toggle__tabs">
+                  <button
+                    type="button"
+                    className={
+                      'agenda-tecnica-view-btn' + (visualizacaoAgenda === 'lista' ? ' agenda-tecnica-view-btn--active' : '')
+                    }
+                    onClick={() => setVisualizacaoAgenda('lista')}
+                  >
+                    📋 {safeT?.lista || 'Lista'}
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      'agenda-tecnica-view-btn' +
+                      (visualizacaoAgenda === 'calendario' ? ' agenda-tecnica-view-btn--active' : '')
+                    }
+                    onClick={() => setVisualizacaoAgenda('calendario')}
+                  >
+                    📅 {safeT?.calendario || 'Calendário'}
+                  </button>
+                </div>
+                {visualizacaoAgenda === 'calendario' ? (
+                  <label className="agenda-tecnica-view-toggle__check" title={(safeT as any)?.agendaCalendarioMostrarConcluidosHint || ''}>
+                    <input
+                      type="checkbox"
+                      checked={agendaCalendarioMostrarConcluidos}
+                      onChange={(e) => {
+                        const v = e.target.checked
+                        setAgendaCalendarioMostrarConcluidos(v)
+                        try {
+                          window.localStorage.setItem(LS_AGENDA_CAL_CONCLUIDOS, v ? '1' : '0')
+                        } catch {
+                          /* ignorar */
+                        }
+                      }}
+                      style={{ accentColor: '#00c853' }}
+                    />
+                    <span>{(safeT as any)?.agendaCalendarioMostrarConcluidos || 'Mostrar concluídos no calendário'}</span>
+                  </label>
+                ) : null}
+              </div>
             </div>
 
             {/* Painel operacional: execução, agendados, pré-agendados, pendentes, cancelados, concluídos recentes */}
