@@ -47429,8 +47429,8 @@ A1;Peça exemplo;10`}
             <div className="agenda-tecnica-toolbar">
               <div className="agenda-tecnica-toolbar__filtros agenda-tecnica-filtros">
                 <div className="agenda-tecnica-filtros__field agenda-tecnica-filtros__field--status">
-                  <label className="agenda-tecnica-filtros__label">{safeT?.status || 'Status'}</label>
                   <select
+                    className="agenda-tecnica-filtros__control"
                     value={filtroAgenda}
                     onChange={(e) => setFiltroAgenda(e.target.value as typeof filtroAgenda)}
                   >
@@ -47442,8 +47442,8 @@ A1;Peça exemplo;10`}
                   </select>
                 </div>
                 <div className="agenda-tecnica-filtros__field agenda-tecnica-filtros__field--tecnico">
-                  <label className="agenda-tecnica-filtros__label">{safeT?.tecnico || 'Técnico'}</label>
                   <select
+                    className="agenda-tecnica-filtros__control"
                     value={filtroTecnicoAgenda}
                     onChange={(e) => setFiltroTecnicoAgenda(e.target.value)}
                   >
@@ -47454,19 +47454,24 @@ A1;Peça exemplo;10`}
                   </select>
                 </div>
                 <div className="agenda-tecnica-filtros__field agenda-tecnica-filtros__field--data">
-                  <label className="agenda-tecnica-filtros__label">{safeT?.data || 'Data'}</label>
                   <input
+                    className="agenda-tecnica-filtros__control agenda-tecnica-filtros__control--date"
                     type="date"
                     value={filtroDataAgenda}
                     onChange={(e) => setFiltroDataAgenda(e.target.value)}
                   />
                 </div>
+                <label className="agenda-tecnica-filtros__label agenda-tecnica-filtros__label--search">
+                  {(safeT as any)?.agendaBuscaRapidaLabel || 'Pesquisa na lista'}
+                </label>
                 <div className="agenda-tecnica-filtros__field agenda-tecnica-filtros__field--search">
-                  <label className="agenda-tecnica-filtros__label">
-                    {(safeT as any)?.agendaBuscaRapidaLabel || 'Pesquisa na lista'}
-                  </label>
                   <input
-                    type="search"
+                    className="agenda-tecnica-filtros__control agenda-tecnica-filtros__control--search"
+                    type="text"
+                    inputMode="search"
+                    enterKeyHint="search"
+                    autoComplete="off"
+                    spellCheck={false}
                     value={buscaAgendaListaRapida}
                     onChange={(e) => setBuscaAgendaListaRapida(e.target.value)}
                     placeholder={(safeT as any)?.agendaBuscaRapidaPlaceholder || 'Cliente, técnico, serviço, equipamento…'}

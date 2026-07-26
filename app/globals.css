@@ -4944,8 +4944,23 @@ body {
   .agenda-tecnica-filtros {
     display: grid !important;
     grid-template-columns: 1fr !important;
+    grid-template-rows: none !important;
     gap: 10px !important;
     width: 100%;
+  }
+
+  .agenda-tecnica-filtros__field--status,
+  .agenda-tecnica-filtros__field--tecnico,
+  .agenda-tecnica-filtros__field--data,
+  .agenda-tecnica-filtros__field--search,
+  .agenda-tecnica-filtros__label--search,
+  .agenda-tecnica-filtros__clear {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+
+  .agenda-tecnica-filtros__label--search {
+    margin-bottom: 0 !important;
   }
 
   .agenda-tecnica-toolbar__cal-check {
@@ -4961,14 +4976,17 @@ body {
   .agenda-tecnica-filtros__field--search {
     min-width: 0 !important;
     width: 100%;
-    flex: 1 1 auto !important;
   }
 
+  .agenda-tecnica-filtros__control,
   .agenda-tecnica-filtros__field select,
   .agenda-tecnica-filtros__field input[type='date'],
-  .agenda-tecnica-filtros__field input[type='search'] {
-    min-height: 44px;
+  .agenda-tecnica-filtros__field input[type='text'] {
+    min-height: 44px !important;
+    height: 44px !important;
+    max-height: 44px !important;
     font-size: 16px;
+    line-height: 44px !important;
   }
 
   .agenda-tecnica-filtros__clear,
@@ -37080,10 +37098,12 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 .agenda-tecnica-toolbar__filtros,
 .agenda-tecnica-filtros {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 12px 14px;
+  display: grid;
+  grid-template-columns: minmax(150px, 1.05fr) minmax(165px, 1.15fr) minmax(145px, 0.95fr) minmax(220px, 2.4fr) auto;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 6px;
+  align-items: end;
   width: 100%;
   min-width: 0;
 }
@@ -37171,30 +37191,41 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 /* Filtros — barra horizontal com campos escuros alinhados */
 .agenda-tecnica-filtros__field {
-  display: flex;
-  flex-direction: column;
-  flex: 0 1 auto;
+  display: block;
   min-width: 0;
 }
 
 .agenda-tecnica-filtros__field--status {
-  flex: 0 1 190px;
-  min-width: 160px;
+  grid-column: 1;
+  grid-row: 2;
 }
 
 .agenda-tecnica-filtros__field--tecnico {
-  flex: 0 1 210px;
-  min-width: 170px;
+  grid-column: 2;
+  grid-row: 2;
 }
 
 .agenda-tecnica-filtros__field--data {
-  flex: 0 1 170px;
-  min-width: 150px;
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.agenda-tecnica-filtros__label--search {
+  grid-column: 4;
+  grid-row: 1;
+  align-self: end;
+  margin: 0 !important;
 }
 
 .agenda-tecnica-filtros__field--search {
-  flex: 1 1 260px;
-  min-width: 200px;
+  grid-column: 4;
+  grid-row: 2;
+}
+
+.agenda-tecnica-filtros__clear {
+  grid-column: 5;
+  grid-row: 2;
+  align-self: end;
 }
 
 .agenda-tecnica-filtros__label {
@@ -37206,29 +37237,45 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   color: rgba(255, 255, 255, 0.55) !important;
 }
 
+.agenda-tecnica-filtros__control,
 .agenda-tecnica-filtros__field select,
 .agenda-tecnica-filtros__field input[type='date'],
-.agenda-tecnica-filtros__field input[type='search'],
+.agenda-tecnica-filtros__field input[type='text'],
 .agenda-tecnica-toolbar__filtros select,
 .agenda-tecnica-toolbar__filtros input[type='date'],
-.agenda-tecnica-toolbar__filtros input[type='search'] {
+.agenda-tecnica-toolbar__filtros input[type='text'] {
+  display: block;
   width: 100%;
   box-sizing: border-box;
-  padding: 12px 14px !important;
+  height: 48px !important;
   min-height: 48px !important;
-  background: #3a3a3a !important;
+  max-height: 48px !important;
+  padding: 0 14px !important;
+  margin: 0 !important;
   background-color: #3a3a3a !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
   border-radius: 12px !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   font-size: 14px !important;
-  line-height: 1.2 !important;
+  line-height: 48px !important;
   appearance: none;
   -webkit-appearance: none;
 }
 
-.agenda-tecnica-filtros__field select {
+.agenda-tecnica-filtros__control--date,
+.agenda-tecnica-filtros__field input[type='date'] {
+  color-scheme: dark;
+  padding-right: 2.5rem !important;
+  line-height: normal !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect x='3' y='5' width='18' height='16' rx='2' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 18px 18px !important;
+}
+
+.agenda-tecnica-filtros__field select,
+.agenda-tecnica-filtros__control:not(.agenda-tecnica-filtros__control--date):is(select) {
   padding-right: 36px !important;
   cursor: pointer;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='rgba(255,255,255,0.55)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
@@ -37237,40 +37284,31 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   background-size: 12px 8px !important;
 }
 
-.agenda-tecnica-filtros__field select option {
+.agenda-tecnica-filtros__field select option,
+.agenda-tecnica-filtros__control option {
   background: #3a3a3a !important;
   color: #ffffff !important;
 }
 
-.agenda-tecnica-filtros__field input[type='date'] {
-  color-scheme: dark;
-}
-
-.agenda-tecnica-filtros__field input[type='search'] {
-  -webkit-appearance: none;
-}
-
-.agenda-tecnica-filtros__field input[type='search']::-webkit-search-cancel-button {
-  filter: invert(1) opacity(0.65);
-}
-
-.agenda-tecnica-filtros__field input[type='search']::placeholder {
+.agenda-tecnica-filtros__control--search::placeholder,
+.agenda-tecnica-filtros__field input[type='text']::placeholder {
   color: rgba(255, 255, 255, 0.38) !important;
   -webkit-text-fill-color: rgba(255, 255, 255, 0.38) !important;
   opacity: 1 !important;
 }
 
+.agenda-tecnica-filtros__control:focus,
 .agenda-tecnica-filtros__field select:focus,
 .agenda-tecnica-filtros__field input[type='date']:focus,
-.agenda-tecnica-filtros__field input[type='search']:focus {
+.agenda-tecnica-filtros__field input[type='text']:focus {
   outline: none !important;
   border-color: rgba(0, 200, 83, 0.45) !important;
   box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.12) !important;
 }
 
 .agenda-tecnica-filtros__clear {
-  align-self: flex-end;
   flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .agenda-tecnica-filtros > .btn-secondary,
@@ -46606,4 +46644,31 @@ html body .agenda-tecnica-page .agenda-lista-toolbar__btn--muted {
 html body .agenda-tecnica-page .agenda-tecnica-hero__action-btn,
 html body .agenda-tecnica-page .agenda-tecnica-hero__nav-btn {
   box-shadow: none !important;
+}
+
+/* Agenda técnica — filtros escuros alinhados (override final) */
+html body .agenda-tecnica-page .agenda-tecnica-filtros__control,
+html body .agenda-tecnica-page .agenda-tecnica-filtros__field select,
+html body .agenda-tecnica-page .agenda-tecnica-filtros__field input[type='date'],
+html body .agenda-tecnica-page .agenda-tecnica-filtros__field input[type='text'] {
+  background-color: #3a3a3a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  box-shadow: none !important;
+}
+
+html body .agenda-tecnica-page .agenda-tecnica-filtros__control--search,
+html body .agenda-tecnica-page .agenda-tecnica-filtros__field input[type='text'] {
+  background-color: #3a3a3a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body .agenda-tecnica-page .agenda-tecnica-filtros__control--date,
+html body .agenda-tecnica-page .agenda-tecnica-filtros__field input[type='date'] {
+  color-scheme: dark !important;
 }
