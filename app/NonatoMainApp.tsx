@@ -41732,10 +41732,10 @@ export default function Dashboard() {
             </div>
 
             {/* Abas + atalho loja (navegação) */}
-            <div className="biblioteca-hub-nav">
+            <div className="biblioteca-hub-nav biblioteca-hub-nav--v2">
             <div
               role="tablist"
-              className="biblioteca-hub-tablist"
+              className="biblioteca-hub-tablist biblioteca-hub-tablist--primary"
               aria-label={hubT.bibliotecaNavAria || 'Biblioteca de peças'}
             >
               <button
@@ -41743,18 +41743,23 @@ export default function Dashboard() {
                 role="tab"
                 className={bibliotecaHubTabClass(abaBibliotecaPecas === 'cadastro')}
                 aria-selected={abaBibliotecaPecas === 'cadastro'}
+                title={safeT?.cadastroPecas || 'Cadastro de Peças'}
                 onClick={() => {
                   setBibliotecaGaleriaCategoriaId(null)
                   setAbaBibliotecaPecas('cadastro')
                 }}
               >
-                {safeT?.cadastroPecas || 'Cadastro de Peças'}
+                <span className="biblioteca-hub-tab__inner">
+                  <span className="biblioteca-hub-tab__icon" aria-hidden>📝</span>
+                  <span className="biblioteca-hub-tab__label">{safeT?.cadastroPecas || 'Cadastro de Peças'}</span>
+                </span>
               </button>
               <button
                 type="button"
                 role="tab"
                 className={bibliotecaHubTabClass(abaBibliotecaPecas === 'biblioteca')}
                 aria-selected={abaBibliotecaPecas === 'biblioteca'}
+                title={safeT?.bibliotecaPecas || 'Biblioteca'}
                 onClick={() => {
                   setBibliotecaGaleriaCategoriaId(null)
                   setAbaBibliotecaPecas('biblioteca')
@@ -41762,40 +41767,61 @@ export default function Dashboard() {
                   setVisualizacaoBiblioteca('grid')
                 }}
               >
-                {safeT?.bibliotecaPecas || 'Biblioteca'}
+                <span className="biblioteca-hub-tab__inner">
+                  <span className="biblioteca-hub-tab__icon" aria-hidden>📚</span>
+                  <span className="biblioteca-hub-tab__label">{safeT?.bibliotecaPecas || 'Biblioteca'}</span>
+                </span>
               </button>
               <button
                 type="button"
                 role="tab"
                 className={bibliotecaHubTabClass(abaBibliotecaPecas === 'biblioteca-gestao')}
                 aria-selected={abaBibliotecaPecas === 'biblioteca-gestao'}
+                title={(safeT as any)?.bibliotecaGestaoEditarTitulo || 'Editar biblioteca'}
                 onClick={() => setAbaBibliotecaPecas('biblioteca-gestao')}
               >
-                ✏️ {(safeT as any)?.bibliotecaGestaoEditarTitulo || 'Editar biblioteca'}
+                <span className="biblioteca-hub-tab__inner">
+                  <span className="biblioteca-hub-tab__icon" aria-hidden>✏️</span>
+                  <span className="biblioteca-hub-tab__label">
+                    {(safeT as any)?.bibliotecaGestaoEditarTitulo || 'Editar biblioteca'}
+                  </span>
+                </span>
               </button>
               <button
                 type="button"
                 role="tab"
                 className={`biblioteca-hub-tab biblioteca-hub-tab--purple${abaBibliotecaPecas === 'grupos' ? ' biblioteca-hub-tab--active' : ''}`}
                 aria-selected={abaBibliotecaPecas === 'grupos'}
+                title={(safeT as any)?.bibliotecaAbaGerirCategorias || 'Categorias e subcategorias'}
                 onClick={() => setAbaBibliotecaPecas('grupos')}
               >
-                📁 {(safeT as any)?.bibliotecaAbaGerirCategorias || 'Categorias e subcategorias'}
+                <span className="biblioteca-hub-tab__inner">
+                  <span className="biblioteca-hub-tab__icon" aria-hidden>📁</span>
+                  <span className="biblioteca-hub-tab__label">
+                    {(safeT as any)?.bibliotecaAbaGerirCategoriasCurto ||
+                      (safeT as any)?.bibliotecaAbaGerirCategorias ||
+                      'Categorias'}
+                  </span>
+                </span>
               </button>
               <button
                 type="button"
                 role="tab"
                 className={bibliotecaHubTabClass(abaBibliotecaPecas === 'importacao')}
                 aria-selected={abaBibliotecaPecas === 'importacao'}
+                title={safeT?.importacaoPecas || 'Importação de Peças'}
                 onClick={() => setAbaBibliotecaPecas('importacao')}
               >
-                📥 {safeT?.importacaoPecas || 'Importação de Peças'}
+                <span className="biblioteca-hub-tab__inner">
+                  <span className="biblioteca-hub-tab__icon" aria-hidden>📥</span>
+                  <span className="biblioteca-hub-tab__label">{safeT?.importacaoPecas || 'Importação de Peças'}</span>
+                </span>
               </button>
             </div>
-            <div className="biblioteca-hub-nav__aux">
+            <div className="biblioteca-hub-nav__secondary">
               <button
                 type="button"
-                className={`biblioteca-hub-nav__compacto${bibliotecaModoCompacto ? ' biblioteca-hub-nav__compacto--ativo' : ''}`}
+                className={`biblioteca-hub-nav__compacto biblioteca-hub-nav__secondary-btn${bibliotecaModoCompacto ? ' biblioteca-hub-nav__compacto--ativo' : ''}`}
                 onClick={toggleBibliotecaModoCompacto}
                 title={
                   bibliotecaModoCompacto
@@ -41806,17 +41832,26 @@ export default function Dashboard() {
                 }
                 aria-pressed={bibliotecaModoCompacto}
               >
-                {bibliotecaModoCompacto
-                  ? (safeT as any)?.bibliotecaModoExpandido || 'Modo expandido'
-                  : (safeT as any)?.bibliotecaModoCompacto || 'Modo compacto'}
+                <span className="biblioteca-hub-tab__inner">
+                  <span className="biblioteca-hub-tab__icon" aria-hidden>{bibliotecaModoCompacto ? '⬜' : '▦'}</span>
+                  <span className="biblioteca-hub-tab__label">
+                    {bibliotecaModoCompacto
+                      ? (safeT as any)?.bibliotecaModoExpandido || 'Modo expandido'
+                      : (safeT as any)?.bibliotecaModoCompacto || 'Modo compacto'}
+                  </span>
+                </span>
               </button>
               <a
                 href={HOMAG_SHOP_PECAS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="biblioteca-hub-tab biblioteca-hub-tab--external"
+                className="biblioteca-hub-tab biblioteca-hub-tab--external biblioteca-hub-nav__secondary-btn"
+                title="Loja Nonato Service / Homag"
               >
-                🛒 Loja Nonato Service / Homag
+                <span className="biblioteca-hub-tab__inner">
+                  <span className="biblioteca-hub-tab__icon" aria-hidden>🛒</span>
+                  <span className="biblioteca-hub-tab__label">Loja Nonato Service / Homag</span>
+                </span>
               </a>
             </div>
             </div>

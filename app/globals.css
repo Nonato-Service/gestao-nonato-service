@@ -26122,12 +26122,12 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   outline: none;
   padding: 0 10px;
   border-radius: var(--bib-pro-r-sm, 9px);
-  border: 1px solid transparent;
-  background: transparent;
-  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   text-align: center;
   justify-content: center;
-  min-height: var(--bib-pro-h, 40px);
+  min-height: 42px;
   display: inline-flex;
   align-items: center;
   width: 100%;
@@ -26624,10 +26624,38 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   margin-bottom: 22px;
 }
 
+.biblioteca-hub-nav--v2 {
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(168deg, rgba(10, 16, 14, 0.72), rgba(4, 8, 7, 0.88));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
 .biblioteca-hub-nav .biblioteca-hub-tablist {
   flex: 1 1 280px;
   min-width: 0;
   margin-bottom: 0;
+}
+
+.biblioteca-hub-nav--v2 .biblioteca-hub-tablist--primary {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.biblioteca-hub-nav__secondary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.biblioteca-hub-nav__secondary-btn {
+  width: 100%;
+  min-height: 42px;
+  text-decoration: none;
 }
 
 .biblioteca-hub-nav__aux {
@@ -26636,6 +26664,47 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   align-items: center;
   gap: 10px;
   padding: 4px 0;
+}
+
+.biblioteca-hub-tab__inner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.biblioteca-hub-tab__icon {
+  flex: 0 0 auto;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.biblioteca-hub-tab__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+}
+
+@media (min-width: 1100px) {
+  .biblioteca-hub-tab__label {
+    font-size: 12px;
+  }
+}
+
+.biblioteca-hub-nav__compacto .biblioteca-hub-tab__inner,
+.biblioteca-hub-tab--external .biblioteca-hub-tab__inner {
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .biblioteca-hub-nav__secondary {
+    grid-template-columns: 1fr;
+  }
 }
 
 .biblioteca-hub-nav__compacto {
