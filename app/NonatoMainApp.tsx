@@ -52279,30 +52279,22 @@ A1;Peça exemplo;10`}
                   )}
                 </div>
 
-                <div style={{ padding: '20px', backgroundColor: '#484848', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.25)' }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
-                    <h3 style={{ margin: 0, color: '#00c853', fontSize: '16px' }}>{(safeT as any)?.itensCobrancaFechamento || 'Itens a cobrar (ajuste com o Cadastro de Serviços)'}</h3>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>✏️ {(safeT as any)?.editarItensFechamento || 'Editar itens'}</span>
+                <div className="fechamento-itens-panel">
+                  <div className="fechamento-itens-panel__title-row">
+                    <h3 className="fechamento-itens-panel__title">{(safeT as any)?.itensCobrancaFechamento || 'Itens a cobrar (ajuste com o Cadastro de Serviços)'}</h3>
+                    <span className="fechamento-itens-panel__edit-hint">✏️ {(safeT as any)?.editarItensFechamento || 'Editar itens'}</span>
                   </div>
                   {servicoGrupos.length > 0 && (
-                    <div
-                      style={{
-                        marginBottom: '16px',
-                        padding: '14px 16px',
-                        borderRadius: '10px',
-                        border: '1px solid rgba(0, 200, 80, 0.45)',
-                        background: 'rgba(18, 52, 24, 0.35)',
-                      }}
-                    >
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#7dff9e', marginBottom: '6px' }}>
+                    <div className="fechamento-itens-subcard">
+                      <div className="fechamento-itens-subcard__title">
                         {(safeT as any)?.fechamentoGrupoTitulo || 'Grupo de tarifas (Cadastro de Serviços)'}
                       </div>
-                      <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.45 }}>
+                      <p className="fechamento-itens-subcard__text">
                         {(safeT as any)?.fechamentoGrupoAjuda ||
                           'Escolha o grupo (ex.: HTT 70 €, 95 €, 50 € ou 60 €). HT, viagem, km e diárias usam os valores desse grupo na ordem de cobrança.'}
                       </p>
                       {clienteRelatorioFechamento?.grupoTarifaId && (
-                        <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#9be7ff', lineHeight: 1.45 }}>
+                        <p className="fechamento-itens-subcard__hint-cliente">
                           {(safeT as any)?.fechamentoGrupoClienteSugerido ||
                             'Tarifa definida no cadastro do cliente'}
                           :{' '}
@@ -52314,16 +52306,7 @@ A1;Peça exemplo;10`}
                       <select
                         value={fechamentoGrupoIdAtual}
                         onChange={(e) => patchFechamentoGrupoLocal(e.target.value)}
-                        style={{
-                          width: '100%',
-                          maxWidth: '420px',
-                          padding: '10px 12px',
-                          borderRadius: '8px',
-                          border: '1px solid rgba(0, 200, 83, 0.35)',
-                          background: '#404040',
-                          color: '#fff',
-                          fontSize: '14px',
-                        }}
+                        style={{ width: '100%', maxWidth: '420px' }}
                       >
                         {ordenarServicoGrupos(servicoGrupos).map((g) => {
                           const htt = servicos.find(
@@ -52345,17 +52328,8 @@ A1;Peça exemplo;10`}
                   )}
                   {omitidosRelatorio.length > 0 && (
                     <div
-                      style={{
-                        marginBottom: '14px',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid rgba(255, 170, 0, 0.45)',
-                        background: 'rgba(255, 170, 0, 0.08)',
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        alignItems: 'center',
-                        gap: '10px'
-                      }}
+                      className="fechamento-itens-subcard fechamento-itens-subcard--warn"
+                      style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}
                     >
                       <span style={{ fontSize: '12px', color: '#ffcc80', fontWeight: 600 }}>
                         {(safeT as any)?.fechamentoLinhasRetiradas || 'Linhas retiradas da cobrança:'}
@@ -52381,20 +52355,20 @@ A1;Peça exemplo;10`}
                       ))}
                     </div>
                   )}
-                  <div className="fechamento-relatorios-servicos-table-host" style={{ width: '100%', overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', color: '#ccc' }}>
+                  <div className="fechamento-relatorios-servicos-table-host">
+                  <table className="fechamento-itens-table">
                     <thead>
-                      <tr style={{ borderBottom: '1px solid rgba(0,200,83,0.3)' }}>
-                        <th style={{ width: '90px', textAlign: 'left', padding: '10px 8px', color: '#00c853' }}>{(safeT as any)?.codigoOuCod || 'COD'}</th>
-                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#00c853' }}>{(safeT as any)?.descricao || 'Descrição / Nome'}</th>
-                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00c853' }}>{(safeT as any)?.quantidade || 'Quantidade'}</th>
-                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00c853' }}>{(safeT as any)?.valorUnitario || 'Valor unit.'}</th>
-                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00c853' }}>{(safeT as any)?.valorTotal || 'Total'}</th>
-                        <th style={{ width: '180px', padding: '10px 8px', color: '#00c853', textAlign: 'center' }}>{(safeT as any)?.fechamentoColunaServicoDiaria || (safeT as any)?.cobrarDiariaTecnico || 'Serviço / diária'}</th>
+                      <tr>
+                        <th style={{ width: '90px' }}>{(safeT as any)?.codigoOuCod || 'COD'}</th>
+                        <th>{(safeT as any)?.descricao || 'Descrição / Nome'}</th>
+                        <th style={{ textAlign: 'right' }}>{(safeT as any)?.quantidade || 'Quantidade'}</th>
+                        <th style={{ textAlign: 'right' }}>{(safeT as any)?.valorUnitario || 'Valor unit.'}</th>
+                        <th style={{ textAlign: 'right' }}>{(safeT as any)?.valorTotal || 'Total'}</th>
+                        <th style={{ width: '180px', textAlign: 'center' }}>{(safeT as any)?.fechamentoColunaServicoDiaria || (safeT as any)?.cobrarDiariaTecnico || 'Serviço / diária'}</th>
                         {temLinhasManuaisFechamento && (
-                          <th style={{ width: '200px', padding: '10px 8px', color: '#00c853' }}>{(safeT as any)?.selecionarServicoAnexar || 'Anexar: selecionar do Cadastro'}</th>
+                          <th style={{ width: '200px' }}>{(safeT as any)?.selecionarServicoAnexar || 'Anexar: selecionar do Cadastro'}</th>
                         )}
-                        <th style={{ width: '96px', padding: '10px 6px', color: '#00c853', textAlign: 'center', fontSize: '11px' }}>{(safeT as any)?.fechamentoColunaAcoes || 'Ações'}</th>
+                        <th style={{ width: '96px', textAlign: 'center', fontSize: '11px' }}>{(safeT as any)?.fechamentoColunaAcoes || 'Ações'}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -52456,23 +52430,24 @@ A1;Peça exemplo;10`}
                           return normalizeServicoValorStored(item.valorTotal)
                         })()
                         return (
-                        <tr key={item.id} style={{ borderBottom: '1px solid #333' }}>
-                          <td style={{ padding: '10px 8px', color: '#00c853', fontWeight: 600 }}>{codExibir}</td>
-                          <td style={{ padding: '10px 8px', minWidth: '160px', maxWidth: 'min(480px, 55vw)', whiteSpace: 'normal', wordBreak: 'break-word', color: '#e8e8e8' }}>
+                        <tr key={item.id}>
+                          <td>{codExibir}</td>
+                          <td className="fechamento-item-desc">
                             {eManual ? (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 <input
                                   type="text"
                                   value={item.descricao}
                                   onChange={(e) => atualizarItem(item.id, { descricao: e.target.value })}
-                                  style={{ width: '100%', minWidth: '120px', padding: '6px', background: '#484848', border: '1px solid #444', borderRadius: '4px', color: '#fff' }}
+                                  style={{ width: '100%', minWidth: '120px' }}
                                   placeholder={(safeT as any)?.descricao || 'Descrição'}
                                 />
                                 <input
                                   type="text"
                                   value={item.infoAdicional || ''}
                                   onChange={(e) => atualizarItem(item.id, { infoAdicional: e.target.value })}
-                                  style={{ width: '100%', minWidth: '120px', padding: '5px 6px', background: 'rgba(255,193,7,0.06)', border: '1px solid rgba(255,193,7,0.35)', borderRadius: '4px', color: '#ffe082', fontSize: '11px' }}
+                                  className="fechamento-item-input--info"
+                                  style={{ width: '100%', minWidth: '120px' }}
                                   placeholder={(safeT as any)?.fechamentoInfoAdicionalPlaceholder || 'Informação adicional para o cliente (motivo do adicional)'}
                                 />
                               </div>
@@ -52487,7 +52462,7 @@ A1;Peça exemplo;10`}
                               </>
                             )}
                           </td>
-                          <td style={{ padding: '10px 8px', textAlign: 'right' }}>
+                          <td style={{ textAlign: 'right' }}>
                             {eManual ? (
                               <input
                                 type="number"
@@ -52495,7 +52470,7 @@ A1;Peça exemplo;10`}
                                 min={0}
                                 value={item.quantidade === 0 ? '' : item.quantidade}
                                 onChange={(e) => atualizarItem(item.id, { quantidade: parseFloat(e.target.value) || 0 })}
-                                style={{ width: '72px', padding: '6px', background: '#484848', border: '1px solid #444', borderRadius: '4px', color: '#fff', textAlign: 'right' }}
+                                style={{ width: '72px', textAlign: 'right' }}
                                 placeholder="0"
                               />
                             ) : item.tipoCobranca === 'hora' ? (
@@ -52506,7 +52481,7 @@ A1;Peça exemplo;10`}
                               item.quantidade
                             )}
                           </td>
-                          <td style={{ padding: '10px 8px', textAlign: 'right' }}>
+                          <td style={{ textAlign: 'right' }}>
                             {eManual ? (
                               <input
                                 type="number"
@@ -52514,15 +52489,8 @@ A1;Peça exemplo;10`}
                                 min={0}
                                 value={item.valorUnitario === 0 ? '' : item.valorUnitario}
                                 onChange={(e) => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })}
-                                style={{
-                                  width: '92px',
-                                  padding: '6px',
-                                  background: item.valorUnitario <= 0 ? 'rgba(255,193,7,0.1)' : '#484848',
-                                  border: item.valorUnitario <= 0 ? '1px solid #ffc107' : '1px solid #444',
-                                  borderRadius: '4px',
-                                  color: '#fff',
-                                  textAlign: 'right',
-                                }}
+                                className={item.valorUnitario <= 0 ? 'fechamento-item-input--warn-val' : undefined}
+                                style={{ width: '92px', textAlign: 'right' }}
                                 placeholder={(safeT as any)?.inserirValorEuro || 'Valor €'}
                                 title={(safeT as any)?.inserirValorEuro || 'Valor €'}
                               />
@@ -52531,16 +52499,16 @@ A1;Peça exemplo;10`}
                                 {valorUnitExibir.toFixed(2)} €
                               </span>
                             ) : (
-                              <input type="number" step="0.01" min={0} value={item.valorUnitario === 0 ? '' : item.valorUnitario} onChange={e => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })} style={{ width: '80px', padding: '6px', background: '#484848', border: '1px solid #444', borderRadius: '4px', color: '#fff' }} placeholder="0,00" />
+                              <input type="number" step="0.01" min={0} value={item.valorUnitario === 0 ? '' : item.valorUnitario} onChange={e => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })} style={{ width: '80px' }} placeholder="0,00" />
                             )}
                           </td>
-                          <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 600, color: cobrarDiaria ? '#00c853' : '#888' }}>{totalExibir.toFixed(2)} €{eDiarias && !cobrarDiaria ? ' (' + ((safeT as any)?.naoCobrar || 'não cobrar') + ')' : ''}</td>
-                          <td style={{ padding: '8px', textAlign: 'center' }}>
+                          <td style={{ textAlign: 'right', fontWeight: 600, color: cobrarDiaria ? '#00c853' : '#888' }}>{totalExibir.toFixed(2)} €{eDiarias && !cobrarDiaria ? ' (' + ((safeT as any)?.naoCobrar || 'não cobrar') + ')' : ''}</td>
+                          <td style={{ textAlign: 'center' }}>
                             {eDiarias ? (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
                               <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                <button type="button" onClick={() => atualizarItem('diarias', { cobrarDiaria: true })} style={{ padding: '6px 12px', borderRadius: '6px', border: cobrarDiaria ? '2px solid #00c853' : '1px solid #555', background: cobrarDiaria ? 'rgba(0,200,83,0.2)' : 'transparent', color: cobrarDiaria ? '#00c853' : '#888', cursor: 'pointer', fontWeight: cobrarDiaria ? 600 : 400 }}>{(safeT as any)?.sim || 'Sim'}</button>
-                                <button type="button" onClick={() => atualizarItem('diarias', { cobrarDiaria: false })} style={{ padding: '6px 12px', borderRadius: '6px', border: !cobrarDiaria ? '2px solid #ff8800' : '1px solid #555', background: !cobrarDiaria ? 'rgba(255,136,0,0.15)' : 'transparent', color: !cobrarDiaria ? '#ff8800' : '#888', cursor: 'pointer', fontWeight: !cobrarDiaria ? 600 : 400 }}>{(safeT as any)?.nao || 'Não'}</button>
+                                <button type="button" onClick={() => atualizarItem('diarias', { cobrarDiaria: true })} className={`fechamento-itens-btn-diaria fechamento-itens-btn-diaria--sim${cobrarDiaria ? ' is-active' : ''}`}>{(safeT as any)?.sim || 'Sim'}</button>
+                                <button type="button" onClick={() => atualizarItem('diarias', { cobrarDiaria: false })} className={`fechamento-itens-btn-diaria fechamento-itens-btn-diaria--nao${!cobrarDiaria ? ' is-active' : ''}`}>{(safeT as any)?.nao || 'Não'}</button>
                               </div>
                                 <select
                                   value={item.servicoId || ''}
@@ -52548,7 +52516,7 @@ A1;Peça exemplo;10`}
                                     const s = servicos.find((sv) => sv.id === e.target.value)
                                     if (s) aplicarServico('diarias', s)
                                   }}
-                                  style={{ width: '100%', maxWidth: '220px', padding: '6px 8px', background: '#484848', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '11px', margin: '0 auto', display: 'block' }}
+                                  style={{ width: '100%', maxWidth: '220px', fontSize: '11px', margin: '0 auto', display: 'block' }}
                                   title={(safeT as any)?.selecionarServicoDiarias || 'Serviço de diárias (DFC, DDT…)'}
                                 >
                                   <option value="">{(safeT as any)?.servicoDiarias || '— Serviço diárias —'}</option>
@@ -52566,7 +52534,7 @@ A1;Peça exemplo;10`}
                                   const s = servicos.find((sv) => sv.id === e.target.value)
                                   if (s) aplicarServico(item.id, s)
                                 }}
-                                style={{ width: '100%', maxWidth: '220px', padding: '6px 8px', background: '#484848', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '11px', margin: '0 auto', display: 'block' }}
+                                style={{ width: '100%', maxWidth: '220px', fontSize: '11px', margin: '0 auto', display: 'block' }}
                                 title={(safeT as any)?.selecionarServicoCadastro || 'Serviço do grupo selecionado'}
                               >
                                 <option value="">{(safeT as any)?.selecioneServicoAnexar || '— Serviço do cadastro —'}</option>
@@ -52581,9 +52549,9 @@ A1;Peça exemplo;10`}
                             )}
                           </td>
                           {temLinhasManuaisFechamento && (
-                            <td style={{ padding: '8px' }}>
+                            <td>
                               {eManual ? (
-                                <select value={item.servicoId || ''} onChange={e => { const sid = e.target.value; const s = servicos.find(sv => sv.id === sid); if (s) aplicarServico(item.id, s) }} style={{ width: '100%', padding: '6px 8px', background: '#484848', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>
+                                <select value={item.servicoId || ''} onChange={e => { const sid = e.target.value; const s = servicos.find(sv => sv.id === sid); if (s) aplicarServico(item.id, s) }} style={{ width: '100%', fontSize: '12px' }}>
                                   <option value="">{(safeT as any)?.selecioneServicoAnexar || '— Selecionar serviço (código, descrição, valor) —'}</option>
                                   {servicosParaItem(item).map((s) => (
                                     <option key={s.id} value={s.id}>
@@ -52596,22 +52564,12 @@ A1;Peça exemplo;10`}
                               )}
                             </td>
                           )}
-                          <td style={{ padding: '8px', textAlign: 'center' }}>
+                          <td style={{ textAlign: 'center' }}>
                             {itemFixoDoRelatorio && (FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(item.id) ? (
                               <button
                                 type="button"
                                 onClick={() => retirarLinhaTemplateFechamento(item.id)}
-                                style={{
-                                  padding: '6px 10px',
-                                  fontSize: '11px',
-                                  borderRadius: '6px',
-                                  border: '1px solid rgba(255, 136, 0, 0.55)',
-                                  background: 'rgba(255, 136, 0, 0.12)',
-                                  color: '#ffaa66',
-                                  cursor: 'pointer',
-                                  fontWeight: 500,
-                                  whiteSpace: 'nowrap'
-                                }}
+                                className="fechamento-itens-btn-retirar"
                                 title={(safeT as any)?.fechamentoRetirarLinhaHint || ''}
                               >
                                 {(safeT as any)?.fechamentoRetirarLinha || 'Retirar'}
@@ -52625,44 +52583,44 @@ A1;Peça exemplo;10`}
                       })}
                     </tbody>
                     <tfoot>
-                      <tr style={{ borderTop: '2px solid rgba(0,200,83,0.5)', background: 'rgba(0,200,83,0.06)' }}>
-                        <td colSpan={4} style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', color: '#00c853' }}>
+                      <tr>
+                        <td colSpan={4} style={{ textAlign: 'right' }}>
                           {ivaOptsFech.incluirIva
                             ? (safeT as any)?.fechamentoTotalBaseLinhas || 'Soma das linhas (s/ IVA)'
                             : (safeT as any)?.somaTotal || 'SOMA TOTAL'}
                         </td>
-                        <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', fontSize: '16px', color: '#00c853' }}>{fechTotIva.liquido.toFixed(2)} €</td>
-                        <td style={{ padding: '12px 8px' }}></td>
-                        {temLinhasManuaisFechamento && <td style={{ padding: '12px 8px' }}></td>}
-                        <td style={{ padding: '12px 8px' }}></td>
+                        <td style={{ textAlign: 'right', fontSize: '16px' }}>{fechTotIva.liquido.toFixed(2)} €</td>
+                        <td></td>
+                        {temLinhasManuaisFechamento && <td></td>}
+                        <td></td>
                       </tr>
                       {ivaOptsFech.incluirIva && (
                         <>
-                          <tr style={{ background: 'rgba(56, 189, 248, 0.08)' }}>
-                            <td colSpan={4} style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 600, color: '#7dd3fc' }}>
+                          <tr className="fechamento-itens-tfoot--iva">
+                            <td colSpan={4} style={{ textAlign: 'right', fontWeight: 600 }}>
                               {(safeT as any)?.valorIva || 'IVA'} ({fechTotIva.taxa}%)
                             </td>
-                            <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 700, fontSize: '15px', color: '#7dd3fc' }}>{fechTotIva.iva.toFixed(2)} €</td>
-                            <td style={{ padding: '10px 8px' }}></td>
-                            {temLinhasManuaisFechamento && <td style={{ padding: '10px 8px' }}></td>}
-                            <td style={{ padding: '10px 8px' }}></td>
+                            <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '15px' }}>{fechTotIva.iva.toFixed(2)} €</td>
+                            <td></td>
+                            {temLinhasManuaisFechamento && <td></td>}
+                            <td></td>
                           </tr>
-                          <tr style={{ borderTop: '2px solid rgba(56, 189, 248, 0.45)', background: 'rgba(56, 189, 248, 0.12)' }}>
-                            <td colSpan={4} style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', color: '#e0f2fe' }}>
+                          <tr className="fechamento-itens-tfoot--iva-total">
+                            <td colSpan={4} style={{ textAlign: 'right' }}>
                               {(safeT as any)?.totalComIva || 'TOTAL com IVA'}
                             </td>
-                            <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', fontSize: '17px', color: '#f0f9ff' }}>{fechTotIva.comIva.toFixed(2)} €</td>
-                            <td style={{ padding: '12px 8px' }}></td>
-                            {temLinhasManuaisFechamento && <td style={{ padding: '12px 8px' }}></td>}
-                            <td style={{ padding: '12px 8px' }}></td>
+                            <td style={{ textAlign: 'right', fontSize: '17px' }}>{fechTotIva.comIva.toFixed(2)} €</td>
+                            <td></td>
+                            {temLinhasManuaisFechamento && <td></td>}
+                            <td></td>
                           </tr>
                         </>
                       )}
                     </tfoot>
                   </table>
                   </div>
-                  <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+                  <div className="fechamento-itens-footer">
+                    <div className="fechamento-itens-footer__actions">
                       <button type="button" className="btn-primary" onClick={adicionarItemManual} style={{ padding: '8px 16px' }}>
                         + {(safeT as any)?.adicionarItemCobranca || 'Adicionar item a cobrar'}
                       </button>
@@ -52686,29 +52644,14 @@ A1;Peça exemplo;10`}
                         </button>
                       )}
                     </div>
-                    <div
-                      style={{
-                        textAlign: 'right',
-                        fontSize: 12,
-                        color: 'rgba(255,255,255,0.85)',
-                        maxWidth: 520,
-                        lineHeight: 1.4,
-                      }}
-                    >
+                    <div className="fechamento-itens-footer__total">
                       {ivaOptsFech.incluirIva ? (
                         <div>
-                          <div
-                            style={{
-                              fontSize: 18,
-                              fontWeight: 'bold',
-                              color: '#7dd3fc',
-                              marginBottom: 4,
-                            }}
-                          >
+                          <div className="fechamento-itens-footer__total-valor--azul">
                             {(safeT as any)?.fechamentoResumoTotalComIva || 'Total a enviar (com IVA)'}:{' '}
                             {fechTotIva.comIva.toFixed(2)} €
                           </div>
-                          <div style={{ fontSize: 12, color: 'rgba(148, 163, 184, 0.95)' }}>
+                          <div className="fechamento-itens-footer__total-dica">
                             {(safeT as any)?.fechamentoResumoComIvaDetalhe || 'Inclui'} {fechTotIva.liquido.toFixed(2)} €
                             {` ${(safeT as any)?.fechamentoResumoMaisIva || '+'} `}
                             {fechTotIva.iva.toFixed(2)} € {(safeT as any)?.valorIva || 'IVA'} ({fechTotIva.taxa}%)
@@ -52716,18 +52659,11 @@ A1;Peça exemplo;10`}
                         </div>
                       ) : (
                         <div>
-                          <div
-                            style={{
-                              fontSize: 18,
-                              fontWeight: 'bold',
-                              color: '#4ade80',
-                              marginBottom: 4,
-                            }}
-                          >
+                          <div className="fechamento-itens-footer__total-valor--verde">
                             {(safeT as any)?.fechamentoResumoTotalSemIva || 'Total a enviar (s/ IVA)'}:{' '}
                             {fechTotIva.liquido.toFixed(2)} €
                           </div>
-                          <div style={{ fontSize: 12, color: 'rgba(148, 163, 184, 0.95)' }}>
+                          <div className="fechamento-itens-footer__total-dica">
                             {(safeT as any)?.fechamentoResumoSemIvaDica || 'Clica em «Fechamento com IVA» acima se o cliente paga IVA em cima destes valores.'}
                           </div>
                         </div>
