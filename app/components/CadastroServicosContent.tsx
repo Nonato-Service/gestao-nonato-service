@@ -466,55 +466,60 @@ export function CadastroServicosContent(props: Props) {
             {servicoGrupoSelecionadoId && grupoSelecionado ? (
               <>
                 <div className="cadastro-valores-v2__group-panel">
-                  <div className="cadastro-valores-v2__group-panel-top">
+                  <div className="cadastro-valores-v2__group-panel-head">
                     <div className="cadastro-valores-v2__group-panel-intro">
                       <span className="cadastro-valores-v2__group-kicker">
                         {safeT.servicosGrupoAtivoLabel || 'Grupo de tarifa activo'}
                       </span>
                       <h2 className="cadastro-valores-v2__group-name">{grupoSelecionado.nome}</h2>
-                      <p className="cadastro-valores-v2__group-report-hint">
+                      <p className="orcamento-pecas-especiais-hint cadastro-valores-v2__group-report-hint">
                         {safeT.servicosGrupoRelatorioHint ||
                           'Os códigos (COD) e valores desta tabela são usados automaticamente nos relatórios de serviço dos clientes deste grupo.'}
                       </p>
                     </div>
-                    <div className="cadastro-valores-v2__group-summary">
-                      <div className="cadastro-valores-v2__group-summary-item">
-                        <span className="cadastro-valores-v2__group-summary-label">{safeT.servicosItensLabel || 'Itens'}</span>
-                        <strong>{statsGrupoSelecionado.total}</strong>
+                    <div
+                      className="orcamento-pecas-especiais-iva-row orcamento-pecas-especiais-iva-row--totais cadastro-valores-v2__group-summary"
+                      aria-label={safeT.servicosResumoGrupoLabel || 'Resumo do grupo'}
+                    >
+                      <div className="orcamento-pecas-especiais-total-box">
+                        <span className="orcamento-pecas-especiais-total-box__label">{safeT.servicosItensLabel || 'Itens'}</span>
+                        <strong className="orcamento-pecas-especiais-total-box__valor">{statsGrupoSelecionado.total}</strong>
                       </div>
-                      <div className="cadastro-valores-v2__group-summary-item">
-                        <span className="cadastro-valores-v2__group-summary-label">{safeT.servicosClientesLabel || 'Clientes'}</span>
-                        <strong>{statsGrupoSelecionado.clientesCount}</strong>
+                      <div className="orcamento-pecas-especiais-total-box orcamento-pecas-especiais-total-box--iva">
+                        <span className="orcamento-pecas-especiais-total-box__label">{safeT.servicosClientesLabel || 'Clientes'}</span>
+                        <strong className="orcamento-pecas-especiais-total-box__valor">{statsGrupoSelecionado.clientesCount}</strong>
                       </div>
-                      <div className="cadastro-valores-v2__group-summary-item">
-                        <span className="cadastro-valores-v2__group-summary-label">{safeT.servico || 'Serviços'}</span>
-                        <strong>{statsGrupoSelecionado.servicosCount}</strong>
+                      <div className="orcamento-pecas-especiais-total-box">
+                        <span className="orcamento-pecas-especiais-total-box__label">{safeT.servico || 'Serviços'}</span>
+                        <strong className="orcamento-pecas-especiais-total-box__valor">{statsGrupoSelecionado.servicosCount}</strong>
                       </div>
-                      <div className="cadastro-valores-v2__group-summary-item">
-                        <span className="cadastro-valores-v2__group-summary-label">{safeT.despesa || 'Despesas'}</span>
-                        <strong>{statsGrupoSelecionado.despesasCount}</strong>
+                      <div className="orcamento-pecas-especiais-total-box">
+                        <span className="orcamento-pecas-especiais-total-box__label">{safeT.despesa || 'Despesas'}</span>
+                        <strong className="orcamento-pecas-especiais-total-box__valor">{statsGrupoSelecionado.despesasCount}</strong>
                       </div>
                       {statsGrupoSelecionado.semValor > 0 ? (
-                        <div className="cadastro-valores-v2__group-summary-item cadastro-valores-v2__group-summary-item--warn">
-                          <span className="cadastro-valores-v2__group-summary-label">
+                        <div className="orcamento-pecas-especiais-total-box cadastro-valores-v2__group-stat--warn">
+                          <span className="orcamento-pecas-especiais-total-box__label">
                             {safeT.servicosSemValorLabel || 'Sem valor'}
                           </span>
-                          <strong>{statsGrupoSelecionado.semValor}</strong>
+                          <strong className="orcamento-pecas-especiais-total-box__valor">{statsGrupoSelecionado.semValor}</strong>
                         </div>
                       ) : null}
                     </div>
                   </div>
 
-                  <div className="cadastro-valores-v2__group-rename">
-                    <div className="cadastro-valores-v2__section-label">{safeT.servicosRenomearGrupo || 'Nome do grupo'}</div>
+                  <div className="cadastro-valores-v2__group-panel-actions">
+                    <label className="orcamento-pecas-especiais-label cadastro-valores-v2__group-rename-label">
+                      {safeT.servicosRenomearGrupo || 'Nome do grupo'}
+                    </label>
                     <div className="cadastro-valores-v2__rename-row">
                       <input
                         type="text"
-                        className="cadastro-valores-v2__input"
+                        className="orcamento-pecas-especiais-input cadastro-valores-v2__field"
                         value={servicoGrupoNomeEdicao}
                         onChange={(e) => setServicoGrupoNomeEdicao(e.target.value)}
                       />
-                      <button type="button" className="cadastro-valores-v2__btn-green cadastro-valores-v2__btn-sm" onClick={onSalvarNomeGrupo}>
+                      <button type="button" className="btn-primary cadastro-valores-v2__btn-sm" onClick={onSalvarNomeGrupo}>
                         {safeT.save || 'Salvar'}
                       </button>
                       <button type="button" className="cadastro-valores-v2__btn-secondary cadastro-valores-v2__btn-sm" onClick={() => onMoveGrupo(servicoGrupoSelecionadoId, 'up')} title={safeT.servicosSubirGrupo || 'Subir'}>

@@ -39108,12 +39108,17 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   overflow: hidden;
 }
 
+.cadastro-valores-v2__group-panel-head,
 .cadastro-valores-v2__group-panel-top {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   padding: 18px 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.cadastro-valores-v2__group-panel-intro {
+  min-width: 0;
 }
 
 .cadastro-valores-v2__group-kicker {
@@ -39130,61 +39135,51 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   margin: 0 0 8px;
   font-size: clamp(1.15rem, 2.2vw, 1.45rem);
   line-height: 1.25;
-  color: #fff;
-  font-weight: 800;
+  color: #66b3ff;
+  font-weight: 700;
 }
 
 .cadastro-valores-v2__group-report-hint {
   margin: 0;
-  max-width: 56rem;
+  max-width: none;
   font-size: 0.82rem;
   line-height: 1.45;
   color: rgba(255, 255, 255, 0.62);
 }
 
 .cadastro-valores-v2__group-summary {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(88px, 1fr));
-  gap: 10px;
-  align-self: start;
-}
-
-.cadastro-valores-v2__group-summary-item {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 88px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.24);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: stretch;
+  width: 100%;
+  margin: 0;
 }
 
-.cadastro-valores-v2__group-summary-item strong {
-  font-size: 1.15rem;
-  line-height: 1;
-  color: #f8fafc;
+.cadastro-valores-v2__group-summary .orcamento-pecas-especiais-total-box {
+  flex: 1 1 0;
+  min-width: 108px;
 }
 
-.cadastro-valores-v2__group-summary-item--warn {
-  border-color: rgba(234, 179, 8, 0.35);
+.cadastro-valores-v2__group-stat--warn {
+  border-color: rgba(234, 179, 8, 0.4);
   background: rgba(234, 179, 8, 0.1);
 }
 
-.cadastro-valores-v2__group-summary-item--warn strong {
+.cadastro-valores-v2__group-stat--warn .orcamento-pecas-especiais-total-box__valor {
   color: #fde68a;
 }
 
-.cadastro-valores-v2__group-summary-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.48);
-}
-
+.cadastro-valores-v2__group-panel-actions,
 .cadastro-valores-v2__group-rename {
   padding: 14px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cadastro-valores-v2__group-rename-label {
+  margin: 0;
 }
 
 .cadastro-valores-v2__toolbar--items {
@@ -39560,8 +39555,9 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   align-items: center;
 }
 
-.cadastro-valores-v2__rename-row .cadastro-valores-v2__input {
-  flex: 1 1 180px;
+.cadastro-valores-v2__rename-row .cadastro-valores-v2__input,
+.cadastro-valores-v2__rename-row .orcamento-pecas-especiais-input {
+  flex: 1 1 220px;
   min-width: 0;
   margin-bottom: 0;
 }
@@ -39758,8 +39754,19 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
     min-width: 0;
   }
 
-  .cadastro-valores-v2__group-panel-top {
-    grid-template-columns: 1fr;
+  .cadastro-valores-v2__group-panel-top,
+  .cadastro-valores-v2__group-panel-head {
+    padding: 16px;
+  }
+
+  .cadastro-valores-v2__group-summary .orcamento-pecas-especiais-total-box {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 0;
+  }
+
+  .cadastro-valores-v2__group-panel-actions,
+  .cadastro-valores-v2__group-rename {
+    padding: 12px 16px 14px;
   }
 
   .cadastro-valores-v2__group-summary {
@@ -39873,6 +39880,20 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   color: #66b3ff;
   font-size: 17px;
   font-weight: 600;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__group-name {
+  color: #66b3ff;
+  font-weight: 700;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__group-summary .orcamento-pecas-especiais-total-box {
+  border-color: rgba(0, 200, 83, 0.18);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__group-panel-actions {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__card-hint,
