@@ -222,7 +222,6 @@ import type { GestorFormState, TecnicoFormState, TipoGestorFormState } from './l
 import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { DiarioLembreteIntervalPicker } from './components/DiarioLembreteIntervalPicker'
 import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'
-import { DashboardFullPanel } from './components/DashboardFullPanel'
 import { FamiliasGruposChecklistContent } from './components/FamiliasGruposChecklistContent'
 import { ChecklistBasicoContent } from './components/ChecklistBasicoContent'
 import { FamiliasGruposEquipamentosContent } from './components/FamiliasGruposEquipamentosContent'
@@ -75422,18 +75421,114 @@ A1;Peça exemplo;10`}
               {dashboardMainHubId ? (
                 renderDashboardMainHubContent(dashboardMainHubId)
               ) : (
-                <DashboardFullPanel
-                  safeT={safeT as Record<string, string | undefined>}
-                  isCompactLayout={isCompactLayout}
-                  logoSlot={<LogoComponent size={isCompactLayout ? 'small' : 'large'} />}
-                  stats={{
-                    clientes: clientes.length,
-                    equipamentos: inventarioArmazem.totalAtivos,
-                    relatorios: relatoriosServicoListaPrincipal.length,
-                    gestores: gestores.length + tecnicos.length,
+                <div className="ns-dashboard-full">
+              {/* Hero — identidade visual alinhada ao resto do painel */}
+              <div
+                className={`ns-dashboard-full-hero${isCompactLayout ? ' ns-dashboard-full-hero--compact' : ''}`}
+              >
+                <div className="ns-dashboard-full-hero__backdrop" aria-hidden>
+                  <div className="ns-dashboard-full-hero__orb ns-dashboard-full-hero__orb--a" />
+                  <div className="ns-dashboard-full-hero__orb ns-dashboard-full-hero__orb--b" />
+                </div>
+                <div className="ns-dashboard-full-hero__content">
+                  <div className="ns-dashboard-full-hero__brand">
+                    <div className="ns-dashboard-full-hero__logo">
+                      <LogoComponent size={isCompactLayout ? 'small' : 'large'} />
+                    </div>
+                    <span className="ns-dashboard-full-hero__badge">
+                      {(safeT as Record<string, string | undefined>)?.dashboardShowcaseBadge ||
+                        'Nonato Service · Gestão Técnica'}
+                    </span>
+                  </div>
+                  <h1 className="ns-dashboard-full-title">{safeT?.title || 'Gestão Técnica'}</h1>
+                  <p className="ns-dashboard-full-welcome">{safeT?.welcome || 'Bem-vindo ao painel de controlo'}</p>
+                  <p className="ns-dashboard-full-lead">
+                    {safeT?.welcomeText2 ||
+                      'Utilize o menu lateral para aceder às funcionalidades disponíveis.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Estatísticas rápidas — cartões uniformes, hover em CSS */}
+              <div className="ns-dashboard-stats">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="ns-dashboard-stat"
+                  onClick={() => handleButtonClick('open-clientes')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleButtonClick('open-clientes')
+                    }
                   }}
-                  onStatClick={handleButtonClick}
                 >
+                  <div className="ns-dashboard-stat-emoji" aria-hidden>
+                    👥
+                  </div>
+                  <h3 className="ns-dashboard-stat-label">{safeT?.clientes || 'Clientes'}</h3>
+                  <p className="ns-dashboard-stat-value">{clientes.length}</p>
+                </div>
+
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="ns-dashboard-stat"
+                  onClick={() => handleButtonClick('open-equipamentos')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleButtonClick('open-equipamentos')
+                    }
+                  }}
+                >
+                  <div className="ns-dashboard-stat-emoji" aria-hidden>
+                    ⚙️
+                  </div>
+                  <h3 className="ns-dashboard-stat-label">{safeT?.equipamentos || 'Equipamentos'}</h3>
+                  <p className="ns-dashboard-stat-value">{inventarioArmazem.totalAtivos}</p>
+                </div>
+
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="ns-dashboard-stat"
+                  onClick={() => handleButtonClick('open-relatorio-servico')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleButtonClick('open-relatorio-servico')
+                    }
+                  }}
+                >
+                  <div className="ns-dashboard-stat-emoji" aria-hidden>
+                    📋
+                  </div>
+                  <h3 className="ns-dashboard-stat-label">{safeT?.relatorios || 'Relatórios'}</h3>
+                  <p className="ns-dashboard-stat-value">{relatoriosServicoListaPrincipal.length}</p>
+                </div>
+
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="ns-dashboard-stat"
+                  onClick={() => handleButtonClick('open-gestores')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleButtonClick('open-gestores')
+                    }
+                  }}
+                >
+                  <div className="ns-dashboard-stat-emoji" aria-hidden>
+                    👨‍💼
+                  </div>
+                  <h3 className="ns-dashboard-stat-label">{safeT?.gestores || 'Gestores'}</h3>
+                  <p className="ns-dashboard-stat-value">{gestores.length + tecnicos.length}</p>
+                </div>
+              </div>
+
+              {/* Cards de Acesso Rápido — cores distintas por item; respeita permissões */}
               {(() => {
                 const tr = safeT as Record<string, string | undefined>
                 const qaColors = [
@@ -75568,7 +75663,7 @@ A1;Peça exemplo;10`}
                   </div>
                 </div>
               </div>
-                </DashboardFullPanel>
+                </div>
               )}
                 </>
               )}
