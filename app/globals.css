@@ -5630,6 +5630,53 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   gap: 12px;
 }
 
+.cliente-equip-hist__secao {
+  margin-top: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.cliente-equip-hist__secao-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+  list-style: none;
+  user-select: none;
+}
+
+.cliente-equip-hist__secao-summary::-webkit-details-marker {
+  display: none;
+}
+
+.cliente-equip-hist__secao-count {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 204, 102, 0.95);
+}
+
+.cliente-equip-hist__secao-body {
+  padding: 0 16px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cliente-equip-hist__lista-orc {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
 .equipamento-cliente-card-toolbar {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

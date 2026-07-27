@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { localeDatetimeGeneral } from '../translations'
 import {
   PedidoOrcamentoRef,
@@ -11,7 +11,17 @@ import {
   pedidoAvulsoCorrespondeEquipamento,
   pedidoRelatorioPendente,
   findOrcamentoGeradoParaPedidoRelatorio,
+  findOrcamentoGeradoParaPedidoAvulso,
   statusEfetivoPedidoRelatorio,
+  statusEfetivoPedidoAvulso,
+  pedidoAvulsoAprovado,
+  pedidoRelatorioAprovado,
+  pedidoAvulsoCancelado,
+  pedidoRelatorioCancelado,
+  orcamentoGeradoCorrespondeEquipamento,
+  orcamentoGeradoPendente,
+  orcamentoGeradoAprovado,
+  orcamentoGeradoCancelado,
   dedupePedidosRelatorioCliente,
 } from '../lib/clienteEquipamentoOrcamentos'
 import type { OrcamentoGeradoRef } from '../lib/clienteEquipamentoOrcamentos'
@@ -112,8 +122,9 @@ export function ClienteEquipamentoHistoricoPanel({
 
   const [pedidosAvulso, setPedidosAvulso] = useState<PedidoAvulsoRef[]>([])
   const [orcamentosGerados, setOrcamentosGerados] = useState<OrcamentoGeradoRef[]>([])
+  const [reloadTick, setReloadTick] = useState(0)
 
-  useEffect(() => {
+  const recarregarDados = useCallback(() => {
     if (!loadData) return
     loadData(PEDIDOS_AVULSO_KEY)
       .then((data) => {
@@ -125,7 +136,17 @@ export function ClienteEquipamentoHistoricoPanel({
         if (Array.isArray(data)) setOrcamentosGerados(data as OrcamentoGeradoRef[])
       })
       .catch(() => {})
-  }, [loadData, clienteId, equipamentoIndex])
+  }, [loadData])
+
+  useEffect(() => {
+    recarregarDados()
+  }, [recarregarDados, clienteId, equipamentoIndex, reloadTick])
+
+  useEffect(() => {
+    const onChanged = () => setReloadTick((n) => n + 1)
+    window.addEventListener('nonato-equip-orcamentos-changed', onChanged)
+    return () => window.removeEventListener('nonato-equip-orcamentos-changed', onChanged)
+  }, [])
 
   const pedidosFiltrados = useMemo(
     () =>
@@ -158,6 +179,141 @@ export function ClienteEquipamentoHistoricoPanel({
       ),
     [pedidosAvulso, clienteId, equipamento, equipamentoIndex, clienteNome, equipamentosArmazem]
   )
+
+  const numerosRelatorioEquip = useMemo(
+    () =>
+      [
+        ...new Set([
+          ...relatorios.map((r) => r.numero),
+          ...pedidosFiltrados.map((p) => p.numeroRelatorio),
+        ]),
+      ].filter(Boolean),
+    [relatorios, pedidosFiltrados]
+  )
+
+  const orcamentosEquipamento = useMemo(
+    () =>
+      orcamentosGerados.filter((o) =>
+        orcamentoGeradoCorrespondeEquipamento(
+          o,
+          clienteId,
+          equipamento,
+          equipamentoIndex,
+          clienteNome,
+          numerosRelatorioEquip,
+          equipamentosArmazem
+        )
+      ),
+    [
+      orcamentosGerados,
+      clienteId,
+      equipamento,
+      equipamentoIndex,
+      clienteNome,
+      numerosRelatorioEquip,
+      equipamentosArmazem,
+    ]
+  )
+
+  const pedidosOrcamentoPendentes = useMemo(() => {
+    const items: Array<
+      | { tipo: 'pedido-relatorio'; data: PedidoOrcamentoRef }
+      | { tipo: 'pedido-avulso'; data: PedidoAvulsoRef }
+      | { tipo: 'orcamento'; data: OrcamentoGeradoRef }
+    > = []
+    for (const p of pedidosFiltrados) {
+      const orc = findOrcamentoGeradoParaPedidoRelatorio(p, orcamentosEquipamento)
+      const st = statusEfetivoPedidoRelatorio(p, orc)
+      if (pedidoRelatorioPendente(st) && !pedidoRelatorioCancelado(st)) {
+        items.push({ tipo: 'pedido-relatorio', data: p })
+      }
+    }
+    for (const p of pedidosAvulsoFiltrados) {
+      const orc = findOrcamentoGeradoParaPedidoAvulso(p, orcamentosEquipamento)
+      if (pedidoAvulsoCancelado(p, orc)) continue
+      const st = statusEfetivoPedidoAvulso(p, orc)
+      if (pedidoAvulsoAprovado(st)) continue
+      if (
+        orc &&
+        (orc.workflowStatus === 'gerado' ||
+          orc.workflowStatus === 'cotacao_recebida' ||
+          orcamentoGeradoPendente(orc.status))
+      ) {
+        continue
+      }
+      items.push({ tipo: 'pedido-avulso', data: p })
+    }
+    for (const o of orcamentosEquipamento) {
+      if (orcamentoGeradoCancelado(o.status)) continue
+      if (orcamentoGeradoAprovado(o.status)) continue
+      if (o.workflowStatus === 'enviado_fornecedor') continue
+      if (
+        o.workflowStatus === 'gerado' ||
+        o.workflowStatus === 'cotacao_recebida' ||
+        orcamentoGeradoPendente(o.status)
+      ) {
+        items.push({ tipo: 'orcamento', data: o })
+      }
+    }
+    return items
+  }, [pedidosFiltrados, pedidosAvulsoFiltrados, orcamentosEquipamento])
+
+  const orcamentosAprovados = useMemo(() => {
+    const items: Array<
+      | { tipo: 'pedido-relatorio'; data: PedidoOrcamentoRef }
+      | { tipo: 'pedido-avulso'; data: PedidoAvulsoRef }
+      | { tipo: 'orcamento'; data: OrcamentoGeradoRef }
+    > = []
+    const orcNums = new Set<string>()
+    for (const p of pedidosFiltrados) {
+      const orc = findOrcamentoGeradoParaPedidoRelatorio(p, orcamentosEquipamento)
+      const st = statusEfetivoPedidoRelatorio(p, orc)
+      if (pedidoRelatorioAprovado(st)) {
+        items.push({ tipo: 'pedido-relatorio', data: p })
+        if (orc) orcNums.add(orc.id)
+      }
+    }
+    for (const p of pedidosAvulsoFiltrados) {
+      const orc = findOrcamentoGeradoParaPedidoAvulso(p, orcamentosEquipamento)
+      const st = statusEfetivoPedidoAvulso(p, orc)
+      if (pedidoAvulsoAprovado(st)) {
+        items.push({ tipo: 'pedido-avulso', data: p })
+        if (orc) orcNums.add(orc.id)
+      }
+    }
+    for (const o of orcamentosEquipamento) {
+      if (orcamentoGeradoCancelado(o.status)) continue
+      if (orcNums.has(o.id)) continue
+      if (
+        orcamentoGeradoAprovado(o.status) ||
+        o.workflowStatus === 'pedido_confirmado' ||
+        o.workflowStatus === 'aguardando_separacao' ||
+        o.workflowStatus === 'mercadoria_recebida'
+      ) {
+        items.push({ tipo: 'orcamento', data: o })
+      }
+    }
+    return items
+  }, [pedidosFiltrados, pedidosAvulsoFiltrados, orcamentosEquipamento])
+
+  const orcamentosCancelados = useMemo(() => {
+    const items: Array<
+      | { tipo: 'pedido-relatorio'; data: PedidoOrcamentoRef }
+      | { tipo: 'pedido-avulso'; data: PedidoAvulsoRef }
+      | { tipo: 'orcamento'; data: OrcamentoGeradoRef }
+    > = []
+    for (const p of pedidosFiltrados) {
+      if (pedidoRelatorioCancelado(p.status)) items.push({ tipo: 'pedido-relatorio', data: p })
+    }
+    for (const p of pedidosAvulsoFiltrados) {
+      const orc = findOrcamentoGeradoParaPedidoAvulso(p, orcamentosEquipamento)
+      if (pedidoAvulsoCancelado(p, orc)) items.push({ tipo: 'pedido-avulso', data: p })
+    }
+    for (const o of orcamentosEquipamento) {
+      if (orcamentoGeradoCancelado(o.status)) items.push({ tipo: 'orcamento', data: o })
+    }
+    return items
+  }, [pedidosFiltrados, pedidosAvulsoFiltrados, orcamentosEquipamento])
 
   const gruposPorNumero = useMemo(() => {
     type Grupo = {
@@ -214,7 +370,55 @@ export function ClienteEquipamentoHistoricoPanel({
     </ul>
   )
 
-  if (gruposPorNumero.length === 0 && pedidosAvulsoFiltrados.length === 0) {
+  const renderCardOrcamento = (o: OrcamentoGeradoRef, tag: string) => (
+    <div key={`orc-${o.id}`} className="cliente-equip-hist__pedido-card">
+      <div className="cliente-equip-hist__pedido-head">
+        <span className="cliente-equip-hist__pedido-cod">{o.numeroOrcamento}</span>
+        <span className="cliente-equip-hist__badge is-aprovado">{tag}</span>
+      </div>
+      {o.relatorioNumero && (
+        <p className="cliente-equip-hist__line">
+          {tr('numeroRelatorio')}: {o.relatorioNumero}
+        </p>
+      )}
+      <p className="cliente-equip-hist__line">{o.descricao || '—'}</p>
+      <p className="cliente-equip-hist__line">
+        {fmtDate(o.dataCriacao || o.data)}
+        {typeof o.total === 'number' && o.total > 0 ? ` · ${o.total.toFixed(2)} €` : ''}
+      </p>
+    </div>
+  )
+
+  const renderSecaoResumo = (
+    titulo: string,
+    count: number,
+    empty: string,
+    children: React.ReactNode,
+    open = count > 0
+  ) => (
+    <details className="cliente-equip-hist__secao" open={open}>
+      <summary className="cliente-equip-hist__secao-summary">
+        {titulo} <span className="cliente-equip-hist__secao-count">{count}</span>
+      </summary>
+      <div className="cliente-equip-hist__secao-body">
+        {count === 0 ? <p className="cliente-equip-hist__col-empty">{empty}</p> : children}
+      </div>
+    </details>
+  )
+
+  const badgeWorkflow = (o: OrcamentoGeradoRef) => {
+    if (o.workflowStatus === 'pedido_confirmado') return tr('pedidoConfirmado')
+    if (o.workflowStatus === 'mercadoria_recebida') return tr('mercadoriaRecebida')
+    if (o.workflowStatus === 'gerado') return tr('aguardaAprovacao')
+    if (o.workflowStatus === 'cotacao_recebida') return tr('cotacaoRecebida')
+    return tr('aguardaAprovacao')
+  }
+
+  if (
+    gruposPorNumero.length === 0 &&
+    pedidosAvulsoFiltrados.length === 0 &&
+    orcamentosEquipamento.length === 0
+  ) {
     return (
       <div className="cliente-equip-hist cliente-equip-hist--empty">
         <p className="cliente-equip-hist__empty">{tr('nenhumHistoricoEquipamento')}</p>
@@ -229,13 +433,18 @@ export function ClienteEquipamentoHistoricoPanel({
         {equipLabel && <p className="cliente-equip-hist__equip-label">{equipLabel}</p>}
         <p className="cliente-equip-hist__hint">{tr('equipHistoricoIsoladoHint')}</p>
         <p className="cliente-equip-hist__meta">
-          {gruposPorNumero.length} {tr('relatoriosNumerados')} · {pedidosAvulsoFiltrados.length}{' '}
-          {tr('avulsos')}
+          {gruposPorNumero.length} {tr('relatoriosNumerados')} · {pedidosOrcamentoPendentes.length}{' '}
+          {tr('pedidosOrcamento').toLowerCase()} · {orcamentosAprovados.length} {tr('aprovado').toLowerCase()}
+          {orcamentosCancelados.length > 0 ? ` · ${orcamentosCancelados.length} ${tr('cancelado').toLowerCase()}` : ''}
         </p>
       </div>
 
-      <div className="cliente-equip-hist__grupos">
-        {gruposPorNumero.map((grupo) => {
+      {renderSecaoResumo(
+        `📋 ${tr('relatorioServico')} / ${tr('relatoriosNumerados').replace(/\(s\).*/, '')}`,
+        gruposPorNumero.length,
+        tr('nenhumHistoricoEquipamento'),
+        <div className="cliente-equip-hist__grupos">
+          {gruposPorNumero.map((grupo) => {
           const rel = grupo.relatorio
           const temPecasNoRel = rel ? relatorioTemPecas(rel) : false
           const pecasRel = rel ? todasPecasRelatorio(rel) : []
@@ -319,7 +528,7 @@ export function ClienteEquipamentoHistoricoPanel({
                     <p className="cliente-equip-hist__col-empty">{tr('semPedidoPecasRelatorio')}</p>
                   ) : (
                     grupo.pedidosPecas.map((pedido) => {
-                      const orc = findOrcamentoGeradoParaPedidoRelatorio(pedido, orcamentosGerados)
+                      const orc = findOrcamentoGeradoParaPedidoRelatorio(pedido, orcamentosEquipamento)
                       const status = statusEfetivoPedidoRelatorio(pedido, orc)
                       const badge = badgePedido(status)
                       const pecas = pedido.pecas ?? []
@@ -368,22 +577,74 @@ export function ClienteEquipamentoHistoricoPanel({
             </article>
           )
         })}
-      </div>
+        </div>,
+        gruposPorNumero.length > 0
+      )}
 
-      {pedidosAvulsoFiltrados.length > 0 && (
-        <section className="cliente-equip-hist__avulsos">
-          <h4 className="cliente-equip-hist__avulsos-title">🧩 {tr('pecasAvulsas')}</h4>
-          <div className="cliente-equip-hist__avulsos-list">
-            {pedidosAvulsoFiltrados.map((p) => {
-              const badge =
-                p.status === 'aprovado' ? tr('aprovado') : tr('aguardaAprovacao')
+      {renderSecaoResumo(
+        `📨 ${tr('pedidosOrcamento')}`,
+        pedidosOrcamentoPendentes.length,
+        tr('semPedidoPecasRelatorio'),
+        <div className="cliente-equip-hist__lista-orc">
+          {pedidosOrcamentoPendentes.map((item) => {
+            if (item.tipo === 'pedido-relatorio') {
+              const pedido = item.data
+              const orc = findOrcamentoGeradoParaPedidoRelatorio(pedido, orcamentosEquipamento)
+              const status = statusEfetivoPedidoRelatorio(pedido, orc)
+              const badge = badgePedido(status)
+              const pecas = pedido.pecas ?? []
               return (
-                <div key={p.codigo} className="cliente-equip-hist__pedido-card">
+                <div key={`pend-rel-${pedido.id}`} className="cliente-equip-hist__pedido-card">
+                  <div className="cliente-equip-hist__pedido-head">
+                    <span className="cliente-equip-hist__pedido-cod">
+                      {pedido.codigo || pedido.numeroRelatorio}
+                    </span>
+                    <span className={`cliente-equip-hist__badge ${badge.cls}`}>{badge.label}</span>
+                  </div>
+                  <p className="cliente-equip-hist__line">
+                    {tr('numeroRelatorio')}: {pedido.numeroRelatorio}
+                  </p>
+                  {pecas.length > 0 ? (
+                    renderListaPecas(pecas, `pend-rel-${pedido.id}`)
+                  ) : (
+                    <p className="cliente-equip-hist__col-empty">{tr('pedidoSemPecas')}</p>
+                  )}
+                  <div className="cliente-equip-hist__pedido-actions">
+                    {onVisualizarPdfRelatorio && (
+                      <button
+                        type="button"
+                        className="cliente-equip-hist__btn"
+                        onClick={() => onVisualizarPdfRelatorio(pedido)}
+                      >
+                        👁️ {tr('visualizarPdfBtn')}
+                      </button>
+                    )}
+                    {onUpdatePedidoRelatorioStatus && pedidoRelatorioPendente(status) && (
+                      <button
+                        type="button"
+                        className="cliente-equip-hist__btn cliente-equip-hist__btn--ok"
+                        onClick={() => onUpdatePedidoRelatorioStatus(pedido.id, 'aprovado')}
+                      >
+                        ✓ {tr('aprovar')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            }
+            if (item.tipo === 'pedido-avulso') {
+              const p = item.data
+              const wf = p.workflowStatus === 'enviado_fornecedor' ? tr('statusEnviado') : tr('aguardaAprovacao')
+              return (
+                <div key={`pend-av-${p.codigo}`} className="cliente-equip-hist__pedido-card">
                   <div className="cliente-equip-hist__pedido-head">
                     <span className="cliente-equip-hist__pedido-cod">{p.codigo}</span>
-                    <span className="cliente-equip-hist__badge is-pendente">{badge}</span>
+                    <span className="cliente-equip-hist__badge is-pendente">{wf}</span>
                   </div>
-                  {(p.pecas?.length ?? 0) > 0 && renderListaPecas(p.pecas!, `av-${p.codigo}`)}
+                  {p.equipamentoTexto && (
+                    <p className="cliente-equip-hist__line">{p.equipamentoTexto}</p>
+                  )}
+                  {(p.pecas?.length ?? 0) > 0 && renderListaPecas(p.pecas!, `pend-av-${p.codigo}`)}
                   <div className="cliente-equip-hist__pedido-actions">
                     {onVisualizarPdfAvulso && (
                       <button
@@ -397,9 +658,134 @@ export function ClienteEquipamentoHistoricoPanel({
                   </div>
                 </div>
               )
-            })}
-          </div>
-        </section>
+            }
+            const o = item.data
+            return (
+              <div key={`pend-orc-${o.id}`} className="cliente-equip-hist__pedido-card">
+                <div className="cliente-equip-hist__pedido-head">
+                  <span className="cliente-equip-hist__pedido-cod">{o.numeroOrcamento}</span>
+                  <span className="cliente-equip-hist__badge is-pendente">{badgeWorkflow(o)}</span>
+                </div>
+                <p className="cliente-equip-hist__line">{o.descricao || '—'}</p>
+                <p className="cliente-equip-hist__line">
+                  {fmtDate(o.dataCriacao || o.data)}
+                  {typeof o.total === 'number' && o.total > 0 ? ` · ${o.total.toFixed(2)} €` : ''}
+                </p>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {renderSecaoResumo(
+        `✅ ${tr('aprovado')} — ${tr('orcamentosGerados')}`,
+        orcamentosAprovados.length,
+        tr('nenhumOrcamentoEquipamento'),
+        <div className="cliente-equip-hist__lista-orc">
+          {orcamentosAprovados.map((item) => {
+            if (item.tipo === 'pedido-relatorio') {
+              const pedido = item.data
+              const orc = findOrcamentoGeradoParaPedidoRelatorio(pedido, orcamentosEquipamento)
+              return (
+                <div key={`ap-rel-${pedido.id}`} className="cliente-equip-hist__pedido-card">
+                  <div className="cliente-equip-hist__pedido-head">
+                    <span className="cliente-equip-hist__pedido-cod">
+                      {pedido.codigo || pedido.numeroRelatorio}
+                    </span>
+                    <span className="cliente-equip-hist__badge is-aprovado">{tr('aprovado')}</span>
+                  </div>
+                  <p className="cliente-equip-hist__line">
+                    {tr('numeroRelatorio')}: {pedido.numeroRelatorio}
+                  </p>
+                  {orc && (
+                    <p className="cliente-equip-hist__line">
+                      {tr('orcamentosGerados')}: {orc.numeroOrcamento}
+                      {typeof orc.total === 'number' && orc.total > 0 ? ` · ${orc.total.toFixed(2)} €` : ''}
+                    </p>
+                  )}
+                </div>
+              )
+            }
+            if (item.tipo === 'pedido-avulso') {
+              const p = item.data
+              const orc = findOrcamentoGeradoParaPedidoAvulso(p, orcamentosEquipamento)
+              const tag =
+                orc?.workflowStatus === 'mercadoria_recebida'
+                  ? tr('mercadoriaRecebida') || 'Mercadoria recebida'
+                  : orc?.workflowStatus === 'pedido_confirmado'
+                    ? tr('pedidoConfirmado') || 'Pedido confirmado'
+                    : tr('aprovado')
+              return (
+                <div key={`ap-av-${p.codigo}`} className="cliente-equip-hist__pedido-card">
+                  <div className="cliente-equip-hist__pedido-head">
+                    <span className="cliente-equip-hist__pedido-cod">{p.codigo}</span>
+                    <span className="cliente-equip-hist__badge is-aprovado">{tag}</span>
+                  </div>
+                  {orc && (
+                    <p className="cliente-equip-hist__line">
+                      {orc.descricao || p.equipamentoTexto || '—'}
+                      {typeof orc.total === 'number' && orc.total > 0 ? ` · ${orc.total.toFixed(2)} €` : ''}
+                    </p>
+                  )}
+                </div>
+              )
+            }
+            const o = item.data
+            return renderCardOrcamento(o, badgeWorkflow(o))
+          })}
+        </div>
+      )}
+
+      {renderSecaoResumo(
+        `❌ ${tr('cancelado')} / ${tr('rejeitado')}`,
+        orcamentosCancelados.length,
+        tr('nenhumOrcamentoFiltro'),
+        <div className="cliente-equip-hist__lista-orc">
+          {orcamentosCancelados.map((item) => {
+            if (item.tipo === 'pedido-relatorio') {
+              const pedido = item.data
+              const badge = badgePedido(pedido.status)
+              return (
+                <div key={`cx-rel-${pedido.id}`} className="cliente-equip-hist__pedido-card">
+                  <div className="cliente-equip-hist__pedido-head">
+                    <span className="cliente-equip-hist__pedido-cod">
+                      {pedido.codigo || pedido.numeroRelatorio}
+                    </span>
+                    <span className={`cliente-equip-hist__badge ${badge.cls}`}>{badge.label}</span>
+                  </div>
+                  <p className="cliente-equip-hist__line">
+                    {tr('numeroRelatorio')}: {pedido.numeroRelatorio}
+                  </p>
+                </div>
+              )
+            }
+            if (item.tipo === 'pedido-avulso') {
+              const p = item.data
+              return (
+                <div key={`cx-av-${p.codigo}`} className="cliente-equip-hist__pedido-card">
+                  <div className="cliente-equip-hist__pedido-head">
+                    <span className="cliente-equip-hist__pedido-cod">{p.codigo}</span>
+                    <span className="cliente-equip-hist__badge is-rejeitado">{tr('cancelado')}</span>
+                  </div>
+                  {p.equipamentoTexto && (
+                    <p className="cliente-equip-hist__line">{p.equipamentoTexto}</p>
+                  )}
+                </div>
+              )
+            }
+            const o = item.data
+            return (
+              <div key={`cx-orc-${o.id}`} className="cliente-equip-hist__pedido-card">
+                <div className="cliente-equip-hist__pedido-head">
+                  <span className="cliente-equip-hist__pedido-cod">{o.numeroOrcamento}</span>
+                  <span className="cliente-equip-hist__badge is-rejeitado">{tr('cancelado')}</span>
+                </div>
+                <p className="cliente-equip-hist__line">{o.descricao || '—'}</p>
+              </div>
+            )
+          })}
+        </div>,
+        false
       )}
     </div>
   )

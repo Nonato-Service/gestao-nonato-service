@@ -20,6 +20,7 @@ import {
 import { resolverIdEquipamentoCliente } from '../lib/relatorioServicoEquipamentos'
 import { ProImageHoverPreview } from './ProImageHoverPreview'
 import type { OrcamentoWorkflowStatus } from '../lib/orcamentoWorkflow'
+import { notifyEquipamentoOrcamentosChanged } from '../lib/orcamentoWorkflow'
 
 export type ClientePedido = {
   id: string
@@ -873,6 +874,7 @@ export function PedidoOrcamentosAvulsoContent({
       (safeT as Record<string, string | undefined>)?.poaCotacaoRecebidaAbrirOrcamentos ||
         `Cotação recebida registada para ${pedido.codigo}.\n\nAbra «Orçamentos Avulso», aplique os valores do fornecedor, guarde e envie o orçamento ao cliente.`
     )
+    notifyEquipamentoOrcamentosChanged()
     onGerarOrcamento?.()
   }
 
@@ -887,6 +889,7 @@ export function PedidoOrcamentosAvulsoContent({
         console.error('Erro ao excluir pedido:', err)
       }
     }
+    notifyEquipamentoOrcamentosChanged()
   }
 
   const handleGerarPedido = async () => {
@@ -1043,6 +1046,7 @@ export function PedidoOrcamentosAvulsoContent({
     const blocoReset = criarBlocoEquipamentoVazio()
     setBlocosEquipamento([blocoReset])
     setBlocoAtivoId(blocoReset.id)
+    notifyEquipamentoOrcamentosChanged()
     onGerarOrcamento?.()
   }
 

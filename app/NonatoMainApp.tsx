@@ -283,6 +283,7 @@ import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import {
   criarPedidoSeparacaoFromOrcamento,
   pedidoSeparacaoJaExiste,
+  notifyEquipamentoOrcamentosChanged,
   type OrcamentoWorkflowOrc,
 } from './lib/orcamentoWorkflow'
 import { ClienteEquipamentoHistoricoPanel } from './components/ClienteEquipamentoHistoricoPanel'
@@ -25417,6 +25418,7 @@ export default function Dashboard() {
       )
       await saveData('nonato-orcamentos-avulso', novosOrcamentos)
     } catch (_) {}
+    notifyEquipamentoOrcamentosChanged()
   }
 
   const imprimirRelatorioPecasEDespesas = (rel: RelatorioServico) => {

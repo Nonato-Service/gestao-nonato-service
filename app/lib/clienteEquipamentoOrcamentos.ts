@@ -38,11 +38,13 @@ export type PedidoAvulsoRef = {
   equipamentoTexto: string
   equipamentoChave?: string
   equipamentoNumeroSerie?: string
-  emitirComoCliente: 'cliente' | 'nonato-service'
+  emitirComoCliente?: 'cliente' | 'nonato-service'
+  workflowStatus?: string
   status?: 'pendente' | 'cancelado' | 'concluido' | 'aprovado' | 'entregue'
   numeroNotaFiscalEntrega?: string
   entregaConfirmadaEm?: string
   geradoEm?: string
+  cotacaoRecebidaEm?: string
   pecas?: Array<{ codigo: string; nome: string; quantidade: number; imagem?: string }>
 }
 
@@ -53,6 +55,7 @@ export type OrcamentoGeradoRef = {
   descricao?: string
   tipo?: string
   status?: 'pendente' | 'cancelado' | 'concluido' | 'aprovado' | 'entregue'
+  workflowStatus?: string
   clienteId?: string
   clienteNome?: string
   relatorioId?: string
@@ -224,6 +227,49 @@ export function findOrcamentoGeradoParaPedidoRelatorio(
   const num = String(pedido.numeroRelatorio ?? '').trim()
   if (!num) return undefined
   return orcamentos.find((o) => String(o.relatorioNumero ?? '').trim() === num)
+}
+
+export function findOrcamentoGeradoParaPedidoAvulso(
+  pedido: PedidoAvulsoRef,
+  orcamentos: OrcamentoGeradoRef[]
+): OrcamentoGeradoRef | undefined {
+  const byId = orcamentos.find((o) => o.id === `avulso-${pedido.codigo}`)
+  if (byId) return byId
+  return orcamentos.find((o) => o.numeroOrcamento === pedido.codigo && o.tipo === 'pedido-avulso')
+}
+
+/** Estado real do pedido avulso — considera orçamento gerado ligado. */
+export function statusEfetivoPedidoAvulso(
+  pedido: PedidoAvulsoRef,
+  orcamento?: OrcamentoGeradoRef | null
+): PedidoAvulsoRef['status'] {
+  const rank: Record<NonNullable<PedidoAvulsoRef['status']>, number> = {
+    pendente: 0,
+    cancelado: 1,
+    aprovado: 3,
+    concluido: 4,
+    entregue: 5,
+  }
+  let best: PedidoAvulsoRef['status'] = pedido.status || 'pendente'
+  const fromOrc = orcamento?.status
+  if (fromOrc && rank[fromOrc] > rank[best]) best = fromOrc
+  return best
+}
+
+export function pedidoAvulsoCancelado(
+  pedido: PedidoAvulsoRef,
+  orcamento?: OrcamentoGeradoRef | null
+): boolean {
+  const st = statusEfetivoPedidoAvulso(pedido, orcamento)
+  return st === 'cancelado' || orcamento?.status === 'cancelado'
+}
+
+export function orcamentoGeradoCancelado(status?: OrcamentoGeradoRef['status']): boolean {
+  return status === 'cancelado'
+}
+
+export function pedidoRelatorioCancelado(status: PedidoOrcamentoRef['status']): boolean {
+  return status === 'rejeitado'
 }
 
 /** Estado real do pedido — considera orçamento gerado ligado (ex.: aprovado em Orçamentos Gerados). */

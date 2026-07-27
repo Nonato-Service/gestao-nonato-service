@@ -14,6 +14,7 @@ import {
   orcamentoAguardandoConfirmacaoCliente,
   orcamentoPedidoConfirmado,
   orcamentoMercadoriaRecebida,
+  notifyEquipamentoOrcamentosChanged,
 } from '../lib/orcamentoWorkflow'
 import {
   ORCAMENTOS_ALFABETO_INDICE,
@@ -227,10 +228,14 @@ export function OrcamentosGeradosBrowse({
     const orc = novos.find((o) => o.id === id)
     if (orc?.tipo === 'pedido-avulso') {
       const codigo = orc.numeroOrcamento
-      await sincronizarPedidoAvulso(codigo, patch as Partial<PedidoAvulsoRef>)
+      await sincronizarPedidoAvulso(codigo, {
+        ...(patch as Partial<PedidoAvulsoRef>),
+        status: patch.status as PedidoAvulsoRef['status'],
+      })
     } else if (orc) {
       await sincronizarPedidoRelatorio(orc, patch)
     }
+    notifyEquipamentoOrcamentosChanged()
   }
 
   const aprovarOrcamento = async (id: string) => {
