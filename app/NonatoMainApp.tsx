@@ -52640,7 +52640,7 @@ A1;Peça exemplo;10`}
                           {temLinhasManuaisFechamento && (
                             <td>
                               {eManual ? (
-                                <select value={item.servicoId || ''} onChange={e => { const sid = e.target.value; const s = servicos.find(sv => sv.id === sid); if (s) aplicarServico(item.id, s) }} style={{ width: '100%', fontSize: '12px' }}>
+                                <select className="fechamento-itens-servico-select" value={item.servicoId || ''} onChange={e => { const sid = e.target.value; const s = servicos.find(sv => sv.id === sid); if (s) aplicarServico(item.id, s) }}>
                                   <option value="">{(safeT as any)?.selecioneServicoAnexar || '— Selecionar serviço (código, descrição, valor) —'}</option>
                                   {servicosParaItem(item).map((s) => (
                                     <option key={s.id} value={s.id}>
