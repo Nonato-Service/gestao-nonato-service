@@ -6,8 +6,9 @@ const PAN_ROOT_ID = 'mobile-pan-root'
 const MIN_SCALE = 1
 const MAX_SCALE = 4
 const ZOOM_SENSITIVITY = 0.075
-const MIN_PINCH_DIST = 72
-const PINCH_CAPTURE_DELTA_PX = 14
+const MIN_PINCH_DIST = 96
+const PINCH_CAPTURE_DELTA_PX = 22
+const ZOOM_ACTIVE_SCALE = 1.045
 
 const SCROLL_NATIVE_SELECTORS = [
   '.sidebar-scroll-inner',
@@ -216,7 +217,7 @@ export function MobileBrowserZoomPan() {
       const scale = scaleRef.current
       const { x, y } = panRef.current
       const { x: ox, y: oy } = originRef.current
-      const zoomed = scale > 1.008
+      const zoomed = scale > ZOOM_ACTIVE_SCALE
 
       if (surface.mode === 'root') {
         setGlobalZoomedClass(zoomed)

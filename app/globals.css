@@ -4260,6 +4260,27 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
   button {
     font-size: 16px !important;
   }
+  /* Tabelas e controlos compactos: alinhar com o resto da linha (Android não exige 16px anti-zoom) */
+  .fechamento-itens-table input,
+  .fechamento-itens-table select,
+  .fechamento-itens-table button,
+  .cadastro-valores-v2__table input,
+  .cadastro-valores-v2__table select,
+  .cadastro-valores-v2__table button,
+  .fechamento-itens-servico-select,
+  .fechamento-itens-btn-diaria,
+  .fechamento-itens-btn-retirar,
+  .bottom-tab-item,
+  .mobile-menu-toggle,
+  .mobile-header-action-btn,
+  .mobile-refresh-toggle {
+    font-size: 14px !important;
+  }
+  .fechamento-itens-table input,
+  .fechamento-itens-table select,
+  .fechamento-itens-servico-select {
+    min-height: 40px !important;
+  }
   input,
   select,
   textarea {
@@ -4412,11 +4433,14 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
   }
   /* Não usar flex:1 + min-height:0 aqui: quebrava a altura do conteúdo das abas no telefone (só o dashboard rolava). A rolagem das abas está no .tab-inner-scroll. */
   .tab-content-wrapper {
-    padding: 4px !important;
+    padding: 10px max(8px, env(safe-area-inset-left, 0px)) 10px max(8px, env(safe-area-inset-right, 0px)) !important;
     max-width: 100% !important;
   }
+  .app-compact-layout .tab-content-wrapper {
+    padding: 10px max(8px, env(safe-area-inset-left, 0px)) 10px max(8px, env(safe-area-inset-right, 0px)) !important;
+  }
   .main-content-area {
-    padding: 4px !important;
+    padding: 8px max(8px, env(safe-area-inset-left, 0px)) 8px max(8px, env(safe-area-inset-right, 0px)) !important;
     flex: 1 !important;
     min-height: 50vh !important;
     overflow-y: auto !important;
@@ -4427,6 +4451,11 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
    */
   .app-compact-layout .main-content-area {
     min-height: 0 !important;
+  }
+  /* Gaveta compacta: rolar só no .tab-inner-scroll (evita scroll duplo / “morto” no telemóvel) */
+  .app-compact-layout .main-content-area.main-content-area-tab-open {
+    overflow: hidden !important;
+    overflow-y: hidden !important;
   }
   /* Logo da barra lateral — não esmagar (antes 60px cortava a imagem) */
   .sidebar > div:first-child.sidebar-brand,
@@ -6286,19 +6315,24 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   }
 }
 
-/* Telemóvel pequeno (Chrome): uma só camada, scroll interno, sem sobreposição */
+/* Telemóvel pequeno (Chrome / rugged ex. Armor 33 Pro): scroll interno, menos chrome vertical */
 @media (max-width: 480px) and (pointer: coarse) {
   .app-compact-layout {
-    padding-top: calc(48px + env(safe-area-inset-top, 0px)) !important;
+    padding-top: calc(46px + env(safe-area-inset-top, 0px)) !important;
   }
 
   .app-layout.app-compact-layout.app-has-bottom-tabs {
-    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .app-has-bottom-tabs .tab-inner-scroll {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+    scroll-padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
   }
 
   .mobile-app-header {
-    height: 48px !important;
-    min-height: calc(48px + env(safe-area-inset-top, 0px)) !important;
+    height: 46px !important;
+    min-height: calc(46px + env(safe-area-inset-top, 0px)) !important;
     gap: 8px !important;
     padding-left: max(8px, env(safe-area-inset-left)) !important;
     padding-right: max(8px, env(safe-area-inset-right)) !important;
@@ -6320,12 +6354,16 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   }
 
   .app-compact-layout .main-content-area:not(.main-content-area-tab-open) {
-    padding: 4px max(4px, env(safe-area-inset-left, 0px)) 6px max(4px, env(safe-area-inset-right, 0px)) !important;
+    padding: 8px max(8px, env(safe-area-inset-left, 0px)) 8px max(8px, env(safe-area-inset-right, 0px)) !important;
   }
 
   .app-compact-layout .tab-inner-scroll {
-    padding: 6px max(4px, env(safe-area-inset-left, 0px)) 8px max(4px, env(safe-area-inset-right, 0px)) !important;
+    padding: 10px max(8px, env(safe-area-inset-left, 0px)) 12px max(8px, env(safe-area-inset-right, 0px)) !important;
     touch-action: pan-y pinch-zoom;
+  }
+
+  .app-compact-layout .tab-content-wrapper {
+    padding: 10px max(8px, env(safe-area-inset-left, 0px)) 10px max(8px, env(safe-area-inset-right, 0px)) !important;
   }
 
   /* Telemóvel pequeno: scroll visível em todas as abas */
@@ -6356,20 +6394,39 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   }
 
   .app-compact-layout .mobile-sticky-toolbar {
-    margin: -4px -4px 8px -4px !important;
+    margin: -6px -6px 10px -6px !important;
     padding: 8px !important;
     gap: 6px !important;
   }
 
   .bottom-tabs-bar {
-    left: 6px !important;
-    right: 6px !important;
-    min-height: 50px !important;
-    bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 8px !important;
+    right: 8px !important;
+    min-height: 46px !important;
+    bottom: calc(6px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .bottom-tabs-brand-img {
-    height: 30px !important;
+    height: 28px !important;
+  }
+
+  .bottom-tab-item {
+    min-height: 40px !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+  }
+
+  .sidebar .sidebar-brand,
+  .sidebar > div:first-child.sidebar-brand {
+    max-height: min(18vh, 112px) !important;
+    min-height: 56px !important;
+  }
+
+  .sidebar .sidebar-brand.sidebar-brand--has-media,
+  .sidebar > div:first-child.sidebar-brand.sidebar-brand--has-media {
+    height: min(18vh, 112px) !important;
+    max-height: min(18vh, 112px) !important;
+    min-height: min(56px, min(18vh, 112px)) !important;
   }
 
   .cliente-lista-linhas__row {
