@@ -360,8 +360,8 @@ export function CadastroServicosContent(props: Props) {
       {activeTab === 'grupos' && (
         <div className="cadastro-valores-v2__layout orcamento-pecas-especiais-form">
           <aside className="cadastro-valores-v2__sidebar">
-            <h3 className="cadastro-valores-v2__card-title">{safeT.servicosGruposTitulo || 'Grupos de tarifa'}</h3>
-            <p className="cadastro-valores-v2__card-hint">
+            <h3>{safeT.servicosGruposTitulo || 'Grupos de tarifa'}</h3>
+            <p className="orcamento-pecas-especiais-hint">
               {safeT.servicosGruposAjuda ||
                 'Crie grupos (ex.: NONATO SERVICE, HOMAG USA). Em cada grupo, cadastre HTT e demais valores — os clientes do mesmo grupo usam esta tabela.'}
             </p>
