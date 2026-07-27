@@ -280,6 +280,11 @@ import { AlfabetoIndiceBusca } from './components/AlfabetoIndiceBusca'
 import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
+import {
+  criarPedidoSeparacaoFromOrcamento,
+  pedidoSeparacaoJaExiste,
+  type OrcamentoWorkflowOrc,
+} from './lib/orcamentoWorkflow'
 import { ClienteEquipamentoHistoricoPanel } from './components/ClienteEquipamentoHistoricoPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
 import {
@@ -71093,6 +71098,10 @@ A1;Peça exemplo;10`}
                     orcamentoEditando || undefined
                   )
 
+                  const totalOrc =
+                    tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo'
+                      ? 0
+                      : calcularTotal()
                   const novoOrcamento = {
                     id: orcamentoEditando || Date.now().toString(),
                     numeroOrcamento: numeroFinal,
@@ -71101,13 +71110,14 @@ A1;Peça exemplo;10`}
                     descricao: dadosOrcamento.descricao,
                     observacoes: dadosOrcamento.observacoes,
                     tipo: tipoOrcamento,
+                    workflowStatus: totalOrc > 0 ? ('gerado' as const) : undefined,
                     clienteId: clienteSelecionado?.id || relatorioSelecionado?.clienteId || (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo ? clienteCadastroPrioritarioFixo.id : undefined),
                     clienteNome: dadosClienteFinal?.nomeEmpresa || clienteSelecionado?.nomeEmpresa || relatorioSelecionado?.cliente || (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo ? clienteCadastroPrioritarioFixo.nomeEmpresa : dadosNonatoService.nomeEmpresa),
                     relatorioId: relatorioSelecionado?.id,
                     relatorioNumero: relatorioSelecionado?.numero,
                     dadosCliente: dadosClienteFinal,
                     itens: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? [] : normalizarItensOrcamentoGravados(dadosOrcamento.itens),
-                    total: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? 0 : calcularTotal(),
+                    total: totalOrc,
                     totalSemIva: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? 0 : calcularTotalSemIva(),
                     totalIva: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? 0 : calcularTotalIva(),
                     dataCriacao: orcamentoEditando
@@ -71430,6 +71440,56 @@ A1;Peça exemplo;10`}
                 saveData={saveData}
                 loadData={loadData}
                 onOrcamentosChange={setOrcamentosGerados}
+                onPedidoConfirmado={async (orc) => {
+                  if (pedidoSeparacaoJaExiste(pedidosSeparacao, orc.numeroOrcamento)) {
+                    alert(
+                      safeT?.pedidoSeparacaoJaExiste ||
+                        `Já existe pedido de separação para o orçamento ${orc.numeroOrcamento}.`
+                    )
+                    return
+                  }
+                  const novoPedido = criarPedidoSeparacaoFromOrcamento(
+                    orc as OrcamentoWorkflowOrc,
+                    pecasBiblioteca
+                  )
+                  const novosPedidos = [...pedidosSeparacao, novoPedido]
+                  setPedidosSeparacao(novosPedidos)
+                  await saveData('nonato-pedidos-separacao', novosPedidos)
+                  alert(
+                    (safeT?.pedidoConfirmadoSeparacao ||
+                      'Pedido confirmado! Orçamento {num} enviado para separação no armazém.').replace(
+                      '{num}',
+                      orc.numeroOrcamento
+                    )
+                  )
+                }}
+                onMercadoriaRecebida={async (orc) => {
+                  if (pedidoSeparacaoJaExiste(pedidosSeparacao, orc.numeroOrcamento)) {
+                    alert(
+                      (safeT?.mercadoriaRecebidaSeparacao ||
+                        'Orçamento {num} — mercadoria registada. Verifique a separação no armazém.').replace(
+                        '{num}',
+                        orc.numeroOrcamento
+                      )
+                    )
+                    return
+                  }
+                  const novoPedido = criarPedidoSeparacaoFromOrcamento(
+                    orc as OrcamentoWorkflowOrc,
+                    pecasBiblioteca
+                  )
+                  novoPedido.mercadoriaRecebidaEm = new Date().toISOString()
+                  const novosPedidos = [...pedidosSeparacao, novoPedido]
+                  setPedidosSeparacao(novosPedidos)
+                  await saveData('nonato-pedidos-separacao', novosPedidos)
+                  alert(
+                    (safeT?.mercadoriaRecebidaSeparacao ||
+                      'Orçamento {num} — mercadoria registada e enviada para separação.').replace(
+                      '{num}',
+                      orc.numeroOrcamento
+                    )
+                  )
+                }}
               >
                 {(filtrados) => (
               <div className="orc-pro__history-list">

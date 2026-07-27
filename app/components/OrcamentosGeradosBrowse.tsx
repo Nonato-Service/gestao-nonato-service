@@ -10,6 +10,12 @@ import {
   aplicarPatchPedidoFromOrcamentoGerado,
 } from '../lib/clienteEquipamentoOrcamentos'
 import {
+  type OrcamentoWorkflowStatus,
+  orcamentoAguardandoConfirmacaoCliente,
+  orcamentoPedidoConfirmado,
+  orcamentoMercadoriaRecebida,
+} from '../lib/orcamentoWorkflow'
+import {
   ORCAMENTOS_ALFABETO_INDICE,
   getClienteLetraAlfabeto,
   chaveClienteOrcamento,
@@ -24,6 +30,7 @@ export type OrcamentoGeradoItem = {
   observacoes?: string
   tipo?: string
   status?: 'pendente' | 'cancelado' | 'concluido' | 'aprovado' | 'entregue'
+  workflowStatus?: OrcamentoWorkflowStatus
   clienteId?: string
   clienteNome?: string
   relatorioId?: string
@@ -47,6 +54,8 @@ type Props = {
   saveData?: (key: string, data: unknown) => Promise<void>
   loadData?: (key: string) => Promise<unknown>
   onOrcamentosChange: (lista: OrcamentoGeradoItem[]) => void
+  onPedidoConfirmado?: (orc: OrcamentoGeradoItem) => void | Promise<void>
+  onMercadoriaRecebida?: (orc: OrcamentoGeradoItem) => void | Promise<void>
   children: (filtrados: OrcamentoGeradoItem[]) => React.ReactNode
 }
 
@@ -73,6 +82,8 @@ export function OrcamentosGeradosBrowse({
   saveData,
   loadData,
   onOrcamentosChange,
+  onPedidoConfirmado,
+  onMercadoriaRecebida,
   children,
 }: Props) {
   const [busca, setBusca] = useState('')
@@ -134,7 +145,23 @@ export function OrcamentosGeradosBrowse({
     letraFiltro && (clientesPorLetra.get(letraFiltro)?.length ?? 0) > 0 ? letraFiltro : null
 
   const itensPastaAguardando = useMemo(
-    () => orcamentosPosBusca.filter((o) => orcamentoGeradoPendente(o.status)),
+    () =>
+      orcamentosPosBusca.filter(
+        (o) =>
+          orcamentoAguardandoConfirmacaoCliente(o) &&
+          orcamentoGeradoPendente(o.status) &&
+          o.workflowStatus !== 'cotacao_recebida'
+      ),
+    [orcamentosPosBusca]
+  )
+
+  const itensPastaConfirmados = useMemo(
+    () => orcamentosPosBusca.filter((o) => orcamentoPedidoConfirmado(o)),
+    [orcamentosPosBusca]
+  )
+
+  const itensPastaMercadoria = useMemo(
+    () => orcamentosPosBusca.filter((o) => orcamentoMercadoriaRecebida(o)),
     [orcamentosPosBusca]
   )
 
@@ -206,7 +233,31 @@ export function OrcamentosGeradosBrowse({
     }
   }
 
-  const aprovarOrcamento = (id: string) => atualizarOrcamento(id, { status: 'aprovado' })
+  const aprovarOrcamento = async (id: string) => {
+    await atualizarOrcamento(id, {
+      status: 'aprovado',
+      workflowStatus: 'pedido_confirmado',
+    })
+    const orc = orcamentos.find((o) => o.id === id)
+    if (orc && onPedidoConfirmado) {
+      await onPedidoConfirmado({ ...orc, status: 'aprovado', workflowStatus: 'pedido_confirmado' })
+    }
+  }
+
+  const marcarMercadoriaRecebida = async (id: string) => {
+    const msg =
+      safeT?.confirmarMercadoriaRecebida ||
+      'Confirmar que a mercadoria deste orçamento chegou e deve ser separada para envio?'
+    if (!confirm(msg)) return
+    await atualizarOrcamento(id, {
+      workflowStatus: 'mercadoria_recebida',
+      status: 'aprovado',
+    })
+    const orc = orcamentos.find((o) => o.id === id)
+    if (orc && onMercadoriaRecebida) {
+      await onMercadoriaRecebida({ ...orc, workflowStatus: 'mercadoria_recebida' })
+    }
+  }
 
   const marcarEntregue = (id: string) => atualizarOrcamento(id, { status: 'entregue' })
 
@@ -295,7 +346,7 @@ export function OrcamentosGeradosBrowse({
                     <button
                       type="button"
                       className="cliente-equip-orcamentos__btn cliente-equip-orcamentos__btn--ok"
-                      onClick={() => aprovarOrcamento(o.id)}
+                      onClick={() => void aprovarOrcamento(o.id)}
                     >
                       ✓ {safeT?.aprovar || 'Aprovar'}
                     </button>
@@ -305,6 +356,78 @@ export function OrcamentosGeradosBrowse({
             )}
           </div>
         </details>
+
+        <details
+          className={`cliente-orc-pasta cliente-orc-pasta--confirmados${itensPastaConfirmados.length > 0 ? ' is-blinking' : ''}`}
+          open={itensPastaConfirmados.length > 0}
+        >
+          <summary className="cliente-orc-pasta__summary">
+            <span className="cliente-orc-pasta__icon">📁</span>
+            {safeT?.pastaPedidosConfirmados || 'Pedidos Confirmados — Aguardando Mercadoria'}
+            <span className="cliente-orc-pasta__count">{itensPastaConfirmados.length}</span>
+          </summary>
+          <div className="cliente-orc-pasta__body">
+            {itensPastaConfirmados.length === 0 ? (
+              <p className="cliente-orc-pasta__empty">
+                {safeT?.pastaVaziaConfirmados || 'Nenhum pedido confirmado pelo cliente.'}
+              </p>
+            ) : (
+              itensPastaConfirmados.map((o) => (
+                <div key={o.id} className="cliente-equip-orcamentos__card orc-gerados-browse__pasta-card">
+                  <div className="cliente-equip-orcamentos__card-head">
+                    <strong>{o.numeroOrcamento}</strong>
+                    <span
+                      className="cliente-equip-orcamentos__badge"
+                      style={{ background: 'rgba(0,200,83,0.2)', color: '#00c853' }}
+                    >
+                      {safeT?.pedidoConfirmado || 'Confirmado'}
+                    </span>
+                  </div>
+                  <p className="cliente-equip-orcamentos__line">
+                    {safeT?.cliente || 'Cliente'}: {resolverNomeCliente(o, clientes) || '—'}
+                  </p>
+                  <div className="cliente-equip-orcamentos__actions">
+                    <button
+                      type="button"
+                      className="cliente-equip-orcamentos__btn cliente-equip-orcamentos__btn--ok"
+                      onClick={() => void marcarMercadoriaRecebida(o.id)}
+                    >
+                      📦 {safeT?.mercadoriaChegou || 'Mercadoria chegou — separar'}
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </details>
+
+        {itensPastaMercadoria.length > 0 ? (
+          <details className="cliente-orc-pasta cliente-orc-pasta--mercadoria" open>
+            <summary className="cliente-orc-pasta__summary">
+              <span className="cliente-orc-pasta__icon">📁</span>
+              {safeT?.pastaMercadoriaRecebida || 'Mercadoria Recebida — Em Separação'}
+              <span className="cliente-orc-pasta__count">{itensPastaMercadoria.length}</span>
+            </summary>
+            <div className="cliente-orc-pasta__body">
+              {itensPastaMercadoria.map((o) => (
+                <div key={o.id} className="cliente-equip-orcamentos__card orc-gerados-browse__pasta-card">
+                  <div className="cliente-equip-orcamentos__card-head">
+                    <strong>{o.numeroOrcamento}</strong>
+                    <span
+                      className="cliente-equip-orcamentos__badge"
+                      style={{ background: 'rgba(255,165,0,0.2)', color: '#ffa500' }}
+                    >
+                      {safeT?.aguardandoSeparacao || 'Aguardando separação'}
+                    </span>
+                  </div>
+                  <p className="cliente-equip-orcamentos__line">
+                    {safeT?.cliente || 'Cliente'}: {resolverNomeCliente(o, clientes) || '—'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </details>
+        ) : null}
 
         <details
           className={`cliente-orc-pasta cliente-orc-pasta--entrega${itensPastaEntrega.length > 0 ? ' is-blinking' : ''}`}

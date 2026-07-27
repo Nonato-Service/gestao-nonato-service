@@ -19,6 +19,7 @@ import {
 } from '../lib/orcamentoPdfPro'
 import { resolverIdEquipamentoCliente } from '../lib/relatorioServicoEquipamentos'
 import { ProImageHoverPreview } from './ProImageHoverPreview'
+import type { OrcamentoWorkflowStatus } from '../lib/orcamentoWorkflow'
 
 export type ClientePedido = {
   id: string
@@ -78,9 +79,11 @@ export type PedidoAvulsoGuardado = {
   pecas: PecaPedido[]
   equipamentosBlocos?: EquipamentoBlocoPedido[]
   status?: StatusPedidoAvulso
+  workflowStatus?: OrcamentoWorkflowStatus
   numeroNotaFiscalEntrega?: string
   entregaConfirmadaEm?: string
   geradoEm?: string
+  cotacaoRecebidaEm?: string
 }
 
 type Props = {
@@ -262,7 +265,7 @@ export function PedidoOrcamentosAvulsoContent({
   const [urlImagemPecaEditando, setUrlImagemPecaEditando] = useState('')
   const [mostrarFormPeca, setMostrarFormPeca] = useState(false)
   const [modoPeca, setModoPeca] = useState<'biblioteca' | 'manual' | null>(null)
-  const [emitirComoCliente, setEmitirComoCliente] = useState<'cliente' | 'nonato-service'>('cliente')
+  const [emitirComoCliente, setEmitirComoCliente] = useState<'cliente' | 'nonato-service'>('nonato-service')
   const [pdfModelo, setPdfModelo] = useState(() => loadPdfModeloPadrao('pedidoAvulso'))
   const [pedidosGerados, setPedidosGerados] = useState<PedidoAvulsoGuardado[]>(() => lerPedidosLocalStorage())
   const [codigoUltimoGerado, setCodigoUltimoGerado] = useState<string | null>(null)
@@ -788,27 +791,26 @@ export function PedidoOrcamentosAvulsoContent({
     }
   }
 
-  const handleConverterParaCliente = async (pedido: PedidoAvulsoGuardado) => {
-    if (pedido.emitirComoCliente !== 'nonato-service') {
-      alert(
-        (safeT as Record<string, string | undefined>)?.poaJaEmitidoCliente ||
-          'Este pedido já está configurado para emitir com o nome do cliente.'
-      )
-      return
-    }
+  const handleCotacaoRecebida = async (pedido: PedidoAvulsoGuardado) => {
     const msg =
-      (safeT as Record<string, string | undefined>)?.poaConfirmarConverterCliente ||
-      `Converter o pedido ${pedido.codigo} para emitir com o nome do cliente "${pedido.clienteNomeReal}"?\n\nDepois pode aplicar os valores em Orçamentos Avulso.`
+      (safeT as Record<string, string | undefined>)?.poaConfirmarCotacaoRecebida ||
+      `Marcar cotação recebida do fornecedor para ${pedido.codigo}?\n\nSerá criado um rascunho de orçamento com o nome do cliente «${pedido.clienteNomeReal}» e dados do equipamento.\n\nDepois aplique os valores em Orçamentos Avulso e guarde para enviar ao cliente.`
     if (!confirm(msg)) return
 
-    const atualizado: PedidoAvulsoGuardado = { ...pedido, emitirComoCliente: 'cliente' }
+    const agora = new Date().toISOString()
+    const atualizado: PedidoAvulsoGuardado = {
+      ...pedido,
+      emitirComoCliente: 'cliente',
+      workflowStatus: 'cotacao_recebida',
+      cotacaoRecebidaEm: agora,
+    }
     const atualizados = pedidosGerados.map((p) => (p.codigo === pedido.codigo ? atualizado : p))
     setPedidosGerados(atualizados)
     if (saveData) {
       try {
         await saveData(PEDIDOS_AVULSO_KEY, atualizados, true, true)
       } catch (err) {
-        console.error('Erro ao guardar pedido convertido:', err)
+        console.error('Erro ao guardar pedido:', err)
       }
     }
 
@@ -817,21 +819,59 @@ export function PedidoOrcamentosAvulsoContent({
         const raw = await loadData(ORCAMENTOS_AVULSO_KEY)
         const lista = Array.isArray(raw) ? raw : []
         const orcId = 'avulso-' + pedido.codigo
-        const novosOrc = lista.map((o: { id?: string; numeroOrcamento?: string; emitirComoCliente?: string }) =>
-          o.id === orcId || o.numeroOrcamento === pedido.codigo
-            ? { ...o, emitirComoCliente: 'cliente' as const }
-            : o
+        const pecasTotais = pedido.equipamentosBlocos?.flatMap((b) => b.pecas) ?? pedido.pecas ?? []
+        const orcamentoDraft = {
+          id: orcId,
+          numeroOrcamento: pedido.codigo,
+          data: new Date().toISOString().split('T')[0],
+          validade: '',
+          descricao: pedido.equipamentoTexto,
+          observacoes: '',
+          tipo: 'pedido-avulso' as const,
+          status: 'pendente' as const,
+          workflowStatus: 'cotacao_recebida' as const,
+          clienteId: pedido.clienteId,
+          clienteNome: pedido.clienteNomeReal,
+          emitirComoCliente: 'cliente' as const,
+          equipamentoChave: pedido.equipamentoChave,
+          equipamentoNumeroSerie: pedido.equipamentoNumeroSerie,
+          equipamentosBlocos: pedido.equipamentosBlocos,
+          geradoEm: agora,
+          itens: pecasTotais.map((p) => ({
+            descricao: p.nome,
+            quantidade: p.quantidade,
+            precoUnitario: 0,
+            total: 0,
+            codigo: p.codigo,
+            tipoItem: 'sem-valor' as const,
+            iva: 0,
+            pecaId: p.pecaId,
+            imagem: p.imagem,
+            incluirObservacao: p.incluirObservacao,
+            observacao: p.incluirObservacao && p.observacao?.trim() ? p.observacao.trim() : undefined,
+          })),
+          total: 0,
+          totalSemIva: 0,
+          totalIva: 0,
+          dataCriacao: agora,
+        }
+        const idx = lista.findIndex(
+          (o: { id?: string; numeroOrcamento?: string }) =>
+            o.id === orcId || o.numeroOrcamento === pedido.codigo
         )
+        const novosOrc =
+          idx >= 0
+            ? lista.map((o, i) => (i === idx ? { ...o, ...orcamentoDraft } : o))
+            : [...lista, orcamentoDraft]
         await saveData(ORCAMENTOS_AVULSO_KEY, novosOrc, true, true)
       } catch (err) {
-        console.error('Erro ao actualizar orçamento avulso:', err)
+        console.error('Erro ao criar rascunho de orçamento:', err)
       }
     }
 
-    handleVisualizarPdfGuardado(atualizado)
     alert(
-      (safeT as Record<string, string | undefined>)?.poaConvertidoAbrirOrcamentos ||
-        `Pedido ${pedido.codigo} convertido.\n\nAbra «Orçamentos Avulso» para aplicar os valores correctos às peças.`
+      (safeT as Record<string, string | undefined>)?.poaCotacaoRecebidaAbrirOrcamentos ||
+        `Cotação recebida registada para ${pedido.codigo}.\n\nAbra «Orçamentos Avulso», aplique os valores do fornecedor, guarde e envie o orçamento ao cliente.`
     )
     onGerarOrcamento?.()
   }
@@ -880,6 +920,8 @@ export function PedidoOrcamentosAvulsoContent({
         pecas: [...b.pecas],
       })),
       status: 'pendente',
+      workflowStatus:
+        emitirComoCliente === 'nonato-service' ? ('enviado_fornecedor' as const) : undefined,
       geradoEm: new Date().toISOString(),
     }
 
@@ -894,7 +936,7 @@ export function PedidoOrcamentosAvulsoContent({
       }
     }
 
-    if (saveData && loadData) {
+    if (saveData && loadData && emitirComoCliente === 'cliente') {
       try {
         let localLista: any[] = []
         if (typeof window !== 'undefined') {
@@ -972,8 +1014,17 @@ export function PedidoOrcamentosAvulsoContent({
         ? empresaPdfPreview.nomeEmpresa || safeT?.nomeNonatoService || 'NONATO SERVICE'
         : nomeReal
 
+    const msgExtra =
+      emitirComoCliente === 'nonato-service'
+        ? '\n\n' +
+          ((safeT as Record<string, string | undefined>)?.poaProximoPassoFornecedor ||
+            'Próximo passo: envie o PDF ao fornecedor. Quando receber a cotação, use «Cotação recebida» no histórico.')
+        : '\n\n' +
+          ((safeT as Record<string, string | undefined>)?.poaOrcamentoGeradoCliente ||
+            'Orçamento criado — aplique valores em Orçamentos Avulso.')
+
     alert(
-      (safeT?.orcamentoSalvoGerado || safeT?.pedidoGeradoComSucesso || 'Orçamento salvo e gerado com sucesso!') +
+      (safeT?.orcamentoSalvoGerado || safeT?.pedidoGeradoComSucesso || 'Pedido gerado com sucesso!') +
         '\n\n' +
         (safeT?.codigoOrcamento || 'Código do orçamento') +
         ': ' +
@@ -986,14 +1037,21 @@ export function PedidoOrcamentosAvulsoContent({
         (safeT?.nomeNoDocumento || 'Emitente no cabeçalho') +
         ': ' +
         emitenteDoc +
-        '\n\n' +
-        (safeT?.guardeCodigoParaLocalizar || 'Guarde este código para localizar o orçamento depois.')
+        msgExtra
     )
 
     const blocoReset = criarBlocoEquipamentoVazio()
     setBlocosEquipamento([blocoReset])
     setBlocoAtivoId(blocoReset.id)
     onGerarOrcamento?.()
+  }
+
+  const workflowLabel = (pedido: PedidoAvulsoGuardado) => {
+    if (pedido.workflowStatus === 'enviado_fornecedor')
+      return (safeT as Record<string, string | undefined>)?.poaStatusEnviadoFornecedor || 'Enviado ao fornecedor'
+    if (pedido.workflowStatus === 'cotacao_recebida')
+      return (safeT as Record<string, string | undefined>)?.poaStatusCotacaoRecebida || 'Cotação recebida'
+    return statusLabel(pedido.status)
   }
 
   const statusBadgeClass = (status?: StatusPedidoAvulso) => {
@@ -1137,7 +1195,7 @@ export function PedidoOrcamentosAvulsoContent({
                       ? safeT?.nomeNonatoService || 'NONATO SERVICE'
                       : safeT?.cliente || 'Cliente'}
                   </span>
-                  <span className={statusBadgeClass(p.status)}>{statusLabel(p.status)}</span>
+                  <span className={statusBadgeClass(p.status)}>{workflowLabel(p)}</span>
                 </div>
                 {p.equipamentoTexto ? (
                   <p className="orc-pro__hint poa-pro__historico-equip">{p.equipamentoTexto.split('\n')[0]}</p>
@@ -1149,14 +1207,20 @@ export function PedidoOrcamentosAvulsoContent({
                   <button type="button" className="orc-pro__act" onClick={() => handleVisualizarPdfGuardado(p)}>
                     👁️ PDF
                   </button>
-                  {p.emitirComoCliente === 'nonato-service' ? (
+                  {p.emitirComoCliente === 'nonato-service' && p.workflowStatus !== 'cotacao_recebida' ? (
                     <button
                       type="button"
                       className="orc-pro__act orc-pro__act--primary"
-                      onClick={() => void handleConverterParaCliente(p)}
+                      onClick={() => void handleCotacaoRecebida(p)}
                     >
-                      {(safeT as Record<string, string | undefined>)?.poaConverterParaCliente ||
-                        'Converter p/ cliente'}
+                      {(safeT as Record<string, string | undefined>)?.poaCotacaoRecebida ||
+                        'Cotação recebida'}
+                    </button>
+                  ) : null}
+                  {p.workflowStatus === 'cotacao_recebida' ? (
+                    <button type="button" className="orc-pro__act orc-pro__act--primary" onClick={() => onGerarOrcamento?.()}>
+                      {(safeT as Record<string, string | undefined>)?.poaGerarOrcamentoCliente ||
+                        'Gerar orçamento cliente'}
                     </button>
                   ) : null}
                   <button type="button" className="orc-pro__act" onClick={() => onGerarOrcamento?.()}>
