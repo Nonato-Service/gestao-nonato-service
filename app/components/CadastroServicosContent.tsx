@@ -100,13 +100,15 @@ function ServicoFormBlock(props: Pick<
   } = props
 
   return (
-    <div className="cadastro-valores-v2__card" style={{ marginBottom: '15px' }}>
-      <h4 className="cadastro-valores-v2__card-title">
+    <div className="cadastro-valores-v2__card orcamento-pecas-especiais-linha" style={{ marginBottom: '15px' }}>
+      <div className="orcamento-pecas-especiais-linha-head">
+        <strong>
         {editingServico ? safeT.editarServico || 'Editar Serviço' : safeT.adicionarServico || 'Adicionar Serviço ou Despesa'}
-      </h4>
-      <label className="cadastro-valores-v2__label">{safeT.servicosServicoGrupo || 'Grupo'}</label>
+        </strong>
+      </div>
+      <label className="orcamento-pecas-especiais-label">{safeT.servicosServicoGrupo || 'Grupo'}</label>
       <select
-        className="cadastro-valores-v2__select cadastro-valores-v2__field"
+        className="orcamento-pecas-especiais-input cadastro-valores-v2__field"
         value={servicoForm.grupoId || servicoGrupoSelecionadoId || ordenarServicoGrupos(servicoGrupos)[0]?.id || ''}
         onChange={(e) => setServicoForm({ ...servicoForm, grupoId: e.target.value })}
       >
@@ -116,8 +118,9 @@ function ServicoFormBlock(props: Pick<
           </option>
         ))}
       </select>
+      <label className="orcamento-pecas-especiais-label">{safeT.tipo || 'Tipo'}</label>
       <select
-        className="cadastro-valores-v2__select cadastro-valores-v2__field"
+        className="orcamento-pecas-especiais-input cadastro-valores-v2__field"
         value={servicoForm.categoria}
         onChange={(e) => setServicoForm({ ...servicoForm, categoria: e.target.value as 'servico' | 'despesa' })}
       >
@@ -125,40 +128,44 @@ function ServicoFormBlock(props: Pick<
         <option value="despesa">{safeT.despesa || 'DESPESA'}</option>
       </select>
       <div className="cadastro-valores-v2__cod-row">
-        <span className="cadastro-valores-v2__cod-label">COD:</span>
+        <label className="orcamento-pecas-especiais-label cadastro-valores-v2__cod-label">COD</label>
         <input
           type="text"
-          className="cadastro-valores-v2__input"
+          className="orcamento-pecas-especiais-input"
           placeholder={(safeT as any).codigoServico || 'HTT'}
           value={servicoForm.cod}
           onChange={(e) => setServicoForm({ ...servicoForm, cod: e.target.value })}
         />
       </div>
+      <label className="orcamento-pecas-especiais-label">{safeT.nomeServico || 'Nome do Serviço/Despesa'}</label>
       <input
         type="text"
-        className="cadastro-valores-v2__input cadastro-valores-v2__field"
+        className="orcamento-pecas-especiais-input cadastro-valores-v2__field"
         placeholder={safeT.nomeServico || 'Nome do Serviço/Despesa'}
         value={servicoForm.nome}
         onChange={(e) => setServicoForm({ ...servicoForm, nome: e.target.value })}
       />
+      <label className="orcamento-pecas-especiais-label">{safeT.descricaoServico || 'Descrição (opcional)'}</label>
       <AssistTextarea
         placeholder={safeT.descricaoServico || 'Descrição (opcional)'}
         value={servicoForm.descricao}
         onValueChange={(v) => setServicoForm({ ...servicoForm, descricao: v })}
         rows={3}
-        className="cadastro-valores-v2__textarea cadastro-valores-v2__field"
+        className="orcamento-pecas-especiais-textarea cadastro-valores-v2__field"
       />
+      <label className="orcamento-pecas-especiais-label">{safeT.valorServico || 'Valor (ex.: 60 ou 60,00)'}</label>
       <input
         type="text"
         inputMode="decimal"
         autoComplete="off"
-        className="cadastro-valores-v2__input cadastro-valores-v2__field"
+        className="orcamento-pecas-especiais-input cadastro-valores-v2__field"
         placeholder={safeT.valorServico || 'Valor (ex.: 60 ou 60,00)'}
         value={servicoValorInput}
         onChange={(e) => setServicoValorInput(e.target.value)}
       />
+      <label className="orcamento-pecas-especiais-label">{safeT.tipoCobranca || 'Tipo de cobrança'}</label>
       <select
-        className="cadastro-valores-v2__select cadastro-valores-v2__field"
+        className="orcamento-pecas-especiais-input cadastro-valores-v2__field"
         value={servicoForm.tipoCobranca}
         onChange={(e) =>
           setServicoForm({
@@ -174,11 +181,11 @@ function ServicoFormBlock(props: Pick<
         <option value="diarias">{safeT.tipoCobrancaDiarias || 'Diárias'}</option>
         <option value="extras">{safeT.tipoCobrancaExtras || 'Extras'}</option>
       </select>
-      <div className="cadastro-valores-v2__form-actions">
-        <button type="button" className="cadastro-valores-v2__btn-green" onClick={onSaveServico}>
+      <div className="orcamento-pecas-especiais-actions cadastro-valores-v2__form-actions">
+        <button type="button" className="btn-primary" onClick={onSaveServico}>
           {safeT.save || 'Salvar'}
         </button>
-        <button type="button" className="cadastro-valores-v2__btn-secondary" onClick={onResetServicoForm}>
+        <button type="button" className="cadastro-valores-v2__btn-secondary orcamento-pecas-especiais-btn-cancelar" onClick={onResetServicoForm}>
           {safeT.cancel || 'Cancelar'}
         </button>
       </div>
@@ -277,7 +284,7 @@ export function CadastroServicosContent(props: Props) {
   )
 
   return (
-    <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 cadastro-valores-v2">
+    <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 cadastro-valores-v2 orcamento-pecas-especiais-page">
       <div className="mobile-sticky-toolbar">
         <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT.voltar || 'Voltar'}>
           ↶ {safeT.voltar || 'Voltar'}
@@ -351,7 +358,7 @@ export function CadastroServicosContent(props: Props) {
       )}
 
       {activeTab === 'grupos' && (
-        <div className="cadastro-valores-v2__layout">
+        <div className="cadastro-valores-v2__layout orcamento-pecas-especiais-form">
           <aside className="cadastro-valores-v2__sidebar">
             <h3 className="cadastro-valores-v2__card-title">{safeT.servicosGruposTitulo || 'Grupos de tarifa'}</h3>
             <p className="cadastro-valores-v2__card-hint">
@@ -519,25 +526,27 @@ export function CadastroServicosContent(props: Props) {
                   </div>
                 </div>
 
-                <div className="cadastro-valores-v2__toolbar cadastro-valores-v2__toolbar--items">
-                  <div className="cadastro-valores-v2__toolbar-copy">
-                    <h3 className="cadastro-valores-v2__toolbar-title">{safeT.servicosItensDoGrupo || 'Trabalhos e valores'}</h3>
-                    <p className="cadastro-valores-v2__toolbar-hint">
-                      {safeT.servicosTabelaHint ||
-                        'Mantenha COD único por grupo. O valor € alimenta linhas de serviço e despesas nos relatórios.'}
-                    </p>
+                <div className="orcamento-pecas-especiais-section cadastro-valores-v2__items-section">
+                  <div className="orcamento-pecas-especiais-section-head cadastro-valores-v2__toolbar--items">
+                    <div className="cadastro-valores-v2__toolbar-copy">
+                      <h3>{safeT.servicosItensDoGrupo || 'Trabalhos e valores'}</h3>
+                    </div>
+                    <div className="cadastro-valores-v2__toolbar-actions">
+                      <button type="button" className="btn-primary cadastro-valores-v2__btn-sm" onClick={onAddServico}>
+                        + {safeT.adicionarServico || 'Adicionar'}
+                      </button>
+                      <button type="button" className="cadastro-valores-v2__btn-info cadastro-valores-v2__btn-sm" onClick={() => onQuickAddHtt(servicoGrupoSelecionadoId || undefined)}>
+                        + HTT
+                      </button>
+                      <button type="button" className="cadastro-valores-v2__btn-warn cadastro-valores-v2__btn-sm" onClick={() => onAplicarTemplate(servicoGrupoSelecionadoId)}>
+                        ⚡ {safeT.servicosAplicarTemplate || 'Template padrão'}
+                      </button>
+                    </div>
                   </div>
-                  <div className="cadastro-valores-v2__toolbar-actions">
-                    <button type="button" className="cadastro-valores-v2__btn-green cadastro-valores-v2__btn-sm" onClick={onAddServico}>
-                      + {safeT.adicionarServico || 'Adicionar'}
-                    </button>
-                    <button type="button" className="cadastro-valores-v2__btn-info cadastro-valores-v2__btn-sm" onClick={() => onQuickAddHtt(servicoGrupoSelecionadoId || undefined)}>
-                      + HTT
-                    </button>
-                    <button type="button" className="cadastro-valores-v2__btn-warn cadastro-valores-v2__btn-sm" onClick={() => onAplicarTemplate(servicoGrupoSelecionadoId)}>
-                      ⚡ {safeT.servicosAplicarTemplate || 'Template padrão'}
-                    </button>
-                  </div>
+                  <p className="orcamento-pecas-especiais-hint">
+                    {safeT.servicosTabelaHint ||
+                      'Mantenha COD único por grupo. O valor € alimenta linhas de serviço e despesas nos relatórios.'}
+                  </p>
                 </div>
 
                 {showServicoForm && <ServicoFormBlock {...props} />}

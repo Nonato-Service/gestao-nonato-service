@@ -39692,6 +39692,185 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   }
 }
 
+/* Cadastro Serviços — visual alinhado a Orçamento peças especiais */
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__hero {
+  margin-bottom: 24px;
+  padding: clamp(20px, 3vw, 30px);
+  background: linear-gradient(135deg, rgba(0, 200, 83, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%);
+  border: 1px solid rgba(0, 200, 83, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 200, 83, 0.08);
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__hero-title {
+  color: #00c853;
+  letter-spacing: 0.02em;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__hero-meta {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__tabs {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 200, 83, 0.2);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__tab {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__tab--active {
+  background: rgba(0, 200, 83, 0.14);
+  border-color: rgba(0, 200, 83, 0.45);
+  color: #86efac;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__layout.orcamento-pecas-especiais-form {
+  margin-top: 0;
+  padding: 20px;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__sidebar,
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__card,
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__group-panel,
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__matriz-panel {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(0, 200, 83, 0.15);
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__card-title,
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__toolbar-title,
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__list-group-title,
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .orcamento-pecas-especiais-section h3 {
+  color: #66b3ff;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__card-hint,
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__toolbar-hint,
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__group-report-hint {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__section-label {
+  color: rgba(255, 255, 255, 0.75);
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__input,
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__select,
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__textarea {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__grupo-btn {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__grupo-btn--selected {
+  background: rgba(0, 200, 83, 0.1);
+  border-color: rgba(0, 200, 83, 0.45);
+  box-shadow: inset 3px 0 0 #00c853;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__items-section {
+  margin-bottom: 16px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .orcamento-pecas-especiais-section-head.cadastro-valores-v2__toolbar--items {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__table-wrap--pro {
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__table--pro thead th {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__table--pro tbody tr td {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(0, 200, 83, 0.15);
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__table--pro tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(0, 200, 83, 0.28);
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__cod-cell {
+  color: #7dff9e;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__nome-main {
+  color: #fff;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__nome-desc {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__group-summary-item {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__group-kicker {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__alert {
+  border-color: rgba(125, 255, 176, 0.35);
+  background: rgba(0, 80, 40, 0.25);
+  color: #b8f5d0;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__form-actions .btn-primary {
+  min-height: 40px;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__toolbar-actions .btn-primary {
+  min-height: 36px;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
 /* Modal rápido — Cadastro de Serviços / Valores */
 .cadastro-valores-modal .modal {
   background: #484848 !important;
