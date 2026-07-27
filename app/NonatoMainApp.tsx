@@ -4624,6 +4624,85 @@ const TAB_DEFAULT_PARENT_HUB: Partial<Record<TabType, string>> = {
   'gestao-demos': 'admin-main',
 }
 
+/** Título traduzido de uma aba/módulo — usado na barra inferior e ao mudar idioma. */
+function getTabTitleForBundle(type: TabType, tRaw: Record<string, unknown>): string {
+  const t = tRaw as Record<string, string | undefined>
+  const titles: Record<TabType, string> = {
+    gestores: t?.gestoresTitle || 'Gestores e Técnicos',
+    equipamentos: t?.equipamentos || 'CADASTRAR EQUIPAMENTOS E VISUALIZAR EQUIPAMENTOS DO ARMAZÉM',
+    'familias-grupos': t?.familiasGruposTitle || 'Cadastro de Famílias e Grupos para Checklist',
+    'familias-grupos-equipamentos':
+      t?.familiasGruposEquipamentosTitle || 'Cadastro de Famílias e Grupos para os Equipamentos',
+    'pre-checklist': t?.preChecklistTitle || 'PRE CHECKLIST',
+    users: t?.userManagement || 'Gestão de Usuários',
+    extras: t?.extras || 'Extras',
+    'cadastro-nonato-service': t?.cadastroNonatoServiceTitle || 'CADASTRO DA NONATO SERVICE',
+    'ficha-pagamento-transferencia':
+      t?.fichaPagamentoTransferenciaTitle || 'FICHA PARA TRANSFERÊNCIA / PAGAMENTO',
+    'ficha-fatura-cliente': t?.fichaFaturaClienteTitle || 'FICHA PARA O CLIENTE EMITIR FATURA',
+    clientes: t?.clientes || 'Clientes',
+    fornecedores: t?.fornecedores || 'Fornecedores',
+    'relatorio-servico': t?.relatorioServico || 'Relatório de Serviço',
+    'pecas-substituicao': t?.pecasSubstituicao || 'Peças de Substituição',
+    'biblioteca-pecas': t?.bibliotecaPecas || 'Biblioteca de Peças',
+    'importacao-pecas': t?.importacaoPecas || 'Importação de Peças',
+    'solicitacao-servico-tecnico': t?.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO',
+    agenda: t?.agenda || 'Agenda',
+    'diario-pedidos-dia': t?.diarioPedidosTitle || 'DIÁRIO DE ANOTAÇÃO',
+    desmontados: t?.desmontados || 'Desmontados',
+    'cadastro-servicos': t?.cadastroServicos || 'Cadastro de Serviços / Valores',
+    'fechamento-relatorios-servicos':
+      t?.fechamentoRelatoriosServicosTitle || 'Fechamento dos Relatórios de Serviços',
+    translator: t?.translator || 'Tradutor de Idiomas',
+    administrador: t?.administrador || 'Administrador',
+    'gestao-demos': 'Gestão de envio de demonstrações',
+    'estado-visual-tecnico': t?.estadoVisualTecnico || 'Estado Visual do Técnico',
+    'informacoes-conhecimento-tecnicos':
+      t?.informacoesConhecimentoTecnicosTitle || 'Informações de Conhecimento dos Técnicos',
+    'gestao-custos': t?.gestaoCustosTitle || 'Gestão de Custos',
+    'biblioteca-relatorios': t?.bibliotecaRelatoriosTitle || 'Biblioteca de Relatórios Salvos',
+    'relatorios-excluidos-clientes': t?.relatoriosExcluidosClientesTitle || 'Relatórios Excluídos / Clientes',
+    'gestao-financeira': t?.gestaoFinanceiraTitle || 'Gestão Financeira',
+    'clientes-financeiro': t?.clientesFinanceiroTitle || 'Clientes / Financeiro',
+    'orcamentos-avulso': t?.orcamentosAvulsoTitle || 'Orçamentos Avulso',
+    'pedido-orcamentos-avulso': t?.pedidoOrcamentosAvulsoTitle || 'PEDIDO DE ORÇAMENTOS AVULSO',
+    'orcamentos-pecas-especiais': t?.orcamentoPecasEspeciaisTitle || 'ORÇAMENTOS DE PEÇAS ESPECIAIS',
+    'orcamento-servico-tecnico': t?.orcamentoServicoTecnicoTitle || 'ORÇAMENTO DE SERVIÇO TÉCNICO',
+    'registro-despesas': t?.registroDespesasTitle || 'REGISTRO DE DESPESAS',
+    'pagamentos-contador': t?.pagamentosContadorTitle || 'PAGAMENTOS AO CONTADOR',
+    'comprovantes-despesas':
+      t?.comprovantesDespesasTitle || 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
+    'mapa-visual-separacao-pecas':
+      t?.mapaVisualSeparacaoPecasTitle || 'Mapa Visual de Separação de Peças / Cliente',
+    'manuais-informacoes-tecnicas':
+      t?.manuaisInformacoesTecnicasTitle || 'MANUAIS E INFORMAÇÕES TÉCNICA DOS EQUIPAMENTOS',
+    'biblia-nonato-service': t?.bibliaNonatoServiceTitle || 'BÍBLIA DA NONATO SERVICE',
+    'almoxarifado-armazem': t?.almoxarifadoArmazemTitle || 'Almoxarifado / Armazém',
+    checklist: t?.checklistTitle || 'CHECKLIST',
+    'checklist-basico': t?.checklistBasicoPageTitle || t?.checklistBasicoSubTitle || 'CHECKLIST BÁSICO',
+    'checklist-hub': t?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST',
+    'gestao-grupos-checklist':
+      t?.gestaoGruposChecklistTitle || 'GESTÃO DOS GRUPOS PARA CHECKLIST (CHECKLIST FINAL PARA A ENTREGA)',
+    'ordem-preparacao': t?.ordemPreparacaoTitle || 'ORDEM DE PREPARAÇÃO',
+    'formularios-checklist-tecnicos':
+      t?.formulariosChecklistTecnicosTitle || 'FORMULARIOS E CHECKLIST P/ TECNICOS',
+    'verificacao-final-entrega':
+      t?.verificacaoFinalEntregaTitle || 'VERIFICAÇÃO FINAL ANTES DA ENTREGA DO EQUIPAMENTO P/ O CLIENTE',
+    'comunicacao-interna': t?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA C/ GESTORES E TECNICOS',
+    'hub-comunicacao': t?.hubComunicacao || 'HUB DE COMUNICAÇÃO',
+    'mensagens-internas': t?.mensagensInternas || 'MENSAGENS INTERNAS / GESTORES',
+    'mensagens-internas-tecnicos': t?.mensagensInternasTecnicos || 'MENSAGENS INTERNAS / TÉCNICOS',
+    'tecnicos-internos': t?.tecnicosInternos || 'TÉCNICOS INTERNOS',
+    'tecnicos-externos': t?.tecnicosExternos || 'TÉCNICOS EXTERNOS',
+    'alerta-mensagens': t?.alertaMensagens || 'ALERTA DE MENSAGENS',
+    'protocolos-servico': t?.protocolosServicoTitle || 'PROTOCOLOS DE SERVIÇO',
+    'manual-programa': t?.manualProgramaTitle || 'Manual do Programa',
+    'informacoes-mecanicas-eletricas':
+      t?.informacoesMecanicasEletricasTitle || 'Informações Mecânicas e Elétricas dos Equipamentos',
+  }
+  return titles[type] || type
+}
+
 type DemoModuleMode = 'active' | 'teaser' | 'hidden'
 
 /** Chaves de tradução para subtítulo dos cartões do hub e das entradas da sidebar (por id de botão). */
@@ -5979,6 +6058,21 @@ export default function Dashboard() {
     }
   }, [openTabs, bottomTabsSavedOrder])
 
+  /** Mantém títulos das abas abertas (barra inferior) sincronizados com o idioma actual. */
+  useEffect(() => {
+    setOpenTabs((prev) => {
+      if (prev.length === 0) return prev
+      let changed = false
+      const next = prev.map((tab) => {
+        const title = getTabTitleForBundle(tab.type, safeT as Record<string, unknown>)
+        if (tab.title === title) return tab
+        changed = true
+        return { ...tab, title }
+      })
+      return changed ? next : prev
+    })
+  }, [selectedLanguage, safeT])
+
   /** Evita a barra lateral “saltar” ao re-render (notebook/tablet). */
   useLayoutEffect(() => {
     const el = sidebarScrollInnerRef.current
@@ -7172,78 +7266,7 @@ export default function Dashboard() {
     setHelpModalSource(null)
   }
   
-  const getTabTitle = (type: TabType): string => {
-    const t = safeT as any
-    const titles: Record<TabType, string> = {
-      'gestores': t?.gestoresTitle || 'Gestores e Técnicos',
-      'equipamentos': t?.equipamentos || 'CADASTRAR EQUIPAMENTOS E VISUALIZAR EQUIPAMENTOS DO ARMAZÉM',
-      'familias-grupos': t?.familiasGruposTitle || 'Cadastro de Famílias e Grupos para Checklist',
-      'familias-grupos-equipamentos': t?.familiasGruposEquipamentosTitle || 'Cadastro de Famílias e Grupos para os Equipamentos',
-      'pre-checklist': t?.preChecklistTitle || 'PRE CHECKLIST',
-      'users': t?.userManagement || 'Gestão de Usuários',
-      'extras': t?.extras || 'Extras',
-      'cadastro-nonato-service': t?.cadastroNonatoServiceTitle || 'CADASTRO DA NONATO SERVICE',
-      'ficha-pagamento-transferencia':
-        (t as any)?.fichaPagamentoTransferenciaTitle || 'FICHA PARA TRANSFERÊNCIA / PAGAMENTO',
-      'ficha-fatura-cliente': (t as any)?.fichaFaturaClienteTitle || 'FICHA PARA O CLIENTE EMITIR FATURA',
-      'clientes': t?.clientes || 'Clientes',
-      'fornecedores': t?.fornecedores || 'Fornecedores',
-      'relatorio-servico': t?.relatorioServico || 'Relatório de Serviço',
-      'pecas-substituicao': t?.pecasSubstituicao || 'Peças de Substituição',
-      'biblioteca-pecas': t?.bibliotecaPecas || 'Biblioteca de Peças',
-      'importacao-pecas': t?.importacaoPecas || 'Importação de Peças',
-      'solicitacao-servico-tecnico': t?.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO',
-      'agenda': t?.agenda || 'Agenda',
-      'diario-pedidos-dia': (t as any)?.diarioPedidosTitle || 'DIÁRIO DE ANOTAÇÃO',
-      'desmontados': t?.desmontados || 'Desmontados',
-      'cadastro-servicos': t?.cadastroServicos || 'Cadastro de Serviços / Valores',
-      'fechamento-relatorios-servicos': t?.fechamentoRelatoriosServicosTitle || 'Fechamento dos Relatórios de Serviços',
-      'translator': t?.translator || 'Tradutor de Idiomas',
-      'administrador': t?.administrador || 'Administrador',
-      'gestao-demos': 'Gestão de envio de demonstrações',
-      'estado-visual-tecnico': t?.estadoVisualTecnico || 'Estado Visual do Técnico',
-      'informacoes-conhecimento-tecnicos': t?.informacoesConhecimentoTecnicosTitle || 'Informações de Conhecimento dos Técnicos',
-      'gestao-custos': t?.gestaoCustosTitle || 'Gestão de Custos',
-      'biblioteca-relatorios': t?.bibliotecaRelatoriosTitle || 'Biblioteca de Relatórios Salvos',
-      'relatorios-excluidos-clientes': (t as any)?.relatoriosExcluidosClientesTitle || 'Relatórios Excluídos / Clientes',
-      'gestao-financeira': t?.gestaoFinanceiraTitle || 'Gestão Financeira',
-      'clientes-financeiro': t?.clientesFinanceiroTitle || 'Clientes / Financeiro',
-      'orcamentos-avulso': t?.orcamentosAvulsoTitle || 'Orçamentos Avulso',
-      'pedido-orcamentos-avulso': t?.pedidoOrcamentosAvulsoTitle || 'PEDIDO DE ORÇAMENTOS AVULSO',
-      'orcamentos-pecas-especiais': (t as any)?.orcamentoPecasEspeciaisTitle || 'ORÇAMENTOS DE PEÇAS ESPECIAIS',
-      'orcamento-servico-tecnico': (t as any)?.orcamentoServicoTecnicoTitle || 'ORÇAMENTO DE SERVIÇO TÉCNICO',
-      'registro-despesas': t?.registroDespesasTitle || 'REGISTRO DE DESPESAS',
-      'pagamentos-contador': t?.pagamentosContadorTitle || 'PAGAMENTOS AO CONTADOR',
-      'comprovantes-despesas': t?.comprovantesDespesasTitle || 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
-      'mapa-visual-separacao-pecas': t?.mapaVisualSeparacaoPecasTitle || 'Mapa Visual de Separação de Peças / Cliente',
-      'manuais-informacoes-tecnicas':
-        t?.manuaisInformacoesTecnicasTitle ||
-        'MANUAIS E INFORMAÇÕES TÉCNICA DOS EQUIPAMENTOS',
-      'biblia-nonato-service':
-        (t as any)?.bibliaNonatoServiceTitle ||
-        'BÍBLIA DA NONATO SERVICE',
-      'almoxarifado-armazem': t?.almoxarifadoArmazemTitle || 'Almoxarifado / Armazém',
-      'checklist': t?.checklistTitle || 'CHECKLIST',
-      'checklist-basico': t?.checklistBasicoPageTitle || t?.checklistBasicoSubTitle || 'CHECKLIST BÁSICO',
-      'checklist-hub': t?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST',
-      'gestao-grupos-checklist': t?.gestaoGruposChecklistTitle || 'GESTÃO DOS GRUPOS PARA CHECKLIST (CHECKLIST FINAL PARA A ENTREGA)',
-      'ordem-preparacao': t?.ordemPreparacaoTitle || 'ORDEM DE PREPARAÇÃO',
-      'formularios-checklist-tecnicos': t?.formulariosChecklistTecnicosTitle || 'FORMULARIOS E CHECKLIST P/ TECNICOS',
-      'verificacao-final-entrega': t?.verificacaoFinalEntregaTitle || 'VERIFICAÇÃO FINAL ANTES DA ENTREGA DO EQUIPAMENTO P/ O CLIENTE',
-      'comunicacao-interna': t?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA C/ GESTORES E TECNICOS',
-      'hub-comunicacao': t?.hubComunicacao || 'HUB DE COMUNICAÇÃO',
-      'mensagens-internas': t?.mensagensInternas || 'MENSAGENS INTERNAS / GESTORES',
-      'mensagens-internas-tecnicos': t?.mensagensInternasTecnicos || 'MENSAGENS INTERNAS / TÉCNICOS',
-      'tecnicos-internos': t?.tecnicosInternos || 'TÉCNICOS INTERNOS',
-      'tecnicos-externos': t?.tecnicosExternos || 'TÉCNICOS EXTERNOS',
-      'alerta-mensagens': t?.alertaMensagens || 'ALERTA DE MENSAGENS',
-      'protocolos-servico': (t as any)?.protocolosServicoTitle || 'PROTOCOLOS DE SERVIÇO',
-      'manual-programa': (t as any)?.manualProgramaTitle || 'Manual do Programa',
-      'informacoes-mecanicas-eletricas':
-        (t as any)?.informacoesMecanicasEletricasTitle || 'Informações Mecânicas e Elétricas dos Equipamentos'
-    }
-    return titles[type] || type
-  }
+  const getTabTitle = (type: TabType): string => getTabTitleForBundle(type, safeT as Record<string, unknown>)
 
   function setFechamentoEtapaFinanceira(
     relatorioId: string,
@@ -9926,6 +9949,11 @@ export default function Dashboard() {
   }, [appInitialLoading, runAutoServerPull])
 
   const activeTabType = openTabs.find((t) => t.id === activeTabId)?.type ?? null
+  const activeOpenTabDisplayTitle = useMemo(() => {
+    if (!activeTabId) return null
+    const tab = openTabs.find((t) => t.id === activeTabId)
+    return tab ? getTabTitleForBundle(tab.type, safeT as Record<string, unknown>) : null
+  }, [activeTabId, openTabs, safeT])
   useEffect(() => {
     if (appInitialLoading) return
     if (
@@ -67902,7 +67930,7 @@ A1;Peça exemplo;10`}
         return (
           <div style={{ padding: '20px' }}>
             <h2 style={{ marginBottom: '20px', borderBottom: '2px solid rgba(0, 100, 255, 0.5)', paddingBottom: '10px' }}>
-              {tab.title}
+              {getTabTitle(tab.type)}
             </h2>
             <div style={{ 
               padding: '20px', 
@@ -73179,10 +73207,8 @@ A1;Peça exemplo;10`}
           >
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
-          <span className="mobile-app-header-title" title={activeTabId ? openTabs.find((t) => t.id === activeTabId)?.title : undefined}>
-            {activeTabId
-              ? openTabs.find((t) => t.id === activeTabId)?.title || 'NONATO SERVICE'
-              : 'NONATO SERVICE'}
+          <span className="mobile-app-header-title" title={activeOpenTabDisplayTitle ?? undefined}>
+            {activeOpenTabDisplayTitle ?? 'NONATO SERVICE'}
           </span>
           <div className="mobile-header-right-actions">
             {(activeTabId || dashboardWorkspaceExpanded) && (
@@ -75164,7 +75190,7 @@ A1;Peça exemplo;10`}
                               color: '#ffffff',
                             }}
                           >
-                            {activeTab.title}
+                            {getTabTitle(activeTab.type)}
                           </span>
                         </span>
                         <span className="ui-expand-chevron" style={{ flexShrink: 0 }} aria-hidden>
@@ -75636,7 +75662,7 @@ A1;Peça exemplo;10`}
                   }}
                   className={`bottom-tab-item ${activeTabId === tab.id ? 'active' : ''} ${getBottomTabAccentClass(tab.type)}${bottomTabsDraggingId === tab.id ? ' is-dragging' : ''}${bottomTabsDragOverId === tab.id ? ' is-drop-target' : ''}`}
                   onClick={() => switchActiveTab(tab.id)}
-                  title={tab.title}
+                  title={getTabTitle(tab.type)}
                 >
                   {tab.icon ? (
                     <span className="bottom-tab-emoji ui-inline-emoji" aria-hidden>
@@ -75648,7 +75674,7 @@ A1;Peça exemplo;10`}
                     </span>
                   )}
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
-                    {tab.title}
+                    {getTabTitle(tab.type)}
                   </span>
                   <button
                     type="button"
