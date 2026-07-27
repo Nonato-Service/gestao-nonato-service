@@ -39871,6 +39871,103 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   font-size: 13px;
 }
 
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__matriz-panel.orcamento-pecas-especiais-form,
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__listar-panel.orcamento-pecas-especiais-form {
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 200, 83, 0.2);
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__list-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__list-group-card {
+  margin-bottom: 0;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__list-group-header {
+  margin-bottom: 12px;
+  align-items: flex-start;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__table--matriz {
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__table--matriz tbody tr td {
+  background: rgba(255, 255, 255, 0.04);
+  border-top: 1px solid rgba(0, 200, 83, 0.15);
+  border-bottom: 1px solid rgba(0, 200, 83, 0.15);
+  padding: 10px 12px;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__table--matriz tbody tr td:first-child {
+  border-left: 1px solid rgba(0, 200, 83, 0.15);
+  border-radius: 8px 0 0 8px;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__table--matriz tbody tr td:last-child {
+  border-right: 1px solid rgba(0, 200, 83, 0.15);
+  border-radius: 0 8px 8px 0;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__table--matriz thead th {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: normal;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__matriz-th-sticky,
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__matriz-td-sticky {
+  background: rgba(0, 0, 0, 0.55) !important;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__matriz-th-group {
+  vertical-align: bottom;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__matriz-link {
+  color: #66b3ff;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__matriz-link:hover {
+  color: #93c5fd;
+  text-decoration: underline;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__matriz-valor {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__matriz-valor--zero {
+  color: #fde68a;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__matriz-valor--missing {
+  color: rgba(255, 255, 255, 0.32);
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__table-wrap--matriz {
+  margin-top: 8px;
+}
+
 /* Modal rápido — Cadastro de Serviços / Valores */
 .cadastro-valores-modal .modal {
   background: #484848 !important;

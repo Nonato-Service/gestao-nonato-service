@@ -638,20 +638,22 @@ export function CadastroServicosContent(props: Props) {
       )}
 
       {activeTab === 'matriz' && (
-        <div className="cadastro-valores-v2__card cadastro-valores-v2__matriz-panel">
-          <h3 className="cadastro-valores-v2__card-title">{safeT.servicosMatrizTitulo || 'Comparar valores entre grupos'}</h3>
-          <p className="cadastro-valores-v2__card-hint">
-            {safeT.servicosMatrizAjuda || 'Visão geral: compare HTT, km, diárias e outros códigos em todos os grupos de tarifa.'}
-          </p>
-          <p className="cadastro-valores-v2__toolbar-hint" style={{ marginBottom: '14px' }}>
-            {safeT.servicosMatrizRelatorioHint ||
-              'Valores a zero aparecem destacados — corrija no grupo antes de emitir relatórios. Clique no nome do grupo para editar a tabela.'}
-          </p>
+        <div className="orcamento-pecas-especiais-form cadastro-valores-v2__matriz-panel">
+          <div className="orcamento-pecas-especiais-section">
+            <h3>{safeT.servicosMatrizTitulo || 'Comparar valores entre grupos'}</h3>
+            <p className="orcamento-pecas-especiais-hint">
+              {safeT.servicosMatrizAjuda || 'Visão geral: compare HTT, km, diárias e outros códigos em todos os grupos de tarifa.'}
+            </p>
+            <p className="orcamento-pecas-especiais-hint">
+              {safeT.servicosMatrizRelatorioHint ||
+                'Valores a zero aparecem destacados — corrija no grupo antes de emitir relatórios. Clique no nome do grupo para editar a tabela.'}
+            </p>
+          </div>
           {gruposOrdenados.length === 0 || codigosMatriz.length === 0 ? (
             <p className="cadastro-valores-v2__empty">{safeT.servicosMatrizVazia || 'Cadastre grupos e serviços para ver a matriz.'}</p>
           ) : (
-            <div className="cadastro-valores-v2__table-wrap cadastro-valores-v2__table-wrap--pro">
-              <table className="cadastro-valores-v2__table cadastro-valores-v2__table--pro" style={{ minWidth: `${180 + gruposOrdenados.length * 100}px` }}>
+            <div className="cadastro-valores-v2__table-wrap cadastro-valores-v2__table-wrap--pro cadastro-valores-v2__table-wrap--matriz">
+              <table className="cadastro-valores-v2__table cadastro-valores-v2__table--pro cadastro-valores-v2__table--matriz" style={{ minWidth: `${180 + gruposOrdenados.length * 100}px` }}>
                 <thead>
                   <tr>
                     <th className="cadastro-valores-v2__matriz-th-sticky">COD</th>
@@ -702,7 +704,14 @@ export function CadastroServicosContent(props: Props) {
       )}
 
       {activeTab === 'listar' && (
-        <div className="cadastro-valores-v2__listar-panel">
+        <div className="orcamento-pecas-especiais-form cadastro-valores-v2__listar-panel">
+          <div className="orcamento-pecas-especiais-section cadastro-valores-v2__items-section">
+            <h3>{safeT.servicosListarTodosTab || 'Ver todos'}</h3>
+            <p className="orcamento-pecas-especiais-hint">
+              {safeT.servicosListarTodosAjuda ||
+                'Lista completa de serviços e despesas por grupo de tarifa. Use Editar para abrir o grupo correspondente.'}
+            </p>
+          </div>
           {servicos.length === 0 ? (
             <p className="cadastro-valores-v2__empty">{safeT.noServicos || 'Nenhum serviço ou despesa cadastrado.'}</p>
           ) : (
@@ -721,8 +730,8 @@ export function CadastroServicosContent(props: Props) {
                 const nZero = itens.filter((s) => !s.valor || s.valor <= 0).length
                 const nCli = clientesPorGrupo[g.id] || 0
                 return (
-                  <div key={g.id} className="cadastro-valores-v2__card">
-                    <div className="cadastro-valores-v2__list-group-header">
+                  <div key={g.id} className="orcamento-pecas-especiais-linha cadastro-valores-v2__list-group-card">
+                    <div className="orcamento-pecas-especiais-linha-head cadastro-valores-v2__list-group-header">
                       <div>
                         <span className="cadastro-valores-v2__group-kicker">{safeT.servicosGrupoAtivoLabel || 'Grupo de tarifa'}</span>
                         <h2 className="cadastro-valores-v2__list-group-title">{g.nome}</h2>
@@ -743,6 +752,14 @@ export function CadastroServicosContent(props: Props) {
                     </div>
                     <div className="cadastro-valores-v2__table-wrap cadastro-valores-v2__table-wrap--pro">
                       <table className="cadastro-valores-v2__table cadastro-valores-v2__table--pro">
+                        <colgroup>
+                          <col className="cadastro-valores-v2__col-cod" />
+                          <col className="cadastro-valores-v2__col-nome" />
+                          <col className="cadastro-valores-v2__col-tipo" />
+                          <col className="cadastro-valores-v2__col-cobranca" />
+                          <col className="cadastro-valores-v2__col-valor" />
+                          <col className="cadastro-valores-v2__col-acoes" />
+                        </colgroup>
                         <thead>
                           <tr>
                             <th>COD</th>
@@ -783,7 +800,7 @@ export function CadastroServicosContent(props: Props) {
                                 <td>
                                   <button
                                     type="button"
-                                    className="cadastro-valores-v2__btn-green cadastro-valores-v2__btn-sm"
+                                    className="btn-primary cadastro-valores-v2__btn-sm"
                                     onClick={() => {
                                       setActiveTab('grupos')
                                       setServicoGrupoSelecionadoId(servico.grupoId)
