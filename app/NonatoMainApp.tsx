@@ -2745,6 +2745,31 @@ function filtrarFechamentoItensPorOmitidos(
 /** Opções de IVA no fechamento de despesas (por relatório / OS). */
 type FechamentoIvaOpcoesRelatorio = { incluirIva: boolean; taxaIva: number }
 
+const FECHAMENTO_IVA_PADRAO: FechamentoIvaOpcoesRelatorio = { incluirIva: false, taxaIva: 23 }
+
+function parseFechamentoIncluirIva(v: unknown): boolean {
+  return v === true || v === 1 || v === '1' || v === 'true'
+}
+
+function normalizarFechamentoIvaOpcoes(raw?: Partial<FechamentoIvaOpcoesRelatorio> | null): FechamentoIvaOpcoesRelatorio {
+  const tx = Number(raw?.taxaIva)
+  return {
+    incluirIva: parseFechamentoIncluirIva(raw?.incluirIva),
+    taxaIva: Number.isFinite(tx) ? Math.min(100, Math.max(0, Math.round(tx * 100) / 100)) : FECHAMENTO_IVA_PADRAO.taxaIva,
+  }
+}
+
+function resolveFechamentoIvaOpcoes(
+  relatorioId: string,
+  map: Record<string, FechamentoIvaOpcoesRelatorio>,
+  relatorioNumero?: string
+): FechamentoIvaOpcoesRelatorio {
+  if (map[relatorioId]) return normalizarFechamentoIvaOpcoes(map[relatorioId])
+  const num = String(relatorioNumero ?? '').trim()
+  if (num && map[num]) return normalizarFechamentoIvaOpcoes(map[num])
+  return { ...FECHAMENTO_IVA_PADRAO }
+}
+
 /** Soma linhas (base) e, se ativo, IVA e total com IVA. */
 function totaisFechamentoLiquidoComIva(
   itens: FechamentoItem[],
@@ -2754,9 +2779,9 @@ function totaisFechamentoLiquidoComIva(
     (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : Number(i.valorTotal) || 0),
     0
   )
-  const o = opts ?? { incluirIva: false, taxaIva: 23 }
-  const incluir = Boolean(o.incluirIva)
-  let taxa = Number(o.taxaIva)
+  const o = normalizarFechamentoIvaOpcoes(opts ?? FECHAMENTO_IVA_PADRAO)
+  const incluir = o.incluirIva
+  let taxa = o.taxaIva
   if (!Number.isFinite(taxa) || taxa < 0) taxa = 0
   if (taxa > 100) taxa = 100
   taxa = Math.round(taxa * 100) / 100
@@ -11950,7 +11975,7 @@ export default function Dashboard() {
           const o = v as Record<string, unknown>
           const tx = Number(o.taxaIva)
           fechamentoIvaMap[k] = {
-            incluirIva: o.incluirIva === true,
+            incluirIva: parseFechamentoIncluirIva(o.incluirIva),
             taxaIva: Number.isFinite(tx) ? Math.min(100, Math.max(0, Math.round(tx * 100) / 100)) : 23,
           }
         }
@@ -16454,7 +16479,10 @@ export default function Dashboard() {
     const blocoFiscal = t.contabilidadeBlocoClienteFiscal || 'Dados fiscais do cliente (cadastro)'
     const localeStr = localeForLongDatetime(selectedLanguage)
     const dataHora = new Date().toLocaleString(localeStr)
-    const ivContab = totaisFechamentoLiquidoComIva(itens, fechamentoIvaPorRelatorioId[relatorio.id])
+    const ivContab = totaisFechamentoLiquidoComIva(
+      itens,
+      resolveFechamentoIvaOpcoes(relatorio.id, fechamentoIvaPorRelatorioId, relatorio.numero)
+    )
     const total = ivContab.comIva
     const linhasItens = itens.map(i => {
       const sv = i.servicoId ? servicos.find(s => s.id === i.servicoId) : null
@@ -17915,7 +17943,12 @@ export default function Dashboard() {
   const persistirFechamentoNaBiblioteca = async (
     relatorioId: string,
     itens: FechamentoItem[],
-    opts?: { fecharRelatorio?: boolean; irBiblioteca?: boolean; silencioso?: boolean }
+    opts?: {
+      fecharRelatorio?: boolean
+      irBiblioteca?: boolean
+      silencioso?: boolean
+      iva?: FechamentoIvaOpcoesRelatorio
+    }
   ) => {
     const nextFech: Record<string, FechamentoItem[]> = {
       ...fechamentosRelatorios,
@@ -17929,6 +17962,19 @@ export default function Dashboard() {
     setFechamentosGuardadosBibliotecaIds(nextGuard)
     await saveData('nonato-fechamentos-relatorios', nextFech)
     await saveData('nonato-fechamentos-guardados-biblioteca', nextGuard)
+
+    const ivaSnap = normalizarFechamentoIvaOpcoes(opts?.iva ?? fechamentoIvaPorRelatorioId[relatorioId] ?? FECHAMENTO_IVA_PADRAO)
+    setFechamentoIvaPorRelatorioId(prev => {
+      const cur = prev[relatorioId]
+      const same =
+        cur &&
+        cur.incluirIva === ivaSnap.incluirIva &&
+        cur.taxaIva === ivaSnap.taxaIva
+      if (same) return prev
+      const next = { ...prev, [relatorioId]: ivaSnap }
+      void saveData(FECHAMENTO_IVA_POR_RELATORIO_KEY, next)
+      return next
+    })
 
     const relAtual = relatoriosServico.find((r) => r.id === relatorioId)
     if (relAtual && !relAtual.servicoConcluido) {
@@ -20430,7 +20476,10 @@ export default function Dashboard() {
       const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
       return `<tr><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;font-weight:600">${cod}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px">${desc}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
     }).join('')
-    const ivPdf = totaisFechamentoLiquidoComIva(itens, fechamentoIvaPorRelatorioId[relatorio.id])
+    const ivPdf = totaisFechamentoLiquidoComIva(
+      itens,
+      resolveFechamentoIvaOpcoes(relatorio.id, fechamentoIvaPorRelatorioId, relatorio.numero)
+    )
     const totalCobranca = ivPdf.comIva
     const titFechamento = tAny.fechamentoDespesasRelatorio || 'Fechamento de Despesas'
     const lblImprimir = tAny.imprimirGuardarPDF || 'Imprimir / Guardar como PDF'
@@ -30872,9 +30921,13 @@ export default function Dashboard() {
   const renderModalVisualizarDespesasBibliotecaOverlay = () => {
     if (!modalVisualizarDespesasBiblioteca || typeof document === 'undefined') return null
     const { relatorio: relV, itens: itensV } = modalVisualizarDespesasBiblioteca
-    const ivModal = totaisFechamentoLiquidoComIva(itensV, fechamentoIvaPorRelatorioId[relV.id])
+    const ivModal = totaisFechamentoLiquidoComIva(
+      itensV,
+      resolveFechamentoIvaOpcoes(relV.id, fechamentoIvaPorRelatorioId, relV.numero)
+    )
     const totV = ivModal.comIva
     const tm = safeT as Record<string, string>
+    const mostrarIvaDetalhado = ivModal.incluir && ivModal.iva > 0.0001
     return createPortal(
       <div
         className="biblioteca-despesas-modal-overlay"
@@ -30980,17 +31033,36 @@ export default function Dashboard() {
               lineHeight: 1.55,
             }}
           >
-            <div>
-              {tm.totalSemIva || 'Total s/ IVA'}: €{ivModal.liquido.toFixed(2)}
-            </div>
-            {ivModal.incluir && ivModal.iva > 0.0001 && (
-              <div style={{ marginTop: '6px', color: '#bae6fd' }}>
-                {tm.valorIva || 'IVA'} ({ivModal.taxa}%): €{ivModal.iva.toFixed(2)}
-              </div>
+            {mostrarIvaDetalhado ? (
+              <>
+                <div>
+                  {tm.totalSemIva || 'Total s/ IVA'}: €{ivModal.liquido.toFixed(2)}
+                </div>
+                <div style={{ marginTop: '6px', color: '#bae6fd' }}>
+                  {tm.valorIva || 'IVA'} ({ivModal.taxa}%): €{ivModal.iva.toFixed(2)}
+                </div>
+                <div style={{ marginTop: '8px', fontSize: '18px' }}>
+                  {tm.totalComIva || 'Total com IVA'}: €{totV.toFixed(2)}
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: '18px' }}>
+                  {(tm.somaTotal || tm.totalSemIva || tm.total || 'Total')}: €{totV.toFixed(2)}
+                </div>
+                <div
+                  style={{
+                    marginTop: '8px',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    color: 'rgba(255, 255, 255, 0.72)',
+                  }}
+                >
+                  {tm.fechamentoResumoSemIvaDica ||
+                    'Modo s/ IVA — use «Editar despesas» e «Fechamento com IVA» se o cliente paga IVA em cima deste total.'}
+                </div>
+              </>
             )}
-            <div style={{ marginTop: '8px', fontSize: '18px' }}>
-              {tm.totalComIva || 'Total com IVA'}: €{totV.toFixed(2)}
-            </div>
           </div>
           <div
             style={{
@@ -51478,14 +51550,18 @@ A1;Peça exemplo;10`}
         const totalCobranca = itensVisiveisFechamento.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal), 0)
         const ridFechIva = relatorioSelecionado?.id
         const ivaOptsFech = ridFechIva
-          ? fechamentoIvaPorRelatorioId[ridFechIva] ?? { incluirIva: false, taxaIva: 23 }
-          : { incluirIva: false, taxaIva: 23 }
+          ? resolveFechamentoIvaOpcoes(
+              ridFechIva,
+              fechamentoIvaPorRelatorioId,
+              relatorioSelecionado?.numero
+            )
+          : { ...FECHAMENTO_IVA_PADRAO }
         const fechTotIva = totaisFechamentoLiquidoComIva(itensVisiveisFechamento, ivaOptsFech)
         const patchFechamentoIvaLocal = (patch: Partial<FechamentoIvaOpcoesRelatorio>) => {
           if (!ridFechIva) return
           setFechamentoIvaPorRelatorioId(prev => {
-            const cur = prev[ridFechIva] ?? { incluirIva: false, taxaIva: 23 }
-            const merged = { ...cur, ...patch }
+            const cur = prev[ridFechIva] ?? { ...FECHAMENTO_IVA_PADRAO }
+            const merged = normalizarFechamentoIvaOpcoes({ ...cur, ...patch })
             if ('taxaIva' in patch) {
               let tx = Number(merged.taxaIva)
               if (!Number.isFinite(tx) || tx < 0) tx = 0
@@ -51648,7 +51724,7 @@ A1;Peça exemplo;10`}
           const itensSnap = [...itensVisiveisFechamento]
           const totalSnap = fechTotIva.comIva
           const cliSnap = relSnap.clienteId ? clientes.find(c => c.id === relSnap.clienteId) : undefined
-          await persistirFechamentoNaBiblioteca(rid, itensSnap)
+          await persistirFechamentoNaBiblioteca(rid, itensSnap, { iva: ivaOptsFech })
           if (contabilidadeConfig.enviarFechamentoContabilidadeAuto && totalSnap > 0.0001) {
             queueMicrotask(() => abrirFechamentoParaContabilidade(relSnap, itensSnap, cliSnap))
           }
@@ -51881,6 +51957,7 @@ A1;Peça exemplo;10`}
         }
         const fechamentoJsx = (
           <div
+            className="fechamento-relatorios-servicos-page orcamento-pecas-especiais-page cadastro-valores-v2 tab-glass-root ns-ui-v2"
             style={{
               padding: isCompactLayout ? '12px 10px' : '24px 32px',
               maxWidth: '1600px',
@@ -52279,17 +52356,17 @@ A1;Peça exemplo;10`}
                   )}
                 </div>
 
-                <div className="fechamento-itens-panel">
-                  <div className="fechamento-itens-panel__title-row">
+                <div className="fechamento-itens-panel orcamento-pecas-especiais-form">
+                  <div className="fechamento-itens-panel__title-row orcamento-pecas-especiais-section-head">
                     <h3 className="fechamento-itens-panel__title">{(safeT as any)?.itensCobrancaFechamento || 'Itens a cobrar (ajuste com o Cadastro de Serviços)'}</h3>
                     <span className="fechamento-itens-panel__edit-hint">✏️ {(safeT as any)?.editarItensFechamento || 'Editar itens'}</span>
                   </div>
                   {servicoGrupos.length > 0 && (
-                    <div className="fechamento-itens-subcard">
-                      <div className="fechamento-itens-subcard__title">
+                    <div className="fechamento-itens-subcard orcamento-pecas-especiais-linha">
+                      <div className="fechamento-itens-subcard__title orcamento-pecas-especiais-label">
                         {(safeT as any)?.fechamentoGrupoTitulo || 'Grupo de tarifas (Cadastro de Serviços)'}
                       </div>
-                      <p className="fechamento-itens-subcard__text">
+                      <p className="fechamento-itens-subcard__text orcamento-pecas-especiais-hint">
                         {(safeT as any)?.fechamentoGrupoAjuda ||
                           'Escolha o grupo (ex.: HTT 70 €, 95 €, 50 € ou 60 €). HT, viagem, km e diárias usam os valores desse grupo na ordem de cobrança.'}
                       </p>
@@ -52304,6 +52381,7 @@ A1;Peça exemplo;10`}
                         </p>
                       )}
                       <select
+                        className="orcamento-pecas-especiais-input"
                         value={fechamentoGrupoIdAtual}
                         onChange={(e) => patchFechamentoGrupoLocal(e.target.value)}
                         style={{ width: '100%', maxWidth: '420px' }}
@@ -52355,8 +52433,8 @@ A1;Peça exemplo;10`}
                       ))}
                     </div>
                   )}
-                  <div className="fechamento-relatorios-servicos-table-host">
-                  <table className="fechamento-itens-table">
+                  <div className="fechamento-relatorios-servicos-table-host cadastro-valores-v2__table-wrap cadastro-valores-v2__table-wrap--pro">
+                  <table className="fechamento-itens-table cadastro-valores-v2__table cadastro-valores-v2__table--pro">
                     <thead>
                       <tr>
                         <th style={{ width: '90px' }}>{(safeT as any)?.codigoOuCod || 'COD'}</th>
@@ -52431,7 +52509,7 @@ A1;Peça exemplo;10`}
                         })()
                         return (
                         <tr key={item.id}>
-                          <td>{codExibir}</td>
+                          <td className="cadastro-valores-v2__cod-cell">{codExibir}</td>
                           <td className="fechamento-item-desc">
                             {eManual ? (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

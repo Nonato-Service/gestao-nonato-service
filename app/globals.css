@@ -12343,15 +12343,13 @@ button.dia-trabalho-acao-btn--del:hover {
   animation: fechamento-fluxo-pulse-azul 1.35s ease-in-out infinite;
 }
 
-/* Fechamento — itens a cobrar (cartões, alinhado a Orçamento peças especiais) */
+/* Fechamento — itens a cobrar (cartões, alinhado a Cadastro Serviços / peças especiais) */
 .fechamento-itens-panel {
   padding: 20px 22px;
-  background: rgba(72, 72, 72, 0.92);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 12px;
-  border: 1px solid rgba(0, 200, 83, 0.22);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 8px 28px rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(0, 200, 83, 0.15);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
 }
 
 .fechamento-itens-panel__title-row {
@@ -12361,13 +12359,15 @@ button.dia-trabalho-acao-btn--del:hover {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 16px;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .fechamento-itens-panel__title {
   margin: 0;
-  color: #00c853;
-  font-size: 16px;
-  font-weight: 700;
+  color: #66b3ff;
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .fechamento-itens-panel__edit-hint {
@@ -12375,16 +12375,17 @@ button.dia-trabalho-acao-btn--del:hover {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 193, 7, 0.92);
+  font-weight: 500;
 }
 
 .fechamento-itens-subcard {
   margin-bottom: 16px;
   padding: 14px 16px;
   border-radius: 10px;
-  border: 1px solid rgba(0, 200, 83, 0.28);
-  background: rgba(255, 255, 255, 0.045);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 200, 83, 0.15);
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
 }
 
 .fechamento-itens-subcard--warn {
@@ -12394,22 +12395,22 @@ button.dia-trabalho-acao-btn--del:hover {
 
 .fechamento-itens-subcard__title {
   font-size: 13px;
-  font-weight: 700;
-  color: #7dff9e;
+  font-weight: 600;
+  color: #66b3ff;
   margin-bottom: 6px;
 }
 
 .fechamento-itens-subcard__text {
   margin: 0 0 10px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
   line-height: 1.45;
 }
 
 .fechamento-itens-subcard__hint-cliente {
   margin: 0 0 10px;
-  font-size: 12px;
-  color: #9be7ff;
+  font-size: 13px;
+  color: rgba(147, 197, 253, 0.95);
   line-height: 1.45;
 }
 
@@ -12417,10 +12418,10 @@ button.dia-trabalho-acao-btn--del:hover {
 .fechamento-itens-panel input[type='text'],
 .fechamento-itens-panel input[type='number'] {
   box-sizing: border-box;
-  padding: 9px 12px;
+  padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.45);
   color: #fff;
   font-size: 14px;
 }
@@ -12441,43 +12442,45 @@ button.dia-trabalho-acao-btn--del:hover {
 .fechamento-itens-table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0 12px;
-  color: #d4d4d4;
+  border-spacing: 0 16px;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .fechamento-itens-table thead th {
   padding: 8px 12px 10px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #00c853;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.75);
   text-align: left;
-  border-bottom: 1px solid rgba(0, 200, 83, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
 }
 
 .fechamento-itens-table tbody tr td {
-  padding: 12px 14px;
+  padding: 14px 16px;
   vertical-align: middle;
-  background: rgba(255, 255, 255, 0.045);
-  border-top: 1px solid rgba(0, 200, 83, 0.14);
-  border-bottom: 1px solid rgba(0, 200, 83, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  border-top: 1px solid rgba(0, 200, 83, 0.15);
+  border-bottom: 1px solid rgba(0, 200, 83, 0.15);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
 }
 
 .fechamento-itens-table tbody tr td:first-child {
-  border-left: 1px solid rgba(0, 200, 83, 0.14);
+  border-left: 1px solid rgba(0, 200, 83, 0.15);
   border-radius: 10px 0 0 10px;
-  color: #00c853;
+  color: #7dff9e;
   font-weight: 700;
 }
 
 .fechamento-itens-table tbody tr td:last-child {
-  border-right: 1px solid rgba(0, 200, 83, 0.14);
+  border-right: 1px solid rgba(0, 200, 83, 0.15);
   border-radius: 0 10px 10px 0;
 }
 
 .fechamento-itens-table tbody tr:hover td {
-  background: rgba(255, 255, 255, 0.065);
+  background: rgba(255, 255, 255, 0.06);
   border-color: rgba(0, 200, 83, 0.28);
 }
 
@@ -12486,7 +12489,9 @@ button.dia-trabalho-acao-btn--del:hover {
   max-width: min(480px, 55vw);
   white-space: normal;
   word-break: break-word;
-  color: #ececec;
+  color: #fff;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 .fechamento-item-input--info {
@@ -12502,11 +12507,11 @@ button.dia-trabalho-acao-btn--del:hover {
 }
 
 .fechamento-itens-table tfoot tr td {
-  background: rgba(0, 200, 83, 0.08);
-  border: 1px solid rgba(0, 200, 83, 0.22);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(0, 200, 83, 0.18);
   padding: 12px 14px;
   font-weight: 700;
-  color: #00c853;
+  color: rgba(255, 255, 255, 0.88);
 }
 
 .fechamento-itens-table tfoot tr.fechamento-itens-tfoot--iva td {
@@ -12516,9 +12521,9 @@ button.dia-trabalho-acao-btn--del:hover {
 }
 
 .fechamento-itens-table tfoot tr.fechamento-itens-tfoot--iva-total td {
-  background: rgba(56, 189, 248, 0.14);
-  border-color: rgba(56, 189, 248, 0.4);
-  color: #e0f2fe;
+  background: rgba(0, 200, 83, 0.1);
+  border-color: rgba(0, 200, 83, 0.35);
+  color: #86efac;
   font-size: 16px;
 }
 
@@ -12568,37 +12573,81 @@ button.dia-trabalho-acao-btn--del:hover {
 .fechamento-itens-btn-retirar {
   padding: 6px 10px;
   font-size: 11px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 136, 0, 0.55);
-  background: rgba(255, 136, 0, 0.12);
-  color: #ffaa66;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 193, 7, 0.45);
+  background: rgba(255, 193, 7, 0.1);
+  color: #fde68a;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
 }
 
 .fechamento-itens-btn-diaria {
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 13px;
-  border: 1px solid #555;
-  background: transparent;
-  color: #888;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .fechamento-itens-btn-diaria--sim.is-active {
-  border: 2px solid #00c853;
-  background: rgba(0, 200, 83, 0.2);
-  color: #00c853;
+  border: 2px solid rgba(0, 200, 83, 0.55);
+  background: rgba(0, 200, 83, 0.14);
+  color: #86efac;
   font-weight: 600;
 }
 
 .fechamento-itens-btn-diaria--nao.is-active {
-  border: 2px solid #ff8800;
-  background: rgba(255, 136, 0, 0.15);
-  color: #ff8800;
+  border: 2px solid rgba(255, 193, 7, 0.55);
+  background: rgba(255, 193, 7, 0.12);
+  color: #fde68a;
   font-weight: 600;
+}
+
+/* Fechamento relatórios — reforço visual igual ao Cadastro Serviços */
+.fechamento-relatorios-servicos-page.orcamento-pecas-especiais-page .fechamento-itens-panel.orcamento-pecas-especiais-form {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(0, 200, 83, 0.15);
+  box-shadow: none;
+}
+
+.fechamento-relatorios-servicos-page.orcamento-pecas-especiais-page .fechamento-itens-panel__title {
+  color: #66b3ff;
+}
+
+.fechamento-relatorios-servicos-page.orcamento-pecas-especiais-page .fechamento-itens-subcard.orcamento-pecas-especiais-linha {
+  background: rgba(0, 0, 0, 0.28);
+  border-color: rgba(0, 200, 83, 0.15);
+}
+
+.fechamento-relatorios-servicos-page.orcamento-pecas-especiais-page .fechamento-relatorios-servicos-table-host.cadastro-valores-v2__table-wrap--pro {
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.fechamento-relatorios-servicos-page.orcamento-pecas-especiais-page .fechamento-itens-table.cadastro-valores-v2__table--pro thead th {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fechamento-relatorios-servicos-page.orcamento-pecas-especiais-page .fechamento-itens-table.cadastro-valores-v2__table--pro tbody tr td {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(0, 200, 83, 0.15);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+}
+
+.fechamento-relatorios-servicos-page.orcamento-pecas-especiais-page .fechamento-itens-table.cadastro-valores-v2__table--pro tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(0, 200, 83, 0.28);
 }
 
 /* Clientes/Financeiro › Despesas na biblioteca — grupos expansíveis */
