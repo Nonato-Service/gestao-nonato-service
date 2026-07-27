@@ -7,6 +7,7 @@ export { BIBLIA_NONATO_STORAGE_KEY } from './bibliaNonatoTypes'
 
 type Props = {
   safeT: Record<string, string | undefined>
+  locale?: string
   closeTab: (tabId: string) => void
   activeTabId?: string
   onHome: () => void
@@ -21,7 +22,7 @@ type BibliaTranslateRequest = {
   callbackId: string
 }
 
-export function BibliaNonatoServiceContent({ safeT }: Props) {
+export function BibliaNonatoServiceContent({ safeT, locale = 'pt-BR' }: Props) {
   const { openForField } = useWritingAssistField()
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
@@ -29,6 +30,31 @@ export function BibliaNonatoServiceContent({ safeT }: Props) {
     () => String(safeT.bibliaNonatoServiceTitle ?? 'BÍBLIA DA NONATO SERVICE'),
     [safeT]
   )
+
+  const iframeSrc = useMemo(
+    () => `/biblia-app/index.html?embedded=1&lang=${encodeURIComponent(locale)}`,
+    [locale]
+  )
+
+  useEffect(() => {
+    const iframe = iframeRef.current
+    if (!iframe) return
+
+    const postLocale = () => {
+      try {
+        iframe.contentWindow?.postMessage(
+          { type: 'nonato-biblia-set-locale', locale },
+          window.location.origin
+        )
+      } catch {
+        /* cross-origin until load */
+      }
+    }
+
+    iframe.addEventListener('load', postLocale)
+    postLocale()
+    return () => iframe.removeEventListener('load', postLocale)
+  }, [locale, iframeSrc])
 
   useEffect(() => {
     const onMessage = (ev: MessageEvent) => {
@@ -60,7 +86,7 @@ export function BibliaNonatoServiceContent({ safeT }: Props) {
       <iframe
         ref={iframeRef}
         className="biblia-embed-frame"
-        src="/biblia-app/index.html?embedded=1"
+        src={iframeSrc}
         title={title}
         allow="clipboard-read; clipboard-write"
       />

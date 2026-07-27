@@ -21,6 +21,58 @@
   const IS_EMBEDDED = new URLSearchParams(window.location.search).get("embedded") === "1";
   let previewAttachment = null;
 
+  let currentLocale = NonatoBibliaI18n.normalizeLocale(
+    new URLSearchParams(window.location.search).get("lang") ||
+      (typeof localStorage !== "undefined" && localStorage.getItem("nonato-language"))
+  );
+
+  function t(key, params) {
+    return NonatoBibliaI18n.t(currentLocale, key, params);
+  }
+
+  function localeTime() {
+    return new Date().toLocaleTimeString(NonatoBibliaI18n.localeTag(currentLocale));
+  }
+
+  function localeDateTime() {
+    return new Date().toLocaleString(NonatoBibliaI18n.localeTag(currentLocale));
+  }
+
+  function tabSectionLabel() {
+    if (activeTab === "mechanical") return t("tabMechanical");
+    if (activeTab === "electrical") return t("tabElectrical");
+    if (activeTab === "notes") return t("tabNotes");
+    return t("tabSoftware");
+  }
+
+  function applyStaticI18n() {
+    document.documentElement.lang = NonatoBibliaI18n.localeTag(currentLocale);
+    document.title = t("pageTitle");
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute("content", t("pageDescription"));
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      const key = el.getAttribute("data-i18n");
+      if (!key) return;
+      if (el.hasAttribute("data-i18n-html")) el.innerHTML = t(key);
+      else el.textContent = t(key);
+    });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+      el.setAttribute("placeholder", t(el.getAttribute("data-i18n-placeholder")));
+    });
+    document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+      el.setAttribute("title", t(el.getAttribute("data-i18n-title")));
+    });
+    document.querySelectorAll("[data-i18n-aria-label]").forEach((el) => {
+      el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria-label")));
+    });
+  }
+
+  function setLocale(loc) {
+    currentLocale = NonatoBibliaI18n.normalizeLocale(loc);
+    applyStaticI18n();
+    render();
+  }
+
   function translateViaParent(text) {
     return new Promise((resolve) => {
       const source = String(text || "").trim();
@@ -29,7 +81,7 @@
         return;
       }
       if (!IS_EMBEDDED || !window.parent || window.parent === window) {
-        alert("Tradução disponível ao abrir a Bíblia dentro do programa Gestão.");
+        alert(t("translateOnlyInGestao"));
         resolve(null);
         return;
       }
@@ -79,7 +131,7 @@
   async function runTranslateFromTextarea(el) {
     const { text, start, end, hasSelection, full } = readTextareaSelection(el);
     if (!text) {
-      alert("Selecione ou escreva texto antes de traduzir.");
+      alert(t("selectTextBeforeTranslate"));
       return;
     }
     const translated = await translateViaParent(text);
@@ -204,9 +256,9 @@
     const title = $("previewModalTitle");
     const paste = $("previewTranslateField");
     if (!modal || !body || !title) return;
-    title.textContent = a.name || "Anexo";
+    title.textContent = a.name || t("previewDefaultTitle");
     if (paste) paste.value = "";
-    body.innerHTML = '<p class="hint">A carregar…</p>';
+    body.innerHTML = '<p class="hint">' + escapeHtml(t("previewLoading")) + "</p>";
 
     if (isPdfAttachment(a)) {
       revokePreviewObjectUrl();
@@ -222,7 +274,7 @@
           '"></iframe>' +
           '<a class="btn btn--secondary preview-modal__open" href="' +
           blobUrl +
-          '" target="_blank" rel="noopener">Abrir janela</a></div>';
+          '" target="_blank" rel="noopener">' + escapeHtml(t("openWindow")) + "</a></div>";
       } else {
         body.innerHTML =
           '<iframe class="preview-modal__frame" title="' +
@@ -263,7 +315,7 @@
     if (!paste) return;
     const { text, start, end, hasSelection, full } = readTextareaSelection(paste);
     if (!text) {
-      alert("Cole ou selecione texto no campo de tradução.");
+      alert(t("pasteTextBeforeTranslate"));
       return;
     }
     const translated = await translateViaParent(text);
@@ -298,7 +350,7 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       scheduleHostedPush();
     } catch (e) {
-      alert("Não foi possível guardar. Verifique o espaço do navegador.");
+      alert(t("saveFailed"));
     }
   }
 
@@ -338,7 +390,7 @@
               .filter((a) => a && a.dataUrl && String(a.dataUrl).startsWith("data:"))
               .map((a) => ({
                 id: a.id || uid(),
-                nome: a.name || "ficheiro",
+                nome: a.name || t("fileDefault"),
                 mime: a.mime || "application/octet-stream",
                 dataUrl: a.dataUrl,
               }));
@@ -373,12 +425,12 @@
 
   async function loadFromServerHosted(silent) {
     const base = window.location.origin;
-    setSyncStatus("A carregar do servidor…", "warn");
+    setSyncStatus(t("loadingFromServer"), "warn");
     try {
       let data = await fetchServerKey(base, STORAGE_KEY);
       if (!data) data = await fetchServerKey(base, GESTAO_STORAGE_KEY);
       if (!data) {
-        setSyncStatus("Servidor ligado — ainda sem dados. Edite e guarde.", "warn");
+        setSyncStatus(t("serverConnectedNoData"), "warn");
         return false;
       }
       state = normalizeImport(data);
@@ -387,12 +439,12 @@
       } catch (_) {}
       route = { categoryId: null, brandId: null, modelId: null };
       render();
-      setSyncStatus("Sincronizado · " + importSummary(state), "ok");
-      if (!silent) alert("Dados carregados do servidor.\n" + importSummary(state));
+      setSyncStatus(t("syncedPrefix") + importSummary(state), "ok");
+      if (!silent) alert(t("dataLoadedFromServer", { summary: importSummary(state) }));
       return true;
     } catch (err) {
       console.error(err);
-      setSyncStatus("Sem ligação ao servidor — a usar cópia local.", "err");
+      setSyncStatus(t("noServerConnection"), "err");
       return false;
     }
   }
@@ -401,7 +453,7 @@
     if (!isHostedGestao()) return;
     const base = window.location.origin;
     if (detailDirty) flushDetailFields();
-    setSyncStatus("A guardar no servidor…", "warn");
+    setSyncStatus(t("savingToServer"), "warn");
     try {
       for (const item of [
         { key: STORAGE_KEY, value: state },
@@ -416,10 +468,10 @@
         const json = await res.json();
         if (!json.success) throw new Error(json.error || "save failed");
       }
-      setSyncStatus("Guardado no servidor · " + new Date().toLocaleString("pt-BR"), "ok");
+      setSyncStatus(t("savedToServer", { time: localeDateTime() }), "ok");
     } catch (err) {
       console.error(err);
-      setSyncStatus("Erro ao guardar no servidor — cópia local mantida.", "err");
+      setSyncStatus(t("saveServerError"), "err");
     }
   }
 
@@ -435,6 +487,7 @@
   }
 
   async function bootstrap() {
+    applyStaticI18n();
     load();
     if (isHostedGestao()) {
       await initHostedGestao();
@@ -480,10 +533,10 @@
           : [];
       return {
         id: fam.id || uid(),
-        name: (fam.nome || "Sem categoria").trim() || "Sem categoria",
+        name: (fam.nome || t("noCategory")).trim() || t("noCategory"),
         brands: linhas.map((lin) => ({
           id: lin.id || uid(),
-          name: (lin.titulo || "Sem fabricante").trim() || "Sem fabricante",
+          name: (lin.titulo || t("noManufacturer")).trim() || t("noManufacturer"),
           models: (Array.isArray(lin.modelos) ? lin.modelos : []).map((mod) => {
             const anexos = Array.isArray(mod.anexos) ? mod.anexos : [];
             const attachments = anexos
@@ -525,7 +578,7 @@
             }
             return {
               id: mod.id || uid(),
-              name: (mod.nome || mod.titulo || mod.name || "Sem modelo").trim() || "Sem modelo",
+              name: (mod.nome || mod.titulo || mod.name || t("noModel")).trim() || t("noModel"),
               software,
               mechanical,
               electrical,
@@ -557,15 +610,15 @@
 
   function importSummary(parsed) {
     const stats = countData(parsed);
-    return (
-      stats.categories +
-      " categoria(s), " +
-      stats.brands +
-      " fabricante(s), " +
-      stats.models +
-      " modelo(s)" +
-      (stats.attachments ? ", " + stats.attachments + " anexo(s)" : "")
-    );
+    const attachmentsPart = stats.attachments
+      ? t("attachmentsPart", { count: stats.attachments })
+      : "";
+    return t("importSummary", {
+      categories: stats.categories,
+      brands: stats.brands,
+      models: stats.models,
+      attachmentsPart,
+    });
   }
 
   function applyImport(parsed) {
@@ -599,32 +652,25 @@
     block.hidden = false;
     const attachments = ensureAttachments(model);
     const secao = getActiveSecao();
-    const secaoLabel =
-      activeTab === "mechanical"
-        ? "Mecânica"
-        : activeTab === "electrical"
-          ? "Elétrica"
-          : activeTab === "notes"
-            ? "Notas"
-            : "Software";
+    const secaoLabel = tabSectionLabel();
 
     const filtered = attachments.filter((a) => resolveAttachmentSecao(a) === secao);
     const files = filtered.filter((a) => !isImageAttachment(a));
     const images = filtered.filter((a) => isImageAttachment(a));
 
     const titleEl = $("attachmentsTitle");
-    if (titleEl) titleEl.textContent = "Anexos — " + secaoLabel;
+    if (titleEl) titleEl.textContent = t("attachmentsTitleSection", { section: secaoLabel });
 
     if (files.length === 0) {
-      ul.innerHTML = '<li class="hint">Nenhum documento nesta secção.</li>';
+      ul.innerHTML = '<li class="hint">' + escapeHtml(t("noDocumentsInSection")) + "</li>";
     } else {
       ul.innerHTML = files
         .map(
           (a) => `<li class="attachments__item">
           <span class="attachments__name" title="${escapeHtml(a.name)}">${escapeHtml(a.name)}</span>
-          <button type="button" class="btn btn--secondary attachments__view" data-view="${a.id}">Visualizar</button>
-          <a href="${a.dataUrl}" download="${escapeHtml(a.name)}" class="attachments__dl" title="Descarregar">↓</a>
-          <button type="button" class="attachments__remove" data-att="${a.id}" title="Remover">✕</button>
+          <button type="button" class="btn btn--secondary attachments__view" data-view="${a.id}">${escapeHtml(t("btnView"))}</button>
+          <a href="${a.dataUrl}" download="${escapeHtml(a.name)}" class="attachments__dl" title="${escapeHtml(t("downloadTitle"))}">↓</a>
+          <button type="button" class="attachments__remove" data-att="${a.id}" title="${escapeHtml(t("removeTitle"))}">✕</button>
         </li>`
         )
         .join("");
@@ -632,7 +678,7 @@
 
     if (imgUl) {
       if (images.length === 0) {
-        imgUl.innerHTML = '<li class="hint">Nenhuma imagem nesta secção.</li>';
+        imgUl.innerHTML = '<li class="hint">' + escapeHtml(t("noImagesInSection")) + "</li>";
       } else {
         imgUl.innerHTML = images
           .map(
@@ -641,7 +687,7 @@
               <img class="attachments__thumb" src="${a.dataUrl}" alt="${escapeHtml(a.name)}" />
               <span class="attachments__name">${escapeHtml(a.name)}</span>
             </button>
-            <button type="button" class="attachments__remove" data-att="${a.id}" title="Remover">✕</button>
+            <button type="button" class="attachments__remove" data-att="${a.id}" title="${escapeHtml(t("removeTitle"))}">✕</button>
           </li>`
           )
           .join("");
@@ -701,7 +747,7 @@
       brand && route.modelId ? findModel(brand, route.modelId) : null;
 
     const parts = [
-      `<button type="button" data-crumb="home">Início</button>`,
+      `<button type="button" data-crumb="home">${escapeHtml(t("breadcrumbHome"))}</button>`,
     ];
     if (cat) {
       parts.push(`<span class="breadcrumbs__sep">›</span>`);
@@ -789,8 +835,7 @@
     const ul = $("listCategories");
     const list = getFilteredCategories();
     if (list.length === 0) {
-      ul.innerHTML =
-        '<li class="hint">Nenhuma categoria. Adicione «Seccionadoras» ou outro tipo.</li>';
+      ul.innerHTML = '<li class="hint">' + escapeHtml(t("noCategoriesHint")) + "</li>";
       return;
     }
     ul.innerHTML = list
@@ -800,11 +845,11 @@
         return `<li class="list__item">
           <button type="button" class="list__item-btn" data-nav="cat" data-id="${c.id}">
             <strong>${escapeHtml(c.name)}</strong>
-            <div class="list__item-meta">${nBrands} fabricante(s) · ${nModels} modelo(s)</div>
+            <div class="list__item-meta">${escapeHtml(t("metaManufacturersModels", { brands: nBrands, models: nModels }))}</div>
           </button>
           <div class="list__item-actions">
-            <button type="button" class="list__rename" data-action="rename" data-id="${c.id}" title="Renomear">✎</button>
-            <button type="button" class="list__delete" data-action="delete" data-id="${c.id}" title="Excluir">✕</button>
+            <button type="button" class="list__rename" data-action="rename" data-id="${c.id}" title="${escapeHtml(t("renameTitle"))}">✎</button>
+            <button type="button" class="list__delete" data-action="delete" data-id="${c.id}" title="${escapeHtml(t("deleteTitle"))}">✕</button>
           </div>
         </li>`;
       })
@@ -826,8 +871,8 @@
   function renderBrands() {
     const cat = findCategory(route.categoryId);
     $("brandsTitle").textContent = cat
-      ? `Fabricantes — ${cat.name}`
-      : "Fabricantes";
+      ? t("brandsTitleNamed", { name: cat.name })
+      : t("brandsTitleDefault");
     const ul = $("listBrands");
     if (!cat) return;
     const filtered = searchQuery
@@ -839,8 +884,7 @@
       : cat.brands;
 
     if (filtered.length === 0) {
-      ul.innerHTML =
-        '<li class="hint">Nenhum fabricante nesta categoria. Adicione Holzma, Homag, etc.; depois os modelos.</li>';
+      ul.innerHTML = '<li class="hint">' + escapeHtml(t("noManufacturersHint")) + "</li>";
       return;
     }
     ul.innerHTML = filtered
@@ -849,11 +893,11 @@
         return `<li class="list__item">
           <button type="button" class="list__item-btn" data-nav="brand" data-id="${b.id}">
             <strong>${escapeHtml(b.name)}</strong>
-            <div class="list__item-meta">${n} modelo(s)</div>
+            <div class="list__item-meta">${escapeHtml(t("metaModels", { count: n }))}</div>
           </button>
           <div class="list__item-actions">
-            <button type="button" class="list__rename" data-action="rename" data-id="${b.id}" data-cat="${cat.id}" title="Renomear">✎</button>
-            <button type="button" class="list__delete" data-action="delete" data-id="${b.id}" data-cat="${cat.id}" title="Excluir">✕</button>
+            <button type="button" class="list__rename" data-action="rename" data-id="${b.id}" data-cat="${cat.id}" title="${escapeHtml(t("renameTitle"))}">✎</button>
+            <button type="button" class="list__delete" data-action="delete" data-id="${b.id}" data-cat="${cat.id}" title="${escapeHtml(t("deleteTitle"))}">✕</button>
           </div>
         </li>`;
       })
@@ -873,8 +917,8 @@
     const cat = findCategory(route.categoryId);
     const brand = cat ? findBrand(cat, route.brandId) : null;
     $("modelsTitle").textContent = brand
-      ? `Modelos — ${brand.name}`
-      : "Modelos";
+      ? t("modelsTitleNamed", { name: brand.name })
+      : t("modelsTitleDefault");
     const ul = $("listModels");
     if (!brand) return;
     const models = searchQuery
@@ -882,8 +926,7 @@
       : brand.models;
 
     if (models.length === 0) {
-      ul.innerHTML =
-        '<li class="hint">Nenhum modelo. Adicione HPP 230, HPL 380, etc.</li>';
+      ul.innerHTML = '<li class="hint">' + escapeHtml(t("noModelsHint")) + "</li>";
       return;
     }
     ul.innerHTML = models
@@ -893,8 +936,8 @@
           <strong>${escapeHtml(m.name)}</strong>
         </button>
         <div class="list__item-actions">
-          <button type="button" class="list__rename" data-action="rename" data-id="${m.id}" data-cat="${cat.id}" data-brand="${brand.id}" title="Renomear">✎</button>
-          <button type="button" class="list__delete" data-action="delete" data-id="${m.id}" data-cat="${cat.id}" data-brand="${brand.id}" title="Excluir">✕</button>
+          <button type="button" class="list__rename" data-action="rename" data-id="${m.id}" data-cat="${cat.id}" data-brand="${brand.id}" title="${escapeHtml(t("renameTitle"))}">✎</button>
+          <button type="button" class="list__delete" data-action="delete" data-id="${m.id}" data-cat="${cat.id}" data-brand="${brand.id}" title="${escapeHtml(t("deleteTitle"))}">✕</button>
         </div>
       </li>`
       )
@@ -922,7 +965,7 @@
     model.electrical = $("fieldElectrical").value;
     model.notes = $("fieldNotes").value;
     save();
-    $("saveHint").textContent = "Guardado " + new Date().toLocaleTimeString("pt-BR");
+    $("saveHint").textContent = t("savedAt", { time: localeTime() });
     detailDirty = false;
   }
 
@@ -1016,7 +1059,7 @@
   function openModalRenameCategory(id) {
     const c = findCategory(id);
     if (!c) return;
-    openModal("Renomear categoria", c.name).then((name) => {
+    openModal(t("renameCategory"), c.name).then((name) => {
       if (!name || name === c.name) return;
       c.name = name;
       save();
@@ -1028,7 +1071,7 @@
     const cat = findCategory(catId);
     const b = cat ? findBrand(cat, brandId) : null;
     if (!b) return;
-    openModal("Renomear fabricante", b.name).then((name) => {
+    openModal(t("renameManufacturer"), b.name).then((name) => {
       if (!name || name === b.name) return;
       b.name = name;
       save();
@@ -1041,7 +1084,7 @@
     const br = cat ? findBrand(cat, brandId) : null;
     const m = br ? findModel(br, modelId) : null;
     if (!m) return;
-    openModal("Renomear modelo", m.name).then((name) => {
+    openModal(t("renameModel"), m.name).then((name) => {
       if (!name || name === m.name) return;
       m.name = name;
       save();
@@ -1050,7 +1093,7 @@
   }
 
   function deleteCategory(id) {
-    if (!confirm("Excluir esta categoria, todos os fabricantes e modelos?")) return;
+    if (!confirm(t("confirmDeleteCategory"))) return;
     state.categories = state.categories.filter((c) => c.id !== id);
     if (route.categoryId === id)
       route = { categoryId: null, brandId: null, modelId: null };
@@ -1061,7 +1104,7 @@
   function deleteBrand(catId, brandId) {
     const cat = findCategory(catId);
     if (!cat) return;
-    if (!confirm("Excluir este fabricante e todos os modelos?")) return;
+    if (!confirm(t("confirmDeleteManufacturer"))) return;
     cat.brands = cat.brands.filter((b) => b.id !== brandId);
     if (route.brandId === brandId) route.brandId = route.modelId = null;
     save();
@@ -1072,7 +1115,7 @@
     const cat = findCategory(catId);
     const br = cat ? findBrand(cat, brandId) : null;
     if (!br) return;
-    if (!confirm("Excluir este modelo?")) return;
+    if (!confirm(t("confirmDeleteModel"))) return;
     br.models = br.models.filter((m) => m.id !== modelId);
     if (route.modelId === modelId) route.modelId = null;
     save();
@@ -1080,7 +1123,7 @@
   }
 
   $("btnAddCategory").addEventListener("click", () => {
-    openModal("Nova categoria").then((name) => {
+    openModal(t("newCategory")).then((name) => {
       if (!name) return;
       state.categories.push({
         id: uid(),
@@ -1095,7 +1138,7 @@
   $("btnAddBrand").addEventListener("click", () => {
     const cat = findCategory(route.categoryId);
     if (!cat) return;
-    openModal("Novo fabricante (ex.: Holzma)").then((name) => {
+    openModal(t("newManufacturer")).then((name) => {
       if (!name) return;
       cat.brands.push({ id: uid(), name, models: [] });
       save();
@@ -1107,7 +1150,7 @@
     const cat = findCategory(route.categoryId);
     const br = cat ? findBrand(cat, route.brandId) : null;
     if (!br) return;
-    openModal("Novo modelo (ex.: HPP 380)").then((name) => {
+    openModal(t("newModel")).then((name) => {
       if (!name) return;
       br.models.push({
         id: uid(),
@@ -1182,17 +1225,12 @@
           parsed = JSON.parse(String(parsed));
         }
         const normalized = normalizeImport(parsed);
-        const msg =
-          "Importar " +
-          importSummary(normalized) +
-          "?\n\nIsto substitui todos os dados neste dispositivo. Exporte antes se precisar de cópia.";
+        const msg = t("importConfirm", { summary: importSummary(normalized) });
         if (!confirm(msg)) return;
         applyImport(normalized);
-        alert("Importação concluída.\n" + importSummary(state));
+        alert(t("importDone", { summary: importSummary(state) }));
       } catch (err) {
-        alert(
-          "Não foi possível ler o ficheiro.\n\nUse um backup deste app ({ categories }) ou do programa Gestão ({ familias })."
-        );
+        alert(t("importFileError"));
       }
     };
     reader.readAsText(file);
@@ -1245,7 +1283,7 @@
         break;
       }
       if (file.size > ATTACHMENT_MAX_BYTES) {
-        alert("«" + file.name + "» demasiado grande (máx. ~6 MB).");
+        alert(t("fileTooLarge", { name: file.name }));
         continue;
       }
       try {
@@ -1262,20 +1300,20 @@
         });
         added += 1;
       } catch {
-        alert("Não foi possível ler «" + file.name + "».");
+        alert(t("fileReadError", { name: file.name }));
       }
     }
 
     if (skippedLimit) {
-      alert("Limite de " + ATTACHMENT_MAX_PER_MODEL + " anexos por modelo.");
+      alert(t("attachmentLimit", { max: ATTACHMENT_MAX_PER_MODEL }));
     }
     if (added > 0) {
       save();
       renderAttachments();
       $("saveHint").textContent =
         added === 1
-          ? "Anexo guardado " + new Date().toLocaleTimeString("pt-BR")
-          : added + " anexos guardados " + new Date().toLocaleTimeString("pt-BR");
+          ? t("attachmentSaved", { time: localeTime() })
+          : t("attachmentsSaved", { count: added, time: localeTime() });
     }
   }
 
@@ -1358,6 +1396,14 @@
 
     btnEnter?.addEventListener("click", showApp);
   }
+
+  window.addEventListener("message", (ev) => {
+    if (ev.origin !== window.location.origin) return;
+    const d = ev.data;
+    if (d && d.type === "nonato-biblia-set-locale" && d.locale) {
+      setLocale(d.locale);
+    }
+  });
 
   bootstrap();
 })();

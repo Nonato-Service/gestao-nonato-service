@@ -63279,6 +63279,7 @@ A1;Peça exemplo;10`}
         return (
           <BibliaNonatoServiceContent
             safeT={safeT as Record<string, string | undefined>}
+            locale={selectedLanguage}
             closeTab={closeTab}
             activeTabId={activeTabId}
             onHome={voltarPaginaInicial}

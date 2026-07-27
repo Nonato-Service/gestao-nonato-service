@@ -23,8 +23,8 @@
         alt="Nonato Service"
         decoding="async"
       />
-      <p class="landing__tagline">Entrar para atualizar seu conhecimento</p>
-      <button type="button" class="btn btn--enter" id="btnEnter">
+      <p class="landing__tagline" data-i18n="landingTagline">Entrar para atualizar seu conhecimento</p>
+      <button type="button" class="btn btn--enter" id="btnEnter" data-i18n="btnEnter">
         Entrar
       </button>
     </div>
@@ -42,15 +42,15 @@
           decoding="async"
         />
         <div class="header__text">
-          <h1 class="header__title">Bíblia da Nonato Service</h1>
-          <p class="header__subtitle">Base técnica — software, mecânica e eletricidade</p>
+          <h1 class="header__title" data-i18n="headerTitle">Bíblia da Nonato Service</h1>
+          <p class="header__subtitle" data-i18n="headerSubtitle">Base técnica — software, mecânica e eletricidade</p>
         </div>
       </div>
       <div class="header__actions">
-        <button type="button" class="btn btn--ghost" id="btnSearch" aria-label="Buscar">Buscar</button>
-        <button type="button" class="btn btn--secondary" id="btnExport">Exportar backup</button>
-        <label class="btn btn--secondary btn--file" title="Aceita backup deste app ou do programa Gestão Nonato Service">
-          Importar backup
+        <button type="button" class="btn btn--ghost" id="btnSearch" data-i18n="btnSearch" data-i18n-aria-label="btnSearch">Buscar</button>
+        <button type="button" class="btn btn--secondary" id="btnExport" data-i18n="btnExport">Exportar backup</button>
+        <label class="btn btn--secondary btn--file" id="btnImportLabel" data-i18n-title="importBackupTitle">
+          <span data-i18n="btnImportBackup">Importar backup</span>
           <input type="file" id="importFile" accept="application/json,.json" hidden />
         </label>
       </div>
@@ -61,7 +61,7 @@
     </p>
 
     <div class="search-panel" id="searchPanel" hidden>
-      <input type="search" id="searchInput" class="input search-panel__input" placeholder="Filtrar por categoria, fabricante ou modelo…" autocomplete="off" />
+      <input type="search" id="searchInput" class="input search-panel__input" data-i18n-placeholder="searchPlaceholder" placeholder="Filtrar por categoria, fabricante ou modelo…" autocomplete="off" />
     </div>
 
     <nav class="breadcrumbs" id="breadcrumbs" aria-label="Navegação"></nav>
@@ -76,8 +76,8 @@
           alt=""
           decoding="async"
         />
-        <h2 class="home-hero__heading">Bíblia da <span class="home-hero__accent">Nonato Service</span></h2>
-        <p class="home-hero__lead">
+        <h2 class="home-hero__heading" id="homeHeroHeading" data-i18n="homeHeroHtml" data-i18n-html>Bíblia da <span class="home-hero__accent">Nonato Service</span></h2>
+        <p class="home-hero__lead" id="homeHeroLead" data-i18n="homeHeroLead" data-i18n-html>
           Consulta e registo organizado de informações técnicas — por tipo de equipamento, fabricante e
           <strong>modelo</strong> (software, mecânica e eletricidade).
         </p>
@@ -85,26 +85,26 @@
 
       <section class="panel" id="viewCategories">
         <div class="panel__head">
-          <h2 class="panel__title">Categorias de equipamento</h2>
-          <button type="button" class="btn btn--primary" id="btnAddCategory">+ Categoria</button>
+          <h2 class="panel__title" data-i18n="panelCategoriesTitle">Categorias de equipamento</h2>
+          <button type="button" class="btn btn--primary" id="btnAddCategory" data-i18n="btnAddCategory">+ Categoria</button>
         </div>
-        <p class="hint">Ex.: Seccionadoras, Esquadrejadoras, CNC… Depois escolha o fabricante e os modelos.</p>
+        <p class="hint" data-i18n="categoriesHint">Ex.: Seccionadoras, Esquadrejadoras, CNC… Depois escolha o fabricante e os modelos.</p>
         <ul class="list" id="listCategories"></ul>
       </section>
 
       <section class="panel" id="viewBrands" hidden>
         <div class="panel__head">
           <h2 class="panel__title" id="brandsTitle">Fabricantes</h2>
-          <button type="button" class="btn btn--primary" id="btnAddBrand">+ Fabricante</button>
+          <button type="button" class="btn btn--primary" id="btnAddBrand" data-i18n="btnAddBrand">+ Fabricante</button>
         </div>
-        <p class="hint" id="brandsHint">Cada fabricante tem a sua lista de <strong>modelos</strong> (ex.: HPP 380).</p>
+        <p class="hint" id="brandsHint" data-i18n="brandsHint" data-i18n-html>Cada fabricante tem a sua lista de <strong>modelos</strong> (ex.: HPP 380).</p>
         <ul class="list" id="listBrands"></ul>
       </section>
 
       <section class="panel" id="viewModels" hidden>
         <div class="panel__head">
           <h2 class="panel__title" id="modelsTitle">Modelos</h2>
-          <button type="button" class="btn btn--primary" id="btnAddModel">+ Modelo</button>
+          <button type="button" class="btn btn--primary" id="btnAddModel" data-i18n="btnAddModel">+ Modelo</button>
         </div>
         <ul class="list" id="listModels"></ul>
       </section>
@@ -113,87 +113,88 @@
         <div class="panel__head panel__head--wrap">
           <h2 class="panel__title" id="detailTitle">Detalhe</h2>
           <div class="detail-actions">
-            <button type="button" class="btn btn--danger" id="btnDeleteModel">Excluir modelo</button>
+            <button type="button" class="btn btn--danger" id="btnDeleteModel" data-i18n="btnDeleteModel">Excluir modelo</button>
           </div>
         </div>
         <div class="tabs" role="tablist">
-          <button type="button" class="tabs__tab is-active" role="tab" aria-selected="true" data-tab="software">Software</button>
-          <button type="button" class="tabs__tab" role="tab" aria-selected="false" data-tab="mechanical">Mecânica</button>
-          <button type="button" class="tabs__tab" role="tab" aria-selected="false" data-tab="electrical">Elétrica</button>
-          <button type="button" class="tabs__tab" role="tab" aria-selected="false" data-tab="notes">Outras notas</button>
+          <button type="button" class="tabs__tab is-active" role="tab" aria-selected="true" data-tab="software" data-i18n="tabSoftware">Software</button>
+          <button type="button" class="tabs__tab" role="tab" aria-selected="false" data-tab="mechanical" data-i18n="tabMechanical">Mecânica</button>
+          <button type="button" class="tabs__tab" role="tab" aria-selected="false" data-tab="electrical" data-i18n="tabElectrical">Elétrica</button>
+          <button type="button" class="tabs__tab" role="tab" aria-selected="false" data-tab="notes" data-i18n="tabNotes">Outras notas</button>
         </div>
         <div class="tab-panels">
           <div class="tab-panel is-active" id="tab-software" role="tabpanel">
-            <label class="field-label" for="fieldSoftware">Informações de software</label>
-            <textarea id="fieldSoftware" class="textarea" rows="12" placeholder="Versões, parâmetros, backups, redes…"></textarea>
+            <label class="field-label" for="fieldSoftware" data-i18n="labelSoftware">Informações de software</label>
+            <textarea id="fieldSoftware" class="textarea" rows="12" data-i18n-placeholder="placeholderSoftware" placeholder="Versões, parâmetros, backups, redes…"></textarea>
           </div>
           <div class="tab-panel" id="tab-mechanical" role="tabpanel" hidden>
-            <label class="field-label" for="fieldMechanical">Informações mecânicas</label>
-            <textarea id="fieldMechanical" class="textarea" rows="12" placeholder="Calibração, peças, manutenção…"></textarea>
+            <label class="field-label" for="fieldMechanical" data-i18n="labelMechanical">Informações mecânicas</label>
+            <textarea id="fieldMechanical" class="textarea" rows="12" data-i18n-placeholder="placeholderMechanical" placeholder="Calibração, peças, manutenção…"></textarea>
           </div>
           <div class="tab-panel" id="tab-electrical" role="tabpanel" hidden>
-            <label class="field-label" for="fieldElectrical">Informações elétricas</label>
-            <textarea id="fieldElectrical" class="textarea" rows="12" placeholder="Esquemas, fusíveis, motores, IO…"></textarea>
+            <label class="field-label" for="fieldElectrical" data-i18n="labelElectrical">Informações elétricas</label>
+            <textarea id="fieldElectrical" class="textarea" rows="12" data-i18n-placeholder="placeholderElectrical" placeholder="Esquemas, fusíveis, motores, IO…"></textarea>
           </div>
           <div class="tab-panel" id="tab-notes" role="tabpanel" hidden>
-            <label class="field-label" for="fieldNotes">Outras notas</label>
-            <textarea id="fieldNotes" class="textarea" rows="12" placeholder="Contatos, fornecedores, observações gerais…"></textarea>
+            <label class="field-label" for="fieldNotes" data-i18n="labelNotes">Outras notas</label>
+            <textarea id="fieldNotes" class="textarea" rows="12" data-i18n-placeholder="placeholderNotes" placeholder="Contatos, fornecedores, observações gerais…"></textarea>
           </div>
         </div>
         <div class="attachments" id="attachmentsBlock" hidden>
           <h3 class="attachments__title" id="attachmentsTitle">Anexos</h3>
-          <p class="hint">Documentos e imagens da secção activa (Software, Mecânica, Elétrica ou Notas). PDFs abrem no ecrã.</p>
-          <h4 class="attachments__subtitle">Documentos</h4>
+          <p class="hint" id="attachmentsHint" data-i18n="attachmentsHint">Documentos e imagens da secção activa (Software, Mecânica, Elétrica ou Notas). PDFs abrem no ecrã.</p>
+          <h4 class="attachments__subtitle" data-i18n="documentsSubtitle">Documentos</h4>
           <ul class="attachments__list" id="attachmentsList"></ul>
           <label class="btn btn--secondary btn--file attachments__add">
-            + Adicionar documento(s)
+            <span data-i18n="btnAddDocument">+ Adicionar documento(s)</span>
             <input type="file" id="attachmentInput" accept=".pdf,.doc,.docx,.txt" multiple hidden />
           </label>
-          <h4 class="attachments__subtitle">Imagens</h4>
+          <h4 class="attachments__subtitle" data-i18n="imagesSubtitle">Imagens</h4>
           <ul class="attachments__list attachments__list--images" id="attachmentsImagesList"></ul>
           <label class="btn btn--secondary btn--file attachments__add">
-            + Adicionar imagem(ns)
+            <span data-i18n="btnAddImage">+ Adicionar imagem(ns)</span>
             <input type="file" id="imageInput" accept="image/*" multiple hidden />
           </label>
         </div>
         <div class="biblia-view-tools" id="bibliaViewTools" hidden>
-          <h3 class="biblia-view-tools__title">Consulta e tradução</h3>
-          <p class="hint biblia-view-tools__hint">
+          <h3 class="biblia-view-tools__title" data-i18n="viewToolsTitle">Consulta e tradução</h3>
+          <p class="hint biblia-view-tools__hint" data-i18n="viewToolsHint">
             Selecione texto numa aba acima ou abra um anexo em Visualizar. Prima Traduzir quando precisar.
           </p>
           <div class="biblia-view-tools__actions">
-            <button type="button" class="btn btn--primary" id="btnBibliaTranslate">Traduzir</button>
-            <button type="button" class="btn btn--secondary" id="btnBibliaCopy">Copiar texto</button>
+            <button type="button" class="btn btn--primary" id="btnBibliaTranslate" data-i18n="btnTranslate">Traduzir</button>
+            <button type="button" class="btn btn--secondary" id="btnBibliaCopy" data-i18n="btnCopy">Copiar texto</button>
           </div>
         </div>
-        <p class="save-hint" id="saveHint">Alterações guardadas automaticamente neste dispositivo.</p>
+        <p class="save-hint" id="saveHint" data-i18n="saveHintDefault">Alterações guardadas automaticamente neste dispositivo.</p>
       </section>
     </main>
 
     <footer class="footer">
-      <span>Dados guardados neste aparelho. No programa online sincroniza automaticamente com o servidor.</span>
+      <span data-i18n="footerText">Dados guardados neste aparelho. No programa online sincroniza automaticamente com o servidor.</span>
     </footer>
   </div>
 
   <dialog class="preview-modal" id="previewModal">
     <div class="preview-modal__head">
       <div>
-        <p class="preview-modal__eyebrow">Pré-visualização</p>
+        <p class="preview-modal__eyebrow" data-i18n="previewEyebrow">Pré-visualização</p>
         <h3 class="preview-modal__title" id="previewModalTitle">Anexo</h3>
       </div>
-      <button type="button" class="btn btn--ghost" id="previewModalClose">Fechar</button>
+      <button type="button" class="btn btn--ghost" id="previewModalClose" data-i18n="previewClose">Fechar</button>
     </div>
     <div class="preview-modal__translate">
-      <p class="hint">Em PDF: selecione texto no documento, copie (Ctrl+C) e cole abaixo. Depois prima Traduzir.</p>
+      <p class="hint" data-i18n="previewPdfHint">Em PDF: selecione texto no documento, copie (Ctrl+C) e cole abaixo. Depois prima Traduzir.</p>
       <textarea
         id="previewTranslateField"
         class="textarea preview-modal__paste"
         rows="4"
+        data-i18n-placeholder="previewPastePlaceholder"
         placeholder="Cole aqui o texto a traduzir…"
       ></textarea>
       <div class="preview-modal__actions">
-        <button type="button" class="btn btn--primary" id="previewModalTranslate">Traduzir</button>
-        <button type="button" class="btn btn--secondary" id="previewModalCopy">Copiar texto</button>
+        <button type="button" class="btn btn--primary" id="previewModalTranslate" data-i18n="btnTranslate">Traduzir</button>
+        <button type="button" class="btn btn--secondary" id="previewModalCopy" data-i18n="btnCopy">Copiar texto</button>
       </div>
     </div>
     <div class="preview-modal__body" id="previewModalBody"></div>
@@ -202,15 +203,16 @@
   <dialog class="modal" id="modal">
     <form method="dialog" class="modal__form" id="modalForm">
       <h3 class="modal__title" id="modalTitle">Título</h3>
-      <label class="field-label" for="modalInput">Nome</label>
+      <label class="field-label" for="modalInput" data-i18n="modalNameLabel">Nome</label>
       <input type="text" id="modalInput" class="input" autocomplete="off" />
       <div class="modal__actions">
-        <button type="button" class="btn btn--ghost" id="modalCancel">Cancelar</button>
-        <button type="submit" class="btn btn--primary" id="modalOk">OK</button>
+        <button type="button" class="btn btn--ghost" id="modalCancel" data-i18n="modalCancel">Cancelar</button>
+        <button type="submit" class="btn btn--primary" id="modalOk" data-i18n="modalOk">OK</button>
       </div>
     </form>
   </dialog>
 
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
   <script>
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
