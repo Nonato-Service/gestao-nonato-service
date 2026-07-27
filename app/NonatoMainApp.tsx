@@ -141,6 +141,9 @@ import {
   hashImagemComprovante,
   mensagemDuplicadoComprovante,
 } from './lib/comprovanteDuplicado'
+import {
+  NONATO_BRAND_LOGO_FALLBACK_SVG_SRC,
+} from './lib/nonatoBrandAssets'
 import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, buildRelatorioServicoPdfMetaSectionHtml, buildFechamentoDespesasRelatorioInfoHtml, buildFechamentoDespesasClienteMetaFields, buildRelatorioServicoSummaryCardsHtml, type RelatorioServicoPdfHeaderVariant, type RelatorioServicoPdfMetaLabels } from './lib/relatorioServicoPdfPrintCss'
 import { PDF_DOCUMENT_LAYOUT_CSS, buildPdfDocumentHeaderHtml, buildPdfDocumentFooterHtml, buildPdfMetaSectionHtml } from './lib/pdfDocumentLayout'
 import {
@@ -6335,50 +6338,53 @@ export default function Dashboard() {
       xlarge: { container: '240px', fontSize: '46px', serviceSize: '22px' }
     }
     const s = sizes[size]
-    
+    const mediaSrc = logoUrl || NONATO_BRAND_LOGO_FALLBACK_SVG_SRC
+    const mediaIsVideo = Boolean(logoUrl && logoType === 'video')
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        {logoUrl ? (
-          logoType === 'video' ? (
-            <div className="ns-logo-in-box" style={{ width: s.container, height: s.container }}>
-              <video src={logoUrl} autoPlay loop muted playsInline />
-            </div>
+        <div className="ns-logo-in-box" style={{ width: s.container, height: s.container }}>
+          {mediaIsVideo ? (
+            <video src={mediaSrc} autoPlay loop muted playsInline />
           ) : (
-            <div className="ns-logo-in-box" style={{ width: s.container, height: s.container }}>
-              <img src={logoUrl} alt="NONATO SERVICE" />
-            </div>
-          )
-        ) : (
+            <img
+              src={mediaSrc}
+              alt="NONATO SERVICE"
+              onError={(e) => {
+                const img = e.currentTarget
+                if (img.src.endsWith('/nonato-watermark-gears.svg')) return
+                img.src = NONATO_BRAND_LOGO_FALLBACK_SVG_SRC
+              }}
+            />
+          )}
+        </div>
+        {!logoUrl ? (
           <>
-            <div style={{ position: 'relative', width: s.container, height: s.container }}>
-              <svg width={s.container} height={s.container} viewBox="0 0 120 120" style={{ position: 'absolute', top: 0, left: 0 }}>
-                <circle cx="60" cy="60" r="55" fill="none" stroke="#00c853" strokeWidth="2" strokeDasharray="8 4" opacity="0.8" />
-                <g transform="translate(40, 45)">
-                  <circle cx="20" cy="20" r="18" fill="#00c853" opacity="0.9" />
-                  <circle cx="20" cy="20" r="8" fill="#000" />
-                  <rect x="18" y="2" width="4" height="8" fill="#00c853" />
-                  <rect x="18" y="30" width="4" height="8" fill="#00c853" />
-                  <rect x="2" y="18" width="8" height="4" fill="#00c853" />
-                  <rect x="30" y="18" width="8" height="4" fill="#00c853" />
-                </g>
-                <g transform="translate(65, 35)">
-                  <circle cx="15" cy="15" r="12" fill="#00c853" opacity="0.9" />
-                  <circle cx="15" cy="15" r="6" fill="#000" />
-                  <rect x="13.5" y="3" width="3" height="6" fill="#00c853" />
-                  <rect x="13.5" y="21" width="3" height="6" fill="#00c853" />
-                  <rect x="3" y="13.5" width="6" height="3" fill="#00c853" />
-                  <rect x="21" y="13.5" width="6" height="3" fill="#00c853" />
-                </g>
-              </svg>
+            <div
+              style={{
+                fontSize: s.fontSize,
+                fontWeight: 700,
+                color: '#ffffff',
+                letterSpacing: '0.12em',
+                fontFamily: 'Arial, sans-serif',
+                lineHeight: 1.1,
+              }}
+            >
+              NONATO
             </div>
-            <div style={{ fontSize: s.fontSize, fontWeight: 'bold', color: '#ffffff', letterSpacing: '2px', fontFamily: 'Arial, sans-serif' }}>
-              NONA<span style={{ color: '#00c853', fontSize: `calc(${s.fontSize} + 4px)`, verticalAlign: 'middle' }}>T</span>O
-            </div>
-            <div style={{ fontSize: s.serviceSize, fontWeight: 'bold', color: '#00c853', letterSpacing: '3px', fontFamily: 'Arial, sans-serif' }}>
+            <div
+              style={{
+                fontSize: s.serviceSize,
+                fontWeight: 700,
+                color: '#86efac',
+                letterSpacing: '0.28em',
+                fontFamily: 'Arial, sans-serif',
+              }}
+            >
               SERVICE
             </div>
           </>
-        )}
+        ) : null}
       </div>
     )
   }
@@ -72794,7 +72800,7 @@ A1;Peça exemplo;10`}
         }}
       >
         <img
-          src="/logo-inicial.png"
+          src={NONATO_BRAND_LOGO_FALLBACK_SVG_SRC}
           alt=""
           style={{
             position: 'fixed',
@@ -72812,15 +72818,22 @@ A1;Peça exemplo;10`}
         <div className="ns-splash-inner">
           <header className="ns-splash-brand-row">
             {/* Logo do dashboard (ou barra lateral como fallback) */}
-            {dashboardLogo && (
-              <div className="ns-splash-logo-box">
-                {dashboardLogoType === 'video' ? (
-                  <video src={dashboardLogo} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                ) : (
-                  <img src={dashboardLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                )}
-              </div>
-            )}
+            <div className="ns-splash-logo-box">
+              {dashboardLogo && dashboardLogoType === 'video' ? (
+                <video src={dashboardLogo} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              ) : (
+                <img
+                  src={dashboardLogo || NONATO_BRAND_LOGO_FALLBACK_SVG_SRC}
+                  alt=""
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  onError={(e) => {
+                    const img = e.currentTarget
+                    if (img.src.endsWith('/nonato-watermark-gears.svg')) return
+                    img.src = NONATO_BRAND_LOGO_FALLBACK_SVG_SRC
+                  }}
+                />
+              )}
+            </div>
 
             <div className="ns-splash-badge">
               {safeT?.sistemaCompletoGestao || 'Sistema Completo de Gestão'}
@@ -73346,47 +73359,28 @@ A1;Peça exemplo;10`}
               {logoType === 'video' ? (
                 <video src={logoUrl} autoPlay loop muted playsInline />
               ) : (
-                <img src={logoUrl} alt="NONATO SERVICE" />
+                <img
+                  src={logoUrl}
+                  alt="NONATO SERVICE"
+                  onError={(e) => {
+                    const img = e.currentTarget
+                    if (img.src.endsWith('/nonato-watermark-gears.svg')) return
+                    img.src = NONATO_BRAND_LOGO_FALLBACK_SVG_SRC
+                  }}
+                />
               )}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', height: '100%', padding: '10px', boxSizing: 'border-box' }}>
-              {/* Engrenagens e Círculo */}
-              <div style={{ position: 'relative', width: '120px', height: '120px', marginBottom: '10px' }}>
-                <svg width="120" height="120" viewBox="0 0 120 120" style={{ position: 'absolute', top: 0, left: 0 }}>
-                  {/* Círculo externo */}
-                  <circle cx="60" cy="60" r="55" fill="none" stroke="#00c853" strokeWidth="2" strokeDasharray="8 4" opacity="0.8" />
-                  {/* Engrenagem maior */}
-                  <g transform="translate(40, 45)">
-                    <circle cx="20" cy="20" r="18" fill="#00c853" opacity="0.9" />
-                    <circle cx="20" cy="20" r="8" fill="#000" />
-                    <rect x="18" y="2" width="4" height="8" fill="#00c853" />
-                    <rect x="18" y="30" width="4" height="8" fill="#00c853" />
-                    <rect x="2" y="18" width="8" height="4" fill="#00c853" />
-                    <rect x="30" y="18" width="8" height="4" fill="#00c853" />
-                    <rect x="8" y="8" width="4" height="4" fill="#00c853" transform="rotate(45 10 10)" />
-                    <rect x="28" y="28" width="4" height="4" fill="#00c853" transform="rotate(45 30 30)" />
-                    <rect x="28" y="8" width="4" height="4" fill="#00c853" transform="rotate(-45 30 10)" />
-                    <rect x="8" y="28" width="4" height="4" fill="#00c853" transform="rotate(-45 10 30)" />
-                  </g>
-                  {/* Engrenagem menor */}
-                  <g transform="translate(65, 35)">
-                    <circle cx="15" cy="15" r="12" fill="#00c853" opacity="0.9" />
-                    <circle cx="15" cy="15" r="6" fill="#000" />
-                    <rect x="13.5" y="3" width="3" height="6" fill="#00c853" />
-                    <rect x="13.5" y="21" width="3" height="6" fill="#00c853" />
-                    <rect x="3" y="13.5" width="6" height="3" fill="#00c853" />
-                    <rect x="21" y="13.5" width="6" height="3" fill="#00c853" />
-                  </g>
-                </svg>
-              </div>
-              {/* Texto NONATO */}
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', letterSpacing: '2px', fontFamily: 'Arial, sans-serif' }}>
-                NONA<span style={{ color: '#00c853', fontSize: '28px', verticalAlign: 'middle' }}>T</span>O
-              </div>
-              {/* Texto SERVICE */}
-              <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#00c853', letterSpacing: '3px', fontFamily: 'Arial, sans-serif' }}>
-                SERVICE
+            <div className="sidebar-brand-fallback">
+              <img
+                className="sidebar-brand-fallback__mark"
+                src={NONATO_BRAND_LOGO_FALLBACK_SVG_SRC}
+                alt=""
+                aria-hidden
+              />
+              <div className="sidebar-brand-fallback__wordmark">
+                <span className="sidebar-brand-fallback__name">NONATO</span>
+                <span className="sidebar-brand-fallback__service">SERVICE</span>
               </div>
             </div>
           )}

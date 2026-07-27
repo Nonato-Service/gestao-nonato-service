@@ -1,6 +1,10 @@
 'use client'
 
-import React from 'react'
+import React, { useCallback, useState } from 'react'
+import {
+  NONATO_BRAND_LOGO_FALLBACK_SVG_SRC,
+  NONATO_BRAND_LOGO_PNG_SRC,
+} from '../lib/nonatoBrandAssets'
 
 /** Variantes visuais derivadas do ficheiro original (filtros CSS — mesma identidade, cor por situação). */
 export type NonatoBrandVariant =
@@ -24,19 +28,30 @@ export function NonatoBrandLogo({
   variant = 'original',
   className = '',
   alt = 'NONATO SERVICE',
+  src,
   ...rest
 }: {
   variant?: NonatoBrandVariant
   className?: string
   alt?: string
+  src?: string
 } & React.ImgHTMLAttributes<HTMLImageElement>) {
+  const [resolvedSrc, setResolvedSrc] = useState(src || NONATO_BRAND_LOGO_PNG_SRC)
+
+  const onError = useCallback(() => {
+    setResolvedSrc((cur) =>
+      cur === NONATO_BRAND_LOGO_FALLBACK_SVG_SRC ? cur : NONATO_BRAND_LOGO_FALLBACK_SVG_SRC
+    )
+  }, [])
+
   return (
     <img
-      src="/brand/nonato-logo-original.png"
+      src={resolvedSrc}
       alt={alt}
       className={`${VARIANT_CLASS[variant] ?? VARIANT_CLASS.original} ${className}`.trim()}
       loading="lazy"
       decoding="async"
+      onError={onError}
       {...rest}
     />
   )

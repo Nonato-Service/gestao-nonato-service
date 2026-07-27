@@ -2593,6 +2593,48 @@ body {
   display: block;
 }
 
+.sidebar-brand-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 10px 12px;
+  box-sizing: border-box;
+}
+
+.sidebar-brand-fallback__mark {
+  width: min(92px, 72%);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  display: block;
+}
+
+.sidebar-brand-fallback__wordmark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.sidebar-brand-fallback__name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.sidebar-brand-fallback__service {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  color: #86efac;
+}
+
 .sidebar-nav-subcluster {
   margin-bottom: 8px;
   padding: 4px 2px 2px;
