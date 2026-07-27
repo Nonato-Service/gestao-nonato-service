@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ManualProgramaPageDef } from '../lib/manualProgramaCatalog'
 import { manualProgramaScreenshotUrl, MANUAL_SCREENSHOT_FILE } from '../lib/manualProgramaAssets'
 import { previewConfigForPage } from '../lib/manualProgramaPreviews'
@@ -31,8 +31,14 @@ export function ManualProgramaScreenPreview({
 }: ManualProgramaScreenPreviewProps) {
   const config = previewConfigForPage(page, title)
   const screenshotUrl = manualProgramaScreenshotUrl(locale, page.id, MANUAL_SCREENSHOT_FILE)
+  const previewKey = `${locale}/${page.id}`
   const [hasRealShot, setHasRealShot] = useState(true)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+
+  useEffect(() => {
+    setHasRealShot(true)
+    setLightboxOpen(false)
+  }, [previewKey])
 
   return (
     <>
@@ -62,11 +68,13 @@ export function ManualProgramaScreenPreview({
               title={zoomHint}
             >
               <img
+                key={previewKey}
                 className="manual-pro-v2-screen__shot manual-pro-v3-device__shot"
                 src={screenshotUrl}
                 alt={`${screenLabel}: ${title}`}
-                loading="lazy"
+                loading="eager"
                 decoding="async"
+                onLoad={() => setHasRealShot(true)}
                 onError={() => setHasRealShot(false)}
               />
               <span className="manual-pro-v3-device__zoom" aria-hidden>

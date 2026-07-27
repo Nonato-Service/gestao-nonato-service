@@ -343,7 +343,7 @@ export default function ManualProgramaContent({
           {!selectedPage ? (
             <p className="manual-pro-empty">{pickTr(tr, 'manualProEmpty', 'Selecione uma página no índice.')}</p>
           ) : (
-            <div key={selectedPage.id} className="manual-pro-v3-detail__animate">
+            <div key={`${locale}-${selectedPage.id}`} className="manual-pro-v3-detail__animate">
               <nav className="manual-pro-v3-breadcrumb" aria-label="Breadcrumb">
                 <span>{pickTr(tr, 'manualProgramaTitle', 'Manual')}</span>
                 <span aria-hidden>›</span>
