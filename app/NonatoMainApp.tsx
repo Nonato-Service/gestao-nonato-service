@@ -1468,14 +1468,29 @@ function extractSidebarButtonTip(btn: HTMLButtonElement): { title: string; desc:
   return { title, desc }
 }
 
+const SIDEBAR_SECTION_ICONS: Record<string, string> = {
+  operacao: '🔧',
+  comercial: '💼',
+  documentacao: '📋',
+  comunicacao: '💬',
+  industrial: '🏭',
+  checklist: '✅',
+  'pecas-armazem': '📦',
+  institucional: '🏛️',
+  sistema: '⚙️',
+}
+
 function SidebarSectionSep({ id, label }: { id: string; label: string }) {
+  const icon = SIDEBAR_SECTION_ICONS[id] ?? '▸'
   return (
-    <div className="sidebar-section-sep" data-section={id} role="presentation" aria-label={label}>
-      <div className="sidebar-section-sep__row">
+    <div className="sidebar-section-sep" data-section={id}>
+      <div className="sidebar-section-sep__row" role="heading" aria-level={2} aria-label={label}>
         <span className="sidebar-section-sep__accent" aria-hidden />
+        <span className="sidebar-section-sep__icon" aria-hidden>
+          {icon}
+        </span>
         <span className="sidebar-section-sep__label">{label}</span>
       </div>
-      <span className="sidebar-section-sep__line" aria-hidden />
     </div>
   )
 }
