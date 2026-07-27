@@ -197,7 +197,8 @@ async function navigateToPage(page, entry) {
 
   if (!entry.action) {
     await jsClick(page, '.main-content-action-btn--home').catch(() => {})
-    await page.waitForTimeout(entry.waitMs || 800)
+    await page.waitForTimeout(entry.waitMs || 1000)
+    await page.waitForSelector('.main-content-area:not(.main-content-area-tab-open)', { timeout: 8000 }).catch(() => {})
     return
   }
 
@@ -205,17 +206,15 @@ async function navigateToPage(page, entry) {
 
   const clicked = await jsClick(page, `[data-sidebar-nav-action="${entry.action}"]`)
   if (!clicked) {
-    const icon = MODULE_GROUP_ICON[entry.moduleId]
-    if (icon) {
-      await page.evaluate((emoji) => {
-        const headers = [...document.querySelectorAll('.sidebar-group-header')]
-        const hit = headers.find((h) => h.textContent?.includes(emoji))
-        if (hit) hit.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }))
-      }, icon)
-    }
+    throw new Error(`Botão sidebar não encontrado: ${entry.action}`)
   }
 
-  await page.waitForTimeout(entry.waitMs || 1200)
+  await page
+    .waitForSelector(`[data-sidebar-nav-action="${entry.action}"].sidebar-action-btn-active`, { timeout: 10000 })
+    .catch(() => {})
+
+  await page.waitForSelector('.main-content-area-tab-open, .tab-content-wrapper', { timeout: 12000 }).catch(() => {})
+  await page.waitForTimeout(entry.waitMs || 1400)
   await dismissUiNoise(page)
 }
 
@@ -291,12 +290,11 @@ async function captureLocale(browser, locale) {
 
     try {
       await navigateToPage(page, entry)
-      const target = page.locator('.app-layout').first()
+      const target = page.locator('.main-content-area').first()
       await target.waitFor({ state: 'visible', timeout: 15000 })
-      await page.screenshot({
+      await target.screenshot({
         path: outFile,
         type: 'png',
-        fullPage: false,
       })
       ok += 1
       log(`  ✓ ${locale}/${entry.id}`)

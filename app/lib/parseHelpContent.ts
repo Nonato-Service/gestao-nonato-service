@@ -93,6 +93,42 @@ export function parseHelpContent(raw: string): ParsedHelpContent {
   return { purpose: purposeBlock, steps, sections, tips, warnings }
 }
 
+const MANUAL_INDEX_SECTION_RE =
+  /^(índice|indice|index|module index|índice dos módulos|indice de modulos|liste des modules|elenco moduli|modulübersicht)/i
+
+/** Passos F1 adaptados ao manual — evita listas gigantes (ex.: índice do painel). */
+export function parseHelpContentForManual(raw: string, pageId?: string): ParsedHelpContent {
+  const parsed = parseHelpContent(raw)
+
+  let sections = parsed.sections.filter((s) => {
+    const t = (s.title || '').trim()
+    if (!t) return true
+    return !MANUAL_INDEX_SECTION_RE.test(t)
+  })
+
+  if (pageId === 'dashboard') {
+    sections = sections.slice(0, 2)
+  }
+
+  const maxSteps = pageId === 'dashboard' ? 6 : 10
+  let stepCount = 0
+  const trimmedSections: typeof sections = []
+
+  for (const section of sections) {
+    const items: string[] = []
+    for (const item of section.items) {
+      if (stepCount >= maxSteps) break
+      items.push(item)
+      stepCount += 1
+    }
+    if (items.length > 0) trimmedSections.push({ ...section, items })
+    if (stepCount >= maxSteps) break
+  }
+
+  const steps = trimmedSections.flatMap((s) => s.items)
+  return { ...parsed, sections: trimmedSections, steps }
+}
+
 export function helpKeyFromTabType(tabType: string): string {
   return (
     'help' +

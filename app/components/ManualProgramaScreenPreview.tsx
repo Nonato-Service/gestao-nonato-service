@@ -10,33 +10,39 @@ type ManualProgramaScreenPreviewProps = {
   page: ManualProgramaPageDef
   title: string
   locale: string
+  sidebarPath: string
   screenLabel: string
   simulatedNote: string
   realScreenNote: string
   realCaptureBadge: string
   zoomHint: string
   closeLightboxLabel: string
+  loadingLabel?: string
 }
 
 export function ManualProgramaScreenPreview({
   page,
   title,
   locale,
+  sidebarPath,
   screenLabel,
   simulatedNote,
   realScreenNote,
   realCaptureBadge,
   zoomHint,
   closeLightboxLabel,
+  loadingLabel = 'A carregar captura…',
 }: ManualProgramaScreenPreviewProps) {
   const config = previewConfigForPage(page, title)
   const screenshotUrl = manualProgramaScreenshotUrl(locale, page.id, MANUAL_SCREENSHOT_FILE)
   const previewKey = `${locale}/${page.id}`
   const [hasRealShot, setHasRealShot] = useState(true)
+  const [imageLoaded, setImageLoaded] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
 
   useEffect(() => {
     setHasRealShot(true)
+    setImageLoaded(false)
     setLightboxOpen(false)
   }, [previewKey])
 
@@ -58,29 +64,45 @@ export function ManualProgramaScreenPreview({
                 <i className="manual-pro-v3-device__dot manual-pro-v3-device__dot--yellow" />
                 <i className="manual-pro-v3-device__dot manual-pro-v3-device__dot--green" />
               </span>
-              <span className="manual-pro-v3-device__url">{page.sidebarPath}</span>
+              <span className="manual-pro-v3-device__url">{sidebarPath}</span>
               <span className="manual-pro-v3-device__badge">{realCaptureBadge}</span>
             </div>
             <button
               type="button"
               className="manual-pro-v3-device__viewport"
-              onClick={() => setLightboxOpen(true)}
+              onClick={() => imageLoaded && setLightboxOpen(true)}
               title={zoomHint}
+              disabled={!imageLoaded}
             >
+              {!imageLoaded ? (
+                <span className="manual-pro-v3-device__loading" aria-live="polite">
+                  <span className="manual-pro-v3-device__loading-spinner" aria-hidden />
+                  <span>{loadingLabel}</span>
+                  <strong>{title}</strong>
+                </span>
+              ) : null}
               <img
                 key={previewKey}
-                className="manual-pro-v2-screen__shot manual-pro-v3-device__shot"
+                className={`manual-pro-v2-screen__shot manual-pro-v3-device__shot${imageLoaded ? ' manual-pro-v3-device__shot--ready' : ''}`}
                 src={screenshotUrl}
                 alt={`${screenLabel}: ${title}`}
                 loading="eager"
                 decoding="async"
-                onLoad={() => setHasRealShot(true)}
-                onError={() => setHasRealShot(false)}
+                onLoad={() => {
+                  setHasRealShot(true)
+                  setImageLoaded(true)
+                }}
+                onError={() => {
+                  setHasRealShot(false)
+                  setImageLoaded(false)
+                }}
               />
-              <span className="manual-pro-v3-device__zoom" aria-hidden>
-                <span className="manual-pro-v3-device__zoom-icon">⤢</span>
-                <span>{zoomHint}</span>
-              </span>
+              {imageLoaded ? (
+                <span className="manual-pro-v3-device__zoom" aria-hidden>
+                  <span className="manual-pro-v3-device__zoom-icon">⤢</span>
+                  <span>{zoomHint}</span>
+                </span>
+              ) : null}
             </button>
           </div>
         ) : (
@@ -89,13 +111,13 @@ export function ManualProgramaScreenPreview({
               <span className="manual-pro-page-preview__dot manual-pro-page-preview__dot--red" />
               <span className="manual-pro-page-preview__dot manual-pro-page-preview__dot--yellow" />
               <span className="manual-pro-page-preview__dot manual-pro-page-preview__dot--green" />
-              <span className="manual-pro-page-preview__path">{page.sidebarPath}</span>
+              <span className="manual-pro-page-preview__path">{sidebarPath}</span>
             </div>
             <div className="manual-pro-page-preview__body">
               <aside className="manual-pro-page-preview__sidebar">
                 <div className="manual-pro-page-preview__sidebar-item manual-pro-page-preview__sidebar-item--active">
                   <span>{page.icon}</span>
-                  <span>{page.moduleTitle}</span>
+                  <span>{title}</span>
                 </div>
                 <div className="manual-pro-page-preview__sidebar-item">
                   <span>📂</span>
@@ -179,7 +201,7 @@ export function ManualProgramaScreenPreview({
       </figure>
 
       <ManualProgramaLightbox
-        open={lightboxOpen && hasRealShot}
+        open={lightboxOpen && hasRealShot && imageLoaded}
         src={screenshotUrl}
         alt={`${screenLabel}: ${title}`}
         closeLabel={closeLightboxLabel}

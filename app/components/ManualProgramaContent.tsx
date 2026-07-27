@@ -7,8 +7,14 @@ import {
   type ManualProgramaPageDef,
 } from '../lib/manualProgramaCatalog'
 import { manualExploredPercent, loadManualVisitedPages, saveManualVisitedPage } from '../lib/manualProgramaProgress'
-import { MANUAL_PROGRAMA_TRAIL } from '../lib/manualProgramaTrail'
-import { parseHelpContent } from '../lib/parseHelpContent'
+import {
+  MANUAL_READING_ORDER,
+  MANUAL_READING_SECTIONS,
+  manualPageOrderIndex,
+  manualSectionForPage,
+  manualSectionPageIndex,
+} from '../lib/manualProgramaReadingOrder'
+import { parseHelpContentForManual } from '../lib/parseHelpContent'
 import { ManualProgramaScreenPreview } from './ManualProgramaScreenPreview'
 
 type ManualProgramaContentProps = {
@@ -34,6 +40,18 @@ function chapterForPage(pageId: string) {
   return MANUAL_PROGRAMA_CHAPTERS.find((c) => c.pages.some((p) => p.id === pageId))
 }
 
+function localizedSidebarPath(
+  page: ManualProgramaPageDef,
+  tr: Record<string, string | undefined>
+): string {
+  const chapter = chapterForPage(page.id)
+  const moduleTitle = chapter
+    ? pickTr(tr, chapter.titleKey, chapter.fallbackTitle)
+    : pickTr(tr, 'manualProChapterIntro', 'Início e painel')
+  const pageTitle = pickTr(tr, page.titleKey, page.fallbackTitle)
+  return `${moduleTitle} › ${pageTitle}`
+}
+
 export default function ManualProgramaContent({
   tr,
   locale,
@@ -55,15 +73,21 @@ export default function ManualProgramaContent({
     setVisited(loadManualVisitedPages())
   }, [])
 
-  const pageIndex = useMemo(
-    () => MANUAL_PROGRAMA_PAGES.findIndex((p) => p.id === selectedPageId),
-    [selectedPageId]
-  )
+  const pageIndex = useMemo(() => manualPageOrderIndex(selectedPageId), [selectedPageId])
 
   const selectedPage = useMemo(() => {
-    if (pageIndex >= 0) return MANUAL_PROGRAMA_PAGES[pageIndex]
-    return firstPage
-  }, [pageIndex, firstPage])
+    return MANUAL_PROGRAMA_PAGES.find((p) => p.id === selectedPageId) || firstPage
+  }, [selectedPageId, firstPage])
+
+  const activeReadingSection = useMemo(
+    () => (selectedPage ? manualSectionForPage(selectedPage.id) : undefined),
+    [selectedPage]
+  )
+
+  const sectionPosition = useMemo(
+    () => (selectedPage ? manualSectionPageIndex(selectedPage.id) : null),
+    [selectedPage]
+  )
 
   const activeChapter = useMemo(
     () => (selectedPage ? chapterForPage(selectedPage.id) : undefined),
@@ -97,29 +121,41 @@ export default function ManualProgramaContent({
   }, [query, tr])
 
   const pageTitle = selectedPage ? pickTr(tr, selectedPage.titleKey, selectedPage.fallbackTitle) : ''
+  const sidebarPath = selectedPage ? localizedSidebarPath(selectedPage, tr) : ''
 
   const parsed = useMemo(() => {
     if (!selectedPage) {
       return { purpose: '', steps: [], sections: [] as Array<{ title: string; items: string[] }>, tips: [], warnings: [] }
     }
-    return parseHelpContent(getHelpContent(selectedPage.helpKey, selectedPage))
+    return parseHelpContentForManual(getHelpContent(selectedPage.helpKey, selectedPage), selectedPage.id)
   }, [selectedPage, getHelpContent])
 
   const canOpen = Boolean(selectedPage?.tabType)
-  const totalPages = MANUAL_PROGRAMA_PAGES.length
+  const totalPages = MANUAL_READING_ORDER.length
   const currentNum = pageIndex >= 0 ? pageIndex + 1 : 1
   const exploredPct = manualExploredPercent(visited.size, totalPages)
   const readPct = totalPages > 0 ? Math.round((currentNum / totalPages) * 100) : 0
 
   const goPrev = useCallback(() => {
-    if (pageIndex > 0) setSelectedPageId(MANUAL_PROGRAMA_PAGES[pageIndex - 1].id)
+    if (pageIndex > 0) setSelectedPageId(MANUAL_READING_ORDER[pageIndex - 1])
   }, [pageIndex])
 
   const goNext = useCallback(() => {
-    if (pageIndex >= 0 && pageIndex < MANUAL_PROGRAMA_PAGES.length - 1) {
-      setSelectedPageId(MANUAL_PROGRAMA_PAGES[pageIndex + 1].id)
+    if (pageIndex >= 0 && pageIndex < MANUAL_READING_ORDER.length - 1) {
+      setSelectedPageId(MANUAL_READING_ORDER[pageIndex + 1])
     }
   }, [pageIndex])
+
+  const selectSection = useCallback(
+    (sectionId: string) => {
+      const section = MANUAL_READING_SECTIONS.find((s) => s.id === sectionId)
+      if (!section?.pageIds.length) return
+      const firstUnvisited = section.pageIds.find((id) => !visited.has(id))
+      setSelectedPageId(firstUnvisited || section.pageIds[0])
+      detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    },
+    [visited]
+  )
 
   const selectPage = useCallback((pageId: string) => {
     setSelectedPageId(pageId)
@@ -251,24 +287,32 @@ export default function ManualProgramaContent({
         {showTrail ? (
           <div className="manual-pro-v3-timeline-wrap">
             <ol className="manual-pro-v3-timeline">
-              {MANUAL_PROGRAMA_TRAIL.map((step, idx) => {
-                const done = visited.has(step.targetPageId)
-                const active = selectedPageId === step.targetPageId
+              {MANUAL_READING_SECTIONS.map((section, idx) => {
+                const sectionVisited = section.pageIds.filter((id) => visited.has(id)).length
+                const sectionTotal = section.pageIds.length
+                const active = activeReadingSection?.id === section.id
                 return (
-                  <li key={step.id} className={`manual-pro-v3-timeline__item${active ? ' manual-pro-v3-timeline__item--active' : ''}${done ? ' manual-pro-v3-timeline__item--done' : ''}`}>
+                  <li
+                    key={section.id}
+                    className={`manual-pro-v3-timeline__item${active ? ' manual-pro-v3-timeline__item--active' : ''}${sectionVisited >= sectionTotal ? ' manual-pro-v3-timeline__item--done' : ''}`}
+                  >
                     <button
                       type="button"
                       className="manual-pro-v3-timeline__btn"
-                      onClick={() => selectPage(step.targetPageId)}
+                      onClick={() => selectSection(section.id)}
                       title={pickTr(tr, 'manualProV3JumpTrail', 'Ir para esta etapa')}
                     >
                       <span className="manual-pro-v3-timeline__node">
                         <span className="manual-pro-v3-timeline__num">{idx + 1}</span>
-                        <span className="manual-pro-v3-timeline__icon" aria-hidden>{step.icon}</span>
+                        <span className="manual-pro-v3-timeline__icon" aria-hidden>{section.icon}</span>
                       </span>
                       <span className="manual-pro-v3-timeline__text">
-                        <strong>{pickTr(tr, step.titleKey, step.fallbackTitle)}</strong>
-                        <small>{pickTr(tr, step.descKey, step.fallbackDesc)}</small>
+                        <strong>{pickTr(tr, section.titleKey, section.fallbackTitle)}</strong>
+                        <small>
+                          {pickTr(tr, section.descKey, section.fallbackDesc)}{' '}
+                          · {sectionVisited}/{sectionTotal}{' '}
+                          {pickTr(tr, 'manualProPages', 'páginas')}
+                        </small>
                       </span>
                     </button>
                   </li>
@@ -327,7 +371,7 @@ export default function ManualProgramaContent({
                           </span>
                           <span className="manual-pro-v3-nav__item-body">
                             <span className="manual-pro-nav__item-title">{title}</span>
-                            <span className="manual-pro-nav__item-path">{page.sidebarPath}</span>
+                            <span className="manual-pro-nav__item-path">{localizedSidebarPath(page, tr)}</span>
                           </span>
                         </button>
                       </li>
@@ -372,7 +416,7 @@ export default function ManualProgramaContent({
                     type="button"
                     className="btn-secondary manual-pro-v2-pager__btn"
                     onClick={goNext}
-                    disabled={pageIndex < 0 || pageIndex >= MANUAL_PROGRAMA_PAGES.length - 1}
+                    disabled={pageIndex < 0 || pageIndex >= MANUAL_READING_ORDER.length - 1}
                   >
                     {pickTr(tr, 'manualProNextPage', 'Seguinte')} →
                   </button>
@@ -383,7 +427,7 @@ export default function ManualProgramaContent({
                 <div>
                   <span className="manual-pro-detail__badge manual-pro-v3-detail__badge">{selectedPage.icon}</span>
                   <h2>{pageTitle}</h2>
-                  <p className="manual-pro-detail__path">{selectedPage.sidebarPath}</p>
+                  <p className="manual-pro-detail__path">{sidebarPath}</p>
                 </div>
                 {canOpen && selectedPage.tabType ? (
                   <button
@@ -404,10 +448,53 @@ export default function ManualProgramaContent({
                 ) : null}
               </div>
 
+              {activeReadingSection && sectionPosition ? (
+                <nav
+                  className="manual-pro-v3-section-pages"
+                  aria-label={pickTr(tr, 'manualProSectionPages', 'Páginas desta etapa')}
+                >
+                  <div className="manual-pro-v3-section-pages__head">
+                    <span className="manual-pro-v3-section-pages__label">
+                      {pickTr(tr, 'manualProSectionPages', 'Páginas desta etapa')}
+                    </span>
+                    <span className="manual-pro-v3-section-pages__progress">
+                      {formatProgress(
+                        pickTr(tr, 'manualProSectionStep', 'Passo {current} de {total} na etapa'),
+                        sectionPosition.indexInSection + 1,
+                        activeReadingSection.pageIds.length
+                      )}
+                    </span>
+                  </div>
+                  <div className="manual-pro-v3-section-pages__list">
+                    {activeReadingSection.pageIds.map((pageId, i) => {
+                      const p = MANUAL_PROGRAMA_PAGES.find((x) => x.id === pageId)
+                      if (!p) return null
+                      const label = pickTr(tr, p.titleKey, p.fallbackTitle)
+                      const isActive = pageId === selectedPageId
+                      const isDone = visited.has(pageId)
+                      return (
+                        <button
+                          key={pageId}
+                          type="button"
+                          className={`manual-pro-v3-section-pages__chip${isActive ? ' manual-pro-v3-section-pages__chip--active' : ''}${isDone ? ' manual-pro-v3-section-pages__chip--done' : ''}`}
+                          onClick={() => selectPage(pageId)}
+                          title={label}
+                        >
+                          <span className="manual-pro-v3-section-pages__chip-num">{i + 1}</span>
+                          <span className="manual-pro-v3-section-pages__chip-label">{label}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </nav>
+              ) : null}
+
               <ManualProgramaScreenPreview
+                key={`${locale}-${selectedPage.id}`}
                 page={selectedPage}
                 title={pageTitle}
                 locale={locale}
+                sidebarPath={sidebarPath}
                 screenLabel={pickTr(tr, 'manualProScreenLabel', 'Ecrã do módulo')}
                 realScreenNote={pickTr(
                   tr,
@@ -422,6 +509,7 @@ export default function ManualProgramaContent({
                 realCaptureBadge={pickTr(tr, 'manualProV3RealCaptureBadge', 'Captura real')}
                 zoomHint={pickTr(tr, 'manualProV3ZoomScreen', 'Clique para ampliar')}
                 closeLightboxLabel={pickTr(tr, 'manualProV3CloseLightbox', 'Fechar')}
+                loadingLabel={pickTr(tr, 'manualProImageLoading', 'A carregar captura…')}
               />
 
               <div className="manual-pro-v2-cards manual-pro-v3-cards">

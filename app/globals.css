@@ -46257,7 +46257,118 @@ html body .op-pro .op-pro__textarea::-webkit-input-placeholder {
   display: block;
   width: 100%;
   height: auto;
-  transition: transform 0.4s ease;
+  transition: transform 0.4s ease, opacity 0.35s ease;
+  opacity: 0;
+}
+.manual-pro-v3-device__shot--ready {
+  opacity: 1;
+}
+.manual-pro-v3-device__loading {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.85rem;
+  background: linear-gradient(180deg, rgba(12, 14, 13, 0.96), rgba(6, 6, 6, 0.98));
+}
+.manual-pro-v3-device__loading strong {
+  color: rgba(180, 255, 190, 0.92);
+  font-size: 0.95rem;
+}
+.manual-pro-v3-device__loading-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: rgba(0, 200, 83, 0.85);
+  animation: manual-pro-v3-spin 0.8s linear infinite;
+}
+@keyframes manual-pro-v3-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.manual-pro-v3-section-pages {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 200, 83, 0.18);
+  background: rgba(0, 200, 83, 0.04);
+}
+.manual-pro-v3-section-pages__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.manual-pro-v3-section-pages__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(180, 255, 190, 0.88);
+}
+.manual-pro-v3-section-pages__progress {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+.manual-pro-v3-section-pages__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.manual-pro-v3-section-pages__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+.manual-pro-v3-section-pages__chip:hover {
+  border-color: rgba(0, 200, 83, 0.35);
+  transform: translateY(-1px);
+}
+.manual-pro-v3-section-pages__chip--active {
+  border-color: rgba(0, 200, 83, 0.65);
+  background: rgba(0, 200, 83, 0.12);
+  color: #fff;
+}
+.manual-pro-v3-section-pages__chip--done:not(.manual-pro-v3-section-pages__chip--active) {
+  border-color: rgba(0, 200, 83, 0.22);
+}
+.manual-pro-v3-section-pages__chip-num {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.08);
+}
+.manual-pro-v3-section-pages__chip--active .manual-pro-v3-section-pages__chip-num {
+  background: rgba(0, 200, 83, 0.28);
+}
+.manual-pro-v3-section-pages__chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .manual-pro-v3-device__viewport:hover .manual-pro-v3-device__shot {
   transform: scale(1.02);
