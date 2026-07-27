@@ -12607,6 +12607,25 @@ button.dia-trabalho-acao-btn--del:hover {
   border-color: #ffc107 !important;
 }
 
+.fechamento-itens-qty-input,
+.fechamento-itens-val-input {
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: inherit;
+  max-width: 100%;
+}
+
+.fechamento-itens-qty-input:focus,
+.fechamento-itens-val-input:focus {
+  outline: none;
+  border-color: rgba(0, 200, 83, 0.45);
+  box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.12);
+}
+
 .fechamento-itens-table tfoot tr td {
   background: rgba(0, 0, 0, 0.28);
   border: 1px solid rgba(0, 200, 83, 0.18);

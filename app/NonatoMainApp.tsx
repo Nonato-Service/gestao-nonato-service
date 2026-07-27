@@ -1067,13 +1067,15 @@ function enriquecerLinhaFechamentoComCadastro(
   if (!svc) return item
   const valorUnit = normalizeServicoValorStored(svc.valor)
   const qty = item.quantidade || 0
+  const valorUnitStored = normalizeServicoValorStored(item.valorUnitario)
+  const valorUnitFinal = valorUnitStored > 0 ? valorUnitStored : valorUnit
   const mult =
     item.tipoCobranca === 'hora' ||
     item.tipoCobranca === 'km' ||
     item.tipoCobranca === 'diarias' ||
     item.id === 'hida' ||
     item.id === 'hret'
-  const valorTotal = mult ? Math.round(qty * valorUnit * 100) / 100 : valorUnit
+  const valorTotal = mult ? Math.round(qty * valorUnitFinal * 100) / 100 : valorUnitFinal
   const cod =
     (typeof svc.cod === 'string' && svc.cod.trim()) || servicoCodParaExibicao(svc) || undefined
   const codCmp = (cod || '').trim().toUpperCase()
@@ -1086,7 +1088,7 @@ function enriquecerLinhaFechamentoComCadastro(
     servicoId: svc.id,
     cod,
     descricao,
-    valorUnitario: valorUnit,
+    valorUnitario: valorUnitFinal,
     valorTotal,
   }
 }
@@ -51444,7 +51446,7 @@ A1;Peça exemplo;10`}
                 ...item,
                 ...saved,
                 id: item.id,
-                quantidade: item.quantidade ?? 0,
+                quantidade: saved.quantidade ?? item.quantidade ?? 0,
                 tipoCobranca: item.tipoCobranca,
                 origem: saved.origem ?? item.origem,
               },
@@ -52365,7 +52367,7 @@ A1;Peça exemplo;10`}
                 <div className="fechamento-itens-panel orcamento-pecas-especiais-form">
                   <div className="fechamento-itens-panel__title-row orcamento-pecas-especiais-section-head">
                     <h3 className="fechamento-itens-panel__title">{(safeT as any)?.itensCobrancaFechamento || 'Itens a cobrar (ajuste com o Cadastro de Serviços)'}</h3>
-                    <span className="fechamento-itens-panel__edit-hint">✏️ {(safeT as any)?.editarItensFechamento || 'Editar itens'}</span>
+                    <span className="fechamento-itens-panel__edit-hint">{(safeT as any)?.fechamentoItensEditHint || 'Edite quantidade, valor €, serviço ou retire linhas'}</span>
                   </div>
                   {servicoGrupos.length > 0 && (
                     <div className="fechamento-itens-subcard orcamento-pecas-especiais-linha">
@@ -52484,6 +52486,10 @@ A1;Peça exemplo;10`}
                         const eManual = isLinhaManualFechamento(item)
                         const eDiarias = item.id === 'diarias'
                         const cobrarDiaria = eDiarias ? (item.cobrarDiaria !== false) : true
+                        const eLinhaTemplateEditavel =
+                          itemFixoDoRelatorio &&
+                          (FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(item.id)
+                        const eCampoEditavel = eManual || eLinhaTemplateEditavel
                         const valorUnitExibir = (() => {
                           let v = normalizeServicoValorStored(item.valorUnitario)
                           if (eManual) return v
@@ -52548,15 +52554,23 @@ A1;Peça exemplo;10`}
                             )}
                           </td>
                           <td style={{ textAlign: 'right' }}>
-                            {eManual ? (
+                            {eCampoEditavel ? (
                               <input
                                 type="number"
-                                step={item.tipoCobranca === 'unidade' ? '1' : '0.01'}
+                                step={
+                                  eManual && item.tipoCobranca === 'unidade'
+                                    ? '1'
+                                    : item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias'
+                                      ? '1'
+                                      : '0.01'
+                                }
                                 min={0}
                                 value={item.quantidade === 0 ? '' : item.quantidade}
                                 onChange={(e) => atualizarItem(item.id, { quantidade: parseFloat(e.target.value) || 0 })}
+                                className="fechamento-itens-qty-input"
                                 style={{ width: '72px', textAlign: 'right' }}
                                 placeholder="0"
+                                title={(safeT as any)?.quantidade || 'Quantidade'}
                               />
                             ) : item.tipoCobranca === 'hora' ? (
                               item.quantidade.toFixed(2) + ' h'
@@ -52567,14 +52581,14 @@ A1;Peça exemplo;10`}
                             )}
                           </td>
                           <td style={{ textAlign: 'right' }}>
-                            {eManual ? (
+                            {eCampoEditavel ? (
                               <input
                                 type="number"
                                 step="0.01"
                                 min={0}
                                 value={item.valorUnitario === 0 ? '' : item.valorUnitario}
                                 onChange={(e) => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })}
-                                className={item.valorUnitario <= 0 ? 'fechamento-item-input--warn-val' : undefined}
+                                className={item.valorUnitario <= 0 ? 'fechamento-item-input--warn-val fechamento-itens-val-input' : 'fechamento-itens-val-input'}
                                 style={{ width: '92px', textAlign: 'right' }}
                                 placeholder={(safeT as any)?.inserirValorEuro || 'Valor €'}
                                 title={(safeT as any)?.inserirValorEuro || 'Valor €'}
@@ -52584,7 +52598,7 @@ A1;Peça exemplo;10`}
                                 {valorUnitExibir.toFixed(2)} €
                               </span>
                             ) : (
-                              <input type="number" step="0.01" min={0} value={item.valorUnitario === 0 ? '' : item.valorUnitario} onChange={e => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })} style={{ width: '80px' }} placeholder="0,00" />
+                              <input type="number" step="0.01" min={0} value={item.valorUnitario === 0 ? '' : item.valorUnitario} onChange={e => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })} className="fechamento-itens-val-input" style={{ width: '80px' }} placeholder="0,00" />
                             )}
                           </td>
                           <td style={{ textAlign: 'right', fontWeight: 600, color: cobrarDiaria ? '#00c853' : '#888' }}>{totalExibir.toFixed(2)} €{eDiarias && !cobrarDiaria ? ' (' + ((safeT as any)?.naoCobrar || 'não cobrar') + ')' : ''}</td>
