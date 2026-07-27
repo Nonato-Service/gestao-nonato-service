@@ -1,7 +1,7 @@
 const MANUAL_ASSET_LOCALES = ['pt-BR', 'es', 'fr', 'it', 'de', 'en'] as const
 
 /** Versão das capturas — bumpar após regenerar imagens para invalidar cache PWA. */
-export const MANUAL_SCREENSHOT_CACHE_VERSION = 2
+export const MANUAL_SCREENSHOT_CACHE_VERSION = 5
 
 /** Código UI → pasta em public/manual/assets (ex.: en-US → en). */
 export function manualProgramaLocale(lang: string): string {

@@ -5,7 +5,7 @@ import { setupAutoSyncOnReconnect, setupFlushSyncOnPageHide } from './utils/data
 import { getStoredUiString } from './translations'
 
 // Bumpar este número em cada deploy para forçar atualização no telemóvel/tablet
-const SW_VERSION = 183
+const SW_VERSION = 186
 const SW_DISMISSED_SESSION_KEY = 'nonato-pwa-update-dismissed-v'
 const UI_LANGUAGE_EVENT = 'nonato-ui-language'
 

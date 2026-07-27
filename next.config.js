@@ -43,6 +43,10 @@ const nextConfig = {
         source: '/biblia-app/:path*',
         headers: [{ key: 'Cache-Control', value: 'no-cache, must-revalidate' }],
       },
+      {
+        source: '/manual/assets/:path*',
+        headers: [{ key: 'Cache-Control', value: 'no-cache, must-revalidate' }],
+      },
     ]
   },
   // Permite o build concluir mesmo com erros de tipo (corrija os tipos gradualmente)

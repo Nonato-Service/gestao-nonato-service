@@ -65,10 +65,16 @@ const LOCALES = (process.env.MANUAL_LOCALES || 'pt-BR')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean)
+const PAGE_FILTER = (process.env.MANUAL_PAGE_IDS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
 const HEADLESS = process.env.MANUAL_HEADLESS !== '0'
 const SKIP_BUILD = process.env.MANUAL_SKIP_BUILD === '1'
 
-const PAGES = loadManualScreenshotPages()
+const PAGES = loadManualScreenshotPages().filter((p) =>
+  PAGE_FILTER.length === 0 ? true : PAGE_FILTER.includes(p.id)
+)
 
 function log(...args) {
   process.stdout.write(`${args.join(' ')}\n`)
@@ -163,6 +169,49 @@ async function dismissUiNoise(page) {
   }
 }
 
+/** Espera o overlay «A preparar o seu ambiente…» desaparecer antes de capturar. */
+async function waitForAppReady(page) {
+  await page
+    .waitForFunction(() => !document.querySelector('.ns-boot-overlay'), { timeout: 300000 })
+    .catch(async () => {
+      const visible = await page.locator('.ns-boot-overlay').isVisible().catch(() => false)
+      if (visible) throw new Error('Timeout: overlay de arranque ainda visível')
+    })
+  await page.waitForTimeout(400)
+}
+
+/** Abre o painel completo para mostrar sidebar e permitir navegar entre módulos. */
+async function enterWorkspace(page) {
+  const enterBtn = page
+    .locator('.ns-dashboard-entry button, .ns-dashboard-entry-showcase__enter')
+    .first()
+  const byRole = page.getByRole('button', {
+    name: /Entrar no sistema|Enter the system|Entrar en el sistema|Entrer dans le système|Entra nel sistema|Ins System gehen/i,
+  }).first()
+
+  if (await enterBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await enterBtn.click().catch(() => {})
+  } else if (await byRole.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await byRole.click().catch(() => {})
+  }
+
+  await page
+    .waitForSelector('.sidebar:not(.sidebar--hidden-entry)', { state: 'visible', timeout: 60000 })
+    .catch(() => {})
+  await page.waitForSelector('.app-layout-workspace-open, .ns-dashboard-full, .main-content-area', {
+    timeout: 30000,
+  }).catch(() => {})
+  await dismissUiNoise(page)
+  await page.waitForTimeout(600)
+}
+
+async function assertReadyForCapture(page, entryId) {
+  const overlayVisible = await page.locator('.ns-boot-overlay').isVisible().catch(() => false)
+  if (overlayVisible) {
+    throw new Error(`Overlay de arranque visível ao capturar ${entryId}`)
+  }
+}
+
 async function jsClick(page, selector) {
   return page.evaluate((sel) => {
     const el = document.querySelector(sel)
@@ -172,41 +221,243 @@ async function jsClick(page, selector) {
   }, selector)
 }
 
-async function expandModuleGroup(page, moduleId) {
-  if (moduleId === 'intro' || moduleId === 'outros') return
+const MODULE_HEADER_SELECTOR = {
+  'gestao-tecnica': '[data-sidebar-zone="operacao"] .sidebar-group-header',
+  'parceiros-comercial':
+    '[data-sidebar-zone="comercial"] .sidebar-nav-cluster:nth-child(1) .sidebar-group-header',
+  'gestao-custos':
+    '[data-sidebar-zone="comercial"] .sidebar-nav-cluster:nth-child(2) .sidebar-group-header',
+  'gestao-financeira':
+    '[data-sidebar-zone="comercial"] .sidebar-nav-cluster:nth-child(3) .sidebar-group-header',
+  'documentacao-relatorios':
+    '[data-sidebar-zone="documentacao"] .sidebar-nav-cluster:first-child .sidebar-group-header',
+  'pecas-biblioteca':
+    '[data-sidebar-zone="pecas-armazem"] > button.sidebar-group-header',
+  'gestao-industrial': '[data-sidebar-zone="industrial"] > button.sidebar-group-header',
+  'checklist-group': '[data-sidebar-zone="checklist"] .sidebar-group-header',
+  'comunicacao-interna': '[data-sidebar-zone="comunicacao"] .sidebar-group-header',
+  'manuais-informacoes-tecnicas':
+    '[data-sidebar-zone="pecas-armazem"] .sidebar-nav-subcluster .sidebar-group-header',
+  'biblia-nonato-service':
+    '[data-sidebar-zone="pecas-armazem"] .sidebar-nav-subcluster .sidebar-group-header',
+  'almoxarifado-armazem':
+    '[data-sidebar-zone="pecas-armazem"] .sidebar-nav-subcluster .sidebar-group-header',
+  'empresa-institucional': '.sidebar-nav-cluster--empresa-institucional .sidebar-group-header',
+}
 
-  if (moduleId === 'empresa-institucional') {
-    await jsClick(page, '[aria-controls="sidebar-empresa-institucional-actions"]')
-    await page.waitForTimeout(300)
+async function clickSidebarEntry(page, entry) {
+  for (const sel of [
+    `[data-sidebar-nav-action="${entry.action}"]`,
+    `[data-button-action="${entry.action}"]`,
+  ]) {
+    const loc = page.locator(sel).first()
+    if (await loc.isVisible({ timeout: 900 }).catch(() => false)) {
+      await loc.scrollIntoViewIfNeeded().catch(() => {})
+      await loc.click({ timeout: 15000, force: true })
+      return
+    }
+  }
+
+  if (entry.action === 'open-biblioteca-pecas' || entry.action === 'open-importacao-pecas') {
+    const pecasHeader = page.locator('[data-sidebar-zone="pecas-armazem"] > button.sidebar-group-header').first()
+    await pecasHeader.click({ timeout: 8000 }).catch(() => {})
+    await page.waitForTimeout(500)
+    const hubBtn = page.locator('[data-sidebar-zone="pecas-armazem"] .sidebar-action-buttons button').first()
+    await hubBtn.click({ timeout: 8000 })
+    await page.waitForTimeout(1400)
+    if (entry.action === 'open-importacao-pecas') {
+      await page
+        .locator('button, [role="tab"]')
+        .filter({ hasText: /import/i })
+        .first()
+        .click({ timeout: 6000 })
+        .catch(() => {})
+      await page.waitForTimeout(800)
+    }
     return
   }
 
-  const icon = MODULE_GROUP_ICON[moduleId]
-  if (!icon) return
+  if (entry.action === 'open-checklist-hub') {
+    const chkHeader = page.locator('[data-sidebar-zone="checklist"] .sidebar-group-header').first()
+    await chkHeader.click({ timeout: 8000 })
+    await page.waitForTimeout(1200)
+    return
+  }
 
-  await page.evaluate((emoji) => {
-    const headers = [...document.querySelectorAll('.sidebar-group-header')]
-    const hit = headers.find((h) => h.textContent?.includes(emoji))
-    if (hit) hit.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }))
-  }, icon)
-  await page.waitForTimeout(350)
+  if (entry.moduleId === 'comunicacao-interna') {
+    await page
+      .locator('[data-sidebar-zone="comunicacao"] .sidebar-group-header')
+      .first()
+      .click({ timeout: 8000 })
+      .catch(() => {})
+    await page.waitForTimeout(500)
+    const label = entry.fallbackLabel || ''
+    const byText = page
+      .locator('[data-sidebar-zone="comunicacao"] .sidebar-action-buttons button')
+      .filter({ hasText: new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') })
+      .first()
+    if (await byText.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await byText.click({ timeout: 15000, force: true })
+      return
+    }
+  }
+
+  if (entry.moduleId === 'gestao-industrial') {
+    await page
+      .locator('[data-sidebar-zone="industrial"] .sidebar-group-header')
+      .first()
+      .click({ timeout: 8000, force: true })
+      .catch(() => {})
+    await page.waitForTimeout(500)
+    const label = entry.fallbackLabel || ''
+    const byText = page
+      .locator('[data-sidebar-zone="industrial"] .sidebar-action-buttons button')
+      .filter({ hasText: new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') })
+      .first()
+    if (await byText.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await byText.click({ timeout: 15000, force: true })
+      return
+    }
+  }
+
+  if (entry.action === 'open-translator') {
+    await dismissUiNoise(page)
+    await page
+      .locator('[data-sidebar-zone="sistema"] .sidebar-group-header')
+      .filter({ hasText: /extras|extra/i })
+      .first()
+      .click({ timeout: 8000, force: true })
+      .catch(() => {})
+    await page.waitForTimeout(500)
+    const byText = page
+      .locator('[data-sidebar-zone="sistema"] .sidebar-action-buttons button')
+      .filter({ hasText: /tradutor|translator|traductor|traducteur|traduttore|übersetzer/i })
+      .first()
+    if (await byText.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await byText.click({ timeout: 15000, force: true })
+      return
+    }
+  }
+
+  if (entry.action === 'open-extra') {
+    await page
+      .locator('[data-sidebar-zone="sistema"] .sidebar-group-header')
+      .filter({ hasText: /extras/i })
+      .first()
+      .click({ timeout: 8000 })
+    await page.waitForTimeout(600)
+    return
+  }
+
+  if (entry.action === 'open-manual-gestor') {
+    await clickSidebarEntry(page, { ...entry, action: 'open-extra', moduleId: 'outros' })
+    await page
+      .getByRole('button', { name: /manual.*gestor|gestor.*manual|manager manual/i })
+      .first()
+      .click({ timeout: 8000 })
+      .catch(() => {})
+    await page.waitForTimeout(800)
+    return
+  }
+
+  if (entry.fallbackLabel) {
+    const clicked = await page.evaluate((label) => {
+      const norm = (s) => s.replace(/\s+/g, ' ').trim().toLowerCase()
+      const want = norm(label)
+      const buttons = [...document.querySelectorAll('.sidebar-action-btn, .sidebar-group-header')]
+      for (const b of buttons) {
+        if (b.offsetParent === null) continue
+        const title = b.querySelector('.sidebar-empresa-entry-title, .sidebar-nav-label-text')
+        const text = norm(title?.textContent || b.textContent || '')
+        if (!text) continue
+        if (text.includes(want) || want.includes(text) || text.slice(0, 12) === want.slice(0, 12)) {
+          b.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }))
+          return true
+        }
+      }
+      return false
+    }, entry.fallbackLabel)
+    if (clicked) return
+  }
+
+  throw new Error(`Botão sidebar não encontrado: ${entry.action}`)
+}
+
+async function expandModuleGroup(page, moduleId, targetAction) {
+  if (moduleId === 'intro') return
+
+  const target = page.locator(
+    `[data-sidebar-nav-action="${targetAction}"], [data-button-action="${targetAction}"]`
+  )
+  if (await target.isVisible({ timeout: 700 }).catch(() => false)) return
+
+  await page.locator('.sidebar-scroll-inner').evaluate((el) => {
+    el.scrollTop = 0
+  }).catch(() => {})
+
+  if (moduleId === 'outros') {
+    await page.locator('.sidebar-admin-footer').click({ timeout: 8000 }).catch(() => {})
+    await page.waitForTimeout(500)
+    if (await target.isVisible({ timeout: 1000 }).catch(() => false)) return
+  }
+
+  if (moduleId === 'empresa-institucional') {
+    await page.locator('[aria-controls="sidebar-empresa-institucional-actions"]').click({ timeout: 8000 }).catch(() => {})
+    await page.waitForTimeout(500)
+    if (await target.isVisible({ timeout: 1000 }).catch(() => false)) return
+  }
+
+  const headerSel = MODULE_HEADER_SELECTOR[moduleId]
+  if (headerSel) {
+    const header = page.locator(headerSel).first()
+    if (await header.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await header.click({ timeout: 5000 }).catch(() => {})
+      await page.waitForTimeout(500)
+      if (await target.isVisible({ timeout: 1200 }).catch(() => false)) return
+    }
+  }
+
+  // Fallback: expandir grupos colapsados até o botão aparecer
+  for (let attempt = 0; attempt < 20; attempt++) {
+    if (await target.isVisible({ timeout: 500 }).catch(() => false)) return
+    const clicked = await page.evaluate(() => {
+      const headers = [...document.querySelectorAll('.sidebar-group-header, .sidebar-admin-footer')]
+      for (const h of headers) {
+        const cluster = h.closest('.sidebar-nav-cluster, .sidebar-nav-subcluster')
+        const sub = cluster?.querySelector('.sidebar-action-buttons')
+        if (!sub || sub.offsetParent === null) {
+          h.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }))
+          return true
+        }
+      }
+      return false
+    })
+    if (!clicked) break
+    await page.waitForTimeout(450)
+  }
 }
 
 async function navigateToPage(page, entry) {
   page.once('dialog', (d) => d.accept().catch(() => {}))
 
+  // Fechar abas anteriores — evita acumular estado e timeouts
+  await page.locator('.main-content-action-btn--home').click({ timeout: 4000 }).catch(() => {})
+  await page.waitForTimeout(400)
+
   if (!entry.action) {
-    await jsClick(page, '.main-content-action-btn--home').catch(() => {})
-    await page.waitForTimeout(entry.waitMs || 1000)
-    await page.waitForSelector('.main-content-area:not(.main-content-area-tab-open)', { timeout: 8000 }).catch(() => {})
+    await enterWorkspace(page).catch(() => {})
+    await page.waitForTimeout(entry.waitMs || 800)
     return
   }
 
-  await expandModuleGroup(page, entry.moduleId)
+  await expandModuleGroup(page, entry.moduleId, entry.action)
+  await clickSidebarEntry(page, entry)
 
-  const clicked = await jsClick(page, `[data-sidebar-nav-action="${entry.action}"]`)
-  if (!clicked) {
-    throw new Error(`Botão sidebar não encontrado: ${entry.action}`)
+  // Checklist pede credencial — fechar modal para capturar ecrã anterior se bloquear
+  const checklistModal = page.locator('.checklist-access-modal, [class*="checklist-access"]')
+  if (await checklistModal.isVisible({ timeout: 800 }).catch(() => false)) {
+    await page.keyboard.press('Escape').catch(() => {})
+    await page.waitForTimeout(300)
   }
 
   await page
@@ -240,6 +491,9 @@ async function captureLocale(browser, locale) {
   await context.addInitScript(
     ({ lang, cachedUser }) => {
       try {
+        // Evita overlay de bootstrap nas capturas (mesma sessão quente que reload normal)
+        sessionStorage.setItem('nonato-warm-session-v1', '1')
+        localStorage.setItem('nonato-warm-bootstrap-at-v1', new Date().toISOString())
         localStorage.setItem('nonato-language', lang)
         if (cachedUser) {
           localStorage.setItem(
@@ -277,8 +531,9 @@ async function captureLocale(browser, locale) {
   }
 
   await page.waitForSelector('.app-layout, .sidebar', { timeout: 120000 })
-  await page.waitForTimeout(2500)
-  await dismissUiNoise(page)
+  await waitForAppReady(page)
+  await enterWorkspace(page)
+  log('  App pronta — a capturar ecrãs…')
 
   let ok = 0
   let fail = 0
@@ -290,8 +545,10 @@ async function captureLocale(browser, locale) {
 
     try {
       await navigateToPage(page, entry)
+      await assertReadyForCapture(page, entry.id)
       const target = page.locator('.main-content-area').first()
       await target.waitFor({ state: 'visible', timeout: 15000 })
+      await page.waitForTimeout(400)
       await target.screenshot({
         path: outFile,
         type: 'png',

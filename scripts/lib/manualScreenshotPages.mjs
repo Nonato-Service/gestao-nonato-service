@@ -49,11 +49,12 @@ export function loadManualScreenshotPages() {
       /\{\s*buttonId:\s*'([^']+)',\s*action:\s*'([^']+)'[\s\S]*?fallbackLabel:\s*'([^']*)'/g
     let itemMatch
     while ((itemMatch = itemRe.exec(itemsBlock)) !== null) {
-      const [, buttonId, action] = itemMatch
+      const [, buttonId, action, fallbackLabel] = itemMatch
       if (SKIP_ACTIONS.has(action)) continue
       pages.push({
         id: buttonId,
         action,
+        fallbackLabel,
         moduleId: currentModuleId,
         waitMs: action === 'open-checklist' ? 1200 : 1400,
       })

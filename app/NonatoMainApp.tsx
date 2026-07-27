@@ -74302,6 +74302,7 @@ A1;Peça exemplo;10`}
                       className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
                         isSelected ? ' sidebar-action-btn-active' : ''
                       }`}
+                      data-sidebar-nav-action={action}
                       onClick={() => handleButtonClick(action)}
                     >
                       {isSelected && (
@@ -74444,6 +74445,7 @@ A1;Peça exemplo;10`}
                       className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
                         isSelected ? ' sidebar-action-btn-active' : ''
                       }`}
+                      data-sidebar-nav-action={button.action}
                       onClick={() => handleButtonClick(button.action, button.id)}
                     >
                       {isSelected && (
@@ -74820,6 +74822,7 @@ A1;Peça exemplo;10`}
                 className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
                   selectedSidebarButton === 'open-translator' ? ' sidebar-action-btn-active' : ''
                 }`}
+                data-sidebar-nav-action="open-translator"
                 onClick={() => handleButtonClick('open-translator')}
               >
                 {selectedSidebarButton === 'open-translator' && (

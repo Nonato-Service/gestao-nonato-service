@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ManualProgramaPageDef } from '../lib/manualProgramaCatalog'
 import { manualProgramaScreenshotUrl, MANUAL_SCREENSHOT_FILE } from '../lib/manualProgramaAssets'
 import { previewConfigForPage } from '../lib/manualProgramaPreviews'
@@ -36,6 +36,7 @@ export function ManualProgramaScreenPreview({
   const config = previewConfigForPage(page, title)
   const screenshotUrl = manualProgramaScreenshotUrl(locale, page.id, MANUAL_SCREENSHOT_FILE)
   const previewKey = `${locale}/${page.id}`
+  const imgRef = useRef<HTMLImageElement>(null)
   const [hasRealShot, setHasRealShot] = useState(true)
   const [imageLoaded, setImageLoaded] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
@@ -45,6 +46,34 @@ export function ManualProgramaScreenPreview({
     setImageLoaded(false)
     setLightboxOpen(false)
   }, [previewKey])
+
+  useEffect(() => {
+    const img = imgRef.current
+    if (!img) return
+
+    const markLoaded = () => {
+      setHasRealShot(true)
+      setImageLoaded(true)
+    }
+    const markError = () => {
+      setHasRealShot(false)
+      setImageLoaded(false)
+    }
+
+    img.addEventListener('load', markLoaded)
+    img.addEventListener('error', markError)
+
+    // Cache do browser: onLoad pode não disparar se a imagem já estiver completa
+    if (img.complete) {
+      if (img.naturalWidth > 0) markLoaded()
+      else markError()
+    }
+
+    return () => {
+      img.removeEventListener('load', markLoaded)
+      img.removeEventListener('error', markError)
+    }
+  }, [screenshotUrl, previewKey])
 
   return (
     <>
@@ -82,20 +111,13 @@ export function ManualProgramaScreenPreview({
                 </span>
               ) : null}
               <img
+                ref={imgRef}
                 key={previewKey}
                 className={`manual-pro-v2-screen__shot manual-pro-v3-device__shot${imageLoaded ? ' manual-pro-v3-device__shot--ready' : ''}`}
                 src={screenshotUrl}
                 alt={`${screenLabel}: ${title}`}
                 loading="eager"
                 decoding="async"
-                onLoad={() => {
-                  setHasRealShot(true)
-                  setImageLoaded(true)
-                }}
-                onError={() => {
-                  setHasRealShot(false)
-                  setImageLoaded(false)
-                }}
               />
               {imageLoaded ? (
                 <span className="manual-pro-v3-device__zoom" aria-hidden>
