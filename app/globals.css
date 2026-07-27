@@ -4473,8 +4473,8 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
     min-width: 0 !important;
     width: 100% !important;
   }
-  .tab-content-wrapper table:not(.biblioteca-relatorios-tabela),
-  .main-content-area table:not(.biblioteca-relatorios-tabela) {
+  .tab-content-wrapper table:not(.biblioteca-relatorios-tabela):not(.cadastro-valores-v2__table),
+  .main-content-area table:not(.biblioteca-relatorios-tabela):not(.cadastro-valores-v2__table) {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
@@ -4808,6 +4808,12 @@ body {
 /* Quando há abas abertas, reservar espaço para o dock flutuante (desktop também). */
 .app-layout.app-has-bottom-tabs {
   padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* Conteúdo rolável: nunca ficar por baixo do dock de abas nem cortar botões no fim */
+.app-has-bottom-tabs .tab-inner-scroll {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
+  scroll-padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
 }
 
 /* Agenda técnica: lembrete visual (pulso suave) em Pendências e Pré-agendamento */
@@ -7105,6 +7111,11 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   .app-compact-layout .tab-inner-scroll {
     padding-left: max(6px, env(safe-area-inset-left, 0px)) !important;
     padding-right: max(6px, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  .app-compact-layout.app-has-bottom-tabs .tab-inner-scroll {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
+    scroll-padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -38702,6 +38713,8 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
 }
 
 .cadastro-valores-v2__hero {
@@ -39090,8 +39103,9 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   gap: 14px 18px;
   padding: 14px 16px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 200, 83, 0.22);
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .cadastro-valores-v2__toolbar-copy {
@@ -39111,6 +39125,9 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+  flex: 1 1 280px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .cadastro-valores-v2__empty--panel {
@@ -39123,19 +39140,28 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 .cadastro-valores-v2__table-wrap--pro {
   margin-top: 0;
-  border-color: rgba(255, 255, 255, 0.1);
+  margin-bottom: 8px;
+  padding: 6px 6px 10px;
+  border-color: rgba(0, 200, 83, 0.18);
+  background: rgba(0, 0, 0, 0.12);
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
 }
 
 .cadastro-valores-v2__table--pro {
-  table-layout: fixed;
+  table-layout: auto;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  min-width: min(100%, 720px);
 }
 
-.cadastro-valores-v2__col-cod { width: 88px; }
-.cadastro-valores-v2__col-nome { width: auto; }
-.cadastro-valores-v2__col-tipo { width: 110px; }
-.cadastro-valores-v2__col-cobranca { width: 130px; }
-.cadastro-valores-v2__col-valor { width: 110px; }
-.cadastro-valores-v2__col-acoes { width: 148px; }
+.cadastro-valores-v2__col-cod { width: 88px; min-width: 72px; }
+.cadastro-valores-v2__col-nome { width: auto; min-width: 140px; }
+.cadastro-valores-v2__col-tipo { width: 112px; min-width: 96px; }
+.cadastro-valores-v2__col-cobranca { width: 128px; min-width: 108px; }
+.cadastro-valores-v2__col-valor { width: 104px; min-width: 88px; }
+.cadastro-valores-v2__col-acoes { width: 188px; min-width: 188px; }
 
 .cadastro-valores-v2__th-valor {
   text-align: right !important;
@@ -39204,13 +39230,48 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .cadastro-valores-v2__row--warn td {
-  background: rgba(234, 179, 8, 0.05);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.cadastro-valores-v2__row--warn td:first-child {
+  box-shadow: inset 3px 0 0 rgba(234, 179, 8, 0.75);
 }
 
 .cadastro-valores-v2__table--pro thead th {
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 2;
+  background: rgba(30, 30, 30, 0.98);
+  border-bottom: 1px solid rgba(0, 200, 83, 0.25);
+  color: #7dff9e;
+}
+
+.cadastro-valores-v2__table--pro tbody tr td {
+  padding: 12px 14px;
+  vertical-align: middle;
+  background: rgba(255, 255, 255, 0.045);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cadastro-valores-v2__table--pro tbody tr td:first-child {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px 0 0 10px;
+}
+
+.cadastro-valores-v2__table--pro tbody tr td:last-child {
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0 10px 10px 0;
+  overflow: visible;
+}
+
+.cadastro-valores-v2__table--pro tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.065);
+  border-color: rgba(0, 200, 83, 0.22);
+}
+
+.cadastro-valores-v2__table--pro tbody tr:last-child td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .cadastro-valores-v2__sidebar-footer {
@@ -39376,6 +39437,8 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 .cadastro-valores-v2__main {
   flex: 1 1 480px;
   min-width: 0;
+  overflow: visible;
+  padding-bottom: 8px;
 }
 
 .cadastro-valores-v2__toolbar {
@@ -39461,7 +39524,11 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 .cadastro-valores-v2__table-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
+  justify-content: flex-end;
+  align-items: center;
+  min-width: 0;
 }
 
 .cadastro-valores-v2__matriz-link {
@@ -39601,6 +39668,27 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
   .cadastro-valores-v2__toolbar-actions {
     justify-content: flex-start;
+    width: 100%;
+  }
+
+  .cadastro-valores-v2__table-wrap--pro {
+    margin-left: -2px;
+    margin-right: -2px;
+    padding-bottom: 14px;
+  }
+
+  .cadastro-valores-v2__table--pro {
+    min-width: 680px;
+  }
+
+  .cadastro-valores-v2__table-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cadastro-valores-v2__table-actions .cadastro-valores-v2__btn-sm {
+    width: 100%;
+    justify-content: center;
   }
 }
 
