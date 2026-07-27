@@ -38873,6 +38873,81 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   margin-top: 12px;
 }
 
+.cadastro-valores-v2__layout--grupos {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  grid-template-columns: unset;
+}
+
+.cadastro-valores-v2__grupos-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 200, 83, 0.2);
+  background: rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+}
+
+.cadastro-valores-v2__grupos-bar-head h3 {
+  margin: 0 0 6px;
+  color: #66b3ff;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.cadastro-valores-v2__grupos-bar-head .orcamento-pecas-especiais-hint {
+  margin: 0;
+}
+
+.cadastro-valores-v2__grupo-list--strip {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 16px;
+  overflow: visible;
+  max-height: none;
+  flex: none;
+  margin-bottom: 0;
+  padding: 2px 0;
+}
+
+.cadastro-valores-v2__grupo-list--strip .cadastro-valores-v2__grupo-btn {
+  flex: 1 1 calc(25% - 12px);
+  min-width: min(240px, 100%);
+  max-width: 100%;
+  width: auto;
+}
+
+.cadastro-valores-v2__grupos-admin {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cadastro-valores-v2__grupos-admin-card {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cadastro-valores-v2__grupos-admin-card .cadastro-valores-v2__field {
+  margin-bottom: 0;
+}
+
+.cadastro-valores-v2__layout--grupos .cadastro-valores-v2__main {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+}
+
 .cadastro-valores-v2__sidebar {
   flex: 0 1 300px;
   min-width: 240px;
@@ -39674,6 +39749,15 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
     grid-template-columns: 1fr;
   }
 
+  .cadastro-valores-v2__grupos-admin {
+    grid-template-columns: 1fr;
+  }
+
+  .cadastro-valores-v2__grupo-list--strip .cadastro-valores-v2__grupo-btn {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
   .cadastro-valores-v2__group-panel-top {
     grid-template-columns: 1fr;
   }
@@ -39756,6 +39840,20 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 .orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__layout.orcamento-pecas-especiais-form {
   margin-top: 0;
   padding: 20px;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__layout--grupos.orcamento-pecas-especiais-form {
+  padding: 20px;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__grupos-bar {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 200, 83, 0.2);
+  padding: 18px 20px;
+}
+
+.orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__grupo-list--strip {
+  gap: 16px;
 }
 
 .orcamento-pecas-especiais-page.cadastro-valores-v2 .cadastro-valores-v2__sidebar,

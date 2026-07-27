@@ -358,14 +358,16 @@ export function CadastroServicosContent(props: Props) {
       )}
 
       {activeTab === 'grupos' && (
-        <div className="cadastro-valores-v2__layout orcamento-pecas-especiais-form">
-          <aside className="cadastro-valores-v2__sidebar">
-            <h3>{safeT.servicosGruposTitulo || 'Grupos de tarifa'}</h3>
-            <p className="orcamento-pecas-especiais-hint">
-              {safeT.servicosGruposAjuda ||
-                'Crie grupos (ex.: NONATO SERVICE, HOMAG USA). Em cada grupo, cadastre HTT e demais valores — os clientes do mesmo grupo usam esta tabela.'}
-            </p>
-            <div className="cadastro-valores-v2__grupo-list">
+        <div className="cadastro-valores-v2__layout cadastro-valores-v2__layout--grupos orcamento-pecas-especiais-form">
+          <div className="cadastro-valores-v2__grupos-bar">
+            <div className="cadastro-valores-v2__grupos-bar-head">
+              <h3>{safeT.servicosGruposTitulo || 'Grupos de tarifa'}</h3>
+              <p className="orcamento-pecas-especiais-hint">
+                {safeT.servicosGruposAjuda ||
+                  'Crie grupos (ex.: NONATO SERVICE, HOMAG USA). Em cada grupo, cadastre HTT e demais valores — os clientes do mesmo grupo usam esta tabela.'}
+              </p>
+            </div>
+            <div className="cadastro-valores-v2__grupo-list cadastro-valores-v2__grupo-list--strip" role="listbox" aria-label={safeT.servicosGruposTitulo || 'Grupos de tarifa'}>
               {gruposOrdenados.map((g, index) => {
                 const nServ = servicos.filter((s) => s.grupoId === g.id).length
                 const nCli = clientesPorGrupo[g.id] || 0
@@ -375,6 +377,8 @@ export function CadastroServicosContent(props: Props) {
                   <button
                     key={g.id}
                     type="button"
+                    role="option"
+                    aria-selected={sel}
                     className={'cadastro-valores-v2__grupo-btn' + (sel ? ' cadastro-valores-v2__grupo-btn--selected' : '')}
                     onClick={() => {
                       setServicoGrupoSelecionadoId(g.id)
@@ -408,25 +412,25 @@ export function CadastroServicosContent(props: Props) {
               })}
             </div>
 
-            <div className="cadastro-valores-v2__sidebar-footer">
-              <div>
+            <div className="cadastro-valores-v2__grupos-admin">
+              <div className="orcamento-pecas-especiais-linha cadastro-valores-v2__grupos-admin-card">
                 <div className="cadastro-valores-v2__section-label">{safeT.servicosNovoGrupoTitulo || 'Novo grupo vazio'}</div>
                 <input
                   type="text"
-                  className="cadastro-valores-v2__input cadastro-valores-v2__field"
+                  className="orcamento-pecas-especiais-input cadastro-valores-v2__field"
                   value={novoServicoGrupoNome}
                   onChange={(e) => setNovoServicoGrupoNome(e.target.value)}
                   placeholder={safeT.servicosGrupoNomePlaceholder || 'Nome do novo grupo'}
                 />
-                <button type="button" className="cadastro-valores-v2__btn-green" style={{ width: '100%' }} onClick={onAddGrupo}>
+                <button type="button" className="btn-primary" style={{ width: '100%' }} onClick={onAddGrupo}>
                   + {safeT.servicosNovoGrupo || 'Criar grupo'}
                 </button>
               </div>
 
-              <div className="cadastro-valores-v2__sidebar-divider">
+              <div className="orcamento-pecas-especiais-linha cadastro-valores-v2__grupos-admin-card">
                 <div className="cadastro-valores-v2__section-label">{safeT.servicosDuplicarGrupoTitulo || 'Duplicar tabela de outro grupo'}</div>
                 <select
-                  className="cadastro-valores-v2__select cadastro-valores-v2__field"
+                  className="orcamento-pecas-especiais-input cadastro-valores-v2__field"
                   value={duplicarOrigemId || servicoGrupoSelecionadoId || gruposOrdenados[0]?.id || ''}
                   onChange={(e) => setDuplicarOrigemId(e.target.value)}
                 >
@@ -438,7 +442,7 @@ export function CadastroServicosContent(props: Props) {
                 </select>
                 <input
                   type="text"
-                  className="cadastro-valores-v2__input cadastro-valores-v2__field"
+                  className="orcamento-pecas-especiais-input cadastro-valores-v2__field"
                   value={duplicarNome}
                   onChange={(e) => setDuplicarNome(e.target.value)}
                   placeholder={safeT.servicosDuplicarGrupoPlaceholder || 'Nome do novo grupo (cópia)'}
@@ -456,7 +460,7 @@ export function CadastroServicosContent(props: Props) {
                 </button>
               </div>
             </div>
-          </aside>
+          </div>
 
           <section className="cadastro-valores-v2__main">
             {servicoGrupoSelecionadoId && grupoSelecionado ? (
