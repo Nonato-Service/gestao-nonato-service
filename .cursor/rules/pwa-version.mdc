@@ -1,0 +1,23 @@
+---
+description: Versão PWA única — bump obrigatório em deploys com alterações ao utilizador
+alwaysApply: true
+---
+
+# Versão PWA (fonte única)
+
+A versão que dispara o banner «Nova versão disponível» está centralizada em **`pwa-version.json`** (campo `version`).
+
+## Regras
+
+1. **Nunca** editar manualmente `SW_VERSION` em `RegisterSW.tsx` nem `CACHE_NAME` em `public/sw.js`.
+2. **Sempre** que entregar alterações visíveis (UI, fluxos, sidebar, offline, traduções na app):
+   - Executar **`npm run pwa:bump`** antes do commit, **ou**
+   - Incrementar `version` em `pwa-version.json` e correr **`npm run pwa:sync`**.
+3. Incluir o bump da PWA no **mesmo commit** das alterações funcionais (ou commit imediato seguinte antes do push).
+4. Ficheiros gerados/sincronizados: `app/lib/pwaVersion.ts`, `public/sw.js` (CACHE_NAME).
+5. `prebuild` e `predev` correm `sync-pwa-version.mjs` — garantem consistência mesmo se alguém só alterar o JSON.
+
+## Comandos
+
+- `npm run pwa:bump` — incrementa + sincroniza (uso habitual)
+- `npm run pwa:sync` — só sincroniza (se `pwa-version.json` já foi editado)

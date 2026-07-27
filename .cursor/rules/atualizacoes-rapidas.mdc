@@ -16,8 +16,9 @@ No projeto **Gestão Técnica Nonato Service**, as alterações ao código devem
 
 ## Depois de fazer mudanças
 
-5. **Atualizar deploy:** Para colocar as alterações na internet (Railway), o utilizador deve executar **ATUALIZAR-DEPLOY.bat** (ou, no terminal: `git add . && git commit -m "Atualização" && git push`). O Railway faz o deploy automaticamente em 2–5 minutos.
-6. **Mensagem opcional:** Pode sugerir ao utilizador: "Para publicar as alterações, execute **ATUALIZAR-DEPLOY.bat** ou use: `git add . && git commit -m \"Descrição da alteração\" && git push`."
+5. **Versão PWA (obrigatório em alterações visíveis ao utilizador):** A versão única está em **`pwa-version.json`** na raiz. Antes de commit/deploy com mudanças na UI ou lógica offline, executar **`npm run pwa:bump`** (incrementa e sincroniza `RegisterSW`, `sw.js` e `app/lib/pwaVersion.ts`). O `prebuild`/`predev` também sincronizam automaticamente — nunca editar `SW_VERSION` ou `CACHE_NAME` à mão em ficheiros separados.
+6. **Atualizar deploy:** Para colocar as alterações na internet (Railway), o utilizador deve executar **ATUALIZAR-DEPLOY.bat** (ou, no terminal: `git add . && git commit -m "Atualização" && git push`). O Railway faz o deploy automaticamente em 2–5 minutos.
+7. **Mensagem opcional:** Pode sugerir ao utilizador: "Para publicar as alterações, execute **ATUALIZAR-DEPLOY.bat** ou use: `git add . && git commit -m \"Descrição da alteração\" && git push`."
 
 ## Resumo para o utilizador
 

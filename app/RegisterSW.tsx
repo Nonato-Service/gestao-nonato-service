@@ -3,9 +3,10 @@
 import { useEffect, useState, useRef } from 'react'
 import { setupAutoSyncOnReconnect, setupFlushSyncOnPageHide } from './utils/dataStorage'
 import { getStoredUiString } from './translations'
+import { PWA_VERSION } from './lib/pwaVersion'
 
-// Bumpar este número em cada deploy para forçar atualização no telemóvel/tablet
-const SW_VERSION = 187
+// Versão centralizada em pwa-version.json — sincronizada em prebuild/predev (npm run pwa:bump)
+const SW_VERSION = PWA_VERSION
 const SW_DISMISSED_SESSION_KEY = 'nonato-pwa-update-dismissed-v'
 const UI_LANGUAGE_EVENT = 'nonato-ui-language'
 

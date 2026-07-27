@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/sync-pwa-version.mjs",
     "dev": "next dev -p 3000",
+    "prebuild": "node scripts/sync-pwa-version.mjs",
     "build": "node --max-old-space-size=4096 node_modules/next/dist/bin/next build",
     "build:demo": "node scripts/run-next-build-demo.mjs",
     "start": "node scripts/start-server.js",
@@ -20,7 +22,9 @@
     "recuperar:pedidos-avulsos": "node scripts/recuperar-pedidos-avulsos.mjs",
     "i18n:check": "node scripts/check-i18n-keys.mjs",
     "i18n:sync": "node scripts/sync-i18n-full.mjs",
-    "manual:capture-screenshots": "node scripts/capture-manual-screenshots.mjs"
+    "manual:capture-screenshots": "node scripts/capture-manual-screenshots.mjs",
+    "pwa:sync": "node scripts/sync-pwa-version.mjs",
+    "pwa:bump": "node scripts/bump-pwa-version.mjs"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",
