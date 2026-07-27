@@ -12648,6 +12648,83 @@ button.dia-trabalho-acao-btn--del:hover {
   font-weight: 600;
 }
 
+.fechamento-itens-btn-diaria--compact {
+  padding: 5px 8px;
+  font-size: 11px;
+  min-width: 38px;
+  flex: 1 1 auto;
+}
+
+.fechamento-itens-col-cobrar-diaria {
+  width: 108px;
+  min-width: 96px;
+  text-align: center !important;
+}
+
+.fechamento-itens-col-servico {
+  width: min(340px, 32vw);
+  min-width: 260px;
+  text-align: left !important;
+}
+
+.fechamento-itens-cobrar-diaria-cell {
+  text-align: center;
+  vertical-align: middle;
+  width: 108px;
+  min-width: 96px;
+}
+
+.fechamento-itens-cobrar-diaria-pills {
+  display: inline-flex;
+  flex-direction: row;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 96px;
+  margin: 0 auto;
+}
+
+.fechamento-itens-servico-cell {
+  min-width: 260px;
+  vertical-align: middle;
+}
+
+.fechamento-itens-servico-select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 240px;
+  max-width: none;
+  padding: 9px 32px 9px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.3;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.fechamento-itens-servico-select:focus {
+  outline: none;
+  border-color: rgba(0, 200, 83, 0.45);
+  box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.12);
+}
+
+.fechamento-itens-cell-empty {
+  color: rgba(255, 255, 255, 0.28);
+  font-size: 13px;
+}
+
+.fechamento-relatorios-servicos-page.orcamento-pecas-especiais-page .fechamento-itens-table.cadastro-valores-v2__table--pro {
+  min-width: 920px;
+}
+
 /* Fechamento relatórios — reforço visual igual ao Cadastro Serviços */
 .fechamento-relatorios-servicos-page.orcamento-pecas-especiais-page .fechamento-itens-panel.orcamento-pecas-especiais-form {
   background: rgba(255, 255, 255, 0.04);

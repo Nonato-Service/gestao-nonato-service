@@ -52448,7 +52448,8 @@ A1;Peça exemplo;10`}
                         <th style={{ textAlign: 'right' }}>{(safeT as any)?.quantidade || 'Quantidade'}</th>
                         <th style={{ textAlign: 'right' }}>{(safeT as any)?.valorUnitario || 'Valor unit.'}</th>
                         <th style={{ textAlign: 'right' }}>{(safeT as any)?.valorTotal || 'Total'}</th>
-                        <th style={{ width: '180px', textAlign: 'center' }}>{(safeT as any)?.fechamentoColunaServicoDiaria || (safeT as any)?.cobrarDiariaTecnico || 'Serviço / diária'}</th>
+                        <th className="fechamento-itens-col-cobrar-diaria">{(safeT as any)?.fechamentoColunaCobrarDiaria || 'Cobrar diária'}</th>
+                        <th className="fechamento-itens-col-servico">{(safeT as any)?.fechamentoColunaServicoCadastro || 'Serviço (cadastro)'}</th>
                         {temLinhasManuaisFechamento && (
                           <th style={{ width: '200px' }}>{(safeT as any)?.selecionarServicoAnexar || 'Anexar: selecionar do Cadastro'}</th>
                         )}
@@ -52587,41 +52588,45 @@ A1;Peça exemplo;10`}
                             )}
                           </td>
                           <td style={{ textAlign: 'right', fontWeight: 600, color: cobrarDiaria ? '#00c853' : '#888' }}>{totalExibir.toFixed(2)} €{eDiarias && !cobrarDiaria ? ' (' + ((safeT as any)?.naoCobrar || 'não cobrar') + ')' : ''}</td>
-                          <td style={{ textAlign: 'center' }}>
+                          <td className="fechamento-itens-cobrar-diaria-cell">
                             {eDiarias ? (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                              <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                <button type="button" onClick={() => atualizarItem('diarias', { cobrarDiaria: true })} className={`fechamento-itens-btn-diaria fechamento-itens-btn-diaria--sim${cobrarDiaria ? ' is-active' : ''}`}>{(safeT as any)?.sim || 'Sim'}</button>
-                                <button type="button" onClick={() => atualizarItem('diarias', { cobrarDiaria: false })} className={`fechamento-itens-btn-diaria fechamento-itens-btn-diaria--nao${!cobrarDiaria ? ' is-active' : ''}`}>{(safeT as any)?.nao || 'Não'}</button>
+                              <div className="fechamento-itens-cobrar-diaria-pills" role="group" aria-label={(safeT as any)?.fechamentoColunaCobrarDiaria || 'Cobrar diária'}>
+                                <button type="button" onClick={() => atualizarItem('diarias', { cobrarDiaria: true })} className={`fechamento-itens-btn-diaria fechamento-itens-btn-diaria--sim fechamento-itens-btn-diaria--compact${cobrarDiaria ? ' is-active' : ''}`}>{(safeT as any)?.sim || 'Sim'}</button>
+                                <button type="button" onClick={() => atualizarItem('diarias', { cobrarDiaria: false })} className={`fechamento-itens-btn-diaria fechamento-itens-btn-diaria--nao fechamento-itens-btn-diaria--compact${!cobrarDiaria ? ' is-active' : ''}`}>{(safeT as any)?.nao || 'Não'}</button>
                               </div>
-                                <select
-                                  value={item.servicoId || ''}
-                                  onChange={(e) => {
-                                    const s = servicos.find((sv) => sv.id === e.target.value)
-                                    if (s) aplicarServico('diarias', s)
-                                  }}
-                                  style={{ width: '100%', maxWidth: '220px', fontSize: '11px', margin: '0 auto', display: 'block' }}
-                                  title={(safeT as any)?.selecionarServicoDiarias || 'Serviço de diárias (DFC, DDT…)'}
-                                >
-                                  <option value="">{(safeT as any)?.servicoDiarias || '— Serviço diárias —'}</option>
-                                  {servicosParaItem(item).map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                      {servicoRotuloParaSelectFechamento(s)} · {formatServicoValorExibicao(s.valor)} €
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
+                            ) : (
+                              <span className="fechamento-itens-cell-empty">—</span>
+                            )}
+                          </td>
+                          <td className="fechamento-itens-servico-cell">
+                            {eDiarias ? (
+                              <select
+                                className="fechamento-itens-servico-select"
+                                value={item.servicoId || ''}
+                                onChange={(e) => {
+                                  const s = servicos.find((sv) => sv.id === e.target.value)
+                                  if (s) aplicarServico('diarias', s)
+                                }}
+                                title={(safeT as any)?.selecionarServicoDiarias || 'Serviço de diárias (DFC, DDT…)'}
+                              >
+                                <option value="">{(safeT as any)?.servicoDiarias || '— Diárias —'}</option>
+                                {servicosParaItem(item).map((s) => (
+                                  <option key={s.id} value={s.id}>
+                                    {servicoRotuloParaSelectFechamento(s)} · {formatServicoValorExibicao(s.valor)} €
+                                  </option>
+                                ))}
+                              </select>
                             ) : itemFixoDoRelatorio && (FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(item.id) && item.id !== 'diarias' ? (
                               <select
+                                className="fechamento-itens-servico-select"
                                 value={item.servicoId || ''}
                                 onChange={(e) => {
                                   const s = servicos.find((sv) => sv.id === e.target.value)
                                   if (s) aplicarServico(item.id, s)
                                 }}
-                                style={{ width: '100%', maxWidth: '220px', fontSize: '11px', margin: '0 auto', display: 'block' }}
                                 title={(safeT as any)?.selecionarServicoCadastro || 'Serviço do grupo selecionado'}
                               >
-                                <option value="">{(safeT as any)?.selecioneServicoAnexar || '— Serviço do cadastro —'}</option>
+                                <option value="">{(safeT as any)?.fechamentoSelecionarServico || '— Selecionar serviço —'}</option>
                                 {servicosParaItem(item).map((s) => (
                                   <option key={s.id} value={s.id}>
                                     {servicoRotuloParaSelectFechamento(s)} · {formatServicoValorExibicao(s.valor)} €
@@ -52629,7 +52634,7 @@ A1;Peça exemplo;10`}
                                 ))}
                               </select>
                             ) : (
-                              <span style={{ color: '#444' }}>—</span>
+                              <span className="fechamento-itens-cell-empty">—</span>
                             )}
                           </td>
                           {temLinhasManuaisFechamento && (
@@ -52675,6 +52680,7 @@ A1;Peça exemplo;10`}
                         </td>
                         <td style={{ textAlign: 'right', fontSize: '16px' }}>{fechTotIva.liquido.toFixed(2)} €</td>
                         <td></td>
+                        <td></td>
                         {temLinhasManuaisFechamento && <td></td>}
                         <td></td>
                       </tr>
@@ -52686,6 +52692,7 @@ A1;Peça exemplo;10`}
                             </td>
                             <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '15px' }}>{fechTotIva.iva.toFixed(2)} €</td>
                             <td></td>
+                            <td></td>
                             {temLinhasManuaisFechamento && <td></td>}
                             <td></td>
                           </tr>
@@ -52694,6 +52701,7 @@ A1;Peça exemplo;10`}
                               {(safeT as any)?.totalComIva || 'TOTAL com IVA'}
                             </td>
                             <td style={{ textAlign: 'right', fontSize: '17px' }}>{fechTotIva.comIva.toFixed(2)} €</td>
+                            <td></td>
                             <td></td>
                             {temLinhasManuaisFechamento && <td></td>}
                             <td></td>
