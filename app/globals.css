@@ -352,6 +352,10 @@ body {
     overflow: visible;
   }
 
+  html.mobile-browser-zoomed .mobile-pan-root * {
+    touch-action: none !important;
+  }
+
   html.mobile-browser-zoomed .sidebar .sidebar-scroll-inner,
   body.mobile-browser-zoomed .sidebar .sidebar-scroll-inner {
     overflow-y: auto !important;

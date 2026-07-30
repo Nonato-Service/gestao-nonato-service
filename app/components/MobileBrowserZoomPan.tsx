@@ -7,7 +7,8 @@ const MIN_SCALE = 1
 const MAX_SCALE = 4
 const ZOOM_SENSITIVITY = 0.075
 const MIN_PINCH_DIST = 96
-const PINCH_CAPTURE_DELTA_PX = 22
+const PINCH_CAPTURE_DELTA_PX = 14
+const PAN_START_MOVE_PX = 5
 const ZOOM_ACTIVE_SCALE = 1.045
 
 const SCROLL_NATIVE_SELECTORS = [
@@ -363,6 +364,9 @@ export function MobileBrowserZoomPan() {
           startPanY: panY,
           startScale: scale,
         }
+        if (surface?.mode === 'root') {
+          e.preventDefault()
+        }
       }
     }
 
@@ -381,20 +385,38 @@ export function MobileBrowserZoomPan() {
 
       if (g.mode === 'two' && e.touches.length === 2) {
         const dist = Math.max(touchDistance(e.touches), MIN_PINCH_DIST)
+        const mid = touchMidpoint(e.touches)
+        const panX = g.startPanX + (mid.x - g.startMidX)
+        const panY = g.startPanY + (mid.y - g.startMidY)
+        const midMoved = Math.hypot(mid.x - g.startMidX, mid.y - g.startMidY)
+        const distDelta = Math.abs(dist - pinchArmDistRef.current)
+        const alreadyZoomed = scaleRef.current > ZOOM_ACTIVE_SCALE
+
         if (!pinchCapturedRef.current) {
-          if (Math.abs(dist - pinchArmDistRef.current) < PINCH_CAPTURE_DELTA_PX) return
-          pinchCapturedRef.current = true
-          if (surface.mode === 'biblioteca' && surface.scrollEl) {
-            lockBibliotecaScroll(surface.scrollEl)
+          if (distDelta >= PINCH_CAPTURE_DELTA_PX) {
+            pinchCapturedRef.current = true
+            if (surface.mode === 'biblioteca' && surface.scrollEl) {
+              lockBibliotecaScroll(surface.scrollEl)
+            }
+          } else if (alreadyZoomed && midMoved >= PAN_START_MOVE_PX) {
+            panRef.current = clampPan(panX, panY, scaleRef.current, surface)
+            lastPinchMidRef.current = mid
+            e.preventDefault()
+            applyTransform()
+            return
+          } else if (!alreadyZoomed && midMoved >= PAN_START_MOVE_PX && midMoved > distDelta) {
+            panRef.current = clampPan(panX, panY, scaleRef.current, surface)
+            lastPinchMidRef.current = mid
+            e.preventDefault()
+            applyTransform()
+            return
+          } else {
+            return
           }
         }
 
-        const mid = touchMidpoint(e.touches)
         const ratio = dist / g.startDist
         const nextScale = scaleFromPinch(g.startScale, ratio)
-
-        const panX = g.startPanX + (mid.x - g.startMidX)
-        const panY = g.startPanY + (mid.y - g.startMidY)
 
         lastPinchMidRef.current = mid
         originRef.current = originFromMid(g.startMidX, g.startMidY, surface.transformEl)
@@ -411,7 +433,7 @@ export function MobileBrowserZoomPan() {
       if (g.mode === 'one' && e.touches.length === 1 && scaleRef.current > 1.008) {
         const dx = e.touches[0].clientX - g.startX
         const dy = e.touches[0].clientY - g.startY
-        if (Math.abs(dx) < 0.4 && Math.abs(dy) < 0.4) return
+        if (Math.abs(dx) < 0.25 && Math.abs(dy) < 0.25) return
 
         panRef.current = clampPan(g.startPanX + dx, g.startPanY + dy, scaleRef.current, surface)
         e.preventDefault()
