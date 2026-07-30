@@ -1,5 +1,6 @@
 # Gera public/brand/nonato-app-icon.ico a partir do logo PNG (Windows exige .ico no atalho)
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'icon-brand-utils.ps1')
 Add-Type -AssemblyName System.Drawing
 
 $proj = Split-Path $PSScriptRoot -Parent
@@ -19,6 +20,12 @@ $src = [System.Drawing.Image]::FromFile($pngPath)
 try {
   $sizes = @(256, 128, 64, 48, 32, 16)
   $images = New-Object System.Collections.Generic.List[System.Drawing.Bitmap]
+  $bounds = Get-ImageOpaqueBounds -Image $src
+  if ($bounds) {
+    $srcRect = [System.Drawing.Rectangle]::new($bounds.X, $bounds.Y, $bounds.Width, $bounds.Height)
+  } else {
+    $srcRect = [System.Drawing.Rectangle]::new(0, 0, $src.Width, $src.Height)
+  }
 
   foreach ($size in $sizes) {
     $bmp = New-Object System.Drawing.Bitmap $size, $size
@@ -28,9 +35,20 @@ try {
       $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
       $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
       $g.Clear([System.Drawing.Color]::FromArgb(18, 18, 18))
-      $margin = [Math]::Max(2, [int]($size * 0.08))
-      $inner = $size - (2 * $margin)
-      $g.DrawImage($src, $margin, $margin, $inner, $inner)
+
+      $inner = [Math]::Floor($size * 0.88)
+      $scale = [Math]::Min($inner / $srcRect.Width, $inner / $srcRect.Height)
+      $drawW = $srcRect.Width * $scale
+      $drawH = $srcRect.Height * $scale
+      $destX = ($size - $drawW) / 2.0
+      $destY = ($size - $drawH) / 2.0
+      $destRect = [System.Drawing.Rectangle]::new(
+        [int][Math]::Round($destX),
+        [int][Math]::Round($destY),
+        [int][Math]::Round($drawW),
+        [int][Math]::Round($drawH)
+      )
+      $g.DrawImage($src, $destRect, $srcRect, [System.Drawing.GraphicsUnit]::Pixel)
     } finally {
       $g.Dispose()
     }
