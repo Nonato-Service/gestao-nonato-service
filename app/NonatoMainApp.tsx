@@ -6341,13 +6341,15 @@ export default function Dashboard() {
     }, [logoUrl])
 
     const sizes = {
-      small: { container: '80px', brandDefault: '120px', fontSize: '16px', serviceSize: '10px' },
-      medium: { container: '120px', brandDefault: '180px', fontSize: '24px', serviceSize: '14px' },
-      large: { container: '160px', brandDefault: '240px', fontSize: '32px', serviceSize: '18px' },
-      xlarge: { container: '240px', brandDefault: '320px', fontSize: '46px', serviceSize: '22px' }
+      small: { container: '80px', brandDefaultW: '148px', brandDefaultH: '188px', fontSize: '16px', serviceSize: '10px' },
+      medium: { container: '120px', brandDefaultW: '176px', brandDefaultH: '224px', fontSize: '24px', serviceSize: '14px' },
+      large: { container: '160px', brandDefaultW: '220px', brandDefaultH: '280px', fontSize: '32px', serviceSize: '18px' },
+      xlarge: { container: '240px', brandDefaultW: '280px', brandDefaultH: '352px', fontSize: '46px', serviceSize: '22px' }
     }
     const s = sizes[size]
-    const boxSize = !logoUrl ? s.brandDefault : s.container
+    const boxStyle = !logoUrl
+      ? { width: s.brandDefaultW, height: s.brandDefaultH }
+      : { width: s.container, height: s.container }
     const mediaSrc = getNonatoBrandLogoDisplaySrc(logoUrl)
     const mediaIsVideo = Boolean(logoUrl && logoType === 'video')
 
@@ -6355,7 +6357,7 @@ export default function Dashboard() {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
         <div
           className={`ns-logo-in-box${!logoUrl ? ' ns-logo-in-box--brand-file' : ''}`}
-          style={{ width: boxSize, height: boxSize }}
+          style={boxStyle}
         >
           {mediaIsVideo ? (
             <video
