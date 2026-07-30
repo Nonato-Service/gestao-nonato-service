@@ -6341,18 +6341,19 @@ export default function Dashboard() {
     }, [logoUrl])
 
     const sizes = {
-      small: { container: '80px', fontSize: '16px', serviceSize: '10px' },
-      medium: { container: '120px', fontSize: '24px', serviceSize: '14px' },
-      large: { container: '160px', fontSize: '32px', serviceSize: '18px' },
-      xlarge: { container: '240px', fontSize: '46px', serviceSize: '22px' }
+      small: { container: '80px', brandDefault: '100px', fontSize: '16px', serviceSize: '10px' },
+      medium: { container: '120px', brandDefault: '152px', fontSize: '24px', serviceSize: '14px' },
+      large: { container: '160px', brandDefault: '200px', fontSize: '32px', serviceSize: '18px' },
+      xlarge: { container: '240px', brandDefault: '300px', fontSize: '46px', serviceSize: '22px' }
     }
     const s = sizes[size]
+    const boxSize = !logoUrl ? s.brandDefault : s.container
     const mediaSrc = getNonatoBrandLogoDisplaySrc(logoUrl)
     const mediaIsVideo = Boolean(logoUrl && logoType === 'video')
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        <div className="ns-logo-in-box" style={{ width: s.container, height: s.container }}>
+        <div className="ns-logo-in-box" style={{ width: boxSize, height: boxSize }}>
           {mediaIsVideo ? (
             <video
               src={mediaSrc}
@@ -73412,50 +73413,36 @@ A1;Peça exemplo;10`}
         onPointerLeave={hideSidebarForEntryDashboard ? undefined : () => setSidebarTipFlyout(null)}
         onMouseLeave={hideSidebarForEntryDashboard ? undefined : () => setSidebarTipFlyout(null)}
       >
-        {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
-        <div className={`sidebar-brand${logoUrl ? ' sidebar-brand--has-media' : ''}`}>
-          {logoUrl ? (
-            <div className="sidebar-brand-media-wrap">
-              {logoType === 'video' ? (
-                <video
-                  src={logoUrl}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  onError={() => {
-                    setLogoUrl(null)
-                    setLogoType('image')
-                  }}
-                />
-              ) : (
-                <img
-                  src={logoUrl}
-                  alt="NONATO SERVICE"
-                  onError={() => {
-                    setLogoUrl(null)
-                    setLogoType('image')
-                  }}
-                />
-              )}
-            </div>
-          ) : (
-            <div className="sidebar-brand-fallback">
-              <img
-                className="sidebar-brand-fallback__mark"
-                src={getNonatoBrandLogoDisplaySrc(null)}
-                alt="NONATO SERVICE"
-                onError={(e) => {
-                  applyNonatoBrandLogoImgFallback(e.currentTarget)
-                  e.currentTarget.closest('.sidebar-brand-fallback')?.classList.add('sidebar-brand-fallback--logo-failed')
+        {/* Logo NONATO SERVICE — preenche toda a área escura (upload ou PNG em public/brand) */}
+        <div className="sidebar-brand sidebar-brand--has-media">
+          <div className="sidebar-brand-media-wrap">
+            {logoUrl && logoType === 'video' ? (
+              <video
+                src={logoUrl}
+                autoPlay
+                loop
+                muted
+                playsInline
+                onError={() => {
+                  setLogoUrl(null)
+                  setLogoType('image')
                 }}
               />
-              <div className="sidebar-brand-fallback__wordmark sidebar-brand-fallback__wordmark--backup">
-                <span className="sidebar-brand-fallback__name">NONATO</span>
-                <span className="sidebar-brand-fallback__service">SERVICE</span>
-              </div>
-            </div>
-          )}
+            ) : (
+              <img
+                src={logoUrl || getNonatoBrandLogoDisplaySrc(null)}
+                alt="NONATO SERVICE"
+                onError={(e) => {
+                  if (logoUrl) {
+                    setLogoUrl(null)
+                    setLogoType('image')
+                    return
+                  }
+                  applyNonatoBrandLogoImgFallback(e.currentTarget)
+                }}
+              />
+            )}
+          </div>
         </div>
 
         {syncTrafficLightsSidebarEmbed}
