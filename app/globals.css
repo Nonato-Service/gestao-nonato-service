@@ -2593,6 +2593,30 @@ body {
   display: block;
 }
 
+/* PNG em public/brand — zoom para preencher (margens transparentes do ficheiro) */
+.ns-logo-in-box--brand-file {
+  padding: 0;
+  background: #000;
+}
+.ns-logo-in-box--brand-file img,
+.ns-logo-in-box--brand-file video {
+  object-fit: cover !important;
+  object-position: center 38%;
+  transform: scale(1.34);
+  transform-origin: center center;
+}
+
+.sidebar-brand--brand-file .sidebar-brand-media-wrap {
+  background: #000;
+}
+.sidebar-brand--brand-file .sidebar-brand-media-wrap img,
+.sidebar-brand--brand-file .sidebar-brand-media-wrap video {
+  object-fit: cover;
+  object-position: center 36%;
+  transform: scale(1.38);
+  transform-origin: center center;
+}
+
 .sidebar-brand-fallback {
   display: flex;
   flex-direction: column;
@@ -3569,6 +3593,17 @@ button.btn-danger.btn-danger--inline {
 }
 .ns-brand-logo--informacao {
   filter: hue-rotate(152deg) saturate(0.95) brightness(1.05) drop-shadow(0 0 10px rgba(129, 140, 248, 0.45));
+}
+.ns-brand-logo--brand-file {
+  object-fit: cover;
+  object-position: center 38%;
+  transform: scale(1.22);
+  transform-origin: center center;
+}
+.bottom-tabs-brand-img.ns-brand-logo--brand-file {
+  height: 52px;
+  width: 52px;
+  max-width: min(148px, 34vw);
 }
 
 /* Barra inferior de abas — vidro escuro + acento verde refinado */
@@ -23667,8 +23702,8 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 
 .ns-dashboard-full-hero .ns-logo-in-box {
-  width: clamp(112px, 13vw, 156px) !important;
-  height: clamp(112px, 13vw, 156px) !important;
+  width: clamp(128px, 15vw, 180px) !important;
+  height: clamp(128px, 15vw, 180px) !important;
   padding: clamp(8px, 1.2vw, 12px);
   border-radius: 20px;
   border: 1px solid rgba(110, 231, 183, 0.28);
@@ -24445,9 +24480,20 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 .ns-showcase--modern .ns-showcase__logo > div {
   gap: 0 !important;
 }
+.ns-dashboard-full-hero .ns-logo-in-box--brand-file {
+  padding: 0 !important;
+  background: #000;
+}
+.ns-dashboard-full-hero .ns-logo-in-box--brand-file img,
+.ns-dashboard-full-hero .ns-logo-in-box--brand-file video {
+  object-fit: cover !important;
+  transform: scale(1.32);
+  border-radius: inherit;
+}
+
 .ns-showcase--modern .ns-showcase__logo .ns-logo-in-box {
-  width: clamp(88px, 10.5vw, 118px) !important;
-  height: clamp(88px, 10.5vw, 118px) !important;
+  width: clamp(104px, 12.5vw, 148px) !important;
+  height: clamp(104px, 12.5vw, 148px) !important;
   border-radius: 16px;
   border: 1px solid rgba(0, 200, 83, 0.38);
   background: rgba(0, 0, 0, 0.45);
@@ -24456,6 +24502,17 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   box-shadow:
     0 12px 32px rgba(0, 0, 0, 0.35),
     0 0 24px rgba(0, 200, 83, 0.1);
+}
+.ns-showcase--modern .ns-showcase__logo .ns-logo-in-box--brand-file {
+  width: clamp(128px, 15vw, 176px) !important;
+  height: clamp(128px, 15vw, 176px) !important;
+  padding: 0 !important;
+  background: #000;
+}
+.ns-showcase--modern .ns-showcase__logo .ns-logo-in-box--brand-file img,
+.ns-showcase--modern .ns-showcase__logo .ns-logo-in-box--brand-file video {
+  object-fit: cover !important;
+  transform: scale(1.32);
 }
 .ns-showcase--modern .ns-showcase__brand-copy {
   display: flex;
@@ -25591,12 +25648,21 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   transform: scale(1);
 }
 .ns-showcase__logo .ns-logo-in-box {
-  width: clamp(160px, 24vw, 240px) !important;
-  height: clamp(160px, 24vw, 240px) !important;
+  width: clamp(180px, 26vw, 280px) !important;
+  height: clamp(180px, 26vw, 280px) !important;
   border-radius: 18px;
   border: 1px solid rgba(0, 255, 136, 0.28);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   background: rgba(0, 0, 0, 0.32);
+}
+.ns-showcase__logo .ns-logo-in-box--brand-file {
+  padding: 0 !important;
+  background: #000;
+}
+.ns-showcase__logo .ns-logo-in-box--brand-file img,
+.ns-showcase__logo .ns-logo-in-box--brand-file video {
+  object-fit: cover !important;
+  transform: scale(1.3);
 }
 .ns-showcase__copy {
   position: relative;

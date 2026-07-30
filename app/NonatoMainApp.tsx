@@ -6341,10 +6341,10 @@ export default function Dashboard() {
     }, [logoUrl])
 
     const sizes = {
-      small: { container: '80px', brandDefault: '100px', fontSize: '16px', serviceSize: '10px' },
-      medium: { container: '120px', brandDefault: '152px', fontSize: '24px', serviceSize: '14px' },
-      large: { container: '160px', brandDefault: '200px', fontSize: '32px', serviceSize: '18px' },
-      xlarge: { container: '240px', brandDefault: '300px', fontSize: '46px', serviceSize: '22px' }
+      small: { container: '80px', brandDefault: '120px', fontSize: '16px', serviceSize: '10px' },
+      medium: { container: '120px', brandDefault: '180px', fontSize: '24px', serviceSize: '14px' },
+      large: { container: '160px', brandDefault: '240px', fontSize: '32px', serviceSize: '18px' },
+      xlarge: { container: '240px', brandDefault: '320px', fontSize: '46px', serviceSize: '22px' }
     }
     const s = sizes[size]
     const boxSize = !logoUrl ? s.brandDefault : s.container
@@ -6353,7 +6353,10 @@ export default function Dashboard() {
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        <div className="ns-logo-in-box" style={{ width: boxSize, height: boxSize }}>
+        <div
+          className={`ns-logo-in-box${!logoUrl ? ' ns-logo-in-box--brand-file' : ''}`}
+          style={{ width: boxSize, height: boxSize }}
+        >
           {mediaIsVideo ? (
             <video
               src={mediaSrc}
@@ -73414,7 +73417,7 @@ A1;Peça exemplo;10`}
         onMouseLeave={hideSidebarForEntryDashboard ? undefined : () => setSidebarTipFlyout(null)}
       >
         {/* Logo NONATO SERVICE — preenche toda a área escura (upload ou PNG em public/brand) */}
-        <div className="sidebar-brand sidebar-brand--has-media">
+        <div className={`sidebar-brand sidebar-brand--has-media${logoUrl ? '' : ' sidebar-brand--brand-file'}`}>
           <div className="sidebar-brand-media-wrap">
             {logoUrl && logoType === 'video' ? (
               <video

@@ -4,6 +4,7 @@ import React, { useCallback, useState } from 'react'
 import {
   applyNonatoBrandLogoImgFallback,
   getNonatoBrandLogoFallbackSrc,
+  isNonatoBrandLogoPngSrc,
   NONATO_BRAND_LOGO_PNG_SRC,
 } from '../lib/nonatoBrandAssets'
 
@@ -38,6 +39,7 @@ export function NonatoBrandLogo({
   src?: string
 } & React.ImgHTMLAttributes<HTMLImageElement>) {
   const [resolvedSrc, setResolvedSrc] = useState(src || NONATO_BRAND_LOGO_PNG_SRC)
+  const isBrandFile = !src && isNonatoBrandLogoPngSrc(resolvedSrc)
 
   const onError = useCallback(() => {
     setResolvedSrc((cur) => {
@@ -51,7 +53,7 @@ export function NonatoBrandLogo({
     <img
       src={resolvedSrc}
       alt={alt}
-      className={`${VARIANT_CLASS[variant] ?? VARIANT_CLASS.original} ${className}`.trim()}
+      className={`${VARIANT_CLASS[variant] ?? VARIANT_CLASS.original}${isBrandFile ? ' ns-brand-logo--brand-file' : ''} ${className}`.trim()}
       loading="lazy"
       decoding="async"
       onError={(e) => {
