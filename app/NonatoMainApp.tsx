@@ -143,6 +143,9 @@ import {
 } from './lib/comprovanteDuplicado'
 import {
   NONATO_BRAND_LOGO_FALLBACK_SVG_SRC,
+  applyNonatoBrandLogoImgFallback,
+  getNonatoBrandLogoFallbackSrc,
+  validateNonatoLogoMediaSrc,
 } from './lib/nonatoBrandAssets'
 import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, buildRelatorioServicoPdfMetaSectionHtml, buildFechamentoDespesasRelatorioInfoHtml, buildFechamentoDespesasClienteMetaFields, buildRelatorioServicoSummaryCardsHtml, type RelatorioServicoPdfHeaderVariant, type RelatorioServicoPdfMetaLabels } from './lib/relatorioServicoPdfPrintCss'
 import { PDF_DOCUMENT_LAYOUT_CSS, buildPdfDocumentHeaderHtml, buildPdfDocumentFooterHtml, buildPdfMetaSectionHtml } from './lib/pdfDocumentLayout'
@@ -6340,23 +6343,29 @@ export default function Dashboard() {
       xlarge: { container: '240px', fontSize: '46px', serviceSize: '22px' }
     }
     const s = sizes[size]
-    const mediaSrc = logoUrl || NONATO_BRAND_LOGO_FALLBACK_SVG_SRC
+    const mediaSrc = logoUrl || getNonatoBrandLogoFallbackSrc()
     const mediaIsVideo = Boolean(logoUrl && logoType === 'video')
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
         <div className="ns-logo-in-box" style={{ width: s.container, height: s.container }}>
           {mediaIsVideo ? (
-            <video src={mediaSrc} autoPlay loop muted playsInline />
+            <video
+              src={mediaSrc}
+              autoPlay
+              loop
+              muted
+              playsInline
+              onError={() => {
+                setLogoUrl(null)
+                setLogoType('image')
+              }}
+            />
           ) : (
             <img
               src={mediaSrc}
               alt="NONATO SERVICE"
-              onError={(e) => {
-                const img = e.currentTarget
-                if (img.src.endsWith('/nonato-watermark-gears.svg')) return
-                img.src = NONATO_BRAND_LOGO_FALLBACK_SVG_SRC
-              }}
+              onError={(e) => applyNonatoBrandLogoImgFallback(e.currentTarget)}
             />
           )}
         </div>
@@ -11288,10 +11297,29 @@ export default function Dashboard() {
       }
       
       if (savedLogo) {
-        // Se for URL da API (vídeo binário), usar diretamente
+        const clearSidebarLogoStorage = async () => {
+          savedLogo = null
+          await saveData('nonato-logo', '', false)
+          await saveData('nonato-logo-type', '', false)
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.removeItem('nonato-logo')
+              localStorage.removeItem('nonato-logo-type')
+            } catch {
+              /* ignorar */
+            }
+          }
+        }
+        // Se for URL da API (vídeo binário), validar antes de usar
         if (savedLogo === '/api/video/logo') {
-          setLogoUrl(savedLogo)
-          setLogoType('video')
+          const okVideo = await validateNonatoLogoMediaSrc(savedLogo)
+          if (okVideo) {
+            setLogoUrl(savedLogo)
+            setLogoType('video')
+          } else {
+            console.warn('Vídeo do logo indisponível no servidor; a usar fallback.')
+            await clearSidebarLogoStorage()
+          }
         } else {
           // Verificar se o logo é válido (não está corrompido) - para base64
           const isValidLogo = typeof savedLogo === 'string' && (savedLogo.startsWith('data:image/') || savedLogo.startsWith('data:video/'))
@@ -11300,28 +11328,20 @@ export default function Dashboard() {
             // Vídeos devem ser sempre arquivos binários
             if (savedLogo.startsWith('data:video/')) {
               console.warn('Vídeo base64 antigo detectado. Limpando e pedindo para fazer upload novamente...')
-              // Limpar vídeo base64 antigo
-              savedLogo = null
-              await saveData('nonato-logo', '', false)
-              await saveData('nonato-logo-type', '', false)
-              if (typeof window !== 'undefined') {
-                localStorage.removeItem('nonato-logo')
-                localStorage.removeItem('nonato-logo-type')
-              }
+              await clearSidebarLogoStorage()
             } else if (savedLogo.startsWith('data:image/')) {
-              // Imagens base64 são OK
-              setLogoUrl(savedLogo)
-              setLogoType('image')
+              const okImg = await validateNonatoLogoMediaSrc(savedLogo)
+              if (okImg) {
+                setLogoUrl(savedLogo)
+                setLogoType('image')
+              } else {
+                console.warn('Imagem do logo corrompida ou ilegível; a usar fallback.')
+                await clearSidebarLogoStorage()
+              }
             }
           } else {
             console.warn('Logo encontrado mas parece estar corrompido, ignorando...')
-            try {
-              localStorage.removeItem('nonato-logo')
-              localStorage.removeItem('nonato-logo-type')
-            } catch {
-              /* ignorar */
-            }
-            savedLogo = null
+            await clearSidebarLogoStorage()
           }
         }
       }
@@ -11415,11 +11435,17 @@ export default function Dashboard() {
       } catch (_) {}
       if (savedLogoDashboard) {
         if (savedLogoDashboard === '/api/video/logo-dashboard') {
-          setLogoUrlDashboard(savedLogoDashboard)
-          setLogoTypeDashboard('video')
+          const okDashVid = await validateNonatoLogoMediaSrc(savedLogoDashboard)
+          if (okDashVid) {
+            setLogoUrlDashboard(savedLogoDashboard)
+            setLogoTypeDashboard('video')
+          }
         } else if (savedLogoDashboard.startsWith('data:image/')) {
-          setLogoUrlDashboard(savedLogoDashboard)
-          setLogoTypeDashboard((savedLogoDashboardType as 'image') || 'image')
+          const okDashImg = await validateNonatoLogoMediaSrc(savedLogoDashboard)
+          if (okDashImg) {
+            setLogoUrlDashboard(savedLogoDashboard)
+            setLogoTypeDashboard((savedLogoDashboardType as 'image') || 'image')
+          }
         }
       }
       
@@ -72822,8 +72848,9 @@ A1;Peça exemplo;10`}
         }}
       >
         <img
-          src={NONATO_BRAND_LOGO_FALLBACK_SVG_SRC}
+          src={getNonatoBrandLogoFallbackSrc()}
           alt=""
+          onError={(e) => applyNonatoBrandLogoImgFallback(e.currentTarget)}
           style={{
             position: 'fixed',
             top: 0,
@@ -72842,17 +72869,21 @@ A1;Peça exemplo;10`}
             {/* Logo do dashboard (ou barra lateral como fallback) */}
             <div className="ns-splash-logo-box">
               {dashboardLogo && dashboardLogoType === 'video' ? (
-                <video src={dashboardLogo} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                <video
+                  src={dashboardLogo}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  onError={() => setLogoUrlDashboard(null)}
+                />
               ) : (
                 <img
-                  src={dashboardLogo || NONATO_BRAND_LOGO_FALLBACK_SVG_SRC}
+                  src={dashboardLogo || getNonatoBrandLogoFallbackSrc()}
                   alt=""
                   style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                  onError={(e) => {
-                    const img = e.currentTarget
-                    if (img.src.endsWith('/nonato-watermark-gears.svg')) return
-                    img.src = NONATO_BRAND_LOGO_FALLBACK_SVG_SRC
-                  }}
+                  onError={(e) => applyNonatoBrandLogoImgFallback(e.currentTarget)}
                 />
               )}
             </div>
@@ -73379,15 +73410,24 @@ A1;Peça exemplo;10`}
           {logoUrl ? (
             <div className="sidebar-brand-media-wrap">
               {logoType === 'video' ? (
-                <video src={logoUrl} autoPlay loop muted playsInline />
+                <video
+                  src={logoUrl}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  onError={() => {
+                    setLogoUrl(null)
+                    setLogoType('image')
+                  }}
+                />
               ) : (
                 <img
                   src={logoUrl}
                   alt="NONATO SERVICE"
-                  onError={(e) => {
-                    const img = e.currentTarget
-                    if (img.src.endsWith('/nonato-watermark-gears.svg')) return
-                    img.src = NONATO_BRAND_LOGO_FALLBACK_SVG_SRC
+                  onError={() => {
+                    setLogoUrl(null)
+                    setLogoType('image')
                   }}
                 />
               )}
@@ -73396,9 +73436,10 @@ A1;Peça exemplo;10`}
             <div className="sidebar-brand-fallback">
               <img
                 className="sidebar-brand-fallback__mark"
-                src={NONATO_BRAND_LOGO_FALLBACK_SVG_SRC}
+                src={getNonatoBrandLogoFallbackSrc()}
                 alt=""
                 aria-hidden
+                onError={(e) => applyNonatoBrandLogoImgFallback(e.currentTarget)}
               />
               <div className="sidebar-brand-fallback__wordmark">
                 <span className="sidebar-brand-fallback__name">NONATO</span>
