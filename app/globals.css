@@ -2620,6 +2620,14 @@ body {
   gap: 2px;
 }
 
+.sidebar-brand-fallback__wordmark--backup {
+  display: none;
+}
+
+.sidebar-brand-fallback--logo-failed .sidebar-brand-fallback__wordmark--backup {
+  display: flex;
+}
+
 .sidebar-brand-fallback__name {
   font-size: 1.05rem;
   font-weight: 700;

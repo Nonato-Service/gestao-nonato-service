@@ -1,4 +1,4 @@
-/** Logo PNG oficial (Administrador → upload). Pode não existir em dev até colocar o ficheiro. */
+/** Logo PNG oficial (Administrador → upload ou public/brand/nonato-logo-original.png). */
 export const NONATO_BRAND_LOGO_PNG_SRC = '/brand/nonato-logo-original.png'
 
 /** Fallback vectorial em disco — precache PWA. */
@@ -12,9 +12,21 @@ export const NONATO_BRAND_LOGO_FALLBACK_DATA_URI = `data:image/svg+xml,${encodeU
   NONATO_BRAND_WATERMARK_SVG_MARKUP
 )}`
 
-/** Preferir data URI (sempre disponível); ficheiro SVG como reserva. */
+export function isNonatoBrandLogoPngSrc(src: string | null | undefined): boolean {
+  if (!src) return false
+  return src.includes('nonato-logo-original.png')
+}
+
+/** Logo SVG/data URI de emergência (último recurso). */
 export function getNonatoBrandLogoFallbackSrc(): string {
   return NONATO_BRAND_LOGO_FALLBACK_DATA_URI
+}
+
+/** Ordem: logo do Administrador → PNG em public/brand → (onError) SVG embutido. */
+export function getNonatoBrandLogoDisplaySrc(customUrl?: string | null): string {
+  const custom = String(customUrl ?? '').trim()
+  if (custom) return custom
+  return NONATO_BRAND_LOGO_PNG_SRC
 }
 
 export function isNonatoBrandLogoFallbackSrc(src: string | null | undefined): boolean {
@@ -27,11 +39,15 @@ export function isNonatoBrandLogoFallbackSrc(src: string | null | undefined): bo
 export function applyNonatoBrandLogoImgFallback(img: HTMLImageElement): void {
   const cur = img.currentSrc || img.src
   if (isNonatoBrandLogoFallbackSrc(cur)) return
-  if (cur === NONATO_BRAND_LOGO_FALLBACK_SVG_SRC || cur.endsWith('/nonato-watermark-gears.svg')) {
+  if (
+    isNonatoBrandLogoPngSrc(cur) ||
+    cur === NONATO_BRAND_LOGO_FALLBACK_SVG_SRC ||
+    cur.endsWith('/nonato-watermark-gears.svg')
+  ) {
     img.src = NONATO_BRAND_LOGO_FALLBACK_DATA_URI
     return
   }
-  img.src = getNonatoBrandLogoFallbackSrc()
+  img.src = NONATO_BRAND_LOGO_PNG_SRC
 }
 
 /** Valida se o logo guardado (data URL ou API vídeo) carrega antes de mostrar na UI. */
@@ -56,4 +72,11 @@ export function validateNonatoLogoMediaSrc(src: string): Promise<boolean> {
     })
   }
   return Promise.resolve(false)
+}
+
+export function validateNonatoBrandLogoPngAvailable(): Promise<boolean> {
+  if (typeof fetch === 'undefined') return Promise.resolve(false)
+  return fetch(NONATO_BRAND_LOGO_PNG_SRC, { method: 'HEAD' })
+    .then((r) => r.ok)
+    .catch(() => false)
 }

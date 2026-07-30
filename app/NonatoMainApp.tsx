@@ -142,9 +142,8 @@ import {
   mensagemDuplicadoComprovante,
 } from './lib/comprovanteDuplicado'
 import {
-  NONATO_BRAND_LOGO_FALLBACK_SVG_SRC,
   applyNonatoBrandLogoImgFallback,
-  getNonatoBrandLogoFallbackSrc,
+  getNonatoBrandLogoDisplaySrc,
   validateNonatoLogoMediaSrc,
 } from './lib/nonatoBrandAssets'
 import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, buildRelatorioServicoPdfMetaSectionHtml, buildFechamentoDespesasRelatorioInfoHtml, buildFechamentoDespesasClienteMetaFields, buildRelatorioServicoSummaryCardsHtml, type RelatorioServicoPdfHeaderVariant, type RelatorioServicoPdfMetaLabels } from './lib/relatorioServicoPdfPrintCss'
@@ -6336,6 +6335,11 @@ export default function Dashboard() {
   // Componente de botões de navegação (retorno e página inicial)
   // Componente de Logo
   const LogoComponent = ({ size = 'medium' }: { size?: 'small' | 'medium' | 'large' | 'xlarge' }) => {
+    const [brandWordmarkBackup, setBrandWordmarkBackup] = useState(false)
+    useEffect(() => {
+      setBrandWordmarkBackup(false)
+    }, [logoUrl])
+
     const sizes = {
       small: { container: '80px', fontSize: '16px', serviceSize: '10px' },
       medium: { container: '120px', fontSize: '24px', serviceSize: '14px' },
@@ -6343,7 +6347,7 @@ export default function Dashboard() {
       xlarge: { container: '240px', fontSize: '46px', serviceSize: '22px' }
     }
     const s = sizes[size]
-    const mediaSrc = logoUrl || getNonatoBrandLogoFallbackSrc()
+    const mediaSrc = getNonatoBrandLogoDisplaySrc(logoUrl)
     const mediaIsVideo = Boolean(logoUrl && logoType === 'video')
 
     return (
@@ -6365,11 +6369,14 @@ export default function Dashboard() {
             <img
               src={mediaSrc}
               alt="NONATO SERVICE"
-              onError={(e) => applyNonatoBrandLogoImgFallback(e.currentTarget)}
+              onError={(e) => {
+                applyNonatoBrandLogoImgFallback(e.currentTarget)
+                if (!logoUrl) setBrandWordmarkBackup(true)
+              }}
             />
           )}
         </div>
-        {!logoUrl ? (
+        {!logoUrl && brandWordmarkBackup ? (
           <>
             <div
               style={{
@@ -72848,7 +72855,7 @@ A1;Peça exemplo;10`}
         }}
       >
         <img
-          src={getNonatoBrandLogoFallbackSrc()}
+          src={getNonatoBrandLogoDisplaySrc(null)}
           alt=""
           onError={(e) => applyNonatoBrandLogoImgFallback(e.currentTarget)}
           style={{
@@ -72880,7 +72887,7 @@ A1;Peça exemplo;10`}
                 />
               ) : (
                 <img
-                  src={dashboardLogo || getNonatoBrandLogoFallbackSrc()}
+                  src={dashboardLogo || getNonatoBrandLogoDisplaySrc(null)}
                   alt=""
                   style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                   onError={(e) => applyNonatoBrandLogoImgFallback(e.currentTarget)}
@@ -73436,12 +73443,14 @@ A1;Peça exemplo;10`}
             <div className="sidebar-brand-fallback">
               <img
                 className="sidebar-brand-fallback__mark"
-                src={getNonatoBrandLogoFallbackSrc()}
-                alt=""
-                aria-hidden
-                onError={(e) => applyNonatoBrandLogoImgFallback(e.currentTarget)}
+                src={getNonatoBrandLogoDisplaySrc(null)}
+                alt="NONATO SERVICE"
+                onError={(e) => {
+                  applyNonatoBrandLogoImgFallback(e.currentTarget)
+                  e.currentTarget.closest('.sidebar-brand-fallback')?.classList.add('sidebar-brand-fallback--logo-failed')
+                }}
               />
-              <div className="sidebar-brand-fallback__wordmark">
+              <div className="sidebar-brand-fallback__wordmark sidebar-brand-fallback__wordmark--backup">
                 <span className="sidebar-brand-fallback__name">NONATO</span>
                 <span className="sidebar-brand-fallback__service">SERVICE</span>
               </div>
