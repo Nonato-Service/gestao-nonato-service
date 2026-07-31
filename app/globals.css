@@ -27013,13 +27013,17 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 76px;
-  min-height: 68px;
-  padding: 8px 6px;
+  width: 72px;
+  height: 72px;
+  min-height: 72px;
+  max-height: 72px;
+  padding: 4px;
   border-radius: 12px;
   background: #0a0a0a;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .biblioteca-pecas-hub__hero-head {
@@ -34690,13 +34694,59 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 76px;
-  min-height: 68px;
-  padding: 8px 6px;
+  width: 72px;
+  height: 72px;
+  min-height: 72px;
+  max-height: 72px;
+  padding: 4px;
   border-radius: 12px;
   background: #0a0a0a;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Logo nos cabeçalhos hub — respeitar caixa preta (inline style do LogoComponent não pode sobrepor título) */
+.clientes-hub__hero-logo .ns-logo-in-box,
+.biblioteca-pecas-hub__hero-logo .ns-logo-in-box,
+.bib-relatorios-hub__hero-logo .ns-logo-in-box,
+.cadastro-valores-v2__hero-row .ns-logo-in-box,
+.tab-glass-hero-top .ns-logo-in-box {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 64px !important;
+  max-height: 64px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.clientes-hub__hero-logo .ns-logo-in-box--brand-file img,
+.biblioteca-pecas-hub__hero-logo .ns-logo-in-box--brand-file img,
+.bib-relatorios-hub__hero-logo .ns-logo-in-box--brand-file img,
+.cadastro-valores-v2__hero-row .ns-logo-in-box--brand-file img,
+.tab-glass-hero-top .ns-logo-in-box--brand-file img,
+.clientes-hub__hero-logo .ns-logo-in-box--brand-file video,
+.biblioteca-pecas-hub__hero-logo .ns-logo-in-box--brand-file video,
+.bib-relatorios-hub__hero-logo .ns-logo-in-box--brand-file video,
+.cadastro-valores-v2__hero-row .ns-logo-in-box--brand-file video,
+.tab-glass-hero-top .ns-logo-in-box--brand-file video {
+  object-fit: contain !important;
+  transform: scale(1.04);
+}
+
+.clientes-hub__hero-logo > div,
+.biblioteca-pecas-hub__hero-logo > div,
+.bib-relatorios-hub__hero-logo > div {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .clientes-hub__hero-head {
@@ -35099,6 +35149,51 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 @media (max-width: 520px) {
+  .clientes-hub__hero-brand,
+  .biblioteca-pecas-hub__hero-brand,
+  .bib-relatorios-hub__hero-brand {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .clientes-hub__hero-logo,
+  .biblioteca-pecas-hub__hero-logo,
+  .bib-relatorios-hub__hero-logo {
+    width: 56px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
+    flex-shrink: 0;
+  }
+
+  .clientes-hub__hero-logo .ns-logo-in-box,
+  .biblioteca-pecas-hub__hero-logo .ns-logo-in-box,
+  .bib-relatorios-hub__hero-logo .ns-logo-in-box {
+    max-width: 50px !important;
+    max-height: 50px !important;
+  }
+
+  .clientes-hub__hero-head,
+  .biblioteca-pecas-hub__hero-head,
+  .bib-relatorios-hub__hero-head {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .clientes-hub__title,
+  .biblioteca-pecas-hub__hero-title {
+    font-size: 0.82rem !important;
+    letter-spacing: 0.03em !important;
+    line-height: 1.25 !important;
+  }
+
+  .clientes-hub__tagline,
+  .biblioteca-pecas-hub__hero-tagline {
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
   .clientes-hub__hero-actions {
     flex-direction: column;
     align-items: stretch;
@@ -35233,12 +35328,16 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 76px;
-  min-height: 68px;
-  padding: 8px 6px;
+  width: 72px;
+  height: 72px;
+  min-height: 72px;
+  max-height: 72px;
+  padding: 4px;
   border-radius: 12px;
   background: #0a0a0a;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .bib-relatorios-hub__hero-head {

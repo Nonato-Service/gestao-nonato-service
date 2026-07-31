@@ -39641,15 +39641,18 @@ export default function Dashboard() {
           if (!clientesPorLetra.has(letra)) clientesPorLetra.set(letra, [])
           clientesPorLetra.get(letra)!.push(c)
         }
+        const buscaCliAtiva = buscaCliente.trim().length > 0
         const clientesLetraAtiva =
           clientesAlfaLetraFiltro &&
           (clientesPorLetra.get(clientesAlfaLetraFiltro)?.length ?? 0) > 0
             ? clientesAlfaLetraFiltro
             : null
-        const clientesLetrasParaLista = clientesLetraAtiva ? [clientesLetraAtiva] : []
+        const clientesLetrasParaLista = clientesLetraAtiva
+          ? [clientesLetraAtiva]
+          : CLIENTES_ALFABETO_INDICE.filter((letra) => (clientesPorLetra.get(letra)?.length ?? 0) > 0)
         const clientesListaFiltradaCount = clientesLetraAtiva
           ? (clientesPorLetra.get(clientesLetraAtiva)?.length ?? 0)
-          : 0
+          : clientesFiltrados.length
         const clientesParaDetalhe = clienteListaDetalheId
           ? clientesFiltrados.filter(c => c.id === clienteListaDetalheId)
           : []
@@ -40420,7 +40423,9 @@ export default function Dashboard() {
                   <div className="clientes-hub__list-meta">
                     {clientesLetraAtiva
                       ? `${clientesListaFiltradaCount} ${safeT?.clientes || 'cliente(s)'} ${safeT?.clientesAlfabetoComInicial || 'com inicial'} «${clientesLetraAtiva === '#' ? (safeT?.clientesAlfabetoOutros || 'Outros') : clientesLetraAtiva}»${buscaCliente.trim() ? ` (${safeT?.de || 'de'} ${clientesFiltrados.length} ${safeT?.filtrados || 'filtrados'})` : ''}`
-                      : `${clientesHubT.mostrando || 'Mostrando'} ${clientesFiltrados.length} ${clientesHubT.de || 'de'} ${clientes.length} ${clientesHubT.clientes || 'cliente(s)'} — ${clientesHubT.clientesAlfabetoSelecioneLetra || 'selecione uma letra abaixo'}`}
+                      : buscaCliAtiva
+                        ? `${clientesFiltrados.length} ${safeT?.clientes || 'cliente(s)'} ${clientesHubT.encontrados || 'encontrado(s)'} — «${buscaCliente.trim()}»`
+                        : `${clientesHubT.mostrando || 'Mostrando'} ${clientesFiltrados.length} ${clientesHubT.de || 'de'} ${clientes.length} ${clientesHubT.clientes || 'cliente(s)'}${clientesFiltrados.length !== clientes.length ? '' : ` — ${clientesHubT.clientesAlfabetoToqueFiltrar || 'toque numa letra para filtrar'}`}`}
                   </div>
                 )}
 
@@ -40447,7 +40452,7 @@ export default function Dashboard() {
                                 : safeT?.clientesAlfabetoSemClientes || 'Sem clientes nesta letra'
                             }
                             onClick={() => {
-                              setClientesAlfaLetraFiltro(letra)
+                              setClientesAlfaLetraFiltro((prev) => (prev === letra ? null : letra))
                               setClienteListaDetalheId(null)
                             }}
                           >
@@ -40462,12 +40467,7 @@ export default function Dashboard() {
                       })}
                     </nav>
 
-                    {!clientesLetraAtiva ? (
-                      <p className="clientes-alfa-prompt">
-                        {safeT?.clientesAlfabetoPrompt ||
-                          'Toque numa letra acima para ver apenas os clientes com essa inicial.'}
-                      </p>
-                    ) : (
+                    {clientesLetrasParaLista.length > 0 ? (
                       clientesLetrasParaLista.map((letra) => (
                         <section
                           key={letra}
@@ -40511,7 +40511,7 @@ export default function Dashboard() {
                           </ul>
                         </section>
                       ))
-                    )}
+                    ) : null}
                   </div>
                 )}
                   </>

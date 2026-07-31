@@ -3,7 +3,9 @@ export const ORCAMENTOS_ALFABETO_INDICE = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split
 export function getClienteLetraAlfabeto(nome: string): string {
   const n = (nome || '').trim()
   if (!n) return '#'
-  const ch = n[0].toUpperCase()
+  const match = n.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/)
+  if (!match) return '#'
+  const ch = match[0].toUpperCase()
   const base = ch.normalize('NFD').replace(/\p{M}/gu, '')
   if (/[A-Z]/.test(base)) return base
   return '#'
