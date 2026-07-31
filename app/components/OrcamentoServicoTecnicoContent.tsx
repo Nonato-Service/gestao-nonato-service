@@ -23,6 +23,10 @@ import {
   type OstRascunhoAtual,
 } from './orcamentoOstPropostas'
 import { IconClipboardList, IconCoins, IconLayers } from './UiIcons'
+import {
+  useDocumentoEnvioCliente,
+  buildTextoEnvioGenerico,
+} from '../context/DocumentoEnvioClienteContext'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 
 export type ServicoOrcamentoLinha = {
@@ -210,6 +214,7 @@ export function OrcamentoServicoTecnicoContent({
   adminPdfLogoHtml = '',
 }: Props) {
   const t = safeT
+  const abrirEnvio = useDocumentoEnvioCliente()
   const [papel, setPapel] = useState<PapelTimbradoFullState>(() => loadPapelTimbradoState())
   const [logoBroken, setLogoBroken] = useState(false)
   const cfg = papel.config
@@ -354,6 +359,23 @@ export function OrcamentoServicoTecnicoContent({
     setLogoBroken(false)
     requestAnimationFrame(() => window.print())
   }, [])
+
+  const abrirEnvioOrcamentoOst = useCallback(
+    (canal: 'email' | 'whatsapp') => {
+      const ref = refDoc.trim() || t.orcamentoServicoTecnicoTitle || 'Orçamento de serviço técnico'
+      const titulo = `${ref}${nomeClienteDoc ? ` — ${nomeClienteDoc}` : ''}`
+      abrirEnvio({
+        title: t.orcamentoServicoTecnicoEnvioTitulo || 'Enviar orçamento de serviço técnico',
+        subject: titulo,
+        body: buildTextoEnvioGenerico(titulo, localServico.trim() ? `Local: ${localServico.trim()}` : undefined),
+        clienteId: clienteId || undefined,
+        clienteNome: nomeClienteDoc || undefined,
+        defaultChannel: canal,
+        onOpenPdf: imprimir,
+      })
+    },
+    [abrirEnvio, refDoc, t, nomeClienteDoc, localServico, clienteId, imprimir]
+  )
 
   const abrirCadastroServicos = useCallback(() => {
     openTab('cadastro-servicos', getTabTitle('cadastro-servicos'))
@@ -501,6 +523,12 @@ export function OrcamentoServicoTecnicoContent({
             </button>
             <button type="button" className="primary" onClick={imprimir}>
               {tx.papelTimbradoImprimir || t.orcamentoServicoTecnicoImprimir || 'Imprimir / PDF'}
+            </button>
+            <button type="button" className="secondary" onClick={() => abrirEnvioOrcamentoOst('email')}>
+              📧 {t.enviarPorEmail || 'E-mail'}
+            </button>
+            <button type="button" className="secondary" onClick={() => abrirEnvioOrcamentoOst('whatsapp')}>
+              💬 {t.enviarPorWhatsApp || 'WhatsApp'}
             </button>
           </div>
 

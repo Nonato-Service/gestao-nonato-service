@@ -17,6 +17,10 @@ import { formatClienteIdentidadeTexto } from './ClienteIdentidadeChips'
 import { PdfModeloPickerField } from './PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from '../lib/pdfModelStorage'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
+import {
+  useDocumentoEnvioCliente,
+  buildTextoEnvioOrcamento,
+} from '../context/DocumentoEnvioClienteContext'
 
 export type ClienteOrcamentoPecasEsp = {
   id: string
@@ -213,6 +217,7 @@ export function OrcamentoPecasEspeciaisContent({
   empresaInfo = {},
 }: Props) {
   const t = safeT
+  const abrirEnvio = useDocumentoEnvioCliente()
   const hoje = new Date().toISOString().slice(0, 10)
 
   const [salvos, setSalvos] = useState<OrcamentoPecasEspeciaisSalvo[]>([])
@@ -625,6 +630,28 @@ export function OrcamentoPecasEspeciaisContent({
       return
     }
     openOrcamentoPecasEspeciaisPdf(montarPayloadPdf(preview))
+  }
+
+  const numeroOfertaAtual = numeroOferta.trim() || gerarNumeroOfertaPecasEspeciais(salvos, dataIso)
+
+  const abrirEnvioOrcamentoPecas = (canal: 'email' | 'whatsapp', preview = false) => {
+    if (!clienteSel) {
+      alert(t.orcamentoPecasEspSelecioneCliente || 'Selecione um cliente.')
+      return
+    }
+    if (montarLinhasPdf().length === 0) {
+      alert(t.orcamentoPecasEspLinhaObrigatoria || 'Adicione pelo menos uma linha com descrição ou código.')
+      return
+    }
+    abrirEnvio({
+      title: t.orcamentoPecasEspEnvioTitulo || 'Enviar orçamento de peças especiais',
+      subject: `${labelsPdf.titulo} ${numeroOfertaAtual} — ${clienteSel.nomeEmpresa}`,
+      body: buildTextoEnvioOrcamento({ numeroOrcamento: numeroOfertaAtual, clienteNome: clienteSel.nomeEmpresa }),
+      clienteId: clienteSel.id,
+      clienteNome: clienteSel.nomeEmpresa,
+      defaultChannel: canal,
+      onOpenPdf: () => abrirPdf(preview),
+    })
   }
 
   const gravarOrcamento = async () => {
@@ -1294,6 +1321,12 @@ export function OrcamentoPecasEspeciaisContent({
           </button>
           <button type="button" className="btn-primary" onClick={() => abrirPdf(false)}>
             📄 {t.gerarPDF || 'Gerar PDF'}
+          </button>
+          <button type="button" className="btn-primary" onClick={() => abrirEnvioOrcamentoPecas('email')}>
+            📧 {t.enviarPorEmail || 'E-mail'}
+          </button>
+          <button type="button" className="btn-primary" onClick={() => abrirEnvioOrcamentoPecas('whatsapp')}>
+            💬 {t.enviarPorWhatsApp || 'WhatsApp'}
           </button>
           <button
             type="button"

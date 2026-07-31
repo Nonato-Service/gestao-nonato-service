@@ -8764,6 +8764,39 @@ a:focus-visible {
   color: #25d366;
 }
 
+.doc-envio-acoes {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.doc-envio-acoes--compact {
+  gap: 4px;
+}
+
+.doc-envio-acoes__btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.doc-envio-acoes__btn--email {
+  background: rgba(18, 38, 62, 0.55);
+  border-color: rgba(80, 160, 255, 0.45);
+  color: #7ec8ff;
+}
+
+.doc-envio-acoes__btn--wa {
+  background: rgba(18, 52, 32, 0.55);
+  border-color: rgba(37, 211, 102, 0.45);
+  color: #5ee89a;
+}
+
 .rs-card-select--v2 {
   min-height: 36px !important;
   border-radius: 10px !important;
@@ -10652,6 +10685,14 @@ a:focus-visible {
 .bib-acao--pdf {
   border-color: rgba(96, 165, 250, 0.45);
   color: #bfdbfe;
+}
+.bib-acao--email {
+  border-color: rgba(80, 160, 255, 0.45);
+  color: #93c5fd;
+}
+.bib-acao--wa {
+  border-color: rgba(37, 211, 102, 0.45);
+  color: #86efac;
 }
 .bib-acao--edit {
   border-color: rgba(251, 191, 36, 0.5);

@@ -3,10 +3,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { loadData, saveData } from '../utils/dataStorage'
 import {
-  abrirEmailChecklistBasico,
-  abrirWhatsAppChecklistBasico,
   openChecklistBasicoPrint,
 } from '../lib/checklistBasicoPdf'
+import {
+  useDocumentoEnvioCliente,
+  buildTextoEnvioGenerico,
+} from '../context/DocumentoEnvioClienteContext'
 import {
   CHECKLIST_BASICO_STORAGE_KEY,
   ChecklistBasicoGrupo,
@@ -221,6 +223,7 @@ function SignatureCanvas(props: {
 export function ChecklistBasicoContent(props: ChecklistBasicoContentProps) {
   const { safeT, LogoComponent, closeTab, activeTabId, voltarPaginaInicial, clientes, tecnicos, logoUrl, logoType } =
     props
+  const abrirEnvio = useDocumentoEnvioCliente()
 
   const [hydrated, setHydrated] = useState(false)
   const [instancia, setInstancia] = useState<ChecklistBasicoInstancia | null>(null)
@@ -439,23 +442,23 @@ export function ChecklistBasicoContent(props: ChecklistBasicoContentProps) {
     openChecklistBasicoPrint(instancia, safeT, logoUrl, logoType)
   }
 
-  const handleEnviarEmail = () => {
+  const montarEnvioChecklist = (canal: 'email' | 'whatsapp') => {
     if (!instancia || !validarParaEnvio()) return
-    const email = (clienteSelecionado?.email || '').trim()
-    if (!email) {
-      setEnvioErro(safeT.checklistBasicoSemEmailCliente || 'Este cliente não tem e-mail no cadastro.')
-      return
-    }
-    handleGerarPdf()
-    abrirEmailChecklistBasico(email, instancia, safeT)
-    marcarEnviado('email')
-  }
-
-  const handleEnviarWhatsApp = () => {
-    if (!instancia || !validarParaEnvio()) return
-    handleGerarPdf()
-    abrirWhatsAppChecklistBasico(clienteSelecionado?.telefones || '', instancia, safeT)
-    marcarEnviado('whatsapp')
+    const nomeCli = clienteSelecionado?.nomeEmpresa || instancia.clienteNome || 'Cliente'
+    const equip = [instancia.equipamento.tipoEquipamento, instancia.equipamento.modelo, instancia.equipamento.numeroSerie]
+      .filter(Boolean)
+      .join(' · ')
+    const titulo = `${safeT.checklistBasico || 'Checklist básico'} — ${nomeCli}`
+    abrirEnvio({
+      title: safeT.checklistBasicoEnvioCliente || 'Envio ao cliente',
+      subject: titulo,
+      body: buildTextoEnvioGenerico(titulo, equip ? `Equipamento: ${equip}` : undefined),
+      clienteId: instancia.clienteId || clienteSelecionado?.id,
+      clienteNome: nomeCli,
+      defaultChannel: canal,
+      onOpenPdf: handleGerarPdf,
+    })
+    marcarEnviado(canal)
   }
 
   const stats = useMemo(() => {
@@ -819,11 +822,11 @@ export function ChecklistBasicoContent(props: ChecklistBasicoContentProps) {
               <button type="button" className="cb-pro__btn cb-pro__btn--secondary" onClick={handleGerarPdf}>
                 {safeT.checklistBasicoGerarPdf || 'Gerar PDF / Imprimir'}
               </button>
-              <button type="button" className="cb-pro__btn cb-pro__btn--primary" onClick={handleEnviarEmail}>
-                {safeT.checklistBasicoEnviarEmail || 'Enviar por e-mail'}
+              <button type="button" className="cb-pro__btn cb-pro__btn--primary" onClick={() => montarEnvioChecklist('email')}>
+                📧 {safeT.checklistBasicoEnviarEmail || 'Enviar por e-mail'}
               </button>
-              <button type="button" className="cb-pro__btn cb-pro__btn--wa" onClick={handleEnviarWhatsApp}>
-                {safeT.checklistBasicoEnviarWhatsApp || 'Enviar por WhatsApp'}
+              <button type="button" className="cb-pro__btn cb-pro__btn--wa" onClick={() => montarEnvioChecklist('whatsapp')}>
+                💬 {safeT.checklistBasicoEnviarWhatsApp || 'Enviar por WhatsApp'}
               </button>
             </div>
           </section>

@@ -4,6 +4,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { documentPdfDateLocale, localeDateShort, localeForLongDatetime } from '../translations'
 import { PdfModeloPickerField } from './PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from '../lib/pdfModelStorage'
+import {
+  useDocumentoEnvioCliente,
+  buildTextoEnvioGenerico,
+} from '../context/DocumentoEnvioClienteContext'
+import { DocumentoEnvioAcoes } from './DocumentoEnvioAcoes'
 
 const STORAGE_ENTIDADES = 'nonato-contador-entidades'
 const STORAGE_PAGAMENTOS = 'nonato-contador-pagamentos'
@@ -234,6 +239,7 @@ export function PagamentosContadorContent({
   activeTabId,
   isCompactLayout = false,
 }: Props) {
+  const abrirEnvio = useDocumentoEnvioCliente()
   const dateLocale = localeDateShort(localeLang)
   const pdfDateLocale = documentPdfDateLocale(localeLang)
   const monthLocale = localeForLongDatetime(localeLang)
@@ -624,6 +630,36 @@ export function PagamentosContadorContent({
     }
   }
 
+  const abrirEnvioRelatorioContador = (canal: 'email' | 'whatsapp') => {
+    if (filtroPeriodoModo === 'mes' && !filtroMes) {
+      alert(tx(safeT, 'pagamentosContadorPdfEscolhaMes', 'Escolha o mês no filtro «Por mês» antes de exportar.'))
+      return
+    }
+    if (pagamentosFiltrados.length === 0) {
+      alert(tx(safeT, 'pagamentosContadorPdfSemDados', 'Não há pagamentos no filtro atual para exportar.'))
+      return
+    }
+    const periodoDesc = descricaoPeriodoFiltro(
+      safeT,
+      monthLocale,
+      dateLocale,
+      filtroPeriodoModo,
+      filtroMes,
+      filtroDataInicio,
+      filtroDataFim
+    )
+    const tituloBase = tx(safeT, 'pagamentosContadorTitle', 'PAGAMENTOS AO CONTADOR')
+    const titulo = periodoDesc ? `${tituloBase} — ${periodoDesc}` : tituloBase
+    const detalhe = `${pagamentosFiltrados.length} registo(s) — Total: € ${totais.total.toFixed(2)}`
+    abrirEnvio({
+      title: tx(safeT, 'pagamentosContadorEnvioTitulo', 'Enviar relatório ao contabilista'),
+      subject: titulo,
+      body: buildTextoEnvioGenerico(titulo, detalhe),
+      defaultChannel: canal,
+      onOpenPdf: () => void gerarPdfContador(),
+    })
+  }
+
   const pad = isCompactLayout ? '12px 10px' : '24px 28px'
 
   if (loading) {
@@ -871,6 +907,20 @@ export function PagamentosContadorContent({
               )}
             >
               📄 {tx(safeT, 'pagamentosContadorExportarPdf', 'Exportar PDF p/ contador')}
+            </button>
+            <button
+              type="button"
+              className="btn-primary pagamentos-contador-btn-email"
+              onClick={() => abrirEnvioRelatorioContador('email')}
+            >
+              📧 {tx(safeT, 'enviarPorEmail', 'E-mail')}
+            </button>
+            <button
+              type="button"
+              className="btn-primary pagamentos-contador-btn-wa"
+              onClick={() => abrirEnvioRelatorioContador('whatsapp')}
+            >
+              💬 {tx(safeT, 'enviarPorWhatsApp', 'WhatsApp')}
             </button>
           </div>
           <div style={{ maxWidth: '380px', margin: '0 0 12px' }}>

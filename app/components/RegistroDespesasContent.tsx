@@ -3,6 +3,11 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 import {
+  useDocumentoEnvioCliente,
+  buildTextoEnvioGenerico,
+} from '../context/DocumentoEnvioClienteContext'
+import { DocumentoEnvioAcoes } from './DocumentoEnvioAcoes'
+import {
   parseTotalEurosFromReceiptText,
   parseDataReciboIso,
   extrairDescricaoRecibo
@@ -84,6 +89,7 @@ export function RegistroDespesasContent({
   closeTab,
   activeTabId
 }: Props) {
+  const abrirEnvio = useDocumentoEnvioCliente()
   const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null)
   const [relatorioSelecionado, setRelatorioSelecionado] = useState<RelatorioServico | null>(null)
   const [documentos, setDocumentos] = useState<DespesaDocumento[]>([])
@@ -293,6 +299,23 @@ export function RegistroDespesasContent({
 
   const gerarPDF = (docId: string) => {
     window.open(`/api/pdf/despesas-documento/${docId}?lang=pt-BR`, '_blank')
+  }
+
+  const montarEnvioDespesasDoc = (doc: DespesaDocumento) => {
+    const total = doc.despesas.reduce((s, x) => s + x.valor, 0).toFixed(2)
+    const titulo = doc.relatorioNumero
+      ? `Despesas — Relatório ${doc.relatorioNumero} — ${doc.clienteNome}`
+      : `Despesas — ${doc.clienteNome}`
+    const detalhe = `${doc.despesas.length} despesa(s) — € ${total}${doc.relatorioNumero ? `\nRelatório: ${doc.relatorioNumero}` : ''}`
+    return {
+      title: safeT?.envioDespesasTitulo || 'Enviar despesas ao cliente',
+      subject: titulo,
+      body: buildTextoEnvioGenerico(titulo, detalhe),
+      clienteId: doc.clienteId,
+      clienteNome: doc.clienteNome,
+      relatorio: doc.relatorioId ? { clienteId: doc.clienteId, cliente: doc.clienteNome } : undefined,
+      onOpenPdf: () => gerarPDF(doc.id),
+    }
   }
 
   const defaultTipoOcr = (): { tipoId: string; tipoNome: string } => {
@@ -1063,9 +1086,29 @@ export function RegistroDespesasContent({
                 <div>
                   <strong>{doc.clienteNome}</strong> {doc.relatorioNumero && `| Relatório ${doc.relatorioNumero}`} — {doc.despesas.length} despesa(s) — € {doc.despesas.reduce((s, x) => s + x.valor, 0).toFixed(2)}
                 </div>
-                <button className="btn-primary" onClick={() => gerarPDF(doc.id)} style={{ padding: '6px 12px', fontSize: '13px' }}>
-                  {safeT?.gerarPDF || 'Gerar PDF'}
-                </button>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button className="btn-primary" onClick={() => gerarPDF(doc.id)} style={{ padding: '6px 12px', fontSize: '13px' }}>
+                    {safeT?.gerarPDF || 'Gerar PDF'}
+                  </button>
+                  {(() => {
+                    const env = montarEnvioDespesasDoc(doc)
+                    return (
+                      <DocumentoEnvioAcoes
+                        compact
+                        abrirEnvio={abrirEnvio}
+                        title={env.title}
+                        subject={env.subject}
+                        body={env.body}
+                        clienteId={env.clienteId}
+                        clienteNome={env.clienteNome}
+                        relatorio={env.relatorio}
+                        onOpenPdf={env.onOpenPdf}
+                        emailLabel={safeT?.enviarPorEmail || 'E-mail'}
+                        whatsLabel={safeT?.enviarPorWhatsApp || 'WhatsApp'}
+                      />
+                    )
+                  })()}
+                </div>
               </div>
             ))}
           </div>

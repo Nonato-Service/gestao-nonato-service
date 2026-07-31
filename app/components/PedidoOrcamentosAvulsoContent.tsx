@@ -21,6 +21,10 @@ import { resolverIdEquipamentoCliente } from '../lib/relatorioServicoEquipamento
 import { ProImageHoverPreview } from './ProImageHoverPreview'
 import type { OrcamentoWorkflowStatus } from '../lib/orcamentoWorkflow'
 import { notifyEquipamentoOrcamentosChanged } from '../lib/orcamentoWorkflow'
+import {
+  useDocumentoEnvioCliente,
+  buildTextoEnvioGenerico,
+} from '../context/DocumentoEnvioClienteContext'
 
 export type ClientePedido = {
   id: string
@@ -249,6 +253,7 @@ export function PedidoOrcamentosAvulsoContent({
   logoHtml = '',
   empresaNonato,
 }: Props) {
+  const abrirEnvio = useDocumentoEnvioCliente()
   const [clienteSelecionado, setClienteSelecionado] = useState<ClientePedido | null>(null)
   const [clienteNomeManual, setClienteNomeManual] = useState('')
   const [blocosEquipamento, setBlocosEquipamento] = useState<EquipamentoBlocoPedido[]>([criarBlocoEquipamentoVazio()])
@@ -758,6 +763,85 @@ export function PedidoOrcamentosAvulsoContent({
     )
   }
 
+  const abrirEnvioPedidoAvulso = (
+    canal: 'email' | 'whatsapp',
+    opts: {
+      codigo: string
+      preview: boolean
+      dataGeracao: string
+      clienteNome: string
+      blocos: EquipamentoBlocoPedido[]
+      emitirComo: 'cliente' | 'nonato-service'
+      clienteRef: ClientePedido | null
+      nomeManual: string
+      clienteId?: string
+    }
+  ) => {
+    const titulo = `${pdfLabels.titulo} ${opts.codigo}${opts.preview ? ` (${safeT?.provvisorio || 'prov.'})` : ''} — ${opts.clienteNome}`
+    abrirEnvio({
+      title: safeT?.poaEnvioTitulo || 'Enviar pedido de orçamento',
+      subject: titulo,
+      body: buildTextoEnvioGenerico(titulo),
+      clienteId: opts.clienteId || opts.clienteRef?.id,
+      clienteNome: opts.clienteNome,
+      defaultChannel: canal,
+      onOpenPdf: () =>
+        openPedidoOrcamentoAvulsoPdf(
+          montarPdfPayload(
+            opts.codigo,
+            opts.preview,
+            opts.dataGeracao,
+            opts.clienteNome,
+            opts.blocos,
+            opts.emitirComo,
+            opts.clienteRef,
+            opts.nomeManual
+          )
+        ),
+    })
+  }
+
+  const handleEnvioPdfAtual = (canal: 'email' | 'whatsapp') => {
+    const dados = resolverDadosPedidoPdf()
+    if (!dados) return
+    abrirEnvioPedidoAvulso(canal, {
+      codigo: `${gerarProximoCodigo()} (${safeT?.provvisorio || 'prov.'})`,
+      preview: true,
+      dataGeracao: new Date().toISOString(),
+      clienteNome: dados.nomeReal,
+      blocos: dados.blocosValidos,
+      emitirComo: emitirComoCliente,
+      clienteRef: clienteSelecionado,
+      nomeManual: clienteNomeManual,
+      clienteId: clienteSelecionado?.id,
+    })
+  }
+
+  const handleEnvioPdfGuardado = (pedido: PedidoAvulsoGuardado, canal: 'email' | 'whatsapp') => {
+    const normalizado = normalizarPedidoCarregado(pedido)
+    const clientePedido =
+      (pedido.clienteId ? clientes.find((c) => c.id === pedido.clienteId) : null) ||
+      (pedido.clienteNomeReal
+        ? clientes.find(
+            (c) => c.nomeEmpresa?.trim().toLowerCase() === pedido.clienteNomeReal.trim().toLowerCase()
+          ) || null
+        : null)
+    const blocosEnriquecidos = (normalizado.equipamentosBlocos || []).map((b) =>
+      enriquecerBlocoEquipamentoPedido(b, clientePedido?.equipamentos, pedido.equipamentoChave)
+    )
+    abrirEnvioPedidoAvulso(canal, {
+      codigo: pedido.codigo,
+      preview: false,
+      dataGeracao: pedido.dataGeracao,
+      clienteNome: pedido.clienteNomeReal,
+      blocos: blocosEnriquecidos,
+      emitirComo: pedido.emitirComoCliente || 'cliente',
+      clienteRef: clientePedido,
+      nomeManual: pedido.clienteNomeReal,
+      clienteId: pedido.clienteId,
+    })
+  }
+
   const handleReabrirPedido = (pedido: PedidoAvulsoGuardado) => {
     const normalizado = normalizarPedidoCarregado(pedido)
     if (pedido.clienteId) {
@@ -1210,6 +1294,12 @@ export function PedidoOrcamentosAvulsoContent({
                   </button>
                   <button type="button" className="orc-pro__act" onClick={() => handleVisualizarPdfGuardado(p)}>
                     👁️ PDF
+                  </button>
+                  <button type="button" className="orc-pro__act" onClick={() => handleEnvioPdfGuardado(p, 'email')} title={safeT?.enviarPorEmail || 'E-mail'}>
+                    📧
+                  </button>
+                  <button type="button" className="orc-pro__act" onClick={() => handleEnvioPdfGuardado(p, 'whatsapp')} title={safeT?.enviarPorWhatsApp || 'WhatsApp'}>
+                    💬
                   </button>
                   {p.emitirComoCliente === 'nonato-service' && p.workflowStatus !== 'cotacao_recebida' ? (
                     <button
@@ -1864,6 +1954,12 @@ export function PedidoOrcamentosAvulsoContent({
               </button>
               <button type="button" className="orc-pro__btn orc-pro__btn--secondary" onClick={handleVisualizarPdf}>
                 👁️ {safeT?.visualizarPdfPedido || 'Visualizar PDF'}
+              </button>
+              <button type="button" className="orc-pro__btn orc-pro__btn--secondary" onClick={() => handleEnvioPdfAtual('email')}>
+                📧 {safeT?.enviarPorEmail || 'E-mail'}
+              </button>
+              <button type="button" className="orc-pro__btn orc-pro__btn--secondary" onClick={() => handleEnvioPdfAtual('whatsapp')}>
+                💬 {safeT?.enviarPorWhatsApp || 'WhatsApp'}
               </button>
               <button type="button" className="orc-pro__btn orc-pro__btn--primary" onClick={handleGerarPedido}>
                 {safeT?.gerarPedido || 'Gerar pedido'}
