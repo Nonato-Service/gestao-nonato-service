@@ -99,6 +99,12 @@ import {
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser } from './utils/syncRevision'
 import { cmpNomeCliente, ordenarClientesPorNome, localeOrdenacaoClientes } from './lib/ordenarClientes'
+import {
+  ORCAMENTOS_ALFABETO_INDICE as CLIENTES_ALFABETO_INDICE,
+  getClienteLetraAlfabeto,
+  contarClientesPorLetraAlfabeto,
+  filtrarClientesPorLetraAlfabeto,
+} from './lib/orcamentosAlfabeto'
 import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasLinkedMenuAccess, hasStrictMenuPolicy, normalizeMenuItems, normalizeMenuItemsWithLegacyFallback, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
   NONATO_CRITICAL_CADASTRO_KEYS,
@@ -813,17 +819,6 @@ function parseServicoValorInput(raw: string | undefined | null): number {
 function servicoValorToInputString(v: number): string {
   if (!Number.isFinite(v) || v === 0) return ''
   return String(v)
-}
-
-const CLIENTES_ALFABETO_INDICE = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''), '#'] as const
-
-function getClienteLetraAlfabeto(nome: string): string {
-  const n = (nome || '').trim()
-  if (!n) return '#'
-  const ch = n[0].toUpperCase()
-  const base = ch.normalize('NFD').replace(/\p{M}/gu, '')
-  if (/[A-Z]/.test(base)) return base
-  return '#'
 }
 
 /** Grupo lógico no cadastro de serviços (ex.: «Horas trabalhadas»). */
@@ -39644,14 +39639,21 @@ export default function Dashboard() {
         const buscaCliAtiva = buscaCliente.trim().length > 0
         const clientesLetraAtiva =
           clientesAlfaLetraFiltro &&
-          (clientesPorLetra.get(clientesAlfaLetraFiltro)?.length ?? 0) > 0
+          contarClientesPorLetraAlfabeto(clientesFiltrados, clientesAlfaLetraFiltro) > 0
             ? clientesAlfaLetraFiltro
             : null
         const clientesLetrasParaLista = clientesLetraAtiva
           ? [clientesLetraAtiva]
           : CLIENTES_ALFABETO_INDICE.filter((letra) => (clientesPorLetra.get(letra)?.length ?? 0) > 0)
+        const clientesListaPorLetra = (letra: string) =>
+          clientesLetraAtiva && letra === clientesLetraAtiva
+            ? ordenarClientesPorNome(
+                filtrarClientesPorLetraAlfabeto(clientesFiltrados, letra),
+                localeOrdCli
+              )
+            : (clientesPorLetra.get(letra) ?? [])
         const clientesListaFiltradaCount = clientesLetraAtiva
-          ? (clientesPorLetra.get(clientesLetraAtiva)?.length ?? 0)
+          ? clientesListaPorLetra(clientesLetraAtiva).length
           : clientesFiltrados.length
         const clientesParaDetalhe = clienteListaDetalheId
           ? clientesFiltrados.filter(c => c.id === clienteListaDetalheId)
@@ -40436,7 +40438,7 @@ export default function Dashboard() {
                       aria-label={safeT?.clientesAlfabetoIndice || 'Índice A–Z'}
                     >
                       {CLIENTES_ALFABETO_INDICE.map((letra) => {
-                        const count = clientesPorLetra.get(letra)?.length ?? 0
+                        const count = contarClientesPorLetraAlfabeto(clientesFiltrados, letra)
                         const temClientes = count > 0
                         const active = clientesLetraAtiva === letra
                         return (
@@ -40479,11 +40481,11 @@ export default function Dashboard() {
                               ? safeT?.clientesAlfabetoOutros || 'Outros'
                               : letra}
                             <span className="clientes-alfa-letra__count">
-                              {(clientesPorLetra.get(letra) ?? []).length}
+                              {clientesListaPorLetra(letra).length}
                             </span>
                           </h3>
                           <ul className="clientes-alfa-nomes">
-                            {(clientesPorLetra.get(letra) ?? []).map((c) => {
+                            {clientesListaPorLetra(letra).map((c) => {
                               const devedor = isClienteMarcadoDevedor(c)
                               return (
                                 <li key={c.id} className="clientes-alfa-item">
