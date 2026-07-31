@@ -104,6 +104,7 @@ import {
   getClienteLetraAlfabeto,
   contarClientesPorLetraAlfabeto,
   filtrarClientesPorLetraAlfabeto,
+  clienteNomeMatchesLetraAlfabeto,
 } from './lib/orcamentosAlfabeto'
 import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasLinkedMenuAccess, hasStrictMenuPolicy, normalizeMenuItems, normalizeMenuItemsWithLegacyFallback, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
@@ -66678,14 +66679,22 @@ A1;Peça exemplo;10`}
         const bibliotecaLetraAtiva =
           !buscaBibliotecaAtiva &&
           bibliotecaRelatoriosAlfaLetraFiltro &&
-          (bibliotecaPorLetra.get(bibliotecaRelatoriosAlfaLetraFiltro)?.length ?? 0) > 0
+          bibliotecaFiltradaComConteudo.some((row) =>
+            clienteNomeMatchesLetraAlfabeto(row.cliente.nomeEmpresa, bibliotecaRelatoriosAlfaLetraFiltro)
+          )
             ? bibliotecaRelatoriosAlfaLetraFiltro
             : null
         const bibliotecaListaRender = buscaBibliotecaAtiva
           ? bibliotecaFiltradaComConteudo
           : bibliotecaLetraAtiva
-            ? (bibliotecaPorLetra.get(bibliotecaLetraAtiva) ?? [])
+            ? bibliotecaFiltradaComConteudo.filter((row) =>
+                clienteNomeMatchesLetraAlfabeto(row.cliente.nomeEmpresa, bibliotecaLetraAtiva)
+              )
             : bibliotecaFiltradaComConteudo
+        const bibliotecaCountPorLetra = (letra: string) =>
+          bibliotecaFiltradaComConteudo.filter((row) =>
+            clienteNomeMatchesLetraAlfabeto(row.cliente.nomeEmpresa, letra)
+          ).length
         const bibliotecaEquipKey = (clienteId: string, equipamentoKey: string) =>
           `${clienteId}::${equipamentoKey}`
         const relatoriosFechadosLista = buildRelatoriosFechadosBibliotecaLista(
@@ -67083,7 +67092,7 @@ A1;Peça exemplo;10`}
                 <div className="bib-relatorios-hub__alfa-sticky">
                   <div className="bib-relatorios-hub__list-meta biblioteca-relatorios-alfa-meta">
                     {bibliotecaLetraAtiva
-                      ? `${(bibliotecaPorLetra.get(bibliotecaLetraAtiva) ?? []).length} ${safeT?.clientes || 'cliente(s)'} ${safeT?.clientesAlfabetoComInicial || 'com inicial'} «${bibliotecaLetraAtiva === '#' ? (safeT?.clientesAlfabetoOutros || 'Outros') : bibliotecaLetraAtiva}»`
+                      ? `${bibliotecaCountPorLetra(bibliotecaLetraAtiva)} ${safeT?.clientes || 'cliente(s)'} ${safeT?.clientesAlfabetoComInicial || 'com inicial'} «${bibliotecaLetraAtiva === '#' ? (safeT?.clientesAlfabetoOutros || 'Outros') : bibliotecaLetraAtiva}»`
                       : `${safeT?.mostrando || 'Mostrando'} ${bibliotecaFiltradaComConteudo.length} ${safeT?.clientes || 'cliente(s)'} ${txBibHero.bibliotecaRelatoriosComRelatorios || 'com relatórios'} — ${txBibHero.bibliotecaRelatoriosAlfabetoFiltrarOpcional || 'toque numa letra para filtrar'}`}
                   </div>
                   <div className="clientes-alfa-wrap biblioteca-relatorios-alfa-wrap">
@@ -67092,7 +67101,7 @@ A1;Peça exemplo;10`}
                       aria-label={safeT?.clientesAlfabetoIndice || 'Índice A–Z'}
                     >
                       {CLIENTES_ALFABETO_INDICE.map((letra) => {
-                        const count = bibliotecaPorLetra.get(letra)?.length ?? 0
+                        const count = bibliotecaCountPorLetra(letra)
                         const temClientes = count > 0
                         const active = bibliotecaLetraAtiva === letra
                         return (
@@ -67107,7 +67116,9 @@ A1;Peça exemplo;10`}
                                 ? `${count} ${safeT?.clientes || 'cliente(s)'}`
                                 : safeT?.clientesAlfabetoSemClientes || 'Sem clientes nesta letra'
                             }
-                            onClick={() => setBibliotecaRelatoriosAlfaLetraFiltro(letra)}
+                            onClick={() =>
+                              setBibliotecaRelatoriosAlfaLetraFiltro((prev) => (prev === letra ? null : letra))
+                            }
                           >
                             <span className="clientes-alfa-jump-btn__letter">{letra === '#' ? '#' : letra}</span>
                             {temClientes ? (
@@ -67126,7 +67137,7 @@ A1;Peça exemplo;10`}
                             ? safeT?.clientesAlfabetoOutros || 'Outros'
                             : bibliotecaLetraAtiva}
                           <span className="clientes-alfa-letra__count">
-                            {(bibliotecaPorLetra.get(bibliotecaLetraAtiva) ?? []).length}
+                            {bibliotecaCountPorLetra(bibliotecaLetraAtiva)}
                           </span>
                         </h3>
                       </section>

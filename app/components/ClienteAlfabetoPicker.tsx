@@ -5,9 +5,11 @@ import {
   CLIENTES_ALFABETO_INDICE,
   agruparClientesPorLetra,
   filtrarClientesPorBusca,
+  contarClientesPorLetraAlfabeto,
+  filtrarClientesPorLetraAlfabeto,
   type ClienteAlfabetoRow,
 } from '../lib/clienteAlfabetoBusca'
-import { localeOrdenacaoClientes } from '../lib/ordenarClientes'
+import { localeOrdenacaoClientes, ordenarClientesPorNome } from '../lib/ordenarClientes'
 import { ClienteListaLinhas } from './ClienteListaLinhas'
 import { ClienteDevedorNomeTag } from './ClienteDevedorNomeTag'
 
@@ -27,6 +29,7 @@ export type ClienteAlfabetoPickerLabels = {
   cliente?: string
   filtrados?: string
   devedor?: string
+  toqueFiltrar?: string
 }
 
 export type ClienteAlfabetoPickerAction = {
@@ -73,12 +76,23 @@ export function ClienteAlfabetoPicker({
   )
 
   const clientesPorLetra = useMemo(() => agruparClientesPorLetra(clientesFiltrados), [clientesFiltrados])
+  const buscaAtiva = busca.trim().length > 0
 
   const letraAtiva =
-    letraFiltro && (clientesPorLetra.get(letraFiltro)?.length ?? 0) > 0 ? letraFiltro : null
+    letraFiltro && contarClientesPorLetraAlfabeto(clientesFiltrados, letraFiltro) > 0
+      ? letraFiltro
+      : null
 
-  const letrasParaLista = letraAtiva ? [letraAtiva] : []
-  const countLetraAtiva = letraAtiva ? (clientesPorLetra.get(letraAtiva)?.length ?? 0) : 0
+  const letrasParaLista = letraAtiva
+    ? [letraAtiva]
+    : CLIENTES_ALFABETO_INDICE.filter((letra) => (clientesPorLetra.get(letra)?.length ?? 0) > 0)
+
+  const clientesListaPorLetra = (letra: string) =>
+    letraAtiva && letra === letraAtiva
+      ? ordenarClientesPorNome(filtrarClientesPorLetraAlfabeto(clientesFiltrados, letra), locale)
+      : (clientesPorLetra.get(letra) ?? [])
+
+  const countLetraAtiva = letraAtiva ? clientesListaPorLetra(letraAtiva).length : clientesFiltrados.length
 
   const selecionado = selectedId ? clientes.find((c) => c.id === selectedId) : undefined
 
@@ -157,9 +171,11 @@ export function ClienteAlfabetoPicker({
             ? `${countLetraAtiva} ${L.clientes || 'cliente(s)'} ${L.comInicial || 'com inicial'} «${
                 letraAtiva === '#' ? L.outros || 'Outros' : letraAtiva
               }»${busca.trim() ? ` (${L.de || 'de'} ${clientesFiltrados.length} ${L.filtrados || 'filtrados'})` : ''}`
-            : `${L.mostrando || 'Mostrando'} ${clientesFiltrados.length} ${L.de || 'de'} ${clientes.length} ${
-                L.clientes || 'cliente(s)'
-              } — ${L.selecioneLetra || 'selecione uma letra abaixo'}`}
+            : buscaAtiva
+              ? `${clientesFiltrados.length} ${L.clientes || 'cliente(s)'} — «${busca.trim()}»`
+              : `${L.mostrando || 'Mostrando'} ${clientesFiltrados.length} ${L.de || 'de'} ${clientes.length} ${
+                  L.clientes || 'cliente(s)'
+                } — ${L.toqueFiltrar || 'toque numa letra para filtrar'}`}
         </div>
       )}
 
@@ -170,7 +186,7 @@ export function ClienteAlfabetoPicker({
             aria-label={L.indiceAz || 'Índice A–Z'}
           >
             {CLIENTES_ALFABETO_INDICE.map((letra) => {
-              const count = clientesPorLetra.get(letra)?.length ?? 0
+              const count = contarClientesPorLetraAlfabeto(clientesFiltrados, letra)
               const temClientes = count > 0
               const active = letraAtiva === letra
               return (
@@ -185,7 +201,7 @@ export function ClienteAlfabetoPicker({
                       ? `${count} ${L.clientes || 'cliente(s)'}`
                       : L.semClientesLetra || 'Sem clientes nesta letra'
                   }
-                  onClick={() => setLetraFiltro(letra)}
+                  onClick={() => setLetraFiltro((prev) => (prev === letra ? null : letra))}
                 >
                   <span className="clientes-alfa-jump-btn__letter">{letra === '#' ? '#' : letra}</span>
                   {temClientes ? (
@@ -199,21 +215,17 @@ export function ClienteAlfabetoPicker({
           </nav>
 
           <div className="cliente-alfabeto-picker__list" style={{ maxHeight: listMaxHeight }}>
-            {!letraAtiva ? (
-              <p className="clientes-alfa-prompt">
-                {L.prompt || 'Toque numa letra acima para ver apenas os clientes com essa inicial.'}
-              </p>
-            ) : (
+            {letrasParaLista.length > 0 ? (
               letrasParaLista.map((letra) => (
                 <section key={letra} id={`cliente-picker-letra-${letra}`} className="clientes-alfa-secao">
                   <h3 className="clientes-alfa-letra">
                     {letra === '#' ? L.outros || 'Outros' : letra}
                     <span className="clientes-alfa-letra__count">
-                      {(clientesPorLetra.get(letra) ?? []).length}
+                      {clientesListaPorLetra(letra).length}
                     </span>
                   </h3>
                   <ul className="clientes-alfa-nomes">
-                    {(clientesPorLetra.get(letra) ?? []).map((c) => {
+                    {clientesListaPorLetra(letra).map((c) => {
                       const devedor = isDevedor?.(c) ?? false
                       const active = selectedId === c.id
                       return (
@@ -233,7 +245,7 @@ export function ClienteAlfabetoPicker({
                   </ul>
                 </section>
               ))
-            )}
+            ) : null}
           </div>
         </div>
       ) : null}

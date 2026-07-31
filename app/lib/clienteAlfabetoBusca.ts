@@ -1,8 +1,18 @@
 import { codigoClienteExibicao } from './clienteCodigoUtils'
-import { getClienteLetraAlfabeto, ORCAMENTOS_ALFABETO_INDICE } from './orcamentosAlfabeto'
+import {
+  getClienteLetraAlfabeto,
+  ORCAMENTOS_ALFABETO_INDICE,
+  contarClientesPorLetraAlfabeto,
+  filtrarClientesPorLetraAlfabeto,
+} from './orcamentosAlfabeto'
 import { ordenarClientesPorNome } from './ordenarClientes'
 
-export { getClienteLetraAlfabeto, ORCAMENTOS_ALFABETO_INDICE as CLIENTES_ALFABETO_INDICE }
+export {
+  getClienteLetraAlfabeto,
+  ORCAMENTOS_ALFABETO_INDICE as CLIENTES_ALFABETO_INDICE,
+  contarClientesPorLetraAlfabeto,
+  filtrarClientesPorLetraAlfabeto,
+}
 
 export type ClienteAlfabetoRow = {
   id: string

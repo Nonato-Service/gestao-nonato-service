@@ -20,6 +20,7 @@ import {
   ORCAMENTOS_ALFABETO_INDICE,
   getClienteLetraAlfabeto,
   chaveClienteOrcamento,
+  clienteNomeMatchesLetraAlfabeto,
 } from '../lib/orcamentosAlfabeto'
 
 export type OrcamentoGeradoItem = {
@@ -142,8 +143,11 @@ export function OrcamentosGeradosBrowse({
     return m
   }, [clientesComOrcamentos])
 
+  const clientesNaLetraAlfabeto = (letra: string) =>
+    clientesComOrcamentos.filter((c) => clienteNomeMatchesLetraAlfabeto(c.nome, letra))
+
   const letraAtiva =
-    letraFiltro && (clientesPorLetra.get(letraFiltro)?.length ?? 0) > 0 ? letraFiltro : null
+    letraFiltro && clientesNaLetraAlfabeto(letraFiltro).length > 0 ? letraFiltro : null
 
   const itensPastaAguardando = useMemo(
     () =>
@@ -187,8 +191,7 @@ export function OrcamentosGeradosBrowse({
       return orcamentosPosBusca.filter((o) => {
         const nome = resolverNomeCliente(o, clientes) || '—'
         const chave = chaveClienteOrcamento(o.clienteId, nome !== '—' ? nome : undefined, o.id)
-        const letra = getClienteLetraAlfabeto(nome)
-        return letra === letraAtiva && chave === clienteChave
+        return clienteNomeMatchesLetraAlfabeto(nome, letraAtiva) && chave === clienteChave
       })
     }
     if (!letraAtiva) return orcamentosRecentes
@@ -499,7 +502,7 @@ export function OrcamentosGeradosBrowse({
           <p className="orc-gerados-browse__meta">
             {orcamentos.length} {safeT?.orcamentosGerados || 'orçamentos gerados'}
             {letraAtiva
-              ? ` · ${clientesPorLetra.get(letraAtiva)?.length ?? 0} ${safeT?.clientes || 'cliente(s)'} ${safeT?.clientesAlfabetoComInicial || 'com inicial'} «${letraAtiva === '#' ? safeT?.clientesAlfabetoOutros || 'Outros' : letraAtiva}»`
+              ? ` · ${clientesNaLetraAlfabeto(letraAtiva).length} ${safeT?.clientes || 'cliente(s)'} ${safeT?.clientesAlfabetoComInicial || 'com inicial'} «${letraAtiva === '#' ? safeT?.clientesAlfabetoOutros || 'Outros' : letraAtiva}»`
               : ` — ${orcamentosRecentes.length} ${safeT?.recentes || 'recentes'}`}
           </p>
           <nav
@@ -507,7 +510,7 @@ export function OrcamentosGeradosBrowse({
             aria-label={safeT?.clientesAlfabetoIndice || 'Índice A–Z'}
           >
             {ORCAMENTOS_ALFABETO_INDICE.map((letra) => {
-              const count = clientesPorLetra.get(letra)?.length ?? 0
+              const count = clientesNaLetraAlfabeto(letra).length
               const tem = count > 0
               const active = letraAtiva === letra
               return (
@@ -523,7 +526,7 @@ export function OrcamentosGeradosBrowse({
                       : safeT?.clientesAlfabetoSemClientes || 'Sem clientes nesta letra'
                   }
                   onClick={() => {
-                    setLetraFiltro(letra)
+                    setLetraFiltro((prev) => (prev === letra ? null : letra))
                     setClienteChave(null)
                   }}
                 >
@@ -550,7 +553,7 @@ export function OrcamentosGeradosBrowse({
                   ? safeT?.clientesAlfabetoOutros || 'Outros'
                   : letraAtiva}
                 <span className="clientes-alfa-letra__count">
-                  {clientesPorLetra.get(letraAtiva)?.length ?? 0}
+                  {clientesNaLetraAlfabeto(letraAtiva).length}
                 </span>
               </h3>
               <p className="orc-gerados-browse__hint">
@@ -558,7 +561,7 @@ export function OrcamentosGeradosBrowse({
                   'Selecione o cliente para ver os orçamentos gerados.'}
               </p>
               <ul className="clientes-alfa-nomes">
-                {(clientesPorLetra.get(letraAtiva) ?? []).map((c) => (
+                {clientesNaLetraAlfabeto(letraAtiva).map((c) => (
                   <li key={c.chave} className="clientes-alfa-item">
                     <button
                       type="button"
