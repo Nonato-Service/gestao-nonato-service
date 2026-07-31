@@ -44970,6 +44970,7 @@ export default function Dashboard() {
                               <thead>
                                 <tr style={{ backgroundColor: excelHeaderBg, color: '#ffffff' }}>
                                   <th
+                                    colSpan={2}
                                     style={{
                                       padding: '10px 14px',
                                       textAlign: 'left',
@@ -45023,119 +45024,106 @@ export default function Dashboard() {
                                         </button>
                                       </div>
                                     ) : (
-                                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                      <div className="biblioteca-pecas-hub__grupo-head">
+                                        <div className="biblioteca-pecas-hub__grupo-head-main">
+                                          <span className="biblioteca-pecas-hub__grupo-head-title">
+                                            <button
+                                              type="button"
+                                              aria-expanded={subcategoriasVisiveis}
+                                              title={
+                                                subcategoriasVisiveis
+                                                  ? safeT?.gerenciarCategoriasOcultarSubcategorias || 'Ocultar subcategorias'
+                                                  : safeT?.gerenciarCategoriasMostrarSubcategorias || 'Mostrar subcategorias'
+                                              }
+                                              onClick={() =>
+                                                setGerenciarCategoriasGrupoAberto((prev) => ({
+                                                  ...prev,
+                                                  [categoria.id]: prev[categoria.id] === true ? false : true,
+                                                }))
+                                              }
+                                              className="ui-expand-chevron"
+                                              style={{
+                                                background: 'rgba(255,255,255,0.08)',
+                                                border: '1px solid rgba(255,255,255,0.2)',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                flexShrink: 0,
+                                              }}
+                                            >
+                                              {subcategoriasVisiveis ? '▼' : '▶'}
+                                            </button>
+                                            <span style={{ fontSize: '15px', letterSpacing: '0.02em' }} title={categoria.nome}>
+                                              {categoria.nome}
+                                            </span>
+                                          </span>
+                                          <span className="biblioteca-pecas-hub__grupo-head-count">
+                                            {subcategoriasDoGrupo.length}{' '}
+                                            {subcategoriasDoGrupo.length === 1
+                                              ? safeT?.subcategoria || 'Subcategoria'
+                                              : safeT?.subcategorias || 'Subcategorias'}
+                                          </span>
+                                        </div>
+                                        <div className="biblioteca-pecas-hub__grupo-acoes">
                                           <button
                                             type="button"
-                                            aria-expanded={subcategoriasVisiveis}
-                                            title={
-                                              subcategoriasVisiveis
-                                                ? safeT?.gerenciarCategoriasOcultarSubcategorias || 'Ocultar subcategorias'
-                                                : safeT?.gerenciarCategoriasMostrarSubcategorias || 'Mostrar subcategorias'
-                                            }
-                                            onClick={() =>
-                                              setGerenciarCategoriasGrupoAberto((prev) => ({
-                                                ...prev,
-                                                [categoria.id]: prev[categoria.id] === true ? false : true,
-                                              }))
-                                            }
-                                            className="ui-expand-chevron"
-                                            style={{
-                                              background: 'rgba(255,255,255,0.08)',
-                                              border: '1px solid rgba(255,255,255,0.2)',
-                                              borderRadius: '4px',
-                                              cursor: 'pointer',
-                                              flexShrink: 0,
+                                            className="btn-primary"
+                                            onClick={() => {
+                                              setGerenciarCategoriasGrupoAberto((prev) => ({ ...prev, [categoria.id]: true }))
+                                              setShowNovaSubcategoriaForm(true)
+                                              setNovaSubcategoriaNome('')
+                                              setEditingSubcategoria(null)
+                                              setPecaBibliotecaForm({ ...pecaBibliotecaForm, categoriaId: categoria.id })
                                             }}
+                                            style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
                                           >
-                                            {subcategoriasVisiveis ? '▼' : '▶'}
+                                            + {safeT?.novaSubcategoria || 'Nova Subcategoria'}
                                           </button>
-                                          <span style={{ fontSize: '15px', letterSpacing: '0.02em' }} title={categoria.nome}>
-                                            {categoria.nome}
-                                          </span>
-                                        </span>
-                                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)', fontWeight: 500 }}>
-                                          {subcategoriasDoGrupo.length}{' '}
-                                          {subcategoriasDoGrupo.length === 1
-                                            ? safeT?.subcategoria || 'Subcategoria'
-                                            : safeT?.subcategorias || 'Subcategorias'}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </th>
-                                  <th
-                                    style={{
-                                      padding: '10px 14px',
-                                      textAlign: 'right',
-                                      whiteSpace: 'nowrap',
-                                      fontWeight: 600,
-                                      ...thRule,
-                                      width: '1%',
-                                    }}
-                                  >
-                                    {editingCategoria?.id !== categoria.id && (
-                                      <div
-                                        className="biblioteca-pecas-hub__grupo-acoes"
-                                      >
-                                        <button
-                                          type="button"
-                                          className="btn-primary"
-                                          onClick={() => {
-                                            setGerenciarCategoriasGrupoAberto((prev) => ({ ...prev, [categoria.id]: true }))
-                                            setShowNovaSubcategoriaForm(true)
-                                            setNovaSubcategoriaNome('')
-                                            setEditingSubcategoria(null)
-                                            setPecaBibliotecaForm({ ...pecaBibliotecaForm, categoriaId: categoria.id })
-                                          }}
-                                          style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
-                                        >
-                                          + {safeT?.novaSubcategoria || 'Nova Subcategoria'}
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="btn-primary"
-                                          onClick={() => {
-                                            setEditingCategoria(categoria)
-                                            setNovaCategoriaNome(categoria.nome)
-                                          }}
-                                          style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
-                                          title={(safeT as any)?.gerenciarCategoriasEditarCategoria || 'Renomear categoria'}
-                                        >
-                                          ✏️ {safeT?.edit || 'Editar'}
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="btn-danger btn-danger--inline"
-                                          onClick={() => {
-                                            if (
-                                              window.confirm(
-                                                safeT?.confirmDeleteCategoria ||
-                                                  'Tem certeza que deseja excluir esta categoria? Todas as subcategorias e peças associadas serão afetadas.'
-                                              )
-                                            ) {
-                                              const updatedSubcategorias = subcategoriasPecas.filter((sub) => sub.categoriaId !== categoria.id)
-                                              setSubcategoriasPecas(updatedSubcategorias)
-                                              saveData('nonato-subcategorias-pecas', updatedSubcategorias)
-                                              const updated = categoriasPecas.filter((c) => c.id !== categoria.id)
-                                              setCategoriasPecas(updated)
-                                              saveData('nonato-categorias-pecas', updated)
-                                              const updatedPecasRaw = pecasBiblioteca.map((p) =>
-                                                p.categoriaId === categoria.id
-                                                  ? { ...p, categoriaId: '', categoria: '', subcategoriaId: '', subcategoria: '' }
-                                                  : p
-                                              )
-                                              const updatedPecas = garantirNumerosSequenciaPecaBiblioteca(
-                                                updatedPecasRaw,
-                                                categoriasPecas
-                                              ).lista
-                                              setPecasBiblioteca(updatedPecas)
-                                              saveData('nonato-pecas-biblioteca', updatedPecas)
-                                            }
-                                          }}
-                                          style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
-                                        >
-                                          🗑 {safeT?.delete || 'Excluir'}
-                                        </button>
+                                          <button
+                                            type="button"
+                                            className="btn-primary"
+                                            onClick={() => {
+                                              setEditingCategoria(categoria)
+                                              setNovaCategoriaNome(categoria.nome)
+                                            }}
+                                            style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                                            title={(safeT as any)?.gerenciarCategoriasEditarCategoria || 'Renomear categoria'}
+                                          >
+                                            ✏️ {safeT?.edit || 'Editar'}
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="btn-danger btn-danger--inline"
+                                            onClick={() => {
+                                              if (
+                                                window.confirm(
+                                                  safeT?.confirmDeleteCategoria ||
+                                                    'Tem certeza que deseja excluir esta categoria? Todas as subcategorias e peças associadas serão afetadas.'
+                                                )
+                                              ) {
+                                                const updatedSubcategorias = subcategoriasPecas.filter((sub) => sub.categoriaId !== categoria.id)
+                                                setSubcategoriasPecas(updatedSubcategorias)
+                                                saveData('nonato-subcategorias-pecas', updatedSubcategorias)
+                                                const updated = categoriasPecas.filter((c) => c.id !== categoria.id)
+                                                setCategoriasPecas(updated)
+                                                saveData('nonato-categorias-pecas', updated)
+                                                const updatedPecasRaw = pecasBiblioteca.map((p) =>
+                                                  p.categoriaId === categoria.id
+                                                    ? { ...p, categoriaId: '', categoria: '', subcategoriaId: '', subcategoria: '' }
+                                                    : p
+                                                )
+                                                const updatedPecas = garantirNumerosSequenciaPecaBiblioteca(
+                                                  updatedPecasRaw,
+                                                  categoriasPecas
+                                                ).lista
+                                                setPecasBiblioteca(updatedPecas)
+                                                saveData('nonato-pecas-biblioteca', updatedPecas)
+                                              }
+                                            }}
+                                            style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                                          >
+                                            🗑 {safeT?.delete || 'Excluir'}
+                                          </button>
+                                        </div>
                                       </div>
                                     )}
                                   </th>
@@ -45261,7 +45249,6 @@ export default function Dashboard() {
                                             textAlign: 'right',
                                             verticalAlign: 'middle',
                                             whiteSpace: 'nowrap',
-                                            width: '1%',
                                             ...tdRule,
                                           }}
                                         >

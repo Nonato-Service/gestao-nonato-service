@@ -30392,15 +30392,66 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 
 .biblioteca-pecas-hub__grupo-acoes {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, max-content));
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-  justify-content: end;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.biblioteca-pecas-hub__grupo-acoes .btn-primary,
+.biblioteca-pecas-hub__grupo-acoes .btn-danger,
+.biblioteca-pecas-hub__grupo-acoes .btn-secondary {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.biblioteca-pecas-hub__grupo-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+}
+
+.biblioteca-pecas-hub__grupo-head-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.biblioteca-pecas-hub__grupo-head-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.biblioteca-pecas-hub__grupo-head-title > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.biblioteca-pecas-hub__grupo-head-count {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.biblioteca-pecas-hub__grupo-table td:last-child,
+.biblioteca-pecas-hub__grupo-table th:last-child {
+  min-width: 0;
 }
 
 .biblioteca-pecas-hub__grupo-acoes--sub {
-  grid-template-columns: repeat(2, minmax(0, max-content));
+  justify-content: flex-end;
 }
 
 @media (max-width: 900px) {
@@ -30496,12 +30547,21 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   }
 
   .biblioteca-pecas-hub__grupo-acoes {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-content: stretch;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .biblioteca-pecas-hub__grupo-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .biblioteca-pecas-hub__grupo-head-main {
+    width: 100%;
   }
 
   .biblioteca-pecas-hub__grupo-acoes--sub {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: flex-start;
   }
 }
 
