@@ -134,14 +134,6 @@ export function OrcamentosGeradosBrowse({
     return [...map.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
   }, [orcamentosPosBusca, clientes])
 
-  const clientesPorLetra = useMemo(() => {
-    const m = new Map<string, typeof clientesComOrcamentos>()
-    for (const c of clientesComOrcamentos) {
-      if (!m.has(c.letra)) m.set(c.letra, [])
-      m.get(c.letra)!.push(c)
-    }
-    return m
-  }, [clientesComOrcamentos])
 
   const clientesNaLetraAlfabeto = (letra: string) =>
     clientesComOrcamentos.filter((c) => clienteNomeMatchesLetraAlfabeto(c.nome, letra))
