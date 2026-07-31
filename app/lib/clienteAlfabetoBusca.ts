@@ -25,7 +25,11 @@ export type ClienteAlfabetoRow = {
   email?: string
   contato?: string
   localidade?: string
+  conselho?: string
   numeroContribuicaoFiscal?: string
+  isDevedor?: boolean
+  saldoPendente?: number
+  relatoriosNaoPagoCount?: number
 }
 
 export function filtrarClientesPorBusca<T extends ClienteAlfabetoRow>(

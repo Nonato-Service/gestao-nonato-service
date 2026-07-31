@@ -1,6 +1,10 @@
 # scripts / tooling cache
 scripts/.i18n-sync-cache.json
 
+# backups locais de dados (nunca commitar)
+*.bak
+data/*.bak
+
 /node_modules
 /.pnp
 .pnp.js

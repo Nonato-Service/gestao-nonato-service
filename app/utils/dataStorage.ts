@@ -2,7 +2,7 @@
 
 import { mergeManuaisFamiliasGrupos } from './manuaisMerge'
 import { isNonatoDemoBuild } from './nonatoDemoMode'
-import { applyRevisionFromSaveResponse, fetchSyncStatus, setLastAcceptedRevision } from './syncRevision'
+import { applyRevisionFromSaveResponse, fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision } from './syncRevision'
 import { safeMergeOfflineSnapshot } from './cadastroSafety'
 import {
   saveManuaisFamiliasGruposToIdb,
@@ -206,7 +206,7 @@ function setItemWithQuotaRecovery(key: string, serialized: string): void {
     /* ignorar */
   }
   if (key === SYNC_QUEUE_KEY) {
-    throw error
+    throw new Error('localStorage sem espaço para a fila de sync')
   }
   localStorage.setItem(key, serialized)
 }

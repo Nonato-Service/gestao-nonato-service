@@ -349,6 +349,7 @@ import {
   aprovarPedidosOrcamentoRelatorio,
   aprovarOrcamentosGeradosRelatorio,
 } from './lib/clienteEquipamentoOrcamentos'
+import type { PedidoOrcamentoRef, PedidoAvulsoRef } from './lib/clienteEquipamentoOrcamentos'
 import type { PedidoAvulsoGuardado } from './components/PedidoOrcamentosAvulsoContent'
 import { rotuloIdEquipamentoCliente, getPagamentoRelatorio } from './lib/clienteDetalheUtils'
 import { ClienteGpsNavButton } from './components/ClienteGpsNavButton'
@@ -25386,7 +25387,7 @@ export default function Dashboard() {
     return novoPedido
   }
 
-  const abrirPdfPedidoOrcamentoRelatorio = (pedido: PedidoOrcamento) => {
+  const abrirPdfPedidoOrcamentoRelatorio = (pedido: PedidoOrcamentoRef) => {
     const emitirComo = pedido.emitirComoCliente || 'cliente'
     const clientePedido = pedido.clienteId
       ? clientes.find((c) => c.id === pedido.clienteId)
@@ -25403,7 +25404,7 @@ export default function Dashboard() {
       const bib = pecasBiblioteca.find((b) => b.codigo === p.codigo)
       return {
         codigo: p.codigo,
-        nome: p.descricao,
+        nome: p.descricao ?? (p as { nome?: string }).nome ?? '',
         quantidade: parseFloat(String(p.quantidade)) || 1,
         imagem: bib?.imagem,
       }
@@ -25465,7 +25466,7 @@ export default function Dashboard() {
     })
   }
 
-  const abrirPdfPedidoOrcamentoAvulso = (pedido: PedidoAvulsoGuardado) => {
+  const abrirPdfPedidoOrcamentoAvulso = (pedido: PedidoAvulsoRef | PedidoAvulsoGuardado) => {
     const emitirComo = pedido.emitirComoCliente || 'cliente'
     const clientePedido = pedido.clienteId
       ? clientes.find((c) => c.id === pedido.clienteId)
@@ -25478,17 +25479,20 @@ export default function Dashboard() {
       cliente: clientePedido,
       nomeClienteFallback: pedido.clienteNomeReal,
     })
-    const blocosFonte =
-      pedido.equipamentosBlocos && pedido.equipamentosBlocos.length > 0
+    const blocosGuardados =
+      'equipamentosBlocos' in pedido && pedido.equipamentosBlocos && pedido.equipamentosBlocos.length > 0
         ? pedido.equipamentosBlocos
-        : [
-            {
-              id: 'legado-' + pedido.codigo,
-              equipamento: null,
-              equipamentoManual: pedido.equipamentoTexto || '',
-              pecas: pedido.pecas,
-            },
-          ]
+        : null
+    const blocosFonte =
+      blocosGuardados ??
+      [
+        {
+          id: 'legado-' + pedido.codigo,
+          equipamento: null,
+          equipamentoManual: pedido.equipamentoTexto || '',
+          pecas: pedido.pecas ?? [],
+        },
+      ]
     const pdfEquipLabels = {
       marca: safeT?.marca,
       modelo: safeT?.modelo,
@@ -25525,7 +25529,7 @@ export default function Dashboard() {
           nome: p.nome,
           quantidade: p.quantidade,
           imagem: p.imagem,
-          observacao: p.incluirObservacao && p.observacao?.trim() ? p.observacao.trim() : undefined,
+          observacao: 'incluirObservacao' in p && p.incluirObservacao && p.observacao?.trim() ? p.observacao.trim() : undefined,
         })),
       }
     })
@@ -25537,12 +25541,12 @@ export default function Dashboard() {
       emitirComo,
       equipamentoTexto: pedido.equipamentoTexto,
       equipamentosBlocos,
-      pecas: pedido.pecas.map((p) => ({
+      pecas: (pedido.pecas ?? []).map((p) => ({
         codigo: p.codigo,
         nome: p.nome,
         quantidade: p.quantidade,
         imagem: p.imagem,
-        observacao: p.incluirObservacao && p.observacao?.trim() ? p.observacao.trim() : undefined,
+        observacao: 'incluirObservacao' in p && p.incluirObservacao && p.observacao?.trim() ? p.observacao.trim() : undefined,
       })),
       logoHtml: getLogoHtmlForReport(),
       empresa: empresaPdf,
