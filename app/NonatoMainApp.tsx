@@ -293,6 +293,15 @@ import { ClienteIdentidadeChips, formatClienteIdentidadeTexto, formatNifClienteE
 import { ClienteListaLinhas } from './components/ClienteListaLinhas'
 import { ClienteDevedorNomeTag } from './components/ClienteDevedorNomeTag'
 import { ClienteAlfabetoPicker } from './components/ClienteAlfabetoPicker'
+import {
+  DocumentoEnvioClienteModal,
+  type DocumentoEnvioClienteConfig,
+} from './components/DocumentoEnvioClienteModal'
+import {
+  findClienteParaEnvio,
+  prefillContactFromCliente,
+  normalizarTelefoneWhatsApp,
+} from './lib/clienteContactEnvio'
 import { AlfabetoIndiceBusca } from './components/AlfabetoIndiceBusca'
 import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
@@ -8401,7 +8410,9 @@ export default function Dashboard() {
   const reciboRapidoFileRef = useRef<HTMLInputElement>(null)
   const reciboRapidoPendingFileRef = useRef<File | null>(null)
   const [showEnvioModal, setShowEnvioModal] = useState(false)
-  const [envioForm, setEnvioForm] = useState<{ templateId: 1|2|3|4|5; whatsapp: boolean; email: boolean; telefone: string; emailDestino: string; tecnicoId: string }>({ templateId: 1, whatsapp: true, email: false, telefone: '', emailDestino: '', tecnicoId: '' })
+  const [envioForm, setEnvioForm] = useState<{ templateId: 1|2|3|4|5; whatsapp: boolean; email: boolean; telefone: string; emailDestino: string; tecnicoId: string; clienteId: string }>({ templateId: 1, whatsapp: true, email: false, telefone: '', emailDestino: '', tecnicoId: '', clienteId: '' })
+  const [docEnvioClienteOpen, setDocEnvioClienteOpen] = useState(false)
+  const [docEnvioClienteModal, setDocEnvioClienteModal] = useState<DocumentoEnvioClienteConfig | null>(null)
   const [buscaOS, setBuscaOS] = useState('')
   /** Gestão financeira › Clientes › Ordem de serviço: recebimento sem fatura e consulta de fatura */
   const [osTabRecebSemFaturaRelId, setOsTabRecebSemFaturaRelId] = useState('')
@@ -17981,6 +17992,37 @@ export default function Dashboard() {
           'Relatórios removidos localmente, mas falhou ao guardar no servidor. Verifique a ligação.'
       )
     }
+  }
+
+  const textoEnvioRelatorioServico = (rel: RelatorioServico) =>
+    `Prezado(a),\n\nSegue em anexo o relatório de serviço n.º ${rel.numero}.\n\nCliente: ${rel.cliente}\nData: ${rel.data}\nEquipamento: ${rel.maquinaModelo || '—'}${rel.numeroMaquina ? ` (${rel.numeroMaquina})` : ''}\n\nAtenciosamente,\nNonato Service`
+
+  const abrirEnvioDocumentoCliente = (opts: {
+    title?: string
+    subject: string
+    body: string
+    clienteId?: string
+    clienteNome?: string
+    relatorio?: RelatorioServico
+    defaultChannel?: 'email' | 'whatsapp'
+    pdfHint?: string
+    onOpenPdf?: () => void
+  }) => {
+    const c = findClienteParaEnvio(clientes, {
+      clienteId: opts.clienteId,
+      clienteNome: opts.clienteNome,
+      relatorio: opts.relatorio,
+    })
+    setDocEnvioClienteModal({
+      title: opts.title,
+      subject: opts.subject,
+      body: opts.body,
+      initialClienteId: c?.id ?? opts.clienteId,
+      defaultChannel: opts.defaultChannel,
+      pdfHint: opts.pdfHint,
+      onOpenPdf: opts.onOpenPdf,
+    })
+    setDocEnvioClienteOpen(true)
   }
 
   const handleDeleteFechamentoRelatorio = (relatorioId: string) => {
@@ -34922,12 +34964,9 @@ export default function Dashboard() {
           )
           persistProtocolosServico(next)
         }
-        const enviarEmailProtocolo = (p: ProtocoloServico) => {
-          const cl = clientes.find(c => c.id === p.clienteId)
+        const corpoEnvioProtocolo = (p: ProtocoloServico) => {
+          const cl = clientes.find((c) => c.id === p.clienteId)
           const nomeCli = (cl?.nomeEmpresa || '').replace(/\s+/g, ' ').trim()
-          const rotEnvio =
-            protoEnvioClienteT?.protocolosServicoEnviarWhatsAppTexto || 'Protocolo de Serviço'
-          const assunto = `${rotEnvio} - ${nomeCli} - ${new Date(p.dataCriacao).toLocaleDateString('pt-PT')}`
           const corpoBase =
             (protoEnvioClienteT?.protocolosServicoEnviarEmailCorpo || 'Segue em anexo o protocolo de serviço.') +
             '\n\n' +
@@ -34937,30 +34976,42 @@ export default function Dashboard() {
               : (p.situacaoDescricao || '').trim()
                 ? ' — ' + (p.situacaoDescricao || '').trim().replace(/\s+/g, ' ').slice(0, 200)
                 : '')
+          const waInstr = protoEnvioClienteT?.protocolosServicoEnvioWhatsappInstrucao || ''
           const instrucao = protoEnvioClienteT?.protocolosServicoEnvioEmailInstrucaoAnexo || ''
-          const corpo = instrucao ? `${corpoBase}\n\n${instrucao}` : corpoBase
-          const to = (cl?.email || '').trim().replace(/\s/g, '')
-          const q = `subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
-          const href = to ? `mailto:${to}?${q}` : `mailto:?${q}`
-          window.open(href, '_blank')
+          const extra = [instrucao, waInstr].filter(Boolean).join('\n\n')
+          return extra ? `${corpoBase}\n\n${extra}` : corpoBase
+        }
+        const assuntoEnvioProtocolo = (p: ProtocoloServico) => {
+          const cl = clientes.find((c) => c.id === p.clienteId)
+          const nomeCli = (cl?.nomeEmpresa || '').replace(/\s+/g, ' ').trim()
+          const rotEnvio =
+            protoEnvioClienteT?.protocolosServicoEnviarWhatsAppTexto || 'Protocolo de Serviço'
+          return `${rotEnvio} - ${nomeCli} - ${new Date(p.dataCriacao).toLocaleDateString('pt-PT')}`
+        }
+        const enviarEmailProtocolo = (p: ProtocoloServico) => {
+          abrirEnvioDocumentoCliente({
+            title: protoT?.protocolosServicoEnviarEmail || 'Enviar protocolo por e-mail',
+            subject: assuntoEnvioProtocolo(p),
+            body: corpoEnvioProtocolo(p),
+            clienteId: p.clienteId,
+            defaultChannel: 'email',
+            onOpenPdf: () => {
+              void gerarPDFProtocolo(p, modeloImpressao)
+            },
+          })
           if (protocoloEstaEmExecucao(p)) marcarProtocoloExecutado(p.id, 'email')
         }
         const enviarWhatsAppProtocolo = (p: ProtocoloServico) => {
-          const cl = clientes.find(c => c.id === p.clienteId)
-          const nomeCli = (cl?.nomeEmpresa || '').replace(/\s+/g, ' ').trim()
-          const waInstr = protoEnvioClienteT?.protocolosServicoEnvioWhatsappInstrucao || ''
-          const texto =
-            (protoEnvioClienteT?.protocolosServicoEnviarWhatsAppTexto || 'Protocolo de Serviço') +
-            ': ' +
-            nomeCli +
-            ' - ' +
-            new Date(p.dataCriacao).toLocaleDateString('pt-PT') +
-            (waInstr ? `\n\n${waInstr}` : '')
-          const num = telefoneDigitsParaWa(cl?.telefones || '')
-          const href = num
-            ? `https://wa.me/${num}?text=${encodeURIComponent(texto)}`
-            : `https://wa.me/?text=${encodeURIComponent(texto)}`
-          window.open(href, '_blank')
+          abrirEnvioDocumentoCliente({
+            title: protoT?.protocolosServicoEnviarWhatsApp || 'Enviar protocolo por WhatsApp',
+            subject: assuntoEnvioProtocolo(p),
+            body: corpoEnvioProtocolo(p),
+            clienteId: p.clienteId,
+            defaultChannel: 'whatsapp',
+            onOpenPdf: () => {
+              void gerarPDFProtocolo(p, modeloImpressao)
+            },
+          })
           if (protocoloEstaEmExecucao(p)) marcarProtocoloExecutado(p.id, 'whatsapp')
         }
         const mostrarFormulario = editingProtocoloServicoId !== null
@@ -39201,6 +39252,46 @@ export default function Dashboard() {
                   <button className="btn-primary" onClick={handleGerarPdfRelatorioServico} style={{ padding: '8px 16px' }}>
                     {safeT?.gerarPDF || 'Gerar'}
                   </button>
+                  <button
+                    className="btn-primary"
+                    type="button"
+                    onClick={() => {
+                      const rel = { ...relatorioServicoForm, id: relatorioServicoForm.id || 'preview' } as RelatorioServico
+                      abrirEnvioDocumentoCliente({
+                        title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
+                        subject: `Relatório de Serviço ${rel.numero || '—'} - ${rel.cliente || 'Cliente'}`,
+                        body: textoEnvioRelatorioServico(rel),
+                        clienteId: rel.clienteId,
+                        clienteNome: rel.cliente,
+                        relatorio: rel,
+                        defaultChannel: 'email',
+                        onOpenPdf: handleGerarPdfRelatorioServico,
+                      })
+                    }}
+                    style={{ padding: '8px 16px', backgroundColor: 'rgba(18, 38, 62, 0.96)', borderColor: 'rgba(80, 160, 255, 0.55)' }}
+                  >
+                    📧 {safeT?.enviarPorEmail || 'E-mail'}
+                  </button>
+                  <button
+                    className="btn-primary"
+                    type="button"
+                    onClick={() => {
+                      const rel = { ...relatorioServicoForm, id: relatorioServicoForm.id || 'preview' } as RelatorioServico
+                      abrirEnvioDocumentoCliente({
+                        title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
+                        subject: `Relatório de Serviço ${rel.numero || '—'} - ${rel.cliente || 'Cliente'}`,
+                        body: textoEnvioRelatorioServico(rel),
+                        clienteId: rel.clienteId,
+                        clienteNome: rel.cliente,
+                        relatorio: rel,
+                        defaultChannel: 'whatsapp',
+                        onOpenPdf: handleGerarPdfRelatorioServico,
+                      })
+                    }}
+                    style={{ padding: '8px 16px', backgroundColor: 'rgba(18, 52, 32, 0.92)', borderColor: 'rgba(37, 211, 102, 0.55)' }}
+                  >
+                    💬 {safeT?.enviarPorWhatsApp || 'WhatsApp'}
+                  </button>
                   <button className="btn-primary" onClick={handleDeletarRelatorioServicoNoFormulario} style={{ padding: '8px 16px', backgroundColor: '#4a1515', borderColor: '#a33' }}>
                     {safeT?.delete || safeT?.deletar || 'Deletar'}
                   </button>
@@ -39640,6 +39731,46 @@ export default function Dashboard() {
                               title={safeT?.gerarPDF || 'Gerar PDF'}
                             >
                               {safeT?.gerarPDF || 'Gerar PDF'}
+                            </button>
+                            <button
+                              className={`rs-card-btn rs-card-btn--email${btnPulseClass}`}
+                              type="button"
+                              onClick={() =>
+                                abrirEnvioDocumentoCliente({
+                                  title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
+                                  subject: `Relatório de Serviço ${relatorio.numero} - ${relatorio.cliente}`,
+                                  body: textoEnvioRelatorioServico(relatorio),
+                                  clienteId: relatorio.clienteId,
+                                  clienteNome: relatorio.cliente,
+                                  relatorio,
+                                  defaultChannel: 'email',
+                                  onOpenPdf: () =>
+                                    handlePrintRelatorio(relatorio, getPdfModelForRelatorio(relatorio.id)),
+                                })
+                              }
+                              title={safeT?.enviarPorEmail || 'Enviar por e-mail'}
+                            >
+                              📧
+                            </button>
+                            <button
+                              className={`rs-card-btn rs-card-btn--wa${btnPulseClass}`}
+                              type="button"
+                              onClick={() =>
+                                abrirEnvioDocumentoCliente({
+                                  title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
+                                  subject: `Relatório de Serviço ${relatorio.numero} - ${relatorio.cliente}`,
+                                  body: textoEnvioRelatorioServico(relatorio),
+                                  clienteId: relatorio.clienteId,
+                                  clienteNome: relatorio.cliente,
+                                  relatorio,
+                                  defaultChannel: 'whatsapp',
+                                  onOpenPdf: () =>
+                                    handlePrintRelatorio(relatorio, getPdfModelForRelatorio(relatorio.id)),
+                                })
+                              }
+                              title={safeT?.enviarPorWhatsApp || 'Enviar por WhatsApp'}
+                            >
+                              💬
                             </button>
                           </div>
                           <button
@@ -51986,26 +52117,39 @@ A1;Peça exemplo;10`}
           printWin.document.write(html)
           printWin.document.close()
         }
-        const handleEnviarWhatsAppFechamento = () => {
-          if (!relatorioSelecionado) return
-          const linhas = itensVisiveisFechamento.map(i => `• ${(i.cod || i.descricao || '').toString().slice(0, 30)}: ${(i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal).toFixed(2)} €`).join('\n')
+        const montarTextoFechamentoEnvio = () => {
+          if (!relatorioSelecionado) return ''
+          const linhas = itensVisiveisFechamento
+            .map(
+              (i) =>
+                `• ${(i.cod || i.descricao || '').toString().slice(0, 40)}: ${(i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal).toFixed(2)} €`
+            )
+            .join('\n')
           const extraIva =
             fechTotIva.incluir && fechTotIva.iva > 0.0001
               ? `\n${(safeT as any)?.totalSemIva || 'Total s/ IVA'}: ${fechTotIva.liquido.toFixed(2)} €\n${(safeT as any)?.valorIva || 'IVA'} (${fechTotIva.taxa}%): ${fechTotIva.iva.toFixed(2)} €\n`
               : '\n'
-          const texto = `Fechamento Relatório ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento(s):\n${textoEquipamentosResumoRelatorioDespesas(relatorioSelecionado, equipamentos, equipamentosClienteDoRelatorioDespesas(relatorioSelecionado, clientes))}\nData: ${relatorioSelecionado.data}\n\nItens:\n${linhas}${extraIva}\n*${(safeT as any)?.totalComIva || 'Total'}: ${fechTotIva.comIva.toFixed(2)} €*`
-          window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener')
+          return `Fechamento Relatório ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento(s):\n${textoEquipamentosResumoRelatorioDespesas(relatorioSelecionado, equipamentos, equipamentosClienteDoRelatorioDespesas(relatorioSelecionado, clientes))}\nData: ${relatorioSelecionado.data}\n\nItens:\n${linhas}${extraIva}\n*${(safeT as any)?.totalComIva || 'Total'}: ${fechTotIva.comIva.toFixed(2)} €*`
+        }
+        const handleEnviarWhatsAppFechamento = () => {
+          if (!relatorioSelecionado) return
+          abrirEnvioDocumentoCliente({
+            title: (safeT as any)?.envioFechamentoTitulo || 'Enviar fechamento ao cliente',
+            subject: `Fechamento Relatório ${relatorioSelecionado.numero} - ${relatorioSelecionado.cliente}`,
+            body: montarTextoFechamentoEnvio(),
+            relatorio: relatorioSelecionado,
+            defaultChannel: 'whatsapp',
+          })
         }
         const handleEnviarEmailFechamento = () => {
           if (!relatorioSelecionado) return
-          const linhas = itensVisiveisFechamento.map(i => `  • ${(i.cod || i.descricao || '').toString().slice(0, 40)}: ${(i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal).toFixed(2)} €`).join('\n')
-          const assunto = `Fechamento Relatório ${relatorioSelecionado.numero} - ${relatorioSelecionado.cliente}`
-          const extraIvaMail =
-            fechTotIva.incluir && fechTotIva.iva > 0.0001
-              ? `\n${(safeT as any)?.totalSemIva || 'Total s/ IVA'}: ${fechTotIva.liquido.toFixed(2)} €\n${(safeT as any)?.valorIva || 'IVA'} (${fechTotIva.taxa}%): ${fechTotIva.iva.toFixed(2)} €\n`
-              : '\n'
-          const corpo = `Fechamento de despesas do relatório de serviço.\n\nRelatório: ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento(s):\n${textoEquipamentosResumoRelatorioDespesas(relatorioSelecionado, equipamentos, equipamentosClienteDoRelatorioDespesas(relatorioSelecionado, clientes))}\nData: ${relatorioSelecionado.data}\n\nItens a cobrar:\n${linhas}${extraIvaMail}\n${(safeT as any)?.totalComIva || 'Total com IVA'}: ${fechTotIva.comIva.toFixed(2)} €\n\n--\nEnviado pela Gestão Técnica Nonato Service`
-          window.location.href = `${mailtoPrefixContabilidade()}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
+          abrirEnvioDocumentoCliente({
+            title: (safeT as any)?.envioFechamentoTitulo || 'Enviar fechamento ao cliente',
+            subject: `Fechamento Relatório ${relatorioSelecionado.numero} - ${relatorioSelecionado.cliente}`,
+            body: `${montarTextoFechamentoEnvio()}\n\n--\nEnviado pela Gestão Técnica Nonato Service`,
+            relatorio: relatorioSelecionado,
+            defaultChannel: 'email',
+          })
         }
         const relatoriosPendentesFechamentoLista = relatoriosServico.filter(r => !fechamentosGuardadosBibliotecaIds.includes(r.id))
         const confirmarOsFechamento = () => {
@@ -54298,7 +54442,40 @@ A1;Peça exemplo;10`}
               <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10001 }} onClick={() => setShowEnvioModal(false)}>
                 <div style={{ background: '#484848', padding: '28px', borderRadius: '16px', border: '2px solid rgba(0,200,83,0.35)', maxWidth: '720px', width: '100%', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
                   <h2 style={{ margin: '0 0 8px', color: '#00c853', fontSize: '22px' }}>{(safeT as any)?.comprovantesEnvioTitulo || 'Enviar por WhatsApp e Email'}</h2>
-                  <p style={{ color: '#aaa', fontSize: '13px', marginBottom: '24px' }}>{(safeT as any)?.comprovantesEnvioDesc || 'Escolha um dos 5 modelos, selecione o canal e gere a mensagem para copiar ou abrir diretamente.'}</p>
+                  <p style={{ color: '#aaa', fontSize: '13px', marginBottom: '16px' }}>{(safeT as any)?.comprovantesEnvioDesc || 'Escolha um dos 5 modelos, selecione o canal e gere a mensagem para copiar ou abrir diretamente.'}</p>
+                  <div style={{ marginBottom: '20px', padding: '12px', background: '#252525', borderRadius: '10px', border: '1px solid #333' }}>
+                    <div style={{ color: '#00c853', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>
+                      {(safeT as any)?.comprovantesEnvioCliente || 'Cliente (preenche e-mail e WhatsApp)'}
+                    </div>
+                    <ClienteAlfabetoPicker
+                      clientes={clientes}
+                      selectedId={envioForm.clienteId}
+                      onSelect={(c) => {
+                        const pre = prefillContactFromCliente(c)
+                        setEnvioForm((f) => ({
+                          ...f,
+                          clienteId: pre.clienteId,
+                          emailDestino: pre.email,
+                          telefone: pre.telefoneWhatsApp,
+                          email: Boolean(pre.email) || f.email,
+                          whatsapp: Boolean(pre.telefoneWhatsApp) || f.whatsapp,
+                        }))
+                      }}
+                      onClear={() =>
+                        setEnvioForm((f) => ({ ...f, clienteId: '', emailDestino: '', telefone: '' }))
+                      }
+                      language={selectedLanguage}
+                      showSelectedChip
+                      listMaxHeight={200}
+                      labels={{
+                        buscar: safeT?.buscarCliente,
+                        clientes: safeT?.clientes,
+                        cliente: safeT?.cliente,
+                        limpar: safeT?.limpar,
+                        toqueFiltrar: (safeT as any)?.clientesAlfabetoToqueFiltrar,
+                      }}
+                    />
+                  </div>
                   {/* 5 modelos */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', marginBottom: '24px' }}>
                     {([1, 2, 3, 4, 5] as const).map(id => (
@@ -69542,13 +69719,10 @@ A1;Peça exemplo;10`}
     )
 
     const aplicarClienteEnvioOrcamento = (c: Cliente) => {
-      setClienteEnvioOrcamentoId(c.id)
-      setEmailDestinatario((c.email || '').trim())
-      const primeiroTel = (c.telefones || '').trim().split(/[/|,;]/)[0].trim() || (c.telefones || '').trim()
-      let digits = primeiroTel.replace(/\D/g, '')
-      if (digits.length === 9 && digits.startsWith('9')) digits = '351' + digits
-      else if (digits.length > 0 && digits.length < 11 && !digits.startsWith('351')) digits = '351' + digits.replace(/^0+/, '')
-      setTelefoneDestinatario(digits)
+      const pre = prefillContactFromCliente(c)
+      setClienteEnvioOrcamentoId(pre.clienteId)
+      setEmailDestinatario(pre.email)
+      setTelefoneDestinatario(pre.telefoneWhatsApp)
     }
 
     const prepararEnvioOrcamentoComCliente = (orcamento: any) => {
@@ -69556,20 +69730,12 @@ A1;Peça exemplo;10`}
       setBuscaClienteEnvioOrcamento('')
       const found = orcamento.clienteId ? clientes.find((x: Cliente) => x.id === orcamento.clienteId) : null
       if (found) {
-        setClienteEnvioOrcamentoId(found.id)
-        setEmailDestinatario((found.email || '').trim())
-        const primeiroTel = (found.telefones || '').trim().split(/[/|,;]/)[0].trim() || (found.telefones || '').trim()
-        let digits = primeiroTel.replace(/\D/g, '')
-        if (digits.length === 9 && digits.startsWith('9')) digits = '351' + digits
-        else if (digits.length > 0 && digits.length < 11 && !digits.startsWith('351')) digits = '351' + digits.replace(/^0+/, '')
-        setTelefoneDestinatario(digits)
+        aplicarClienteEnvioOrcamento(found)
       } else {
         setClienteEnvioOrcamentoId('')
         const dc = orcamento.dadosCliente || {}
         setEmailDestinatario((dc.email || '').trim())
-        let t = String(dc.telefones || '').replace(/\D/g, '')
-        if (t.length === 9 && t.startsWith('9')) t = '351' + t
-        setTelefoneDestinatario(t)
+        setTelefoneDestinatario(normalizarTelefoneWhatsApp(String(dc.telefones || '')))
       }
     }
 
@@ -81889,6 +82055,17 @@ A1;Peça exemplo;10`}
           </div>,
           document.body
         )}
+      <DocumentoEnvioClienteModal
+        open={docEnvioClienteOpen}
+        onClose={() => {
+          setDocEnvioClienteOpen(false)
+          setDocEnvioClienteModal(null)
+        }}
+        config={docEnvioClienteModal}
+        clientes={clientes}
+        language={selectedLanguage}
+        labels={safeT as Record<string, string | undefined>}
+      />
     </WritingAssistFieldContext.Provider>
     </div>
   )

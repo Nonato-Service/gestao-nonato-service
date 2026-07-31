@@ -8567,6 +8567,203 @@ a:focus-visible {
   border-color: rgba(248, 113, 113, 0.4);
 }
 
+.rs-card-btn--email {
+  background: rgba(18, 38, 62, 0.55);
+  border-color: rgba(80, 160, 255, 0.45);
+}
+
+.rs-card-btn--wa {
+  background: rgba(18, 52, 32, 0.55);
+  border-color: rgba(37, 211, 102, 0.45);
+}
+
+.doc-envio-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.doc-envio-modal {
+  width: min(720px, 100%);
+  max-height: 92vh;
+  overflow: auto;
+  background: #3a3a3a;
+  border: 2px solid rgba(0, 200, 83, 0.35);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.doc-envio-modal__title {
+  margin: 0 0 8px;
+  color: #00c853;
+  font-size: 1.35rem;
+}
+
+.doc-envio-modal__hint {
+  margin: 0 0 16px;
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.doc-envio-modal__section-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #00c853;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.doc-envio-modal__cliente {
+  margin-bottom: 16px;
+}
+
+.doc-envio-modal__selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(0, 200, 83, 0.08);
+  border: 1px solid rgba(0, 200, 83, 0.25);
+}
+
+.doc-envio-modal__clear {
+  border: 1px solid #666;
+  background: transparent;
+  color: #ccc;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.doc-envio-modal__canais {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.doc-envio-modal__canal {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #555;
+  background: #2a2a2a;
+  color: #ddd;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.doc-envio-modal__canal.is-active {
+  border-color: rgba(0, 200, 83, 0.65);
+  background: rgba(0, 200, 83, 0.12);
+  color: #fff;
+}
+
+.doc-envio-modal__canal--wa.is-active {
+  border-color: rgba(37, 211, 102, 0.65);
+  background: rgba(37, 211, 102, 0.12);
+}
+
+.doc-envio-modal__field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.doc-envio-modal__field span {
+  display: block;
+  margin-bottom: 6px;
+  color: #ccc;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.doc-envio-modal__field input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 200, 83, 0.35);
+  background: #2f2f2f;
+  color: #fff;
+}
+
+.doc-envio-modal__preview {
+  margin-bottom: 16px;
+}
+
+.doc-envio-modal__subject {
+  margin: 0 0 8px;
+  color: #eee;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.doc-envio-modal__body {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #2f2f2f;
+  color: #ccc;
+  font-size: 13px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.doc-envio-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.doc-envio-modal__actions-right {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.doc-envio-modal__btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.doc-envio-modal__btn--ghost {
+  background: transparent;
+  border-color: #666;
+  color: #ccc;
+}
+
+.doc-envio-modal__btn--pdf {
+  background: rgba(0, 200, 83, 0.15);
+  border-color: #00c853;
+  color: #00c853;
+}
+
+.doc-envio-modal__btn--email {
+  background: rgba(0, 150, 255, 0.2);
+  border-color: #0096ff;
+  color: #0096ff;
+}
+
+.doc-envio-modal__btn--wa {
+  background: rgba(37, 211, 102, 0.2);
+  border-color: #25d366;
+  color: #25d366;
+}
+
 .rs-card-select--v2 {
   min-height: 36px !important;
   border-radius: 10px !important;
