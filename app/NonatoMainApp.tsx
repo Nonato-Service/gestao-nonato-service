@@ -192,6 +192,11 @@ import {
   nomesClienteCorrespondem,
 } from './lib/bibliotecaRelatoriosRecovery'
 import {
+  coletarIdsRelatoriosClienteParaExclusao,
+  isClienteBibliotecaOrfaos,
+  type ClienteExclusaoAlvo,
+} from './lib/clienteExclusao'
+import {
   snapshotRelatoriosServicoBackup,
   restaurarRelatoriosDeBackupsLocais,
   coletarRelatoriosDeTodasFontes,
@@ -17888,52 +17893,93 @@ export default function Dashboard() {
     return `${meses[parseInt(mesNum) - 1]} ${ano}`
   }
 
-  const handleDeleteCliente = (clienteId: string) => {
-    if (window.confirm((t as any).confirmDeleteCliente || 'Tem certeza que deseja excluir este cliente? Os relatórios e despesas associados também serão removidos.')) {
-      const updatedClientes = clientes.filter(c => c.id !== clienteId)
+  const handleDeleteCliente = async (
+    clienteId: string,
+    opts?: { nomeEmpresa?: string }
+  ) => {
+    const cliente = clientes.find((c) => c.id === clienteId)
+    const pastaOrfaos = isClienteBibliotecaOrfaos(clienteId)
+    if (!cliente && !pastaOrfaos) return
+
+    const alvoExclusao: ClienteExclusaoAlvo = {
+      id: clienteId,
+      nomeEmpresa: cliente?.nomeEmpresa ?? opts?.nomeEmpresa ?? '',
+    }
+
+    if (
+      !window.confirm(
+        (t as any).confirmDeleteCliente ||
+          'Tem certeza que deseja excluir este cliente? Os relatórios e despesas associados também serão removidos.'
+      )
+    ) {
+      return
+    }
+
+    const reportIdsDoCliente = coletarIdsRelatoriosClienteParaExclusao(
+      alvoExclusao,
+      relatoriosServico,
+      clientes
+    )
+
+    if (cliente) {
+      const updatedClientes = clientes.filter((c) => c.id !== clienteId)
       setClientes(updatedClientes)
-      saveData('nonato-clientes', updatedClientes)
-      // Remover relatórios de serviço e fechamentos deste cliente
-      const reportIdsDoCliente = relatoriosServico.filter(r => r.clienteId === clienteId).map(r => r.id)
-      if (reportIdsDoCliente.length > 0) {
-        removerFechamentoFluxoParaRelatorios(reportIdsDoCliente)
-        const updatedRelatorios = relatoriosServico.filter(r => r.clienteId !== clienteId)
-        setRelatoriosServico(updatedRelatorios)
-        saveData('nonato-relatorios-servico', updatedRelatorios)
-        const nextFechamentos = { ...fechamentosRelatorios }
-        reportIdsDoCliente.forEach(id => { delete nextFechamentos[id] })
-        setFechamentosRelatorios(nextFechamentos)
-        saveData('nonato-fechamentos-relatorios', nextFechamentos)
-        setFechamentosGuardadosBibliotecaIds(prev => {
-          const next = prev.filter(id => !reportIdsDoCliente.includes(id))
-          saveData('nonato-fechamentos-guardados-biblioteca', next)
-          return next
-        })
-        setResumoCobrancaDecisaoPorRelatorio(prev => {
-          const next = { ...prev }
-          reportIdsDoCliente.forEach(id => {
-            delete next[id]
-          })
-          void saveData(RESUMO_COBRANCA_DECISAO_KEY, next)
-          return next
-        })
-        setFechamentoItensOmitidosPorRelatorio(prev => {
-          const next = { ...prev }
-          reportIdsDoCliente.forEach(id => {
-            delete next[id]
-          })
-          void saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, next)
-          return next
-        })
-        setFechamentoIvaPorRelatorioId(prev => {
-          const next = { ...prev }
-          reportIdsDoCliente.forEach(id => {
-            delete next[id]
-          })
-          void saveData(FECHAMENTO_IVA_POR_RELATORIO_KEY, next)
-          return next
-        })
+      const clientesOk = await saveData('nonato-clientes', updatedClientes, true, true)
+      if (!clientesOk) {
+        window.alert(
+          (t as any).erroSalvarServidor ||
+            'Cliente removido localmente, mas falhou ao guardar no servidor. Verifique a ligação.'
+        )
       }
+    }
+
+    if (reportIdsDoCliente.length === 0) return
+
+    removerFechamentoFluxoParaRelatorios(reportIdsDoCliente)
+    const updatedRelatorios = relatoriosServico.filter((r) => !reportIdsDoCliente.includes(r.id))
+    setRelatoriosServico(updatedRelatorios)
+    const relOk = await saveData('nonato-relatorios-servico', updatedRelatorios, true, true)
+    const nextFechamentos = { ...fechamentosRelatorios }
+    reportIdsDoCliente.forEach((id) => {
+      delete nextFechamentos[id]
+    })
+    setFechamentosRelatorios(nextFechamentos)
+    await saveData('nonato-fechamentos-relatorios', nextFechamentos, true, true)
+    setFechamentosGuardadosBibliotecaIds((prev) => {
+      const next = prev.filter((id) => !reportIdsDoCliente.includes(id))
+      void saveData('nonato-fechamentos-guardados-biblioteca', next, true, true)
+      return next
+    })
+    setResumoCobrancaDecisaoPorRelatorio((prev) => {
+      const next = { ...prev }
+      reportIdsDoCliente.forEach((id) => {
+        delete next[id]
+      })
+      void saveData(RESUMO_COBRANCA_DECISAO_KEY, next, true, true)
+      return next
+    })
+    setFechamentoItensOmitidosPorRelatorio((prev) => {
+      const next = { ...prev }
+      reportIdsDoCliente.forEach((id) => {
+        delete next[id]
+      })
+      void saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, next, true, true)
+      return next
+    })
+    setFechamentoIvaPorRelatorioId((prev) => {
+      const next = { ...prev }
+      reportIdsDoCliente.forEach((id) => {
+        delete next[id]
+      })
+      void saveData(FECHAMENTO_IVA_POR_RELATORIO_KEY, next, true, true)
+      return next
+    })
+
+    if (!relOk) {
+      window.alert(
+        (t as any).erroSalvarServidor ||
+          'Relatórios removidos localmente, mas falhou ao guardar no servidor. Verifique a ligação.'
+      )
     }
   }
 
@@ -67516,7 +67562,7 @@ A1;Peça exemplo;10`}
                             onClick={e => {
                               e.preventDefault()
                               e.stopPropagation()
-                              handleDeleteCliente(cliente.id)
+                              handleDeleteCliente(cliente.id, { nomeEmpresa: cliente.nomeEmpresa })
                             }}
                             title={txBib.excluirPastaBiblioteca || 'Excluir pasta (e cliente)'}
                           >
