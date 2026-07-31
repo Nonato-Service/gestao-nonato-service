@@ -9430,8 +9430,8 @@ export default function Dashboard() {
     equipamentoOrigem: 'cliente',
   })
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false)
-  /** Largura ≤1024px: menu em gaveta, conteúdo a largura total (tablet/telemóvel) */
-  const COMPACT_LAYOUT_MAX_PX = 1024
+  /** Largura ≤768px: menu em gaveta, header mobile (telemóvel / telemóvel landscape estreito) */
+  const COMPACT_LAYOUT_MAX_PX = 768
   const [isCompactLayout, setIsCompactLayout] = useState(() => {
     if (typeof window === 'undefined') return false
     return (
@@ -9898,6 +9898,7 @@ export default function Dashboard() {
       const compact = window.innerWidth <= COMPACT_LAYOUT_MAX_PX
       setIsCompactLayout(compact)
       document.documentElement.classList.toggle('app-compact-layout-early', compact)
+      document.documentElement.classList.toggle('app-phone-layout', compact)
       if (!compact) setMobileMenuOpen(false)
     }
     q()

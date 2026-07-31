@@ -4208,8 +4208,8 @@ div[style*="border-bottom"][style*="255, 0, 0.2"] > div:last-child {
 :root {
   --ns-bp-phone: 480px;
   --ns-bp-tablet: 768px;
-  --ns-bp-compact: 1024px;
-  --ns-bp-desktop: 1025px;
+  --ns-bp-compact: 768px;
+  --ns-bp-desktop: 769px;
 }
 
 /* Garantir que nada ultrapasse a largura do ecrã */
@@ -4221,7 +4221,7 @@ html, body {
 
 /*
  * Antes da hidratação React: script em layout.tsx aplica .app-compact-layout-early no <html>
- * quando largura ≤1024 — evita flash de sidebar desktop no telemóvel/tablet.
+ * quando largura ≤768 — evita flash de sidebar desktop no telemóvel.
  */
 html.app-compact-layout-early body {
   overscroll-behavior: none;
@@ -4923,15 +4923,14 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
-/* Quando há abas abertas, reservar espaço para o dock flutuante (desktop também). */
+/* Quando há abas abertas, reservar espaço para o dock (só no scroll interno — ver layout-shell-fix.css) */
 .app-layout.app-has-bottom-tabs {
-  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+  padding-bottom: 0 !important;
 }
 
-/* Conteúdo rolável: nunca ficar por baixo do dock de abas nem cortar botões no fim */
 .app-has-bottom-tabs .tab-inner-scroll {
-  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
-  scroll-padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)) !important;
+  scroll-padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
 }
 
 /* Agenda técnica: lembrete visual (pulso suave) em Pendências e Pré-agendamento */
@@ -6309,7 +6308,7 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   font-style: italic;
 }
 
-/* ========== Layout compacto (≤1024px): menu em gaveta, área principal a largura total ========== */
+/* ========== Layout compacto (≤768px): menu em gaveta, área principal a largura total ========== */
 .app-compact-layout {
   flex-direction: column !important;
   padding-top: calc(52px + env(safe-area-inset-top, 0px)) !important;

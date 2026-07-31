@@ -70,7 +70,7 @@ export function MobileBrowserZoomPan() {
     const isTouchMobile = () => {
       if (window.innerWidth > 1280) return false
       if (window.matchMedia('(pointer: coarse)').matches) return true
-      return navigator.maxTouchPoints > 0 && window.innerWidth <= 1024
+      return navigator.maxTouchPoints > 0 && window.innerWidth <= 768
     }
 
     const panRoot = () => document.getElementById(PAN_ROOT_ID)
