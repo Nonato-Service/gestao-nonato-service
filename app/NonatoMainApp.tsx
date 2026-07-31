@@ -43758,7 +43758,7 @@ export default function Dashboard() {
                         <div className="biblioteca-hub-toolbar__filter-quick">
                           <button
                             type="button"
-                            className={`biblioteca-hub-toolbar__filter-chip${filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA ? ' biblioteca-hub-toolbar__filter-chip--active' : ''}`}
+                            className={`biblioteca-hub-toolbar__filter-chip biblioteca-hub-toolbar__filter-chip--sem-categoria${filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA ? ' biblioteca-hub-toolbar__filter-chip--active' : ''}`}
                             onClick={() => {
                               setFiltroGrupoBiblioteca(BIBLIOTECA_FILTRO_SEM_CATEGORIA)
                               setFiltroSubgrupoBiblioteca('')
