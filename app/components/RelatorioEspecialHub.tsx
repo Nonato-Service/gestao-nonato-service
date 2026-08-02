@@ -273,7 +273,7 @@ export default function RelatorioEspecialHub({
                         <button type="button" className="btn-secondary" onClick={() => abrirEditar(rel)}>
                           {t.edit || 'Editar'}
                         </button>
-                        <button type="button" className="btn-secondary" onClick={() => imprimirRelatorioEspecialPdf(prep)}>
+                        <button type="button" className="btn-secondary" onClick={() => imprimirRelatorioEspecialPdf(prep, t)}>
                           🖨 {t.print || 'PDF'}
                         </button>
                         <button type="button" className="btn-primary" onClick={() => abrirFechamento(rel)}>
@@ -355,7 +355,7 @@ export default function RelatorioEspecialHub({
           <button type="button" className="btn-primary" disabled={salvando} onClick={guardarFechamento}>
             {salvando ? '…' : t.save || 'Guardar fechamento'}
           </button>
-          <button type="button" className="btn-secondary" onClick={() => imprimirRelatorioEspecialPdf(formComTotais)}>
+          <button type="button" className="btn-secondary" onClick={() => imprimirRelatorioEspecialPdf(formComTotais, t)}>
             🖨 PDF
           </button>
         </div>
@@ -451,7 +451,7 @@ export default function RelatorioEspecialHub({
               {MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES})
             </h3>
             <p className="relatorio-equipamentos-block__lead">
-              {t.relatorioEquipamentosAjuda ||
+              {t.relatorioEspecialEquipamentosAjuda ||
                 'Adicione equipamentos do cliente ou busque na biblioteca do armazém. Edite ID, modelo e n.º série.'}
             </p>
           </div>
@@ -540,7 +540,7 @@ export default function RelatorioEspecialHub({
                           }}
                         />
                         <span className="relatorio-equipamento-card__origem-radio-mark" aria-hidden="true" />
-                        <span>{t.relatorioEquipOrigemArmazem || 'Armazém — biblioteca de equipamentos'}</span>
+                        <span>{t.relatorioEspecialEquipOrigemArmazem || t.relatorioEquipOrigemArmazem || 'Armazém — biblioteca de equipamentos'}</span>
                       </label>
                     </div>
                   </div>
@@ -747,7 +747,7 @@ export default function RelatorioEspecialHub({
 
                   <div className="relatorio-especial-dia-secao">
                     <h4 className="relatorio-especial-dia-secao__titulo">
-                      🕐 {t.horariosIda || 'Ida ao cliente'}
+                      🕐 {t.relatorioEspecialIdaCliente || t.horariosIda || 'Ida ao cliente'}
                     </h4>
                     <div className="relatorio-especial-dia-secao__grid">
                       <div>
@@ -777,7 +777,7 @@ export default function RelatorioEspecialHub({
 
                   <div className="relatorio-especial-dia-secao">
                     <h4 className="relatorio-especial-dia-secao__titulo">
-                      🕐 {t.horarioServico || 'Hora trabalhada'} ({t.relatorioEspecialHorasPorEquipamento || 'por equipamento'}) — máx.{' '}
+                      🕐 {t.relatorioEspecialHoraTrabalhada || t.horarioServico || 'Hora trabalhada'} ({t.relatorioEspecialHorasPorEquipamento || 'por equipamento'}) — máx.{' '}
                       {MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA}/dia
                     </h4>
                     <p className="relatorio-especial-dia-secao__ajuda">
@@ -867,7 +867,7 @@ export default function RelatorioEspecialHub({
                             />
                           </div>
                           <div>
-                            <label>{t.total || 'Total líquido'}</label>
+                            <label>{t.totalLiquido || t.total || 'Total líquido'}</label>
                             <input type="text" readOnly value={linhaCalc.horasDuracao || '—'} style={{ ...inputStyle, opacity: 0.85 }} />
                           </div>
                           <button
@@ -918,7 +918,7 @@ export default function RelatorioEspecialHub({
 
                   <div className="relatorio-especial-dia-secao">
                     <h4 className="relatorio-especial-dia-secao__titulo">
-                      🕐 {t.horariosRetorno || 'Saída do cliente'}
+                      🕐 {t.relatorioEspecialSaidaCliente || t.horariosRetorno || 'Saída do cliente'}
                     </h4>
                     <div className="relatorio-especial-dia-secao__grid">
                       <div>
@@ -960,7 +960,9 @@ export default function RelatorioEspecialHub({
                       </div>
                     </div>
                     <p className="relatorio-especial-dia-secao__ajuda">
-                      {t.tempoPausaDescricao || 'Ex.: 01:00 desconta 1 hora do total trabalhado (hora corrida menos almoço).'}
+                      {t.relatorioEspecialTempoAlmocoDescricao ||
+                        t.tempoPausaDescricao ||
+                        'Ex.: 01:00 desconta 1 hora do total trabalhado (hora corrida menos almoço).'}
                     </p>
                   </div>
 
@@ -1054,7 +1056,7 @@ export default function RelatorioEspecialHub({
         <button type="button" className="btn-primary" disabled={salvando} onClick={persistir}>
           {salvando ? '…' : t.save || 'Guardar'}
         </button>
-        <button type="button" className="btn-secondary" onClick={() => imprimirRelatorioEspecialPdf(formComTotais)}>
+        <button type="button" className="btn-secondary" onClick={() => imprimirRelatorioEspecialPdf(formComTotais, t)}>
           🖨 PDF
         </button>
       </div>
