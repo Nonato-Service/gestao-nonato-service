@@ -41402,6 +41402,104 @@ html body .relatorio-especial-root.tab-glass-root.ns-ui-v2 .btn-secondary:not(.b
   cursor: not-allowed;
 }
 
+/* Relatórios Especiais — botões e layout padronizados */
+html body .relatorio-especial-root .btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn),
+html body .relatorio-especial-root .btn-secondary:not(.btn-danger):not(.relatorio-equipamentos-block__add),
+html body .relatorio-especial-root .btn-danger--inline {
+  min-height: 40px !important;
+  padding: 10px 18px !important;
+  font-size: 14px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+}
+
+html body .relatorio-especial-root .relatorio-equipamentos-block__add {
+  min-height: 40px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+html body .relatorio-especial-root .relatorio-especial-dia-card {
+  margin-top: 10px;
+  border: 1px solid rgba(0, 200, 83, 0.25);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+html body .relatorio-especial-root .relatorio-especial-dia-card__toggle {
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  background: rgba(0, 50, 30, 0.4);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-dia-card__chevron {
+  float: right;
+  opacity: 0.75;
+}
+
+html body .relatorio-especial-root .relatorio-especial-dia-card__body {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+html body .relatorio-especial-root .relatorio-especial-dia-secao {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html body .relatorio-especial-root .relatorio-especial-dia-secao__titulo {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+html body .relatorio-especial-root .relatorio-especial-dia-secao__ajuda {
+  margin: 0 0 10px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.45;
+}
+
+html body .relatorio-especial-root .relatorio-especial-dia-secao__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-dia-secao__grid--almoco {
+  max-width: 220px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-hora-eq-linha {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.4fr) repeat(3, minmax(100px, 1fr)) auto;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: end;
+}
+
+@media (max-width: 720px) {
+  html body .relatorio-especial-root .relatorio-especial-hora-eq-linha {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 html body .biblioteca-pecas-hub .biblioteca-btn--green,
 html body .biblioteca-pecas-hub .biblioteca-btn--green:hover,
 html body .biblioteca-pecas-hub .biblioteca-btn--green:active {

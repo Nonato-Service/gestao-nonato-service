@@ -51656,6 +51656,7 @@ A1;Peça exemplo;10`}
               relatorios={relatoriosEspeciais}
               onSaveAll={salvarRelatoriosEspeciais}
               clientes={clientesOrdenadosAlfabeticamente}
+              equipamentosArmazem={equipamentos}
               tecnicos={tecnicos}
               selectedLanguage={selectedLanguage}
               labels={safeT as Record<string, string | undefined>}

@@ -22,10 +22,17 @@ import {
 } from '../lib/relatorioEspecialTypes'
 import {
   criarEquipamentoRelatorioVazio,
+  equipamentoArmazemEstaAtivo,
+  resolverChaveEquipamentoClienteRelatorio,
+  resolverEquipamentoRelatorioParaExibicao,
+  resolverIdEquipamentoCliente,
+  resolverIdEquipamentoVisivelCliente,
+  type EquipamentoArmazemBaixaLookup,
+  type EquipamentoClienteIdLookup,
   type RelatorioEquipamentoRef,
 } from '../lib/relatorioServicoEquipamentos'
 
-type ClienteMin = ClienteAlfabetoRow
+type ClienteMin = ClienteAlfabetoRow & { equipamentos?: EquipamentoClienteIdLookup[] }
 
 type TecnicoMin = { id: string; name: string }
 
@@ -33,6 +40,7 @@ export type RelatorioEspecialHubProps = {
   relatorios: RelatorioEspecial[]
   onSaveAll: (lista: RelatorioEspecial[]) => Promise<boolean>
   clientes: ClienteMin[]
+  equipamentosArmazem: EquipamentoArmazemBaixaLookup[]
   tecnicos: TecnicoMin[]
   selectedLanguage: string
   labels: Record<string, string | undefined>
@@ -58,6 +66,7 @@ export default function RelatorioEspecialHub({
   relatorios,
   onSaveAll,
   clientes,
+  equipamentosArmazem,
   tecnicos,
   selectedLanguage,
   labels,
@@ -80,6 +89,15 @@ export default function RelatorioEspecialHub({
     () => [...clientes].sort((a, b) => a.nomeEmpresa.localeCompare(b.nomeEmpresa, 'pt')),
     [clientes]
   )
+
+  const equipamentosAtivos = useMemo(
+    () => equipamentosArmazem.filter(equipamentoArmazemEstaAtivo),
+    [equipamentosArmazem]
+  )
+
+  const atualizarEquipamentos = useCallback((next: RelatorioEquipamentoRef[]) => {
+    setForm((prev) => ({ ...prev, equipamentos: next }))
+  }, [])
 
   const abrirNovo = useCallback(() => {
     const vazio = criarRelatorioEspecialVazio()
@@ -140,10 +158,7 @@ export default function RelatorioEspecialHub({
       )
       return
     }
-    setForm((prev) => ({
-      ...prev,
-      equipamentos: [...(prev.equipamentos || []), criarEquipamentoRelatorioVazio('cliente')],
-    }))
+    atualizarEquipamentos([...(form.equipamentos || []), criarEquipamentoRelatorioVazio('cliente')])
   }
 
   const adicionarDia = () => {
@@ -216,11 +231,11 @@ export default function RelatorioEspecialHub({
   if (modo === 'lista') {
     return (
       <div className="relatorio-especial-hub" style={{ padding: '16px 0' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginBottom: 20 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginBottom: 20 }} className="relatorio-especial-hub__head">
           <h2 style={{ margin: 0, flex: '1 1 200px' }}>
             {t.relatorioEspecialTitle || 'Relatórios Especiais'}
           </h2>
-          <button type="button" className="btn-primary" onClick={abrirNovo}>
+          <button type="button" className="btn-primary relatorio-equipamentos-block__add" onClick={abrirNovo}>
             ➕ {t.relatorioEspecialNovo || 'Novo relatório especial'}
           </button>
         </div>
@@ -349,6 +364,9 @@ export default function RelatorioEspecialHub({
   }
 
   const diasOrdenados = sortDiasTrabalhoEspecialCronologicamente(form.diasTrabalho || [])
+  const clienteIdEfetivo = form.clienteId || ''
+  const clienteEquipamentos = clientes.find((c) => c.id === clienteIdEfetivo)?.equipamentos ?? []
+  const podeAdicionarEquip = (form.equipamentos?.length || 0) < MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES
 
   return (
     <div className="relatorio-especial-form" style={{ padding: '16px 0' }}>
@@ -425,104 +443,277 @@ export default function RelatorioEspecialHub({
         </div>
       </section>
 
-      <section style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-          <h3 style={{ margin: 0 }}>
-            {t.relatorioEspecialEquipamentos || 'Equipamentos'} ({form.equipamentos?.length || 0}/{MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES})
-          </h3>
-          <button type="button" className="btn-secondary" onClick={adicionarEquipamento}>
-            + {t.adicionar || 'Adicionar'}
+      <section style={{ marginBottom: 24 }} className="relatorio-equipamentos-block">
+        <div className="relatorio-equipamentos-block__head">
+          <div>
+            <h3 className="relatorio-equipamentos-block__title" style={{ margin: 0 }}>
+              {t.relatorioEspecialEquipamentos || 'Equipamentos'} ({form.equipamentos?.length || 0}/
+              {MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES})
+            </h3>
+            <p className="relatorio-equipamentos-block__lead">
+              {t.relatorioEquipamentosAjuda ||
+                'Adicione equipamentos do cliente ou busque na biblioteca do armazém. Edite ID, modelo e n.º série.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn-secondary relatorio-equipamentos-block__add"
+            disabled={!podeAdicionarEquip}
+            onClick={adicionarEquipamento}
+          >
+            + {t.relatorioAdicionarEquipamento || 'Adicionar equipamento'}
           </button>
         </div>
-        {(form.equipamentos || []).map((eq, idx) => (
-          <div
-            key={eq.uid}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-              gap: 8,
-              marginTop: 10,
-              padding: 10,
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: 8,
-            }}
-          >
-            <div>
-              <label>ID</label>
-              <input
-                type="text"
-                value={eq.equipamentoId}
-                onChange={(e) => {
-                  const v = e.target.value
-                  setForm((prev) => ({
-                    ...prev,
-                    equipamentos: prev.equipamentos!.map((x) => (x.uid === eq.uid ? { ...x, equipamentoId: v } : x)),
-                  }))
-                }}
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label>{t.modelo || 'Modelo'}</label>
-              <input
-                type="text"
-                value={eq.maquinaModelo}
-                onChange={(e) => {
-                  const v = e.target.value
-                  setForm((prev) => ({
-                    ...prev,
-                    equipamentos: prev.equipamentos!.map((x) => (x.uid === eq.uid ? { ...x, maquinaModelo: v } : x)),
-                  }))
-                }}
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label>S/N</label>
-              <input
-                type="text"
-                value={eq.numeroMaquina}
-                onChange={(e) => {
-                  const v = e.target.value
-                  setForm((prev) => ({
-                    ...prev,
-                    equipamentos: prev.equipamentos!.map((x) => (x.uid === eq.uid ? { ...x, numeroMaquina: v } : x)),
-                  }))
-                }}
-                style={inputStyle}
-              />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-              <button
-                type="button"
-                className="btn-danger"
-                onClick={() =>
-                  setForm((prev) => ({
-                    ...prev,
-                    equipamentos: prev.equipamentos!.filter((x) => x.uid !== eq.uid),
-                  }))
-                }
-              >
-                ✕
-              </button>
-            </div>
-            <div style={{ gridColumn: '1 / -1', fontSize: 11, color: '#888' }}>
-              {labelEquipamentoCurto(eq, idx)}
-            </div>
+
+        {(form.equipamentos || []).length === 0 ? (
+          <p className="relatorio-equipamentos-block__empty">
+            {t.relatorioSemEquipamentos || 'Nenhum equipamento adicionado.'}
+          </p>
+        ) : (
+          <div className="relatorio-equipamentos-list">
+            {(form.equipamentos || []).map((eq, eqIdx) => (
+              <div key={eq.uid} className="relatorio-equipamento-card">
+                <div className="relatorio-equipamento-card__head">
+                  <span className="relatorio-equipamento-card__badge">
+                    {(t.relatorioEquipamentoNumero || 'Equipamento {n}').replace('{n}', String(eqIdx + 1))}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-danger btn-danger--inline relatorio-equipamento-card__remove"
+                    onClick={() => atualizarEquipamentos((form.equipamentos || []).filter((x) => x.uid !== eq.uid))}
+                  >
+                    {t.removerEquipamentoRelatorio || 'Remover'}
+                  </button>
+                </div>
+
+                <div className="relatorio-equipamento-card__grid">
+                  <div className="relatorio-equipamento-card__field--full">
+                    <span className="relatorio-equipamento-card__label relatorio-equipamento-card__label--blue">
+                      {t.relatorioEquipamentoOrigem || 'Origem do equipamento'}
+                    </span>
+                    <div className="relatorio-equipamento-card__origem-radios" role="radiogroup">
+                      <label className="relatorio-equipamento-card__origem-radio">
+                        <input
+                          type="radio"
+                          name={`re-eq-origem-${eq.uid}`}
+                          value="cliente"
+                          checked={eq.equipamentoOrigem === 'cliente'}
+                          onChange={() => {
+                            atualizarEquipamentos(
+                              (form.equipamentos || []).map((item) =>
+                                item.uid === eq.uid
+                                  ? {
+                                      ...item,
+                                      equipamentoOrigem: 'cliente' as const,
+                                      equipamentoId: '',
+                                      numeroMaquina: '',
+                                      maquinaModelo: '',
+                                    }
+                                  : item
+                              )
+                            )
+                          }}
+                        />
+                        <span className="relatorio-equipamento-card__origem-radio-mark" aria-hidden="true" />
+                        <span>{t.relatorioEquipOrigemCliente || 'Cliente — equipamentos do cadastro'}</span>
+                      </label>
+                      <label className="relatorio-equipamento-card__origem-radio">
+                        <input
+                          type="radio"
+                          name={`re-eq-origem-${eq.uid}`}
+                          value="armazem"
+                          checked={eq.equipamentoOrigem === 'armazem'}
+                          onChange={() => {
+                            atualizarEquipamentos(
+                              (form.equipamentos || []).map((item) =>
+                                item.uid === eq.uid
+                                  ? {
+                                      ...item,
+                                      equipamentoOrigem: 'armazem' as const,
+                                      equipamentoId: '',
+                                      numeroMaquina: '',
+                                      maquinaModelo: '',
+                                    }
+                                  : item
+                              )
+                            )
+                          }}
+                        />
+                        <span className="relatorio-equipamento-card__origem-radio-mark" aria-hidden="true" />
+                        <span>{t.relatorioEquipOrigemArmazem || 'Armazém — biblioteca de equipamentos'}</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="relatorio-equipamento-card__field--full">
+                    <label className="relatorio-equipamento-card__label">
+                      {eq.equipamentoOrigem === 'armazem'
+                        ? t.equipamentoArmazemRelatorio || 'Equipamento do armazém'
+                        : t.equipamento || t.selecioneEquipamento || 'Equipamento'}
+                    </label>
+                    {eq.equipamentoOrigem === 'armazem' ? (
+                      <select
+                        value={eq.equipamentoId || ''}
+                        onChange={(e) => {
+                          const found = equipamentosAtivos.find((x) => x.id === e.target.value)
+                          atualizarEquipamentos(
+                            (form.equipamentos || []).map((item) =>
+                              item.uid === eq.uid
+                                ? {
+                                    ...item,
+                                    equipamentoOrigem: 'armazem' as const,
+                                    equipamentoId: found?.id || '',
+                                    numeroMaquina: found?.numeroSerie || '',
+                                    maquinaModelo: found ? `${found.modelo} ${found.marca}`.trim() : '',
+                                  }
+                                : item
+                            )
+                          )
+                        }}
+                        className="relatorio-equipamento-card__select relatorio-equipamento-card__select--blue"
+                      >
+                        <option value="">{t.selecioneEquipamentoArmazem || 'Selecione equipamento do armazém'}</option>
+                        {equipamentosAtivos.map((itemEq) => (
+                          <option key={itemEq.id} value={itemEq.id}>
+                            [Armazém] ID {itemEq.id} · {itemEq.modelo} {itemEq.marca}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <select
+                        value={
+                          clienteIdEfetivo
+                            ? resolverChaveEquipamentoClienteRelatorio(
+                                eq.equipamentoId || '',
+                                clienteEquipamentos,
+                                equipamentosArmazem
+                              )
+                            : eq.equipamentoId || ''
+                        }
+                        onChange={(e) => {
+                          const chave = e.target.value
+                          const selectedEquipamento = clienteEquipamentos.find(
+                            (itemCli, idxCli) => resolverIdEquipamentoCliente(itemCli, idxCli) === chave
+                          )
+                          const idVisivel = selectedEquipamento
+                            ? resolverIdEquipamentoVisivelCliente(selectedEquipamento, equipamentosArmazem)
+                            : chave
+                          atualizarEquipamentos(
+                            (form.equipamentos || []).map((item) =>
+                              item.uid === eq.uid
+                                ? {
+                                    ...item,
+                                    equipamentoOrigem: 'cliente' as const,
+                                    equipamentoId: idVisivel || chave,
+                                    numeroMaquina: selectedEquipamento?.numeroSerie || '',
+                                    maquinaModelo: selectedEquipamento
+                                      ? `${selectedEquipamento.modelo} ${selectedEquipamento.marca}`.trim()
+                                      : '',
+                                  }
+                                : item
+                            )
+                          )
+                        }}
+                        className="relatorio-equipamento-card__select"
+                        disabled={!clienteIdEfetivo}
+                      >
+                        <option value="">{t.selecioneEquipamento || 'Selecione o equipamento'}</option>
+                        {clienteIdEfetivo &&
+                          clienteEquipamentos.map((itemCli, idxCli) => {
+                            const eqKey = resolverIdEquipamentoCliente(itemCli, idxCli)
+                            const idVisivel = resolverIdEquipamentoVisivelCliente(itemCli, equipamentosArmazem)
+                            return (
+                              <option key={eqKey} value={eqKey}>
+                                ID {idVisivel || eqKey} · {itemCli.modelo} {itemCli.marca}
+                              </option>
+                            )
+                          })}
+                      </select>
+                    )}
+                  </div>
+
+                  <div className="relatorio-equipamento-card__field--full">
+                    <label className="relatorio-equipamento-card__label relatorio-equipamento-card__label--id">
+                      {t.relatorioEquipamentoIdLabel || 'ID do equipamento'}
+                    </label>
+                    <input
+                      type="text"
+                      value={eq.equipamentoId || ''}
+                      placeholder={t.relatorioEquipamentoIdPlaceholder || 'ID interno, armazém ou n.º série'}
+                      onChange={(e) => {
+                        atualizarEquipamentos(
+                          (form.equipamentos || []).map((item) =>
+                            item.uid === eq.uid ? { ...item, equipamentoId: e.target.value.trim() } : item
+                          )
+                        )
+                      }}
+                      className="relatorio-equipamento-card__input relatorio-equipamento-card__input--id"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="relatorio-equipamento-card__label">{t.modelo || 'Modelo'}</label>
+                    <input
+                      type="text"
+                      value={eq.maquinaModelo}
+                      onChange={(e) => {
+                        atualizarEquipamentos(
+                          (form.equipamentos || []).map((item) =>
+                            item.uid === eq.uid ? { ...item, maquinaModelo: e.target.value } : item
+                          )
+                        )
+                      }}
+                      className="relatorio-equipamento-card__input"
+                    />
+                  </div>
+                  <div>
+                    <label className="relatorio-equipamento-card__label">S/N</label>
+                    <input
+                      type="text"
+                      value={eq.numeroMaquina}
+                      onChange={(e) => {
+                        atualizarEquipamentos(
+                          (form.equipamentos || []).map((item) =>
+                            item.uid === eq.uid ? { ...item, numeroMaquina: e.target.value } : item
+                          )
+                        )
+                      }}
+                      className="relatorio-equipamento-card__input"
+                    />
+                  </div>
+
+                  {(eq.equipamentoId || eq.maquinaModelo) && (
+                    <div className="relatorio-equipamento-card__preview relatorio-equipamento-card__field--full">
+                      <strong>{t.relatorioEquipamentoIdLabel || 'ID'}:</strong>{' '}
+                      <span className="relatorio-equipamento-card__id">
+                        {resolverEquipamentoRelatorioParaExibicao(eq, equipamentosArmazem, clienteEquipamentos) || '—'}
+                      </span>
+                      {eq.maquinaModelo ? (
+                        <>
+                          <span className="relatorio-equipamento-card__sep"> · </span>
+                          <strong>{t.maquinaModelo || 'Modelo'}:</strong> {eq.maquinaModelo}
+                        </>
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </section>
 
       <section style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <div className="relatorio-equipamentos-block__head">
           <h3 style={{ margin: 0 }}>{t.diasTrabalho || 'Dias de trabalho'}</h3>
-          <button type="button" className="btn-secondary" onClick={adicionarDia}>
+          <button type="button" className="btn-secondary relatorio-equipamentos-block__add" onClick={adicionarDia}>
             + {t.adicionarDia || 'Adicionar dia'}
           </button>
         </div>
         {diasOrdenados.map((dia) => {
+          const diaCalc = atualizarCalculosDiaEspecial(dia)
           const aberto = diaExpandido === dia.id
-          const resumoHoras = (dia.horasPorEquipamento || [])
+          const resumoHoras = (diaCalc.horasPorEquipamento || [])
             .filter((h) => h.equipamentoUid && h.horasDuracao)
             .map((h) => {
               const eq = form.equipamentos?.find((e) => e.uid === h.equipamentoUid)
@@ -531,197 +722,266 @@ export default function RelatorioEspecialHub({
             })
             .join(' · ')
           return (
-            <div key={dia.id} style={{ marginTop: 10, border: '1px solid rgba(0,200,83,0.25)', borderRadius: 8, overflow: 'hidden' }}>
+            <div key={dia.id} className="relatorio-especial-dia-card">
               <button
                 type="button"
+                className="relatorio-especial-dia-card__toggle"
                 onClick={() => setDiaExpandido(aberto ? null : dia.id)}
-                style={{
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '12px 14px',
-                  background: 'rgba(0,50,30,0.4)',
-                  border: 'none',
-                  color: '#fff',
-                  cursor: 'pointer',
-                }}
               >
                 <strong>{formatDiaCurtoPt(dia.data)}</strong>
                 {resumoHoras ? ` — ${resumoHoras}` : ''}
-                <span style={{ float: 'right' }}>{aberto ? '▲' : '▼'}</span>
+                <span className="relatorio-especial-dia-card__chevron">{aberto ? '▲' : '▼'}</span>
               </button>
               {aberto && (
-                <div style={{ padding: 14 }}>
-                  <div style={{ marginBottom: 12 }}>
+                <div className="relatorio-especial-dia-card__body">
+                  <div style={{ marginBottom: 16 }}>
                     <label>{t.data || 'Data'}</label>
                     <input
                       type="date"
                       value={diaTrabalhoDataInput(dia.data)}
                       onChange={(e) => actualizarDia(dia.id, { data: e.target.value })}
-                      style={{ ...inputStyle, maxWidth: 200 }}
+                      style={{ ...inputStyle, maxWidth: 220 }}
+                      className="ns-datetime-input"
                     />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8, marginBottom: 16 }}>
-                    <div>
-                      <label>Ida início</label>
-                      <input type="time" value={dia.idaHora} onChange={(e) => actualizarDia(dia.id, { idaHora: e.target.value })} style={inputStyle} />
-                    </div>
-                    <div>
-                      <label>Ida chegada</label>
-                      <input type="time" value={dia.idaChegada} onChange={(e) => actualizarDia(dia.id, { idaChegada: e.target.value })} style={inputStyle} />
-                    </div>
-                    <div>
-                      <label>Ret. saída</label>
-                      <input type="time" value={dia.retornoSaida} onChange={(e) => actualizarDia(dia.id, { retornoSaida: e.target.value })} style={inputStyle} />
-                    </div>
-                    <div>
-                      <label>Ret. chegada</label>
-                      <input type="time" value={dia.retornoChegada} onChange={(e) => actualizarDia(dia.id, { retornoChegada: e.target.value })} style={inputStyle} />
-                    </div>
-                    <div>
-                      <label>KM ida</label>
-                      <input type="text" value={dia.kmIda} onChange={(e) => actualizarDia(dia.id, { kmIda: e.target.value })} style={inputStyle} />
-                    </div>
-                    <div>
-                      <label>KM retorno</label>
-                      <input type="text" value={dia.kmRetorno} onChange={(e) => actualizarDia(dia.id, { kmRetorno: e.target.value })} style={inputStyle} />
+
+                  <div className="relatorio-especial-dia-secao">
+                    <h4 className="relatorio-especial-dia-secao__titulo">
+                      🕐 {t.horariosIda || 'Ida ao cliente'}
+                    </h4>
+                    <div className="relatorio-especial-dia-secao__grid">
+                      <div>
+                        <label>{t.saida || 'Saída'}</label>
+                        <input
+                          type="time"
+                          className="ns-datetime-input"
+                          value={dia.idaHora}
+                          onChange={(e) => actualizarDia(dia.id, { idaHora: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label>{t.chegada || 'Chegada'}</label>
+                        <input
+                          type="time"
+                          className="ns-datetime-input"
+                          value={dia.idaChegada}
+                          onChange={(e) => actualizarDia(dia.id, { idaChegada: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label>{t.duracao || 'Duração'}</label>
+                        <input type="text" readOnly value={diaCalc.idaDuracao || '—'} style={{ ...inputStyle, opacity: 0.85 }} />
+                      </div>
                     </div>
                   </div>
-                  <h4 style={{ margin: '0 0 8px' }}>
-                    {t.relatorioEspecialHorasPorEquipamento || 'Horas por equipamento'} (máx. {MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA}/dia)
-                  </h4>
-                  {(dia.horasPorEquipamento || []).map((linha, li) => (
-                    <div
-                      key={li}
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr 100px 100px 80px auto',
-                        gap: 8,
-                        marginBottom: 8,
-                        alignItems: 'end',
-                      }}
-                    >
-                      <div>
-                        <label>{t.equipamento || 'Equipamento'}</label>
-                        <select
-                          value={linha.equipamentoUid}
-                          onChange={(e) => {
-                            const v = e.target.value
-                            setForm((prev) => ({
-                              ...prev,
-                              diasTrabalho: prev.diasTrabalho!.map((d) =>
-                                d.id === dia.id
-                                  ? {
-                                      ...d,
-                                      horasPorEquipamento: d.horasPorEquipamento.map((h, hi) =>
-                                        hi === li ? { ...h, equipamentoUid: v } : h
-                                      ),
-                                    }
-                                  : d
-                              ),
-                            }))
-                          }}
-                          style={inputStyle}
-                        >
-                          <option value="">—</option>
-                          {(form.equipamentos || []).map((eq, ei) => (
-                            <option key={eq.uid} value={eq.uid}>
-                              {labelEquipamentoCurto(eq, ei)}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label>Início</label>
-                        <input
-                          type="time"
-                          value={linha.horasInicio}
-                          onChange={(e) => {
-                            const v = e.target.value
-                            setForm((prev) => ({
-                              ...prev,
-                              diasTrabalho: prev.diasTrabalho!.map((d) =>
-                                d.id === dia.id
-                                  ? atualizarCalculosDiaEspecial({
-                                      ...d,
-                                      horasPorEquipamento: d.horasPorEquipamento.map((h, hi) =>
-                                        hi === li ? { ...h, horasInicio: v } : h
-                                      ),
-                                    })
-                                  : d
-                              ),
-                            }))
-                          }}
-                          style={inputStyle}
-                        />
-                      </div>
-                      <div>
-                        <label>Fim</label>
-                        <input
-                          type="time"
-                          value={linha.horasFim}
-                          onChange={(e) => {
-                            const v = e.target.value
-                            setForm((prev) => ({
-                              ...prev,
-                              diasTrabalho: prev.diasTrabalho!.map((d) =>
-                                d.id === dia.id
-                                  ? atualizarCalculosDiaEspecial({
-                                      ...d,
-                                      horasPorEquipamento: d.horasPorEquipamento.map((h, hi) =>
-                                        hi === li ? { ...h, horasFim: v } : h
-                                      ),
-                                    })
-                                  : d
-                              ),
-                            }))
-                          }}
-                          style={inputStyle}
-                        />
-                      </div>
-                      <div>
-                        <label>Total</label>
-                        <input type="text" readOnly value={linha.horasDuracao} style={{ ...inputStyle, opacity: 0.85 }} />
-                      </div>
+
+                  <div className="relatorio-especial-dia-secao">
+                    <h4 className="relatorio-especial-dia-secao__titulo">
+                      🕐 {t.horarioServico || 'Hora trabalhada'} ({t.relatorioEspecialHorasPorEquipamento || 'por equipamento'}) — máx.{' '}
+                      {MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA}/dia
+                    </h4>
+                    <p className="relatorio-especial-dia-secao__ajuda">
+                      {t.relatorioEspecialHoraCorridaAjuda ||
+                        'Indique início e fim (hora corrida). O total líquido desconta a hora de almoço abaixo.'}
+                    </p>
+                    {(dia.horasPorEquipamento || []).map((linha, li) => {
+                      const linhaCalc = diaCalc.horasPorEquipamento?.[li] || linha
+                      return (
+                        <div key={li} className="relatorio-especial-hora-eq-linha">
+                          <div>
+                            <label>{t.equipamento || 'Equipamento'}</label>
+                            <select
+                              value={linha.equipamentoUid}
+                              onChange={(e) => {
+                                const v = e.target.value
+                                setForm((prev) => ({
+                                  ...prev,
+                                  diasTrabalho: prev.diasTrabalho!.map((d) =>
+                                    d.id === dia.id
+                                      ? atualizarCalculosDiaEspecial({
+                                          ...d,
+                                          horasPorEquipamento: d.horasPorEquipamento.map((h, hi) =>
+                                            hi === li ? { ...h, equipamentoUid: v } : h
+                                          ),
+                                        })
+                                      : d
+                                  ),
+                                }))
+                              }}
+                              style={inputStyle}
+                            >
+                              <option value="">—</option>
+                              {(form.equipamentos || []).map((eq, ei) => (
+                                <option key={eq.uid} value={eq.uid}>
+                                  {labelEquipamentoCurto(eq, ei)}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label>{t.inicio || 'Início'}</label>
+                            <input
+                              type="time"
+                              className="ns-datetime-input"
+                              value={linha.horasInicio}
+                              onChange={(e) => {
+                                const v = e.target.value
+                                setForm((prev) => ({
+                                  ...prev,
+                                  diasTrabalho: prev.diasTrabalho!.map((d) =>
+                                    d.id === dia.id
+                                      ? atualizarCalculosDiaEspecial({
+                                          ...d,
+                                          horasPorEquipamento: d.horasPorEquipamento.map((h, hi) =>
+                                            hi === li ? { ...h, horasInicio: v } : h
+                                          ),
+                                        })
+                                      : d
+                                  ),
+                                }))
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label>{t.fim || 'Fim'}</label>
+                            <input
+                              type="time"
+                              className="ns-datetime-input"
+                              value={linha.horasFim}
+                              onChange={(e) => {
+                                const v = e.target.value
+                                setForm((prev) => ({
+                                  ...prev,
+                                  diasTrabalho: prev.diasTrabalho!.map((d) =>
+                                    d.id === dia.id
+                                      ? atualizarCalculosDiaEspecial({
+                                          ...d,
+                                          horasPorEquipamento: d.horasPorEquipamento.map((h, hi) =>
+                                            hi === li ? { ...h, horasFim: v } : h
+                                          ),
+                                        })
+                                      : d
+                                  ),
+                                }))
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label>{t.total || 'Total líquido'}</label>
+                            <input type="text" readOnly value={linhaCalc.horasDuracao || '—'} style={{ ...inputStyle, opacity: 0.85 }} />
+                          </div>
+                          <button
+                            type="button"
+                            className="btn-danger btn-danger--inline"
+                            onClick={() =>
+                              setForm((prev) => ({
+                                ...prev,
+                                diasTrabalho: prev.diasTrabalho!.map((d) =>
+                                  d.id === dia.id
+                                    ? atualizarCalculosDiaEspecial({
+                                        ...d,
+                                        horasPorEquipamento: d.horasPorEquipamento.filter((_, hi) => hi !== li),
+                                      })
+                                    : d
+                                ),
+                              }))
+                            }
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      )
+                    })}
+                    {(dia.horasPorEquipamento?.length || 0) < MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA && (
                       <button
                         type="button"
-                        className="btn-danger"
+                        className="btn-secondary relatorio-equipamentos-block__add"
+                        style={{ marginTop: 8 }}
                         onClick={() =>
                           setForm((prev) => ({
                             ...prev,
                             diasTrabalho: prev.diasTrabalho!.map((d) =>
                               d.id === dia.id
-                                ? { ...d, horasPorEquipamento: d.horasPorEquipamento.filter((_, hi) => hi !== li) }
+                                ? atualizarCalculosDiaEspecial({
+                                    ...d,
+                                    horasPorEquipamento: [...d.horasPorEquipamento, criarHorasEquipamentoDiaVazio()],
+                                  })
                                 : d
                             ),
                           }))
                         }
                       >
-                        ✕
+                        + {t.relatorioEspecialLinhaEquipamento || 'Linha equipamento'}
                       </button>
+                    )}
+                  </div>
+
+                  <div className="relatorio-especial-dia-secao">
+                    <h4 className="relatorio-especial-dia-secao__titulo">
+                      🕐 {t.horariosRetorno || 'Saída do cliente'}
+                    </h4>
+                    <div className="relatorio-especial-dia-secao__grid">
+                      <div>
+                        <label>{t.saida || 'Saída'}</label>
+                        <input
+                          type="time"
+                          className="ns-datetime-input"
+                          value={dia.retornoSaida}
+                          onChange={(e) => actualizarDia(dia.id, { retornoSaida: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label>{t.chegada || 'Chegada'}</label>
+                        <input
+                          type="time"
+                          className="ns-datetime-input"
+                          value={dia.retornoChegada}
+                          onChange={(e) => actualizarDia(dia.id, { retornoChegada: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label>{t.duracao || 'Duração'}</label>
+                        <input type="text" readOnly value={diaCalc.retornoDuracao || '—'} style={{ ...inputStyle, opacity: 0.85 }} />
+                      </div>
                     </div>
-                  ))}
-                  {(dia.horasPorEquipamento?.length || 0) < MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA && (
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      style={{ marginTop: 8 }}
-                      onClick={() =>
-                        setForm((prev) => ({
-                          ...prev,
-                          diasTrabalho: prev.diasTrabalho!.map((d) =>
-                            d.id === dia.id
-                              ? {
-                                  ...d,
-                                  horasPorEquipamento: [...d.horasPorEquipamento, criarHorasEquipamentoDiaVazio()],
-                                }
-                              : d
-                          ),
-                        }))
-                      }
-                    >
-                      + {t.relatorioEspecialLinhaEquipamento || 'Linha equipamento'}
-                    </button>
-                  )}
+                  </div>
+
+                  <div className="relatorio-especial-dia-secao">
+                    <h4 className="relatorio-especial-dia-secao__titulo">☕ {t.horaAlmoco || t.tempoPausa || 'Hora de almoço'}</h4>
+                    <div className="relatorio-especial-dia-secao__grid relatorio-especial-dia-secao__grid--almoco">
+                      <div>
+                        <label>{t.tempoPausa || 'Tempo (HH:MM)'}</label>
+                        <input
+                          type="time"
+                          className="ns-datetime-input"
+                          value={dia.tempoPausa || ''}
+                          onChange={(e) => actualizarDia(dia.id, { tempoPausa: e.target.value, pausa: e.target.value ? 'sim' : '' })}
+                        />
+                      </div>
+                    </div>
+                    <p className="relatorio-especial-dia-secao__ajuda">
+                      {t.tempoPausaDescricao || 'Ex.: 01:00 desconta 1 hora do total trabalhado (hora corrida menos almoço).'}
+                    </p>
+                  </div>
+
+                  <div className="relatorio-especial-dia-secao">
+                    <h4 className="relatorio-especial-dia-secao__titulo">🚗 {t.quilometragem || 'Quilometragem'}</h4>
+                    <div className="relatorio-especial-dia-secao__grid">
+                      <div>
+                        <label>{t.kmIda || 'KM ida'}</label>
+                        <input type="text" value={dia.kmIda} onChange={(e) => actualizarDia(dia.id, { kmIda: e.target.value })} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label>{t.kmVolta || 'KM retorno'}</label>
+                        <input type="text" value={dia.kmRetorno} onChange={(e) => actualizarDia(dia.id, { kmRetorno: e.target.value })} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label>{t.kmTotal || 'KM total'}</label>
+                        <input type="text" readOnly value={diaCalc.kmTotal || '0'} style={{ ...inputStyle, opacity: 0.85 }} />
+                      </div>
+                    </div>
+                  </div>
+
                   <div style={{ marginTop: 12 }}>
                     <label>{t.descricaoTrabalho || 'Descrição'}</label>
                     <textarea
@@ -733,7 +993,7 @@ export default function RelatorioEspecialHub({
                   </div>
                   <button
                     type="button"
-                    className="btn-danger"
+                    className="btn-danger btn-danger--inline"
                     style={{ marginTop: 12 }}
                     onClick={() => {
                       if (!window.confirm(t.confirmDelete || 'Remover este dia?')) return
@@ -790,7 +1050,7 @@ export default function RelatorioEspecialHub({
         />
       </section>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+      <div className="relatorio-especial-form__actions">
         <button type="button" className="btn-primary" disabled={salvando} onClick={persistir}>
           {salvando ? '…' : t.save || 'Guardar'}
         </button>

@@ -37,12 +37,56 @@ export function formatMinutosComoHHMM(minutos: number): string {
   return `${h}:${String(rest).padStart(2, '0')}`
 }
 
+export function minutosAlmocoDia(dia: DiaTrabalhoEspecial): number {
+  const tempoPausa = String(dia.tempoPausa ?? '').trim()
+  if (/^\d{1,2}:\d{2}$/.test(tempoPausa)) return minutosDeDuracaoHHMM(tempoPausa)
+  const pausa = String(dia.pausa ?? '').trim()
+  if (/^\d{1,2}:\d{2}$/.test(pausa)) return minutosDeDuracaoHHMM(pausa)
+  return 0
+}
+
+/** Bruto início→fim por linha de equipamento (hora corrida). */
+export function horasEquipamentoDiaBruto(linha: HorasEquipamentoDia): string {
+  if (linha.horasInicio && linha.horasFim) {
+    return calcularDuracaoHoras(linha.horasInicio, linha.horasFim)
+  }
+  return linha.horasDuracao || ''
+}
+
 export function atualizarHorasEquipamentoDia(linha: HorasEquipamentoDia): HorasEquipamentoDia {
-  const horasDuracao =
-    linha.horasInicio && linha.horasFim
-      ? calcularDuracaoHoras(linha.horasInicio, linha.horasFim)
-      : linha.horasDuracao
-  return { ...linha, horasDuracao }
+  return { ...linha, horasDuracao: horasEquipamentoDiaBruto(linha) }
+}
+
+/** Desconta almoço/pausa do total do dia, repartido pelas linhas de equipamento. */
+export function aplicarDescontoAlmocoHorasEquipamento(
+  linhas: HorasEquipamentoDia[],
+  pausaMin: number
+): HorasEquipamentoDia[] {
+  const comBruto = linhas.map((l) => ({
+    ...l,
+    horasDuracao: horasEquipamentoDiaBruto(l),
+  }))
+  if (pausaMin <= 0) return comBruto
+
+  const brutoMin = comBruto.map((l) => minutosDeDuracaoHHMM(l.horasDuracao))
+  const totalBruto = brutoMin.reduce((a, b) => a + b, 0)
+  if (totalBruto <= 0) return comBruto
+
+  const pausaEfetiva = Math.min(pausaMin, totalBruto)
+  let pausaAlocada = 0
+  const liquidoMin = brutoMin.map((bruto, idx) => {
+    if (idx === brutoMin.length - 1) {
+      return Math.max(0, bruto - (pausaEfetiva - pausaAlocada))
+    }
+    const desconto = Math.floor((bruto / totalBruto) * pausaEfetiva)
+    pausaAlocada += desconto
+    return Math.max(0, bruto - desconto)
+  })
+
+  return comBruto.map((l, idx) => ({
+    ...l,
+    horasDuracao: formatMinutosComoHHMM(liquidoMin[idx]),
+  }))
 }
 
 export function atualizarCalculosDiaEspecial(dia: DiaTrabalhoEspecial): DiaTrabalhoEspecial {
@@ -54,7 +98,10 @@ export function atualizarCalculosDiaEspecial(dia: DiaTrabalhoEspecial): DiaTraba
       : dia.retornoDuracao
   const kmIda = parseFloat(dia.kmIda) || 0
   const kmRetorno = parseFloat(dia.kmRetorno) || 0
-  const horasPorEquipamento = (dia.horasPorEquipamento || []).map(atualizarHorasEquipamentoDia)
+  const horasPorEquipamento = aplicarDescontoAlmocoHorasEquipamento(
+    (dia.horasPorEquipamento || []).map(atualizarHorasEquipamentoDia),
+    minutosAlmocoDia(dia)
+  )
   return {
     ...dia,
     idaDuracao,
