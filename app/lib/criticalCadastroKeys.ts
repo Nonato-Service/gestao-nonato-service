@@ -8,6 +8,7 @@ export const NONATO_CRITICAL_CADASTRO_KEYS = [
   'nonato-servicos-grupos',
   'nonato-equipamentos',
   'nonato-relatorios-servico',
+  'nonato-relatorios-especiais',
   'nonato-gestores',
   'nonato-tecnicos',
   'nonato-pecas-biblioteca',

@@ -47,6 +47,16 @@ export const RELATORIO_SERVICO_PDF_TOOLBAR_CSS = `
 .rs-pdf-toolbar__btn--close {
   background: #f1f5f9;
 }
+.rs-pdf-toolbar__btn--email {
+  background: rgba(18, 38, 62, 0.96);
+  border-color: rgba(80, 160, 255, 0.55);
+  color: #fff;
+}
+.rs-pdf-toolbar__btn--wa {
+  background: rgba(18, 52, 32, 0.92);
+  border-color: rgba(37, 211, 102, 0.55);
+  color: #fff;
+}
 @media print {
   .rs-pdf-toolbar, .no-print { display: none !important; }
 }
@@ -56,12 +66,25 @@ export function buildRelatorioServicoPdfToolbarHtml(labels?: {
   titulo?: string
   imprimir?: string
   fechar?: string
+  enviarEmail?: string
+  enviarWhatsApp?: string
+  showEnvio?: boolean
+  envioMessageType?: string
 }): string {
   const titulo = escapePdfHtml(labels?.titulo || 'Relatório de Serviço — PDF')
   const imprimir = escapePdfHtml(labels?.imprimir || 'Imprimir / Guardar PDF')
   const fechar = escapePdfHtml(labels?.fechar || 'Fechar')
+  const email = escapePdfHtml(labels?.enviarEmail || 'E-mail')
+  const whats = escapePdfHtml(labels?.enviarWhatsApp || 'WhatsApp')
+  const msgType = escapePdfHtml(labels?.envioMessageType || 'documentoEnvio')
+  const envioBtns =
+    labels?.showEnvio
+      ? `<button type="button" class="rs-pdf-toolbar__btn rs-pdf-toolbar__btn--email" onclick="if(window.opener){window.opener.postMessage({type:'${msgType}',channel:'email'},'*')}">📧 ${email}</button>
+    <button type="button" class="rs-pdf-toolbar__btn rs-pdf-toolbar__btn--wa" onclick="if(window.opener){window.opener.postMessage({type:'${msgType}',channel:'whatsapp'},'*')}">💬 ${whats}</button>`
+      : ''
   return `<div class="rs-pdf-toolbar no-print">
     <p class="rs-pdf-toolbar__title">${titulo}</p>
+    ${envioBtns}
     <button type="button" class="rs-pdf-toolbar__btn rs-pdf-toolbar__btn--print" onclick="window.print()">🖨️ ${imprimir}</button>
     <button type="button" class="rs-pdf-toolbar__btn rs-pdf-toolbar__btn--close" onclick="window.close()">✕ ${fechar}</button>
   </div>`
@@ -74,7 +97,15 @@ export function wrapRelatorioServicoPrintDocument(options: {
   bodyHtml: string
   pdfModelo?: string
   showToolbar?: boolean
-  toolbarLabels?: { titulo?: string; imprimir?: string; fechar?: string }
+  toolbarLabels?: {
+    titulo?: string
+    imprimir?: string
+    fechar?: string
+    enviarEmail?: string
+    enviarWhatsApp?: string
+    showEnvio?: boolean
+    envioMessageType?: string
+  }
 }): string {
   const model = normalizePdfModelo(options.pdfModelo)
   const themeCss = relatorioPdfThemeCss(model)

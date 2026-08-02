@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, Fragment as ReactFragment } from 'react'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 import type { ClienteAlfabetoRow } from '../lib/clienteAlfabetoBusca'
 import {
@@ -8,10 +8,19 @@ import {
   atualizarCalculosDiaEspecial,
   calcularTotaisRelatorioEspecial,
   coletarSessoesPorEquipamento,
+  formatDiaComDiaSemana,
   formatDiaCurtoPt,
   formatMinutosComoHHMM,
+  getDiaSemanaInfo,
+  minutosDeDuracaoHHMM,
   sortDiasTrabalhoEspecialCronologicamente,
+  diaTrabalhoDataChaveOrdenacao,
 } from '../lib/relatorioEspecialCalculos'
+import { DocumentoEnvioAcoes } from './DocumentoEnvioAcoes'
+import {
+  buildTextoEnvioRelatorioEspecial,
+  type AbrirEnvioDocumentoClienteOpts,
+} from '../context/DocumentoEnvioClienteContext'
 import { imprimirRelatorioEspecialPdf } from '../lib/relatorioEspecialPdf'
 import {
   criarDiaTrabalhoEspecialVazio,
@@ -48,6 +57,9 @@ export type RelatorioEspecialHubProps = {
   selectedLanguage: string
   labels: Record<string, string | undefined>
   preverNumero: (dataIso: string) => string
+  pdfLogoHtml?: string
+  empresaNome?: string
+  abrirEnvioDocumentoCliente?: (opts: AbrirEnvioDocumentoClienteOpts) => void
 }
 
 const inputStyle: React.CSSProperties = {
@@ -74,15 +86,103 @@ export default function RelatorioEspecialHub({
   selectedLanguage,
   labels,
   preverNumero,
+  pdfLogoHtml = '',
+  empresaNome = 'Nonato Service',
+  abrirEnvioDocumentoCliente,
 }: RelatorioEspecialHubProps) {
   const t = labels
+  const pdfOpts = useMemo(
+    () => ({ labels: t, logoHtml: pdfLogoHtml, empresaNome }),
+    [t, pdfLogoHtml, empresaNome]
+  )
+  const ultimoRelPdfRef = useRef<RelatorioEspecial | null>(null)
+  const envioRelatorio = useCallback(
+    (rel: RelatorioEspecial, onOpenPdf: () => void) => ({
+      title: t.envioRelatorioTitulo || 'Enviar relatório ao cliente',
+      subject: `${t.relatorioEspecialTitle || 'Relatório de Serviços'} ${rel.numero || '—'} - ${rel.cliente || 'Cliente'}`,
+      body: buildTextoEnvioRelatorioEspecial({
+        numero: rel.numero,
+        cliente: rel.cliente,
+        data: rel.data,
+        horasTrabalho: aplicarTotaisNoRelatorioEspecial(rel).horasTrabalho,
+        kmsPercorridos: aplicarTotaisNoRelatorioEspecial(rel).kmsPercorridos,
+        equipamentos: rel.equipamentos,
+      }),
+      clienteId: rel.clienteId,
+      clienteNome: rel.cliente,
+      relatorio: rel,
+      onOpenPdf,
+    }),
+    [t]
+  )
+  const imprimirPdf = useCallback(
+    (rel: RelatorioEspecial) => {
+      ultimoRelPdfRef.current = aplicarTotaisNoRelatorioEspecial(rel)
+      imprimirRelatorioEspecialPdf(rel, pdfOpts)
+    },
+    [pdfOpts]
+  )
+
+  useEffect(() => {
+    if (!abrirEnvioDocumentoCliente) return
+    const onMsg = (e: MessageEvent) => {
+      if (e.data?.type !== 'reEspecialEnvio') return
+      const rel = ultimoRelPdfRef.current
+      if (!rel) return
+      const channel = e.data.channel === 'whatsapp' ? 'whatsapp' : 'email'
+      abrirEnvioDocumentoCliente({
+        ...envioRelatorio(rel, () => imprimirPdf(rel)),
+        defaultChannel: channel,
+      })
+    }
+    window.addEventListener('message', onMsg)
+    return () => window.removeEventListener('message', onMsg)
+  }, [abrirEnvioDocumentoCliente, envioRelatorio, imprimirPdf])
+  const EnvioBotoes = ({
+    rel,
+    compact = false,
+  }: {
+    rel: RelatorioEspecial
+    compact?: boolean
+  }) =>
+    abrirEnvioDocumentoCliente ? (
+      <DocumentoEnvioAcoes
+        abrirEnvio={abrirEnvioDocumentoCliente}
+        {...envioRelatorio(rel, () => imprimirPdf(aplicarTotaisNoRelatorioEspecial(rel)))}
+        emailLabel={t.enviarPorEmail || 'E-mail'}
+        whatsLabel={t.enviarPorWhatsApp || 'WhatsApp'}
+        compact={compact}
+      />
+    ) : null
   const [modo, setModo] = useState<'lista' | 'form' | 'fechamento'>('lista')
   const [form, setForm] = useState<RelatorioEspecial>(() => criarRelatorioEspecialVazio())
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [diaExpandido, setDiaExpandido] = useState<string | null>(null)
   const [salvando, setSalvando] = useState(false)
+  const snapshotGuardadoRef = useRef('')
 
   const formComTotais = useMemo(() => aplicarTotaisNoRelatorioEspecial(form), [form])
+
+  const marcarSnapshot = useCallback((rel: RelatorioEspecial) => {
+    snapshotGuardadoRef.current = JSON.stringify(aplicarTotaisNoRelatorioEspecial(rel))
+  }, [])
+
+  const formTemAlteracoes = useCallback(() => {
+    return JSON.stringify(formComTotais) !== snapshotGuardadoRef.current
+  }, [formComTotais])
+
+  const voltarLista = useCallback(() => {
+    if (modo !== 'lista' && formTemAlteracoes()) {
+      const msg =
+        t.relatorioEspecialSairSemGuardar ||
+        'Tem alterações por guardar. Sair mesmo assim? (clique em Guardar para não perder)'
+      if (!window.confirm(msg)) return
+    }
+    setModo('lista')
+    setEditandoId(null)
+    setDiaExpandido(null)
+  }, [modo, formTemAlteracoes, t])
+
   const totais = useMemo(
     () => calcularTotaisRelatorioEspecial(formComTotais.diasTrabalho),
     [formComTotais.diasTrabalho]
@@ -110,23 +210,59 @@ export default function RelatorioEspecialHub({
     const vazio = criarRelatorioEspecialVazio()
     vazio.numero = preverNumero(vazio.data)
     setForm(vazio)
+    marcarSnapshot(vazio)
     setEditandoId(null)
     setModo('form')
     setDiaExpandido(null)
-  }, [preverNumero])
+  }, [preverNumero, marcarSnapshot])
 
-  const abrirEditar = useCallback((rel: RelatorioEspecial) => {
-    setForm({ ...rel, equipamentos: [...(rel.equipamentos || [])], diasTrabalho: [...(rel.diasTrabalho || [])] })
-    setEditandoId(rel.id)
-    setModo('form')
-    setDiaExpandido(null)
-  }, [])
+  const abrirEditar = useCallback(
+    (rel: RelatorioEspecial) => {
+      const copia = {
+        ...rel,
+        equipamentos: [...(rel.equipamentos || [])],
+        diasTrabalho: [...(rel.diasTrabalho || [])],
+      }
+      setForm(copia)
+      marcarSnapshot(copia)
+      setEditandoId(rel.id)
+      setModo('form')
+      setDiaExpandido(null)
+    },
+    [marcarSnapshot]
+  )
 
-  const abrirFechamento = useCallback((rel: RelatorioEspecial) => {
-    setForm(aplicarTotaisNoRelatorioEspecial(rel))
-    setEditandoId(rel.id)
-    setModo('fechamento')
-  }, [])
+  const abrirFechamento = useCallback(
+    (rel: RelatorioEspecial) => {
+      const prep = aplicarTotaisNoRelatorioEspecial(rel)
+      setForm(prep)
+      marcarSnapshot(prep)
+      setEditandoId(rel.id)
+      setModo('fechamento')
+    },
+    [marcarSnapshot]
+  )
+
+  const eliminarRelatorio = useCallback(
+    async (rel: RelatorioEspecial) => {
+      const msg =
+        t.relatorioEspecialConfirmarEliminar ||
+        `Eliminar o relatório ${rel.numero}? Esta ação não pode ser desfeita.`
+      if (!window.confirm(msg)) return
+      setSalvando(true)
+      try {
+        const lista = relatorios.filter((r) => r.id !== rel.id)
+        const ok = await onSaveAll(lista)
+        if (ok) {
+          alert(t.relatorioEspecialEliminado || 'Relatório especial eliminado.')
+          if (editandoId === rel.id) voltarLista()
+        }
+      } finally {
+        setSalvando(false)
+      }
+    },
+    [relatorios, onSaveAll, t, editandoId, voltarLista]
+  )
 
   const persistir = useCallback(async () => {
     if (!form.tecnico?.trim() || !form.cliente?.trim() || !form.data?.trim() || !form.numero?.trim()) {
@@ -148,14 +284,17 @@ export default function RelatorioEspecialHub({
         : [...relatorios, preparado]
       const ok = await onSaveAll(lista)
       if (ok) {
+        marcarSnapshot(preparado)
         alert(t.saveSuccess || 'Relatório especial guardado.')
         setModo('lista')
         setEditandoId(null)
+      } else {
+        alert(t.erroSalvar || 'Não foi possível guardar. Verifique a ligação e tente novamente.')
       }
     } finally {
       setSalvando(false)
     }
-  }, [form, editandoId, relatorios, onSaveAll, t])
+  }, [form, editandoId, relatorios, onSaveAll, t, marcarSnapshot])
 
   const adicionarEquipamento = () => {
     if ((form.equipamentos?.length || 0) >= MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES) {
@@ -173,16 +312,31 @@ export default function RelatorioEspecialHub({
     const dia = criarDiaTrabalhoEspecialVazio(data)
     setForm((prev) => ({
       ...prev,
-      diasTrabalho: [...(prev.diasTrabalho || []), dia],
+      diasTrabalho: sortDiasTrabalhoEspecialCronologicamente([...(prev.diasTrabalho || []), dia]),
     }))
     setDiaExpandido(dia.id)
+  }
+
+  const abrirEditarDia = (diaId: string) => {
+    setDiaExpandido(diaId)
+    setTimeout(() => {
+      document.getElementById(`re-dia-card-${diaId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
   }
 
   const actualizarDia = (diaId: string, patch: Partial<DiaTrabalhoEspecial>) => {
     setForm((prev) => ({
       ...prev,
-      diasTrabalho: (prev.diasTrabalho || []).map((d) =>
-        d.id === diaId ? atualizarCalculosDiaEspecial({ ...d, ...patch }) : d
+      diasTrabalho: sortDiasTrabalhoEspecialCronologicamente(
+        (prev.diasTrabalho || []).map((d) => {
+          if (d.id !== diaId) return d
+          const merged = { ...d, ...patch }
+          if (patch.data != null) {
+            const key = diaTrabalhoDataChaveOrdenacao(patch.data)
+            if (key && /^\d{4}-\d{2}-\d{2}$/.test(key)) merged.data = key
+          }
+          return atualizarCalculosDiaEspecial(merged)
+        })
       ),
     }))
   }
@@ -227,8 +381,11 @@ export default function RelatorioEspecialHub({
       const lista = relatorios.map((r) => (r.id === preparado.id ? preparado : r))
       const ok = await onSaveAll(lista)
       if (ok) {
+        marcarSnapshot(preparado)
         alert(t.relatorioEspecialFechamentoGuardado || 'Fechamento guardado.')
         setModo('lista')
+      } else {
+        alert(t.erroSalvar || 'Não foi possível guardar o fechamento.')
       }
     } finally {
       setSalvando(false)
@@ -278,13 +435,23 @@ export default function RelatorioEspecialHub({
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                         <button type="button" className="btn-secondary" onClick={() => abrirEditar(rel)}>
-                          {t.edit || 'Editar'}
+                          ✏️ {t.edit || 'Editar'}
                         </button>
-                        <button type="button" className="btn-secondary" onClick={() => imprimirRelatorioEspecialPdf(prep, t)}>
+                        <button type="button" className="btn-secondary" onClick={() => imprimirPdf(prep)}>
                           🖨 {t.print || 'PDF'}
                         </button>
+                        <EnvioBotoes rel={rel} compact />
                         <button type="button" className="btn-primary" onClick={() => abrirFechamento(rel)}>
                           {t.relatorioEspecialFechamento || 'Fechamento'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          disabled={salvando}
+                          onClick={() => void eliminarRelatorio(rel)}
+                          style={{ borderColor: 'rgba(239,68,68,0.5)', color: '#fca5a5' }}
+                        >
+                          🗑 {t.delete || 'Eliminar'}
                         </button>
                       </div>
                     </div>
@@ -301,7 +468,7 @@ export default function RelatorioEspecialHub({
     const eqs = formComTotais.equipamentos || []
     return (
       <div style={{ padding: '16px 0', maxWidth: 720 }}>
-        <button type="button" className="btn-secondary" style={{ marginBottom: 16 }} onClick={() => setModo('lista')}>
+        <button type="button" className="btn-secondary" style={{ marginBottom: 16 }} onClick={voltarLista}>
           ← {t.voltar || 'Voltar'}
         </button>
         <h2>{t.relatorioEspecialFechamentoMes || 'Fechamento do mês'}</h2>
@@ -358,13 +525,14 @@ export default function RelatorioEspecialHub({
             </button>
           )}
         </div>
-        <div style={{ marginTop: 20, display: 'flex', gap: 10 }}>
+        <div style={{ marginTop: 20, display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
           <button type="button" className="btn-primary" disabled={salvando} onClick={guardarFechamento}>
             {salvando ? '…' : t.save || 'Guardar fechamento'}
           </button>
-          <button type="button" className="btn-secondary" onClick={() => imprimirRelatorioEspecialPdf(formComTotais, t)}>
+          <button type="button" className="btn-secondary" onClick={() => imprimirPdf(formComTotais)}>
             🖨 PDF
           </button>
+          <EnvioBotoes rel={formComTotais} />
         </div>
       </div>
     )
@@ -377,10 +545,46 @@ export default function RelatorioEspecialHub({
 
   return (
     <div className="relatorio-especial-form" style={{ padding: '16px 0' }}>
-      <button type="button" className="btn-secondary" style={{ marginBottom: 16 }} onClick={() => setModo('lista')}>
-        ← {t.voltar || 'Voltar'}
-      </button>
-      <h2>{editandoId ? t.relatorioEspecialEditar || 'Editar relatório especial' : t.relatorioEspecialNovo || 'Novo relatório especial'}</h2>
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 10,
+          alignItems: 'center',
+          marginBottom: 16,
+          justifyContent: 'space-between',
+        }}
+      >
+        <button type="button" className="btn-secondary" onClick={voltarLista}>
+          ← {t.voltar || 'Voltar'}
+        </button>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <button type="button" className="btn-primary" disabled={salvando} onClick={persistir}>
+            {salvando ? '…' : `💾 ${t.save || 'Guardar'}`}
+          </button>
+          {editandoId && (
+            <button
+              type="button"
+              className="btn-secondary"
+              disabled={salvando}
+              onClick={() => void eliminarRelatorio(formComTotais)}
+              style={{ borderColor: 'rgba(239,68,68,0.5)', color: '#fca5a5' }}
+            >
+              🗑 {t.delete || 'Eliminar'}
+            </button>
+          )}
+          <button type="button" className="btn-secondary" onClick={() => imprimirPdf(formComTotais)}>
+            🖨 PDF
+          </button>
+          <EnvioBotoes rel={formComTotais} />
+        </div>
+      </div>
+      <h2>{editandoId ? t.relatorioEspecialEditar || 'Editar relatório de serviços' : t.relatorioEspecialNovo || 'Novo relatório de serviços'}</h2>
+      {formTemAlteracoes() && (
+        <p style={{ color: '#fbbf24', fontSize: 13, margin: '0 0 12px' }}>
+          {t.relatorioEspecialAlteracoesPendentes || 'Alterações por guardar — clique em Guardar antes de sair.'}
+        </p>
+      )}
 
       <section style={{ marginBottom: 24 }}>
         <h3>{t.informacoesBasicas || 'Informações básicas'}</h3>
@@ -717,6 +921,131 @@ export default function RelatorioEspecialHub({
             + {t.adicionarDia || 'Adicionar dia'}
           </button>
         </div>
+        <p className="relatorio-especial-dia-secao__ajuda" style={{ margin: '0 0 8px' }}>
+          {t.relatorioEspecialInformacaoApenasData ||
+            t.informacaoApenasDataObrigatoria ||
+            'Apenas a data é obrigatória. Horários, KM e equipamentos são opcionais.'}
+        </p>
+        <p className="relatorio-especial-dia-secao__ajuda" style={{ margin: '0 0 12px', color: '#00c853' }}>
+          ℹ️{' '}
+          {t.relatorioEspecialDiasFimSemanaOk ||
+            'Sábado e domingo também contam como dias de trabalho (diárias).'}
+        </p>
+
+        {diasOrdenados.length > 0 ? (
+          <div style={{ marginBottom: 16 }}>
+            <h4 style={{ margin: '0 0 10px', fontSize: 14, color: 'rgba(255,255,255,0.9)' }}>
+              {t.controleHorasDeslocamentos || 'Controlo de horas e deslocamentos'}
+            </h4>
+            <div className="relatorio-dias-trabalho-wrap">
+              <table className="relatorio-dias-trabalho-table" style={{ backgroundColor: '#404040', fontSize: 10 }}>
+                <thead>
+                  <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.12)' }}>
+                    <th rowSpan={2}>{t.data || 'Data'}</th>
+                    <th colSpan={3}>{t.ida || 'Ida'}</th>
+                    <th colSpan={3}>{t.horas || 'Horas'}</th>
+                    <th colSpan={3}>{t.retorno || 'Retorno'}</th>
+                    <th colSpan={3}>{t.km || 'KM'}</th>
+                    <th rowSpan={2}>{t.pausa || 'Pausa'}</th>
+                    <th rowSpan={2}>{t.acao || 'Ação'}</th>
+                  </tr>
+                  <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.12)' }}>
+                    <th>{t.saida || 'Saída'}</th>
+                    <th>{t.chegada || 'Chegada'}</th>
+                    <th>{t.duracao || 'Duração'}</th>
+                    <th>{t.inicio || 'Início'}</th>
+                    <th>{t.fim || 'Fim'}</th>
+                    <th>{t.duracao || 'Duração'}</th>
+                    <th>{t.saida || 'Saída'}</th>
+                    <th>{t.chegada || 'Chegada'}</th>
+                    <th>{t.duracao || 'Duração'}</th>
+                    <th>{t.ida || 'Ida'}</th>
+                    <th>{t.retorno || 'Retorno'}</th>
+                    <th>{t.total || 'Total'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {diasOrdenados.map((dia, index) => {
+                    const diaCalc = atualizarCalculosDiaEspecial(dia)
+                    const sem = getDiaSemanaInfo(dia.data, t)
+                    const horasResumo = resumoHorasDiaEspecial(diaCalc)
+                    const pausaFmt = (dia.tempoPausa || '').trim() || dia.pausa || '—'
+                    const temDescricao = Boolean((dia.descricaoTrabalho || '').trim())
+                    return (
+                      <ReactFragment key={dia.id}>
+                        <tr className={sem.isFimDeSemana ? 're-dia-linha--fim-semana' : undefined}>
+                          <td
+                            rowSpan={temDescricao ? 2 : 1}
+                            style={{
+                              fontWeight: 700,
+                              whiteSpace: 'nowrap',
+                              color: sem.isFimDeSemana ? '#ffd54f' : undefined,
+                            }}
+                          >
+                            {formatDiaComDiaSemana(dia.data, t)}
+                          </td>
+                          <td>{dia.idaHora || '—'}</td>
+                          <td>{dia.idaChegada || '—'}</td>
+                          <td>{diaCalc.idaDuracao || '—'}</td>
+                          <td>{horasResumo.inicio}</td>
+                          <td>{horasResumo.fim}</td>
+                          <td>{horasResumo.duracao}</td>
+                          <td>{dia.retornoSaida || '—'}</td>
+                          <td>{dia.retornoChegada || '—'}</td>
+                          <td>{diaCalc.retornoDuracao || '—'}</td>
+                          <td>{dia.kmIda || '0'}</td>
+                          <td>{dia.kmRetorno || '0'}</td>
+                          <td>{diaCalc.kmTotal || '0'}</td>
+                          <td rowSpan={temDescricao ? 2 : 1}>{pausaFmt}</td>
+                          <td className="relatorio-dia-acao-cell" rowSpan={temDescricao ? 2 : 1}>
+                            <div style={{ display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
+                              <button
+                                type="button"
+                                className="dia-trabalho-acao-btn dia-trabalho-acao-btn--edit"
+                                onClick={() => abrirEditarDia(dia.id)}
+                              >
+                                {t.edit || 'Editar'}
+                              </button>
+                              <button
+                                type="button"
+                                className="dia-trabalho-acao-btn dia-trabalho-acao-btn--del"
+                                onClick={() => {
+                                  if (!window.confirm(t.confirmDelete || 'Remover este dia?')) return
+                                  setForm((prev) => ({
+                                    ...prev,
+                                    diasTrabalho: prev.diasTrabalho!.filter((d) => d.id !== dia.id),
+                                  }))
+                                  if (diaExpandido === dia.id) setDiaExpandido(null)
+                                }}
+                              >
+                                {t.delete || 'Eliminar'}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                        {temDescricao && (
+                          <tr>
+                            <td colSpan={12} className="relatorio-dia-descricao-cell">
+                              📝 {dia.descricaoTrabalho}
+                            </td>
+                          </tr>
+                        )}
+                      </ReactFragment>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p style={{ margin: '8px 0 0', fontSize: 12, color: '#aaa' }}>
+              {t.diarias || 'Diárias'}: <strong style={{ color: '#00c853' }}>{totais.diarias}</strong>
+            </p>
+          </div>
+        ) : (
+          <p style={{ color: '#ffaa00', fontSize: 13, marginBottom: 16 }}>
+            {t.relatorioEspecialNenhumDiaTrabalho || t.nenhumDiaTrabalhoAdicionado || 'Nenhum dia de trabalho ainda.'}
+          </p>
+        )}
+
         {diasOrdenados.map((dia) => {
           const diaCalc = atualizarCalculosDiaEspecial(dia)
           const aberto = diaExpandido === dia.id
@@ -729,13 +1058,15 @@ export default function RelatorioEspecialHub({
             })
             .join(' · ')
           return (
-            <div key={dia.id} className="relatorio-especial-dia-card">
+            <div key={dia.id} id={`re-dia-card-${dia.id}`} className="relatorio-especial-dia-card">
               <button
                 type="button"
                 className="relatorio-especial-dia-card__toggle"
                 onClick={() => setDiaExpandido(aberto ? null : dia.id)}
               >
-                <strong>{formatDiaCurtoPt(dia.data)}</strong>
+                <strong style={{ color: getDiaSemanaInfo(dia.data, t).isFimDeSemana ? '#ffd54f' : undefined }}>
+                  {formatDiaComDiaSemana(dia.data, t)}
+                </strong>
                 {resumoHoras ? ` — ${resumoHoras}` : ''}
                 <span className="relatorio-especial-dia-card__chevron">{aberto ? '▲' : '▼'}</span>
               </button>
@@ -1112,11 +1443,23 @@ export default function RelatorioEspecialHub({
 
       <div className="relatorio-especial-form__actions">
         <button type="button" className="btn-primary" disabled={salvando} onClick={persistir}>
-          {salvando ? '…' : t.save || 'Guardar'}
+          {salvando ? '…' : `💾 ${t.save || 'Guardar'}`}
         </button>
-        <button type="button" className="btn-secondary" onClick={() => imprimirRelatorioEspecialPdf(formComTotais, t)}>
+        {editandoId && (
+          <button
+            type="button"
+            className="btn-secondary"
+            disabled={salvando}
+            onClick={() => void eliminarRelatorio(formComTotais)}
+            style={{ borderColor: 'rgba(239,68,68,0.5)', color: '#fca5a5' }}
+          >
+            🗑 {t.delete || 'Eliminar'}
+          </button>
+        )}
+        <button type="button" className="btn-secondary" onClick={() => imprimirPdf(formComTotais)}>
           🖨 PDF
         </button>
+        <EnvioBotoes rel={formComTotais} />
       </div>
     </div>
   )
@@ -1127,4 +1470,28 @@ function diaTrabalhoDataInput(data: string): string {
   if (/^\d{4}-\d{2}-\d{2}$/.test(data)) return data
   if (data.includes('T')) return data.slice(0, 10)
   return data
+}
+
+function resumoHorasDiaEspecial(diaCalc: DiaTrabalhoEspecial): {
+  inicio: string
+  fim: string
+  duracao: string
+} {
+  const linhas = (diaCalc.horasPorEquipamento || []).filter(
+    (h) => (h.horasInicio || h.horasFim || h.horasDuracao) && h.equipamentoUid
+  )
+  if (linhas.length === 0) return { inicio: '—', fim: '—', duracao: '—' }
+  if (linhas.length === 1) {
+    return {
+      inicio: linhas[0].horasInicio || '—',
+      fim: linhas[0].horasFim || '—',
+      duracao: linhas[0].horasDuracao || '—',
+    }
+  }
+  const totalMin = linhas.reduce((s, h) => s + minutosDeDuracaoHHMM(h.horasDuracao), 0)
+  return {
+    inicio: '…',
+    fim: '…',
+    duracao: formatMinutosComoHHMM(totalMin),
+  }
 }

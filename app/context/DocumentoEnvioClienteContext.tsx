@@ -120,6 +120,26 @@ export function buildTextoEnvioRelatorioServico(rel: {
   return `Prezado(a),\n\nSegue em anexo o relatório de serviço n.º ${rel.numero || '—'}.\n\nCliente: ${rel.cliente || '—'}\nData: ${rel.data || '—'}\nEquipamento: ${rel.maquinaModelo || '—'}${rel.numeroMaquina ? ` (${rel.numeroMaquina})` : ''}\n\nAtenciosamente,\nNonato Service`
 }
 
+export function buildTextoEnvioRelatorioEspecial(rel: {
+  numero?: string
+  cliente?: string
+  data?: string
+  horasTrabalho?: string
+  kmsPercorridos?: string
+  equipamentos?: Array<{ equipamentoId?: string; maquinaModelo?: string; numeroMaquina?: string }>
+}) {
+  const linhasEquip = (rel.equipamentos || [])
+    .map((e) => {
+      const partes = [e.equipamentoId, e.maquinaModelo, e.numeroMaquina].filter(Boolean)
+      return partes.length ? `• ${partes.join(' · ')}` : ''
+    })
+    .filter(Boolean)
+    .join('\n')
+  return `Prezado(a),\n\nSegue em anexo o relatório de serviços n.º ${rel.numero || '—'}.\n\nCliente: ${rel.cliente || '—'}\nData: ${rel.data || '—'}${
+    linhasEquip ? `\nEquipamentos:\n${linhasEquip}` : ''
+  }\nHoras de trabalho: ${rel.horasTrabalho || '—'}\nKM: ${rel.kmsPercorridos || '—'}\n\nAtenciosamente,\nNonato Service`
+}
+
 export function buildTextoEnvioOrcamento(orc: { numeroOrcamento?: string; clienteNome?: string }) {
   return `Prezado(a),\n\nSegue em anexo o orçamento ${orc.numeroOrcamento || '—'}${orc.clienteNome ? ` — ${orc.clienteNome}` : ''}.\n\nAtenciosamente,\nNonato Service`
 }

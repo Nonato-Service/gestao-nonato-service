@@ -4713,7 +4713,7 @@ function getTabTitleForBundle(type: TabType, tRaw: Record<string, unknown>): str
     clientes: t?.clientes || 'Clientes',
     fornecedores: t?.fornecedores || 'Fornecedores',
     'relatorio-servico': t?.relatorioServico || 'Relatório de Serviço',
-    'relatorio-especial': t?.relatorioEspecialTitle || 'Relatórios Especiais',
+    'relatorio-especial': t?.relatorioEspecialTitle || 'Relatório de Serviços',
     'pecas-substituicao': t?.pecasSubstituicao || 'Peças de Substituição',
     'biblioteca-pecas': t?.bibliotecaPecas || 'Biblioteca de Peças',
     'importacao-pecas': t?.importacaoPecas || 'Importação de Peças',
@@ -13489,7 +13489,7 @@ export default function Dashboard() {
         const idxRel = buttons.findIndex((b: SidebarButton) => b.id === 'relatorio-servico-default')
         const relatorioEspecialButton: SidebarButton = {
           id: 'relatorio-especial-default',
-          name: 'RELATÓRIOS ESPECIAIS',
+          name: 'RELATÓRIO DE SERVIÇOS',
           action: 'open-relatorio-especial',
           order: idxRel >= 0 ? (buttons[idxRel].order ?? idxRel) + 1 : buttons.length,
           translationKey: 'relatorioEspecialTitle',
@@ -14124,7 +14124,7 @@ export default function Dashboard() {
         const idxRelAfter = filteredButtons.findIndex((b: SidebarButton) => b.id === 'relatorio-servico-default')
         const relEspBtn: SidebarButton = {
           id: 'relatorio-especial-default',
-          name: 'RELATÓRIOS ESPECIAIS',
+          name: 'RELATÓRIO DE SERVIÇOS',
           action: 'open-relatorio-especial',
           order: idxRelAfter >= 0 ? (filteredButtons[idxRelAfter].order ?? idxRelAfter) + 1 : filteredButtons.length,
           translationKey: 'relatorioEspecialTitle',
@@ -19994,12 +19994,17 @@ export default function Dashboard() {
 
   const salvarRelatoriosEspeciais = useCallback(async (lista: RelatorioEspecial[]): Promise<boolean> => {
     setRelatoriosEspeciais(lista)
-    const ok = await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, lista, true, true)
-    if (!ok) {
+    try {
+      const ok = await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, lista, true, false)
+      if (!ok) {
+        alert((safeT as any)?.erroSalvar || 'Erro ao guardar localmente. Tente novamente.')
+        return false
+      }
+      return true
+    } catch {
       alert((safeT as any)?.erroSalvar || 'Erro ao guardar. Tente novamente.')
       return false
     }
-    return true
   }, [safeT])
 
   const gerarNumeroRelatorio = (dataReferenciaIso?: string): string =>
@@ -37474,7 +37479,7 @@ export default function Dashboard() {
                     }}
                     title={(safeT as any)?.relatorioEspecialSubtitle || 'Horas por equipamento — fabricante'}
                   >
-                    🏭 {(safeT as any)?.relatorioEspecialTitle || 'RELATÓRIOS ESPECIAIS'}
+                    🏭 {(safeT as any)?.relatorioEspecialTitle || 'RELATÓRIO DE SERVIÇOS'}
                   </button>
                   <button 
                     className="btn-primary" 
@@ -51643,7 +51648,7 @@ A1;Peça exemplo;10`}
                 <LogoComponent size="small" />
                 <div className="relatorio-servico-hero-heading-wrap">
                   <h1 className="relatorio-servico-hero-title">
-                    {safeT?.relatorioEspecialTitle || 'RELATÓRIOS ESPECIAIS'}
+                    {safeT?.relatorioEspecialTitle || 'RELATÓRIO DE SERVIÇOS'}
                   </h1>
                   <p className="relatorio-servico-hero-meta" style={{ opacity: 0.85 }}>
                     {safeT?.relatorioEspecialSubtitle ||
@@ -51661,6 +51666,9 @@ A1;Peça exemplo;10`}
               selectedLanguage={selectedLanguage}
               labels={safeT as Record<string, string | undefined>}
               preverNumero={preverProximoNumeroRelatorioEspecial}
+              pdfLogoHtml={getLogoHtmlForReport()}
+              empresaNome={(fichaCadastral.nomeEmpresa || 'Nonato Service').trim()}
+              abrirEnvioDocumentoCliente={abrirEnvioDocumentoCliente}
             />
           </div>
         )
@@ -75769,7 +75777,7 @@ A1;Peça exemplo;10`}
                   descFallback: string
                 }> = [
                   { action: 'open-relatorio-servico', titleKey: 'relatorioServicoTitle', descKey: 'relatorioServicoSubtitle', icon: '📋', titleFallback: 'RELATÓRIO DE SERVIÇO', descFallback: 'Gestão de Relatórios de Serviço' },
-                  { action: 'open-relatorio-especial', titleKey: 'relatorioEspecialTitle', descKey: 'relatorioEspecialSubtitle', icon: '🏭', titleFallback: 'RELATÓRIOS ESPECIAIS', descFallback: 'Horas por equipamento — intervenção fabricante' },
+                  { action: 'open-relatorio-especial', titleKey: 'relatorioEspecialTitle', descKey: 'relatorioEspecialSubtitle', icon: '🏭', titleFallback: 'RELATÓRIO DE SERVIÇOS', descFallback: 'Horas por equipamento — intervenção fabricante' },
                   { action: 'open-biblioteca-relatorios', titleKey: 'bibliotecaRelatoriosTitle', descKey: 'quickAccessBibliotecaRelatoriosDesc', icon: '📚', titleFallback: 'BIBLIOTECA DE RELATÓRIOS', descFallback: 'Visualize relatórios por cliente.' },
                   { action: 'open-protocolos-servico', titleKey: 'protocolosServicoTitle', descKey: 'quickAccessProtocolosServicoDesc', icon: '📑', titleFallback: 'PROTOCOLOS DE SERVIÇO', descFallback: 'Relatórios visuais, peças, PDF e envio ao cliente.' },
                   { action: 'open-quick-gestao-custos', titleKey: 'gestaoCustosTitle', descKey: 'quickAccessGestaoCustosDesc', icon: '💰', titleFallback: 'FECHAMENTO DE OS/CUSTOS/ORÇAMENTOS', descFallback: 'Orçamentos, despesas e mapas.' },

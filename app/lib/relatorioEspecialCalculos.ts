@@ -159,7 +159,46 @@ export function diaTrabalhoDataChaveOrdenacao(data: string | undefined): string 
   if (s.includes('T') && s.length >= 10) return s.slice(0, 10)
   const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
   if (m) return `${m[3]}-${m[2]}-${m[1]}`
+  const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{2})$/)
+  if (m2) {
+    const yy = parseInt(m2[3], 10)
+    const yyyy = Number.isFinite(yy) ? 2000 + yy : 2000
+    return `${yyyy}-${m2[2]}-${m2[1]}`
+  }
+  const d = new Date(s)
+  if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10)
   return s
+}
+
+export type DiaSemanaLabels = Record<string, string | undefined>
+
+export function getDiaSemanaInfo(
+  dataRaw: string | undefined,
+  labels?: DiaSemanaLabels
+): { abrev: string; isFimDeSemana: boolean } {
+  const key = diaTrabalhoDataChaveOrdenacao(dataRaw)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return { abrev: '', isFimDeSemana: false }
+  const [y, m, d] = key.split('-').map((x) => parseInt(x, 10))
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) {
+    return { abrev: '', isFimDeSemana: false }
+  }
+  const dow = new Date(y, m - 1, d).getDay()
+  const nomes = [
+    labels?.domingo || 'Dom',
+    labels?.segunda || 'Seg',
+    labels?.terca || 'Ter',
+    labels?.quarta || 'Qua',
+    labels?.quinta || 'Qui',
+    labels?.sexta || 'Sex',
+    labels?.sabado || 'Sáb',
+  ]
+  return { abrev: nomes[dow] || '', isFimDeSemana: dow === 0 || dow === 6 }
+}
+
+export function formatDiaComDiaSemana(dataRaw: string | undefined, labels?: DiaSemanaLabels): string {
+  const fmt = formatDiaCurtoPt(dataRaw)
+  const { abrev } = getDiaSemanaInfo(dataRaw, labels)
+  return abrev ? `${fmt} (${abrev})` : fmt
 }
 
 export function sortDiasTrabalhoEspecialCronologicamente(dias: DiaTrabalhoEspecial[]): DiaTrabalhoEspecial[] {

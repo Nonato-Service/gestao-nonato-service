@@ -41486,6 +41486,10 @@ html body .relatorio-especial-root .relatorio-especial-dia-secao__grid--almoco {
   max-width: 220px;
 }
 
+html body .relatorio-especial-root .re-dia-linha--fim-semana td {
+  background: rgba(255, 213, 79, 0.08) !important;
+}
+
 html body .relatorio-especial-root .relatorio-especial-hora-eq-linha {
   display: grid;
   grid-template-columns: minmax(140px, 1.4fr) repeat(3, minmax(100px, 1fr)) auto;

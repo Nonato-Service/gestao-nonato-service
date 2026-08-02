@@ -585,6 +585,7 @@ const RELATORIOS_SERVICO_KEY = 'nonato-relatorios-servico'
 /** Gravações que devem confirmar no Railway antes de dar por concluído (não inclui biblioteca — payload grande). */
 const KEYS_AUTO_AWAIT_SERVER = new Set([
   RELATORIOS_SERVICO_KEY,
+  'nonato-relatorios-especiais',
   CLIENTES_KEY,
   'nonato-fechamentos-relatorios',
   'nonato-fechamentos-guardados-biblioteca',
@@ -2324,6 +2325,13 @@ export async function saveData(
       }
     }
     if (key === RELATORIOS_SERVICO_KEY && Array.isArray(value)) {
+      try {
+        await saveKv(key, value)
+      } catch (idbErr) {
+        console.warn(`[saveData] espelho IndexedDB falhou para ${key}`, idbErr)
+      }
+    }
+    if (key === 'nonato-relatorios-especiais' && Array.isArray(value)) {
       try {
         await saveKv(key, value)
       } catch (idbErr) {
