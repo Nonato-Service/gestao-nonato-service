@@ -7977,6 +7977,13 @@ export default function Dashboard() {
   const [pecaBibliotecaImagemCapaUrlDraft, setPecaBibliotecaImagemCapaUrlDraft] = useState('')
   /** Contentor do formulário da peça — listener nativo `paste` em captura (mais fiável que só React) */
   const pecaBibliotecaFormPasteRootRef = useRef<HTMLDivElement | null>(null)
+  /** Estado actual do formulário — evita cliques em «Salvar» com dados ainda não commitados no render. */
+  const pecaBibliotecaFormRef = useRef(pecaBibliotecaForm)
+  pecaBibliotecaFormRef.current = pecaBibliotecaForm
+  const editingPecaBibliotecaRef = useRef(editingPecaBiblioteca)
+  editingPecaBibliotecaRef.current = editingPecaBiblioteca
+  const salvandoPecaBibliotecaRef = useRef(false)
+  const [salvandoPecaBiblioteca, setSalvandoPecaBiblioteca] = useState(false)
   const importacaoPreviewPanelRef = useRef<HTMLDivElement | null>(null)
   const [showNovaCategoriaForm, setShowNovaCategoriaForm] = useState(false)
   const [novaCategoriaNome, setNovaCategoriaNome] = useState('')
@@ -25747,75 +25754,122 @@ export default function Dashboard() {
     }
   }
 
-  const handleAddPecaBiblioteca = (): boolean => {
-    if (!pecaBibliotecaForm.nome || !pecaBibliotecaForm.codigo) {
-      alert(t.fillAllFields || 'Preencha todos os campos obrigatórios')
-      return false
+  const confirmarSalvarPecaBiblioteca = (): boolean => {
+    if (salvandoPecaBibliotecaRef.current) return false
+    salvandoPecaBibliotecaRef.current = true
+    setSalvandoPecaBiblioteca(true)
+
+    try {
+      setPecaBibliotecaPickerCategoriaAberto(false)
+      setPecaBibliotecaPickerSubcategoriaAberto(false)
+
+      const form = pecaBibliotecaFormRef.current
+      const editing = editingPecaBibliotecaRef.current
+      const nome = (form.nome || '').trim()
+      const codigo = (form.codigo || '').trim()
+
+      if (!nome || !codigo) {
+        alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
+        return false
+      }
+
+      const idEdicao = resolverIdEdicaoPecaBiblioteca(form, editing, pecasBiblioteca)
+      if (pecaBibliotecaCodigoDuplicado(codigo, idEdicao || undefined)) {
+        alert(
+          safeT?.codigoPecaBibliotecaDuplicado ||
+            'Já existe uma peça com este código. Indique outro código.'
+        )
+        return false
+      }
+
+      const numeroSeq = resolverNumeroSequenciaAoSalvarPecaBiblioteca(
+        form,
+        pecasBiblioteca,
+        editing,
+        categoriasPecas
+      )
+
+      let updatedPecas: PecaBiblioteca[]
+      if (idEdicao) {
+        updatedPecas = pecasBiblioteca.map((p) =>
+          p.id === idEdicao
+            ? {
+                ...form,
+                nome,
+                codigo,
+                id: idEdicao,
+                numeroSequenciaGrupo: numeroSeq,
+                dataCriacao: p.dataCriacao,
+                importacaoPendente: false,
+              }
+            : p
+        )
+      } else {
+        const newPeca: PecaBiblioteca = {
+          ...form,
+          nome,
+          codigo,
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          numeroSequenciaGrupo: numeroSeq,
+          dataCriacao: new Date().toISOString(),
+          importacaoPendente: false,
+        }
+        updatedPecas = [...pecasBiblioteca, newPeca]
+      }
+
+      persistPecasBiblioteca(updatedPecas)
+
+      const { categoriaId: grupoParaManter, subcategoriaId: subgrupoParaManter } =
+        normalizarUltimaSelecaoBiblioteca(form, categoriasPecas, subcategoriasPecas)
+      const categoriaSelecionada = categoriasPecas.find((c) => c.id === grupoParaManter)
+      const subcategoriaSelecionada = subcategoriasPecas.find((s) => s.id === subgrupoParaManter)
+      const voltaImportacaoAposSalvar = salvarPecaBibliotecaVoltaParaImportacao
+
+      setUltimoGrupoSelecionado(grupoParaManter)
+      setUltimoSubgrupoSelecionado(subgrupoParaManter)
+      setEditingPecaBiblioteca(null)
+      editingPecaBibliotecaRef.current = null
+
+      const formLimpo: PecaBiblioteca = {
+        id: '',
+        nome: '',
+        codigo: '',
+        preco: '',
+        descricao: '',
+        categoria: categoriaSelecionada?.nome || '',
+        categoriaId: grupoParaManter,
+        subcategoria: subcategoriaSelecionada?.nome || '',
+        subcategoriaId: subgrupoParaManter,
+        imagem: '',
+        imagemCapa: '',
+        dataCriacao: new Date().toISOString(),
+        importacaoPendente: false,
+      }
+
+      setPecaBibliotecaForm(formLimpo)
+      pecaBibliotecaFormRef.current = formLimpo
+      setPecaBibliotecaImagemUrlDraft('')
+      setPecaBibliotecaImagemCapaUrlDraft('')
+      setPecaBibliotecaPickerCategoriaAberto(false)
+      setPecaBibliotecaPickerSubcategoriaAberto(false)
+      setShowBibliotecaPecasForm(false)
+      setSalvarPecaBibliotecaVoltaParaImportacao(false)
+      setUnsavedFormBaseline('biblioteca-peca', formLimpo)
+
+      concluirEdicaoPecaBibliotecaNavegacao({
+        voltarImportacao: voltaImportacaoAposSalvar,
+        categoriaIdSalva: grupoParaManter,
+      })
+
+      alert(safeT?.saveSuccess || safeT?.pecaBibliotecaSaved || 'Peça salva com sucesso!')
+      return true
+    } finally {
+      salvandoPecaBibliotecaRef.current = false
+      setSalvandoPecaBiblioteca(false)
     }
-    if (pecaBibliotecaCodigoDuplicado(pecaBibliotecaForm.codigo, editingPecaBiblioteca?.id)) {
-      alert(t.codigoPecaBibliotecaDuplicado || 'Já existe uma peça com este código. Indique outro código.')
-      return false
-    }
-
-    const numeroSeq = resolverNumeroSequenciaAoSalvarPecaBiblioteca(
-      pecaBibliotecaForm,
-      pecasBiblioteca,
-      editingPecaBiblioteca,
-      categoriasPecas
-    )
-
-    const novaPeca: PecaBiblioteca = {
-      ...pecaBibliotecaForm,
-      numeroSequenciaGrupo: numeroSeq,
-      id: editingPecaBiblioteca?.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      dataCriacao: editingPecaBiblioteca?.dataCriacao || new Date().toISOString(),
-      importacaoPendente: editingPecaBiblioteca?.importacaoPendente || false
-    }
-
-    let updatedPecas: PecaBiblioteca[]
-    if (editingPecaBiblioteca) {
-      updatedPecas = pecasBiblioteca.map(p => p.id === editingPecaBiblioteca.id ? novaPeca : p)
-    } else {
-      updatedPecas = [...pecasBiblioteca, novaPeca]
-    }
-
-    persistPecasBiblioteca(updatedPecas)
-
-    const { categoriaId: grupoParaManter, subcategoriaId: subgrupoParaManter } = normalizarUltimaSelecaoBiblioteca(
-      novaPeca,
-      categoriasPecas,
-      subcategoriasPecas
-    )
-    const categoriaSelecionada = categoriasPecas.find(c => c.id === grupoParaManter)
-    const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === subgrupoParaManter)
-
-    setUltimoGrupoSelecionado(grupoParaManter)
-    setUltimoSubgrupoSelecionado(subgrupoParaManter)
-    
-    setShowBibliotecaPecasForm(false)
-    setPecaBibliotecaForm({
-      id: '',
-      nome: '',
-      codigo: '',
-      preco: '',
-      descricao: '',
-      categoria: categoriaSelecionada?.nome || '',
-      categoriaId: grupoParaManter,
-      subcategoria: subcategoriaSelecionada?.nome || '',
-      subcategoriaId: subgrupoParaManter,
-      imagem: '',
-      imagemCapa: '',
-      dataCriacao: new Date().toISOString()
-    })
-    setPecaBibliotecaImagemUrlDraft('')
-    setPecaBibliotecaImagemCapaUrlDraft('')
-    setEditingPecaBiblioteca(null)
-    setPecaBibliotecaPickerCategoriaAberto(false)
-    setPecaBibliotecaPickerSubcategoriaAberto(false)
-    navegarBibliotecaAposSalvarPeca(grupoParaManter)
-    alert(t.pecaBibliotecaSaved || 'Peça salva com sucesso!')
-    return true
   }
+
+  const handleAddPecaBiblioteca = (): boolean => confirmarSalvarPecaBiblioteca()
 
   const handleEditPecaBiblioteca = (peca: PecaBiblioteca) => {
     setSalvarPecaBibliotecaVoltaParaImportacao(false)
@@ -42745,7 +42799,7 @@ export default function Dashboard() {
                     className="biblioteca-pecas-form__input"
                     placeholder={safeT?.nomePecaBiblioteca || 'Nome'}
                     value={pecaBibliotecaForm.nome}
-                    onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, nome: e.target.value })}
+                    onChange={(e) => setPecaBibliotecaForm((prev) => ({ ...prev, nome: e.target.value }))}
                   />
                 </div>
                 
@@ -42758,7 +42812,7 @@ export default function Dashboard() {
                     className="biblioteca-pecas-form__input"
                     placeholder={safeT?.codigoPecaBiblioteca || 'Código'}
                     value={pecaBibliotecaForm.codigo}
-                    onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, codigo: e.target.value })}
+                    onChange={(e) => setPecaBibliotecaForm((prev) => ({ ...prev, codigo: e.target.value }))}
                   />
                 </div>
                 
@@ -42787,7 +42841,7 @@ export default function Dashboard() {
                     className="biblioteca-pecas-form__input"
                     placeholder={safeT?.precoPecaBiblioteca || 'Preço (€)'}
                     value={pecaBibliotecaForm.preco}
-                    onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, preco: e.target.value })}
+                    onChange={(e) => setPecaBibliotecaForm((prev) => ({ ...prev, preco: e.target.value }))}
                   />
                 </div>
                 
@@ -42799,7 +42853,7 @@ export default function Dashboard() {
                     className="biblioteca-pecas-form__textarea"
                     placeholder={safeT?.descricaoPecaBiblioteca || 'Descrição'}
                     value={pecaBibliotecaForm.descricao ?? ''}
-                    onValueChange={(v) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, descricao: v })}
+                    onValueChange={(v) => setPecaBibliotecaForm((prev) => ({ ...prev, descricao: v }))}
                     rows={4}
                     style={{ resize: 'vertical' as const }}
                   ></AssistTextarea>
@@ -43198,97 +43252,16 @@ export default function Dashboard() {
                 
                 <div className="biblioteca-pecas-form__actions">
                   <button 
-                    className="btn-primary" 
-                    onClick={() => {
-                      if (!pecaBibliotecaForm.nome || !pecaBibliotecaForm.codigo) {
-                        alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
-                        return
-                      }
-                      const idEdicao = resolverIdEdicaoPecaBiblioteca(pecaBibliotecaForm, editingPecaBiblioteca, pecasBiblioteca)
-                      if (pecaBibliotecaCodigoDuplicado(pecaBibliotecaForm.codigo, idEdicao || undefined)) {
-                        alert(
-                          safeT?.codigoPecaBibliotecaDuplicado ||
-                            'Já existe uma peça com este código. Indique outro código.'
-                        )
-                        return
-                      }
-                      if (idEdicao) {
-                        const numeroSeq = resolverNumeroSequenciaAoSalvarPecaBiblioteca(
-                          pecaBibliotecaForm,
-                          pecasBiblioteca,
-                          editingPecaBiblioteca,
-                          categoriasPecas
-                        )
-                        const updated = pecasBiblioteca.map((p) =>
-                          p.id === idEdicao
-                            ? {
-                                ...pecaBibliotecaForm,
-                                id: idEdicao,
-                                numeroSequenciaGrupo: numeroSeq,
-                                importacaoPendente: false,
-                              }
-                            : p
-                        )
-                        persistPecasBiblioteca(updated)
-                      } else {
-                        const numeroSeq = resolverNumeroSequenciaAoSalvarPecaBiblioteca(
-                          pecaBibliotecaForm,
-                          pecasBiblioteca,
-                          null,
-                          categoriasPecas
-                        )
-                        const newPeca: PecaBiblioteca = {
-                          ...pecaBibliotecaForm,
-                          id: Date.now().toString(),
-                          numeroSequenciaGrupo: numeroSeq,
-                          importacaoPendente: false,
-                        }
-                        const updated = [...pecasBiblioteca, newPeca]
-                        persistPecasBiblioteca(updated)
-                      }
-                      const { categoriaId: grupoMantido, subcategoriaId: subMantido } = normalizarUltimaSelecaoBiblioteca(
-                        pecaBibliotecaForm,
-                        categoriasPecas,
-                        subcategoriasPecas
-                      )
-                      const voltaImportacaoAposSalvar = salvarPecaBibliotecaVoltaParaImportacao
-                      setUltimoGrupoSelecionado(grupoMantido)
-                      setUltimoSubgrupoSelecionado(subMantido)
-                      setEditingPecaBiblioteca(null)
-                      const categoriaSelecionada = categoriasPecas.find(c => c.id === grupoMantido)
-                      const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === subMantido)
-                      setPecaBibliotecaForm({
-                        id: '',
-                        nome: '',
-                        codigo: '',
-                        preco: '',
-                        descricao: '',
-                        categoria: categoriaSelecionada?.nome || '',
-                        categoriaId: grupoMantido,
-                        subcategoria: subcategoriaSelecionada?.nome || '',
-                        subcategoriaId: subMantido,
-                        imagem: '',
-                        dataCriacao: new Date().toISOString(),
-                        importacaoPendente: false,
-                      })
-                      setPecaBibliotecaImagemUrlDraft('')
-                      setPecaBibliotecaPickerCategoriaAberto(false)
-                      setPecaBibliotecaPickerSubcategoriaAberto(false)
-                      setShowBibliotecaPecasForm(false)
-                      setSalvarPecaBibliotecaVoltaParaImportacao(false)
-                      concluirEdicaoPecaBibliotecaNavegacao({
-                        voltarImportacao: voltaImportacaoAposSalvar,
-                        categoriaIdSalva: grupoMantido,
-                      })
-                      setTimeout(() => {
-                        alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
-                      }, 0)
-                    }}
+                    type="button"
+                    className="btn-primary biblioteca-pecas-form__save-btn"
+                    disabled={salvandoPecaBiblioteca}
+                    onClick={() => { confirmarSalvarPecaBiblioteca() }}
                   >
-                    {safeT?.save || 'Salvar'}
+                    {salvandoPecaBiblioteca ? ((safeT as Record<string, string | undefined>)?.salvandoPeca || 'A guardar…') : (safeT?.save || 'Salvar')}
                   </button>
                   <button 
-                    className="btn-secondary" 
+                    type="button"
+                    className="btn-secondary"
                     onClick={() => { 
                       const voltarImportacao = salvarPecaBibliotecaVoltaParaImportacao
                       setSalvarPecaBibliotecaVoltaParaImportacao(false)
@@ -78340,7 +78313,7 @@ A1;Peça exemplo;10`}
                     className="biblioteca-pecas-form__input"
                     placeholder={safeT?.nomePecaBiblioteca || 'Nome'}
                     value={pecaBibliotecaForm.nome}
-                    onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, nome: e.target.value })}
+                    onChange={(e) => setPecaBibliotecaForm((prev) => ({ ...prev, nome: e.target.value }))}
                   />
                 </div>
                 <div className="biblioteca-pecas-form__field">
@@ -78349,7 +78322,7 @@ A1;Peça exemplo;10`}
                     className="biblioteca-pecas-form__input"
                     placeholder={safeT?.codigoPecaBiblioteca || 'Código'}
                     value={pecaBibliotecaForm.codigo}
-                    onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, codigo: e.target.value })}
+                    onChange={(e) => setPecaBibliotecaForm((prev) => ({ ...prev, codigo: e.target.value }))}
                   />
                 </div>
                 <div className="biblioteca-pecas-form__field">
@@ -78358,7 +78331,7 @@ A1;Peça exemplo;10`}
                     className="biblioteca-pecas-form__input"
                     placeholder={safeT?.precoPecaBiblioteca || 'Preço (€)'}
                     value={pecaBibliotecaForm.preco}
-                    onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, preco: e.target.value })}
+                    onChange={(e) => setPecaBibliotecaForm((prev) => ({ ...prev, preco: e.target.value }))}
                   />
                 </div>
                 <div className="biblioteca-pecas-form__field">
@@ -78366,82 +78339,21 @@ A1;Peça exemplo;10`}
                     className="biblioteca-pecas-form__textarea"
                     placeholder={safeT?.descricaoPecaBiblioteca || 'Descrição'}
                     value={pecaBibliotecaForm.descricao ?? ''}
-                    onValueChange={(v) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, descricao: v })}
+                    onValueChange={(v) => setPecaBibliotecaForm((prev) => ({ ...prev, descricao: v }))}
                     rows={3}
                     style={{ resize: 'vertical' as const }}
                   ></AssistTextarea>
                 </div>
                 <div className="biblioteca-pecas-form__actions">
-                  <button className="btn-primary" onClick={() => {
-                    if (!pecaBibliotecaForm.nome || !pecaBibliotecaForm.codigo) {
-                      alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
-                      return
-                    }
-                    const idEdicaoModal = resolverIdEdicaoPecaBiblioteca(pecaBibliotecaForm, editingPecaBiblioteca, pecasBiblioteca)
-                    if (pecaBibliotecaCodigoDuplicado(pecaBibliotecaForm.codigo, idEdicaoModal || undefined)) {
-                      alert(
-                        safeT?.codigoPecaBibliotecaDuplicado ||
-                          'Já existe uma peça com este código. Indique outro código.'
-                      )
-                      return
-                    }
-                    if (idEdicaoModal) {
-                      const updated = pecasBiblioteca.map((p) =>
-                          p.id === idEdicaoModal
-                            ? { ...pecaBibliotecaForm, id: idEdicaoModal, importacaoPendente: false }
-                            : p
-                        )
-                        persistPecasBiblioteca(updated)
-                    } else {
-                      const newPeca: PecaBiblioteca = {
-                        ...pecaBibliotecaForm,
-                        id: Date.now().toString(),
-                        importacaoPendente: false
-                      }
-                      const updated = [...pecasBiblioteca, newPeca]
-                      persistPecasBiblioteca(updated)
-                    }
-                    const { categoriaId: gM, subcategoriaId: sM } = normalizarUltimaSelecaoBiblioteca(
-                      pecaBibliotecaForm,
-                      categoriasPecas,
-                      subcategoriasPecas
-                    )
-                    const voltaImportacaoModal = salvarPecaBibliotecaVoltaParaImportacao
-                    setUltimoGrupoSelecionado(gM)
-                    setUltimoSubgrupoSelecionado(sM)
-                    setEditingPecaBiblioteca(null)
-                    setPecaBibliotecaImagemUrlDraft('')
-                    const catApos = categoriasPecas.find(c => c.id === gM)
-                    const subApos = subcategoriasPecas.find(s => s.id === sM)
-                    setPecaBibliotecaForm({
-                      id: '',
-                      nome: '',
-                      codigo: '',
-                      preco: '',
-                      descricao: '',
-                      categoria: catApos?.nome || '',
-                      categoriaId: gM,
-                      subcategoria: subApos?.nome || '',
-                      subcategoriaId: sM,
-                      imagem: '',
-                      dataCriacao: new Date().toISOString(),
-                      importacaoPendente: false,
-                    })
-                    setPecaBibliotecaPickerCategoriaAberto(false)
-                    setPecaBibliotecaPickerSubcategoriaAberto(false)
-                    setShowBibliotecaPecasForm(false)
-                    setSalvarPecaBibliotecaVoltaParaImportacao(false)
-                    concluirEdicaoPecaBibliotecaNavegacao({
-                      voltarImportacao: voltaImportacaoModal,
-                      categoriaIdSalva: gM,
-                    })
-                    setTimeout(() => {
-                      alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
-                    }, 0)
-                  }}>
-                    {safeT?.save || 'Salvar'}
+                  <button
+                    type="button"
+                    className="btn-primary biblioteca-pecas-form__save-btn"
+                    disabled={salvandoPecaBiblioteca}
+                    onClick={() => { confirmarSalvarPecaBiblioteca() }}
+                  >
+                    {salvandoPecaBiblioteca ? ((safeT as Record<string, string | undefined>)?.salvandoPeca || 'A guardar…') : (safeT?.save || 'Salvar')}
                   </button>
-                  <button className="btn-secondary" onClick={() => {
+                  <button type="button" className="btn-secondary" onClick={() => {
                     const voltarImportacao = salvarPecaBibliotecaVoltaParaImportacao
                     setSalvarPecaBibliotecaVoltaParaImportacao(false)
                     setShowBibliotecaPecasForm(false)
