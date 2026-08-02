@@ -28091,10 +28091,27 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 
 .biblioteca-hub-toolbar__filter-quick {
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 6px;
   width: 100%;
+}
+
+.biblioteca-hub-toolbar__filter-hint {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(251, 146, 60, 0.35);
+  background: rgba(120, 55, 8, 0.22);
+  color: #ffedd5;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.biblioteca-pecas-hub__select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .biblioteca-hub-toolbar__filter-chip {

@@ -43715,16 +43715,24 @@ export default function Dashboard() {
                           <select
                             id="biblioteca-filtro-grupo"
                             className="biblioteca-pecas-hub__select"
-                            value={filtroGrupoBiblioteca || ''}
+                            value={
+                              filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA
+                                ? ''
+                                : filtroGrupoBiblioteca || ''
+                            }
+                            disabled={filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA}
+                            title={
+                              filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA
+                                ? (safeT as any)?.bibliotecaSomenteExibindoSemCat ||
+                                  'Filtro «sem categoria» activo — use o botão abaixo para desactivar.'
+                                : undefined
+                            }
                             onChange={(e) => {
                               setFiltroGrupoBiblioteca(e.target.value)
                               setFiltroSubgrupoBiblioteca('')
                             }}
                           >
                             <option value="">{safeT?.todosGrupos || 'Todos os grupos'}</option>
-                            <option value={BIBLIOTECA_FILTRO_SEM_CATEGORIA}>
-                              {(safeT as any).bibliotecaFiltroApenasSemCategoria || 'Apenas peças sem categoria'}
-                            </option>
                             {categoriasPecasAlfabeto.map(cat => (
                               <option key={cat.id} value={cat.id}>{cat.nome}</option>
                             ))}
@@ -43756,15 +43764,29 @@ export default function Dashboard() {
                           </div>
                         ) : null}
                         <div className="biblioteca-hub-toolbar__filter-quick">
+                          {filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA ? (
+                            <p className="biblioteca-hub-toolbar__filter-hint" role="status">
+                              {(safeT as any)?.bibliotecaSomenteExibindoSemCat ||
+                                'A mostrar só peças sem categoria. Clique no botão abaixo para ver todas.'}
+                            </p>
+                          ) : null}
                           <button
                             type="button"
                             className={`biblioteca-hub-toolbar__filter-chip biblioteca-hub-toolbar__filter-chip--sem-categoria${filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA ? ' biblioteca-hub-toolbar__filter-chip--active' : ''}`}
+                            aria-pressed={filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA}
                             onClick={() => {
-                              setFiltroGrupoBiblioteca(BIBLIOTECA_FILTRO_SEM_CATEGORIA)
+                              if (filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA) {
+                                setFiltroGrupoBiblioteca('')
+                              } else {
+                                setFiltroGrupoBiblioteca(BIBLIOTECA_FILTRO_SEM_CATEGORIA)
+                              }
                               setFiltroSubgrupoBiblioteca('')
                             }}
                           >
-                            {(safeT as any).bibliotecaBotaoIrSemCategoria || 'Ver só sem categoria'}
+                            {filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA
+                              ? (safeT as any)?.bibliotecaBotaoDesactivarSemCategoria ||
+                                'Ver todas as peças — desactivar filtro'
+                              : (safeT as any)?.bibliotecaBotaoIrSemCategoria || 'Ver só sem categoria'}
                           </button>
                         </div>
                       </div>
