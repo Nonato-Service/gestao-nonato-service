@@ -1,8 +1,10 @@
 import type { RelatorioEquipamentoRef } from './relatorioServicoEquipamentos'
 import {
   aplicarTotaisNoRelatorioEspecial,
+  calcularTotaisRelatorioEspecial,
   coletarSessoesPorEquipamento,
   formatDiaCurtoPt,
+  formatMinutosComoHHMM,
   sortDiasTrabalhoEspecialCronologicamente,
 } from './relatorioEspecialCalculos'
 import type { RelatorioEspecial } from './relatorioEspecialTypes'
@@ -16,14 +18,33 @@ function L(labels: RelatorioEspecialPdfLabels | undefined, key: string, fallback
   return v != null && String(v).trim() !== '' ? String(v) : fallback
 }
 
-function labelEquipamento(eq: RelatorioEquipamentoRef, idx: number): string {
-  const id = (eq.equipamentoId || eq.numeroMaquina || '').trim()
-  const modelo = (eq.maquinaModelo || '').trim()
-  const parts: string[] = []
-  if (id) parts.push(id)
-  if (modelo) parts.push(modelo)
-  if (parts.length === 0) parts.push(`#${idx + 1}`)
-  return parts.join(' · ')
+function cabecalhoEquipamentoPdf(
+  eq: RelatorioEquipamentoRef,
+  labels: RelatorioEspecialPdfLabels | undefined,
+  idx: number
+): string {
+  const id = (eq.equipamentoId || '').trim() || '—'
+  const modelo = (eq.maquinaModelo || '').trim() || '—'
+  const sn = (eq.numeroMaquina || '').trim() || '—'
+  return `
+    <table class="re-especial-table re-equip-ident" style="margin-bottom:8px">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>${escapeHtml(L(labels, 'relatorioEquipamentoIdLabel', 'ID'))}</th>
+          <th>${escapeHtml(L(labels, 'modelo', 'Modelo'))}</th>
+          <th>S/N</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${escapeHtml(id)}</td>
+          <td>${escapeHtml(modelo)}</td>
+          <td>${escapeHtml(sn)}</td>
+        </tr>
+      </tbody>
+    </table>`
 }
 
 function formatHorarioIntervalo(inicio: string, fim: string): string {
@@ -43,6 +64,29 @@ export function imprimirRelatorioEspecialPdf(
   const dias = sortDiasTrabalhoEspecialCronologicamente(rel.diasTrabalho || [])
   const equipamentos = rel.equipamentos || []
   const sessoesPorEquip = coletarSessoesPorEquipamento(dias)
+  const totais = calcularTotaisRelatorioEspecial(dias)
+  const totalAlmocoFmt =
+    totais.horasAlmocoTotal > 0 ? formatMinutosComoHHMM(totais.horasAlmocoTotal) : ''
+  const totalBrutoFmt = formatMinutosComoHHMM(totais.horasTrabalhoBruto)
+  const linhaDescontoAlmoco =
+    totais.horasAlmocoTotal > 0
+      ? `<div style="font-size:11px;font-weight:500;margin-top:4px;color:#555">${escapeHtml(L(labels, 'relatorioEspecialPdfTotalBruto', 'Total bruto'))}: ${escapeHtml(totalBrutoFmt)} · ${escapeHtml(L(labels, 'horaAlmoco', 'Almoço'))}: −${escapeHtml(totalAlmocoFmt)}</div>`
+      : ''
+
+  const tabelaEquipamentos = equipamentos.length
+    ? `<h3 class="re-secao-titulo">${escapeHtml(L(labels, 'relatorioEspecialEquipamentos', 'Equipamentos'))} (${equipamentos.length})</h3>
+  <table class="re-especial-table">
+    <thead><tr><th>#</th><th>${escapeHtml(L(labels, 'relatorioEquipamentoIdLabel', 'ID'))}</th><th>${escapeHtml(L(labels, 'modelo', 'Modelo'))}</th><th>S/N</th></tr></thead>
+    <tbody>
+      ${equipamentos
+        .map(
+          (eq, i) =>
+            `<tr><td>${i + 1}</td><td>${escapeHtml(eq.equipamentoId || '—')}</td><td>${escapeHtml(eq.maquinaModelo || '—')}</td><td>${escapeHtml(eq.numeroMaquina || '—')}</td></tr>`
+        )
+        .join('')}
+    </tbody>
+  </table>`
+    : ''
 
   const linhasDeslocamento = dias
     .map((dia) => {
@@ -62,7 +106,6 @@ export function imprimirRelatorioEspecialPdf(
 
   const blocosEquipamentos = equipamentos
     .map((eq, i) => {
-      const titulo = labelEquipamento(eq, i)
       const sessoes = sessoesPorEquip[eq.uid] || []
       const total = rel.horasPorEquipamentoResumo?.[eq.uid] || '0:00'
       const linhas =
@@ -81,13 +124,13 @@ export function imprimirRelatorioEspecialPdf(
 
       return `
       <div class="re-equip-bloco">
-        <h4 class="re-equip-bloco__titulo">${escapeHtml(L(labels, 'equipamento', 'Equipamento'))}: ${escapeHtml(titulo)}</h4>
+        ${cabecalhoEquipamentoPdf(eq, labels, i)}
         <table class="re-especial-table re-equip-bloco__tabela">
           <thead>
             <tr>
               <th>${escapeHtml(L(labels, 'relatorioEspecialPdfColDias', 'Dias'))}</th>
               <th>${escapeHtml(L(labels, 'relatorioEspecialPdfColHorario', 'Horário'))}</th>
-              <th>${escapeHtml(L(labels, 'totalLiquido', L(labels, 'total', 'Total')))}</th>
+              <th>${escapeHtml(L(labels, 'total', 'Total'))}</th>
             </tr>
           </thead>
           <tbody>
@@ -124,6 +167,8 @@ export function imprimirRelatorioEspecialPdf(
     <tr><td><strong>${escapeHtml(L(labels, 'cidade', 'Cidade'))}</strong> ${escapeHtml(rel.cidade || '—')}</td><td><strong>${escapeHtml(L(labels, 'tipoServico', 'Tipo'))}</strong> ${escapeHtml(rel.tipoServico || '—')}</td></tr>
   </table>
 
+  ${tabelaEquipamentos}
+
   <h3 class="re-secao-titulo">${escapeHtml(L(labels, 'relatorioEspecialPdfDeslocamentos', 'Deslocamentos por dia'))}</h3>
   <table class="re-especial-table">
     <thead>
@@ -148,6 +193,7 @@ export function imprimirRelatorioEspecialPdf(
 
   <div style="margin-top:16px;padding:10px 14px;background:#e8f5e9;border:1px solid #00c853;border-radius:8px;font-weight:700;text-align:center">
     ${escapeHtml(L(labels, 'relatorioEspecialPdfTotalGeralLabel', 'TOTAL GERAL DE HORAS DE TRABALHO'))}: ${escapeHtml(rel.horasTrabalho || '0:00')}
+    ${linhaDescontoAlmoco}
   </div>
 
   <div class="re-totais-box">

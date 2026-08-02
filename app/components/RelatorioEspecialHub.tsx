@@ -9,6 +9,7 @@ import {
   calcularTotaisRelatorioEspecial,
   coletarSessoesPorEquipamento,
   formatDiaCurtoPt,
+  formatMinutosComoHHMM,
   sortDiasTrabalhoEspecialCronologicamente,
 } from '../lib/relatorioEspecialCalculos'
 import { imprimirRelatorioEspecialPdf } from '../lib/relatorioEspecialPdf'
@@ -887,7 +888,7 @@ export default function RelatorioEspecialHub({
                             />
                           </div>
                           <div>
-                            <label>{t.totalLiquido || t.total || 'Total líquido'}</label>
+                            <label>{t.total || 'Total'}</label>
                             <input type="text" readOnly value={linhaCalc.horasDuracao || '—'} style={{ ...inputStyle, opacity: 0.85 }} />
                           </div>
                           <button
@@ -1058,7 +1059,7 @@ export default function RelatorioEspecialHub({
                     <tr>
                       <th>{t.relatorioEspecialPdfColDias || t.diasTrabalho || 'Dias'}</th>
                       <th>{t.relatorioEspecialPdfColHorario || 'Horário'}</th>
-                      <th>{t.totalLiquido || t.total || 'Total'}</th>
+                      <th>{t.total || 'Total'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1085,6 +1086,12 @@ export default function RelatorioEspecialHub({
           <div>
             <div style={{ fontSize: 12, color: '#aaa' }}>{t.relatorioEspecialTotalGeral || 'Total geral'}</div>
             <strong style={{ fontSize: 18, color: '#00c853' }}>{formComTotais.horasTrabalho}</strong>
+            {totais.horasAlmocoTotal > 0 && (
+              <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>
+                {t.relatorioEspecialTotalComAlmoco ||
+                  `Bruto ${formatMinutosComoHHMM(totais.horasTrabalhoBruto)} − ${t.horaAlmoco || 'almoço'} ${formatMinutosComoHHMM(totais.horasAlmocoTotal)}`}
+              </div>
+            )}
           </div>
           <div>
             <div style={{ fontSize: 12, color: '#aaa' }}>KM</div>

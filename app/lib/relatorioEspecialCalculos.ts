@@ -57,38 +57,6 @@ export function atualizarHorasEquipamentoDia(linha: HorasEquipamentoDia): HorasE
   return { ...linha, horasDuracao: horasEquipamentoDiaBruto(linha) }
 }
 
-/** Desconta almoço/pausa do total do dia, repartido pelas linhas de equipamento. */
-export function aplicarDescontoAlmocoHorasEquipamento(
-  linhas: HorasEquipamentoDia[],
-  pausaMin: number
-): HorasEquipamentoDia[] {
-  const comBruto = linhas.map((l) => ({
-    ...l,
-    horasDuracao: horasEquipamentoDiaBruto(l),
-  }))
-  if (pausaMin <= 0) return comBruto
-
-  const brutoMin = comBruto.map((l) => minutosDeDuracaoHHMM(l.horasDuracao))
-  const totalBruto = brutoMin.reduce((a, b) => a + b, 0)
-  if (totalBruto <= 0) return comBruto
-
-  const pausaEfetiva = Math.min(pausaMin, totalBruto)
-  let pausaAlocada = 0
-  const liquidoMin = brutoMin.map((bruto, idx) => {
-    if (idx === brutoMin.length - 1) {
-      return Math.max(0, bruto - (pausaEfetiva - pausaAlocada))
-    }
-    const desconto = Math.floor((bruto / totalBruto) * pausaEfetiva)
-    pausaAlocada += desconto
-    return Math.max(0, bruto - desconto)
-  })
-
-  return comBruto.map((l, idx) => ({
-    ...l,
-    horasDuracao: formatMinutosComoHHMM(liquidoMin[idx]),
-  }))
-}
-
 export function atualizarCalculosDiaEspecial(dia: DiaTrabalhoEspecial): DiaTrabalhoEspecial {
   const idaDuracao =
     dia.idaHora && dia.idaChegada ? calcularDuracaoHoras(dia.idaHora, dia.idaChegada) : dia.idaDuracao
@@ -98,10 +66,8 @@ export function atualizarCalculosDiaEspecial(dia: DiaTrabalhoEspecial): DiaTraba
       : dia.retornoDuracao
   const kmIda = parseFloat(dia.kmIda) || 0
   const kmRetorno = parseFloat(dia.kmRetorno) || 0
-  const horasPorEquipamento = aplicarDescontoAlmocoHorasEquipamento(
-    (dia.horasPorEquipamento || []).map(atualizarHorasEquipamentoDia),
-    minutosAlmocoDia(dia)
-  )
+  /** Horas por linha = hora corrida (bruto). Almoço desconta só no total geral. */
+  const horasPorEquipamento = (dia.horasPorEquipamento || []).map(atualizarHorasEquipamentoDia)
   return {
     ...dia,
     idaDuracao,
@@ -114,6 +80,8 @@ export function atualizarCalculosDiaEspecial(dia: DiaTrabalhoEspecial): DiaTraba
 export type TotaisRelatorioEspecial = {
   horasPorEquipamento: Record<string, number>
   horasTrabalhoTotal: number
+  horasTrabalhoBruto: number
+  horasAlmocoTotal: number
   kmsTotal: number
   horasViagemTotal: number
   horasViagemIda: number
@@ -126,7 +94,8 @@ export function calcularTotaisRelatorioEspecial(
 ): TotaisRelatorioEspecial {
   const lista = Array.isArray(dias) ? dias : []
   const horasPorEquipamento: Record<string, number> = {}
-  let horasTrabalhoTotal = 0
+  let horasTrabalhoBruto = 0
+  let horasAlmocoTotal = 0
   let kmsTotal = 0
   let horasViagemIda = 0
   let horasViagemRetorno = 0
@@ -139,20 +108,25 @@ export function calcularTotaisRelatorioEspecial(
     kmsTotal += parseFloat(dia.kmTotal) || 0
     horasViagemIda += minutosDeDuracaoHHMM(dia.idaDuracao)
     horasViagemRetorno += minutosDeDuracaoHHMM(dia.retornoDuracao)
+    horasAlmocoTotal += minutosAlmocoDia(dia)
 
     for (const linha of dia.horasPorEquipamento || []) {
       const uid = (linha.equipamentoUid || '').trim()
       if (!uid) continue
-      const min = minutosDeDuracaoHHMM(linha.horasDuracao)
+      const min = minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(linha))
       if (min <= 0) continue
       horasPorEquipamento[uid] = (horasPorEquipamento[uid] || 0) + min
-      horasTrabalhoTotal += min
+      horasTrabalhoBruto += min
     }
   }
+
+  const horasTrabalhoTotal = Math.max(0, horasTrabalhoBruto - horasAlmocoTotal)
 
   return {
     horasPorEquipamento,
     horasTrabalhoTotal,
+    horasTrabalhoBruto,
+    horasAlmocoTotal,
     kmsTotal,
     horasViagemTotal: horasViagemIda + horasViagemRetorno,
     horasViagemIda,
@@ -239,8 +213,7 @@ export function coletarSessoesPorEquipamento(
       const uid = (linha.equipamentoUid || '').trim()
       if (!uid) continue
       const bruto = horasEquipamentoDiaBruto(linha)
-      const liquido = linha.horasDuracao || bruto
-      if (!linha.horasInicio && !linha.horasFim && !liquido) continue
+      if (!linha.horasInicio && !linha.horasFim && !bruto) continue
       if (!porUid[uid]) porUid[uid] = []
       porUid[uid].push({
         equipamentoUid: uid,
@@ -249,7 +222,7 @@ export function coletarSessoesPorEquipamento(
         dataFormatada: dataFmt,
         horasInicio: linha.horasInicio,
         horasFim: linha.horasFim,
-        horasDuracao: liquido,
+        horasDuracao: bruto,
       })
     }
   }
