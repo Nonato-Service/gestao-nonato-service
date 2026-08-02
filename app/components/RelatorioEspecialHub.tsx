@@ -7,6 +7,7 @@ import {
   aplicarTotaisNoRelatorioEspecial,
   atualizarCalculosDiaEspecial,
   calcularTotaisRelatorioEspecial,
+  coletarSessoesPorEquipamento,
   formatDiaCurtoPt,
   sortDiasTrabalhoEspecialCronologicamente,
 } from '../lib/relatorioEspecialCalculos'
@@ -17,6 +18,7 @@ import {
   criarRelatorioEspecialVazio,
   MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA,
   MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES,
+  MAX_LINHAS_HORAS_RELATORIO_ESPECIAL_DIA,
   type DiaTrabalhoEspecial,
   type RelatorioEspecial,
 } from '../lib/relatorioEspecialTypes'
@@ -82,6 +84,10 @@ export default function RelatorioEspecialHub({
   const formComTotais = useMemo(() => aplicarTotaisNoRelatorioEspecial(form), [form])
   const totais = useMemo(
     () => calcularTotaisRelatorioEspecial(formComTotais.diasTrabalho),
+    [formComTotais.diasTrabalho]
+  )
+  const sessoesPorEquip = useMemo(
+    () => coletarSessoesPorEquipamento(formComTotais.diasTrabalho),
     [formComTotais.diasTrabalho]
   )
 
@@ -777,12 +783,12 @@ export default function RelatorioEspecialHub({
 
                   <div className="relatorio-especial-dia-secao">
                     <h4 className="relatorio-especial-dia-secao__titulo">
-                      🕐 {t.relatorioEspecialHoraTrabalhada || t.horarioServico || 'Hora trabalhada'} ({t.relatorioEspecialHorasPorEquipamento || 'por equipamento'}) — máx.{' '}
-                      {MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA}/dia
+                      🕐 {t.relatorioEspecialHoraTrabalhada || t.horarioServico || 'Hora trabalhada'} ({t.relatorioEspecialHorasPorEquipamento || 'por equipamento'})
                     </h4>
                     <p className="relatorio-especial-dia-secao__ajuda">
-                      {t.relatorioEspecialHoraCorridaAjuda ||
-                        'Indique início e fim (hora corrida). O total líquido desconta a hora de almoço abaixo.'}
+                      {t.relatorioEspecialMultiplasSessoesAjuda ||
+                        t.relatorioEspecialHoraCorridaAjuda ||
+                        'Pode repetir o mesmo equipamento no mesmo dia (ex.: 10:00–12:00 e 14:00–19:00). Máx. 4 equipamentos diferentes por dia.'}
                     </p>
                     {(dia.horasPorEquipamento || []).map((linha, li) => {
                       const linhaCalc = diaCalc.horasPorEquipamento?.[li] || linha
@@ -794,6 +800,20 @@ export default function RelatorioEspecialHub({
                               value={linha.equipamentoUid}
                               onChange={(e) => {
                                 const v = e.target.value
+                                if (v) {
+                                  const uidsAtuais = new Set(
+                                    (dia.horasPorEquipamento || [])
+                                      .map((h, hi) => (hi === li ? '' : (h.equipamentoUid || '').trim()))
+                                      .filter(Boolean)
+                                  )
+                                  if (!uidsAtuais.has(v) && uidsAtuais.size >= MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA) {
+                                    alert(
+                                      t.relatorioEspecialMaxEquipamentosDia ||
+                                        `Máximo ${MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA} equipamentos diferentes por dia.`
+                                    )
+                                    return
+                                  }
+                                }
                                 setForm((prev) => ({
                                   ...prev,
                                   diasTrabalho: prev.diasTrabalho!.map((d) =>
@@ -892,7 +912,7 @@ export default function RelatorioEspecialHub({
                         </div>
                       )
                     })}
-                    {(dia.horasPorEquipamento?.length || 0) < MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA && (
+                    {(dia.horasPorEquipamento?.length || 0) < MAX_LINHAS_HORAS_RELATORIO_ESPECIAL_DIA && (
                       <button
                         type="button"
                         className="btn-secondary relatorio-equipamentos-block__add"
@@ -1024,13 +1044,44 @@ export default function RelatorioEspecialHub({
         }}
       >
         <h3 style={{ marginTop: 0 }}>{t.resumo || 'Resumo'}</h3>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-          {(form.equipamentos || []).map((eq, i) => (
-            <div key={eq.uid}>
-              <div style={{ fontSize: 12, color: '#aaa' }}>{labelEquipamentoCurto(eq, i)}</div>
-              <strong>{formComTotais.horasPorEquipamentoResumo?.[eq.uid] || '0:00'}</strong>
+        {(form.equipamentos || []).map((eq, i) => {
+          const sessoes = sessoesPorEquip[eq.uid] || []
+          const total = formComTotais.horasPorEquipamentoResumo?.[eq.uid] || '0:00'
+          return (
+            <div key={eq.uid} className="relatorio-especial-resumo-equip" style={{ marginBottom: 16 }}>
+              <div style={{ fontWeight: 600, marginBottom: 8, color: '#00c853' }}>
+                {labelEquipamentoCurto(eq, i)} — <strong>{total}</strong>
+              </div>
+              {sessoes.length > 0 ? (
+                <table className="relatorio-especial-resumo-equip__tabela">
+                  <thead>
+                    <tr>
+                      <th>{t.relatorioEspecialPdfColDias || t.diasTrabalho || 'Dias'}</th>
+                      <th>{t.relatorioEspecialPdfColHorario || 'Horário'}</th>
+                      <th>{t.totalLiquido || t.total || 'Total'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sessoes.map((s, si) => (
+                      <tr key={`${s.diaId}-${si}`}>
+                        <td>{s.dataFormatada}</td>
+                        <td>
+                          {s.horasInicio && s.horasFim ? `${s.horasInicio} – ${s.horasFim}` : s.horasInicio || s.horasFim || '—'}
+                        </td>
+                        <td>{s.horasDuracao || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p style={{ fontSize: 12, color: '#888', margin: 0 }}>
+                  {t.relatorioEspecialPdfSemSessoesEquip || 'Sem horas registadas'}
+                </p>
+              )}
             </div>
-          ))}
+          )
+        })}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 8, paddingTop: 12, borderTop: '1px solid rgba(0,200,83,0.25)' }}>
           <div>
             <div style={{ fontSize: 12, color: '#aaa' }}>{t.relatorioEspecialTotalGeral || 'Total geral'}</div>
             <strong style={{ fontSize: 18, color: '#00c853' }}>{formComTotais.horasTrabalho}</strong>

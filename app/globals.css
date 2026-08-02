@@ -41494,6 +41494,26 @@ html body .relatorio-especial-root .relatorio-especial-hora-eq-linha {
   align-items: end;
 }
 
+html body .relatorio-especial-root .relatorio-especial-resumo-equip__tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-resumo-equip__tabela th,
+html body .relatorio-especial-root .relatorio-especial-resumo-equip__tabela td {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+html body .relatorio-especial-root .relatorio-especial-resumo-equip__tabela th {
+  background: rgba(0, 60, 30, 0.35);
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 600;
+}
+
 @media (max-width: 720px) {
   html body .relatorio-especial-root .relatorio-especial-hora-eq-linha {
     grid-template-columns: 1fr 1fr;

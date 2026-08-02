@@ -205,3 +205,63 @@ export function formatDiaCurtoPt(dataRaw: string | undefined): string {
   const dt = new Date(y, m - 1, d)
   return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
 }
+
+export type SessaoHorasEquipamentoEspecial = {
+  equipamentoUid: string
+  diaId: string
+  data: string
+  dataFormatada: string
+  horasInicio: string
+  horasFim: string
+  horasDuracao: string
+}
+
+export function contarEquipamentosUnicosDia(dia: DiaTrabalhoEspecial): number {
+  const uids = new Set<string>()
+  for (const h of dia.horasPorEquipamento || []) {
+    const uid = (h.equipamentoUid || '').trim()
+    if (uid) uids.add(uid)
+  }
+  return uids.size
+}
+
+/** Todas as sessões de horas agrupadas por equipamento (várias linhas no mesmo dia permitidas). */
+export function coletarSessoesPorEquipamento(
+  dias: DiaTrabalhoEspecial[] | undefined | null
+): Record<string, SessaoHorasEquipamentoEspecial[]> {
+  const porUid: Record<string, SessaoHorasEquipamentoEspecial[]> = {}
+  const diasOrd = sortDiasTrabalhoEspecialCronologicamente(Array.isArray(dias) ? dias : [])
+
+  for (const diaRaw of diasOrd) {
+    const dia = atualizarCalculosDiaEspecial(diaRaw)
+    const dataFmt = formatDiaCurtoPt(dia.data)
+    for (const linha of dia.horasPorEquipamento || []) {
+      const uid = (linha.equipamentoUid || '').trim()
+      if (!uid) continue
+      const bruto = horasEquipamentoDiaBruto(linha)
+      const liquido = linha.horasDuracao || bruto
+      if (!linha.horasInicio && !linha.horasFim && !liquido) continue
+      if (!porUid[uid]) porUid[uid] = []
+      porUid[uid].push({
+        equipamentoUid: uid,
+        diaId: dia.id,
+        data: dia.data,
+        dataFormatada: dataFmt,
+        horasInicio: linha.horasInicio,
+        horasFim: linha.horasFim,
+        horasDuracao: liquido,
+      })
+    }
+  }
+
+  for (const uid of Object.keys(porUid)) {
+    porUid[uid].sort((a, b) => {
+      const ka = diaTrabalhoDataChaveOrdenacao(a.data)
+      const kb = diaTrabalhoDataChaveOrdenacao(b.data)
+      const c = ka.localeCompare(kb)
+      if (c !== 0) return c
+      return (a.horasInicio || '').localeCompare(b.horasInicio || '')
+    })
+  }
+  return porUid
+}

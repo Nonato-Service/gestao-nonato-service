@@ -3,7 +3,10 @@ import type { PecaSubstituicao } from './relatorioEspecialShared'
 
 export const RELATORIOS_ESPECIAIS_STORAGE_KEY = 'nonato-relatorios-especiais'
 export const MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES = 11
+/** Máximo de equipamentos diferentes com horas no mesmo dia */
 export const MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA = 4
+/** Máximo de linhas de horário no mesmo dia (permite várias sessões no mesmo equipamento) */
+export const MAX_LINHAS_HORAS_RELATORIO_ESPECIAL_DIA = 12
 
 export type HorasEquipamentoDia = {
   equipamentoUid: string
