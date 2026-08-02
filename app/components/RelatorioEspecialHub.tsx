@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
-import ClienteAlfabetoPicker from './ClienteAlfabetoPicker'
+import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 import type { ClienteAlfabetoRow } from '../lib/clienteAlfabetoBusca'
 import {
   aplicarTotaisNoRelatorioEspecial,
