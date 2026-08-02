@@ -58,6 +58,7 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
     icon: '📋',
     items: [
       { buttonId: 'relatorio-servico-default', action: 'open-relatorio-servico', labelKey: 'relatorioServicoTitle', fallbackLabel: 'Relatório de serviço', legacyKey: 'relatorioServico' },
+      { buttonId: 'relatorio-especial-default', action: 'open-relatorio-especial', labelKey: 'relatorioEspecialTitle', fallbackLabel: 'Relatórios especiais', legacyKey: 'relatorioServico' },
       { buttonId: 'biblioteca-relatorios-default', action: 'open-biblioteca-relatorios', labelKey: 'bibliotecaRelatoriosTitle', fallbackLabel: 'Biblioteca de relatórios', legacyKey: 'relatorioServico' },
       { buttonId: 'relatorios-excluidos-clientes-default', action: 'open-relatorios-excluidos-clientes', labelKey: 'relatoriosExcluidosClientesTitle', fallbackLabel: 'Relatórios excluídos', legacyKey: 'clientes' },
       { buttonId: 'fechamento-relatorios-servicos-default', action: 'open-fechamento-relatorios-servicos', labelKey: 'fechamentoRelatoriosServicosTitle', fallbackLabel: 'Fechamento de relatórios', legacyKey: 'relatorioServico' },

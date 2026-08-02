@@ -327,6 +327,9 @@ import {
 import { buscarPecaBibliotecaNoServidor } from './lib/buscarPecaBibliotecaRemoto'
 import { filtrarPorNomeBusca, getLetraAlfabetoNome } from './lib/nomeAlfabetoBusca'
 import { wrapRelatorioServicoPrintDocument } from './lib/relatorioServicoPdfShell'
+import RelatorioEspecialHub from './components/RelatorioEspecialHub'
+import type { RelatorioEspecial } from './lib/relatorioEspecialTypes'
+import { RELATORIOS_ESPECIAIS_STORAGE_KEY } from './lib/relatorioEspecialTypes'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
 import { PdfModeloPickerField } from './components/PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from './lib/pdfModelStorage'
@@ -1344,6 +1347,7 @@ const SIDEBAR_TRANSLATION_KEY_BY_ID: Record<string, string> = {
   'clientes-default': 'clientesTitle',
   'fornecedores-default': 'fornecedoresTitle',
   'relatorio-servico-default': 'relatorioServicoTitle',
+  'relatorio-especial-default': 'relatorioEspecialTitle',
   'biblioteca-pecas-default': 'cadastroPecasBibliotecaTitle',
   'solicitacao-servico-tecnico-default': 'solicitacaoServicoTecnicoTitle',
   'agenda-default': 'agendaTitle',
@@ -1399,6 +1403,7 @@ function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
   if (
     [
       'relatorio-servico-default',
+      'relatorio-especial-default',
       'biblioteca-relatorios-default',
       'relatorios-excluidos-clientes-default',
       'fechamento-relatorios-servicos-default',
@@ -4616,7 +4621,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-pagamento-transferencia' | 'ficha-fatura-cliente' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'diario-pedidos-dia' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamentos-pecas-especiais' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'pagamentos-contador' | 'manuais-informacoes-tecnicas' | 'biblia-nonato-service' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-basico' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa' | 'informacoes-mecanicas-eletricas'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-pagamento-transferencia' | 'ficha-fatura-cliente' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'relatorio-especial' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'diario-pedidos-dia' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamentos-pecas-especiais' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'pagamentos-contador' | 'manuais-informacoes-tecnicas' | 'biblia-nonato-service' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-basico' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa' | 'informacoes-mecanicas-eletricas'
 
 type Tab = {
   id: string
@@ -4638,6 +4643,7 @@ const TAB_DEFAULT_PARENT_HUB: Partial<Record<TabType, string>> = {
   clientes: 'parceiros-comercial',
   fornecedores: 'parceiros-comercial',
   'relatorio-servico': 'documentacao-relatorios',
+  'relatorio-especial': 'documentacao-relatorios',
   'biblioteca-relatorios': 'documentacao-relatorios',
   'relatorios-excluidos-clientes': 'documentacao-relatorios',
   'fechamento-relatorios-servicos': 'documentacao-relatorios',
@@ -4707,6 +4713,7 @@ function getTabTitleForBundle(type: TabType, tRaw: Record<string, unknown>): str
     clientes: t?.clientes || 'Clientes',
     fornecedores: t?.fornecedores || 'Fornecedores',
     'relatorio-servico': t?.relatorioServico || 'Relatório de Serviço',
+    'relatorio-especial': t?.relatorioEspecialTitle || 'Relatórios Especiais',
     'pecas-substituicao': t?.pecasSubstituicao || 'Peças de Substituição',
     'biblioteca-pecas': t?.bibliotecaPecas || 'Biblioteca de Peças',
     'importacao-pecas': t?.importacaoPecas || 'Importação de Peças',
@@ -4775,6 +4782,7 @@ const HUB_CARD_DESC_BY_BUTTON_ID: Record<string, readonly string[]> = {
   'clientes-default': ['clientesSubtitle'],
   'fornecedores-default': ['fornecedoresSubtitle'],
   'relatorio-servico-default': ['relatorioServicoSubtitle'],
+  'relatorio-especial-default': ['relatorioEspecialSubtitle'],
   'biblioteca-relatorios-default': ['quickAccessBibliotecaRelatoriosDesc'],
   'relatorios-excluidos-clientes-default': ['relatoriosExcluidosClientesDesc'],
   'biblioteca-pecas-default': ['quickAccessBibliotecaPecasDesc'],
@@ -6270,6 +6278,7 @@ export default function Dashboard() {
       clientes: 'open-clientes',
       fornecedores: 'open-fornecedores',
       'relatorio-servico': 'open-relatorio-servico',
+      'relatorio-especial': 'open-relatorio-especial',
       'pecas-substituicao': 'open-pecas-substituicao',
       'biblioteca-pecas': 'open-biblioteca-pecas',
       'importacao-pecas': 'open-importacao-pecas',
@@ -8595,6 +8604,7 @@ export default function Dashboard() {
   
   // Estados para Relatório de Serviço
   const [relatoriosServico, setRelatoriosServico] = useState<RelatorioServico[]>([])
+  const [relatoriosEspeciais, setRelatoriosEspeciais] = useState<RelatorioEspecial[]>([])
   /** Fechamentos por relatório: relatorioId -> itens de cobrança (vinculados ao Cadastro de Serviços) */
   const [fechamentosRelatorios, setFechamentosRelatorios] = useState<Record<string, FechamentoItem[]>>({})
   /** Por relatório: ids das linhas fixas (ht, km, …) retiradas da cobrança no fechamento (persistido) */
@@ -9753,6 +9763,7 @@ export default function Dashboard() {
       'clientes-default', 
       'fornecedores-default',
       'relatorio-servico-default',
+      'relatorio-especial-default',
       'biblioteca-relatorios-default',
       'biblioteca-pecas-default',
       'solicitacao-servico-tecnico-default',
@@ -9796,6 +9807,7 @@ export default function Dashboard() {
               b.id === 'clientes-default' ? 'clientesTitle' :
               b.id === 'fornecedores-default' ? 'fornecedoresTitle' :
               b.id === 'relatorio-servico-default' ? 'relatorioServicoTitle' :
+              b.id === 'relatorio-especial-default' ? 'relatorioEspecialTitle' :
               b.id === 'biblioteca-relatorios-default' ? 'bibliotecaRelatoriosTitle' :
               b.id === 'biblioteca-pecas-default' ? 'cadastroPecasBibliotecaTitle' :
               b.id === 'solicitacao-servico-tecnico-default' ? 'solicitacaoServicoTecnicoTitle' :
@@ -11911,6 +11923,11 @@ export default function Dashboard() {
         setRelatoriosServico(relatoriosOk)
       }
 
+      const savedRelatoriosEspeciais = getData(RELATORIOS_ESPECIAIS_STORAGE_KEY)
+      if (savedRelatoriosEspeciais && Array.isArray(savedRelatoriosEspeciais)) {
+        setRelatoriosEspeciais(savedRelatoriosEspeciais as RelatorioEspecial[])
+      }
+
       const savedFechamentosRelatorios = getData('nonato-fechamentos-relatorios')
       let fechamentosParaEstado: Record<string, FechamentoItem[]> | null = null
       if (savedFechamentosRelatorios && typeof savedFechamentosRelatorios === 'object' && !Array.isArray(savedFechamentosRelatorios)) {
@@ -12647,6 +12664,7 @@ export default function Dashboard() {
           'clientes-default': { translationKey: 'clientesTitle', group: 'parceiros-comercial' },
           'fornecedores-default': { translationKey: 'fornecedoresTitle', group: 'parceiros-comercial' },
           'relatorio-servico-default': { translationKey: 'relatorioServicoTitle', group: 'documentacao-relatorios' },
+          'relatorio-especial-default': { translationKey: 'relatorioEspecialTitle', group: 'documentacao-relatorios' },
           'biblioteca-pecas-default': { translationKey: 'cadastroPecasBibliotecaTitle', group: 'pecas-biblioteca' },
           'solicitacao-servico-tecnico-default': { translationKey: 'solicitacaoServicoTecnicoTitle', group: 'empresa-institucional' },
           'agenda-default': { translationKey: 'agendaTitle', group: 'gestao-tecnica' },
@@ -12705,6 +12723,7 @@ export default function Dashboard() {
                                         b.id === 'clientes-default' ||
                                         b.id === 'fornecedores-default' ||
                                         b.id === 'relatorio-servico-default' ||
+                                        b.id === 'relatorio-especial-default' ||
                                         b.id === 'biblioteca-pecas-default' ||
                                         b.id === 'biblioteca-relatorios-default' ||
                                         b.id === 'relatorios-excluidos-clientes-default' ||
@@ -12735,6 +12754,7 @@ export default function Dashboard() {
                                b.id === 'clientes-default' ? 'open-clientes' :
                                b.id === 'fornecedores-default' ? 'open-fornecedores' :
                                b.id === 'relatorio-servico-default' ? 'open-relatorio-servico' :
+                               b.id === 'relatorio-especial-default' ? 'open-relatorio-especial' :
                                b.id === 'biblioteca-pecas-default' ? 'open-biblioteca-hub' :
                                b.id === 'solicitacao-servico-tecnico-default' ? 'open-solicitacao-servico-tecnico' :
                                b.id === 'agenda-default' ? 'open-agenda' :
@@ -12828,6 +12848,7 @@ export default function Dashboard() {
 
       const documentacaoTranslationKeys: { [key: string]: string } = {
         'relatorio-servico-default': 'relatorioServicoTitle',
+        'relatorio-especial-default': 'relatorioEspecialTitle',
         'biblioteca-relatorios-default': 'bibliotecaRelatoriosTitle',
         'relatorios-excluidos-clientes-default': 'relatoriosExcluidosClientesTitle',
         'fechamento-relatorios-servicos-default': 'fechamentoRelatoriosServicosTitle',
@@ -12958,6 +12979,10 @@ export default function Dashboard() {
         if (b.id === 'relatorio-servico-default' && b.group !== 'documentacao-relatorios') {
           buttonsMigrated = true
           return { ...b, group: 'documentacao-relatorios', translationKey: 'relatorioServicoTitle', action: 'open-relatorio-servico' }
+        }
+        if (b.id === 'relatorio-especial-default' && b.group !== 'documentacao-relatorios') {
+          buttonsMigrated = true
+          return { ...b, group: 'documentacao-relatorios', translationKey: 'relatorioEspecialTitle', action: 'open-relatorio-especial' }
         }
         if (b.id === 'fechamento-relatorios-servicos-default' && b.group !== 'documentacao-relatorios') {
           buttonsMigrated = true
@@ -13458,6 +13483,21 @@ export default function Dashboard() {
           group: 'documentacao-relatorios'
         }
         buttons.push(relatorioServicoButton)
+      }
+
+      if (!buttons.some((b) => b.id === 'relatorio-especial-default')) {
+        const idxRel = buttons.findIndex((b: SidebarButton) => b.id === 'relatorio-servico-default')
+        const relatorioEspecialButton: SidebarButton = {
+          id: 'relatorio-especial-default',
+          name: 'RELATÓRIOS ESPECIAIS',
+          action: 'open-relatorio-especial',
+          order: idxRel >= 0 ? (buttons[idxRel].order ?? idxRel) + 1 : buttons.length,
+          translationKey: 'relatorioEspecialTitle',
+          group: 'documentacao-relatorios',
+        }
+        if (idxRel >= 0) buttons.splice(idxRel + 1, 0, relatorioEspecialButton)
+        else buttons.push(relatorioEspecialButton)
+        saveData('nonato-sidebar-buttons', buttons)
       }
 
       if (!hasBibliotecaRelatorios) {
@@ -14076,8 +14116,22 @@ export default function Dashboard() {
           action: 'open-relatorio-servico',
           order: filteredButtons.length,
           translationKey: 'relatorioServicoTitle',
-          group: 'gestao-tecnica'
+          group: 'documentacao-relatorios'
         })
+      }
+      const hasRelatorioEspecialAfter = filteredButtons.some((b: SidebarButton) => b.id === 'relatorio-especial-default')
+      if (!hasRelatorioEspecialAfter) {
+        const idxRelAfter = filteredButtons.findIndex((b: SidebarButton) => b.id === 'relatorio-servico-default')
+        const relEspBtn: SidebarButton = {
+          id: 'relatorio-especial-default',
+          name: 'RELATÓRIOS ESPECIAIS',
+          action: 'open-relatorio-especial',
+          order: idxRelAfter >= 0 ? (filteredButtons[idxRelAfter].order ?? idxRelAfter) + 1 : filteredButtons.length,
+          translationKey: 'relatorioEspecialTitle',
+          group: 'documentacao-relatorios',
+        }
+        if (idxRelAfter >= 0) filteredButtons.splice(idxRelAfter + 1, 0, relEspBtn)
+        else filteredButtons.push(relEspBtn)
       }
       if (!hasBibliotecaPecasAfter) {
         filteredButtons.push({
@@ -14859,6 +14913,7 @@ export default function Dashboard() {
       'clientes-default', 
       'fornecedores-default',
       'relatorio-servico-default',
+      'relatorio-especial-default',
       'biblioteca-relatorios-default',
       'biblioteca-pecas-default',
       'solicitacao-servico-tecnico-default',
@@ -19924,6 +19979,28 @@ export default function Dashboard() {
     }
     return `${yyyymmdd}-${String(maxSeq + 1).padStart(3, '0')}`
   }, [relatoriosServico])
+
+  /** Número relatório especial: E + AAAAMMDD-NNN (distinto dos relatórios normais). */
+  const preverProximoNumeroRelatorioEspecial = useCallback((dataReferenciaIso?: string): string => {
+    const yyyymmdd = dataIsoParaYYYYMMDDRelatorio(dataReferenciaIso)
+    let maxSeq = 0
+    for (const r of relatoriosEspeciais) {
+      const num = String(r.numero || '').replace(/^E/i, '')
+      const p = parseRelatorioServicoNumeroDataSeq(num)
+      if (p && p.yyyymmdd === yyyymmdd) maxSeq = Math.max(maxSeq, p.seq)
+    }
+    return `E${yyyymmdd}-${String(maxSeq + 1).padStart(3, '0')}`
+  }, [relatoriosEspeciais])
+
+  const salvarRelatoriosEspeciais = useCallback(async (lista: RelatorioEspecial[]): Promise<boolean> => {
+    setRelatoriosEspeciais(lista)
+    const ok = await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, lista, true, true)
+    if (!ok) {
+      alert((safeT as any)?.erroSalvar || 'Erro ao guardar. Tente novamente.')
+      return false
+    }
+    return true
+  }, [safeT])
 
   const gerarNumeroRelatorio = (dataReferenciaIso?: string): string =>
     preverProximoNumeroRelatorio(dataReferenciaIso)
@@ -28977,6 +29054,7 @@ export default function Dashboard() {
     'open-clientes': 'clientes',
     'open-fornecedores': 'fornecedores',
     'open-relatorio-servico': 'relatorioServico',
+    'open-relatorio-especial': 'relatorioServico',
     'open-biblioteca-relatorios': 'relatorioServico',
     'open-biblioteca-pecas': 'bibliotecaPecas',
     'open-importacao-pecas': 'bibliotecaPecas',
@@ -29608,6 +29686,8 @@ export default function Dashboard() {
       openTab('fornecedores', getTabTitle('fornecedores'))
     } else if (action === 'open-relatorio-servico') {
       openTab('relatorio-servico', getTabTitle('relatorio-servico'))
+    } else if (action === 'open-relatorio-especial') {
+      openTab('relatorio-especial', getTabTitle('relatorio-especial'))
     } else if (action === 'open-protocolos-servico') {
       openTab('protocolos-servico', getTabTitle('protocolos-servico'))
     } else if (action === 'open-manual-programa') {
@@ -37380,6 +37460,22 @@ export default function Dashboard() {
                       🔄 {(safeT as any)?.syncUpdatingNewInfo || 'A atualizar novas informações do servidor…'}
                     </span>
                   )}
+                  <button 
+                    type="button"
+                    className="btn-primary" 
+                    onClick={() => handleButtonClick('open-relatorio-especial')} 
+                    style={{ 
+                      padding: '10px 20px',
+                      backgroundColor: 'rgba(255, 170, 0, 0.18)',
+                      border: '2px solid rgba(255, 190, 0, 0.75)',
+                      color: '#fff',
+                      fontWeight: 'bold',
+                      fontSize: '13px'
+                    }}
+                    title={(safeT as any)?.relatorioEspecialSubtitle || 'Horas por equipamento — fabricante'}
+                  >
+                    🏭 {(safeT as any)?.relatorioEspecialTitle || 'RELATÓRIOS ESPECIAIS'}
+                  </button>
                   <button 
                     className="btn-primary" 
                     onClick={() => openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))} 
@@ -51537,6 +51633,35 @@ A1;Peça exemplo;10`}
             activeTabId={activeTabId || undefined}
             isCompactLayout={isCompactLayout}
           />
+        )
+
+      case 'relatorio-especial':
+        return (
+          <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 relatorio-especial-root">
+            <div className="relatorio-servico-hero" style={{ marginBottom: 16 }}>
+              <div className="relatorio-servico-hero-top">
+                <LogoComponent size="small" />
+                <div className="relatorio-servico-hero-heading-wrap">
+                  <h1 className="relatorio-servico-hero-title">
+                    {safeT?.relatorioEspecialTitle || 'RELATÓRIOS ESPECIAIS'}
+                  </h1>
+                  <p className="relatorio-servico-hero-meta" style={{ opacity: 0.85 }}>
+                    {safeT?.relatorioEspecialSubtitle ||
+                      'Intervenção fabricante — horas por equipamento, até 4 equip./dia e 11/mês'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <RelatorioEspecialHub
+              relatorios={relatoriosEspeciais}
+              onSaveAll={salvarRelatoriosEspeciais}
+              clientes={clientesOrdenadosAlfabeticamente}
+              tecnicos={tecnicos}
+              selectedLanguage={selectedLanguage}
+              labels={safeT as Record<string, string | undefined>}
+              preverNumero={preverProximoNumeroRelatorioEspecial}
+            />
+          </div>
         )
 
       case 'fechamento-relatorios-servicos': {
@@ -68626,6 +68751,7 @@ A1;Peça exemplo;10`}
       const sorted = [...getButtonsByGroup('documentacao-relatorios')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       const docHubIcon: Record<string, string> = {
         'relatorio-servico-default': '📄',
+        'relatorio-especial-default': '🏭',
         'biblioteca-relatorios-default': '📚',
         'relatorios-excluidos-clientes-default': '🗃️',
         'fechamento-relatorios-servicos-default': '💼',
@@ -75642,6 +75768,7 @@ A1;Peça exemplo;10`}
                   descFallback: string
                 }> = [
                   { action: 'open-relatorio-servico', titleKey: 'relatorioServicoTitle', descKey: 'relatorioServicoSubtitle', icon: '📋', titleFallback: 'RELATÓRIO DE SERVIÇO', descFallback: 'Gestão de Relatórios de Serviço' },
+                  { action: 'open-relatorio-especial', titleKey: 'relatorioEspecialTitle', descKey: 'relatorioEspecialSubtitle', icon: '🏭', titleFallback: 'RELATÓRIOS ESPECIAIS', descFallback: 'Horas por equipamento — intervenção fabricante' },
                   { action: 'open-biblioteca-relatorios', titleKey: 'bibliotecaRelatoriosTitle', descKey: 'quickAccessBibliotecaRelatoriosDesc', icon: '📚', titleFallback: 'BIBLIOTECA DE RELATÓRIOS', descFallback: 'Visualize relatórios por cliente.' },
                   { action: 'open-protocolos-servico', titleKey: 'protocolosServicoTitle', descKey: 'quickAccessProtocolosServicoDesc', icon: '📑', titleFallback: 'PROTOCOLOS DE SERVIÇO', descFallback: 'Relatórios visuais, peças, PDF e envio ao cliente.' },
                   { action: 'open-quick-gestao-custos', titleKey: 'gestaoCustosTitle', descKey: 'quickAccessGestaoCustosDesc', icon: '💰', titleFallback: 'FECHAMENTO DE OS/CUSTOS/ORÇAMENTOS', descFallback: 'Orçamentos, despesas e mapas.' },

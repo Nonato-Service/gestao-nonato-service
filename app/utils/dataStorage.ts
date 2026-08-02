@@ -615,6 +615,7 @@ export const NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE = new Set([
   'nonato-tecnicos',
   'nonato-equipamentos',
   'nonato-relatorios-servico',
+  'nonato-relatorios-especiais',
   'nonato-pecas-biblioteca',
   'nonato-biblioteca-pecas',
   'nonato-diario-pedidos-dia',
