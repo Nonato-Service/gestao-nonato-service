@@ -13,6 +13,19 @@ import { getKv, saveKv } from './manuaisIndexedDb'
 const BACKUP_KEY = 'nonato-cadastro-safety-backup'
 const SNAPSHOT_KEY = 'nonato-offline-server-snapshot'
 const RESTORED_FLAG = 'nonato-cadastro-safety-restored-count'
+const RESTORE_NOTICE_SUPPRESS_KEY = 'nonato-cadastro-restored-notice-suppressed'
+const RESTORE_NOTICE_LAST_COUNT_KEY = 'nonato-cadastro-last-notified-restore-count'
+
+function noteCadastroRestore(restored: number): void {
+  if (restored <= 0 || typeof window === 'undefined') return
+  try {
+    const prev = parseInt(sessionStorage.getItem(RESTORED_FLAG) || '0', 10)
+    const total = (Number.isFinite(prev) ? prev : 0) + restored
+    sessionStorage.setItem(RESTORED_FLAG, String(total))
+  } catch {
+    /* ignorar */
+  }
+}
 const PECAS_BIBLIOTECA_KEY = 'nonato-pecas-biblioteca'
 const CLIENTES_KEY = 'nonato-clientes'
 const CATEGORIAS_PECAS_KEY = 'nonato-categorias-pecas'
@@ -162,13 +175,7 @@ export async function restoreCriticalCadastroFromIdbIfNeeded(): Promise<number> 
     }
   }
 
-  if (restored > 0) {
-    try {
-      sessionStorage.setItem(RESTORED_FLAG, String(restored))
-    } catch {
-      /* ignorar */
-    }
-  }
+  if (restored > 0) noteCadastroRestore(restored)
   return restored
 }
 
@@ -179,9 +186,26 @@ export function consumeCadastroRestoredNoticeCount(): number {
     const raw = sessionStorage.getItem(RESTORED_FLAG)
     sessionStorage.removeItem(RESTORED_FLAG)
     const n = raw ? parseInt(raw, 10) : 0
-    return Number.isFinite(n) && n > 0 ? n : 0
+    if (!Number.isFinite(n) || n <= 0) return 0
+    const suppressed = localStorage.getItem(RESTORE_NOTICE_SUPPRESS_KEY) === '1'
+    const lastNotified = parseInt(localStorage.getItem(RESTORE_NOTICE_LAST_COUNT_KEY) || '0', 10)
+    if (suppressed && n <= (Number.isFinite(lastNotified) ? lastNotified : 0)) return 0
+    return n
   } catch {
     return 0
+  }
+}
+
+/** Utilizador fechou o aviso — não voltar a mostrar para a mesma recuperação. */
+export function dismissCadastroRestoredNotice(restoredCount: number): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(RESTORE_NOTICE_SUPPRESS_KEY, '1')
+    if (restoredCount > 0) {
+      localStorage.setItem(RESTORE_NOTICE_LAST_COUNT_KEY, String(restoredCount))
+    }
+  } catch {
+    /* ignorar */
   }
 }
 
@@ -215,13 +239,7 @@ export async function mergeSafetyBackupIntoServerData(
       restored++
     }
   }
-  if (restored > 0) {
-    try {
-      sessionStorage.setItem(RESTORED_FLAG, String(restored))
-    } catch {
-      /* ignorar */
-    }
-  }
+  if (restored > 0) noteCadastroRestore(restored)
   return merged
 }
 
@@ -300,13 +318,7 @@ export async function recoverCriticalCadastroGapsFromIdbAndSnapshot(): Promise<n
       }
     }
   }
-  if (restored > 0) {
-    try {
-      sessionStorage.setItem(RESTORED_FLAG, String(restored))
-    } catch {
-      /* ignorar */
-    }
-  }
+  if (restored > 0) noteCadastroRestore(restored)
   return restored
 }
 

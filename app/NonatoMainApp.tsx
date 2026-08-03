@@ -122,6 +122,7 @@ import {
   recoverCriticalCadastroGapsFromIdbAndSnapshot,
   hasMeaningfulCadastroInLocalStorage,
   consumeCadastroRestoredNoticeCount,
+  dismissCadastroRestoredNotice,
 } from './utils/cadastroSafety'
 import { assessPullServerRisk, type PullRiskSeverity } from './utils/syncRisk'
 import {
@@ -5594,6 +5595,14 @@ export default function Dashboard() {
     setBrowserMounted(true)
   }, [])
   const [cadastroRestoredNotice, setCadastroRestoredNotice] = useState(0)
+  useEffect(() => {
+    if (cadastroRestoredNotice <= 0) return
+    const timer = window.setTimeout(() => {
+      dismissCadastroRestoredNotice(cadastroRestoredNotice)
+      setCadastroRestoredNotice(0)
+    }, 9000)
+    return () => window.clearTimeout(timer)
+  }, [cadastroRestoredNotice])
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
   /** Vista resumida no painel inicial; «Entrar no sistema» mostra métricas, atalhos e inventário. */
   const [dashboardWorkspaceExpanded, setDashboardWorkspaceExpanded] = useState(
@@ -8719,7 +8728,6 @@ export default function Dashboard() {
           const { lista: normalized } = garantirCodigosClientes(base)
           setClientes(normalized)
           await saveData('nonato-clientes', normalized, true, false)
-          setCadastroRestoredNotice((prev) => (prev && prev > 0 ? prev : 1))
         } catch {
           /* ignorar */
         }
@@ -73431,7 +73439,10 @@ A1;Peça exemplo;10`}
           </div>
           <button
             type="button"
-            onClick={() => setCadastroRestoredNotice(0)}
+            onClick={() => {
+              dismissCadastroRestoredNotice(cadastroRestoredNotice)
+              setCadastroRestoredNotice(0)
+            }}
             style={{
               background: 'transparent',
               border: '1px solid rgba(255,255,255,0.5)',
