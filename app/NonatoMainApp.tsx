@@ -24,6 +24,7 @@ import {
   loadFromServer,
   pushAllLocalStorageToServer,
   repairPecasBibliotecaIfStale,
+  ensurePecasBibliotecaInServerData,
   forceReporPecasBibliotecaFromServer,
   reporPecasBibliotecaEmergencia,
   hydratePecasBibliotecaImagensFromServer,
@@ -7881,9 +7882,12 @@ export default function Dashboard() {
   const handleUrgentPecasLoaded = useCallback(
     (pecas: PecaBiblioteca[]) => {
       const raw = pecas.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
-      const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
-      setPecasBiblioteca(lista)
-      void savePecasBibliotecaLocally(lista as unknown[])
+      setPecasBiblioteca((prev) => {
+        const merged = mergePecasBibliotecaArrays(raw, prev) as PecaBiblioteca[]
+        const { lista } = garantirNumerosSequenciaPecaBiblioteca(merged, categoriasPecas)
+        void savePecasBibliotecaLocally(lista as unknown[])
+        return prev.length >= 50 && lista.length < prev.length ? prev : lista
+      })
     },
     [categoriasPecas]
   )
@@ -10847,6 +10851,9 @@ export default function Dashboard() {
               }
             : await loadAllForBootstrap(serverDataFromFullPullPrefetch)
         serverData = await mergeSafetyBackupIntoServerData(bootLoad.data)
+        const catsBoot = serverData['nonato-categorias-pecas']
+        const catsBootCount = Array.isArray(catsBoot) ? catsBoot.length : 0
+        serverData = await ensurePecasBibliotecaInServerData(serverData, catsBootCount)
         if (!bootLoad.ok) setBootstrapOfflineMode(true)
         await reportBoot(28)
 
@@ -12274,8 +12281,10 @@ export default function Dashboard() {
       if (savedPecasBiblioteca) {
         console.info(`[Nonato] Biblioteca do browser: ${savedPecasBiblioteca.length} peça(s).`)
       }
-      const minPecasOk = Math.max(15, Math.min(catsInicial.length, 80))
-      if (!savedPecasBiblioteca || (catsInicial.length >= 10 && savedPecasBiblioteca.length < minPecasOk)) {
+      const minPecasOk = Math.max(15, Math.min(Math.max(catsInicial.length, 5), 80))
+      const pecasIncompletas = (arr: unknown[] | null | undefined) =>
+        !Array.isArray(arr) || arr.length < minPecasOk || arr.length < 50
+      if (pecasIncompletas(savedPecasBiblioteca)) {
         const liteBoot = serverData['nonato-pecas-biblioteca-lite']
         const fullBoot = serverData['nonato-pecas-biblioteca']
         if (Array.isArray(liteBoot) && liteBoot.length >= 50) {
@@ -12287,18 +12296,26 @@ export default function Dashboard() {
         } else {
           savedPecasBiblioteca = await bootstrapLoadPecasBiblioteca(catsInicial.length)
         }
-        const pecasIncompletas =
-          !Array.isArray(savedPecasBiblioteca) ||
-          (catsInicial.length >= 10 && savedPecasBiblioteca.length < minPecasOk)
-        if (pecasIncompletas) {
+        if (pecasIncompletas(savedPecasBiblioteca)) {
           const reposto = await reporPecasBibliotecaEmergencia()
           if (Array.isArray(reposto) && reposto.length > 0) {
             savedPecasBiblioteca = reposto
             console.info(`[Nonato] Biblioteca reposta no arranque: ${reposto.length} peça(s).`)
           }
         }
+        if (pecasIncompletas(savedPecasBiblioteca)) {
+          const reparado = await repairPecasBibliotecaIfStale(savedPecasBiblioteca ?? [], catsInicial.length)
+          if (Array.isArray(reparado) && reparado.length > 0) {
+            savedPecasBiblioteca = reparado
+            console.info(`[Nonato] Biblioteca reparada no arranque: ${reparado.length} peça(s).`)
+          }
+        }
       }
-      if (savedPecasBiblioteca && Array.isArray(savedPecasBiblioteca) && savedPecasBiblioteca.length > 0) {
+      if (
+        savedPecasBiblioteca &&
+        Array.isArray(savedPecasBiblioteca) &&
+        !pecasIncompletas(savedPecasBiblioteca)
+      ) {
         const raw = (savedPecasBiblioteca as PecaBiblioteca[]).map((peca) =>
           sanitizarPecaBibliotecaImportacaoFlag(peca)
         )
@@ -28225,7 +28242,7 @@ export default function Dashboard() {
   }, [importacaoTextoColado, processarTextoImportacaoPecas, processarDuplicadosImportacao])
 
   const catalogoPecasSuspeitoParcial =
-    categoriasPecas.length >= 10 &&
+    categoriasPecas.length >= 5 &&
     pecasBiblioteca.length < Math.max(15, Math.min(categoriasPecas.length, 80))
 
   const pecasReporManualLockRef = useRef(false)
@@ -28313,9 +28330,9 @@ export default function Dashboard() {
     if (typeof window === 'undefined') return
     if (appInitialLoading) return
     if (pecasPosBootReporRef.current) return
-    if (categoriasPecas.length < 10) return
+    if (categoriasPecas.length < 5) return
     const minOk = Math.max(15, Math.min(categoriasPecas.length, 80))
-    if (pecasBiblioteca.length >= minOk) return
+    if (pecasBiblioteca.length >= minOk && pecasBiblioteca.length >= 50) return
     pecasPosBootReporRef.current = true
     void (async () => {
       try {
@@ -28329,6 +28346,20 @@ export default function Dashboard() {
         }
         setPecasBibliotecaReparoLoading(true)
         setPecasBibliotecaReparoProgress('A repor biblioteca…')
+        const reparado = await repairPecasBibliotecaIfStale(
+          pecasBiblioteca,
+          categoriasPecas.length,
+          (loaded, total) =>
+            setPecasBibliotecaReparoProgress(
+              `A repor: ${loaded.toLocaleString('pt-PT')} / ${total.toLocaleString('pt-PT')}`
+            )
+        )
+        if (Array.isArray(reparado) && reparado.length >= minOk) {
+          const raw = (reparado as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+          const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
+          setPecasBiblioteca(lista)
+          return
+        }
         const rep = await reporPecasBibliotecaEmergencia((msg) => setPecasBibliotecaReparoProgress(msg))
         if (Array.isArray(rep) && rep.length >= minOk) {
           const raw = (rep as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))

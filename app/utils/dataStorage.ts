@@ -1590,6 +1590,64 @@ export async function repairPecasBibliotecaIfStale(
   return best
 }
 
+function pecasBibliotecaCountInBundle(data: Record<string, unknown>): number {
+  const full = data[PECAS_BIBLIOTECA_KEY]
+  const lite = data[PECAS_BIBLIOTECA_LITE_KEY]
+  return Math.max(
+    Array.isArray(full) ? full.length : 0,
+    Array.isArray(lite) ? lite.length : 0
+  )
+}
+
+/**
+ * Garante catálogo completo no bundle de arranque — crítico em tablet (warm resume, LS parcial, dados só no IDB).
+ */
+export async function ensurePecasBibliotecaInServerData(
+  serverData: Record<string, any>,
+  categoriasCount: number
+): Promise<Record<string, any>> {
+  if (typeof window === 'undefined') return serverData
+  const catN = Math.max(categoriasCount, 0)
+  if (catN < 5) return serverData
+
+  const minOk = Math.max(15, Math.min(catN, 80))
+  let local: unknown[] = []
+  try {
+    const snap = await readLocalValueForLoad(PECAS_BIBLIOTECA_KEY, true)
+    if (Array.isArray(snap.parsed)) local = snap.parsed as unknown[]
+  } catch {
+    /* ignorar */
+  }
+
+  const bundleCount = Math.max(pecasBibliotecaCountInBundle(serverData as Record<string, unknown>), local.length)
+  if (bundleCount >= minOk && bundleCount >= 50) return serverData
+
+  if (isOnline()) {
+    try {
+      const fromLite = await fetchPecasBibliotecaLiteFromServer()
+      if (Array.isArray(fromLite) && fromLite.length >= Math.min(minOk, 50)) {
+        const merged = mergePecasBibliotecaArrays(fromLite, local) as unknown[]
+        await savePecasBibliotecaLocally(merged)
+        console.info(`[Nonato] Biblioteca reposta no arranque (lite): ${bundleCount} → ${merged.length} peça(s).`)
+        return {
+          ...serverData,
+          [PECAS_BIBLIOTECA_KEY]: merged,
+          [PECAS_BIBLIOTECA_LITE_KEY]: fromLite,
+        }
+      }
+    } catch (e) {
+      console.warn('[Nonato] ensurePecasBibliotecaInServerData lite:', e)
+    }
+  }
+
+  const repaired = await repairPecasBibliotecaIfStale(local.length > 0 ? local : serverData[PECAS_BIBLIOTECA_KEY], catN)
+  if (Array.isArray(repaired) && repaired.length > bundleCount) {
+    return { ...serverData, [PECAS_BIBLIOTECA_KEY]: repaired }
+  }
+
+  return serverData
+}
+
 /** Resultado de carregar o bundle completo: `ok` distingue rede/HTTP bem-sucedidos de falha (timeout, offline). */
 export type LoadAllFromServerResult = {
   data: Record<string, any>
@@ -1845,7 +1903,7 @@ function serverPullValueIsEmpty(value: unknown): boolean {
  */
 export async function applyNonBlockingServerPull(server: Record<string, unknown>): Promise<boolean> {
   if (typeof window === 'undefined') return false
-  const local = collectLocalNonatoSnapshotForPull()
+  const local = await collectLocalNonatoSnapshotForPull()
   if (!canAutoPullServerChanges(server, local)) return false
 
   let changed = false
@@ -1881,12 +1939,13 @@ export async function applyNonBlockingServerPull(server: Record<string, unknown>
   return changed
 }
 
-function collectLocalNonatoSnapshotForPull(): Record<string, unknown> {
+async function collectLocalNonatoSnapshotForPull(): Promise<Record<string, unknown>> {
   const out: Record<string, unknown> = {}
   if (typeof window === 'undefined') return out
+  const skipKeys = new Set<string>([...SKIP_PULL_KEYS, PECAS_BIBLIOTECA_KEY, CLIENTES_KEY, RELATORIOS_SERVICO_KEY])
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i)
-    if (!k || !k.startsWith('nonato-') || SKIP_PULL_KEYS.has(k)) continue
+    if (!k || !k.startsWith('nonato-') || skipKeys.has(k)) continue
     const raw = localStorage.getItem(k)
     if (raw === null || raw === '') continue
     try {
@@ -1894,6 +1953,34 @@ function collectLocalNonatoSnapshotForPull(): Record<string, unknown> {
     } catch {
       out[k] = raw
     }
+  }
+  try {
+    const pecasSnap = await readLocalValueForLoad(PECAS_BIBLIOTECA_KEY, true)
+    if (
+      Array.isArray(pecasSnap.parsed) &&
+      pecasSnap.parsed.length > 0 &&
+      !isPecasBibliotecaLocalParcial(pecasSnap.parsed)
+    ) {
+      out[PECAS_BIBLIOTECA_KEY] = pecasSnap.parsed
+    }
+  } catch {
+    /* ignorar */
+  }
+  try {
+    const clientesSnap = await readLocalValueForLoad(CLIENTES_KEY, true)
+    if (Array.isArray(clientesSnap.parsed) && clientesSnap.parsed.length > 0) {
+      out[CLIENTES_KEY] = clientesSnap.parsed
+    }
+  } catch {
+    /* ignorar */
+  }
+  try {
+    const relSnap = await readLocalValueForLoad(RELATORIOS_SERVICO_KEY, true)
+    if (Array.isArray(relSnap.parsed) && relSnap.parsed.length > 0) {
+      out[RELATORIOS_SERVICO_KEY] = relSnap.parsed
+    }
+  } catch {
+    /* ignorar */
   }
   return out
 }
