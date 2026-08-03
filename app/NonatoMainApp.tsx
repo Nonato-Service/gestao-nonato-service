@@ -336,6 +336,8 @@ import { minutosPausaOuAlmocoDia } from './lib/relatorioEspecialCalculos'
 import {
   isPecasBibliotecaCatalogIncomplete,
   pecasBibliotecaMinExpected,
+  getCachedPecasBibliotecaServerTotal,
+  setCachedPecasBibliotecaServerTotal,
 } from './lib/pecasBibliotecaCompleteness'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
 import { PdfModeloPickerField } from './components/PdfModeloPickerField'
@@ -12292,7 +12294,8 @@ export default function Dashboard() {
       const pecasIncompletas = (arr: unknown[] | null | undefined) =>
         isPecasBibliotecaCatalogIncomplete(
           Array.isArray(arr) ? arr.length : 0,
-          Math.max(catsInicial.length, 5)
+          Math.max(catsInicial.length, 5),
+          getCachedPecasBibliotecaServerTotal()
         )
       if (pecasIncompletas(savedPecasBiblioteca)) {
         const liteBoot = serverData['nonato-pecas-biblioteca-lite']
@@ -28209,7 +28212,8 @@ export default function Dashboard() {
 
   const catalogoPecasSuspeitoParcial = isPecasBibliotecaCatalogIncomplete(
     pecasBiblioteca.length,
-    categoriasPecas.length
+    categoriasPecas.length,
+    bibliotecaServidorMeta?.total ?? getCachedPecasBibliotecaServerTotal()
   )
 
   const pecasReporManualLockRef = useRef(false)
@@ -28262,19 +28266,43 @@ export default function Dashboard() {
     setPecasBibliotecaReparoLoading(true)
     setPecasBibliotecaReparoProgress('A ligar ao servidor…')
     try {
-      const fromServer = await reporPecasBibliotecaEmergencia((msg) => {
-        setPecasBibliotecaReparoProgress(msg)
+      const meta = await fetchPecasBibliotecaServerMeta()
+      const expectedTotal = meta?.total ?? getCachedPecasBibliotecaServerTotal()
+      const fromServer = await forceReporPecasBibliotecaFromServer(pecasBiblioteca, (p) => {
+        if (p.phase === 'catalog') {
+          setPecasBibliotecaReparoProgress(
+            `Catálogo: ${p.loaded.toLocaleString('pt-PT')} / ${(p.total || expectedTotal || p.loaded).toLocaleString('pt-PT')}`
+          )
+        } else if (p.phase === 'images') {
+          setPecasBibliotecaReparoProgress(
+            `Fotos: ${p.loaded.toLocaleString('pt-PT')} / ${p.total.toLocaleString('pt-PT')}`
+          )
+        }
       })
-      if (!Array.isArray(fromServer) || fromServer.length < 50) {
-        alert(
-          `Não foi possível carregar as peças do servidor.\n\nVerifique:\n• A janela do servidor está aberta (npm run dev)\n• O endereço é http://localhost:3000\n• Prima Ctrl+Shift+R e tente outra vez`
-        )
+      if (!Array.isArray(fromServer) || fromServer.length === 0) {
+        const rep = await reporPecasBibliotecaEmergencia((msg) => setPecasBibliotecaReparoProgress(msg))
+        if (!Array.isArray(rep) || rep.length === 0) {
+          alert(
+            `Não foi possível carregar todas as peças do servidor.\n\nVerifique:\n• Internet ligada\n• Sessão iniciada (login)\n• Prima Ctrl+Shift+R e tente outra vez`
+          )
+          return
+        }
+        const raw = (rep as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+        const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
+        setPecasBiblioteca(lista)
+        await savePecasBibliotecaLocally(lista as unknown[])
+        setCachedPecasBibliotecaServerTotal(lista.length)
+        gravarBibliotecaUltimaSyncServidor()
+        gravarUltimoServidorTotalAvisado(lista.length)
+        void refreshBibliotecaServidorMeta()
+        alert(`Biblioteca reposta: ${lista.length} peça(s) do servidor.`)
         return
       }
       const raw = (fromServer as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
       const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
       setPecasBiblioteca(lista)
       await savePecasBibliotecaLocally(lista as unknown[])
+      setCachedPecasBibliotecaServerTotal(lista.length)
       gravarBibliotecaUltimaSyncServidor()
       gravarUltimoServidorTotalAvisado(lista.length)
       void refreshBibliotecaServidorMeta()
@@ -28289,7 +28317,7 @@ export default function Dashboard() {
       setPecasBibliotecaReparoLoading(false)
       setPecasBibliotecaReparoProgress('')
     }
-  }, [categoriasPecas, pecasBibliotecaReparoLoading, gravarBibliotecaUltimaSyncServidor, refreshBibliotecaServidorMeta])
+  }, [categoriasPecas, pecasBiblioteca, pecasBibliotecaReparoLoading, gravarBibliotecaUltimaSyncServidor, refreshBibliotecaServidorMeta])
 
   /** Se o arranque ficou com 0 peças mas o recuperador gravou no browser, repor na hora. */
   const pecasPosBootReporRef = useRef(false)
@@ -28298,21 +28326,14 @@ export default function Dashboard() {
     if (appInitialLoading) return
     if (pecasPosBootReporRef.current) return
     if (categoriasPecas.length < 5) return
-    const minOk = pecasBibliotecaMinExpected(categoriasPecas.length)
-    if (!isPecasBibliotecaCatalogIncomplete(pecasBiblioteca.length, categoriasPecas.length)) return
+    if (!isPecasBibliotecaCatalogIncomplete(pecasBiblioteca.length, categoriasPecas.length, getCachedPecasBibliotecaServerTotal())) return
     pecasPosBootReporRef.current = true
     void (async () => {
       try {
-        const local = await loadPecasBibliotecaFromBrowserStorage(categoriasPecas.length)
-        if (local && local.length >= minOk) {
-          const raw = (local as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
-          const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
-          setPecasBiblioteca(lista)
-          console.info(`[Nonato] Biblioteca reposta do browser: ${lista.length} peça(s).`)
-          return
-        }
         setPecasBibliotecaReparoLoading(true)
         setPecasBibliotecaReparoProgress('A repor biblioteca…')
+        const meta = await fetchPecasBibliotecaServerMeta()
+        const expectedTotal = meta?.total ?? getCachedPecasBibliotecaServerTotal()
         const reparado = await repairPecasBibliotecaIfStale(
           pecasBiblioteca,
           categoriasPecas.length,
@@ -28321,14 +28342,14 @@ export default function Dashboard() {
               `A repor: ${loaded.toLocaleString('pt-PT')} / ${total.toLocaleString('pt-PT')}`
             )
         )
-        if (Array.isArray(reparado) && reparado.length >= minOk) {
+        if (Array.isArray(reparado) && !isPecasBibliotecaCatalogIncomplete(reparado.length, categoriasPecas.length, expectedTotal)) {
           const raw = (reparado as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
           const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
           setPecasBiblioteca(lista)
           return
         }
         const rep = await reporPecasBibliotecaEmergencia((msg) => setPecasBibliotecaReparoProgress(msg))
-        if (Array.isArray(rep) && rep.length >= minOk) {
+        if (Array.isArray(rep) && !isPecasBibliotecaCatalogIncomplete(rep.length, categoriasPecas.length, expectedTotal)) {
           const raw = (rep as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
           const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
           setPecasBiblioteca(lista)
@@ -28671,6 +28692,8 @@ export default function Dashboard() {
       ? bibliotecaServidorMeta.total - pecasCatalogoBiblioteca.length
       : 0
 
+  const pecasAutoReporServidorRef = useRef(false)
+
   /** Verifica periodicamente se o Railway tem mais peças que este browser e avisa (badge + notificação). */
   useEffect(() => {
     if (typeof window === 'undefined' || appInitialLoading || isDemoMode) return
@@ -28701,6 +28724,30 @@ export default function Dashboard() {
           return
         }
 
+        /** Repor automaticamente uma vez quando o tablet/PC ficou muito atrás do servidor. */
+        if (!pecasAutoReporServidorRef.current && novidades >= 5) {
+          pecasAutoReporServidorRef.current = true
+          setPecasBibliotecaReparoLoading(true)
+          setPecasBibliotecaReparoProgress('A sincronizar biblioteca com o servidor…')
+          try {
+            const rep = await reporPecasBibliotecaEmergencia((msg) => setPecasBibliotecaReparoProgress(msg))
+            if (Array.isArray(rep) && !isPecasBibliotecaCatalogIncomplete(rep.length, categoriasPecas.length, meta.total)) {
+              const raw = (rep as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+              const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
+              setPecasBiblioteca(lista)
+              setCachedPecasBibliotecaServerTotal(lista.length)
+              gravarUltimoServidorTotalAvisado(meta.total)
+              console.info(`[Nonato] Biblioteca auto-reposta: ${local} → ${lista.length} peça(s).`)
+              return
+            }
+          } catch (e) {
+            console.warn('[Nonato] Auto-repor biblioteca:', e)
+          } finally {
+            setPecasBibliotecaReparoLoading(false)
+            setPecasBibliotecaReparoProgress('')
+          }
+        }
+
         const ultimoAvisado = lerUltimoServidorTotalAvisado()
         if (meta.total <= ultimoAvisado) return
 
@@ -28726,7 +28773,7 @@ export default function Dashboard() {
       cancelled = true
       window.clearInterval(timer)
     }
-  }, [appInitialLoading, isDemoMode, safeT])
+  }, [appInitialLoading, isDemoMode, categoriasPecas, safeT])
 
   const pecasImportadasPendentes = useMemo(
     () => pecasBiblioteca.filter((peca) => ehImportacaoPendenteStrict(peca)),

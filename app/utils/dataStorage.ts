@@ -33,6 +33,9 @@ import {
 import {
   isPecasBibliotecaCatalogIncomplete,
   pecasBibliotecaMinExpected,
+  pecasBibliotecaMeetsServerTotal,
+  setCachedPecasBibliotecaServerTotal,
+  getCachedPecasBibliotecaServerTotal,
 } from '../lib/pecasBibliotecaCompleteness'
 
 const PECAS_BIBLIOTECA_KEY = 'nonato-pecas-biblioteca'
@@ -1170,12 +1173,37 @@ export async function hydratePecasBibliotecaImagensFromServer(
 export async function fetchPecasBibliotecaLiteFromServer(
   onProgress?: (loaded: number, total: number) => void
 ): Promise<unknown[] | null> {
+  await waitForDataApiAuth(20_000)
+  const meta = await fetchPecasBibliotecaServerMeta()
+  const expectedTotal = meta?.total ?? getCachedPecasBibliotecaServerTotal()
+
+  const fromRepair = await fetchPecasBibliotecaRepairPaginated(onProgress)
+  if (
+    Array.isArray(fromRepair) &&
+    fromRepair.length > 0 &&
+    pecasBibliotecaMeetsServerTotal(fromRepair.length, expectedTotal)
+  ) {
+    setCachedPecasBibliotecaServerTotal(fromRepair.length)
+    return fromRepair
+  }
+
   const fromFile = await fetchPecasLiteFileFromServer()
-  if (Array.isArray(fromFile) && fromFile.length > 0) {
+  if (
+    Array.isArray(fromFile) &&
+    fromFile.length > 0 &&
+    pecasBibliotecaMeetsServerTotal(fromFile.length, expectedTotal)
+  ) {
+    setCachedPecasBibliotecaServerTotal(fromFile.length)
     onProgress?.(fromFile.length, fromFile.length)
     return fromFile
   }
-  return fetchPecasBibliotecaRepairPaginated(onProgress)
+
+  if (Array.isArray(fromRepair) && fromRepair.length > 0) {
+    setCachedPecasBibliotecaServerTotal(fromRepair.length)
+    return fromRepair
+  }
+  if (Array.isArray(fromFile) && fromFile.length > 0) return fromFile
+  return null
 }
 
 export type PecasBibliotecaServerMeta = {
@@ -1193,6 +1221,7 @@ export type PecasBibliotecaServerMeta = {
 /** Contagem no servidor (Railway) — para comparar com o catálogo local. */
 export async function fetchPecasBibliotecaServerMeta(): Promise<PecasBibliotecaServerMeta | null> {
   try {
+    await waitForDataApiAuth(15_000)
     const metaRes = await dataApiFetch(`${API_BASE}/repair-pecas-biblioteca?meta=1&lite=1`, {
       method: 'GET',
       signal: createTimeoutSignal(20_000),
@@ -1212,6 +1241,7 @@ export async function fetchPecasBibliotecaServerMeta(): Promise<PecasBibliotecaS
     }
     if (meta?.error === 'auth_required') return null
     if (typeof meta.total !== 'number') return null
+    setCachedPecasBibliotecaServerTotal(meta.total)
     return {
       total: meta.total,
       totalImages: typeof meta.totalImages === 'number' ? meta.totalImages : 0,
@@ -1276,28 +1306,16 @@ export async function forceReporPecasBibliotecaFromServer(
   current: unknown,
   onProgress?: (p: PecasBibliotecaRepairProgress) => void
 ): Promise<unknown[] | null> {
+  await waitForDataApiAuth(25_000)
+  const meta = await fetchPecasBibliotecaServerMeta()
+  const expectedTotal = meta?.total ?? getCachedPecasBibliotecaServerTotal()
   const local = Array.isArray(current) ? current : []
-  let best: unknown[] = [...local]
 
-  /** Limpar cópia parcial (2 peças) que bloqueia o browser. */
-  if (typeof window !== 'undefined' && local.length < 50) {
-    try {
-      localStorage.removeItem(PECAS_BIBLIOTECA_KEY)
-      localStorage.removeItem(`${PECAS_BIBLIOTECA_KEY}--idb`)
-      await saveKv(PECAS_BIBLIOTECA_KEY, [])
-    } catch {
-      /* ignorar */
-    }
-    best = []
-  }
-
-  try {
-    const fromKv = await getKv(PECAS_BIBLIOTECA_KEY)
-    if (Array.isArray(fromKv) && fromKv.length > best.length) {
-      best = fromKv as unknown[]
-    }
-  } catch {
-    /* ignorar */
+  if (
+    typeof window !== 'undefined' &&
+    isPecasBibliotecaCatalogIncomplete(local.length, 0, expectedTotal)
+  ) {
+    await clearPecasBibliotecaLocal()
   }
 
   const fromServer = await fetchPecasBibliotecaRepairPaginated((loaded, total) => {
@@ -1307,21 +1325,28 @@ export async function forceReporPecasBibliotecaFromServer(
   if (!Array.isArray(fromServer) || fromServer.length === 0) {
     return null
   }
+  if (!pecasBibliotecaMeetsServerTotal(fromServer.length, expectedTotal)) {
+    console.warn(
+      `[Nonato] forceRepor incompleto: ${fromServer.length}${expectedTotal ? `/${expectedTotal}` : ''}`
+    )
+    return null
+  }
 
-  best = mergePecasBibliotecaArrays(fromServer, best) as unknown[]
-  await savePecasBibliotecaLocally(best)
+  await savePecasBibliotecaLocally(fromServer)
+  setCachedPecasBibliotecaServerTotal(fromServer.length)
   try {
-    sessionStorage.setItem('nonato-pecas-biblioteca-count', String(best.length))
+    sessionStorage.setItem('nonato-pecas-biblioteca-count', String(fromServer.length))
   } catch {
     /* ignorar */
   }
-  console.info(`[Nonato] Catálogo reposto (lite): ${local.length} → ${best.length} peças.`)
+  console.info(`[Nonato] Catálogo reposto (lite): ${local.length} → ${fromServer.length} peças.`)
 
   void (async () => {
     try {
-      const withImages = await hydratePecasBibliotecaImagensFromServer(best, onProgress)
+      const withImages = await hydratePecasBibliotecaImagensFromServer(fromServer, onProgress)
       if (withImages.length > 0) {
         await savePecasBibliotecaLocally(withImages)
+        setCachedPecasBibliotecaServerTotal(withImages.length)
         console.info(`[Nonato] Fotos da biblioteca hidratadas: ${withImages.filter((p) => p && typeof p === 'object' && (p as { imagem?: string }).imagem).length} peça(s) com imagem.`)
       }
     } catch (e) {
@@ -1329,7 +1354,7 @@ export async function forceReporPecasBibliotecaFromServer(
     }
   })()
 
-  return best
+  return fromServer
 }
 
 /** Lê biblioteca já gravada neste browser (IndexedDB ou localStorage) — prioridade após recuperação. */
@@ -1337,10 +1362,11 @@ export async function loadPecasBibliotecaFromBrowserStorage(
   categoriasCount = 0
 ): Promise<unknown[] | null> {
   const snap = await readLocalValueForLoad(PECAS_BIBLIOTECA_KEY, true)
+  const cachedTotal = getCachedPecasBibliotecaServerTotal()
   if (
     Array.isArray(snap.parsed) &&
     snap.parsed.length > 0 &&
-    !isPecasBibliotecaLocalParcial(snap.parsed, categoriasCount)
+    !isPecasBibliotecaCatalogIncomplete(snap.parsed.length, categoriasCount, cachedTotal)
   ) {
     return snap.parsed as unknown[]
   }
@@ -1379,55 +1405,77 @@ export async function reporPecasBibliotecaEmergencia(
   onProgress?: (msg: string) => void
 ): Promise<unknown[] | null> {
   serverOffline = false
-  onProgress?.('A carregar catálogo do servidor…')
-
-  let localBefore: unknown[] | null = null
-  try {
-    localBefore = await loadPecasBibliotecaFromBrowserStorage()
-  } catch {
-    /* ignorar */
+  onProgress?.('A aguardar sessão…')
+  const authed = await waitForDataApiAuth(30_000)
+  if (!authed) {
+    console.warn('[Nonato] reporPecasBibliotecaEmergencia: sessão não disponível')
+    return null
   }
 
-  const cacheBust = Date.now()
-  const urls = [
-    `${API_BASE}/load?key=${encodeURIComponent(PECAS_BIBLIOTECA_LITE_KEY)}&_=${cacheBust}`,
-    `${API_BASE}/repair-pecas-biblioteca?lite=1&offset=0&limit=500&_=${cacheBust}`,
-  ]
+  onProgress?.('A carregar catálogo do servidor…')
+  const meta = await fetchPecasBibliotecaServerMeta()
+  const expectedTotal = meta?.total ?? getCachedPecasBibliotecaServerTotal()
 
   let catalog: unknown[] | null = null
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, {
-        method: 'GET',
-        credentials: 'same-origin',
-        cache: 'no-store',
-      })
-      if (!res.ok) continue
-      const json = (await res.json()) as {
-        data?: unknown
-        pecas?: unknown
-        error?: string
-        success?: boolean
+  try {
+    catalog = await fetchPecasBibliotecaRepairPaginated((loaded, total) => {
+      onProgress?.(`Catálogo: ${loaded.toLocaleString('pt-PT')} / ${(total || expectedTotal || loaded).toLocaleString('pt-PT')}…`)
+    })
+  } catch (e) {
+    console.warn('[Nonato] reporPecasBibliotecaEmergencia paginado:', e)
+  }
+
+  if (!catalog || !pecasBibliotecaMeetsServerTotal(catalog.length, expectedTotal)) {
+    const cacheBust = Date.now()
+    const urls = [
+      `${API_BASE}/load?key=${encodeURIComponent(PECAS_BIBLIOTECA_LITE_KEY)}&_=${cacheBust}`,
+      `${API_BASE}/repair-pecas-biblioteca?lite=1&offset=0&limit=500&_=${cacheBust}`,
+    ]
+    for (const url of urls) {
+      try {
+        const res = await dataApiFetch(url, {
+          method: 'GET',
+          signal: createTimeoutSignal(60_000),
+        })
+        if (!res.ok) continue
+        const json = (await res.json()) as {
+          data?: unknown
+          pecas?: unknown
+          error?: string
+        }
+        if (json?.error === 'auth_required') continue
+        const data = Array.isArray(json?.data)
+          ? json.data
+          : Array.isArray(json?.pecas)
+            ? json.pecas
+            : null
+        if (!data || data.length === 0) continue
+        if (!pecasBibliotecaMeetsServerTotal(data.length, expectedTotal)) {
+          console.warn(
+            `[Nonato] Ignorado catálogo parcial (${data.length}${expectedTotal ? `/${expectedTotal}` : ''}) de ${url}`
+          )
+          continue
+        }
+        catalog = data
+        break
+      } catch (e) {
+        console.warn('[Nonato] reporPecasBibliotecaEmergencia tentativa falhou:', url, e)
       }
-      if (json?.error === 'auth_required') continue
-      const data = Array.isArray(json?.data)
-        ? json.data
-        : Array.isArray(json?.pecas)
-          ? json.pecas
-          : null
-      if (!data || data.length < 50) continue
-      catalog = data
-      break
-    } catch (e) {
-      console.warn('[Nonato] reporPecasBibliotecaEmergencia tentativa falhou:', url, e)
     }
   }
 
-  if (!catalog) return null
+  if (!catalog || catalog.length === 0) return null
+  if (!pecasBibliotecaMeetsServerTotal(catalog.length, expectedTotal)) {
+    console.warn(
+      `[Nonato] Catálogo ainda incompleto após repor: ${catalog.length}${expectedTotal ? ` (esperado ${expectedTotal})` : ''}`
+    )
+    return null
+  }
 
   await clearPecasBibliotecaLocal()
-  onProgress?.(`${catalog.length} peças — a recuperar fotos do servidor…`)
+  onProgress?.(`${catalog.length} peças — a gravar…`)
   await savePecasBibliotecaLocally(catalog)
+  setCachedPecasBibliotecaServerTotal(catalog.length)
 
   let finalCatalog: unknown[] = catalog
   try {
@@ -1618,6 +1666,8 @@ export async function ensurePecasBibliotecaInServerData(
   if (typeof window === 'undefined') return serverData
   const catN = Math.max(categoriasCount, 0)
   if (catN < 5) return serverData
+
+  await waitForDataApiAuth(20_000)
 
   const minOk = pecasBibliotecaMinExpected(catN)
   let local: unknown[] = []
@@ -2013,6 +2063,13 @@ async function writeLocalFromServerPull(key: string, value: unknown): Promise<vo
   if (key === PECAS_BIBLIOTECA_KEY && Array.isArray(value)) {
     const snap = await readLocalValueForLoad(key, true)
     const localCount = Array.isArray(snap.parsed) ? snap.parsed.length : 0
+    const cachedTotal = getCachedPecasBibliotecaServerTotal()
+    if (cachedTotal && value.length < cachedTotal && localCount >= value.length) {
+      console.warn(
+        `[Nonato] Sync ignorada: «${key}» (${value.length}) menor que total conhecido (${cachedTotal}).`
+      )
+      return
+    }
     if (localCount > value.length && localCount >= 15) {
       console.warn(
         `[Nonato] Sync ignorada: «${key}» no servidor (${value.length}) é menor que local (${localCount}).`

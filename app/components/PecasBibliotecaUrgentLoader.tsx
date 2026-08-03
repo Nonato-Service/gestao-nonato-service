@@ -6,6 +6,7 @@ import {
   fetchPecasBibliotecaServerMeta,
   loadPecasBibliotecaFromBrowserStorage,
   savePecasBibliotecaLocally,
+  waitForDataApiAuth,
 } from '../utils/dataStorage'
 import { isPecasBibliotecaCatalogIncomplete } from '../lib/pecasBibliotecaCompleteness'
 
@@ -40,6 +41,7 @@ export function PecasBibliotecaUrgentLoader({
     void (async () => {
       try {
         onProgress?.(loadingMessage || 'A carregar peças do servidor…')
+        await waitForDataApiAuth(25_000)
         const meta = await fetchPecasBibliotecaServerMeta()
         const serverTotal = meta?.total ?? null
 
@@ -65,7 +67,7 @@ export function PecasBibliotecaUrgentLoader({
           !Array.isArray(fromLite) ||
           isPecasBibliotecaCatalogIncomplete(fromLite.length, categoriasCount, serverTotal)
         ) {
-          throw new Error(`Catálogo inválido (${Array.isArray(fromLite) ? fromLite.length : 0} peças)`)
+          throw new Error(`Catálogo inválido (${Array.isArray(fromLite) ? fromLite.length : 0}${serverTotal ? `/${serverTotal}` : ''} peças)`)
         }
 
         await savePecasBibliotecaLocally(fromLite)
