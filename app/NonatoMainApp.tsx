@@ -30,6 +30,8 @@ import {
   hydratePecasBibliotecaImagensFromServer,
   loadPecasBibliotecaFromBrowserStorage,
   fetchPecasBibliotecaLiteFromServer,
+  mergePecasBibliotecaWithServerLite,
+  pushPecasBibliotecaClassificationsIfRicher,
   fetchPecasBibliotecaServerMeta,
   bootstrapLoadPecasBiblioteca,
   clearPecasBibliotecaLocal,
@@ -28774,6 +28776,35 @@ export default function Dashboard() {
       window.clearInterval(timer)
     }
   }, [appInitialLoading, isDemoMode, categoriasPecas, safeT])
+
+  const pecasBibliotecaClassificacaoSyncRef = useRef(pecasBiblioteca)
+  pecasBibliotecaClassificacaoSyncRef.current = pecasBiblioteca
+  const pecasClassificacaoSyncFeitoRef = useRef(false)
+
+  /** PC envia classificações ao servidor; tablet funde lite remoto (categorias/subcategorias). */
+  useEffect(() => {
+    if (typeof window === 'undefined' || appInitialLoading || isDemoMode) return
+    if (abaBibliotecaPecas !== 'biblioteca' && abaBibliotecaPecas !== 'biblioteca-gestao') return
+    if (categoriasPecas.length < 3 || !isOnline()) return
+    if (pecasClassificacaoSyncFeitoRef.current) return
+    const local = pecasBibliotecaClassificacaoSyncRef.current
+    if (!Array.isArray(local) || local.length < 50) return
+
+    pecasClassificacaoSyncFeitoRef.current = true
+    void (async () => {
+      try {
+        await pushPecasBibliotecaClassificationsIfRicher(local as unknown[])
+        const merged = await mergePecasBibliotecaWithServerLite(local as unknown[])
+        if (!Array.isArray(merged)) return
+        const raw = (merged as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+        const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
+        setPecasBiblioteca(lista)
+      } catch (e) {
+        console.warn('[Nonato] Sync classificações biblioteca:', e)
+        pecasClassificacaoSyncFeitoRef.current = false
+      }
+    })()
+  }, [abaBibliotecaPecas, appInitialLoading, categoriasPecas, isDemoMode])
 
   const pecasImportadasPendentes = useMemo(
     () => pecasBiblioteca.filter((peca) => ehImportacaoPendenteStrict(peca)),

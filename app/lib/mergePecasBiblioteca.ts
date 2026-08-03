@@ -63,10 +63,30 @@ function temImagemBase64Peca(p: PecaBibliotecaMerge): boolean {
   return typeof img === 'string' && img.startsWith('data:') && img.length > 100
 }
 
+function temClassificacaoPeca(p: PecaBibliotecaMerge): boolean {
+  return Boolean(String(p.categoriaId ?? '').trim())
+}
+
+function copiarClassificacaoPeca(out: PecaBibliotecaMerge, src: PecaBibliotecaMerge): void {
+  out.categoriaId = src.categoriaId
+  out.categoria = src.categoria
+  out.subcategoriaId = src.subcategoriaId
+  out.subcategoria = src.subcategoria
+  if (src.numeroSequenciaGrupo !== undefined) {
+    out.numeroSequenciaGrupo = src.numeroSequenciaGrupo
+  }
+}
+
+export type MergePecaBibliotecaOptions = {
+  /** Segundo argumento (local) ganha categoria/subcategoria quando tiver grupo. */
+  preferSecondClassification?: boolean
+}
+
 /** Funde dois registos da mesma peça — prioriza classificação e revisão mais recente. */
 export function mergePecaBibliotecaFields(
   a: PecaBibliotecaMerge,
-  b: PecaBibliotecaMerge
+  b: PecaBibliotecaMerge,
+  options?: MergePecaBibliotecaOptions
 ): PecaBibliotecaMerge {
   const scoreA = pecaRevisionScore(a)
   const scoreB = pecaRevisionScore(b)
@@ -74,16 +94,14 @@ export function mergePecaBibliotecaFields(
   const older = scoreB >= scoreA ? a : b
   const out: PecaBibliotecaMerge = { ...older, ...newer }
 
-  const newerCat = String(newer.categoriaId ?? '').trim()
-  const olderCat = String(older.categoriaId ?? '').trim()
-  if (!newerCat && olderCat) {
-    out.categoriaId = older.categoriaId
-    out.categoria = older.categoria
-    out.subcategoriaId = older.subcategoriaId
-    out.subcategoria = older.subcategoria
-    if (older.numeroSequenciaGrupo !== undefined) {
-      out.numeroSequenciaGrupo = older.numeroSequenciaGrupo
-    }
+  if (options?.preferSecondClassification && temClassificacaoPeca(b)) {
+    copiarClassificacaoPeca(out, b)
+  } else if (temClassificacaoPeca(b) && !temClassificacaoPeca(a)) {
+    copiarClassificacaoPeca(out, b)
+  } else if (temClassificacaoPeca(a) && !temClassificacaoPeca(b)) {
+    copiarClassificacaoPeca(out, a)
+  } else if (temClassificacaoPeca(a) && temClassificacaoPeca(b)) {
+    copiarClassificacaoPeca(out, scoreB >= scoreA ? b : a)
   }
 
   if (!temImagemBase64Peca(newer) && temImagemBase64Peca(older)) {
@@ -191,7 +209,7 @@ export function mergePecasBibliotecaArrays(
       byId.set(id, p)
       continue
     }
-    byId.set(id, mergePecaBibliotecaFields(existing, p))
+    byId.set(id, mergePecaBibliotecaFields(existing, p, { preferSecondClassification: true }))
   }
 
   const codigoPrincipal = new Map<string, string>()

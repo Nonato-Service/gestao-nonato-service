@@ -1206,6 +1206,57 @@ export async function fetchPecasBibliotecaLiteFromServer(
   return null
 }
 
+export function countPecasBibliotecaComClassificacao(pecas: unknown): number {
+  if (!Array.isArray(pecas)) return 0
+  let n = 0
+  for (const p of pecas) {
+    if (p && typeof p === 'object' && String((p as { categoriaId?: string }).categoriaId ?? '').trim()) n++
+  }
+  return n
+}
+
+/** Envia catálogo ao servidor quando este browser tem mais peças classificadas que o lite remoto. */
+export async function pushPecasBibliotecaClassificationsIfRicher(local: unknown[]): Promise<boolean> {
+  if (typeof window === 'undefined' || !isOnline() || !Array.isArray(local) || local.length === 0) {
+    return false
+  }
+  const localClass = countPecasBibliotecaComClassificacao(local)
+  if (localClass < 1) return false
+  try {
+    await waitForDataApiAuth(15_000)
+    const lite = await fetchPecasBibliotecaLiteFromServer()
+    const serverClass = countPecasBibliotecaComClassificacao(lite ?? [])
+    if (localClass <= serverClass) return false
+    console.info(
+      `[Nonato] Classificações locais (${localClass}) > servidor (${serverClass}) — a enviar catálogo completo.`
+    )
+    return (await saveToServer(PECAS_BIBLIOTECA_KEY, local)) === true
+  } catch (e) {
+    console.warn('[Nonato] pushPecasBibliotecaClassificationsIfRicher:', e)
+    return false
+  }
+}
+
+/** Funde catálogo lite do servidor com cópia local (categorias/subcategorias de qualquer lado). */
+export async function mergePecasBibliotecaWithServerLite(local: unknown[]): Promise<unknown[] | null> {
+  if (typeof window === 'undefined' || !isOnline() || !Array.isArray(local)) return null
+  try {
+    await waitForDataApiAuth(15_000)
+    const lite = await fetchPecasBibliotecaLiteFromServer()
+    if (!Array.isArray(lite) || lite.length === 0) return null
+    const merged = mergePecasBibliotecaArrays(lite, local) as unknown[]
+    if (!pecasBibliotecaArraysDiffer(merged, local)) return null
+    await savePecasBibliotecaLocally(merged)
+    console.info(
+      `[Nonato] Catálogo fundido com servidor: ${local.length} → ${merged.length}, classificadas ${countPecasBibliotecaComClassificacao(merged)}.`
+    )
+    return merged
+  } catch (e) {
+    console.warn('[Nonato] mergePecasBibliotecaWithServerLite:', e)
+    return null
+  }
+}
+
 export type PecasBibliotecaServerMeta = {
   total: number
   totalImages: number
@@ -1473,14 +1524,22 @@ export async function reporPecasBibliotecaEmergencia(
     return null
   }
 
-  await clearPecasBibliotecaLocal()
-  onProgress?.(`${catalog.length} peças — a gravar…`)
-  await savePecasBibliotecaLocally(catalog)
+  let localBefore: unknown[] = []
+  try {
+    const snap = await readLocalValueForLoad(PECAS_BIBLIOTECA_KEY, true)
+    if (Array.isArray(snap.parsed)) localBefore = snap.parsed as unknown[]
+  } catch {
+    /* ignorar */
+  }
+
+  const catalogMerged = mergePecasBibliotecaArrays(catalog, localBefore) as unknown[]
+  onProgress?.(`${catalogMerged.length} peças — a gravar…`)
+  await savePecasBibliotecaLocally(catalogMerged)
   setCachedPecasBibliotecaServerTotal(catalog.length)
 
-  let finalCatalog: unknown[] = catalog
+  let finalCatalog: unknown[] = catalogMerged
   try {
-    finalCatalog = await hydratePecasBibliotecaImagensFromServer(catalog, (p) => {
+    finalCatalog = await hydratePecasBibliotecaImagensFromServer(catalogMerged, (p) => {
       if (p.phase === 'images') {
         onProgress?.(`Fotos: ${p.loaded} / ${p.total}…`)
       }
@@ -1491,15 +1550,18 @@ export async function reporPecasBibliotecaEmergencia(
     onProgress?.(`Concluído: ${finalCatalog.length} peças, ${comFoto} fotos.`)
   } catch (e) {
     console.warn('[Nonato] Hidratação de fotos falhou parcialmente:', e)
-    onProgress?.(`${catalog.length} peças (fotos incompletas — tente Repor outra vez).`)
+    onProgress?.(`${catalogMerged.length} peças (fotos incompletas — tente Repor outra vez).`)
   }
 
-  if (localBefore && Array.isArray(localBefore) && localBefore.length > 0) {
-    finalCatalog = mergePecasBibliotecaArrays(finalCatalog, localBefore)
-    await savePecasBibliotecaLocally(finalCatalog)
-    console.info(
-      `[Nonato] Reposição emergência fundida com local: ${finalCatalog.length} peça(s) (classificações locais preservadas).`
-    )
+  if (localBefore.length > 0) {
+    const withLocalClass = mergePecasBibliotecaArrays(finalCatalog, localBefore) as unknown[]
+    if (pecasBibliotecaArraysDiffer(withLocalClass, finalCatalog)) {
+      finalCatalog = withLocalClass
+      await savePecasBibliotecaLocally(finalCatalog)
+      console.info(
+        `[Nonato] Reposição emergência: classificações locais preservadas (${finalCatalog.length} peça(s)).`
+      )
+    }
   }
 
   try {
