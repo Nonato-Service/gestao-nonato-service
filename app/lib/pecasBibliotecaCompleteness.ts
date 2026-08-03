@@ -39,7 +39,7 @@ export function isPecasBibliotecaCatalogIncomplete(
       ? serverTotal
       : getCachedPecasBibliotecaServerTotal()
 
-  /** Total do servidor é a referência — PC e tablet devem coincidir. */
+  /** Incompleto quando falta peça face ao servidor (PC com mais locais não é «incompleto»). */
   if (typeof expected === 'number' && expected > 0) {
     return count < expected
   }
@@ -57,5 +57,5 @@ export function pecasBibliotecaMeetsServerTotal(
   serverTotal: number | null | undefined
 ): boolean {
   if (!serverTotal || serverTotal <= 0) return count >= 50
-  return count >= serverTotal
+  return count === serverTotal
 }

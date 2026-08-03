@@ -106,6 +106,15 @@ export function mergePecaBibliotecaFields(
     delete out.dataAtualizacao
   }
 
+  const flagSrv = (p: PecaBibliotecaMerge) =>
+    p.temImagemServidor === true ||
+    p.temImagemServidor === 'true' ||
+    p.temImagemServidor === 1 ||
+    p.temImagemServidor === '1'
+  if (flagSrv(a) || flagSrv(b)) {
+    out.temImagemServidor = true
+  }
+
   return out
 }
 

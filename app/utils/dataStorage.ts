@@ -1332,18 +1332,19 @@ export async function forceReporPecasBibliotecaFromServer(
     return null
   }
 
-  await savePecasBibliotecaLocally(fromServer)
+  const merged = mergePecasBibliotecaArrays(fromServer, local) as unknown[]
+  await savePecasBibliotecaLocally(merged)
   setCachedPecasBibliotecaServerTotal(fromServer.length)
   try {
-    sessionStorage.setItem('nonato-pecas-biblioteca-count', String(fromServer.length))
+    sessionStorage.setItem('nonato-pecas-biblioteca-count', String(merged.length))
   } catch {
     /* ignorar */
   }
-  console.info(`[Nonato] Catálogo reposto (lite): ${local.length} → ${fromServer.length} peças.`)
+  console.info(`[Nonato] Catálogo reposto (lite): ${local.length} → ${merged.length} peças.`)
 
   void (async () => {
     try {
-      const withImages = await hydratePecasBibliotecaImagensFromServer(fromServer, onProgress)
+      const withImages = await hydratePecasBibliotecaImagensFromServer(merged, onProgress)
       if (withImages.length > 0) {
         await savePecasBibliotecaLocally(withImages)
         setCachedPecasBibliotecaServerTotal(withImages.length)
@@ -1354,7 +1355,7 @@ export async function forceReporPecasBibliotecaFromServer(
     }
   })()
 
-  return fromServer
+  return merged
 }
 
 /** Lê biblioteca já gravada neste browser (IndexedDB ou localStorage) — prioridade após recuperação. */

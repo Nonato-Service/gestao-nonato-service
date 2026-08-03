@@ -28724,8 +28724,8 @@ export default function Dashboard() {
           return
         }
 
-        /** Repor automaticamente uma vez quando o tablet/PC ficou muito atrás do servidor. */
-        if (!pecasAutoReporServidorRef.current && novidades >= 5) {
+        /** Repor automaticamente uma vez quando o tablet/PC ficou atrás do servidor. */
+        if (!pecasAutoReporServidorRef.current && novidades >= 1) {
           pecasAutoReporServidorRef.current = true
           setPecasBibliotecaReparoLoading(true)
           setPecasBibliotecaReparoProgress('A sincronizar biblioteca com o servidor…')

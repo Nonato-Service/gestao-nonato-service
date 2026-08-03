@@ -165,6 +165,16 @@ function toLitePeca(p: PecaRecord): PecaRecord {
 
     delete out.imagem
 
+  } else if (pecaTemUrlHomag(out) || pecaTemPlaceholder(out)) {
+
+    /* URL/placeholder mantém-se em imagem — visível no tablet sem base64 */
+
+  } else if (typeof out.imagem === 'string' && out.imagem.trim().startsWith('data:')) {
+
+    out.temImagemServidor = true
+
+    delete out.imagem
+
   }
 
   return out
