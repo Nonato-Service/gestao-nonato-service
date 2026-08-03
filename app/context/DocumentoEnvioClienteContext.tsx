@@ -135,7 +135,7 @@ export function buildTextoEnvioRelatorioEspecial(rel: {
     })
     .filter(Boolean)
     .join('\n')
-  return `Prezado(a),\n\nSegue em anexo o relatório de serviços n.º ${rel.numero || '—'}.\n\nCliente: ${rel.cliente || '—'}\nData: ${rel.data || '—'}${
+  return `Prezado(a),\n\nSegue em anexo o relatório de serviço n.º ${rel.numero || '—'}.\n\nCliente: ${rel.cliente || '—'}\nData: ${rel.data || '—'}${
     linhasEquip ? `\nEquipamentos:\n${linhasEquip}` : ''
   }\nHoras de trabalho: ${rel.horasTrabalho || '—'}\nKM: ${rel.kmsPercorridos || '—'}\n\nAtenciosamente,\nNonato Service`
 }

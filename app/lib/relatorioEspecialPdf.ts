@@ -549,7 +549,7 @@ export function imprimirRelatorioEspecialPdf(
 
   const headerHtml = buildPdfDocumentHeaderHtml({
     logoContent,
-    title: L(labels, 'relatorioEspecialPdfDocTitle', 'RELATÓRIO DE SERVIÇOS'),
+    title: L(labels, 'relatorioEspecialPdfDocTitle', L(labels, 'relatorioServicoTitle', 'RELATÓRIO DE SERVIÇO')),
     reportNumber: String(rel.numero || ''),
     subtitle: `${L(labels, 'relatorioEspecialSubtitle', 'Horas por equipamento — intervenção fabricante')} · ${empresaNome}`,
     badgeLabel: L(labels, 'relatorioPdfBadgeLabel', 'Relatório n.º'),
@@ -671,8 +671,9 @@ export function imprimirRelatorioEspecialPdf(
     hour: '2-digit',
     minute: '2-digit',
   })
+  const pdfDocTitle = L(labels, 'relatorioEspecialPdfDocTitle', L(labels, 'relatorioServicoTitle', 'RELATÓRIO DE SERVIÇO'))
   const footerHtml = buildPdfDocumentFooterHtml(
-    `${empresaNome} · ${L(labels, 'relatorioEspecialTitle', 'Relatório de Serviços')} ${rel.numero} · ${dataGeracao}`
+    `${empresaNome} · ${pdfDocTitle} ${rel.numero} · ${dataGeracao}`
   )
 
   const body = `
@@ -691,13 +692,13 @@ export function imprimirRelatorioEspecialPdf(
 </div>`
 
   const html = wrapRelatorioServicoPrintDocument({
-    title: `${L(labels, 'relatorioEspecialTitle', 'Relatório de Serviços')} ${rel.numero}`,
+    title: `${pdfDocTitle} ${rel.numero}`,
     bodyClass: 'rs-pdf rs-pdf--classic rs-pdf--especial',
     baseCss: RELATORIO_SERVICO_PDF_PRINT_CSS,
     bodyHtml: body,
     showToolbar: true,
     toolbarLabels: {
-      titulo: L(labels, 'relatorioEspecialPdfToolbarTitulo', 'Relatório de Serviços — PDF'),
+      titulo: L(labels, 'relatorioEspecialPdfToolbarTitulo', 'Relatório de Serviço — PDF'),
       imprimir: L(labels, 'imprimirGuardarPDF', 'Imprimir / Guardar PDF'),
       fechar: L(labels, 'voltar', 'Fechar'),
       enviarEmail: L(labels, 'enviarPorEmail', 'E-mail'),

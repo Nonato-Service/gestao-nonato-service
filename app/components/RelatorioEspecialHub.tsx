@@ -99,7 +99,7 @@ export default function RelatorioEspecialHub({
   const envioRelatorio = useCallback(
     (rel: RelatorioEspecial, onOpenPdf: () => void) => ({
       title: t.envioRelatorioTitulo || 'Enviar relatório ao cliente',
-      subject: `${t.relatorioEspecialTitle || 'Relatório de Serviços'} ${rel.numero || '—'} - ${rel.cliente || 'Cliente'}`,
+      subject: `${t.relatorioEspecialPdfDocTitle || t.relatorioServicoTitle || 'Relatório de Serviço'} ${rel.numero || '—'} - ${rel.cliente || 'Cliente'}`,
       body: buildTextoEnvioRelatorioEspecial({
         numero: rel.numero,
         cliente: rel.cliente,
@@ -397,7 +397,7 @@ export default function RelatorioEspecialHub({
       <div className="relatorio-especial-hub" style={{ padding: '16px 0' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginBottom: 20 }} className="relatorio-especial-hub__head">
           <h2 style={{ margin: 0, flex: '1 1 200px' }}>
-            {t.relatorioEspecialTitle || 'Relatórios Especiais'}
+            {t.relatorioEspecialTitle || 'RELATÓRIOS ESPECIAIS'}
           </h2>
           <button type="button" className="btn-primary relatorio-equipamentos-block__add" onClick={abrirNovo}>
             ➕ {t.relatorioEspecialNovo || 'Novo relatório especial'}
