@@ -1307,7 +1307,10 @@ export default function RelatorioEspecialHub({
                           type="time"
                           className="ns-datetime-input"
                           value={dia.tempoPausa || ''}
-                          onChange={(e) => actualizarDia(dia.id, { tempoPausa: e.target.value, pausa: e.target.value ? 'sim' : '' })}
+                          onChange={(e) => {
+                            const v = e.target.value ? e.target.value.slice(0, 5) : ''
+                            actualizarDia(dia.id, { tempoPausa: v, pausa: v ? 'sim' : '' })
+                          }}
                         />
                       </div>
                     </div>

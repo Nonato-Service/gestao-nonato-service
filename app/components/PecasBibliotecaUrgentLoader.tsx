@@ -2,57 +2,76 @@
 
 import { useLayoutEffect, useRef } from 'react'
 import {
+  fetchPecasBibliotecaLiteFromServer,
+  fetchPecasBibliotecaServerMeta,
   loadPecasBibliotecaFromBrowserStorage,
   savePecasBibliotecaLocally,
 } from '../utils/dataStorage'
+import { isPecasBibliotecaCatalogIncomplete } from '../lib/pecasBibliotecaCompleteness'
 
 type PecaLike = { id?: string; codigo?: string; nome?: string; [key: string]: unknown }
 
 type Props = {
   pecasCount: number
+  categoriasCount: number
   onLoaded: (pecas: PecaLike[]) => void
   onProgress?: (msg: string) => void
   loadingMessage?: string
 }
 
-/** Carrega 362 peças do servidor IMEDIATAMENTE — não espera o bootstrap lento. */
-export function PecasBibliotecaUrgentLoader({ pecasCount, onLoaded, onProgress, loadingMessage }: Props) {
+/** Carrega catálogo completo do servidor quando o browser ficou com cópia parcial. */
+export function PecasBibliotecaUrgentLoader({
+  pecasCount,
+  categoriasCount,
+  onLoaded,
+  onProgress,
+  loadingMessage,
+}: Props) {
   const doneRef = useRef(false)
 
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return
     if (doneRef.current) return
-    if (pecasCount >= 50) return
+    if (!isPecasBibliotecaCatalogIncomplete(pecasCount, categoriasCount)) return
 
     doneRef.current = true
     let cancelled = false
 
     void (async () => {
       try {
-        onProgress?.(loadingMessage || 'Loading parts from server…')
-        const local = await loadPecasBibliotecaFromBrowserStorage()
+        onProgress?.(loadingMessage || 'A carregar peças do servidor…')
+        const meta = await fetchPecasBibliotecaServerMeta()
+        const serverTotal = meta?.total ?? null
+
+        if (!isPecasBibliotecaCatalogIncomplete(pecasCount, categoriasCount, serverTotal)) {
+          onProgress?.('')
+          return
+        }
+
+        const local = await loadPecasBibliotecaFromBrowserStorage(categoriasCount)
         if (cancelled) return
-        if (local && local.length >= 50) {
+        if (
+          local &&
+          !isPecasBibliotecaCatalogIncomplete(local.length, categoriasCount, serverTotal)
+        ) {
           onLoaded(local as PecaLike[])
           onProgress?.('')
           return
         }
 
-        const res = await fetch(
-          `/api/data/pecas-fix?_=${Date.now()}`,
-          { cache: 'no-store', credentials: 'same-origin' }
-        )
-        if (!res.ok) throw new Error(`Servidor respondeu ${res.status}`)
-        const json = (await res.json()) as { success?: boolean; pecas?: unknown; total?: number; message?: string }
-        const data = json?.pecas
-        if (!Array.isArray(data) || data.length < 50) {
-          throw new Error(`Catálogo inválido (${Array.isArray(data) ? data.length : 0} peças)`)
-        }
+        const fromLite = await fetchPecasBibliotecaLiteFromServer()
         if (cancelled) return
-        await savePecasBibliotecaLocally(data)
-        onLoaded(data as PecaLike[])
+        if (
+          !Array.isArray(fromLite) ||
+          isPecasBibliotecaCatalogIncomplete(fromLite.length, categoriasCount, serverTotal)
+        ) {
+          throw new Error(`Catálogo inválido (${Array.isArray(fromLite) ? fromLite.length : 0} peças)`)
+        }
+
+        await savePecasBibliotecaLocally(fromLite)
+        onLoaded(fromLite as PecaLike[])
         onProgress?.('')
-        console.info(`[Nonato] Urgent loader: ${data.length} peça(s) carregadas.`)
+        console.info(`[Nonato] Urgent loader: ${fromLite.length} peça(s) carregadas.`)
       } catch (e) {
         console.error('[Nonato] Urgent loader falhou:', e)
         onProgress?.('')
@@ -63,7 +82,7 @@ export function PecasBibliotecaUrgentLoader({ pecasCount, onLoaded, onProgress, 
     return () => {
       cancelled = true
     }
-  }, [pecasCount, onLoaded, onProgress])
+  }, [pecasCount, categoriasCount, onLoaded, onProgress, loadingMessage])
 
   return null
 }

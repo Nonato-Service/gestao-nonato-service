@@ -332,6 +332,11 @@ import { wrapRelatorioServicoPrintDocument } from './lib/relatorioServicoPdfShel
 import RelatorioEspecialHub from './components/RelatorioEspecialHub'
 import type { RelatorioEspecial } from './lib/relatorioEspecialTypes'
 import { RELATORIOS_ESPECIAIS_STORAGE_KEY } from './lib/relatorioEspecialTypes'
+import { minutosPausaOuAlmocoDia } from './lib/relatorioEspecialCalculos'
+import {
+  isPecasBibliotecaCatalogIncomplete,
+  pecasBibliotecaMinExpected,
+} from './lib/pecasBibliotecaCompleteness'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
 import { PdfModeloPickerField } from './components/PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from './lib/pdfModelStorage'
@@ -7886,7 +7891,10 @@ export default function Dashboard() {
         const merged = mergePecasBibliotecaArrays(raw, prev) as PecaBiblioteca[]
         const { lista } = garantirNumerosSequenciaPecaBiblioteca(merged, categoriasPecas)
         void savePecasBibliotecaLocally(lista as unknown[])
-        return prev.length >= 50 && lista.length < prev.length ? prev : lista
+        return !isPecasBibliotecaCatalogIncomplete(prev.length, categoriasPecas.length) &&
+          isPecasBibliotecaCatalogIncomplete(lista.length, categoriasPecas.length)
+          ? prev
+          : lista
       })
     },
     [categoriasPecas]
@@ -10843,7 +10851,7 @@ export default function Dashboard() {
 
         // Primeiro, tentar carregar tudo do servidor (ou reutilizar bundle do full-pull já obtido antes do wipe)
         const bootLoad =
-          warmResume && !serverDataFromFullPullPrefetch
+          warmResume && !serverDataFromFullPullPrefetch && !isOnline()
             ? {
                 data: await loadAllFromLocalCache(),
                 ok: false as const,
@@ -12277,20 +12285,22 @@ export default function Dashboard() {
       }
 
       // Carregar peças biblioteca — PRIORIDADE: cópia já gravada pelo recuperador (IndexedDB)
-      let savedPecasBiblioteca: unknown[] | null = await loadPecasBibliotecaFromBrowserStorage()
+      let savedPecasBiblioteca: unknown[] | null = await loadPecasBibliotecaFromBrowserStorage(catsInicial.length)
       if (savedPecasBiblioteca) {
         console.info(`[Nonato] Biblioteca do browser: ${savedPecasBiblioteca.length} peça(s).`)
       }
-      const minPecasOk = Math.max(15, Math.min(Math.max(catsInicial.length, 5), 80))
       const pecasIncompletas = (arr: unknown[] | null | undefined) =>
-        !Array.isArray(arr) || arr.length < minPecasOk || arr.length < 50
+        isPecasBibliotecaCatalogIncomplete(
+          Array.isArray(arr) ? arr.length : 0,
+          Math.max(catsInicial.length, 5)
+        )
       if (pecasIncompletas(savedPecasBiblioteca)) {
         const liteBoot = serverData['nonato-pecas-biblioteca-lite']
         const fullBoot = serverData['nonato-pecas-biblioteca']
-        if (Array.isArray(liteBoot) && liteBoot.length >= 50) {
+        if (Array.isArray(liteBoot) && !pecasIncompletas(liteBoot)) {
           savedPecasBiblioteca = liteBoot
           console.info(`[Nonato] Biblioteca do bundle lite: ${liteBoot.length} peça(s).`)
-        } else if (Array.isArray(fullBoot) && fullBoot.length >= 50) {
+        } else if (Array.isArray(fullBoot) && !pecasIncompletas(fullBoot)) {
           savedPecasBiblioteca = fullBoot
           console.info(`[Nonato] Biblioteca do bundle completo: ${fullBoot.length} peça(s).`)
         } else {
@@ -12320,7 +12330,15 @@ export default function Dashboard() {
           sanitizarPecaBibliotecaImportacaoFlag(peca)
         )
         const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, catsInicial)
-        setPecasBiblioteca((prev) => (prev.length >= 50 && lista.length < prev.length ? prev : lista))
+        setPecasBiblioteca((prev) => {
+          if (
+            !isPecasBibliotecaCatalogIncomplete(prev.length, catsInicial.length) &&
+            isPecasBibliotecaCatalogIncomplete(lista.length, catsInicial.length)
+          ) {
+            return prev
+          }
+          return lista
+        })
         void savePecasBibliotecaLocally(lista)
         const faltamFotos = lista.filter(
           (p) =>
@@ -24196,24 +24214,17 @@ export default function Dashboard() {
     let horasDuracao = dia.horasDuracao
     if (dia.horasInicio && dia.horasFim) {
       horasDuracao = calcularDuracao(dia.horasInicio, dia.horasFim)
-      
-      // Subtrair tempo de pausa se houver
-      if ((dia.pausa === 'true' || dia.pausa === 'sim') && dia.tempoPausa) {
+      const pausaMinutos = minutosPausaOuAlmocoDia(dia)
+      if (pausaMinutos > 0) {
         try {
-          const [hPausa, mPausa] = dia.tempoPausa.split(':').map(Number)
-          const pausaMinutos = (hPausa || 0) * 60 + (mPausa || 0)
-          
-          // Converter horasDuracao para minutos
           const [hDuracao, mDuracao] = horasDuracao.split(':').map(Number)
           const duracaoMinutos = (hDuracao || 0) * 60 + (mDuracao || 0)
-          
-          // Subtrair pausa
           const diffMinutos = Math.max(0, duracaoMinutos - pausaMinutos)
           const horas = Math.floor(diffMinutos / 60)
           const minutos = diffMinutos % 60
           horasDuracao = `${horas}:${String(minutos).padStart(2, '0')}`
         } catch {
-          // Se houver erro no cálculo, manter o valor original
+          /* manter bruto */
         }
       }
     }
@@ -24239,7 +24250,6 @@ export default function Dashboard() {
     let totalHorasViagem = 0
     let totalHorasViagemIda = 0
     let totalHorasViagemRetorno = 0
-    let totalPausa = 0
 
     listaDias.forEach(dia => {
       // Recalcular o dia antes de somar
@@ -24255,25 +24265,7 @@ export default function Dashboard() {
         }
       }
 
-      // Somar pausa para descontar depois do total
-      if (diaCalculado.pausa) {
-        // A pausa pode estar no formato "0:30" ou "30" (minutos)
-        let minutosPausa = 0
-        if (diaCalculado.pausa.includes(':')) {
-          // Formato HH:MM
-          const pausaParts = diaCalculado.pausa.split(':')
-          if (pausaParts.length === 2) {
-            const horasPausa = parseInt(pausaParts[0]) || 0
-            const minutosPausaPart = parseInt(pausaParts[1]) || 0
-            minutosPausa = horasPausa * 60 + minutosPausaPart
-          }
-        } else {
-          // Apenas minutos
-          minutosPausa = parseInt(diaCalculado.pausa) || 0
-        }
-        totalPausa += minutosPausa
-      }
-
+      // horasDuracao já inclui desconto de pausa (atualizarCalculosDia)
       // Horas de viagem de IDA
       if (diaCalculado.idaDuracao) {
         const idaDuracao = diaCalculado.idaDuracao.split(':')
@@ -24300,9 +24292,7 @@ export default function Dashboard() {
       totalKms += parseFloat(diaCalculado.kmTotal) || 0
     })
 
-    // Descontar a pausa total das horas de trabalho
-    totalHorasTrabalho = Math.max(0, totalHorasTrabalho - totalPausa)
-
+    // Pausa já descontada em horasDuracao por dia — não subtrair de novo
     // Converter minutos de volta para formato HH:MM
     const horasTrabalho = Math.floor(totalHorasTrabalho / 60) + ':' + String(totalHorasTrabalho % 60).padStart(2, '0')
     const horasViagem = Math.floor(totalHorasViagem / 60) + ':' + String(totalHorasViagem % 60).padStart(2, '0')
@@ -25114,34 +25104,10 @@ export default function Dashboard() {
       retornoDuracao = `${horas}:${String(minutos).padStart(2, '0')}`
     }
 
-    let horasDuracao = novoDiaTrabalho.horasDuracao
-    if (!horasDuracao && novoDiaTrabalho.horasInicio && novoDiaTrabalho.horasFim) {
-      // Calcular duração das horas de trabalho
-      const [horaInicio, minInicio] = novoDiaTrabalho.horasInicio.split(':').map(Number)
-      const [horaFim, minFim] = novoDiaTrabalho.horasFim.split(':').map(Number)
-      const inicioMinutos = horaInicio * 60 + minInicio
-      const fimMinutos = horaFim * 60 + minFim
-      let diffMinutos = fimMinutos - inicioMinutos
-      
-      // Subtrair tempo de pausa se houver
-      if ((novoDiaTrabalho.pausa === 'true' || novoDiaTrabalho.pausa === 'sim') && novoDiaTrabalho.tempoPausa) {
-        const [horaPausa, minPausa] = novoDiaTrabalho.tempoPausa.split(':').map(Number)
-        const pausaMinutos = (horaPausa || 0) * 60 + (minPausa || 0)
-        diffMinutos = Math.max(0, diffMinutos - pausaMinutos) // Garantir que não fique negativo
-      }
-      
-      const horas = Math.floor(diffMinutos / 60)
-      const minutos = diffMinutos % 60
-      horasDuracao = `${horas}:${String(minutos).padStart(2, '0')}`
-    }
-
-    const diaAtualizado = {
+    const diaAtualizado = atualizarCalculosDia({
       ...novoDiaTrabalho,
       data: normalizeDateKey(dataParaUsar),
       id: editingDiaTrabalhoIndex !== null ? relatorioServicoForm.diasTrabalho[editingDiaTrabalhoIndex].id : (Date.now().toString() + Math.random().toString(36).substr(2, 9)),
-      idaDuracao,
-      retornoDuracao,
-      horasDuracao,
       kmTotal,
       kmIda: kmIdaVal,
       kmRetorno: kmRetornoVal,
@@ -25149,7 +25115,7 @@ export default function Dashboard() {
         0,
         WRITING_ASSIST_FIELD_MAX_CHARS
       ),
-    }
+    })
 
     if (editingDiaTrabalhoIndex !== null) {
       const updatedDias = [...relatorioServicoForm.diasTrabalho]
@@ -28241,9 +28207,10 @@ export default function Dashboard() {
     return () => window.clearTimeout(timer)
   }, [importacaoTextoColado, processarTextoImportacaoPecas, processarDuplicadosImportacao])
 
-  const catalogoPecasSuspeitoParcial =
-    categoriasPecas.length >= 5 &&
-    pecasBiblioteca.length < Math.max(15, Math.min(categoriasPecas.length, 80))
+  const catalogoPecasSuspeitoParcial = isPecasBibliotecaCatalogIncomplete(
+    pecasBiblioteca.length,
+    categoriasPecas.length
+  )
 
   const pecasReporManualLockRef = useRef(false)
 
@@ -28331,12 +28298,12 @@ export default function Dashboard() {
     if (appInitialLoading) return
     if (pecasPosBootReporRef.current) return
     if (categoriasPecas.length < 5) return
-    const minOk = Math.max(15, Math.min(categoriasPecas.length, 80))
-    if (pecasBiblioteca.length >= minOk && pecasBiblioteca.length >= 50) return
+    const minOk = pecasBibliotecaMinExpected(categoriasPecas.length)
+    if (!isPecasBibliotecaCatalogIncomplete(pecasBiblioteca.length, categoriasPecas.length)) return
     pecasPosBootReporRef.current = true
     void (async () => {
       try {
-        const local = await loadPecasBibliotecaFromBrowserStorage()
+        const local = await loadPecasBibliotecaFromBrowserStorage(categoriasPecas.length)
         if (local && local.length >= minOk) {
           const raw = (local as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
           const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
@@ -38473,7 +38440,7 @@ export default function Dashboard() {
                                 setNovoDiaTrabalho((prev) => ({
                                   ...prev,
                                   pausa: e.target.checked ? 'sim' : '',
-                                  tempoPausa: e.target.checked ? prev.tempoPausa || '' : '',
+                                  tempoPausa: e.target.checked ? prev.tempoPausa || '01:00' : '',
                                 }))
                               }
                               style={{ 
@@ -38530,7 +38497,12 @@ export default function Dashboard() {
                             <input
                               type="time"
                               value={novoDiaTrabalho.tempoPausa || ''}
-                              onChange={(e) => setNovoDiaTrabalho((prev) => ({ ...prev, tempoPausa: e.target.value }))}
+                              onChange={(e) =>
+                                setNovoDiaTrabalho((prev) => ({
+                                  ...prev,
+                                  tempoPausa: e.target.value ? e.target.value.slice(0, 5) : '',
+                                }))
+                              }
                               placeholder="00:30"
                               className="ns-datetime-input ns-datetime-input--muted"
                             />
@@ -73433,6 +73405,7 @@ A1;Peça exemplo;10`}
       >
       <PecasBibliotecaUrgentLoader
         pecasCount={pecasBiblioteca.length}
+        categoriasCount={categoriasPecas.length}
         onLoaded={handleUrgentPecasLoaded}
         onProgress={setPecasBibliotecaReparoProgress}
         loadingMessage={(safeT as any)?.bibliotecaUrgentLoaderCarregando}

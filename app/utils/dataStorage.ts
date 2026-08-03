@@ -30,6 +30,10 @@ import { mergeRelatoriosServicoDeferServerLocal } from '../lib/bibliotecaRelator
 import {
   canAutoPullServerChanges,
 } from './syncDiff'
+import {
+  isPecasBibliotecaCatalogIncomplete,
+  pecasBibliotecaMinExpected,
+} from '../lib/pecasBibliotecaCompleteness'
 
 const PECAS_BIBLIOTECA_KEY = 'nonato-pecas-biblioteca'
 const PECAS_BIBLIOTECA_LITE_KEY = 'nonato-pecas-biblioteca-lite'
@@ -72,8 +76,9 @@ export async function waitForDataApiAuth(maxMs = 20_000): Promise<boolean> {
   return false
 }
 
-function isPecasBibliotecaLocalParcial(value: unknown): boolean {
-  return Array.isArray(value) && value.length > 0 && value.length < 50
+function isPecasBibliotecaLocalParcial(value: unknown, categoriasCount = 0): boolean {
+  if (!Array.isArray(value) || value.length === 0) return false
+  return isPecasBibliotecaCatalogIncomplete(value.length, categoriasCount)
 }
 
 /** Durante a carga inicial da página: não enviar migrações «só servidor» (saveToLocalStorage=false) nem pushes implícitos em loadData — evita revisões e payloads diferentes por aparelho. */
@@ -1225,8 +1230,7 @@ export async function fetchPecasBibliotecaServerMeta(): Promise<PecasBibliotecaS
 
 /** Arranque / botão repor: prioriza ficheiro lite (~157 KB), ignora cópia parcial no browser. */
 export async function bootstrapLoadPecasBiblioteca(categoriasCount: number): Promise<unknown[] | null> {
-  const threshold = Math.max(15, Math.min(categoriasCount, 80))
-  const isComplete = (n: number) => n >= 50 || (categoriasCount >= 10 && n >= threshold)
+  const isComplete = (n: number) => !isPecasBibliotecaCatalogIncomplete(n, categoriasCount)
 
   for (let attempt = 0; attempt < 3; attempt++) {
     if (attempt > 0) await new Promise((r) => setTimeout(r, 700 * attempt))
@@ -1329,9 +1333,15 @@ export async function forceReporPecasBibliotecaFromServer(
 }
 
 /** Lê biblioteca já gravada neste browser (IndexedDB ou localStorage) — prioridade após recuperação. */
-export async function loadPecasBibliotecaFromBrowserStorage(): Promise<unknown[] | null> {
+export async function loadPecasBibliotecaFromBrowserStorage(
+  categoriasCount = 0
+): Promise<unknown[] | null> {
   const snap = await readLocalValueForLoad(PECAS_BIBLIOTECA_KEY, true)
-  if (Array.isArray(snap.parsed) && snap.parsed.length >= 50 && !isPecasBibliotecaLocalParcial(snap.parsed)) {
+  if (
+    Array.isArray(snap.parsed) &&
+    snap.parsed.length > 0 &&
+    !isPecasBibliotecaLocalParcial(snap.parsed, categoriasCount)
+  ) {
     return snap.parsed as unknown[]
   }
   return null
@@ -1539,8 +1549,7 @@ export async function repairPecasBibliotecaIfStale(
 ): Promise<unknown[] | null> {
   const local = Array.isArray(current) ? current : []
   if (categoriasCount < 5) return null
-  /** Muitas categorias com catálogo minúsculo = cópia parcial (ex.: restore a 9/07). */
-  const suspectPartial = local.length < Math.max(15, Math.min(categoriasCount, 80))
+  const suspectPartial = isPecasBibliotecaCatalogIncomplete(local.length, categoriasCount)
   if (!suspectPartial) return null
 
   let best: unknown[] = [...local]
@@ -1610,7 +1619,7 @@ export async function ensurePecasBibliotecaInServerData(
   const catN = Math.max(categoriasCount, 0)
   if (catN < 5) return serverData
 
-  const minOk = Math.max(15, Math.min(catN, 80))
+  const minOk = pecasBibliotecaMinExpected(catN)
   let local: unknown[] = []
   try {
     const snap = await readLocalValueForLoad(PECAS_BIBLIOTECA_KEY, true)
@@ -1619,13 +1628,27 @@ export async function ensurePecasBibliotecaInServerData(
     /* ignorar */
   }
 
+  let serverTotal: number | null = null
+  if (isOnline()) {
+    try {
+      const meta = await fetchPecasBibliotecaServerMeta()
+      serverTotal = meta?.total ?? null
+    } catch {
+      /* ignorar */
+    }
+  }
+
   const bundleCount = Math.max(pecasBibliotecaCountInBundle(serverData as Record<string, unknown>), local.length)
-  if (bundleCount >= minOk && bundleCount >= 50) return serverData
+  if (!isPecasBibliotecaCatalogIncomplete(bundleCount, catN, serverTotal)) return serverData
 
   if (isOnline()) {
     try {
       const fromLite = await fetchPecasBibliotecaLiteFromServer()
-      if (Array.isArray(fromLite) && fromLite.length >= Math.min(minOk, 50)) {
+      const liteOk =
+        Array.isArray(fromLite) &&
+        fromLite.length >= minOk &&
+        !isPecasBibliotecaCatalogIncomplete(fromLite.length, catN, serverTotal)
+      if (liteOk) {
         const merged = mergePecasBibliotecaArrays(fromLite, local) as unknown[]
         await savePecasBibliotecaLocally(merged)
         console.info(`[Nonato] Biblioteca reposta no arranque (lite): ${bundleCount} → ${merged.length} peça(s).`)
@@ -2130,13 +2153,18 @@ export async function applySilentServerSync(server: Record<string, unknown>): Pr
     if (serverPullValueIsEmpty(s)) continue
     if (
       key === PECAS_BIBLIOTECA_KEY &&
-      Array.isArray(s) &&
-      s.length < 50
+      Array.isArray(s)
     ) {
+      const cats = server['nonato-categorias-pecas']
+      const catN = Array.isArray(cats) ? cats.length : 0
       const snap = await readLocalValueForLoad(key, true)
-      if (Array.isArray(snap.parsed) && snap.parsed.length > s.length) continue
-      /* Nunca aplicar cópia parcial (2 peças) vinda do bundle sync */
-      continue
+      const localLen = Array.isArray(snap.parsed) ? snap.parsed.length : 0
+      if (isPecasBibliotecaCatalogIncomplete(s.length, catN) && localLen >= s.length) {
+        continue
+      }
+      if (localLen > s.length && localLen >= pecasBibliotecaMinExpected(catN)) continue
+      /* Nunca aplicar cópia parcial vinda do bundle sync */
+      if (isPecasBibliotecaCatalogIncomplete(s.length, catN)) continue
     }
     if (key === RELATORIOS_SERVICO_KEY && Array.isArray(s)) {
       const snap = await readLocalValueForLoad(key, true)

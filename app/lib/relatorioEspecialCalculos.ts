@@ -23,11 +23,26 @@ export function calcularDuracaoHoras(horaInicio: string, horaFim: string): strin
 
 export function minutosDeDuracaoHHMM(duracao: string | undefined): number {
   if (!duracao) return 0
-  const parts = duracao.split(':')
-  if (parts.length !== 2) return 0
-  const h = parseInt(parts[0], 10) || 0
-  const m = parseInt(parts[1], 10) || 0
-  return h * 60 + m
+  const parts = duracao.trim().split(':').map((p) => parseInt(p, 10) || 0)
+  if (parts.length < 2) return 0
+  return parts[0] * 60 + parts[1]
+}
+
+/** Minutos de pausa/almoço — aceita tempoPausa HH:MM(:SS), pausa legado ou «sim» (= 1h). */
+export function minutosPausaOuAlmocoDia(dia: {
+  tempoPausa?: string
+  pausa?: string
+}): number {
+  const tempoPausa = String(dia.tempoPausa ?? '').trim()
+  if (tempoPausa && /^\d{1,2}:\d{2}/.test(tempoPausa)) return minutosDeDuracaoHHMM(tempoPausa)
+  const pausa = String(dia.pausa ?? '').trim()
+  if (/^\d{1,2}:\d{2}/.test(pausa)) return minutosDeDuracaoHHMM(pausa)
+  if (pausa === 'sim' || pausa === 'true') return 60
+  return 0
+}
+
+export function minutosAlmocoDia(dia: DiaTrabalhoEspecial): number {
+  return minutosPausaOuAlmocoDia(dia)
 }
 
 export function formatMinutosComoHHMM(minutos: number): string {
@@ -35,14 +50,6 @@ export function formatMinutosComoHHMM(minutos: number): string {
   const h = Math.floor(m / 60)
   const rest = m % 60
   return `${h}:${String(rest).padStart(2, '0')}`
-}
-
-export function minutosAlmocoDia(dia: DiaTrabalhoEspecial): number {
-  const tempoPausa = String(dia.tempoPausa ?? '').trim()
-  if (/^\d{1,2}:\d{2}$/.test(tempoPausa)) return minutosDeDuracaoHHMM(tempoPausa)
-  const pausa = String(dia.pausa ?? '').trim()
-  if (/^\d{1,2}:\d{2}$/.test(pausa)) return minutosDeDuracaoHHMM(pausa)
-  return 0
 }
 
 /** Bruto início→fim por linha de equipamento (hora corrida). */
