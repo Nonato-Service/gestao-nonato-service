@@ -24,25 +24,66 @@ export function calcularDuracaoHoras(horaInicio: string, horaFim: string): strin
 export function minutosDeDuracaoHHMM(duracao: string | undefined): number {
   if (!duracao) return 0
   const parts = duracao.trim().split(':').map((p) => parseInt(p, 10) || 0)
-  if (parts.length < 2) return 0
-  return parts[0] * 60 + parts[1]
+  if (parts.length >= 2) return parts[0] * 60 + parts[1]
+  return 0
 }
 
-/** Minutos de pausa/almoço — aceita tempoPausa HH:MM(:SS), pausa legado ou «sim» (= 1h). */
+function minutosDeTextoLivrePausa(raw: string): number {
+  const s = String(raw ?? '').trim().toLowerCase()
+  if (!s) return 0
+  if (/^\d+$/.test(s)) {
+    const n = parseInt(s, 10)
+    return n > 0 && n <= 480 ? n : 0
+  }
+  const hm = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/)
+  if (hm) return (parseInt(hm[1], 10) || 0) * 60 + (parseInt(hm[2], 10) || 0)
+  const horaDecimal = s.match(/^(\d+(?:[.,]\d+)?)\s*h(?:oras?)?$/)
+  if (horaDecimal) {
+    const h = parseFloat(horaDecimal[1].replace(',', '.'))
+    return Number.isFinite(h) && h > 0 ? Math.round(h * 60) : 0
+  }
+  if (/^(\d+(?:[.,]\d+)?)\s*hora(?:s)?$/.test(s)) {
+    const m = s.match(/^(\d+(?:[.,]\d+)?)\s*hora(?:s)?$/)
+    if (m) {
+      const h = parseFloat(m[1].replace(',', '.'))
+      return Number.isFinite(h) && h > 0 ? Math.round(h * 60) : 0
+    }
+  }
+  if (s === '1 hora' || s === 'uma hora') return 60
+  return 0
+}
+
+/** Minutos de pausa/almoço — aceita tempoPausa HH:MM(:SS), texto livre, pausa legado ou «sim» (= 1h). */
 export function minutosPausaOuAlmocoDia(dia: {
   tempoPausa?: string
   pausa?: string
 }): number {
   const tempoPausa = String(dia.tempoPausa ?? '').trim()
-  if (tempoPausa && /^\d{1,2}:\d{2}/.test(tempoPausa)) return minutosDeDuracaoHHMM(tempoPausa)
+  if (tempoPausa) {
+    if (/^\d{1,2}:\d{2}/.test(tempoPausa)) return minutosDeDuracaoHHMM(tempoPausa)
+    const livre = minutosDeTextoLivrePausa(tempoPausa)
+    if (livre > 0) return livre
+  }
   const pausa = String(dia.pausa ?? '').trim()
   if (/^\d{1,2}:\d{2}/.test(pausa)) return minutosDeDuracaoHHMM(pausa)
-  if (pausa === 'sim' || pausa === 'true') return 60
+  const pausaLivre = minutosDeTextoLivrePausa(pausa)
+  if (pausaLivre > 0) return pausaLivre
+  if (pausa === 'sim' || pausa === 'true' || pausa === '1') return 60
   return 0
 }
 
 export function minutosAlmocoDia(dia: DiaTrabalhoEspecial): number {
   return minutosPausaOuAlmocoDia(dia)
+}
+
+/** Minutos de trabalho no dia (equipamentos) já descontando almoço/pausa desse dia. */
+export function minutosTrabalhoLiquidoDia(dia: DiaTrabalhoEspecial): number {
+  const calc = atualizarCalculosDiaEspecial(dia)
+  let bruto = 0
+  for (const linha of calc.horasPorEquipamento || []) {
+    bruto += minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(linha))
+  }
+  return Math.max(0, bruto - minutosAlmocoDia(calc))
 }
 
 export function formatMinutosComoHHMM(minutos: number): string {
@@ -117,13 +158,30 @@ export function calcularTotaisRelatorioEspecial(
     horasViagemRetorno += minutosDeDuracaoHHMM(dia.retornoDuracao)
     horasAlmocoTotal += minutosAlmocoDia(dia)
 
+    const brutoDiaPorUid: Array<{ uid: string; min: number }> = []
+    let brutoDia = 0
     for (const linha of dia.horasPorEquipamento || []) {
       const uid = (linha.equipamentoUid || '').trim()
       if (!uid) continue
       const min = minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(linha))
       if (min <= 0) continue
-      horasPorEquipamento[uid] = (horasPorEquipamento[uid] || 0) + min
-      horasTrabalhoBruto += min
+      brutoDiaPorUid.push({ uid, min })
+      brutoDia += min
+    }
+    const almocoDia = minutosAlmocoDia(dia)
+    const netDia = Math.max(0, brutoDia - almocoDia)
+    if (brutoDia > 0 && brutoDiaPorUid.length > 0) {
+      let repartido = 0
+      brutoDiaPorUid.forEach((row, idx) => {
+        let netMin =
+          idx === brutoDiaPorUid.length - 1
+            ? netDia - repartido
+            : Math.round((row.min / brutoDia) * netDia)
+        netMin = Math.max(0, netMin)
+        repartido += netMin
+        horasPorEquipamento[row.uid] = (horasPorEquipamento[row.uid] || 0) + netMin
+        horasTrabalhoBruto += row.min
+      })
     }
   }
 

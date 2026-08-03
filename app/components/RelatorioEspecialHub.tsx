@@ -13,6 +13,8 @@ import {
   formatMinutosComoHHMM,
   getDiaSemanaInfo,
   minutosDeDuracaoHHMM,
+  minutosAlmocoDia,
+  minutosTrabalhoLiquidoDia,
   sortDiasTrabalhoEspecialCronologicamente,
   diaTrabalhoDataChaveOrdenacao,
 } from '../lib/relatorioEspecialCalculos'
@@ -1300,6 +1302,30 @@ export default function RelatorioEspecialHub({
 
                   <div className="relatorio-especial-dia-secao">
                     <h4 className="relatorio-especial-dia-secao__titulo">☕ {t.horaAlmoco || t.tempoPausa || 'Hora de almoço'}</h4>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
+                        <input
+                          type="checkbox"
+                          checked={dia.pausa === 'true' || dia.pausa === 'sim' || Boolean((dia.tempoPausa || '').trim())}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              actualizarDia(dia.id, {
+                                pausa: 'sim',
+                                tempoPausa: (dia.tempoPausa || '').trim() || '01:00',
+                              })
+                            } else {
+                              actualizarDia(dia.id, { pausa: '', tempoPausa: '' })
+                            }
+                          }}
+                        />
+                        {t.pausa || 'Descanso / almoço'}
+                      </label>
+                      {minutosAlmocoDia(dia) > 0 ? (
+                        <span style={{ fontSize: 12, color: '#00c853' }}>
+                          −{formatMinutosComoHHMM(minutosAlmocoDia(dia))} {t.horaAlmoco || 'no total do dia'}
+                        </span>
+                      ) : null}
+                    </div>
                     <div className="relatorio-especial-dia-secao__grid relatorio-especial-dia-secao__grid--almoco">
                       <div>
                         <label>{t.tempoPausa || 'Tempo (HH:MM)'}</label>
@@ -1484,17 +1510,17 @@ function resumoHorasDiaEspecial(diaCalc: DiaTrabalhoEspecial): {
     (h) => (h.horasInicio || h.horasFim || h.horasDuracao) && h.equipamentoUid
   )
   if (linhas.length === 0) return { inicio: '—', fim: '—', duracao: '—' }
+  const liquido = minutosTrabalhoLiquidoDia(diaCalc)
   if (linhas.length === 1) {
     return {
       inicio: linhas[0].horasInicio || '—',
       fim: linhas[0].horasFim || '—',
-      duracao: linhas[0].horasDuracao || '—',
+      duracao: formatMinutosComoHHMM(liquido),
     }
   }
-  const totalMin = linhas.reduce((s, h) => s + minutosDeDuracaoHHMM(h.horasDuracao), 0)
   return {
     inicio: '…',
     fim: '…',
-    duracao: formatMinutosComoHHMM(totalMin),
+    duracao: formatMinutosComoHHMM(liquido),
   }
 }

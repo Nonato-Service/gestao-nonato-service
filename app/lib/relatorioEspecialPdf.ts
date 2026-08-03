@@ -5,6 +5,7 @@ import {
   atualizarCalculosDiaEspecial,
   calcularTotaisRelatorioEspecial,
   coletarSessoesPorEquipamento,
+  minutosTrabalhoLiquidoDia,
   formatDiaComDiaSemana,
   formatMinutosComoHHMM,
   getDiaSemanaInfo,
@@ -349,15 +350,15 @@ function resumoHorasDiaPdf(diaCalc: DiaTrabalhoEspecial): { inicio: string; fim:
     (h) => (h.horasInicio || h.horasFim || h.horasDuracao) && h.equipamentoUid
   )
   if (linhas.length === 0) return { inicio: '—', fim: '—', duracao: '—' }
+  const liquido = minutosTrabalhoLiquidoDia(diaCalc)
   if (linhas.length === 1) {
     return {
       inicio: linhas[0].horasInicio || '—',
       fim: linhas[0].horasFim || '—',
-      duracao: linhas[0].horasDuracao || '—',
+      duracao: formatMinutosComoHHMM(liquido),
     }
   }
-  const totalMin = linhas.reduce((s, h) => s + minutosDeDuracaoHHMM(h.horasDuracao), 0)
-  return { inicio: '…', fim: '…', duracao: formatMinutosComoHHMM(totalMin) }
+  return { inicio: '…', fim: '…', duracao: formatMinutosComoHHMM(liquido) }
 }
 
 function formatHorarioIntervalo(inicio: string, fim: string): string {
