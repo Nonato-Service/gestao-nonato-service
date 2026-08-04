@@ -313,11 +313,32 @@ export function coletarSessoesPorEquipamento(
   for (const diaRaw of diasOrd) {
     const dia = atualizarCalculosDiaEspecial(diaRaw)
     const dataFmt = formatDiaCurtoPt(dia.data)
-    for (const linha of dia.horasPorEquipamento || []) {
+    const linhasDia = (dia.horasPorEquipamento || []).filter((linha) => {
       const uid = (linha.equipamentoUid || '').trim()
-      if (!uid) continue
+      if (!uid) return false
       const bruto = horasEquipamentoDiaBruto(linha)
-      if (!linha.horasInicio && !linha.horasFim && !bruto) continue
+      return Boolean(linha.horasInicio || linha.horasFim || bruto)
+    })
+    const brutoDia = linhasDia.reduce(
+      (s, linha) => s + minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(linha)),
+      0
+    )
+    const almocoDia = minutosAlmocoDia(dia)
+    const netDia = Math.max(0, brutoDia - almocoDia)
+    let repartido = 0
+
+    linhasDia.forEach((linha, idx) => {
+      const uid = (linha.equipamentoUid || '').trim()
+      const brutoMin = minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(linha))
+      let netMin = brutoMin
+      if (brutoDia > 0 && almocoDia > 0) {
+        netMin =
+          idx === linhasDia.length - 1
+            ? netDia - repartido
+            : Math.round((brutoMin / brutoDia) * netDia)
+        netMin = Math.max(0, netMin)
+        repartido += netMin
+      }
       if (!porUid[uid]) porUid[uid] = []
       porUid[uid].push({
         equipamentoUid: uid,
@@ -326,9 +347,9 @@ export function coletarSessoesPorEquipamento(
         dataFormatada: dataFmt,
         horasInicio: linha.horasInicio,
         horasFim: linha.horasFim,
-        horasDuracao: bruto,
+        horasDuracao: formatMinutosComoHHMM(netMin),
       })
-    }
+    })
   }
 
   for (const uid of Object.keys(porUid)) {

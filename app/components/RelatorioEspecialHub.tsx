@@ -185,13 +185,10 @@ export default function RelatorioEspecialHub({
     setDiaExpandido(null)
   }, [modo, formTemAlteracoes, t])
 
-  const totais = useMemo(
-    () => calcularTotaisRelatorioEspecial(formComTotais.diasTrabalho),
-    [formComTotais.diasTrabalho]
-  )
+  const totais = useMemo(() => calcularTotaisRelatorioEspecial(form.diasTrabalho), [form.diasTrabalho])
   const sessoesPorEquip = useMemo(
-    () => coletarSessoesPorEquipamento(formComTotais.diasTrabalho),
-    [formComTotais.diasTrabalho]
+    () => coletarSessoesPorEquipamento(form.diasTrabalho),
+    [form.diasTrabalho]
   )
 
   const clientesOrdenados = useMemo(
@@ -1429,7 +1426,14 @@ export default function RelatorioEspecialHub({
                         <td>
                           {s.horasInicio && s.horasFim ? `${s.horasInicio} – ${s.horasFim}` : s.horasInicio || s.horasFim || '—'}
                         </td>
-                        <td>{s.horasDuracao || '—'}</td>
+                        <td>
+                          {s.horasDuracao || '—'}
+                          {totais.horasAlmocoTotal > 0 && s.horasInicio && s.horasFim ? (
+                            <span style={{ display: 'block', fontSize: 10, color: '#888' }}>
+                              {t.relatorioEspecialTotalComAlmoco || 'com desconto de almoço'}
+                            </span>
+                          ) : null}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
