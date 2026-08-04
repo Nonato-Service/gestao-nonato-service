@@ -15,6 +15,10 @@ import { writeCodeZipToFile } from '../zip-code'
 
 export const runtime = 'nodejs'
 
+function isSaveOnlyMode(request: NextRequest): boolean {
+  return request.nextUrl.searchParams.get('mode') === 'save'
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { isDemo } = getDemoContext(request)
@@ -41,6 +45,20 @@ export async function GET(request: NextRequest) {
     )
 
     const stat = fs.statSync(savedPath)
+    const resolvedPath = path.resolve(savedPath)
+    const resolvedFolder = path.resolve(codigoDir)
+
+    if (isSaveOnlyMode(request)) {
+      return NextResponse.json({
+        success: true,
+        fileName,
+        savedPath: resolvedPath,
+        codigoFolder: resolvedFolder,
+        backupsFolder: path.resolve(path.dirname(resolvedFolder)),
+        sizeBytes: stat.size,
+      })
+    }
+
     const stream = createReadStream(savedPath)
 
     return new NextResponse(stream as unknown as ReadableStream, {
@@ -48,8 +66,8 @@ export async function GET(request: NextRequest) {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="${fileName}"`,
         'Content-Length': String(stat.size),
-        'X-Backup-Saved-Path': savedPath,
-        'X-Backup-Saved-Folder': path.resolve(codigoDir),
+        'X-Backup-Saved-Path': resolvedPath,
+        'X-Backup-Saved-Folder': resolvedFolder,
       },
     })
   } catch (error: unknown) {

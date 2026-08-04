@@ -1,5 +1,6 @@
 import type { RelatorioEquipamentoRef } from './relatorioServicoEquipamentos'
 import type { PecaSubstituicao } from './relatorioEspecialShared'
+import { dataLocalHojeISO } from './relatorioEspecialShared'
 
 export const RELATORIOS_ESPECIAIS_STORAGE_KEY = 'nonato-relatorios-especiais'
 export const MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES = 11
@@ -102,7 +103,7 @@ export function criarDiaTrabalhoEspecialVazio(data = ''): DiaTrabalhoEspecial {
 }
 
 export function criarRelatorioEspecialVazio(): RelatorioEspecial {
-  const hoje = new Date().toISOString().split('T')[0]
+  const hoje = dataLocalHojeISO()
   return {
     id: `re-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     numero: '',

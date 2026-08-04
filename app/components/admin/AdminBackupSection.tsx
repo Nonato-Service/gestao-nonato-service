@@ -438,7 +438,9 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
                 + {tr(safeT, 'adminBackupHubCreateJsonNow', 'Criar JSON agora')}
               </button>
               <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--secondary" onClick={handleDownloadDataZip} disabled={isDemoMode}>
-                {tr(safeT, 'adminBackupHubDownloadDataZip', 'Descarregar ZIP de dados')}
+                {isLocalHost
+                  ? tr(safeT, 'adminBackupHubSaveDataZip', 'Guardar ZIP de dados em backups/json')
+                  : tr(safeT, 'adminBackupHubDownloadDataZip', 'Descarregar ZIP de dados')}
               </button>
             </div>
           </div>
@@ -511,7 +513,9 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
               {safeT?.backupCodigoButton || 'Criar backup no servidor'}
             </button>
             <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--secondary" disabled={isDemoMode} onClick={handleDownloadBackupZip}>
-              {tr(safeT, 'adminBackupHubDownloadZip', 'Descarregar ZIP')}
+              {isLocalHost
+                ? tr(safeT, 'adminBackupHubSaveCodeZip', 'Guardar ZIP em backups/codigo')
+                : tr(safeT, 'adminBackupHubDownloadZip', 'Descarregar ZIP')}
             </button>
             <input ref={restoreFromZipInputRef} type="file" accept=".zip,application/zip" onChange={handleRestoreFromZip} hidden />
             <button
@@ -574,7 +578,11 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
               <h5>{tr(safeT, 'adminBackupHubZipTitle', 'Histórico de ZIP descarregados')}</h5>
             </header>
             {zipHistory.length === 0 ? (
-              <p className="admin-backup-hub-empty">{tr(safeT, 'adminBackupHubZipEmpty', 'Descarregue um ZIP para guardar cópia no PC.')}</p>
+              <p className="admin-backup-hub-empty">
+                {isLocalHost
+                  ? tr(safeT, 'adminBackupHubZipEmptyLocal', 'Guarde um ZIP acima — fica em backups/codigo/ dentro do projeto.')
+                  : tr(safeT, 'adminBackupHubZipEmpty', 'Descarregue um ZIP para guardar cópia no PC.')}
+              </p>
             ) : (
               <ul className="admin-backup-hub-list admin-backup-hub-list--meta">
                 {zipHistory.map((entry, index) => (

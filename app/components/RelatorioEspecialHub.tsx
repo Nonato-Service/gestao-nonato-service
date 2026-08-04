@@ -24,6 +24,7 @@ import {
   type AbrirEnvioDocumentoClienteOpts,
 } from '../context/DocumentoEnvioClienteContext'
 import { imprimirRelatorioEspecialPdf } from '../lib/relatorioEspecialPdf'
+import { dataLocalHojeISO } from '../lib/relatorioEspecialShared'
 import {
   criarDiaTrabalhoEspecialVazio,
   criarHorasEquipamentoDiaVazio,
@@ -215,6 +216,43 @@ export default function RelatorioEspecialHub({
     setDiaExpandido(null)
   }, [preverNumero, marcarSnapshot])
 
+  /** Novo relatório: mantém data e número alinhados ao dia actual (meia-noite, regresso ao separador). */
+  const sincronizarDataHojeNovoRelatorio = useCallback(() => {
+    if (modo !== 'form' || editandoId) return
+    const hoje = dataLocalHojeISO()
+    const ontem = dataLocalHojeISO(new Date(Date.now() - 86_400_000))
+    setForm((prev) => {
+      if (prev.data === hoje) return prev
+      // Actualiza só se a data era «hoje» ou «ontem» (passou meia-noite) — não sobrescreve datas antigas escolhidas à mão
+      if (prev.data !== ontem && prev.data !== hoje) return prev
+      return {
+        ...prev,
+        data: hoje,
+        numero: preverNumero(hoje),
+      }
+    })
+  }, [modo, editandoId, preverNumero])
+
+  useEffect(() => {
+    sincronizarDataHojeNovoRelatorio()
+  }, [sincronizarDataHojeNovoRelatorio])
+
+  useEffect(() => {
+    if (modo !== 'form' || editandoId) return
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') sincronizarDataHojeNovoRelatorio()
+    }
+    const onFocus = () => sincronizarDataHojeNovoRelatorio()
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onFocus)
+    const id = window.setInterval(sincronizarDataHojeNovoRelatorio, 60_000)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onFocus)
+      window.clearInterval(id)
+    }
+  }, [modo, editandoId, sincronizarDataHojeNovoRelatorio])
+
   const abrirEditar = useCallback(
     (rel: RelatorioEspecial) => {
       const copia = {
@@ -307,7 +345,7 @@ export default function RelatorioEspecialHub({
   }
 
   const adicionarDia = () => {
-    const data = form.data || new Date().toISOString().split('T')[0]
+    const data = dataLocalHojeISO()
     const dia = criarDiaTrabalhoEspecialVazio(data)
     setForm((prev) => ({
       ...prev,

@@ -15,11 +15,16 @@ import { writeDataZipToFile } from '../zip-data'
 
 export const runtime = 'nodejs'
 
+function isSaveOnlyMode(request: NextRequest): boolean {
+  return request.nextUrl.searchParams.get('mode') === 'save'
+}
+
 /**
  * GET — descarrega ZIP com pasta data/ (servidor) + último backup JSON em disco.
  * POST — recebe envelope JSON no body e inclui no ZIP junto com data/.
+ * ?mode=save — guarda só em backups/json/ e devolve JSON (sem download no browser).
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const projectRoot = path.resolve(getProjectRoot())
     ensureBackupLayout(projectRoot)
@@ -57,6 +62,20 @@ export async function GET() {
     )
 
     const stat = fs.statSync(savedPath)
+    const resolvedPath = path.resolve(savedPath)
+    const resolvedFolder = path.resolve(jsonDir)
+
+    if (isSaveOnlyMode(request)) {
+      return NextResponse.json({
+        success: true,
+        fileName,
+        savedPath: resolvedPath,
+        jsonFolder: resolvedFolder,
+        backupsFolder: path.resolve(path.dirname(resolvedFolder)),
+        sizeBytes: stat.size,
+      })
+    }
+
     const stream = createReadStream(savedPath)
 
     return new NextResponse(stream as unknown as ReadableStream, {
@@ -64,7 +83,7 @@ export async function GET() {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="${fileName}"`,
         'Content-Length': String(stat.size),
-        'X-Backup-Saved-Path': savedPath,
+        'X-Backup-Saved-Path': resolvedPath,
       },
     })
   } catch (error: unknown) {
@@ -106,6 +125,20 @@ export async function POST(request: NextRequest) {
     )
 
     const stat = fs.statSync(savedPath)
+    const resolvedPath = path.resolve(savedPath)
+    const resolvedFolder = path.resolve(jsonDir)
+
+    if (isSaveOnlyMode(request)) {
+      return NextResponse.json({
+        success: true,
+        fileName,
+        savedPath: resolvedPath,
+        jsonFolder: resolvedFolder,
+        backupsFolder: path.resolve(path.dirname(resolvedFolder)),
+        sizeBytes: stat.size,
+      })
+    }
+
     const stream = createReadStream(savedPath)
 
     return new NextResponse(stream as unknown as ReadableStream, {
@@ -113,7 +146,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="${fileName}"`,
         'Content-Length': String(stat.size),
-        'X-Backup-Saved-Path': savedPath,
+        'X-Backup-Saved-Path': resolvedPath,
       },
     })
   } catch (error: unknown) {

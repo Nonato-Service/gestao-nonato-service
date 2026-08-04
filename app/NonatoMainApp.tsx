@@ -15709,7 +15709,11 @@ export default function Dashboard() {
     try {
       const data = await collectFullBackupData({ includeServer: true })
       const envelope = buildBackupEnvelope(data)
-      const response = await fetch('/api/backup-data/download-zip', {
+      const isLocalHost =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      const apiUrl = isLocalHost ? '/api/backup-data/download-zip?mode=save' : '/api/backup-data/download-zip'
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(envelope),
@@ -15718,9 +15722,27 @@ export default function Dashboard() {
         const err = await response.json().catch(() => ({}))
         throw new Error(err.error || 'Erro ao gerar ZIP de dados')
       }
+      const summary = summarizeBackupEnvelope(envelope)
+      if (isLocalHost) {
+        const result = await response.json()
+        alert(
+          '✓ ZIP de dados guardado na pasta de backup do projeto.' +
+            '\n\nFicheiro:\n' +
+            (result.savedPath || '') +
+            '\n\nPasta backups/json:\n' +
+            (result.jsonFolder || '') +
+            `\n\nChaves: ${summary.keyCount} · ~${(summary.totalBytes / (1024 * 1024)).toFixed(1)} MB` +
+            '\n\nTodos os backups ficam em backups\\ dentro da Gestão Técnica.'
+        )
+        return
+      }
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)
-      const fileName = `backup-dados-completo-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.zip`
+      const cd = response.headers.get('Content-Disposition') || ''
+      const cdMatch = cd.match(/filename="([^"]+)"/)
+      const fileName =
+        cdMatch?.[1] ||
+        `backup-dados-completo-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.zip`
       const a = document.createElement('a')
       a.href = url
       a.download = fileName
@@ -15729,7 +15751,6 @@ export default function Dashboard() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
       const savedPath = response.headers.get('X-Backup-Saved-Path') || ''
-      const summary = summarizeBackupEnvelope(envelope)
       alert(
         '✓ ZIP de dados completo descarregado.' +
           (savedPath ? '\n\nGuardado também em:\n' + savedPath : '') +
@@ -15741,17 +15762,39 @@ export default function Dashboard() {
     }
   }
 
-  // Descarregar backup do código como ZIP para o PC (mais seguro: não perde mesmo que o servidor apague)
+  // Guardar/descarregar backup do código como ZIP (localhost → backups/codigo/; remoto → browser)
   const handleDownloadBackupZip = async () => {
     try {
-      const response = await fetch('/api/backup-code/download', { method: 'GET' })
+      const isLocalHost =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      const apiUrl = isLocalHost ? '/api/backup-code/download?mode=save' : '/api/backup-code/download'
+      const response = await fetch(apiUrl, { method: 'GET' })
       if (!response.ok) {
         const err = await response.json().catch(() => ({}))
         throw new Error(err.error || 'Erro ao gerar ZIP')
       }
+      if (isLocalHost) {
+        const result = await response.json()
+        pushZipDownloadHistory({ fileName: result.fileName, sizeBytes: result.sizeBytes })
+        alert(
+          '✓ ZIP do código guardado na pasta de backup do projeto.' +
+            '\n\nFicheiro:\n' +
+            (result.savedPath || '') +
+            '\n\nPasta backups/codigo:\n' +
+            (result.codigoFolder || '') +
+            '\n\nTodos os backups ficam em backups\\ dentro da Gestão Técnica.' +
+            '\n\nCopie a pasta backups\\ para pen USB de vez em quando.'
+        )
+        return
+      }
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)
-      const fileName = `backup-codigo-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.zip`
+      const cd = response.headers.get('Content-Disposition') || ''
+      const cdMatch = cd.match(/filename="([^"]+)"/)
+      const fileName =
+        cdMatch?.[1] ||
+        `backup-codigo-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.zip`
       const a = document.createElement('a')
       a.href = url
       a.download = fileName
@@ -15763,9 +15806,9 @@ export default function Dashboard() {
       const savedPath = response.headers.get('X-Backup-Saved-Path') || ''
       const savedFolder = response.headers.get('X-Backup-Saved-Folder') || ''
       alert(
-        '✓ ZIP descarregado e guardado na pasta do projeto.' +
-          (savedPath ? '\n\nFicheiro:\n' + savedPath : savedFolder ? '\n\nPasta:\n' + savedFolder : '') +
-          '\n\nCopie a pasta backups\\codigo\\ para pen USB de vez em quando.'
+        '✓ ZIP descarregado para o browser.' +
+          (savedPath ? '\n\nCópia no servidor:\n' + savedPath : savedFolder ? '\n\nPasta:\n' + savedFolder : '') +
+          '\n\nNo PC local use http://localhost:3000 para guardar directamente em backups\\codigo\\.'
       )
     } catch (error) {
       alert('❌ Erro ao descarregar backup: ' + (error as Error).message)
