@@ -14,7 +14,7 @@ import {
   getDiaSemanaInfo,
   minutosDeDuracaoHHMM,
   minutosAlmocoDia,
-  minutosTrabalhoLiquidoDia,
+  resumoHorasTrabalhoDia,
   sortDiasTrabalhoEspecialCronologicamente,
   diaTrabalhoDataChaveOrdenacao,
 } from '../lib/relatorioEspecialCalculos'
@@ -942,7 +942,7 @@ export default function RelatorioEspecialHub({
                   <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.12)' }}>
                     <th rowSpan={2}>{t.data || 'Data'}</th>
                     <th colSpan={3}>{t.ida || 'Ida'}</th>
-                    <th colSpan={3}>{t.horas || 'Horas'}</th>
+                    <th colSpan={3}>{t.relatorioEspecialPdfHorasTrabalho || t.horas || 'Horas de trabalho'}</th>
                     <th colSpan={3}>{t.retorno || 'Retorno'}</th>
                     <th colSpan={3}>{t.km || 'KM'}</th>
                     <th rowSpan={2}>{t.pausa || 'Pausa'}</th>
@@ -954,7 +954,7 @@ export default function RelatorioEspecialHub({
                     <th>{t.duracao || 'Duração'}</th>
                     <th>{t.inicio || 'Início'}</th>
                     <th>{t.fim || 'Fim'}</th>
-                    <th>{t.duracao || 'Duração'}</th>
+                    <th>{t.relatorioEspecialPdfDuracaoLiquida || 'Líquido'}</th>
                     <th>{t.saida || 'Saída'}</th>
                     <th>{t.chegada || 'Chegada'}</th>
                     <th>{t.duracao || 'Duração'}</th>
@@ -967,8 +967,8 @@ export default function RelatorioEspecialHub({
                   {diasOrdenados.map((dia, index) => {
                     const diaCalc = atualizarCalculosDiaEspecial(dia)
                     const sem = getDiaSemanaInfo(dia.data, t)
-                    const horasResumo = resumoHorasDiaEspecial(diaCalc)
-                    const pausaFmt = (dia.tempoPausa || '').trim() || dia.pausa || '—'
+                    const horasResumo = resumoHorasTrabalhoDia(diaCalc)
+                    const pausaFmt = (dia.tempoPausa || '').trim() || (dia.pausa === 'sim' ? '01:00' : dia.pausa || '—')
                     const temDescricao = Boolean((dia.descricaoTrabalho || '').trim())
                     return (
                       <ReactFragment key={dia.id}>
@@ -988,7 +988,14 @@ export default function RelatorioEspecialHub({
                           <td>{diaCalc.idaDuracao || '—'}</td>
                           <td>{horasResumo.inicio}</td>
                           <td>{horasResumo.fim}</td>
-                          <td>{horasResumo.duracao}</td>
+                          <td>
+                            <strong>{horasResumo.duracaoLiquida}</strong>
+                            {horasResumo.almocoMinutos > 0 && horasResumo.duracaoBruta !== horasResumo.duracaoLiquida ? (
+                              <div style={{ fontSize: 9, color: '#aaa', marginTop: 2 }}>
+                                {horasResumo.duracaoBruta} − {horasResumo.almocoFmt} {t.horaAlmoco || 'almoço'}
+                              </div>
+                            ) : null}
+                          </td>
                           <td>{dia.retornoSaida || '—'}</td>
                           <td>{dia.retornoChegada || '—'}</td>
                           <td>{diaCalc.retornoDuracao || '—'}</td>
@@ -1033,6 +1040,24 @@ export default function RelatorioEspecialHub({
                     )
                   })}
                 </tbody>
+                <tfoot>
+                  <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.2)', fontWeight: 700 }}>
+                    <td colSpan={6} style={{ textAlign: 'right' }}>{t.totais || 'TOTAIS'}</td>
+                    <td>
+                      <strong style={{ color: '#00c853' }}>{formatMinutosComoHHMM(totais.horasTrabalhoTotal)}</strong>
+                      {totais.horasAlmocoTotal > 0 ? (
+                        <div style={{ fontSize: 9, color: '#aaa', fontWeight: 400 }}>
+                          {formatMinutosComoHHMM(totais.horasTrabalhoBruto)} − {formatMinutosComoHHMM(totais.horasAlmocoTotal)} {t.horaAlmoco || 'almoço'}
+                        </div>
+                      ) : null}
+                    </td>
+                    <td colSpan={3} />
+                    <td colSpan={2} />
+                    <td>{totais.kmsTotal}</td>
+                    <td>{totais.horasAlmocoTotal > 0 ? `−${formatMinutosComoHHMM(totais.horasAlmocoTotal)}` : '—'}</td>
+                    <td colSpan={2} />
+                  </tr>
+                </tfoot>
               </table>
             </div>
             <p style={{ margin: '8px 0 0', fontSize: 12, color: '#aaa' }}>
@@ -1416,7 +1441,7 @@ export default function RelatorioEspecialHub({
                     <tr>
                       <th>{t.relatorioEspecialPdfColDias || t.diasTrabalho || 'Dias'}</th>
                       <th>{t.relatorioEspecialPdfColHorario || 'Horário'}</th>
-                      <th>{t.total || 'Total'}</th>
+                      <th>{t.relatorioEspecialPdfTotalLiquido || t.total || 'Total líquido'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1427,10 +1452,10 @@ export default function RelatorioEspecialHub({
                           {s.horasInicio && s.horasFim ? `${s.horasInicio} – ${s.horasFim}` : s.horasInicio || s.horasFim || '—'}
                         </td>
                         <td>
-                          {s.horasDuracao || '—'}
-                          {totais.horasAlmocoTotal > 0 && s.horasInicio && s.horasFim ? (
+                          <strong>{s.horasDuracao || '—'}</strong>
+                          {s.horasDuracaoBruta && s.horasDuracaoBruta !== s.horasDuracao && s.horasDuracaoBruta !== '0:00' ? (
                             <span style={{ display: 'block', fontSize: 10, color: '#888' }}>
-                              {t.relatorioEspecialTotalComAlmoco || 'com desconto de almoço'}
+                              {t.relatorioEspecialPdfBruto || 'bruto'} {s.horasDuracaoBruta}
                             </span>
                           ) : null}
                         </td>
@@ -1448,8 +1473,8 @@ export default function RelatorioEspecialHub({
         })}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 8, paddingTop: 12, borderTop: '1px solid rgba(0,200,83,0.25)' }}>
           <div>
-            <div style={{ fontSize: 12, color: '#aaa' }}>{t.relatorioEspecialTotalGeral || 'Total geral'}</div>
-            <strong style={{ fontSize: 18, color: '#00c853' }}>{formComTotais.horasTrabalho}</strong>
+            <div style={{ fontSize: 12, color: '#aaa' }}>{t.relatorioEspecialPdfTotalGeralLabel || t.relatorioEspecialTotalGeral || 'TOTAL DE HORAS DE TRABALHO'}</div>
+            <strong style={{ fontSize: 28, color: '#00c853' }}>{formComTotais.horasTrabalho}</strong>
             {totais.horasAlmocoTotal > 0 && (
               <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>
                 {t.relatorioEspecialTotalComAlmoco ||
@@ -1503,28 +1528,4 @@ function diaTrabalhoDataInput(data: string): string {
   if (/^\d{4}-\d{2}-\d{2}$/.test(data)) return data
   if (data.includes('T')) return data.slice(0, 10)
   return data
-}
-
-function resumoHorasDiaEspecial(diaCalc: DiaTrabalhoEspecial): {
-  inicio: string
-  fim: string
-  duracao: string
-} {
-  const linhas = (diaCalc.horasPorEquipamento || []).filter(
-    (h) => (h.horasInicio || h.horasFim || h.horasDuracao) && h.equipamentoUid
-  )
-  if (linhas.length === 0) return { inicio: '—', fim: '—', duracao: '—' }
-  const liquido = minutosTrabalhoLiquidoDia(diaCalc)
-  if (linhas.length === 1) {
-    return {
-      inicio: linhas[0].horasInicio || '—',
-      fim: linhas[0].horasFim || '—',
-      duracao: formatMinutosComoHHMM(liquido),
-    }
-  }
-  return {
-    inicio: '…',
-    fim: '…',
-    duracao: formatMinutosComoHHMM(liquido),
-  }
 }

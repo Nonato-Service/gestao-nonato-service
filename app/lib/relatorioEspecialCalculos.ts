@@ -76,14 +76,19 @@ export function minutosAlmocoDia(dia: DiaTrabalhoEspecial): number {
   return minutosPausaOuAlmocoDia(dia)
 }
 
-/** Minutos de trabalho no dia (equipamentos) já descontando almoço/pausa desse dia. */
-export function minutosTrabalhoLiquidoDia(dia: DiaTrabalhoEspecial): number {
+/** Minutos de trabalho bruto no dia (soma equipamentos, sem descontar almoço). */
+export function minutosTrabalhoBrutoDia(dia: DiaTrabalhoEspecial): number {
   const calc = atualizarCalculosDiaEspecial(dia)
   let bruto = 0
   for (const linha of calc.horasPorEquipamento || []) {
     bruto += minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(linha))
   }
-  return Math.max(0, bruto - minutosAlmocoDia(calc))
+  return bruto
+}
+
+/** Minutos de trabalho no dia (equipamentos) já descontando almoço/pausa desse dia. */
+export function minutosTrabalhoLiquidoDia(dia: DiaTrabalhoEspecial): number {
+  return Math.max(0, minutosTrabalhoBrutoDia(dia) - minutosAlmocoDia(dia))
 }
 
 export function formatMinutosComoHHMM(minutos: number): string {
@@ -292,6 +297,52 @@ export type SessaoHorasEquipamentoEspecial = {
   horasInicio: string
   horasFim: string
   horasDuracao: string
+  /** Bruto início→fim (antes de repartir almoço do dia). */
+  horasDuracaoBruta?: string
+}
+
+export type ResumoHorasTrabalhoDia = {
+  inicio: string
+  fim: string
+  duracaoBruta: string
+  duracaoLiquida: string
+  almocoMinutos: number
+  almocoFmt: string
+  temHoras: boolean
+}
+
+/** Primeiro início e último fim das linhas de equipamento no dia. */
+export function intervaloHorasTrabalhoDia(dia: DiaTrabalhoEspecial): { inicio: string; fim: string } {
+  const calc = atualizarCalculosDiaEspecial(dia)
+  const linhas = (calc.horasPorEquipamento || []).filter(
+    (h) => h.equipamentoUid && (h.horasInicio || h.horasFim || h.horasDuracao)
+  )
+  if (linhas.length === 0) return { inicio: '—', fim: '—' }
+  const inicios = linhas.map((l) => l.horasInicio).filter(Boolean).sort() as string[]
+  const fins = linhas.map((l) => l.horasFim).filter(Boolean).sort() as string[]
+  return {
+    inicio: inicios[0] || '—',
+    fim: fins.length > 0 ? fins[fins.length - 1] : '—',
+  }
+}
+
+/** Resumo claro do dia para tabela/PDF: intervalo, bruto, líquido e almoço. */
+export function resumoHorasTrabalhoDia(dia: DiaTrabalhoEspecial): ResumoHorasTrabalhoDia {
+  const calc = atualizarCalculosDiaEspecial(dia)
+  const { inicio, fim } = intervaloHorasTrabalhoDia(calc)
+  const bruto = minutosTrabalhoBrutoDia(calc)
+  const almoco = minutosAlmocoDia(calc)
+  const liquido = Math.max(0, bruto - almoco)
+  const temHoras = bruto > 0
+  return {
+    inicio,
+    fim,
+    duracaoBruta: formatMinutosComoHHMM(bruto),
+    duracaoLiquida: formatMinutosComoHHMM(liquido),
+    almocoMinutos: almoco,
+    almocoFmt: almoco > 0 ? formatMinutosComoHHMM(almoco) : '',
+    temHoras,
+  }
 }
 
 export function contarEquipamentosUnicosDia(dia: DiaTrabalhoEspecial): number {
@@ -348,6 +399,7 @@ export function coletarSessoesPorEquipamento(
         horasInicio: linha.horasInicio,
         horasFim: linha.horasFim,
         horasDuracao: formatMinutosComoHHMM(netMin),
+        horasDuracaoBruta: formatMinutosComoHHMM(brutoMin),
       })
     })
   }
