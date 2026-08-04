@@ -1434,6 +1434,9 @@ export default function RelatorioEspecialHub({
             <div key={eq.uid} className="relatorio-especial-resumo-equip" style={{ marginBottom: 16 }}>
               <div style={{ fontWeight: 600, marginBottom: 8, color: '#00c853' }}>
                 {labelEquipamentoCurto(eq, i)} — <strong>{total}</strong>
+                <span style={{ fontSize: 11, color: '#888', fontWeight: 400, marginLeft: 6 }}>
+                  ({t.relatorioEspecialTotalEquipamentoBruto || 'total na máquina — almoço no total geral'})
+                </span>
               </div>
               {sessoes.length > 0 ? (
                 <table className="relatorio-especial-resumo-equip__tabela">
@@ -1441,7 +1444,7 @@ export default function RelatorioEspecialHub({
                     <tr>
                       <th>{t.relatorioEspecialPdfColDias || t.diasTrabalho || 'Dias'}</th>
                       <th>{t.relatorioEspecialPdfColHorario || 'Horário'}</th>
-                      <th>{t.relatorioEspecialPdfTotalLiquido || t.total || 'Total líquido'}</th>
+                      <th>{t.relatorioEspecialPdfHorasMaquina || t.total || 'Horas na máquina'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1451,14 +1454,7 @@ export default function RelatorioEspecialHub({
                         <td>
                           {s.horasInicio && s.horasFim ? `${s.horasInicio} – ${s.horasFim}` : s.horasInicio || s.horasFim || '—'}
                         </td>
-                        <td>
-                          <strong>{s.horasDuracao || '—'}</strong>
-                          {s.horasDuracaoBruta && s.horasDuracaoBruta !== s.horasDuracao && s.horasDuracaoBruta !== '0:00' ? (
-                            <span style={{ display: 'block', fontSize: 10, color: '#888' }}>
-                              {t.relatorioEspecialPdfBruto || 'bruto'} {s.horasDuracaoBruta}
-                            </span>
-                          ) : null}
-                        </td>
+                        <td><strong>{s.horasDuracao || '—'}</strong></td>
                       </tr>
                     ))}
                   </tbody>

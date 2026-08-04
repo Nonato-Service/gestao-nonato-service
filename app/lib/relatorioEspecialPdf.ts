@@ -498,19 +498,12 @@ function buildEquipamentoCardHtml(
     lista.length > 0
       ? lista
           .map(
-            (s) => {
-              const brutoHint =
-                s.horasDuracaoBruta &&
-                s.horasDuracaoBruta !== s.horasDuracao &&
-                s.horasDuracaoBruta !== '0:00'
-                  ? `<div class="re-sessao-bruto">${esc(L(labels, 'relatorioEspecialPdfBruto', 'bruto'))} ${esc(s.horasDuracaoBruta)}</div>`
-                  : ''
-              return `<tr>
+            (s) =>
+              `<tr>
                 <td>${esc(s.dataFormatada)}</td>
                 <td>${esc(formatHorarioIntervalo(s.horasInicio, s.horasFim))}</td>
-                <td class="re-col-total"><strong>${esc(s.horasDuracao || '—')}</strong>${brutoHint}</td>
+                <td class="re-col-total"><strong>${esc(s.horasDuracao || '—')}</strong></td>
               </tr>`
-            }
           )
           .join('')
       : `<tr><td colspan="3" style="text-align:center;color:#64748b;font-style:italic">${esc(L(labels, 'relatorioEspecialPdfSemSessoesEquip', 'Sem horas registadas'))}</td></tr>`
@@ -539,13 +532,13 @@ function buildEquipamentoCardHtml(
           <tr>
             <th>${esc(L(labels, 'relatorioEspecialPdfColDias', 'Dias'))}</th>
             <th>${esc(L(labels, 'relatorioEspecialPdfColHorario', 'Horário'))}</th>
-            <th style="width:72px">${esc(L(labels, 'relatorioEspecialPdfTotalLiquido', 'Total líquido'))}</th>
+            <th style="width:72px">${esc(L(labels, 'relatorioEspecialPdfHorasMaquina', 'Horas na máquina'))}</th>
           </tr>
         </thead>
         <tbody>
           ${linhas}
           <tr class="re-row-total">
-            <td colspan="2" style="text-align:right">${esc(L(labels, 'relatorioEspecialTotalEquipamento', 'Total líquido do equipamento'))}</td>
+            <td colspan="2" style="text-align:right">${esc(L(labels, 'relatorioEspecialTotalEquipamentoBruto', 'Total do equipamento'))}</td>
             <td class="re-col-total">${esc(total)}</td>
           </tr>
         </tbody>
@@ -725,6 +718,7 @@ export function imprimirRelatorioEspecialPdf(
 
   const controloHorasHtml = `<section class="re-secao">
     <h3 class="re-secao__titulo">${esc(L(labels, 'relatorioEspecialPdfControloHoras', 'Controlo de horas por equipamento'))}</h3>
+    <p style="font-size:9px;color:#64748b;margin:0 0 10px">${esc(L(labels, 'relatorioEspecialPdfEquipBrutoNota', 'Horas reais em cada máquina (início → fim). O almoço desconta uma vez por dia — no total geral e na tabela de dias acima.'))}</p>
     ${blocosEquipamentos || `<p style="color:#64748b;font-style:italic">${esc(L(labels, 'relatorioEspecialSemEquipamentos', 'Sem equipamentos'))}</p>`}
   </section>`
 
