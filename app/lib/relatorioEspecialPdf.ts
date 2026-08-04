@@ -125,33 +125,35 @@ body.rs-pdf--especial .re-doc {
 }
 
 .re-equip-card {
-  margin: 0 0 16px;
-  border: 1px solid #c8e6c9;
-  border-radius: 4px;
+  margin: 0 0 18px;
+  border: 2px solid #0d7a3d;
+  border-radius: 6px;
   overflow: hidden;
   break-inside: avoid;
   page-break-inside: avoid;
+  box-shadow: 0 1px 4px rgba(13, 122, 61, 0.12);
 }
 
 .re-equip-card__head {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0;
-  background: linear-gradient(180deg, #f1f8e9 0%, #e8f5e9 100%);
-  border-bottom: 1px solid #c8e6c9;
+  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+  border-bottom: 2px solid #0d7a3d;
 }
 
 .re-equip-card__num {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  padding: 10px 12px;
+  min-width: 52px;
+  padding: 14px 12px;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 16px;
+  font-size: 22px;
   font-weight: 700;
-  color: #0d7a3d;
-  border-right: 1px solid #c8e6c9;
+  color: #ffffff;
+  background: #0d7a3d;
+  border-right: 2px solid #065f2a;
 }
 
 .re-equip-card__meta {
@@ -161,8 +163,9 @@ body.rs-pdf--especial .re-doc {
 }
 
 .re-equip-card__field {
-  padding: 8px 12px;
-  border-right: 1px solid #dcedc8;
+  padding: 12px 14px;
+  border-right: 1px solid #86efac;
+  background: rgba(255, 255, 255, 0.45);
 }
 
 .re-equip-card__field:last-child {
@@ -171,21 +174,35 @@ body.rs-pdf--especial .re-doc {
 
 .re-equip-card__label {
   display: block;
-  font-size: 7px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #558b2f;
-  margin-bottom: 3px;
+  color: #0d7a3d;
+  margin-bottom: 6px;
+  line-height: 1.25;
 }
 
 .re-equip-card__value {
   display: block;
-  font-size: 10px;
-  font-weight: 600;
-  color: #1b5e20;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
   word-break: break-word;
-  line-height: 1.35;
+  line-height: 1.4;
+}
+
+.re-equip-card__value--mono {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  color: #1e3a5f;
+}
+
+.re-equip-card__value--modelo {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1b5e20;
 }
 
 .re-equip-card__body {
@@ -204,8 +221,14 @@ body.rs-pdf--especial .re-doc {
 }
 
 .re-equip-card__body .re-table th {
-  background: #2e7d32;
-  font-size: 0.82em;
+  background: #1e293b;
+  font-size: 0.9em;
+  padding: 9px 10px;
+}
+
+.re-equip-card__body .re-table td {
+  padding: 9px 10px;
+  font-size: 0.95em;
 }
 
 .re-total-geral {
@@ -513,16 +536,16 @@ function buildEquipamentoCardHtml(
       <div class="re-equip-card__num">${idx + 1}</div>
       <div class="re-equip-card__meta">
         <div class="re-equip-card__field">
-          <span class="re-equip-card__label">${esc(L(labels, 'relatorioEquipamentoIdLabel', 'ID'))}</span>
-          <span class="re-equip-card__value">${esc(eq.equipamentoId || '—')}</span>
+          <span class="re-equip-card__label">${esc(L(labels, 'relatorioEquipamentoIdLabel', 'ID do equipamento'))}</span>
+          <span class="re-equip-card__value re-equip-card__value--mono">${esc(eq.equipamentoId || '—')}</span>
         </div>
         <div class="re-equip-card__field">
           <span class="re-equip-card__label">${esc(L(labels, 'modelo', 'Modelo'))}</span>
-          <span class="re-equip-card__value">${esc(eq.maquinaModelo || '—')}</span>
+          <span class="re-equip-card__value re-equip-card__value--modelo">${esc(eq.maquinaModelo || '—')}</span>
         </div>
         <div class="re-equip-card__field">
-          <span class="re-equip-card__label">${esc(L(labels, 'numeroSerie', 'N.º série'))}</span>
-          <span class="re-equip-card__value">${esc(eq.numeroMaquina || '—')}</span>
+          <span class="re-equip-card__label">${esc(L(labels, 'numeroSerie', 'N.º de série'))}</span>
+          <span class="re-equip-card__value re-equip-card__value--mono">${esc(eq.numeroMaquina || '—')}</span>
         </div>
       </div>
     </div>
