@@ -18,6 +18,7 @@ import {
   buildPdfDocumentHeaderHtml,
   buildPdfMetaSectionHtml,
   escapePdfHtml,
+  PDF_TABLE_CELL_BORDER,
   type PdfMetaField,
 } from './pdfDocumentLayout'
 import { RELATORIO_SERVICO_PDF_PRINT_CSS } from './relatorioServicoPdfPrintCss'
@@ -69,7 +70,7 @@ body.rs-pdf--especial .re-doc {
 
 .re-table th,
 .re-table td {
-  border: 1px solid #e2e8f0;
+  border: ${PDF_TABLE_CELL_BORDER};
   padding: 7px 9px;
   vertical-align: middle;
   text-align: left;

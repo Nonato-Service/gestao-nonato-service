@@ -61,7 +61,7 @@ export function buildChecklistBasicoPrintHtml(
   .meta { margin: 4px 0; color: #444; }
   h3 { margin: 16px 0 8px; font-size: 13px; color: #007a33; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-  th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; vertical-align: top; }
+  th, td { border: 1.5px solid #94a3b8; padding: 6px 8px; text-align: left; vertical-align: top; }
   th { background: #f0f0f0; font-size: 11px; }
   .motivo { font-size: 11px; color: #555; margin-top: 4px; }
   .sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 28px; }

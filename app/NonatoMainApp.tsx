@@ -20779,7 +20779,7 @@ export default function Dashboard() {
       const desc = (item.descricao || '').replace(/</g, '&lt;')
       const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
       const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
-      return `<tr><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;font-weight:600">${cod}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px">${desc}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
+      return `<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${desc}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
     }).join('')
     const ivPdf = totaisFechamentoLiquidoComIva(
       itens,
@@ -20846,7 +20846,7 @@ export default function Dashboard() {
         : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#0d7a3d">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#0d7a3d">${totalCobranca.toFixed(2)} €</td></tr>`
     const tableContent = `<div style="margin:8px 0 24px;border-radius:8px;overflow:hidden;border:1px solid #c8e6c9"><table class="fech-pdf-itens" style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdf}</tfoot></table></div>`
     const rodape = buildPdfDocumentFooterHtml(`${esc(docGeradoEm)} ${dataHoraGerado} · Nonato Service`)
-    const pdfRowStyles = `.pdf-tbody tr:nth-child(odd){background:#fff}.pdf-tbody tr:nth-child(even){background:#f1f8e9}.fech-pdf-itens{min-width:0;width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 24px;border-radius:8px;overflow:hidden;border:1px solid #c8e6c9}.fech-pdf-itens th{padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase}.fech-pdf-itens td{padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px}`
+    const pdfRowStyles = `.pdf-tbody tr:nth-child(odd){background:#fff}.pdf-tbody tr:nth-child(even){background:#f1f8e9}.fech-pdf-itens{min-width:0;width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 24px;border-radius:8px;overflow:hidden;border:1.5px solid #94a3b8}.fech-pdf-itens th,.fech-pdf-itens td{border:1.5px solid #94a3b8}.fech-pdf-itens th{padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase}.fech-pdf-itens td{padding:12px 14px;font-size:12px}`
     const bodyHtml = `${headerHtml}${infoMetaBib}${tableContent}${rodape}`
     const html = wrapRelatorioServicoPrintDocument({
       title: `${titFechamento} - ${relatorio.numero}`,
@@ -23893,7 +23893,7 @@ export default function Dashboard() {
         .report-section{margin-bottom:14px;padding:10px 0;border-bottom:1px dashed #ccc}
         .report-section h3{font-size:10px;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;color:#555}
         .row-res{display:flex;flex-wrap:wrap;gap:8px 24px;font-size:10px}.row-res span{white-space:nowrap}
-        table{width:100%;border-collapse:collapse;font-size:9px}th,td{border:1px solid #ccc;padding:6px}
+        table{width:100%;border-collapse:collapse;font-size:9px}th,td{border:1.5px solid #94a3b8;padding:6px}
         th{background:#f0f0f0}.report-summary{display:flex;gap:16px;margin-top:8px;font-size:10px}
         .report-resultados{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:10px}
         .chk{width:12px;height:12px;border:1px solid #333;display:inline-block;margin-right:6px;vertical-align:middle}.chk.checked{background:#000}
@@ -23926,7 +23926,7 @@ export default function Dashboard() {
         body{font-family:Arial,sans-serif;font-size:11px;color:#222;background:#fff;padding:18px}
         .report-section{margin-bottom:16px;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-top:2px solid #1e3a5f;border-radius:2px}
         .report-section h3{font-family:Georgia,serif;font-size:11px;margin-bottom:10px;color:#1e293b;font-weight:700;letter-spacing:0.08em;text-transform:uppercase}
-        table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1px solid #e2e8f0;padding:8px}
+        table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1.5px solid #94a3b8;padding:8px}
         th{background:#1e293b;color:#f8fafc}.report-summary{display:flex;gap:18px;margin-top:10px;color:#1e3a5f;font-weight:600}
         .report-resultados{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:10px}
         .chk{width:14px;height:14px;border:2px solid #94a3b8;display:inline-block;margin-right:6px;vertical-align:middle;border-radius:2px}.chk.checked{background:#1e293b;border-color:#1e293b}
@@ -23999,7 +23999,7 @@ export default function Dashboard() {
         .report-section{margin-bottom:16px}.report-section h3{font-size:11px;margin-bottom:10px;color:#333;border-left:4px solid #333;padding-left:8px}
         ul.lis{list-style:none;padding:0;margin:0}.lis li{padding:6px 0;border-bottom:1px solid #eee;display:flex;gap:12px}
         .lis .l{font-weight:600;min-width:140px}.lis .v{color:#555}
-        table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1px solid #ddd;padding:8px}
+        table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1.5px solid #94a3b8;padding:8px}
         th{background:#333;color:#fff}.report-summary{display:flex;gap:20px;margin-top:10px;font-size:11px}
         .report-resultados ul.lis .chk{width:12px;height:12px;border:1px solid #333;display:inline-block;margin-right:8px;vertical-align:middle}.chk.checked{background:#333}
         @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
@@ -25770,7 +25770,7 @@ export default function Dashboard() {
       )
       .join('')
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(rel.numero)} — Peças e Despesas</title>
-<style>body{font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#111}h1,h2{color:#1e3a5f}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#1e293b;color:#fff}</style></head><body>
+<style>body{font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#111}h1,h2{color:#1e3a5f}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{border:1.5px solid #94a3b8;padding:8px;text-align:left}th{background:#1e293b;color:#fff}</style></head><body>
 <h1>${esc(safeT?.relatorioServico || 'Relatório de Serviço')} — ${esc(rel.numero)}</h1>
 <p><strong>${esc(safeT?.cliente || 'Cliente')}:</strong> ${esc(rel.cliente)} · <strong>${esc(safeT?.data || 'Data')}:</strong> ${esc(rel.data)}</p>
 <h2>${esc(safeT?.pecasSubstituicao || 'Peças que necessitam substituição')}</h2>
@@ -52264,7 +52264,7 @@ A1;Peça exemplo;10`}
               item.origem === 'manual' || item.id.startsWith('peca-') || item.id.startsWith('m')
                 ? normalizeServicoValorStored(item.valorUnitario)
                 : item.valorUnitario
-            return `<tr><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;font-weight:600;color:inherit">${cod}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px">${descHtml}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${vuLinha.toFixed(2)} €</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
+            return `<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600;color:inherit">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${descHtml}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${vuLinha.toFixed(2)} €</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
           }).join('')
           const esc = (s: string) =>
             String(s ?? '')

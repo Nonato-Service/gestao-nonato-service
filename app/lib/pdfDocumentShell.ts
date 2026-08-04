@@ -284,7 +284,7 @@ body.ns-pdf-doc--expense .ns-pdf-section-title { color: #0d7a3d; border-bottom-c
 }
 .ns-pdf-table th,
 .ns-pdf-table td {
-  border: 1px solid #e2e8f0;
+  border: 1.5px solid #94a3b8;
   padding: 9px 10px;
   text-align: left;
   vertical-align: top;

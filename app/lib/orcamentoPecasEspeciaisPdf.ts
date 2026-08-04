@@ -193,7 +193,7 @@ export function buildOrcamentoPecasEspeciaisPdfHtml(data: OrcamentoPecasEspeciai
     .contact-grid strong { display: block; font-size: 10px; text-transform: uppercase; color: #64748b; margin-bottom: 3px; }
     table.items { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
     table.items th { background: #ecfdf5; color: #14532d; font-size: 10px; text-transform: uppercase; padding: 8px 6px; border: 1px solid #cbd5e1; text-align: left; }
-    table.items td { border: 1px solid #e2e8f0; padding: 6px; vertical-align: top; }
+    table.items td { border: 1.5px solid #94a3b8; padding: 6px; vertical-align: top; }
     .item-detail-row td { background: #fafafa; border-top: none; padding-top: 8px; padding-bottom: 10px; }
     .item-detail-flex { display: flex; gap: 12px; align-items: flex-start; }
     .item-img { flex: 0 0 auto; width: 88px; }

@@ -279,8 +279,13 @@ body.orc-pdf-pro {
   text-transform: uppercase;
   padding: 9px 6px;
   border-bottom: 2px solid var(--orc-brand);
+  border-right: 1px solid #cbd5e1;
   text-align: left;
   vertical-align: bottom;
+}
+
+.orc-pdf-pro__table th:last-child {
+  border-right: none;
 }
 
 .orc-pdf-pro__table th.orc-pdf-pro__col-qtd {
@@ -296,9 +301,14 @@ body.orc-pdf-pro {
 
 .orc-pdf-pro__table td {
   padding: 9px 8px;
-  border-bottom: 1px solid #eef2f6;
+  border-bottom: 1px solid #cbd5e1;
+  border-right: 1px solid #cbd5e1;
   vertical-align: middle;
   font-size: 10px;
+}
+
+.orc-pdf-pro__table td:last-child {
+  border-right: none;
 }
 
 .orc-pdf-pro__table tbody tr:nth-child(even) td { background: #fafbfc; }

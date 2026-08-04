@@ -5,6 +5,7 @@
 
 import {
   PDF_DOCUMENT_LAYOUT_CSS,
+  PDF_TABLE_CELL_BORDER,
   buildPdfDocumentHeaderHtml,
   buildPdfMetaSectionHtml,
   escapePdfHtml,
@@ -418,7 +419,7 @@ ${PDF_DOCUMENT_LAYOUT_CSS}
 }
 .ns-pdf-meta__equip-table th,
 .ns-pdf-meta__equip-table td {
-  border: 1px solid #e2e8f0;
+  border: ${PDF_TABLE_CELL_BORDER};
   padding: 7px 8px;
   text-align: left;
   vertical-align: middle;
@@ -498,7 +499,7 @@ ${PDF_DOCUMENT_LAYOUT_CSS}
   page-break-inside: auto;
 }
 .rs-pdf th, .rs-pdf td {
-  border: 1px solid #e2e8f0;
+  border: ${PDF_TABLE_CELL_BORDER};
   padding: 6px 5px;
   text-align: center;
   vertical-align: middle;
@@ -644,7 +645,7 @@ ${PDF_DOCUMENT_LAYOUT_CSS}
   font-size: 1em;
 }
 .rs-pdf .pecas-table th, .rs-pdf .pecas-table td {
-  border: 1px solid #e2e8f0;
+  border: ${PDF_TABLE_CELL_BORDER};
   padding: 8px 6px;
   text-align: left;
   vertical-align: middle;

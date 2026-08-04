@@ -219,7 +219,7 @@ export function buildFolhaSemanalContadorHtml(params: FolhaSemanalContadorParams
     }
     .comp-pdf-table-wrap { margin: 0 0 16px; border: 1px solid #dbeafe; border-radius: 4px; overflow: hidden; }
     .comp-pdf-table { width: 100%; border-collapse: collapse; margin: 0; font-size: 9pt; }
-    .comp-pdf-table th, .comp-pdf-table td { border: 1px solid #e2e8f0; padding: 7px 8px; text-align: left; vertical-align: top; }
+    .comp-pdf-table th, .comp-pdf-table td { border: 1.5px solid #94a3b8; padding: 7px 8px; text-align: left; vertical-align: top; }
     .comp-pdf-table th { background: #0d7a3d; color: #fff; font-weight: 600; font-size: 8pt; text-transform: uppercase; }
     .comp-pdf-table tbody tr:nth-child(even) td { background: #f8fafc; }
     .comp-pdf-table .num { text-align: right; white-space: nowrap; }

@@ -21,6 +21,10 @@ export function escapePdfHtml(s: string | undefined | null): string {
     .replace(/\r\n|\r|\n/g, '<br/>')
 }
 
+/** Bordas de colunas em tabelas PDF — mais visíveis na impressão */
+export const PDF_TABLE_CELL_BORDER = '1.5px solid #94a3b8'
+export const PDF_TABLE_GRID_BORDER = '1px solid #cbd5e1'
+
 export function buildPdfDocumentHeaderHtml(options: {
   logoContent: string
   title: string
@@ -304,8 +308,8 @@ export const PDF_DOCUMENT_LAYOUT_CSS = `
   text-transform: uppercase;
   color: #64748b;
   background: #fafbfc;
-  border-bottom: 1px solid #eef2f6;
-  border-right: 1px solid #eef2f6;
+  border-bottom: ${PDF_TABLE_GRID_BORDER};
+  border-right: ${PDF_TABLE_GRID_BORDER};
   word-break: break-word;
 }
 
@@ -317,7 +321,8 @@ export const PDF_DOCUMENT_LAYOUT_CSS = `
   font-weight: 500;
   color: #0f172a;
   line-height: 1.45;
-  border-bottom: 1px solid #eef2f6;
+  border-bottom: ${PDF_TABLE_GRID_BORDER};
+  border-right: ${PDF_TABLE_GRID_BORDER};
   word-break: break-word;
   overflow-wrap: anywhere;
 }
