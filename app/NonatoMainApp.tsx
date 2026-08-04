@@ -95,9 +95,13 @@ import {
   downloadBackupJson,
   readStoredBackupList,
   MANUAL_DATA_BACKUP_STORAGE_KEY,
-  AUTO_BACKUP_STORAGE_KEY,
   deleteStoredBackupEntry,
   pushManualDataBackupFromEnvelope,
+  refreshAutoBackupListCache,
+  getAutoBackupListCached,
+  deleteAutoBackupEntry,
+  restoreAutoBackupEntry,
+  summarizeBackupEnvelope,
 } from './utils/backupRestore'
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser } from './utils/syncRevision'
@@ -5140,6 +5144,8 @@ export default function Dashboard() {
   const [codeBackups, setCodeBackups] = useState<Array<{ path: string; timestamp: string; filesCount: number }>>([])
   const [codeBackupsFolder, setCodeBackupsFolder] = useState<string>('')
   const [loadingBackups, setLoadingBackups] = useState(false)
+  const lastAutoCodeBackupAtRef = useRef(0)
+  const [autoBackupListTick, setAutoBackupListTick] = useState(0)
   const [restoringFromZip, setRestoringFromZip] = useState(false)
   const restoreFromZipInputRef = useRef<HTMLInputElement | null>(null)
   const [isDemoMode, setIsDemoMode] = useState(false)
@@ -12554,7 +12560,8 @@ export default function Dashboard() {
       }
 
       // Criar primeiro backup automático ao iniciar
-      createAutoBackup()
+      void createAutoBackup().then(() => setAutoBackupListTick((n) => n + 1))
+      void refreshAutoBackupListCache()
 
       // Pedidos / ordens / formulários / checklist: só getData (uma leitura do servidor por arranque), com fallback raro se a chave não veio no bundle
       try {
@@ -15518,8 +15525,9 @@ export default function Dashboard() {
   // Função para criar backup completo (v2 — todas as chaves nonato-* + IndexedDB)
   const handleCreateBackup = async () => {
     try {
-      const data = await collectFullBackupData()
+      const data = await collectFullBackupData({ includeServer: true })
       const envelope = buildBackupEnvelope(data)
+      const summary = summarizeBackupEnvelope(envelope)
       const jsonStr = JSON.stringify(envelope, null, 2)
       const dateStr = new Date().toISOString().split('T')[0]
       const fileName = `${(t as any).backupFileName || 'backup'}-${dateStr}.json`
@@ -15576,9 +15584,14 @@ export default function Dashboard() {
           ((t as any).backupSuccess || 'Backup realizado com sucesso!') +
             '\n' +
             ((t as any).backupDownloaded || 'Backup baixado') +
-            `\n\nChaves incluídas: ${Object.keys(data).length} (cadastro, serviços, relatórios, peças, etc.)` +
+            `\n\nChaves incluídas: ${summary.keyCount} (browser + servidor)` +
+            `\nTamanho aproximado: ${(summary.totalBytes / (1024 * 1024)).toFixed(1)} MB` +
+            (summary.criticalMissing.length > 0
+              ? `\n\n(Aviso: sem dados em ${summary.criticalMissing.length} chave(s) crítica(s) — ${summary.criticalMissing.slice(0, 4).join(', ')}${summary.criticalMissing.length > 4 ? '…' : ''})`
+              : '\n\n✓ Todas as chaves críticas presentes.') +
             (stored.ok ? '\n\n✓ Registado nos últimos 5 backups JSON no navegador.' : '') +
-            diskMsg
+            diskMsg +
+            '\n\nRecomendado: clique também em «Descarregar ZIP de dados» para cópia completa.'
         )
       }
     } catch (error) {
@@ -15589,7 +15602,9 @@ export default function Dashboard() {
   // Função para criar backup automático (salva no localStorage)
   const createAutoBackup = useCallback(async () => {
     try {
-      return await createAutoBackupEntry()
+      const ok = await createAutoBackupEntry()
+      setAutoBackupListTick((n) => n + 1)
+      return ok
     } catch (error) {
       console.error('Erro ao criar backup automático:', error)
       return false
@@ -15609,11 +15624,15 @@ export default function Dashboard() {
   // Função para restaurar backup automático (v1 ou v2 — restauro completo)
   const restoreAutoBackup = async (backup: { timestamp: number; data?: any }) => {
     try {
-      if (!backup?.data) {
+      let envelopeRaw = backup?.data
+      if (!envelopeRaw) {
+        envelopeRaw = await restoreAutoBackupEntry(backup)
+      }
+      if (!envelopeRaw) {
         alert(t.invalidBackup || 'Backup inválido')
         return false
       }
-      const envelope = backup.data.data ? backup.data : { data: backup.data }
+      const envelope = (envelopeRaw as { data?: unknown }).data ? envelopeRaw : { data: envelopeRaw }
       const keyMap = normalizeBackupFile(envelope)
       const result = await restoreFullBackup(keyMap)
       if (!result.ok) {
@@ -15633,22 +15652,15 @@ export default function Dashboard() {
     }
   }
 
-  // Função para obter lista de backups automáticos
   const getAutoBackups = () => {
-    try {
-      const backupsStr = localStorage.getItem('nonato-auto-backups')
-      if (!backupsStr) return []
-      
-      const backups = JSON.parse(backupsStr)
-      return backups.sort((a: any, b: any) => b.timestamp - a.timestamp)
-    } catch (e) {
-      return []
-    }
+    void autoBackupListTick
+    return getAutoBackupListCached()
   }
 
   // Função para deletar backup automático
   const deleteAutoBackup = (timestamp: number) => {
-    return deleteStoredBackupEntry(AUTO_BACKUP_STORAGE_KEY, timestamp)
+    void deleteAutoBackupEntry(timestamp).then(() => setAutoBackupListTick((n) => n + 1))
+    return true
   }
 
   const getManualDataBackups = () => readStoredBackupList(MANUAL_DATA_BACKUP_STORAGE_KEY)
@@ -15659,22 +15671,73 @@ export default function Dashboard() {
   const restoreManualDataBackup = async (backup: { timestamp: number; data?: unknown }) =>
     restoreAutoBackup(backup as { timestamp: number; data?: any })
 
-  const downloadStoredBackupJson = (backup: { timestamp: number; data?: unknown }, prefix: string) => {
-    if (!backup?.data) return
+  const downloadStoredBackupJson = async (backup: { timestamp: number; data?: unknown }, prefix: string) => {
+    let payload = backup?.data
+    if (!payload) {
+      try {
+        payload = await restoreAutoBackupEntry(backup)
+      } catch {
+        alert('Backup não encontrado — dados podem estar apenas no IndexedDB deste browser.')
+        return
+      }
+    }
+    if (!payload) return
     const dateStr = new Date(backup.timestamp).toISOString().split('T')[0]
-    downloadBackupJson(backup.data, `${prefix}-${dateStr}.json`)
+    downloadBackupJson(payload, `${prefix}-${dateStr}.json`)
   }
 
   const getZipHistory = () => getZipDownloadHistory()
 
-  // Função para criar backup antes de operações críticas
+  const maybeCreateAutoCodeBackup = () => {
+    const now = Date.now()
+    if (now - lastAutoCodeBackupAtRef.current < 5 * 60 * 1000) return
+    lastAutoCodeBackupAtRef.current = now
+    void createAutoCodeBackup()
+  }
+
   const createAutoBackupBeforeOperation = () => {
     try {
       createAutoBackup()
-      // Também fazer backup do código automaticamente
-      createAutoCodeBackup()
+      maybeCreateAutoCodeBackup()
     } catch (error) {
       console.error('Erro ao criar backup antes da operação:', error)
+    }
+  }
+
+  // Descarregar ZIP completo de dados (pasta data/ + JSON)
+  const handleDownloadDataZip = async () => {
+    try {
+      const data = await collectFullBackupData({ includeServer: true })
+      const envelope = buildBackupEnvelope(data)
+      const response = await fetch('/api/backup-data/download-zip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(envelope),
+      })
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.error || 'Erro ao gerar ZIP de dados')
+      }
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const fileName = `backup-dados-completo-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.zip`
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      const savedPath = response.headers.get('X-Backup-Saved-Path') || ''
+      const summary = summarizeBackupEnvelope(envelope)
+      alert(
+        '✓ ZIP de dados completo descarregado.' +
+          (savedPath ? '\n\nGuardado também em:\n' + savedPath : '') +
+          `\n\nChaves: ${summary.keyCount} · ~${(summary.totalBytes / (1024 * 1024)).toFixed(1)} MB` +
+          '\n\nContém pasta data/ (servidor) + backup JSON. Guarde em pen USB.'
+      )
+    } catch (error) {
+      alert('❌ Erro ao descarregar ZIP de dados: ' + (error as Error).message)
     }
   }
 
@@ -33712,6 +33775,7 @@ export default function Dashboard() {
               restoreFromZipInputRef,
               saveData,
               handleCreateBackup,
+              handleDownloadDataZip,
               handleRestoreBackup,
               handleBackupCodigo,
               handleDownloadBackupZip,
@@ -76933,6 +76997,7 @@ A1;Peça exemplo;10`}
                 restoreFromZipInputRef,
                 saveData,
                 handleCreateBackup,
+                handleDownloadDataZip,
                 handleRestoreBackup,
                 handleBackupCodigo,
                 handleDownloadBackupZip,

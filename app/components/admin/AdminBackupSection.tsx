@@ -21,6 +21,7 @@ export type AdminBackupSectionProps = {
   restoreFromZipInputRef: React.RefObject<HTMLInputElement>
   saveData: (key: string, value: unknown, saveToLocalStorage?: boolean, awaitServer?: boolean) => Promise<boolean>
   handleCreateBackup: () => void
+  handleDownloadDataZip: () => void
   handleRestoreBackup: (e: React.ChangeEvent<HTMLInputElement>) => void
   handleBackupCodigo: () => void
   handleDownloadBackupZip: () => void
@@ -37,11 +38,15 @@ export type AdminBackupSectionProps = {
   getZipHistory: () => Array<{ timestamp: number; fileName: string; sizeBytes?: number }>
 }
 
+type DiskJsonFile = { name: string; sizeBytes: number; modified: string }
+
 type BackupStatus = {
   projectRoot?: string
   backupsFolder?: string
   jsonFolder?: string
   codigoFolder?: string
+  dataFolder?: string
+  dataFileCount?: number
   backupsCount?: number
   jsonCount?: number
   zipCount?: number
@@ -84,6 +89,7 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
     restoreFromZipInputRef,
     saveData,
     handleCreateBackup,
+    handleDownloadDataZip,
     handleRestoreBackup,
     handleBackupCodigo,
     handleDownloadBackupZip,
@@ -103,6 +109,7 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
   const [tick, setTick] = useState(0)
   const [confirm, setConfirm] = useState<ConfirmState>(null)
   const [status, setStatus] = useState<BackupStatus | null>(null)
+  const [diskJsonFiles, setDiskJsonFiles] = useState<DiskJsonFile[]>([])
   const [statusLoading, setStatusLoading] = useState(false)
   const [codeListLoaded, setCodeListLoaded] = useState(false)
   const [isLocalHost, setIsLocalHost] = useState(true)
@@ -120,8 +127,15 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
   const refreshStatus = useCallback(async () => {
     setStatusLoading(true)
     try {
-      const res = await fetch('/api/backup-code/status')
-      if (res.ok) setStatus(await res.json())
+      const [statusRes, jsonRes] = await Promise.all([
+        fetch('/api/backup-code/status'),
+        fetch('/api/backup-data/save'),
+      ])
+      if (statusRes.ok) setStatus(await statusRes.json())
+      if (jsonRes.ok) {
+        const jsonData = await jsonRes.json()
+        setDiskJsonFiles(Array.isArray(jsonData.files) ? jsonData.files.slice(0, 8) : [])
+      }
     } catch {
       setStatus(null)
     } finally {
@@ -161,7 +175,7 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
     setConfirm(null)
     if (c.kind === 'restore-auto') {
       const b = findBackup(autoBackups, c.id)
-      if (!b?.data) {
+      if (!b) {
         alert(tr(safeT, 'adminBackupHubInvalidBackup', 'Backup inválido ou corrompido — não contém dados.'))
         return
       }
@@ -196,20 +210,26 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
     backups: AutoBackup[],
     restoreKind: 'restore-auto' | 'restore-manual',
     deleteKind: 'delete-auto' | 'delete-manual',
-    prefix: string
+    prefix: string,
+    allowIdbOnly = false
   ) => (
     <ul className="admin-backup-hub-list">
-      {backups.map((b, index) => (
+      {backups.map((b, index) => {
+        const hasData = Boolean(b.data) || (allowIdbOnly && (b as { storedInIdb?: boolean }).storedInIdb)
+        return (
         <li key={b.timestamp}>
           <div>
             <strong>#{index + 1}</strong>
             <span>{formatWhen(b.timestamp, locale)}</span>
+            {(b as { keyCount?: number }).keyCount ? (
+              <small>{(b as { keyCount?: number }).keyCount} chaves</small>
+            ) : null}
           </div>
           <div className="admin-backup-hub-list__actions">
             <button
               type="button"
               className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--ghost"
-              disabled={isDemoMode || !b.data}
+              disabled={isDemoMode || !hasData}
               onClick={() => downloadStoredBackupJson(b, prefix)}
             >
               {tr(safeT, 'adminBackupHubDownloadJson', 'JSON')}
@@ -227,7 +247,7 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
               <button
                 type="button"
                 className="admin-backup-hub-btn admin-backup-hub-btn--xs admin-backup-hub-btn--primary"
-                disabled={isDemoMode || !b.data}
+                disabled={isDemoMode || !hasData}
                 onClick={() => setConfirm({ kind: restoreKind, id: b.timestamp })}
               >
                 {tr(safeT, 'adminBackupHubRestoreOne', 'Restaurar')}
@@ -249,7 +269,7 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
             )}
           </div>
         </li>
-      ))}
+      )})}
     </ul>
   )
 
@@ -316,6 +336,10 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
             <strong>{status?.zipCount ?? '—'}</strong>
           </div>
           <div className="admin-backup-hub__status-pill">
+            <span>{tr(safeT, 'adminBackupHubStatusDataCount', 'Ficheiros data/')}</span>
+            <strong>{status?.dataFileCount ?? '—'}</strong>
+          </div>
+          <div className="admin-backup-hub__status-pill">
             <span>{tr(safeT, 'adminBackupHubStatusCount', 'Pastas código')}</span>
             <strong>{status?.backupsCount ?? codeList.length}</strong>
           </div>
@@ -366,7 +390,14 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
             {tr(
               safeT,
               'adminBackupHubZoneDataDesc',
-              'Restaura clientes, relatórios, peças, configurações — não altera o código-fonte. Cada backup guarda ficheiro em backups/json/ com data no nome.'
+              'Restaura clientes, relatórios, peças, fotos e configurações — inclui browser + servidor. Cada backup guarda ficheiro em backups/json/ com data no nome.'
+            )}
+          </p>
+          <p className="admin-backup-hub__safe-note">
+            {tr(
+              safeT,
+              'adminBackupHubCompleteHint',
+              'Para não perder nada: use «Criar JSON agora» + «Descarregar ZIP de dados» semanalmente. Copie a pasta backups/ para pen USB.'
             )}
           </p>
 
@@ -406,8 +437,32 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
               <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--primary" onClick={handleCreateBackup} disabled={isDemoMode}>
                 + {tr(safeT, 'adminBackupHubCreateJsonNow', 'Criar JSON agora')}
               </button>
+              <button type="button" className="admin-backup-hub-btn admin-backup-hub-btn--secondary" onClick={handleDownloadDataZip} disabled={isDemoMode}>
+                {tr(safeT, 'adminBackupHubDownloadDataZip', 'Descarregar ZIP de dados')}
+              </button>
             </div>
           </div>
+
+          {diskJsonFiles.length > 0 ? (
+            <article className="admin-backup-hub-card admin-backup-hub-card--disk">
+              <header>
+                <h5>{tr(safeT, 'adminBackupHubDiskJsonTitle', 'JSON guardados no disco (servidor)')}</h5>
+              </header>
+              <ul className="admin-backup-hub-list admin-backup-hub-list--meta">
+                {diskJsonFiles.map((f, index) => (
+                  <li key={f.name}>
+                    <div>
+                      <strong>#{index + 1}</strong>
+                      <span>{f.name}</span>
+                      <small>
+                        {formatBackupBytes(f.sizeBytes)} · {formatWhen(new Date(f.modified).getTime(), locale)}
+                      </small>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ) : null}
 
           <div className="admin-backup-hub-grid admin-backup-hub-grid--inner">
             <article className="admin-backup-hub-card admin-backup-hub-card--system">
@@ -418,7 +473,7 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
               {autoBackups.length === 0 ? (
                 <p className="admin-backup-hub-empty">{tr(safeT, 'adminBackupHubSystemEmpty', 'Sem cópias automáticas ainda.')}</p>
               ) : (
-                renderBackupList(autoBackups, 'restore-auto', 'delete-auto', 'backup-auto')
+                renderBackupList(autoBackups, 'restore-auto', 'delete-auto', 'backup-auto', true)
               )}
             </article>
 

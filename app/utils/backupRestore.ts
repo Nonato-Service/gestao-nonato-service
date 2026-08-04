@@ -1,28 +1,36 @@
 /**
- * Backup e restauro completos — todas as chaves nonato-* + IndexedDB.
+ * Backup e restauro completos — todas as chaves nonato-* + IndexedDB + servidor.
  * Compatível com backups antigos (v1.0.0 com campos nomeados).
  */
 
-import { collectAllLocalNonatoDataForSync, saveAllToServer, saveData } from './dataStorage'
+import { NONATO_CRITICAL_CADASTRO_KEYS } from '../lib/criticalCadastroKeys'
+import { mergeArraysByIdDeferServerLocal } from '../lib/mergeArraysById'
+import { collectAllLocalNonatoDataForSync, loadAllFromServer, saveAllToServer, saveData } from './dataStorage'
 import {
   collectAllNonatoKvFromIdb,
+  getKv,
   saveManuaisFamiliasGruposToIdb,
   saveKv,
 } from './manuaisIndexedDb'
 
-export const BACKUP_VERSION = '2.0.0'
+export const BACKUP_VERSION = '2.1.0'
 export const AUTO_BACKUP_STORAGE_KEY = 'nonato-auto-backups'
 export const AUTO_BACKUP_IDB_MIRROR_KEY = 'nonato-auto-backups-idb-mirror'
 export const MAX_AUTO_BACKUPS = 5
 export const MAX_MANUAL_DATA_BACKUPS = 5
 export const MANUAL_DATA_BACKUP_STORAGE_KEY = 'nonato-manual-data-backups'
-const MAX_AUTO_VALUE_CHARS = 250_000
 
 const SKIP_BACKUP_KEYS = new Set([
   'nonato-auto-backups',
+  'nonato-auto-backups-idb-mirror',
   'nonato-code-backups',
   'nonato-sync-queue',
   'nonato-pending-full-server-replace',
+  'nonato-manual-data-backups',
+  'nonato-zip-download-history',
+  'nonato-relatorios-servico-backup-v1',
+  'nonato-auto-backup-enabled',
+  'nonato-auto-backup-interval',
 ])
 
 /** Mapa v1 (campos nomeados) → chaves localStorage */
@@ -68,27 +76,6 @@ function parseRawValue(raw: unknown): any | null {
   return raw
 }
 
-function stripPhotosFromPeople(value: any): any {
-  if (Array.isArray(value)) {
-    return value.map((item) => {
-      if (item && typeof item === 'object' && 'photo' in item) {
-        const { photo, ...rest } = item as Record<string, unknown>
-        return rest
-      }
-      return item
-    })
-  }
-  if (value && typeof value === 'object' && 'photo' in value) {
-    const { photo, ...rest } = value as Record<string, unknown>
-    return rest
-  }
-  return value
-}
-
-function isProbablyBase64Blob(value: unknown): boolean {
-  return typeof value === 'string' && (value.startsWith('data:image/') || value.startsWith('data:video/'))
-}
-
 function serializeSize(value: any): number {
   try {
     return JSON.stringify(value).length
@@ -97,18 +84,60 @@ function serializeSize(value: any): number {
   }
 }
 
+function isEmptyValue(value: unknown): boolean {
+  if (value == null || value === '') return true
+  if (Array.isArray(value)) return value.length === 0
+  if (typeof value === 'object') return Object.keys(value as object).length === 0
+  return false
+}
+
+/** Junta dados do servidor para não perder nada que só exista no PC/servidor. */
+export async function mergeServerIntoBackup(local: Record<string, any>): Promise<Record<string, any>> {
+  const out = { ...local }
+  try {
+    const { data: server, ok } = await loadAllFromServer()
+    if (!ok || !server || typeof server !== 'object') return out
+
+    for (const [key, serverVal] of Object.entries(server)) {
+      if (!key.startsWith('nonato-') || SKIP_BACKUP_KEYS.has(key)) continue
+      if (serverVal == null) continue
+
+      const localVal = out[key]
+      if (isEmptyValue(localVal)) {
+        out[key] = serverVal
+        continue
+      }
+
+      if (Array.isArray(localVal) && Array.isArray(serverVal)) {
+        out[key] = mergeArraysByIdDeferServerLocal(serverVal, localVal)
+        continue
+      }
+
+      if (typeof localVal === 'object' && typeof serverVal === 'object' && !Array.isArray(localVal)) {
+        out[key] = { ...(serverVal as object), ...(localVal as object) }
+      }
+    }
+  } catch (e) {
+    console.warn('[backup] merge servidor ignorado:', e)
+  }
+  return out
+}
+
 /** Junta localStorage + spillover IndexedDB (exceto meta-backups). */
 export async function collectFullBackupData(opts?: {
-  forAuto?: boolean
-  stripPhotos?: boolean
+  includeServer?: boolean
 }): Promise<Record<string, any>> {
-  const out = await collectAllLocalNonatoDataForSync()
+  let out = await collectAllLocalNonatoDataForSync()
 
   try {
     const idb = await collectAllNonatoKvFromIdb()
     for (const [key, value] of Object.entries(idb)) {
       if (value == null || SKIP_BACKUP_KEYS.has(key)) continue
-      if (out[key] == null) out[key] = value
+      if (out[key] == null) {
+        out[key] = value
+      } else if (Array.isArray(out[key]) && Array.isArray(value)) {
+        out[key] = mergeArraysByIdDeferServerLocal(value, out[key])
+      }
     }
   } catch {
     /* ignorar IDB */
@@ -116,32 +145,19 @@ export async function collectFullBackupData(opts?: {
 
   for (const k of SKIP_BACKUP_KEYS) delete out[k]
 
-  if (!opts?.forAuto && !opts?.stripPhotos) return out
-
-  const trimmed: Record<string, any> = {}
-  for (const [key, value] of Object.entries(out)) {
-    if (value == null) continue
-    if (isProbablyBase64Blob(value)) continue
-    let v = value
-    if (opts?.stripPhotos && (key === 'nonato-gestores' || key === 'nonato-tecnicos')) {
-      v = stripPhotosFromPeople(v)
-    }
-    if (opts?.forAuto && serializeSize(v) > MAX_AUTO_VALUE_CHARS) {
-      if (
-        key !== 'nonato-relatorios-servico' &&
-        key !== 'nonato-clientes' &&
-        key !== 'nonato-fechamentos-relatorios'
-      ) {
-        continue
-      }
-    }
-    trimmed[key] = v
+  if (opts?.includeServer) {
+    out = await mergeServerIntoBackup(out)
   }
-  return trimmed
+
+  return out
 }
 
 export function buildBackupEnvelope(data: Record<string, any>, timestamp?: number) {
   const keys = Object.keys(data).sort()
+  const sizes: Record<string, number> = {}
+  for (const k of keys) {
+    sizes[k] = serializeSize(data[k])
+  }
   return {
     version: BACKUP_VERSION,
     format: 'full-keys',
@@ -150,7 +166,9 @@ export function buildBackupEnvelope(data: Record<string, any>, timestamp?: numbe
     meta: {
       keyCount: keys.length,
       keys,
+      sizes,
       app: 'gestao-tecnica-nonato-service',
+      complete: true,
     },
     data,
   }
@@ -260,9 +278,47 @@ export async function restoreFullBackup(keyMap: Record<string, any>): Promise<Re
   return { ok: true, keysRestored: keys.length, serverOk }
 }
 
-export function tryPersistAutoBackups(backups: Array<{ timestamp: number; data: unknown }>): { ok: boolean; kept: number } {
+export type StoredBackupEntry = { timestamp: number; data: unknown; keyCount?: number; storedInIdb?: boolean }
+
+let autoBackupListCache: StoredBackupEntry[] = []
+
+export function getAutoBackupListCached(): StoredBackupEntry[] {
+  return autoBackupListCache
+}
+
+/** Lê backups automáticos — IndexedDB (completo) com fallback localStorage. */
+export async function refreshAutoBackupListCache(): Promise<StoredBackupEntry[]> {
+  if (typeof window === 'undefined') {
+    autoBackupListCache = []
+    return []
+  }
+  try {
+    const idb = await getKv(AUTO_BACKUP_IDB_MIRROR_KEY)
+    if (Array.isArray(idb) && idb.length > 0) {
+      autoBackupListCache = (idb as StoredBackupEntry[]).sort((a, b) => b.timestamp - a.timestamp)
+      return autoBackupListCache
+    }
+  } catch {
+    /* fallback LS */
+  }
+  autoBackupListCache = readStoredBackupList(AUTO_BACKUP_STORAGE_KEY)
+  return autoBackupListCache
+}
+
+export function tryPersistAutoBackups(backups: StoredBackupEntry[]): { ok: boolean; kept: number } {
   if (typeof window === 'undefined') return { ok: false, kept: 0 }
-  let working = backups.slice()
+
+  const lightweight = backups.map((b) => {
+    const env = b.data as { meta?: { keyCount?: number } } | null
+    return {
+      timestamp: b.timestamp,
+      keyCount: env?.meta?.keyCount ?? b.keyCount ?? 0,
+      storedInIdb: true,
+      data: null,
+    }
+  })
+
+  let working = lightweight.slice()
   while (working.length > 0) {
     try {
       localStorage.setItem(AUTO_BACKUP_STORAGE_KEY, JSON.stringify(working))
@@ -284,33 +340,57 @@ export function tryPersistAutoBackups(backups: Array<{ timestamp: number; data: 
   return { ok: false, kept: 0 }
 }
 
-export async function createAutoBackupEntry(): Promise<boolean> {
-  const data = await collectFullBackupData({ forAuto: true, stripPhotos: true })
-  const envelope = buildBackupEnvelope(data)
-  const existingRaw = localStorage.getItem(AUTO_BACKUP_STORAGE_KEY)
-  let backups: Array<{ timestamp: number; data: unknown }> = []
-  if (existingRaw) {
-    try {
-      backups = JSON.parse(existingRaw)
-      if (!Array.isArray(backups)) backups = []
-    } catch {
-      backups = []
-    }
-  }
-  backups.push({ timestamp: envelope.timestamp, data: envelope })
-  backups.sort((a, b) => b.timestamp - a.timestamp)
-  if (backups.length > MAX_AUTO_BACKUPS) backups = backups.slice(0, MAX_AUTO_BACKUPS)
-  const persisted = tryPersistAutoBackups(backups)
-  try {
-    await saveKv(AUTO_BACKUP_IDB_MIRROR_KEY, backups)
-  } catch {
-    /* espelho IDB opcional */
-  }
-  if (persisted.ok) return true
-  return backups.length > 0
+async function resolveBackupEntryData(entry: StoredBackupEntry): Promise<unknown> {
+  if (entry.data) return entry.data
+  const list = await refreshAutoBackupListCache()
+  const found = list.find((b) => b.timestamp === entry.timestamp)
+  return found?.data ?? null
 }
 
-export type StoredBackupEntry = { timestamp: number; data: unknown }
+/** Guarda backup automático no disco (localhost) — silencioso se falhar. */
+async function persistAutoBackupToDisk(envelope: ReturnType<typeof buildBackupEnvelope>): Promise<void> {
+  if (typeof window === 'undefined') return
+  try {
+    await fetch('/api/backup-data/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(envelope),
+    })
+  } catch {
+    /* offline ou Railway — ignorar */
+  }
+}
+
+export async function createAutoBackupEntry(): Promise<boolean> {
+  const data = await collectFullBackupData({ includeServer: true })
+  const envelope = buildBackupEnvelope(data)
+
+  let backups: StoredBackupEntry[] = []
+  try {
+    const idb = await getKv(AUTO_BACKUP_IDB_MIRROR_KEY)
+    if (Array.isArray(idb)) backups = idb as StoredBackupEntry[]
+  } catch {
+    backups = readStoredBackupList(AUTO_BACKUP_STORAGE_KEY)
+  }
+
+  backups.push({ timestamp: envelope.timestamp, data: envelope, keyCount: envelope.meta.keyCount })
+  backups.sort((a, b) => b.timestamp - a.timestamp)
+  if (backups.length > MAX_AUTO_BACKUPS) backups = backups.slice(0, MAX_AUTO_BACKUPS)
+
+  let idbOk = false
+  try {
+    await saveKv(AUTO_BACKUP_IDB_MIRROR_KEY, backups)
+    idbOk = true
+  } catch (e) {
+    console.error('[auto-backup] IndexedDB falhou:', e)
+  }
+
+  const persisted = tryPersistAutoBackups(backups)
+  autoBackupListCache = backups
+  void persistAutoBackupToDisk(envelope)
+
+  return idbOk || persisted.ok || backups.length > 0
+}
 
 export function readStoredBackupList(storageKey: string): StoredBackupEntry[] {
   if (typeof window === 'undefined') return []
@@ -354,7 +434,7 @@ export function tryPersistStoredBackups(
 }
 
 export async function pushManualDataBackupEntry(): Promise<{ ok: boolean; timestamp: number }> {
-  const data = await collectFullBackupData()
+  const data = await collectFullBackupData({ includeServer: true })
   const envelope = buildBackupEnvelope(data)
   return pushManualDataBackupFromEnvelope(envelope)
 }
@@ -380,6 +460,25 @@ export function deleteStoredBackupEntry(storageKey: string, timestamp: number): 
   }
 }
 
+export async function deleteAutoBackupEntry(timestamp: number): Promise<boolean> {
+  let backups = autoBackupListCache.length ? autoBackupListCache : await refreshAutoBackupListCache()
+  backups = backups.filter((b) => b.timestamp !== timestamp)
+  try {
+    await saveKv(AUTO_BACKUP_IDB_MIRROR_KEY, backups)
+  } catch {
+    /* ignorar */
+  }
+  tryPersistAutoBackups(backups)
+  autoBackupListCache = backups
+  return true
+}
+
+export async function restoreAutoBackupEntry(backup: StoredBackupEntry): Promise<unknown> {
+  const data = await resolveBackupEntryData(backup)
+  if (!data) throw new Error('Backup automático não encontrado — dados podem estar corrompidos.')
+  return data
+}
+
 export function downloadBackupJson(envelope: unknown, fileName: string): void {
   const jsonStr = JSON.stringify(envelope, null, 2)
   const blob = new Blob([jsonStr], { type: 'application/json' })
@@ -391,4 +490,17 @@ export function downloadBackupJson(envelope: unknown, fileName: string): void {
   link.click()
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
+}
+
+/** Resumo do backup para mostrar na UI. */
+export function summarizeBackupEnvelope(envelope: unknown): { keyCount: number; totalBytes: number; criticalMissing: string[] } {
+  const root = envelope as { data?: Record<string, unknown>; meta?: { keys?: string[] } }
+  const data = root?.data && typeof root.data === 'object' ? root.data : {}
+  const keys = Object.keys(data)
+  let totalBytes = 0
+  for (const k of keys) {
+    totalBytes += serializeSize(data[k])
+  }
+  const criticalMissing = NONATO_CRITICAL_CADASTRO_KEYS.filter((k) => isEmptyValue(data[k]))
+  return { keyCount: keys.length, totalBytes, criticalMissing: [...criticalMissing] }
 }

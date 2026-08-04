@@ -8,6 +8,7 @@ import {
   ensureBackupLayout,
   formatBackupStamp,
   getCodigoBackupsDir,
+  listCodeBackupFolderNames,
   MAX_CODE_FOLDER_BACKUPS,
   MAX_CODIGO_ZIP_ON_DISK,
   pruneFilesInDir,
@@ -143,45 +144,33 @@ Para restaurar:
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const projectRoot = path.resolve(getProjectRoot())
-    const backupsDir = path.join(projectRoot, 'backups')
-    
-    if (!fs.existsSync(backupsDir)) {
-      return NextResponse.json({ backups: [] })
-    }
-
-    const backups = fs.readdirSync(backupsDir)
-      .filter(item => item.startsWith('code-backup-'))
-      .map(item => {
-        const backupPath = path.join(backupsDir, item)
-        const stat = fs.statSync(backupPath)
-        const metadataPath = path.join(backupPath, 'metadata.json')
-        let metadata = null
-        if (fs.existsSync(metadataPath)) {
-          try {
-            metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'))
-          } catch (e) {
-            // Ignorar erro
-          }
+    const folders = listCodeBackupFolderNames(projectRoot)
+    const backups = folders.map((backupPath) => {
+      const stat = fs.statSync(backupPath)
+      const metadataPath = path.join(backupPath, 'metadata.json')
+      let metadata = null
+      if (fs.existsSync(metadataPath)) {
+        try {
+          metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'))
+        } catch {
+          /* ignorar */
         }
-        return {
-          name: item,
-          path: backupPath,
-          created: stat.birthtime.toISOString(),
-          modified: stat.mtime.toISOString(),
-          metadata
-        }
-      })
-      .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())
-
+      }
+      return {
+        name: path.basename(backupPath),
+        path: backupPath,
+        created: stat.birthtime.toISOString(),
+        modified: stat.mtime.toISOString(),
+        metadata,
+      }
+    })
     return NextResponse.json({ backups })
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: 'Erro ao listar backups: ' + error.message },
-      { status: 500 }
-    )
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    return NextResponse.json({ error: 'Erro ao listar backups: ' + message }, { status: 500 })
   }
 }
 

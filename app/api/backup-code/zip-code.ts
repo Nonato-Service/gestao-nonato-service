@@ -18,20 +18,24 @@ export function writeCodeZipToFile(projectRoot: string, destZipPath: string): Pr
     archive.on('error', reject)
     archive.pipe(output)
 
+    archive.on('entry', () => {
+      filesAdded++
+    })
+
+    let itemsQueued = 0
     for (const item of CODE_BACKUP_ITEMS) {
       const fullPath = path.join(resolvedRoot, item)
       if (!fs.existsSync(fullPath)) continue
       const stat = fs.statSync(fullPath)
       if (stat.isDirectory()) {
         archive.glob('**/*', { cwd: fullPath, dot: true, ignore: IGNORE_IN_ZIP }, { prefix: item })
-        filesAdded++
       } else {
         archive.file(fullPath, { name: item })
-        filesAdded++
       }
+      itemsQueued++
     }
 
-    if (filesAdded === 0) {
+    if (itemsQueued === 0) {
       archive.destroy()
       output.destroy()
       reject(new Error('Nenhum ficheiro encontrado para ZIP'))
