@@ -37,6 +37,10 @@ import {
   setCachedPecasBibliotecaServerTotal,
   getCachedPecasBibliotecaServerTotal,
 } from '../lib/pecasBibliotecaCompleteness'
+import {
+  runPecasBibliotecaSyncExclusive,
+  shouldDeferPecasBibliotecaImageHydration,
+} from '../lib/pecasBibliotecaSyncCoordinator'
 
 const PECAS_BIBLIOTECA_KEY = 'nonato-pecas-biblioteca'
 const PECAS_BIBLIOTECA_LITE_KEY = 'nonato-pecas-biblioteca-lite'
@@ -1031,10 +1035,23 @@ async function fetchPecasBibliotecaRepairPaginated(
     if (total > 0 && all.length >= total) break
   }
 
-    if (all.length > 0) break
+    if (all.length > 0) {
+      if (total > 0 && all.length >= total) break
+      if (total <= 0) break
+      console.warn(`[Nonato] Reparo peças incompleto (${all.length}/${total}) — nova tentativa…`)
+      all.length = 0
+      offset = 0
+      continue
+    }
+    break
   }
 
-  return all.length > 0 ? all : null
+  if (all.length === 0) return null
+  if (total > 0 && all.length < total) {
+    console.warn(`[Nonato] Reparo peças abortado: só ${all.length} de ${total}.`)
+    return null
+  }
+  return all
 }
 
 export type PecasBibliotecaRepairProgress = {
@@ -1198,11 +1215,6 @@ export async function fetchPecasBibliotecaLiteFromServer(
     return fromFile
   }
 
-  if (Array.isArray(fromRepair) && fromRepair.length > 0) {
-    setCachedPecasBibliotecaServerTotal(fromRepair.length)
-    return fromRepair
-  }
-  if (Array.isArray(fromFile) && fromFile.length > 0) return fromFile
   return null
 }
 
@@ -1357,6 +1369,7 @@ export async function forceReporPecasBibliotecaFromServer(
   current: unknown,
   onProgress?: (p: PecasBibliotecaRepairProgress) => void
 ): Promise<unknown[] | null> {
+  return runPecasBibliotecaSyncExclusive('force-repor', async () => {
   await waitForDataApiAuth(25_000)
   const meta = await fetchPecasBibliotecaServerMeta()
   const expectedTotal = meta?.total ?? getCachedPecasBibliotecaServerTotal()
@@ -1393,20 +1406,23 @@ export async function forceReporPecasBibliotecaFromServer(
   }
   console.info(`[Nonato] Catálogo reposto (lite): ${local.length} → ${merged.length} peças.`)
 
-  void (async () => {
-    try {
-      const withImages = await hydratePecasBibliotecaImagensFromServer(merged, onProgress)
-      if (withImages.length > 0) {
-        await savePecasBibliotecaLocally(withImages)
-        setCachedPecasBibliotecaServerTotal(withImages.length)
-        console.info(`[Nonato] Fotos da biblioteca hidratadas: ${withImages.filter((p) => p && typeof p === 'object' && (p as { imagem?: string }).imagem).length} peça(s) com imagem.`)
+  if (!shouldDeferPecasBibliotecaImageHydration()) {
+    void (async () => {
+      try {
+        const withImages = await hydratePecasBibliotecaImagensFromServer(merged, onProgress)
+        if (withImages.length > 0) {
+          await savePecasBibliotecaLocally(withImages)
+          setCachedPecasBibliotecaServerTotal(withImages.length)
+          console.info(`[Nonato] Fotos da biblioteca hidratadas: ${withImages.filter((p) => p && typeof p === 'object' && (p as { imagem?: string }).imagem).length} peça(s) com imagem.`)
+        }
+      } catch (e) {
+        console.warn('[Nonato] Hidratação de fotos interrompida:', e)
       }
-    } catch (e) {
-      console.warn('[Nonato] Hidratação de fotos interrompida:', e)
-    }
-  })()
+    })()
+  }
 
   return merged
+  })
 }
 
 /** Lê biblioteca já gravada neste browser (IndexedDB ou localStorage) — prioridade após recuperação. */
@@ -1456,6 +1472,7 @@ export async function clearPecasBibliotecaLocal(): Promise<void> {
 export async function reporPecasBibliotecaEmergencia(
   onProgress?: (msg: string) => void
 ): Promise<unknown[] | null> {
+  return runPecasBibliotecaSyncExclusive('repor-emergencia', async () => {
   serverOffline = false
   onProgress?.('A aguardar sessão…')
   const authed = await waitForDataApiAuth(30_000)
@@ -1481,7 +1498,6 @@ export async function reporPecasBibliotecaEmergencia(
     const cacheBust = Date.now()
     const urls = [
       `${API_BASE}/load?key=${encodeURIComponent(PECAS_BIBLIOTECA_LITE_KEY)}&_=${cacheBust}`,
-      `${API_BASE}/repair-pecas-biblioteca?lite=1&offset=0&limit=500&_=${cacheBust}`,
     ]
     for (const url of urls) {
       try {
@@ -1538,6 +1554,10 @@ export async function reporPecasBibliotecaEmergencia(
   setCachedPecasBibliotecaServerTotal(catalog.length)
 
   let finalCatalog: unknown[] = catalogMerged
+  const skipPhotos = shouldDeferPecasBibliotecaImageHydration()
+  if (skipPhotos) {
+    onProgress?.(`${catalogMerged.length} peças — catálogo OK (fotos depois, no PC).`)
+  } else {
   try {
     finalCatalog = await hydratePecasBibliotecaImagensFromServer(catalogMerged, (p) => {
       if (p.phase === 'images') {
@@ -1551,6 +1571,7 @@ export async function reporPecasBibliotecaEmergencia(
   } catch (e) {
     console.warn('[Nonato] Hidratação de fotos falhou parcialmente:', e)
     onProgress?.(`${catalogMerged.length} peças (fotos incompletas — tente Repor outra vez).`)
+  }
   }
 
   if (localBefore.length > 0) {
@@ -1575,6 +1596,7 @@ export async function reporPecasBibliotecaEmergencia(
   }
 
   return finalCatalog
+  })
 }
 
 /** Grava biblioteca de peças: IndexedDB primeiro (suporta ~10 MB+); localStorage se couber. */
@@ -1658,12 +1680,20 @@ export async function repairPecasBibliotecaIfStale(
   categoriasCount: number,
   onProgress?: (loaded: number, total: number) => void
 ): Promise<unknown[] | null> {
+  return runPecasBibliotecaSyncExclusive('repair-if-stale', async () => {
   const local = Array.isArray(current) ? current : []
   if (categoriasCount < 5) return null
   const suspectPartial = isPecasBibliotecaCatalogIncomplete(local.length, categoriasCount)
   if (!suspectPartial) return null
 
   let best: unknown[] = [...local]
+  let expectedTotal: number | null = getCachedPecasBibliotecaServerTotal()
+  try {
+    const meta = await fetchPecasBibliotecaServerMeta()
+    if (meta?.total) expectedTotal = meta.total
+  } catch {
+    /* ignorar */
+  }
 
   try {
     const snap = await getKv(OFFLINE_SNAPSHOT_KEY)
@@ -1689,16 +1719,25 @@ export async function repairPecasBibliotecaIfStale(
   const fromServer = await fetchPecasBibliotecaRepairPaginated((loaded, total) => {
     onProgress?.(loaded, total)
   })
-  if (Array.isArray(fromServer) && fromServer.length > 0) {
+  if (
+    Array.isArray(fromServer) &&
+    fromServer.length > 0 &&
+    pecasBibliotecaMeetsServerTotal(fromServer.length, expectedTotal)
+  ) {
     best = mergePecasBibliotecaArrays(fromServer, best) as unknown[]
   } else {
     const fromLoad = await forceLoadCadastroFromServer(PECAS_BIBLIOTECA_KEY)
-    if (Array.isArray(fromLoad) && fromLoad.length > 0) {
+    if (
+      Array.isArray(fromLoad) &&
+      fromLoad.length > 0 &&
+      pecasBibliotecaMeetsServerTotal(fromLoad.length, expectedTotal)
+    ) {
       best = mergePecasBibliotecaArrays(fromLoad, best) as unknown[]
     }
   }
 
   if (best.length <= local.length) return null
+  if (expectedTotal && best.length < expectedTotal) return null
 
   await savePecasBibliotecaLocally(best)
   if (!shouldDeferImplicitServerPush() && Array.isArray(fromServer) && pecasBibliotecaArraysDiffer(best, fromServer)) {
@@ -1708,6 +1747,7 @@ export async function repairPecasBibliotecaIfStale(
     `[Nonato] Biblioteca de peças reposta: ${local.length} → ${best.length}${Array.isArray(fromServer) ? ` (servidor: ${fromServer.length})` : ''}.`
   )
   return best
+  })
 }
 
 function pecasBibliotecaCountInBundle(data: Record<string, unknown>): number {

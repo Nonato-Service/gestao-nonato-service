@@ -345,6 +345,7 @@ import {
   getCachedPecasBibliotecaServerTotal,
   setCachedPecasBibliotecaServerTotal,
 } from './lib/pecasBibliotecaCompleteness'
+import { isPecasBibliotecaSyncInFlight } from './lib/pecasBibliotecaSyncCoordinator'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
 import { PdfModeloPickerField } from './components/PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from './lib/pdfModelStorage'
@@ -7900,11 +7901,17 @@ export default function Dashboard() {
       setPecasBiblioteca((prev) => {
         const merged = mergePecasBibliotecaArrays(raw, prev) as PecaBiblioteca[]
         const { lista } = garantirNumerosSequenciaPecaBiblioteca(merged, categoriasPecas)
+        const expected = getCachedPecasBibliotecaServerTotal()
+        const keepPrev =
+          (expected != null &&
+            expected > 0 &&
+            lista.length < expected &&
+            prev.length >= lista.length) ||
+          (!isPecasBibliotecaCatalogIncomplete(prev.length, categoriasPecas.length, expected) &&
+            isPecasBibliotecaCatalogIncomplete(lista.length, categoriasPecas.length, expected))
+        if (keepPrev) return prev
         void savePecasBibliotecaLocally(lista as unknown[])
-        return !isPecasBibliotecaCatalogIncomplete(prev.length, categoriasPecas.length) &&
-          isPecasBibliotecaCatalogIncomplete(lista.length, categoriasPecas.length)
-          ? prev
-          : lista
+        return lista.length >= prev.length ? lista : prev
       })
     },
     [categoriasPecas]
@@ -8118,11 +8125,16 @@ export default function Dashboard() {
     const onImagens = (ev: Event) => {
       const pecas = (ev as CustomEvent<{ pecas?: unknown[] }>).detail?.pecas
       if (!Array.isArray(pecas) || pecas.length === 0) return
+      if (isPecasBibliotecaSyncInFlight()) return
       setPecasBiblioteca((prev) => {
         const raw = (pecas as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
         const merged = mergePecasBibliotecaArrays(raw, prev) as PecaBiblioteca[]
         const { lista } = garantirNumerosSequenciaPecaBiblioteca(merged, categoriasPecas)
-        return lista
+        const expected = getCachedPecasBibliotecaServerTotal()
+        if (expected && expected > 0 && lista.length < expected && prev.length >= lista.length) {
+          return prev
+        }
+        return lista.length >= prev.length ? lista : prev
       })
     }
     window.addEventListener('nonato-pecas-imagens-hidratadas', onImagens)
@@ -28433,6 +28445,7 @@ export default function Dashboard() {
     if (typeof window === 'undefined') return
     if (appInitialLoading) return
     if (pecasPosBootReporRef.current) return
+    if (pecasBibliotecaReparoLoading || isPecasBibliotecaSyncInFlight()) return
     if (categoriasPecas.length < 5) return
     if (!isPecasBibliotecaCatalogIncomplete(pecasBiblioteca.length, categoriasPecas.length, getCachedPecasBibliotecaServerTotal())) return
     pecasPosBootReporRef.current = true
@@ -28834,6 +28847,7 @@ export default function Dashboard() {
 
         /** Repor automaticamente uma vez quando o tablet/PC ficou atrás do servidor. */
         if (!pecasAutoReporServidorRef.current && novidades >= 1) {
+          if (pecasBibliotecaReparoLoading || isPecasBibliotecaSyncInFlight()) return
           pecasAutoReporServidorRef.current = true
           setPecasBibliotecaReparoLoading(true)
           setPecasBibliotecaReparoProgress('A sincronizar biblioteca com o servidor…')
@@ -28893,6 +28907,7 @@ export default function Dashboard() {
     if (abaBibliotecaPecas !== 'biblioteca' && abaBibliotecaPecas !== 'biblioteca-gestao') return
     if (categoriasPecas.length < 3 || !isOnline()) return
     if (pecasClassificacaoSyncFeitoRef.current) return
+    if (pecasBibliotecaReparoLoading || isPecasBibliotecaSyncInFlight()) return
     const local = pecasBibliotecaClassificacaoSyncRef.current
     if (!Array.isArray(local) || local.length < 50) return
 
