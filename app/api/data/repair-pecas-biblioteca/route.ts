@@ -372,6 +372,26 @@ async function handleRepairRequest(request: NextRequest) {
 
   }
 
+  /** Catálogo lite completo num único pedido (tablet — evita 40+ páginas de 500). */
+  const allAtOnce = searchParams.get('all') === '1'
+  if (lite && allAtOnce) {
+    const litePecas = pecas.map(toLitePeca)
+    return NextResponse.json(
+      {
+        success: true,
+        mode: 'lite-all',
+        total: pecas.length,
+        offset: 0,
+        limit: litePecas.length,
+        count: litePecas.length,
+        hasMore: false,
+        pecas: litePecas,
+        message: `Catálogo completo (sem fotos): ${litePecas.length} peça(s).`,
+      },
+      { headers: NO_STORE_HEADERS }
+    )
+  }
+
 
 
   const sliceRaw = pecas.slice(offset, offset + limit)

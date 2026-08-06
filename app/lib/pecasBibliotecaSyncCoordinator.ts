@@ -2,6 +2,8 @@
  * Evita várias cargas de biblioteca em paralelo (tablet a «saltar» 1000→16000→200).
  */
 
+import { getCachedPecasBibliotecaServerTotal } from './pecasBibliotecaCompleteness'
+
 let syncInFlight: Promise<unknown> | null = null
 let syncOwner = ''
 
@@ -50,4 +52,14 @@ export function shouldDeferPecasBibliotecaImageHydration(): boolean {
   } catch {
     return false
   }
+}
+
+export function isBibliotecaMobileDevice(): boolean {
+  return shouldDeferPecasBibliotecaImageHydration()
+}
+
+export function shouldRejectPartialPecasSave(count: number, expected?: number | null): boolean {
+  const exp = expected ?? getCachedPecasBibliotecaServerTotal()
+  if (!exp || exp <= 0) return false
+  return count < exp
 }

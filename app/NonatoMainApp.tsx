@@ -342,10 +342,11 @@ import { minutosPausaOuAlmocoDia } from './lib/relatorioEspecialCalculos'
 import {
   isPecasBibliotecaCatalogIncomplete,
   pecasBibliotecaMinExpected,
+  pecasBibliotecaMeetsServerTotal,
   getCachedPecasBibliotecaServerTotal,
   setCachedPecasBibliotecaServerTotal,
 } from './lib/pecasBibliotecaCompleteness'
-import { isPecasBibliotecaSyncInFlight } from './lib/pecasBibliotecaSyncCoordinator'
+import { isPecasBibliotecaSyncInFlight, isBibliotecaMobileDevice, shouldDeferPecasBibliotecaImageHydration } from './lib/pecasBibliotecaSyncCoordinator'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
 import { PdfModeloPickerField } from './components/PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from './lib/pdfModelStorage'
@@ -11054,6 +11055,7 @@ export default function Dashboard() {
         ) {
           const liteValue = serverData['nonato-pecas-biblioteca-lite']
           const serverValue = serverData[key]
+          const expectedTotal = getCachedPecasBibliotecaServerTotal()
           if (Array.isArray(liteValue) && liteValue.length >= 50) {
             const fullCount = Array.isArray(serverValue) ? serverValue.length : 0
             const localData = localStorage.getItem(key)
@@ -11065,7 +11067,10 @@ export default function Dashboard() {
                 /* continuar */
               }
             }
-            if (fullCount < liteValue.length) {
+            if (
+              fullCount < liteValue.length &&
+              pecasBibliotecaMeetsServerTotal(liteValue.length, expectedTotal)
+            ) {
               const merged = mergePecasBibliotecaArrays(liteValue, localParsed ?? [])
               void savePecasBibliotecaLocally(merged as unknown[])
               return merged
@@ -11073,6 +11078,12 @@ export default function Dashboard() {
           }
           const localData = localStorage.getItem(key)
           if (Array.isArray(serverValue) && serverValue.length >= 50) {
+            if (
+              !pecasBibliotecaMeetsServerTotal(serverValue.length, expectedTotal) &&
+              isPecasBibliotecaCatalogIncomplete(serverValue.length, 5, expectedTotal)
+            ) {
+              /* bundle sync parcial — não gravar 500/12000; repair API trata disto */
+            } else {
             let localParsed: unknown = null
             if (localData !== null && localData !== '') {
               try {
@@ -11087,6 +11098,7 @@ export default function Dashboard() {
               void saveData(key, merged, false, true)
             }
             return merged
+            }
           }
           /* Cópia parcial no bundle sync (<50) — bootstrapLoadPecasBiblioteca usa repair API */
         }
@@ -12368,7 +12380,7 @@ export default function Dashboard() {
             (p as PecaBiblioteca & { temImagemServidor?: boolean }).temImagemServidor &&
             !(typeof p.imagem === 'string' && p.imagem.startsWith('data:'))
         ).length
-        if (faltamFotos >= 5) {
+        if (faltamFotos >= 5 && !shouldDeferPecasBibliotecaImageHydration()) {
           void (async () => {
             try {
               const comFotos = await hydratePecasBibliotecaImagensFromServer(lista as unknown[])
@@ -28445,6 +28457,7 @@ export default function Dashboard() {
     if (typeof window === 'undefined') return
     if (appInitialLoading) return
     if (pecasPosBootReporRef.current) return
+    if (isBibliotecaMobileDevice()) return
     if (pecasBibliotecaReparoLoading || isPecasBibliotecaSyncInFlight()) return
     if (categoriasPecas.length < 5) return
     if (!isPecasBibliotecaCatalogIncomplete(pecasBiblioteca.length, categoriasPecas.length, getCachedPecasBibliotecaServerTotal())) return
@@ -28845,8 +28858,8 @@ export default function Dashboard() {
           return
         }
 
-        /** Repor automaticamente uma vez quando o tablet/PC ficou atrás do servidor. */
-        if (!pecasAutoReporServidorRef.current && novidades >= 1) {
+        /** Repor automaticamente uma vez quando o tablet/PC ficou atrás do servidor (só PC). */
+        if (!pecasAutoReporServidorRef.current && novidades >= 1 && !isBibliotecaMobileDevice()) {
           if (pecasBibliotecaReparoLoading || isPecasBibliotecaSyncInFlight()) return
           pecasAutoReporServidorRef.current = true
           setPecasBibliotecaReparoLoading(true)
@@ -28907,6 +28920,7 @@ export default function Dashboard() {
     if (abaBibliotecaPecas !== 'biblioteca' && abaBibliotecaPecas !== 'biblioteca-gestao') return
     if (categoriasPecas.length < 3 || !isOnline()) return
     if (pecasClassificacaoSyncFeitoRef.current) return
+    if (isBibliotecaMobileDevice()) return
     if (pecasBibliotecaReparoLoading || isPecasBibliotecaSyncInFlight()) return
     const local = pecasBibliotecaClassificacaoSyncRef.current
     if (!Array.isArray(local) || local.length < 50) return
