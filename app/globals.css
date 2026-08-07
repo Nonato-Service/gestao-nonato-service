@@ -347,12 +347,32 @@ body {
 
 @media (max-width: 1024px) {
   html.mobile-browser-zoomed .mobile-pan-root {
+    /* Pan/pinch tratados em JS; não bloquear filhos interactivos (botões). */
     touch-action: none;
     overflow: visible;
   }
 
-  html.mobile-browser-zoomed .mobile-pan-root * {
-    touch-action: none !important;
+  /* Antes: * { touch-action: none } matava toques em botões após zoom. */
+  html.mobile-browser-zoomed .mobile-pan-root
+    :is(
+      button,
+      a,
+      input,
+      select,
+      textarea,
+      label,
+      summary,
+      [role='button'],
+      [role='tab'],
+      [role='menuitem'],
+      .sidebar button,
+      .sidebar a,
+      .sidebar-item,
+      .tab-bar button,
+      .ns-boot-progress,
+      .biblioteca-hub-toolbar__status-btn
+    ) {
+    touch-action: manipulation !important;
   }
 
   html.mobile-browser-zoomed .sidebar .sidebar-scroll-inner,

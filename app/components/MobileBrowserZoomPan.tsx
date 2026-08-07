@@ -62,6 +62,8 @@ export function MobileBrowserZoomPan() {
   const zoomSurfaceRef = useRef<ZoomSurface | null>(null)
   const pinchArmDistRef = useRef(0)
   const pinchCapturedRef = useRef(false)
+  /** Só depois de arrastar > limiar: evita que o pan com zoom mate o toque nos botões. */
+  const oneFingerPanActiveRef = useRef(false)
   const scrollSnapshotRef = useRef<ScrollSnapshot | null>(null)
 
   useEffect(() => {
@@ -270,6 +272,7 @@ export function MobileBrowserZoomPan() {
       zoomSurfaceRef.current = null
       pinchCapturedRef.current = false
       pinchArmDistRef.current = 0
+      oneFingerPanActiveRef.current = false
       scrollSnapshotRef.current = null
       resetAllSurfaces()
     }
@@ -353,6 +356,7 @@ export function MobileBrowserZoomPan() {
         if (!zoomSurfaceRef.current) {
           zoomSurfaceRef.current = surface
         }
+        oneFingerPanActiveRef.current = false
         gestureRef.current = {
           mode: 'one',
           startX: e.touches[0].clientX,
@@ -364,9 +368,8 @@ export function MobileBrowserZoomPan() {
           startPanY: panY,
           startScale: scale,
         }
-        if (surface?.mode === 'root') {
-          e.preventDefault()
-        }
+        // NÃO preventDefault no touchstart: isso bloqueava clicks/taps nos botões com zoom.
+        // O pan só captura o gesto depois de mover o dedo (ver onTouchMove).
       }
     }
 
@@ -433,7 +436,10 @@ export function MobileBrowserZoomPan() {
       if (g.mode === 'one' && e.touches.length === 1 && scaleRef.current > 1.008) {
         const dx = e.touches[0].clientX - g.startX
         const dy = e.touches[0].clientY - g.startY
-        if (Math.abs(dx) < 0.25 && Math.abs(dy) < 0.25) return
+        const moved = Math.hypot(dx, dy)
+        // Toque curto = clique no botão; só pan após limiar.
+        if (!oneFingerPanActiveRef.current && moved < PAN_START_MOVE_PX) return
+        oneFingerPanActiveRef.current = true
 
         panRef.current = clampPan(g.startPanX + dx, g.startPanY + dy, scaleRef.current, surface)
         e.preventDefault()
@@ -456,11 +462,13 @@ export function MobileBrowserZoomPan() {
         gestureRef.current = null
         pinchCapturedRef.current = false
         pinchArmDistRef.current = 0
+        oneFingerPanActiveRef.current = false
         applyTransform()
         if (scaleRef.current <= 1.008) resetView()
         return
       }
       if (e.touches.length === 1 && scaleRef.current > 1.008) {
+        oneFingerPanActiveRef.current = false
         gestureRef.current = {
           mode: 'one',
           startX: e.touches[0].clientX,
