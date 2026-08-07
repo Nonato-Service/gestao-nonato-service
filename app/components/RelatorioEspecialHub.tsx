@@ -292,19 +292,31 @@ export default function RelatorioEspecialHub({
       setAcaoEmCurso('eliminar')
       setSalvando(true)
       try {
-        const lista = relatorios.filter((r) => r.id !== rel.id)
+        const rid = String(rel.id || '').trim()
+        const rnum = String(rel.numero || '').trim()
+        const lista = relatorios.filter((r) => {
+          const id = String(r.id || '').trim()
+          const num = String(r.numero || '').trim()
+          if (rid && id === rid) return false
+          if (rnum && num === rnum) return false
+          return true
+        })
         const ok = await onSaveAll(lista)
         if (ok) {
           alert(t.relatorioEspecialEliminado || 'Relatório especial eliminado.')
-          if (editandoId === rel.id) voltarLista()
+          if (editandoId === rel.id || (rnum && String(form.numero || '').trim() === rnum)) {
+            // Após eliminar: sair sem perguntar «alterações por guardar».
+            setModo('lista')
+            setEditandoId(null)
+            setDiaExpandido(null)
+          }
         }
-        // Falha: onSaveAll já mostra o alerta de eliminação (não misturar com «guardar»).
       } finally {
         setSalvando(false)
         setAcaoEmCurso(null)
       }
     },
-    [relatorios, onSaveAll, t, editandoId, voltarLista]
+    [relatorios, onSaveAll, t, editandoId, form.numero]
   )
 
   const persistir = useCallback(async () => {

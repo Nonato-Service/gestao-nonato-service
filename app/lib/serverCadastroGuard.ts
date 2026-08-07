@@ -55,6 +55,14 @@ export function assessServerCadastroWrite(
   const newCount = value.length
 
   if (existingCount > 0 && newCount === 0) {
+    /** Documentos (relatórios especiais, etc.): apagar o último item é válido. */
+    if (
+      ALLOW_PROTECTED_SUBSET_SHRINK_KEYS.has(key) &&
+      existing &&
+      isIntentionalSubsetShrink(existing, value)
+    ) {
+      return { allowed: true }
+    }
     return { allowed: false, reason: 'empty_overwrite', existingCount, newCount }
   }
   if (existingCount > 0 && newCount < existingCount) {

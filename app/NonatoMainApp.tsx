@@ -8749,6 +8749,38 @@ export default function Dashboard() {
     return () => window.removeEventListener('nonato-data-local-changed', onRelSync)
   }, [])
 
+  /** Sync de relatórios especiais: respeitar tombstones (itens eliminados não voltam à UI). */
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onEspeciaisSync = async (ev: Event) => {
+      const key = (ev as CustomEvent<{ key?: string }>)?.detail?.key
+      if (
+        key !== RELATORIOS_ESPECIAIS_STORAGE_KEY &&
+        key !== RELATORIOS_ESPECIAIS_DELETED_IDS_KEY
+      ) {
+        return
+      }
+      try {
+        let parsed: RelatorioEspecial[] | null = null
+        const raw = localStorage.getItem(RELATORIOS_ESPECIAIS_STORAGE_KEY)
+        if (raw) {
+          parsed = JSON.parse(raw) as RelatorioEspecial[]
+        } else {
+          const idb = await getKv(RELATORIOS_ESPECIAIS_STORAGE_KEY)
+          if (Array.isArray(idb)) parsed = idb as RelatorioEspecial[]
+        }
+        if (!Array.isArray(parsed)) return
+        const deletedIds = normalizeDeletedIds(getData(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY))
+        const filtrados = filterByDeletedIds(parsed, deletedIds) as RelatorioEspecial[]
+        setRelatoriosEspeciais(filtrados)
+      } catch {
+        /* ignorar */
+      }
+    }
+    window.addEventListener('nonato-data-local-changed', onEspeciaisSync)
+    return () => window.removeEventListener('nonato-data-local-changed', onEspeciaisSync)
+  }, [])
+
   /** Vigilância pós-arranque: se clientes ficarem a zero, tentar recuperar uma vez do servidor. */
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -20211,9 +20243,9 @@ export default function Dashboard() {
       const prevIds = new Set(prevSnapshot.map((r) => String(r.id || '').trim()).filter(Boolean))
       const nextIds = new Set(lista.map((r) => String(r.id || '').trim()).filter(Boolean))
       const removed = [...prevIds].filter((id) => !nextIds.has(id))
-      const isDelete = removed.length > 0
+      const isDelete = removed.length > 0 || lista.length < prevSnapshot.length
       let deletedIds = normalizeDeletedIds(getData(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY))
-      if (isDelete) {
+      if (removed.length > 0) {
         deletedIds = mergeDeletedIds(deletedIds, removed)
       }
       const listaLimpa = filterByDeletedIds(lista, deletedIds) as RelatorioEspecial[]
@@ -20221,9 +20253,12 @@ export default function Dashboard() {
       /** Eliminar: confirmar já no aparelho; sync ao servidor em segundo plano (não misturar com «guardar»). */
       if (isDelete) {
         setRelatoriosEspeciais(listaLimpa)
-        await saveData(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY, deletedIds, true, false)
-        const okLocal = await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa, true, false)
-        if (!okLocal) {
+        try {
+          // awaitServer=false: não reverter se o Railway recusar (antes auto-await desfazia a exclusão).
+          await saveData(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY, deletedIds, true, false)
+          await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa, true, false)
+        } catch (e) {
+          console.warn('[Nonato] Falha local ao eliminar relatório especial:', e)
           setRelatoriosEspeciais(prevSnapshot)
           alert(
             (safeT as any)?.relatorioEspecialErroEliminar ||
@@ -20231,10 +20266,7 @@ export default function Dashboard() {
           )
           return false
         }
-        // Empurrar tombstone + lista ao Railway sem bloquear a UI com mensagem de «guardar».
         void Promise.all([
-          saveData(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY, deletedIds, true, true),
-          saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa, true, true),
           saveToServer(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY, deletedIds),
           saveToServer(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa),
         ]).catch((e) => console.warn('[Nonato] Sync pós-eliminação relatório especial:', e))
@@ -20258,7 +20290,7 @@ export default function Dashboard() {
         .map((r) => String(r.id || '').trim())
         .filter((id) => id && !lista.some((r) => String(r.id || '').trim() === id))
       alert(
-        removedIds.length > 0
+        removedIds.length > 0 || lista.length < prevSnapshot.length
           ? (safeT as any)?.relatorioEspecialErroEliminar ||
               'Não foi possível eliminar o relatório. Tente novamente.'
           : (safeT as any)?.erroSalvar || 'Erro ao guardar. Tente novamente.'

@@ -606,7 +606,7 @@ const RELATORIOS_SERVICO_KEY = 'nonato-relatorios-servico'
 /** Gravações que devem confirmar no Railway antes de dar por concluído (não inclui biblioteca — payload grande). */
 const KEYS_AUTO_AWAIT_SERVER = new Set([
   RELATORIOS_SERVICO_KEY,
-  'nonato-relatorios-especiais',
+  /** Relatórios especiais: NÃO auto-await — eliminar tem de gravar local mesmo se o servidor bloquear shrink. */
   CLIENTES_KEY,
   'nonato-fechamentos-relatorios',
   'nonato-fechamentos-guardados-biblioteca',
@@ -734,6 +734,8 @@ async function shouldBlockEmptyServerOverwrite(key: string, value: unknown): Pro
       return false
     }
   }
+  /** Documentos (relatórios especiais, etc.): lista vazia = tudo eliminado — permitir. */
+  if (ALLOW_PROTECTED_SUBSET_SHRINK_KEYS.has(key)) return false
   if (!NONATO_PROTECTED_ARRAY_KEYS.has(key) && !NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE.has(key)) return false
   if (!isEmptyDataArray(value)) return false
   try {
@@ -748,6 +750,8 @@ async function shouldBlockEmptyServerOverwrite(key: string, value: unknown): Pro
 export function omitEmptyProtectedKeysForServerPush(data: Record<string, any>): Record<string, any> {
   const out: Record<string, any> = { ...data }
   for (const key of NONATO_PROTECTED_ARRAY_KEYS) {
+    /** Documentos elimináveis: `[]` tem de ir ao servidor (último item apagado). */
+    if (ALLOW_PROTECTED_SUBSET_SHRINK_KEYS.has(key)) continue
     if (isEmptyDataArray(out[key])) delete out[key]
   }
   for (const key of NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE) {
