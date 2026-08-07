@@ -5,11 +5,13 @@ import { useEffect, useRef } from 'react'
 const PAN_ROOT_ID = 'mobile-pan-root'
 const MIN_SCALE = 1
 const MAX_SCALE = 4
-const ZOOM_SENSITIVITY = 0.075
-const MIN_PINCH_DIST = 96
-const PINCH_CAPTURE_DELTA_PX = 14
-const PAN_START_MOVE_PX = 5
-const ZOOM_ACTIVE_SCALE = 1.045
+/** Quase 1:1 com o movimento dos dedos (antes 0.075 — parecia morto). */
+const ZOOM_SENSITIVITY = 0.95
+/** Só evita divisão por zero; não inventar distância mínima grande. */
+const MIN_PINCH_DIST = 12
+const PINCH_CAPTURE_DELTA_PX = 3
+const PAN_START_MOVE_PX = 4
+const ZOOM_ACTIVE_SCALE = 1.02
 
 const SCROLL_NATIVE_SELECTORS = [
   '.sidebar-scroll-inner',
@@ -19,7 +21,7 @@ const SCROLL_NATIVE_SELECTORS = [
 ]
 
 const scaleFromPinch = (startScale: number, fingerRatio: number) => {
-  if (Math.abs(fingerRatio - 1) < 0.01) return startScale
+  if (!Number.isFinite(fingerRatio) || fingerRatio <= 0) return startScale
   const dampedRatio = 1 + (fingerRatio - 1) * ZOOM_SENSITIVITY
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, startScale * dampedRatio))
 }
@@ -49,9 +51,9 @@ type ScrollSnapshot = {
 }
 
 /**
- * Telemóvel/tablet touch: zoom com 2 dedos.
- * Biblioteca de peças: zoom local no conteúdo da aba (não move o cabeçalho).
- * Resto da app: zoom global em #mobile-pan-root (comportamento v74).
+ * Zoom com 2 dedos — resposta imediata e matemática uniforme em toda a app.
+ * Biblioteca: zoom local no conteúdo da aba (cabeçalho fica).
+ * Resto: zoom em #mobile-pan-root.
  */
 export function MobileBrowserZoomPan() {
   const scaleRef = useRef(1)
@@ -62,9 +64,10 @@ export function MobileBrowserZoomPan() {
   const zoomSurfaceRef = useRef<ZoomSurface | null>(null)
   const pinchArmDistRef = useRef(0)
   const pinchCapturedRef = useRef(false)
-  /** Só depois de arrastar > limiar: evita que o pan com zoom mate o toque nos botões. */
   const oneFingerPanActiveRef = useRef(false)
   const scrollSnapshotRef = useRef<ScrollSnapshot | null>(null)
+  const rafApplyRef = useRef(0)
+  const pendingApplyRef = useRef(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -72,7 +75,7 @@ export function MobileBrowserZoomPan() {
     const isTouchMobile = () => {
       if (window.innerWidth > 1280) return false
       if (window.matchMedia('(pointer: coarse)').matches) return true
-      return navigator.maxTouchPoints > 0 && window.innerWidth <= 768
+      return navigator.maxTouchPoints > 0 && window.innerWidth <= 1024
     }
 
     const panRoot = () => document.getElementById(PAN_ROOT_ID)
@@ -119,7 +122,13 @@ export function MobileBrowserZoomPan() {
 
     const originFromMid = (midX: number, midY: number, el: HTMLElement) => {
       const rect = el.getBoundingClientRect()
-      return { x: midX - rect.left, y: midY - rect.top }
+      const w = rect.width || 1
+      const h = rect.height || 1
+      // Origem em % — mantém o ponto do pinça estável quando a escala muda.
+      return {
+        x: ((midX - rect.left) / w) * 100,
+        y: ((midY - rect.top) / h) * 100,
+      }
     }
 
     const isScrollableEl = (el: HTMLElement) => {
@@ -178,14 +187,6 @@ export function MobileBrowserZoomPan() {
       }
     }
 
-    const scheduleScrollRestore = () => {
-      restoreScrollSnapshot()
-      requestAnimationFrame(() => {
-        restoreScrollSnapshot()
-        requestAnimationFrame(restoreScrollSnapshot)
-      })
-    }
-
     const lockBibliotecaScroll = (scrollEl: HTMLElement) => {
       if (!scrollEl.dataset.nsZoomScrollTop) {
         scrollEl.dataset.nsZoomScrollTop = String(scrollEl.scrollTop)
@@ -211,7 +212,8 @@ export function MobileBrowserZoomPan() {
       el.style.willChange = ''
     }
 
-    const applyTransform = () => {
+    const applyTransformNow = () => {
+      pendingApplyRef.current = false
       const surface =
         zoomSurfaceRef.current ??
         (panRoot() ? { mode: 'root' as const, transformEl: panRoot()!, scrollEl: null } : null)
@@ -236,7 +238,7 @@ export function MobileBrowserZoomPan() {
       }
 
       if (zoomed) {
-        surface.transformEl.style.transformOrigin = `${ox}px ${oy}px`
+        surface.transformEl.style.transformOrigin = `${ox}% ${oy}%`
         surface.transformEl.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`
         surface.transformEl.style.willChange = 'transform'
       } else {
@@ -248,8 +250,15 @@ export function MobileBrowserZoomPan() {
       }
 
       if (zoomed && surface.mode === 'biblioteca') {
-        scheduleScrollRestore()
+        restoreScrollSnapshot()
       }
+    }
+
+    /** Um frame só — evita atraso de vários rAF + sensação de “não responde”. */
+    const applyTransform = () => {
+      if (pendingApplyRef.current) return
+      pendingApplyRef.current = true
+      rafApplyRef.current = requestAnimationFrame(applyTransformNow)
     }
 
     const resetAllSurfaces = () => {
@@ -265,6 +274,8 @@ export function MobileBrowserZoomPan() {
     }
 
     const resetView = () => {
+      if (rafApplyRef.current) cancelAnimationFrame(rafApplyRef.current)
+      pendingApplyRef.current = false
       scaleRef.current = 1
       panRef.current = { x: 0, y: 0 }
       originRef.current = { x: 0, y: 0 }
@@ -318,7 +329,8 @@ export function MobileBrowserZoomPan() {
       originRef.current = originFromMid(mid.x, mid.y, surface.transformEl)
       lastPinchMidRef.current = mid
       pinchArmDistRef.current = dist
-      pinchCapturedRef.current = false
+      // Se já há zoom, captura já; senão captura no primeiro movimento mínimo.
+      pinchCapturedRef.current = scale > ZOOM_ACTIVE_SCALE
       gestureRef.current = {
         mode: 'two',
         startX: 0,
@@ -329,6 +341,10 @@ export function MobileBrowserZoomPan() {
         startPanX: panX,
         startPanY: panY,
         startScale: scale,
+      }
+
+      if (pinchCapturedRef.current && surface.mode === 'biblioteca' && surface.scrollEl) {
+        lockBibliotecaScroll(surface.scrollEl)
       }
     }
 
@@ -343,16 +359,15 @@ export function MobileBrowserZoomPan() {
 
       if (e.touches.length >= 2) {
         armTwoFingerGesture(e)
-        if (surface?.mode === 'root') {
-          e.preventDefault()
-          scheduleScrollRestore()
-        }
+        // Capturar já o pinça — resposta imediata (não esperar 14px).
+        e.preventDefault()
+        if (surface?.mode === 'biblioteca') restoreScrollSnapshot()
         return
       }
 
-      if (e.touches.length === 1 && inScrollArea && scale <= 1.008) return
+      if (e.touches.length === 1 && inScrollArea && scale <= ZOOM_ACTIVE_SCALE) return
 
-      if (e.touches.length === 1 && scale > 1.008) {
+      if (e.touches.length === 1 && scale > ZOOM_ACTIVE_SCALE) {
         if (!zoomSurfaceRef.current) {
           zoomSurfaceRef.current = surface
         }
@@ -368,8 +383,6 @@ export function MobileBrowserZoomPan() {
           startPanY: panY,
           startScale: scale,
         }
-        // NÃO preventDefault no touchstart: isso bloqueava clicks/taps nos botões com zoom.
-        // O pan só captura o gesto depois de mover o dedo (ver onTouchMove).
       }
     }
 
@@ -391,39 +404,32 @@ export function MobileBrowserZoomPan() {
         const mid = touchMidpoint(e.touches)
         const panX = g.startPanX + (mid.x - g.startMidX)
         const panY = g.startPanY + (mid.y - g.startMidY)
-        const midMoved = Math.hypot(mid.x - g.startMidX, mid.y - g.startMidY)
         const distDelta = Math.abs(dist - pinchArmDistRef.current)
-        const alreadyZoomed = scaleRef.current > ZOOM_ACTIVE_SCALE
 
         if (!pinchCapturedRef.current) {
           if (distDelta >= PINCH_CAPTURE_DELTA_PX) {
             pinchCapturedRef.current = true
+            // Recentrar o “start” no momento da captura para o zoom começar limpo.
+            g.startDist = dist
+            g.startScale = scaleRef.current
+            g.startMidX = mid.x
+            g.startMidY = mid.y
+            g.startPanX = panRef.current.x
+            g.startPanY = panRef.current.y
+            pinchArmDistRef.current = dist
+            originRef.current = originFromMid(mid.x, mid.y, surface.transformEl)
             if (surface.mode === 'biblioteca' && surface.scrollEl) {
               lockBibliotecaScroll(surface.scrollEl)
             }
-          } else if (alreadyZoomed && midMoved >= PAN_START_MOVE_PX) {
-            panRef.current = clampPan(panX, panY, scaleRef.current, surface)
-            lastPinchMidRef.current = mid
-            e.preventDefault()
-            applyTransform()
-            return
-          } else if (!alreadyZoomed && midMoved >= PAN_START_MOVE_PX && midMoved > distDelta) {
-            panRef.current = clampPan(panX, panY, scaleRef.current, surface)
-            lastPinchMidRef.current = mid
-            e.preventDefault()
-            applyTransform()
-            return
           } else {
             return
           }
         }
 
-        const ratio = dist / g.startDist
+        const ratio = dist / Math.max(g.startDist, MIN_PINCH_DIST)
         const nextScale = scaleFromPinch(g.startScale, ratio)
 
         lastPinchMidRef.current = mid
-        originRef.current = originFromMid(g.startMidX, g.startMidY, surface.transformEl)
-
         scaleRef.current = nextScale
         panRef.current = clampPan(panX, panY, nextScale, surface)
 
@@ -433,11 +439,10 @@ export function MobileBrowserZoomPan() {
         return
       }
 
-      if (g.mode === 'one' && e.touches.length === 1 && scaleRef.current > 1.008) {
+      if (g.mode === 'one' && e.touches.length === 1 && scaleRef.current > ZOOM_ACTIVE_SCALE) {
         const dx = e.touches[0].clientX - g.startX
         const dy = e.touches[0].clientY - g.startY
         const moved = Math.hypot(dx, dy)
-        // Toque curto = clique no botão; só pan após limiar.
         if (!oneFingerPanActiveRef.current && moved < PAN_START_MOVE_PX) return
         oneFingerPanActiveRef.current = true
 
@@ -448,26 +453,16 @@ export function MobileBrowserZoomPan() {
     }
 
     const onTouchEnd = (e: TouchEvent) => {
-      const surface = zoomSurfaceRef.current
-
       if (e.touches.length === 0) {
-        if (gestureRef.current?.mode === 'two' && surface) {
-          const mid = lastPinchMidRef.current
-          originRef.current = originFromMid(
-            mid.x || gestureRef.current.startMidX,
-            mid.y || gestureRef.current.startMidY,
-            surface.transformEl
-          )
-        }
         gestureRef.current = null
         pinchCapturedRef.current = false
         pinchArmDistRef.current = 0
         oneFingerPanActiveRef.current = false
         applyTransform()
-        if (scaleRef.current <= 1.008) resetView()
+        if (scaleRef.current <= ZOOM_ACTIVE_SCALE) resetView()
         return
       }
-      if (e.touches.length === 1 && scaleRef.current > 1.008) {
+      if (e.touches.length === 1 && scaleRef.current > ZOOM_ACTIVE_SCALE) {
         oneFingerPanActiveRef.current = false
         gestureRef.current = {
           mode: 'one',
@@ -492,30 +487,51 @@ export function MobileBrowserZoomPan() {
       if (!isTouchMobile()) resetView()
     }
 
-    /** Firefox/desktop: Ctrl+scroll mantém posição na biblioteca (evita saltar ao cabeçalho). */
     const onWheel = (e: WheelEvent) => {
       if (!e.ctrlKey) return
       const t = e.target
       if (!(t instanceof Element) || !t.closest('.biblioteca-pecas-hub')) return
       saveScrollSnapshot(t)
-      scheduleScrollRestore()
-      window.setTimeout(scheduleScrollRestore, 0)
-      window.setTimeout(scheduleScrollRestore, 80)
+      restoreScrollSnapshot()
+      requestAnimationFrame(restoreScrollSnapshot)
+    }
+
+    /** Dois toques rápidos = voltar ao zoom 100% (uniforme em toda a app). */
+    let lastTapAt = 0
+    let lastTapX = 0
+    let lastTapY = 0
+    const onDblTapReset = (e: TouchEvent) => {
+      if (!isTouchMobile() || e.touches.length !== 0) return
+      if (scaleRef.current <= ZOOM_ACTIVE_SCALE) return
+      const t = e.changedTouches[0]
+      if (!t) return
+      const now = Date.now()
+      const dt = now - lastTapAt
+      const dist = Math.hypot(t.clientX - lastTapX, t.clientY - lastTapY)
+      lastTapAt = now
+      lastTapX = t.clientX
+      lastTapY = t.clientY
+      if (dt > 0 && dt < 280 && dist < 28) {
+        resetView()
+      }
     }
 
     document.addEventListener('touchstart', onTouchStart, { passive: false, capture: true })
     document.addEventListener('touchmove', onTouchMove, { passive: false, capture: true })
     document.addEventListener('touchend', onTouchEnd, { capture: true })
     document.addEventListener('touchcancel', onTouchEnd, { capture: true })
+    document.addEventListener('touchend', onDblTapReset, { capture: true })
     window.addEventListener('orientationchange', onResize)
     window.addEventListener('resize', onResize)
     window.addEventListener('wheel', onWheel, { passive: true, capture: true })
 
     return () => {
+      if (rafApplyRef.current) cancelAnimationFrame(rafApplyRef.current)
       document.removeEventListener('touchstart', onTouchStart, true)
       document.removeEventListener('touchmove', onTouchMove, true)
       document.removeEventListener('touchend', onTouchEnd, true)
       document.removeEventListener('touchcancel', onTouchEnd, true)
+      document.removeEventListener('touchend', onDblTapReset, true)
       window.removeEventListener('orientationchange', onResize)
       window.removeEventListener('resize', onResize)
       window.removeEventListener('wheel', onWheel, true)
