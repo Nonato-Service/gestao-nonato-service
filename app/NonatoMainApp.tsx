@@ -9533,8 +9533,9 @@ export default function Dashboard() {
     equipamentoOrigem: 'cliente',
   })
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false)
-  /** Largura ≤768px: menu em gaveta, header mobile (telemóvel / telemóvel landscape estreito) */
-  const COMPACT_LAYOUT_MAX_PX = 768
+  /** ≤1024px: menu em gaveta + header mobile (telemóvel e tablet). Telefone estreito = ≤768. */
+  const COMPACT_LAYOUT_MAX_PX = 1024
+  const PHONE_LAYOUT_MAX_PX = 768
   const [isCompactLayout, setIsCompactLayout] = useState(() => {
     if (typeof window === 'undefined') return false
     return (
@@ -10000,10 +10001,12 @@ export default function Dashboard() {
   useLayoutEffect(() => {
     const q = () => {
       if (typeof window === 'undefined') return
-      const compact = window.innerWidth <= COMPACT_LAYOUT_MAX_PX
+      const w = window.innerWidth
+      const compact = w <= COMPACT_LAYOUT_MAX_PX
+      const phone = w <= PHONE_LAYOUT_MAX_PX
       setIsCompactLayout(compact)
       document.documentElement.classList.toggle('app-compact-layout-early', compact)
-      document.documentElement.classList.toggle('app-phone-layout', compact)
+      document.documentElement.classList.toggle('app-phone-layout', phone)
       if (!compact) setMobileMenuOpen(false)
     }
     q()
@@ -73838,7 +73841,7 @@ A1;Peça exemplo;10`}
 
   return (
     <div
-      className={`app-layout${!isDemoMode ? ' app-layout-no-top-bar' : ''}${isCompactLayout ? ' app-compact-layout' : ''}${isCompactLayout && isDemoMode ? ' app-compact-with-demo' : ''}${openTabs.length > 0 ? ' app-has-bottom-tabs' : ''}${hideSidebarForEntryDashboard ? ' app-layout-entry-focus' : ''}${dashboardWorkspaceExpanded ? ' app-layout-workspace-open' : ''}`}
+      className={`app-layout${!isDemoMode ? ' app-layout-no-top-bar' : ''}${isCompactLayout ? ' app-compact-layout' : ''}${isCompactLayout && isDemoMode ? ' app-compact-with-demo' : ''}${isMobileOrTablet ? ' app-touch-device' : ''}${openTabs.length > 0 ? ' app-has-bottom-tabs' : ''}${hideSidebarForEntryDashboard ? ' app-layout-entry-focus' : ''}${dashboardWorkspaceExpanded ? ' app-layout-workspace-open' : ''}`}
       style={{
         display: 'flex',
         minHeight: '100dvh',

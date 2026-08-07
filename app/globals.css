@@ -4226,9 +4226,9 @@ div[style*="border-bottom"][style*="255, 0, 0.2"] > div:last-child {
 
 :root {
   --ns-bp-phone: 480px;
-  --ns-bp-tablet: 768px;
-  --ns-bp-compact: 768px;
-  --ns-bp-desktop: 769px;
+  --ns-bp-tablet: 1024px;
+  --ns-bp-compact: 1024px;
+  --ns-bp-desktop: 1025px;
 }
 
 /* Garantir que nada ultrapasse a largura do ecrã */
@@ -4240,7 +4240,7 @@ html, body {
 
 /*
  * Antes da hidratação React: script em layout.tsx aplica .app-compact-layout-early no <html>
- * quando largura ≤768 — evita flash de sidebar desktop no telemóvel.
+ * quando largura ≤1024 — evita flash de sidebar desktop no telemóvel/tablet.
  */
 html.app-compact-layout-early body {
   overscroll-behavior: none;
@@ -5229,12 +5229,12 @@ body {
   }
 }
 
-/* Tabelas em conteúdo: limitar largura no telefone/tablet; use um wrapper com overflow-x: auto se a tabela for muito larga */
+/* Tabelas: no telemóvel/tablet preferir scroll horizontal a esmagar colunas */
 @media (max-width: 1024px) {
   .tab-content-wrapper table,
   .main-content-area table {
-    max-width: 100%;
-    table-layout: fixed;
+    max-width: none;
+    table-layout: auto;
   }
 }
 
@@ -6444,9 +6444,9 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   }
 
   .app-compact-layout .mobile-toolbar-btn {
-    min-height: 38px !important;
-    padding: 7px 8px !important;
-    font-size: 12px !important;
+    min-height: 44px !important;
+    padding: 10px 10px !important;
+    font-size: max(12px, 0.75rem) !important;
   }
 
   .app-compact-layout .mobile-sticky-toolbar {
@@ -7075,10 +7075,11 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  /* Tabelas e conteúdos largos */
+  /* Conteúdo: scroll vertical no eixo principal; tabelas largas rolam no próprio wrapper */
   .app-compact-layout .tab-inner-scroll,
   .app-compact-layout .main-content-area {
-    overflow-x: hidden;
+    overflow-x: auto;
+    overflow-y: auto;
   }
 
   /* Com zoom activo: anular overflow-x hidden do layout compacto (vem acima e bloqueava pan lateral) */
@@ -7188,6 +7189,144 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
     min-height: auto !important;
     white-space: normal !important;
     word-break: break-word !important;
+  }
+
+  /* Toque: alvos mínimos em todo o programa (tablet + telemóvel) */
+  .app-compact-layout .btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn),
+  .app-compact-layout .btn-secondary:not(.btn-danger),
+  .app-compact-layout .btn-danger,
+  .app-compact-layout .btn--compact,
+  .app-compact-layout button.btn-primary.btn--compact {
+    min-height: 44px !important;
+  }
+  .app-compact-layout .bottom-tabs-scroll-btn {
+    width: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  /* Tabelas: wrapper implícito com scroll horizontal (não esmagar células) */
+  .app-compact-layout .tab-content-wrapper table,
+  .app-compact-layout .main-content-area table {
+    display: block;
+    width: max-content;
+    min-width: 100%;
+    max-width: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    table-layout: auto;
+  }
+  .app-compact-layout .ns-table-scroll,
+  .app-compact-layout .fechamento-relatorios-servicos-table-host,
+  .app-compact-layout .biblioteca-relatorios-tabela-wrap {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+  .app-compact-layout .ns-table-scroll > table,
+  .app-compact-layout .fechamento-relatorios-servicos-table-host > table,
+  .app-compact-layout .biblioteca-relatorios-tabela-wrap > table {
+    display: table !important;
+    width: max-content;
+    min-width: 100%;
+    table-layout: auto !important;
+  }
+
+  /* Inputs: evitar zoom iOS e alvos pequenos */
+  .app-compact-layout input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  .app-compact-layout select,
+  .app-compact-layout textarea {
+    font-size: max(16px, 1rem) !important;
+    min-height: 44px;
+  }
+  .app-compact-layout textarea {
+    min-height: 88px;
+  }
+
+  /* Modais mais usáveis no ecrã pequeno */
+  .app-compact-layout .modal {
+    width: min(96vw, 720px) !important;
+    max-width: 96vw !important;
+    max-height: min(92dvh, 900px) !important;
+  }
+
+  /* Espaço para a barra de abas inferiores não cobrir o fim do conteúdo */
+  .app-compact-layout.app-has-bottom-tabs .tab-inner-scroll {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .app-compact-layout.app-has-bottom-tabs .main-content-area:not(.main-content-area-tab-open) {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* minWidth inline frequente em formulários/modais */
+  .app-compact-layout .tab-content-wrapper [style*='minWidth: 520px'],
+  .app-compact-layout .tab-content-wrapper [style*='min-width: 520px'],
+  .app-compact-layout .main-content-area [style*='minWidth: 520px'],
+  .app-compact-layout .main-content-area [style*='min-width: 520px'],
+  .app-compact-layout .modal [style*='minWidth: 520px'],
+  .app-compact-layout .modal [style*='min-width: 520px'] {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Telemóvel estreito: grelhas de 2–4 colunas passam a 1 coluna */
+@media (max-width: 768px) {
+  .app-compact-layout .tab-content-wrapper [style*='grid-template-columns: repeat(4'],
+  .app-compact-layout .tab-content-wrapper [style*='gridTemplateColumns: repeat(4'],
+  .app-compact-layout .tab-content-wrapper [style*="gridTemplateColumns: 'repeat(4"],
+  .app-compact-layout .tab-content-wrapper [style*='grid-template-columns: repeat(3'],
+  .app-compact-layout .tab-content-wrapper [style*='gridTemplateColumns: repeat(3'],
+  .app-compact-layout .tab-content-wrapper [style*="gridTemplateColumns: 'repeat(3"],
+  .app-compact-layout .tab-content-wrapper [style*='grid-template-columns: repeat(2'],
+  .app-compact-layout .tab-content-wrapper [style*='gridTemplateColumns: repeat(2'],
+  .app-compact-layout .tab-content-wrapper [style*="gridTemplateColumns: 'repeat(2"],
+  .app-compact-layout .tab-content-wrapper [style*='minmax(350px'],
+  .app-compact-layout .tab-content-wrapper [style*='minmax(300px'],
+  .app-compact-layout .tab-content-wrapper [style*='minmax(280px'],
+  .app-compact-layout .tab-content-wrapper [style*='minmax(260px'],
+  .app-compact-layout .main-content-area [style*='minmax(350px'],
+  .app-compact-layout .main-content-area [style*='minmax(300px'],
+  .app-compact-layout .main-content-area [style*='minmax(280px'],
+  .app-compact-layout .main-content-area [style*='minmax(260px'] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-compact-layout .modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100dvh !important;
+    border-radius: 14px 14px 0 0 !important;
+    margin-top: auto !important;
+  }
+
+  .app-compact-layout .agenda-cal-grid--head > div {
+    font-size: 12px !important;
+    min-height: 36px;
+  }
+  .app-compact-layout .agenda-cal-day,
+  .app-compact-layout .agenda-cal-day--empty {
+    min-height: 88px !important;
+  }
+
+  .app-compact-layout .cliente-lista-linhas__value--info {
+    font-size: 12px !important;
+  }
+  .app-compact-layout .cliente-lista-linhas__value--nome {
+    font-size: 14px !important;
+  }
+
+  .app-compact-layout .fechamento-itens-qty-input,
+  .app-compact-layout .fechamento-itens-val-input {
+    min-height: 44px !important;
+    font-size: 16px !important;
+    min-width: 4.5rem;
   }
 }
 
