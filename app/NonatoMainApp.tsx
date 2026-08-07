@@ -346,6 +346,7 @@ import {
   filterByDeletedIds,
   mergeDeletedIds,
   normalizeDeletedIds,
+  readDeletedIdsFromLocalStorage,
 } from './lib/relatorioEspecialDeleted'
 import { minutosPausaOuAlmocoDia } from './lib/relatorioEspecialCalculos'
 import {
@@ -8770,7 +8771,7 @@ export default function Dashboard() {
           if (Array.isArray(idb)) parsed = idb as RelatorioEspecial[]
         }
         if (!Array.isArray(parsed)) return
-        const deletedIds = normalizeDeletedIds(getData(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY))
+        const deletedIds = readDeletedIdsFromLocalStorage()
         const filtrados = filterByDeletedIds(parsed, deletedIds) as RelatorioEspecial[]
         setRelatoriosEspeciais(filtrados)
       } catch {
@@ -20244,7 +20245,8 @@ export default function Dashboard() {
       const nextIds = new Set(lista.map((r) => String(r.id || '').trim()).filter(Boolean))
       const removed = [...prevIds].filter((id) => !nextIds.has(id))
       const isDelete = removed.length > 0 || lista.length < prevSnapshot.length
-      let deletedIds = normalizeDeletedIds(getData(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY))
+      // NÃO usar getData() aqui — essa função só existe dentro do bootstrap (loadAllData).
+      let deletedIds = readDeletedIdsFromLocalStorage()
       if (removed.length > 0) {
         deletedIds = mergeDeletedIds(deletedIds, removed)
       }
@@ -20259,12 +20261,18 @@ export default function Dashboard() {
           await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa, true, false)
         } catch (e) {
           console.warn('[Nonato] Falha local ao eliminar relatório especial:', e)
-          setRelatoriosEspeciais(prevSnapshot)
-          alert(
-            (safeT as any)?.relatorioEspecialErroEliminar ||
-              'Não foi possível eliminar o relatório. Tente novamente.'
-          )
-          return false
+          // Mesmo com falha de disco: manter eliminado na UI; sync tenta depois.
+          try {
+            localStorage.setItem(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY, JSON.stringify(deletedIds))
+            localStorage.setItem(RELATORIOS_ESPECIAIS_STORAGE_KEY, JSON.stringify(listaLimpa))
+          } catch {
+            setRelatoriosEspeciais(prevSnapshot)
+            alert(
+              (safeT as any)?.relatorioEspecialErroEliminar ||
+                'Não foi possível eliminar o relatório. Tente novamente.'
+            )
+            return false
+          }
         }
         void Promise.all([
           saveToServer(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY, deletedIds),
