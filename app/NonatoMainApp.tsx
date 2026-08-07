@@ -338,7 +338,15 @@ import { filtrarPorNomeBusca, getLetraAlfabetoNome } from './lib/nomeAlfabetoBus
 import { wrapRelatorioServicoPrintDocument } from './lib/relatorioServicoPdfShell'
 import RelatorioEspecialHub from './components/RelatorioEspecialHub'
 import type { RelatorioEspecial } from './lib/relatorioEspecialTypes'
-import { RELATORIOS_ESPECIAIS_STORAGE_KEY } from './lib/relatorioEspecialTypes'
+import {
+  RELATORIOS_ESPECIAIS_STORAGE_KEY,
+  RELATORIOS_ESPECIAIS_DELETED_IDS_KEY,
+} from './lib/relatorioEspecialTypes'
+import {
+  filterByDeletedIds,
+  mergeDeletedIds,
+  normalizeDeletedIds,
+} from './lib/relatorioEspecialDeleted'
 import { minutosPausaOuAlmocoDia } from './lib/relatorioEspecialCalculos'
 import {
   isPecasBibliotecaCatalogIncomplete,
@@ -11985,9 +11993,19 @@ export default function Dashboard() {
         setRelatoriosServico(relatoriosOk)
       }
 
+      const savedRelatoriosEspeciaisDeleted = normalizeDeletedIds(
+        getData(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY)
+      )
       const savedRelatoriosEspeciais = getData(RELATORIOS_ESPECIAIS_STORAGE_KEY)
       if (savedRelatoriosEspeciais && Array.isArray(savedRelatoriosEspeciais)) {
-        setRelatoriosEspeciais(savedRelatoriosEspeciais as RelatorioEspecial[])
+        const especiaisFiltrados = filterByDeletedIds(
+          savedRelatoriosEspeciais as RelatorioEspecial[],
+          savedRelatoriosEspeciaisDeleted
+        ) as RelatorioEspecial[]
+        setRelatoriosEspeciais(especiaisFiltrados)
+        if (especiaisFiltrados.length !== savedRelatoriosEspeciais.length) {
+          saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, especiaisFiltrados, true, true).catch(() => {})
+        }
       }
 
       const savedFechamentosRelatorios = getData('nonato-fechamentos-relatorios')
@@ -20188,11 +20206,27 @@ export default function Dashboard() {
   }, [relatoriosEspeciais])
 
   const salvarRelatoriosEspeciais = useCallback(async (lista: RelatorioEspecial[]): Promise<boolean> => {
-    setRelatoriosEspeciais(lista)
     try {
-      const ok = await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, lista, true, false)
+      const prevIds = new Set(relatoriosEspeciais.map((r) => String(r.id || '').trim()).filter(Boolean))
+      const nextIds = new Set(lista.map((r) => String(r.id || '').trim()).filter(Boolean))
+      const removed = [...prevIds].filter((id) => !nextIds.has(id))
+      let deletedIds = normalizeDeletedIds(getData(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY))
+      if (removed.length > 0) {
+        deletedIds = mergeDeletedIds(deletedIds, removed)
+        const okDel = await saveData(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY, deletedIds, true, true)
+        if (!okDel) {
+          console.warn('[Nonato] Falha a gravar IDs eliminados de relatórios especiais no servidor.')
+        }
+      }
+      const listaLimpa = filterByDeletedIds(lista, deletedIds) as RelatorioEspecial[]
+      setRelatoriosEspeciais(listaLimpa)
+      // awaitServer=true: exclusões têm de chegar ao Railway (senão o item volta no sync).
+      const ok = await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa, true, true)
       if (!ok) {
-        alert((safeT as any)?.erroSalvar || 'Erro ao guardar localmente. Tente novamente.')
+        alert(
+          (safeT as any)?.erroSalvar ||
+            'Não foi possível gravar no servidor. O relatório pode voltar a aparecer noutros aparelhos até sincronizar.'
+        )
         return false
       }
       return true
@@ -20200,7 +20234,7 @@ export default function Dashboard() {
       alert((safeT as any)?.erroSalvar || 'Erro ao guardar. Tente novamente.')
       return false
     }
-  }, [safeT])
+  }, [safeT, relatoriosEspeciais])
 
   const gerarNumeroRelatorio = (dataReferenciaIso?: string): string =>
     preverProximoNumeroRelatorio(dataReferenciaIso)

@@ -3,10 +3,16 @@ import {
   NONATO_PROTECTED_ARRAY_KEYS,
   serverKeyHasMeaningfulData,
 } from './criticalCadastroKeys'
+import {
+  ALLOW_PROTECTED_SUBSET_SHRINK_KEYS,
+  isIntentionalSubsetShrink,
+} from './cadastroShrinkPolicy'
 
 export type ServerCadastroGuardResult =
   | { allowed: true }
   | { allowed: false; reason: 'empty_overwrite' | 'shrink_overwrite'; existingCount: number; newCount: number }
+
+export { ALLOW_PROTECTED_SUBSET_SHRINK_KEYS, isIntentionalSubsetShrink } from './cadastroShrinkPolicy'
 
 function readExistingJsonArray(filePath: string): unknown[] | null {
   if (!fs.existsSync(filePath)) return null
@@ -52,6 +58,13 @@ export function assessServerCadastroWrite(
     return { allowed: false, reason: 'empty_overwrite', existingCount, newCount }
   }
   if (existingCount > 0 && newCount < existingCount) {
+    if (
+      ALLOW_PROTECTED_SUBSET_SHRINK_KEYS.has(key) &&
+      existing &&
+      isIntentionalSubsetShrink(existing, value)
+    ) {
+      return { allowed: true }
+    }
     return { allowed: false, reason: 'shrink_overwrite', existingCount, newCount }
   }
   return { allowed: true }

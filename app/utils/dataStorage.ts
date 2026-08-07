@@ -17,6 +17,14 @@ import {
   serverKeyHasMeaningfulData,
 } from '../lib/criticalCadastroKeys'
 import { mergeArraysByIdDeferServerLocal } from '../lib/mergeArraysById'
+import { ALLOW_PROTECTED_SUBSET_SHRINK_KEYS, isIntentionalSubsetShrink } from '../lib/cadastroShrinkPolicy'
+import {
+  RELATORIOS_ESPECIAIS_DELETED_IDS_KEY,
+  filterByDeletedIds,
+  mergeDeletedIds,
+  normalizeDeletedIds,
+} from '../lib/relatorioEspecialDeleted'
+import { RELATORIOS_ESPECIAIS_STORAGE_KEY } from '../lib/relatorioEspecialTypes'
 import {
   mergePecasBibliotecaArrays,
   pecasBibliotecaArraysDiffer,
@@ -703,6 +711,9 @@ async function shouldBlockShrinkServerOverwrite(key: string, value: unknown): Pr
     const existing = await forceLoadCadastroFromServer(key)
     if (!Array.isArray(existing) || existing.length === 0) return false
     if (value.length >= existing.length) return false
+    if (ALLOW_PROTECTED_SUBSET_SHRINK_KEYS.has(key) && isIntentionalSubsetShrink(existing, value)) {
+      return false
+    }
     console.warn(
       `[Nonato] Gravação ignorada: «${key}» tem ${value.length} item(ns) — o servidor tem ${existing.length}; não substituir cadastro maior.`
     )
@@ -2359,6 +2370,54 @@ async function writeLocalFromServerPull(key: string, value: unknown): Promise<vo
       }
     } catch {
       /* ignorar */
+    }
+    return
+  }
+  if (key === RELATORIOS_ESPECIAIS_STORAGE_KEY && Array.isArray(value)) {
+    const snap = await readLocalValueForLoad(key, true)
+    const localParsed = snap.parsed
+    const deletedSnap = await readLocalValueForLoad(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY, true)
+    const deletedIds = normalizeDeletedIds(deletedSnap.parsed)
+    const mergedRaw = mergeArraysByIdDeferServerLocal(value, localParsed)
+    const merged = filterByDeletedIds(mergedRaw as Array<{ id?: unknown }>, deletedIds)
+    try {
+      await saveKv(key, merged)
+    } catch {
+      /* ignorar */
+    }
+    writeLocalStorageValue(key, merged)
+    // Nunca reenviar itens tombstonados para o servidor.
+    try {
+      if (JSON.stringify(merged) !== JSON.stringify(filterByDeletedIds(value as Array<{ id?: unknown }>, deletedIds))) {
+        scheduleServerMigrationPush(key, merged)
+      }
+    } catch {
+      /* ignorar */
+    }
+    return
+  }
+  if (key === RELATORIOS_ESPECIAIS_DELETED_IDS_KEY && Array.isArray(value)) {
+    const snap = await readLocalValueForLoad(key, true)
+    const merged = mergeDeletedIds(value, snap.parsed)
+    try {
+      await saveKv(key, merged)
+    } catch {
+      /* ignorar */
+    }
+    writeLocalStorageValue(key, merged)
+    // Remover do catálogo local qualquer especial já marcado como eliminado.
+    const especiaisSnap = await readLocalValueForLoad(RELATORIOS_ESPECIAIS_STORAGE_KEY, true)
+    if (Array.isArray(especiaisSnap.parsed)) {
+      const purged = filterByDeletedIds(especiaisSnap.parsed as Array<{ id?: unknown }>, merged)
+      if (purged.length !== (especiaisSnap.parsed as unknown[]).length) {
+        try {
+          await saveKv(RELATORIOS_ESPECIAIS_STORAGE_KEY, purged)
+        } catch {
+          /* ignorar */
+        }
+        writeLocalStorageValue(RELATORIOS_ESPECIAIS_STORAGE_KEY, purged)
+        scheduleServerMigrationPush(RELATORIOS_ESPECIAIS_STORAGE_KEY, purged)
+      }
     }
     return
   }

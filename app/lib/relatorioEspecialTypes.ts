@@ -3,6 +3,7 @@ import type { PecaSubstituicao } from './relatorioEspecialShared'
 import { dataLocalHojeISO } from './relatorioEspecialShared'
 
 export const RELATORIOS_ESPECIAIS_STORAGE_KEY = 'nonato-relatorios-especiais'
+export { RELATORIOS_ESPECIAIS_DELETED_IDS_KEY } from './relatorioEspecialDeleted'
 export const MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES = 11
 /** Máximo de equipamentos diferentes com horas no mesmo dia */
 export const MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA = 4
