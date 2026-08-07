@@ -162,6 +162,8 @@ export default function RelatorioEspecialHub({
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [diaExpandido, setDiaExpandido] = useState<string | null>(null)
   const [salvando, setSalvando] = useState(false)
+  /** 'eliminar' = não mostrar textos de «guardar» durante a exclusão */
+  const [acaoEmCurso, setAcaoEmCurso] = useState<'guardar' | 'eliminar' | null>(null)
   const snapshotGuardadoRef = useRef('')
 
   const formComTotais = useMemo(() => aplicarTotaisNoRelatorioEspecial(form), [form])
@@ -282,10 +284,12 @@ export default function RelatorioEspecialHub({
 
   const eliminarRelatorio = useCallback(
     async (rel: RelatorioEspecial) => {
-      const msg =
+      const base =
         t.relatorioEspecialConfirmarEliminar ||
-        `Eliminar o relatório ${rel.numero}? Esta ação não pode ser desfeita.`
+        'Eliminar este relatório especial? Esta ação não pode ser desfeita.'
+      const msg = `${base}\n\n${rel.numero || ''} — ${rel.cliente || ''}`.trim()
       if (!window.confirm(msg)) return
+      setAcaoEmCurso('eliminar')
       setSalvando(true)
       try {
         const lista = relatorios.filter((r) => r.id !== rel.id)
@@ -294,8 +298,10 @@ export default function RelatorioEspecialHub({
           alert(t.relatorioEspecialEliminado || 'Relatório especial eliminado.')
           if (editandoId === rel.id) voltarLista()
         }
+        // Falha: onSaveAll já mostra o alerta de eliminação (não misturar com «guardar»).
       } finally {
         setSalvando(false)
+        setAcaoEmCurso(null)
       }
     },
     [relatorios, onSaveAll, t, editandoId, voltarLista]
@@ -313,6 +319,7 @@ export default function RelatorioEspecialHub({
       alert(t.relatorioEspecialSemEquipamentos || 'Adicione pelo menos um equipamento ao relatório.')
       return
     }
+    setAcaoEmCurso('guardar')
     setSalvando(true)
     try {
       const preparado = aplicarTotaisNoRelatorioEspecial({ ...form, equipamentos: equipamentosOk })
@@ -330,6 +337,7 @@ export default function RelatorioEspecialHub({
       }
     } finally {
       setSalvando(false)
+      setAcaoEmCurso(null)
     }
   }, [form, editandoId, relatorios, onSaveAll, t, marcarSnapshot])
 
@@ -412,6 +420,7 @@ export default function RelatorioEspecialHub({
   }
 
   const guardarFechamento = async () => {
+    setAcaoEmCurso('guardar')
     setSalvando(true)
     try {
       const preparado = aplicarTotaisNoRelatorioEspecial(form)
@@ -426,6 +435,7 @@ export default function RelatorioEspecialHub({
       }
     } finally {
       setSalvando(false)
+      setAcaoEmCurso(null)
     }
   }
 
@@ -488,7 +498,10 @@ export default function RelatorioEspecialHub({
                           onClick={() => void eliminarRelatorio(rel)}
                           style={{ borderColor: 'rgba(239,68,68,0.5)', color: '#fca5a5' }}
                         >
-                          🗑 {t.delete || 'Eliminar'}
+                          🗑{' '}
+                          {salvando && acaoEmCurso === 'eliminar'
+                            ? t.relatorioEspecialAEliminar || 'A eliminar…'
+                            : t.delete || 'Eliminar'}
                         </button>
                       </div>
                     </div>
@@ -597,7 +610,9 @@ export default function RelatorioEspecialHub({
         </button>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           <button type="button" className="btn-primary" disabled={salvando} onClick={persistir}>
-            {salvando ? '…' : `💾 ${t.save || 'Guardar'}`}
+            {salvando && acaoEmCurso === 'guardar'
+              ? '…'
+              : `💾 ${t.save || 'Guardar'}`}
           </button>
           {editandoId && (
             <button
@@ -607,7 +622,10 @@ export default function RelatorioEspecialHub({
               onClick={() => void eliminarRelatorio(formComTotais)}
               style={{ borderColor: 'rgba(239,68,68,0.5)', color: '#fca5a5' }}
             >
-              🗑 {t.delete || 'Eliminar'}
+              🗑{' '}
+              {salvando && acaoEmCurso === 'eliminar'
+                ? t.relatorioEspecialAEliminar || 'A eliminar…'
+                : t.delete || 'Eliminar'}
             </button>
           )}
           <button type="button" className="btn-secondary" onClick={() => imprimirPdf(formComTotais)}>
@@ -1534,23 +1552,26 @@ export default function RelatorioEspecialHub({
       </section>
 
       <div className="relatorio-especial-form__actions">
-        <button type="button" className="btn-primary" disabled={salvando} onClick={persistir}>
-          {salvando ? '…' : `💾 ${t.save || 'Guardar'}`}
-        </button>
-        {editandoId && (
-          <button
-            type="button"
-            className="btn-secondary"
-            disabled={salvando}
-            onClick={() => void eliminarRelatorio(formComTotais)}
-            style={{ borderColor: 'rgba(239,68,68,0.5)', color: '#fca5a5' }}
-          >
-            🗑 {t.delete || 'Eliminar'}
+          <button type="button" className="btn-primary" disabled={salvando} onClick={persistir}>
+            {salvando && acaoEmCurso === 'guardar' ? '…' : `💾 ${t.save || 'Guardar'}`}
           </button>
-        )}
-        <button type="button" className="btn-secondary" onClick={() => imprimirPdf(formComTotais)}>
-          🖨 PDF
-        </button>
+          {editandoId && (
+            <button
+              type="button"
+              className="btn-secondary"
+              disabled={salvando}
+              onClick={() => void eliminarRelatorio(formComTotais)}
+              style={{ borderColor: 'rgba(239,68,68,0.5)', color: '#fca5a5' }}
+            >
+              🗑{' '}
+              {salvando && acaoEmCurso === 'eliminar'
+                ? t.relatorioEspecialAEliminar || 'A eliminar…'
+                : t.delete || 'Eliminar'}
+            </button>
+          )}
+          <button type="button" className="btn-secondary" onClick={() => imprimirPdf(formComTotais)}>
+            🖨 PDF
+          </button>
         <EnvioBotoes rel={formComTotais} />
       </div>
     </div>

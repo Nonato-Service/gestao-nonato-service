@@ -20206,21 +20206,42 @@ export default function Dashboard() {
   }, [relatoriosEspeciais])
 
   const salvarRelatoriosEspeciais = useCallback(async (lista: RelatorioEspecial[]): Promise<boolean> => {
+    const prevSnapshot = relatoriosEspeciais
     try {
-      const prevIds = new Set(relatoriosEspeciais.map((r) => String(r.id || '').trim()).filter(Boolean))
+      const prevIds = new Set(prevSnapshot.map((r) => String(r.id || '').trim()).filter(Boolean))
       const nextIds = new Set(lista.map((r) => String(r.id || '').trim()).filter(Boolean))
       const removed = [...prevIds].filter((id) => !nextIds.has(id))
+      const isDelete = removed.length > 0
       let deletedIds = normalizeDeletedIds(getData(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY))
-      if (removed.length > 0) {
+      if (isDelete) {
         deletedIds = mergeDeletedIds(deletedIds, removed)
-        const okDel = await saveData(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY, deletedIds, true, true)
-        if (!okDel) {
-          console.warn('[Nonato] Falha a gravar IDs eliminados de relatórios especiais no servidor.')
-        }
       }
       const listaLimpa = filterByDeletedIds(lista, deletedIds) as RelatorioEspecial[]
+
+      /** Eliminar: confirmar já no aparelho; sync ao servidor em segundo plano (não misturar com «guardar»). */
+      if (isDelete) {
+        setRelatoriosEspeciais(listaLimpa)
+        await saveData(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY, deletedIds, true, false)
+        const okLocal = await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa, true, false)
+        if (!okLocal) {
+          setRelatoriosEspeciais(prevSnapshot)
+          alert(
+            (safeT as any)?.relatorioEspecialErroEliminar ||
+              'Não foi possível eliminar o relatório. Tente novamente.'
+          )
+          return false
+        }
+        // Empurrar tombstone + lista ao Railway sem bloquear a UI com mensagem de «guardar».
+        void Promise.all([
+          saveData(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY, deletedIds, true, true),
+          saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa, true, true),
+          saveToServer(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY, deletedIds),
+          saveToServer(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa),
+        ]).catch((e) => console.warn('[Nonato] Sync pós-eliminação relatório especial:', e))
+        return true
+      }
+
       setRelatoriosEspeciais(listaLimpa)
-      // awaitServer=true: exclusões têm de chegar ao Railway (senão o item volta no sync).
       const ok = await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa, true, true)
       if (!ok) {
         alert(
@@ -20232,7 +20253,16 @@ export default function Dashboard() {
       }
       return true
     } catch {
-      alert((safeT as any)?.erroSalvar || 'Erro ao guardar. Tente novamente.')
+      setRelatoriosEspeciais(prevSnapshot)
+      const removedIds = prevSnapshot
+        .map((r) => String(r.id || '').trim())
+        .filter((id) => id && !lista.some((r) => String(r.id || '').trim() === id))
+      alert(
+        removedIds.length > 0
+          ? (safeT as any)?.relatorioEspecialErroEliminar ||
+              'Não foi possível eliminar o relatório. Tente novamente.'
+          : (safeT as any)?.erroSalvar || 'Erro ao guardar. Tente novamente.'
+      )
       return false
     }
   }, [safeT, relatoriosEspeciais])
