@@ -40,6 +40,8 @@ const RELATORIO_ESPECIAL_PDF_CSS = `
 body.rs-pdf--especial .re-doc {
   max-width: 100%;
   counter-reset: re-sec;
+  color: #1e293b;
+  font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
 }
 
 .re-doc-flow {
@@ -48,201 +50,118 @@ body.rs-pdf--especial .re-doc {
   gap: 0;
 }
 
+/* Resumo executivo — caixa sóbria */
 .re-kpi-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 0;
   margin: 0 0 18px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 
 .re-kpi {
-  position: relative;
-  overflow: hidden;
-  border-radius: 8px;
   padding: 12px 10px 11px;
-  text-align: center;
-  border: 1px solid #bbf7d0;
-  background: linear-gradient(165deg, #ecfdf5 0%, #ffffff 62%, #f0fdf4 100%);
-  box-shadow: 0 1px 0 rgba(13, 122, 61, 0.08);
+  text-align: left;
+  border-right: 1px solid #e2e8f0;
+  background: #f8fafc;
 }
 
-.re-kpi::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: linear-gradient(180deg, #0d7a3d, #22c55e);
+.re-kpi:last-child {
+  border-right: none;
 }
 
 .re-kpi--main {
-  border-color: #0d7a3d;
-  background: linear-gradient(145deg, #0d7a3d 0%, #059669 55%, #047857 100%);
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(13, 122, 61, 0.22);
-}
-
-.re-kpi--main::before {
-  display: none;
+  background: #fff;
 }
 
 .re-kpi__label {
   display: block;
   font-size: 7.5px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #64748b;
-  margin-bottom: 5px;
-}
-
-.re-kpi--main .re-kpi__label {
-  color: rgba(255, 255, 255, 0.88);
+  margin-bottom: 6px;
 }
 
 .re-kpi__valor {
   display: block;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
-  color: #0d7a3d;
+  color: #0f172a;
   font-variant-numeric: tabular-nums;
-  line-height: 1.15;
+  line-height: 1.2;
 }
 
 .re-kpi--main .re-kpi__valor {
-  color: #fff;
-  font-size: 22px;
+  color: #0d7a3d;
+  font-size: 18px;
 }
 
 .re-kpi__hint {
   display: block;
-  margin-top: 4px;
+  margin-top: 5px;
   font-size: 7.5px;
   color: #64748b;
-  line-height: 1.3;
-}
-
-.re-kpi--main .re-kpi__hint {
-  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.35;
 }
 
 .re-secao {
-  margin: 0 0 20px;
+  margin: 0 0 18px;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 
 .re-secao__titulo {
   counter-increment: re-sec;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 11px;
-  margin: 0 0 12px;
-  padding: 0 0 8px;
+  margin: 0 0 10px;
+  padding: 0 0 6px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #0f172a;
-  border-bottom: 2px solid #0d7a3d;
+  border-bottom: 1.5px solid #1e293b;
 }
 
 .re-secao__titulo::before {
-  content: counter(re-sec);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: linear-gradient(145deg, #0d7a3d, #16a34a);
-  color: #fff;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 11px;
-  font-weight: 800;
+  content: counter(re-sec, decimal-leading-zero) ". ";
+  color: #0d7a3d;
+  font-weight: 700;
   letter-spacing: 0;
-  box-shadow: 0 2px 6px rgba(13, 122, 61, 0.25);
 }
 
 .re-secao__ajuda {
-  font-size: 9px;
+  font-size: 8.5px;
   color: #64748b;
-  margin: -4px 0 10px;
+  margin: -2px 0 10px;
   line-height: 1.45;
-}
-
-.re-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 4px;
-}
-
-.re-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid #86efac;
-  background: linear-gradient(180deg, #f0fdf4, #ffffff);
-  font-size: 10px;
-  color: #14532d;
-  box-shadow: 0 1px 2px rgba(13, 122, 61, 0.08);
-}
-
-.re-chip__n {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #0d7a3d;
-  color: #fff;
-  font-weight: 800;
-  font-size: 10px;
-}
-
-.re-chip__txt {
-  font-weight: 600;
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .re-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+  border-collapse: collapse;
   margin: 0 0 4px;
-  font-size: 0.92em;
+  font-size: 0.9em;
   page-break-inside: auto;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  overflow: hidden;
 }
 
 .re-table th,
 .re-table td {
   border: ${PDF_TABLE_CELL_BORDER};
-  padding: 7px 9px;
+  padding: 6px 8px;
   vertical-align: middle;
   text-align: left;
 }
 
 .re-table th {
-  background: linear-gradient(180deg, #134e2a 0%, #0d7a3d 100%);
+  background: #1e293b;
   color: #f8fafc;
-  font-weight: 700;
-  font-size: 0.86em;
+  font-weight: 600;
+  font-size: 0.82em;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -251,15 +170,11 @@ body.rs-pdf--especial .re-doc {
   background: #f8fafc;
 }
 
-.re-table tbody tr:hover td {
-  background: #ecfdf5;
-}
-
 .re-table .re-col-num {
-  width: 36px;
+  width: 32px;
   text-align: center;
-  font-weight: 700;
-  color: #1e3a5f;
+  font-weight: 600;
+  color: #334155;
 }
 
 .re-table .re-col-total {
@@ -269,98 +184,62 @@ body.rs-pdf--especial .re-doc {
 }
 
 .re-table--dias {
-  font-size: 0.82em;
+  font-size: 0.8em;
 }
 
 .re-table--dias th,
 .re-table--dias td {
-  padding: 5px 4px;
+  padding: 5px 3px;
   text-align: center;
   vertical-align: middle;
 }
 
-.re-table .re-row-total td {
-  background: #e8f5e9 !important;
-  border-top: 2px solid #0d7a3d;
+.re-table .re-row-total td,
+.re-table tfoot .re-row-total td {
+  background: #f1f5f9 !important;
+  border-top: 1.5px solid #1e293b;
   font-weight: 700;
-  color: #1b5e20;
+  color: #0f172a;
 }
 
 .re-table .re-row-total .re-col-total {
-  font-size: 1.05em;
+  font-size: 1.02em;
   color: #0d7a3d;
 }
 
 .re-equip-card {
-  margin: 0 0 16px;
-  border: 1.5px solid #86efac;
-  border-radius: 10px;
-  overflow: hidden;
+  margin: 0 0 14px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
   break-inside: avoid;
   page-break-inside: avoid;
-  box-shadow: 0 3px 10px rgba(13, 122, 61, 0.1);
-  background: #fff;
 }
 
 .re-equip-card__head {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 0;
-  background: linear-gradient(120deg, #ecfdf5 0%, #d1fae5 45%, #f0fdf4 100%);
-  border-bottom: 2px solid #0d7a3d;
+  grid-template-columns: 40px 1fr;
+  border-bottom: 1px solid #cbd5e1;
+  background: #f8fafc;
 }
 
 .re-equip-card__num {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 48px;
-  padding: 14px 12px;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 20px;
+  font-size: 13px;
   font-weight: 700;
-  color: #ffffff;
-  background: linear-gradient(180deg, #16a34a, #0d7a3d);
-  border-right: 2px solid #065f2a;
-}
-
-.re-equip-card__total-pill {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 88px;
-  padding: 10px 12px;
-  background: #0d7a3d;
   color: #fff;
-  border-left: 1px solid #065f2a;
-}
-
-.re-equip-card__total-pill span {
-  display: block;
-  font-size: 7.5px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.9;
-}
-
-.re-equip-card__total-pill strong {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 16px;
-  margin-top: 3px;
+  background: #1e293b;
 }
 
 .re-equip-card__meta {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
 }
 
 .re-equip-card__field {
-  padding: 12px 14px;
-  border-right: 1px solid #86efac;
-  background: rgba(255, 255, 255, 0.45);
+  padding: 10px 12px;
+  border-right: 1px solid #e2e8f0;
 }
 
 .re-equip-card__field:last-child {
@@ -369,35 +248,34 @@ body.rs-pdf--especial .re-doc {
 
 .re-equip-card__label {
   display: block;
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 7.5px;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #0d7a3d;
-  margin-bottom: 6px;
-  line-height: 1.25;
+  color: #64748b;
+  margin-bottom: 4px;
 }
 
 .re-equip-card__value {
   display: block;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 11.5px;
+  font-weight: 600;
   color: #0f172a;
   word-break: break-word;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .re-equip-card__value--mono {
   font-family: Consolas, "Courier New", monospace;
-  font-size: 14px;
-  letter-spacing: 0.02em;
-  color: #1e3a5f;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  color: #1e293b;
 }
 
 .re-equip-card__value--modelo {
-  font-size: 12px;
-  font-weight: 700;
-  color: #1b5e20;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #0f172a;
 }
 
 .re-equip-card__body {
@@ -406,7 +284,6 @@ body.rs-pdf--especial .re-doc {
 
 .re-equip-card__body .re-table {
   margin: 0;
-  border: none;
 }
 
 .re-equip-card__body .re-table th,
@@ -416,147 +293,145 @@ body.rs-pdf--especial .re-doc {
 }
 
 .re-equip-card__body .re-table th {
-  background: #1e293b;
-  font-size: 0.9em;
-  padding: 9px 10px;
+  background: #334155;
+  font-size: 0.84em;
+  padding: 7px 9px;
 }
 
 .re-equip-card__body .re-table td {
-  padding: 9px 10px;
-  font-size: 0.95em;
+  padding: 7px 9px;
+  font-size: 0.92em;
 }
 
 .re-total-geral {
-  margin: 8px 0 18px;
-  padding: 16px 20px 18px;
-  background:
-    radial-gradient(120% 80% at 100% 0%, rgba(255, 255, 255, 0.18) 0%, transparent 50%),
-    linear-gradient(135deg, #0d7a3d 0%, #059669 55%, #047857 100%);
-  border-radius: 10px;
-  text-align: center;
-  color: #fff;
+  margin: 6px 0 18px;
+  padding: 14px 16px;
+  border: 1.5px solid #1e293b;
+  background: #fff;
+  text-align: left;
   break-inside: avoid;
   page-break-inside: avoid;
-  box-shadow: 0 6px 18px rgba(13, 122, 61, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .re-total-geral__label {
   display: block;
-  font-size: 8.5px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: 0.92;
-  margin-bottom: 6px;
+  color: #64748b;
+  margin-bottom: 4px;
 }
 
 .re-total-geral__valor {
   display: block;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 30px;
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 1.15;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+  color: #0f172a;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 
 .re-total-geral__detalhe {
-  margin-top: 10px;
-  font-size: 9.5px;
-  font-weight: 500;
-  opacity: 0.95;
-  line-height: 1.5;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 9px;
+  color: #475569;
+  line-height: 1.45;
 }
 
 .re-total-geral--fecho {
-  margin: 4px 0 20px;
+  margin: 2px 0 18px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 16px;
+  align-items: end;
+}
+
+.re-total-geral--fecho .re-total-geral__label {
+  grid-column: 1;
+}
+
+.re-total-geral--fecho .re-total-geral__valor {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: 24px;
+  color: #0d7a3d;
+}
+
+.re-total-geral--fecho .re-total-geral__detalhe {
+  grid-column: 1;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 .re-dia-duracao-detalhe {
-  font-size: 7.5px;
+  font-size: 7px;
   font-weight: 500;
   color: #64748b;
   margin-top: 2px;
   line-height: 1.3;
 }
 
-.re-table tfoot .re-row-total td {
-  background: #e8f5e9 !important;
-  border-top: 2px solid #0d7a3d;
-  font-weight: 700;
-  color: #1b5e20;
-}
-
-.re-equip-card__body .re-sessao-bruto {
-  font-size: 7.5px;
-  color: #64748b;
-  margin-top: 1px;
-}
-
 .re-resumo {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin: 0 0 18px;
+  gap: 0;
+  margin: 0;
+  border: 1px solid #cbd5e1;
 }
 
 .re-resumo-card {
-  border: 1px solid #d1fae5;
-  border-radius: 8px;
-  padding: 12px 12px;
-  text-align: center;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  padding: 10px 12px;
+  text-align: left;
+  background: #fff;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.re-resumo-card:nth-child(3n) {
+  border-right: none;
 }
 
 .re-resumo-card__label {
   display: block;
-  font-size: 7.5px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #64748b;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .re-resumo-card__valor {
   display: block;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 700;
-  color: #0d7a3d;
+  color: #0f172a;
   font-variant-numeric: tabular-nums;
 }
 
-.re-resumo-card--highlight {
-  border: 2px solid #0d7a3d;
-  background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%);
-  grid-column: 1 / -1;
-}
-
-.re-resumo-card--highlight .re-resumo-card__valor {
-  font-size: 24px;
-}
-
 .re-encerramento {
-  margin-top: 6px;
-  padding: 14px 16px 8px;
-  border: 1px dashed #86efac;
-  border-radius: 10px;
-  background: #f8fffb;
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 
 .re-assinatura {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #cbd5e1;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 
 .re-assinatura__titulo {
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -566,46 +441,44 @@ body.rs-pdf--especial .re-doc {
 
 .re-assinatura img {
   display: block;
-  max-width: 260px;
-  max-height: 80px;
-  border: 1px solid #e2e8f0;
-  border-radius: 2px;
+  max-width: 240px;
+  max-height: 72px;
+  border: 1px solid #cbd5e1;
   padding: 6px;
   background: #fff;
 }
 
 .re-obs {
-  margin: 0 0 16px;
-  padding: 12px 14px;
-  border: 1px solid #e2e8f0;
-  border-left: 3px solid #0d7a3d;
-  border-radius: 0 2px 2px 0;
-  background: #fafafa;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-left: 3px solid #1e293b;
+  background: #f8fafc;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 
 .re-obs__titulo {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #1e293b;
+  color: #334155;
   margin-bottom: 6px;
 }
 
 .re-obs__texto {
   font-size: 10px;
   white-space: pre-wrap;
-  line-height: 1.55;
+  line-height: 1.5;
   color: #334155;
 }
 
 @media print {
   .re-equip-card,
   .re-total-geral,
-  .re-secao {
+  .re-secao,
+  .re-kpi-strip {
     break-inside: avoid;
     page-break-inside: avoid;
   }
@@ -674,7 +547,7 @@ function buildMetaRelatorioEspecialHtml(
   return buildPdfMetaSectionHtml({
     title: esc(L(labels, 'relatorioEspecialPdfInfoGeral', 'Informações gerais')),
     fields,
-    modifier: 'expense',
+    modifier: '',
   })
 }
 
@@ -684,16 +557,6 @@ function buildTabelaEquipamentosResumoHtml(
 ): string {
   if (!equipamentos.length) return ''
   const esc = escapePdfHtml
-  const chips = equipamentos
-    .map((eq, i) => {
-      const id = eq.equipamentoId || '—'
-      const modelo = eq.maquinaModelo || ''
-      const serie = eq.numeroMaquina || ''
-      const txt = [id, modelo, serie].filter(Boolean).join(' · ')
-      return `<span class="re-chip"><span class="re-chip__n">${i + 1}</span><span class="re-chip__txt">${esc(txt)}</span></span>`
-    })
-    .join('')
-
   const rows = equipamentos
     .map(
       (eq, i) =>
@@ -708,8 +571,7 @@ function buildTabelaEquipamentosResumoHtml(
 
   return `<section class="re-secao">
     <h3 class="re-secao__titulo">${esc(L(labels, 'relatorioEspecialEquipamentos', 'Equipamentos'))} (${equipamentos.length})</h3>
-    <div class="re-chips">${chips}</div>
-    <table class="re-table" style="margin-top:12px">
+    <table class="re-table">
       <thead>
         <tr>
           <th class="re-col-num">#</th>
@@ -798,10 +660,6 @@ function buildEquipamentoCardHtml(
           <span class="re-equip-card__label">${esc(L(labels, 'numeroSerie', 'N.º de série'))}</span>
           <span class="re-equip-card__value re-equip-card__value--mono">${esc(eq.numeroMaquina || '—')}</span>
         </div>
-      </div>
-      <div class="re-equip-card__total-pill">
-        <span>${esc(L(labels, 'total', 'Total'))}</span>
-        <strong>${esc(total)}</strong>
       </div>
     </div>
     <div class="re-equip-card__body">
@@ -896,7 +754,7 @@ export function imprimirRelatorioEspecialPdf(
     badgeLabel: L(labels, 'relatorioPdfBadgeLabel', 'Relatório n.º'),
     badgeLabelCompact: L(labels, 'relatorioPdfBadgeLabelCompact', 'N.º'),
     variant: 'classic',
-    theme: 'expense',
+    theme: 'service',
   })
 
   const metaHtml = buildMetaRelatorioEspecialHtml(rel, labels)
