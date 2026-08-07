@@ -454,68 +454,61 @@ export default function RelatorioEspecialHub({
   if (modo === 'lista') {
     return (
       <div className="relatorio-especial-hub" style={{ padding: '16px 0' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginBottom: 20 }} className="relatorio-especial-hub__head">
+        <div className="relatorio-especial-hub__head">
           <h2 style={{ margin: 0, flex: '1 1 200px' }}>
             {t.relatorioEspecialTitle || 'RELATÓRIOS ESPECIAIS'}
           </h2>
-          <button type="button" className="btn-primary relatorio-equipamentos-block__add" onClick={abrirNovo}>
+          <button type="button" className="btn-primary relatorio-especial-hub__novo" onClick={abrirNovo}>
             ➕ {t.relatorioEspecialNovo || 'Novo relatório especial'}
           </button>
         </div>
-        <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, marginBottom: 16, lineHeight: 1.45 }}>
+        <p className="relatorio-especial-hub__desc">
           {t.relatorioEspecialDescricao ||
             'Um relatório por intervenção de fabricante — até 11 equipamentos no mês, até 4 por dia, com horas separadas por equipamento e fechamento mensal.'}
         </p>
         {relatorios.length === 0 ? (
           <p style={{ color: '#aaa' }}>{t.relatorioEspecialListaVazia || 'Nenhum relatório especial ainda.'}</p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="relatorio-especial-hub__lista">
             {[...relatorios]
               .sort((a, b) => String(b.data).localeCompare(String(a.data)))
               .map((rel) => {
                 const prep = aplicarTotaisNoRelatorioEspecial(rel)
                 return (
-                  <div
-                    key={rel.id}
-                    style={{
-                      border: '1px solid rgba(0,200,83,0.35)',
-                      borderRadius: 10,
-                      padding: '14px 16px',
-                      background: 'rgba(0,40,24,0.35)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between' }}>
-                      <div>
-                        <strong>{rel.numero}</strong> · {rel.cliente} · {rel.tecnico}
-                        <div style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>
-                          {(rel.equipamentos?.length || 0)} equip. · {prep.horasTrabalho} h total · {prep.kmsPercorridos} km
-                          {prep.fechamento?.totalGeral ? ' · ✓ Fechado' : ''}
-                        </div>
+                  <div key={rel.id} className="relatorio-especial-card">
+                    <div className="relatorio-especial-card__meta">
+                      <strong className="relatorio-especial-card__numero">{rel.numero}</strong>
+                      <div className="relatorio-especial-card__linha">
+                        {rel.cliente}
+                        {rel.tecnico ? ` · ${rel.tecnico}` : ''}
                       </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                        <button type="button" className="btn-secondary" onClick={() => abrirEditar(rel)}>
-                          ✏️ {t.edit || 'Editar'}
-                        </button>
-                        <button type="button" className="btn-secondary" onClick={() => imprimirPdf(prep)}>
-                          🖨 {t.print || 'PDF'}
-                        </button>
-                        <EnvioBotoes rel={rel} compact />
-                        <button type="button" className="btn-primary" onClick={() => abrirFechamento(rel)}>
-                          {t.relatorioEspecialFechamento || 'Fechamento'}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-secondary"
-                          disabled={salvando}
-                          onClick={() => void eliminarRelatorio(rel)}
-                          style={{ borderColor: 'rgba(239,68,68,0.5)', color: '#fca5a5' }}
-                        >
-                          🗑{' '}
-                          {salvando && acaoEmCurso === 'eliminar'
-                            ? t.relatorioEspecialAEliminar || 'A eliminar…'
-                            : t.delete || 'Eliminar'}
-                        </button>
+                      <div className="relatorio-especial-card__sub">
+                        {(rel.equipamentos?.length || 0)} equip. · {prep.horasTrabalho} h · {prep.kmsPercorridos} km
+                        {prep.fechamento?.totalGeral ? ' · ✓ Fechado' : ''}
                       </div>
+                    </div>
+                    <div className="relatorio-especial-card__acoes">
+                      <button type="button" className="btn-secondary" onClick={() => abrirEditar(rel)}>
+                        ✏️ {t.edit || 'Editar'}
+                      </button>
+                      <button type="button" className="btn-secondary" onClick={() => imprimirPdf(prep)}>
+                        🖨 {t.print || 'PDF'}
+                      </button>
+                      <EnvioBotoes rel={rel} compact />
+                      <button type="button" className="btn-primary" onClick={() => abrirFechamento(rel)}>
+                        {t.relatorioEspecialFechamento || 'Fechamento'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary relatorio-especial-card__eliminar"
+                        disabled={salvando}
+                        onClick={() => void eliminarRelatorio(rel)}
+                      >
+                        🗑{' '}
+                        {salvando && acaoEmCurso === 'eliminar'
+                          ? t.relatorioEspecialAEliminar || 'A eliminar…'
+                          : t.delete || 'Eliminar'}
+                      </button>
                     </div>
                   </div>
                 )
@@ -529,8 +522,24 @@ export default function RelatorioEspecialHub({
   if (modo === 'fechamento') {
     const eqs = formComTotais.equipamentos || []
     return (
-      <div style={{ padding: '16px 0', maxWidth: 720 }}>
-        <button type="button" className="btn-secondary" style={{ marginBottom: 16 }} onClick={voltarLista}>
+      <div className="relatorio-especial-fechamento" style={{ padding: '16px 0', maxWidth: 720 }}>
+        <div className="mobile-sticky-toolbar relatorio-especial-mobile-bar">
+          <button type="button" className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={voltarLista}>
+            ← {t.voltar || 'Voltar'}
+          </button>
+          <button
+            type="button"
+            className="mobile-toolbar-btn"
+            disabled={salvando}
+            onClick={() => void guardarFechamento()}
+          >
+            {salvando ? '…' : `💾 ${t.save || 'Guardar'}`}
+          </button>
+          <button type="button" className="mobile-toolbar-btn" onClick={() => imprimirPdf(formComTotais)}>
+            🖨 PDF
+          </button>
+        </div>
+        <button type="button" className="btn-secondary relatorio-especial-desktop-nav" style={{ marginBottom: 16 }} onClick={voltarLista}>
           ← {t.voltar || 'Voltar'}
         </button>
         <h2>{t.relatorioEspecialFechamentoMes || 'Fechamento do mês'}</h2>
@@ -607,20 +616,40 @@ export default function RelatorioEspecialHub({
 
   return (
     <div className="relatorio-especial-form" style={{ padding: '16px 0' }}>
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 10,
-          alignItems: 'center',
-          marginBottom: 16,
-          justifyContent: 'space-between',
-        }}
-      >
+      <div className="mobile-sticky-toolbar relatorio-especial-mobile-bar">
+        <button type="button" className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={voltarLista}>
+          ← {t.voltar || 'Voltar'}
+        </button>
+        <button
+          type="button"
+          className="mobile-toolbar-btn mobile-toolbar-btn--primary"
+          disabled={salvando}
+          onClick={() => void persistir()}
+        >
+          {salvando && acaoEmCurso === 'guardar' ? '…' : `💾 ${t.save || 'Guardar'}`}
+        </button>
+        <button type="button" className="mobile-toolbar-btn" onClick={() => imprimirPdf(formComTotais)}>
+          🖨 PDF
+        </button>
+        {editandoId && (
+          <button
+            type="button"
+            className="mobile-toolbar-btn mobile-toolbar-btn--danger"
+            disabled={salvando}
+            onClick={() => void eliminarRelatorio(formComTotais)}
+          >
+            🗑{' '}
+            {salvando && acaoEmCurso === 'eliminar'
+              ? t.relatorioEspecialAEliminar || 'A eliminar…'
+              : t.delete || 'Eliminar'}
+          </button>
+        )}
+      </div>
+      <div className="relatorio-especial-form__toolbar relatorio-especial-desktop-nav">
         <button type="button" className="btn-secondary" onClick={voltarLista}>
           ← {t.voltar || 'Voltar'}
         </button>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <div className="relatorio-especial-form__toolbar-acoes">
           <button type="button" className="btn-primary" disabled={salvando} onClick={persistir}>
             {salvando && acaoEmCurso === 'guardar'
               ? '…'
@@ -655,7 +684,7 @@ export default function RelatorioEspecialHub({
 
       <section style={{ marginBottom: 24 }}>
         <h3>{t.informacoesBasicas || 'Informações básicas'}</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+        <div className="relatorio-especial-form__grid">
           <div>
             <label>{t.numeroRelatorio || 'Número'}</label>
             <input type="text" value={form.numero} onChange={(e) => setForm({ ...form, numero: e.target.value })} style={inputStyle} />

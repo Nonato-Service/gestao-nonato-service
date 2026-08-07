@@ -41544,6 +41544,209 @@ html body .relatorio-especial-root .relatorio-especial-resumo-equip__tabela th {
   }
 }
 
+/* Relatórios Especiais — uso confortável no telemóvel */
+html body .relatorio-especial-root .relatorio-especial-hub__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-hub__desc {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  margin-bottom: 16px;
+  line-height: 1.45;
+}
+
+html body .relatorio-especial-root .relatorio-especial-hub__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-card {
+  border: 1px solid rgba(0, 200, 83, 0.35);
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: rgba(0, 40, 24, 0.35);
+}
+
+html body .relatorio-especial-root .relatorio-especial-card__numero {
+  display: block;
+  font-size: 16px;
+  color: #00c853;
+  margin-bottom: 4px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-card__linha {
+  font-size: 14px;
+  color: #fff;
+  word-break: break-word;
+}
+
+html body .relatorio-especial-root .relatorio-especial-card__sub {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 4px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-card__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-card__eliminar {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
+}
+
+html body .relatorio-especial-root .relatorio-especial-form__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+  justify-content: space-between;
+}
+
+html body .relatorio-especial-root .relatorio-especial-form__toolbar-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-form__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-mobile-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  html body .relatorio-especial-root .relatorio-especial-desktop-nav {
+    display: none !important;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-mobile-bar {
+    display: grid !important;
+  }
+
+  html body .relatorio-especial-root .mobile-toolbar-btn--primary {
+    background: rgba(0, 200, 83, 0.28) !important;
+    border-color: #00c853 !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+  }
+
+  html body .relatorio-especial-root .mobile-toolbar-btn--danger {
+    border-color: rgba(239, 68, 68, 0.55) !important;
+    color: #fca5a5 !important;
+    -webkit-text-fill-color: #fca5a5 !important;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-hub__novo,
+  html body .relatorio-especial-root .relatorio-especial-hub__head .btn-primary {
+    width: 100%;
+    min-height: 48px !important;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-card__acoes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-card__acoes > * {
+    width: 100%;
+    min-height: 44px !important;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-card__acoes .btn-primary {
+    grid-column: 1 / -1;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-form__grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-form input,
+  html body .relatorio-especial-root .relatorio-especial-form select,
+  html body .relatorio-especial-root .relatorio-especial-form textarea,
+  html body .relatorio-especial-root .relatorio-especial-fechamento input,
+  html body .relatorio-especial-root .relatorio-especial-fechamento select,
+  html body .relatorio-especial-root .relatorio-especial-fechamento textarea {
+    font-size: 16px !important; /* evita zoom automático no iOS */
+    min-height: 44px;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-form__actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    position: sticky;
+    bottom: 0;
+    z-index: 90;
+    padding: 10px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    margin: 16px -8px 0;
+    background: rgba(20, 20, 20, 0.96);
+    border-top: 1px solid rgba(0, 200, 83, 0.35);
+    backdrop-filter: blur(6px);
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-form__actions > * {
+    width: 100%;
+    min-height: 48px !important;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-form__actions .btn-primary {
+    grid-column: 1 / -1;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-resumo-equip {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-resumo-equip__tabela {
+    min-width: 420px;
+    table-layout: auto;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-hora-eq-linha {
+    grid-template-columns: 1fr !important;
+  }
+
+  html body .relatorio-especial-root .relatorio-equipamentos-block__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  html body .relatorio-especial-root .relatorio-equipamentos-block__add {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-dia-card__toggle {
+    min-height: 48px;
+    font-size: 15px;
+    padding: 14px;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-form,
+  html body .relatorio-especial-root .relatorio-especial-fechamento,
+  html body .relatorio-especial-root .relatorio-especial-hub {
+    padding-bottom: 24px !important;
+  }
+}
+
 html body .biblioteca-pecas-hub .biblioteca-btn--green,
 html body .biblioteca-pecas-hub .biblioteca-btn--green:hover,
 html body .biblioteca-pecas-hub .biblioteca-btn--green:active {
