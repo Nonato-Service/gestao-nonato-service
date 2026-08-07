@@ -39,32 +39,195 @@ function L(labels: RelatorioEspecialPdfLabels | undefined, key: string, fallback
 const RELATORIO_ESPECIAL_PDF_CSS = `
 body.rs-pdf--especial .re-doc {
   max-width: 100%;
+  counter-reset: re-sec;
 }
 
-.re-secao {
+.re-doc-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.re-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
   margin: 0 0 18px;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 
-.re-secao__titulo {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 10px;
-  margin: 0 0 10px;
-  padding: 0 0 7px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+.re-kpi {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  padding: 12px 10px 11px;
+  text-align: center;
+  border: 1px solid #bbf7d0;
+  background: linear-gradient(165deg, #ecfdf5 0%, #ffffff 62%, #f0fdf4 100%);
+  box-shadow: 0 1px 0 rgba(13, 122, 61, 0.08);
+}
+
+.re-kpi::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #0d7a3d, #22c55e);
+}
+
+.re-kpi--main {
+  border-color: #0d7a3d;
+  background: linear-gradient(145deg, #0d7a3d 0%, #059669 55%, #047857 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(13, 122, 61, 0.22);
+}
+
+.re-kpi--main::before {
+  display: none;
+}
+
+.re-kpi__label {
+  display: block;
+  font-size: 7.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #1e293b;
+  color: #64748b;
+  margin-bottom: 5px;
+}
+
+.re-kpi--main .re-kpi__label {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.re-kpi__valor {
+  display: block;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0d7a3d;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.re-kpi--main .re-kpi__valor {
+  color: #fff;
+  font-size: 22px;
+}
+
+.re-kpi__hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 7.5px;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+.re-kpi--main .re-kpi__hint {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.re-secao {
+  margin: 0 0 20px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.re-secao__titulo {
+  counter-increment: re-sec;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11px;
+  margin: 0 0 12px;
+  padding: 0 0 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0f172a;
   border-bottom: 2px solid #0d7a3d;
+}
+
+.re-secao__titulo::before {
+  content: counter(re-sec);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #0d7a3d, #16a34a);
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  box-shadow: 0 2px 6px rgba(13, 122, 61, 0.25);
+}
+
+.re-secao__ajuda {
+  font-size: 9px;
+  color: #64748b;
+  margin: -4px 0 10px;
+  line-height: 1.45;
+}
+
+.re-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 4px;
+}
+
+.re-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid #86efac;
+  background: linear-gradient(180deg, #f0fdf4, #ffffff);
+  font-size: 10px;
+  color: #14532d;
+  box-shadow: 0 1px 2px rgba(13, 122, 61, 0.08);
+}
+
+.re-chip__n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #0d7a3d;
+  color: #fff;
+  font-weight: 800;
+  font-size: 10px;
+}
+
+.re-chip__txt {
+  font-weight: 600;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .re-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin: 0 0 4px;
   font-size: 0.92em;
   page-break-inside: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .re-table th,
@@ -76,16 +239,20 @@ body.rs-pdf--especial .re-doc {
 }
 
 .re-table th {
-  background: #1e293b;
+  background: linear-gradient(180deg, #134e2a 0%, #0d7a3d 100%);
   color: #f8fafc;
-  font-weight: 600;
-  font-size: 0.88em;
+  font-weight: 700;
+  font-size: 0.86em;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .re-table tbody tr:nth-child(even) td {
   background: #f8fafc;
+}
+
+.re-table tbody tr:hover td {
+  background: #ecfdf5;
 }
 
 .re-table .re-col-num {
@@ -125,20 +292,21 @@ body.rs-pdf--especial .re-doc {
 }
 
 .re-equip-card {
-  margin: 0 0 18px;
-  border: 2px solid #0d7a3d;
-  border-radius: 6px;
+  margin: 0 0 16px;
+  border: 1.5px solid #86efac;
+  border-radius: 10px;
   overflow: hidden;
   break-inside: avoid;
   page-break-inside: avoid;
-  box-shadow: 0 1px 4px rgba(13, 122, 61, 0.12);
+  box-shadow: 0 3px 10px rgba(13, 122, 61, 0.1);
+  background: #fff;
 }
 
 .re-equip-card__head {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto 1fr auto;
   gap: 0;
-  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+  background: linear-gradient(120deg, #ecfdf5 0%, #d1fae5 45%, #f0fdf4 100%);
   border-bottom: 2px solid #0d7a3d;
 }
 
@@ -146,14 +314,41 @@ body.rs-pdf--especial .re-doc {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 52px;
+  min-width: 48px;
   padding: 14px 12px;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   color: #ffffff;
-  background: #0d7a3d;
+  background: linear-gradient(180deg, #16a34a, #0d7a3d);
   border-right: 2px solid #065f2a;
+}
+
+.re-equip-card__total-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  padding: 10px 12px;
+  background: #0d7a3d;
+  color: #fff;
+  border-left: 1px solid #065f2a;
+}
+
+.re-equip-card__total-pill span {
+  display: block;
+  font-size: 7.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.re-equip-card__total-pill strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  margin-top: 3px;
 }
 
 .re-equip-card__meta {
@@ -232,50 +427,50 @@ body.rs-pdf--especial .re-doc {
 }
 
 .re-total-geral {
-  margin: 20px 0 16px;
-  padding: 14px 18px;
-  background: linear-gradient(135deg, #0d7a3d 0%, #059669 100%);
-  border-radius: 4px;
+  margin: 8px 0 18px;
+  padding: 16px 20px 18px;
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(255, 255, 255, 0.18) 0%, transparent 50%),
+    linear-gradient(135deg, #0d7a3d 0%, #059669 55%, #047857 100%);
+  border-radius: 10px;
   text-align: center;
   color: #fff;
   break-inside: avoid;
   page-break-inside: avoid;
+  box-shadow: 0 6px 18px rgba(13, 122, 61, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .re-total-geral__label {
   display: block;
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  opacity: 0.9;
-  margin-bottom: 4px;
+  opacity: 0.92;
+  margin-bottom: 6px;
 }
 
 .re-total-geral__valor {
   display: block;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 22px;
+  font-size: 30px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  line-height: 1.2;
+  line-height: 1.15;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
 }
 
 .re-total-geral__detalhe {
-  margin-top: 8px;
-  font-size: 9px;
+  margin-top: 10px;
+  font-size: 9.5px;
   font-weight: 500;
-  opacity: 0.92;
+  opacity: 0.95;
   line-height: 1.5;
 }
 
-.re-total-geral--topo {
-  margin: 0 0 18px;
-  padding: 18px 20px;
-}
-
-.re-total-geral--topo .re-total-geral__valor {
-  font-size: 28px;
+.re-total-geral--fecho {
+  margin: 4px 0 20px;
 }
 
 .re-dia-duracao-detalhe {
@@ -307,21 +502,22 @@ body.rs-pdf--especial .re-doc {
 }
 
 .re-resumo-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  padding: 10px 12px;
+  border: 1px solid #d1fae5;
+  border-radius: 8px;
+  padding: 12px 12px;
   text-align: center;
-  background: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 .re-resumo-card__label {
   display: block;
-  font-size: 7px;
-  font-weight: 700;
+  font-size: 7.5px;
+  font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #64748b;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
 
 .re-resumo-card__valor {
@@ -341,6 +537,14 @@ body.rs-pdf--especial .re-doc {
 
 .re-resumo-card--highlight .re-resumo-card__valor {
   font-size: 24px;
+}
+
+.re-encerramento {
+  margin-top: 6px;
+  padding: 14px 16px 8px;
+  border: 1px dashed #86efac;
+  border-radius: 10px;
+  background: #f8fffb;
 }
 
 .re-assinatura {
@@ -480,6 +684,16 @@ function buildTabelaEquipamentosResumoHtml(
 ): string {
   if (!equipamentos.length) return ''
   const esc = escapePdfHtml
+  const chips = equipamentos
+    .map((eq, i) => {
+      const id = eq.equipamentoId || '—'
+      const modelo = eq.maquinaModelo || ''
+      const serie = eq.numeroMaquina || ''
+      const txt = [id, modelo, serie].filter(Boolean).join(' · ')
+      return `<span class="re-chip"><span class="re-chip__n">${i + 1}</span><span class="re-chip__txt">${esc(txt)}</span></span>`
+    })
+    .join('')
+
   const rows = equipamentos
     .map(
       (eq, i) =>
@@ -494,7 +708,8 @@ function buildTabelaEquipamentosResumoHtml(
 
   return `<section class="re-secao">
     <h3 class="re-secao__titulo">${esc(L(labels, 'relatorioEspecialEquipamentos', 'Equipamentos'))} (${equipamentos.length})</h3>
-    <table class="re-table">
+    <div class="re-chips">${chips}</div>
+    <table class="re-table" style="margin-top:12px">
       <thead>
         <tr>
           <th class="re-col-num">#</th>
@@ -506,6 +721,42 @@ function buildTabelaEquipamentosResumoHtml(
       <tbody>${rows}</tbody>
     </table>
   </section>`
+}
+
+function buildKpiStripHtml(
+  rel: RelatorioEspecial,
+  totais: ReturnType<typeof calcularTotaisRelatorioEspecial>,
+  equipamentosCount: number,
+  labels: RelatorioEspecialPdfLabels | undefined
+): string {
+  const esc = escapePdfHtml
+  const almocoHint =
+    totais.horasAlmocoTotal > 0
+      ? `${L(labels, 'relatorioEspecialPdfTotalBruto', 'Bruto')} ${formatMinutosComoHHMM(totais.horasTrabalhoBruto)} − ${L(labels, 'horaAlmoco', 'almoço')} ${formatMinutosComoHHMM(totais.horasAlmocoTotal)}`
+      : L(labels, 'relatorioEspecialPdfTotalLiquidoHint', 'Total líquido de horas de trabalho')
+
+  return `<div class="re-kpi-strip">
+    <div class="re-kpi re-kpi--main">
+      <span class="re-kpi__label">${esc(L(labels, 'relatorioEspecialPdfHorasTrabalho', 'Horas de trabalho'))}</span>
+      <span class="re-kpi__valor">${esc(rel.horasTrabalho || '0:00')}</span>
+      <span class="re-kpi__hint">${esc(almocoHint)}</span>
+    </div>
+    <div class="re-kpi">
+      <span class="re-kpi__label">${esc(L(labels, 'kmTotal', 'KM total'))}</span>
+      <span class="re-kpi__valor">${esc(rel.kmsPercorridos || '0')}</span>
+      <span class="re-kpi__hint">${esc(L(labels, 'relatorioEspecialPdfHorasViagem', 'Horas viagem'))}: ${esc(rel.horasViagem || '0:00')}</span>
+    </div>
+    <div class="re-kpi">
+      <span class="re-kpi__label">${esc(L(labels, 'diarias', 'Diárias'))}</span>
+      <span class="re-kpi__valor">${esc(String(totais.diarias))}</span>
+      <span class="re-kpi__hint">${esc(L(labels, 'relatorioEspecialPdfColDias', 'Dias'))}: ${esc(String((rel.diasTrabalho || []).length))}</span>
+    </div>
+    <div class="re-kpi">
+      <span class="re-kpi__label">${esc(L(labels, 'relatorioEspecialEquipamentos', 'Equipamentos'))}</span>
+      <span class="re-kpi__valor">${esc(String(equipamentosCount))}</span>
+      <span class="re-kpi__hint">${esc(L(labels, 'relatorioEspecialSubtitle', 'Horas por equipamento'))}</span>
+    </div>
+  </div>`
 }
 
 function buildEquipamentoCardHtml(
@@ -548,6 +799,10 @@ function buildEquipamentoCardHtml(
           <span class="re-equip-card__value re-equip-card__value--mono">${esc(eq.numeroMaquina || '—')}</span>
         </div>
       </div>
+      <div class="re-equip-card__total-pill">
+        <span>${esc(L(labels, 'total', 'Total'))}</span>
+        <strong>${esc(total)}</strong>
+      </div>
     </div>
     <div class="re-equip-card__body">
       <table class="re-table">
@@ -580,7 +835,7 @@ function buildResumoCardsHtml(
     {
       label: L(labels, 'relatorioEspecialPdfHorasTrabalho', 'Horas de trabalho (total)'),
       value: rel.horasTrabalho || '0:00',
-      highlight: true,
+      highlight: false,
     },
     { label: L(labels, 'kmTotal', 'KM total'), value: rel.kmsPercorridos || '0' },
     { label: L(labels, 'relatorioEspecialPdfHorasViagem', 'Horas viagem'), value: rel.horasViagem || '0:00' },
@@ -630,8 +885,8 @@ export function imprimirRelatorioEspecialPdf(
   const esc = escapePdfHtml
   const labelAlmoco = L(labels, 'horaAlmoco', 'almoço')
 
-  const totalGeralTopoHtml = buildTotalGeralBannerHtml(rel, totais, labels, ' re-total-geral--topo')
-  const totalGeralFinalHtml = buildTotalGeralBannerHtml(rel, totais, labels, '')
+  const totalGeralFinalHtml = buildTotalGeralBannerHtml(rel, totais, labels, ' re-total-geral--fecho')
+  const kpiStripHtml = buildKpiStripHtml(rel, totais, equipamentos.length, labels)
 
   const headerHtml = buildPdfDocumentHeaderHtml({
     logoContent,
@@ -692,7 +947,7 @@ export function imprimirRelatorioEspecialPdf(
 
   const deslocamentosHtml = `<section class="re-secao">
     <h3 class="re-secao__titulo">${esc(L(labels, 'controleHorasDeslocamentos', L(labels, 'relatorioEspecialPdfDeslocamentos', 'Controlo de horas e deslocamentos')))}</h3>
-    <p style="font-size:9px;color:#64748b;margin:0 0 8px">${esc(L(labels, 'relatorioEspecialDiasFimSemanaOk', 'Sábado e domingo também contam como dias de trabalho.'))}</p>
+    <p class="re-secao__ajuda">${esc(L(labels, 'relatorioEspecialDiasFimSemanaOk', 'Sábado e domingo também contam como dias de trabalho.'))}</p>
     <table class="re-table re-table--dias">
       <thead>
         <tr>
@@ -741,13 +996,14 @@ export function imprimirRelatorioEspecialPdf(
 
   const controloHorasHtml = `<section class="re-secao">
     <h3 class="re-secao__titulo">${esc(L(labels, 'relatorioEspecialPdfControloHoras', 'Controlo de horas por equipamento'))}</h3>
-    <p style="font-size:9px;color:#64748b;margin:0 0 10px">${esc(L(labels, 'relatorioEspecialPdfEquipBrutoNota', 'Horas reais em cada máquina (início → fim). O almoço desconta uma vez por dia — no total geral e na tabela de dias acima.'))}</p>
+    <p class="re-secao__ajuda">${esc(L(labels, 'relatorioEspecialPdfEquipBrutoNota', 'Horas reais em cada máquina (início → fim). O almoço desconta uma vez por dia — no total geral e na tabela de dias acima.'))}</p>
     ${blocosEquipamentos || `<p style="color:#64748b;font-style:italic">${esc(L(labels, 'relatorioEspecialSemEquipamentos', 'Sem equipamentos'))}</p>`}
   </section>`
 
-  const totalGeralHtml = totalGeralFinalHtml
-
-  const resumoHtml = buildResumoCardsHtml(rel, totais, labels)
+  const resumoHtml = `<section class="re-secao">
+    <h3 class="re-secao__titulo">${esc(L(labels, 'resumo', 'Resumo'))}</h3>
+    ${buildResumoCardsHtml(rel, totais, labels)}
+  </section>`
 
   const observacoesHtml = rel.observacoes
     ? `<section class="re-obs">
@@ -763,6 +1019,15 @@ export function imprimirRelatorioEspecialPdf(
       </div>`
     : ''
 
+  const encerramentoHtml =
+    observacoesHtml || assinaturaHtml
+      ? `<section class="re-secao re-encerramento">
+          <h3 class="re-secao__titulo">${esc(L(labels, 'relatorioEspecialPdfEncerramento', 'Encerramento'))}</h3>
+          ${observacoesHtml}
+          ${assinaturaHtml}
+        </section>`
+      : ''
+
   const dataGeracao = new Date().toLocaleString('pt-PT', {
     day: '2-digit',
     month: '2-digit',
@@ -777,17 +1042,16 @@ export function imprimirRelatorioEspecialPdf(
 
   const body = `
 <style>${RELATORIO_ESPECIAL_PDF_CSS}</style>
-<div class="re-doc pdf-doc">
+<div class="re-doc pdf-doc re-doc-flow">
   ${headerHtml}
+  ${kpiStripHtml}
   ${metaHtml}
-  ${totalGeralTopoHtml}
   ${equipamentosResumoHtml}
   ${deslocamentosHtml}
   ${controloHorasHtml}
-  ${totalGeralHtml}
+  ${totalGeralFinalHtml}
   ${resumoHtml}
-  ${observacoesHtml}
-  ${assinaturaHtml}
+  ${encerramentoHtml}
   ${footerHtml}
 </div>`
 
