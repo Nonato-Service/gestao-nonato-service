@@ -785,13 +785,16 @@ async function _doSaveToServer(
     const isLargeManuaisJson = key === MANUAIS_KEY && payloadStr.length > 80000
     /** Biblioteca de logos PDF: várias imagens base64 — mesmo tratamento que manuais grandes */
     const isLargeLogosRelatoriosJson = key === 'nonato-logos-relatorios' && payloadStr.length > 80000
-    /** Biblioteca de peças com imagens base64 — payload grande */
+    /**
+     * Biblioteca de peças: NUNCA usar save-text.
+     * save-text gravava `.txt` e o telemóvel lia o `.json`/lite antigo (ex.: PC 21465 vs tablet 21430).
+     * O `/save` actualiza `.json` + regenera `nonato-pecas-biblioteca-lite`.
+     */
     const isLargePecasBibliotecaJson = key === PECAS_BIBLIOTECA_KEY && payloadStr.length > 80000
     const useTextEndpoint =
       isLargeString ||
       isLargeManuaisJson ||
       isLargeLogosRelatoriosJson ||
-      isLargePecasBibliotecaJson ||
       useSaveTextForLogo
     const endpoint = useTextEndpoint ? `${API_BASE}/save-text` : `${API_BASE}/save`
     const body =
@@ -809,11 +812,14 @@ async function _doSaveToServer(
       headers: { 'Content-Type': 'application/json' },
       body,
       signal: createTimeoutSignal(
-        opts?.timeoutMs ?? (payloadNeedsSlowUpload ? 120000 : 5000)
+        opts?.timeoutMs ?? (payloadNeedsSlowUpload ? 180000 : 5000)
       ),
     })
     if (response.ok) {
       serverOffline = false
+      if (key === PECAS_BIBLIOTECA_KEY && Array.isArray(value) && value.length > 0) {
+        setCachedPecasBibliotecaServerTotal(value.length)
+      }
       try {
         const json = await response.json()
         applyRevisionFromSaveResponse(json)
@@ -1843,8 +1849,6 @@ export async function ensurePecasBibliotecaInServerData(
   const catN = Math.max(categoriasCount, 0)
   if (catN < 5) return serverData
 
-  await waitForDataApiAuth(20_000)
-
   const minOk = pecasBibliotecaMinExpected(catN)
   let local: unknown[] = []
   try {
@@ -1854,46 +1858,47 @@ export async function ensurePecasBibliotecaInServerData(
     /* ignorar */
   }
 
+  const bundleCount = Math.max(pecasBibliotecaCountInBundle(serverData as Record<string, unknown>), local.length)
+  // Se o bundle/local já chega, não bloquear o arranque com auth/rede.
+  if (!isPecasBibliotecaCatalogIncomplete(bundleCount, catN)) return serverData
+
+  // Offline / servidor já falhou no boot: não gastar 20–60s a tentar reparar aqui.
+  if (!isOnline() || serverOffline) return serverData
+
+  const authed = await waitForDataApiAuth(3_000)
+  if (!authed) return serverData
+
   let serverTotal: number | null = null
-  if (isOnline()) {
-    try {
-      const meta = await fetchPecasBibliotecaServerMeta()
-      serverTotal = meta?.total ?? null
-    } catch {
-      /* ignorar */
-    }
+  try {
+    const meta = await fetchPecasBibliotecaServerMeta()
+    serverTotal = meta?.total ?? null
+  } catch {
+    /* ignorar */
   }
 
-  const bundleCount = Math.max(pecasBibliotecaCountInBundle(serverData as Record<string, unknown>), local.length)
   if (!isPecasBibliotecaCatalogIncomplete(bundleCount, catN, serverTotal)) return serverData
 
-  if (isOnline()) {
-    try {
-      const fromLite = await fetchPecasBibliotecaLiteFromServer()
-      const liteOk =
-        Array.isArray(fromLite) &&
-        fromLite.length >= minOk &&
-        !isPecasBibliotecaCatalogIncomplete(fromLite.length, catN, serverTotal)
-      if (liteOk) {
-        const merged = mergePecasBibliotecaArrays(fromLite, local) as unknown[]
-        await savePecasBibliotecaLocally(merged)
-        console.info(`[Nonato] Biblioteca reposta no arranque (lite): ${bundleCount} → ${merged.length} peça(s).`)
-        return {
-          ...serverData,
-          [PECAS_BIBLIOTECA_KEY]: merged,
-          [PECAS_BIBLIOTECA_LITE_KEY]: fromLite,
-        }
+  try {
+    const fromLite = await fetchPecasBibliotecaLiteFromServer()
+    const liteOk =
+      Array.isArray(fromLite) &&
+      fromLite.length >= minOk &&
+      !isPecasBibliotecaCatalogIncomplete(fromLite.length, catN, serverTotal)
+    if (liteOk) {
+      const merged = mergePecasBibliotecaArrays(fromLite, local) as unknown[]
+      await savePecasBibliotecaLocally(merged)
+      console.info(`[Nonato] Biblioteca reposta no arranque (lite): ${bundleCount} → ${merged.length} peça(s).`)
+      return {
+        ...serverData,
+        [PECAS_BIBLIOTECA_KEY]: merged,
+        [PECAS_BIBLIOTECA_LITE_KEY]: fromLite,
       }
-    } catch (e) {
-      console.warn('[Nonato] ensurePecasBibliotecaInServerData lite:', e)
     }
+  } catch (e) {
+    console.warn('[Nonato] ensurePecasBibliotecaInServerData lite:', e)
   }
 
-  const repaired = await repairPecasBibliotecaIfStale(local.length > 0 ? local : serverData[PECAS_BIBLIOTECA_KEY], catN)
-  if (Array.isArray(repaired) && repaired.length > bundleCount) {
-    return { ...serverData, [PECAS_BIBLIOTECA_KEY]: repaired }
-  }
-
+  // Reparação paginada fica para depois do overlay — não bloquear o boot.
   return serverData
 }
 
@@ -1964,7 +1969,7 @@ export async function loadAllForBootstrap(
     }
   }
 
-  const server = await loadAllFromServer()
+  const server = await loadAllFromServer({ bootstrap: true })
   if (server.ok && Object.keys(server.data).length > 0) {
     void saveOfflineServerSnapshot(server.data)
     return { ...server, source: 'server' }
@@ -1979,8 +1984,9 @@ export async function loadAllForBootstrap(
 }
 
 const LOAD_ALL_TIMEOUT_MS = 60_000
+const LOAD_ALL_BOOTSTRAP_TIMEOUT_MS = 22_000
 
-async function loadAllFromServerOnce(): Promise<LoadAllFromServerResult> {
+async function loadAllFromServerOnce(opts?: { bootstrap?: boolean }): Promise<LoadAllFromServerResult> {
   if (isNonatoDemoBuild()) {
     return { data: {}, ok: false }
   }
@@ -1989,10 +1995,14 @@ async function loadAllFromServerOnce(): Promise<LoadAllFromServerResult> {
     return { data: {}, ok: false }
   }
 
+  const bootstrap = opts?.bootstrap === true
+  const url = bootstrap ? `${API_BASE}/load?bootstrap=1` : `${API_BASE}/load`
+  const timeoutMs = bootstrap ? LOAD_ALL_BOOTSTRAP_TIMEOUT_MS : LOAD_ALL_TIMEOUT_MS
+
   try {
     // Não abortar aqui só porque `serverOffline` — evita ficar preso a `{}` durante ~30s após um timeout.
-    const response = await dataApiFetch(`${API_BASE}/load`, {
-      signal: createTimeoutSignal(LOAD_ALL_TIMEOUT_MS),
+    const response = await dataApiFetch(url, {
+      signal: createTimeoutSignal(timeoutMs),
     })
 
     if (!response.ok) {
@@ -2017,15 +2027,16 @@ async function loadAllFromServerOnce(): Promise<LoadAllFromServerResult> {
   }
 }
 
-/** Carrega todos os ficheiros do servidor com retry (payload grande pode exceder 5s). */
-export async function loadAllFromServer(): Promise<LoadAllFromServerResult> {
-  const delays = [0, 700, 1800]
+/** Carrega ficheiros do servidor com retry. `bootstrap: true` = bundle leve + timeout curto. */
+export async function loadAllFromServer(opts?: { bootstrap?: boolean }): Promise<LoadAllFromServerResult> {
+  const bootstrap = opts?.bootstrap === true
+  const delays = bootstrap ? [0, 600] : [0, 700, 1800]
   let last: LoadAllFromServerResult = { data: {}, ok: false }
   for (let i = 0; i < delays.length; i++) {
     if (delays[i]! > 0) {
       await new Promise((r) => setTimeout(r, delays[i]))
     }
-    last = await loadAllFromServerOnce()
+    last = await loadAllFromServerOnce({ bootstrap })
     if (last.ok) return last
   }
   return last

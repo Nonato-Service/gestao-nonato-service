@@ -28,10 +28,21 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: jsonHeaders() })
 }
 
+/** Chaves pesadas omitidas no arranque rápido (`?bootstrap=1`). O resto carrega depois em segundo plano. */
+const BOOTSTRAP_SKIP_JSON_KEYS = new Set([
+  'nonato-offline-server-snapshot',
+  'nonato-pecas-biblioteca', // full ~38MB — o lite basta para abrir a UI
+  'nonato-comprovantes-despesas',
+  'nonato-cadastro-safety-backup',
+  'nonato-auto-backups',
+  'nonato-code-backups',
+])
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const key = searchParams.get('key')
+    const bootstrap = searchParams.get('bootstrap') === '1'
     const host = (request.headers.get('host') || '').split(':')[0].toLowerCase()
     const isLocalDevHost =
       process.env.NODE_ENV === 'development' ||
@@ -56,14 +67,19 @@ export async function GET(request: NextRequest) {
     ensureDemoDataDir(dataDir)
 
     if (!key) {
-      // Retornar todos os dados disponíveis
+      // Retornar todos os dados disponíveis (ou bundle leve de arranque)
       const jsonFiles = fs.existsSync(dataDir) ? fs.readdirSync(dataDir).filter((f: string) => f.endsWith('.json')) : []
-      const txtFiles = fs.existsSync(dataDir) ? fs.readdirSync(dataDir).filter((f: string) => f.endsWith('.txt')) : []
+      const txtFiles = bootstrap
+        ? []
+        : fs.existsSync(dataDir)
+          ? fs.readdirSync(dataDir).filter((f: string) => f.endsWith('.txt'))
+          : []
       const allData: Record<string, any> = {}
       
       // Carregar arquivos JSON
       for (const file of jsonFiles) {
         const fileKey = file.replace('.json', '')
+        if (bootstrap && BOOTSTRAP_SKIP_JSON_KEYS.has(fileKey)) continue
         const filePath = path.join(dataDir, file)
         try {
           const content = fs.readFileSync(filePath, 'utf-8')
@@ -89,7 +105,7 @@ export async function GET(request: NextRequest) {
         }
       }
       
-      // Carregar arquivos TXT (para vídeos/imagens grandes)
+      // Carregar arquivos TXT (para vídeos/imagens grandes) — omitidos no bootstrap
       for (const file of txtFiles) {
         const fileKey = file.replace('.txt', '')
         // Só adicionar se não existir já no JSON (prioridade para JSON)
@@ -115,38 +131,43 @@ export async function GET(request: NextRequest) {
       }
 
       // Logos base64 grandes vão para `.txt` (save-text); um `.json` antigo ainda existir fazia o bundle ignorar o .txt.
-      for (const logoKey of ['nonato-logo', 'nonato-logo-dashboard'] as const) {
-        const txtPath = path.join(dataDir, `${logoKey}.txt`)
-        if (!fs.existsSync(txtPath)) continue
-        try {
-          const c = fs.readFileSync(txtPath, 'utf-8')
-          if (c && c.trim() !== '') {
-            allData[logoKey] = c
+      if (!bootstrap) {
+        for (const logoKey of ['nonato-logo', 'nonato-logo-dashboard'] as const) {
+          const txtPath = path.join(dataDir, `${logoKey}.txt`)
+          if (!fs.existsSync(txtPath)) continue
+          try {
+            const c = fs.readFileSync(txtPath, 'utf-8')
+            if (c && c.trim() !== '') {
+              allData[logoKey] = c
+            }
+          } catch (e) {
+            console.error(`Erro ao ler ${logoKey}.txt no bundle:`, e)
           }
-        } catch (e) {
-          console.error(`Erro ao ler ${logoKey}.txt no bundle:`, e)
+        }
+
+        // Manuais/Bíblia com PDFs: `.txt` completo prevalece sobre `.json` lite (evita perder anexos no sync).
+        for (const richKey of [
+          'nonato-manuais-familias-grupos',
+          'nonato-biblia-nonato-service',
+          'nonato-conhecimento-tecnico-unificado',
+        ] as const) {
+          const txtPath = path.join(dataDir, `${richKey}.txt`)
+          if (!fs.existsSync(txtPath)) continue
+          try {
+            const c = fs.readFileSync(txtPath, 'utf-8')
+            if (c && c.trim() !== '') {
+              allData[richKey] = JSON.parse(c)
+            }
+          } catch (e) {
+            console.error(`Erro ao ler ${richKey}.txt no bundle:`, e)
+          }
         }
       }
 
-      // Manuais/Bíblia com PDFs: `.txt` completo prevalece sobre `.json` lite (evita perder anexos no sync).
-      for (const richKey of [
-        'nonato-manuais-familias-grupos',
-        'nonato-biblia-nonato-service',
-        'nonato-conhecimento-tecnico-unificado',
-      ] as const) {
-        const txtPath = path.join(dataDir, `${richKey}.txt`)
-        if (!fs.existsSync(txtPath)) continue
-        try {
-          const c = fs.readFileSync(txtPath, 'utf-8')
-          if (c && c.trim() !== '') {
-            allData[richKey] = JSON.parse(c)
-          }
-        } catch (e) {
-          console.error(`Erro ao ler ${richKey}.txt no bundle:`, e)
-        }
-      }
-
-      return NextResponse.json({ success: true, data: allData }, { headers: jsonHeaders() })
+      return NextResponse.json(
+        { success: true, data: allData, bootstrap: bootstrap || undefined },
+        { headers: jsonHeaders() }
+      )
     }
 
     // Carregar um arquivo específico

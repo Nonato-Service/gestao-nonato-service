@@ -5,8 +5,9 @@ import { ensureDataDir, resolveDataDirForKey } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
-import { textFileContentUnchanged, writeTextFileAtomic } from '../writeIfChanged'
-import { assessServerCadastroTextWrite } from '../../../lib/serverCadastroGuard'
+import { textFileContentUnchanged, writeTextFileAtomic, writeJsonFileAtomic } from '../writeIfChanged'
+import { assessServerCadastroTextWrite, assessServerCadastroWrite } from '../../../lib/serverCadastroGuard'
+import { buildPecasBibliotecaLite } from '../../../lib/pecasBibliotecaLite'
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,9 +32,62 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const targetDir = resolveDataDirForKey(key, dataDir)
     const filePath = path.join(dataDir, `${key}.txt`)
-    const jsonGuardPath = path.join(resolveDataDirForKey(key, dataDir), `${key}.json`)
-    const textPayload = typeof value === 'string' ? value : String(value)
+    const jsonGuardPath = path.join(targetDir, `${key}.json`)
+
+    /**
+     * Biblioteca de peças: gravar sempre `.json` + lite.
+     * Clientes antigos enviavam array (não string) e `String(array)` virava "[object Object]…" —
+     * o `.txt` ficava corrompido e o telemóvel continuava a ler o `.json` antigo.
+     */
+    if (key === 'nonato-pecas-biblioteca') {
+      let pecas: unknown = value
+      if (typeof value === 'string') {
+        try {
+          pecas = JSON.parse(value)
+        } catch {
+          return NextResponse.json({ error: 'JSON de peças inválido' }, { status: 400 })
+        }
+      }
+      if (!Array.isArray(pecas)) {
+        return NextResponse.json({ error: 'Biblioteca de peças deve ser um array' }, { status: 400 })
+      }
+      const guard = assessServerCadastroWrite(key, pecas, jsonGuardPath)
+      if (!guard.allowed) {
+        return NextResponse.json(
+          {
+            error: 'cadastro_protected',
+            reason: guard.reason,
+            key,
+            existingCount: guard.existingCount,
+            newCount: guard.newCount,
+          },
+          { status: 409 }
+        )
+      }
+      writeJsonFileAtomic(jsonGuardPath, pecas)
+      try {
+        writeJsonFileAtomic(path.join(targetDir, 'nonato-pecas-biblioteca-lite.json'), buildPecasBibliotecaLite(pecas))
+      } catch (liteErr) {
+        console.warn('[Nonato API save-text] Falha ao gerar lite de peças:', liteErr)
+      }
+      try {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+      } catch {
+        /* ignorar */
+      }
+      const meta = bumpSyncMeta(dataDir)
+      return NextResponse.json({
+        success: true,
+        message: `Dados salvos com sucesso: ${key}`,
+        revision: meta.revision,
+        updatedAt: meta.updatedAt,
+        total: pecas.length,
+      })
+    }
+
+    const textPayload = typeof value === 'string' ? value : JSON.stringify(value)
 
     let revision: number | undefined
     let updatedAt: string | undefined

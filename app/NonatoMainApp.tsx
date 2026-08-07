@@ -16,6 +16,7 @@ import {
 import {
   loadData,
   saveData,
+  saveToServer,
   loadAllFromServer,
   loadAllForBootstrap,
   loadAllFromLocalCache,
@@ -10850,6 +10851,8 @@ export default function Dashboard() {
       const localSnapshotBeforeMerge = collectLocalNonatoSnapshot()
       let bootstrapLoadErrored = false
       let serverData: Record<string, any> = {}
+      /** true se o bundle inicial falhou — evita awaits longos no resto do boot */
+      let bootOffline = false
       try {
         setBlockImplicitServerPushDuringBootstrap(true)
         const syncSt = await fetchSyncStatus()
@@ -10885,7 +10888,8 @@ export default function Dashboard() {
         const catsBoot = serverData['nonato-categorias-pecas']
         const catsBootCount = Array.isArray(catsBoot) ? catsBoot.length : 0
         serverData = await ensurePecasBibliotecaInServerData(serverData, catsBootCount)
-        if (!bootLoad.ok) setBootstrapOfflineMode(true)
+        bootOffline = !bootLoad.ok
+        if (bootOffline) setBootstrapOfflineMode(true)
         await reportBoot(28)
 
         /** Sincronização automática: fundir sempre com o servidor (sem modal bloqueante). */
@@ -11842,7 +11846,7 @@ export default function Dashboard() {
         const fromBundle = serverData['nonato-clientes']
         if (Array.isArray(fromBundle) && fromBundle.length > 0) {
           savedClientes = fromBundle
-        } else {
+        } else if (!bootOffline && isOnline()) {
           try {
             const fromLoad = await loadData('nonato-clientes')
             if (Array.isArray(fromLoad) && fromLoad.length > 0) savedClientes = fromLoad
@@ -11851,6 +11855,7 @@ export default function Dashboard() {
           }
         }
       }
+      await reportBoot(55)
       const normalizeClienteEquipamentos = (arr: Cliente[]) =>
         arr.map((c: Cliente) => ({
           ...c,
@@ -12318,7 +12323,8 @@ export default function Dashboard() {
         setCategoriasPecas(savedCategoriasPecas)
       }
 
-      // Carregar peças biblioteca — PRIORIDADE: cópia já gravada pelo recuperador (IndexedDB)
+      await reportBoot(58)
+      // Carregar peças biblioteca — PRIORIDADE: cópia local/bundle. Reparos pesados vão em segundo plano.
       let savedPecasBiblioteca: unknown[] | null = await loadPecasBibliotecaFromBrowserStorage(catsInicial.length)
       if (savedPecasBiblioteca) {
         console.info(`[Nonato] Biblioteca do browser: ${savedPecasBiblioteca.length} peça(s).`)
@@ -12332,38 +12338,21 @@ export default function Dashboard() {
       if (pecasIncompletas(savedPecasBiblioteca)) {
         const liteBoot = serverData['nonato-pecas-biblioteca-lite']
         const fullBoot = serverData['nonato-pecas-biblioteca']
-        if (Array.isArray(liteBoot) && !pecasIncompletas(liteBoot)) {
-          savedPecasBiblioteca = liteBoot
-          console.info(`[Nonato] Biblioteca do bundle lite: ${liteBoot.length} peça(s).`)
-        } else if (Array.isArray(fullBoot) && !pecasIncompletas(fullBoot)) {
-          savedPecasBiblioteca = fullBoot
-          console.info(`[Nonato] Biblioteca do bundle completo: ${fullBoot.length} peça(s).`)
-        } else {
-          savedPecasBiblioteca = await bootstrapLoadPecasBiblioteca(catsInicial.length)
-        }
-        if (pecasIncompletas(savedPecasBiblioteca)) {
-          const reposto = await reporPecasBibliotecaEmergencia()
-          if (Array.isArray(reposto) && reposto.length > 0) {
-            savedPecasBiblioteca = reposto
-            console.info(`[Nonato] Biblioteca reposta no arranque: ${reposto.length} peça(s).`)
+        if (Array.isArray(liteBoot) && liteBoot.length > 0) {
+          // Aceitar lite mesmo parcial no boot — abre a UI; completa depois.
+          if (!savedPecasBiblioteca || liteBoot.length > savedPecasBiblioteca.length) {
+            savedPecasBiblioteca = liteBoot
+            console.info(`[Nonato] Biblioteca do bundle lite: ${liteBoot.length} peça(s).`)
           }
-        }
-        if (pecasIncompletas(savedPecasBiblioteca)) {
-          const reparado = await repairPecasBibliotecaIfStale(savedPecasBiblioteca ?? [], catsInicial.length)
-          if (Array.isArray(reparado) && reparado.length > 0) {
-            savedPecasBiblioteca = reparado
-            console.info(`[Nonato] Biblioteca reparada no arranque: ${reparado.length} peça(s).`)
+        } else if (Array.isArray(fullBoot) && fullBoot.length > 0) {
+          if (!savedPecasBiblioteca || fullBoot.length > savedPecasBiblioteca.length) {
+            savedPecasBiblioteca = fullBoot
+            console.info(`[Nonato] Biblioteca do bundle completo: ${fullBoot.length} peça(s).`)
           }
         }
       }
-      if (
-        savedPecasBiblioteca &&
-        Array.isArray(savedPecasBiblioteca) &&
-        !pecasIncompletas(savedPecasBiblioteca)
-      ) {
-        const raw = (savedPecasBiblioteca as PecaBiblioteca[]).map((peca) =>
-          sanitizarPecaBibliotecaImportacaoFlag(peca)
-        )
+      const applyPecasBootList = (listaIn: PecaBiblioteca[]) => {
+        const raw = listaIn.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
         const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, catsInicial)
         setPecasBiblioteca((prev) => {
           if (
@@ -12375,6 +12364,10 @@ export default function Dashboard() {
           return lista
         })
         void savePecasBibliotecaLocally(lista)
+        return lista
+      }
+      if (savedPecasBiblioteca && Array.isArray(savedPecasBiblioteca) && savedPecasBiblioteca.length > 0) {
+        const lista = applyPecasBootList(savedPecasBiblioteca as PecaBiblioteca[])
         const faltamFotos = lista.filter(
           (p) =>
             (p as PecaBiblioteca & { temImagemServidor?: boolean }).temImagemServidor &&
@@ -12386,11 +12379,7 @@ export default function Dashboard() {
               const comFotos = await hydratePecasBibliotecaImagensFromServer(lista as unknown[])
               if (Array.isArray(comFotos) && comFotos.length > 0) {
                 await savePecasBibliotecaLocally(comFotos)
-                const rawF = (comFotos as PecaBiblioteca[]).map((peca) =>
-                  sanitizarPecaBibliotecaImportacaoFlag(peca)
-                )
-                const { lista: listaF } = garantirNumerosSequenciaPecaBiblioteca(rawF, catsInicial)
-                setPecasBiblioteca(listaF)
+                applyPecasBootList(comFotos as PecaBiblioteca[])
               }
             } catch (e) {
               console.warn('[Nonato] Hidratação de fotos no arranque:', e)
@@ -12398,6 +12387,34 @@ export default function Dashboard() {
           })()
         }
       }
+      // Reposição/reparo completo: só após o overlay (não bloquear nos 52–64%).
+      if (
+        pecasIncompletas(savedPecasBiblioteca) &&
+        !bootOffline &&
+        isOnline()
+      ) {
+        const catsForBg = catsInicial.length
+        void (async () => {
+          try {
+            let next = await bootstrapLoadPecasBiblioteca(catsForBg)
+            if (pecasIncompletas(next)) {
+              const reposto = await reporPecasBibliotecaEmergencia()
+              if (Array.isArray(reposto) && reposto.length > 0) next = reposto
+            }
+            if (pecasIncompletas(next)) {
+              const reparado = await repairPecasBibliotecaIfStale(next ?? [], catsForBg)
+              if (Array.isArray(reparado) && reparado.length > 0) next = reparado
+            }
+            if (Array.isArray(next) && next.length > 0) {
+              applyPecasBootList(next as PecaBiblioteca[])
+              console.info(`[Nonato] Biblioteca completa em segundo plano: ${next.length} peça(s).`)
+            }
+          } catch (e) {
+            console.warn('[Nonato] Reposição de peças em segundo plano:', e)
+          }
+        })()
+      }
+      await reportBoot(61)
 
       const savedPecaLookupTpl = getData(NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY)
       if (typeof savedPecaLookupTpl === 'string') {
@@ -28826,7 +28843,62 @@ export default function Dashboard() {
       ? bibliotecaServidorMeta.total - pecasCatalogoBiblioteca.length
       : 0
 
+  /** Peças só neste aparelho (ainda não no Railway) — causa típica: PC 21465 vs telemóvel 21430. */
+  const bibliotecaLocaisAFrente =
+    bibliotecaServidorMeta && pecasCatalogoBiblioteca.length > bibliotecaServidorMeta.total
+      ? pecasCatalogoBiblioteca.length - bibliotecaServidorMeta.total
+      : 0
+
   const pecasAutoReporServidorRef = useRef(false)
+  const pecasAutoPushLocaisRef = useRef(false)
+
+  const handleEnviarPecasLocaisAoServidor = useCallback(async () => {
+    if (pecasReporManualLockRef.current || pecasBibliotecaReparoLoading) return
+    if (pecasBiblioteca.length < 1) {
+      alert((safeT as any)?.bibliotecaSyncEnvioVazio || 'Não há peças neste aparelho para enviar.')
+      return
+    }
+    pecasReporManualLockRef.current = true
+    setPecasBibliotecaReparoLoading(true)
+    setPecasBibliotecaReparoProgress(
+      (safeT as any)?.bibliotecaSyncAEnviar || 'A enviar catálogo local ao servidor…'
+    )
+    try {
+      const ok = await saveToServer('nonato-pecas-biblioteca', pecasBiblioteca)
+      if (!ok) {
+        alert(
+          (safeT as any)?.bibliotecaSyncEnvioFalhou ||
+            'Não foi possível enviar as peças ao servidor. Verifique o login e a ligação, e tente de novo.'
+        )
+        return
+      }
+      gravarBibliotecaUltimaSyncServidor()
+      await refreshBibliotecaServidorMeta()
+      alert(
+        ((safeT as any)?.bibliotecaSyncEnvioOk || 'Catálogo enviado: {n} peça(s) no servidor.').replace(
+          '{n}',
+          String(pecasCatalogoBiblioteca.length)
+        )
+      )
+    } catch (e) {
+      console.error('[enviar pecas locais]', e)
+      alert(
+        (safeT as any)?.bibliotecaSyncEnvioFalhou ||
+          'Não foi possível enviar as peças ao servidor. Verifique o login e a ligação, e tente de novo.'
+      )
+    } finally {
+      setPecasBibliotecaReparoLoading(false)
+      setPecasBibliotecaReparoProgress('')
+      pecasReporManualLockRef.current = false
+    }
+  }, [
+    pecasBiblioteca,
+    pecasBibliotecaReparoLoading,
+    pecasCatalogoBiblioteca.length,
+    refreshBibliotecaServidorMeta,
+    gravarBibliotecaUltimaSyncServidor,
+    safeT,
+  ])
 
   /** Verifica periodicamente se o Railway tem mais peças que este browser e avisa (badge + notificação). */
   useEffect(() => {
@@ -28852,6 +28924,41 @@ export default function Dashboard() {
 
         const local = pecasCatalogoBibliotecaCountRef.current
         const novidades = meta.total > local ? meta.total - local : 0
+        const locaisAFrente = local > meta.total ? local - meta.total : 0
+
+        /** PC com mais peças que o servidor: enviar uma vez (as 35 em falta no telemóvel). */
+        if (
+          locaisAFrente > 0 &&
+          !pecasAutoPushLocaisRef.current &&
+          !isBibliotecaMobileDevice() &&
+          !pecasBibliotecaReparoLoading &&
+          !isPecasBibliotecaSyncInFlight()
+        ) {
+          pecasAutoPushLocaisRef.current = true
+          setPecasBibliotecaReparoLoading(true)
+          setPecasBibliotecaReparoProgress('A enviar peças locais ao servidor…')
+          try {
+            const lista = pecasBibliotecaClassificacaoSyncRef.current
+            const ok = await saveToServer('nonato-pecas-biblioteca', lista)
+            if (ok) {
+              setCachedPecasBibliotecaServerTotal(Array.isArray(lista) ? lista.length : local)
+              gravarUltimoServidorTotalAvisado(Array.isArray(lista) ? lista.length : local)
+              console.info(
+                `[Nonato] Catálogo local enviado ao servidor: ${meta.total} → ${Array.isArray(lista) ? lista.length : local} peça(s).`
+              )
+              await refreshBibliotecaServidorMeta()
+            } else {
+              pecasAutoPushLocaisRef.current = false
+            }
+          } catch (e) {
+            console.warn('[Nonato] Auto-envio biblioteca local:', e)
+            pecasAutoPushLocaisRef.current = false
+          } finally {
+            setPecasBibliotecaReparoLoading(false)
+            setPecasBibliotecaReparoProgress('')
+          }
+          return
+        }
 
         if (novidades <= 0) {
           gravarUltimoServidorTotalAvisado(meta.total)
@@ -43905,9 +44012,16 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {(bibliotecaNovidadesServidor > 0 || bibliotecaUltimaSyncServidor || bibliotecaServidorMeta) && (
+                  {(bibliotecaNovidadesServidor > 0 ||
+                    bibliotecaLocaisAFrente > 0 ||
+                    bibliotecaUltimaSyncServidor ||
+                    bibliotecaServidorMeta) && (
                     <div
-                      className={`biblioteca-hub-toolbar__status${bibliotecaNovidadesServidor > 0 ? ' biblioteca-hub-toolbar__status--warn' : ' biblioteca-hub-toolbar__status--ok'}`}
+                      className={`biblioteca-hub-toolbar__status${
+                        bibliotecaNovidadesServidor > 0 || bibliotecaLocaisAFrente > 0
+                          ? ' biblioteca-hub-toolbar__status--warn'
+                          : ' biblioteca-hub-toolbar__status--ok'
+                      }`}
                     >
                       {bibliotecaNovidadesServidor > 0 ? (
                         <>
@@ -43923,6 +44037,22 @@ export default function Dashboard() {
                             onClick={() => void handleReporPecasBibliotecaDoServidor()}
                           >
                             {(safeT as any)?.bibliotecaSyncBtnAtualizar || 'Actualizar'}
+                          </button>
+                        </>
+                      ) : bibliotecaLocaisAFrente > 0 ? (
+                        <>
+                          <strong>
+                            {(safeT as any)?.bibliotecaSyncAvisoLocais || '⚠ Só neste aparelho:'}
+                          </strong>{' '}
+                          +{bibliotecaLocaisAFrente}{' '}
+                          {(safeT as any)?.bibliotecaSyncAvisoToolbarPecas || 'peça(s) — '}
+                          <button
+                            type="button"
+                            className="biblioteca-btn--green biblioteca-hub-toolbar__status-btn"
+                            disabled={pecasBibliotecaReparoLoading}
+                            onClick={() => void handleEnviarPecasLocaisAoServidor()}
+                          >
+                            {(safeT as any)?.bibliotecaSyncBtnEnviar || 'Enviar ao servidor'}
                           </button>
                         </>
                       ) : (
