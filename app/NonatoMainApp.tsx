@@ -20224,7 +20224,8 @@ export default function Dashboard() {
       const ok = await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa, true, true)
       if (!ok) {
         alert(
-          (safeT as any)?.erroSalvar ||
+          (safeT as any)?.relatorioEspecialErroSalvarServidor ||
+            (safeT as any)?.erroSalvar ||
             'Não foi possível gravar no servidor. O relatório pode voltar a aparecer noutros aparelhos até sincronizar.'
         )
         return false
@@ -28970,7 +28971,9 @@ export default function Dashboard() {
         ) {
           pecasAutoPushLocaisRef.current = true
           setPecasBibliotecaReparoLoading(true)
-          setPecasBibliotecaReparoProgress('A enviar peças locais ao servidor…')
+          setPecasBibliotecaReparoProgress(
+            (safeT as any)?.bibliotecaSyncAEnviar || 'A enviar peças locais ao servidor…'
+          )
           try {
             const lista = pecasBibliotecaClassificacaoSyncRef.current
             const ok = await saveToServer('nonato-pecas-biblioteca', lista)
@@ -29004,7 +29007,9 @@ export default function Dashboard() {
           if (pecasBibliotecaReparoLoading || isPecasBibliotecaSyncInFlight()) return
           pecasAutoReporServidorRef.current = true
           setPecasBibliotecaReparoLoading(true)
-          setPecasBibliotecaReparoProgress('A sincronizar biblioteca com o servidor…')
+          setPecasBibliotecaReparoProgress(
+            (safeT as any)?.bibliotecaSyncAReporServidor || 'A sincronizar biblioteca com o servidor…'
+          )
           try {
             const rep = await reporPecasBibliotecaEmergencia((msg) => setPecasBibliotecaReparoProgress(msg))
             if (Array.isArray(rep) && !isPecasBibliotecaCatalogIncomplete(rep.length, categoriasPecas.length, meta.total)) {

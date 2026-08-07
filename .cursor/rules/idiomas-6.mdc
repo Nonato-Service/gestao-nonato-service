@@ -50,3 +50,7 @@ O projeto **Gestão Técnica Nonato Service** deve manter suporte completo a **6
 ```
 
 Resumindo: **qualquer texto visível ao usuário deve existir nos 6 idiomas.**
+
+## Lembrete obrigatório (pedido do utilizador)
+
+Tudo o que se cria ou se altera na interface — botões, avisos, alertas, tooltips, estados de sync, PDFs — **tem de estar nos 6 idiomas** (`pt-BR`, `es`, `fr`, `it`, `de`, `en`) antes de commit/deploy. Correr `npm run i18n:check` e não deixar falhas.
