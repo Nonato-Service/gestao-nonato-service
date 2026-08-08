@@ -1,8 +1,9 @@
 # Build e deploy no Railway — modo standalone (menos RAM em runtime)
+# Nota: npm ci exige package.json e package-lock.json sincronizados (sem overrides órfãos).
 FROM node:20-alpine AS deps
 WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci
+COPY package.json package-lock.json ./
+RUN npm ci --prefer-offline --no-audit --no-fund
 
 FROM node:20-alpine AS builder
 WORKDIR /app
