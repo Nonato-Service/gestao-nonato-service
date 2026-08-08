@@ -4,7 +4,7 @@ FROM node:20-bookworm-slim AS deps
 WORKDIR /app
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json .npmrc ./
 # Sem --prefer-offline: evita cache npm corrompido entre builds falhados no Railway
 RUN npm ci --no-audit --no-fund
 
