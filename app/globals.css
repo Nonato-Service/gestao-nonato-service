@@ -41763,11 +41763,53 @@ html body .relatorio-especial-root .relatorio-especial-card {
   background: rgba(0, 40, 24, 0.35);
 }
 
+html body .relatorio-especial-root .relatorio-especial-card__numero-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
 html body .relatorio-especial-root .relatorio-especial-card__numero {
-  display: block;
+  display: inline-block;
   font-size: 16px;
   color: #00c853;
-  margin-bottom: 4px;
+  margin-bottom: 0;
+}
+
+html body .relatorio-especial-root .relatorio-especial-card__cobranca,
+html body .relatorio-especial-root .relatorio-especial-form__cobranca {
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  min-height: 36px;
+  white-space: nowrap;
+}
+
+html body .relatorio-especial-root .relatorio-especial-card__resumo-chip,
+html body .relatorio-especial-root .relatorio-especial-form__resumo-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  min-height: 36px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-form__numero-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-form__numero-wrap > input {
+  flex: 1 1 140px;
+  min-width: 0;
 }
 
 html body .relatorio-especial-root .relatorio-especial-card__linha {

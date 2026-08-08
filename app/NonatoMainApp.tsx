@@ -343,6 +343,12 @@ import {
   RELATORIOS_ESPECIAIS_DELETED_IDS_KEY,
 } from './lib/relatorioEspecialTypes'
 import {
+  adaptRelatorioEspecialParaFechamentoShape,
+  buildItensFechamentoBaseRelatorioEspecial,
+  encontrarRelatorioEspecialPorOsInput,
+  numeroPareceRelatorioEspecial,
+} from './lib/relatorioEspecialFechamentoCobranca'
+import {
   filterByDeletedIds,
   mergeDeletedIds,
   normalizeDeletedIds,
@@ -3660,10 +3666,11 @@ function buildRelatoriosFechadosBibliotecaLista(
   relatoriosServico: RelatorioServico[],
   clientes: Cliente[],
   fechamentosGuardadosBibliotecaIds: string[],
-  fechamentosRelatorios: Record<string, FechamentoItem[] | undefined>
+  fechamentosRelatorios: Record<string, FechamentoItem[] | undefined>,
+  relatoriosEspeciais: RelatorioEspecial[] = []
 ): RelatorioFechadoBibliotecaRow[] {
   const idSet = new Set(fechamentosGuardadosBibliotecaIds)
-  return relatoriosServico
+  const servicoRows = relatoriosServico
     .filter((r) => idSet.has(r.id))
     .map((r) => {
       const cliente =
@@ -3675,11 +3682,24 @@ function buildRelatoriosFechadosBibliotecaLista(
         itens: Array.isArray(fechamentosRelatorios[r.id]) ? fechamentosRelatorios[r.id]! : [],
       }
     })
-    .sort((a, b) => {
-      const byC = cmpBibliotecaLocale(a.clienteNome, b.clienteNome)
-      if (byC !== 0) return byC
-      return cmpBibliotecaLocale(String(a.relatorio.numero ?? ''), String(b.relatorio.numero ?? ''))
+  const especialRows = relatoriosEspeciais
+    .filter((r) => idSet.has(r.id))
+    .map((r) => {
+      const adaptado = adaptRelatorioEspecialParaFechamentoShape(r) as RelatorioServico
+      const cliente =
+        clientes.find((c) => c.id === adaptado.clienteId) ||
+        findClienteByRelatorio(clientes, adaptado)
+      return {
+        relatorio: adaptado,
+        clienteNome: String(cliente?.nomeEmpresa || adaptado.cliente || '—').trim() || '—',
+        itens: Array.isArray(fechamentosRelatorios[r.id]) ? fechamentosRelatorios[r.id]! : [],
+      }
     })
+  return [...servicoRows, ...especialRows].sort((a, b) => {
+    const byC = cmpBibliotecaLocale(a.clienteNome, b.clienteNome)
+    if (byC !== 0) return byC
+    return cmpBibliotecaLocale(String(a.relatorio.numero ?? ''), String(b.relatorio.numero ?? ''))
+  })
 }
 
 type RelatorioFechadoBibliotecaGrupo = {
@@ -3772,7 +3792,8 @@ function buildBibliotecaRelatoriosPorCliente(
   relatoriosServico: RelatorioServico[],
   fechamentosRelatorios: Record<string, FechamentoItem[] | undefined>,
   fechamentosGuardadosBibliotecaIds: string[],
-  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],
+  relatoriosEspeciais: RelatorioEspecial[] = []
 ): BibliotecaRelatoriosClienteRow[] {
   const rows: BibliotecaRelatoriosClienteRow[] = []
 
@@ -3886,6 +3907,22 @@ function buildBibliotecaRelatoriosPorCliente(
         despesas.push({ relatorio: rel, itens })
       }
     }
+    const especiaisDoCliente = relatoriosEspeciais.filter(
+      (r) =>
+        r.clienteId === cliente.id ||
+        nomesClienteCorrespondem(String(r.cliente ?? ''), String(cliente.nomeEmpresa ?? ''))
+    )
+    for (const relEsp of especiaisDoCliente) {
+      const itens = fechamentosRelatorios[relEsp.id]
+      if (itens && itens.length > 0 && fechamentosGuardadosBibliotecaIds.includes(relEsp.id)) {
+        if (!despesas.some((d) => d.relatorio.id === relEsp.id)) {
+          despesas.push({
+            relatorio: adaptRelatorioEspecialParaFechamentoShape(relEsp) as RelatorioServico,
+            itens,
+          })
+        }
+      }
+    }
     despesas.sort((a, b) =>
       cmpBibliotecaLocale(String(a.relatorio.numero ?? ''), String(b.relatorio.numero ?? ''))
     )
@@ -3948,6 +3985,39 @@ function buildBibliotecaRelatoriosPorCliente(
       }
     }
     rows.push({ cliente: clienteOrfaos, equipamentos: equipamentosOrfaos, despesas: despesasOrfaos })
+  }
+
+  /** Relatórios especiais com fechamento na Biblioteca sem pasta de cliente indexada. */
+  const especiaisOrfaos = relatoriosEspeciais.filter(
+    (r) =>
+      fechamentosGuardadosBibliotecaIds.includes(r.id) &&
+      Array.isArray(fechamentosRelatorios[r.id]) &&
+      (fechamentosRelatorios[r.id]?.length || 0) > 0 &&
+      !idsIndexados.has(r.id)
+  )
+  if (especiaisOrfaos.length > 0) {
+    const porNome = new Map<string, RelatorioEspecial[]>()
+    for (const r of especiaisOrfaos) {
+      const nome = String(r.cliente || '').trim() || 'Relatórios especiais'
+      const key = nome.toLowerCase()
+      if (!porNome.has(key)) porNome.set(key, [])
+      porNome.get(key)!.push(r)
+    }
+    for (const [, listaEsp] of porNome) {
+      const nomeOrfaos = String(listaEsp[0]?.cliente ?? '').trim() || 'Relatórios especiais'
+      const clienteOrfaos: Cliente = {
+        id: `bib-orfaos-esp-${nomeOrfaos.toLowerCase().replace(/\s+/g, '-').slice(0, 48)}`,
+        nomeEmpresa: nomeOrfaos,
+        equipamentos: [],
+        relatorios: {},
+      } as Cliente
+      const despesasOrfaos = listaEsp.map((r) => ({
+        relatorio: adaptRelatorioEspecialParaFechamentoShape(r) as RelatorioServico,
+        itens: fechamentosRelatorios[r.id] || [],
+      }))
+      rows.push({ cliente: clienteOrfaos, equipamentos: [], despesas: despesasOrfaos })
+      for (const r of listaEsp) idsIndexados.add(r.id)
+    }
   }
 
   rows.sort((x, y) => cmpBibliotecaLocale(x.cliente.nomeEmpresa || '', y.cliente.nomeEmpresa || ''))
@@ -8673,16 +8743,35 @@ export default function Dashboard() {
     Record<string, FechamentoIvaOpcoesRelatorio>
   >({})
   const [fechamentoGrupoPorRelatorioId, setFechamentoGrupoPorRelatorioId] = useState<Record<string, string>>({})
-  const relatoriosFechamentoBibliotecaOrdenados = useMemo(
-    () =>
-      relatoriosComFechamentoNaBibliotecaOrdenados(
-        relatoriosServico,
-        clientes,
-        fechamentosGuardadosBibliotecaIds,
-        fechamentosRelatorios
-      ),
-    [relatoriosServico, clientes, fechamentosGuardadosBibliotecaIds, fechamentosRelatorios]
-  )
+  const relatoriosFechamentoBibliotecaOrdenados = useMemo(() => {
+    const servico = relatoriosComFechamentoNaBibliotecaOrdenados(
+      relatoriosServico,
+      clientes,
+      fechamentosGuardadosBibliotecaIds,
+      fechamentosRelatorios
+    )
+    const especiais = relatoriosEspeciais
+      .filter(
+        (r) =>
+          fechamentosGuardadosBibliotecaIds.includes(r.id) &&
+          Array.isArray(fechamentosRelatorios[r.id]) &&
+          (fechamentosRelatorios[r.id]?.length || 0) > 0
+      )
+      .map((r) => adaptRelatorioEspecialParaFechamentoShape(r) as RelatorioServico)
+    return [...servico, ...especiais].sort((a, b) => {
+      const ca = clientes.find((c) => c.id === a.clienteId)?.nomeEmpresa || a.cliente || ''
+      const cb = clientes.find((c) => c.id === b.clienteId)?.nomeEmpresa || b.cliente || ''
+      const byC = cmpClienteRelatorioFinanceiro(ca, cb)
+      if (byC !== 0) return byC
+      return cmpClienteRelatorioFinanceiro(String(a.numero ?? ''), String(b.numero ?? ''))
+    })
+  }, [
+    relatoriosServico,
+    relatoriosEspeciais,
+    clientes,
+    fechamentosGuardadosBibliotecaIds,
+    fechamentosRelatorios,
+  ])
   /** Modal de equipamentos do cliente: recarregar lista quando sync/outro separador altera `nonato-clientes`. */
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -18399,6 +18488,15 @@ export default function Dashboard() {
       )
       setRelatoriosServico(relatoriosAtualizados)
       await saveData('nonato-relatorios-servico', relatoriosAtualizados)
+    } else {
+      const relEsp = relatoriosEspeciais.find((r) => r.id === relatorioId)
+      if (relEsp && !relEsp.servicoConcluido) {
+        const especiaisAtualizados = relatoriosEspeciais.map((r) =>
+          r.id === relatorioId ? { ...r, servicoConcluido: true } : r
+        )
+        setRelatoriosEspeciais(especiaisAtualizados)
+        await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, especiaisAtualizados, true, true)
+      }
     }
 
     const fluxoAtual = fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]
@@ -52136,6 +52234,13 @@ A1;Peça exemplo;10`}
               pdfLogoHtml={getLogoHtmlForReport()}
               empresaNome={(fichaCadastral.nomeEmpresa || 'Nonato Service').trim()}
               abrirEnvioDocumentoCliente={abrirEnvioDocumentoCliente}
+              onAbrirFechamentoCobranca={(relatorioId) => {
+                setFechamentoRelatorioSelecionadoId(relatorioId)
+                setFechamentoEditandoDespesasBibliotecaId(null)
+                openTab('fechamento-relatorios-servicos', getTabTitle('fechamento-relatorios-servicos'))
+              }}
+              getResumoCobrancaFase={(relatorioId) => getResumoCobrancaVisualClass(relatorioId)}
+              onClickResumoCobranca={(relatorioId) => handleClickResumoCobranca(relatorioId)}
             />
           </div>
         )
@@ -52196,7 +52301,16 @@ A1;Peça exemplo;10`}
             kmRetornoTotal
           }
         }
-        const relatorioSelecionado = fechamentoRelatorioSelecionadoId ? relatoriosServico.find(r => r.id === fechamentoRelatorioSelecionadoId) : null
+        const relatorioEspecialSelecionado = fechamentoRelatorioSelecionadoId
+          ? relatoriosEspeciais.find((r) => r.id === fechamentoRelatorioSelecionadoId) || null
+          : null
+        const relatorioSelecionadoServico = fechamentoRelatorioSelecionadoId
+          ? relatoriosServico.find((r) => r.id === fechamentoRelatorioSelecionadoId) || null
+          : null
+        const relatorioSelecionado: RelatorioServico | null = relatorioEspecialSelecionado
+          ? (adaptRelatorioEspecialParaFechamentoShape(relatorioEspecialSelecionado) as RelatorioServico)
+          : relatorioSelecionadoServico
+        const isFechamentoRelatorioEspecial = Boolean(relatorioEspecialSelecionado)
         const clienteRelatorioFechamento = relatorioSelecionado
           ? findClienteByRelatorio(clientes, relatorioSelecionado)
           : undefined
@@ -52213,7 +52327,32 @@ A1;Peça exemplo;10`}
         )
         const { fechServHt, fechServHida, fechServHret } = fechamentoServicosTpl
 
+        const enriquecerItensFechamentoBase = (base: FechamentoItem[]): FechamentoItem[] =>
+          base.map((item) => {
+            const enriched = enriquecerLinhaFechamentoComCadastro(
+              item,
+              servicos as ServicoCadastroFechamentoMin[],
+              undefined,
+              fechamentoGrupoIdAtual
+            )
+            if (item.id === 'diarias') return { ...enriched, cobrarDiaria: true }
+            return enriched
+          })
+
+        const getItensIniciaisDoRelatorioEspecial = (r: RelatorioEspecial): FechamentoItem[] => {
+          const base = buildItensFechamentoBaseRelatorioEspecial(r, {
+            horasTrabalho: (safeT as any)?.horasTrabalho,
+            kmsPercorridos: (safeT as any)?.kmsPercorridos,
+            diarias: (safeT as any)?.diarias,
+            horasViagemIda: (safeT as any)?.horasViagemIda,
+            horasViagemRetorno: (safeT as any)?.horasViagemRetorno,
+          }) as FechamentoItem[]
+          return enriquecerItensFechamentoBase(base)
+        }
+
         const getItensIniciaisDoRelatorio = (r: RelatorioServico): FechamentoItem[] => {
+          const esp = relatoriosEspeciais.find((e) => e.id === r.id)
+          if (esp) return getItensIniciaisDoRelatorioEspecial(esp)
           const t = totaisFromRelatorio(r)
           const lab = (key: string) => (safeT as any)[key] || key
           // 5 itens alinhados ao resumo: Horas Trabalho, Km's, Diárias, Viagem Ida, Viagem Retorno (sem «Horas de Viagem» total — evita duplicar ida+retorno)
@@ -52225,16 +52364,7 @@ A1;Peça exemplo;10`}
             { id: 'hida', descricao: lab('horasViagemIda') || 'Horas de Viagem de Ida', tipoCobranca: 'hora', quantidade: t.horasViagemIdaDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
             { id: 'hret', descricao: lab('horasViagemRetorno') || 'Horas de Viagem de Retorno', tipoCobranca: 'hora', quantidade: t.horasViagemRetornoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' }
           ]
-          return base.map((item) => {
-            const enriched = enriquecerLinhaFechamentoComCadastro(
-              item,
-              servicos as ServicoCadastroFechamentoMin[],
-              undefined,
-              fechamentoGrupoIdAtual
-            )
-            if (item.id === 'diarias') return { ...enriched, cobrarDiaria: true }
-            return enriched
-          })
+          return enriquecerItensFechamentoBase(base)
         }
         // Helper: obter serviço do Cadastro para um item do resumo (para preencher cod e valor unit. quando saved está vazio/desatualizado)
         const getServicoParaItemResumo = (itemId: string, savedServicoId?: string) =>
@@ -52752,17 +52882,21 @@ A1;Peça exemplo;10`}
           })
         }
         const relatoriosPendentesFechamentoLista = relatoriosServico.filter(r => !fechamentosGuardadosBibliotecaIds.includes(r.id))
+        const especiaisPendentesFechamentoLista = relatoriosEspeciais.filter(
+          (r) => !fechamentosGuardadosBibliotecaIds.includes(r.id)
+        )
         const confirmarOsFechamento = () => {
           const raw = fechamentoOsConsultaInput.trim()
           if (!raw) {
             alert((safeT as any)?.fechamentoOsInformeNumero || 'Indique o número da OS (relatório de serviço).')
             return
           }
+          const pareceEspecial = numeroPareceRelatorioEspecial(raw)
           const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
-          const encontrarRelatorioPorOsInput = (lista: RelatorioServico[]) => {
+          const encontrarRelatorioPorOsInput = (lista: RelatorioServico[], permitirDigitos: boolean) => {
             let hit = lista.find((r) => (r.numero || '').trim() === raw)
             if (!hit) hit = lista.find((r) => norm(r.numero || '') === norm(raw))
-            if (!hit) {
+            if (!hit && permitirDigitos) {
               const apenasDig = raw.replace(/\D/g, '')
               if (apenasDig.length > 0) {
                 hit = lista.find((r) => {
@@ -52773,24 +52907,60 @@ A1;Peça exemplo;10`}
             }
             return hit
           }
-          const found = encontrarRelatorioPorOsInput(relatoriosPendentesFechamentoLista)
-          if (found) {
-            setFechamentoRelatorioSelecionadoId(found.id)
+          const abrirEncontrado = (id: string) => {
+            setFechamentoRelatorioSelecionadoId(id)
             setFechamentoOsConsultaInput('')
-            return
           }
-          const foundBiblioteca = encontrarRelatorioPorOsInput(relatoriosServico)
-          if (foundBiblioteca && fechamentosGuardadosBibliotecaIds.includes(foundBiblioteca.id)) {
+          const tentarEditarBiblioteca = (id: string, numero: string, cliente: string) => {
             const msgBase =
               (safeT as any)?.fechamentoOsJaNaBiblioteca ||
               'Este fechamento já está na Biblioteca de Relatórios.'
             const msgEditar =
               (safeT as any)?.fechamentoOsJaNaBibliotecaEditar ||
-              `${msgBase}\n\n«${foundBiblioteca.numero}» — ${foundBiblioteca.cliente}\n\nDeseja editar as despesas agora?\n\nOK = Abrir fechamento para editar\nCancelar = Fechar`
+              `${msgBase}\n\n«${numero}» — ${cliente}\n\nDeseja editar as despesas agora?\n\nOK = Abrir fechamento para editar\nCancelar = Fechar`
             if (window.confirm(msgEditar)) {
-              handleEditarDespesasNaBiblioteca(foundBiblioteca.id)
+              handleEditarDespesasNaBiblioteca(id)
               setFechamentoOsConsultaInput('')
             }
+          }
+
+          if (pareceEspecial) {
+            const espPend = encontrarRelatorioEspecialPorOsInput(especiaisPendentesFechamentoLista, raw)
+            if (espPend) {
+              abrirEncontrado(espPend.id)
+              return
+            }
+            const espBib = encontrarRelatorioEspecialPorOsInput(relatoriosEspeciais, raw)
+            if (espBib && fechamentosGuardadosBibliotecaIds.includes(espBib.id)) {
+              tentarEditarBiblioteca(espBib.id, espBib.numero, espBib.cliente)
+              return
+            }
+            alert(
+              (safeT as any)?.fechamentoOsEspecialNaoEncontrado ||
+                (safeT as any)?.fechamentoOsNaoEncontrado ||
+                'Nenhum relatório especial pendente encontrado com esse número.'
+            )
+            return
+          }
+
+          const found = encontrarRelatorioPorOsInput(relatoriosPendentesFechamentoLista, true)
+          if (found) {
+            abrirEncontrado(found.id)
+            return
+          }
+          const espPend = encontrarRelatorioEspecialPorOsInput(especiaisPendentesFechamentoLista, raw)
+          if (espPend) {
+            abrirEncontrado(espPend.id)
+            return
+          }
+          const foundBiblioteca = encontrarRelatorioPorOsInput(relatoriosServico, true)
+          if (foundBiblioteca && fechamentosGuardadosBibliotecaIds.includes(foundBiblioteca.id)) {
+            tentarEditarBiblioteca(foundBiblioteca.id, foundBiblioteca.numero, foundBiblioteca.cliente)
+            return
+          }
+          const espBib = encontrarRelatorioEspecialPorOsInput(relatoriosEspeciais, raw)
+          if (espBib && fechamentosGuardadosBibliotecaIds.includes(espBib.id)) {
+            tentarEditarBiblioteca(espBib.id, espBib.numero, espBib.cliente)
             return
           }
           alert((safeT as any)?.fechamentoOsNaoEncontrado || 'Nenhum relatório pendente encontrado com esse número de OS.')
@@ -53019,7 +53189,11 @@ A1;Peça exemplo;10`}
                           confirmarOsFechamento()
                         }
                       }}
-                      placeholder={(safeT as any)?.fechamentoPlaceholderOs || 'Ex.: 12-202504'}
+                      placeholder={
+                        (safeT as any)?.fechamentoPlaceholderOsComEspecial ||
+                        (safeT as any)?.fechamentoPlaceholderOs ||
+                        'Ex.: 12-202504 ou E20260808-001'
+                      }
                       style={{
                         width: '100%',
                         padding: '12px 14px',
@@ -53036,7 +53210,7 @@ A1;Peça exemplo;10`}
                       {(safeT as any)?.fechamentoConfirmarOs || 'Confirmar'}
                     </button>
                     <p style={{ color: '#909090', fontSize: '12px', margin: '14px 0 0' }}>
-                      {relatoriosPendentesFechamentoLista.length}{' '}
+                      {relatoriosPendentesFechamentoLista.length + especiaisPendentesFechamentoLista.length}{' '}
                       {(safeT as any)?.relatoriosPendentesFechamento || 'pendentes de guardar na Biblioteca'}
                     </p>
                   </div>
@@ -53066,7 +53240,28 @@ A1;Peça exemplo;10`}
                   <h3 style={{ margin: '0 0 16px', color: 'rgba(0, 200, 83, 0.95)', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{(safeT as any)?.cabecalhoRelatorio || 'Cabeçalho do relatório'}</h3>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
                     <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.cliente || 'Cliente'}</span><br/><strong style={{ color: '#fff', fontSize: '14px' }}>{relatorioSelecionado.cliente}</strong></div>
-                    <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.numeroRelatorio || 'Nº Relatório'}</span><br/><strong style={{ color: '#00c853', fontSize: '14px' }}>{relatorioSelecionado.numero}</strong></div>
+                    <div>
+                      <span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.numeroRelatorio || 'Nº Relatório'}</span>
+                      <br />
+                      <strong style={{ color: '#00c853', fontSize: '14px' }}>{relatorioSelecionado.numero}</strong>
+                      {isFechamentoRelatorioEspecial ? (
+                        <span
+                          style={{
+                            marginLeft: 8,
+                            padding: '2px 8px',
+                            borderRadius: 6,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: '#7dd3fc',
+                            border: '1px solid rgba(125, 211, 252, 0.45)',
+                            background: 'rgba(56, 189, 248, 0.12)',
+                            verticalAlign: 'middle',
+                          }}
+                        >
+                          {(safeT as any)?.relatorioEspecialBadge || 'Especial'}
+                        </span>
+                      ) : null}
+                    </div>
                     <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.equipamento || 'Equipamento'}</span><br/><strong style={{ color: '#fff', fontSize: '14px', fontWeight: 600 }}><EquipamentosRelatorioDespesasInline relatorio={relatorioSelecionado} clientes={clientes} equipamentosArmazem={equipamentos} /></strong></div>
                     <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.data || 'Data'}</span><br/><span style={{ color: '#ccc', fontSize: '14px' }}>{relatorioSelecionado.data}</span></div>
                   </div>
@@ -67480,7 +67675,8 @@ A1;Peça exemplo;10`}
           relatoriosServico,
           fechamentosRelatorios,
           fechamentosGuardadosBibliotecaIds,
-          equipamentos
+          equipamentos,
+          relatoriosEspeciais
         )
         const totalRelatorios = relatoriosPorCliente.reduce(
           (s, row) => s + row.equipamentos.reduce((se, eq) => se + eq.relatorios.length, 0),
@@ -67524,7 +67720,8 @@ A1;Peça exemplo;10`}
           relatoriosServico,
           clientes,
           fechamentosGuardadosBibliotecaIds,
-          fechamentosRelatorios
+          fechamentosRelatorios,
+          relatoriosEspeciais
         )
         const relatoriosFechadosPorCliente = groupRelatoriosFechadosPorCliente(relatoriosFechadosLista)
         const txBibHero = safeT as Record<string, string>
