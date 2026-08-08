@@ -66,6 +66,7 @@ const PDF_ACCENT: Record<PdfLogoSituationId, string> = {
   protocolos: 'violet',
   checklist: 'teal',
   preChecklist: 'rose',
+  checklistBasico: 'lime',
 }
 
 function tr(safeT: SafeT, key: string, fallback: string): string {

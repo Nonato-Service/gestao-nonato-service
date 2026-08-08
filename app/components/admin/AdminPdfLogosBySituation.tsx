@@ -196,9 +196,9 @@ export function AdminPdfLogosBySituation({
   setPdfLogosModoUnificado,
   logosRelatorios,
   logoRelatorioSelecionadoId,
-  logoFechamentoSelecionadoId,
-  logoOrcamentoSelecionadoId,
-  logoProtocoloServicoSelecionadoId,
+  logoFechamentoSelecionadoId: _logoFechamentoSelecionadoId,
+  logoOrcamentoSelecionadoId: _logoOrcamentoSelecionadoId,
+  logoProtocoloServicoSelecionadoId: _logoProtocoloServicoSelecionadoId,
   incluirLogoNosRelatorios,
   incluirLogoFechamentosDespesas,
   setIncluirLogoNosRelatorios,
@@ -219,13 +219,6 @@ export function AdminPdfLogosBySituation({
 }: AdminPdfLogosBySituationProps) {
   const compact = variant === 'compact'
   const tr = safeT
-
-  const selectedBySituation: Record<PdfLogoSituationId, string> = {
-    relatorios: logoRelatorioSelecionadoId,
-    fechamentos: logoFechamentoSelecionadoId,
-    orcamentos: logoOrcamentoSelecionadoId,
-    protocolos: logoProtocoloServicoSelecionadoId,
-  }
 
   const unifiedSelectedId = logoRelatorioSelecionadoId
 
@@ -331,7 +324,7 @@ export function AdminPdfLogosBySituation({
       ) : (
         <div className="admin-logo-situacao-grid">
           {PDF_LOGO_SITUATIONS.map((sit) => {
-            const selectedId = selectedBySituation[sit.id]
+            const selectedId = getSelectedLogoIdForSituation(sit.id)
             const title =
               (tr as Record<string, string | undefined>)[sit.titleKey] || sit.titleFallback
             const description =

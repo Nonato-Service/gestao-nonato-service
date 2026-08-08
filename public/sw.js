@@ -1,8 +1,9 @@
 // Service Worker - Gestão Técnica Nonato Service (PWA offline)
 // CACHE_NAME sincronizado a partir de pwa-version.json (npm run pwa:sync / prebuild)
-const CACHE_NAME = 'nonato-pwa-v266'
+const CACHE_NAME = 'nonato-pwa-v267'
 
 const PRECACHE_ASSETS = [
+  '/',
   '/icon.svg',
   '/manifest.json',
   '/icon-192.png',
@@ -13,13 +14,20 @@ const PRECACHE_ASSETS = [
   '/brand/nonato-watermark-gears.svg',
 ]
 
+/** Página offline neutra (PT + EN) — o resto da UI já está nos 6 idiomas na app. */
 const OFFLINE_HTML =
-  '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nonato Service</title></head><body style="background:#000;color:#0f0;font-family:sans-serif;padding:24px;text-align:center;line-height:1.5"><h1 style="margin:0 0 12px">Sem ligação</h1><p style="color:#ccc;margin:0 0 16px">Se já abriu o sistema com internet neste aparelho, volte a abrir a app — os dados locais devem carregar.</p><p style="color:#888;font-size:14px;margin:0">Na primeira utilização é necessário internet para preparar o modo offline.</p></body></html>'
+  '<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nonato Service</title></head><body style="margin:0;background:#000;color:#00ff00;font-family:Segoe UI,system-ui,sans-serif;padding:28px 20px;text-align:center;line-height:1.55;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="max-width:420px"><div style="font-size:42px;margin-bottom:12px" aria-hidden="true">⚙</div><h1 style="margin:0 0 10px;font-size:22px;letter-spacing:0.04em">NONATO SERVICE</h1><p style="color:#fff;margin:0 0 8px;font-size:16px">Sem ligação / Offline</p><p style="color:#bbb;margin:0 0 18px;font-size:14px">Se já abriu o sistema com internet neste aparelho, volte a abrir a app — os dados locais devem carregar.<br><span style="color:#888">If you already opened the app online on this device, reopen it — local data should load.</span></p><p style="color:#666;font-size:12px;margin:0">1.ª utilização / First use: precisa de internet para preparar o modo offline.</p></div></body></html>'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS).catch(() => {})
+      return Promise.all(
+        PRECACHE_ASSETS.map((url) =>
+          cache.add(url).catch(() => {
+            /* recurso opcional — não falhar o install todo */
+          })
+        )
+      )
     })
   )
 })

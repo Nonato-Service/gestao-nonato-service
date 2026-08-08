@@ -41730,7 +41730,7 @@ html body .relatorio-especial-root .relatorio-especial-resumo-equip__tabela th {
 
 @media (max-width: 720px) {
   html body .relatorio-especial-root .relatorio-especial-hora-eq-linha {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -41765,9 +41765,22 @@ html body .relatorio-especial-root .relatorio-especial-card {
 
 html body .relatorio-especial-root .relatorio-especial-card__numero {
   display: block;
-  font-size: 16px;
-  color: #00c853;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #00ff00;
+  text-shadow: 0 0 12px rgba(0, 255, 0, 0.25);
   margin-bottom: 4px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-card {
+  box-shadow: 0 0 0 1px rgba(0, 255, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+html body .relatorio-especial-root .relatorio-especial-card:hover {
+  border-color: rgba(0, 255, 0, 0.45);
+  box-shadow: 0 0 0 1px rgba(0, 255, 0, 0.18), 0 10px 28px rgba(0, 0, 0, 0.4);
 }
 
 html body .relatorio-especial-root .relatorio-especial-card__cobranca-bar,

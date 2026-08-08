@@ -27,7 +27,7 @@
     "pwa:bump": "node scripts/bump-pwa-version.mjs"
   },
   "dependencies": {
-    "adm-zip": "^0.5.16",
+    "adm-zip": "^0.6.0",
     "archiver": "^7.0.1",
     "jszip": "^3.10.1",
     "next": "^14.0.0",
@@ -42,6 +42,8 @@
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
     "google-translate-api-x": "^10.7.3",
     "playwright": "^1.49.0",
     "typescript": "^5.0.0"

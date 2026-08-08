@@ -91,6 +91,18 @@ function classNameResumoCobrancaEspecial(fase: 'laranja' | 'azul' | 'verde' | 'b
   return 'relatorio-resumo-cobranca-wrap--laranja'
 }
 
+function localeUiFromLang(lang: string): string {
+  const map: Record<string, string> = {
+    'pt-BR': 'pt-BR',
+    es: 'es',
+    fr: 'fr',
+    it: 'it',
+    de: 'de',
+    en: 'en',
+  }
+  return map[lang] || 'pt-BR'
+}
+
 function labelResumoCobrancaEspecial(
   fase: 'laranja' | 'azul' | 'verde' | 'biblioteca',
   t: Record<string, string | undefined>
@@ -118,6 +130,7 @@ export default function RelatorioEspecialHub({
   onClickResumoCobranca,
 }: RelatorioEspecialHubProps) {
   const t = labels
+  const uiLocale = localeUiFromLang(selectedLanguage)
   const pdfOpts = useMemo(
     () => ({ labels: t, logoHtml: pdfLogoHtml, empresaNome }),
     [t, pdfLogoHtml, empresaNome]
@@ -644,7 +657,13 @@ export default function RelatorioEspecialHub({
                 <span style={{ flex: 1 }}>{labelEquipamentoCurto(eq, i)}</span>
                 <strong>{total}</strong>
                 {fechado ? (
-                  <span style={{ color: '#00c853', fontSize: 12 }}>✓ {new Date(fechado.fechadoEm).toLocaleDateString('pt-PT')}</span>
+                  <span style={{ color: '#00ff00', fontSize: 12 }} aria-label={t.relatorioEspecialFechadoEm || 'Fechado'}>
+                    ✓{' '}
+                    {(t.relatorioEspecialFechadoEm || 'Fechado em {data}').replace(
+                      '{data}',
+                      new Date(fechado.fechadoEm).toLocaleDateString(uiLocale)
+                    )}
+                  </span>
                 ) : (
                   <button type="button" className="btn-primary" onClick={() => fecharPorEquipamento(eq.uid)}>
                     {t.relatorioEspecialFecharEquipamento || 'Fechar equipamento'}
@@ -666,7 +685,13 @@ export default function RelatorioEspecialHub({
           <h3 style={{ marginTop: 0 }}>{t.relatorioEspecialFechamentoTotal || 'Total geral'}</h3>
           <p style={{ fontSize: 24, fontWeight: 700, color: '#00c853' }}>{formComTotais.horasTrabalho}</p>
           {form.fechamento?.totalGeral ? (
-            <p style={{ color: '#00c853' }}>✓ Fechado em {new Date(form.fechamento.totalGeral.fechadoEm).toLocaleString('pt-PT')}</p>
+            <p style={{ color: '#00ff00' }}>
+              ✓{' '}
+              {(t.relatorioEspecialFechadoEm || 'Fechado em {data}').replace(
+                '{data}',
+                new Date(form.fechamento.totalGeral.fechadoEm).toLocaleString(uiLocale)
+              )}
+            </p>
           ) : (
             <button type="button" className="btn-primary" onClick={fecharTotalGeral}>
               {t.relatorioEspecialFecharTotal || 'Fechar total geral'}
@@ -917,7 +942,7 @@ export default function RelatorioEspecialHub({
               const resumoLinha = [
                 eq.equipamentoId || '',
                 eq.maquinaModelo || '',
-                eq.numeroMaquina ? `S/N ${eq.numeroMaquina}` : '',
+                eq.numeroMaquina ? `${t.numeroSerie || 'S/N'} ${eq.numeroMaquina}` : '',
               ]
                 .filter(Boolean)
                 .join(' · ')
@@ -965,7 +990,11 @@ export default function RelatorioEspecialHub({
                     <span className="relatorio-equipamento-card__label relatorio-equipamento-card__label--blue">
                       {t.relatorioEquipamentoOrigem || 'Origem do equipamento'}
                     </span>
-                    <div className="relatorio-equipamento-card__origem-radios" role="radiogroup">
+                    <div
+                      className="relatorio-equipamento-card__origem-radios"
+                      role="radiogroup"
+                      aria-label={t.relatorioEquipamentoOrigem || 'Origem do equipamento'}
+                    >
                       <label className="relatorio-equipamento-card__origem-radio">
                         <input
                           type="radio"
@@ -1141,7 +1170,7 @@ export default function RelatorioEspecialHub({
                     />
                   </div>
                   <div>
-                    <label className="relatorio-equipamento-card__label">S/N</label>
+                    <label className="relatorio-equipamento-card__label">{t.numeroSerie || 'S/N'}</label>
                     <input
                       type="text"
                       value={eq.numeroMaquina}
