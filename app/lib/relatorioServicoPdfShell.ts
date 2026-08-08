@@ -79,8 +79,8 @@ export function buildRelatorioServicoPdfToolbarHtml(labels?: {
   const msgType = escapePdfHtml(labels?.envioMessageType || 'documentoEnvio')
   const envioBtns =
     labels?.showEnvio
-      ? `<button type="button" class="rs-pdf-toolbar__btn rs-pdf-toolbar__btn--email" onclick="if(window.opener){window.opener.postMessage({type:'${msgType}',channel:'email'},'*')}">📧 ${email}</button>
-    <button type="button" class="rs-pdf-toolbar__btn rs-pdf-toolbar__btn--wa" onclick="if(window.opener){window.opener.postMessage({type:'${msgType}',channel:'whatsapp'},'*')}">💬 ${whats}</button>`
+      ? `<button type="button" class="rs-pdf-toolbar__btn rs-pdf-toolbar__btn--email" onclick="if(window.opener){window.opener.postMessage({type:'${msgType}',channel:'email'},window.location.origin)}">📧 ${email}</button>
+    <button type="button" class="rs-pdf-toolbar__btn rs-pdf-toolbar__btn--wa" onclick="if(window.opener){window.opener.postMessage({type:'${msgType}',channel:'whatsapp'},window.location.origin)}">💬 ${whats}</button>`
       : ''
   return `<div class="rs-pdf-toolbar no-print">
     <p class="rs-pdf-toolbar__title">${titulo}</p>
@@ -96,6 +96,8 @@ export function wrapRelatorioServicoPrintDocument(options: {
   baseCss: string
   bodyHtml: string
   pdfModelo?: string
+  /** Idioma do documento HTML (ex.: pt-BR, en). */
+  htmlLang?: string
   showToolbar?: boolean
   toolbarLabels?: {
     titulo?: string
@@ -109,12 +111,13 @@ export function wrapRelatorioServicoPrintDocument(options: {
 }): string {
   const model = normalizePdfModelo(options.pdfModelo)
   const themeCss = relatorioPdfThemeCss(model)
+  const lang = String(options.htmlLang || 'pt-BR').trim() || 'pt-BR'
   const toolbar =
     options.showToolbar !== false
       ? buildRelatorioServicoPdfToolbarHtml(options.toolbarLabels)
       : ''
   return `<!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="${escapePdfHtml(lang)}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />

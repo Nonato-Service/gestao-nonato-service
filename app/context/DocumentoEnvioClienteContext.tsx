@@ -110,24 +110,47 @@ export function useDocumentoEnvioClienteOptional(): AbrirEnvioFn | null {
   return useContext(DocumentoEnvioCtx)
 }
 
-export function buildTextoEnvioRelatorioServico(rel: {
-  numero?: string
-  cliente?: string
-  data?: string
-  maquinaModelo?: string
-  numeroMaquina?: string
-}) {
-  return `Prezado(a),\n\nSegue em anexo o relatório de serviço n.º ${rel.numero || '—'}.\n\nCliente: ${rel.cliente || '—'}\nData: ${rel.data || '—'}\nEquipamento: ${rel.maquinaModelo || '—'}${rel.numeroMaquina ? ` (${rel.numeroMaquina})` : ''}\n\nAtenciosamente,\nNonato Service`
+type EnvioTextoLabels = Record<string, string | undefined> | null | undefined
+
+function Lenvio(labels: EnvioTextoLabels, key: string, fallback: string): string {
+  const v = labels?.[key]
+  return v != null && String(v).trim() !== '' ? String(v) : fallback
 }
 
-export function buildTextoEnvioRelatorioEspecial(rel: {
-  numero?: string
-  cliente?: string
-  data?: string
-  horasTrabalho?: string
-  kmsPercorridos?: string
-  equipamentos?: Array<{ equipamentoId?: string; maquinaModelo?: string; numeroMaquina?: string }>
-}) {
+export function buildTextoEnvioRelatorioServico(
+  rel: {
+    numero?: string
+    cliente?: string
+    data?: string
+    maquinaModelo?: string
+    numeroMaquina?: string
+  },
+  labels?: EnvioTextoLabels
+) {
+  const prezado = Lenvio(labels, 'envioDocPrezado', 'Prezado(a),')
+  const anexo = Lenvio(
+    labels,
+    'envioAnexoRelatorioServicoNumero',
+    'Segue em anexo o relatório de serviço n.º {numero}.'
+  ).replace('{numero}', rel.numero || '—')
+  const cliente = Lenvio(labels, 'cliente', 'Cliente')
+  const data = Lenvio(labels, 'data', 'Data')
+  const equipamento = Lenvio(labels, 'equipamento', 'Equipamento')
+  const atenciosamente = Lenvio(labels, 'envioDocAtenciosamente', 'Atenciosamente,')
+  return `${prezado}\n\n${anexo}\n\n${cliente}: ${rel.cliente || '—'}\n${data}: ${rel.data || '—'}\n${equipamento}: ${rel.maquinaModelo || '—'}${rel.numeroMaquina ? ` (${rel.numeroMaquina})` : ''}\n\n${atenciosamente}\nNonato Service`
+}
+
+export function buildTextoEnvioRelatorioEspecial(
+  rel: {
+    numero?: string
+    cliente?: string
+    data?: string
+    horasTrabalho?: string
+    kmsPercorridos?: string
+    equipamentos?: Array<{ equipamentoId?: string; maquinaModelo?: string; numeroMaquina?: string }>
+  },
+  labels?: EnvioTextoLabels
+) {
   const linhasEquip = (rel.equipamentos || [])
     .map((e) => {
       const partes = [e.equipamentoId, e.maquinaModelo, e.numeroMaquina].filter(Boolean)
@@ -135,15 +158,43 @@ export function buildTextoEnvioRelatorioEspecial(rel: {
     })
     .filter(Boolean)
     .join('\n')
-  return `Prezado(a),\n\nSegue em anexo o relatório de serviço n.º ${rel.numero || '—'}.\n\nCliente: ${rel.cliente || '—'}\nData: ${rel.data || '—'}${
-    linhasEquip ? `\nEquipamentos:\n${linhasEquip}` : ''
-  }\nHoras de trabalho: ${rel.horasTrabalho || '—'}\nKM: ${rel.kmsPercorridos || '—'}\n\nAtenciosamente,\nNonato Service`
+  const prezado = Lenvio(labels, 'envioDocPrezado', 'Prezado(a),')
+  const anexo = Lenvio(
+    labels,
+    'envioAnexoRelatorioServicoNumero',
+    'Segue em anexo o relatório de serviço n.º {numero}.'
+  ).replace('{numero}', rel.numero || '—')
+  const cliente = Lenvio(labels, 'cliente', 'Cliente')
+  const data = Lenvio(labels, 'data', 'Data')
+  const equipamentosTitulo = Lenvio(labels, 'equipamentosTitulo', 'Equipamentos')
+  const horas = Lenvio(labels, 'horasTrabalho', 'Horas de Trabalho')
+  const km = Lenvio(labels, 'km', 'KM')
+  const atenciosamente = Lenvio(labels, 'envioDocAtenciosamente', 'Atenciosamente,')
+  return `${prezado}\n\n${anexo}\n\n${cliente}: ${rel.cliente || '—'}\n${data}: ${rel.data || '—'}${
+    linhasEquip ? `\n${equipamentosTitulo}:\n${linhasEquip}` : ''
+  }\n${horas}: ${rel.horasTrabalho || '—'}\n${km}: ${rel.kmsPercorridos || '—'}\n\n${atenciosamente}\nNonato Service`
 }
 
-export function buildTextoEnvioOrcamento(orc: { numeroOrcamento?: string; clienteNome?: string }) {
-  return `Prezado(a),\n\nSegue em anexo o orçamento ${orc.numeroOrcamento || '—'}${orc.clienteNome ? ` — ${orc.clienteNome}` : ''}.\n\nAtenciosamente,\nNonato Service`
+export function buildTextoEnvioOrcamento(
+  orc: { numeroOrcamento?: string; clienteNome?: string },
+  labels?: EnvioTextoLabels
+) {
+  const prezado = Lenvio(labels, 'envioDocPrezado', 'Prezado(a),')
+  const anexo = Lenvio(labels, 'envioAnexoOrcamento', 'Segue em anexo o orçamento {numero}.').replace(
+    '{numero}',
+    orc.numeroOrcamento || '—'
+  )
+  const atenciosamente = Lenvio(labels, 'envioDocAtenciosamente', 'Atenciosamente,')
+  const clienteParte = orc.clienteNome ? ` — ${orc.clienteNome}` : ''
+  return `${prezado}\n\n${anexo}${clienteParte}\n\n${atenciosamente}\nNonato Service`
 }
 
-export function buildTextoEnvioGenerico(titulo: string, detalhe?: string) {
-  return `Prezado(a),\n\nSegue em anexo: ${titulo}${detalhe ? `\n\n${detalhe}` : ''}\n\nAtenciosamente,\nNonato Service`
+export function buildTextoEnvioGenerico(titulo: string, detalhe?: string, labels?: EnvioTextoLabels) {
+  const prezado = Lenvio(labels, 'envioDocPrezado', 'Prezado(a),')
+  const anexo = Lenvio(labels, 'envioAnexoGenerico', 'Segue em anexo: {titulo}').replace(
+    '{titulo}',
+    titulo
+  )
+  const atenciosamente = Lenvio(labels, 'envioDocAtenciosamente', 'Atenciosamente,')
+  return `${prezado}\n\n${anexo}${detalhe ? `\n\n${detalhe}` : ''}\n\n${atenciosamente}\nNonato Service`
 }

@@ -8,6 +8,8 @@ import {
 
   classNameFechamentoFluxoBar,
 
+  fechamentoFluxoEhSemFatura,
+
   getFechamentoFluxoFase,
 
   type FechamentoFluxoFase,
@@ -94,6 +96,8 @@ export function FechamentoFluxoPagamentoBar({
 
   const fase = getFechamentoFluxoFase(fluxo)
 
+  const modoSemFatura = fechamentoFluxoEhSemFatura(fluxo)
+
   const inputRef = useRef<HTMLInputElement>(null)
 
   const aEditarLocalmente = useRef(false)
@@ -154,13 +158,21 @@ export function FechamentoFluxoPagamentoBar({
 
 
 
-  const mostrarFormularioCompactoSemFatura = compact && fase === 'sem_numero_fatura'
+  const mostrarFormularioCompactoSemFatura =
 
-  const mostrarCtaSemFatura = fase === 'sem_numero_fatura' && !editandoFatura && !compact
+    !modoSemFatura && compact && fase === 'sem_numero_fatura'
+
+  const mostrarCtaSemFatura =
+
+    !modoSemFatura && fase === 'sem_numero_fatura' && !editandoFatura && !compact
 
   const mostrarLinhaFatura =
 
-    (fase === 'sem_numero_fatura' && (editandoFatura || compact)) || fase === 'aguardar_pagamento'
+    !modoSemFatura &&
+
+    ((fase === 'sem_numero_fatura' && (editandoFatura || compact)) ||
+
+      (fase === 'aguardar_pagamento' && String(numeroFaturaAtual ?? '').trim() !== ''))
 
 
 

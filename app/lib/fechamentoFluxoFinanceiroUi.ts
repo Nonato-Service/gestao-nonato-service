@@ -21,9 +21,15 @@ export function getFechamentoFluxoFase(fr: unknown): FechamentoFluxoFase {
   if (!frObj) return 'sem_numero_fatura'
   if (frObj.pagamento === 'pago' || frObj.situacaoFatura === 'paga') return 'pago'
   if (frObj.pagamento === 'devedor' || frObj.situacaoFatura === 'nao_paga') return 'nao_pago'
+  /** Sem fatura: não pedir nº — ir direto a Pago / Não pago. */
+  if (frObj.modo === 'sem_fatura') return 'aguardar_pagamento'
   const num = String(frObj.numeroFatura ?? '').trim()
   if (!num) return 'sem_numero_fatura'
   return 'aguardar_pagamento'
+}
+
+export function fechamentoFluxoEhSemFatura(fr: unknown): boolean {
+  return parseFluxoEntry(fr)?.modo === 'sem_fatura'
 }
 
 export function fechamentoFluxoFasePisca(fase: FechamentoFluxoFase): boolean {

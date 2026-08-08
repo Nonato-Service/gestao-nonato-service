@@ -29,6 +29,8 @@ export type RelatorioEspecialPdfOptions = {
   labels?: RelatorioEspecialPdfLabels
   logoHtml?: string
   empresaNome?: string
+  /** Idioma do HTML (ex.: pt-BR, en). */
+  lang?: string
 }
 
 function L(labels: RelatorioEspecialPdfLabels | undefined, key: string, fallback: string): string {
@@ -727,7 +729,8 @@ export function imprimirRelatorioEspecialPdf(
   labelsOrOptions?: RelatorioEspecialPdfLabels | RelatorioEspecialPdfOptions
 ): void {
   const options: RelatorioEspecialPdfOptions =
-    labelsOrOptions && ('logoHtml' in labelsOrOptions || 'empresaNome' in labelsOrOptions)
+    labelsOrOptions &&
+    ('logoHtml' in labelsOrOptions || 'empresaNome' in labelsOrOptions || 'lang' in labelsOrOptions)
       ? labelsOrOptions
       : { labels: labelsOrOptions as RelatorioEspecialPdfLabels | undefined }
 
@@ -915,9 +918,11 @@ export function imprimirRelatorioEspecialPdf(
 
   const html = wrapRelatorioServicoPrintDocument({
     title: `${pdfDocTitle} ${rel.numero}`,
-    bodyClass: 'rs-pdf rs-pdf--classic rs-pdf--especial',
+    bodyClass: 'rs-pdf rs-pdf--service rs-pdf--especial',
     baseCss: RELATORIO_SERVICO_PDF_PRINT_CSS,
     bodyHtml: body,
+    pdfModelo: 'service',
+    htmlLang: options.lang || 'pt-BR',
     showToolbar: true,
     toolbarLabels: {
       titulo: L(labels, 'relatorioEspecialPdfToolbarTitulo', 'Relatório de Serviço — PDF'),

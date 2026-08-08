@@ -12218,22 +12218,37 @@ export default function Dashboard() {
           }
           if (v && typeof v === 'object' && !Array.isArray(v)) {
             const o = v as any
-            const etapa = o.etapa
-            const modo = o.modo
-            const pagamento = o.pagamento
-            if ((etapa === 'enviado_fatura' || etapa === 'controlo_pagamento') &&
-              (modo === 'com_fatura' || modo === 'sem_fatura') &&
-              (pagamento === 'pendente' || pagamento === 'pago' || pagamento === 'devedor')) {
-              const situ = o.situacaoFatura
-              const situOk =
-                situ === 'emitida' || situ === 'no_prazo' || situ === 'paga' || situ === 'nao_paga' ? situ : undefined
+            const etapa =
+              o.etapa === 'enviado_fatura' || o.etapa === 'controlo_pagamento'
+                ? o.etapa
+                : 'controlo_pagamento'
+            const modo = o.modo === 'sem_fatura' ? 'sem_fatura' : 'com_fatura'
+            const pagamento =
+              o.pagamento === 'pago' || o.pagamento === 'devedor' || o.pagamento === 'pendente'
+                ? o.pagamento
+                : 'pendente'
+            const situ = o.situacaoFatura
+            const situOk =
+              situ === 'emitida' || situ === 'no_prazo' || situ === 'paga' || situ === 'nao_paga' ? situ : undefined
+            const numFat =
+              typeof o.numeroFatura === 'string' && o.numeroFatura.trim() ? o.numeroFatura.trim() : ''
+            /** Aceitar entradas com nº fatura, modo sem_fatura ou pagamento — não descartar só por falta de `modo`. */
+            const temSinal =
+              Boolean(numFat) ||
+              modo === 'sem_fatura' ||
+              pagamento === 'pago' ||
+              pagamento === 'devedor' ||
+              Boolean(situOk) ||
+              o.etapa === 'enviado_fatura' ||
+              o.etapa === 'controlo_pagamento'
+            if (temSinal) {
               const entryLoad: FechamentoFluxoFinanceiroEntry = {
                 etapa,
                 modo,
                 pagamento,
                 updatedAt: typeof o.updatedAt === 'string' ? o.updatedAt : new Date().toISOString(),
               }
-              if (typeof o.numeroFatura === 'string' && o.numeroFatura.trim()) entryLoad.numeroFatura = o.numeroFatura.trim()
+              if (numFat) entryLoad.numeroFatura = numFat
               if (situOk) entryLoad.situacaoFatura = situOk
               if (typeof o.dataVencimentoFatura === 'string' && o.dataVencimentoFatura.trim()) {
                 entryLoad.dataVencimentoFatura = o.dataVencimentoFatura.trim()
@@ -19319,11 +19334,22 @@ export default function Dashboard() {
   const guardarNumeroFaturaFechamento = (relatorioId: string, numero: string) => {
     const n = String(numero ?? '').trim()
     if (!n) return
+    const curr = fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]
+    const currObj =
+      curr && typeof curr === 'object' && !Array.isArray(curr)
+        ? (curr as FechamentoFluxoFinanceiroEntry)
+        : null
     setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', {
-      modo: 'com_fatura',
-      pagamento: 'pendente',
+      modo: currObj?.modo === 'sem_fatura' ? 'sem_fatura' : 'com_fatura',
+      pagamento:
+        currObj?.pagamento === 'pago' || currObj?.pagamento === 'devedor'
+          ? currObj.pagamento
+          : 'pendente',
       numeroFatura: n,
-      situacaoFatura: 'emitida',
+      situacaoFatura:
+        currObj?.situacaoFatura === 'paga' || currObj?.situacaoFatura === 'nao_paga'
+          ? currObj.situacaoFatura
+          : 'emitida',
     })
   }
 
@@ -20721,13 +20747,7 @@ export default function Dashboard() {
 
   const isIncluirLogoRelatoriosAtivo = (): boolean => {
     if (incluirLogoNosRelatorios === true) return true
-    if (incluirLogoNosRelatorios === false) {
-      try {
-        return localStorage.getItem('nonato-relatorios-incluir-logo') === 'true'
-      } catch {
-        return false
-      }
-    }
+    if (incluirLogoNosRelatorios === false) return false
     try {
       const stored = localStorage.getItem('nonato-relatorios-incluir-logo')
       if (stored === 'false') return false
@@ -20738,13 +20758,7 @@ export default function Dashboard() {
 
   const isIncluirLogoFechamentosAtivo = (): boolean => {
     if (incluirLogoFechamentosDespesas === true) return true
-    if (incluirLogoFechamentosDespesas === false) {
-      try {
-        return localStorage.getItem('nonato-fechamentos-incluir-logo') === 'true'
-      } catch {
-        return false
-      }
-    }
+    if (incluirLogoFechamentosDespesas === false) return false
     try {
       const stored = localStorage.getItem('nonato-fechamentos-incluir-logo')
       if (stored === 'false') return false

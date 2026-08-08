@@ -57,5 +57,6 @@ export function pecasBibliotecaMeetsServerTotal(
   serverTotal: number | null | undefined
 ): boolean {
   if (!serverTotal || serverTotal <= 0) return count >= 50
-  return count === serverTotal
+  /** >= : merge local pode ter mais peças que o total do servidor. */
+  return count >= serverTotal
 }

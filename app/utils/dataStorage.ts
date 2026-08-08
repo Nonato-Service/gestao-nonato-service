@@ -915,12 +915,20 @@ async function _doSaveToServer(
     })
     if (response.ok) {
       serverOffline = false
-      if (key === PECAS_BIBLIOTECA_KEY && Array.isArray(value) && value.length > 0) {
-        setCachedPecasBibliotecaServerTotal(value.length)
-      }
+      /** Não usar value.length local aqui — merge pode ter mais peças que o total real do servidor. */
       try {
         const json = await response.json()
         applyRevisionFromSaveResponse(json)
+        if (
+          key === PECAS_BIBLIOTECA_KEY &&
+          json &&
+          typeof json === 'object' &&
+          typeof (json as { total?: unknown }).total === 'number' &&
+          Number.isFinite((json as { total: number }).total) &&
+          (json as { total: number }).total > 0
+        ) {
+          setCachedPecasBibliotecaServerTotal((json as { total: number }).total)
+        }
       } catch {
         /* resposta sem JSON */
       }
@@ -1564,7 +1572,7 @@ export async function forceReporPecasBibliotecaFromServer(
         const withImages = await hydratePecasBibliotecaImagensFromServer(merged, onProgress)
         if (withImages.length > 0) {
           await savePecasBibliotecaLocally(withImages)
-          setCachedPecasBibliotecaServerTotal(withImages.length)
+          setCachedPecasBibliotecaServerTotal(fromServer.length)
           console.info(`[Nonato] Fotos da biblioteca hidratadas: ${withImages.filter((p) => p && typeof p === 'object' && (p as { imagem?: string }).imagem).length} peça(s) com imagem.`)
         }
       } catch (e) {
@@ -2245,6 +2253,7 @@ export async function collectAllLocalNonatoDataForSync(): Promise<Record<string,
   }
 
   keys.delete('nonato-fechamentos-relatorios')
+  keys.delete('nonato-fechamentos-fluxo-financeiro')
   try {
     const fechSnap = await readLocalValueForLoad('nonato-fechamentos-relatorios', true)
     if (
@@ -2254,6 +2263,19 @@ export async function collectAllLocalNonatoDataForSync(): Promise<Record<string,
       Object.keys(fechSnap.parsed as object).length > 0
     ) {
       out['nonato-fechamentos-relatorios'] = fechSnap.parsed
+    }
+  } catch {
+    /* ignorar */
+  }
+  try {
+    const fluxoSnap = await readLocalValueForLoad('nonato-fechamentos-fluxo-financeiro', true)
+    if (
+      fluxoSnap.parsed &&
+      typeof fluxoSnap.parsed === 'object' &&
+      !Array.isArray(fluxoSnap.parsed) &&
+      Object.keys(fluxoSnap.parsed as object).length > 0
+    ) {
+      out['nonato-fechamentos-fluxo-financeiro'] = fluxoSnap.parsed
     }
   } catch {
     /* ignorar */
@@ -2396,12 +2418,7 @@ async function writeLocalFromServerPull(key: string, value: unknown): Promise<vo
       )
       return
     }
-    if (localCount > value.length && localCount >= 15) {
-      console.warn(
-        `[Nonato] Sync ignorada: «${key}» no servidor (${value.length}) é menor que local (${localCount}).`
-      )
-      return
-    }
+    /** Mesmo com local maior: fundir — peças novas do servidor não podem ficar de fora. */
     let localParsed: unknown = snap.parsed
     const merged = mergePecasBibliotecaArrays(value, localParsed)
     await savePecasBibliotecaLocally(merged as unknown[])
@@ -2887,7 +2904,12 @@ export async function saveData(
         console.warn(`[saveData] espelho IndexedDB falhou para ${key}`, idbErr)
       }
     }
-    if (key === 'nonato-fechamentos-relatorios' && value && typeof value === 'object' && !Array.isArray(value)) {
+    if (
+      (key === 'nonato-fechamentos-relatorios' || key === 'nonato-fechamentos-fluxo-financeiro') &&
+      value &&
+      typeof value === 'object' &&
+      !Array.isArray(value)
+    ) {
       try {
         await saveKv(key, value)
       } catch (idbErr) {

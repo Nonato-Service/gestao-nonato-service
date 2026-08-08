@@ -400,12 +400,7 @@ export async function safeMergeOfflineSnapshot(data: Record<string, any>): Promi
   let payload: Record<string, unknown> = existing ? { ...existing, ...data } : { ...data }
   const incomingPecas = data[PECAS_BIBLIOTECA_KEY]
   const existingPecas = existing?.[PECAS_BIBLIOTECA_KEY]
-  if (
-    Array.isArray(incomingPecas) &&
-    Array.isArray(existingPecas) &&
-    incomingPecas.length < existingPecas.length &&
-    existingPecas.length >= 15
-  ) {
+  if (Array.isArray(incomingPecas) && Array.isArray(existingPecas)) {
     payload[PECAS_BIBLIOTECA_KEY] = mergePecasBibliotecaArrays(incomingPecas, existingPecas)
   }
 

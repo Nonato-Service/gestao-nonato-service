@@ -5317,7 +5317,13 @@ body {
   }
 }
 
-/* Banner PWA — botões com contraste legível (não herdar regra global branca) */
+/* Banner PWA — safe-area (notch) + botões com contraste legível */
+html body .pwa-update-banner {
+  padding-top: calc(14px + env(safe-area-inset-top, 0px)) !important;
+  padding-left: calc(20px + env(safe-area-inset-left, 0px)) !important;
+  padding-right: calc(20px + env(safe-area-inset-right, 0px)) !important;
+}
+
 html body .pwa-update-banner button.pwa-update-banner__btn {
   padding: 10px 20px;
   border-radius: 8px;

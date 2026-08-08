@@ -47,5 +47,8 @@
     "google-translate-api-x": "^10.7.3",
     "playwright": "^1.49.0",
     "typescript": "^5.0.0"
+  },
+  "overrides": {
+    "glob": "^10.4.6"
   }
 }

@@ -132,22 +132,25 @@ export default function RelatorioEspecialHub({
   const t = labels
   const uiLocale = localeUiFromLang(selectedLanguage)
   const pdfOpts = useMemo(
-    () => ({ labels: t, logoHtml: pdfLogoHtml, empresaNome }),
-    [t, pdfLogoHtml, empresaNome]
+    () => ({ labels: t, logoHtml: pdfLogoHtml, empresaNome, lang: selectedLanguage }),
+    [t, pdfLogoHtml, empresaNome, selectedLanguage]
   )
   const ultimoRelPdfRef = useRef<RelatorioEspecial | null>(null)
   const envioRelatorio = useCallback(
     (rel: RelatorioEspecial, onOpenPdf: () => void) => ({
       title: t.envioRelatorioTitulo || 'Enviar relatório ao cliente',
       subject: `${t.relatorioEspecialPdfDocTitle || t.relatorioServicoTitle || 'Relatório de Serviço'} ${rel.numero || '—'} - ${rel.cliente || 'Cliente'}`,
-      body: buildTextoEnvioRelatorioEspecial({
-        numero: rel.numero,
-        cliente: rel.cliente,
-        data: rel.data,
-        horasTrabalho: aplicarTotaisNoRelatorioEspecial(rel).horasTrabalho,
-        kmsPercorridos: aplicarTotaisNoRelatorioEspecial(rel).kmsPercorridos,
-        equipamentos: rel.equipamentos,
-      }),
+      body: buildTextoEnvioRelatorioEspecial(
+        {
+          numero: rel.numero,
+          cliente: rel.cliente,
+          data: rel.data,
+          horasTrabalho: aplicarTotaisNoRelatorioEspecial(rel).horasTrabalho,
+          kmsPercorridos: aplicarTotaisNoRelatorioEspecial(rel).kmsPercorridos,
+          equipamentos: rel.equipamentos,
+        },
+        t as Record<string, string | undefined>
+      ),
       clienteId: rel.clienteId,
       clienteNome: rel.cliente,
       relatorio: rel,

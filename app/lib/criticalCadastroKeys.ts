@@ -28,7 +28,10 @@ export type NonatoCriticalCadastroKey = (typeof NONATO_CRITICAL_CADASTRO_KEYS)[n
  * Objetos (Record) críticos — backup e guarda de overwrite vazio.
  * Fechamentos de cobrança: mapa relatorioId → itens.
  */
-export const NONATO_CRITICAL_OBJECT_KEYS = ['nonato-fechamentos-relatorios'] as const
+export const NONATO_CRITICAL_OBJECT_KEYS = [
+  'nonato-fechamentos-relatorios',
+  'nonato-fechamentos-fluxo-financeiro',
+] as const
 
 /** Todas as chaves-array que nunca podem ser apagadas ou encolhidas no servidor. */
 export const NONATO_PROTECTED_ARRAY_KEYS = new Set<string>([

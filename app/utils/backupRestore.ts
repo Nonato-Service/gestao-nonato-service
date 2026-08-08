@@ -52,6 +52,7 @@ const LEGACY_FIELD_TO_KEY: Record<string, string> = {
   subcategoriasPecas: 'nonato-subcategorias-pecas',
   agendamentos: 'nonato-agendamentos',
   fechamentosRelatorios: 'nonato-fechamentos-relatorios',
+  fechamentosFluxoFinanceiro: 'nonato-fechamentos-fluxo-financeiro',
   fechamentosGuardadosBiblioteca: 'nonato-fechamentos-guardados-biblioteca',
   sidebarButtons: 'nonato-sidebar-buttons',
   manuaisFamiliasGrupos: 'nonato-manuais-familias-grupos',
