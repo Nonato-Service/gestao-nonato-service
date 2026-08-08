@@ -1,18 +1,23 @@
 # Build e deploy no Railway — modo standalone (menos RAM em runtime)
-# Nota: npm ci exige package.json e package-lock.json sincronizados (sem overrides órfãos).
-FROM node:20-alpine AS deps
+# bookworm-slim: mais estável que alpine para npm ci / Next SWC
+FROM node:20-bookworm-slim AS deps
 WORKDIR /app
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1
 COPY package.json package-lock.json ./
-RUN npm ci --prefer-offline --no-audit --no-fund
+# Sem --prefer-offline: evita cache npm corrompido entre builds falhados no Railway
+RUN npm ci --no-audit --no-fund
 
-FROM node:20-alpine AS builder
+FROM node:20-bookworm-slim AS builder
 WORKDIR /app
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm run build
 
-FROM node:20-alpine AS runner
+FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
