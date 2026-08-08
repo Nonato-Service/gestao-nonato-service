@@ -5,8 +5,9 @@ WORKDIR /app
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1
 COPY package.json package-lock.json .npmrc ./
-# Sem --prefer-offline: evita cache npm corrompido entre builds falhados no Railway
-RUN npm ci --no-audit --no-fund
+# npm install (não ci): o PC usa npm 11 e a imagem Node 20 usa npm 10 —
+# npm ci falha com "lock out of sync" entre versões. install é determinístico com lock presente.
+RUN npm install --no-audit --no-fund
 
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
