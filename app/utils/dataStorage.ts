@@ -806,18 +806,27 @@ async function shouldBlockObjectShrinkServerOverwrite(key: string, value: unknow
   try {
     const existing = await forceLoadCadastroFromServer(key)
     if (!existing || typeof existing !== 'object' || Array.isArray(existing)) return false
-    const oldN = Object.keys(existing as object).length
-    const newN = Object.keys(value as object).length
-    if (oldN > 0 && newN < oldN) {
-      console.warn(
-        `[Nonato] Gravação ignorada: «${key}» tem ${newN} chave(s) — o servidor tem ${oldN}; não substituir mapa maior.`
-      )
+    const oldObj = existing as Record<string, unknown>
+    const newObj = value as Record<string, unknown>
+    const oldKeys = Object.keys(oldObj)
+    const newKeys = Object.keys(newObj)
+    if (oldKeys.length === 0) return false
+    /** Wipe total {} → bloquear. */
+    if (newKeys.length === 0) {
+      console.warn(`[Nonato] Gravação ignorada: «${key}» vazio — o servidor tem ${oldKeys.length} chave(s).`)
       return true
     }
+    if (newKeys.length >= oldKeys.length) return false
+    /** Remoção pontual de chaves (ex.: apagar fluxo ao eliminar relatório) — permitir se for subconjunto. */
+    const isKeySubset = newKeys.every((k) => Object.prototype.hasOwnProperty.call(oldObj, k))
+    if (isKeySubset) return false
+    console.warn(
+      `[Nonato] Gravação ignorada: «${key}» tem ${newKeys.length} chave(s) — o servidor tem ${oldKeys.length}; mapa não é subconjunto.`
+    )
+    return true
   } catch {
     return false
   }
-  return false
 }
 
 /** Remove listas/objetos vazios protegidos do payload de «Enviar tudo» para não apagar o servidor. */

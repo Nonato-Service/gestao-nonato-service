@@ -33644,7 +33644,7 @@ export default function Dashboard() {
                       abrirEnvioDocumentoCliente({
                         title: safeT?.cadastroNonatoEnvioTitulo || 'Enviar dados bancários ao cliente',
                         subject: `Dados bancários — ${nome}`,
-                        body: buildTextoEnvioGenerico(`Dados bancários — ${nome}`, hint),
+                        body: buildTextoEnvioGenerico(`Dados bancários — ${nome}`, hint, safeT as Record<string, string | undefined>),
                         clienteId: cadastroNonatoEnvioCliente.clienteId || undefined,
                         defaultChannel: 'email',
                         onOpenPdf: () => {
@@ -33671,7 +33671,7 @@ export default function Dashboard() {
                       abrirEnvioDocumentoCliente({
                         title: safeT?.cadastroNonatoEnvioTitulo || 'Enviar dados bancários ao cliente',
                         subject: `Dados bancários — ${nome}`,
-                        body: buildTextoEnvioGenerico(`Dados bancários — ${nome}`, hint),
+                        body: buildTextoEnvioGenerico(`Dados bancários — ${nome}`, hint, safeT as Record<string, string | undefined>),
                         clienteId: cadastroNonatoEnvioCliente.clienteId || undefined,
                         defaultChannel: 'whatsapp',
                         onOpenPdf: () => {
@@ -39974,7 +39974,7 @@ export default function Dashboard() {
                       abrirEnvioDocumentoCliente({
                         title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
                         subject: `Relatório de Serviço ${rel.numero || '—'} - ${rel.cliente || 'Cliente'}`,
-                        body: buildTextoEnvioRelatorioServico(rel),
+                        body: buildTextoEnvioRelatorioServico(rel, safeT as Record<string, string | undefined>),
                         clienteId: rel.clienteId,
                         clienteNome: rel.cliente,
                         relatorio: rel,
@@ -39994,7 +39994,7 @@ export default function Dashboard() {
                       abrirEnvioDocumentoCliente({
                         title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
                         subject: `Relatório de Serviço ${rel.numero || '—'} - ${rel.cliente || 'Cliente'}`,
-                        body: buildTextoEnvioRelatorioServico(rel),
+                        body: buildTextoEnvioRelatorioServico(rel, safeT as Record<string, string | undefined>),
                         clienteId: rel.clienteId,
                         clienteNome: rel.cliente,
                         relatorio: rel,
@@ -40453,7 +40453,7 @@ export default function Dashboard() {
                                 abrirEnvioDocumentoCliente({
                                   title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
                                   subject: `Relatório de Serviço ${relatorio.numero} - ${relatorio.cliente}`,
-                                  body: buildTextoEnvioRelatorioServico(relatorio),
+                                  body: buildTextoEnvioRelatorioServico(relatorio, safeT as Record<string, string | undefined>),
                                   clienteId: relatorio.clienteId,
                                   clienteNome: relatorio.cliente,
                                   relatorio,
@@ -40473,7 +40473,7 @@ export default function Dashboard() {
                                 abrirEnvioDocumentoCliente({
                                   title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
                                   subject: `Relatório de Serviço ${relatorio.numero} - ${relatorio.cliente}`,
-                                  body: buildTextoEnvioRelatorioServico(relatorio),
+                                  body: buildTextoEnvioRelatorioServico(relatorio, safeT as Record<string, string | undefined>),
                                   clienteId: relatorio.clienteId,
                                   clienteNome: relatorio.cliente,
                                   relatorio,
@@ -41026,7 +41026,8 @@ export default function Dashboard() {
                                             subject: `Fechamento Relatório ${rel.numero} - ${rel.cliente}`,
                                             body: buildTextoEnvioGenerico(
                                               `Fechamento Relatório ${rel.numero} - ${rel.cliente}`,
-                                              `Total: € ${tot.toFixed(2)}`
+                                              `Total: € ${tot.toFixed(2)}`,
+                                              safeT as Record<string, string | undefined>
                                             ),
                                             relatorio: rel,
                                             defaultChannel: 'email',
@@ -41047,7 +41048,8 @@ export default function Dashboard() {
                                             subject: `Fechamento Relatório ${rel.numero} - ${rel.cliente}`,
                                             body: buildTextoEnvioGenerico(
                                               `Fechamento Relatório ${rel.numero} - ${rel.cliente}`,
-                                              `Total: € ${tot.toFixed(2)}`
+                                              `Total: € ${tot.toFixed(2)}`,
+                                              safeT as Record<string, string | undefined>
                                             ),
                                             relatorio: rel,
                                             defaultChannel: 'whatsapp',
@@ -68342,7 +68344,7 @@ A1;Peça exemplo;10`}
                                           abrirEnvioDocumentoCliente({
                                             title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
                                             subject: `Relatório de Serviço ${rel.numero} - ${rel.cliente}`,
-                                            body: buildTextoEnvioRelatorioServico(rel),
+                                            body: buildTextoEnvioRelatorioServico(rel, safeT as Record<string, string | undefined>),
                                             clienteId: rel.clienteId,
                                             clienteNome: rel.cliente,
                                             relatorio: rel,
@@ -68362,7 +68364,7 @@ A1;Peça exemplo;10`}
                                           abrirEnvioDocumentoCliente({
                                             title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
                                             subject: `Relatório de Serviço ${rel.numero} - ${rel.cliente}`,
-                                            body: buildTextoEnvioRelatorioServico(rel),
+                                            body: buildTextoEnvioRelatorioServico(rel, safeT as Record<string, string | undefined>),
                                             clienteId: rel.clienteId,
                                             clienteNome: rel.cliente,
                                             relatorio: rel,
@@ -68798,7 +68800,7 @@ A1;Peça exemplo;10`}
                                                         abrirEnvioDocumentoCliente({
                                                           title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
                                                           subject: `Relatório de Serviço ${relatorio.numero} - ${relatorio.cliente}`,
-                                                          body: buildTextoEnvioRelatorioServico(relatorio),
+                                                          body: buildTextoEnvioRelatorioServico(relatorio, safeT as Record<string, string | undefined>),
                                                           clienteId: relatorio.clienteId,
                                                           clienteNome: relatorio.cliente,
                                                           relatorio,
@@ -68819,7 +68821,7 @@ A1;Peça exemplo;10`}
                                                         abrirEnvioDocumentoCliente({
                                                           title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
                                                           subject: `Relatório de Serviço ${relatorio.numero} - ${relatorio.cliente}`,
-                                                          body: buildTextoEnvioRelatorioServico(relatorio),
+                                                          body: buildTextoEnvioRelatorioServico(relatorio, safeT as Record<string, string | undefined>),
                                                           clienteId: relatorio.clienteId,
                                                           clienteNome: relatorio.cliente,
                                                           relatorio,
@@ -68975,7 +68977,8 @@ A1;Peça exemplo;10`}
                                                   subject: `Fechamento Relatório ${relatorio.numero} - ${relatorio.cliente}`,
                                                   body: buildTextoEnvioGenerico(
                                                     `Fechamento Relatório ${relatorio.numero} - ${relatorio.cliente}`,
-                                                    `Total: € ${totalCobranca.toFixed(2)}`
+                                                    `Total: € ${totalCobranca.toFixed(2)}`,
+                                                    safeT as Record<string, string | undefined>
                                                   ),
                                                   relatorio,
                                                   defaultChannel: 'email',
@@ -68997,7 +69000,8 @@ A1;Peça exemplo;10`}
                                                   subject: `Fechamento Relatório ${relatorio.numero} - ${relatorio.cliente}`,
                                                   body: buildTextoEnvioGenerico(
                                                     `Fechamento Relatório ${relatorio.numero} - ${relatorio.cliente}`,
-                                                    `Total: € ${totalCobranca.toFixed(2)}`
+                                                    `Total: € ${totalCobranca.toFixed(2)}`,
+                                                    safeT as Record<string, string | undefined>
                                                   ),
                                                   relatorio,
                                                   defaultChannel: 'whatsapp',
@@ -70914,7 +70918,7 @@ A1;Peça exemplo;10`}
       abrirEnvioDocumentoCliente({
         title: (safeT as any)?.envioOrcamentoTitulo || 'Enviar orçamento ao cliente',
         subject: `Orçamento ${orcamento.numeroOrcamento} - NONATO SERVICE`,
-        body: buildTextoEnvioOrcamento(orcamento),
+        body: buildTextoEnvioOrcamento(orcamento, safeT as Record<string, string | undefined>),
         clienteId: orcamento.clienteId,
         clienteNome: orcamento.clienteNome,
         defaultChannel: canal,
@@ -82352,7 +82356,7 @@ A1;Peça exemplo;10`}
                     abrirEnvioDocumentoCliente({
                       title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
                       subject: `Relatório de Serviço ${rel.numero} - ${rel.cliente}`,
-                      body: buildTextoEnvioRelatorioServico(rel),
+                      body: buildTextoEnvioRelatorioServico(rel, safeT as Record<string, string | undefined>),
                       clienteId: rel.clienteId,
                       clienteNome: rel.cliente,
                       relatorio: rel,
@@ -82373,7 +82377,7 @@ A1;Peça exemplo;10`}
                     abrirEnvioDocumentoCliente({
                       title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
                       subject: `Relatório de Serviço ${rel.numero} - ${rel.cliente}`,
-                      body: buildTextoEnvioRelatorioServico(rel),
+                      body: buildTextoEnvioRelatorioServico(rel, safeT as Record<string, string | undefined>),
                       clienteId: rel.clienteId,
                       clienteNome: rel.cliente,
                       relatorio: rel,

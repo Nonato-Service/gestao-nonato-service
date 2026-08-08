@@ -422,6 +422,12 @@ export function FechamentoFluxoPagamentoBar({
 
         <div className="fechamento-fluxo-bar__pagamento-row">
 
+          {modoSemFatura ? (
+
+            <span className="fechamento-fluxo-bar__status">{labelFase(fase, labels)}</span>
+
+          ) : null}
+
           <button
 
             type="button"
@@ -476,7 +482,7 @@ export function FechamentoFluxoPagamentoBar({
 
             <span className="fechamento-fluxo-bar__fixo-label">{labelFase(fase, labels)}</span>
 
-            {numeroFaturaAtual ? (
+            {!modoSemFatura && numeroFaturaAtual ? (
 
               <span className="fechamento-fluxo-bar__fixo-fatura">
 
@@ -486,27 +492,31 @@ export function FechamentoFluxoPagamentoBar({
 
             ) : null}
 
-            <button
+            {!modoSemFatura ? (
 
-              type="button"
+              <button
 
-              className="fechamento-fluxo-bar__btn fechamento-fluxo-bar__btn--ghost fechamento-fluxo-bar__btn--mini"
+                type="button"
 
-              onClick={(e) => {
+                className="fechamento-fluxo-bar__btn fechamento-fluxo-bar__btn--ghost fechamento-fluxo-bar__btn--mini"
 
-                pararPropagacaoInteracao(e)
+                onClick={(e) => {
 
-                abrirEdicaoFatura()
+                  pararPropagacaoInteracao(e)
 
-              }}
+                  abrirEdicaoFatura()
 
-              title={labels.fechamentoFluxoEditarNumeroFatura || 'Editar número da fatura'}
+                }}
 
-            >
+                title={labels.fechamentoFluxoEditarNumeroFatura || 'Editar número da fatura'}
 
-              ✏️
+              >
 
-            </button>
+                ✏️
+
+              </button>
+
+            ) : null}
 
           </div>
 
@@ -516,7 +526,7 @@ export function FechamentoFluxoPagamentoBar({
 
 
 
-      {(fase === 'pago' || fase === 'nao_pago') && editandoFatura ? (
+      {!modoSemFatura && (fase === 'pago' || fase === 'nao_pago') && editandoFatura ? (
 
         <div className="fechamento-fluxo-bar__fatura-row fechamento-fluxo-bar__fatura-row--overlay">
 

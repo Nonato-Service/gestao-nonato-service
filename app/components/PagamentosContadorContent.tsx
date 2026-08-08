@@ -654,7 +654,7 @@ export function PagamentosContadorContent({
     abrirEnvio({
       title: tx(safeT, 'pagamentosContadorEnvioTitulo', 'Enviar relatório ao contabilista'),
       subject: titulo,
-      body: buildTextoEnvioGenerico(titulo, detalhe),
+      body: buildTextoEnvioGenerico(titulo, detalhe, safeT),
       defaultChannel: canal,
       onOpenPdf: () => void gerarPdfContador(),
     })

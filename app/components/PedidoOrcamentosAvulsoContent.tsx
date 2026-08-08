@@ -781,7 +781,7 @@ export function PedidoOrcamentosAvulsoContent({
     abrirEnvio({
       title: safeT?.poaEnvioTitulo || 'Enviar pedido de orçamento',
       subject: titulo,
-      body: buildTextoEnvioGenerico(titulo),
+      body: buildTextoEnvioGenerico(titulo, undefined, safeT),
       clienteId: opts.clienteId || opts.clienteRef?.id,
       clienteNome: opts.clienteNome,
       defaultChannel: canal,

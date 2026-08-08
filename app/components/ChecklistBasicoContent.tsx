@@ -452,7 +452,11 @@ export function ChecklistBasicoContent(props: ChecklistBasicoContentProps) {
     abrirEnvio({
       title: safeT.checklistBasicoEnvioCliente || 'Envio ao cliente',
       subject: titulo,
-      body: buildTextoEnvioGenerico(titulo, equip ? `Equipamento: ${equip}` : undefined),
+      body: buildTextoEnvioGenerico(
+        titulo,
+        equip ? `${safeT.equipamento || 'Equipamento'}: ${equip}` : undefined,
+        safeT
+      ),
       clienteId: instancia.clienteId || clienteSelecionado?.id,
       clienteNome: nomeCli,
       defaultChannel: canal,

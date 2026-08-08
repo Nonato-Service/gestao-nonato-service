@@ -816,7 +816,7 @@ export function imprimirRelatorioEspecialPdf(
           <th colspan="3">${esc(L(labels, 'ida', 'Ida'))}</th>
           <th colspan="3">${esc(L(labels, 'relatorioEspecialPdfHorasTrabalho', 'Horas de trabalho'))}</th>
           <th colspan="3">${esc(L(labels, 'retorno', 'Retorno'))}</th>
-          <th colspan="3">KM</th>
+          <th colspan="3">${esc(L(labels, 'km', 'KM'))}</th>
           <th rowspan="2">${esc(L(labels, 'horaAlmoco', L(labels, 'tempoPausa', 'Almoço')))}</th>
           <th rowspan="2">${esc(L(labels, 'relatorioEspecialPdfDescricao', 'Descrição'))}</th>
         </tr>

@@ -367,7 +367,13 @@ export function OrcamentoServicoTecnicoContent({
       abrirEnvio({
         title: t.orcamentoServicoTecnicoEnvioTitulo || 'Enviar orçamento de serviço técnico',
         subject: titulo,
-        body: buildTextoEnvioGenerico(titulo, localServico.trim() ? `Local: ${localServico.trim()}` : undefined),
+        body: buildTextoEnvioGenerico(
+          titulo,
+          localServico.trim()
+            ? `${t.localidade || 'Local'}: ${localServico.trim()}`
+            : undefined,
+          t as Record<string, string | undefined>
+        ),
         clienteId: clienteId || undefined,
         clienteNome: nomeClienteDoc || undefined,
         defaultChannel: canal,

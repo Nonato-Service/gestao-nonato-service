@@ -546,8 +546,12 @@ export default function RelatorioEspecialHub({
                         {rel.tecnico ? ` · ${rel.tecnico}` : ''}
                       </div>
                       <div className="relatorio-especial-card__sub">
-                        {(rel.equipamentos?.length || 0)} equip. · {prep.horasTrabalho} h · {prep.kmsPercorridos} km
-                        {prep.fechamento?.totalGeral ? ' · ✓ Fechado' : ''}
+                        {(rel.equipamentos?.length || 0)} {t.equipamentosTitulo || 'Equipamentos'}
+                        {' · '}
+                        {prep.horasTrabalho} {t.horasTrabalho || 'Horas'}
+                        {' · '}
+                        {prep.kmsPercorridos} {t.km || 'KM'}
+                        {prep.fechamento?.totalGeral ? ` · ✓ ${t.fechado || 'Fechado'}` : ''}
                       </div>
                       {(onAbrirFechamentoCobranca || (getResumoCobrancaFase && onClickResumoCobranca)) && (
                         <div className="relatorio-especial-card__cobranca-bar" aria-label={t.relatorioEspecialFechamentoCobranca || 'Fechamento / Cobrança'}>

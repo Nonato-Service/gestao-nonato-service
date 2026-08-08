@@ -646,7 +646,10 @@ export function OrcamentoPecasEspeciaisContent({
     abrirEnvio({
       title: t.orcamentoPecasEspEnvioTitulo || 'Enviar orçamento de peças especiais',
       subject: `${labelsPdf.titulo} ${numeroOfertaAtual} — ${clienteSel.nomeEmpresa}`,
-      body: buildTextoEnvioOrcamento({ numeroOrcamento: numeroOfertaAtual, clienteNome: clienteSel.nomeEmpresa }),
+      body: buildTextoEnvioOrcamento(
+        { numeroOrcamento: numeroOfertaAtual, clienteNome: clienteSel.nomeEmpresa },
+        t as Record<string, string | undefined>
+      ),
       clienteId: clienteSel.id,
       clienteNome: clienteSel.nomeEmpresa,
       defaultChannel: canal,

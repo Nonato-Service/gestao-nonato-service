@@ -310,7 +310,7 @@ export function RegistroDespesasContent({
     return {
       title: safeT?.envioDespesasTitulo || 'Enviar despesas ao cliente',
       subject: titulo,
-      body: buildTextoEnvioGenerico(titulo, detalhe),
+      body: buildTextoEnvioGenerico(titulo, detalhe, safeT),
       clienteId: doc.clienteId,
       clienteNome: doc.clienteNome,
       relatorio: doc.relatorioId ? { clienteId: doc.clienteId, cliente: doc.clienteNome } : undefined,
