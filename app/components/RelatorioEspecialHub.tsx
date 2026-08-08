@@ -91,6 +91,16 @@ function classNameResumoCobrancaEspecial(fase: 'laranja' | 'azul' | 'verde' | 'b
   return 'relatorio-resumo-cobranca-wrap--laranja'
 }
 
+function labelResumoCobrancaEspecial(
+  fase: 'laranja' | 'azul' | 'verde' | 'biblioteca',
+  t: Record<string, string | undefined>
+): string {
+  if (fase === 'biblioteca') return t.resumoCobrancaEstadoBiblioteca || 'Na biblioteca'
+  if (fase === 'verde') return t.resumoCobrancaEstadoNao || 'Não cobrar'
+  if (fase === 'azul') return t.resumoCobrancaEstadoSim || 'Cobrar'
+  return t.resumoCobrancaEstadoPendente || 'Decidir cobrança'
+}
+
 export default function RelatorioEspecialHub({
   relatorios,
   onSaveAll,
@@ -514,35 +524,7 @@ export default function RelatorioEspecialHub({
                 return (
                   <div key={rel.id} className="relatorio-especial-card">
                     <div className="relatorio-especial-card__meta">
-                      <div className="relatorio-especial-card__numero-row">
-                        <strong className="relatorio-especial-card__numero">{rel.numero}</strong>
-                        {onAbrirFechamentoCobranca ? (
-                          <button
-                            type="button"
-                            className="btn-primary relatorio-especial-card__cobranca"
-                            onClick={() => onAbrirFechamentoCobranca(rel.id, rel.numero)}
-                            title={
-                              t.relatorioEspecialFechamentoCobrancaDica ||
-                              'Abrir fechamento para cobrança (valores HT/KM/diárias)'
-                            }
-                          >
-                            {t.relatorioEspecialFechamentoCobranca || 'Fechamento / Cobrança'}
-                          </button>
-                        ) : null}
-                        {getResumoCobrancaFase && onClickResumoCobranca ? (
-                          <button
-                            type="button"
-                            className={`relatorio-resumo-cobranca-wrap relatorio-especial-card__resumo-chip ${classNameResumoCobrancaEspecial(getResumoCobrancaFase(rel.id))}`}
-                            onClick={() => onClickResumoCobranca(rel.id)}
-                            title={
-                              t.resumoCobrancaDicaClique ||
-                              'Toque para indicar se deve cobrar ao cliente.'
-                            }
-                          >
-                            {t.resumoCobrancaCurto || t.resumo || 'Cobrança'}
-                          </button>
-                        ) : null}
-                      </div>
+                      <strong className="relatorio-especial-card__numero">{rel.numero}</strong>
                       <div className="relatorio-especial-card__linha">
                         {rel.cliente}
                         {rel.tecnico ? ` · ${rel.tecnico}` : ''}
@@ -551,6 +533,36 @@ export default function RelatorioEspecialHub({
                         {(rel.equipamentos?.length || 0)} equip. · {prep.horasTrabalho} h · {prep.kmsPercorridos} km
                         {prep.fechamento?.totalGeral ? ' · ✓ Fechado' : ''}
                       </div>
+                      {(onAbrirFechamentoCobranca || (getResumoCobrancaFase && onClickResumoCobranca)) && (
+                        <div className="relatorio-especial-card__cobranca-bar" aria-label={t.relatorioEspecialFechamentoCobranca || 'Fechamento / Cobrança'}>
+                          {onAbrirFechamentoCobranca ? (
+                            <button
+                              type="button"
+                              className="btn-primary relatorio-especial-card__cobranca"
+                              onClick={() => onAbrirFechamentoCobranca(rel.id, rel.numero)}
+                              title={
+                                t.relatorioEspecialFechamentoCobrancaDica ||
+                                'Abrir fechamento para cobrança (valores HT/KM/diárias)'
+                              }
+                            >
+                              💶 {t.relatorioEspecialFechamentoCobranca || 'Fechamento / Cobrança'}
+                            </button>
+                          ) : null}
+                          {getResumoCobrancaFase && onClickResumoCobranca ? (
+                            <button
+                              type="button"
+                              className={`relatorio-especial-card__resumo-chip ${classNameResumoCobrancaEspecial(getResumoCobrancaFase(rel.id))}`}
+                              onClick={() => onClickResumoCobranca(rel.id)}
+                              title={
+                                t.resumoCobrancaDicaClique ||
+                                'Toque para indicar se deve cobrar ao cliente.'
+                              }
+                            >
+                              {labelResumoCobrancaEspecial(getResumoCobrancaFase(rel.id), t)}
+                            </button>
+                          ) : null}
+                        </div>
+                      )}
                     </div>
                     <div className="relatorio-especial-card__acoes">
                       <button type="button" className="btn-secondary" onClick={() => abrirEditar(rel)}>
@@ -561,7 +573,7 @@ export default function RelatorioEspecialHub({
                       </button>
                       <EnvioBotoes rel={rel} compact />
                       <button type="button" className="btn-secondary" onClick={() => abrirFechamento(rel)}>
-                        {t.relatorioEspecialFechamentoHoras || 'Fechamento de horas'}
+                        ⏱ {t.relatorioEspecialFechamentoHoras || 'Fechamento de horas'}
                       </button>
                       <button
                         type="button"
@@ -759,33 +771,37 @@ export default function RelatorioEspecialHub({
                 onChange={(e) => setForm({ ...form, numero: e.target.value })}
                 style={inputStyle}
               />
-              {editandoId && onAbrirFechamentoCobranca ? (
-                <button
-                  type="button"
-                  className="btn-primary relatorio-especial-form__cobranca"
-                  onClick={() => onAbrirFechamentoCobranca(editandoId, form.numero)}
-                  title={
-                    t.relatorioEspecialFechamentoCobrancaDica ||
-                    'Abrir fechamento para cobrança (valores HT/KM/diárias)'
-                  }
-                >
-                  {t.relatorioEspecialFechamentoCobranca || 'Fechamento / Cobrança'}
-                </button>
-              ) : null}
-              {editandoId && getResumoCobrancaFase && onClickResumoCobranca ? (
-                <button
-                  type="button"
-                  className={`relatorio-resumo-cobranca-wrap relatorio-especial-form__resumo-chip ${classNameResumoCobrancaEspecial(getResumoCobrancaFase(editandoId))}`}
-                  onClick={() => onClickResumoCobranca(editandoId)}
-                  title={
-                    t.resumoCobrancaDicaClique ||
-                    'Toque para indicar se deve cobrar ao cliente (após gravar o relatório).'
-                  }
-                >
-                  {t.resumoCobrancaCurto || t.resumo || 'Cobrança'}
-                </button>
-              ) : null}
             </div>
+            {editandoId && (onAbrirFechamentoCobranca || (getResumoCobrancaFase && onClickResumoCobranca)) ? (
+              <div className="relatorio-especial-form__cobranca-bar">
+                {onAbrirFechamentoCobranca ? (
+                  <button
+                    type="button"
+                    className="btn-primary relatorio-especial-form__cobranca"
+                    onClick={() => onAbrirFechamentoCobranca(editandoId, form.numero)}
+                    title={
+                      t.relatorioEspecialFechamentoCobrancaDica ||
+                      'Abrir fechamento para cobrança (valores HT/KM/diárias)'
+                    }
+                  >
+                    💶 {t.relatorioEspecialFechamentoCobranca || 'Fechamento / Cobrança'}
+                  </button>
+                ) : null}
+                {getResumoCobrancaFase && onClickResumoCobranca ? (
+                  <button
+                    type="button"
+                    className={`relatorio-especial-form__resumo-chip ${classNameResumoCobrancaEspecial(getResumoCobrancaFase(editandoId))}`}
+                    onClick={() => onClickResumoCobranca(editandoId)}
+                    title={
+                      t.resumoCobrancaDicaClique ||
+                      'Toque para indicar se deve cobrar ao cliente (após gravar o relatório).'
+                    }
+                  >
+                    {labelResumoCobrancaEspecial(getResumoCobrancaFase(editandoId), t)}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
           </div>
           <div>
             <label>{t.data || 'Data ref.'}</label>

@@ -41763,26 +41763,30 @@ html body .relatorio-especial-root .relatorio-especial-card {
   background: rgba(0, 40, 24, 0.35);
 }
 
-html body .relatorio-especial-root .relatorio-especial-card__numero-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+html body .relatorio-especial-root .relatorio-especial-card__numero {
+  display: block;
+  font-size: 16px;
+  color: #00c853;
   margin-bottom: 4px;
 }
 
-html body .relatorio-especial-root .relatorio-especial-card__numero {
-  display: inline-block;
-  font-size: 16px;
-  color: #00c853;
-  margin-bottom: 0;
+html body .relatorio-especial-root .relatorio-especial-card__cobranca-bar,
+html body .relatorio-especial-root .relatorio-especial-form__cobranca-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 200, 83, 0.22);
 }
 
 html body .relatorio-especial-root .relatorio-especial-card__cobranca,
 html body .relatorio-especial-root .relatorio-especial-form__cobranca {
-  padding: 6px 12px !important;
-  font-size: 12px !important;
-  min-height: 36px;
+  flex: 1 1 auto;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  min-height: 40px;
   white-space: nowrap;
 }
 
@@ -41791,25 +41795,62 @@ html body .relatorio-especial-root .relatorio-especial-form__resumo-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 10px;
-  font-size: 11px;
-  font-weight: 700;
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
   border-radius: 8px;
   cursor: pointer;
-  border: none;
-  min-height: 36px;
+  min-height: 40px;
+  border: 2px solid transparent;
+  -webkit-text-fill-color: currentColor;
+}
+
+html body .relatorio-especial-root .relatorio-especial-card__resumo-chip.relatorio-resumo-cobranca-wrap--laranja,
+html body .relatorio-especial-root .relatorio-especial-form__resumo-chip.relatorio-resumo-cobranca-wrap--laranja {
+  background: #f59e0b !important;
+  border-color: #d97706 !important;
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
+}
+
+html body .relatorio-especial-root .relatorio-especial-card__resumo-chip.relatorio-resumo-cobranca-wrap--azul,
+html body .relatorio-especial-root .relatorio-especial-form__resumo-chip.relatorio-resumo-cobranca-wrap--azul {
+  background: #2563eb !important;
+  border-color: #1d4ed8 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+html body .relatorio-especial-root .relatorio-especial-card__resumo-chip.relatorio-resumo-cobranca-wrap--verde,
+html body .relatorio-especial-root .relatorio-especial-form__resumo-chip.relatorio-resumo-cobranca-wrap--verde {
+  background: rgba(0, 200, 83, 0.18) !important;
+  border-color: #00c853 !important;
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+}
+
+html body .relatorio-especial-root .relatorio-especial-card__resumo-chip.relatorio-resumo-cobranca-wrap--biblioteca,
+html body .relatorio-especial-root .relatorio-especial-form__resumo-chip.relatorio-resumo-cobranca-wrap--biblioteca {
+  background: rgba(56, 189, 248, 0.16) !important;
+  border-color: #38bdf8 !important;
+  color: #e0f2fe !important;
+  -webkit-text-fill-color: #e0f2fe !important;
 }
 
 html body .relatorio-especial-root .relatorio-especial-form__numero-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  gap: 8px;
+  display: block;
 }
 
 html body .relatorio-especial-root .relatorio-especial-form__numero-wrap > input {
-  flex: 1 1 140px;
-  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+html body .relatorio-especial-root .relatorio-especial-form__cobranca-bar {
+  margin-top: 8px;
+  grid-column: 1 / -1;
 }
 
 html body .relatorio-especial-root .relatorio-especial-card__linha {

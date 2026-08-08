@@ -2,5 +2,5 @@
  * Versão PWA — gerado por scripts/sync-pwa-version.mjs
  * Não editar à mão. Altere pwa-version.json na raiz (ou `npm run pwa:bump`).
  */
-export const PWA_VERSION = 264 as const
-export const PWA_CACHE_NAME = 'nonato-pwa-v264' as const
+export const PWA_VERSION = 265 as const
+export const PWA_CACHE_NAME = 'nonato-pwa-v265' as const
