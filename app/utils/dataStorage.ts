@@ -645,6 +645,9 @@ export const NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE = new Set([
   'nonato-diario-pedidos-dia',
   'nonato-conhecimento-tecnicos',
   'nonato-checklist-basico-instancias',
+  'nonato-despesas-documentos',
+  'nonato-cartoes-empresa-despesas',
+  'nonato-comprovantes-despesas',
 ])
 
 function isEmptyDataArray(value: unknown): boolean {
@@ -2263,6 +2266,24 @@ export async function collectAllLocalNonatoDataForSync(): Promise<Record<string,
 
   keys.delete('nonato-fechamentos-relatorios')
   keys.delete('nonato-fechamentos-fluxo-financeiro')
+  keys.delete('nonato-despesas-documentos')
+  keys.delete('nonato-cartoes-empresa-despesas')
+  try {
+    const despSnap = await readLocalValueForLoad('nonato-despesas-documentos', true)
+    if (Array.isArray(despSnap.parsed) && despSnap.parsed.length > 0) {
+      out['nonato-despesas-documentos'] = despSnap.parsed
+    }
+  } catch {
+    /* ignorar */
+  }
+  try {
+    const cartSnap = await readLocalValueForLoad('nonato-cartoes-empresa-despesas', true)
+    if (Array.isArray(cartSnap.parsed) && cartSnap.parsed.length > 0) {
+      out['nonato-cartoes-empresa-despesas'] = cartSnap.parsed
+    }
+  } catch {
+    /* ignorar */
+  }
   try {
     const fechSnap = await readLocalValueForLoad('nonato-fechamentos-relatorios', true)
     if (
@@ -2918,6 +2939,16 @@ export async function saveData(
       value &&
       typeof value === 'object' &&
       !Array.isArray(value)
+    ) {
+      try {
+        await saveKv(key, value)
+      } catch (idbErr) {
+        console.warn(`[saveData] espelho IndexedDB falhou para ${key}`, idbErr)
+      }
+    }
+    if (
+      (key === 'nonato-despesas-documentos' || key === 'nonato-cartoes-empresa-despesas') &&
+      Array.isArray(value)
     ) {
       try {
         await saveKv(key, value)

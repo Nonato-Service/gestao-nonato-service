@@ -18,6 +18,8 @@ export const NONATO_CRITICAL_CADASTRO_KEYS = [
   'nonato-faturas-pecas',
   'nonato-ordens-servico',
   'nonato-comprovantes-despesas',
+  'nonato-despesas-documentos',
+  'nonato-cartoes-empresa-despesas',
   'nonato-protocolos-servico',
   'nonato-fechamentos-guardados-biblioteca',
 ] as const

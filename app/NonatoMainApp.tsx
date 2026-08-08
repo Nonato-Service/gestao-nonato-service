@@ -52237,6 +52237,7 @@ A1;Peça exemplo;10`}
           openTab={(tab, title) => openTab(tab as TabType, title)}
           closeTab={closeTab}
           activeTabId={activeTabId || undefined}
+          selectedLanguage={selectedLanguage}
         />
 
       case 'pagamentos-contador':

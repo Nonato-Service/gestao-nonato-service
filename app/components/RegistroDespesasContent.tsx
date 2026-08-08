@@ -76,6 +76,15 @@ type Props = {
   openTab: (tab: string, title: string) => void
   closeTab: (tab: string) => void
   activeTabId?: string
+  /** Idioma da UI (pt-BR, es, fr, it, de, en) — PDF e datas. */
+  selectedLanguage?: string
+}
+
+function localeUiFromLang(lang?: string): string {
+  const l = String(lang || 'pt-BR').trim()
+  if (l === 'en') return 'en-GB'
+  if (l === 'pt-BR' || l === 'es' || l === 'fr' || l === 'it' || l === 'de') return l
+  return 'pt-BR'
 }
 
 export function RegistroDespesasContent({
@@ -87,9 +96,12 @@ export function RegistroDespesasContent({
   safeT,
   openTab,
   closeTab,
-  activeTabId
+  activeTabId,
+  selectedLanguage = 'pt-BR',
 }: Props) {
   const abrirEnvio = useDocumentoEnvioCliente()
+  const uiLocale = localeUiFromLang(selectedLanguage)
+  const pdfLang = String(selectedLanguage || 'pt-BR').trim() || 'pt-BR'
   const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null)
   const [relatorioSelecionado, setRelatorioSelecionado] = useState<RelatorioServico | null>(null)
   const [documentos, setDocumentos] = useState<DespesaDocumento[]>([])
@@ -298,7 +310,7 @@ export function RegistroDespesasContent({
   }
 
   const gerarPDF = (docId: string) => {
-    window.open(`/api/pdf/despesas-documento/${docId}?lang=pt-BR`, '_blank')
+    window.open(`/api/pdf/despesas-documento/${docId}?lang=${encodeURIComponent(pdfLang)}`, '_blank')
   }
 
   const montarEnvioDespesasDoc = (doc: DespesaDocumento) => {
@@ -311,7 +323,14 @@ export function RegistroDespesasContent({
           '{cliente}',
           doc.clienteNome || ''
         )
-    const detalhe = `${doc.despesas.length} despesa(s) — € ${total}${doc.relatorioNumero ? `\nRelatório: ${doc.relatorioNumero}` : ''}`
+    const contagem = (safeT?.despesasListaContagem || '{n} despesa(s)').replace(
+      '{n}',
+      String(doc.despesas.length)
+    )
+    const relLinha = doc.relatorioNumero
+      ? `\n${safeT?.relatorioLabelCurto || 'Relatório'}: ${doc.relatorioNumero}`
+      : ''
+    const detalhe = `${contagem} — € ${total}${relLinha}`
     return {
       title: safeT?.envioDespesasTitulo || 'Enviar despesas ao cliente',
       subject: titulo,
@@ -530,7 +549,7 @@ export function RegistroDespesasContent({
                   border: relatorioSelecionado?.id === r.id ? '2px solid #00c853' : '1px solid #444'
                 }}
               >
-                {r.numero} - {r.cliente} ({new Date(r.data).toLocaleDateString('pt-BR')})
+                {r.numero} - {r.cliente} ({new Date(r.data).toLocaleDateString(uiLocale)})
               </div>
             ))}
           </div>
@@ -548,7 +567,11 @@ export function RegistroDespesasContent({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <strong style={{ color: '#00c853' }}>{docAtual.clienteNome}</strong>
-              {docAtual.relatorioNumero && <span style={{ marginLeft: '12px', color: '#aaa' }}>| Relatório: {docAtual.relatorioNumero}</span>}
+              {docAtual.relatorioNumero && (
+                <span style={{ marginLeft: '12px', color: '#aaa' }}>
+                  | {safeT?.relatorioLabelCurto || 'Relatório'}: {docAtual.relatorioNumero}
+                </span>
+              )}
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button className="btn-secondary" onClick={() => setDocAtual(null)}>{safeT?.cancelar || 'Cancelar'}</button>
@@ -565,7 +588,6 @@ export function RegistroDespesasContent({
                 ref={ocrReciboFileRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 style={{ display: 'none' }}
                 aria-hidden
                 onChange={async (e) => {
@@ -716,7 +738,6 @@ export function RegistroDespesasContent({
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  capture="environment"
                   onChange={handleFileChange}
                   style={{ display: 'none' }}
                 />
@@ -1089,7 +1110,17 @@ export function RegistroDespesasContent({
                 }}
               >
                 <div>
-                  <strong>{doc.clienteNome}</strong> {doc.relatorioNumero && `| Relatório ${doc.relatorioNumero}`} — {doc.despesas.length} despesa(s) — € {doc.despesas.reduce((s, x) => s + x.valor, 0).toFixed(2)}
+                  <strong>{doc.clienteNome}</strong>
+                  {doc.relatorioNumero
+                    ? ` | ${safeT?.relatorioLabelCurto || 'Relatório'} ${doc.relatorioNumero}`
+                    : ''}
+                  {' — '}
+                  {(safeT?.despesasListaContagem || '{n} despesa(s)').replace(
+                    '{n}',
+                    String(doc.despesas.length)
+                  )}
+                  {' — € '}
+                  {doc.despesas.reduce((s, x) => s + x.valor, 0).toFixed(2)}
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <button className="btn-primary" onClick={() => gerarPDF(doc.id)} style={{ padding: '6px 12px', fontSize: '13px' }}>

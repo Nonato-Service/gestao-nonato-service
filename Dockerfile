@@ -23,8 +23,11 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
+# Fallback se o volume Railway não definir DATA_DIR (volume continua a sobrepor em /data)
+ENV DATA_DIR=/app/data
 # Runtime: contentor pode ter até 8 GB no Railway — dar heap generoso ao Node
 ENV NODE_OPTIONS=--max-old-space-size=6144
+RUN mkdir -p /app/data
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
