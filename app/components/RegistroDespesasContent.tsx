@@ -304,8 +304,13 @@ export function RegistroDespesasContent({
   const montarEnvioDespesasDoc = (doc: DespesaDocumento) => {
     const total = doc.despesas.reduce((s, x) => s + x.valor, 0).toFixed(2)
     const titulo = doc.relatorioNumero
-      ? `Despesas — Relatório ${doc.relatorioNumero} — ${doc.clienteNome}`
-      : `Despesas — ${doc.clienteNome}`
+      ? (safeT?.envioSubjectDespesasComRelatorio || 'Despesas — Relatório {numero} — {cliente}')
+          .replace('{numero}', doc.relatorioNumero)
+          .replace('{cliente}', doc.clienteNome || '')
+      : (safeT?.envioSubjectDespesas || 'Despesas — {cliente}').replace(
+          '{cliente}',
+          doc.clienteNome || ''
+        )
     const detalhe = `${doc.despesas.length} despesa(s) — € ${total}${doc.relatorioNumero ? `\nRelatório: ${doc.relatorioNumero}` : ''}`
     return {
       title: safeT?.envioDespesasTitulo || 'Enviar despesas ao cliente',

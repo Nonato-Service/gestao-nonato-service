@@ -198,3 +198,36 @@ export function buildTextoEnvioGenerico(titulo: string, detalhe?: string, labels
   const atenciosamente = Lenvio(labels, 'envioDocAtenciosamente', 'Atenciosamente,')
   return `${prezado}\n\n${anexo}${detalhe ? `\n\n${detalhe}` : ''}\n\n${atenciosamente}\nNonato Service`
 }
+
+/** Assunto de e-mail: relatório de serviço. */
+export function buildAssuntoEnvioRelatorioServico(
+  rel: { numero?: string; cliente?: string },
+  labels?: EnvioTextoLabels
+): string {
+  const titulo = Lenvio(labels, 'relatorioServicoTitle', Lenvio(labels, 'relatorioServico', 'Relatório de Serviço'))
+  const cliente = rel.cliente || Lenvio(labels, 'cliente', 'Cliente')
+  return `${titulo} ${rel.numero || '—'} - ${cliente}`
+}
+
+/** Assunto de e-mail: fechamento / cobrança. */
+export function buildAssuntoEnvioFechamentoRelatorio(
+  rel: { numero?: string; cliente?: string },
+  labels?: EnvioTextoLabels
+): string {
+  const tpl = Lenvio(
+    labels,
+    'envioSubjectFechamentoRelatorio',
+    'Fechamento Relatório {numero} - {cliente}'
+  )
+  return tpl
+    .replace('{numero}', rel.numero || '—')
+    .replace('{cliente}', rel.cliente || Lenvio(labels, 'cliente', 'Cliente'))
+}
+
+/** Assunto de e-mail: dados bancários. */
+export function buildAssuntoEnvioDadosBancarios(nome: string, labels?: EnvioTextoLabels): string {
+  return Lenvio(labels, 'envioSubjectDadosBancarios', 'Dados bancários — {nome}').replace(
+    '{nome}',
+    nome || '—'
+  )
+}

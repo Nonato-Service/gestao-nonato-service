@@ -2,6 +2,10 @@
   "name": "gestao-tecnica-nonato-service",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20 <=24",
+    "npm": ">=10"
+  },
   "scripts": {
     "predev": "node scripts/sync-pwa-version.mjs",
     "dev": "next dev -p 3000",

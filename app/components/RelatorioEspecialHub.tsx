@@ -21,6 +21,7 @@ import {
 import { DocumentoEnvioAcoes } from './DocumentoEnvioAcoes'
 import {
   buildTextoEnvioRelatorioEspecial,
+  buildAssuntoEnvioRelatorioServico,
   type AbrirEnvioDocumentoClienteOpts,
 } from '../context/DocumentoEnvioClienteContext'
 import { imprimirRelatorioEspecialPdf } from '../lib/relatorioEspecialPdf'
@@ -139,7 +140,10 @@ export default function RelatorioEspecialHub({
   const envioRelatorio = useCallback(
     (rel: RelatorioEspecial, onOpenPdf: () => void) => ({
       title: t.envioRelatorioTitulo || 'Enviar relatório ao cliente',
-      subject: `${t.relatorioEspecialPdfDocTitle || t.relatorioServicoTitle || 'Relatório de Serviço'} ${rel.numero || '—'} - ${rel.cliente || 'Cliente'}`,
+      subject: buildAssuntoEnvioRelatorioServico(
+        { numero: rel.numero, cliente: rel.cliente },
+        t as Record<string, string | undefined>
+      ),
       body: buildTextoEnvioRelatorioEspecial(
         {
           numero: rel.numero,
