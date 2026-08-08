@@ -79,9 +79,11 @@ export async function POST(request: NextRequest) {
               existingCount: guard.existingCount,
               newCount: guard.newCount,
               message:
-                guard.reason === 'empty_overwrite'
-                  ? `Não é permitido apagar «${key}» com lista vazia enquanto existirem ${guard.existingCount} registo(s) no servidor.`
-                  : `Não é permitido reduzir «${key}» de ${guard.existingCount} para ${guard.newCount} registo(s).`,
+                guard.reason === 'empty_overwrite' || guard.reason === 'object_empty_overwrite'
+                  ? `Não é permitido apagar «${key}» com dados vazios enquanto existirem ${guard.existingCount} registo(s) no servidor.`
+                  : guard.reason === 'tombstone_shrink'
+                    ? `Não é permitido reduzir tombstones de «${key}» de ${guard.existingCount} para ${guard.newCount}.`
+                    : `Não é permitido reduzir «${key}» de ${guard.existingCount} para ${guard.newCount} registo(s).`,
             },
             { status: 409, headers: jsonHeaders() }
           )

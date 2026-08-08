@@ -14,6 +14,8 @@ import {
 import {
   NONATO_CRITICAL_CADASTRO_KEYS,
   NONATO_PROTECTED_ARRAY_KEYS,
+  NONATO_PROTECTED_OBJECT_KEYS,
+  NONATO_TOMBSTONE_UNION_KEYS,
   serverKeyHasMeaningfulData,
 } from '../lib/criticalCadastroKeys'
 import { mergeArraysByIdDeferServerLocal } from '../lib/mergeArraysById'
@@ -723,6 +725,15 @@ async function shouldBlockShrinkServerOverwrite(key: string, value: unknown): Pr
   }
 }
 
+function isEmptyProtectedObject(value: unknown): boolean {
+  return (
+    value != null &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    Object.keys(value as object).length === 0
+  )
+}
+
 /** Evita que uma lista vazia (sync/atualização) apague dados já guardados no servidor. */
 async function shouldBlockEmptyServerOverwrite(key: string, value: unknown): Promise<boolean> {
   if (MANUAIS_OBJECT_KEYS_BLOCK_EMPTY_OVERWRITE.has(key)) {
@@ -734,8 +745,30 @@ async function shouldBlockEmptyServerOverwrite(key: string, value: unknown): Pro
       return false
     }
   }
-  /** Documentos (relatórios especiais, etc.): lista vazia = tudo eliminado — permitir. */
-  if (ALLOW_PROTECTED_SUBSET_SHRINK_KEYS.has(key)) return false
+  if (NONATO_PROTECTED_OBJECT_KEYS.has(key)) {
+    if (!isEmptyProtectedObject(value)) return false
+    try {
+      const existing = await forceLoadCadastroFromServer(key)
+      return (
+        existing != null &&
+        typeof existing === 'object' &&
+        !Array.isArray(existing) &&
+        Object.keys(existing as object).length > 0
+      )
+    } catch {
+      return false
+    }
+  }
+  if (NONATO_TOMBSTONE_UNION_KEYS.has(key)) {
+    if (!isEmptyDataArray(value)) return false
+    try {
+      const existing = await forceLoadCadastroFromServer(key)
+      return Array.isArray(existing) && existing.length > 0
+    } catch {
+      return false
+    }
+  }
+  /** Inclui documentos (especiais/serviço): `[]` NÃO pode apagar o servidor — exclusões usam tombstones. */
   if (!NONATO_PROTECTED_ARRAY_KEYS.has(key) && !NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE.has(key)) return false
   if (!isEmptyDataArray(value)) return false
   try {
@@ -746,16 +779,58 @@ async function shouldBlockEmptyServerOverwrite(key: string, value: unknown): Pro
   }
 }
 
-/** Remove listas vazias protegidas do payload de «Enviar tudo» para não apagar o servidor. */
+async function shouldBlockTombstoneShrinkOverwrite(key: string, value: unknown): Promise<boolean> {
+  if (!NONATO_TOMBSTONE_UNION_KEYS.has(key) || !Array.isArray(value)) return false
+  try {
+    const existing = await forceLoadCadastroFromServer(key)
+    if (!Array.isArray(existing) || existing.length === 0) return false
+    const oldSet = new Set(existing.map((x) => String(x ?? '').trim()).filter(Boolean))
+    const newSet = new Set(value.map((x) => String(x ?? '').trim()).filter(Boolean))
+    for (const id of oldSet) {
+      if (!newSet.has(id)) {
+        console.warn(
+          `[Nonato] Gravação ignorada: «${key}» perderia tombstones (${newSet.size} vs ${oldSet.size}).`
+        )
+        return true
+      }
+    }
+  } catch {
+    return false
+  }
+  return false
+}
+
+async function shouldBlockObjectShrinkServerOverwrite(key: string, value: unknown): Promise<boolean> {
+  if (!NONATO_PROTECTED_OBJECT_KEYS.has(key)) return false
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) return false
+  try {
+    const existing = await forceLoadCadastroFromServer(key)
+    if (!existing || typeof existing !== 'object' || Array.isArray(existing)) return false
+    const oldN = Object.keys(existing as object).length
+    const newN = Object.keys(value as object).length
+    if (oldN > 0 && newN < oldN) {
+      console.warn(
+        `[Nonato] Gravação ignorada: «${key}» tem ${newN} chave(s) — o servidor tem ${oldN}; não substituir mapa maior.`
+      )
+      return true
+    }
+  } catch {
+    return false
+  }
+  return false
+}
+
+/** Remove listas/objetos vazios protegidos do payload de «Enviar tudo» para não apagar o servidor. */
 export function omitEmptyProtectedKeysForServerPush(data: Record<string, any>): Record<string, any> {
   const out: Record<string, any> = { ...data }
   for (const key of NONATO_PROTECTED_ARRAY_KEYS) {
-    /** Documentos elimináveis: `[]` tem de ir ao servidor (último item apagado). */
-    if (ALLOW_PROTECTED_SUBSET_SHRINK_KEYS.has(key)) continue
     if (isEmptyDataArray(out[key])) delete out[key]
   }
   for (const key of NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE) {
     if (isEmptyDataArray(out[key])) delete out[key]
+  }
+  for (const key of NONATO_PROTECTED_OBJECT_KEYS) {
+    if (isEmptyProtectedObject(out[key])) delete out[key]
   }
   for (const key of MANUAIS_OBJECT_KEYS_BLOCK_EMPTY_OVERWRITE) {
     if (isEmptyManuaisLikePayload(out[key])) delete out[key]
@@ -773,6 +848,14 @@ async function _doSaveToServer(
     console.warn(
       `[Nonato] Gravação ignorada: «${key}» vazio não pode substituir o cadastro já guardado no servidor.`
     )
+    dispatchSyncBlocked(key, 'empty')
+    return 'blocked'
+  }
+  if (await shouldBlockTombstoneShrinkOverwrite(key, value)) {
+    dispatchSyncBlocked(key, 'empty')
+    return 'blocked'
+  }
+  if (await shouldBlockObjectShrinkServerOverwrite(key, value)) {
     dispatchSyncBlocked(key, 'empty')
     return 'blocked'
   }
@@ -2141,6 +2224,41 @@ export async function collectAllLocalNonatoDataForSync(): Promise<Record<string,
     /* ignorar */
   }
 
+  /** Relatórios especiais + tombstones — best-of LS/IDB (nunca enviar LS vazio se IDB tem dados). */
+  keys.delete(RELATORIOS_ESPECIAIS_STORAGE_KEY)
+  keys.delete(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY)
+  try {
+    const espSnap = await readLocalValueForLoad(RELATORIOS_ESPECIAIS_STORAGE_KEY, true)
+    if (Array.isArray(espSnap.parsed) && espSnap.parsed.length > 0) {
+      out[RELATORIOS_ESPECIAIS_STORAGE_KEY] = espSnap.parsed
+    }
+  } catch {
+    /* ignorar */
+  }
+  try {
+    const delSnap = await readLocalValueForLoad(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY, true)
+    if (Array.isArray(delSnap.parsed) && delSnap.parsed.length > 0) {
+      out[RELATORIOS_ESPECIAIS_DELETED_IDS_KEY] = delSnap.parsed
+    }
+  } catch {
+    /* ignorar */
+  }
+
+  keys.delete('nonato-fechamentos-relatorios')
+  try {
+    const fechSnap = await readLocalValueForLoad('nonato-fechamentos-relatorios', true)
+    if (
+      fechSnap.parsed &&
+      typeof fechSnap.parsed === 'object' &&
+      !Array.isArray(fechSnap.parsed) &&
+      Object.keys(fechSnap.parsed as object).length > 0
+    ) {
+      out['nonato-fechamentos-relatorios'] = fechSnap.parsed
+    }
+  } catch {
+    /* ignorar */
+  }
+
   for (const key of Array.from(keys)) {
     const raw = localStorage.getItem(key)
     if (raw === null || raw === '') continue
@@ -2759,7 +2877,17 @@ export async function saveData(
         console.warn(`[saveData] espelho IndexedDB falhou para ${key}`, idbErr)
       }
     }
-    if (key === 'nonato-relatorios-especiais' && Array.isArray(value)) {
+    if (
+      (key === 'nonato-relatorios-especiais' || key === RELATORIOS_ESPECIAIS_DELETED_IDS_KEY) &&
+      Array.isArray(value)
+    ) {
+      try {
+        await saveKv(key, value)
+      } catch (idbErr) {
+        console.warn(`[saveData] espelho IndexedDB falhou para ${key}`, idbErr)
+      }
+    }
+    if (key === 'nonato-fechamentos-relatorios' && value && typeof value === 'object' && !Array.isArray(value)) {
       try {
         await saveKv(key, value)
       } catch (idbErr) {
@@ -2832,7 +2960,14 @@ async function readLocalValueForLoad(
     return { parsed: null, raw: null }
   }
 
-  if ((key === PECAS_BIBLIOTECA_KEY || key === RELATORIOS_SERVICO_KEY || key === CLIENTES_KEY) && parseJson) {
+  if (
+    (key === PECAS_BIBLIOTECA_KEY ||
+      key === RELATORIOS_SERVICO_KEY ||
+      key === CLIENTES_KEY ||
+      key === RELATORIOS_ESPECIAIS_STORAGE_KEY ||
+      key === RELATORIOS_ESPECIAIS_DELETED_IDS_KEY) &&
+    parseJson
+  ) {
     return readArrayBestOfLsIdb()
   }
 

@@ -9,6 +9,7 @@ export const NONATO_CRITICAL_CADASTRO_KEYS = [
   'nonato-equipamentos',
   'nonato-relatorios-servico',
   'nonato-relatorios-especiais',
+  'nonato-relatorios-especiais-deleted-ids',
   'nonato-gestores',
   'nonato-tecnicos',
   'nonato-pecas-biblioteca',
@@ -18,9 +19,16 @@ export const NONATO_CRITICAL_CADASTRO_KEYS = [
   'nonato-ordens-servico',
   'nonato-comprovantes-despesas',
   'nonato-protocolos-servico',
+  'nonato-fechamentos-guardados-biblioteca',
 ] as const
 
 export type NonatoCriticalCadastroKey = (typeof NONATO_CRITICAL_CADASTRO_KEYS)[number]
+
+/**
+ * Objetos (Record) críticos — backup e guarda de overwrite vazio.
+ * Fechamentos de cobrança: mapa relatorioId → itens.
+ */
+export const NONATO_CRITICAL_OBJECT_KEYS = ['nonato-fechamentos-relatorios'] as const
 
 /** Todas as chaves-array que nunca podem ser apagadas ou encolhidas no servidor. */
 export const NONATO_PROTECTED_ARRAY_KEYS = new Set<string>([
@@ -29,9 +37,23 @@ export const NONATO_PROTECTED_ARRAY_KEYS = new Set<string>([
   'nonato-diario-pedidos-dia',
   'nonato-conhecimento-tecnicos',
   'nonato-checklist-basico-instancias',
-  'nonato-fechamentos-relatorios',
-  'nonato-fechamentos-guardados-biblioteca',
 ])
+
+/**
+ * Objetos (Record) protegidos — nunca gravar `{}` sobre dados existentes.
+ */
+export const NONATO_PROTECTED_OBJECT_KEYS = new Set<string>([...NONATO_CRITICAL_OBJECT_KEYS])
+
+/** Tombstones: só podem crescer (união), nunca ser substituídos por lista menor/vazia. */
+export const NONATO_TOMBSTONE_UNION_KEYS = new Set<string>([
+  'nonato-relatorios-especiais-deleted-ids',
+])
+
+/** Chaves incluídas no backup de segurança (arrays críticos + objetos críticos). */
+export const NONATO_BACKUP_CADASTRO_KEYS = [
+  ...NONATO_CRITICAL_CADASTRO_KEYS,
+  ...NONATO_CRITICAL_OBJECT_KEYS,
+] as const
 
 /** Chaves IndexedDB que nunca apagar durante wipe/sync total. */
 export const NONATO_IDB_KEYS_NEVER_DELETE = new Set<string>([

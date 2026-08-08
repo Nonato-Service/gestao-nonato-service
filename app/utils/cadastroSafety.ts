@@ -2,6 +2,7 @@
  * Proteção de cadastros críticos — backup antes do arranque e recuperação se algo apagar dados por engano.
  */
 import {
+  NONATO_BACKUP_CADASTRO_KEYS,
   NONATO_CRITICAL_CADASTRO_KEYS,
   localStorageKeyHasMeaningfulCadastro,
   serverKeyHasMeaningfulData,
@@ -98,11 +99,43 @@ async function readClientesRawForBackup(): Promise<string | null> {
   return null
 }
 
+const RELATORIOS_ESPECIAIS_KEY = 'nonato-relatorios-especiais'
+
+async function readArrayBestOfLsIdbRaw(key: string): Promise<string | null> {
+  let fromLs: unknown[] | null = null
+  const rawLs = typeof window !== 'undefined' ? localStorage.getItem(key) : null
+  if (rawLs) {
+    try {
+      const p = JSON.parse(rawLs) as unknown
+      if (Array.isArray(p)) fromLs = p
+    } catch {
+      /* ignorar */
+    }
+  }
+  let fromIdb: unknown[] | null = null
+  try {
+    const idb = await getKv(key)
+    if (Array.isArray(idb)) fromIdb = idb
+  } catch {
+    /* ignorar */
+  }
+  const best =
+    fromLs && fromIdb ? (fromIdb.length >= fromLs.length ? fromIdb : fromLs) : fromIdb || fromLs
+  if (!best || best.length === 0) {
+    return rawLs && localStorageKeyHasMeaningfulCadastro(rawLs) ? rawLs : null
+  }
+  try {
+    return JSON.stringify(best)
+  } catch {
+    return rawLs
+  }
+}
+
 /** Guarda cópia de segurança no IndexedDB antes de qualquer arranque / wipe / deploy. */
 export async function backupCriticalCadastroToIdb(): Promise<void> {
   if (typeof window === 'undefined') return
   const backup: Record<string, string> = {}
-  for (const key of NONATO_CRITICAL_CADASTRO_KEYS) {
+  for (const key of NONATO_BACKUP_CADASTRO_KEYS) {
     if (key === PECAS_BIBLIOTECA_KEY) {
       const raw = await readPecasBibliotecaRawForBackup()
       if (raw && localStorageKeyHasMeaningfulCadastro(raw)) backup[key] = raw
@@ -113,9 +146,23 @@ export async function backupCriticalCadastroToIdb(): Promise<void> {
       if (raw && localStorageKeyHasMeaningfulCadastro(raw)) backup[key] = raw
       continue
     }
+    if (key === RELATORIOS_ESPECIAIS_KEY) {
+      const raw = await readArrayBestOfLsIdbRaw(key)
+      if (raw && localStorageKeyHasMeaningfulCadastro(raw)) backup[key] = raw
+      continue
+    }
     const raw = localStorage.getItem(key)
     if (localStorageKeyHasMeaningfulCadastro(raw)) {
       backup[key] = raw!
+      continue
+    }
+    try {
+      const fromIdb = await getKv(key)
+      if (serverKeyHasMeaningfulData(fromIdb)) {
+        backup[key] = typeof fromIdb === 'string' ? fromIdb : JSON.stringify(fromIdb)
+      }
+    } catch {
+      /* ignorar */
     }
   }
   if (Object.keys(backup).length === 0) return
@@ -141,7 +188,7 @@ export async function restoreCriticalCadastroFromIdbIfNeeded(): Promise<number> 
   if (!backup || typeof backup !== 'object') return 0
 
   let restored = 0
-  for (const key of NONATO_CRITICAL_CADASTRO_KEYS) {
+  for (const key of NONATO_BACKUP_CADASTRO_KEYS) {
     const current = localStorage.getItem(key)
     if (key === PECAS_BIBLIOTECA_KEY && isPecasBibliotecaBackupSuspeito(current)) {
       /* cópia parcial — não bloquear reparo posterior */
@@ -209,13 +256,14 @@ export function dismissCadastroRestoredNotice(restoredCount: number): void {
   }
 }
 
-/** Funde backup de segurança num bundle de servidor vazio ou incompleto. */
+/**
+ * Funde backup de segurança no bundle do servidor.
+ * Por chave: se o servidor vier vazio nessa chave e o backup tiver dados, repõe
+ * (não exige o bundle crítico inteiro vazio — evita perder só especiais/fechamentos).
+ */
 export async function mergeSafetyBackupIntoServerData(
   serverData: Record<string, any>
 ): Promise<Record<string, any>> {
-  if (!serverCadastroBundleIsEmpty(serverData as Record<string, unknown>)) {
-    return serverData
-  }
   let backup: Record<string, string> | null = null
   try {
     backup = (await getKv(BACKUP_KEY)) as Record<string, string> | null
@@ -226,8 +274,14 @@ export async function mergeSafetyBackupIntoServerData(
 
   const merged = { ...serverData }
   let restored = 0
-  for (const key of NONATO_CRITICAL_CADASTRO_KEYS) {
+  const onlyIfBundleEmpty = serverCadastroBundleIsEmpty(serverData as Record<string, unknown>)
+  for (const key of NONATO_BACKUP_CADASTRO_KEYS) {
     if (serverKeyHasMeaningfulData(merged[key])) continue
+    /** Chaves críticas: sempre tentar repor se vazias. Outras do backup: só se o bundle estiver vazio. */
+    const isCritical =
+      (NONATO_CRITICAL_CADASTRO_KEYS as readonly string[]).includes(key) ||
+      key === 'nonato-fechamentos-relatorios'
+    if (!isCritical && !onlyIfBundleEmpty) continue
     const fromBackup = backup[key]
     if (key === PECAS_BIBLIOTECA_KEY && isPecasBibliotecaBackupSuspeito(fromBackup)) continue
     if (!localStorageKeyHasMeaningfulCadastro(fromBackup)) continue
@@ -265,7 +319,7 @@ export async function recoverCriticalCadastroGapsFromIdbAndSnapshot(): Promise<n
   }
 
   let restored = 0
-  for (const key of NONATO_CRITICAL_CADASTRO_KEYS) {
+  for (const key of NONATO_BACKUP_CADASTRO_KEYS) {
     if (localStorageKeyHasMeaningfulCadastro(localStorage.getItem(key))) continue
 
     let payload: unknown = null

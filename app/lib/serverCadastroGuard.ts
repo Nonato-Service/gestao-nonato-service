@@ -1,6 +1,8 @@
 import fs from 'fs'
 import {
   NONATO_PROTECTED_ARRAY_KEYS,
+  NONATO_PROTECTED_OBJECT_KEYS,
+  NONATO_TOMBSTONE_UNION_KEYS,
   serverKeyHasMeaningfulData,
 } from './criticalCadastroKeys'
 import {
@@ -10,7 +12,12 @@ import {
 
 export type ServerCadastroGuardResult =
   | { allowed: true }
-  | { allowed: false; reason: 'empty_overwrite' | 'shrink_overwrite'; existingCount: number; newCount: number }
+  | {
+      allowed: false
+      reason: 'empty_overwrite' | 'shrink_overwrite' | 'tombstone_shrink' | 'object_empty_overwrite' | 'object_shrink_overwrite'
+      existingCount: number
+      newCount: number
+    }
 
 export { ALLOW_PROTECTED_SUBSET_SHRINK_KEYS, isIntentionalSubsetShrink } from './cadastroShrinkPolicy'
 
@@ -37,12 +44,63 @@ function readExistingJsonValue(filePath: string): unknown | null {
   }
 }
 
+function countObjectKeys(value: unknown): number {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return 0
+  return Object.keys(value as object).length
+}
+
+function asIdSet(value: unknown): Set<string> {
+  if (!Array.isArray(value)) return new Set()
+  return new Set(
+    value
+      .map((x) => String(x ?? '').trim())
+      .filter(Boolean)
+  )
+}
+
 /** Última barreira no disco: nunca gravar [] nem lista menor sobre cadastro existente. */
 export function assessServerCadastroWrite(
   key: string,
   value: unknown,
   filePath: string
 ): ServerCadastroGuardResult {
+  if (NONATO_PROTECTED_OBJECT_KEYS.has(key)) {
+    if (Array.isArray(value)) {
+      return { allowed: true }
+    }
+    const existing = readExistingJsonValue(filePath)
+    const existingCount = countObjectKeys(existing)
+    const newCount = countObjectKeys(value)
+    if (existingCount > 0 && newCount === 0) {
+      return { allowed: false, reason: 'object_empty_overwrite', existingCount, newCount }
+    }
+    if (existingCount > 0 && newCount < existingCount) {
+      return { allowed: false, reason: 'object_shrink_overwrite', existingCount, newCount }
+    }
+    return { allowed: true }
+  }
+
+  if (NONATO_TOMBSTONE_UNION_KEYS.has(key) && Array.isArray(value)) {
+    const existing = readExistingJsonArray(filePath) || []
+    const oldSet = asIdSet(existing)
+    const newSet = asIdSet(value)
+    if (oldSet.size > 0 && newSet.size < oldSet.size) {
+      let missing = 0
+      for (const id of oldSet) {
+        if (!newSet.has(id)) missing++
+      }
+      if (missing > 0) {
+        return {
+          allowed: false,
+          reason: 'tombstone_shrink',
+          existingCount: oldSet.size,
+          newCount: newSet.size,
+        }
+      }
+    }
+    return { allowed: true }
+  }
+
   if (!NONATO_PROTECTED_ARRAY_KEYS.has(key)) {
     return { allowed: true }
   }
@@ -55,14 +113,7 @@ export function assessServerCadastroWrite(
   const newCount = value.length
 
   if (existingCount > 0 && newCount === 0) {
-    /** Documentos (relatórios especiais, etc.): apagar o último item é válido. */
-    if (
-      ALLOW_PROTECTED_SUBSET_SHRINK_KEYS.has(key) &&
-      existing &&
-      isIntentionalSubsetShrink(existing, value)
-    ) {
-      return { allowed: true }
-    }
+    /** Wipe total com `[]` bloqueado — exclusões usam tombstones + lista restante (nunca vazia no servidor se ainda há histórico). */
     return { allowed: false, reason: 'empty_overwrite', existingCount, newCount }
   }
   if (existingCount > 0 && newCount < existingCount) {

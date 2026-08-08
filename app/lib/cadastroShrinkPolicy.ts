@@ -23,8 +23,12 @@ function itemId(item: unknown): string {
   return String((item as { id?: unknown }).id ?? '').trim()
 }
 
-/** Todos os IDs novos existiam na lista antiga — exclusão intencional, não substituição parcial. */
+/**
+ * Todos os IDs novos existiam na lista antiga — exclusão intencional, não substituição parcial.
+ * Lista vazia NÃO conta: wipe total exige tombstones / outro fluxo — nunca apagar o servidor com `[]`.
+ */
 export function isIntentionalSubsetShrink(existing: unknown[], next: unknown[]): boolean {
+  if (!Array.isArray(next) || next.length === 0) return false
   const oldIds = new Set(existing.map(itemId).filter(Boolean))
   if (oldIds.size === 0) return false
   for (const item of next) {

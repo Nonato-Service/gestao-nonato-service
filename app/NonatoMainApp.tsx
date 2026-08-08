@@ -346,6 +346,7 @@ import {
   adaptRelatorioEspecialParaFechamentoShape,
   buildItensFechamentoBaseRelatorioEspecial,
   encontrarRelatorioEspecialPorOsInput,
+  isRelatorioEspecialId,
   numeroPareceRelatorioEspecial,
 } from './lib/relatorioEspecialFechamentoCobranca'
 import {
@@ -24763,6 +24764,27 @@ export default function Dashboard() {
   }
 
   function buildItensFechamentoBaseRelatorio(r: RelatorioServico): FechamentoItem[] {
+    if (isRelatorioEspecialId(r.id)) {
+      const esp = relatoriosEspeciais.find((e) => e.id === r.id)
+      if (esp) {
+        const base = buildItensFechamentoBaseRelatorioEspecial(esp, {
+          horasTrabalho: t.horasTrabalho,
+          kmsPercorridos: t.kmsPercorridos,
+          diarias: t.diarias,
+          horasViagemIda: t.horasViagemIda,
+          horasViagemRetorno: t.horasViagemRetorno,
+        }) as FechamentoItem[]
+        const grupoId = fechamentoGrupoPorRelatorioId[r.id] || null
+        return base.map((item) =>
+          enriquecerLinhaFechamentoComCadastro(
+            item,
+            servicos as ServicoCadastroFechamentoMin[],
+            undefined,
+            grupoId
+          )
+        )
+      }
+    }
     const hhmmToDecimal = (s: string): number => {
       const raw = String(s ?? '').trim()
       if (!raw) return 0
