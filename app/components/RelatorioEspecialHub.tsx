@@ -161,6 +161,8 @@ export default function RelatorioEspecialHub({
   const [form, setForm] = useState<RelatorioEspecial>(() => criarRelatorioEspecialVazio())
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [diaExpandido, setDiaExpandido] = useState<string | null>(null)
+  /** Uids dos cartões de equipamento abertos (expandir / retrair detalhes). */
+  const [equipExpandidos, setEquipExpandidos] = useState<Set<string>>(() => new Set())
   const [salvando, setSalvando] = useState(false)
   /** 'eliminar' = não mostrar textos de «guardar» durante a exclusão */
   const [acaoEmCurso, setAcaoEmCurso] = useState<'guardar' | 'eliminar' | null>(null)
@@ -216,6 +218,7 @@ export default function RelatorioEspecialHub({
     setEditandoId(null)
     setModo('form')
     setDiaExpandido(null)
+    setEquipExpandidos(new Set())
   }, [preverNumero, marcarSnapshot])
 
   /** Novo relatório: mantém data e número alinhados ao dia actual (meia-noite, regresso ao separador). */
@@ -267,6 +270,7 @@ export default function RelatorioEspecialHub({
       setEditandoId(rel.id)
       setModo('form')
       setDiaExpandido(null)
+      setEquipExpandidos(new Set())
     },
     [marcarSnapshot]
   )
@@ -361,7 +365,26 @@ export default function RelatorioEspecialHub({
       )
       return
     }
-    atualizarEquipamentos([...(form.equipamentos || []), criarEquipamentoRelatorioVazio('cliente')])
+    const novo = criarEquipamentoRelatorioVazio('cliente')
+    atualizarEquipamentos([...(form.equipamentos || []), novo])
+    setEquipExpandidos((prev) => new Set(prev).add(novo.uid))
+  }
+
+  const toggleEquipExpandido = (uid: string) => {
+    setEquipExpandidos((prev) => {
+      const next = new Set(prev)
+      if (next.has(uid)) next.delete(uid)
+      else next.add(uid)
+      return next
+    })
+  }
+
+  const expandirTodosEquipamentos = () => {
+    setEquipExpandidos(new Set((form.equipamentos || []).map((e) => e.uid)))
+  }
+
+  const retrairTodosEquipamentos = () => {
+    setEquipExpandidos(new Set())
   }
 
   const adicionarDia = () => {
@@ -762,14 +785,34 @@ export default function RelatorioEspecialHub({
                 'Adicione equipamentos do cliente ou busque na biblioteca do armazém. Edite ID, modelo e n.º série.'}
             </p>
           </div>
-          <button
-            type="button"
-            className="btn-secondary relatorio-equipamentos-block__add"
-            disabled={!podeAdicionarEquip}
-            onClick={adicionarEquipamento}
-          >
-            + {t.relatorioAdicionarEquipamento || 'Adicionar equipamento'}
-          </button>
+          <div className="relatorio-equipamentos-block__acoes">
+            {(form.equipamentos || []).length > 0 && (
+              <>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={expandirTodosEquipamentos}
+                >
+                  {t.expandirTodos || t.expandAll || 'Expandir todos'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={retrairTodosEquipamentos}
+                >
+                  {t.retrairTodos || t.collapseAll || 'Retrair todos'}
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              className="btn-secondary relatorio-equipamentos-block__add"
+              disabled={!podeAdicionarEquip}
+              onClick={adicionarEquipamento}
+            >
+              + {t.relatorioAdicionarEquipamento || 'Adicionar equipamento'}
+            </button>
+          </div>
         </div>
 
         {(form.equipamentos || []).length === 0 ? (
@@ -778,21 +821,54 @@ export default function RelatorioEspecialHub({
           </p>
         ) : (
           <div className="relatorio-equipamentos-list">
-            {(form.equipamentos || []).map((eq, eqIdx) => (
-              <div key={eq.uid} className="relatorio-equipamento-card">
+            {(form.equipamentos || []).map((eq, eqIdx) => {
+              const aberto = equipExpandidos.has(eq.uid)
+              const resumoLinha = [
+                eq.equipamentoId || '',
+                eq.maquinaModelo || '',
+                eq.numeroMaquina ? `S/N ${eq.numeroMaquina}` : '',
+              ]
+                .filter(Boolean)
+                .join(' · ')
+              return (
+              <div
+                key={eq.uid}
+                className={`relatorio-equipamento-card${aberto ? ' relatorio-equipamento-card--aberto' : ' relatorio-equipamento-card--fechado'}`}
+              >
                 <div className="relatorio-equipamento-card__head">
-                  <span className="relatorio-equipamento-card__badge">
-                    {(t.relatorioEquipamentoNumero || 'Equipamento {n}').replace('{n}', String(eqIdx + 1))}
-                  </span>
+                  <button
+                    type="button"
+                    className="relatorio-equipamento-card__toggle"
+                    onClick={() => toggleEquipExpandido(eq.uid)}
+                    aria-expanded={aberto}
+                  >
+                    <span className="relatorio-equipamento-card__badge">
+                      {(t.relatorioEquipamentoNumero || 'Equipamento {n}').replace('{n}', String(eqIdx + 1))}
+                    </span>
+                    <span className="relatorio-equipamento-card__resumo">
+                      {resumoLinha || (t.relatorioEspecialEquipSemDetalhe || 'Sem detalhes — toque para editar')}
+                    </span>
+                    <span className="relatorio-equipamento-card__chevron" aria-hidden="true">
+                      {aberto ? '▲' : '▼'}
+                    </span>
+                  </button>
                   <button
                     type="button"
                     className="btn-danger btn-danger--inline relatorio-equipamento-card__remove"
-                    onClick={() => atualizarEquipamentos((form.equipamentos || []).filter((x) => x.uid !== eq.uid))}
+                    onClick={() => {
+                      atualizarEquipamentos((form.equipamentos || []).filter((x) => x.uid !== eq.uid))
+                      setEquipExpandidos((prev) => {
+                        const next = new Set(prev)
+                        next.delete(eq.uid)
+                        return next
+                      })
+                    }}
                   >
                     {t.removerEquipamentoRelatorio || 'Remover'}
                   </button>
                 </div>
 
+                {aberto && (
                 <div className="relatorio-equipamento-card__grid">
                   <div className="relatorio-equipamento-card__field--full">
                     <span className="relatorio-equipamento-card__label relatorio-equipamento-card__label--blue">
@@ -1004,8 +1080,10 @@ export default function RelatorioEspecialHub({
                     </div>
                   )}
                 </div>
+                )}
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </section>
