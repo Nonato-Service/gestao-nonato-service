@@ -8425,6 +8425,8 @@ export default function Dashboard() {
   const [clientesListaDetalheExpandidoIds, setClientesListaDetalheExpandidoIds] = useState<Set<string>>(
     () => new Set()
   )
+  /** Painel A–Z (bloco inteiro com as letras) aberto/retraído. */
+  const [clientesAlfaBlocoAberto, setClientesAlfaBlocoAberto] = useState(true)
   const [clientesActiveTab, setClientesActiveTabState] = useState<'cadastrar' | 'listar' | 'grupos'>('cadastrar')
   const setClientesActiveTab = useCallback((tab: 'cadastrar' | 'listar' | 'grupos') => {
     void (async () => {
@@ -41385,31 +41387,32 @@ export default function Dashboard() {
                 )}
 
                 {clientesFiltrados.length > 0 && (
-                  <div className="clientes-alfa-wrap clientes-cadastrados-lista">
-                    <div className="clientes-alfa-toolbar">
-                      <button
-                        type="button"
-                        className="btn-secondary clientes-alfa-toolbar__btn"
-                        onClick={() => {
-                          setClientesAlfaLetrasRecolhidas(new Set())
-                          setClientesListaDetalheExpandidoIds(
-                            new Set(clientesFiltrados.map((c) => c.id).filter(Boolean) as string[])
-                          )
-                        }}
-                      >
-                        {(safeT as any)?.expandirTodos || 'Expandir todos'}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-secondary clientes-alfa-toolbar__btn"
-                        onClick={() => {
-                          setClientesAlfaLetrasRecolhidas(new Set(clientesLetrasParaLista))
-                          setClientesListaDetalheExpandidoIds(new Set())
-                        }}
-                      >
-                        {(safeT as any)?.retrairTodos || 'Retrair todos'}
-                      </button>
-                    </div>
+                  <div
+                    className={`clientes-alfa-painel${clientesAlfaBlocoAberto ? ' clientes-alfa-painel--aberto' : ' clientes-alfa-painel--retraido'}`}
+                  >
+                    <button
+                      type="button"
+                      className="clientes-alfa-painel__toggle"
+                      aria-expanded={clientesAlfaBlocoAberto}
+                      title={
+                        clientesAlfaBlocoAberto
+                          ? (safeT as any)?.clientesAlfaPainelRetrair || 'Retrair bloco'
+                          : (safeT as any)?.clientesAlfaPainelExpandir || 'Expandir bloco'
+                      }
+                      onClick={() => setClientesAlfaBlocoAberto((v) => !v)}
+                    >
+                      <span className="clientes-alfa-painel__title">
+                        {(safeT as any)?.clientesAlfaPainelTitulo || 'Clientes por letra'}
+                      </span>
+                      <span className="clientes-alfa-painel__count" aria-hidden>
+                        {clientesListaFiltradaCount}
+                      </span>
+                      <span className="clientes-alfa-painel__chevron" aria-hidden>
+                        {clientesAlfaBlocoAberto ? '▲' : '▼'}
+                      </span>
+                    </button>
+                    {clientesAlfaBlocoAberto ? (
+                    <div className="clientes-alfa-wrap clientes-cadastrados-lista">
                     <nav
                       className="clientes-alfa-jump clientes-alfa-jump--modern"
                       aria-label={safeT?.clientesAlfabetoIndice || 'Índice A–Z'}
@@ -41534,6 +41537,8 @@ export default function Dashboard() {
                         </section>
                         )
                       })
+                    ) : null}
+                    </div>
                     ) : null}
                   </div>
                 )}

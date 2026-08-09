@@ -7711,6 +7711,70 @@ a:focus-visible {
   box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.2) !important;
 }
 
+/* Clientes > Listar — painel A–Z (bloco inteiro retrátil) */
+.clientes-alfa-painel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid #00c853;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+.clientes-alfa-painel__toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 12px 14px;
+  border: none;
+  background: rgba(0, 0, 0, 0.22);
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.clientes-alfa-painel__toggle:hover {
+  background: rgba(0, 200, 83, 0.1);
+}
+.clientes-alfa-painel__title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+}
+.clientes-alfa-painel__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #86efac;
+  background: rgba(0, 200, 83, 0.16);
+  border: 1px solid rgba(0, 200, 83, 0.35);
+}
+.clientes-alfa-painel__chevron {
+  margin-left: auto;
+  color: #00c853;
+  font-size: 12px;
+  opacity: 0.95;
+}
+.clientes-alfa-painel--retraido .clientes-alfa-painel__toggle {
+  border-radius: 0;
+}
+.clientes-alfa-painel .clientes-alfa-wrap {
+  padding: 12px 12px 14px;
+}
+
 /* Clientes > Listar — índice alfabético (nomes por letra) */
 .clientes-alfa-wrap {
   display: flex;
