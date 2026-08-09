@@ -900,12 +900,14 @@ export default function RelatorioEspecialHub({
         </div>
       </section>
 
-      <section style={{ marginBottom: 24 }} className="relatorio-equipamentos-block">
-        <div className="relatorio-equipamentos-block__head">
+      <section className="relatorio-equipamentos-block relatorio-especial-panel">
+        <div className="relatorio-equipamentos-block__head relatorio-especial-panel__head">
           <div>
-            <h3 className="relatorio-equipamentos-block__title" style={{ margin: 0 }}>
-              {t.relatorioEspecialEquipamentos || 'Equipamentos'} ({form.equipamentos?.length || 0}/
-              {MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES})
+            <h3 className="relatorio-equipamentos-block__title relatorio-especial-panel__title">
+              {t.relatorioEspecialEquipamentos || 'Equipamentos'}{' '}
+              <span className="relatorio-especial-panel__count">
+                ({form.equipamentos?.length || 0}/{MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES})
+              </span>
             </h3>
             <p className="relatorio-equipamentos-block__lead">
               {t.relatorioEspecialEquipamentosAjuda ||
@@ -933,7 +935,7 @@ export default function RelatorioEspecialHub({
             )}
             <button
               type="button"
-              className="btn-secondary relatorio-equipamentos-block__add"
+              className="btn-primary relatorio-equipamentos-block__add"
               disabled={!podeAdicionarEquip}
               onClick={adicionarEquipamento}
             >
@@ -1219,42 +1221,55 @@ export default function RelatorioEspecialHub({
         )}
       </section>
 
-      <section style={{ marginBottom: 24 }}>
-        <div className="relatorio-equipamentos-block__head">
-          <h3 style={{ margin: 0 }}>{t.diasTrabalho || 'Dias de trabalho'}</h3>
-          <button type="button" className="btn-secondary relatorio-equipamentos-block__add" onClick={adicionarDia}>
+      <section className="relatorio-especial-panel relatorio-especial-panel--dias">
+        <div className="relatorio-equipamentos-block__head relatorio-especial-panel__head">
+          <div>
+            <h3 className="relatorio-especial-panel__title">{t.diasTrabalho || 'Dias de trabalho'}</h3>
+            <p className="relatorio-especial-dia-secao__ajuda relatorio-especial-panel__lead">
+              {t.relatorioEspecialInformacaoApenasData ||
+                t.informacaoApenasDataObrigatoria ||
+                'Apenas a data é obrigatória. Horários, KM e equipamentos são opcionais.'}
+            </p>
+          </div>
+          <button type="button" className="btn-primary relatorio-equipamentos-block__add" onClick={adicionarDia}>
             + {t.adicionarDia || 'Adicionar dia'}
           </button>
         </div>
-        <p className="relatorio-especial-dia-secao__ajuda" style={{ margin: '0 0 8px' }}>
-          {t.relatorioEspecialInformacaoApenasData ||
-            t.informacaoApenasDataObrigatoria ||
-            'Apenas a data é obrigatória. Horários, KM e equipamentos são opcionais.'}
-        </p>
-        <p className="relatorio-especial-dia-secao__ajuda" style={{ margin: '0 0 12px', color: '#00c853' }}>
-          ℹ️{' '}
-          {t.relatorioEspecialDiasFimSemanaOk ||
-            'Sábado e domingo também contam como dias de trabalho (diárias).'}
-        </p>
+        <div className="relatorio-especial-callout" role="note">
+          <span className="relatorio-especial-callout__icon" aria-hidden="true">
+            i
+          </span>
+          <p>
+            {t.relatorioEspecialDiasFimSemanaOk ||
+              'Sábado e domingo também contam como dias de trabalho (diárias).'}
+          </p>
+        </div>
 
         {diasOrdenados.length > 0 ? (
-          <div style={{ marginBottom: 16 }}>
-            <h4 style={{ margin: '0 0 10px', fontSize: 14, color: 'rgba(255,255,255,0.9)' }}>
-              {t.controleHorasDeslocamentos || 'Controlo de horas e deslocamentos'}
-            </h4>
-            <div className="relatorio-dias-trabalho-wrap">
-              <table className="relatorio-dias-trabalho-table" style={{ backgroundColor: '#404040', fontSize: 10 }}>
+          <div className="relatorio-especial-horas-block">
+            <div className="relatorio-especial-horas-block__head">
+              <h4 className="relatorio-especial-horas-block__title">
+                {t.controleHorasDeslocamentos || 'Controlo de horas e deslocamentos'}
+              </h4>
+              <span className="relatorio-especial-horas-block__meta">
+                {(t.diarias || 'Diárias')}: <strong>{totais.diarias}</strong>
+              </span>
+            </div>
+            <div className="relatorio-dias-trabalho-wrap relatorio-especial-table-shell">
+              <table className="relatorio-dias-trabalho-table relatorio-especial-horas-table">
                 <thead>
-                  <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.12)' }}>
+                  <tr className="relatorio-especial-horas-table__group">
                     <th rowSpan={2}>{t.data || 'Data'}</th>
                     <th colSpan={3}>{t.ida || 'Ida'}</th>
                     <th colSpan={3}>{t.relatorioEspecialPdfHorasTrabalho || t.horas || 'Horas de trabalho'}</th>
                     <th colSpan={3}>{t.retorno || 'Retorno'}</th>
                     <th colSpan={3}>{t.km || 'KM'}</th>
                     <th rowSpan={2}>{t.pausa || 'Pausa'}</th>
-                    <th rowSpan={2}>{t.acao || 'Ação'}</th>
+                    <th rowSpan={2} className="relatorio-dia-acao-head">
+                      {t.acao || 'Ação'}
+                    </th>
                   </tr>
-                  <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.12)' }}>
+                  <tr className="relatorio-especial-horas-table__sub">
                     <th>{t.saida || 'Saída'}</th>
                     <th>{t.chegada || 'Chegada'}</th>
                     <th>{t.duracao || 'Duração'}</th>
@@ -1281,11 +1296,7 @@ export default function RelatorioEspecialHub({
                         <tr className={sem.isFimDeSemana ? 're-dia-linha--fim-semana' : undefined}>
                           <td
                             rowSpan={temDescricao ? 2 : 1}
-                            style={{
-                              fontWeight: 700,
-                              whiteSpace: 'nowrap',
-                              color: sem.isFimDeSemana ? '#ffd54f' : undefined,
-                            }}
+                            className={`relatorio-especial-horas-table__data${sem.isFimDeSemana ? ' relatorio-especial-horas-table__data--fds' : ''}`}
                           >
                             {formatDiaComDiaSemana(dia.data, t)}
                           </td>
@@ -1294,12 +1305,12 @@ export default function RelatorioEspecialHub({
                           <td>{diaCalc.idaDuracao || '—'}</td>
                           <td>{horasResumo.inicio}</td>
                           <td>{horasResumo.fim}</td>
-                          <td>
+                          <td className="relatorio-especial-horas-table__liquido">
                             <strong>{horasResumo.duracaoLiquida}</strong>
                             {horasResumo.almocoMinutos > 0 && horasResumo.duracaoBruta !== horasResumo.duracaoLiquida ? (
-                              <div style={{ fontSize: 9, color: '#aaa', marginTop: 2 }}>
+                              <span className="relatorio-especial-horas-table__hint">
                                 {horasResumo.duracaoBruta} − {horasResumo.almocoFmt} {t.horaAlmoco || 'almoço'}
-                              </div>
+                              </span>
                             ) : null}
                           </td>
                           <td>{dia.retornoSaida || '—'}</td>
@@ -1310,7 +1321,7 @@ export default function RelatorioEspecialHub({
                           <td>{diaCalc.kmTotal || '0'}</td>
                           <td rowSpan={temDescricao ? 2 : 1}>{pausaFmt}</td>
                           <td className="relatorio-dia-acao-cell" rowSpan={temDescricao ? 2 : 1}>
-                            <div style={{ display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
+                            <div className="relatorio-especial-horas-table__acoes">
                               <button
                                 type="button"
                                 className="dia-trabalho-acao-btn dia-trabalho-acao-btn--edit"
@@ -1336,9 +1347,9 @@ export default function RelatorioEspecialHub({
                           </td>
                         </tr>
                         {temDescricao && (
-                          <tr>
+                          <tr className="relatorio-especial-horas-table__desc-row">
                             <td colSpan={12} className="relatorio-dia-descricao-cell">
-                              📝 {dia.descricaoTrabalho}
+                              {dia.descricaoTrabalho}
                             </td>
                           </tr>
                         )}
@@ -1347,14 +1358,15 @@ export default function RelatorioEspecialHub({
                   })}
                 </tbody>
                 <tfoot>
-                  <tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.2)', fontWeight: 700 }}>
-                    <td colSpan={6} style={{ textAlign: 'right' }}>{t.totais || 'TOTAIS'}</td>
-                    <td>
-                      <strong style={{ color: '#00c853' }}>{formatMinutosComoHHMM(totais.horasTrabalhoTotal)}</strong>
+                  <tr className="relatorio-especial-horas-table__totais">
+                    <td colSpan={6}>{t.totais || 'TOTAIS'}</td>
+                    <td className="relatorio-especial-horas-table__liquido">
+                      <strong>{formatMinutosComoHHMM(totais.horasTrabalhoTotal)}</strong>
                       {totais.horasAlmocoTotal > 0 ? (
-                        <div style={{ fontSize: 9, color: '#aaa', fontWeight: 400 }}>
-                          {formatMinutosComoHHMM(totais.horasTrabalhoBruto)} − {formatMinutosComoHHMM(totais.horasAlmocoTotal)} {t.horaAlmoco || 'almoço'}
-                        </div>
+                        <span className="relatorio-especial-horas-table__hint">
+                          {formatMinutosComoHHMM(totais.horasTrabalhoBruto)} −{' '}
+                          {formatMinutosComoHHMM(totais.horasAlmocoTotal)} {t.horaAlmoco || 'almoço'}
+                        </span>
                       ) : null}
                     </td>
                     <td colSpan={3} />
@@ -1366,12 +1378,9 @@ export default function RelatorioEspecialHub({
                 </tfoot>
               </table>
             </div>
-            <p style={{ margin: '8px 0 0', fontSize: 12, color: '#aaa' }}>
-              {t.diarias || 'Diárias'}: <strong style={{ color: '#00c853' }}>{totais.diarias}</strong>
-            </p>
           </div>
         ) : (
-          <p style={{ color: '#ffaa00', fontSize: 13, marginBottom: 16 }}>
+          <p className="relatorio-especial-empty-hint">
             {t.relatorioEspecialNenhumDiaTrabalho || t.nenhumDiaTrabalhoAdicionado || 'Nenhum dia de trabalho ainda.'}
           </p>
         )}
