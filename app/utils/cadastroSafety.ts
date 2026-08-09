@@ -376,6 +376,139 @@ export async function recoverCriticalCadastroGapsFromIdbAndSnapshot(): Promise<n
   return restored
 }
 
+function parseEspecialArray(raw: unknown): Array<{ id?: unknown; numero?: unknown; diasTrabalho?: unknown[]; equipamentos?: unknown[] }> {
+  if (Array.isArray(raw)) return raw as Array<{ id?: unknown; numero?: unknown; diasTrabalho?: unknown[]; equipamentos?: unknown[] }>
+  if (typeof raw === 'string' && raw.trim()) {
+    try {
+      const p = JSON.parse(raw) as unknown
+      return Array.isArray(p) ? (p as Array<{ id?: unknown; numero?: unknown; diasTrabalho?: unknown[]; equipamentos?: unknown[] }>) : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
+
+function riquezaRelatorioEspecial(r: {
+  diasTrabalho?: unknown[]
+  equipamentos?: unknown[]
+  numero?: unknown
+  cliente?: unknown
+}): number {
+  let n = 0
+  n += (r.diasTrabalho?.length || 0) * 1000
+  n += (r.equipamentos?.length || 0) * 50
+  try {
+    n += JSON.stringify(r).length
+  } catch {
+    /* ignorar */
+  }
+  return n
+}
+
+/**
+ * Recupera relatórios especiais em falta: funde por id a partir do backup de segurança,
+ * snapshot offline e IndexedDB — mesmo quando a lista local já tem outros relatórios.
+ * @returns quantidade de relatórios recuperados / enriquecidos
+ */
+export async function recoverMissingRelatoriosEspeciaisByIdMerge(): Promise<number> {
+  if (typeof window === 'undefined') return 0
+
+  const sources: unknown[] = []
+  try {
+    const backup = (await getKv(BACKUP_KEY)) as Record<string, string> | null
+    if (backup && typeof backup === 'object' && backup[RELATORIOS_ESPECIAIS_KEY]) {
+      sources.push(backup[RELATORIOS_ESPECIAIS_KEY])
+    }
+  } catch {
+    /* ignorar */
+  }
+  try {
+    const snap = await getKv(SNAPSHOT_KEY)
+    if (snap && typeof snap === 'object' && !Array.isArray(snap)) {
+      sources.push((snap as Record<string, unknown>)[RELATORIOS_ESPECIAIS_KEY])
+    }
+  } catch {
+    /* ignorar */
+  }
+  try {
+    sources.push(await getKv(RELATORIOS_ESPECIAIS_KEY))
+  } catch {
+    /* ignorar */
+  }
+  try {
+    sources.push(localStorage.getItem(RELATORIOS_ESPECIAIS_KEY))
+  } catch {
+    /* ignorar */
+  }
+
+  const byId = new Map<string, { id?: unknown; numero?: unknown; diasTrabalho?: unknown[]; equipamentos?: unknown[] }>()
+  for (const src of sources) {
+    for (const item of parseEspecialArray(src)) {
+      const id = String(item?.id ?? '').trim()
+      if (!id) continue
+      const prev = byId.get(id)
+      if (!prev || riquezaRelatorioEspecial(item) >= riquezaRelatorioEspecial(prev)) {
+        byId.set(id, item)
+      }
+    }
+  }
+  if (byId.size === 0) return 0
+
+  let current = parseEspecialArray(localStorage.getItem(RELATORIOS_ESPECIAIS_KEY))
+  try {
+    const idbCur = await getKv(RELATORIOS_ESPECIAIS_KEY)
+    const fromIdb = parseEspecialArray(idbCur)
+    if (fromIdb.length > current.length) current = fromIdb
+  } catch {
+    /* ignorar */
+  }
+
+  const curById = new Map<string, (typeof current)[number]>()
+  for (const item of current) {
+    const id = String(item?.id ?? '').trim()
+    if (id) curById.set(id, item)
+  }
+
+  let changed = 0
+  for (const [id, candidate] of byId) {
+    const existing = curById.get(id)
+    if (!existing) {
+      curById.set(id, candidate)
+      changed++
+      continue
+    }
+    if (riquezaRelatorioEspecial(candidate) > riquezaRelatorioEspecial(existing) + 80) {
+      curById.set(id, candidate)
+      changed++
+    }
+  }
+
+  if (changed === 0) return 0
+
+  const merged = [...curById.values()]
+  try {
+    localStorage.setItem(RELATORIOS_ESPECIAIS_KEY, JSON.stringify(merged))
+  } catch {
+    /* quota — tentar só IDB */
+  }
+  try {
+    await saveKv(RELATORIOS_ESPECIAIS_KEY, merged)
+  } catch {
+    /* ignorar */
+  }
+  try {
+    window.dispatchEvent(
+      new CustomEvent('nonato-data-local-changed', { detail: { key: RELATORIOS_ESPECIAIS_KEY } })
+    )
+  } catch {
+    /* ignorar */
+  }
+  noteCadastroRestore(1)
+  console.info(`[Nonato] Relatórios especiais recuperados/enriquecidos: ${changed}`)
+  return changed
+}
+
 /** Nunca gravar snapshot offline mais vazio do que o que já existe. */
 export async function safeMergeOfflineSnapshot(data: Record<string, any>): Promise<void> {
   if (typeof window === 'undefined' || Object.keys(data).length === 0) return

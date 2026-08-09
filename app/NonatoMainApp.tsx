@@ -128,6 +128,7 @@ import {
   restoreCriticalCadastroFromIdbIfNeeded,
   mergeSafetyBackupIntoServerData,
   recoverCriticalCadastroGapsFromIdbAndSnapshot,
+  recoverMissingRelatoriosEspeciaisByIdMerge,
   hasMeaningfulCadastroInLocalStorage,
   consumeCadastroRestoredNoticeCount,
   dismissCadastroRestoredNotice,
@@ -14554,6 +14555,21 @@ export default function Dashboard() {
         if (!bootstrapLoadErrored && typeof window !== 'undefined') {
           await restoreCriticalCadastroFromIdbIfNeeded()
           const gapRestored = await recoverCriticalCadastroGapsFromIdbAndSnapshot()
+          const especiaisRecuperados = await recoverMissingRelatoriosEspeciaisByIdMerge()
+          if (especiaisRecuperados > 0) {
+            try {
+              const rawEsp = localStorage.getItem(RELATORIOS_ESPECIAIS_STORAGE_KEY)
+              if (rawEsp) {
+                const parsedEsp = JSON.parse(rawEsp) as RelatorioEspecial[]
+                if (Array.isArray(parsedEsp)) {
+                  const deletedIds = readDeletedIdsFromLocalStorage()
+                  setRelatoriosEspeciais(filterByDeletedIds(parsedEsp, deletedIds) as RelatorioEspecial[])
+                }
+              }
+            } catch {
+              /* ignorar */
+            }
+          }
           if (gapRestored > 0) {
             try {
               const raw = localStorage.getItem('nonato-clientes')

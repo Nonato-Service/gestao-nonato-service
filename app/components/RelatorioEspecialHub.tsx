@@ -114,6 +114,45 @@ function labelResumoCobrancaEspecial(
   return t.resumoCobrancaEstadoPendente || 'Decidir cobrança'
 }
 
+const RASCUNHO_ESPECIAL_KEY = 'nonato-relatorio-especial-rascunho'
+
+function lerRascunhoEspecial(): RelatorioEspecial | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(RASCUNHO_ESPECIAL_KEY)
+    if (!raw) return null
+    const p = JSON.parse(raw) as RelatorioEspecial
+    if (!p || typeof p !== 'object' || !p.id) return null
+    return p
+  } catch {
+    return null
+  }
+}
+
+function gravarRascunhoEspecial(rel: RelatorioEspecial): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(RASCUNHO_ESPECIAL_KEY, JSON.stringify(rel))
+  } catch {
+    /* quota */
+  }
+}
+
+function limparRascunhoEspecial(): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.removeItem(RASCUNHO_ESPECIAL_KEY)
+  } catch {
+    /* ignorar */
+  }
+}
+
+function rascunhoEspecialTemConteudo(rel: RelatorioEspecial): boolean {
+  const eqs = (rel.equipamentos || []).filter((e) => e.equipamentoId || e.maquinaModelo || e.numeroMaquina)
+  const dias = rel.diasTrabalho || []
+  return Boolean(rel.cliente?.trim() || rel.tecnico?.trim() || eqs.length > 0 || dias.length > 0)
+}
+
 export default function RelatorioEspecialHub({
   relatorios,
   onSaveAll,
@@ -210,7 +249,9 @@ export default function RelatorioEspecialHub({
   const [salvando, setSalvando] = useState(false)
   /** 'eliminar' = não mostrar textos de «guardar» durante a exclusão */
   const [acaoEmCurso, setAcaoEmCurso] = useState<'guardar' | 'eliminar' | null>(null)
+  const [recuperando, setRecuperando] = useState(false)
   const snapshotGuardadoRef = useRef('')
+  const rascunhoOferecidoRef = useRef(false)
 
   const formComTotais = useMemo(() => aplicarTotaisNoRelatorioEspecial(form), [form])
 
@@ -302,6 +343,38 @@ export default function RelatorioEspecialHub({
     }
   }, [modo, editandoId, sincronizarDataHojeNovoRelatorio])
 
+  /** Rascunho automático — sobrevive a atualização PWA / fecho acidental. */
+  useEffect(() => {
+    if (modo !== 'form' && modo !== 'fechamento') return
+    if (!rascunhoEspecialTemConteudo(formComTotais)) return
+    const id = window.setTimeout(() => gravarRascunhoEspecial(formComTotais), 400)
+    return () => window.clearTimeout(id)
+  }, [modo, formComTotais])
+
+  useEffect(() => {
+    if (rascunhoOferecidoRef.current || modo !== 'lista') return
+    rascunhoOferecidoRef.current = true
+    const draft = lerRascunhoEspecial()
+    if (!draft || !rascunhoEspecialTemConteudo(draft)) return
+    const jaGuardado = relatorios.some((r) => String(r.id) === String(draft.id))
+    const msg = jaGuardado
+      ? t.relatorioEspecialRascunhoContinuar ||
+        'Há um rascunho deste relatório especial. Quer continuar a editar?'
+      : t.relatorioEspecialRascunhoRecuperar ||
+        'Encontrámos um rascunho do relatório especial (pode ser o de hoje). Quer recuperá-lo?'
+    if (!window.confirm(msg)) return
+    setForm({
+      ...draft,
+      equipamentos: [...(draft.equipamentos || [])],
+      diasTrabalho: [...(draft.diasTrabalho || [])],
+    })
+    marcarSnapshot(draft)
+    setEditandoId(jaGuardado ? draft.id : null)
+    setModo('form')
+    setDiaExpandido(null)
+    setEquipExpandidos(new Set())
+  }, [modo, relatorios, t, marcarSnapshot])
+
   const abrirEditar = useCallback(
     (rel: RelatorioEspecial) => {
       const copia = {
@@ -342,11 +415,10 @@ export default function RelatorioEspecialHub({
       try {
         const rid = String(rel.id || '').trim()
         const rnum = String(rel.numero || '').trim()
+              // Só eliminar por id — nunca por número (evita apagar outro relatório do mesmo dia).
         const lista = relatorios.filter((r) => {
           const id = String(r.id || '').trim()
-          const num = String(r.numero || '').trim()
           if (rid && id === rid) return false
-          if (rnum && num === rnum) return false
           return true
         })
         const ok = await onSaveAll(lista)
@@ -388,6 +460,7 @@ export default function RelatorioEspecialHub({
         : [...relatorios, preparado]
       const ok = await onSaveAll(lista)
       if (ok) {
+        limparRascunhoEspecial()
         marcarSnapshot(preparado)
         alert(t.saveSuccess || 'Relatório especial guardado.')
         setModo('lista')
@@ -525,6 +598,52 @@ export default function RelatorioEspecialHub({
           <h2 style={{ margin: 0, flex: '1 1 200px' }}>
             {t.relatorioEspecialTitle || 'RELATÓRIOS ESPECIAIS'}
           </h2>
+          <button
+            type="button"
+            className="btn-secondary"
+            disabled={recuperando || salvando}
+            onClick={() => {
+              void (async () => {
+                setRecuperando(true)
+                try {
+                  const { recoverMissingRelatoriosEspeciaisByIdMerge } = await import(
+                    '../utils/cadastroSafety'
+                  )
+                  const n = await recoverMissingRelatoriosEspeciaisByIdMerge()
+                  const draft = lerRascunhoEspecial()
+                  if (draft && rascunhoEspecialTemConteudo(draft)) {
+                    const ja = relatorios.some((r) => String(r.id) === String(draft.id))
+                    if (!ja) {
+                      const ok = await onSaveAll([...relatorios, aplicarTotaisNoRelatorioEspecial(draft)])
+                      if (ok) {
+                        limparRascunhoEspecial()
+                        alert(
+                          t.relatorioEspecialRascunhoRecuperado ||
+                            'Rascunho do relatório especial recuperado e guardado.'
+                        )
+                        return
+                      }
+                    }
+                  }
+                  alert(
+                    n > 0
+                      ? (t.relatorioEspecialRecuperados || 'Relatórios especiais recuperados do backup: {n}').replace(
+                          '{n}',
+                          String(n)
+                        )
+                      : t.relatorioEspecialNadaRecuperar ||
+                          'Não foi encontrado relatório extra no backup deste aparelho. Se preencheu sem clicar em Guardar antes da atualização, o rascunho pode já não existir — volte a criar o de hoje e use Guardar.'
+                  )
+                } finally {
+                  setRecuperando(false)
+                }
+              })()
+            }}
+          >
+            {recuperando
+              ? t.relatorioEspecialARecuperar || 'A recuperar…'
+              : t.relatorioEspecialRecuperar || 'Recuperar relatório'}
+          </button>
           <button type="button" className="btn-primary relatorio-especial-hub__novo" onClick={abrirNovo}>
             ➕ {t.relatorioEspecialNovo || 'Novo relatório especial'}
           </button>
