@@ -42217,7 +42217,8 @@ html body .relatorio-especial-root .relatorio-especial-table-shell {
 }
 
 html body .relatorio-especial-root .relatorio-especial-horas-table {
-  min-width: 900px;
+  min-width: 980px;
+  table-layout: auto !important;
   font-size: 11.5px;
   background: transparent;
 }
@@ -42265,13 +42266,24 @@ html body .relatorio-especial-root .relatorio-especial-horas-table tbody tr:hove
   background: rgba(0, 200, 83, 0.05);
 }
 
+html body .relatorio-especial-root .relatorio-especial-horas-table thead th:first-child,
+html body .relatorio-especial-root .relatorio-especial-horas-table__data {
+  min-width: 128px;
+  width: 128px;
+  max-width: none;
+  box-sizing: border-box;
+  overflow: visible;
+  text-overflow: clip;
+}
+
 html body .relatorio-especial-root .relatorio-especial-horas-table__data {
   font-weight: 700;
-  white-space: nowrap;
+  white-space: nowrap !important;
   text-align: left !important;
-  padding-left: 10px !important;
+  padding: 8px 14px 8px 12px !important;
   color: #fff;
   background: rgba(0, 0, 0, 0.18) !important;
+  font-variant-numeric: tabular-nums;
 }
 
 html body .relatorio-especial-root .relatorio-especial-horas-table__data--fds {
