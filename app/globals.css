@@ -7841,6 +7841,18 @@ a:focus-visible {
 .clientes-alfa-secao {
   scroll-margin-top: 72px;
 }
+.clientes-alfa-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.clientes-alfa-toolbar__btn {
+  min-height: 36px !important;
+  padding: 8px 14px !important;
+  font-size: 13px !important;
+  border-radius: 10px !important;
+}
 .clientes-alfa-letra {
   margin: 0 0 10px;
   padding: 8px 12px;
@@ -7854,6 +7866,36 @@ a:focus-visible {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+button.clientes-alfa-letra--toggle {
+  width: 100%;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+button.clientes-alfa-letra--toggle:hover {
+  background: rgba(0, 200, 83, 0.1);
+}
+.clientes-alfa-letra__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: rgba(0, 200, 83, 0.18);
+  border: 1px solid rgba(0, 200, 83, 0.4);
+  color: #00ff88;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1;
 }
 .clientes-alfa-letra__count {
   display: inline-flex;
@@ -7869,6 +7911,55 @@ a:focus-visible {
   color: #86efac;
   background: rgba(0, 200, 83, 0.16);
   border: 1px solid rgba(0, 200, 83, 0.35);
+}
+.clientes-alfa-letra__chevron {
+  margin-left: auto;
+  color: #00c853;
+  font-size: 12px;
+  opacity: 0.9;
+}
+.clientes-alfa-secao--retraida .clientes-alfa-letra {
+  margin-bottom: 0;
+}
+.cliente-lista-linhas__topo {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+.cliente-lista-linhas__corpo {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.cliente-lista-linhas__expand {
+  flex: 0 0 auto;
+  width: 34px;
+  min-height: 34px;
+  margin-top: 2px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 200, 83, 0.35);
+  background: rgba(0, 200, 83, 0.1);
+  color: #00c853;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.cliente-lista-linhas__expand:hover {
+  background: rgba(0, 200, 83, 0.2);
+  border-color: rgba(0, 200, 83, 0.55);
+}
+.cliente-lista-linhas__expand-chevron {
+  font-size: 11px;
+  line-height: 1;
+}
+.cliente-lista-linhas--retraido .cliente-lista-linhas__row--nome {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 .clientes-alfa-nomes {
   list-style: none;

@@ -30,6 +30,8 @@ export type ClienteAlfabetoPickerLabels = {
   filtrados?: string
   devedor?: string
   toqueFiltrar?: string
+  expandirTodos?: string
+  retrairTodos?: string
 }
 
 export type ClienteAlfabetoPickerAction = {
@@ -68,6 +70,8 @@ export function ClienteAlfabetoPicker({
 }: Props) {
   const [busca, setBusca] = useState('')
   const [letraFiltro, setLetraFiltro] = useState<string | null>(null)
+  const [letrasRecolhidas, setLetrasRecolhidas] = useState<Set<string>>(() => new Set())
+  const [cardsExpandidos, setCardsExpandidos] = useState<Set<string>>(() => new Set())
   const locale = localeOrdenacaoClientes(language)
 
   const clientesFiltrados = useMemo(
@@ -216,18 +220,71 @@ export function ClienteAlfabetoPicker({
 
           <div className="cliente-alfabeto-picker__list" style={{ maxHeight: listMaxHeight }}>
             {letrasParaLista.length > 0 ? (
-              letrasParaLista.map((letra) => (
-                <section key={letra} id={`cliente-picker-letra-${letra}`} className="clientes-alfa-secao">
-                  <h3 className="clientes-alfa-letra">
-                    {letra === '#' ? L.outros || 'Outros' : letra}
-                    <span className="clientes-alfa-letra__count">
-                      {clientesListaPorLetra(letra).length}
+              <>
+                <div className="clientes-alfa-toolbar">
+                  <button
+                    type="button"
+                    className="btn-secondary clientes-alfa-toolbar__btn"
+                    onClick={() => {
+                      setLetrasRecolhidas(new Set())
+                      setCardsExpandidos(
+                        new Set(
+                          letrasParaLista.flatMap((letra) =>
+                            clientesListaPorLetra(letra).map((c) => c.id).filter(Boolean)
+                          ) as string[]
+                        )
+                      )
+                    }}
+                  >
+                    {L.expandirTodos || 'Expandir todos'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary clientes-alfa-toolbar__btn"
+                    onClick={() => {
+                      setLetrasRecolhidas(new Set(letrasParaLista))
+                      setCardsExpandidos(new Set())
+                    }}
+                  >
+                    {L.retrairTodos || 'Retrair todos'}
+                  </button>
+                </div>
+                {letrasParaLista.map((letra) => {
+                  const letraAberta = !letrasRecolhidas.has(letra)
+                  const listaLetra = clientesListaPorLetra(letra)
+                  return (
+                <section
+                  key={letra}
+                  id={`cliente-picker-letra-${letra}`}
+                  className={`clientes-alfa-secao${letraAberta ? ' clientes-alfa-secao--aberta' : ' clientes-alfa-secao--retraida'}`}
+                >
+                  <button
+                    type="button"
+                    className="clientes-alfa-letra clientes-alfa-letra--toggle"
+                    aria-expanded={letraAberta}
+                    onClick={() => {
+                      setLetrasRecolhidas((prev) => {
+                        const next = new Set(prev)
+                        if (next.has(letra)) next.delete(letra)
+                        else next.add(letra)
+                        return next
+                      })
+                    }}
+                  >
+                    <span className="clientes-alfa-letra__badge">
+                      {letra === '#' ? L.outros || 'Outros' : letra}
                     </span>
-                  </h3>
+                    <span className="clientes-alfa-letra__count">{listaLetra.length}</span>
+                    <span className="clientes-alfa-letra__chevron" aria-hidden>
+                      {letraAberta ? '▲' : '▼'}
+                    </span>
+                  </button>
+                  {letraAberta ? (
                   <ul className="clientes-alfa-nomes">
-                    {clientesListaPorLetra(letra).map((c) => {
+                    {listaLetra.map((c) => {
                       const devedor = isDevedor?.(c) ?? false
                       const active = selectedId === c.id
+                      const cardAberto = cardsExpandidos.has(c.id)
                       return (
                         <li key={c.id} className="clientes-alfa-item">
                           <button
@@ -237,14 +294,32 @@ export function ClienteAlfabetoPicker({
                             }`}
                             onClick={() => onSelect(c)}
                           >
-                            <ClienteListaLinhas cliente={c} language={language} devedor={devedor} />
+                            <ClienteListaLinhas
+                              cliente={c}
+                              language={language}
+                              devedor={devedor}
+                              expandido={cardAberto}
+                              onToggleExpand={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                setCardsExpandidos((prev) => {
+                                  const next = new Set(prev)
+                                  if (next.has(c.id)) next.delete(c.id)
+                                  else next.add(c.id)
+                                  return next
+                                })
+                              }}
+                            />
                           </button>
                         </li>
                       )
                     })}
                   </ul>
+                  ) : null}
                 </section>
-              ))
+                  )
+                })}
+              </>
             ) : null}
           </div>
         </div>

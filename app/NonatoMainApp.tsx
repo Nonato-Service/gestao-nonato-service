@@ -8419,6 +8419,12 @@ export default function Dashboard() {
   const [buscaCliente, setBuscaCliente] = useState('')
   const [clienteListaDetalheId, setClienteListaDetalheId] = useState<string | null>(null)
   const [clientesAlfaLetraFiltro, setClientesAlfaLetraFiltro] = useState<string | null>(null)
+  /** Letras com lista retraída (vazia = todas expandidas). */
+  const [clientesAlfaLetrasRecolhidas, setClientesAlfaLetrasRecolhidas] = useState<Set<string>>(() => new Set())
+  /** Cartões com INF. ADICIONAL expandida. */
+  const [clientesListaDetalheExpandidoIds, setClientesListaDetalheExpandidoIds] = useState<Set<string>>(
+    () => new Set()
+  )
   const [clientesActiveTab, setClientesActiveTabState] = useState<'cadastrar' | 'listar' | 'grupos'>('cadastrar')
   const setClientesActiveTab = useCallback((tab: 'cadastrar' | 'listar' | 'grupos') => {
     void (async () => {
@@ -41380,6 +41386,30 @@ export default function Dashboard() {
 
                 {clientesFiltrados.length > 0 && (
                   <div className="clientes-alfa-wrap clientes-cadastrados-lista">
+                    <div className="clientes-alfa-toolbar">
+                      <button
+                        type="button"
+                        className="btn-secondary clientes-alfa-toolbar__btn"
+                        onClick={() => {
+                          setClientesAlfaLetrasRecolhidas(new Set())
+                          setClientesListaDetalheExpandidoIds(
+                            new Set(clientesFiltrados.map((c) => c.id).filter(Boolean) as string[])
+                          )
+                        }}
+                      >
+                        {(safeT as any)?.expandirTodos || 'Expandir todos'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary clientes-alfa-toolbar__btn"
+                        onClick={() => {
+                          setClientesAlfaLetrasRecolhidas(new Set(clientesLetrasParaLista))
+                          setClientesListaDetalheExpandidoIds(new Set())
+                        }}
+                      >
+                        {(safeT as any)?.retrairTodos || 'Retrair todos'}
+                      </button>
+                    </div>
                     <nav
                       className="clientes-alfa-jump clientes-alfa-jump--modern"
                       aria-label={safeT?.clientesAlfabetoIndice || 'Índice A–Z'}
@@ -41403,6 +41433,11 @@ export default function Dashboard() {
                             onClick={() => {
                               setClientesAlfaLetraFiltro((prev) => (prev === letra ? null : letra))
                               setClienteListaDetalheId(null)
+                              setClientesAlfaLetrasRecolhidas((prev) => {
+                                const next = new Set(prev)
+                                next.delete(letra)
+                                return next
+                              })
                             }}
                           >
                             <span className="clientes-alfa-jump-btn__letter">{letra === '#' ? '#' : letra}</span>
@@ -41417,23 +41452,45 @@ export default function Dashboard() {
                     </nav>
 
                     {clientesLetrasParaLista.length > 0 ? (
-                      clientesLetrasParaLista.map((letra) => (
+                      clientesLetrasParaLista.map((letra) => {
+                        const letraAberta = !clientesAlfaLetrasRecolhidas.has(letra)
+                        const listaLetra = clientesListaPorLetra(letra)
+                        return (
                         <section
                           key={letra}
                           id={`clientes-letra-${letra}`}
-                          className="clientes-alfa-secao"
+                          className={`clientes-alfa-secao${letraAberta ? ' clientes-alfa-secao--aberta' : ' clientes-alfa-secao--retraida'}`}
                         >
-                          <h3 className="clientes-alfa-letra">
-                            {letra === '#'
-                              ? safeT?.clientesAlfabetoOutros || 'Outros'
-                              : letra}
-                            <span className="clientes-alfa-letra__count">
-                              {clientesListaPorLetra(letra).length}
+                          <button
+                            type="button"
+                            className="clientes-alfa-letra clientes-alfa-letra--toggle"
+                            aria-expanded={letraAberta}
+                            onClick={() => {
+                              setClientesAlfaLetrasRecolhidas((prev) => {
+                                const next = new Set(prev)
+                                if (next.has(letra)) next.delete(letra)
+                                else next.add(letra)
+                                return next
+                              })
+                            }}
+                          >
+                            <span className="clientes-alfa-letra__badge">
+                              {letra === '#'
+                                ? safeT?.clientesAlfabetoOutros || 'Outros'
+                                : letra}
                             </span>
-                          </h3>
+                            <span className="clientes-alfa-letra__count">
+                              {listaLetra.length}
+                            </span>
+                            <span className="clientes-alfa-letra__chevron" aria-hidden>
+                              {letraAberta ? '▲' : '▼'}
+                            </span>
+                          </button>
+                          {letraAberta ? (
                           <ul className="clientes-alfa-nomes">
-                            {clientesListaPorLetra(letra).map((c) => {
+                            {listaLetra.map((c) => {
                               const devedor = isClienteMarcadoDevedor(c)
+                              const cardAberto = clientesListaDetalheExpandidoIds.has(c.id)
                               return (
                                 <li key={c.id} className="clientes-alfa-item">
                                   <button
@@ -41441,7 +41498,22 @@ export default function Dashboard() {
                                     className={`clientes-alfa-nome-btn${devedor ? ' clientes-alfa-nome-btn--devedor' : ''}`}
                                     onClick={() => setClienteListaDetalheId(c.id)}
                                   >
-                                    <ClienteListaLinhas cliente={c} language={selectedLanguage} devedor={devedor} />
+                                    <ClienteListaLinhas
+                                      cliente={c}
+                                      language={selectedLanguage}
+                                      devedor={devedor}
+                                      expandido={cardAberto}
+                                      onToggleExpand={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        setClientesListaDetalheExpandidoIds((prev) => {
+                                          const next = new Set(prev)
+                                          if (next.has(c.id)) next.delete(c.id)
+                                          else next.add(c.id)
+                                          return next
+                                        })
+                                      }}
+                                    />
                                   </button>
                                   <ClienteGpsNavButton
                                     language={selectedLanguage}
@@ -41458,8 +41530,10 @@ export default function Dashboard() {
                               )
                             })}
                           </ul>
+                          ) : null}
                         </section>
-                      ))
+                        )
+                      })
                     ) : null}
                   </div>
                 )}
