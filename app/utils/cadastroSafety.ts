@@ -406,15 +406,59 @@ function riquezaRelatorioEspecial(r: {
   return n
 }
 
+const RELATORIOS_ESPECIAIS_DELETED_KEY = 'nonato-relatorios-especiais-deleted-ids'
+
+export type RecoverEspeciaisResult = {
+  recovered: number
+  fromServer: number
+  resurrectedFromTombstone: number
+  blockedByTombstone: number
+  tombstoneIds: string[]
+  totalAfter: number
+  totalSources: number
+  serverOk: boolean
+}
+
+function readDeletedIdsLocal(): string[] {
+  try {
+    const raw = localStorage.getItem(RELATORIOS_ESPECIAIS_DELETED_KEY)
+    if (!raw) return []
+    const p = JSON.parse(raw) as unknown
+    if (!Array.isArray(p)) return []
+    return p.map((x) => String(x ?? '').trim()).filter(Boolean)
+  } catch {
+    return []
+  }
+}
+
 /**
- * Recupera relatórios especiais em falta: funde por id a partir do backup de segurança,
- * snapshot offline e IndexedDB — mesmo quando a lista local já tem outros relatórios.
- * @returns quantidade de relatórios recuperados / enriquecidos
+ * Recuperação agressiva: backup + snapshot + IndexedDB + lista do servidor.
+ * Pode repor IDs que estavam na lista de «eliminados» (tombstones).
  */
-export async function recoverMissingRelatoriosEspeciaisByIdMerge(): Promise<number> {
-  if (typeof window === 'undefined') return 0
+export async function recoverRelatoriosEspeciaisAggressive(opts?: {
+  serverList?: unknown
+  resurrectTombstones?: boolean
+}): Promise<RecoverEspeciaisResult> {
+  const empty: RecoverEspeciaisResult = {
+    recovered: 0,
+    fromServer: 0,
+    resurrectedFromTombstone: 0,
+    blockedByTombstone: 0,
+    tombstoneIds: [],
+    totalAfter: 0,
+    totalSources: 0,
+    serverOk: false,
+  }
+  if (typeof window === 'undefined') return empty
 
   const sources: unknown[] = []
+  let fromServer = 0
+  let serverOk = false
+  if (opts?.serverList != null) {
+    serverOk = true
+    sources.push(opts.serverList)
+    fromServer = parseEspecialArray(opts.serverList).length
+  }
   try {
     const backup = (await getKv(BACKUP_KEY)) as Record<string, string> | null
     if (backup && typeof backup === 'object' && backup[RELATORIOS_ESPECIAIS_KEY]) {
@@ -442,7 +486,10 @@ export async function recoverMissingRelatoriosEspeciaisByIdMerge(): Promise<numb
     /* ignorar */
   }
 
-  const byId = new Map<string, { id?: unknown; numero?: unknown; diasTrabalho?: unknown[]; equipamentos?: unknown[] }>()
+  const byId = new Map<
+    string,
+    { id?: unknown; numero?: unknown; diasTrabalho?: unknown[]; equipamentos?: unknown[] }
+  >()
   for (const src of sources) {
     for (const item of parseEspecialArray(src)) {
       const id = String(item?.id ?? '').trim()
@@ -453,7 +500,6 @@ export async function recoverMissingRelatoriosEspeciaisByIdMerge(): Promise<numb
       }
     }
   }
-  if (byId.size === 0) return 0
 
   let current = parseEspecialArray(localStorage.getItem(RELATORIOS_ESPECIAIS_KEY))
   try {
@@ -470,33 +516,80 @@ export async function recoverMissingRelatoriosEspeciaisByIdMerge(): Promise<numb
     if (id) curById.set(id, item)
   }
 
-  let changed = 0
+  const deleted = new Set(readDeletedIdsLocal())
+  const blockedIds: string[] = []
+  let recovered = 0
+  let resurrected = 0
+
   for (const [id, candidate] of byId) {
     const existing = curById.get(id)
-    if (!existing) {
-      curById.set(id, candidate)
-      changed++
+    const isNew = !existing
+    const isRicher =
+      !!existing && riquezaRelatorioEspecial(candidate) > riquezaRelatorioEspecial(existing) + 80
+    if (!isNew && !isRicher) continue
+
+    if (deleted.has(id)) {
+      if (opts?.resurrectTombstones) {
+        deleted.delete(id)
+        curById.set(id, candidate)
+        recovered++
+        resurrected++
+      } else {
+        blockedIds.push(id)
+      }
       continue
     }
-    if (riquezaRelatorioEspecial(candidate) > riquezaRelatorioEspecial(existing) + 80) {
-      curById.set(id, candidate)
-      changed++
-    }
+
+    curById.set(id, candidate)
+    recovered++
   }
 
-  if (changed === 0) return 0
-
   const merged = [...curById.values()]
+  empty.totalSources = byId.size
+  empty.totalAfter = merged.length
+  empty.fromServer = fromServer
+  empty.serverOk = serverOk
+  empty.blockedByTombstone = blockedIds.length
+  empty.tombstoneIds = blockedIds
+
+  if (recovered === 0 && resurrected === 0) {
+    return { ...empty, recovered: 0, resurrectedFromTombstone: 0 }
+  }
+
   try {
     localStorage.setItem(RELATORIOS_ESPECIAIS_KEY, JSON.stringify(merged))
   } catch {
-    /* quota — tentar só IDB */
+    /* quota */
   }
   try {
     await saveKv(RELATORIOS_ESPECIAIS_KEY, merged)
   } catch {
     /* ignorar */
   }
+
+  if (opts?.resurrectTombstones && resurrected > 0) {
+    const nextDeleted = [...deleted]
+    try {
+      localStorage.setItem(RELATORIOS_ESPECIAIS_DELETED_KEY, JSON.stringify(nextDeleted))
+    } catch {
+      /* ignorar */
+    }
+    try {
+      await saveKv(RELATORIOS_ESPECIAIS_DELETED_KEY, nextDeleted)
+    } catch {
+      /* ignorar */
+    }
+    try {
+      window.dispatchEvent(
+        new CustomEvent('nonato-data-local-changed', {
+          detail: { key: RELATORIOS_ESPECIAIS_DELETED_KEY },
+        })
+      )
+    } catch {
+      /* ignorar */
+    }
+  }
+
   try {
     window.dispatchEvent(
       new CustomEvent('nonato-data-local-changed', { detail: { key: RELATORIOS_ESPECIAIS_KEY } })
@@ -505,8 +598,22 @@ export async function recoverMissingRelatoriosEspeciaisByIdMerge(): Promise<numb
     /* ignorar */
   }
   noteCadastroRestore(1)
-  console.info(`[Nonato] Relatórios especiais recuperados/enriquecidos: ${changed}`)
-  return changed
+  console.info(
+    `[Nonato] Especiais recuperados=${recovered} ressuscitados=${resurrected} bloqueados=${blockedIds.length}`
+  )
+  return {
+    ...empty,
+    recovered,
+    resurrectedFromTombstone: resurrected,
+  }
+}
+
+/**
+ * Recupera relatórios especiais em falta (arranque): backup/snapshot/IDB, sem ressuscitar tombstones.
+ */
+export async function recoverMissingRelatoriosEspeciaisByIdMerge(): Promise<number> {
+  const r = await recoverRelatoriosEspeciaisAggressive({ resurrectTombstones: false })
+  return r.recovered
 }
 
 /** Nunca gravar snapshot offline mais vazio do que o que já existe. */

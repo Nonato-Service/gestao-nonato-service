@@ -606,10 +606,36 @@ export default function RelatorioEspecialHub({
               void (async () => {
                 setRecuperando(true)
                 try {
-                  const { recoverMissingRelatoriosEspeciaisByIdMerge } = await import(
-                    '../utils/cadastroSafety'
-                  )
-                  const n = await recoverMissingRelatoriosEspeciaisByIdMerge()
+                  const { recoverRelatoriosEspeciaisAggressive } = await import('../utils/cadastroSafety')
+                  const { loadFromServer } = await import('../utils/dataStorage')
+                  let serverList: unknown = null
+                  try {
+                    serverList = await loadFromServer('nonato-relatorios-especiais')
+                  } catch {
+                    serverList = null
+                  }
+
+                  let result = await recoverRelatoriosEspeciaisAggressive({
+                    serverList: serverList ?? undefined,
+                    resurrectTombstones: false,
+                  })
+
+                  if (result.blockedByTombstone > 0) {
+                    const okRes =
+                      window.confirm(
+                        (
+                          t.relatorioEspecialConfirmarRessuscitar ||
+                          'Encontrámos {n} relatório(s) marcados como eliminados neste aparelho. Quer repô-los na lista?'
+                        ).replace('{n}', String(result.blockedByTombstone))
+                      )
+                    if (okRes) {
+                      result = await recoverRelatoriosEspeciaisAggressive({
+                        serverList: serverList ?? undefined,
+                        resurrectTombstones: true,
+                      })
+                    }
+                  }
+
                   const draft = lerRascunhoEspecial()
                   if (draft && rascunhoEspecialTemConteudo(draft)) {
                     const ja = relatorios.some((r) => String(r.id) === String(draft.id))
@@ -623,16 +649,42 @@ export default function RelatorioEspecialHub({
                         )
                         return
                       }
+                    } else {
+                      setForm({
+                        ...draft,
+                        equipamentos: [...(draft.equipamentos || [])],
+                        diasTrabalho: [...(draft.diasTrabalho || [])],
+                      })
+                      marcarSnapshot(draft)
+                      setEditandoId(draft.id)
+                      setModo('form')
+                      alert(
+                        t.relatorioEspecialRascunhoContinuar ||
+                          'Há um rascunho deste relatório especial. A abrir para continuar.'
+                      )
+                      return
                     }
                   }
-                  alert(
-                    n > 0
-                      ? (t.relatorioEspecialRecuperados || 'Relatórios especiais recuperados do backup: {n}').replace(
-                          '{n}',
-                          String(n)
+
+                  const totalRec = result.recovered + result.resurrectedFromTombstone
+                  if (totalRec > 0) {
+                    alert(
+                      (t.relatorioEspecialRecuperadosDetalhe ||
+                        'Recuperados: {n}. Fontes: local/backup {src}, servidor {srv}. Total na lista: {tot}.')
+                        .replace('{n}', String(totalRec))
+                        .replace('{src}', String(result.totalSources))
+                        .replace(
+                          '{srv}',
+                          result.serverOk ? String(result.fromServer) : (t.offline || 'offline')
                         )
-                      : t.relatorioEspecialNadaRecuperar ||
-                          'Não foi encontrado relatório extra no backup deste aparelho. Se preencheu sem clicar em Guardar antes da atualização, o rascunho pode já não existir — volte a criar o de hoje e use Guardar.'
+                        .replace('{tot}', String(result.totalAfter))
+                    )
+                    return
+                  }
+
+                  alert(
+                    t.relatorioEspecialNadaRecuperarForcado ||
+                      'Não há cópia deste relatório no servidor nem no backup deste telemóvel.\n\nIsto acontece se o relatório foi preenchido mas não chegou a clicar em GUARDAR antes da atualização.\n\nNesse caso não é possível recuperar — é preciso criar de novo o de hoje e clicar em Guardar.\n\nConfirme também em Relatórios de Serviço (o normal) se o de hoje está lá.'
                   )
                 } finally {
                   setRecuperando(false)
