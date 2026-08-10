@@ -9326,21 +9326,13 @@ export default function Dashboard() {
     [clientes, safeT]
   )
 
+  // Recuperação de relatórios NÃO é automática no arranque nem quando a lista encolhe
+  // (ex.: após eliminar). Antes, countDesceu → restaurar do backup fazia o relatório «voltar».
+  // Use o botão «Recuperar relatório» quando precisar.
   useEffect(() => {
-    if (clientes.length === 0 && relatoriosServico.length === 0) return
-
-    const countDesceu = relatoriosServico.length < relatoriosCountAnteriorRef.current
     relatoriosCountAnteriorRef.current = relatoriosServico.length
-
-    if (!relatoriosRecuperacaoBootRef.current) {
-      relatoriosRecuperacaoBootRef.current = true
-      executarRecuperacaoRelatorios(relatoriosServico, true)
-      return
-    }
-    if (countDesceu) {
-      executarRecuperacaoRelatorios(relatoriosServico, true)
-    }
-  }, [clientes, relatoriosServico, executarRecuperacaoRelatorios])
+    relatoriosRecuperacaoBootRef.current = true
+  }, [relatoriosServico.length])
 
   const relatorioMatchesRecuperacaoBusca = useCallback((rel: RelatorioServico, q: string): boolean => {
     const nq = q.trim().toLowerCase()
@@ -12109,22 +12101,20 @@ export default function Dashboard() {
         }
       }
 
-      // Carregar relatórios de serviço — reparar clienteId inválido (nunca apagar relatórios)
+      // Carregar relatórios de serviço — só reparar clienteId (sem restaurar backup no arranque)
       const savedRelatoriosServicoRaw = getData('nonato-relatorios-servico')
       const removedRelatorioIds = new Set<string>()
       if (savedRelatoriosServicoRaw && Array.isArray(savedRelatoriosServicoRaw)) {
         let relatoriosOk = savedRelatoriosServicoRaw as RelatorioServico[]
-        const backupBoot = restaurarRelatoriosDeBackupsLocais(relatoriosOk)
-        if (backupBoot.recuperados > 0) {
-          relatoriosOk = backupBoot.relatorios as RelatorioServico[]
-        }
+        // Não chamar restaurarRelatoriosDeBackupsLocais no arranque — repunha eliminados após deploy.
         if (Array.isArray(savedClientes)) {
           const recBoot = recuperarRelatoriosServicoPerdidos(
             savedClientes as Cliente[],
-            relatoriosOk
+            relatoriosOk,
+            { onlyRepairClienteIds: true }
           )
           relatoriosOk = recBoot.relatorios as RelatorioServico[]
-          if (recBoot.alterou) {
+          if (recBoot.clienteIdsReparados > 0) {
             saveData('nonato-relatorios-servico', relatoriosOk).catch(() => {})
           }
         }
@@ -14555,20 +14545,28 @@ export default function Dashboard() {
         if (!bootstrapLoadErrored && typeof window !== 'undefined') {
           await restoreCriticalCadastroFromIdbIfNeeded()
           const gapRestored = await recoverCriticalCadastroGapsFromIdbAndSnapshot()
-          const especiaisRecuperados = await recoverMissingRelatoriosEspeciaisByIdMerge()
-          if (especiaisRecuperados > 0) {
-            try {
-              const rawEsp = localStorage.getItem(RELATORIOS_ESPECIAIS_STORAGE_KEY)
-              if (rawEsp) {
-                const parsedEsp = JSON.parse(rawEsp) as RelatorioEspecial[]
-                if (Array.isArray(parsedEsp)) {
-                  const deletedIds = readDeletedIdsFromLocalStorage()
-                  setRelatoriosEspeciais(filterByDeletedIds(parsedEsp, deletedIds) as RelatorioEspecial[])
+          // NÃO repor especiais do backup aqui — isso fazia relatórios eliminados voltarem após cada deploy.
+          // Recuperação só pelo botão «Recuperar relatório» (e só se a lista local estiver vazia).
+          try {
+            const rawEsp = localStorage.getItem(RELATORIOS_ESPECIAIS_STORAGE_KEY)
+            const parsedEsp = rawEsp ? (JSON.parse(rawEsp) as RelatorioEspecial[]) : []
+            if (!Array.isArray(parsedEsp) || parsedEsp.length === 0) {
+              const especiaisRecuperados = await recoverMissingRelatoriosEspeciaisByIdMerge()
+              if (especiaisRecuperados > 0) {
+                const rawAfter = localStorage.getItem(RELATORIOS_ESPECIAIS_STORAGE_KEY)
+                if (rawAfter) {
+                  const parsedAfter = JSON.parse(rawAfter) as RelatorioEspecial[]
+                  if (Array.isArray(parsedAfter)) {
+                    const deletedIds = readDeletedIdsFromLocalStorage()
+                    setRelatoriosEspeciais(
+                      filterByDeletedIds(parsedAfter, deletedIds) as RelatorioEspecial[]
+                    )
+                  }
                 }
               }
-            } catch {
-              /* ignorar */
             }
+          } catch {
+            /* ignorar */
           }
           if (gapRestored > 0) {
             try {

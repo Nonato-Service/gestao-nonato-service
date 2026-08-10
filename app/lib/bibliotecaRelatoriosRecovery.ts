@@ -64,10 +64,12 @@ export function resolverClienteIdRelatorioFlexivel(
 /**
  * Repõe relatórios na lista global a partir de `cliente.relatorios` e corrige `clienteId` inválido.
  * Nunca remove relatórios — só acrescenta ou repara ligações.
+ * `onlyRepairClienteIds`: no arranque — só corrige ligações, sem repor relatórios antigos das pastas.
  */
 export function recuperarRelatoriosServicoPerdidos(
   clientes: ClienteMin[],
-  relatoriosServico: RelatorioServicoMin[]
+  relatoriosServico: RelatorioServicoMin[],
+  opts?: { onlyRepairClienteIds?: boolean }
 ): RecuperacaoRelatoriosResultado {
   const idsCliente = new Set(clientes.map((c) => c.id).filter(Boolean))
   const byId = new Map<string, RelatorioServicoMin>()
@@ -88,23 +90,25 @@ export function recuperarRelatoriosServicoPerdidos(
   }
 
   let adicionadosDeClientes = 0
-  for (const c of clientes) {
-    const nested = coletarRelatoriosCliente(
-      c.relatorios as Record<string, RelatorioServicoMin[]> | undefined
-    )
-    for (const rel of nested) {
-      if (!rel?.id) continue
-      if (byId.has(rel.id)) continue
-      const reparado = resolverClienteIdRelatorioFlexivel(
-        { ...rel, cliente: rel.cliente || c.nomeEmpresa, clienteId: rel.clienteId || c.id },
-        clientes
+  if (!opts?.onlyRepairClienteIds) {
+    for (const c of clientes) {
+      const nested = coletarRelatoriosCliente(
+        c.relatorios as Record<string, RelatorioServicoMin[]> | undefined
       )
-      byId.set(rel.id, {
-        ...rel,
-        clienteId: reparado || c.id,
-        cliente: String(rel.cliente || c.nomeEmpresa || '').trim() || rel.cliente,
-      })
-      adicionadosDeClientes++
+      for (const rel of nested) {
+        if (!rel?.id) continue
+        if (byId.has(rel.id)) continue
+        const reparado = resolverClienteIdRelatorioFlexivel(
+          { ...rel, cliente: rel.cliente || c.nomeEmpresa, clienteId: rel.clienteId || c.id },
+          clientes
+        )
+        byId.set(rel.id, {
+          ...rel,
+          clienteId: reparado || c.id,
+          cliente: String(rel.cliente || c.nomeEmpresa || '').trim() || rel.cliente,
+        })
+        adicionadosDeClientes++
+      }
     }
   }
 
