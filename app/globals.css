@@ -7911,11 +7911,27 @@ a:focus-visible {
   gap: 8px;
   margin: 0 0 12px;
 }
-.clientes-alfa-toolbar__btn {
-  min-height: 36px !important;
+/* Evita botões brancos ilegíveis (browser default + texto branco do tema) */
+.clientes-alfa-toolbar__btn,
+button.clientes-alfa-toolbar__btn.btn-secondary {
+  min-height: 40px !important;
   padding: 8px 14px !important;
   font-size: 13px !important;
+  font-weight: 700 !important;
   border-radius: 10px !important;
+  background: #2a2a2a !important;
+  border: 1px solid rgba(0, 200, 83, 0.45) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+.clientes-alfa-toolbar__btn:hover:not(:disabled),
+button.clientes-alfa-toolbar__btn.btn-secondary:hover:not(:disabled) {
+  background: rgba(0, 200, 83, 0.14) !important;
+  border-color: #00c853 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 .clientes-alfa-letra {
   margin: 0 0 10px;
@@ -41747,12 +41763,14 @@ html body .biblioteca-pecas-hub.tab-glass-root.ns-ui-v2 .btn-secondary:hover:not
   border-color: rgba(255, 255, 255, 0.32) !important;
 }
 
-/* Relatórios Especiais — btn-secondary legível (evita fundo branco do browser + texto branco global) */
-html body .relatorio-especial-root.tab-glass-root.ns-ui-v2 .btn-secondary:not(.btn-danger):not(.btn-primary) {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  color: rgba(255, 255, 255, 0.92) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
+/* Relatórios Especial + Serviço — btn-secondary legível (evita fundo branco + texto branco) */
+html body .relatorio-especial-root.tab-glass-root.ns-ui-v2 .btn-secondary:not(.btn-danger):not(.btn-primary),
+html body .relatorio-servico-root.tab-glass-root.ns-ui-v2 .btn-secondary:not(.btn-danger):not(.btn-primary),
+html body .relatorio-servico-root .btn-secondary:not(.btn-danger):not(.btn-primary) {
+  background: #2a2a2a !important;
+  border: 1px solid rgba(0, 200, 83, 0.45) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
   border-radius: 12px !important;
   font-weight: 600 !important;
@@ -41761,14 +41779,18 @@ html body .relatorio-especial-root.tab-glass-root.ns-ui-v2 .btn-secondary:not(.b
   cursor: pointer;
 }
 
-html body .relatorio-especial-root.tab-glass-root.ns-ui-v2 .btn-secondary:not(.btn-danger):not(.btn-primary):hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.32) !important;
+html body .relatorio-especial-root.tab-glass-root.ns-ui-v2 .btn-secondary:not(.btn-danger):not(.btn-primary):hover:not(:disabled),
+html body .relatorio-servico-root.tab-glass-root.ns-ui-v2 .btn-secondary:not(.btn-danger):not(.btn-primary):hover:not(:disabled),
+html body .relatorio-servico-root .btn-secondary:not(.btn-danger):not(.btn-primary):hover:not(:disabled) {
+  background: rgba(0, 200, 83, 0.14) !important;
+  border-color: #00c853 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-html body .relatorio-especial-root.tab-glass-root.ns-ui-v2 .btn-secondary:not(.btn-danger):not(.btn-primary):disabled {
+html body .relatorio-especial-root.tab-glass-root.ns-ui-v2 .btn-secondary:not(.btn-danger):not(.btn-primary):disabled,
+html body .relatorio-servico-root.tab-glass-root.ns-ui-v2 .btn-secondary:not(.btn-danger):not(.btn-primary):disabled,
+html body .relatorio-servico-root .btn-secondary:not(.btn-danger):not(.btn-primary):disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
