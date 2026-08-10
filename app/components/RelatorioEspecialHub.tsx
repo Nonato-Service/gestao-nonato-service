@@ -929,88 +929,83 @@ export default function RelatorioEspecialHub({
           </button>
         )}
       </div>
-      <div className="relatorio-especial-form__toolbar relatorio-especial-desktop-nav">
-        <button type="button" className="btn-secondary" onClick={voltarLista}>
+
+      <div className="relatorio-especial-form__action-bar relatorio-especial-desktop-nav">
+        <button type="button" className="re-action-btn re-action-btn--ghost" onClick={voltarLista}>
           ← {t.voltar || 'Voltar'}
         </button>
-        <div className="relatorio-especial-form__toolbar-acoes">
-          <button type="button" className="btn-primary" disabled={salvando} onClick={persistir}>
-            {salvando && acaoEmCurso === 'guardar'
-              ? '…'
-              : `💾 ${t.save || 'Guardar'}`}
+        <div className="relatorio-especial-form__action-bar-acoes">
+          <button
+            type="button"
+            className="re-action-btn re-action-btn--primary"
+            disabled={salvando}
+            onClick={() => void persistir()}
+          >
+            {salvando && acaoEmCurso === 'guardar' ? '…' : `💾 ${t.save || 'Guardar'}`}
           </button>
-          {editandoId && (
+          {editandoId ? (
             <button
               type="button"
-              className="btn-secondary"
+              className="re-action-btn re-action-btn--danger"
               disabled={salvando}
               onClick={() => void eliminarRelatorio(formComTotais)}
-              style={{ borderColor: 'rgba(239,68,68,0.5)', color: '#fca5a5' }}
             >
               🗑{' '}
               {salvando && acaoEmCurso === 'eliminar'
                 ? t.relatorioEspecialAEliminar || 'A eliminar…'
                 : t.delete || 'Eliminar'}
             </button>
-          )}
-          <button type="button" className="btn-secondary" onClick={() => imprimirPdf(formComTotais)}>
+          ) : null}
+          <button
+            type="button"
+            className="re-action-btn re-action-btn--ghost"
+            onClick={() => imprimirPdf(formComTotais)}
+          >
             🖨 PDF
           </button>
-          <EnvioBotoes rel={formComTotais} />
+          <span className="relatorio-especial-form__envio">
+            {abrirEnvioDocumentoCliente ? (
+              <DocumentoEnvioAcoes
+                abrirEnvio={abrirEnvioDocumentoCliente}
+                {...envioRelatorio(formComTotais, () =>
+                  imprimirPdf(aplicarTotaisNoRelatorioEspecial(formComTotais))
+                )}
+                emailLabel={t.email || 'E-mail'}
+                whatsLabel="WhatsApp"
+                className="relatorio-especial-form__envio-inner"
+              />
+            ) : null}
+          </span>
         </div>
       </div>
-      <h2>{editandoId ? t.relatorioEspecialEditar || 'Editar relatório de serviços' : t.relatorioEspecialNovo || 'Novo relatório de serviços'}</h2>
-      {formTemAlteracoes() && (
-        <p style={{ color: '#fbbf24', fontSize: 13, margin: '0 0 12px' }}>
-          {t.relatorioEspecialAlteracoesPendentes || 'Alterações por guardar — clique em Guardar antes de sair.'}
-        </p>
-      )}
 
-      <section style={{ marginBottom: 24 }}>
-        <h3>{t.informacoesBasicas || 'Informações básicas'}</h3>
-        <div className="relatorio-especial-form__grid">
-          <div>
+      <header className="relatorio-especial-form__hero">
+        <h2 className="relatorio-especial-form__titulo">
+          {editandoId
+            ? t.relatorioEspecialEditar || 'Editar relatório de serviços'
+            : t.relatorioEspecialNovo || 'Novo relatório de serviços'}
+        </h2>
+        {formTemAlteracoes() ? (
+          <p className="relatorio-especial-form__aviso-pendente">
+            {t.relatorioEspecialAlteracoesPendentes ||
+              'Alterações por guardar — clique em Guardar antes de sair.'}
+          </p>
+        ) : null}
+      </header>
+
+      <section className="relatorio-especial-panel relatorio-especial-form__basicos">
+        <h3 className="relatorio-especial-panel__title">{t.informacoesBasicas || 'Informações básicas'}</h3>
+        <div className="relatorio-especial-form__grid relatorio-especial-form__grid--basicos">
+          <div className="relatorio-especial-form__field">
             <label>{t.numeroRelatorio || 'Número'}</label>
-            <div className="relatorio-especial-form__numero-wrap">
-              <input
-                type="text"
-                value={form.numero}
-                onChange={(e) => setForm({ ...form, numero: e.target.value })}
-                style={inputStyle}
-              />
-            </div>
-            {editandoId && (onAbrirFechamentoCobranca || (getResumoCobrancaFase && onClickResumoCobranca)) ? (
-              <div className="relatorio-especial-form__cobranca-bar">
-                {onAbrirFechamentoCobranca ? (
-                  <button
-                    type="button"
-                    className="btn-primary relatorio-especial-form__cobranca"
-                    onClick={() => onAbrirFechamentoCobranca(editandoId, form.numero)}
-                    title={
-                      t.relatorioEspecialFechamentoCobrancaDica ||
-                      'Abrir fechamento para cobrança (valores HT/KM/diárias)'
-                    }
-                  >
-                    💶 {t.relatorioEspecialFechamentoCobranca || 'Fechamento / Cobrança'}
-                  </button>
-                ) : null}
-                {getResumoCobrancaFase && onClickResumoCobranca ? (
-                  <button
-                    type="button"
-                    className={`relatorio-especial-form__resumo-chip ${classNameResumoCobrancaEspecial(getResumoCobrancaFase(editandoId))}`}
-                    onClick={() => onClickResumoCobranca(editandoId)}
-                    title={
-                      t.resumoCobrancaDicaClique ||
-                      'Toque para indicar se deve cobrar ao cliente (após gravar o relatório).'
-                    }
-                  >
-                    {labelResumoCobrancaEspecial(getResumoCobrancaFase(editandoId), t)}
-                  </button>
-                ) : null}
-              </div>
-            ) : null}
+            <input
+              type="text"
+              value={form.numero}
+              onChange={(e) => setForm({ ...form, numero: e.target.value })}
+              style={inputStyle}
+            />
           </div>
-          <div>
+          <div className="relatorio-especial-form__field">
             <label>{t.data || 'Data ref.'}</label>
             <input
               type="date"
@@ -1026,9 +1021,13 @@ export default function RelatorioEspecialHub({
               style={inputStyle}
             />
           </div>
-          <div>
+          <div className="relatorio-especial-form__field">
             <label>{t.selecioneTecnico || 'Técnico'}</label>
-            <select value={form.tecnico} onChange={(e) => setForm({ ...form, tecnico: e.target.value })} style={inputStyle}>
+            <select
+              value={form.tecnico}
+              onChange={(e) => setForm({ ...form, tecnico: e.target.value })}
+              style={inputStyle}
+            >
               <option value="">{t.selecioneTecnico || 'Técnico'}</option>
               {tecnicos.map((tec) => (
                 <option key={tec.id} value={tec.name}>
@@ -1037,7 +1036,39 @@ export default function RelatorioEspecialHub({
               ))}
             </select>
           </div>
-          <div style={{ gridColumn: '1 / -1' }}>
+
+          {editandoId && (onAbrirFechamentoCobranca || (getResumoCobrancaFase && onClickResumoCobranca)) ? (
+            <div className="relatorio-especial-form__cobranca-bar relatorio-especial-form__cobranca-bar--row">
+              {onAbrirFechamentoCobranca ? (
+                <button
+                  type="button"
+                  className="re-action-btn re-action-btn--primary relatorio-especial-form__cobranca"
+                  onClick={() => onAbrirFechamentoCobranca(editandoId, form.numero)}
+                  title={
+                    t.relatorioEspecialFechamentoCobrancaDica ||
+                    'Abrir fechamento para cobrança (valores HT/KM/diárias)'
+                  }
+                >
+                  💶 {t.relatorioEspecialFechamentoCobranca || 'Fechamento / Cobrança'}
+                </button>
+              ) : null}
+              {getResumoCobrancaFase && onClickResumoCobranca ? (
+                <button
+                  type="button"
+                  className={`re-action-btn relatorio-especial-form__resumo-chip ${classNameResumoCobrancaEspecial(getResumoCobrancaFase(editandoId))}`}
+                  onClick={() => onClickResumoCobranca(editandoId)}
+                  title={
+                    t.resumoCobrancaDicaClique ||
+                    'Toque para indicar se deve cobrar ao cliente (após gravar o relatório).'
+                  }
+                >
+                  {labelResumoCobrancaEspecial(getResumoCobrancaFase(editandoId), t)}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className="relatorio-especial-form__field relatorio-especial-form__field--full">
             <label>{t.selecioneCliente || 'Cliente'}</label>
             <ClienteAlfabetoPicker
               clientes={clientesOrdenados}
@@ -1056,17 +1087,32 @@ export default function RelatorioEspecialHub({
               }
             />
           </div>
-          <div>
+          <div className="relatorio-especial-form__field">
             <label>{t.cidade || 'Cidade'}</label>
-            <input type="text" value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} style={inputStyle} />
+            <input
+              type="text"
+              value={form.cidade}
+              onChange={(e) => setForm({ ...form, cidade: e.target.value })}
+              style={inputStyle}
+            />
           </div>
-          <div>
+          <div className="relatorio-especial-form__field">
             <label>{t.telefone || 'Telefone'}</label>
-            <input type="text" value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} style={inputStyle} />
+            <input
+              type="text"
+              value={form.telefone}
+              onChange={(e) => setForm({ ...form, telefone: e.target.value })}
+              style={inputStyle}
+            />
           </div>
-          <div>
+          <div className="relatorio-especial-form__field">
             <label>{t.tipoServico || 'Tipo de serviço'}</label>
-            <input type="text" value={form.tipoServico} onChange={(e) => setForm({ ...form, tipoServico: e.target.value })} style={inputStyle} />
+            <input
+              type="text"
+              value={form.tipoServico}
+              onChange={(e) => setForm({ ...form, tipoServico: e.target.value })}
+              style={inputStyle}
+            />
           </div>
         </div>
       </section>
