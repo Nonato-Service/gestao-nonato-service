@@ -40440,17 +40440,25 @@ export default function Dashboard() {
                         )}
 
                         <div className="rs-card-acoes rs-card-acoes--v2">
-                          <div className="rs-card-acoes__row">
+                          <div className="rs-card-acoes__modelo">
                             <RelatorioPdfModeloPicker
                               className={`rs-card-select rs-card-select--v2${btnPulseClass}`}
                               compact
                               value={getPdfModelForRelatorio(relatorio.id)}
                               onChange={(model) => escolherModeloPdfRelatorio(relatorio.id, model)}
-                              title={(safeT as Record<string, string>).relatorioPdfModeloCartaoTitle || safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
+                              title={
+                                (safeT as Record<string, string>).relatorioPdfModeloCartaoTitle ||
+                                safeT?.selecioneModeloPDF ||
+                                'Selecione o modelo de PDF'
+                              }
                               labels={safeT as Record<string, string>}
-                              groupRecomendados={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados para cliente'}
+                              groupRecomendados={
+                                safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados para cliente'
+                              }
                               groupOutros={safeT?.relatorioPdfOptgroupOutros || 'Outros estilos'}
                             />
+                          </div>
+                          <div className="rs-card-acoes__row rs-card-acoes__row--main">
                             <button
                               className={`rs-card-btn rs-card-btn--edit${btnPulseClass}`}
                               type="button"
@@ -40461,63 +40469,91 @@ export default function Dashboard() {
                               }}
                               title={safeT?.edit || 'Editar'}
                             >
-                              {safeT?.edit || 'Editar'}
+                              ✏️ {safeT?.edit || 'Editar'}
                             </button>
                             <button
                               className={`rs-card-btn rs-card-btn--view${btnPulseClass}`}
                               type="button"
-                              onClick={() => setViewingRelatorioServico(resolverRelatorioServicoDono(relatorio))}
+                              onClick={() =>
+                                setViewingRelatorioServico(resolverRelatorioServicoDono(relatorio))
+                              }
                               title={safeT?.view || 'Ver'}
                             >
-                              {safeT?.view || 'Ver'}
+                              👁 {safeT?.view || 'Ver'}
                             </button>
                             <button
                               className={`rs-card-btn rs-card-btn--pdf${btnPulseClass}`}
                               type="button"
-                              onClick={() => handlePrintRelatorio(relatorio, getPdfModelForRelatorio(relatorio.id))}
+                              onClick={() =>
+                                handlePrintRelatorio(relatorio, getPdfModelForRelatorio(relatorio.id))
+                              }
                               title={safeT?.gerarPDF || 'Gerar PDF'}
                             >
-                              {safeT?.gerarPDF || 'Gerar PDF'}
+                              🖨 PDF
                             </button>
+                          </div>
+                          <div className="rs-card-acoes__row rs-card-acoes__row--envio">
                             <button
                               className={`rs-card-btn rs-card-btn--email${btnPulseClass}`}
                               type="button"
                               onClick={() =>
                                 abrirEnvioDocumentoCliente({
-                                  title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
-                                  subject: buildAssuntoEnvioRelatorioServico(relatorio, safeT as Record<string, string | undefined>),
-                                  body: buildTextoEnvioRelatorioServico(relatorio, safeT as Record<string, string | undefined>),
+                                  title:
+                                    (safeT as any)?.envioRelatorioTitulo ||
+                                    'Enviar relatório ao cliente',
+                                  subject: buildAssuntoEnvioRelatorioServico(
+                                    relatorio,
+                                    safeT as Record<string, string | undefined>
+                                  ),
+                                  body: buildTextoEnvioRelatorioServico(
+                                    relatorio,
+                                    safeT as Record<string, string | undefined>
+                                  ),
                                   clienteId: relatorio.clienteId,
                                   clienteNome: relatorio.cliente,
                                   relatorio,
                                   defaultChannel: 'email',
                                   onOpenPdf: () =>
-                                    handlePrintRelatorio(relatorio, getPdfModelForRelatorio(relatorio.id)),
+                                    handlePrintRelatorio(
+                                      relatorio,
+                                      getPdfModelForRelatorio(relatorio.id)
+                                    ),
                                 })
                               }
                               title={safeT?.enviarPorEmail || 'Enviar por e-mail'}
                             >
-                              📧
+                              📧 {(safeT as any)?.email || 'E-mail'}
                             </button>
                             <button
                               className={`rs-card-btn rs-card-btn--wa${btnPulseClass}`}
                               type="button"
                               onClick={() =>
                                 abrirEnvioDocumentoCliente({
-                                  title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
-                                  subject: buildAssuntoEnvioRelatorioServico(relatorio, safeT as Record<string, string | undefined>),
-                                  body: buildTextoEnvioRelatorioServico(relatorio, safeT as Record<string, string | undefined>),
+                                  title:
+                                    (safeT as any)?.envioRelatorioTitulo ||
+                                    'Enviar relatório ao cliente',
+                                  subject: buildAssuntoEnvioRelatorioServico(
+                                    relatorio,
+                                    safeT as Record<string, string | undefined>
+                                  ),
+                                  body: buildTextoEnvioRelatorioServico(
+                                    relatorio,
+                                    safeT as Record<string, string | undefined>
+                                  ),
                                   clienteId: relatorio.clienteId,
                                   clienteNome: relatorio.cliente,
                                   relatorio,
                                   defaultChannel: 'whatsapp',
                                   onOpenPdf: () =>
-                                    handlePrintRelatorio(relatorio, getPdfModelForRelatorio(relatorio.id)),
+                                    handlePrintRelatorio(
+                                      relatorio,
+                                      getPdfModelForRelatorio(relatorio.id)
+                                    ),
                                 })
                               }
                               title={safeT?.enviarPorWhatsApp || 'Enviar por WhatsApp'}
                             >
-                              💬
+                              💬 WhatsApp
                             </button>
                           </div>
                           <button
@@ -40526,7 +40562,7 @@ export default function Dashboard() {
                             onClick={() => handleDeleteRelatorioServico(relatorio.id)}
                             title={safeT?.delete || 'Excluir'}
                           >
-                            {safeT?.delete || 'Excluir'}
+                            🗑 {safeT?.delete || 'Excluir'}
                           </button>
                         </div>
                       </div>

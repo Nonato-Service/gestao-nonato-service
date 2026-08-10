@@ -8842,64 +8842,111 @@ button.clientes-alfa-letra--toggle:hover {
 
 .rs-card-acoes--v2 {
   gap: 8px;
-  border-top-color: rgba(255, 255, 255, 0.08);
+  border-top-color: rgba(0, 200, 83, 0.18);
+}
+
+.rs-card-acoes__modelo {
+  width: 100%;
+  min-width: 0;
+}
+
+.rs-card-acoes__modelo .rs-card-select,
+.rs-card-acoes__modelo .relatorio-servico-pdf-modelo-picker,
+.rs-card-acoes__modelo .relatorio-servico-pdf-modelo-picker__trigger {
+  width: 100% !important;
+  max-width: 100%;
 }
 
 .rs-card-acoes__row {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) repeat(3, minmax(0, 1fr));
-  gap: 6px;
+  gap: 8px;
   align-items: stretch;
+  width: 100%;
+}
+
+.rs-card-acoes__row--main {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.rs-card-acoes__row--envio {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .rs-card-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 36px;
-  padding: 0 10px;
+  gap: 6px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
   border-radius: 10px;
-  border: 1px solid transparent;
-  font-size: 11px;
+  border: 1px solid rgba(0, 200, 83, 0.4);
+  background: #2a2a2a;
+  font-size: 12px;
   font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
   color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
   cursor: pointer;
-  transition: filter 0.15s ease;
+  box-sizing: border-box;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background 0.15s ease, filter 0.15s ease;
 }
 
 .rs-card-btn:hover {
-  filter: brightness(1.08);
+  background: rgba(0, 200, 83, 0.12);
+  border-color: #00c853;
+  filter: none;
 }
 
 .rs-card-btn--edit {
-  background: rgba(120, 80, 10, 0.45);
-  border-color: rgba(251, 191, 36, 0.45);
+  background: #2a2a2a;
+  border-color: rgba(251, 191, 36, 0.55);
+  color: #fde68a;
+  -webkit-text-fill-color: #fde68a;
 }
 
 .rs-card-btn--view {
-  background: rgba(18, 80, 45, 0.55);
-  border-color: rgba(74, 222, 128, 0.45);
+  background: #2a2a2a;
+  border-color: rgba(0, 200, 83, 0.5);
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
 }
 
 .rs-card-btn--pdf {
-  background: rgba(18, 55, 95, 0.55);
-  border-color: rgba(56, 189, 248, 0.45);
+  background: #2a2a2a;
+  border-color: rgba(96, 165, 250, 0.55);
+  color: #bfdbfe;
+  -webkit-text-fill-color: #bfdbfe;
+}
+
+.rs-card-btn--email {
+  background: #2a2a2a;
+  border-color: rgba(96, 165, 250, 0.5);
+  color: #bfdbfe;
+  -webkit-text-fill-color: #bfdbfe;
+}
+
+.rs-card-btn--wa {
+  background: #2a2a2a;
+  border-color: rgba(0, 200, 83, 0.55);
+  color: #86efac;
+  -webkit-text-fill-color: #86efac;
 }
 
 .rs-card-btn--delete {
   width: 100%;
-  background: rgba(100, 25, 25, 0.45);
-  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(80, 24, 24, 0.55);
+  border-color: rgba(248, 113, 113, 0.55);
+  color: #fecaca;
+  -webkit-text-fill-color: #fecaca;
 }
 
-.rs-card-btn--email {
-  background: rgba(18, 38, 62, 0.55);
-  border-color: rgba(80, 160, 255, 0.45);
-}
-
-.rs-card-btn--wa {
-  background: rgba(18, 52, 32, 0.55);
-  border-color: rgba(37, 211, 102, 0.45);
+.rs-card-btn--delete:hover {
+  background: rgba(120, 30, 30, 0.55);
+  border-color: rgba(252, 165, 165, 0.75);
 }
 
 .doc-envio-modal__backdrop {
@@ -9123,20 +9170,23 @@ button.clientes-alfa-letra--toggle:hover {
 }
 
 .rs-card-select--v2 {
-  min-height: 36px !important;
+  min-height: 40px !important;
   border-radius: 10px !important;
-  border-color: rgba(56, 189, 248, 0.45) !important;
-  background: rgba(10, 20, 30, 0.7) !important;
-  font-size: 11px !important;
+  border-color: rgba(0, 200, 83, 0.45) !important;
+  background: #2a2a2a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
 }
 
 @media (max-width: 720px) {
-  .rs-card-acoes__row {
-    grid-template-columns: 1fr 1fr;
+  .rs-card-acoes__row--main {
+    grid-template-columns: 1fr;
   }
 
-  .rs-card-select--v2 {
-    grid-column: 1 / -1;
+  .rs-card-acoes__row--envio {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
