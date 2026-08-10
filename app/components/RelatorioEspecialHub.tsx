@@ -2017,38 +2017,61 @@ export default function RelatorioEspecialHub({
         </div>
       </section>
 
-      <section style={{ marginBottom: 24 }}>
-        <label>{t.observacoes || 'Observações'}</label>
+      <section className="relatorio-especial-panel relatorio-especial-form__observacoes">
+        <h3 className="relatorio-especial-panel__title">{t.observacoes || 'Observações'}</h3>
         <textarea
           value={form.observacoes}
           onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
-          rows={3}
+          rows={4}
+          className="relatorio-especial-form__observacoes-input"
           style={{ ...inputStyle, resize: 'vertical' }}
         />
       </section>
 
-      <div className="relatorio-especial-form__actions">
-          <button type="button" className="btn-primary" disabled={salvando} onClick={persistir}>
+      <div className="relatorio-especial-form__action-bar relatorio-especial-form__actions">
+        <div className="relatorio-especial-form__action-bar-acoes">
+          <button
+            type="button"
+            className="re-action-btn re-action-btn--primary"
+            disabled={salvando}
+            onClick={() => void persistir()}
+          >
             {salvando && acaoEmCurso === 'guardar' ? '…' : `💾 ${t.save || 'Guardar'}`}
           </button>
-          {editandoId && (
+          {editandoId ? (
             <button
               type="button"
-              className="btn-secondary"
+              className="re-action-btn re-action-btn--danger"
               disabled={salvando}
               onClick={() => void eliminarRelatorio(formComTotais)}
-              style={{ borderColor: 'rgba(239,68,68,0.5)', color: '#fca5a5' }}
             >
               🗑{' '}
               {salvando && acaoEmCurso === 'eliminar'
                 ? t.relatorioEspecialAEliminar || 'A eliminar…'
                 : t.delete || 'Eliminar'}
             </button>
-          )}
-          <button type="button" className="btn-secondary" onClick={() => imprimirPdf(formComTotais)}>
+          ) : null}
+          <button
+            type="button"
+            className="re-action-btn re-action-btn--ghost"
+            onClick={() => imprimirPdf(formComTotais)}
+          >
             🖨 PDF
           </button>
-        <EnvioBotoes rel={formComTotais} />
+          <span className="relatorio-especial-form__envio">
+            {abrirEnvioDocumentoCliente ? (
+              <DocumentoEnvioAcoes
+                abrirEnvio={abrirEnvioDocumentoCliente}
+                {...envioRelatorio(formComTotais, () =>
+                  imprimirPdf(aplicarTotaisNoRelatorioEspecial(formComTotais))
+                )}
+                emailLabel={t.email || 'E-mail'}
+                whatsLabel="WhatsApp"
+                className="relatorio-especial-form__envio-inner"
+              />
+            ) : null}
+          </span>
+        </div>
       </div>
     </div>
   )

@@ -41797,6 +41797,19 @@ html body .relatorio-especial-root .relatorio-especial-form__actions {
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
+  justify-content: flex-start;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-form__observacoes {
+  margin-bottom: 16px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-form__observacoes-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 96px;
 }
 
 html body .relatorio-especial-root .relatorio-especial-dia-card {
@@ -42366,27 +42379,41 @@ html body .relatorio-especial-root .relatorio-especial-mobile-bar {
     min-height: 44px;
   }
 
-  html body .relatorio-especial-root .relatorio-especial-form__actions {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+  html body .relatorio-especial-root .relatorio-especial-form__actions.relatorio-especial-form__action-bar {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
     position: sticky;
     bottom: 0;
     z-index: 90;
-    padding: 10px 8px calc(10px + env(safe-area-inset-bottom, 0px));
-    margin: 16px -8px 0;
+    margin: 12px 0 0;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+    border-radius: 14px;
     background: rgba(20, 20, 20, 0.96);
-    border-top: 1px solid rgba(0, 200, 83, 0.35);
+    border: 1px solid rgba(0, 200, 83, 0.35);
     backdrop-filter: blur(6px);
   }
 
-  html body .relatorio-especial-root .relatorio-especial-form__actions > * {
+  html body .relatorio-especial-root .relatorio-especial-form__actions .relatorio-especial-form__action-bar-acoes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-form__actions .re-action-btn,
+  html body .relatorio-especial-root .relatorio-especial-form__actions .doc-envio-acoes__btn {
     width: 100%;
     min-height: 48px !important;
   }
 
-  html body .relatorio-especial-root .relatorio-especial-form__actions .btn-primary {
+  html body .relatorio-especial-root .relatorio-especial-form__actions .re-action-btn--primary {
     grid-column: 1 / -1;
+  }
+
+  html body .relatorio-especial-root .relatorio-especial-form__actions .relatorio-especial-form__envio,
+  html body .relatorio-especial-root .relatorio-especial-form__actions .doc-envio-acoes {
+    display: contents;
   }
 
   html body .relatorio-especial-root .relatorio-especial-resumo-equip {
