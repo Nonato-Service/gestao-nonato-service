@@ -12499,33 +12499,39 @@ export default function Dashboard() {
       if (pecasIncompletas(savedPecasBiblioteca)) {
         const liteBoot = serverData['nonato-pecas-biblioteca-lite']
         const fullBoot = serverData['nonato-pecas-biblioteca']
+        const localBoot = Array.isArray(savedPecasBiblioteca) ? savedPecasBiblioteca : []
         if (Array.isArray(liteBoot) && liteBoot.length > 0) {
-          // Aceitar lite mesmo parcial no boot — abre a UI; completa depois.
-          if (!savedPecasBiblioteca || liteBoot.length > savedPecasBiblioteca.length) {
-            savedPecasBiblioteca = liteBoot
-            console.info(`[Nonato] Biblioteca do bundle lite: ${liteBoot.length} peça(s).`)
-          }
+          // Fundir — nunca substituir categorias locais pelo lite do servidor.
+          savedPecasBiblioteca = mergePecasBibliotecaArrays(liteBoot, localBoot) as unknown[]
+          console.info(
+            `[Nonato] Biblioteca bundle lite fundida: ${savedPecasBiblioteca.length} peça(s).`
+          )
         } else if (Array.isArray(fullBoot) && fullBoot.length > 0) {
-          if (!savedPecasBiblioteca || fullBoot.length > savedPecasBiblioteca.length) {
-            savedPecasBiblioteca = fullBoot
-            console.info(`[Nonato] Biblioteca do bundle completo: ${fullBoot.length} peça(s).`)
-          }
+          savedPecasBiblioteca = mergePecasBibliotecaArrays(fullBoot, localBoot) as unknown[]
+          console.info(
+            `[Nonato] Biblioteca bundle completo fundida: ${savedPecasBiblioteca.length} peça(s).`
+          )
         }
       }
       const applyPecasBootList = (listaIn: PecaBiblioteca[]) => {
         const raw = listaIn.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
-        const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, catsInicial)
+        const { lista: sequenciada } = garantirNumerosSequenciaPecaBiblioteca(raw, catsInicial)
+        let toSave = sequenciada
         setPecasBiblioteca((prev) => {
           if (
             !isPecasBibliotecaCatalogIncomplete(prev.length, catsInicial.length) &&
-            isPecasBibliotecaCatalogIncomplete(lista.length, catsInicial.length)
+            isPecasBibliotecaCatalogIncomplete(sequenciada.length, catsInicial.length)
           ) {
+            toSave = prev
             return prev
           }
-          return lista
+          // Preservar categorias já atribuídas na UI se o incoming vier sem classificação.
+          toSave = mergePecasBibliotecaArrays(sequenciada, prev) as PecaBiblioteca[]
+          return toSave
         })
-        void savePecasBibliotecaLocally(lista)
-        return lista
+        void savePecasBibliotecaLocally(toSave)
+        void pushPecasBibliotecaClassificationsIfRicher(toSave as unknown[])
+        return toSave
       }
       if (savedPecasBiblioteca && Array.isArray(savedPecasBiblioteca) && savedPecasBiblioteca.length > 0) {
         const lista = applyPecasBootList(savedPecasBiblioteca as PecaBiblioteca[])

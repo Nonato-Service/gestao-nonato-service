@@ -64,7 +64,11 @@ function temImagemBase64Peca(p: PecaBibliotecaMerge): boolean {
 }
 
 function temClassificacaoPeca(p: PecaBibliotecaMerge): boolean {
-  return Boolean(String(p.categoriaId ?? '').trim())
+  return Boolean(
+    String(p.categoriaId ?? '').trim() ||
+      String(p.categoria ?? '').trim() ||
+      String(p.subcategoriaId ?? '').trim()
+  )
 }
 
 function copiarClassificacaoPeca(out: PecaBibliotecaMerge, src: PecaBibliotecaMerge): void {

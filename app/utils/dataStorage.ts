@@ -641,6 +641,8 @@ export const NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE = new Set([
   'nonato-relatorios-servico',
   'nonato-relatorios-especiais',
   'nonato-pecas-biblioteca',
+  'nonato-categorias-pecas',
+  'nonato-subcategorias-pecas',
   'nonato-biblioteca-pecas',
   'nonato-diario-pedidos-dia',
   'nonato-conhecimento-tecnicos',
@@ -1491,7 +1493,17 @@ export async function fetchPecasBibliotecaServerMeta(): Promise<PecasBibliotecaS
   }
 }
 
-/** Arranque / botão repor: prioriza ficheiro lite (~157 KB), ignora cópia parcial no browser. */
+/** Funde lite/full do servidor com o local e grava — nunca apaga categorias já preenchidas neste aparelho. */
+async function savePecasBibliotecaMergedWithLocal(fromServer: unknown[]): Promise<unknown[]> {
+  const snap = await readLocalValueForLoad(PECAS_BIBLIOTECA_KEY, true)
+  const local = Array.isArray(snap.parsed) ? snap.parsed : []
+  const merged = mergePecasBibliotecaArrays(fromServer, local) as unknown[]
+  await savePecasBibliotecaLocally(merged)
+  void pushPecasBibliotecaClassificationsIfRicher(merged)
+  return merged
+}
+
+/** Arranque / botão repor: prioriza ficheiro lite, mas SEMPRE funde com categorias locais. */
 export async function bootstrapLoadPecasBiblioteca(categoriasCount: number): Promise<unknown[] | null> {
   const isComplete = (n: number) => !isPecasBibliotecaCatalogIncomplete(n, categoriasCount)
 
@@ -1500,9 +1512,11 @@ export async function bootstrapLoadPecasBiblioteca(categoriasCount: number): Pro
     try {
       const fromServer = await fetchPecasBibliotecaLiteFromServer()
       if (Array.isArray(fromServer) && isComplete(fromServer.length)) {
-        await savePecasBibliotecaLocally(fromServer)
-        console.info(`[Nonato] Biblioteca carregada: ${fromServer.length} peça(s).`)
-        return fromServer
+        const merged = await savePecasBibliotecaMergedWithLocal(fromServer)
+        console.info(
+          `[Nonato] Biblioteca carregada: ${merged.length} peça(s), classificadas ${countPecasBibliotecaComClassificacao(merged)}.`
+        )
+        return merged
       }
     } catch (e) {
       console.warn('[Nonato] bootstrapLoadPecasBiblioteca tentativa', attempt + 1, e)
@@ -1513,18 +1527,20 @@ export async function bootstrapLoadPecasBiblioteca(categoriasCount: number): Pro
   const loadCount = Array.isArray(fromLoad) ? fromLoad.length : 0
   if (isComplete(loadCount)) return fromLoad
 
+  const localClass = countPecasBibliotecaComClassificacao(Array.isArray(fromLoad) ? fromLoad : [])
   try {
-    await clearPecasBibliotecaLocal()
+    // Nunca limpar o browser se já há peças classificadas — isso apagava o trabalho do utilizador.
+    if (localClass < 1) {
+      await clearPecasBibliotecaLocal()
+    }
     const lastTry = await fetchPecasBibliotecaLiteFromServer()
     if (Array.isArray(lastTry) && isComplete(lastTry.length)) {
-      await savePecasBibliotecaLocally(lastTry)
-      return lastTry
+      return await savePecasBibliotecaMergedWithLocal(lastTry)
     }
     if (!shouldDeferPecasBibliotecaImageHydration()) {
       const repaired = await fetchPecasBibliotecaRepairPaginated()
       if (Array.isArray(repaired) && isComplete(repaired.length)) {
-        await savePecasBibliotecaLocally(repaired)
-        return repaired
+        return await savePecasBibliotecaMergedWithLocal(repaired)
       }
     }
   } catch {
@@ -2453,6 +2469,38 @@ async function writeLocalFromServerPull(key: string, value: unknown): Promise<vo
     const merged = mergePecasBibliotecaArrays(value, localParsed)
     await savePecasBibliotecaLocally(merged as unknown[])
     if (pecasBibliotecaArraysDiffer(merged, value)) {
+      scheduleServerMigrationPush(key, merged)
+    }
+    void pushPecasBibliotecaClassificationsIfRicher(merged as unknown[])
+    return
+  }
+  if (key === 'nonato-categorias-pecas' || key === 'nonato-subcategorias-pecas') {
+    const snap = await readLocalValueForLoad(key, true)
+    const localParsed = snap.parsed
+    const localCount = Array.isArray(localParsed) ? localParsed.length : 0
+    const serverCount = Array.isArray(value) ? value.length : 0
+    // Lista de categorias/subcategorias: união por id; nunca substituir local maior por servidor menor.
+    if (localCount > 0 && serverCount < localCount) {
+      const merged = mergeArraysByIdDeferServerLocal(value, localParsed)
+      writeLocalStorageValue(key, merged)
+      try {
+        await saveKv(key, merged)
+      } catch {
+        /* ignorar */
+      }
+      if (JSON.stringify(merged) !== JSON.stringify(value)) {
+        scheduleServerMigrationPush(key, merged)
+      }
+      return
+    }
+    const merged = mergeArraysByIdDeferServerLocal(value, localParsed)
+    writeLocalStorageValue(key, merged)
+    try {
+      await saveKv(key, merged)
+    } catch {
+      /* ignorar */
+    }
+    if (JSON.stringify(merged) !== JSON.stringify(value)) {
       scheduleServerMigrationPush(key, merged)
     }
     return
