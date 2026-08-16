@@ -1,6 +1,7 @@
-/** Módulo Agenda — tipos, normalização, datas, filtros, rótulos e resolução cliente/equipamento. */
+/** Módulo Agenda — tipos, normalização, datas, filtros, rótulos, resolução cliente/equipamento e blocos UI estado visual. */
 
 export type { Agendamento, AgendaListaSecaoId } from './tipos'
+export type { ClienteAgendaLike, EquipamentoAgendaLike } from './clienteEquipamento'
 export {
   AGENDA_CONCLUIDOS_LISTA_MAX,
   AGENDA_PAINEL_CONCLUIDOS_MAX,
@@ -53,3 +54,8 @@ export {
   resolveClienteEEquipamentoParaFormularioAgenda,
   resolverEquipamentoAgendamentoParaExibicao,
 } from './clienteEquipamento'
+
+export {
+  renderBlocoEquipamentoAgendamentoEstadoVisual,
+  renderBlocoAssuntoPessoalEstadoVisual,
+} from './estadoVisual'

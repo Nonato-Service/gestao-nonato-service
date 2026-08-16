@@ -420,17 +420,31 @@ try {
   if (
     idx.includes('normalizeTipoAgendamento') &&
     idx.includes('getDatasPeriodoAgendamento') &&
-    idx.includes('resolverEquipamentoAgendamentoParaExibicao')
+    idx.includes('resolverEquipamentoAgendamentoParaExibicao') &&
+    idx.includes('renderBlocoEquipamentoAgendamentoEstadoVisual')
   ) {
-    ok('módulo agenda exporta normalize/datas/clienteEquipamento')
+    ok('módulo agenda exporta normalize/datas/clienteEquipamento/estadoVisual')
   } else {
     fail('módulo agenda incompleto (index.ts)')
+  }
+  if (!exists('app/modules/agenda/estadoVisual.tsx')) {
+    fail('falta app/modules/agenda/estadoVisual.tsx')
+  } else {
+    ok('existe app/modules/agenda/estadoVisual.tsx')
   }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/agenda'") || nma.includes('from "./modules/agenda"')) {
     ok('NonatoMainApp importa app/modules/agenda')
   } else {
     fail('NonatoMainApp não importa o módulo agenda')
+  }
+  if (
+    !nma.includes('function renderBlocoEquipamentoAgendamentoEstadoVisual(') &&
+    !nma.includes('function renderBlocoAssuntoPessoalEstadoVisual(')
+  ) {
+    ok('NonatoMainApp usa blocos estado visual do módulo agenda')
+  } else {
+    fail('NonatoMainApp ainda define renderBloco*EstadoVisual localmente')
   }
 } catch (e) {
   fail(`módulo agenda: ${e.message}`)

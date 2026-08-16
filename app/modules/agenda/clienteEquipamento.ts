@@ -1,7 +1,7 @@
 import type { Agendamento } from './tipos'
 import { isAgendamentoPessoal } from './normalize'
 
-type EquipamentoAgendaLike = {
+export type EquipamentoAgendaLike = {
   id?: string
   numeroSerie?: string
   modelo?: string
@@ -11,7 +11,7 @@ type EquipamentoAgendaLike = {
   grupo?: string
 }
 
-type ClienteAgendaLike = {
+export type ClienteAgendaLike = {
   id: string
   nomeEmpresa?: string
   equipamentos?: EquipamentoAgendaLike[]
