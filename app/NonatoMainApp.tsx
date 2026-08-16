@@ -120,6 +120,12 @@ import {
   bibliotecaRowTemConteudo,
   buildBibliotecaRelatoriosPorCliente,
   equipamentosClienteDoRelatorioDespesas,
+  clipboardLooksLikeCatalogImport,
+  pickBestCatalogRawFromClipboard,
+  BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY,
+  NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY,
+  HOMAG_SHOP_PECA_LOOKUP_ROOT,
+  buildPecaCatalogoUrlFromTemplate,
 } from './modules/biblioteca'
 import {
   type DiaTrabalho,
@@ -1197,48 +1203,7 @@ type RegraClassificacaoPeca = {
   createdAt: string
 }
 
-/* Cadastro rápido biblioteca → app/modules/biblioteca */
-
-const BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY = 'nonato-biblioteca-pecas-ultima-selecao'
-const NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY = 'nonato-peca-lookup-url-template'
-
-/** URL de entrada da loja HOMAG (sem código no path); convertida automaticamente para pesquisa global. */
-const HOMAG_SHOP_PECA_LOOKUP_ROOT = 'https://shop.homag.com/s/?language=en_US'
-
-/** HTML/texto colado de uma página de catálogo (não tratar como colagem só de imagem). */
-function clipboardLooksLikeCatalogImport(html: string, plain: string): boolean {
-  const h = String(html || '')
-  const p = String(plain || '').trim()
-  if (h.length >= 40 && (/<table\b/i.test(h) || /<tr\b/i.test(h) || /<img\b/i.test(h))) return true
-  if (!p || p.length < 10) return false
-  if (/^https?:\/\//i.test(p) && !p.includes('\n')) return true
-  if (p.startsWith('[') || p.startsWith('{')) return true
-  const lines = p.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
-  if (lines.length >= 2) return true
-  if (p.length >= 25) return true
-  return false
-}
-
-function pickBestCatalogRawFromClipboard(html: string, plain: string): { raw: string; plainFallback: string } {
-  const h = String(html || '').trim()
-  const p = String(plain || '').trim()
-  if (!h && !p) return { raw: '', plainFallback: '' }
-  if (/^https?:\/\//i.test(p) && !p.includes('\n') && h.length < 40) return { raw: p, plainFallback: p }
-  /** HOMAG: texto plano com códigos 10 dígitos é mais fiável que HTML Salesforce/LWC. */
-  if (countHomagCodesInText(p) >= 3) return { raw: p, plainFallback: p }
-  if (h.length >= 40 && /<table\b/i.test(h)) return { raw: h, plainFallback: p }
-  if (h.length >= 40 && p.length >= 20) {
-    const plainLines = p.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
-    const htmlLooksUseful =
-      /<table\b/i.test(h) ||
-      /<tr\b/i.test(h) ||
-      (/<img\b/i.test(h) && plainLines.length >= 2)
-    if (htmlLooksUseful && countHomagCodesInText(p) < 3) return { raw: h, plainFallback: p }
-    if (plainLines.length >= 2) return { raw: p, plainFallback: p }
-  }
-  if (h.length >= 40 && countHomagCodesInText(p) < 3) return { raw: h, plainFallback: p }
-  return { raw: p, plainFallback: p }
-}
+/* Cadastro rápido biblioteca → app/modules/biblioteca (catalogClipboard / catalogUrl) */
 
 /* Numeração sequência biblioteca → app/modules/biblioteca */
 
@@ -1270,49 +1235,6 @@ function NumeroSequenciaCirculo({
   )
 }
 
-function buildPecaCatalogoUrlFromTemplate(template: string, codigo: string): string | null {
-  const rawCode = String(codigo || '').trim()
-  const tpl = String(template || '').trim()
-  if (!rawCode || !tpl) return null
-
-  const hasExplicitPlaceholder =
-    /\{codigo\}/i.test(tpl) || /\{codigopath\}/i.test(tpl) || /\{CODIGOPATH\}/i.test(tpl) || tpl.includes('*')
-
-  // HOMAG eShop: só a página da loja (ex.: …/s/?language=en_US) — monta pesquisa global com o mesmo idioma.
-  if (!hasExplicitPlaceholder) {
-    try {
-      const u = new URL(tpl)
-      if (/shop\.homag\.com$/i.test(u.hostname)) {
-        const path = (u.pathname || '/').replace(/\/+$/, '') || '/'
-        if (path === '/s') {
-          const language = u.searchParams.get('language') || 'en_US'
-          const term = encodeURIComponent(rawCode)
-          const out = `https://shop.homag.com/s/global-search/${term}?language=${encodeURIComponent(language)}`
-          return new URL(out).href
-        }
-      }
-    } catch {
-      /* continuar com marcadores clássicos */
-    }
-  }
-
-  const enc = encodeURIComponent(rawCode)
-  const encPath = encodeURI(rawCode)
-  let out = tpl
-  if (out.includes('{codigo}')) out = out.split('{codigo}').join(enc)
-  else if (out.includes('{CODIGO}')) out = out.split('{CODIGO}').join(enc)
-  else if (out.includes('{codigoPath}')) out = out.split('{codigoPath}').join(encPath)
-  else if (out.includes('{CODIGOPATH}')) out = out.split('{CODIGOPATH}').join(encPath)
-  else if (out.includes('*')) out = out.replace(/\*/g, enc)
-  else return null
-  if (!out.startsWith('http://') && !out.startsWith('https://')) return null
-  try {
-    return new URL(out).href
-  } catch {
-    return null
-  }
-}
-/** Valor do `<select>` de grupo na biblioteca: só peças sem `categoriaId` (continuam a aparecer na vista normal quando o filtro é «todos»). */
 const BIBLIOTECA_FILTRO_SEM_CATEGORIA = '__sem_categoria__'
 /** Peças visíveis de cada vez na gestão (evita 21k+ nós DOM no tablet). */
 const BIBLIOTECA_ITENS_POR_LOTE = 48

@@ -100,6 +100,18 @@ export {
   resolverIdEdicaoPecaBiblioteca,
 } from './cadastroForm'
 
+export {
+  clipboardLooksLikeCatalogImport,
+  pickBestCatalogRawFromClipboard,
+} from './catalogClipboard'
+
+export {
+  BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY,
+  NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY,
+  HOMAG_SHOP_PECA_LOOKUP_ROOT,
+  buildPecaCatalogoUrlFromTemplate,
+} from './catalogUrl'
+
 export type { CategoriaRefSequencia } from './sequencia'
 export {
   BIBLIOTECA_SEM_GRUPO_SEQUENCIA_KEY,

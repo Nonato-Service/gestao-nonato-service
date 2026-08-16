@@ -231,6 +231,14 @@ try {
   } else {
     fail('NonatoMainApp não importa buildBibliotecaRelatoriosPorCliente / repararIdsGuardadosBiblioteca')
   }
+  if (
+    idx.includes('clipboardLooksLikeCatalogImport') &&
+    idx.includes('buildPecaCatalogoUrlFromTemplate')
+  ) {
+    ok('módulo biblioteca exporta catálogo clipboard/URL')
+  } else {
+    fail('módulo biblioteca sem clipboardLooksLikeCatalogImport / buildPecaCatalogoUrlFromTemplate')
+  }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
 }
