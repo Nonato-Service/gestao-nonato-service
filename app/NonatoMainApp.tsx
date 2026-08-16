@@ -1080,6 +1080,17 @@ function servicoCombinaLinhaFechamento(s: ServicoCadastroFechamentoMin, linhaId:
   return true
 }
 
+function servicoPertenceAoGrupoFechamento(
+  s: ServicoCadastroFechamentoMin | undefined,
+  grupoId?: string | null
+): boolean {
+  if (!s) return false
+  if (!grupoId) return true
+  const gid = String(s.grupoId || '').trim()
+  // Sem grupo no serviço: aceitar (cadastros antigos); com grupo: tem de coincidir
+  return !gid || gid === grupoId
+}
+
 function getServicoParaLinhaFechamento(
   servicos: ServicoCadastroFechamentoMin[],
   linhaId: string,
@@ -1088,7 +1099,13 @@ function getServicoParaLinhaFechamento(
 ): ServicoCadastroFechamentoMin | undefined {
   if (savedServicoId) {
     const byId = servicos.find((s) => s.id === savedServicoId)
-    if (byId && servicoCombinaLinhaFechamento(byId, linhaId)) return byId
+    if (
+      byId &&
+      servicoCombinaLinhaFechamento(byId, linhaId) &&
+      servicoPertenceAoGrupoFechamento(byId, grupoId)
+    ) {
+      return byId
+    }
   }
   const r = resolverServicosFechamentoTemplate(servicos, grupoId)
   if (linhaId === 'ht') return r.fechServHt
@@ -1104,11 +1121,17 @@ function enriquecerLinhaFechamentoComCadastro(
   item: FechamentoItem,
   servicos: ServicoCadastroFechamentoMin[],
   savedServicoId?: string,
-  grupoId?: string | null
+  grupoId?: string | null,
+  opts?: { forcarValorCadastro?: boolean }
 ): FechamentoItem {
   const tpl = getServicoParaLinhaFechamento(servicos, item.id, undefined, grupoId)
   let svc = tpl
-  if (savedServicoId) {
+  const savedRaw = savedServicoId ? servicos.find((s) => s.id === savedServicoId) : undefined
+  const savedMesmoGrupo =
+    !!savedRaw &&
+    servicoCombinaLinhaFechamento(savedRaw, item.id) &&
+    servicoPertenceAoGrupoFechamento(savedRaw, grupoId)
+  if (savedMesmoGrupo && savedServicoId) {
     const bySaved = getServicoParaLinhaFechamento(servicos, item.id, savedServicoId, grupoId)
     const vSaved = bySaved ? normalizeServicoValorStored(bySaved.valor) : 0
     if (item.id === 'diarias') {
@@ -1122,7 +1145,34 @@ function enriquecerLinhaFechamentoComCadastro(
   const valorUnit = normalizeServicoValorStored(svc.valor)
   const qty = item.quantidade || 0
   const valorUnitStored = normalizeServicoValorStored(item.valorUnitario)
-  const valorUnitFinal = valorUnitStored > 0 ? valorUnitStored : valorUnit
+  /**
+   * Se o serviço guardado é de outro grupo (ex.: HTT 50 → grupo HTT 70),
+   * ou ao mudar o grupo, ou se o € guardado coincide com HTT/KM de outro grupo,
+   * usar o valor do cadastro do grupo atual.
+   */
+  const valorCoincideComOutroGrupo =
+    valorUnit > 0 &&
+    valorUnitStored > 0 &&
+    Math.abs(valorUnit - valorUnitStored) > 0.009 &&
+    servicos.some(
+      (s) =>
+        s.id !== svc.id &&
+        servicoCombinaLinhaFechamento(s, item.id) &&
+        (!grupoId || String(s.grupoId || '').trim() !== grupoId) &&
+        Math.abs(normalizeServicoValorStored(s.valor) - valorUnitStored) < 0.009
+    )
+  const deveUsarCadastro =
+    opts?.forcarValorCadastro === true ||
+    !savedMesmoGrupo ||
+    valorUnitStored <= 0 ||
+    valorCoincideComOutroGrupo
+  const valorUnitFinal = deveUsarCadastro
+    ? valorUnit > 0
+      ? valorUnit
+      : valorUnitStored
+    : valorUnitStored > 0
+      ? valorUnitStored
+      : valorUnit
   const mult =
     item.tipoCobranca === 'hora' ||
     item.tipoCobranca === 'km' ||
@@ -52674,10 +52724,13 @@ A1;Peça exemplo;10`}
                   ...item,
                   quantidade: qtyById[item.id] ?? item.quantidade,
                   servicoId: undefined,
+                  valorUnitario: 0,
+                  valorTotal: 0,
                 },
                 servicos as ServicoCadastroFechamentoMin[],
                 undefined,
-                grupoId
+                grupoId,
+                { forcarValorCadastro: true }
               )
               if (item.id === 'diarias') {
                 return { ...enriched, cobrarDiaria: item.cobrarDiaria !== false }
