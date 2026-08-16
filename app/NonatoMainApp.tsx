@@ -137,6 +137,45 @@ import {
   relatoriosServicoForaDaBiblioteca,
 } from './modules/relatorio-servico'
 import {
+  type Agendamento,
+  type AgendaListaSecaoId,
+  AGENDA_CONCLUIDOS_LISTA_MAX,
+  AGENDA_PAINEL_CONCLUIDOS_MAX,
+  AGENDA_PAINEL_CANCELADOS_MAX,
+  LS_AGENDA_CAL_CONCLUIDOS,
+  AGENDA_LISTA_SECAO_IDS,
+  AGENDA_CANCELADO_BG,
+  AGENDA_CANCELADO_BORDA,
+  AGENDA_CANCELADO_SOMBRA,
+  AGENDA_FILTRO_CTRL_STYLE,
+  AGENDA_FILTRO_BAR_STYLE,
+  normalizeTipoAgendamento,
+  normalizeStatusAgendamento,
+  normalizeCategoriaAgendamento,
+  isAgendamentoPessoal,
+  isAgendamentoCancelado,
+  normalizeDataKeyAgenda,
+  parseDataAgendaLocal,
+  formatDataYYYYMMDDLocal,
+  getDatasPeriodoAgendamento,
+  agendamentoIncluiData,
+  agendamentoPeriodoIntersectaIntervalo,
+  rotuloPeriodoAgendamento,
+  agendamentoStatusAtivoParaEstadoVisual,
+  agendamentoVisivelNoEstadoVisualTecnico,
+  agendaPassaFiltroTipoListagem,
+  ordenarAgendamentosCalendarioDia,
+  rotuloTituloAgendamento,
+  rotuloCurtoAgendamentoCalendario,
+  rotuloTipoAgendamentoEstadoVisual,
+  rotuloAgendaPainelSituacao,
+  accentCorAgendamentoLista,
+  estiloCardAgendaEstadoVisualShared,
+  estiloMarcadorAgendamentoCancelado,
+  resolveClienteEEquipamentoParaFormularioAgenda,
+  resolverEquipamentoAgendamentoParaExibicao,
+} from './modules/agenda'
+import {
   mergeSidebarButtonsDeferLocal,
   repairSidebarButtonsFromCatalog,
 } from './lib/sidebarMergeUtils'
@@ -1823,171 +1862,6 @@ type PedidoOrcamento = {
   observacoes?: string
 }
 
-type Agendamento = {
-  id: string
-  tipo: 'pre-agendamento' | 'agendamento-tecnico'
-  tecnico: string
-  cliente: string
-  clienteId?: string
-  equipamento?: string
-  equipamentoId?: string
-  data: string
-  hora: string
-  duracaoEstimada: string // em dias
-  /** Datas (YYYY-MM-DD) escolhidas no calendário de duração; usado com duracaoEstimada = quantidade */
-  diasSelecionados?: string[]
-  tipoServico: string
-  observacoesTecnicas: string
-  necessidadePecas: boolean
-  codigoNotaFiscal?: string
-  pecasAnexadas?: string[] // URLs ou IDs das peças anexadas
-  status: 'pendente' | 'confirmado' | 'em-andamento' | 'concluido' | 'cancelado'
-  telefone: string
-  endereco: string
-  cidade: string
-  dataCriacao: string
-  dataConfirmacao?: string
-  /** Texto livre: serviço efetivamente executado (preencher ao concluir). Gravado com o agendamento. */
-  relatorioTrabalhoExecutado?: string
-  /** Preenchido automaticamente ao passar o estado para «Concluído». */
-  dataRegistoConclusao?: string
-  /** servico = cliente/equipamento; pessoal = assuntos particulares ou visita técnica (sem cliente). */
-  categoria?: 'servico' | 'pessoal'
-  /** Quando categoria = pessoal: tipo de compromisso exibido na agenda. */
-  subtipoPessoal?: 'pessoal' | 'visita-tecnica'
-  /** Descrição opcional do assunto pessoal (ex.: médico, banco). */
-  assunto?: string
-}
-
-/** Normaliza tipo para o calendário: dados antigos podem vir sem `tipo` ou com texto diferente — antes ficava tudo azul. */
-function normalizeTipoAgendamento(ag: { tipo?: string }): 'pre-agendamento' | 'agendamento-tecnico' {
-  const raw = ag.tipo
-  if (raw === 'pre-agendamento') return 'pre-agendamento'
-  if (raw === 'agendamento-tecnico') return 'agendamento-tecnico'
-  const s = String(raw ?? '')
-    .trim()
-    .toLowerCase()
-  if (s === 'pre-agendamento' || s.startsWith('pre') || s.includes('pré') || s.includes('preagendamento')) {
-    return 'pre-agendamento'
-  }
-  if (s === 'agendamento-tecnico' || s.includes('tecnico') || s.includes('técnico')) {
-    return 'agendamento-tecnico'
-  }
-  return 'pre-agendamento'
-}
-
-/** Normaliza status para UI (localStorage antigo pode trazer texto livre ou acentos). */
-function normalizeStatusAgendamento(ag: { status?: string }): Agendamento['status'] {
-  const raw = String(ag.status ?? '').trim()
-  const s = raw
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-  if (s === 'concluido') return 'concluido'
-  if (s === 'cancelado') return 'cancelado'
-  if (s === 'em-andamento' || s === 'em andamento') return 'em-andamento'
-  if (s === 'confirmado') return 'confirmado'
-  if (s === 'pendente') return 'pendente'
-  if (s.includes('conclu')) return 'concluido'
-  if (s.includes('cancel')) return 'cancelado'
-  if (s.includes('andamento')) return 'em-andamento'
-  if (s.includes('confirm')) return 'confirmado'
-  return 'pendente'
-}
-
-/** Ao editar, preencher selects de cliente/equipamento quando o registo antigo só tinha texto livre. */
-function resolveClienteEEquipamentoParaFormularioAgenda(
-  ag: Agendamento,
-  clientes: Cliente[]
-): Pick<Agendamento, 'clienteId' | 'equipamentoId'> {
-  let clienteId = String(ag.clienteId ?? '').trim()
-  if (!clienteId || !clientes.some((c) => c.id === clienteId)) {
-    const nome = (ag.cliente || '').trim().toLowerCase()
-    if (nome) {
-      const exato = clientes.find((c) => (c.nomeEmpresa || '').trim().toLowerCase() === nome)
-      const parcial =
-        exato ||
-        clientes.find(
-          (c) =>
-            nome.includes((c.nomeEmpresa || '').trim().toLowerCase()) ||
-            (c.nomeEmpresa || '').trim().toLowerCase().includes(nome)
-        )
-      clienteId = parcial?.id || ''
-    }
-  }
-  let equipamentoId = String(ag.equipamentoId ?? '').trim()
-  const cli = clientes.find((c) => c.id === clienteId)
-  if (cli?.equipamentos?.length) {
-    const equipDoCliente = (id: string) =>
-      cli.equipamentos!.find((e) => e.id === id || e.numeroSerie === id)
-    const valid = equipamentoId && equipDoCliente(equipamentoId)
-    if (!valid && (ag.equipamento || '').trim()) {
-      const label = (ag.equipamento || '').trim().toLowerCase()
-      const m =
-        cli.equipamentos.find((e) => {
-          const blob = `${e.modelo || ''} ${e.numeroSerie || ''} ${e.tipoEquipamento || ''}`.toLowerCase()
-          return (
-            blob.includes(label) ||
-            label.includes((e.modelo || '').toLowerCase()) ||
-            (e.numeroSerie && label.includes(String(e.numeroSerie).toLowerCase()))
-          )
-        }) || null
-      equipamentoId = (m?.numeroSerie || m?.id || equipamentoId) as string
-    }
-    // O formulário da agenda usa `value={eq.numeroSerie}` no select — alinhar id interno ao n.º série.
-    if (equipamentoId) {
-      const me = equipDoCliente(equipamentoId)
-      if (me) {
-        const serial = String(me.numeroSerie || '').trim()
-        equipamentoId = serial || String(me.id || '').trim() || equipamentoId
-      }
-    }
-  }
-  return { clienteId, equipamentoId }
-}
-
-/** Resolve equipamento do agendamento para exibição (estado visual, lista, etc.). */
-function resolverEquipamentoAgendamentoParaExibicao(
-  ag: Agendamento,
-  clientes: Cliente[]
-): { equipamento: EquipamentoCliente | null; rotulo: string } {
-  if (isAgendamentoPessoal(ag)) return { equipamento: null, rotulo: '' }
-
-  const { clienteId, equipamentoId } = resolveClienteEEquipamentoParaFormularioAgenda(ag, clientes)
-  const cli = clientes.find((c) => c.id === clienteId)
-  const equipamentos = cli?.equipamentos || []
-
-  const encontrarPorId = (id: string) =>
-    equipamentos.find((e) => e.numeroSerie === id || e.id === id) || null
-
-  let eq: EquipamentoCliente | null = null
-  if (equipamentoId) eq = encontrarPorId(equipamentoId)
-
-  if (!eq && (ag.equipamento || '').trim() && equipamentos.length) {
-    const label = (ag.equipamento || '').trim().toLowerCase()
-    eq =
-      equipamentos.find((e) => {
-        const blob = `${e.tipoEquipamento || ''} ${e.marca || ''} ${e.modelo || ''} ${e.numeroSerie || ''}`.toLowerCase()
-        return (
-          blob.includes(label) ||
-          label.includes((e.modelo || '').toLowerCase()) ||
-          (e.numeroSerie && label.includes(String(e.numeroSerie).toLowerCase()))
-        )
-      }) || null
-  }
-
-  if (!eq && equipamentos.length === 1) eq = equipamentos[0]
-
-  const rotuloEq = eq
-    ? [eq.tipoEquipamento, eq.marca, eq.modelo].filter((p) => String(p || '').trim()).join(' · ') ||
-      String(eq.modelo || '').trim()
-    : ''
-  const serie = eq?.numeroSerie ? ` (${eq.numeroSerie})` : ''
-  const rotulo = rotuloEq ? `${rotuloEq}${serie}` : String(ag.equipamento || '').trim()
-
-  return { equipamento: eq, rotulo }
-}
-
 function renderBlocoEquipamentoAgendamentoEstadoVisual(
   ag: Agendamento,
   clientes: Cliente[],
@@ -2083,64 +1957,6 @@ function renderBlocoEquipamentoAgendamentoEstadoVisual(
   )
 }
 
-/** Agendamentos visíveis no cartão do técnico (serviço do técnico + assuntos pessoais da equipa). */
-function agendamentoVisivelNoEstadoVisualTecnico(ag: Agendamento, tecnicoName: string): boolean {
-  if (!agendamentoStatusAtivoParaEstadoVisual(ag)) return false
-  if (isAgendamentoPessoal(ag)) return true
-  return String(ag.tecnico || '').trim() === String(tecnicoName || '').trim()
-}
-
-function estiloCardAgendaEstadoVisualShared(ag: Agendamento): React.CSSProperties {
-  if (normalizeStatusAgendamento(ag) === 'concluido') {
-    return {
-      padding: '10px',
-      backgroundColor: 'rgba(0, 200, 80, 0.14)',
-      borderRadius: '6px',
-      border: '1px solid rgba(0, 255, 130, 0.45)',
-    }
-  }
-  if (isAgendamentoPessoal(ag)) {
-    return {
-      padding: '10px',
-      backgroundColor: 'rgba(124, 58, 237, 0.22)',
-      borderRadius: '6px',
-      border: '1px solid rgba(216, 180, 254, 0.55)',
-    }
-  }
-  if (normalizeTipoAgendamento(ag) === 'pre-agendamento') {
-    return {
-      padding: '10px',
-      backgroundColor: 'rgba(255, 150, 0, 0.22)',
-      borderRadius: '6px',
-      border: '1px solid rgba(255, 180, 60, 0.7)',
-    }
-  }
-  return {
-    padding: '10px',
-    backgroundColor: 'rgba(40, 100, 220, 0.2)',
-    borderRadius: '6px',
-    border: '1px solid rgba(120, 170, 255, 0.55)',
-  }
-}
-
-function rotuloTipoAgendamentoEstadoVisual(
-  ag: Agendamento,
-  tr?: Record<string, string | undefined>
-): string {
-  if (isAgendamentoPessoal(ag)) {
-    return (
-      ag.subtipoPessoal === 'visita-tecnica'
-        ? tr?.agendaVisitaTecnica || 'Visita técnica'
-        : tr?.agendaPessoal || 'Pessoal'
-    ).toUpperCase()
-  }
-  return (
-    normalizeTipoAgendamento(ag) === 'pre-agendamento'
-      ? tr?.preAgendamento || 'Pré-Agendamento'
-      : tr?.agendamentoTecnico || 'Agendamento Técnico'
-  ).toUpperCase()
-}
-
 function renderBlocoAssuntoPessoalEstadoVisual(
   ag: Agendamento,
   tr?: Record<string, string | undefined>
@@ -2164,243 +1980,6 @@ function renderBlocoAssuntoPessoalEstadoVisual(
       {(tr?.observacaoTecnica || 'Observação').toUpperCase()}: {obs.toUpperCase()}
     </p>
   )
-}
-
-/** Máx. de concluídos na vista em lista; painéis usam valores menores para não sobrecarregar o ecrã. */
-const AGENDA_CONCLUIDOS_LISTA_MAX = 60
-const AGENDA_PAINEL_CONCLUIDOS_MAX = 40
-const AGENDA_PAINEL_CANCELADOS_MAX = 40
-const LS_AGENDA_CAL_CONCLUIDOS = 'nonato-agenda-cal-concluidos'
-
-type AgendaListaSecaoId = 'exec' | 'agend' | 'pre' | 'pessoal' | 'pend' | 'canc' | 'done' | 'dia'
-const AGENDA_LISTA_SECAO_IDS: AgendaListaSecaoId[] = ['exec', 'agend', 'pre', 'pessoal', 'pend', 'canc', 'done', 'dia']
-
-/** Normaliza chave YYYY-MM-DD (evita falha em includes por zeros à esquerda). */
-function normalizeDataKeyAgenda(s: string): string {
-  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(s ?? '').trim())
-  if (!m) return String(s ?? '').trim()
-  return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`
-}
-
-/**
- * Interpreta data do agendamento no fuso local.
- * `new Date('YYYY-MM-DD')` é meia-noite UTC e desloca o dia (ex.: Brasil → dia anterior), quebrando período e cor dos chips.
- */
-function parseDataAgendaLocal(dataStr: string): Date {
-  const norm = normalizeDataKeyAgenda(dataStr)
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(norm)
-  if (!m) return new Date(dataStr)
-  return new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10))
-}
-
-function formatDataYYYYMMDDLocal(d: Date): string {
-  const ano = d.getFullYear()
-  const mes = String(d.getMonth() + 1).padStart(2, '0')
-  const dia = String(d.getDate()).padStart(2, '0')
-  return `${ano}-${mes}-${dia}`
-}
-
-/** Datas YYYY-MM-DD do período do agendamento (diasSelecionados ou data + duração). */
-function getDatasPeriodoAgendamento(ag: Agendamento): string[] {
-  if (ag.diasSelecionados && ag.diasSelecionados.length > 0) {
-    return [...new Set(ag.diasSelecionados.map((d) => normalizeDataKeyAgenda(String(d))))].sort()
-  }
-  const dataInicio = parseDataAgendaLocal(ag.data)
-  const duracaoDias = parseInt(String(ag.duracaoEstimada || '1'), 10) || 1
-  const keys: string[] = []
-  for (let i = 0; i < duracaoDias; i++) {
-    const dataAtual = new Date(dataInicio.getFullYear(), dataInicio.getMonth(), dataInicio.getDate() + i)
-    keys.push(formatDataYYYYMMDDLocal(dataAtual))
-  }
-  return keys
-}
-
-function agendamentoStatusAtivoParaEstadoVisual(ag: Agendamento): boolean {
-  const st = normalizeStatusAgendamento(ag)
-  return st === 'pendente' || st === 'confirmado' || st === 'em-andamento'
-}
-
-/** Verifica se a data (YYYY-MM-DD local) está dentro do período do agendamento. */
-function agendamentoIncluiData(ag: Agendamento, dataKey: string): boolean {
-  const alvo = normalizeDataKeyAgenda(dataKey)
-  return getDatasPeriodoAgendamento(ag).some((d) => normalizeDataKeyAgenda(d) === alvo)
-}
-
-/** Algum dia do período cai no intervalo [inicio, fim] (inclusive), datas YYYY-MM-DD. */
-function agendamentoPeriodoIntersectaIntervalo(ag: Agendamento, inicio: string, fim: string): boolean {
-  const a = normalizeDataKeyAgenda(inicio)
-  const b = normalizeDataKeyAgenda(fim)
-  return getDatasPeriodoAgendamento(ag).some((d) => {
-    const k = normalizeDataKeyAgenda(d)
-    return k >= a && k <= b
-  })
-}
-
-function rotuloPeriodoAgendamento(ag: Agendamento): string {
-  const keys = getDatasPeriodoAgendamento(ag)
-  if (keys.length <= 1) return keys[0] || ag.data
-  const fmt = (k: string) => parseDataAgendaLocal(k).toLocaleDateString('pt-PT')
-  return `${fmt(keys[0])} — ${fmt(keys[keys.length - 1])}`
-}
-
-function normalizeCategoriaAgendamento(ag: { categoria?: string }): 'servico' | 'pessoal' {
-  return ag.categoria === 'pessoal' ? 'pessoal' : 'servico'
-}
-
-function isAgendamentoPessoal(ag: { categoria?: string }): boolean {
-  return normalizeCategoriaAgendamento(ag) === 'pessoal'
-}
-
-function rotuloTituloAgendamento(ag: Agendamento, tr?: Record<string, string | undefined>): string {
-  if (isAgendamentoPessoal(ag)) {
-    const base =
-      ag.subtipoPessoal === 'visita-tecnica'
-        ? tr?.agendaVisitaTecnica || 'Visita técnica'
-        : tr?.agendaPessoal || 'Pessoal'
-    const assunto = String(ag.assunto || ag.tipoServico || '').trim()
-    return assunto ? `${base} — ${assunto}` : base
-  }
-  return String(ag.cliente || '').trim() || '—'
-}
-
-function rotuloCurtoAgendamentoCalendario(ag: Agendamento, tr?: Record<string, string | undefined>): string {
-  if (isAgendamentoPessoal(ag)) {
-    const base =
-      ag.subtipoPessoal === 'visita-tecnica'
-        ? tr?.agendaVisitaTecnica || 'Visita técnica'
-        : tr?.agendaPessoal || 'Pessoal'
-    const assunto = String(ag.assunto || '').trim()
-    if (assunto) {
-      const curto = assunto.length > 14 ? `${assunto.substring(0, 14)}…` : assunto
-      return `${base}: ${curto}`
-    }
-    return base
-  }
-  const st = normalizeStatusAgendamento(ag)
-  const nome = String(ag.cliente || '').trim()
-  const curto = nome.length > 14 ? `${nome.substring(0, 14)}…` : nome
-  if (st === 'cancelado') {
-    return curto ? `${curto} (${tr?.cancelado || 'canc.'})` : tr?.cancelado || 'Cancelado'
-  }
-  return curto || '—'
-}
-
-/** Assuntos pessoais permanecem visíveis na agenda normal mesmo com filtro de tipo de serviço. */
-function agendaPassaFiltroTipoListagem(
-  filtro: 'todos' | 'pre-agendamento' | 'agendamento-tecnico' | 'assuntos-pessoais' | 'visita-tecnica' | 'nenhum' | 'folga' | 'doente' | 'ferias',
-  ag: Agendamento
-): boolean {
-  if (filtro === 'assuntos-pessoais' && !isAgendamentoPessoal(ag)) return false
-  if (
-    filtro === 'visita-tecnica' &&
-    (!isAgendamentoPessoal(ag) || ag.subtipoPessoal !== 'visita-tecnica')
-  ) {
-    return false
-  }
-  if (
-    (filtro === 'pre-agendamento' || filtro === 'agendamento-tecnico') &&
-    !isAgendamentoPessoal(ag) &&
-    normalizeTipoAgendamento(ag) !== filtro
-  ) {
-    return false
-  }
-  return true
-}
-
-function ordenarAgendamentosCalendarioDia(a: Agendamento, b: Agendamento): number {
-  const prioridade = (ag: Agendamento): number => {
-    if (isAgendamentoPessoal(ag)) return 2
-    const st = normalizeStatusAgendamento(ag)
-    if (st === 'cancelado') return 3
-    if (st === 'concluido') return 5
-    return 1
-  }
-  const pa = prioridade(a)
-  const pb = prioridade(b)
-  if (pa !== pb) return pa - pb
-  return String(a.hora || '').localeCompare(String(b.hora || ''))
-}
-
-function accentCorAgendamentoLista(ag: Agendamento): string {
-  if (isAgendamentoPessoal(ag)) return 'rgba(168, 85, 247, 0.92)'
-  const st = normalizeStatusAgendamento(ag)
-  if (st === 'cancelado') return '#f87171'
-  if (st === 'em-andamento') return 'rgba(255, 107, 45, 0.92)'
-  if (st === 'confirmado') return 'rgba(55, 130, 235, 0.92)'
-  if (st === 'pendente') return 'rgba(234, 88, 12, 0.92)'
-  if (normalizeTipoAgendamento(ag) === 'pre-agendamento') return 'rgba(255, 190, 50, 0.95)'
-  return 'rgba(90, 150, 255, 0.45)'
-}
-
-const AGENDA_CANCELADO_BG =
-  'linear-gradient(165deg, rgba(110, 14, 14, 0.98) 0%, rgba(52, 8, 8, 0.99) 48%, rgba(16, 0, 0, 1) 100%)'
-const AGENDA_CANCELADO_BORDA = '#f87171'
-const AGENDA_CANCELADO_SOMBRA = '0 0 22px rgba(248, 113, 113, 0.42)'
-
-/** Estilo inline dos filtros da Agenda — garante visual mesmo com CSS/PWA em cache antigo */
-const AGENDA_FILTRO_CTRL_STYLE: React.CSSProperties = {
-  width: '100%',
-  height: 48,
-  minHeight: 48,
-  maxHeight: 48,
-  boxSizing: 'border-box',
-  padding: '0 14px',
-  margin: 0,
-  backgroundColor: '#3a3a3a',
-  border: '1px solid rgba(255,255,255,0.14)',
-  borderRadius: 12,
-  color: '#ffffff',
-  WebkitTextFillColor: '#ffffff',
-  fontSize: 14,
-  lineHeight: '46px',
-  appearance: 'none',
-  WebkitAppearance: 'none',
-}
-
-const AGENDA_FILTRO_BAR_STYLE: React.CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  alignItems: 'flex-end',
-  gap: 12,
-  width: '100%',
-}
-
-function isAgendamentoCancelado(ag: Agendamento): boolean {
-  return normalizeStatusAgendamento(ag) === 'cancelado'
-}
-
-function estiloMarcadorAgendamentoCancelado(): React.CSSProperties {
-  return {
-    background: AGENDA_CANCELADO_BG,
-    border: `2px solid ${AGENDA_CANCELADO_BORDA}`,
-    boxShadow: AGENDA_CANCELADO_SOMBRA,
-    color: '#ffffff',
-    fontWeight: 700,
-    textDecoration: 'line-through',
-    textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-  }
-}
-
-function rotuloAgendaPainelSituacao(
-  id: 'exec' | 'agend' | 'pre' | 'pessoal' | 'pend' | 'canc' | 'done',
-  tr?: Record<string, string | undefined>
-): string {
-  switch (id) {
-    case 'exec':
-      return tr?.agendaPainelEmExecucao || 'Em execução'
-    case 'agend':
-      return tr?.agendaPainelAgendados || 'Agendados (confirmados)'
-    case 'pre':
-      return tr?.agendaPainelPreAgendados || 'Pré-agendados'
-    case 'pessoal':
-      return tr?.agendaPainelAssuntosPessoais || 'Assuntos pessoais'
-    case 'pend':
-      return tr?.agendaPainelPendentes || 'Pendentes (ag. técnico)'
-    case 'canc':
-      return tr?.agendaPainelCancelados || 'Cancelados'
-    default:
-      return tr?.agendaPainelConcluidosRecentes || 'Concluídos (recentes)'
-  }
 }
 
 type EquipamentoCliente = {

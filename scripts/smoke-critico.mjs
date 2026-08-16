@@ -39,6 +39,7 @@ const critical = [
   'app/modules/comprovantes/index.ts',
   'app/modules/equipamentos/index.ts',
   'app/modules/relatorio-servico/index.ts',
+  'app/modules/agenda/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -287,6 +288,28 @@ try {
   }
 } catch (e) {
   fail(`módulo relatorio-servico: ${e.message}`)
+}
+
+// 3k) Módulo agenda (11.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/agenda/index.ts'), 'utf8')
+  if (
+    idx.includes('normalizeTipoAgendamento') &&
+    idx.includes('getDatasPeriodoAgendamento') &&
+    idx.includes('resolverEquipamentoAgendamentoParaExibicao')
+  ) {
+    ok('módulo agenda exporta normalize/datas/clienteEquipamento')
+  } else {
+    fail('módulo agenda incompleto (index.ts)')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/agenda'") || nma.includes('from "./modules/agenda"')) {
+    ok('NonatoMainApp importa app/modules/agenda')
+  } else {
+    fail('NonatoMainApp não importa o módulo agenda')
+  }
+} catch (e) {
+  fail(`módulo agenda: ${e.message}`)
 }
 
 // 4) i18n
