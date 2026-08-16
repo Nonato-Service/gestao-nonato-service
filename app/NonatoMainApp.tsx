@@ -511,6 +511,11 @@ import {
   migrarServicoLegacyCodNomeDesc,
   buildItensFechamentoBaseRelatorio as buildItensFechamentoBaseRelatorioModulo,
   sincronizarItensFechamentoComRelatorioAtualizado as sincronizarItensFechamentoComRelatorioAtualizadoModulo,
+  quantidadesFechamentoCobrancaRelatorio,
+  isLinhaManualFechamento,
+  buildItensFechamentoParaExibirFromSalvos,
+  labelLinhaFechamentoFixa as labelLinhaFechamentoFixaModulo,
+  filtrarOpcoesServicoLinhaFechamento,
 } from './modules/fechamento'
 import {
   encontrarClienteDuplicadoCadastro,
@@ -47218,61 +47223,6 @@ A1;Peça exemplo;10`}
         )
 
       case 'fechamento-relatorios-servicos': {
-        const hhmmToDecimal = (s: string): number => {
-          const raw = String(s ?? '').trim()
-          if (!raw) return 0
-          // Horas decimais sem ":" (ex.: "2,5" ou "2.5")
-          if (!raw.includes(':')) {
-            const n = parseFloat(raw.replace(',', '.'))
-            return Number.isFinite(n) ? n : 0
-          }
-          const parts = raw.split(':').map(p => p.trim())
-          const h = parseInt(parts[0], 10) || 0
-          const m = parseInt(parts[1] ?? '0', 10) || 0
-          return h + m / 60
-        }
-        const minutosParaHorasDecimal = (min: number | undefined): number => {
-          if (min == null || !Number.isFinite(min)) return 0
-          return Math.round(min) / 60
-        }
-        const totaisFromRelatorio = (r: RelatorioServico) => {
-          const totais = calcularTotais(r.diasTrabalho || [])
-          const dias = r.diasTrabalho || []
-          const kmIdaTotal = dias.reduce((s, d) => s + (parseFloat(d.kmIda) || 0), 0)
-          const kmRetornoTotal = dias.reduce((s, d) => s + (parseFloat(d.kmRetorno) || 0), 0)
-          const tAny = totais as typeof totais & {
-            horasTrabalhoMinutos?: number
-            horasViagemMinutos?: number
-            horasViagemIdaMinutos?: number
-            horasViagemRetornoMinutos?: number
-          }
-          return {
-            horasTrabalho: totais.horasTrabalho,
-            horasTrabalhoDecimal:
-              typeof tAny.horasTrabalhoMinutos === 'number'
-                ? minutosParaHorasDecimal(tAny.horasTrabalhoMinutos)
-                : hhmmToDecimal(totais.horasTrabalho),
-            horasViagem: totais.horasViagem,
-            horasViagemDecimal:
-              typeof tAny.horasViagemMinutos === 'number'
-                ? minutosParaHorasDecimal(tAny.horasViagemMinutos)
-                : hhmmToDecimal(totais.horasViagem),
-            horasViagemIda: totais.horasViagemIda,
-            horasViagemIdaDecimal:
-              typeof tAny.horasViagemIdaMinutos === 'number'
-                ? minutosParaHorasDecimal(tAny.horasViagemIdaMinutos)
-                : hhmmToDecimal(totais.horasViagemIda),
-            horasViagemRetorno: totais.horasViagemRetorno,
-            horasViagemRetornoDecimal:
-              typeof tAny.horasViagemRetornoMinutos === 'number'
-                ? minutosParaHorasDecimal(tAny.horasViagemRetornoMinutos)
-                : hhmmToDecimal(totais.horasViagemRetorno),
-            kmsPercorridos: parseFloat(totais.kmsPercorridos) || 0,
-            numDiarias: dias.length,
-            kmIdaTotal,
-            kmRetornoTotal
-          }
-        }
         const relatorioEspecialSelecionado = fechamentoRelatorioSelecionadoId
           ? relatoriosEspeciais.find((r) => r.id === fechamentoRelatorioSelecionadoId) || null
           : null
@@ -47293,96 +47243,28 @@ A1;Peça exemplo;10`}
               ordenarServicoGrupos(servicoGrupos)[0]?.id ||
               ''
             : ''
-        const fechamentoServicosTpl = resolverServicosFechamentoTemplate(
-          servicos as ServicoCadastroFechamentoMin[],
-          fechamentoGrupoIdAtual
-        )
-        const { fechServHt, fechServHida, fechServHret } = fechamentoServicosTpl
-
-        const enriquecerItensFechamentoBase = (base: FechamentoItem[]): FechamentoItem[] =>
-          base.map((item) => {
-            const enriched = enriquecerLinhaFechamentoComCadastro(
-              item,
-              servicos as ServicoCadastroFechamentoMin[],
-              undefined,
-              fechamentoGrupoIdAtual
-            )
-            if (item.id === 'diarias') return { ...enriched, cobrarDiaria: true }
-            return enriched
-          })
-
-        const getItensIniciaisDoRelatorioEspecial = (r: RelatorioEspecial): FechamentoItem[] => {
-          const base = buildItensFechamentoBaseRelatorioEspecial(r, {
-            horasTrabalho: (safeT as any)?.horasTrabalho,
-            kmsPercorridos: (safeT as any)?.kmsPercorridos,
-            diarias: (safeT as any)?.diarias,
-            horasViagemIda: (safeT as any)?.horasViagemIda,
-            horasViagemRetorno: (safeT as any)?.horasViagemRetorno,
-          }) as FechamentoItem[]
-          return enriquecerItensFechamentoBase(base)
+        const labelsFechamentoCobrancaUi = {
+          horasTrabalho: (safeT as any)?.horasTrabalho,
+          kmsPercorridos: (safeT as any)?.kmsPercorridos,
+          diarias: (safeT as any)?.diarias,
+          horasViagemIda: (safeT as any)?.horasViagemIda,
+          horasViagemRetorno: (safeT as any)?.horasViagemRetorno,
         }
-
-        const getItensIniciaisDoRelatorio = (r: RelatorioServico): FechamentoItem[] => {
-          const esp = relatoriosEspeciais.find((e) => e.id === r.id)
-          if (esp) return getItensIniciaisDoRelatorioEspecial(esp)
-          const t = totaisFromRelatorio(r)
-          const lab = (key: string) => (safeT as any)[key] || key
-          // 5 itens alinhados ao resumo: Horas Trabalho, Km's, Diárias, Viagem Ida, Viagem Retorno (sem «Horas de Viagem» total — evita duplicar ida+retorno)
-          /** Sem linha «Horas de Viagem» total: evita cobrar ida+retorno duas vezes (total já = ida + retorno). */
-          const base: FechamentoItem[] = [
-            { id: 'ht', descricao: lab('horasTrabalho') || 'Horas de Trabalho', tipoCobranca: 'hora', quantidade: t.horasTrabalhoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
-            { id: 'km', descricao: lab('kmsPercorridos') || 'Km\'s Percorridos', tipoCobranca: 'km', quantidade: t.kmsPercorridos, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
-            { id: 'diarias', descricao: lab('diarias') || 'Diárias', tipoCobranca: 'diarias', quantidade: t.numDiarias, valorUnitario: 0, valorTotal: 0, origem: 'relatorio', cobrarDiaria: true },
-            { id: 'hida', descricao: lab('horasViagemIda') || 'Horas de Viagem de Ida', tipoCobranca: 'hora', quantidade: t.horasViagemIdaDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
-            { id: 'hret', descricao: lab('horasViagemRetorno') || 'Horas de Viagem de Retorno', tipoCobranca: 'hora', quantidade: t.horasViagemRetornoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' }
-          ]
-          return enriquecerItensFechamentoBase(base)
-        }
-        // Helper: obter serviço do Cadastro para um item do resumo (para preencher cod e valor unit. quando saved está vazio/desatualizado)
-        const getServicoParaItemResumo = (itemId: string, savedServicoId?: string) =>
-          getServicoParaLinhaFechamento(servicos, itemId, savedServicoId, fechamentoGrupoIdAtual)
-        // Sempre preencher a tabela a partir do resumo do relatório: itens com quantidades do resumo + código/descrição/valor do Cadastro de Serviços
-        const itensIniciaisSempre = relatorioSelecionado ? getItensIniciaisDoRelatorio(relatorioSelecionado) : []
-        /** Linhas extra guardadas sem `origem` (dados antigos) continuam a contar como manuais. */
-        const isLinhaManualFechamento = (i: FechamentoItem) => {
-          if (i.origem === 'manual') return true
-          if (i.origem === 'relatorio') return false
-          return !(FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(i.id)
-        }
+        const itensIniciaisSempre = relatorioSelecionado
+          ? buildItensFechamentoBaseRelatorioModulo(relatorioSelecionado, {
+              labels: labelsFechamentoCobrancaUi,
+              servicos: servicos as ServicoCadastroFechamentoMin[],
+              grupoId: fechamentoGrupoIdAtual,
+              relatorioEspecial: relatorioEspecialSelecionado,
+              getRelatorioEspecial: (id: string) => relatoriosEspeciais.find((e) => e.id === id),
+            })
+          : []
         const buildItensParaExibirFromSalvos = (salvosBrutos: FechamentoItem[] | undefined): FechamentoItem[] => {
           if (!relatorioSelecionado) return []
-          const salvos = salvosBrutos || []
-          const seisDoResumo = itensIniciaisSempre
-          const itensManuaisSalvos = salvos.filter(isLinhaManualFechamento)
-          if (salvos.length === 0) return [...seisDoResumo, ...itensManuaisSalvos]
-          const seisComQuantidadeDoResumo = seisDoResumo.map((item) => {
-            const saved = salvos.find((s) => s.id === item.id)
-            if (!saved) return item
-            const cobrarDiaria =
-              item.id === 'diarias' && typeof saved.cobrarDiaria === 'boolean'
-                ? saved.cobrarDiaria
-                : (item as FechamentoItem).cobrarDiaria !== false
-            const enriched = enriquecerLinhaFechamentoComCadastro(
-              {
-                ...item,
-                ...saved,
-                id: item.id,
-                quantidade: saved.quantidade ?? item.quantidade ?? 0,
-                tipoCobranca: item.tipoCobranca,
-                origem: saved.origem ?? item.origem,
-              },
-              servicos as ServicoCadastroFechamentoMin[],
-              saved.servicoId,
-              fechamentoGrupoIdAtual
-            )
-            return {
-              ...enriched,
-              cobrarDiaria: item.id === 'diarias' ? cobrarDiaria : undefined,
-            }
+          return buildItensFechamentoParaExibirFromSalvos(salvosBrutos, itensIniciaisSempre, {
+            servicos: servicos as ServicoCadastroFechamentoMin[],
+            grupoId: fechamentoGrupoIdAtual,
           })
-          const seisIds = ['ht', 'km', 'diarias', 'hida', 'hret']
-          const comTodosSeis = seisIds.map(id => seisComQuantidadeDoResumo.find(i => i.id === id) || itensIniciaisSempre.find(i => i.id === id)).filter(Boolean) as FechamentoItem[]
-          return [...comTodosSeis, ...itensManuaisSalvos].filter(i => !(i.id === 'hviagem' && i.origem === 'relatorio'))
         }
         const salvosParaEsteRelatorio = (relatorioSelecionado && fechamentosRelatorios[relatorioSelecionado.id]) || []
         const itensParaExibir = relatorioSelecionado ? buildItensParaExibirFromSalvos(salvosParaEsteRelatorio) : []
@@ -47390,15 +47272,8 @@ A1;Peça exemplo;10`}
         const omitidosRelatorio = relatorioSelecionado ? (fechamentoItensOmitidosPorRelatorio[relatorioSelecionado.id] ?? []) : []
         const omitSetFechamento = new Set(omitidosRelatorio)
         const itensVisiveisFechamento = itensParaExibir.filter(i => !omitSetFechamento.has(i.id))
-        const labelLinhaFechamentoFixa = (id: string) => {
-          const tx = safeT as Record<string, string | undefined>
-          if (id === 'ht') return tx.horasTrabalho || 'HT'
-          if (id === 'km') return tx.kmsPercorridos || 'KM'
-          if (id === 'diarias') return tx.diarias || 'Diárias'
-          if (id === 'hida') return tx.horasViagemIda || 'Ida'
-          if (id === 'hret') return tx.horasViagemRetorno || 'Retorno'
-          return id
-        }
+        const labelLinhaFechamentoFixa = (id: string) =>
+          labelLinhaFechamentoFixaModulo(id, safeT as Record<string, string | undefined>)
         const retirarLinhaTemplateFechamento = (itemId: string) => {
           if (!relatorioSelecionado) return
           if (!(FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(itemId)) return
@@ -47423,19 +47298,12 @@ A1;Peça exemplo;10`}
             return next
           })
         }
-        const servicosParaItem = (item: FechamentoItem) => {
-          const pool = filtrarServicosCadastroPorGrupo(
+        const servicosParaItem = (item: FechamentoItem) =>
+          filtrarOpcoesServicoLinhaFechamento(
+            item,
             servicos as ServicoCadastroFechamentoMin[],
             fechamentoGrupoIdAtual
           )
-          const txt = (s: typeof servicos[0]) => ((s.nome || '') + ' ' + (s.descricao || '')).toLowerCase()
-          if (item.id === 'hida') return pool.filter(s => s.tipoCobranca === 'hora' || (/viagem/.test(txt(s)) && /ida/.test(txt(s))))
-          if (item.id === 'hret') return pool.filter(s => s.tipoCobranca === 'hora' || (/viagem/.test(txt(s)) && /retorno/.test(txt(s))))
-          if (item.tipoCobranca === 'hora') return pool.filter(s => s.tipoCobranca === 'hora')
-          if (item.tipoCobranca === 'km') return pool.filter(s => s.tipoCobranca === 'km')
-          if (item.tipoCobranca === 'diarias') return pool.filter(s => s.tipoCobranca === 'diarias')
-          return pool
-        }
         const patchFechamentoGrupoLocal = (grupoId: string) => {
           if (!relatorioSelecionado || !grupoId) return
           const rid = relatorioSelecionado.id
@@ -47446,13 +47314,13 @@ A1;Peça exemplo;10`}
           })
           setFechamentosRelatorios((prev) => {
             const list = buildItensParaExibirFromSalvos(prev[rid])
-            const t = totaisFromRelatorio(relatorioSelecionado)
+            const q = quantidadesFechamentoCobrancaRelatorio(relatorioSelecionado)
             const qtyById: Record<string, number> = {
-              ht: t.horasTrabalhoDecimal,
-              km: t.kmsPercorridos,
-              diarias: t.numDiarias,
-              hida: t.horasViagemIdaDecimal,
-              hret: t.horasViagemRetornoDecimal,
+              ht: q.ht,
+              km: q.km,
+              diarias: q.diarias,
+              hida: q.hida,
+              hret: q.hret,
             }
             const nova = list.map((item) => {
               if (!(FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(item.id)) return item

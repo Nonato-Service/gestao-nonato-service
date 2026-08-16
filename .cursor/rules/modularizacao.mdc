@@ -43,6 +43,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 23. `app/modules/biblioteca/` (classificação) — feito
 24. `app/modules/relatorio-servico/` (cálculos de dia) — feito
 25. `app/modules/fechamento/` (cobrancaRelatorio) — feito
+26. `app/modules/fechamento/` (exibirItens UI) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

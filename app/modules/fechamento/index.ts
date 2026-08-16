@@ -58,3 +58,13 @@ export {
   isLinhaManualFechamento,
   sincronizarItensFechamentoComRelatorioAtualizado,
 } from './cobrancaRelatorio'
+
+export type {
+  LabelsLinhaFechamentoFixa,
+  BuildItensFechamentoParaExibirOpts,
+} from './exibirItens'
+export {
+  buildItensFechamentoParaExibirFromSalvos,
+  labelLinhaFechamentoFixa,
+  filtrarOpcoesServicoLinhaFechamento,
+} from './exibirItens'
