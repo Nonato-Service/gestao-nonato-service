@@ -46,6 +46,7 @@ const critical = [
   'app/modules/checklist/index.ts',
   'app/modules/contabilidade/index.ts',
   'app/modules/sst/index.ts',
+  'app/modules/pdf/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -742,6 +743,42 @@ try {
   }
 } catch (e) {
   fail(`módulo sst: ${e.message}`)
+}
+
+// 3aa) Módulo pdf (34.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/pdf/index.ts'), 'utf8')
+  if (
+    idx.includes('getLogoHtmlForSituation') &&
+    idx.includes('getLogoHtmlForReport') &&
+    idx.includes('resolvePdfLogoHtmlBySelectedId')
+  ) {
+    ok('módulo pdf exporta logos')
+  } else {
+    fail('módulo pdf incompleto (index.ts)')
+  }
+  if (!exists('app/modules/pdf/logos.ts')) {
+    fail('falta app/modules/pdf/logos.ts')
+  } else {
+    ok('existe app/modules/pdf/logos.ts')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/pdf'") || nma.includes('from "./modules/pdf"')) {
+    ok('NonatoMainApp importa app/modules/pdf')
+  } else {
+    fail('NonatoMainApp não importa o módulo pdf')
+  }
+  if (
+    !nma.includes('const logoImgHtmlFromDataUrl =') &&
+    !nma.includes('const resolveLogoPrincipalDataUrl =') &&
+    nma.includes('pdfLogoResolveCtx')
+  ) {
+    ok('NonatoMainApp usa logos do módulo pdf')
+  } else {
+    fail('NonatoMainApp ainda define resolução de logos PDF localmente')
+  }
+} catch (e) {
+  fail(`módulo pdf: ${e.message}`)
 }
 
 // 4) i18n

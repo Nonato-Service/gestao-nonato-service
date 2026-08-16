@@ -707,6 +707,22 @@ import {
 import { buildProtocoloServicoPdfHtmlFromProtocolo } from './lib/protocoloPdfBuild'
 import { prepareProtocoloWatermarkSrc } from './utils/protocoloPdfWatermark'
 import { PDF_LOGO_SITUATIONS, PDF_LOGO_LEGACY_STORAGE_KEYS, buildEmptyPdfLogoSelection, type PdfLogoSituationId } from './lib/adminPdfLogoSituations'
+import type { PdfLogoResolveCtx } from './modules/pdf'
+import {
+  getLogoHtmlForSituation as getLogoHtmlForSituationModulo,
+  getLogoHtmlForReport as getLogoHtmlForReportModulo,
+  getLogoHtmlForFechamento as getLogoHtmlForFechamentoModulo,
+  getLogoHtmlForOrcamento as getLogoHtmlForOrcamentoModulo,
+  getLogoHtmlForOrcamentoServico as getLogoHtmlForOrcamentoServicoModulo,
+  getLogoHtmlForDocumentos as getLogoHtmlForDocumentosModulo,
+  getLogoHtmlForProtocoloServico as getLogoHtmlForProtocoloServicoModulo,
+  getLogoHtmlForChecklist as getLogoHtmlForChecklistModulo,
+  getLogoHtmlForPreChecklist as getLogoHtmlForPreChecklistModulo,
+  getSelectedLogoIdForSituation as getSelectedLogoIdForSituationModulo,
+  resolvePdfLogoHtmlBySelectedId as resolvePdfLogoHtmlBySelectedIdModulo,
+  resolveBibliotecaLogoDataUrl as resolveBibliotecaLogoDataUrlModulo,
+  resolveLogoPrincipalDataUrl as resolveLogoPrincipalDataUrlModulo,
+} from './modules/pdf'
 import {
   buildSolicitacaoServicoTecnicoPrintHtml,
   downloadSolicitacaoServicoTecnicoHtmlFile,
@@ -16297,115 +16313,29 @@ export default function Dashboard() {
     handleEditRelatorioServico(r)
   }
 
-  // —— Logos PDF: resolução unificada (state + localStorage), como no preview do Administrador ——
-  const logoImgHtmlFromDataUrl = (dataUrl: string): string => {
-    const src = String(dataUrl).replace(/"/g, '&quot;')
-    return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`
-  }
-
-  const resolveLogoPrincipalDataUrl = (): string | null => {
-    if (logoUrl && logoType !== 'video') return logoUrl
-    if (typeof window === 'undefined') return null
-    try {
-      const logo = localStorage.getItem('nonato-logo')
-      const type = localStorage.getItem('nonato-logo-type')
-      if (logo && type !== 'video') return logo
-    } catch { /* ignorar */ }
-    return null
-  }
-
-  const resolveBibliotecaLogoDataUrl = (selectedId: string): string | null => {
-    const id = String(selectedId ?? '').trim()
-    if (!id) return null
-    if (Array.isArray(logosRelatorios) && logosRelatorios.length > 0) {
-      const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === id)
-      if (fromState?.type === 'image' && fromState.data) return fromState.data
-    }
-    if (typeof window === 'undefined') return null
-    try {
-      const raw = localStorage.getItem('nonato-logos-relatorios')
-      if (!raw) return null
-      const listRaw = JSON.parse(raw)
-      if (!Array.isArray(listRaw)) return null
-      const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === id)
-      if (logoItem?.type === 'image' && logoItem.data) return String(logoItem.data)
-    } catch { /* lista inválida ou muito grande */ }
-    return null
-  }
-
-  const resolvePdfLogoHtmlBySelectedId = (selectedId: string): string => {
-    const bib = resolveBibliotecaLogoDataUrl(selectedId)
-    if (bib) return logoImgHtmlFromDataUrl(bib)
-    const principal = resolveLogoPrincipalDataUrl()
-    if (principal) return logoImgHtmlFromDataUrl(principal)
-    return ''
-  }
-
-  const isIncluirLogoRelatoriosAtivo = (): boolean => {
-    if (incluirLogoNosRelatorios === true) return true
-    if (incluirLogoNosRelatorios === false) return false
-    try {
-      const stored = localStorage.getItem('nonato-relatorios-incluir-logo')
-      if (stored === 'false') return false
-      if (stored === 'true') return true
-    } catch { /* ignorar */ }
-    return true
-  }
-
-  const isIncluirLogoFechamentosAtivo = (): boolean => {
-    if (incluirLogoFechamentosDespesas === true) return true
-    if (incluirLogoFechamentosDespesas === false) return false
-    try {
-      const stored = localStorage.getItem('nonato-fechamentos-incluir-logo')
-      if (stored === 'false') return false
-      if (stored === 'true') return true
-    } catch { /* ignorar */ }
-    return true
-  }
-
-  const readStoredLogoSelectionId = (storageKey: string, stateId: string | null | undefined): string => {
-    if (stateId !== undefined && stateId !== null) return String(stateId)
-    if (typeof window === 'undefined') return ''
-    try {
-      const r = localStorage.getItem(storageKey)
-      return r != null ? r : ''
-    } catch {
-      return ''
-    }
-  }
-
-  const getSelectedLogoIdForSituation = (situationId: PdfLogoSituationId): string => {
-    const def = PDF_LOGO_SITUATIONS.find((s) => s.id === situationId)
-    if (!def) return ''
-    return readStoredLogoSelectionId(def.storageKey, pdfLogoSelectedIds[situationId])
-  }
-
+  // —— Logos PDF: resolução unificada → app/modules/pdf/logos ——
+  const pdfLogoResolveCtx = (): PdfLogoResolveCtx => ({
+    logoUrl,
+    logoType,
+    logosRelatorios,
+    incluirLogoNosRelatorios,
+    incluirLogoFechamentosDespesas,
+    pdfLogoSelectedIds,
+  })
+  const resolvePdfLogoHtmlBySelectedId = (selectedId: string): string =>
+    resolvePdfLogoHtmlBySelectedIdModulo(selectedId, pdfLogoResolveCtx())
+  const getSelectedLogoIdForSituation = (situationId: PdfLogoSituationId): string =>
+    getSelectedLogoIdForSituationModulo(situationId, pdfLogoResolveCtx())
   const getLogoHtmlForSituation = (
     situationId: PdfLogoSituationId,
     requireInclude?: 'relatorios' | 'fechamentos'
-  ): string => {
-    if (typeof window === 'undefined') return ''
-    if (requireInclude === 'relatorios' && !isIncluirLogoRelatoriosAtivo()) return ''
-    if (requireInclude === 'fechamentos' && !isIncluirLogoFechamentosAtivo()) return ''
-    const selectedId = getSelectedLogoIdForSituation(situationId)
-    return resolvePdfLogoHtmlBySelectedId(selectedId)
-  }
-
-  // Helper: HTML do logo para cabeçalho dos PDFs (respeita opção do Administrador e logo escolhido)
-  const getLogoHtmlForReport = (): string => getLogoHtmlForSituation('relatorios', 'relatorios')
-
-  // Helper: HTML do logo para PDF de Fechamentos de Despesas dos Relatórios (opção separada no Administrador)
-  const getLogoHtmlForFechamento = (): string => getLogoHtmlForSituation('fechamentos', 'fechamentos')
-
-  // Helper: HTML do logo para PDF de Orçamento de peças
-  const getLogoHtmlForOrcamento = (): string => getLogoHtmlForSituation('orcamentoPecas')
-
-  const getLogoHtmlForOrcamentoServico = (): string => getLogoHtmlForSituation('orcamentoServico')
-
-  const getLogoHtmlForDocumentos = (): string => getLogoHtmlForSituation('documentos')
-
-  // Helper: HTML do logo para PDF de Protocolos de Serviço (opção separada no Administrador)
-  const getLogoHtmlForProtocoloServico = (): string => getLogoHtmlForSituation('protocolos')
+  ): string => getLogoHtmlForSituationModulo(situationId, pdfLogoResolveCtx(), requireInclude)
+  const getLogoHtmlForReport = (): string => getLogoHtmlForReportModulo(pdfLogoResolveCtx())
+  const getLogoHtmlForFechamento = (): string => getLogoHtmlForFechamentoModulo(pdfLogoResolveCtx())
+  const getLogoHtmlForOrcamento = (): string => getLogoHtmlForOrcamentoModulo(pdfLogoResolveCtx())
+  const getLogoHtmlForOrcamentoServico = (): string => getLogoHtmlForOrcamentoServicoModulo(pdfLogoResolveCtx())
+  const getLogoHtmlForDocumentos = (): string => getLogoHtmlForDocumentosModulo(pdfLogoResolveCtx())
+  const getLogoHtmlForProtocoloServico = (): string => getLogoHtmlForProtocoloServicoModulo(pdfLogoResolveCtx())
 
   useEffect(() => {
     let cancelled = false
@@ -16417,9 +16347,8 @@ export default function Dashboard() {
     }
   }, [pdfLogoSelectedIds, pdfLogosModoUnificado])
 
-  const getLogoHtmlForChecklist = (): string => getLogoHtmlForSituation('checklist')
-
-  const getLogoHtmlForPreChecklist = (): string => getLogoHtmlForSituation('preChecklist')
+  const getLogoHtmlForChecklist = (): string => getLogoHtmlForChecklistModulo(pdfLogoResolveCtx())
+  const getLogoHtmlForPreChecklist = (): string => getLogoHtmlForPreChecklistModulo(pdfLogoResolveCtx())
 
   const buildPdfHeaderForRelatorio = (
     relatorio: RelatorioServico,
@@ -16475,9 +16404,10 @@ export default function Dashboard() {
 
   /** Pré-visualização no painel Administrador: logo da lista ou logo principal (barra), para PDFs */
   const administradorPreviewPdfLogo = (selectedId: string): string | null => {
-    const bib = resolveBibliotecaLogoDataUrl(selectedId)
+    const ctx = pdfLogoResolveCtx()
+    const bib = resolveBibliotecaLogoDataUrlModulo(selectedId, ctx)
     if (bib) return bib
-    return resolveLogoPrincipalDataUrl()
+    return resolveLogoPrincipalDataUrlModulo(ctx)
   }
 
   /** Modo Administrador: um logo para todos os tipos de PDF */
