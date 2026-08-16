@@ -106,14 +106,18 @@ import {
 } from './utils/backupRestore'
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser } from './utils/syncRevision'
-import { cmpNomeCliente, ordenarClientesPorNome, localeOrdenacaoClientes } from './lib/ordenarClientes'
 import {
-  ORCAMENTOS_ALFABETO_INDICE as CLIENTES_ALFABETO_INDICE,
+  cmpNomeCliente,
+  ordenarClientesPorNome,
+  localeOrdenacaoClientes,
+  CLIENTES_ALFABETO_INDICE,
   getClienteLetraAlfabeto,
   contarClientesPorLetraAlfabeto,
   filtrarClientesPorLetraAlfabeto,
   clienteNomeMatchesLetraAlfabeto,
-} from './lib/orcamentosAlfabeto'
+  rotuloIdEquipamentoCliente,
+  getPagamentoRelatorio,
+} from './modules/clientes'
 import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasLinkedMenuAccess, hasStrictMenuPolicy, normalizeMenuItems, normalizeMenuItemsWithLegacyFallback, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
   NONATO_CRITICAL_CADASTRO_KEYS,
@@ -408,7 +412,6 @@ import {
 } from './lib/clienteEquipamentoOrcamentos'
 import type { PedidoOrcamentoRef, PedidoAvulsoRef } from './lib/clienteEquipamentoOrcamentos'
 import type { PedidoAvulsoGuardado } from './components/PedidoOrcamentosAvulsoContent'
-import { rotuloIdEquipamentoCliente, getPagamentoRelatorio } from './lib/clienteDetalheUtils'
 import { ClienteGpsNavButton } from './components/ClienteGpsNavButton'
 import { TEMPLATE_SERVICOS_PADRAO } from './lib/servicosCadastroUtils'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'

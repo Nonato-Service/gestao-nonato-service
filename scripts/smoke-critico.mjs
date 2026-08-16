@@ -31,6 +31,7 @@ const critical = [
   'app/lib/orcamentosAlfabeto.ts',
   'app/lib/clienteDevedorUtils.ts',
   'app/modules/fechamento/index.ts',
+  'app/modules/clientes/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -61,7 +62,7 @@ try {
 
 // 3) Filtro A–Z usa letra inicial (não qualquer palavra)
 try {
-  const alfa = fs.readFileSync(path.join(root, 'app/lib/orcamentosAlfabeto.ts'), 'utf8')
+  const alfa = fs.readFileSync(path.join(root, 'app/modules/clientes/alfabeto.ts'), 'utf8')
   if (
     alfa.includes('getClienteLetraAlfabeto(c.nomeEmpresa') &&
     alfa.includes('filtrarClientesPorLetraAlfabeto')
@@ -90,6 +91,28 @@ try {
   }
 } catch (e) {
   fail(`módulo fechamento: ${e.message}`)
+}
+
+// 3c) Módulo clientes (2.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/clientes/index.ts'), 'utf8')
+  if (
+    idx.includes('filtrarClientesPorLetraAlfabeto') &&
+    idx.includes('calcularResumoFinanceiroCliente') &&
+    idx.includes('ordenarClientesPorNome')
+  ) {
+    ok('módulo clientes exporta alfabeto/detalhe')
+  } else {
+    fail('módulo clientes incompleto (index.ts)')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/clientes'") || nma.includes('from "./modules/clientes"')) {
+    ok('NonatoMainApp importa app/modules/clientes')
+  } else {
+    fail('NonatoMainApp não importa o módulo clientes')
+  }
+} catch (e) {
+  fail(`módulo clientes: ${e.message}`)
 }
 
 // 4) i18n

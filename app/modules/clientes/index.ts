@@ -1,6 +1,29 @@
-/**
- * @deprecated Preferir `app/modules/clientes` — reexport de compatibilidade.
- */
+/** Módulo Clientes — alfabeto A–Z, ordenação, busca e detalhe financeiro (funções puras). */
+
+export {
+  CLIENTES_ALFABETO_INDICE,
+  ORCAMENTOS_ALFABETO_INDICE,
+  getClienteLetraAlfabeto,
+  extrairPalavrasNomeCliente,
+  clienteNomeMatchesLetraAlfabeto,
+  clienteNomeMatchesLetraEmQualquerPalavra,
+  contarClientesPorLetraAlfabeto,
+  filtrarClientesPorLetraAlfabeto,
+} from './alfabeto'
+
+export {
+  cmpNomeCliente,
+  ordenarClientesPorNome,
+  localeOrdenacaoClientes,
+  ordenarNomesClientes,
+} from './ordenar'
+
+export type { ClienteAlfabetoRow } from './busca'
+export {
+  filtrarClientesPorBusca,
+  agruparClientesPorLetra,
+} from './busca'
+
 export type {
   FechamentoItemLike,
   FechamentoIvaLike,
@@ -12,7 +35,7 @@ export type {
   ClienteDetalheFinanceiroResumo,
   ClienteDetalheServicoFinanceiro,
   RelatorioServicoFinanceiroLike,
-} from '../modules/clientes/detalhe'
+} from './detalhe'
 
 export {
   rotuloIdEquipamentoCliente,
@@ -30,4 +53,4 @@ export {
   dataEquipamentoAdicionado,
   calcularResumoFinanceiroCliente,
   buildServicosFinanceirosCliente,
-} from '../modules/clientes/detalhe'
+} from './detalhe'
