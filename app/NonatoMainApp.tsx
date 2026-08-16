@@ -172,25 +172,20 @@ import {
   parseDataReciboIso,
   parseHoraRecibo,
   extrairDescricaoRecibo,
-} from './lib/reciboComprovanteParser'
-import {
   resolverClientesAtivosComprovanteHoje,
   resolverEstadoClienteComprovanteRecibo,
   horaAtualLocal,
   labelOrigemClienteComprovante,
   type ClienteAtivoComprovante,
   type MotivoAssociacaoRecibo,
-} from './lib/comprovanteClientesAtivosHoje'
-import {
   abrirFolhaSemanalContadorPdf,
   buildFolhaSemanalContadorHtml,
-} from './lib/comprovantesFolhaSemanalPdf'
-import {
   encontrarComprovanteDuplicado,
   encontrarDuplicadoImagemComprovante,
   hashImagemComprovante,
   mensagemDuplicadoComprovante,
-} from './lib/comprovanteDuplicado'
+  type ComprovanteDespesa,
+} from './modules/comprovantes'
 import {
   applyNonatoBrandLogoImgFallback,
   getNonatoBrandLogoDisplaySrc,
@@ -4175,23 +4170,7 @@ function resolveActionCardDescription(
   return fb
 }
 
-type ComprovanteDespesa = {
-  id: string
-  tipo: 'cliente' | 'pessoal'  // cliente = despesa por cliente; pessoal = Despesas da NONATO SERVICE (campo interno)
-  cliente: string
-  clienteId?: string
-  /** Data da transação / no recibo (YYYY-MM-DD) — aparece no PDF e na lista por dia */
-  data: string
-  /** Mês de arquivo / IRS (YYYY-MM). Se omitido, usa-se o mês derivado de `data`. Pode diferir da data (ex.: foto hoje, recibo de março). */
-  mesCompetencia?: string
-  valorUnitario: number
-  quantidade: number
-  valorTotal: number
-  descricao?: string
-  imagemBase64?: string
-  /** Hash da imagem para evitar registar a mesma foto duas vezes */
-  imagemHash?: string
-}
+/* ComprovanteDespesa → app/modules/comprovantes */
 
 // Biblioteca do tradutor: entradas separadas por par de idiomas (origem → destino)
 type TranslatorLibraryEntry = {

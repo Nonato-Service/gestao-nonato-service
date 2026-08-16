@@ -36,6 +36,7 @@ const critical = [
   'app/modules/orcamentos/index.ts',
   'app/modules/biblioteca/index.ts',
   'app/modules/relatorios-especiais/index.ts',
+  'app/modules/comprovantes/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -213,6 +214,28 @@ try {
   }
 } catch (e) {
   fail(`módulo relatorios-especiais: ${e.message}`)
+}
+
+// 3h) Módulo comprovantes (7.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/comprovantes/index.ts'), 'utf8')
+  if (
+    idx.includes('parseTotalEurosFromReceiptText') &&
+    idx.includes('encontrarComprovanteDuplicado') &&
+    idx.includes('buildFolhaSemanalContadorHtml')
+  ) {
+    ok('módulo comprovantes exporta parser/duplicados/folha')
+  } else {
+    fail('módulo comprovantes incompleto (index.ts)')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/comprovantes'") || nma.includes('from "./modules/comprovantes"')) {
+    ok('NonatoMainApp importa app/modules/comprovantes')
+  } else {
+    fail('NonatoMainApp não importa o módulo comprovantes')
+  }
+} catch (e) {
+  fail(`módulo comprovantes: ${e.message}`)
 }
 
 // 4) i18n
