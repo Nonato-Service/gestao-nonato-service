@@ -1,4 +1,4 @@
-/** Módulo Relatórios Especiais — tipos, cálculos, deleted-ids e fechamento/cobrança. */
+/** Módulo Relatórios Especiais — tipos, cálculos, deleted-ids, fechamento/cobrança e PDF. */
 
 export type { PecaSubstituicao } from './shared'
 export { dataLocalHojeISO } from './shared'
@@ -71,3 +71,6 @@ export {
   adaptRelatorioEspecialParaFechamentoShape,
   encontrarRelatorioEspecialPorOsInput,
 } from './fechamentoCobranca'
+
+export type { RelatorioEspecialPdfLabels, RelatorioEspecialPdfOptions } from './pdf'
+export { imprimirRelatorioEspecialPdf } from './pdf'

@@ -198,9 +198,10 @@ try {
   if (
     idx.includes('calcularTotaisRelatorioEspecial') &&
     idx.includes('adaptRelatorioEspecialParaFechamentoShape') &&
-    idx.includes('filterByDeletedIds')
+    idx.includes('filterByDeletedIds') &&
+    idx.includes('imprimirRelatorioEspecialPdf')
   ) {
-    ok('módulo relatorios-especiais exporta cálculos/fechamento')
+    ok('módulo relatorios-especiais exporta cálculos/fechamento/PDF')
   } else {
     fail('módulo relatorios-especiais incompleto (index.ts)')
   }

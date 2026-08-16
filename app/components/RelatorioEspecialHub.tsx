@@ -24,7 +24,7 @@ import {
   buildAssuntoEnvioRelatorioServico,
   type AbrirEnvioDocumentoClienteOpts,
 } from '../context/DocumentoEnvioClienteContext'
-import { imprimirRelatorioEspecialPdf } from '../lib/relatorioEspecialPdf'
+import { imprimirRelatorioEspecialPdf } from '../modules/relatorios-especiais'
 import { dataLocalHojeISO } from '../lib/relatorioEspecialShared'
 import {
   criarDiaTrabalhoEspecialVazio,
