@@ -31,6 +31,7 @@ export {
 
 export type { PecaBibliotecaMerge, MergePecaBibliotecaOptions } from './merge'
 export {
+  normalizeImportKey,
   variantesCodigoPecaBiblioteca,
   pecaRevisionScore,
   mergePecaBibliotecaFields,
@@ -104,6 +105,19 @@ export {
   clipboardLooksLikeCatalogImport,
   pickBestCatalogRawFromClipboard,
 } from './catalogClipboard'
+
+export type { SepararPecasImportacaoResultado } from './importDedup'
+export {
+  indiceVariantesPecaBiblioteca,
+  pecaBibliotecaEstaNoCatalogo,
+  construirIndiceCodigosBiblioteca,
+  codigoExisteNaBibliotecaPecas,
+  chavePecaBibliotecaParaImport,
+  codigoNormalizadoImport,
+  separarPecasImportacao,
+} from './importDedup'
+
+export { buildImportedPecaDescricao, mapItemToPecaBiblioteca } from './importMappers'
 
 export {
   BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY,

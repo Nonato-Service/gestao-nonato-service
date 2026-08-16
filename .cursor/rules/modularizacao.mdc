@@ -38,6 +38,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 18. `app/modules/financeiro/` (fluxo tipos / mutações) — feito
 19. `app/modules/checklist/` (tipos / gerar mappers) — feito
 20. `app/modules/contabilidade/` (print / HTML) — feito
+21. `app/modules/biblioteca/` (import mappers / dedup) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

@@ -4,6 +4,8 @@ export type PecaBibliotecaLike = {
   id: string
   codigo?: string
   nome?: string
+  preco?: string
+  descricao?: string
   categoriaId?: string
   categoria?: string
   subcategoriaId?: string
@@ -12,6 +14,10 @@ export type PecaBibliotecaLike = {
   importacaoPendente?: boolean | string | number
   numeroSequenciaGrupo?: string
   dataCriacao?: string
+  referenciasAlternativas?: string[]
+  codigosAlternativos?: string[]
+  referenciasAntigas?: string[]
+  codigosAntigos?: string[]
 }
 
 export type CategoriaPecaLike = {

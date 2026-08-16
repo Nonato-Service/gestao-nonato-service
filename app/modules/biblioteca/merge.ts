@@ -16,7 +16,7 @@ export type PecaBibliotecaMerge = {
   [key: string]: unknown
 }
 
-function normalizeImportKey(v: unknown): string {
+export function normalizeImportKey(v: unknown): string {
   return String(v ?? '')
     .trim()
     .toLowerCase()

@@ -249,6 +249,14 @@ try {
   } else {
     fail('módulo biblioteca sem clipboardLooksLikeCatalogImport / buildPecaCatalogoUrlFromTemplate')
   }
+  if (
+    (idx.includes('mapItemToPecaBiblioteca') || idx.includes('buildImportedPecaDescricao')) &&
+    idx.includes('separarPecasImportacao')
+  ) {
+    ok('módulo biblioteca exporta import mappers/dedup')
+  } else {
+    fail('módulo biblioteca sem mapItemToPecaBiblioteca|buildImportedPecaDescricao + separarPecasImportacao')
+  }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
 }
