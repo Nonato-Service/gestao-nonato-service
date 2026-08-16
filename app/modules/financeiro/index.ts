@@ -1,4 +1,4 @@
-/** Módulo Financeiro — devedores, flags e UI de fluxo de cobrança (funções puras). */
+/** Módulo Financeiro — devedores, flags, UI de fluxo, período/IVA (funções puras). */
 
 export type {
   ClienteDevedor,
@@ -9,6 +9,16 @@ export type {
   FechamentoIvaDevedorLike,
   ClienteCadastroDevedorFlags,
 } from './tipos'
+
+export type {
+  OrdemServico,
+  FaturaPecas,
+  IVAControle,
+  RelatorioFinanceiro,
+  TipoPeriodoFinanceiro,
+  RelatorioServicoLike,
+  BuildFinanceiroPeriodoInput,
+} from './tiposOs'
 
 export type { ClienteDevedorLike } from './devedorFlags'
 export { isClienteMarcadoDevedor, relatorioFluxoFinanceiroNaoPago } from './devedorFlags'
@@ -42,3 +52,16 @@ export {
   classNameBibliotecaClienteFluxoFinanceiro,
   financeiroDespesasBibGrupoDevePiscar,
 } from './fluxoUi'
+
+export { normalizarTextoFaturaBusca, numeroFaturaCorrespondeConsulta } from './faturaBusca'
+
+export {
+  parseDataFinanceiroParaDate,
+  periodoFinanceiroFromDate,
+  isoWeekStringFromDate,
+  dateFromIsoWeekString,
+  financeiroReferenciaDateFromFiltros,
+  dataDentroPeriodoFinanceiro,
+} from './periodo'
+
+export { buildIvaControlesFromDados, buildRelatorioFinanceiroPeriodo } from './buildPeriodo'

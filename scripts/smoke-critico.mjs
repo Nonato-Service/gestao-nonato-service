@@ -83,13 +83,18 @@ try {
   fail(`alfabeto: ${e.message}`)
 }
 
-// 3b) Módulo fechamento (1.º corte modularização)
+// 3b) Módulo fechamento (1.º corte + IVA helpers)
 try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/fechamento/index.ts'), 'utf8')
   if (idx.includes('enriquecerLinhaFechamentoComCadastro') && idx.includes('FECHAMENTO_IDS_FIXOS_TEMPLATE')) {
     ok('módulo fechamento exporta tarifas/linhas')
   } else {
     fail('módulo fechamento incompleto (index.ts)')
+  }
+  if (idx.includes('totaisFechamentoLiquidoComIva') || idx.includes('FECHAMENTO_IVA_PADRAO')) {
+    ok('módulo fechamento exporta IVA')
+  } else {
+    fail('módulo fechamento sem totaisFechamentoLiquidoComIva / FECHAMENTO_IVA_PADRAO')
   }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/fechamento'") || nma.includes('from "./modules/fechamento"')) {
@@ -123,7 +128,7 @@ try {
   fail(`módulo clientes: ${e.message}`)
 }
 
-// 3d) Módulo financeiro (3.º corte modularização)
+// 3d) Módulo financeiro (3.º corte + 11.º: período/IVA)
 try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/financeiro/index.ts'), 'utf8')
   if (
@@ -134,6 +139,14 @@ try {
     ok('módulo financeiro exporta devedores')
   } else {
     fail('módulo financeiro incompleto (index.ts)')
+  }
+  if (
+    idx.includes('buildRelatorioFinanceiroPeriodo') ||
+    idx.includes('periodoFinanceiroFromDate')
+  ) {
+    ok('módulo financeiro exporta período/IVA')
+  } else {
+    fail('módulo financeiro sem buildRelatorioFinanceiroPeriodo / periodoFinanceiroFromDate')
   }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/financeiro'") || nma.includes('from "./modules/financeiro"')) {

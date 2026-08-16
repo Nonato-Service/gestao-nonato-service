@@ -26,3 +26,13 @@ export {
   getServicoParaLinhaFechamento,
   enriquecerLinhaFechamentoComCadastro,
 } from './linhaCadastro'
+
+export type { FechamentoIvaOpcoesRelatorio } from './iva'
+export {
+  filtrarFechamentoItensPorOmitidos,
+  FECHAMENTO_IVA_PADRAO,
+  parseFechamentoIncluirIva,
+  normalizarFechamentoIvaOpcoes,
+  resolveFechamentoIvaOpcoes,
+  totaisFechamentoLiquidoComIva,
+} from './iva'

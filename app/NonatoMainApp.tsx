@@ -379,15 +379,32 @@ import {
   classNameBibliotecaClienteFluxoFinanceiro,
   financeiroDespesasBibGrupoDevePiscar,
   ORDEM_ESTADOS_COBRANCA_FINANCEIRA,
+  normalizarTextoFaturaBusca,
+  numeroFaturaCorrespondeConsulta,
+  parseDataFinanceiroParaDate,
+  periodoFinanceiroFromDate,
+  isoWeekStringFromDate,
+  dateFromIsoWeekString,
+  financeiroReferenciaDateFromFiltros,
+  dataDentroPeriodoFinanceiro,
+  buildIvaControlesFromDados,
+  buildRelatorioFinanceiroPeriodo,
   type ClienteDevedor,
   type EstadoCobrancaFinanceiraVisual,
   type EstadoCobrancaFinanceiraGrupoExibicao,
+  type OrdemServico,
+  type FaturaPecas,
+  type IVAControle,
+  type RelatorioFinanceiro,
+  type TipoPeriodoFinanceiro,
+  type BuildFinanceiroPeriodoInput,
 } from './modules/financeiro'
 import { FechamentoFluxoPagamentoBar } from './components/FechamentoFluxoPagamentoBar'
 import {
   FECHAMENTO_IDS_FIXOS_TEMPLATE,
   type FechamentoItem,
   type ServicoCadastroFechamentoMin,
+  type FechamentoIvaOpcoesRelatorio,
   normalizeServicoValorStored,
   formatServicoValorExibicao,
   parseServicoValorInput,
@@ -399,6 +416,12 @@ import {
   resolverServicosFechamentoTemplate,
   getServicoParaLinhaFechamento,
   enriquecerLinhaFechamentoComCadastro,
+  filtrarFechamentoItensPorOmitidos,
+  FECHAMENTO_IVA_PADRAO,
+  parseFechamentoIncluirIva,
+  normalizarFechamentoIvaOpcoes,
+  resolveFechamentoIvaOpcoes,
+  totaisFechamentoLiquidoComIva,
 } from './modules/fechamento'
 import {
   encontrarClienteDuplicadoCadastro,
@@ -1758,64 +1781,7 @@ type RelatorioServico = {
 
 /** Item de cobrança no fechamento → app/modules/fechamento (FechamentoItem) */
 
-function filtrarFechamentoItensPorOmitidos(
-  omitidosPorRelatorio: Record<string, string[]>,
-  relatorioId: string,
-  itens: FechamentoItem[]
-): FechamentoItem[] {
-  const omit = omitidosPorRelatorio[relatorioId]
-  if (!omit || omit.length === 0) return itens
-  const setO = new Set(omit)
-  return itens.filter(i => !setO.has(i.id))
-}
-
-/** Opções de IVA no fechamento de despesas (por relatório / OS). */
-type FechamentoIvaOpcoesRelatorio = { incluirIva: boolean; taxaIva: number }
-
-const FECHAMENTO_IVA_PADRAO: FechamentoIvaOpcoesRelatorio = { incluirIva: false, taxaIva: 23 }
-
-function parseFechamentoIncluirIva(v: unknown): boolean {
-  return v === true || v === 1 || v === '1' || v === 'true'
-}
-
-function normalizarFechamentoIvaOpcoes(raw?: Partial<FechamentoIvaOpcoesRelatorio> | null): FechamentoIvaOpcoesRelatorio {
-  const tx = Number(raw?.taxaIva)
-  return {
-    incluirIva: parseFechamentoIncluirIva(raw?.incluirIva),
-    taxaIva: Number.isFinite(tx) ? Math.min(100, Math.max(0, Math.round(tx * 100) / 100)) : FECHAMENTO_IVA_PADRAO.taxaIva,
-  }
-}
-
-function resolveFechamentoIvaOpcoes(
-  relatorioId: string,
-  map: Record<string, FechamentoIvaOpcoesRelatorio>,
-  relatorioNumero?: string
-): FechamentoIvaOpcoesRelatorio {
-  if (map[relatorioId]) return normalizarFechamentoIvaOpcoes(map[relatorioId])
-  const num = String(relatorioNumero ?? '').trim()
-  if (num && map[num]) return normalizarFechamentoIvaOpcoes(map[num])
-  return { ...FECHAMENTO_IVA_PADRAO }
-}
-
-/** Soma linhas (base) e, se ativo, IVA e total com IVA. */
-function totaisFechamentoLiquidoComIva(
-  itens: FechamentoItem[],
-  opts?: FechamentoIvaOpcoesRelatorio | null
-): { liquido: number; iva: number; comIva: number; incluir: boolean; taxa: number } {
-  const liquido = itens.reduce(
-    (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : Number(i.valorTotal) || 0),
-    0
-  )
-  const o = normalizarFechamentoIvaOpcoes(opts ?? FECHAMENTO_IVA_PADRAO)
-  const incluir = o.incluirIva
-  let taxa = o.taxaIva
-  if (!Number.isFinite(taxa) || taxa < 0) taxa = 0
-  if (taxa > 100) taxa = 100
-  taxa = Math.round(taxa * 100) / 100
-  const iva = incluir ? Math.round(liquido * (taxa / 100) * 100) / 100 : 0
-  const comIva = Math.round((liquido + iva) * 100) / 100
-  return { liquido, iva, comIva, incluir, taxa }
-}
+/* Fechamento IVA → app/modules/fechamento/iva */
 
 /** Item arquivado ao excluir relatório (cópia de segurança por pasta de cliente) */
 type ItemRelatorioExcluidoArquivo =
@@ -2522,22 +2488,7 @@ function EquipamentosRelatorioDespesasInline({
   )
 }
 
-function normalizarTextoFaturaBusca(s: string): string {
-  return s.trim().toLowerCase().replace(/\s+/g, '')
-}
-
-/**
- * Correspondência exata (normalizada) ou parcial: exige pelo menos 2 caracteres na consulta
- * para evitar coincidências com um único dígito/letra.
- */
-function numeroFaturaCorrespondeConsulta(numeroGuardado: string, consulta: string): boolean {
-  const a = normalizarTextoFaturaBusca(numeroGuardado)
-  const b = normalizarTextoFaturaBusca(consulta)
-  if (!a || !b) return false
-  if (a === b) return true
-  if (b.length < 2) return false
-  return a.includes(b) || b.includes(a)
-}
+/* Fatura busca → app/modules/financeiro/faturaBusca */
 
 // Protocolo de Serviço: antes/depois com texto, imagens e peças trocadas
 type ProtocoloBloco = {
@@ -2671,390 +2622,7 @@ type Fornecedor = {
   faturas: FaturaFornecedor[]
 }
 
-// Tipos para Sistema Financeiro
-type OrdemServico = {
-  id: string
-  numeroOS: string // Número único da ordem de serviço
-  clienteId: string
-  clienteNome: string
-  dataAbertura: string // ISO date string
-  dataFechamento?: string // ISO date string
-  status: 'aberta' | 'em-andamento' | 'concluida' | 'cancelada'
-  valorServico: number
-  valorPecas: number
-  valorTotal: number
-  valorIVA: number
-  valorSemIVA: number
-  taxaIVA?: number
-  observacoes?: string
-  tecnicoResponsavel?: string
-  equipamentoId?: string
-  faturasPecas: string[] // IDs das faturas de peças anexadas
-}
-
-type FaturaPecas = {
-  id: string
-  numeroFatura: string
-  ordemServicoId: string // ID da OS à qual está anexada (vazio se só cliente)
-  numeroOS: string // Número da OS (para exibição)
-  clienteId: string
-  clienteNome: string
-  dataEmissao: string // ISO date string
-  dataVencimento?: string // ISO date string
-  valorTotal: number
-  valorIVA: number
-  valorSemIVA: number
-  taxaIVA: number // Percentual de IVA (ex: 23 para 23%)
-  status: 'pendente' | 'paga' | 'vencida' | 'cancelada'
-  itens: Array<{
-    id: string
-    descricao: string
-    quantidade: number
-    precoUnitario: number
-    valorTotal: number
-    codigoPeca?: string
-  }>
-  observacoes?: string
-  /** PDF ou imagem (base64 data URL) */
-  arquivoAnexo?: string
-  nomeArquivoOriginal?: string
-  tipoArquivo?: string
-  /** Indica se já foram enviados ao cliente os dados de conta / IBAN para pagamento */
-  contaPagamentoEnviada?: boolean
-}
-
-/* ClienteDevedor → app/modules/financeiro */
-
-type IVAControle = {
-  id: string
-  periodo: string // Formato: "YYYY-MM" para mensal, "YYYY-WW" para semanal, "YYYY" para anual
-  tipoPeriodo: 'semanal' | 'mensal' | 'anual'
-  dataInicio: string // ISO date string
-  dataFim: string // ISO date string
-  valorTotalVendas: number
-  valorTotalCompras: number
-  IVACobrado: number // IVA cobrado nas vendas
-  IVAPago: number // IVA pago nas compras
-  IVAApagar: number // IVA a pagar (IVA cobrado - IVA pago)
-  faturasVendas: string[] // IDs das faturas de vendas
-  faturasCompras: string[] // IDs das faturas de compras
-  status: 'aberto' | 'fechado' | 'pago'
-  dataPagamento?: string // ISO date string
-  observacoes?: string
-}
-
-type RelatorioFinanceiro = {
-  id: string
-  tipo: 'semanal' | 'mensal' | 'anual'
-  periodo: string
-  dataInicio: string
-  dataFim: string
-  totalVendas: number
-  totalCompras: number
-  totalRecebido: number
-  totalPago: number
-  saldo: number
-  totalIVA: number
-  numeroOS: number
-  numeroFaturas: number
-  clientesDevedores: number
-  valorTotalDevedores: number
-  dataGeracao: string
-  /** Fechamentos guardados na biblioteca (serviços) */
-  numeroFechamentosBiblioteca?: number
-  totalFechamentosBiblioteca?: number
-  ivaFechamentosBiblioteca?: number
-  recebidoFechamentosBiblioteca?: number
-  pendenteFechamentosBiblioteca?: number
-}
-
-type TipoPeriodoFinanceiro = 'semanal' | 'mensal' | 'anual'
-
-function parseDataFinanceiroParaDate(raw: string | undefined | null): Date | null {
-  const key = diaTrabalhoDataChaveOrdenacao(raw ?? '')
-  if (!key || !/^\d{4}-\d{2}-\d{2}$/.test(key)) return null
-  const [y, m, d] = key.split('-').map(x => parseInt(x, 10))
-  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null
-  return new Date(y, m - 1, d)
-}
-
-function periodoFinanceiroFromDate(
-  d: Date,
-  tipo: TipoPeriodoFinanceiro
-): { periodo: string; dataInicio: Date; dataFim: Date } {
-  const y = d.getFullYear()
-  const m = d.getMonth()
-  if (tipo === 'anual') {
-    return {
-      periodo: String(y),
-      dataInicio: new Date(y, 0, 1),
-      dataFim: new Date(y, 11, 31, 23, 59, 59, 999),
-    }
-  }
-  if (tipo === 'mensal') {
-    return {
-      periodo: `${y}-${String(m + 1).padStart(2, '0')}`,
-      dataInicio: new Date(y, m, 1),
-      dataFim: new Date(y, m + 1, 0, 23, 59, 59, 999),
-    }
-  }
-  const start = new Date(d)
-  start.setDate(d.getDate() - d.getDay())
-  start.setHours(0, 0, 0, 0)
-  const end = new Date(start)
-  end.setDate(start.getDate() + 6)
-  end.setHours(23, 59, 59, 999)
-  const weekNum = Math.ceil(
-    (d.getTime() - new Date(y, 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000)
-  )
-  return { periodo: `${y}-W${String(weekNum).padStart(2, '0')}`, dataInicio: start, dataFim: end }
-}
-
-function isoWeekStringFromDate(d: Date): string {
-  const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-  const dayNum = tmp.getUTCDay() || 7
-  tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum)
-  const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1))
-  const weekNo = Math.ceil(((tmp.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
-  return `${tmp.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`
-}
-
-function dateFromIsoWeekString(isoWeek: string): Date {
-  const m = isoWeek.match(/^(\d{4})-W(\d{2})$/)
-  if (!m) return new Date()
-  const y = parseInt(m[1], 10)
-  const w = parseInt(m[2], 10)
-  const jan4 = new Date(y, 0, 4)
-  const dayOfWeek = jan4.getDay() || 7
-  const monday = new Date(jan4)
-  monday.setDate(jan4.getDate() - dayOfWeek + 1 + (w - 1) * 7)
-  monday.setHours(12, 0, 0, 0)
-  return monday
-}
-
-function financeiroReferenciaDateFromFiltros(
-  tipo: TipoPeriodoFinanceiro,
-  refMes: string,
-  refAno: number,
-  refSemana: string
-): Date {
-  if (tipo === 'mensal') {
-    const [y, mo] = refMes.split('-').map(x => parseInt(x, 10))
-    if (Number.isFinite(y) && Number.isFinite(mo)) return new Date(y, mo - 1, 15)
-  }
-  if (tipo === 'anual') return new Date(refAno, 6, 1)
-  return dateFromIsoWeekString(refSemana)
-}
-
-function dataDentroPeriodoFinanceiro(d: Date, inicio: Date, fim: Date): boolean {
-  const t = d.getTime()
-  return t >= inicio.getTime() && t <= fim.getTime()
-}
-
-type BuildFinanceiroPeriodoInput = {
-  tipo: TipoPeriodoFinanceiro
-  agora?: Date
-  faturasPecas: FaturaPecas[]
-  ordensServico: OrdemServico[]
-  relatoriosServico: RelatorioServico[]
-  fechamentosGuardadosBibliotecaIds: string[]
-  fechamentosRelatorios: Record<string, FechamentoItem[]>
-  fechamentoFluxoFinanceiroPorRelatorioId: Record<string, FechamentoFluxoFinanceiroEntry | FechamentoFluxoFinanceiroEtapa>
-  fechamentoIvaPorRelatorioId: Record<string, FechamentoIvaOpcoesRelatorio>
-  fechamentoItensOmitidosPorRelatorio: Record<string, string[]>
-  clientesDevedores: ClienteDevedor[]
-}
-
-function buildIvaControlesFromDados(input: BuildFinanceiroPeriodoInput): IVAControle[] {
-  const tipos: TipoPeriodoFinanceiro[] = ['semanal', 'mensal', 'anual']
-  type Bucket = {
-    tipoPeriodo: TipoPeriodoFinanceiro
-    periodo: string
-    dataInicio: Date
-    dataFim: Date
-    valorTotalVendas: number
-    IVACobrado: number
-    faturasVendas: string[]
-  }
-  const buckets = new Map<string, Bucket>()
-
-  const add = (
-    tipo: TipoPeriodoFinanceiro,
-    dt: Date,
-    iva: number,
-    venda: number,
-    faturaId?: string
-  ) => {
-    if (iva <= 0 && venda <= 0) return
-    const { periodo, dataInicio, dataFim } = periodoFinanceiroFromDate(dt, tipo)
-    const key = `${tipo}|${periodo}`
-    let b = buckets.get(key)
-    if (!b) {
-      b = {
-        tipoPeriodo: tipo,
-        periodo,
-        dataInicio,
-        dataFim,
-        valorTotalVendas: 0,
-        IVACobrado: 0,
-        faturasVendas: [],
-      }
-      buckets.set(key, b)
-    }
-    b.IVACobrado = Math.round((b.IVACobrado + iva) * 100) / 100
-    b.valorTotalVendas = Math.round((b.valorTotalVendas + venda) * 100) / 100
-    if (faturaId && !b.faturasVendas.includes(faturaId)) b.faturasVendas.push(faturaId)
-  }
-
-  for (const tipo of tipos) {
-    for (const f of input.faturasPecas) {
-      if (f.status === 'cancelada') continue
-      const dt = parseDataFinanceiroParaDate(f.dataEmissao)
-      if (!dt) continue
-      add(tipo, dt, Number(f.valorIVA) || 0, Number(f.valorTotal) || 0, f.id)
-    }
-    for (const os of input.ordensServico) {
-      if (os.status === 'cancelada') continue
-      const dt = parseDataFinanceiroParaDate(os.dataFechamento || os.dataAbertura)
-      if (!dt) continue
-      add(tipo, dt, Number(os.valorIVA) || 0, Number(os.valorTotal) || 0)
-    }
-    for (const rel of input.relatoriosServico) {
-      if (!input.fechamentosGuardadosBibliotecaIds.includes(rel.id)) continue
-      const itens = input.fechamentosRelatorios[rel.id]
-      if (!itens?.length) continue
-      const vis = filtrarFechamentoItensPorOmitidos(
-        input.fechamentoItensOmitidosPorRelatorio,
-        rel.id,
-        itens
-      )
-      const tot = totaisFechamentoLiquidoComIva(vis, input.fechamentoIvaPorRelatorioId[rel.id])
-      if (!tot.incluir || tot.iva <= 0) continue
-      const dt = parseDataFinanceiroParaDate(rel.data)
-      if (!dt) continue
-      add(tipo, dt, tot.iva, tot.comIva)
-    }
-  }
-
-  return [...buckets.values()]
-    .map(b => {
-      const IVAPago = 0
-      const IVAApagar = Math.max(0, Math.round((b.IVACobrado - IVAPago) * 100) / 100)
-      const status: IVAControle['status'] =
-        b.IVACobrado <= 0 ? 'aberto' : IVAApagar <= 0.009 ? 'pago' : 'fechado'
-      return {
-        id: `iva-${b.tipoPeriodo}-${b.periodo}`,
-        periodo: b.periodo,
-        tipoPeriodo: b.tipoPeriodo,
-        dataInicio: b.dataInicio.toISOString(),
-        dataFim: b.dataFim.toISOString(),
-        valorTotalVendas: b.valorTotalVendas,
-        valorTotalCompras: 0,
-        IVACobrado: b.IVACobrado,
-        IVAPago,
-        IVAApagar,
-        faturasVendas: b.faturasVendas,
-        faturasCompras: [],
-        status,
-      } satisfies IVAControle
-    })
-    .sort((a, b) => new Date(b.dataInicio).getTime() - new Date(a.dataInicio).getTime())
-}
-
-function buildRelatorioFinanceiroPeriodo(input: BuildFinanceiroPeriodoInput): RelatorioFinanceiro {
-  const agora = input.agora ?? new Date()
-  const { periodo, dataInicio, dataFim } = periodoFinanceiroFromDate(agora, input.tipo)
-
-  let totalVendas = 0
-  let totalIVA = 0
-  let totalRecebido = 0
-  let numeroOS = 0
-  let numeroFaturas = 0
-  let numeroFechamentosBiblioteca = 0
-  let totalFechamentosBiblioteca = 0
-  let ivaFechamentosBiblioteca = 0
-  let recebidoFechamentosBiblioteca = 0
-  let pendenteFechamentosBiblioteca = 0
-
-  for (const os of input.ordensServico) {
-    if (os.status === 'cancelada') continue
-    const dt = parseDataFinanceiroParaDate(os.dataFechamento || os.dataAbertura)
-    if (!dt || !dataDentroPeriodoFinanceiro(dt, dataInicio, dataFim)) continue
-    numeroOS++
-    totalVendas += Number(os.valorTotal) || 0
-    totalIVA += Number(os.valorIVA) || 0
-    if (os.status === 'concluida') totalRecebido += Number(os.valorTotal) || 0
-  }
-
-  for (const f of input.faturasPecas) {
-    if (f.status === 'cancelada') continue
-    const dt = parseDataFinanceiroParaDate(f.dataEmissao)
-    if (!dt || !dataDentroPeriodoFinanceiro(dt, dataInicio, dataFim)) continue
-    numeroFaturas++
-    totalVendas += Number(f.valorTotal) || 0
-    totalIVA += Number(f.valorIVA) || 0
-    if (f.status === 'paga') totalRecebido += Number(f.valorTotal) || 0
-  }
-
-  for (const rel of input.relatoriosServico) {
-    if (!input.fechamentosGuardadosBibliotecaIds.includes(rel.id)) continue
-    const itens = input.fechamentosRelatorios[rel.id]
-    if (!itens?.length) continue
-    const dt = parseDataFinanceiroParaDate(rel.data)
-    if (!dt || !dataDentroPeriodoFinanceiro(dt, dataInicio, dataFim)) continue
-    const vis = filtrarFechamentoItensPorOmitidos(
-      input.fechamentoItensOmitidosPorRelatorio,
-      rel.id,
-      itens
-    )
-    const tot = totaisFechamentoLiquidoComIva(vis, input.fechamentoIvaPorRelatorioId[rel.id])
-    numeroFechamentosBiblioteca++
-    totalFechamentosBiblioteca += tot.comIva
-    if (tot.incluir) ivaFechamentosBiblioteca += tot.iva
-    const fr = input.fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
-    const frObj =
-      fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
-    if (frObj?.pagamento === 'pago') recebidoFechamentosBiblioteca += tot.comIva
-    else pendenteFechamentosBiblioteca += tot.comIva
-  }
-
-  totalVendas = Math.round(totalVendas * 100) / 100
-  totalIVA = Math.round(totalIVA * 100) / 100
-  totalRecebido = Math.round((totalRecebido + recebidoFechamentosBiblioteca) * 100) / 100
-  totalFechamentosBiblioteca = Math.round(totalFechamentosBiblioteca * 100) / 100
-  ivaFechamentosBiblioteca = Math.round(ivaFechamentosBiblioteca * 100) / 100
-  recebidoFechamentosBiblioteca = Math.round(recebidoFechamentosBiblioteca * 100) / 100
-  pendenteFechamentosBiblioteca = Math.round(pendenteFechamentosBiblioteca * 100) / 100
-
-  const devedores = input.clientesDevedores.filter(
-    cd =>
-      cd.isDevedor && (cd.saldoPendente > 0 || Number(cd.relatoriosNaoPagoCount ?? 0) > 0)
-  )
-
-  return {
-    id: `rel-vivo-${input.tipo}-${periodo}`,
-    tipo: input.tipo,
-    periodo,
-    dataInicio: dataInicio.toISOString(),
-    dataFim: dataFim.toISOString(),
-    totalVendas,
-    totalCompras: 0,
-    totalRecebido,
-    totalPago: recebidoFechamentosBiblioteca,
-    saldo: Math.round((totalRecebido - 0) * 100) / 100,
-    totalIVA: Math.round((totalIVA + ivaFechamentosBiblioteca) * 100) / 100,
-    numeroOS,
-    numeroFaturas,
-    clientesDevedores: devedores.length,
-    valorTotalDevedores: Math.round(devedores.reduce((s, d) => s + d.saldoPendente, 0) * 100) / 100,
-    dataGeracao: agora.toISOString(),
-    numeroFechamentosBiblioteca,
-    totalFechamentosBiblioteca,
-    ivaFechamentosBiblioteca,
-    recebidoFechamentosBiblioteca,
-    pendenteFechamentosBiblioteca,
-  }
-}
+/* OrdemServico / FaturaPecas / período / IVA → app/modules/financeiro */
 
 type GrupoDesmontado = {
   id: string
