@@ -257,6 +257,16 @@ try {
   } else {
     fail('módulo biblioteca sem mapItemToPecaBiblioteca|buildImportedPecaDescricao + separarPecasImportacao')
   }
+  if (idx.includes('parseRawToPecas') || idx.includes('parseRawCatalogItensPlain')) {
+    ok('módulo biblioteca exporta import parse (plain/html)')
+  } else {
+    fail('módulo biblioteca sem parseRawToPecas|parseRawCatalogItensPlain')
+  }
+  if (nma.includes('parseRawToPecasFromModule')) {
+    ok('NonatoMainApp usa parseRawToPecas do módulo biblioteca')
+  } else {
+    fail('NonatoMainApp não usa parseRawToPecas do módulo biblioteca')
+  }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
 }

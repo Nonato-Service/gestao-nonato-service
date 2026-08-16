@@ -119,6 +119,10 @@ export {
 
 export { buildImportedPecaDescricao, mapItemToPecaBiblioteca } from './importMappers'
 
+export { parseRawCatalogItensPlain, csvSplit, pushIfValidCatalogItem } from './importParsePlain'
+export { parseRawCatalogItensHtml } from './importParseHtml'
+export { parseRawToPecas, looksLikeCatalogImportHtml } from './importParse'
+
 export {
   BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY,
   NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY,
