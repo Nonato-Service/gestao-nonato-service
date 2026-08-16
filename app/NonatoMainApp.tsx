@@ -10778,7 +10778,7 @@ export default function Dashboard() {
     })
     return () => cancelAnimationFrame(raf)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- atualizarClientesDevedores usa estado atual; não incluir na deps (identidade instável).
-  }, [faturasPecas, clientes, relatoriosServico, fechamentoFluxoFinanceiroPorRelatorioId])
+  }, [faturasPecas, clientes, relatoriosServico, relatoriosEspeciais, fechamentoFluxoFinanceiroPorRelatorioId])
 
   useEffect(() => {
     if (!fechamentosGuardadosBibliotecaIds.length) return
@@ -19645,7 +19645,7 @@ export default function Dashboard() {
       }
     })
 
-    // Relatórios de serviço com fechamento «não pago» / devedor (sincroniza cartão vermelho no cadastro de clientes)
+    // Relatórios (serviço + especial) com fechamento «não pago» / devedor → cartão vermelho no cadastro
     const relatorioTsParaOrdenar = (r: RelatorioServico) => {
       const s = String(r.data || '').trim().slice(0, 10)
       if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
@@ -19662,8 +19662,15 @@ export default function Dashboard() {
       }
       return 0
     }
+    const idsRelatorioServico = new Set(relatoriosServico.map((r) => r.id))
+    const relatoriosParaDevedor: RelatorioServico[] = [
+      ...relatoriosServico,
+      ...relatoriosEspeciais
+        .filter((r) => r?.id && !idsRelatorioServico.has(r.id))
+        .map((r) => adaptRelatorioEspecialParaFechamentoShape(r) as RelatorioServico),
+    ]
     const relatoriosNaoPagoPorCliente = new Map<string, RelatorioServico[]>()
-    for (const rel of relatoriosServico) {
+    for (const rel of relatoriosParaDevedor) {
       const fr = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
       const frObj =
         fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
