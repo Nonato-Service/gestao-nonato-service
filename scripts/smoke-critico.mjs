@@ -40,6 +40,7 @@ const critical = [
   'app/modules/equipamentos/index.ts',
   'app/modules/relatorio-servico/index.ts',
   'app/modules/agenda/index.ts',
+  'app/modules/sidebar/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -339,6 +340,27 @@ try {
   }
 } catch (e) {
   fail(`módulo agenda: ${e.message}`)
+}
+
+// 3l) Módulo sidebar (13.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/sidebar/index.ts'), 'utf8')
+  if (
+    idx.includes('normalizeSidebarButtons') &&
+    (idx.includes('getTabTitleForBundle') || idx.includes('getDefaultSidebarGroup'))
+  ) {
+    ok('módulo sidebar exporta normalize/hub')
+  } else {
+    fail('módulo sidebar incompleto (index.ts)')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/sidebar'") || nma.includes('from "./modules/sidebar"')) {
+    ok('NonatoMainApp importa app/modules/sidebar')
+  } else {
+    fail('NonatoMainApp não importa o módulo sidebar')
+  }
+} catch (e) {
+  fail(`módulo sidebar: ${e.message}`)
 }
 
 // 4) i18n
