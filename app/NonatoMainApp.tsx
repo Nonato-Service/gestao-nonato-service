@@ -169,6 +169,11 @@ import {
   calcularDuracao,
   atualizarCalculosDia,
   calcularTotais,
+  RELATORIO_SERVICO_PDF_MODELOS,
+  PDF_MODEL_PADRAO_STORAGE_KEY,
+  PDF_MODEL_POR_RELATORIO_STORAGE_KEY,
+  normalizePdfModeloPorRelatorioMap,
+  resolvePdfModeloForRelatorio,
 } from './modules/relatorio-servico'
 import {
   type Agendamento,
@@ -725,24 +730,7 @@ const HUB_CARD_SVG_SIZE = 44
 /** Logo Nonato para exibição quando a peça não tem foto (não gravar este URL como `imagem` da peça). Colocar o ficheiro em `public/brand/nonato-logo-original.png`. */
 const PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC = '/brand/nonato-logo-original.png'
 
-const RELATORIO_SERVICO_PDF_MODELOS = new Set([
-  'classico', 'detalhado', 'compacto', 'moderno', 'profissional', 'minimalista',
-  'tecnico', 'executivo', 'negro', 'ferwood', 'resumido', 'colorido', 'formal', 'lista',
-])
-
-const PDF_MODEL_PADRAO_STORAGE_KEY = 'nonato-relatorios-pdf-modelo'
-const PDF_MODEL_POR_RELATORIO_STORAGE_KEY = 'nonato-relatorios-pdf-modelo-por-id'
-
-function normalizePdfModeloPorRelatorioMap(raw: unknown): Record<string, string> {
-  if (!raw || typeof raw !== 'object') return {}
-  const out: Record<string, string> = {}
-  for (const [id, model] of Object.entries(raw as Record<string, unknown>)) {
-    if (typeof id === 'string' && id && typeof model === 'string' && RELATORIO_SERVICO_PDF_MODELOS.has(model)) {
-      out[id] = model
-    }
-  }
-  return out
-}
+/* PDF modelo relatório → app/modules/relatorio-servico/pdfModelo */
 
 function pecaBibliotecaSrcImagemDisplay(
   imagemOuPeca: string | undefined | null | { imagem?: string; id?: string; temImagemServidor?: boolean }
@@ -19323,15 +19311,13 @@ export default function Dashboard() {
   }
 
   // Modelo PDF: cada relatório tem o seu; só relatórios sem escolha usam o padrão global
-  const getPdfModelForRelatorio = (relatorioId: string): string => {
-    const perRef = pdfModelPorRelatorioIdRef.current[relatorioId]
-    if (perRef && RELATORIO_SERVICO_PDF_MODELOS.has(perRef)) return perRef
-    const per = pdfModelPorRelatorioId[relatorioId]
-    if (per && RELATORIO_SERVICO_PDF_MODELOS.has(per)) return per
-    const padrao = selectedPDFModelRef.current || selectedPDFModel
-    if (RELATORIO_SERVICO_PDF_MODELOS.has(padrao)) return padrao
-    return 'profissional'
-  }
+  const getPdfModelForRelatorio = (relatorioId: string): string =>
+    resolvePdfModeloForRelatorio(
+      relatorioId,
+      pdfModelPorRelatorioIdRef.current,
+      pdfModelPorRelatorioId,
+      selectedPDFModelRef.current || selectedPDFModel
+    )
 
   const escolherModeloPdfRelatorio = (relatorioId: string | null, model: string) => {
     if (!RELATORIO_SERVICO_PDF_MODELOS.has(model)) return

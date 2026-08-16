@@ -434,6 +434,20 @@ try {
   } else {
     fail('módulo relatorio-servico sem calcularDuracao/atualizarCalculosDia/calcularTotais')
   }
+  if (
+    idx.includes('normalizePdfModeloPorRelatorioMap') &&
+    idx.includes('resolvePdfModeloForRelatorio') &&
+    idx.includes('PDF_MODEL_PADRAO_STORAGE_KEY')
+  ) {
+    ok('módulo relatorio-servico exporta pdfModelo')
+  } else {
+    fail('módulo relatorio-servico sem pdfModelo')
+  }
+  if (!exists('app/modules/relatorio-servico/pdfModelo.ts')) {
+    fail('falta app/modules/relatorio-servico/pdfModelo.ts')
+  } else {
+    ok('existe app/modules/relatorio-servico/pdfModelo.ts')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (
     nma.includes("from './modules/relatorio-servico'") ||
@@ -451,6 +465,15 @@ try {
     ok('NonatoMainApp usa cálculos do módulo relatorio-servico')
   } else {
     fail('NonatoMainApp ainda define calcularDuracao/atualizarCalculosDia localmente')
+  }
+  if (
+    !nma.includes('function normalizePdfModeloPorRelatorioMap(') &&
+    !nma.includes('const RELATORIO_SERVICO_PDF_MODELOS = new Set(') &&
+    nma.includes('resolvePdfModeloForRelatorio')
+  ) {
+    ok('NonatoMainApp usa pdfModelo do módulo relatorio-servico')
+  } else {
+    fail('NonatoMainApp ainda define pdfModelo localmente')
   }
 } catch (e) {
   fail(`módulo relatorio-servico: ${e.message}`)

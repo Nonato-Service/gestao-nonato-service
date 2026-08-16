@@ -37,3 +37,12 @@ export {
 
 export type { TotaisDiasTrabalho } from './calculos'
 export { calcularDuracao, atualizarCalculosDia, calcularTotais } from './calculos'
+
+export {
+  RELATORIO_SERVICO_PDF_MODELOS,
+  PDF_MODEL_PADRAO_STORAGE_KEY,
+  PDF_MODEL_POR_RELATORIO_STORAGE_KEY,
+  isRelatorioServicoPdfModelo,
+  normalizePdfModeloPorRelatorioMap,
+  resolvePdfModeloForRelatorio,
+} from './pdfModelo'
