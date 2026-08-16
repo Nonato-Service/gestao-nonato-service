@@ -25,8 +25,17 @@ export function extrairPalavrasNomeCliente(nome: string): string[] {
     .filter((p) => p.length >= 2)
 }
 
-/** Letra principal (secção) ou qualquer palavra do nome — ex.: THOMAS aparece em «T». */
+/** Letra principal do nome (primeira letra A–Z) — usada no índice A–Z de clientes. */
 export function clienteNomeMatchesLetraAlfabeto(nome: string, letra: string): boolean {
+  const alvo = letra.toUpperCase()
+  return getClienteLetraAlfabeto(nome) === alvo
+}
+
+/**
+ * Qualquer palavra do nome começa com a letra (ex.: «BRUNO MORAIS» em M).
+ * Só para pesquisa auxiliar (orçamentos); o índice A–Z de clientes usa a letra principal.
+ */
+export function clienteNomeMatchesLetraEmQualquerPalavra(nome: string, letra: string): boolean {
   const alvo = letra.toUpperCase()
   if (alvo === '#') return getClienteLetraAlfabeto(nome) === '#'
   if (getClienteLetraAlfabeto(nome) === alvo) return true
@@ -37,14 +46,16 @@ export function contarClientesPorLetraAlfabeto<T extends { nomeEmpresa?: string 
   clientes: T[],
   letra: string
 ): number {
-  return clientes.filter((c) => clienteNomeMatchesLetraAlfabeto(c.nomeEmpresa || '', letra)).length
+  const alvo = letra.toUpperCase()
+  return clientes.filter((c) => getClienteLetraAlfabeto(c.nomeEmpresa || '') === alvo).length
 }
 
 export function filtrarClientesPorLetraAlfabeto<T extends { nomeEmpresa?: string | null }>(
   clientes: T[],
   letra: string
 ): T[] {
-  return clientes.filter((c) => clienteNomeMatchesLetraAlfabeto(c.nomeEmpresa || '', letra))
+  const alvo = letra.toUpperCase()
+  return clientes.filter((c) => getClienteLetraAlfabeto(c.nomeEmpresa || '') === alvo)
 }
 
 export function chaveClienteOrcamento(clienteId?: string, clienteNome?: string, fallbackId?: string): string {

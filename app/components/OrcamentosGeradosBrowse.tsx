@@ -20,7 +20,7 @@ import {
   ORCAMENTOS_ALFABETO_INDICE,
   getClienteLetraAlfabeto,
   chaveClienteOrcamento,
-  clienteNomeMatchesLetraAlfabeto,
+  clienteNomeMatchesLetraEmQualquerPalavra,
 } from '../lib/orcamentosAlfabeto'
 
 export type OrcamentoGeradoItem = {
@@ -136,7 +136,7 @@ export function OrcamentosGeradosBrowse({
 
 
   const clientesNaLetraAlfabeto = (letra: string) =>
-    clientesComOrcamentos.filter((c) => clienteNomeMatchesLetraAlfabeto(c.nome, letra))
+    clientesComOrcamentos.filter((c) => clienteNomeMatchesLetraEmQualquerPalavra(c.nome, letra))
 
   const letraAtiva =
     letraFiltro && clientesNaLetraAlfabeto(letraFiltro).length > 0 ? letraFiltro : null
@@ -183,7 +183,7 @@ export function OrcamentosGeradosBrowse({
       return orcamentosPosBusca.filter((o) => {
         const nome = resolverNomeCliente(o, clientes) || '—'
         const chave = chaveClienteOrcamento(o.clienteId, nome !== '—' ? nome : undefined, o.id)
-        return clienteNomeMatchesLetraAlfabeto(nome, letraAtiva) && chave === clienteChave
+        return clienteNomeMatchesLetraEmQualquerPalavra(nome, letraAtiva) && chave === clienteChave
       })
     }
     if (!letraAtiva) return orcamentosRecentes

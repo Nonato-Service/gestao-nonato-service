@@ -40670,12 +40670,7 @@ export default function Dashboard() {
           ? [clientesLetraAtiva]
           : CLIENTES_ALFABETO_INDICE.filter((letra) => (clientesPorLetra.get(letra)?.length ?? 0) > 0)
         const clientesListaPorLetra = (letra: string) =>
-          clientesLetraAtiva && letra === clientesLetraAtiva
-            ? ordenarClientesPorNome(
-                filtrarClientesPorLetraAlfabeto(clientesFiltrados, letra),
-                localeOrdCli
-              )
-            : (clientesPorLetra.get(letra) ?? [])
+          ordenarClientesPorNome(clientesPorLetra.get(letra) ?? [], localeOrdCli)
         const clientesListaFiltradaCount = clientesLetraAtiva
           ? clientesListaPorLetra(clientesLetraAtiva).length
           : clientesFiltrados.length
@@ -41608,7 +41603,7 @@ export default function Dashboard() {
                               const devedor = isClienteMarcadoDevedor(c)
                               const cardAberto = clientesListaDetalheExpandidoIds.has(c.id)
                               return (
-                                <li key={c.id} className="clientes-alfa-item">
+                                <li key={c.id} className={`clientes-alfa-item${devedor ? ' clientes-alfa-item--devedor' : ''}`}>
                                   <button
                                     type="button"
                                     className={`clientes-alfa-nome-btn${devedor ? ' clientes-alfa-nome-btn--devedor' : ''}`}

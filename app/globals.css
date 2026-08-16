@@ -8529,6 +8529,35 @@ button.clientes-alfa-letra--toggle:hover {
   color: #ffffff;
 }
 
+.clientes-alfa-item--devedor .clientes-alfa-nome-btn,
+.clientes-alfa-item--devedor .clientes-alfa-nome-btn--devedor {
+  border-color: #f87171 !important;
+  background: linear-gradient(
+    165deg,
+    rgba(110, 14, 14, 0.98) 0%,
+    rgba(52, 8, 8, 0.99) 48%,
+    rgba(16, 0, 0, 1) 100%
+  ) !important;
+}
+
+.clientes-alfa-item--devedor .cliente-lista-linhas__row--cod {
+  border-left-color: #f87171 !important;
+}
+
+.clientes-alfa-item--devedor .cliente-lista-linhas__value--cod,
+.clientes-alfa-item--devedor .cliente-lista-linhas__value--nome,
+.clientes-alfa-item--devedor .cliente-devedor-nome-text {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-weight: 800;
+}
+
+.clientes-alfa-item--devedor .cliente-lista-linhas__label,
+.clientes-alfa-item--devedor .cliente-lista-linhas__eq {
+  color: #fecaca !important;
+  -webkit-text-fill-color: #fecaca !important;
+}
+
 /* Cliente devedor — fundo vermelho forte (lista alfabética, cadastro, detalhe) */
 .clientes-alfa-nome-btn--devedor,
 .clientes-cadastrados-lista .clientes-alfa-nome-btn--devedor,
