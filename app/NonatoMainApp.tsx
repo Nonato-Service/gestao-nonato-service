@@ -279,8 +279,13 @@ import {
   gerarProximoCodigoCliente,
   codigoClienteExibicao,
 } from './lib/clienteCodigoUtils'
-import { isClienteMarcadoDevedor } from './lib/clienteDevedorUtils'
 import {
+  isClienteMarcadoDevedor,
+  relatorioFluxoFinanceiroNaoPago,
+  calcularClientesDevedores,
+  aplicarFlagsDevedorNosClientes,
+  hashFlagsClientesDevedores,
+  refreshDevedoresListaSegura,
   getEstadoCobrancaFinanceiraVisual,
   getEstadoCobrancaFinanceiraGrupo,
   getEstadoCobrancaFinanceiraGrupoExibicao,
@@ -291,9 +296,10 @@ import {
   classNameBibliotecaClienteFluxoFinanceiro,
   financeiroDespesasBibGrupoDevePiscar,
   ORDEM_ESTADOS_COBRANCA_FINANCEIRA,
+  type ClienteDevedor,
   type EstadoCobrancaFinanceiraVisual,
   type EstadoCobrancaFinanceiraGrupoExibicao,
-} from './lib/fechamentoFluxoFinanceiroUi'
+} from './modules/financeiro'
 import { FechamentoFluxoPagamentoBar } from './components/FechamentoFluxoPagamentoBar'
 import {
   FECHAMENTO_IDS_FIXOS_TEMPLATE,
@@ -2404,12 +2410,9 @@ type FechamentoFluxoFinanceiroEntry = {
   dataVencimentoFatura?: string
 }
 
-/** Fluxo financeiro da OS: «não pago» ou marcado devedor — mesmo critério do cartão devedor no cadastro. */
+/** Fluxo financeiro da OS: «não pago» / devedor — ver `relatorioFluxoFinanceiroNaoPago` em modules/financeiro. */
 function relatorioServicoFluxoFinanceiroPendente(fr: unknown): boolean {
-  const frObj =
-    fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
-  if (!frObj) return false
-  return frObj.situacaoFatura === 'nao_paga' || frObj.pagamento === 'devedor'
+  return relatorioFluxoFinanceiroNaoPago(fr)
 }
 
 type PasswordEntry = {
@@ -4019,29 +4022,7 @@ type FaturaPecas = {
   contaPagamentoEnviada?: boolean
 }
 
-type ClienteDevedor = {
-  clienteId: string
-  clienteNome: string
-  totalDevido: number
-  totalPago: number
-  saldoPendente: number
-  numeroFaturasPendentes: number
-  numeroFaturasVencidas: number
-  ultimaAtualizacao: string // ISO date string
-  faturasPendentes: Array<{
-    faturaId: string
-    numeroFatura: string
-    numeroOS?: string
-    valor: number
-    dataVencimento?: string
-    diasVencido?: number
-  }>
-  isDevedor: boolean // Flag para indicar se é devedor
-  /** Relatórios de serviço com fechamento marcado «não pago» / devedor (gestão financeira) */
-  relatoriosNaoPagoCount?: number
-  /** Id do relatório de serviço mais recente (data) ainda «não pago»/devedor — para marcar no cadastro do cliente */
-  ultimoRelatorioNaoPagoId?: string
-}
+/* ClienteDevedor → app/modules/financeiro */
 
 type IVAControle = {
   id: string
@@ -19293,198 +19274,37 @@ export default function Dashboard() {
 
   const atualizarClientesDevedores = (faturasOverride?: FaturaPecas[]) => {
     const lista = faturasOverride ?? faturasPecas
-    const hoje = new Date()
-    hoje.setHours(0, 0, 0, 0)
-
-    const devedoresMap = new Map<string, ClienteDevedor>()
-
-    // Processar faturas pendentes e vencidas
-    lista.forEach(fatura => {
-      if (fatura.status === 'pendente' || fatura.status === 'vencida') {
-        const clienteId = fatura.clienteId
-        if (!devedoresMap.has(clienteId)) {
-          const cliente = clientes.find(c => c.id === clienteId)
-          devedoresMap.set(clienteId, {
-            clienteId,
-            clienteNome: cliente?.nomeEmpresa || fatura.clienteNome,
-            totalDevido: 0,
-            totalPago: 0,
-            saldoPendente: 0,
-            numeroFaturasPendentes: 0,
-            numeroFaturasVencidas: 0,
-            ultimaAtualizacao: new Date().toISOString(),
-            faturasPendentes: [],
-            isDevedor: false,
-            relatoriosNaoPagoCount: 0,
-          })
-        }
-
-        const devedor = devedoresMap.get(clienteId)!
-        const isVencida = fatura.dataVencimento && new Date(fatura.dataVencimento) < hoje
-        const diasVencido = fatura.dataVencimento ? Math.floor((hoje.getTime() - new Date(fatura.dataVencimento).getTime()) / (1000 * 60 * 60 * 24)) : 0
-
-        devedor.totalDevido += fatura.valorTotal
-        devedor.saldoPendente += fatura.valorTotal
-        devedor.numeroFaturasPendentes++
-        if (isVencida) {
-          devedor.numeroFaturasVencidas++
-        }
-
-        devedor.faturasPendentes.push({
-          faturaId: fatura.id,
-          numeroFatura: fatura.numeroFatura,
-          numeroOS: fatura.numeroOS,
-          valor: fatura.valorTotal,
-          dataVencimento: fatura.dataVencimento,
-          diasVencido: diasVencido > 0 ? diasVencido : undefined
-        })
-      }
-    })
-
-    // Processar faturas pagas
-    lista.forEach(fatura => {
-      if (fatura.status === 'paga') {
-        const clienteId = fatura.clienteId
-        if (devedoresMap.has(clienteId)) {
-          const devedor = devedoresMap.get(clienteId)!
-          devedor.totalPago += fatura.valorTotal
-          devedor.saldoPendente = Math.max(0, devedor.saldoPendente - fatura.valorTotal)
-        }
-      }
-    })
-
-    // Relatórios (serviço + especial) com fechamento «não pago» / devedor → cartão vermelho no cadastro
-    const relatorioTsParaOrdenar = (r: RelatorioServico) => {
-      const s = String(r.data || '').trim().slice(0, 10)
-      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-        const t = new Date(s + 'T12:00:00').getTime()
-        if (!Number.isNaN(t)) return t
-      }
-      const parsed = parseRelatorioServicoNumeroDataSeq(String(r.numero || ''))
-      if (parsed) {
-        const y = Number(parsed.yyyymmdd.slice(0, 4))
-        const mo = Number(parsed.yyyymmdd.slice(4, 6)) - 1
-        const da = Number(parsed.yyyymmdd.slice(6, 8))
-        const t = new Date(y, mo, da).getTime()
-        if (!Number.isNaN(t)) return t
-      }
-      return 0
-    }
     const idsRelatorioServico = new Set(relatoriosServico.map((r) => r.id))
-    const relatoriosParaDevedor: RelatorioServico[] = [
+    const relatoriosParaDevedor = [
       ...relatoriosServico,
       ...relatoriosEspeciais
         .filter((r) => r?.id && !idsRelatorioServico.has(r.id))
         .map((r) => adaptRelatorioEspecialParaFechamentoShape(r) as RelatorioServico),
     ]
-    const relatoriosNaoPagoPorCliente = new Map<string, RelatorioServico[]>()
-    for (const rel of relatoriosParaDevedor) {
-      const fr = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
-      const frObj =
-        fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
-      if (!frObj) continue
-      const naoPagoRel =
-        frObj.situacaoFatura === 'nao_paga' || frObj.pagamento === 'devedor'
-      if (!naoPagoRel) continue
-      const clienteId =
-        String(rel.clienteId ?? '').trim() ||
-        resolverClienteIdRelatorioFlexivel(rel, clientes) ||
-        clientes.find((c) =>
-          nomesClienteCorrespondem(String(rel.cliente ?? ''), String(c.nomeEmpresa ?? ''))
-        )?.id ||
-        ''
-      if (!clienteId) continue
-      if (!relatoriosNaoPagoPorCliente.has(clienteId)) relatoriosNaoPagoPorCliente.set(clienteId, [])
-      relatoriosNaoPagoPorCliente.get(clienteId)!.push(rel)
-    }
-    for (const [clienteId, rels] of relatoriosNaoPagoPorCliente.entries()) {
-      if (!devedoresMap.has(clienteId)) {
-        const rel0 = rels[0]
-        const cliente = clientes.find(c => c.id === clienteId)
-        devedoresMap.set(clienteId, {
-          clienteId,
-          clienteNome: cliente?.nomeEmpresa || rel0?.cliente || '',
-          totalDevido: 0,
-          totalPago: 0,
-          saldoPendente: 0,
-          numeroFaturasPendentes: 0,
-          numeroFaturasVencidas: 0,
-          ultimaAtualizacao: new Date().toISOString(),
-          faturasPendentes: [],
-          isDevedor: false,
-          relatoriosNaoPagoCount: 0,
-        })
-      }
-      const devedorRel = devedoresMap.get(clienteId)!
-      devedorRel.relatoriosNaoPagoCount = rels.length
-      let valorFechamentosNaoPago = 0
-      for (const rel of rels) {
-        const itensRaw = fechamentosRelatorios[rel.id]
-        if (!Array.isArray(itensRaw) || itensRaw.length === 0) continue
-        const omit = new Set(fechamentoItensOmitidosPorRelatorio[rel.id] || [])
-        const itensVis = itensRaw.filter((i) => !omit.has(i.id))
-        valorFechamentosNaoPago += totaisFechamentoLiquidoComIva(
-          itensVis,
-          fechamentoIvaPorRelatorioId[rel.id]
-        ).comIva
-      }
-      if (valorFechamentosNaoPago > 0) {
-        devedorRel.totalDevido += valorFechamentosNaoPago
-        devedorRel.saldoPendente += valorFechamentosNaoPago
-      }
-      const maisRecente = [...rels].sort((a, b) => {
-        const ta = relatorioTsParaOrdenar(a)
-        const tb = relatorioTsParaOrdenar(b)
-        if (tb !== ta) return tb - ta
-        return cmpClienteRelatorioFinanceiro(String(b.numero ?? ''), String(a.numero ?? ''))
-      })[0]
-      devedorRel.ultimoRelatorioNaoPagoId = maisRecente?.id
-    }
-
-    // Marcar como devedor: faturas de peças em aberto ou relatório(s) de serviço «não pago»
-    devedoresMap.forEach((devedor, clienteId) => {
-      devedor.isDevedor =
-        devedor.saldoPendente > 0 || (devedor.relatoriosNaoPagoCount ?? 0) > 0
+    const novosDevedores = calcularClientesDevedores({
+      faturas: lista,
+      clientes,
+      relatoriosParaDevedor,
+      fechamentoFluxoFinanceiroPorRelatorioId,
+      fechamentosRelatorios,
+      fechamentoItensOmitidosPorRelatorio,
+      fechamentoIvaPorRelatorioId,
     })
-
-    const novosDevedores = Array.from(devedoresMap.values())
     setClientesDevedores(novosDevedores)
     saveData('nonato-clientes-devedores', novosDevedores)
 
-    // Atualizar flag isDevedor nos clientes
-    const clientesAtualizados = clientes.map(cliente => {
-      const devedor = novosDevedores.find(d => d.clienteId === cliente.id)
-      return {
-        ...cliente,
-        isDevedor: devedor?.isDevedor || false,
-        saldoPendente: devedor?.saldoPendente || 0,
-        relatoriosNaoPagoCount: devedor?.relatoriosNaoPagoCount ?? 0,
-        ultimoRelatorioDevedorId: devedor?.ultimoRelatorioNaoPagoId,
-      }
-    })
-    
-    // Verificar se realmente houve mudança antes de atualizar para evitar loop infinito
-    // Criar um hash simples dos valores relevantes para comparação rápida
-    const newHash = JSON.stringify(clientesAtualizados.map(c => ({ 
-      id: c.id, 
-      isDevedor: c.isDevedor || false, 
-      saldoPendente: c.saldoPendente || 0,
-      relatoriosNaoPagoCount: c.relatoriosNaoPagoCount ?? 0,
-      ultimoRelatorioDevedorId: c.ultimoRelatorioDevedorId || '',
-    })).sort((a, b) => a.id.localeCompare(b.id)))
-    
-    // Só atualizar se o hash mudou
+    const clientesAtualizados = aplicarFlagsDevedorNosClientes(clientes, novosDevedores)
+    const newHash = hashFlagsClientesDevedores(clientesAtualizados)
+
     if (lastClientesDevedoresHash.current !== newHash) {
       lastClientesDevedoresHash.current = newHash
-      // Segurança: nunca gravar lista menor (evita apagar clientes por estado incompleto).
-      if (clientesAtualizados.length < clientes.length) {
+      if (!refreshDevedoresListaSegura(clientesAtualizados, clientes)) {
         console.warn(
           '[Nonato] Refresh de devedores abortado — lista de clientes ficou menor do que a actual.'
         )
         return
       }
       setClientes(clientesAtualizados)
-      // Flags de dívida: gravar local de imediato; sync ao servidor sem bloquear (não forçar overwrite).
       void saveData('nonato-clientes', clientesAtualizados, true, false)
       setEditingCliente((prev) => {
         if (!prev) return prev

@@ -32,6 +32,7 @@ const critical = [
   'app/lib/clienteDevedorUtils.ts',
   'app/modules/fechamento/index.ts',
   'app/modules/clientes/index.ts',
+  'app/modules/financeiro/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -113,6 +114,33 @@ try {
   }
 } catch (e) {
   fail(`módulo clientes: ${e.message}`)
+}
+
+// 3d) Módulo financeiro (3.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/financeiro/index.ts'), 'utf8')
+  if (
+    idx.includes('calcularClientesDevedores') &&
+    idx.includes('isClienteMarcadoDevedor') &&
+    idx.includes('refreshDevedoresListaSegura')
+  ) {
+    ok('módulo financeiro exporta devedores')
+  } else {
+    fail('módulo financeiro incompleto (index.ts)')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/financeiro'") || nma.includes('from "./modules/financeiro"')) {
+    ok('NonatoMainApp importa app/modules/financeiro')
+  } else {
+    fail('NonatoMainApp não importa o módulo financeiro')
+  }
+  if (nma.includes('calcularClientesDevedores') && nma.includes('refreshDevedoresListaSegura')) {
+    ok('NonatoMainApp usa cálculo/proteção de devedores do módulo')
+  } else {
+    fail('NonatoMainApp não usa calcularClientesDevedores / refreshDevedoresListaSegura')
+  }
+} catch (e) {
+  fail(`módulo financeiro: ${e.message}`)
 }
 
 // 4) i18n
