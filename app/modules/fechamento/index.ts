@@ -44,3 +44,17 @@ export {
   nomeGrupoTarifaServico,
   migrarServicoLegacyCodNomeDesc,
 } from './grupos'
+
+export type {
+  LabelsFechamentoCobrancaRelatorio,
+  RelatorioServicoCobrancaMin,
+  BuildItensFechamentoBaseRelatorioOpts,
+} from './cobrancaRelatorio'
+export {
+  hhmmToDecimal,
+  minutosParaHorasDecimal,
+  quantidadesFechamentoCobrancaRelatorio,
+  buildItensFechamentoBaseRelatorio,
+  isLinhaManualFechamento,
+  sincronizarItensFechamentoComRelatorioAtualizado,
+} from './cobrancaRelatorio'

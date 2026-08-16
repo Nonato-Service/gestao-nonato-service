@@ -110,6 +110,11 @@ try {
   } else {
     fail('módulo fechamento sem grupos (ordenar/migrar/nomeGrupo)')
   }
+  if (idx.includes('buildItensFechamentoBaseRelatorio')) {
+    ok('módulo fechamento exporta cobrancaRelatorio')
+  } else {
+    fail('módulo fechamento sem buildItensFechamentoBaseRelatorio')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/fechamento'") || nma.includes('from "./modules/fechamento"')) {
     ok('NonatoMainApp importa app/modules/fechamento')

@@ -509,6 +509,8 @@ import {
   ordenarServicoGrupos,
   nomeGrupoTarifaServico,
   migrarServicoLegacyCodNomeDesc,
+  buildItensFechamentoBaseRelatorio as buildItensFechamentoBaseRelatorioModulo,
+  sincronizarItensFechamentoComRelatorioAtualizado as sincronizarItensFechamentoComRelatorioAtualizadoModulo,
 } from './modules/fechamento'
 import {
   encontrarClienteDuplicadoCadastro,
@@ -20736,117 +20738,23 @@ export default function Dashboard() {
     return vendidos
   }
 
+  function optsFechamentoCobrancaRelatorio(relId: string) {
+    return {
+      labels: {
+        horasTrabalho: t.horasTrabalho,
+        kmsPercorridos: t.kmsPercorridos,
+        diarias: t.diarias,
+        horasViagemIda: t.horasViagemIda,
+        horasViagemRetorno: t.horasViagemRetorno,
+      },
+      servicos: servicos as ServicoCadastroFechamentoMin[],
+      grupoId: fechamentoGrupoPorRelatorioId[relId] || null,
+      getRelatorioEspecial: (id: string) => relatoriosEspeciais.find((e) => e.id === id),
+    }
+  }
+
   function buildItensFechamentoBaseRelatorio(r: RelatorioServico): FechamentoItem[] {
-    if (isRelatorioEspecialId(r.id)) {
-      const esp = relatoriosEspeciais.find((e) => e.id === r.id)
-      if (esp) {
-        const base = buildItensFechamentoBaseRelatorioEspecial(esp, {
-          horasTrabalho: t.horasTrabalho,
-          kmsPercorridos: t.kmsPercorridos,
-          diarias: t.diarias,
-          horasViagemIda: t.horasViagemIda,
-          horasViagemRetorno: t.horasViagemRetorno,
-        }) as FechamentoItem[]
-        const grupoId = fechamentoGrupoPorRelatorioId[r.id] || null
-        return base.map((item) =>
-          enriquecerLinhaFechamentoComCadastro(
-            item,
-            servicos as ServicoCadastroFechamentoMin[],
-            undefined,
-            grupoId
-          )
-        )
-      }
-    }
-    const hhmmToDecimal = (s: string): number => {
-      const raw = String(s ?? '').trim()
-      if (!raw) return 0
-      if (!raw.includes(':')) {
-        const n = parseFloat(raw.replace(',', '.'))
-        return Number.isFinite(n) ? n : 0
-      }
-      const parts = raw.split(':').map((p) => p.trim())
-      const h = parseInt(parts[0], 10) || 0
-      const m = parseInt(parts[1] ?? '0', 10) || 0
-      return h + m / 60
-    }
-    const dias = r.diasTrabalho || []
-    const totais = calcularTotais(dias)
-    const tAny = totais as typeof totais & {
-      horasTrabalhoMinutos?: number
-      horasViagemIdaMinutos?: number
-      horasViagemRetornoMinutos?: number
-    }
-    const minutosParaHorasDecimal = (min: number | undefined): number => {
-      if (min == null || !Number.isFinite(min)) return 0
-      return Math.round(min) / 60
-    }
-    const grupoId = fechamentoGrupoPorRelatorioId[r.id] || null
-    const base: FechamentoItem[] = [
-      {
-        id: 'ht',
-        descricao: t.horasTrabalho || 'Horas de Trabalho',
-        tipoCobranca: 'hora',
-        quantidade:
-          typeof tAny.horasTrabalhoMinutos === 'number'
-            ? minutosParaHorasDecimal(tAny.horasTrabalhoMinutos)
-            : hhmmToDecimal(totais.horasTrabalho),
-        valorUnitario: 0,
-        valorTotal: 0,
-        origem: 'relatorio',
-      },
-      {
-        id: 'km',
-        descricao: t.kmsPercorridos || "Km's Percorridos",
-        tipoCobranca: 'km',
-        quantidade: parseFloat(totais.kmsPercorridos) || 0,
-        valorUnitario: 0,
-        valorTotal: 0,
-        origem: 'relatorio',
-      },
-      {
-        id: 'diarias',
-        descricao: t.diarias || 'Diárias',
-        tipoCobranca: 'diarias',
-        quantidade: dias.length,
-        valorUnitario: 0,
-        valorTotal: 0,
-        origem: 'relatorio',
-        cobrarDiaria: true,
-      },
-      {
-        id: 'hida',
-        descricao: t.horasViagemIda || 'Horas de Viagem de Ida',
-        tipoCobranca: 'hora',
-        quantidade:
-          typeof tAny.horasViagemIdaMinutos === 'number'
-            ? minutosParaHorasDecimal(tAny.horasViagemIdaMinutos)
-            : hhmmToDecimal(totais.horasViagemIda),
-        valorUnitario: 0,
-        valorTotal: 0,
-        origem: 'relatorio',
-      },
-      {
-        id: 'hret',
-        descricao: t.horasViagemRetorno || 'Horas de Viagem de Retorno',
-        tipoCobranca: 'hora',
-        quantidade:
-          typeof tAny.horasViagemRetornoMinutos === 'number'
-            ? minutosParaHorasDecimal(tAny.horasViagemRetornoMinutos)
-            : hhmmToDecimal(totais.horasViagemRetorno),
-        valorUnitario: 0,
-        valorTotal: 0,
-        origem: 'relatorio',
-      },
-    ]
-    return base.map((item) =>
-      enriquecerLinhaFechamentoComCadastro(
-        item,
-        servicos as ServicoCadastroFechamentoMin[],
-        undefined,
-        grupoId
-      )
-    )
+    return buildItensFechamentoBaseRelatorioModulo(r, optsFechamentoCobrancaRelatorio(r.id))
   }
 
   /** Atualiza linhas fixas (horas/km/diárias) do fechamento guardado quando o relatório de serviço é editado na Biblioteca. */
@@ -20854,56 +20762,10 @@ export default function Dashboard() {
     rel: RelatorioServico,
     salvosBrutos: FechamentoItem[] | undefined
   ): FechamentoItem[] {
-    const salvos = salvosBrutos || []
-    const seisDoResumo = buildItensFechamentoBaseRelatorio(rel)
-    if (salvos.length === 0) return seisDoResumo
-    const isLinhaManualFechamento = (i: FechamentoItem) => {
-      if (i.origem === 'manual') return true
-      if (i.origem === 'relatorio') return false
-      return !(FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(i.id)
-    }
-    const itensExtrasSalvos = salvos.filter(
-      (i) =>
-        isLinhaManualFechamento(i) ||
-        i.id.startsWith('peca-') ||
-        i.id.startsWith('m')
-    )
-    const grupoId = fechamentoGrupoPorRelatorioId[rel.id] || null
-    const seisComQuantidadeDoResumo = seisDoResumo.map((item) => {
-      const saved = salvos.find((s) => s.id === item.id)
-      if (!saved) return item
-      const cobrarDiaria =
-        item.id === 'diarias' && typeof saved.cobrarDiaria === 'boolean'
-          ? saved.cobrarDiaria
-          : (item as FechamentoItem).cobrarDiaria !== false
-      const enriched = enriquecerLinhaFechamentoComCadastro(
-        {
-          ...item,
-          ...saved,
-          id: item.id,
-          quantidade: item.quantidade ?? 0,
-          tipoCobranca: item.tipoCobranca,
-          origem: saved.origem ?? item.origem,
-        },
-        servicos as ServicoCadastroFechamentoMin[],
-        saved.servicoId,
-        grupoId
-      )
-      return {
-        ...enriched,
-        cobrarDiaria: item.id === 'diarias' ? cobrarDiaria : undefined,
-      }
-    })
-    const seisIds = ['ht', 'km', 'diarias', 'hida', 'hret']
-    const comTodosSeis = seisIds
-      .map(
-        (id) =>
-          seisComQuantidadeDoResumo.find((i) => i.id === id) ||
-          seisDoResumo.find((i) => i.id === id)
-      )
-      .filter(Boolean) as FechamentoItem[]
-    return [...comTodosSeis, ...itensExtrasSalvos].filter(
-      (i) => !(i.id === 'hviagem' && i.origem === 'relatorio')
+    return sincronizarItensFechamentoComRelatorioAtualizadoModulo(
+      rel,
+      salvosBrutos,
+      optsFechamentoCobrancaRelatorio(rel.id)
     )
   }
 
