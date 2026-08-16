@@ -25,8 +25,9 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 5. `app/modules/biblioteca/` (peças sync/merge/sequência + recovery) — feito
 6. `app/modules/relatorios-especiais/` (tipos / cálculos / fechamento) — feito
 7. `app/modules/comprovantes/` (OCR / duplicados / folha semanal) — feito
+8. `app/modules/equipamentos/` (relatório / etiquetas armazém) — feito
 
-Próximos cortes (quando necessário): PDF do relatório especial, ou equipamentos/armazém.
+Próximos cortes (quando necessário): PDF do relatório especial.
 
 ## Proibido neste processo
 

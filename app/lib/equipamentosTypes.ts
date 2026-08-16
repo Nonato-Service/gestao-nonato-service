@@ -1,6 +1,4 @@
-export type GrupoEquipamento = {
-  numeroGrupo?: string
-  nome: string
-  familia: string
-  numerosGrupo?: string[]
-}
+/**
+ * @deprecated Preferir `app/modules/equipamentos` — reexport de compatibilidade.
+ */
+export type { GrupoEquipamento } from '../modules/equipamentos/tiposGrupo'

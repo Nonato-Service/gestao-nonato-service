@@ -37,6 +37,7 @@ const critical = [
   'app/modules/biblioteca/index.ts',
   'app/modules/relatorios-especiais/index.ts',
   'app/modules/comprovantes/index.ts',
+  'app/modules/equipamentos/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -236,6 +237,29 @@ try {
   }
 } catch (e) {
   fail(`módulo comprovantes: ${e.message}`)
+}
+
+// 3i) Módulo equipamentos (8.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/equipamentos/index.ts'), 'utf8')
+  const rel = fs.readFileSync(path.join(root, 'app/modules/equipamentos/relatorio.ts'), 'utf8')
+  if (
+    rel.includes('resolverIdEquipamentoCliente') &&
+    idx.includes('getSequenciaEtiquetasArmazem') &&
+    idx.includes('enriquecerBlocoEquipamentoPedido')
+  ) {
+    ok('módulo equipamentos exporta relatório/etiquetas')
+  } else {
+    fail('módulo equipamentos incompleto (index.ts)')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/equipamentos'") || nma.includes('from "./modules/equipamentos"')) {
+    ok('NonatoMainApp importa app/modules/equipamentos')
+  } else {
+    fail('NonatoMainApp não importa o módulo equipamentos')
+  }
+} catch (e) {
+  fail(`módulo equipamentos: ${e.message}`)
 }
 
 // 4) i18n
