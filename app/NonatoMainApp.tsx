@@ -206,6 +206,15 @@ import {
   pickTrChain,
   resolveActionCardDescription,
 } from './modules/sidebar'
+import type { DiarioPedidoStatus, DiarioPedidoAnexo, DiarioPedidoItem } from './modules/diario'
+import {
+  DIARIO_PEDIDOS_DIA_STORAGE_KEY,
+  DIARIO_PEDIDOS_MODAL_TOPO_RETRAIDO_KEY,
+  DIARIO_PEDIDO_ANEXOS_MAX,
+  normalizeDiarioAnexos,
+  diarioPedidoTituloECorpo,
+  diarioPedidoLinhasTarefas,
+} from './modules/diario'
 import {
   mergeSidebarButtonsDeferLocal,
   repairSidebarButtonsFromCatalog,
@@ -877,67 +886,7 @@ type UserFormState = {
   menuItemsConfigured: boolean
 }
 
-type DiarioPedidoStatus = 'planeado' | 'em_curso' | 'concluido'
-type DiarioPedidoAnexo = {
-  id: string
-  nome: string
-  dataUrl: string
-}
-type DiarioPedidoItem = {
-  id: string
-  texto: string
-  status: DiarioPedidoStatus
-  criadoEm: string
-  atualizadoEm?: string
-  anexos?: DiarioPedidoAnexo[]
-  /** Quando a anotação foi criada a partir do cadastro — permite mostrar morada/contactos ao expandir */
-  clienteCadastroId?: string
-  lembreteAtivo?: boolean
-  lembreteIntervaloMinutos?: number
-  lembreteProximoEm?: string
-  lembreteUltimoEm?: string
-}
-
-const DIARIO_PEDIDOS_DIA_STORAGE_KEY = 'nonato-diario-pedidos-dia'
-const DIARIO_PEDIDOS_MODAL_TOPO_RETRAIDO_KEY = 'nonato-diario-modal-topo-retraido'
-const DIARIO_PEDIDO_ANEXOS_MAX = 4
-
-function normalizeDiarioAnexos(raw: unknown): DiarioPedidoAnexo[] | undefined {
-  if (!Array.isArray(raw)) return undefined
-  const out: DiarioPedidoAnexo[] = []
-  for (const a of raw) {
-    if (!a || typeof a !== 'object') continue
-    const o = a as Record<string, unknown>
-    if (typeof o.id !== 'string' || typeof o.nome !== 'string' || typeof o.dataUrl !== 'string') continue
-    if (!String(o.dataUrl).startsWith('data:image/')) continue
-    out.push({
-      id: o.id,
-      nome: String(o.nome).slice(0, 160),
-      dataUrl: String(o.dataUrl),
-    })
-    if (out.length >= DIARIO_PEDIDO_ANEXOS_MAX) break
-  }
-  return out.length ? out : undefined
-}
-
-/** Primeira linha não vazia = título na lista (ex.: cliente na agenda); o resto abre ao expandir. */
-function diarioPedidoTituloECorpo(texto: string): { titulo: string; corpo: string } {
-  const lines = String(texto ?? '').split(/\r?\n/)
-  let i = 0
-  while (i < lines.length && !lines[i].trim()) i++
-  if (i >= lines.length) return { titulo: '', corpo: '' }
-  const titulo = lines[i].trim()
-  const corpo = lines.slice(i + 1).join('\n').trim()
-  return { titulo, corpo }
-}
-
-/** Linhas de tarefas (corpo do diário), uma bolinha por linha na lista. */
-function diarioPedidoLinhasTarefas(corpo: string): string[] {
-  return String(corpo ?? '')
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean)
-}
+/* Diário tipos/helpers → app/modules/diario */
 
 async function compressImageFileToJpegDataUrl(file: File): Promise<string> {
   const bmp = await createImageBitmap(file)

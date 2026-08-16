@@ -41,6 +41,7 @@ const critical = [
   'app/modules/relatorio-servico/index.ts',
   'app/modules/agenda/index.ts',
   'app/modules/sidebar/index.ts',
+  'app/modules/diario/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -361,6 +362,28 @@ try {
   }
 } catch (e) {
   fail(`módulo sidebar: ${e.message}`)
+}
+
+// 3m) Módulo diario (14.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/diario/index.ts'), 'utf8')
+  if (
+    idx.includes('normalizeDiarioAnexos') &&
+    idx.includes('diarioPedidoTituloECorpo') &&
+    idx.includes('DIARIO_PEDIDOS_DIA_STORAGE_KEY')
+  ) {
+    ok('módulo diario exporta tipos/anexos/texto')
+  } else {
+    fail('módulo diario incompleto (index.ts)')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/diario'") || nma.includes('from "./modules/diario"')) {
+    ok('NonatoMainApp importa app/modules/diario')
+  } else {
+    fail('NonatoMainApp não importa o módulo diario')
+  }
+} catch (e) {
+  fail(`módulo diario: ${e.message}`)
 }
 
 // 4) i18n
