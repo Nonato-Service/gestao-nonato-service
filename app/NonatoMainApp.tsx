@@ -113,6 +113,30 @@ import {
   rotuloNumeroSequenciaPecaBiblioteca,
 } from './modules/biblioteca'
 import {
+  type DiaTrabalho,
+  diaTrabalhoDataChaveOrdenacao,
+  sortDiasTrabalhoCronologicamente,
+  diasTrabalhoRelatorioOrdenados,
+  normalizarDiasTrabalhoParaPersist,
+  formatDiaTrabalhoCurtoPt,
+  kmStringForNumberField,
+  sanitizeKmFieldTyping,
+  normalizeKmForPersist,
+  isKmFieldEmpty,
+  getKmPadraoDoCliente,
+  countRelatorioIdInClientesRelatorios,
+  relatorioServicoMesmaChaveNegocio,
+  encontrarRelatorioServicoDuplicado,
+  dataIsoParaYYYYMMDDRelatorio,
+  yyyymmddRelatorioValido,
+  parseRelatorioServicoNumeroDataSeq,
+  normalizeOsNumeroRelatorio,
+  findClienteByRelatorio,
+  relatorioEstaNaBibliotecaArquivo,
+  relatorioSaiDaListaPrincipalRelatorios,
+  relatoriosServicoForaDaBiblioteca,
+} from './modules/relatorio-servico'
+import {
   mergeSidebarButtonsDeferLocal,
   repairSidebarButtonsFromCatalog,
 } from './lib/sidebarMergeUtils'
@@ -1423,139 +1447,7 @@ type RelatorioEquipamento = {
   equipamentoId?: string // Para identificar qual equipamento (usando numeroSerie como referência)
 }
 
-type DiaTrabalho = {
-  id?: string
-  data: string
-  idaHora: string
-  idaChegada: string
-  idaDuracao: string
-  horasInicio: string
-  horasFim: string
-  horasDuracao: string
-  retornoSaida: string
-  retornoChegada: string
-  retornoDuracao: string
-  kmIda: string
-  kmRetorno: string
-  kmTotal: string
-  pausa: string
-  tempoPausa?: string // Tempo de pausa em formato HH:MM ou minutos
-  descricaoTrabalho: string
-}
-
-/** Normaliza a data do dia para YYYY-MM-DD (alinhado ao campo do formulário) para ordenação. */
-function diaTrabalhoDataChaveOrdenacao(data: string | undefined): string {
-  if (!data) return ''
-  const s = String(data).trim()
-  if (!s) return ''
-  if (s.includes('T') && s.length >= 10) return s.slice(0, 10)
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
-  const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
-  if (m) return `${m[3]}-${m[2]}-${m[1]}`
-  /** DD/MM/AA como na UI (ex. 27/04/26) — evita `new Date` ambíguo e corrige a ordenação. */
-  const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{2})$/)
-  if (m2) {
-    const yy = parseInt(m2[3], 10)
-    const yyyy = Number.isFinite(yy) ? 2000 + yy : 2000
-    return `${yyyy}-${m2[2]}-${m2[1]}`
-  }
-  const d = new Date(s)
-  if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10)
-  return s
-}
-
-/** Ordena dias de trabalho por data crescente (ex. 26 → 27 → 28), mesmo que tenham sido introduzidos fora de ordem. */
-function sortDiasTrabalhoCronologicamente(dias: DiaTrabalho[]): DiaTrabalho[] {
-  return [...dias].sort((a, b) => {
-    const ka = diaTrabalhoDataChaveOrdenacao(a.data)
-    const kb = diaTrabalhoDataChaveOrdenacao(b.data)
-    const c = ka.localeCompare(kb)
-    if (c !== 0) return c
-    return String(a.id ?? '').localeCompare(String(b.id ?? ''))
-  })
-}
-
-/** Dias na ordem cronológica para listas, modal de ver e PDF (dados antigos podem estar gravados fora de ordem). */
-function diasTrabalhoRelatorioOrdenados(relatorio: { diasTrabalho?: DiaTrabalho[] }): DiaTrabalho[] {
-  return sortDiasTrabalhoCronologicamente(Array.isArray(relatorio.diasTrabalho) ? relatorio.diasTrabalho : [])
-}
-
-/** Ao gravar: uma única chave YYYY-MM-DD por dia (alinha com `diaTrabalhoDataChaveOrdenacao` / input type=date). */
-function normalizarDiasTrabalhoParaPersist(dias: DiaTrabalho[]): DiaTrabalho[] {
-  return dias.map((dia) => {
-    const key = diaTrabalhoDataChaveOrdenacao(dia.data)
-    if (key && /^\d{4}-\d{2}-\d{2}$/.test(key)) return { ...dia, data: key }
-    return dia
-  })
-}
-
-/** Data do dia em DD/MM/AA sem deslocar o dia por fuso (evita `Date('YYYY-MM-DD')` em UTC). */
-function formatDiaTrabalhoCurtoPt(dataRaw: string | undefined, localeTag: string = 'pt-BR'): string {
-  const key = diaTrabalhoDataChaveOrdenacao(dataRaw)
-  if (!key || !/^\d{4}-\d{2}-\d{2}$/.test(key)) return (dataRaw && String(dataRaw).trim()) || '-'
-  const [y, m, d] = key.split('-').map((x) => parseInt(x, 10))
-  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return '-'
-  const dt = new Date(y, m - 1, d)
-  return dt.toLocaleDateString(localeTag, { day: '2-digit', month: '2-digit', year: '2-digit' })
-}
-
-/** KM no formulário: vazio se zero; valor canónico sem zeros à esquerda (ex. dados antigos «095»). */
-function kmStringForNumberField(raw: string | undefined | null): string {
-  if (raw == null) return ''
-  const t = String(raw).trim().replace(',', '.')
-  if (t === '') return ''
-  const n = parseFloat(t)
-  if (!Number.isFinite(n) || n === 0) return ''
-  return String(n)
-}
-
-/** Durante a digitação: remove zeros à esquerda (095→95, 00→vazio); mantém decimais (0.5, 12.). */
-function sanitizeKmFieldTyping(raw: string): string {
-  if (raw === '') return ''
-  let v = raw.replace(',', '.').replace(/[^\d.]/g, '')
-  const firstDot = v.indexOf('.')
-  if (firstDot !== -1) {
-    v = v.slice(0, firstDot + 1) + v.slice(firstDot + 1).replace(/\./g, '')
-  }
-  if (!v.includes('.')) {
-    return v.replace(/^0+/, '')
-  }
-  const parts = v.split('.')
-  const intPart = parts[0] ?? ''
-  const fracPart = parts.slice(1).join('.')
-  let ai = intPart.replace(/^0+/, '')
-  if (ai === '' && (fracPart !== '' || v.endsWith('.'))) {
-    ai = '0'
-  }
-  if (v.endsWith('.') && fracPart === '') {
-    return `${ai}.`
-  }
-  return fracPart !== '' ? `${ai}.${fracPart}` : ai
-}
-
-/** Ao gravar o dia: string canónica ou vazio (totais usam parseFloat). */
-function normalizeKmForPersist(raw: string | undefined): string {
-  const t = (raw ?? '').trim().replace(',', '.')
-  if (t === '') return ''
-  const n = parseFloat(t)
-  if (!Number.isFinite(n) || n === 0) return ''
-  return String(n)
-}
-
-function isKmFieldEmpty(raw: string | undefined | null): boolean {
-  return kmStringForNumberField(raw) === ''
-}
-
-/** KM predefinidos no cadastro do cliente (ida / retorno). */
-function getKmPadraoDoCliente(cliente?: { kmIdaPadrao?: string; kmRetornoPadrao?: string } | null): {
-  kmIda: string
-  kmRetorno: string
-} {
-  return {
-    kmIda: kmStringForNumberField(cliente?.kmIdaPadrao),
-    kmRetorno: kmStringForNumberField(cliente?.kmRetornoPadrao),
-  }
-}
+/* dias-km → modules/relatorio-servico */
 
 type PecaSubstituicao = {
   id: string
@@ -1823,94 +1715,7 @@ type RelatorioServico = {
   dataAssinaturaCliente?: string
 }
 
-/** Conta quantas vezes um id de relatório aparece em cliente.relatorios (todas as chaves de equipamento). */
-function countRelatorioIdInClientesRelatorios(
-  clientes: Array<{ relatorios?: Record<string, RelatorioServico[]> | undefined }>,
-  relatorioId: string
-): number {
-  let n = 0
-  for (const c of clientes) {
-    const rel = c.relatorios
-    if (!rel) continue
-    for (const k of Object.keys(rel)) {
-      const list = rel[k]
-      if (!Array.isArray(list)) continue
-      for (const r of list) {
-        if (r.id === relatorioId) n++
-      }
-    }
-  }
-  return n
-}
-
-/** Número + data + cliente (id ou nome) — chave lógica para avisar duplicados na lista global. */
-function relatorioServicoMesmaChaveNegocio(
-  existente: RelatorioServico,
-  numero: string,
-  data: string,
-  clienteId: string | undefined,
-  clienteNome: string
-): boolean {
-  if (String(existente.numero ?? '').trim() !== String(numero ?? '').trim()) return false
-  const normData = (s: string) => String(s ?? '').trim().slice(0, 10)
-  if (normData(existente.data) !== normData(data)) return false
-  const idE = (existente.clienteId || '').trim()
-  const idN = (clienteId || '').trim()
-  if (idE && idN) return idE === idN
-  return String(existente.cliente ?? '').trim().toLowerCase() === String(clienteNome ?? '').trim().toLowerCase()
-}
-
-function encontrarRelatorioServicoDuplicado(
-  lista: RelatorioServico[],
-  numero: string,
-  data: string,
-  clienteId: string | undefined,
-  clienteNome: string,
-  excluirId?: string
-): RelatorioServico | undefined {
-  return lista.find(
-    (r) =>
-      (!excluirId || r.id !== excluirId) &&
-      relatorioServicoMesmaChaveNegocio(r, numero, data, clienteId, clienteNome)
-  )
-}
-
-/** AAAAMMDD a partir de YYYY-MM-DD ou, se inválido, da data de hoje (calendário local). */
-function dataIsoParaYYYYMMDDRelatorio(dataIso: string | undefined): string {
-  const s = (dataIso || '').trim().slice(0, 10)
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-    return s.replace(/-/g, '')
-  }
-  const d = new Date()
-  const y = d.getFullYear()
-  const mo = String(d.getMonth() + 1).padStart(2, '0')
-  const da = String(d.getDate()).padStart(2, '0')
-  return `${y}${mo}${da}`
-}
-
-function yyyymmddRelatorioValido(yyyymmdd: string): boolean {
-  if (!/^\d{8}$/.test(yyyymmdd)) return false
-  const y = Number(yyyymmdd.slice(0, 4))
-  const mo = Number(yyyymmdd.slice(4, 6))
-  const da = Number(yyyymmdd.slice(6, 8))
-  if (mo < 1 || mo > 12 || da < 1 || da > 31) return false
-  const d = new Date(y, mo - 1, da)
-  return d.getFullYear() === y && d.getMonth() === mo - 1 && d.getDate() === da
-}
-
-/**
- * Número oficial de relatório de serviço: AAAAMMDD-NNN
- * — data (8 dígitos ISO) + ordem dentro desse dia (001, 002…). Vários clientes no mesmo dia: 001, 002…
- */
-function parseRelatorioServicoNumeroDataSeq(numero: string): { yyyymmdd: string; seq: number } | null {
-  const m = (numero || '').trim().match(/^(\d{8})-(\d{1,4})$/i)
-  if (!m) return null
-  const yyyymmdd = m[1]
-  if (!yyyymmddRelatorioValido(yyyymmdd)) return null
-  const seq = parseInt(m[2], 10)
-  if (!Number.isFinite(seq) || seq < 1) return null
-  return { yyyymmdd, seq }
-}
+/* numero → modules/relatorio-servico */
 
 /** Item de cobrança no fechamento → app/modules/fechamento (FechamentoItem) */
 
@@ -2651,16 +2456,7 @@ type Cliente = {
   tipoCliente?: 'fisica' | 'juridica'
 }
 
-function findClienteByRelatorio(clientes: Cliente[], rel: RelatorioServico): Cliente | undefined {
-  const cid = (rel.clienteId || '').trim()
-  if (cid) {
-    const byId = clientes.find((c) => c.id === cid)
-    if (byId) return byId
-  }
-  const nome = (rel.cliente || '').trim().toLowerCase()
-  if (!nome) return undefined
-  return clientes.find((c) => (c.nomeEmpresa || '').trim().toLowerCase() === nome)
-}
+/* findCliente → modules/relatorio-servico */
 
 function nomeGrupoTarifaServico(servicoGrupos: ServicoCadastroGrupo[], grupoId?: string): string {
   if (!grupoId) return ''
@@ -2685,42 +2481,7 @@ function cmpClienteRelatorioFinanceiro(a: string, b: string): number {
   return (a || '').localeCompare(b || '', undefined, { sensitivity: 'base', numeric: true })
 }
 
-function normalizeOsNumeroRelatorio(numero: string | undefined | null): string {
-  return String(numero ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '')
-}
-
-/** Relatório com fechamento guardado na Biblioteca (pode ainda estar em aberto na lista principal). */
-function relatorioEstaNaBibliotecaArquivo(
-  r: RelatorioServico,
-  fechamentosGuardadosBibliotecaIds: string[]
-): boolean {
-  return fechamentosGuardadosBibliotecaIds.includes(r.id)
-}
-
-/**
- * Sai da pasta «Relatório de Serviço» só quando está na Biblioteca E «Serviço concluído».
- * Na Biblioteca sem concluir (ex.: fechamento gravado) continua visível na lista.
- */
-function relatorioSaiDaListaPrincipalRelatorios(
-  r: RelatorioServico,
-  fechamentosGuardadosBibliotecaIds: string[]
-): boolean {
-  if (!r.servicoConcluido) return false
-  return relatorioEstaNaBibliotecaArquivo(r, fechamentosGuardadosBibliotecaIds)
-}
-
-/** Relatórios ainda visíveis no separador «Relatório de Serviço». */
-function relatoriosServicoForaDaBiblioteca(
-  relatoriosServico: RelatorioServico[],
-  fechamentosGuardadosBibliotecaIds: string[]
-): RelatorioServico[] {
-  return relatoriosServico.filter(
-    (r) => !relatorioSaiDaListaPrincipalRelatorios(r, fechamentosGuardadosBibliotecaIds)
-  )
-}
+/* lista-bib → modules/relatorio-servico */
 
 function classNameResumoCobrancaPorFase(fase: 'laranja' | 'azul' | 'verde' | 'biblioteca'): string {
   if (fase === 'biblioteca') return 'relatorio-resumo-cobranca-wrap--biblioteca'

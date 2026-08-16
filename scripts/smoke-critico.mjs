@@ -38,6 +38,7 @@ const critical = [
   'app/modules/relatorios-especiais/index.ts',
   'app/modules/comprovantes/index.ts',
   'app/modules/equipamentos/index.ts',
+  'app/modules/relatorio-servico/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -261,6 +262,31 @@ try {
   }
 } catch (e) {
   fail(`módulo equipamentos: ${e.message}`)
+}
+
+// 3j) Módulo relatório de serviço (10.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/relatorio-servico/index.ts'), 'utf8')
+  if (
+    idx.includes('sortDiasTrabalhoCronologicamente') &&
+    idx.includes('parseRelatorioServicoNumeroDataSeq') &&
+    idx.includes('relatoriosServicoForaDaBiblioteca')
+  ) {
+    ok('módulo relatorio-servico exporta dias/número/lista')
+  } else {
+    fail('módulo relatorio-servico incompleto (index.ts)')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (
+    nma.includes("from './modules/relatorio-servico'") ||
+    nma.includes('from "./modules/relatorio-servico"')
+  ) {
+    ok('NonatoMainApp importa app/modules/relatorio-servico')
+  } else {
+    fail('NonatoMainApp não importa o módulo relatorio-servico')
+  }
+} catch (e) {
+  fail(`módulo relatorio-servico: ${e.message}`)
 }
 
 // 4) i18n
