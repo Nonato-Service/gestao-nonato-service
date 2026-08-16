@@ -10778,7 +10778,7 @@ export default function Dashboard() {
     })
     return () => cancelAnimationFrame(raf)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- atualizarClientesDevedores usa estado atual; não incluir na deps (identidade instável).
-  }, [faturasPecas, clientes, relatoriosServico, relatoriosEspeciais, fechamentoFluxoFinanceiroPorRelatorioId])
+  }, [faturasPecas, clientes, relatoriosServico, relatoriosEspeciais, fechamentoFluxoFinanceiroPorRelatorioId, fechamentosRelatorios, fechamentoIvaPorRelatorioId, fechamentoItensOmitidosPorRelatorio])
 
   useEffect(() => {
     if (!fechamentosGuardadosBibliotecaIds.length) return
@@ -19709,6 +19709,21 @@ export default function Dashboard() {
       }
       const devedorRel = devedoresMap.get(clienteId)!
       devedorRel.relatoriosNaoPagoCount = rels.length
+      let valorFechamentosNaoPago = 0
+      for (const rel of rels) {
+        const itensRaw = fechamentosRelatorios[rel.id]
+        if (!Array.isArray(itensRaw) || itensRaw.length === 0) continue
+        const omit = new Set(fechamentoItensOmitidosPorRelatorio[rel.id] || [])
+        const itensVis = itensRaw.filter((i) => !omit.has(i.id))
+        valorFechamentosNaoPago += totaisFechamentoLiquidoComIva(
+          itensVis,
+          fechamentoIvaPorRelatorioId[rel.id]
+        ).comIva
+      }
+      if (valorFechamentosNaoPago > 0) {
+        devedorRel.totalDevido += valorFechamentosNaoPago
+        devedorRel.saldoPendente += valorFechamentosNaoPago
+      }
       const maisRecente = [...rels].sort((a, b) => {
         const ta = relatorioTsParaOrdenar(a)
         const tb = relatorioTsParaOrdenar(b)
@@ -40680,6 +40695,21 @@ export default function Dashboard() {
         const clientesDevedoresCount = clientes.filter((c) => isClienteMarcadoDevedor(c)).length
         const clientesHubLocale = localeForLongDatetime(selectedLanguage)
         const clientesHubT = safeT as Record<string, string | undefined>
+        const relatoriosDetalheCliente = (() => {
+          if (!clientesParaDetalhe[0]) return [] as RelatorioServico[]
+          const cid = clientesParaDetalhe[0].id
+          const cnome = String(clientesParaDetalhe[0].nomeEmpresa ?? '')
+          const matchCli = (r: { clienteId?: string; cliente?: string }) =>
+            String(r.clienteId ?? '').trim() === cid ||
+            resolverClienteIdRelatorioFlexivel(r, clientes) === cid ||
+            nomesClienteCorrespondem(String(r.cliente ?? ''), cnome)
+          const serv = relatoriosServico.filter(matchCli)
+          const ids = new Set(serv.map((r) => r.id))
+          const esp = relatoriosEspeciais
+            .filter((r) => r?.id && !ids.has(r.id) && matchCli({ clienteId: r.clienteId, cliente: r.cliente }))
+            .map((r) => adaptRelatorioEspecialParaFechamentoShape(r) as RelatorioServico)
+          return [...serv, ...esp]
+        })()
         
         return (
           <div
@@ -41410,29 +41440,13 @@ export default function Dashboard() {
                         selectedLanguage +
                         clientesParaDetalhe[0].id +
                         '-' +
-                        relatoriosServico.filter(
-                          (r) =>
-                            r.clienteId === clientesParaDetalhe[0].id ||
-                            resolverClienteIdRelatorioFlexivel(r, clientes) === clientesParaDetalhe[0].id ||
-                            nomesClienteCorrespondem(
-                              String(r.cliente ?? ''),
-                              String(clientesParaDetalhe[0].nomeEmpresa ?? '')
-                            )
-                        ).length
+                        relatoriosDetalheCliente.length
                       }
                       cliente={clientesParaDetalhe[0]}
                       language={selectedLanguage}
                       equipamentosArmazem={equipamentos}
                       faturasPecas={faturasPecas}
-                      relatoriosServico={relatoriosServico.filter(
-                        (r) =>
-                          r.clienteId === clientesParaDetalhe[0].id ||
-                          resolverClienteIdRelatorioFlexivel(r, clientes) === clientesParaDetalhe[0].id ||
-                          nomesClienteCorrespondem(
-                            String(r.cliente ?? ''),
-                            String(clientesParaDetalhe[0].nomeEmpresa ?? '')
-                          )
-                      )}
+                      relatoriosServico={relatoriosDetalheCliente}
                       fechamentosGuardadosBibliotecaIds={fechamentosGuardadosBibliotecaIds}
                       fechamentosRelatorios={fechamentosRelatorios}
                       fechamentoFluxoFinanceiroPorRelatorioId={fechamentoFluxoFinanceiroPorRelatorioId}
