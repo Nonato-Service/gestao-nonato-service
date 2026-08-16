@@ -1,13 +1,29 @@
-/**
- * @deprecated Preferir `app/modules/orcamentos` — reexport de compatibilidade.
- */
+/** Módulo Orçamentos — workflow, equipamento/pedidos, numeração avulsa, rascunho e imagens. */
+
+export { chaveClienteOrcamento } from './chave'
+
+export type {
+  OrcamentoWorkflowStatus,
+  PedidoSeparacaoItem,
+  PedidoSeparacaoRef,
+  OrcamentoWorkflowOrc,
+} from './workflow'
+export {
+  orcamentoAguardandoConfirmacaoCliente,
+  orcamentoPedidoConfirmado,
+  orcamentoMercadoriaRecebida,
+  criarPedidoSeparacaoFromOrcamento,
+  pedidoSeparacaoJaExiste,
+  notifyEquipamentoOrcamentosChanged,
+} from './workflow'
+
 export type {
   EquipamentoArmazemRef,
   EquipamentoClienteRef,
   PedidoOrcamentoRef,
   PedidoAvulsoRef,
   OrcamentoGeradoRef,
-} from '../modules/orcamentos/equipamento'
+} from './equipamento'
 export {
   resolverChaveEquipamentoCliente,
   equipamentoCorrespondeChave,
@@ -49,4 +65,33 @@ export {
   rotuloEquipamentoOrcamentoGerado,
   mergeOrcamentosGeradosArrays,
   enrichOrcamentosGeradosComPedidosAvulsos,
-} from '../modules/orcamentos/equipamento'
+} from './equipamento'
+
+export type { OrcamentoAvulsoNumeroRef } from './numeroAvulso'
+export {
+  parseNumeroOrcamentoAvulsoSequencial,
+  dataIsoParaDiaAnoOrcamento,
+  gerarProximoNumeroOrcamentoAvulso,
+  resolverNumeroOrcamentoAvulsoAoSalvar,
+  snapshotDadosClienteOrcamentoAvulso,
+} from './numeroAvulso'
+
+export type {
+  OrcamentoAvulsoTipoRascunho,
+  OrcamentoAvulsoItemRascunho,
+  OrcamentoAvulsoRascunhoPersist,
+} from './rascunhoAvulso'
+export {
+  ORCAMENTO_AVULSO_RASCUNHO_LS,
+  criarOrcamentoAvulsoRascunhoVazio,
+  lerOrcamentoAvulsoRascunhoSession,
+  gravarOrcamentoAvulsoRascunhoSession,
+  limparOrcamentoAvulsoRascunhoSession,
+} from './rascunhoAvulso'
+
+export {
+  ORCAMENTO_PECA_IMAGEM_PADRAO_SRC,
+  resolveImagemItemOrcamentoParaGravar,
+  resolveImagemItemOrcamentoDisplay,
+  itemOrcamentoDeveMostrarImagem,
+} from './imagemItem'

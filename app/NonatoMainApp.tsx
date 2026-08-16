@@ -74,15 +74,44 @@ import {
   resolvePecaBibliotecaImagemSrcForDisplay,
   resolvePecaBibliotecaCapaSrcForDisplay,
   pecaBibliotecaTemCapaOuFotoVisivel,
-} from './lib/pecaBibliotecaImagemStats'
-import {
   BIBLIOTECA_AVISO_POLL_MS,
   formatBibliotecaNovidadesMsg,
   gravarUltimoServidorTotalAvisado,
   lerUltimoServidorTotalAvisado,
   pedirPermissaoAvisoBibliotecaSeNecessario,
   showBibliotecaBrowserNotification,
-} from './lib/bibliotecaAviso'
+  resolverClienteIdRelatorioFlexivel,
+  recuperarRelatoriosServicoPerdidos,
+  mergeRelatoriosServicoDeferServerLocal,
+  relatoriosServicoOrfaosNaBiblioteca,
+  agruparRelatoriosOrfaosPorNome,
+  nomesClienteCorrespondem,
+  isPecasBibliotecaCatalogIncomplete,
+  pecasBibliotecaMinExpected,
+  pecasBibliotecaMeetsServerTotal,
+  getCachedPecasBibliotecaServerTotal,
+  setCachedPecasBibliotecaServerTotal,
+  isPecasBibliotecaSyncInFlight,
+  isBibliotecaMobileDevice,
+  shouldDeferPecasBibliotecaImageHydration,
+  ehImportacaoPendenteStrict,
+  sanitizarPecaBibliotecaImportacaoFlag,
+  normalizarUltimaSelecaoBiblioteca,
+  preencherPecaBibliotecaComUltimaCategoriaSeVazio,
+  resolverIdEdicaoPecaBiblioteca,
+  pecaEntraNaNumeracaoSequenciaBiblioteca,
+  chaveSequenciaNumeroPecaBiblioteca,
+  formatNumeroSequenciaPecaBiblioteca,
+  parseNumeroSequenciaPecaBiblioteca,
+  proximoNumeroSequenciaPecaBiblioteca,
+  garantirNumerosSequenciaPecaBiblioteca,
+  chavePecaBibliotecaSequenciaPreview,
+  compararPecasBibliotecaPorNumeroSequencia,
+  ordenarPecasBibliotecaParaExibicao,
+  atribuirNumerosSequenciaNovasPecas,
+  resolverNumeroSequenciaAoSalvarPecaBiblioteca,
+  rotuloNumeroSequenciaPecaBiblioteca,
+} from './modules/biblioteca'
 import {
   mergeSidebarButtonsDeferLocal,
   repairSidebarButtonsFromCatalog,
@@ -197,14 +226,6 @@ import {
   type EquipamentoArmazemIdLookup,
   type EquipamentoArmazemVendidoInfo,
 } from './lib/relatorioServicoEquipamentos'
-import {
-  resolverClienteIdRelatorioFlexivel,
-  recuperarRelatoriosServicoPerdidos,
-  mergeRelatoriosServicoDeferServerLocal,
-  relatoriosServicoOrfaosNaBiblioteca,
-  agruparRelatoriosOrfaosPorNome,
-  nomesClienteCorrespondem,
-} from './lib/bibliotecaRelatoriosRecovery'
 import {
   coletarIdsRelatoriosClienteParaExclusao,
   isClienteBibliotecaOrfaos,
@@ -350,7 +371,25 @@ import {
   pedidoSeparacaoJaExiste,
   notifyEquipamentoOrcamentosChanged,
   type OrcamentoWorkflowOrc,
-} from './lib/orcamentoWorkflow'
+  enrichOrcamentosGeradosComPedidosAvulsos,
+  gerarProximoCodigoPedidoRelatorio,
+  mergeOrcamentosGeradosArrays,
+  aprovarPedidosOrcamentoRelatorio,
+  aprovarOrcamentosGeradosRelatorio,
+  type PedidoOrcamentoRef,
+  type PedidoAvulsoRef,
+  gerarProximoNumeroOrcamentoAvulso,
+  resolverNumeroOrcamentoAvulsoAoSalvar,
+  snapshotDadosClienteOrcamentoAvulso,
+  criarOrcamentoAvulsoRascunhoVazio,
+  lerOrcamentoAvulsoRascunhoSession,
+  gravarOrcamentoAvulsoRascunhoSession,
+  limparOrcamentoAvulsoRascunhoSession,
+  type OrcamentoAvulsoRascunhoPersist,
+  resolveImagemItemOrcamentoParaGravar,
+  resolveImagemItemOrcamentoDisplay,
+  itemOrcamentoDeveMostrarImagem,
+} from './modules/orcamentos'
 import { ClienteEquipamentoHistoricoPanel } from './components/ClienteEquipamentoHistoricoPanel'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
 import {
@@ -386,14 +425,6 @@ import {
   readDeletedIdsFromLocalStorage,
 } from './lib/relatorioEspecialDeleted'
 import { minutosPausaOuAlmocoDia } from './lib/relatorioEspecialCalculos'
-import {
-  isPecasBibliotecaCatalogIncomplete,
-  pecasBibliotecaMinExpected,
-  pecasBibliotecaMeetsServerTotal,
-  getCachedPecasBibliotecaServerTotal,
-  setCachedPecasBibliotecaServerTotal,
-} from './lib/pecasBibliotecaCompleteness'
-import { isPecasBibliotecaSyncInFlight, isBibliotecaMobileDevice, shouldDeferPecasBibliotecaImageHydration } from './lib/pecasBibliotecaSyncCoordinator'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
 import { PdfModeloPickerField } from './components/PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from './lib/pdfModelStorage'
@@ -409,14 +440,6 @@ import {
   resolverNumeroEquipamentoPdf,
   resolverSerieEquipamentoPdf,
 } from './lib/orcamentoPdfPro'
-import {
-  enrichOrcamentosGeradosComPedidosAvulsos,
-  gerarProximoCodigoPedidoRelatorio,
-  mergeOrcamentosGeradosArrays,
-  aprovarPedidosOrcamentoRelatorio,
-  aprovarOrcamentosGeradosRelatorio,
-} from './lib/clienteEquipamentoOrcamentos'
-import type { PedidoOrcamentoRef, PedidoAvulsoRef } from './lib/clienteEquipamentoOrcamentos'
 import type { PedidoAvulsoGuardado } from './components/PedidoOrcamentosAvulsoContent'
 import { ClienteGpsNavButton } from './components/ClienteGpsNavButton'
 import { TEMPLATE_SERVICOS_PADRAO } from './lib/servicosCadastroUtils'
@@ -625,245 +648,7 @@ function pecaPassaBuscaBibliotecaTexto(
   return pecaBibliotecaMatchesBuscaCompleta(peca, q)
 }
 
-/** Imagem gravada no item do orçamento (só foto real da peça / upload manual — não o logo padrão). */
-function resolveImagemItemOrcamentoParaGravar(
-  item: { imagem?: string; pecaId?: string },
-  pecasBiblioteca: PecaBiblioteca[]
-): string {
-  const imgSalva = typeof item.imagem === 'string' ? item.imagem.trim() : ''
-  if (pecaBibliotecaTemImagemPropria(imgSalva) && imgSalva !== PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC) return imgSalva
-  if (item.pecaId) {
-    const peca = pecasBiblioteca.find((p) => p.id === item.pecaId)
-    const imgPeca = typeof peca?.imagem === 'string' ? peca.imagem.trim() : ''
-    if (pecaBibliotecaTemImagemPropria(imgPeca) && imgPeca !== PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC) return imgPeca
-  }
-  return imgSalva
-}
-
-/** Src para <img> na UI/PDF do orçamento (inclui logo padrão quando a peça da biblioteca não tem foto). */
-function resolveImagemItemOrcamentoDisplay(
-  item: { imagem?: string; pecaId?: string },
-  pecasBiblioteca: PecaBiblioteca[]
-): string {
-  const gravada = resolveImagemItemOrcamentoParaGravar(item, pecasBiblioteca)
-  if (pecaBibliotecaTemImagemPropria(gravada)) return gravada
-  if (item.pecaId) return PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC
-  return ''
-}
-
-function itemOrcamentoDeveMostrarImagem(item: { imagem?: string; pecaId?: string }): boolean {
-  return Boolean(
-    pecaBibliotecaTemImagemPropria(item.imagem) ||
-    item.pecaId ||
-    (typeof item.imagem === 'string' && item.imagem.trim() !== '')
-  )
-}
-
-type OrcamentoAvulsoNumeroRef = { numeroOrcamento: string; data?: string; dataCriacao?: string; id?: string }
-
-/** Formato: DD/AAAA (1.º do dia) ou DD-N/AAAA (2.º, 3.º… no mesmo dia). */
-function parseNumeroOrcamentoAvulsoSequencial(num: string): { day: string; year: string; seq: number | null } | null {
-  const t = (num || '').trim()
-  const comSeq = /^(\d{1,2})-(\d+)\/(\d{4})$/.exec(t)
-  if (comSeq) {
-    return { day: comSeq[1].padStart(2, '0'), year: comSeq[3], seq: parseInt(comSeq[2], 10) }
-  }
-  const base = /^(\d{1,2})\/(\d{4})$/.exec(t)
-  if (base) return { day: base[1].padStart(2, '0'), year: base[2], seq: null }
-  return null
-}
-
-function dataIsoParaDiaAnoOrcamento(dataIso: string): { day: string; year: string } | null {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((dataIso || '').trim())
-  if (!m) return null
-  return { day: m[3], year: m[1] }
-}
-
-function gerarProximoNumeroOrcamentoAvulso(
-  dataIso: string,
-  orcamentosExistentes: OrcamentoAvulsoNumeroRef[],
-  excluirId?: string
-): string {
-  const da = dataIsoParaDiaAnoOrcamento(dataIso)
-  const now = new Date()
-  const day = da?.day ?? String(now.getDate()).padStart(2, '0')
-  const year = da?.year ?? String(now.getFullYear())
-
-  let hasBase = false
-  const seqs = new Set<number>()
-
-  for (const o of orcamentosExistentes) {
-    if (excluirId && o.id === excluirId) continue
-    const parsed = parseNumeroOrcamentoAvulsoSequencial(o.numeroOrcamento)
-    const diaData = o.data ? dataIsoParaDiaAnoOrcamento(o.data) : null
-    const diaCriacao = o.dataCriacao ? dataIsoParaDiaAnoOrcamento(o.dataCriacao.slice(0, 10)) : null
-    const mesmoDia =
-      (parsed && parsed.day === day && parsed.year === year) ||
-      (diaData && diaData.day === day && diaData.year === year) ||
-      (diaCriacao && diaCriacao.day === day && diaCriacao.year === year)
-
-    if (!mesmoDia) continue
-
-    if (parsed && parsed.day === day && parsed.year === year) {
-      if (parsed.seq === null) hasBase = true
-      else seqs.add(parsed.seq)
-    } else {
-      hasBase = true
-    }
-  }
-
-  if (!hasBase) return `${day}/${year}`
-
-  let nextSeq = 1
-  while (seqs.has(nextSeq)) nextSeq++
-  return `${day}-${nextSeq}/${year}`
-}
-
-function resolverNumeroOrcamentoAvulsoAoSalvar(
-  dataIso: string,
-  numeroAtual: string,
-  orcamentosExistentes: OrcamentoAvulsoNumeroRef[],
-  excluirId?: string
-): string {
-  let num =
-    (numeroAtual || '').trim() ||
-    gerarProximoNumeroOrcamentoAvulso(dataIso, orcamentosExistentes, excluirId)
-
-  const outros = orcamentosExistentes.filter((o) => o.id !== excluirId)
-  while (outros.some((o) => (o.numeroOrcamento || '').trim() === num)) {
-    num = gerarProximoNumeroOrcamentoAvulso(
-      dataIso,
-      [...outros, { numeroOrcamento: num, data: dataIso }],
-      excluirId
-    )
-  }
-  return num
-}
-
-function snapshotDadosClienteOrcamentoAvulso(origem: unknown): Record<string, string> {
-  const c = (origem || {}) as Record<string, unknown>
-  return {
-    nomeEmpresa: String(c.nomeEmpresa || c.cliente || '').trim(),
-    morada: String(c.morada || '').trim(),
-    localidade: String(c.localidade || '').trim(),
-    conselho: String(c.conselho || c.cidade || '').trim(),
-    pais: String(c.pais || '').trim(),
-    codigoPostal: String(c.codigoPostal || '').trim(),
-    freguesia: String(c.freguesia || '').trim(),
-    numeroContribuicaoFiscal: String(c.numeroContribuicaoFiscal || '').trim(),
-    telefones: String(c.telefones || c.telefone || '').trim(),
-    email: String(c.email || '').trim(),
-    contato: String(c.contato || '').trim(),
-    numeroRelatorio: String(c.numeroRelatorio || c.numero || '').trim(),
-  }
-}
-
-const ORCAMENTO_AVULSO_RASCUNHO_LS = 'nonato-orcamento-avulso-rascunho'
-
-type OrcamentoAvulsoTipoRascunho =
-  | 'dados-fixos'
-  | 'cliente-cadastrado'
-  | 'orcamento-relatorio'
-  | 'cliente-prioritario-fixo'
-  | 'cliente-prioritario-valores'
-  | 'orcamentos-gerados'
-
-type OrcamentoAvulsoItemRascunho = {
-  id?: string
-  descricao: string
-  quantidade: number
-  precoUnitario: number
-  total: number
-  codigo?: string
-  tipoItem?: 'sem-valor' | 'com-valor'
-  iva?: number
-  pecaId?: string
-  imagem?: string
-  incluirObservacao?: boolean
-  observacao?: string
-}
-
-export type OrcamentoAvulsoRascunhoPersist = {
-  v: 1
-  dadosOrcamento: {
-    numeroOrcamento: string
-    data: string
-    validade: string
-    descricao: string
-    observacoes: string
-    itens: OrcamentoAvulsoItemRascunho[]
-  }
-  tipoOrcamento: OrcamentoAvulsoTipoRascunho
-  clienteSelecionadoId: string | null
-  relatorioSelecionadoId: string | null
-  clienteCadastroPrioritarioFixoId: string | null
-  numeroOrcamentoManual: boolean
-  buscaCliente: string
-  buscaRelatorio: string
-  buscaClientePrioritarioFixo: string
-}
-
-function criarOrcamentoAvulsoRascunhoVazio(): OrcamentoAvulsoRascunhoPersist {
-  return {
-    v: 1,
-    dadosOrcamento: {
-      numeroOrcamento: '',
-      data: new Date().toISOString().split('T')[0],
-      validade: '',
-      descricao: '',
-      observacoes: '',
-      itens: [],
-    },
-    tipoOrcamento: 'dados-fixos',
-    clienteSelecionadoId: null,
-    relatorioSelecionadoId: null,
-    clienteCadastroPrioritarioFixoId: null,
-    numeroOrcamentoManual: false,
-    buscaCliente: '',
-    buscaRelatorio: '',
-    buscaClientePrioritarioFixo: '',
-  }
-}
-
-function lerOrcamentoAvulsoRascunhoSession(): OrcamentoAvulsoRascunhoPersist | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = sessionStorage.getItem(ORCAMENTO_AVULSO_RASCUNHO_LS)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as Partial<OrcamentoAvulsoRascunhoPersist>
-    if (!parsed || parsed.v !== 1 || !parsed.dadosOrcamento) return null
-    const base = criarOrcamentoAvulsoRascunhoVazio()
-    return {
-      ...base,
-      ...parsed,
-      dadosOrcamento: {
-        ...base.dadosOrcamento,
-        ...parsed.dadosOrcamento,
-        itens: Array.isArray(parsed.dadosOrcamento.itens) ? parsed.dadosOrcamento.itens : [],
-      },
-    }
-  } catch {
-    return null
-  }
-}
-
-function gravarOrcamentoAvulsoRascunhoSession(rascunho: OrcamentoAvulsoRascunhoPersist) {
-  if (typeof window === 'undefined') return
-  try {
-    sessionStorage.setItem(ORCAMENTO_AVULSO_RASCUNHO_LS, JSON.stringify(rascunho))
-  } catch (err) {
-    console.warn('Não foi possível guardar rascunho do orçamento avulso:', err)
-  }
-}
-
-function limparOrcamentoAvulsoRascunhoSession() {
-  if (typeof window === 'undefined') return
-  try {
-    sessionStorage.removeItem(ORCAMENTO_AVULSO_RASCUNHO_LS)
-  } catch {
-    /* ignore */
-  }
-}
+/* Helpers orçamento avulso/imagem → app/modules/orcamentos */
 
 /** Restaura manuais no localStorage e no IndexedDB a partir de um backup JSON (string JSON ou objeto). */
 async function restoreManuaisFamiliasGruposFromBackupPayload(raw: unknown): Promise<void> {
@@ -1950,99 +1735,7 @@ type RegraClassificacaoPeca = {
   createdAt: string
 }
 
-/** Categoria/subcategoria válidas para manter no próximo cadastro de peça (ex.: mesma categoria em sequência). */
-function normalizarUltimaSelecaoBiblioteca(
-  form: Pick<PecaBiblioteca, 'categoriaId' | 'subcategoriaId' | 'categoria' | 'subcategoria'>,
-  categorias: CategoriaPeca[],
-  subcategorias: SubcategoriaPeca[]
-): { categoriaId: string; subcategoriaId: string } {
-  let catId =
-    form.categoriaId && categorias.some((c) => c.id === form.categoriaId) ? form.categoriaId : ''
-
-  if (!catId && form.categoria?.trim()) {
-    const alvo = form.categoria.trim().toLowerCase()
-    const porNome = categorias.find((c) => (c.nome || '').trim().toLowerCase() === alvo)
-    if (porNome) catId = porNome.id
-  }
-
-  let subId = ''
-  if (catId && form.subcategoriaId) {
-    const s = subcategorias.find((x) => x.id === form.subcategoriaId && x.categoriaId === catId)
-    if (s) subId = s.id
-  }
-
-  if (!subId && catId && form.subcategoria?.trim()) {
-    const alvo = form.subcategoria.trim().toLowerCase()
-    const porNomeSub = subcategorias.find(
-      (x) => x.categoriaId === catId && (x.nome || '').trim().toLowerCase() === alvo
-    )
-    if (porNomeSub) subId = porNomeSub.id
-  }
-
-  return { categoriaId: catId, subcategoriaId: subId }
-}
-
-/** Se a peça ainda não tem categoria válida (ex.: importação), aplica a última categoria/subcategoria usada para cadastro rápido em sequência. */
-function preencherPecaBibliotecaComUltimaCategoriaSeVazio(
-  peca: PecaBiblioteca,
-  ultimoCatId: string,
-  ultimoSubId: string,
-  categorias: CategoriaPeca[],
-  subcategorias: SubcategoriaPeca[]
-): PecaBiblioteca {
-  const idValido = peca.categoriaId && categorias.some((c) => c.id === peca.categoriaId)
-  if (idValido) return peca
-  if (!ultimoCatId || !categorias.some((c) => c.id === ultimoCatId)) return peca
-  const cat = categorias.find((c) => c.id === ultimoCatId)!
-  let subId = ''
-  let subNome = ''
-  if (ultimoSubId && subcategorias.some((s) => s.id === ultimoSubId && s.categoriaId === ultimoCatId)) {
-    subId = ultimoSubId
-    subNome = subcategorias.find((s) => s.id === ultimoSubId)?.nome || ''
-  }
-  return {
-    ...peca,
-    categoriaId: ultimoCatId,
-    categoria: cat.nome || peca.categoria || '',
-    subcategoriaId: subId,
-    subcategoria: subNome,
-  }
-}
-
-/** Garante atualização da peça certa ao gravar (evita duplicar se `editingPecaBiblioteca` se perdeu mas o formulário ainda tem `id`). */
-function resolverIdEdicaoPecaBiblioteca(
-  form: PecaBiblioteca,
-  editing: PecaBiblioteca | null,
-  todas: PecaBiblioteca[]
-): string | null {
-  if (editing?.id) return editing.id
-  const fid = (form.id || '').trim()
-  if (fid && todas.some((p) => p.id === fid)) return fid
-  const cod = (form.codigo || '').trim().toLowerCase()
-  const nome = (form.nome || '').trim().toLowerCase()
-  if (cod) {
-    const pendentes = todas.filter((p) => ehImportacaoPendenteStrict(p))
-    const porCodigo = pendentes.filter((p) => (p.codigo || '').trim().toLowerCase() === cod)
-    if (porCodigo.length === 1) return porCodigo[0].id
-    if (porCodigo.length > 1 && nome) {
-      const porNome = porCodigo.filter((p) => (p.nome || '').trim().toLowerCase() === nome)
-      if (porNome.length === 1) return porNome[0].id
-    }
-  }
-  return null
-}
-
-/** Só conta como pendente valores explicitamente verdadeiros (evita strings/JSON estranhos). */
-function ehImportacaoPendenteStrict(peca: PecaBiblioteca): boolean {
-  const v = peca.importacaoPendente as unknown
-  return v === true || v === 'true' || v === 1 || v === '1'
-}
-
-function sanitizarPecaBibliotecaImportacaoFlag(peca: PecaBiblioteca): PecaBiblioteca {
-  const img = typeof peca.imagem === 'string' ? peca.imagem.trim() : ''
-  const imagem = img === PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC ? '' : peca.imagem
-  return { ...peca, imagem, importacaoPendente: ehImportacaoPendenteStrict(peca) }
-}
+/* Cadastro rápido biblioteca → app/modules/biblioteca */
 
 const BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY = 'nonato-biblioteca-pecas-ultima-selecao'
 const NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY = 'nonato-peca-lookup-url-template'
@@ -2085,220 +1778,7 @@ function pickBestCatalogRawFromClipboard(html: string, plain: string): { raw: st
   return { raw: p, plainFallback: p }
 }
 
-const BIBLIOTECA_SEM_GRUPO_SEQUENCIA_KEY = '__sem_grupo__'
-
-type CategoriaRefSequencia = Pick<CategoriaPeca, 'id' | 'nome'>
-
-/** Peças na fila amarela (importação pendente) não entram na numeração do catálogo. */
-function pecaEntraNaNumeracaoSequenciaBiblioteca(p: PecaBiblioteca): boolean {
-  return !ehImportacaoPendenteStrict(p)
-}
-
-function resolverChaveSequenciaNumeroPecaBiblioteca(
-  p: Pick<PecaBiblioteca, 'categoriaId' | 'categoria' | 'importacaoPendente'>,
-  categorias?: CategoriaRefSequencia[]
-): string | null {
-  if (!pecaEntraNaNumeracaoSequenciaBiblioteca(p as PecaBiblioteca)) return null
-  let catId = String(p.categoriaId || '').trim()
-  if (!catId && p.categoria?.trim() && categorias?.length) {
-    const alvo = p.categoria.trim().toLowerCase()
-    const porNome = categorias.find((c) => (c.nome || '').trim().toLowerCase() === alvo)
-    if (porNome) catId = porNome.id
-  }
-  if (!catId) return BIBLIOTECA_SEM_GRUPO_SEQUENCIA_KEY
-  return catId
-}
-
-function chaveSequenciaNumeroPecaBiblioteca(
-  p: Pick<PecaBiblioteca, 'categoriaId' | 'subcategoriaId' | 'categoria' | 'importacaoPendente'>,
-  categorias?: CategoriaRefSequencia[]
-): string {
-  return resolverChaveSequenciaNumeroPecaBiblioteca(p, categorias) ?? BIBLIOTECA_SEM_GRUPO_SEQUENCIA_KEY
-}
-
-function formatNumeroSequenciaPecaBiblioteca(n: number): string {
-  if (!Number.isFinite(n) || n < 1) return '01'
-  if (n > 999) return String(n)
-  return String(n).padStart(n > 99 ? 3 : 2, '0')
-}
-
-function parseNumeroSequenciaPecaBiblioteca(raw: string | undefined | null): number {
-  const digits = String(raw || '').replace(/\D/g, '')
-  const n = parseInt(digits, 10)
-  return Number.isFinite(n) && n > 0 ? n : 0
-}
-
-function proximoNumeroSequenciaPecaBiblioteca(
-  categoriaId: string,
-  subcategoriaId: string,
-  pecas: PecaBiblioteca[],
-  excludeId?: string,
-  categorias?: CategoriaRefSequencia[]
-): string {
-  const key = chaveSequenciaNumeroPecaBiblioteca({ categoriaId, subcategoriaId }, categorias)
-  let count = 0
-  for (const p of pecas) {
-    if (excludeId && p.id === excludeId) continue
-    if (!pecaEntraNaNumeracaoSequenciaBiblioteca(p)) continue
-    if (chaveSequenciaNumeroPecaBiblioteca(p, categorias) !== key) continue
-    count++
-  }
-  return formatNumeroSequenciaPecaBiblioteca(count + 1)
-}
-
-function garantirNumerosSequenciaPecaBiblioteca(
-  pecas: PecaBiblioteca[],
-  categorias?: CategoriaRefSequencia[]
-): { lista: PecaBiblioteca[]; alterou: boolean } {
-  const grupos = new Map<string, PecaBiblioteca[]>()
-  for (const p of pecas) {
-    const k = resolverChaveSequenciaNumeroPecaBiblioteca(p, categorias)
-    if (k === null) continue
-    if (!grupos.has(k)) grupos.set(k, [])
-    grupos.get(k)!.push(p)
-  }
-  let alterou = false
-  const out = pecas.map((p) => ({ ...p }))
-  const byId = new Map(out.map((p) => [p.id, p]))
-
-  for (const [, list] of grupos) {
-    const ordenada = [...list].sort((a, b) => {
-      const dateCmp = String(a.dataCriacao || '').localeCompare(String(b.dataCriacao || ''))
-      if (dateCmp !== 0) return dateCmp
-      return String(a.nome || a.codigo || '').localeCompare(String(b.nome || b.codigo || ''), undefined, {
-        numeric: true,
-      })
-    })
-    ordenada.forEach((p, idx) => {
-      const fmt = formatNumeroSequenciaPecaBiblioteca(idx + 1)
-      const cur = byId.get(p.id)!
-      const atual = String(cur.numeroSequenciaGrupo ?? '').trim()
-      const atualFmt =
-        parseNumeroSequenciaPecaBiblioteca(atual) > 0
-          ? formatNumeroSequenciaPecaBiblioteca(parseNumeroSequenciaPecaBiblioteca(atual))
-          : ''
-      if (atualFmt !== fmt) {
-        cur.numeroSequenciaGrupo = fmt
-        alterou = true
-      }
-    })
-  }
-
-  for (const p of out) {
-    if (!pecaEntraNaNumeracaoSequenciaBiblioteca(p) && p.numeroSequenciaGrupo) {
-      byId.get(p.id)!.numeroSequenciaGrupo = ''
-      alterou = true
-    }
-  }
-
-  return { lista: out, alterou }
-}
-
-function chavePecaBibliotecaSequenciaPreview(p: { codigo?: string; nome?: string }): string {
-  const cod = String(p.codigo ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
-  if (cod) return cod
-  const nome = String(p.nome ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
-  return nome ? `n:${nome}` : ''
-}
-
-function indiceOrdemCategoriaPecaBiblioteca(
-  p: Pick<PecaBiblioteca, 'categoriaId'>,
-  categorias?: CategoriaRefSequencia[]
-): number {
-  const catId = String(p.categoriaId || '').trim()
-  if (!catId) return (categorias?.length ?? 0) + 1
-  if (!categorias?.length) return 0
-  const idx = categorias.findIndex((c) => c.id === catId)
-  return idx >= 0 ? idx : categorias.length
-}
-
-function compararPecasBibliotecaPorNumeroSequencia(
-  a: PecaBiblioteca,
-  b: PecaBiblioteca,
-  categorias?: CategoriaRefSequencia[]
-): number {
-  const ca = indiceOrdemCategoriaPecaBiblioteca(a, categorias)
-  const cb = indiceOrdemCategoriaPecaBiblioteca(b, categorias)
-  if (ca !== cb) return ca - cb
-
-  const na = parseNumeroSequenciaPecaBiblioteca(a.numeroSequenciaGrupo)
-  const nb = parseNumeroSequenciaPecaBiblioteca(b.numeroSequenciaGrupo)
-  if (na && nb && na !== nb) return na - nb
-  if (na && !nb) return -1
-  if (!na && nb) return 1
-  return String(a.nome || a.codigo || '').localeCompare(String(b.nome || b.codigo || ''), undefined, {
-    numeric: true,
-  })
-}
-
-function ordenarPecasBibliotecaParaExibicao(
-  pecas: PecaBiblioteca[],
-  categorias?: CategoriaRefSequencia[]
-): PecaBiblioteca[] {
-  return [...pecas].sort((a, b) => compararPecasBibliotecaPorNumeroSequencia(a, b, categorias))
-}
-
-function atribuirNumerosSequenciaNovasPecas(
-  novas: PecaBiblioteca[],
-  existentes: PecaBiblioteca[],
-  categorias?: CategoriaRefSequencia[]
-): PecaBiblioteca[] {
-  if (novas.length === 0) return novas
-  const merged = [
-    ...existentes,
-    ...novas.map((p) => ({ ...p, numeroSequenciaGrupo: '' })),
-  ]
-  const { lista } = garantirNumerosSequenciaPecaBiblioteca(merged, categorias)
-  const numeroPorChave = new Map<string, string>()
-  for (const p of lista) {
-    const k = p.id || chavePecaBibliotecaSequenciaPreview(p)
-    if (k && p.numeroSequenciaGrupo) numeroPorChave.set(k, p.numeroSequenciaGrupo)
-  }
-  return novas.map((p) => {
-    const k = p.id || chavePecaBibliotecaSequenciaPreview(p)
-    const num = k ? numeroPorChave.get(k) : undefined
-    return num ? { ...p, numeroSequenciaGrupo: num } : p
-  })
-}
-
-function resolverNumeroSequenciaAoSalvarPecaBiblioteca(
-  form: PecaBiblioteca,
-  pecas: PecaBiblioteca[],
-  editing?: PecaBiblioteca | null,
-  categorias?: CategoriaRefSequencia[]
-): string {
-  let gid = form.categoriaId || ''
-  if (!gid && form.categoria?.trim() && categorias?.length) {
-    const alvo = form.categoria.trim().toLowerCase()
-    const porNome = categorias.find((c) => (c.nome || '').trim().toLowerCase() === alvo)
-    if (porNome) gid = porNome.id
-  }
-  const sid = form.subcategoriaId || ''
-  if (editing) {
-    const oldKey = chaveSequenciaNumeroPecaBiblioteca(editing, categorias)
-    const newKey = chaveSequenciaNumeroPecaBiblioteca({ categoriaId: gid, subcategoriaId: sid }, categorias)
-    const existente = parseNumeroSequenciaPecaBiblioteca(editing.numeroSequenciaGrupo)
-    if (oldKey === newKey && existente > 0) {
-      return formatNumeroSequenciaPecaBiblioteca(existente)
-    }
-  }
-  return proximoNumeroSequenciaPecaBiblioteca(gid, sid, pecas, editing?.id, categorias)
-}
-
-function rotuloNumeroSequenciaPecaBiblioteca(
-  peca: Pick<PecaBiblioteca, 'numeroSequenciaGrupo' | 'categoriaId' | 'subcategoriaId' | 'categoria' | 'subcategoria'>,
-  categorias?: { id: string; nome: string }[],
-  subcategorias?: { id: string; nome: string }[]
-): string {
-  const num = String(peca.numeroSequenciaGrupo || '').trim()
-  if (!num) return ''
-  const cat =
-    peca.categoriaId && categorias
-      ? categorias.find((c) => c.id === peca.categoriaId)?.nome || peca.categoria
-      : peca.categoria
-  const grupo = String(cat || '').trim()
-  return grupo ? `${grupo} ${num}` : num
-}
+/* Numeração sequência biblioteca → app/modules/biblioteca */
 
 function NumeroSequenciaCirculo({
   numero,

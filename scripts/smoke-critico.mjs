@@ -33,6 +33,8 @@ const critical = [
   'app/modules/fechamento/index.ts',
   'app/modules/clientes/index.ts',
   'app/modules/financeiro/index.ts',
+  'app/modules/orcamentos/index.ts',
+  'app/modules/biblioteca/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -141,6 +143,50 @@ try {
   }
 } catch (e) {
   fail(`módulo financeiro: ${e.message}`)
+}
+
+// 3e) Módulo orçamentos (4.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/orcamentos/index.ts'), 'utf8')
+  if (
+    idx.includes('gerarProximoNumeroOrcamentoAvulso') &&
+    idx.includes('criarPedidoSeparacaoFromOrcamento') &&
+    idx.includes('mergeOrcamentosGeradosArrays')
+  ) {
+    ok('módulo orçamentos exporta workflow/avulso')
+  } else {
+    fail('módulo orçamentos incompleto (index.ts)')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/orcamentos'") || nma.includes('from "./modules/orcamentos"')) {
+    ok('NonatoMainApp importa app/modules/orcamentos')
+  } else {
+    fail('NonatoMainApp não importa o módulo orçamentos')
+  }
+} catch (e) {
+  fail(`módulo orçamentos: ${e.message}`)
+}
+
+// 3f) Módulo biblioteca (5.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/biblioteca/index.ts'), 'utf8')
+  if (
+    idx.includes('garantirNumerosSequenciaPecaBiblioteca') &&
+    idx.includes('mergePecasBibliotecaArrays') &&
+    idx.includes('isPecasBibliotecaCatalogIncomplete')
+  ) {
+    ok('módulo biblioteca exporta peças/sequência')
+  } else {
+    fail('módulo biblioteca incompleto (index.ts)')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/biblioteca'") || nma.includes('from "./modules/biblioteca"')) {
+    ok('NonatoMainApp importa app/modules/biblioteca')
+  } else {
+    fail('NonatoMainApp não importa o módulo biblioteca')
+  }
+} catch (e) {
+  fail(`módulo biblioteca: ${e.message}`)
 }
 
 // 4) i18n

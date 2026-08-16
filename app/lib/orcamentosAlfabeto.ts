@@ -1,6 +1,6 @@
 /**
- * @deprecated Preferir `app/modules/clientes` — reexport de compatibilidade.
- * Chave de orçamento permanece aqui (específica de orçamentos).
+ * @deprecated Preferir `app/modules/clientes` (alfabeto) e `app/modules/orcamentos` (chave).
+ * Reexport de compatibilidade.
  */
 export {
   ORCAMENTOS_ALFABETO_INDICE,
@@ -12,10 +12,4 @@ export {
   filtrarClientesPorLetraAlfabeto,
 } from '../modules/clientes/alfabeto'
 
-export function chaveClienteOrcamento(clienteId?: string, clienteNome?: string, fallbackId?: string): string {
-  const id = String(clienteId ?? '').trim()
-  if (id) return `id:${id}`
-  const nome = String(clienteNome ?? '').trim()
-  if (nome) return `nome:${nome.toLowerCase()}`
-  return `orc:${fallbackId || 'sem-cliente'}`
-}
+export { chaveClienteOrcamento } from '../modules/orcamentos/chave'
