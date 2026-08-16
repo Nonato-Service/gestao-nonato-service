@@ -51,13 +51,52 @@ export function buildMailtoUrl(opts: { to?: string; subject?: string; body?: str
   return q ? `mailto:${to}?${q}` : to ? `mailto:${to}` : 'mailto:'
 }
 
+/** Limite seguro para query string do WhatsApp (URLs muito longas falham em silêncio). */
+const WHATSAPP_TEXT_MAX = 1800
+
 export function buildWhatsAppUrl(opts: { telefone?: string; text?: string }): string {
   const tel = String(opts.telefone ?? '').replace(/\D/g, '')
-  const text = opts.text ?? ''
-  if (tel.length >= 9) {
-    return `https://wa.me/${tel}${text ? `?text=${encodeURIComponent(text)}` : ''}`
+  let text = String(opts.text ?? '')
+  if (text.length > WHATSAPP_TEXT_MAX) {
+    text = `${text.slice(0, WHATSAPP_TEXT_MAX - 1)}…`
   }
-  return `https://wa.me/${text ? `?text=${encodeURIComponent(text)}` : ''}`
+  // api.whatsapp.com é mais fiável que wa.me em PWA / browsers móveis
+  const q = new URLSearchParams()
+  if (tel.length >= 9) q.set('phone', tel)
+  if (text) q.set('text', text)
+  const qs = q.toString()
+  return qs ? `https://api.whatsapp.com/send?${qs}` : 'https://api.whatsapp.com/send'
+}
+
+/** Abre URL externa; devolve false só se não foi possível disparar a abertura. */
+export function abrirUrlExterna(url: string): boolean {
+  if (typeof window === 'undefined' || !url) return false
+  try {
+    const w = window.open(url, '_blank')
+    if (w) {
+      try {
+        w.opener = null
+      } catch {
+        /* ignorar */
+      }
+      return true
+    }
+  } catch {
+    /* continuar para fallback */
+  }
+  try {
+    const a = document.createElement('a')
+    a.href = url
+    a.target = '_blank'
+    a.rel = 'noopener noreferrer'
+    a.setAttribute('aria-hidden', 'true')
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    return true
+  } catch {
+    return false
+  }
 }
 
 export function findClienteParaEnvio(
@@ -87,11 +126,11 @@ export function findClienteParaEnvio(
 export function abrirEmailCliente(opts: { email?: string; subject?: string; body?: string }): boolean {
   const email = String(opts.email ?? '').trim()
   if (!email) return false
-  window.open(buildMailtoUrl({ to: email, subject: opts.subject, body: opts.body }), '_blank', 'noopener,noreferrer')
-  return true
+  return abrirUrlExterna(buildMailtoUrl({ to: email, subject: opts.subject, body: opts.body }))
 }
 
 export function abrirWhatsAppCliente(opts: { telefone?: string; text?: string }): boolean {
-  window.open(buildWhatsAppUrl(opts), '_blank', 'noopener,noreferrer')
-  return true
+  const tel = String(opts.telefone ?? '').replace(/\D/g, '')
+  if (tel.length < 9) return false
+  return abrirUrlExterna(buildWhatsAppUrl(opts))
 }

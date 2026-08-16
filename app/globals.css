@@ -8963,12 +8963,26 @@ button.clientes-alfa-letra--toggle:hover {
 .doc-envio-modal {
   width: min(720px, 100%);
   max-height: 92vh;
-  overflow: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background: #3a3a3a;
   border: 2px solid rgba(0, 200, 83, 0.35);
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.doc-envio-modal__head {
+  flex-shrink: 0;
+  padding-bottom: 4px;
+}
+
+.doc-envio-modal__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .doc-envio-modal__title {
@@ -8982,6 +8996,22 @@ button.clientes-alfa-letra--toggle:hover {
   color: #aaa;
   font-size: 13px;
   line-height: 1.45;
+}
+
+.doc-envio-modal__contacts {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.doc-envio-modal__field.is-destaque input {
+  border-color: #25d366;
+  box-shadow: 0 0 0 1px rgba(37, 211, 102, 0.25);
+}
+
+.doc-envio-modal__contacts > .doc-envio-modal__field:first-child.is-destaque input {
+  border-color: #0096ff;
+  box-shadow: 0 0 0 1px rgba(0, 150, 255, 0.25);
 }
 
 .doc-envio-modal__section-label {
@@ -9098,10 +9128,20 @@ button.clientes-alfa-letra--toggle:hover {
   align-items: center;
 }
 
+.doc-envio-modal__actions--sticky {
+  flex-shrink: 0;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #444;
+  background: #3a3a3a;
+  z-index: 2;
+}
+
 .doc-envio-modal__actions-right {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  justify-content: flex-end;
 }
 
 .doc-envio-modal__btn {
@@ -9130,10 +9170,20 @@ button.clientes-alfa-letra--toggle:hover {
   color: #0096ff;
 }
 
+.doc-envio-modal__btn--email.is-primary {
+  background: #0096ff;
+  color: #000;
+}
+
 .doc-envio-modal__btn--wa {
   background: rgba(37, 211, 102, 0.2);
   border-color: #25d366;
   color: #25d366;
+}
+
+.doc-envio-modal__btn--wa.is-primary {
+  background: #25d366;
+  color: #000;
 }
 
 .doc-envio-acoes {

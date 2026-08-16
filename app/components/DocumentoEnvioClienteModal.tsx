@@ -6,6 +6,7 @@ import type { ClienteAlfabetoRow } from '../lib/clienteAlfabetoBusca'
 import {
   abrirEmailCliente,
   abrirWhatsAppCliente,
+  buildWhatsAppUrl,
   prefillContactFromCliente,
 } from '../lib/clienteContactEnvio'
 
@@ -36,7 +37,7 @@ export function DocumentoEnvioClienteModal({
   language = 'pt-BR',
   labels: L = {},
 }: Props) {
-  const [canal, setCanal] = useState<'email' | 'whatsapp'>(config?.defaultChannel ?? 'email')
+  const [destaque, setDestaque] = useState<'email' | 'whatsapp'>(config?.defaultChannel ?? 'email')
   const [clienteId, setClienteId] = useState('')
   const [email, setEmail] = useState('')
   const [telefone, setTelefone] = useState('')
@@ -48,7 +49,7 @@ export function DocumentoEnvioClienteModal({
 
   useEffect(() => {
     if (!open || !config) return
-    setCanal(config.defaultChannel ?? 'email')
+    setDestaque(config.defaultChannel ?? 'email')
     const inicial = config.initialClienteId
       ? clientes.find((c) => c.id === config.initialClienteId)
       : null
@@ -80,19 +81,36 @@ export function DocumentoEnvioClienteModal({
   }
 
   const handleEnviarEmail = () => {
+    setDestaque('email')
     if (!email.trim()) {
       window.alert(L.envioInformeEmail || 'Indique o e-mail do cliente.')
       return
     }
-    abrirEmailCliente({ email, subject: config.subject, body: config.body })
+    const ok = abrirEmailCliente({ email, subject: config.subject, body: config.body })
+    if (!ok) {
+      window.alert(
+        L.envioPopupBloqueado ||
+          'O navegador bloqueou a abertura. Permita pop-ups neste site e tente novamente.'
+      )
+    }
   }
 
   const handleEnviarWhatsApp = () => {
-    if (!telefone.trim()) {
+    setDestaque('whatsapp')
+    const digits = telefone.replace(/\D/g, '')
+    if (digits.length < 9) {
       window.alert(L.envioInformeTelefone || 'Indique o telemóvel do cliente para WhatsApp.')
       return
     }
-    abrirWhatsAppCliente({ telefone, text: config.body })
+    const url = buildWhatsAppUrl({ telefone: digits, text: config.body })
+    const ok = abrirWhatsAppCliente({ telefone: digits, text: config.body })
+    if (!ok) {
+      const ir = window.confirm(
+        L.envioWhatsAppBloqueado ||
+          'Não foi possível abrir o WhatsApp automaticamente. Deseja abrir nesta janela?'
+      )
+      if (ir) window.location.assign(url)
+    }
   }
 
   return (
@@ -115,93 +133,70 @@ export function DocumentoEnvioClienteModal({
           </p>
         </header>
 
-        <div className="doc-envio-modal__cliente">
-          <p className="doc-envio-modal__section-label">
-            {L.cliente || 'Cliente'} — {L.envioSelecioneCliente || 'selecione para preencher contactos'}
-          </p>
-          {clienteSelecionado ? (
-            <div className="doc-envio-modal__selected">
-              <strong>{clienteSelecionado.nomeEmpresa}</strong>
-              <button type="button" className="doc-envio-modal__clear" onClick={limparCliente}>
-                {L.limpar || 'Limpar'}
-              </button>
-            </div>
-          ) : null}
-          <ClienteAlfabetoPicker
-            clientes={clientes}
-            selectedId={clienteId}
-            onSelect={aplicarCliente}
-            onClear={limparCliente}
-            language={language}
-            showSelectedChip={false}
-            listMaxHeight={220}
-            labels={{
-              buscar: L.buscarCliente,
-              nenhumEncontrado: L.nenhumEncontrado,
-              toqueFiltrar: L.envioToqueFiltrar,
-              clientes: L.clientes,
-              de: L.de,
-              mostrando: L.mostrando,
-            }}
-          />
-        </div>
-
-        <div className="doc-envio-modal__canais" role="tablist" aria-label={L.envioCanal || 'Canal de envio'}>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={canal === 'email'}
-            className={`doc-envio-modal__canal${canal === 'email' ? ' is-active' : ''}`}
-            onClick={() => setCanal('email')}
-          >
-            📧 {L.enviarPorEmail || 'E-mail'}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={canal === 'whatsapp'}
-            className={`doc-envio-modal__canal doc-envio-modal__canal--wa${canal === 'whatsapp' ? ' is-active' : ''}`}
-            onClick={() => setCanal('whatsapp')}
-          >
-            💬 {L.enviarPorWhatsApp || 'WhatsApp'}
-          </button>
-        </div>
-
-        {canal === 'email' ? (
-          <label className="doc-envio-modal__field">
-            <span>{L.email || 'E-mail do cliente'}</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value)
-                setClienteId('')
+        <div className="doc-envio-modal__scroll">
+          <div className="doc-envio-modal__cliente">
+            <p className="doc-envio-modal__section-label">
+              {L.cliente || 'Cliente'} — {L.envioSelecioneCliente || 'selecione para preencher contactos'}
+            </p>
+            {clienteSelecionado ? (
+              <div className="doc-envio-modal__selected">
+                <strong>{clienteSelecionado.nomeEmpresa}</strong>
+                <button type="button" className="doc-envio-modal__clear" onClick={limparCliente}>
+                  {L.limpar || 'Limpar'}
+                </button>
+              </div>
+            ) : null}
+            <ClienteAlfabetoPicker
+              clientes={clientes}
+              selectedId={clienteId}
+              onSelect={aplicarCliente}
+              onClear={limparCliente}
+              language={language}
+              showSelectedChip={false}
+              listMaxHeight={160}
+              labels={{
+                buscar: L.buscarCliente,
+                nenhumEncontrado: L.nenhumEncontrado,
+                toqueFiltrar: L.envioToqueFiltrar,
+                clientes: L.clientes,
+                de: L.de,
+                mostrando: L.mostrando,
               }}
-              placeholder={L.envioEmailPlaceholder || 'cliente@empresa.com'}
             />
-          </label>
-        ) : (
-          <label className="doc-envio-modal__field">
-            <span>{L.envioWhatsCliente || 'Telemóvel — WhatsApp'}</span>
-            <input
-              type="tel"
-              value={telefone}
-              onChange={(e) => {
-                setTelefone(e.target.value.replace(/\D/g, ''))
-                setClienteId('')
-              }}
-              placeholder={L.envioTelefonePlaceholder || '351912345678'}
-            />
-          </label>
-        )}
+          </div>
 
-        <div className="doc-envio-modal__preview">
-          <span className="doc-envio-modal__section-label">{L.assunto || 'Assunto / mensagem'}</span>
-          <p className="doc-envio-modal__subject">{config.subject}</p>
-          <textarea readOnly value={config.body} rows={6} className="doc-envio-modal__body" />
+          <div className="doc-envio-modal__contacts">
+            <label className={`doc-envio-modal__field${destaque === 'email' ? ' is-destaque' : ''}`}>
+              <span>{L.email || 'E-mail do cliente'}</span>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onFocus={() => setDestaque('email')}
+                placeholder={L.envioEmailPlaceholder || 'cliente@empresa.com'}
+              />
+            </label>
+            <label className={`doc-envio-modal__field${destaque === 'whatsapp' ? ' is-destaque' : ''}`}>
+              <span>{L.envioWhatsCliente || 'Telemóvel — WhatsApp'}</span>
+              <input
+                type="tel"
+                value={telefone}
+                onChange={(e) => setTelefone(e.target.value.replace(/\D/g, ''))}
+                onFocus={() => setDestaque('whatsapp')}
+                placeholder={L.envioTelefonePlaceholder || '351912345678'}
+                inputMode="numeric"
+              />
+            </label>
+          </div>
+
+          <div className="doc-envio-modal__preview">
+            <span className="doc-envio-modal__section-label">{L.assunto || 'Assunto / mensagem'}</span>
+            <p className="doc-envio-modal__subject">{config.subject}</p>
+            <textarea readOnly value={config.body} rows={4} className="doc-envio-modal__body" />
+          </div>
         </div>
 
-        <footer className="doc-envio-modal__actions">
+        <footer className="doc-envio-modal__actions doc-envio-modal__actions--sticky">
           <button type="button" className="doc-envio-modal__btn doc-envio-modal__btn--ghost" onClick={onClose}>
             {L.cancelar || L.cancel || 'Cancelar'}
           </button>
@@ -215,23 +210,20 @@ export function DocumentoEnvioClienteModal({
                 📄 {L.gerarPDF || 'Gerar PDF'}
               </button>
             ) : null}
-            {canal === 'email' ? (
-              <button
-                type="button"
-                className="doc-envio-modal__btn doc-envio-modal__btn--email"
-                onClick={handleEnviarEmail}
-              >
-                📧 {L.abrirEmail || 'Abrir e-mail'}
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="doc-envio-modal__btn doc-envio-modal__btn--wa"
-                onClick={handleEnviarWhatsApp}
-              >
-                💬 {L.abrirWhatsApp || 'Abrir WhatsApp'}
-              </button>
-            )}
+            <button
+              type="button"
+              className={`doc-envio-modal__btn doc-envio-modal__btn--email${destaque === 'email' ? ' is-primary' : ''}`}
+              onClick={handleEnviarEmail}
+            >
+              📧 {L.enviarPorEmail || 'Enviar por Email'}
+            </button>
+            <button
+              type="button"
+              className={`doc-envio-modal__btn doc-envio-modal__btn--wa${destaque === 'whatsapp' ? ' is-primary' : ''}`}
+              onClick={handleEnviarWhatsApp}
+            >
+              💬 {L.enviarPorWhatsApp || 'Enviar por WhatsApp'}
+            </button>
           </div>
         </footer>
       </div>
