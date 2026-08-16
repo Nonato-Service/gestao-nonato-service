@@ -574,6 +574,20 @@ import {
   readDeletedIdsFromLocalStorage,
   minutosPausaOuAlmocoDia,
 } from './modules/relatorios-especiais'
+import type {
+  ChecklistItemTemplate,
+  ChecklistTemplate,
+  ManutencaoChecklist,
+  ItemTrabalhoCriacao,
+  ParenteChecklist,
+  GrupoChecklist,
+} from './modules/checklist'
+import {
+  buildManutencoesDoGrupo,
+  buildPecasPorGrupoVisualizacao,
+  buildChecklistGeradoRecord,
+  buildPecasArmazemFromChecklist,
+} from './modules/checklist'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
 import { PdfModeloPickerField } from './components/PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from './lib/pdfModelStorage'
@@ -1672,70 +1686,6 @@ type PecaDesmontada = {
     numeroEspaco: string // Número ou letras do espaço
     numeroGrupoPrateleira: string // Número do grupo da prateleira
   }
-  dataCriacao: string
-}
-
-type ChecklistItemTemplate = {
-  id: string
-  texto: string
-}
-
-type ChecklistTemplate = {
-  id: string
-  nome: string
-  descricao?: string
-  itens: ChecklistItemTemplate[]
-  dataCriacao: string
-}
-
-type ManutencaoChecklist = {
-  id: string
-  nome: string
-  avaliacaoFeitaVisual: boolean
-  testeMecanico: boolean
-  testeEletrico: boolean
-  testeOperacional: boolean
-  pecas: Array<{
-    pecaId: string
-    quantidade?: number
-  }>
-  dataCriacao: string
-}
-
-/** Item adicionado na Criação de Checklist por Grupos: manutenção ou outro, com opção de peças */
-type ItemTrabalhoCriacao = {
-  id: string
-  tipo: string
-  descricaoTrabalho: string
-  necessitaPecas: boolean
-  origemPecas?: 'biblioteca' | 'equipamentos-pdf' | 'codigo-manual'
-  codigoPeca?: string
-  pecasManuais?: Array<{ codigo: string; quantia: number }>
-  dataCriacao: string
-  /** Quando origemPecas === 'equipamentos-pdf': equipamento escolhido no armazém */
-  equipamentoPdfId?: string
-  equipamentoPdfUrl?: string
-}
-
-type ParenteChecklist = {
-  id: string
-  nome: string
-  familia: string
-  imagem?: string
-}
-
-type GrupoChecklist = {
-  id: string
-  numeroGrupo: string
-  nomeGrupo: string
-  familia: string
-  parenteId?: string // Opcional: tipo/modelo dentro da família (ex: HPP 250 dentro de Seccionadora)
-  tipo: 'basico' | 'equipamentos-aprovados' | 'verificacao-geral-entrega' // Tipo do checklist
-  imagem?: string
-  trabalhosASeremExecutados?: string
-  manutencoes: ManutencaoChecklist[]
-  itensTrabalho?: ItemTrabalhoCriacao[] // Itens adicionados na parte inferior (Adicionar manutenção ou outro)
-  opcoesTipo?: string[] // Opções criadas pelo utilizador (ex: Manutenção, Inspeção) para depois selecionar em cada trabalho
   dataCriacao: string
 }
 
@@ -27250,123 +27200,44 @@ export default function Dashboard() {
     }
 
     const tecnicoSelecionado = tecnicos.find(t => t.id === checklistTecnicoResponsavel)
-
-    const mapManutencaoParaFormulario = (m: ManutencaoChecklist) => ({
-      ...m,
-      inicioExecucao: '',
-      tecnicoExecucao: '',
-      tecnicoAtual: '',
-      statusConclusao: 'pendente' as 'pendente' | 'concluido',
-      tecnicoConclusao: '',
-      dataConclusao: '',
-      historicoTecnicos: [] as Array<{ tecnico: string; inicioExecucao: string; fimExecucao?: string; tempoIndividual: string }>,
-      horarios: [] as Array<{ tipo: 'saida' | 'parada' | 'retoma' | 'almoco' | 'inicio' | 'fim'; horario: string; motivo?: string; tecnico?: string }>,
-      observacoes: [] as Array<{ tecnico: string; observacao: string; data: string }>,
-      tempoInicio: '',
-      tempoFim: '',
-      tempoTotal: '',
-      tempoIndividual: ''
-    })
-
-    const buildManutencoesDoGrupo = (g: GrupoChecklist) => {
-      if (usaMontagemPorFamiliaParente && g.itensTrabalho && g.itensTrabalho.length > 0) {
-        return g.itensTrabalho
-          .filter(it => checklistMontagemServicosSelecionados.has(`${g.id}-${it.id}`))
-          .map(it => mapManutencaoParaFormulario({
-            id: it.id,
-            nome: it.descricaoTrabalho || it.tipo || '',
-            avaliacaoFeitaVisual: false,
-            testeMecanico: false,
-            testeEletrico: false,
-            testeOperacional: false,
-            pecas: [],
-            dataCriacao: it.dataCriacao || new Date().toISOString()
-          }))
-      }
-      if (usaMontagemPorFamiliaParente) {
-        return (g.manutencoes || [])
-          .filter(m => checklistMontagemServicosSelecionados.has(`${g.id}-${m.id}`))
-          .map(m => mapManutencaoParaFormulario(m))
-      }
-      return g.manutencoes
-        .filter(m => checklistManutencoesSelecionadas.has(`${g.id}-${m.id}`))
-        .map(m => mapManutencaoParaFormulario(m))
+    const montagemOpts = {
+      usaMontagemPorFamiliaParente: !!usaMontagemPorFamiliaParente,
+      montagemServicosSelecionados: checklistMontagemServicosSelecionados,
+      manutencoesSelecionadas: checklistManutencoesSelecionadas,
     }
 
     const gruposComSelecao = gruposParaGerar
-      .map(g => ({ g, manutencoes: buildManutencoesDoGrupo(g) }))
+      .map(g => ({ g, manutencoes: buildManutencoesDoGrupo(g, montagemOpts) }))
       .filter(({ manutencoes }) => manutencoes.length > 0)
 
-    const checklistId = `checklist-${Date.now()}`
-    const pecasPorGrupoVisualizacao = gruposComSelecao
-      .filter(({ g }) => (checklistMontagemPecasPorGrupo[g.id]?.length ?? 0) > 0)
-      .map(({ g }) => ({
-        grupoId: g.id,
-        numeroGrupo: g.numeroGrupo || '',
-        nomeGrupo: g.nomeGrupo || '—',
-        pecas: checklistMontagemPecasPorGrupo[g.id] || []
-      }))
+    const nowMs = Date.now()
+    const checklistId = `checklist-${nowMs}`
+    const pecasPorGrupoVisualizacao = buildPecasPorGrupoVisualizacao(
+      gruposComSelecao,
+      checklistMontagemPecasPorGrupo
+    )
 
-    const novoChecklist = {
-      id: checklistId,
-      tipo: 'checklist-gerado',
-      equipamentoId: checklistEquipamentoSelecionado.id,
-      equipamento: {
-        id: checklistEquipamentoSelecionado.id,
-        tipoEquipamento: checklistEquipamentoSelecionado.tipoEquipamento,
-        modelo: checklistEquipamentoSelecionado.modelo,
-        marca: checklistEquipamentoSelecionado.marca,
-        numeroSerie: checklistEquipamentoSelecionado.numeroSerie,
-        familia: checklistEquipamentoSelecionado.familia,
-        ano: checklistEquipamentoSelecionado.ano
-      },
+    const novoChecklist = buildChecklistGeradoRecord({
+      checklistId,
+      equipamento: checklistEquipamentoSelecionado,
       data: checklistData,
       tecnicoResponsavel: checklistTecnicoResponsavel,
-      tecnicoNome: tecnicoSelecionado?.name || '',
-      tecnicoTipo: tecnicoSelecionado?.type || 'internal',
-      grupos: gruposComSelecao.map(({ g, manutencoes }) => ({
-        grupoId: g.id,
-        numeroGrupo: g.numeroGrupo,
-        nomeGrupo: g.nomeGrupo,
-        familia: g.familia,
-        tipo: g.tipo,
-        manutencoes
-      })),
-      manutencoesSelecionadas: usaMontagemPorFamiliaParente ? Array.from(checklistMontagemServicosSelecionados) : Array.from(checklistManutencoesSelecionadas),
-      dataCriacao: new Date().toISOString(),
-      status: 'gerado' as 'salvo' | 'gerado' | 'concluido',
+      tecnico: tecnicoSelecionado,
+      gruposComSelecao,
+      usaMontagemPorFamiliaParente: !!usaMontagemPorFamiliaParente,
+      montagemServicosSelecionados: checklistMontagemServicosSelecionados,
+      manutencoesSelecionadas: checklistManutencoesSelecionadas,
       pecasPorGrupoVisualizacao,
-      dadosBloqueados: {
-        equipamento: checklistEquipamentoSelecionado,
-        data: checklistData,
-        tecnicoResponsavel: checklistTecnicoResponsavel,
-        tecnicoNome: tecnicoSelecionado?.name || '',
-        grupos: gruposComSelecao.map(({ g, manutencoes }) => ({
-          grupoId: g.id,
-          numeroGrupo: g.numeroGrupo,
-          nomeGrupo: g.nomeGrupo,
-          familia: g.familia,
-          tipo: g.tipo,
-          manutencoes
-        }))
-      }
-    }
+    })
 
-    const novosItensArmazem: PecaSolicitadaArmazem[] = gruposComSelecao
-      .filter(({ g }) => (checklistMontagemPecasPorGrupo[g.id]?.length ?? 0) > 0)
-      .map(({ g }) => ({
-        id: `pecas-armazem-${checklistId}-${g.id}-${Date.now()}`,
-        mensagemId: '',
-        checklistId,
-        equipamentoId: checklistEquipamentoSelecionado.id,
-        equipamentoNumeroSerie: checklistEquipamentoSelecionado.numeroSerie,
-        nomeGrupo: g.nomeGrupo || '—',
-        numeroGrupo: g.numeroGrupo || '',
-        nomeSolicitante: tecnicoSelecionado?.name || '',
-        nomeGestorAprovador: '-',
-        pecasSolicitadas: (checklistMontagemPecasPorGrupo[g.id] || []).map(p => ({ codigo: p.codigo, nome: p.nome, quantidade: p.quantidade })),
-        dataEnvio: new Date().toISOString()
-      }))
+    const novosItensArmazem: PecaSolicitadaArmazem[] = buildPecasArmazemFromChecklist({
+      checklistId,
+      equipamento: checklistEquipamentoSelecionado,
+      tecnico: tecnicoSelecionado,
+      gruposComSelecao,
+      pecasPorGrupo: checklistMontagemPecasPorGrupo,
+      nowMs,
+    })
     if (novosItensArmazem.length > 0) {
       const atualizadasPecasArmazem = [...pecasSolicitadasArmazem, ...novosItensArmazem]
       setPecasSolicitadasArmazem(atualizadasPecasArmazem)
