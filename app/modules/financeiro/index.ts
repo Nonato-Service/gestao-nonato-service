@@ -109,6 +109,18 @@ export {
   getStatusFaturasDetalhado,
 } from './faturaStatus'
 
+export type {
+  FichaCadastralBancariaMin,
+  FaturaPecasEnvioLike,
+  RelatorioCobrancaEnvioLike,
+} from './envioCobranca'
+export {
+  primeiroTelefoneSoDigitosCliente,
+  digitosWhatsAppFromTelefonesCliente,
+  buildCorpoEnvioIbanFaturaPecas,
+  buildCorpoEnvioCobrancaFechamentoBiblioteca,
+} from './envioCobranca'
+
 export {
   parseDataFinanceiroParaDate,
   periodoFinanceiroFromDate,

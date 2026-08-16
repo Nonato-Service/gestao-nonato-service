@@ -259,6 +259,28 @@ try {
   } else {
     fail('NonatoMainApp ainda define parseMoeda/sanitize fatura localmente')
   }
+  if (
+    idx.includes('buildCorpoEnvioIbanFaturaPecas') &&
+    idx.includes('digitosWhatsAppFromTelefonesCliente')
+  ) {
+    ok('módulo financeiro exporta envioCobranca')
+  } else {
+    fail('módulo financeiro sem envioCobranca')
+  }
+  if (!exists('app/modules/financeiro/envioCobranca.ts')) {
+    fail('falta app/modules/financeiro/envioCobranca.ts')
+  } else {
+    ok('existe app/modules/financeiro/envioCobranca.ts')
+  }
+  if (
+    !nma.includes('const primeiroTelefoneSoDigitosCliente =') &&
+    !nma.includes('const digitosWhatsAppFromTelefonesCliente =') &&
+    nma.includes('buildCorpoEnvioIbanFaturaPecas')
+  ) {
+    ok('NonatoMainApp usa envioCobranca do módulo financeiro')
+  } else {
+    fail('NonatoMainApp ainda define telefones/corpo envio localmente')
+  }
 } catch (e) {
   fail(`módulo financeiro: ${e.message}`)
 }

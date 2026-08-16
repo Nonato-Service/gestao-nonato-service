@@ -473,6 +473,10 @@ import {
   getSinalPagamentoFaturaPecas,
   getStatusFaturasCliente as getStatusFaturasClienteModulo,
   getClienteFaturaBadgeProps as getClienteFaturaBadgePropsModulo,
+  primeiroTelefoneSoDigitosCliente,
+  digitosWhatsAppFromTelefonesCliente,
+  buildCorpoEnvioIbanFaturaPecas,
+  buildCorpoEnvioCobrancaFechamentoBiblioteca,
   parseDataFinanceiroParaDate,
   periodoFinanceiroFromDate,
   isoWeekStringFromDate,
@@ -15079,46 +15083,7 @@ export default function Dashboard() {
         (Number(cd.saldoPendente) > 0 || Number(cd.relatoriosNaoPagoCount ?? 0) > 0)
     )
 
-  const primeiroTelefoneSoDigitosCliente = (telefones: string): string => {
-    const partes = (telefones || '')
-      .split(/[/,;]+/)
-      .map(p => p.trim())
-      .filter(Boolean)
-    const raw = (partes[0] || telefones || '').replace(/\D/g, '')
-    return raw.slice(0, 18)
-  }
-
-  const digitosWhatsAppFromTelefonesCliente = (telefones: string): string => {
-    const raw = primeiroTelefoneSoDigitosCliente(telefones)
-    if (raw.length === 9 && raw.startsWith('9')) return '351' + raw
-    if (raw.length >= 9) return raw
-    if (raw.length > 0) return '351' + raw
-    return ''
-  }
-
-  const buildCorpoEnvioIbanFaturaPecas = (fatura: FaturaPecas): string => {
-    const fc = fichaCadastral
-    const nome = (fc.nomeEmpresa || 'NONATO SERVICE').trim()
-    const lines: string[] = [
-      'Olá,',
-      '',
-      `Seguem os dados para pagamento da fatura ${fatura.numeroFatura} (${fatura.clienteNome}).`,
-      `Valor total: €${fatura.valorTotal.toFixed(2)} (com IVA).`,
-      '',
-      `${nome} — dados bancários:`,
-    ]
-    if (fc.nif) lines.push(`NIF: ${fc.nif}`)
-    if (fc.nib) lines.push(`NIB: ${fc.nib}`)
-    if (fc.iban) lines.push(`IBAN: ${fc.iban}`)
-    if (fc.swift) lines.push(`SWIFT/BIC: ${fc.swift}`)
-    if (fc.nomeBanco) lines.push(`Banco: ${fc.nomeBanco}`)
-    if (fc.telefone) lines.push(`Contacto: ${fc.telefone}`)
-    if (fc.email) lines.push(`Email: ${fc.email}`)
-    if (fc.morada) lines.push(`Morada: ${fc.morada}`)
-    lines.push('')
-    lines.push('Obrigado.')
-    return lines.join('\n')
-  }
+  /* envio IBAN/cobrança → app/modules/financeiro/envioCobranca */
 
   const marcarContaPagamentoEnviadaFaturaPecas = (faturaId: string) => {
     createAutoBackupBeforeOperation()
@@ -15131,7 +15096,7 @@ export default function Dashboard() {
   const handleEnvioDadosPagamentoFaturaPecas = (canal: 'email' | 'whatsapp' | 'sms', fatura: FaturaPecas) => {
     const ft = safeT as Record<string, string | undefined>
     const cliente = clientes.find(c => c.id === fatura.clienteId)
-    const corpo = buildCorpoEnvioIbanFaturaPecas(fatura)
+    const corpo = buildCorpoEnvioIbanFaturaPecas(fatura, fichaCadastral)
     const assunto = encodeURIComponent(`${ft.faturaEnvioAssunto || 'Dados para pagamento'} — ${fatura.numeroFatura}`)
 
     if (canal === 'email') {
@@ -15165,34 +15130,13 @@ export default function Dashboard() {
     marcarContaPagamentoEnviadaFaturaPecas(fatura.id)
   }
 
-  const buildCorpoEnvioCobrancaFechamentoBiblioteca = (
+  const buildCorpoEnvioCobrancaFechamentoBibliotecaLocal = (
     rel: RelatorioServico,
     totalComIva: number
   ): string => {
-    const fc = fichaCadastral
-    const nome = (fc.nomeEmpresa || 'NONATO SERVICE').trim()
     const nomeCli =
       clientes.find(c => c.id === rel.clienteId)?.nomeEmpresa || rel.cliente || '—'
-    const lines: string[] = [
-      'Olá,',
-      '',
-      `Seguem os dados para pagamento do fechamento do relatório ${rel.numero} (${nomeCli}).`,
-      `Equipamento: ${rel.maquinaModelo || '—'}.`,
-      `Valor total (c/ IVA): €${totalComIva.toFixed(2)}.`,
-      '',
-      `${nome} — dados bancários:`,
-    ]
-    if (fc.nif) lines.push(`NIF: ${fc.nif}`)
-    if (fc.nib) lines.push(`NIB: ${fc.nib}`)
-    if (fc.iban) lines.push(`IBAN: ${fc.iban}`)
-    if (fc.swift) lines.push(`SWIFT/BIC: ${fc.swift}`)
-    if (fc.nomeBanco) lines.push(`Banco: ${fc.nomeBanco}`)
-    if (fc.telefone) lines.push(`Contacto: ${fc.telefone}`)
-    if (fc.email) lines.push(`Email: ${fc.email}`)
-    if (fc.morada) lines.push(`Morada: ${fc.morada}`)
-    lines.push('')
-    lines.push('Obrigado.')
-    return lines.join('\n')
+    return buildCorpoEnvioCobrancaFechamentoBiblioteca(rel, totalComIva, fichaCadastral, nomeCli)
   }
 
   const marcarCobrancaEnviadaFechamentoBiblioteca = (relatorioId: string) => {
@@ -15210,7 +15154,7 @@ export default function Dashboard() {
   ) => {
     const ft = safeT as Record<string, string | undefined>
     const cliente = clientes.find(c => c.id === rel.clienteId)
-    const corpo = buildCorpoEnvioCobrancaFechamentoBiblioteca(rel, totalComIva)
+    const corpo = buildCorpoEnvioCobrancaFechamentoBibliotecaLocal(rel, totalComIva)
     const assunto = encodeURIComponent(
       `${ft.financeiroDespesasCobrancaAssunto || 'Cobrança fechamento'} — ${rel.numero}`
     )
