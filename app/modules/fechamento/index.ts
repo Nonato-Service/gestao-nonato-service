@@ -36,3 +36,11 @@ export {
   resolveFechamentoIvaOpcoes,
   totaisFechamentoLiquidoComIva,
 } from './iva'
+
+export type { ServicoCadastroGrupo } from './grupos'
+export {
+  DEFAULT_SERVICO_GRUPO_ID,
+  ordenarServicoGrupos,
+  nomeGrupoTarifaServico,
+  migrarServicoLegacyCodNomeDesc,
+} from './grupos'

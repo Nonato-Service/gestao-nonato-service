@@ -1,10 +1,12 @@
 /** Utilitários partilhados — cadastro de serviços / grupos de tarifa. */
 
-export type ServicoCadastroGrupo = {
-  id: string
-  nome: string
-  ordem: number
-}
+export type { ServicoCadastroGrupo } from '../modules/fechamento'
+export {
+  DEFAULT_SERVICO_GRUPO_ID,
+  ordenarServicoGrupos,
+  nomeGrupoTarifaServico,
+  migrarServicoLegacyCodNomeDesc,
+} from '../modules/fechamento'
 
 export type ServicoCadastroItem = {
   id: string
@@ -16,8 +18,6 @@ export type ServicoCadastroItem = {
   tipoCobranca: 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras'
   categoria: 'servico' | 'despesa'
 }
-
-export const DEFAULT_SERVICO_GRUPO_ID = 'servico-grupo-geral'
 
 export const TEMPLATE_SERVICOS_PADRAO: Omit<ServicoCadastroItem, 'id' | 'grupoId'>[] = [
   { cod: 'HTT', nome: 'Hora técnica trabalhada', descricao: 'HORA TECNICA TRABALHADA', valor: 0, tipoCobranca: 'hora', categoria: 'servico' },
@@ -31,10 +31,6 @@ export const TEMPLATE_SERVICOS_PADRAO: Omit<ServicoCadastroItem, 'id' | 'grupoId
 ]
 
 const COD_ORDEM_PADRAO = ['HTT', 'HVI', 'HVR', 'KRC', 'DFC', 'DDT', 'DDH', 'DCC']
-
-export function ordenarServicoGrupos(grupos: ServicoCadastroGrupo[]): ServicoCadastroGrupo[] {
-  return [...grupos].sort((a, b) => (a.ordem !== b.ordem ? a.ordem - b.ordem : a.nome.localeCompare(b.nome)))
-}
 
 export function formatServicoValorExibicao(v: unknown): string {
   const n = typeof v === 'number' ? v : parseFloat(String(v ?? '0').replace(',', '.'))
