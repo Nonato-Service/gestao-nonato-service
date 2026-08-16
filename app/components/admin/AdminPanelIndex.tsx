@@ -32,6 +32,16 @@ export function AdminPanelIndex({ safeT }: Props) {
   const cards: AdminAreaCard[] = [
     {
       num: '01',
+      icon: '✓',
+      tone: 'emerald',
+      titleKey: 'confiancaTitle',
+      titleFallback: 'Checklist de confiança',
+      descKey: 'confiancaSub',
+      descFallback: 'Após cada actualização: 8 passos (~10 min)',
+      onActivate: () => openAdminSection('admin-detail-confianca'),
+    },
+    {
+      num: '02',
       icon: '↔',
       tone: 'sky',
       titleKey: 'adminJumpSyncTitle',
@@ -41,7 +51,7 @@ export function AdminPanelIndex({ safeT }: Props) {
       onActivate: () => openAdminSection('admin-detail-sync'),
     },
     {
-      num: '02',
+      num: '03',
       icon: '▶',
       tone: 'violet',
       titleKey: 'adminJumpDemosTitle',
@@ -51,7 +61,7 @@ export function AdminPanelIndex({ safeT }: Props) {
       onActivate: () => openAdminSection('admin-detail-demos'),
     },
     {
-      num: '03',
+      num: '04',
       icon: '⚙',
       tone: 'slate',
       titleKey: 'adminJumpGeralTitle',
@@ -61,7 +71,7 @@ export function AdminPanelIndex({ safeT }: Props) {
       onActivate: () => openAdminSection('admin-detail-geral'),
     },
     {
-      num: '04',
+      num: '05',
       icon: '👤',
       tone: 'indigo',
       titleKey: 'adminJumpUsersTitle',
@@ -71,7 +81,7 @@ export function AdminPanelIndex({ safeT }: Props) {
       onActivate: () => openAdminSection('admin-detail-users'),
     },
     {
-      num: '05',
+      num: '06',
       icon: '★',
       tone: 'amber',
       titleKey: 'adminJumpClienteTitle',
@@ -81,7 +91,7 @@ export function AdminPanelIndex({ safeT }: Props) {
       onActivate: () => openAdminSection('admin-detail-prioritario'),
     },
     {
-      num: '06',
+      num: '07',
       icon: '☰',
       tone: 'teal',
       titleKey: 'adminJumpSidebarTitle',
@@ -91,7 +101,7 @@ export function AdminPanelIndex({ safeT }: Props) {
       onActivate: () => openAdminSection('admin-detail-sidebar'),
     },
     {
-      num: '07',
+      num: '08',
       icon: '📄',
       tone: 'rose',
       titleKey: 'adminJumpPapelTimbradoTitle',
@@ -101,7 +111,7 @@ export function AdminPanelIndex({ safeT }: Props) {
       onActivate: () => window.open('/papel-timbrado', '_blank', 'noopener,noreferrer'),
     },
     {
-      num: '08',
+      num: '09',
       icon: '🔐',
       tone: 'orange',
       titleKey: 'adminJumpPasswordsTitle',
@@ -111,7 +121,7 @@ export function AdminPanelIndex({ safeT }: Props) {
       onActivate: () => openAdminSection('admin-detail-passwords'),
     },
     {
-      num: '09',
+      num: '10',
       icon: '💾',
       tone: 'emerald',
       titleKey: 'adminJumpBackupTitle',

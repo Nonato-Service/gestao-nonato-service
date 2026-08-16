@@ -19768,8 +19768,16 @@ export default function Dashboard() {
     // Só atualizar se o hash mudou
     if (lastClientesDevedoresHash.current !== newHash) {
       lastClientesDevedoresHash.current = newHash
+      // Segurança: nunca gravar lista menor (evita apagar clientes por estado incompleto).
+      if (clientesAtualizados.length < clientes.length) {
+        console.warn(
+          '[Nonato] Refresh de devedores abortado — lista de clientes ficou menor do que a actual.'
+        )
+        return
+      }
       setClientes(clientesAtualizados)
-      saveData('nonato-clientes', clientesAtualizados)
+      // Flags de dívida: gravar local de imediato; sync ao servidor sem bloquear (não forçar overwrite).
+      void saveData('nonato-clientes', clientesAtualizados, true, false)
       setEditingCliente((prev) => {
         if (!prev) return prev
         const atualizado = clientesAtualizados.find((c) => c.id === prev.id)

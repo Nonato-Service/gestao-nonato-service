@@ -5,6 +5,7 @@ import { GestaoDemosContent } from '../GestaoDemosContent'
 import { AdminBackupSection, type AdminBackupSectionProps } from './AdminBackupSection'
 import { AdminClientePrioritarioSection, type AdminClientePrioritarioSectionProps } from './AdminClientePrioritarioSection'
 import { AdminConfigGeralSection, type AdminConfigGeralSectionProps } from './AdminConfigGeralSection'
+import { AdminConfiancaChecklist } from './AdminConfiancaChecklist'
 import { AdminDisclosure } from './AdminDisclosure'
 import { AdminPanelIndex } from './AdminPanelIndex'
 import { AdminPasswordsSection, type AdminPasswordsSectionProps } from './AdminPasswordsSection'
@@ -161,6 +162,22 @@ export function AdministradorContent({
       ) : null}
 
       <AdminPanelIndex safeT={safeT} />
+
+      <AdminDisclosure
+        id="admin-detail-confianca"
+        icon="✓"
+        title={
+          (safeT as Record<string, string | undefined>)?.confiancaTitle ||
+          'Checklist de confiança'
+        }
+        sub={
+          (safeT as Record<string, string | undefined>)?.confiancaSub ||
+          'Após cada actualização: 8 passos (~10 min) — sem repassar o programa inteiro.'
+        }
+        toneClass="admin-disclosure--emerald"
+      >
+        <AdminConfiancaChecklist safeT={safeT} />
+      </AdminDisclosure>
 
       <AdminDisclosure
         id="admin-detail-sync"

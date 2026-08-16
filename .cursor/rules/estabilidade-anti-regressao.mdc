@@ -1,0 +1,32 @@
+---
+description: Anti-regressão — uma correção segura de cada vez; proteger dados e smoke check
+alwaysApply: true
+---
+
+# Estabilidade e anti-regressão (Nonato Service)
+
+O utilizador perdeu dados/confiança muitas vezes. Prioridade: **não partir o que já funciona**.
+
+## Antes de alterar
+
+1. Identificar o fluxo afectado (clientes, fechamento, financeiro/devedor, WhatsApp, sync).
+2. Preferir `StrReplace` cirúrgico — **nunca** reescrever `NonatoMainApp.tsx` inteiro.
+3. Não tocar em módulos não pedidos (evitar “limpeza” ou refactors extras).
+
+## Durante a alteração
+
+1. **Uma correção = um objectivo.** Não empilhar 3 assuntos no mesmo commit.
+2. Cadastros críticos: seguir `proteger-dados.mdc` — nunca gravar listas menores/vazias; usar `cadastroSafety` / `criticalCadastroKeys`.
+3. Relatórios especiais e de serviço: se mexer em financeiro/devedor/detalhe do cliente, incluir **ambos**.
+4. Textos de UI: 6 idiomas (`idiomas-6.mdc`) + `npm run i18n:check`.
+5. UI visível: `npm run pwa:bump` no mesmo ciclo de entrega.
+
+## Antes de pedir commit/push
+
+1. Correr `npm run smoke:critico` (tem de passar).
+2. Lembrar o utilizador do **Checklist de confiança** no Administrador (8 passos ~10 min) — não pedir para “repassar o programa todo”.
+3. Só publicar quando o utilizador disser **SIM**.
+
+## Depois de publicar
+
+Indicar: actualizar PWA → abrir **Administrador → Checklist de confiança** → marcar os passos.

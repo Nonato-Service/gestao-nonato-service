@@ -15697,6 +15697,64 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   border: 1px solid rgba(0, 168, 107, 0.22);
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.32);
 }
+
+.admin-confianca {
+  padding: 8px 2px 4px;
+}
+.admin-confianca__lead {
+  margin: 0 0 12px;
+  color: #c8c8c8;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.admin-confianca__progress {
+  margin-bottom: 12px;
+  color: #9f9;
+  font-size: 13px;
+}
+.admin-confianca__last {
+  color: #aaa;
+  font-weight: 400;
+}
+.admin-confianca__list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.admin-confianca__item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  color: #eee;
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.admin-confianca__item.is-done {
+  border-color: rgba(0, 200, 83, 0.45);
+  background: rgba(0, 200, 83, 0.1);
+}
+.admin-confianca__item input {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.admin-confianca__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.admin-confianca__ok {
+  margin: 12px 0 0;
+  color: #00c853;
+  font-size: 13px;
+  font-weight: 600;
+}
 .admin-panels-overview__head {
   display: flex;
   align-items: flex-start;
