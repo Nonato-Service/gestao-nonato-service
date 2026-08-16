@@ -44,6 +44,7 @@ const critical = [
   'app/modules/diario/index.ts',
   'app/modules/protocolo/index.ts',
   'app/modules/checklist/index.ts',
+  'app/modules/contabilidade/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -477,6 +478,46 @@ try {
   }
 } catch (e) {
   fail(`módulo checklist: ${e.message}`)
+}
+
+// 3p) Módulo contabilidade (20.º corte modularização — print/HTML)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/contabilidade/index.ts'), 'utf8')
+  if (
+    (idx.includes('buildHtmlClienteDadosContabilidade') &&
+      idx.includes('buildHtmlFechamentoContabilidade')) ||
+    (idx.includes('CONTAB_PRINT_WINDOW_STYLES') && idx.includes('construirTextoPlanoClienteDadosContabilidade'))
+  ) {
+    ok('módulo contabilidade exporta print/HTML builders')
+  } else {
+    fail('módulo contabilidade incompleto (index.ts)')
+  }
+  if (
+    idx.includes('CONTAB_PRINT_WINDOW_STYLES') &&
+    idx.includes('construirTextoPlanoClienteDadosContabilidade') &&
+    idx.includes('mailtoPrefixContabilidade')
+  ) {
+    ok('módulo contabilidade exporta estilos/texto/mailto')
+  } else {
+    fail('módulo contabilidade sem CONTAB_PRINT_WINDOW_STYLES / construirTextoPlano / mailto')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/contabilidade'") || nma.includes('from "./modules/contabilidade"')) {
+    ok('NonatoMainApp importa app/modules/contabilidade')
+  } else {
+    fail('NonatoMainApp não importa o módulo contabilidade')
+  }
+  if (
+    nma.includes('buildHtmlClienteDadosContabilidade') &&
+    nma.includes('buildHtmlFechamentoContabilidade') &&
+    !nma.includes('const CONTAB_PRINT_WINDOW_STYLES =')
+  ) {
+    ok('NonatoMainApp usa builders contabilidade (sem CONTAB_PRINT_WINDOW_STYLES local)')
+  } else {
+    fail('NonatoMainApp não usa builders / ainda tem CONTAB_PRINT_WINDOW_STYLES local')
+  }
+} catch (e) {
+  fail(`módulo contabilidade: ${e.message}`)
 }
 
 // 4) i18n

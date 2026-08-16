@@ -588,6 +588,13 @@ import {
   buildChecklistGeradoRecord,
   buildPecasArmazemFromChecklist,
 } from './modules/checklist'
+import {
+  mailtoPrefixContabilidade,
+  construirTextoPlanoClienteDadosContabilidade,
+  buildHtmlClienteDadosContabilidade,
+  buildHtmlFechamentoContabilidade,
+  type ClienteContabEnvioModalOpts,
+} from './modules/contabilidade'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
 import { PdfModeloPickerField } from './components/PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from './lib/pdfModelStorage'
@@ -671,88 +678,6 @@ const NONATO_CADASTRO_KEYS_BACKUP_ON_FULL_PULL = NONATO_CRITICAL_CADASTRO_KEYS
 
 /** Tamanho dos SVG nos cards do hub (sem Unicode — evita mojibake no deploy) */
 const HUB_CARD_SVG_SIZE = 44
-
-/** CSS das janelas de impressão/PDF (contabilidade) — `viewport` + tabelas com scroll + botões em coluna no telemóvel */
-const CONTAB_PRINT_WINDOW_STYLES = `
-@page{size:A4;margin:10mm}
-html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-body{
-  font-family:Segoe UI,Arial,sans-serif;
-  margin:0;
-  box-sizing:border-box;
-  max-width:100%;
-  width:100%;
-  background:#fff;
-  color:#222;
-  font-size:14px;
-  line-height:1.45;
-  padding:max(10px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));
-}
-.contab-dica{
-  margin:0 0 12px;
-  padding:12px 12px;
-  background:#e3f2fd;
-  border:1px solid #90caf9;
-  border-radius:8px;
-  font-size:12px;
-  line-height:1.5;
-  color:#0d47a1;
-  white-space:pre-wrap;
-  word-break:break-word;
-  overflow-wrap:break-word;
-  max-width:100%;
-  box-sizing:border-box
-}
-.contab-actions{
-  display:flex;
-  flex-direction:row;
-  flex-wrap:wrap;
-  gap:10px;
-  align-items:stretch;
-  margin-bottom:16px
-}
-.contab-actions button,
-.contab-actions a{
-  flex:1 1 auto;
-  min-height:48px;
-  min-width:0;
-  -webkit-tap-highlight-color:transparent;
-  box-sizing:border-box
-}
-@media (max-width: 600px){
-  body{ font-size:13px; padding:10px 8px 14px }
-  .contab-dica{ font-size:11px; padding:10px 8px; margin-bottom:10px }
-  .contab-actions{ flex-direction:column; flex-wrap:nowrap; gap:8px; margin-bottom:12px }
-  .contab-actions > button,
-  .contab-actions > a{
-    width:100% !important;
-    flex:0 0 auto;
-    text-align:center;
-    justify-content:center;
-    padding:14px 10px;
-    font-size:14px
-  }
-  .contab-h-title{ font-size:17px !important }
-  .contab-h-sub{ font-size:12px !important }
-}
-.contab-scroll{
-  width:100%;
-  max-width:100%;
-  overflow-x:auto;
-  -webkit-overflow-scrolling:touch;
-  margin:0 0 12px;
-  box-sizing:border-box
-}
-table.contab-items-table{ min-width:640px }
-table.contab-client-tbl{ min-width: 100% }
-.contab-info-card{ word-wrap:break-word; overflow-wrap:break-word; box-sizing:border-box; max-width:100% }
-.contab-fiscal{ word-wrap:break-word; box-sizing:border-box; max-width:100% }
-@media print{
-  .no-print{ display:none !important }
-  body{ padding:10px }
-  .contab-scroll{ overflow:visible }
-}
-`
 
 /** Logo Nonato para exibição quando a peça não tem foto (não gravar este URL como `imagem` da peça). Colocar o ficheiro em `public/brand/nonato-logo-original.png`. */
 const PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC = '/brand/nonato-logo-original.png'
@@ -13270,83 +13195,6 @@ export default function Dashboard() {
     void saveData(CONTABILIDADE_CONFIG_KEY, next)
   }
 
-  const mailtoPrefixContabilidade = () => {
-    const e = contabilidadeConfig.emailContabilidade.trim()
-    return e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) ? `mailto:${e}` : 'mailto:'
-  }
-
-  type ClienteContabEnvioModalOpts = { valorFatura?: string; notaFatura?: string; anexos?: File[] }
-
-  /** Corpo de texto (e-mail, WhatsApp, etc.) com dados + pedido faturação + ficheiros. */
-  const construirTextoPlanoClienteDadosContabilidade = (cliente: Cliente, opts?: ClienteContabEnvioModalOpts) => {
-    const st = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
-    const t = st as unknown as Record<string, string> & {
-      contabilidadeBlocoPedidoFatura?: string
-      contabilidadeFaturaValorLabel?: string
-      contabilidadeFaturaNotaLabel?: string
-      contabilidadeAnexosListaTitulo?: string
-      contabilidadeAnexosInstrucaoCorpo?: string
-    }
-    const valorF = (opts?.valorFatura || '').trim()
-    const notaF = (opts?.notaFatura || '').trim()
-    const anexos = opts?.anexos && opts.anexos.length > 0 ? opts.anexos : []
-    const anexosLinhas = anexos.map(f => `${f.name} (${(f.size / 1024).toFixed(1)} KB)`)
-    const hasPedido = Boolean(valorF || notaF || anexosLinhas.length)
-    const val = (x: string | undefined) => (x && String(x).trim() ? String(x).trim() : '—')
-    const lblEmpresa = t.nomeEmpresa || 'Nome da Empresa'
-    const lblNif = t.identificacaoFiscal || 'NIF'
-    const lblMorada = t.morada || 'Morada'
-    const lblLocal = t.localidade || 'Localidade'
-    const lblCp = t.codigoPostal || 'Código Postal'
-    const lblFreg = t.freguesia || 'Freguesia'
-    const lblCons = t.conselho || 'Conselho'
-    const lblPais = t.pais || 'País'
-    const lblTel = t.telefones || 'Telefones'
-    const lblMail = t.email || 'E-mail'
-    const lblCont = t.contato || 'Contato'
-    const titulo = t.clienteDadosContabilidadeTitulo || 'Dados do cliente — contabilidade / faturação'
-    const docGerado = t.pdfDocumentoGeradoEm || 'Documento gerado em'
-    const localeStr = localeForLongDatetime(selectedLanguage)
-    const dataHora = new Date().toLocaleString(localeStr)
-    const linhas: string[] = [
-      titulo,
-      '',
-      `${lblEmpresa}: ${val(cliente.nomeEmpresa)}`,
-      `${lblNif}: ${val(cliente.numeroContribuicaoFiscal)}`,
-      `${lblMorada}: ${val(cliente.morada)}`,
-      `${lblLocal}: ${val(cliente.localidade)}`,
-      `${lblCp}: ${val(cliente.codigoPostal)}`,
-      `${lblFreg}: ${val(cliente.freguesia)}`,
-      `${lblCons}: ${val(cliente.conselho)}`,
-      `${lblPais}: ${val(cliente.pais)}`,
-      `${lblTel}: ${val(cliente.telefones)}`,
-      `${lblMail}: ${val(cliente.email)}`,
-      `${lblCont}: ${val(cliente.contato)}`,
-    ]
-    if (hasPedido) {
-      const subPed = t.contabilidadeBlocoPedidoFatura || 'Pedido de faturação / referência'
-      const lVal = t.contabilidadeFaturaValorLabel || 'Valor (referência) a faturar'
-      const lNota = t.contabilidadeFaturaNotaLabel || 'Nota / instrução p/ a contabilidade'
-      const lAnx =
-        t.contabilidadeAnexosListaTitulo || 'Ficheiros a anexar ao e-mail (indicar no aparelho ao enviar):'
-      linhas.push(
-        '',
-        '— ' + subPed + ' —',
-        '',
-        ...(valorF ? [`${lVal}: ${valorF}`] : []),
-        ...(notaF ? [`${lNota}: ${notaF}`] : []),
-        ...(anexosLinhas.length ? [lAnx, ...anexosLinhas.map(n => '  • ' + n), ''] : []),
-        t.contabilidadeAnexosInstrucaoCorpo ||
-          'Nota: o atalho «Enviar por e-mail» do navegador não anexa ficheiros. Anexa-os no programa de e-mail, ou no telemóvel usa Partilhar se o sistema o permitir.',
-        '',
-      )
-    } else {
-      linhas.push('')
-    }
-    linhas.push(`${docGerado} ${dataHora}`)
-    return linhas.join('\n')
-  }
-
   /** Abre o passo intermédio: valor, nota e ficheiros opcionais antes de gerar o documento. */
   const abrirClienteDadosContabilidade = (cliente: Cliente) => {
     setModalEnvioContabilidadeCliente(cliente)
@@ -13358,163 +13206,18 @@ export default function Dashboard() {
   /** Ficha resumida (NIF, morada, contactos) + pedido de faturação e lista de anexos — HTML para impressão e mailto. */
   const gerarJanelaClienteDadosContabilidade = (cliente: Cliente, opts?: ClienteContabEnvioModalOpts) => {
     const st = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
-    const t = st as unknown as Record<string, string> & {
-      contabilidadeBlocoPedidoFatura?: string
-      contabilidadeFaturaValorLabel?: string
-      contabilidadeFaturaNotaLabel?: string
-      contabilidadeAnexosListaTitulo?: string
-      contabilidadeAnexosInstrucaoCorpo?: string
-      contabilidadeAnexosAvisoManual?: string
-    }
-    const valorF = (opts?.valorFatura || '').trim()
-    const notaF = (opts?.notaFatura || '').trim()
-    const anexos = opts?.anexos && opts.anexos.length > 0 ? opts.anexos : []
-    const anexosLinhas = anexos.map(f => `${f.name} (${(f.size / 1024).toFixed(1)} KB)`)
-    const hasPedido = Boolean(valorF || notaF || anexosLinhas.length)
-    const textoPlano = construirTextoPlanoClienteDadosContabilidade(cliente, opts)
-
-    const escAttr = (s: string) =>
-      String(s ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-    const preEsc = (s: string) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    const val = (x: string | undefined) => (x && String(x).trim() ? String(x).trim() : '—')
-    const lblEmpresa = t.nomeEmpresa || 'Nome da Empresa'
-    const lblNif = t.identificacaoFiscal || 'NIF'
-    const lblMorada = t.morada || 'Morada'
-    const lblLocal = t.localidade || 'Localidade'
-    const lblCp = t.codigoPostal || 'Código Postal'
-    const lblFreg = t.freguesia || 'Freguesia'
-    const lblCons = t.conselho || 'Conselho'
-    const lblPais = t.pais || 'País'
-    const lblTel = t.telefones || 'Telefones'
-    const lblMail = t.email || 'E-mail'
-    const lblCont = t.contato || 'Contato'
-    const titulo = t.clienteDadosContabilidadeTitulo || 'Dados do cliente — contabilidade / faturação'
-    const sub = t.clienteDadosContabilidadeSub || ''
-    const lblImprimir = t.imprimirGuardarPDF || 'Imprimir / Guardar como PDF'
-    const lblFechar = t.close || 'Fechar'
-    const lblEmail = t.clienteDadosContabilidadeEnviarEmail || 'Enviar por e-mail'
-    const lblCopiar = t.clienteDadosContabilidadeCopiar || 'Copiar texto'
-    const lblCopiado = t.clienteDadosContabilidadeCopiado || 'Texto copiado para a área de transferência.'
-    const assuntoMail = t.clienteDadosContabilidadeEmailAssunto || 'Dados de cliente para faturação'
-    const tCliMail = t as Record<string, string> & {
-      clienteDadosContabEmailCorpoIntro?: string
-      clienteDadosContabEmailCorpoFim?: string
-      clienteDadosContabDicaPassos?: string
-    }
-    const emIntroCli =
-      tCliMail.clienteDadosContabEmailCorpoIntro ||
-      'Resumo de dados do cliente. Gerar PDF na janela (Imprimir → Guardar como PDF) e anexar a este e-mail.\n'
-    const emFimCli =
-      tCliMail.clienteDadosContabEmailCorpoFim || '\n(Todos os campos, morada, pedido: PDF ou «Copiar texto».)'
-    const notaCorta = notaF.length > 200 ? notaF.slice(0, 197).trim() + '…' : notaF
-    const tFechBtns = t as Record<string, string> & {
-      contabilidadeFechamentoBtnGerarPdf?: string
-      contabilidadeFechamentoBtnEmail?: string
-    }
-    const lblPdfCli = tFechBtns.contabilidadeFechamentoBtnGerarPdf || lblImprimir
-    const lblMailCli = tFechBtns.contabilidadeFechamentoBtnEmail || lblEmail
-    const dicaCli =
-      tCliMail.clienteDadosContabDicaPassos ||
-      'Gere o PDF a partir do botão verde; o atalho de e-mail traz resumo. Anexar o PDF no correio. Texto completo: «Copiar».'
-    const dicaBlockCli = `<div class="no-print contab-dica">${escAttr(dicaCli)}</div>`
-    const textoPlanoEmail = (() => {
-      const lin: string[] = [emIntroCli.trimEnd(), '', `${lblEmpresa}: ${val(cliente.nomeEmpresa)}`, `${lblNif}: ${val(cliente.numeroContribuicaoFiscal)}`]
-      if (hasPedido) {
-        lin.push(
-          '',
-          `${lblMorada}: ${val(cliente.morada)}`,
-          `${lblCp} / ${lblLocal}: ${val(cliente.codigoPostal)} — ${val(cliente.localidade)}`
-        )
-        if (valorF) lin.push(`${t.contabilidadeFaturaValorLabel || 'Valor'}: ${valorF}`)
-        if (notaCorta) lin.push(`${t.contabilidadeFaturaNotaLabel || 'Nota'}: ${notaCorta}`)
-        if (anexosLinhas.length) {
-          const tit = t.contabilidadeAnexosListaTitulo || 'Ficheiros'
-          lin.push(`${tit}:`, ...anexosLinhas.map(x => `  • ${x}`))
-        }
-      } else {
-        lin.push(
-          `${lblMorada}: ${val(cliente.morada)}`,
-          `${lblCp} / ${lblLocal}: ${val(cliente.codigoPostal)} — ${val(cliente.localidade)}`,
-          `${lblTel}: ${val(cliente.telefones)}`,
-          `${lblMail}: ${val(cliente.email)}`
-        )
-      }
-      lin.push(emFimCli)
-      return lin.join('\n')
-    })()
-    const docGerado = t.pdfDocumentoGeradoEm || 'Documento gerado em'
+    const t = st as unknown as Record<string, string>
     const localeStr = localeForLongDatetime(selectedLanguage)
     const dataHora = new Date().toLocaleString(localeStr)
-    const row = (label: string, cell: string) =>
-      `<tr><td style="padding:10px 14px;border:1px solid #c8e6c9;font-weight:700;background:#e8f5e9;width:34%;vertical-align:top">${escAttr(label)}</td><td style="padding:10px 14px;border:1px solid #c8e6c9;vertical-align:top;word-break:break-word">${escAttr(cell)}</td></tr>`
-    const rowPed = (label: string, cell: string) =>
-      `<tr><td style="padding:10px 14px;border:1px solid #90caf9;font-weight:700;background:#e3f2fd;width:34%;vertical-align:top">${escAttr(label)}</td><td style="padding:10px 14px;border:1px solid #90caf9;vertical-align:top;word-break:break-word;white-space:pre-wrap">${escAttr(cell)}</td></tr>`
-    const mainRows = [
-      row(lblEmpresa, val(cliente.nomeEmpresa)),
-      row(lblNif, val(cliente.numeroContribuicaoFiscal)),
-      row(lblMorada, val(cliente.morada)),
-      row(lblLocal, val(cliente.localidade)),
-      row(lblCp, val(cliente.codigoPostal)),
-      row(lblFreg, val(cliente.freguesia)),
-      row(lblCons, val(cliente.conselho)),
-      row(lblPais, val(cliente.pais)),
-      row(lblTel, val(cliente.telefones)),
-      row(lblMail, val(cliente.email)),
-      row(lblCont, val(cliente.contato)),
-    ].join('')
-    let pedidoTableHtml = ''
-    if (hasPedido) {
-      const pTit = t.contabilidadeBlocoPedidoFatura || 'Pedido de faturação / referência'
-      const pRows: string[] = []
-      if (valorF) pRows.push(rowPed(t.contabilidadeFaturaValorLabel || 'Valor (referência) a faturar', valorF))
-      if (notaF) pRows.push(rowPed(t.contabilidadeFaturaNotaLabel || 'Nota / instrução', notaF))
-      if (anexosLinhas.length) {
-        pRows.push(
-          rowPed(
-            t.contabilidadeAnexosListaTitulo || 'Ficheiros selecionados p/ anexar',
-            anexosLinhas.join('\n')
-          )
-        )
-      }
-      pedidoTableHtml = `<div style="margin:20px 0 10px;max-width:100%;box-sizing:border-box"><div style="font-size:15px;font-weight:700;color:#1565c0;word-wrap:break-word">${escAttr(
-        pTit
-      )}</div></div><div class="contab-scroll"><table class="contab-client-tbl" style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px">${pRows.join('')}</table></div>
-      <p style="font-size:12px;color:#0d47a1;line-height:1.4;margin:0 0 16px;word-wrap:break-word">${escAttr(
-        t.contabilidadeAnexosInstrucaoCorpo ||
-          'O atalho de e-mail não anexa ficheiros. Anexa no teu correio, ou partilha pelo teu aparelho.'
-      )}</p>`
-    }
-    const tableRows = mainRows
-    const mailSub = `${assuntoMail}${cliente.nomeEmpresa?.trim() ? ` — ${cliente.nomeEmpresa.trim().slice(0, 60)}` : ''}`
-    const mailtoHref = `${mailtoPrefixContabilidade()}?subject=${encodeURIComponent(mailSub)}&body=${encodeURIComponent(textoPlanoEmail)}`
-    const headerHtml = `<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid #00a650;max-width:100%;box-sizing:border-box"><div class="contab-h-title" style="font-size:20px;font-weight:700;color:#00a650;word-wrap:break-word">${escAttr(
-      titulo
-    )}</div><p class="contab-h-sub" style="margin:10px 0 0;font-size:13px;color:#444;line-height:1.45;word-wrap:break-word">${escAttr(
-      sub
-    )}</p></div>`
-    const tableHtml = `<div class="contab-scroll"><table class="contab-client-tbl" style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px">${tableRows}</table></div>${pedidoTableHtml}`
-    const rodape = `<div style="margin-top:28px;padding-top:16px;border-top:1px solid #e0e0e0;font-size:11px;color:#666">${escAttr(docGerado)} ${escAttr(dataHora)}</div><div style="font-size:10px;color:#999;margin-top:6px">Nonato Service</div>`
-    const preHidden = `<pre id="dados-cli-pre-contab" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;margin:0">${preEsc(textoPlano)}</pre>`
-    const btns = `<div class="no-print contab-actions"><button type="button" onclick="window.print()" style="padding:12px 16px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(
-      lblPdfCli
-    )}</button><a href="${escAttr(mailtoHref)}" style="padding:12px 16px;background:#1565c0;color:#fff;border:none;border-radius:8px;text-decoration:none;display:inline-block;font-weight:600;font-size:13px">${escAttr(
-      lblMailCli
-    )}</a><button type="button" data-msg="${escAttr(lblCopiado)}" onclick="(function(b){var el=document.getElementById('dados-cli-pre-contab');var tx=el?el.textContent:'';var m=b.getAttribute('data-msg')||'';if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(tx).then(function(){alert(m);}).catch(function(){window.prompt(m,tx);});}else{window.prompt(m,tx);}})(this)" style="padding:12px 16px;background:#5d4037;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(
-      lblCopiar
-    )}</button><button type="button" onclick="window.close()" style="padding:12px 16px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">${escAttr(
-      lblFechar
-    )}</button></div>`
-    const docTitle = `${titulo} — ${cliente.nomeEmpresa || cliente.id}`.slice(0, 120)
-    const html = `<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="light only">
-<title>${escAttr(docTitle)}</title>
-<style>${CONTAB_PRINT_WINDOW_STYLES}</style>
-</head><body>${dicaBlockCli}${btns}${preHidden}${headerHtml}${tableHtml}${rodape}</body></html>`
+    const textoPlano = construirTextoPlanoClienteDadosContabilidade(cliente, opts, t, dataHora)
+    const html = buildHtmlClienteDadosContabilidade({
+      cliente,
+      opts,
+      t,
+      dataHora,
+      mailtoPrefix: mailtoPrefixContabilidade(contabilidadeConfig.emailContabilidade),
+      textoPlano,
+    })
     const printWin = window.open('', '_blank')
     if (!printWin) {
       alert(t.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.')
@@ -13523,16 +13226,19 @@ export default function Dashboard() {
     printWin.document.write(html)
     printWin.document.close()
     printWin.focus()
+    const anexos = opts?.anexos && opts.anexos.length > 0 ? opts.anexos : []
     if (anexos.length) {
+      const assuntoMail = t.clienteDadosContabilidadeEmailAssunto || 'Dados de cliente para faturação'
+      const mailSub = `${assuntoMail}${cliente.nomeEmpresa?.trim() ? ` — ${cliente.nomeEmpresa.trim().slice(0, 60)}` : ''}`
       const lembrete = (names: string) =>
         (t.contabilidadeAnexosAvisoManual || 'Lembrete: o e-mail deste ecrã não envia ficheiros automaticamente. Anexa: ') +
         names
       const nomes = anexos.map(f => f.name).join(', ')
       const n = navigator as Navigator & { share?: (data: ShareData) => Promise<void>; canShare?: (d: ShareData) => boolean }
       try {
-        if (typeof n.share === 'function' && typeof n.canShare === 'function' && n.canShare({ files: anexos })) {
+        if (typeof n.share === 'function' && typeof n.canShare === 'function' && n.canShare({ files: anexos as File[] })) {
           void n
-            .share({ title: mailSub, text: textoPlano, files: anexos })
+            .share({ title: mailSub, text: textoPlano, files: anexos as File[] })
             .catch(() => window.alert(lembrete(nomes)))
         } else {
           window.alert(lembrete(nomes))
@@ -13565,11 +13271,18 @@ export default function Dashboard() {
     if (!c) return
     const st = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
     const t = st as unknown as Record<string, string> & { clienteDadosContabilidadeCopiado?: string }
-    const text = construirTextoPlanoClienteDadosContabilidade(c, {
-      valorFatura: contabEnvioValor,
-      notaFatura: contabEnvioNota,
-      anexos: contabEnvioAnexos,
-    })
+    const localeStr = localeForLongDatetime(selectedLanguage)
+    const dataHora = new Date().toLocaleString(localeStr)
+    const text = construirTextoPlanoClienteDadosContabilidade(
+      c,
+      {
+        valorFatura: contabEnvioValor,
+        notaFatura: contabEnvioNota,
+        anexos: contabEnvioAnexos,
+      },
+      t as Record<string, string>,
+      dataHora
+    )
     const tr = t as Record<string, string>
     const base = t.clienteDadosContabilidadeCopiado || 'Texto copiado para a área de transferência.'
     const dicaF =
@@ -13598,196 +13311,25 @@ export default function Dashboard() {
       string,
       string
     >
-    const escAttr = (s: string) =>
-      String(s ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-    const preEsc = (s: string) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    const val = (x: string | undefined) => (x && String(x).trim() ? String(x).trim() : '—')
-    const titulo = t.contabilidadeFechamentoDocTitulo || 'Fechamento para contabilidade / fatura'
-    const sub = t.contabilidadeFechamentoDocSub || ''
-    const lblImprimir = t.imprimirGuardarPDF || 'Imprimir / Guardar como PDF'
-    const lblFechar = t.close || 'Fechar'
-    const lblEmail = t.clienteDadosContabilidadeEnviarEmail || 'Enviar por e-mail'
-    const lblCopiar = t.clienteDadosContabilidadeCopiar || 'Copiar texto'
-    const lblCopiado = t.clienteDadosContabilidadeCopiado || 'Texto copiado para a área de transferência.'
-    const docGerado = t.pdfDocumentoGeradoEm || 'Documento gerado em'
-    const lblCliente = t.cliente || 'Cliente'
-    const lblNum = t.numeroRelatorio || 'Nº Relatório'
-    const lblEquip = t.equipamento || 'Equipamento'
-    const lblData = t.data || 'Data'
-    const lblCod = t.codigoOuCod || 'COD'
-    const lblDesc = t.descricao || 'Descrição'
-    const lblQtd = t.quantidade || 'Quantidade'
-    const lblVu = t.valorUnitario || 'Valor unit.'
-    const lblTot = t.total || 'Total'
-    const lblSoma = t.somaTotal || 'Total geral'
-    const blocoFiscal = t.contabilidadeBlocoClienteFiscal || 'Dados fiscais do cliente (cadastro)'
     const localeStr = localeForLongDatetime(selectedLanguage)
     const dataHora = new Date().toLocaleString(localeStr)
     const ivContab = totaisFechamentoLiquidoComIva(
       itens,
       resolveFechamentoIvaOpcoes(relatorio.id, fechamentoIvaPorRelatorioId, relatorio.numero)
     )
-    const total = ivContab.comIva
-    const linhasItens = itens.map(i => {
-      const sv = i.servicoId ? servicos.find(s => s.id === i.servicoId) : null
-      const cod = ((i.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—').toString()
-      const desc = (i.descricao || '').trim() || '—'
-      const infoExtra = (i.infoAdicional || '').trim()
-      const descCompleta = infoExtra ? `${desc} (${infoExtra})` : desc
-      const qtd =
-        i.tipoCobranca === 'hora'
-          ? `${i.quantidade.toFixed(2)} h`
-          : i.tipoCobranca === 'km'
-            ? `${i.quantidade.toFixed(0)} km`
-            : String(i.quantidade)
-      const vl = i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal
-      return `  • ${cod} — ${descCompleta} | ${qtd} × ${i.valorUnitario.toFixed(2)} € = ${vl.toFixed(2)} €`
-    })
-    const textoPlano = [
-      titulo,
-      sub ? `${sub}\n` : '',
-      `${lblNum}: ${relatorio.numero}`,
-      `${lblCliente}: ${relatorio.cliente}`,
-      `${lblEquip}: ${relatorio.maquinaModelo || ''}`.trim(),
-      `${lblData}: ${relatorio.data}`,
-      '',
-      ...(clienteFiscal
-        ? [
-            `— ${blocoFiscal} —`,
-            `${t.nomeEmpresa || 'Empresa'}: ${val(clienteFiscal.nomeEmpresa)}`,
-            `${t.identificacaoFiscal || 'NIF'}: ${val(clienteFiscal.numeroContribuicaoFiscal)}`,
-            `${t.morada || 'Morada'}: ${val(clienteFiscal.morada)}`,
-            `${t.codigoPostal || 'CP'}: ${val(clienteFiscal.codigoPostal)} ${val(clienteFiscal.localidade)}`.trim(),
-            `${t.email || 'E-mail'}: ${val(clienteFiscal.email)}`,
-            `${t.telefones || 'Telefones'}: ${val(clienteFiscal.telefones)}`,
-            '',
-          ]
-        : []),
-      `${t.itensCobrancaFechamento || 'Itens a cobrar'}:`,
-      ...linhasItens,
-      '',
-      `${t.totalSemIva || 'Total s/ IVA'}: ${ivContab.liquido.toFixed(2)} €`,
-      ...(ivContab.incluir && ivContab.iva > 0.0001
-        ? [`${t.valorIva || 'IVA'} (${ivContab.taxa}%): ${ivContab.iva.toFixed(2)} €`, `${t.totalComIva || 'Total com IVA'}: ${total.toFixed(2)} €`]
-        : [`${lblSoma}: ${total.toFixed(2)} €`]),
-      '',
-      `${docGerado} ${dataHora}`,
-    ]
-      .filter(Boolean)
-      .join('\n')
-
-    /** Corpo curto p/ `mailto` — o mail não anexa PDF; pormenor completo fica no PDF (imprimir) e em «Copiar». */
-    const tMail = t as Record<string, string> & {
-      contabilidadeFechamentoEmailCorpoIntro?: string
-      contabilidadeFechamentoEmailCorpoFim?: string
-    }
-    const emIntro =
-      tMail.contabilidadeFechamentoEmailCorpoIntro ||
-      'Segue resumo para a contabilidade. Anexar ficheiro PDF: na janela, botão verde → Imprimir → Guardar como PDF; depois anexar a este e-mail.\n\n'
-    const emFim =
-      tMail.contabilidadeFechamentoEmailCorpoFim ||
-      '\n(Detalhe e linhas: no ficheiro PDF, ou com «Copiar texto» na mesma janela.)\n'
-    const resumoFiscalShort = clienteFiscal
-      ? [
-          `${t.nomeEmpresa || 'Empresa'}: ${val(clienteFiscal.nomeEmpresa)}`,
-          `${t.identificacaoFiscal || 'NIF'}: ${val(clienteFiscal.numeroContribuicaoFiscal)}`,
-        ].join('\n')
-      : ''
-    const textoPlanoEmail = (() => {
-      const a: string[] = [
-        emIntro.trimEnd(),
-        '',
-        `${lblNum}: ${relatorio.numero}`,
-        `${lblCliente}: ${relatorio.cliente}`,
-        `${lblEquip}: ${relatorio.maquinaModelo || ''}`.trim(),
-        `${lblData}: ${relatorio.data}`,
-        '',
-      ]
-      if (resumoFiscalShort) {
-        a.push(resumoFiscalShort, '')
-      }
-      a.push(
-        `${t.totalSemIva || 'Total s/ IVA'}: ${ivContab.liquido.toFixed(2)} €`
-      )
-      if (ivContab.incluir && ivContab.iva > 0.0001) {
-        a.push(
-          `${t.valorIva || 'IVA'} (${ivContab.taxa}%): ${ivContab.iva.toFixed(2)} €`,
-          `${t.totalComIva || 'Total com IVA'}: ${total.toFixed(2)} €`
-        )
-      } else {
-        a.push(`${t.somaTotal || t.totalComIva || 'Total a cobrar'}: ${total.toFixed(2)} €`)
-      }
-      a.push(emFim)
-      return a.join('\n')
-    })()
-    const rowsHtml = itens
-      .map(item => {
+    const html = buildHtmlFechamentoContabilidade({
+      relatorio,
+      itens,
+      clienteFiscal,
+      t,
+      dataHora,
+      mailtoPrefix: mailtoPrefixContabilidade(contabilidadeConfig.emailContabilidade),
+      ivContab,
+      resolveItemCod: (item) => {
         const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
-        const cod = escAttr(
-          ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—').toString()
-        )
-        const desc = escAttr((item.descricao || '').trim() || '—')
-        const qtd = escAttr(
-          item.tipoCobranca === 'hora'
-            ? `${item.quantidade.toFixed(2)} h`
-            : item.tipoCobranca === 'km'
-              ? `${item.quantidade.toFixed(0)} km`
-              : String(item.quantidade)
-        )
-        const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
-        return `<tr><td style="padding:8px 10px;border:1px solid #c8e6c9;font-weight:600">${cod}</td><td style="padding:8px 10px;border:1px solid #c8e6c9">${desc}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right">${qtd}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
-      })
-      .join('')
-    const footIvaRows =
-      ivContab.incluir && ivContab.iva > 0.0001
-        ? `<tr><td colspan="4" style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;background:#fafafa">${escAttr(t.totalSemIva || 'Total s/ IVA')}</td><td style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;font-weight:600;background:#fafafa">${ivContab.liquido.toFixed(2)} €</td></tr><tr><td colspan="4" style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;background:#fafafa">${escAttr(t.valorIva || 'IVA')} (${ivContab.taxa}%)</td><td style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;font-weight:600;background:#fafafa">${ivContab.iva.toFixed(2)} €</td></tr><tr><td colspan="4" style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:700;background:#f1f8e9">${escAttr(t.totalComIva || 'Total com IVA')}</td><td style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:800;background:#f1f8e9">${total.toFixed(2)} €</td></tr>`
-        : `<tr><td colspan="4" style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:700;background:#f1f8e9">${escAttr(lblSoma)}</td><td style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:800;background:#f1f8e9">${total.toFixed(2)} €</td></tr>`
-    const tableHtml = `<div class="contab-scroll"><table class="contab-items-table" style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:0"><thead><tr><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:left">${escAttr(lblCod)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:left">${escAttr(lblDesc)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblQtd)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblVu)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblTot)}</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot>${footIvaRows}</tfoot></table></div>`
-    const infoRel = `<div class="contab-info-card" style="margin-bottom:16px;padding:14px;border-radius:10px;background:#f1f8e9;border:1px solid #c8e6c9;font-size:13px;line-height:1.5"><div style="word-wrap:break-word"><strong>${escAttr(lblNum)}:</strong> ${escAttr(relatorio.numero)}</div><div style="word-wrap:break-word"><strong>${escAttr(lblCliente)}:</strong> ${escAttr(relatorio.cliente)}</div><div style="word-wrap:break-word"><strong>${escAttr(lblEquip)}:</strong> ${escAttr(`${relatorio.maquinaModelo || ''}`.trim())}</div><div><strong>${escAttr(lblData)}:</strong> ${escAttr(relatorio.data)}</div></div>`
-    const rowFiscalHtml = (a: string, b: string) =>
-      `<tr><td style="padding:6px 8px;color:#666;width:34%">${a}</td><td style="padding:6px 8px;font-weight:600">${b}</td></tr>`
-    let fiscalHtml = ''
-    if (clienteFiscal) {
-      fiscalHtml = `<div class="contab-fiscal" style="margin-bottom:18px;padding:14px;border-radius:10px;background:#fff8e1;border:1px solid #ffcc80"><div style="font-weight:700;color:#e65100;margin-bottom:8px;word-wrap:break-word">${escAttr(blocoFiscal)}</div><div class="contab-scroll"><table class="contab-client-tbl" style="width:100%;font-size:12px">${rowFiscalHtml(escAttr(t.nomeEmpresa || 'Empresa'), escAttr(val(clienteFiscal.nomeEmpresa)))}${rowFiscalHtml(escAttr(t.identificacaoFiscal || 'NIF'), escAttr(val(clienteFiscal.numeroContribuicaoFiscal)))}${rowFiscalHtml(escAttr(t.morada || 'Morada'), escAttr(val(clienteFiscal.morada)))}${rowFiscalHtml(escAttr(t.email || 'E-mail'), escAttr(val(clienteFiscal.email)))}${rowFiscalHtml(escAttr(t.telefones || 'Telefones'), escAttr(val(clienteFiscal.telefones)))}</table></div></div>`
-    }
-    const assuntoMail = `${t.contabilidadeFechamentoEmailAssunto || 'Fechamento para faturação'} — ${relatorio.numero}`
-    const mailtoHref = `${mailtoPrefixContabilidade()}?subject=${encodeURIComponent(assuntoMail)}&body=${encodeURIComponent(textoPlanoEmail)}`
-    const tFech = t as Record<string, string> & {
-      contabilidadeFechamentoDicaPassos?: string
-      contabilidadeFechamentoBtnGerarPdf?: string
-      contabilidadeFechamentoBtnEmail?: string
-    }
-    const dicaFech =
-      tFech.contabilidadeFechamentoDicaPassos ||
-      'O documento formal é o PDF: Imprimir → Guardar como PDF, depois anexar no e-mail. O atalho de e-mail traz um resumo no texto; linhas e totais a fundo estão no PDF ou em «Copiar texto».'
-    const lblPdfFech = tFech.contabilidadeFechamentoBtnGerarPdf || lblImprimir
-    const lblMailFech = tFech.contabilidadeFechamentoBtnEmail || lblEmail
-    const dicaBlock = `<div class="no-print contab-dica">${escAttr(dicaFech)}</div>`
-    const headerHtml = `<div style="margin-bottom:16px;padding-bottom:14px;border-bottom:3px solid #00a650;max-width:100%;box-sizing:border-box"><div class="contab-h-title" style="font-size:19px;font-weight:700;color:#00a650;word-wrap:break-word">${escAttr(
-      titulo
-    )}</div><p class="contab-h-sub" style="margin:8px 0 0;font-size:12px;color:#555;line-height:1.45;word-wrap:break-word">${escAttr(sub)}</p></div>`
-    const rodape = `<div style="margin-top:20px;padding-top:12px;border-top:1px solid #e0e0e0;font-size:11px;color:#666">${escAttr(docGerado)} ${escAttr(dataHora)}</div><div style="font-size:10px;color:#999;margin-top:4px">Nonato Service</div>`
-    const preHidden = `<pre id="fech-contab-pre" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;margin:0">${preEsc(textoPlano)}</pre>`
-    const btns = `<div class="no-print contab-actions"><button type="button" onclick="window.print()" style="padding:12px 16px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(
-      lblPdfFech
-    )}</button><a href="${escAttr(mailtoHref)}" style="padding:12px 16px;background:#1565c0;color:#fff;border-radius:8px;text-decoration:none;display:inline-block;font-weight:600;font-size:13px">${escAttr(
-      lblMailFech
-    )}</a><button type="button" data-msg="${escAttr(lblCopiado)}" onclick="(function(b){var el=document.getElementById('fech-contab-pre');var tx=el?el.textContent:'';var m=b.getAttribute('data-msg')||'';if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(tx).then(function(){alert(m);}).catch(function(){window.prompt(m,tx);});}else{window.prompt(m,tx);}})(this)" style="padding:12px 16px;background:#5d4037;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(
-      lblCopiar
-    )}</button><button type="button" onclick="window.close()" style="padding:12px 16px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">${escAttr(
-      lblFechar
-    )}</button></div>`
-    const docTitle = `${titulo} — ${relatorio.numero}`.slice(0, 120)
-    const html = `<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="light only">
-<title>${escAttr(docTitle)}</title>
-<style>${CONTAB_PRINT_WINDOW_STYLES}</style>
-</head><body>${dicaBlock}${btns}${preHidden}${headerHtml}${infoRel}${fiscalHtml}${tableHtml}${rodape}</body></html>`
+        return ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—').toString()
+      },
+    })
     const printWin = window.open('', '_blank')
     if (!printWin) {
       alert(t.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.')
