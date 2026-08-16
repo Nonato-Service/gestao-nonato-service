@@ -478,6 +478,7 @@ import {
   removeFechamentoFluxoIdsFromMap,
   ensureDefaultFluxoEntriesForBibliotecaIds,
   relatorioServicoFluxoFinanceiroPendente,
+  normalizeFechamentoFluxoFinanceiroMap,
   type ClienteDevedor,
   type EstadoCobrancaFinanceiraVisual,
   type EstadoCobrancaFinanceiraGrupoExibicao,
@@ -8609,66 +8610,16 @@ export default function Dashboard() {
       setFechamentoItensOmitidosPorRelatorio(fechamentoOmitidosMap)
 
       const savedFluxoFin = getData(FECHAMENTO_FLUXO_FINANCEIRO_KEY)
-      let fluxoFinMap: FechamentoFluxoFinanceiroMap = {}
-      if (savedFluxoFin && typeof savedFluxoFin === 'object' && !Array.isArray(savedFluxoFin)) {
-        const rawFlux = savedFluxoFin as Record<string, unknown>
-        for (const k of Object.keys(rawFlux)) {
-          const v = rawFlux[k]
-          if (v === 'enviado_fatura' || v === 'controlo_pagamento') {
-            fluxoFinMap[k] = v
-            continue
-          }
-          if (v && typeof v === 'object' && !Array.isArray(v)) {
-            const o = v as any
-            const etapa =
-              o.etapa === 'enviado_fatura' || o.etapa === 'controlo_pagamento'
-                ? o.etapa
-                : 'controlo_pagamento'
-            const modo = o.modo === 'sem_fatura' ? 'sem_fatura' : 'com_fatura'
-            const pagamento =
-              o.pagamento === 'pago' || o.pagamento === 'devedor' || o.pagamento === 'pendente'
-                ? o.pagamento
-                : 'pendente'
-            const situ = o.situacaoFatura
-            const situOk =
-              situ === 'emitida' || situ === 'no_prazo' || situ === 'paga' || situ === 'nao_paga' ? situ : undefined
-            const numFat =
-              typeof o.numeroFatura === 'string' && o.numeroFatura.trim() ? o.numeroFatura.trim() : ''
-            /** Aceitar entradas com nº fatura, modo sem_fatura ou pagamento — não descartar só por falta de `modo`. */
-            const temSinal =
-              Boolean(numFat) ||
-              modo === 'sem_fatura' ||
-              pagamento === 'pago' ||
-              pagamento === 'devedor' ||
-              Boolean(situOk) ||
-              o.etapa === 'enviado_fatura' ||
-              o.etapa === 'controlo_pagamento'
-            if (temSinal) {
-              const entryLoad: FechamentoFluxoFinanceiroEntry = {
-                etapa,
-                modo,
-                pagamento,
-                updatedAt: typeof o.updatedAt === 'string' ? o.updatedAt : new Date().toISOString(),
-              }
-              if (numFat) entryLoad.numeroFatura = numFat
-              if (situOk) entryLoad.situacaoFatura = situOk
-              if (typeof o.dataVencimentoFatura === 'string' && o.dataVencimentoFatura.trim()) {
-                entryLoad.dataVencimentoFatura = o.dataVencimentoFatura.trim()
-              }
-              fluxoFinMap[k] = entryLoad
-            }
-          }
-        }
-        if (removedRelatorioIds.size > 0) {
-          let fluxDirty = false
-          for (const id of removedRelatorioIds) {
-            if (id in fluxoFinMap) {
-              delete fluxoFinMap[id]
-              fluxDirty = true
-            }
-          }
-          if (fluxDirty) void saveData(FECHAMENTO_FLUXO_FINANCEIRO_KEY, fluxoFinMap)
-        }
+      let fluxoFinMap = normalizeFechamentoFluxoFinanceiroMap(savedFluxoFin)
+      if (
+        savedFluxoFin &&
+        typeof savedFluxoFin === 'object' &&
+        !Array.isArray(savedFluxoFin) &&
+        removedRelatorioIds.size > 0
+      ) {
+        const pruned = removeFechamentoFluxoIdsFromMap(fluxoFinMap, [...removedRelatorioIds])
+        fluxoFinMap = pruned.next
+        if (pruned.changed) void saveData(FECHAMENTO_FLUXO_FINANCEIRO_KEY, fluxoFinMap)
       }
       setFechamentoFluxoFinanceiroPorRelatorioId(fluxoFinMap)
 

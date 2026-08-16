@@ -57,6 +57,8 @@ export {
   relatorioServicoFluxoFinanceiroPendente,
 } from './fluxoMutations'
 
+export { normalizeFechamentoFluxoFinanceiroMap } from './fluxoNormalize'
+
 export type {
   FechamentoFluxoFinanceiroEntryLike,
   FechamentoFluxoFase,

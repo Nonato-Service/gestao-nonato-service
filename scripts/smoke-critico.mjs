@@ -207,6 +207,16 @@ try {
   } else {
     fail('módulo financeiro sem FECHAMENTO_FLUXO_FINANCEIRO_KEY / applyFechamentoEtapaFinanceiraToMap')
   }
+  if (idx.includes('normalizeFechamentoFluxoFinanceiroMap')) {
+    ok('módulo financeiro exporta fluxoNormalize')
+  } else {
+    fail('módulo financeiro sem normalizeFechamentoFluxoFinanceiroMap')
+  }
+  if (!exists('app/modules/financeiro/fluxoNormalize.ts')) {
+    fail('falta app/modules/financeiro/fluxoNormalize.ts')
+  } else {
+    ok('existe app/modules/financeiro/fluxoNormalize.ts')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/financeiro'") || nma.includes('from "./modules/financeiro"')) {
     ok('NonatoMainApp importa app/modules/financeiro')
@@ -217,6 +227,14 @@ try {
     ok('NonatoMainApp usa cálculo/proteção de devedores do módulo')
   } else {
     fail('NonatoMainApp não usa calcularClientesDevedores / refreshDevedoresListaSegura')
+  }
+  if (
+    nma.includes('normalizeFechamentoFluxoFinanceiroMap') &&
+    !nma.includes('const entryLoad: FechamentoFluxoFinanceiroEntry = {')
+  ) {
+    ok('NonatoMainApp usa fluxoNormalize do módulo financeiro')
+  } else {
+    fail('NonatoMainApp ainda normaliza fluxo financeiro inline')
   }
 } catch (e) {
   fail(`módulo financeiro: ${e.message}`)
