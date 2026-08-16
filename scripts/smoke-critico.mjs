@@ -124,11 +124,34 @@ try {
   } else {
     fail('módulo fechamento sem buildItensFechamentoParaExibirFromSalvos / filtrarOpcoesServicoLinhaFechamento')
   }
+  if (
+    idx.includes('RESUMO_COBRANCA_DECISAO_KEY') &&
+    idx.includes('normalizeFechamentoItensOmitidosMap') &&
+    idx.includes('normalizeFechamentoIvaPorRelatorioMap')
+  ) {
+    ok('módulo fechamento exporta persistMaps')
+  } else {
+    fail('módulo fechamento sem persistMaps (keys/normalize)')
+  }
+  if (!exists('app/modules/fechamento/persistMaps.ts')) {
+    fail('falta app/modules/fechamento/persistMaps.ts')
+  } else {
+    ok('existe app/modules/fechamento/persistMaps.ts')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/fechamento'") || nma.includes('from "./modules/fechamento"')) {
     ok('NonatoMainApp importa app/modules/fechamento')
   } else {
     fail('NonatoMainApp não importa o módulo fechamento')
+  }
+  if (
+    !nma.includes("const RESUMO_COBRANCA_DECISAO_KEY =") &&
+    !nma.includes("const FECHAMENTO_ITENS_OMITIDOS_KEY =") &&
+    nma.includes('normalizeFechamentoItensOmitidosMap')
+  ) {
+    ok('NonatoMainApp usa persistMaps do módulo fechamento')
+  } else {
+    fail('NonatoMainApp ainda define keys FECHAMENTO_* localmente / não usa normalize')
   }
 } catch (e) {
   fail(`módulo fechamento: ${e.message}`)

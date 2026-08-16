@@ -68,3 +68,16 @@ export {
   labelLinhaFechamentoFixa,
   filtrarOpcoesServicoLinhaFechamento,
 } from './exibirItens'
+
+export type { ResumoCobrancaDecisao } from './persistMaps'
+export {
+  RESUMO_COBRANCA_DECISAO_KEY,
+  FECHAMENTO_ITENS_OMITIDOS_KEY,
+  FECHAMENTO_IVA_POR_RELATORIO_KEY,
+  FECHAMENTO_GRUPO_POR_RELATORIO_KEY,
+  pruneRelatorioIdsFromMap,
+  normalizeResumoCobrancaDecisaoMap,
+  normalizeFechamentoItensOmitidosMap,
+  normalizeFechamentoIvaPorRelatorioMap,
+  normalizeFechamentoGrupoPorRelatorioMap,
+} from './persistMaps'

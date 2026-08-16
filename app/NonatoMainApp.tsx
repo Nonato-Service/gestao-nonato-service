@@ -513,7 +513,6 @@ import {
   enriquecerLinhaFechamentoComCadastro,
   filtrarFechamentoItensPorOmitidos,
   FECHAMENTO_IVA_PADRAO,
-  parseFechamentoIncluirIva,
   normalizarFechamentoIvaOpcoes,
   resolveFechamentoIvaOpcoes,
   totaisFechamentoLiquidoComIva,
@@ -529,6 +528,15 @@ import {
   buildItensFechamentoParaExibirFromSalvos,
   labelLinhaFechamentoFixa as labelLinhaFechamentoFixaModulo,
   filtrarOpcoesServicoLinhaFechamento,
+  RESUMO_COBRANCA_DECISAO_KEY,
+  FECHAMENTO_ITENS_OMITIDOS_KEY,
+  FECHAMENTO_IVA_POR_RELATORIO_KEY,
+  FECHAMENTO_GRUPO_POR_RELATORIO_KEY,
+  pruneRelatorioIdsFromMap,
+  normalizeResumoCobrancaDecisaoMap,
+  normalizeFechamentoItensOmitidosMap,
+  normalizeFechamentoIvaPorRelatorioMap,
+  normalizeFechamentoGrupoPorRelatorioMap,
 } from './modules/fechamento'
 import {
   encontrarClienteDuplicadoCadastro,
@@ -1173,15 +1181,8 @@ function NumeroSequenciaCirculo({
 const BIBLIOTECA_FILTRO_SEM_CATEGORIA = '__sem_categoria__'
 /** Peças visíveis de cada vez na gestão (evita 21k+ nós DOM no tablet). */
 const BIBLIOTECA_ITENS_POR_LOTE = 48
-/** Decisão «cobrar / não cobrar» no resumo do relatório (por id do relatório) */
-const RESUMO_COBRANCA_DECISAO_KEY = 'nonato-resumo-cobranca-decisao'
-/** Linhas fixas do fechamento (resumo) que podem ser retiradas da cobrança e restauradas depois */
-const FECHAMENTO_ITENS_OMITIDOS_KEY = 'nonato-fechamentos-itens-omitidos-por-relatorio'
+/* RESUMO_COBRANCA / FECHAMENTO omitidos·IVA·grupo keys + normalize → modules/fechamento/persistMaps */
 /* FECHAMENTO_FLUXO_FINANCEIRO_KEY / CONTABILIDADE_CONFIG / fluxo tipos → modules/financeiro/fluxoTipos */
-/** Por relatório: fecho com IVA opcional e taxa (ex.: PT/ES/IT) */
-const FECHAMENTO_IVA_POR_RELATORIO_KEY = 'nonato-fechamentos-iva-por-relatorio'
-/** Grupo do Cadastro de Serviços aplicado à ordem de cobrança de cada relatório (HTT/KRC/… por tarifa). */
-const FECHAMENTO_GRUPO_POR_RELATORIO_KEY = 'nonato-fechamentos-grupo-por-relatorio'
 
 type PasswordEntry = {
   id: string
@@ -8582,35 +8583,28 @@ export default function Dashboard() {
       }
 
       const savedResumoDecisao = getData(RESUMO_COBRANCA_DECISAO_KEY)
-      let resumoDecMap: Record<string, 'sim' | 'nao'> = {}
-      if (savedResumoDecisao && typeof savedResumoDecisao === 'object' && !Array.isArray(savedResumoDecisao)) {
-        resumoDecMap = { ...(savedResumoDecisao as Record<string, 'sim' | 'nao'>) }
-        if (removedRelatorioIds.size > 0) {
-          for (const id of removedRelatorioIds) {
-            delete resumoDecMap[id]
-          }
-          saveData(RESUMO_COBRANCA_DECISAO_KEY, resumoDecMap).catch(() => {})
-        }
+      let resumoDecMap = normalizeResumoCobrancaDecisaoMap(savedResumoDecisao)
+      if (
+        savedResumoDecisao &&
+        typeof savedResumoDecisao === 'object' &&
+        !Array.isArray(savedResumoDecisao) &&
+        removedRelatorioIds.size > 0
+      ) {
+        resumoDecMap = pruneRelatorioIdsFromMap(resumoDecMap, removedRelatorioIds).map
+        saveData(RESUMO_COBRANCA_DECISAO_KEY, resumoDecMap).catch(() => {})
       }
       setResumoCobrancaDecisaoPorRelatorio(resumoDecMap)
 
       const savedFechamentoOmitidos = getData(FECHAMENTO_ITENS_OMITIDOS_KEY)
-      let fechamentoOmitidosMap: Record<string, string[]> = {}
-      if (savedFechamentoOmitidos && typeof savedFechamentoOmitidos === 'object' && !Array.isArray(savedFechamentoOmitidos)) {
-        const fixos = new Set<string>([...FECHAMENTO_IDS_FIXOS_TEMPLATE])
-        const raw = savedFechamentoOmitidos as Record<string, unknown>
-        for (const k of Object.keys(raw)) {
-          const v = raw[k]
-          if (!Array.isArray(v)) continue
-          const arr = v.filter((x): x is string => typeof x === 'string' && fixos.has(x))
-          if (arr.length > 0) fechamentoOmitidosMap[k] = arr
-        }
-        if (removedRelatorioIds.size > 0) {
-          for (const id of removedRelatorioIds) {
-            delete fechamentoOmitidosMap[id]
-          }
-          saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, fechamentoOmitidosMap).catch(() => {})
-        }
+      let fechamentoOmitidosMap = normalizeFechamentoItensOmitidosMap(savedFechamentoOmitidos)
+      if (
+        savedFechamentoOmitidos &&
+        typeof savedFechamentoOmitidos === 'object' &&
+        !Array.isArray(savedFechamentoOmitidos) &&
+        removedRelatorioIds.size > 0
+      ) {
+        fechamentoOmitidosMap = pruneRelatorioIdsFromMap(fechamentoOmitidosMap, removedRelatorioIds).map
+        saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, fechamentoOmitidosMap).catch(() => {})
       }
       setFechamentoItensOmitidosPorRelatorio(fechamentoOmitidosMap)
 
@@ -8679,50 +8673,30 @@ export default function Dashboard() {
       setFechamentoFluxoFinanceiroPorRelatorioId(fluxoFinMap)
 
       const savedFechamentoIva = getData(FECHAMENTO_IVA_POR_RELATORIO_KEY)
-      let fechamentoIvaMap: Record<string, FechamentoIvaOpcoesRelatorio> = {}
-      if (savedFechamentoIva && typeof savedFechamentoIva === 'object' && !Array.isArray(savedFechamentoIva)) {
-        const rawIva = savedFechamentoIva as Record<string, unknown>
-        for (const k of Object.keys(rawIva)) {
-          const v = rawIva[k]
-          if (!v || typeof v !== 'object' || Array.isArray(v)) continue
-          const o = v as Record<string, unknown>
-          const tx = Number(o.taxaIva)
-          fechamentoIvaMap[k] = {
-            incluirIva: parseFechamentoIncluirIva(o.incluirIva),
-            taxaIva: Number.isFinite(tx) ? Math.min(100, Math.max(0, Math.round(tx * 100) / 100)) : 23,
-          }
-        }
-        if (removedRelatorioIds.size > 0) {
-          let ivaDirty = false
-          for (const id of removedRelatorioIds) {
-            if (id in fechamentoIvaMap) {
-              delete fechamentoIvaMap[id]
-              ivaDirty = true
-            }
-          }
-          if (ivaDirty) void saveData(FECHAMENTO_IVA_POR_RELATORIO_KEY, fechamentoIvaMap)
-        }
+      let fechamentoIvaMap = normalizeFechamentoIvaPorRelatorioMap(savedFechamentoIva)
+      if (
+        savedFechamentoIva &&
+        typeof savedFechamentoIva === 'object' &&
+        !Array.isArray(savedFechamentoIva) &&
+        removedRelatorioIds.size > 0
+      ) {
+        const pruned = pruneRelatorioIdsFromMap(fechamentoIvaMap, removedRelatorioIds)
+        fechamentoIvaMap = pruned.map
+        if (pruned.dirty) void saveData(FECHAMENTO_IVA_POR_RELATORIO_KEY, fechamentoIvaMap)
       }
       setFechamentoIvaPorRelatorioId(fechamentoIvaMap)
 
       const savedFechamentoGrupo = getData(FECHAMENTO_GRUPO_POR_RELATORIO_KEY)
-      let fechamentoGrupoMap: Record<string, string> = {}
-      if (savedFechamentoGrupo && typeof savedFechamentoGrupo === 'object' && !Array.isArray(savedFechamentoGrupo)) {
-        const rawG = savedFechamentoGrupo as Record<string, unknown>
-        for (const k of Object.keys(rawG)) {
-          const v = rawG[k]
-          if (typeof v === 'string' && v.trim()) fechamentoGrupoMap[k] = v.trim()
-        }
-        if (removedRelatorioIds.size > 0) {
-          let grupoDirty = false
-          for (const id of removedRelatorioIds) {
-            if (id in fechamentoGrupoMap) {
-              delete fechamentoGrupoMap[id]
-              grupoDirty = true
-            }
-          }
-          if (grupoDirty) void saveData(FECHAMENTO_GRUPO_POR_RELATORIO_KEY, fechamentoGrupoMap)
-        }
+      let fechamentoGrupoMap = normalizeFechamentoGrupoPorRelatorioMap(savedFechamentoGrupo)
+      if (
+        savedFechamentoGrupo &&
+        typeof savedFechamentoGrupo === 'object' &&
+        !Array.isArray(savedFechamentoGrupo) &&
+        removedRelatorioIds.size > 0
+      ) {
+        const pruned = pruneRelatorioIdsFromMap(fechamentoGrupoMap, removedRelatorioIds)
+        fechamentoGrupoMap = pruned.map
+        if (pruned.dirty) void saveData(FECHAMENTO_GRUPO_POR_RELATORIO_KEY, fechamentoGrupoMap)
       }
       setFechamentoGrupoPorRelatorioId(fechamentoGrupoMap)
 
