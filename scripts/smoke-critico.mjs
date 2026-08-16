@@ -45,6 +45,7 @@ const critical = [
   'app/modules/protocolo/index.ts',
   'app/modules/checklist/index.ts',
   'app/modules/contabilidade/index.ts',
+  'app/modules/sst/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -597,6 +598,41 @@ try {
   }
 } catch (e) {
   fail(`módulo contabilidade: ${e.message}`)
+}
+
+// 3z) Módulo sst (28.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/sst/index.ts'), 'utf8')
+  if (
+    idx.includes('emptySolicitacaoServicoTecnicoFormState') &&
+    idx.includes('enriquecerSolicitacaoComClienteCadastrado') &&
+    idx.includes('mergeClienteSelecionadoSst') &&
+    idx.includes('patchEquipamentoClienteChave')
+  ) {
+    ok('módulo sst exporta tipos/form/mappers')
+  } else {
+    fail('módulo sst incompleto (index.ts)')
+  }
+  ;['tipos.ts', 'formState.ts', 'clienteMappers.ts'].forEach((f) => {
+    if (exists(`app/modules/sst/${f}`)) ok(`existe app/modules/sst/${f}`)
+    else fail(`falta app/modules/sst/${f}`)
+  })
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/sst'") || nma.includes('from "./modules/sst"')) {
+    ok('NonatoMainApp importa app/modules/sst')
+  } else {
+    fail('NonatoMainApp não importa o módulo sst')
+  }
+  if (
+    !nma.includes('type SolicitacaoServicoTecnico = {') &&
+    !nma.includes('const emptySolicitacaoServicoTecnicoFormState =')
+  ) {
+    ok('NonatoMainApp usa tipos/form SST do módulo')
+  } else {
+    fail('NonatoMainApp ainda define SolicitacaoServicoTecnico/emptyForm localmente')
+  }
+} catch (e) {
+  fail(`módulo sst: ${e.message}`)
 }
 
 // 4) i18n

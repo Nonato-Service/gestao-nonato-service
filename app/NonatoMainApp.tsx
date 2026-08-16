@@ -243,6 +243,18 @@ import {
 } from './modules/diario'
 import type { ProtocoloBloco, ProtocoloServico } from './modules/protocolo'
 import { newProtocoloBlocoId, ensureProtocoloBlocosIds } from './modules/protocolo'
+import type {
+  SolicitacaoDocDevolvido,
+  SolicitacaoDocDevolvidoCliente,
+  SolicitacaoServicoTecnico,
+  SolicitacaoServicoTecnicoFormState,
+} from './modules/sst'
+import {
+  emptySolicitacaoServicoTecnicoFormState,
+  enriquecerSolicitacaoComClienteCadastrado,
+  mergeClienteSelecionadoSst,
+  patchEquipamentoClienteChave,
+} from './modules/sst'
 import {
   mergeSidebarButtonsDeferLocal,
   repairSidebarButtonsFromCatalog,
@@ -972,52 +984,7 @@ type PecaSolicitadaArmazem = {
   enviadoAvisoRetirada?: boolean
 }
 
-/** Documento devolvido pelo cliente (PDF/imagem), em base64 — também replicado na ficha do cliente quando há vínculo */
-type SolicitacaoDocDevolvido = {
-  id: string
-  nome: string
-  tipo: string
-  dados: string
-  dataUpload: string
-}
-
-/** Cópia do documento devolvido guardada na ficha do cliente cadastrado */
-type SolicitacaoDocDevolvidoCliente = SolicitacaoDocDevolvido & { solicitacaoServicoId: string }
-
-/** Solicitação de Serviço Técnico — formulário enviado ao cliente; cliente assina e reenvia por e-mail ou WhatsApp; após recebido será feito pré-agendamento e nível de urgência */
-type SolicitacaoServicoTecnico = {
-  id: string
-  /** Cliente cadastrado (opcional) — anexos devolvidos são também guardados na ficha deste cliente */
-  clienteId?: string
-  nomeCliente: string
-  /** NIF / VAT / identificação fiscal (preenchido a partir do cadastro do cliente quando existir) */
-  identificacaoFiscal?: string
-  /** E-mail de contacto na solicitação */
-  emailContato?: string
-  departamento?: string
-  /** Tipo de serviço requisitado (ex.: reparação, manutenção) — distinto do tipo de equipamento */
-  tipoServico?: string
-  /** Local onde o serviço é necessário */
-  localServico?: string
-  /** Preferência de horário (modelo NSA) */
-  horarioPreferido?: '' | 'manha' | 'tarde' | 'dia' | 'noite' | 'livre'
-  /** Referência ao equipamento escolhido na lista do cliente: `id:…` ou `idx:n` */
-  equipamentoClienteChave?: string
-  tipoEquipamento: string
-  marca: string
-  modelo: string
-  numeroSerie: string
-  problemasApresentados: string
-  endereco: string
-  telefone: string
-  responsavel: string
-  assinaturaCliente?: string
-  dataAssinaturaCliente?: string
-  nivelUrgencia?: 'baixa' | 'media' | 'alta' | 'critica'
-  dataCriacao: string
-  dataRecebimento?: string
-  documentoDevolvido?: SolicitacaoDocDevolvido
-}
+/* SST tipos/form/mappers → app/modules/sst */
 
 /** Ficha cadastral da Nonato Service — nome empresa, NIF, NIB/IBAN, SWIFT, logo, contacto; para os clientes transferirem pagamento */
 type FichaCadastral = {
@@ -4254,36 +4221,13 @@ export default function Dashboard() {
     })
   }, [filtroDataAgenda])
   
-  const emptySolicitacaoServicoTecnicoFormState = (): Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'> => ({
-    clienteId: undefined,
-    nomeCliente: '',
-    identificacaoFiscal: '',
-    emailContato: '',
-    departamento: '',
-    tipoServico: '',
-    localServico: '',
-    horarioPreferido: '',
-    equipamentoClienteChave: '',
-    tipoEquipamento: '',
-    marca: '',
-    modelo: '',
-    numeroSerie: '',
-    problemasApresentados: '',
-    endereco: '',
-    telefone: '',
-    responsavel: '',
-    assinaturaCliente: undefined,
-    dataAssinaturaCliente: undefined,
-    dataRecebimento: undefined,
-    documentoDevolvido: undefined
-  })
   // Estados para Solicitação de Serviço Técnico (formulário para enviar ao cliente; assinatura; envio por e-mail/WhatsApp)
   const [solicitacoesServicoTecnico, setSolicitacoesServicoTecnico] = useState<SolicitacaoServicoTecnico[]>([])
   const [showSolicitacaoServicoTecnicoForm, setShowSolicitacaoServicoTecnicoForm] = useState(false)
   const [editingSolicitacaoServicoTecnico, setEditingSolicitacaoServicoTecnico] = useState<SolicitacaoServicoTecnico | null>(null)
-  const [solicitacaoServicoTecnicoForm, setSolicitacaoServicoTecnicoForm] = useState<Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'>>(() => emptySolicitacaoServicoTecnicoFormState())
+  const [solicitacaoServicoTecnicoForm, setSolicitacaoServicoTecnicoForm] = useState<SolicitacaoServicoTecnicoFormState>(() => emptySolicitacaoServicoTecnicoFormState())
   /** Modelo base (em branco ou texto fixo) guardado para reutilizar em novos envios ao cliente */
-  const [sstModeloBase, setSstModeloBase] = useState<Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'>>(() => emptySolicitacaoServicoTecnicoFormState())
+  const [sstModeloBase, setSstModeloBase] = useState<SolicitacaoServicoTecnicoFormState>(() => emptySolicitacaoServicoTecnicoFormState())
   const canvasAssinaturaSolicitacaoRef = useRef<HTMLCanvasElement>(null)
   const [mostrarCanvasAssinaturaSolicitacao, setMostrarCanvasAssinaturaSolicitacao] = useState(false)
   const isDrawingSolicitacaoRef = useRef(false)
@@ -42029,81 +41973,7 @@ A1;Peça exemplo;10`}
         )
       
       case 'solicitacao-servico-tecnico': {
-        const enriquecerSolicitacaoComClienteCadastrado = (rec: SolicitacaoServicoTecnico): SolicitacaoServicoTecnico => {
-          if (!rec.clienteId) return rec
-          const c = clientes.find((x) => x.id === rec.clienteId)
-          if (!c) return rec
-          const morada = [c.morada, c.codigoPostal].filter(Boolean).join(', ')
-          const tel = String(c.telefones || '').split(/[;,]/)[0]?.trim() || ''
-          const email = String(c.email || '').trim()
-          const nif = String(c.numeroContribuicaoFiscal || '').trim()
-          const contato = String(c.contato || '').trim()
-          return {
-            ...rec,
-            nomeCliente: String(rec.nomeCliente || '').trim() || c.nomeEmpresa || rec.nomeCliente,
-            telefone: String(rec.telefone || '').trim() || tel || rec.telefone,
-            endereco: String(rec.endereco || '').trim() || morada || rec.endereco,
-            identificacaoFiscal: String(rec.identificacaoFiscal || '').trim() || nif || rec.identificacaoFiscal,
-            emailContato: String(rec.emailContato || '').trim() || email || rec.emailContato,
-            responsavel: String(rec.responsavel || '').trim() || contato || rec.responsavel
-          }
-        }
-        const mergeClienteSelecionadoSst = (
-          prev: Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'>,
-          clienteId: string | undefined
-        ): Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'> => {
-          if (!clienteId) {
-            return { ...prev, clienteId: undefined, equipamentoClienteChave: '' }
-          }
-          const c = clientes.find((x) => x.id === clienteId)
-          if (!c) return { ...prev, clienteId }
-          const morada = [c.morada, c.codigoPostal].filter(Boolean).join(', ')
-          const tel = String(c.telefones || '').split(/[;,]/)[0]?.trim() || ''
-          return {
-            ...prev,
-            clienteId,
-            nomeCliente: (c.nomeEmpresa || prev.nomeCliente || '').trim(),
-            endereco: morada || prev.endereco || '',
-            telefone: tel || prev.telefone || '',
-            emailContato: String(c.email || '').trim() || prev.emailContato || '',
-            identificacaoFiscal: String(c.numeroContribuicaoFiscal || '').trim() || prev.identificacaoFiscal || '',
-            responsavel: String(c.contato || '').trim() || prev.responsavel || '',
-            equipamentoClienteChave: '',
-            tipoEquipamento: '',
-            marca: '',
-            modelo: '',
-            numeroSerie: ''
-          }
-        }
-        const patchEquipamentoClienteChave = (
-          base: Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'>,
-          chave: string,
-          clienteId: string | undefined
-        ): Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'> => {
-          if (!chave) {
-            return { ...base, equipamentoClienteChave: '', tipoEquipamento: '', marca: '', modelo: '', numeroSerie: '' }
-          }
-          if (!clienteId) return { ...base, equipamentoClienteChave: chave }
-          const c = clientes.find((x) => x.id === clienteId)
-          const list = c?.equipamentos
-          if (!list?.length) return { ...base, equipamentoClienteChave: chave }
-          let eq: EquipamentoCliente | undefined
-          if (chave.startsWith('idx:')) {
-            const i = parseInt(chave.slice(4), 10)
-            eq = Number.isFinite(i) ? list[i] : undefined
-          } else {
-            eq = list.find((e) => e.id === chave)
-          }
-          if (!eq) return { ...base, equipamentoClienteChave: chave }
-          return {
-            ...base,
-            equipamentoClienteChave: chave,
-            tipoEquipamento: eq.tipoEquipamento || '',
-            marca: eq.marca || '',
-            modelo: eq.modelo || '',
-            numeroSerie: eq.numeroSerie || ''
-          }
-        }
+        /* enriquecer / merge / patch equipamento → app/modules/sst */
         const resolveRecParaNomeDocDevolvido = (sstId: string): SolicitacaoServicoTecnico | null => {
           const fromList = solicitacoesServicoTecnico.find((x) => x.id === sstId)
           if (editingSolicitacaoServicoTecnico?.id === sstId) {
@@ -42119,9 +41989,9 @@ A1;Peça exemplo;10`}
               ...solicitacaoServicoTecnicoForm,
               id: sstId,
               dataCriacao: base.dataCriacao
-            })
+            }, clientes)
           }
-          if (fromList) return enriquecerSolicitacaoComClienteCadastrado(fromList)
+          if (fromList) return enriquecerSolicitacaoComClienteCadastrado(fromList, clientes)
           return null
         }
         const buildSolicitacaoBody = (s: typeof solicitacaoServicoTecnicoForm | SolicitacaoServicoTecnico) => {
@@ -42211,7 +42081,7 @@ A1;Peça exemplo;10`}
               ...formPayload,
               dataCriacao: editingSolicitacaoServicoTecnico?.dataCriacao || new Date().toISOString()
             }
-            const enr = enriquecerSolicitacaoComClienteCadastrado(pseudo)
+            const enr = enriquecerSolicitacaoComClienteCadastrado(pseudo, clientes)
             formPayload = {
               ...formPayload,
               documentoDevolvido: {
@@ -42264,7 +42134,7 @@ A1;Peça exemplo;10`}
               ...solicitacaoServicoTecnicoForm,
               dataCriacao: editingSolicitacaoServicoTecnico?.dataCriacao || new Date().toISOString()
             } as SolicitacaoServicoTecnico)
-          return enriquecerSolicitacaoComClienteCadastrado(base)
+          return enriquecerSolicitacaoComClienteCadastrado(base, clientes)
         }
         const montarHtmlSolicitacao = (rec: SolicitacaoServicoTecnico) => {
           const tr = translations[translationBundleKey(selectedLanguage)] as (typeof translations)['pt-BR']
@@ -42428,7 +42298,7 @@ A1;Peça exemplo;10`}
         const handleDescarregarDocumentoDevolvidoComNomeCliente = (s: SolicitacaoServicoTecnico) => {
           const doc = s.documentoDevolvido
           if (!doc?.dados || typeof document === 'undefined') return
-          const enr = enriquecerSolicitacaoComClienteCadastrado(s)
+          const enr = enriquecerSolicitacaoComClienteCadastrado(s, clientes)
           const nome = buildSolicitacaoDocDevolvidoCanonicalFilename({
             solicitacaoId: s.id,
             nomeCliente: String(enr.nomeCliente || '').trim() || 'cliente',
@@ -42446,7 +42316,7 @@ A1;Peça exemplo;10`}
         const handleAtualizarNomeDocumentoDevolvidoNoRegisto = (sstId: string) => {
           const row = solicitacoesServicoTecnico.find((x) => x.id === sstId)
           if (!row?.documentoDevolvido?.dados) return
-          const enr = enriquecerSolicitacaoComClienteCadastrado(row)
+          const enr = enriquecerSolicitacaoComClienteCadastrado(row, clientes)
           const newNome = buildSolicitacaoDocDevolvidoCanonicalFilename({
             solicitacaoId: sstId,
             nomeCliente: String(enr.nomeCliente || '').trim() || 'cliente',
@@ -42492,7 +42362,7 @@ A1;Peça exemplo;10`}
           )
         }
         const montarEnvioSolicitacaoSst = (rec: SolicitacaoServicoTecnico, canal: 'email' | 'whatsapp') => {
-          const enr = enriquecerSolicitacaoComClienteCadastrado(rec)
+          const enr = enriquecerSolicitacaoComClienteCadastrado(rec, clientes)
           baixarFormularioOficialClienteHtml(enr)
           const intro =
             canal === 'email'
@@ -42538,10 +42408,10 @@ A1;Peça exemplo;10`}
           }
         }
         const handleEnviarEmailModeloBase = () => {
-          montarEnvioSolicitacaoSst(enriquecerSolicitacaoComClienteCadastrado(registoModeloBaseParaEnvio()), 'email')
+          montarEnvioSolicitacaoSst(enriquecerSolicitacaoComClienteCadastrado(registoModeloBaseParaEnvio(), clientes), 'email')
         }
         const handleEnviarWhatsAppModeloBase = () => {
-          montarEnvioSolicitacaoSst(enriquecerSolicitacaoComClienteCadastrado(registoModeloBaseParaEnvio()), 'whatsapp')
+          montarEnvioSolicitacaoSst(enriquecerSolicitacaoComClienteCadastrado(registoModeloBaseParaEnvio(), clientes), 'whatsapp')
         }
         const handleUpdateUrgencia = (id: string, nivel: 'baixa' | 'media' | 'alta' | 'critica' | undefined) => {
           const list = solicitacoesServicoTecnico.map(s => s.id === id ? { ...s, nivelUrgencia: nivel || undefined } : s)
@@ -42554,7 +42424,7 @@ A1;Peça exemplo;10`}
           saveData('nonato-solicitacoes-servico-tecnico', list)
         }
         const gerarPdfSolicitacaoServico = (s: SolicitacaoServicoTecnico) => {
-          const { html } = montarHtmlSolicitacao(enriquecerSolicitacaoComClienteCadastrado(s))
+          const { html } = montarHtmlSolicitacao(enriquecerSolicitacaoComClienteCadastrado(s, clientes))
           const w = typeof window !== 'undefined' ? window.open('', '_blank') : null
           if (w) {
             w.document.write(html)
@@ -42626,8 +42496,8 @@ A1;Peça exemplo;10`}
                   labels={clientePickerLabels}
                   listMaxHeight={260}
                   isDevedor={isClienteMarcadoDevedor}
-                  onSelect={(c) => setSstModeloBase(mergeClienteSelecionadoSst(sstModeloBase, c.id))}
-                  onClear={() => setSstModeloBase(mergeClienteSelecionadoSst(sstModeloBase, undefined))}
+                  onSelect={(c) => setSstModeloBase(mergeClienteSelecionadoSst(sstModeloBase, c.id, clientes))}
+                  onClear={() => setSstModeloBase(mergeClienteSelecionadoSst(sstModeloBase, undefined, clientes))}
                 />
               </div>
               {(() => {
@@ -42642,7 +42512,7 @@ A1;Peça exemplo;10`}
                     </label>
                     <select
                       value={sstModeloBase.equipamentoClienteChave || ''}
-                      onChange={(e) => setSstModeloBase(patchEquipamentoClienteChave(sstModeloBase, e.target.value, cidMb))}
+                      onChange={(e) => setSstModeloBase(patchEquipamentoClienteChave(sstModeloBase, e.target.value, cidMb, clientes))}
                       style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
                     >
                       <option value="">{(safeT as any)?.solicitacaoServicoTecnicoEquipamentoManual || '— Introduzir equipamento manualmente —'}</option>
@@ -42749,7 +42619,7 @@ A1;Peça exemplo;10`}
                 <button type="button" className="btn-primary" onClick={() => gerarPdfSolicitacaoServico(registoModeloBaseParaEnvio())} style={{ padding: '10px 18px', backgroundColor: 'rgba(15, 80, 70, 0.96)', border: '1px solid rgba(45, 212, 191, 0.65)', color: '#ecfdf5', fontWeight: 700 }}>
                   📄 {(safeT as any)?.solicitacaoServicoTecnicoModeloBaseGerarPdf || 'PDF / impressão (modelo)'}
                 </button>
-                <button type="button" className="btn-primary" onClick={() => baixarFormularioOficialClienteHtml(enriquecerSolicitacaoComClienteCadastrado(registoModeloBaseParaEnvio()))} style={{ padding: '10px 18px', backgroundColor: 'rgba(30, 58, 90, 0.95)', border: '1px solid rgba(100, 180, 255, 0.45)', color: '#e0f2fe', fontWeight: 700 }}>
+                <button type="button" className="btn-primary" onClick={() => baixarFormularioOficialClienteHtml(enriquecerSolicitacaoComClienteCadastrado(registoModeloBaseParaEnvio(), clientes))} style={{ padding: '10px 18px', backgroundColor: 'rgba(30, 58, 90, 0.95)', border: '1px solid rgba(100, 180, 255, 0.45)', color: '#e0f2fe', fontWeight: 700 }}>
                   ⬇ {(safeT as any)?.solicitacaoServicoTecnicoModeloBaseHtml || 'Descarregar .html (modelo)'}
                 </button>
                 <button type="button" onClick={() => handleEnviarEmailModeloBase()} style={{ padding: '10px 18px', border: '1px solid rgba(80, 160, 255, 0.55)', color: '#ffffff', background: 'rgba(18, 38, 62, 0.96)', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}>
@@ -42780,10 +42650,10 @@ A1;Peça exemplo;10`}
                     listMaxHeight={260}
                     isDevedor={isClienteMarcadoDevedor}
                     onSelect={(c) =>
-                      setSolicitacaoServicoTecnicoForm(mergeClienteSelecionadoSst(solicitacaoServicoTecnicoForm, c.id))
+                      setSolicitacaoServicoTecnicoForm(mergeClienteSelecionadoSst(solicitacaoServicoTecnicoForm, c.id, clientes))
                     }
                     onClear={() =>
-                      setSolicitacaoServicoTecnicoForm(mergeClienteSelecionadoSst(solicitacaoServicoTecnicoForm, undefined))
+                      setSolicitacaoServicoTecnicoForm(mergeClienteSelecionadoSst(solicitacaoServicoTecnicoForm, undefined, clientes))
                     }
                   />
                   <p style={{ margin: '8px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
@@ -42804,7 +42674,7 @@ A1;Peça exemplo;10`}
                         value={solicitacaoServicoTecnicoForm.equipamentoClienteChave || ''}
                         onChange={(e) =>
                           setSolicitacaoServicoTecnicoForm(
-                            patchEquipamentoClienteChave(solicitacaoServicoTecnicoForm, e.target.value, cidFv)
+                            patchEquipamentoClienteChave(solicitacaoServicoTecnicoForm, e.target.value, cidFv, clientes)
                           )
                         }
                         style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px' }}
