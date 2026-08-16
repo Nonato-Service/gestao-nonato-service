@@ -215,6 +215,8 @@ import {
   diarioPedidoTituloECorpo,
   diarioPedidoLinhasTarefas,
 } from './modules/diario'
+import type { ProtocoloBloco, ProtocoloServico } from './modules/protocolo'
+import { newProtocoloBlocoId, ensureProtocoloBlocosIds } from './modules/protocolo'
 import {
   mergeSidebarButtonsDeferLocal,
   repairSidebarButtonsFromCatalog,
@@ -1676,87 +1678,7 @@ function EquipamentosRelatorioDespesasInline({
 
 /* Fatura busca → app/modules/financeiro/faturaBusca */
 
-// Protocolo de Serviço: antes/depois com texto, imagens e peças trocadas
-type ProtocoloBloco = {
-  /** Identificador estável por bloco (evita FileReader async gravar no índice errado). */
-  id?: string
-  tipo: 'texto' | 'imagens' | 'acao'
-  /** Cabeçalho desta acção / secção (PDF e formulário). */
-  titulo?: string
-  texto?: string
-  imagens?: string[] // máx. 2, uma ao lado da outra (bloco imagens ou acção)
-  /** Apenas `acao`: ordem entre quadro de imagens e balão de texto. */
-  ordemConteudo?: 'texto_primeiro' | 'imagens_primeiro'
-  /** Apenas `acao`: estado técnico visível no PDF (Bom / Reparar / Substituir / N/D). */
-  estadoAcao?: 'bom' | 'reparar' | 'substituir' | 'nd'
-}
-
-function newProtocoloBlocoId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
-  return `bloco-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-}
-
-function ensureProtocoloBlocosIds(blocos: ProtocoloBloco[]): ProtocoloBloco[] {
-  return blocos.map((raw) => {
-    const b = raw as ProtocoloBloco
-    const tipo = b.tipo === 'imagens' || b.tipo === 'acao' || b.tipo === 'texto' ? b.tipo : 'texto'
-    const base: ProtocoloBloco = {
-      ...b,
-      tipo,
-      imagens: tipo === 'acao' || tipo === 'imagens' ? (Array.isArray(b.imagens) ? b.imagens : []) : b.imagens,
-      ordemConteudo:
-        tipo === 'acao' && (b.ordemConteudo === 'imagens_primeiro' || b.ordemConteudo === 'texto_primeiro')
-          ? b.ordemConteudo
-          : tipo === 'acao'
-            ? 'texto_primeiro'
-            : undefined,
-      estadoAcao:
-        tipo === 'acao' && (b.estadoAcao === 'bom' || b.estadoAcao === 'reparar' || b.estadoAcao === 'substituir' || b.estadoAcao === 'nd')
-          ? b.estadoAcao
-          : undefined,
-    }
-    return base.id ? base : { ...base, id: newProtocoloBlocoId() }
-  })
-}
-
-/** Primeiro número com 9–15 dígitos (WhatsApp wa.me) a partir do campo telefones do cliente */
-function telefoneDigitsParaWa(telefones: string): string {
-  const s = String(telefones || '')
-  const all = s.replace(/\D/g, '')
-  if (all.length >= 10 && all.length <= 15) return all
-  if (all.length === 9) return all
-  const parts = s.split(/[/;,|]+/)
-  for (const part of parts) {
-    const d = part.replace(/\D/g, '')
-    if (d.length >= 10 && d.length <= 15) return d
-    if (d.length === 9) return d
-  }
-  return all.length >= 9 ? all : ''
-}
-
-type ProtocoloServico = {
-  id: string
-  clienteId: string
-  equipamentoNumeroSerie: string
-  /** Quando não há equipamento: descrição da situação ou do serviço (obrigatório se série vazia). */
-  situacaoDescricao?: string
-  textoInicial: string
-  blocos: ProtocoloBloco[]
-  pecasTrocadasCodigos: string[]
-  dataCriacao: string
-  /** 1–12: modelo visual do PDF (impressão / Guardar como PDF) */
-  pdfModelo?: number
-  /** Relatório de Serviço associado (abrir / rastrear no mesmo atendimento). */
-  relatorioServicoId?: string
-  /** em_execucao = aberto; executado_enviado = concluído / enviado ao cliente */
-  status?: 'em_execucao' | 'executado_enviado'
-  dataConclusao?: string
-  enviadoVia?: 'email' | 'whatsapp' | 'manual'
-  condicaoGeral?: string
-  ativoSeguroUso?: 'sim' | 'nao'
-  manutencaoNecessaria?: 'sim' | 'nao'
-  observacaoCondicoes?: string
-}
+/* Protocolo tipos/blocos → app/modules/protocolo */
 
 type ClientePrioritario = {
   id: string

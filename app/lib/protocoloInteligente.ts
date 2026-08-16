@@ -2,20 +2,16 @@
  * Lógica inteligente para Protocolos de Serviço — completude, histórico, templates e filtros.
  */
 
+export type {
+  ProtocoloEstadoAcao,
+  ProtocoloBlocoMin,
+  ProtocoloServicoStatus,
+} from '../modules/protocolo'
+export { newProtocoloBlocoId, ensureProtocoloBlocosIds } from '../modules/protocolo'
+
+import type { ProtocoloBlocoMin, ProtocoloServicoStatus } from '../modules/protocolo'
+
 export type ProtocoloIntelFiltroChip = 'todos' | 'ultimos7d' | 'com_fotos' | 'com_pecas' | 'incompletos'
-
-export type ProtocoloEstadoAcao = 'bom' | 'reparar' | 'substituir' | 'nd'
-
-export type ProtocoloBlocoMin = {
-  id?: string
-  tipo?: string
-  titulo?: string
-  texto?: string
-  imagens?: string[]
-  ordemConteudo?: string
-  /** Apenas `acao`: estado técnico (Bom / Reparar / Substituir / N/D). */
-  estadoAcao?: ProtocoloEstadoAcao
-}
 
 export type ProtocoloCondicaoSimNao = 'sim' | 'nao' | ''
 
@@ -33,8 +29,6 @@ export type ProtocoloFormMin = {
   manutencaoNecessaria?: ProtocoloCondicaoSimNao
   observacaoCondicoes?: string
 }
-
-export type ProtocoloServicoStatus = 'em_execucao' | 'executado_enviado'
 
 export type ProtocoloServicoMin = ProtocoloFormMin & {
   id: string

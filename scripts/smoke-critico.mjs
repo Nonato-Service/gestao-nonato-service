@@ -42,6 +42,7 @@ const critical = [
   'app/modules/agenda/index.ts',
   'app/modules/sidebar/index.ts',
   'app/modules/diario/index.ts',
+  'app/modules/protocolo/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -393,6 +394,34 @@ try {
   }
 } catch (e) {
   fail(`módulo diario: ${e.message}`)
+}
+
+// 3n) Módulo protocolo (16.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/protocolo/index.ts'), 'utf8')
+  if (
+    idx.includes('ensureProtocoloBlocosIds') &&
+    idx.includes('newProtocoloBlocoId') &&
+    idx.includes('ProtocoloBloco')
+  ) {
+    ok('módulo protocolo exporta tipos/blocos')
+  } else {
+    fail('módulo protocolo incompleto (index.ts)')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/protocolo'") || nma.includes('from "./modules/protocolo"')) {
+    ok('NonatoMainApp importa app/modules/protocolo')
+  } else {
+    fail('NonatoMainApp não importa o módulo protocolo')
+  }
+  const intel = fs.readFileSync(path.join(root, 'app/lib/protocoloInteligente.ts'), 'utf8')
+  if (intel.includes("from '../modules/protocolo'") || intel.includes('from "../modules/protocolo"')) {
+    ok('protocoloInteligente usa app/modules/protocolo')
+  } else {
+    fail('protocoloInteligente não importa o módulo protocolo')
+  }
+} catch (e) {
+  fail(`módulo protocolo: ${e.message}`)
 }
 
 // 4) i18n
