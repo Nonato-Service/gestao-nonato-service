@@ -84,6 +84,31 @@ export {
 
 export { normalizarTextoFaturaBusca, numeroFaturaCorrespondeConsulta } from './faturaBusca'
 
+export type {
+  SinalPagamentoFaturaFornecedor,
+  SinalPagamentoFaturaPecas,
+  StatusFaturasAgregado,
+  FaturaFornecedorStatusLike,
+  FaturaPecasStatusLike,
+  FornecedorFaturasLike,
+  StatusFaturasDetalhado,
+  ClienteFaturaBadgeLabels,
+  ClienteFaturaBadgeProps,
+} from './faturaStatus'
+export {
+  getSinalPagamentoFaturaFornecedor,
+  parseMoedaPtFaturaFornecedor,
+  sanitizeFaturaFornecedorValorDigitando,
+  getSinalPagamentoFaturaPecas,
+  listarFaturasPendentesFornecedores,
+  agruparFaturasPorMes,
+  getStatusFaturasCliente,
+  clienteFaturaBadgePropsFromStatus,
+  getClienteFaturaBadgeProps,
+  getStatusFaturasFornecedor,
+  getStatusFaturasDetalhado,
+} from './faturaStatus'
+
 export {
   parseDataFinanceiroParaDate,
   periodoFinanceiroFromDate,

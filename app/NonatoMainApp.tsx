@@ -467,6 +467,12 @@ import {
   ORDEM_ESTADOS_COBRANCA_FINANCEIRA,
   normalizarTextoFaturaBusca,
   numeroFaturaCorrespondeConsulta,
+  getSinalPagamentoFaturaFornecedor,
+  parseMoedaPtFaturaFornecedor,
+  sanitizeFaturaFornecedorValorDigitando,
+  getSinalPagamentoFaturaPecas,
+  getStatusFaturasCliente as getStatusFaturasClienteModulo,
+  getClienteFaturaBadgeProps as getClienteFaturaBadgePropsModulo,
   parseDataFinanceiroParaDate,
   periodoFinanceiroFromDate,
   isoWeekStringFromDate,
@@ -14087,45 +14093,7 @@ export default function Dashboard() {
   }
 
   /** Verde = pago, amarelo = por pagar, vermelho = devendo (vencida ou vencimento passado) */
-  const getSinalPagamentoFaturaFornecedor = (f: Pick<FaturaFornecedor, 'status' | 'dataVencimento'>): 'pago' | 'pendente' | 'atrasado' => {
-    const hoje = new Date()
-    hoje.setHours(0, 0, 0, 0)
-    if (f.status === 'paga') return 'pago'
-    if (f.status === 'vencida') return 'atrasado'
-    if (f.dataVencimento) {
-      const dv = new Date(f.dataVencimento)
-      dv.setHours(0, 0, 0, 0)
-      if (dv < hoje) return 'atrasado'
-    }
-    return 'pendente'
-  }
-
-  /** Converte texto com formato PT (350,50 ou 350) em número. */
-  function parseMoedaPtFaturaFornecedor(s: string): number {
-    const t = String(s ?? '')
-      .trim()
-      .replace(/\s/g, '')
-    if (!t) return NaN
-    const normalized = t.replace(/\./g, '').replace(',', '.')
-    const n = parseFloat(normalized)
-    return n
-  }
-
-  /** Durante a digitação: só dígitos e uma vírgula; remove zeros à esquerda na parte inteira. */
-  function sanitizeFaturaFornecedorValorDigitando(raw: string): string {
-    let s = String(raw ?? '').replace(/[^\d,]/g, '')
-    const firstComma = s.indexOf(',')
-    if (firstComma !== -1) {
-      s = s.slice(0, firstComma + 1) + s.slice(firstComma + 1).replace(/,/g, '')
-    }
-    const parts = s.split(',')
-    let intPart = parts[0] ?? ''
-    const frac = (parts[1] ?? '').slice(0, 2)
-    intPart = intPart.replace(/^0+(?=\d)/, '')
-    if (intPart === '' && frac !== '') intPart = '0'
-    if (parts.length > 1) return intPart + ',' + frac
-    return intPart
-  }
+  /* fatura status/sinal → app/modules/financeiro/faturaStatus */
 
   const handleAddFatura = (fornecedor: Fornecedor) => {
     setSelectedFornecedorForFatura(fornecedor)
@@ -15101,19 +15069,7 @@ export default function Dashboard() {
     setFaturaForm(resetFaturaFormState())
   }
 
-  const getSinalPagamentoFaturaPecas = (f: Pick<FaturaPecas, 'status' | 'dataVencimento'>): 'pago' | 'pendente' | 'atrasado' | 'cancelada' => {
-    const hoje = new Date()
-    hoje.setHours(0, 0, 0, 0)
-    if (f.status === 'paga') return 'pago'
-    if (f.status === 'cancelada') return 'cancelada'
-    if (f.status === 'vencida') return 'atrasado'
-    if (f.dataVencimento) {
-      const dv = new Date(f.dataVencimento)
-      dv.setHours(0, 0, 0, 0)
-      if (dv < hoje) return 'atrasado'
-    }
-    return 'pendente'
-  }
+  /* getSinalPagamentoFaturaPecas → app/modules/financeiro/faturaStatus */
 
   const clienteFaturaEhDevedor = (clienteId: string) =>
     clientesDevedores.some(
@@ -15568,24 +15524,10 @@ export default function Dashboard() {
     }
   }
 
-  // Função para obter todas as faturas pendentes de todos os fornecedores
-  const getFaturasPendentes = () => {
-    const todasFaturas: Array<{ fornecedor: Fornecedor, fatura: FaturaFornecedor }> = []
-    fornecedores.forEach(fornecedor => {
-      (fornecedor.faturas || []).forEach(fatura => {
-        if (fatura.status === 'pendente' || fatura.status === 'vencida') {
-          todasFaturas.push({ fornecedor, fatura })
-        }
-      })
-    })
-    return todasFaturas.sort((a, b) => {
-      // Ordenar por mês e depois por fornecedor
-      if (a.fatura.mes !== b.fatura.mes) {
-        return a.fatura.mes.localeCompare(b.fatura.mes)
-      }
-      return a.fornecedor.nomeEmpresa.localeCompare(b.fornecedor.nomeEmpresa)
-    })
-  }
+  /* listarFaturasPendentes / agrupar / status agregado → app/modules/financeiro/faturaStatus */
+  const getStatusFaturasCliente = (clienteId: string) => getStatusFaturasClienteModulo(clienteId, fornecedores)
+  const getClienteFaturaBadgeProps = (clienteId: string) =>
+    getClienteFaturaBadgePropsModulo(clienteId, fornecedores, safeT as Record<string, string>)
 
   const openOSEditor = (os: OrdemServico) => {
     setEditingOS(os)
@@ -15603,132 +15545,6 @@ export default function Dashboard() {
       equipamentoId: os.equipamentoId || ''
     })
     setShowOSForm(true)
-  }
-
-  // Função para agrupar faturas por mês
-  const agruparFaturasPorMes = (faturas: FaturaFornecedor[]) => {
-    const agrupadas: { [mes: string]: FaturaFornecedor[] } = {}
-    faturas.forEach(fatura => {
-      if (!agrupadas[fatura.mes]) {
-        agrupadas[fatura.mes] = []
-      }
-      agrupadas[fatura.mes].push(fatura)
-    })
-    return agrupadas
-  }
-
-  // Função para obter o status das faturas de um cliente
-  const getStatusFaturasCliente = (clienteId: string): 'pago' | 'pendente' | 'atrasado' | 'sem-faturas' => {
-    const faturasDoCliente: FaturaFornecedor[] = []
-    
-    // Buscar todas as faturas deste cliente em todos os fornecedores
-    fornecedores.forEach(fornecedor => {
-      (fornecedor.faturas || []).forEach(fatura => {
-        if (fatura.clienteId === clienteId) {
-          faturasDoCliente.push(fatura)
-        }
-      })
-    })
-
-    if (faturasDoCliente.length === 0) {
-      return 'sem-faturas'
-    }
-
-    // Verificar se há faturas atrasadas (vencidas)
-    const temAtrasadas = faturasDoCliente.some(f => f.status === 'vencida')
-    if (temAtrasadas) {
-      return 'atrasado'
-    }
-
-    // Verificar se há faturas pendentes
-    const temPendentes = faturasDoCliente.some(f => f.status === 'pendente')
-    if (temPendentes) {
-      return 'pendente'
-    }
-
-    // Se todas estão pagas
-    return 'pago'
-  }
-
-  /** Selo ao lado do nome no cadastro de clientes: cores por situação das faturas (fornecedor → cliente). */
-  function getClienteFaturaBadgeProps(clienteId: string) {
-    const st = getStatusFaturasCliente(clienteId)
-    const tr = safeT as Record<string, string>
-    if (st === 'sem-faturas') {
-      return {
-        bg: 'rgba(255, 255, 255, 0.14)',
-        fg: '#ffffff',
-        border: '1px solid rgba(255, 255, 255, 0.65)',
-        label: tr.semFaturas || tr.semFatura || 'Sem Faturas',
-        mark: '—',
-      }
-    }
-    if (st === 'pendente') {
-      return {
-        bg: '#fde047',
-        fg: '#1c1917',
-        border: '1px solid rgba(202, 138, 8, 0.95)',
-        label: tr.clienteBadgeFaturaAReceber || 'Fatura a receber',
-        mark: '\u23F3',
-      }
-    }
-    if (st === 'atrasado') {
-      return {
-        bg: '#dc2626',
-        fg: '#ffffff',
-        border: '1px solid rgba(252, 165, 165, 0.7)',
-        label: tr.clienteBadgeNaoPago || 'Não pago',
-        mark: '!',
-      }
-    }
-    return {
-      bg: '#15803d',
-      fg: '#ecfdf5',
-      border: '1px solid rgba(74, 222, 128, 0.55)',
-      label: tr.clienteBadgeEmDia || 'Em Dia',
-      mark: '\u2713',
-    }
-  }
-
-  // Função para obter o status das faturas de um fornecedor
-  const getStatusFaturasFornecedor = (fornecedor: Fornecedor): 'pago' | 'pendente' | 'atrasado' | 'sem-faturas' => {
-    const faturas = fornecedor.faturas || []
-
-    if (faturas.length === 0) {
-      return 'sem-faturas'
-    }
-
-    // Verificar se há faturas atrasadas (vencidas)
-    const temAtrasadas = faturas.some(f => f.status === 'vencida')
-    if (temAtrasadas) {
-      return 'atrasado'
-    }
-
-    // Verificar se há faturas pendentes
-    const temPendentes = faturas.some(f => f.status === 'pendente')
-    if (temPendentes) {
-      return 'pendente'
-    }
-
-    // Se todas estão pagas (status === 'paga')
-    return 'pago'
-  }
-
-  // Função para calcular os 4 status de faturas do fornecedor
-  const getStatusFaturasDetalhado = (fornecedor: Fornecedor) => {
-    const faturas = fornecedor.faturas || []
-    
-    const semFatura = faturas.length === 0
-    const faturaPendente = faturas.some(f => f.status === 'pendente')
-    const faturaAtrasada = faturas.some(f => f.status === 'vencida')
-    const faturaPaga = faturas.length > 0 && faturas.some(f => f.status === 'paga')
-    
-    return {
-      semFatura,
-      faturaPendente,
-      faturaAtrasada,
-      faturaPaga
-    }
   }
 
   // Funções para gerenciar Equipamentos do Cliente

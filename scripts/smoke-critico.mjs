@@ -212,6 +212,20 @@ try {
   } else {
     fail('módulo financeiro sem normalizeFechamentoFluxoFinanceiroMap')
   }
+  if (
+    idx.includes('getSinalPagamentoFaturaFornecedor') &&
+    idx.includes('getStatusFaturasCliente') &&
+    idx.includes('clienteFaturaBadgePropsFromStatus')
+  ) {
+    ok('módulo financeiro exporta faturaStatus')
+  } else {
+    fail('módulo financeiro sem faturaStatus')
+  }
+  if (!exists('app/modules/financeiro/faturaStatus.ts')) {
+    fail('falta app/modules/financeiro/faturaStatus.ts')
+  } else {
+    ok('existe app/modules/financeiro/faturaStatus.ts')
+  }
   if (!exists('app/modules/financeiro/fluxoNormalize.ts')) {
     fail('falta app/modules/financeiro/fluxoNormalize.ts')
   } else {
@@ -235,6 +249,15 @@ try {
     ok('NonatoMainApp usa fluxoNormalize do módulo financeiro')
   } else {
     fail('NonatoMainApp ainda normaliza fluxo financeiro inline')
+  }
+  if (
+    !nma.includes('function parseMoedaPtFaturaFornecedor(') &&
+    !nma.includes('function sanitizeFaturaFornecedorValorDigitando(') &&
+    nma.includes('getSinalPagamentoFaturaFornecedor')
+  ) {
+    ok('NonatoMainApp usa faturaStatus do módulo financeiro')
+  } else {
+    fail('NonatoMainApp ainda define parseMoeda/sanitize fatura localmente')
   }
 } catch (e) {
   fail(`módulo financeiro: ${e.message}`)
