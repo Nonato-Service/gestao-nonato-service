@@ -70,6 +70,28 @@ export {
   agruparRelatoriosOrfaosPorNome,
 } from './relatoriosRecovery'
 
+export type {
+  RelatorioServicoBibliotecaLike,
+  EquipamentoClienteBibliotecaLike,
+  ClienteBibliotecaLike,
+  RelatorioFechadoBibliotecaRow,
+  RelatorioFechadoBibliotecaGrupo,
+  BibliotecaRelatoriosClienteRow,
+} from './relatoriosLista'
+export {
+  cmpClienteRelatorioFinanceiro,
+  repararIdsGuardadosBiblioteca,
+  relatoriosComFechamentoNaBibliotecaOrdenados,
+  buildRelatoriosFechadosBibliotecaLista,
+  groupRelatoriosFechadosPorCliente,
+  bibliotecaRelatoriosRowMatchesBusca,
+  cmpBibliotecaLocale,
+  ordenarRelatoriosBiblioteca,
+  bibliotecaRowTemConteudo,
+  buildBibliotecaRelatoriosPorCliente,
+  equipamentosClienteDoRelatorioDespesas,
+} from './relatoriosLista'
+
 export {
   ehImportacaoPendenteStrict,
   sanitizarPecaBibliotecaImportacaoFlag,

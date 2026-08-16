@@ -185,7 +185,7 @@ try {
   fail(`módulo orçamentos: ${e.message}`)
 }
 
-// 3f) Módulo biblioteca (5.º corte modularização)
+// 3f) Módulo biblioteca (5.º corte + 12.º: relatórios lista/árvore)
 try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/biblioteca/index.ts'), 'utf8')
   if (
@@ -197,11 +197,27 @@ try {
   } else {
     fail('módulo biblioteca incompleto (index.ts)')
   }
+  if (
+    idx.includes('buildBibliotecaRelatoriosPorCliente') ||
+    idx.includes('repararIdsGuardadosBiblioteca')
+  ) {
+    ok('módulo biblioteca exporta relatórios lista/árvore')
+  } else {
+    fail('módulo biblioteca sem buildBibliotecaRelatoriosPorCliente / repararIdsGuardadosBiblioteca')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/biblioteca'") || nma.includes('from "./modules/biblioteca"')) {
     ok('NonatoMainApp importa app/modules/biblioteca')
   } else {
     fail('NonatoMainApp não importa o módulo biblioteca')
+  }
+  if (
+    nma.includes('buildBibliotecaRelatoriosPorCliente') &&
+    nma.includes('repararIdsGuardadosBiblioteca')
+  ) {
+    ok('NonatoMainApp usa helpers de biblioteca relatórios')
+  } else {
+    fail('NonatoMainApp não importa buildBibliotecaRelatoriosPorCliente / repararIdsGuardadosBiblioteca')
   }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
