@@ -14,6 +14,7 @@ export type PecaBibliotecaLike = {
   importacaoPendente?: boolean | string | number
   numeroSequenciaGrupo?: string
   dataCriacao?: string
+  dataAtualizacao?: string
   referenciasAlternativas?: string[]
   codigosAlternativos?: string[]
   referenciasAntigas?: string[]

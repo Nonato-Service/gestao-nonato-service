@@ -123,6 +123,19 @@ export { parseRawCatalogItensPlain, csvSplit, pushIfValidCatalogItem } from './i
 export { parseRawCatalogItensHtml } from './importParseHtml'
 export { parseRawToPecas, looksLikeCatalogImportHtml } from './importParse'
 
+export type { RegraClassificacaoPeca, DestinoClassificacaoResolvido } from './classificacao'
+export {
+  parsePalavrasClassificacao,
+  resolverDestinoClassificacaoLote,
+  aplicarClassificacaoCamposNaPeca,
+  aplicarRegrasClassificacaoEmLista,
+  aplicarClassificacaoManualEmLista,
+  aplicarClassificacaoPorPalavrasEmLista,
+  criarRegraClassificacaoPeca,
+  renomearRegraClassificacaoCategoria,
+  renomearRegraClassificacaoSubcategoria,
+} from './classificacao'
+
 export {
   BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY,
   NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY,

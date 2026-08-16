@@ -267,6 +267,22 @@ try {
   } else {
     fail('NonatoMainApp não usa parseRawToPecas do módulo biblioteca')
   }
+  if (
+    idx.includes('aplicarRegrasClassificacaoEmLista') ||
+    idx.includes('criarRegraClassificacaoPeca')
+  ) {
+    ok('módulo biblioteca exporta classificação')
+  } else {
+    fail('módulo biblioteca sem aplicarRegrasClassificacaoEmLista|criarRegraClassificacaoPeca')
+  }
+  if (
+    nma.includes('aplicarRegrasClassificacaoEmLista') &&
+    (nma.includes('criarRegraClassificacaoPeca') || nma.includes('parsePalavrasClassificacao'))
+  ) {
+    ok('NonatoMainApp usa helpers de classificação da biblioteca')
+  } else {
+    fail('NonatoMainApp não usa aplicarRegrasClassificacaoEmLista / criarRegraClassificacaoPeca do módulo')
+  }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
 }

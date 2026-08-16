@@ -133,6 +133,15 @@ import {
   separarPecasImportacao as separarPecasImportacaoBase,
   mapItemToPecaBiblioteca,
   parseRawToPecas as parseRawToPecasFromModule,
+  type RegraClassificacaoPeca,
+  parsePalavrasClassificacao,
+  resolverDestinoClassificacaoLote,
+  aplicarRegrasClassificacaoEmLista,
+  aplicarClassificacaoManualEmLista,
+  aplicarClassificacaoPorPalavrasEmLista,
+  criarRegraClassificacaoPeca,
+  renomearRegraClassificacaoCategoria,
+  renomearRegraClassificacaoSubcategoria,
 } from './modules/biblioteca'
 import {
   type DiaTrabalho,
@@ -1150,15 +1159,7 @@ type PecaBiblioteca = {
   numeroSequenciaGrupo?: string
 }
 
-type RegraClassificacaoPeca = {
-  id: string
-  palavras: string[]
-  categoriaId: string
-  categoria: string
-  subcategoriaId?: string
-  subcategoria?: string
-  createdAt: string
-}
+/* Classificação biblioteca → app/modules/biblioteca (classificacao) */
 
 /* Cadastro rápido biblioteca → app/modules/biblioteca (catalogClipboard / catalogUrl) */
 
@@ -23555,7 +23556,11 @@ export default function Dashboard() {
         setImportacaoDuplicadasIgnoradas(ignoradasTotal)
       }
 
-      const classificadosAutomaticamente = aplicarRegrasClassificacaoEmLista(novos, true)
+      const classificadosAutomaticamente = aplicarRegrasClassificacaoEmLista(
+        novos,
+        regrasClassificacaoPecas,
+        true
+      )
       const merged = [...existentes, ...classificadosAutomaticamente.lista]
       const { lista: atualizadoNormalizado } = garantirNumerosSequenciaPecaBiblioteca(
         merged.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca)),
@@ -23582,11 +23587,11 @@ export default function Dashboard() {
       })
     },
     [
-      aplicarRegrasClassificacaoEmLista,
       categoriasPecas,
       perguntarLimparColagemAposImportacao,
       montarMensagemImportacaoIgnoradas,
       pecasBiblioteca,
+      regrasClassificacaoPecas,
       separarPecasImportacao,
       t,
     ]
@@ -24156,10 +24161,9 @@ export default function Dashboard() {
       setPecaBibliotecaForm(prev =>
         prev.categoriaId === categoriaId ? { ...prev, categoria: nome } : prev
       )
-      const nextRegras = regrasClassificacaoPecas.map(r =>
-        r.categoriaId === categoriaId ? { ...r, categoria: nome } : r
+      persistRegrasClassificacaoPecas(
+        renomearRegraClassificacaoCategoria(regrasClassificacaoPecas, categoriaId, nome)
       )
-      persistRegrasClassificacaoPecas(nextRegras)
     },
     [pecasBiblioteca, regrasClassificacaoPecas, persistPecasBiblioteca, persistRegrasClassificacaoPecas]
   )
@@ -24181,10 +24185,9 @@ export default function Dashboard() {
       setPecaBibliotecaForm(prev =>
         prev.subcategoriaId === subcategoriaId ? { ...prev, subcategoria: nome } : prev
       )
-      const nextRegras = regrasClassificacaoPecas.map(r =>
-        r.subcategoriaId === subcategoriaId ? { ...r, subcategoria: nome } : r
+      persistRegrasClassificacaoPecas(
+        renomearRegraClassificacaoSubcategoria(regrasClassificacaoPecas, subcategoriaId, nome)
       )
-      persistRegrasClassificacaoPecas(nextRegras)
     },
     [pecasBiblioteca, regrasClassificacaoPecas, persistPecasBiblioteca, persistRegrasClassificacaoPecas]
   )
@@ -24592,46 +24595,6 @@ export default function Dashboard() {
     return pecasImportadasPendentes
   }, [filtroImportacaoPendente, pecasImportadasPendentes])
 
-  function aplicarRegrasClassificacaoEmLista(lista: PecaBiblioteca[], somenteSemGrupo = true) {
-    if (regrasClassificacaoPecas.length === 0) return { lista, alteradas: 0 }
-
-    let alteradas = 0
-    const updated = lista.map((peca) => {
-      if (somenteSemGrupo && peca.categoriaId) return peca
-
-      const textoBase = `${peca.nome} ${peca.codigo} ${peca.descricao || ''}`.toLowerCase()
-      const regra = regrasClassificacaoPecas.find((item) =>
-        item.palavras.some((palavra) => textoBase.includes(palavra.toLowerCase()))
-      )
-
-      if (!regra) return peca
-
-      const proximaPeca: PecaBiblioteca = {
-        ...peca,
-        categoriaId: regra.categoriaId,
-        categoria: regra.categoria,
-        subcategoriaId: regra.subcategoriaId || '',
-        subcategoria: regra.subcategoria || ''
-      }
-
-      if (
-        proximaPeca.categoriaId === (peca.categoriaId || '') &&
-        proximaPeca.subcategoriaId === (peca.subcategoriaId || '')
-      ) {
-        return peca
-      }
-
-      alteradas++
-      const categoriaMudou = proximaPeca.categoriaId !== (peca.categoriaId || '')
-      const agora = new Date().toISOString()
-      return categoriaMudou
-        ? { ...proximaPeca, numeroSequenciaGrupo: '', dataAtualizacao: agora }
-        : { ...proximaPeca, dataAtualizacao: agora }
-    })
-
-    return { lista: updated, alteradas }
-  }
-
   const toggleSelecaoPecaBiblioteca = useCallback((pecaId: string) => {
     setSelecaoPecasBibliotecaIds((prev) =>
       prev.includes(pecaId) ? prev.filter((id) => id !== pecaId) : [...prev, pecaId]
@@ -24664,49 +24627,24 @@ export default function Dashboard() {
       return
     }
 
-    const categoriaIdFinal =
-      classificacaoLoteCategoriaId ||
-      subcategoriasPecas.find((sub) => sub.id === classificacaoLoteSubcategoriaId)?.categoriaId ||
-      ''
-
-    const categoriaSelecionada = categoriasPecas.find((cat) => cat.id === categoriaIdFinal)
-    const subcategoriaSelecionada = subcategoriasPecas.find(
-      (sub) => sub.id === classificacaoLoteSubcategoriaId && sub.categoriaId === categoriaIdFinal
+    const destino = resolverDestinoClassificacaoLote(
+      classificacaoLoteCategoriaId,
+      classificacaoLoteSubcategoriaId,
+      categoriasPecas,
+      subcategoriasPecas
     )
 
-    if (!categoriaSelecionada && !subcategoriaSelecionada) {
+    if (!destino) {
       alert('Escolha um grupo ou subgrupo para aplicar.')
       return
     }
 
-    let alteradas = 0
-    const idSet = new Set(ids)
-    const updated = pecasBiblioteca.map((peca) => {
-      if (!idSet.has(peca.id)) return peca
-      if (classificacaoLoteSomenteSemGrupo && peca.categoriaId) return peca
-
-      const proximaPeca: PecaBiblioteca = {
-        ...peca,
-        categoriaId: categoriaSelecionada?.id || '',
-        categoria: categoriaSelecionada?.nome || '',
-        subcategoriaId: subcategoriaSelecionada?.id || '',
-        subcategoria: subcategoriaSelecionada?.nome || ''
-      }
-
-      if (
-        proximaPeca.categoriaId === (peca.categoriaId || '') &&
-        proximaPeca.subcategoriaId === (peca.subcategoriaId || '')
-      ) {
-        return peca
-      }
-
-      alteradas++
-      const categoriaMudou = proximaPeca.categoriaId !== (peca.categoriaId || '')
-      const agora = new Date().toISOString()
-      return categoriaMudou
-        ? { ...proximaPeca, numeroSequenciaGrupo: '', dataAtualizacao: agora }
-        : { ...proximaPeca, dataAtualizacao: agora }
-    })
+    const { lista: updated, alteradas } = aplicarClassificacaoManualEmLista(
+      pecasBiblioteca,
+      ids,
+      destino,
+      classificacaoLoteSomenteSemGrupo
+    )
 
     if (alteradas === 0) {
       alert(classificacaoLoteSomenteSemGrupo
@@ -24715,6 +24653,7 @@ export default function Dashboard() {
       return
     }
 
+    const idSet = new Set(ids)
     persistPecasBiblioteca(updated)
     setSelecaoPecasBibliotecaIds((prev) => prev.filter((id) => !idSet.has(id)))
     alert(`${alteradas} peça(s) classificadas em lote.`)
@@ -24734,63 +24673,32 @@ export default function Dashboard() {
       return
     }
 
-    const palavras = classificacaoLotePalavras
-      .split(/[\n,;]+/)
-      .map((item) => item.trim().toLowerCase())
-      .filter(Boolean)
+    const palavras = parsePalavrasClassificacao(classificacaoLotePalavras)
 
     if (palavras.length === 0) {
       alert('Digite uma ou mais palavras-chave.')
       return
     }
 
-    const categoriaIdFinal =
-      classificacaoLoteCategoriaId ||
-      subcategoriasPecas.find((sub) => sub.id === classificacaoLoteSubcategoriaId)?.categoriaId ||
-      ''
-
-    const categoriaSelecionada = categoriasPecas.find((cat) => cat.id === categoriaIdFinal)
-    const subcategoriaSelecionada = subcategoriasPecas.find(
-      (sub) => sub.id === classificacaoLoteSubcategoriaId && sub.categoriaId === categoriaIdFinal
+    const destino = resolverDestinoClassificacaoLote(
+      classificacaoLoteCategoriaId,
+      classificacaoLoteSubcategoriaId,
+      categoriasPecas,
+      subcategoriasPecas
     )
 
-    if (!categoriaSelecionada && !subcategoriaSelecionada) {
+    if (!destino) {
       alert('Escolha o grupo ou subgrupo de destino antes de aplicar por palavras.')
       return
     }
 
-    const idSet = new Set(ids)
-    let alteradas = 0
-    const updated = pecasBiblioteca.map((peca) => {
-      if (!idSet.has(peca.id)) return peca
-      if (classificacaoLoteSomenteSemGrupo && peca.categoriaId) return peca
-
-      const textoBase = `${peca.nome} ${peca.codigo} ${peca.descricao || ''}`.toLowerCase()
-      const combina = palavras.some((palavra) => textoBase.includes(palavra))
-      if (!combina) return peca
-
-      const proximaPeca: PecaBiblioteca = {
-        ...peca,
-        categoriaId: categoriaSelecionada?.id || '',
-        categoria: categoriaSelecionada?.nome || '',
-        subcategoriaId: subcategoriaSelecionada?.id || '',
-        subcategoria: subcategoriaSelecionada?.nome || ''
-      }
-
-      if (
-        proximaPeca.categoriaId === (peca.categoriaId || '') &&
-        proximaPeca.subcategoriaId === (peca.subcategoriaId || '')
-      ) {
-        return peca
-      }
-
-      alteradas++
-      const categoriaMudou = proximaPeca.categoriaId !== (peca.categoriaId || '')
-      const agora = new Date().toISOString()
-      return categoriaMudou
-        ? { ...proximaPeca, numeroSequenciaGrupo: '', dataAtualizacao: agora }
-        : { ...proximaPeca, dataAtualizacao: agora }
-    })
+    const { lista: updated, alteradas } = aplicarClassificacaoPorPalavrasEmLista(
+      pecasBiblioteca,
+      ids,
+      palavras,
+      destino,
+      classificacaoLoteSomenteSemGrupo
+    )
 
     if (alteradas === 0) {
       alert('Nenhuma peça combinou com as palavras-chave informadas.')
@@ -24811,40 +24719,26 @@ export default function Dashboard() {
   ])
 
   const handleSalvarRegraClassificacaoLote = useCallback(() => {
-    const palavras = classificacaoLotePalavras
-      .split(/[\n,;]+/)
-      .map((item) => item.trim().toLowerCase())
-      .filter(Boolean)
+    const palavras = parsePalavrasClassificacao(classificacaoLotePalavras)
 
     if (palavras.length === 0) {
       alert('Digite as palavras-chave antes de salvar a regra.')
       return
     }
 
-    const categoriaIdFinal =
-      classificacaoLoteCategoriaId ||
-      subcategoriasPecas.find((sub) => sub.id === classificacaoLoteSubcategoriaId)?.categoriaId ||
-      ''
-
-    const categoriaSelecionada = categoriasPecas.find((cat) => cat.id === categoriaIdFinal)
-    const subcategoriaSelecionada = subcategoriasPecas.find(
-      (sub) => sub.id === classificacaoLoteSubcategoriaId && sub.categoriaId === categoriaIdFinal
+    const destino = resolverDestinoClassificacaoLote(
+      classificacaoLoteCategoriaId,
+      classificacaoLoteSubcategoriaId,
+      categoriasPecas,
+      subcategoriasPecas
     )
 
-    if (!categoriaSelecionada && !subcategoriaSelecionada) {
+    if (!destino) {
       alert('Escolha o destino da regra antes de salvar.')
       return
     }
 
-    const regra: RegraClassificacaoPeca = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      palavras,
-      categoriaId: categoriaSelecionada?.id || '',
-      categoria: categoriaSelecionada?.nome || '',
-      subcategoriaId: subcategoriaSelecionada?.id || '',
-      subcategoria: subcategoriaSelecionada?.nome || '',
-      createdAt: new Date().toISOString()
-    }
+    const regra = criarRegraClassificacaoPeca(palavras, destino)
 
     persistRegrasClassificacaoPecas([regra, ...regrasClassificacaoPecas])
     alert('Regra salva. As próximas importações já podem ser classificadas automaticamente.')
@@ -24866,7 +24760,11 @@ export default function Dashboard() {
 
     const idSet = new Set(ids)
     const alvo = pecasBiblioteca.filter((peca) => idSet.has(peca.id))
-    const resultado = aplicarRegrasClassificacaoEmLista(alvo, classificacaoLoteSomenteSemGrupo)
+    const resultado = aplicarRegrasClassificacaoEmLista(
+      alvo,
+      regrasClassificacaoPecas,
+      classificacaoLoteSomenteSemGrupo
+    )
 
     if (resultado.alteradas === 0) {
       alert('Nenhuma regra combinou com as peças selecionadas.')
@@ -24878,10 +24776,10 @@ export default function Dashboard() {
     persistPecasBiblioteca(updated)
     alert(`${resultado.alteradas} peça(s) classificadas pelas regras salvas.`)
   }, [
-    aplicarRegrasClassificacaoEmLista,
     classificacaoLoteSomenteSemGrupo,
     pecasBiblioteca,
-    persistPecasBiblioteca
+    persistPecasBiblioteca,
+    regrasClassificacaoPecas,
   ])
 
   // ===== Funções para Biblioteca de Grupos/Peças Desmontados =====
