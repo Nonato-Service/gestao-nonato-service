@@ -1,0 +1,29 @@
+---
+description: Modularização incremental — extrair um módulo de cada vez do NonatoMainApp
+alwaysApply: true
+---
+
+# Modularização por módulos (Nonato Service)
+
+O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracções incrementais**, nunca por reescrita total.
+
+## Procedimento (obrigatório)
+
+1. **Um módulo por ciclo:** extrair → `npm run smoke:critico` → checklist de confiança → commit/push só com **SIM**.
+2. **Só `StrReplace` / ficheiros novos** — nunca reescrever `NonatoMainApp.tsx` inteiro.
+3. Extrair primeiro **funções puras + tipos**; UI/hooks só depois das dependências estarem no módulo.
+4. Pasta padrão: `app/modules/<nome>/` com `index.ts` público.
+5. Não misturar features novas com extracção no mesmo commit.
+6. Actualizar `scripts/smoke-critico.mjs` quando surgir um novo módulo obrigatório.
+
+## Ordem actual
+
+1. `app/modules/fechamento/` (tarifas / linhas) — 1.º corte
+2. `app/modules/clientes/` (alfabeto / detalhe)
+3. `app/modules/financeiro/` (devedores)
+
+## Proibido neste processo
+
+- Migrar JSX de ecrãs inteiros sem ter tipagem/utils no módulo
+- Mover `translations.ts` / `globals.css` “por limpeza”
+- Apagar código não relacionado no mesmo PR

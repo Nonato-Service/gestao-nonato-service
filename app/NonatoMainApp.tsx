@@ -292,6 +292,22 @@ import {
 } from './lib/fechamentoFluxoFinanceiroUi'
 import { FechamentoFluxoPagamentoBar } from './components/FechamentoFluxoPagamentoBar'
 import {
+  FECHAMENTO_IDS_FIXOS_TEMPLATE,
+  type FechamentoItem,
+  type ServicoCadastroFechamentoMin,
+  normalizeServicoValorStored,
+  formatServicoValorExibicao,
+  parseServicoValorInput,
+  servicoValorToInputString,
+  servicoCodParaExibicao,
+  servicoDescricaoLegivelFechamento,
+  servicoRotuloParaSelectFechamento,
+  filtrarServicosCadastroPorGrupo,
+  resolverServicosFechamentoTemplate,
+  getServicoParaLinhaFechamento,
+  enriquecerLinhaFechamentoComCadastro,
+} from './modules/fechamento'
+import {
   encontrarClienteDuplicadoCadastro,
   encontrarClienteDuplicadoCadastroAntecipado,
   listarClientesNomeSimilarCadastro,
@@ -852,31 +868,7 @@ async function restoreManuaisFamiliasGruposFromBackupPayload(raw: unknown): Prom
   }
 }
 
-/** Cadastro de serviços: valores vindos do JSON/localStorage podem ser string. */
-function normalizeServicoValorStored(v: unknown): number {
-  if (typeof v === 'number' && Number.isFinite(v)) return v
-  const n = parseFloat(String(v ?? '').replace(/\s/g, '').replace(',', '.'))
-  return Number.isFinite(n) ? n : 0
-}
-
-/** Exibição nos cartões/listas do cadastro: sempre 2 casas e ponto decimal (ex.: 0.60, 70.00). */
-function formatServicoValorExibicao(v: unknown): string {
-  return normalizeServicoValorStored(v).toFixed(2)
-}
-
-/** Campo de valor (texto): aceita vírgula ou ponto; vazio trata-se como 0 ao guardar. */
-function parseServicoValorInput(raw: string | undefined | null): number {
-  const t = String(raw ?? '').trim().replace(/\s/g, '').replace(/€/g, '').replace(',', '.')
-  if (t === '' || t === '-' || t === '.') return 0
-  const n = parseFloat(t)
-  return Number.isFinite(n) ? n : NaN
-}
-
-/** Texto inicial do input — sem forçar 0 visível quando o valor é zero. */
-function servicoValorToInputString(v: number): string {
-  if (!Number.isFinite(v) || v === 0) return ''
-  return String(v)
-}
+/** Cadastro de serviços: valores/rotulos/linhas → app/modules/fechamento */
 
 /** Grupo lógico no cadastro de serviços (ex.: «Horas trabalhadas»). */
 type ServicoCadastroGrupo = {
@@ -924,277 +916,6 @@ function migrarServicoLegacyCodNomeDesc<
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ')
   return { row: { ...s, cod, nome: nomeNovo, descricao } as T, touched: true }
-}
-
-/** Código para ecrã e PDF: `cod` preenchido ou prefixo legado `COD-…` no `nome` (ex. HTT-HORA… → HTT). */
-function servicoCodParaExibicao(s: { cod?: string; nome: string }): string {
-  const c = (typeof s.cod === 'string' ? s.cod : '').trim()
-  if (c) return c
-  const m = (s.nome || '').trim().match(/^([A-Za-z0-9]{2,8})[-–]/)
-  return m ? m[1].toUpperCase() : ''
-}
-
-/** Descrição legível para gravar no fechamento (evita só o código curto do cadastro). */
-function servicoDescricaoLegivelFechamento(s: { cod?: string; nome: string; descricao?: string }): string {
-  const cod = servicoCodParaExibicao(s)
-  const codNorm = (cod || '').trim().toUpperCase()
-  const pareceSoCodigo = (texto: string) => {
-    const t = (texto || '').trim()
-    if (!t) return true
-    if (codNorm && t.toUpperCase() === codNorm) return true
-    if (t.length <= 8 && /^[A-Z0-9._\-]+$/i.test(t) && !/\s/.test(t)) return true
-    return false
-  }
-  const d = (typeof s.descricao === 'string' ? s.descricao : '').trim()
-  const n = (s.nome || '').trim()
-  if (d && !pareceSoCodigo(d)) return d
-  if (n && !pareceSoCodigo(n)) return n
-  if (d) return d
-  if (n) return n
-  return cod || ''
-}
-
-/** Rótulo para `<select>` no fechamento: código + descrição/nome legível. */
-function servicoRotuloParaSelectFechamento(s: { cod?: string; nome: string; descricao?: string }): string {
-  const cod = servicoCodParaExibicao(s)
-  const codNorm = (cod || '').trim().toUpperCase()
-  const legivel = servicoDescricaoLegivelFechamento(s)
-  const legNorm = String(legivel ?? '').trim().toUpperCase()
-  if (cod && legivel && legNorm !== codNorm) return `${cod} — ${legivel}`
-  if (legivel) return cod ? `${cod} — ${legivel}` : legivel
-  return cod || '—'
-}
-
-type ServicoCadastroFechamentoMin = {
-  id: string
-  cod?: string
-  nome: string
-  descricao?: string
-  valor: number
-  tipoCobranca: string
-  categoria?: string
-  grupoId?: string
-}
-
-/** Restringe o cadastro ao grupo escolhido no fechamento (ex.: HTT 70 € vs 95 € por grupo). */
-function filtrarServicosCadastroPorGrupo(
-  servicos: ServicoCadastroFechamentoMin[],
-  grupoId?: string | null
-): ServicoCadastroFechamentoMin[] {
-  if (!grupoId) return servicos
-  const filtered = servicos.filter((s) => s.grupoId === grupoId)
-  return filtered.length > 0 ? filtered : servicos
-}
-
-function txtServicoFechamento(s: ServicoCadastroFechamentoMin): string {
-  return `${s.nome || ''} ${s.descricao || ''} ${s.cod || ''}`.toLowerCase()
-}
-
-/** Associa cada linha do fechamento (ht, km, diárias, ida, retorno) ao serviço certo do cadastro. */
-function resolverServicosFechamentoTemplate(
-  servicos: ServicoCadastroFechamentoMin[],
-  grupoId?: string | null
-) {
-  const pool = filtrarServicosCadastroPorGrupo(servicos, grupoId)
-  const horaServs = pool.filter((s) => s.tipoCobranca === 'hora')
-  const txt = txtServicoFechamento
-  const porCod = (re: RegExp) => pool.find((s) => re.test(String(s.cod || '').trim()))
-
-  const fechServHt =
-    porCod(/^(ht|htt)$/i) ||
-    horaServs.find(
-      (s) =>
-        (/trabalho/i.test(txt(s)) || /^(ht|htt)$/i.test(String(s.cod || '').trim())) &&
-        !/viaj|viagem|\bida\b|\bretorno\b/i.test(txt(s))
-    ) ||
-    horaServs.find((s) => /trabalho/i.test(txt(s))) ||
-    horaServs[0]
-
-  const fechServHida =
-    porCod(/^(hvi|hida|hvida)$/i) ||
-    pool.find((s) => /viaj/i.test(txt(s)) && /\bida\b/i.test(txt(s)) && !/retorno/i.test(txt(s))) ||
-    horaServs.find((s) => /\bida\b/i.test(txt(s)) && !/retorno/i.test(txt(s))) ||
-    horaServs.find((s) => s.id && s.id !== fechServHt?.id)
-
-  const fechServHret =
-    porCod(/^(hvr|hret|hvret)$/i) ||
-    pool.find((s) => /viaj/i.test(txt(s)) && /(retorno|volta)/i.test(txt(s))) ||
-    horaServs.find((s) => /retorno|volta/i.test(txt(s))) ||
-    horaServs.find((s) => s.id && s.id !== fechServHt?.id && s.id !== fechServHida?.id) ||
-    fechServHida
-
-  const fechServKm = porCod(/^krc$/i) || pool.find((s) => s.tipoCobranca === 'km')
-
-  const diariasLista = pool
-    .filter((s) => s.tipoCobranca === 'diarias')
-    .slice()
-    .sort((a, b) => {
-      const va = normalizeServicoValorStored(a.valor)
-      const vb = normalizeServicoValorStored(b.valor)
-      const sa = a.categoria === 'servico' ? 1 : 0
-      const sb = b.categoria === 'servico' ? 1 : 0
-      if (sa !== sb) return sb - sa
-      if (vb !== va) return vb - va
-      return String(a.cod || '').localeCompare(String(b.cod || ''))
-    })
-  const fechServDiarias =
-    porCod(/^dfc$/i) ||
-    porCod(/^ddt$/i) ||
-    diariasLista.find((s) => normalizeServicoValorStored(s.valor) > 0 && s.categoria === 'servico') ||
-    diariasLista.find((s) => normalizeServicoValorStored(s.valor) > 0) ||
-    diariasLista[0]
-
-  return { fechServHt, fechServHida, fechServHret, fechServKm, fechServDiarias }
-}
-
-function servicoCombinaLinhaFechamento(s: ServicoCadastroFechamentoMin, linhaId: string): boolean {
-  const cod = String(s.cod || '').trim().toUpperCase()
-  const t = txtServicoFechamento(s)
-  if (linhaId === 'ht') {
-    return (
-      /^(HT|HTT)$/i.test(cod) ||
-      (s.tipoCobranca === 'hora' && /trabalho/i.test(t) && !/viaj|viagem|\bida\b|\bretorno\b/i.test(t))
-    )
-  }
-  if (linhaId === 'hida') {
-    return (
-      /^(HVI|HIDA|HVIDA)$/i.test(cod) ||
-      (/viaj|viagem/i.test(t) && /\bida\b/i.test(t) && !/retorno|volta/i.test(t))
-    )
-  }
-  if (linhaId === 'hret') {
-    return (
-      /^(HVR|HRET|HVRET)$/i.test(cod) ||
-      (/viaj|viagem/i.test(t) && /(retorno|volta)/i.test(t))
-    )
-  }
-  if (linhaId === 'km') return s.tipoCobranca === 'km' || /^KRC$/i.test(cod)
-  if (linhaId === 'diarias') {
-    if (s.tipoCobranca !== 'diarias') return false
-    const cod = String(s.cod || '').trim().toUpperCase()
-    const v = normalizeServicoValorStored(s.valor)
-    if (/^(DFC|DDT|DIAR|DIARIAS)$/i.test(cod)) return true
-    if (s.categoria === 'servico' && v > 0) return true
-    return v > 0
-  }
-  return true
-}
-
-function servicoPertenceAoGrupoFechamento(
-  s: ServicoCadastroFechamentoMin | undefined,
-  grupoId?: string | null
-): boolean {
-  if (!s) return false
-  if (!grupoId) return true
-  const gid = String(s.grupoId || '').trim()
-  // Sem grupo no serviço: aceitar (cadastros antigos); com grupo: tem de coincidir
-  return !gid || gid === grupoId
-}
-
-function getServicoParaLinhaFechamento(
-  servicos: ServicoCadastroFechamentoMin[],
-  linhaId: string,
-  savedServicoId?: string,
-  grupoId?: string | null
-): ServicoCadastroFechamentoMin | undefined {
-  if (savedServicoId) {
-    const byId = servicos.find((s) => s.id === savedServicoId)
-    if (
-      byId &&
-      servicoCombinaLinhaFechamento(byId, linhaId) &&
-      servicoPertenceAoGrupoFechamento(byId, grupoId)
-    ) {
-      return byId
-    }
-  }
-  const r = resolverServicosFechamentoTemplate(servicos, grupoId)
-  if (linhaId === 'ht') return r.fechServHt
-  if (linhaId === 'hida') return r.fechServHida
-  if (linhaId === 'hret') return r.fechServHret
-  if (linhaId === 'km') return r.fechServKm
-  if (linhaId === 'diarias') return r.fechServDiarias
-  return undefined
-}
-
-/** Preenche código, valor unitário e total de uma linha do fechamento a partir do cadastro. */
-function enriquecerLinhaFechamentoComCadastro(
-  item: FechamentoItem,
-  servicos: ServicoCadastroFechamentoMin[],
-  savedServicoId?: string,
-  grupoId?: string | null,
-  opts?: { forcarValorCadastro?: boolean }
-): FechamentoItem {
-  const tpl = getServicoParaLinhaFechamento(servicos, item.id, undefined, grupoId)
-  let svc = tpl
-  const savedRaw = savedServicoId ? servicos.find((s) => s.id === savedServicoId) : undefined
-  const savedMesmoGrupo =
-    !!savedRaw &&
-    servicoCombinaLinhaFechamento(savedRaw, item.id) &&
-    servicoPertenceAoGrupoFechamento(savedRaw, grupoId)
-  if (savedMesmoGrupo && savedServicoId) {
-    const bySaved = getServicoParaLinhaFechamento(servicos, item.id, savedServicoId, grupoId)
-    const vSaved = bySaved ? normalizeServicoValorStored(bySaved.valor) : 0
-    if (item.id === 'diarias') {
-      const cod = String(bySaved?.cod || '').trim().toUpperCase()
-      if (bySaved && vSaved > 0 && /^(DFC|DDT|DIAR|DIARIAS)$/i.test(cod)) svc = bySaved
-    } else if (bySaved && vSaved > 0) {
-      svc = bySaved
-    }
-  }
-  if (!svc) return item
-  const valorUnit = normalizeServicoValorStored(svc.valor)
-  const qty = item.quantidade || 0
-  const valorUnitStored = normalizeServicoValorStored(item.valorUnitario)
-  /**
-   * Se o serviço guardado é de outro grupo (ex.: HTT 50 → grupo HTT 70),
-   * ou ao mudar o grupo, ou se o € guardado coincide com HTT/KM de outro grupo,
-   * usar o valor do cadastro do grupo atual.
-   */
-  const valorCoincideComOutroGrupo =
-    valorUnit > 0 &&
-    valorUnitStored > 0 &&
-    Math.abs(valorUnit - valorUnitStored) > 0.009 &&
-    servicos.some(
-      (s) =>
-        s.id !== svc.id &&
-        servicoCombinaLinhaFechamento(s, item.id) &&
-        (!grupoId || String(s.grupoId || '').trim() !== grupoId) &&
-        Math.abs(normalizeServicoValorStored(s.valor) - valorUnitStored) < 0.009
-    )
-  const deveUsarCadastro =
-    opts?.forcarValorCadastro === true ||
-    !savedMesmoGrupo ||
-    valorUnitStored <= 0 ||
-    valorCoincideComOutroGrupo
-  const valorUnitFinal = deveUsarCadastro
-    ? valorUnit > 0
-      ? valorUnit
-      : valorUnitStored
-    : valorUnitStored > 0
-      ? valorUnitStored
-      : valorUnit
-  const mult =
-    item.tipoCobranca === 'hora' ||
-    item.tipoCobranca === 'km' ||
-    item.tipoCobranca === 'diarias' ||
-    item.id === 'hida' ||
-    item.id === 'hret'
-  const valorTotal = mult ? Math.round(qty * valorUnitFinal * 100) / 100 : valorUnitFinal
-  const cod =
-    (typeof svc.cod === 'string' && svc.cod.trim()) || servicoCodParaExibicao(svc) || undefined
-  const codCmp = (cod || '').trim().toUpperCase()
-  const descLegivel = servicoDescricaoLegivelFechamento(svc)
-  const descricao =
-    descLegivel && descLegivel.trim().toUpperCase() !== codCmp ? descLegivel : item.descricao
-  return {
-    ...item,
-    tipoCobranca: item.tipoCobranca,
-    servicoId: svc.id,
-    cod,
-    descricao,
-    valorUnitario: valorUnitFinal,
-    valorTotal,
-  }
 }
 
 type Language = {
@@ -2654,7 +2375,6 @@ const FECHAMENTO_FLUXO_FINANCEIRO_KEY = 'nonato-fechamentos-fluxo-financeiro'
 const FECHAMENTO_IVA_POR_RELATORIO_KEY = 'nonato-fechamentos-iva-por-relatorio'
 /** Grupo do Cadastro de Serviços aplicado à ordem de cobrança de cada relatório (HTT/KRC/… por tarifa). */
 const FECHAMENTO_GRUPO_POR_RELATORIO_KEY = 'nonato-fechamentos-grupo-por-relatorio'
-const FECHAMENTO_IDS_FIXOS_TEMPLATE = ['ht', 'km', 'diarias', 'hida', 'hret'] as const
 /** E-mail da contabilidade e opção de abrir envio após guardar fechamento na Biblioteca */
 const CONTABILIDADE_CONFIG_KEY = 'nonato-contabilidade-config'
 type ContabilidadeConfig = {
@@ -2825,22 +2545,7 @@ function parseRelatorioServicoNumeroDataSeq(numero: string): { yyyymmdd: string;
   return { yyyymmdd, seq }
 }
 
-/** Item de cobrança no fechamento de um relatório de serviço (vinculado ao Cadastro de Serviços) */
-type FechamentoItem = {
-  id: string
-  descricao: string
-  cod?: string
-  servicoId?: string
-  tipoCobranca: 'hora' | 'km' | 'valor-fixo' | 'unidade' | 'diarias' | 'extras'
-  quantidade: number
-  valorUnitario: number
-  valorTotal: number
-  origem?: 'relatorio' | 'manual'
-  /** Nota curta visível para o cliente (itens manuais / peças sem orçamento) */
-  infoAdicional?: string
-  /** Apenas para item Diárias: false = não cobrar diária ao cliente (Sim/Não) */
-  cobrarDiaria?: boolean
-}
+/** Item de cobrança no fechamento → app/modules/fechamento (FechamentoItem) */
 
 function filtrarFechamentoItensPorOmitidos(
   omitidosPorRelatorio: Record<string, string[]>,

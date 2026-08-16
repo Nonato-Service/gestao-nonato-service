@@ -30,6 +30,7 @@ const critical = [
   'app/lib/criticalCadastroKeys.ts',
   'app/lib/orcamentosAlfabeto.ts',
   'app/lib/clienteDevedorUtils.ts',
+  'app/modules/fechamento/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -71,6 +72,24 @@ try {
   }
 } catch (e) {
   fail(`alfabeto: ${e.message}`)
+}
+
+// 3b) Módulo fechamento (1.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/fechamento/index.ts'), 'utf8')
+  if (idx.includes('enriquecerLinhaFechamentoComCadastro') && idx.includes('FECHAMENTO_IDS_FIXOS_TEMPLATE')) {
+    ok('módulo fechamento exporta tarifas/linhas')
+  } else {
+    fail('módulo fechamento incompleto (index.ts)')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/fechamento'") || nma.includes('from "./modules/fechamento"')) {
+    ok('NonatoMainApp importa app/modules/fechamento')
+  } else {
+    fail('NonatoMainApp não importa o módulo fechamento')
+  }
+} catch (e) {
+  fail(`módulo fechamento: ${e.message}`)
 }
 
 // 4) i18n
