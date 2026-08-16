@@ -140,7 +140,7 @@ try {
   fail(`módulo clientes: ${e.message}`)
 }
 
-// 3d) Módulo financeiro (3.º corte + 11.º: período/IVA)
+// 3d) Módulo financeiro (3.º corte + 11.º: período/IVA + 18.º: fluxo tipos/mutações)
 try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/financeiro/index.ts'), 'utf8')
   if (
@@ -159,6 +159,14 @@ try {
     ok('módulo financeiro exporta período/IVA')
   } else {
     fail('módulo financeiro sem buildRelatorioFinanceiroPeriodo / periodoFinanceiroFromDate')
+  }
+  if (
+    idx.includes('FECHAMENTO_FLUXO_FINANCEIRO_KEY') ||
+    idx.includes('applyFechamentoEtapaFinanceiraToMap')
+  ) {
+    ok('módulo financeiro exporta fluxo tipos/mutações')
+  } else {
+    fail('módulo financeiro sem FECHAMENTO_FLUXO_FINANCEIRO_KEY / applyFechamentoEtapaFinanceiraToMap')
   }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/financeiro'") || nma.includes('from "./modules/financeiro"')) {

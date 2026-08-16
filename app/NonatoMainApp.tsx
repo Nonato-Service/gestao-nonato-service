@@ -426,6 +426,7 @@ import {
   classNameFinanceiroDespesasBibGrupoPorEstado,
   classNameBibliotecaClienteFluxoFinanceiro,
   financeiroDespesasBibGrupoDevePiscar,
+  classNameResumoCobrancaPorFase,
   ORDEM_ESTADOS_COBRANCA_FINANCEIRA,
   normalizarTextoFaturaBusca,
   numeroFaturaCorrespondeConsulta,
@@ -437,6 +438,14 @@ import {
   dataDentroPeriodoFinanceiro,
   buildIvaControlesFromDados,
   buildRelatorioFinanceiroPeriodo,
+  FECHAMENTO_FLUXO_FINANCEIRO_KEY,
+  CONTABILIDADE_CONFIG_KEY,
+  defaultContabilidadeConfig,
+  applyFechamentoEtapaFinanceiraToMap,
+  situacaoFaturaToEtapaOpts,
+  removeFechamentoFluxoIdsFromMap,
+  ensureDefaultFluxoEntriesForBibliotecaIds,
+  relatorioServicoFluxoFinanceiroPendente,
   type ClienteDevedor,
   type EstadoCobrancaFinanceiraVisual,
   type EstadoCobrancaFinanceiraGrupoExibicao,
@@ -446,6 +455,12 @@ import {
   type RelatorioFinanceiro,
   type TipoPeriodoFinanceiro,
   type BuildFinanceiroPeriodoInput,
+  type ContabilidadeConfig,
+  type FechamentoFluxoFinanceiroEtapa,
+  type FechamentoSituacaoFatura,
+  type FechamentoFluxoFinanceiroEntry,
+  type FechamentoFluxoFinanceiroMap,
+  type FechamentoFluxoFinanceiroPatchOpts,
 } from './modules/financeiro'
 import { FechamentoFluxoPagamentoBar } from './components/FechamentoFluxoPagamentoBar'
 import {
@@ -1242,42 +1257,11 @@ const BIBLIOTECA_ITENS_POR_LOTE = 48
 const RESUMO_COBRANCA_DECISAO_KEY = 'nonato-resumo-cobranca-decisao'
 /** Linhas fixas do fechamento (resumo) que podem ser retiradas da cobrança e restauradas depois */
 const FECHAMENTO_ITENS_OMITIDOS_KEY = 'nonato-fechamentos-itens-omitidos-por-relatorio'
-/** Por relatório de serviço com fechamento na biblioteca: fluxo fatura → pagamento (com/sem fatura) */
-const FECHAMENTO_FLUXO_FINANCEIRO_KEY = 'nonato-fechamentos-fluxo-financeiro'
+/* FECHAMENTO_FLUXO_FINANCEIRO_KEY / CONTABILIDADE_CONFIG / fluxo tipos → modules/financeiro/fluxoTipos */
 /** Por relatório: fecho com IVA opcional e taxa (ex.: PT/ES/IT) */
 const FECHAMENTO_IVA_POR_RELATORIO_KEY = 'nonato-fechamentos-iva-por-relatorio'
 /** Grupo do Cadastro de Serviços aplicado à ordem de cobrança de cada relatório (HTT/KRC/… por tarifa). */
 const FECHAMENTO_GRUPO_POR_RELATORIO_KEY = 'nonato-fechamentos-grupo-por-relatorio'
-/** E-mail da contabilidade e opção de abrir envio após guardar fechamento na Biblioteca */
-const CONTABILIDADE_CONFIG_KEY = 'nonato-contabilidade-config'
-type ContabilidadeConfig = {
-  emailContabilidade: string
-  enviarFechamentoContabilidadeAuto: boolean
-}
-const defaultContabilidadeConfig: ContabilidadeConfig = {
-  emailContabilidade: '',
-  enviarFechamentoContabilidadeAuto: true,
-}
-
-type FechamentoFluxoFinanceiroEtapa = 'none' | 'enviado_fatura' | 'controlo_pagamento'
-type FechamentoFluxoFinanceiroModo = 'com_fatura' | 'sem_fatura'
-type FechamentoFluxoFinanceiroPagamento = 'pendente' | 'pago' | 'devedor'
-/** Situação explícita da fatura (complementa etapa/pagamento na gestão financeira / OS) */
-type FechamentoSituacaoFatura = 'emitida' | 'no_prazo' | 'paga' | 'nao_paga'
-type FechamentoFluxoFinanceiroEntry = {
-  etapa: Exclude<FechamentoFluxoFinanceiroEtapa, 'none'>
-  modo: FechamentoFluxoFinanceiroModo
-  pagamento: FechamentoFluxoFinanceiroPagamento
-  updatedAt: string
-  numeroFatura?: string
-  situacaoFatura?: FechamentoSituacaoFatura
-  dataVencimentoFatura?: string
-}
-
-/** Fluxo financeiro da OS: «não pago» / devedor — ver `relatorioFluxoFinanceiroNaoPago` em modules/financeiro. */
-function relatorioServicoFluxoFinanceiroPendente(fr: unknown): boolean {
-  return relatorioFluxoFinanceiroNaoPago(fr)
-}
 
 type PasswordEntry = {
   id: string
@@ -1567,13 +1551,7 @@ function idEquipamentoVisivelParaProtocolo(eq: EquipamentoCliente | undefined, e
 }
 
 /* lista-bib / biblioteca relatórios → modules/biblioteca/relatoriosLista */
-
-function classNameResumoCobrancaPorFase(fase: 'laranja' | 'azul' | 'verde' | 'biblioteca'): string {
-  if (fase === 'biblioteca') return 'relatorio-resumo-cobranca-wrap--biblioteca'
-  if (fase === 'verde') return 'relatorio-resumo-cobranca-wrap--verde'
-  if (fase === 'azul') return 'relatorio-resumo-cobranca-wrap--azul'
-  return 'relatorio-resumo-cobranca-wrap--laranja'
-}
+/* classNameResumoCobrancaPorFase → modules/financeiro/fluxoUi */
 
 function EquipamentosRelatorioDespesasInline({
   relatorio,
@@ -4266,86 +4244,21 @@ export default function Dashboard() {
   function setFechamentoEtapaFinanceira(
     relatorioId: string,
     etapa: FechamentoFluxoFinanceiroEtapa,
-    opts?: {
-      modo?: FechamentoFluxoFinanceiroModo
-      pagamento?: FechamentoFluxoFinanceiroPagamento
-      numeroFatura?: string
-      situacaoFatura?: FechamentoSituacaoFatura
-      dataVencimentoFatura?: string
-    }
+    opts?: FechamentoFluxoFinanceiroPatchOpts
   ) {
     setFechamentoFluxoFinanceiroPorRelatorioId(prev => {
-      const next = { ...prev }
-      if (etapa === 'none') {
-        delete next[relatorioId]
-      } else {
-        const curr = next[relatorioId]
-        const currObj = curr && typeof curr === 'object' && !Array.isArray(curr) ? (curr as FechamentoFluxoFinanceiroEntry) : null
-        const numeroFatura =
-          opts?.numeroFatura !== undefined ? opts.numeroFatura : currObj?.numeroFatura
-        const situacaoFatura =
-          opts?.situacaoFatura !== undefined ? opts.situacaoFatura : currObj?.situacaoFatura
-        const dataVencimentoFatura =
-          opts?.dataVencimentoFatura !== undefined ? opts.dataVencimentoFatura : currObj?.dataVencimentoFatura
-        const entry: FechamentoFluxoFinanceiroEntry = {
-          etapa,
-          modo: opts?.modo || currObj?.modo || (etapa === 'enviado_fatura' ? 'com_fatura' : 'com_fatura'),
-          pagamento: opts?.pagamento || currObj?.pagamento || 'pendente',
-          updatedAt: new Date().toISOString(),
-        }
-        if (numeroFatura !== undefined && String(numeroFatura).trim() !== '') entry.numeroFatura = String(numeroFatura).trim()
-        if (situacaoFatura !== undefined) entry.situacaoFatura = situacaoFatura
-        if (dataVencimentoFatura !== undefined && String(dataVencimentoFatura).trim() !== '') {
-          entry.dataVencimentoFatura = String(dataVencimentoFatura).trim()
-        }
-        next[relatorioId] = entry
-      }
+      const next = applyFechamentoEtapaFinanceiraToMap(prev, relatorioId, etapa, opts)
       void saveData(FECHAMENTO_FLUXO_FINANCEIRO_KEY, next)
       return next
     })
   }
-
   function aplicarSituacaoFaturaNoRelatorio(relatorioId: string, situacao: FechamentoSituacaoFatura) {
-    if (situacao === 'emitida') {
-      setFechamentoEtapaFinanceira(relatorioId, 'enviado_fatura', {
-        modo: 'com_fatura',
-        pagamento: 'pendente',
-        situacaoFatura: 'emitida',
-      })
-      return
-    }
-    if (situacao === 'no_prazo') {
-      // Preserva `sem_fatura` quando o fechamento é sem fatura (clientes que não faturam)
-      setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', {
-        pagamento: 'pendente',
-        situacaoFatura: 'no_prazo',
-      })
-      return
-    }
-    if (situacao === 'paga') {
-      setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', {
-        pagamento: 'pago',
-        situacaoFatura: 'paga',
-      })
-      return
-    }
-    setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', {
-      pagamento: 'devedor',
-      situacaoFatura: 'nao_paga',
-    })
+    const { etapa, opts } = situacaoFaturaToEtapaOpts(situacao)
+    setFechamentoEtapaFinanceira(relatorioId, etapa, opts)
   }
-
-  function removerFechamentoFluxoParaRelatorios(relatorioIds: string[]) {
-    if (!relatorioIds.length) return
+  function removerFechamentoFluxoParaRelatorios(ids: string[]) {
     setFechamentoFluxoFinanceiroPorRelatorioId(prev => {
-      let changed = false
-      const next = { ...prev }
-      for (const id of relatorioIds) {
-        if (id in next) {
-          delete next[id]
-          changed = true
-        }
-      }
+      const { next, changed } = removeFechamentoFluxoIdsFromMap(prev, ids)
       if (changed) void saveData(FECHAMENTO_FLUXO_FINANCEIRO_KEY, next)
       return changed ? next : prev
     })
@@ -5537,7 +5450,7 @@ export default function Dashboard() {
   const [fechamentosGuardadosBibliotecaIds, setFechamentosGuardadosBibliotecaIds] = useState<string[]>([])
   /** Fechamento na biblioteca: etapa e pagamento (com/sem fatura) */
   const [fechamentoFluxoFinanceiroPorRelatorioId, setFechamentoFluxoFinanceiroPorRelatorioId] = useState<
-    Record<string, FechamentoFluxoFinanceiroEntry | FechamentoFluxoFinanceiroEtapa>
+    FechamentoFluxoFinanceiroMap
   >({})
   const [fechamentoIvaPorRelatorioId, setFechamentoIvaPorRelatorioId] = useState<
     Record<string, FechamentoIvaOpcoesRelatorio>
@@ -7520,19 +7433,10 @@ export default function Dashboard() {
   useEffect(() => {
     if (!fechamentosGuardadosBibliotecaIds.length) return
     setFechamentoFluxoFinanceiroPorRelatorioId((prev) => {
-      let changed = false
-      const next = { ...prev }
-      for (const id of fechamentosGuardadosBibliotecaIds) {
-        const curr = next[id]
-        if (curr && typeof curr === 'object' && !Array.isArray(curr)) continue
-        next[id] = {
-          etapa: 'controlo_pagamento',
-          modo: 'com_fatura',
-          pagamento: 'pendente',
-          updatedAt: new Date().toISOString(),
-        }
-        changed = true
-      }
+      const { next, changed } = ensureDefaultFluxoEntriesForBibliotecaIds(
+        prev,
+        fechamentosGuardadosBibliotecaIds
+      )
       if (changed) void saveData(FECHAMENTO_FLUXO_FINANCEIRO_KEY, next)
       return changed ? next : prev
     })
@@ -8996,7 +8900,7 @@ export default function Dashboard() {
       setFechamentoItensOmitidosPorRelatorio(fechamentoOmitidosMap)
 
       const savedFluxoFin = getData(FECHAMENTO_FLUXO_FINANCEIRO_KEY)
-      let fluxoFinMap: Record<string, FechamentoFluxoFinanceiroEntry | FechamentoFluxoFinanceiroEtapa> = {}
+      let fluxoFinMap: FechamentoFluxoFinanceiroMap = {}
       if (savedFluxoFin && typeof savedFluxoFin === 'object' && !Array.isArray(savedFluxoFin)) {
         const rawFlux = savedFluxoFin as Record<string, unknown>
         for (const k of Object.keys(rawFlux)) {

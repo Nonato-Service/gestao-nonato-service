@@ -126,3 +126,12 @@ export function financeiroDespesasBibGrupoDevePiscar(
   if (variosEstados || !relatorioIds.length) return false
   return relatorioIds.some((id) => fechamentoFluxoFasePisca(getFechamentoFluxoFase(fluxoPorId[id])))
 }
+
+export function classNameResumoCobrancaPorFase(
+  fase: 'laranja' | 'azul' | 'verde' | 'biblioteca'
+): string {
+  if (fase === 'biblioteca') return 'relatorio-resumo-cobranca-wrap--biblioteca'
+  if (fase === 'verde') return 'relatorio-resumo-cobranca-wrap--verde'
+  if (fase === 'azul') return 'relatorio-resumo-cobranca-wrap--azul'
+  return 'relatorio-resumo-cobranca-wrap--laranja'
+}

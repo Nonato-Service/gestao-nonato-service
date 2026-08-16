@@ -1,4 +1,4 @@
-/** Módulo Financeiro — devedores, flags, UI de fluxo, período/IVA (funções puras). */
+/** Módulo Financeiro — devedores, flags, UI de fluxo, período/IVA, mutações de fluxo (funções puras). */
 
 export type {
   ClienteDevedor,
@@ -32,6 +32,32 @@ export {
 } from './calcularDevedores'
 
 export type {
+  ContabilidadeConfig,
+  FechamentoFluxoFinanceiroEtapa,
+  FechamentoFluxoFinanceiroModo,
+  FechamentoFluxoFinanceiroPagamento,
+  FechamentoSituacaoFatura,
+  FechamentoFluxoFinanceiroEntry,
+  FechamentoFluxoFinanceiroMap,
+  FechamentoFluxoFinanceiroPatchOpts,
+} from './fluxoTipos'
+
+export {
+  FECHAMENTO_FLUXO_FINANCEIRO_KEY,
+  CONTABILIDADE_CONFIG_KEY,
+  defaultContabilidadeConfig,
+  defaultFluxoEntryParaBiblioteca,
+} from './fluxoTipos'
+
+export {
+  applyFechamentoEtapaFinanceiraToMap,
+  situacaoFaturaToEtapaOpts,
+  removeFechamentoFluxoIdsFromMap,
+  ensureDefaultFluxoEntriesForBibliotecaIds,
+  relatorioServicoFluxoFinanceiroPendente,
+} from './fluxoMutations'
+
+export type {
   FechamentoFluxoFinanceiroEntryLike,
   FechamentoFluxoFase,
   EstadoCobrancaFinanceiraVisual,
@@ -51,6 +77,7 @@ export {
   getEstadoCobrancaFinanceiraGrupoExibicao,
   classNameBibliotecaClienteFluxoFinanceiro,
   financeiroDespesasBibGrupoDevePiscar,
+  classNameResumoCobrancaPorFase,
 } from './fluxoUi'
 
 export { normalizarTextoFaturaBusca, numeroFaturaCorrespondeConsulta } from './faturaBusca'
