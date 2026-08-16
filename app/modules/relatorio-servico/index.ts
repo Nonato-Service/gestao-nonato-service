@@ -34,3 +34,6 @@ export {
   relatorioSaiDaListaPrincipalRelatorios,
   relatoriosServicoForaDaBiblioteca,
 } from './lista'
+
+export type { TotaisDiasTrabalho } from './calculos'
+export { calcularDuracao, atualizarCalculosDia, calcularTotais } from './calculos'

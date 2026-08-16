@@ -370,6 +370,15 @@ try {
   } else {
     fail('módulo relatorio-servico incompleto (index.ts)')
   }
+  if (
+    idx.includes('calcularDuracao') &&
+    idx.includes('atualizarCalculosDia') &&
+    idx.includes('calcularTotais')
+  ) {
+    ok('módulo relatorio-servico exporta cálculos de dia')
+  } else {
+    fail('módulo relatorio-servico sem calcularDuracao/atualizarCalculosDia/calcularTotais')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (
     nma.includes("from './modules/relatorio-servico'") ||
@@ -378,6 +387,15 @@ try {
     ok('NonatoMainApp importa app/modules/relatorio-servico')
   } else {
     fail('NonatoMainApp não importa o módulo relatorio-servico')
+  }
+  if (
+    !nma.includes('const calcularDuracao =') &&
+    !nma.includes('const atualizarCalculosDia =') &&
+    nma.includes('calcularTotais')
+  ) {
+    ok('NonatoMainApp usa cálculos do módulo relatorio-servico')
+  } else {
+    fail('NonatoMainApp ainda define calcularDuracao/atualizarCalculosDia localmente')
   }
 } catch (e) {
   fail(`módulo relatorio-servico: ${e.message}`)
