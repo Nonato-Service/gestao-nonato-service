@@ -35,6 +35,7 @@ const critical = [
   'app/modules/financeiro/index.ts',
   'app/modules/orcamentos/index.ts',
   'app/modules/biblioteca/index.ts',
+  'app/modules/relatorios-especiais/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -187,6 +188,31 @@ try {
   }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
+}
+
+// 3g) Módulo relatórios especiais (6.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/index.ts'), 'utf8')
+  if (
+    idx.includes('calcularTotaisRelatorioEspecial') &&
+    idx.includes('adaptRelatorioEspecialParaFechamentoShape') &&
+    idx.includes('filterByDeletedIds')
+  ) {
+    ok('módulo relatorios-especiais exporta cálculos/fechamento')
+  } else {
+    fail('módulo relatorios-especiais incompleto (index.ts)')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (
+    nma.includes("from './modules/relatorios-especiais'") ||
+    nma.includes('from "./modules/relatorios-especiais"')
+  ) {
+    ok('NonatoMainApp importa app/modules/relatorios-especiais')
+  } else {
+    fail('NonatoMainApp não importa o módulo relatorios-especiais')
+  }
+} catch (e) {
+  fail(`módulo relatorios-especiais: ${e.message}`)
 }
 
 // 4) i18n

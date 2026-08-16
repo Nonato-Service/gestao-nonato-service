@@ -406,25 +406,21 @@ import { buscarPecaBibliotecaNoServidor } from './lib/buscarPecaBibliotecaRemoto
 import { filtrarPorNomeBusca, getLetraAlfabetoNome } from './lib/nomeAlfabetoBusca'
 import { wrapRelatorioServicoPrintDocument } from './lib/relatorioServicoPdfShell'
 import RelatorioEspecialHub from './components/RelatorioEspecialHub'
-import type { RelatorioEspecial } from './lib/relatorioEspecialTypes'
 import {
+  type RelatorioEspecial,
   RELATORIOS_ESPECIAIS_STORAGE_KEY,
   RELATORIOS_ESPECIAIS_DELETED_IDS_KEY,
-} from './lib/relatorioEspecialTypes'
-import {
   adaptRelatorioEspecialParaFechamentoShape,
   buildItensFechamentoBaseRelatorioEspecial,
   encontrarRelatorioEspecialPorOsInput,
   isRelatorioEspecialId,
   numeroPareceRelatorioEspecial,
-} from './lib/relatorioEspecialFechamentoCobranca'
-import {
   filterByDeletedIds,
   mergeDeletedIds,
   normalizeDeletedIds,
   readDeletedIdsFromLocalStorage,
-} from './lib/relatorioEspecialDeleted'
-import { minutosPausaOuAlmocoDia } from './lib/relatorioEspecialCalculos'
+  minutosPausaOuAlmocoDia,
+} from './modules/relatorios-especiais'
 import { pdfModeloBodyClass } from './lib/pdfModelTypes'
 import { PdfModeloPickerField } from './components/PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from './lib/pdfModelStorage'
