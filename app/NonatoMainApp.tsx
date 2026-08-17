@@ -263,6 +263,8 @@ import {
   buildSolicitacaoPrintPayload,
   formatDataSstLista,
 } from './modules/sst'
+import type { UserFormState } from './modules/admin'
+import { createEmptyUserForm, userToFormState } from './modules/admin'
 import {
   mergeSidebarButtonsDeferLocal,
   repairSidebarButtonsFromCatalog,
@@ -837,30 +839,6 @@ type User = {
   }
   menuItems?: Record<string, boolean>
   menuItemsConfigured?: boolean
-}
-
-type UserFormState = {
-  name: string
-  email: string
-  role: string
-  linkedProfileType: 'gestor' | 'tecnico' | ''
-  linkedProfileId: string
-  password: string
-  isAdmin: boolean
-  permissions: {
-    gestores: boolean
-    equipamentos: boolean
-    clientes: boolean
-    fornecedores: boolean
-    relatorioServico: boolean
-    bibliotecaPecas: boolean
-    agenda: boolean
-    desmontados: boolean
-    cadastroServicos: boolean
-    extras: boolean
-  }
-  menuItems: Record<string, boolean>
-  menuItemsConfigured: boolean
 }
 
 /* Diário tipos/helpers → app/modules/diario */
@@ -1544,91 +1522,6 @@ export default function Dashboard() {
       return undefined
     }
   }, [])
-  const createEmptyUserForm = (): UserFormState => ({
-    name: '',
-    email: '',
-    role: '',
-    linkedProfileType: '',
-    linkedProfileId: '',
-    password: '',
-    isAdmin: false,
-    permissions: {
-      gestores: false,
-      equipamentos: false,
-      clientes: false,
-      fornecedores: false,
-      relatorioServico: false,
-      bibliotecaPecas: false,
-      agenda: false,
-      desmontados: false,
-      cadastroServicos: false,
-      extras: false
-    },
-    menuItems: buildMenuItemsFromLegacyPermissions({
-      gestores: false,
-      equipamentos: false,
-      clientes: false,
-      fornecedores: false,
-      relatorioServico: false,
-      bibliotecaPecas: false,
-      agenda: false,
-      desmontados: false,
-      cadastroServicos: false,
-      extras: false,
-    }),
-    menuItemsConfigured: false,
-  })
-
-  const userToFormState = (user: User, passwordField?: string): UserFormState => ({
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    linkedProfileType: user.linkedProfileType || '',
-    linkedProfileId: user.linkedProfileId || '',
-    password: passwordField !== undefined ? passwordField : user.password || '',
-    isAdmin: user.isAdmin ?? false,
-    permissions: {
-      gestores: Boolean(user.permissions?.gestores),
-      equipamentos: Boolean(user.permissions?.equipamentos),
-      clientes: Boolean(user.permissions?.clientes),
-      fornecedores: Boolean(user.permissions?.fornecedores),
-      relatorioServico: Boolean(user.permissions?.relatorioServico),
-      bibliotecaPecas: Boolean(user.permissions?.bibliotecaPecas),
-      agenda: Boolean(user.permissions?.agenda),
-      desmontados: Boolean(user.permissions?.desmontados),
-      cadastroServicos: Boolean(user.permissions?.cadastroServicos),
-      extras: Boolean(user.permissions?.extras),
-    },
-    menuItems: user.menuItemsConfigured
-      ? normalizeMenuItemsWithLegacyFallback(user.menuItems, {
-          gestores: Boolean(user.permissions?.gestores),
-          equipamentos: Boolean(user.permissions?.equipamentos),
-          clientes: Boolean(user.permissions?.clientes),
-          fornecedores: Boolean(user.permissions?.fornecedores),
-          relatorioServico: Boolean(user.permissions?.relatorioServico),
-          bibliotecaPecas: Boolean(user.permissions?.bibliotecaPecas),
-          agenda: Boolean(user.permissions?.agenda),
-          desmontados: Boolean(user.permissions?.desmontados),
-          cadastroServicos: Boolean(user.permissions?.cadastroServicos),
-          extras: Boolean(user.permissions?.extras),
-        })
-      : buildMenuItemsFromLegacyPermissions(
-          {
-            gestores: Boolean(user.permissions?.gestores),
-            equipamentos: Boolean(user.permissions?.equipamentos),
-            clientes: Boolean(user.permissions?.clientes),
-            fornecedores: Boolean(user.permissions?.fornecedores),
-            relatorioServico: Boolean(user.permissions?.relatorioServico),
-            bibliotecaPecas: Boolean(user.permissions?.bibliotecaPecas),
-            agenda: Boolean(user.permissions?.agenda),
-            desmontados: Boolean(user.permissions?.desmontados),
-            cadastroServicos: Boolean(user.permissions?.cadastroServicos),
-            extras: Boolean(user.permissions?.extras),
-          },
-          user.menuItems
-        ),
-    menuItemsConfigured: Boolean(user.menuItemsConfigured),
-  })
 
   const [showModal, setShowModal] = useState(false)
   const [showGestoresModal, setShowGestoresModal] = useState(false)

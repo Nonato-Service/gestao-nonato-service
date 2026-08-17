@@ -47,6 +47,7 @@ const critical = [
   'app/modules/contabilidade/index.ts',
   'app/modules/sst/index.ts',
   'app/modules/pdf/index.ts',
+  'app/modules/admin/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -784,6 +785,38 @@ try {
   }
 } catch (e) {
   fail(`módulo pdf: ${e.message}`)
+}
+
+// 3ab) Módulo admin (36.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/admin/index.ts'), 'utf8')
+  if (idx.includes('createEmptyUserForm') && idx.includes('userToFormState')) {
+    ok('módulo admin exporta userForm')
+  } else {
+    fail('módulo admin incompleto (index.ts)')
+  }
+  if (!exists('app/modules/admin/userForm.ts')) {
+    fail('falta app/modules/admin/userForm.ts')
+  } else {
+    ok('existe app/modules/admin/userForm.ts')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/admin'") || nma.includes('from "./modules/admin"')) {
+    ok('NonatoMainApp importa app/modules/admin')
+  } else {
+    fail('NonatoMainApp não importa o módulo admin')
+  }
+  if (
+    !nma.includes('const createEmptyUserForm = (): UserFormState') &&
+    !nma.includes('const userToFormState = (user: User') &&
+    !nma.includes('type UserFormState = {')
+  ) {
+    ok('NonatoMainApp usa userForm do módulo admin')
+  } else {
+    fail('NonatoMainApp ainda define createEmptyUserForm/userToFormState/UserFormState localmente')
+  }
+} catch (e) {
+  fail(`módulo admin: ${e.message}`)
 }
 
 // 4) i18n
