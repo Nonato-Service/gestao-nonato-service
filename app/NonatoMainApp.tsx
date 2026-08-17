@@ -277,8 +277,8 @@ import {
   buildSolicitacaoPrintPayload,
   formatDataSstLista,
 } from './modules/sst'
-import type { UserFormState } from './modules/admin'
-import { createEmptyUserForm, userToFormState } from './modules/admin'
+import type { UserFormState, PasswordEntry } from './modules/admin'
+import { createEmptyUserForm, userToFormState, generatePassword } from './modules/admin'
 import type {
   GrupoDesmontado,
   PecaDesmontada,
@@ -1125,13 +1125,7 @@ function NumeroSequenciaCirculo({
 /* RESUMO_COBRANCA / FECHAMENTO omitidos·IVA·grupo keys + normalize → modules/fechamento/persistMaps */
 /* FECHAMENTO_FLUXO_FINANCEIRO_KEY / CONTABILIDADE_CONFIG / fluxo tipos → modules/financeiro/fluxoTipos */
 
-type PasswordEntry = {
-  id: string
-  tecnicoName: string
-  password: string
-  createdAt: string
-  updatedAt?: string
-}
+/* PasswordEntry / generatePassword → app/modules/admin/passwords */
 
 type RelatorioServico = {
   id: string
@@ -11063,30 +11057,6 @@ export default function Dashboard() {
       setEditingUser(newUser)
       setUserForm(userToFormState(newUser, ''))
     }
-  }
-
-  // Função para gerar senha automaticamente
-  const generatePassword = (length: number = 16): string => {
-    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    const lowercase = 'abcdefghijklmnopqrstuvwxyz'
-    const numbers = '0123456789'
-    const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?'
-    const allChars = uppercase + lowercase + numbers + symbols
-    
-    let password = ''
-    // Garantir pelo menos um de cada tipo
-    password += uppercase[Math.floor(Math.random() * uppercase.length)]
-    password += lowercase[Math.floor(Math.random() * lowercase.length)]
-    password += numbers[Math.floor(Math.random() * numbers.length)]
-    password += symbols[Math.floor(Math.random() * symbols.length)]
-    
-    // Preencher o resto aleatoriamente
-    for (let i = password.length; i < length; i++) {
-      password += allChars[Math.floor(Math.random() * allChars.length)]
-    }
-    
-    // Embaralhar a senha
-    return password.split('').sort(() => Math.random() - 0.5).join('')
   }
 
   // Função para salvar senha manualmente criada

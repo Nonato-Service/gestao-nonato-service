@@ -902,7 +902,7 @@ try {
   fail(`módulo pdf: ${e.message}`)
 }
 
-// 3ab) Módulo admin (36.º corte modularização)
+// 3ab) Módulo admin (36.º corte modularização + 46.º passwords)
 try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/admin/index.ts'), 'utf8')
   if (idx.includes('createEmptyUserForm') && idx.includes('userToFormState')) {
@@ -910,10 +910,20 @@ try {
   } else {
     fail('módulo admin incompleto (index.ts)')
   }
+  if (idx.includes('generatePassword') && idx.includes('PasswordEntry')) {
+    ok('módulo admin exporta passwords')
+  } else {
+    fail('módulo admin incompleto (passwords no index.ts)')
+  }
   if (!exists('app/modules/admin/userForm.ts')) {
     fail('falta app/modules/admin/userForm.ts')
   } else {
     ok('existe app/modules/admin/userForm.ts')
+  }
+  if (!exists('app/modules/admin/passwords.ts')) {
+    fail('falta app/modules/admin/passwords.ts')
+  } else {
+    ok('existe app/modules/admin/passwords.ts')
   }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/admin'") || nma.includes('from "./modules/admin"')) {
@@ -929,6 +939,15 @@ try {
     ok('NonatoMainApp usa userForm do módulo admin')
   } else {
     fail('NonatoMainApp ainda define createEmptyUserForm/userToFormState/UserFormState localmente')
+  }
+  if (
+    !nma.includes('type PasswordEntry = {') &&
+    !nma.includes('const generatePassword = (length') &&
+    nma.includes('generatePassword')
+  ) {
+    ok('NonatoMainApp usa passwords do módulo admin')
+  } else {
+    fail('NonatoMainApp ainda define PasswordEntry/generatePassword localmente')
   }
 } catch (e) {
   fail(`módulo admin: ${e.message}`)

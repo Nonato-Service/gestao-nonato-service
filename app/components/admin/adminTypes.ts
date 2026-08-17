@@ -98,13 +98,7 @@ export type ClientePrioritarioForm = {
   photo: string
 }
 
-export type PasswordEntry = {
-  id: string
-  tecnicoName: string
-  password: string
-  createdAt: string
-  updatedAt?: string
-}
+export type { PasswordEntry } from '../../modules/admin/passwords'
 
 export type SyncPendingRemote = {
   revision: number
