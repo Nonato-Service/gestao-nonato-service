@@ -252,6 +252,7 @@ import {
   normalizeDiarioAnexos,
   diarioPedidoTituloECorpo,
   diarioPedidoLinhasTarefas,
+  compressImageFileToJpegDataUrl,
 } from './modules/diario'
 import type { ProtocoloBloco, ProtocoloServico } from './modules/protocolo'
 import { newProtocoloBlocoId, ensureProtocoloBlocosIds } from './modules/protocolo'
@@ -822,34 +823,6 @@ type User = {
 }
 
 /* Diário tipos/helpers → app/modules/diario */
-
-async function compressImageFileToJpegDataUrl(file: File): Promise<string> {
-  const bmp = await createImageBitmap(file)
-  try {
-    const maxW = 1400
-    const maxH = 1400
-    let { width: w, height: h } = bmp
-    const scale = Math.min(1, maxW / Math.max(1, w), maxH / Math.max(1, h))
-    const tw = Math.max(1, Math.round(w * scale))
-    const th = Math.max(1, Math.round(h * scale))
-    if (typeof document === 'undefined') throw new Error('no document')
-    const canvas = document.createElement('canvas')
-    canvas.width = tw
-    canvas.height = th
-    const ctx = canvas.getContext('2d')
-    if (!ctx) throw new Error('no canvas')
-    ctx.drawImage(bmp, 0, 0, tw, th)
-    let quality = 0.82
-    let dataUrl = canvas.toDataURL('image/jpeg', quality)
-    while (dataUrl.length > 960_000 && quality > 0.48) {
-      quality -= 0.06
-      dataUrl = canvas.toDataURL('image/jpeg', quality)
-    }
-    return dataUrl
-  } finally {
-    bmp.close()
-  }
-}
 
 function SidebarSectionSep({ id, label }: { id: string; label: string }) {
   const icon = SIDEBAR_SECTION_ICONS[id] ?? '▸'

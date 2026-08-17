@@ -637,17 +637,28 @@ try {
   if (
     idx.includes('normalizeDiarioAnexos') &&
     idx.includes('diarioPedidoTituloECorpo') &&
-    idx.includes('DIARIO_PEDIDOS_DIA_STORAGE_KEY')
+    idx.includes('DIARIO_PEDIDOS_DIA_STORAGE_KEY') &&
+    idx.includes('compressImageFileToJpegDataUrl')
   ) {
-    ok('módulo diario exporta tipos/anexos/texto')
+    ok('módulo diario exporta tipos/anexos/texto/compressImage')
   } else {
     fail('módulo diario incompleto (index.ts)')
+  }
+  if (!exists('app/modules/diario/compressImage.ts')) {
+    fail('falta app/modules/diario/compressImage.ts')
+  } else {
+    ok('existe app/modules/diario/compressImage.ts')
   }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/diario'") || nma.includes('from "./modules/diario"')) {
     ok('NonatoMainApp importa app/modules/diario')
   } else {
     fail('NonatoMainApp não importa o módulo diario')
+  }
+  if (!nma.includes('async function compressImageFileToJpegDataUrl(')) {
+    ok('NonatoMainApp usa compressImage do módulo diario')
+  } else {
+    fail('NonatoMainApp ainda define compressImageFileToJpegDataUrl localmente')
   }
 } catch (e) {
   fail(`módulo diario: ${e.message}`)

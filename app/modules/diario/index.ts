@@ -1,4 +1,4 @@
-/** Módulo Diário — tipos, constantes e helpers de texto/anexos (funções puras). */
+/** Módulo Diário — tipos, constantes, helpers de texto/anexos e compressão de imagem. */
 
 export type { DiarioPedidoStatus, DiarioPedidoAnexo, DiarioPedidoItem } from './tipos'
 
@@ -10,3 +10,4 @@ export {
 
 export { normalizeDiarioAnexos } from './normalize'
 export { diarioPedidoTituloECorpo, diarioPedidoLinhasTarefas } from './texto'
+export { compressImageFileToJpegDataUrl } from './compressImage'
