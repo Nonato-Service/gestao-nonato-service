@@ -1,4 +1,4 @@
-/** Módulo Sidebar — grupos, normalize, tip bubble e hub/tabs. */
+/** Módulo Sidebar — grupos, normalize, tip bubble, hub/tabs e intro/help. */
 
 export type { SidebarGroup, SidebarButton, TabType, Tab } from './tipos'
 
@@ -33,3 +33,11 @@ export {
   pickTrChain,
   resolveActionCardDescription,
 } from './hub'
+
+export {
+  TAB_MODULE_INTRO_KEYS,
+  getTabModuleIntroText,
+  getBottomTabAccentClass,
+  getHelpKey,
+  getHelpContent,
+} from './tabIntro'

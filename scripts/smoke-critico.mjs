@@ -624,17 +624,34 @@ try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/sidebar/index.ts'), 'utf8')
   if (
     idx.includes('normalizeSidebarButtons') &&
-    (idx.includes('getTabTitleForBundle') || idx.includes('getDefaultSidebarGroup'))
+    (idx.includes('getTabTitleForBundle') || idx.includes('getDefaultSidebarGroup')) &&
+    idx.includes('getTabModuleIntroText') &&
+    idx.includes('getBottomTabAccentClass') &&
+    idx.includes('getHelpContent')
   ) {
-    ok('módulo sidebar exporta normalize/hub')
+    ok('módulo sidebar exporta normalize/hub/tabIntro')
   } else {
     fail('módulo sidebar incompleto (index.ts)')
+  }
+  if (!exists('app/modules/sidebar/tabIntro.ts')) {
+    fail('falta app/modules/sidebar/tabIntro.ts')
+  } else {
+    ok('existe app/modules/sidebar/tabIntro.ts')
   }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/sidebar'") || nma.includes('from "./modules/sidebar"')) {
     ok('NonatoMainApp importa app/modules/sidebar')
   } else {
     fail('NonatoMainApp não importa o módulo sidebar')
+  }
+  if (
+    !nma.includes('mainModuleIntroFallback') &&
+    !nma.includes('bottom-tab-item--accent-finance') &&
+    nma.includes('getTabModuleIntroTextFromModule')
+  ) {
+    ok('NonatoMainApp usa tabIntro do módulo sidebar')
+  } else {
+    fail('NonatoMainApp ainda define tabIntro/help/accent localmente')
   }
 } catch (e) {
   fail(`módulo sidebar: ${e.message}`)

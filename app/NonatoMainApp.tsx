@@ -243,6 +243,9 @@ import {
   HUB_CARD_DESC_BY_ACTION,
   pickTrChain,
   resolveActionCardDescription,
+  getTabModuleIntroText as getTabModuleIntroTextFromModule,
+  getBottomTabAccentClass,
+  getHelpContent as getHelpContentFromModule,
 } from './modules/sidebar'
 import type { DiarioPedidoStatus, DiarioPedidoAnexo, DiarioPedidoItem } from './modules/diario'
 import {
@@ -3867,95 +3870,11 @@ export default function Dashboard() {
     })
   }
 
-  const getTabModuleIntroText = (type: TabType): string => {
-    const tr = safeT as Record<string, string | undefined>
-    const pick = (keys: readonly string[]) => {
-      for (const k of keys) {
-        const v = tr[k]
-        if (typeof v === 'string' && v.trim().length > 0) return v.trim()
-      }
-      return ''
-    }
-    const introKeyMap: Partial<Record<TabType, readonly string[]>> = {
-      gestores: ['gestoresSubtitle'],
-      equipamentos: ['equipamentosSubtitle'],
-      clientes: ['clientesSubtitle'],
-      fornecedores: ['fornecedoresSubtitle'],
-      'relatorio-servico': ['relatorioServicoSubtitle'],
-      'biblioteca-pecas': ['quickAccessBibliotecaPecasDesc'],
-      'solicitacao-servico-tecnico': ['solicitacaoServicoTecnicoSubtitle'],
-      desmontados: ['desmontadosSubtitle'],
-      'cadastro-servicos': ['cadastroServicosSubtitle'],
-      'gestao-custos': ['quickAccessGestaoCustosDesc'],
-      'orcamento-servico-tecnico': ['orcamentoServicoTecnicoSubtitle'],
-      'biblioteca-relatorios': ['quickAccessBibliotecaRelatoriosDesc'],
-      'gestao-financeira': ['gestaoFinanceiraDesc'],
-      'manuais-informacoes-tecnicas': ['manuaisInformacoesTecnicasDesc', 'manuaisInformacoesTecnicasConteudo'],
-      'biblia-nonato-service': ['bibliaNonatoServiceDesc', 'bibliaNonatoQuickDesc'],
-      'almoxarifado-armazem': ['almoxarifadoArmazemDesc'],
-      'hub-comunicacao': ['hubComunicacaoDesc'],
-      'protocolos-servico': ['protocolosServicoDesc'],
-      'manual-programa': ['manualProgramaSubtitle'],
-      'cadastro-nonato-service': ['cadastroNonatoServiceSubtitle', 'cadastroNonatoServiceInfo'],
-      'ficha-pagamento-transferencia': ['fichaPagamentoTransferenciaSubtitle'],
-      'ficha-fatura-cliente': ['fichaFaturaClienteSubtitle'],
-      translator: ['quickAccessTranslatorDesc'],
-      'checklist-hub': ['quickAccessChecklistHubDesc'],
-      agenda: ['quickAccessAgendaDesc'],
-      'diario-pedidos-dia': ['diarioPedidosHubCardDesc'],
-      'estado-visual-tecnico': ['estadoVisualHubCardDesc'],
-      'relatorios-excluidos-clientes': ['relatoriosExcluidosClientesDesc'],
-      'fechamento-relatorios-servicos': ['fechamentoRelatoriosServicosDesc'],
-      'orcamentos-avulso': ['orcamentosAvulsoHubCardDesc'],
-      'pedido-orcamentos-avulso': ['pedidoOrcamentosAvulsoHubCardDesc'],
-      'orcamentos-pecas-especiais': ['orcamentoPecasEspeciaisHubCardDesc'],
-      'registro-despesas': ['registroDespesasDesc'],
-      'mapa-visual-separacao-pecas': ['mapaVisualSeparacaoPecasHubCardDesc'],
-      'clientes-financeiro': ['clientesFinanceiroHubCardDesc'],
-      'comprovantes-despesas': ['comprovantesDespesasDesc'],
-      'pagamentos-contador': ['pagamentosContadorDesc'],
-      'mensagens-internas': ['mensagensInternasHubCardDesc'],
-      'mensagens-internas-tecnicos': ['mensagensInternasTecnicosHubCardDesc'],
-      'alerta-mensagens': ['alertaMensagensDesc'],
-      'gestao-grupos-checklist': ['gestaoGruposChecklistDesc'],
-      'ordem-preparacao': ['ordemPreparacaoDesc'],
-      'formularios-checklist-tecnicos': ['formulariosChecklistTecnicosDesc'],
-      'verificacao-final-entrega': ['verificacaoFinalEntregaDesc'],
-      'gestao-demos': ['adminJumpDemosDesc'],
-      'familias-grupos': ['familiasGruposDesc'],
-      'familias-grupos-equipamentos': ['familiasGruposEquipamentosHubCardDesc'],
-      'pre-checklist': ['preChecklistDesc'],
-      checklist: ['checklistDesc'],
-      'checklist-basico': ['checklistBasicoDesc'],
-      administrador: ['administradorGeralDesc'],
-      'informacoes-conhecimento-tecnicos': ['informacoesConhecimentoTecnicosDesc'],
-    }
-    const keys = introKeyMap[type]
-    const txt = keys ? pick(keys) : ''
-    if (txt) return txt
-    return pick(['mainModuleIntroFallback'])
-  }
+  const getTabModuleIntroText = (type: TabType): string =>
+    getTabModuleIntroTextFromModule(type, safeT as Record<string, string | undefined>)
 
-  const getBottomTabAccentClass = (type: TabType): string => {
-    const fin: TabType[] = ['gestao-financeira', 'clientes-financeiro', 'comprovantes-despesas', 'orcamentos-avulso', 'pedido-orcamentos-avulso', 'orcamentos-pecas-especiais', 'orcamento-servico-tecnico', 'registro-despesas', 'pagamentos-contador']
-    if (fin.includes(type)) return 'bottom-tab-item--accent-finance'
-    if (type === 'alerta-mensagens') return 'bottom-tab-item--accent-alert'
-    const chk: TabType[] = ['pre-checklist', 'checklist', 'checklist-hub', 'gestao-grupos-checklist']
-    if (chk.includes(type)) return 'bottom-tab-item--accent-check'
-    return ''
-  }
-
-  // Chave de tradução para o Help da seção (ex: equipamentos -> helpEquipamentos)
-  const getHelpKey = (type: TabType): string => {
-    const key = 'help' + type.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')
-    return key
-  }
-  const getHelpContent = (type: TabType): string => {
-    const t = safeT as Record<string, string | undefined>
-    const key = getHelpKey(type)
-    const text = t?.[key]
-    return text || (t?.helpDefault || 'Consulte o manual do sistema para mais informações sobre esta secção.')
-  }
+  const getHelpContent = (type: TabType): string =>
+    getHelpContentFromModule(type, safeT as Record<string, string | undefined>)
 
   const getManualHelpContent = useCallback(
     (helpKey: string, page: ManualProgramaPageDef): string => {
