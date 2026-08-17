@@ -385,6 +385,7 @@ import {
   textoEquipamentosResumoRelatorioDespesas,
   resolverIdEquipamentoCliente,
   resolverIdEquipamentoVisivelCliente,
+  equipamentoIdETecnicoGerado,
   resolverIdEquipamentoVisivelRelatorio,
   resolverEquipamentoRelatorioParaExibicao,
   resolverClienteIdRelatorio,
@@ -402,6 +403,14 @@ import {
   openPrintEtiquetasArmazem,
   enriquecerBlocoEquipamentoPedido,
   montarCamposEquipamentoPedidoPdf,
+  type HistoricoEquipamento,
+  type ItemIncluso,
+  type PartEquipamento,
+  type Equipamento,
+  type EquipamentoFormState,
+  type GrupoEquipamento,
+  createEmptyEquipamentoForm,
+  equipamentoToFormState,
 } from './modules/equipamentos'
 import {
   coletarIdsRelatoriosClienteParaExclusao,
@@ -965,22 +974,21 @@ type FichaCadastral = {
   logo?: string
 }
 
-type HistoricoEquipamento = {
-  id: string
-  data: string
-  tipo: 'manutencao' | 'reparo' | 'inspecao' | 'transferencia' | 'baixa' | 'outro'
-  descricao: string
-  responsavel?: string
-  observacoes?: string
+type FichaCadastralBancaria = {
+  nomeEmpresa: string
+  nif: string
+  nib: string
+  iban: string
+  swift: string
+  nomeBanco?: string
+  telefone?: string
+  email?: string
+  morada?: string
+  logo?: string
 }
 
-type ItemIncluso = {
-  id: string
-  nome: string
-  imagem?: string
-}
-
-type GrupoEquipamento = { numeroGrupo?: string; nome: string; familia: string; numerosGrupo?: string[] }
+/* Equipamento armazém form/tipos → app/modules/equipamentos/formState */
+/* GrupoEquipamento → app/modules/equipamentos/tiposGrupo */
 
 /** Famílias e grupos para organizar a secção Manuais e Informações Técnicas */
 type ManuaisGrupo = { id: string; nome: string; familia: string }
@@ -1000,45 +1008,7 @@ type ManuaisModelo = {
   imagens?: ManuaisImagem[]
 }
 
-/** Parte de equipamento composto (quando não é uma só parte) */
-type PartEquipamento = {
-  ordem: number
-  tipoId: 'geral' | 'especifico'
-  id?: string
-  numeroSerieFabricante?: string
-}
-
-type Equipamento = {
-  id: string
-  tipoEquipamento: string
-  modelo: string
-  marca: string
-  numeroSerie: string
-  familia: string
-  grupo: string
-  ano?: string
-  /** Peso do equipamento (ex: "10 kg") */
-  peso?: string
-  /** true = uma só parte; false = composto por várias partes */
-  umaParteSo?: boolean
-  /** Número de partes (quando umaParteSo = false) */
-  quantidadePartes?: number
-  /** Partes do equipamento (quando umaParteSo = false) */
-  partes?: PartEquipamento[]
-  photo?: string
-  coverPhoto?: string
-  photoLibrary?: string[]
-  manualPdf?: string
-  documentosPdf?: string[] // Múltiplos PDFs
-  itemsIncluded?: ItemIncluso[]
-  historico?: HistoricoEquipamento[]
-  status?: 'ativo' | 'baixado'
-  dataBaixa?: string
-  /** Ex.: vendido — baixa automática quando o mesmo ID aparece num relatório de cliente */
-  motivoBaixa?: string
-  /** ID do modelo em Manuais e Informações Técnicas (Família > Grupo > Modelo) */
-  modeloManuaisId?: string
-}
+/* PartEquipamento / Equipamento → app/modules/equipamentos/formState */
 
 /* Etiquetas armazem → app/modules/equipamentos */
 
@@ -1294,19 +1264,7 @@ type Cliente = {
 
 /* findCliente → modules/relatorio-servico */
 
-/** true = ID gerado pela app (UUID ou prefixo eqc-), não código próprio do utilizador. */
-function equipamentoClienteIdETecnicoGerado(id: string | undefined): boolean {
-  const t = String(id ?? '').trim()
-  if (!t) return true
-  if (/^eqc-/i.test(t)) return true
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89abAB][0-9a-f]{3}-[0-9a-f]{12}$/i.test(t)
-}
-
-/** ID no cabeçalho do protocolo/PDF: código próprio do cliente; senão ID do armazém pela série. */
-function idEquipamentoVisivelParaProtocolo(eq: EquipamentoCliente | undefined, equipamentosArmazem: Equipamento[]): string {
-  if (!eq) return ''
-  return resolverIdEquipamentoVisivelCliente(eq, equipamentosArmazem)
-}
+/* Aliases ID equipamento → equipamentoIdETecnicoGerado / resolverIdEquipamentoVisivelCliente */
 
 /* lista-bib / biblioteca relatórios → modules/biblioteca/relatoriosLista */
 /* classNameResumoCobrancaPorFase → modules/financeiro/fluxoUi */
@@ -1772,47 +1730,7 @@ export default function Dashboard() {
   const [newItemIncluded, setNewItemIncluded] = useState('')
   const [editingItemIncluded, setEditingItemIncluded] = useState<ItemIncluso | null>(null)
   const [itemIncludedForm, setItemIncludedForm] = useState<{ nome: string; imagem?: string }>({ nome: '', imagem: undefined })
-  const [equipamentoForm, setEquipamentoForm] = useState<{
-    id: string
-    tipoEquipamento: string
-    modelo: string
-    marca: string
-    numeroSerie: string
-    familia: string
-    grupo: string
-    peso: string
-    umaParteSo: boolean
-    quantidadePartes: number
-    partes: PartEquipamento[]
-    photo: string
-    coverPhoto: string
-    photoLibrary: string[]
-    manualPdf: string
-    documentosPdf: string[]
-    itemsIncluded: ItemIncluso[]
-    historico: HistoricoEquipamento[]
-    modeloManuaisId: string
-  }>({ 
-    id: '',
-    tipoEquipamento: '', 
-    modelo: '', 
-    marca: '', 
-    numeroSerie: '', 
-    familia: '', 
-    grupo: '',
-    peso: '',
-    umaParteSo: true,
-    quantidadePartes: 1,
-    partes: [],
-    photo: '',
-    coverPhoto: '',
-    photoLibrary: [] as string[],
-    manualPdf: '',
-    documentosPdf: [] as string[],
-    itemsIncluded: [] as ItemIncluso[],
-    historico: [] as HistoricoEquipamento[],
-    modeloManuaisId: '' as string
-  })
+  const [equipamentoForm, setEquipamentoForm] = useState<EquipamentoFormState>(createEmptyEquipamentoForm())
   const [informacoesMecanicasAba, setInformacoesMecanicasAba] = useState<'cadastro' | 'lista'>('lista')
   const [informacoesMecanicasFiltroFamilia, setInformacoesMecanicasFiltroFamilia] = useState('')
   const [informacoesMecanicasFiltroGrupo, setInformacoesMecanicasFiltroGrupo] = useState('')
@@ -12389,63 +12307,10 @@ export default function Dashboard() {
     }
   }
 
-  const equipamentoToFormState = (equipamento: Equipamento) => {
-    const qtd = Math.max(1, equipamento.quantidadePartes ?? (equipamento.partes?.length ?? 1))
-    const partes =
-      equipamento.partes && equipamento.partes.length > 0
-        ? equipamento.partes
-        : Array.from({ length: qtd }, (_, i) => ({
-            ordem: i + 1,
-            tipoId: 'geral' as const,
-            numeroSerieFabricante: '',
-          }))
-    return {
-      id: equipamento.id,
-      tipoEquipamento: equipamento.tipoEquipamento,
-      modelo: equipamento.modelo,
-      marca: equipamento.marca,
-      numeroSerie: equipamento.numeroSerie,
-      familia: equipamento.familia,
-      grupo: equipamento.grupo,
-      peso: equipamento.peso ?? '',
-      umaParteSo: equipamento.umaParteSo ?? true,
-      quantidadePartes: qtd,
-      partes,
-      photo: equipamento.photo || '',
-      coverPhoto: equipamento.coverPhoto || '',
-      photoLibrary: equipamento.photoLibrary || [],
-      manualPdf: equipamento.manualPdf || '',
-      documentosPdf: equipamento.documentosPdf || [],
-      itemsIncluded: equipamento.itemsIncluded || [],
-      historico: equipamento.historico || [],
-      modeloManuaisId: equipamento.modeloManuaisId || '',
-    }
-  }
-
   const handleAddEquipamento = () => {
     setEditingEquipamento(null)
     setSearchedEquipamento(null)
-    setEquipamentoForm({ 
-      id: '',
-      tipoEquipamento: '', 
-      modelo: '', 
-      marca: '', 
-      numeroSerie: '', 
-      familia: '', 
-      grupo: '',
-      peso: '',
-      umaParteSo: true,
-      quantidadePartes: 1,
-      partes: [],
-      photo: '',
-      coverPhoto: '',
-      photoLibrary: [],
-      manualPdf: '',
-      documentosPdf: [],
-      itemsIncluded: [],
-      historico: [],
-      modeloManuaisId: ''
-    })
+    setEquipamentoForm(createEmptyEquipamentoForm())
     setNewItem('')
     setShowEquipamentoForm(true)
   }
@@ -15290,8 +15155,8 @@ export default function Dashboard() {
     setEditingEquipamentoClienteIndex(index >= 0 ? index : null)
     setEquipamentoClienteGuardadoMsg('')
     const idBruto = String(eqAtual.id ?? '').trim()
-    const idETecnico = equipamentoClienteIdETecnicoGerado(eqAtual.id)
-    const idVisivel = idEquipamentoVisivelParaProtocolo(eqAtual, equipamentos)
+    const idETecnico = equipamentoIdETecnicoGerado(eqAtual.id)
+    const idVisivel = resolverIdEquipamentoVisivelCliente(eqAtual, equipamentos)
     const temCodigoProprio = Boolean((idBruto && !idETecnico) || (idETecnico && idVisivel))
     setEquipamentoClienteTemCodigoProprio(temCodigoProprio)
     setEquipamentoClienteForm({
@@ -15468,7 +15333,7 @@ export default function Dashboard() {
     if (refreshed) setSelectedClienteForEquipamento(refreshed)
 
     const idGravado = String(savedEquipamentoCliente.id ?? '').trim()
-    const idETecnico = equipamentoClienteIdETecnicoGerado(savedEquipamentoCliente.id)
+    const idETecnico = equipamentoIdETecnicoGerado(savedEquipamentoCliente.id)
     setEquipamentoClienteTemCodigoProprio(Boolean(idGravado && !idETecnico))
     setEquipamentoClienteForm({ ...savedEquipamentoCliente, id: idETecnico ? '' : idGravado })
     setEditingEquipamentoCliente(savedEquipamentoCliente)
@@ -29579,7 +29444,7 @@ export default function Dashboard() {
           (e) => (e.numeroSerie || '').trim() === serieProtoForm
         )
         const serieProtocoloResumo = (equipamentoProto?.numeroSerie || protocoloServicoForm.equipamentoNumeroSerie || '').trim()
-        const idEquipamentoVisivel = idEquipamentoVisivelParaProtocolo(equipamentoProto, equipamentos)
+        const idEquipamentoVisivel = resolverIdEquipamentoVisivelCliente(equipamentoProto, equipamentos)
         const montarHtmlPDFProtocolo = (p: ProtocoloServico, modeloOverride?: number, watermarkSrc?: string) => {
           const cl = clientes.find((c) => c.id === p.clienteId)
           const snP = (p.equipamentoNumeroSerie || '').trim()
@@ -29718,7 +29583,7 @@ export default function Dashboard() {
           ? protocolosOrdenados.filter(p => {
               const cl = clientes.find(c => c.id === p.clienteId)
               const eq = cl?.equipamentos?.find((e) => (e.numeroSerie || '').trim() === (p.equipamentoNumeroSerie || '').trim())
-              const idEqFilt = idEquipamentoVisivelParaProtocolo(eq, equipamentos)
+              const idEqFilt = resolverIdEquipamentoVisivelCliente(eq, equipamentos)
               const sitF = (p.situacaoDescricao || '').trim().toLowerCase()
               const blocosHay = (p.blocos || [])
                 .map((b) => [b.titulo, b.texto, b.tipo].filter(Boolean).join(' '))
@@ -32493,7 +32358,7 @@ export default function Dashboard() {
                                                 resolverIdEquipamentoCliente(itemCli, idxCli) === chave
                                             )
                                             const idVisivel = selectedEquipamento
-                                              ? idEquipamentoVisivelParaProtocolo(selectedEquipamento, equipamentos)
+                                              ? resolverIdEquipamentoVisivelCliente(selectedEquipamento, equipamentos)
                                               : chave
                                             const next = equipamentosForm.map(item =>
                                               item.uid === eq.uid
@@ -32517,7 +32382,7 @@ export default function Dashboard() {
                                           {clienteIdEfetivo &&
                                             clienteEquipamentos.map((itemCli, idxCli) => {
                                               const eqKey = resolverIdEquipamentoCliente(itemCli, idxCli)
-                                              const idVisivel = idEquipamentoVisivelParaProtocolo(itemCli, equipamentos)
+                                              const idVisivel = resolverIdEquipamentoVisivelCliente(itemCli, equipamentos)
                                               return (
                                                 <option key={eqKey} value={eqKey}>
                                                   ID {idVisivel || eqKey} · {itemCli.modelo} {itemCli.marca}

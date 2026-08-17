@@ -1,4 +1,4 @@
-/** Módulo Equipamentos — relatório/serviço, pedido avulso PDF e etiquetas de armazém. */
+/** Módulo Equipamentos — relatório/serviço, pedido avulso PDF, etiquetas e formulário armazém. */
 
 export type { GrupoEquipamento } from './tiposGrupo'
 
@@ -19,3 +19,17 @@ export type {
   EtiquetasArmazemLabels,
 } from './etiquetas'
 export { getSequenciaEtiquetasArmazem, openPrintEtiquetasArmazem } from './etiquetas'
+
+export type {
+  HistoricoEquipamento,
+  ItemIncluso,
+  PartEquipamento,
+  Equipamento,
+  EquipamentoFormState,
+} from './formState'
+export {
+  buildPartesPadraoEquipamento,
+  resizePartesEquipamento,
+  createEmptyEquipamentoForm,
+  equipamentoToFormState,
+} from './formState'
