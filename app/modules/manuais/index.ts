@@ -1,8 +1,9 @@
-/** Re-export fino — fonte canónica em `app/modules/manuais`. */
+/** Módulo Manuais — tipos (famílias/grupos/modelos/documentos). */
+
 export type {
   ManuaisGrupo,
   ManuaisDocumento,
   ManuaisImagem,
   ManuaisModelo,
   EquipamentoManuaisRef,
-} from '../modules/manuais'
+} from './tipos'

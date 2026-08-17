@@ -51,6 +51,7 @@ const critical = [
   'app/modules/desmontados/index.ts',
   'app/modules/idiomas/index.ts',
   'app/modules/pessoas/index.ts',
+  'app/modules/manuais/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -1066,6 +1067,45 @@ try {
   }
 } catch (e) {
   fail(`módulo pessoas: ${e.message}`)
+}
+
+// 3af) Módulo manuais (49.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/manuais/index.ts'), 'utf8')
+  if (idx.includes('ManuaisGrupo') && idx.includes('ManuaisModelo') && idx.includes('EquipamentoManuaisRef')) {
+    ok('módulo manuais exporta tipos')
+  } else {
+    fail('módulo manuais incompleto (index.ts)')
+  }
+  if (!exists('app/modules/manuais/tipos.ts')) {
+    fail('falta app/modules/manuais/tipos.ts')
+  } else {
+    ok('existe app/modules/manuais/tipos.ts')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/manuais'") || nma.includes('from "./modules/manuais"')) {
+    ok('NonatoMainApp importa app/modules/manuais')
+  } else {
+    fail('NonatoMainApp não importa o módulo manuais')
+  }
+  if (
+    !nma.includes('type ManuaisGrupo = {') &&
+    !nma.includes('type ManuaisModelo = {') &&
+    nma.includes('ManuaisGrupo') &&
+    nma.includes('ManuaisModelo')
+  ) {
+    ok('NonatoMainApp usa tipos manuais do módulo')
+  } else {
+    fail('NonatoMainApp ainda define ManuaisGrupo/ManuaisModelo localmente')
+  }
+  const libTypes = fs.readFileSync(path.join(root, 'app/lib/manuaisTypes.ts'), 'utf8')
+  if (libTypes.includes("from '../modules/manuais'") || libTypes.includes('from "../modules/manuais"')) {
+    ok('lib/manuaisTypes re-exporta app/modules/manuais')
+  } else {
+    fail('lib/manuaisTypes não re-exporta o módulo manuais')
+  }
+} catch (e) {
+  fail(`módulo manuais: ${e.message}`)
 }
 
 // 4) i18n

@@ -482,6 +482,7 @@ import type {
   TipoGestorFormState,
 } from './modules/pessoas'
 import { getGestorClasse, getTecnicoClasse, getTecnicoTipo } from './modules/pessoas'
+import type { ManuaisGrupo, ManuaisModelo } from './modules/manuais'
 import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { DiarioLembreteIntervalPicker } from './components/DiarioLembreteIntervalPicker'
 import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'
@@ -983,24 +984,7 @@ type FichaCadastralBancaria = {
 
 /* Equipamento armazém form/tipos → app/modules/equipamentos/formState */
 /* GrupoEquipamento → app/modules/equipamentos/tiposGrupo */
-
-/** Famílias e grupos para organizar a secção Manuais e Informações Técnicas */
-type ManuaisGrupo = { id: string; nome: string; familia: string }
-/** Documento anexado a um modelo (PDF, etc.) */
-type ManuaisDocumento = { id: string; nome: string; tipo: string; dados: string }
-/** Imagem anexada a um modelo */
-type ManuaisImagem = { id: string; nome: string; dados: string }
-/** Modelos dentro de cada grupo (ex.: família SECCIONADORAS → grupo HOLZMA → modelos) */
-type ManuaisModelo = {
-  id: string
-  nome: string
-  grupoId: string
-  documentos?: ManuaisDocumento[]
-  infoTecnicas?: string
-  infoMecanicas?: string
-  infoEletricas?: string
-  imagens?: ManuaisImagem[]
-}
+/* ManuaisGrupo / ManuaisModelo / … → app/modules/manuais */
 
 /* PartEquipamento / Equipamento → app/modules/equipamentos/formState */
 
