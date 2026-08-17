@@ -1,4 +1,4 @@
-/** Módulo Sidebar — grupos, normalize, tip bubble, hub/tabs e intro/help. */
+/** Módulo Sidebar — grupos, normalize, tip bubble, hub/tabs, intro/help e rótulos de hub. */
 
 export type { SidebarGroup, SidebarButton, TabType, Tab } from './tipos'
 
@@ -41,3 +41,9 @@ export {
   getHelpKey,
   getHelpContent,
 } from './tabIntro'
+
+export {
+  getSidebarGroupLabel,
+  getDashboardMainHubTitle,
+  formatNavBackToHub,
+} from './hubLabels'

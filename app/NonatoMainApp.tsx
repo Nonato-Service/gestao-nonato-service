@@ -246,6 +246,9 @@ import {
   getTabModuleIntroText as getTabModuleIntroTextFromModule,
   getBottomTabAccentClass,
   getHelpContent as getHelpContentFromModule,
+  getSidebarGroupLabel as getSidebarGroupLabelFromModule,
+  getDashboardMainHubTitle as getDashboardMainHubTitleFromModule,
+  formatNavBackToHub as formatNavBackToHubFromModule,
 } from './modules/sidebar'
 import type { DiarioPedidoStatus, DiarioPedidoAnexo, DiarioPedidoItem } from './modules/diario'
 import {
@@ -62952,70 +62955,14 @@ A1;Peça exemplo;10`}
     return normalized
   }
 
-  const getSidebarGroupLabel = (group: SidebarGroup) => {
-    switch (group) {
-      case 'gestao-tecnica':
-        return safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'
-      case 'parceiros-comercial':
-        return (safeT as any)?.parceirosComercialTitle || 'CLIENTES E FORNECEDORES'
-      case 'documentacao-relatorios':
-        return (safeT as any)?.documentacaoRelatoriosTitle || 'DOCUMENTAÇÃO E RELATÓRIOS'
-      case 'pecas-biblioteca':
-        return (safeT as any)?.pecasBibliotecaTitle || 'CADASTRO DE PEÇAS E BIBLIOTECA DE PEÇAS'
-      case 'gestao-custos':
-        return safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS'
-      case 'gestao-industrial':
-        return safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'
-      case 'gestao-financeira':
-        return safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'
-      case 'checklist-group':
-        return safeT?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST'
-      case 'comunicacao-interna':
-        return (safeT as any)?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA'
-      case 'manuais-informacoes-tecnicas':
-        return (safeT as any)?.manuaisInformacoesTecnicasTitle || 'MANUAIS E INFORMAÇÕES TÉCNICAS'
-      case 'biblia-nonato-service':
-        return (safeT as any)?.bibliaNonatoServiceTitle || 'BÍBLIA DA NONATO SERVICE'
-      case 'almoxarifado-armazem':
-        return (safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'
-      case 'empresa-institucional':
-        return (safeT as any)?.empresaInstitucionalTitle || 'EMPRESA & REGISTOS OFICIAIS'
-      default:
-        return safeT?.outrosBotoes || 'OUTROS'
-    }
-  }
+  const getSidebarGroupLabel = (group: SidebarGroup) =>
+    getSidebarGroupLabelFromModule(group, safeT as Record<string, string | undefined>)
 
-  const getDashboardMainHubTitle = (hubId: string) => {
-    const t = safeT as Record<string, string | undefined>
-    switch (hubId) {
-      case 'protocolos-main':
-        return (t as any).protocolosServicoTitle || 'Protocolos de serviço'
-      case 'manual-programa-main':
-        return (t as any).manualProgramaTitle || 'Manual do programa'
-      case 'manuais-informacoes-main':
-        return (t as any).manuaisInformacoesTecnicasTitle || 'Manuais e informações técnicas'
-      case 'biblia-nonato-main':
-        return (t as any).bibliaNonatoServiceTitle || 'Bíblia da Nonato Service'
-      case 'almoxarifado-main':
-        return (t as any).almoxarifadoArmazemTitle || 'Almoxarifado / Armazém'
-      case 'empresa-institucional-main':
-      case 'cadastro-nonato-main':
-        return (t as any).empresaInstitucionalTitle || t.cadastroNonatoServiceTitle || 'EMPRESA & REGISTOS OFICIAIS'
-      case 'admin-main':
-        return t.administrador || 'ADMINISTRADOR'
-      case 'extra':
-        return t.extras || 'EXTRAS'
-      default:
-        if (SIDEBAR_GROUPS.includes(hubId as SidebarGroup)) return getSidebarGroupLabel(hubId as SidebarGroup)
-        return t.title || ''
-    }
-  }
+  const getDashboardMainHubTitle = (hubId: string) =>
+    getDashboardMainHubTitleFromModule(hubId, safeT as Record<string, string | undefined>)
 
-  const formatNavBackToHub = (hubId: string) => {
-    const hubTitle = getDashboardMainHubTitle(hubId)
-    const tpl = (safeT as Record<string, string | undefined>).navBackToHub || 'Voltar a {hub}'
-    return tpl.replace('{hub}', hubTitle)
-  }
+  const formatNavBackToHub = (hubId: string) =>
+    formatNavBackToHubFromModule(hubId, safeT as Record<string, string | undefined>)
 
   const voltarAoHubDaAba = (hubId: string) => {
     setActiveTabId(null)

@@ -627,9 +627,11 @@ try {
     (idx.includes('getTabTitleForBundle') || idx.includes('getDefaultSidebarGroup')) &&
     idx.includes('getTabModuleIntroText') &&
     idx.includes('getBottomTabAccentClass') &&
-    idx.includes('getHelpContent')
+    idx.includes('getHelpContent') &&
+    idx.includes('getSidebarGroupLabel') &&
+    idx.includes('formatNavBackToHub')
   ) {
-    ok('módulo sidebar exporta normalize/hub/tabIntro')
+    ok('módulo sidebar exporta normalize/hub/tabIntro/hubLabels')
   } else {
     fail('módulo sidebar incompleto (index.ts)')
   }
@@ -637,6 +639,11 @@ try {
     fail('falta app/modules/sidebar/tabIntro.ts')
   } else {
     ok('existe app/modules/sidebar/tabIntro.ts')
+  }
+  if (!exists('app/modules/sidebar/hubLabels.ts')) {
+    fail('falta app/modules/sidebar/hubLabels.ts')
+  } else {
+    ok('existe app/modules/sidebar/hubLabels.ts')
   }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/sidebar'") || nma.includes('from "./modules/sidebar"')) {
@@ -647,11 +654,13 @@ try {
   if (
     !nma.includes('mainModuleIntroFallback') &&
     !nma.includes('bottom-tab-item--accent-finance') &&
-    nma.includes('getTabModuleIntroTextFromModule')
+    nma.includes('getTabModuleIntroTextFromModule') &&
+    nma.includes('getSidebarGroupLabelFromModule') &&
+    !nma.includes("return safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'")
   ) {
-    ok('NonatoMainApp usa tabIntro do módulo sidebar')
+    ok('NonatoMainApp usa tabIntro/hubLabels do módulo sidebar')
   } else {
-    fail('NonatoMainApp ainda define tabIntro/help/accent localmente')
+    fail('NonatoMainApp ainda define tabIntro/hubLabels localmente')
   }
 } catch (e) {
   fail(`módulo sidebar: ${e.message}`)
