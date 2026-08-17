@@ -71,9 +71,13 @@ import {
   calcularPecasBibliotecaImagemStats,
   pecaBibliotecaTemFotoVisivel,
   pecaBibliotecaTemImagemPropria,
-  resolvePecaBibliotecaImagemSrcForDisplay,
-  resolvePecaBibliotecaCapaSrcForDisplay,
   pecaBibliotecaTemCapaOuFotoVisivel,
+  PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC,
+  BIBLIOTECA_FILTRO_SEM_CATEGORIA,
+  BIBLIOTECA_ITENS_POR_LOTE,
+  pecaBibliotecaSrcImagemDisplay,
+  pecaBibliotecaSrcCapaDisplay,
+  pecaPassaBuscaBibliotecaTexto,
   BIBLIOTECA_AVISO_POLL_MS,
   formatBibliotecaNovidadesMsg,
   gravarUltimoServidorTotalAvisado,
@@ -766,41 +770,7 @@ const NONATO_CADASTRO_KEYS_BACKUP_ON_FULL_PULL = NONATO_CRITICAL_CADASTRO_KEYS
 /** Tamanho dos SVG nos cards do hub (sem Unicode — evita mojibake no deploy) */
 const HUB_CARD_SVG_SIZE = 44
 
-/** Logo Nonato para exibição quando a peça não tem foto (não gravar este URL como `imagem` da peça). Colocar o ficheiro em `public/brand/nonato-logo-original.png`. */
-const PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC = '/brand/nonato-logo-original.png'
-
-/* PDF modelo relatório → app/modules/relatorio-servico/pdfModelo */
-
-function pecaBibliotecaSrcImagemDisplay(
-  imagemOuPeca: string | undefined | null | { imagem?: string; id?: string; temImagemServidor?: boolean }
-): string {
-  return resolvePecaBibliotecaImagemSrcForDisplay(imagemOuPeca, PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC)
-}
-
-function pecaBibliotecaSrcCapaDisplay(
-  peca: string | undefined | null | { imagem?: string; imagemCapa?: string; id?: string; temImagemServidor?: boolean }
-): string {
-  if (peca && typeof peca === 'object') {
-    return resolvePecaBibliotecaCapaSrcForDisplay(peca, PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC)
-  }
-  return resolvePecaBibliotecaImagemSrcForDisplay(peca, PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC)
-}
-
-function pecaPassaBuscaBibliotecaTexto(
-  peca: {
-    codigo?: string
-    nome?: string
-    descricao?: string
-    codigosAlternativos?: string[]
-    referenciasAlternativas?: string[]
-    referenciasAntigas?: string[]
-    codigosAntigos?: string[]
-  },
-  q: string
-): boolean {
-  if (!q.trim()) return true
-  return pecaBibliotecaMatchesBuscaCompleta(peca, q)
-}
+/* Biblioteca display/busca UI → app/modules/biblioteca/display */
 
 /* Helpers orçamento avulso/imagem → app/modules/orcamentos */
 
@@ -1182,9 +1152,7 @@ function NumeroSequenciaCirculo({
   )
 }
 
-const BIBLIOTECA_FILTRO_SEM_CATEGORIA = '__sem_categoria__'
-/** Peças visíveis de cada vez na gestão (evita 21k+ nós DOM no tablet). */
-const BIBLIOTECA_ITENS_POR_LOTE = 48
+/* BIBLIOTECA_FILTRO_SEM_CATEGORIA / BIBLIOTECA_ITENS_POR_LOTE → modules/biblioteca/display */
 /* RESUMO_COBRANCA / FECHAMENTO omitidos·IVA·grupo keys + normalize → modules/fechamento/persistMaps */
 /* FECHAMENTO_FLUXO_FINANCEIRO_KEY / CONTABILIDADE_CONFIG / fluxo tipos → modules/financeiro/fluxoTipos */
 

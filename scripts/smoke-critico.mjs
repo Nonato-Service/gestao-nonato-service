@@ -385,6 +385,30 @@ try {
   } else {
     fail('NonatoMainApp não usa aplicarRegrasClassificacaoEmLista / criarRegraClassificacaoPeca do módulo')
   }
+  if (
+    idx.includes('pecaBibliotecaSrcImagemDisplay') &&
+    idx.includes('pecaPassaBuscaBibliotecaTexto') &&
+    idx.includes('BIBLIOTECA_FILTRO_SEM_CATEGORIA')
+  ) {
+    ok('módulo biblioteca exporta display/busca UI')
+  } else {
+    fail('módulo biblioteca sem display (pecaBibliotecaSrc* / pecaPassaBusca)')
+  }
+  if (!exists('app/modules/biblioteca/display.ts')) {
+    fail('falta app/modules/biblioteca/display.ts')
+  } else {
+    ok('existe app/modules/biblioteca/display.ts')
+  }
+  if (
+    !nma.includes('function pecaBibliotecaSrcImagemDisplay(') &&
+    !nma.includes('function pecaPassaBuscaBibliotecaTexto(') &&
+    !nma.includes("const BIBLIOTECA_FILTRO_SEM_CATEGORIA = '__sem_categoria__'") &&
+    nma.includes('pecaBibliotecaSrcCapaDisplay')
+  ) {
+    ok('NonatoMainApp usa display da biblioteca do módulo')
+  } else {
+    fail('NonatoMainApp ainda define display/busca biblioteca localmente')
+  }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
 }

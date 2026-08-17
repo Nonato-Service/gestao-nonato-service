@@ -161,3 +161,12 @@ export {
   resolverNumeroSequenciaAoSalvarPecaBiblioteca,
   rotuloNumeroSequenciaPecaBiblioteca,
 } from './sequencia'
+
+export {
+  BIBLIOTECA_FILTRO_SEM_CATEGORIA,
+  BIBLIOTECA_ITENS_POR_LOTE,
+  PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC,
+  pecaBibliotecaSrcImagemDisplay,
+  pecaBibliotecaSrcCapaDisplay,
+  pecaPassaBuscaBibliotecaTexto,
+} from './display'
