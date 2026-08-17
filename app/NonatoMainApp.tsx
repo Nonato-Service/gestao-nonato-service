@@ -295,6 +295,7 @@ import {
   precisaRegravarGruposDesmontados,
   precisaRegravarPecasDesmontadas,
 } from './modules/desmontados'
+import { getLanguages } from './modules/idiomas'
 import {
   mergeSidebarButtonsDeferLocal,
   repairSidebarButtonsFromCatalog,
@@ -823,12 +824,7 @@ async function restoreManuaisFamiliasGruposFromBackupPayload(raw: unknown): Prom
 }
 
 /** Cadastro de serviços: valores/rótulos/linhas/grupos → app/modules/fechamento */
-
-type Language = {
-  code: string
-  name: string
-  flag: string
-}
+/* Language / getLanguages → app/modules/idiomas */
 
 type User = {
   id: string
@@ -1372,19 +1368,7 @@ type TranslatorLibraryEntry = {
   targetText: string
 }
 
-// Lista de idiomas será gerada dinamicamente baseada no idioma selecionado
-const getLanguages = (t: any): Language[] => {
-  const ptBR = translations['pt-BR']
-  return [
-    { code: 'pt-BR', name: t?.languagePortuguese || ptBR?.languagePortuguese || 'Português', flag: '🇧🇷' },
-    { code: 'es', name: t?.languageSpanish || ptBR?.languageSpanish || 'Espanhol', flag: '🇪🇸' },
-    { code: 'fr', name: t?.languageFrench || ptBR?.languageFrench || 'Francês', flag: '🇫🇷' },
-    { code: 'it', name: t?.languageItalian || ptBR?.languageItalian || 'Italiano', flag: '🇮🇹' },
-    { code: 'de', name: t?.languageGerman || ptBR?.languageGerman || 'Alemão', flag: '🇩🇪' },
-    { code: 'en', name: t?.languageEnglishUK || t?.languageEnglish || ptBR?.languageEnglishUK || ptBR?.languageEnglish || 'Inglês (Reino Unido)', flag: '🇬🇧' },
-    { code: 'en-US', name: t?.languageEnglishUS || ptBR?.languageEnglishUS || 'Inglês (EUA)', flag: '🇺🇸' }
-  ]
-}
+/* getLanguages → app/modules/idiomas */
 
 export default function Dashboard() {
   const warmOnMount = useMemo(() => isWarmSessionResume(), [])

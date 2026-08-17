@@ -49,6 +49,7 @@ const critical = [
   'app/modules/pdf/index.ts',
   'app/modules/admin/index.ts',
   'app/modules/desmontados/index.ts',
+  'app/modules/idiomas/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -987,6 +988,38 @@ try {
   }
 } catch (e) {
   fail(`módulo desmontados: ${e.message}`)
+}
+
+// 3ad) Módulo idiomas (47.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/idiomas/index.ts'), 'utf8')
+  if (idx.includes('getLanguages') && idx.includes('Language')) {
+    ok('módulo idiomas exporta getLanguages/Language')
+  } else {
+    fail('módulo idiomas incompleto (index.ts)')
+  }
+  if (!exists('app/modules/idiomas/languages.ts')) {
+    fail('falta app/modules/idiomas/languages.ts')
+  } else {
+    ok('existe app/modules/idiomas/languages.ts')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/idiomas'") || nma.includes('from "./modules/idiomas"')) {
+    ok('NonatoMainApp importa app/modules/idiomas')
+  } else {
+    fail('NonatoMainApp não importa o módulo idiomas')
+  }
+  if (
+    !nma.includes('type Language = {') &&
+    !nma.includes('const getLanguages = (t:') &&
+    nma.includes('getLanguages')
+  ) {
+    ok('NonatoMainApp usa getLanguages do módulo idiomas')
+  } else {
+    fail('NonatoMainApp ainda define Language/getLanguages localmente')
+  }
+} catch (e) {
+  fail(`módulo idiomas: ${e.message}`)
 }
 
 // 4) i18n
