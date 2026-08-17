@@ -1,4 +1,4 @@
-/** Módulo SST — Solicitação de Serviço Técnico (tipos, formulário vazio, mappers cliente/equipamento). */
+/** Módulo SST — Solicitação de Serviço Técnico (tipos, form, mappers, texto de envio, print PDF). */
 
 export type {
   SolicitacaoDocDevolvido,
@@ -16,3 +16,17 @@ export {
   mergeClienteSelecionadoSst,
   patchEquipamentoClienteChave,
 } from './clienteMappers'
+
+export {
+  sstRefValFromId,
+  rotuloNivelUrgenciaSst,
+  rotuloHorarioPreferidoSst,
+  sstHtmlLangFromUiLanguage,
+  formatDataSstLista,
+} from './rotulos'
+
+export type { SstEnvioTextoTr } from './envioTexto'
+export { buildSolicitacaoBody } from './envioTexto'
+
+export type { SstPrintTr, SolicitacaoPrintPayload } from './printPayload'
+export { buildSolicitacaoPrintPayload } from './printPayload'

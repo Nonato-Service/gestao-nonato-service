@@ -259,6 +259,9 @@ import {
   enriquecerSolicitacaoComClienteCadastrado,
   mergeClienteSelecionadoSst,
   patchEquipamentoClienteChave,
+  buildSolicitacaoBody,
+  buildSolicitacaoPrintPayload,
+  formatDataSstLista,
 } from './modules/sst'
 import {
   mergeSidebarButtonsDeferLocal,
@@ -728,8 +731,6 @@ import {
   downloadSolicitacaoServicoTecnicoHtmlFile,
   safeSolicitacaoFilenameSegment,
   buildSolicitacaoDocDevolvidoCanonicalFilename,
-  type SolicitacaoServicoTecnicoPdfData,
-  type SolicitacaoServicoTecnicoPdfLabels,
 } from './utils/solicitacaoServicoTecnicoPdf'
 import {
   ACCENT_GREEN,
@@ -41595,83 +41596,10 @@ A1;Peça exemplo;10`}
           if (fromList) return enriquecerSolicitacaoComClienteCadastrado(fromList, clientes)
           return null
         }
-        const buildSolicitacaoBody = (s: typeof solicitacaoServicoTecnicoForm | SolicitacaoServicoTecnico) => {
+        const buildSolicitacaoBodyLocal = (s: typeof solicitacaoServicoTecnicoForm | SolicitacaoServicoTecnico) => {
           const t = translations[translationBundleKey(selectedLanguage)] as typeof translations['pt-BR']
-          const labels = {
-            nomeCliente: t?.solicitacaoServicoTecnicoNomeCliente ?? 'Nome do cliente',
-            identificacaoFiscal: (t as any)?.solicitacaoServicoTecnicoIdentificacaoFiscal ?? 'Identificação fiscal',
-            emailContato: (t as any)?.solicitacaoServicoTecnicoEmailContato ?? 'E-mail',
-            departamento: (t as any)?.solicitacaoServicoTecnicoDepartamento ?? 'Departamento',
-            tipoServico: (t as any)?.solicitacaoServicoTecnicoTipoServico ?? 'Tipo de serviço',
-            localServico: (t as any)?.solicitacaoServicoTecnicoLocalServico ?? 'Local do serviço',
-            horarioPreferido: (t as any)?.solicitacaoServicoTecnicoHorarioPreferido ?? 'Horário preferencial',
-            nivelUrgencia: (t as any)?.solicitacaoServicoTecnicoPdfNivelUrgenciaCampo ?? t?.solicitacaoServicoTecnicoNivelUrgencia ?? 'Nível de urgência',
-            tipoEquipamento: t?.solicitacaoServicoTecnicoTipoEquipamento ?? 'Tipo de equipamento',
-            marca: t?.solicitacaoServicoTecnicoMarca ?? 'Marca',
-            modelo: t?.solicitacaoServicoTecnicoModelo ?? 'Modelo',
-            numeroSerie: t?.solicitacaoServicoTecnicoNumeroSerie ?? 'Número de série',
-            problemas: t?.solicitacaoServicoTecnicoProblemasApresentados ?? 'Problemas apresentados',
-            endereco: t?.solicitacaoServicoTecnicoEndereco ?? 'Endereço',
-            telefone: t?.solicitacaoServicoTecnicoTelefone ?? 'Telefone',
-            responsavel: t?.solicitacaoServicoTecnicoResponsavel ?? 'Responsável',
-            assinaturaDesc: t?.solicitacaoServicoTecnicoAssinaturaDesc ?? 'O cliente deve assinar e enviar por e-mail ou WhatsApp.'
-          }
-          const pushVal = (label: string, val?: string) => {
-            const v = String(val ?? '').trim()
-            return v ? `${label}: ${v}` : ''
-          }
-          const hk = String((s as SolicitacaoServicoTecnico).horarioPreferido || '')
-          const horarioMap: Record<string, string> = {
-            manha: (t as any)?.solicitacaoServicoTecnicoHorarioOpcManha ?? '',
-            tarde: (t as any)?.solicitacaoServicoTecnicoHorarioOpcTarde ?? '',
-            dia: (t as any)?.solicitacaoServicoTecnicoHorarioOpcDia ?? '',
-            noite: (t as any)?.solicitacaoServicoTecnicoHorarioOpcNoite ?? '',
-            livre: (t as any)?.solicitacaoServicoTecnicoHorarioOpcLivre ?? ''
-          }
-          const horarioTxt = hk ? horarioMap[hk] || hk : ''
-          const nu = (s as SolicitacaoServicoTecnico).nivelUrgencia
-          const nivelTxt =
-            nu === 'baixa'
-              ? t?.solicitacaoServicoTecnicoUrgenciaBaixa ?? 'Baixa'
-              : nu === 'media'
-                ? t?.solicitacaoServicoTecnicoUrgenciaMedia ?? 'Média'
-                : nu === 'alta'
-                  ? t?.solicitacaoServicoTecnicoUrgenciaAlta ?? 'Alta'
-                  : nu === 'critica'
-                    ? t?.solicitacaoServicoTecnicoUrgenciaCritica ?? 'Crítica'
-                    : ''
-          const linhas = [
-            pushVal(labels.nomeCliente, s.nomeCliente),
-            pushVal(labels.identificacaoFiscal, (s as SolicitacaoServicoTecnico).identificacaoFiscal),
-            pushVal(labels.emailContato, (s as SolicitacaoServicoTecnico).emailContato),
-            pushVal(labels.departamento, (s as SolicitacaoServicoTecnico).departamento),
-            pushVal(labels.tipoServico, (s as SolicitacaoServicoTecnico).tipoServico),
-            pushVal(labels.localServico, (s as SolicitacaoServicoTecnico).localServico),
-            pushVal(labels.horarioPreferido, horarioTxt),
-            pushVal(labels.nivelUrgencia, nivelTxt),
-            pushVal(labels.tipoEquipamento, s.tipoEquipamento),
-            pushVal(labels.marca, s.marca),
-            pushVal(labels.modelo, s.modelo),
-            pushVal(labels.numeroSerie, s.numeroSerie),
-            pushVal(labels.problemas, s.problemasApresentados),
-            pushVal(labels.endereco, s.endereco),
-            pushVal(labels.telefone, s.telefone),
-            pushVal(labels.responsavel, s.responsavel)
-          ].filter(Boolean)
-          const titulo = safeT?.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO'
-          const blocoResumo =
-            linhas.length > 0
-              ? [
-                  (t as any)?.solicitacaoServicoTecnicoResumoTitulo || (safeT as any)?.solicitacaoServicoTecnicoResumoTitulo || 'Resumo (só campos preenchidos):',
-                  '',
-                  ...linhas,
-                  '',
-                  labels.assinaturaDesc
-                ].join('\n')
-              : (t as any)?.solicitacaoServicoTecnicoBodySomenteAnexo ||
-                (safeT as any)?.solicitacaoServicoTecnicoBodySomenteAnexo ||
-                'Não há campos preenchidos no resumo. Todos os dados estão no documento oficial descarregado (.html): abra esse ficheiro no browser — é o mesmo layout do PDF — ou use Imprimir → Guardar como PDF e anexe o PDF.'
-          return [titulo, '', blocoResumo].join('\n')
+          const tr = { ...(t as unknown as Record<string, string | undefined>), ...(safeT as Record<string, string | undefined>) }
+          return buildSolicitacaoBody(s, tr)
         }
         const handleGuardarSolicitacao = () => {
           const id = editingSolicitacaoServicoTecnico?.id || `sst-${Date.now()}`
@@ -41739,103 +41667,20 @@ A1;Peça exemplo;10`}
         }
         const montarHtmlSolicitacao = (rec: SolicitacaoServicoTecnico) => {
           const tr = translations[translationBundleKey(selectedLanguage)] as (typeof translations)['pt-BR']
-          const dataCriStr = new Date(rec.dataCriacao).toLocaleDateString(localePdfSst)
-          const refVal = `SST-${String(rec.id).replace(/[^a-zA-Z0-9]/g, '').slice(-10).toUpperCase() || 'DOC'}`
-          const nu = rec.nivelUrgencia
-          const nivelUrgenciaLabel =
-            nu === 'baixa'
-              ? tr.solicitacaoServicoTecnicoUrgenciaBaixa ?? 'Baixa'
-              : nu === 'media'
-                ? tr.solicitacaoServicoTecnicoUrgenciaMedia ?? 'Média'
-                : nu === 'alta'
-                  ? tr.solicitacaoServicoTecnicoUrgenciaAlta ?? 'Alta'
-                  : nu === 'critica'
-                    ? tr.solicitacaoServicoTecnicoUrgenciaCritica ?? 'Crítica'
-                    : ''
-          const trAny = tr as unknown as Record<string, string | undefined>
-          const L: SolicitacaoServicoTecnicoPdfLabels = {
-            docTitleLine1: trAny.solicitacaoServicoTecnicoPdfTitleLine1 || 'SOLICITAÇÃO DE',
-            docTitleLine2: trAny.solicitacaoServicoTecnicoPdfTitleLine2 || 'SERVIÇO TÉCNICO',
-            docSubtitle: tr.solicitacaoServicoTecnicoPdfDocSubtitle ?? '',
-            emitidoEmLabel: tr.solicitacaoServicoTecnicoPdfEmitidoEm ?? 'Emitido em',
-            emitidoEmValue: dataCriStr,
-            refLabel: tr.solicitacaoServicoTecnicoPdfRef ?? 'Referência',
-            refValue: refVal,
-            secEmpresa:
-              trAny.solicitacaoServicoTecnicoPdfSecEmpresa != null
-                ? trAny.solicitacaoServicoTecnicoPdfSecEmpresa
-                : 'EMPRESA SOLICITANTE',
-            secContato: trAny.solicitacaoServicoTecnicoPdfSecContato || 'INFORMAÇÕES DE CONTATO',
-            secRequisito: trAny.solicitacaoServicoTecnicoPdfSecRequisito || 'REQUISITO DO SERVIÇO',
-            secEquipamento: trAny.solicitacaoServicoTecnicoPdfSecEquipamento || 'EQUIPAMENTO',
-            secDisponibilidade: trAny.solicitacaoServicoTecnicoPdfSecDisponibilidade || 'DISPONIBILIDADE',
-            horarioPreferidoParaServico:
-              trAny.solicitacaoServicoTecnicoPdfHorarioPreferidoParaServico ||
-              trAny.solicitacaoServicoTecnicoHorarioPreferido ||
-              'Horário preferido para serviço:',
-            dataSolicitacaoLabel: trAny.solicitacaoServicoTecnicoPdfDataSolicitacao || 'Data da solicitação',
-            nomeCliente: tr.solicitacaoServicoTecnicoNomeCliente || 'Nome do cliente',
-            identificacaoFiscal: trAny.solicitacaoServicoTecnicoIdentificacaoFiscal || 'Identificação fiscal',
-            emailContato: trAny.solicitacaoServicoTecnicoEmailContato || 'E-mail',
-            departamento: trAny.solicitacaoServicoTecnicoDepartamento || 'Departamento',
-            tipoServico: trAny.solicitacaoServicoTecnicoTipoServico || 'Tipo de serviço',
-            localServico: trAny.solicitacaoServicoTecnicoLocalServico || 'Local do serviço',
-            tipoEquipamento: tr.solicitacaoServicoTecnicoTipoEquipamento || 'Tipo',
-            marca: tr.solicitacaoServicoTecnicoMarca || 'Marca',
-            modelo: tr.solicitacaoServicoTecnicoModelo || 'Modelo',
-            numeroSerie: tr.solicitacaoServicoTecnicoNumeroSerie || 'N.º série',
-            problemas: tr.solicitacaoServicoTecnicoProblemasApresentados || 'Problemas',
-            nivelUrgencia: trAny.solicitacaoServicoTecnicoPdfNivelUrgenciaCampo || tr.solicitacaoServicoTecnicoNivelUrgencia || 'Nível de urgência',
-            endereco: tr.solicitacaoServicoTecnicoEndereco || 'Endereço',
-            telefone: tr.solicitacaoServicoTecnicoTelefone || 'Telefone',
-            responsavel: tr.solicitacaoServicoTecnicoResponsavel || 'Responsável',
-            horarioManha: trAny.solicitacaoServicoTecnicoHorarioOpcManha || '',
-            horarioTarde: trAny.solicitacaoServicoTecnicoHorarioOpcTarde || '',
-            horarioDia: trAny.solicitacaoServicoTecnicoHorarioOpcDia || '',
-            horarioNoite: trAny.solicitacaoServicoTecnicoHorarioOpcNoite || '',
-            horarioLivre: trAny.solicitacaoServicoTecnicoHorarioOpcLivre || '',
-            secAssinatura: tr.solicitacaoServicoTecnicoPdfSecAssinatura || 'Assinatura do cliente',
-            textoLegal: tr.solicitacaoServicoTecnicoPdfTextoLegal || '',
-            zonaAssinar: tr.solicitacaoServicoTecnicoPdfZonaAssinar || '',
-            nomeLegivel: tr.solicitacaoServicoTecnicoPdfNomeLegivel || '',
-            localData: tr.solicitacaoServicoTecnicoPdfLocalData || '',
-            rodape: tr.solicitacaoServicoTecnicoPdfRodape || 'Nonato Service',
-          }
-          const dataPdf: SolicitacaoServicoTecnicoPdfData = {
-            id: rec.id,
-            nomeCliente: rec.nomeCliente,
-            identificacaoFiscal: String(rec.identificacaoFiscal || '').trim(),
-            emailContato: String(rec.emailContato || '').trim(),
-            departamento: String(rec.departamento || '').trim(),
-            tipoServico: String(rec.tipoServico || '').trim(),
-            localServico: String(rec.localServico || '').trim(),
-            problemasApresentados: rec.problemasApresentados,
-            nivelUrgenciaLabel,
-            horarioPreferidoKey: String(rec.horarioPreferido || ''),
-            tipoEquipamento: rec.tipoEquipamento,
-            marca: rec.marca,
-            modelo: rec.modelo,
-            numeroSerie: rec.numeroSerie,
-            endereco: rec.endereco,
-            telefone: rec.telefone,
-            responsavel: rec.responsavel,
-            dataCriacao: rec.dataCriacao,
-            dataSolicitacaoStr: dataCriStr,
-          }
-          const htmlLang =
+          const payload = buildSolicitacaoPrintPayload(
+            rec,
+            tr as unknown as Record<string, string | undefined>,
+            localePdfSst,
+            selectedLanguage,
             isEnglishUi(selectedLanguage)
-              ? 'en'
-              : selectedLanguage === 'de'
-                ? 'de'
-                : selectedLanguage === 'fr'
-                  ? 'fr'
-                  : selectedLanguage === 'it'
-                    ? 'it'
-                    : selectedLanguage === 'es'
-                      ? 'es'
-                      : 'pt'
-          const html = buildSolicitacaoServicoTecnicoPrintHtml(dataPdf, L, getLogoHtmlForDocumentos(), htmlLang)
-          return { html, refVal }
+          )
+          const html = buildSolicitacaoServicoTecnicoPrintHtml(
+            payload.dataPdf,
+            payload.labels,
+            getLogoHtmlForDocumentos(),
+            payload.htmlLang
+          )
+          return { html, refVal: payload.refVal }
         }
         const baixarFormularioOficialClienteHtml = (rec: SolicitacaoServicoTecnico) => {
           const { html, refVal } = montarHtmlSolicitacao(rec)
@@ -41971,7 +41816,7 @@ A1;Peça exemplo;10`}
                 'Foi descarregado o ficheiro HTML do formulário oficial (igual ao PDF/impressão). Anexe esse ficheiro a este e-mail, ou abra-o no browser e use «Imprimir → Guardar como PDF» e anexe o PDF.'
               : (safeT as any)?.solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo ||
                 'Formulário oficial: o ficheiro .html foi descarregado (pasta de descargas). Anexe-o a seguir nesta conversa ou envie o PDF depois de imprimir a partir desse ficheiro.'
-          const body = `${intro}\n\n---\n${buildSolicitacaoBody(enr)}`
+          const body = `${intro}\n\n---\n${buildSolicitacaoBodyLocal(enr)}`
           const refVal = `SST-${String(enr.id).replace(/[^a-zA-Z0-9]/g, '').slice(-10).toUpperCase() || 'DOC'}`
           const nomeAssunto = String(enr.nomeCliente || '').trim() || refVal
           const tagModelo = (safeT as any)?.solicitacaoServicoTecnicoModeloBaseAssunto || 'Modelo base'
@@ -42038,12 +41883,6 @@ A1;Peça exemplo;10`}
           (a, b) =>
             new Date(b.dataCriacao || 0).getTime() - new Date(a.dataCriacao || 0).getTime()
         )
-        const fmtDataSst = (iso?: string) => {
-          if (!iso) return '—'
-          const t = Date.parse(iso)
-          if (Number.isNaN(t)) return iso.length >= 10 ? iso.slice(0, 10) : '—'
-          return new Date(t).toLocaleDateString(localePdfSst)
-        }
         return (
           <div className="tab-content-wrapper tab-glass-root ns-ui-v2">
             <div className="tab-glass-hero">
@@ -42649,8 +42488,8 @@ A1;Peça exemplo;10`}
                                 </label>
                               </div>
                             </td>
-                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>{fmtDataSst(s.dataCriacao)}</td>
-                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>{fmtDataSst(s.dataAssinaturaCliente)}</td>
+                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>{formatDataSstLista(s.dataCriacao, localePdfSst)}</td>
+                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>{formatDataSstLista(s.dataAssinaturaCliente, localePdfSst)}</td>
                             <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
                               <input type="date" value={s.dataRecebimento ? s.dataRecebimento.slice(0, 10) : ''} onChange={e => handleUpdateDataRecebimento(s.id, e.target.value)} style={{ padding: '6px 8px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', fontSize: '12px' }} title={safeT?.solicitacaoServicoTecnicoDataRecebimento} />
                             </td>

@@ -717,13 +717,16 @@ try {
     idx.includes('emptySolicitacaoServicoTecnicoFormState') &&
     idx.includes('enriquecerSolicitacaoComClienteCadastrado') &&
     idx.includes('mergeClienteSelecionadoSst') &&
-    idx.includes('patchEquipamentoClienteChave')
+    idx.includes('patchEquipamentoClienteChave') &&
+    idx.includes('buildSolicitacaoBody') &&
+    idx.includes('buildSolicitacaoPrintPayload') &&
+    idx.includes('formatDataSstLista')
   ) {
-    ok('módulo sst exporta tipos/form/mappers')
+    ok('módulo sst exporta tipos/form/mappers/envio/print')
   } else {
     fail('módulo sst incompleto (index.ts)')
   }
-  ;['tipos.ts', 'formState.ts', 'clienteMappers.ts'].forEach((f) => {
+  ;['tipos.ts', 'formState.ts', 'clienteMappers.ts', 'rotulos.ts', 'envioTexto.ts', 'printPayload.ts'].forEach((f) => {
     if (exists(`app/modules/sst/${f}`)) ok(`existe app/modules/sst/${f}`)
     else fail(`falta app/modules/sst/${f}`)
   })
@@ -735,11 +738,13 @@ try {
   }
   if (
     !nma.includes('type SolicitacaoServicoTecnico = {') &&
-    !nma.includes('const emptySolicitacaoServicoTecnicoFormState =')
+    !nma.includes('const emptySolicitacaoServicoTecnicoFormState =') &&
+    !nma.includes('const buildSolicitacaoBody = (s: SolicitacaoServicoTecnico)') &&
+    !nma.includes('const fmtDataSst = (iso?: string)')
   ) {
-    ok('NonatoMainApp usa tipos/form SST do módulo')
+    ok('NonatoMainApp usa SST tipos/form/envio/print do módulo')
   } else {
-    fail('NonatoMainApp ainda define SolicitacaoServicoTecnico/emptyForm localmente')
+    fail('NonatoMainApp ainda define SST localmente (tipos/form/envio/print)')
   }
 } catch (e) {
   fail(`módulo sst: ${e.message}`)
