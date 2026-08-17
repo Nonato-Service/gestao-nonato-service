@@ -548,9 +548,11 @@ try {
     idx.includes('normalizeTipoAgendamento') &&
     idx.includes('getDatasPeriodoAgendamento') &&
     idx.includes('resolverEquipamentoAgendamentoParaExibicao') &&
-    idx.includes('renderBlocoEquipamentoAgendamentoEstadoVisual')
+    idx.includes('renderBlocoEquipamentoAgendamentoEstadoVisual') &&
+    idx.includes('filterAgendamentosLembrete') &&
+    idx.includes('buildMensagemLembreteAgenda')
   ) {
-    ok('módulo agenda exporta normalize/datas/clienteEquipamento/estadoVisual')
+    ok('módulo agenda exporta normalize/datas/clienteEquipamento/estadoVisual/lembreteWA')
   } else {
     fail('módulo agenda incompleto (index.ts)')
   }
@@ -558,6 +560,11 @@ try {
     fail('falta app/modules/agenda/estadoVisual.tsx')
   } else {
     ok('existe app/modules/agenda/estadoVisual.tsx')
+  }
+  if (!exists('app/modules/agenda/lembreteWhatsApp.ts')) {
+    fail('falta app/modules/agenda/lembreteWhatsApp.ts')
+  } else {
+    ok('existe app/modules/agenda/lembreteWhatsApp.ts')
   }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/agenda'") || nma.includes('from "./modules/agenda"')) {
@@ -567,11 +574,13 @@ try {
   }
   if (
     !nma.includes('function renderBlocoEquipamentoAgendamentoEstadoVisual(') &&
-    !nma.includes('function renderBlocoAssuntoPessoalEstadoVisual(')
+    !nma.includes('function renderBlocoAssuntoPessoalEstadoVisual(') &&
+    !nma.includes('const formatTelefoneWhatsApp = (telefone: string)') &&
+    !nma.includes('Lembrete Nonato Service:')
   ) {
-    ok('NonatoMainApp usa blocos estado visual do módulo agenda')
+    ok('NonatoMainApp usa blocos estado visual / lembreteWA do módulo agenda')
   } else {
-    fail('NonatoMainApp ainda define renderBloco*EstadoVisual localmente')
+    fail('NonatoMainApp ainda define renderBloco*EstadoVisual ou lembreteWA localmente')
   }
 } catch (e) {
   fail(`módulo agenda: ${e.message}`)

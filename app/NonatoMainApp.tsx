@@ -214,6 +214,9 @@ import {
   resolveClienteEEquipamentoParaFormularioAgenda,
   renderBlocoEquipamentoAgendamentoEstadoVisual,
   renderBlocoAssuntoPessoalEstadoVisual,
+  filterAgendamentosLembrete,
+  formatTelefoneWhatsApp,
+  buildMensagemLembreteAgenda,
 } from './modules/agenda'
 import type { SidebarGroup, SidebarButton, TabType, Tab } from './modules/sidebar'
 import {
@@ -13491,45 +13494,10 @@ export default function Dashboard() {
   }
 
   // Lembretes Agenda: agendamentos de hoje e amanhã (exclui cancelados)
-  const getAgendamentosLembrete = (): Agendamento[] => {
-    const today = new Date()
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    const todayStr = today.toISOString().split('T')[0]
-    const tomorrowStr = tomorrow.toISOString().split('T')[0]
-    return agendamentos.filter(
-      (a) =>
-        a.status !== 'cancelado' &&
-        (a.data === todayStr || a.data === tomorrowStr)
-    )
-  }
+  const getAgendamentosLembrete = (): Agendamento[] => filterAgendamentosLembrete(agendamentos)
 
-  // Formatar telefone para WhatsApp (apenas dígitos; Portugal 351 se 9 dígitos)
-  const formatTelefoneWhatsApp = (telefone: string): string => {
-    const digits = (telefone || '').replace(/\D/g, '')
-    if (digits.length === 9 && digits.startsWith('9')) return '351' + digits
-    if (digits.length >= 9) return digits
-    return '351' + digits
-  }
-
-  // Mensagem de lembrete para WhatsApp
-  const getMensagemLembreteAgenda = (a: Agendamento): string => {
-    const dataPt = a.data ? new Date(a.data + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''
-    const tipoLabel = a.tipo === 'agendamento-tecnico' ? (safeT?.agendamentoTecnico || 'Agendamento Técnico') : (safeT?.preAgendamento || 'Pré-Agendamento')
-    const titulo = rotuloTituloAgendamento(a, safeT as Record<string, string | undefined>)
-    const pessoal = isAgendamentoPessoal(a)
-    return [
-      (safeT?.lembreteAgendaWhatsAppPrefixo || 'Lembrete Nonato Service:'),
-      '',
-      (safeT?.lembreteAgendaTemosAgendado || 'Temos agendado para') + ` ${dataPt} ${safeT?.as || 'às'} ${a.hora || ''}:`,
-      pessoal ? `• ${titulo}` : `• ${tipoLabel}`,
-      !pessoal ? `• ${safeT?.cliente || 'Cliente'}: ${a.cliente || ''}` : '',
-      !pessoal && a.tecnico ? `• ${safeT?.tecnico || 'Técnico'}: ${a.tecnico}` : '',
-      !pessoal && a.equipamento ? `• ${safeT?.equipamento || 'Equipamento'}: ${a.equipamento}` : '',
-      '',
-      (safeT?.lembreteAgendaQualquerDuvida || 'Qualquer dúvida, contacte-nos.')
-    ].filter(Boolean).join('\n')
-  }
+  const getMensagemLembreteAgenda = (a: Agendamento): string =>
+    buildMensagemLembreteAgenda(a, safeT as Record<string, string | undefined>)
 
   // Lembretes 3x por dia: 8h, 12h, 17h — ao abrir a app nesses horários mostra o modal uma vez por slot
   useEffect(() => {

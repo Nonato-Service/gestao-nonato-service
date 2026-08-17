@@ -1,4 +1,4 @@
-/** Módulo Agenda — tipos, normalização, datas, filtros, rótulos, resolução cliente/equipamento e blocos UI estado visual. */
+/** Módulo Agenda — tipos, normalização, datas, filtros, rótulos, resolução cliente/equipamento, estado visual e lembretes WhatsApp. */
 
 export type { Agendamento, AgendaListaSecaoId } from './tipos'
 export type { ClienteAgendaLike, EquipamentoAgendaLike } from './clienteEquipamento'
@@ -59,3 +59,10 @@ export {
   renderBlocoEquipamentoAgendamentoEstadoVisual,
   renderBlocoAssuntoPessoalEstadoVisual,
 } from './estadoVisual'
+
+export type { LembreteAgendaTr } from './lembreteWhatsApp'
+export {
+  filterAgendamentosLembrete,
+  formatTelefoneWhatsApp,
+  buildMensagemLembreteAgenda,
+} from './lembreteWhatsApp'
