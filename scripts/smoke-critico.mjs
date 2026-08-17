@@ -48,6 +48,7 @@ const critical = [
   'app/modules/sst/index.ts',
   'app/modules/pdf/index.ts',
   'app/modules/admin/index.ts',
+  'app/modules/desmontados/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -931,6 +932,42 @@ try {
   }
 } catch (e) {
   fail(`módulo admin: ${e.message}`)
+}
+
+// 3ac) Módulo desmontados (45.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/desmontados/index.ts'), 'utf8')
+  if (
+    idx.includes('createEmptyGrupoDesmontadoForm') &&
+    idx.includes('pecaDesmontadaToFormState') &&
+    idx.includes('migrateGruposDesmontadosList')
+  ) {
+    ok('módulo desmontados exporta form/migrate')
+  } else {
+    fail('módulo desmontados incompleto (index.ts)')
+  }
+  ;['tipos.ts', 'formState.ts', 'migrate.ts'].forEach((f) => {
+    if (exists(`app/modules/desmontados/${f}`)) ok(`existe app/modules/desmontados/${f}`)
+    else fail(`falta app/modules/desmontados/${f}`)
+  })
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/desmontados'") || nma.includes('from "./modules/desmontados"')) {
+    ok('NonatoMainApp importa app/modules/desmontados')
+  } else {
+    fail('NonatoMainApp não importa o módulo desmontados')
+  }
+  if (
+    !nma.includes('type GrupoDesmontado = {') &&
+    !nma.includes('type PecaDesmontada = {') &&
+    nma.includes('createEmptyGrupoDesmontadoForm') &&
+    nma.includes('migrateGruposDesmontadosList')
+  ) {
+    ok('NonatoMainApp usa desmontados do módulo')
+  } else {
+    fail('NonatoMainApp ainda define tipos/form Desmontados localmente')
+  }
+} catch (e) {
+  fail(`módulo desmontados: ${e.message}`)
 }
 
 // 4) i18n

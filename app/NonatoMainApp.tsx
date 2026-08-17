@@ -279,6 +279,22 @@ import {
 } from './modules/sst'
 import type { UserFormState } from './modules/admin'
 import { createEmptyUserForm, userToFormState } from './modules/admin'
+import type {
+  GrupoDesmontado,
+  PecaDesmontada,
+  GrupoDesmontadoFormState,
+  PecaDesmontadaFormState,
+} from './modules/desmontados'
+import {
+  createEmptyGrupoDesmontadoForm,
+  createEmptyPecaDesmontadaForm,
+  grupoDesmontadoToFormState,
+  pecaDesmontadaToFormState,
+  migrateGruposDesmontadosList,
+  migratePecasDesmontadasList,
+  precisaRegravarGruposDesmontados,
+  precisaRegravarPecasDesmontadas,
+} from './modules/desmontados'
 import {
   mergeSidebarButtonsDeferLocal,
   repairSidebarButtonsFromCatalog,
@@ -1347,49 +1363,7 @@ type Fornecedor = {
 }
 
 /* OrdemServico / FaturaPecas / período / IVA → app/modules/financeiro */
-
-type GrupoDesmontado = {
-  id: string
-  numeroGrupo: string // Número do grupo
-  familia: string // Família que pertence
-  idFabricante?: string // ID ou número do fabricante
-  imagem?: string // Imagem do grupo
-  localizacao: {
-    rua: string // Rua
-    numeroEspaco: string // Número ou letras do espaço
-    numeroGrupoPrateleira: string // Número do grupo da prateleira
-  }
-  nome: string // Mantido para compatibilidade
-  descricao?: string
-  dataCriacao: string
-}
-
-type PecaDesmontada = {
-  id: string
-  numeroPeca: string // Número da peça
-  familia: string // Família que pertence
-  grupoId: string
-  grupoNome: string
-  nome: string // Mantido para compatibilidade
-  codigo?: string
-  marca?: string
-  modelo?: string
-  tipoEquipamento?: string
-  observacoes?: string
-  quantidade: number // Quantidade da peça
-  imagens?: string[] // Imagens anexadas da peça
-  statusFuncional?: 'funciona' | 'nao-funciona' | 'nao-testado' // Status funcional
-  foiRecuperada?: boolean // Se foi recuperada
-  foiTestada?: boolean // Se foi testada
-  tecnicoTeste?: string // Técnico que testou
-  descricaoTeste?: string // Descrição do que foi feito/testado
-  localizacao: {
-    rua: string // Rua
-    numeroEspaco: string // Número ou letras do espaço
-    numeroGrupoPrateleira: string // Número do grupo da prateleira
-  }
-  dataCriacao: string
-}
+/* Desmontados tipos/form/migrate → app/modules/desmontados */
 
 type DemoModuleMode = 'active' | 'teaser' | 'hidden'
 
@@ -5890,34 +5864,12 @@ export default function Dashboard() {
   const [showPecaDesmontadaForm, setShowPecaDesmontadaForm] = useState(false)
   const [editingGrupoDesmontado, setEditingGrupoDesmontado] = useState<GrupoDesmontado | null>(null)
   const [editingPecaDesmontada, setEditingPecaDesmontada] = useState<PecaDesmontada | null>(null)
-  const [grupoDesmontadoForm, setGrupoDesmontadoForm] = useState({ 
-    numeroGrupo: '', 
-    familia: '', 
-    idFabricante: '', 
-    imagem: '',
-    localizacao: { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' },
-    nome: '', 
-    descricao: '' 
-  })
-  const [pecaDesmontadaForm, setPecaDesmontadaForm] = useState({
-    numeroPeca: '',
-    familia: '',
-    grupoId: '',
-    nome: '',
-    codigo: '',
-    marca: '',
-    modelo: '',
-    tipoEquipamento: '',
-    observacoes: '',
-    quantidade: 1,
-    imagens: [] as string[],
-    statusFuncional: 'nao-testado' as 'funciona' | 'nao-funciona' | 'nao-testado',
-    foiRecuperada: false,
-    foiTestada: false,
-    tecnicoTeste: '',
-    descricaoTeste: '',
-    localizacao: { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' }
-  })
+  const [grupoDesmontadoForm, setGrupoDesmontadoForm] = useState<GrupoDesmontadoFormState>(
+    createEmptyGrupoDesmontadoForm()
+  )
+  const [pecaDesmontadaForm, setPecaDesmontadaForm] = useState<PecaDesmontadaFormState>(
+    createEmptyPecaDesmontadaForm()
+  )
 
   // ===== PRE CHECKLIST =====
   const [preCheckBuscaId, setPreCheckBuscaId] = useState('')
@@ -8727,18 +8679,9 @@ export default function Dashboard() {
       // Carregar grupos desmontados
       const savedGruposDesmontados = getData('nonato-desmontados-grupos')
       if (savedGruposDesmontados) {
-        const grupos = savedGruposDesmontados
-        // Migração: adicionar campos novos se não existirem
-        const gruposMigrados = grupos.map((g: any) => ({
-          ...g,
-          numeroGrupo: g.numeroGrupo || g.nome || '',
-          familia: g.familia || '',
-          idFabricante: g.idFabricante || undefined,
-          imagem: g.imagem || undefined,
-          localizacao: g.localizacao || { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' }
-        }))
+        const gruposMigrados = migrateGruposDesmontadosList(savedGruposDesmontados)
         setGruposDesmontados(gruposMigrados)
-        if (gruposMigrados.length > 0 && (!gruposMigrados[0].numeroGrupo || !gruposMigrados[0].localizacao)) {
+        if (precisaRegravarGruposDesmontados(gruposMigrados)) {
           saveData('nonato-desmontados-grupos', gruposMigrados)
         }
       }
@@ -8746,23 +8689,9 @@ export default function Dashboard() {
       // Carregar peças desmontadas
       const savedPecasDesmontadas = getData('nonato-desmontados-pecas')
       if (savedPecasDesmontadas) {
-        const pecas = savedPecasDesmontadas
-        // Migração: adicionar campos novos se não existirem
-        const pecasMigradas = pecas.map((p: any) => ({
-          ...p,
-          numeroPeca: p.numeroPeca || p.nome || '',
-          familia: p.familia || '',
-          quantidade: p.quantidade || 1,
-          imagens: p.imagens || [],
-          statusFuncional: p.statusFuncional || 'nao-testado',
-          foiRecuperada: p.foiRecuperada || false,
-          foiTestada: p.foiTestada || false,
-          tecnicoTeste: p.tecnicoTeste || undefined,
-          descricaoTeste: p.descricaoTeste || undefined,
-          localizacao: p.localizacao || { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' }
-        }))
+        const pecasMigradas = migratePecasDesmontadasList(savedPecasDesmontadas)
         setPecasDesmontadas(pecasMigradas)
-        if (pecasMigradas.length > 0 && (!pecasMigradas[0].numeroPeca || !pecasMigradas[0].localizacao || !pecasMigradas[0].quantidade)) {
+        if (precisaRegravarPecasDesmontadas(pecasMigradas)) {
           saveData('nonato-desmontados-pecas', pecasMigradas)
         }
       }
@@ -13451,29 +13380,13 @@ export default function Dashboard() {
   // Funções para Desmontados - Grupos
   const handleAddGrupoDesmontado = () => {
     setEditingGrupoDesmontado(null)
-    setGrupoDesmontadoForm({ 
-      numeroGrupo: '', 
-      familia: '', 
-      idFabricante: '', 
-      imagem: '',
-      localizacao: { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' },
-      nome: '', 
-      descricao: '' 
-    })
+    setGrupoDesmontadoForm(createEmptyGrupoDesmontadoForm())
     setShowGrupoDesmontadoForm(true)
   }
 
   const handleEditGrupoDesmontado = (grupo: GrupoDesmontado) => {
     setEditingGrupoDesmontado(grupo)
-    setGrupoDesmontadoForm({
-      numeroGrupo: grupo.numeroGrupo,
-      familia: grupo.familia,
-      idFabricante: grupo.idFabricante || '',
-      imagem: grupo.imagem || '',
-      localizacao: grupo.localizacao,
-      nome: grupo.nome || '',
-      descricao: grupo.descricao || ''
-    })
+    setGrupoDesmontadoForm(grupoDesmontadoToFormState(grupo))
     setShowGrupoDesmontadoForm(true)
   }
 
@@ -13507,15 +13420,7 @@ export default function Dashboard() {
       saveData('nonato-desmontados-grupos', updated)
     }
     setEditingGrupoDesmontado(savedGrupoDesmontado)
-    setGrupoDesmontadoForm({ 
-      numeroGrupo: savedGrupoDesmontado.numeroGrupo, 
-      familia: savedGrupoDesmontado.familia, 
-      idFabricante: savedGrupoDesmontado.idFabricante || '', 
-      imagem: savedGrupoDesmontado.imagem || '',
-      localizacao: savedGrupoDesmontado.localizacao,
-      nome: savedGrupoDesmontado.nome || '', 
-      descricao: savedGrupoDesmontado.descricao || '' 
-    })
+    setGrupoDesmontadoForm(grupoDesmontadoToFormState(savedGrupoDesmontado))
     alert(safeT?.saveSuccess || 'Grupo salvo com sucesso!')
   }
 
@@ -13530,49 +13435,13 @@ export default function Dashboard() {
   // Funções para Desmontados - Peças
   const handleAddPecaDesmontada = () => {
     setEditingPecaDesmontada(null)
-    setPecaDesmontadaForm({
-      numeroPeca: '',
-      familia: '',
-      grupoId: '',
-      nome: '',
-      codigo: '',
-      marca: '',
-      modelo: '',
-      tipoEquipamento: '',
-      observacoes: '',
-      quantidade: 1,
-      imagens: [],
-      statusFuncional: 'nao-testado',
-      foiRecuperada: false,
-      foiTestada: false,
-      tecnicoTeste: '',
-      descricaoTeste: '',
-      localizacao: { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' }
-    })
+    setPecaDesmontadaForm(createEmptyPecaDesmontadaForm())
     setShowPecaDesmontadaForm(true)
   }
 
   const handleEditPecaDesmontada = (peca: PecaDesmontada) => {
     setEditingPecaDesmontada(peca)
-    setPecaDesmontadaForm({
-      numeroPeca: peca.numeroPeca,
-      familia: peca.familia,
-      grupoId: peca.grupoId,
-      nome: peca.nome,
-      codigo: peca.codigo || '',
-      marca: peca.marca || '',
-      modelo: peca.modelo || '',
-      tipoEquipamento: peca.tipoEquipamento || '',
-      observacoes: peca.observacoes || '',
-      quantidade: peca.quantidade,
-      imagens: peca.imagens || [],
-      statusFuncional: peca.statusFuncional || 'nao-testado',
-      foiRecuperada: peca.foiRecuperada || false,
-      foiTestada: peca.foiTestada || false,
-      tecnicoTeste: peca.tecnicoTeste || '',
-      descricaoTeste: peca.descricaoTeste || '',
-      localizacao: peca.localizacao
-    })
+    setPecaDesmontadaForm(pecaDesmontadaToFormState(peca))
     setShowPecaDesmontadaForm(true)
   }
 
@@ -13606,25 +13475,7 @@ export default function Dashboard() {
       saveData('nonato-desmontados-pecas', updated)
     }
     setEditingPecaDesmontada(savedPecaDesmontada)
-    setPecaDesmontadaForm({
-      numeroPeca: savedPecaDesmontada.numeroPeca,
-      familia: savedPecaDesmontada.familia,
-      grupoId: savedPecaDesmontada.grupoId,
-      nome: savedPecaDesmontada.nome,
-      codigo: savedPecaDesmontada.codigo || '',
-      marca: savedPecaDesmontada.marca || '',
-      modelo: savedPecaDesmontada.modelo || '',
-      tipoEquipamento: savedPecaDesmontada.tipoEquipamento || '',
-      observacoes: savedPecaDesmontada.observacoes || '',
-      quantidade: savedPecaDesmontada.quantidade,
-      imagens: savedPecaDesmontada.imagens || [],
-      statusFuncional: savedPecaDesmontada.statusFuncional || 'nao-testado',
-      foiRecuperada: savedPecaDesmontada.foiRecuperada || false,
-      foiTestada: savedPecaDesmontada.foiTestada || false,
-      tecnicoTeste: savedPecaDesmontada.tecnicoTeste || '',
-      descricaoTeste: savedPecaDesmontada.descricaoTeste || '',
-      localizacao: savedPecaDesmontada.localizacao
-    })
+    setPecaDesmontadaForm(pecaDesmontadaToFormState(savedPecaDesmontada))
     alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
   }
 
@@ -73405,7 +73256,7 @@ A1;Peça exemplo;10`}
                       <button className="btn-primary" onClick={handleSaveGrupoDesmontado} style={{ flex: 1 }}>
                         {safeT?.save || 'Salvar'}
                       </button>
-                      <button className="btn-primary" onClick={() => { setShowGrupoDesmontadoForm(false); setEditingGrupoDesmontado(null); setGrupoDesmontadoForm({ numeroGrupo: '', familia: '', idFabricante: '', localizacao: { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' }, imagem: '', nome: '', descricao: '' }); }} style={{ flex: 1 }}>
+                      <button className="btn-primary" onClick={() => { setShowGrupoDesmontadoForm(false); setEditingGrupoDesmontado(null); setGrupoDesmontadoForm(createEmptyGrupoDesmontadoForm()); }} style={{ flex: 1 }}>
                         {safeT?.cancel || 'Cancelar'}
                       </button>
                     </div>
@@ -73556,7 +73407,7 @@ A1;Peça exemplo;10`}
                       <button className="btn-primary" onClick={handleSavePecaDesmontada} style={{ flex: 1 }}>
                         {safeT?.save || 'Salvar'}
                       </button>
-                      <button className="btn-primary" onClick={() => { setShowPecaDesmontadaForm(false); setEditingPecaDesmontada(null); setPecaDesmontadaForm({ numeroPeca: '', familia: '', grupoId: '', nome: '', codigo: '', marca: '', modelo: '', tipoEquipamento: '', observacoes: '', quantidade: 1, imagens: [], statusFuncional: 'nao-testado', foiRecuperada: false, foiTestada: false, tecnicoTeste: '', descricaoTeste: '', localizacao: { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' } }); }} style={{ flex: 1 }}>
+                      <button className="btn-primary" onClick={() => { setShowPecaDesmontadaForm(false); setEditingPecaDesmontada(null); setPecaDesmontadaForm(createEmptyPecaDesmontadaForm()); }} style={{ flex: 1 }}>
                         {safeT?.cancel || 'Cancelar'}
                       </button>
                     </div>
