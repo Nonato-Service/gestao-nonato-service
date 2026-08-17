@@ -337,6 +337,13 @@ import {
   encontrarDuplicadoImagemComprovante,
   hashImagemComprovante,
   mensagemDuplicadoComprovante,
+  getWeekKey,
+  mesCompetenciaKey,
+  anoCompetenciaKey,
+  mesesRollingCompetenciaKeys,
+  localeListaComprovantes,
+  formatarDataListaComprovante,
+  agruparComprovantesPorData,
   type ComprovanteDespesa,
 } from './modules/comprovantes'
 import {
@@ -47966,22 +47973,6 @@ A1;Peça exemplo;10`}
           )
           return true
         }
-        const getWeekKey = (dateStr: string) => {
-          const d = new Date(dateStr + 'T12:00:00')
-          const start = new Date(d.getFullYear(), 0, 1)
-          const dayOfYear = 1 + Math.floor((d.getTime() - start.getTime()) / (24 * 60 * 60 * 1000))
-          const weekNum = Math.ceil(dayOfYear / 7)
-          return `${d.getFullYear()}-W${String(weekNum).padStart(2, '0')}`
-        }
-        /** Mês de arquivo / IRS (YYYY-MM): explícito no registo ou derivado da data do recibo */
-        const mesCompetenciaKey = (c: ComprovanteDespesa) => {
-          const m = c.mesCompetencia
-          if (typeof m === 'string' && /^\d{4}-\d{2}$/.test(m)) return m
-          const ds = String(c.data ?? '').trim().slice(0, 10)
-          const d = new Date(ds + 'T12:00:00')
-          if (Number.isNaN(d.getTime())) return ''
-          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-        }
         const filtroMes = comprovantesFiltroMes
         const setFiltroMes = setComprovantesFiltroMes
         const filtroSemana = comprovantesFiltroSemana
@@ -47992,18 +47983,8 @@ A1;Peça exemplo;10`}
         const setFiltroAno = setComprovantesFiltroAno
         const filtroCliente = comprovantesFiltroCliente
         const setFiltroCliente = setComprovantesFiltroCliente
-        const anoCompetenciaKey = (c: ComprovanteDespesa) => {
-          const m = mesCompetenciaKey(c)
-          if (m.length >= 4) return m.slice(0, 4)
-          return String(c.data ?? '').trim().slice(0, 4)
-        }
         const mesesDosRegistos = comprovantesDespesas.map(mesCompetenciaKey).filter(Boolean)
-        const mesesRolling: string[] = []
-        for (let i = 0; i < 30; i++) {
-          const d = new Date()
-          d.setMonth(d.getMonth() - i)
-          mesesRolling.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
-        }
+        const mesesRolling = mesesRollingCompetenciaKeys(30)
         const mesesAnos = Array.from(new Set([...mesesDosRegistos, ...mesesRolling])).sort().reverse()
         const anosDisponiveis = Array.from(
           new Set([
@@ -48033,52 +48014,10 @@ A1;Peça exemplo;10`}
           if (filtroCliente && grupo !== filtroCliente) return false
           return true
         })
-        const comprovantesListLocale =
-          selectedLanguage === 'pt-BR'
-            ? 'pt-PT'
-            : selectedLanguage === 'es'
-              ? 'es-ES'
-              : selectedLanguage === 'fr'
-                ? 'fr-FR'
-                : selectedLanguage === 'it'
-                  ? 'it-IT'
-                  : selectedLanguage === 'de'
-                    ? 'de-DE'
-                    : 'en-GB'
-        const formatarDataListaComprovante = (iso: string) => {
-          if (!iso || iso === '—') return '—'
-          const d = new Date(iso.slice(0, 10) + 'T12:00:00')
-          return Number.isNaN(d.getTime())
-            ? iso
-            : d.toLocaleDateString(comprovantesListLocale, {
-                weekday: 'short',
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-              })
-        }
-        const filtradosPorData = (() => {
-          const m = new Map<string, ComprovanteDespesa[]>()
-          for (const c of filtrados) {
-            const key = String(c.data ?? '')
-              .trim()
-              .slice(0, 10)
-            const k = key || '—'
-            if (!m.has(k)) m.set(k, [])
-            m.get(k)!.push(c)
-          }
-          return [...m.entries()]
-            .sort((a, b) => {
-              if (a[0] === '—') return 1
-              if (b[0] === '—') return -1
-              return b[0].localeCompare(a[0])
-            })
-            .map(([data, items]) => ({
-              data,
-              items: [...items].sort((a, b) => String(b.id).localeCompare(String(a.id))),
-              subtotal: items.reduce((s, x) => s + (Number(x.valorTotal) || 0), 0),
-            }))
-        })()
+        const comprovantesListLocale = localeListaComprovantes(selectedLanguage)
+        const formatarDataListaComprovanteUi = (iso: string) =>
+          formatarDataListaComprovante(iso, comprovantesListLocale)
+        const filtradosPorData = agruparComprovantesPorData(filtrados)
         const paramsClientesComprovante = () => ({
           relatoriosAbertos: relatoriosServicoListaPrincipal.map((r) => ({
             id: r.id,
@@ -48353,7 +48292,7 @@ A1;Peça exemplo;10`}
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ color: '#d1d5db', fontSize: '13px', fontWeight: 600 }}>
-                {formatarDataListaComprovante(String(c.data || '').slice(0, 10))}
+                {formatarDataListaComprovanteUi(String(c.data || '').slice(0, 10))}
                 {mesCompetenciaKey(c) !== String(c.data || '').trim().slice(0, 7) ? (
                   <span style={{ marginLeft: '8px', color: '#fde68a', fontSize: '11px', fontWeight: 500 }}>
                     {(safeT as any)?.comprovantesMesArquivoAbrev || 'Arquivo'}: {mesCompetenciaKey(c)}
@@ -48957,7 +48896,7 @@ A1;Peça exemplo;10`}
                     }}
                   >
                     <span style={{ color: '#bbf7d0', fontWeight: 700, fontSize: '15px' }}>
-                      {formatarDataListaComprovante(grupo.data)}
+                      {formatarDataListaComprovanteUi(grupo.data)}
                     </span>
                     <span style={{ color: '#a7f3d0', fontSize: '13px' }}>
                       {(safeT as any)?.comprovantesSubtotalDia || 'Subtotal do dia'}:{' '}
@@ -49036,7 +48975,7 @@ A1;Peça exemplo;10`}
                                 'Vários clientes no dia. Às {hora} qual deles?'
                               )
                                 .replace('{hora}', formComp.horaUsada)
-                                .replace('{data}', formatarDataListaComprovante(formComp.data))}
+                                .replace('{data}', formatarDataListaComprovanteUi(formComp.data))}
                             </p>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
                               {formComp.clientesSugeridos.map((cl) => {
@@ -49575,7 +49514,7 @@ A1;Peça exemplo;10`}
                               'Nenhum cliente com relatório ou agenda no dia {data}. Serão Despesas da NONATO SERVICE ou escolha manualmente.'
                             ).replace(
                               '{data}',
-                              formatarDataListaComprovante(String(comprovanteReciboRapido.data || '').slice(0, 10))
+                              formatarDataListaComprovanteUi(String(comprovanteReciboRapido.data || '').slice(0, 10))
                             )}
                           </p>
                         ) : comprovanteReciboRapido.clientesSugeridos.length === 1 ? (
@@ -49599,7 +49538,7 @@ A1;Peça exemplo;10`}
                                 (safeT as any)?.comprovantesClientesAtivosAutoData ||
                                 'Para o dia {data}: {cliente} ({origem})'
                               )
-                                .replace('{data}', formatarDataListaComprovante(String(comprovanteReciboRapido.data || '').slice(0, 10)))
+                                .replace('{data}', formatarDataListaComprovanteUi(String(comprovanteReciboRapido.data || '').slice(0, 10)))
                                 .replace('{cliente}', comprovanteReciboRapido.clientesSugeridos[0].clienteNome)
                                 .replace(
                                   '{origem}',
@@ -49618,14 +49557,14 @@ A1;Peça exemplo;10`}
                                     (safeT as any)?.comprovantesClientesAtivosEscolhaHora ||
                                     'Vários clientes no dia {data}. Às {hora} qual deles? (mais próximo primeiro)'
                                   )
-                                    .replace('{data}', formatarDataListaComprovante(String(comprovanteReciboRapido.data || '').slice(0, 10)))
+                                    .replace('{data}', formatarDataListaComprovanteUi(String(comprovanteReciboRapido.data || '').slice(0, 10)))
                                     .replace('{hora}', comprovanteReciboRapido.horaUsada)
                                 : (
                                     (safeT as any)?.comprovantesClientesAtivosEscolhaData ||
                                     'Vários clientes no dia {data}. Qual deles?'
                                   ).replace(
                                     '{data}',
-                                    formatarDataListaComprovante(String(comprovanteReciboRapido.data || '').slice(0, 10))
+                                    formatarDataListaComprovanteUi(String(comprovanteReciboRapido.data || '').slice(0, 10))
                                   )}
                             </p>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

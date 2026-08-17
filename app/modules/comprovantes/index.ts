@@ -1,4 +1,4 @@
-/** Módulo Comprovantes / despesas — parser OCR, clientes ativos, duplicados e folha semanal. */
+/** Módulo Comprovantes / despesas — parser OCR, clientes ativos, duplicados, folha semanal e período. */
 
 export type { ComprovanteDespesa } from './tipos'
 
@@ -35,3 +35,14 @@ export type {
   FolhaSemanalContadorParams,
 } from './folhaSemanalPdf'
 export { buildFolhaSemanalContadorHtml, abrirFolhaSemanalContadorPdf } from './folhaSemanalPdf'
+
+export type { ComprovantesGrupoPorData } from './periodo'
+export {
+  getWeekKey,
+  mesCompetenciaKey,
+  anoCompetenciaKey,
+  mesesRollingCompetenciaKeys,
+  localeListaComprovantes,
+  formatarDataListaComprovante,
+  agruparComprovantesPorData,
+} from './periodo'

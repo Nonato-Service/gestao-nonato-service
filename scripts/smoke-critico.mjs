@@ -421,17 +421,32 @@ try {
   if (
     idx.includes('parseTotalEurosFromReceiptText') &&
     idx.includes('encontrarComprovanteDuplicado') &&
-    idx.includes('buildFolhaSemanalContadorHtml')
+    idx.includes('buildFolhaSemanalContadorHtml') &&
+    idx.includes('mesCompetenciaKey') &&
+    idx.includes('agruparComprovantesPorData')
   ) {
-    ok('módulo comprovantes exporta parser/duplicados/folha')
+    ok('módulo comprovantes exporta parser/duplicados/folha/periodo')
   } else {
     fail('módulo comprovantes incompleto (index.ts)')
   }
+  ;['periodo.ts'].forEach((f) => {
+    if (exists(`app/modules/comprovantes/${f}`)) ok(`existe app/modules/comprovantes/${f}`)
+    else fail(`falta app/modules/comprovantes/${f}`)
+  })
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/comprovantes'") || nma.includes('from "./modules/comprovantes"')) {
     ok('NonatoMainApp importa app/modules/comprovantes')
   } else {
     fail('NonatoMainApp não importa o módulo comprovantes')
+  }
+  if (
+    !nma.includes('const getWeekKey = (dateStr: string)') &&
+    !nma.includes('const mesCompetenciaKey = (c: ComprovanteDespesa)') &&
+    !nma.includes('const filtradosPorData = (() => {')
+  ) {
+    ok('NonatoMainApp usa periodo do módulo comprovantes')
+  } else {
+    fail('NonatoMainApp ainda define periodo/agrupar comprovantes localmente')
   }
 } catch (e) {
   fail(`módulo comprovantes: ${e.message}`)
