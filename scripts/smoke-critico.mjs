@@ -447,13 +447,14 @@ try {
     idx.includes('encontrarComprovanteDuplicado') &&
     idx.includes('buildFolhaSemanalContadorHtml') &&
     idx.includes('mesCompetenciaKey') &&
-    idx.includes('agruparComprovantesPorData')
+    idx.includes('agruparComprovantesPorData') &&
+    idx.includes('buildMensagemEnvioComprovantes')
   ) {
-    ok('módulo comprovantes exporta parser/duplicados/folha/periodo')
+    ok('módulo comprovantes exporta parser/duplicados/folha/periodo/envio')
   } else {
     fail('módulo comprovantes incompleto (index.ts)')
   }
-  ;['periodo.ts'].forEach((f) => {
+  ;['periodo.ts', 'envioMensagem.ts'].forEach((f) => {
     if (exists(`app/modules/comprovantes/${f}`)) ok(`existe app/modules/comprovantes/${f}`)
     else fail(`falta app/modules/comprovantes/${f}`)
   })
@@ -471,6 +472,14 @@ try {
     ok('NonatoMainApp usa periodo do módulo comprovantes')
   } else {
     fail('NonatoMainApp ainda define periodo/agrupar comprovantes localmente')
+  }
+  if (
+    !nma.includes('NONATO SERVICE\\nRelatório de Comprovantes') &&
+    nma.includes('buildMensagemEnvioComprovantes')
+  ) {
+    ok('NonatoMainApp usa envioMensagem do módulo comprovantes')
+  } else {
+    fail('NonatoMainApp ainda define templates de envio comprovantes localmente')
   }
 } catch (e) {
   fail(`módulo comprovantes: ${e.message}`)

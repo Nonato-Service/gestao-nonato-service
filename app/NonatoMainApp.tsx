@@ -352,6 +352,10 @@ import {
   localeListaComprovantes,
   formatarDataListaComprovante,
   agruparComprovantesPorData,
+  buildPeriodoLabelEnvioComprovantes,
+  buildPeriodoPdfEnvioComprovantes,
+  buildMensagemEnvioComprovantes,
+  prefixarMensagemEnvioComTecnico,
   type ComprovanteDespesa,
 } from './modules/comprovantes'
 import {
@@ -48326,45 +48330,37 @@ A1;Peça exemplo;10`}
           setShowFormComp(false)
         }
         const tituloRelatorio = (safeT as any)?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS'
-        const getMensagemEnvio = (templateId: 1|2|3|4|5): string => {
-          const periodo = filtroPeriodoView === 'mensal' && filtroMes ? filtroMes : filtroPeriodoView === 'semanal' && filtroSemana ? filtroSemana : filtroPeriodoView === 'anual' && filtroAno ? filtroAno : (safeT as any)?.comprovantesTodosMeses || 'Todos'
-          if (templateId === 1) {
-            let msg = `${tituloRelatorio}\n\nTotal geral: ${totalGeral.toFixed(2)} €\n\n`
-            Object.entries(totalPorCliente).sort((a, b) => b[1] - a[1]).forEach(([nome, tot]) => { msg += `${nome}: ${tot.toFixed(2)} €\n` })
-            return msg.trim()
-          }
-          if (templateId === 2) {
-            let msg = `${tituloRelatorio}\n\n`
-            filtrados.forEach(c => { msg += `${c.data} | ${getClienteOuPessoal(c)} | ${c.valorTotal.toFixed(2)} €${c.descricao ? ' | ' + c.descricao : ''}\n` })
-            msg += `\nTotal: ${totalGeral.toFixed(2)} €`
-            return msg.trim()
-          }
-          if (templateId === 3) {
-            let msg = `${tituloRelatorio}\nPeríodo: ${periodo}\n\nTotal do período: ${totalGeral.toFixed(2)} €\n\n`
-            Object.entries(totalPorCliente).sort((a, b) => b[1] - a[1]).forEach(([nome, tot]) => { msg += `${nome}: ${tot.toFixed(2)} €\n` })
-            return msg.trim()
-          }
-          if (templateId === 4) {
-            let msg = `NONATO SERVICE\nRelatório de Comprovantes de Despesas\nData do relatório: ${new Date().toLocaleDateString('pt-PT')}\n────────────────────────\n\n`
-            msg += `Total geral: ${totalGeral.toFixed(2)} €\n\nPor cliente/beneficiário:\n`
-            Object.entries(totalPorCliente).sort((a, b) => b[1] - a[1]).forEach(([nome, tot]) => { msg += `• ${nome}: ${tot.toFixed(2)} €\n` })
-            msg += `\n────────────────────────\nFim do relatório.`
-            return msg
-          }
-          if (templateId === 5) {
-            let msg = `Total: ${totalGeral.toFixed(2)} €`
-            Object.entries(totalPorCliente).sort((a, b) => b[1] - a[1]).forEach(([nome, tot]) => { msg += `\n${nome}: ${tot.toFixed(2)} €` })
-            return msg
-          }
-          return ''
-        }
+        const periodoLabelEnvio = buildPeriodoLabelEnvioComprovantes({
+          filtroPeriodoView,
+          filtroMes,
+          filtroSemana,
+          filtroAno,
+          labelTodos: (safeT as any)?.comprovantesTodosMeses || 'Todos',
+        })
+        const getMensagemEnvio = (templateId: 1 | 2 | 3 | 4 | 5): string =>
+          buildMensagemEnvioComprovantes({
+            templateId,
+            tituloRelatorio,
+            periodoLabel: periodoLabelEnvio,
+            filtrados,
+            totalGeral,
+            totalPorCliente,
+            labelCliente: getClienteOuPessoal,
+          })
         const tecnicoSelecionado = envioForm.tecnicoId ? tecnicos.find(t => t.id === envioForm.tecnicoId) : null
-        const mensagemEnvio = (() => { const base = getMensagemEnvio(envioForm.templateId); if (tecnicoSelecionado?.name) return `Técnico: ${tecnicoSelecionado.name}\n\n` + base; return base })()
+        const mensagemEnvio = prefixarMensagemEnvioComTecnico(
+          getMensagemEnvio(envioForm.templateId),
+          tecnicoSelecionado?.name
+        )
         const handleCopiarEnvio = () => { navigator.clipboard.writeText(mensagemEnvio); alert((safeT as any)?.comprovantesCopiado || 'Mensagem copiada!') }
         const handleAbrirWhatsApp = () => { const tel = envioForm.telefone.replace(/\D/g, ''); const url = `https://wa.me/${tel || '351'}` + (mensagemEnvio ? `?text=${encodeURIComponent(mensagemEnvio)}` : ''); window.open(url, '_blank') }
         const handleAbrirEmail = () => { const to = envioForm.emailDestino || ''; const subj = encodeURIComponent(tituloRelatorio + ' - ' + new Date().toLocaleDateString('pt-PT')); const body = encodeURIComponent(mensagemEnvio); window.open(`mailto:${to}?subject=${subj}&body=${body}`, '_blank') }
         const handleGerarPDF = async () => {
-          const periodo = filtroPeriodoView === 'mensal' && filtroMes ? filtroMes : filtroPeriodoView === 'semanal' && filtroSemana ? filtroSemana : ''
+          const periodo = buildPeriodoPdfEnvioComprovantes({
+            filtroPeriodoView,
+            filtroMes,
+            filtroSemana,
+          })
           const payload = {
             comprovantes: filtrados.map(c => ({
               id: c.id,

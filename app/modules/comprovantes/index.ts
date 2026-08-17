@@ -1,4 +1,4 @@
-/** Módulo Comprovantes / despesas — parser OCR, clientes ativos, duplicados, folha semanal e período. */
+/** Módulo Comprovantes / despesas — parser OCR, clientes ativos, duplicados, folha semanal, período e envio. */
 
 export type { ComprovanteDespesa } from './tipos'
 
@@ -46,3 +46,15 @@ export {
   formatarDataListaComprovante,
   agruparComprovantesPorData,
 } from './periodo'
+
+export type {
+  MensagemEnvioComprovanteTemplateId,
+  PeriodoViewComprovantes,
+  BuildMensagemEnvioComprovantesParams,
+} from './envioMensagem'
+export {
+  buildPeriodoLabelEnvioComprovantes,
+  buildPeriodoPdfEnvioComprovantes,
+  buildMensagemEnvioComprovantes,
+  prefixarMensagemEnvioComTecnico,
+} from './envioMensagem'
