@@ -65,6 +65,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 45. `app/modules/desmontados/` (tipos / form / migrate) — feito
 46. `app/modules/admin/` (passwords tipo / generatePassword) — feito
 47. `app/modules/idiomas/` (Language / getLanguages) — feito
+48. `app/modules/pessoas/` (tipos / form / classes gestor-técnico) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

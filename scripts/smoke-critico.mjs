@@ -50,6 +50,7 @@ const critical = [
   'app/modules/admin/index.ts',
   'app/modules/desmontados/index.ts',
   'app/modules/idiomas/index.ts',
+  'app/modules/pessoas/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -1020,6 +1021,51 @@ try {
   }
 } catch (e) {
   fail(`módulo idiomas: ${e.message}`)
+}
+
+// 3ae) Módulo pessoas (48.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/pessoas/index.ts'), 'utf8')
+  if (
+    idx.includes('getGestorClasse') &&
+    idx.includes('getTecnicoClasse') &&
+    idx.includes('emptyGestorForm') &&
+    idx.includes('Gestor')
+  ) {
+    ok('módulo pessoas exporta tipos/form/classes')
+  } else {
+    fail('módulo pessoas incompleto (index.ts)')
+  }
+  ;['tipos.ts', 'formState.ts', 'classes.ts'].forEach((f) => {
+    if (exists(`app/modules/pessoas/${f}`)) ok(`existe app/modules/pessoas/${f}`)
+    else fail(`falta app/modules/pessoas/${f}`)
+  })
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/pessoas'") || nma.includes('from "./modules/pessoas"')) {
+    ok('NonatoMainApp importa app/modules/pessoas')
+  } else {
+    fail('NonatoMainApp não importa o módulo pessoas')
+  }
+  if (
+    !nma.includes('type TipoGestor = {') &&
+    !nma.includes('type Gestor = {') &&
+    !nma.includes('type Tecnico = {') &&
+    !nma.includes('const getGestorClasse = ') &&
+    nma.includes('getGestorClasse') &&
+    nma.includes('getTecnicoTipo')
+  ) {
+    ok('NonatoMainApp usa pessoas do módulo')
+  } else {
+    fail('NonatoMainApp ainda define tipos/classes Gestor/Tecnico localmente')
+  }
+  const libTypes = fs.readFileSync(path.join(root, 'app/lib/pessoaTypes.ts'), 'utf8')
+  if (libTypes.includes("from '../modules/pessoas'") || libTypes.includes('from "../modules/pessoas"')) {
+    ok('lib/pessoaTypes re-exporta app/modules/pessoas')
+  } else {
+    fail('lib/pessoaTypes não re-exporta o módulo pessoas')
+  }
+} catch (e) {
+  fail(`módulo pessoas: ${e.message}`)
 }
 
 // 4) i18n

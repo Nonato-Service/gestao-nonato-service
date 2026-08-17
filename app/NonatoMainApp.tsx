@@ -473,7 +473,15 @@ import ManualProgramaContent from './components/ManualProgramaContent'
 import type { ManualProgramaPageDef } from './lib/manualProgramaCatalog'
 import { GestoresTecnicosPanel } from './components/pessoas/GestoresTecnicosPanel'
 import { ConhecimentoTecnicosContent } from './components/ConhecimentoTecnicosContent'
-import type { GestorFormState, TecnicoFormState, TipoGestorFormState } from './lib/pessoaTypes'
+import type {
+  TipoGestor,
+  Gestor,
+  Tecnico,
+  GestorFormState,
+  TecnicoFormState,
+  TipoGestorFormState,
+} from './modules/pessoas'
+import { getGestorClasse, getTecnicoClasse, getTecnicoTipo } from './modules/pessoas'
 import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { DiarioLembreteIntervalPicker } from './components/DiarioLembreteIntervalPicker'
 import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'
@@ -870,33 +878,7 @@ function SidebarSectionSep({ id, label }: { id: string; label: string }) {
   )
 }
 
-type TipoGestor = {
-  id: string
-  nome: string
-  cor: string // Cor em hex para o badge
-  icone: string // Emoji ou ícone
-  ordem: number // Ordem de exibição
-}
-
-type Gestor = {
-  id: string
-  name: string
-  email: string
-  phone: string
-  address: string
-  area: string // Agora é dinâmico, pode ser qualquer string
-  photo?: string
-}
-
-type Tecnico = {
-  id: string
-  name: string
-  email: string
-  phone: string
-  address: string
-  type: 'internal' | 'external' | 'armazem'
-  photo?: string
-}
+/* TipoGestor / Gestor / Tecnico → app/modules/pessoas */
 
 /** Logo disponível para uso nos relatórios PDF (lista no Administrador) */
 type LogoRelatorio = {
@@ -56532,10 +56514,6 @@ A1;Peça exemplo;10`}
         const tecnicosInternos = tecnicos.filter(t => t.type === 'internal')
         const tecnicosExternos = tecnicos.filter(t => t.type === 'external')
         const tecnicosArmazem = tecnicos.filter(t => t.type === 'armazem')
-        const getGestorClasse = (gestor?: Gestor | null) =>
-          gestor?.area === 'industrial' ? 'gestor-industrial' : gestor?.area === 'armazem' ? 'armazem' : 'gestor'
-        const getTecnicoClasse = (tecnico?: Tecnico | null) =>
-          tecnico?.type === 'internal' ? 'tecnico-interno' : tecnico?.type === 'external' ? 'tecnico-externo' : 'armazem'
         const getAvatarStyle = (tipo: 'gestor' | 'interno' | 'externo' | 'armazem') => {
           const styles: Record<string, React.CSSProperties> = {
             gestor: { background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%)' },
@@ -56545,7 +56523,6 @@ A1;Peça exemplo;10`}
           }
           return { width: '44px', height: '44px', borderRadius: '50%', ...styles[tipo], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: '18px', flexShrink: 0 }
         }
-        const getTecnicoTipo = (t: Tecnico): 'interno' | 'externo' | 'armazem' => t.type === 'internal' ? 'interno' : t.type === 'external' ? 'externo' : 'armazem'
         const renderPessoaAvatar = (
           nome: string,
           foto: string | undefined,
