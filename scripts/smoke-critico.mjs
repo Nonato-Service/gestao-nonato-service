@@ -321,7 +321,7 @@ try {
   fail(`módulo financeiro: ${e.message}`)
 }
 
-// 3e) Módulo orçamentos (4.º corte modularização)
+// 3e) Módulo orçamentos (4.º corte + 58.º: PedidoOrcamento / buildFromRelatorio)
 try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/orcamentos/index.ts'), 'utf8')
   if (
@@ -333,11 +333,33 @@ try {
   } else {
     fail('módulo orçamentos incompleto (index.ts)')
   }
+  if (
+    idx.includes('PedidoOrcamento') &&
+    idx.includes('buildPedidoOrcamentoFromRelatorio') &&
+    idx.includes('relatorioTemPecasParaPedidoOrcamento')
+  ) {
+    ok('módulo orçamentos exporta PedidoOrcamento + buildFromRelatorio')
+  } else {
+    fail('módulo orçamentos incompleto (pedidoRelatorio no index.ts)')
+  }
+  for (const f of ['pedidoRelatorioTipos.ts', 'pedidoRelatorio.ts']) {
+    if (exists(`app/modules/orcamentos/${f}`)) ok(`existe app/modules/orcamentos/${f}`)
+    else fail(`falta app/modules/orcamentos/${f}`)
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/orcamentos'") || nma.includes('from "./modules/orcamentos"')) {
     ok('NonatoMainApp importa app/modules/orcamentos')
   } else {
     fail('NonatoMainApp não importa o módulo orçamentos')
+  }
+  if (
+    !nma.includes('type PedidoOrcamento = {') &&
+    nma.includes('buildPedidoOrcamentoFromRelatorio') &&
+    nma.includes('relatorioTemPecasParaPedidoOrcamento')
+  ) {
+    ok('NonatoMainApp usa PedidoOrcamento do módulo orçamentos')
+  } else {
+    fail('NonatoMainApp ainda define PedidoOrcamento localmente ou não usa helpers do módulo')
   }
 } catch (e) {
   fail(`módulo orçamentos: ${e.message}`)

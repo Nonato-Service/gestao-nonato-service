@@ -1,6 +1,21 @@
-/** Módulo Orçamentos — workflow, equipamento/pedidos, numeração avulsa, rascunho e imagens. */
+/** Módulo Orçamentos — workflow, equipamento/pedidos, numeração avulsa, rascunho, imagens e pedido de relatório. */
 
 export { chaveClienteOrcamento } from './chave'
+
+export type {
+  PedidoOrcamento,
+  PedidoOrcamentoStatus,
+  PedidoOrcamentoEmitirComo,
+  PecaPedidoOrcamento,
+  RelatorioParaPedidoOrcamento,
+} from './pedidoRelatorioTipos'
+
+export type { BuildPedidoOrcamentoFromRelatorioOpts } from './pedidoRelatorio'
+export {
+  buildPedidoOrcamentoFromRelatorio,
+  relatorioTemPecasParaPedidoOrcamento,
+} from './pedidoRelatorio'
+
 
 export type {
   OrcamentoWorkflowStatus,

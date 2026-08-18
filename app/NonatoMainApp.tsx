@@ -713,6 +713,9 @@ import {
   aprovarOrcamentosGeradosRelatorio,
   type PedidoOrcamentoRef,
   type PedidoAvulsoRef,
+  type PedidoOrcamento,
+  buildPedidoOrcamentoFromRelatorio,
+  relatorioTemPecasParaPedidoOrcamento,
   gerarProximoNumeroOrcamentoAvulso,
   resolverNumeroOrcamentoAvulsoAoSalvar,
   snapshotDadosClienteOrcamentoAvulso,
@@ -1123,23 +1126,7 @@ type PastaRelatoriosExcluidosCliente = {
 
 type RelatoriosExcluidosClientesStorage = { pastas: Record<string, PastaRelatoriosExcluidosCliente> }
 
-type PedidoOrcamento = {
-  id: string
-  codigo?: string
-  numeroRelatorio: string
-  cliente: string
-  clienteId?: string
-  equipamentoId?: string
-  maquinaModelo: string
-  numeroMaquina: string
-  data: string
-  dataGeracao: string
-  pecas: PecaSubstituicao[]
-  status: 'pendente' | 'enviado' | 'recebido' | 'aprovado' | 'rejeitado'
-  emitirComoCliente?: 'cliente' | 'nonato-service'
-  relatorioId?: string
-  observacoes?: string
-}
+/* PedidoOrcamento / buildPedidoOrcamentoFromRelatorio → app/modules/orcamentos */
 
 /* Blocos UI estado visual agenda → app/modules/agenda/estadoVisual */
 
@@ -20265,28 +20252,16 @@ export default function Dashboard() {
     rel: RelatorioServico,
     opts?: { emitirComoCliente?: 'cliente' | 'nonato-service' }
   ) => {
-    if (!rel.pecasSubstituicao?.length) {
+    if (!relatorioTemPecasParaPedidoOrcamento(rel)) {
       alert((safeT as any)?.relatorioSemPecasParaOrcamento || 'Adicione peças ao relatório antes de gerar o pedido de orçamento.')
       return
     }
     const emitirComo = opts?.emitirComoCliente ?? 'cliente'
     const codigo = gerarProximoCodigoPedidoRelatorio(pedidosOrcamento)
-    const novoPedido: PedidoOrcamento = {
-      id: Date.now().toString(),
+    const novoPedido = buildPedidoOrcamentoFromRelatorio(rel, {
       codigo,
-      numeroRelatorio: rel.numero,
-      cliente: rel.cliente,
-      clienteId: rel.clienteId,
-      equipamentoId: rel.equipamentoId,
-      relatorioId: rel.id,
-      maquinaModelo: rel.maquinaModelo,
-      numeroMaquina: rel.numeroMaquina,
-      data: rel.data,
-      dataGeracao: new Date().toISOString(),
-      pecas: rel.pecasSubstituicao,
-      status: 'pendente',
       emitirComoCliente: emitirComo,
-    }
+    })
     const updatedPedidos = [...pedidosOrcamento, novoPedido]
     setPedidosOrcamento(updatedPedidos)
     saveData('nonato-pedidos-orcamento', updatedPedidos)
