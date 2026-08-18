@@ -1,4 +1,4 @@
-/** Módulo Clientes — alfabeto A–Z, ordenação, busca e detalhe financeiro (funções puras). */
+/** Módulo Clientes — alfabeto A–Z, ordenação, busca, detalhe financeiro e cliente prioritário (funções puras). */
 
 export {
   CLIENTES_ALFABETO_INDICE,
@@ -54,3 +54,16 @@ export {
   calcularResumoFinanceiroCliente,
   buildServicosFinanceirosCliente,
 } from './detalhe'
+
+export type { ClientePrioritario, ClientePrioritarioForm } from './prioritarioTipos'
+export { CLIENTE_PRIORITARIO_FORM_TRACKED_FIELDS } from './prioritarioTipos'
+
+export {
+  emptyClientePrioritarioForm,
+  clientePrioritarioToForm,
+  isClientePrioritarioFormValid,
+  createClientePrioritarioFromForm,
+  updateClientePrioritarioFromForm,
+  clientePrioritarioFormCompleteness,
+  formatClientePrioritarioAddress,
+} from './prioritarioForm'

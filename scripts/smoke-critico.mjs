@@ -175,17 +175,41 @@ try {
   if (
     idx.includes('filtrarClientesPorLetraAlfabeto') &&
     idx.includes('calcularResumoFinanceiroCliente') &&
-    idx.includes('ordenarClientesPorNome')
+    idx.includes('ordenarClientesPorNome') &&
+    idx.includes('ClientePrioritario') &&
+    idx.includes('emptyClientePrioritarioForm') &&
+    idx.includes('clientePrioritarioToForm') &&
+    idx.includes('createClientePrioritarioFromForm') &&
+    idx.includes('updateClientePrioritarioFromForm') &&
+    idx.includes('isClientePrioritarioFormValid') &&
+    idx.includes('clientePrioritarioFormCompleteness') &&
+    idx.includes('formatClientePrioritarioAddress')
   ) {
-    ok('módulo clientes exporta alfabeto/detalhe')
+    ok('módulo clientes exporta alfabeto/detalhe/prioritário')
   } else {
     fail('módulo clientes incompleto (index.ts)')
+  }
+  for (const f of ['prioritarioTipos.ts', 'prioritarioForm.ts']) {
+    if (exists(`app/modules/clientes/${f}`)) ok(`existe app/modules/clientes/${f}`)
+    else fail(`falta app/modules/clientes/${f}`)
   }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/clientes'") || nma.includes('from "./modules/clientes"')) {
     ok('NonatoMainApp importa app/modules/clientes')
   } else {
     fail('NonatoMainApp não importa o módulo clientes')
+  }
+  if (
+    !nma.includes('type ClientePrioritario = {') &&
+    nma.includes('emptyClientePrioritarioForm') &&
+    nma.includes('clientePrioritarioToForm') &&
+    nma.includes('createClientePrioritarioFromForm') &&
+    nma.includes('updateClientePrioritarioFromForm') &&
+    nma.includes('isClientePrioritarioFormValid')
+  ) {
+    ok('NonatoMainApp usa ClientePrioritario do módulo clientes')
+  } else {
+    fail('NonatoMainApp ainda define ClientePrioritario localmente ou não usa helpers do módulo')
   }
 } catch (e) {
   fail(`módulo clientes: ${e.message}`)

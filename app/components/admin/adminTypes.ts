@@ -59,39 +59,11 @@ export type UserFormState = {
 export type GestorItem = { id: string; name: string; area?: string }
 export type TecnicoItem = { id: string; name: string; type?: 'internal' | 'external' | string }
 
-/** Subconjunto usado na secção administrador (compatível com o tipo em page.tsx). */
-export type ClientePrioritario = {
-  id: string
-  nomeEmpresa: string
-  morada: string
-  localidade: string
-  conselho: string
-  pais: string
-  codigoPostal: string
-  freguesia: string
-  numeroContribuicaoFiscal: string
-  telefones: string
-  email: string
-  contato: string
-  photo?: string
-  equipamentos?: unknown[]
-  relatorios?: Record<string, unknown[]>
-}
-
-export type ClientePrioritarioForm = {
-  nomeEmpresa: string
-  morada: string
-  localidade: string
-  conselho: string
-  pais: string
-  codigoPostal: string
-  freguesia: string
-  numeroContribuicaoFiscal: string
-  telefones: string
-  email: string
-  contato: string
-  photo: string
-}
+/** Subconjunto usado na secção administrador (compatível com o tipo em NonatoMainApp). */
+export type {
+  ClientePrioritario,
+  ClientePrioritarioForm,
+} from '../../modules/clientes/prioritarioTipos'
 
 export type { PasswordEntry } from '../../modules/admin/passwords'
 

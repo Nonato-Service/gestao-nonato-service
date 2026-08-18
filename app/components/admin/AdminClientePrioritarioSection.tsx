@@ -2,6 +2,10 @@
 
 import React, { useMemo, useState } from 'react'
 import type { ClientePrioritario, ClientePrioritarioForm, SafeT } from './adminTypes'
+import {
+  clientePrioritarioFormCompleteness,
+  formatClientePrioritarioAddress,
+} from '../../modules/clientes'
 
 type ClientePrioritarioEntity = ClientePrioritario
 
@@ -25,34 +29,6 @@ export type AdminClientePrioritarioSectionProps = {
 
 function tr(safeT: SafeT, key: string, fallback: string): string {
   return (safeT as Record<string, string | undefined>)[key] || fallback
-}
-
-const TRACKED_FIELDS: (keyof ClientePrioritarioForm)[] = [
-  'nomeEmpresa',
-  'morada',
-  'localidade',
-  'conselho',
-  'pais',
-  'codigoPostal',
-  'freguesia',
-  'numeroContribuicaoFiscal',
-  'telefones',
-  'email',
-  'contato',
-  'photo',
-]
-
-function completeness(data: Partial<ClientePrioritarioForm> | ClientePrioritario | null): number {
-  if (!data) return 0
-  const filled = TRACKED_FIELDS.filter((key) => String(data[key] || '').trim().length > 0).length
-  return Math.round((filled / TRACKED_FIELDS.length) * 100)
-}
-
-function formatAddress(data: ClientePrioritario | ClientePrioritarioForm): string {
-  return [data.morada, data.localidade, data.freguesia, data.conselho, data.codigoPostal, data.pais]
-    .map((part) => (part || '').trim())
-    .filter(Boolean)
-    .join(' · ')
 }
 
 function initials(name: string): string {
@@ -83,7 +59,7 @@ export function AdminClientePrioritarioSection({
   const [copyFlash, setCopyFlash] = useState<'email' | 'phone' | null>(null)
 
   const activeData = showClientePrioritarioForm ? clientePrioritarioForm : clientePrioritario
-  const pct = useMemo(() => completeness(activeData), [activeData])
+  const pct = useMemo(() => clientePrioritarioFormCompleteness(activeData), [activeData])
   const hasClient = Boolean(clientePrioritario)
   const hasPhoto = Boolean((activeData?.photo || '').trim())
 
@@ -329,7 +305,7 @@ export function AdminClientePrioritarioSection({
                 {tr(safeT, 'adminClientePriorViewCard', 'Cliente prioritário ativo')}
               </span>
               <h4>{clientePrioritario.nomeEmpresa}</h4>
-              <p>{formatAddress(clientePrioritario)}</p>
+              <p>{formatClientePrioritarioAddress(clientePrioritario)}</p>
               <div className="admin-priority-client-hub-showcase__chips">
                 {clientePrioritario.numeroContribuicaoFiscal ? (
                   <span className="admin-priority-client-hub-chip">

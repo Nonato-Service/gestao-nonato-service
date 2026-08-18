@@ -348,6 +348,7 @@ import {
 } from './utils/backupRestore'
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser } from './utils/syncRevision'
+import type { ClientePrioritario, ClientePrioritarioForm } from './modules/clientes'
 import {
   cmpNomeCliente,
   ordenarClientesPorNome,
@@ -359,6 +360,11 @@ import {
   clienteNomeMatchesLetraAlfabeto,
   rotuloIdEquipamentoCliente,
   getPagamentoRelatorio,
+  emptyClientePrioritarioForm,
+  clientePrioritarioToForm,
+  isClientePrioritarioFormValid,
+  createClientePrioritarioFromForm,
+  updateClientePrioritarioFromForm,
 } from './modules/clientes'
 import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasLinkedMenuAccess, hasStrictMenuPolicy, normalizeMenuItems, normalizeMenuItemsWithLegacyFallback, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
@@ -1224,23 +1230,7 @@ function EquipamentosRelatorioDespesasInline({
 
 /* Protocolo tipos/blocos → app/modules/protocolo */
 
-type ClientePrioritario = {
-  id: string
-  nomeEmpresa: string
-  morada: string
-  localidade: string
-  conselho: string
-  pais: string
-  codigoPostal: string
-  freguesia: string
-  numeroContribuicaoFiscal: string
-  telefones: string
-  email: string
-  contato: string
-  photo?: string
-  equipamentos: EquipamentoCliente[]
-  relatorios?: { [equipamentoId: string]: RelatorioServico[] }
-}
+/* ClientePrioritario / form → app/modules/clientes */
 
 /* Fornecedor / FaturaFornecedor / form / entidadeOrigem → app/modules/fornecedores */
 
@@ -4588,20 +4578,9 @@ export default function Dashboard() {
   const [clientePrioritario, setClientePrioritario] = useState<ClientePrioritario | null>(null)
   const [showClientePrioritarioForm, setShowClientePrioritarioForm] = useState(false)
   const [editingClientePrioritario, setEditingClientePrioritario] = useState<ClientePrioritario | null>(null)
-  const [clientePrioritarioForm, setClientePrioritarioForm] = useState({
-    nomeEmpresa: '',
-    morada: '',
-    localidade: '',
-    conselho: '',
-    pais: '',
-    codigoPostal: '',
-    freguesia: '',
-    numeroContribuicaoFiscal: '',
-    telefones: '',
-    email: '',
-    contato: '',
-    photo: ''
-  })
+  const [clientePrioritarioForm, setClientePrioritarioForm] = useState<ClientePrioritarioForm>(() =>
+    emptyClientePrioritarioForm()
+  )
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
   const [showFornecedoresModal, setShowFornecedoresModal] = useState(false)
   const [showModalRecebimentoSeparacao, setShowModalRecebimentoSeparacao] = useState(false)
@@ -14075,40 +14054,14 @@ export default function Dashboard() {
       return
     }
     setEditingClientePrioritario(null)
-    setClientePrioritarioForm({
-      nomeEmpresa: '',
-      morada: '',
-      localidade: '',
-      conselho: '',
-      pais: '',
-      codigoPostal: '',
-      freguesia: '',
-      numeroContribuicaoFiscal: '',
-      telefones: '',
-      email: '',
-      contato: '',
-      photo: ''
-    })
+    setClientePrioritarioForm(emptyClientePrioritarioForm())
     setShowClientePrioritarioForm(true)
   }
 
   const handleEditClientePrioritario = () => {
     if (!clientePrioritario) return
     setEditingClientePrioritario(clientePrioritario)
-    setClientePrioritarioForm({
-      nomeEmpresa: clientePrioritario.nomeEmpresa,
-      morada: clientePrioritario.morada,
-      localidade: clientePrioritario.localidade,
-      conselho: clientePrioritario.conselho,
-      pais: clientePrioritario.pais,
-      codigoPostal: clientePrioritario.codigoPostal,
-      freguesia: clientePrioritario.freguesia,
-      numeroContribuicaoFiscal: clientePrioritario.numeroContribuicaoFiscal || '',
-      telefones: clientePrioritario.telefones,
-      email: clientePrioritario.email,
-      contato: clientePrioritario.contato,
-      photo: clientePrioritario.photo || ''
-    })
+    setClientePrioritarioForm(clientePrioritarioToForm(clientePrioritario))
     setShowClientePrioritarioForm(true)
   }
 
@@ -14137,7 +14090,7 @@ export default function Dashboard() {
   }
 
   const handleSaveClientePrioritario = () => {
-    if (!clientePrioritarioForm.nomeEmpresa || !clientePrioritarioForm.morada || !clientePrioritarioForm.email) {
+    if (!isClientePrioritarioFormValid(clientePrioritarioForm)) {
       alert(t.fillAllFields)
       return
     }
@@ -14146,12 +14099,8 @@ export default function Dashboard() {
 
     let savedClientePrioritario: ClientePrioritario
     if (editingClientePrioritario) {
-      const updatedClientePrioritario: ClientePrioritario = savedClientePrioritario = {
-        ...editingClientePrioritario,
-        ...clientePrioritarioForm,
-        equipamentos: editingClientePrioritario.equipamentos || [],
-        relatorios: editingClientePrioritario.relatorios || {}
-      }
+      const updatedClientePrioritario: ClientePrioritario = savedClientePrioritario =
+        updateClientePrioritarioFromForm(editingClientePrioritario, clientePrioritarioForm)
       setClientePrioritario(updatedClientePrioritario)
       saveData('nonato-cliente-prioritario', updatedClientePrioritario)
     } else {
@@ -14160,30 +14109,13 @@ export default function Dashboard() {
         alert((t as any).clientePrioritarioLimitado || 'Apenas um cliente prioritário pode ser cadastrado. Edite o existente ou exclua antes de adicionar um novo.')
         return
       }
-      const newClientePrioritario: ClientePrioritario = savedClientePrioritario = {
-        id: Date.now().toString(),
-        ...clientePrioritarioForm,
-        equipamentos: [],
-        relatorios: {}
-      }
+      const newClientePrioritario: ClientePrioritario = savedClientePrioritario =
+        createClientePrioritarioFromForm(clientePrioritarioForm)
       setClientePrioritario(newClientePrioritario)
       saveData('nonato-cliente-prioritario', newClientePrioritario)
     }
 
-    setClientePrioritarioForm({
-      nomeEmpresa: savedClientePrioritario.nomeEmpresa,
-      morada: savedClientePrioritario.morada,
-      localidade: savedClientePrioritario.localidade,
-      conselho: savedClientePrioritario.conselho,
-      pais: savedClientePrioritario.pais,
-      codigoPostal: savedClientePrioritario.codigoPostal,
-      freguesia: savedClientePrioritario.freguesia,
-      numeroContribuicaoFiscal: savedClientePrioritario.numeroContribuicaoFiscal || '',
-      telefones: savedClientePrioritario.telefones,
-      email: savedClientePrioritario.email,
-      contato: savedClientePrioritario.contato,
-      photo: savedClientePrioritario.photo || ''
-    })
+    setClientePrioritarioForm(clientePrioritarioToForm(savedClientePrioritario))
     setEditingClientePrioritario(savedClientePrioritario)
     alert((t as any).clientePrioritarioSaved || 'Cliente prioritário salvo com sucesso!')
   }
@@ -27612,20 +27544,7 @@ export default function Dashboard() {
               handleRemoveClientePrioritarioPhoto,
               setShowClientePrioritarioForm,
               setEditingClientePrioritario,
-              emptyClientePrioritarioForm: () => ({
-                nomeEmpresa: '',
-                morada: '',
-                localidade: '',
-                conselho: '',
-                pais: '',
-                codigoPostal: '',
-                freguesia: '',
-                numeroContribuicaoFiscal: '',
-                telefones: '',
-                email: '',
-                contato: '',
-                photo: '',
-              }),
+              emptyClientePrioritarioForm,
             }}
             sidebar={{
               sidebarButtons,
@@ -70553,20 +70472,7 @@ A1;Peça exemplo;10`}
                 handleRemoveClientePrioritarioPhoto,
                 setShowClientePrioritarioForm,
                 setEditingClientePrioritario,
-                emptyClientePrioritarioForm: () => ({
-                  nomeEmpresa: '',
-                  morada: '',
-                  localidade: '',
-                  conselho: '',
-                  pais: '',
-                  codigoPostal: '',
-                  freguesia: '',
-                  numeroContribuicaoFiscal: '',
-                  telefones: '',
-                  email: '',
-                  contato: '',
-                  photo: '',
-                }),
+                emptyClientePrioritarioForm,
               }}
               sidebar={{
                 sidebarButtons,
