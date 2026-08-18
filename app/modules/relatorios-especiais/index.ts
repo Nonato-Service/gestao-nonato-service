@@ -33,6 +33,7 @@ export type {
   DiaSemanaLabels,
   SessaoHorasEquipamentoEspecial,
   ResumoHorasTrabalhoDia,
+  DiaSemMaquinaResumoEspecial,
 } from './calculos'
 export {
   calcularDuracaoHoras,
@@ -56,8 +57,10 @@ export {
   sortDiasTrabalhoEspecialCronologicamente,
   formatDiaCurtoPt,
   intervaloHorasTrabalhoDia,
+  intervaloViagemDia,
   resumoHorasTrabalhoDia,
   contarEquipamentosUnicosDia,
+  coletarDiasSemMaquinaResumo,
   coletarSessoesPorEquipamento,
 } from './calculos'
 

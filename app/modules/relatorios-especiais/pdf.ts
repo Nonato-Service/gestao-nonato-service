@@ -1,9 +1,10 @@
 import type { RelatorioEquipamentoRef } from '../equipamentos/relatorio'
-import type { SessaoHorasEquipamentoEspecial, DiaSemanaLabels } from './calculos'
+import type { SessaoHorasEquipamentoEspecial, DiaSemanaLabels, DiaSemMaquinaResumoEspecial } from './calculos'
 import {
   aplicarTotaisNoRelatorioEspecial,
   atualizarCalculosDiaEspecial,
   calcularTotaisRelatorioEspecial,
+  coletarDiasSemMaquinaResumo,
   coletarSessoesPorEquipamento,
   formatDiaComDiaSemana,
   formatMinutosComoHHMM,
@@ -732,6 +733,48 @@ function buildResumoCardsHtml(
     .join('')}</div>`
 }
 
+function buildResumoViagemHtml(
+  diasSemMaquina: DiaSemMaquinaResumoEspecial[],
+  labels: RelatorioEspecialPdfLabels | undefined
+): string {
+  if (!diasSemMaquina.length) return ''
+  const esc = escapePdfHtml
+  const labelViagem = L(
+    labels,
+    'relatorioEspecialDiaSoViagem',
+    L(labels, 'relatorioEspecialPdfHorasViagem', 'viagem')
+  )
+  const rows = diasSemMaquina
+    .map((d) => {
+      const duracaoCell = d.soViagem && d.duracaoFmt
+        ? `<strong>${esc(d.duracaoFmt)}</strong><div class="re-dia-duracao-detalhe">${esc(labelViagem)}</div>`
+        : '—'
+      return `<tr>
+        <td>${esc(d.dataFormatada)}</td>
+        <td>${esc(d.horarioFmt || '—')}</td>
+        <td class="re-col-total">${duracaoCell}</td>
+        <td>${esc(d.descricao || '—')}</td>
+      </tr>`
+    })
+    .join('')
+
+  return `<div style="margin-top:12px">
+    <h4 style="margin:0 0 6px;font-size:12px;color:#0f172a">${esc(L(labels, 'relatorioEspecialResumoViagem', 'Viagem / deslocação'))}</h4>
+    <p style="margin:0 0 8px;font-size:9px;color:#64748b">${esc(L(labels, 'relatorioEspecialResumoViagemAjuda', 'Dias só com viagem ou registados sem horas em máquina.'))}</p>
+    <table class="re-table">
+      <thead>
+        <tr>
+          <th>${esc(L(labels, 'relatorioEspecialPdfColDias', 'Dias'))}</th>
+          <th>${esc(L(labels, 'relatorioEspecialPdfColHorario', 'Horário'))}</th>
+          <th style="width:88px">${esc(L(labels, 'relatorioEspecialPdfHorasViagem', 'Horas viagem'))}</th>
+          <th>${esc(L(labels, 'relatorioEspecialResumoNota', L(labels, 'descricao', 'Nota')))}</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`
+}
+
 export function imprimirRelatorioEspecialPdf(
   relatorio: RelatorioEspecial,
   labelsOrOptions?: RelatorioEspecialPdfLabels | RelatorioEspecialPdfOptions
@@ -750,6 +793,7 @@ export function imprimirRelatorioEspecialPdf(
   const dias = sortDiasTrabalhoEspecialCronologicamente(rel.diasTrabalho || [])
   const equipamentos = rel.equipamentos || []
   const sessoesPorEquip = coletarSessoesPorEquipamento(dias)
+  const diasSemMaquinaResumo = coletarDiasSemMaquinaResumo(dias)
   const totais = calcularTotaisRelatorioEspecial(dias)
   const esc = escapePdfHtml
   const labelAlmoco = L(labels, 'horaAlmoco', 'almoço')
@@ -874,6 +918,7 @@ export function imprimirRelatorioEspecialPdf(
   const resumoHtml = `<section class="re-secao">
     <h3 class="re-secao__titulo">${esc(L(labels, 'resumo', 'Resumo'))}</h3>
     ${buildResumoCardsHtml(rel, totais, labels)}
+    ${buildResumoViagemHtml(diasSemMaquinaResumo, labels)}
   </section>`
 
   const observacoesHtml = rel.observacoes

@@ -8,6 +8,7 @@ import {
   atualizarCalculosDiaEspecial,
   calcularTotaisRelatorioEspecial,
   coletarSessoesPorEquipamento,
+  coletarDiasSemMaquinaResumo,
   diaContaComoDiariaEspecial,
   formatDiaComDiaSemana,
   formatDiaCurtoPt,
@@ -290,6 +291,10 @@ export default function RelatorioEspecialHub({
   )
   const sessoesPorEquip = useMemo(
     () => coletarSessoesPorEquipamento(form.diasTrabalho),
+    [form.diasTrabalho, diasTrabalhoDiariasKey]
+  )
+  const diasSemMaquinaResumo = useMemo(
+    () => coletarDiasSemMaquinaResumo(form.diasTrabalho),
     [form.diasTrabalho, diasTrabalhoDiariasKey]
   )
 
@@ -2081,6 +2086,50 @@ export default function RelatorioEspecialHub({
             </div>
           )
         })}
+        {diasSemMaquinaResumo.length > 0 ? (
+          <div className="relatorio-especial-resumo-equip" style={{ marginBottom: 16 }}>
+            <div style={{ fontWeight: 600, marginBottom: 8, color: '#00c853' }}>
+              {t.relatorioEspecialResumoViagem || 'Viagem / deslocação'}
+            </div>
+            <p style={{ fontSize: 11, color: '#888', margin: '0 0 8px' }}>
+              {t.relatorioEspecialResumoViagemAjuda ||
+                'Dias só com viagem ou registados sem horas em máquina.'}
+            </p>
+            <table className="relatorio-especial-resumo-equip__tabela">
+              <thead>
+                <tr>
+                  <th>{t.relatorioEspecialPdfColDias || t.diasTrabalho || 'Dias'}</th>
+                  <th>{t.relatorioEspecialPdfColHorario || 'Horário'}</th>
+                  <th>{t.relatorioEspecialPdfHorasViagem || t.horasViagem || 'Horas viagem'}</th>
+                  <th>{t.relatorioEspecialResumoNota || t.descricao || 'Nota'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {diasSemMaquinaResumo.map((d) => (
+                  <tr key={d.diaId}>
+                    <td>{d.dataFormatada}</td>
+                    <td>{d.horarioFmt}</td>
+                    <td>
+                      {d.soViagem && d.duracaoFmt ? (
+                        <>
+                          <strong>{d.duracaoFmt}</strong>
+                          <span style={{ display: 'block', fontSize: 10, color: '#888' }}>
+                            {t.relatorioEspecialDiaSoViagem ||
+                              t.relatorioEspecialPdfHorasViagem ||
+                              'viagem'}
+                          </span>
+                        </>
+                      ) : (
+                        <strong>—</strong>
+                      )}
+                    </td>
+                    <td style={{ fontSize: 12, color: '#ccc' }}>{d.descricao || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 8, paddingTop: 12, borderTop: '1px solid rgba(0,200,83,0.25)' }}>
           <div>
             <div style={{ fontSize: 12, color: '#aaa' }}>{t.relatorioEspecialPdfTotalGeralLabel || t.relatorioEspecialTotalGeral || 'TOTAL DE HORAS DE TRABALHO'}</div>

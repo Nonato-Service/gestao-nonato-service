@@ -417,6 +417,86 @@ export function contarEquipamentosUnicosDia(dia: DiaTrabalhoEspecial): number {
   return uids.size
 }
 
+/**
+ * Intervalo de deslocação do dia (ida e/ou retorno) para o Resumo.
+ * Preferência: só ida → saída–chegada ida; só retorno → saída–chegada retorno;
+ * ambos → início da ida até fim do retorno.
+ */
+export function intervaloViagemDia(dia: DiaTrabalhoEspecial): { inicio: string; fim: string } {
+  const calc = atualizarCalculosDiaEspecial(dia)
+  const idaIni = (calc.idaHora || '').trim()
+  const idaFim = (calc.idaChegada || '').trim()
+  const retIni = (calc.retornoSaida || '').trim()
+  const retFim = (calc.retornoChegada || '').trim()
+  const temIda = Boolean(idaIni || idaFim)
+  const temRet = Boolean(retIni || retFim)
+  if (temIda && !temRet) return { inicio: idaIni || '—', fim: idaFim || '—' }
+  if (!temIda && temRet) return { inicio: retIni || '—', fim: retFim || '—' }
+  if (temIda && temRet) {
+    return {
+      inicio: idaIni || retIni || '—',
+      fim: retFim || idaFim || '—',
+    }
+  }
+  return { inicio: '—', fim: '—' }
+}
+
+export type DiaSemMaquinaResumoEspecial = {
+  diaId: string
+  data: string
+  dataFormatada: string
+  /** Ex.: "04:00 – 15:00" */
+  horarioFmt: string
+  /** Duração total viagem (ida+retorno), ou '' se não houver. */
+  duracaoFmt: string
+  descricao: string
+  /** Sem horas em máquina e com deslocamento. */
+  soViagem: boolean
+  /** Dia registado (diária) sem máquina e sem viagem (ex. domingo). */
+  soRegisto: boolean
+}
+
+/**
+ * Dias que não aparecem nas tabelas por máquina do Resumo:
+ * só viagem e (opcionalmente) dias registados sem horas em máquina.
+ */
+export function coletarDiasSemMaquinaResumo(
+  dias: DiaTrabalhoEspecial[] | undefined | null
+): DiaSemMaquinaResumoEspecial[] {
+  const diasOrd = sortDiasTrabalhoEspecialCronologicamente(Array.isArray(dias) ? dias : [])
+  const out: DiaSemMaquinaResumoEspecial[] = []
+
+  for (const diaRaw of diasOrd) {
+    const dia = atualizarCalculosDiaEspecial(diaRaw)
+    const resumo = resumoHorasTrabalhoDia(dia)
+    if (resumo.temHoras) continue
+
+    const contaDiaria = Boolean(diaContaComoDiariaEspecial(dia))
+    if (!resumo.soViagem && !contaDiaria) continue
+
+    const { inicio, fim } = intervaloViagemDia(dia)
+    let horarioFmt = '—'
+    if (resumo.soViagem || inicio !== '—' || fim !== '—') {
+      if (inicio !== '—' && fim !== '—') horarioFmt = `${inicio} – ${fim}`
+      else if (inicio !== '—') horarioFmt = inicio
+      else if (fim !== '—') horarioFmt = fim
+    }
+
+    out.push({
+      diaId: dia.id,
+      data: dia.data,
+      dataFormatada: formatDiaCurtoPt(dia.data),
+      horarioFmt,
+      duracaoFmt: resumo.viagemFmt,
+      descricao: (dia.descricaoTrabalho || '').trim(),
+      soViagem: resumo.soViagem,
+      soRegisto: !resumo.soViagem && contaDiaria,
+    })
+  }
+
+  return out
+}
+
 /** Todas as sessões de horas agrupadas por equipamento (duração = líquida/cobrável). */
 export function coletarSessoesPorEquipamento(
   dias: DiaTrabalhoEspecial[] | undefined | null
