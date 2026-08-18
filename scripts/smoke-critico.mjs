@@ -53,6 +53,7 @@ const critical = [
   'app/modules/pessoas/index.ts',
   'app/modules/manuais/index.ts',
   'app/modules/ficha-cadastral/index.ts',
+  'app/modules/tradutor/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -1150,6 +1151,54 @@ try {
   }
 } catch (e) {
   fail(`módulo ficha-cadastral: ${e.message}`)
+}
+
+// 3ah) Módulo tradutor (51.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/tradutor/index.ts'), 'utf8')
+  if (
+    idx.includes('TranslatorLibraryEntry') &&
+    idx.includes('normalizeTranslatorLibrary') &&
+    idx.includes('filterLibraryByLangPair') &&
+    idx.includes('findLibraryMatch') &&
+    idx.includes('libraryEntryExists') &&
+    idx.includes('createTranslatorLibraryEntry')
+  ) {
+    ok('módulo tradutor exporta tipos/helpers')
+  } else {
+    fail('módulo tradutor incompleto (index.ts)')
+  }
+  for (const f of ['tipos.ts', 'library.ts']) {
+    if (exists(`app/modules/tradutor/${f}`)) ok(`existe app/modules/tradutor/${f}`)
+    else fail(`falta app/modules/tradutor/${f}`)
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/tradutor'") || nma.includes('from "./modules/tradutor"')) {
+    ok('NonatoMainApp importa app/modules/tradutor')
+  } else {
+    fail('NonatoMainApp não importa o módulo tradutor')
+  }
+  if (
+    !nma.includes('type TranslatorLibraryEntry = {') &&
+    nma.includes('TranslatorLibraryEntry') &&
+    nma.includes('normalizeTranslatorLibrary') &&
+    nma.includes('filterLibraryByLangPair') &&
+    nma.includes('findLibraryMatch') &&
+    nma.includes('libraryEntryExists') &&
+    nma.includes('createTranslatorLibraryEntry')
+  ) {
+    ok('NonatoMainApp usa tradutor do módulo')
+  } else {
+    fail('NonatoMainApp ainda define TranslatorLibraryEntry localmente ou não usa helpers')
+  }
+  const libTypes = fs.readFileSync(path.join(root, 'app/lib/translatorLibraryTypes.ts'), 'utf8')
+  if (libTypes.includes("from '../modules/tradutor'") || libTypes.includes('from "../modules/tradutor"')) {
+    ok('lib/translatorLibraryTypes re-exporta app/modules/tradutor')
+  } else {
+    fail('lib/translatorLibraryTypes não re-exporta o módulo tradutor')
+  }
+} catch (e) {
+  fail(`módulo tradutor: ${e.message}`)
 }
 
 // 4) i18n

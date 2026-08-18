@@ -491,6 +491,14 @@ import { getGestorClasse, getTecnicoClasse, getTecnicoTipo } from './modules/pes
 import type { ManuaisGrupo, ManuaisModelo } from './modules/manuais'
 import type { FichaCadastral } from './modules/ficha-cadastral'
 import { emptyFichaCadastral, normalizeFichaCadastral } from './modules/ficha-cadastral'
+import type { TranslatorLibraryEntry } from './modules/tradutor'
+import {
+  normalizeTranslatorLibrary,
+  filterLibraryByLangPair,
+  findLibraryMatch,
+  libraryEntryExists,
+  createTranslatorLibraryEntry,
+} from './modules/tradutor'
 import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { DiarioLembreteIntervalPicker } from './components/DiarioLembreteIntervalPicker'
 import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'
@@ -1307,14 +1315,7 @@ type DemoModuleMode = 'active' | 'teaser' | 'hidden'
 
 /* ComprovanteDespesa → app/modules/comprovantes */
 
-// Biblioteca do tradutor: entradas separadas por par de idiomas (origem → destino)
-type TranslatorLibraryEntry = {
-  id: string
-  sourceLang: string
-  sourceText: string
-  targetLang: string
-  targetText: string
-}
+/* TranslatorLibraryEntry / biblioteca → app/modules/tradutor */
 
 /* getLanguages → app/modules/idiomas */
 
@@ -6634,10 +6635,7 @@ export default function Dashboard() {
       return
     }
 
-    const textNorm = text.trim().toLowerCase()
-    const fromLibrary = translatorLibrary.find(
-      e => e.sourceLang === from && e.targetLang === to && e.sourceText.trim().toLowerCase() === textNorm
-    )
+    const fromLibrary = findLibraryMatch(translatorLibrary, from, to, text)
     if (fromLibrary) {
       setQuickTranslateResult(fromLibrary.targetText)
       return
@@ -7900,8 +7898,8 @@ export default function Dashboard() {
 
       // Carregar biblioteca do tradutor (separada por idiomas)
       const savedTranslatorLibrary = getData('nonato-translator-library')
-      if (savedTranslatorLibrary && Array.isArray(savedTranslatorLibrary)) {
-        setTranslatorLibrary(savedTranslatorLibrary)
+      if (savedTranslatorLibrary != null) {
+        setTranslatorLibrary(normalizeTranslatorLibrary(savedTranslatorLibrary))
       }
 
       // Carregar técnicos
@@ -35844,8 +35842,10 @@ export default function Dashboard() {
       
       case 'translator': {
         const langs = getLanguages(safeT)
-        const libraryFiltered = translatorLibrary.filter(
-          e => e.sourceLang === translatorLibraryFrom && e.targetLang === translatorLibraryTo
+        const libraryFiltered = filterLibraryByLangPair(
+          translatorLibrary,
+          translatorLibraryFrom,
+          translatorLibraryTo
         )
         return (
           <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }}>
@@ -35970,17 +35970,15 @@ export default function Dashboard() {
                           const src = translatorText.trim()
                           const tgt = (translatedText || quickTranslateResult || '').trim()
                           if (!src || !tgt) return
-                          const exists = translatorLibrary.some(
-                            e => e.sourceLang === translatorFrom && e.targetLang === translatorTo && e.sourceText.trim().toLowerCase() === src.toLowerCase()
-                          )
-                          if (exists) { alert(safeT?.alreadyInLibrary || 'Já existe na biblioteca para este par de idiomas.'); return }
-                          const newEntry: TranslatorLibraryEntry = {
-                            id: Date.now().toString() + Math.random().toString(36).slice(2),
+                          if (libraryEntryExists(translatorLibrary, translatorFrom, translatorTo, src)) {
+                            alert(safeT?.alreadyInLibrary || 'Já existe na biblioteca para este par de idiomas.'); return
+                          }
+                          const newEntry = createTranslatorLibraryEntry({
                             sourceLang: translatorFrom,
                             sourceText: src,
                             targetLang: translatorTo,
-                            targetText: tgt
-                          }
+                            targetText: tgt,
+                          })
                           const next = [...translatorLibrary, newEntry]
                           setTranslatorLibrary(next)
                           saveData('nonato-translator-library', next)
@@ -36072,17 +36070,15 @@ export default function Dashboard() {
                     const src = libraryEntrySource.trim()
                     const tgt = libraryEntryTarget.trim()
                     if (!src || !tgt) return
-                    const exists = translatorLibrary.some(
-                      e => e.sourceLang === translatorLibraryFrom && e.targetLang === translatorLibraryTo && e.sourceText.trim().toLowerCase() === src.toLowerCase()
-                    )
-                    if (exists) { alert(safeT?.alreadyInLibrary || 'Já existe para este par.'); return }
-                    const newEntry: TranslatorLibraryEntry = {
-                      id: Date.now().toString() + Math.random().toString(36).slice(2),
+                    if (libraryEntryExists(translatorLibrary, translatorLibraryFrom, translatorLibraryTo, src)) {
+                      alert(safeT?.alreadyInLibrary || 'Já existe para este par.'); return
+                    }
+                    const newEntry = createTranslatorLibraryEntry({
                       sourceLang: translatorLibraryFrom,
                       sourceText: src,
                       targetLang: translatorLibraryTo,
-                      targetText: tgt
-                    }
+                      targetText: tgt,
+                    })
                     const next = [...translatorLibrary, newEntry]
                     setTranslatorLibrary(next)
                     saveData('nonato-translator-library', next)
