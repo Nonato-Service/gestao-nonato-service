@@ -490,8 +490,12 @@ body.rs-pdf--especial .re-doc {
 function formatDuracaoDiaPdf(
   resumo: ReturnType<typeof resumoHorasTrabalhoDia>,
   esc: (s: string) => string,
-  labelAlmoco: string
+  labelAlmoco: string,
+  labelViagem: string
 ): string {
+  if (resumo.soViagem) {
+    return `<strong>${esc(resumo.viagemFmt)}</strong><div class="re-dia-duracao-detalhe">${esc(labelViagem)}</div>`
+  }
   if (!resumo.temHoras) return '—'
   if (resumo.almocoMinutos > 0 && resumo.duracaoBruta !== resumo.duracaoLiquida) {
     return `<strong>${esc(resumo.duracaoLiquida)}</strong><div class="re-dia-duracao-detalhe">${esc(resumo.duracaoBruta)} − ${esc(resumo.almocoFmt)} ${esc(labelAlmoco)}</div>`
@@ -745,6 +749,7 @@ export function imprimirRelatorioEspecialPdf(
   const totais = calcularTotaisRelatorioEspecial(dias)
   const esc = escapePdfHtml
   const labelAlmoco = L(labels, 'horaAlmoco', 'almoço')
+  const labelViagem = L(labels, 'relatorioEspecialDiaSoViagem', L(labels, 'relatorioEspecialPdfHorasViagem', 'viagem'))
 
   const totalGeralFinalHtml = buildTotalGeralBannerHtml(rel, totais, labels, ' re-total-geral--fecho')
   const kpiStripHtml = buildKpiStripHtml(rel, totais, equipamentos.length, labels)
@@ -778,7 +783,7 @@ export function imprimirRelatorioEspecialPdf(
         <td class="re-col-total">${esc(dia.idaDuracao || '—')}</td>
         <td>${esc(horas.inicio)}</td>
         <td>${esc(horas.fim)}</td>
-        <td class="re-col-total">${formatDuracaoDiaPdf(horas, esc, labelAlmoco)}</td>
+        <td class="re-col-total">${formatDuracaoDiaPdf(horas, esc, labelAlmoco, labelViagem)}</td>
         <td>${esc(dia.retornoSaida || '—')}</td>
         <td>${esc(dia.retornoChegada || '—')}</td>
         <td class="re-col-total">${esc(dia.retornoDuracao || '—')}</td>
@@ -796,7 +801,7 @@ export function imprimirRelatorioEspecialPdf(
       ? `<tfoot>
           <tr class="re-row-total">
             <td colspan="6" style="text-align:right">${esc(L(labels, 'totais', 'TOTAIS'))}</td>
-            <td class="re-col-total">${esc(formatMinutosComoHHMM(totais.horasTrabalhoTotal))}<div class="re-dia-duracao-detalhe">${esc(L(labels, 'relatorioEspecialPdfTotalLiquido', 'Trabalho líquido'))}${totais.horasAlmocoTotal > 0 ? ` · ${esc(formatMinutosComoHHMM(totais.horasTrabalhoBruto))} − ${esc(formatMinutosComoHHMM(totais.horasAlmocoTotal))} ${esc(labelAlmoco)}` : ''}</div></td>
+            <td class="re-col-total">${esc(formatMinutosComoHHMM(totais.horasTrabalhoTotal))}<div class="re-dia-duracao-detalhe">${esc(L(labels, 'relatorioEspecialPdfTotalLiquido', 'Trabalho líquido'))}${totais.horasAlmocoTotal > 0 ? ` · ${esc(formatMinutosComoHHMM(totais.horasTrabalhoBruto))} − ${esc(formatMinutosComoHHMM(totais.horasAlmocoTotal))} ${esc(labelAlmoco)}` : ''}${totais.horasViagemTotal > 0 ? ` · ${esc(labelViagem)} ${esc(formatMinutosComoHHMM(totais.horasViagemTotal))}` : ''}</div></td>
             <td colspan="3"></td>
             <td colspan="2"></td>
             <td class="re-col-total">${esc(String(totais.kmsTotal))}</td>

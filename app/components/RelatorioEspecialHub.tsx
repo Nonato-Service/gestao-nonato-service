@@ -866,6 +866,10 @@ export default function RelatorioEspecialHub({
         >
           <h3 style={{ marginTop: 0 }}>{t.relatorioEspecialFechamentoTotal || 'Total geral'}</h3>
           <p style={{ fontSize: 24, fontWeight: 700, color: '#00c853' }}>{formComTotais.horasTrabalho}</p>
+          <p style={{ fontSize: 13, color: '#aaa', marginTop: 0 }}>
+            {t.relatorioEspecialPdfHorasViagem || t.horasViagem || 'Horas viagem'}:{' '}
+            <strong style={{ color: '#00c853' }}>{formComTotais.horasViagem || '0:00'}</strong>
+          </p>
           {form.fechamento?.totalGeral ? (
             <p style={{ color: '#00ff00' }}>
               ✓{' '}
@@ -1523,12 +1527,29 @@ export default function RelatorioEspecialHub({
                           <td>{horasResumo.inicio}</td>
                           <td>{horasResumo.fim}</td>
                           <td className="relatorio-especial-horas-table__liquido">
-                            <strong>{horasResumo.duracaoLiquida}</strong>
-                            {horasResumo.almocoMinutos > 0 && horasResumo.duracaoBruta !== horasResumo.duracaoLiquida ? (
-                              <span className="relatorio-especial-horas-table__hint">
-                                {horasResumo.duracaoBruta} − {horasResumo.almocoFmt} {t.horaAlmoco || 'almoço'}
-                              </span>
-                            ) : null}
+                            {horasResumo.soViagem ? (
+                              <>
+                                <strong>{horasResumo.viagemFmt}</strong>
+                                <span className="relatorio-especial-horas-table__hint">
+                                  {t.relatorioEspecialDiaSoViagem ||
+                                    t.relatorioEspecialPdfHorasViagem ||
+                                    'viagem'}
+                                </span>
+                              </>
+                            ) : horasResumo.temHoras ? (
+                              <>
+                                <strong>{horasResumo.duracaoLiquida}</strong>
+                                {horasResumo.almocoMinutos > 0 &&
+                                horasResumo.duracaoBruta !== horasResumo.duracaoLiquida ? (
+                                  <span className="relatorio-especial-horas-table__hint">
+                                    {horasResumo.duracaoBruta} − {horasResumo.almocoFmt}{' '}
+                                    {t.horaAlmoco || 'almoço'}
+                                  </span>
+                                ) : null}
+                              </>
+                            ) : (
+                              <strong>—</strong>
+                            )}
                           </td>
                           <td>{dia.retornoSaida || '—'}</td>
                           <td>{dia.retornoChegada || '—'}</td>
@@ -1605,6 +1626,7 @@ export default function RelatorioEspecialHub({
         {diasOrdenados.map((dia) => {
           const diaCalc = atualizarCalculosDiaEspecial(dia)
           const aberto = diaExpandido === dia.id
+          const horasResumoCard = resumoHorasTrabalhoDia(diaCalc)
           const resumoHoras = (diaCalc.horasPorEquipamento || [])
             .filter((h) => h.equipamentoUid && h.horasDuracao)
             .map((h) => {
@@ -1613,6 +1635,11 @@ export default function RelatorioEspecialHub({
               return `${eq ? labelEquipamentoCurto(eq, idx) : '?'}: ${h.horasDuracao}`
             })
             .join(' · ')
+          const resumoLinha =
+            resumoHoras ||
+            (horasResumoCard.soViagem
+              ? `${horasResumoCard.viagemFmt} ${t.relatorioEspecialDiaSoViagem || t.relatorioEspecialPdfHorasViagem || 'viagem'}`
+              : '')
           return (
             <div key={dia.id} id={`re-dia-card-${dia.id}`} className="relatorio-especial-dia-card">
               <button
@@ -1623,7 +1650,7 @@ export default function RelatorioEspecialHub({
                 <strong style={{ color: getDiaSemanaInfo(dia.data, t).isFimDeSemana ? '#ffd54f' : undefined }}>
                   {formatDiaComDiaSemana(dia.data, t)}
                 </strong>
-                {resumoHoras ? ` — ${resumoHoras}` : ''}
+                {resumoLinha ? ` — ${resumoLinha}` : ''}
                 <span className="relatorio-especial-dia-card__chevron">{aberto ? '▲' : '▼'}</span>
               </button>
               {aberto && (
@@ -2005,10 +2032,25 @@ export default function RelatorioEspecialHub({
             <strong style={{ fontSize: 28, color: '#00c853' }}>{formComTotais.horasTrabalho}</strong>
             {totais.horasAlmocoTotal > 0 && (
               <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>
-                {t.relatorioEspecialTotalComAlmoco ||
-                  `Bruto ${formatMinutosComoHHMM(totais.horasTrabalhoBruto)} − ${t.horaAlmoco || 'almoço'} ${formatMinutosComoHHMM(totais.horasAlmocoTotal)}`}
+                {formatMinutosComoHHMM(totais.horasTrabalhoBruto)} −{' '}
+                {formatMinutosComoHHMM(totais.horasAlmocoTotal)} {t.horaAlmoco || 'almoço'}
+                {' · '}
+                {t.relatorioEspecialTotalComAlmoco || 'Total com desconto de almoço'}
               </div>
             )}
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: '#aaa' }}>
+              {t.relatorioEspecialPdfHorasViagem || t.horasViagem || 'Horas viagem'}
+            </div>
+            <strong style={{ fontSize: 28, color: '#00c853' }}>{formComTotais.horasViagem || '0:00'}</strong>
+            {totais.horasViagemTotal > 0 && (totais.horasViagemIda > 0 || totais.horasViagemRetorno > 0) ? (
+              <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>
+                {(t.horasViagemIda || 'Ida') + ': ' + formatMinutosComoHHMM(totais.horasViagemIda)}
+                {' · '}
+                {(t.horasViagemRetorno || 'Retorno') + ': ' + formatMinutosComoHHMM(totais.horasViagemRetorno)}
+              </div>
+            ) : null}
           </div>
           <div>
             <div style={{ fontSize: 12, color: '#aaa' }}>KM</div>

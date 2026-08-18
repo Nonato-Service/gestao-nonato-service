@@ -11,6 +11,7 @@ export {
   calcularDuracaoHoras,
   minutosDeDuracaoHHMM,
   minutosPausaOuAlmocoDia,
+  minutosViagemDia,
   minutosAlmocoDia,
   minutosTrabalhoBrutoDia,
   minutosTrabalhoLiquidoDia,

@@ -72,8 +72,12 @@ export function minutosPausaOuAlmocoDia(dia: {
   return 0
 }
 
-export function minutosAlmocoDia(dia: DiaTrabalhoEspecial): number {
-  return minutosPausaOuAlmocoDia(dia)
+/** Minutos de viagem (ida + retorno) no dia. */
+export function minutosViagemDia(dia: DiaTrabalhoEspecial): number {
+  const calc = atualizarCalculosDiaEspecial(dia)
+  return (
+    minutosDeDuracaoHHMM(calc.idaDuracao || '') + minutosDeDuracaoHHMM(calc.retornoDuracao || '')
+  )
 }
 
 /** Minutos de trabalho bruto no dia (soma equipamentos, sem descontar almoço). */
@@ -84,6 +88,15 @@ export function minutosTrabalhoBrutoDia(dia: DiaTrabalhoEspecial): number {
     bruto += minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(linha))
   }
   return bruto
+}
+
+/**
+ * Almoço/pausa só conta em dias com horas em máquina.
+ * Dia só de viagem não desconta almoço do total de trabalho.
+ */
+export function minutosAlmocoDia(dia: DiaTrabalhoEspecial): number {
+  if (minutosTrabalhoBrutoDia(dia) <= 0) return 0
+  return minutosPausaOuAlmocoDia(dia)
 }
 
 /** Minutos de trabalho no dia (equipamentos) já descontando almoço/pausa desse dia. */
@@ -290,6 +303,11 @@ export type ResumoHorasTrabalhoDia = {
   almocoMinutos: number
   almocoFmt: string
   temHoras: boolean
+  /** Ida + retorno (minutos). */
+  viagemMinutos: number
+  viagemFmt: string
+  /** Sem horas em máquina, mas com deslocamento registado. */
+  soViagem: boolean
 }
 
 /** Primeiro início e último fim das linhas de equipamento no dia. */
@@ -307,13 +325,14 @@ export function intervaloHorasTrabalhoDia(dia: DiaTrabalhoEspecial): { inicio: s
   }
 }
 
-/** Resumo claro do dia para tabela/PDF: intervalo, bruto, líquido e almoço. */
+/** Resumo claro do dia para tabela/PDF: intervalo, bruto, líquido, almoço e viagem. */
 export function resumoHorasTrabalhoDia(dia: DiaTrabalhoEspecial): ResumoHorasTrabalhoDia {
   const calc = atualizarCalculosDiaEspecial(dia)
   const { inicio, fim } = intervaloHorasTrabalhoDia(calc)
   const bruto = minutosTrabalhoBrutoDia(calc)
   const almoco = minutosAlmocoDia(calc)
   const liquido = Math.max(0, bruto - almoco)
+  const viagemMinutos = minutosViagemDia(calc)
   const temHoras = bruto > 0
   return {
     inicio,
@@ -323,6 +342,9 @@ export function resumoHorasTrabalhoDia(dia: DiaTrabalhoEspecial): ResumoHorasTra
     almocoMinutos: almoco,
     almocoFmt: almoco > 0 ? formatMinutosComoHHMM(almoco) : '',
     temHoras,
+    viagemMinutos,
+    viagemFmt: viagemMinutos > 0 ? formatMinutosComoHHMM(viagemMinutos) : '',
+    soViagem: !temHoras && viagemMinutos > 0,
   }
 }
 
