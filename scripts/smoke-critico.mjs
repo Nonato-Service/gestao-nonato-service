@@ -448,13 +448,15 @@ try {
   }
   if (
     hub.includes('coletarDiasSemMaquinaResumo') &&
-    hub.includes('contextoFmt') &&
+    hub.includes('equipamentoFmt') &&
+    hub.includes('relatorio-especial-resumo-viagem__equip') &&
     hub.includes('relatorio-especial-tecnicos-chips') &&
-    hub.includes('tecnicosOpcoes')
+    hub.includes('tecnicosOpcoes') &&
+    !hub.includes("origem: 'tecnico' | 'gestor'")
   ) {
-    ok('RelatorioEspecialHub: viagem com equipamento/cliente + chips de técnico')
+    ok('RelatorioEspecialHub: viagem com equipamento destacado + chips só de técnico')
   } else {
-    fail('RelatorioEspecialHub sem contexto de viagem ou selector de técnico visível')
+    fail('RelatorioEspecialHub sem destaque de equipamento na viagem ou chips de técnico')
   }
   const calc = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/calculos.ts'), 'utf8')
   if (

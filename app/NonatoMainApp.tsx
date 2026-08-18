@@ -45717,7 +45717,6 @@ A1;Peça exemplo;10`}
               clientes={clientesOrdenadosAlfabeticamente}
               equipamentosArmazem={equipamentos}
               tecnicos={tecnicos}
-              gestores={gestores}
               selectedLanguage={selectedLanguage}
               labels={safeT as Record<string, string | undefined>}
               preverNumero={preverProximoNumeroRelatorioEspecial}

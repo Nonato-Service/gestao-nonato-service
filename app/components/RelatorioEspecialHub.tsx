@@ -60,8 +60,6 @@ export type RelatorioEspecialHubProps = {
   clientes: ClienteMin[]
   equipamentosArmazem: EquipamentoArmazemBaixaLookup[]
   tecnicos: TecnicoMin[]
-  /** Opcional: gestores também aparecem como opção de técnico no formulário. */
-  gestores?: Array<{ id: string; name?: string; nome?: string }>
   selectedLanguage: string
   labels: Record<string, string | undefined>
   preverNumero: (dataIso: string) => string
@@ -173,7 +171,6 @@ export default function RelatorioEspecialHub({
   clientes,
   equipamentosArmazem,
   tecnicos,
-  gestores = [],
   selectedLanguage,
   labels,
   preverNumero,
@@ -326,11 +323,11 @@ export default function RelatorioEspecialHub({
     ]
   )
 
-  /** Lista visível de técnicos (name/nome) + gestores; inclui valor já gravado se órfão. */
+  /** Chips = só técnicos cadastrados; inclui valor já gravado se órfão. Gestores não entram. */
   const tecnicosOpcoes = useMemo(() => {
     const seen = new Set<string>()
-    const out: { id: string; name: string; origem: 'tecnico' | 'gestor' | 'atual' }[] = []
-    const push = (id: string, name: string, origem: 'tecnico' | 'gestor' | 'atual') => {
+    const out: { id: string; name: string; origem: 'tecnico' | 'atual' }[] = []
+    const push = (id: string, name: string, origem: 'tecnico' | 'atual') => {
       const n = name.trim()
       if (!n) return
       const key = n.toLowerCase()
@@ -341,13 +338,10 @@ export default function RelatorioEspecialHub({
     for (const tec of tecnicos || []) {
       push(String(tec.id || ''), nomePessoaCadastro(tec), 'tecnico')
     }
-    for (const g of gestores || []) {
-      push(String(g.id || ''), nomePessoaCadastro(g), 'gestor')
-    }
     const atual = (form.tecnico || '').trim()
     if (atual) push(`atual-${atual}`, atual, 'atual')
     return out
-  }, [tecnicos, gestores, form.tecnico])
+  }, [tecnicos, form.tecnico])
 
   const clientesOrdenados = useMemo(
     () => [...clientes].sort((a, b) => a.nomeEmpresa.localeCompare(b.nomeEmpresa, 'pt')),
@@ -1124,11 +1118,6 @@ export default function RelatorioEspecialHub({
                       onClick={() => setForm((prev) => ({ ...prev, tecnico: tec.name }))}
                     >
                       {tec.name}
-                      {tec.origem === 'gestor' ? (
-                        <span className="relatorio-especial-tecnico-chip__tag">
-                          {t.gestoresTab || t.gestores || 'Gestor'}
-                        </span>
-                      ) : null}
                     </button>
                   )
                 })}
@@ -2211,21 +2200,21 @@ export default function RelatorioEspecialHub({
                       )}
                     </td>
                     <td style={{ fontSize: 12, color: '#ccc' }}>
-                      {(d.contextoFmt || d.equipamentoFmt || d.clienteFmt) && (
-                        <div style={{ color: '#00c853', fontWeight: 600, marginBottom: 4, fontSize: 11 }}>
-                          {d.contextoFmt ||
-                            [
-                              d.equipamentoFmt
-                                ? `${t.relatorioEspecialResumoViagemEquipamento || 'Equipamento'}: ${d.equipamentoFmt}`
-                                : '',
-                              d.clienteFmt
-                                ? `${t.relatorioEspecialResumoViagemCliente || 'Cliente'}: ${d.clienteFmt}`
-                                : '',
-                            ]
-                              .filter(Boolean)
-                              .join(' · ')}
+                      {d.equipamentoFmt ? (
+                        <div className="relatorio-especial-resumo-viagem__equip">
+                          <span className="relatorio-especial-resumo-viagem__equip-label">
+                            {t.relatorioEspecialResumoViagemEquipamento || 'Equipamento'}:
+                          </span>{' '}
+                          <strong className="relatorio-especial-resumo-viagem__equip-valor">
+                            {d.equipamentoFmt}
+                          </strong>
                         </div>
-                      )}
+                      ) : null}
+                      {d.clienteFmt ? (
+                        <div className="relatorio-especial-resumo-viagem__cliente">
+                          {t.relatorioEspecialResumoViagemCliente || 'Cliente'}: {d.clienteFmt}
+                        </div>
+                      ) : null}
                       {d.descricao || '—'}
                     </td>
                   </tr>

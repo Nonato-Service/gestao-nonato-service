@@ -380,6 +380,42 @@ body.rs-pdf--especial .re-doc {
   line-height: 1.3;
 }
 
+.re-viagem-equip {
+  display: block;
+  margin: 0 0 4px;
+  padding: 4px 6px;
+  border-left: 3px solid #00c853;
+  background: #ecfdf5;
+  color: #065f46;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.re-viagem-equip__label {
+  display: block;
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #047857;
+  margin-bottom: 1px;
+}
+
+.re-viagem-equip__valor {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #064e3b;
+}
+
+.re-viagem-cliente {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 3px;
+}
+
 .re-resumo {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -749,24 +785,21 @@ function buildResumoViagemHtml(
       const duracaoCell = d.soViagem && d.duracaoFmt
         ? `<strong>${esc(d.duracaoFmt)}</strong><div class="re-dia-duracao-detalhe">${esc(labelViagem)}</div>`
         : '—'
-      const contexto =
-        d.contextoFmt ||
-        [
-          d.equipamentoFmt
-            ? `${L(labels, 'relatorioEspecialResumoViagemEquipamento', 'Equipamento')}: ${d.equipamentoFmt}`
-            : '',
-          d.clienteFmt
-            ? `${L(labels, 'relatorioEspecialResumoViagemCliente', 'Cliente')}: ${d.clienteFmt}`
-            : '',
-        ]
-          .filter(Boolean)
-          .join(' · ')
+      const labEq = L(labels, 'relatorioEspecialResumoViagemEquipamento', 'Equipamento')
+      const labCli = L(labels, 'relatorioEspecialResumoViagemCliente', 'Cliente')
+      const equipHtml = d.equipamentoFmt
+        ? `<div class="re-viagem-equip"><span class="re-viagem-equip__label">${esc(labEq)}</span><span class="re-viagem-equip__valor">${esc(d.equipamentoFmt)}</span></div>`
+        : ''
+      const clienteHtml = d.clienteFmt
+        ? `<div class="re-viagem-cliente">${esc(labCli)}: ${esc(d.clienteFmt)}</div>`
+        : ''
       return `<tr>
         <td>${esc(d.dataFormatada)}</td>
         <td>${esc(d.horarioFmt || '—')}</td>
         <td class="re-col-total">${duracaoCell}</td>
         <td>
-          ${contexto ? `<div style="font-size:9px;color:#0f172a;font-weight:600;margin-bottom:2px">${esc(contexto)}</div>` : ''}
+          ${equipHtml}
+          ${clienteHtml}
           ${esc(d.descricao || '—')}
         </td>
       </tr>`
