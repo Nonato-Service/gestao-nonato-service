@@ -7,6 +7,7 @@ import {
   coletarDiasSemMaquinaResumo,
   coletarSessoesPorEquipamento,
   formatDiaComDiaSemana,
+  formatDiaCurtoPt,
   formatMinutosComoHHMM,
   getDiaSemanaInfo,
   resumoHorasTrabalhoDia,
@@ -197,6 +198,42 @@ body.rs-pdf--especial .re-doc {
   vertical-align: middle;
 }
 
+/* DATA: dia da semana em destaque (à frente), data por baixo */
+.re-col-data {
+  text-align: left !important;
+  min-width: 62px;
+  max-width: 78px;
+  padding-left: 6px !important;
+  padding-right: 5px !important;
+  white-space: nowrap;
+  vertical-align: middle !important;
+}
+
+.re-dia-semana {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #0f172a;
+  line-height: 1.15;
+}
+
+.re-col-data--fds .re-dia-semana {
+  color: #b45309;
+}
+
+.re-dia-data {
+  display: block;
+  margin-top: 2px;
+  font-size: 8px;
+  font-weight: 600;
+  color: #475569;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+
 .re-table .re-row-total td,
 .re-table tfoot .re-row-total td {
   background: #f1f5f9 !important;
@@ -338,20 +375,22 @@ body.rs-pdf--especial .re-doc {
 
 .re-total-geral__valor-linha {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 10px;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 .re-total-geral__detalhe {
-  margin: 0;
+  display: block;
+  margin: 4px 0 0;
   padding: 0;
   border: none;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 500;
   color: #64748b;
-  line-height: 1.35;
-  white-space: nowrap;
+  line-height: 1.4;
+  white-space: normal;
 }
 
 .re-total-geral--fecho {
@@ -370,7 +409,9 @@ body.rs-pdf--especial .re-doc {
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
+  align-items: flex-end;
   justify-content: flex-end;
+  text-align: right;
 }
 
 .re-total-geral--fecho .re-total-geral__valor {
@@ -393,6 +434,30 @@ body.rs-pdf--especial .re-doc {
   margin-left: 4px;
   line-height: 1.3;
   white-space: nowrap;
+}
+
+/* Hora cobrável limpa + nota de almoço em linha separada */
+.re-dia-duracao-cell {
+  text-align: center;
+  line-height: 1.25;
+}
+
+.re-dia-duracao-principal {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.re-dia-duracao-nota {
+  display: block;
+  margin-top: 3px;
+  font-size: 7.5px;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.3;
+  white-space: normal;
 }
 
 .re-viagem-equip {
@@ -539,6 +604,28 @@ body.rs-pdf--especial .re-doc {
 }
 `.trim()
 
+function formatCelulaDataPdfHtml(
+  dataRaw: string | undefined,
+  labels: RelatorioEspecialPdfLabels | undefined,
+  esc: (s: string) => string
+): string {
+  const { abrev, isFimDeSemana } = getDiaSemanaInfo(dataRaw, labels)
+  const dataCurta = formatDiaCurtoPt(dataRaw)
+  const fdsClass = isFimDeSemana ? ' re-col-data--fds' : ''
+  if (!abrev) {
+    return `<td class="re-col-data${fdsClass}"><span class="re-dia-data">${esc(dataCurta)}</span></td>`
+  }
+  return `<td class="re-col-data${fdsClass}"><span class="re-dia-semana">${esc(abrev)}</span><span class="re-dia-data">${esc(dataCurta)}</span></td>`
+}
+
+function formatNotaAlmocoPdf(
+  almocoFmt: string,
+  labelAlmoco: string,
+  esc: (s: string) => string
+): string {
+  return `<span class="re-dia-duracao-nota">−${esc(almocoFmt)} ${esc(labelAlmoco)}</span>`
+}
+
 function formatDuracaoDiaPdf(
   resumo: ReturnType<typeof resumoHorasTrabalhoDia>,
   esc: (s: string) => string,
@@ -546,13 +633,14 @@ function formatDuracaoDiaPdf(
   labelViagem: string
 ): string {
   if (resumo.soViagem) {
-    return `<strong>${esc(resumo.viagemFmt)}</strong><span class="re-dia-duracao-detalhe">(${esc(labelViagem)})</span>`
+    return `<div class="re-dia-duracao-cell"><strong class="re-dia-duracao-principal">${esc(resumo.viagemFmt)}</strong><span class="re-dia-duracao-nota">${esc(labelViagem)}</span></div>`
   }
   if (!resumo.temHoras) return '—'
+  const principal = `<strong class="re-dia-duracao-principal">${esc(resumo.duracaoLiquida)}</strong>`
   if (resumo.almocoMinutos > 0 && resumo.duracaoBruta !== resumo.duracaoLiquida) {
-    return `<strong>${esc(resumo.duracaoLiquida)}</strong><span class="re-dia-duracao-detalhe">(${esc(resumo.duracaoBruta)} −${esc(resumo.almocoFmt)} ${esc(labelAlmoco)} → ${esc(resumo.duracaoLiquida)})</span>`
+    return `<div class="re-dia-duracao-cell">${principal}${formatNotaAlmocoPdf(resumo.almocoFmt, labelAlmoco, esc)}</div>`
   }
-  return `<strong>${esc(resumo.duracaoLiquida)}</strong>`
+  return `<div class="re-dia-duracao-cell">${principal}</div>`
 }
 
 function buildTotalGeralBannerHtml(
@@ -568,7 +656,7 @@ function buildTotalGeralBannerHtml(
   const totalLiquidoFmt = rel.horasTrabalho || '0:00'
   const detalheAlmoco =
     totais.horasAlmocoTotal > 0
-      ? `<span class="re-total-geral__detalhe">(${esc(totalBrutoFmt)} −${esc(totalAlmocoFmt)} ${esc(L(labels, 'horaAlmoco', 'almoço'))} → ${esc(totalLiquidoFmt)})</span>`
+      ? `<span class="re-total-geral__detalhe">${esc(L(labels, 'relatorioEspecialPdfTotalBruto', 'Bruto'))}: ${esc(totalBrutoFmt)} · −${esc(totalAlmocoFmt)} ${esc(L(labels, 'horaAlmoco', 'almoço'))}</span>`
       : `<span class="re-total-geral__detalhe">${esc(L(labels, 'relatorioEspecialPdfTotalLiquidoHint', 'Soma de todas as horas de trabalho nos equipamentos.'))}</span>`
 
   return `<div class="re-total-geral${modifier}">
@@ -655,16 +743,14 @@ function buildKpiStripHtml(
   const esc = escapePdfHtml
   const almocoHint =
     totais.horasAlmocoTotal > 0
-      ? `(${formatMinutosComoHHMM(totais.horasTrabalhoBruto)} −${formatMinutosComoHHMM(totais.horasAlmocoTotal)} ${L(labels, 'horaAlmoco', 'almoço')} → ${rel.horasTrabalho || '0:00'})`
+      ? `${L(labels, 'relatorioEspecialPdfTotalBruto', 'Bruto')}: ${formatMinutosComoHHMM(totais.horasTrabalhoBruto)} · −${formatMinutosComoHHMM(totais.horasAlmocoTotal)} ${L(labels, 'horaAlmoco', 'almoço')}`
       : L(labels, 'relatorioEspecialPdfTotalLiquidoHint', 'Total líquido de horas de trabalho')
 
   return `<div class="re-kpi-strip">
     <div class="re-kpi re-kpi--main">
       <span class="re-kpi__label">${esc(L(labels, 'relatorioEspecialPdfHorasTrabalho', 'Horas de trabalho'))}</span>
-      <span class="re-kpi__valor-linha" style="display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px">
-        <span class="re-kpi__valor">${esc(rel.horasTrabalho || '0:00')}</span>
-        <span class="re-kpi__hint" style="display:inline;margin:0">${esc(almocoHint)}</span>
-      </span>
+      <span class="re-kpi__valor">${esc(rel.horasTrabalho || '0:00')}</span>
+      <span class="re-kpi__hint">${esc(almocoHint)}</span>
     </div>
     <div class="re-kpi">
       <span class="re-kpi__label">${esc(L(labels, 'kmTotal', 'KM total'))}</span>
@@ -696,24 +782,26 @@ function buildEquipamentoCardHtml(
   labels: RelatorioEspecialPdfLabels | undefined
 ): string {
   const esc = escapePdfHtml
+  const labelAlmoco = L(labels, 'horaAlmoco', 'almoço')
   const lista = sessoes || []
   const linhas =
     lista.length > 0
       ? lista
-          .map(
-            (s) =>
-              `<tr>
-                <td>${esc(s.dataFormatada)}</td>
-                <td>${esc(formatHorarioIntervalo(s.horasInicio, s.horasFim))}</td>
-                <td class="re-col-total"><strong>${esc(s.horasDuracaoBruta || s.horasDuracao || '—')}</strong>${
-                  s.almocoDescontadoMinutos > 0
-                    ? `<span class="re-dia-duracao-detalhe">(−${esc(s.almocoDescontadoFmt)} ${esc(L(labels, 'horaAlmoco', 'almoço'))} → ${esc(s.horasDuracao)})</span>`
-                    : s.horasDuracaoBruta
-                      ? `<span class="re-dia-duracao-detalhe">(${esc(L(labels, 'relatorioEspecialHorasIntervaloBruto', 'intervalo (relógio)'))})</span>`
+          .map((s) => {
+            const horasCell =
+              s.almocoDescontadoMinutos > 0
+                ? `<div class="re-dia-duracao-cell"><strong class="re-dia-duracao-principal">${esc(s.horasDuracao || '—')}</strong>${formatNotaAlmocoPdf(s.almocoDescontadoFmt, labelAlmoco, esc)}</div>`
+                : `<div class="re-dia-duracao-cell"><strong class="re-dia-duracao-principal">${esc(s.horasDuracao || s.horasDuracaoBruta || '—')}</strong>${
+                    s.horasDuracaoBruta && s.horasDuracaoBruta !== s.horasDuracao
+                      ? `<span class="re-dia-duracao-nota">${esc(L(labels, 'relatorioEspecialHorasIntervaloBruto', 'intervalo (relógio)'))}</span>`
                       : ''
-                }</td>
+                  }</div>`
+            return `<tr>
+                ${formatCelulaDataPdfHtml(s.data, labels, esc)}
+                <td>${esc(formatHorarioIntervalo(s.horasInicio, s.horasFim))}</td>
+                <td class="re-col-total">${horasCell}</td>
               </tr>`
-          )
+          })
           .join('')
       : `<tr><td colspan="3" style="text-align:center;color:#64748b;font-style:italic">${esc(L(labels, 'relatorioEspecialPdfSemSessoesEquip', 'Sem horas registadas'))}</td></tr>`
 
@@ -739,9 +827,9 @@ function buildEquipamentoCardHtml(
       <table class="re-table">
         <thead>
           <tr>
-            <th>${esc(L(labels, 'relatorioEspecialPdfColDias', 'Dias'))}</th>
+            <th>${esc(L(labels, 'relatorioEspecialPdfColData', L(labels, 'relatorioEspecialPdfColDias', 'Dia / Data')))}</th>
             <th>${esc(L(labels, 'relatorioEspecialPdfColHorario', 'Horário'))}</th>
-            <th style="width:72px">${esc(L(labels, 'relatorioEspecialPdfHorasMaquina', 'Horas cobráveis'))}</th>
+            <th style="width:88px">${esc(L(labels, 'relatorioEspecialPdfHorasMaquina', 'Horas cobráveis'))}</th>
           </tr>
         </thead>
         <tbody>
@@ -809,7 +897,7 @@ function buildResumoViagemHtml(
   const rows = diasSemMaquina
     .map((d) => {
       const duracaoCell = d.soViagem && d.duracaoFmt
-        ? `<strong>${esc(d.duracaoFmt)}</strong><span class="re-dia-duracao-detalhe">(${esc(labelViagem)})</span>`
+        ? `<div class="re-dia-duracao-cell"><strong class="re-dia-duracao-principal">${esc(d.duracaoFmt)}</strong><span class="re-dia-duracao-nota">${esc(labelViagem)}</span></div>`
         : '—'
       const labEq = L(labels, 'relatorioEspecialResumoViagemEquipamento', 'Equipamento')
       const labCli = L(labels, 'relatorioEspecialResumoViagemCliente', 'Cliente')
@@ -820,7 +908,7 @@ function buildResumoViagemHtml(
         ? `<div class="re-viagem-cliente">${esc(labCli)}: ${esc(d.clienteFmt)}</div>`
         : ''
       return `<tr>
-        <td>${esc(d.dataFormatada)}</td>
+        ${formatCelulaDataPdfHtml(d.data, labels, esc)}
         <td>${esc(d.horarioFmt || '—')}</td>
         <td class="re-col-total">${duracaoCell}</td>
         <td>
@@ -838,7 +926,7 @@ function buildResumoViagemHtml(
     <table class="re-table">
       <thead>
         <tr>
-          <th>${esc(L(labels, 'relatorioEspecialPdfColDias', 'Dias'))}</th>
+          <th>${esc(L(labels, 'relatorioEspecialPdfColData', L(labels, 'relatorioEspecialPdfColDias', 'Dia / Data')))}</th>
           <th>${esc(L(labels, 'relatorioEspecialPdfColHorario', 'Horário'))}</th>
           <th style="width:88px">${esc(L(labels, 'relatorioEspecialPdfHorasViagem', 'Horas viagem'))}</th>
           <th>${esc(L(labels, 'relatorioEspecialResumoNota', L(labels, 'descricao', 'Nota')))}</th>
@@ -901,11 +989,8 @@ export function imprimirRelatorioEspecialPdf(
       const dia = atualizarCalculosDiaEspecial(diaRaw)
       const almoco = (dia.tempoPausa || '').trim() || (dia.pausa === 'sim' ? '01:00' : dia.pausa || '')
       const horas = resumoHorasDiaPdf(dia)
-      const sem = getDiaSemanaInfo(dia.data, labels)
-      const dataFmt = formatDiaComDiaSemana(dia.data, labels)
-      const fimSemanaStyle = sem.isFimDeSemana ? ' style="color:#b8860b;font-weight:700"' : ''
       return `<tr>
-        <td${fimSemanaStyle}>${esc(dataFmt)}</td>
+        ${formatCelulaDataPdfHtml(dia.data, labels, esc)}
         <td>${esc(dia.idaHora || '—')}</td>
         <td>${esc(dia.idaChegada || '—')}</td>
         <td class="re-col-total">${esc(dia.idaDuracao || '—')}</td>
@@ -929,15 +1014,15 @@ export function imprimirRelatorioEspecialPdf(
       ? `<tfoot>
           <tr class="re-row-total">
             <td colspan="6" style="text-align:right">${esc(L(labels, 'totais', 'TOTAIS'))}</td>
-            <td class="re-col-total"><strong>${esc(formatMinutosComoHHMM(totais.horasTrabalhoTotal))}</strong>${
+            <td class="re-col-total"><div class="re-dia-duracao-cell"><strong class="re-dia-duracao-principal">${esc(formatMinutosComoHHMM(totais.horasTrabalhoTotal))}</strong>${
               totais.horasAlmocoTotal > 0
-                ? `<span class="re-dia-duracao-detalhe">(${esc(formatMinutosComoHHMM(totais.horasTrabalhoBruto))} −${esc(formatMinutosComoHHMM(totais.horasAlmocoTotal))} ${esc(labelAlmoco)} → ${esc(formatMinutosComoHHMM(totais.horasTrabalhoTotal))})</span>`
+                ? formatNotaAlmocoPdf(formatMinutosComoHHMM(totais.horasAlmocoTotal), labelAlmoco, esc)
                 : ''
             }${
               totais.horasViagemTotal > 0
-                ? `<span class="re-dia-duracao-detalhe"> · ${esc(labelViagem)} ${esc(formatMinutosComoHHMM(totais.horasViagemTotal))}</span>`
+                ? `<span class="re-dia-duracao-nota">${esc(labelViagem)} ${esc(formatMinutosComoHHMM(totais.horasViagemTotal))}</span>`
                 : ''
-            }</td>
+            }</div></td>
             <td colspan="3"></td>
             <td colspan="2"></td>
             <td class="re-col-total">${esc(String(totais.kmsTotal))}</td>
@@ -953,7 +1038,7 @@ export function imprimirRelatorioEspecialPdf(
     <table class="re-table re-table--dias">
       <thead>
         <tr>
-          <th rowspan="2">${esc(L(labels, 'data', 'Data'))}</th>
+          <th rowspan="2">${esc(L(labels, 'relatorioEspecialPdfColData', L(labels, 'data', 'Dia / Data')))}</th>
           <th colspan="3">${esc(L(labels, 'ida', 'Ida'))}</th>
           <th colspan="3">${esc(L(labels, 'relatorioEspecialPdfHorasTrabalho', 'Horas de trabalho'))}</th>
           <th colspan="3">${esc(L(labels, 'retorno', 'Retorno'))}</th>
