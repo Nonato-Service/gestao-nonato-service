@@ -441,6 +441,12 @@ import {
   relatoriosAusentesNaLista,
   formatRelatorioRecuperacaoLabel,
 } from './lib/relatorioServicoBackup'
+import {
+  lerRascunhoRelatorioServico,
+  gravarRascunhoRelatorioServico,
+  limparRascunhoRelatorioServico,
+  rascunhoRelatorioServicoTemConteudo,
+} from './lib/relatorioServicoRascunho'
 import { mergeManuaisFamiliasGrupos, manuaisPayloadHasRichContent } from './utils/manuaisMerge'
 import {
   buildManuaisFromSources,
@@ -5634,6 +5640,7 @@ export default function Dashboard() {
   const PROTOCOLO_SERVICO_DRAFT_KEY = 'nonato-protocolo-servico-draft'
   /** Valor do <select> «Filtrar por cliente» que esconde todos os cartões (lista vazia). */
   const PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM = '__proto_cliente_nenhum__'
+  const rascunhoRelatorioServicoOferecidoRef = useRef(false)
   const [relatorioServicoForm, setRelatorioServicoForm] = useState<RelatorioServico>({
     id: '',
     numero: '',
@@ -6512,6 +6519,89 @@ export default function Dashboard() {
     }, 250)
     return () => window.clearTimeout(timer)
   }, [editingProtocoloServicoId, protocoloServicoForm, PROTOCOLO_SERVICO_DRAFT_KEY])
+
+  /** Rascunho automático do Relatório de Serviço — sobrevive a PWA / fecho / mudança de ecrã. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!showRelatorioServicoForm) return
+    if (!rascunhoRelatorioServicoTemConteudo(relatorioServicoForm)) return
+    const timer = window.setTimeout(() => {
+      gravarRascunhoRelatorioServico(relatorioServicoForm)
+    }, 400)
+    return () => window.clearTimeout(timer)
+  }, [showRelatorioServicoForm, relatorioServicoForm])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (rascunhoRelatorioServicoOferecidoRef.current) return
+    if (activeTabType !== 'relatorio-servico') return
+    if (showRelatorioServicoForm) return
+    rascunhoRelatorioServicoOferecidoRef.current = true
+    const draft = lerRascunhoRelatorioServico()
+    if (!draft || !rascunhoRelatorioServicoTemConteudo(draft)) return
+    const draftId = String(draft.id || '').trim()
+    const existente = draftId
+      ? relatoriosServico.find((r) => String(r.id) === draftId)
+      : undefined
+    const tr = safeT as Record<string, string | undefined>
+    const msg = existente
+      ? tr.relatorioServicoRascunhoContinuar ||
+        'Há um rascunho deste relatório de serviço. Quer continuar a editar?'
+      : tr.relatorioServicoRascunhoRecuperar ||
+        'Encontrámos um rascunho do relatório de serviço. Quer recuperá-lo?'
+    if (!window.confirm(msg)) return
+    const dias = Array.isArray(draft.diasTrabalho) ? [...(draft.diasTrabalho as DiaTrabalho[])] : []
+    const eqs = Array.isArray(draft.equipamentos)
+      ? [...(draft.equipamentos as RelatorioEquipamentoRef[])]
+      : []
+    const restored: RelatorioServico = {
+      id: draftId,
+      numero: String(draft.numero || ''),
+      tecnico: String(draft.tecnico || ''),
+      cliente: String(draft.cliente || ''),
+      cidade: String(draft.cidade || ''),
+      telefone: String(draft.telefone || ''),
+      data: String(draft.data || new Date().toISOString().split('T')[0]),
+      maquinaModelo: String(draft.maquinaModelo || ''),
+      numeroMaquina: String(draft.numeroMaquina || ''),
+      tipoServico: String(draft.tipoServico || ''),
+      diasTrabalho: dias,
+      horasTrabalho: String(draft.horasTrabalho || ''),
+      kmsPercorridos: String(draft.kmsPercorridos || ''),
+      horasViagem: String(draft.horasViagem || ''),
+      servicoConcluido: Boolean(draft.servicoConcluido),
+      retornoNecessario: Boolean(draft.retornoNecessario),
+      entregaDocumentacao: Boolean(draft.entregaDocumentacao),
+      liberacaoProducao: Boolean(draft.liberacaoProducao),
+      instrucaoFuncionarios: Boolean(draft.instrucaoFuncionarios),
+      necessarioTrocaPecas: Boolean(draft.necessarioTrocaPecas),
+      pecasInstaladasSubstituidas: Boolean(draft.pecasInstaladasSubstituidas),
+      observacoes: String(draft.observacoes || ''),
+      pontosAberto: String(draft.pontosAberto || ''),
+      pecasSubstituicao: Array.isArray(draft.pecasSubstituicao)
+        ? (draft.pecasSubstituicao as PecaSubstituicao[])
+        : [],
+      pecasInstaladas: Array.isArray(draft.pecasInstaladas)
+        ? (draft.pecasInstaladas as PecaSubstituicao[])
+        : [],
+      equipamentoId: typeof draft.equipamentoId === 'string' ? draft.equipamentoId : undefined,
+      clienteId: typeof draft.clienteId === 'string' ? draft.clienteId : undefined,
+      equipamentoOrigem:
+        draft.equipamentoOrigem === 'armazem' || draft.equipamentoOrigem === 'cliente'
+          ? draft.equipamentoOrigem
+          : 'cliente',
+      equipamentos: eqs.length > 0 ? eqs : [criarEquipamentoRelatorioVazio('cliente')],
+      assinaturaCliente:
+        typeof draft.assinaturaCliente === 'string' ? draft.assinaturaCliente : undefined,
+      dataAssinaturaCliente:
+        typeof draft.dataAssinaturaCliente === 'string' ? draft.dataAssinaturaCliente : undefined,
+    }
+    setRelatorioServicoListaDetalheId(null)
+    setEditingDiaTrabalhoIndex(null)
+    setEditingRelatorioServico(existente ? { ...existente, ...restored, id: existente.id } : null)
+    setRelatorioServicoForm(restored)
+    setShowRelatorioServicoForm(true)
+  }, [activeTabType, showRelatorioServicoForm, relatoriosServico, safeT])
 
   // Garantir scroll quando o grupo checklist-group é expandido
   useEffect(() => {
@@ -19668,6 +19758,7 @@ export default function Dashboard() {
 
     setRelatoriosServico(updatedRelatorios)
     snapshotRelatoriosServicoBackup(updatedRelatorios)
+    limparRascunhoRelatorioServico()
     void (async () => {
       const okRel = await saveData('nonato-relatorios-servico', updatedRelatorios, true, true)
       let okCli = true
@@ -19821,6 +19912,7 @@ export default function Dashboard() {
     
     setRelatoriosServico(updatedRelatorios)
     saveData('nonato-relatorios-servico', updatedRelatorios)
+    limparRascunhoRelatorioServico()
     
     if (savedRelatorio.clienteId) {
       const updatedClientesGen = aplicarRelatorioNaBibliotecaCliente(clientes, savedRelatorio, equipamentos)
@@ -19958,6 +20050,7 @@ export default function Dashboard() {
     }
     setRelatoriosServico(updatedRelatorios)
     saveData('nonato-relatorios-servico', updatedRelatorios)
+    limparRascunhoRelatorioServico()
     if (savedRelatorio.clienteId) {
       const updatedClientesPdf = aplicarRelatorioNaBibliotecaCliente(clientes, savedRelatorio, equipamentos)
       if (updatedClientesPdf !== clientes) {
