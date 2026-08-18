@@ -16,21 +16,7 @@ export type AdminBibliotecaLogoDraft = {
 
 export type { LogoRelatorio } from '../../modules/admin/logosRelatorio'
 
-export type User = {
-  id: string
-  name: string
-  email: string
-  role: string
-  linkedProfileType?: 'gestor' | 'tecnico' | ''
-  linkedProfileId?: string
-  password?: string
-  isAdmin?: boolean
-  permissions?: Record<string, boolean | undefined>
-  /** Itens do menu visíveis (botão da sidebar → on/off). Sobrepõe permissões legadas quando definido. */
-  menuItems?: Record<string, boolean>
-  /** Quando true, só aparecem itens explicitamente activos em menuItems. */
-  menuItemsConfigured?: boolean
-}
+export type { User, UserPermissions } from '../../modules/admin/userTipos'
 
 export type UserFormState = {
   name: string

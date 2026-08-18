@@ -277,10 +277,12 @@ import {
   buildSolicitacaoPrintPayload,
   formatDataSstLista,
 } from './modules/sst'
-import type { UserFormState, PasswordEntry, LogoRelatorio } from './modules/admin'
+import type { User, UserFormState, PasswordEntry, LogoRelatorio } from './modules/admin'
 import {
   createEmptyUserForm,
   userToFormState,
+  createUserFromForm,
+  updateUserFromForm,
   generatePassword,
   parseLogosRelatoriosArr,
   preferRicherLogosRelatorios,
@@ -891,33 +893,7 @@ async function restoreManuaisFamiliasGruposFromBackupPayload(raw: unknown): Prom
 
 /** Cadastro de serviços: valores/rótulos/linhas/grupos → app/modules/fechamento */
 /* Language / getLanguages → app/modules/idiomas */
-
-type User = {
-  id: string
-  name: string
-  email: string
-  role: string
-  isDemoGuest?: boolean
-  demoRecipientId?: string
-  linkedProfileType?: 'gestor' | 'tecnico' | ''
-  linkedProfileId?: string
-  password?: string
-  isAdmin?: boolean
-  permissions?: {
-    gestores?: boolean
-    equipamentos?: boolean
-    clientes?: boolean
-    fornecedores?: boolean
-    relatorioServico?: boolean
-    bibliotecaPecas?: boolean
-    agenda?: boolean
-    desmontados?: boolean
-    cadastroServicos?: boolean
-    extras?: boolean
-  }
-  menuItems?: Record<string, boolean>
-  menuItemsConfigured?: boolean
-}
+/* User / createUserFromForm / updateUserFromForm → app/modules/admin */
 
 /* Diário tipos/helpers → app/modules/diario */
 
@@ -10851,39 +10827,19 @@ export default function Dashboard() {
 
     const normalizedMenuItems = normalizeMenuItems(userForm.menuItems)
     const menuItemsConfigured = !userForm.isAdmin
-
-    const savedUser: User = editingUser
-      ? users.find(u => u.id === editingUser.id)!
-      : {
-          id: Date.now().toString(),
-          name: userForm.name,
-          email: userForm.email,
-          role: userForm.role,
-          linkedProfileType: userForm.linkedProfileType || '',
-          linkedProfileId: userForm.linkedProfileId || '',
-          password: userForm.password,
-          isAdmin: userForm.isAdmin,
-          permissions: userForm.permissions,
-          menuItems: normalizedMenuItems,
-          menuItemsConfigured,
-        }
+    const permissions = syncLegacyPermissionsFromMenuItems(normalizedMenuItems, userForm.permissions)
 
     if (editingUser) {
-      const updatedUser: User = ensureUserMenuPolicy({
-        ...savedUser,
-        name: userForm.name,
-        email: userForm.email,
-        role: userForm.role,
-        linkedProfileType: userForm.linkedProfileType || '',
-        linkedProfileId: userForm.linkedProfileId || '',
-        password: userForm.password || savedUser.password,
-        isAdmin: userForm.isAdmin,
-        permissions: syncLegacyPermissionsFromMenuItems(normalizedMenuItems, userForm.permissions),
-        menuItems: normalizedMenuItems,
-        menuItemsConfigured,
-      })
-      const updatedUsers = users.map(u => 
-        u.id === editingUser.id 
+      const existing = users.find(u => u.id === editingUser.id)!
+      const updatedUser: User = ensureUserMenuPolicy(
+        updateUserFromForm(existing, userForm, {
+          menuItems: normalizedMenuItems,
+          menuItemsConfigured,
+          permissions,
+        })
+      )
+      const updatedUsers = users.map(u =>
+        u.id === editingUser.id
           ? updatedUser
           : u
       )
@@ -10903,16 +10859,17 @@ export default function Dashboard() {
         )
       }
     } else {
-      const newUser: User = ensureUserMenuPolicy({
-        ...savedUser,
-        permissions: syncLegacyPermissionsFromMenuItems(normalizedMenuItems, userForm.permissions),
-        menuItems: normalizedMenuItems,
-        menuItemsConfigured,
-      })
+      const newUser: User = ensureUserMenuPolicy(
+        createUserFromForm(userForm, {
+          menuItems: normalizedMenuItems,
+          menuItemsConfigured,
+          permissions,
+        })
+      )
       const updatedUsers = [...users, newUser]
       setUsers(updatedUsers)
       saveData('nonato-users', updatedUsers)
-      
+
       // Salvar senha automaticamente no gestor de senhas
       if (userForm.password) {
         const newPasswordEntry: PasswordEntry = {

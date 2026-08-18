@@ -1014,13 +1014,23 @@ try {
   fail(`módulo pdf: ${e.message}`)
 }
 
-// 3ab) Módulo admin (36.º corte modularização + 46.º passwords)
+// 3ab) Módulo admin (36.º corte + 46.º passwords + 53.º logos + 59.º User/fromForm)
 try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/admin/index.ts'), 'utf8')
   if (idx.includes('createEmptyUserForm') && idx.includes('userToFormState')) {
     ok('módulo admin exporta userForm')
   } else {
     fail('módulo admin incompleto (index.ts)')
+  }
+  if (
+    idx.includes('User') &&
+    idx.includes('UserPermissions') &&
+    idx.includes('createUserFromForm') &&
+    idx.includes('updateUserFromForm')
+  ) {
+    ok('módulo admin exporta User + create/update fromForm')
+  } else {
+    fail('módulo admin incompleto (User/fromForm no index.ts)')
   }
   if (idx.includes('generatePassword') && idx.includes('PasswordEntry')) {
     ok('módulo admin exporta passwords')
@@ -1040,6 +1050,16 @@ try {
     fail('falta app/modules/admin/userForm.ts')
   } else {
     ok('existe app/modules/admin/userForm.ts')
+  }
+  if (!exists('app/modules/admin/userTipos.ts')) {
+    fail('falta app/modules/admin/userTipos.ts')
+  } else {
+    ok('existe app/modules/admin/userTipos.ts')
+  }
+  if (!exists('app/modules/admin/userFromForm.ts')) {
+    fail('falta app/modules/admin/userFromForm.ts')
+  } else {
+    ok('existe app/modules/admin/userFromForm.ts')
   }
   if (!exists('app/modules/admin/passwords.ts')) {
     fail('falta app/modules/admin/passwords.ts')
@@ -1065,6 +1085,15 @@ try {
     ok('NonatoMainApp usa userForm do módulo admin')
   } else {
     fail('NonatoMainApp ainda define createEmptyUserForm/userToFormState/UserFormState localmente')
+  }
+  if (
+    !nma.includes('type User = {') &&
+    nma.includes('createUserFromForm') &&
+    nma.includes('updateUserFromForm')
+  ) {
+    ok('NonatoMainApp usa User + fromForm do módulo admin')
+  } else {
+    fail('NonatoMainApp ainda define User localmente ou não usa create/updateUserFromForm')
   }
   if (
     !nma.includes('type PasswordEntry = {') &&
@@ -1093,6 +1122,14 @@ try {
     ok('adminTypes re-exporta LogoRelatorio do módulo admin')
   } else {
     fail('adminTypes não re-exporta LogoRelatorio do módulo admin')
+  }
+  if (
+    adminTypes.includes("from '../../modules/admin/userTipos'") ||
+    adminTypes.includes('from "../../modules/admin/userTipos"')
+  ) {
+    ok('adminTypes re-exporta User do módulo admin')
+  } else {
+    fail('adminTypes não re-exporta User do módulo admin')
   }
 } catch (e) {
   fail(`módulo admin: ${e.message}`)
