@@ -277,8 +277,14 @@ import {
   buildSolicitacaoPrintPayload,
   formatDataSstLista,
 } from './modules/sst'
-import type { UserFormState, PasswordEntry } from './modules/admin'
-import { createEmptyUserForm, userToFormState, generatePassword } from './modules/admin'
+import type { UserFormState, PasswordEntry, LogoRelatorio } from './modules/admin'
+import {
+  createEmptyUserForm,
+  userToFormState,
+  generatePassword,
+  parseLogosRelatoriosArr,
+  preferRicherLogosRelatorios,
+} from './modules/admin'
 import type {
   GrupoDesmontado,
   PecaDesmontada,
@@ -899,13 +905,7 @@ function SidebarSectionSep({ id, label }: { id: string; label: string }) {
 
 /* TipoGestor / Gestor / Tecnico → app/modules/pessoas */
 
-/** Logo disponível para uso nos relatórios PDF (lista no Administrador) */
-type LogoRelatorio = {
-  id: string
-  name: string
-  data: string
-  type: 'image' | 'video'
-}
+/* LogoRelatorio / parseLogosRelatoriosArr → app/modules/admin */
 
 /* ConhecimentoTecnicoEntry / normalize → app/modules/conhecimento-tecnico */
 
@@ -8314,28 +8314,13 @@ export default function Dashboard() {
       if (savedIncluirLogo !== undefined && savedIncluirLogo !== null) {
         setIncluirLogoNosRelatorios(savedIncluirLogo === true || savedIncluirLogo === 'true')
       }
-      const parseLogosRelatoriosArr = (raw: unknown): LogoRelatorio[] | null => {
-        let v: unknown = raw
-        if (typeof v === 'string' && v.trim().startsWith('[')) {
-          try {
-            v = JSON.parse(v)
-          } catch {
-            return null
-          }
-        }
-        return Array.isArray(v) ? (v as LogoRelatorio[]) : null
-      }
       const savedLogosRelatoriosRaw = getData('nonato-logos-relatorios')
       let mergedLogosRelatorios = parseLogosRelatoriosArr(savedLogosRelatoriosRaw)
       if (typeof window !== 'undefined') {
         try {
           const rawLs = localStorage.getItem('nonato-logos-relatorios')
           const fromLs = rawLs ? parseLogosRelatoriosArr(JSON.parse(rawLs)) : null
-          if (fromLs && fromLs.length > 0) {
-            if (!mergedLogosRelatorios || fromLs.length > mergedLogosRelatorios.length) {
-              mergedLogosRelatorios = fromLs
-            }
-          }
+          mergedLogosRelatorios = preferRicherLogosRelatorios(mergedLogosRelatorios, fromLs)
         } catch {
           /* ignorar */
         }
@@ -8343,10 +8328,10 @@ export default function Dashboard() {
       if ((!mergedLogosRelatorios || mergedLogosRelatorios.length === 0) && typeof window !== 'undefined') {
         try {
           const fromIdb = await getKv('nonato-logos-relatorios')
-          const idbArr = parseLogosRelatoriosArr(fromIdb)
-          if (idbArr && idbArr.length > 0) {
-            mergedLogosRelatorios = idbArr
-          }
+          mergedLogosRelatorios = preferRicherLogosRelatorios(
+            mergedLogosRelatorios,
+            parseLogosRelatoriosArr(fromIdb)
+          )
         } catch {
           /* ignorar */
         }

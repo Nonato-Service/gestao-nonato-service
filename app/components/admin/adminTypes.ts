@@ -14,12 +14,7 @@ export type AdminBibliotecaLogoDraft = {
   fileName: string
 }
 
-export type LogoRelatorio = {
-  id: string
-  name: string
-  data: string
-  type: 'image' | 'video'
-}
+export type { LogoRelatorio } from '../../modules/admin/logosRelatorio'
 
 export type User = {
   id: string

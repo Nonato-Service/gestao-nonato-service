@@ -921,6 +921,15 @@ try {
   } else {
     fail('módulo admin incompleto (passwords no index.ts)')
   }
+  if (
+    idx.includes('LogoRelatorio') &&
+    idx.includes('parseLogosRelatoriosArr') &&
+    idx.includes('preferRicherLogosRelatorios')
+  ) {
+    ok('módulo admin exporta logosRelatorio')
+  } else {
+    fail('módulo admin incompleto (logosRelatorio no index.ts)')
+  }
   if (!exists('app/modules/admin/userForm.ts')) {
     fail('falta app/modules/admin/userForm.ts')
   } else {
@@ -930,6 +939,11 @@ try {
     fail('falta app/modules/admin/passwords.ts')
   } else {
     ok('existe app/modules/admin/passwords.ts')
+  }
+  if (!exists('app/modules/admin/logosRelatorio.ts')) {
+    fail('falta app/modules/admin/logosRelatorio.ts')
+  } else {
+    ok('existe app/modules/admin/logosRelatorio.ts')
   }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/admin'") || nma.includes('from "./modules/admin"')) {
@@ -954,6 +968,25 @@ try {
     ok('NonatoMainApp usa passwords do módulo admin')
   } else {
     fail('NonatoMainApp ainda define PasswordEntry/generatePassword localmente')
+  }
+  if (
+    !nma.includes('type LogoRelatorio = {') &&
+    !nma.includes('const parseLogosRelatoriosArr = (raw') &&
+    nma.includes('parseLogosRelatoriosArr') &&
+    nma.includes('preferRicherLogosRelatorios')
+  ) {
+    ok('NonatoMainApp usa logosRelatorio do módulo admin')
+  } else {
+    fail('NonatoMainApp ainda define LogoRelatorio/parseLogosRelatoriosArr localmente')
+  }
+  const adminTypes = fs.readFileSync(path.join(root, 'app/components/admin/adminTypes.ts'), 'utf8')
+  if (
+    adminTypes.includes("from '../../modules/admin/logosRelatorio'") ||
+    adminTypes.includes('from "../../modules/admin/logosRelatorio"')
+  ) {
+    ok('adminTypes re-exporta LogoRelatorio do módulo admin')
+  } else {
+    fail('adminTypes não re-exporta LogoRelatorio do módulo admin')
   }
 } catch (e) {
   fail(`módulo admin: ${e.message}`)
