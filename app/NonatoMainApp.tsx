@@ -527,6 +527,7 @@ import {
   lerMostrarPrecosBiblioteca,
 } from './components/BibliotecaPrecoOlhoToggle'
 import { DEMO_VISITOR_USER } from './lib/demoManagement'
+import type { DemoModuleMode } from './modules/demo'
 import { AdministradorContent } from './components/admin/AdministradorContent'
 import { AdminUserFormPanel } from './components/admin/AdminUserFormPanel'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
@@ -1299,7 +1300,7 @@ type Fornecedor = {
 /* OrdemServico / FaturaPecas / período / IVA → app/modules/financeiro */
 /* Desmontados tipos/form/migrate → app/modules/desmontados */
 
-type DemoModuleMode = 'active' | 'teaser' | 'hidden'
+/* DemoModuleMode / pickValidDemoModuleModes → app/modules/demo */
 
 /* ComprovanteDespesa → app/modules/comprovantes */
 

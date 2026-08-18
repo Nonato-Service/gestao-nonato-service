@@ -55,6 +55,7 @@ const critical = [
   'app/modules/ficha-cadastral/index.ts',
   'app/modules/tradutor/index.ts',
   'app/modules/conhecimento-tecnico/index.ts',
+  'app/modules/demo/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -1303,6 +1304,61 @@ try {
   }
 } catch (e) {
   fail(`módulo conhecimento-tecnico: ${e.message}`)
+}
+
+// 3ak) Módulo demo (54.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/demo/index.ts'), 'utf8')
+  if (
+    idx.includes('DemoModuleMode') &&
+    idx.includes('pickValidDemoModuleModes') &&
+    idx.includes('countActiveModules') &&
+    idx.includes('isDemoModuleMode')
+  ) {
+    ok('módulo demo exporta tipos + modulesMode')
+  } else {
+    fail('módulo demo incompleto (index.ts)')
+  }
+  for (const f of ['tipos.ts', 'modulesMode.ts', 'index.ts']) {
+    if (exists(`app/modules/demo/${f}`)) ok(`existe app/modules/demo/${f}`)
+    else fail(`falta app/modules/demo/${f}`)
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/demo'") || nma.includes('from "./modules/demo"')) {
+    ok('NonatoMainApp importa app/modules/demo')
+  } else {
+    fail('NonatoMainApp não importa o módulo demo')
+  }
+  if (
+    !nma.includes("type DemoModuleMode = 'active'") &&
+    !nma.includes('type DemoModuleMode = "active"') &&
+    nma.includes('DemoModuleMode')
+  ) {
+    ok('NonatoMainApp usa DemoModuleMode do módulo demo')
+  } else {
+    fail('NonatoMainApp ainda define DemoModuleMode localmente')
+  }
+  const gestao = fs.readFileSync(path.join(root, 'app/components/GestaoDemosContent.tsx'), 'utf8')
+  if (
+    gestao.includes("from '../modules/demo'") ||
+    gestao.includes('from "../modules/demo"')
+  ) {
+    ok('GestaoDemosContent importa tipos de app/modules/demo')
+  } else {
+    fail('GestaoDemosContent não importa app/modules/demo')
+  }
+  const libDemo = fs.readFileSync(path.join(root, 'app/lib/demoManagement.ts'), 'utf8')
+  if (
+    (libDemo.includes("from '../modules/demo'") || libDemo.includes('from "../modules/demo"')) &&
+    !libDemo.includes("export type DemoModuleMode = 'active'") &&
+    libDemo.includes('pickValidDemoModuleModes')
+  ) {
+    ok('lib/demoManagement re-exporta app/modules/demo')
+  } else {
+    fail('lib/demoManagement não re-exporta o módulo demo / ainda define DemoModuleMode')
+  }
+} catch (e) {
+  fail(`módulo demo: ${e.message}`)
 }
 
 // 4) i18n

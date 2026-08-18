@@ -17,19 +17,21 @@ import {
   DEMO_PRESET_CARDS,
   DEMO_RECIPIENTS_KEY,
   DemoModuleGroupId,
-  DemoModuleMode,
   DemoPackagePreset,
   DemoPresetCard,
-  DemoRecipientRecord,
-  DemoRecipientStatus,
   finalizeDemoModulesPolicy,
   enrichDemoRecipients,
   getDemoModuleGroupId,
   getDemoModuleLabelForGrid,
   getDemoPresetLabel,
   resolveDemoDaysForRecipient,
-  type DemoRecipientWithState,
 } from '../lib/demoManagement'
+import type {
+  DemoModuleMode,
+  DemoRecipientRecord,
+  DemoRecipientStatus,
+  DemoRecipientWithState,
+} from '../modules/demo'
 import { buildDemoUsername, formatDemoCredentialsText, generateDemoAccessCredentials } from '../lib/demoCredentials'
 import type { SafeT } from './admin/adminTypes'
 
