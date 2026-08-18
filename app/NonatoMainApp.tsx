@@ -489,6 +489,8 @@ import type {
 } from './modules/pessoas'
 import { getGestorClasse, getTecnicoClasse, getTecnicoTipo } from './modules/pessoas'
 import type { ManuaisGrupo, ManuaisModelo } from './modules/manuais'
+import type { FichaCadastral } from './modules/ficha-cadastral'
+import { emptyFichaCadastral, normalizeFichaCadastral } from './modules/ficha-cadastral'
 import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { DiarioLembreteIntervalPicker } from './components/DiarioLembreteIntervalPicker'
 import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'
@@ -960,33 +962,7 @@ type PecaSolicitadaArmazem = {
 }
 
 /* SST tipos/form/mappers → app/modules/sst */
-
-/** Ficha cadastral da Nonato Service — nome empresa, NIF, NIB/IBAN, SWIFT, logo, contacto; para os clientes transferirem pagamento */
-type FichaCadastral = {
-  nomeEmpresa: string
-  nif: string
-  nib: string
-  iban?: string
-  swift: string
-  nomeBanco?: string
-  telefone?: string
-  email?: string
-  morada?: string
-  logo?: string
-}
-
-type FichaCadastralBancaria = {
-  nomeEmpresa: string
-  nif: string
-  nib: string
-  iban: string
-  swift: string
-  nomeBanco?: string
-  telefone?: string
-  email?: string
-  morada?: string
-  logo?: string
-}
+/* FichaCadastral / Bancaria / empty / normalize → app/modules/ficha-cadastral */
 
 /* Equipamento armazém form/tipos → app/modules/equipamentos/formState */
 /* GrupoEquipamento → app/modules/equipamentos/tiposGrupo */
@@ -3863,7 +3839,7 @@ export default function Dashboard() {
   const lastPosSolicitacaoRef = useRef<{ x: number; y: number } | null>(null)
   
   // Ficha Cadastral da Nonato Service (nome empresa, NIF, NIB, SWIFT, logo)
-  const [fichaCadastral, setFichaCadastral] = useState<FichaCadastral>({ nomeEmpresa: '', nif: '', nib: '', swift: '' })
+  const [fichaCadastral, setFichaCadastral] = useState<FichaCadastral>(() => emptyFichaCadastral())
   const [pdfModeloCadastroNonato, setPdfModeloCadastroNonato] = useState(() => loadPdfModeloPadrao('cadastroNonato'))
   /** Destino opcional para envio do PDF (cadastro Nonato) — e-mail e WhatsApp do cliente (manual ou a partir do cadastro) */
   const [cadastroNonatoEnvioCliente, setCadastroNonatoEnvioCliente] = useState<{ emailDestino: string; telefoneWhats: string; clienteId: string }>({ emailDestino: '', telefoneWhats: '', clienteId: '' })
@@ -8694,20 +8670,9 @@ export default function Dashboard() {
       }
 
       // Carregar ficha cadastral
-      const savedFichaCadastral = getData('nonato-ficha-cadastral')
-      if (savedFichaCadastral && typeof savedFichaCadastral === 'object' && !Array.isArray(savedFichaCadastral)) {
-        setFichaCadastral({
-          nomeEmpresa: savedFichaCadastral.nomeEmpresa ?? '',
-          nif: savedFichaCadastral.nif ?? '',
-          nib: savedFichaCadastral.nib ?? '',
-          iban: savedFichaCadastral.iban,
-          swift: savedFichaCadastral.swift ?? '',
-          nomeBanco: savedFichaCadastral.nomeBanco,
-          telefone: savedFichaCadastral.telefone,
-          email: savedFichaCadastral.email,
-          morada: savedFichaCadastral.morada,
-          logo: savedFichaCadastral.logo
-        })
+      const savedFichaCadastral = normalizeFichaCadastral(getData('nonato-ficha-cadastral'))
+      if (savedFichaCadastral) {
+        setFichaCadastral(savedFichaCadastral)
       }
 
       // Carregar grupos desmontados
