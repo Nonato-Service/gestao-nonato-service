@@ -20,6 +20,7 @@ import {
   sortDiasTrabalhoEspecialCronologicamente,
   diaTrabalhoDataChaveOrdenacao,
 } from '../lib/relatorioEspecialCalculos'
+import { BibliotecaHubPainelRecolhivel } from './BibliotecaHubPainelRecolhivel'
 import { DocumentoEnvioAcoes } from './DocumentoEnvioAcoes'
 import {
   buildTextoEnvioRelatorioEspecial,
@@ -880,71 +881,100 @@ export default function RelatorioEspecialHub({
         <p style={{ fontSize: 13, color: '#ccc' }}>
           {form.numero} · {form.cliente}
         </p>
-        <h3 style={{ marginTop: 20 }}>{t.relatorioEspecialFechamentoPorEquipamento || 'Por equipamento'}</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {eqs.map((eq, i) => {
-            const total = formComTotais.horasPorEquipamentoResumo?.[eq.uid] || '0:00'
-            const fechado = form.fechamento?.porEquipamento?.find((f) => f.equipamentoUid === eq.uid)
-            return (
-              <div
-                key={eq.uid}
-                style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 10,
-                  alignItems: 'center',
-                  padding: 12,
-                  border: '1px solid rgba(0,200,83,0.3)',
-                  borderRadius: 8,
-                }}
-              >
-                <span style={{ flex: 1 }}>{labelEquipamentoCurto(eq, i)}</span>
-                <strong>{total}</strong>
-                {fechado ? (
-                  <span style={{ color: '#00ff00', fontSize: 12 }} aria-label={t.relatorioEspecialFechadoEm || 'Fechado'}>
-                    ✓{' '}
-                    {(t.relatorioEspecialFechadoEm || 'Fechado em {data}').replace(
-                      '{data}',
-                      new Date(fechado.fechadoEm).toLocaleDateString(uiLocale)
+        <div className="relatorio-especial-paineis-stack">
+          <BibliotecaHubPainelRecolhivel
+            modulo="relatorio-especial"
+            id="re-fechamento-equip"
+            titulo={t.relatorioEspecialFechamentoPorEquipamento || 'Por equipamento'}
+            resumo={
+              t.especialPainelFechamentoEquipResumo ||
+              `${eqs.length} ${t.especialPainelEquipamentosResumo || 'equipamento(s)'}`
+            }
+            icone="⚙"
+            defaultAberto
+            labelExpandir={t.bibliotecaPainelExpandir || 'Expandir'}
+            labelRetrair={t.bibliotecaPainelRetrair || 'Retrair'}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '4px 0' }}>
+              {eqs.map((eq, i) => {
+                const total = formComTotais.horasPorEquipamentoResumo?.[eq.uid] || '0:00'
+                const fechado = form.fechamento?.porEquipamento?.find((f) => f.equipamentoUid === eq.uid)
+                return (
+                  <div
+                    key={eq.uid}
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: 10,
+                      alignItems: 'center',
+                      padding: 12,
+                      border: '1px solid rgba(0,200,83,0.3)',
+                      borderRadius: 8,
+                    }}
+                  >
+                    <span style={{ flex: 1 }}>{labelEquipamentoCurto(eq, i)}</span>
+                    <strong>{total}</strong>
+                    {fechado ? (
+                      <span style={{ color: '#00ff00', fontSize: 12 }} aria-label={t.relatorioEspecialFechadoEm || 'Fechado'}>
+                        ✓{' '}
+                        {(t.relatorioEspecialFechadoEm || 'Fechado em {data}').replace(
+                          '{data}',
+                          new Date(fechado.fechadoEm).toLocaleDateString(uiLocale)
+                        )}
+                      </span>
+                    ) : (
+                      <button type="button" className="btn-primary" onClick={() => fecharPorEquipamento(eq.uid)}>
+                        {t.relatorioEspecialFecharEquipamento || 'Fechar equipamento'}
+                      </button>
                     )}
-                  </span>
-                ) : (
-                  <button type="button" className="btn-primary" onClick={() => fecharPorEquipamento(eq.uid)}>
-                    {t.relatorioEspecialFecharEquipamento || 'Fechar equipamento'}
-                  </button>
-                )}
-              </div>
-            )
-          })}
-        </div>
-        <div
-          style={{
-            marginTop: 24,
-            padding: 16,
-            border: '2px solid rgba(0,200,83,0.5)',
-            borderRadius: 10,
-            background: 'rgba(0,60,30,0.25)',
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>{t.relatorioEspecialFechamentoTotal || 'Total geral'}</h3>
-          <p style={{ fontSize: 24, fontWeight: 700, color: '#00c853' }}>{formComTotais.horasTrabalho}</p>
-          <p style={{ fontSize: 13, color: '#aaa', marginTop: 0 }}>
-            {t.relatorioEspecialPdfHorasViagem || t.horasViagem || 'Horas viagem'}:{' '}
-            <strong style={{ color: '#00c853' }}>{formComTotais.horasViagem || '0:00'}</strong>
-          </p>
-          {form.fechamento?.totalGeral ? (
-            <p style={{ color: '#00ff00' }}>
-              ✓{' '}
-              {(t.relatorioEspecialFechadoEm || 'Fechado em {data}').replace(
-                '{data}',
-                new Date(form.fechamento.totalGeral.fechadoEm).toLocaleString(uiLocale)
+                  </div>
+                )
+              })}
+            </div>
+          </BibliotecaHubPainelRecolhivel>
+          <BibliotecaHubPainelRecolhivel
+            modulo="relatorio-especial"
+            id="re-fechamento-total"
+            titulo={t.relatorioEspecialFechamentoTotal || 'Total geral'}
+            resumo={
+              form.fechamento?.totalGeral
+                ? formComTotais.horasTrabalho
+                : t.especialPainelFechamentoTotalResumo || 'Fechar o total do mês'
+            }
+            icone="∑"
+            defaultAberto
+            variant="stats"
+            labelExpandir={t.bibliotecaPainelExpandir || 'Expandir'}
+            labelRetrair={t.bibliotecaPainelRetrair || 'Retrair'}
+          >
+            <div
+              style={{
+                padding: 16,
+                border: '2px solid rgba(0,200,83,0.5)',
+                borderRadius: 10,
+                background: 'rgba(0,60,30,0.25)',
+              }}
+            >
+              <p style={{ fontSize: 24, fontWeight: 700, color: '#00c853', marginTop: 0 }}>{formComTotais.horasTrabalho}</p>
+              <p style={{ fontSize: 13, color: '#aaa', marginTop: 0 }}>
+                {t.relatorioEspecialPdfHorasViagem || t.horasViagem || 'Horas viagem'}:{' '}
+                <strong style={{ color: '#00c853' }}>{formComTotais.horasViagem || '0:00'}</strong>
+              </p>
+              {form.fechamento?.totalGeral ? (
+                <p style={{ color: '#00ff00' }}>
+                  ✓{' '}
+                  {(t.relatorioEspecialFechadoEm || 'Fechado em {data}').replace(
+                    '{data}',
+                    new Date(form.fechamento.totalGeral.fechadoEm).toLocaleString(uiLocale)
+                  )}
+                </p>
+              ) : (
+                <button type="button" className="btn-primary" onClick={fecharTotalGeral}>
+                  {t.relatorioEspecialFecharTotal || 'Fechar total geral'}
+                </button>
               )}
-            </p>
-          ) : (
-            <button type="button" className="btn-primary" onClick={fecharTotalGeral}>
-              {t.relatorioEspecialFecharTotal || 'Fechar total geral'}
-            </button>
-          )}
+            </div>
+          </BibliotecaHubPainelRecolhivel>
         </div>
         <div style={{ marginTop: 20, display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
           <button type="button" className="btn-primary" disabled={salvando} onClick={guardarFechamento}>
@@ -1074,8 +1104,18 @@ export default function RelatorioEspecialHub({
         ) : null}
       </header>
 
-      <section className="relatorio-especial-panel relatorio-especial-form__basicos">
-        <h3 className="relatorio-especial-panel__title">{t.informacoesBasicas || 'Informações básicas'}</h3>
+      <div className="relatorio-especial-paineis-stack">
+      <BibliotecaHubPainelRecolhivel
+        modulo="relatorio-especial"
+        id="re-form-basicas"
+        titulo={t.informacoesBasicas || 'Informações básicas'}
+        resumo={`${form.numero || '—'} · ${form.cliente || (t.selecioneCliente || 'Cliente')}`}
+        icone="📋"
+        defaultAberto
+        labelExpandir={t.bibliotecaPainelExpandir || 'Expandir'}
+        labelRetrair={t.bibliotecaPainelRetrair || 'Retrair'}
+      >
+      <section className="relatorio-especial-panel relatorio-especial-panel--in-hub relatorio-especial-form__basicos">
         <div className="relatorio-especial-form__grid relatorio-especial-form__grid--basicos">
           <div className="relatorio-especial-form__field">
             <label>{t.numeroRelatorio || 'Número'}</label>
@@ -1223,16 +1263,21 @@ export default function RelatorioEspecialHub({
           </div>
         </div>
       </section>
+      </BibliotecaHubPainelRecolhivel>
 
-      <section className="relatorio-equipamentos-block relatorio-especial-panel">
+      <BibliotecaHubPainelRecolhivel
+        modulo="relatorio-especial"
+        id="re-form-equipamentos"
+        titulo={t.relatorioEspecialEquipamentos || 'Equipamentos'}
+        resumo={`${form.equipamentos?.length || 0}/${MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES} ${t.especialPainelEquipamentosResumo || 'equipamento(s)'}`}
+        icone="🔧"
+        defaultAberto
+        labelExpandir={t.bibliotecaPainelExpandir || 'Expandir'}
+        labelRetrair={t.bibliotecaPainelRetrair || 'Retrair'}
+      >
+      <section className="relatorio-equipamentos-block relatorio-especial-panel relatorio-especial-panel--in-hub">
         <div className="relatorio-equipamentos-block__head relatorio-especial-panel__head">
           <div>
-            <h3 className="relatorio-equipamentos-block__title relatorio-especial-panel__title">
-              {t.relatorioEspecialEquipamentos || 'Equipamentos'}{' '}
-              <span className="relatorio-especial-panel__count">
-                ({form.equipamentos?.length || 0}/{MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES})
-              </span>
-            </h3>
             <p className="relatorio-equipamentos-block__lead">
               {t.relatorioEspecialEquipamentosAjuda ||
                 'Adicione equipamentos do cliente ou busque na biblioteca do armazém. Edite ID, modelo e n.º série.'}
@@ -1301,8 +1346,8 @@ export default function RelatorioEspecialHub({
                     <span className="relatorio-equipamento-card__resumo">
                       {resumoLinha || (t.relatorioEspecialEquipSemDetalhe || 'Sem detalhes — toque para editar')}
                     </span>
-                    <span className="relatorio-equipamento-card__chevron" aria-hidden="true">
-                      {aberto ? '▲' : '▼'}
+                    <span className="relatorio-equipamento-card__chevron ui-expand-chevron" aria-hidden="true">
+                      {aberto ? '▼' : '▶'}
                     </span>
                   </button>
                   <button
@@ -1544,11 +1589,22 @@ export default function RelatorioEspecialHub({
           </div>
         )}
       </section>
+      </BibliotecaHubPainelRecolhivel>
 
-      <section className="relatorio-especial-panel relatorio-especial-panel--dias">
+      <BibliotecaHubPainelRecolhivel
+        modulo="relatorio-especial"
+        id="re-form-dias"
+        titulo={t.diasTrabalho || 'Dias de trabalho'}
+        resumo={`${diasOrdenados.length} ${t.relatorioPainelDiasResumo || 'dia(s) registado(s)'}`}
+        icone="📅"
+        defaultAberto
+        variant="wizard"
+        labelExpandir={t.bibliotecaPainelExpandir || 'Expandir'}
+        labelRetrair={t.bibliotecaPainelRetrair || 'Retrair'}
+      >
+      <section className="relatorio-especial-panel relatorio-especial-panel--in-hub relatorio-especial-panel--dias">
         <div className="relatorio-equipamentos-block__head relatorio-especial-panel__head">
           <div>
-            <h3 className="relatorio-especial-panel__title">{t.diasTrabalho || 'Dias de trabalho'}</h3>
             <p className="relatorio-especial-dia-secao__ajuda relatorio-especial-panel__lead">
               {t.relatorioEspecialInformacaoApenasData ||
                 t.informacaoApenasDataObrigatoria ||
@@ -1782,7 +1838,9 @@ export default function RelatorioEspecialHub({
                   </span>
                 ) : null}
                 {resumoLinha ? ` — ${resumoLinha}` : ''}
-                <span className="relatorio-especial-dia-card__chevron">{aberto ? '▲' : '▼'}</span>
+                <span className="relatorio-especial-dia-card__chevron ui-expand-chevron" aria-hidden>
+                  {aberto ? '▼' : '▶'}
+                </span>
               </button>
               {aberto && (
                 <div className="relatorio-especial-dia-card__body">
@@ -2106,17 +2164,33 @@ export default function RelatorioEspecialHub({
           )
         })}
       </section>
+      </BibliotecaHubPainelRecolhivel>
 
+      <BibliotecaHubPainelRecolhivel
+        modulo="relatorio-especial"
+        id="re-form-resumo"
+        titulo={t.resumo || 'Resumo'}
+        resumo={
+          diasOrdenados.length > 0
+            ? `${formComTotais.horasTrabalho} · ${totalDiariasUi} ${t.diarias || 'diárias'} · ${formComTotais.kmsPercorridos} KM`
+            : t.relatorioPainelResumoVazio || 'Adicione dias de trabalho'
+        }
+        icone="📊"
+        defaultAberto
+        variant="stats"
+        labelExpandir={t.bibliotecaPainelExpandir || 'Expandir'}
+        labelRetrair={t.bibliotecaPainelRetrair || 'Retrair'}
+      >
       <section
+        className="relatorio-especial-panel relatorio-especial-panel--in-hub"
         style={{
-          marginBottom: 24,
+          marginBottom: 0,
           padding: 16,
           border: '1px solid rgba(0,200,83,0.35)',
           borderRadius: 10,
           background: 'rgba(0,40,24,0.3)',
         }}
       >
-        <h3 style={{ marginTop: 0 }}>{t.resumo || 'Resumo'}</h3>
         {(form.equipamentos || []).map((eq, i) => {
           const sessoes = sessoesPorEquip[eq.uid] || []
           const total = formComTotais.horasPorEquipamentoResumo?.[eq.uid] || '0:00'
@@ -2272,9 +2346,23 @@ export default function RelatorioEspecialHub({
           </div>
         </div>
       </section>
+      </BibliotecaHubPainelRecolhivel>
 
-      <section className="relatorio-especial-panel relatorio-especial-form__observacoes">
-        <h3 className="relatorio-especial-panel__title">{t.observacoes || 'Observações'}</h3>
+      <BibliotecaHubPainelRecolhivel
+        modulo="relatorio-especial"
+        id="re-form-observacoes"
+        titulo={t.observacoes || 'Observações'}
+        resumo={
+          (form.observacoes || '').trim()
+            ? (form.observacoes || '').trim().slice(0, 48) + ((form.observacoes || '').trim().length > 48 ? '…' : '')
+            : t.especialPainelObsResumo || 'Notas do relatório especial'
+        }
+        icone="📝"
+        defaultAberto={false}
+        labelExpandir={t.bibliotecaPainelExpandir || 'Expandir'}
+        labelRetrair={t.bibliotecaPainelRetrair || 'Retrair'}
+      >
+      <section className="relatorio-especial-panel relatorio-especial-panel--in-hub relatorio-especial-form__observacoes">
         <textarea
           value={form.observacoes}
           onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
@@ -2283,6 +2371,8 @@ export default function RelatorioEspecialHub({
           style={{ ...inputStyle, resize: 'vertical' }}
         />
       </section>
+      </BibliotecaHubPainelRecolhivel>
+      </div>
 
       <div className="relatorio-especial-form__action-bar relatorio-especial-form__actions">
         <div className="relatorio-especial-form__action-bar-acoes">

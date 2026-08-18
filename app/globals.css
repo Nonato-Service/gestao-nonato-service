@@ -9300,8 +9300,27 @@ button.clientes-alfa-letra--toggle:hover {
   margin-bottom: 12px;
 }
 
+.relatorio-especial-paineis-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .relatorio-servico-root .biblioteca-hub-painel {
   margin-bottom: 0;
+}
+
+.relatorio-especial-root .biblioteca-hub-painel {
+  margin-bottom: 0;
+}
+
+.relatorio-especial-root .biblioteca-hub-painel__corpo .relatorio-especial-panel--in-hub {
+  margin-bottom: 0;
+  padding: 4px 0 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .relatorio-servico-root .biblioteca-hub-painel__corpo .relatorio-servico-form-grid-2,
@@ -9568,6 +9587,9 @@ button.clientes-alfa-letra--toggle:hover {
 
 .relatorio-equipamento-card__chevron {
   flex: 0 0 auto;
+}
+
+.relatorio-equipamento-card__chevron:not(.ui-expand-chevron) {
   font-size: 11px;
   opacity: 0.75;
   color: #00c853;
@@ -9919,6 +9941,8 @@ button.clientes-alfa-letra--toggle:hover {
 .biblioteca-pecas-hub__catalog-th-chevron,
 .ns-diario-entry__titulo-chevron,
 .relatorio-servico-pdf-modelo-picker__chevron,
+.relatorio-equipamento-card__chevron,
+.relatorio-especial-dia-card__chevron,
 .fg-checklist-pro__expand,
 .manuais-pro__expand {
   display: inline-flex;
@@ -9997,6 +10021,8 @@ button.clientes-alfa-letra--toggle:hover {
   .biblioteca-pecas-hub__catalog-th-chevron,
   .ns-diario-entry__titulo-chevron,
   .relatorio-servico-pdf-modelo-picker__chevron,
+  .relatorio-equipamento-card__chevron,
+  .relatorio-especial-dia-card__chevron,
   .fg-checklist-pro__expand,
   .manuais-pro__expand,
   .sidebar .sidebar-group-header .sidebar-nav-chevron:not(.sidebar-nav-chevron--entry),
@@ -42054,6 +42080,10 @@ html body .relatorio-especial-root .relatorio-especial-dia-card {
 
 html body .relatorio-especial-root .relatorio-especial-dia-card__toggle {
   width: 100%;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   text-align: left;
   padding: 12px 14px;
   background: rgba(0, 50, 30, 0.4);
@@ -42064,8 +42094,9 @@ html body .relatorio-especial-root .relatorio-especial-dia-card__toggle {
 }
 
 html body .relatorio-especial-root .relatorio-especial-dia-card__chevron {
-  float: right;
-  opacity: 0.75;
+  float: none;
+  margin-left: auto;
+  opacity: 1;
 }
 
 html body .relatorio-especial-root .relatorio-especial-dia-card__body {

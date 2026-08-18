@@ -447,6 +447,19 @@ try {
     fail('RelatorioEspecialHub sem contador unificado de diárias no CONTROLE')
   }
   if (
+    hub.includes('BibliotecaHubPainelRecolhivel') &&
+    hub.includes('modulo="relatorio-especial"') &&
+    hub.includes('re-form-basicas') &&
+    hub.includes('re-form-equipamentos') &&
+    hub.includes('re-form-dias') &&
+    hub.includes('re-form-resumo') &&
+    hub.includes('re-form-observacoes')
+  ) {
+    ok('RelatorioEspecialHub: painéis retraíveis com seta (padrão BibliotecaHubPainel)')
+  } else {
+    fail('RelatorioEspecialHub sem painéis retraíveis BibliotecaHubPainelRecolhivel')
+  }
+  if (
     hub.includes('coletarDiasSemMaquinaResumo') &&
     hub.includes('equipamentoFmt') &&
     hub.includes('relatorio-especial-resumo-viagem__equip') &&

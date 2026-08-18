@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-export type HubPainelModulo = 'biblioteca' | 'relatorio-servico'
+export type HubPainelModulo = 'biblioteca' | 'relatorio-servico' | 'relatorio-especial'
 
 const LS_PREFIX_BY_MODULO: Record<HubPainelModulo, string> = {
   biblioteca: 'nonato-biblioteca-painel-',
   'relatorio-servico': 'nonato-relatorio-servico-painel-',
+  'relatorio-especial': 'nonato-relatorio-especial-painel-',
 }
 
 function lsPrefix(modulo: HubPainelModulo): string {
