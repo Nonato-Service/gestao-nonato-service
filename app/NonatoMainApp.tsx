@@ -63090,7 +63090,10 @@ A1;Peça exemplo;10`}
     useEffect(() => {
       gravarOrcamentoAvulsoRascunhoSession({
         v: 1,
-        dadosOrcamento,
+        dadosOrcamento: {
+          ...dadosOrcamento,
+          itens: Array.isArray(dadosOrcamento.itens) ? dadosOrcamento.itens : [],
+        },
         tipoOrcamento,
         clienteSelecionadoId: clienteSelecionado?.id ?? null,
         relatorioSelecionadoId: relatorioSelecionado?.id ?? null,
@@ -63160,7 +63163,10 @@ A1;Peça exemplo;10`}
           /* ignorar */
         }
         const aplicarEnriquecimento = (lista: typeof orcamentosGerados, baseServidor?: typeof orcamentosGerados) => {
-          const enriquecida = enrichOrcamentosGeradosComPedidosAvulsos(lista, pedidosAvulso)
+          const enriquecida = enrichOrcamentosGeradosComPedidosAvulsos(lista, pedidosAvulso).map((o) => ({
+            ...o,
+            itens: Array.isArray(o.itens) ? o.itens : [],
+          }))
           setOrcamentosGerados(enriquecida)
           const refServidor = baseServidor ?? lista
           if (JSON.stringify(enriquecida) !== JSON.stringify(refServidor) && enriquecida.length > 0) {
@@ -63384,8 +63390,8 @@ A1;Peça exemplo;10`}
       }
     }
 
-    const normalizarItensOrcamentoGravados = (itens: typeof dadosOrcamento.itens) =>
-      itens.map((item) => {
+    const normalizarItensOrcamentoGravados = (itens: typeof dadosOrcamento.itens | undefined | null) =>
+      (Array.isArray(itens) ? itens : []).map((item) => {
         const imagem = resolveImagemItemOrcamentoParaGravar(item, pecasBiblioteca)
         return { ...item, ...(imagem ? { imagem } : { imagem: undefined }) }
       })
@@ -63576,13 +63582,13 @@ A1;Peça exemplo;10`}
     }
 
     const alterarQuantidadeItemOrcamento = (index: number, delta: number) => {
-      const item = dadosOrcamento.itens[index]
+      const item = (dadosOrcamento.itens || [])[index]
       if (!item) return
       atualizarItem(index, 'quantidade', Math.max(1, (item.quantidade || 1) + delta))
     }
 
     const calcularTotal = () => {
-      return dadosOrcamento.itens.reduce((sum, item) => {
+      return (dadosOrcamento.itens || []).reduce((sum, item) => {
         const subtotal = item.total
         const iva = item.iva ? (subtotal * item.iva / 100) : 0
         return sum + subtotal + iva
@@ -63590,11 +63596,11 @@ A1;Peça exemplo;10`}
     }
 
     const calcularTotalSemIva = () => {
-      return dadosOrcamento.itens.reduce((sum, item) => sum + item.total, 0)
+      return (dadosOrcamento.itens || []).reduce((sum, item) => sum + item.total, 0)
     }
 
     const calcularTotalIva = () => {
-      return dadosOrcamento.itens.reduce((sum, item) => {
+      return (dadosOrcamento.itens || []).reduce((sum, item) => {
         const iva = item.iva ? (item.total * item.iva / 100) : 0
         return sum + iva
       }, 0)
@@ -63948,7 +63954,11 @@ A1;Peça exemplo;10`}
         dadosOrcamento: {
           ...base.dadosOrcamento,
           ...dadosOrcamento,
-          itens: Array.isArray(dadosOrcamento.itens) ? dadosOrcamento.itens : base.dadosOrcamento.itens,
+          itens: Array.isArray(dadosOrcamento.itens)
+            ? dadosOrcamento.itens
+            : Array.isArray(base.dadosOrcamento?.itens)
+              ? base.dadosOrcamento.itens
+              : [],
         },
         numeroOrcamentoManual,
         buscaCliente,
@@ -64103,7 +64113,7 @@ A1;Peça exemplo;10`}
             </div>
             <div className="orc-pro__kpi">
               <span>{safeT?.itens || 'Itens no rascunho'}</span>
-              <strong>{dadosOrcamento.itens.length}</strong>
+              <strong>{(dadosOrcamento.itens || []).length}</strong>
             </div>
           </div>
         </section>
@@ -64579,13 +64589,13 @@ A1;Peça exemplo;10`}
                   </div>
                 </div>
 
-                {dadosOrcamento.itens.length === 0 ? (
+                {(dadosOrcamento.itens || []).length === 0 ? (
                 <p className="orc-pro__empty-hint">
                   {safeT?.nenhumItemAdicionado || 'Nenhum item adicionado'}
                 </p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {dadosOrcamento.itens.map((item, index) => {
+                  {(dadosOrcamento.itens || []).map((item, index) => {
                     const subtotal = item.total
                     const valorIva = item.iva ? (subtotal * item.iva / 100) : 0
                     const totalComIva = subtotal + valorIva
@@ -65225,7 +65235,7 @@ A1;Peça exemplo;10`}
             )}
 
             {/* Total - Só aparece se houver itens e não for orcamento-relatorio ou cliente-prioritario-fixo */}
-            {dadosOrcamento.itens.length > 0 && (tipoOrcamento !== 'orcamento-relatorio' && tipoOrcamento !== 'cliente-prioritario-fixo') && (
+            {(dadosOrcamento.itens || []).length > 0 && (tipoOrcamento !== 'orcamento-relatorio' && tipoOrcamento !== 'cliente-prioritario-fixo') && (
               <div style={{ 
                 padding: '20px', 
                 backgroundColor: '#484848', 
@@ -65319,7 +65329,7 @@ A1;Peça exemplo;10`}
                 className="orc-pro__act orc-pro__act--primary"
                 onClick={async () => {
                   // Validação de itens só para tipos que permitem itens
-                  if ((tipoOrcamento === 'dados-fixos' || tipoOrcamento === 'cliente-cadastrado' || tipoOrcamento === 'cliente-prioritario-valores') && dadosOrcamento.itens.length === 0) {
+                  if ((tipoOrcamento === 'dados-fixos' || tipoOrcamento === 'cliente-cadastrado' || tipoOrcamento === 'cliente-prioritario-valores') && (dadosOrcamento.itens || []).length === 0) {
                     alert(safeT?.adicionarItensObrigatorio || 'Adicione pelo menos um item ao orçamento!')
                     return
                   }
@@ -65591,7 +65601,7 @@ A1;Peça exemplo;10`}
                       dadosCliente: dadosClienteFinal,
                       dataPedido: dadosOrcamento.data,
                       status: 'aguardando-fornecedor' as const,
-                      itens: dadosOrcamento.itens.map((item, index) => ({
+                      itens: (dadosOrcamento.itens || []).map((item, index) => ({
                         id: `item-${Date.now()}-${index}`,
                         descricao: item.descricao,
                         quantidade: item.quantidade,
@@ -66144,7 +66154,7 @@ A1;Peça exemplo;10`}
                                 dadosCliente: orcamento.dadosCliente,
                                 dataPedido: orcamento.data,
                                 status: 'aguardando-fornecedor' as const,
-                                itens: orcamento.itens.map((item, index) => ({
+                                itens: (orcamento.itens || []).map((item, index) => ({
                                   id: `item-${Date.now()}-${index}`,
                                   descricao: item.descricao,
                                   quantidade: item.quantidade,
@@ -66194,13 +66204,13 @@ A1;Peça exemplo;10`}
                         </div>
                       </div>
                       
-                      {orcamento.itens.length > 0 && (
+                      {(orcamento.itens || []).length > 0 && (
                         <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(0, 100, 255, 0.3)' }}>
                           <h5 style={{ color: '#66b3ff', marginBottom: '10px', fontSize: '14px' }}>
                             {safeT?.itensOrcamento || 'Itens do Orçamento'}:
                           </h5>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {orcamento.itens.map((item, index) => {
+                            {(orcamento.itens || []).map((item, index) => {
                               const isEditing = itemEditando?.orcamentoId === orcamento.id && itemEditando?.itemIndex === index
                               const temValor = item.tipoItem === 'com-valor' && (item.precoUnitario || 0) > 0
                               const subtotal = item.total || 0

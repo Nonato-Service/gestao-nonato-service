@@ -93,6 +93,8 @@ export function OrcamentosGeradosBrowse({
   const [clienteChave, setClienteChave] = useState<string | null>(null)
   const [notaFiscalInputs, setNotaFiscalInputs] = useState<Record<string, string>>({})
   const [pedidosAvulso, setPedidosAvulso] = useState<PedidoAvulsoRef[]>([])
+  const listaOrcamentos = Array.isArray(orcamentos) ? orcamentos : []
+  const listaClientes = Array.isArray(clientes) ? clientes : []
 
   useEffect(() => {
     if (!loadData) return
@@ -107,13 +109,13 @@ export function OrcamentosGeradosBrowse({
 
   const orcamentosPosBusca = useMemo(() => {
     const q = busca.trim().toLowerCase()
-    if (!q) return orcamentos
-    return orcamentos.filter((o) => {
+    if (!q) return listaOrcamentos
+    return listaOrcamentos.filter((o) => {
       const num = String(o.numeroOrcamento ?? '').toLowerCase()
-      const nome = resolverNomeCliente(o, clientes).toLowerCase()
+      const nome = resolverNomeCliente(o, listaClientes).toLowerCase()
       return num.includes(q) || nome.includes(q)
     })
-  }, [orcamentos, busca, clientes])
+  }, [listaOrcamentos, busca, listaClientes])
 
   const clientesComOrcamentos = useMemo(() => {
     const map = new Map<
@@ -121,7 +123,7 @@ export function OrcamentosGeradosBrowse({
       { chave: string; nome: string; letra: string; count: number }
     >()
     for (const o of orcamentosPosBusca) {
-      const nome = resolverNomeCliente(o, clientes) || '—'
+      const nome = resolverNomeCliente(o, listaClientes) || '—'
       const chave = chaveClienteOrcamento(o.clienteId, nome !== '—' ? nome : undefined, o.id)
       const letra = getClienteLetraAlfabeto(nome)
       const existente = map.get(chave)
@@ -132,7 +134,7 @@ export function OrcamentosGeradosBrowse({
       }
     }
     return [...map.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-  }, [orcamentosPosBusca, clientes])
+  }, [orcamentosPosBusca, listaClientes])
 
 
   const clientesNaLetraAlfabeto = (letra: string) =>
@@ -169,26 +171,26 @@ export function OrcamentosGeradosBrowse({
 
   const orcamentosRecentes = useMemo(
     () =>
-      [...orcamentos].sort(
+      [...listaOrcamentos].sort(
         (a, b) =>
           new Date(b.dataCriacao || b.geradoEm || 0).getTime() -
           new Date(a.dataCriacao || a.geradoEm || 0).getTime()
       ).slice(0, 25),
-    [orcamentos]
+    [listaOrcamentos]
   )
 
   const orcamentosVisiveis = useMemo(() => {
     if (buscaAtiva) return orcamentosPosBusca
     if (letraAtiva && clienteChave) {
       return orcamentosPosBusca.filter((o) => {
-        const nome = resolverNomeCliente(o, clientes) || '—'
+        const nome = resolverNomeCliente(o, listaClientes) || '—'
         const chave = chaveClienteOrcamento(o.clienteId, nome !== '—' ? nome : undefined, o.id)
         return clienteNomeMatchesLetraEmQualquerPalavra(nome, letraAtiva) && chave === clienteChave
       })
     }
     if (!letraAtiva) return orcamentosRecentes
     return []
-  }, [buscaAtiva, orcamentosPosBusca, letraAtiva, clienteChave, clientes, orcamentosRecentes])
+  }, [buscaAtiva, orcamentosPosBusca, letraAtiva, clienteChave, listaClientes, orcamentosRecentes])
 
   const sincronizarPedidoAvulso = async (
     codigo: string,
@@ -217,7 +219,7 @@ export function OrcamentosGeradosBrowse({
   }
 
   const atualizarOrcamento = async (id: string, patch: Partial<OrcamentoGeradoItem>) => {
-    const novos = orcamentos.map((o) => (o.id === id ? { ...o, ...patch } : o))
+    const novos = listaOrcamentos.map((o) => (o.id === id ? { ...o, ...patch } : o))
     onOrcamentosChange(novos)
     if (saveData) await saveData(ORCAMENTOS_AVULSO_KEY, novos)
     const orc = novos.find((o) => o.id === id)
@@ -238,7 +240,7 @@ export function OrcamentosGeradosBrowse({
       status: 'aprovado',
       workflowStatus: 'pedido_confirmado',
     })
-    const orc = orcamentos.find((o) => o.id === id)
+    const orc = listaOrcamentos.find((o) => o.id === id)
     if (orc && onPedidoConfirmado) {
       await onPedidoConfirmado({ ...orc, status: 'aprovado', workflowStatus: 'pedido_confirmado' })
     }
@@ -253,7 +255,7 @@ export function OrcamentosGeradosBrowse({
       workflowStatus: 'mercadoria_recebida',
       status: 'aprovado',
     })
-    const orc = orcamentos.find((o) => o.id === id)
+    const orc = listaOrcamentos.find((o) => o.id === id)
     if (orc && onMercadoriaRecebida) {
       await onMercadoriaRecebida({ ...orc, workflowStatus: 'mercadoria_recebida' })
     }
@@ -340,7 +342,7 @@ export function OrcamentosGeradosBrowse({
                     </span>
                   </div>
                   <p className="cliente-equip-orcamentos__line">
-                    {safeT?.cliente || 'Cliente'}: {resolverNomeCliente(o, clientes) || '—'}
+                    {safeT?.cliente || 'Cliente'}: {resolverNomeCliente(o, listaClientes) || '—'}
                   </p>
                   <div className="cliente-equip-orcamentos__actions">
                     <button
@@ -384,7 +386,7 @@ export function OrcamentosGeradosBrowse({
                     </span>
                   </div>
                   <p className="cliente-equip-orcamentos__line">
-                    {safeT?.cliente || 'Cliente'}: {resolverNomeCliente(o, clientes) || '—'}
+                    {safeT?.cliente || 'Cliente'}: {resolverNomeCliente(o, listaClientes) || '—'}
                   </p>
                   <div className="cliente-equip-orcamentos__actions">
                     <button
@@ -421,7 +423,7 @@ export function OrcamentosGeradosBrowse({
                     </span>
                   </div>
                   <p className="cliente-equip-orcamentos__line">
-                    {safeT?.cliente || 'Cliente'}: {resolverNomeCliente(o, clientes) || '—'}
+                    {safeT?.cliente || 'Cliente'}: {resolverNomeCliente(o, listaClientes) || '—'}
                   </p>
                 </div>
               ))}
@@ -453,7 +455,7 @@ export function OrcamentosGeradosBrowse({
                     </span>
                   </div>
                   <p className="cliente-equip-orcamentos__line">
-                    {safeT?.cliente || 'Cliente'}: {resolverNomeCliente(o, clientes) || '—'}
+                    {safeT?.cliente || 'Cliente'}: {resolverNomeCliente(o, listaClientes) || '—'}
                   </p>
                   <div className="cliente-orc-pasta__nf-row">
                     <input
@@ -492,7 +494,7 @@ export function OrcamentosGeradosBrowse({
       {!buscaAtiva && (
         <div className="clientes-alfa-wrap orc-gerados-browse__alfa">
           <p className="orc-gerados-browse__meta">
-            {orcamentos.length} {safeT?.orcamentosGerados || 'orçamentos gerados'}
+            {listaOrcamentos.length} {safeT?.orcamentosGerados || 'orçamentos gerados'}
             {letraAtiva
               ? ` · ${clientesNaLetraAlfabeto(letraAtiva).length} ${safeT?.clientes || 'cliente(s)'} ${safeT?.clientesAlfabetoComInicial || 'com inicial'} «${letraAtiva === '#' ? safeT?.clientesAlfabetoOutros || 'Outros' : letraAtiva}»`
               : ` — ${orcamentosRecentes.length} ${safeT?.recentes || 'recentes'}`}

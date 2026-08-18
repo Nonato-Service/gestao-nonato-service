@@ -106,7 +106,7 @@ export function buildOrcamentoGeradoPdfHtml(data: OrcamentoGeradoPdfData): strin
     metaFields.push({ label: L.equipamento || 'Equipamento', value: data.equipamentoDescricao.trim(), fullWidth: true })
   }
 
-  const itensHtml = data.itens.map((item, idx) => renderItemRow(item, idx, data)).join('')
+  const itensHtml = (Array.isArray(data.itens) ? data.itens : []).map((item, idx) => renderItemRow(item, idx, data)).join('')
 
   const tabela = `<table class="orc-pdf-pro__table">
     <thead>
@@ -135,7 +135,7 @@ export function buildOrcamentoGeradoPdfHtml(data: OrcamentoGeradoPdfData): strin
     : `<div class="orc-pdf-pro__summary">
         <div class="orc-pdf-pro__summary-row orc-pdf-pro__summary-row--total">
           <span class="orc-pdf-pro__summary-label">${escapePdfHtml(L.itemSemValor || 'Orçamento sem valores')}</span>
-          <span class="orc-pdf-pro__summary-value">${data.itens.length} ${escapePdfHtml(L.itens || 'itens')}</span>
+          <span class="orc-pdf-pro__summary-value">${(Array.isArray(data.itens) ? data.itens : []).length} ${escapePdfHtml(L.itens || 'itens')}</span>
         </div>
       </div>`
 

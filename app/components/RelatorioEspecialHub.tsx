@@ -1949,7 +1949,7 @@ export default function RelatorioEspecialHub({
                                     d.id === dia.id
                                       ? atualizarCalculosDiaEspecial({
                                           ...d,
-                                          horasPorEquipamento: d.horasPorEquipamento.map((h, hi) =>
+                                          horasPorEquipamento: (d.horasPorEquipamento || []).map((h, hi) =>
                                             hi === li ? { ...h, equipamentoUid: v } : h
                                           ),
                                         })
@@ -1981,7 +1981,7 @@ export default function RelatorioEspecialHub({
                                     d.id === dia.id
                                       ? atualizarCalculosDiaEspecial({
                                           ...d,
-                                          horasPorEquipamento: d.horasPorEquipamento.map((h, hi) =>
+                                          horasPorEquipamento: (d.horasPorEquipamento || []).map((h, hi) =>
                                             hi === li ? { ...h, horasInicio: v } : h
                                           ),
                                         })
@@ -2005,7 +2005,7 @@ export default function RelatorioEspecialHub({
                                     d.id === dia.id
                                       ? atualizarCalculosDiaEspecial({
                                           ...d,
-                                          horasPorEquipamento: d.horasPorEquipamento.map((h, hi) =>
+                                          horasPorEquipamento: (d.horasPorEquipamento || []).map((h, hi) =>
                                             hi === li ? { ...h, horasFim: v } : h
                                           ),
                                         })
@@ -2029,7 +2029,7 @@ export default function RelatorioEspecialHub({
                                   d.id === dia.id
                                     ? atualizarCalculosDiaEspecial({
                                         ...d,
-                                        horasPorEquipamento: d.horasPorEquipamento.filter((_, hi) => hi !== li),
+                                        horasPorEquipamento: (d.horasPorEquipamento || []).filter((_, hi) => hi !== li),
                                       })
                                     : d
                                 ),
@@ -2053,7 +2053,7 @@ export default function RelatorioEspecialHub({
                               d.id === dia.id
                                 ? atualizarCalculosDiaEspecial({
                                     ...d,
-                                    horasPorEquipamento: [...d.horasPorEquipamento, criarHorasEquipamentoDiaVazio()],
+                                    horasPorEquipamento: [...(d.horasPorEquipamento || []), criarHorasEquipamentoDiaVazio()],
                                   })
                                 : d
                             ),

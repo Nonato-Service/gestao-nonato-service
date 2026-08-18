@@ -369,6 +369,16 @@ try {
   } else {
     fail('Orçamentos: falta persistência sync do tipo (regressão do seletor TIPO DE ORÇAMENTO)')
   }
+  if (
+    nma.includes('(orcamento.itens || []).length') &&
+    nma.includes('(orcamento.itens || []).map') &&
+    !nma.includes('orcamento.itens.length > 0') &&
+    !nma.includes('orcamento.itens.map((item, index)')
+  ) {
+    ok('Orçamentos gerados: itens protegidos contra undefined (lista/histórico)')
+  } else {
+    fail('Orçamentos gerados: ainda há orcamento.itens.length/map sem fallback []')
+  }
 } catch (e) {
   fail(`módulo orçamentos: ${e.message}`)
 }
