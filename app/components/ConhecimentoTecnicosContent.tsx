@@ -4,21 +4,23 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { ContextualBackBar } from './ContextualBackBar'
 import { saveData } from '../utils/dataStorage'
 import { AssistTextarea } from './AssistTextFields'
+import type {
+  ConhecimentoSkillField,
+  ConhecimentoTecnicoEntry,
+  TipoEquipamentoOpcao,
+} from '../modules/conhecimento-tecnico'
+import {
+  buildTiposEquipamentoOpcoes,
+  clampConhecimentoNivel,
+  conhecimentoEntryExists,
+  computeTecnicoStats,
+  createConhecimentoTecnicoEntry,
+  descricaoKeyForSkill,
+  filterConhecimentoByTecnico,
+  getDescricaoValue,
+} from '../modules/conhecimento-tecnico'
 
-export type ConhecimentoTecnicoEntry = {
-  id: string
-  tecnicoId: string
-  equipamentoTipoId: string
-  equipamentoTipoNome: string
-  mecanico: number
-  eletrico: number
-  software: number
-  programacao: number
-  descricaoMecanico?: string
-  descricaoEletrico?: string
-  descricaoSoftware?: string
-  descricaoProgramacao?: string
-}
+export type { ConhecimentoTecnicoEntry }
 
 type TecnicoResumo = {
   id: string
@@ -28,9 +30,8 @@ type TecnicoResumo = {
 }
 
 type NivelOpcao = { value: number; label: string }
-type TipoEquipamentoOpcao = { id: string; nome: string }
 
-type SkillField = 'mecanico' | 'eletrico' | 'software' | 'programacao'
+type SkillField = ConhecimentoSkillField
 type CampoDescricao = SkillField
 
 const SKILL_META: Array<{ field: SkillField; icon: string; tone: string }> = [
@@ -73,22 +74,6 @@ function nivelTone(value: number): string {
   if (value >= 2) return 'medium'
   if (value >= 1) return 'basic'
   return 'none'
-}
-
-function computeTecnicoStats(entries: ConhecimentoTecnicoEntry[]) {
-  let totalSkills = 0
-  let sum = 0
-  let expert = 0
-  for (const e of entries) {
-    for (const f of SKILL_META) {
-      const v = e[f.field]
-      totalSkills++
-      sum += v
-      if (v >= 4) expert++
-    }
-  }
-  const media = totalSkills > 0 ? sum / totalSkills : 0
-  return { equipamentos: entries.length, media, expert, totalSkills }
 }
 
 function SkillPillar(props: {
@@ -163,16 +148,10 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
     { value: 4, label: safeT.conhecimentoNivelEspecialista ?? 'Especialista' },
   ]
 
-  const tiposEquipamentoOpcoes = useMemo((): TipoEquipamentoOpcao[] => {
-    const out: TipoEquipamentoOpcao[] = []
-    const fams = [...(familiasEquipamento || [])].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-    fams.forEach((f) => {
-      const grupos = (gruposEquipamento || []).filter((g) => (g.familia || '') === f)
-      if (grupos.length === 0) out.push({ id: `${f}|`, nome: f })
-      else grupos.forEach((g) => out.push({ id: `${g.familia || f}|${g.nome}`, nome: `${g.familia || f} › ${g.nome}` }))
-    })
-    return out
-  }, [familiasEquipamento, gruposEquipamento])
+  const tiposEquipamentoOpcoes = useMemo(
+    (): TipoEquipamentoOpcao[] => buildTiposEquipamentoOpcoes(familiasEquipamento, gruposEquipamento),
+    [familiasEquipamento, gruposEquipamento]
+  )
 
   const tecnicosFiltrados = useMemo(() => {
     const q = buscaTecnico.trim().toLowerCase()
@@ -195,50 +174,38 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
     }
   }, [tecnicos, tecnicoConhecimentoSelecionado, setTecnicoConhecimentoSelecionado])
 
-  const conhecimentosDoTecnico = useMemo(() => {
-    if (!tecnicoConhecimentoSelecionado) return []
-    return conhecimentoTecnicos.filter((c) => c.tecnicoId === tecnicoConhecimentoSelecionado)
-  }, [conhecimentoTecnicos, tecnicoConhecimentoSelecionado])
+  const conhecimentosDoTecnico = useMemo(
+    () => filterConhecimentoByTecnico(conhecimentoTecnicos, tecnicoConhecimentoSelecionado),
+    [conhecimentoTecnicos, tecnicoConhecimentoSelecionado]
+  )
 
   const tecnicoSelecionado = tecnicos.find((t) => t.id === tecnicoConhecimentoSelecionado)
   const stats = computeTecnicoStats(conhecimentosDoTecnico)
 
   const addConhecimento = (equipamentoTipoId: string, equipamentoTipoNome: string) => {
     if (!tecnicoConhecimentoSelecionado) return
-    const existe = conhecimentoTecnicos.some(
-      (c) => c.tecnicoId === tecnicoConhecimentoSelecionado && c.equipamentoTipoId === equipamentoTipoId
-    )
-    if (existe) return
-    const novo: ConhecimentoTecnicoEntry = {
-      id: `ct-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    if (conhecimentoEntryExists(conhecimentoTecnicos, tecnicoConhecimentoSelecionado, equipamentoTipoId)) {
+      return
+    }
+    const novo = createConhecimentoTecnicoEntry({
       tecnicoId: tecnicoConhecimentoSelecionado,
       equipamentoTipoId,
       equipamentoTipoNome,
-      mecanico: 0,
-      eletrico: 0,
-      software: 0,
-      programacao: 0,
-    }
+    })
     const next = [...conhecimentoTecnicos, novo]
     setConhecimentoTecnicos(next)
     void saveData('nonato-conhecimento-tecnicos', next)
   }
 
   const updateConhecimento = (id: string, field: SkillField, value: number) => {
-    const next = conhecimentoTecnicos.map((c) => (c.id === id ? { ...c, [field]: value } : c))
+    const nivel = clampConhecimentoNivel(value)
+    const next = conhecimentoTecnicos.map((c) => (c.id === id ? { ...c, [field]: nivel } : c))
     setConhecimentoTecnicos(next)
     void saveData('nonato-conhecimento-tecnicos', next)
   }
 
   const updateConhecimentoDescricaoCampo = (id: string, campo: CampoDescricao, value: string) => {
-    const key =
-      campo === 'mecanico'
-        ? 'descricaoMecanico'
-        : campo === 'eletrico'
-          ? 'descricaoEletrico'
-          : campo === 'software'
-            ? 'descricaoSoftware'
-            : 'descricaoProgramacao'
+    const key = descricaoKeyForSkill(campo)
     const next = conhecimentoTecnicos.map((c) => (c.id === id ? { ...c, [key]: value } : c))
     setConhecimentoTecnicos(next)
     void saveData('nonato-conhecimento-tecnicos', next)
@@ -257,12 +224,8 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
     return safeT.conhecimentoProgramacao ?? 'Programação'
   }
 
-  const descricaoValue = (ent: ConhecimentoTecnicoEntry, field: CampoDescricao) => {
-    if (field === 'mecanico') return ent.descricaoMecanico ?? ''
-    if (field === 'eletrico') return ent.descricaoEletrico ?? ''
-    if (field === 'software') return ent.descricaoSoftware ?? ''
-    return ent.descricaoProgramacao ?? ''
-  }
+  const descricaoValue = (ent: ConhecimentoTecnicoEntry, field: CampoDescricao) =>
+    getDescricaoValue(ent, field)
 
   return (
     <div className="ct-pro ns-ui-v2">

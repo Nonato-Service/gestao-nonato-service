@@ -499,6 +499,8 @@ import {
   libraryEntryExists,
   createTranslatorLibraryEntry,
 } from './modules/tradutor'
+import type { ConhecimentoTecnicoEntry } from './modules/conhecimento-tecnico'
+import { normalizeConhecimentoTecnicos } from './modules/conhecimento-tecnico'
 import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { DiarioLembreteIntervalPicker } from './components/DiarioLembreteIntervalPicker'
 import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'
@@ -905,21 +907,7 @@ type LogoRelatorio = {
   type: 'image' | 'video'
 }
 
-/** Conhecimento do técnico por tipo de equipamento (mecânico, elétrico, software, programação). Níveis 0 = nenhum, 1 = básico, 2 = médio, 3 = avançado, 4 = especialista. Descrição por área: só aparece opção para as áreas com nível > 0 */
-type ConhecimentoTecnicoEntry = {
-  id: string
-  tecnicoId: string
-  equipamentoTipoId: string
-  equipamentoTipoNome: string
-  mecanico: number
-  eletrico: number
-  software: number
-  programacao: number
-  descricaoMecanico?: string
-  descricaoEletrico?: string
-  descricaoSoftware?: string
-  descricaoProgramacao?: string
-}
+/* ConhecimentoTecnicoEntry / normalize → app/modules/conhecimento-tecnico */
 
 type MensagemComunicacao = {
   id: string
@@ -7915,8 +7903,11 @@ export default function Dashboard() {
 
       // Carregar conhecimentos dos técnicos (por tipo de equipamento)
       const savedConhecimentoTecnicos = getData('nonato-conhecimento-tecnicos')
-      if (savedConhecimentoTecnicos && Array.isArray(savedConhecimentoTecnicos)) {
-        setConhecimentoTecnicos(savedConhecimentoTecnicos)
+      if (savedConhecimentoTecnicos != null) {
+        const normalizedCt = normalizeConhecimentoTecnicos(savedConhecimentoTecnicos)
+        if (Array.isArray(savedConhecimentoTecnicos)) {
+          setConhecimentoTecnicos(normalizedCt)
+        }
       }
 
       // Carregar equipamentos

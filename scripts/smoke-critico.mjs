@@ -54,6 +54,7 @@ const critical = [
   'app/modules/manuais/index.ts',
   'app/modules/ficha-cadastral/index.ts',
   'app/modules/tradutor/index.ts',
+  'app/modules/conhecimento-tecnico/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -1199,6 +1200,76 @@ try {
   }
 } catch (e) {
   fail(`módulo tradutor: ${e.message}`)
+}
+
+// 3ai) Módulo conhecimento-tecnico (52.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/conhecimento-tecnico/index.ts'), 'utf8')
+  if (
+    idx.includes('ConhecimentoTecnicoEntry') &&
+    idx.includes('normalizeConhecimentoTecnicos') &&
+    idx.includes('filterConhecimentoByTecnico') &&
+    idx.includes('conhecimentoEntryExists') &&
+    idx.includes('createConhecimentoTecnicoEntry') &&
+    idx.includes('computeTecnicoStats') &&
+    idx.includes('buildTiposEquipamentoOpcoes')
+  ) {
+    ok('módulo conhecimento-tecnico exporta tipos/helpers')
+  } else {
+    fail('módulo conhecimento-tecnico incompleto (index.ts)')
+  }
+  for (const f of ['tipos.ts', 'entries.ts']) {
+    if (exists(`app/modules/conhecimento-tecnico/${f}`)) ok(`existe app/modules/conhecimento-tecnico/${f}`)
+    else fail(`falta app/modules/conhecimento-tecnico/${f}`)
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (
+    nma.includes("from './modules/conhecimento-tecnico'") ||
+    nma.includes('from "./modules/conhecimento-tecnico"')
+  ) {
+    ok('NonatoMainApp importa app/modules/conhecimento-tecnico')
+  } else {
+    fail('NonatoMainApp não importa o módulo conhecimento-tecnico')
+  }
+  if (
+    !nma.includes('type ConhecimentoTecnicoEntry = {') &&
+    nma.includes('ConhecimentoTecnicoEntry') &&
+    nma.includes('normalizeConhecimentoTecnicos')
+  ) {
+    ok('NonatoMainApp usa conhecimento-tecnico do módulo')
+  } else {
+    fail('NonatoMainApp ainda define ConhecimentoTecnicoEntry localmente ou não usa normalize')
+  }
+  const content = fs.readFileSync(path.join(root, 'app/components/ConhecimentoTecnicosContent.tsx'), 'utf8')
+  if (
+    content.includes("from '../modules/conhecimento-tecnico'") ||
+    content.includes('from "../modules/conhecimento-tecnico"')
+  ) {
+    ok('ConhecimentoTecnicosContent importa app/modules/conhecimento-tecnico')
+  } else {
+    fail('ConhecimentoTecnicosContent não importa o módulo conhecimento-tecnico')
+  }
+  if (
+    !content.includes('export type ConhecimentoTecnicoEntry = {') &&
+    content.includes('createConhecimentoTecnicoEntry') &&
+    content.includes('computeTecnicoStats') &&
+    content.includes('buildTiposEquipamentoOpcoes')
+  ) {
+    ok('ConhecimentoTecnicosContent usa helpers do módulo')
+  } else {
+    fail('ConhecimentoTecnicosContent ainda define o tipo localmente ou não usa helpers')
+  }
+  const libTypes = fs.readFileSync(path.join(root, 'app/lib/conhecimentoTecnicoTypes.ts'), 'utf8')
+  if (
+    libTypes.includes("from '../modules/conhecimento-tecnico'") ||
+    libTypes.includes('from "../modules/conhecimento-tecnico"')
+  ) {
+    ok('lib/conhecimentoTecnicoTypes re-exporta app/modules/conhecimento-tecnico')
+  } else {
+    fail('lib/conhecimentoTecnicoTypes não re-exporta o módulo conhecimento-tecnico')
+  }
+} catch (e) {
+  fail(`módulo conhecimento-tecnico: ${e.message}`)
 }
 
 // 4) i18n
