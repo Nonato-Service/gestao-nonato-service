@@ -749,18 +749,33 @@ function buildResumoViagemHtml(
       const duracaoCell = d.soViagem && d.duracaoFmt
         ? `<strong>${esc(d.duracaoFmt)}</strong><div class="re-dia-duracao-detalhe">${esc(labelViagem)}</div>`
         : '—'
+      const contexto =
+        d.contextoFmt ||
+        [
+          d.equipamentoFmt
+            ? `${L(labels, 'relatorioEspecialResumoViagemEquipamento', 'Equipamento')}: ${d.equipamentoFmt}`
+            : '',
+          d.clienteFmt
+            ? `${L(labels, 'relatorioEspecialResumoViagemCliente', 'Cliente')}: ${d.clienteFmt}`
+            : '',
+        ]
+          .filter(Boolean)
+          .join(' · ')
       return `<tr>
         <td>${esc(d.dataFormatada)}</td>
         <td>${esc(d.horarioFmt || '—')}</td>
         <td class="re-col-total">${duracaoCell}</td>
-        <td>${esc(d.descricao || '—')}</td>
+        <td>
+          ${contexto ? `<div style="font-size:9px;color:#0f172a;font-weight:600;margin-bottom:2px">${esc(contexto)}</div>` : ''}
+          ${esc(d.descricao || '—')}
+        </td>
       </tr>`
     })
     .join('')
 
   return `<div style="margin-top:12px">
     <h4 style="margin:0 0 6px;font-size:12px;color:#0f172a">${esc(L(labels, 'relatorioEspecialResumoViagem', 'Viagem / deslocação'))}</h4>
-    <p style="margin:0 0 8px;font-size:9px;color:#64748b">${esc(L(labels, 'relatorioEspecialResumoViagemAjuda', 'Dias só com viagem ou registados sem horas em máquina.'))}</p>
+    <p style="margin:0 0 8px;font-size:9px;color:#64748b">${esc(L(labels, 'relatorioEspecialResumoViagemAjuda', 'Dias só com viagem ou registados sem horas em máquina — com equipamento e cliente.'))}</p>
     <table class="re-table">
       <thead>
         <tr>
@@ -793,7 +808,13 @@ export function imprimirRelatorioEspecialPdf(
   const dias = sortDiasTrabalhoEspecialCronologicamente(rel.diasTrabalho || [])
   const equipamentos = rel.equipamentos || []
   const sessoesPorEquip = coletarSessoesPorEquipamento(dias)
-  const diasSemMaquinaResumo = coletarDiasSemMaquinaResumo(dias)
+  const diasSemMaquinaResumo = coletarDiasSemMaquinaResumo(dias, {
+    equipamentos,
+    cliente: rel.cliente,
+    labelEquipamento: L(labels, 'relatorioEspecialResumoViagemEquipamento', 'Equipamento'),
+    labelCliente: L(labels, 'relatorioEspecialResumoViagemCliente', 'Cliente'),
+    labelSecaoViagem: L(labels, 'relatorioEspecialResumoViagem', 'Viagem / deslocação'),
+  })
   const totais = calcularTotaisRelatorioEspecial(dias)
   const esc = escapePdfHtml
   const labelAlmoco = L(labels, 'horaAlmoco', 'almoço')

@@ -42492,6 +42492,55 @@ html body .relatorio-especial-root .relatorio-especial-form__field--full {
   grid-column: 1 / -1;
 }
 
+html body .relatorio-especial-root .relatorio-especial-tecnicos-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-tecnico-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 200, 83, 0.35);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-text-fill-color: #fff;
+}
+
+html body .relatorio-especial-root .relatorio-especial-tecnico-chip.is-selected {
+  background: rgba(0, 200, 83, 0.22);
+  border-color: #00c853;
+  box-shadow: 0 0 0 1px rgba(0, 200, 83, 0.35);
+}
+
+html body .relatorio-especial-root .relatorio-especial-tecnico-chip__tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fbbf24;
+  -webkit-text-fill-color: #fbbf24;
+  opacity: 0.95;
+}
+
+html body .relatorio-especial-root .relatorio-especial-tecnicos-vazio {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px dashed rgba(251, 191, 36, 0.45);
+  background: rgba(251, 191, 36, 0.08);
+  color: #fbbf24;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 html body .relatorio-especial-root .relatorio-especial-form__cobranca-bar--row {
   grid-column: 1 / -1;
   display: flex;

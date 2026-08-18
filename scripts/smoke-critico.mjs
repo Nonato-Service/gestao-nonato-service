@@ -446,6 +446,27 @@ try {
   } else {
     fail('RelatorioEspecialHub sem contador unificado de diárias no CONTROLE')
   }
+  if (
+    hub.includes('coletarDiasSemMaquinaResumo') &&
+    hub.includes('contextoFmt') &&
+    hub.includes('relatorio-especial-tecnicos-chips') &&
+    hub.includes('tecnicosOpcoes')
+  ) {
+    ok('RelatorioEspecialHub: viagem com equipamento/cliente + chips de técnico')
+  } else {
+    fail('RelatorioEspecialHub sem contexto de viagem ou selector de técnico visível')
+  }
+  const calc = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/calculos.ts'), 'utf8')
+  if (
+    calc.includes('equipamentosContextoDiaEspecial') &&
+    calc.includes('equipamentoFmt') &&
+    calc.includes('clienteFmt') &&
+    calc.includes('contextoFmt')
+  ) {
+    ok('calculos especiais: dias sem máquina com contexto equipamento/cliente')
+  } else {
+    fail('calculos especiais sem contexto de viagem no resumo')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (
     nma.includes("from './modules/relatorios-especiais'") ||

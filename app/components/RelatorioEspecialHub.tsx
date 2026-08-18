@@ -52,7 +52,7 @@ import {
 
 type ClienteMin = ClienteAlfabetoRow & { equipamentos?: EquipamentoClienteIdLookup[] }
 
-type TecnicoMin = { id: string; name: string }
+type TecnicoMin = { id: string; name?: string; nome?: string; type?: string }
 
 export type RelatorioEspecialHubProps = {
   relatorios: RelatorioEspecial[]
@@ -60,6 +60,8 @@ export type RelatorioEspecialHubProps = {
   clientes: ClienteMin[]
   equipamentosArmazem: EquipamentoArmazemBaixaLookup[]
   tecnicos: TecnicoMin[]
+  /** Opcional: gestores também aparecem como opção de técnico no formulário. */
+  gestores?: Array<{ id: string; name?: string; nome?: string }>
   selectedLanguage: string
   labels: Record<string, string | undefined>
   preverNumero: (dataIso: string) => string
@@ -82,9 +84,19 @@ const inputStyle: React.CSSProperties = {
 }
 
 function labelEquipamentoCurto(eq: RelatorioEquipamentoRef, idx: number): string {
-  const id = eq.equipamentoId || eq.numeroMaquina || `#${idx + 1}`
-  const mod = eq.maquinaModelo ? ` · ${eq.maquinaModelo}` : ''
-  return `${id}${mod}`
+  const serie = (eq.numeroMaquina || '').trim()
+  const modelo = (eq.maquinaModelo || '').trim()
+  const id = (eq.equipamentoId || '').trim()
+  const parts: string[] = []
+  if (serie) parts.push(serie)
+  if (modelo) parts.push(modelo)
+  if (id && id !== serie && !parts.includes(id)) parts.push(id)
+  return parts.length > 0 ? parts.join(' · ') : `#${idx + 1}`
+}
+
+function nomePessoaCadastro(p: { name?: string; nome?: string } | null | undefined): string {
+  if (!p) return ''
+  return String(p.name || p.nome || '').trim()
 }
 
 function classNameResumoCobrancaEspecial(fase: 'laranja' | 'azul' | 'verde' | 'biblioteca'): string {
@@ -161,6 +173,7 @@ export default function RelatorioEspecialHub({
   clientes,
   equipamentosArmazem,
   tecnicos,
+  gestores = [],
   selectedLanguage,
   labels,
   preverNumero,
@@ -294,9 +307,47 @@ export default function RelatorioEspecialHub({
     [form.diasTrabalho, diasTrabalhoDiariasKey]
   )
   const diasSemMaquinaResumo = useMemo(
-    () => coletarDiasSemMaquinaResumo(form.diasTrabalho),
-    [form.diasTrabalho, diasTrabalhoDiariasKey]
+    () =>
+      coletarDiasSemMaquinaResumo(form.diasTrabalho, {
+        equipamentos: form.equipamentos,
+        cliente: form.cliente,
+        labelEquipamento: t.relatorioEspecialResumoViagemEquipamento || 'Equipamento',
+        labelCliente: t.relatorioEspecialResumoViagemCliente || 'Cliente',
+        labelSecaoViagem: t.relatorioEspecialResumoViagem || 'Viagem / deslocação',
+      }),
+    [
+      form.diasTrabalho,
+      form.equipamentos,
+      form.cliente,
+      diasTrabalhoDiariasKey,
+      t.relatorioEspecialResumoViagemEquipamento,
+      t.relatorioEspecialResumoViagemCliente,
+      t.relatorioEspecialResumoViagem,
+    ]
   )
+
+  /** Lista visível de técnicos (name/nome) + gestores; inclui valor já gravado se órfão. */
+  const tecnicosOpcoes = useMemo(() => {
+    const seen = new Set<string>()
+    const out: { id: string; name: string; origem: 'tecnico' | 'gestor' | 'atual' }[] = []
+    const push = (id: string, name: string, origem: 'tecnico' | 'gestor' | 'atual') => {
+      const n = name.trim()
+      if (!n) return
+      const key = n.toLowerCase()
+      if (seen.has(key)) return
+      seen.add(key)
+      out.push({ id: id || n, name: n, origem })
+    }
+    for (const tec of tecnicos || []) {
+      push(String(tec.id || ''), nomePessoaCadastro(tec), 'tecnico')
+    }
+    for (const g of gestores || []) {
+      push(String(g.id || ''), nomePessoaCadastro(g), 'gestor')
+    }
+    const atual = (form.tecnico || '').trim()
+    if (atual) push(`atual-${atual}`, atual, 'atual')
+    return out
+  }, [tecnicos, gestores, form.tecnico])
 
   const clientesOrdenados = useMemo(
     () => [...clientes].sort((a, b) => a.nomeEmpresa.localeCompare(b.nomeEmpresa, 'pt')),
@@ -1057,20 +1108,51 @@ export default function RelatorioEspecialHub({
               style={inputStyle}
             />
           </div>
-          <div className="relatorio-especial-form__field">
+          <div className="relatorio-especial-form__field relatorio-especial-form__field--full relatorio-especial-form__field--tecnico">
             <label>{t.selecioneTecnico || 'Técnico'}</label>
-            <select
+            {tecnicosOpcoes.length > 0 ? (
+              <div className="relatorio-especial-tecnicos-chips" role="listbox" aria-label={t.selecioneTecnico || 'Técnico'}>
+                {tecnicosOpcoes.map((tec) => {
+                  const selected = form.tecnico === tec.name
+                  return (
+                    <button
+                      key={tec.id}
+                      type="button"
+                      role="option"
+                      aria-selected={selected}
+                      className={`relatorio-especial-tecnico-chip${selected ? ' is-selected' : ''}`}
+                      onClick={() => setForm((prev) => ({ ...prev, tecnico: tec.name }))}
+                    >
+                      {tec.name}
+                      {tec.origem === 'gestor' ? (
+                        <span className="relatorio-especial-tecnico-chip__tag">
+                          {t.gestoresTab || t.gestores || 'Gestor'}
+                        </span>
+                      ) : null}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="relatorio-especial-tecnicos-vazio">
+                {t.relatorioEspecialSemTecnicos ||
+                  'Nenhum técnico na lista. Cadastre em Gestores / Técnicos, ou escreva o nome abaixo.'}
+              </p>
+            )}
+            <input
+              type="text"
               value={form.tecnico}
               onChange={(e) => setForm({ ...form, tecnico: e.target.value })}
-              style={inputStyle}
-            >
-              <option value="">{t.selecioneTecnico || 'Técnico'}</option>
-              {tecnicos.map((tec) => (
-                <option key={tec.id} value={tec.name}>
-                  {tec.name}
-                </option>
+              placeholder={t.selecioneTecnico || 'Nome do técnico'}
+              list="relatorio-especial-tecnicos-datalist"
+              style={{ ...inputStyle, marginTop: 8 }}
+              autoComplete="off"
+            />
+            <datalist id="relatorio-especial-tecnicos-datalist">
+              {tecnicosOpcoes.map((tec) => (
+                <option key={`dl-${tec.id}`} value={tec.name} />
               ))}
-            </select>
+            </datalist>
           </div>
 
           {editandoId && (onAbrirFechamentoCobranca || (getResumoCobrancaFase && onClickResumoCobranca)) ? (
@@ -2090,10 +2172,15 @@ export default function RelatorioEspecialHub({
           <div className="relatorio-especial-resumo-equip" style={{ marginBottom: 16 }}>
             <div style={{ fontWeight: 600, marginBottom: 8, color: '#00c853' }}>
               {t.relatorioEspecialResumoViagem || 'Viagem / deslocação'}
+              {form.cliente?.trim() ? (
+                <span style={{ fontWeight: 500, color: '#aaa', fontSize: 13, marginLeft: 8 }}>
+                  · {t.relatorioEspecialResumoViagemCliente || 'Cliente'}: {form.cliente.trim()}
+                </span>
+              ) : null}
             </div>
             <p style={{ fontSize: 11, color: '#888', margin: '0 0 8px' }}>
               {t.relatorioEspecialResumoViagemAjuda ||
-                'Dias só com viagem ou registados sem horas em máquina.'}
+                'Dias só com viagem ou registados sem horas em máquina — com equipamento e cliente.'}
             </p>
             <table className="relatorio-especial-resumo-equip__tabela">
               <thead>
@@ -2123,7 +2210,24 @@ export default function RelatorioEspecialHub({
                         <strong>—</strong>
                       )}
                     </td>
-                    <td style={{ fontSize: 12, color: '#ccc' }}>{d.descricao || '—'}</td>
+                    <td style={{ fontSize: 12, color: '#ccc' }}>
+                      {(d.contextoFmt || d.equipamentoFmt || d.clienteFmt) && (
+                        <div style={{ color: '#00c853', fontWeight: 600, marginBottom: 4, fontSize: 11 }}>
+                          {d.contextoFmt ||
+                            [
+                              d.equipamentoFmt
+                                ? `${t.relatorioEspecialResumoViagemEquipamento || 'Equipamento'}: ${d.equipamentoFmt}`
+                                : '',
+                              d.clienteFmt
+                                ? `${t.relatorioEspecialResumoViagemCliente || 'Cliente'}: ${d.clienteFmt}`
+                                : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' · ')}
+                        </div>
+                      )}
+                      {d.descricao || '—'}
+                    </td>
                   </tr>
                 ))}
               </tbody>

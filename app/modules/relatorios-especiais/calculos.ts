@@ -441,6 +441,13 @@ export function intervaloViagemDia(dia: DiaTrabalhoEspecial): { inicio: string; 
   return { inicio: '—', fim: '—' }
 }
 
+export type EquipamentoRefMinEspecial = {
+  uid: string
+  equipamentoId?: string
+  maquinaModelo?: string
+  numeroMaquina?: string
+}
+
 export type DiaSemMaquinaResumoEspecial = {
   diaId: string
   data: string
@@ -454,17 +461,96 @@ export type DiaSemMaquinaResumoEspecial = {
   soViagem: boolean
   /** Dia registado (diária) sem máquina e sem viagem (ex. domingo). */
   soRegisto: boolean
+  /** Série / modelo / marca dos equipamentos ligados ao dia (ou do relatório). */
+  equipamentoFmt: string
+  /** Cliente do relatório especial. */
+  clienteFmt: string
+  /**
+   * Texto pronto para Resumo/PDF, ex.:
+   * «Viagem / deslocação — Equipamento: HOLZMA · Cliente: ACME»
+   */
+  contextoFmt: string
+}
+
+export type ColetarDiasSemMaquinaOpts = {
+  equipamentos?: EquipamentoRefMinEspecial[] | null
+  cliente?: string | null
+  /** Rótulos curtos (já traduzidos) para montar contextoFmt. */
+  labelEquipamento?: string
+  labelCliente?: string
+  labelSecaoViagem?: string
+}
+
+function labelEquipamentoRefMin(eq: EquipamentoRefMinEspecial, idx: number): string {
+  const serie = String(eq.numeroMaquina || '').trim()
+  const modelo = String(eq.maquinaModelo || '').trim()
+  const id = String(eq.equipamentoId || '').trim()
+  const parts: string[] = []
+  if (serie) parts.push(serie)
+  if (modelo) parts.push(modelo)
+  if (id && id !== serie && !parts.includes(id)) parts.push(id)
+  return parts.length > 0 ? parts.join(' · ') : `#${idx + 1}`
+}
+
+/** Equipamentos do dia (uids nas linhas); se nenhum, todos os do relatório. */
+export function equipamentosContextoDiaEspecial(
+  dia: DiaTrabalhoEspecial,
+  equipamentosRelatorio: EquipamentoRefMinEspecial[] | undefined | null
+): EquipamentoRefMinEspecial[] {
+  const lista = Array.isArray(equipamentosRelatorio) ? equipamentosRelatorio : []
+  const porUid = new Map(lista.map((e) => [String(e.uid || '').trim(), e]))
+  const uidsDia: string[] = []
+  const seen = new Set<string>()
+  for (const h of dia.horasPorEquipamento || []) {
+    const uid = String(h.equipamentoUid || '').trim()
+    if (!uid || seen.has(uid)) continue
+    seen.add(uid)
+    uidsDia.push(uid)
+  }
+  if (uidsDia.length > 0) {
+    const doDia: EquipamentoRefMinEspecial[] = []
+    for (const uid of uidsDia) {
+      const eq = porUid.get(uid)
+      if (eq) doDia.push(eq)
+      else doDia.push({ uid, equipamentoId: uid })
+    }
+    return doDia
+  }
+  return lista.filter(
+    (e) =>
+      String(e.equipamentoId || '').trim() ||
+      String(e.maquinaModelo || '').trim() ||
+      String(e.numeroMaquina || '').trim()
+  )
+}
+
+function montarContextoViagemFmt(
+  equipamentoFmt: string,
+  clienteFmt: string,
+  opts?: ColetarDiasSemMaquinaOpts
+): string {
+  const labEq = (opts?.labelEquipamento || 'Equipamento').trim()
+  const labCli = (opts?.labelCliente || 'Cliente').trim()
+  const labSec = (opts?.labelSecaoViagem || 'Viagem / deslocação').trim()
+  const partes: string[] = []
+  if (equipamentoFmt) partes.push(`${labEq}: ${equipamentoFmt}`)
+  if (clienteFmt) partes.push(`${labCli}: ${clienteFmt}`)
+  if (partes.length === 0) return labSec
+  return `${labSec} — ${partes.join(' · ')}`
 }
 
 /**
  * Dias que não aparecem nas tabelas por máquina do Resumo:
  * só viagem e (opcionalmente) dias registados sem horas em máquina.
+ * Inclui equipamento(s) e cliente para quem só lê o Resumo.
  */
 export function coletarDiasSemMaquinaResumo(
-  dias: DiaTrabalhoEspecial[] | undefined | null
+  dias: DiaTrabalhoEspecial[] | undefined | null,
+  opts?: ColetarDiasSemMaquinaOpts
 ): DiaSemMaquinaResumoEspecial[] {
   const diasOrd = sortDiasTrabalhoEspecialCronologicamente(Array.isArray(dias) ? dias : [])
   const out: DiaSemMaquinaResumoEspecial[] = []
+  const clienteFmt = String(opts?.cliente || '').trim()
 
   for (const diaRaw of diasOrd) {
     const dia = atualizarCalculosDiaEspecial(diaRaw)
@@ -482,6 +568,9 @@ export function coletarDiasSemMaquinaResumo(
       else if (fim !== '—') horarioFmt = fim
     }
 
+    const eqs = equipamentosContextoDiaEspecial(dia, opts?.equipamentos)
+    const equipamentoFmt = eqs.map((eq, i) => labelEquipamentoRefMin(eq, i)).join('; ')
+
     out.push({
       diaId: dia.id,
       data: dia.data,
@@ -491,6 +580,9 @@ export function coletarDiasSemMaquinaResumo(
       descricao: (dia.descricaoTrabalho || '').trim(),
       soViagem: resumo.soViagem,
       soRegisto: !resumo.soViagem && contaDiaria,
+      equipamentoFmt,
+      clienteFmt,
+      contextoFmt: montarContextoViagemFmt(equipamentoFmt, clienteFmt, opts),
     })
   }
 

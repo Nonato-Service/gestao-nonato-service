@@ -34,6 +34,8 @@ export type {
   SessaoHorasEquipamentoEspecial,
   ResumoHorasTrabalhoDia,
   DiaSemMaquinaResumoEspecial,
+  EquipamentoRefMinEspecial,
+  ColetarDiasSemMaquinaOpts,
 } from './calculos'
 export {
   calcularDuracaoHoras,
@@ -60,6 +62,7 @@ export {
   intervaloViagemDia,
   resumoHorasTrabalhoDia,
   contarEquipamentosUnicosDia,
+  equipamentosContextoDiaEspecial,
   coletarDiasSemMaquinaResumo,
   coletarSessoesPorEquipamento,
 } from './calculos'
