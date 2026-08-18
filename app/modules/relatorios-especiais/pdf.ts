@@ -336,13 +336,22 @@ body.rs-pdf--especial .re-doc {
   font-variant-numeric: tabular-nums;
 }
 
+.re-total-geral__valor-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
 .re-total-geral__detalhe {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #e2e8f0;
-  font-size: 9px;
-  color: #475569;
-  line-height: 1.45;
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-size: 10px;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.35;
+  white-space: nowrap;
 }
 
 .re-total-geral--fecho {
@@ -357,27 +366,33 @@ body.rs-pdf--especial .re-doc {
   grid-column: 1;
 }
 
-.re-total-geral--fecho .re-total-geral__valor {
+.re-total-geral--fecho .re-total-geral__valor-linha {
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
+  justify-content: flex-end;
+}
+
+.re-total-geral--fecho .re-total-geral__valor {
   font-size: 24px;
   color: #0d7a3d;
 }
 
 .re-total-geral--fecho .re-total-geral__detalhe {
-  grid-column: 1;
+  grid-column: auto;
   margin-top: 0;
   padding-top: 0;
   border-top: none;
 }
 
 .re-dia-duracao-detalhe {
-  font-size: 7px;
+  display: inline;
+  font-size: 7.5px;
   font-weight: 500;
   color: #64748b;
-  margin-top: 2px;
+  margin-left: 4px;
   line-height: 1.3;
+  white-space: nowrap;
 }
 
 .re-viagem-equip {
@@ -531,11 +546,11 @@ function formatDuracaoDiaPdf(
   labelViagem: string
 ): string {
   if (resumo.soViagem) {
-    return `<strong>${esc(resumo.viagemFmt)}</strong><div class="re-dia-duracao-detalhe">${esc(labelViagem)}</div>`
+    return `<strong>${esc(resumo.viagemFmt)}</strong><span class="re-dia-duracao-detalhe">(${esc(labelViagem)})</span>`
   }
   if (!resumo.temHoras) return '—'
   if (resumo.almocoMinutos > 0 && resumo.duracaoBruta !== resumo.duracaoLiquida) {
-    return `<strong>${esc(resumo.duracaoLiquida)}</strong><div class="re-dia-duracao-detalhe">${esc(resumo.duracaoBruta)} − ${esc(resumo.almocoFmt)} ${esc(labelAlmoco)}</div>`
+    return `<strong>${esc(resumo.duracaoLiquida)}</strong><span class="re-dia-duracao-detalhe">(${esc(resumo.duracaoBruta)} −${esc(resumo.almocoFmt)} ${esc(labelAlmoco)} → ${esc(resumo.duracaoLiquida)})</span>`
   }
   return `<strong>${esc(resumo.duracaoLiquida)}</strong>`
 }
@@ -550,15 +565,18 @@ function buildTotalGeralBannerHtml(
   const totalAlmocoFmt =
     totais.horasAlmocoTotal > 0 ? formatMinutosComoHHMM(totais.horasAlmocoTotal) : ''
   const totalBrutoFmt = formatMinutosComoHHMM(totais.horasTrabalhoBruto)
+  const totalLiquidoFmt = rel.horasTrabalho || '0:00'
   const detalheAlmoco =
     totais.horasAlmocoTotal > 0
-      ? `<div class="re-total-geral__detalhe">${esc(L(labels, 'relatorioEspecialPdfTotalBruto', 'Horas trabalho (bruto)'))}: ${esc(totalBrutoFmt)} · ${esc(L(labels, 'horaAlmoco', 'Almoço descontado'))}: −${esc(totalAlmocoFmt)} · ${esc(L(labels, 'relatorioEspecialPdfTotalLiquido', 'Total líquido'))}: ${esc(rel.horasTrabalho || '0:00')}</div>`
-      : `<div class="re-total-geral__detalhe">${esc(L(labels, 'relatorioEspecialPdfTotalLiquidoHint', 'Soma de todas as horas de trabalho nos equipamentos.'))}</div>`
+      ? `<span class="re-total-geral__detalhe">(${esc(totalBrutoFmt)} −${esc(totalAlmocoFmt)} ${esc(L(labels, 'horaAlmoco', 'almoço'))} → ${esc(totalLiquidoFmt)})</span>`
+      : `<span class="re-total-geral__detalhe">${esc(L(labels, 'relatorioEspecialPdfTotalLiquidoHint', 'Soma de todas as horas de trabalho nos equipamentos.'))}</span>`
 
   return `<div class="re-total-geral${modifier}">
     <span class="re-total-geral__label">${esc(L(labels, 'relatorioEspecialPdfTotalGeralLabel', 'TOTAL DE HORAS DE TRABALHO'))}</span>
-    <span class="re-total-geral__valor">${esc(rel.horasTrabalho || '0:00')}</span>
-    ${detalheAlmoco}
+    <div class="re-total-geral__valor-linha">
+      <span class="re-total-geral__valor">${esc(totalLiquidoFmt)}</span>
+      ${detalheAlmoco}
+    </div>
   </div>`
 }
 
@@ -637,14 +655,16 @@ function buildKpiStripHtml(
   const esc = escapePdfHtml
   const almocoHint =
     totais.horasAlmocoTotal > 0
-      ? `${L(labels, 'relatorioEspecialPdfTotalBruto', 'Bruto')} ${formatMinutosComoHHMM(totais.horasTrabalhoBruto)} − ${L(labels, 'horaAlmoco', 'almoço')} ${formatMinutosComoHHMM(totais.horasAlmocoTotal)}`
+      ? `(${formatMinutosComoHHMM(totais.horasTrabalhoBruto)} −${formatMinutosComoHHMM(totais.horasAlmocoTotal)} ${L(labels, 'horaAlmoco', 'almoço')} → ${rel.horasTrabalho || '0:00'})`
       : L(labels, 'relatorioEspecialPdfTotalLiquidoHint', 'Total líquido de horas de trabalho')
 
   return `<div class="re-kpi-strip">
     <div class="re-kpi re-kpi--main">
       <span class="re-kpi__label">${esc(L(labels, 'relatorioEspecialPdfHorasTrabalho', 'Horas de trabalho'))}</span>
-      <span class="re-kpi__valor">${esc(rel.horasTrabalho || '0:00')}</span>
-      <span class="re-kpi__hint">${esc(almocoHint)}</span>
+      <span class="re-kpi__valor-linha" style="display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px">
+        <span class="re-kpi__valor">${esc(rel.horasTrabalho || '0:00')}</span>
+        <span class="re-kpi__hint" style="display:inline;margin:0">${esc(almocoHint)}</span>
+      </span>
     </div>
     <div class="re-kpi">
       <span class="re-kpi__label">${esc(L(labels, 'kmTotal', 'KM total'))}</span>
@@ -687,9 +707,9 @@ function buildEquipamentoCardHtml(
                 <td>${esc(formatHorarioIntervalo(s.horasInicio, s.horasFim))}</td>
                 <td class="re-col-total"><strong>${esc(s.horasDuracaoBruta || s.horasDuracao || '—')}</strong>${
                   s.almocoDescontadoMinutos > 0
-                    ? `<div class="re-dia-duracao-detalhe">−${esc(s.almocoDescontadoFmt)} ${esc(L(labels, 'horaAlmoco', 'almoço'))} → ${esc(s.horasDuracao)}</div>`
+                    ? `<span class="re-dia-duracao-detalhe">(−${esc(s.almocoDescontadoFmt)} ${esc(L(labels, 'horaAlmoco', 'almoço'))} → ${esc(s.horasDuracao)})</span>`
                     : s.horasDuracaoBruta
-                      ? `<div class="re-dia-duracao-detalhe">${esc(L(labels, 'relatorioEspecialHorasIntervaloBruto', 'intervalo (relógio)'))}</div>`
+                      ? `<span class="re-dia-duracao-detalhe">(${esc(L(labels, 'relatorioEspecialHorasIntervaloBruto', 'intervalo (relógio)'))})</span>`
                       : ''
                 }</td>
               </tr>`
@@ -789,7 +809,7 @@ function buildResumoViagemHtml(
   const rows = diasSemMaquina
     .map((d) => {
       const duracaoCell = d.soViagem && d.duracaoFmt
-        ? `<strong>${esc(d.duracaoFmt)}</strong><div class="re-dia-duracao-detalhe">${esc(labelViagem)}</div>`
+        ? `<strong>${esc(d.duracaoFmt)}</strong><span class="re-dia-duracao-detalhe">(${esc(labelViagem)})</span>`
         : '—'
       const labEq = L(labels, 'relatorioEspecialResumoViagemEquipamento', 'Equipamento')
       const labCli = L(labels, 'relatorioEspecialResumoViagemCliente', 'Cliente')
@@ -909,7 +929,15 @@ export function imprimirRelatorioEspecialPdf(
       ? `<tfoot>
           <tr class="re-row-total">
             <td colspan="6" style="text-align:right">${esc(L(labels, 'totais', 'TOTAIS'))}</td>
-            <td class="re-col-total">${esc(formatMinutosComoHHMM(totais.horasTrabalhoTotal))}<div class="re-dia-duracao-detalhe">${esc(L(labels, 'relatorioEspecialPdfTotalLiquido', 'Trabalho líquido'))}${totais.horasAlmocoTotal > 0 ? ` · ${esc(formatMinutosComoHHMM(totais.horasTrabalhoBruto))} − ${esc(formatMinutosComoHHMM(totais.horasAlmocoTotal))} ${esc(labelAlmoco)}` : ''}${totais.horasViagemTotal > 0 ? ` · ${esc(labelViagem)} ${esc(formatMinutosComoHHMM(totais.horasViagemTotal))}` : ''}</div></td>
+            <td class="re-col-total"><strong>${esc(formatMinutosComoHHMM(totais.horasTrabalhoTotal))}</strong>${
+              totais.horasAlmocoTotal > 0
+                ? `<span class="re-dia-duracao-detalhe">(${esc(formatMinutosComoHHMM(totais.horasTrabalhoBruto))} −${esc(formatMinutosComoHHMM(totais.horasAlmocoTotal))} ${esc(labelAlmoco)} → ${esc(formatMinutosComoHHMM(totais.horasTrabalhoTotal))})</span>`
+                : ''
+            }${
+              totais.horasViagemTotal > 0
+                ? `<span class="re-dia-duracao-detalhe"> · ${esc(labelViagem)} ${esc(formatMinutosComoHHMM(totais.horasViagemTotal))}</span>`
+                : ''
+            }</td>
             <td colspan="3"></td>
             <td colspan="2"></td>
             <td class="re-col-total">${esc(String(totais.kmsTotal))}</td>

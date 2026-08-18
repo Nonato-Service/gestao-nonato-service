@@ -1723,8 +1723,8 @@ export default function RelatorioEspecialHub({
                                 {horasResumo.almocoMinutos > 0 &&
                                 horasResumo.duracaoBruta !== horasResumo.duracaoLiquida ? (
                                   <span className="relatorio-especial-horas-table__hint">
-                                    {horasResumo.duracaoBruta} − {horasResumo.almocoFmt}{' '}
-                                    {t.horaAlmoco || 'almoço'}
+                                    ({horasResumo.duracaoBruta} −{horasResumo.almocoFmt}{' '}
+                                    {t.horaAlmoco || 'almoço'} → {horasResumo.duracaoLiquida})
                                   </span>
                                 ) : null}
                               </>
@@ -1783,8 +1783,9 @@ export default function RelatorioEspecialHub({
                       <strong>{formatMinutosComoHHMM(totais.horasTrabalhoTotal)}</strong>
                       {totais.horasAlmocoTotal > 0 ? (
                         <span className="relatorio-especial-horas-table__hint">
-                          {formatMinutosComoHHMM(totais.horasTrabalhoBruto)} −{' '}
-                          {formatMinutosComoHHMM(totais.horasAlmocoTotal)} {t.horaAlmoco || 'almoço'}
+                          ({formatMinutosComoHHMM(totais.horasTrabalhoBruto)} −
+                          {formatMinutosComoHHMM(totais.horasAlmocoTotal)} {t.horaAlmoco || 'almoço'} →{' '}
+                          {formatMinutosComoHHMM(totais.horasTrabalhoTotal)})
                         </span>
                       ) : null}
                     </td>
@@ -2221,14 +2222,14 @@ export default function RelatorioEspecialHub({
                         <td>
                           <strong>{s.horasDuracaoBruta || s.horasDuracao || '—'}</strong>
                           {s.almocoDescontadoMinutos > 0 ? (
-                            <span style={{ display: 'block', fontSize: 10, color: '#888' }}>
-                              −{s.almocoDescontadoFmt} {t.horaAlmoco || 'almoço'} → {s.horasDuracao}
+                            <span style={{ marginLeft: 6, fontSize: 11, color: '#aaa', whiteSpace: 'nowrap' }}>
+                              (−{s.almocoDescontadoFmt} {t.horaAlmoco || 'almoço'} → {s.horasDuracao})
                             </span>
-                          ) : (
-                            <span style={{ display: 'block', fontSize: 10, color: '#888' }}>
-                              {t.relatorioEspecialHorasIntervaloBruto || 'intervalo (relógio)'}
+                          ) : s.horasDuracaoBruta ? (
+                            <span style={{ marginLeft: 6, fontSize: 10, color: '#888' }}>
+                              ({t.relatorioEspecialHorasIntervaloBruto || 'intervalo (relógio)'})
                             </span>
-                          )}
+                          ) : null}
                         </td>
                       </tr>
                     ))}
@@ -2311,15 +2312,18 @@ export default function RelatorioEspecialHub({
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 8, paddingTop: 12, borderTop: '1px solid rgba(0,200,83,0.25)' }}>
           <div>
             <div style={{ fontSize: 12, color: '#aaa' }}>{t.relatorioEspecialPdfTotalGeralLabel || t.relatorioEspecialTotalGeral || 'TOTAL DE HORAS DE TRABALHO'}</div>
-            <strong style={{ fontSize: 28, color: '#00c853' }}>{formComTotais.horasTrabalho}</strong>
-            {totais.horasAlmocoTotal > 0 && (
-              <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>
-                {formatMinutosComoHHMM(totais.horasTrabalhoBruto)} −{' '}
-                {formatMinutosComoHHMM(totais.horasAlmocoTotal)} {t.horaAlmoco || 'almoço'}
-                {' · '}
-                {t.relatorioEspecialTotalComAlmoco || 'Total com desconto de almoço'}
-              </div>
-            )}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '6px 10px' }}>
+              <strong style={{ fontSize: 28, color: '#00c853', lineHeight: 1.1 }}>
+                {formComTotais.horasTrabalho}
+              </strong>
+              {totais.horasAlmocoTotal > 0 ? (
+                <span style={{ fontSize: 13, color: '#bbb', whiteSpace: 'nowrap' }}>
+                  ({formatMinutosComoHHMM(totais.horasTrabalhoBruto)} −
+                  {formatMinutosComoHHMM(totais.horasAlmocoTotal)} {t.horaAlmoco || 'almoço'} →{' '}
+                  {formComTotais.horasTrabalho})
+                </span>
+              ) : null}
+            </div>
           </div>
           <div>
             <div style={{ fontSize: 12, color: '#aaa' }}>
