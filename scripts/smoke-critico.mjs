@@ -361,6 +361,14 @@ try {
   } else {
     fail('NonatoMainApp ainda define PedidoOrcamento localmente ou não usa helpers do módulo')
   }
+  if (
+    nma.includes('lerOrcamentoAvulsoRascunhoSession() || rascunho') &&
+    nma.includes('gravarTipoOrcamentoSessionSync')
+  ) {
+    ok('Orçamentos: tipo sobrevive a remount via sessionStorage')
+  } else {
+    fail('Orçamentos: falta persistência sync do tipo (regressão do seletor TIPO DE ORÇAMENTO)')
+  }
 } catch (e) {
   fail(`módulo orçamentos: ${e.message}`)
 }

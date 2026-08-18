@@ -1379,13 +1379,10 @@ export default function Dashboard() {
   const [familiasGruposModalVariant, setFamiliasGruposModalVariant] = useState<'checklist' | 'equipamentos'>('checklist') // Título do modal Famílias e Grupos
   const [showSplashInicial, setShowSplashInicial] = useState(() => !warmOnMount) // Tela inicial preta com logo (verde transparente)
   const [openOrcamentosGeradosView, setOpenOrcamentosGeradosView] = useState(false) // Ao gerar pedido avulso, abrir Orçamentos > Orçamentos Gerados
-  /** Rascunho do orçamento avulso no pai — evita perder itens quando o painel re-renderiza */
-  const [orcamentoAvulsoRascunho, setOrcamentoAvulsoRascunho] = useState<OrcamentoAvulsoRascunhoPersist>(
+  /** Rascunho do orçamento avulso no pai — semente inicial; o painel grava em sessionStorage (sobrevive a remount). */
+  const [orcamentoAvulsoRascunho] = useState<OrcamentoAvulsoRascunhoPersist>(
     () => lerOrcamentoAvulsoRascunhoSession() || criarOrcamentoAvulsoRascunhoVazio()
   )
-  useEffect(() => {
-    gravarOrcamentoAvulsoRascunhoSession(orcamentoAvulsoRascunho)
-  }, [orcamentoAvulsoRascunho])
   const [showPasswordScreen, setShowPasswordScreen] = useState(false) // Tela de login (usuário + senha) ao clicar Acessar Sistema
   const [loginUsuarioInput, setLoginUsuarioInput] = useState('') // Usuário (e-mail ou nome) no login
   const [senhaInicialInput, setSenhaInicialInput] = useState('') // Senha no login
@@ -62998,31 +62995,37 @@ A1;Peça exemplo;10`}
     initialTipoOrcamento?: 'orcamentos-gerados'
     onOrcamentosGeradosViewShown?: () => void
   }) => {
+    /**
+     * O painel é definido dentro do NonatoMainApp: cada re-render do pai remonta este
+     * componente. O prop `rascunho` do pai fica desactualizado (não é actualizado de
+     * propósito — evita cascata de setState). Fonte de verdade no remount = sessionStorage.
+     */
+    const rascunhoEfetivo = lerOrcamentoAvulsoRascunhoSession() || rascunho
     const [tipoOrcamento, setTipoOrcamento] = useState<OrcamentoAvulsoTipoRascunho>(
-      rascunho.tipoOrcamento || 'dados-fixos'
+      rascunhoEfetivo.tipoOrcamento || 'dados-fixos'
     )
     const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(() => {
-      if (!rascunho.clienteSelecionadoId) return null
-      return clientes.find((c) => c.id === rascunho.clienteSelecionadoId) ?? null
+      if (!rascunhoEfetivo.clienteSelecionadoId) return null
+      return clientes.find((c) => c.id === rascunhoEfetivo.clienteSelecionadoId) ?? null
     })
-    const [buscaCliente, setBuscaCliente] = useState(rascunho.buscaCliente || '')
+    const [buscaCliente, setBuscaCliente] = useState(rascunhoEfetivo.buscaCliente || '')
     const [pdfModeloOrcamento, setPdfModeloOrcamento] = useState(() => loadPdfModeloPadrao('orcamentos'))
     /** Cliente Prioritário (Fixo): opcional — dados do cadastro geral para e-mail/WhatsApp neste orçamento */
     const [clienteCadastroPrioritarioFixo, setClienteCadastroPrioritarioFixo] = useState<Cliente | null>(() => {
-      if (!rascunho.clienteCadastroPrioritarioFixoId) return null
-      return clientes.find((c) => c.id === rascunho.clienteCadastroPrioritarioFixoId) ?? null
+      if (!rascunhoEfetivo.clienteCadastroPrioritarioFixoId) return null
+      return clientes.find((c) => c.id === rascunhoEfetivo.clienteCadastroPrioritarioFixoId) ?? null
     })
     const [buscaClientePrioritarioFixo, setBuscaClientePrioritarioFixo] = useState(
-      rascunho.buscaClientePrioritarioFixo || ''
+      rascunhoEfetivo.buscaClientePrioritarioFixo || ''
     )
     const [relatorioSelecionado, setRelatorioSelecionado] = useState<RelatorioServico | null>(() => {
-      if (!rascunho.relatorioSelecionadoId) return null
-      return relatoriosServico.find((r) => r.id === rascunho.relatorioSelecionadoId) ?? null
+      if (!rascunhoEfetivo.relatorioSelecionadoId) return null
+      return relatoriosServico.find((r) => r.id === rascunhoEfetivo.relatorioSelecionadoId) ?? null
     })
-    const [buscaRelatorio, setBuscaRelatorio] = useState(rascunho.buscaRelatorio || '')
+    const [buscaRelatorio, setBuscaRelatorio] = useState(rascunhoEfetivo.buscaRelatorio || '')
     const [dadosOrcamento, setDadosOrcamento] = useState(() => ({
-      ...rascunho.dadosOrcamento,
-      itens: Array.isArray(rascunho.dadosOrcamento.itens) ? rascunho.dadosOrcamento.itens : [],
+      ...rascunhoEfetivo.dadosOrcamento,
+      itens: Array.isArray(rascunhoEfetivo.dadosOrcamento.itens) ? rascunhoEfetivo.dadosOrcamento.itens : [],
     }))
     const [showItemForm, setShowItemForm] = useState(false)
     const [itemFormMode, setItemFormMode] = useState<'biblioteca' | 'manual' | null>(null)
@@ -63040,7 +63043,7 @@ A1;Peça exemplo;10`}
     const [pecasFiltradas, setPecasFiltradas] = useState<PecaBiblioteca[]>([])
     const [orcamentoEditando, setOrcamentoEditando] = useState<string | null>(null)
     const [numeroOrcamentoManual, setNumeroOrcamentoManual] = useState(
-      Boolean(rascunho.numeroOrcamentoManual)
+      Boolean(rascunhoEfetivo.numeroOrcamentoManual)
     )
     const [itemEditando, setItemEditando] = useState<{orcamentoId: string, itemIndex: number} | null>(null)
     const [itemEditForm, setItemEditForm] = useState({
@@ -63229,6 +63232,12 @@ A1;Peça exemplo;10`}
     // Abrir diretamente a vista "Orçamentos Gerados" quando vem do Pedido de Orçamentos Avulsos
     useEffect(() => {
       if (initialTipoOrcamento === 'orcamentos-gerados') {
+        const base = lerOrcamentoAvulsoRascunhoSession() || rascunho
+        gravarOrcamentoAvulsoRascunhoSession({
+          ...base,
+          v: 1,
+          tipoOrcamento: 'orcamentos-gerados',
+        })
         setTipoOrcamento('orcamentos-gerados')
         onOrcamentosGeradosViewShown?.()
       }
@@ -63921,19 +63930,68 @@ A1;Peça exemplo;10`}
       return labels[key] || key.replace(/-/g, ' ')
     }
 
+    /** Grava o tipo já no clique — se o pai re-renderizar e remotar o painel antes do useEffect, o modo não volta a «dados-fixos». */
+    const gravarTipoOrcamentoSessionSync = (
+      tipo: OrcamentoAvulsoTipoRascunho,
+      patch?: Partial<
+        Pick<
+          OrcamentoAvulsoRascunhoPersist,
+          'clienteSelecionadoId' | 'relatorioSelecionadoId' | 'clienteCadastroPrioritarioFixoId'
+        >
+      >
+    ) => {
+      const base = lerOrcamentoAvulsoRascunhoSession() || rascunho
+      gravarOrcamentoAvulsoRascunhoSession({
+        ...base,
+        v: 1,
+        tipoOrcamento: tipo,
+        dadosOrcamento: {
+          ...base.dadosOrcamento,
+          ...dadosOrcamento,
+          itens: Array.isArray(dadosOrcamento.itens) ? dadosOrcamento.itens : base.dadosOrcamento.itens,
+        },
+        numeroOrcamentoManual,
+        buscaCliente,
+        buscaRelatorio,
+        buscaClientePrioritarioFixo,
+        clienteSelecionadoId:
+          patch && 'clienteSelecionadoId' in patch
+            ? patch.clienteSelecionadoId ?? null
+            : clienteSelecionado?.id ?? base.clienteSelecionadoId,
+        relatorioSelecionadoId:
+          patch && 'relatorioSelecionadoId' in patch
+            ? patch.relatorioSelecionadoId ?? null
+            : relatorioSelecionado?.id ?? base.relatorioSelecionadoId,
+        clienteCadastroPrioritarioFixoId:
+          patch && 'clienteCadastroPrioritarioFixoId' in patch
+            ? patch.clienteCadastroPrioritarioFixoId ?? null
+            : clienteCadastroPrioritarioFixo?.id ?? base.clienteCadastroPrioritarioFixoId,
+      })
+    }
+
     const mudarTipoOrcamento = (key: OrcamentoAvulsoTipoRascunho | 'orcamentos-gerados') => {
       if (key === 'orcamentos-gerados') {
+        gravarTipoOrcamentoSessionSync('orcamentos-gerados', { clienteCadastroPrioritarioFixoId: null })
         setTipoOrcamento('orcamentos-gerados')
         setClienteCadastroPrioritarioFixo(null)
         return
       }
       if (key === 'cliente-prioritario-fixo') {
+        gravarTipoOrcamentoSessionSync('cliente-prioritario-fixo', {
+          clienteSelecionadoId: null,
+          relatorioSelecionadoId: null,
+        })
         setTipoOrcamento('cliente-prioritario-fixo')
         setClienteSelecionado(null)
         setRelatorioSelecionado(null)
         return
       }
       if (key === 'cliente-prioritario-valores') {
+        gravarTipoOrcamentoSessionSync('cliente-prioritario-valores', {
+          clienteSelecionadoId: null,
+          relatorioSelecionadoId: null,
+          clienteCadastroPrioritarioFixoId: null,
+        })
         setTipoOrcamento('cliente-prioritario-valores')
         setClienteSelecionado(null)
         setRelatorioSelecionado(null)
@@ -63941,6 +63999,11 @@ A1;Peça exemplo;10`}
         return
       }
       if (key === 'dados-fixos') {
+        gravarTipoOrcamentoSessionSync('dados-fixos', {
+          clienteSelecionadoId: null,
+          relatorioSelecionadoId: null,
+          clienteCadastroPrioritarioFixoId: null,
+        })
         setTipoOrcamento('dados-fixos')
         setClienteSelecionado(null)
         setRelatorioSelecionado(null)
@@ -63948,11 +64011,19 @@ A1;Peça exemplo;10`}
         return
       }
       if (key === 'cliente-cadastrado') {
+        gravarTipoOrcamentoSessionSync('cliente-cadastrado', {
+          relatorioSelecionadoId: null,
+          clienteCadastroPrioritarioFixoId: null,
+        })
         setTipoOrcamento('cliente-cadastrado')
         setRelatorioSelecionado(null)
         setClienteCadastroPrioritarioFixo(null)
         return
       }
+      gravarTipoOrcamentoSessionSync('orcamento-relatorio', {
+        clienteSelecionadoId: null,
+        clienteCadastroPrioritarioFixoId: null,
+      })
       setTipoOrcamento('orcamento-relatorio')
       setClienteSelecionado(null)
       setClienteCadastroPrioritarioFixo(null)
