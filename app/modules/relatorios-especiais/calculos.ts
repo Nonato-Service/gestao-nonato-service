@@ -104,6 +104,41 @@ export function minutosTrabalhoLiquidoDia(dia: DiaTrabalhoEspecial): number {
   return Math.max(0, minutosTrabalhoBrutoDia(dia) - minutosAlmocoDia(dia))
 }
 
+/**
+ * Distribui o almoço do dia proporcionalmente ao tempo bruto de cada linha de máquina.
+ * A soma dos líquidos = bruto do dia − almoço (sem deriva de arredondamento).
+ * Dia só com viagem (sem linhas de máquina) → lista vazia / zeros.
+ */
+export function minutosLiquidosPorLinhaEquipamentoDia(
+  linhas: HorasEquipamentoDia[] | undefined | null,
+  almocoMinutos: number
+): number[] {
+  const lista = Array.isArray(linhas) ? linhas : []
+  const brutos = lista.map((l) => minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(l)))
+  const brutoTotal = brutos.reduce((acc, m) => acc + m, 0)
+  if (brutoTotal <= 0) return brutos.map(() => 0)
+  const almoco = Math.min(Math.max(0, Math.round(almocoMinutos) || 0), brutoTotal)
+  if (almoco <= 0) return brutos.slice()
+
+  const indicesComHoras: number[] = []
+  for (let i = 0; i < brutos.length; i++) {
+    if (brutos[i] > 0) indicesComHoras.push(i)
+  }
+  const descontos = new Array(brutos.length).fill(0)
+  let alocado = 0
+  for (let k = 0; k < indicesComHoras.length; k++) {
+    const i = indicesComHoras[k]
+    if (k === indicesComHoras.length - 1) {
+      descontos[i] = Math.max(0, almoco - alocado)
+    } else {
+      const d = Math.floor((brutos[i] * almoco) / brutoTotal)
+      descontos[i] = d
+      alocado += d
+    }
+  }
+  return brutos.map((b, i) => Math.max(0, b - descontos[i]))
+}
+
 export function formatMinutosComoHHMM(minutos: number): string {
   const m = Math.max(0, minutos)
   const h = Math.floor(m / 60)
@@ -132,7 +167,7 @@ export function atualizarCalculosDiaEspecial(dia: DiaTrabalhoEspecial): DiaTraba
       : dia.retornoDuracao
   const kmIda = parseFloat(dia.kmIda) || 0
   const kmRetorno = parseFloat(dia.kmRetorno) || 0
-  /** Horas por linha = hora corrida (bruto). Almoço desconta só no total geral. */
+  /** Horas por linha = hora corrida (bruto no formulário). Almoço desconta no resumo/totais por máquina (proporcional). */
   const horasPorEquipamento = (dia.horasPorEquipamento || []).map(atualizarHorasEquipamentoDia)
   return {
     ...dia,
@@ -144,6 +179,7 @@ export function atualizarCalculosDiaEspecial(dia: DiaTrabalhoEspecial): DiaTraba
 }
 
 export type TotaisRelatorioEspecial = {
+  /** Minutos cobráveis por equipamento (almoço já descontado de forma proporcional por dia). */
   horasPorEquipamento: Record<string, number>
   horasTrabalhoTotal: number
   horasTrabalhoBruto: number
@@ -152,7 +188,20 @@ export type TotaisRelatorioEspecial = {
   horasViagemTotal: number
   horasViagemIda: number
   horasViagemRetorno: number
+  /** Quantidade de diárias = dias de missão registados (com data), mesmo sem HT. */
   diarias: number
+  /** Datas ISO (YYYY-MM-DD) que contam como diária, ordenadas. */
+  datasDiarias: string[]
+}
+
+/**
+ * Dia conta como diária se tiver data válida de missão/fora.
+ * Não exige horas em máquina, viagem nem KM — sáb./dom. com 0:00 HT também contam.
+ */
+export function diaContaComoDiariaEspecial(dia: DiaTrabalhoEspecial | undefined | null): string {
+  if (!dia) return ''
+  const chave = diaTrabalhoDataChaveOrdenacao(dia.data)
+  return /^\d{4}-\d{2}-\d{2}$/.test(chave) ? chave : ''
 }
 
 export function calcularTotaisRelatorioEspecial(
@@ -169,24 +218,30 @@ export function calcularTotaisRelatorioEspecial(
 
   for (const diaRaw of lista) {
     const dia = atualizarCalculosDiaEspecial(diaRaw)
-    if (dia.data) datasUnicas.add(dia.data.slice(0, 10))
+    const chaveDiaria = diaContaComoDiariaEspecial(dia)
+    if (chaveDiaria) datasUnicas.add(chaveDiaria)
 
     kmsTotal += parseFloat(dia.kmTotal) || 0
     horasViagemIda += minutosDeDuracaoHHMM(dia.idaDuracao)
     horasViagemRetorno += minutosDeDuracaoHHMM(dia.retornoDuracao)
-    horasAlmocoTotal += minutosAlmocoDia(dia)
+    const almocoDia = minutosAlmocoDia(dia)
+    horasAlmocoTotal += almocoDia
 
-    for (const linha of dia.horasPorEquipamento || []) {
-      const uid = (linha.equipamentoUid || '').trim()
+    const linhas = dia.horasPorEquipamento || []
+    const liquidos = minutosLiquidosPorLinhaEquipamentoDia(linhas, almocoDia)
+    for (let i = 0; i < linhas.length; i++) {
+      const uid = (linhas[i].equipamentoUid || '').trim()
       if (!uid) continue
-      const min = minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(linha))
-      if (min <= 0) continue
-      horasPorEquipamento[uid] = (horasPorEquipamento[uid] || 0) + min
-      horasTrabalhoBruto += min
+      const bruto = minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(linhas[i]))
+      if (bruto <= 0) continue
+      horasTrabalhoBruto += bruto
+      const liq = liquidos[i] ?? Math.max(0, bruto)
+      horasPorEquipamento[uid] = (horasPorEquipamento[uid] || 0) + liq
     }
   }
 
   const horasTrabalhoTotal = Math.max(0, horasTrabalhoBruto - horasAlmocoTotal)
+  const datasDiarias = Array.from(datasUnicas).sort()
 
   return {
     horasPorEquipamento,
@@ -197,7 +252,8 @@ export function calcularTotaisRelatorioEspecial(
     horasViagemTotal: horasViagemIda + horasViagemRetorno,
     horasViagemIda,
     horasViagemRetorno,
-    diarias: datasUnicas.size,
+    diarias: datasDiarias.length,
+    datasDiarias,
   }
 }
 
@@ -357,7 +413,7 @@ export function contarEquipamentosUnicosDia(dia: DiaTrabalhoEspecial): number {
   return uids.size
 }
 
-/** Todas as sessões de horas agrupadas por equipamento (várias linhas no mesmo dia permitidas). */
+/** Todas as sessões de horas agrupadas por equipamento (duração = líquida/cobrável). */
 export function coletarSessoesPorEquipamento(
   dias: DiaTrabalhoEspecial[] | undefined | null
 ): Record<string, SessaoHorasEquipamentoEspecial[]> {
@@ -367,15 +423,14 @@ export function coletarSessoesPorEquipamento(
   for (const diaRaw of diasOrd) {
     const dia = atualizarCalculosDiaEspecial(diaRaw)
     const dataFmt = formatDiaCurtoPt(dia.data)
-    const linhasDia = (dia.horasPorEquipamento || []).filter((linha) => {
+    const linhas = dia.horasPorEquipamento || []
+    const liquidos = minutosLiquidosPorLinhaEquipamentoDia(linhas, minutosAlmocoDia(dia))
+    for (let i = 0; i < linhas.length; i++) {
+      const linha = linhas[i]
       const uid = (linha.equipamentoUid || '').trim()
-      if (!uid) return false
-      const bruto = horasEquipamentoDiaBruto(linha)
-      return Boolean(linha.horasInicio || linha.horasFim || bruto)
-    })
-    for (const linha of linhasDia) {
-      const uid = (linha.equipamentoUid || '').trim()
+      if (!uid) continue
       const brutoMin = minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(linha))
+      if (!linha.horasInicio && !linha.horasFim && brutoMin <= 0) continue
       if (!porUid[uid]) porUid[uid] = []
       porUid[uid].push({
         equipamentoUid: uid,
@@ -384,7 +439,7 @@ export function coletarSessoesPorEquipamento(
         dataFormatada: dataFmt,
         horasInicio: linha.horasInicio,
         horasFim: linha.horasFim,
-        horasDuracao: formatMinutosComoHHMM(brutoMin),
+        horasDuracao: formatMinutosComoHHMM(liquidos[i] ?? Math.max(0, brutoMin)),
       })
     }
   }

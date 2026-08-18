@@ -1,5 +1,5 @@
 import type { RelatorioEquipamentoRef } from '../equipamentos/relatorio'
-import type { SessaoHorasEquipamentoEspecial } from './calculos'
+import type { SessaoHorasEquipamentoEspecial, DiaSemanaLabels } from './calculos'
 import {
   aplicarTotaisNoRelatorioEspecial,
   atualizarCalculosDiaEspecial,
@@ -615,9 +615,13 @@ function buildKpiStripHtml(
       <span class="re-kpi__hint">${esc(L(labels, 'relatorioEspecialPdfHorasViagem', 'Horas viagem'))}: ${esc(rel.horasViagem || '0:00')}</span>
     </div>
     <div class="re-kpi">
-      <span class="re-kpi__label">${esc(L(labels, 'diarias', 'Diárias'))}</span>
+      <span class="re-kpi__label">${esc(L(labels, 'relatorioEspecialTotalDiarias', L(labels, 'diarias', 'Diárias')))}</span>
       <span class="re-kpi__valor">${esc(String(totais.diarias))}</span>
-      <span class="re-kpi__hint">${esc(L(labels, 'relatorioEspecialPdfColDias', 'Dias'))}: ${esc(String((rel.diasTrabalho || []).length))}</span>
+      <span class="re-kpi__hint">${esc(
+        (totais.datasDiarias || []).length > 0
+          ? (totais.datasDiarias || []).map((d) => formatDiaComDiaSemana(d, labels as DiaSemanaLabels)).join(' · ')
+          : L(labels, 'relatorioEspecialDiariasAjuda', 'Dias registados (inclui sáb./dom. sem HT)')
+      )}</span>
     </div>
     <div class="re-kpi">
       <span class="re-kpi__label">${esc(L(labels, 'relatorioEspecialEquipamentos', 'Equipamentos'))}</span>
@@ -674,13 +678,13 @@ function buildEquipamentoCardHtml(
           <tr>
             <th>${esc(L(labels, 'relatorioEspecialPdfColDias', 'Dias'))}</th>
             <th>${esc(L(labels, 'relatorioEspecialPdfColHorario', 'Horário'))}</th>
-            <th style="width:72px">${esc(L(labels, 'relatorioEspecialPdfHorasMaquina', 'Horas na máquina'))}</th>
+            <th style="width:72px">${esc(L(labels, 'relatorioEspecialPdfHorasMaquina', 'Horas cobráveis'))}</th>
           </tr>
         </thead>
         <tbody>
           ${linhas}
           <tr class="re-row-total">
-            <td colspan="2" style="text-align:right">${esc(L(labels, 'relatorioEspecialTotalEquipamentoBruto', 'Total do equipamento'))}</td>
+            <td colspan="2" style="text-align:right">${esc(L(labels, 'relatorioEspecialTotalEquipamentoLiquido', 'Total cobrável do equipamento'))}</td>
             <td class="re-col-total">${esc(total)}</td>
           </tr>
         </tbody>
@@ -704,7 +708,7 @@ function buildResumoCardsHtml(
     { label: L(labels, 'kmTotal', 'KM total'), value: rel.kmsPercorridos || '0' },
     { label: L(labels, 'relatorioEspecialPdfHorasViagem', 'Horas viagem'), value: rel.horasViagem || '0:00' },
     {
-      label: L(labels, 'diarias', 'Diárias'),
+      label: L(labels, 'relatorioEspecialTotalDiarias', L(labels, 'diarias', 'Diárias')),
       value: String(totais.diarias),
     },
     {
@@ -845,7 +849,8 @@ export function imprimirRelatorioEspecialPdf(
       </tbody>
       ${tfootDeslocamento}
     </table>
-    <p style="font-size:10px;margin:8px 0 0;color:#1b5e20"><strong>${esc(L(labels, 'diarias', 'Diárias'))}:</strong> ${totais.diarias}</p>
+    <p style="font-size:10px;margin:8px 0 0;color:#1b5e20"><strong>${esc(L(labels, 'relatorioEspecialTotalDiarias', L(labels, 'diarias', 'TOTAL DE DIÁRIAS')))}:</strong> ${totais.diarias}${(totais.datasDiarias || []).length > 0 ? ` — ${esc((totais.datasDiarias || []).map((d) => formatDiaComDiaSemana(d, labels as DiaSemanaLabels)).join(' · '))}` : ''}</p>
+    <p style="font-size:9px;margin:4px 0 0;color:#64748b">${esc(L(labels, 'relatorioEspecialDiariasAjuda', 'Cada dia registado conta como diária (inclui sáb./dom. e dias só com viagem), mesmo sem horas em máquina.'))}</p>
   </section>`
 
   const blocosEquipamentos = equipamentos
@@ -862,7 +867,7 @@ export function imprimirRelatorioEspecialPdf(
 
   const controloHorasHtml = `<section class="re-secao">
     <h3 class="re-secao__titulo">${esc(L(labels, 'relatorioEspecialPdfControloHoras', 'Controlo de horas por equipamento'))}</h3>
-    <p class="re-secao__ajuda">${esc(L(labels, 'relatorioEspecialPdfEquipBrutoNota', 'Horas reais em cada máquina (início → fim). O almoço desconta uma vez por dia — no total geral e na tabela de dias acima.'))}</p>
+    <p class="re-secao__ajuda">${esc(L(labels, 'relatorioEspecialPdfEquipLiquidoNota', 'Horas cobráveis em cada máquina (almoço descontado de forma proporcional no dia). Dias sem horas em máquina também contam para diárias se estiverem registados.'))}</p>
     ${blocosEquipamentos || `<p style="color:#64748b;font-style:italic">${esc(L(labels, 'relatorioEspecialSemEquipamentos', 'Sem equipamentos'))}</p>`}
   </section>`
 

@@ -1473,7 +1473,8 @@ export default function RelatorioEspecialHub({
                 {t.controleHorasDeslocamentos || 'Controlo de horas e deslocamentos'}
               </h4>
               <span className="relatorio-especial-horas-block__meta">
-                {(t.diarias || 'Diárias')}: <strong>{totais.diarias}</strong>
+                {(t.relatorioEspecialTotalDiarias || t.diarias || 'TOTAL DE DIÁRIAS')}:{' '}
+                <strong>{totais.diarias}</strong>
               </span>
             </div>
             <div className="relatorio-dias-trabalho-wrap relatorio-especial-table-shell">
@@ -1994,7 +1995,7 @@ export default function RelatorioEspecialHub({
               <div style={{ fontWeight: 600, marginBottom: 8, color: '#00c853' }}>
                 {labelEquipamentoCurto(eq, i)} — <strong>{total}</strong>
                 <span style={{ fontSize: 11, color: '#888', fontWeight: 400, marginLeft: 6 }}>
-                  ({t.relatorioEspecialTotalEquipamentoBruto || 'total na máquina — almoço no total geral'})
+                  ({t.relatorioEspecialTotalEquipamentoLiquido || 'total cobrável na máquina — almoço já descontado'})
                 </span>
               </div>
               {sessoes.length > 0 ? (
@@ -2003,7 +2004,7 @@ export default function RelatorioEspecialHub({
                     <tr>
                       <th>{t.relatorioEspecialPdfColDias || t.diasTrabalho || 'Dias'}</th>
                       <th>{t.relatorioEspecialPdfColHorario || 'Horário'}</th>
-                      <th>{t.relatorioEspecialPdfHorasMaquina || t.total || 'Horas na máquina'}</th>
+                      <th>{t.relatorioEspecialPdfHorasMaquina || t.total || 'Horas cobráveis'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2038,6 +2039,23 @@ export default function RelatorioEspecialHub({
                 {t.relatorioEspecialTotalComAlmoco || 'Total com desconto de almoço'}
               </div>
             )}
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: '#aaa' }}>
+              {t.relatorioEspecialTotalDiarias || t.diarias || 'TOTAL DE DIÁRIAS'}
+            </div>
+            <strong style={{ fontSize: 28, color: '#00c853' }}>{totais.diarias}</strong>
+            {(totais.datasDiarias || []).length > 0 ? (
+              <div style={{ fontSize: 11, color: '#aaa', marginTop: 4, maxWidth: 360 }}>
+                {(totais.datasDiarias || [])
+                  .map((d) => formatDiaComDiaSemana(d, t as Record<string, string | undefined>))
+                  .join(' · ')}
+              </div>
+            ) : null}
+            <div style={{ fontSize: 11, color: '#888', marginTop: 4, maxWidth: 360 }}>
+              {t.relatorioEspecialDiariasAjuda ||
+                'Cada dia registado conta como diária (inclui sáb./dom. e dias só com viagem), mesmo sem horas em máquina.'}
+            </div>
           </div>
           <div>
             <div style={{ fontSize: 12, color: '#aaa' }}>
