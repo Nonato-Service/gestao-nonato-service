@@ -299,6 +299,16 @@ import {
   inferFaturaFornecedorEntidadeOrigem,
 } from './modules/fornecedores'
 import type {
+  MensagemComunicacao,
+  PecaSolicitadaArmazem,
+  CommunicationIdentity,
+} from './modules/comunicacao'
+import {
+  resolveCommunicationIdentity,
+  filterMensagensVisiveis,
+  filterMensagensNaoLidas,
+} from './modules/comunicacao'
+import type {
   GrupoDesmontado,
   PecaDesmontada,
   GrupoDesmontadoFormState,
@@ -923,53 +933,7 @@ function SidebarSectionSep({ id, label }: { id: string; label: string }) {
 
 /* ConhecimentoTecnicoEntry / normalize → app/modules/conhecimento-tecnico */
 
-type MensagemComunicacao = {
-  id: string
-  remetenteId: string
-  remetenteNome: string
-  remetenteTipo: 'gestor' | 'tecnico' | 'armazem' | 'sistema'
-  remetenteClasse: 'gestor' | 'gestor-industrial' | 'tecnico-interno' | 'tecnico-externo' | 'armazem'
-  remetenteArea?: 'assistencia-tecnica' | 'industrial' | 'armazem' // Área do gestor remetente
-  destinatarioId: string
-  destinatarioNome: string
-  destinatarioTipo: 'gestor' | 'tecnico' | 'armazem'
-  destinatarioClasse: 'gestor' | 'gestor-industrial' | 'tecnico-interno' | 'tecnico-externo' | 'armazem' | 'todos-gestores' | 'todos-tecnicos' | 'todos-tecnicos-internos' | 'todos-tecnicos-externos' | 'todos-gestores-industrial'
-  destinatarioTipoTecnico?: 'interno' | 'externo' | 'armazem' // Tipo do técnico destinatário
-  assunto: string
-  mensagem: string
-  arquivos?: Array<{ nome: string, tipo: string, dados: string }> // Arquivos em base64
-  imagens?: Array<{ nome: string, dados: string }> // Imagens em base64
-  dataEnvio: string
-  lida: boolean
-  dataLeitura?: string
-  tipoMensagem?: 'normal' | 'solicitacao-pecas'
-  motivoSolicitacaoPecas?: string // Motivo/razão da solicitação das peças (descrito pelo técnico)
-  checklistId?: string
-  equipamentoId?: string
-  equipamentoNumeroSerie?: string // Para resolver ID do equipamento no armazém quando equipamentoId estiver vazio ou incorreto
-  pecasSolicitadas?: Array<{ id?: string; codigo?: string; nome?: string; quantidade?: number; tecnicoSolicitante?: string; dataSolicitacao?: string }>
-  statusSolicitacao?: 'pendente' | 'aceite' | 'enviado-armazem'
-  gestorAprovadorId?: string
-  gestorAprovadorNome?: string
-  dataAceite?: string
-  dataEnvioArmazem?: string
-}
-
-type PecaSolicitadaArmazem = {
-  id: string
-  mensagemId: string
-  checklistId: string
-  equipamentoId: string
-  equipamentoNumeroSerie?: string // Para exibir ID real do equipamento quando equipamentoId estiver vazio ou incorreto
-  nomeGrupo?: string // Grupo do checklist (listas separadas por grupo)
-  numeroGrupo?: string
-  nomeSolicitante: string
-  nomeGestorAprovador: string
-  motivoSolicitacaoPecas?: string // Motivo/razão da solicitação (enviado com as peças)
-  pecasSolicitadas: Array<{ id?: string; codigo?: string; nome?: string; quantidade?: number; tecnicoSolicitante?: string; separada?: boolean }>
-  dataEnvio: string
-  enviadoAvisoRetirada?: boolean
-}
+/* MensagemComunicacao / PecaSolicitadaArmazem / identity / visibilidade → app/modules/comunicacao */
 
 /* SST tipos/form/mappers → app/modules/sst */
 /* FichaCadastral / Bancaria / empty / normalize → app/modules/ficha-cadastral */
@@ -23440,87 +23404,25 @@ export default function Dashboard() {
     )
   }, [users, loginUser?.id, loginUser?.isAdmin, loginUser?.menuItems, loginUser?.permissions, loginUser?.menuItemsConfigured])
 
-  const currentCommunicationIdentity = useMemo(() => {
-    if (!loginUser || loginUser.isAdmin) return null
-    const loginEmail = (loginUser.email || '').trim().toLowerCase()
-    const loginNome = (loginUser.name || '').trim().toLowerCase()
-
-    if (loginUser.linkedProfileType === 'gestor' && loginUser.linkedProfileId) {
-      const gestorById = gestores.find((g) => g.id === loginUser.linkedProfileId)
-      if (gestorById) {
-        return {
-          tipo: 'gestor' as const,
-          id: gestorById.id,
-          nome: gestorById.name,
-          area: gestorById.area || 'assistencia-tecnica',
-          foto: gestorById.photo || ''
-        }
-      }
-    }
-
-    if (loginUser.linkedProfileType === 'tecnico' && loginUser.linkedProfileId) {
-      const tecnicoById = tecnicos.find((t) => t.id === loginUser.linkedProfileId)
-      if (tecnicoById) {
-        return {
-          tipo: 'tecnico' as const,
-          id: tecnicoById.id,
-          nome: tecnicoById.name,
-          area: tecnicoById.type === 'armazem' ? 'armazem' : undefined,
-          foto: tecnicoById.photo || '',
-          tecnicoTipo: tecnicoById.type
-        }
-      }
-    }
-
-    const gestor = gestores.find((g) =>
-      (loginEmail && (g.email || '').trim().toLowerCase() === loginEmail) ||
-      (loginNome && (g.name || '').trim().toLowerCase() === loginNome)
-    )
-    if (gestor) {
-      return {
-        tipo: 'gestor' as const,
-        id: gestor.id,
-        nome: gestor.name,
-        area: gestor.area || 'assistencia-tecnica',
-        foto: gestor.photo || ''
-      }
-    }
-
-    const tecnico = tecnicos.find((t) =>
-      (loginEmail && (t.email || '').trim().toLowerCase() === loginEmail) ||
-      (loginNome && (t.name || '').trim().toLowerCase() === loginNome)
-    )
-    if (tecnico) {
-      return {
-        tipo: 'tecnico' as const,
-        id: tecnico.id,
-        nome: tecnico.name,
-        area: tecnico.type === 'armazem' ? 'armazem' : undefined,
-        foto: tecnico.photo || '',
-        tecnicoTipo: tecnico.type
-      }
-    }
-
-    return null
-  }, [gestores, loginUser, tecnicos])
-
-  const isMensagemVisivelParaUsuario = useCallback((mensagem: MensagemComunicacao): boolean => {
-    if (loginUser?.isAdmin) return true
-    if (!currentCommunicationIdentity) return false
-    return mensagem.remetenteId === currentCommunicationIdentity.id || mensagem.destinatarioId === currentCommunicationIdentity.id
-  }, [currentCommunicationIdentity, loginUser?.isAdmin])
+  const currentCommunicationIdentity = useMemo(
+    (): CommunicationIdentity | null =>
+      resolveCommunicationIdentity(loginUser, gestores, tecnicos),
+    [gestores, loginUser, tecnicos]
+  )
 
   const mensagensComunicacaoVisiveis = useMemo(
-    () => mensagensComunicacao.filter(isMensagemVisivelParaUsuario),
-    [isMensagemVisivelParaUsuario, mensagensComunicacao]
+    () =>
+      filterMensagensVisiveis(
+        mensagensComunicacao,
+        currentCommunicationIdentity?.id,
+        !!loginUser?.isAdmin
+      ),
+    [mensagensComunicacao, currentCommunicationIdentity?.id, loginUser?.isAdmin]
   )
 
   const mensagensComunicacaoNaoLidas = useMemo(
-    () =>
-      mensagensComunicacaoVisiveis.filter(
-        (mensagem) => !!currentCommunicationIdentity && mensagem.destinatarioId === currentCommunicationIdentity.id && !mensagem.lida
-      ),
-    [currentCommunicationIdentity, mensagensComunicacaoVisiveis]
+    () => filterMensagensNaoLidas(mensagensComunicacaoVisiveis, currentCommunicationIdentity?.id),
+    [currentCommunicationIdentity?.id, mensagensComunicacaoVisiveis]
   )
 
   const comunicacaoUnreadCount = mensagensComunicacaoNaoLidas.length

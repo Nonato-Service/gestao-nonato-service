@@ -57,6 +57,7 @@ const critical = [
   'app/modules/conhecimento-tecnico/index.ts',
   'app/modules/demo/index.ts',
   'app/modules/fornecedores/index.ts',
+  'app/modules/comunicacao/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -1457,6 +1458,48 @@ try {
   }
 } catch (e) {
   fail(`módulo fornecedores: ${e.message}`)
+}
+
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/comunicacao/index.ts'), 'utf8')
+  if (
+    idx.includes('MensagemComunicacao') &&
+    idx.includes('PecaSolicitadaArmazem') &&
+    idx.includes('CommunicationIdentity') &&
+    idx.includes('resolveCommunicationIdentity') &&
+    idx.includes('isMensagemVisivelParaUsuario') &&
+    idx.includes('filterMensagensVisiveis') &&
+    idx.includes('filterMensagensNaoLidas') &&
+    idx.includes('countMensagensNaoLidas')
+  ) {
+    ok('módulo comunicação exporta tipos + identity + visibilidade')
+  } else {
+    fail('módulo comunicação incompleto (index.ts)')
+  }
+  for (const f of ['tipos.ts', 'identity.ts', 'visibilidade.ts', 'index.ts']) {
+    if (exists(`app/modules/comunicacao/${f}`)) ok(`existe app/modules/comunicacao/${f}`)
+    else fail(`falta app/modules/comunicacao/${f}`)
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/comunicacao'") || nma.includes('from "./modules/comunicacao"')) {
+    ok('NonatoMainApp importa app/modules/comunicacao')
+  } else {
+    fail('NonatoMainApp não importa o módulo comunicação')
+  }
+  if (
+    !nma.includes('type MensagemComunicacao = {') &&
+    !nma.includes('type PecaSolicitadaArmazem = {') &&
+    nma.includes('MensagemComunicacao') &&
+    nma.includes('resolveCommunicationIdentity') &&
+    nma.includes('filterMensagensVisiveis') &&
+    nma.includes('filterMensagensNaoLidas')
+  ) {
+    ok('NonatoMainApp usa MensagemComunicacao/PecaSolicitadaArmazem do módulo comunicação')
+  } else {
+    fail('NonatoMainApp ainda define MensagemComunicacao/PecaSolicitadaArmazem localmente')
+  }
+} catch (e) {
+  fail(`módulo comunicação: ${e.message}`)
 }
 
 // 4) i18n
