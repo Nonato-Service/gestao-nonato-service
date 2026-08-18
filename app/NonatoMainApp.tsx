@@ -286,6 +286,19 @@ import {
   preferRicherLogosRelatorios,
 } from './modules/admin'
 import type {
+  Fornecedor,
+  FaturaFornecedor,
+  FornecedorFormState,
+  FaturaFornecedorFormState,
+} from './modules/fornecedores'
+import {
+  emptyFornecedorFormState,
+  fornecedorToFormState,
+  emptyFaturaFornecedorFormState,
+  faturaFornecedorToFormState,
+  inferFaturaFornecedorEntidadeOrigem,
+} from './modules/fornecedores'
+import type {
   GrupoDesmontado,
   PecaDesmontada,
   GrupoDesmontadoFormState,
@@ -669,7 +682,7 @@ import {
 import { DocumentoEnvioAcoes } from './components/DocumentoEnvioAcoes'
 import { prefillContactFromCliente, normalizarTelefoneWhatsApp } from './lib/clienteContactEnvio'
 import { AlfabetoIndiceBusca } from './components/AlfabetoIndiceBusca'
-import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/FornecedorCadastroForm'
+import { FornecedorCadastroForm } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import {
@@ -1265,37 +1278,7 @@ type ClientePrioritario = {
   relatorios?: { [equipamentoId: string]: RelatorioServico[] }
 }
 
-type FaturaFornecedor = {
-  id: string
-  numeroFatura: string
-  mes: string // Formato: "YYYY-MM" (ex: "2024-01")
-  valor: number
-  /** ID do cliente OU do fornecedor (ver entidadeOrigem); nome em clienteNome */
-  clienteId: string
-  clienteNome: string
-  dataVencimento?: string
-  status: 'pendente' | 'paga' | 'vencida'
-  observacoes?: string
-  /** Legado: omitido = tratado como cliente */
-  entidadeOrigem?: 'cliente' | 'fornecedor'
-}
-
-type Fornecedor = {
-  id: string
-  nomeEmpresa: string
-  morada: string
-  localidade: string
-  conselho: string
-  pais: string
-  codigoPostal: string
-  freguesia: string
-  numeroContribuicaoFiscal: string
-  telefones: string
-  email: string
-  contato: string
-  iban: string
-  faturas: FaturaFornecedor[]
-}
+/* Fornecedor / FaturaFornecedor / form / entidadeOrigem → app/modules/fornecedores */
 
 /* OrdemServico / FaturaPecas / período / IVA → app/modules/financeiro */
 /* Desmontados tipos/form/migrate → app/modules/desmontados */
@@ -4684,36 +4667,14 @@ export default function Dashboard() {
     dataCriacao: string
   }>>([])
   
-  const [fornecedorForm, setFornecedorForm] = useState({
-    nomeEmpresa: '',
-    morada: '',
-    localidade: '',
-    conselho: '',
-    pais: '',
-    codigoPostal: '',
-    freguesia: '',
-    numeroContribuicaoFiscal: '',
-    telefones: '',
-    email: '',
-    contato: '',
-    iban: ''
-  })
+  const [fornecedorForm, setFornecedorForm] = useState<FornecedorFormState>(() => emptyFornecedorFormState())
   const [selectedFornecedorForFatura, setSelectedFornecedorForFatura] = useState<Fornecedor | null>(null)
   const relatoriosEquipamentoModalBodyRef = useRef<HTMLDivElement | null>(null)
   const [showFaturaFornecedorForm, setShowFaturaFornecedorForm] = useState(false)
   const [editingFaturaFornecedor, setEditingFaturaFornecedor] = useState<FaturaFornecedor | null>(null)
-  const [faturaFornecedorForm, setFaturaFornecedorForm] = useState({
-    numeroFatura: '',
-    mes: new Date().toISOString().slice(0, 7), // YYYY-MM
-    /** Texto do valor em formato PT (ex.: 350,00); evita input type=number com zero inicial. */
-    valorText: '',
-    clienteId: '',
-    clienteNome: '',
-    dataVencimento: '',
-    status: 'pendente' as 'pendente' | 'paga' | 'vencida',
-    observacoes: '',
-    entidadeOrigem: 'fornecedor' as 'fornecedor' | 'cliente'
-  })
+  const [faturaFornecedorForm, setFaturaFornecedorForm] = useState<FaturaFornecedorFormState>(() =>
+    emptyFaturaFornecedorFormState()
+  )
   const [showFaturasAPagarModal, setShowFaturasAPagarModal] = useState(false)
   const [showFaturasGeralModal, setShowFaturasGeralModal] = useState(false)
   const [showEquipamentoClienteForm, setShowEquipamentoClienteForm] = useState(false)
@@ -13484,20 +13445,7 @@ export default function Dashboard() {
 
   const handleEditFornecedor = (fornecedor: Fornecedor) => {
     setEditingFornecedor(fornecedor)
-    setFornecedorForm({
-      nomeEmpresa: fornecedor.nomeEmpresa,
-      morada: fornecedor.morada,
-      localidade: fornecedor.localidade,
-      conselho: fornecedor.conselho,
-      pais: fornecedor.pais,
-      codigoPostal: fornecedor.codigoPostal,
-      freguesia: fornecedor.freguesia,
-      numeroContribuicaoFiscal: fornecedor.numeroContribuicaoFiscal,
-      telefones: fornecedor.telefones,
-      email: fornecedor.email,
-      contato: fornecedor.contato,
-      iban: fornecedor.iban
-    })
+    setFornecedorForm(fornecedorToFormState(fornecedor))
     setFornecedoresActiveTab('cadastrar')
     setFornecedorListaDetalheId(null)
     setShowFornecedorForm(true)
@@ -13507,49 +13455,26 @@ export default function Dashboard() {
     setSelectedFornecedorForFatura(fornecedor)
   }
 
-  const inferFaturaFornecedorEntidadeOrigem = (f: FaturaFornecedor): 'cliente' | 'fornecedor' => {
-    if (f.entidadeOrigem === 'fornecedor' || f.entidadeOrigem === 'cliente') return f.entidadeOrigem
-    if (clientes.some(c => c.id === f.clienteId)) return 'cliente'
-    if (fornecedores.some(x => x.id === f.clienteId)) return 'fornecedor'
-    return 'cliente'
-  }
-
   /** Verde = pago, amarelo = por pagar, vermelho = devendo (vencida ou vencimento passado) */
   /* fatura status/sinal → app/modules/financeiro/faturaStatus */
+  /* inferFaturaFornecedorEntidadeOrigem → app/modules/fornecedores */
 
   const handleAddFatura = (fornecedor: Fornecedor) => {
     setSelectedFornecedorForFatura(fornecedor)
     setEditingFaturaFornecedor(null)
-    setFaturaFornecedorForm({
-      numeroFatura: '',
-      mes: new Date().toISOString().slice(0, 7), // YYYY-MM
-      valorText: '',
-      clienteId: '',
-      clienteNome: '',
-      dataVencimento: '',
-      status: 'pendente' as 'pendente' | 'paga' | 'vencida',
-      observacoes: '',
-      entidadeOrigem: 'fornecedor'
-    })
+    setFaturaFornecedorForm(emptyFaturaFornecedorFormState())
     setShowFaturaFornecedorForm(true)
   }
 
   const handleEditFatura = (fornecedor: Fornecedor, fatura: FaturaFornecedor) => {
     setSelectedFornecedorForFatura(fornecedor)
     setEditingFaturaFornecedor(fatura)
-    setFaturaFornecedorForm({
-      numeroFatura: fatura.numeroFatura,
-      mes: fatura.mes,
-      valorText: Number.isFinite(fatura.valor)
-        ? fatura.valor.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        : '',
-      clienteId: fatura.clienteId,
-      clienteNome: fatura.clienteNome,
-      dataVencimento: fatura.dataVencimento || '',
-      status: fatura.status,
-      observacoes: fatura.observacoes || '',
-      entidadeOrigem: inferFaturaFornecedorEntidadeOrigem(fatura)
-    })
+    setFaturaFornecedorForm(
+      faturaFornecedorToFormState(
+        fatura,
+        inferFaturaFornecedorEntidadeOrigem(fatura, clientes, fornecedores)
+      )
+    )
     setShowFaturaFornecedorForm(true)
   }
 
@@ -13639,20 +13564,12 @@ export default function Dashboard() {
     saveData('nonato-fornecedores', updatedFornecedores)
     if (savedFaturaFornecedor !== null) {
       const fat = savedFaturaFornecedor as FaturaFornecedor
-      setFaturaFornecedorForm({
-        numeroFatura: fat.numeroFatura,
-        mes: fat.mes,
-        valorText: fat.valor.toLocaleString('pt-PT', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }),
-        clienteId: fat.clienteId,
-        clienteNome: fat.clienteNome,
-        dataVencimento: fat.dataVencimento || '',
-        status: fat.status,
-        observacoes: fat.observacoes || '',
-        entidadeOrigem: inferFaturaFornecedorEntidadeOrigem(fat)
-      })
+      setFaturaFornecedorForm(
+        faturaFornecedorToFormState(
+          fat,
+          inferFaturaFornecedorEntidadeOrigem(fat, clientes, fornecedores)
+        )
+      )
       setEditingFaturaFornecedor(fat)
     }
     alert(t.invoiceSavedSuccess || 'Fatura salva com sucesso!')
@@ -74266,7 +74183,7 @@ A1;Peça exemplo;10`}
                       {(safeT as any)?.faturaFornecedorLigadoA || 'Ligado a'}: <strong style={{ fontWeight: 600 }}>{fatura.clienteNome}</strong>
                       <span style={{ opacity: 0.78, fontSize: '13px', marginLeft: '8px' }}>
                         (
-                        {inferFaturaFornecedorEntidadeOrigem(fatura) === 'fornecedor'
+                        {inferFaturaFornecedorEntidadeOrigem(fatura, clientes, fornecedores) === 'fornecedor'
                           ? ((safeT as any)?.faturaFornecedorTagFornecedor || 'cadastro fornecedor')
                           : ((safeT as any)?.faturaFornecedorTagCliente || 'cadastro cliente')}
                         )

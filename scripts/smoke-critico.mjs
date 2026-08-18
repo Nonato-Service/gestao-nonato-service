@@ -56,6 +56,7 @@ const critical = [
   'app/modules/tradutor/index.ts',
   'app/modules/conhecimento-tecnico/index.ts',
   'app/modules/demo/index.ts',
+  'app/modules/fornecedores/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -1359,6 +1360,56 @@ try {
   }
 } catch (e) {
   fail(`módulo demo: ${e.message}`)
+}
+
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/fornecedores/index.ts'), 'utf8')
+  if (
+    idx.includes('Fornecedor') &&
+    idx.includes('FaturaFornecedor') &&
+    idx.includes('emptyFornecedorFormState') &&
+    idx.includes('fornecedorToFormState') &&
+    idx.includes('emptyFaturaFornecedorFormState') &&
+    idx.includes('faturaFornecedorToFormState') &&
+    idx.includes('inferFaturaFornecedorEntidadeOrigem')
+  ) {
+    ok('módulo fornecedores exporta tipos + formState + entidadeOrigem')
+  } else {
+    fail('módulo fornecedores incompleto (index.ts)')
+  }
+  for (const f of ['tipos.ts', 'formState.ts', 'entidadeOrigem.ts', 'index.ts']) {
+    if (exists(`app/modules/fornecedores/${f}`)) ok(`existe app/modules/fornecedores/${f}`)
+    else fail(`falta app/modules/fornecedores/${f}`)
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes("from './modules/fornecedores'") || nma.includes('from "./modules/fornecedores"')) {
+    ok('NonatoMainApp importa app/modules/fornecedores')
+  } else {
+    fail('NonatoMainApp não importa o módulo fornecedores')
+  }
+  if (
+    !nma.includes('type Fornecedor = {') &&
+    !nma.includes('type FaturaFornecedor = {') &&
+    nma.includes('Fornecedor') &&
+    nma.includes('inferFaturaFornecedorEntidadeOrigem')
+  ) {
+    ok('NonatoMainApp usa Fornecedor/FaturaFornecedor do módulo fornecedores')
+  } else {
+    fail('NonatoMainApp ainda define Fornecedor/FaturaFornecedor localmente')
+  }
+  const formComp = fs.readFileSync(path.join(root, 'app/components/FornecedorCadastroForm.tsx'), 'utf8')
+  if (
+    (formComp.includes("from '../modules/fornecedores'") ||
+      formComp.includes('from "../modules/fornecedores"')) &&
+    !formComp.includes('export type FornecedorFormState = {') &&
+    !formComp.includes('export const emptyFornecedorFormState = (): FornecedorFormState')
+  ) {
+    ok('FornecedorCadastroForm re-exporta form do módulo fornecedores')
+  } else {
+    fail('FornecedorCadastroForm não re-exporta / ainda define form localmente')
+  }
+} catch (e) {
+  fail(`módulo fornecedores: ${e.message}`)
 }
 
 // 4) i18n

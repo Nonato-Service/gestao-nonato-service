@@ -3,6 +3,11 @@
 import React, { useMemo, useState } from 'react'
 import { IconBuilding2, IconHome, IconIdCard } from './UiIcons'
 import { translations, translationBundleKey } from '../translations'
+import type { FornecedorFormState } from '../modules/fornecedores'
+import { emptyFornecedorFormState } from '../modules/fornecedores'
+
+export type { FornecedorFormState }
+export { emptyFornecedorFormState }
 
 function useFornecedorFormTr(language: string) {
   return useMemo(() => {
@@ -14,21 +19,6 @@ function useFornecedorFormTr(language: string) {
     const pt = translations['pt-BR'] as Record<string, string | undefined>
     return (key: string) => primary[key] ?? en[key] ?? pt[key] ?? key
   }, [language])
-}
-
-export type FornecedorFormState = {
-  nomeEmpresa: string
-  morada: string
-  localidade: string
-  conselho: string
-  pais: string
-  codigoPostal: string
-  freguesia: string
-  numeroContribuicaoFiscal: string
-  telefones: string
-  email: string
-  contato: string
-  iban: string
 }
 
 type Props = {
@@ -348,18 +338,3 @@ export function FornecedorCadastroForm({
     </div>
   )
 }
-
-export const emptyFornecedorFormState = (): FornecedorFormState => ({
-  nomeEmpresa: '',
-  morada: '',
-  localidade: '',
-  conselho: '',
-  pais: '',
-  codigoPostal: '',
-  freguesia: '',
-  numeroContribuicaoFiscal: '',
-  telefones: '',
-  email: '',
-  contato: '',
-  iban: '',
-})
