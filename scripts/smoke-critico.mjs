@@ -477,13 +477,34 @@ try {
     idx.includes('adaptRelatorioEspecialParaFechamentoShape') &&
     idx.includes('filterByDeletedIds') &&
     idx.includes('imprimirRelatorioEspecialPdf') &&
-    idx.includes('diaContaComoDiariaEspecial')
+    idx.includes('diaContaComoDiariaEspecial') &&
+    idx.includes('dedupeRelatoriosEspeciais') &&
+    idx.includes('upsertRelatorioEspecialNaLista')
   ) {
     ok('módulo relatorios-especiais exporta cálculos/fechamento/PDF')
   } else {
     fail('módulo relatorios-especiais incompleto (index.ts)')
   }
   const hub = fs.readFileSync(path.join(root, 'app/components/RelatorioEspecialHub.tsx'), 'utf8')
+  if (
+    hub.includes('upsertRelatorioEspecialNaLista') &&
+    hub.includes('encontrarRelatorioEspecialParaUpsert') &&
+    !hub.includes('[...relatorios, preparado]')
+  ) {
+    ok('RelatorioEspecialHub: guardar dia faz upsert (não cria cartão duplicado)')
+  } else {
+    fail('RelatorioEspecialHub ainda faz push de relatório ao guardar (risco de duplicados)')
+  }
+  const dedupeFile = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/dedupe.ts'), 'utf8')
+  if (
+    dedupeFile.includes('dedupeRelatoriosEspeciais') &&
+    dedupeFile.includes('riquezaRelatorioEspecial') &&
+    dedupeFile.includes('upsertRelatorioEspecialNaLista')
+  ) {
+    ok('relatorios-especiais: dedupe por id/número mantém cópia mais rica')
+  } else {
+    fail('relatorios-especiais sem dedupe seguro de duplicados')
+  }
   if (
     hub.includes('totalDiariasUi') &&
     hub.includes('relatorio-especial-horas-block__meta--diarias') &&

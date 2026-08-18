@@ -755,6 +755,7 @@ import {
   mergeDeletedIds,
   normalizeDeletedIds,
   readDeletedIdsFromLocalStorage,
+  dedupeRelatoriosEspeciais,
 } from './modules/relatorios-especiais'
 import type {
   ChecklistItemTemplate,
@@ -4751,8 +4752,27 @@ export default function Dashboard() {
         }
         if (!Array.isArray(parsed)) return
         const deletedIds = readDeletedIdsFromLocalStorage()
-        const filtrados = filterByDeletedIds(parsed, deletedIds) as RelatorioEspecial[]
-        setRelatoriosEspeciais(filtrados)
+        const filtrados = dedupeRelatoriosEspeciais(
+          filterByDeletedIds(parsed, deletedIds) as RelatorioEspecial[]
+        )
+        setRelatoriosEspeciais((prev) => {
+          if (filtrados.length === 0 && prev.length > 0) return prev
+          // Só enriquecer ids/números que ainda existem em storage — não ressuscitar eliminados.
+          const overlapPrev = prev.filter((p) => {
+            const pid = String(p.id || '').trim()
+            const pnum = String(p.numero || '')
+              .trim()
+              .toUpperCase()
+            return filtrados.some((d) => {
+              const did = String(d.id || '').trim()
+              const dnum = String(d.numero || '')
+                .trim()
+                .toUpperCase()
+              return (pid && did === pid) || (pnum && dnum === pnum)
+            })
+          })
+          return dedupeRelatoriosEspeciais([...filtrados, ...overlapPrev])
+        })
       } catch {
         /* ignorar */
       }
@@ -8056,12 +8076,22 @@ export default function Dashboard() {
       )
       const savedRelatoriosEspeciais = getData(RELATORIOS_ESPECIAIS_STORAGE_KEY)
       if (savedRelatoriosEspeciais && Array.isArray(savedRelatoriosEspeciais)) {
-        const especiaisFiltrados = filterByDeletedIds(
-          savedRelatoriosEspeciais as RelatorioEspecial[],
-          savedRelatoriosEspeciaisDeleted
-        ) as RelatorioEspecial[]
+        const especiaisFiltrados = dedupeRelatoriosEspeciais(
+          filterByDeletedIds(
+            savedRelatoriosEspeciais as RelatorioEspecial[],
+            savedRelatoriosEspeciaisDeleted
+          ) as RelatorioEspecial[]
+        )
         setRelatoriosEspeciais(especiaisFiltrados)
-        if (especiaisFiltrados.length !== savedRelatoriosEspeciais.length) {
+        if (
+          especiaisFiltrados.length !== savedRelatoriosEspeciais.length ||
+          JSON.stringify(especiaisFiltrados.map((r) => r.id).sort()) !==
+            JSON.stringify(
+              (savedRelatoriosEspeciais as RelatorioEspecial[])
+                .map((r) => String(r?.id || ''))
+                .sort()
+            )
+        ) {
           saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, especiaisFiltrados, true, true).catch(() => {})
         }
       }
@@ -15140,16 +15170,18 @@ export default function Dashboard() {
   const salvarRelatoriosEspeciais = useCallback(async (lista: RelatorioEspecial[]): Promise<boolean> => {
     const prevSnapshot = relatoriosEspeciais
     try {
+      // Dedupe seguro por id/número (mantém o mais rico) antes de gravar.
+      const listaDedup = dedupeRelatoriosEspeciais(lista)
       const prevIds = new Set(prevSnapshot.map((r) => String(r.id || '').trim()).filter(Boolean))
-      const nextIds = new Set(lista.map((r) => String(r.id || '').trim()).filter(Boolean))
+      const nextIds = new Set(listaDedup.map((r) => String(r.id || '').trim()).filter(Boolean))
       const removed = [...prevIds].filter((id) => !nextIds.has(id))
-      const isDelete = removed.length > 0 || lista.length < prevSnapshot.length
+      const isDelete = removed.length > 0 || listaDedup.length < prevSnapshot.length
       // NÃO usar getData() aqui — essa função só existe dentro do bootstrap (loadAllData).
       let deletedIds = readDeletedIdsFromLocalStorage()
       if (removed.length > 0) {
         deletedIds = mergeDeletedIds(deletedIds, removed)
       }
-      const listaLimpa = filterByDeletedIds(lista, deletedIds) as RelatorioEspecial[]
+      const listaLimpa = filterByDeletedIds(listaDedup, deletedIds) as RelatorioEspecial[]
 
       /** Eliminar: confirmar já no aparelho; sync ao servidor em segundo plano (não misturar com «guardar»). */
       if (isDelete) {

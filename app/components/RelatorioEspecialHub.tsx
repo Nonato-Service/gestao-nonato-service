@@ -27,7 +27,11 @@ import {
   buildAssuntoEnvioRelatorioServico,
   type AbrirEnvioDocumentoClienteOpts,
 } from '../context/DocumentoEnvioClienteContext'
-import { imprimirRelatorioEspecialPdf } from '../modules/relatorios-especiais'
+import {
+  encontrarRelatorioEspecialParaUpsert,
+  imprimirRelatorioEspecialPdf,
+  upsertRelatorioEspecialNaLista,
+} from '../modules/relatorios-especiais'
 import { dataLocalHojeISO } from '../lib/relatorioEspecialShared'
 import {
   criarDiaTrabalhoEspecialVazio,
@@ -419,20 +423,24 @@ export default function RelatorioEspecialHub({
     rascunhoOferecidoRef.current = true
     const draft = lerRascunhoEspecial()
     if (!draft || !rascunhoEspecialTemConteudo(draft)) return
-    const jaGuardado = relatorios.some((r) => String(r.id) === String(draft.id))
+    const existente = encontrarRelatorioEspecialParaUpsert(relatorios, draft, draft.id)
+    const jaGuardado = Boolean(existente)
     const msg = jaGuardado
       ? t.relatorioEspecialRascunhoContinuar ||
         'Há um rascunho deste relatório especial. Quer continuar a editar?'
       : t.relatorioEspecialRascunhoRecuperar ||
         'Encontrámos um rascunho do relatório especial (pode ser o de hoje). Quer recuperá-lo?'
     if (!window.confirm(msg)) return
-    setForm({
+    const idFinal = String(existente?.id || draft.id || '').trim() || draft.id
+    const formRecuperado = {
       ...draft,
+      id: idFinal,
       equipamentos: [...(draft.equipamentos || [])],
       diasTrabalho: [...(draft.diasTrabalho || [])],
-    })
-    marcarSnapshot(draft)
-    setEditandoId(jaGuardado ? draft.id : null)
+    }
+    setForm(formRecuperado)
+    marcarSnapshot(formRecuperado)
+    setEditandoId(jaGuardado ? idFinal : null)
     setModo('form')
     setDiaExpandido(null)
     setEquipExpandidos(new Set())
@@ -517,10 +525,15 @@ export default function RelatorioEspecialHub({
     setAcaoEmCurso('guardar')
     setSalvando(true)
     try {
-      const preparado = aplicarTotaisNoRelatorioEspecial({ ...form, equipamentos: equipamentosOk })
-      const lista = editandoId
-        ? relatorios.map((r) => (r.id === editandoId ? preparado : r))
-        : [...relatorios, preparado]
+      // Upsert por id/número: adicionar dia NUNCA cria cartão novo do mesmo relatório.
+      const existente = encontrarRelatorioEspecialParaUpsert(relatorios, form, editandoId)
+      const idFinal = String(existente?.id || editandoId || form.id || '').trim() || form.id
+      const preparado = aplicarTotaisNoRelatorioEspecial({
+        ...form,
+        id: idFinal,
+        equipamentos: equipamentosOk,
+      })
+      const lista = upsertRelatorioEspecialNaLista(relatorios, preparado, editandoId || idFinal)
       const ok = await onSaveAll(lista)
       if (ok) {
         limparRascunhoEspecial()
@@ -638,8 +651,10 @@ export default function RelatorioEspecialHub({
     setAcaoEmCurso('guardar')
     setSalvando(true)
     try {
-      const preparado = aplicarTotaisNoRelatorioEspecial(form)
-      const lista = relatorios.map((r) => (r.id === preparado.id ? preparado : r))
+      const existente = encontrarRelatorioEspecialParaUpsert(relatorios, form, editandoId)
+      const idFinal = String(existente?.id || editandoId || form.id || '').trim() || form.id
+      const preparado = aplicarTotaisNoRelatorioEspecial({ ...form, id: idFinal })
+      const lista = upsertRelatorioEspecialNaLista(relatorios, preparado, editandoId || idFinal)
       const ok = await onSaveAll(lista)
       if (ok) {
         marcarSnapshot(preparado)
@@ -701,9 +716,15 @@ export default function RelatorioEspecialHub({
 
                   const draft = lerRascunhoEspecial()
                   if (draft && rascunhoEspecialTemConteudo(draft)) {
-                    const ja = relatorios.some((r) => String(r.id) === String(draft.id))
-                    if (!ja) {
-                      const ok = await onSaveAll([...relatorios, aplicarTotaisNoRelatorioEspecial(draft)])
+                    const existente = encontrarRelatorioEspecialParaUpsert(relatorios, draft, draft.id)
+                    if (!existente) {
+                      const ok = await onSaveAll(
+                        upsertRelatorioEspecialNaLista(
+                          relatorios,
+                          aplicarTotaisNoRelatorioEspecial(draft),
+                          draft.id
+                        )
+                      )
                       if (ok) {
                         limparRascunhoEspecial()
                         alert(
@@ -713,13 +734,16 @@ export default function RelatorioEspecialHub({
                         return
                       }
                     } else {
-                      setForm({
+                      const idFinal = String(existente.id || draft.id || '').trim() || draft.id
+                      const formRec = {
                         ...draft,
+                        id: idFinal,
                         equipamentos: [...(draft.equipamentos || [])],
                         diasTrabalho: [...(draft.diasTrabalho || [])],
-                      })
-                      marcarSnapshot(draft)
-                      setEditandoId(draft.id)
+                      }
+                      setForm(formRec)
+                      marcarSnapshot(formRec)
+                      setEditandoId(idFinal)
                       setModo('form')
                       alert(
                         t.relatorioEspecialRascunhoContinuar ||

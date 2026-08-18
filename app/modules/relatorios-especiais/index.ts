@@ -86,3 +86,10 @@ export {
 
 export type { RelatorioEspecialPdfLabels, RelatorioEspecialPdfOptions } from './pdf'
 export { imprimirRelatorioEspecialPdf } from './pdf'
+
+export {
+  riquezaRelatorioEspecial,
+  dedupeRelatoriosEspeciais,
+  encontrarRelatorioEspecialParaUpsert,
+  upsertRelatorioEspecialNaLista,
+} from './dedupe'

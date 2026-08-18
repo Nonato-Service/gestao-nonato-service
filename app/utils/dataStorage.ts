@@ -27,6 +27,8 @@ import {
   normalizeDeletedIds,
 } from '../lib/relatorioEspecialDeleted'
 import { RELATORIOS_ESPECIAIS_STORAGE_KEY } from '../lib/relatorioEspecialTypes'
+import { dedupeRelatoriosEspeciais } from '../modules/relatorios-especiais/dedupe'
+import type { RelatorioEspecial } from '../modules/relatorios-especiais/tipos'
 import {
   mergePecasBibliotecaArrays,
   pecasBibliotecaArraysDiffer,
@@ -2596,7 +2598,9 @@ async function writeLocalFromServerPull(key: string, value: unknown): Promise<vo
     const deletedSnap = await readLocalValueForLoad(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY, true)
     const deletedIds = normalizeDeletedIds(deletedSnap.parsed)
     const mergedRaw = mergeArraysByIdDeferServerLocal(value, localParsed)
-    const merged = filterByDeletedIds(mergedRaw as Array<{ id?: unknown }>, deletedIds)
+    const merged = dedupeRelatoriosEspeciais(
+      filterByDeletedIds(mergedRaw as Array<{ id?: unknown }>, deletedIds) as RelatorioEspecial[]
+    )
     try {
       await saveKv(key, merged)
     } catch {
