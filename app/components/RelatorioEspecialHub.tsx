@@ -8,6 +8,7 @@ import {
   atualizarCalculosDiaEspecial,
   calcularTotaisRelatorioEspecial,
   coletarSessoesPorEquipamento,
+  diaContaComoDiariaEspecial,
   formatDiaComDiaSemana,
   formatDiaCurtoPt,
   formatMinutosComoHHMM,
@@ -275,10 +276,21 @@ export default function RelatorioEspecialHub({
     setDiaExpandido(null)
   }, [modo, formTemAlteracoes, t])
 
-  const totais = useMemo(() => calcularTotaisRelatorioEspecial(form.diasTrabalho), [form.diasTrabalho])
+  /** Assinatura das datas — evita totais.diarias stale se a ref do array não mudar. */
+  const diasTrabalhoDiariasKey = useMemo(
+    () =>
+      (form.diasTrabalho || [])
+        .map((d) => `${d.id}|${String(d.data || '').trim()}`)
+        .join(';'),
+    [form.diasTrabalho]
+  )
+  const totais = useMemo(
+    () => calcularTotaisRelatorioEspecial(form.diasTrabalho),
+    [form.diasTrabalho, diasTrabalhoDiariasKey]
+  )
   const sessoesPorEquip = useMemo(
     () => coletarSessoesPorEquipamento(form.diasTrabalho),
-    [form.diasTrabalho]
+    [form.diasTrabalho, diasTrabalhoDiariasKey]
   )
 
   const clientesOrdenados = useMemo(
@@ -898,6 +910,21 @@ export default function RelatorioEspecialHub({
   }
 
   const diasOrdenados = sortDiasTrabalhoEspecialCronologicamente(form.diasTrabalho || [])
+  /** Contagem no ecrã = mesma regra do Resumo (datas únicas com data registada). */
+  const diariasUnicasUi = new Set<string>()
+  for (const d of diasOrdenados) {
+    const k = diaContaComoDiariaEspecial(d)
+    if (k) diariasUnicasUi.add(k)
+  }
+  const totalDiariasUi = Math.max(
+    Number(totais.diarias) || 0,
+    Array.isArray(totais.datasDiarias) ? totais.datasDiarias.length : 0,
+    diariasUnicasUi.size
+  )
+  const datasDiariasUi =
+    totais.datasDiarias && totais.datasDiarias.length > 0
+      ? totais.datasDiarias
+      : Array.from(diariasUnicasUi).sort()
   const clienteIdEfetivo = form.clienteId || ''
   const clienteEquipamentos = clientes.find((c) => c.id === clienteIdEfetivo)?.equipamentos ?? []
   const podeAdicionarEquip = (form.equipamentos?.length || 0) < MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES
@@ -1472,9 +1499,24 @@ export default function RelatorioEspecialHub({
               <h4 className="relatorio-especial-horas-block__title">
                 {t.controleHorasDeslocamentos || 'Controlo de horas e deslocamentos'}
               </h4>
-              <span className="relatorio-especial-horas-block__meta">
-                {(t.relatorioEspecialTotalDiarias || t.diarias || 'TOTAL DE DIÁRIAS')}:{' '}
-                <strong>{totais.diarias}</strong>
+              <span
+                className="relatorio-especial-horas-block__meta relatorio-especial-horas-block__meta--diarias"
+                title={
+                  t.relatorioEspecialDiariasAjuda ||
+                  'Cada dia registado conta como diária (inclui sáb./dom. e dias só com viagem), mesmo sem horas em máquina.'
+                }
+              >
+                <span className="relatorio-especial-horas-block__meta-label">
+                  {t.relatorioEspecialTotalDiarias || t.diarias || 'TOTAL DE DIÁRIAS'}
+                </span>
+                <strong className="relatorio-especial-horas-block__meta-num">{totalDiariasUi}</strong>
+                {datasDiariasUi.length > 0 ? (
+                  <span className="relatorio-especial-horas-block__meta-datas">
+                    {datasDiariasUi
+                      .map((d) => formatDiaCurtoPt(d))
+                      .join(' · ')}
+                  </span>
+                ) : null}
               </span>
             </div>
             <div className="relatorio-dias-trabalho-wrap relatorio-especial-table-shell">
@@ -1507,12 +1549,13 @@ export default function RelatorioEspecialHub({
                   </tr>
                 </thead>
                 <tbody>
-                  {diasOrdenados.map((dia, index) => {
+                  {diasOrdenados.map((dia) => {
                     const diaCalc = atualizarCalculosDiaEspecial(dia)
                     const sem = getDiaSemanaInfo(dia.data, t)
                     const horasResumo = resumoHorasTrabalhoDia(diaCalc)
                     const pausaFmt = (dia.tempoPausa || '').trim() || (dia.pausa === 'sim' ? '01:00' : dia.pausa || '—')
                     const temDescricao = Boolean((dia.descricaoTrabalho || '').trim())
+                    const contaDiaria = Boolean(diaContaComoDiariaEspecial(dia))
                     return (
                       <ReactFragment key={dia.id}>
                         <tr className={sem.isFimDeSemana ? 're-dia-linha--fim-semana' : undefined}>
@@ -1521,6 +1564,11 @@ export default function RelatorioEspecialHub({
                             className={`relatorio-especial-horas-table__data${sem.isFimDeSemana ? ' relatorio-especial-horas-table__data--fds' : ''}`}
                           >
                             {formatDiaComDiaSemana(dia.data, t)}
+                            {contaDiaria ? (
+                              <span className="relatorio-especial-badge-diaria" title={t.relatorioEspecialDiariasAjuda || ''}>
+                                {t.relatorioEspecialBadgeDiaria || t.diarias || 'Diária'}
+                              </span>
+                            ) : null}
                           </td>
                           <td>{dia.idaHora || '—'}</td>
                           <td>{dia.idaChegada || '—'}</td>
@@ -1628,6 +1676,7 @@ export default function RelatorioEspecialHub({
           const diaCalc = atualizarCalculosDiaEspecial(dia)
           const aberto = diaExpandido === dia.id
           const horasResumoCard = resumoHorasTrabalhoDia(diaCalc)
+          const contaDiariaCard = Boolean(diaContaComoDiariaEspecial(dia))
           const resumoHoras = (diaCalc.horasPorEquipamento || [])
             .filter((h) => h.equipamentoUid && h.horasDuracao)
             .map((h) => {
@@ -1651,6 +1700,11 @@ export default function RelatorioEspecialHub({
                 <strong style={{ color: getDiaSemanaInfo(dia.data, t).isFimDeSemana ? '#ffd54f' : undefined }}>
                   {formatDiaComDiaSemana(dia.data, t)}
                 </strong>
+                {contaDiariaCard ? (
+                  <span className="relatorio-especial-badge-diaria" title={t.relatorioEspecialDiariasAjuda || ''}>
+                    {t.relatorioEspecialBadgeDiaria || t.diarias || 'Diária'}
+                  </span>
+                ) : null}
                 {resumoLinha ? ` — ${resumoLinha}` : ''}
                 <span className="relatorio-especial-dia-card__chevron">{aberto ? '▲' : '▼'}</span>
               </button>
@@ -2044,10 +2098,10 @@ export default function RelatorioEspecialHub({
             <div style={{ fontSize: 12, color: '#aaa' }}>
               {t.relatorioEspecialTotalDiarias || t.diarias || 'TOTAL DE DIÁRIAS'}
             </div>
-            <strong style={{ fontSize: 28, color: '#00c853' }}>{totais.diarias}</strong>
-            {(totais.datasDiarias || []).length > 0 ? (
+            <strong style={{ fontSize: 28, color: '#00c853' }}>{totalDiariasUi}</strong>
+            {datasDiariasUi.length > 0 ? (
               <div style={{ fontSize: 11, color: '#aaa', marginTop: 4, maxWidth: 360 }}>
-                {(totais.datasDiarias || [])
+                {datasDiariasUi
                   .map((d) => formatDiaComDiaSemana(d, t as Record<string, string | undefined>))
                   .join(' · ')}
               </div>

@@ -195,13 +195,17 @@ export type TotaisRelatorioEspecial = {
 }
 
 /**
- * Dia conta como diária se tiver data válida de missão/fora.
- * Não exige horas em máquina, viagem nem KM — sáb./dom. com 0:00 HT também contam.
+ * Dia conta como diária se tiver data de missão/fora.
+ * Não exige horas em máquina, viagem nem KM — sáb./dom. e dias só com viagem também contam.
+ * Devolve a chave estável (ISO YYYY-MM-DD quando possível) para deduplicar.
  */
 export function diaContaComoDiariaEspecial(dia: DiaTrabalhoEspecial | undefined | null): string {
   if (!dia) return ''
   const chave = diaTrabalhoDataChaveOrdenacao(dia.data)
-  return /^\d{4}-\d{2}-\d{2}$/.test(chave) ? chave : ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(chave)) return chave
+  /** Legado / formatos estranhos: ainda conta se houver texto de data não vazio. */
+  const raw = String(dia.data ?? '').trim()
+  return raw ? raw.slice(0, 40) : ''
 }
 
 export function calcularTotaisRelatorioEspecial(

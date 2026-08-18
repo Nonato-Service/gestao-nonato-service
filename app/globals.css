@@ -42851,9 +42851,63 @@ html body .relatorio-especial-root .relatorio-especial-horas-block__meta {
   color: rgba(255, 255, 255, 0.55);
 }
 
-html body .relatorio-especial-root .relatorio-especial-horas-block__meta strong {
+html body .relatorio-especial-root .relatorio-especial-horas-block__meta--diarias {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  max-width: min(420px, 100%);
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 200, 83, 0.45);
+  background: rgba(0, 80, 40, 0.35);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+html body .relatorio-especial-root .relatorio-especial-horas-block__meta-label {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+html body .relatorio-especial-root .relatorio-especial-horas-block__meta-num,
+html body .relatorio-especial-root .relatorio-especial-horas-block__meta strong,
+html body .relatorio-especial-root .relatorio-especial-horas-block__meta--diarias .relatorio-especial-horas-block__meta-num {
   color: #00c853;
+  font-size: 22px;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+html body .relatorio-especial-root .relatorio-especial-horas-block__meta-datas {
+  flex: 1 1 100%;
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.35;
+}
+
+html body .relatorio-especial-root .relatorio-especial-badge-diaria {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 200, 83, 0.55);
+  background: rgba(0, 200, 83, 0.12);
+  color: #86efac;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+html body .relatorio-especial-root .relatorio-especial-dia-card__toggle .relatorio-especial-badge-diaria {
+  margin-left: 8px;
+  margin-right: 4px;
 }
 
 html body .relatorio-especial-root .relatorio-especial-table-shell {

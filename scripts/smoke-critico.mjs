@@ -429,11 +429,22 @@ try {
     idx.includes('calcularTotaisRelatorioEspecial') &&
     idx.includes('adaptRelatorioEspecialParaFechamentoShape') &&
     idx.includes('filterByDeletedIds') &&
-    idx.includes('imprimirRelatorioEspecialPdf')
+    idx.includes('imprimirRelatorioEspecialPdf') &&
+    idx.includes('diaContaComoDiariaEspecial')
   ) {
     ok('módulo relatorios-especiais exporta cálculos/fechamento/PDF')
   } else {
     fail('módulo relatorios-especiais incompleto (index.ts)')
+  }
+  const hub = fs.readFileSync(path.join(root, 'app/components/RelatorioEspecialHub.tsx'), 'utf8')
+  if (
+    hub.includes('totalDiariasUi') &&
+    hub.includes('relatorio-especial-horas-block__meta--diarias') &&
+    hub.includes('diaContaComoDiariaEspecial')
+  ) {
+    ok('RelatorioEspecialHub unifica TOTAL DE DIÁRIAS no CONTROLE e Resumo')
+  } else {
+    fail('RelatorioEspecialHub sem contador unificado de diárias no CONTROLE')
   }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (
