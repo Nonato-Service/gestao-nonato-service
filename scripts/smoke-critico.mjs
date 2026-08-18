@@ -483,6 +483,16 @@ try {
   } else {
     fail('calculos especiais sem contexto de viagem no resumo')
   }
+  if (
+    calc.includes('indiceLinhaAlmocoActiva') &&
+    calc.includes('distribuirAlmocoPorLinhaEquipamentoDia') &&
+    calc.includes('almocoDescontadoMinutos') &&
+    !calc.includes('proporcionalmente ao tempo bruto')
+  ) {
+    ok('calculos especiais: almoço numa só máquina activa (sem rateio proporcional)')
+  } else {
+    fail('calculos especiais ainda rateiam almoço proporcionalmente entre máquinas')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (
     nma.includes("from './modules/relatorios-especiais'") ||

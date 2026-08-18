@@ -685,7 +685,13 @@ function buildEquipamentoCardHtml(
               `<tr>
                 <td>${esc(s.dataFormatada)}</td>
                 <td>${esc(formatHorarioIntervalo(s.horasInicio, s.horasFim))}</td>
-                <td class="re-col-total"><strong>${esc(s.horasDuracao || '—')}</strong></td>
+                <td class="re-col-total"><strong>${esc(s.horasDuracaoBruta || s.horasDuracao || '—')}</strong>${
+                  s.almocoDescontadoMinutos > 0
+                    ? `<div class="re-dia-duracao-detalhe">−${esc(s.almocoDescontadoFmt)} ${esc(L(labels, 'horaAlmoco', 'almoço'))} → ${esc(s.horasDuracao)}</div>`
+                    : s.horasDuracaoBruta
+                      ? `<div class="re-dia-duracao-detalhe">${esc(L(labels, 'relatorioEspecialHorasIntervaloBruto', 'intervalo (relógio)'))}</div>`
+                      : ''
+                }</td>
               </tr>`
           )
           .join('')
@@ -965,7 +971,7 @@ export function imprimirRelatorioEspecialPdf(
 
   const controloHorasHtml = `<section class="re-secao">
     <h3 class="re-secao__titulo">${esc(L(labels, 'relatorioEspecialPdfControloHoras', 'Controlo de horas por equipamento'))}</h3>
-    <p class="re-secao__ajuda">${esc(L(labels, 'relatorioEspecialPdfEquipLiquidoNota', 'Horas cobráveis em cada máquina (almoço descontado de forma proporcional no dia). Dias sem horas em máquina também contam para diárias se estiverem registados.'))}</p>
+    <p class="re-secao__ajuda">${esc(L(labels, 'relatorioEspecialPdfEquipLiquidoNota', 'Horas por máquina: intervalo de relógio; almoço descontado uma vez na máquina activa do dia. Dias sem horas em máquina também contam para diárias se estiverem registados.'))}</p>
     ${blocosEquipamentos || `<p style="color:#64748b;font-style:italic">${esc(L(labels, 'relatorioEspecialSemEquipamentos', 'Sem equipamentos'))}</p>`}
   </section>`
 

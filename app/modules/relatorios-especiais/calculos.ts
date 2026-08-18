@@ -104,39 +104,124 @@ export function minutosTrabalhoLiquidoDia(dia: DiaTrabalhoEspecial): number {
   return Math.max(0, minutosTrabalhoBrutoDia(dia) - minutosAlmocoDia(dia))
 }
 
+/** Minutos de relógio HH:MM (0–1439); null se inválido. */
+function minutosRelogioHHMM(hhmm: string | undefined | null): number | null {
+  const s = String(hhmm ?? '').trim()
+  if (!/^\d{1,2}:\d{2}/.test(s)) return null
+  const [h, m] = s.split(':').map((p) => parseInt(p, 10) || 0)
+  if (h < 0 || h > 23 || m < 0 || m > 59) return null
+  return h * 60 + m
+}
+
+/** True se o instante (minutos do dia) cai dentro do intervalo início→fim da linha. */
+function linhaCobreInstante(linha: HorasEquipamentoDia, instanteMin: number): boolean {
+  const ini = minutosRelogioHHMM(linha.horasInicio)
+  const fim = minutosRelogioHHMM(linha.horasFim)
+  if (ini == null || fim == null) return false
+  let f = fim
+  if (f <= ini) f += 24 * 60
+  let t = instanteMin
+  if (t < ini && f > 24 * 60) t += 24 * 60
+  return t >= ini && t < f
+}
+
 /**
- * Distribui o almoço do dia proporcionalmente ao tempo bruto de cada linha de máquina.
- * A soma dos líquidos = bruto do dia − almoço (sem deriva de arredondamento).
- * Dia só com viagem (sem linhas de máquina) → lista vazia / zeros.
+ * Escolhe a única linha (máquina/bloco activo) onde descontar o almoço do dia.
+ * Nunca rateia entre máquinas.
+ * Preferência: bloco que cobre meio-dia (12:00) → 13:00 → bloco da tarde com horas
+ * suficientes → maior bloco que absorve → último com horas.
  */
+export function indiceLinhaAlmocoActiva(
+  linhas: HorasEquipamentoDia[] | undefined | null,
+  almocoMinutos: number
+): number {
+  const lista = Array.isArray(linhas) ? linhas : []
+  const brutos = lista.map((l) => minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(l)))
+  const almoco = Math.max(0, Math.round(almocoMinutos) || 0)
+  const comHoras: number[] = []
+  for (let i = 0; i < brutos.length; i++) {
+    if (brutos[i] > 0) comHoras.push(i)
+  }
+  if (comHoras.length === 0) return -1
+  if (almoco <= 0) return -1
+
+  const candidatosQueAbsorvem = comHoras.filter((i) => brutos[i] >= almoco)
+  const pool = candidatosQueAbsorvem.length > 0 ? candidatosQueAbsorvem : comHoras
+
+  for (const alvo of [12 * 60, 13 * 60]) {
+    for (const i of pool) {
+      if (linhaCobreInstante(lista[i], alvo)) return i
+    }
+  }
+
+  let bestTarde = -1
+  let bestTardeScore = -1
+  for (const i of pool) {
+    const ini = minutosRelogioHHMM(lista[i].horasInicio)
+    if (ini == null || ini < 10 * 60) continue
+    const score = brutos[i]
+    if (score > bestTardeScore) {
+      bestTardeScore = score
+      bestTarde = i
+    }
+  }
+  if (bestTarde >= 0) return bestTarde
+
+  let best = pool[0]
+  let bestMin = brutos[best]
+  for (const i of pool) {
+    if (brutos[i] > bestMin) {
+      best = i
+      bestMin = brutos[i]
+    }
+  }
+  return best
+}
+
+export type DistribuicaoAlmocoLinhas = {
+  liquidos: number[]
+  descontosAlmoco: number[]
+  indiceAlmoco: number
+}
+
+/**
+ * Desconta o almoço do dia **uma vez** na linha em que a pessoa estava activa na pausa.
+ * Não divide minutos entre máquinas (evita 3:10 / 6:20 «picados»).
+ * Soma dos líquidos = bruto do dia − almoço.
+ */
+export function distribuirAlmocoPorLinhaEquipamentoDia(
+  linhas: HorasEquipamentoDia[] | undefined | null,
+  almocoMinutos: number
+): DistribuicaoAlmocoLinhas {
+  const lista = Array.isArray(linhas) ? linhas : []
+  const brutos = lista.map((l) => minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(l)))
+  const brutoTotal = brutos.reduce((acc, m) => acc + m, 0)
+  const descontos = brutos.map(() => 0)
+  if (brutoTotal <= 0) {
+    return { liquidos: brutos.map(() => 0), descontosAlmoco: descontos, indiceAlmoco: -1 }
+  }
+  const almoco = Math.min(Math.max(0, Math.round(almocoMinutos) || 0), brutoTotal)
+  if (almoco <= 0) {
+    return { liquidos: brutos.slice(), descontosAlmoco: descontos, indiceAlmoco: -1 }
+  }
+  const indiceAlmoco = indiceLinhaAlmocoActiva(lista, almoco)
+  if (indiceAlmoco < 0) {
+    return { liquidos: brutos.slice(), descontosAlmoco: descontos, indiceAlmoco: -1 }
+  }
+  descontos[indiceAlmoco] = Math.min(almoco, brutos[indiceAlmoco])
+  return {
+    liquidos: brutos.map((b, i) => Math.max(0, b - descontos[i])),
+    descontosAlmoco: descontos,
+    indiceAlmoco,
+  }
+}
+
+/** Líquidos cobráveis por linha (almoço numa só máquina activa). */
 export function minutosLiquidosPorLinhaEquipamentoDia(
   linhas: HorasEquipamentoDia[] | undefined | null,
   almocoMinutos: number
 ): number[] {
-  const lista = Array.isArray(linhas) ? linhas : []
-  const brutos = lista.map((l) => minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(l)))
-  const brutoTotal = brutos.reduce((acc, m) => acc + m, 0)
-  if (brutoTotal <= 0) return brutos.map(() => 0)
-  const almoco = Math.min(Math.max(0, Math.round(almocoMinutos) || 0), brutoTotal)
-  if (almoco <= 0) return brutos.slice()
-
-  const indicesComHoras: number[] = []
-  for (let i = 0; i < brutos.length; i++) {
-    if (brutos[i] > 0) indicesComHoras.push(i)
-  }
-  const descontos = new Array(brutos.length).fill(0)
-  let alocado = 0
-  for (let k = 0; k < indicesComHoras.length; k++) {
-    const i = indicesComHoras[k]
-    if (k === indicesComHoras.length - 1) {
-      descontos[i] = Math.max(0, almoco - alocado)
-    } else {
-      const d = Math.floor((brutos[i] * almoco) / brutoTotal)
-      descontos[i] = d
-      alocado += d
-    }
-  }
-  return brutos.map((b, i) => Math.max(0, b - descontos[i]))
+  return distribuirAlmocoPorLinhaEquipamentoDia(linhas, almocoMinutos).liquidos
 }
 
 export function formatMinutosComoHHMM(minutos: number): string {
@@ -167,7 +252,7 @@ export function atualizarCalculosDiaEspecial(dia: DiaTrabalhoEspecial): DiaTraba
       : dia.retornoDuracao
   const kmIda = parseFloat(dia.kmIda) || 0
   const kmRetorno = parseFloat(dia.kmRetorno) || 0
-  /** Horas por linha = hora corrida (bruto no formulário). Almoço desconta no resumo/totais por máquina (proporcional). */
+  /** Horas por linha = hora corrida (bruto no formulário). Almoço desconta uma vez na máquina activa. */
   const horasPorEquipamento = (dia.horasPorEquipamento || []).map(atualizarHorasEquipamentoDia)
   return {
     ...dia,
@@ -179,7 +264,7 @@ export function atualizarCalculosDiaEspecial(dia: DiaTrabalhoEspecial): DiaTraba
 }
 
 export type TotaisRelatorioEspecial = {
-  /** Minutos cobráveis por equipamento (almoço já descontado de forma proporcional por dia). */
+  /** Minutos cobráveis por equipamento (almoço descontado uma vez na máquina activa do dia). */
   horasPorEquipamento: Record<string, number>
   horasTrabalhoTotal: number
   horasTrabalhoBruto: number
@@ -232,7 +317,7 @@ export function calcularTotaisRelatorioEspecial(
     horasAlmocoTotal += almocoDia
 
     const linhas = dia.horasPorEquipamento || []
-    const liquidos = minutosLiquidosPorLinhaEquipamentoDia(linhas, almocoDia)
+    const { liquidos } = distribuirAlmocoPorLinhaEquipamentoDia(linhas, almocoDia)
     for (let i = 0; i < linhas.length; i++) {
       const uid = (linhas[i].equipamentoUid || '').trim()
       if (!uid) continue
@@ -352,7 +437,14 @@ export type SessaoHorasEquipamentoEspecial = {
   dataFormatada: string
   horasInicio: string
   horasFim: string
+  /** Duração cobrável (líquida) nesta sessão. */
   horasDuracao: string
+  /** Intervalo de relógio (bruto), sem descontar almoço. */
+  horasDuracaoBruta: string
+  /** Minutos de almoço atribuídos a esta linha (0 ou o almoço do dia). */
+  almocoDescontadoMinutos: number
+  /** Formato HH:MM do almoço nesta linha, ou ''. */
+  almocoDescontadoFmt: string
 }
 
 export type ResumoHorasTrabalhoDia = {
@@ -589,7 +681,7 @@ export function coletarDiasSemMaquinaResumo(
   return out
 }
 
-/** Todas as sessões de horas agrupadas por equipamento (duração = líquida/cobrável). */
+/** Sessões por equipamento: intervalo bruto + almoço só na máquina activa do dia. */
 export function coletarSessoesPorEquipamento(
   dias: DiaTrabalhoEspecial[] | undefined | null
 ): Record<string, SessaoHorasEquipamentoEspecial[]> {
@@ -600,13 +692,15 @@ export function coletarSessoesPorEquipamento(
     const dia = atualizarCalculosDiaEspecial(diaRaw)
     const dataFmt = formatDiaCurtoPt(dia.data)
     const linhas = dia.horasPorEquipamento || []
-    const liquidos = minutosLiquidosPorLinhaEquipamentoDia(linhas, minutosAlmocoDia(dia))
+    const dist = distribuirAlmocoPorLinhaEquipamentoDia(linhas, minutosAlmocoDia(dia))
     for (let i = 0; i < linhas.length; i++) {
       const linha = linhas[i]
       const uid = (linha.equipamentoUid || '').trim()
       if (!uid) continue
       const brutoMin = minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(linha))
       if (!linha.horasInicio && !linha.horasFim && brutoMin <= 0) continue
+      const desconto = dist.descontosAlmoco[i] ?? 0
+      const liquidoMin = dist.liquidos[i] ?? Math.max(0, brutoMin)
       if (!porUid[uid]) porUid[uid] = []
       porUid[uid].push({
         equipamentoUid: uid,
@@ -615,7 +709,10 @@ export function coletarSessoesPorEquipamento(
         dataFormatada: dataFmt,
         horasInicio: linha.horasInicio,
         horasFim: linha.horasFim,
-        horasDuracao: formatMinutosComoHHMM(liquidos[i] ?? Math.max(0, brutoMin)),
+        horasDuracao: formatMinutosComoHHMM(liquidoMin),
+        horasDuracaoBruta: formatMinutosComoHHMM(brutoMin),
+        almocoDescontadoMinutos: desconto,
+        almocoDescontadoFmt: desconto > 0 ? formatMinutosComoHHMM(desconto) : '',
       })
     }
   }

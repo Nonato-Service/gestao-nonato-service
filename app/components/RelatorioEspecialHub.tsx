@@ -2199,7 +2199,7 @@ export default function RelatorioEspecialHub({
               <div style={{ fontWeight: 600, marginBottom: 8, color: '#00c853' }}>
                 {labelEquipamentoCurto(eq, i)} — <strong>{total}</strong>
                 <span style={{ fontSize: 11, color: '#888', fontWeight: 400, marginLeft: 6 }}>
-                  ({t.relatorioEspecialTotalEquipamentoLiquido || 'total cobrável na máquina — almoço já descontado'})
+                  ({t.relatorioEspecialTotalEquipamentoLiquido || 'total cobrável — almoço descontado uma vez na máquina activa'})
                 </span>
               </div>
               {sessoes.length > 0 ? (
@@ -2208,7 +2208,7 @@ export default function RelatorioEspecialHub({
                     <tr>
                       <th>{t.relatorioEspecialPdfColDias || t.diasTrabalho || 'Dias'}</th>
                       <th>{t.relatorioEspecialPdfColHorario || 'Horário'}</th>
-                      <th>{t.relatorioEspecialPdfHorasMaquina || t.total || 'Horas cobráveis'}</th>
+                      <th>{t.relatorioEspecialPdfHorasMaquina || t.total || 'Horas'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2218,7 +2218,18 @@ export default function RelatorioEspecialHub({
                         <td>
                           {s.horasInicio && s.horasFim ? `${s.horasInicio} – ${s.horasFim}` : s.horasInicio || s.horasFim || '—'}
                         </td>
-                        <td><strong>{s.horasDuracao || '—'}</strong></td>
+                        <td>
+                          <strong>{s.horasDuracaoBruta || s.horasDuracao || '—'}</strong>
+                          {s.almocoDescontadoMinutos > 0 ? (
+                            <span style={{ display: 'block', fontSize: 10, color: '#888' }}>
+                              −{s.almocoDescontadoFmt} {t.horaAlmoco || 'almoço'} → {s.horasDuracao}
+                            </span>
+                          ) : (
+                            <span style={{ display: 'block', fontSize: 10, color: '#888' }}>
+                              {t.relatorioEspecialHorasIntervaloBruto || 'intervalo (relógio)'}
+                            </span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

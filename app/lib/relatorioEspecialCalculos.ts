@@ -9,6 +9,7 @@ export type {
   DiaSemMaquinaResumoEspecial,
   EquipamentoRefMinEspecial,
   ColetarDiasSemMaquinaOpts,
+  DistribuicaoAlmocoLinhas,
 } from '../modules/relatorios-especiais/calculos'
 export {
   calcularDuracaoHoras,
@@ -18,6 +19,8 @@ export {
   minutosAlmocoDia,
   minutosTrabalhoBrutoDia,
   minutosTrabalhoLiquidoDia,
+  indiceLinhaAlmocoActiva,
+  distribuirAlmocoPorLinhaEquipamentoDia,
   minutosLiquidosPorLinhaEquipamentoDia,
   formatMinutosComoHHMM,
   horasEquipamentoDiaBruto,

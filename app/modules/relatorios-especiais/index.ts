@@ -36,6 +36,7 @@ export type {
   DiaSemMaquinaResumoEspecial,
   EquipamentoRefMinEspecial,
   ColetarDiasSemMaquinaOpts,
+  DistribuicaoAlmocoLinhas,
 } from './calculos'
 export {
   calcularDuracaoHoras,
@@ -45,6 +46,8 @@ export {
   minutosAlmocoDia,
   minutosTrabalhoBrutoDia,
   minutosTrabalhoLiquidoDia,
+  indiceLinhaAlmocoActiva,
+  distribuirAlmocoPorLinhaEquipamentoDia,
   minutosLiquidosPorLinhaEquipamentoDia,
   formatMinutosComoHHMM,
   horasEquipamentoDiaBruto,
