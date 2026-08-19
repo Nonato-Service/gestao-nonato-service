@@ -3697,6 +3697,8 @@ export default function Dashboard() {
   const [showSelecionarPecasModal, setShowSelecionarPecasModal] = useState(false)
   const [pecasSelecionadasAgenda, setPecasSelecionadasAgenda] = useState<PecaBiblioteca[]>([])
   const [showAgendaLembreteModal, setShowAgendaLembreteModal] = useState(false)
+  /** Mensagem do modal centrado de bloqueio por conflito (técnico/cliente) — substitui alert() nativo */
+  const [agendaConflitoModalMsg, setAgendaConflitoModalMsg] = useState<string | null>(null)
   const [agendaHistoricoConcluidosAberto, setAgendaHistoricoConcluidosAberto] = useState(false)
   const [agendaListaSecoesAbertas, setAgendaListaSecoesAbertas] = useState<Set<AgendaListaSecaoId>>(
     () => new Set<AgendaListaSecaoId>(['exec'])
@@ -12963,7 +12965,7 @@ export default function Dashboard() {
         const msgBase =
           safeT?.agendaConflitoTecnicoMesmoDia ||
           'Este técnico já tem um agendamento activo com dias em comum ({periodo}). O mesmo técnico não pode ter dois atendimentos sobrepostos. Cancele ou altere o outro agendamento primeiro.'
-        alert(String(msgBase).replace('{periodo}', periodo))
+        setAgendaConflitoModalMsg(String(msgBase).replace('{periodo}', periodo))
         return false
       }
       const conflitoCliente = encontrarConflitoClienteMesmoDia(
@@ -12976,7 +12978,7 @@ export default function Dashboard() {
         const msgBase =
           safeT?.agendaConflitoClienteMesmoDia ||
           'Já existe um agendamento activo deste cliente com dias em comum ({periodo}). Não é permitido sobrepor o mesmo cliente no mesmo dia. Cancele ou altere o outro agendamento primeiro.'
-        alert(String(msgBase).replace('{periodo}', periodo))
+        setAgendaConflitoModalMsg(String(msgBase).replace('{periodo}', periodo))
         return false
       }
     }
@@ -72617,6 +72619,83 @@ A1;Peça exemplo;10`}
                 })}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal centrado: bloqueio de conflito de agenda (técnico / cliente) */}
+      {agendaConflitoModalMsg && (
+        <div
+          className="modal-overlay"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="agenda-conflito-modal-titulo"
+          onClick={() => setAgendaConflitoModalMsg(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10100,
+            padding: '20px',
+          }}
+        >
+          <div
+            className="modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '480px',
+              width: '100%',
+              background: 'linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%)',
+              borderRadius: '14px',
+              border: '2px solid #ffcc00',
+              boxShadow: '0 0 32px rgba(255, 204, 0, 0.22), 0 24px 48px rgba(0,0,0,0.55)',
+              padding: '24px 28px',
+              textAlign: 'center',
+            }}
+          >
+            <h2
+              id="agenda-conflito-modal-titulo"
+              style={{
+                margin: '0 0 14px 0',
+                fontSize: '18px',
+                fontWeight: 700,
+                color: '#ffffff',
+                letterSpacing: '0.3px',
+              }}
+            >
+              ⚠️ {(safeT as any)?.agendaConflitoModalTitulo || 'Conflito na agenda'}
+            </h2>
+            <p
+              style={{
+                margin: '0 0 22px 0',
+                fontSize: '15px',
+                lineHeight: 1.55,
+                color: '#ffffff',
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {agendaConflitoModalMsg}
+            </p>
+            <button
+              type="button"
+              onClick={() => setAgendaConflitoModalMsg(null)}
+              style={{
+                padding: '10px 28px',
+                fontSize: '15px',
+                fontWeight: 600,
+                backgroundColor: 'rgba(255, 204, 0, 0.18)',
+                color: '#fff8dc',
+                border: '2px solid #ffcc00',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'background-color 0.15s ease',
+              }}
+            >
+              {(safeT as any)?.agendaConflitoModalBotao || 'Entendi'}
+            </button>
           </div>
         </div>
       )}
