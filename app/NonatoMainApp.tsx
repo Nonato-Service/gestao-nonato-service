@@ -382,6 +382,7 @@ import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackup
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser, clearWarmSessionMarkers } from './utils/syncRevision'
 import type {
   Cliente,
+  ClienteFormState,
   ClientePrioritario,
   ClientePrioritarioForm,
   EquipamentoCliente,
@@ -399,6 +400,7 @@ import {
   clienteNomeMatchesLetraAlfabeto,
   rotuloIdEquipamentoCliente,
   getPagamentoRelatorio,
+  emptyClienteFormState,
   emptyClientePrioritarioForm,
   clientePrioritarioToForm,
   isClientePrioritarioFormValid,
@@ -719,7 +721,7 @@ import {
 } from './lib/clienteCadastroDuplicadoUtils'
 import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
-import { ClienteCadastroForm, emptyClienteFormState, type ClienteFormState } from './components/ClienteCadastroForm'
+import { ClienteCadastroForm } from './components/ClienteCadastroForm'
 import { ClienteIdentidadeChips, formatClienteIdentidadeTexto, formatNifClienteExibicao } from './components/ClienteIdentidadeChips'
 import { ClienteListaLinhas } from './components/ClienteListaLinhas'
 import { ClienteDevedorNomeTag } from './components/ClienteDevedorNomeTag'
@@ -1054,6 +1056,7 @@ function NumeroSequenciaCirculo({
 /* EquipamentoCliente → app/modules/clientes (equipamentoClienteTipos) */
 
 /* Cliente → app/modules/clientes (clienteTipos) */
+/* ClienteFormState / emptyClienteFormState → app/modules/clientes (clienteFormState) */
 
 /* findCliente → modules/relatorio-servico */
 

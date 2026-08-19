@@ -1,6 +1,9 @@
-/** Módulo Clientes — alfabeto A–Z, ordenação, busca, detalhe financeiro, tipo Cliente, prioritário e equipamento do cliente (funções puras). */
+/** Módulo Clientes — alfabeto A–Z, ordenação, busca, detalhe financeiro, tipo Cliente, formulário cadastro, prioritário e equipamento do cliente (funções puras). */
 
 export type { Cliente } from './clienteTipos'
+
+export type { ClienteFormState } from './clienteFormState'
+export { emptyClienteFormState } from './clienteFormState'
 
 export {
   CLIENTES_ALFABETO_INDICE,

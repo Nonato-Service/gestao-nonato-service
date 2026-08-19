@@ -186,9 +186,11 @@ try {
     idx.includes('formatClientePrioritarioAddress') &&
     idx.includes('createEmptyEquipamentoClienteForm') &&
     idx.includes('createEmptyRelatorioEquipamentoForm') &&
-    idx.includes('Cliente')
+    idx.includes('Cliente') &&
+    idx.includes('ClienteFormState') &&
+    idx.includes('emptyClienteFormState')
   ) {
-    ok('módulo clientes exporta alfabeto/detalhe/prioritário/equipamentoCliente/Cliente')
+    ok('módulo clientes exporta alfabeto/detalhe/prioritário/equipamentoCliente/Cliente/ClienteFormState')
   } else {
     fail('módulo clientes incompleto (index.ts)')
   }
@@ -198,6 +200,7 @@ try {
     'equipamentoClienteTipos.ts',
     'equipamentoClienteForm.ts',
     'clienteTipos.ts',
+    'clienteFormState.ts',
   ]) {
     if (exists(`app/modules/clientes/${f}`)) ok(`existe app/modules/clientes/${f}`)
     else fail(`falta app/modules/clientes/${f}`)
@@ -248,6 +251,18 @@ try {
     ok('NonatoMainApp usa Cliente do módulo clientes')
   } else {
     fail('NonatoMainApp ainda define Cliente localmente ou módulo não exporta Cliente')
+  }
+  if (
+    idx.includes('export type { ClienteFormState }') &&
+    idx.includes('emptyClienteFormState') &&
+    nma.includes('emptyClienteFormState') &&
+    nma.includes('ClienteFormState') &&
+    !nma.includes('type ClienteFormState = {') &&
+    exists('app/modules/clientes/clienteFormState.ts')
+  ) {
+    ok('NonatoMainApp usa ClienteFormState/emptyClienteFormState do módulo clientes')
+  } else {
+    fail('NonatoMainApp ainda define ClienteFormState localmente ou módulo não exporta emptyClienteFormState')
   }
 } catch (e) {
   fail(`módulo clientes: ${e.message}`)

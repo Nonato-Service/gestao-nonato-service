@@ -16,6 +16,13 @@ import { ClienteIdentidadeChips } from './ClienteIdentidadeChips'
 import { isClienteMarcadoDevedor } from '../lib/clienteDevedorUtils'
 import { ordenarServicoGrupos, type ServicoCadastroGrupo } from '../lib/servicosCadastroUtils'
 import type { ClienteCadastroDuplicado } from '../lib/clienteCadastroDuplicadoUtils'
+import {
+  emptyClienteFormState,
+  type ClienteFormState,
+} from '../modules/clientes/clienteFormState'
+
+export type { ClienteFormState }
+export { emptyClienteFormState }
 
 function useClienteFormTr(language: string) {
   return useMemo(() => {
@@ -27,25 +34,6 @@ function useClienteFormTr(language: string) {
     const pt = translations['pt-BR'] as Record<string, string | undefined>
     return (key: string) => primary[key] ?? en[key] ?? pt[key] ?? key
   }, [language])
-}
-
-export type ClienteFormState = {
-  nomeEmpresa: string
-  morada: string
-  localidade: string
-  conselho: string
-  pais: string
-  codigoPostal: string
-  freguesia: string
-  numeroContribuicaoFiscal: string
-  telefones: string
-  email: string
-  contato: string
-  photo: string
-  grupoTarifaId: string
-  kmIdaPadrao: string
-  kmRetornoPadrao: string
-  tipoCliente: 'fisica' | 'juridica'
 }
 
 type Props = {
@@ -684,22 +672,3 @@ export function ClienteCadastroForm({
     </div>
   )
 }
-
-export const emptyClienteFormState = (grupoTarifaId = ''): ClienteFormState => ({
-  nomeEmpresa: '',
-  morada: '',
-  localidade: '',
-  conselho: '',
-  pais: '',
-  codigoPostal: '',
-  freguesia: '',
-  numeroContribuicaoFiscal: '',
-  telefones: '',
-  email: '',
-  contato: '',
-  photo: '',
-  grupoTarifaId,
-  kmIdaPadrao: '',
-  kmRetornoPadrao: '',
-  tipoCliente: 'fisica',
-})
