@@ -814,6 +814,26 @@ try {
   } else {
     fail('NonatoMainApp ainda define PecaSubstituicao localmente ou não usa createEmptyPecaSubstituicaoForm')
   }
+  if (
+    idx.includes('createEmptyDiaTrabalhoForm')
+  ) {
+    ok('módulo relatorio-servico exporta createEmptyDiaTrabalhoForm')
+  } else {
+    fail('módulo relatorio-servico sem createEmptyDiaTrabalhoForm')
+  }
+  if (!exists('app/modules/relatorio-servico/diaTrabalhoForm.ts')) {
+    fail('falta app/modules/relatorio-servico/diaTrabalhoForm.ts')
+  } else {
+    ok('existe app/modules/relatorio-servico/diaTrabalhoForm.ts')
+  }
+  if (
+    nma.includes('createEmptyDiaTrabalhoForm') &&
+    (nma.match(/setNovoDiaTrabalho\(\s*\{/g) || []).length <= 1
+  ) {
+    ok('NonatoMainApp usa createEmptyDiaTrabalhoForm nos resets de DiaTrabalho')
+  } else {
+    fail('NonatoMainApp ainda tem resets literais de DiaTrabalho vazio ou não importa createEmptyDiaTrabalhoForm')
+  }
 } catch (e) {
   fail(`módulo relatorio-servico: ${e.message}`)
 }

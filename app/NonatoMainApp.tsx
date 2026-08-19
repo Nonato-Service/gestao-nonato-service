@@ -154,6 +154,7 @@ import {
 import {
   type DiaTrabalho,
   type PecaSubstituicao,
+  createEmptyDiaTrabalhoForm,
   createEmptyPecaSubstituicaoForm,
   diaTrabalhoDataChaveOrdenacao,
   sortDiasTrabalhoCronologicamente,
@@ -5514,24 +5515,7 @@ export default function Dashboard() {
   const [mostrarCanvasAssinatura, setMostrarCanvasAssinatura] = useState(false)
   const isDrawingRef = useRef(false)
   const lastPosRef = useRef<{ x: number; y: number } | null>(null)
-  const [novoDiaTrabalho, setNovoDiaTrabalho] = useState<DiaTrabalho>({
-    data: new Date().toISOString().split('T')[0],
-    idaHora: '',
-    idaChegada: '',
-    idaDuracao: '',
-    horasInicio: '',
-    horasFim: '',
-    horasDuracao: '',
-    retornoSaida: '',
-    retornoChegada: '',
-    retornoDuracao: '',
-    kmIda: '',
-    kmRetorno: '',
-    kmTotal: '',
-    pausa: '',
-    tempoPausa: '',
-    descricaoTrabalho: ''
-  })
+  const [novoDiaTrabalho, setNovoDiaTrabalho] = useState<DiaTrabalho>(createEmptyDiaTrabalhoForm())
   const [editingDiaTrabalhoIndex, setEditingDiaTrabalhoIndex] = useState<number | null>(null)
   const [novaPeca, setNovaPeca] = useState<PecaSubstituicao>(createEmptyPecaSubstituicaoForm())
   const [pecaSelecionadaBiblioteca, setPecaSelecionadaBiblioteca] = useState<PecaBiblioteca | null>(null)
@@ -15446,23 +15430,7 @@ export default function Dashboard() {
       equipamentoOrigem: 'cliente',
       equipamentos: [criarEquipamentoRelatorioVazio('cliente')],
     })
-    setNovoDiaTrabalho({
-      data: new Date().toISOString().split('T')[0], // Inicializar com a data de hoje
-      idaHora: '',
-      idaChegada: '',
-      idaDuracao: '',
-      horasInicio: '',
-      horasFim: '',
-      horasDuracao: '',
-      retornoSaida: '',
-      retornoChegada: '',
-      retornoDuracao: '',
-      kmIda: '',
-      kmRetorno: '',
-      kmTotal: '',
-      pausa: '',
-      descricaoTrabalho: ''
-    })
+    setNovoDiaTrabalho(createEmptyDiaTrabalhoForm())
     setEditingDiaTrabalhoIndex(null)
     setNovaPeca(createEmptyPecaSubstituicaoForm())
     setShowRelatorioServicoForm(true)
@@ -19583,24 +19551,7 @@ export default function Dashboard() {
     void createAutoBackup()
 
     setRelatorioServicoForm(savedRelatorio)
-    setNovoDiaTrabalho({
-      data: new Date().toISOString().split('T')[0], // Inicializar com a data de hoje
-      idaHora: '',
-      idaChegada: '',
-      idaDuracao: '',
-      horasInicio: '',
-      horasFim: '',
-      horasDuracao: '',
-      retornoSaida: '',
-      retornoChegada: '',
-      retornoDuracao: '',
-      kmIda: '',
-      kmRetorno: '',
-      kmTotal: '',
-      pausa: '',
-      tempoPausa: '',
-      descricaoTrabalho: ''
-    })
+    setNovoDiaTrabalho(createEmptyDiaTrabalhoForm())
     setEditingRelatorioServico(savedRelatorio)
     if (savedRelatorio.servicoConcluido) {
       arquivarRelatorioConcluidoNaBiblioteca(savedRelatorio)
@@ -19752,24 +19703,7 @@ export default function Dashboard() {
       pecasInstaladas: [],
       equipamentoOrigem: 'cliente',
     })
-    setNovoDiaTrabalho({
-      data: new Date().toISOString().split('T')[0],
-      idaHora: '',
-      idaChegada: '',
-      idaDuracao: '',
-      horasInicio: '',
-      horasFim: '',
-      horasDuracao: '',
-      retornoSaida: '',
-      retornoChegada: '',
-      retornoDuracao: '',
-      kmIda: '',
-      kmRetorno: '',
-      kmTotal: '',
-      pausa: '',
-      tempoPausa: '',
-      descricaoTrabalho: ''
-    })
+    setNovoDiaTrabalho(createEmptyDiaTrabalhoForm())
     setNovaPeca(createEmptyPecaSubstituicaoForm())
     setEditingRelatorioServico(null)
     
@@ -19869,10 +19803,7 @@ export default function Dashboard() {
           instrucaoFuncionarios: false, necessarioTrocaPecas: false, pecasInstaladasSubstituidas: false, observacoes: '', pontosAberto: '', pecasSubstituicao: [], pecasInstaladas: [],
           equipamentoOrigem: 'cliente',
         })
-        setNovoDiaTrabalho({
-          data: new Date().toISOString().split('T')[0], idaHora: '', idaChegada: '', idaDuracao: '', horasInicio: '', horasFim: '', horasDuracao: '',
-          retornoSaida: '', retornoChegada: '', retornoDuracao: '', kmIda: '', kmRetorno: '', kmTotal: '', pausa: '', tempoPausa: '', descricaoTrabalho: ''
-        })
+        setNovoDiaTrabalho(createEmptyDiaTrabalhoForm())
         setNovaPeca(createEmptyPecaSubstituicaoForm())
       }
     } else {
@@ -19916,24 +19847,7 @@ export default function Dashboard() {
         equipamentoId: '',
         equipamentoOrigem: 'cliente',
       })
-      setNovoDiaTrabalho({
-        data: new Date().toISOString().split('T')[0],
-        idaHora: '',
-        idaChegada: '',
-        idaDuracao: '',
-        horasInicio: '',
-        horasFim: '',
-        horasDuracao: '',
-        retornoSaida: '',
-        retornoChegada: '',
-        retornoDuracao: '',
-        kmIda: '',
-        kmRetorno: '',
-        kmTotal: '',
-        pausa: '',
-        tempoPausa: '',
-        descricaoTrabalho: ''
-      })
+      setNovoDiaTrabalho(createEmptyDiaTrabalhoForm())
       setNovaPeca(createEmptyPecaSubstituicaoForm())
       setCodigoBuscaPeca('')
       setPecaSelecionadaBiblioteca(null)
@@ -20039,22 +19953,9 @@ export default function Dashboard() {
     setNovoDiaTrabalho(() => {
       const { kmIda, kmRetorno } = getKmPadraoDoCliente(clienteAtual)
       return atualizarCalculosDia({
-        data: new Date().toISOString().split('T')[0],
-        idaHora: '',
-        idaChegada: '',
-        idaDuracao: '',
-        horasInicio: '',
-        horasFim: '',
-        horasDuracao: '',
-        retornoSaida: '',
-        retornoChegada: '',
-        retornoDuracao: '',
+        ...createEmptyDiaTrabalhoForm(),
         kmIda,
         kmRetorno,
-        kmTotal: '',
-        pausa: '',
-        tempoPausa: '',
-        descricaoTrabalho: '',
       })
     })
   }
@@ -20068,24 +19969,7 @@ export default function Dashboard() {
     })
     if (editingDiaTrabalhoIndex === index) {
       setEditingDiaTrabalhoIndex(null)
-      setNovoDiaTrabalho({
-        data: new Date().toISOString().split('T')[0],
-        idaHora: '',
-        idaChegada: '',
-        idaDuracao: '',
-        horasInicio: '',
-        horasFim: '',
-        horasDuracao: '',
-        retornoSaida: '',
-        retornoChegada: '',
-        retornoDuracao: '',
-        kmIda: '',
-        kmRetorno: '',
-        kmTotal: '',
-        pausa: '',
-        tempoPausa: '',
-        descricaoTrabalho: ''
-      })
+      setNovoDiaTrabalho(createEmptyDiaTrabalhoForm())
     } else if (editingDiaTrabalhoIndex !== null && editingDiaTrabalhoIndex > index) {
       setEditingDiaTrabalhoIndex(editingDiaTrabalhoIndex - 1)
     }
@@ -32593,24 +32477,7 @@ export default function Dashboard() {
                           className="btn-danger"
                           onClick={() => {
                             setEditingDiaTrabalhoIndex(null)
-                            setNovoDiaTrabalho({
-                              data: new Date().toISOString().split('T')[0],
-                              idaHora: '',
-                              idaChegada: '',
-                              idaDuracao: '',
-                              horasInicio: '',
-                              horasFim: '',
-                              horasDuracao: '',
-                              retornoSaida: '',
-                              retornoChegada: '',
-                              retornoDuracao: '',
-                              kmIda: '',
-                              kmRetorno: '',
-                              kmTotal: '',
-                              pausa: '',
-                              tempoPausa: '',
-                              descricaoTrabalho: ''
-                            })
+                            setNovoDiaTrabalho(createEmptyDiaTrabalhoForm())
                           }}
                           style={{
                             padding: '10px 16px',
@@ -33482,24 +33349,7 @@ export default function Dashboard() {
                       pecasSubstituicao: [],
                       pecasInstaladas: [],
                     });
-                    setNovoDiaTrabalho({
-                      data: new Date().toISOString().split('T')[0],
-                      idaHora: '',
-                      idaChegada: '',
-                      idaDuracao: '',
-                      horasInicio: '',
-                      horasFim: '',
-                      horasDuracao: '',
-                      retornoSaida: '',
-                      retornoChegada: '',
-                      retornoDuracao: '',
-                      kmIda: '',
-                      kmRetorno: '',
-                      kmTotal: '',
-                      pausa: '',
-                      tempoPausa: '',
-                      descricaoTrabalho: ''
-                    });
+                    setNovoDiaTrabalho(createEmptyDiaTrabalhoForm());
                     setNovaPeca(createEmptyPecaSubstituicaoForm());
                   }} style={{ padding: '8px 16px', backgroundColor: '#484848', borderColor: '#666' }}>
                     {safeT?.cancel || 'Cancelar'}
