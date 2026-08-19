@@ -401,6 +401,7 @@ import {
   rotuloIdEquipamentoCliente,
   getPagamentoRelatorio,
   emptyClienteFormState,
+  clienteToForm,
   emptyClientePrioritarioForm,
   clientePrioritarioToForm,
   isClientePrioritarioFormValid,
@@ -12193,24 +12194,7 @@ export default function Dashboard() {
 
   const handleEditCliente = (cliente: Cliente) => {
     setEditingCliente(cliente)
-    setClienteForm({
-      nomeEmpresa: cliente.nomeEmpresa,
-      morada: cliente.morada,
-      localidade: cliente.localidade,
-      conselho: cliente.conselho,
-      pais: cliente.pais,
-      codigoPostal: cliente.codigoPostal,
-      freguesia: cliente.freguesia,
-      numeroContribuicaoFiscal: cliente.numeroContribuicaoFiscal || '',
-      telefones: cliente.telefones,
-      email: cliente.email,
-      contato: cliente.contato,
-      photo: cliente.photo || '',
-      grupoTarifaId: cliente.grupoTarifaId || '',
-      kmIdaPadrao: kmStringForNumberField(cliente.kmIdaPadrao),
-      kmRetornoPadrao: kmStringForNumberField(cliente.kmRetornoPadrao),
-      tipoCliente: cliente.tipoCliente === 'juridica' ? 'juridica' : 'fisica',
-    })
+    setClienteForm(clienteToForm(cliente))
     setClientesActiveTab('cadastrar')
     setShowClienteForm(true)
   }
@@ -13836,24 +13820,7 @@ export default function Dashboard() {
       void saveData('nonato-clientes', updatedClientes, false, true).catch(() => {})
 
       createAutoBackupBeforeOperation()
-      const syncedForm = {
-        nomeEmpresa: savedCliente.nomeEmpresa,
-        morada: savedCliente.morada,
-        localidade: savedCliente.localidade,
-        conselho: savedCliente.conselho,
-        pais: savedCliente.pais,
-        codigoPostal: savedCliente.codigoPostal,
-        freguesia: savedCliente.freguesia,
-        numeroContribuicaoFiscal: savedCliente.numeroContribuicaoFiscal || '',
-        telefones: savedCliente.telefones,
-        email: savedCliente.email,
-        contato: savedCliente.contato,
-        photo: savedCliente.photo || '',
-        grupoTarifaId: savedCliente.grupoTarifaId || '',
-        kmIdaPadrao: kmStringForNumberField(savedCliente.kmIdaPadrao),
-        kmRetornoPadrao: kmStringForNumberField(savedCliente.kmRetornoPadrao),
-        tipoCliente: savedCliente.tipoCliente === 'juridica' ? 'juridica' : 'fisica',
-      }
+      const syncedForm = clienteToForm(savedCliente)
       setClienteForm(syncedForm)
       setEditingCliente(savedCliente)
       setUnsavedFormBaseline('cliente', syncedForm)

@@ -3,7 +3,7 @@
 export type { Cliente } from './clienteTipos'
 
 export type { ClienteFormState } from './clienteFormState'
-export { emptyClienteFormState } from './clienteFormState'
+export { emptyClienteFormState, clienteToForm } from './clienteFormState'
 
 export {
   CLIENTES_ALFABETO_INDICE,
