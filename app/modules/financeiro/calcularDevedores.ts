@@ -148,6 +148,7 @@ export function calcularClientesDevedores(input: CalcularClientesDevedoresInput)
 
   const relatoriosNaoPagoPorCliente = new Map<string, RelatorioParaDevedorLike[]>()
   for (const rel of input.relatoriosParaDevedor) {
+    if (!rel?.id) continue
     const fr = input.fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
     if (!relatorioFluxoFinanceiroNaoPago(fr)) continue
     const clienteId =
@@ -175,10 +176,11 @@ export function calcularClientesDevedores(input: CalcularClientesDevedoresInput)
     devedorRel.relatoriosNaoPagoCount = rels.length
     let valorFechamentosNaoPago = 0
     for (const rel of rels) {
+      if (!rel?.id) continue
       const itensRaw = input.fechamentosRelatorios[rel.id]
       if (!Array.isArray(itensRaw) || itensRaw.length === 0) continue
       const omit = new Set(input.fechamentoItensOmitidosPorRelatorio[rel.id] || [])
-      const itensVis = itensRaw.filter((i) => !omit.has(i.id))
+      const itensVis = itensRaw.filter((i) => i?.id && !omit.has(i.id))
       valorFechamentosNaoPago += totaisFechamentoLiquidoComIva(
         itensVis,
         input.fechamentoIvaPorRelatorioId[rel.id]

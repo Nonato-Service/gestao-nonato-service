@@ -65,10 +65,14 @@ export function repararIdsGuardadosBiblioteca(
   fechamentosRelatorios: Record<string, FechamentoItem[]>,
   relatoriosServico: RelatorioServicoBibliotecaLike[]
 ): string[] {
-  const porId = new Map(relatoriosServico.map((r) => [r.id, r]))
+  const rels = (relatoriosServico || []).filter(
+    (r): r is RelatorioServicoBibliotecaLike =>
+      r != null && typeof r === 'object' && String(r.id ?? '').trim() !== ''
+  )
+  const porId = new Map(rels.map((r) => [r.id, r]))
   const set = new Set(guardAtual)
   const normToIds = new Map<string, string[]>()
-  for (const r of relatoriosServico) {
+  for (const r of rels) {
     if (!r.servicoConcluido) continue
     const n = normalizeOsNumeroRelatorio(r.numero)
     if (!n) continue
@@ -95,17 +99,20 @@ export function relatoriosComFechamentoNaBibliotecaOrdenados(
   fechamentosGuardadosBibliotecaIds: string[],
   fechamentosRelatorios: Record<string, FechamentoItem[]>
 ): RelatorioServicoBibliotecaLike[] {
-  return relatoriosServico
+  return (relatoriosServico || [])
     .filter(
       (r) =>
+        r != null &&
+        typeof r === 'object' &&
+        Boolean(r.id) &&
         Boolean(r.clienteId) &&
         fechamentosGuardadosBibliotecaIds.includes(r.id) &&
         Array.isArray(fechamentosRelatorios[r.id]) &&
         fechamentosRelatorios[r.id]!.length > 0
     )
     .sort((a, b) => {
-      const ca = clientes.find((c) => c.id === a.clienteId)?.nomeEmpresa || a.cliente || ''
-      const cb = clientes.find((c) => c.id === b.clienteId)?.nomeEmpresa || b.cliente || ''
+      const ca = clientes.find((c) => c?.id === a.clienteId)?.nomeEmpresa || a.cliente || ''
+      const cb = clientes.find((c) => c?.id === b.clienteId)?.nomeEmpresa || b.cliente || ''
       const byC = cmpClienteRelatorioFinanceiro(ca, cb)
       if (byC !== 0) return byC
       return cmpClienteRelatorioFinanceiro(String(a.numero ?? ''), String(b.numero ?? ''))
@@ -127,23 +134,23 @@ export function buildRelatoriosFechadosBibliotecaLista(
   relatoriosEspeciais: RelatorioEspecial[] = []
 ): RelatorioFechadoBibliotecaRow[] {
   const idSet = new Set(fechamentosGuardadosBibliotecaIds)
-  const servicoRows = relatoriosServico
-    .filter((r) => idSet.has(r.id))
+  const servicoRows = (relatoriosServico || [])
+    .filter((r) => r != null && typeof r === 'object' && Boolean(r.id) && idSet.has(r.id))
     .map((r) => {
       const cliente =
-        clientes.find((c) => c.id === r.clienteId) || findClienteByRelatorio(clientes, r)
+        clientes.find((c) => c?.id === r.clienteId) || findClienteByRelatorio(clientes, r)
       return {
         relatorio: r,
         clienteNome: String(cliente?.nomeEmpresa || r.cliente || '—').trim() || '—',
         itens: Array.isArray(fechamentosRelatorios[r.id]) ? fechamentosRelatorios[r.id]! : [],
       }
     })
-  const especialRows = relatoriosEspeciais
-    .filter((r) => idSet.has(r.id))
+  const especialRows = (relatoriosEspeciais || [])
+    .filter((r) => r != null && typeof r === 'object' && Boolean(r.id) && idSet.has(r.id))
     .map((r) => {
       const adaptado = adaptRelatorioEspecialParaFechamentoShape(r) as RelatorioServicoBibliotecaLike
       const cliente =
-        clientes.find((c) => c.id === adaptado.clienteId) ||
+        clientes.find((c) => c?.id === adaptado.clienteId) ||
         findClienteByRelatorio(clientes, adaptado)
       return {
         relatorio: adaptado,
@@ -266,6 +273,7 @@ export function buildBibliotecaRelatoriosPorCliente(
   const rows: BibliotecaRelatoriosClienteRow[] = []
 
   for (const cliente of clientes) {
+    if (!cliente?.id) continue
     const equipMap = new Map<
       string,
       {
@@ -278,12 +286,17 @@ export function buildBibliotecaRelatoriosPorCliente(
     const putEquip = (equipamento: EquipamentoClienteBibliotecaLike, equipamentoKey: string) => {
       const key = String(equipamentoKey || '').trim()
       if (!key) return
-      const rels = ordenarRelatoriosBiblioteca(cliente.relatorios?.[key] || [])
+      const rels = ordenarRelatoriosBiblioteca(
+        (cliente.relatorios?.[key] || []).filter(
+          (r) => r != null && typeof r === 'object' && Boolean(r.id)
+        )
+      )
       equipMap.set(key, { equipamento, equipamentoKey: key, relatorios: rels })
     }
 
     if (cliente.equipamentos?.length) {
       for (const eq of cliente.equipamentos) {
+        if (!eq || typeof eq !== 'object') continue
         const key =
           String(eq.numeroSerie || '').trim() ||
           `${String(eq.modelo || '').trim()} ${String(eq.marca || '').trim()}`.trim() ||
@@ -325,9 +338,12 @@ export function buildBibliotecaRelatoriosPorCliente(
 
     const relatoriosDoCliente = relatoriosServico.filter(
       (r) =>
-        r.clienteId === cliente.id ||
-        resolverClienteIdRelatorioFlexivel(r, clientes) === cliente.id ||
-        nomesClienteCorrespondem(String(r.cliente ?? ''), String(cliente.nomeEmpresa ?? ''))
+        r != null &&
+        typeof r === 'object' &&
+        Boolean(r.id) &&
+        (r.clienteId === cliente.id ||
+          resolverClienteIdRelatorioFlexivel(r, clientes) === cliente.id ||
+          nomesClienteCorrespondem(String(r.cliente ?? ''), String(cliente.nomeEmpresa ?? '')))
     )
 
     /** Garante relatórios de serviço na pasta (fonte: relatoriosServico, não só cliente.relatorios). */
@@ -471,6 +487,9 @@ export function buildBibliotecaRelatoriosPorCliente(
   /** Relatórios especiais com fechamento na Biblioteca sem pasta de cliente indexada. */
   const especiaisOrfaos = relatoriosEspeciais.filter(
     (r) =>
+      r != null &&
+      typeof r === 'object' &&
+      Boolean(r.id) &&
       fechamentosGuardadosBibliotecaIds.includes(r.id) &&
       Array.isArray(fechamentosRelatorios[r.id]) &&
       (fechamentosRelatorios[r.id]?.length || 0) > 0 &&

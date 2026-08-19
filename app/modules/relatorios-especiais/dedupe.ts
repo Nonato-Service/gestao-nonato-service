@@ -64,7 +64,8 @@ export function dedupeRelatoriosEspeciais(lista: RelatorioEspecial[]): Relatorio
   }
 
   const out = [...byNumero.values(), ...semNumero]
-  return out.length > 0 ? out : lista
+  // Nunca devolver a lista original com buracos/null (crash em r.id no boot).
+  return out.length > 0 ? out : []
 }
 
 /** Localiza relatório já existente para actualizar (por id de edição, id do form ou número). */

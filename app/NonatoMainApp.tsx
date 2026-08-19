@@ -428,6 +428,7 @@ import {
   hasMeaningfulCadastroInLocalStorage,
   consumeCadastroRestoredNoticeCount,
   dismissCadastroRestoredNotice,
+  filterEntitiesWithId,
 } from './utils/cadastroSafety'
 import { assessPullServerRisk, type PullRiskSeverity } from './utils/syncRisk'
 import {
@@ -4536,14 +4537,17 @@ export default function Dashboard() {
     const especiais = relatoriosEspeciais
       .filter(
         (r) =>
+          r != null &&
+          typeof r === 'object' &&
+          Boolean(r.id) &&
           fechamentosGuardadosBibliotecaIds.includes(r.id) &&
           Array.isArray(fechamentosRelatorios[r.id]) &&
           (fechamentosRelatorios[r.id]?.length || 0) > 0
       )
       .map((r) => adaptRelatorioEspecialParaFechamentoShape(r) as RelatorioServico)
     return [...servico, ...especiais].sort((a, b) => {
-      const ca = clientes.find((c) => c.id === a.clienteId)?.nomeEmpresa || a.cliente || ''
-      const cb = clientes.find((c) => c.id === b.clienteId)?.nomeEmpresa || b.cliente || ''
+      const ca = clientes.find((c) => c?.id === a.clienteId)?.nomeEmpresa || a.cliente || ''
+      const cb = clientes.find((c) => c?.id === b.clienteId)?.nomeEmpresa || b.cliente || ''
       const byC = cmpClienteRelatorioFinanceiro(ca, cb)
       if (byC !== 0) return byC
       return cmpClienteRelatorioFinanceiro(String(a.numero ?? ''), String(b.numero ?? ''))
@@ -4609,10 +4613,15 @@ export default function Dashboard() {
           if (Array.isArray(idb)) parsed = idb as RelatorioServico[]
         }
         if (!Array.isArray(parsed)) return
+        const parsedSafe = filterEntitiesWithId<RelatorioServico>(parsed)
         setRelatoriosServico((prev) => {
-          const merged = mergeRelatoriosServicoDeferServerLocal(parsed, prev) as RelatorioServico[]
+          const merged = filterEntitiesWithId<RelatorioServico>(
+            mergeRelatoriosServicoDeferServerLocal(parsedSafe, prev) as RelatorioServico[]
+          )
           if (merged.length >= prev.length) return merged
-          return mergeRelatoriosServicoDeferServerLocal(prev, parsed) as RelatorioServico[]
+          return filterEntitiesWithId<RelatorioServico>(
+            mergeRelatoriosServicoDeferServerLocal(prev, parsedSafe) as RelatorioServico[]
+          )
         })
       } catch {
         /* ignorar */
@@ -4758,7 +4767,7 @@ export default function Dashboard() {
     let valorComNotaFiscal = 0
     let nFaturasComNF = 0
     for (const f of faturasPecas) {
-      if (f.status === 'cancelada') continue
+      if (!f?.id || f.status === 'cancelada') continue
       valorComNotaFiscal += Number(f.valorTotal) || 0
       nFaturasComNF++
     }
@@ -4768,6 +4777,7 @@ export default function Dashboard() {
     let valorDinheiroSemNFPendente = 0
     let nFechamentosDinheiroPendente = 0
     for (const rel of relatoriosServico) {
+      if (!rel?.id) continue
       if (!fechamentosGuardadosBibliotecaIds.includes(rel.id)) continue
       const fr = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
       const obj =
@@ -4886,6 +4896,7 @@ export default function Dashboard() {
   const relatoriosSemNFPendenteMapaGestaoFin = useMemo(() => {
     const out: RelatorioServico[] = []
     for (const rel of relatoriosServico) {
+      if (!rel?.id) continue
       if (!fechamentosGuardadosBibliotecaIds.includes(rel.id)) continue
       const itens = fechamentosRelatorios[rel.id]
       if (!itens?.length) continue
@@ -4923,7 +4934,7 @@ export default function Dashboard() {
     const clientesIdsFaturaAberta = new Set<string>()
 
     for (const f of faturasPecas) {
-      if (f.status === 'cancelada') continue
+      if (!f?.id || f.status === 'cancelada') continue
       const v = Number(f.valorTotal) || 0
       const vi = Number(f.valorIVA) || 0
       if (f.status === 'paga') {
@@ -4967,6 +4978,7 @@ export default function Dashboard() {
     let valorComFaturaFluxoPendente = 0
     let nComFaturaFluxoPendente = 0
     for (const rel of relatoriosServico) {
+      if (!rel?.id) continue
       if (!fechamentosGuardadosBibliotecaIds.includes(rel.id)) continue
       const fr = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
       const obj =
@@ -4990,6 +5002,7 @@ export default function Dashboard() {
 
     let ivaServSemNfEst = 0
     for (const rel of relatoriosServico) {
+      if (!rel?.id) continue
       if (!fechamentosGuardadosBibliotecaIds.includes(rel.id)) continue
       const fr = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
       const obj =
@@ -5002,6 +5015,7 @@ export default function Dashboard() {
     }
     let ivaServComFatFluxoEst = 0
     for (const rel of relatoriosServico) {
+      if (!rel?.id) continue
       if (!fechamentosGuardadosBibliotecaIds.includes(rel.id)) continue
       const fr = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
       const obj =
@@ -7908,7 +7922,7 @@ export default function Dashboard() {
       const savedRelatoriosServicoRaw = getData('nonato-relatorios-servico')
       const removedRelatorioIds = new Set<string>()
       if (savedRelatoriosServicoRaw && Array.isArray(savedRelatoriosServicoRaw)) {
-        let relatoriosOk = savedRelatoriosServicoRaw as RelatorioServico[]
+        let relatoriosOk = filterEntitiesWithId<RelatorioServico>(savedRelatoriosServicoRaw)
         // Não chamar restaurarRelatoriosDeBackupsLocais no arranque — repunha eliminados após deploy.
         if (Array.isArray(savedClientes)) {
           const recBoot = recuperarRelatoriosServicoPerdidos(
@@ -7916,10 +7930,12 @@ export default function Dashboard() {
             relatoriosOk,
             { onlyRepairClienteIds: true }
           )
-          relatoriosOk = recBoot.relatorios as RelatorioServico[]
-          if (recBoot.clienteIdsReparados > 0) {
+          relatoriosOk = filterEntitiesWithId<RelatorioServico>(recBoot.relatorios)
+          if (recBoot.clienteIdsReparados > 0 || relatoriosOk.length !== savedRelatoriosServicoRaw.length) {
             saveData('nonato-relatorios-servico', relatoriosOk).catch(() => {})
           }
+        } else if (relatoriosOk.length !== savedRelatoriosServicoRaw.length) {
+          saveData('nonato-relatorios-servico', relatoriosOk).catch(() => {})
         }
         setRelatoriosServico(relatoriosOk)
       }
@@ -8248,7 +8264,9 @@ export default function Dashboard() {
         }
       }
       const applyPecasBootList = (listaIn: PecaBiblioteca[]) => {
-        const raw = listaIn.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+        const raw = filterEntitiesWithId<PecaBiblioteca>(listaIn).map((peca) =>
+          sanitizarPecaBibliotecaImportacaoFlag(peca)
+        )
         const { lista: sequenciada } = garantirNumerosSequenciaPecaBiblioteca(raw, catsInicial)
         let toSave = sequenciada
         setPecasBiblioteca((prev) => {
@@ -8601,14 +8619,18 @@ export default function Dashboard() {
       }
 
       const preLegacyMigrated = JSON.stringify(buttons)
-      buttons = migrateLegacyFichaCadastralSidebarButtons(Array.isArray(buttons) ? buttons : [])
+      buttons = migrateLegacyFichaCadastralSidebarButtons(
+        filterEntitiesWithId<SidebarButton>(Array.isArray(buttons) ? buttons : [])
+      )
       if (JSON.stringify(buttons) !== preLegacyMigrated) {
         void saveData('nonato-sidebar-buttons', buttons)
       }
 
       // Normalizar botões padrão - FORÇA atualização de translationKey e group para garantir tradução
       // Remove customName se o nome corresponde à tradução padrão em pt-BR
-      buttons = (Array.isArray(buttons) ? buttons : []).map((b: SidebarButton) => {
+      buttons = (Array.isArray(buttons) ? buttons : [])
+        .filter((b): b is SidebarButton => b != null && typeof b === 'object' && Boolean(b.id))
+        .map((b: SidebarButton) => {
         // Mapeamento de IDs para translationKeys e groups padrão
         const buttonDefaults: { [key: string]: { translationKey: string, group?: SidebarGroup } } = {
           'extras-default': { translationKey: 'administrador' },
@@ -14506,7 +14528,9 @@ export default function Dashboard() {
 
   const atualizarClientesDevedores = (faturasOverride?: FaturaPecas[]) => {
     const lista = faturasOverride ?? faturasPecas
-    const idsRelatorioServico = new Set(relatoriosServico.map((r) => r.id))
+    const idsRelatorioServico = new Set(
+      relatoriosServico.map((r) => r?.id).filter((id): id is string => Boolean(id))
+    )
     const relatoriosParaDevedor = [
       ...relatoriosServico,
       ...relatoriosEspeciais
@@ -19900,16 +19924,16 @@ export default function Dashboard() {
     if (concluidosReparadosRef.current) return
     if (relatoriosServico.length === 0) return
     const bibSet = new Set(fechamentosGuardadosBibliotecaIds)
-    const semFlagConcluido = relatoriosServico.filter((r) => bibSet.has(r.id) && !r.servicoConcluido)
+    const semFlagConcluido = relatoriosServico.filter((r) => r?.id && bibSet.has(r.id) && !r.servicoConcluido)
     if (semFlagConcluido.length > 0) {
       const relatoriosCorrigidos = relatoriosServico.map((r) =>
-        bibSet.has(r.id) && !r.servicoConcluido ? { ...r, servicoConcluido: true } : r
+        r?.id && bibSet.has(r.id) && !r.servicoConcluido ? { ...r, servicoConcluido: true } : r
       )
       setRelatoriosServico(relatoriosCorrigidos)
       void saveData('nonato-relatorios-servico', relatoriosCorrigidos)
     }
     const pendentes = relatoriosServico.filter(
-      (r) => r.servicoConcluido && !fechamentosGuardadosBibliotecaIds.includes(r.id)
+      (r) => r?.id && r.servicoConcluido && !fechamentosGuardadosBibliotecaIds.includes(r.id)
     )
     if (pendentes.length === 0) {
       concluidosReparadosRef.current = true
@@ -22316,6 +22340,7 @@ export default function Dashboard() {
     const isFiltroSoSemCategoria = filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA
     const q = buscaBibliotecaDeferred.trim()
     const filtered = pecasBiblioteca.filter((peca) => {
+      if (!peca?.id) return false
       if (isFiltroSoSemCategoria) {
         if (peca.categoriaId) return false
       } else if (filtroGrupoBiblioteca && peca.categoriaId !== filtroGrupoBiblioteca) {
@@ -22326,7 +22351,7 @@ export default function Dashboard() {
       return true
     })
     return ordenarPecasBibliotecaParaExibicao(filtered, categoriasPecasAlfabeto).filter(
-      (p) => !ehImportacaoPendenteStrict(p)
+      (p) => p?.id && !ehImportacaoPendenteStrict(p)
     )
   }, [
     pecasBiblioteca,
@@ -22342,7 +22367,10 @@ export default function Dashboard() {
     const totalPaginas = Math.max(1, Math.ceil(total / BIBLIOTECA_ITENS_POR_LOTE))
     const pagina = Math.min(paginaBibliotecaFlat, totalPaginas - 1)
     const inicio = pagina * BIBLIOTECA_ITENS_POR_LOTE
-    return pecasCatalogoFiltradasGestao.slice(inicio, inicio + BIBLIOTECA_ITENS_POR_LOTE).map((p) => p.id)
+    return pecasCatalogoFiltradasGestao
+      .slice(inicio, inicio + BIBLIOTECA_ITENS_POR_LOTE)
+      .map((p) => p?.id)
+      .filter((id): id is string => Boolean(id))
   }, [pecasCatalogoFiltradasGestao, paginaBibliotecaFlat])
 
   const paginaBibliotecaTodaSelecionada = useMemo(

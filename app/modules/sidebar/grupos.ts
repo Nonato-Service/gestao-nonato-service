@@ -76,7 +76,7 @@ export function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
 }
 
 export function isSidebarButtonLocked(button: SidebarButton): boolean {
-  return SIDEBAR_GROUP_LAUNCHER_IDS.has(button.id)
+  return Boolean(button?.id) && SIDEBAR_GROUP_LAUNCHER_IDS.has(button.id)
 }
 
 export function sidebarGroupChevronClass(isExpanded: boolean): string {

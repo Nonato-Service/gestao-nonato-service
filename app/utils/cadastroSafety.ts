@@ -55,6 +55,20 @@ function isPecasBibliotecaBackupSuspeito(raw: string | null | undefined): boolea
   return n < Math.max(15, Math.min(catN, 80))
 }
 
+/**
+ * Remove buracos/`null` de arrays de entidades com `id`.
+ * Não apaga cadastros válidos — só entradas inválidas que crasham `.id` no boot.
+ */
+export function filterEntitiesWithId<T extends { id?: unknown }>(arr: unknown): T[] {
+  if (!Array.isArray(arr)) return []
+  return arr.filter(
+    (x): x is T =>
+      x != null &&
+      typeof x === 'object' &&
+      String((x as { id?: unknown }).id ?? '').trim() !== ''
+  )
+}
+
 export function hasMeaningfulCadastroInLocalStorage(): boolean {
   if (typeof window === 'undefined') return false
   return NONATO_CRITICAL_CADASTRO_KEYS.some((key) =>

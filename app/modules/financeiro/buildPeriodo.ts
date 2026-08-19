@@ -58,18 +58,19 @@ export function buildIvaControlesFromDados(input: BuildFinanceiroPeriodoInput): 
 
   for (const tipo of tipos) {
     for (const f of input.faturasPecas) {
-      if (f.status === 'cancelada') continue
+      if (!f?.id || f.status === 'cancelada') continue
       const dt = parseDataFinanceiroParaDate(f.dataEmissao)
       if (!dt) continue
       add(tipo, dt, Number(f.valorIVA) || 0, Number(f.valorTotal) || 0, f.id)
     }
     for (const os of input.ordensServico) {
-      if (os.status === 'cancelada') continue
+      if (!os || os.status === 'cancelada') continue
       const dt = parseDataFinanceiroParaDate(os.dataFechamento || os.dataAbertura)
       if (!dt) continue
       add(tipo, dt, Number(os.valorIVA) || 0, Number(os.valorTotal) || 0)
     }
     for (const rel of input.relatoriosServico) {
+      if (!rel?.id) continue
       if (!input.fechamentosGuardadosBibliotecaIds.includes(rel.id)) continue
       const itens = input.fechamentosRelatorios[rel.id]
       if (!itens?.length) continue
@@ -127,7 +128,7 @@ export function buildRelatorioFinanceiroPeriodo(input: BuildFinanceiroPeriodoInp
   let pendenteFechamentosBiblioteca = 0
 
   for (const os of input.ordensServico) {
-    if (os.status === 'cancelada') continue
+    if (!os || os.status === 'cancelada') continue
     const dt = parseDataFinanceiroParaDate(os.dataFechamento || os.dataAbertura)
     if (!dt || !dataDentroPeriodoFinanceiro(dt, dataInicio, dataFim)) continue
     numeroOS++
@@ -137,7 +138,7 @@ export function buildRelatorioFinanceiroPeriodo(input: BuildFinanceiroPeriodoInp
   }
 
   for (const f of input.faturasPecas) {
-    if (f.status === 'cancelada') continue
+    if (!f?.id || f.status === 'cancelada') continue
     const dt = parseDataFinanceiroParaDate(f.dataEmissao)
     if (!dt || !dataDentroPeriodoFinanceiro(dt, dataInicio, dataFim)) continue
     numeroFaturas++
@@ -147,6 +148,7 @@ export function buildRelatorioFinanceiroPeriodo(input: BuildFinanceiroPeriodoInp
   }
 
   for (const rel of input.relatoriosServico) {
+    if (!rel?.id) continue
     if (!input.fechamentosGuardadosBibliotecaIds.includes(rel.id)) continue
     const itens = input.fechamentosRelatorios[rel.id]
     if (!itens?.length) continue

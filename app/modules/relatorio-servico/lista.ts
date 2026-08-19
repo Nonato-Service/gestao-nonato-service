@@ -4,28 +4,29 @@ export function findClienteByRelatorio<T extends ClienteRelatorioLookup>(
   clientes: T[],
   rel: RelatorioServicoNumeroLike
 ): T | undefined {
-  const cid = (rel.clienteId || '').trim()
+  const cid = (rel?.clienteId || '').trim()
   if (cid) {
-    const byId = clientes.find((c) => c.id === cid)
+    const byId = clientes.find((c) => c?.id === cid)
     if (byId) return byId
   }
-  const nome = (rel.cliente || '').trim().toLowerCase()
+  const nome = (rel?.cliente || '').trim().toLowerCase()
   if (!nome) return undefined
-  return clientes.find((c) => (c.nomeEmpresa || '').trim().toLowerCase() === nome)
+  return clientes.find((c) => (c?.nomeEmpresa || '').trim().toLowerCase() === nome)
 }
 
 export function relatorioEstaNaBibliotecaArquivo(
-  r: { id: string },
+  r: { id?: string } | null | undefined,
   fechamentosGuardadosBibliotecaIds: string[]
 ): boolean {
+  if (!r?.id) return false
   return fechamentosGuardadosBibliotecaIds.includes(r.id)
 }
 
 export function relatorioSaiDaListaPrincipalRelatorios(
-  r: RelatorioServicoNumeroLike,
+  r: RelatorioServicoNumeroLike | null | undefined,
   fechamentosGuardadosBibliotecaIds: string[]
 ): boolean {
-  if (!r.servicoConcluido) return false
+  if (!r?.servicoConcluido) return false
   return relatorioEstaNaBibliotecaArquivo(r, fechamentosGuardadosBibliotecaIds)
 }
 
@@ -33,7 +34,11 @@ export function relatoriosServicoForaDaBiblioteca<T extends RelatorioServicoNume
   relatoriosServico: T[],
   fechamentosGuardadosBibliotecaIds: string[]
 ): T[] {
-  return relatoriosServico.filter(
-    (r) => !relatorioSaiDaListaPrincipalRelatorios(r, fechamentosGuardadosBibliotecaIds)
+  return (relatoriosServico || []).filter(
+    (r) =>
+      r != null &&
+      typeof r === 'object' &&
+      Boolean(r.id) &&
+      !relatorioSaiDaListaPrincipalRelatorios(r, fechamentosGuardadosBibliotecaIds)
   )
 }

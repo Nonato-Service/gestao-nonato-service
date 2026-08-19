@@ -4,8 +4,11 @@ import type { SidebarButton, SidebarGroup } from './tipos'
 
 /** Substitui o botão legado «ficha-cadastral-default» por dois: transferência e fatura (cliente). */
 export function migrateLegacyFichaCadastralSidebarButtons(buttons: SidebarButton[]): SidebarButton[] {
-  if (!buttons.some((b) => b.id === 'ficha-cadastral-default')) return buttons
-  return buttons.flatMap((b) => {
+  const safe = (buttons || []).filter(
+    (b): b is SidebarButton => b != null && typeof b === 'object' && Boolean(b.id)
+  )
+  if (!safe.some((b) => b.id === 'ficha-cadastral-default')) return safe
+  return safe.flatMap((b) => {
     if (b.id !== 'ficha-cadastral-default') return [b]
     const ord = typeof b.order === 'number' ? b.order : 20
     const grp = (b.group || 'empresa-institucional') as SidebarGroup
@@ -35,7 +38,10 @@ export function migrateLegacyFichaCadastralSidebarButtons(buttons: SidebarButton
 }
 
 export function normalizeSidebarButtons(buttons: SidebarButton[]): SidebarButton[] {
-  const sorted = [...buttons].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  const safe = (buttons || []).filter(
+    (b): b is SidebarButton => b != null && typeof b === 'object' && Boolean(b.id)
+  )
+  const sorted = [...safe].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
   const grouped = new Map<SidebarGroup, SidebarButton[]>()
   for (const group of SIDEBAR_GROUPS) grouped.set(group, [])
 
