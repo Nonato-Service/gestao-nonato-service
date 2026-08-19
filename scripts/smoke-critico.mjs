@@ -877,6 +877,28 @@ try {
   } else {
     fail('NonatoMainApp ainda define RelatorioServico localmente ou não importa createEmptyRelatorioServicoForm')
   }
+  if (
+    idx.includes('ItemRelatorioExcluidoArquivo') &&
+    idx.includes('PastaRelatoriosExcluidosCliente') &&
+    idx.includes('RelatoriosExcluidosClientesStorage')
+  ) {
+    ok('módulo relatorio-servico exporta tipos de relatórios excluídos')
+  } else {
+    fail('módulo relatorio-servico sem tipos ItemRelatorioExcluidoArquivo / Pasta / Storage')
+  }
+  if (!exists('app/modules/relatorio-servico/excluidosArquivo.ts')) {
+    fail('falta app/modules/relatorio-servico/excluidosArquivo.ts')
+  } else {
+    ok('existe app/modules/relatorio-servico/excluidosArquivo.ts')
+  }
+  if (
+    nma.includes('ItemRelatorioExcluidoArquivo') &&
+    !nma.includes('type ItemRelatorioExcluidoArquivo =')
+  ) {
+    ok('NonatoMainApp usa ItemRelatorioExcluidoArquivo do módulo relatorio-servico')
+  } else {
+    fail('NonatoMainApp ainda define ItemRelatorioExcluidoArquivo localmente ou não importa')
+  }
 } catch (e) {
   fail(`módulo relatorio-servico: ${e.message}`)
 }

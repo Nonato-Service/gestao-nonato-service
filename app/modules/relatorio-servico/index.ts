@@ -19,6 +19,12 @@ export {
 export type { RelatorioServico } from './relatorioServicoForm'
 export { createEmptyRelatorioServicoForm } from './relatorioServicoForm'
 
+export type {
+  ItemRelatorioExcluidoArquivo,
+  PastaRelatoriosExcluidosCliente,
+  RelatoriosExcluidosClientesStorage,
+} from './excluidosArquivo'
+
 export {
   diaTrabalhoDataChaveOrdenacao,
   sortDiasTrabalhoCronologicamente,

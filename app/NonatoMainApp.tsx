@@ -156,6 +156,9 @@ import {
   type PecaSubstituicao,
   type RelatorioEquipamentoRef,
   type RelatorioServico,
+  type ItemRelatorioExcluidoArquivo,
+  type PastaRelatoriosExcluidosCliente,
+  type RelatoriosExcluidosClientesStorage,
   createEmptyDiaTrabalhoForm,
   createEmptyPecaSubstituicaoForm,
   createEmptyRelatorioServicoForm,
@@ -1035,38 +1038,13 @@ function NumeroSequenciaCirculo({
 
 /* RelatorioServico / createEmptyRelatorioServicoForm → modules/relatorio-servico */
 
+/* ItemRelatorioExcluidoArquivo / PastaRelatoriosExcluidosCliente / RelatoriosExcluidosClientesStorage → modules/relatorio-servico */
+
 /* numero → modules/relatorio-servico */
 
 /** Item de cobrança no fechamento → app/modules/fechamento (FechamentoItem) */
 
 /* Fechamento IVA → app/modules/fechamento/iva */
-
-/** Item arquivado ao excluir relatório (cópia de segurança por pasta de cliente) */
-type ItemRelatorioExcluidoArquivo =
-  | {
-      archiveId: string
-      excluidoEm: string
-      tipo: 'servico'
-      relatorio: RelatorioServico
-      fechamentoItens?: FechamentoItem[]
-      tinhaFechamentoBiblioteca?: boolean
-    }
-  | {
-      archiveId: string
-      excluidoEm: string
-      tipo: 'nota-equipamento'
-      relatorio: RelatorioEquipamento
-      equipamentoModelo?: string
-      equipamentoSerie?: string
-    }
-
-type PastaRelatoriosExcluidosCliente = {
-  clienteId: string
-  clienteNome: string
-  itens: ItemRelatorioExcluidoArquivo[]
-}
-
-type RelatoriosExcluidosClientesStorage = { pastas: Record<string, PastaRelatoriosExcluidosCliente> }
 
 /* PedidoOrcamento / buildPedidoOrcamentoFromRelatorio → app/modules/orcamentos */
 
