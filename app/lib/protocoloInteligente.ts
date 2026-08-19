@@ -10,6 +10,7 @@ export type {
 export { newProtocoloBlocoId, ensureProtocoloBlocosIds } from '../modules/protocolo'
 
 import type { ProtocoloBlocoMin, ProtocoloServicoStatus } from '../modules/protocolo'
+import { ensureProtocoloBlocosIds } from '../modules/protocolo'
 
 export type ProtocoloIntelFiltroChip = 'todos' | 'ultimos7d' | 'com_fotos' | 'com_pecas' | 'incompletos'
 
@@ -52,6 +53,7 @@ const MS_7_DIAS = 7 * 24 * 60 * 60 * 1000
 export function protocoloTemImagens(p: { blocos?: ProtocoloBlocoMin[] }): boolean {
   return (p.blocos || []).some(
     (b) =>
+      !!b &&
       (b.tipo === 'imagens' || b.tipo === 'acao') &&
       Array.isArray(b.imagens) &&
       b.imagens.some((src) => String(src || '').trim().length > 0)
@@ -72,6 +74,7 @@ export function protocoloIdentificacaoOk(p: ProtocoloFormMin): boolean {
 export function protocoloConteudoOk(p: ProtocoloFormMin): boolean {
   const textoIni = Boolean((p.textoInicial || '').trim())
   const blocosComDado = (p.blocos || []).some((b) => {
+    if (!b || typeof b !== 'object') return false
     if (b.tipo === 'texto') return Boolean((b.texto || '').trim())
     if (b.tipo === 'imagens') return protocoloBlocoTemImagem(b)
     if (b.tipo === 'acao') return Boolean((b.texto || '').trim()) || protocoloBlocoTemImagem(b)
@@ -81,7 +84,7 @@ export function protocoloConteudoOk(p: ProtocoloFormMin): boolean {
 }
 
 function protocoloBlocoTemImagem(b: ProtocoloBlocoMin): boolean {
-  return Array.isArray(b.imagens) && b.imagens.some((s) => String(s || '').trim().length > 0)
+  return Array.isArray(b?.imagens) && b.imagens.some((s) => String(s || '').trim().length > 0)
 }
 
 /** Protocolo guardado sem conteúdo narrativo ou imagens — útil para filtro «incompletos». */
@@ -116,6 +119,7 @@ export function aplicarFiltroInteligenteChip<T extends ProtocoloServicoMin>(
   if (chip === 'todos') return lista
   const agora = Date.now()
   return lista.filter((p) => {
+    if (!p || typeof p !== 'object') return false
     switch (chip) {
       case 'ultimos7d': {
         const t = new Date(p.dataCriacao).getTime()
@@ -195,12 +199,12 @@ export function formRascunhoDeProtocolo(
   pdfPadrao: number
 ): ProtocoloFormMin & { relatorioServicoId: string } {
   return {
-    clienteId: p.clienteId,
+    clienteId: p.clienteId || '',
     equipamentoNumeroSerie: p.equipamentoNumeroSerie || '',
     situacaoDescricao: typeof p.situacaoDescricao === 'string' ? p.situacaoDescricao : '',
     textoInicial: p.textoInicial || '',
-    blocos: (p.blocos || []).map((b) => ({ ...b })),
-    pecasTrocadasCodigos: [...(p.pecasTrocadasCodigos || [])],
+    blocos: ensureProtocoloBlocosIds(p.blocos),
+    pecasTrocadasCodigos: [...(p.pecasTrocadasCodigos || [])].map((c) => String(c ?? '')),
     pdfModelo: p.pdfModelo ?? pdfPadrao,
     relatorioServicoId: typeof p.relatorioServicoId === 'string' ? p.relatorioServicoId : '',
     condicaoGeral: typeof p.condicaoGeral === 'string' ? p.condicaoGeral : '',
@@ -377,9 +381,10 @@ export function agruparProtocolosExecutadosPorClienteEData<T extends ProtocoloAr
   lista: T[],
   nomeClienteFn: (clienteId: string) => string
 ): GrupoProtocolosExecutadosCliente<T>[] {
-  const exec = lista.filter((p) => protocoloEstaExecutadoEnviado(p))
+  const exec = lista.filter((p) => p && protocoloEstaExecutadoEnviado(p))
   const mapCliente = new Map<string, T[]>()
   for (const p of exec) {
+    if (!p?.id) continue
     const id = p.clienteId || '__sem_cliente__'
     if (!mapCliente.has(id)) mapCliente.set(id, [])
     mapCliente.get(id)!.push(p)

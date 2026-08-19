@@ -6198,8 +6198,13 @@ export default function Dashboard() {
   useEffect(() => {
     if (editingProtocoloServicoId === null) return
     setProtocoloServicoForm((prev) => {
-      if (!prev.blocos.length || !prev.blocos.some((b) => !b.id)) return prev
-      return { ...prev, blocos: ensureProtocoloBlocosIds(prev.blocos) }
+      const blocos = Array.isArray(prev.blocos) ? prev.blocos : []
+      // Buracos/null no array ou bloco sem id → normalizar (evita TypeError em bloco.id no render).
+      if (blocos.length === 0) {
+        return Array.isArray(prev.blocos) ? prev : { ...prev, blocos: [] }
+      }
+      if (!blocos.some((b) => b == null || typeof b !== 'object' || !b.id)) return prev
+      return { ...prev, blocos: ensureProtocoloBlocosIds(blocos) }
     })
   }, [editingProtocoloServicoId])
 
@@ -8187,14 +8192,23 @@ export default function Dashboard() {
 
       const savedProtocolosServico = getData('nonato-protocolos-servico')
       if (Array.isArray(savedProtocolosServico)) {
-        setProtocolosServico(savedProtocolosServico.map((pr: ProtocoloServico) => {
-          const m = Number(pr.pdfModelo)
-          return {
-            ...pr,
-            pdfModelo: m >= 1 && m <= PROTOCOLO_SERVICO_PDF_MODELOS_MAX ? m : PROTOCOLO_PDF_MODELO_PADRAO,
-            status: pr.status === 'executado_enviado' ? 'executado_enviado' : 'em_execucao',
-          }
-        }))
+        setProtocolosServico(
+          savedProtocolosServico
+            .filter(
+              (pr): pr is ProtocoloServico =>
+                pr != null && typeof pr === 'object' && typeof (pr as ProtocoloServico).id === 'string'
+            )
+            .map((pr: ProtocoloServico) => {
+              const m = Number(pr.pdfModelo)
+              return {
+                ...pr,
+                blocos: ensureProtocoloBlocosIds(Array.isArray(pr.blocos) ? pr.blocos : []),
+                pecasTrocadasCodigos: Array.isArray(pr.pecasTrocadasCodigos) ? pr.pecasTrocadasCodigos : [],
+                pdfModelo: m >= 1 && m <= PROTOCOLO_SERVICO_PDF_MODELOS_MAX ? m : PROTOCOLO_PDF_MODELO_PADRAO,
+                status: pr.status === 'executado_enviado' ? 'executado_enviado' : 'em_execucao',
+              }
+            })
+        )
       }
 
       // Carregar categorias de peças (antes da numeração sequencial por grupo)
@@ -28672,10 +28686,10 @@ export default function Dashboard() {
         const protoEnvioClienteT = translations['pt-BR'] as any
         const tituloProto = protoT?.protocolosServicoTitle || 'PROTOCOLOS DE SERVIÇO'
         const descProto = protoT?.protocolosServicoDesc || 'Consulte e gere os protocolos de serviço (antes/depois, imagens e peças trocadas).'
-        const clienteProto = clientes.find(c => c.id === protocoloServicoForm.clienteId)
+        const clienteProto = clientes.find(c => c?.id === protocoloServicoForm.clienteId)
         const serieProtoForm = (protocoloServicoForm.equipamentoNumeroSerie || '').trim()
         const equipamentoProto = clienteProto?.equipamentos?.find(
-          (e) => (e.numeroSerie || '').trim() === serieProtoForm
+          (e) => e && (e.numeroSerie || '').trim() === serieProtoForm
         )
         const serieProtocoloResumo = (equipamentoProto?.numeroSerie || protocoloServicoForm.equipamentoNumeroSerie || '').trim()
         const idEquipamentoVisivel = resolverIdEquipamentoVisivelCliente(equipamentoProto, equipamentos)
@@ -28812,14 +28826,15 @@ export default function Dashboard() {
         const filtroClienteRaw = protocoloServicoClienteFiltroLista.trim()
         const filtroClienteNenhum = filtroClienteRaw === PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM
         const filtroClienteLista = filtroClienteNenhum ? '' : filtroClienteRaw
-        const protocolosOrdenados = protocolosServico.slice().reverse()
+        const protocolosOrdenados = protocolosServico.filter((p) => p != null && typeof p === 'object' && p.id).slice().reverse()
         let protocolosFiltrados = filtroLista
           ? protocolosOrdenados.filter(p => {
-              const cl = clientes.find(c => c.id === p.clienteId)
-              const eq = cl?.equipamentos?.find((e) => (e.numeroSerie || '').trim() === (p.equipamentoNumeroSerie || '').trim())
+              const cl = clientes.find(c => c?.id === p.clienteId)
+              const eq = cl?.equipamentos?.find((e) => e && (e.numeroSerie || '').trim() === (p.equipamentoNumeroSerie || '').trim())
               const idEqFilt = resolverIdEquipamentoVisivelCliente(eq, equipamentos)
               const sitF = (p.situacaoDescricao || '').trim().toLowerCase()
               const blocosHay = (p.blocos || [])
+                .filter((b) => b != null && typeof b === 'object')
                 .map((b) => [b.titulo, b.texto, b.tipo].filter(Boolean).join(' '))
                 .join(' ')
                 .toLowerCase()
@@ -28841,11 +28856,11 @@ export default function Dashboard() {
             protocoloServicoFiltroChip
           ) as ProtocoloServico[]
         }
-        const protocolosEmExecucao = protocolosFiltrados.filter((p) => protocoloEstaEmExecucao(p))
-        const protocolosExecutadosFiltrados = protocolosFiltrados.filter((p) => protocoloEstaExecutadoEnviado(p))
-        const protocoloIdsComArquivo = new Set(protocolosServico.map((p) => p.clienteId).filter(Boolean))
+        const protocolosEmExecucao = protocolosFiltrados.filter((p) => p && protocoloEstaEmExecucao(p))
+        const protocolosExecutadosFiltrados = protocolosFiltrados.filter((p) => p && protocoloEstaExecutadoEnviado(p))
+        const protocoloIdsComArquivo = new Set(protocolosServico.map((p) => p?.clienteId).filter(Boolean))
         const clientesComProtocolo = ordenarClientesPorNome(
-          clientes.filter((c) => protocoloIdsComArquivo.has(c.id)),
+          clientes.filter((c) => c?.id && protocoloIdsComArquivo.has(c.id)),
           localeOrdCli
         )
         type GrupoProtocolosLista = { clienteId: string; nomeGrupo: string; itens: ProtocoloServico[] }
@@ -29077,7 +29092,8 @@ export default function Dashboard() {
           setProtocoloServicoForm(protocoloFormVazio(PROTOCOLO_PDF_MODELO_PADRAO))
         }
         const renderProtocoloCard = (p: ProtocoloServico, lane: 'exec' | 'arquivo') => {
-          const cl = clientes.find((c) => c.id === p.clienteId)
+          if (!p?.id) return null
+          const cl = clientes.find((c) => c?.id === p.clienteId)
           const eq = cl?.equipamentos?.find((e) => e.numeroSerie === p.equipamentoNumeroSerie)
           const dataBase = lane === 'arquivo' ? p.dataConclusao || p.dataCriacao : p.dataCriacao
           const dataStr = new Date(dataBase).toLocaleDateString(documentPdfDateLocale(selectedLanguage))
@@ -29243,7 +29259,8 @@ export default function Dashboard() {
           )
         }
         const renderProtocoloArquivoRow = (p: ProtocoloServico) => {
-          const cl = clientes.find((c) => c.id === p.clienteId)
+          if (!p?.id) return null
+          const cl = clientes.find((c) => c?.id === p.clienteId)
           const eq = cl?.equipamentos?.find((e) => e.numeroSerie === p.equipamentoNumeroSerie)
           const dataBase = p.dataConclusao || p.dataCriacao
           const dataStr = new Date(dataBase).toLocaleDateString(documentPdfDateLocale(selectedLanguage))
@@ -29829,7 +29846,9 @@ export default function Dashboard() {
                   </div>
                   <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</label>
                   <AssistTextarea value={protocoloServicoForm.textoInicial} onValueChange={(v) => setProtocoloServicoForm(prev => ({ ...prev, textoInicial: v }))} placeholder={protoT?.protocolosServicoTextoInicialPlaceholder || 'Texto introdutório do protocolo...'} rows={4} style={{ ...inputBase, resize: 'vertical' as const, marginBottom: '20px', maxWidth: '100%' }} />
-                  {protocoloServicoForm.blocos.map((bloco, idx) => (
+                  {(protocoloServicoForm.blocos || []).map((bloco, idx) => {
+                    if (!bloco || typeof bloco !== 'object') return null
+                    return (
                     <div key={bloco.id || `bloco-fallback-${idx}`} style={{ marginBottom: '16px', padding: '16px 18px', backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: '12px', border: '1px solid rgba(0, 255, 136, 0.14)' }}>
                       <div
                         style={{
@@ -30439,7 +30458,8 @@ export default function Dashboard() {
                         </div>
                       )}
                     </div>
-                  ))}
+                  )
+                  })}
                   <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '8px' }}>
                     <button type="button" className="btn-primary" style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: [...prev.blocos, { id: newProtocoloBlocoId(), tipo: 'texto', texto: '' }] }))}>
                       + {protoT?.protocolosServicoAdicionarTexto || 'Bloco de texto'}
@@ -30852,7 +30872,7 @@ export default function Dashboard() {
                           onClick: () => setProtocoloServicoClienteFiltroLista(PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM),
                         },
                       ]}
-                      onSelect={(c) => setProtocoloServicoClienteFiltroLista(c.id)}
+                      onSelect={(c) => c?.id && setProtocoloServicoClienteFiltroLista(c.id)}
                       onClear={() => setProtocoloServicoClienteFiltroLista('')}
                     />
                   </div>

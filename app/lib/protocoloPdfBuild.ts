@@ -211,6 +211,7 @@ export function buildProtocoloServicoPdfHtmlFromProtocolo(input: ProtocoloPdfBui
   let blocosHtml = ''
   let acaoNum = 0
   ;(p.blocos || []).forEach((b) => {
+    if (!b || typeof b !== 'object') return
     if (b.tipo === 'texto' && b.texto?.trim()) {
       blocosHtml += `<div class="proto-bloco-texto" style="${bts}">${tituloSecaoHtml(b.titulo)}${esc(b.texto)}</div>`
     }
