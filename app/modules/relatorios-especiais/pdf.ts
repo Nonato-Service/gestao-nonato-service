@@ -48,10 +48,26 @@ body.rs-pdf--especial .re-doc {
   font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
 }
 
+/* Fluxo do documento: hierarquia clara sem remover dados */
 .re-doc-flow {
   display: flex;
   flex-direction: column;
   gap: 0;
+}
+
+.re-doc-flow > .ns-pdf-header {
+  margin-bottom: 14px;
+}
+
+.re-doc-flow > .ns-pdf-meta {
+  margin-bottom: 16px;
+}
+
+.re-bloco-kpi {
+  margin: 0 0 20px;
+  padding: 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 /* Resumo executivo — caixa sóbria */
@@ -59,7 +75,7 @@ body.rs-pdf--especial .re-doc {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
-  margin: 0 0 18px;
+  margin: 0;
   border: 1px solid #cbd5e1;
   background: #fff;
   break-inside: avoid;
@@ -114,26 +130,34 @@ body.rs-pdf--especial .re-doc {
 }
 
 .re-secao {
-  margin: 0 0 18px;
+  margin: 0 0 22px;
+  padding: 0 0 4px;
   break-inside: avoid;
   page-break-inside: avoid;
+}
+
+/* Tabelas longas (dias / equipamentos) podem partir página */
+.re-secao--fluxo {
+  break-inside: auto;
+  page-break-inside: auto;
 }
 
 .re-secao__titulo {
   counter-increment: re-sec;
   margin: 0 0 10px;
-  padding: 0 0 6px;
+  padding: 7px 10px;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #0f172a;
-  border-bottom: 1.5px solid #1e293b;
+  color: #f8fafc;
+  background: #1e293b;
+  border-bottom: 3px solid #0d7a3d;
 }
 
 .re-secao__titulo::before {
   content: counter(re-sec, decimal-leading-zero) ". ";
-  color: #0d7a3d;
+  color: #86efac;
   font-weight: 700;
   letter-spacing: 0;
 }
@@ -141,8 +165,61 @@ body.rs-pdf--especial .re-doc {
 .re-secao__ajuda {
   font-size: 8.5px;
   color: #64748b;
-  margin: -2px 0 10px;
+  margin: 0 0 10px;
+  padding: 0 2px;
   line-height: 1.45;
+}
+
+.re-diarias-rodape {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.re-diarias-rodape__total {
+  margin: 0;
+  font-size: 10px;
+  color: #14532d;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.re-diarias-rodape__ajuda {
+  margin: 4px 0 0;
+  font-size: 9px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.re-viagem-bloco {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.re-viagem-bloco__titulo {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+}
+
+.re-viagem-bloco__ajuda {
+  margin: 0 0 8px;
+  font-size: 9px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.re-table--dias .re-col-desc {
+  text-align: left !important;
+  min-width: 72px;
+  font-size: 8px;
+  line-height: 1.35;
 }
 
 .re-table {
@@ -248,11 +325,15 @@ body.rs-pdf--especial .re-doc {
 }
 
 .re-equip-card {
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   border: 1px solid #cbd5e1;
   background: #fff;
   break-inside: avoid;
   page-break-inside: avoid;
+}
+
+.re-equip-card:last-child {
+  margin-bottom: 0;
 }
 
 .re-equip-card__head {
@@ -344,9 +425,10 @@ body.rs-pdf--especial .re-doc {
 }
 
 .re-total-geral {
-  margin: 6px 0 18px;
+  margin: 4px 0 22px;
   padding: 14px 16px;
   border: 1.5px solid #1e293b;
+  border-left: 4px solid #0d7a3d;
   background: #fff;
   text-align: left;
   break-inside: avoid;
@@ -505,7 +587,7 @@ body.rs-pdf--especial .re-doc {
 }
 
 .re-resumo-card {
-  padding: 10px 12px;
+  padding: 11px 12px;
   text-align: left;
   background: #fff;
   border-right: 1px solid #e2e8f0;
@@ -596,8 +678,16 @@ body.rs-pdf--especial .re-doc {
 @media print {
   .re-equip-card,
   .re-total-geral,
-  .re-secao,
-  .re-kpi-strip {
+  .re-kpi-strip,
+  .re-bloco-kpi,
+  .re-diarias-rodape,
+  .re-assinatura,
+  .re-obs {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .re-secao:not(.re-secao--fluxo) {
     break-inside: avoid;
     page-break-inside: avoid;
   }
@@ -920,9 +1010,9 @@ function buildResumoViagemHtml(
     })
     .join('')
 
-  return `<div style="margin-top:12px">
-    <h4 style="margin:0 0 6px;font-size:12px;color:#0f172a">${esc(L(labels, 'relatorioEspecialResumoViagem', 'Viagem / deslocação'))}</h4>
-    <p style="margin:0 0 8px;font-size:9px;color:#64748b">${esc(L(labels, 'relatorioEspecialResumoViagemAjuda', 'Dias só com viagem ou registados sem horas em máquina — com equipamento e cliente.'))}</p>
+  return `<div class="re-viagem-bloco">
+    <h4 class="re-viagem-bloco__titulo">${esc(L(labels, 'relatorioEspecialResumoViagem', 'Viagem / deslocação'))}</h4>
+    <p class="re-viagem-bloco__ajuda">${esc(L(labels, 'relatorioEspecialResumoViagemAjuda', 'Dias só com viagem ou registados sem horas em máquina — com equipamento e cliente.'))}</p>
     <table class="re-table">
       <thead>
         <tr>
@@ -1004,7 +1094,7 @@ export function imprimirRelatorioEspecialPdf(
         <td class="re-col-total">${esc(dia.kmRetorno || '0')}</td>
         <td class="re-col-total">${esc(dia.kmTotal || '—')}</td>
         <td class="re-col-total">${esc(almoco || '—')}</td>
-        <td>${esc(dia.descricaoTrabalho || '')}</td>
+        <td class="re-col-desc">${esc(dia.descricaoTrabalho || '')}</td>
       </tr>`
     })
     .join('')
@@ -1032,7 +1122,7 @@ export function imprimirRelatorioEspecialPdf(
         </tfoot>`
       : ''
 
-  const deslocamentosHtml = `<section class="re-secao">
+  const deslocamentosHtml = `<section class="re-secao re-secao--fluxo">
     <h3 class="re-secao__titulo">${esc(L(labels, 'controleHorasDeslocamentos', L(labels, 'relatorioEspecialPdfDeslocamentos', 'Controlo de horas e deslocamentos')))}</h3>
     <p class="re-secao__ajuda">${esc(L(labels, 'relatorioEspecialDiasFimSemanaOk', 'Sábado e domingo também contam como dias de trabalho.'))}</p>
     <table class="re-table re-table--dias">
@@ -1066,8 +1156,10 @@ export function imprimirRelatorioEspecialPdf(
       </tbody>
       ${tfootDeslocamento}
     </table>
-    <p style="font-size:10px;margin:8px 0 0;color:#1b5e20"><strong>${esc(L(labels, 'relatorioEspecialTotalDiarias', L(labels, 'diarias', 'TOTAL DE DIÁRIAS')))}:</strong> ${totais.diarias}${(totais.datasDiarias || []).length > 0 ? ` — ${esc((totais.datasDiarias || []).map((d) => formatDiaComDiaSemana(d, labels as DiaSemanaLabels)).join(' · '))}` : ''}</p>
-    <p style="font-size:9px;margin:4px 0 0;color:#64748b">${esc(L(labels, 'relatorioEspecialDiariasAjuda', 'Cada dia registado conta como diária (inclui sáb./dom. e dias só com viagem), mesmo sem horas em máquina.'))}</p>
+    <div class="re-diarias-rodape">
+      <p class="re-diarias-rodape__total"><strong>${esc(L(labels, 'relatorioEspecialTotalDiarias', L(labels, 'diarias', 'TOTAL DE DIÁRIAS')))}:</strong> ${totais.diarias}${(totais.datasDiarias || []).length > 0 ? ` — ${esc((totais.datasDiarias || []).map((d) => formatDiaComDiaSemana(d, labels as DiaSemanaLabels)).join(' · '))}` : ''}</p>
+      <p class="re-diarias-rodape__ajuda">${esc(L(labels, 'relatorioEspecialDiariasAjuda', 'Cada dia registado conta como diária (inclui sáb./dom. e dias só com viagem), mesmo sem horas em máquina.'))}</p>
+    </div>
   </section>`
 
   const blocosEquipamentos = equipamentos
@@ -1082,7 +1174,7 @@ export function imprimirRelatorioEspecialPdf(
     )
     .join('')
 
-  const controloHorasHtml = `<section class="re-secao">
+  const controloHorasHtml = `<section class="re-secao re-secao--fluxo">
     <h3 class="re-secao__titulo">${esc(L(labels, 'relatorioEspecialPdfControloHoras', 'Controlo de horas por equipamento'))}</h3>
     <p class="re-secao__ajuda">${esc(L(labels, 'relatorioEspecialPdfEquipLiquidoNota', 'Horas por máquina: intervalo de relógio; almoço descontado uma vez na máquina activa do dia. Dias sem horas em máquina também contam para diárias se estiverem registados.'))}</p>
     ${blocosEquipamentos || `<p style="color:#64748b;font-style:italic">${esc(L(labels, 'relatorioEspecialSemEquipamentos', 'Sem equipamentos'))}</p>`}
@@ -1133,10 +1225,10 @@ export function imprimirRelatorioEspecialPdf(
 <style>${RELATORIO_ESPECIAL_PDF_CSS}</style>
 <div class="re-doc pdf-doc re-doc-flow">
   ${headerHtml}
-  ${kpiStripHtml}
   ${metaHtml}
-  ${equipamentosResumoHtml}
+  <div class="re-bloco-kpi">${kpiStripHtml}</div>
   ${deslocamentosHtml}
+  ${equipamentosResumoHtml}
   ${controloHorasHtml}
   ${totalGeralFinalHtml}
   ${resumoHtml}
