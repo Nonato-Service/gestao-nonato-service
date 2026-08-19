@@ -86,6 +86,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 66. `app/modules/relatorio-servico/` (RelatorioEquipamentoRef / criarEquipamentoRelatorioVazio) — feito
 67. `app/modules/relatorio-servico/` (RelatorioServico / createEmptyRelatorioServicoForm) — feito
 68. `app/modules/relatorio-servico/` (ItemRelatorioExcluidoArquivo / Pasta / Storage) — feito
+69. `app/modules/clientes/` (Cliente tipo canónico) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

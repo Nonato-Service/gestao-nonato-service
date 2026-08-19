@@ -185,13 +185,20 @@ try {
     idx.includes('clientePrioritarioFormCompleteness') &&
     idx.includes('formatClientePrioritarioAddress') &&
     idx.includes('createEmptyEquipamentoClienteForm') &&
-    idx.includes('createEmptyRelatorioEquipamentoForm')
+    idx.includes('createEmptyRelatorioEquipamentoForm') &&
+    idx.includes('Cliente')
   ) {
-    ok('módulo clientes exporta alfabeto/detalhe/prioritário/equipamentoCliente')
+    ok('módulo clientes exporta alfabeto/detalhe/prioritário/equipamentoCliente/Cliente')
   } else {
     fail('módulo clientes incompleto (index.ts)')
   }
-  for (const f of ['prioritarioTipos.ts', 'prioritarioForm.ts', 'equipamentoClienteTipos.ts', 'equipamentoClienteForm.ts']) {
+  for (const f of [
+    'prioritarioTipos.ts',
+    'prioritarioForm.ts',
+    'equipamentoClienteTipos.ts',
+    'equipamentoClienteForm.ts',
+    'clienteTipos.ts',
+  ]) {
     if (exists(`app/modules/clientes/${f}`)) ok(`existe app/modules/clientes/${f}`)
     else fail(`falta app/modules/clientes/${f}`)
   }
@@ -232,6 +239,15 @@ try {
     ok('NonatoMainApp usa EquipamentoCliente/RelatorioEquipamento do módulo clientes')
   } else {
     fail('NonatoMainApp ainda define EquipamentoCliente/RelatorioEquipamento localmente ou não usa createEmpty*')
+  }
+  if (
+    idx.includes('export type { Cliente }') &&
+    nma.includes('Cliente') &&
+    !nma.includes('type Cliente = {')
+  ) {
+    ok('NonatoMainApp usa Cliente do módulo clientes')
+  } else {
+    fail('NonatoMainApp ainda define Cliente localmente ou módulo não exporta Cliente')
   }
 } catch (e) {
   fail(`módulo clientes: ${e.message}`)

@@ -381,6 +381,7 @@ import {
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser, clearWarmSessionMarkers } from './utils/syncRevision'
 import type {
+  Cliente,
   ClientePrioritario,
   ClientePrioritarioForm,
   EquipamentoCliente,
@@ -1052,41 +1053,7 @@ function NumeroSequenciaCirculo({
 
 /* EquipamentoCliente → app/modules/clientes (equipamentoClienteTipos) */
 
-type Cliente = {
-  id: string
-  /** Código legível (ex.: NS000042) — gerado automaticamente */
-  codigoCliente?: string
-  nomeEmpresa: string
-  morada: string
-  localidade: string
-  conselho: string
-  pais: string
-  codigoPostal: string
-  freguesia: string
-  numeroContribuicaoFiscal: string
-  telefones: string
-  email: string
-  contato: string
-  photo?: string
-  equipamentos: EquipamentoCliente[]
-  relatorios?: { [equipamentoId: string]: RelatorioServico[] } // Relatórios organizados por equipamento
-  isDevedor?: boolean // Indica se o cliente é devedor
-  saldoPendente?: number // Saldo pendente do cliente
-  /** Quantidade de relatórios de serviço com situação «não pago» no fluxo financeiro */
-  relatoriosNaoPagoCount?: number
-  /** Relatório mais recente (por data) ainda «não pago»/devedor — destaque fino no cadastro até regularizar */
-  ultimoRelatorioDevedorId?: string
-  /** Formulários de solicitação técnica devolvidos (PDF/imagem), associados ao registo do cliente */
-  anexosSolicitacaoServico?: SolicitacaoDocDevolvidoCliente[]
-  /** Grupo do Cadastro de Serviços (tabela HTT/KRC/…) aplicada a este cliente */
-  grupoTarifaId?: string
-  /** KM de ida predefinidos — preenchidos no relatório de serviço ao escolher o cliente */
-  kmIdaPadrao?: string
-  /** KM de retorno predefinidos — preenchidos no relatório de serviço ao escolher o cliente */
-  kmRetornoPadrao?: string
-  /** Pessoa física ou jurídica — usado no formulário de cadastro */
-  tipoCliente?: 'fisica' | 'juridica'
-}
+/* Cliente → app/modules/clientes (clienteTipos) */
 
 /* findCliente → modules/relatorio-servico */
 
