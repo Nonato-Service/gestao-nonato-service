@@ -61,25 +61,16 @@ export function relatorioPdfThemeCss(model: string): string {
   const m = normalizePdfModelo(model)
   const themes: Record<string, string> = {
     profissional: `
-      body.rs-pdf.rs-pdf--profissional .info-section {
-        background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-        border-left: 4px solid #0d7a3d;
-        border-radius: 0 8px 8px 0;
-        padding: 16px 18px;
-        box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+      body.rs-pdf.rs-pdf--profissional .summary-card--main .value { color: #0d7a3d; }
+      body.rs-pdf.rs-pdf--profissional th { background: #1e293b; }
+      body.rs-pdf.rs-pdf--profissional .ns-pdf-header__bar {
+        background: linear-gradient(90deg, #1e293b 0%, #0d7a3d 50%, #1e293b 100%);
       }
-      body.rs-pdf.rs-pdf--profissional .summary-card {
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(30,58,95,0.08);
-        border-top-width: 3px;
-        border-top-color: #0d7a3d;
-      }
-      body.rs-pdf.rs-pdf--profissional th { background: linear-gradient(180deg, #1e293b 0%, #334155 100%); }
     `,
     moderno: `
       body.rs-pdf.rs-pdf--moderno .ns-pdf-header {
-        background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
-        border-radius: 10px;
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        border-radius: 0;
         padding: 4px 0 12px;
         margin-bottom: 18px;
       }
@@ -87,7 +78,12 @@ export function relatorioPdfThemeCss(model: string): string {
       body.rs-pdf.rs-pdf--moderno .ns-pdf-header__subtitle { color: #fff !important; }
     `,
     classico: `
-      body.rs-pdf.rs-pdf--classico .info-section h3 { border-bottom-color: #1e3a5f; color: #1e3a5f; }
+      body.rs-pdf.rs-pdf--classico .info-section h3,
+      body.rs-pdf.rs-pdf--classico .report-section h3 {
+        background: #1e293b;
+        border-bottom-color: #0d7a3d;
+        color: #f8fafc;
+      }
     `,
   }
   return themes[m] || themes.profissional
