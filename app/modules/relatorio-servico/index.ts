@@ -1,6 +1,9 @@
-/** Módulo Relatório de Serviço — dias, KM, numeração/duplicados e lista vs biblioteca. */
+/** Módulo Relatório de Serviço — dias, KM, numeração/duplicados, lista vs biblioteca e peça substituição. */
 
 export type { DiaTrabalho, RelatorioServicoNumeroLike, ClienteRelatorioLookup } from './tipos'
+
+export type { PecaSubstituicao } from './pecaSubstituicao'
+export { createEmptyPecaSubstituicaoForm } from './pecaSubstituicao'
 
 export {
   diaTrabalhoDataChaveOrdenacao,

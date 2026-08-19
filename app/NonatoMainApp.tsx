@@ -153,6 +153,8 @@ import {
 } from './modules/biblioteca'
 import {
   type DiaTrabalho,
+  type PecaSubstituicao,
+  createEmptyPecaSubstituicaoForm,
   diaTrabalhoDataChaveOrdenacao,
   sortDiasTrabalhoCronologicamente,
   diasTrabalhoRelatorioOrdenados,
@@ -979,15 +981,7 @@ function SidebarSectionSep({ id, label }: { id: string; label: string }) {
 
 /* RelatorioEquipamento / EquipamentoCliente / empty form → app/modules/clientes */
 
-/* dias-km → modules/relatorio-servico */
-
-type PecaSubstituicao = {
-  id: string
-  imagem?: string
-  descricao: string
-  codigo: string
-  quantidade: string
-}
+/* dias-km / PecaSubstituicao / createEmptyPecaSubstituicaoForm → modules/relatorio-servico */
 
 /* CategoriaPeca / SubcategoriaPeca / PecaBiblioteca / createEmptyPecaBibliotecaForm → app/modules/biblioteca */
 
@@ -5535,12 +5529,7 @@ export default function Dashboard() {
     descricaoTrabalho: ''
   })
   const [editingDiaTrabalhoIndex, setEditingDiaTrabalhoIndex] = useState<number | null>(null)
-  const [novaPeca, setNovaPeca] = useState<PecaSubstituicao>({
-    id: '',
-    descricao: '',
-    codigo: '',
-    quantidade: ''
-  })
+  const [novaPeca, setNovaPeca] = useState<PecaSubstituicao>(createEmptyPecaSubstituicaoForm())
   const [pecaSelecionadaBiblioteca, setPecaSelecionadaBiblioteca] = useState<PecaBiblioteca | null>(null)
   const [codigoBuscaPeca, setCodigoBuscaPeca] = useState<string>('')
   const [showAdicionarPecaModal, setShowAdicionarPecaModal] = useState(false)
@@ -15442,12 +15431,7 @@ export default function Dashboard() {
       descricaoTrabalho: ''
     })
     setEditingDiaTrabalhoIndex(null)
-    setNovaPeca({
-      id: '',
-      descricao: '',
-      codigo: '',
-      quantidade: ''
-    })
+    setNovaPeca(createEmptyPecaSubstituicaoForm())
     setShowRelatorioServicoForm(true)
     scrollRelatorioServicoFormIntoView()
   }
@@ -19753,12 +19737,7 @@ export default function Dashboard() {
       tempoPausa: '',
       descricaoTrabalho: ''
     })
-    setNovaPeca({
-      id: '',
-      descricao: '',
-      codigo: '',
-      quantidade: ''
-    })
+    setNovaPeca(createEmptyPecaSubstituicaoForm())
     setEditingRelatorioServico(null)
     
     // Gerar/Imprimir o relatório após salvar
@@ -19861,7 +19840,7 @@ export default function Dashboard() {
           data: new Date().toISOString().split('T')[0], idaHora: '', idaChegada: '', idaDuracao: '', horasInicio: '', horasFim: '', horasDuracao: '',
           retornoSaida: '', retornoChegada: '', retornoDuracao: '', kmIda: '', kmRetorno: '', kmTotal: '', pausa: '', tempoPausa: '', descricaoTrabalho: ''
         })
-        setNovaPeca({ id: '', descricao: '', codigo: '', quantidade: '' })
+        setNovaPeca(createEmptyPecaSubstituicaoForm())
       }
     } else {
       handleLimparRelatorio()
@@ -19922,12 +19901,7 @@ export default function Dashboard() {
         tempoPausa: '',
         descricaoTrabalho: ''
       })
-      setNovaPeca({
-        id: '',
-        descricao: '',
-        codigo: '',
-        quantidade: ''
-      })
+      setNovaPeca(createEmptyPecaSubstituicaoForm())
       setCodigoBuscaPeca('')
       setPecaSelecionadaBiblioteca(null)
       setEditingRelatorioServico(null)
@@ -20102,12 +20076,7 @@ export default function Dashboard() {
         pecasSubstituicao: [...relatorioServicoForm.pecasSubstituicao, novaEntrada],
       })
     }
-    setNovaPeca({
-      id: '',
-      descricao: '',
-      codigo: '',
-      quantidade: ''
-    })
+    setNovaPeca(createEmptyPecaSubstituicaoForm())
     setShowAdicionarPecaModal(false)
   }
 
@@ -33498,12 +33467,7 @@ export default function Dashboard() {
                       tempoPausa: '',
                       descricaoTrabalho: ''
                     });
-                    setNovaPeca({
-                      id: '',
-                      descricao: '',
-                      codigo: '',
-                      quantidade: ''
-                    });
+                    setNovaPeca(createEmptyPecaSubstituicaoForm());
                   }} style={{ padding: '8px 16px', backgroundColor: '#484848', borderColor: '#666' }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>

@@ -793,6 +793,27 @@ try {
   } else {
     fail('NonatoMainApp ainda define pdfModelo localmente')
   }
+  if (
+    idx.includes('createEmptyPecaSubstituicaoForm') &&
+    idx.includes('PecaSubstituicao')
+  ) {
+    ok('módulo relatorio-servico exporta PecaSubstituicao / createEmptyPecaSubstituicaoForm')
+  } else {
+    fail('módulo relatorio-servico sem PecaSubstituicao / createEmptyPecaSubstituicaoForm')
+  }
+  if (!exists('app/modules/relatorio-servico/pecaSubstituicao.ts')) {
+    fail('falta app/modules/relatorio-servico/pecaSubstituicao.ts')
+  } else {
+    ok('existe app/modules/relatorio-servico/pecaSubstituicao.ts')
+  }
+  if (
+    nma.includes('createEmptyPecaSubstituicaoForm') &&
+    !nma.includes('type PecaSubstituicao = {')
+  ) {
+    ok('NonatoMainApp usa PecaSubstituicao do módulo relatorio-servico')
+  } else {
+    fail('NonatoMainApp ainda define PecaSubstituicao localmente ou não usa createEmptyPecaSubstituicaoForm')
+  }
 } catch (e) {
   fail(`módulo relatorio-servico: ${e.message}`)
 }
