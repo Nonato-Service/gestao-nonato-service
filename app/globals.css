@@ -47249,18 +47249,50 @@ html body .clientes-cadastro-page.tab-glass-root .cliente-cadastro-v2__input-wra
   max-height: calc(100vh - 120px);
   overflow: auto;
 }
+/* Contexto (dados-fixos): nunca sticky/select — evitava overlap com o formulário */
 .orc-pro__workspace--create .orc-pro__panel--context {
-  grid-column: 1;
-  grid-row: 1;
+  grid-column: 1 / -1;
+  grid-row: auto;
+  position: static;
+  max-height: none;
+  overflow: visible;
 }
 .orc-pro__workspace--create .orc-pro__panel--form,
 .orc-pro__workspace--create .orc-pro__panel--placeholder {
   grid-column: 1 / -1;
+  grid-row: auto;
 }
 .orc-pro__workspace--create.orc-pro__workspace--has-sidebar .orc-pro__panel--form,
 .orc-pro__workspace--create.orc-pro__workspace--has-sidebar .orc-pro__panel--placeholder {
   grid-column: 2;
   grid-row: 1;
+}
+.orc-pro__context-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.orc-pro__context-brand-logo {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 200, 83, 0.35);
+  padding: 6px;
+}
+.orc-pro__dados-fixos-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 150, 255, 0.4);
+  padding: 4px;
+  margin-bottom: 12px;
 }
 .orc-pro__workspace--history {
   display: flex;

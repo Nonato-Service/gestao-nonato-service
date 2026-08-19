@@ -87,17 +87,76 @@ export function lerOrcamentoAvulsoRascunhoSession(): OrcamentoAvulsoRascunhoPers
   }
 }
 
-export function gravarOrcamentoAvulsoRascunhoSession(rascunho: OrcamentoAvulsoRascunhoPersist) {
+/** data: URLs em itens incham o sessionStorage e congelam a UI em cada remount/write. */
+function sanitizarRascunhoParaSession(
+  rascunho: OrcamentoAvulsoRascunhoPersist
+): OrcamentoAvulsoRascunhoPersist {
+  const itens = Array.isArray(rascunho.dadosOrcamento?.itens)
+    ? rascunho.dadosOrcamento.itens.map((item) => {
+        const img = typeof item.imagem === 'string' ? item.imagem : ''
+        if (img.startsWith('data:')) {
+          const { imagem: _omit, ...rest } = item
+          return rest
+        }
+        return item
+      })
+    : []
+  return {
+    ...rascunho,
+    dadosOrcamento: {
+      ...rascunho.dadosOrcamento,
+      itens,
+    },
+  }
+}
+
+let gravarOrcamentoAvulsoRascunhoTimer: ReturnType<typeof setTimeout> | null = null
+let gravarOrcamentoAvulsoRascunhoPendente: OrcamentoAvulsoRascunhoPersist | null = null
+
+function gravarOrcamentoAvulsoRascunhoSessionNow(rascunho: OrcamentoAvulsoRascunhoPersist) {
   if (typeof window === 'undefined') return
   try {
-    sessionStorage.setItem(ORCAMENTO_AVULSO_RASCUNHO_LS, JSON.stringify(rascunho))
+    sessionStorage.setItem(
+      ORCAMENTO_AVULSO_RASCUNHO_LS,
+      JSON.stringify(sanitizarRascunhoParaSession(rascunho))
+    )
   } catch (err) {
     console.warn('Não foi possível guardar rascunho do orçamento avulso:', err)
   }
 }
 
+/** Grava rascunho em sessionStorage. `sync: true` — imediato (mudança de tipo). */
+export function gravarOrcamentoAvulsoRascunhoSession(
+  rascunho: OrcamentoAvulsoRascunhoPersist,
+  opts?: { sync?: boolean }
+) {
+  if (typeof window === 'undefined') return
+  if (opts?.sync) {
+    if (gravarOrcamentoAvulsoRascunhoTimer) {
+      clearTimeout(gravarOrcamentoAvulsoRascunhoTimer)
+      gravarOrcamentoAvulsoRascunhoTimer = null
+    }
+    gravarOrcamentoAvulsoRascunhoPendente = null
+    gravarOrcamentoAvulsoRascunhoSessionNow(rascunho)
+    return
+  }
+  gravarOrcamentoAvulsoRascunhoPendente = rascunho
+  if (gravarOrcamentoAvulsoRascunhoTimer) clearTimeout(gravarOrcamentoAvulsoRascunhoTimer)
+  gravarOrcamentoAvulsoRascunhoTimer = setTimeout(() => {
+    gravarOrcamentoAvulsoRascunhoTimer = null
+    const pending = gravarOrcamentoAvulsoRascunhoPendente
+    gravarOrcamentoAvulsoRascunhoPendente = null
+    if (pending) gravarOrcamentoAvulsoRascunhoSessionNow(pending)
+  }, 250)
+}
+
 export function limparOrcamentoAvulsoRascunhoSession() {
   if (typeof window === 'undefined') return
+  if (gravarOrcamentoAvulsoRascunhoTimer) {
+    clearTimeout(gravarOrcamentoAvulsoRascunhoTimer)
+    gravarOrcamentoAvulsoRascunhoTimer = null
+  }
+  gravarOrcamentoAvulsoRascunhoPendente = null
   try {
     sessionStorage.removeItem(ORCAMENTO_AVULSO_RASCUNHO_LS)
   } catch {

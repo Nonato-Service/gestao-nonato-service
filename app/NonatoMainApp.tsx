@@ -880,6 +880,28 @@ const HUB_CARD_SVG_SIZE = 44
 
 /* Helpers orçamento avulso/imagem → app/modules/orcamentos */
 
+/**
+ * O painel Orçamentos Avulso era `const X = () => {}` dentro do Dashboard:
+ * cada re-render do pai mudava a identidade do tipo React → remount total (freeze + perda de upload).
+ * Mantemos uma única função estável e lemos o contexto do pai via ref.
+ */
+const orcAvulsoParentCtxRef: {
+  current: {
+    selectedLanguage: string
+    clientePickerLabels: Record<string, string>
+    openTab: (type: TabType, title: string, icon?: string, explicitReturnHub?: string | null) => void
+    closeTab: (tabId: string) => void
+    getLogoHtmlForOrcamento: () => string
+    voltarPaginaInicial: () => void
+    activeTabId: string | null
+    getTabTitle: (type: TabType) => string
+    LogoComponent: (props: { size?: 'small' | 'medium' | 'large' | 'xlarge' }) => React.ReactNode
+    fichaCadastralLogo: string
+    brandLogoUrl: string | null
+  } | null
+} = { current: null }
+let orcamentosAvulsoContentStable: ((props: any) => React.ReactNode) | null = null
+
 /** Restaura manuais no localStorage e no IndexedDB a partir de um backup JSON (string JSON ou objeto). */
 async function restoreManuaisFamiliasGruposFromBackupPayload(raw: unknown): Promise<void> {
   if (raw == null || raw === '') return
@@ -62935,8 +62957,24 @@ A1;Peça exemplo;10`}
     }
   }
 
-  // Componente para Orçamentos Avulso
-  const OrcamentosAvulsoContent = ({ 
+  // Contexto do pai para o painel estável de Orçamentos Avulso (evita remount a cada render)
+  orcAvulsoParentCtxRef.current = {
+    selectedLanguage,
+    clientePickerLabels: clientePickerLabels as Record<string, string>,
+    openTab,
+    closeTab,
+    getLogoHtmlForOrcamento,
+    voltarPaginaInicial,
+    activeTabId,
+    getTabTitle,
+    LogoComponent,
+    fichaCadastralLogo: typeof fichaCadastral?.logo === 'string' ? fichaCadastral.logo : '',
+    brandLogoUrl: logoUrl,
+  }
+
+  // Componente para Orçamentos Avulso — identidade estável (módulo); corpo criado uma vez
+  if (!orcamentosAvulsoContentStable) {
+  orcamentosAvulsoContentStable = function OrcamentosAvulsoContent({ 
     clientes, 
     clientePrioritario,
     pecasBiblioteca,
@@ -62994,11 +63032,26 @@ A1;Peça exemplo;10`}
     }>>>
     initialTipoOrcamento?: 'orcamentos-gerados'
     onOrcamentosGeradosViewShown?: () => void
-  }) => {
+  }) {
+    const {
+      selectedLanguage,
+      clientePickerLabels,
+      openTab,
+      closeTab,
+      getLogoHtmlForOrcamento,
+      voltarPaginaInicial,
+      activeTabId,
+      getTabTitle,
+      LogoComponent,
+      fichaCadastralLogo,
+      brandLogoUrl,
+    } = orcAvulsoParentCtxRef.current!
+    const logoDadosFixosSrc = getNonatoBrandLogoDisplaySrc(
+      (fichaCadastralLogo || '').trim() || brandLogoUrl
+    )
     /**
-     * O painel é definido dentro do NonatoMainApp: cada re-render do pai remonta este
-     * componente. O prop `rascunho` do pai fica desactualizado (não é actualizado de
-     * propósito — evita cascata de setState). Fonte de verdade no remount = sessionStorage.
+     * Identidade estável no módulo: o pai pode re-renderizar sem remontar este painel.
+     * `rascunho` do pai é só semente; sessionStorage continua a ser a fonte ao reabrir o ecrã.
      */
     const rascunhoEfetivo = lerOrcamentoAvulsoRascunhoSession() || rascunho
     const [tipoOrcamento, setTipoOrcamento] = useState<OrcamentoAvulsoTipoRascunho>(
@@ -63976,7 +64029,7 @@ A1;Peça exemplo;10`}
           patch && 'clienteCadastroPrioritarioFixoId' in patch
             ? patch.clienteCadastroPrioritarioFixoId ?? null
             : clienteCadastroPrioritarioFixo?.id ?? base.clienteCadastroPrioritarioFixoId,
-      })
+      }, { sync: true })
     }
 
     const mudarTipoOrcamento = (key: OrcamentoAvulsoTipoRascunho | 'orcamentos-gerados') => {
@@ -64173,15 +64226,23 @@ A1;Peça exemplo;10`}
           className={`orc-pro__workspace ${tipoOrcamento !== 'orcamentos-gerados' ? 'orc-pro__workspace--create' : 'orc-pro__workspace--history'} ${sidebarSelecaoVisivel ? 'orc-pro__workspace--has-sidebar' : ''}`}
         >
         {tipoOrcamento !== 'orcamentos-gerados' && !sidebarSelecaoVisivel && (
-          <div className="orc-pro__panel orc-pro__panel--context orc-pro__panel--select">
+          <div className="orc-pro__panel orc-pro__panel--context">
             <h3 className="orc-pro__panel-title orc-pro__panel-title--blue">
               {safeT?.orcamentoSecaoContexto || 'Contexto do orçamento'}
             </h3>
-            <p className="orc-pro__panel-desc">
-              {tipoOrcamento === 'dados-fixos'
-                ? (safeT?.orcamentoTipoDadosFixosHint || 'Orçamento com dados fixos da NONATO SERVICE.')
-                : (safeT?.orcamentoTipoPrioritarioValoresHint || 'Orçamento para cliente prioritário com linhas e valores.')}
-            </p>
+            <div className="orc-pro__context-brand">
+              <img
+                src={logoDadosFixosSrc}
+                alt={safeT?.dadosNonatoService || 'NONATO SERVICE'}
+                className="orc-pro__context-brand-logo"
+                onError={(e) => applyNonatoBrandLogoImgFallback(e.currentTarget)}
+              />
+              <p className="orc-pro__panel-desc" style={{ margin: 0 }}>
+                {tipoOrcamento === 'dados-fixos'
+                  ? (safeT?.orcamentoTipoDadosFixosHint || 'Orçamento com dados fixos da NONATO SERVICE.')
+                  : (safeT?.orcamentoTipoPrioritarioValoresHint || 'Orçamento para cliente prioritário com linhas e valores.')}
+              </p>
+            </div>
           </div>
         )}
 
@@ -64312,6 +64373,16 @@ A1;Peça exemplo;10`}
               </h4>
               {tipoOrcamento === 'dados-fixos' || tipoOrcamento === 'cliente-prioritario-fixo' || tipoOrcamento === 'cliente-prioritario-valores' ? (
                 <div style={{ color: '#ccc', fontSize: '14px' }}>
+                  {(tipoOrcamento === 'dados-fixos' ||
+                    tipoOrcamento === 'cliente-prioritario-valores' ||
+                    (tipoOrcamento === 'cliente-prioritario-fixo' && !clienteCadastroPrioritarioFixo)) && (
+                    <img
+                      src={logoDadosFixosSrc}
+                      alt={safeT?.dadosNonatoService || 'NONATO SERVICE'}
+                      className="orc-pro__dados-fixos-logo"
+                      onError={(e) => applyNonatoBrandLogoImgFallback(e.currentTarget)}
+                    />
+                  )}
                   {tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo && (
                     <p style={{ fontSize: '12px', color: '#ffa500', marginBottom: '12px', fontWeight: 600 }}>{safeT?.orcamentoPrioritarioFixoUsandoClienteCadastro || 'A mostrar dados do cliente seleccionado no cadastro (e-mail e telefone para envio).'}</p>
                   )}
@@ -66492,6 +66563,8 @@ A1;Peça exemplo;10`}
       </div>
     )
   }
+  }
+  const OrcamentosAvulsoContent = orcamentosAvulsoContentStable!
 
   const bootUsesOfflineCopy = browserMounted && (bootstrapOfflineMode || !isOnline())
   const bootLoadingOverlay =
