@@ -1242,6 +1242,31 @@ try {
   fail(`módulo idiomas: ${e.message}`)
 }
 
+try {
+  const adminGeral = fs.readFileSync(path.join(root, 'app/components/admin/AdminConfigGeralSection.tsx'), 'utf8')
+  if (
+    adminGeral.includes('configuraIdioma') &&
+    adminGeral.includes('selectedLanguage') &&
+    adminGeral.includes('onLanguageChange') &&
+    adminGeral.includes('getLanguages')
+  ) {
+    ok('Admin Configuração Geral tem seletor de idioma')
+  } else {
+    fail('Admin Configuração Geral sem seletor de idioma (configuraIdioma)')
+  }
+  const nmaLang = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (
+    nmaLang.includes("localStorage.setItem('nonato-language'") &&
+    nmaLang.includes('onLanguageChange: handleLanguageChange')
+  ) {
+    ok('NonatoMainApp persiste e liga o idioma no Admin')
+  } else {
+    fail('NonatoMainApp não persiste/liga o idioma no Admin')
+  }
+} catch (e) {
+  fail(`configura idioma: ${e.message}`)
+}
+
 // 3ae) Módulo pessoas (48.º corte modularização)
 try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/pessoas/index.ts'), 'utf8')

@@ -7681,6 +7681,11 @@ export default function Dashboard() {
       const savedLanguage = getData('nonato-language', false)
       if (savedLanguage && savedLanguage !== selectedLanguage) {
         setSelectedLanguage(savedLanguage)
+        try {
+          localStorage.setItem('nonato-language', savedLanguage)
+        } catch {
+          /* ignorar */
+        }
       }
 
       await reportBoot(40)
@@ -10855,12 +10860,15 @@ export default function Dashboard() {
 
   const handleLanguageChange = (languageCode: string) => {
     setSelectedLanguage(languageCode)
-    saveData('nonato-language', languageCode, false)
     if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('nonato-language', languageCode)
+      } catch {
+        /* quota / modo privado */
+      }
       window.dispatchEvent(new Event('nonato-ui-language'))
     }
-    // Não precisa recarregar a página - o useMemo já atualiza automaticamente
-    // Forçar re-renderização de componentes que dependem do idioma
+    void saveData('nonato-language', languageCode, true)
   }
 
   const handleAddUser = () => {
@@ -27535,6 +27543,8 @@ export default function Dashboard() {
                 setExigirSaidaCorrecta(v)
                 void saveData(EXIGIR_SAIDA_CORRECTA_KEY, v)
               },
+              selectedLanguage,
+              onLanguageChange: handleLanguageChange,
               saveData,
               administradorPreviewPdfLogo,
               aplicarLogoUnificadoTodosPdfs,
@@ -70613,6 +70623,8 @@ A1;Peça exemplo;10`}
                   setExigirSaidaCorrecta(v)
                   void saveData(EXIGIR_SAIDA_CORRECTA_KEY, v)
                 },
+                selectedLanguage,
+                onLanguageChange: handleLanguageChange,
                 saveData,
                 administradorPreviewPdfLogo,
                 aplicarLogoUnificadoTodosPdfs,

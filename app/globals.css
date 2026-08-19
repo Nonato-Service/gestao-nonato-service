@@ -16227,6 +16227,26 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   letter-spacing: 0.04em;
 }
 
+.admin-config-idioma-select {
+  width: 100%;
+  max-width: 420px;
+  padding: 10px 12px;
+  background-color: #1a1a1a;
+  color: #fff;
+  border: 1px solid #00ff00;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.admin-config-idioma-select:hover,
+.admin-config-idioma-select:focus-visible {
+  outline: none;
+  border-color: #00ff00;
+  box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.22);
+}
+
 .admin-logos-hub {
   border-radius: 16px;
   overflow: hidden;

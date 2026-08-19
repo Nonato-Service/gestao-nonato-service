@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { getLanguages } from '../../modules/idiomas'
 import { AdminLogosHub } from './AdminLogosHub'
 import type { AdminBibliotecaLogoDraft, AdminInterfaceLogoDraft, LogoRelatorio, SafeT } from './adminTypes'
 import type { PdfLogoSituationId } from '../../lib/adminPdfLogoSituations'
@@ -39,6 +40,9 @@ export type AdminConfigGeralSectionProps = {
   /** Preferência Admin: logout correcto + aviso beforeunload. */
   exigirSaidaCorrecta: boolean
   setExigirSaidaCorrecta: (v: boolean) => void
+  /** Idioma da interface neste aparelho. */
+  selectedLanguage: string
+  onLanguageChange: (languageCode: string) => void
   saveData: (key: string, value: unknown, saveToLocalStorage?: boolean, awaitServer?: boolean) => Promise<boolean>
   administradorPreviewPdfLogo: (selectedId: string) => string | null
   aplicarLogoUnificadoTodosPdfs: (logoId: string) => void
@@ -60,8 +64,11 @@ export function AdminConfigGeralSection(props: AdminConfigGeralSectionProps) {
     preverProximoNumeroRelatorio,
     exigirSaidaCorrecta,
     setExigirSaidaCorrecta,
+    selectedLanguage,
+    onLanguageChange,
     ...logoProps
   } = props
+  const languageOptions = getLanguages(safeT)
 
   return (
     <div className="admin-section admin-section--violet admin-config-geral">
@@ -106,6 +113,31 @@ export function AdminConfigGeralSection(props: AdminConfigGeralSectionProps) {
             <span />
           </span>
         </button>
+      </div>
+
+      <div className="admin-config-relatorio-card admin-config-idioma-card" style={{ marginBottom: 16 }}>
+        <h4 className="admin-config-relatorio-card__title">
+          {(safeT as Record<string, string | undefined>)?.configuraIdioma || 'CONFIGURA IDIOMA'}
+        </h4>
+        <p className="admin-config-relatorio-card__desc">
+          {(safeT as Record<string, string | undefined>)?.configuraIdiomaDesc ||
+            'Escolha o idioma da interface neste aparelho. A alteração aplica-se de imediato e fica guardada.'}
+        </p>
+        <label className="admin-config-relatorio-card__label" htmlFor="admin-config-idioma-select">
+          {safeT?.selectLanguage || 'Selecionar Idioma'}
+        </label>
+        <select
+          id="admin-config-idioma-select"
+          className="ns-lang-select admin-config-idioma-select"
+          value={selectedLanguage}
+          onChange={(e) => onLanguageChange(e.target.value)}
+        >
+          {languageOptions.map((lang) => (
+            <option key={lang.code} value={lang.code}>
+              {lang.flag} {lang.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {variant === 'full' ? (
