@@ -203,7 +203,7 @@ import {
   normalizeCategoriaAgendamento,
   isAgendamentoPessoal,
   isAgendamentoCancelado,
-  statusOperacionalAgenda,
+  isStatusOperacionalAtivo,
   statusFromOperacional,
   normalizeDataKeyAgenda,
   parseDataAgendaLocal,
@@ -235,6 +235,7 @@ import {
   buildMensagemLembreteAgenda,
   encontrarConflitoClienteMesmoDia,
   encontrarConflitoTecnicoMesmoDia,
+  encontrarConflitoTecnicoEmAndamento,
   temConflitosAgendaLegados,
   agendamentoActivoParaConflitoCliente,
 } from './modules/agenda'
@@ -12852,6 +12853,22 @@ export default function Dashboard() {
     operacional: StatusOperacionalAgenda
   ) => {
     const novoStatus = statusFromOperacional(operacional)
+    const alvo = agendamentos.find((a) => a.id === id)
+    if (!alvo) return
+
+    if (novoStatus === 'em-andamento') {
+      const candidato: Agendamento = { ...alvo, status: 'em-andamento' }
+      const conflito = encontrarConflitoTecnicoEmAndamento(candidato, agendamentos, id)
+      if (conflito) {
+        const periodo = rotuloPeriodoAgendamento(conflito)
+        const msgBase =
+          safeT?.agendaConflitoTecnicoEmAndamento ||
+          'Este técnico já tem um atendimento «Em andamento» ({periodo}). Só pode haver um de cada vez. Conclua ou cancele o actual antes de iniciar outro.'
+        setAgendaConflitoModalMsg(String(msgBase).replace('{periodo}', periodo))
+        return
+      }
+    }
+
     const updated = agendamentos.map((a) => {
       if (a.id !== id) return a
       const antes = normalizeStatusAgendamento(a)
@@ -12954,6 +12971,19 @@ export default function Dashboard() {
         const msgBase =
           safeT?.agendaConflitoTecnicoMesmoDia ||
           'Este técnico já tem um agendamento activo com dias em comum ({periodo}). O mesmo técnico não pode ter dois atendimentos sobrepostos. Cancele ou altere o outro agendamento primeiro.'
+        setAgendaConflitoModalMsg(String(msgBase).replace('{periodo}', periodo))
+        return false
+      }
+      const conflitoEmAndamento = encontrarConflitoTecnicoEmAndamento(
+        savedAgendamento,
+        agendamentos,
+        savedAgendamento.id
+      )
+      if (conflitoEmAndamento) {
+        const periodo = rotuloPeriodoAgendamento(conflitoEmAndamento)
+        const msgBase =
+          safeT?.agendaConflitoTecnicoEmAndamento ||
+          'Este técnico já tem um atendimento «Em andamento» ({periodo}). Só pode haver um de cada vez. Conclua ou cancele o actual antes de iniciar outro.'
         setAgendaConflitoModalMsg(String(msgBase).replace('{periodo}', periodo))
         return false
       }
@@ -43582,7 +43612,7 @@ A1;Peça exemplo;10`}
                             {safeT?.edit || 'Editar'}
                           </button>
                           {(['em-andamento', 'concluido', 'cancelado'] as StatusOperacionalAgenda[]).map((op) => {
-                            const ativo = statusOperacionalAgenda(agendamento) === op
+                            const ativo = isStatusOperacionalAtivo(agendamento, op)
                             return (
                               <button
                                 key={op}
@@ -44513,12 +44543,20 @@ A1;Peça exemplo;10`}
                   })
                 })
 
-                const temAgendamentoTecnicoEmCurso = agendamentosAtivos.some(
+                // «Em andamento» real (status persistido) — cabeçalho EM ATENDIMENTO
+                const temEmAndamentoHoje = agendamentosAtivos.some(
                   (ag) =>
                     !isAgendamentoPessoal(ag) &&
-                    normalizeTipoAgendamento(ag) === 'agendamento-tecnico' &&
+                    normalizeStatusAgendamento(ag) === 'em-andamento' &&
+                    agendamentoIncluiData(ag, hoje)
+                )
+                const temEmAndamentoNaJanela = agendamentosAtivos.some(
+                  (ag) =>
+                    !isAgendamentoPessoal(ag) &&
+                    normalizeStatusAgendamento(ag) === 'em-andamento' &&
                     agendamentoPeriodoIntersectaIntervalo(ag, hoje, fimJanela)
                 )
+                const temEmAtendimentoReal = temEmAndamentoHoje || temEmAndamentoNaJanela
 
                 const temAssuntoPessoal = agendamentosAtivos.some(
                   (ag) =>
@@ -44529,35 +44567,30 @@ A1;Peça exemplo;10`}
                   (ag) => isAgendamentoPessoal(ag) && agendamentoIncluiData(ag, hoje)
                 )
 
-                // Determinar cor do boneco
+                // Determinar cor do boneco (EM ATENDIMENTO só com status real «em-andamento»)
                 let corBoneco = '#ffffff' // Branco - sem trabalho
                 let statusTexto = safeT?.semTrabalho || 'SEM TRABALHO'
                 let corIndicador = '#888' // Cinza para sem trabalho
                 
-                if (temAgendamentoTecnicoHoje && temPreAgendamento) {
-                  // Verde e amarelo - em atendimento e tem pré-agendamento
+                if (temEmAtendimentoReal && temPreAgendamento) {
                   corBoneco = 'linear-gradient(135deg, #00c853 50%, #ffd700 50%)'
                   statusTexto = safeT?.emAtendimentoComPreAgendamento || 'EM ATENDIMENTO + PRÉ-AGENDAMENTO'
                   corIndicador = '#00c853'
-                } else if (temAgendamentoTecnicoHoje || temAgendamentoTecnicoEmCurso) {
-                  // Verde - serviço em curso (inclui multi-dia até 20/06, etc.)
+                } else if (temEmAtendimentoReal) {
                   corBoneco = '#00c853'
                   statusTexto = safeT?.emAtendimento || 'EM ATENDIMENTO'
                   corIndicador = '#00c853'
-                } else if (temPreAgendamento && temAgendamentoTecnicoFuturo) {
-                  // Verde e amarelo - tem ambos futuros
+                } else if (temPreAgendamento && (temAgendamentoTecnicoFuturo || temAgendamentoTecnicoHoje)) {
                   corBoneco = 'linear-gradient(135deg, #00c853 50%, #ffd700 50%)'
-                  statusTexto = safeT?.emAtendimentoComPreAgendamento || 'EM ATENDIMENTO + PRÉ-AGENDAMENTO'
+                  statusTexto = safeT?.comAgendaEPreAgendamento || 'COM AGENDA + PRÉ-AGENDAMENTO'
                   corIndicador = '#00c853'
                 } else if (temPreAgendamento) {
-                  // Amarelo - pré-agendamento (sem atendimento técnico)
                   corBoneco = '#ffd700'
                   statusTexto = safeT?.preAgendamento || 'PRÉ-AGENDAMENTO'
                   corIndicador = '#ffd700'
-                } else if (temAgendamentoTecnicoFuturo) {
-                  // Verde - tem agendamento técnico futuro
+                } else if (temAgendamentoTecnicoFuturo || temAgendamentoTecnicoHoje) {
                   corBoneco = '#00c853'
-                  statusTexto = safeT?.emAtendimento || 'EM ATENDIMENTO'
+                  statusTexto = safeT?.comAgenda || 'COM AGENDA'
                   corIndicador = '#00c853'
                 } else if (temAssuntoPessoalHoje || temAssuntoPessoal) {
                   corBoneco = '#a855f7'
@@ -44665,7 +44698,7 @@ A1;Peça exemplo;10`}
                               {renderBlocoEquipamentoAgendamentoEstadoVisual(ag, clientes, safeT as Record<string, string | undefined>)}
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
                                 {(['em-andamento', 'concluido', 'cancelado'] as StatusOperacionalAgenda[]).map((op) => {
-                                  const ativo = statusOperacionalAgenda(ag) === op
+                                  const ativo = isStatusOperacionalAtivo(ag, op)
                                   return (
                                     <button
                                       key={`${ag.id}-${op}`}
@@ -44718,7 +44751,7 @@ A1;Peça exemplo;10`}
                               {renderBlocoEquipamentoAgendamentoEstadoVisual(ag, clientes, safeT as Record<string, string | undefined>)}
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
                                 {(['em-andamento', 'concluido', 'cancelado'] as StatusOperacionalAgenda[]).map((op) => {
-                                  const ativo = statusOperacionalAgenda(ag) === op
+                                  const ativo = isStatusOperacionalAtivo(ag, op)
                                   return (
                                     <button
                                       key={`${ag.id}-f-${op}`}

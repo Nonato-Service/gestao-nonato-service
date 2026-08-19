@@ -1,7 +1,7 @@
 import type { Agendamento } from './tipos'
 import { getDatasPeriodoAgendamento, normalizeDataKeyAgenda } from './datas'
 import { agendamentoStatusAtivoParaEstadoVisual } from './filtros'
-import { isAgendamentoPessoal } from './normalize'
+import { isAgendamentoPessoal, normalizeStatusAgendamento } from './normalize'
 
 /** Normaliza nome (cliente ou técnico) para comparação (trim + minúsculas + sem acentos). */
 export function normalizeNomeAgenda(nome: string): string {
@@ -148,6 +148,55 @@ export function listarParesConflitoTecnicoLegados(
 export function temConflitosAgendaLegados(agendamentos: Agendamento[]): boolean {
   return (
     listarParesConflitoClienteLegados(agendamentos).length > 0 ||
-    listarParesConflitoTecnicoLegados(agendamentos).length > 0
+    listarParesConflitoTecnicoLegados(agendamentos).length > 0 ||
+    listarParesTecnicoMultiploEmAndamento(agendamentos).length > 0
   )
+}
+
+/**
+ * Status persistido «em-andamento» (não confundir com activo/pendente/confirmado).
+ * Assuntos pessoais não contam.
+ */
+export function agendamentoEmAndamentoReal(ag: Agendamento): boolean {
+  if (isAgendamentoPessoal(ag)) return false
+  return normalizeStatusAgendamento(ag) === 'em-andamento'
+}
+
+/**
+ * Um técnico = no máximo um atendimento «em-andamento» de cada vez
+ * (independente de sobreposição de datas ou tipo pré/técnico).
+ * `excludeId` ignora o próprio registo (edição / clique no mesmo cartão).
+ */
+export function encontrarConflitoTecnicoEmAndamento(
+  candidato: Agendamento,
+  existentes: Agendamento[],
+  excludeId?: string
+): Agendamento | null {
+  if (!agendamentoEmAndamentoReal(candidato)) return null
+  if (!normalizeNomeAgenda(candidato.tecnico)) return null
+  const skip = String(excludeId ?? candidato.id ?? '').trim()
+  for (const outro of existentes) {
+    if (skip && String(outro.id) === skip) continue
+    if (!agendamentoEmAndamentoReal(outro)) continue
+    if (!mesmoTecnicoAgendamento(candidato, outro)) continue
+    return outro
+  }
+  return null
+}
+
+/** Pares legados: mesmo técnico com dois (ou mais) «em-andamento». Sem wipe. */
+export function listarParesTecnicoMultiploEmAndamento(
+  agendamentos: Agendamento[]
+): Array<{ a: Agendamento; b: Agendamento }> {
+  const emAndamento = agendamentos.filter(agendamentoEmAndamentoReal)
+  const pares: Array<{ a: Agendamento; b: Agendamento }> = []
+  for (let i = 0; i < emAndamento.length; i++) {
+    for (let j = i + 1; j < emAndamento.length; j++) {
+      const a = emAndamento[i]
+      const b = emAndamento[j]
+      if (!mesmoTecnicoAgendamento(a, b)) continue
+      pares.push({ a, b })
+    }
+  }
+  return pares
 }

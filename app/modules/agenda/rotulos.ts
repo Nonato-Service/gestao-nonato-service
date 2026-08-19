@@ -3,7 +3,6 @@ import {
   isAgendamentoPessoal,
   normalizeStatusAgendamento,
   normalizeTipoAgendamento,
-  statusOperacionalAgenda,
   type StatusOperacionalAgenda,
 } from './normalize'
 
@@ -102,11 +101,17 @@ export function rotuloStatusOperacionalAgenda(
   return tr?.emAndamento || 'Em Andamento'
 }
 
+/** Rótulo do status real (pendente/confirmado distintos de em-andamento). */
 export function rotuloStatusOperacionalDeAgendamento(
   ag: Agendamento,
   tr?: Record<string, string | undefined>
 ): string {
-  return rotuloStatusOperacionalAgenda(statusOperacionalAgenda(ag), tr)
+  const st = normalizeStatusAgendamento(ag)
+  if (st === 'concluido') return tr?.concluido || 'Concluído'
+  if (st === 'cancelado') return tr?.cancelado || 'Cancelado'
+  if (st === 'em-andamento') return tr?.emAndamento || 'Em Andamento'
+  if (st === 'confirmado') return tr?.confirmado || 'Confirmado'
+  return tr?.pendente || 'Pendente'
 }
 
 /** Cores da legenda simples (estado do técnico) — alinhadas ao calendário. */

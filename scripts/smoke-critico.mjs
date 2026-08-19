@@ -834,6 +834,8 @@ try {
     idx.includes('buildMensagemLembreteAgenda') &&
     idx.includes('encontrarConflitoClienteMesmoDia') &&
     idx.includes('encontrarConflitoTecnicoMesmoDia') &&
+    idx.includes('encontrarConflitoTecnicoEmAndamento') &&
+    idx.includes('isStatusOperacionalAtivo') &&
     idx.includes('temConflitosAgendaLegados') &&
     idx.includes('intervalosSobrepoem')
   ) {
@@ -848,11 +850,12 @@ try {
     if (
       confSrc.includes('encontrarConflitoClienteMesmoDia') &&
       confSrc.includes('encontrarConflitoTecnicoMesmoDia') &&
+      confSrc.includes('encontrarConflitoTecnicoEmAndamento') &&
       confSrc.includes('mesmoTecnicoAgendamento') &&
       confSrc.includes('intervalosSobrepoem') &&
       confSrc.includes('mesmoClienteAgendamento')
     ) {
-      ok('módulo agenda conflitoAgenda: overlap cliente + técnico')
+      ok('módulo agenda conflitoAgenda: overlap + um em-andamento por técnico')
     } else {
       fail('módulo agenda conflitoAgenda incompleto')
     }
@@ -872,10 +875,10 @@ try {
     fail('módulo agenda datas sem expandirIntervaloDatasContinuo/agendamentoCaiNoAnoMes')
   }
   const normSrc = fs.readFileSync(path.join(root, 'app/modules/agenda/normalize.ts'), 'utf8')
-  if (normSrc.includes('statusOperacionalAgenda') && normSrc.includes('statusFromOperacional')) {
+  if (normSrc.includes('statusOperacionalAgenda') && normSrc.includes('isStatusOperacionalAtivo') && normSrc.includes('statusFromOperacional')) {
     ok('módulo agenda normalize: estado operacional técnico')
   } else {
-    fail('módulo agenda normalize sem statusOperacionalAgenda')
+    fail('módulo agenda normalize sem statusOperacionalAgenda/isStatusOperacionalAtivo')
   }
   if (!exists('app/modules/agenda/estadoVisual.tsx')) {
     fail('falta app/modules/agenda/estadoVisual.tsx')
@@ -900,6 +903,8 @@ try {
     !nma.includes('Lembrete Nonato Service:') &&
     nma.includes('encontrarConflitoClienteMesmoDia') &&
     nma.includes('encontrarConflitoTecnicoMesmoDia') &&
+    nma.includes('encontrarConflitoTecnicoEmAndamento') &&
+    nma.includes('isStatusOperacionalAtivo') &&
     nma.includes('temConflitosAgendaLegados')
   ) {
     ok('NonatoMainApp usa blocos estado visual / lembreteWA / conflitoAgenda do módulo agenda')

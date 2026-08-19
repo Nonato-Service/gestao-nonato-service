@@ -8,9 +8,12 @@ export {
   mesmoTecnicoAgendamento,
   agendamentoActivoParaConflitoAgenda,
   agendamentoActivoParaConflitoCliente,
+  agendamentoEmAndamentoReal,
   encontrarConflitoClienteMesmoDia,
   encontrarConflitoTecnicoMesmoDia,
+  encontrarConflitoTecnicoEmAndamento,
   listarParesConflitoClienteLegados,
   listarParesConflitoTecnicoLegados,
+  listarParesTecnicoMultiploEmAndamento,
   temConflitosAgendaLegados,
 } from './conflitoAgenda'

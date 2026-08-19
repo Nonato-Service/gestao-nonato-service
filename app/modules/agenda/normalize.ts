@@ -49,8 +49,9 @@ export function isAgendamentoCancelado(ag: { status?: string }): boolean {
 }
 
 /**
- * Estado operacional simplificado para o técnico (3 opções claras).
- * pendente / confirmado / em-andamento → «Em andamento» (ainda não concluído).
+ * Estado operacional simplificado para botões rápidos (3 opções).
+ * Usar `isStatusOperacionalAtivo` para destacar o botão — «Em andamento»
+ * só fica activo com status persistido `em-andamento`.
  */
 export type StatusOperacionalAgenda = 'em-andamento' | 'concluido' | 'cancelado'
 
@@ -58,7 +59,20 @@ export function statusOperacionalAgenda(ag: { status?: string }): StatusOperacio
   const st = normalizeStatusAgendamento(ag)
   if (st === 'concluido') return 'concluido'
   if (st === 'cancelado') return 'cancelado'
+  if (st === 'em-andamento') return 'em-andamento'
+  // pendente / confirmado: ainda não promovidos a «em andamento»
   return 'em-andamento'
+}
+
+/** Destaca o botão rápido correcto (pendente/confirmado ≠ Em andamento activo). */
+export function isStatusOperacionalAtivo(
+  ag: { status?: string },
+  op: StatusOperacionalAgenda
+): boolean {
+  const st = normalizeStatusAgendamento(ag)
+  if (op === 'concluido') return st === 'concluido'
+  if (op === 'cancelado') return st === 'cancelado'
+  return st === 'em-andamento'
 }
 
 /** Mapeia o estado operacional para o status persistido no agendamento. */

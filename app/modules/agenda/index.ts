@@ -22,6 +22,7 @@ export {
   isAgendamentoPessoal,
   isAgendamentoCancelado,
   statusOperacionalAgenda,
+  isStatusOperacionalAtivo,
   statusFromOperacional,
 } from './normalize'
 export type { StatusOperacionalAgenda } from './normalize'
@@ -85,9 +86,12 @@ export {
   mesmoTecnicoAgendamento,
   agendamentoActivoParaConflitoAgenda,
   agendamentoActivoParaConflitoCliente,
+  agendamentoEmAndamentoReal,
   encontrarConflitoClienteMesmoDia,
   encontrarConflitoTecnicoMesmoDia,
+  encontrarConflitoTecnicoEmAndamento,
   listarParesConflitoClienteLegados,
   listarParesConflitoTecnicoLegados,
+  listarParesTecnicoMultiploEmAndamento,
   temConflitosAgendaLegados,
 } from './conflitoAgenda'
