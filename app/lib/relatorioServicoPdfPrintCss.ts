@@ -415,12 +415,11 @@ body.rs-pdf--classic { font-size: 10px; line-height: 1.5; padding: 8px 10px 18px
 body.rs-pdf--detailed { font-size: 11px; line-height: 1.55; padding: 10px 12px 20px; }
 body.rs-pdf--compact { font-size: 8px; line-height: 1.38; padding: 6px 8px 14px; }
 
-/* Hierarquia do Relatório de Serviço comum — alinhada ao especial; não afecta .rs-pdf--especial */
+/* Hierarquia do Relatório de Serviço comum — alinhada ao especial; não afecta .rs-pdf--especial.
+   Usar block (não flex): flex + break-inside:avoid no Chrome deixa a 1.ª página do PDF em branco. */
 body.rs-pdf:not(.rs-pdf--especial) .rs-doc,
 body.rs-pdf:not(.rs-pdf--especial) .rs-doc-flow {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  display: block;
   max-width: 100%;
   color: #1e293b;
   counter-reset: rs-sec;
@@ -484,7 +483,8 @@ ${PDF_DOCUMENT_LAYOUT_CSS}
   background: #1e293b22;
 }
 
-/* Secções no estilo especial (.re-secao): barra escura + verde, sem caixa arredondada */
+/* Secções no estilo especial (.re-secao): barra escura + verde, sem caixa arredondada.
+   break-inside:auto por defeito — avoid em secções grandes provoca página inicial em branco. */
 body.rs-pdf:not(.rs-pdf--especial) .info-section,
 body.rs-pdf:not(.rs-pdf--especial) .report-section {
   margin: 0 0 22px;
@@ -493,12 +493,6 @@ body.rs-pdf:not(.rs-pdf--especial) .report-section {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
-
-body.rs-pdf:not(.rs-pdf--especial) .info-section:has(table),
-body.rs-pdf:not(.rs-pdf--especial) .report-section:has(table) {
   break-inside: auto;
   page-break-inside: auto;
 }
@@ -532,11 +526,9 @@ body.rs-pdf:not(.rs-pdf--especial) .report-assinatura-cliente h3::before {
   letter-spacing: 0;
 }
 
-/* fallback legado (fechamento / outros) */
+/* fallback legado (fechamento / outros) — avoid só em ecrã; impressão trata abaixo */
 .rs-pdf .info-section {
   margin-bottom: 16px;
-  break-inside: avoid;
-  page-break-inside: avoid;
 }
 
 .rs-pdf .info-section h3 {
@@ -910,8 +902,19 @@ body.rs-pdf:not(.rs-pdf--especial) .ns-pdf-meta__title {
 
 @media print {
   body.rs-pdf { padding-bottom: 8mm; }
-  .rs-pdf .info-section:has(table),
-  .rs-pdf .report-section:has(table) {
+  /* Comum: forçar fluxo em bloco e quebras normais — evita 1.ª página vazia no Chrome */
+  body.rs-pdf:not(.rs-pdf--especial) .rs-doc,
+  body.rs-pdf:not(.rs-pdf--especial) .rs-doc-flow {
+    display: block !important;
+  }
+  body.rs-pdf:not(.rs-pdf--especial) .info-section,
+  body.rs-pdf:not(.rs-pdf--especial) .report-section,
+  body.rs-pdf:not(.rs-pdf--especial) .observacoes {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+  .rs-pdf .info-section,
+  .rs-pdf .report-section {
     break-inside: auto;
     page-break-inside: auto;
   }

@@ -4,18 +4,22 @@ import { relatorioPdfThemeCss } from './pdfDocumentThemes'
 
 export const RELATORIO_SERVICO_PDF_TOOLBAR_CSS = `
 .rs-pdf-toolbar {
-  position: sticky;
-  top: 0;
   z-index: 100;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
   padding: 12px 16px;
-  margin: -8px -8px 20px;
+  margin: 0 0 20px;
   background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
   border-bottom: 1px solid #cbd5e1;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+@media screen {
+  .rs-pdf-toolbar {
+    position: sticky;
+    top: 0;
+  }
 }
 .rs-pdf-toolbar__title {
   flex: 1 1 180px;
@@ -58,7 +62,15 @@ export const RELATORIO_SERVICO_PDF_TOOLBAR_CSS = `
   color: #fff;
 }
 @media print {
-  .rs-pdf-toolbar, .no-print { display: none !important; }
+  .rs-pdf-toolbar, .no-print {
+    display: none !important;
+    position: static !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+  }
 }
 `.trim()
 
