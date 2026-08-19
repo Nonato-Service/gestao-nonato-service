@@ -232,7 +232,8 @@ import {
   formatTelefoneWhatsApp,
   buildMensagemLembreteAgenda,
   encontrarConflitoClienteMesmoDia,
-  listarParesConflitoClienteLegados,
+  encontrarConflitoTecnicoMesmoDia,
+  temConflitosAgendaLegados,
   agendamentoActivoParaConflitoCliente,
 } from './modules/agenda'
 import type { StatusOperacionalAgenda } from './modules/agenda'
@@ -12950,15 +12951,28 @@ export default function Dashboard() {
           ...marcarConclusao,
         }
 
-    // Mesmo cliente + dias em comum + activo (não cancelado/concluído) → bloquear
+    // Mesmo técnico OU mesmo cliente + dias em comum + activo → bloquear (sem wipe)
     if (agendamentoActivoParaConflitoCliente(savedAgendamento)) {
-      const conflito = encontrarConflitoClienteMesmoDia(
+      const conflitoTecnico = encontrarConflitoTecnicoMesmoDia(
         savedAgendamento,
         agendamentos,
         savedAgendamento.id
       )
-      if (conflito) {
-        const periodo = rotuloPeriodoAgendamento(conflito)
+      if (conflitoTecnico) {
+        const periodo = rotuloPeriodoAgendamento(conflitoTecnico)
+        const msgBase =
+          safeT?.agendaConflitoTecnicoMesmoDia ||
+          'Este técnico já tem um agendamento activo com dias em comum ({periodo}). O mesmo técnico não pode ter dois atendimentos sobrepostos. Cancele ou altere o outro agendamento primeiro.'
+        alert(String(msgBase).replace('{periodo}', periodo))
+        return false
+      }
+      const conflitoCliente = encontrarConflitoClienteMesmoDia(
+        savedAgendamento,
+        agendamentos,
+        savedAgendamento.id
+      )
+      if (conflitoCliente) {
+        const periodo = rotuloPeriodoAgendamento(conflitoCliente)
         const msgBase =
           safeT?.agendaConflitoClienteMesmoDia ||
           'Já existe um agendamento activo deste cliente com dias em comum ({periodo}). Não é permitido sobrepor o mesmo cliente no mesmo dia. Cancele ou altere o outro agendamento primeiro.'
@@ -41775,7 +41789,7 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
-            {listarParesConflitoClienteLegados(agendamentos).length > 0 && (
+            {temConflitosAgendaLegados(agendamentos) && (
               <div
                 role="status"
                 style={{
@@ -41790,7 +41804,7 @@ A1;Peça exemplo;10`}
                 }}
               >
                 {safeT?.agendaAvisoConflitosLegados ||
-                  'Atenção: há agendamentos activos do mesmo cliente com dias sobrepostos (dados antigos). Novos registos já são bloqueados; ajuste ou cancele os duplicados.'}
+                  'Atenção: há agendamentos activos com dias sobrepostos no mesmo técnico ou no mesmo cliente (dados antigos). Novos registos já são bloqueados; ajuste ou cancele os duplicados.'}
               </div>
             )}
 

@@ -812,25 +812,34 @@ try {
     idx.includes('filterAgendamentosLembrete') &&
     idx.includes('buildMensagemLembreteAgenda') &&
     idx.includes('encontrarConflitoClienteMesmoDia') &&
+    idx.includes('encontrarConflitoTecnicoMesmoDia') &&
+    idx.includes('temConflitosAgendaLegados') &&
     idx.includes('intervalosSobrepoem')
   ) {
     ok('módulo agenda exporta normalize/datas/clienteEquipamento/estadoVisual/lembreteWA/conflito')
   } else {
     fail('módulo agenda incompleto (index.ts)')
   }
-  if (!exists('app/modules/agenda/conflitoCliente.ts')) {
-    fail('falta app/modules/agenda/conflitoCliente.ts')
+  if (!exists('app/modules/agenda/conflitoAgenda.ts')) {
+    fail('falta app/modules/agenda/conflitoAgenda.ts')
   } else {
-    const confSrc = fs.readFileSync(path.join(root, 'app/modules/agenda/conflitoCliente.ts'), 'utf8')
+    const confSrc = fs.readFileSync(path.join(root, 'app/modules/agenda/conflitoAgenda.ts'), 'utf8')
     if (
       confSrc.includes('encontrarConflitoClienteMesmoDia') &&
+      confSrc.includes('encontrarConflitoTecnicoMesmoDia') &&
+      confSrc.includes('mesmoTecnicoAgendamento') &&
       confSrc.includes('intervalosSobrepoem') &&
       confSrc.includes('mesmoClienteAgendamento')
     ) {
-      ok('módulo agenda conflitoCliente: overlap mesmo cliente')
+      ok('módulo agenda conflitoAgenda: overlap cliente + técnico')
     } else {
-      fail('módulo agenda conflitoCliente incompleto')
+      fail('módulo agenda conflitoAgenda incompleto')
     }
+  }
+  if (!exists('app/modules/agenda/conflitoCliente.ts')) {
+    fail('falta app/modules/agenda/conflitoCliente.ts (reexport)')
+  } else {
+    ok('existe app/modules/agenda/conflitoCliente.ts (compat)')
   }
   const datasSrc = fs.readFileSync(path.join(root, 'app/modules/agenda/datas.ts'), 'utf8')
   if (
@@ -868,11 +877,13 @@ try {
     !nma.includes('function renderBlocoAssuntoPessoalEstadoVisual(') &&
     !nma.includes('const formatTelefoneWhatsApp = (telefone: string)') &&
     !nma.includes('Lembrete Nonato Service:') &&
-    nma.includes('encontrarConflitoClienteMesmoDia')
+    nma.includes('encontrarConflitoClienteMesmoDia') &&
+    nma.includes('encontrarConflitoTecnicoMesmoDia') &&
+    nma.includes('temConflitosAgendaLegados')
   ) {
-    ok('NonatoMainApp usa blocos estado visual / lembreteWA / conflitoCliente do módulo agenda')
+    ok('NonatoMainApp usa blocos estado visual / lembreteWA / conflitoAgenda do módulo agenda')
   } else {
-    fail('NonatoMainApp ainda define renderBloco*EstadoVisual ou lembreteWA localmente, ou falta conflitoCliente')
+    fail('NonatoMainApp ainda define renderBloco*EstadoVisual ou lembreteWA localmente, ou falta conflitoAgenda')
   }
 } catch (e) {
   fail(`módulo agenda: ${e.message}`)

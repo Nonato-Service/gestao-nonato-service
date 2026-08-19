@@ -77,11 +77,17 @@ export {
 } from './lembreteWhatsApp'
 
 export {
+  normalizeNomeAgenda,
   normalizeNomeClienteAgenda,
   intervalosSobrepoem,
   agendamentosIntervalosSobrepoem,
   mesmoClienteAgendamento,
+  mesmoTecnicoAgendamento,
+  agendamentoActivoParaConflitoAgenda,
   agendamentoActivoParaConflitoCliente,
   encontrarConflitoClienteMesmoDia,
+  encontrarConflitoTecnicoMesmoDia,
   listarParesConflitoClienteLegados,
-} from './conflitoCliente'
+  listarParesConflitoTecnicoLegados,
+  temConflitosAgendaLegados,
+} from './conflitoAgenda'
