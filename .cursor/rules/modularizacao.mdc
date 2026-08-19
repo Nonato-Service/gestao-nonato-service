@@ -77,6 +77,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 57. `app/modules/clientes/` (ClientePrioritario / form empty/toForm/create/update / completeness) — feito
 58. `app/modules/orcamentos/` (PedidoOrcamento / buildFromRelatorio / temPecas) — feito
 59. `app/modules/admin/` (User / UserPermissions / createUserFromForm / updateUserFromForm) — feito
+60. `app/modules/biblioteca/` (PecaBiblioteca / CategoriaPeca / SubcategoriaPeca / createEmptyPecaBibliotecaForm) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

@@ -483,6 +483,35 @@ try {
   } else {
     fail('NonatoMainApp ainda define display/busca biblioteca localmente')
   }
+  if (!exists('app/modules/biblioteca/pecaTipos.ts')) {
+    fail('falta app/modules/biblioteca/pecaTipos.ts')
+  } else {
+    ok('existe app/modules/biblioteca/pecaTipos.ts')
+  }
+  if (!exists('app/modules/biblioteca/pecaForm.ts')) {
+    fail('falta app/modules/biblioteca/pecaForm.ts')
+  } else {
+    ok('existe app/modules/biblioteca/pecaForm.ts')
+  }
+  if (
+    idx.includes('createEmptyPecaBibliotecaForm') &&
+    idx.includes('PecaBiblioteca') &&
+    idx.includes('CategoriaPeca') &&
+    idx.includes('SubcategoriaPeca')
+  ) {
+    ok('módulo biblioteca exporta tipos canónicos / form vazio peça')
+  } else {
+    fail('módulo biblioteca sem createEmptyPecaBibliotecaForm / PecaBiblioteca / CategoriaPeca')
+  }
+  if (
+    nma.includes('createEmptyPecaBibliotecaForm') &&
+    !nma.includes('type CategoriaPeca = {') &&
+    !nma.includes('type PecaBiblioteca = {')
+  ) {
+    ok('NonatoMainApp usa tipos/form peça da biblioteca do módulo')
+  } else {
+    fail('NonatoMainApp ainda define CategoriaPeca/PecaBiblioteca localmente ou não usa createEmptyPecaBibliotecaForm')
+  }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
 }

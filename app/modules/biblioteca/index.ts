@@ -2,6 +2,10 @@
 
 export type { PecaBibliotecaLike, CategoriaPecaLike, SubcategoriaPecaLike } from './tipos'
 
+export type { CategoriaPeca, SubcategoriaPeca, PecaBiblioteca } from './pecaTipos'
+export type { EmptyPecaBibliotecaFormOpts } from './pecaForm'
+export { createEmptyPecaBibliotecaForm } from './pecaForm'
+
 export type { BibliotecaNovidadesMsgTemplates } from './aviso'
 export {
   BIBLIOTECA_AVISO_POLL_MS,

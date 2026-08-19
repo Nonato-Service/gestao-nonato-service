@@ -146,6 +146,10 @@ import {
   criarRegraClassificacaoPeca,
   renomearRegraClassificacaoCategoria,
   renomearRegraClassificacaoSubcategoria,
+  type CategoriaPeca,
+  type SubcategoriaPeca,
+  type PecaBiblioteca,
+  createEmptyPecaBibliotecaForm,
 } from './modules/biblioteca'
 import {
   type DiaTrabalho,
@@ -979,46 +983,7 @@ type PecaSubstituicao = {
   quantidade: string
 }
 
-type CategoriaPeca = {
-  id: string
-  nome: string
-}
-
-type SubcategoriaPeca = {
-  id: string
-  nome: string
-  categoriaId: string
-}
-
-type PecaBiblioteca = {
-  id: string
-  nome: string
-  codigo: string
-  preco?: string
-  descricao?: string
-  categoria?: string
-  categoriaId?: string
-  subcategoria?: string
-  subcategoriaId?: string
-  imagem?: string
-  /** Miniatura opcional na grelha da biblioteca; se vazia, usa `imagem`. */
-  imagemCapa?: string
-  quantidade?: number
-  dataCriacao?: string
-  /** Marca de revisão local — classificação em lote, edição manual, etc. */
-  dataAtualizacao?: string
-  importacaoPendente?: boolean
-  /** Referências HOMAG alternativas (ex.: 2-006-80-7481 quando codigo é 2006807481). */
-  referenciasAlternativas?: string[]
-  /** SKUs alternativos (ex.: R2006215960, 2006808181R). */
-  codigosAlternativos?: string[]
-  /** @deprecated Use referenciasAlternativas */
-  referenciasAntigas?: string[]
-  /** @deprecated Use codigosAlternativos */
-  codigosAntigos?: string[]
-  /** Número sequencial dentro da categoria (01, 02, 03… — ignora subcategoria). */
-  numeroSequenciaGrupo?: string
-}
+/* CategoriaPeca / SubcategoriaPeca / PecaBiblioteca / createEmptyPecaBibliotecaForm → app/modules/biblioteca */
 
 /* Classificação biblioteca → app/modules/biblioteca (classificacao) */
 
@@ -4046,19 +4011,7 @@ export default function Dashboard() {
   const [gerenciarCategoriasGrupoAberto, setGerenciarCategoriasGrupoAberto] = useState<Record<string, boolean>>({})
   const [gerenciarCategoriasBusca, setGerenciarCategoriasBusca] = useState('')
   const [gerenciarCategoriasLetra, setGerenciarCategoriasLetra] = useState<string | null>(null)
-  const [pecaBibliotecaForm, setPecaBibliotecaForm] = useState<PecaBiblioteca>({
-    id: '',
-    nome: '',
-    codigo: '',
-    preco: '',
-    descricao: '',
-    categoria: '',
-    categoriaId: '',
-    subcategoria: '',
-    subcategoriaId: '',
-    imagem: '',
-    dataCriacao: new Date().toISOString()
-  })
+  const [pecaBibliotecaForm, setPecaBibliotecaForm] = useState<PecaBiblioteca>(createEmptyPecaBibliotecaForm())
   /** Rascunho do campo «URL da imagem» no formulário da biblioteca de peças */
   const [pecaBibliotecaImagemUrlDraft, setPecaBibliotecaImagemUrlDraft] = useState('')
   const [pecaBibliotecaImagemCapaUrlDraft, setPecaBibliotecaImagemCapaUrlDraft] = useState('')
@@ -20824,21 +20777,14 @@ export default function Dashboard() {
       setEditingPecaBiblioteca(null)
       editingPecaBibliotecaRef.current = null
 
-      const formLimpo: PecaBiblioteca = {
-        id: '',
-        nome: '',
-        codigo: '',
-        preco: '',
-        descricao: '',
+      const formLimpo: PecaBiblioteca = createEmptyPecaBibliotecaForm({
         categoria: categoriaSelecionada?.nome || '',
         categoriaId: grupoParaManter,
         subcategoria: subcategoriaSelecionada?.nome || '',
         subcategoriaId: subgrupoParaManter,
-        imagem: '',
         imagemCapa: '',
-        dataCriacao: new Date().toISOString(),
         importacaoPendente: false,
-      }
+      })
 
       setPecaBibliotecaForm(formLimpo)
       pecaBibliotecaFormRef.current = formLimpo
@@ -36082,19 +36028,14 @@ export default function Dashboard() {
                           ? ultimoSubgrupoSelecionado
                           : ''
                       const subNome = sid ? subcategoriaSelecionada?.nome || '' : ''
-                      setPecaBibliotecaForm({
-                        id: '',
-                        nome: '',
-                        codigo: '',
-                        preco: '',
-                        descricao: '',
-                        categoria: categoriaSelecionada?.nome || '',
-                        categoriaId: gid,
-                        subcategoria: subNome,
-                        subcategoriaId: sid,
-                        imagem: '',
-                        dataCriacao: new Date().toISOString(),
-                      })
+                      setPecaBibliotecaForm(
+                        createEmptyPecaBibliotecaForm({
+                          categoria: categoriaSelecionada?.nome || '',
+                          categoriaId: gid,
+                          subcategoria: subNome,
+                          subcategoriaId: sid,
+                        })
+                      )
                       setPecaBibliotecaImagemUrlDraft('')
                       setUltimoGrupoSelecionado(gid)
                       setUltimoSubgrupoSelecionado(sid)
@@ -36765,19 +36706,14 @@ export default function Dashboard() {
                     ? ultimoSubgrupoSelecionado
                     : ''
                 const subNome = sid ? subcategoriaSelecionada?.nome || '' : ''
-                setPecaBibliotecaForm({ 
-                  id: '', 
-                  nome: '', 
-                  codigo: '', 
-                  preco: '', 
-                  descricao: '', 
-                  categoria: categoriaSelecionada?.nome || '', 
-                  categoriaId: gid, 
-                  subcategoria: subNome, 
-                  subcategoriaId: sid, 
-                  imagem: '', 
-                  dataCriacao: new Date().toISOString() 
-                }); 
+                setPecaBibliotecaForm(
+                  createEmptyPecaBibliotecaForm({
+                    categoria: categoriaSelecionada?.nome || '',
+                    categoriaId: gid,
+                    subcategoria: subNome,
+                    subcategoriaId: sid,
+                  })
+                ) 
                 setPecaBibliotecaImagemUrlDraft('')
                 setUltimoGrupoSelecionado(gid)
                 setUltimoSubgrupoSelecionado(sid)
@@ -37548,19 +37484,14 @@ export default function Dashboard() {
                       const categoriaSelecionada = categoriasPecas.find(c => c.id === gid)
                       const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === sid)
                       setPecaBibliotecaImagemUrlDraft('')
-                      setPecaBibliotecaForm({ 
-                        id: '', 
-                        nome: '', 
-                        codigo: '', 
-                        preco: '', 
-                        descricao: '', 
-                        categoria: categoriaSelecionada?.nome || '', 
-                        categoriaId: gid, 
-                        subcategoria: subcategoriaSelecionada?.nome || '', 
-                        subcategoriaId: sid, 
-                        imagem: '', 
-                        dataCriacao: new Date().toISOString() 
-                      }); 
+                      setPecaBibliotecaForm(
+                        createEmptyPecaBibliotecaForm({
+                          categoria: categoriaSelecionada?.nome || '',
+                          categoriaId: gid,
+                          subcategoria: subcategoriaSelecionada?.nome || '',
+                          subcategoriaId: sid,
+                        })
+                      ) 
                       setPecaBibliotecaPickerCategoriaAberto(false)
                       setPecaBibliotecaPickerSubcategoriaAberto(false)
                       concluirEdicaoPecaBibliotecaNavegacao({ voltarImportacao })
@@ -72125,19 +72056,14 @@ A1;Peça exemplo;10`}
               const sidM =
                 gidM && subM && subM.categoriaId === gidM ? ultimoSubgrupoSelecionado : ''
               const subNomeM = sidM ? subM?.nome || '' : ''
-              setPecaBibliotecaForm({
-                id: '',
-                nome: '',
-                codigo: '',
-                preco: '',
-                descricao: '',
-                categoria: catM?.nome || '',
-                categoriaId: gidM,
-                subcategoria: subNomeM,
-                subcategoriaId: sidM,
-                imagem: '',
-                dataCriacao: new Date().toISOString(),
-              })
+              setPecaBibliotecaForm(
+                createEmptyPecaBibliotecaForm({
+                  categoria: catM?.nome || '',
+                  categoriaId: gidM,
+                  subcategoria: subNomeM,
+                  subcategoriaId: sidM,
+                })
+              )
               setUltimoGrupoSelecionado(gidM)
               setUltimoSubgrupoSelecionado(sidM)
               setPecaBibliotecaPickerCategoriaAberto(false)
@@ -72391,19 +72317,14 @@ A1;Peça exemplo;10`}
                     setUltimoSubgrupoSelecionado(sid)
                     const catC = categoriasPecas.find(c => c.id === gid)
                     const subC = subcategoriasPecas.find(s => s.id === sid)
-                    setPecaBibliotecaForm({
-                      id: '',
-                      nome: '',
-                      codigo: '',
-                      preco: '',
-                      descricao: '',
-                      categoria: catC?.nome || '',
-                      categoriaId: gid,
-                      subcategoria: subC?.nome || '',
-                      subcategoriaId: sid,
-                      imagem: '',
-                      dataCriacao: new Date().toISOString(),
-                    })
+                    setPecaBibliotecaForm(
+                      createEmptyPecaBibliotecaForm({
+                        categoria: catC?.nome || '',
+                        categoriaId: gid,
+                        subcategoria: subC?.nome || '',
+                        subcategoriaId: sid,
+                      })
+                    )
                     setPecaBibliotecaPickerCategoriaAberto(false)
                     setPecaBibliotecaPickerSubcategoriaAberto(false)
                     concluirEdicaoPecaBibliotecaNavegacao({ voltarImportacao })
