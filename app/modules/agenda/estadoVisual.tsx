@@ -1,15 +1,11 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import type { Agendamento } from './tipos'
 import { isAgendamentoPessoal } from './normalize'
 import {
   resolverEquipamentoAgendamentoParaExibicao,
   type ClienteAgendaLike,
 } from './clienteEquipamento'
-import {
-  corFundoStatusOperacional,
-  rotuloStatusOperacionalAgenda,
-} from './rotulos'
-import type { StatusOperacionalAgenda } from './normalize'
+import { corFundoMarcadorLegendaAgenda, type ChaveLegendaAgendaVisual } from './estilo'
 
 /** Bloco de equipamento/tipo de serviço no cartão «estado visual» da agenda. */
 export function renderBlocoEquipamentoAgendamentoEstadoVisual(
@@ -133,48 +129,63 @@ export function renderBlocoAssuntoPessoalEstadoVisual(
   )
 }
 
-/** Legenda simples de estados (calendário / lista / estado visual). */
-export function renderLegendaEstadosAgenda(tr?: Record<string, string | undefined>): ReactNode {
-  const itens: { op: StatusOperacionalAgenda; label: string }[] = [
-    { op: 'em-andamento', label: rotuloStatusOperacionalAgenda('em-andamento', tr) },
-    { op: 'concluido', label: rotuloStatusOperacionalAgenda('concluido', tr) },
-    { op: 'cancelado', label: rotuloStatusOperacionalAgenda('cancelado', tr) },
-  ]
+function swatchLegendaAgenda(chave: ChaveLegendaAgendaVisual, label: string): ReactNode {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-      {itens.map(({ op, label }) => (
-        <div key={op} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span
-            style={{
-              display: 'inline-block',
-              width: 14,
-              height: 14,
-              borderRadius: 4,
-              backgroundColor: corFundoStatusOperacional(op),
-              border: '1px solid rgba(255,255,255,0.25)',
-              flexShrink: 0,
-            }}
-            aria-hidden
-          />
-          <span style={{ fontSize: '13px', color: '#fff', fontWeight: 600 }}>{label}</span>
+    <div key={chave} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <span
+        style={{
+          display: 'inline-block',
+          width: 14,
+          height: 14,
+          borderRadius: 4,
+          backgroundColor: corFundoMarcadorLegendaAgenda(chave),
+          border: '1px solid rgba(255,255,255,0.25)',
+          flexShrink: 0,
+        }}
+        aria-hidden
+      />
+      <span style={{ fontSize: '13px', color: '#fff', fontWeight: 600 }}>{label}</span>
+    </div>
+  )
+}
+
+/**
+ * Legenda completa (calendário / estado visual) — alinhada aos marcadores reais.
+ * Estados e tipos separados para não misturar «Pessoal» com status operacional.
+ */
+export function renderLegendaEstadosAgenda(tr?: Record<string, string | undefined>): ReactNode {
+  const estados: { chave: ChaveLegendaAgendaVisual; label: string }[] = [
+    { chave: 'confirmado', label: tr?.confirmado || 'Confirmado' },
+    { chave: 'em-andamento', label: tr?.emAndamento || 'Em Andamento' },
+    { chave: 'pendente', label: tr?.pendente || 'Pendente' },
+    { chave: 'concluido', label: tr?.concluido || 'Concluído' },
+    { chave: 'cancelado', label: tr?.cancelado || 'Cancelado' },
+  ]
+  const tipos: { chave: ChaveLegendaAgendaVisual; label: string }[] = [
+    { chave: 'pre-agendamento', label: tr?.preAgendamento || 'Pré-agendamento' },
+    { chave: 'pessoal', label: tr?.agendaPessoal || 'Pessoal' },
+  ]
+  const tituloEstilo: CSSProperties = {
+    margin: '0 0 8px 0',
+    fontSize: '11px',
+    fontWeight: 700,
+    letterSpacing: '0.4px',
+    textTransform: 'uppercase',
+    color: 'rgba(0, 255, 122, 0.85)',
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div>
+        <p style={tituloEstilo}>{tr?.agendaLegendaSecaoEstados || 'Estados'}</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+          {estados.map(({ chave, label }) => swatchLegendaAgenda(chave, label))}
         </div>
-      ))}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span
-          style={{
-            display: 'inline-block',
-            width: 14,
-            height: 14,
-            borderRadius: 4,
-            backgroundColor: 'rgba(124, 58, 237, 0.94)',
-            border: '1px solid rgba(216, 180, 254, 0.55)',
-            flexShrink: 0,
-          }}
-          aria-hidden
-        />
-        <span style={{ fontSize: '13px', color: '#fff', fontWeight: 600 }}>
-          {tr?.agendaPessoal || 'Pessoal'}
-        </span>
+      </div>
+      <div>
+        <p style={tituloEstilo}>{tr?.agendaLegendaSecaoTipos || 'Tipos'}</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+          {tipos.map(({ chave, label }) => swatchLegendaAgenda(chave, label))}
+        </div>
       </div>
     </div>
   )

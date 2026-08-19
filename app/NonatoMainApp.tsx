@@ -229,6 +229,7 @@ import {
   estiloFundoCardAgendaLista,
   estiloBotaoRapidoStatusOperacional,
   coresAgendamentoVisual,
+  corFundoMarcadorLegendaAgenda,
   estiloMarcadorAgendamentoCancelado,
   resolveClienteEEquipamentoParaFormularioAgenda,
   renderBlocoEquipamentoAgendamentoEstadoVisual,
@@ -43991,7 +43992,7 @@ A1;Peça exemplo;10`}
                 if (isAgendamentoPessoal(ag)) {
                   return {
                     ...texto,
-                    backgroundColor: 'rgba(124, 58, 237, 0.94)',
+                    backgroundColor: corFundoMarcadorLegendaAgenda('pessoal'),
                     border: '1px solid rgba(216, 180, 254, 0.55)',
                     boxShadow: '0 0 12px rgba(168, 85, 247, 0.28)',
                     fontWeight: 800,
@@ -44006,7 +44007,7 @@ A1;Peça exemplo;10`}
                 if (st === 'concluido') {
                   return {
                     ...texto,
-                    backgroundColor: 'rgba(0, 128, 58, 0.94)',
+                    backgroundColor: corFundoMarcadorLegendaAgenda('concluido'),
                     border: '1px solid rgba(0, 255, 150, 0.5)',
                     boxShadow: '0 0 12px rgba(0, 200, 95, 0.28)',
                     fontWeight: 800,
@@ -44016,7 +44017,7 @@ A1;Peça exemplo;10`}
                 if (tipo === 'pre-agendamento') {
                   return {
                     ...texto,
-                    backgroundColor: 'rgba(158, 108, 8, 0.95)',
+                    backgroundColor: corFundoMarcadorLegendaAgenda('pre-agendamento'),
                     border: '1px solid rgba(255, 220, 110, 0.55)',
                     boxShadow: '0 0 12px rgba(255, 185, 40, 0.22)',
                     fontWeight: 800,
@@ -44025,7 +44026,7 @@ A1;Peça exemplo;10`}
                 if (st === 'em-andamento') {
                   return {
                     ...texto,
-                    backgroundColor: 'rgba(200, 78, 22, 0.94)',
+                    backgroundColor: corFundoMarcadorLegendaAgenda('em-andamento'),
                     border: '1px solid rgba(255, 160, 100, 0.6)',
                     boxShadow: '0 0 12px rgba(255, 107, 45, 0.28)',
                     fontWeight: 800,
@@ -44034,7 +44035,7 @@ A1;Peça exemplo;10`}
                 if (st === 'pendente') {
                   return {
                     ...texto,
-                    backgroundColor: 'rgba(178, 62, 22, 0.94)',
+                    backgroundColor: corFundoMarcadorLegendaAgenda('pendente'),
                     border: '1px solid rgba(255, 160, 105, 0.55)',
                     fontWeight: 800,
                   }
@@ -44042,7 +44043,7 @@ A1;Peça exemplo;10`}
                 if (st === 'confirmado') {
                   return {
                     ...texto,
-                    backgroundColor: 'rgba(28, 78, 188, 0.94)',
+                    backgroundColor: corFundoMarcadorLegendaAgenda('confirmado'),
                     border: '1px solid rgba(150, 195, 255, 0.55)',
                     boxShadow: '0 0 12px rgba(70, 130, 255, 0.22)',
                     fontWeight: 800,

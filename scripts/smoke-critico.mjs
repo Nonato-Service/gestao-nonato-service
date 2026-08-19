@@ -857,6 +857,7 @@ try {
     idx.includes('encontrarConflitoTecnicoEmAndamento') &&
     idx.includes('isStatusOperacionalAtivo') &&
     idx.includes('coresAgendamentoVisual') &&
+    idx.includes('corFundoMarcadorLegendaAgenda') &&
     idx.includes('estiloBotaoRapidoStatusOperacional') &&
     idx.includes('estiloFundoCardAgendaLista') &&
     idx.includes('temConflitosAgendaLegados') &&
@@ -909,18 +910,30 @@ try {
     const estSrc = fs.readFileSync(path.join(root, 'app/modules/agenda/estilo.ts'), 'utf8')
     if (
       estSrc.includes('coresAgendamentoVisual') &&
+      estSrc.includes('corFundoMarcadorLegendaAgenda') &&
       estSrc.includes('estiloBotaoRapidoStatusOperacional') &&
       estSrc.includes('estiloFundoCardAgendaLista')
     ) {
-      ok('módulo agenda estilo: cores por status real')
+      ok('módulo agenda estilo: cores por status real + legenda completa')
     } else {
-      fail('módulo agenda estilo incompleto (cores/botões)')
+      fail('módulo agenda estilo incompleto (cores/botões/legenda)')
     }
   }
   if (!exists('app/modules/agenda/estadoVisual.tsx')) {
     fail('falta app/modules/agenda/estadoVisual.tsx')
   } else {
-    ok('existe app/modules/agenda/estadoVisual.tsx')
+    const evSrc = fs.readFileSync(path.join(root, 'app/modules/agenda/estadoVisual.tsx'), 'utf8')
+    if (
+      evSrc.includes('agendaLegendaSecaoEstados') &&
+      evSrc.includes('agendaLegendaSecaoTipos') &&
+      evSrc.includes("'confirmado'") &&
+      evSrc.includes("'pendente'") &&
+      evSrc.includes("'pre-agendamento'")
+    ) {
+      ok('módulo agenda estadoVisual: legenda estados+tipos completa')
+    } else {
+      fail('módulo agenda estadoVisual: legenda incompleta (faltam confirmado/pendente/pré)')
+    }
   }
   if (!exists('app/modules/agenda/lembreteWhatsApp.ts')) {
     fail('falta app/modules/agenda/lembreteWhatsApp.ts')

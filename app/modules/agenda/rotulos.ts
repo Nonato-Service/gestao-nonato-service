@@ -5,7 +5,7 @@ import {
   normalizeTipoAgendamento,
   type StatusOperacionalAgenda,
 } from './normalize'
-import { coresAgendamentoVisual } from './estilo'
+import { coresAgendamentoVisual, corFundoMarcadorLegendaAgenda } from './estilo'
 
 export function rotuloTituloAgendamento(ag: Agendamento, tr?: Record<string, string | undefined>): string {
   if (isAgendamentoPessoal(ag)) {
@@ -107,9 +107,9 @@ export function rotuloStatusOperacionalDeAgendamento(
   return tr?.pendente || 'Pendente'
 }
 
-/** Cores da legenda simples (estado do técnico) — em andamento laranja, alinhado aos cartões. */
+/** Cores da legenda simples (botões operacionais) — alinhado aos marcadores. */
 export function corFundoStatusOperacional(op: StatusOperacionalAgenda): string {
-  if (op === 'concluido') return 'rgba(0, 128, 58, 0.94)'
-  if (op === 'cancelado') return 'rgba(178, 28, 28, 0.94)'
-  return 'rgba(200, 78, 22, 0.94)'
+  if (op === 'concluido') return corFundoMarcadorLegendaAgenda('concluido')
+  if (op === 'cancelado') return corFundoMarcadorLegendaAgenda('cancelado')
+  return corFundoMarcadorLegendaAgenda('em-andamento')
 }

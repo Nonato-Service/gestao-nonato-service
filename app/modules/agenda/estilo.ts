@@ -159,3 +159,36 @@ export function estiloMarcadorAgendamentoCancelado(): CSSProperties {
     textShadow: '0 1px 2px rgba(0,0,0,0.5)',
   }
 }
+
+/**
+ * Fundo opaco da legenda / marcadores do calendário (mapa completo v376).
+ * Confirmado azul · Em andamento laranja · Pendente laranja escuro ·
+ * Pré-agendamento dourado · Concluído verde · Cancelado vermelho · Pessoal roxo.
+ */
+export type ChaveLegendaAgendaVisual =
+  | 'confirmado'
+  | 'em-andamento'
+  | 'pendente'
+  | 'pre-agendamento'
+  | 'concluido'
+  | 'cancelado'
+  | 'pessoal'
+
+export function corFundoMarcadorLegendaAgenda(chave: ChaveLegendaAgendaVisual): string {
+  switch (chave) {
+    case 'confirmado':
+      return 'rgba(28, 78, 188, 0.94)'
+    case 'em-andamento':
+      return 'rgba(200, 78, 22, 0.94)'
+    case 'pendente':
+      return 'rgba(178, 62, 22, 0.94)'
+    case 'pre-agendamento':
+      return 'rgba(158, 108, 8, 0.95)'
+    case 'concluido':
+      return 'rgba(0, 128, 58, 0.94)'
+    case 'cancelado':
+      return 'rgba(178, 28, 28, 0.94)'
+    case 'pessoal':
+      return 'rgba(124, 58, 237, 0.94)'
+  }
+}
