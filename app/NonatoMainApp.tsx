@@ -231,6 +231,9 @@ import {
   filterAgendamentosLembrete,
   formatTelefoneWhatsApp,
   buildMensagemLembreteAgenda,
+  encontrarConflitoClienteMesmoDia,
+  listarParesConflitoClienteLegados,
+  agendamentoActivoParaConflitoCliente,
 } from './modules/agenda'
 import type { StatusOperacionalAgenda } from './modules/agenda'
 import type { SidebarGroup, SidebarButton, TabType, Tab } from './modules/sidebar'
@@ -12971,6 +12974,23 @@ export default function Dashboard() {
           id: Date.now().toString(),
           ...marcarConclusao,
         }
+
+    // Mesmo cliente + dias em comum + activo (não cancelado/concluído) → bloquear
+    if (agendamentoActivoParaConflitoCliente(savedAgendamento)) {
+      const conflito = encontrarConflitoClienteMesmoDia(
+        savedAgendamento,
+        agendamentos,
+        savedAgendamento.id
+      )
+      if (conflito) {
+        const periodo = rotuloPeriodoAgendamento(conflito)
+        const msgBase =
+          safeT?.agendaConflitoClienteMesmoDia ||
+          'Já existe um agendamento activo deste cliente com dias em comum ({periodo}). Não é permitido sobrepor o mesmo cliente no mesmo dia. Cancele ou altere o outro agendamento primeiro.'
+        alert(String(msgBase).replace('{periodo}', periodo))
+        return false
+      }
+    }
 
     if (editingAgendamento) {
       const updated = agendamentos.map((a) => (a.id === editingAgendamento.id ? savedAgendamento : a))
@@ -41792,6 +41812,25 @@ A1;Peça exemplo;10`}
                 </div>
               </div>
             </div>
+
+            {listarParesConflitoClienteLegados(agendamentos).length > 0 && (
+              <div
+                role="status"
+                style={{
+                  margin: '12px 16px 0',
+                  padding: '10px 14px',
+                  borderRadius: 10,
+                  border: '1px solid rgba(255, 190, 50, 0.55)',
+                  background: 'rgba(80, 55, 0, 0.45)',
+                  color: '#ffe9a8',
+                  fontSize: 13,
+                  lineHeight: 1.45,
+                }}
+              >
+                {safeT?.agendaAvisoConflitosLegados ||
+                  'Atenção: há agendamentos activos do mesmo cliente com dias sobrepostos (dados antigos). Novos registos já são bloqueados; ajuste ou cancele os duplicados.'}
+              </div>
+            )}
 
             {/* Filtros — barra horizontal (Lista/Calendário ficam no cabeçalho) */}
             <div className="agenda-tecnica-toolbar">

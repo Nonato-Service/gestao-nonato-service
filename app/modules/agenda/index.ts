@@ -75,3 +75,13 @@ export {
   formatTelefoneWhatsApp,
   buildMensagemLembreteAgenda,
 } from './lembreteWhatsApp'
+
+export {
+  normalizeNomeClienteAgenda,
+  intervalosSobrepoem,
+  agendamentosIntervalosSobrepoem,
+  mesmoClienteAgendamento,
+  agendamentoActivoParaConflitoCliente,
+  encontrarConflitoClienteMesmoDia,
+  listarParesConflitoClienteLegados,
+} from './conflitoCliente'

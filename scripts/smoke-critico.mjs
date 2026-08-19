@@ -788,11 +788,27 @@ try {
     idx.includes('resolverEquipamentoAgendamentoParaExibicao') &&
     idx.includes('renderBlocoEquipamentoAgendamentoEstadoVisual') &&
     idx.includes('filterAgendamentosLembrete') &&
-    idx.includes('buildMensagemLembreteAgenda')
+    idx.includes('buildMensagemLembreteAgenda') &&
+    idx.includes('encontrarConflitoClienteMesmoDia') &&
+    idx.includes('intervalosSobrepoem')
   ) {
-    ok('módulo agenda exporta normalize/datas/clienteEquipamento/estadoVisual/lembreteWA')
+    ok('módulo agenda exporta normalize/datas/clienteEquipamento/estadoVisual/lembreteWA/conflito')
   } else {
     fail('módulo agenda incompleto (index.ts)')
+  }
+  if (!exists('app/modules/agenda/conflitoCliente.ts')) {
+    fail('falta app/modules/agenda/conflitoCliente.ts')
+  } else {
+    const confSrc = fs.readFileSync(path.join(root, 'app/modules/agenda/conflitoCliente.ts'), 'utf8')
+    if (
+      confSrc.includes('encontrarConflitoClienteMesmoDia') &&
+      confSrc.includes('intervalosSobrepoem') &&
+      confSrc.includes('mesmoClienteAgendamento')
+    ) {
+      ok('módulo agenda conflitoCliente: overlap mesmo cliente')
+    } else {
+      fail('módulo agenda conflitoCliente incompleto')
+    }
   }
   const datasSrc = fs.readFileSync(path.join(root, 'app/modules/agenda/datas.ts'), 'utf8')
   if (
@@ -829,11 +845,12 @@ try {
     !nma.includes('function renderBlocoEquipamentoAgendamentoEstadoVisual(') &&
     !nma.includes('function renderBlocoAssuntoPessoalEstadoVisual(') &&
     !nma.includes('const formatTelefoneWhatsApp = (telefone: string)') &&
-    !nma.includes('Lembrete Nonato Service:')
+    !nma.includes('Lembrete Nonato Service:') &&
+    nma.includes('encontrarConflitoClienteMesmoDia')
   ) {
-    ok('NonatoMainApp usa blocos estado visual / lembreteWA do módulo agenda')
+    ok('NonatoMainApp usa blocos estado visual / lembreteWA / conflitoCliente do módulo agenda')
   } else {
-    fail('NonatoMainApp ainda define renderBloco*EstadoVisual ou lembreteWA localmente')
+    fail('NonatoMainApp ainda define renderBloco*EstadoVisual ou lembreteWA localmente, ou falta conflitoCliente')
   }
 } catch (e) {
   fail(`módulo agenda: ${e.message}`)
