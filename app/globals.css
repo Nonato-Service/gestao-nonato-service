@@ -39372,9 +39372,9 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   color: rgba(255, 255, 255, 0.8) !important;
 }
 
-/* Cards da lista */
+/* Cards da lista — fundo via --agenda-card-bg (status/tipo); fallback cinza */
 .agenda-lista-card:not(.agenda-lista-card-cancelado) {
-  background-color: #484848 !important;
+  background-color: var(--agenda-card-bg, #484848) !important;
   border-radius: 14px !important;
   padding: 22px !important;
   display: flex;

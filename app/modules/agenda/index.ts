@@ -57,7 +57,7 @@ export {
   corFundoStatusOperacional,
 } from './rotulos'
 
-export { estiloCardAgendaEstadoVisualShared, estiloMarcadorAgendamentoCancelado } from './estilo'
+export { estiloCardAgendaEstadoVisualShared, estiloMarcadorAgendamentoCancelado, coresAgendamentoVisual, estiloFundoCardAgendaLista, estiloBotaoRapidoStatusOperacional } from './estilo'
 
 export {
   resolveClienteEEquipamentoParaFormularioAgenda,

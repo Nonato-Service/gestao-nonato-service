@@ -836,10 +836,13 @@ try {
     idx.includes('encontrarConflitoTecnicoMesmoDia') &&
     idx.includes('encontrarConflitoTecnicoEmAndamento') &&
     idx.includes('isStatusOperacionalAtivo') &&
+    idx.includes('coresAgendamentoVisual') &&
+    idx.includes('estiloBotaoRapidoStatusOperacional') &&
+    idx.includes('estiloFundoCardAgendaLista') &&
     idx.includes('temConflitosAgendaLegados') &&
     idx.includes('intervalosSobrepoem')
   ) {
-    ok('módulo agenda exporta normalize/datas/clienteEquipamento/estadoVisual/lembreteWA/conflito')
+    ok('módulo agenda exporta normalize/datas/clienteEquipamento/estadoVisual/lembreteWA/conflito/cores')
   } else {
     fail('módulo agenda incompleto (index.ts)')
   }
@@ -880,6 +883,20 @@ try {
   } else {
     fail('módulo agenda normalize sem statusOperacionalAgenda/isStatusOperacionalAtivo')
   }
+  if (!exists('app/modules/agenda/estilo.ts')) {
+    fail('falta app/modules/agenda/estilo.ts')
+  } else {
+    const estSrc = fs.readFileSync(path.join(root, 'app/modules/agenda/estilo.ts'), 'utf8')
+    if (
+      estSrc.includes('coresAgendamentoVisual') &&
+      estSrc.includes('estiloBotaoRapidoStatusOperacional') &&
+      estSrc.includes('estiloFundoCardAgendaLista')
+    ) {
+      ok('módulo agenda estilo: cores por status real')
+    } else {
+      fail('módulo agenda estilo incompleto (cores/botões)')
+    }
+  }
   if (!exists('app/modules/agenda/estadoVisual.tsx')) {
     fail('falta app/modules/agenda/estadoVisual.tsx')
   } else {
@@ -905,6 +922,8 @@ try {
     nma.includes('encontrarConflitoTecnicoMesmoDia') &&
     nma.includes('encontrarConflitoTecnicoEmAndamento') &&
     nma.includes('isStatusOperacionalAtivo') &&
+    nma.includes('estiloBotaoRapidoStatusOperacional') &&
+    nma.includes('estiloFundoCardAgendaLista') &&
     nma.includes('temConflitosAgendaLegados')
   ) {
     ok('NonatoMainApp usa blocos estado visual / lembreteWA / conflitoAgenda do módulo agenda')

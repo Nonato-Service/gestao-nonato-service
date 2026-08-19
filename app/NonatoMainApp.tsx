@@ -225,6 +225,9 @@ import {
   accentCorAgendamentoLista,
   rotuloStatusOperacionalDeAgendamento,
   estiloCardAgendaEstadoVisualShared,
+  estiloFundoCardAgendaLista,
+  estiloBotaoRapidoStatusOperacional,
+  coresAgendamentoVisual,
   estiloMarcadorAgendamentoCancelado,
   resolveClienteEEquipamentoParaFormularioAgenda,
   renderBlocoEquipamentoAgendamentoEstadoVisual,
@@ -42181,23 +42184,26 @@ A1;Peça exemplo;10`}
                   )
                 }
 
-                const miniAgendaBtn = (a: Agendamento, borda: string, opts?: { muted?: boolean; cancelado?: boolean }) => (
+                const miniAgendaBtn = (a: Agendamento, borda: string, opts?: { muted?: boolean; cancelado?: boolean }) => {
+                  const cores = coresAgendamentoVisual(a)
+                  const canc = opts?.cancelado || isAgendamentoCancelado(a)
+                  return (
                   <button
                     key={`painel-${a.id}`}
                     type="button"
                     title={(safeT as any)?.agendaMiniCardEditarHint || 'Clique para editar este registo'}
                     onClick={() => handleEditAgendamento(a)}
-                    className={opts?.cancelado || isAgendamentoCancelado(a) ? 'agenda-mini-card-cancelado' : undefined}
+                    className={canc ? 'agenda-mini-card-cancelado' : undefined}
                     style={{
                       width: '100%',
                       textAlign: 'left',
                       padding: '10px 11px',
                       marginBottom: '8px',
                       borderRadius: '8px',
-                      border: opts?.cancelado || isAgendamentoCancelado(a) ? `2px solid ${AGENDA_CANCELADO_BORDA}` : `1px solid ${borda}`,
-                      background: opts?.cancelado || isAgendamentoCancelado(a) ? AGENDA_CANCELADO_BG : undefined,
-                      backgroundColor: opts?.cancelado || isAgendamentoCancelado(a) ? undefined : '#444444',
-                      boxShadow: opts?.cancelado || isAgendamentoCancelado(a) ? AGENDA_CANCELADO_SOMBRA : undefined,
+                      border: canc ? `2px solid ${AGENDA_CANCELADO_BORDA}` : `1px solid ${borda || cores.borda}`,
+                      background: canc ? AGENDA_CANCELADO_BG : undefined,
+                      backgroundColor: canc ? undefined : cores.fundo,
+                      boxShadow: canc ? AGENDA_CANCELADO_SOMBRA : `inset 3px 0 0 ${cores.accent}`,
                       color: '#fff',
                       cursor: 'pointer',
                       fontSize: '12px',
@@ -42220,8 +42226,21 @@ A1;Peça exemplo;10`}
                       {!isAgendamentoPessoal(a) && a.tecnico ? ` · ${a.tecnico}` : ''}
                     </div>
                     {a.tipoServico && !isAgendamentoPessoal(a) ? <div style={{ marginTop: '4px', opacity: 0.75 }}>{a.tipoServico}</div> : null}
+                    <div
+                      style={{
+                        marginTop: '6px',
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        color: cores.accent,
+                      }}
+                    >
+                      {rotuloStatusOperacionalDeAgendamento(a, safeT as Record<string, string | undefined>)}
+                    </div>
                   </button>
-                )
+                  )
+                }
 
                 const vazio = (msg: string) => (
                   <div style={{ padding: '12px', fontSize: '12px', color: '#909090', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.12)' }}>{msg}</div>
@@ -43361,6 +43380,8 @@ A1;Peça exemplo;10`}
                     const cancelado = isAgendamentoCancelado(agendamento)
                     const trAg = safeT as Record<string, string | undefined>
                     const st = normalizeStatusAgendamento(agendamento)
+                    const coresCard = coresAgendamentoVisual(agendamento)
+                    const accentEfectivo = accent || coresCard.accent
                     const listaModo = opts?.listaModo === true
                     const cardExpandido = !listaModo || agendaListaCardsExpandidos.has(agendamento.id)
                     const agendaCardField = (label: string, value: React.ReactNode) => (
@@ -43389,12 +43410,11 @@ A1;Peça exemplo;10`}
                         .filter(Boolean)
                         .join(' ') || undefined}
                       style={{
-                        backgroundColor: cancelado ? undefined : '#404040',
-                        background: cancelado ? AGENDA_CANCELADO_BG : undefined,
+                        ...estiloFundoCardAgendaLista(agendamento),
                         padding: listaModo && !cardExpandido ? '14px 16px' : '20px',
                         borderRadius: '10px',
-                        border: cancelado ? `2px solid ${AGENDA_CANCELADO_BORDA}` : `1px solid ${accent}`,
-                        borderLeft: cancelado ? `6px solid ${AGENDA_CANCELADO_BORDA}` : `6px solid ${accent}`,
+                        border: cancelado ? `2px solid ${AGENDA_CANCELADO_BORDA}` : `1px solid ${accentEfectivo}`,
+                        borderLeft: cancelado ? `6px solid ${AGENDA_CANCELADO_BORDA}` : `6px solid ${accentEfectivo}`,
                         boxShadow: cancelado ? AGENDA_CANCELADO_SOMBRA : undefined,
                         opacity: opts?.muted ? 0.96 : 1,
                         cursor: 'pointer',
@@ -43463,7 +43483,15 @@ A1;Peça exemplo;10`}
                             </p>
                           ) : null}
                         </div>
-                        <span className="agenda-card__status-badge" style={{ borderColor: `${accent}66`, color: accent }}>
+                        <span
+                          className="agenda-card__status-badge"
+                          style={{
+                            borderColor: coresCard.borda,
+                            color: accentEfectivo,
+                            backgroundColor: coresCard.fundo,
+                            boxShadow: `0 0 10px ${coresCard.borda}`,
+                          }}
+                        >
                           {rotuloStatusOperacionalDeAgendamento(agendamento, trAg)}
                         </span>
                       </div>
@@ -43626,12 +43654,8 @@ A1;Peça exemplo;10`}
                                 style={{
                                   padding: '8px 10px',
                                   fontSize: '12px',
-                                  fontWeight: 700,
                                   borderRadius: 8,
-                                  cursor: 'pointer',
-                                  border: ativo ? '2px solid #00c853' : '1px solid rgba(255,255,255,0.22)',
-                                  backgroundColor: ativo ? 'rgba(0, 200, 83, 0.22)' : '#3a3a3a',
-                                  color: '#fff',
+                                  ...estiloBotaoRapidoStatusOperacional(op, ativo),
                                 }}
                               >
                                 {op === 'em-andamento'
@@ -44103,9 +44127,9 @@ A1;Peça exemplo;10`}
               ]
 
               /**
-               * Marcador do calendário: fundo na cor do status; hora e nome em branco (pedido do usuário).
-               * Pré-agendamento (qualquer status exc. concl./canc.) → fundo amarelo/dourado.
-               * Agendamento técnico confirmado/em andamento → fundo azul; pendente → laranja.
+               * Marcador do calendário: fundo na cor do status real; hora e nome em branco.
+               * Pré-agendamento → dourado; confirmado → azul; em andamento → laranja;
+               * pendente → laranja escuro; concluído → verde; cancelado → vermelho; pessoal → roxo.
                */
               const estiloMarcadorCalendario = (ag: Agendamento): React.CSSProperties => {
                 const st = normalizeStatusAgendamento(ag)
@@ -44148,6 +44172,15 @@ A1;Peça exemplo;10`}
                     fontWeight: 800,
                   }
                 }
+                if (st === 'em-andamento') {
+                  return {
+                    ...texto,
+                    backgroundColor: 'rgba(200, 78, 22, 0.94)',
+                    border: '1px solid rgba(255, 160, 100, 0.6)',
+                    boxShadow: '0 0 12px rgba(255, 107, 45, 0.28)',
+                    fontWeight: 800,
+                  }
+                }
                 if (st === 'pendente') {
                   return {
                     ...texto,
@@ -44156,7 +44189,7 @@ A1;Peça exemplo;10`}
                     fontWeight: 800,
                   }
                 }
-                if (st === 'confirmado' || st === 'em-andamento') {
+                if (st === 'confirmado') {
                   return {
                     ...texto,
                     backgroundColor: 'rgba(28, 78, 188, 0.94)',
@@ -44707,12 +44740,8 @@ A1;Peça exemplo;10`}
                                       style={{
                                         padding: '6px 8px',
                                         fontSize: '11px',
-                                        fontWeight: 700,
                                         borderRadius: 6,
-                                        cursor: 'pointer',
-                                        border: ativo ? '2px solid #00c853' : '1px solid rgba(255,255,255,0.25)',
-                                        backgroundColor: ativo ? 'rgba(0, 200, 83, 0.25)' : 'rgba(0,0,0,0.35)',
-                                        color: '#fff',
+                                        ...estiloBotaoRapidoStatusOperacional(op, ativo),
                                       }}
                                     >
                                       {op === 'em-andamento'
@@ -44760,12 +44789,8 @@ A1;Peça exemplo;10`}
                                       style={{
                                         padding: '6px 8px',
                                         fontSize: '11px',
-                                        fontWeight: 700,
                                         borderRadius: 6,
-                                        cursor: 'pointer',
-                                        border: ativo ? '2px solid #00c853' : '1px solid rgba(255,255,255,0.25)',
-                                        backgroundColor: ativo ? 'rgba(0, 200, 83, 0.25)' : 'rgba(0,0,0,0.35)',
-                                        color: '#fff',
+                                        ...estiloBotaoRapidoStatusOperacional(op, ativo),
                                       }}
                                     >
                                       {op === 'em-andamento'
