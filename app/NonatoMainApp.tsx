@@ -44276,9 +44276,6 @@ A1;Peça exemplo;10`}
                   <p className="tab-glass-hero-meta">
                     {tecnicos.length} {safeT?.tecnicosCadastrados || 'técnico(s) cadastrado(s)'}
                   </p>
-                  <div style={{ marginTop: '10px' }}>
-                    {renderLegendaEstadosAgenda(safeT as Record<string, string | undefined>)}
-                  </div>
                 </div>
                 <div className="tab-glass-hero-actions">
                   <div className="tab-glass-hero-actions-row">
@@ -44342,6 +44339,10 @@ A1;Peça exemplo;10`}
                   </button>
                   </div>
                 </div>
+              </div>
+              {/* Legenda full-width abaixo do hero (evita text-align:center do heading) */}
+              <div style={{ marginTop: 4, width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+                {renderLegendaEstadosAgenda(safeT as Record<string, string | undefined>)}
               </div>
             </div>
 

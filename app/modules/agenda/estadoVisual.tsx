@@ -129,22 +129,80 @@ export function renderBlocoAssuntoPessoalEstadoVisual(
   )
 }
 
+const SWATCH_SIZE = 14
+
 function swatchLegendaAgenda(chave: ChaveLegendaAgendaVisual, label: string): ReactNode {
   return (
-    <div key={chave} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <div
+      key={chave}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        boxSizing: 'border-box',
+        minHeight: 32,
+        padding: '6px 10px',
+        borderRadius: 6,
+        backgroundColor: 'rgba(0, 0, 0, 0.32)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+      }}
+    >
       <span
         style={{
-          display: 'inline-block',
-          width: 14,
-          height: 14,
-          borderRadius: 4,
+          display: 'block',
+          width: SWATCH_SIZE,
+          height: SWATCH_SIZE,
+          borderRadius: 3,
           backgroundColor: corFundoMarcadorLegendaAgenda(chave),
-          border: '1px solid rgba(255,255,255,0.25)',
+          border: '1px solid rgba(255,255,255,0.28)',
           flexShrink: 0,
         }}
         aria-hidden
       />
-      <span style={{ fontSize: '13px', color: '#fff', fontWeight: 600 }}>{label}</span>
+      <span
+        style={{
+          fontSize: 12,
+          lineHeight: 1.2,
+          color: '#fff',
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {label}
+      </span>
+    </div>
+  )
+}
+
+function secaoLegendaAgenda(
+  titulo: string,
+  itens: { chave: ChaveLegendaAgendaVisual; label: string }[],
+  tituloEstilo: CSSProperties
+): ReactNode {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        gap: 8,
+        width: '100%',
+        textAlign: 'left',
+      }}
+    >
+      <p style={tituloEstilo}>{titulo}</p>
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          gap: 8,
+          width: '100%',
+        }}
+      >
+        {itens.map(({ chave, label }) => swatchLegendaAgenda(chave, label))}
+      </div>
     </div>
   )
 }
@@ -152,6 +210,7 @@ function swatchLegendaAgenda(chave: ChaveLegendaAgendaVisual, label: string): Re
 /**
  * Legenda completa (calendário / estado visual) — alinhada aos marcadores reais.
  * Estados e tipos separados para não misturar «Pessoal» com status operacional.
+ * Layout left-aligned e chips uniformes (não herda text-align:center do hero).
  */
 export function renderLegendaEstadosAgenda(tr?: Record<string, string | undefined>): ReactNode {
   const estados: { chave: ChaveLegendaAgendaVisual; label: string }[] = [
@@ -166,27 +225,45 @@ export function renderLegendaEstadosAgenda(tr?: Record<string, string | undefine
     { chave: 'pessoal', label: tr?.agendaPessoal || 'Pessoal' },
   ]
   const tituloEstilo: CSSProperties = {
-    margin: '0 0 8px 0',
-    fontSize: '11px',
+    margin: 0,
+    width: '100%',
+    fontSize: 11,
     fontWeight: 700,
-    letterSpacing: '0.4px',
+    letterSpacing: '0.5px',
     textTransform: 'uppercase',
-    color: 'rgba(0, 255, 122, 0.85)',
+    textAlign: 'left',
+    color: 'rgba(0, 255, 122, 0.88)',
+    lineHeight: 1.3,
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      <div>
-        <p style={tituloEstilo}>{tr?.agendaLegendaSecaoEstados || 'Estados'}</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-          {estados.map(({ chave, label }) => swatchLegendaAgenda(chave, label))}
-        </div>
-      </div>
-      <div>
-        <p style={tituloEstilo}>{tr?.agendaLegendaSecaoTipos || 'Tipos'}</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-          {tipos.map(({ chave, label }) => swatchLegendaAgenda(chave, label))}
-        </div>
-      </div>
+    <div
+      role="group"
+      aria-label={tr?.legenda || 'Legenda'}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
+        gap: 14,
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
+        textAlign: 'left',
+        padding: '12px 14px',
+        backgroundColor: 'rgba(0, 0, 0, 0.28)',
+        border: '1px solid rgba(0, 200, 83, 0.22)',
+        borderRadius: 8,
+      }}
+    >
+      {secaoLegendaAgenda(tr?.agendaLegendaSecaoEstados || 'Estados', estados, tituloEstilo)}
+      <div
+        aria-hidden
+        style={{
+          height: 1,
+          width: '100%',
+          backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        }}
+      />
+      {secaoLegendaAgenda(tr?.agendaLegendaSecaoTipos || 'Tipos', tipos, tituloEstilo)}
     </div>
   )
 }
