@@ -465,7 +465,7 @@ import {
   getNonatoBrandLogoDisplaySrc,
   validateNonatoLogoMediaSrc,
 } from './lib/nonatoBrandAssets'
-import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, buildRelatorioServicoPdfMetaSectionHtml, buildFechamentoDespesasRelatorioInfoHtml, buildFechamentoDespesasClienteMetaFields, buildRelatorioServicoSummaryCardsHtml, type RelatorioServicoPdfHeaderVariant, type RelatorioServicoPdfMetaLabels } from './lib/relatorioServicoPdfPrintCss'
+import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, buildRelatorioServicoPdfMetaSectionHtml, buildFechamentoDespesasRelatorioInfoHtml, buildFechamentoDespesasClienteMetaFields, buildRelatorioServicoSummaryCardsHtml, wrapRelatorioServicoPdfDocHtml, type RelatorioServicoPdfHeaderVariant, type RelatorioServicoPdfMetaLabels } from './lib/relatorioServicoPdfPrintCss'
 import { PDF_DOCUMENT_LAYOUT_CSS, buildPdfDocumentHeaderHtml, buildPdfDocumentFooterHtml, buildPdfMetaSectionHtml } from './lib/pdfDocumentLayout'
 import {
   MAX_EQUIPAMENTOS_RELATORIO,
@@ -15765,13 +15765,13 @@ export default function Dashboard() {
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
-      const bodyHtml = `
+      const bodyHtml = wrapRelatorioServicoPdfDocHtml(`
           ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
 
           ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada)}
 
           ${relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0 ? `
-          <div class="info-section">
+          <section class="info-section">
             <h3>${t.controleHorasDeslocamentos || 'CONTROLE DE HORAS E DESLOCAMENTOS'}</h3>
             <table>
               <thead>
@@ -15811,17 +15811,17 @@ export default function Dashboard() {
                       <td><strong>${diaCalc.kmTotal || '0'}</strong></td>
                       <td>${dia.tempoPausa || dia.pausa || '0:00'}</td>
                     </tr>
-                    ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr><td colspan="14" style="text-align:left;padding:6px 8px;font-size:9px;border:1px solid #000;background:#f9f9f9;vertical-align:top;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
+                    ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr class="rs-dia-desc"><td colspan="14" class="rs-dia-desc-cell"><span class="rs-dia-desc-label">${t.descricaoTrabalho || 'Descrição do Trabalho'}:</span> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
                   `;
                 }).join('')}
               </tbody>
             </table>
-          </div>
+          </section>
 
           ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>)}
           ` : ''}
 
-          <div class="info-section">
+          <section class="info-section">
             <h3>${t.resultadosTrabalho || 'RESULTADOS DO TRABALHO'}</h3>
             <div class="resultados-grid">
               <div class="resultado-item">
@@ -15849,24 +15849,24 @@ export default function Dashboard() {
                 <span>${t.necessarioTrocaPecas || 'Necessário troca de Peças'}</span>
               </div>
             </div>
-          </div>
+          </section>
 
           ${relatorio.observacoes ? `
-          <div class="observacoes">
-            <h4>${t.observacoes || 'Observações'}</h4>
+          <section class="info-section observacoes">
+            <h3>${t.observacoes || 'Observações'}</h3>
             <p>${escapePdfHtml(relatorio.observacoes)}</p>
-          </div>
+          </section>
           ` : ''}
 
           ${relatorio.pontosAberto ? `
-          <div class="observacoes">
-            <h4>${t.pontosAberto || 'Pontos em Aberto'}</h4>
+          <section class="info-section observacoes">
+            <h3>${t.pontosAberto || 'Pontos em Aberto'}</h3>
             <p>${escapePdfHtml(relatorio.pontosAberto)}</p>
-          </div>
+          </section>
           ` : ''}
 
           ${relatorio.pecasSubstituicao && relatorio.pecasSubstituicao.length > 0 ? `
-          <div class="info-section">
+          <section class="info-section">
             <h3>${t.pecasSubstituicao || 'PEÇAS QUE NECESSITAM DE SER SUBSTITUIDAS'}</h3>
             <table class="pecas-table">
               <thead>
@@ -15888,14 +15888,14 @@ export default function Dashboard() {
                 `).join('')}
               </tbody>
             </table>
-          </div>
+          </section>
           ` : ''}
 
           ${renderReportAssinaturaCliente(relatorio)}
-    `;
+    `);
       const htmlContent = wrapRelatorioServicoPrintDocument({
         title: `Relatório de Serviço — ${relatorio.numero}`,
-        bodyClass: pdfModeloBodyClass('classico', 'rs-pdf'),
+        bodyClass: `${pdfModeloBodyClass('classico', 'rs-pdf')} rs-pdf--classic`,
         baseCss: RELATORIO_SERVICO_PDF_PRINT_CSS,
         bodyHtml,
         pdfModelo: 'classico',
@@ -15929,21 +15929,13 @@ export default function Dashboard() {
       const totais = calcularTotais(relatorio.diasTrabalho);
     const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
     
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>Relatório de Serviço - ${relatorio.numero}</title>
-          <style>${RELATORIO_SERVICO_PDF_PRINT_CSS}</style>
-        </head>
-        <body class="rs-pdf rs-pdf--compact">
+    const bodyHtml = wrapRelatorioServicoPdfDocHtml(`
           ${buildPdfHeaderForRelatorio(relatorio, 'compact')}
 
           ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada)}
 
           ${relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0 ? `
-          <div class="info-section">
+          <section class="info-section">
             <h3>${t.controleHorasDeslocamentos || 'CONTROLE DE HORAS'}</h3>
             <table>
               <thead>
@@ -15967,17 +15959,17 @@ export default function Dashboard() {
                       <td>${diaCalc.retornoDuracao || '-'}</td>
                       <td>${diaCalc.kmTotal || '0'}</td>
                     </tr>
-                    ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr><td colspan="5" style="text-align:left;padding:6px 8px;font-size:9px;border:1px solid #000;background:#f9f9f9;vertical-align:top;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
+                    ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr class="rs-dia-desc"><td colspan="5" class="rs-dia-desc-cell"><span class="rs-dia-desc-label">${t.descricaoTrabalho || 'Descrição do Trabalho'}:</span> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
                   `;
                 }).join('')}
               </tbody>
             </table>
-          </div>
+          </section>
 
           ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>)}
           ` : ''}
 
-          <div class="info-section">
+          <section class="info-section">
             <h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>
             <div class="resultados-grid">
               <div class="resultado-item">
@@ -16005,17 +15997,17 @@ export default function Dashboard() {
                 <span>${t.necessarioTrocaPecas || 'Troca Peças'}</span>
               </div>
             </div>
-          </div>
+          </section>
 
           ${relatorio.observacoes ? `
-          <div class="observacoes">
-            <h4>${t.observacoes || 'Observações'}</h4>
+          <section class="info-section observacoes">
+            <h3>${t.observacoes || 'Observações'}</h3>
             <p>${escapePdfHtml(relatorio.observacoes)}</p>
-          </div>
+          </section>
           ` : ''}
 
           ${relatorio.pecasSubstituicao && relatorio.pecasSubstituicao.length > 0 ? `
-          <div class="info-section">
+          <section class="info-section">
             <h3>${t.pecasSubstituicao || 'PEÇAS'}</h3>
             <table class="pecas-table">
               <thead>
@@ -16035,13 +16027,23 @@ export default function Dashboard() {
                 `).join('')}
               </tbody>
             </table>
-          </div>
+          </section>
           ` : ''}
 
           ${renderReportAssinaturaCliente(relatorio)}
-        </body>
-      </html>
-    `;
+    `);
+      const htmlContent = wrapRelatorioServicoPrintDocument({
+        title: `Relatório de Serviço — ${relatorio.numero}`,
+        bodyClass: `${pdfModeloBodyClass('compacto', 'rs-pdf')} rs-pdf--compact`,
+        baseCss: RELATORIO_SERVICO_PDF_PRINT_CSS,
+        bodyHtml,
+        pdfModelo: 'compacto',
+        toolbarLabels: {
+          titulo: t.relatorioServicoTitle || 'Relatório de Serviço',
+          imprimir: t.imprimirOrcamento || t.gerarPDF || 'Imprimir / Guardar PDF',
+          fechar: t.fechar || 'Fechar',
+        },
+      });
 
       printWindow.document.write(htmlContent);
       printWindow.document.close();
@@ -16066,21 +16068,13 @@ export default function Dashboard() {
       const totais = calcularTotais(relatorio.diasTrabalho);
     const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
     
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>Relatório de Serviço - ${relatorio.numero}</title>
-          <style>${RELATORIO_SERVICO_PDF_PRINT_CSS}</style>
-        </head>
-        <body class="rs-pdf rs-pdf--detailed">
+    const bodyHtml = wrapRelatorioServicoPdfDocHtml(`
           ${buildPdfHeaderForRelatorio(relatorio, 'detailed')}
 
           ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada)}
 
           ${relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0 ? `
-          <div class="info-section">
+          <section class="info-section">
             <h3>${t.controleHorasDeslocamentos || 'CONTROLE DE HORAS E DESLOCAMENTOS'}</h3>
             <table>
               <thead>
@@ -16121,9 +16115,9 @@ export default function Dashboard() {
                       <td>${dia.tempoPausa || dia.pausa || '0:00'}</td>
                     </tr>
                     ${(dia.descricaoTrabalho || '').trim() !== '' ? `
-                    <tr>
-                      <td colspan="14" class="descricao-trabalho" style="text-align:left;vertical-align:top;">
-                        <strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}
+                    <tr class="rs-dia-desc">
+                      <td colspan="14" class="rs-dia-desc-cell">
+                        <span class="rs-dia-desc-label">${t.descricaoTrabalho || 'Descrição do Trabalho'}:</span> ${escapePdfHtml(dia.descricaoTrabalho)}
                       </td>
                     </tr>
                     ` : ''}
@@ -16131,12 +16125,12 @@ export default function Dashboard() {
                 }).join('')}
               </tbody>
             </table>
-          </div>
+          </section>
 
           ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>)}
           ` : ''}
 
-          <div class="info-section">
+          <section class="info-section">
             <h3>${t.resultadosTrabalho || 'RESULTADOS DO TRABALHO'}</h3>
             <div class="resultados-grid">
               <div class="resultado-item">
@@ -16164,24 +16158,24 @@ export default function Dashboard() {
                 <span>${t.necessarioTrocaPecas || 'Necessário troca de Peças'}</span>
               </div>
             </div>
-          </div>
+          </section>
 
           ${relatorio.observacoes ? `
-          <div class="observacoes">
-            <h4>${t.observacoes || 'Observações'}</h4>
+          <section class="info-section observacoes">
+            <h3>${t.observacoes || 'Observações'}</h3>
             <p>${escapePdfHtml(relatorio.observacoes)}</p>
-          </div>
+          </section>
           ` : ''}
 
           ${relatorio.pontosAberto ? `
-          <div class="observacoes">
-            <h4>${t.pontosAberto || 'Pontos em Aberto'}</h4>
+          <section class="info-section observacoes">
+            <h3>${t.pontosAberto || 'Pontos em Aberto'}</h3>
             <p>${escapePdfHtml(relatorio.pontosAberto)}</p>
-          </div>
+          </section>
           ` : ''}
 
           ${relatorio.pecasSubstituicao && relatorio.pecasSubstituicao.length > 0 ? `
-          <div class="info-section">
+          <section class="info-section">
             <h3>${t.pecasSubstituicao || 'PEÇAS QUE NECESSITAM DE SER SUBSTITUIDAS'}</h3>
             <table class="pecas-table">
               <thead>
@@ -16203,13 +16197,23 @@ export default function Dashboard() {
                 `).join('')}
               </tbody>
             </table>
-          </div>
+          </section>
           ` : ''}
 
           ${renderReportAssinaturaCliente(relatorio)}
-        </body>
-      </html>
-    `;
+    `);
+      const htmlContent = wrapRelatorioServicoPrintDocument({
+        title: `Relatório de Serviço — ${relatorio.numero}`,
+        bodyClass: `${pdfModeloBodyClass('detalhado', 'rs-pdf')} rs-pdf--detailed`,
+        baseCss: RELATORIO_SERVICO_PDF_PRINT_CSS,
+        bodyHtml,
+        pdfModelo: 'detalhado',
+        toolbarLabels: {
+          titulo: t.relatorioServicoTitle || 'Relatório de Serviço',
+          imprimir: t.imprimirOrcamento || t.gerarPDF || 'Imprimir / Guardar PDF',
+          fechar: t.fechar || 'Fechar',
+        },
+      });
 
       printWindow.document.write(htmlContent);
       printWindow.document.close();
@@ -18639,7 +18643,7 @@ export default function Dashboard() {
     if (!relatorio.diasTrabalho || relatorio.diasTrabalho.length === 0) return '';
     const numDiarias = relatorio.diasTrabalho.length;
     return `
-    <div class="report-section">
+    <section class="info-section">
       <h3>${t.controleHorasDeslocamentos || 'CONTROLE DE HORAS E DESLOCAMENTOS'}</h3>
       <table>
         <thead><tr>
@@ -18651,45 +18655,45 @@ export default function Dashboard() {
             const df = formatDiaTrabalhoCurtoPt(dia.data, localeReport);
             const linha = `<tr><td>${df}</td><td>${diaCalc.idaDuracao || '-'}</td><td>${diaCalc.horasDuracao || '-'}</td><td>${diaCalc.retornoDuracao || '-'}</td><td>${diaCalc.kmTotal || '0'}</td></tr>`;
             const desc = (dia.descricaoTrabalho || '').trim() !== ''
-              ? `<tr><td colspan="5" style="text-align:left;padding:6px 8px;font-size:9px;vertical-align:top;background:#f5f5f5;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>`
+              ? `<tr class="rs-dia-desc"><td colspan="5" class="rs-dia-desc-cell"><span class="rs-dia-desc-label">${t.descricaoTrabalho || 'Descrição do Trabalho'}:</span> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>`
               : '';
             return linha + desc;
           }).join('')}
         </tbody>
       </table>
-      ${buildRelatorioServicoSummaryCardsHtml(totais, numDiarias, t as Record<string, string | undefined>)}
-    </div>`;
+    </section>
+    ${buildRelatorioServicoSummaryCardsHtml(totais, numDiarias, t as Record<string, string | undefined>)}`;
   };
 
   const renderReportResultados = (relatorio: RelatorioServico) => `
-    <div class="report-resultados">
-      <div><span class="chk ${relatorio.servicoConcluido ? 'checked' : ''}"></span> ${t.servicoConcluido || 'Concluído'}</div>
-      <div><span class="chk ${relatorio.liberacaoProducao ? 'checked' : ''}"></span> ${t.liberacaoProducao || 'Liberação'}</div>
-      <div><span class="chk ${relatorio.retornoNecessario ? 'checked' : ''}"></span> ${t.retornoNecessario || 'Retorno'}</div>
-      <div><span class="chk ${relatorio.instrucaoFuncionarios ? 'checked' : ''}"></span> ${t.instrucaoFuncionarios || 'Instrução'}</div>
-      <div><span class="chk ${relatorio.entregaDocumentacao ? 'checked' : ''}"></span> ${t.entregaDocumentacao || 'Documentação'}</div>
-      <div><span class="chk ${relatorio.necessarioTrocaPecas ? 'checked' : ''}"></span> ${t.necessarioTrocaPecas || 'Troca de peças'}</div>
-      <div><span class="chk ${relatorio.pecasInstaladasSubstituidas ? 'checked' : ''}"></span> ${t.pecasInstaladasSubstituidas || 'Peças instaladas / substituídas'}</div>
+    <div class="resultados-grid report-resultados">
+      <div class="resultado-item"><span class="checkbox chk ${relatorio.servicoConcluido ? 'checked' : ''}"></span> ${t.servicoConcluido || 'Concluído'}</div>
+      <div class="resultado-item"><span class="checkbox chk ${relatorio.liberacaoProducao ? 'checked' : ''}"></span> ${t.liberacaoProducao || 'Liberação'}</div>
+      <div class="resultado-item"><span class="checkbox chk ${relatorio.retornoNecessario ? 'checked' : ''}"></span> ${t.retornoNecessario || 'Retorno'}</div>
+      <div class="resultado-item"><span class="checkbox chk ${relatorio.instrucaoFuncionarios ? 'checked' : ''}"></span> ${t.instrucaoFuncionarios || 'Instrução'}</div>
+      <div class="resultado-item"><span class="checkbox chk ${relatorio.entregaDocumentacao ? 'checked' : ''}"></span> ${t.entregaDocumentacao || 'Documentação'}</div>
+      <div class="resultado-item"><span class="checkbox chk ${relatorio.necessarioTrocaPecas ? 'checked' : ''}"></span> ${t.necessarioTrocaPecas || 'Troca de peças'}</div>
+      <div class="resultado-item"><span class="checkbox chk ${relatorio.pecasInstaladasSubstituidas ? 'checked' : ''}"></span> ${t.pecasInstaladasSubstituidas || 'Peças instaladas / substituídas'}</div>
     </div>`;
 
   const renderReportPecas = (relatorio: RelatorioServico) => {
     if (!relatorio.pecasSubstituicao || relatorio.pecasSubstituicao.length === 0) return '';
     return `
-    <div class="report-section">
+    <section class="info-section">
       <h3>${t.pecasSubstituicao || 'PEÇAS SUBSTITUIÇÃO'}</h3>
-      <table><thead><tr><th>${t.descricaoItem || 'Descrição'}</th><th>${t.codigo || 'Código'}</th><th>${t.quantidade || 'Qtd'}</th></tr></thead>
+      <table class="pecas-table"><thead><tr><th>${t.descricaoItem || 'Descrição'}</th><th>${t.codigo || 'Código'}</th><th>${t.quantidade || 'Qtd'}</th></tr></thead>
       <tbody>${relatorio.pecasSubstituicao.map((p: PecaSubstituicao) => `<tr><td>${p.descricao || '-'}</td><td>${p.codigo || '-'}</td><td>${p.quantidade || '-'}</td></tr>`).join('')}</tbody></table>
-    </div>`;
+    </section>`;
   };
 
   const renderReportPecasInstaladas = (relatorio: RelatorioServico) => {
     if (!relatorio.pecasInstaladas || relatorio.pecasInstaladas.length === 0) return '';
     return `
-    <div class="report-section">
+    <section class="info-section">
       <h3>${t.pecasInstaladasSubstituidas || 'PEÇAS INSTALADAS / SUBSTITUÍDAS'}</h3>
-      <table><thead><tr><th>${t.descricaoItem || 'Descrição'}</th><th>${t.codigo || 'Código'}</th><th>${t.quantidade || 'Qtd'}</th></tr></thead>
+      <table class="pecas-table"><thead><tr><th>${t.descricaoItem || 'Descrição'}</th><th>${t.codigo || 'Código'}</th><th>${t.quantidade || 'Qtd'}</th></tr></thead>
       <tbody>${relatorio.pecasInstaladas.map((p: PecaSubstituicao) => `<tr><td>${p.descricao || '-'}</td><td>${p.codigo || '-'}</td><td>${p.quantidade || '-'}</td></tr>`).join('')}</tbody></table>
-    </div>`;
+    </section>`;
   };
 
   const labelAssinaturaCliente = t?.assinaturaCliente ?? 'Assinatura do Cliente'
@@ -18698,28 +18702,26 @@ export default function Dashboard() {
   const renderReportAssinaturaCliente = (relatorio: RelatorioServico) => {
     const titulo = labelAssinaturaCliente
     const subtitulo = labelAssinaturaClienteConfirmacao
-    const baseStyle = 'margin-top:24px;padding-top:16px;border-top:1px solid #ccc;'
-    const textStyle = 'font-size:10px;color:#666;margin-bottom:10px;'
     const labelData = t?.dataAssinatura ?? 'Data'
     if (relatorio.assinaturaCliente) {
       const dataAssinatura = relatorio.dataAssinaturaCliente
         ? new Date(relatorio.dataAssinaturaCliente).toLocaleString(localeReport, { dateStyle: 'short', timeStyle: 'short' })
         : ''
       return `
-    <div class="report-assinatura-cliente" style="${baseStyle}">
-      <h3 style="font-size:11px;margin-bottom:8px;font-weight:bold;">${titulo}</h3>
-      <p style="${textStyle}">${subtitulo}</p>
-      <img src="${String(relatorio.assinaturaCliente).replace(/"/g, '&quot;')}" alt="Assinatura" style="max-width:280px;max-height:100px;object-fit:contain;display:block;border-bottom:1px solid #000;padding-bottom:4px;background:#fff;" />
-      ${dataAssinatura ? `<p style="font-size:9px;color:#555;margin-top:6px;">${labelData}: ${dataAssinatura}</p>` : ''}
-    </div>`
+    <section class="report-assinatura-cliente">
+      <h3>${titulo}</h3>
+      <p class="report-assinatura-cliente__hint">${subtitulo}</p>
+      <img class="report-assinatura-cliente__img" src="${String(relatorio.assinaturaCliente).replace(/"/g, '&quot;')}" alt="" />
+      ${dataAssinatura ? `<p class="report-assinatura-cliente__data">${labelData}: ${dataAssinatura}</p>` : ''}
+    </section>`
     }
     return `
-    <div class="report-assinatura-cliente" style="${baseStyle}">
-      <h3 style="font-size:11px;margin-bottom:8px;font-weight:bold;">${titulo}</h3>
-      <p style="${textStyle}">${subtitulo}</p>
-      <div style="width:280px;height:70px;border-bottom:2px solid #000;margin-top:8px;"></div>
-      <p style="font-size:9px;color:#555;margin-top:6px;">${labelData}: _______________________</p>
-    </div>`
+    <section class="report-assinatura-cliente">
+      <h3>${titulo}</h3>
+      <p class="report-assinatura-cliente__hint">${subtitulo}</p>
+      <div class="report-assinatura-cliente__linha"></div>
+      <p class="report-assinatura-cliente__data">${labelData}: _______________________</p>
+    </section>`
   }
 
   const handlePrintRelatorioProfissional = (relatorio: RelatorioServico) => {
@@ -18728,17 +18730,17 @@ export default function Dashboard() {
       if (!printWindow) { alert('Por favor, permita pop-ups para gerar o PDF.'); return; }
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeReport) : '-';
-      const bodyHtml = `
+      const bodyHtml = wrapRelatorioServicoPdfDocHtml(`
         ${buildPdfHeaderForRelatorio(relatorio, 'detailed')}
         ${buildPdfClienteEquipamentoSection(relatorio, dataFormatada)}
         ${renderReportDiasTable(relatorio, totais)}
-        <div class="info-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
-        ${relatorio.observacoes ? `<div class="info-section observacoes"><h3>${t.observacoes || 'Observações'}</h3><p>${escapePdfHtml(relatorio.observacoes)}</p></div>` : ''}
-        ${relatorio.pontosAberto ? `<div class="info-section"><h3>${t.pontosAberto || 'Pontos em Aberto'}</h3><p>${escapePdfHtml(relatorio.pontosAberto)}</p></div>` : ''}
+        <section class="info-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</section>
+        ${relatorio.observacoes ? `<section class="info-section observacoes"><h3>${t.observacoes || 'Observações'}</h3><p>${escapePdfHtml(relatorio.observacoes)}</p></section>` : ''}
+        ${relatorio.pontosAberto ? `<section class="info-section"><h3>${t.pontosAberto || 'Pontos em Aberto'}</h3><p>${escapePdfHtml(relatorio.pontosAberto)}</p></section>` : ''}
         ${renderReportPecas(relatorio)}
         ${renderReportPecasInstaladas(relatorio)}
         ${renderReportAssinaturaCliente(relatorio)}
-      `;
+      `);
       const htmlContent = wrapRelatorioServicoPrintDocument({
         title: `Relatório de Serviço — ${relatorio.numero}`,
         bodyClass: `${pdfModeloBodyClass('profissional', 'rs-pdf')} rs-pdf--detailed`,

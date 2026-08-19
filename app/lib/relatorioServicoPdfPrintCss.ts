@@ -383,7 +383,7 @@ export function buildRelatorioServicoSummaryCardsHtml(
       html: formatHorasResumoPdf(totais.horasViagemRetorno),
     },
   ]
-  return `<div class="${wrap}">${items
+  return `<div class="rs-resumo-bloco"><div class="${wrap}">${items
     .map((it) => {
       const labelAttr = labelCls ? ` class="${labelCls}"` : ''
       const labelHtml =
@@ -392,7 +392,12 @@ export function buildRelatorioServicoSummaryCardsHtml(
           : `<h4${labelAttr}>${escapePdfHtml(it.label)}</h4>`
       return `<div class="${card}">${labelHtml}<div class="value">${it.html}</div></div>`
     })
-    .join('')}</div>`
+    .join('')}</div></div>`
+}
+
+/** Envelope de fluxo do PDF comum (não usar em especiais). */
+export function wrapRelatorioServicoPdfDocHtml(innerHtml: string): string {
+  return `<div class="rs-doc rs-doc-flow">${innerHtml}</div>`
 }
 
 export const RELATORIO_SERVICO_PDF_PRINT_CSS = `
@@ -408,6 +413,28 @@ body.rs-pdf {
 body.rs-pdf--classic { font-size: 10px; line-height: 1.5; padding: 8px 10px 18px; }
 body.rs-pdf--detailed { font-size: 11px; line-height: 1.55; padding: 10px 12px 20px; }
 body.rs-pdf--compact { font-size: 8px; line-height: 1.38; padding: 6px 8px 14px; }
+
+/* Hierarquia do Relatório de Serviço comum — não afecta .rs-pdf--especial */
+body.rs-pdf:not(.rs-pdf--especial) .rs-doc-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 100%;
+}
+body.rs-pdf:not(.rs-pdf--especial) .rs-doc-flow > .ns-pdf-header {
+  margin-bottom: 14px;
+}
+body.rs-pdf:not(.rs-pdf--especial) .rs-doc-flow > .ns-pdf-meta {
+  margin-bottom: 16px;
+}
+body.rs-pdf:not(.rs-pdf--especial) .rs-doc-flow > .info-section,
+body.rs-pdf:not(.rs-pdf--especial) .rs-doc-flow > .report-section,
+body.rs-pdf:not(.rs-pdf--especial) .rs-doc-flow > .observacoes,
+body.rs-pdf:not(.rs-pdf--especial) .rs-doc-flow > .summary,
+body.rs-pdf:not(.rs-pdf--especial) .rs-doc-flow > .rs-resumo-bloco,
+body.rs-pdf:not(.rs-pdf--especial) .rs-doc-flow > .report-assinatura-cliente {
+  margin-bottom: 18px;
+}
 
 ${PDF_DOCUMENT_LAYOUT_CSS}
 
@@ -453,6 +480,39 @@ ${PDF_DOCUMENT_LAYOUT_CSS}
   background: #1e293b22;
 }
 
+body.rs-pdf:not(.rs-pdf--especial) .info-section,
+body.rs-pdf:not(.rs-pdf--especial) .report-section {
+  margin-bottom: 16px;
+  padding: 12px 14px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #fff;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+body.rs-pdf:not(.rs-pdf--especial) .info-section:has(table),
+body.rs-pdf:not(.rs-pdf--especial) .report-section:has(table) {
+  break-inside: auto;
+  page-break-inside: auto;
+}
+
+body.rs-pdf:not(.rs-pdf--especial) .info-section h3,
+body.rs-pdf:not(.rs-pdf--especial) .report-section h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 10px;
+  margin: 0 0 12px 0;
+  padding: 0 0 8px 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #1e293b;
+  border-bottom: 2px solid #1e3a5f;
+  border-left: 3px solid #1e3a5f;
+  line-height: 1.3;
+}
+
+/* fallback legado (fechamento / outros) */
 .rs-pdf .info-section {
   margin-bottom: 16px;
   break-inside: avoid;
@@ -522,6 +582,19 @@ ${PDF_DOCUMENT_LAYOUT_CSS}
   color: #334155;
 }
 
+body.rs-pdf:not(.rs-pdf--especial) .rs-resumo-bloco {
+  margin: 4px 0 18px;
+  padding: 12px 12px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #f8fafc;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+body.rs-pdf:not(.rs-pdf--especial) .rs-resumo-bloco > .summary {
+  margin: 0;
+}
+
 .rs-pdf .summary {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -589,18 +662,24 @@ ${PDF_DOCUMENT_LAYOUT_CSS}
   text-transform: lowercase;
 }
 
-.rs-pdf .resultados-grid {
+.rs-pdf .resultados-grid,
+.rs-pdf .report-resultados {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px 16px;
-  margin: 10px 0;
+  gap: 8px 12px;
+  margin: 4px 0 0;
 }
-.rs-pdf .resultado-item {
+.rs-pdf .resultado-item,
+.rs-pdf .report-resultados > div {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 1em;
   color: #334155;
+  padding: 7px 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 3px;
 }
 .rs-pdf .checkbox {
   width: 12px;
@@ -690,6 +769,68 @@ body.rs-pdf--compact .pecas-table .imagem-col img { max-width: 48px; max-height:
   color: #334155;
 }
 
+body.rs-pdf:not(.rs-pdf--especial) tr.rs-dia-desc td,
+body.rs-pdf:not(.rs-pdf--especial) .rs-dia-desc-cell {
+  text-align: left !important;
+  padding: 8px 10px !important;
+  font-size: 0.95em;
+  line-height: 1.45;
+  vertical-align: top;
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #334155;
+}
+body.rs-pdf:not(.rs-pdf--especial) .rs-dia-desc-label {
+  font-weight: 700;
+  color: #1e293b;
+  margin-right: 4px;
+}
+
+body.rs-pdf:not(.rs-pdf--especial) .report-assinatura-cliente {
+  margin-top: 8px;
+  padding: 14px 16px 16px;
+  border: 1px solid #e2e8f0;
+  border-top: 2px solid #1e3a5f;
+  border-radius: 4px;
+  background: #fff;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+body.rs-pdf:not(.rs-pdf--especial) .report-assinatura-cliente h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 10px;
+  margin: 0 0 6px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #1e293b;
+}
+body.rs-pdf:not(.rs-pdf--especial) .report-assinatura-cliente__hint {
+  font-size: 9px;
+  color: #64748b;
+  margin: 0 0 10px;
+}
+body.rs-pdf:not(.rs-pdf--especial) .report-assinatura-cliente__img {
+  max-width: 280px;
+  max-height: 100px;
+  object-fit: contain;
+  display: block;
+  border-bottom: 1px solid #0f172a;
+  padding-bottom: 4px;
+  background: #fff;
+}
+body.rs-pdf:not(.rs-pdf--especial) .report-assinatura-cliente__linha {
+  width: 280px;
+  height: 70px;
+  border-bottom: 2px solid #0f172a;
+  margin-top: 8px;
+}
+body.rs-pdf:not(.rs-pdf--especial) .report-assinatura-cliente__data {
+  font-size: 9px;
+  color: #555;
+  margin-top: 6px;
+}
+
 .rs-pdf .pdf-rs-footer {
   margin-top: 22px;
   padding-top: 14px;
@@ -703,11 +844,14 @@ body.rs-pdf--compact .pecas-table .imagem-col img { max-width: 48px; max-height:
 
 @media print {
   body.rs-pdf { padding-bottom: 8mm; }
-  .rs-pdf .info-section:has(table) {
+  .rs-pdf .info-section:has(table),
+  .rs-pdf .report-section:has(table) {
     break-inside: auto;
     page-break-inside: auto;
   }
-  .rs-pdf .summary {
+  .rs-pdf .summary,
+  .rs-pdf .rs-resumo-bloco,
+  .rs-pdf .report-assinatura-cliente {
     break-inside: avoid;
     page-break-inside: avoid;
   }
