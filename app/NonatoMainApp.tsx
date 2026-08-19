@@ -197,12 +197,16 @@ import {
   normalizeCategoriaAgendamento,
   isAgendamentoPessoal,
   isAgendamentoCancelado,
+  statusOperacionalAgenda,
+  statusFromOperacional,
   normalizeDataKeyAgenda,
   parseDataAgendaLocal,
   formatDataYYYYMMDDLocal,
+  expandirIntervaloDatasContinuo,
   getDatasPeriodoAgendamento,
   agendamentoIncluiData,
   agendamentoPeriodoIntersectaIntervalo,
+  agendamentoCaiNoAnoMes,
   rotuloPeriodoAgendamento,
   agendamentoStatusAtivoParaEstadoVisual,
   agendamentoVisivelNoEstadoVisualTecnico,
@@ -213,15 +217,18 @@ import {
   rotuloTipoAgendamentoEstadoVisual,
   rotuloAgendaPainelSituacao,
   accentCorAgendamentoLista,
+  rotuloStatusOperacionalDeAgendamento,
   estiloCardAgendaEstadoVisualShared,
   estiloMarcadorAgendamentoCancelado,
   resolveClienteEEquipamentoParaFormularioAgenda,
   renderBlocoEquipamentoAgendamentoEstadoVisual,
   renderBlocoAssuntoPessoalEstadoVisual,
+  renderLegendaEstadosAgenda,
   filterAgendamentosLembrete,
   formatTelefoneWhatsApp,
   buildMensagemLembreteAgenda,
 } from './modules/agenda'
+import type { StatusOperacionalAgenda } from './modules/agenda'
 import type { SidebarGroup, SidebarButton, TabType, Tab } from './modules/sidebar'
 import {
   SIDEBAR_GROUPS,
@@ -12917,6 +12924,24 @@ export default function Dashboard() {
     })
   }, [])
 
+  const atualizarStatusAgendamentoRapido = (
+    id: string,
+    operacional: StatusOperacionalAgenda
+  ) => {
+    const novoStatus = statusFromOperacional(operacional)
+    const updated = agendamentos.map((a) => {
+      if (a.id !== id) return a
+      const antes = normalizeStatusAgendamento(a)
+      const next: Agendamento = { ...a, status: novoStatus }
+      if (novoStatus === 'concluido' && antes !== 'concluido') {
+        next.dataRegistoConclusao = new Date().toISOString()
+      }
+      return next
+    })
+    setAgendamentos(updated)
+    saveData('nonato-agendamentos', updated)
+  }
+
   const handleSaveAgendamento = (): boolean => {
     const pessoal = isAgendamentoPessoal(agendaForm)
     if (!agendaForm.data || !agendaForm.hora) {
@@ -12928,13 +12953,29 @@ export default function Dashboard() {
       return false
     }
 
+    // Sincroniza rascunho do calendário (mesmo sem clicar «Confirmar dias») e preenche intervalo contínuo.
+    const diasExpandidos = expandirIntervaloDatasContinuo(
+      agendaDiasRascunho.length > 0
+        ? agendaDiasRascunho
+        : agendaForm.diasSelecionados || []
+    )
+    const formComPeriodo: Agendamento =
+      diasExpandidos.length > 0
+        ? {
+            ...agendaForm,
+            data: diasExpandidos[0],
+            diasSelecionados: diasExpandidos,
+            duracaoEstimada: String(diasExpandidos.length),
+          }
+        : agendaForm
+
     const formSanitizado: Agendamento = {
-      ...agendaForm,
-      tipo: normalizeTipoAgendamento(agendaForm),
-      status: normalizeStatusAgendamento(agendaForm),
+      ...formComPeriodo,
+      tipo: normalizeTipoAgendamento(formComPeriodo),
+      status: normalizeStatusAgendamento(formComPeriodo),
       categoria: pessoal ? 'pessoal' : 'servico',
-      subtipoPessoal: pessoal ? agendaForm.subtipoPessoal || 'pessoal' : undefined,
-      assunto: pessoal ? String(agendaForm.assunto || '').trim() : undefined,
+      subtipoPessoal: pessoal ? formComPeriodo.subtipoPessoal || 'pessoal' : undefined,
+      assunto: pessoal ? String(formComPeriodo.assunto || '').trim() : undefined,
       ...(pessoal
         ? {
             tecnico: '',
@@ -13012,15 +13053,17 @@ export default function Dashboard() {
   }
 
   const confirmarAgendaDiasCalendario = () => {
-    const sorted = [...agendaDiasRascunho].sort()
-    if (sorted.length === 0) {
+    const expanded = expandirIntervaloDatasContinuo(agendaDiasRascunho)
+    if (expanded.length === 0) {
       alert(safeT?.agendaSelecioneUmDia || 'Selecione pelo menos um dia no calendário.')
       return
     }
+    setAgendaDiasRascunho(expanded)
     setAgendaForm((f) => ({
       ...f,
-      duracaoEstimada: String(sorted.length),
-      diasSelecionados: sorted,
+      data: expanded[0],
+      duracaoEstimada: String(expanded.length),
+      diasSelecionados: expanded,
     }))
   }
 
@@ -42839,6 +42882,10 @@ A1;Peça exemplo;10`}
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
                     {safeT?.status || 'Status'}
                   </label>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#aaa' }}>
+                    {(safeT as any)?.agendaStatusTecnicoHint ||
+                      'Estado do técnico: Em andamento (não concluído), Concluído ou Cancelado. Pendente/Confirmado também contam como em andamento na vista operacional.'}
+                  </p>
                   <select
                     value={agendaForm.status}
                     onChange={(e) =>
@@ -42849,11 +42896,11 @@ A1;Peça exemplo;10`}
                     }
                     style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                   >
-                    <option value="pendente">{safeT?.pendente || 'Pendente'}</option>
-                    <option value="confirmado">{safeT?.confirmado || 'Confirmado'}</option>
                     <option value="em-andamento">{safeT?.emAndamento || 'Em Andamento'}</option>
                     <option value="concluido">{safeT?.concluido || 'Concluído'}</option>
                     <option value="cancelado">{safeT?.cancelado || 'Cancelado'}</option>
+                    <option value="pendente">{safeT?.pendente || 'Pendente'}</option>
+                    <option value="confirmado">{safeT?.confirmado || 'Confirmado'}</option>
                   </select>
                 </div>
 
@@ -42864,9 +42911,9 @@ A1;Peça exemplo;10`}
                   <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#aaa' }}>
                     {isAgendamentoPessoal(agendaForm)
                       ? ((safeT as any)?.agendaCalendarioDiasHintPessoal ||
-                          'Toque nos dias do calendário e confirme para definir quantos dias durará o compromisso.')
-                      : (safeT?.agendaCalendarioDiasHint ||
-                          'Toque nos dias do calendário e confirme para definir quantos dias durará o serviço.')}
+                          'Marque o primeiro e o último dia (navegue o mês se precisar). Ao confirmar, preenche o intervalo contínuo — inclusive no mês seguinte.')
+                      : ((safeT as any)?.agendaCalendarioDiasHint ||
+                          'Marque o primeiro e o último dia (navegue o mês se precisar). Ao confirmar, preenche o intervalo contínuo — inclusive no mês seguinte.')}
                   </p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
                     <button
@@ -43374,16 +43421,6 @@ A1;Peça exemplo;10`}
                     const st = normalizeStatusAgendamento(agendamento)
                     const listaModo = opts?.listaModo === true
                     const cardExpandido = !listaModo || agendaListaCardsExpandidos.has(agendamento.id)
-                    const statusLabel =
-                      st === 'concluido'
-                        ? safeT?.concluido || 'Concluído'
-                        : st === 'cancelado'
-                          ? safeT?.cancelado || 'Cancelado'
-                          : st === 'em-andamento'
-                            ? safeT?.emAndamento || 'Em Andamento'
-                            : st === 'confirmado'
-                              ? safeT?.confirmado || 'Confirmado'
-                              : safeT?.pendente || 'Pendente'
                     const agendaCardField = (label: string, value: React.ReactNode) => (
                       <p className="agenda-card__field">
                         <strong>{label}</strong>
@@ -43485,7 +43522,7 @@ A1;Peça exemplo;10`}
                           ) : null}
                         </div>
                         <span className="agenda-card__status-badge" style={{ borderColor: `${accent}66`, color: accent }}>
-                          {statusLabel}
+                          {rotuloStatusOperacionalDeAgendamento(agendamento, trAg)}
                         </span>
                       </div>
 
@@ -43632,6 +43669,37 @@ A1;Peça exemplo;10`}
                           >
                             {safeT?.edit || 'Editar'}
                           </button>
+                          {(['em-andamento', 'concluido', 'cancelado'] as StatusOperacionalAgenda[]).map((op) => {
+                            const ativo = statusOperacionalAgenda(agendamento) === op
+                            return (
+                              <button
+                                key={op}
+                                type="button"
+                                className="agenda-card-action-btn"
+                                title={(safeT as any)?.agendaStatusRapidoHint || 'Alterar estado do trabalho'}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  atualizarStatusAgendamentoRapido(agendamento.id, op)
+                                }}
+                                style={{
+                                  padding: '8px 10px',
+                                  fontSize: '12px',
+                                  fontWeight: 700,
+                                  borderRadius: 8,
+                                  cursor: 'pointer',
+                                  border: ativo ? '2px solid #00c853' : '1px solid rgba(255,255,255,0.22)',
+                                  backgroundColor: ativo ? 'rgba(0, 200, 83, 0.22)' : '#3a3a3a',
+                                  color: '#fff',
+                                }}
+                              >
+                                {op === 'em-andamento'
+                                  ? safeT?.emAndamento || 'Em Andamento'
+                                  : op === 'concluido'
+                                    ? safeT?.concluido || 'Concluído'
+                                    : safeT?.cancelado || 'Cancelado'}
+                              </button>
+                            )
+                          })}
                           <button
                             type="button"
                             className="btn-danger agenda-card-action-btn agenda-card-action-btn--delete"
@@ -43958,11 +44026,11 @@ A1;Peça exemplo;10`}
 
             {/* Visualização Calendário */}
             {visualizacaoAgenda === 'calendario' && (() => {
-              // Filtrar agendamentos
+              // Filtrar agendamentos (sem filtro de data — o calendário mostra o mês inteiro;
+              // o filtro de data aplica-se na lista ao clicar num dia).
               const agendamentosFiltrados = agendamentos.filter((ag) => {
                 if (!agendaPassaFiltroTipoListagem(filtroAgenda, ag)) return false
                 if (filtroTecnicoAgenda && !isAgendamentoPessoal(ag) && ag.tecnico !== filtroTecnicoAgenda) return false
-                if (filtroDataAgenda && !agendamentoIncluiData(ag, filtroDataAgenda)) return false
                 return true
               })
               const agendamentosCalendarioVisiveis = agendaCalendarioMostrarConcluidos
@@ -44003,7 +44071,7 @@ A1;Peça exemplo;10`}
                 safeT?.dezembro || 'Dezembro'
               ]
 
-              // Agrupar agendamentos por data (incluindo todos os dias do período)
+              // Agrupar agendamentos por data (incluindo todos os dias do período — cross-mês)
               const agendamentosPorData: Record<string, Agendamento[]> = {}
               agendamentosCalendarioVisiveis.forEach((ag) => {
                 const datasPeriodo = getDatasPeriodoAgendamento(ag)
@@ -44015,8 +44083,9 @@ A1;Peça exemplo;10`}
                 })
               })
 
-              // Função para navegar meses
+              // Função para navegar meses (limpa filtro de dia para revelar marcações do mês seguinte)
               const navegarMes = (direcao: 'anterior' | 'proximo') => {
+                setFiltroDataAgenda('')
                 if (direcao === 'anterior') {
                   if (calendarioMes === 0) {
                     setCalendarioMes(11)
@@ -44053,10 +44122,7 @@ A1;Peça exemplo;10`}
               }
 
               const agendamentoCaiNoMes = (ag: Agendamento) =>
-                getDatasPeriodoAgendamento(ag).some((d) => {
-                  const p = d.split('-').map(Number)
-                  return p[0] === calendarioAno && p[1] === calendarioMes + 1
-                })
+                agendamentoCaiNoAnoMes(ag, calendarioAno, calendarioMes)
 
               const baseAgendaStats = agendamentos.filter((ag) => {
                 if (!agendaPassaFiltroTipoListagem(filtroAgenda, ag)) return false
@@ -44340,155 +44406,26 @@ A1;Peça exemplo;10`}
                     </div>
                   ) : null}
 
-                  {/* Legenda */}
+                  {/* Legenda — estados claros (módulo agenda) */}
                   <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#404040', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                     <h4 style={{ marginBottom: '10px', fontSize: '14px', color: '#00c853' }}>
-                      {safeT?.legenda || 'Legenda'}
+                      {(safeT as any)?.agendaLegendaEstadosTitulo || safeT?.legenda || 'Legenda'}
                     </h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <div style={{ fontSize: '12px', color: 'rgba(120, 200, 255, 0.85)', lineHeight: 1.45 }}>
-                        {agendaCalendarioMostrarConcluidos
-                          ? (safeT as any)?.agendaLegendaComConcluidosCal ||
-                            'Concluídos visíveis no calendário (opção acima). Fundo verde nos marcadores. Na lista vê até 60 recentes; pesquisa completa no histórico.'
-                          : (safeT as any)?.agendaLegendaOcultaConcluidos ||
-                            'Por defeito os concluídos não aparecem no calendário — marque «Mostrar concluídos no calendário» acima ou use «Histórico — trabalhos concluídos».'}
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
-                        {(safeT as any)?.legendaFundoNeutro ||
-                          'Fundo do dia da grade neutro. Em cada marcador, o fundo colorido indica o status; hora e nome do cliente ficam em branco.'}
-                      </div>
-                      <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                        {(safeT as any)?.legendaMarcadores || 'Marcadores (hora + cliente)'}
-                      </div>
-                      <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div
-                            style={{
-                              padding: '2px 8px',
-                              borderRadius: '6px',
-                              backgroundColor: 'rgba(158, 108, 8, 0.95)',
-                              border: '1px solid rgba(255, 220, 110, 0.55)',
-                              fontSize: '11px',
-                              color: '#fff',
-                              fontWeight: 800,
-                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-                            }}
-                          >
-                            09:00 Cliente
-                          </div>
-                          <span style={{ fontSize: '12px' }}>
-                            {(safeT as any)?.legendaPreAmarelo ||
-                              'Pré-agendamento (pendente ou confirmado) — fundo amarelo/dourado'}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div
-                            style={{
-                              padding: '2px 8px',
-                              borderRadius: '6px',
-                              backgroundColor: 'rgba(28, 78, 188, 0.94)',
-                              border: '1px solid rgba(150, 195, 255, 0.55)',
-                              fontSize: '11px',
-                              color: '#fff',
-                              fontWeight: 800,
-                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-                            }}
-                          >
-                            09:00 Cliente
-                          </div>
-                          <span style={{ fontSize: '12px' }}>
-                            {(safeT as any)?.legendaAzulTecnicoConfirmado ||
-                              'Agendamento técnico confirmado/em andamento — fundo azul'}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div
-                            style={{
-                              padding: '2px 8px',
-                              borderRadius: '6px',
-                              backgroundColor: 'rgba(178, 62, 22, 0.94)',
-                              border: '1px solid rgba(255, 160, 105, 0.55)',
-                              fontSize: '11px',
-                              color: '#fff',
-                              fontWeight: 800,
-                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-                            }}
-                          >
-                            09:00 Cliente
-                          </div>
-                          <span style={{ fontSize: '12px' }}>
-                            {(safeT as any)?.legendaPendenteTecnico ||
-                              'Agendamento técnico pendente — fundo laranja'}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div
-                            style={{
-                              padding: '2px 8px',
-                              borderRadius: '6px',
-                              backgroundColor: 'rgba(124, 58, 237, 0.94)',
-                              border: '1px solid rgba(216, 180, 254, 0.55)',
-                              fontSize: '11px',
-                              color: '#fff',
-                              fontWeight: 800,
-                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-                            }}
-                          >
-                            09:00 {(safeT as any)?.agendaPessoal || 'Pessoal'}
-                          </div>
-                          <span style={{ fontSize: '12px' }}>
-                            {(safeT as any)?.agendaLegendaPessoal ||
-                              'Assunto pessoal ou visita técnica — fundo roxo'}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div
-                            style={{
-                              padding: '2px 8px',
-                              borderRadius: '6px',
-                              background: AGENDA_CANCELADO_BG,
-                              border: `2px solid ${AGENDA_CANCELADO_BORDA}`,
-                              boxShadow: AGENDA_CANCELADO_SOMBRA,
-                              fontSize: '11px',
-                              color: '#fff',
-                              fontWeight: 700,
-                              textDecoration: 'line-through',
-                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-                            }}
-                          >
-                            09:00 Cliente
-                          </div>
-                          <span style={{ fontSize: '12px', color: '#fecaca' }}>
-                            {(safeT as any)?.agendaLegendaCancelado || safeT?.cancelado || 'Cancelado — fundo vermelho (igual devedor)'}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: agendaCalendarioMostrarConcluidos ? 1 : 0.72 }}>
-                          <div
-                            style={{
-                              padding: '2px 8px',
-                              borderRadius: '6px',
-                              backgroundColor: 'rgba(0, 128, 58, 0.94)',
-                              border: '1px solid rgba(0, 255, 150, 0.5)',
-                              fontSize: '11px',
-                              color: '#fff',
-                              fontWeight: 800,
-                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-                            }}
-                          >
-                            09:00 Cliente
-                          </div>
-                          <span style={{ fontSize: '12px' }}>
-                            {agendaCalendarioMostrarConcluidos
-                              ? (safeT as any)?.legendaConcluidoCalendarioOn || 'Concluído — fundo verde'
-                              : (safeT as any)?.legendaConcluidoCalendarioOff ||
-                                'Concluído — fundo verde (active «Mostrar concluídos» para ver no calendário)'}
-                          </span>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(0, 200, 83, 0.08)', border: '2px solid rgba(0, 255, 122, 0.5)', borderRadius: '4px' }} />
-                        <span style={{ fontSize: '12px' }}>{safeT?.diaAtual || 'Dia de hoje'} — {(safeT as any)?.legendaContornoVerde || 'contorno verde'}</span>
-                      </div>
+                    <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.45 }}>
+                      {(safeT as any)?.agendaLegendaEstadosHint ||
+                        'Cores do estado do trabalho. Intervalos multi-dia aparecem em todos os meses do período — use Mês Anterior / Próximo Mês.'}
+                    </p>
+                    {renderLegendaEstadosAgenda(safeT as Record<string, string | undefined>)}
+                    <div style={{ marginTop: '12px', fontSize: '12px', color: 'rgba(120, 200, 255, 0.85)', lineHeight: 1.45 }}>
+                      {agendaCalendarioMostrarConcluidos
+                        ? (safeT as any)?.agendaLegendaComConcluidosCal ||
+                          'Concluídos visíveis no calendário (opção acima).'
+                        : (safeT as any)?.agendaLegendaOcultaConcluidos ||
+                          'Por defeito os concluídos não aparecem no calendário — marque «Mostrar concluídos no calendário» acima.'}
+                    </div>
+                    <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(0, 200, 83, 0.08)', border: '2px solid rgba(0, 255, 122, 0.5)', borderRadius: '4px' }} />
+                      <span style={{ fontSize: '12px' }}>{safeT?.diaAtual || 'Dia de hoje'} — {(safeT as any)?.legendaContornoVerde || 'contorno verde'}</span>
                     </div>
                   </div>
                 </div>
@@ -44513,6 +44450,9 @@ A1;Peça exemplo;10`}
                   <p className="tab-glass-hero-meta">
                     {tecnicos.length} {safeT?.tecnicosCadastrados || 'técnico(s) cadastrado(s)'}
                   </p>
+                  <div style={{ marginTop: '10px' }}>
+                    {renderLegendaEstadosAgenda(safeT as Record<string, string | undefined>)}
+                  </div>
                 </div>
                 <div className="tab-glass-hero-actions">
                   <div className="tab-glass-hero-actions-row">
@@ -44600,8 +44540,9 @@ A1;Peça exemplo;10`}
               {tecnicos.map(tecnico => {
                 const hoje = formatDataYYYYMMDDLocal(new Date())
                 const hojeDate = parseDataAgendaLocal(hoje)
+                // Janela até ao fim do mês seguinte — cobre trabalhos que atravessam o mês (ex.: até dia 4).
                 const fimJanela = formatDataYYYYMMDDLocal(
-                  new Date(hojeDate.getFullYear(), hojeDate.getMonth(), hojeDate.getDate() + 30)
+                  new Date(hojeDate.getFullYear(), hojeDate.getMonth() + 2, 0)
                 )
 
                 const agendamentosAtivos = agendamentos.filter((ag) =>
@@ -44806,9 +44747,38 @@ A1;Peça exemplo;10`}
                               <p style={{ margin: '5px 0 0 0', fontSize: '12px', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                 {rotuloPeriodoAgendamento(ag)} · {ag.hora}
                                 {` - ${rotuloTipoAgendamentoEstadoVisual(ag, safeT as Record<string, string | undefined>)}`}
+                                {` · ${rotuloStatusOperacionalDeAgendamento(ag, safeT as Record<string, string | undefined>)}`}
                               </p>
                               {renderBlocoAssuntoPessoalEstadoVisual(ag, safeT as Record<string, string | undefined>)}
                               {renderBlocoEquipamentoAgendamentoEstadoVisual(ag, clientes, safeT as Record<string, string | undefined>)}
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                                {(['em-andamento', 'concluido', 'cancelado'] as StatusOperacionalAgenda[]).map((op) => {
+                                  const ativo = statusOperacionalAgenda(ag) === op
+                                  return (
+                                    <button
+                                      key={`${ag.id}-${op}`}
+                                      type="button"
+                                      onClick={() => atualizarStatusAgendamentoRapido(ag.id, op)}
+                                      style={{
+                                        padding: '6px 8px',
+                                        fontSize: '11px',
+                                        fontWeight: 700,
+                                        borderRadius: 6,
+                                        cursor: 'pointer',
+                                        border: ativo ? '2px solid #00c853' : '1px solid rgba(255,255,255,0.25)',
+                                        backgroundColor: ativo ? 'rgba(0, 200, 83, 0.25)' : 'rgba(0,0,0,0.35)',
+                                        color: '#fff',
+                                      }}
+                                    >
+                                      {op === 'em-andamento'
+                                        ? safeT?.emAndamento || 'Em Andamento'
+                                        : op === 'concluido'
+                                          ? safeT?.concluido || 'Concluído'
+                                          : safeT?.cancelado || 'Cancelado'}
+                                    </button>
+                                  )
+                                })}
+                              </div>
                             </div>
                           ))}
                           {Array.from(
@@ -44830,9 +44800,38 @@ A1;Peça exemplo;10`}
                               <p style={{ margin: '5px 0 0 0', fontSize: '12px', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                 {rotuloPeriodoAgendamento(ag)} · {ag.hora}
                                 {` - ${rotuloTipoAgendamentoEstadoVisual(ag, safeT as Record<string, string | undefined>)}`}
+                                {` · ${rotuloStatusOperacionalDeAgendamento(ag, safeT as Record<string, string | undefined>)}`}
                               </p>
                               {renderBlocoAssuntoPessoalEstadoVisual(ag, safeT as Record<string, string | undefined>)}
                               {renderBlocoEquipamentoAgendamentoEstadoVisual(ag, clientes, safeT as Record<string, string | undefined>)}
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                                {(['em-andamento', 'concluido', 'cancelado'] as StatusOperacionalAgenda[]).map((op) => {
+                                  const ativo = statusOperacionalAgenda(ag) === op
+                                  return (
+                                    <button
+                                      key={`${ag.id}-f-${op}`}
+                                      type="button"
+                                      onClick={() => atualizarStatusAgendamentoRapido(ag.id, op)}
+                                      style={{
+                                        padding: '6px 8px',
+                                        fontSize: '11px',
+                                        fontWeight: 700,
+                                        borderRadius: 6,
+                                        cursor: 'pointer',
+                                        border: ativo ? '2px solid #00c853' : '1px solid rgba(255,255,255,0.25)',
+                                        backgroundColor: ativo ? 'rgba(0, 200, 83, 0.25)' : 'rgba(0,0,0,0.35)',
+                                        color: '#fff',
+                                      }}
+                                    >
+                                      {op === 'em-andamento'
+                                        ? safeT?.emAndamento || 'Em Andamento'
+                                        : op === 'concluido'
+                                          ? safeT?.concluido || 'Concluído'
+                                          : safeT?.cancelado || 'Cancelado'}
+                                    </button>
+                                  )
+                                })}
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -72782,7 +72781,8 @@ A1;Peça exemplo;10`}
                     {safeT?.duracaoEstimada || 'Duração Estimada (dias)'}
                   </label>
                   <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: '#aaa' }}>
-                    {safeT?.agendaCalendarioDiasHint || 'Toque nos dias do calendário e confirme para definir quantos dias durará o serviço.'}
+                    {safeT?.agendaCalendarioDiasHint ||
+                      'Marque o primeiro e o último dia (navegue o mês se precisar). Ao confirmar, preenche o intervalo contínuo — inclusive no mês seguinte.'}
                   </p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '6px' }}>
                     <button type="button" onClick={() => goAgendaPickerMes(-1)} style={{ padding: '4px 10px', backgroundColor: '#484848', border: '1px solid rgba(0, 200, 83, 0.35)', color: '#00c853', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>‹</button>

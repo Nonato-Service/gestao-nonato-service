@@ -752,6 +752,10 @@ try {
   if (
     idx.includes('normalizeTipoAgendamento') &&
     idx.includes('getDatasPeriodoAgendamento') &&
+    idx.includes('expandirIntervaloDatasContinuo') &&
+    idx.includes('agendamentoCaiNoAnoMes') &&
+    idx.includes('statusOperacionalAgenda') &&
+    idx.includes('renderLegendaEstadosAgenda') &&
     idx.includes('resolverEquipamentoAgendamentoParaExibicao') &&
     idx.includes('renderBlocoEquipamentoAgendamentoEstadoVisual') &&
     idx.includes('filterAgendamentosLembrete') &&
@@ -760,6 +764,21 @@ try {
     ok('módulo agenda exporta normalize/datas/clienteEquipamento/estadoVisual/lembreteWA')
   } else {
     fail('módulo agenda incompleto (index.ts)')
+  }
+  const datasSrc = fs.readFileSync(path.join(root, 'app/modules/agenda/datas.ts'), 'utf8')
+  if (
+    datasSrc.includes('expandirIntervaloDatasContinuo') &&
+    datasSrc.includes('agendamentoCaiNoAnoMes')
+  ) {
+    ok('módulo agenda datas: intervalo contínuo + cai no mês')
+  } else {
+    fail('módulo agenda datas sem expandirIntervaloDatasContinuo/agendamentoCaiNoAnoMes')
+  }
+  const normSrc = fs.readFileSync(path.join(root, 'app/modules/agenda/normalize.ts'), 'utf8')
+  if (normSrc.includes('statusOperacionalAgenda') && normSrc.includes('statusFromOperacional')) {
+    ok('módulo agenda normalize: estado operacional técnico')
+  } else {
+    fail('módulo agenda normalize sem statusOperacionalAgenda')
   }
   if (!exists('app/modules/agenda/estadoVisual.tsx')) {
     fail('falta app/modules/agenda/estadoVisual.tsx')

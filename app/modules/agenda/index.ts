@@ -21,15 +21,20 @@ export {
   normalizeCategoriaAgendamento,
   isAgendamentoPessoal,
   isAgendamentoCancelado,
+  statusOperacionalAgenda,
+  statusFromOperacional,
 } from './normalize'
+export type { StatusOperacionalAgenda } from './normalize'
 
 export {
   normalizeDataKeyAgenda,
   parseDataAgendaLocal,
   formatDataYYYYMMDDLocal,
+  expandirIntervaloDatasContinuo,
   getDatasPeriodoAgendamento,
   agendamentoIncluiData,
   agendamentoPeriodoIntersectaIntervalo,
+  agendamentoCaiNoAnoMes,
   rotuloPeriodoAgendamento,
 } from './datas'
 
@@ -46,6 +51,9 @@ export {
   rotuloTipoAgendamentoEstadoVisual,
   rotuloAgendaPainelSituacao,
   accentCorAgendamentoLista,
+  rotuloStatusOperacionalAgenda,
+  rotuloStatusOperacionalDeAgendamento,
+  corFundoStatusOperacional,
 } from './rotulos'
 
 export { estiloCardAgendaEstadoVisualShared, estiloMarcadorAgendamentoCancelado } from './estilo'
@@ -58,6 +66,7 @@ export {
 export {
   renderBlocoEquipamentoAgendamentoEstadoVisual,
   renderBlocoAssuntoPessoalEstadoVisual,
+  renderLegendaEstadosAgenda,
 } from './estadoVisual'
 
 export type { LembreteAgendaTr } from './lembreteWhatsApp'

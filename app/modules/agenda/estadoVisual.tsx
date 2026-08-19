@@ -5,6 +5,11 @@ import {
   resolverEquipamentoAgendamentoParaExibicao,
   type ClienteAgendaLike,
 } from './clienteEquipamento'
+import {
+  corFundoStatusOperacional,
+  rotuloStatusOperacionalAgenda,
+} from './rotulos'
+import type { StatusOperacionalAgenda } from './normalize'
 
 /** Bloco de equipamento/tipo de serviço no cartão «estado visual» da agenda. */
 export function renderBlocoEquipamentoAgendamentoEstadoVisual(
@@ -102,7 +107,7 @@ export function renderBlocoEquipamentoAgendamentoEstadoVisual(
   )
 }
 
-/** Observação de agendamento pessoal no cartão «estado visual». */
+/** Bloco de observação de agendamento pessoal no cartão «estado visual». */
 export function renderBlocoAssuntoPessoalEstadoVisual(
   ag: Agendamento,
   tr?: Record<string, string | undefined>
@@ -125,5 +130,52 @@ export function renderBlocoAssuntoPessoalEstadoVisual(
     >
       {(tr?.observacaoTecnica || 'Observação').toUpperCase()}: {obs.toUpperCase()}
     </p>
+  )
+}
+
+/** Legenda simples de estados (calendário / lista / estado visual). */
+export function renderLegendaEstadosAgenda(tr?: Record<string, string | undefined>): ReactNode {
+  const itens: { op: StatusOperacionalAgenda; label: string }[] = [
+    { op: 'em-andamento', label: rotuloStatusOperacionalAgenda('em-andamento', tr) },
+    { op: 'concluido', label: rotuloStatusOperacionalAgenda('concluido', tr) },
+    { op: 'cancelado', label: rotuloStatusOperacionalAgenda('cancelado', tr) },
+  ]
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+      {itens.map(({ op, label }) => (
+        <div key={op} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span
+            style={{
+              display: 'inline-block',
+              width: 14,
+              height: 14,
+              borderRadius: 4,
+              backgroundColor: corFundoStatusOperacional(op),
+              border: '1px solid rgba(255,255,255,0.25)',
+              flexShrink: 0,
+            }}
+            aria-hidden
+          />
+          <span style={{ fontSize: '13px', color: '#fff', fontWeight: 600 }}>{label}</span>
+        </div>
+      ))}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span
+          style={{
+            display: 'inline-block',
+            width: 14,
+            height: 14,
+            borderRadius: 4,
+            backgroundColor: 'rgba(124, 58, 237, 0.94)',
+            border: '1px solid rgba(216, 180, 254, 0.55)',
+            flexShrink: 0,
+          }}
+          aria-hidden
+        />
+        <span style={{ fontSize: '13px', color: '#fff', fontWeight: 600 }}>
+          {tr?.agendaPessoal || 'Pessoal'}
+        </span>
+      </div>
+    </div>
   )
 }

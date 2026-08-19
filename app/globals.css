@@ -39953,6 +39953,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 
 .agenda-calendario-mes {
   overflow-x: auto;
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   margin-bottom: 4px;
 }
@@ -39964,6 +39965,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   padding: 14px !important;
   min-width: 520px;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .agenda-cal-grid--head,
@@ -39971,6 +39973,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   display: grid !important;
   grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
   gap: 8px !important;
+  overflow: visible;
 }
 
 .agenda-cal-grid--head {

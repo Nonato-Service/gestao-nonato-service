@@ -47,3 +47,23 @@ export function isAgendamentoPessoal(ag: { categoria?: string }): boolean {
 export function isAgendamentoCancelado(ag: { status?: string }): boolean {
   return normalizeStatusAgendamento(ag) === 'cancelado'
 }
+
+/**
+ * Estado operacional simplificado para o técnico (3 opções claras).
+ * pendente / confirmado / em-andamento → «Em andamento» (ainda não concluído).
+ */
+export type StatusOperacionalAgenda = 'em-andamento' | 'concluido' | 'cancelado'
+
+export function statusOperacionalAgenda(ag: { status?: string }): StatusOperacionalAgenda {
+  const st = normalizeStatusAgendamento(ag)
+  if (st === 'concluido') return 'concluido'
+  if (st === 'cancelado') return 'cancelado'
+  return 'em-andamento'
+}
+
+/** Mapeia o estado operacional para o status persistido no agendamento. */
+export function statusFromOperacional(op: StatusOperacionalAgenda): Agendamento['status'] {
+  if (op === 'concluido') return 'concluido'
+  if (op === 'cancelado') return 'cancelado'
+  return 'em-andamento'
+}

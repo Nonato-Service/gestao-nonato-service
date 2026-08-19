@@ -4,12 +4,21 @@ import { AGENDA_CANCELADO_BG, AGENDA_CANCELADO_BORDA, AGENDA_CANCELADO_SOMBRA } 
 import { isAgendamentoPessoal, normalizeStatusAgendamento, normalizeTipoAgendamento } from './normalize'
 
 export function estiloCardAgendaEstadoVisualShared(ag: Agendamento): CSSProperties {
-  if (normalizeStatusAgendamento(ag) === 'concluido') {
+  const st = normalizeStatusAgendamento(ag)
+  if (st === 'concluido') {
     return {
       padding: '10px',
       backgroundColor: 'rgba(0, 200, 80, 0.14)',
       borderRadius: '6px',
       border: '1px solid rgba(0, 255, 130, 0.45)',
+    }
+  }
+  if (st === 'cancelado') {
+    return {
+      padding: '10px',
+      backgroundColor: 'rgba(178, 28, 28, 0.22)',
+      borderRadius: '6px',
+      border: '1px solid rgba(248, 113, 113, 0.65)',
     }
   }
   if (isAgendamentoPessoal(ag)) {
@@ -18,6 +27,14 @@ export function estiloCardAgendaEstadoVisualShared(ag: Agendamento): CSSProperti
       backgroundColor: 'rgba(124, 58, 237, 0.22)',
       borderRadius: '6px',
       border: '1px solid rgba(216, 180, 254, 0.55)',
+    }
+  }
+  if (st === 'em-andamento' || st === 'confirmado' || st === 'pendente') {
+    return {
+      padding: '10px',
+      backgroundColor: 'rgba(40, 100, 220, 0.22)',
+      borderRadius: '6px',
+      border: '1px solid rgba(120, 170, 255, 0.6)',
     }
   }
   if (normalizeTipoAgendamento(ag) === 'pre-agendamento') {
