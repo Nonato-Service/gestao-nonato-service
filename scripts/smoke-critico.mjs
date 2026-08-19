@@ -856,6 +856,27 @@ try {
   } else {
     fail('NonatoMainApp ainda define criarEquipamentoRelatorioVazio localmente ou não importa')
   }
+  if (
+    idx.includes('createEmptyRelatorioServicoForm') &&
+    idx.includes('RelatorioServico')
+  ) {
+    ok('módulo relatorio-servico exporta RelatorioServico / createEmptyRelatorioServicoForm')
+  } else {
+    fail('módulo relatorio-servico sem RelatorioServico / createEmptyRelatorioServicoForm')
+  }
+  if (!exists('app/modules/relatorio-servico/relatorioServicoForm.ts')) {
+    fail('falta app/modules/relatorio-servico/relatorioServicoForm.ts')
+  } else {
+    ok('existe app/modules/relatorio-servico/relatorioServicoForm.ts')
+  }
+  if (
+    nma.includes('createEmptyRelatorioServicoForm') &&
+    !nma.includes('type RelatorioServico = {')
+  ) {
+    ok('NonatoMainApp usa RelatorioServico do módulo relatorio-servico')
+  } else {
+    fail('NonatoMainApp ainda define RelatorioServico localmente ou não importa createEmptyRelatorioServicoForm')
+  }
 } catch (e) {
   fail(`módulo relatorio-servico: ${e.message}`)
 }

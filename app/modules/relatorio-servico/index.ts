@@ -1,4 +1,4 @@
-/** Módulo Relatório de Serviço — dias, KM, numeração, peça, equipamento no relatório. */
+/** Módulo Relatório de Serviço — dias, KM, numeração, peça, equipamento, tipo canónico. */
 
 export type { DiaTrabalho, RelatorioServicoNumeroLike, ClienteRelatorioLookup } from './tipos'
 
@@ -15,6 +15,9 @@ export {
   criarEquipamentoRelatorioVazio,
   createEmptyEquipamentoRelatorioForm,
 } from './equipamentoRelatorioForm'
+
+export type { RelatorioServico } from './relatorioServicoForm'
+export { createEmptyRelatorioServicoForm } from './relatorioServicoForm'
 
 export {
   diaTrabalhoDataChaveOrdenacao,

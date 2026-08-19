@@ -155,8 +155,10 @@ import {
   type DiaTrabalho,
   type PecaSubstituicao,
   type RelatorioEquipamentoRef,
+  type RelatorioServico,
   createEmptyDiaTrabalhoForm,
   createEmptyPecaSubstituicaoForm,
+  createEmptyRelatorioServicoForm,
   criarEquipamentoRelatorioVazio,
   diaTrabalhoDataChaveOrdenacao,
   sortDiasTrabalhoCronologicamente,
@@ -1031,44 +1033,7 @@ function NumeroSequenciaCirculo({
 
 /* PasswordEntry / generatePassword → app/modules/admin/passwords */
 
-type RelatorioServico = {
-  id: string
-  numero: string
-  tecnico: string
-  cliente: string
-  cidade: string
-  telefone: string
-  data: string
-  maquinaModelo: string
-  numeroMaquina: string
-  tipoServico: string
-  diasTrabalho: DiaTrabalho[]
-  horasTrabalho: string
-  kmsPercorridos: string
-  horasViagem: string
-  servicoConcluido: boolean
-  retornoNecessario: boolean
-  entregaDocumentacao: boolean
-  liberacaoProducao: boolean
-  instrucaoFuncionarios: boolean
-  necessarioTrocaPecas: boolean
-  /** Peças efetivamente instaladas ou substituídas no serviço (distinto de «necessitam substituição»). */
-  pecasInstaladasSubstituidas: boolean
-  observacoes: string
-  pontosAberto: string
-  pecasSubstituicao: PecaSubstituicao[]
-  pecasInstaladas: PecaSubstituicao[]
-  equipamentoId?: string // cliente: n.º série do equipamento do cliente; armazém: id do equipamento em nonato-equipamentos
-  clienteId?: string // Para associar ao cliente
-  /** De onde veio o equipamento escolhido no relatório (distinção lógica cliente vs armazém industrial) */
-  equipamentoOrigem?: 'cliente' | 'armazem'
-  /** Até 5 equipamentos no mesmo relatório (IDs, modelos e séries por linha) */
-  equipamentos?: RelatorioEquipamentoRef[]
-  /** Assinatura do cliente (base64), quando preenchida em tablet/telemóvel */
-  assinaturaCliente?: string
-  /** Data/hora em que o cliente assinou (ISO) */
-  dataAssinaturaCliente?: string
-}
+/* RelatorioServico / createEmptyRelatorioServicoForm → modules/relatorio-servico */
 
 /* numero → modules/relatorio-servico */
 
@@ -5471,36 +5436,9 @@ export default function Dashboard() {
   /** Valor do <select> «Filtrar por cliente» que esconde todos os cartões (lista vazia). */
   const PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM = '__proto_cliente_nenhum__'
   const rascunhoRelatorioServicoOferecidoRef = useRef(false)
-  const [relatorioServicoForm, setRelatorioServicoForm] = useState<RelatorioServico>({
-    id: '',
-    numero: '',
-    tecnico: '',
-    cliente: '',
-    cidade: '',
-    telefone: '',
-    data: new Date().toISOString().split('T')[0],
-    maquinaModelo: '',
-    numeroMaquina: '',
-    tipoServico: '',
-    diasTrabalho: [],
-    horasTrabalho: '',
-    kmsPercorridos: '',
-    horasViagem: '',
-    servicoConcluido: false,
-    retornoNecessario: false,
-    entregaDocumentacao: false,
-    liberacaoProducao: false,
-    instrucaoFuncionarios: false,
-    necessarioTrocaPecas: false,
-    pecasInstaladasSubstituidas: false,
-    observacoes: '',
-    pontosAberto: '',
-    pecasSubstituicao: [],
-    pecasInstaladas: [],
-    assinaturaCliente: undefined,
-    dataAssinaturaCliente: undefined,
-    equipamentoOrigem: 'cliente',
-  })
+  const [relatorioServicoForm, setRelatorioServicoForm] = useState<RelatorioServico>(
+    createEmptyRelatorioServicoForm()
+  )
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false)
   /** ≤1024px: menu em gaveta + header mobile (telemóvel e tablet). Telefone estreito = ≤768. */
   const COMPACT_LAYOUT_MAX_PX = 1024
@@ -15400,37 +15338,13 @@ export default function Dashboard() {
     const numeroAuto = gerarNumeroRelatorio(dataInicial)
 
     setEditingRelatorioServico(null)
-    setRelatorioServicoForm({
-      id: '',
-      numero: numeroAuto,
-      tecnico: '',
-      cliente: '',
-      cidade: '',
-      telefone: '',
-      data: dataInicial,
-      maquinaModelo: '',
-      numeroMaquina: '',
-      tipoServico: '',
-      diasTrabalho: [],
-      horasTrabalho: '',
-      kmsPercorridos: '',
-      horasViagem: '',
-      servicoConcluido: false,
-      retornoNecessario: false,
-      entregaDocumentacao: false,
-      liberacaoProducao: false,
-      instrucaoFuncionarios: false,
-      necessarioTrocaPecas: false,
-      pecasInstaladasSubstituidas: false,
-      observacoes: '',
-      pontosAberto: '',
-      pecasSubstituicao: [],
-      pecasInstaladas: [],
-      assinaturaCliente: undefined,
-      dataAssinaturaCliente: undefined,
-      equipamentoOrigem: 'cliente',
-      equipamentos: [criarEquipamentoRelatorioVazio('cliente')],
-    })
+    setRelatorioServicoForm(
+      createEmptyRelatorioServicoForm({
+        numero: numeroAuto,
+        data: dataInicial,
+        equipamentos: [criarEquipamentoRelatorioVazio('cliente')],
+      })
+    )
     setNovoDiaTrabalho(createEmptyDiaTrabalhoForm())
     setEditingDiaTrabalhoIndex(null)
     setNovaPeca(createEmptyPecaSubstituicaoForm())
@@ -19676,34 +19590,7 @@ export default function Dashboard() {
     const modelEscolhido = getPdfModelSelecionadoNoFormulario()
 
     setShowRelatorioServicoForm(false)
-    setRelatorioServicoForm({
-      id: '',
-      numero: '',
-      tecnico: '',
-      cliente: '',
-      cidade: '',
-      telefone: '',
-      data: new Date().toISOString().split('T')[0],
-      maquinaModelo: '',
-      numeroMaquina: '',
-      tipoServico: '',
-      diasTrabalho: [],
-      horasTrabalho: '',
-      kmsPercorridos: '',
-      horasViagem: '',
-      servicoConcluido: false,
-      retornoNecessario: false,
-      entregaDocumentacao: false,
-      liberacaoProducao: false,
-      instrucaoFuncionarios: false,
-      necessarioTrocaPecas: false,
-      pecasInstaladasSubstituidas: false,
-      observacoes: '',
-      pontosAberto: '',
-      pecasSubstituicao: [],
-      pecasInstaladas: [],
-      equipamentoOrigem: 'cliente',
-    })
+    setRelatorioServicoForm(createEmptyRelatorioServicoForm())
     setNovoDiaTrabalho(createEmptyDiaTrabalhoForm())
     setNovaPeca(createEmptyPecaSubstituicaoForm())
     setEditingRelatorioServico(null)
@@ -19796,14 +19683,7 @@ export default function Dashboard() {
         handleDeleteRelatorioServico(editingRelatorioServico.id)
         setShowRelatorioServicoForm(false)
         setEditingRelatorioServico(null)
-        setRelatorioServicoForm({
-          id: '', numero: '', tecnico: '', cliente: '', cidade: '', telefone: '',
-          data: new Date().toISOString().split('T')[0], maquinaModelo: '', numeroMaquina: '', tipoServico: '',
-          diasTrabalho: [], horasTrabalho: '', kmsPercorridos: '', horasViagem: '',
-          servicoConcluido: false, retornoNecessario: false, entregaDocumentacao: false, liberacaoProducao: false,
-          instrucaoFuncionarios: false, necessarioTrocaPecas: false, pecasInstaladasSubstituidas: false, observacoes: '', pontosAberto: '', pecasSubstituicao: [], pecasInstaladas: [],
-          equipamentoOrigem: 'cliente',
-        })
+        setRelatorioServicoForm(createEmptyRelatorioServicoForm())
         setNovoDiaTrabalho(createEmptyDiaTrabalhoForm())
         setNovaPeca(createEmptyPecaSubstituicaoForm())
       }
@@ -19818,36 +19698,14 @@ export default function Dashboard() {
       const dataLimpar = new Date().toISOString().split('T')[0]
       const numeroAuto = gerarNumeroRelatorio(dataLimpar)
 
-      setRelatorioServicoForm({
-        id: '',
-        numero: numeroAuto,
-        tecnico: '',
-        cliente: '',
-        cidade: '',
-        telefone: '',
-        data: dataLimpar,
-        maquinaModelo: '',
-        numeroMaquina: '',
-        tipoServico: '',
-        diasTrabalho: [],
-        horasTrabalho: '',
-        kmsPercorridos: '',
-        horasViagem: '',
-        servicoConcluido: false,
-        retornoNecessario: false,
-        entregaDocumentacao: false,
-        liberacaoProducao: false,
-        instrucaoFuncionarios: false,
-        necessarioTrocaPecas: false,
-        pecasInstaladasSubstituidas: false,
-        observacoes: '',
-        pontosAberto: '',
-        pecasSubstituicao: [],
-        pecasInstaladas: [],
-        clienteId: '',
-        equipamentoId: '',
-        equipamentoOrigem: 'cliente',
-      })
+      setRelatorioServicoForm(
+        createEmptyRelatorioServicoForm({
+          numero: numeroAuto,
+          data: dataLimpar,
+          clienteId: '',
+          equipamentoId: '',
+        })
+      )
       setNovoDiaTrabalho(createEmptyDiaTrabalhoForm())
       setNovaPeca(createEmptyPecaSubstituicaoForm())
       setCodigoBuscaPeca('')
@@ -33323,33 +33181,7 @@ export default function Dashboard() {
                     </button>
                     <button className="btn-primary" onClick={() => { 
                     voltarNavegacaoRelatorioServico()
-                    setRelatorioServicoForm({ 
-                      id: '', 
-                      numero: '', 
-                      tecnico: '', 
-                      cliente: '', 
-                      cidade: '', 
-                      telefone: '', 
-                      data: new Date().toISOString().split('T')[0], 
-                      maquinaModelo: '', 
-                      numeroMaquina: '', 
-                      tipoServico: '', 
-                      diasTrabalho: [], 
-                      horasTrabalho: '', 
-                      kmsPercorridos: '', 
-                      horasViagem: '', 
-                      servicoConcluido: false, 
-                      retornoNecessario: false, 
-                      entregaDocumentacao: false, 
-                      liberacaoProducao: false, 
-                      instrucaoFuncionarios: false, 
-                      necessarioTrocaPecas: false, 
-                      pecasInstaladasSubstituidas: false,
-                      observacoes: '', 
-                      pontosAberto: '', 
-                      pecasSubstituicao: [],
-                      pecasInstaladas: [],
-                    });
+                    setRelatorioServicoForm(createEmptyRelatorioServicoForm());
                     setNovoDiaTrabalho(createEmptyDiaTrabalhoForm());
                     setNovaPeca(createEmptyPecaSubstituicaoForm());
                   }} style={{ padding: '8px 16px', backgroundColor: '#484848', borderColor: '#666' }}>
@@ -71862,7 +71694,7 @@ A1;Peça exemplo;10`}
                   <button className="btn-primary" onClick={handleSaveRelatorioServico} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowRelatorioServicoForm(false); setEditingRelatorioServico(null); setRelatorioServicoForm({ id: '', numero: '', tecnico: '', cliente: '', cidade: '', telefone: '', data: new Date().toISOString().split('T')[0], maquinaModelo: '', numeroMaquina: '', tipoServico: '', diasTrabalho: [], horasTrabalho: '', kmsPercorridos: '', horasViagem: '', servicoConcluido: false, retornoNecessario: false, entregaDocumentacao: false, liberacaoProducao: false, instrucaoFuncionarios: false, necessarioTrocaPecas: false, pecasInstaladasSubstituidas: false, observacoes: '', pontosAberto: '', pecasSubstituicao: [], pecasInstaladas: [], equipamentoOrigem: 'cliente' }); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={() => { setShowRelatorioServicoForm(false); setEditingRelatorioServico(null); setRelatorioServicoForm(createEmptyRelatorioServicoForm()); }} style={{ flex: 1 }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
