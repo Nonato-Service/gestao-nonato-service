@@ -112,6 +112,7 @@ export function RelatorioPdfModeloPicker({
       ? createPortal(
           <div
             ref={menuRef}
+            data-bib-acoes-nested-portal=""
             className={`relatorio-servico-pdf-modelo-picker__menu${compact ? ' relatorio-servico-pdf-modelo-picker__menu--compact' : ''}`}
             style={{
               position: 'fixed',

@@ -721,6 +721,7 @@ import {
   listarClientesNomeSimilarCadastro,
 } from './lib/clienteCadastroDuplicadoUtils'
 import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
+import { BibliotecaRowAcoesMenu } from './components/BibliotecaRowAcoesMenu'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
 import { ClienteCadastroForm } from './components/ClienteCadastroForm'
 import { ClienteIdentidadeChips, formatClienteIdentidadeTexto, formatNifClienteExibicao } from './components/ClienteIdentidadeChips'
@@ -61391,135 +61392,166 @@ A1;Peça exemplo;10`}
                                                 <td className="bib-col-num">{totais.horasTrabalho}h</td>
                                                 <td className="bib-col-num">{totais.kmsPercorridos}</td>
                                                 <td className="bib-col-acoes">
-                                                  <details className="bib-row-acoes">
-                                                    <summary className="bib-row-acoes__summary">
-                                                      <span className="bib-row-acoes__chev" aria-hidden>
-                                                        ▶
+                                                  <BibliotecaRowAcoesMenu label={txBib.acoes || 'Ações'}>
+                                                    <div className="bib-row-acoes-menu__section">
+                                                      <span className="bib-row-acoes-menu__section-label">
+                                                        {(safeT as Record<string, string>).selecioneModeloPDF ||
+                                                          'Modelo PDF'}
                                                       </span>
-                                                      {txBib.acoes || 'Ações'}
-                                                    </summary>
-                                                    <div className="bib-acoes-panel bib-acoes-panel--inline">
-                                                      <div className="bib-acoes-panel__btns bib-acoes-panel__btns--wrap">
-                                                    <RelatorioPdfModeloPicker
-                                                      compact
-                                                      value={getPdfModelForRelatorio(relatorio.id)}
-                                                      onChange={(model) =>
-                                                        escolherModeloPdfRelatorio(relatorio.id, model)
-                                                      }
-                                                      title={(safeT as Record<string, string>).relatorioPdfModeloCartaoTitle || safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
-                                                      labels={safeT as Record<string, string>}
-                                                      groupRecomendados={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados'}
-                                                      groupOutros={safeT?.relatorioPdfOptgroupOutros || 'Outros'}
-                                                    />
+                                                      <RelatorioPdfModeloPicker
+                                                        compact
+                                                        value={getPdfModelForRelatorio(relatorio.id)}
+                                                        onChange={model =>
+                                                          escolherModeloPdfRelatorio(relatorio.id, model)
+                                                        }
+                                                        title={
+                                                          (safeT as Record<string, string>)
+                                                            .relatorioPdfModeloCartaoTitle ||
+                                                          safeT?.selecioneModeloPDF ||
+                                                          'Selecione o modelo de PDF'
+                                                        }
+                                                        labels={safeT as Record<string, string>}
+                                                        groupRecomendados={
+                                                          safeT?.relatorioPdfOptgroupRecomendados ||
+                                                          'Recomendados'
+                                                        }
+                                                        groupOutros={
+                                                          safeT?.relatorioPdfOptgroupOutros || 'Outros'
+                                                        }
+                                                      />
+                                                    </div>
                                                     <button
                                                       type="button"
-                                                      className="bib-acao bib-acao--ver"
-                                                      title={txBib.verRelatorioServicoBiblioteca ?? safeT?.view ?? 'Ver relatório'}
-                                                      aria-label={txBib.verRelatorioServicoBiblioteca ?? safeT?.view ?? 'Ver relatório'}
+                                                      role="menuitem"
+                                                      className="bib-row-acoes-menu__item bib-row-acoes-menu__item--ver"
                                                       onClick={() =>
                                                         setViewingRelatorioServico(
                                                           resolverRelatorioServicoDono(relatorio)
                                                         )
                                                       }
                                                     >
-                                                      👁{' '}
-                                                      <span className="bib-acao__label">
-                                                        {txBib.verRelatorioServicoBiblioteca ?? safeT?.view ?? 'Ver'}
+                                                      <span aria-hidden>👁</span>
+                                                      <span>
+                                                        {txBib.verRelatorioServicoBiblioteca ??
+                                                          safeT?.view ??
+                                                          'Ver relatório'}
                                                       </span>
                                                     </button>
                                                     <button
                                                       type="button"
-                                                      className="bib-acao bib-acao--edit"
-                                                      title={
-                                                        txBib.editarRelatorioServicoBiblioteca ??
-                                                        safeT?.edit ??
-                                                        'Editar'
-                                                      }
-                                                      aria-label={
-                                                        txBib.editarRelatorioServicoBiblioteca ??
-                                                        safeT?.edit ??
-                                                        'Editar'
-                                                      }
+                                                      role="menuitem"
+                                                      className="bib-row-acoes-menu__item bib-row-acoes-menu__item--edit"
                                                       onClick={() =>
                                                         handleEditarRelatorioServicoNaBiblioteca(relatorio)
                                                       }
                                                     >
-                                                      ✏️{' '}
-                                                      <span className="bib-acao__label">
+                                                      <span aria-hidden>✏️</span>
+                                                      <span>
                                                         {txBib.editarRelatorioServicoBiblioteca ??
                                                           safeT?.edit ??
-                                                          'Editar'}
+                                                          'Editar relatório'}
                                                       </span>
                                                     </button>
-                                                    <button
-                                                      type="button"
-                                                      className="bib-acao bib-acao--pdf bib-acao--compact"
-                                                      title={safeT?.gerarPDF || 'PDF'}
-                                                      aria-label={safeT?.gerarPDF || 'PDF'}
-                                                      onClick={() => handlePrintRelatorio(relatorio, getPdfModelForRelatorio(relatorio.id))}
-                                                    >
-                                                      📄
-                                                    </button>
-                                                    <button
-                                                      type="button"
-                                                      className="bib-acao bib-acao--email bib-acao--compact"
-                                                      title={safeT?.enviarPorEmail || 'E-mail'}
-                                                      aria-label={safeT?.enviarPorEmail || 'E-mail'}
-                                                      onClick={() =>
-                                                        abrirEnvioDocumentoCliente({
-                                                          title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
-                                                          subject: buildAssuntoEnvioRelatorioServico(relatorio, safeT as Record<string, string | undefined>),
-                                                          body: buildTextoEnvioRelatorioServico(relatorio, safeT as Record<string, string | undefined>),
-                                                          clienteId: relatorio.clienteId,
-                                                          clienteNome: relatorio.cliente,
-                                                          relatorio,
-                                                          defaultChannel: 'email',
-                                                          onOpenPdf: () =>
-                                                            handlePrintRelatorio(relatorio, getPdfModelForRelatorio(relatorio.id)),
-                                                        })
-                                                      }
-                                                    >
-                                                      📧
-                                                    </button>
-                                                    <button
-                                                      type="button"
-                                                      className="bib-acao bib-acao--wa bib-acao--compact"
-                                                      title={safeT?.enviarPorWhatsApp || 'WhatsApp'}
-                                                      aria-label={safeT?.enviarPorWhatsApp || 'WhatsApp'}
-                                                      onClick={() =>
-                                                        abrirEnvioDocumentoCliente({
-                                                          title: (safeT as any)?.envioRelatorioTitulo || 'Enviar relatório ao cliente',
-                                                          subject: buildAssuntoEnvioRelatorioServico(relatorio, safeT as Record<string, string | undefined>),
-                                                          body: buildTextoEnvioRelatorioServico(relatorio, safeT as Record<string, string | undefined>),
-                                                          clienteId: relatorio.clienteId,
-                                                          clienteNome: relatorio.cliente,
-                                                          relatorio,
-                                                          defaultChannel: 'whatsapp',
-                                                          onOpenPdf: () =>
-                                                            handlePrintRelatorio(relatorio, getPdfModelForRelatorio(relatorio.id)),
-                                                        })
-                                                      }
-                                                    >
-                                                      💬
-                                                    </button>
-                                                    <button
-                                                      type="button"
-                                                      className="bib-acao bib-acao--del bib-acao--compact"
-                                                      title={safeT?.delete || 'Excluir'}
-                                                      aria-label={safeT?.delete || 'Excluir'}
-                                                      onClick={() =>
-                                                        handleDeleteRelatorioServico(relatorio.id, {
-                                                          clienteId: cliente.id,
-                                                          equipamentoKey,
-                                                          indexInEquipamento: relIndex,
-                                                        })
-                                                      }
-                                                    >
-                                                      ✕
-                                                    </button>
-                                                      </div>
+                                                    <div className="bib-row-acoes-menu__icons" role="group">
+                                                      <button
+                                                        type="button"
+                                                        role="menuitem"
+                                                        className="bib-acao bib-acao--pdf bib-acao--compact"
+                                                        title={safeT?.gerarPDF || 'PDF'}
+                                                        aria-label={safeT?.gerarPDF || 'PDF'}
+                                                        onClick={() =>
+                                                          handlePrintRelatorio(
+                                                            relatorio,
+                                                            getPdfModelForRelatorio(relatorio.id)
+                                                          )
+                                                        }
+                                                      >
+                                                        📄
+                                                      </button>
+                                                      <button
+                                                        type="button"
+                                                        role="menuitem"
+                                                        className="bib-acao bib-acao--email bib-acao--compact"
+                                                        title={safeT?.enviarPorEmail || 'E-mail'}
+                                                        aria-label={safeT?.enviarPorEmail || 'E-mail'}
+                                                        onClick={() =>
+                                                          abrirEnvioDocumentoCliente({
+                                                            title:
+                                                              (safeT as any)?.envioRelatorioTitulo ||
+                                                              'Enviar relatório ao cliente',
+                                                            subject: buildAssuntoEnvioRelatorioServico(
+                                                              relatorio,
+                                                              safeT as Record<string, string | undefined>
+                                                            ),
+                                                            body: buildTextoEnvioRelatorioServico(
+                                                              relatorio,
+                                                              safeT as Record<string, string | undefined>
+                                                            ),
+                                                            clienteId: relatorio.clienteId,
+                                                            clienteNome: relatorio.cliente,
+                                                            relatorio,
+                                                            defaultChannel: 'email',
+                                                            onOpenPdf: () =>
+                                                              handlePrintRelatorio(
+                                                                relatorio,
+                                                                getPdfModelForRelatorio(relatorio.id)
+                                                              ),
+                                                          })
+                                                        }
+                                                      >
+                                                        📧
+                                                      </button>
+                                                      <button
+                                                        type="button"
+                                                        role="menuitem"
+                                                        className="bib-acao bib-acao--wa bib-acao--compact"
+                                                        title={safeT?.enviarPorWhatsApp || 'WhatsApp'}
+                                                        aria-label={safeT?.enviarPorWhatsApp || 'WhatsApp'}
+                                                        onClick={() =>
+                                                          abrirEnvioDocumentoCliente({
+                                                            title:
+                                                              (safeT as any)?.envioRelatorioTitulo ||
+                                                              'Enviar relatório ao cliente',
+                                                            subject: buildAssuntoEnvioRelatorioServico(
+                                                              relatorio,
+                                                              safeT as Record<string, string | undefined>
+                                                            ),
+                                                            body: buildTextoEnvioRelatorioServico(
+                                                              relatorio,
+                                                              safeT as Record<string, string | undefined>
+                                                            ),
+                                                            clienteId: relatorio.clienteId,
+                                                            clienteNome: relatorio.cliente,
+                                                            relatorio,
+                                                            defaultChannel: 'whatsapp',
+                                                            onOpenPdf: () =>
+                                                              handlePrintRelatorio(
+                                                                relatorio,
+                                                                getPdfModelForRelatorio(relatorio.id)
+                                                              ),
+                                                          })
+                                                        }
+                                                      >
+                                                        💬
+                                                      </button>
+                                                      <button
+                                                        type="button"
+                                                        role="menuitem"
+                                                        className="bib-acao bib-acao--del bib-acao--compact"
+                                                        title={safeT?.delete || 'Excluir'}
+                                                        aria-label={safeT?.delete || 'Excluir'}
+                                                        onClick={() =>
+                                                          handleDeleteRelatorioServico(relatorio.id, {
+                                                            clienteId: cliente.id,
+                                                            equipamentoKey,
+                                                            indexInEquipamento: relIndex,
+                                                          })
+                                                        }
+                                                      >
+                                                        ✕
+                                                      </button>
                                                     </div>
-                                                  </details>
+                                                  </BibliotecaRowAcoesMenu>
                                                 </td>
                                               </tr>
                                             )
@@ -61583,20 +61615,11 @@ A1;Peça exemplo;10`}
                                         <td className="bib-col-num bib-col-total">€{totalCobranca.toFixed(2)}</td>
                                         <td className="bib-col-fluxo">{renderBarraFluxoFechamento(relatorio.id, true)}</td>
                                         <td className="bib-col-acoes">
-                                          <details className="bib-row-acoes">
-                                            <summary className="bib-row-acoes__summary">
-                                              <span className="bib-row-acoes__chev" aria-hidden>
-                                                ▶
-                                              </span>
-                                              {txBib.acoes || 'Ações'}
-                                            </summary>
-                                            <div className="bib-acoes-panel bib-acoes-panel--inline">
-                                              <div className="bib-acoes-panel__btns bib-acoes-panel__btns--wrap">
+                                          <BibliotecaRowAcoesMenu label={txBib.acoes || 'Ações'}>
                                             <button
                                               type="button"
-                                              className="bib-acao bib-acao--ver"
-                                              title={txBib.visualizarDespesasBiblioteca ?? safeT?.view ?? 'Ver despesas'}
-                                              aria-label={txBib.visualizarDespesasBiblioteca ?? safeT?.view ?? 'Ver despesas'}
+                                              role="menuitem"
+                                              className="bib-row-acoes-menu__item bib-row-acoes-menu__item--ver"
                                               onClick={() =>
                                                 setModalVisualizarDespesasBiblioteca({
                                                   relatorio,
@@ -61604,95 +61627,124 @@ A1;Peça exemplo;10`}
                                                 })
                                               }
                                             >
-                                              👁{' '}
-                                              <span className="bib-acao__label">
-                                                {txBib.visualizarDespesasBiblioteca ?? safeT?.view ?? 'Ver'}
+                                              <span aria-hidden>👁</span>
+                                              <span>
+                                                {txBib.visualizarDespesasBiblioteca ??
+                                                  safeT?.view ??
+                                                  'Ver despesas'}
                                               </span>
                                             </button>
                                             <button
                                               type="button"
-                                              className="bib-acao bib-acao--edit"
-                                              title={txBib.editarRelatorioDespesas ?? safeT?.edit ?? 'Editar despesas'}
-                                              aria-label={txBib.editarRelatorioDespesas ?? safeT?.edit ?? 'Editar despesas'}
+                                              role="menuitem"
+                                              className="bib-row-acoes-menu__item bib-row-acoes-menu__item--edit"
                                               onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)}
                                             >
-                                              ✏️{' '}
-                                              <span className="bib-acao__label">
-                                                {txBib.editarRelatorioDespesas ?? safeT?.edit ?? 'Editar'}
+                                              <span aria-hidden>✏️</span>
+                                              <span>
+                                                {txBib.editarRelatorioDespesas ??
+                                                  safeT?.edit ??
+                                                  'Editar despesas'}
                                               </span>
                                             </button>
-                                            <button
-                                              type="button"
-                                              className="bib-acao bib-acao--pdf bib-acao--compact"
-                                              title={txBib.gerarPDF || 'PDF'}
-                                              aria-label={txBib.gerarPDF || 'PDF'}
-                                              onClick={() =>
-                                                imprimirPDFDespesasDaBiblioteca(
-                                                  relatorio,
-                                                  itensDespesasVisiveis
-                                                )
-                                              }
-                                            >
-                                              📄
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="bib-acao bib-acao--email bib-acao--compact"
-                                              title={safeT?.enviarPorEmail || 'E-mail'}
-                                              aria-label={safeT?.enviarPorEmail || 'E-mail'}
-                                              onClick={() =>
-                                                abrirEnvioDocumentoCliente({
-                                                  title: (safeT as any)?.envioFechamentoTitulo || 'Enviar fechamento ao cliente',
-                                                  subject: buildAssuntoEnvioFechamentoRelatorio(relatorio, safeT as Record<string, string | undefined>),
-                                                  body: buildTextoEnvioGenerico(
-                                                    buildAssuntoEnvioFechamentoRelatorio(relatorio, safeT as Record<string, string | undefined>),
-                                                    `Total: € ${totalCobranca.toFixed(2)}`,
-                                                    safeT as Record<string, string | undefined>
-                                                  ),
-                                                  relatorio,
-                                                  defaultChannel: 'email',
-                                                  onOpenPdf: () =>
-                                                    imprimirPDFDespesasDaBiblioteca(relatorio, itensDespesasVisiveis),
-                                                })
-                                              }
-                                            >
-                                              📧
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="bib-acao bib-acao--wa bib-acao--compact"
-                                              title={safeT?.enviarPorWhatsApp || 'WhatsApp'}
-                                              aria-label={safeT?.enviarPorWhatsApp || 'WhatsApp'}
-                                              onClick={() =>
-                                                abrirEnvioDocumentoCliente({
-                                                  title: (safeT as any)?.envioFechamentoTitulo || 'Enviar fechamento ao cliente',
-                                                  subject: buildAssuntoEnvioFechamentoRelatorio(relatorio, safeT as Record<string, string | undefined>),
-                                                  body: buildTextoEnvioGenerico(
-                                                    buildAssuntoEnvioFechamentoRelatorio(relatorio, safeT as Record<string, string | undefined>),
-                                                    `Total: € ${totalCobranca.toFixed(2)}`,
-                                                    safeT as Record<string, string | undefined>
-                                                  ),
-                                                  relatorio,
-                                                  defaultChannel: 'whatsapp',
-                                                  onOpenPdf: () =>
-                                                    imprimirPDFDespesasDaBiblioteca(relatorio, itensDespesasVisiveis),
-                                                })
-                                              }
-                                            >
-                                              💬
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="bib-acao bib-acao--del bib-acao--compact"
-                                              title={safeT?.delete || 'Excluir'}
-                                              aria-label={safeT?.delete || 'Excluir'}
-                                              onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)}
-                                            >
-                                              ✕
-                                            </button>
-                                              </div>
+                                            <div className="bib-row-acoes-menu__icons" role="group">
+                                              <button
+                                                type="button"
+                                                role="menuitem"
+                                                className="bib-acao bib-acao--pdf bib-acao--compact"
+                                                title={txBib.gerarPDF || 'PDF'}
+                                                aria-label={txBib.gerarPDF || 'PDF'}
+                                                onClick={() =>
+                                                  imprimirPDFDespesasDaBiblioteca(
+                                                    relatorio,
+                                                    itensDespesasVisiveis
+                                                  )
+                                                }
+                                              >
+                                                📄
+                                              </button>
+                                              <button
+                                                type="button"
+                                                role="menuitem"
+                                                className="bib-acao bib-acao--email bib-acao--compact"
+                                                title={safeT?.enviarPorEmail || 'E-mail'}
+                                                aria-label={safeT?.enviarPorEmail || 'E-mail'}
+                                                onClick={() =>
+                                                  abrirEnvioDocumentoCliente({
+                                                    title:
+                                                      (safeT as any)?.envioFechamentoTitulo ||
+                                                      'Enviar fechamento ao cliente',
+                                                    subject: buildAssuntoEnvioFechamentoRelatorio(
+                                                      relatorio,
+                                                      safeT as Record<string, string | undefined>
+                                                    ),
+                                                    body: buildTextoEnvioGenerico(
+                                                      buildAssuntoEnvioFechamentoRelatorio(
+                                                        relatorio,
+                                                        safeT as Record<string, string | undefined>
+                                                      ),
+                                                      `Total: € ${totalCobranca.toFixed(2)}`,
+                                                      safeT as Record<string, string | undefined>
+                                                    ),
+                                                    relatorio,
+                                                    defaultChannel: 'email',
+                                                    onOpenPdf: () =>
+                                                      imprimirPDFDespesasDaBiblioteca(
+                                                        relatorio,
+                                                        itensDespesasVisiveis
+                                                      ),
+                                                  })
+                                                }
+                                              >
+                                                📧
+                                              </button>
+                                              <button
+                                                type="button"
+                                                role="menuitem"
+                                                className="bib-acao bib-acao--wa bib-acao--compact"
+                                                title={safeT?.enviarPorWhatsApp || 'WhatsApp'}
+                                                aria-label={safeT?.enviarPorWhatsApp || 'WhatsApp'}
+                                                onClick={() =>
+                                                  abrirEnvioDocumentoCliente({
+                                                    title:
+                                                      (safeT as any)?.envioFechamentoTitulo ||
+                                                      'Enviar fechamento ao cliente',
+                                                    subject: buildAssuntoEnvioFechamentoRelatorio(
+                                                      relatorio,
+                                                      safeT as Record<string, string | undefined>
+                                                    ),
+                                                    body: buildTextoEnvioGenerico(
+                                                      buildAssuntoEnvioFechamentoRelatorio(
+                                                        relatorio,
+                                                        safeT as Record<string, string | undefined>
+                                                      ),
+                                                      `Total: € ${totalCobranca.toFixed(2)}`,
+                                                      safeT as Record<string, string | undefined>
+                                                    ),
+                                                    relatorio,
+                                                    defaultChannel: 'whatsapp',
+                                                    onOpenPdf: () =>
+                                                      imprimirPDFDespesasDaBiblioteca(
+                                                        relatorio,
+                                                        itensDespesasVisiveis
+                                                      ),
+                                                  })
+                                                }
+                                              >
+                                                💬
+                                              </button>
+                                              <button
+                                                type="button"
+                                                role="menuitem"
+                                                className="bib-acao bib-acao--del bib-acao--compact"
+                                                title={safeT?.delete || 'Excluir'}
+                                                aria-label={safeT?.delete || 'Excluir'}
+                                                onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)}
+                                              >
+                                                ✕
+                                              </button>
                                             </div>
-                                          </details>
+                                          </BibliotecaRowAcoesMenu>
                                         </td>
                                       </tr>
                                     )
