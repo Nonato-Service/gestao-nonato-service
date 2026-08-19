@@ -349,7 +349,7 @@ import {
   summarizeBackupEnvelope,
 } from './utils/backupRestore'
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
-import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser } from './utils/syncRevision'
+import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser, clearWarmSessionMarkers } from './utils/syncRevision'
 import type { ClientePrioritario, ClientePrioritarioForm } from './modules/clientes'
 import {
   cmpNomeCliente,
@@ -1370,6 +1370,23 @@ export default function Dashboard() {
   const diarioPedidoImgTargetRef = useRef<'composer' | 'edit' | null>(null)
   /** true só após «Sair do sistema» confirmado — evita aviso ao fechar de forma segura. */
   const allowUnsafeBrowserExitRef = useRef(false)
+  /** Preferência Admin: saída correcta (guardar + limpar sessão + aviso beforeunload). Default activo. */
+  const EXIGIR_SAIDA_CORRECTA_KEY = 'nonato-exigir-saida-correcta'
+  const [exigirSaidaCorrecta, setExigirSaidaCorrecta] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true
+    try {
+      const raw = localStorage.getItem(EXIGIR_SAIDA_CORRECTA_KEY)
+      if (raw === 'false' || raw === '0') return false
+      if (raw === 'true' || raw === '1') return true
+      const parsed = raw != null ? JSON.parse(raw) : null
+      if (parsed === false) return false
+      if (parsed === true) return true
+    } catch {
+      /* ignorar */
+    }
+    return true
+  })
+  const [sairEmCurso, setSairEmCurso] = useState(false)
   const [checklistAccessStep, setChecklistAccessStep] = useState<'message' | 'password'>('message')
   const [checklistAccessNomeInput, setChecklistAccessNomeInput] = useState('')
   const [checklistAccessPasswordInput, setChecklistAccessPasswordInput] = useState('')
@@ -8230,6 +8247,10 @@ export default function Dashboard() {
       const savedIncluirLogo = getData('nonato-relatorios-incluir-logo')
       if (savedIncluirLogo !== undefined && savedIncluirLogo !== null) {
         setIncluirLogoNosRelatorios(savedIncluirLogo === true || savedIncluirLogo === 'true')
+      }
+      const savedExigirSaida = getData(EXIGIR_SAIDA_CORRECTA_KEY)
+      if (savedExigirSaida !== undefined && savedExigirSaida !== null) {
+        setExigirSaidaCorrecta(savedExigirSaida === true || savedExigirSaida === 'true')
       }
       const savedLogosRelatoriosRaw = getData('nonato-logos-relatorios')
       let mergedLogosRelatorios = parseLogosRelatoriosArr(savedLogosRelatoriosRaw)
@@ -23525,34 +23546,60 @@ export default function Dashboard() {
     })
   }, [currentCommunicationIdentity?.id, hubUsuarioAtual?.id, hubDestinatarioSelecionado.join(',')])
 
-  // Função para sair do sistema (fechar aplicação/aba) — saída segura; desativa o aviso de beforeunload
-  const handleSairDoSistema = useCallback(() => {
+  // «Sair do sistema»: guardar (se online) + limpar sessão/auth → splash (login completo). Não usar o X do browser.
+  const handleSairDoSistema = useCallback(async () => {
+    if (typeof window === 'undefined' || sairEmCurso) return
     const t = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
-    const msg = (t as { confirmarSair?: string }).confirmarSair || 'Deseja realmente sair do sistema?'
-    if (typeof window !== 'undefined' && window.confirm(msg)) {
-      allowUnsafeBrowserExitRef.current = true
+    const msg =
+      (t as { confirmarSair?: string }).confirmarSair ||
+      'Deseja sair do sistema? Os dados serão guardados e será necessário voltar a iniciar sessão.'
+    if (!window.confirm(msg)) return
+
+    allowUnsafeBrowserExitRef.current = true
+    setSairEmCurso(true)
+    let saveOk = true
+    try {
       if (!isDemoMode) {
+        try {
+          if (isOnline()) {
+            const r = await pushAllLocalStorageToServer()
+            if (!r.ok) saveOk = false
+          }
+        } catch {
+          saveOk = false
+        }
+        if (!saveOk) {
+          window.alert(
+            (t as { sairSaveParcialFalha?: string }).sairSaveParcialFalha ||
+              'Não foi possível enviar tudo ao servidor. Os dados ficam neste aparelho. A sessão será encerrada na mesma — verifique a ligação ou use Backup no Administrador.'
+          )
+        }
         void fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {})
         clearLastAuthUser()
+        clearWarmSessionMarkers()
         setLoginUser(null)
-        setShowSplashInicial(true)
+        setLoginUsuarioInput('')
+        setSenhaInicialInput('')
         setShowPasswordScreen(false)
+        setShowSplashInicial(true)
+      } else {
+        setLoginUser(null)
+        setShowPasswordScreen(false)
+        setShowSplashInicial(true)
       }
-      window.close()
-      // Fallback: em alguns navegadores window.close() não fecha a aba; redireciona para página em branco
-      setTimeout(() => {
-        if (typeof window !== 'undefined') window.location.href = 'about:blank'
-      }, 300)
-      // Se o fecho falhar, voltar a proteger o utilizador após alguns segundos
-      setTimeout(() => {
+    } finally {
+      setSairEmCurso(false)
+      // Manter saída segura breve (ex.: se o utilizador fechar o separador a seguir)
+      window.setTimeout(() => {
         allowUnsafeBrowserExitRef.current = false
-      }, 8000)
+      }, 2000)
     }
-  }, [selectedLanguage, isDemoMode])
+  }, [selectedLanguage, isDemoMode, sairEmCurso])
 
-  // Bloquear fecho/recarregar inadequado do separador; saída segura = botão «Sair do sistema» (confirmação)
+  // Aviso ao fechar/recarregar só com «Exigir saída correcta» activo (Admin). Saída correcta = botão «Sair do sistema».
   useEffect(() => {
     if (typeof window === 'undefined') return
+    if (!exigirSaidaCorrecta) return
     const sessaoPrincipalAtiva =
       Boolean(loginUser) && !showSplashInicial && !showPasswordScreen && !demoExpired
 
@@ -23561,17 +23608,14 @@ export default function Dashboard() {
       if (!sessaoPrincipalAtiva) return
       const pending = getPendingSyncCount()
       const dirtyForms = hasUnsavedChanges()
-      if (pending > 0 || dirtyForms) {
+      if (pending > 0 || dirtyForms || exigirSaidaCorrecta) {
         e.preventDefault()
         e.returnValue = ''
-        return
       }
-      e.preventDefault()
-      e.returnValue = ''
     }
     window.addEventListener('beforeunload', onBeforeUnload)
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
-  }, [loginUser, showSplashInicial, showPasswordScreen, demoExpired])
+  }, [loginUser, showSplashInicial, showPasswordScreen, demoExpired, exigirSaidaCorrecta])
 
   // Rolar apenas a área CENTRAL para o topo (não tocar na barra lateral nem na janela)
   const scrollMainContentToTop = useCallback(() => {
@@ -27486,6 +27530,11 @@ export default function Dashboard() {
               incluirLogoFechamentosDespesas,
               setIncluirLogoNosRelatorios,
               setIncluirLogoFechamentosDespesas,
+              exigirSaidaCorrecta,
+              setExigirSaidaCorrecta: (v: boolean) => {
+                setExigirSaidaCorrecta(v)
+                void saveData(EXIGIR_SAIDA_CORRECTA_KEY, v)
+              },
               saveData,
               administradorPreviewPdfLogo,
               aplicarLogoUnificadoTodosPdfs,
@@ -69190,11 +69239,21 @@ A1;Peça exemplo;10`}
         <div className="sidebar-footer">
         <button
           type="button"
-          onClick={handleSairDoSistema}
+          onClick={() => void handleSairDoSistema()}
           className="btn-primary sidebar-logout-btn"
+          disabled={sairEmCurso}
+          title={
+            sairEmCurso
+              ? (safeT as { sairAGuardar?: string })?.sairAGuardar || 'A guardar dados antes de sair…'
+              : safeT?.sairDoSistema || 'Sair do sistema'
+          }
         >
           <span style={{ fontSize: '16px', lineHeight: 1 }} aria-hidden>🚪</span>
-          <span>{safeT?.sairDoSistema || 'Sair do Sistema'}</span>
+          <span>
+            {sairEmCurso
+              ? (safeT as { sairAGuardar?: string })?.sairAGuardar || 'A guardar…'
+              : safeT?.sairDoSistema || 'Sair do Sistema'}
+          </span>
         </button>
         </div>
       </div>
@@ -70549,6 +70608,11 @@ A1;Peça exemplo;10`}
                 incluirLogoFechamentosDespesas,
                 setIncluirLogoNosRelatorios,
                 setIncluirLogoFechamentosDespesas,
+                exigirSaidaCorrecta,
+                setExigirSaidaCorrecta: (v: boolean) => {
+                  setExigirSaidaCorrecta(v)
+                  void saveData(EXIGIR_SAIDA_CORRECTA_KEY, v)
+                },
                 saveData,
                 administradorPreviewPdfLogo,
                 aplicarLogoUnificadoTodosPdfs,

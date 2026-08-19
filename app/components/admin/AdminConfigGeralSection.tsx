@@ -36,6 +36,9 @@ export type AdminConfigGeralSectionProps = {
   incluirLogoFechamentosDespesas: boolean
   setIncluirLogoNosRelatorios: (v: boolean) => void
   setIncluirLogoFechamentosDespesas: (v: boolean) => void
+  /** Preferência Admin: logout correcto + aviso beforeunload. */
+  exigirSaidaCorrecta: boolean
+  setExigirSaidaCorrecta: (v: boolean) => void
   saveData: (key: string, value: unknown, saveToLocalStorage?: boolean, awaitServer?: boolean) => Promise<boolean>
   administradorPreviewPdfLogo: (selectedId: string) => string | null
   aplicarLogoUnificadoTodosPdfs: (logoId: string) => void
@@ -55,6 +58,8 @@ export function AdminConfigGeralSection(props: AdminConfigGeralSectionProps) {
     variant = 'full',
     safeT,
     preverProximoNumeroRelatorio,
+    exigirSaidaCorrecta,
+    setExigirSaidaCorrecta,
     ...logoProps
   } = props
 
@@ -69,6 +74,39 @@ export function AdminConfigGeralSection(props: AdminConfigGeralSectionProps) {
           {safeT?.configuracoesGerais || 'CONFIGURAÇÕES GERAIS'}
         </h3>
       )}
+
+      <div
+        className={`admin-users-hub-admin-card${exigirSaidaCorrecta ? ' admin-users-hub-admin-card--active' : ''}`}
+        style={{ marginBottom: 16 }}
+      >
+        <button
+          type="button"
+          className="admin-users-hub-admin-card__toggle"
+          role="switch"
+          aria-checked={exigirSaidaCorrecta}
+          onClick={() => setExigirSaidaCorrecta(!exigirSaidaCorrecta)}
+        >
+          <span className="admin-users-hub-admin-card__icon" aria-hidden="true">
+            🔐
+          </span>
+          <span className="admin-users-hub-admin-card__text">
+            <strong>
+              {(safeT as Record<string, string | undefined>)?.exigirSaidaCorrecta ||
+                'Exigir saída correcta / Logout obrigatório'}
+            </strong>
+            <small>
+              {(safeT as Record<string, string | undefined>)?.exigirSaidaCorrectaDesc ||
+                'Activo: «Sair do sistema» guarda dados, limpa a sessão e pede novo login; avisa ao fechar o separador. Desactive só enquanto ajusta (sem aviso ao fechar).'}
+            </small>
+          </span>
+          <span
+            className={`admin-users-hub-switch${exigirSaidaCorrecta ? ' admin-users-hub-switch--on' : ''}`}
+            aria-hidden="true"
+          >
+            <span />
+          </span>
+        </button>
+      </div>
 
       {variant === 'full' ? (
         <div className="admin-config-relatorio-card">
