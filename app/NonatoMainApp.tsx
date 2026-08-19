@@ -364,7 +364,13 @@ import {
 } from './utils/backupRestore'
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser, clearWarmSessionMarkers } from './utils/syncRevision'
-import type { ClientePrioritario, ClientePrioritarioForm } from './modules/clientes'
+import type {
+  ClientePrioritario,
+  ClientePrioritarioForm,
+  EquipamentoCliente,
+  RelatorioEquipamento,
+  RelatorioEquipamentoFormFields,
+} from './modules/clientes'
 import {
   cmpNomeCliente,
   ordenarClientesPorNome,
@@ -381,6 +387,8 @@ import {
   isClientePrioritarioFormValid,
   createClientePrioritarioFromForm,
   updateClientePrioritarioFromForm,
+  createEmptyEquipamentoClienteForm,
+  createEmptyRelatorioEquipamentoForm,
 } from './modules/clientes'
 import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasLinkedMenuAccess, hasStrictMenuPolicy, normalizeMenuItems, normalizeMenuItemsWithLegacyFallback, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
@@ -968,13 +976,7 @@ function SidebarSectionSep({ id, label }: { id: string; label: string }) {
 
 /* Etiquetas armazem → app/modules/equipamentos */
 
-type RelatorioEquipamento = {
-  id: string
-  titulo: string
-  dataGeracao: string
-  conteudo: string
-  equipamentoId?: string // Para identificar qual equipamento (usando numeroSerie como referência)
-}
+/* RelatorioEquipamento / EquipamentoCliente / empty form → app/modules/clientes */
 
 /* dias-km → modules/relatorio-servico */
 
@@ -1104,22 +1106,7 @@ type RelatoriosExcluidosClientesStorage = { pastas: Record<string, PastaRelatori
 
 /* Blocos UI estado visual agenda → app/modules/agenda/estadoVisual */
 
-type EquipamentoCliente = {
-  /** ID ou código de referência (opcional). Se vazio na 1.ª gravação, gera-se um ID técnico (UUID). Distinto do n.º de série. */
-  id?: string
-  tipoEquipamento: string
-  modelo: string
-  marca: string
-  numeroSerie: string
-  familia: string
-  grupo: string
-  photo?: string
-  coverPhoto?: string
-  photoLibrary?: string[]
-  manualPdf?: string
-  itemsIncluded?: string[]
-  relatorios?: RelatorioEquipamento[]
-}
+/* EquipamentoCliente → app/modules/clientes (equipamentoClienteTipos) */
 
 type Cliente = {
   id: string
@@ -4589,20 +4576,9 @@ export default function Dashboard() {
   const equipamentoClienteFormRef = useRef<HTMLDivElement | null>(null)
   const [isSavingEquipamentoCliente, setIsSavingEquipamentoCliente] = useState(false)
   const [equipamentoClienteGuardadoMsg, setEquipamentoClienteGuardadoMsg] = useState('')
-  const [equipamentoClienteForm, setEquipamentoClienteForm] = useState<EquipamentoCliente>({
-    id: '',
-    tipoEquipamento: '',
-    modelo: '',
-    marca: '',
-    numeroSerie: '',
-    familia: '',
-    grupo: '',
-    photo: '',
-    coverPhoto: '',
-    photoLibrary: [],
-    manualPdf: '',
-    itemsIncluded: []
-  })
+  const [equipamentoClienteForm, setEquipamentoClienteForm] = useState<EquipamentoCliente>(() =>
+    createEmptyEquipamentoClienteForm()
+  )
   /** Se marcado, mostra o campo de código/ID próprio; se desmarcado, usa só ID técnico (novo) ou mantém o guardado (edição). */
   const [equipamentoClienteTemCodigoProprio, setEquipamentoClienteTemCodigoProprio] = useState(false)
   const [selectedClienteForEquipamento, setSelectedClienteForEquipamento] = useState<Cliente | null>(null)
@@ -4611,10 +4587,9 @@ export default function Dashboard() {
   const [selectedEquipamentoForRelatorio, setSelectedEquipamentoForRelatorio] = useState<{cliente: Cliente, equipamento: EquipamentoCliente, index: number} | null>(null)
   const [showRelatorioForm, setShowRelatorioForm] = useState(false)
   const [editingRelatorio, setEditingRelatorio] = useState<RelatorioEquipamento | null>(null)
-  const [relatorioForm, setRelatorioForm] = useState({
-    titulo: '',
-    conteudo: ''
-  })
+  const [relatorioForm, setRelatorioForm] = useState<RelatorioEquipamentoFormFields>(() =>
+    createEmptyRelatorioEquipamentoForm()
+  )
   
   // Estados para Relatório de Serviço
   const [relatoriosServico, setRelatoriosServico] = useState<RelatorioServico[]>([])
@@ -14777,20 +14752,7 @@ export default function Dashboard() {
     setEditingEquipamentoCliente(null)
     setEditingEquipamentoClienteIndex(null)
     setEquipamentoClienteGuardadoMsg('')
-    setEquipamentoClienteForm({
-      id: '',
-      tipoEquipamento: '',
-      modelo: '',
-      marca: '',
-      numeroSerie: '',
-      familia: '',
-      grupo: '',
-      photo: '',
-      coverPhoto: '',
-      photoLibrary: [],
-      manualPdf: '',
-      itemsIncluded: []
-    })
+    setEquipamentoClienteForm(createEmptyEquipamentoClienteForm())
     setNewItemCliente('')
     setEquipamentoClienteTemCodigoProprio(false)
     setShowEquipamentoClienteForm(true)
@@ -15094,7 +15056,7 @@ export default function Dashboard() {
 
   const handleAddRelatorio = () => {
     setEditingRelatorio(null)
-    setRelatorioForm({ titulo: '', conteudo: '' })
+    setRelatorioForm(createEmptyRelatorioEquipamentoForm())
     setShowRelatorioForm(true)
     requestAnimationFrame(() => {
       relatoriosEquipamentoModalBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' })

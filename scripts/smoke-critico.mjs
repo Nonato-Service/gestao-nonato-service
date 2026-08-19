@@ -183,13 +183,15 @@ try {
     idx.includes('updateClientePrioritarioFromForm') &&
     idx.includes('isClientePrioritarioFormValid') &&
     idx.includes('clientePrioritarioFormCompleteness') &&
-    idx.includes('formatClientePrioritarioAddress')
+    idx.includes('formatClientePrioritarioAddress') &&
+    idx.includes('createEmptyEquipamentoClienteForm') &&
+    idx.includes('createEmptyRelatorioEquipamentoForm')
   ) {
-    ok('módulo clientes exporta alfabeto/detalhe/prioritário')
+    ok('módulo clientes exporta alfabeto/detalhe/prioritário/equipamentoCliente')
   } else {
     fail('módulo clientes incompleto (index.ts)')
   }
-  for (const f of ['prioritarioTipos.ts', 'prioritarioForm.ts']) {
+  for (const f of ['prioritarioTipos.ts', 'prioritarioForm.ts', 'equipamentoClienteTipos.ts', 'equipamentoClienteForm.ts']) {
     if (exists(`app/modules/clientes/${f}`)) ok(`existe app/modules/clientes/${f}`)
     else fail(`falta app/modules/clientes/${f}`)
   }
@@ -210,6 +212,26 @@ try {
     ok('NonatoMainApp usa ClientePrioritario do módulo clientes')
   } else {
     fail('NonatoMainApp ainda define ClientePrioritario localmente ou não usa helpers do módulo')
+  }
+  if (
+    idx.includes('createEmptyEquipamentoClienteForm') &&
+    idx.includes('createEmptyRelatorioEquipamentoForm') &&
+    idx.includes('EquipamentoCliente') &&
+    idx.includes('RelatorioEquipamento')
+  ) {
+    ok('módulo clientes exporta EquipamentoCliente / RelatorioEquipamento / forms vazios')
+  } else {
+    fail('módulo clientes sem EquipamentoCliente / RelatorioEquipamento / createEmpty*')
+  }
+  if (
+    nma.includes('createEmptyEquipamentoClienteForm') &&
+    nma.includes('createEmptyRelatorioEquipamentoForm') &&
+    !nma.includes('type RelatorioEquipamento = {') &&
+    !nma.includes('type EquipamentoCliente = {')
+  ) {
+    ok('NonatoMainApp usa EquipamentoCliente/RelatorioEquipamento do módulo clientes')
+  } else {
+    fail('NonatoMainApp ainda define EquipamentoCliente/RelatorioEquipamento localmente ou não usa createEmpty*')
   }
 } catch (e) {
   fail(`módulo clientes: ${e.message}`)

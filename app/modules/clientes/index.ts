@@ -1,4 +1,4 @@
-/** Módulo Clientes — alfabeto A–Z, ordenação, busca, detalhe financeiro e cliente prioritário (funções puras). */
+/** Módulo Clientes — alfabeto A–Z, ordenação, busca, detalhe financeiro, prioritário e equipamento do cliente (funções puras). */
 
 export {
   CLIENTES_ALFABETO_INDICE,
@@ -67,3 +67,11 @@ export {
   clientePrioritarioFormCompleteness,
   formatClientePrioritarioAddress,
 } from './prioritarioForm'
+
+export type { RelatorioEquipamento, EquipamentoCliente } from './equipamentoClienteTipos'
+
+export type { RelatorioEquipamentoFormFields } from './equipamentoClienteForm'
+export {
+  createEmptyEquipamentoClienteForm,
+  createEmptyRelatorioEquipamentoForm,
+} from './equipamentoClienteForm'
