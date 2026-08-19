@@ -1,4 +1,12 @@
-export type RelatorioEquipamentoOrigem = 'cliente' | 'armazem'
+import type {
+  RelatorioEquipamentoOrigem,
+  RelatorioEquipamentoRef,
+} from '../relatorio-servico/equipamentoRelatorioForm'
+export type {
+  RelatorioEquipamentoOrigem,
+  RelatorioEquipamentoRef,
+} from '../relatorio-servico/equipamentoRelatorioForm'
+export { criarEquipamentoRelatorioVazio } from '../relatorio-servico/equipamentoRelatorioForm'
 
 export type EquipamentoArmazemIdLookup = { id?: string; numeroSerie?: string }
 
@@ -140,14 +148,6 @@ export type RelatorioEquipamentoCabecalhoLinha = {
   equipamentoId: string
   numeroMaquina: string
   maquinaModelo: string
-}
-
-export type RelatorioEquipamentoRef = {
-  uid: string
-  equipamentoOrigem: RelatorioEquipamentoOrigem
-  equipamentoId: string
-  maquinaModelo: string
-  numeroMaquina: string
 }
 
 export const MAX_EQUIPAMENTOS_RELATORIO = 5
@@ -407,18 +407,6 @@ export function resolverNumeroMaquinaRelatorioParaExibicao(
   }
 
   return ''
-}
-
-export function criarEquipamentoRelatorioVazio(
-  origem: RelatorioEquipamentoOrigem = 'cliente'
-): RelatorioEquipamentoRef {
-  return {
-    uid: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-    equipamentoOrigem: origem,
-    equipamentoId: '',
-    maquinaModelo: '',
-    numeroMaquina: '',
-  }
 }
 
 export function equipamentosRelatorioPreenchidos(

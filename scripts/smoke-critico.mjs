@@ -834,6 +834,28 @@ try {
   } else {
     fail('NonatoMainApp ainda tem resets literais de DiaTrabalho vazio ou não importa createEmptyDiaTrabalhoForm')
   }
+  if (
+    idx.includes('criarEquipamentoRelatorioVazio') &&
+    idx.includes('createEmptyEquipamentoRelatorioForm') &&
+    idx.includes('RelatorioEquipamentoRef')
+  ) {
+    ok('módulo relatorio-servico exporta RelatorioEquipamentoRef / criarEquipamentoRelatorioVazio')
+  } else {
+    fail('módulo relatorio-servico sem RelatorioEquipamentoRef / criarEquipamentoRelatorioVazio')
+  }
+  if (!exists('app/modules/relatorio-servico/equipamentoRelatorioForm.ts')) {
+    fail('falta app/modules/relatorio-servico/equipamentoRelatorioForm.ts')
+  } else {
+    ok('existe app/modules/relatorio-servico/equipamentoRelatorioForm.ts')
+  }
+  if (
+    nma.includes('criarEquipamentoRelatorioVazio') &&
+    !nma.includes('function criarEquipamentoRelatorioVazio(')
+  ) {
+    ok('NonatoMainApp usa criarEquipamentoRelatorioVazio do módulo relatorio-servico')
+  } else {
+    fail('NonatoMainApp ainda define criarEquipamentoRelatorioVazio localmente ou não importa')
+  }
 } catch (e) {
   fail(`módulo relatorio-servico: ${e.message}`)
 }

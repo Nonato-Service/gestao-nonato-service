@@ -154,8 +154,10 @@ import {
 import {
   type DiaTrabalho,
   type PecaSubstituicao,
+  type RelatorioEquipamentoRef,
   createEmptyDiaTrabalhoForm,
   createEmptyPecaSubstituicaoForm,
+  criarEquipamentoRelatorioVazio,
   diaTrabalhoDataChaveOrdenacao,
   sortDiasTrabalhoCronologicamente,
   diasTrabalhoRelatorioOrdenados,
@@ -458,7 +460,6 @@ import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buil
 import { PDF_DOCUMENT_LAYOUT_CSS, buildPdfDocumentHeaderHtml, buildPdfDocumentFooterHtml, buildPdfMetaSectionHtml } from './lib/pdfDocumentLayout'
 import {
   MAX_EQUIPAMENTOS_RELATORIO,
-  criarEquipamentoRelatorioVazio,
   normalizarEquipamentosRelatorio,
   sincronizarCamposLegadoEquipamentos,
   validarEquipamentosRelatorio,
@@ -481,7 +482,6 @@ import {
   aplicarBaixaVendaEquipamentosArmazemRelatorio,
   encontrarEquipamentoArmazemCorrespondenteCliente,
   MOTIVO_BAIXA_EQUIPAMENTO_VENDIDO,
-  type RelatorioEquipamentoRef,
   type EquipamentoArmazemIdLookup,
   type EquipamentoArmazemVendidoInfo,
   getSequenciaEtiquetasArmazem,

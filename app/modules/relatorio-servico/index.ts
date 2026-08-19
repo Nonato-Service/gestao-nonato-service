@@ -1,4 +1,4 @@
-/** Módulo Relatório de Serviço — dias, KM, numeração/duplicados, lista vs biblioteca e peça substituição. */
+/** Módulo Relatório de Serviço — dias, KM, numeração, peça, equipamento no relatório. */
 
 export type { DiaTrabalho, RelatorioServicoNumeroLike, ClienteRelatorioLookup } from './tipos'
 
@@ -6,6 +6,15 @@ export { createEmptyDiaTrabalhoForm } from './diaTrabalhoForm'
 
 export type { PecaSubstituicao } from './pecaSubstituicao'
 export { createEmptyPecaSubstituicaoForm } from './pecaSubstituicao'
+
+export type {
+  RelatorioEquipamentoOrigem,
+  RelatorioEquipamentoRef,
+} from './equipamentoRelatorioForm'
+export {
+  criarEquipamentoRelatorioVazio,
+  createEmptyEquipamentoRelatorioForm,
+} from './equipamentoRelatorioForm'
 
 export {
   diaTrabalhoDataChaveOrdenacao,
