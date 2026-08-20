@@ -28,6 +28,7 @@ import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
 import { isClienteMarcadoDevedor } from '../lib/clienteDevedorUtils'
 import { ClienteDevedorNomeTag } from './ClienteDevedorNomeTag'
 import { ClienteOrcamentosFichaSection } from './ClienteOrcamentosFichaSection'
+import { ClienteFaturasSection } from './ClienteFaturasSection'
 import type { PedidoOrcamentoRef, PedidoAvulsoRef, OrcamentoGeradoRef } from '../lib/clienteEquipamentoOrcamentos'
 
 function useDetalheTr(language: string) {
@@ -531,6 +532,33 @@ export function ClienteDetalheView({
         onVisualizarPdfAvulso={onVisualizarPdfAvulso}
         onAtualizarPedidoAvulso={onAtualizarPedidoAvulso}
         onAtualizarOrcamentosGerados={onAtualizarOrcamentosGerados}
+      />
+
+      <ClienteFaturasSection
+        faturas={faturasPecas
+          .filter((f) => f.clienteId === cliente.id)
+          .map((f) => ({
+            id: f.id,
+            numeroFatura: f.numeroFatura || f.id,
+            dataEmissao: f.dataEmissao,
+            valorTotal: f.valorTotal,
+            status: f.status,
+            equipamentoId: f.equipamentoId,
+            equipamentoTexto: f.equipamentoTexto,
+            arquivoAnexo: f.arquivoAnexo,
+            nomeArquivoOriginal: f.nomeArquivoOriginal,
+          }))}
+        equipamentos={equipamentos}
+        safeT={safeT}
+        language={language}
+        onOpenAnexo={(fatura) => {
+          if (!fatura.arquivoAnexo) return
+          try {
+            window.open(fatura.arquivoAnexo, '_blank', 'noopener,noreferrer')
+          } catch {
+            /* ignore */
+          }
+        }}
       />
 
       <section className="cliente-detalhe-v2__card">

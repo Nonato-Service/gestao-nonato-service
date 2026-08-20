@@ -1934,6 +1934,72 @@ try {
   fail(`módulo comunicação: ${e.message}`)
 }
 
+// Hub Cliente → Equipamento + faturas no detalhe
+try {
+  for (const f of [
+    'app/components/ClienteEquipamentoHub.tsx',
+    'app/components/ClienteEquipamentoHistoricoPanel.tsx',
+    'app/components/ClienteFaturasSection.tsx',
+  ]) {
+    if (exists(f)) ok(`existe ${f}`)
+    else fail(`em falta: ${f}`)
+  }
+  const hub = fs.readFileSync(path.join(root, 'app/components/ClienteEquipamentoHub.tsx'), 'utf8')
+  if (
+    hub.includes('hubEqTabRelatorios') &&
+    hub.includes('hubEqTabPecas') &&
+    hub.includes('hubEqTabOrcamentos') &&
+    hub.includes('vista={active.vista}')
+  ) {
+    ok('ClienteEquipamentoHub com tabs RS / peças / orçamentos')
+  } else {
+    fail('ClienteEquipamentoHub incompleto (tabs/vista)')
+  }
+  const hist = fs.readFileSync(path.join(root, 'app/components/ClienteEquipamentoHistoricoPanel.tsx'), 'utf8')
+  if (hist.includes("vista === 'pecas'") && hist.includes('hubEqPecasVazio')) {
+    ok('HistoricoPanel trata vista=pecas + empty state')
+  } else {
+    fail('HistoricoPanel sem empty state para vista=pecas')
+  }
+  const det = fs.readFileSync(path.join(root, 'app/components/ClienteDetalheView.tsx'), 'utf8')
+  if (det.includes('ClienteFaturasSection') && det.includes('faturasPecas')) {
+    ok('ClienteDetalheView liga ClienteFaturasSection')
+  } else {
+    fail('ClienteDetalheView sem ClienteFaturasSection')
+  }
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma.includes('ClienteEquipamentoHub')) {
+    ok('NonatoMainApp usa ClienteEquipamentoHub')
+  } else {
+    fail('NonatoMainApp sem ClienteEquipamentoHub')
+  }
+  if (
+    nma.includes('equipamentoId: faturaForm.equipamentoId') ||
+    nma.includes('equipamentoId: faturaForm.equipamentoId || undefined')
+  ) {
+    ok('faturaForm grava equipamentoId')
+  } else {
+    fail('faturaForm sem equipamentoId no payload')
+  }
+  if (
+    nma.includes("openTab('clientes'") &&
+    nma.includes('bibliotecaRelatoriosAtalhoClientes') &&
+    nma.includes("action === 'open-biblioteca-relatorios'")
+  ) {
+    ok('Biblioteca Relatórios redireciona para Clientes')
+  } else {
+    fail('open-biblioteca-relatorios não redireciona para Clientes')
+  }
+  const tipos = fs.readFileSync(path.join(root, 'app/modules/financeiro/tiposOs.ts'), 'utf8')
+  if (tipos.includes('equipamentoId?: string') && tipos.includes('equipamentoTexto?: string')) {
+    ok('FaturaPecas tipada com equipamentoId/Texto')
+  } else {
+    fail('FaturaPecas sem equipamentoId/Texto')
+  }
+} catch (e) {
+  fail(`hub cliente-equipamento: ${e.message}`)
+}
+
 // 4) i18n
 const i18n = spawnSync('node', ['scripts/check-i18n-keys.mjs'], {
   cwd: root,

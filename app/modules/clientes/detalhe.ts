@@ -75,6 +75,12 @@ export type FaturaPecasLike = {
   valorIVA: number
   valorSemIVA: number
   status: string
+  numeroFatura?: string
+  dataEmissao?: string
+  equipamentoId?: string
+  equipamentoTexto?: string
+  arquivoAnexo?: string
+  nomeArquivoOriginal?: string
 }
 
 export type ClienteDetalheFinanceiroResumo = {

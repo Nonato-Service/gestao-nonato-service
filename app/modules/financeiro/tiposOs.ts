@@ -48,6 +48,9 @@ export type FaturaPecas = {
     codigoPeca?: string
   }>
   observacoes?: string
+  /** Equipamento do cliente a que a fatura se refere (opcional; legado pode não ter) */
+  equipamentoId?: string
+  equipamentoTexto?: string
   /** PDF ou imagem (base64 data URL) */
   arquivoAnexo?: string
   nomeArquivoOriginal?: string

@@ -774,7 +774,7 @@ import {
   resolveImagemItemOrcamentoDisplay,
   itemOrcamentoDeveMostrarImagem,
 } from './modules/orcamentos'
-import { ClienteEquipamentoHistoricoPanel } from './components/ClienteEquipamentoHistoricoPanel'
+import { ClienteEquipamentoHub } from './components/ClienteEquipamentoHub'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
 import {
   filtrarPecasBibliotecaPorBusca,
@@ -4425,6 +4425,8 @@ export default function Dashboard() {
     numeroOS: '',
     clienteId: '',
     clienteNome: '',
+    equipamentoId: '',
+    equipamentoTexto: '',
     dataEmissao: new Date().toISOString().split('T')[0],
     dataVencimento: '',
     taxaIVA: 23,
@@ -14193,6 +14195,8 @@ export default function Dashboard() {
     numeroOS: '',
     clienteId: '',
     clienteNome: '',
+    equipamentoId: '',
+    equipamentoTexto: '',
     dataEmissao: new Date().toISOString().split('T')[0],
     dataVencimento: '',
     taxaIVA: 23,
@@ -14530,6 +14534,8 @@ export default function Dashboard() {
       numeroOS: faturaForm.numeroOS || '',
       clienteId: faturaForm.clienteId,
       clienteNome: faturaForm.clienteNome,
+      equipamentoId: faturaForm.equipamentoId || undefined,
+      equipamentoTexto: faturaForm.equipamentoTexto || undefined,
       dataEmissao: faturaForm.dataEmissao,
       dataVencimento: faturaForm.dataVencimento || undefined,
       valorTotal,
@@ -14580,6 +14586,8 @@ export default function Dashboard() {
       numeroOS: savedFatura.numeroOS || '',
       clienteId: savedFatura.clienteId,
       clienteNome: savedFatura.clienteNome,
+      equipamentoId: savedFatura.equipamentoId || '',
+      equipamentoTexto: savedFatura.equipamentoTexto || '',
       dataEmissao: savedFatura.dataEmissao,
       dataVencimento: savedFatura.dataVencimento || '',
       taxaIVA: savedFatura.taxaIVA,
@@ -23679,7 +23687,11 @@ export default function Dashboard() {
     } else if (action === 'open-manual-gestor') {
       window.open('/api/pdf/manual-gestor', '_blank', 'noopener,noreferrer')
     } else if (action === 'open-biblioteca-relatorios') {
-      openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))
+      openTab('clientes', getTabTitle('clientes'))
+      alert(
+        (safeT as Record<string, string | undefined>)?.bibliotecaRelatoriosAtalhoClientes ||
+          'Os relatórios por equipamento estão em Clientes → Equipamento. Abra o cliente e o equipamento desejado.'
+      )
     } else if (action === 'open-relatorios-excluidos-clientes') {
       openTab('relatorios-excluidos-clientes', getTabTitle('relatorios-excluidos-clientes'))
     }
@@ -59708,6 +59720,8 @@ A1;Peça exemplo;10`}
                                   numeroOS: fatura.numeroOS || '',
                                   clienteId: fatura.clienteId,
                                   clienteNome: fatura.clienteNome,
+                                  equipamentoId: fatura.equipamentoId || '',
+                                  equipamentoTexto: fatura.equipamentoTexto || '',
                                   dataEmissao: (fatura.dataEmissao && String(fatura.dataEmissao).slice(0, 10)) || new Date().toISOString().split('T')[0],
                                   dataVencimento: fatura.dataVencimento ? String(fatura.dataVencimento).slice(0, 10) : '',
                                   taxaIVA: fatura.taxaIVA,
@@ -73771,7 +73785,7 @@ A1;Peça exemplo;10`}
                               <button type="button" className="btn-danger equipamento-cliente-card-action" onClick={() => handleDeleteEquipamentoCliente(selectedClienteForEquipamento.id, index)} style={{ padding: '11px 16px', fontSize: '13px', borderRadius: '12px', fontWeight: '600' }}>🗑️ {safeT?.delete || 'Excluir'}</button>
                             </div>
 
-                            <ClienteEquipamentoHistoricoPanel
+                            <ClienteEquipamentoHub
                               relatorios={relatoriosServicoEquipamento}
                               clienteId={selectedClienteForEquipamento.id}
                               clienteNome={selectedClienteForEquipamento.nomeEmpresa}
@@ -74140,7 +74154,13 @@ A1;Peça exemplo;10`}
               isDevedor={isClienteMarcadoDevedor}
               onSelect={(cli) =>
                 setFaturaForm((prev) => {
-                  let next = { ...prev, clienteId: cli.id, clienteNome: cli.nomeEmpresa || '' }
+                  let next = {
+                    ...prev,
+                    clienteId: cli.id,
+                    clienteNome: cli.nomeEmpresa || '',
+                    equipamentoId: '',
+                    equipamentoTexto: '',
+                  }
                   if (prev.ordemServicoId) {
                     const os = ordensServico.find((o) => o.id === prev.ordemServicoId)
                     if (os && os.clienteId !== cli.id) {
@@ -74151,9 +74171,89 @@ A1;Peça exemplo;10`}
                 })
               }
               onClear={() =>
-                setFaturaForm((prev) => ({ ...prev, clienteId: '', clienteNome: '', ordemServicoId: '', numeroOS: '' }))
+                setFaturaForm((prev) => ({
+                  ...prev,
+                  clienteId: '',
+                  clienteNome: '',
+                  ordemServicoId: '',
+                  numeroOS: '',
+                  equipamentoId: '',
+                  equipamentoTexto: '',
+                }))
               }
             />
+
+            <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>
+              {(safeT as any)?.faturaEquipamentoLabel || 'Equipamento (opcional)'}
+            </label>
+            <select
+              value={faturaForm.equipamentoId}
+              disabled={!faturaForm.clienteId}
+              onChange={(e) => {
+                const id = e.target.value
+                const cli = clientes.find((c) => c.id === faturaForm.clienteId)
+                const eqs = (cli?.equipamentos || []) as Array<{
+                  id?: string
+                  modelo?: string
+                  marca?: string
+                  numeroSerie?: string
+                  tipoEquipamento?: string
+                }>
+                const eq = eqs.find((item) => {
+                  const optId = String(item.id || item.numeroSerie || '').trim()
+                  return optId && optId === id
+                })
+                const texto = eq
+                  ? [eq.marca, eq.modelo, eq.numeroSerie].filter(Boolean).join(' · ') ||
+                    eq.tipoEquipamento ||
+                    id
+                  : ''
+                setFaturaForm({
+                  ...faturaForm,
+                  equipamentoId: id,
+                  equipamentoTexto: id ? texto : '',
+                })
+              }}
+              style={{
+                width: '100%',
+                padding: '8px',
+                marginBottom: '12px',
+                backgroundColor: '#404040',
+                color: '#fff',
+                border: '1px solid rgba(0, 200, 83, 0.3)',
+                borderRadius: '4px',
+                opacity: faturaForm.clienteId ? 1 : 0.55,
+              }}
+            >
+              <option value="">
+                {(safeT as any)?.clienteFaturaSemEquipamento || 'Sem equipamento'}
+              </option>
+              {(() => {
+                const cli = clientes.find((c) => c.id === faturaForm.clienteId)
+                const eqs = (cli?.equipamentos || []) as Array<{
+                  id?: string
+                  modelo?: string
+                  marca?: string
+                  numeroSerie?: string
+                  tipoEquipamento?: string
+                }>
+                return eqs
+                  .map((eq) => {
+                    const optId = String(eq.id || eq.numeroSerie || '').trim()
+                    if (!optId) return null
+                    const label =
+                      [eq.marca, eq.modelo, eq.numeroSerie].filter(Boolean).join(' · ') ||
+                      eq.tipoEquipamento ||
+                      optId
+                    return (
+                      <option key={optId} value={optId}>
+                        {label}
+                      </option>
+                    )
+                  })
+                  .filter(Boolean)
+              })()}
+            </select>
 
             <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{(safeT as any)?.faturaOsOpcional || 'Ordem de serviço (opcional)'}</label>
             <select

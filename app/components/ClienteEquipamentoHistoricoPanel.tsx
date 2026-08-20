@@ -39,6 +39,9 @@ export type RelatorioEquipamentoHistorico = {
   pecasInstaladasSubstituidas?: boolean
 }
 
+/** Vista do hub: filtra secções sem perder dados. */
+export type ClienteEquipamentoHistVista = 'todas' | 'relatorios' | 'pecas' | 'orcamentos'
+
 type Props = {
   relatorios: RelatorioEquipamentoHistorico[]
   clienteId: string
@@ -56,6 +59,8 @@ type Props = {
   onVisualizarPdfRelatorio?: (pedido: PedidoOrcamentoRef) => void
   onVisualizarPdfAvulso?: (pedido: PedidoAvulsoRef) => void
   onAtualizarPedidoAvulso?: (pedidos: PedidoAvulsoRef[]) => void
+  /** Hub Cliente→Equipamento: mostrar só a secção pedida */
+  vista?: ClienteEquipamentoHistVista
 }
 
 const PEDIDOS_AVULSO_KEY = 'nonato-pedidos-orcamento-avulso'
@@ -100,9 +105,14 @@ export function ClienteEquipamentoHistoricoPanel({
   onUpdatePedidoRelatorioStatus,
   onVisualizarPdfRelatorio,
   onVisualizarPdfAvulso,
+  vista = 'todas',
 }: Props) {
   const tr = (key: string) => safeT[key] ?? key
   const locale = localeDatetimeGeneral(language)
+  const showGrupos = vista === 'todas' || vista === 'relatorios' || vista === 'pecas'
+  const showOrcamentos = vista === 'todas' || vista === 'orcamentos'
+  const showColServico = vista === 'todas' || vista === 'relatorios'
+  const showColPecas = vista === 'todas' || vista === 'pecas'
 
   const fmtDate = (d: string) => {
     try {
@@ -414,20 +424,42 @@ export function ClienteEquipamentoHistoricoPanel({
     return tr('aguardaAprovacao')
   }
 
+  const gruposComPecas = gruposPorNumero.filter(
+    (g) => g.pedidosPecas.length > 0 || (g.relatorio != null && relatorioTemPecas(g.relatorio))
+  )
+  const gruposParaVista = vista === 'pecas' ? gruposComPecas : gruposPorNumero
+
+  const emptyMsgKey =
+    vista === 'pecas'
+      ? 'hubEqPecasVazio'
+      : vista === 'orcamentos'
+        ? 'hubEqOrcamentosVazio'
+        : vista === 'relatorios'
+          ? 'hubEqRelatoriosVazio'
+          : 'nenhumHistoricoEquipamento'
+
   if (
-    gruposPorNumero.length === 0 &&
-    pedidosAvulsoFiltrados.length === 0 &&
-    orcamentosEquipamento.length === 0
+    (vista === 'relatorios' && gruposPorNumero.length === 0) ||
+    (vista === 'pecas' && gruposComPecas.length === 0) ||
+    (vista === 'orcamentos' &&
+      pedidosOrcamentoPendentes.length === 0 &&
+      orcamentosAprovados.length === 0 &&
+      orcamentosCancelados.length === 0) ||
+    (vista === 'todas' &&
+      gruposPorNumero.length === 0 &&
+      pedidosAvulsoFiltrados.length === 0 &&
+      orcamentosEquipamento.length === 0)
   ) {
     return (
       <div className="cliente-equip-hist cliente-equip-hist--empty">
-        <p className="cliente-equip-hist__empty">{tr('nenhumHistoricoEquipamento')}</p>
+        <p className="cliente-equip-hist__empty">{tr(emptyMsgKey)}</p>
       </div>
     )
   }
 
   return (
     <div className="cliente-equip-hist">
+      {vista === 'todas' && (
       <div className="cliente-equip-hist__header">
         <h4 className="cliente-equip-hist__title">📂 {tr('equipHistoricoDesteEquipamento')}</h4>
         {equipLabel && <p className="cliente-equip-hist__equip-label">{equipLabel}</p>}
@@ -438,13 +470,18 @@ export function ClienteEquipamentoHistoricoPanel({
           {orcamentosCancelados.length > 0 ? ` · ${orcamentosCancelados.length} ${tr('cancelado').toLowerCase()}` : ''}
         </p>
       </div>
+      )}
 
-      {renderSecaoResumo(
-        `📋 ${tr('relatorioServico')} / ${tr('relatoriosNumerados').replace(/\(s\).*/, '')}`,
-        gruposPorNumero.length,
-        tr('nenhumHistoricoEquipamento'),
+      {showGrupos && renderSecaoResumo(
+        vista === 'pecas'
+          ? `🔧 ${tr('hubEqTabPecas')}`
+          : vista === 'relatorios'
+            ? `📋 ${tr('hubEqTabRelatorios')}`
+            : `📋 ${tr('relatorioServico')} / ${tr('relatoriosNumerados').replace(/\(s\).*/, '')}`,
+        gruposParaVista.length,
+        tr(emptyMsgKey),
         <div className="cliente-equip-hist__grupos">
-          {gruposPorNumero.map((grupo) => {
+          {gruposParaVista.map((grupo) => {
           const rel = grupo.relatorio
           const temPecasNoRel = rel ? relatorioTemPecas(rel) : false
           const pecasRel = rel ? todasPecasRelatorio(rel) : []
@@ -467,6 +504,7 @@ export function ClienteEquipamentoHistoricoPanel({
               </header>
 
               <div className="cliente-equip-hist__cols">
+                {showColServico && (
                 <section className="cliente-equip-hist__col cliente-equip-hist__col--servico">
                   <h5 className="cliente-equip-hist__col-title">
                     📋 {tr('relatorioServico')}
@@ -502,7 +540,9 @@ export function ClienteEquipamentoHistoricoPanel({
                     </div>
                   )}
                 </section>
+                )}
 
+                {showColPecas && (
                 <section className="cliente-equip-hist__col cliente-equip-hist__col--com-pecas">
                   <h5 className="cliente-equip-hist__col-title">
                     🔧 {tr('relatorioComPecas')}
@@ -519,7 +559,9 @@ export function ClienteEquipamentoHistoricoPanel({
                     </div>
                   )}
                 </section>
+                )}
 
+                {showColPecas && (
                 <section className="cliente-equip-hist__col cliente-equip-hist__col--somente-pecas">
                   <h5 className="cliente-equip-hist__col-title">
                     📦 {tr('somentePecas')}
@@ -573,15 +615,16 @@ export function ClienteEquipamentoHistoricoPanel({
                     })
                   )}
                 </section>
+                )}
               </div>
             </article>
           )
         })}
         </div>,
-        gruposPorNumero.length > 0
+        gruposParaVista.length > 0
       )}
 
-      {renderSecaoResumo(
+      {showOrcamentos && renderSecaoResumo(
         `📨 ${tr('pedidosOrcamento')}`,
         pedidosOrcamentoPendentes.length,
         tr('semPedidoPecasRelatorio'),
@@ -677,7 +720,7 @@ export function ClienteEquipamentoHistoricoPanel({
         </div>
       )}
 
-      {renderSecaoResumo(
+      {showOrcamentos && renderSecaoResumo(
         `✅ ${tr('aprovado')} — ${tr('orcamentosGerados')}`,
         orcamentosAprovados.length,
         tr('nenhumOrcamentoEquipamento'),
@@ -736,7 +779,7 @@ export function ClienteEquipamentoHistoricoPanel({
         </div>
       )}
 
-      {renderSecaoResumo(
+      {showOrcamentos && renderSecaoResumo(
         `❌ ${tr('cancelado')} / ${tr('rejeitado')}`,
         orcamentosCancelados.length,
         tr('nenhumOrcamentoFiltro'),
