@@ -32,6 +32,28 @@ export function applyFechamentoEtapaFinanceiraToMap(
       opts?.dataVencimentoFatura !== undefined
         ? opts.dataVencimentoFatura
         : currObj?.dataVencimentoFatura
+    let arquivoAnexo: string | undefined
+    let nomeArquivoOriginal: string | undefined
+    let tipoArquivo: string | undefined
+    if (opts?.arquivoAnexo !== undefined) {
+      const rawAnexo = String(opts.arquivoAnexo || '').trim()
+      if (rawAnexo) {
+        arquivoAnexo = rawAnexo
+        nomeArquivoOriginal =
+          opts.nomeArquivoOriginal !== undefined
+            ? String(opts.nomeArquivoOriginal || '').trim() || undefined
+            : currObj?.nomeArquivoOriginal
+        tipoArquivo =
+          opts.tipoArquivo !== undefined
+            ? String(opts.tipoArquivo || '').trim() || undefined
+            : currObj?.tipoArquivo
+      }
+      // string vazia → limpar anexo (não copiar do actual)
+    } else {
+      arquivoAnexo = currObj?.arquivoAnexo
+      nomeArquivoOriginal = currObj?.nomeArquivoOriginal
+      tipoArquivo = currObj?.tipoArquivo
+    }
     const entry: FechamentoFluxoFinanceiroEntry = {
       etapa,
       modo: opts?.modo || currObj?.modo || (etapa === 'enviado_fatura' ? 'com_fatura' : 'com_fatura'),
@@ -44,6 +66,11 @@ export function applyFechamentoEtapaFinanceiraToMap(
     if (situacaoFatura !== undefined) entry.situacaoFatura = situacaoFatura
     if (dataVencimentoFatura !== undefined && String(dataVencimentoFatura).trim() !== '') {
       entry.dataVencimentoFatura = String(dataVencimentoFatura).trim()
+    }
+    if (arquivoAnexo) {
+      entry.arquivoAnexo = arquivoAnexo
+      if (nomeArquivoOriginal) entry.nomeArquivoOriginal = nomeArquivoOriginal
+      if (tipoArquivo) entry.tipoArquivo = tipoArquivo
     }
     next[relatorioId] = entry
   }

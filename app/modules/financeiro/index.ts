@@ -84,6 +84,13 @@ export {
 
 export { normalizarTextoFaturaBusca, numeroFaturaCorrespondeConsulta } from './faturaBusca'
 
+export {
+  MAX_FATURA_ANEXO_BYTES,
+  readFaturaAnexoFromFile,
+  abrirFaturaAnexoDataUrl,
+} from './faturaAnexo'
+export type { FaturaAnexoPayload } from './faturaAnexo'
+
 export type {
   SinalPagamentoFaturaFornecedor,
   SinalPagamentoFaturaPecas,

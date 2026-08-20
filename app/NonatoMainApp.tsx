@@ -639,6 +639,8 @@ import {
   digitosWhatsAppFromTelefonesCliente,
   buildCorpoEnvioIbanFaturaPecas,
   buildCorpoEnvioCobrancaFechamentoBiblioteca,
+  readFaturaAnexoFromFile,
+  abrirFaturaAnexoDataUrl,
   parseDataFinanceiroParaDate,
   periodoFinanceiroFromDate,
   isoWeekStringFromDate,
@@ -14185,8 +14187,6 @@ export default function Dashboard() {
     alert(safeT?.osSalva || 'Ordem de serviço salva com sucesso!')
   }
 
-  const MAX_FATURA_ANEXO_BYTES = 4 * 1024 * 1024
-
   const resetFaturaFormState = () => ({
     numeroFatura: '',
     ordemServicoId: '',
@@ -14212,26 +14212,27 @@ export default function Dashboard() {
     }>
   })
 
-  const handleFaturaAnexoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFaturaAnexoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const ft = safeT as Record<string, string | undefined>
     const file = e.target.files?.[0]
+    e.target.value = ''
     if (!file) return
-    if (file.size > MAX_FATURA_ANEXO_BYTES) {
-      alert(ft?.faturaAnexoGrande || 'Ficheiro demasiado grande (máx. 4 MB).')
-      e.target.value = ''
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => {
-      const dataUrl = reader.result as string
+    try {
+      const payload = await readFaturaAnexoFromFile(file)
       setFaturaForm(prev => ({
         ...prev,
-        arquivoAnexo: dataUrl,
-        nomeArquivoOriginal: file.name,
-        tipoArquivo: file.type || ''
+        arquivoAnexo: payload.arquivoAnexo,
+        nomeArquivoOriginal: payload.nomeArquivoOriginal,
+        tipoArquivo: payload.tipoArquivo,
       }))
+    } catch (err) {
+      const code = err instanceof Error ? err.message : ''
+      if (code === 'FATURA_ANEXO_GRANDE') {
+        alert(ft?.faturaAnexoGrande || 'Ficheiro demasiado grande (máx. 4 MB).')
+      } else {
+        alert(ft?.faturaAnexoErro || 'Não foi possível ler o anexo.')
+      }
     }
-    reader.readAsDataURL(file)
   }
 
   const fecharModalFaturaPecas = () => {
@@ -14387,16 +14388,79 @@ export default function Dashboard() {
     })
   }
 
-  const fluxoNumeroFaturaRelatorio = (relatorioId: string): string => {
+  const fluxoEntryRelatorio = (relatorioId: string): FechamentoFluxoFinanceiroEntry | null => {
     const fr = fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]
-    const frObj =
-      fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
-    return String(frObj?.numeroFatura ?? '').trim()
+    return fr && typeof fr === 'object' && !Array.isArray(fr)
+      ? (fr as FechamentoFluxoFinanceiroEntry)
+      : null
+  }
+
+  const fluxoNumeroFaturaRelatorio = (relatorioId: string): string => {
+    return String(fluxoEntryRelatorio(relatorioId)?.numeroFatura ?? '').trim()
+  }
+
+  const fluxoAnexoFaturaRelatorio = (relatorioId: string) => {
+    const frObj = fluxoEntryRelatorio(relatorioId)
+    const dataUrl = String(frObj?.arquivoAnexo ?? '')
+    if (!dataUrl.startsWith('data:')) return null
+    return {
+      dataUrl,
+      nome: String(frObj?.nomeArquivoOriginal ?? '').trim() || undefined,
+      tipo: String(frObj?.tipoArquivo ?? '').trim() || undefined,
+    }
+  }
+
+  const patchFluxoAnexoFatura = (
+    relatorioId: string,
+    anexo: { arquivoAnexo: string; nomeArquivoOriginal?: string; tipoArquivo?: string }
+  ) => {
+    const currObj = fluxoEntryRelatorio(relatorioId)
+    const etapa =
+      currObj?.etapa === 'enviado_fatura' || currObj?.etapa === 'controlo_pagamento'
+        ? currObj.etapa
+        : 'controlo_pagamento'
+    setFechamentoEtapaFinanceira(relatorioId, etapa, {
+      modo: currObj?.modo === 'sem_fatura' ? 'sem_fatura' : 'com_fatura',
+      pagamento:
+        currObj?.pagamento === 'pago' || currObj?.pagamento === 'devedor'
+          ? currObj.pagamento
+          : 'pendente',
+      numeroFatura: currObj?.numeroFatura,
+      situacaoFatura: currObj?.situacaoFatura,
+      dataVencimentoFatura: currObj?.dataVencimentoFatura,
+      arquivoAnexo: anexo.arquivoAnexo,
+      nomeArquivoOriginal: anexo.nomeArquivoOriginal,
+      tipoArquivo: anexo.tipoArquivo,
+    })
+  }
+
+  const guardarAnexoFaturaFechamento = async (relatorioId: string, file: File) => {
+    const ft = safeT as Record<string, string | undefined>
+    try {
+      const payload = await readFaturaAnexoFromFile(file)
+      patchFluxoAnexoFatura(relatorioId, payload)
+    } catch (err) {
+      const code = err instanceof Error ? err.message : ''
+      if (code === 'FATURA_ANEXO_GRANDE') {
+        alert(ft?.faturaAnexoGrande || 'Ficheiro demasiado grande (máx. 4 MB).')
+      } else {
+        alert(ft?.faturaAnexoErro || 'Não foi possível ler o anexo.')
+      }
+    }
+  }
+
+  const removerAnexoFaturaFechamento = (relatorioId: string) => {
+    patchFluxoAnexoFatura(relatorioId, {
+      arquivoAnexo: '',
+      nomeArquivoOriginal: '',
+      tipoArquivo: '',
+    })
   }
 
   const renderBarraFluxoFechamento = (relatorioId: string, compact?: boolean) => {
     const fluxoAtual = fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]
     const numFatura = fluxoNumeroFaturaRelatorio(relatorioId)
+    const anexo = fluxoAnexoFaturaRelatorio(relatorioId)
     return (
       <div
         className="bib-fluxo-fechamento-wrap"
@@ -14405,12 +14469,15 @@ export default function Dashboard() {
         onPointerDown={(e) => e.stopPropagation()}
       >
         <FechamentoFluxoPagamentoBar
-          key={`${relatorioId}::${numFatura}::${getFechamentoFluxoFase(fluxoAtual)}`}
+          key={`${relatorioId}::${numFatura}::${Boolean(anexo?.dataUrl)}::${getFechamentoFluxoFase(fluxoAtual)}`}
           relatorioId={relatorioId}
           fluxo={fluxoAtual}
           labels={safeT as Record<string, string | undefined>}
           numeroFaturaAtual={numFatura}
+          anexoAtual={anexo}
           onGuardarNumeroFatura={guardarNumeroFaturaFechamento}
+          onGuardarAnexoFatura={guardarAnexoFaturaFechamento}
+          onRemoverAnexoFatura={removerAnexoFaturaFechamento}
           onMarcarPago={marcarFechamentoBibliotecaPago}
           onMarcarNaoPago={marcarFechamentoBibliotecaNaoPago}
           compact={compact}
@@ -34147,6 +34214,24 @@ export default function Dashboard() {
                                         <>
                                           {' · '}
                                           {(txc.numeroFatura || 'Nº fatura')}: {numFat}
+                                        </>
+                                      ) : null}
+                                      {frObj?.arquivoAnexo && String(frObj.arquivoAnexo).startsWith('data:') ? (
+                                        <>
+                                          {' · '}
+                                          <button
+                                            type="button"
+                                            className="btn-primary"
+                                            style={{ padding: '2px 8px', fontSize: '10px', marginLeft: '2px' }}
+                                            onClick={() => abrirFaturaAnexoDataUrl(String(frObj.arquivoAnexo))}
+                                            title={
+                                              frObj.nomeArquivoOriginal
+                                                ? `${txc.faturaAbrirAnexo || txc.fechamentoFluxoVerAnexo || 'Ver anexo'} (${frObj.nomeArquivoOriginal})`
+                                                : txc.faturaAbrirAnexo || txc.fechamentoFluxoVerAnexo || 'Ver anexo'
+                                            }
+                                          >
+                                            📎 {txc.fechamentoFluxoVerAnexo || txc.faturaAbrirAnexo || 'Ver anexo'}
+                                          </button>
                                         </>
                                       ) : null}
                                     </div>
@@ -59320,6 +59405,71 @@ A1;Peça exemplo;10`}
                                       {txOs.financeiroOsNumFaturaBtn || 'Guardar nº'}
                                     </button>
                                   </div>
+                                  <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                                    {(() => {
+                                      const frAnx =
+                                        fechamentoFluxoFinanceiroPorRelatorioId[rel.id] &&
+                                        typeof fechamentoFluxoFinanceiroPorRelatorioId[rel.id] === 'object' &&
+                                        !Array.isArray(fechamentoFluxoFinanceiroPorRelatorioId[rel.id])
+                                          ? (fechamentoFluxoFinanceiroPorRelatorioId[rel.id] as FechamentoFluxoFinanceiroEntry)
+                                          : null
+                                      const temAnx =
+                                        Boolean(frAnx?.arquivoAnexo && String(frAnx.arquivoAnexo).startsWith('data:'))
+                                      return (
+                                        <>
+                                          <label
+                                            className="btn-primary"
+                                            style={{
+                                              padding: '6px 10px',
+                                              fontSize: '11px',
+                                              cursor: 'pointer',
+                                              display: 'inline-flex',
+                                              alignItems: 'center',
+                                            }}
+                                          >
+                                            {txOs.fechamentoFluxoAnexarFatura || txOs.faturaAnexoLabel || 'Anexar fatura'}
+                                            <input
+                                              type="file"
+                                              accept=".pdf,application/pdf,image/*"
+                                              style={{ display: 'none' }}
+                                              onChange={async e => {
+                                                const f = e.target.files?.[0]
+                                                e.target.value = ''
+                                                if (f) await guardarAnexoFaturaFechamento(rel.id, f)
+                                              }}
+                                            />
+                                          </label>
+                                          {temAnx ? (
+                                            <>
+                                              <button
+                                                type="button"
+                                                className="btn-primary"
+                                                style={{ padding: '6px 10px', fontSize: '11px' }}
+                                                onClick={() => abrirFaturaAnexoDataUrl(String(frAnx?.arquivoAnexo))}
+                                              >
+                                                {txOs.fechamentoFluxoVerAnexo || txOs.faturaAbrirAnexo || 'Ver anexo'}
+                                                {frAnx?.nomeArquivoOriginal ? ` (${frAnx.nomeArquivoOriginal})` : ''}
+                                              </button>
+                                              <button
+                                                type="button"
+                                                className="btn-primary"
+                                                style={{ padding: '6px 10px', fontSize: '11px', backgroundColor: '#5a2020' }}
+                                                onClick={() => {
+                                                  const msg =
+                                                    txOs.fechamentoFluxoConfirmarRemoverAnexo ||
+                                                    'Remover o anexo da fatura?'
+                                                  if (!window.confirm(msg)) return
+                                                  removerAnexoFaturaFechamento(rel.id)
+                                                }}
+                                              >
+                                                {txOs.fechamentoFluxoRemoverAnexo || txOs.faturaRemoverAnexo || 'Remover anexo'}
+                                              </button>
+                                            </>
+                                          ) : null}
+                                        </>
+                                      )
+                                    })()}
+                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -74113,7 +74263,12 @@ A1;Peça exemplo;10`}
               {faturaForm.arquivoAnexo && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
                   <span style={{ color: '#ccc', fontSize: '13px' }}>{faturaForm.nomeArquivoOriginal || 'anexo'}</span>
-                  <button type="button" className="btn-primary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => setFaturaForm({ ...faturaForm, arquivoAnexo: '', nomeArquivoOriginal: '', tipoArquivo: '' })}>
+                  <button type="button" className="btn-primary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => {
+                    const ft = safeT as Record<string, string | undefined>
+                    const msg = ft?.fechamentoFluxoConfirmarRemoverAnexo || ft?.faturaRemoverAnexoConfirm || 'Remover o anexo da fatura?'
+                    if (!window.confirm(msg)) return
+                    setFaturaForm({ ...faturaForm, arquivoAnexo: '', nomeArquivoOriginal: '', tipoArquivo: '' })
+                  }}>
                     {(safeT as any)?.faturaRemoverAnexo || 'Remover anexo'}
                   </button>
                   <button type="button" className="btn-primary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => { try { window.open(faturaForm.arquivoAnexo, '_blank', 'noopener,noreferrer') } catch (_) {} }}>

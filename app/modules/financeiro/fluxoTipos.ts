@@ -27,6 +27,10 @@ export type FechamentoFluxoFinanceiroEntry = {
   numeroFatura?: string
   situacaoFatura?: FechamentoSituacaoFatura
   dataVencimentoFatura?: string
+  /** PDF ou imagem (data URL) — mesmo registo do nº fatura */
+  arquivoAnexo?: string
+  nomeArquivoOriginal?: string
+  tipoArquivo?: string
 }
 
 export type FechamentoFluxoFinanceiroMap = Record<
@@ -40,6 +44,10 @@ export type FechamentoFluxoFinanceiroPatchOpts = {
   numeroFatura?: string
   situacaoFatura?: FechamentoSituacaoFatura
   dataVencimentoFatura?: string
+  /** Data URL do anexo; string vazia limpa o anexo */
+  arquivoAnexo?: string
+  nomeArquivoOriginal?: string
+  tipoArquivo?: string
 }
 
 export function defaultFluxoEntryParaBiblioteca(nowIso?: string): FechamentoFluxoFinanceiroEntry {

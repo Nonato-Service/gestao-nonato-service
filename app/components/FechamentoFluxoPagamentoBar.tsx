@@ -15,7 +15,10 @@ type Props = {
   fluxo: unknown
   labels: Record<string, string | undefined>
   numeroFaturaAtual?: string
+  anexoAtual?: { dataUrl?: string; nome?: string; tipo?: string } | null
   onGuardarNumeroFatura: (relatorioId: string, numero: string) => void
+  onGuardarAnexoFatura?: (relatorioId: string, file: File) => void | Promise<void>
+  onRemoverAnexoFatura?: (relatorioId: string) => void
   onMarcarPago: (relatorioId: string) => void
   onMarcarNaoPago: (relatorioId: string) => void
   compact?: boolean
@@ -43,7 +46,10 @@ export function FechamentoFluxoPagamentoBar({
   fluxo,
   labels,
   numeroFaturaAtual,
+  anexoAtual,
   onGuardarNumeroFatura,
+  onGuardarAnexoFatura,
+  onRemoverAnexoFatura,
   onMarcarPago,
   onMarcarNaoPago,
   compact,
@@ -51,14 +57,18 @@ export function FechamentoFluxoPagamentoBar({
   const fase = getFechamentoFluxoFase(fluxo)
   const modoSemFatura = fechamentoFluxoEhSemFatura(fluxo)
   const inputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
   const aEditarLocalmente = useRef(false)
   const [editandoFatura, setEditandoFatura] = useState(false)
   const [numeroInput, setNumeroInput] = useState(() => String(numeroFaturaAtual ?? '').trim())
+  const [anexoBusy, setAnexoBusy] = useState(false)
   const [popoverRect, setPopoverRect] = useState<{ top: number; left: number; width: number } | null>(
     null
   )
+
+  const temAnexo = Boolean(anexoAtual?.dataUrl && String(anexoAtual.dataUrl).startsWith('data:'))
 
   useEffect(() => {
     if (aEditarLocalmente.current) return
@@ -75,9 +85,9 @@ export function FechamentoFluxoPagamentoBar({
     const el = triggerRef.current
     if (!el || typeof window === 'undefined') return
     const rect = el.getBoundingClientRect()
-    const width = Math.max(rect.width, compact ? 260 : 280)
+    const width = Math.max(rect.width, compact ? 280 : 300)
     const gap = 4
-    const estimatedHeight = 120
+    const estimatedHeight = temAnexo || onGuardarAnexoFatura ? 168 : 120
     const spaceBelow = window.innerHeight - rect.bottom - gap
     const openUp = spaceBelow < estimatedHeight && rect.top > spaceBelow
     const top = openUp ? Math.max(gap, rect.top - estimatedHeight - gap) : rect.bottom + gap
@@ -86,7 +96,7 @@ export function FechamentoFluxoPagamentoBar({
       Math.max(gap, window.innerWidth - width - gap)
     )
     setPopoverRect({ top, left, width })
-  }, [compact])
+  }, [compact, temAnexo, onGuardarAnexoFatura])
 
   useLayoutEffect(() => {
     if (!editandoFatura || !compact) return
@@ -139,6 +149,38 @@ export function FechamentoFluxoPagamentoBar({
     window.setTimeout(() => inputRef.current?.focus(), 0)
   }
 
+  const abrirAnexo = () => {
+    const url = anexoAtual?.dataUrl
+    if (!url || typeof window === 'undefined') return
+    try {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const pedirRemoverAnexo = () => {
+    if (!onRemoverAnexoFatura || !temAnexo) return
+    const msg =
+      labels.fechamentoFluxoConfirmarRemoverAnexo ||
+      labels.faturaRemoverAnexoConfirm ||
+      'Remover o anexo da fatura?'
+    if (typeof window !== 'undefined' && !window.confirm(msg)) return
+    onRemoverAnexoFatura(relatorioId)
+  }
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !onGuardarAnexoFatura) return
+    setAnexoBusy(true)
+    try {
+      await onGuardarAnexoFatura(relatorioId, file)
+    } finally {
+      setAnexoBusy(false)
+    }
+  }
+
   // Compacto: CTA até o utilizador abrir o popover — não estica a linha da tabela
   const mostrarCtaSemFatura =
     !modoSemFatura && fase === 'sem_numero_fatura' && !editandoFatura
@@ -152,13 +194,94 @@ export function FechamentoFluxoPagamentoBar({
   const mostrarPopoverFaturaCompact =
     !modoSemFatura && compact && editandoFatura && (fase === 'sem_numero_fatura' || fase === 'pago' || fase === 'nao_pago')
 
+  const mostrarFaixaAnexo =
+    !modoSemFatura &&
+    Boolean(onGuardarAnexoFatura || onRemoverAnexoFatura) &&
+    (fase === 'aguardar_pagamento' ||
+      fase === 'pago' ||
+      fase === 'nao_pago' ||
+      (fase === 'sem_numero_fatura' && editandoFatura) ||
+      temAnexo)
+
   const submitFormularioFatura = (e: React.FormEvent) => {
     e.preventDefault()
     e.stopPropagation()
     guardarNumero()
   }
 
-  const renderFaturaFormFields = (opts?: { showCancel?: boolean; editTitle?: boolean }) => (
+  const renderAnexoControls = (opts?: { inPopover?: boolean }) => {
+    if (!mostrarFaixaAnexo && !opts?.inPopover) return null
+    if (modoSemFatura) return null
+    if (!onGuardarAnexoFatura && !temAnexo) return null
+    return (
+      <div
+        className={
+          opts?.inPopover
+            ? 'fechamento-fluxo-bar__anexo-row fechamento-fluxo-bar__anexo-row--popover'
+            : 'fechamento-fluxo-bar__anexo-row'
+        }
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,application/pdf,image/*"
+          className="fechamento-fluxo-bar__anexo-input"
+          tabIndex={-1}
+          onChange={onFileChange}
+        />
+        {temAnexo ? (
+          <>
+            <button
+              type="button"
+              className="fechamento-fluxo-bar__btn fechamento-fluxo-bar__btn--ghost fechamento-fluxo-bar__btn--mini"
+              onClick={e => {
+                pararPropagacaoInteracao(e)
+                abrirAnexo()
+              }}
+              title={
+                anexoAtual?.nome
+                  ? `${labels.faturaAbrirAnexo || labels.fechamentoFluxoVerAnexo || 'Ver anexo'} (${anexoAtual.nome})`
+                  : labels.faturaAbrirAnexo || labels.fechamentoFluxoVerAnexo || 'Ver anexo'
+              }
+            >
+              {labels.fechamentoFluxoVerAnexo || labels.faturaAbrirAnexo || 'Ver anexo'}
+            </button>
+            {onRemoverAnexoFatura ? (
+              <button
+                type="button"
+                className="fechamento-fluxo-bar__btn fechamento-fluxo-bar__btn--ghost fechamento-fluxo-bar__btn--mini"
+                disabled={anexoBusy}
+                onClick={e => {
+                  pararPropagacaoInteracao(e)
+                  pedirRemoverAnexo()
+                }}
+                title={labels.fechamentoFluxoRemoverAnexo || labels.faturaRemoverAnexo || 'Remover anexo'}
+              >
+                {labels.fechamentoFluxoRemoverAnexo || labels.faturaRemoverAnexo || 'Remover'}
+              </button>
+            ) : null}
+          </>
+        ) : onGuardarAnexoFatura ? (
+          <button
+            type="button"
+            className="fechamento-fluxo-bar__btn fechamento-fluxo-bar__btn--save fechamento-fluxo-bar__btn--mini"
+            disabled={anexoBusy}
+            onClick={e => {
+              pararPropagacaoInteracao(e)
+              fileInputRef.current?.click()
+            }}
+            title={labels.fechamentoFluxoAnexarFatura || labels.faturaAnexoLabel || 'Anexar fatura'}
+          >
+            {anexoBusy
+              ? '…'
+              : labels.fechamentoFluxoAnexarFatura || 'Anexar'}
+          </button>
+        ) : null}
+      </div>
+    )
+  }
+
+  const renderFaturaFormFields = (opts?: { showCancel?: boolean; editTitle?: boolean; withAnexo?: boolean }) => (
     <>
       <label className="fechamento-fluxo-bar__fatura-label">
         <span className="fechamento-fluxo-bar__fatura-label-text">
@@ -209,6 +332,7 @@ export function FechamentoFluxoPagamentoBar({
           {labels.cancelar || 'Cancelar'}
         </button>
       ) : null}
+      {opts?.withAnexo ? renderAnexoControls({ inPopover: true }) : null}
     </>
   )
 
@@ -234,6 +358,7 @@ export function FechamentoFluxoPagamentoBar({
             {renderFaturaFormFields({
               showCancel: true,
               editTitle: fase === 'pago' || fase === 'nao_pago',
+              withAnexo: true,
             })}
           </form>,
           document.body
@@ -271,6 +396,7 @@ export function FechamentoFluxoPagamentoBar({
           ) : null}
           {renderFaturaFormFields({
             showCancel: fase === 'sem_numero_fatura' && editandoFatura,
+            withAnexo: true,
           })}
         </form>
       ) : null}
@@ -313,6 +439,9 @@ export function FechamentoFluxoPagamentoBar({
         </div>
       ) : null}
 
+      {/* Anexo compacto fora do formulário (aguardar / pago / não pago) */}
+      {!editandoFatura && !mostrarLinhaFaturaInline ? renderAnexoControls() : null}
+
       {fase === 'pago' || fase === 'nao_pago' ? (
         !editandoFatura ? (
           <div className="fechamento-fluxo-bar__formo">
@@ -340,7 +469,7 @@ export function FechamentoFluxoPagamentoBar({
         ) : !compact ? (
           <div className="fechamento-fluxo-bar__fatura-row fechamento-fluxo-bar__fatura-row--overlay">
             <form style={{ display: 'contents' }} onSubmit={submitFormularioFatura}>
-              {renderFaturaFormFields({ showCancel: true, editTitle: true })}
+              {renderFaturaFormFields({ showCancel: true, editTitle: true, withAnexo: true })}
             </form>
           </div>
         ) : null

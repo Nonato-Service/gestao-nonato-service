@@ -13353,6 +13353,29 @@ button.dia-trabalho-acao-btn--del:hover {
   color: rgba(226, 232, 240, 0.85);
   font-variant-numeric: tabular-nums;
 }
+.fechamento-fluxo-bar__anexo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+.fechamento-fluxo-bar__anexo-row--popover {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+.fechamento-fluxo-bar__anexo-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.fechamento-fluxo-bar--compact .fechamento-fluxo-bar__anexo-row .fechamento-fluxo-bar__btn--mini {
+  padding: 3px 6px;
+  font-size: 10px;
+}
 .bib-fluxo-fechamento-wrap {
   position: relative;
   z-index: 4;
