@@ -80,3 +80,19 @@ export {
   createEmptyEquipamentoClienteForm,
   createEmptyRelatorioEquipamentoForm,
 } from './equipamentoClienteForm'
+
+export type {
+  HubEqChip,
+  HubEqChipTone,
+  HubEqTimelineItem,
+  HubEqTimelineTipo,
+  HubEqFaturaLike,
+} from './equipamentoHubPro'
+export {
+  faturaCorrespondeEquipamento,
+  filtrarFaturasDoEquipamento,
+  buildHubEqChips,
+  hubEqChipToneStyle,
+  sortHubEqTimeline,
+  hubEqTimelineTipoIcon,
+} from './equipamentoHubPro'

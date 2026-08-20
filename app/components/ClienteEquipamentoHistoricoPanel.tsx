@@ -25,6 +25,15 @@ import {
   dedupePedidosRelatorioCliente,
 } from '../lib/clienteEquipamentoOrcamentos'
 import type { OrcamentoGeradoRef } from '../lib/clienteEquipamentoOrcamentos'
+import {
+  buildHubEqChips,
+  filtrarFaturasDoEquipamento,
+  hubEqChipToneStyle,
+  hubEqTimelineTipoIcon,
+  sortHubEqTimeline,
+  type HubEqFaturaLike,
+  type HubEqTimelineItem,
+} from '../modules/clientes/equipamentoHubPro'
 
 export type RelatorioEquipamentoHistorico = {
   id: string
@@ -40,7 +49,7 @@ export type RelatorioEquipamentoHistorico = {
 }
 
 /** Vista do hub: filtra secções sem perder dados. */
-export type ClienteEquipamentoHistVista = 'todas' | 'relatorios' | 'pecas' | 'orcamentos'
+export type ClienteEquipamentoHistVista = 'todas' | 'relatorios' | 'pecas' | 'orcamentos' | 'timeline'
 
 type Props = {
   relatorios: RelatorioEquipamentoHistorico[]
@@ -50,6 +59,8 @@ type Props = {
   equipamentoIndex: number
   pedidosRelatorio: PedidoOrcamentoRef[]
   equipamentosArmazem?: EquipamentoArmazemRef[]
+  /** Faturas do cliente (filtradas no painel por equipamento). */
+  faturasCliente?: HubEqFaturaLike[]
   language?: string
   safeT: Record<string, string | undefined>
   loadData?: (key: string) => Promise<unknown>
@@ -61,6 +72,8 @@ type Props = {
   onAtualizarPedidoAvulso?: (pedidos: PedidoAvulsoRef[]) => void
   /** Hub Cliente→Equipamento: mostrar só a secção pedida */
   vista?: ClienteEquipamentoHistVista
+  /** Chips de estado no topo (visão profissional do hub). */
+  mostrarBarraEstado?: boolean
 }
 
 const PEDIDOS_AVULSO_KEY = 'nonato-pedidos-orcamento-avulso'
@@ -97,6 +110,7 @@ export function ClienteEquipamentoHistoricoPanel({
   equipamentoIndex,
   pedidosRelatorio,
   equipamentosArmazem = [],
+  faturasCliente = [],
   language = 'pt-BR',
   safeT,
   loadData,
@@ -106,6 +120,7 @@ export function ClienteEquipamentoHistoricoPanel({
   onVisualizarPdfRelatorio,
   onVisualizarPdfAvulso,
   vista = 'todas',
+  mostrarBarraEstado = false,
 }: Props) {
   const tr = (key: string) => safeT[key] ?? key
   const locale = localeDatetimeGeneral(language)
@@ -113,6 +128,7 @@ export function ClienteEquipamentoHistoricoPanel({
   const showOrcamentos = vista === 'todas' || vista === 'orcamentos'
   const showColServico = vista === 'todas' || vista === 'relatorios'
   const showColPecas = vista === 'todas' || vista === 'pecas'
+  const showTimeline = vista === 'timeline'
 
   const fmtDate = (d: string) => {
     try {
@@ -429,6 +445,112 @@ export function ClienteEquipamentoHistoricoPanel({
   )
   const gruposParaVista = vista === 'pecas' ? gruposComPecas : gruposPorNumero
 
+  const faturasEquipamento = useMemo(
+    () => filtrarFaturasDoEquipamento(faturasCliente, equipamento, equipamentoIndex),
+    [faturasCliente, equipamento, equipamentoIndex]
+  )
+
+  const hubChips = useMemo(() => {
+    const rsAbertos = relatorios.filter((r) => !r.servicoConcluido).length
+    const fatPendentes = faturasEquipamento.filter((f) => f.status === 'pendente').length
+    const fatVencidas = faturasEquipamento.filter((f) => f.status === 'vencida').length
+    return buildHubEqChips({
+      rsAbertos,
+      orcPendentes: pedidosOrcamentoPendentes.length,
+      fatPendentes,
+      fatVencidas,
+    })
+  }, [relatorios, pedidosOrcamentoPendentes.length, faturasEquipamento])
+
+  const timelineItems = useMemo(() => {
+    const items: HubEqTimelineItem[] = []
+    for (const rel of relatorios) {
+      items.push({
+        id: `rs-${rel.id}`,
+        tipo: 'relatorio',
+        dataIso: rel.data || '',
+        titulo: `${tr('numeroRelatorio')} ${rel.numero}`,
+        subtitulo: [rel.tecnico, rel.tipoServico].filter(Boolean).join(' · ') || undefined,
+        statusLabel: rel.servicoConcluido
+          ? tr('concluido') !== 'concluido'
+            ? tr('concluido')
+            : 'Concluído'
+          : tr('emAberto') !== 'emAberto'
+            ? tr('emAberto')
+            : 'Em aberto',
+      })
+    }
+    for (const p of pedidosFiltrados) {
+      const st = badgePedido(p.status)
+      items.push({
+        id: `pr-${p.id}`,
+        tipo: 'pedido',
+        dataIso: p.dataGeracao || p.data || '',
+        titulo: `${tr('pedidosOrcamento')} · ${p.numeroRelatorio || p.codigo || p.id}`,
+        subtitulo: p.maquinaModelo || p.cliente,
+        statusLabel: st.label,
+      })
+    }
+    for (const p of pedidosAvulsoFiltrados) {
+      const orc = findOrcamentoGeradoParaPedidoAvulso(p, orcamentosEquipamento)
+      const stRaw = statusEfetivoPedidoAvulso(p, orc) || 'pendente'
+      items.push({
+        id: `pa-${p.codigo}`,
+        tipo: 'pedido',
+        dataIso: p.dataGeracao || p.geradoEm || '',
+        titulo: `${tr('hubEqTabPecas')} · ${p.codigo}`,
+        subtitulo: p.equipamentoTexto || p.clienteNomeReal,
+        statusLabel: String(stRaw),
+      })
+    }
+    for (const o of orcamentosEquipamento) {
+      items.push({
+        id: `og-${o.id}`,
+        tipo: 'orcamento',
+        dataIso: o.dataCriacao || o.geradoEm || o.data || '',
+        titulo: `${tr('hubEqTabOrcamentos')} · ${o.numeroOrcamento || o.id}`,
+        subtitulo: o.descricao || badgeWorkflow(o),
+        statusLabel: badgeWorkflow(o),
+      })
+    }
+    for (const f of faturasEquipamento) {
+      const st =
+        f.status === 'paga'
+          ? tr('pagosLabel') !== 'pagosLabel'
+            ? tr('pagosLabel')
+            : 'Paga'
+          : f.status === 'vencida'
+            ? tr('vencida') !== 'vencida'
+              ? tr('vencida')
+              : 'Vencida'
+            : f.status === 'cancelada'
+              ? tr('cancelado') !== 'cancelado'
+                ? tr('cancelado')
+                : 'Cancelada'
+              : tr('pendentesLabel') !== 'pendentesLabel'
+                ? tr('pendentesLabel')
+                : 'Pendente'
+      items.push({
+        id: `fat-${f.id}`,
+        tipo: 'fatura',
+        dataIso: f.dataEmissao || '',
+        titulo: `${tr('clienteFaturasTitle') !== 'clienteFaturasTitle' ? tr('clienteFaturasTitle') : 'Fatura'} ${f.numeroFatura || f.id}`,
+        subtitulo:
+          typeof f.valorTotal === 'number' ? `${f.valorTotal.toFixed(2)} €` : undefined,
+        statusLabel: st,
+      })
+    }
+    return sortHubEqTimeline(items)
+  }, [
+    relatorios,
+    pedidosFiltrados,
+    pedidosAvulsoFiltrados,
+    orcamentosEquipamento,
+    faturasEquipamento,
+    language,
+    safeT,
+  ])
+
   const emptyMsgKey =
     vista === 'pecas'
       ? 'hubEqPecasVazio'
@@ -436,7 +558,95 @@ export function ClienteEquipamentoHistoricoPanel({
         ? 'hubEqOrcamentosVazio'
         : vista === 'relatorios'
           ? 'hubEqRelatoriosVazio'
-          : 'nenhumHistoricoEquipamento'
+          : vista === 'timeline'
+            ? 'hubEqTimelineVazio'
+            : 'nenhumHistoricoEquipamento'
+
+  const barraEstado = mostrarBarraEstado ? (
+    <div
+      className="cliente-equip-hist__estado"
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '8px',
+        marginBottom: '14px',
+      }}
+    >
+      {hubChips.map((chip) => {
+        const tone = hubEqChipToneStyle(chip.tone)
+        return (
+          <span
+            key={chip.id}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 10px',
+              borderRadius: '999px',
+              fontSize: '11px',
+              fontWeight: 700,
+              letterSpacing: '0.02em',
+              ...tone,
+            }}
+          >
+            {tr(chip.labelKey) !== chip.labelKey ? tr(chip.labelKey) : chip.fallback}
+            {chip.count > 0 ? (
+              <span style={{ opacity: 0.9 }}>({chip.count})</span>
+            ) : null}
+          </span>
+        )
+      })}
+    </div>
+  ) : null
+
+  if (showTimeline) {
+    if (timelineItems.length === 0) {
+      return (
+        <div className="cliente-equip-hist cliente-equip-hist--empty">
+          {barraEstado}
+          <p className="cliente-equip-hist__empty">{tr(emptyMsgKey)}</p>
+        </div>
+      )
+    }
+    return (
+      <div className="cliente-equip-hist">
+        {barraEstado}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {timelineItems.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'auto 1fr auto',
+                gap: '12px',
+                alignItems: 'start',
+                padding: '12px 14px',
+                borderRadius: '12px',
+                border: '1px solid rgba(0, 200, 83, 0.18)',
+                background: 'rgba(0,0,0,0.28)',
+              }}
+            >
+              <span style={{ fontSize: '18px', lineHeight: 1 }}>{hubEqTimelineTipoIcon(item.tipo)}</span>
+              <div>
+                <div style={{ color: '#fff', fontSize: '13px', fontWeight: 700 }}>{item.titulo}</div>
+                {item.subtitulo ? (
+                  <div style={{ marginTop: '4px', fontSize: '12px', color: 'rgba(255,255,255,0.55)' }}>
+                    {item.subtitulo}
+                  </div>
+                ) : null}
+              </div>
+              <div style={{ textAlign: 'right', fontSize: '11px', color: 'rgba(185,255,208,0.85)' }}>
+                <div>{item.dataIso ? fmtDate(item.dataIso) : '—'}</div>
+                {item.statusLabel ? (
+                  <div style={{ marginTop: '4px', color: 'rgba(255,255,255,0.55)' }}>{item.statusLabel}</div>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   if (
     (vista === 'relatorios' && gruposPorNumero.length === 0) ||
@@ -452,6 +662,7 @@ export function ClienteEquipamentoHistoricoPanel({
   ) {
     return (
       <div className="cliente-equip-hist cliente-equip-hist--empty">
+        {barraEstado}
         <p className="cliente-equip-hist__empty">{tr(emptyMsgKey)}</p>
       </div>
     )
@@ -459,6 +670,7 @@ export function ClienteEquipamentoHistoricoPanel({
 
   return (
     <div className="cliente-equip-hist">
+      {barraEstado}
       {vista === 'todas' && (
       <div className="cliente-equip-hist__header">
         <h4 className="cliente-equip-hist__title">📂 {tr('equipHistoricoDesteEquipamento')}</h4>

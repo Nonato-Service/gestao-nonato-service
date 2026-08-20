@@ -73875,6 +73875,9 @@ A1;Peça exemplo;10`}
                               equipamentoIndex={index}
                               pedidosRelatorio={pedidosOrcamento}
                               equipamentosArmazem={equipamentos}
+                              faturasCliente={faturasPecas.filter(
+                                (f) => f.clienteId === selectedClienteForEquipamento.id
+                              )}
                               language={selectedLanguage}
                               safeT={safeT as Record<string, string | undefined>}
                               loadData={loadData}

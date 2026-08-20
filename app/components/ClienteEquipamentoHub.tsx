@@ -12,8 +12,9 @@ import type {
   EquipamentoClienteRef,
   EquipamentoArmazemRef,
 } from '../lib/clienteEquipamentoOrcamentos'
+import type { HubEqFaturaLike } from '../modules/clientes/equipamentoHubPro'
 
-type HubTab = 'relatorios' | 'pecas' | 'orcamentos'
+type HubTab = 'timeline' | 'relatorios' | 'pecas' | 'orcamentos'
 
 type Props = {
   relatorios: RelatorioEquipamentoHistorico[]
@@ -23,6 +24,7 @@ type Props = {
   equipamentoIndex: number
   pedidosRelatorio: PedidoOrcamentoRef[]
   equipamentosArmazem?: EquipamentoArmazemRef[]
+  faturasCliente?: HubEqFaturaLike[]
   language?: string
   safeT: Record<string, string | undefined>
   loadData?: (key: string) => Promise<unknown>
@@ -32,15 +34,13 @@ type Props = {
   onVisualizarPdfRelatorio?: (pedido: PedidoOrcamentoRef) => void
   onVisualizarPdfAvulso?: (pedido: PedidoAvulsoRef) => void
   onAtualizarPedidoAvulso?: (pedidos: PedidoAvulsoRef[]) => void
-  /** Abre formulário de novo relatório de serviço com cliente + equipamento preenchidos. */
   onNovoRelatorio?: () => void
-  /** Abre modal de nova fatura de peças com cliente + equipamento preenchidos. */
   onNovaFatura?: () => void
-  /** Abre pedido de orçamento/peças avulso com cliente + equipamento preenchidos. */
   onNovoPedidoOrcamento?: () => void
 }
 
 const TABS: Array<{ id: HubTab; vista: ClienteEquipamentoHistVista; labelKey: string; fallback: string; icon: string }> = [
+  { id: 'timeline', vista: 'timeline', labelKey: 'hubEqTabTimeline', fallback: 'Timeline', icon: '🕒' },
   { id: 'relatorios', vista: 'relatorios', labelKey: 'hubEqTabRelatorios', fallback: 'Relatórios de Serviço', icon: '📋' },
   { id: 'pecas', vista: 'pecas', labelKey: 'hubEqTabPecas', fallback: 'Pedidos de Peças', icon: '🔧' },
   { id: 'orcamentos', vista: 'orcamentos', labelKey: 'hubEqTabOrcamentos', fallback: 'Orçamentos', icon: '💶' },
@@ -60,7 +60,7 @@ const btnCriarStyle: React.CSSProperties = {
 }
 
 export function ClienteEquipamentoHub(props: Props) {
-  const [tab, setTab] = useState<HubTab>('relatorios')
+  const [tab, setTab] = useState<HubTab>('timeline')
   const tr = (key: string, fb: string) => props.safeT[key] || fb
   const active = TABS.find((t) => t.id === tab) || TABS[0]
   const temAcoesCriar = Boolean(props.onNovoRelatorio || props.onNovaFatura || props.onNovoPedidoOrcamento)
@@ -119,49 +119,33 @@ export function ClienteEquipamentoHub(props: Props) {
             borderBottom: '1px solid rgba(0, 200, 83, 0.18)',
           }}
         >
-          <span
-            style={{
-              fontSize: '11px',
-              color: 'rgba(255,255,255,0.55)',
-              marginRight: '4px',
-            }}
-          >
+          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', marginRight: '4px' }}>
             {tr('hubEqCriarBarraHint', 'Criar a partir deste equipamento:')}
           </span>
           {props.onNovoRelatorio && (
-            <button
-              type="button"
-              className="cliente-equip-hub__criar-relatorio"
-              onClick={props.onNovoRelatorio}
-              style={btnCriarStyle}
-            >
+            <button type="button" className="cliente-equip-hub__criar-relatorio" onClick={props.onNovoRelatorio} style={btnCriarStyle}>
               ➕ {tr('hubEqCriarRelatorio', 'Novo Relatório')}
             </button>
           )}
           {props.onNovoPedidoOrcamento && (
-            <button
-              type="button"
-              className="cliente-equip-hub__criar-orcamento"
-              onClick={props.onNovoPedidoOrcamento}
-              style={btnCriarStyle}
-            >
+            <button type="button" className="cliente-equip-hub__criar-orcamento" onClick={props.onNovoPedidoOrcamento} style={btnCriarStyle}>
               🔧 {tr('hubEqCriarOrcamento', 'Pedido / Orçamento')}
             </button>
           )}
           {props.onNovaFatura && (
-            <button
-              type="button"
-              className="cliente-equip-hub__criar-fatura"
-              onClick={props.onNovaFatura}
-              style={btnCriarStyle}
-            >
+            <button type="button" className="cliente-equip-hub__criar-fatura" onClick={props.onNovaFatura} style={btnCriarStyle}>
               💶 {tr('hubEqCriarFatura', 'Nova Fatura')}
             </button>
           )}
         </div>
       )}
 
-      <ClienteEquipamentoHistoricoPanel {...props} vista={active.vista} />
+      <ClienteEquipamentoHistoricoPanel
+        {...props}
+        vista={active.vista}
+        mostrarBarraEstado
+        faturasCliente={props.faturasCliente}
+      />
     </div>
   )
 }

@@ -1949,11 +1949,13 @@ try {
     hub.includes('hubEqTabRelatorios') &&
     hub.includes('hubEqTabPecas') &&
     hub.includes('hubEqTabOrcamentos') &&
-    hub.includes('vista={active.vista}')
+    hub.includes('hubEqTabTimeline') &&
+    hub.includes('vista={active.vista}') &&
+    hub.includes('mostrarBarraEstado')
   ) {
-    ok('ClienteEquipamentoHub com tabs RS / peças / orçamentos')
+    ok('ClienteEquipamentoHub com tabs Timeline / RS / peças / orçamentos + estado')
   } else {
-    fail('ClienteEquipamentoHub incompleto (tabs/vista)')
+    fail('ClienteEquipamentoHub incompleto (tabs/vista/estado)')
   }
   if (
     hub.includes('onNovoRelatorio') &&
@@ -1974,6 +1976,21 @@ try {
   } else {
     fail('HistoricoPanel sem empty state para vista=pecas')
   }
+  if (
+    hist.includes("vista === 'timeline'") &&
+    hist.includes('buildHubEqChips') &&
+    hist.includes('hubEqTimelineVazio') &&
+    hist.includes('mostrarBarraEstado')
+  ) {
+    ok('HistoricoPanel com timeline + chips de estado')
+  } else {
+    fail('HistoricoPanel sem timeline/chips profissionais')
+  }
+  if (exists('app/modules/clientes/equipamentoHubPro.ts')) {
+    ok('existe app/modules/clientes/equipamentoHubPro.ts')
+  } else {
+    fail('em falta: app/modules/clientes/equipamentoHubPro.ts')
+  }
   const det = fs.readFileSync(path.join(root, 'app/components/ClienteDetalheView.tsx'), 'utf8')
   if (det.includes('ClienteFaturasSection') && det.includes('faturasPecas')) {
     ok('ClienteDetalheView liga ClienteFaturasSection')
@@ -1985,6 +2002,11 @@ try {
     ok('NonatoMainApp usa ClienteEquipamentoHub')
   } else {
     fail('NonatoMainApp sem ClienteEquipamentoHub')
+  }
+  if (nma.includes('faturasCliente=')) {
+    ok('NonatoMainApp passa faturasCliente ao hub')
+  } else {
+    fail('NonatoMainApp sem faturasCliente no hub')
   }
   if (
     nma.includes('onNovaFatura={') &&
