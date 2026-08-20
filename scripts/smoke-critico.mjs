@@ -2018,11 +2018,40 @@ try {
   } else {
     fail('ClienteDetalheView sem ClienteFaturasSection')
   }
+  if (
+    det.includes('onAssociarEquipamentoFatura') &&
+    det.includes('buildHubEqChips') &&
+    det.includes('hubEqChipToneStyle')
+  ) {
+    ok('ClienteDetalheView: associar fatura + chips equipamento')
+  } else {
+    fail('ClienteDetalheView sem associar fatura / chips')
+  }
+  const fatSec = fs.readFileSync(path.join(root, 'app/components/ClienteFaturasSection.tsx'), 'utf8')
+  if (
+    fatSec.includes('onAssociarEquipamento') &&
+    fatSec.includes('clienteFaturaAssociar') &&
+    fatSec.includes('clienteFaturaEscolherEquipamento')
+  ) {
+    ok('ClienteFaturasSection: UI associar equipamento')
+  } else {
+    fail('ClienteFaturasSection sem UI associar')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes('ClienteEquipamentoHub')) {
     ok('NonatoMainApp usa ClienteEquipamentoHub')
   } else {
     fail('NonatoMainApp sem ClienteEquipamentoHub')
+  }
+  if (nma.includes('onAssociarEquipamentoFatura=') && nma.includes("saveData('nonato-faturas-pecas'")) {
+    ok('NonatoMainApp grava associação fatura→equipamento')
+  } else {
+    fail('NonatoMainApp sem wire associar fatura')
+  }
+  if (nma.includes('hubChipsCard') && nma.includes('buildHubEqChips')) {
+    ok('NonatoMainApp: chips no cartão do equipamento')
+  } else {
+    fail('NonatoMainApp sem chips no cartão equipamento')
   }
   if (nma.includes('faturasCliente=')) {
     ok('NonatoMainApp passa faturasCliente ao hub')

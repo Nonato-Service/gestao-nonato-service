@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 
 export type ClienteFaturaListItem = {
   id: string
@@ -28,25 +28,43 @@ type Props = {
   safeT: Record<string, string | undefined>
   language?: string
   onOpenAnexo?: (fatura: ClienteFaturaListItem) => void
+  onAssociarEquipamento?: (faturaId: string, equipamentoId: string, equipamentoTexto: string) => void
 }
 
-function rotuloEquipamento(eq: EquipamentoOpt, index: number): string {
+export function rotuloEquipamentoFatura(eq: EquipamentoOpt, index: number): string {
   const parts = [eq.marca, eq.modelo, eq.numeroSerie].filter(Boolean)
   if (parts.length) return parts.join(' · ')
   if (eq.tipoEquipamento) return eq.tipoEquipamento
   return eq.id || `#${index + 1}`
 }
 
-export function ClienteFaturasSection({ faturas, equipamentos, safeT, language = 'pt-BR', onOpenAnexo }: Props) {
+function faturaSemEquipamentoUtil(f: ClienteFaturaListItem): boolean {
+  return !String(f.equipamentoId || '').trim() && !String(f.equipamentoTexto || '').trim()
+}
+
+export function ClienteFaturasSection({
+  faturas,
+  equipamentos,
+  safeT,
+  language = 'pt-BR',
+  onOpenAnexo,
+  onAssociarEquipamento,
+}: Props) {
   const tr = (key: string, fb: string) => safeT[key] || fb
+  const [selByFat, setSelByFat] = useState<Record<string, string>>({})
 
   const eqLabelById = useMemo(() => {
     const map = new Map<string, string>()
     equipamentos.forEach((eq, i) => {
-      if (eq.id) map.set(String(eq.id), rotuloEquipamento(eq, i))
+      if (eq.id) map.set(String(eq.id), rotuloEquipamentoFatura(eq, i))
     })
     return map
   }, [equipamentos])
+
+  const equipamentosComId = useMemo(
+    () => equipamentos.map((eq, i) => ({ eq, i })).filter(({ eq }) => String(eq.id || '').trim()),
+    [equipamentos]
+  )
 
   const fmt = (n: number) => {
     try {
@@ -76,6 +94,20 @@ export function ClienteFaturasSection({ faturas, equipamentos, safeT, language =
     return s || '—'
   }
 
+  const temOrfas =
+    Boolean(onAssociarEquipamento) &&
+    faturas.some(faturaSemEquipamentoUtil) &&
+    equipamentosComId.length > 0
+
+  const associar = (faturaId: string) => {
+    if (!onAssociarEquipamento) return
+    const eqId = String(selByFat[faturaId] || '').trim()
+    if (!eqId) return
+    const found = equipamentosComId.find(({ eq }) => String(eq.id) === eqId)
+    if (!found?.eq.id) return
+    onAssociarEquipamento(faturaId, found.eq.id, rotuloEquipamentoFatura(found.eq, found.i))
+  }
+
   return (
     <section className="cliente-detalhe-v2__card">
       <h3 className="cliente-detalhe-v2__section-title cliente-detalhe-v2__section-title--solo">
@@ -84,6 +116,14 @@ export function ClienteFaturasSection({ faturas, equipamentos, safeT, language =
       <p style={{ margin: '0 0 14px', fontSize: '13px', color: 'rgba(255,255,255,0.55)' }}>
         {tr('clienteFaturasHint', 'Cada fatura pode estar ligada a um equipamento deste cliente.')}
       </p>
+      {temOrfas ? (
+        <p style={{ margin: '0 0 14px', fontSize: '12px', color: 'rgba(255, 193, 7, 0.85)' }}>
+          {tr(
+            'clienteFaturaAssociarHint',
+            'Há faturas sem equipamento. Escolha o equipamento e toque em Associar.'
+          )}
+        </p>
+      ) : null}
       {faturas.length === 0 ? (
         <p style={{ margin: 0, fontSize: '14px', color: 'rgba(255,255,255,0.5)' }}>
           {tr('clienteFaturasVazio', 'Nenhuma fatura registada para este cliente.')}
@@ -91,10 +131,13 @@ export function ClienteFaturasSection({ faturas, equipamentos, safeT, language =
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {faturas.map((f) => {
+            const semEq = faturaSemEquipamentoUtil(f)
             const eqTxt =
               f.equipamentoTexto ||
               (f.equipamentoId ? eqLabelById.get(String(f.equipamentoId)) : undefined) ||
               tr('clienteFaturaSemEquipamento', 'Sem equipamento')
+            const podeAssociar =
+              Boolean(onAssociarEquipamento) && equipamentosComId.length > 0 && semEq
             return (
               <div
                 key={f.id}
@@ -111,9 +154,23 @@ export function ClienteFaturasSection({ faturas, equipamentos, safeT, language =
                   </strong>
                   <span style={{ fontSize: '12px', color: 'rgba(185,255,208,0.9)' }}>{statusLabel(f.status)}</span>
                 </div>
-                <div style={{ marginTop: '6px', fontSize: '12px', color: 'rgba(255,255,255,0.65)', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                  <span>{tr('dataLabel', 'Data')}: {fmtDate(f.dataEmissao)}</span>
-                  <span>{tr('totalLabel', 'Total')}: {fmt(f.valorTotal)}</span>
+                <div
+                  style={{
+                    marginTop: '6px',
+                    fontSize: '12px',
+                    color: 'rgba(255,255,255,0.65)',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '10px',
+                    alignItems: 'center',
+                  }}
+                >
+                  <span>
+                    {tr('dataLabel', 'Data')}: {fmtDate(f.dataEmissao)}
+                  </span>
+                  <span>
+                    {tr('totalLabel', 'Total')}: {fmt(f.valorTotal)}
+                  </span>
                   <span>🔧 {eqTxt}</span>
                 </div>
                 {f.arquivoAnexo && onOpenAnexo && (
@@ -134,6 +191,62 @@ export function ClienteFaturasSection({ faturas, equipamentos, safeT, language =
                     📎 {tr('verAnexoFatura', 'Ver anexo')}
                   </button>
                 )}
+                {podeAssociar ? (
+                  <div
+                    style={{
+                      marginTop: '10px',
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '8px',
+                      alignItems: 'center',
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <select
+                      value={selByFat[f.id] || ''}
+                      onChange={(e) => setSelByFat((prev) => ({ ...prev, [f.id]: e.target.value }))}
+                      aria-label={tr('clienteFaturaEscolherEquipamento', 'Escolher equipamento')}
+                      style={{
+                        flex: '1 1 180px',
+                        minWidth: '160px',
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(0, 200, 83, 0.35)',
+                        background: '#1a1a1a',
+                        color: '#fff',
+                        fontSize: '12px',
+                      }}
+                    >
+                      <option value="">
+                        {tr('clienteFaturaEscolherEquipamento', 'Escolher equipamento…')}
+                      </option>
+                      {equipamentosComId.map(({ eq, i }) => (
+                        <option key={String(eq.id)} value={String(eq.id)}>
+                          {rotuloEquipamentoFatura(eq, i)}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      disabled={!selByFat[f.id]}
+                      onClick={() => associar(f.id)}
+                      style={{
+                        padding: '8px 12px',
+                        fontSize: '12px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(0, 200, 83, 0.45)',
+                        background: selByFat[f.id]
+                          ? 'rgba(0, 200, 83, 0.18)'
+                          : 'rgba(255,255,255,0.06)',
+                        color: selByFat[f.id] ? '#00c853' : 'rgba(255,255,255,0.4)',
+                        cursor: selByFat[f.id] ? 'pointer' : 'not-allowed',
+                      }}
+                    >
+                      {tr('clienteFaturaAssociar', 'Associar')}
+                    </button>
+                  </div>
+                ) : null}
               </div>
             )
           })}

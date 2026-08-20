@@ -411,6 +411,9 @@ import {
   updateClientePrioritarioFromForm,
   createEmptyEquipamentoClienteForm,
   createEmptyRelatorioEquipamentoForm,
+  buildHubEqChips,
+  hubEqChipToneStyle,
+  filtrarFaturasDoEquipamento,
 } from './modules/clientes'
 import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasLinkedMenuAccess, hasStrictMenuPolicy, normalizeMenuItems, normalizeMenuItemsWithLegacyFallback, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
@@ -778,6 +781,8 @@ import {
   resolveImagemItemOrcamentoParaGravar,
   resolveImagemItemOrcamentoDisplay,
   itemOrcamentoDeveMostrarImagem,
+  pedidoRelatorioCorrespondeEquipamento,
+  pedidoRelatorioPendente,
 } from './modules/orcamentos'
 import { ClienteEquipamentoHub } from './components/ClienteEquipamentoHub'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
@@ -34758,6 +34763,36 @@ export default function Dashboard() {
                       }}
                       onAtualizarOrcamentosGerados={async (orcamentos) => {
                         await saveData('nonato-orcamentos-avulso', orcamentos)
+                      }}
+                      onAssociarEquipamentoFatura={(faturaId, equipamentoId, equipamentoTexto) => {
+                        const fid = String(faturaId || '').trim()
+                        const eid = String(equipamentoId || '').trim()
+                        if (!fid || !eid) return
+                        if (!Array.isArray(faturasPecas) || faturasPecas.length === 0) return
+                        const updated = faturasPecas.map((f) =>
+                          f.id === fid
+                            ? {
+                                ...f,
+                                equipamentoId: eid,
+                                equipamentoTexto: String(equipamentoTexto || '').trim() || f.equipamentoTexto,
+                              }
+                            : f
+                        )
+                        if (updated.length !== faturasPecas.length) return
+                        const stillHasAll = faturasPecas.every((orig) =>
+                          updated.some((u) => u.id === orig.id)
+                        )
+                        if (!stillHasAll) return
+                        setFaturasPecas(updated)
+                        saveData('nonato-faturas-pecas', updated)
+                        try {
+                          window.alert(
+                            (safeT as any)?.clienteFaturaAssociadaOk ||
+                              'Equipamento associado à fatura.'
+                          )
+                        } catch {
+                          /* ignore */
+                        }
                       }}
                     />
                   )
@@ -73923,6 +73958,31 @@ A1;Peça exemplo;10`}
                       clientes,
                     })
                     const equipamentoPhoto = equipamento.photo || equipamento.coverPhoto
+                    const faturasClienteEq = faturasPecas.filter(
+                      (f) => f.clienteId === selectedClienteForEquipamento.id
+                    )
+                    const faturasEqCard = filtrarFaturasDoEquipamento(
+                      faturasClienteEq,
+                      equipamento,
+                      index
+                    )
+                    const orcPendCard = (pedidosOrcamento || []).filter(
+                      (p) =>
+                        pedidoRelatorioCorrespondeEquipamento(
+                          p,
+                          selectedClienteForEquipamento.id,
+                          equipamento,
+                          index,
+                          selectedClienteForEquipamento.nomeEmpresa,
+                          equipamentos
+                        ) && pedidoRelatorioPendente(p.status)
+                    ).length
+                    const hubChipsCard = buildHubEqChips({
+                      rsAbertos: relatoriosServicoEquipamento.filter((r) => !r.servicoConcluido).length,
+                      orcPendentes: orcPendCard,
+                      fatPendentes: faturasEqCard.filter((f) => f.status === 'pendente').length,
+                      fatVencidas: faturasEqCard.filter((f) => f.status === 'vencida').length,
+                    })
                     return (
                       <div
                         className="equipamento-cliente-card"
@@ -73984,6 +74044,39 @@ A1;Peça exemplo;10`}
                               <p style={{ margin: 0, fontSize: '11px', fontWeight: '600', color: 'rgba(0, 200, 83, 0.95)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{equipamento.tipoEquipamento}</p>
                               <h3 style={{ margin: '10px 0 8px', fontSize: '19px', fontWeight: '700', color: '#fff', letterSpacing: '0.02em', lineHeight: '1.25' }}>{equipamento.modelo}</h3>
                               <p style={{ margin: 0, fontSize: '14px', color: 'rgba(255,255,255,0.78)' }}>{equipamento.marca}{equipamento.numeroSerie ? ` · ${equipamento.numeroSerie}` : ''}</p>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  flexWrap: 'wrap',
+                                  gap: '6px',
+                                  marginTop: '10px',
+                                }}
+                              >
+                                {hubChipsCard.map((chip) => {
+                                  const tone = hubEqChipToneStyle(chip.tone)
+                                  return (
+                                    <span
+                                      key={chip.id}
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        padding: '4px 9px',
+                                        borderRadius: '999px',
+                                        fontSize: '11px',
+                                        fontWeight: 700,
+                                        letterSpacing: '0.02em',
+                                        ...tone,
+                                      }}
+                                    >
+                                      {(safeT as any)?.[chip.labelKey] || chip.fallback}
+                                      {chip.count > 0 ? (
+                                        <span style={{ opacity: 0.9 }}>({chip.count})</span>
+                                      ) : null}
+                                    </span>
+                                  )
+                                })}
+                              </div>
                             </div>
 
                             <div className="equipamento-cliente-card-toolbar">

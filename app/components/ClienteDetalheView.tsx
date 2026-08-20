@@ -30,6 +30,16 @@ import { ClienteDevedorNomeTag } from './ClienteDevedorNomeTag'
 import { ClienteOrcamentosFichaSection } from './ClienteOrcamentosFichaSection'
 import { ClienteFaturasSection } from './ClienteFaturasSection'
 import type { PedidoOrcamentoRef, PedidoAvulsoRef, OrcamentoGeradoRef } from '../lib/clienteEquipamentoOrcamentos'
+import {
+  pedidoRelatorioCorrespondeEquipamento,
+  pedidoRelatorioPendente,
+} from '../lib/clienteEquipamentoOrcamentos'
+import {
+  buildHubEqChips,
+  hubEqChipToneStyle,
+  filtrarFaturasDoEquipamento,
+} from '../modules/clientes'
+import { coletarRelatoriosServicoPorEquipamentoCliente } from '../modules/equipamentos'
 
 function useDetalheTr(language: string) {
   return useMemo(() => {
@@ -85,6 +95,7 @@ type Props = {
   onVisualizarPdfAvulso?: (pedido: PedidoAvulsoRef) => void
   onAtualizarPedidoAvulso?: (pedidos: PedidoAvulsoRef[]) => void
   onAtualizarOrcamentosGerados?: (orcamentos: OrcamentoGeradoRef[]) => void
+  onAssociarEquipamentoFatura?: (faturaId: string, equipamentoId: string, equipamentoTexto: string) => void
 }
 
 function IconArrowLeft({ className }: { className?: string }) {
@@ -236,6 +247,7 @@ export function ClienteDetalheView({
   onVisualizarPdfAvulso,
   onAtualizarPedidoAvulso,
   onAtualizarOrcamentosGerados,
+  onAssociarEquipamentoFatura,
 }: Props) {
   const tr = useDetalheTr(language)
 
@@ -489,6 +501,41 @@ export function ClienteDetalheView({
             {equipamentos.map((eq, index) => {
               const photo = eq.photo || eq.coverPhoto
               const idEquip = rotuloIdEquipamentoCliente(eq, equipamentosArmazem, index)
+              const rsEq = coletarRelatoriosServicoPorEquipamentoCliente({
+                cliente: {
+                  id: cliente.id,
+                  nomeEmpresa: cliente.nomeEmpresa,
+                  relatorios: cliente.relatorios,
+                  equipamentos,
+                },
+                equipamento: eq,
+                equipamentoIndex: index,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                relatoriosServico: relatoriosServico as any,
+                equipamentosArmazem,
+              })
+              const faturasEq = filtrarFaturasDoEquipamento(
+                faturasPecas.filter((f) => f.clienteId === cliente.id),
+                eq,
+                index
+              )
+              const orcPendentes = pedidosRelatorio.filter(
+                (p) =>
+                  pedidoRelatorioCorrespondeEquipamento(
+                    p,
+                    cliente.id,
+                    eq,
+                    index,
+                    cliente.nomeEmpresa,
+                    equipamentosArmazem
+                  ) && pedidoRelatorioPendente(p.status)
+              ).length
+              const hubChips = buildHubEqChips({
+                rsAbertos: rsEq.filter((r) => !r.servicoConcluido).length,
+                orcPendentes,
+                fatPendentes: faturasEq.filter((f) => f.status === 'pendente').length,
+                fatVencidas: faturasEq.filter((f) => f.status === 'vencida').length,
+              })
               return (
                 <button
                   key={eq.id || `${eq.numeroSerie}-${index}`}
@@ -511,6 +558,37 @@ export function ClienteDetalheView({
                       </span>
                     ) : null}
                     {eq.numeroSerie ? <span>{eq.numeroSerie}</span> : null}
+                    <span
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '4px',
+                        marginTop: '6px',
+                      }}
+                    >
+                      {hubChips.map((chip) => {
+                        const tone = hubEqChipToneStyle(chip.tone)
+                        return (
+                          <span
+                            key={chip.id}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '2px 7px',
+                              borderRadius: '999px',
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              letterSpacing: '0.02em',
+                              ...tone,
+                            }}
+                          >
+                            {(safeT[chip.labelKey] || chip.fallback)}
+                            {chip.count > 0 ? <span style={{ opacity: 0.9 }}>({chip.count})</span> : null}
+                          </span>
+                        )
+                      })}
+                    </span>
                   </div>
                 </button>
               )
@@ -551,6 +629,7 @@ export function ClienteDetalheView({
         equipamentos={equipamentos}
         safeT={safeT}
         language={language}
+        onAssociarEquipamento={onAssociarEquipamentoFatura}
         onOpenAnexo={(fatura) => {
           if (!fatura.arquivoAnexo) return
           try {
