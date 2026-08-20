@@ -12,7 +12,7 @@ import type {
   EquipamentoClienteRef,
   EquipamentoArmazemRef,
 } from '../lib/clienteEquipamentoOrcamentos'
-import type { HubEqFaturaLike } from '../modules/clientes/equipamentoHubPro'
+import type { HubEqCriarFaturaDeOrcamentoPayload, HubEqFaturaLike, HubEqTimelineItem } from '../modules/clientes/equipamentoHubPro'
 
 type HubTab = 'timeline' | 'relatorios' | 'pecas' | 'orcamentos'
 
@@ -37,6 +37,8 @@ type Props = {
   onNovoRelatorio?: () => void
   onNovaFatura?: () => void
   onNovoPedidoOrcamento?: () => void
+  onCriarFaturaDeOrcamento?: (payload: HubEqCriarFaturaDeOrcamentoPayload) => void
+  onAbrirTimelineItem?: (item: HubEqTimelineItem) => void
 }
 
 const TABS: Array<{ id: HubTab; vista: ClienteEquipamentoHistVista; labelKey: string; fallback: string; icon: string }> = [

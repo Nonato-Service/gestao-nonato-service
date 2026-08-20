@@ -67,6 +67,16 @@ export type OrcamentoGeradoRef = {
   numeroNotaFiscalEntrega?: string
   entregaConfirmadaEm?: string
   total?: number
+  /** Linhas com preço (quando o orçamento gerado as guarda). */
+  itens?: Array<{
+    id?: string
+    descricao?: string
+    nome?: string
+    quantidade?: number | string
+    precoUnitario?: number
+    codigo?: string
+    codigoPeca?: string
+  }>
 }
 
 export function resolverChaveEquipamentoCliente(

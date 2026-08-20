@@ -86,7 +86,10 @@ export type {
   HubEqChipTone,
   HubEqTimelineItem,
   HubEqTimelineTipo,
+  HubEqTimelineActionKind,
   HubEqFaturaLike,
+  HubEqFaturaItemDraft,
+  HubEqCriarFaturaDeOrcamentoPayload,
 } from './equipamentoHubPro'
 export {
   faturaCorrespondeEquipamento,
@@ -95,4 +98,5 @@ export {
   hubEqChipToneStyle,
   sortHubEqTimeline,
   hubEqTimelineTipoIcon,
+  buildItensFaturaDeOrcamentoAprovado,
 } from './equipamentoHubPro'

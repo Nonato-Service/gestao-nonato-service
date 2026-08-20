@@ -386,6 +386,8 @@ import type {
   ClientePrioritario,
   ClientePrioritarioForm,
   EquipamentoCliente,
+  HubEqCriarFaturaDeOrcamentoPayload,
+  HubEqTimelineItem,
   RelatorioEquipamento,
   RelatorioEquipamentoFormFields,
 } from './modules/clientes'
@@ -15462,6 +15464,129 @@ export default function Dashboard() {
     setClientesFinanceiroActiveTab('faturas')
     openTab('gestao-financeira', getTabTitle('gestao-financeira'))
     setShowFaturaForm(true)
+  }
+
+  /** Fatura pré-preenchida a partir de orçamento/pedido aprovado no Hub. */
+  const handleCriarFaturaDeOrcamentoFromHub = (payload: HubEqCriarFaturaDeOrcamentoPayload) => {
+    setEditingFatura(null)
+    setFaturaForm({
+      ...resetFaturaFormState(),
+      numeroFatura: `FAT-${Date.now()}`,
+      clienteId: payload.clienteId,
+      clienteNome: payload.clienteNome,
+      equipamentoId: payload.equipamentoId,
+      equipamentoTexto: payload.equipamentoTexto,
+      itens: (payload.itens || []).map((it) => ({
+        id: it.id,
+        descricao: it.descricao,
+        quantidade: it.quantidade,
+        precoUnitario: it.precoUnitario,
+        codigoPeca: it.codigoPeca,
+      })),
+      observacoes: payload.sourceLabel
+        ? `${(safeT as Record<string, string | undefined>)?.hubEqTabOrcamentos || 'Orçamento'}: ${payload.sourceLabel}`
+        : '',
+      valorManualSemIVA:
+        (!payload.itens || payload.itens.length === 0) &&
+        typeof payload.valorTotalHint === 'number' &&
+        payload.valorTotalHint > 0
+          ? String(payload.valorTotalHint)
+          : '',
+    })
+    ensureGestaoFinanceiraSidebarExpanded()
+    setClientesFinanceiroActiveTab('faturas')
+    openTab('gestao-financeira', getTabTitle('gestao-financeira'))
+    setShowFaturaForm(true)
+  }
+
+  /** Timeline do hub: abrir RS / fatura / pedido / orçamento. */
+  const handleAbrirTimelineItemFromHub = (item: HubEqTimelineItem) => {
+    const action = item.action
+    if (!action) return
+    const ft = safeT as Record<string, string | undefined>
+
+    if (action.kind === 'relatorio') {
+      const rel = relatoriosServico.find((r) => r.id === action.id)
+      if (rel) {
+        setViewingRelatorioServico(resolverRelatorioServicoDono(rel))
+      }
+      return
+    }
+
+    if (action.kind === 'fatura') {
+      const anexo = String(action.arquivoAnexo || '')
+      if (anexo.startsWith('data:')) {
+        abrirFaturaAnexoDataUrl(anexo)
+        return
+      }
+      const fatura = faturasPecas.find((f) => f.id === action.id)
+      ensureGestaoFinanceiraSidebarExpanded()
+      setClientesFinanceiroActiveTab('faturas')
+      openTab('gestao-financeira', getTabTitle('gestao-financeira'))
+      if (fatura) {
+        setEditingFatura(fatura)
+        setFaturaForm({
+          numeroFatura: fatura.numeroFatura,
+          ordemServicoId: fatura.ordemServicoId || '',
+          numeroOS: fatura.numeroOS || '',
+          clienteId: fatura.clienteId,
+          clienteNome: fatura.clienteNome,
+          equipamentoId: fatura.equipamentoId || '',
+          equipamentoTexto: fatura.equipamentoTexto || '',
+          dataEmissao:
+            (fatura.dataEmissao && String(fatura.dataEmissao).slice(0, 10)) ||
+            new Date().toISOString().split('T')[0],
+          dataVencimento: fatura.dataVencimento ? String(fatura.dataVencimento).slice(0, 10) : '',
+          taxaIVA: fatura.taxaIVA,
+          status: fatura.status,
+          observacoes: fatura.observacoes || '',
+          arquivoAnexo: fatura.arquivoAnexo || '',
+          nomeArquivoOriginal: fatura.nomeArquivoOriginal || '',
+          tipoArquivo: fatura.tipoArquivo || '',
+          contaPagamentoEnviada: Boolean(fatura.contaPagamentoEnviada),
+          valorManualSemIVA: '',
+          itens: (fatura.itens || []).map((i) => ({
+            id: i.id,
+            descricao: i.descricao,
+            quantidade: i.quantidade,
+            precoUnitario: i.precoUnitario,
+            codigoPeca: i.codigoPeca,
+          })),
+        })
+        setShowFaturaForm(true)
+      } else {
+        alert(ft?.hubEqTimelineSemAnexo || 'Anexo da fatura não disponível.')
+      }
+      return
+    }
+
+    if (action.kind === 'pedido-relatorio') {
+      const pedido = pedidosOrcamento.find((p) => p.id === action.id)
+      if (pedido) abrirPdfPedidoOrcamentoRelatorio(pedido)
+      return
+    }
+
+    if (action.kind === 'pedido-avulso') {
+      void loadData('nonato-pedidos-orcamento-avulso').then((raw) => {
+        const pedidos = Array.isArray(raw) ? (raw as PedidoAvulsoRef[]) : []
+        const pedido = pedidos.find((p) => p.codigo === action.id)
+        if (pedido) abrirPdfPedidoOrcamentoAvulso(pedido)
+      })
+      return
+    }
+
+    if (action.kind === 'orcamento') {
+      openTab('orcamentos-avulso', getTabTitle('orcamentos-avulso'))
+      // Se o utilizador não tiver o ecrã, a mensagem indica onde abrir.
+      if (typeof canAccessAction === 'function') {
+        const okTab =
+          canAccessAction('open-orcamentos-avulso') || canAccessAction('orcamentos-avulso')
+        if (!okTab) {
+          alert(ft?.hubEqTimelineAbrir || 'Abra em Orçamentos.')
+        }
+      }
+      return
+    }
   }
 
   /** Pedido de orçamento/peças avulso a partir do Hub (seed cliente + equipamento). */
@@ -73904,6 +74029,8 @@ A1;Peça exemplo;10`}
                               onNovoPedidoOrcamento={() =>
                                 handleNovoPedidoOrcamentoFromHub(selectedClienteForEquipamento.id, index)
                               }
+                              onCriarFaturaDeOrcamento={handleCriarFaturaDeOrcamentoFromHub}
+                              onAbrirTimelineItem={handleAbrirTimelineItemFromHub}
                             />
                           </div>
                         </div>

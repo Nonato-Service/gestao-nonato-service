@@ -27,10 +27,12 @@ import {
 import type { OrcamentoGeradoRef } from '../lib/clienteEquipamentoOrcamentos'
 import {
   buildHubEqChips,
+  buildItensFaturaDeOrcamentoAprovado,
   filtrarFaturasDoEquipamento,
   hubEqChipToneStyle,
   hubEqTimelineTipoIcon,
   sortHubEqTimeline,
+  type HubEqCriarFaturaDeOrcamentoPayload,
   type HubEqFaturaLike,
   type HubEqTimelineItem,
 } from '../modules/clientes/equipamentoHubPro'
@@ -70,6 +72,10 @@ type Props = {
   onVisualizarPdfRelatorio?: (pedido: PedidoOrcamentoRef) => void
   onVisualizarPdfAvulso?: (pedido: PedidoAvulsoRef) => void
   onAtualizarPedidoAvulso?: (pedidos: PedidoAvulsoRef[]) => void
+  /** Criar fatura a partir de orçamento/pedido aprovado. */
+  onCriarFaturaDeOrcamento?: (payload: HubEqCriarFaturaDeOrcamentoPayload) => void
+  /** Abrir item da timeline (RS, fatura, pedido, orçamento). */
+  onAbrirTimelineItem?: (item: HubEqTimelineItem) => void
   /** Hub Cliente→Equipamento: mostrar só a secção pedida */
   vista?: ClienteEquipamentoHistVista
   /** Chips de estado no topo (visão profissional do hub). */
@@ -119,6 +125,8 @@ export function ClienteEquipamentoHistoricoPanel({
   onUpdatePedidoRelatorioStatus,
   onVisualizarPdfRelatorio,
   onVisualizarPdfAvulso,
+  onCriarFaturaDeOrcamento,
+  onAbrirTimelineItem,
   vista = 'todas',
   mostrarBarraEstado = false,
 }: Props) {
@@ -381,6 +389,38 @@ export function ClienteEquipamentoHistoricoPanel({
     .filter(Boolean)
     .join(' · ')
 
+  const equipamentoIdHub = String(equipamento.id || equipamento.numeroSerie || `idx:${equipamentoIndex}`).trim()
+  const equipamentoTextoHub =
+    equipLabel || String(equipamento.tipoEquipamento || equipamentoIdHub).trim()
+
+  const emitirCriarFaturaDeAprovado = (input: {
+    orc?: OrcamentoGeradoRef | null
+    pedidoRelatorio?: PedidoOrcamentoRef | null
+    pedidoAvulso?: PedidoAvulsoRef | null
+    sourceLabel: string
+  }) => {
+    if (!onCriarFaturaDeOrcamento) return
+    const built = buildItensFaturaDeOrcamentoAprovado({
+      orc: input.orc || null,
+      pedidoRelatorio: input.pedidoRelatorio || null,
+      pedidoAvulso: input.pedidoAvulso || null,
+    })
+    onCriarFaturaDeOrcamento({
+      clienteId,
+      clienteNome,
+      equipamentoId: equipamentoIdHub,
+      equipamentoTexto: equipamentoTextoHub,
+      sourceLabel: input.sourceLabel,
+      itens: built.itens,
+      valorTotalHint: built.valorTotalHint,
+    })
+  }
+
+  const labelCriarFaturaOrc =
+    tr('hubEqCriarFaturaDeOrcamento') !== 'hubEqCriarFaturaDeOrcamento'
+      ? tr('hubEqCriarFaturaDeOrcamento')
+      : 'Criar fatura'
+
   const renderListaPecas = (
     pecas: Array<{ codigo: string; descricao: string; quantidade: number | string }>,
     keyPrefix: string
@@ -412,6 +452,22 @@ export function ClienteEquipamentoHistoricoPanel({
         {fmtDate(o.dataCriacao || o.data)}
         {typeof o.total === 'number' && o.total > 0 ? ` · ${o.total.toFixed(2)} €` : ''}
       </p>
+      {onCriarFaturaDeOrcamento && (
+        <div className="cliente-equip-hist__pedido-actions">
+          <button
+            type="button"
+            className="cliente-equip-hist__btn"
+            onClick={() =>
+              emitirCriarFaturaDeAprovado({
+                orc: o,
+                sourceLabel: o.numeroOrcamento || o.id,
+              })
+            }
+          >
+            💶 {labelCriarFaturaOrc}
+          </button>
+        </div>
+      )}
     </div>
   )
 
@@ -478,6 +534,7 @@ export function ClienteEquipamentoHistoricoPanel({
           : tr('emAberto') !== 'emAberto'
             ? tr('emAberto')
             : 'Em aberto',
+        action: { kind: 'relatorio', id: rel.id },
       })
     }
     for (const p of pedidosFiltrados) {
@@ -489,6 +546,7 @@ export function ClienteEquipamentoHistoricoPanel({
         titulo: `${tr('pedidosOrcamento')} · ${p.numeroRelatorio || p.codigo || p.id}`,
         subtitulo: p.maquinaModelo || p.cliente,
         statusLabel: st.label,
+        action: { kind: 'pedido-relatorio', id: p.id },
       })
     }
     for (const p of pedidosAvulsoFiltrados) {
@@ -501,6 +559,7 @@ export function ClienteEquipamentoHistoricoPanel({
         titulo: `${tr('hubEqTabPecas')} · ${p.codigo}`,
         subtitulo: p.equipamentoTexto || p.clienteNomeReal,
         statusLabel: String(stRaw),
+        action: { kind: 'pedido-avulso', id: p.codigo },
       })
     }
     for (const o of orcamentosEquipamento) {
@@ -511,6 +570,7 @@ export function ClienteEquipamentoHistoricoPanel({
         titulo: `${tr('hubEqTabOrcamentos')} · ${o.numeroOrcamento || o.id}`,
         subtitulo: o.descricao || badgeWorkflow(o),
         statusLabel: badgeWorkflow(o),
+        action: { kind: 'orcamento', id: o.id },
       })
     }
     for (const f of faturasEquipamento) {
@@ -538,6 +598,11 @@ export function ClienteEquipamentoHistoricoPanel({
         subtitulo:
           typeof f.valorTotal === 'number' ? `${f.valorTotal.toFixed(2)} €` : undefined,
         statusLabel: st,
+        action: {
+          kind: 'fatura',
+          id: f.id,
+          arquivoAnexo: f.arquivoAnexo,
+        },
       })
     }
     return sortHubEqTimeline(items)
@@ -612,37 +677,82 @@ export function ClienteEquipamentoHistoricoPanel({
       <div className="cliente-equip-hist">
         {barraEstado}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {timelineItems.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'auto 1fr auto',
-                gap: '12px',
-                alignItems: 'start',
-                padding: '12px 14px',
-                borderRadius: '12px',
-                border: '1px solid rgba(0, 200, 83, 0.18)',
-                background: 'rgba(0,0,0,0.28)',
-              }}
-            >
-              <span style={{ fontSize: '18px', lineHeight: 1 }}>{hubEqTimelineTipoIcon(item.tipo)}</span>
-              <div>
-                <div style={{ color: '#fff', fontSize: '13px', fontWeight: 700 }}>{item.titulo}</div>
-                {item.subtitulo ? (
-                  <div style={{ marginTop: '4px', fontSize: '12px', color: 'rgba(255,255,255,0.55)' }}>
-                    {item.subtitulo}
+          {timelineItems.map((item) => {
+            const clickable = Boolean(item.action && onAbrirTimelineItem)
+            const rowStyle: React.CSSProperties = {
+              display: 'grid',
+              gridTemplateColumns: 'auto 1fr auto',
+              gap: '12px',
+              alignItems: 'start',
+              padding: '12px 14px',
+              borderRadius: '12px',
+              border: '1px solid rgba(0, 200, 83, 0.18)',
+              background: 'rgba(0,0,0,0.28)',
+              width: '100%',
+              textAlign: 'left',
+              color: 'inherit',
+              font: 'inherit',
+              cursor: clickable ? 'pointer' : undefined,
+              transition: 'border-color 0.15s ease, background 0.15s ease',
+            }
+            const titleAbrir = 'Abrir'
+            if (clickable) {
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="cliente-equip-hist__timeline-item is-clickable"
+                  title={titleAbrir}
+                  aria-label={titleAbrir}
+                  onClick={() => onAbrirTimelineItem?.(item)}
+                  style={rowStyle}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.55)'
+                    e.currentTarget.style.background = 'rgba(0, 200, 83, 0.08)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(0, 200, 83, 0.18)'
+                    e.currentTarget.style.background = 'rgba(0,0,0,0.28)'
+                  }}
+                >
+                  <span style={{ fontSize: '18px', lineHeight: 1 }}>{hubEqTimelineTipoIcon(item.tipo)}</span>
+                  <div>
+                    <div style={{ color: '#fff', fontSize: '13px', fontWeight: 700 }}>{item.titulo}</div>
+                    {item.subtitulo ? (
+                      <div style={{ marginTop: '4px', fontSize: '12px', color: 'rgba(255,255,255,0.55)' }}>
+                        {item.subtitulo}
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
+                  <div style={{ textAlign: 'right', fontSize: '11px', color: 'rgba(185,255,208,0.85)' }}>
+                    <div>{item.dataIso ? fmtDate(item.dataIso) : '—'}</div>
+                    {item.statusLabel ? (
+                      <div style={{ marginTop: '4px', color: 'rgba(255,255,255,0.55)' }}>{item.statusLabel}</div>
+                    ) : null}
+                  </div>
+                </button>
+              )
+            }
+            return (
+              <div key={item.id} className="cliente-equip-hist__timeline-item" style={rowStyle}>
+                <span style={{ fontSize: '18px', lineHeight: 1 }}>{hubEqTimelineTipoIcon(item.tipo)}</span>
+                <div>
+                  <div style={{ color: '#fff', fontSize: '13px', fontWeight: 700 }}>{item.titulo}</div>
+                  {item.subtitulo ? (
+                    <div style={{ marginTop: '4px', fontSize: '12px', color: 'rgba(255,255,255,0.55)' }}>
+                      {item.subtitulo}
+                    </div>
+                  ) : null}
+                </div>
+                <div style={{ textAlign: 'right', fontSize: '11px', color: 'rgba(185,255,208,0.85)' }}>
+                  <div>{item.dataIso ? fmtDate(item.dataIso) : '—'}</div>
+                  {item.statusLabel ? (
+                    <div style={{ marginTop: '4px', color: 'rgba(255,255,255,0.55)' }}>{item.statusLabel}</div>
+                  ) : null}
+                </div>
               </div>
-              <div style={{ textAlign: 'right', fontSize: '11px', color: 'rgba(185,255,208,0.85)' }}>
-                <div>{item.dataIso ? fmtDate(item.dataIso) : '—'}</div>
-                {item.statusLabel ? (
-                  <div style={{ marginTop: '4px', color: 'rgba(255,255,255,0.55)' }}>{item.statusLabel}</div>
-                ) : null}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     )
@@ -958,6 +1068,27 @@ export function ClienteEquipamentoHistoricoPanel({
                       {typeof orc.total === 'number' && orc.total > 0 ? ` · ${orc.total.toFixed(2)} €` : ''}
                     </p>
                   )}
+                  {onCriarFaturaDeOrcamento && (
+                    <div className="cliente-equip-hist__pedido-actions">
+                      <button
+                        type="button"
+                        className="cliente-equip-hist__btn"
+                        onClick={() =>
+                          emitirCriarFaturaDeAprovado({
+                            orc,
+                            pedidoRelatorio: pedido,
+                            sourceLabel:
+                              orc?.numeroOrcamento ||
+                              pedido.codigo ||
+                              pedido.numeroRelatorio ||
+                              pedido.id,
+                          })
+                        }
+                      >
+                        💶 {labelCriarFaturaOrc}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )
             }
@@ -981,6 +1112,23 @@ export function ClienteEquipamentoHistoricoPanel({
                       {orc.descricao || p.equipamentoTexto || '—'}
                       {typeof orc.total === 'number' && orc.total > 0 ? ` · ${orc.total.toFixed(2)} €` : ''}
                     </p>
+                  )}
+                  {onCriarFaturaDeOrcamento && (
+                    <div className="cliente-equip-hist__pedido-actions">
+                      <button
+                        type="button"
+                        className="cliente-equip-hist__btn"
+                        onClick={() =>
+                          emitirCriarFaturaDeAprovado({
+                            orc,
+                            pedidoAvulso: p,
+                            sourceLabel: orc?.numeroOrcamento || p.codigo,
+                          })
+                        }
+                      >
+                        💶 {labelCriarFaturaOrc}
+                      </button>
+                    </div>
                   )}
                 </div>
               )

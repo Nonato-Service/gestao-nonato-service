@@ -12,6 +12,13 @@ export type HubEqChip = {
 
 export type HubEqTimelineTipo = 'relatorio' | 'pedido' | 'orcamento' | 'fatura'
 
+export type HubEqTimelineActionKind =
+  | 'relatorio'
+  | 'fatura'
+  | 'pedido-relatorio'
+  | 'pedido-avulso'
+  | 'orcamento'
+
 export type HubEqTimelineItem = {
   id: string
   tipo: HubEqTimelineTipo
@@ -19,6 +26,11 @@ export type HubEqTimelineItem = {
   titulo: string
   subtitulo?: string
   statusLabel?: string
+  action?: {
+    kind: HubEqTimelineActionKind
+    id: string
+    arquivoAnexo?: string
+  }
 }
 
 export type HubEqFaturaLike = {
@@ -29,6 +41,127 @@ export type HubEqFaturaLike = {
   valorTotal?: number
   equipamentoId?: string
   equipamentoTexto?: string
+  arquivoAnexo?: string
+}
+
+export type HubEqFaturaItemDraft = {
+  id: string
+  descricao: string
+  quantidade: number
+  precoUnitario: number
+  codigoPeca?: string
+}
+
+export type HubEqCriarFaturaDeOrcamentoPayload = {
+  clienteId: string
+  clienteNome: string
+  equipamentoId: string
+  equipamentoTexto: string
+  sourceLabel: string
+  itens: HubEqFaturaItemDraft[]
+  valorTotalHint?: number
+}
+
+type HubEqOrcamentoItemLike = {
+  id?: string
+  descricao?: string
+  nome?: string
+  quantidade?: number | string
+  precoUnitario?: number
+  codigo?: string
+  codigoPeca?: string
+}
+
+type HubEqOrcamentoLike = {
+  id?: string
+  numeroOrcamento?: string
+  descricao?: string
+  total?: number
+  itens?: HubEqOrcamentoItemLike[]
+}
+
+type HubEqPedidoRelatorioPecasLike = {
+  pecas?: Array<{ codigo?: string; descricao?: string; quantidade?: number | string }>
+  codigo?: string
+  numeroRelatorio?: string
+  id?: string
+}
+
+type HubEqPedidoAvulsoPecasLike = {
+  pecas?: Array<{ codigo?: string; nome?: string; quantidade?: number }>
+  codigo?: string
+}
+
+/** Monta linhas de fatura a partir de orçamento aprovado / pedido ligado. */
+export function buildItensFaturaDeOrcamentoAprovado(input: {
+  orc?: HubEqOrcamentoLike | null
+  pedidoRelatorio?: HubEqPedidoRelatorioPecasLike | null
+  pedidoAvulso?: HubEqPedidoAvulsoPecasLike | null
+}): { itens: HubEqFaturaItemDraft[]; valorTotalHint?: number } {
+  const orc = input.orc
+  const hint = typeof orc?.total === 'number' ? orc.total : undefined
+  const stamp = Date.now()
+
+  if (orc && Array.isArray(orc.itens) && orc.itens.length > 0) {
+    return {
+      itens: orc.itens.map((it, i) => ({
+        id: String(it.id || `orc-item-${i}-${stamp}`),
+        descricao: String(it.descricao || it.nome || '—'),
+        quantidade: parseFloat(String(it.quantidade)) || 1,
+        precoUnitario: Number(it.precoUnitario) || 0,
+        codigoPeca: it.codigoPeca || it.codigo || undefined,
+      })),
+      valorTotalHint: hint,
+    }
+  }
+
+  const pecasRel = input.pedidoRelatorio?.pecas
+  if (Array.isArray(pecasRel) && pecasRel.length > 0) {
+    return {
+      itens: pecasRel.map((p, i) => ({
+        id: `pr-item-${i}-${stamp}`,
+        descricao: String(p.descricao || '—'),
+        quantidade: parseFloat(String(p.quantidade)) || 1,
+        precoUnitario: 0,
+        codigoPeca: p.codigo || undefined,
+      })),
+      valorTotalHint: hint,
+    }
+  }
+
+  const pecasAv = input.pedidoAvulso?.pecas
+  if (Array.isArray(pecasAv) && pecasAv.length > 0) {
+    return {
+      itens: pecasAv.map((p, i) => ({
+        id: `pa-item-${i}-${stamp}`,
+        descricao: String(p.nome || '—'),
+        quantidade: Number(p.quantidade) || 1,
+        precoUnitario: 0,
+        codigoPeca: p.codigo || undefined,
+      })),
+      valorTotalHint: hint,
+    }
+  }
+
+  const desc =
+    orc?.descricao ||
+    orc?.numeroOrcamento ||
+    input.pedidoRelatorio?.codigo ||
+    input.pedidoRelatorio?.numeroRelatorio ||
+    input.pedidoAvulso?.codigo ||
+    'Orçamento'
+  const total = typeof orc?.total === 'number' ? orc.total : 0
+  return {
+    itens: [
+      {
+        id: `orc-total-${stamp}`,
+        descricao: String(desc),
+        quantidade: 1,
+        precoUnitario: total,
+      },
+    ],
+    valorTotalHint: total > 0 ? total : hint,
+  }
 }
 
 /** Liga fatura ao equipamento do cliente (legado sem id fica de fora desta máquina). */

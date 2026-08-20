@@ -1986,10 +1986,31 @@ try {
   } else {
     fail('HistoricoPanel sem timeline/chips profissionais')
   }
+  if (
+    hist.includes('onCriarFaturaDeOrcamento') &&
+    hist.includes('hubEqCriarFaturaDeOrcamento') &&
+    hist.includes('buildItensFaturaDeOrcamentoAprovado') &&
+    hist.includes('onAbrirTimelineItem') &&
+    hist.includes('item.action')
+  ) {
+    ok('HistoricoPanel: Criar fatura de orçamento + timeline clicável')
+  } else {
+    fail('HistoricoPanel sem Criar fatura / timeline clicável')
+  }
   if (exists('app/modules/clientes/equipamentoHubPro.ts')) {
     ok('existe app/modules/clientes/equipamentoHubPro.ts')
   } else {
     fail('em falta: app/modules/clientes/equipamentoHubPro.ts')
+  }
+  const hubPro = fs.readFileSync(path.join(root, 'app/modules/clientes/equipamentoHubPro.ts'), 'utf8')
+  if (
+    hubPro.includes('buildItensFaturaDeOrcamentoAprovado') &&
+    hubPro.includes('HubEqCriarFaturaDeOrcamentoPayload') &&
+    hubPro.includes("kind: HubEqTimelineActionKind")
+  ) {
+    ok('equipamentoHubPro: payload fatura + action timeline')
+  } else {
+    fail('equipamentoHubPro incompleto (fatura/timeline action)')
   }
   const det = fs.readFileSync(path.join(root, 'app/components/ClienteDetalheView.tsx'), 'utf8')
   if (det.includes('ClienteFaturasSection') && det.includes('faturasPecas')) {
@@ -2019,6 +2040,16 @@ try {
     ok('NonatoMainApp liga callbacks Criar do hub equipamento')
   } else {
     fail('NonatoMainApp sem wire dos callbacks Criar do hub')
+  }
+  if (
+    nma.includes('onCriarFaturaDeOrcamento={') &&
+    nma.includes('handleCriarFaturaDeOrcamentoFromHub') &&
+    nma.includes('onAbrirTimelineItem={') &&
+    nma.includes('handleAbrirTimelineItemFromHub')
+  ) {
+    ok('NonatoMainApp liga fatura-de-orçamento + timeline clicável do hub')
+  } else {
+    fail('NonatoMainApp sem wire fatura-de-orçamento / timeline clicável')
   }
   if (nma.includes('hubSeed={pedidoAvulsoHubSeed}')) {
     ok('Pedido avulso recebe hubSeed do equipamento')
