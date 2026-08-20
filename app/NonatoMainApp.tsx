@@ -23658,7 +23658,7 @@ export default function Dashboard() {
     [activeTabId, dashboardMainHubId, expandedGroups, openDashboardHubFromSidebar, scrollMainContentToTop]
   )
 
-  /** Gestão financeira abre abas diretamente (não usa toggleOrOpenDashboardHub); sem expandir o grupo, os subitens na sidebar ficam sempre ocultos. */
+  /** Expande o grupo Gestão Financeira na sidebar (subitens / painel). O hub animado abre via toggleOrOpenDashboardHub. */
   const ensureGestaoFinanceiraSidebarExpanded = useCallback(() => {
     setExpandedGroups((prev) => {
       if (prev.has('gestao-financeira')) return prev
@@ -23862,21 +23862,8 @@ export default function Dashboard() {
     } else if (action === 'open-gestao-custos') {
       toggleOrOpenDashboardHub('gestao-custos', 'gestao-custos')
     } else if (action === 'open-gestao-financeira') {
-      if (expandedGroups.has('gestao-financeira')) {
-        setExpandedGroups((prev) => {
-          const next = new Set(prev)
-          next.delete('gestao-financeira')
-          return next
-        })
-      } else {
-        setExpandedGroups((prev) => new Set(prev).add('gestao-financeira'))
-        const currentTab = openTabs.find((t) => t.id === activeTabId)
-        const alreadyOnFinTab =
-          currentTab != null && GESTAO_FINANCEIRA_TAB_TYPES.has(currentTab.type)
-        if (!alreadyOnFinTab) {
-          openTab('gestao-financeira', getTabTitle('gestao-financeira'))
-        }
-      }
+      // Mesmo padrão dos outros grupos: hub animado de módulos no centro (não saltar directo ao painel).
+      toggleOrOpenDashboardHub('gestao-financeira', 'gestao-financeira')
     } else if (action === 'open-clientes-financeiro') {
       ensureGestaoFinanceiraSidebarExpanded()
       openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
@@ -62668,13 +62655,14 @@ A1;Peça exemplo;10`}
           subsection,
         })
       }
-      if (canAccessAction('open-gestao-financeira')) {
+      if (canAccessAction('open-gestao-financeira') || canAccessAction('open-quick-gestao-financeira')) {
         rows.push({
           key: 'gestao-financeira-hub-entry',
           title: panelTitle,
           desc: pickTrChain(tr, ['gestaoFinanceiraDesc']) || cardHint,
           icon: '📊',
-          action: 'open-gestao-financeira',
+          // Painel completo — não voltar a abrir o hub (evita loop no cartão «visão geral»).
+          action: 'open-quick-gestao-financeira',
           subsection: tp,
         })
       }

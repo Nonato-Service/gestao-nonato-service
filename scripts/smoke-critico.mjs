@@ -2102,6 +2102,14 @@ try {
   } else {
     fail('open-biblioteca-relatorios não redireciona para Clientes')
   }
+  if (
+    nma.includes("toggleOrOpenDashboardHub('gestao-financeira', 'gestao-financeira')") &&
+    nma.includes("action: 'open-quick-gestao-financeira'")
+  ) {
+    ok('Gestão Financeira abre hub animado (como Gestão Técnica)')
+  } else {
+    fail('Gestão Financeira sem hub animado no clique do grupo')
+  }
   const tipos = fs.readFileSync(path.join(root, 'app/modules/financeiro/tiposOs.ts'), 'utf8')
   if (tipos.includes('equipamentoId?: string') && tipos.includes('equipamentoTexto?: string')) {
     ok('FaturaPecas tipada com equipamentoId/Texto')
