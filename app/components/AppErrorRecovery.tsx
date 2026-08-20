@@ -5,18 +5,28 @@ import { clearLastAuthUser, clearWarmSessionMarkers } from '../utils/syncRevisio
 
 type Props = { children: React.ReactNode }
 
-type State = { hasError: boolean; message: string }
+type State = { hasError: boolean; message: string; stackPreview: string }
 
 export class AppErrorRecovery extends React.Component<Props, State> {
-  state: State = { hasError: false, message: '' }
+  state: State = { hasError: false, message: '', stackPreview: '' }
 
   static getDerivedStateFromError(error: unknown): State {
     const message = error instanceof Error ? error.message : 'Erro desconhecido'
-    return { hasError: true, message }
+    const stackPreview =
+      error instanceof Error && typeof error.stack === 'string'
+        ? error.stack.split('\n').slice(0, 6).join('\n')
+        : ''
+    return { hasError: true, message, stackPreview }
   }
 
-  componentDidCatch(error: unknown) {
+  componentDidCatch(error: unknown, info: React.ErrorInfo) {
     console.error('[Nonato] Erro fatal na interface:', error)
+    if (info?.componentStack) {
+      console.error('[Nonato] componentStack:', info.componentStack)
+    }
+    if (error instanceof Error && error.stack) {
+      console.error('[Nonato] stack:', error.stack)
+    }
   }
 
   private handleClearCacheAndReload = () => {
@@ -59,6 +69,23 @@ export class AppErrorRecovery extends React.Component<Props, State> {
           <p style={{ margin: 0, fontSize: 13, opacity: 0.55, maxWidth: 520, wordBreak: 'break-word' }}>
             {this.state.message}
           </p>
+        ) : null}
+        {this.state.stackPreview ? (
+          <pre
+            style={{
+              margin: 0,
+              maxWidth: 560,
+              maxHeight: 120,
+              overflow: 'auto',
+              textAlign: 'left',
+              fontSize: 11,
+              opacity: 0.45,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+            }}
+          >
+            {this.state.stackPreview}
+          </pre>
         ) : null}
         <button
           type="button"

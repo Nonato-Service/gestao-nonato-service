@@ -7812,11 +7812,21 @@ export default function Dashboard() {
       }
       await reportBoot(55)
       const normalizeClienteEquipamentos = (arr: Cliente[]) =>
-        arr.map((c: Cliente) => ({
-          ...c,
-          equipamentos: Array.isArray(c.equipamentos) ? c.equipamentos : [],
-          relatorios: c.relatorios && typeof c.relatorios === 'object' && !Array.isArray(c.relatorios) ? c.relatorios : {},
-        }))
+        arr
+          .filter((c): c is Cliente => c != null && typeof c === 'object' && Boolean(c.id))
+          .map((c: Cliente) => ({
+            ...c,
+            // Compacta buracos/null — evita crash em resolverIdEquipamentoVisivelCliente (.id) no boot.
+            equipamentos: Array.isArray(c.equipamentos)
+              ? c.equipamentos.filter(
+                  (eq): eq is NonNullable<typeof eq> => eq != null && typeof eq === 'object'
+                )
+              : [],
+            relatorios:
+              c.relatorios && typeof c.relatorios === 'object' && !Array.isArray(c.relatorios)
+                ? c.relatorios
+                : {},
+          }))
       if (savedClientes && Array.isArray(savedClientes) && savedClientes.length > 0) {
         const base = normalizeClienteEquipamentos(savedClientes as Cliente[])
         const { lista: normalized, alterou: codigosAlterados } = garantirCodigosClientes(base)
@@ -14679,6 +14689,7 @@ export default function Dashboard() {
       index >= 0 && index < (latest.equipamentos?.length ?? 0)
         ? latest.equipamentos[index]
         : equipamento
+    if (eqAtual == null || typeof eqAtual !== 'object') return
     setSelectedClienteForEquipamento(latest)
     setEditingEquipamentoCliente(eqAtual)
     setEditingEquipamentoClienteIndex(index >= 0 ? index : null)
@@ -14749,7 +14760,9 @@ export default function Dashboard() {
 
     const clienteAtual = clientes.find((c) => c.id === selectedClienteForEquipamento.id)
     if (clienteAtual && !editingEquipamentoCliente) {
-      const dup = clienteAtual.equipamentos.some((eq) => String(eq.numeroSerie).trim() === serialNorm)
+      const dup = clienteAtual.equipamentos.some(
+        (eq) => eq != null && String(eq.numeroSerie).trim() === serialNorm
+      )
       if (dup) {
         alert(
           (safeT as any)?.equipamentoClienteDuplicadoSerie ||

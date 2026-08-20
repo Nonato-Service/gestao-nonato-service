@@ -44,10 +44,11 @@ export type RotuloIdEquipamentoCliente = {
 
 /** ID para listas/cartões: código visível, ID próprio ou referência técnica (nunca oculto na UI). */
 export function rotuloIdEquipamentoCliente(
-  eq: { id?: string; numeroSerie?: string },
+  eq: { id?: string; numeroSerie?: string } | null | undefined,
   equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],
   index = 0
 ): RotuloIdEquipamentoCliente | null {
+  if (eq == null || typeof eq !== 'object') return null
   const sn = String(eq.numeroSerie ?? '').trim()
   const vis = resolverIdEquipamentoVisivelCliente(eq, equipamentosArmazem).trim()
   if (vis) return { texto: vis, titulo: vis }

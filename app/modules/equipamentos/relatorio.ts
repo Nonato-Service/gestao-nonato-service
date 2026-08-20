@@ -162,9 +162,10 @@ export type RelatorioServicoEquipamentosHost = {
 
 /** ID técnico do equipamento no cadastro do cliente (prioriza `id`, depois n.º série). */
 export function resolverIdEquipamentoCliente(
-  eq: { id?: string; numeroSerie?: string },
+  eq: { id?: string; numeroSerie?: string } | null | undefined,
   idx = 0
 ): string {
+  if (eq == null || typeof eq !== 'object') return String(idx).trim()
   return String(eq.id || eq.numeroSerie || idx).trim()
 }
 
@@ -176,17 +177,21 @@ export function equipamentoIdETecnicoGerado(id: string | undefined): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89abAB][0-9a-f]{3}-[0-9a-f]{12}$/i.test(t)
 }
 
-/** ID visível no relatório/PDF: código do cliente, ID do armazém pela série; nunca UUID interno. */
+/**
+ * ID visível no relatório/PDF: código do cliente, ID do armazém pela série; nunca UUID interno.
+ * Aceita `eq` null/undefined — listas com buracos no boot (tabs RR) não podem crashar a app.
+ */
 export function resolverIdEquipamentoVisivelCliente(
-  eq: { id?: string; numeroSerie?: string },
+  eq: { id?: string; numeroSerie?: string } | null | undefined,
   equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): string {
+  if (eq == null || typeof eq !== 'object') return ''
   const idC = String(eq.id ?? '').trim()
   if (idC && !equipamentoIdETecnicoGerado(idC)) return idC
   const s = String(eq.numeroSerie ?? '').trim()
   if (s) {
-    const wh = equipamentosArmazem.find(
-      (e) => String(e.numeroSerie ?? '').trim().toLowerCase() === s.toLowerCase()
+    const wh = (equipamentosArmazem || []).find(
+      (e) => e != null && String(e.numeroSerie ?? '').trim().toLowerCase() === s.toLowerCase()
     )
     const idA = String(wh?.id ?? '').trim()
     if (idA && !equipamentoIdETecnicoGerado(idA)) return idA
@@ -195,9 +200,10 @@ export function resolverIdEquipamentoVisivelCliente(
 }
 
 export function resolverIdEquipamentoVisivelRelatorio(
-  eq: RelatorioEquipamentoRef,
+  eq: RelatorioEquipamentoRef | null | undefined,
   equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): string {
+  if (eq == null || typeof eq !== 'object') return ''
   if (eq.equipamentoOrigem === 'armazem') {
     const id = String(eq.equipamentoId ?? '').trim()
     return equipamentoIdETecnicoGerado(id) ? '' : id
@@ -211,15 +217,20 @@ export function resolverIdEquipamentoVisivelRelatorio(
 /** ID para ecrã/PDF: resolve código visível; nunca mostra UUID interno se existir alternativa no cliente/armazém. */
 /** Resolve `clienteId` quando o relatório antigo só tem o nome do cliente. */
 export function resolverClienteIdRelatorio(
-  rel: { clienteId?: string; cliente?: string },
+  rel: { clienteId?: string; cliente?: string } | null | undefined,
   clientes: { id: string; nomeEmpresa?: string }[]
 ): string {
+  if (rel == null || typeof rel !== 'object') return ''
+  const lista = (clientes || []).filter(
+    (c): c is { id: string; nomeEmpresa?: string } =>
+      c != null && typeof c === 'object' && String(c.id ?? '').trim() !== ''
+  )
   const cid = String(rel.clienteId ?? '').trim()
-  if (cid && clientes.some((c) => c.id === cid)) return cid
+  if (cid && lista.some((c) => c.id === cid)) return cid
   const nome = String(rel.cliente ?? '').trim()
   if (!nome) return cid
   const nomeNorm = nome.toLowerCase()
-  const hitExact = clientes.find(
+  const hitExact = lista.find(
     (c) => String(c.nomeEmpresa ?? '').trim().toLowerCase() === nomeNorm
   )
   if (hitExact) return hitExact.id
@@ -230,7 +241,7 @@ export function resolverClienteIdRelatorio(
     .split(/\s+/)
     .filter((w) => w.length >= 3)
   if (tokens.length > 0) {
-    const hitPartial = clientes.find((c) => {
+    const hitPartial = lista.find((c) => {
       const cn = String(c.nomeEmpresa ?? '')
         .trim()
         .toLowerCase()
@@ -256,6 +267,7 @@ export function resolverChaveEquipamentoClienteRelatorio(
   if (!alvo || !clienteEquipamentos?.length) return alvo
   for (let idx = 0; idx < clienteEquipamentos.length; idx++) {
     const item = clienteEquipamentos[idx]
+    if (item == null || typeof item !== 'object') continue
     const key = resolverIdEquipamentoCliente(item, idx)
     const vis = resolverIdEquipamentoVisivelCliente(item, equipamentosArmazem)
     if (
@@ -278,7 +290,9 @@ export function prepararEquipamentosRelatorioParaEdicao(
 ): RelatorioEquipamentoRef[] {
   const cliEq = clienteEquipamentos ?? []
 
-  return equipamentosRaw.map((eqItem) => {
+  return (equipamentosRaw || [])
+    .filter((eqItem): eqItem is RelatorioEquipamentoRef => eqItem != null && typeof eqItem === 'object')
+    .map((eqItem) => {
     if (eqItem.equipamentoOrigem === 'armazem') {
       return {
         ...eqItem,
@@ -292,6 +306,7 @@ export function prepararEquipamentosRelatorioParaEdicao(
     const sn = String(eqItem.numeroMaquina ?? '').trim()
 
     const eqMatch = cliEq.find((e, idx) => {
+      if (e == null || typeof e !== 'object') return false
       const key = resolverIdEquipamentoCliente(e, idx)
       const vis = resolverIdEquipamentoVisivelCliente(e, equipamentosArmazem)
       return (
@@ -412,7 +427,12 @@ export function resolverNumeroMaquinaRelatorioParaExibicao(
 export function equipamentosRelatorioPreenchidos(
   equipamentos: RelatorioEquipamentoRef[]
 ): RelatorioEquipamentoRef[] {
-  return equipamentos.filter((eq) => eq.equipamentoId || eq.maquinaModelo || eq.numeroMaquina)
+  return (equipamentos || []).filter(
+    (eq) =>
+      eq != null &&
+      typeof eq === 'object' &&
+      Boolean(eq.equipamentoId || eq.maquinaModelo || eq.numeroMaquina)
+  )
 }
 
 export function normalizarEquipamentosRelatorio(
@@ -728,10 +748,11 @@ export function equipamentosClienteParaBiblioteca(
 
 /** Chaves possíveis em `cliente.relatorios` para um equipamento do cadastro. */
 export function chavesLookupEquipamentoCliente(
-  equipamento: EquipamentoClienteIdLookup,
+  equipamento: EquipamentoClienteIdLookup | null | undefined,
   equipamentoIndex: number,
   equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): string[] {
+  if (equipamento == null || typeof equipamento !== 'object') return [String(equipamentoIndex)]
   const vis = resolverIdEquipamentoVisivelCliente(equipamento, equipamentosArmazem)
   const key = resolverIdEquipamentoCliente(equipamento, equipamentoIndex)
   const serie = String(equipamento.numeroSerie ?? '').trim()
