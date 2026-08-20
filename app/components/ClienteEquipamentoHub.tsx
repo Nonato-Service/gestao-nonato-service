@@ -32,6 +32,12 @@ type Props = {
   onVisualizarPdfRelatorio?: (pedido: PedidoOrcamentoRef) => void
   onVisualizarPdfAvulso?: (pedido: PedidoAvulsoRef) => void
   onAtualizarPedidoAvulso?: (pedidos: PedidoAvulsoRef[]) => void
+  /** Abre formulário de novo relatório de serviço com cliente + equipamento preenchidos. */
+  onNovoRelatorio?: () => void
+  /** Abre modal de nova fatura de peças com cliente + equipamento preenchidos. */
+  onNovaFatura?: () => void
+  /** Abre pedido de orçamento/peças avulso com cliente + equipamento preenchidos. */
+  onNovoPedidoOrcamento?: () => void
 }
 
 const TABS: Array<{ id: HubTab; vista: ClienteEquipamentoHistVista; labelKey: string; fallback: string; icon: string }> = [
@@ -40,10 +46,24 @@ const TABS: Array<{ id: HubTab; vista: ClienteEquipamentoHistVista; labelKey: st
   { id: 'orcamentos', vista: 'orcamentos', labelKey: 'hubEqTabOrcamentos', fallback: 'Orçamentos', icon: '💶' },
 ]
 
+const btnCriarStyle: React.CSSProperties = {
+  padding: '7px 11px',
+  borderRadius: '8px',
+  fontSize: '11px',
+  fontWeight: 700,
+  letterSpacing: '0.02em',
+  cursor: 'pointer',
+  border: '1px solid rgba(0, 200, 83, 0.45)',
+  background: 'rgba(0, 200, 83, 0.1)',
+  color: '#b9ffd0',
+  whiteSpace: 'nowrap',
+}
+
 export function ClienteEquipamentoHub(props: Props) {
   const [tab, setTab] = useState<HubTab>('relatorios')
   const tr = (key: string, fb: string) => props.safeT[key] || fb
   const active = TABS.find((t) => t.id === tab) || TABS[0]
+  const temAcoesCriar = Boolean(props.onNovoRelatorio || props.onNovaFatura || props.onNovoPedidoOrcamento)
 
   return (
     <div className="cliente-equip-hub">
@@ -54,9 +74,9 @@ export function ClienteEquipamentoHub(props: Props) {
           display: 'flex',
           flexWrap: 'wrap',
           gap: '8px',
-          marginBottom: '14px',
+          marginBottom: temAcoesCriar ? '10px' : '14px',
           paddingBottom: '12px',
-          borderBottom: '1px solid rgba(0, 200, 83, 0.18)',
+          borderBottom: temAcoesCriar ? 'none' : '1px solid rgba(0, 200, 83, 0.18)',
         }}
       >
         {TABS.map((t) => {
@@ -85,6 +105,62 @@ export function ClienteEquipamentoHub(props: Props) {
           )
         })}
       </div>
+
+      {temAcoesCriar && (
+        <div
+          className="cliente-equip-hub__criar"
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '14px',
+            paddingBottom: '12px',
+            borderBottom: '1px solid rgba(0, 200, 83, 0.18)',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '11px',
+              color: 'rgba(255,255,255,0.55)',
+              marginRight: '4px',
+            }}
+          >
+            {tr('hubEqCriarBarraHint', 'Criar a partir deste equipamento:')}
+          </span>
+          {props.onNovoRelatorio && (
+            <button
+              type="button"
+              className="cliente-equip-hub__criar-relatorio"
+              onClick={props.onNovoRelatorio}
+              style={btnCriarStyle}
+            >
+              ➕ {tr('hubEqCriarRelatorio', 'Novo Relatório')}
+            </button>
+          )}
+          {props.onNovoPedidoOrcamento && (
+            <button
+              type="button"
+              className="cliente-equip-hub__criar-orcamento"
+              onClick={props.onNovoPedidoOrcamento}
+              style={btnCriarStyle}
+            >
+              🔧 {tr('hubEqCriarOrcamento', 'Pedido / Orçamento')}
+            </button>
+          )}
+          {props.onNovaFatura && (
+            <button
+              type="button"
+              className="cliente-equip-hub__criar-fatura"
+              onClick={props.onNovaFatura}
+              style={btnCriarStyle}
+            >
+              💶 {tr('hubEqCriarFatura', 'Nova Fatura')}
+            </button>
+          )}
+        </div>
+      )}
+
       <ClienteEquipamentoHistoricoPanel {...props} vista={active.vista} />
     </div>
   )

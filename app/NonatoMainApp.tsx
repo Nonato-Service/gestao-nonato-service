@@ -549,7 +549,10 @@ import { translateWithMyMemory, WRITING_ASSIST_FIELD_MAX_CHARS } from './lib/mym
 import { AssistTextarea, AssistInput } from './components/AssistTextFields'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PagamentosContadorContent } from './components/PagamentosContadorContent'
-import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
+import {
+  PedidoOrcamentosAvulsoContent,
+  type PedidoAvulsoHubSeed,
+} from './components/PedidoOrcamentosAvulsoContent'
 import { ProImageHoverPreview } from './components/ProImageHoverPreview'
 import { GestaoDemosContent } from './components/GestaoDemosContent'
 import { ManuaisInformacoesContent } from './components/ManuaisInformacoesContent'
@@ -4404,6 +4407,8 @@ export default function Dashboard() {
   const [financeiroRefSemana, setFinanceiroRefSemana] = useState(() => isoWeekStringFromDate(new Date()))
   const [showOSForm, setShowOSForm] = useState(false)
   const [showFaturaForm, setShowFaturaForm] = useState(false)
+  /** Seed do Hub Cliente→Equipamento para pedido de orçamento/peças avulso. */
+  const [pedidoAvulsoHubSeed, setPedidoAvulsoHubSeed] = useState<PedidoAvulsoHubSeed | null>(null)
   const [editingOS, setEditingOS] = useState<OrdemServico | null>(null)
   const [editingFatura, setEditingFatura] = useState<FaturaPecas | null>(null)
   const [osForm, setOSForm] = useState({
@@ -15392,6 +15397,81 @@ export default function Dashboard() {
     setNovaPeca(createEmptyPecaSubstituicaoForm())
     setShowRelatorioServicoForm(true)
     scrollRelatorioServicoFormIntoView()
+  }
+
+  /** Novo RS a partir do Hub Cliente→Equipamento (cliente + equipamento já preenchidos). */
+  const handleNovoRelatorioFromHub = (
+    cliente: Cliente,
+    equipamento: EquipamentoCliente,
+    equipamentoIndex: number
+  ) => {
+    setRelatorioServicoListaDetalheId(null)
+    const dataInicial = new Date().toISOString().split('T')[0]
+    const numeroAuto = gerarNumeroRelatorio(dataInicial)
+    const idVisivel = resolverIdEquipamentoVisivelCliente(equipamento, equipamentos)
+    const chave = resolverIdEquipamentoCliente(equipamento, equipamentoIndex)
+    const linhaEq = {
+      ...criarEquipamentoRelatorioVazio('cliente'),
+      equipamentoId: idVisivel || chave,
+      numeroMaquina: equipamento.numeroSerie || '',
+      maquinaModelo: `${equipamento.modelo || ''} ${equipamento.marca || ''}`.trim(),
+    }
+    setEditingRelatorioServico(null)
+    setRelatorioServicoForm(
+      createEmptyRelatorioServicoForm({
+        numero: numeroAuto,
+        data: dataInicial,
+        clienteId: cliente.id,
+        cliente: cliente.nomeEmpresa || '',
+        cidade: cliente.conselho || cliente.localidade || '',
+        telefone: cliente.telefones || '',
+        equipamentoOrigem: 'cliente',
+        ...sincronizarCamposLegadoEquipamentos([linhaEq], equipamentos),
+      })
+    )
+    setNovoDiaTrabalho(createEmptyDiaTrabalhoForm())
+    setEditingDiaTrabalhoIndex(null)
+    setNovaPeca(createEmptyPecaSubstituicaoForm())
+    applyKmClienteAoRelatorio(cliente, true)
+    setShowRelatorioServicoForm(true)
+    openTab('relatorio-servico', getTabTitle('relatorio-servico'))
+    scrollRelatorioServicoFormIntoView()
+  }
+
+  /** Nova fatura de peças a partir do Hub (cliente + equipamento preenchidos). */
+  const handleNovaFaturaFromHub = (
+    cliente: Cliente,
+    equipamento: EquipamentoCliente,
+    equipamentoIndex: number
+  ) => {
+    const eqId = String(equipamento.id || equipamento.numeroSerie || equipamentoIndex).trim()
+    const eqTexto =
+      [equipamento.marca, equipamento.modelo, equipamento.numeroSerie].filter(Boolean).join(' · ') ||
+      equipamento.tipoEquipamento ||
+      eqId
+    setEditingFatura(null)
+    setFaturaForm({
+      ...resetFaturaFormState(),
+      numeroFatura: `FAT-${Date.now()}`,
+      clienteId: cliente.id,
+      clienteNome: cliente.nomeEmpresa || '',
+      equipamentoId: eqId,
+      equipamentoTexto: eqTexto,
+    })
+    ensureGestaoFinanceiraSidebarExpanded()
+    setClientesFinanceiroActiveTab('faturas')
+    openTab('gestao-financeira', getTabTitle('gestao-financeira'))
+    setShowFaturaForm(true)
+  }
+
+  /** Pedido de orçamento/peças avulso a partir do Hub (seed cliente + equipamento). */
+  const handleNovoPedidoOrcamentoFromHub = (clienteId: string, equipamentoIndex: number) => {
+    setPedidoAvulsoHubSeed({
+      clienteId,
+      equipamentoIndex,
+      token: Date.now(),
+    })
+    openTab('pedido-orcamentos-avulso', getTabTitle('pedido-orcamentos-avulso'))
   }
 
   /** Prioriza `relatoriosServico` (fonte de verdade); cópias em `cliente.relatorios` podem ficar desactualizadas (ex.: `diasTrabalho`). */
@@ -45214,6 +45294,8 @@ A1;Peça exemplo;10`}
             }}
             logoHtml={getLogoHtmlForOrcamento()}
             empresaNonato={fichaCadastralParaEmpresaPdf(fichaCadastral)}
+            hubSeed={pedidoAvulsoHubSeed}
+            onHubSeedConsumed={() => setPedidoAvulsoHubSeed(null)}
           />
         )
 
@@ -73810,6 +73892,15 @@ A1;Peça exemplo;10`}
                               onAtualizarPedidoAvulso={async (pedidos) => {
                                 await saveData('nonato-pedidos-orcamento-avulso', pedidos)
                               }}
+                              onNovoRelatorio={() =>
+                                handleNovoRelatorioFromHub(selectedClienteForEquipamento, equipamento, index)
+                              }
+                              onNovaFatura={() =>
+                                handleNovaFaturaFromHub(selectedClienteForEquipamento, equipamento, index)
+                              }
+                              onNovoPedidoOrcamento={() =>
+                                handleNovoPedidoOrcamentoFromHub(selectedClienteForEquipamento.id, index)
+                              }
                             />
                           </div>
                         </div>

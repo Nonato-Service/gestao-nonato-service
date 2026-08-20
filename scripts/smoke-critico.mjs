@@ -1955,6 +1955,19 @@ try {
   } else {
     fail('ClienteEquipamentoHub incompleto (tabs/vista)')
   }
+  if (
+    hub.includes('onNovoRelatorio') &&
+    hub.includes('onNovaFatura') &&
+    hub.includes('onNovoPedidoOrcamento') &&
+    hub.includes('hubEqCriarRelatorio') &&
+    hub.includes('hubEqCriarFatura') &&
+    hub.includes('hubEqCriarOrcamento') &&
+    hub.includes('cliente-equip-hub__criar')
+  ) {
+    ok('ClienteEquipamentoHub com botões Criar (RS / orçamento / fatura)')
+  } else {
+    fail('ClienteEquipamentoHub sem barra Criar / callbacks')
+  }
   const hist = fs.readFileSync(path.join(root, 'app/components/ClienteEquipamentoHistoricoPanel.tsx'), 'utf8')
   if (hist.includes("vista === 'pecas'") && hist.includes('hubEqPecasVazio')) {
     ok('HistoricoPanel trata vista=pecas + empty state')
@@ -1972,6 +1985,23 @@ try {
     ok('NonatoMainApp usa ClienteEquipamentoHub')
   } else {
     fail('NonatoMainApp sem ClienteEquipamentoHub')
+  }
+  if (
+    nma.includes('onNovaFatura={') &&
+    nma.includes('onNovoRelatorio={') &&
+    nma.includes('onNovoPedidoOrcamento={') &&
+    nma.includes('handleNovaFaturaFromHub') &&
+    nma.includes('handleNovoRelatorioFromHub') &&
+    nma.includes('handleNovoPedidoOrcamentoFromHub')
+  ) {
+    ok('NonatoMainApp liga callbacks Criar do hub equipamento')
+  } else {
+    fail('NonatoMainApp sem wire dos callbacks Criar do hub')
+  }
+  if (nma.includes('hubSeed={pedidoAvulsoHubSeed}')) {
+    ok('Pedido avulso recebe hubSeed do equipamento')
+  } else {
+    fail('Pedido avulso sem hubSeed')
   }
   if (
     nma.includes('equipamentoId: faturaForm.equipamentoId') ||

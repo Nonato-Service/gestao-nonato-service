@@ -91,6 +91,13 @@ export type PedidoAvulsoGuardado = {
   cotacaoRecebidaEm?: string
 }
 
+export type PedidoAvulsoHubSeed = {
+  clienteId: string
+  equipamentoIndex: number
+  /** Token único por clique (Date.now) para reaplicar o seed mesmo no mesmo cliente/equipamento. */
+  token: number
+}
+
 type Props = {
   clientes: ClientePedido[]
   pecasBiblioteca: Array<{ id: string; codigo: string; nome: string; imagem?: string }>
@@ -109,6 +116,9 @@ type Props = {
   onGerarOrcamento?: () => void
   logoHtml?: string
   empresaNonato?: OrcamentoPdfEmpresa
+  /** Pré-preenche cliente + equipamento a partir do Hub Cliente→Equipamento. */
+  hubSeed?: PedidoAvulsoHubSeed | null
+  onHubSeedConsumed?: () => void
 }
 
 const PEDIDOS_AVULSO_KEY = 'nonato-pedidos-orcamento-avulso'
@@ -252,6 +262,8 @@ export function PedidoOrcamentosAvulsoContent({
   onGerarOrcamento,
   logoHtml = '',
   empresaNonato,
+  hubSeed = null,
+  onHubSeedConsumed,
 }: Props) {
   const abrirEnvio = useDocumentoEnvioCliente()
   const [clienteSelecionado, setClienteSelecionado] = useState<ClientePedido | null>(null)
@@ -277,6 +289,33 @@ export function PedidoOrcamentosAvulsoContent({
   const [codigoUltimoGerado, setCodigoUltimoGerado] = useState<string | null>(null)
   const [buscaHistorico, setBuscaHistorico] = useState('')
   const [historicoCarregando, setHistoricoCarregando] = useState(false)
+  const lastHubSeedTokenRef = React.useRef<number | null>(null)
+
+  useEffect(() => {
+    if (!hubSeed || !hubSeed.clienteId) return
+    if (lastHubSeedTokenRef.current === hubSeed.token) return
+    lastHubSeedTokenRef.current = hubSeed.token
+    const cl = clientes.find((c) => c.id === hubSeed.clienteId) || null
+    if (!cl) {
+      onHubSeedConsumed?.()
+      return
+    }
+    setClienteSelecionado(cl)
+    setClienteNomeManual('')
+    setBuscaCliente('')
+    const eqs = cl.equipamentos || []
+    const idx = Math.max(0, Math.min(hubSeed.equipamentoIndex, eqs.length - 1))
+    const eq = eqs[idx] || null
+    const bloco = criarBlocoEquipamentoVazio()
+    if (eq) {
+      bloco.equipamento = eq
+      bloco.equipamentoIdx = idx
+      bloco.equipamentoManual = ''
+    }
+    setBlocosEquipamento([bloco])
+    setBlocoAtivoId(bloco.id)
+    onHubSeedConsumed?.()
+  }, [hubSeed, clientes, onHubSeedConsumed])
 
   const carregarPedidos = useCallback(async () => {
     const local = lerPedidosLocalStorage()
