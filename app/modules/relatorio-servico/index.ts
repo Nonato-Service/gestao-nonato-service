@@ -14,6 +14,8 @@ export type {
 export {
   criarEquipamentoRelatorioVazio,
   createEmptyEquipamentoRelatorioForm,
+  normalizarEquipamentoOrigem,
+  clientesExternosParaEquipamentoRelatorio,
 } from './equipamentoRelatorioForm'
 
 export type { RelatorioServico } from './relatorioServicoForm'

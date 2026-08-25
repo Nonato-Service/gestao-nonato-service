@@ -2,11 +2,16 @@ import type {
   RelatorioEquipamentoOrigem,
   RelatorioEquipamentoRef,
 } from '../relatorio-servico/equipamentoRelatorioForm'
+import { normalizarEquipamentoOrigem } from '../relatorio-servico/equipamentoRelatorioForm'
 export type {
   RelatorioEquipamentoOrigem,
   RelatorioEquipamentoRef,
 } from '../relatorio-servico/equipamentoRelatorioForm'
-export { criarEquipamentoRelatorioVazio } from '../relatorio-servico/equipamentoRelatorioForm'
+export {
+  criarEquipamentoRelatorioVazio,
+  normalizarEquipamentoOrigem,
+  clientesExternosParaEquipamentoRelatorio,
+} from '../relatorio-servico/equipamentoRelatorioForm'
 
 export type EquipamentoArmazemIdLookup = { id?: string; numeroSerie?: string }
 
@@ -65,7 +70,7 @@ export function encontrarEquipamentoArmazemCorrespondenteCliente(
   eq: RelatorioEquipamentoRef,
   equipamentosArmazem: EquipamentoArmazemBaixaLookup[]
 ): EquipamentoArmazemBaixaLookup | null {
-  if (eq.equipamentoOrigem !== 'cliente') return null
+  if (eq.equipamentoOrigem !== 'cliente' && eq.equipamentoOrigem !== 'clientes-externos') return null
   const chavesCliente = coletarIdsComparacaoEquipamentoCliente(eq, equipamentosArmazem)
   if (chavesCliente.length === 0) return null
 
@@ -441,10 +446,12 @@ export function normalizarEquipamentosRelatorio(
   if (Array.isArray(r.equipamentos) && r.equipamentos.length > 0) {
     return r.equipamentos.slice(0, MAX_EQUIPAMENTOS_RELATORIO).map((eq, i) => ({
       uid: eq.uid || `eq-${i}-${eq.equipamentoId || i}`,
-      equipamentoOrigem: eq.equipamentoOrigem === 'armazem' ? 'armazem' : 'cliente',
+      equipamentoOrigem: normalizarEquipamentoOrigem(eq.equipamentoOrigem),
       equipamentoId: String(eq.equipamentoId ?? '').trim(),
       maquinaModelo: String(eq.maquinaModelo ?? '').trim(),
       numeroMaquina: String(eq.numeroMaquina ?? '').trim(),
+      clienteExternoId: String(eq.clienteExternoId ?? '').trim() || undefined,
+      clienteExternoNome: String(eq.clienteExternoNome ?? '').trim() || undefined,
     }))
   }
 
@@ -456,7 +463,7 @@ export function normalizarEquipamentosRelatorio(
   return [
     {
       uid: 'legacy-0',
-      equipamentoOrigem: r.equipamentoOrigem === 'armazem' ? 'armazem' : 'cliente',
+      equipamentoOrigem: normalizarEquipamentoOrigem(r.equipamentoOrigem),
       equipamentoId: id,
       maquinaModelo: modelo,
       numeroMaquina: sn,
@@ -473,7 +480,14 @@ export function formatarEquipamentoRelatorioLinha(
   const idVis = resolverIdEquipamentoVisivelRelatorio(eq, equipamentosArmazem)
   const idPart = idVis ? `ID: ${idVis}` : ''
   const modelo = eq.maquinaModelo
-  const origemTag = eq.equipamentoOrigem === 'armazem' ? '(Armazém)' : ''
+  const origemTag =
+    eq.equipamentoOrigem === 'armazem'
+      ? '(Armazém)'
+      : eq.equipamentoOrigem === 'clientes-externos'
+        ? eq.clienteExternoNome
+          ? `(${eq.clienteExternoNome})`
+          : '(Cliente externo)'
+        : ''
   const partes = [idPart, modelo, origemTag].filter(Boolean)
   const corpo = partes.join(' · ')
   if (!corpo) return prefix || '—'
@@ -635,7 +649,19 @@ export function validarEquipamentosRelatorio(equipamentos: RelatorioEquipamentoR
     if (eq.equipamentoOrigem === 'armazem' && !eq.equipamentoId) {
       return `Equipamento ${i + 1}: selecione o equipamento do armazém ou remova a linha.`
     }
-    if (eq.equipamentoOrigem === 'cliente' && !eq.equipamentoId && !eq.maquinaModelo) {
+    if (
+      eq.equipamentoOrigem === 'clientes-externos' &&
+      !eq.clienteExternoId &&
+      !eq.equipamentoId &&
+      !eq.maquinaModelo
+    ) {
+      return `Equipamento ${i + 1}: selecione o cliente externo e o equipamento.`
+    }
+    if (
+      (eq.equipamentoOrigem === 'cliente' || eq.equipamentoOrigem === 'clientes-externos') &&
+      !eq.equipamentoId &&
+      !eq.maquinaModelo
+    ) {
       return `Equipamento ${i + 1}: selecione um equipamento do cliente.`
     }
   }
@@ -688,14 +714,20 @@ export function relatorioParaImprimirPDFEquipamentos<T extends RelatorioServicoE
 
   if (equipamentos.length === 1) {
     const eq = equipamentos[0]
-    const tagArmazem =
-      eq.equipamentoOrigem === 'armazem' ? ' (Armazém — gestão industrial)' : ''
+    const tagOrigem =
+      eq.equipamentoOrigem === 'armazem'
+        ? ' (Armazém — gestão industrial)'
+        : eq.equipamentoOrigem === 'clientes-externos'
+          ? eq.clienteExternoNome
+            ? ` (${eq.clienteExternoNome})`
+            : ' (Cliente externo)'
+          : ''
     return {
       ...r,
       equipamentos,
       equipamentoId: cabecalho.ids !== '—' ? cabecalho.ids : eq.equipamentoId,
       equipamentoOrigem: eq.equipamentoOrigem,
-      maquinaModelo: `${eq.maquinaModelo || '—'}${tagArmazem}`.trim(),
+      maquinaModelo: `${eq.maquinaModelo || '—'}${tagOrigem}`.trim(),
       numeroMaquina: eq.numeroMaquina,
     }
   }
@@ -739,7 +771,7 @@ export function equipamentosClienteParaBiblioteca(
   return [
     ...new Set(
       equipamentosRelatorioPreenchidos(equipamentos)
-        .filter((eq) => eq.equipamentoOrigem !== 'armazem')
+        .filter((eq) => eq.equipamentoOrigem === 'cliente')
         .map((eq) => chave(eq))
         .filter(Boolean)
     ),

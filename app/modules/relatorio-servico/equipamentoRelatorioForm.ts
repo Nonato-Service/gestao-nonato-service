@@ -1,6 +1,6 @@
 /** Equipamento no relatório de serviço (tipo puro + form vazio). */
 
-export type RelatorioEquipamentoOrigem = 'cliente' | 'armazem'
+export type RelatorioEquipamentoOrigem = 'cliente' | 'armazem' | 'clientes-externos'
 
 export type RelatorioEquipamentoRef = {
   uid: string
@@ -8,6 +8,29 @@ export type RelatorioEquipamentoRef = {
   equipamentoId: string
   maquinaModelo: string
   numeroMaquina: string
+  /** Quando origem = clientes-externos: id do outro cliente no cadastro. */
+  clienteExternoId?: string
+  /** Nome do cliente externo (persistido para PDF/resumo se o cadastro mudar). */
+  clienteExternoNome?: string
+}
+
+/** Normaliza origem antiga/desconhecida sem perder dados do utilizador. */
+export function normalizarEquipamentoOrigem(origem: unknown): RelatorioEquipamentoOrigem {
+  if (origem === 'armazem' || origem === 'clientes-externos') return origem
+  return 'cliente'
+}
+
+/** Clientes do cadastro excepto o cliente principal do relatório. */
+export function clientesExternosParaEquipamentoRelatorio<T extends { id?: string }>(
+  clientes: T[],
+  clientePrincipalId: string
+): T[] {
+  const principal = String(clientePrincipalId || '').trim()
+  return (clientes || []).filter((c) => {
+    if (c == null || typeof c !== 'object') return false
+    const id = String(c.id ?? '').trim()
+    return id !== '' && id !== principal
+  })
 }
 
 /** Estado inicial / limpo de uma linha de equipamento no relatório. */
@@ -20,6 +43,8 @@ export function criarEquipamentoRelatorioVazio(
     equipamentoId: '',
     maquinaModelo: '',
     numeroMaquina: '',
+    clienteExternoId: '',
+    clienteExternoNome: '',
   }
 }
 

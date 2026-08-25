@@ -44,6 +44,7 @@ import {
   type RelatorioEspecial,
 } from '../lib/relatorioEspecialTypes'
 import {
+  clientesExternosParaEquipamentoRelatorio,
   criarEquipamentoRelatorioVazio,
   equipamentoArmazemEstaAtivo,
   resolverChaveEquipamentoClienteRelatorio,
@@ -1417,6 +1418,8 @@ export default function RelatorioEspecialHub({
                                       equipamentoId: '',
                                       numeroMaquina: '',
                                       maquinaModelo: '',
+                                      clienteExternoId: '',
+                                      clienteExternoNome: '',
                                     }
                                   : item
                               )
@@ -1442,6 +1445,8 @@ export default function RelatorioEspecialHub({
                                       equipamentoId: '',
                                       numeroMaquina: '',
                                       maquinaModelo: '',
+                                      clienteExternoId: '',
+                                      clienteExternoNome: '',
                                     }
                                   : item
                               )
@@ -1451,8 +1456,78 @@ export default function RelatorioEspecialHub({
                         <span className="relatorio-equipamento-card__origem-radio-mark" aria-hidden="true" />
                         <span>{t.relatorioEspecialEquipOrigemArmazem || t.relatorioEquipOrigemArmazem || 'Armazém — biblioteca de equipamentos'}</span>
                       </label>
+                      <label className="relatorio-equipamento-card__origem-radio">
+                        <input
+                          type="radio"
+                          name={`re-eq-origem-${eq.uid}`}
+                          value="clientes-externos"
+                          checked={eq.equipamentoOrigem === 'clientes-externos'}
+                          onChange={() => {
+                            atualizarEquipamentos(
+                              (form.equipamentos || []).map((item) =>
+                                item.uid === eq.uid
+                                  ? {
+                                      ...item,
+                                      equipamentoOrigem: 'clientes-externos' as const,
+                                      equipamentoId: '',
+                                      numeroMaquina: '',
+                                      maquinaModelo: '',
+                                      clienteExternoId: '',
+                                      clienteExternoNome: '',
+                                    }
+                                  : item
+                              )
+                            )
+                          }}
+                        />
+                        <span className="relatorio-equipamento-card__origem-radio-mark" aria-hidden="true" />
+                        <span>
+                          {t.relatorioEquipOrigemClientesExternos ||
+                            'Clientes externos — equipamentos de outros clientes'}
+                        </span>
+                      </label>
                     </div>
                   </div>
+
+                  {eq.equipamentoOrigem === 'clientes-externos' && (
+                    <div className="relatorio-equipamento-card__field--full">
+                      <label className="relatorio-equipamento-card__label">
+                        {t.clienteExternoRelatorio || 'Cliente externo'}
+                      </label>
+                      <select
+                        value={eq.clienteExternoId || ''}
+                        onChange={(e) => {
+                          const cid = e.target.value
+                          const found = clientes.find((c) => c.id === cid)
+                          atualizarEquipamentos(
+                            (form.equipamentos || []).map((item) =>
+                              item.uid === eq.uid
+                                ? {
+                                    ...item,
+                                    equipamentoOrigem: 'clientes-externos' as const,
+                                    clienteExternoId: cid,
+                                    clienteExternoNome: found?.nomeEmpresa || '',
+                                    equipamentoId: '',
+                                    numeroMaquina: '',
+                                    maquinaModelo: '',
+                                  }
+                                : item
+                            )
+                          )
+                        }}
+                        className="relatorio-equipamento-card__select"
+                      >
+                        <option value="">
+                          {t.selecioneClienteExterno || 'Selecione o cliente externo'}
+                        </option>
+                        {clientesExternosParaEquipamentoRelatorio(clientes, clienteIdEfetivo).map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.nomeEmpresa || c.id}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                   <div className="relatorio-equipamento-card__field--full">
                     <label className="relatorio-equipamento-card__label">
@@ -1474,6 +1549,8 @@ export default function RelatorioEspecialHub({
                                     equipamentoId: found?.id || '',
                                     numeroMaquina: found?.numeroSerie || '',
                                     maquinaModelo: found ? `${found.modelo} ${found.marca}`.trim() : '',
+                                    clienteExternoId: '',
+                                    clienteExternoNome: '',
                                   }
                                 : item
                             )
@@ -1488,6 +1565,63 @@ export default function RelatorioEspecialHub({
                           </option>
                         ))}
                       </select>
+                    ) : eq.equipamentoOrigem === 'clientes-externos' ? (
+                      (() => {
+                        const eqsExternos =
+                          clientes.find((c) => c.id === (eq.clienteExternoId || ''))?.equipamentos ?? []
+                        const cidExt = eq.clienteExternoId || ''
+                        return (
+                          <select
+                            value={
+                              cidExt
+                                ? resolverChaveEquipamentoClienteRelatorio(
+                                    eq.equipamentoId || '',
+                                    eqsExternos,
+                                    equipamentosArmazem
+                                  )
+                                : eq.equipamentoId || ''
+                            }
+                            onChange={(e) => {
+                              const chave = e.target.value
+                              const selectedEquipamento = eqsExternos.find(
+                                (itemCli, idxCli) => resolverIdEquipamentoCliente(itemCli, idxCli) === chave
+                              )
+                              const idVisivel = selectedEquipamento
+                                ? resolverIdEquipamentoVisivelCliente(selectedEquipamento, equipamentosArmazem)
+                                : chave
+                              atualizarEquipamentos(
+                                (form.equipamentos || []).map((item) =>
+                                  item.uid === eq.uid
+                                    ? {
+                                        ...item,
+                                        equipamentoOrigem: 'clientes-externos' as const,
+                                        equipamentoId: idVisivel || chave,
+                                        numeroMaquina: selectedEquipamento?.numeroSerie || '',
+                                        maquinaModelo: selectedEquipamento
+                                          ? `${selectedEquipamento.modelo} ${selectedEquipamento.marca}`.trim()
+                                          : '',
+                                      }
+                                    : item
+                                )
+                              )
+                            }}
+                            className="relatorio-equipamento-card__select"
+                            disabled={!cidExt}
+                          >
+                            <option value="">{t.selecioneEquipamento || 'Selecione o equipamento'}</option>
+                            {cidExt &&
+                              eqsExternos.map((itemCli, idxCli) => {
+                                const eqKey = resolverIdEquipamentoCliente(itemCli, idxCli)
+                                const idVisivel = resolverIdEquipamentoVisivelCliente(itemCli, equipamentosArmazem)
+                                return (
+                                  <option key={eqKey} value={eqKey}>
+                                    ID {idVisivel || eqKey} · {itemCli.modelo} {itemCli.marca}
+                                  </option>
+                                )
+                              })}
+                          </select>
+                        )
+                      })()
                     ) : (
                       <select
                         value={
@@ -1518,6 +1652,8 @@ export default function RelatorioEspecialHub({
                                     maquinaModelo: selectedEquipamento
                                       ? `${selectedEquipamento.modelo} ${selectedEquipamento.marca}`.trim()
                                       : '',
+                                    clienteExternoId: '',
+                                    clienteExternoNome: '',
                                   }
                                 : item
                             )
@@ -1595,8 +1731,21 @@ export default function RelatorioEspecialHub({
                     <div className="relatorio-equipamento-card__preview relatorio-equipamento-card__field--full">
                       <strong>{t.relatorioEquipamentoIdLabel || 'ID'}:</strong>{' '}
                       <span className="relatorio-equipamento-card__id">
-                        {resolverEquipamentoRelatorioParaExibicao(eq, equipamentosArmazem, clienteEquipamentos) || '—'}
+                        {resolverEquipamentoRelatorioParaExibicao(
+                          eq,
+                          equipamentosArmazem,
+                          eq.equipamentoOrigem === 'clientes-externos'
+                            ? clientes.find((c) => c.id === (eq.clienteExternoId || ''))?.equipamentos ?? []
+                            : clienteEquipamentos
+                        ) || '—'}
                       </span>
+                      {eq.clienteExternoNome && eq.equipamentoOrigem === 'clientes-externos' ? (
+                        <>
+                          <span className="relatorio-equipamento-card__sep"> · </span>
+                          <strong>{t.clienteExternoRelatorio || 'Cliente externo'}:</strong>{' '}
+                          {eq.clienteExternoNome}
+                        </>
+                      ) : null}
                       {eq.maquinaModelo ? (
                         <>
                           <span className="relatorio-equipamento-card__sep"> · </span>
