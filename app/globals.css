@@ -9688,29 +9688,40 @@ button.clientes-alfa-letra--toggle:hover {
 }
 
 .relatorio-equipamento-card__origem-radios {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
   margin-top: 4px;
 }
 
 .relatorio-equipamento-card__origem-radio {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1 1 calc(50% - 4px);
-  min-width: min(100%, 148px);
-  padding: 10px 12px;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid rgba(100, 181, 246, 0.25);
   background: rgba(30, 58, 90, 0.35);
   cursor: pointer;
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: 12px;
+  line-height: 1.3;
   color: rgba(255, 255, 255, 0.92);
   transition: border-color 0.15s, background 0.15s;
   box-sizing: border-box;
+}
+
+@media (max-width: 520px) {
+  .relatorio-equipamento-card__origem-radios {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .relatorio-equipamento-card__origem-radio {
+    flex: 1 1 calc(50% - 4px);
+    min-width: min(100%, 140px);
+  }
 }
 
 .relatorio-equipamento-card__origem-radio > span:last-child {
