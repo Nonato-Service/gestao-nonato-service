@@ -1012,7 +1012,7 @@ function buildResumoViagemHtml(
 
   return `<div class="re-viagem-bloco">
     <h4 class="re-viagem-bloco__titulo">${esc(L(labels, 'relatorioEspecialResumoViagem', 'Viagem / deslocação'))}</h4>
-    <p class="re-viagem-bloco__ajuda">${esc(L(labels, 'relatorioEspecialResumoViagemAjuda', 'Dias só com viagem ou registados sem horas em máquina — com equipamento e cliente.'))}</p>
+    <p class="re-viagem-bloco__ajuda">${esc(L(labels, 'relatorioEspecialResumoViagemAjuda', 'Dias só com viagem ou registados sem horas em máquina. Equipamento só aparece se foi seleccionado no dia.'))}</p>
     <table class="re-table">
       <thead>
         <tr>

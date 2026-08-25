@@ -2279,7 +2279,7 @@ export default function RelatorioEspecialHub({
             </div>
             <p style={{ fontSize: 11, color: '#888', margin: '0 0 8px' }}>
               {t.relatorioEspecialResumoViagemAjuda ||
-                'Dias só com viagem ou registados sem horas em máquina — com equipamento e cliente.'}
+                'Dias só com viagem ou registados sem horas em máquina. Equipamento só aparece se foi seleccionado no dia.'}
             </p>
             <table className="relatorio-especial-resumo-equip__tabela">
               <thead>

@@ -553,13 +553,13 @@ export type DiaSemMaquinaResumoEspecial = {
   soViagem: boolean
   /** Dia registado (diária) sem máquina e sem viagem (ex. domingo). */
   soRegisto: boolean
-  /** Série / modelo / marca dos equipamentos ligados ao dia (ou do relatório). */
+  /** Série / modelo / marca dos equipamentos seleccionados nas linhas do dia (vazio se nenhum). */
   equipamentoFmt: string
   /** Cliente do relatório especial. */
   clienteFmt: string
   /**
    * Texto pronto para Resumo/PDF, ex.:
-   * «Viagem / deslocação — Equipamento: HOLZMA · Cliente: ACME»
+   * «Viagem / deslocação — Cliente: ACME» (equipamento só se seleccionado no dia)
    */
   contextoFmt: string
 }
@@ -584,7 +584,10 @@ function labelEquipamentoRefMin(eq: EquipamentoRefMinEspecial, idx: number): str
   return parts.length > 0 ? parts.join(' · ') : `#${idx + 1}`
 }
 
-/** Equipamentos do dia (uids nas linhas); se nenhum, todos os do relatório. */
+/**
+ * Equipamentos seleccionados nas linhas de horas do dia.
+ * Sem uid no dia → lista vazia (não herda equipamentos do relatório / cliente / outro dia).
+ */
 export function equipamentosContextoDiaEspecial(
   dia: DiaTrabalhoEspecial,
   equipamentosRelatorio: EquipamentoRefMinEspecial[] | undefined | null
@@ -599,21 +602,14 @@ export function equipamentosContextoDiaEspecial(
     seen.add(uid)
     uidsDia.push(uid)
   }
-  if (uidsDia.length > 0) {
-    const doDia: EquipamentoRefMinEspecial[] = []
-    for (const uid of uidsDia) {
-      const eq = porUid.get(uid)
-      if (eq) doDia.push(eq)
-      else doDia.push({ uid, equipamentoId: uid })
-    }
-    return doDia
+  if (uidsDia.length === 0) return []
+  const doDia: EquipamentoRefMinEspecial[] = []
+  for (const uid of uidsDia) {
+    const eq = porUid.get(uid)
+    if (eq) doDia.push(eq)
+    else doDia.push({ uid, equipamentoId: uid })
   }
-  return lista.filter(
-    (e) =>
-      String(e.equipamentoId || '').trim() ||
-      String(e.maquinaModelo || '').trim() ||
-      String(e.numeroMaquina || '').trim()
-  )
+  return doDia
 }
 
 function montarContextoViagemFmt(
@@ -634,7 +630,7 @@ function montarContextoViagemFmt(
 /**
  * Dias que não aparecem nas tabelas por máquina do Resumo:
  * só viagem e (opcionalmente) dias registados sem horas em máquina.
- * Inclui equipamento(s) e cliente para quem só lê o Resumo.
+ * Cliente do relatório; equipamento só se seleccionado nas linhas do dia.
  */
 export function coletarDiasSemMaquinaResumo(
   dias: DiaTrabalhoEspecial[] | undefined | null,
