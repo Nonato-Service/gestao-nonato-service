@@ -20340,6 +20340,86 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   cursor: not-allowed;
 }
 
+/* Bateria de progresso — Enviar / Carregar do servidor */
+.admin-sync-battery {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  background: rgba(8, 15, 28, 0.72);
+}
+.admin-sync-battery__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.admin-sync-battery__shell {
+  position: relative;
+  flex: 1;
+  height: 18px;
+  padding: 2px;
+  border-radius: 5px;
+  border: 2px solid rgba(148, 163, 184, 0.55);
+  background: #0a0a0a;
+  box-sizing: border-box;
+}
+.admin-sync-battery__shell::after {
+  content: '';
+  position: absolute;
+  right: -7px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 8px;
+  border-radius: 0 2px 2px 0;
+  background: rgba(148, 163, 184, 0.55);
+}
+.admin-sync-battery__fill {
+  height: 100%;
+  min-width: 0;
+  border-radius: 2px;
+  transition: width 0.28s ease, background 0.35s ease, box-shadow 0.35s ease;
+}
+.admin-sync-battery__fill--charging {
+  background: linear-gradient(90deg, #0d47a1 0%, #1e88e5 45%, #64b5f6 100%);
+  background-size: 200% 100%;
+  animation: admin-sync-battery-charge 1.35s linear infinite;
+  box-shadow: 0 0 10px rgba(30, 136, 229, 0.45);
+}
+.admin-sync-battery__fill--done {
+  background: #00c853;
+  animation: none;
+  box-shadow: 0 0 12px rgba(0, 200, 83,.55);
+}
+.admin-sync-battery__pct {
+  min-width: 3.4em;
+  text-align: right;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #90caf9;
+  font-variant-numeric: tabular-nums;
+}
+.admin-sync-battery__pct--done {
+  color: #69f0ae;
+}
+.admin-sync-battery__label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(147, 197, 253, 0.9);
+}
+.admin-sync-battery__label--done {
+  color: rgba(105, 240, 174, 0.95);
+}
+@keyframes admin-sync-battery-charge {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
 /* Centro de Demonstrações */
 .admin-demos-hub {
   display: flex;

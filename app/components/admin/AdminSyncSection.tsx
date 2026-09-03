@@ -1,12 +1,15 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { AdminSyncBatteryProgress } from './AdminSyncBatteryProgress'
 import type { SafeT, SyncPendingRemote } from './adminTypes'
 
 export type AdminSyncSectionProps = {
   safeT: SafeT
   syncPendingRemote: SyncPendingRemote | null
   syncPushLoading: boolean
+  /** Progresso 0–100 do envio (pai); se omitido, a secção estima localmente. */
+  syncOperationPercent?: number
   setSyncDecisionModalOpen: (open: boolean) => void
   setLastAcceptedRevision: (rev: number) => void
   pendingFullServerReplaceKey: string
@@ -17,20 +20,48 @@ function tr(safeT: SafeT, key: string, fallback: string): string {
   return (safeT as Record<string, string | undefined>)[key] || fallback
 }
 
+function labelWithPercent(template: string, n: number): string {
+  return template.replace(/\{n\}/g, String(Math.max(0, Math.min(100, Math.round(n)))))
+}
+
 export function AdminSyncSection({
   safeT,
   syncPendingRemote,
   syncPushLoading,
+  syncOperationPercent = 0,
   setSyncDecisionModalOpen,
   setLastAcceptedRevision,
   pendingFullServerReplaceKey,
   enviarEsteAparelhoParaServidor,
 }: AdminSyncSectionProps) {
   const [confirmPush, setConfirmPush] = useState(false)
+  const [pushDoneFlash, setPushDoneFlash] = useState(false)
+  const [pullLoading, setPullLoading] = useState(false)
+  const [pullPercent, setPullPercent] = useState(0)
+  const [pullDone, setPullDone] = useState(false)
   const pending = Boolean(syncPendingRemote)
   const revision = syncPendingRemote?.revision ?? 0
 
+  const pushPercent = syncPushLoading
+    ? Math.max(1, Math.min(99, Math.round(syncOperationPercent || 1)))
+    : pushDoneFlash
+      ? 100
+      : Math.max(0, Math.min(100, Math.round(syncOperationPercent || 0)))
+
+  useEffect(() => {
+    if (syncPushLoading) {
+      setPushDoneFlash(false)
+      return
+    }
+    if (syncOperationPercent >= 100) {
+      setPushDoneFlash(true)
+      const tid = window.setTimeout(() => setPushDoneFlash(false), 2200)
+      return () => window.clearTimeout(tid)
+    }
+  }, [syncPushLoading, syncOperationPercent])
+
   const handleManualPull = () => {
+    if (pullLoading) return
     const msg =
       tr(
         safeT,
@@ -38,19 +69,38 @@ export function AdminSyncSection({
         'Recarregar a partir do servidor? A revisão local é reposta e a página recarrega.'
       )
     if (!window.confirm(msg)) return
-    setLastAcceptedRevision(0)
-    try {
-      localStorage.setItem('nonato-sync-last-accepted-revision', '0')
-    } catch {
-      /* ignorar */
-    }
-    try {
-      sessionStorage.setItem('nonato-sync-full-server-apply', '1')
-      localStorage.setItem(pendingFullServerReplaceKey, '1')
-    } catch {
-      /* ignorar */
-    }
-    window.location.reload()
+
+    setPullLoading(true)
+    setPullDone(false)
+    setPullPercent(8)
+
+    const climb = window.setInterval(() => {
+      setPullPercent((prev) => {
+        if (prev >= 88) return prev
+        return Math.min(88, prev + Math.max(2, Math.round((88 - prev) * 0.12)))
+      })
+    }, 160)
+
+    window.setTimeout(() => {
+      window.clearInterval(climb)
+      setPullPercent(100)
+      setPullDone(true)
+      setLastAcceptedRevision(0)
+      try {
+        localStorage.setItem('nonato-sync-last-accepted-revision', '0')
+      } catch {
+        /* ignorar */
+      }
+      try {
+        sessionStorage.setItem('nonato-sync-full-server-apply', '1')
+        localStorage.setItem(pendingFullServerReplaceKey, '1')
+      } catch {
+        /* ignorar */
+      }
+      window.setTimeout(() => {
+        window.location.reload()
+      }, 280)
+    }, 900)
   }
 
   return (
@@ -153,10 +203,32 @@ export function AdminSyncSection({
             <h4>{tr(safeT, 'adminSyncHubActionPullTitle', 'Atualizar este aparelho')}</h4>
             <p>{tr(safeT, 'adminSyncHubActionPullDesc', 'Trazer a cópia mais recente do servidor para aqui')}</p>
           </div>
-          <button type="button" className="admin-sync-hub-btn admin-sync-hub-btn--pull" onClick={handleManualPull}>
-            {tr(safeT, 'syncLoadFromServer', 'Carregar do servidor')}
+          <button
+            type="button"
+            className="admin-sync-hub-btn admin-sync-hub-btn--pull"
+            onClick={handleManualPull}
+            disabled={pullLoading || syncPushLoading}
+          >
+            {pullLoading
+              ? tr(safeT, 'syncPullChecking', 'A atualizar do servidor')
+              : tr(safeT, 'syncLoadFromServer', 'Carregar do servidor')}
             <span className="admin-sync-hub-btn__sub">{tr(safeT, 'syncAdminManualPullShort', 'forçar alinhamento')}</span>
           </button>
+          {(pullLoading || pullDone) && (
+            <AdminSyncBatteryProgress
+              percent={pullPercent}
+              active={pullLoading && !pullDone}
+              done={pullDone}
+              label={
+                pullDone
+                  ? tr(safeT, 'syncConcluido', 'Concluído')
+                  : labelWithPercent(
+                      tr(safeT, 'carregandoPercentagem', 'A carregar… {n}%'),
+                      pullPercent
+                    )
+              }
+            />
+          )}
         </article>
 
         <article className="admin-sync-hub__action admin-sync-hub__action--push">
@@ -174,20 +246,30 @@ export function AdminSyncSection({
             </p>
           </div>
           {!confirmPush ? (
-            <button type="button" className="admin-sync-hub-btn admin-sync-hub-btn--ghost" onClick={() => setConfirmPush(true)} disabled={syncPushLoading}>
+            <button
+              type="button"
+              className="admin-sync-hub-btn admin-sync-hub-btn--ghost"
+              onClick={() => setConfirmPush(true)}
+              disabled={syncPushLoading || pullLoading}
+            >
               {tr(safeT, 'adminSyncHubActionPushPrepare', 'Preparar envio')}
             </button>
           ) : (
             <div className="admin-sync-hub__confirm">
               <p>{tr(safeT, 'syncAdminForcePushHint', 'Confirme apenas se este aparelho tem os dados corretos.')}</p>
               <div className="admin-sync-hub__confirm-actions">
-                <button type="button" className="admin-sync-hub-btn admin-sync-hub-btn--ghost" onClick={() => setConfirmPush(false)} disabled={syncPushLoading}>
+                <button
+                  type="button"
+                  className="admin-sync-hub-btn admin-sync-hub-btn--ghost"
+                  onClick={() => setConfirmPush(false)}
+                  disabled={syncPushLoading}
+                >
                   {tr(safeT, 'cancel', 'Cancelar')}
                 </button>
                 <button
                   type="button"
                   className="admin-sync-hub-btn admin-sync-hub-btn--push"
-                  disabled={syncPushLoading}
+                  disabled={syncPushLoading || pullLoading}
                   onClick={() => {
                     setConfirmPush(false)
                     void enviarEsteAparelhoParaServidor()
@@ -199,6 +281,21 @@ export function AdminSyncSection({
                 </button>
               </div>
             </div>
+          )}
+          {(syncPushLoading || pushDoneFlash || (pushPercent > 0 && pushPercent < 100 && syncPushLoading)) && (
+            <AdminSyncBatteryProgress
+              percent={pushPercent}
+              active={syncPushLoading && pushPercent < 100}
+              done={pushDoneFlash || (!syncPushLoading && pushPercent >= 100)}
+              label={
+                pushDoneFlash || pushPercent >= 100
+                  ? tr(safeT, 'syncConcluido', 'Concluído')
+                  : labelWithPercent(
+                      tr(safeT, 'enviandoPercentagem', 'A enviar… {n}%'),
+                      pushPercent
+                    )
+              }
+            />
           )}
         </article>
       </div>

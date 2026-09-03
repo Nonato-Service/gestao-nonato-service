@@ -6153,10 +6153,19 @@ export default function Dashboard() {
       'Isto vai SUBSTITUIR os dados no servidor pelos deste aparelho. Os outros equipamentos passarão a poder carregar esta versão. Continuar?'
     if (!window.confirm(msg)) return
     setSyncPushLoading(true)
-    setSyncOperationPercent(18)
+    setSyncOperationPercent(5)
+    /** Pedido único (`save-all`): sobe suavemente até ~90%; 100% só no sucesso. */
+    const progressTimer = window.setInterval(() => {
+      setSyncOperationPercent((prev) => {
+        if (prev >= 90) return prev
+        const step = Math.max(1, Math.round((90 - prev) * 0.1))
+        return Math.min(90, prev + step)
+      })
+    }, 320)
     try {
       const r = await pushAllLocalStorageToServer()
       if (!r.ok) {
+        window.clearInterval(progressTimer)
         window.alert(
           (safeT as any)?.syncPushFail ||
             (r.error === 'empty'
@@ -6166,6 +6175,7 @@ export default function Dashboard() {
         setSyncOperationPercent(0)
         return
       }
+      window.clearInterval(progressTimer)
       setSyncOperationPercent(100)
       window.alert((safeT as any)?.syncPushOk || 'Dados enviados ao servidor. Os outros aparelhos verão «Carregar do servidor» na próxima vez que abrirem a página.')
       setSyncPendingRemote(null)
@@ -6178,11 +6188,13 @@ export default function Dashboard() {
           /* ignorar */
         }
       }
-      await new Promise((r) => setTimeout(r, 80))
+      await new Promise((r) => setTimeout(r, 180))
       window.location.reload()
     } finally {
+      window.clearInterval(progressTimer)
       setSyncPushLoading(false)
-      setSyncOperationPercent(0)
+      /* Mantém 100% visível até ao reload; só limpa se falhou (já a 0) ou ficou abaixo. */
+      setSyncOperationPercent((prev) => (prev >= 100 ? 100 : 0))
     }
   }, [safeT])
 
@@ -27484,6 +27496,7 @@ export default function Dashboard() {
               safeT,
               syncPendingRemote,
               syncPushLoading,
+              syncOperationPercent,
               setSyncDecisionModalOpen,
               setLastAcceptedRevision,
               pendingFullServerReplaceKey: NONATO_PENDING_FULL_SERVER_REPLACE_LS,
@@ -70857,6 +70870,7 @@ A1;Peça exemplo;10`}
                 safeT,
                 syncPendingRemote,
                 syncPushLoading,
+                syncOperationPercent,
                 setSyncDecisionModalOpen,
                 setLastAcceptedRevision,
                 pendingFullServerReplaceKey: NONATO_PENDING_FULL_SERVER_REPLACE_LS,
