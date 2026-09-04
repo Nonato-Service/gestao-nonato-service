@@ -4510,6 +4510,8 @@ export default function Dashboard() {
   const [showEquipamentoClienteForm, setShowEquipamentoClienteForm] = useState(false)
   const [editingEquipamentoCliente, setEditingEquipamentoCliente] = useState<EquipamentoCliente | null>(null)
   const [editingEquipamentoClienteIndex, setEditingEquipamentoClienteIndex] = useState<number | null>(null)
+  /** Índice de edição estável (evita append se o state do índice falhar no save). */
+  const editingEquipamentoClienteIndexRef = useRef<number | null>(null)
   const equipamentoClienteFormRef = useRef<HTMLDivElement | null>(null)
   const [isSavingEquipamentoCliente, setIsSavingEquipamentoCliente] = useState(false)
   const [equipamentoClienteGuardadoMsg, setEquipamentoClienteGuardadoMsg] = useState('')
@@ -14765,6 +14767,7 @@ export default function Dashboard() {
     setShowEquipamentoClienteForm(false)
     setEditingEquipamentoCliente(null)
     setEditingEquipamentoClienteIndex(null)
+    editingEquipamentoClienteIndexRef.current = null
     setEquipamentoClienteTemCodigoProprio(false)
     setEquipamentoClienteGuardadoMsg('')
   }
@@ -14774,6 +14777,7 @@ export default function Dashboard() {
     setSelectedClienteForEquipamento(latest)
     setEditingEquipamentoCliente(null)
     setEditingEquipamentoClienteIndex(null)
+    editingEquipamentoClienteIndexRef.current = null
     setEquipamentoClienteGuardadoMsg('')
     setEquipamentoClienteForm(createEmptyEquipamentoClienteForm())
     setNewItemCliente('')
@@ -14790,16 +14794,19 @@ export default function Dashboard() {
     if (eqAtual == null || typeof eqAtual !== 'object') return
     setSelectedClienteForEquipamento(latest)
     setEditingEquipamentoCliente(eqAtual)
-    setEditingEquipamentoClienteIndex(index >= 0 ? index : null)
+    const idxEdit = index >= 0 ? index : null
+    setEditingEquipamentoClienteIndex(idxEdit)
+    editingEquipamentoClienteIndexRef.current = idxEdit
     setEquipamentoClienteGuardadoMsg('')
     const idBruto = String(eqAtual.id ?? '').trim()
     const idETecnico = equipamentoIdETecnicoGerado(eqAtual.id)
-    const idVisivel = resolverIdEquipamentoVisivelCliente(eqAtual, equipamentos)
-    const temCodigoProprio = Boolean((idBruto && !idETecnico) || (idETecnico && idVisivel))
+    // Só «código próprio» se o ID guardado for do utilizador — NÃO usar o ID visível do armazém
+    // (isso substituía o UUID técnico e, com mudança de série, o merge/sync criava duplicado).
+    const temCodigoProprio = Boolean(idBruto && !idETecnico)
     setEquipamentoClienteTemCodigoProprio(temCodigoProprio)
     setEquipamentoClienteForm({
       ...eqAtual,
-      id: temCodigoProprio ? (idBruto && !idETecnico ? idBruto : idVisivel) : '',
+      id: temCodigoProprio ? idBruto : '',
       itemsIncluded: eqAtual.itemsIncluded ? [...eqAtual.itemsIncluded] : [],
       relatorios: eqAtual.relatorios ? [...eqAtual.relatorios] : [],
     })
@@ -14870,24 +14877,39 @@ export default function Dashboard() {
       }
     }
 
+    const resolveEditIndex = (equipamentosList: EquipamentoCliente[]): number => {
+      if (!editingEquipamentoCliente) return -1
+      const idxState =
+        editingEquipamentoClienteIndex != null ? editingEquipamentoClienteIndex : editingEquipamentoClienteIndexRef.current
+      if (idxState != null && idxState >= 0 && idxState < equipamentosList.length) {
+        return idxState
+      }
+      const idOrig = String(editingEquipamentoCliente.id ?? '').trim()
+      if (idOrig) {
+        const byId = equipamentosList.findIndex((eq) => String(eq?.id ?? '').trim() === idOrig)
+        if (byId >= 0) return byId
+      }
+      return equipamentosList.findIndex(
+        (eq) =>
+          eq != null &&
+          eq.numeroSerie === editingEquipamentoCliente.numeroSerie &&
+          eq.tipoEquipamento === editingEquipamentoCliente.tipoEquipamento
+      )
+    }
+
+    const editIndexResolved =
+      clienteAtual && editingEquipamentoCliente ? resolveEditIndex(clienteAtual.equipamentos) : -1
+
+    if (editingEquipamentoCliente && editIndexResolved < 0) {
+      alert(
+        (safeT as any)?.equipamentoClienteEditNaoEncontrado ||
+          'Não foi possível localizar o equipamento a editar. Feche o formulário, toque em «Editar» no cartão correcto e guarde outra vez. Não foi criado um equipamento novo.'
+      )
+      return
+    }
+
     if (clienteAtual && idUsuario) {
-      const editIndex = editingEquipamentoCliente
-        ? (() => {
-            if (
-              editingEquipamentoClienteIndex != null &&
-              editingEquipamentoClienteIndex >= 0 &&
-              editingEquipamentoClienteIndex < clienteAtual.equipamentos.length
-            ) {
-              return editingEquipamentoClienteIndex
-            }
-            return clienteAtual.equipamentos.findIndex((eq) =>
-              editingEquipamentoCliente.id
-                ? eq.id === editingEquipamentoCliente.id
-                : eq.numeroSerie === editingEquipamentoCliente.numeroSerie &&
-                  eq.tipoEquipamento === editingEquipamentoCliente.tipoEquipamento
-            )
-          })()
-        : -1
+      const editIndex = editingEquipamentoCliente ? editIndexResolved : -1
       const dupId = clienteAtual.equipamentos.some((eq, i) => {
         if (editIndex >= 0 && i === editIndex) return false
         return String(eq.id || '').trim() === idUsuario
@@ -14901,12 +14923,23 @@ export default function Dashboard() {
       }
     }
 
+    const idOriginal = editingEquipamentoCliente ? String(editingEquipamentoCliente.id ?? '').trim() : ''
+    const idOriginalETecnico = equipamentoIdETecnicoGerado(idOriginal || undefined)
+    const idVisivelOriginal = editingEquipamentoCliente
+      ? resolverIdEquipamentoVisivelCliente(editingEquipamentoCliente, equipamentos)
+      : ''
+
     const idFinal = editingEquipamentoCliente
-      ? equipamentoClienteTemCodigoProprio
-        ? idUsuario ||
-          String(editingEquipamentoCliente.id ?? '').trim() ||
-          gerarIdEquipamentoCliente()
-        : String(editingEquipamentoCliente.id ?? '').trim() || gerarIdEquipamentoCliente()
+      ? (() => {
+          if (equipamentoClienteTemCodigoProprio && idUsuario) {
+            // Evitar gravar o ID do armazém por cima do UUID técnico (duplicados no sync).
+            if (idOriginalETecnico && idUsuario === idVisivelOriginal) {
+              return idOriginal || gerarIdEquipamentoCliente()
+            }
+            return idUsuario
+          }
+          return idOriginal || gerarIdEquipamentoCliente()
+        })()
       : equipamentoClienteTemCodigoProprio && idUsuario
         ? idUsuario
         : gerarIdEquipamentoCliente()
@@ -14926,34 +14959,36 @@ export default function Dashboard() {
     const updatedClientes = clientes.map((c) => {
       if (c.id !== selectedClienteForEquipamento.id) return c
       if (editingEquipamentoCliente) {
-        let index = -1
-        if (
-          editingEquipamentoClienteIndex != null &&
-          editingEquipamentoClienteIndex >= 0 &&
-          editingEquipamentoClienteIndex < c.equipamentos.length
-        ) {
-          index = editingEquipamentoClienteIndex
-        }
-        if (index < 0 && editingEquipamentoCliente.id) {
-          index = c.equipamentos.findIndex((eq) => eq.id === editingEquipamentoCliente.id)
-        }
-        if (index < 0) {
-          index = c.equipamentos.findIndex(
-            (eq) =>
-              eq.numeroSerie === editingEquipamentoCliente.numeroSerie &&
-              eq.tipoEquipamento === editingEquipamentoCliente.tipoEquipamento
-          )
+        // Nunca fazer push em modo edição — só substituir no índice resolvido.
+        const index =
+          editIndexResolved >= 0 && editIndexResolved < c.equipamentos.length
+            ? editIndexResolved
+            : resolveEditIndex(c.equipamentos)
+        if (index < 0 || index >= c.equipamentos.length) {
+          return c
         }
         const updatedEquipamentos = [...c.equipamentos]
-        if (index >= 0) {
-          updatedEquipamentos[index] = savedEquipamentoCliente
-        } else {
-          updatedEquipamentos.push(savedEquipamentoCliente)
-        }
+        updatedEquipamentos[index] = savedEquipamentoCliente
         return { ...c, equipamentos: updatedEquipamentos }
       }
       return { ...c, equipamentos: [...c.equipamentos, savedEquipamentoCliente] }
     })
+
+    // Se a edição não alterou nenhum cliente (índice inválido após map), abortar sem gravar.
+    if (wasEditing) {
+      const before = previousClientes.find((c) => c.id === selectedClienteForEquipamento.id)
+      const after = updatedClientes.find((c) => c.id === selectedClienteForEquipamento.id)
+      const beforeJson = JSON.stringify(before?.equipamentos ?? [])
+      const afterJson = JSON.stringify(after?.equipamentos ?? [])
+      if (beforeJson === afterJson) {
+        setIsSavingEquipamentoCliente(false)
+        alert(
+          (safeT as any)?.equipamentoClienteEditNaoEncontrado ||
+            'Não foi possível localizar o equipamento a editar. Feche o formulário, toque em «Editar» no cartão correcto e guarde outra vez. Não foi criado um equipamento novo.'
+        )
+        return
+      }
+    }
 
     setClientes(updatedClientes)
 
@@ -14977,6 +15012,10 @@ export default function Dashboard() {
     setEquipamentoClienteTemCodigoProprio(Boolean(idGravado && !idETecnico))
     setEquipamentoClienteForm({ ...savedEquipamentoCliente, id: idETecnico ? '' : idGravado })
     setEditingEquipamentoCliente(savedEquipamentoCliente)
+    if (wasEditing && editIndexResolved >= 0) {
+      setEditingEquipamentoClienteIndex(editIndexResolved)
+      editingEquipamentoClienteIndexRef.current = editIndexResolved
+    }
     setNewItemCliente('')
     const msg = wasEditing
       ? (safeT as any)?.equipamentoClienteUpdated || 'Equipamento atualizado com sucesso!'
@@ -74131,6 +74170,7 @@ A1;Peça exemplo;10`}
                           setShowEquipamentoClienteForm(false)
                           setEditingEquipamentoCliente(null)
                           setEditingEquipamentoClienteIndex(null)
+                          editingEquipamentoClienteIndexRef.current = null
                           setEquipamentoClienteGuardadoMsg('')
                           setEquipamentoClienteTemCodigoProprio(false)
                         }}

@@ -15,10 +15,11 @@ export type ClienteMerge = {
 }
 
 export function equipamentoClienteDedupeKey(e: EquipamentoClienteMerge): string {
-  const s = String(e?.numeroSerie ?? '').trim()
-  if (s) return `s:${s}`
+  // ID primeiro: ao editar e mudar n.º de série, o mesmo equipamento não pode virar 2 entradas no merge/sync.
   const id = String(e?.id ?? '').trim()
   if (id) return `i:${id}`
+  const s = String(e?.numeroSerie ?? '').trim()
+  if (s) return `s:${s}`
   return `h:${JSON.stringify({ m: e?.modelo, t: e?.tipoEquipamento })}`
 }
 
@@ -44,7 +45,7 @@ export function mergeEquipamentosClienteLists(
   return Array.from(by.values())
 }
 
-/** Funde listas de clientes: campos do servidor prevalecem; equipamentos = união por n.º de série. */
+/** Funde listas de clientes: campos do servidor prevalecem; equipamentos = união por ID (senão n.º de série). */
 export function mergeNonatoClientesDeferServerLocal(
   serverList: unknown,
   localList: unknown
