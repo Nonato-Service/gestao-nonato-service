@@ -20,7 +20,7 @@ import {
   sortDiasTrabalhoEspecialCronologicamente,
   diaTrabalhoDataChaveOrdenacao,
 } from '../lib/relatorioEspecialCalculos'
-import { BibliotecaHubPainelRecolhivel } from './BibliotecaHubPainelRecolhivel'
+import { BibliotecaHubPainelRecolhivel, type HubPainelStatus } from './BibliotecaHubPainelRecolhivel'
 import { DocumentoEnvioAcoes } from './DocumentoEnvioAcoes'
 import {
   buildTextoEnvioRelatorioEspecial,
@@ -1034,6 +1034,30 @@ export default function RelatorioEspecialHub({
   const clienteEquipamentos = clientes.find((c) => c.id === clienteIdEfetivo)?.equipamentos ?? []
   const podeAdicionarEquip = (form.equipamentos?.length || 0) < MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES
 
+  const chipOk = t.relatorioEspecialChipOk || 'OK'
+  const chipIncompleto = t.relatorioEspecialChipIncompleto || 'Incompleto'
+  const chipEmFalta = t.relatorioEspecialChipEmFalta || 'Em falta'
+  const chipOpcional = t.relatorioEspecialChipOpcional || 'Opcional'
+  const labelChip = (status: HubPainelStatus, opcional = false) => {
+    if (status === 'ok') return chipOk
+    if (opcional && status === 'empty') return chipOpcional
+    if (status === 'empty') return chipEmFalta
+    return chipIncompleto
+  }
+  const temNumeroBasico = Boolean((form.numero || '').trim())
+  const temClienteBasico = Boolean((form.cliente || '').trim() || form.clienteId)
+  const temTecnicoBasico = Boolean((form.tecnico || '').trim())
+  const statusBasicas: HubPainelStatus =
+    temNumeroBasico && temClienteBasico && temTecnicoBasico
+      ? 'ok'
+      : temNumeroBasico || temClienteBasico || temTecnicoBasico
+        ? 'incomplete'
+        : 'empty'
+  const statusEquipamentos: HubPainelStatus = (form.equipamentos?.length || 0) > 0 ? 'ok' : 'empty'
+  const statusDias: HubPainelStatus = diasOrdenados.length > 0 ? 'ok' : 'empty'
+  const statusResumo: HubPainelStatus = diasOrdenados.length > 0 ? 'ok' : 'empty'
+  const statusObservacoes: HubPainelStatus = (form.observacoes || '').trim() ? 'ok' : 'empty'
+
   return (
     <div className="relatorio-especial-form" style={{ padding: '16px 0' }}>
       <div className="mobile-sticky-toolbar relatorio-especial-mobile-bar">
@@ -1066,7 +1090,7 @@ export default function RelatorioEspecialHub({
         )}
       </div>
 
-      <div className="relatorio-especial-form__action-bar relatorio-especial-desktop-nav">
+      <div className="relatorio-especial-form__action-bar relatorio-especial-form__action-bar--sticky-top relatorio-especial-desktop-nav">
         <button type="button" className="re-action-btn re-action-btn--ghost" onClick={voltarLista}>
           ← {t.voltar || 'Voltar'}
         </button>
@@ -1121,6 +1145,10 @@ export default function RelatorioEspecialHub({
             ? t.relatorioEspecialEditar || 'Editar relatório de serviços'
             : t.relatorioEspecialNovo || 'Novo relatório de serviços'}
         </h2>
+        <p className="relatorio-especial-form__secoes-ajuda">
+          {t.relatorioEspecialSecoesAjuda ||
+            'Toque numa secção para abrir ou fechar. No ecrã grande as secções aparecem em grelha.'}
+        </p>
         {formTemAlteracoes() ? (
           <p className="relatorio-especial-form__aviso-pendente">
             {t.relatorioEspecialAlteracoesPendentes ||
@@ -1129,14 +1157,18 @@ export default function RelatorioEspecialHub({
         ) : null}
       </header>
 
-      <div className="relatorio-especial-paineis-stack">
+      <div className="relatorio-especial-paineis-stack relatorio-especial-paineis-stack--steps">
       <BibliotecaHubPainelRecolhivel
         modulo="relatorio-especial"
         id="re-form-basicas"
+        className="relatorio-especial-hub-step"
         titulo={t.informacoesBasicas || 'Informações básicas'}
         resumo={`${form.numero || '—'} · ${form.cliente || (t.selecioneCliente || 'Cliente')}`}
         icone="📋"
         defaultAberto
+        status={statusBasicas}
+        statusLabel={labelChip(statusBasicas)}
+        sempreMostrarResumo
         labelExpandir={t.bibliotecaPainelExpandir || 'Expandir'}
         labelRetrair={t.bibliotecaPainelRetrair || 'Retrair'}
       >
@@ -1293,10 +1325,14 @@ export default function RelatorioEspecialHub({
       <BibliotecaHubPainelRecolhivel
         modulo="relatorio-especial"
         id="re-form-equipamentos"
+        className="relatorio-especial-hub-step"
         titulo={t.relatorioEspecialEquipamentos || 'Equipamentos'}
         resumo={`${form.equipamentos?.length || 0}/${MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES} ${t.especialPainelEquipamentosResumo || 'equipamento(s)'}`}
         icone="🔧"
         defaultAberto
+        status={statusEquipamentos}
+        statusLabel={labelChip(statusEquipamentos)}
+        sempreMostrarResumo
         labelExpandir={t.bibliotecaPainelExpandir || 'Expandir'}
         labelRetrair={t.bibliotecaPainelRetrair || 'Retrair'}
       >
@@ -1767,11 +1803,15 @@ export default function RelatorioEspecialHub({
       <BibliotecaHubPainelRecolhivel
         modulo="relatorio-especial"
         id="re-form-dias"
+        className="relatorio-especial-hub-step"
         titulo={t.diasTrabalho || 'Dias de trabalho'}
         resumo={`${diasOrdenados.length} ${t.relatorioPainelDiasResumo || 'dia(s) registado(s)'}`}
         icone="📅"
         defaultAberto
         variant="wizard"
+        status={statusDias}
+        statusLabel={labelChip(statusDias)}
+        sempreMostrarResumo
         labelExpandir={t.bibliotecaPainelExpandir || 'Expandir'}
         labelRetrair={t.bibliotecaPainelRetrair || 'Retrair'}
       >
@@ -2343,6 +2383,7 @@ export default function RelatorioEspecialHub({
       <BibliotecaHubPainelRecolhivel
         modulo="relatorio-especial"
         id="re-form-resumo"
+        className="relatorio-especial-hub-step"
         titulo={t.resumo || 'Resumo'}
         resumo={
           diasOrdenados.length > 0
@@ -2352,6 +2393,9 @@ export default function RelatorioEspecialHub({
         icone="📊"
         defaultAberto
         variant="stats"
+        status={statusResumo}
+        statusLabel={labelChip(statusResumo)}
+        sempreMostrarResumo
         labelExpandir={t.bibliotecaPainelExpandir || 'Expandir'}
         labelRetrair={t.bibliotecaPainelRetrair || 'Retrair'}
       >
@@ -2539,6 +2583,7 @@ export default function RelatorioEspecialHub({
       <BibliotecaHubPainelRecolhivel
         modulo="relatorio-especial"
         id="re-form-observacoes"
+        className="relatorio-especial-hub-step"
         titulo={t.observacoes || 'Observações'}
         resumo={
           (form.observacoes || '').trim()
@@ -2547,6 +2592,9 @@ export default function RelatorioEspecialHub({
         }
         icone="📝"
         defaultAberto={false}
+        status={statusObservacoes}
+        statusLabel={labelChip(statusObservacoes, true)}
+        sempreMostrarResumo
         labelExpandir={t.bibliotecaPainelExpandir || 'Expandir'}
         labelRetrair={t.bibliotecaPainelRetrair || 'Retrair'}
       >

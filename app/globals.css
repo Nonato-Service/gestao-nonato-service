@@ -9307,6 +9307,32 @@ button.clientes-alfa-letra--toggle:hover {
   margin-bottom: 12px;
 }
 
+/* Editor: secções como cartões/passos (grelha no desktop) */
+.relatorio-especial-paineis-stack--steps {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 900px) {
+  .relatorio-especial-paineis-stack--steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .relatorio-especial-paineis-stack--steps > .biblioteca-hub-painel--aberto,
+  .relatorio-especial-paineis-stack--steps > .relatorio-especial-hub-step.biblioteca-hub-painel--aberto {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1200px) {
+  .relatorio-especial-paineis-stack--steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .relatorio-servico-root .biblioteca-hub-painel {
   margin-bottom: 0;
 }
@@ -28681,6 +28707,41 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   text-overflow: ellipsis;
 }
 
+.biblioteca-hub-painel__status {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.biblioteca-hub-painel__status--ok {
+  background: rgba(0, 200, 83, 0.18);
+  border-color: rgba(0, 200, 83, 0.55);
+  color: #86efac;
+}
+
+.biblioteca-hub-painel__status--incomplete {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fcd34d;
+}
+
+.biblioteca-hub-painel__status--empty {
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.35);
+  color: #cbd5e1;
+}
+
 .biblioteca-hub-painel__corpo-wrap {
   display: grid;
   grid-template-rows: 1fr;
@@ -42654,6 +42715,16 @@ html body .relatorio-especial-root .relatorio-especial-form__action-bar {
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
 }
 
+html body .relatorio-especial-root .relatorio-especial-form__action-bar--sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 96;
+  backdrop-filter: blur(8px);
+  background: linear-gradient(180deg, rgba(42, 42, 42, 0.97) 0%, rgba(24, 24, 24, 0.96) 100%);
+  border-color: rgba(0, 200, 83, 0.42);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 200, 83, 0.08);
+}
+
 html body .relatorio-especial-root .relatorio-especial-form__action-bar-acoes {
   display: flex;
   flex-wrap: wrap;
@@ -42761,6 +42832,74 @@ html body .relatorio-especial-root .relatorio-especial-form__envio .doc-envio-ac
 
 html body .relatorio-especial-root .relatorio-especial-form__hero {
   margin: 0 0 16px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-form__secoes-ajuda {
+  margin: 0 0 10px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+html body .relatorio-especial-root .relatorio-especial-paineis-stack--steps > .biblioteca-hub-painel,
+html body .relatorio-especial-root .relatorio-especial-hub-step {
+  border-radius: 14px;
+  border: 1px solid rgba(0, 200, 83, 0.32);
+  background: linear-gradient(165deg, rgba(0, 48, 28, 0.42) 0%, rgba(20, 20, 20, 0.88) 55%, #161616 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
+}
+
+html body .relatorio-especial-root .relatorio-especial-paineis-stack--steps > .biblioteca-hub-painel:hover,
+html body .relatorio-especial-root .relatorio-especial-hub-step:hover {
+  border-color: rgba(0, 200, 83, 0.55);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(0, 200, 83, 0.12);
+}
+
+html body .relatorio-especial-root .relatorio-especial-paineis-stack--steps > .biblioteca-hub-painel--aberto,
+html body .relatorio-especial-root .relatorio-especial-hub-step.biblioteca-hub-painel--aberto {
+  border-color: rgba(0, 200, 83, 0.55);
+  background: linear-gradient(180deg, rgba(0, 40, 24, 0.5) 0%, rgba(18, 18, 18, 0.95) 100%);
+}
+
+html body .relatorio-especial-root .relatorio-especial-paineis-stack--steps .biblioteca-hub-painel__cabecalho {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px 10px;
+  min-height: 72px;
+  padding: 14px 16px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-paineis-stack--steps .biblioteca-hub-painel__icone {
+  font-size: 22px;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+html body .relatorio-especial-root .relatorio-especial-paineis-stack--steps .biblioteca-hub-painel__titulo {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+}
+
+html body .relatorio-especial-root .relatorio-especial-paineis-stack--steps .biblioteca-hub-painel__resumo {
+  flex: 1 1 100%;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  padding-left: 28px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(190, 210, 200, 0.85);
+}
+
+html body .relatorio-especial-root .relatorio-especial-paineis-stack--steps .biblioteca-hub-painel__status {
+  margin-left: auto;
+}
+
+html body .relatorio-especial-root .relatorio-especial-paineis-stack--steps .biblioteca-hub-painel__cabecalho:hover {
+  background: rgba(0, 200, 83, 0.08);
 }
 
 html body .relatorio-especial-root .relatorio-especial-form__titulo {

@@ -50,6 +50,8 @@ export function fecharTodosBibliotecaPaineis(
   for (const id of ids) setBibliotecaPainelAbertoPersist(id, false, modulo)
 }
 
+export type HubPainelStatus = 'ok' | 'incomplete' | 'empty'
+
 type Props = {
   id: string
   titulo: string
@@ -63,6 +65,11 @@ type Props = {
   labelExpandir?: string
   labelRetrair?: string
   modulo?: HubPainelModulo
+  /** Chip visual opcional (ok / incompleto / vazio) — não altera a lógica do painel. */
+  status?: HubPainelStatus
+  statusLabel?: string
+  /** Mostrar o resumo também com o painel aberto (útil em cartões/passos). */
+  sempreMostrarResumo?: boolean
   children: React.ReactNode
 }
 
@@ -78,6 +85,9 @@ export function BibliotecaHubPainelRecolhivel({
   labelExpandir = 'Expandir',
   labelRetrair = 'Retrair',
   modulo = 'biblioteca',
+  status,
+  statusLabel,
+  sempreMostrarResumo = false,
   children,
 }: Props) {
   const [aberto, setAberto] = useState(() => readBibliotecaPainelAberto(id, defaultAberto, modulo))
@@ -99,6 +109,7 @@ export function BibliotecaHubPainelRecolhivel({
 
   const fechado = !aberto
   const panelDomId = `${modulo}-painel-${id}`
+  const mostrarResumo = Boolean(resumo) && (sempreMostrarResumo || fechado)
 
   return (
     <section
@@ -106,6 +117,7 @@ export function BibliotecaHubPainelRecolhivel({
         'biblioteca-hub-painel',
         fechado ? 'biblioteca-hub-painel--fechado' : 'biblioteca-hub-painel--aberto',
         `biblioteca-hub-painel--${variant}`,
+        status ? `biblioteca-hub-painel--status-${status}` : '',
         className,
       ]
         .filter(Boolean)
@@ -126,7 +138,15 @@ export function BibliotecaHubPainelRecolhivel({
           {icone}
         </span>
         <span className="biblioteca-hub-painel__titulo">{titulo}</span>
-        {fechado && resumo ? <span className="biblioteca-hub-painel__resumo">{resumo}</span> : null}
+        {status && statusLabel ? (
+          <span
+            className={`biblioteca-hub-painel__status biblioteca-hub-painel__status--${status}`}
+            aria-label={statusLabel}
+          >
+            {statusLabel}
+          </span>
+        ) : null}
+        {mostrarResumo ? <span className="biblioteca-hub-painel__resumo">{resumo}</span> : null}
       </button>
       <div
         id={panelDomId}
