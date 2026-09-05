@@ -27,12 +27,67 @@ import { wrapRelatorioServicoPrintDocument } from '../../lib/relatorioServicoPdf
 
 export type RelatorioEspecialPdfLabels = Record<string, string | undefined>
 
+/** Secções exportáveis do PDF — alinhadas aos cartões do hub. */
+export type RelatorioEspecialPdfSecaoId =
+  | 'infos'
+  | 'equipamentos'
+  | 'dias'
+  | 'resumo'
+  | 'observacoes'
+
+export type RelatorioEspecialPdfSecoes = Record<RelatorioEspecialPdfSecaoId, boolean>
+
+export const RELATORIO_ESPECIAL_PDF_SECAO_IDS: RelatorioEspecialPdfSecaoId[] = [
+  'infos',
+  'equipamentos',
+  'dias',
+  'resumo',
+  'observacoes',
+]
+
+export function defaultRelatorioEspecialPdfSecoes(): RelatorioEspecialPdfSecoes {
+  return {
+    infos: true,
+    equipamentos: true,
+    dias: true,
+    resumo: true,
+    observacoes: true,
+  }
+}
+
+export function normalizeRelatorioEspecialPdfSecoes(
+  partial?: Partial<RelatorioEspecialPdfSecoes> | null
+): RelatorioEspecialPdfSecoes {
+  const base = defaultRelatorioEspecialPdfSecoes()
+  if (partial == null) return base
+  return {
+    infos: typeof partial.infos === 'boolean' ? partial.infos : base.infos,
+    equipamentos: typeof partial.equipamentos === 'boolean' ? partial.equipamentos : base.equipamentos,
+    dias: typeof partial.dias === 'boolean' ? partial.dias : base.dias,
+    resumo: typeof partial.resumo === 'boolean' ? partial.resumo : base.resumo,
+    observacoes: typeof partial.observacoes === 'boolean' ? partial.observacoes : base.observacoes,
+  }
+}
+
+export function temAlgumaSecaoPdfEspecial(secoes: RelatorioEspecialPdfSecoes): boolean {
+  return RELATORIO_ESPECIAL_PDF_SECAO_IDS.some((id) => secoes[id])
+}
+
 export type RelatorioEspecialPdfOptions = {
   labels?: RelatorioEspecialPdfLabels
   logoHtml?: string
   empresaNome?: string
   /** Idioma do HTML (ex.: pt-BR, en). */
   lang?: string
+  /**
+   * Quais blocos incluir no PDF. Por omissão: todas (comportamento actual).
+   * `infos` = cabeçalho + informações gerais + KPI;
+   * `dias` = controlo de horas e deslocamentos;
+   * `equipamentos` = lista + horas por equipamento;
+   * `resumo` = total geral + cartões de resumo;
+   * `observacoes` = observações + assinatura.
+   */
+  secoes?: Partial<RelatorioEspecialPdfSecoes> | null
 }
 
 function L(labels: RelatorioEspecialPdfLabels | undefined, key: string, fallback: string): string {
@@ -1033,13 +1088,17 @@ export function imprimirRelatorioEspecialPdf(
 ): void {
   const options: RelatorioEspecialPdfOptions =
     labelsOrOptions &&
-    ('logoHtml' in labelsOrOptions || 'empresaNome' in labelsOrOptions || 'lang' in labelsOrOptions)
+    ('logoHtml' in labelsOrOptions ||
+      'empresaNome' in labelsOrOptions ||
+      'lang' in labelsOrOptions ||
+      'secoes' in labelsOrOptions)
       ? labelsOrOptions
       : { labels: labelsOrOptions as RelatorioEspecialPdfLabels | undefined }
 
   const labels = options.labels
   const empresaNome = (options.empresaNome || 'Nonato Service').trim()
   const logoContent = (options.logoHtml || '').trim() || empresaNome
+  const secoes = normalizeRelatorioEspecialPdfSecoes(options.secoes)
 
   const rel = aplicarTotaisNoRelatorioEspecial(relatorio)
   const dias = sortDiasTrabalhoEspecialCronologicamente(rel.diasTrabalho || [])
@@ -1221,18 +1280,30 @@ export function imprimirRelatorioEspecialPdf(
     `${empresaNome} · ${pdfDocTitle} ${rel.numero} · ${dataGeracao}`
   )
 
+  const blocoInfos = secoes.infos
+    ? `${headerHtml}
+  ${metaHtml}
+  <div class="re-bloco-kpi">${kpiStripHtml}</div>`
+    : ''
+  const blocoDias = secoes.dias ? deslocamentosHtml : ''
+  const blocoEquipamentos = secoes.equipamentos
+    ? `${equipamentosResumoHtml}
+  ${controloHorasHtml}`
+    : ''
+  const blocoResumo = secoes.resumo
+    ? `${totalGeralFinalHtml}
+  ${resumoHtml}`
+    : ''
+  const blocoObservacoes = secoes.observacoes ? encerramentoHtml : ''
+
   const body = `
 <style>${RELATORIO_ESPECIAL_PDF_CSS}</style>
 <div class="re-doc pdf-doc re-doc-flow">
-  ${headerHtml}
-  ${metaHtml}
-  <div class="re-bloco-kpi">${kpiStripHtml}</div>
-  ${deslocamentosHtml}
-  ${equipamentosResumoHtml}
-  ${controloHorasHtml}
-  ${totalGeralFinalHtml}
-  ${resumoHtml}
-  ${encerramentoHtml}
+  ${blocoInfos}
+  ${blocoDias}
+  ${blocoEquipamentos}
+  ${blocoResumo}
+  ${blocoObservacoes}
   ${footerHtml}
 </div>`
 

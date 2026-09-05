@@ -21,7 +21,6 @@ import {
   diaTrabalhoDataChaveOrdenacao,
 } from '../lib/relatorioEspecialCalculos'
 import { BibliotecaHubPainelRecolhivel, type HubPainelStatus } from './BibliotecaHubPainelRecolhivel'
-import { DocumentoEnvioAcoes } from './DocumentoEnvioAcoes'
 import {
   buildTextoEnvioRelatorioEspecial,
   buildAssuntoEnvioRelatorioServico,
@@ -31,6 +30,12 @@ import {
   encontrarRelatorioEspecialParaUpsert,
   imprimirRelatorioEspecialPdf,
   upsertRelatorioEspecialNaLista,
+  RELATORIO_ESPECIAL_PDF_SECAO_IDS,
+  defaultRelatorioEspecialPdfSecoes,
+  normalizeRelatorioEspecialPdfSecoes,
+  temAlgumaSecaoPdfEspecial,
+  type RelatorioEspecialPdfSecaoId,
+  type RelatorioEspecialPdfSecoes,
 } from '../modules/relatorios-especiais'
 import { dataLocalHojeISO } from '../lib/relatorioEspecialShared'
 import {
@@ -171,6 +176,33 @@ function rascunhoEspecialTemConteudo(rel: RelatorioEspecial): boolean {
   return Boolean(rel.cliente?.trim() || rel.tecnico?.trim() || eqs.length > 0 || dias.length > 0)
 }
 
+type ExportAcaoEspecial = 'pdf' | 'email' | 'whatsapp'
+
+type ExportPendenteEspecial = {
+  rel: RelatorioEspecial
+  acao: ExportAcaoEspecial
+}
+
+function labelSecaoPdfEspecial(
+  id: RelatorioEspecialPdfSecaoId,
+  t: Record<string, string | undefined>
+): string {
+  switch (id) {
+    case 'infos':
+      return t.informacoesBasicas || t.relatorioEspecialPdfSecaoInfos || 'Informações Básicas'
+    case 'equipamentos':
+      return t.relatorioEspecialEquipamentos || t.equipamentosTitulo || 'Equipamentos'
+    case 'dias':
+      return t.diasTrabalho || t.relatorioEspecialPdfSecaoDias || 'Dias de Trabalho'
+    case 'resumo':
+      return t.resumo || t.relatorioEspecialPdfSecaoResumo || 'Resumo'
+    case 'observacoes':
+      return t.observacoes || t.relatorioEspecialPdfSecaoObservacoes || 'Observações'
+    default:
+      return id
+  }
+}
+
 export default function RelatorioEspecialHub({
   relatorios,
   onSaveAll,
@@ -189,43 +221,96 @@ export default function RelatorioEspecialHub({
 }: RelatorioEspecialHubProps) {
   const t = labels
   const uiLocale = localeUiFromLang(selectedLanguage)
-  const pdfOpts = useMemo(
+  const pdfOptsBase = useMemo(
     () => ({ labels: t, logoHtml: pdfLogoHtml, empresaNome, lang: selectedLanguage }),
     [t, pdfLogoHtml, empresaNome, selectedLanguage]
   )
   const ultimoRelPdfRef = useRef<RelatorioEspecial | null>(null)
+  const ultimoSecoesPdfRef = useRef<RelatorioEspecialPdfSecoes>(defaultRelatorioEspecialPdfSecoes())
+  const [exportPendente, setExportPendente] = useState<ExportPendenteEspecial | null>(null)
+  const [pdfSecoesEscolha, setPdfSecoesEscolha] = useState<RelatorioEspecialPdfSecoes>(() =>
+    defaultRelatorioEspecialPdfSecoes()
+  )
   const envioRelatorio = useCallback(
-    (rel: RelatorioEspecial, onOpenPdf: () => void) => ({
-      title: t.envioRelatorioTitulo || 'Enviar relatório ao cliente',
-      subject: buildAssuntoEnvioRelatorioServico(
-        { numero: rel.numero, cliente: rel.cliente },
-        t as Record<string, string | undefined>
-      ),
-      body: buildTextoEnvioRelatorioEspecial(
-        {
-          numero: rel.numero,
-          cliente: rel.cliente,
-          data: rel.data,
-          horasTrabalho: aplicarTotaisNoRelatorioEspecial(rel).horasTrabalho,
-          kmsPercorridos: aplicarTotaisNoRelatorioEspecial(rel).kmsPercorridos,
-          equipamentos: rel.equipamentos,
-        },
-        t as Record<string, string | undefined>
-      ),
-      clienteId: rel.clienteId,
-      clienteNome: rel.cliente,
-      relatorio: rel,
-      onOpenPdf,
-    }),
+    (rel: RelatorioEspecial, onOpenPdf: () => void, secoes?: RelatorioEspecialPdfSecoes) => {
+      const s = normalizeRelatorioEspecialPdfSecoes(secoes)
+      const relTot = aplicarTotaisNoRelatorioEspecial(rel)
+      return {
+        title: t.envioRelatorioTitulo || 'Enviar relatório ao cliente',
+        subject: buildAssuntoEnvioRelatorioServico(
+          { numero: rel.numero, cliente: rel.cliente },
+          t as Record<string, string | undefined>
+        ),
+        body: buildTextoEnvioRelatorioEspecial(
+          {
+            numero: rel.numero,
+            cliente: rel.cliente,
+            data: rel.data,
+            horasTrabalho: relTot.horasTrabalho,
+            kmsPercorridos: relTot.kmsPercorridos,
+            equipamentos: s.equipamentos ? rel.equipamentos : [],
+          },
+          t as Record<string, string | undefined>,
+          s
+        ),
+        clienteId: rel.clienteId,
+        clienteNome: rel.cliente,
+        relatorio: rel,
+        onOpenPdf,
+      }
+    },
     [t]
   )
   const imprimirPdf = useCallback(
-    (rel: RelatorioEspecial) => {
+    (rel: RelatorioEspecial, secoes?: RelatorioEspecialPdfSecoes | null) => {
+      const s = normalizeRelatorioEspecialPdfSecoes(secoes)
       ultimoRelPdfRef.current = aplicarTotaisNoRelatorioEspecial(rel)
-      imprimirRelatorioEspecialPdf(rel, pdfOpts)
+      ultimoSecoesPdfRef.current = s
+      imprimirRelatorioEspecialPdf(rel, { ...pdfOptsBase, secoes: s })
     },
-    [pdfOpts]
+    [pdfOptsBase]
   )
+
+  const pedirExportComSecoes = useCallback((rel: RelatorioEspecial, acao: ExportAcaoEspecial) => {
+    setPdfSecoesEscolha(defaultRelatorioEspecialPdfSecoes())
+    setExportPendente({ rel: aplicarTotaisNoRelatorioEspecial(rel), acao })
+  }, [])
+
+  const fecharModalSecoes = useCallback(() => {
+    setExportPendente(null)
+  }, [])
+
+  const confirmarExportComSecoes = useCallback(() => {
+    if (!exportPendente) return
+    const secoes = normalizeRelatorioEspecialPdfSecoes(pdfSecoesEscolha)
+    if (!temAlgumaSecaoPdfEspecial(secoes)) {
+      alert(
+        t.relatorioEspecialPdfSecoesMinima || 'Seleccione pelo menos uma secção.'
+      )
+      return
+    }
+    const { rel, acao } = exportPendente
+    setExportPendente(null)
+    if (acao === 'pdf') {
+      imprimirPdf(rel, secoes)
+      return
+    }
+    if (!abrirEnvioDocumentoCliente) {
+      imprimirPdf(rel, secoes)
+      return
+    }
+    abrirEnvioDocumentoCliente({
+      ...envioRelatorio(rel, () => imprimirPdf(rel, secoes), secoes),
+      defaultChannel: acao,
+    })
+  }, [
+    exportPendente,
+    pdfSecoesEscolha,
+    t,
+    imprimirPdf,
+    abrirEnvioDocumentoCliente,
+    envioRelatorio,
+  ])
 
   useEffect(() => {
     if (!abrirEnvioDocumentoCliente) return
@@ -233,15 +318,115 @@ export default function RelatorioEspecialHub({
       if (e.data?.type !== 'reEspecialEnvio') return
       const rel = ultimoRelPdfRef.current
       if (!rel) return
+      const secoes = ultimoSecoesPdfRef.current
       const channel = e.data.channel === 'whatsapp' ? 'whatsapp' : 'email'
       abrirEnvioDocumentoCliente({
-        ...envioRelatorio(rel, () => imprimirPdf(rel)),
+        ...envioRelatorio(rel, () => imprimirPdf(rel, secoes), secoes),
         defaultChannel: channel,
       })
     }
     window.addEventListener('message', onMsg)
     return () => window.removeEventListener('message', onMsg)
   }, [abrirEnvioDocumentoCliente, envioRelatorio, imprimirPdf])
+
+  const modalEscolhaSecoesPdf =
+    exportPendente != null ? (
+      <div
+        className="modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="re-pdf-secoes-titulo"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) fecharModalSecoes()
+        }}
+      >
+        <div
+          style={{
+            background: '#2a2a2a',
+            border: '1px solid #00ff00',
+            borderRadius: 8,
+            padding: '18px 20px',
+            maxWidth: 420,
+            width: '92%',
+            color: '#fff',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.55)',
+          }}
+        >
+          <h3 id="re-pdf-secoes-titulo" style={{ margin: '0 0 8px', color: '#00ff00', fontSize: 16 }}>
+            {t.relatorioEspecialPdfSecoesTitulo || 'Escolher secções do PDF'}
+          </h3>
+          <p style={{ margin: '0 0 14px', fontSize: 13, color: '#ccc', lineHeight: 1.4 }}>
+            {t.relatorioEspecialPdfSecoesAjuda ||
+              'Marque o que pretende incluir no PDF, impressão ou envio.'}
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setPdfSecoesEscolha(defaultRelatorioEspecialPdfSecoes())}
+            >
+              {t.relatorioEspecialPdfSecoesSelecionarTodas || 'Selecionar todas'}
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() =>
+                setPdfSecoesEscolha({
+                  infos: false,
+                  equipamentos: false,
+                  dias: false,
+                  resumo: false,
+                  observacoes: false,
+                })
+              }
+            >
+              {t.relatorioEspecialPdfSecoesLimpar || 'Limpar'}
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+            {RELATORIO_ESPECIAL_PDF_SECAO_IDS.map((id) => (
+              <label
+                key={id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '8px 10px',
+                  background: '#1a1a1a',
+                  border: '1px solid rgba(0,255,0,0.25)',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  fontSize: 14,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={pdfSecoesEscolha[id]}
+                  onChange={(e) =>
+                    setPdfSecoesEscolha((prev) => ({ ...prev, [id]: e.target.checked }))
+                  }
+                  style={{ width: 18, height: 18, accentColor: '#00ff00' }}
+                />
+                <span>{labelSecaoPdfEspecial(id, t)}</span>
+              </label>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+            <button type="button" className="btn-secondary" onClick={fecharModalSecoes}>
+              {t.cancel || t.voltar || 'Cancelar'}
+            </button>
+            <button type="button" className="btn-primary" onClick={confirmarExportComSecoes}>
+              {exportPendente.acao === 'pdf'
+                ? `🖨 ${t.relatorioEspecialPdfSecoesContinuar || t.print || 'PDF'}`
+                : exportPendente.acao === 'email'
+                  ? `📧 ${t.relatorioEspecialPdfSecoesContinuar || t.enviarPorEmail || 'E-mail'}`
+                  : `💬 ${t.relatorioEspecialPdfSecoesContinuar || t.enviarPorWhatsApp || 'WhatsApp'}`}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null
+
   const EnvioBotoes = ({
     rel,
     compact = false,
@@ -250,13 +435,24 @@ export default function RelatorioEspecialHub({
     compact?: boolean
   }) =>
     abrirEnvioDocumentoCliente ? (
-      <DocumentoEnvioAcoes
-        abrirEnvio={abrirEnvioDocumentoCliente}
-        {...envioRelatorio(rel, () => imprimirPdf(aplicarTotaisNoRelatorioEspecial(rel)))}
-        emailLabel={t.enviarPorEmail || 'E-mail'}
-        whatsLabel={t.enviarPorWhatsApp || 'WhatsApp'}
-        compact={compact}
-      />
+      <span className={`doc-envio-acoes${compact ? ' doc-envio-acoes--compact' : ''}`}>
+        <button
+          type="button"
+          className="doc-envio-acoes__btn doc-envio-acoes__btn--email"
+          title={t.enviarPorEmail || 'E-mail'}
+          onClick={() => pedirExportComSecoes(rel, 'email')}
+        >
+          {compact ? '📧' : `📧 ${t.enviarPorEmail || t.email || 'E-mail'}`}
+        </button>
+        <button
+          type="button"
+          className="doc-envio-acoes__btn doc-envio-acoes__btn--wa"
+          title={t.enviarPorWhatsApp || 'WhatsApp'}
+          onClick={() => pedirExportComSecoes(rel, 'whatsapp')}
+        >
+          {compact ? '💬' : `💬 ${t.enviarPorWhatsApp || 'WhatsApp'}`}
+        </button>
+      </span>
     ) : null
   const [modo, setModo] = useState<'lista' | 'form' | 'fechamento'>('lista')
   const [form, setForm] = useState<RelatorioEspecial>(() => criarRelatorioEspecialVazio())
@@ -851,7 +1047,7 @@ export default function RelatorioEspecialHub({
                       <button type="button" className="btn-secondary" onClick={() => abrirEditar(rel)}>
                         ✏️ {t.edit || 'Editar'}
                       </button>
-                      <button type="button" className="btn-secondary" onClick={() => imprimirPdf(prep)}>
+                      <button type="button" className="btn-secondary" onClick={() => pedirExportComSecoes(prep, 'pdf')}>
                         🖨 {t.print || 'PDF'}
                       </button>
                       <EnvioBotoes rel={rel} compact />
@@ -876,7 +1072,9 @@ export default function RelatorioEspecialHub({
           </div>
         )}
       </div>
-    )
+      {modalEscolhaSecoesPdf}
+    </div>
+  )
   }
 
   if (modo === 'fechamento') {
@@ -895,7 +1093,7 @@ export default function RelatorioEspecialHub({
           >
             {salvando ? '…' : `💾 ${t.save || 'Guardar'}`}
           </button>
-          <button type="button" className="mobile-toolbar-btn" onClick={() => imprimirPdf(formComTotais)}>
+          <button type="button" className="mobile-toolbar-btn" onClick={() => pedirExportComSecoes(formComTotais, 'pdf')}>
             🖨 PDF
           </button>
         </div>
@@ -1005,11 +1203,12 @@ export default function RelatorioEspecialHub({
           <button type="button" className="btn-primary" disabled={salvando} onClick={guardarFechamento}>
             {salvando ? '…' : t.save || 'Guardar fechamento'}
           </button>
-          <button type="button" className="btn-secondary" onClick={() => imprimirPdf(formComTotais)}>
+          <button type="button" className="btn-secondary" onClick={() => pedirExportComSecoes(formComTotais, 'pdf')}>
             🖨 PDF
           </button>
           <EnvioBotoes rel={formComTotais} />
         </div>
+        {modalEscolhaSecoesPdf}
       </div>
     )
   }
@@ -1060,6 +1259,7 @@ export default function RelatorioEspecialHub({
 
   return (
     <div className="relatorio-especial-form" style={{ padding: '16px 0' }}>
+      {modalEscolhaSecoesPdf}
       <div className="mobile-sticky-toolbar relatorio-especial-mobile-bar">
         <button type="button" className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={voltarLista}>
           ← {t.voltar || 'Voltar'}
@@ -1072,7 +1272,7 @@ export default function RelatorioEspecialHub({
         >
           {salvando && acaoEmCurso === 'guardar' ? '…' : `💾 ${t.save || 'Guardar'}`}
         </button>
-        <button type="button" className="mobile-toolbar-btn" onClick={() => imprimirPdf(formComTotais)}>
+        <button type="button" className="mobile-toolbar-btn" onClick={() => pedirExportComSecoes(formComTotais, 'pdf')}>
           🖨 PDF
         </button>
         {editandoId && (
@@ -1119,22 +1319,12 @@ export default function RelatorioEspecialHub({
           <button
             type="button"
             className="re-action-btn re-action-btn--ghost"
-            onClick={() => imprimirPdf(formComTotais)}
+            onClick={() => pedirExportComSecoes(formComTotais, 'pdf')}
           >
             🖨 PDF
           </button>
           <span className="relatorio-especial-form__envio">
-            {abrirEnvioDocumentoCliente ? (
-              <DocumentoEnvioAcoes
-                abrirEnvio={abrirEnvioDocumentoCliente}
-                {...envioRelatorio(formComTotais, () =>
-                  imprimirPdf(aplicarTotaisNoRelatorioEspecial(formComTotais))
-                )}
-                emailLabel={t.email || 'E-mail'}
-                whatsLabel="WhatsApp"
-                className="relatorio-especial-form__envio-inner"
-              />
-            ) : null}
+            <EnvioBotoes rel={formComTotais} />
           </span>
         </div>
       </div>
@@ -2636,22 +2826,12 @@ export default function RelatorioEspecialHub({
           <button
             type="button"
             className="re-action-btn re-action-btn--ghost"
-            onClick={() => imprimirPdf(formComTotais)}
+            onClick={() => pedirExportComSecoes(formComTotais, 'pdf')}
           >
             🖨 PDF
           </button>
           <span className="relatorio-especial-form__envio">
-            {abrirEnvioDocumentoCliente ? (
-              <DocumentoEnvioAcoes
-                abrirEnvio={abrirEnvioDocumentoCliente}
-                {...envioRelatorio(formComTotais, () =>
-                  imprimirPdf(aplicarTotaisNoRelatorioEspecial(formComTotais))
-                )}
-                emailLabel={t.email || 'E-mail'}
-                whatsLabel="WhatsApp"
-                className="relatorio-especial-form__envio-inner"
-              />
-            ) : null}
+            <EnvioBotoes rel={formComTotais} />
           </span>
         </div>
       </div>

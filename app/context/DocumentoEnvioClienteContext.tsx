@@ -149,15 +149,27 @@ export function buildTextoEnvioRelatorioEspecial(
     kmsPercorridos?: string
     equipamentos?: Array<{ equipamentoId?: string; maquinaModelo?: string; numeroMaquina?: string }>
   },
-  labels?: EnvioTextoLabels
+  labels?: EnvioTextoLabels,
+  secoes?: {
+    infos?: boolean
+    equipamentos?: boolean
+    dias?: boolean
+    resumo?: boolean
+    observacoes?: boolean
+  } | null
 ) {
-  const linhasEquip = (rel.equipamentos || [])
-    .map((e) => {
-      const partes = [e.equipamentoId, e.maquinaModelo, e.numeroMaquina].filter(Boolean)
-      return partes.length ? `• ${partes.join(' · ')}` : ''
-    })
-    .filter(Boolean)
-    .join('\n')
+  const incluirInfos = secoes?.infos !== false
+  const incluirEquip = secoes?.equipamentos !== false
+  const incluirResumo = secoes?.resumo !== false
+  const linhasEquip = incluirEquip
+    ? (rel.equipamentos || [])
+        .map((e) => {
+          const partes = [e.equipamentoId, e.maquinaModelo, e.numeroMaquina].filter(Boolean)
+          return partes.length ? `• ${partes.join(' · ')}` : ''
+        })
+        .filter(Boolean)
+        .join('\n')
+    : ''
   const prezado = Lenvio(labels, 'envioDocPrezado', 'Prezado(a),')
   const anexo = Lenvio(
     labels,
@@ -170,9 +182,14 @@ export function buildTextoEnvioRelatorioEspecial(
   const horas = Lenvio(labels, 'horasTrabalho', 'Horas de Trabalho')
   const km = Lenvio(labels, 'km', 'KM')
   const atenciosamente = Lenvio(labels, 'envioDocAtenciosamente', 'Atenciosamente,')
-  return `${prezado}\n\n${anexo}\n\n${cliente}: ${rel.cliente || '—'}\n${data}: ${rel.data || '—'}${
-    linhasEquip ? `\n${equipamentosTitulo}:\n${linhasEquip}` : ''
-  }\n${horas}: ${rel.horasTrabalho || '—'}\n${km}: ${rel.kmsPercorridos || '—'}\n\n${atenciosamente}\nNonato Service`
+  const blocoInfos = incluirInfos
+    ? `\n${cliente}: ${rel.cliente || '—'}\n${data}: ${rel.data || '—'}`
+    : ''
+  const blocoEquip = linhasEquip ? `\n${equipamentosTitulo}:\n${linhasEquip}` : ''
+  const blocoResumo = incluirResumo
+    ? `\n${horas}: ${rel.horasTrabalho || '—'}\n${km}: ${rel.kmsPercorridos || '—'}`
+    : ''
+  return `${prezado}\n\n${anexo}${blocoInfos}${blocoEquip}${blocoResumo}\n\n${atenciosamente}\nNonato Service`
 }
 
 export function buildTextoEnvioOrcamento(

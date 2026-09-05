@@ -580,6 +580,9 @@ try {
     idx.includes('adaptRelatorioEspecialParaFechamentoShape') &&
     idx.includes('filterByDeletedIds') &&
     idx.includes('imprimirRelatorioEspecialPdf') &&
+    idx.includes('defaultRelatorioEspecialPdfSecoes') &&
+    idx.includes('normalizeRelatorioEspecialPdfSecoes') &&
+    idx.includes('temAlgumaSecaoPdfEspecial') &&
     idx.includes('diaContaComoDiariaEspecial') &&
     idx.includes('dedupeRelatoriosEspeciais') &&
     idx.includes('upsertRelatorioEspecialNaLista')
@@ -589,6 +592,20 @@ try {
     fail('módulo relatorios-especiais incompleto (index.ts)')
   }
   const hub = fs.readFileSync(path.join(root, 'app/components/RelatorioEspecialHub.tsx'), 'utf8')
+  const pdfMod = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/pdf.ts'), 'utf8')
+  if (
+    pdfMod.includes('secoes.infos') &&
+    pdfMod.includes('secoes.equipamentos') &&
+    pdfMod.includes('secoes.dias') &&
+    pdfMod.includes('secoes.resumo') &&
+    pdfMod.includes('secoes.observacoes') &&
+    hub.includes('pedirExportComSecoes') &&
+    hub.includes('modalEscolhaSecoesPdf')
+  ) {
+    ok('relatorios-especiais: escolha de secções no PDF/Email/WhatsApp')
+  } else {
+    fail('relatorios-especiais sem escolha de secções antes do PDF/envio')
+  }
   if (
     hub.includes('upsertRelatorioEspecialNaLista') &&
     hub.includes('encontrarRelatorioEspecialParaUpsert') &&

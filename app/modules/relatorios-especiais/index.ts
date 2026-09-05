@@ -84,8 +84,19 @@ export {
   encontrarRelatorioEspecialPorOsInput,
 } from './fechamentoCobranca'
 
-export type { RelatorioEspecialPdfLabels, RelatorioEspecialPdfOptions } from './pdf'
-export { imprimirRelatorioEspecialPdf } from './pdf'
+export type {
+  RelatorioEspecialPdfLabels,
+  RelatorioEspecialPdfOptions,
+  RelatorioEspecialPdfSecaoId,
+  RelatorioEspecialPdfSecoes,
+} from './pdf'
+export {
+  RELATORIO_ESPECIAL_PDF_SECAO_IDS,
+  defaultRelatorioEspecialPdfSecoes,
+  normalizeRelatorioEspecialPdfSecoes,
+  temAlgumaSecaoPdfEspecial,
+  imprimirRelatorioEspecialPdf,
+} from './pdf'
 
 export {
   riquezaRelatorioEspecial,
