@@ -122,6 +122,16 @@ export function AdminPanelIndex({ safeT }: Props) {
     },
     {
       num: '10',
+      icon: '🧩',
+      tone: 'emerald',
+      titleKey: 'adminJumpPecasBackupTitle',
+      titleFallback: 'Backup das peças',
+      descKey: 'adminJumpPecasBackupDesc',
+      descFallback: 'JSON só da biblioteca — códigos, preços e imagens',
+      onActivate: () => openAdminSection('admin-detail-pecas-backup'),
+    },
+    {
+      num: '11',
       icon: '💾',
       tone: 'emerald',
       titleKey: 'adminJumpBackupTitle',

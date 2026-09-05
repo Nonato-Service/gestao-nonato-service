@@ -9,6 +9,7 @@ import { AdminConfiancaChecklist } from './AdminConfiancaChecklist'
 import { AdminDisclosure } from './AdminDisclosure'
 import { AdminPanelIndex } from './AdminPanelIndex'
 import { AdminPasswordsSection, type AdminPasswordsSectionProps } from './AdminPasswordsSection'
+import { AdminPecasBackupSection, type AdminPecasBackupSectionProps } from './AdminPecasBackupSection'
 import { AdminSidebarOrganizer, type AdminSidebarOrganizerProps } from './AdminSidebarOrganizer'
 import { AdminSyncSection, type AdminSyncSectionProps } from './AdminSyncSection'
 import { AdminUsersSection, type AdminUsersSectionProps } from './AdminUsersSection'
@@ -34,6 +35,7 @@ export type AdministradorContentProps = {
   sidebar: Omit<AdminSidebarOrganizerProps, 'safeT'>
   passwords: Omit<AdminPasswordsSectionProps, 'safeT'>
   backup: Omit<AdminBackupSectionProps, 'variant' | 'safeT'>
+  pecasBackup: Omit<AdminPecasBackupSectionProps, 'safeT'>
 }
 
 export function AdministradorContent({
@@ -55,6 +57,7 @@ export function AdministradorContent({
   sidebar,
   passwords,
   backup,
+  pecasBackup,
 }: AdministradorContentProps) {
   if (variant === 'compact') {
     return (
@@ -72,6 +75,7 @@ export function AdministradorContent({
         <AdminConfigGeralSection variant="compact" safeT={safeT} {...geral} />
         <AdminUsersSection variant="compact" safeT={safeT} {...users} />
         <AdminSidebarOrganizer safeT={safeT} {...sidebar} />
+        <AdminPecasBackupSection safeT={safeT} {...pecasBackup} />
         <AdminBackupSection variant="compact" safeT={safeT} {...backup} />
 
         <button
@@ -257,6 +261,22 @@ export function AdministradorContent({
         toneClass="admin-disclosure--amber"
       >
         <AdminPasswordsSection safeT={safeT} {...passwords} />
+      </AdminDisclosure>
+
+      <AdminDisclosure
+        id="admin-detail-pecas-backup"
+        icon="🧩"
+        title={
+          (safeT as Record<string, string | undefined>)?.adminPecasBackupTitle ||
+          'Backup / cópia de segurança das peças'
+        }
+        sub={
+          (safeT as Record<string, string | undefined>)?.adminPecasBackupSub ||
+          'JSON só da biblioteca de peças — códigos, preços, categorias e imagens.'
+        }
+        toneClass="admin-disclosure--emerald"
+      >
+        <AdminPecasBackupSection safeT={safeT} {...pecasBackup} />
       </AdminDisclosure>
 
       <AdminDisclosure

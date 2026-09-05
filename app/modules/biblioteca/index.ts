@@ -174,3 +174,21 @@ export {
   pecaBibliotecaSrcCapaDisplay,
   pecaPassaBuscaBibliotecaTexto,
 } from './display'
+
+export type { PecasBackupPayload, ParsedPecasBackup, ApplyPecasBackupMode } from './pecasBackup'
+export {
+  PECAS_BIBLIOTECA_STORAGE_KEY,
+  CATEGORIAS_PECAS_STORAGE_KEY,
+  SUBCATEGORIAS_PECAS_STORAGE_KEY,
+  PECAS_BACKUP_TYPE,
+  PECAS_BACKUP_VERSION,
+  countPecasComImagemBase64,
+  enrichPecasParaBackup,
+  buildPecasBackupPayload,
+  pecasBackupFileName,
+  parsePecasBackupJson,
+  mergeCategoriasPecas,
+  mergeSubcategoriasPecas,
+  applyPecasBackupImport,
+  downloadJsonBlob,
+} from './pecasBackup'

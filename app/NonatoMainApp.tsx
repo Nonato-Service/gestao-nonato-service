@@ -27699,6 +27699,17 @@ export default function Dashboard() {
               downloadStoredBackupJson,
               getZipHistory,
             }}
+            pecasBackup={{
+              isDemoMode,
+              pecasBiblioteca,
+              categoriasPecas,
+              subcategoriasPecas,
+              setPecasBiblioteca,
+              setCategoriasPecas,
+              setSubcategoriasPecas,
+              saveData,
+              loadData,
+            }}
           />
         )
       case 'familias-grupos':
@@ -70717,6 +70728,17 @@ A1;Peça exemplo;10`}
                 deleteManualDataBackup,
                 downloadStoredBackupJson,
                 getZipHistory,
+              }}
+              pecasBackup={{
+                isDemoMode,
+                pecasBiblioteca,
+                categoriasPecas,
+                subcategoriasPecas,
+                setPecasBiblioteca,
+                setCategoriasPecas,
+                setSubcategoriasPecas,
+                saveData,
+                loadData,
               }}
             />
           </div>

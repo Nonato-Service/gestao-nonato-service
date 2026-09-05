@@ -20099,6 +20099,152 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   .admin-backup-hub__status-grid {
     grid-template-columns: 1fr;
   }
+  }
+}
+
+/* Backup dedicado da biblioteca de peças */
+.admin-pecas-backup {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.admin-pecas-backup--demo {
+  opacity: 0.85;
+}
+.admin-pecas-backup__hero {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 0, 0.28);
+  background: linear-gradient(135deg, rgba(0, 80, 40, 0.35) 0%, rgba(0, 0, 0, 0.55) 100%);
+}
+.admin-pecas-backup__hero-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  border: 1px solid rgba(0, 255, 0, 0.35);
+  background: rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+}
+.admin-pecas-backup__title {
+  margin: 0 0 6px;
+  color: #00ff00;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.admin-pecas-backup__desc {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.admin-pecas-backup__warn {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  background: rgba(120, 53, 15, 0.25);
+  color: #fbbf24;
+  font-size: 0.88rem;
+}
+.admin-pecas-backup__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.admin-pecas-backup__stat {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  background: #2a2a2a;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.admin-pecas-backup__stat span {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.78rem;
+}
+.admin-pecas-backup__stat strong {
+  color: #00ff00;
+  font-size: 1.15rem;
+}
+.admin-pecas-backup__actions,
+.admin-pecas-backup__pending-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.admin-pecas-backup-btn {
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.admin-pecas-backup-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.admin-pecas-backup-btn--primary {
+  background: rgba(0, 255, 0, 0.12);
+  border: 1px solid #00ff00;
+  color: #00ff00;
+}
+.admin-pecas-backup-btn--primary:hover:not(:disabled) {
+  background: rgba(0, 255, 0, 0.22);
+}
+.admin-pecas-backup-btn--ghost {
+  background: transparent;
+  border: 1px solid rgba(0, 255, 0, 0.35);
+  color: #c8ffc8;
+}
+.admin-pecas-backup-btn--ghost:hover:not(:disabled) {
+  border-color: #00ff00;
+  background: rgba(0, 255, 0, 0.08);
+}
+.admin-pecas-backup__pending {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 0, 0.25);
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.admin-pecas-backup__pending p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9rem;
+}
+.admin-pecas-backup__mode {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.admin-pecas-backup__mode label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e8ffe8;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.admin-pecas-backup__status {
+  margin: 0;
+  color: #86efac;
+  font-size: 0.88rem;
+}
+@media (max-width: 720px) {
+  .admin-pecas-backup__stats {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Centro de Sincronização entre aparelhos */
