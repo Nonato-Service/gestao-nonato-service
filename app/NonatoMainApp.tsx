@@ -602,6 +602,7 @@ import {
   BibliotecaHubPainelRecolhivel,
   fecharTodosBibliotecaPaineis,
 } from './components/BibliotecaHubPainelRecolhivel'
+import { AgendaListaToolbar, AgendaSecaoRecolhivel } from './components/AgendaSecaoRecolhivel'
 import {
   BibliotecaPrecoOlhoToggle,
   formatPrecoBibliotecaExibicao,
@@ -42131,7 +42132,7 @@ A1;Peça exemplo;10`}
               ) : null}
             </div>
 
-            {/* Painel operacional: execução, agendados, pré-agendados, pendentes, cancelados, concluídos recentes */}
+            {/* Painel operacional: secções recolhíveis (mesmo padrão Expandir/Retrair da lista) */}
             <div
               className="agenda-tecnica-painel-outer"
               style={{
@@ -42142,37 +42143,14 @@ A1;Peça exemplo;10`}
                 border: '1px solid rgba(0, 200, 83, 0.22)',
               }}
             >
-              {agendaPainelSituacaoSelecionada ? (
-                <div className="agenda-painel-voltar-bar">
-                  <button
-                    type="button"
-                    className="btn-primary agenda-painel-voltar-btn"
-                    onClick={() => setAgendaPainelSituacaoSelecionada(null)}
-                  >
-                    ← {(safeT as any)?.agendaPainelVoltarSituacoes || 'Voltar às situações'}
-                  </button>
-                  <span className="agenda-painel-voltar-contexto">
-                    {(safeT as any)?.agendaPainelSituacaoAtual || 'Situação:'}{' '}
-                    <strong>
-                      {rotuloAgendaPainelSituacao(
-                        agendaPainelSituacaoSelecionada,
-                        safeT as Record<string, string | undefined>
-                      )}
-                    </strong>
-                  </span>
-                </div>
-              ) : null}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
                 <div>
                   <h2 style={{ margin: 0, fontSize: '17px', color: '#00c853', letterSpacing: '0.5px' }}>
                     {(safeT as any)?.agendaPainelOperacionalTitulo || 'Situação operacional'}
                   </h2>
                   <p className="agenda-tecnica-painel-hint" style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#b0b0b0', maxWidth: '900px' }}>
-                    {agendaPainelSituacaoSelecionada
-                      ? (safeT as any)?.agendaPainelDetalheHint ||
-                        'Registos desta situação. Use «Voltar às situações» para escolher outra.'
-                      : (safeT as any)?.agendaPainelSelecionarSituacaoHint ||
-                        'Selecione uma situação abaixo para ver os registos. O filtro de técnico acima aplica-se aqui.'}
+                    {(safeT as any)?.agendaPainelSecoesHint ||
+                      'Secções recolhíveis por situação. O filtro de técnico acima aplica-se aqui.'}
                   </p>
                 </div>
               </div>
@@ -42219,204 +42197,6 @@ A1;Peça exemplo;10`}
                   .filter((a) => normalizeStatusAgendamento(a) === 'concluido')
                   .sort(ordenarDataHoraDescPainel)
                 const concluidosPainelCount = concluidosPainelFull.length
-
-                const cabecalhoPainelColuna = (
-                  variant: 'exec' | 'agend' | 'pre' | 'pend' | 'pessoal' | 'canc' | 'done',
-                  titulo: string,
-                  n: number,
-                  modoMenu = false
-                ) => {
-                  const trAny = safeT as Record<string, string | undefined>
-                  let cfg: {
-                    icon: string
-                    tag: string
-                    bar: string
-                    grad: string
-                    iconBox: string
-                    iconBorder: string
-                    titleTint: string
-                  }
-                  switch (variant) {
-                    case 'exec':
-                      cfg = {
-                        icon: '▶',
-                        tag: trAny.agendaPainelHeadTagExecucao || 'AO VIVO',
-                        bar: '#ff6b2d',
-                        grad: 'linear-gradient(105deg, rgba(255,95,40,0.42) 0%, rgba(18,10,8,0.97) 48%, rgba(12,12,12,0.98) 100%)',
-                        iconBox: 'rgba(255, 110, 50, 0.22)',
-                        iconBorder: '1px solid rgba(255, 160, 100, 0.55)',
-                        titleTint: '#ffd4bc',
-                      }
-                      break
-                    case 'agend':
-                      cfg = {
-                        icon: '✓',
-                        tag: trAny.agendaPainelHeadTagAgendados || 'CONFIRMADO',
-                        bar: '#3b82f6',
-                        grad: 'linear-gradient(105deg, rgba(45,120,255,0.38) 0%, rgba(8,14,28,0.97) 48%, rgba(12,12,14,0.98) 100%)',
-                        iconBox: 'rgba(55, 130, 235, 0.22)',
-                        iconBorder: '1px solid rgba(130, 185, 255, 0.5)',
-                        titleTint: '#cfe6ff',
-                      }
-                      break
-                    case 'pre':
-                      cfg = {
-                        icon: '⏱',
-                        tag: trAny.agendaPainelHeadTagPre || 'RASCUNHO',
-                        bar: '#e6b422',
-                        grad: 'linear-gradient(105deg, rgba(230,190,50,0.34) 0%, rgba(26,22,8,0.97) 48%, rgba(14,14,12,0.98) 100%)',
-                        iconBox: 'rgba(220, 180, 40, 0.2)',
-                        iconBorder: '1px solid rgba(240, 210, 100, 0.45)',
-                        titleTint: '#f5ecc8',
-                      }
-                      break
-                    case 'pend':
-                      cfg = {
-                        icon: '⏸',
-                        tag: trAny.agendaPainelHeadTagPendente || 'PENDENTE',
-                        bar: '#ea580c',
-                        grad: 'linear-gradient(105deg, rgba(234,88,12,0.4) 0%, rgba(28,12,6,0.97) 48%, rgba(14,12,12,0.98) 100%)',
-                        iconBox: 'rgba(234, 88, 12, 0.22)',
-                        iconBorder: '1px solid rgba(255, 140, 90, 0.55)',
-                        titleTint: '#ffdcc4',
-                      }
-                      break
-                    case 'pessoal':
-                      cfg = {
-                        icon: '📌',
-                        tag: trAny.agendaPainelHeadTagPessoal || 'PESSOAL',
-                        bar: '#a855f7',
-                        grad: 'linear-gradient(105deg, rgba(168,85,247,0.38) 0%, rgba(22,10,32,0.97) 48%, rgba(14,12,18,0.98) 100%)',
-                        iconBox: 'rgba(168, 85, 247, 0.22)',
-                        iconBorder: '1px solid rgba(216, 180, 254, 0.55)',
-                        titleTint: '#e9d5ff',
-                      }
-                      break
-                    case 'canc':
-                      cfg = {
-                        icon: '✕',
-                        tag: trAny.agendaPainelHeadTagCancelado || 'CANCELADO',
-                        bar: '#ef4444',
-                        grad: 'linear-gradient(105deg, rgba(220, 38, 38, 0.55) 0%, rgba(52, 8, 8, 0.97) 48%, rgba(16, 0, 0, 0.98) 100%)',
-                        iconBox: 'rgba(220, 38, 38, 0.28)',
-                        iconBorder: '1px solid rgba(248, 113, 113, 0.65)',
-                        titleTint: '#fecaca',
-                      }
-                      break
-                    default:
-                      cfg = {
-                        icon: '🏁',
-                        tag: trAny.agendaPainelHeadTagConcluido || 'CONCLUÍDO',
-                        bar: '#16a34a',
-                        grad: 'linear-gradient(105deg, rgba(22,163,74,0.42) 0%, rgba(6,22,12,0.97) 48%, rgba(10,14,12,0.98) 100%)',
-                        iconBox: 'rgba(34, 197, 94, 0.22)',
-                        iconBorder: '1px solid rgba(110, 220, 150, 0.5)',
-                        titleTint: '#bbf7d0',
-                      }
-                  }
-                  return (
-                    <div
-                      className={modoMenu ? 'agenda-painel-situacao-head' : undefined}
-                      style={{
-                        margin: modoMenu ? 0 : '0 0 12px 0',
-                        borderRadius: '0',
-                        borderTop: `4px solid ${cfg.bar}`,
-                        background: cfg.grad,
-                        minHeight: modoMenu ? 108 : undefined,
-                        flex: modoMenu ? 1 : undefined,
-                        display: modoMenu ? 'flex' : undefined,
-                        flexDirection: modoMenu ? 'column' : undefined,
-                      }}
-                    >
-                      <div
-                        className={modoMenu ? 'agenda-painel-situacao-head__row' : undefined}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '10px',
-                          padding: '12px 14px',
-                          minHeight: modoMenu ? 104 : undefined,
-                          height: modoMenu ? '100%' : undefined,
-                          boxSizing: 'border-box',
-                        }}
-                      >
-                        <div
-                          className={modoMenu ? 'agenda-painel-situacao-head__main' : undefined}
-                          style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}
-                        >
-                          <span
-                            aria-hidden
-                            className={modoMenu ? 'agenda-painel-situacao-head__icon' : undefined}
-                            style={{
-                              flexShrink: 0,
-                              width: 40,
-                              height: 40,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '11px',
-                              backgroundColor: cfg.iconBox,
-                              border: cfg.iconBorder,
-                              fontSize: '17px',
-                              fontWeight: 900,
-                              color: cfg.titleTint,
-                              lineHeight: 1,
-                            }}
-                          >
-                            {cfg.icon}
-                          </span>
-                          <div className={modoMenu ? 'agenda-painel-situacao-head__text' : undefined} style={{ minWidth: 0, flex: 1 }}>
-                            <div
-                              className={modoMenu ? 'agenda-painel-situacao-head__tag' : undefined}
-                              style={{
-                                fontSize: '10px',
-                                fontWeight: 900,
-                                letterSpacing: '0.16em',
-                                color: 'rgba(255,255,255,0.42)',
-                                textTransform: 'uppercase',
-                                marginBottom: '4px',
-                                lineHeight: 1.2,
-                              }}
-                            >
-                              {cfg.tag}
-                            </div>
-                            <div
-                              className={modoMenu ? 'agenda-painel-situacao-head__title' : undefined}
-                              style={{
-                                fontSize: modoMenu ? 13 : 14,
-                                fontWeight: 900,
-                                color: '#fff',
-                                letterSpacing: '0.02em',
-                                lineHeight: 1.3,
-                              }}
-                            >
-                              {titulo}
-                            </div>
-                          </div>
-                        </div>
-                        <span
-                          className={modoMenu ? 'agenda-painel-situacao-head__count' : undefined}
-                          style={{
-                            flexShrink: 0,
-                            minWidth: 36,
-                            padding: '7px 10px',
-                            borderRadius: '999px',
-                            backgroundColor: 'rgba(0,0,0,0.35)',
-                            border: cfg.iconBorder,
-                            fontSize: '14px',
-                            fontWeight: 900,
-                            color: '#fff',
-                            textAlign: 'center',
-                            boxShadow: '0 0 0 1px rgba(0,0,0,0.2)',
-                          }}
-                        >
-                          {n}
-                        </span>
-                      </div>
-                    </div>
-                  )
-                }
 
                 const miniAgendaBtn = (a: Agendamento, borda: string, opts?: { muted?: boolean; cancelado?: boolean }) => {
                   const cores = coresAgendamentoVisual(a)
@@ -42476,115 +42256,84 @@ A1;Peça exemplo;10`}
                   )
                 }
 
-                const vazio = (msg: string) => (
-                  <div style={{ padding: '12px', fontSize: '12px', color: '#909090', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.12)' }}>{msg}</div>
-                )
-
                 type PainelSitId = 'exec' | 'agend' | 'pre' | 'pessoal' | 'pend' | 'canc' | 'done'
                 const trPainel = safeT as Record<string, string | undefined>
 
-                const painelSituacoes: Array<{
+                const collapsedHintPainel =
+                  trPainel.agendaListaSecaoRetraidaHint ||
+                  '{n} registo(s) oculto(s) — clique no cabeçalho para expandir'
+
+                const painelSecoesMeta: Array<{
                   id: PainelSitId
                   titulo: string
-                  count: number
-                  wrapStyle: React.CSSProperties
-                  borda: string
+                  hint?: string
+                  cor: string
+                  pulse?: 'pendencias' | 'pre'
                   itens: Agendamento[]
-                  vazioMsg: string
+                  count: number
                   miniOpts?: { muted?: boolean; cancelado?: boolean }
                   rodape?: React.ReactNode
                 }> = [
                   {
                     id: 'exec',
-                    titulo: trPainel.agendaPainelEmExecucao || 'Em execução',
-                    count: emExecucao.length,
-                    wrapStyle: {
-                      backgroundColor: 'rgba(28, 14, 8, 0.55)',
-                      border: '1px solid rgba(255, 110, 55, 0.5)',
-                      boxShadow: '0 4px 18px rgba(255, 80, 30, 0.08)',
-                    },
-                    borda: 'rgba(255, 150, 60, 0.55)',
+                    titulo: trPainel.agendaSecaoEmExecucao || trPainel.agendaPainelEmExecucao || 'Em execução',
+                    hint: trPainel.agendaSecaoEmExecucaoHint || 'Ao vivo — agendamento técnico em andamento',
+                    cor: 'rgba(255, 107, 45, 0.92)',
                     itens: emExecucao,
-                    vazioMsg: trPainel.agendaPainelVazioExecucao || 'Nenhum trabalho em execução.',
+                    count: emExecucao.length,
                   },
                   {
                     id: 'agend',
-                    titulo: trPainel.agendaPainelAgendados || 'Agendados (confirmados)',
-                    count: agendados.length,
-                    wrapStyle: {
-                      backgroundColor: 'rgba(8, 16, 32, 0.6)',
-                      border: '1px solid rgba(80, 150, 255, 0.52)',
-                      boxShadow: '0 4px 18px rgba(40, 100, 255, 0.1)',
-                    },
-                    borda: 'rgba(90, 150, 255, 0.45)',
+                    titulo: trPainel.agendaSecaoConfirmados || trPainel.agendaPainelAgendados || 'Agendados (confirmados)',
+                    hint: trPainel.agendaSecaoAgendadoHint || 'Confirmado — ainda não iniciado',
+                    cor: 'rgba(55, 130, 235, 0.92)',
                     itens: agendados,
-                    vazioMsg: trPainel.agendaPainelVazioAgendados || 'Nenhum agendamento técnico confirmado.',
+                    count: agendados.length,
                   },
                   {
                     id: 'pre',
-                    titulo: trPainel.agendaPainelPreAgendados || 'Pré-agendados',
-                    count: preAgendados.length,
-                    wrapStyle: {
-                      backgroundColor: 'rgba(32, 28, 10, 0.58)',
-                      border: '1px solid rgba(215, 175, 45, 0.48)',
-                      boxShadow: '0 4px 18px rgba(200, 160, 30, 0.08)',
-                    },
-                    borda: 'rgba(230, 200, 80, 0.4)',
+                    titulo: trPainel.agendaSecaoPreAgendamento || trPainel.agendaPainelPreAgendados || 'Pré-agendados',
+                    hint: trPainel.agendaSecaoPreHint || 'Pré-agendamento ativo',
+                    cor: 'rgba(255, 190, 50, 0.95)',
+                    pulse: 'pre',
                     itens: preAgendados,
-                    vazioMsg: trPainel.agendaPainelVazioPre || 'Nenhum pré-agendamento ativo.',
+                    count: preAgendados.length,
                   },
                   {
                     id: 'pessoal',
-                    titulo: trPainel.agendaPainelAssuntosPessoais || 'Assuntos pessoais',
-                    count: assuntosPessoaisPainel.length,
-                    wrapStyle: {
-                      backgroundColor: 'rgba(28, 14, 38, 0.62)',
-                      border: '1px solid rgba(168, 85, 247, 0.48)',
-                      boxShadow: '0 4px 18px rgba(120, 60, 180, 0.12)',
-                    },
-                    borda: 'rgba(168, 85, 247, 0.45)',
+                    titulo: trPainel.agendaSecaoAssuntosPessoais || trPainel.agendaPainelAssuntosPessoais || 'Assuntos pessoais',
+                    hint:
+                      trPainel.agendaSecaoAssuntosPessoaisHint ||
+                      'Compromissos pessoais ou visitas técnicas — sem cliente nem equipamento',
+                    cor: 'rgba(168, 85, 247, 0.92)',
                     itens: assuntosPessoaisPainel,
-                    vazioMsg: trPainel.agendaPainelVazioPessoal || 'Nenhum assunto pessoal pendente.',
+                    count: assuntosPessoaisPainel.length,
                   },
                   {
                     id: 'pend',
-                    titulo: trPainel.agendaPainelPendentes || 'Pendentes (ag. técnico)',
-                    count: pendentesPainel.length,
-                    wrapStyle: {
-                      backgroundColor: 'rgba(36, 18, 10, 0.58)',
-                      border: '1px solid rgba(234, 88, 12, 0.48)',
-                      boxShadow: '0 4px 18px rgba(200, 80, 20, 0.1)',
-                    },
-                    borda: 'rgba(255, 120, 60, 0.5)',
+                    titulo: trPainel.agendaSecaoPendencias || trPainel.agendaPainelPendentes || 'Pendentes',
+                    hint: trPainel.agendaSecaoPendenciasHint || 'Ag. técnico pendente de confirmação',
+                    cor: 'rgba(234, 88, 12, 0.92)',
+                    pulse: 'pendencias',
                     itens: pendentesPainel,
-                    vazioMsg: trPainel.agendaPainelVazioPendentes || 'Nenhum agendamento técnico pendente.',
+                    count: pendentesPainel.length,
                   },
                   {
                     id: 'canc',
-                    titulo: trPainel.agendaPainelCancelados || 'Cancelados',
-                    count: canceladosPainelCount,
-                    wrapStyle: {
-                      backgroundColor: 'rgba(40, 0, 0, 0.55)',
-                      border: '2px solid rgba(248, 113, 113, 0.65)',
-                      boxShadow: '0 4px 18px rgba(220, 38, 38, 0.22)',
-                    },
-                    borda: AGENDA_CANCELADO_BORDA,
+                    titulo: trPainel.agendaSecaoCancelados || trPainel.agendaPainelCancelados || 'Cancelados',
+                    hint: trPainel.agendaSecaoCanceladosHint || 'Cancelado — mantido para registo',
+                    cor: '#f87171',
                     itens: canceladosPainelFull,
-                    vazioMsg: trPainel.agendaPainelVazioCancelados || 'Nenhum agendamento cancelado.',
+                    count: canceladosPainelCount,
                     miniOpts: { muted: true, cancelado: true },
                   },
                   {
                     id: 'done',
-                    titulo: trPainel.agendaPainelConcluidosRecentes || 'Concluídos (recentes)',
-                    count: concluidosPainelCount,
-                    wrapStyle: {
-                      backgroundColor: 'rgba(8, 28, 16, 0.58)',
-                      border: '1px solid rgba(34, 197, 94, 0.45)',
-                      boxShadow: '0 4px 18px rgba(0, 160, 70, 0.1)',
-                    },
-                    borda: 'rgba(50, 200, 100, 0.45)',
+                    titulo: trPainel.agendaListaSecaoConcluidos || trPainel.agendaPainelConcluidosRecentes || 'Concluídos (recentes)',
+                    hint: trPainel.agendaListaConcluidosHintRodape || 'Pesquisa completa no histórico abaixo.',
+                    cor: 'rgba(34, 197, 94, 0.88)',
                     itens: concluidosPainelFull,
-                    vazioMsg: trPainel.agendaPainelVazioConcluidos || 'Nenhum trabalho concluído.',
+                    count: concluidosPainelCount,
                     rodape:
                       concluidosPainelCount > 0 ? (
                         <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#6a8f6f', lineHeight: 1.35 }}>
@@ -42595,81 +42344,54 @@ A1;Peça exemplo;10`}
                   },
                 ]
 
-                const renderPainelConteudoSituacao = (sit: (typeof painelSituacoes)[number]) => (
-                  <div
-                    style={{
-                      borderRadius: '12px',
-                      overflow: 'hidden',
-                      ...sit.wrapStyle,
-                    }}
-                  >
-                    {cabecalhoPainelColuna(sit.id, sit.titulo, sit.count)}
-                    <div style={{ padding: '0 12px 12px' }}>
-                      {sit.itens.length === 0
-                        ? vazio(sit.vazioMsg)
-                        : sit.itens.map((a) => miniAgendaBtn(a, sit.borda, sit.miniOpts))}
-                      {sit.rodape}
-                    </div>
-                  </div>
-                )
-
-                if (!agendaPainelSituacaoSelecionada) {
-                  return (
-                    <div
-                      className="agenda-tecnica-painel-grid agenda-tecnica-painel-grid--menu"
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                        gap: 14,
-                        marginBottom: 18,
-                        width: '100%',
-                      }}
-                    >
-                      {painelSituacoes.map((sit) => (
-                        <button
-                          key={sit.id}
-                          type="button"
-                          className="agenda-painel-situacao-btn"
-                          onClick={() => setAgendaPainelSituacaoSelecionada(sit.id)}
-                          style={{
-                            display: 'flex',
-                            width: '100%',
-                            minHeight: 108,
-                            padding: 0,
-                            margin: 0,
-                            border: 'none',
-                            background: 'transparent',
-                            cursor: 'pointer',
-                            textAlign: 'left',
-                            borderRadius: 12,
-                            overflow: 'hidden',
-                          }}
-                        >
-                          <div className="agenda-painel-situacao-card" style={{ ...sit.wrapStyle, flex: 1, width: '100%', minHeight: 108, borderRadius: 12, overflow: 'hidden' }}>
-                            {cabecalhoPainelColuna(sit.id, sit.titulo, sit.count, true)}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )
-                }
-
-                const situacaoAtiva = painelSituacoes.find((s) => s.id === agendaPainelSituacaoSelecionada)
-                if (!situacaoAtiva) {
-                  return null
-                }
+                const temAlgumaSecao = painelSecoesMeta.some((s) => s.count > 0)
 
                 return (
-                  <div className="agenda-tecnica-painel-detalhe" style={{ marginBottom: '18px' }}>
-                    {renderPainelConteudoSituacao(situacaoAtiva)}
-                    <button
-                      type="button"
-                      className="btn-primary agenda-painel-voltar-btn"
-                      onClick={() => setAgendaPainelSituacaoSelecionada(null)}
-                      style={{ marginTop: '14px', width: '100%', justifyContent: 'center' }}
-                    >
-                      ← {trPainel.agendaPainelVoltarSituacoes || 'Voltar às situações'}
-                    </button>
+                  <div className="agenda-tecnica-painel-secoes" style={{ marginBottom: 4 }}>
+                    <AgendaListaToolbar
+                      hint={
+                        trPainel.agendaListaExpandirHint ||
+                        'Secções e cartões recolhíveis — expanda só o que precisa. Ideal para listas longas.'
+                      }
+                      labelExpandir={trPainel.expandirTodos || 'Expandir todos'}
+                      labelRetrair={trPainel.retrairTodos || 'Retrair todos'}
+                      onExpandirTodos={expandirTodasSecoesAgendaLista}
+                      onRetrairTodos={retrairTodasSecoesAgendaLista}
+                    />
+                    {!temAlgumaSecao ? (
+                      <div
+                        style={{
+                          padding: '16px',
+                          fontSize: '13px',
+                          color: '#909090',
+                          borderRadius: '8px',
+                          border: '1px dashed rgba(255,255,255,0.12)',
+                          textAlign: 'center',
+                        }}
+                      >
+                        {trPainel.agendaPainelVazioGeral || 'Nenhum registo para mostrar com o filtro actual.'}
+                      </div>
+                    ) : (
+                      painelSecoesMeta.map((sit) => (
+                        <AgendaSecaoRecolhivel
+                          key={sit.id}
+                          secaoId={sit.id}
+                          titulo={sit.titulo}
+                          cor={sit.cor}
+                          aberta={agendaListaSecoesAbertas.has(sit.id)}
+                          onToggle={toggleAgendaListaSecao}
+                          contagem={sit.count}
+                          hint={sit.hint}
+                          pulse={sit.pulse}
+                          collapsedHint={collapsedHintPainel}
+                        >
+                          {sit.itens.length === 0
+                            ? null
+                            : sit.itens.map((a) => miniAgendaBtn(a, sit.cor, sit.miniOpts))}
+                          {sit.rodape}
+                        </AgendaSecaoRecolhivel>
+                      ))
+                    )}
                   </div>
                 )
               })()}
@@ -43917,29 +43639,21 @@ A1;Peça exemplo;10`}
                   }
 
                   const renderAgendaListaToolbar = () => (
-                    <div className="agenda-lista-toolbar">
-                      <p className="agenda-lista-toolbar__hint">
-                        {safeT.agendaListaExpandirHint ||
-                          'Secções e cartões recolhíveis — expanda só o que precisa. Ideal para listas longas.'}
-                      </p>
-                      <div className="agenda-lista-toolbar__actions">
-                        <button
-                          type="button"
-                          className="agenda-lista-toolbar__btn"
-                          onClick={expandirTodasSecoesAgendaLista}
-                        >
-                          {(safeT as any)?.expandirTodos || 'Expandir todos'}
-                        </button>
-                        <button
-                          type="button"
-                          className="agenda-lista-toolbar__btn agenda-lista-toolbar__btn--muted"
-                          onClick={retrairTodasSecoesAgendaLista}
-                        >
-                          {(safeT as any)?.retrairTodos || 'Retrair todos'}
-                        </button>
-                      </div>
-                    </div>
+                    <AgendaListaToolbar
+                      hint={
+                        safeT.agendaListaExpandirHint ||
+                        'Secções e cartões recolhíveis — expanda só o que precisa. Ideal para listas longas.'
+                      }
+                      labelExpandir={(safeT as any)?.expandirTodos || 'Expandir todos'}
+                      labelRetrair={(safeT as any)?.retrairTodos || 'Retrair todos'}
+                      onExpandirTodos={expandirTodasSecoesAgendaLista}
+                      onRetrairTodos={retrairTodasSecoesAgendaLista}
+                    />
                   )
+
+                  const collapsedHintLista =
+                    (safeT as any)?.agendaListaSecaoRetraidaHint ||
+                    '{n} registo(s) oculto(s) — clique no cabeçalho para expandir'
 
                   const renderAgendaSection = (
                     secaoId: AgendaListaSecaoId,
@@ -43954,95 +43668,27 @@ A1;Peça exemplo;10`}
                   ) => {
                     if (itens.length === 0) return null
                     const nBadge = typeof contagemBadge === 'number' ? contagemBadge : itens.length
-                    const secaoAberta = agendaListaSecoesAbertas.has(secaoId)
-                    const headerPulseClass =
-                      pulse === 'pendencias'
-                        ? 'agenda-section-header agenda-section-header--pulse-pendencias'
-                        : pulse === 'pre'
-                          ? 'agenda-section-header agenda-section-header--pulse-pre'
-                          : 'agenda-section-header'
-                    const dotPulseClass =
-                      pulse === 'pendencias'
-                        ? 'agenda-section-dot agenda-section-dot--pulse-pendencias'
-                        : pulse === 'pre'
-                          ? 'agenda-section-dot agenda-section-dot--pulse-pre'
-                          : undefined
                     const cardPulseClass =
                       pulse === 'pendencias' ? 'agenda-card--pulse-pendencias' : pulse === 'pre' ? 'agenda-card--pulse-pre' : undefined
                     return (
-                      <div className={`agenda-section-block${secaoAberta ? ' agenda-section-block--open' : ' agenda-section-block--closed'}`}>
-                        <button
-                          type="button"
-                          className={`${headerPulseClass} agenda-section-header--toggle`}
-                          aria-expanded={secaoAberta}
-                          onClick={() => toggleAgendaListaSecao(secaoId)}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: '12px',
-                            width: '100%',
-                            padding: '12px 14px',
-                            borderRadius: '12px',
-                            backgroundColor: 'rgba(20,20,20,0.92)',
-                            border: `1px solid ${cor}55`,
-                            cursor: 'pointer',
-                            textAlign: 'left',
-                          }}
-                        >
-                          <span className="agenda-section-header__left">
-                            <span className="ui-expand-chevron agenda-section-header__chevron" aria-hidden>
-                              {secaoAberta ? '▼' : '▶'}
-                            </span>
-                            <span
-                              className={dotPulseClass}
-                              style={{
-                                width: 10,
-                                height: 10,
-                                borderRadius: 999,
-                                backgroundColor: cor,
-                                ...(dotPulseClass ? {} : { boxShadow: `0 0 16px ${cor}55` }),
-                              }}
-                              aria-hidden
-                            />
-                            <span className="agenda-section-header__title">{titulo}</span>
-                            {hint ? (
-                              <span className="agenda-section-header__hint">{hint}</span>
-                            ) : null}
-                          </span>
-                          <span
-                            className="agenda-section-header__badge"
-                            style={{
-                              padding: '6px 10px',
-                              borderRadius: 999,
-                              backgroundColor: `${cor}22`,
-                              border: `1px solid ${cor}55`,
-                              color: '#fff',
-                              fontSize: '12px',
-                              fontWeight: 800,
-                            }}
-                          >
-                            {nBadge}
-                          </span>
-                        </button>
-                        {secaoAberta ? (
-                          <div className="agenda-section-cards">
-                            {itens.map((ag) =>
-                              renderAgendaCard(ag, corPorItem ? corPorItem(ag) : cor, cardPulseClass, {
-                                muted: mutedCards || normalizeStatusAgendamento(ag) === 'cancelado',
-                                listaModo: true,
-                              })
-                            )}
-                          </div>
-                        ) : (
-                          <p className="agenda-section-collapsed-hint">
-                            {(
-                              (safeT as any)?.agendaListaSecaoRetraidaHint ||
-                              '{n} registo(s) oculto(s) — clique no cabeçalho para expandir'
-                            ).replace('{n}', String(nBadge))}
-                          </p>
+                      <AgendaSecaoRecolhivel
+                        secaoId={secaoId}
+                        titulo={titulo}
+                        cor={cor}
+                        aberta={agendaListaSecoesAbertas.has(secaoId)}
+                        onToggle={toggleAgendaListaSecao}
+                        contagem={nBadge}
+                        hint={hint}
+                        pulse={pulse}
+                        collapsedHint={collapsedHintLista}
+                      >
+                        {itens.map((ag) =>
+                          renderAgendaCard(ag, corPorItem ? corPorItem(ag) : cor, cardPulseClass, {
+                            muted: mutedCards || normalizeStatusAgendamento(ag) === 'cancelado',
+                            listaModo: true,
+                          })
                         )}
-                      </div>
+                      </AgendaSecaoRecolhivel>
                     )
                   }
 

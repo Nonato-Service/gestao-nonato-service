@@ -1039,6 +1039,16 @@ try {
   } else {
     ok('existe app/modules/agenda/lembreteWhatsApp.ts')
   }
+  if (!exists('app/components/AgendaSecaoRecolhivel.tsx')) {
+    fail('falta app/components/AgendaSecaoRecolhivel.tsx')
+  } else {
+    const secoesSrc = fs.readFileSync(path.join(root, 'app/components/AgendaSecaoRecolhivel.tsx'), 'utf8')
+    if (!secoesSrc.includes('export function AgendaSecaoRecolhivel') || !secoesSrc.includes('export function AgendaListaToolbar')) {
+      fail('AgendaSecaoRecolhivel sem exports esperados')
+    } else {
+      ok('existe app/components/AgendaSecaoRecolhivel.tsx (toolbar + secção)')
+    }
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/agenda'") || nma.includes('from "./modules/agenda"')) {
     ok('NonatoMainApp importa app/modules/agenda')
