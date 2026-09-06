@@ -1071,10 +1071,9 @@ export default function RelatorioEspecialHub({
               })}
           </div>
         )}
+        {modalEscolhaSecoesPdf}
       </div>
-      {modalEscolhaSecoesPdf}
-    </div>
-  )
+    )
   }
 
   if (modo === 'fechamento') {
