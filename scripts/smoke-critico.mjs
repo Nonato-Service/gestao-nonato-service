@@ -638,11 +638,12 @@ try {
   if (
     hub.includes('totalDiariasUi') &&
     hub.includes('relatorio-especial-horas-block__meta--diarias') &&
-    hub.includes('diaContaComoDiariaEspecial')
+    hub.includes('diaContaComoDiariaEspecial') &&
+    hub.includes('adicionarRetornoMesmoDia')
   ) {
     ok('RelatorioEspecialHub unifica TOTAL DE DIÁRIAS no CONTROLE e Resumo')
   } else {
-    fail('RelatorioEspecialHub sem contador unificado de diárias no CONTROLE')
+    fail('RelatorioEspecialHub sem contador unificado de diárias / retorno mesmo dia')
   }
   if (
     hub.includes('BibliotecaHubPainelRecolhivel') &&
@@ -807,11 +808,13 @@ try {
   if (
     idx.includes('calcularDuracao') &&
     idx.includes('atualizarCalculosDia') &&
-    idx.includes('calcularTotais')
+    idx.includes('calcularTotais') &&
+    idx.includes('contarDiariasDatasUnicas') &&
+    idx.includes('diaContaComoDiariaServico')
   ) {
     ok('módulo relatorio-servico exporta cálculos de dia')
   } else {
-    fail('módulo relatorio-servico sem calcularDuracao/atualizarCalculosDia/calcularTotais')
+    fail('módulo relatorio-servico sem calcularDuracao/atualizarCalculosDia/calcularTotais/diárias únicas')
   }
   if (
     idx.includes('normalizePdfModeloPorRelatorioMap') &&

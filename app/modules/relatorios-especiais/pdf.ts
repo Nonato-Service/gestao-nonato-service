@@ -1217,7 +1217,7 @@ export function imprimirRelatorioEspecialPdf(
     </table>
     <div class="re-diarias-rodape">
       <p class="re-diarias-rodape__total"><strong>${esc(L(labels, 'relatorioEspecialTotalDiarias', L(labels, 'diarias', 'TOTAL DE DIÁRIAS')))}:</strong> ${totais.diarias}${(totais.datasDiarias || []).length > 0 ? ` — ${esc((totais.datasDiarias || []).map((d) => formatDiaComDiaSemana(d, labels as DiaSemanaLabels)).join(' · '))}` : ''}</p>
-      <p class="re-diarias-rodape__ajuda">${esc(L(labels, 'relatorioEspecialDiariasAjuda', 'Cada dia registado conta como diária (inclui sáb./dom. e dias só com viagem), mesmo sem horas em máquina.'))}</p>
+      <p class="re-diarias-rodape__ajuda">${esc(L(labels, 'relatorioEspecialDiariasAjuda', '1 diária por data civil (inclui sáb./dom. e dias só com viagem), mesmo sem horas em máquina. Vários blocos no mesmo dia não duplicam a diária.'))}</p>
     </div>
   </section>`
 

@@ -809,6 +809,43 @@ export default function RelatorioEspecialHub({
     setDiaExpandido(dia.id)
   }
 
+  /**
+   * Segundo período no mesmo dia civil: nova linha de horário no cartão do dia
+   * (horas/KM somam; diária continua 1× por data — sem 2.º almoço).
+   */
+  const adicionarRetornoMesmoDia = (diaId: string) => {
+    const dia = (form.diasTrabalho || []).find((d) => d.id === diaId)
+    if (!dia) return
+    const linhas = dia.horasPorEquipamento || []
+    if (linhas.length >= MAX_LINHAS_HORAS_RELATORIO_ESPECIAL_DIA) {
+      alert(
+        t.relatorioEspecialMaxLinhasHorarioDia ||
+          `Máximo ${MAX_LINHAS_HORAS_RELATORIO_ESPECIAL_DIA} linhas de horário por dia.`
+      )
+      return
+    }
+    const ultimoUid =
+      [...linhas].reverse().find((h) => (h.equipamentoUid || '').trim())?.equipamentoUid || ''
+    setForm((prev) => ({
+      ...prev,
+      diasTrabalho: (prev.diasTrabalho || []).map((d) =>
+        d.id === diaId
+          ? atualizarCalculosDiaEspecial({
+              ...d,
+              horasPorEquipamento: [
+                ...(d.horasPorEquipamento || []),
+                criarHorasEquipamentoDiaVazio(ultimoUid),
+              ],
+            })
+          : d
+      ),
+    }))
+    setDiaExpandido(diaId)
+    setTimeout(() => {
+      document.getElementById(`re-dia-card-${diaId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
+  }
+
   const abrirEditarDia = (diaId: string) => {
     setDiaExpandido(diaId)
     setTimeout(() => {
@@ -2125,6 +2162,10 @@ export default function RelatorioEspecialHub({
               'Sábado e domingo também contam como dias de trabalho (diárias).'}
           </p>
         </div>
+        <p className="relatorio-especial-dia-secao__ajuda" style={{ marginTop: 8, marginBottom: 4 }}>
+          {t.retornoMesmoDiaAjuda ||
+            'Pode acrescentar outro horário no mesmo dia (ex.: voltar às 21:00) sem nova diária. Use «Adicionar retorno no mesmo dia».'}
+        </p>
 
         {diasOrdenados.length > 0 ? (
           <div className="relatorio-especial-horas-block">
@@ -2182,13 +2223,18 @@ export default function RelatorioEspecialHub({
                   </tr>
                 </thead>
                 <tbody>
-                  {diasOrdenados.map((dia) => {
+                  {(() => {
+                    const datasComBadgeDiaria = new Set<string>()
+                    return diasOrdenados.map((dia) => {
                     const diaCalc = atualizarCalculosDiaEspecial(dia)
                     const sem = getDiaSemanaInfo(dia.data, t)
                     const horasResumo = resumoHorasTrabalhoDia(diaCalc)
                     const pausaFmt = (dia.tempoPausa || '').trim() || (dia.pausa === 'sim' ? '01:00' : dia.pausa || '—')
                     const temDescricao = Boolean((dia.descricaoTrabalho || '').trim())
-                    const contaDiaria = Boolean(diaContaComoDiariaEspecial(dia))
+                    const chaveDiaria = diaContaComoDiariaEspecial(dia)
+                    const mostraBadgeDiaria =
+                      Boolean(chaveDiaria) && !datasComBadgeDiaria.has(chaveDiaria)
+                    if (mostraBadgeDiaria && chaveDiaria) datasComBadgeDiaria.add(chaveDiaria)
                     return (
                       <ReactFragment key={dia.id}>
                         <tr className={sem.isFimDeSemana ? 're-dia-linha--fim-semana' : undefined}>
@@ -2197,7 +2243,7 @@ export default function RelatorioEspecialHub({
                             className={`relatorio-especial-horas-table__data${sem.isFimDeSemana ? ' relatorio-especial-horas-table__data--fds' : ''}`}
                           >
                             {formatDiaComDiaSemana(dia.data, t)}
-                            {contaDiaria ? (
+                            {mostraBadgeDiaria ? (
                               <span className="relatorio-especial-badge-diaria" title={t.relatorioEspecialDiariasAjuda || ''}>
                                 {t.relatorioEspecialBadgeDiaria || t.diarias || 'Diária'}
                               </span>
@@ -2251,6 +2297,17 @@ export default function RelatorioEspecialHub({
                               </button>
                               <button
                                 type="button"
+                                className="dia-trabalho-acao-btn dia-trabalho-acao-btn--edit"
+                                onClick={() => adicionarRetornoMesmoDia(dia.id)}
+                                title={
+                                  t.retornoMesmoDiaAjuda ||
+                                  'Outro horário no mesmo dia sem nova diária'
+                                }
+                              >
+                                {t.adicionarRetornoMesmoDiaCurto || t.adicionarRetornoMesmoDia || 'Retorno mesmo dia'}
+                              </button>
+                              <button
+                                type="button"
                                 className="dia-trabalho-acao-btn dia-trabalho-acao-btn--del"
                                 onClick={() => {
                                   if (!window.confirm(t.confirmDelete || 'Remover este dia?')) return
@@ -2275,7 +2332,8 @@ export default function RelatorioEspecialHub({
                         )}
                       </ReactFragment>
                     )
-                  })}
+                  })
+                  })()}
                 </tbody>
                 <tfoot>
                   <tr className="relatorio-especial-horas-table__totais">
@@ -2306,11 +2364,15 @@ export default function RelatorioEspecialHub({
           </p>
         )}
 
-        {diasOrdenados.map((dia) => {
+        {diasOrdenados.map((dia, diaIdx) => {
           const diaCalc = atualizarCalculosDiaEspecial(dia)
           const aberto = diaExpandido === dia.id
           const horasResumoCard = resumoHorasTrabalhoDia(diaCalc)
-          const contaDiariaCard = Boolean(diaContaComoDiariaEspecial(dia))
+          const chaveDiariaCard = diaContaComoDiariaEspecial(dia)
+          const primeiraOcorrenciaData =
+            Boolean(chaveDiariaCard) &&
+            diasOrdenados.findIndex((d) => diaContaComoDiariaEspecial(d) === chaveDiariaCard) === diaIdx
+          const contaDiariaCard = primeiraOcorrenciaData
           const resumoHoras = (diaCalc.horasPorEquipamento || [])
             .filter((h) => h.equipamentoUid && h.horasDuracao)
             .map((h) => {
@@ -2394,7 +2456,7 @@ export default function RelatorioEspecialHub({
                     <p className="relatorio-especial-dia-secao__ajuda">
                       {t.relatorioEspecialMultiplasSessoesAjuda ||
                         t.relatorioEspecialHoraCorridaAjuda ||
-                        'Pode repetir o mesmo equipamento no mesmo dia (ex.: 10:00–12:00 e 14:00–19:00). Máx. 4 equipamentos diferentes por dia.'}
+                        'Pode repetir o mesmo equipamento no mesmo dia (ex.: 10:00–12:00 e 14:00–19:00 ou voltar às 21:00). Máx. 4 equipamentos diferentes por dia. Vários horários no mesmo dia = 1 diária.'}
                     </p>
                     {(dia.horasPorEquipamento || []).map((linha, li) => {
                       const linhaCalc = diaCalc.horasPorEquipamento?.[li] || linha
@@ -2519,26 +2581,41 @@ export default function RelatorioEspecialHub({
                       )
                     })}
                     {(dia.horasPorEquipamento?.length || 0) < MAX_LINHAS_HORAS_RELATORIO_ESPECIAL_DIA && (
-                      <button
-                        type="button"
-                        className="btn-secondary relatorio-equipamentos-block__add"
-                        style={{ marginTop: 8 }}
-                        onClick={() =>
-                          setForm((prev) => ({
-                            ...prev,
-                            diasTrabalho: prev.diasTrabalho!.map((d) =>
-                              d.id === dia.id
-                                ? atualizarCalculosDiaEspecial({
-                                    ...d,
-                                    horasPorEquipamento: [...(d.horasPorEquipamento || []), criarHorasEquipamentoDiaVazio()],
-                                  })
-                                : d
-                            ),
-                          }))
-                        }
-                      >
-                        + {t.relatorioEspecialLinhaEquipamento || 'Linha equipamento'}
-                      </button>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+                        <button
+                          type="button"
+                          className="btn-secondary relatorio-equipamentos-block__add"
+                          onClick={() =>
+                            setForm((prev) => ({
+                              ...prev,
+                              diasTrabalho: prev.diasTrabalho!.map((d) =>
+                                d.id === dia.id
+                                  ? atualizarCalculosDiaEspecial({
+                                      ...d,
+                                      horasPorEquipamento: [
+                                        ...(d.horasPorEquipamento || []),
+                                        criarHorasEquipamentoDiaVazio(),
+                                      ],
+                                    })
+                                  : d
+                              ),
+                            }))
+                          }
+                        >
+                          + {t.relatorioEspecialLinhaEquipamento || 'Linha equipamento'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-primary relatorio-equipamentos-block__add"
+                          onClick={() => adicionarRetornoMesmoDia(dia.id)}
+                          title={
+                            t.retornoMesmoDiaAjuda ||
+                            'Outro horário no mesmo dia sem nova diária'
+                          }
+                        >
+                          + {t.adicionarRetornoMesmoDia || 'Adicionar retorno no mesmo dia'}
+                        </button>
+                      </div>
                     )}
                   </div>
 

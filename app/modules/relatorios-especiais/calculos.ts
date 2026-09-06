@@ -304,6 +304,8 @@ export function calcularTotaisRelatorioEspecial(
   let horasViagemIda = 0
   let horasViagemRetorno = 0
   const datasUnicas = new Set<string>()
+  /** Almoço só uma vez por data civil (retorno no mesmo dia não desconta 2.º almoço). */
+  const almocoJaAplicadoPorData = new Set<string>()
 
   for (const diaRaw of lista) {
     const dia = atualizarCalculosDiaEspecial(diaRaw)
@@ -313,7 +315,12 @@ export function calcularTotaisRelatorioEspecial(
     kmsTotal += parseFloat(dia.kmTotal) || 0
     horasViagemIda += minutosDeDuracaoHHMM(dia.idaDuracao)
     horasViagemRetorno += minutosDeDuracaoHHMM(dia.retornoDuracao)
-    const almocoDia = minutosAlmocoDia(dia)
+    let almocoDia = minutosAlmocoDia(dia)
+    if (chaveDiaria && almocoJaAplicadoPorData.has(chaveDiaria)) {
+      almocoDia = 0
+    } else if (chaveDiaria && almocoDia > 0) {
+      almocoJaAplicadoPorData.add(chaveDiaria)
+    }
     horasAlmocoTotal += almocoDia
 
     const linhas = dia.horasPorEquipamento || []

@@ -68,7 +68,8 @@ export function quantidadesFechamentoCobrancaRelatorio(r: RelatorioServicoCobran
         ? minutosParaHorasDecimal(totais.horasTrabalhoMinutos)
         : hhmmToDecimal(totais.horasTrabalho),
     km: parseFloat(totais.kmsPercorridos) || 0,
-    diarias: dias.length,
+    /** 1 diária por data civil — vários blocos no mesmo dia não duplicam. */
+    diarias: totais.diarias,
     hida:
       typeof totais.horasViagemIdaMinutos === 'number'
         ? minutosParaHorasDecimal(totais.horasViagemIdaMinutos)

@@ -16359,7 +16359,7 @@ export default function Dashboard() {
             </table>
           </section>
 
-          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>)}
+          ${buildRelatorioServicoSummaryCardsHtml(totais, totais.diarias, t as Record<string, string | undefined>)}
           ` : ''}
 
           <section class="info-section">
@@ -16507,7 +16507,7 @@ export default function Dashboard() {
             </table>
           </section>
 
-          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>)}
+          ${buildRelatorioServicoSummaryCardsHtml(totais, totais.diarias, t as Record<string, string | undefined>)}
           ` : ''}
 
           <section class="info-section">
@@ -16668,7 +16668,7 @@ export default function Dashboard() {
             </table>
           </section>
 
-          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>)}
+          ${buildRelatorioServicoSummaryCardsHtml(totais, totais.diarias, t as Record<string, string | undefined>)}
           ` : ''}
 
           <section class="info-section">
@@ -17047,7 +17047,7 @@ export default function Dashboard() {
             </table>
           </div>
 
-          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>, {
+          ${buildRelatorioServicoSummaryCardsHtml(totais, totais.diarias, t as Record<string, string | undefined>, {
             wrapperClass: 'summary-modern',
             cardClass: 'summary-card-modern',
           })}
@@ -17385,7 +17385,7 @@ export default function Dashboard() {
             </table>
           </div>
 
-          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>, {
+          ${buildRelatorioServicoSummaryCardsHtml(totais, totais.diarias, t as Record<string, string | undefined>, {
             wrapperClass: 'summary-minimal',
             cardClass: 'summary-item',
             labelAs: 'div',
@@ -17738,7 +17738,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>, {
+          ${buildRelatorioServicoSummaryCardsHtml(totais, totais.diarias, t as Record<string, string | undefined>, {
             wrapperClass: 'summary-tecnico',
             cardClass: 'summary-card-tecnico',
           })}
@@ -18091,7 +18091,7 @@ export default function Dashboard() {
             </table>
           </div>
 
-          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>, {
+          ${buildRelatorioServicoSummaryCardsHtml(totais, totais.diarias, t as Record<string, string | undefined>, {
             wrapperClass: 'summary-executivo',
             cardClass: 'summary-item-executivo',
             labelAs: 'div',
@@ -18476,7 +18476,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          ${buildRelatorioServicoSummaryCardsHtml(totais, relatorio.diasTrabalho.length, t as Record<string, string | undefined>, {
+          ${buildRelatorioServicoSummaryCardsHtml(totais, totais.diarias, t as Record<string, string | undefined>, {
             wrapperClass: 'summary-negro',
             cardClass: 'summary-card-negro',
           })}
@@ -19180,9 +19180,10 @@ export default function Dashboard() {
 
   const localeReport = localeDateShort(selectedLanguage);
 
-  const renderReportDiasTable = (relatorio: RelatorioServico, totais: { horasTrabalho: string; kmsPercorridos: string; horasViagem: string; horasViagemIda?: string; horasViagemRetorno?: string }) => {
+  const renderReportDiasTable = (relatorio: RelatorioServico, totais: { horasTrabalho: string; kmsPercorridos: string; horasViagem: string; horasViagemIda?: string; horasViagemRetorno?: string; diarias?: number }) => {
     if (!relatorio.diasTrabalho || relatorio.diasTrabalho.length === 0) return '';
-    const numDiarias = relatorio.diasTrabalho.length;
+    const numDiarias =
+      typeof totais.diarias === 'number' ? totais.diarias : calcularTotais(relatorio.diasTrabalho).diarias;
     return `
     <section class="info-section">
       <h3>${t.controleHorasDeslocamentos || 'CONTROLE DE HORAS E DESLOCAMENTOS'}</h3>
@@ -20275,6 +20276,21 @@ export default function Dashboard() {
         kmRetorno,
       })
     })
+  }
+
+  /** Prepara o editor para um 2.º bloco de horário na mesma data (sem nova diária). */
+  const handlePrepararRetornoMesmoDia = (dia: DiaTrabalho) => {
+    setEditingDiaTrabalhoIndex(null)
+    const dataKey = normalizeDateKey(dia.data) || dia.data || new Date().toISOString().split('T')[0]
+    setNovoDiaTrabalho(
+      atualizarCalculosDia({
+        ...createEmptyDiaTrabalhoForm(),
+        data: dataKey,
+        pausa: '',
+        tempoPausa: '',
+      })
+    )
+    scrollRelatorioServicoDiaEditorIntoView()
   }
 
   const handleRemoveDiaTrabalho = (index: number) => {
@@ -32548,6 +32564,18 @@ export default function Dashboard() {
                     }}>
                       ℹ️ {safeT?.informacaoApenasDataObrigatoria || 'Informação: Apenas a Data é obrigatória. Os campos de Horários de Ida, Horários de Retorno e Horários de Trabalho são opcionais. Você pode preencher apenas o que for necessário.'}
                     </p>
+                    <p style={{
+                      marginBottom: '15px',
+                      fontSize: '11px',
+                      color: 'rgba(255,255,255,0.75)',
+                      padding: '8px',
+                      backgroundColor: '#383838',
+                      borderRadius: '4px',
+                      border: '1px solid rgba(0, 200, 83, 0.22)'
+                    }}>
+                      {(safeT as any)?.retornoMesmoDiaAjuda ||
+                        'Pode acrescentar outro horário no mesmo dia (ex.: voltar às 21:00) sem nova diária. Use «Adicionar retorno no mesmo dia» na tabela; horas e KM somam, a diária conta 1 vez por data.'}
+                    </p>
 
                     {/* Data */}
                     <div style={{ marginBottom: '20px' }}>
@@ -32984,7 +33012,7 @@ export default function Dashboard() {
                       </p>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '14px', flexWrap: 'nowrap' }}>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '14px', flexWrap: 'wrap' }}>
                       <button
                         className="btn-primary"
                         onClick={handleAddDiaTrabalho}
@@ -32998,6 +33026,38 @@ export default function Dashboard() {
                       >
                         {editingDiaTrabalhoIndex !== null ? (safeT?.atualizarDia || 'Atualizar Dia') : (safeT?.adicionarDia || 'Adicionar Dia')}
                       </button>
+                      {editingDiaTrabalhoIndex === null &&
+                        (relatorioServicoForm.diasTrabalho?.length ?? 0) > 0 && (
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => {
+                            const dataKey = normalizeDateKey(novoDiaTrabalho.data)
+                            const mesmoDia = (relatorioServicoForm.diasTrabalho || []).find(
+                              (d) => normalizeDateKey(d.data) === dataKey
+                            )
+                            const base =
+                              mesmoDia ||
+                              relatorioServicoForm.diasTrabalho[
+                                relatorioServicoForm.diasTrabalho.length - 1
+                              ]
+                            if (base) handlePrepararRetornoMesmoDia(base)
+                          }}
+                          title={
+                            (safeT as any)?.retornoMesmoDiaAjuda ||
+                            'Outro horário no mesmo dia sem nova diária'
+                          }
+                          style={{
+                            padding: '10px 14px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            borderRadius: '6px',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {(safeT as any)?.adicionarRetornoMesmoDia || 'Adicionar retorno no mesmo dia'}
+                        </button>
+                      )}
                       {editingDiaTrabalhoIndex !== null && (
                         <button
                           type="button"
@@ -33076,7 +33136,7 @@ export default function Dashboard() {
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.2)', fontSize: '10px', fontWeight: 'bold', color: '#ffffff', whiteSpace: 'nowrap' }}>{diaCalculado.kmTotal || '0'}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.2)', fontSize: '10px', color: '#ffffff', whiteSpace: 'nowrap' }} rowSpan={temDescricao ? 2 : 1}>{dia.pausa || '0'}</td>
                                     <td className="relatorio-dia-acao-cell" style={{ padding: '2px 2px', textAlign: 'center', border: '1px solid rgba(0, 200, 83, 0.2)', verticalAlign: 'middle' }} rowSpan={temDescricao ? 2 : 1}>
-                                      <div style={{ display: 'flex', gap: '3px', justifyContent: 'center', flexWrap: 'nowrap', alignItems: 'center' }}>
+                                      <div style={{ display: 'flex', gap: '3px', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center' }}>
                                         <button
                                           type="button"
                                           className="dia-trabalho-acao-btn dia-trabalho-acao-btn--edit"
@@ -33111,6 +33171,23 @@ export default function Dashboard() {
                                           title={(safeT as any)?.editar || safeT?.edit || 'Editar'}
                                         >
                                           {(safeT as any)?.editar || safeT?.edit || 'Editar'}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="dia-trabalho-acao-btn dia-trabalho-acao-btn--edit"
+                                          onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            handlePrepararRetornoMesmoDia(dia)
+                                          }}
+                                          title={
+                                            (safeT as any)?.retornoMesmoDiaAjuda ||
+                                            'Outro horário no mesmo dia sem nova diária'
+                                          }
+                                        >
+                                          {(safeT as any)?.adicionarRetornoMesmoDiaCurto ||
+                                            (safeT as any)?.adicionarRetornoMesmoDia ||
+                                            'Retorno mesmo dia'}
                                         </button>
                                         <button
                                           type="button"
@@ -33651,7 +33728,7 @@ export default function Dashboard() {
                       </div>
                       <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
                         <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
-                        <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{relatorioServicoForm.diasTrabalho.length}</p>
+                        <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).diarias}</p>
                       </div>
                       <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.3)', textAlign: 'center' }}>
                         <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>
@@ -75835,7 +75912,7 @@ A1;Peça exemplo;10`}
                         </div>
                         <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.4)', textAlign: 'center' }}>
                           <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
-                          <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{diasTrabalhoRelatorioOrdenados(viewingRelatorioServico).length}</p>
+                          <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{totais.diarias}</p>
                         </div>
                         <div style={{ padding: '10px', backgroundColor: '#404040', borderRadius: '6px', border: '1px solid rgba(0, 200, 83, 0.3)', textAlign: 'center' }}>
                           <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>

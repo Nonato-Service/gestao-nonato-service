@@ -1,5 +1,32 @@
 import { minutosPausaOuAlmocoDia } from '../relatorios-especiais'
+import { diaTrabalhoDataChaveOrdenacao } from './dias'
 import type { DiaTrabalho } from './tipos'
+
+/**
+ * Dia conta como diária se tiver data de missão.
+ * Devolve chave estável YYYY-MM-DD (quando possível) para deduplicar vários blocos no mesmo dia civil.
+ */
+export function diaContaComoDiariaServico(dia: DiaTrabalho | undefined | null): string {
+  if (!dia) return ''
+  const chave = diaTrabalhoDataChaveOrdenacao(dia.data)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(chave)) return chave
+  const raw = String(dia.data ?? '').trim()
+  return raw ? raw.slice(0, 40) : ''
+}
+
+/** Quantidade de diárias = datas civis únicas (vários horários no mesmo dia = 1 diária). */
+export function contarDiariasDatasUnicas(dias: DiaTrabalho[] | undefined | null): {
+  diarias: number
+  datasDiarias: string[]
+} {
+  const datasUnicas = new Set<string>()
+  for (const dia of Array.isArray(dias) ? dias : []) {
+    const chave = diaContaComoDiariaServico(dia)
+    if (chave) datasUnicas.add(chave)
+  }
+  const datasDiarias = Array.from(datasUnicas).sort()
+  return { diarias: datasDiarias.length, datasDiarias }
+}
 
 /** Duração HH:MM entre duas horas (suporta atravessar meia-noite). */
 export function calcularDuracao(horaInicio: string, horaFim: string): string {
@@ -73,9 +100,12 @@ export type TotaisDiasTrabalho = {
   horasViagemIdaMinutos: number
   horasViagemRetorno: string
   horasViagemRetornoMinutos: number
+  /** 1 diária por data civil (YYYY-MM-DD), mesmo com vários blocos de horário. */
+  diarias: number
+  datasDiarias: string[]
 }
 
-/** Agrega totais de horas/KM a partir dos dias de trabalho. */
+/** Agrega totais de horas/KM/diárias a partir dos dias de trabalho. */
 export function calcularTotais(dias: DiaTrabalho[] | undefined | null): TotaisDiasTrabalho {
   const listaDias = Array.isArray(dias) ? dias : []
   let totalHorasTrabalho = 0
@@ -124,6 +154,7 @@ export function calcularTotais(dias: DiaTrabalho[] | undefined | null): TotaisDi
   const horasViagemIda = Math.floor(totalHorasViagemIda / 60) + ':' + String(totalHorasViagemIda % 60).padStart(2, '0')
   const horasViagemRetorno =
     Math.floor(totalHorasViagemRetorno / 60) + ':' + String(totalHorasViagemRetorno % 60).padStart(2, '0')
+  const { diarias, datasDiarias } = contarDiariasDatasUnicas(listaDias)
 
   return {
     horasTrabalho,
@@ -135,5 +166,7 @@ export function calcularTotais(dias: DiaTrabalho[] | undefined | null): TotaisDi
     horasViagemIdaMinutos: totalHorasViagemIda,
     horasViagemRetorno,
     horasViagemRetornoMinutos: totalHorasViagemRetorno,
+    diarias,
+    datasDiarias,
   }
 }

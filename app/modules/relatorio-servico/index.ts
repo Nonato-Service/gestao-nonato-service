@@ -61,7 +61,13 @@ export {
 } from './lista'
 
 export type { TotaisDiasTrabalho } from './calculos'
-export { calcularDuracao, atualizarCalculosDia, calcularTotais } from './calculos'
+export {
+  calcularDuracao,
+  atualizarCalculosDia,
+  calcularTotais,
+  diaContaComoDiariaServico,
+  contarDiariasDatasUnicas,
+} from './calculos'
 
 export {
   RELATORIO_SERVICO_PDF_MODELOS,
