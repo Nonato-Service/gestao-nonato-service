@@ -658,6 +658,42 @@ export default function RelatorioEspecialHub({
     setEquipExpandidos(new Set())
   }, [modo, relatorios, t, marcarSnapshot])
 
+  // Hooks ANTES de qualquer early return (lista/fechamento) — React #310
+  const clienteIdEfetivo = form.clienteId || ''
+  const clienteEquipamentos = clientes.find((c) => c.id === clienteIdEfetivo)?.equipamentos ?? []
+  const clienteEquipamentosSyncKey = useMemo(
+    () =>
+      JSON.stringify(
+        (clienteEquipamentos || []).map((e) => [
+          String(e?.id ?? '').trim(),
+          String(e?.numeroSerie ?? '').trim(),
+          String(e?.modelo ?? '').trim(),
+          String(e?.marca ?? '').trim(),
+        ])
+      ),
+    [clienteEquipamentos]
+  )
+
+  /** Alinha linhas do relatório ao cadastro actual (após apagar/duplicar equipamento). */
+  useEffect(() => {
+    if (modo !== 'form') return
+    if (!clienteIdEfetivo) return
+    setForm((prev) => {
+      if (String(prev.clienteId || '').trim() !== clienteIdEfetivo) return prev
+      const next = prepararEquipamentosRelatorioParaEdicao(
+        prev.equipamentos || [],
+        clienteEquipamentos,
+        equipamentosArmazem
+      )
+      const prevJson = JSON.stringify(prev.equipamentos || [])
+      const nextJson = JSON.stringify(next)
+      if (prevJson === nextJson) return prev
+      return { ...prev, equipamentos: next }
+    })
+    // clienteEquipamentosSyncKey cobre mudanças de conteúdo sem reagir a nova referência vazia a cada render
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- syncKey é a fonte de verdade do cadastro
+  }, [modo, clienteIdEfetivo, clienteEquipamentosSyncKey, equipamentosArmazem])
+
   const abrirEditar = useCallback(
     (rel: RelatorioEspecial) => {
       const cliEq =
@@ -1286,41 +1322,6 @@ export default function RelatorioEspecialHub({
     totais.datasDiarias && totais.datasDiarias.length > 0
       ? totais.datasDiarias
       : Array.from(diariasUnicasUi).sort()
-  const clienteIdEfetivo = form.clienteId || ''
-  const clienteEquipamentos = clientes.find((c) => c.id === clienteIdEfetivo)?.equipamentos ?? []
-  const clienteEquipamentosSyncKey = useMemo(
-    () =>
-      JSON.stringify(
-        (clienteEquipamentos || []).map((e) => [
-          String(e?.id ?? '').trim(),
-          String(e?.numeroSerie ?? '').trim(),
-          String(e?.modelo ?? '').trim(),
-          String(e?.marca ?? '').trim(),
-        ])
-      ),
-    [clienteEquipamentos]
-  )
-
-  /** Alinha linhas do relatório ao cadastro actual (após apagar/duplicar equipamento). */
-  useEffect(() => {
-    if (modo !== 'form') return
-    if (!clienteIdEfetivo) return
-    setForm((prev) => {
-      if (String(prev.clienteId || '').trim() !== clienteIdEfetivo) return prev
-      const next = prepararEquipamentosRelatorioParaEdicao(
-        prev.equipamentos || [],
-        clienteEquipamentos,
-        equipamentosArmazem
-      )
-      const prevJson = JSON.stringify(prev.equipamentos || [])
-      const nextJson = JSON.stringify(next)
-      if (prevJson === nextJson) return prev
-      return { ...prev, equipamentos: next }
-    })
-    // clienteEquipamentosSyncKey cobre mudanças de conteúdo sem reagir a nova referência vazia a cada render
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- syncKey é a fonte de verdade do cadastro
-  }, [modo, clienteIdEfetivo, clienteEquipamentosSyncKey, equipamentosArmazem])
-
   const podeAdicionarEquip = (form.equipamentos?.length || 0) < MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES
 
   const chipOk = t.relatorioEspecialChipOk || 'OK'
