@@ -21,6 +21,7 @@ import {
   diaTrabalhoDataChaveOrdenacao,
 } from '../lib/relatorioEspecialCalculos'
 import { BibliotecaHubPainelRecolhivel, type HubPainelStatus } from './BibliotecaHubPainelRecolhivel'
+import { RelatorioCobrancaAcoes, type RelatorioCobrancaGrupoMin } from './RelatorioCobrancaAcoes'
 import {
   buildTextoEnvioRelatorioEspecial,
   buildAssuntoEnvioRelatorioServico,
@@ -78,9 +79,18 @@ export type RelatorioEspecialHubProps = {
   empresaNome?: string
   abrirEnvioDocumentoCliente?: (opts: AbrirEnvioDocumentoClienteOpts) => void
   /** Abre a aba de fechamento para cobrança (mesmo padrão do relatório de serviço). */
-  onAbrirFechamentoCobranca?: (relatorioId: string, numero: string) => void
+  onAbrirFechamentoCobranca?: (
+    relatorioId: string,
+    numero: string,
+    relatorioAtualizado?: RelatorioEspecial
+  ) => void
   getResumoCobrancaFase?: (relatorioId: string) => 'laranja' | 'azul' | 'verde' | 'biblioteca'
   onClickResumoCobranca?: (relatorioId: string) => void
+  /** Grupos do cadastro de valores (tipo de cobrança). */
+  gruposTipoCobranca?: RelatorioCobrancaGrupoMin[]
+  getGrupoTipoCobranca?: (relatorioId: string) => string
+  onSelectGrupoTipoCobranca?: (relatorioId: string, grupoId: string) => void
+  getGrupoSugeridoNome?: (relatorioId: string) => string | undefined
 }
 
 const inputStyle: React.CSSProperties = {
@@ -218,6 +228,10 @@ export default function RelatorioEspecialHub({
   onAbrirFechamentoCobranca,
   getResumoCobrancaFase,
   onClickResumoCobranca,
+  gruposTipoCobranca = [],
+  getGrupoTipoCobranca,
+  onSelectGrupoTipoCobranca,
+  getGrupoSugeridoNome,
 }: RelatorioEspecialHubProps) {
   const t = labels
   const uiLocale = localeUiFromLang(selectedLanguage)
@@ -1014,18 +1028,17 @@ export default function RelatorioEspecialHub({
                       </div>
                       {(onAbrirFechamentoCobranca || (getResumoCobrancaFase && onClickResumoCobranca)) && (
                         <div className="relatorio-especial-card__cobranca-bar" aria-label={t.relatorioEspecialFechamentoCobranca || 'Fechamento / Cobrança'}>
-                          {onAbrirFechamentoCobranca ? (
-                            <button
-                              type="button"
-                              className="btn-primary relatorio-especial-card__cobranca"
-                              onClick={() => onAbrirFechamentoCobranca(rel.id, rel.numero)}
-                              title={
-                                t.relatorioEspecialFechamentoCobrancaDica ||
-                                'Abrir fechamento para cobrança (valores HT/KM/diárias)'
-                              }
-                            >
-                              💶 {t.relatorioEspecialFechamentoCobranca || 'Fechamento / Cobrança'}
-                            </button>
+                          {onAbrirFechamentoCobranca && rel.servicoConcluido ? (
+                            <RelatorioCobrancaAcoes
+                              concluido
+                              compact
+                              labels={t}
+                              grupos={gruposTipoCobranca}
+                              grupoIdAtual={getGrupoTipoCobranca?.(rel.id) || ''}
+                              grupoSugeridoNome={getGrupoSugeridoNome?.(rel.id)}
+                              onSelectGrupo={(gid) => onSelectGrupoTipoCobranca?.(rel.id, gid)}
+                              onIrAoFechamento={() => onAbrirFechamentoCobranca(rel.id, rel.numero)}
+                            />
                           ) : null}
                           {getResumoCobrancaFase && onClickResumoCobranca ? (
                             <button
@@ -1430,20 +1443,65 @@ export default function RelatorioEspecialHub({
             </datalist>
           </div>
 
+          <div className="relatorio-especial-form__field relatorio-especial-form__field--full">
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginTop: 4 }}>
+              <input
+                type="checkbox"
+                checked={Boolean(form.servicoConcluido)}
+                onChange={(e) => setForm((prev) => ({ ...prev, servicoConcluido: e.target.checked }))}
+                style={{ width: 18, height: 18, cursor: 'pointer' }}
+              />
+              <span>{t.servicoConcluido || 'Serviço Concluído'}</span>
+            </label>
+            <p style={{ margin: '6px 0 0', fontSize: 12, color: '#888', lineHeight: 1.4 }}>
+              {t.relatorioIrAoFechamentoDica ||
+                'Com o serviço concluído aparecem «Tipo de cobrança» e «Ir ao fechamento».'}
+            </p>
+          </div>
+
           {editandoId && (onAbrirFechamentoCobranca || (getResumoCobrancaFase && onClickResumoCobranca)) ? (
             <div className="relatorio-especial-form__cobranca-bar relatorio-especial-form__cobranca-bar--row">
-              {onAbrirFechamentoCobranca ? (
-                <button
-                  type="button"
-                  className="re-action-btn re-action-btn--primary relatorio-especial-form__cobranca"
-                  onClick={() => onAbrirFechamentoCobranca(editandoId, form.numero)}
-                  title={
-                    t.relatorioEspecialFechamentoCobrancaDica ||
-                    'Abrir fechamento para cobrança (valores HT/KM/diárias)'
-                  }
-                >
-                  💶 {t.relatorioEspecialFechamentoCobranca || 'Fechamento / Cobrança'}
-                </button>
+              {onAbrirFechamentoCobranca && form.servicoConcluido ? (
+                <RelatorioCobrancaAcoes
+                  concluido
+                  labels={t}
+                  grupos={gruposTipoCobranca}
+                  grupoIdAtual={getGrupoTipoCobranca?.(editandoId) || ''}
+                  grupoSugeridoNome={getGrupoSugeridoNome?.(editandoId)}
+                  onSelectGrupo={(gid) => onSelectGrupoTipoCobranca?.(editandoId, gid)}
+                  onIrAoFechamento={() => {
+                    void (async () => {
+                      const equipamentosOk = (form.equipamentos || []).filter(
+                        (e) => e.equipamentoId || e.maquinaModelo || e.numeroMaquina
+                      )
+                      if (equipamentosOk.length === 0) {
+                        alert(
+                          t.relatorioEspecialSemEquipamentos ||
+                            'Adicione pelo menos um equipamento ao relatório.'
+                        )
+                        return
+                      }
+                      const preparado = aplicarTotaisNoRelatorioEspecial({
+                        ...form,
+                        id: editandoId,
+                        equipamentos: equipamentosOk,
+                        servicoConcluido: true,
+                      })
+                      const lista = upsertRelatorioEspecialNaLista(
+                        relatorios,
+                        preparado,
+                        editandoId
+                      )
+                      const ok = await onSaveAll(lista)
+                      if (!ok) {
+                        alert(t.erroSalvar || 'Não foi possível guardar. Verifique a ligação e tente novamente.')
+                        return
+                      }
+                      marcarSnapshot(preparado)
+                      onAbrirFechamentoCobranca(editandoId, form.numero, preparado)
+                    })()
+                  }}
+                />
               ) : null}
               {getResumoCobrancaFase && onClickResumoCobranca ? (
                 <button

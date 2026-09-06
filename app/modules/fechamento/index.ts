@@ -69,6 +69,14 @@ export {
   filtrarOpcoesServicoLinhaFechamento,
 } from './exibirItens'
 
+export type { ComprovanteParaFechamentoMin } from './comprovantesMerge'
+export {
+  comprovanteIdFechamento,
+  filtrarComprovantesDoCliente,
+  comprovanteParaItemFechamento,
+  mesclarComprovantesEmItensFechamento,
+} from './comprovantesMerge'
+
 export type { ResumoCobrancaDecisao } from './persistMaps'
 export {
   RESUMO_COBRANCA_DECISAO_KEY,

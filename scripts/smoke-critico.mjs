@@ -145,6 +145,16 @@ try {
   } else {
     fail('módulo fechamento sem persistMaps (keys/normalize)')
   }
+  if (idx.includes('mesclarComprovantesEmItensFechamento')) {
+    ok('módulo fechamento exporta comprovantesMerge')
+  } else {
+    fail('módulo fechamento sem mesclarComprovantesEmItensFechamento')
+  }
+  if (!exists('app/modules/fechamento/comprovantesMerge.ts')) {
+    fail('falta app/modules/fechamento/comprovantesMerge.ts')
+  } else {
+    ok('existe app/modules/fechamento/comprovantesMerge.ts')
+  }
   if (!exists('app/modules/fechamento/persistMaps.ts')) {
     fail('falta app/modules/fechamento/persistMaps.ts')
   } else {

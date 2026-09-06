@@ -728,7 +728,9 @@ import {
   normalizeFechamentoItensOmitidosMap,
   normalizeFechamentoIvaPorRelatorioMap,
   normalizeFechamentoGrupoPorRelatorioMap,
+  mesclarComprovantesEmItensFechamento,
 } from './modules/fechamento'
+import { RelatorioCobrancaAcoes } from './components/RelatorioCobrancaAcoes'
 import {
   encontrarClienteDuplicadoCadastro,
   encontrarClienteDuplicadoCadastroAntecipado,
@@ -13799,6 +13801,120 @@ export default function Dashboard() {
     setFechamentoEditandoDespesasBibliotecaId(relatorioId)
     setFechamentoRelatorioSelecionadoId(relatorioId)
     openTab('fechamento-relatorios-servicos', getTabTitle('fechamento-relatorios-servicos'))
+  }
+
+  /** Guarda o grupo de tarifas (tipo de cobrança) para um relatório — cadastro de valores existente. */
+  const guardarTipoCobrancaRelatorio = (relatorioId: string, grupoId: string) => {
+    if (!relatorioId || !grupoId) return
+    setFechamentoGrupoPorRelatorioId((prev) => {
+      const next = { ...prev, [relatorioId]: grupoId }
+      void saveData(FECHAMENTO_GRUPO_POR_RELATORIO_KEY, next)
+      return next
+    })
+  }
+
+  /** Opções de grupos para o botão «Tipo de cobrança» (com HTT se existir). */
+  const gruposOpcoesTipoCobranca = () =>
+    ordenarServicoGrupos(servicoGrupos).map((g) => {
+      const htt = servicos.find(
+        (s) =>
+          s.grupoId === g.id &&
+          (/^(HT|HTT)$/i.test(String(s.cod || '').trim()) ||
+            /trabalh/i.test(`${s.nome || ''} ${s.descricao || ''}`.toLowerCase()))
+      )
+      const httVal = htt ? formatServicoValorExibicao(htt.valor) : null
+      return {
+        id: g.id,
+        nome: g.nome,
+        httLabel: httVal != null ? `HTT ${httVal} €` : undefined,
+      }
+    })
+
+  /**
+   * Abre Fechamento de relatórios com HT/KM/diárias pré-preenchidos e
+   * junta comprovantes (foto) do cliente sem apagar linhas manuais já guardadas.
+   */
+  const abrirFechamentoCobrancaComPrefill = (opts: {
+    relatorioId: string
+    clienteId?: string
+    clienteNome?: string
+    fecharFormulario?: boolean
+    /** Evita race após guardar relatório especial antes do re-render. */
+    relatorioEspecial?: RelatorioEspecial | null
+    relatorioServico?: RelatorioServico | null
+  }) => {
+    const rid = opts.relatorioId
+    if (!rid) return
+    const relEsp =
+      opts.relatorioEspecial && opts.relatorioEspecial.id === rid
+        ? opts.relatorioEspecial
+        : relatoriosEspeciais.find((r) => r.id === rid)
+    const relSrv =
+      opts.relatorioServico && opts.relatorioServico.id === rid
+        ? opts.relatorioServico
+        : relatoriosServico.find((r) => r.id === rid)
+    const shape = relEsp
+      ? (adaptRelatorioEspecialParaFechamentoShape(relEsp) as RelatorioServico)
+      : relSrv
+    if (!shape) return
+
+    const cli =
+      findClienteByRelatorio(clientes, shape) ||
+      (opts.clienteId ? clientes.find((c) => c.id === opts.clienteId) : undefined)
+    const grupoId =
+      fechamentoGrupoPorRelatorioId[rid] ||
+      cli?.grupoTarifaId ||
+      ordenarServicoGrupos(servicoGrupos)[0]?.id ||
+      ''
+    if (grupoId && !fechamentoGrupoPorRelatorioId[rid]) {
+      guardarTipoCobrancaRelatorio(rid, grupoId)
+    }
+
+    const labelsUi = {
+      horasTrabalho: (safeT as any)?.horasTrabalho,
+      kmsPercorridos: (safeT as any)?.kmsPercorridos,
+      diarias: (safeT as any)?.diarias,
+      horasViagemIda: (safeT as any)?.horasViagemIda,
+      horasViagemRetorno: (safeT as any)?.horasViagemRetorno,
+    }
+    const base = buildItensFechamentoBaseRelatorioModulo(shape, {
+      labels: labelsUi,
+      servicos: servicos as ServicoCadastroFechamentoMin[],
+      grupoId,
+      relatorioEspecial: relEsp || undefined,
+      getRelatorioEspecial: (id: string) =>
+        id === rid && relEsp ? relEsp : relatoriosEspeciais.find((e) => e.id === id),
+    })
+    const salvos = fechamentosRelatorios[rid]
+    let itens = buildItensFechamentoParaExibirFromSalvos(salvos, base, {
+      servicos: servicos as ServicoCadastroFechamentoMin[],
+      grupoId,
+    })
+    itens = mesclarComprovantesEmItensFechamento(
+      itens,
+      comprovantesDespesas,
+      opts.clienteId || shape.clienteId || cli?.id,
+      opts.clienteNome || shape.cliente || cli?.nomeEmpresa,
+      (safeT as any)?.relatorioDespesaComprovante || 'Despesa (comprovante)'
+    )
+    setFechamentosRelatorios((prev) => {
+      const prevList = prev[rid]
+      const same =
+        Array.isArray(prevList) &&
+        prevList.length === itens.length &&
+        prevList.every((p, i) => p.id === itens[i]?.id && p.quantidade === itens[i]?.quantidade)
+      if (same) return prev
+      const next = { ...prev, [rid]: itens }
+      void saveData('nonato-fechamentos-relatorios', next)
+      return next
+    })
+
+    setFechamentoEditandoDespesasBibliotecaId(null)
+    setFechamentoRelatorioSelecionadoId(rid)
+    openTab('fechamento-relatorios-servicos', getTabTitle('fechamento-relatorios-servicos'))
+    if (opts.fecharFormulario) {
+      fecharFormularioRelatorioServico()
+    }
   }
 
   /** Fecha o formulário/modal do relatório de serviço (volta à lista do módulo). */
@@ -33632,6 +33748,45 @@ export default function Dashboard() {
                     </label>
                   </div>
                 </div>
+                {relatorioServicoForm.servicoConcluido && relatorioServicoForm.id ? (
+                  <div style={{ marginTop: 14 }}>
+                    <RelatorioCobrancaAcoes
+                      concluido
+                      labels={safeT as Record<string, string | undefined>}
+                      grupos={gruposOpcoesTipoCobranca()}
+                      grupoIdAtual={
+                        fechamentoGrupoPorRelatorioId[relatorioServicoForm.id] ||
+                        findClienteByRelatorio(clientes, relatorioServicoForm)?.grupoTarifaId ||
+                        ordenarServicoGrupos(servicoGrupos)[0]?.id ||
+                        ''
+                      }
+                      grupoSugeridoNome={(() => {
+                        const cli = findClienteByRelatorio(clientes, relatorioServicoForm)
+                        return cli?.grupoTarifaId
+                          ? nomeGrupoTarifaServico(servicoGrupos, cli.grupoTarifaId)
+                          : undefined
+                      })()}
+                      onSelectGrupo={(gid) => guardarTipoCobrancaRelatorio(relatorioServicoForm.id, gid)}
+                      onIrAoFechamento={() => {
+                        const rel = salvarRelatorioServicoAtual({ silencioso: true })
+                        if (!rel?.servicoConcluido) {
+                          alert(
+                            (safeT as any)?.servicoConcluido ||
+                              'Marque «Serviço Concluído» e guarde antes de ir ao fechamento.'
+                          )
+                          return
+                        }
+                        abrirFechamentoCobrancaComPrefill({
+                          relatorioId: rel.id,
+                          clienteId: rel.clienteId,
+                          clienteNome: rel.cliente,
+                          fecharFormulario: false,
+                          relatorioServico: rel,
+                        })
+                      }}
+                    />
+                  </div>
+                ) : null}
                 </BibliotecaHubPainelRecolhivel>
                 </div>
                 
@@ -34110,6 +34265,40 @@ export default function Dashboard() {
                               🖨 PDF
                             </button>
                           </div>
+                          {relatorio.servicoConcluido ? (
+                            <div
+                              className="rs-card-acoes__row rs-card-acoes__row--cobranca"
+                              onClick={(e) => e.stopPropagation()}
+                              style={{ marginTop: 6 }}
+                            >
+                              <RelatorioCobrancaAcoes
+                                concluido
+                                compact
+                                labels={safeT as Record<string, string | undefined>}
+                                grupos={gruposOpcoesTipoCobranca()}
+                                grupoIdAtual={
+                                  fechamentoGrupoPorRelatorioId[relatorio.id] ||
+                                  findClienteByRelatorio(clientes, relatorio)?.grupoTarifaId ||
+                                  ordenarServicoGrupos(servicoGrupos)[0]?.id ||
+                                  ''
+                                }
+                                grupoSugeridoNome={(() => {
+                                  const cli = findClienteByRelatorio(clientes, relatorio)
+                                  return cli?.grupoTarifaId
+                                    ? nomeGrupoTarifaServico(servicoGrupos, cli.grupoTarifaId)
+                                    : undefined
+                                })()}
+                                onSelectGrupo={(gid) => guardarTipoCobrancaRelatorio(relatorio.id, gid)}
+                                onIrAoFechamento={() =>
+                                  abrirFechamentoCobrancaComPrefill({
+                                    relatorioId: relatorio.id,
+                                    clienteId: relatorio.clienteId,
+                                    clienteNome: relatorio.cliente,
+                                  })
+                                }
+                              />
+                            </div>
+                          ) : null}
                           <div className="rs-card-acoes__row rs-card-acoes__row--envio">
                             <button
                               className={`rs-card-btn rs-card-btn--email${btnPulseClass}`}
@@ -45468,13 +45657,51 @@ A1;Peça exemplo;10`}
               pdfLogoHtml={getLogoHtmlForReport()}
               empresaNome={(fichaCadastral.nomeEmpresa || 'Nonato Service').trim()}
               abrirEnvioDocumentoCliente={abrirEnvioDocumentoCliente}
-              onAbrirFechamentoCobranca={(relatorioId) => {
-                setFechamentoRelatorioSelecionadoId(relatorioId)
-                setFechamentoEditandoDespesasBibliotecaId(null)
-                openTab('fechamento-relatorios-servicos', getTabTitle('fechamento-relatorios-servicos'))
+              onAbrirFechamentoCobranca={(relatorioId, _numero, relAtualizado) => {
+                const relEsp =
+                  relAtualizado && relAtualizado.id === relatorioId
+                    ? relAtualizado
+                    : relatoriosEspeciais.find((r) => r.id === relatorioId)
+                abrirFechamentoCobrancaComPrefill({
+                  relatorioId,
+                  clienteId: relEsp?.clienteId,
+                  clienteNome: relEsp?.cliente,
+                  relatorioEspecial: relEsp || null,
+                })
               }}
               getResumoCobrancaFase={(relatorioId) => getResumoCobrancaVisualClass(relatorioId)}
               onClickResumoCobranca={(relatorioId) => handleClickResumoCobranca(relatorioId)}
+              gruposTipoCobranca={gruposOpcoesTipoCobranca()}
+              getGrupoTipoCobranca={(relatorioId) => {
+                const relEsp = relatoriosEspeciais.find((r) => r.id === relatorioId)
+                const cli = relEsp
+                  ? findClienteByRelatorio(
+                      clientes,
+                      adaptRelatorioEspecialParaFechamentoShape(relEsp) as RelatorioServico
+                    )
+                  : undefined
+                return (
+                  fechamentoGrupoPorRelatorioId[relatorioId] ||
+                  cli?.grupoTarifaId ||
+                  ordenarServicoGrupos(servicoGrupos)[0]?.id ||
+                  ''
+                )
+              }}
+              onSelectGrupoTipoCobranca={(relatorioId, grupoId) =>
+                guardarTipoCobrancaRelatorio(relatorioId, grupoId)
+              }
+              getGrupoSugeridoNome={(relatorioId) => {
+                const relEsp = relatoriosEspeciais.find((r) => r.id === relatorioId)
+                const cli = relEsp
+                  ? findClienteByRelatorio(
+                      clientes,
+                      adaptRelatorioEspecialParaFechamentoShape(relEsp) as RelatorioServico
+                    )
+                  : undefined
+                return cli?.grupoTarifaId
+                  ? nomeGrupoTarifaServico(servicoGrupos, cli.grupoTarifaId)
+                  : undefined
+              }}
             />
           </div>
         )
