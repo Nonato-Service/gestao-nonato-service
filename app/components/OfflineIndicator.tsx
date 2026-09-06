@@ -7,6 +7,7 @@ import {
   clearPendingSyncQueue,
   getPendingSyncCount,
   setupAutoSyncOnReconnect,
+  probeServerReachable,
 } from '../utils/dataStorage'
 import { getStoredUiString } from '../translations'
 
@@ -19,6 +20,7 @@ export function OfflineIndicator() {
   const [lastConfirmed, setLastConfirmed] = useState<string | null>(null)
   const [blockedMsg, setBlockedMsg] = useState<string | null>(null)
   const lastTapAtRef = useRef(0)
+  const probeInFlightRef = useRef(false)
 
   const refreshPending = () => setPendingCount(getPendingSyncCount())
 
@@ -31,6 +33,19 @@ export function OfflineIndicator() {
       if (failed > 0) setLastFailed(Date.now())
       if (getPendingSyncCount() === 0) setLastFailed(null)
     })
+  }
+
+  const refreshOnlineFromProbe = async () => {
+    if (probeInFlightRef.current) return
+    probeInFlightRef.current = true
+    try {
+      const ok = await probeServerReachable({ force: true })
+      const next = ok || isOnline()
+      setOnline(next)
+      if (next) runSync()
+    } finally {
+      probeInFlightRef.current = false
+    }
   }
 
   const tryDismissStuckQueue = () => {
@@ -57,16 +72,27 @@ export function OfflineIndicator() {
   useEffect(() => {
     setOnline(isOnline())
     refreshPending()
+    void refreshOnlineFromProbe()
 
     const teardownAutoSync = setupAutoSyncOnReconnect()
 
     const handleOnline = () => {
       setOnline(true)
       runSync()
+      void refreshOnlineFromProbe()
     }
 
     const handleOffline = () => {
-      setOnline(false)
+      // Não confiar de imediato em navigator.offline — falso negativo comum após PWA/rede
+      void refreshOnlineFromProbe()
+    }
+
+    const handleConnectivity = (e: Event) => {
+      const detail = (e as CustomEvent<{ online?: boolean }>).detail
+      if (detail?.online) {
+        setOnline(true)
+        runSync()
+      }
     }
 
     const handleSyncCompleted = () => {
@@ -74,11 +100,13 @@ export function OfflineIndicator() {
       setLastSync(Date.now())
       setLastFailed(null)
       setSyncing(false)
+      setOnline(true)
     }
 
     const handleSaveResult = (e: Event) => {
       const detail = (e as CustomEvent<{ key?: string; ok?: boolean }>).detail
       if (detail?.ok) {
+        setOnline(true)
         setLastConfirmed(
           getStoredUiString('saveServerConfirmed', '✓ Confirmado no servidor')
         )
@@ -101,19 +129,36 @@ export function OfflineIndicator() {
 
     const handleQueueHydrated = () => refreshPending()
 
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') void refreshOnlineFromProbe()
+    }
+
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
+    window.addEventListener('nonato-connectivity', handleConnectivity)
     window.addEventListener('nonato-sync-completed', handleSyncCompleted)
     window.addEventListener('nonato-save-server-result', handleSaveResult)
     window.addEventListener('nonato-sync-blocked', handleBlocked)
     window.addEventListener('nonato-sync-queue-hydrated', handleQueueHydrated)
+    document.addEventListener('visibilitychange', handleVisibility)
+    window.addEventListener('focus', handleVisibility)
+
+    const probeWhileOffline = window.setInterval(() => {
+      if (!isOnline()) void refreshOnlineFromProbe()
+      else setOnline(true)
+    }, 10000)
+
     return () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
+      window.removeEventListener('nonato-connectivity', handleConnectivity)
       window.removeEventListener('nonato-sync-completed', handleSyncCompleted)
       window.removeEventListener('nonato-save-server-result', handleSaveResult)
       window.removeEventListener('nonato-sync-blocked', handleBlocked)
       window.removeEventListener('nonato-sync-queue-hydrated', handleQueueHydrated)
+      document.removeEventListener('visibilitychange', handleVisibility)
+      window.removeEventListener('focus', handleVisibility)
+      window.clearInterval(probeWhileOffline)
       teardownAutoSync()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runSync estável o suficiente para este efeito
@@ -220,22 +265,28 @@ export function OfflineIndicator() {
           maxWidth: 'min(92vw, 360px)',
           backgroundColor: bg,
           color: '#fff',
-          cursor: pendingCount > 0 || showFailed ? 'pointer' : undefined,
+          cursor: pendingCount > 0 || showFailed || !online ? 'pointer' : undefined,
         }}
         onClick={() => {
-          if (!online || !(pendingCount > 0 || showFailed)) return
+          if (!online) {
+            void refreshOnlineFromProbe()
+            return
+          }
+          if (!(pendingCount > 0 || showFailed)) return
           if (showFailed && tryDismissStuckQueue()) return
           runSync()
         }}
         title={
-          pendingCount > 0 || showFailed
-            ? showFailed
-              ? getStoredUiString(
-                  'offlineTapToSyncOrDismiss',
-                  'Toque para tentar de novo; toque 2× para ignorar'
-                )
-              : getStoredUiString('offlineTapToSync', 'Toque para tentar sincronizar agora')
-            : undefined
+          !online
+            ? getStoredUiString('offlineTapToSync', 'Toque para tentar sincronizar agora')
+            : pendingCount > 0 || showFailed
+              ? showFailed
+                ? getStoredUiString(
+                    'offlineTapToSyncOrDismiss',
+                    'Toque para tentar de novo; toque 2× para ignorar'
+                  )
+                : getStoredUiString('offlineTapToSync', 'Toque para tentar sincronizar agora')
+              : undefined
         }
       >
         {!online ? (

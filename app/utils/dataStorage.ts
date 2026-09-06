@@ -270,11 +270,33 @@ function dispatchSaveServerResult(key: string, ok: boolean): void {
 let serverOffline = false
 let lastServerCheck = 0
 const SERVER_CHECK_INTERVAL = 30000 // 30 segundos
+/**
+ * Último contacto HTTP bem-sucedido com a API.
+ * Corrige falso «offline» de `navigator.onLine` (comum após update PWA / mudança de rede).
+ */
+let lastSuccessfulServerContact = 0
+const REACHABLE_GRACE_MS = 90_000
 
-// Verificar se está online (rápido)
+function dispatchConnectivity(online: boolean): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.dispatchEvent(new CustomEvent('nonato-connectivity', { detail: { online } }))
+  } catch {
+    /* ignorar */
+  }
+}
+
+/** Marca a API como alcançável — limpa estado preso de offline. */
+export function markServerReachable(): void {
+  lastSuccessfulServerContact = Date.now()
+  serverOffline = false
+}
+
+// Verificar se está online (rápido). Aceita navigator.onLine OU contacto recente com a API.
 export function isOnline(): boolean {
   if (typeof navigator === 'undefined') return true
-  return navigator.onLine
+  if (navigator.onLine) return true
+  return Date.now() - lastSuccessfulServerContact < REACHABLE_GRACE_MS
 }
 
 // Fila de sincronização (para quando estiver offline)
@@ -401,32 +423,44 @@ function createTimeoutSignal(timeoutMs: number): AbortSignal {
   return controller.signal
 }
 
-// Verificar se o servidor está online
-async function checkServerOnline(): Promise<boolean> {
+/**
+ * Probe real à API. Não desiste só porque `navigator.onLine` é false
+ * (falsos negativos deixavam o banner vermelho e a fila presos).
+ * `force: true` ignora o cache de 30s após falha.
+ */
+export async function probeServerReachable(opts?: { force?: boolean }): Promise<boolean> {
   if (isNonatoDemoBuild()) {
     serverOffline = true
     return false
   }
-  if (!isOnline()) {
-    serverOffline = true
-    return false
-  }
   const now = Date.now()
-  if (now - lastServerCheck < SERVER_CHECK_INTERVAL && serverOffline) {
-    return false
+  const force = opts?.force === true
+  if (!force && now - lastServerCheck < SERVER_CHECK_INTERVAL) {
+    if (serverOffline) return false
+    if (lastSuccessfulServerContact > 0) return true
   }
   lastServerCheck = now
   try {
     const response = await dataApiFetch(`${API_BASE}/load?key=__health_check__`, {
       method: 'GET',
-      signal: createTimeoutSignal(3000),
+      signal: createTimeoutSignal(5000),
     })
-    serverOffline = false
+    // Qualquer resposta HTTP = rede OK (401/404 inclusive — servidor alcançável)
+    if (response.status >= 500) {
+      serverOffline = true
+      return false
+    }
+    markServerReachable()
+    dispatchConnectivity(true)
     return true
   } catch {
     serverOffline = true
     return false
   }
+}
+
+async function checkServerOnline(): Promise<boolean> {
+  return probeServerReachable()
 }
 
 // Processar fila de sincronização (quando voltar online)
@@ -472,14 +506,14 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
     /* blocked: não reenviar — servidor tem versão mais completa */
   }
   setSyncQueue(remaining)
-  if (synced > 0 || remaining.length === 0) serverOffline = false
+  if (synced > 0 || remaining.length === 0) markServerReachable()
   return { synced, failed, discarded }
 }
 
 /** Limpa fila offline presa (ex.: item obsoleto que não consegue gravar). */
 export function clearPendingSyncQueue(): void {
   setSyncQueue([])
-  serverOffline = false
+  markServerReachable()
   lastServerCheck = 0
   dispatchSyncCompleted({ synced: 0, failed: 0, discarded: 0 })
 }
@@ -492,7 +526,11 @@ export async function forceSyncPendingChanges(): Promise<{
   failed: number
   discarded: number
 }> {
-  if (isNonatoDemoBuild() || !isOnline()) return { synced: 0, failed: 0, discarded: 0 }
+  if (isNonatoDemoBuild()) return { synced: 0, failed: 0, discarded: 0 }
+  if (!isOnline()) {
+    const reachable = await probeServerReachable({ force: true })
+    if (!reachable) return { synced: 0, failed: 0, discarded: 0 }
+  }
   serverOffline = false
   lastServerCheck = 0
   return autoSyncPendingChanges()
@@ -532,14 +570,28 @@ export function setupAutoSyncOnReconnect(): () => void {
 
   const run = () => {
     if (isOnline()) void autoSyncPendingChanges()
+    else {
+      void probeServerReachable({ force: true }).then((ok) => {
+        if (ok) void autoSyncPendingChanges()
+      })
+    }
   }
 
   window.addEventListener('online', run)
   const interval = window.setInterval(() => {
-    if (isOnline() && getPendingSyncCount() > 0) void autoSyncPendingChanges()
+    if (getPendingSyncCount() === 0) return
+    if (isOnline()) void autoSyncPendingChanges()
+    else {
+      void probeServerReachable({ force: true }).then((ok) => {
+        if (ok) void autoSyncPendingChanges()
+      })
+    }
   }, 15000)
 
   if (isOnline()) void autoSyncPendingChanges()
+  else void probeServerReachable({ force: true }).then((ok) => {
+    if (ok) void autoSyncPendingChanges()
+  })
 
   return () => {
     window.removeEventListener('online', run)
