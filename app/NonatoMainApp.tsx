@@ -5968,18 +5968,33 @@ export default function Dashboard() {
     if (isNonatoDemoBuild()) return
 
     let cancelled = false
-    const POLL_MS = 12_000
+    /** Antes: 12s + focus a cada clique → UI a congelar com fetch/sync. */
+    const POLL_MS = 45_000
+    const FOCUS_DEBOUNCE_MS = 8_000
+    let lastFocusPullAt = 0
 
     const runCheck = async () => {
       if (cancelled) return
+      if (document.visibilityState === 'hidden') return
       await runAutoServerPull()
     }
 
-    const tid = window.setInterval(runCheck, POLL_MS)
+    const tid = window.setInterval(() => {
+      void runCheck()
+    }, POLL_MS)
     const onVis = () => {
-      if (document.visibilityState === 'visible') void runCheck()
+      if (document.visibilityState !== 'visible') return
+      const now = Date.now()
+      if (now - lastFocusPullAt < FOCUS_DEBOUNCE_MS) return
+      lastFocusPullAt = now
+      void runCheck()
     }
-    const onFocus = () => void runCheck()
+    const onFocus = () => {
+      const now = Date.now()
+      if (now - lastFocusPullAt < FOCUS_DEBOUNCE_MS) return
+      lastFocusPullAt = now
+      void runCheck()
+    }
     document.addEventListener('visibilitychange', onVis)
     window.addEventListener('focus', onFocus)
     void runCheck()
@@ -6008,7 +6023,11 @@ export default function Dashboard() {
       return
     }
     void runAutoServerPull()
-    const tid = window.setInterval(() => void runAutoServerPull(), 10_000)
+    // Abas quentes: 30s (antes 10s) — evita competir com o poll global e com o foco.
+    const tid = window.setInterval(() => {
+      if (document.visibilityState === 'hidden') return
+      void runAutoServerPull()
+    }, 30_000)
     return () => window.clearInterval(tid)
   }, [activeTabType, appInitialLoading, runAutoServerPull])
 

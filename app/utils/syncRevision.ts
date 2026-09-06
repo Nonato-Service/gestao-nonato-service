@@ -44,7 +44,7 @@ export async function fetchSyncStatus(): Promise<{ revision: number; updatedAt: 
   if (isNonatoDemoBuild()) return null
   try {
     const ctrl = new AbortController()
-    const t = setTimeout(() => ctrl.abort(), 5000)
+    const t = setTimeout(() => ctrl.abort(), 2500)
     const r = await fetch('/api/data/sync-status', { signal: ctrl.signal, cache: 'no-store' })
     clearTimeout(t)
     if (!r.ok) return null

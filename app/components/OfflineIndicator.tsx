@@ -11,6 +11,21 @@ import {
 } from '../utils/dataStorage'
 import { getStoredUiString } from '../translations'
 
+const PROBE_FOCUS_DEBOUNCE_MS = 2500
+const PROBE_OFFLINE_INTERVAL_MS = 25_000
+const PENDING_REFRESH_MS = 8_000
+
+function scheduleIdle(fn: () => void): void {
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    ;(window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number }).requestIdleCallback(
+      fn,
+      { timeout: 2000 }
+    )
+    return
+  }
+  window.setTimeout(fn, 0)
+}
+
 export function OfflineIndicator() {
   const [online, setOnline] = useState(true)
   const [pendingCount, setPendingCount] = useState(0)
@@ -21,10 +36,16 @@ export function OfflineIndicator() {
   const [blockedMsg, setBlockedMsg] = useState<string | null>(null)
   const lastTapAtRef = useRef(0)
   const probeInFlightRef = useRef(false)
+  const lastProbeAtRef = useRef(0)
+  const lastFocusProbeAtRef = useRef(0)
 
   const refreshPending = () => setPendingCount(getPendingSyncCount())
 
   const runSync = () => {
+    if (getPendingSyncCount() === 0) {
+      refreshPending()
+      return
+    }
     setSyncing(true)
     forceSyncPendingChanges().then(({ synced, failed, discarded }) => {
       refreshPending()
@@ -35,14 +56,19 @@ export function OfflineIndicator() {
     })
   }
 
-  const refreshOnlineFromProbe = async () => {
+  /** Probe: force só em clique do utilizador; fundo usa cache. Não sync se fila vazia. */
+  const refreshOnlineFromProbe = async (opts?: { force?: boolean; syncIfOnline?: boolean }) => {
     if (probeInFlightRef.current) return
+    const force = opts?.force === true
+    const now = Date.now()
+    if (!force && now - lastProbeAtRef.current < 4_000) return
     probeInFlightRef.current = true
+    lastProbeAtRef.current = now
     try {
-      const ok = await probeServerReachable({ force: true })
+      const ok = await probeServerReachable({ force })
       const next = ok || isOnline()
       setOnline(next)
-      if (next) runSync()
+      if (next && opts?.syncIfOnline !== false && getPendingSyncCount() > 0) runSync()
     } finally {
       probeInFlightRef.current = false
     }
@@ -72,26 +98,28 @@ export function OfflineIndicator() {
   useEffect(() => {
     setOnline(isOnline())
     refreshPending()
-    void refreshOnlineFromProbe()
+    // Arranque: soft probe (respeita cache); sync só se houver pendentes.
+    void refreshOnlineFromProbe({ force: false })
 
     const teardownAutoSync = setupAutoSyncOnReconnect()
 
     const handleOnline = () => {
       setOnline(true)
-      runSync()
-      void refreshOnlineFromProbe()
+      if (getPendingSyncCount() > 0) runSync()
     }
 
     const handleOffline = () => {
-      // Não confiar de imediato em navigator.offline — falso negativo comum após PWA/rede
-      void refreshOnlineFromProbe()
+      // Soft probe — não force; evita rajada com o intervalo.
+      scheduleIdle(() => {
+        void refreshOnlineFromProbe({ force: false })
+      })
     }
 
     const handleConnectivity = (e: Event) => {
       const detail = (e as CustomEvent<{ online?: boolean }>).detail
       if (detail?.online) {
         setOnline(true)
-        runSync()
+        if (getPendingSyncCount() > 0) runSync()
       }
     }
 
@@ -130,7 +158,18 @@ export function OfflineIndicator() {
     const handleQueueHydrated = () => refreshPending()
 
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible') void refreshOnlineFromProbe()
+      if (document.visibilityState !== 'visible') return
+      const now = Date.now()
+      if (now - lastFocusProbeAtRef.current < PROBE_FOCUS_DEBOUNCE_MS) return
+      lastFocusProbeAtRef.current = now
+      // Online: não probe agressivo no focus (já há auto-pull noutro sítio).
+      if (isOnline()) {
+        refreshPending()
+        return
+      }
+      scheduleIdle(() => {
+        void refreshOnlineFromProbe({ force: false })
+      })
     }
 
     window.addEventListener('online', handleOnline)
@@ -143,10 +182,17 @@ export function OfflineIndicator() {
     document.addEventListener('visibilitychange', handleVisibility)
     window.addEventListener('focus', handleVisibility)
 
+    // Só enquanto offline (e separador visível); intervalo mais longo + idle.
     const probeWhileOffline = window.setInterval(() => {
-      if (!isOnline()) void refreshOnlineFromProbe()
-      else setOnline(true)
-    }, 10000)
+      if (document.visibilityState === 'hidden') return
+      if (isOnline()) {
+        setOnline(true)
+        return
+      }
+      scheduleIdle(() => {
+        void refreshOnlineFromProbe({ force: false })
+      })
+    }, PROBE_OFFLINE_INTERVAL_MS)
 
     return () => {
       window.removeEventListener('online', handleOnline)
@@ -165,7 +211,7 @@ export function OfflineIndicator() {
   }, [])
 
   useEffect(() => {
-    const interval = setInterval(refreshPending, 5000)
+    const interval = setInterval(refreshPending, PENDING_REFRESH_MS)
     return () => clearInterval(interval)
   }, [])
 
@@ -269,7 +315,7 @@ export function OfflineIndicator() {
         }}
         onClick={() => {
           if (!online) {
-            void refreshOnlineFromProbe()
+            void refreshOnlineFromProbe({ force: true, syncIfOnline: true })
             return
           }
           if (!(pendingCount > 0 || showFailed)) return

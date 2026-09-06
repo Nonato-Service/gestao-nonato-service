@@ -423,10 +423,16 @@ function createTimeoutSignal(timeoutMs: number): AbortSignal {
   return controller.signal
 }
 
+/** Evita probes em rajada (focus + interval + clique) a saturar a UI. */
+let probeInFlight: Promise<boolean> | null = null
+const PROBE_OK_CACHE_MS = 8_000
+const PROBE_TIMEOUT_MS = 2_500
+
 /**
  * Probe real à API. Não desiste só porque `navigator.onLine` é false
  * (falsos negativos deixavam o banner vermelho e a fila presos).
- * `force: true` ignora o cache de 30s após falha.
+ * `force: true` ignora o cache de 30s após falha, mas ainda respeita
+ * contacto recente (8s) e deduplica probes em paralelo.
  */
 export async function probeServerReachable(opts?: { force?: boolean }): Promise<boolean> {
   if (isNonatoDemoBuild()) {
@@ -435,28 +441,38 @@ export async function probeServerReachable(opts?: { force?: boolean }): Promise<
   }
   const now = Date.now()
   const force = opts?.force === true
+  // Contacto recente = online; não dispara fetch (mesmo com force).
+  if (lastSuccessfulServerContact > 0 && now - lastSuccessfulServerContact < PROBE_OK_CACHE_MS) {
+    return true
+  }
   if (!force && now - lastServerCheck < SERVER_CHECK_INTERVAL) {
     if (serverOffline) return false
     if (lastSuccessfulServerContact > 0) return true
   }
+  if (probeInFlight) return probeInFlight
   lastServerCheck = now
-  try {
-    const response = await dataApiFetch(`${API_BASE}/load?key=__health_check__`, {
-      method: 'GET',
-      signal: createTimeoutSignal(5000),
-    })
-    // Qualquer resposta HTTP = rede OK (401/404 inclusive — servidor alcançável)
-    if (response.status >= 500) {
+  probeInFlight = (async () => {
+    try {
+      const response = await dataApiFetch(`${API_BASE}/load?key=__health_check__`, {
+        method: 'GET',
+        signal: createTimeoutSignal(PROBE_TIMEOUT_MS),
+      })
+      // Qualquer resposta HTTP = rede OK (401/404 inclusive — servidor alcançável)
+      if (response.status >= 500) {
+        serverOffline = true
+        return false
+      }
+      markServerReachable()
+      dispatchConnectivity(true)
+      return true
+    } catch {
       serverOffline = true
       return false
+    } finally {
+      probeInFlight = null
     }
-    markServerReachable()
-    dispatchConnectivity(true)
-    return true
-  } catch {
-    serverOffline = true
-    return false
-  }
+  })()
+  return probeInFlight
 }
 
 async function checkServerOnline(): Promise<boolean> {
@@ -486,6 +502,8 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
       console.warn(`[Nonato] Fila offline: descartado «${item.key}» (falhas=${item.failCount ?? 0}, idade=${Math.round((now - item.timestamp) / 3600000)}h)`)
       continue
     }
+    // Cedência ao browser entre itens — evita freeze com payloads grandes (peças/imagens).
+    await new Promise<void>((r) => setTimeout(r, 0))
     const payloadStr = typeof item.value === 'string' ? item.value : JSON.stringify(item.value)
     const slowUpload =
       payloadStr.length > 80000 ||
@@ -578,18 +596,20 @@ export function setupAutoSyncOnReconnect(): () => void {
   }
 
   window.addEventListener('online', run)
+  // Intervalo mais longo; probe sem force (respeita cache) para não saturar a UI.
   const interval = window.setInterval(() => {
     if (getPendingSyncCount() === 0) return
+    if (document.visibilityState === 'hidden') return
     if (isOnline()) void autoSyncPendingChanges()
     else {
-      void probeServerReachable({ force: true }).then((ok) => {
+      void probeServerReachable().then((ok) => {
         if (ok) void autoSyncPendingChanges()
       })
     }
-  }, 15000)
+  }, 30000)
 
   if (isOnline()) void autoSyncPendingChanges()
-  else void probeServerReachable({ force: true }).then((ok) => {
+  else void probeServerReachable().then((ok) => {
     if (ok) void autoSyncPendingChanges()
   })
 
@@ -2770,7 +2790,19 @@ export async function applySilentServerSync(server: Record<string, unknown>): Pr
     let same = false
     if (raw !== null && raw !== '') {
       try {
-        same = JSON.stringify(JSON.parse(raw)) === JSON.stringify(s)
+        // Um único stringify + comparação directa — evita parse+stringify duplo em payloads MB.
+        const ser = typeof s === 'string' ? s : JSON.stringify(s)
+        if (raw === ser) {
+          same = true
+        } else if (raw.length > 80_000 || ser.length > 80_000) {
+          // Payload enorme: heurística barata. Preferir falso-negativo (reescrever) a saltar update.
+          same =
+            raw.length === ser.length &&
+            raw.slice(0, 48) === ser.slice(0, 48) &&
+            raw.slice(-48) === ser.slice(-48)
+        } else {
+          same = JSON.stringify(JSON.parse(raw)) === ser
+        }
       } catch {
         same = raw === String(s)
       }
@@ -2783,6 +2815,8 @@ export async function applySilentServerSync(server: Record<string, unknown>): Pr
     } catch {
       /* ignorar */
     }
+    // Cedência entre chaves para não congelar o ecrã com sync silencioso.
+    await new Promise<void>((r) => setTimeout(r, 0))
   }
   return changedKeys
 }
