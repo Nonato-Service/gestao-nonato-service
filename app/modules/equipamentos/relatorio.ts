@@ -191,6 +191,71 @@ export function equipamentoIdPlaceholderInvalido(id: string | undefined): boolea
   return false
 }
 
+/** Segmento seguro para UI: omite vazio e IDs só-zeros. */
+export function segmentoIdEquipamentoExibivel(valor: string | undefined): string {
+  const t = String(valor ?? '').trim()
+  if (!t || equipamentoIdPlaceholderInvalido(t)) return ''
+  return t
+}
+
+/**
+ * Label curto do select (horas / resumos): série · modelo · id.
+ * Nunca inclui placeholder `0000000000` em nenhum segmento.
+ */
+export function formatarLabelEquipamentoSelectCurto(
+  eq:
+    | {
+        equipamentoId?: string
+        maquinaModelo?: string
+        numeroMaquina?: string
+      }
+    | null
+    | undefined,
+  idx = 0
+): string {
+  if (eq == null || typeof eq !== 'object') return `#${idx + 1}`
+  const serie = segmentoIdEquipamentoExibivel(eq.numeroMaquina)
+  const modelo = String(eq.maquinaModelo ?? '').trim()
+  const id = segmentoIdEquipamentoExibivel(eq.equipamentoId)
+  const parts: string[] = []
+  if (serie) parts.push(serie)
+  if (modelo) parts.push(modelo)
+  if (id && id !== serie && !parts.includes(id)) parts.push(id)
+  return parts.length > 0 ? parts.join(' · ') : `#${idx + 1}`
+}
+
+/**
+ * Valor + texto da `<option>` do cadastro do cliente.
+ * `value` nunca fica preso em placeholder se existir UUID/série equivalente.
+ */
+export function opcaoEquipamentoClienteSelectRelatorio(
+  item: EquipamentoClienteIdLookup,
+  idx: number,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+): { value: string; label: string } {
+  const sn = segmentoIdEquipamentoExibivel(item.numeroSerie) || String(item.numeroSerie ?? '').trim()
+  const snLimpo = equipamentoIdPlaceholderInvalido(sn) ? '' : sn
+  const value =
+    idEquipamentoCadastroParaGravarNoRelatorio(item, idx, equipamentosArmazem) ||
+    snLimpo ||
+    ''
+  const idVis = segmentoIdEquipamentoExibivel(
+    resolverIdEquipamentoVisivelCliente(item, equipamentosArmazem)
+  )
+  const idTech = segmentoIdEquipamentoExibivel(String(item.id ?? ''))
+  const idLabel =
+    (idVis && idVis.toLowerCase() !== snLimpo.toLowerCase() ? idVis : '') ||
+    (idTech && idTech.toLowerCase() !== snLimpo.toLowerCase() ? idTech : '') ||
+    ''
+  const modelo = `${String(item.modelo ?? '').trim()} ${String(item.marca ?? '').trim()}`.trim()
+  const parts: string[] = []
+  if (idLabel) parts.push(`ID ${idLabel}`)
+  if (modelo) parts.push(modelo)
+  if (snLimpo && snLimpo !== idLabel && !parts.includes(snLimpo)) parts.push(snLimpo)
+  if (parts.length === 0 && value) parts.push(value)
+  return { value, label: parts.join(' · ') || value || '—' }
+}
+
 /**
  * ID visível no relatório/PDF: código do cliente, ID do armazém pela série; nunca UUID interno.
  * Aceita `eq` null/undefined — listas com buracos no boot (tabs RR) não podem crashar a app.
@@ -353,21 +418,35 @@ export function resolverChaveEquipamentoClienteRelatorio(
   equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): string {
   const alvo = String(equipamentoId ?? '').trim()
-  if (!alvo || !clienteEquipamentos?.length) return alvo
-  for (let idx = 0; idx < clienteEquipamentos.length; idx++) {
-    const item = clienteEquipamentos[idx]
+  const list = equipamentosClienteParaSelectRelatorio(clienteEquipamentos)
+  if (!alvo || list.length === 0) {
+    return equipamentoIdPlaceholderInvalido(alvo) ? '' : alvo
+  }
+  for (let idx = 0; idx < list.length; idx++) {
+    const item = list[idx]
     if (item == null || typeof item !== 'object') continue
     const key = resolverIdEquipamentoCliente(item, idx)
     const vis = resolverIdEquipamentoVisivelCliente(item, equipamentosArmazem)
+    const idGravar = idEquipamentoCadastroParaGravarNoRelatorio(item, idx, equipamentosArmazem)
+    const sn = String(item.numeroSerie ?? '').trim()
+    const idRaw = String(item.id ?? '').trim()
     if (
       key === alvo ||
       vis === alvo ||
-      String(item.numeroSerie ?? '').trim() === alvo ||
-      String(item.id ?? '').trim() === alvo
+      idGravar === alvo ||
+      sn === alvo ||
+      idRaw === alvo
     ) {
-      return key
+      return (
+        idGravar ||
+        segmentoIdEquipamentoExibivel(key) ||
+        segmentoIdEquipamentoExibivel(sn) ||
+        ''
+      )
     }
   }
+  // Alvo é placeholder: o prepararEquipamentosRelatorioParaEdicao rematch pela série.
+  if (equipamentoIdPlaceholderInvalido(alvo)) return ''
   return alvo
 }
 
@@ -423,24 +502,38 @@ export function prepararEquipamentosRelatorioParaEdicao(
       const idGravar = idEquipamentoCadastroParaGravarNoRelatorio(eqMatch, idx, equipamentosArmazem)
       const modeloCadastro =
         `${String(eqMatch.modelo ?? '').trim()} ${String(eqMatch.marca ?? '').trim()}`.trim()
-      const serieCadastro = String(eqMatch.numeroSerie ?? '').trim()
+      const serieCadastroRaw = String(eqMatch.numeroSerie ?? '').trim()
+      const serieCadastro = segmentoIdEquipamentoExibivel(serieCadastroRaw) || serieCadastroRaw
+      const serieFinal =
+        segmentoIdEquipamentoExibivel(serieCadastro) ||
+        segmentoIdEquipamentoExibivel(eqItem.numeroMaquina) ||
+        segmentoIdEquipamentoExibivel(sn) ||
+        ''
       // Preferir sempre o cadastro actual (evita snapshot com ID apagado / série trocada).
       return {
         ...eqItem,
-        equipamentoId: idGravar || (!equipamentoIdPlaceholderInvalido(alvo) ? alvo : '') || serieCadastro || sn,
+        equipamentoId:
+          idGravar ||
+          segmentoIdEquipamentoExibivel(alvo) ||
+          serieFinal ||
+          '',
         maquinaModelo: modeloCadastro || eqItem.maquinaModelo,
-        numeroMaquina: serieCadastro || eqItem.numeroMaquina,
+        numeroMaquina: serieFinal,
       }
     }
 
     const idFallback = resolverIdEquipamentoVisivelRelatorio(eqItem, equipamentosArmazem)
+    const serieLimpa =
+      segmentoIdEquipamentoExibivel(sn) ||
+      (equipamentoIdPlaceholderInvalido(sn) ? '' : sn)
     const idLimpo =
-      idFallback ||
-      (!equipamentoIdPlaceholderInvalido(eqItem.equipamentoId) ? eqItem.equipamentoId : '') ||
-      sn
+      segmentoIdEquipamentoExibivel(idFallback) ||
+      segmentoIdEquipamentoExibivel(eqItem.equipamentoId) ||
+      serieLimpa
     return {
       ...eqItem,
       equipamentoId: idLimpo,
+      numeroMaquina: serieLimpa || (equipamentoIdPlaceholderInvalido(eqItem.numeroMaquina) ? '' : String(eqItem.numeroMaquina ?? '').trim()),
     }
   })
 }

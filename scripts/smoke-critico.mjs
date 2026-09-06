@@ -756,6 +756,9 @@ try {
   const rel = fs.readFileSync(path.join(root, 'app/modules/equipamentos/relatorio.ts'), 'utf8')
   if (
     rel.includes('resolverIdEquipamentoCliente') &&
+    rel.includes('formatarLabelEquipamentoSelectCurto') &&
+    rel.includes('opcaoEquipamentoClienteSelectRelatorio') &&
+    rel.includes('equipamentoIdPlaceholderInvalido') &&
     idx.includes('getSequenciaEtiquetasArmazem') &&
     idx.includes('enriquecerBlocoEquipamentoPedido') &&
     idx.includes('createEmptyEquipamentoForm') &&
