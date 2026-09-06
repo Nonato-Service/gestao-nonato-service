@@ -276,6 +276,9 @@ const SERVER_CHECK_INTERVAL = 30000 // 30 segundos
  */
 let lastSuccessfulServerContact = 0
 const REACHABLE_GRACE_MS = 90_000
+/** Falhas de rede seguidas no probe de conectividade (banner). */
+let consecutiveProbeFailures = 0
+const PROBE_FAILS_BEFORE_OFFLINE = 3
 
 function dispatchConnectivity(online: boolean): void {
   if (typeof window === 'undefined') return
@@ -290,13 +293,20 @@ function dispatchConnectivity(online: boolean): void {
 export function markServerReachable(): void {
   lastSuccessfulServerContact = Date.now()
   serverOffline = false
+  consecutiveProbeFailures = 0
 }
 
-// Verificar se está online (rápido). Aceita navigator.onLine OU contacto recente com a API.
+/**
+ * Online rápido para sync/UI.
+ * Não trata `navigator.onLine === false` como verdade (falsos comuns no Chrome/Windows).
+ * Offline só após probe confirmar falhas seguidas, ou sem grace de contacto API.
+ */
 export function isOnline(): boolean {
   if (typeof navigator === 'undefined') return true
-  if (navigator.onLine) return true
-  return Date.now() - lastSuccessfulServerContact < REACHABLE_GRACE_MS
+  if (Date.now() - lastSuccessfulServerContact < REACHABLE_GRACE_MS) return true
+  if (consecutiveProbeFailures >= PROBE_FAILS_BEFORE_OFFLINE) return false
+  // Optimista até prova em contrário — evita banner a piscar.
+  return true
 }
 
 // Fila de sincronização (para quando estiver offline)
@@ -425,14 +435,19 @@ function createTimeoutSignal(timeoutMs: number): AbortSignal {
 
 /** Evita probes em rajada (focus + interval + clique) a saturar a UI. */
 let probeInFlight: Promise<boolean> | null = null
-const PROBE_OK_CACHE_MS = 8_000
-const PROBE_TIMEOUT_MS = 2_500
+/** Contacto recente = online (não martelar). */
+const PROBE_OK_CACHE_MS = 20_000
+/** Railway cold start / rede lenta — timeout curto (2.5s) gerava falso offline. */
+const PROBE_TIMEOUT_MS = 15_000
+/** Após offline confirmado, esperar isto antes de novo soft-probe. */
+const PROBE_FAIL_CACHE_MS = 12_000
 
 /**
- * Probe real à API. Não desiste só porque `navigator.onLine` é false
- * (falsos negativos deixavam o banner vermelho e a fila presos).
- * `force: true` ignora o cache de 30s após falha, mas ainda respeita
- * contacto recente (8s) e deduplica probes em paralelo.
+ * Probe real de conectividade.
+ * - Qualquer resposta HTTP (incl. 401/404/503) = online (servidor alcançável).
+ * - Só marca offline após falhas de rede/timeout confirmadas em sequência.
+ * - Não usa `serverOffline` de load/save pesados como verdade do banner.
+ * - Não desiste só porque `navigator.onLine` é false.
  */
 export async function probeServerReachable(opts?: { force?: boolean }): Promise<boolean> {
   if (isNonatoDemoBuild()) {
@@ -445,29 +460,48 @@ export async function probeServerReachable(opts?: { force?: boolean }): Promise<
   if (lastSuccessfulServerContact > 0 && now - lastSuccessfulServerContact < PROBE_OK_CACHE_MS) {
     return true
   }
-  if (!force && now - lastServerCheck < SERVER_CHECK_INTERVAL) {
-    if (serverOffline) return false
-    if (lastSuccessfulServerContact > 0) return true
+  // Offline já confirmado: soft-probe respeita cache curto (force ignora).
+  if (
+    !force &&
+    consecutiveProbeFailures >= PROBE_FAILS_BEFORE_OFFLINE &&
+    now - lastServerCheck < PROBE_FAIL_CACHE_MS
+  ) {
+    return false
+  }
+  // Soft: se ainda não confirmámos offline e medimos há pouco, não martelar.
+  if (!force && now - lastServerCheck < 5_000 && consecutiveProbeFailures < PROBE_FAILS_BEFORE_OFFLINE) {
+    return true
   }
   if (probeInFlight) return probeInFlight
   lastServerCheck = now
   probeInFlight = (async () => {
     try {
-      const response = await dataApiFetch(`${API_BASE}/load?key=__health_check__`, {
+      // /api/health é leve e não exige auth; qualquer status HTTP = rede OK
+      // (incl. 503 de persistência — isso NÃO é «sem rede»).
+      const response = await fetch('/api/health', {
         method: 'GET',
+        cache: 'no-store',
         signal: createTimeoutSignal(PROBE_TIMEOUT_MS),
       })
-      // Qualquer resposta HTTP = rede OK (401/404 inclusive — servidor alcançável)
-      if (response.status >= 500) {
+      if (response) {
+        markServerReachable()
+        dispatchConnectivity(true)
+        return true
+      }
+      consecutiveProbeFailures += 1
+      if (consecutiveProbeFailures >= PROBE_FAILS_BEFORE_OFFLINE) {
         serverOffline = true
         return false
       }
-      markServerReachable()
-      dispatchConnectivity(true)
       return true
     } catch {
-      serverOffline = true
-      return false
+      consecutiveProbeFailures += 1
+      if (consecutiveProbeFailures >= PROBE_FAILS_BEFORE_OFFLINE) {
+        serverOffline = true
+        return false
+      }
+      // Ainda não confirmado — manter online (evita banner a piscar).
+      return true
     } finally {
       probeInFlight = null
     }
@@ -1002,7 +1036,7 @@ async function _doSaveToServer(
       ),
     })
     if (response.ok) {
-      serverOffline = false
+      markServerReachable()
       /** Não usar value.length local aqui — merge pode ter mais peças que o total real do servidor. */
       try {
         const json = await response.json()
@@ -2219,7 +2253,7 @@ async function loadAllFromServerOnce(opts?: { bootstrap?: boolean }): Promise<Lo
     }
 
     const result = await response.json()
-    serverOffline = false
+    markServerReachable()
     return { data: result?.data && typeof result.data === 'object' ? result.data : {}, ok: true }
   } catch (error: any) {
     if (
