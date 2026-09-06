@@ -574,13 +574,13 @@ export type ColetarDiasSemMaquinaOpts = {
 }
 
 function labelEquipamentoRefMin(eq: EquipamentoRefMinEspecial, idx: number): string {
-  const serie = String(eq.numeroMaquina || '').trim()
-  const modelo = String(eq.maquinaModelo || '').trim()
   const id = String(eq.equipamentoId || '').trim()
+  const modelo = String(eq.maquinaModelo || '').trim()
+  const serie = String(eq.numeroMaquina || '').trim()
   const parts: string[] = []
-  if (serie) parts.push(serie)
+  if (id) parts.push(id)
   if (modelo) parts.push(modelo)
-  if (id && id !== serie && !parts.includes(id)) parts.push(id)
+  if (serie && serie !== id && !parts.includes(serie)) parts.push(serie)
   return parts.length > 0 ? parts.join(' · ') : `#${idx + 1}`
 }
 

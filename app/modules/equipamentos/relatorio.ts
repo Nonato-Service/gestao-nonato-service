@@ -182,6 +182,15 @@ export function equipamentoIdETecnicoGerado(id: string | undefined): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89abAB][0-9a-f]{3}-[0-9a-f]{12}$/i.test(t)
 }
 
+/** ID de armazém/placeholder inválido para mostrar (ex. 0000000000). */
+export function equipamentoIdPlaceholderInvalido(id: string | undefined): boolean {
+  const t = String(id ?? '').trim()
+  if (!t) return true
+  // Só zeros / lixo óbvio — não é código real do utilizador nem do armazém.
+  if (/^0+$/.test(t)) return true
+  return false
+}
+
 /**
  * ID visível no relatório/PDF: código do cliente, ID do armazém pela série; nunca UUID interno.
  * Aceita `eq` null/undefined — listas com buracos no boot (tabs RR) não podem crashar a app.
@@ -192,16 +201,18 @@ export function resolverIdEquipamentoVisivelCliente(
 ): string {
   if (eq == null || typeof eq !== 'object') return ''
   const idC = String(eq.id ?? '').trim()
-  if (idC && !equipamentoIdETecnicoGerado(idC)) return idC
+  if (idC && !equipamentoIdETecnicoGerado(idC) && !equipamentoIdPlaceholderInvalido(idC)) return idC
   const s = String(eq.numeroSerie ?? '').trim()
   if (s) {
     const wh = (equipamentosArmazem || []).find(
       (e) => e != null && String(e.numeroSerie ?? '').trim().toLowerCase() === s.toLowerCase()
     )
     const idA = String(wh?.id ?? '').trim()
-    if (idA && !equipamentoIdETecnicoGerado(idA)) return idA
+    if (idA && !equipamentoIdETecnicoGerado(idA) && !equipamentoIdPlaceholderInvalido(idA)) return idA
   }
-  return equipamentoIdETecnicoGerado(idC) ? '' : idC
+  // Sem código útil: preferir n.º de série a UUID/placeholder.
+  if (s) return s
+  return equipamentoIdETecnicoGerado(idC) || equipamentoIdPlaceholderInvalido(idC) ? '' : idC
 }
 
 export function resolverIdEquipamentoVisivelRelatorio(
@@ -328,13 +339,15 @@ export function prepararEquipamentosRelatorioParaEdicao(
       const idx = cliEq.indexOf(eqMatch)
       const idVis = resolverIdEquipamentoVisivelCliente(eqMatch, equipamentosArmazem)
       const chave = resolverIdEquipamentoCliente(eqMatch, idx)
+      const modeloCadastro =
+        `${String(eqMatch.modelo ?? '').trim()} ${String(eqMatch.marca ?? '').trim()}`.trim()
+      const serieCadastro = String(eqMatch.numeroSerie ?? '').trim()
+      // Preferir sempre o cadastro actual (evita snapshot com ID apagado / série trocada).
       return {
         ...eqItem,
         equipamentoId: idVis || chave || alvo || sn,
-        maquinaModelo:
-          eqItem.maquinaModelo ||
-          `${String(eqMatch.modelo ?? '').trim()} ${String(eqMatch.marca ?? '').trim()}`.trim(),
-        numeroMaquina: eqItem.numeroMaquina || String(eqMatch.numeroSerie ?? '').trim(),
+        maquinaModelo: modeloCadastro || eqItem.maquinaModelo,
+        numeroMaquina: serieCadastro || eqItem.numeroMaquina,
       }
     }
 

@@ -53,6 +53,7 @@ import {
   clientesExternosParaEquipamentoRelatorio,
   criarEquipamentoRelatorioVazio,
   equipamentoArmazemEstaAtivo,
+  prepararEquipamentosRelatorioParaEdicao,
   resolverChaveEquipamentoClienteRelatorio,
   resolverEquipamentoRelatorioParaExibicao,
   resolverIdEquipamentoCliente,
@@ -103,13 +104,13 @@ const inputStyle: React.CSSProperties = {
 }
 
 function labelEquipamentoCurto(eq: RelatorioEquipamentoRef, idx: number): string {
-  const serie = (eq.numeroMaquina || '').trim()
-  const modelo = (eq.maquinaModelo || '').trim()
   const id = (eq.equipamentoId || '').trim()
+  const modelo = (eq.maquinaModelo || '').trim()
+  const serie = (eq.numeroMaquina || '').trim()
   const parts: string[] = []
-  if (serie) parts.push(serie)
+  if (id) parts.push(id)
   if (modelo) parts.push(modelo)
-  if (id && id !== serie && !parts.includes(id)) parts.push(id)
+  if (serie && serie !== id && !parts.includes(serie)) parts.push(serie)
   return parts.length > 0 ? parts.join(' · ') : `#${idx + 1}`
 }
 
@@ -659,9 +660,16 @@ export default function RelatorioEspecialHub({
 
   const abrirEditar = useCallback(
     (rel: RelatorioEspecial) => {
+      const cliEq =
+        clientes.find((c) => c.id === String(rel.clienteId || '').trim())?.equipamentos ?? []
+      const equipamentos = prepararEquipamentosRelatorioParaEdicao(
+        rel.equipamentos || [],
+        cliEq,
+        equipamentosArmazem
+      )
       const copia = {
         ...rel,
-        equipamentos: [...(rel.equipamentos || [])],
+        equipamentos,
         diasTrabalho: [...(rel.diasTrabalho || [])],
       }
       setForm(copia)
@@ -671,7 +679,7 @@ export default function RelatorioEspecialHub({
       setDiaExpandido(null)
       setEquipExpandidos(new Set())
     },
-    [marcarSnapshot]
+    [marcarSnapshot, clientes, equipamentosArmazem]
   )
 
   const abrirFechamento = useCallback(
@@ -1243,6 +1251,39 @@ export default function RelatorioEspecialHub({
       : Array.from(diariasUnicasUi).sort()
   const clienteIdEfetivo = form.clienteId || ''
   const clienteEquipamentos = clientes.find((c) => c.id === clienteIdEfetivo)?.equipamentos ?? []
+  const clienteEquipamentosSyncKey = useMemo(
+    () =>
+      JSON.stringify(
+        (clienteEquipamentos || []).map((e) => [
+          String(e?.id ?? '').trim(),
+          String(e?.numeroSerie ?? '').trim(),
+          String(e?.modelo ?? '').trim(),
+          String(e?.marca ?? '').trim(),
+        ])
+      ),
+    [clienteEquipamentos]
+  )
+
+  /** Alinha linhas do relatório ao cadastro actual (após apagar/duplicar equipamento). */
+  useEffect(() => {
+    if (modo !== 'form') return
+    if (!clienteIdEfetivo) return
+    setForm((prev) => {
+      if (String(prev.clienteId || '').trim() !== clienteIdEfetivo) return prev
+      const next = prepararEquipamentosRelatorioParaEdicao(
+        prev.equipamentos || [],
+        clienteEquipamentos,
+        equipamentosArmazem
+      )
+      const prevJson = JSON.stringify(prev.equipamentos || [])
+      const nextJson = JSON.stringify(next)
+      if (prevJson === nextJson) return prev
+      return { ...prev, equipamentos: next }
+    })
+    // clienteEquipamentosSyncKey cobre mudanças de conteúdo sem reagir a nova referência vazia a cada render
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- syncKey é a fonte de verdade do cadastro
+  }, [modo, clienteIdEfetivo, clienteEquipamentosSyncKey, equipamentosArmazem])
+
   const podeAdicionarEquip = (form.equipamentos?.length || 0) < MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES
 
   const chipOk = t.relatorioEspecialChipOk || 'OK'

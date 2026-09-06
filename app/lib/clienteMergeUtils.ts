@@ -29,9 +29,67 @@ function isEquipamentoClienteMergeEntry(
   return e != null && typeof e === 'object'
 }
 
+function serialNormEquipamento(e: EquipamentoClienteMerge): string {
+  return String(e?.numeroSerie ?? '')
+    .trim()
+    .toLowerCase()
+}
+
+/** Prefere UUID técnico / registo mais completo face a ID de armazém fantasma (ex. 0000000000). */
+export function preferEquipamentoClienteMerge(
+  a: EquipamentoClienteMerge,
+  b: EquipamentoClienteMerge
+): EquipamentoClienteMerge {
+  const idA = String(a?.id ?? '').trim()
+  const idB = String(b?.id ?? '').trim()
+  const uuidRe =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89abAB][0-9a-f]{3}-[0-9a-f]{12}$/i
+  const eqc = (id: string) => /^eqc-/i.test(id)
+  const zeros = (id: string) => /^0+$/.test(id)
+  const score = (id: string) => {
+    if (!id) return 0
+    if (zeros(id)) return 1
+    if (eqc(id) || uuidRe.test(id)) return 4
+    if (/^\d+$/.test(id) && id.length <= 12) return 2
+    return 3
+  }
+  const sa = score(idA)
+  const sb = score(idB)
+  if (sa !== sb) return sa > sb ? a : b
+  const filled = (e: EquipamentoClienteMerge) =>
+    [e.modelo, e.marca, e.tipoEquipamento, e.numeroSerie].filter((x) => String(x ?? '').trim()).length
+  return filled(a) >= filled(b) ? a : b
+}
+
 /**
- * Une equipamentos local/servidor por n.º série.
- * Caminho de escrita que antes podia propagar `null`/buracos → crash em `.id` no boot (RR → pQ).
+ * Colapsa duplicados da mesma série (IDs diferentes) — típico do bug edição→duplicado armazém/técnico.
+ */
+export function dedupeEquipamentosClientePorSerie(
+  list: EquipamentoClienteMerge[]
+): EquipamentoClienteMerge[] {
+  const bySerial = new Map<string, EquipamentoClienteMerge>()
+  const semSerie: EquipamentoClienteMerge[] = []
+  for (const e of list) {
+    const s = serialNormEquipamento(e)
+    if (!s) {
+      semSerie.push(e)
+      continue
+    }
+    const prev = bySerial.get(s)
+    bySerial.set(s, prev ? preferEquipamentoClienteMerge(prev, e) : e)
+  }
+  // Sem série: ainda dedupe por chave de ID
+  const byKey = new Map<string, EquipamentoClienteMerge>()
+  for (const e of semSerie) byKey.set(equipamentoClienteDedupeKey(e), e)
+  return [...byKey.values(), ...bySerial.values()]
+}
+
+/**
+ * Une equipamentos local/servidor.
+ * - Mesmo ID: campos do servidor prevalecem.
+ * - Mesma série com IDs diferentes: mantém o local (não ressuscita duplicado apagado no aparelho).
+ * - Série nova só no servidor: adiciona (outro dispositivo).
+ * No fim, colapsa residual por série.
  */
 export function mergeEquipamentosClienteLists(
   serverEq: EquipamentoClienteMerge[] | undefined,
@@ -39,13 +97,42 @@ export function mergeEquipamentosClienteLists(
 ): EquipamentoClienteMerge[] {
   const sm = (Array.isArray(serverEq) ? serverEq : []).filter(isEquipamentoClienteMergeEntry)
   const lm = (Array.isArray(localEq) ? localEq : []).filter(isEquipamentoClienteMergeEntry)
-  const by = new Map<string, EquipamentoClienteMerge>()
-  for (const e of lm) by.set(equipamentoClienteDedupeKey(e), e)
-  for (const e of sm) by.set(equipamentoClienteDedupeKey(e), e)
-  return Array.from(by.values())
+
+  if (lm.length === 0) return dedupeEquipamentosClientePorSerie(sm)
+  if (sm.length === 0) return dedupeEquipamentosClientePorSerie(lm)
+
+  const byId = new Map<string, EquipamentoClienteMerge>()
+  const serialToKey = new Map<string, string>()
+
+  const rememberSerial = (e: EquipamentoClienteMerge, key: string) => {
+    const s = serialNormEquipamento(e)
+    if (s) serialToKey.set(s, key)
+  }
+
+  for (const e of lm) {
+    const k = equipamentoClienteDedupeKey(e)
+    byId.set(k, e)
+    rememberSerial(e, k)
+  }
+
+  for (const e of sm) {
+    const k = equipamentoClienteDedupeKey(e)
+    const s = serialNormEquipamento(e)
+    if (byId.has(k)) {
+      byId.set(k, { ...byId.get(k)!, ...e })
+      rememberSerial(e, k)
+      continue
+    }
+    // Duplicado por série (ID técnico vs ID armazém): não repor o fantasma do servidor.
+    if (s && serialToKey.has(s)) continue
+    byId.set(k, e)
+    rememberSerial(e, k)
+  }
+
+  return dedupeEquipamentosClientePorSerie(Array.from(byId.values()))
 }
 
-/** Funde listas de clientes: campos do servidor prevalecem; equipamentos = união por ID (senão n.º de série). */
+/** Funde listas de clientes: campos do servidor prevalecem; equipamentos = união inteligente local/servidor. */
 export function mergeNonatoClientesDeferServerLocal(
   serverList: unknown,
   localList: unknown

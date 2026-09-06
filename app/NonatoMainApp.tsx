@@ -57,7 +57,10 @@ import {
   requestDiarioNotificationPermission,
   showDiarioBrowserNotification,
 } from './lib/diarioLembrete'
-import { mergeNonatoClientesDeferServerLocal } from './lib/clienteMergeUtils'
+import {
+  dedupeEquipamentosClientePorSerie,
+  mergeNonatoClientesDeferServerLocal,
+} from './lib/clienteMergeUtils'
 import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer, deduplicarPecasBibliotecaPorCodigo } from './lib/mergePecasBiblioteca'
 import { mergeHomagExportIntoBiblioteca, parseHomagExportJson } from './lib/mergeHomagExport'
 import {
@@ -7865,24 +7868,33 @@ export default function Dashboard() {
       const normalizeClienteEquipamentos = (arr: Cliente[]) =>
         arr
           .filter((c): c is Cliente => c != null && typeof c === 'object' && Boolean(c.id))
-          .map((c: Cliente) => ({
-            ...c,
-            // Compacta buracos/null — evita crash em resolverIdEquipamentoVisivelCliente (.id) no boot.
-            equipamentos: Array.isArray(c.equipamentos)
+          .map((c: Cliente) => {
+            const eqsRaw = Array.isArray(c.equipamentos)
               ? c.equipamentos.filter(
                   (eq): eq is NonNullable<typeof eq> => eq != null && typeof eq === 'object'
                 )
-              : [],
-            relatorios:
-              c.relatorios && typeof c.relatorios === 'object' && !Array.isArray(c.relatorios)
-                ? c.relatorios
-                : {},
-          }))
+              : []
+            // Remove duplicado série (ID técnico vs ID armazém fantasma) deixado por edições antigas.
+            const eqs = dedupeEquipamentosClientePorSerie(eqsRaw) as typeof eqsRaw
+            return {
+              ...c,
+              equipamentos: eqs,
+              relatorios:
+                c.relatorios && typeof c.relatorios === 'object' && !Array.isArray(c.relatorios)
+                  ? c.relatorios
+                  : {},
+            }
+          })
       if (savedClientes && Array.isArray(savedClientes) && savedClientes.length > 0) {
         const base = normalizeClienteEquipamentos(savedClientes as Cliente[])
         const { lista: normalized, alterou: codigosAlterados } = garantirCodigosClientes(base)
+        const dedupedVsRaw = (savedClientes as Cliente[]).some((raw) => {
+          const n = base.find((c) => c.id === raw?.id)
+          if (!n) return false
+          return (raw?.equipamentos?.length || 0) !== (n.equipamentos?.length || 0)
+        })
         setClientes(normalized)
-        if (codigosAlterados || normalized.length > 0) {
+        if (codigosAlterados || dedupedVsRaw || normalized.length > 0) {
           saveData('nonato-clientes', normalized, true, false).catch(() => {})
         }
       } else if (savedClientes && Array.isArray(savedClientes)) {
@@ -14977,7 +14989,13 @@ export default function Dashboard() {
       alert((t as any).erroSalvar || 'Erro ao salvar. Tente novamente.')
       return
     }
-    void saveData('nonato-clientes', updatedClientes, false, true).catch(() => {})
+    // Aguardar servidor: push em background deixava o ID apagado no Railway e o merge
+    // voltava a trazer o equipamento fantasma (e omitia o novo no dropdown do relatório).
+    try {
+      await saveData('nonato-clientes', updatedClientes, false, true)
+    } catch (err) {
+      console.warn('Erro ao sincronizar exclusão de equipamento com o servidor:', err)
+    }
     const refreshed = updatedClientes.find((c) => c.id === clienteId)
     if (refreshed) setSelectedClienteForEquipamento(refreshed)
     setEquipamentoClienteGuardadoMsg('')
