@@ -16,11 +16,12 @@ export type ClienteMerge = {
 
 export function equipamentoClienteDedupeKey(e: EquipamentoClienteMerge): string {
   // ID primeiro: ao editar e mudar n.º de série, o mesmo equipamento não pode virar 2 entradas no merge/sync.
+  // Placeholder 0000000000 NÃO conta como ID — cai para série real ou chave fraca.
   const id = String(e?.id ?? '').trim()
-  if (id) return `i:${id}`
+  if (id && !/^0+$/.test(id)) return `i:${id}`
   const s = String(e?.numeroSerie ?? '').trim()
-  if (s) return `s:${s}`
-  return `h:${JSON.stringify({ m: e?.modelo, t: e?.tipoEquipamento })}`
+  if (s && !/^0+$/.test(s)) return `s:${s}`
+  return `h:${JSON.stringify({ m: e?.modelo, t: e?.tipoEquipamento, b: e?.marca })}`
 }
 
 function isEquipamentoClienteMergeEntry(
@@ -30,9 +31,12 @@ function isEquipamentoClienteMergeEntry(
 }
 
 function serialNormEquipamento(e: EquipamentoClienteMerge): string {
-  return String(e?.numeroSerie ?? '')
+  const s = String(e?.numeroSerie ?? '')
     .trim()
     .toLowerCase()
+  // 0000000000 / só-zeros não é série real — não usar como chave de merge/dedupe.
+  if (!s || /^0+$/.test(s)) return ''
+  return s
 }
 
 /** Prefere UUID técnico / registo mais completo face a ID de armazém fantasma (ex. 0000000000). */
@@ -63,25 +67,30 @@ export function preferEquipamentoClienteMerge(
 
 /**
  * Colapsa duplicados da mesma série (IDs diferentes) — típico do bug edição→duplicado armazém/técnico.
+ * Sem série (ou só-zeros): dedupe só por ID real; sem ID mantém entradas distintas (não funde por modelo).
  */
 export function dedupeEquipamentosClientePorSerie(
   list: EquipamentoClienteMerge[]
 ): EquipamentoClienteMerge[] {
   const bySerial = new Map<string, EquipamentoClienteMerge>()
-  const semSerie: EquipamentoClienteMerge[] = []
+  const byIdSemSerie = new Map<string, EquipamentoClienteMerge>()
+  const semSerieSemId: EquipamentoClienteMerge[] = []
   for (const e of list) {
     const s = serialNormEquipamento(e)
     if (!s) {
-      semSerie.push(e)
+      const id = String(e?.id ?? '').trim()
+      if (id && !/^0+$/.test(id)) {
+        const prev = byIdSemSerie.get(id)
+        byIdSemSerie.set(id, prev ? preferEquipamentoClienteMerge(prev, e) : e)
+      } else {
+        semSerieSemId.push(e)
+      }
       continue
     }
     const prev = bySerial.get(s)
     bySerial.set(s, prev ? preferEquipamentoClienteMerge(prev, e) : e)
   }
-  // Sem série: ainda dedupe por chave de ID
-  const byKey = new Map<string, EquipamentoClienteMerge>()
-  for (const e of semSerie) byKey.set(equipamentoClienteDedupeKey(e), e)
-  return [...byKey.values(), ...bySerial.values()]
+  return [...byIdSemSerie.values(), ...semSerieSemId, ...bySerial.values()]
 }
 
 /**

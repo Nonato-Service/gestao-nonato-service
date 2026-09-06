@@ -199,8 +199,8 @@ export function segmentoIdEquipamentoExibivel(valor: string | undefined): string
 }
 
 /**
- * Label curto do select (horas / resumos): série · modelo · id.
- * Nunca inclui placeholder `0000000000` em nenhum segmento.
+ * Label curto do select (horas / resumos): id · modelo · série.
+ * Omite segmentos vazios; nunca inclui placeholder `0000000000`.
  */
 export function formatarLabelEquipamentoSelectCurto(
   eq:
@@ -214,18 +214,19 @@ export function formatarLabelEquipamentoSelectCurto(
   idx = 0
 ): string {
   if (eq == null || typeof eq !== 'object') return `#${idx + 1}`
-  const serie = segmentoIdEquipamentoExibivel(eq.numeroMaquina)
-  const modelo = String(eq.maquinaModelo ?? '').trim()
   const id = segmentoIdEquipamentoExibivel(eq.equipamentoId)
+  const modelo = String(eq.maquinaModelo ?? '').trim()
+  const serie = segmentoIdEquipamentoExibivel(eq.numeroMaquina)
   const parts: string[] = []
-  if (serie) parts.push(serie)
+  if (id) parts.push(id)
   if (modelo) parts.push(modelo)
-  if (id && id !== serie && !parts.includes(id)) parts.push(id)
+  if (serie && serie !== id && !parts.includes(serie)) parts.push(serie)
   return parts.length > 0 ? parts.join(' · ') : `#${idx + 1}`
 }
 
 /**
  * Valor + texto da `<option>` do cadastro do cliente.
+ * Label: id · modelo · série (sem id → modelo · série).
  * `value` nunca fica preso em placeholder se existir UUID/série equivalente.
  */
 export function opcaoEquipamentoClienteSelectRelatorio(
@@ -233,8 +234,7 @@ export function opcaoEquipamentoClienteSelectRelatorio(
   idx: number,
   equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): { value: string; label: string } {
-  const sn = segmentoIdEquipamentoExibivel(item.numeroSerie) || String(item.numeroSerie ?? '').trim()
-  const snLimpo = equipamentoIdPlaceholderInvalido(sn) ? '' : sn
+  const snLimpo = segmentoIdEquipamentoExibivel(item.numeroSerie)
   const value =
     idEquipamentoCadastroParaGravarNoRelatorio(item, idx, equipamentosArmazem) ||
     snLimpo ||
@@ -249,11 +249,11 @@ export function opcaoEquipamentoClienteSelectRelatorio(
     ''
   const modelo = `${String(item.modelo ?? '').trim()} ${String(item.marca ?? '').trim()}`.trim()
   const parts: string[] = []
-  if (idLabel) parts.push(`ID ${idLabel}`)
+  if (idLabel) parts.push(idLabel)
   if (modelo) parts.push(modelo)
   if (snLimpo && snLimpo !== idLabel && !parts.includes(snLimpo)) parts.push(snLimpo)
-  if (parts.length === 0 && value) parts.push(value)
-  return { value, label: parts.join(' · ') || value || '—' }
+  if (parts.length === 0 && value) parts.push(segmentoIdEquipamentoExibivel(value) || value)
+  return { value, label: parts.join(' · ') || (segmentoIdEquipamentoExibivel(value) || value) || '—' }
 }
 
 /**
@@ -268,15 +268,18 @@ export function resolverIdEquipamentoVisivelCliente(
   const idC = String(eq.id ?? '').trim()
   if (idC && !equipamentoIdETecnicoGerado(idC) && !equipamentoIdPlaceholderInvalido(idC)) return idC
   const s = String(eq.numeroSerie ?? '').trim()
-  if (s) {
+  const sVis = segmentoIdEquipamentoExibivel(s)
+  if (sVis) {
     const wh = (equipamentosArmazem || []).find(
-      (e) => e != null && String(e.numeroSerie ?? '').trim().toLowerCase() === s.toLowerCase()
+      (e) =>
+        e != null &&
+        segmentoIdEquipamentoExibivel(e.numeroSerie).toLowerCase() === sVis.toLowerCase()
     )
     const idA = String(wh?.id ?? '').trim()
     if (idA && !equipamentoIdETecnicoGerado(idA) && !equipamentoIdPlaceholderInvalido(idA)) return idA
   }
-  // Sem código útil: preferir n.º de série a UUID/placeholder.
-  if (s) return s
+  // Sem código útil: preferir n.º de série real a UUID/placeholder (nunca 0000000000).
+  if (sVis) return sVis
   return equipamentoIdETecnicoGerado(idC) || equipamentoIdPlaceholderInvalido(idC) ? '' : idC
 }
 
@@ -324,11 +327,13 @@ export function idEquipamentoCadastroParaGravarNoRelatorio(
   // Preferir UUID/eqc do cadastro (o select usa esta chave) em vez de zeros/série só.
   if (chave && !equipamentoIdPlaceholderInvalido(chave)) return chave
   if (idVis && !equipamentoIdPlaceholderInvalido(idVis)) return idVis
-  if (sn) return sn
+  const snVis = segmentoIdEquipamentoExibivel(sn)
+  if (snVis) return snVis
   return ''
 }
 
-/** Lista do select: colapsa duplicados por série (UUID vence 0000000000). */
+/** Lista do select: colapsa duplicados por série real (UUID vence 0000000000).
+ * Série vazia / só-zeros NÃO funde itens — dedupe só por ID real; sem ID mantém todos. */
 export function equipamentosClienteParaSelectRelatorio(
   list: EquipamentoClienteIdLookup[] | undefined | null
 ): EquipamentoClienteIdLookup[] {
@@ -337,7 +342,8 @@ export function equipamentosClienteParaSelectRelatorio(
   )
   if (raw.length <= 1) return raw
   const bySerial = new Map<string, { eq: EquipamentoClienteIdLookup; idx: number }>()
-  const semSerie: EquipamentoClienteIdLookup[] = []
+  const byIdSemSerie = new Map<string, EquipamentoClienteIdLookup>()
+  const semSerieSemId: EquipamentoClienteIdLookup[] = []
   const scoreId = (id: string) => {
     if (!id) return 0
     if (/^0+$/.test(id)) return 1
@@ -348,11 +354,21 @@ export function equipamentosClienteParaSelectRelatorio(
     return 3
   }
   raw.forEach((eq, idx) => {
-    const s = String(eq.numeroSerie ?? '')
+    const sRaw = String(eq.numeroSerie ?? '')
       .trim()
       .toLowerCase()
+    // Placeholder 0000000000 conta como «sem série» — não colapsar por essa chave fantasma.
+    const s = !sRaw || /^0+$/.test(sRaw) ? '' : sRaw
     if (!s) {
-      semSerie.push(eq)
+      const id = String(eq.id ?? '').trim()
+      if (id && !/^0+$/.test(id)) {
+        const prev = byIdSemSerie.get(id)
+        if (!prev || scoreId(id) >= scoreId(String(prev.id ?? '').trim())) {
+          byIdSemSerie.set(id, eq)
+        }
+      } else {
+        semSerieSemId.push(eq)
+      }
       return
     }
     const prev = bySerial.get(s)
@@ -366,7 +382,11 @@ export function equipamentosClienteParaSelectRelatorio(
     const sb = scoreId(idB)
     if (sb > sa) bySerial.set(s, { eq, idx })
   })
-  return [...semSerie, ...[...bySerial.values()].map((x) => x.eq)]
+  return [
+    ...byIdSemSerie.values(),
+    ...semSerieSemId,
+    ...[...bySerial.values()].map((x) => x.eq),
+  ]
 }
 
 /** Resolve `clienteId` quando o relatório antigo só tem o nome do cliente. */
@@ -475,25 +495,28 @@ export function prepararEquipamentosRelatorioParaEdicao(
 
     const alvo = String(eqItem.equipamentoId ?? '').trim()
     const sn = String(eqItem.numeroMaquina ?? '').trim()
+    // Série válida para rematch — nunca usar vazio / 0000000000 como chave de match.
+    const snValido = segmentoIdEquipamentoExibivel(sn)
 
     const eqMatch = cliEq.find((e, idx) => {
       if (e == null || typeof e !== 'object') return false
       const key = resolverIdEquipamentoCliente(e, idx)
       const vis = resolverIdEquipamentoVisivelCliente(e, equipamentosArmazem)
       const idGravar = idEquipamentoCadastroParaGravarNoRelatorio(e, idx, equipamentosArmazem)
+      const snCadastro = segmentoIdEquipamentoExibivel(e.numeroSerie)
       return (
+        // Rematch por ID real (UUID / código) — preferido quando não há série.
         (alvo &&
           !equipamentoIdPlaceholderInvalido(alvo) &&
           (String(e.id ?? '').trim() === alvo ||
-            String(e.numeroSerie ?? '').trim() === alvo ||
+            snCadastro === alvo ||
             key === alvo ||
             vis === alvo ||
             idGravar === alvo)) ||
-        (sn && String(e.numeroSerie ?? '').trim() === sn) ||
-        // Snapshot com 0000000000: rematch só pela série do cadastro activo
-        (equipamentoIdPlaceholderInvalido(alvo) &&
-          sn &&
-          String(e.numeroSerie ?? '').trim().toLowerCase() === sn.toLowerCase())
+        // Rematch por série só se a série for real (nunca placeholder / vazia).
+        (snValido &&
+          snCadastro &&
+          snCadastro.toLowerCase() === snValido.toLowerCase())
       )
     })
 
@@ -502,12 +525,10 @@ export function prepararEquipamentosRelatorioParaEdicao(
       const idGravar = idEquipamentoCadastroParaGravarNoRelatorio(eqMatch, idx, equipamentosArmazem)
       const modeloCadastro =
         `${String(eqMatch.modelo ?? '').trim()} ${String(eqMatch.marca ?? '').trim()}`.trim()
-      const serieCadastroRaw = String(eqMatch.numeroSerie ?? '').trim()
-      const serieCadastro = segmentoIdEquipamentoExibivel(serieCadastroRaw) || serieCadastroRaw
       const serieFinal =
-        segmentoIdEquipamentoExibivel(serieCadastro) ||
+        segmentoIdEquipamentoExibivel(eqMatch.numeroSerie) ||
         segmentoIdEquipamentoExibivel(eqItem.numeroMaquina) ||
-        segmentoIdEquipamentoExibivel(sn) ||
+        snValido ||
         ''
       // Preferir sempre o cadastro actual (evita snapshot com ID apagado / série trocada).
       return {

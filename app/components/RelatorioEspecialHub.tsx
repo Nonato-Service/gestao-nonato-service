@@ -1718,17 +1718,7 @@ export default function RelatorioEspecialHub({
           <div className="relatorio-equipamentos-list">
             {(form.equipamentos || []).map((eq, eqIdx) => {
               const aberto = equipExpandidos.has(eq.uid)
-              const resumoLinha = [
-                segmentoIdEquipamentoExibivel(eq.numeroMaquina),
-                (eq.maquinaModelo || '').trim(),
-                (() => {
-                  const id = segmentoIdEquipamentoExibivel(eq.equipamentoId)
-                  const sn = segmentoIdEquipamentoExibivel(eq.numeroMaquina)
-                  return id && id !== sn ? id : ''
-                })(),
-              ]
-                .filter(Boolean)
-                .join(' · ')
+              const resumoLinha = formatarLabelEquipamentoSelectCurto(eq, eqIdx)
               return (
               <div
                 key={eq.uid}
