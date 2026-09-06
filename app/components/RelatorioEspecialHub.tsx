@@ -53,8 +53,12 @@ import {
   clientesExternosParaEquipamentoRelatorio,
   criarEquipamentoRelatorioVazio,
   equipamentoArmazemEstaAtivo,
+  equipamentoIdPlaceholderInvalido,
+  equipamentosClienteParaSelectRelatorio,
+  idEquipamentoCadastroParaGravarNoRelatorio,
   prepararEquipamentosRelatorioParaEdicao,
   resolverChaveEquipamentoClienteRelatorio,
+  resolverClienteIdRelatorio,
   resolverEquipamentoRelatorioParaExibicao,
   resolverIdEquipamentoCliente,
   resolverIdEquipamentoVisivelCliente,
@@ -104,7 +108,8 @@ const inputStyle: React.CSSProperties = {
 }
 
 function labelEquipamentoCurto(eq: RelatorioEquipamentoRef, idx: number): string {
-  const id = (eq.equipamentoId || '').trim()
+  const idRaw = (eq.equipamentoId || '').trim()
+  const id = equipamentoIdPlaceholderInvalido(idRaw) ? '' : idRaw
   const modelo = (eq.maquinaModelo || '').trim()
   const serie = (eq.numeroMaquina || '').trim()
   const parts: string[] = []
@@ -659,8 +664,15 @@ export default function RelatorioEspecialHub({
   }, [modo, relatorios, t, marcarSnapshot])
 
   // Hooks ANTES de qualquer early return (lista/fechamento) — React #310
-  const clienteIdEfetivo = form.clienteId || ''
-  const clienteEquipamentos = clientes.find((c) => c.id === clienteIdEfetivo)?.equipamentos ?? []
+  const clienteIdEfetivo =
+    resolverClienteIdRelatorio(form, clientes) || String(form.clienteId || '').trim()
+  const clienteEquipamentos = useMemo(
+    () =>
+      equipamentosClienteParaSelectRelatorio(
+        clientes.find((c) => c.id === clienteIdEfetivo)?.equipamentos
+      ),
+    [clientes, clienteIdEfetivo]
+  )
   const clienteEquipamentosSyncKey = useMemo(
     () =>
       JSON.stringify(
@@ -696,8 +708,11 @@ export default function RelatorioEspecialHub({
 
   const abrirEditar = useCallback(
     (rel: RelatorioEspecial) => {
-      const cliEq =
-        clientes.find((c) => c.id === String(rel.clienteId || '').trim())?.equipamentos ?? []
+      const cid =
+        resolverClienteIdRelatorio(rel, clientes) || String(rel.clienteId || '').trim()
+      const cliEq = equipamentosClienteParaSelectRelatorio(
+        clientes.find((c) => c.id === cid)?.equipamentos
+      )
       const equipamentos = prepararEquipamentosRelatorioParaEdicao(
         rel.equipamentos || [],
         cliEq,
@@ -705,6 +720,7 @@ export default function RelatorioEspecialHub({
       )
       const copia = {
         ...rel,
+        clienteId: cid || rel.clienteId,
         equipamentos,
         diasTrabalho: [...(rel.diasTrabalho || [])],
       }
@@ -1929,8 +1945,9 @@ export default function RelatorioEspecialHub({
                       </select>
                     ) : eq.equipamentoOrigem === 'clientes-externos' ? (
                       (() => {
-                        const eqsExternos =
-                          clientes.find((c) => c.id === (eq.clienteExternoId || ''))?.equipamentos ?? []
+                        const eqsExternos = equipamentosClienteParaSelectRelatorio(
+                          clientes.find((c) => c.id === (eq.clienteExternoId || ''))?.equipamentos
+                        )
                         const cidExt = eq.clienteExternoId || ''
                         return (
                           <select
@@ -1948,8 +1965,15 @@ export default function RelatorioEspecialHub({
                               const selectedEquipamento = eqsExternos.find(
                                 (itemCli, idxCli) => resolverIdEquipamentoCliente(itemCli, idxCli) === chave
                               )
-                              const idVisivel = selectedEquipamento
-                                ? resolverIdEquipamentoVisivelCliente(selectedEquipamento, equipamentosArmazem)
+                              const idxSel = selectedEquipamento
+                                ? eqsExternos.indexOf(selectedEquipamento)
+                                : -1
+                              const idGravar = selectedEquipamento
+                                ? idEquipamentoCadastroParaGravarNoRelatorio(
+                                    selectedEquipamento,
+                                    idxSel >= 0 ? idxSel : 0,
+                                    equipamentosArmazem
+                                  )
                                 : chave
                               atualizarEquipamentos(
                                 (form.equipamentos || []).map((item) =>
@@ -1957,7 +1981,7 @@ export default function RelatorioEspecialHub({
                                     ? {
                                         ...item,
                                         equipamentoOrigem: 'clientes-externos' as const,
-                                        equipamentoId: idVisivel || chave,
+                                        equipamentoId: idGravar || chave,
                                         numeroMaquina: selectedEquipamento?.numeroSerie || '',
                                         maquinaModelo: selectedEquipamento
                                           ? `${selectedEquipamento.modelo} ${selectedEquipamento.marca}`.trim()
@@ -1975,9 +1999,18 @@ export default function RelatorioEspecialHub({
                               eqsExternos.map((itemCli, idxCli) => {
                                 const eqKey = resolverIdEquipamentoCliente(itemCli, idxCli)
                                 const idVisivel = resolverIdEquipamentoVisivelCliente(itemCli, equipamentosArmazem)
+                                const idLabel =
+                                  idVisivel ||
+                                  (!equipamentoIdPlaceholderInvalido(eqKey) ? eqKey : '') ||
+                                  String(itemCli.numeroSerie || '').trim() ||
+                                  eqKey
                                 return (
                                   <option key={eqKey} value={eqKey}>
-                                    ID {idVisivel || eqKey} · {itemCli.modelo} {itemCli.marca}
+                                    ID {idLabel} · {itemCli.modelo} {itemCli.marca}
+                                    {itemCli.numeroSerie &&
+                                    String(itemCli.numeroSerie).trim() !== idLabel
+                                      ? ` · ${itemCli.numeroSerie}`
+                                      : ''}
                                   </option>
                                 )
                               })}
@@ -2000,8 +2033,15 @@ export default function RelatorioEspecialHub({
                           const selectedEquipamento = clienteEquipamentos.find(
                             (itemCli, idxCli) => resolverIdEquipamentoCliente(itemCli, idxCli) === chave
                           )
-                          const idVisivel = selectedEquipamento
-                            ? resolverIdEquipamentoVisivelCliente(selectedEquipamento, equipamentosArmazem)
+                          const idxSel = selectedEquipamento
+                            ? clienteEquipamentos.indexOf(selectedEquipamento)
+                            : -1
+                          const idGravar = selectedEquipamento
+                            ? idEquipamentoCadastroParaGravarNoRelatorio(
+                                selectedEquipamento,
+                                idxSel >= 0 ? idxSel : 0,
+                                equipamentosArmazem
+                              )
                             : chave
                           atualizarEquipamentos(
                             (form.equipamentos || []).map((item) =>
@@ -2009,7 +2049,7 @@ export default function RelatorioEspecialHub({
                                 ? {
                                     ...item,
                                     equipamentoOrigem: 'cliente' as const,
-                                    equipamentoId: idVisivel || chave,
+                                    equipamentoId: idGravar || chave,
                                     numeroMaquina: selectedEquipamento?.numeroSerie || '',
                                     maquinaModelo: selectedEquipamento
                                       ? `${selectedEquipamento.modelo} ${selectedEquipamento.marca}`.trim()
@@ -2029,9 +2069,18 @@ export default function RelatorioEspecialHub({
                           clienteEquipamentos.map((itemCli, idxCli) => {
                             const eqKey = resolverIdEquipamentoCliente(itemCli, idxCli)
                             const idVisivel = resolverIdEquipamentoVisivelCliente(itemCli, equipamentosArmazem)
+                            const idLabel =
+                              idVisivel ||
+                              (!equipamentoIdPlaceholderInvalido(eqKey) ? eqKey : '') ||
+                              String(itemCli.numeroSerie || '').trim() ||
+                              eqKey
                             return (
                               <option key={eqKey} value={eqKey}>
-                                ID {idVisivel || eqKey} · {itemCli.modelo} {itemCli.marca}
+                                ID {idLabel} · {itemCli.modelo} {itemCli.marca}
+                                {itemCli.numeroSerie &&
+                                String(itemCli.numeroSerie).trim() !== idLabel
+                                  ? ` · ${itemCli.numeroSerie}`
+                                  : ''}
                               </option>
                             )
                           })}

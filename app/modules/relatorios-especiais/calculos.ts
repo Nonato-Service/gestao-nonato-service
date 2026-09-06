@@ -581,7 +581,8 @@ export type ColetarDiasSemMaquinaOpts = {
 }
 
 function labelEquipamentoRefMin(eq: EquipamentoRefMinEspecial, idx: number): string {
-  const id = String(eq.equipamentoId || '').trim()
+  const idRaw = String(eq.equipamentoId || '').trim()
+  const id = /^0+$/.test(idRaw) ? '' : idRaw
   const modelo = String(eq.maquinaModelo || '').trim()
   const serie = String(eq.numeroMaquina || '').trim()
   const parts: string[] = []

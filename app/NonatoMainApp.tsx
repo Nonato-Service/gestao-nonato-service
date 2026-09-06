@@ -490,11 +490,14 @@ import {
   resolverIdEquipamentoCliente,
   resolverIdEquipamentoVisivelCliente,
   equipamentoIdETecnicoGerado,
+  equipamentoIdPlaceholderInvalido,
   resolverIdEquipamentoVisivelRelatorio,
   resolverEquipamentoRelatorioParaExibicao,
   resolverClienteIdRelatorio,
   resolverChaveEquipamentoClienteRelatorio,
   equipamentosClienteParaBiblioteca,
+  equipamentosClienteParaSelectRelatorio,
+  idEquipamentoCadastroParaGravarNoRelatorio,
   coletarRelatoriosServicoPorEquipamentoCliente,
   prepararEquipamentosRelatorioParaEdicao,
   aplicarBaixaVendaEquipamentosArmazemRelatorio,
@@ -32000,9 +32003,13 @@ export default function Dashboard() {
                       const equipamentosForm = normalizarEquipamentosRelatorio(relatorioServicoForm)
                       const clienteRelatorio = findClienteByRelatorio(clientes, relatorioServicoForm)
                       const clienteIdEfetivo =
-                        relatorioServicoForm.clienteId || clienteRelatorio?.id || ''
-                      const clienteEquipamentos =
-                        clientes.find((c) => c.id === clienteIdEfetivo)?.equipamentos ?? []
+                        resolverClienteIdRelatorio(relatorioServicoForm, clientes) ||
+                        relatorioServicoForm.clienteId ||
+                        clienteRelatorio?.id ||
+                        ''
+                      const clienteEquipamentos = equipamentosClienteParaSelectRelatorio(
+                        clientes.find((c) => c.id === clienteIdEfetivo)?.equipamentos
+                      )
                       const podeAdicionarEquip = equipamentosForm.length < MAX_EQUIPAMENTOS_RELATORIO
                       const atualizarEquipamentos = (next: RelatorioEquipamentoRef[]) => {
                         setRelatorioServicoForm(prev => ({
@@ -32233,9 +32240,10 @@ export default function Dashboard() {
                                         </select>
                                       ) : eq.equipamentoOrigem === 'clientes-externos' ? (
                                         (() => {
-                                          const eqsExternos =
+                                          const eqsExternos = equipamentosClienteParaSelectRelatorio(
                                             clientes.find((c) => c.id === (eq.clienteExternoId || ''))
-                                              ?.equipamentos ?? []
+                                              ?.equipamentos
+                                          )
                                           const cidExt = eq.clienteExternoId || ''
                                           return (
                                             <select
@@ -32254,9 +32262,13 @@ export default function Dashboard() {
                                                   (itemCli, idxCli) =>
                                                     resolverIdEquipamentoCliente(itemCli, idxCli) === chave
                                                 )
-                                                const idVisivel = selectedEquipamento
-                                                  ? resolverIdEquipamentoVisivelCliente(
+                                                const idxSel = selectedEquipamento
+                                                  ? eqsExternos.indexOf(selectedEquipamento)
+                                                  : -1
+                                                const idGravar = selectedEquipamento
+                                                  ? idEquipamentoCadastroParaGravarNoRelatorio(
                                                       selectedEquipamento,
+                                                      idxSel >= 0 ? idxSel : 0,
                                                       equipamentos
                                                     )
                                                   : chave
@@ -32265,7 +32277,7 @@ export default function Dashboard() {
                                                     ? {
                                                         ...item,
                                                         equipamentoOrigem: 'clientes-externos' as const,
-                                                        equipamentoId: idVisivel || chave,
+                                                        equipamentoId: idGravar || chave,
                                                         numeroMaquina: selectedEquipamento?.numeroSerie || '',
                                                         maquinaModelo: selectedEquipamento
                                                           ? `${selectedEquipamento.modelo} ${selectedEquipamento.marca}`.trim()
@@ -32288,9 +32300,18 @@ export default function Dashboard() {
                                                     itemCli,
                                                     equipamentos
                                                   )
+                                                  const idLabel =
+                                                    idVisivel ||
+                                                    (!equipamentoIdPlaceholderInvalido(eqKey) ? eqKey : '') ||
+                                                    String(itemCli.numeroSerie || '').trim() ||
+                                                    eqKey
                                                   return (
                                                     <option key={eqKey} value={eqKey}>
-                                                      ID {idVisivel || eqKey} · {itemCli.modelo} {itemCli.marca}
+                                                      ID {idLabel} · {itemCli.modelo} {itemCli.marca}
+                                                      {itemCli.numeroSerie &&
+                                                      String(itemCli.numeroSerie).trim() !== idLabel
+                                                        ? ` · ${itemCli.numeroSerie}`
+                                                        : ''}
                                                     </option>
                                                   )
                                                 })}
@@ -32341,15 +32362,22 @@ export default function Dashboard() {
                                               (itemCli, idxCli) =>
                                                 resolverIdEquipamentoCliente(itemCli, idxCli) === chave
                                             )
-                                            const idVisivel = selectedEquipamento
-                                              ? resolverIdEquipamentoVisivelCliente(selectedEquipamento, equipamentos)
+                                            const idxSel = selectedEquipamento
+                                              ? clienteEquipamentos.indexOf(selectedEquipamento)
+                                              : -1
+                                            const idGravar = selectedEquipamento
+                                              ? idEquipamentoCadastroParaGravarNoRelatorio(
+                                                  selectedEquipamento,
+                                                  idxSel >= 0 ? idxSel : 0,
+                                                  equipamentos
+                                                )
                                               : chave
                                             const next = equipamentosForm.map(item =>
                                               item.uid === eq.uid
                                                 ? {
                                                     ...item,
                                                     equipamentoOrigem: 'cliente' as const,
-                                                    equipamentoId: idVisivel || chave,
+                                                    equipamentoId: idGravar || chave,
                                                     numeroMaquina: selectedEquipamento?.numeroSerie || '',
                                                     maquinaModelo: selectedEquipamento
                                                       ? `${selectedEquipamento.modelo} ${selectedEquipamento.marca}`.trim()
@@ -32369,9 +32397,18 @@ export default function Dashboard() {
                                             clienteEquipamentos.map((itemCli, idxCli) => {
                                               const eqKey = resolverIdEquipamentoCliente(itemCli, idxCli)
                                               const idVisivel = resolverIdEquipamentoVisivelCliente(itemCli, equipamentos)
+                                              const idLabel =
+                                                idVisivel ||
+                                                (!equipamentoIdPlaceholderInvalido(eqKey) ? eqKey : '') ||
+                                                String(itemCli.numeroSerie || '').trim() ||
+                                                eqKey
                                               return (
                                                 <option key={eqKey} value={eqKey}>
-                                                  ID {idVisivel || eqKey} · {itemCli.modelo} {itemCli.marca}
+                                                  ID {idLabel} · {itemCli.modelo} {itemCli.marca}
+                                                  {itemCli.numeroSerie &&
+                                                  String(itemCli.numeroSerie).trim() !== idLabel
+                                                    ? ` · ${itemCli.numeroSerie}`
+                                                    : ''}
                                                 </option>
                                               )
                                             })}

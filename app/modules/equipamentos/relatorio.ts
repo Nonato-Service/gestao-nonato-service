@@ -222,7 +222,11 @@ export function resolverIdEquipamentoVisivelRelatorio(
   if (eq == null || typeof eq !== 'object') return ''
   if (eq.equipamentoOrigem === 'armazem') {
     const id = String(eq.equipamentoId ?? '').trim()
-    return equipamentoIdETecnicoGerado(id) ? '' : id
+    if (equipamentoIdETecnicoGerado(id) || equipamentoIdPlaceholderInvalido(id)) {
+      const sn = String(eq.numeroMaquina ?? '').trim()
+      return sn || ''
+    }
+    return id
   }
   return resolverIdEquipamentoVisivelCliente(
     { id: eq.equipamentoId, numeroSerie: eq.numeroMaquina },
@@ -230,7 +234,76 @@ export function resolverIdEquipamentoVisivelRelatorio(
   )
 }
 
-/** ID para ecrã/PDF: resolve código visível; nunca mostra UUID interno se existir alternativa no cliente/armazém. */
+/**
+ * ID a gravar na linha do relatório a partir do cadastro do cliente.
+ * Nunca devolve placeholder (ex. 0000000000): código próprio → chave técnica (UUID) → série.
+ */
+export function idEquipamentoCadastroParaGravarNoRelatorio(
+  eq: EquipamentoClienteIdLookup | null | undefined,
+  idx = 0,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+): string {
+  if (eq == null || typeof eq !== 'object') return ''
+  const chave = resolverIdEquipamentoCliente(eq, idx)
+  const idVis = resolverIdEquipamentoVisivelCliente(eq, equipamentosArmazem)
+  const sn = String(eq.numeroSerie ?? '').trim()
+  // Código próprio real (não série “eco”, não UUID, não zeros).
+  if (
+    idVis &&
+    !equipamentoIdPlaceholderInvalido(idVis) &&
+    !equipamentoIdETecnicoGerado(idVis) &&
+    idVis.toLowerCase() !== sn.toLowerCase()
+  ) {
+    return idVis
+  }
+  // Preferir UUID/eqc do cadastro (o select usa esta chave) em vez de zeros/série só.
+  if (chave && !equipamentoIdPlaceholderInvalido(chave)) return chave
+  if (idVis && !equipamentoIdPlaceholderInvalido(idVis)) return idVis
+  if (sn) return sn
+  return ''
+}
+
+/** Lista do select: colapsa duplicados por série (UUID vence 0000000000). */
+export function equipamentosClienteParaSelectRelatorio(
+  list: EquipamentoClienteIdLookup[] | undefined | null
+): EquipamentoClienteIdLookup[] {
+  const raw = (Array.isArray(list) ? list : []).filter(
+    (e): e is EquipamentoClienteIdLookup => e != null && typeof e === 'object'
+  )
+  if (raw.length <= 1) return raw
+  const bySerial = new Map<string, { eq: EquipamentoClienteIdLookup; idx: number }>()
+  const semSerie: EquipamentoClienteIdLookup[] = []
+  const scoreId = (id: string) => {
+    if (!id) return 0
+    if (/^0+$/.test(id)) return 1
+    if (/^eqc-/i.test(id)) return 4
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89abAB][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id))
+      return 4
+    if (/^\d+$/.test(id) && id.length <= 12) return 2
+    return 3
+  }
+  raw.forEach((eq, idx) => {
+    const s = String(eq.numeroSerie ?? '')
+      .trim()
+      .toLowerCase()
+    if (!s) {
+      semSerie.push(eq)
+      return
+    }
+    const prev = bySerial.get(s)
+    if (!prev) {
+      bySerial.set(s, { eq, idx })
+      return
+    }
+    const idA = String(prev.eq.id ?? '').trim()
+    const idB = String(eq.id ?? '').trim()
+    const sa = scoreId(idA)
+    const sb = scoreId(idB)
+    if (sb > sa) bySerial.set(s, { eq, idx })
+  })
+  return [...semSerie, ...[...bySerial.values()].map((x) => x.eq)]
+}
+
 /** Resolve `clienteId` quando o relatório antigo só tem o nome do cliente. */
 export function resolverClienteIdRelatorio(
   rel: { clienteId?: string; cliente?: string } | null | undefined,
@@ -304,17 +377,20 @@ export function prepararEquipamentosRelatorioParaEdicao(
   clienteEquipamentos: EquipamentoClienteIdLookup[] | undefined,
   equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): RelatorioEquipamentoRef[] {
-  const cliEq = clienteEquipamentos ?? []
+  const cliEq = equipamentosClienteParaSelectRelatorio(clienteEquipamentos)
 
   return (equipamentosRaw || [])
     .filter((eqItem): eqItem is RelatorioEquipamentoRef => eqItem != null && typeof eqItem === 'object')
     .map((eqItem) => {
     if (eqItem.equipamentoOrigem === 'armazem') {
+      const idArmazem =
+        resolverIdEquipamentoVisivelRelatorio(eqItem, equipamentosArmazem) ||
+        (equipamentoIdPlaceholderInvalido(eqItem.equipamentoId)
+          ? String(eqItem.numeroMaquina ?? '').trim()
+          : eqItem.equipamentoId)
       return {
         ...eqItem,
-        equipamentoId:
-          resolverIdEquipamentoVisivelRelatorio(eqItem, equipamentosArmazem) ||
-          eqItem.equipamentoId,
+        equipamentoId: idArmazem,
       }
     }
 
@@ -325,36 +401,46 @@ export function prepararEquipamentosRelatorioParaEdicao(
       if (e == null || typeof e !== 'object') return false
       const key = resolverIdEquipamentoCliente(e, idx)
       const vis = resolverIdEquipamentoVisivelCliente(e, equipamentosArmazem)
+      const idGravar = idEquipamentoCadastroParaGravarNoRelatorio(e, idx, equipamentosArmazem)
       return (
         (alvo &&
+          !equipamentoIdPlaceholderInvalido(alvo) &&
           (String(e.id ?? '').trim() === alvo ||
             String(e.numeroSerie ?? '').trim() === alvo ||
             key === alvo ||
-            vis === alvo)) ||
-        (sn && String(e.numeroSerie ?? '').trim() === sn)
+            vis === alvo ||
+            idGravar === alvo)) ||
+        (sn && String(e.numeroSerie ?? '').trim() === sn) ||
+        // Snapshot com 0000000000: rematch só pela série do cadastro activo
+        (equipamentoIdPlaceholderInvalido(alvo) &&
+          sn &&
+          String(e.numeroSerie ?? '').trim().toLowerCase() === sn.toLowerCase())
       )
     })
 
     if (eqMatch) {
       const idx = cliEq.indexOf(eqMatch)
-      const idVis = resolverIdEquipamentoVisivelCliente(eqMatch, equipamentosArmazem)
-      const chave = resolverIdEquipamentoCliente(eqMatch, idx)
+      const idGravar = idEquipamentoCadastroParaGravarNoRelatorio(eqMatch, idx, equipamentosArmazem)
       const modeloCadastro =
         `${String(eqMatch.modelo ?? '').trim()} ${String(eqMatch.marca ?? '').trim()}`.trim()
       const serieCadastro = String(eqMatch.numeroSerie ?? '').trim()
       // Preferir sempre o cadastro actual (evita snapshot com ID apagado / série trocada).
       return {
         ...eqItem,
-        equipamentoId: idVis || chave || alvo || sn,
+        equipamentoId: idGravar || (!equipamentoIdPlaceholderInvalido(alvo) ? alvo : '') || serieCadastro || sn,
         maquinaModelo: modeloCadastro || eqItem.maquinaModelo,
         numeroMaquina: serieCadastro || eqItem.numeroMaquina,
       }
     }
 
+    const idFallback = resolverIdEquipamentoVisivelRelatorio(eqItem, equipamentosArmazem)
+    const idLimpo =
+      idFallback ||
+      (!equipamentoIdPlaceholderInvalido(eqItem.equipamentoId) ? eqItem.equipamentoId : '') ||
+      sn
     return {
       ...eqItem,
-      equipamentoId:
-        resolverIdEquipamentoVisivelRelatorio(eqItem, equipamentosArmazem) || eqItem.equipamentoId,
+      equipamentoId: idLimpo,
     }
   })
 }

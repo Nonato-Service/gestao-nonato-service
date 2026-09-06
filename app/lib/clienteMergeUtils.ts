@@ -123,8 +123,24 @@ export function mergeEquipamentosClienteLists(
       rememberSerial(e, k)
       continue
     }
-    // Duplicado por série (ID técnico vs ID armazém): não repor o fantasma do servidor.
-    if (s && serialToKey.has(s)) continue
+    // Mesma série, IDs diferentes: ficar com o melhor (UUID > código > zeros),
+    // senão o fantasma 0000000000 local bloqueava o UUID correcto do servidor (ou vice-versa).
+    if (s && serialToKey.has(s)) {
+      const prevKey = serialToKey.get(s)!
+      const prev = byId.get(prevKey)
+      if (!prev) {
+        byId.set(k, e)
+        rememberSerial(e, k)
+        continue
+      }
+      const preferred = preferEquipamentoClienteMerge(prev, e)
+      if (preferred === prev) continue
+      byId.delete(prevKey)
+      const newKey = equipamentoClienteDedupeKey(preferred)
+      byId.set(newKey, preferred)
+      rememberSerial(preferred, newKey)
+      continue
+    }
     byId.set(k, e)
     rememberSerial(e, k)
   }
