@@ -51,9 +51,8 @@ export async function GET() {
     (fileCount > 5 && Boolean(volumeMount)) ||
     Boolean(volumeMount && dataDirEnv && volumeMount === dataDirEnv)
 
-  const isRailway = Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID)
-  const httpStatus = isRailway && !persistenceOk ? 503 : 200
-
+  // Liveness SEMPRE 200: o healthcheck do Railway (railway.json) falha/trava o
+  // deploy em «Configuring network» se receber 503. Persistência fica no JSON.
   let hint = 'Dados no disco parecem presentes.'
   if (!persistenceOk) {
     hint =
@@ -65,7 +64,8 @@ export async function GET() {
 
   return new Response(
     JSON.stringify({
-      ok: httpStatus === 200,
+      ok: true,
+      alive: true,
       persistence: {
         dataDir,
         fileCount,
@@ -78,7 +78,7 @@ export async function GET() {
       },
     }),
     {
-      status: httpStatus,
+      status: 200,
       headers: { 'Content-Type': 'application/json' },
     }
   )
