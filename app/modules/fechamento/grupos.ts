@@ -9,7 +9,13 @@ export type ServicoCadastroGrupo = {
 export const DEFAULT_SERVICO_GRUPO_ID = 'servico-grupo-geral'
 
 export function ordenarServicoGrupos(grupos: ServicoCadastroGrupo[]): ServicoCadastroGrupo[] {
-  return [...grupos].sort((a, b) => (a.ordem !== b.ordem ? a.ordem - b.ordem : a.nome.localeCompare(b.nome)))
+  const list = Array.isArray(grupos) ? grupos.filter((g) => g && typeof g.id === 'string') : []
+  return [...list].sort((a, b) => {
+    const oa = typeof a.ordem === 'number' && Number.isFinite(a.ordem) ? a.ordem : 0
+    const ob = typeof b.ordem === 'number' && Number.isFinite(b.ordem) ? b.ordem : 0
+    if (oa !== ob) return oa - ob
+    return String(a.nome || '').localeCompare(String(b.nome || ''))
+  })
 }
 
 export function nomeGrupoTarifaServico(servicoGrupos: ServicoCadastroGrupo[], grupoId?: string): string {

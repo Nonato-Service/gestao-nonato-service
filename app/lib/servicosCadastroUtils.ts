@@ -66,7 +66,8 @@ export function labelCategoria(cat: ServicoCadastroItem['categoria'], safeT: Rec
 
 export function coletarCodigosMatriz(servicos: ServicoCadastroItem[]): string[] {
   const set = new Set<string>()
-  servicos.forEach((s) => {
+  ;(servicos || []).forEach((s) => {
+    if (!s) return
     const cod = servicoCodParaExibicao(s)
     if (cod) set.add(cod.toUpperCase())
   })
@@ -88,5 +89,7 @@ export function servicoPorCodNoGrupo(
   cod: string
 ): ServicoCadastroItem | undefined {
   const c = cod.toUpperCase()
-  return servicos.find((s) => s.grupoId === grupoId && servicoCodParaExibicao(s).toUpperCase() === c)
+  return (servicos || []).find(
+    (s) => s && s.grupoId === grupoId && servicoCodParaExibicao(s).toUpperCase() === c
+  )
 }

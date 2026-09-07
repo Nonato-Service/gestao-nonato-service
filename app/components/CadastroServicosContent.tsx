@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { AssistTextarea } from './AssistTextFields'
 import {
   coletarCodigosMatriz,
@@ -15,6 +15,21 @@ import {
 } from '../lib/servicosCadastroUtils'
 
 type TabId = 'grupos' | 'matriz' | 'listar'
+
+type ServicoFormDraft = {
+  cod: string
+  nome: string
+  descricao: string
+  valor: number
+  grupoId: string
+  tipoCobranca: ServicoCadastroItem['tipoCobranca']
+  categoria: ServicoCadastroItem['categoria']
+}
+
+export type CadastroServicoSavePayload = {
+  form: ServicoFormDraft
+  valorInput: string
+}
 
 type Props = {
   servicoGrupos: ServicoCadastroGrupo[]
@@ -36,26 +51,8 @@ type Props = {
   setShowServicoForm: (v: boolean) => void
   editingServico: ServicoCadastroItem | null
   setEditingServico: (v: ServicoCadastroItem | null) => void
-  servicoForm: {
-    cod: string
-    nome: string
-    descricao: string
-    valor: number
-    grupoId: string
-    tipoCobranca: ServicoCadastroItem['tipoCobranca']
-    categoria: ServicoCadastroItem['categoria']
-  }
-  setServicoForm: React.Dispatch<
-    React.SetStateAction<{
-      cod: string
-      nome: string
-      descricao: string
-      valor: number
-      grupoId: string
-      tipoCobranca: ServicoCadastroItem['tipoCobranca']
-      categoria: ServicoCadastroItem['categoria']
-    }>
-  >
+  servicoForm: ServicoFormDraft
+  setServicoForm: React.Dispatch<React.SetStateAction<ServicoFormDraft>>
   servicoValorInput: string
   setServicoValorInput: (v: string) => void
   servicoGrupoIdPadrao: () => string
@@ -69,7 +66,8 @@ type Props = {
   onQuickAddHtt: (grupoId?: string) => void
   onEditServico: (servico: ServicoCadastroItem) => void
   onDeleteServico: (id: string) => void
-  onSaveServico: () => void
+  /** Aceita rascunho local — evita setState no NonatoMainApp a cada tecla (freeze/crash). */
+  onSaveServico: (payload?: CadastroServicoSavePayload) => void | Promise<void>
   onResetServicoForm: () => void
 }
 
@@ -79,10 +77,9 @@ function ServicoFormBlock(props: Pick<
   | 'servicoGrupos'
   | 'servicoGrupoSelecionadoId'
   | 'servicoForm'
-  | 'setServicoForm'
   | 'servicoValorInput'
-  | 'setServicoValorInput'
   | 'editingServico'
+  | 'showServicoForm'
   | 'onSaveServico'
   | 'onResetServicoForm'
 >) {
@@ -91,13 +88,26 @@ function ServicoFormBlock(props: Pick<
     servicoGrupos,
     servicoGrupoSelecionadoId,
     servicoForm,
-    setServicoForm,
     servicoValorInput,
-    setServicoValorInput,
     editingServico,
+    showServicoForm,
     onSaveServico,
     onResetServicoForm,
   } = props
+
+  /** Rascunho local: editar valores/nome sem re-renderizar o monólito a cada tecla. */
+  const [draft, setDraft] = useState<ServicoFormDraft>(servicoForm)
+  const [valorDraft, setValorDraft] = useState(servicoValorInput)
+
+  useEffect(() => {
+    if (!showServicoForm) return
+    setDraft(servicoForm)
+    setValorDraft(servicoValorInput)
+    // Só re-sincroniza ao abrir o formulário / mudar o item em edição.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intencional
+  }, [showServicoForm, editingServico?.id])
+
+  const gruposOpts = useMemo(() => ordenarServicoGrupos(servicoGrupos || []), [servicoGrupos])
 
   return (
     <div className="cadastro-valores-v2__card orcamento-pecas-especiais-linha" style={{ marginBottom: '15px' }}>
@@ -109,20 +119,20 @@ function ServicoFormBlock(props: Pick<
       <label className="orcamento-pecas-especiais-label">{safeT.servicosServicoGrupo || 'Grupo'}</label>
       <select
         className="orcamento-pecas-especiais-input cadastro-valores-v2__field"
-        value={servicoForm.grupoId || servicoGrupoSelecionadoId || ordenarServicoGrupos(servicoGrupos)[0]?.id || ''}
-        onChange={(e) => setServicoForm({ ...servicoForm, grupoId: e.target.value })}
+        value={draft.grupoId || servicoGrupoSelecionadoId || gruposOpts[0]?.id || ''}
+        onChange={(e) => setDraft({ ...draft, grupoId: e.target.value })}
       >
-        {ordenarServicoGrupos(servicoGrupos).map((g) => (
+        {gruposOpts.map((g) => (
           <option key={g.id} value={g.id}>
-            {g.nome}
+            {g.nome || g.id}
           </option>
         ))}
       </select>
       <label className="orcamento-pecas-especiais-label">{safeT.tipo || 'Tipo'}</label>
       <select
         className="orcamento-pecas-especiais-input cadastro-valores-v2__field"
-        value={servicoForm.categoria}
-        onChange={(e) => setServicoForm({ ...servicoForm, categoria: e.target.value as 'servico' | 'despesa' })}
+        value={draft.categoria || 'servico'}
+        onChange={(e) => setDraft({ ...draft, categoria: e.target.value as 'servico' | 'despesa' })}
       >
         <option value="servico">{safeT.servico || 'SERVIÇO'}</option>
         <option value="despesa">{safeT.despesa || 'DESPESA'}</option>
@@ -133,8 +143,8 @@ function ServicoFormBlock(props: Pick<
           type="text"
           className="orcamento-pecas-especiais-input"
           placeholder={(safeT as any).codigoServico || 'HTT'}
-          value={servicoForm.cod}
-          onChange={(e) => setServicoForm({ ...servicoForm, cod: e.target.value })}
+          value={draft.cod || ''}
+          onChange={(e) => setDraft({ ...draft, cod: e.target.value })}
         />
       </div>
       <label className="orcamento-pecas-especiais-label">{safeT.nomeServico || 'Nome do Serviço/Despesa'}</label>
@@ -142,14 +152,14 @@ function ServicoFormBlock(props: Pick<
         type="text"
         className="orcamento-pecas-especiais-input cadastro-valores-v2__field"
         placeholder={safeT.nomeServico || 'Nome do Serviço/Despesa'}
-        value={servicoForm.nome}
-        onChange={(e) => setServicoForm({ ...servicoForm, nome: e.target.value })}
+        value={draft.nome || ''}
+        onChange={(e) => setDraft({ ...draft, nome: e.target.value })}
       />
       <label className="orcamento-pecas-especiais-label">{safeT.descricaoServico || 'Descrição (opcional)'}</label>
       <AssistTextarea
         placeholder={safeT.descricaoServico || 'Descrição (opcional)'}
-        value={servicoForm.descricao}
-        onValueChange={(v) => setServicoForm({ ...servicoForm, descricao: v })}
+        value={draft.descricao || ''}
+        onValueChange={(v) => setDraft({ ...draft, descricao: v })}
         rows={3}
         className="orcamento-pecas-especiais-textarea cadastro-valores-v2__field"
       />
@@ -160,16 +170,16 @@ function ServicoFormBlock(props: Pick<
         autoComplete="off"
         className="orcamento-pecas-especiais-input cadastro-valores-v2__field"
         placeholder={safeT.valorServico || 'Valor (ex.: 60 ou 60,00)'}
-        value={servicoValorInput}
-        onChange={(e) => setServicoValorInput(e.target.value)}
+        value={valorDraft}
+        onChange={(e) => setValorDraft(e.target.value)}
       />
       <label className="orcamento-pecas-especiais-label">{safeT.tipoCobranca || 'Tipo de cobrança'}</label>
       <select
         className="orcamento-pecas-especiais-input cadastro-valores-v2__field"
-        value={servicoForm.tipoCobranca}
+        value={draft.tipoCobranca || 'valor-fixo'}
         onChange={(e) =>
-          setServicoForm({
-            ...servicoForm,
+          setDraft({
+            ...draft,
             tipoCobranca: e.target.value as ServicoCadastroItem['tipoCobranca'],
           })
         }
@@ -182,7 +192,11 @@ function ServicoFormBlock(props: Pick<
         <option value="extras">{safeT.tipoCobrancaExtras || 'Extras'}</option>
       </select>
       <div className="orcamento-pecas-especiais-actions cadastro-valores-v2__form-actions">
-        <button type="button" className="btn-primary" onClick={onSaveServico}>
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={() => void onSaveServico({ form: draft, valorInput: valorDraft })}
+        >
           {safeT.save || 'Salvar'}
         </button>
         <button type="button" className="cadastro-valores-v2__btn-secondary orcamento-pecas-especiais-btn-cancelar" onClick={onResetServicoForm}>
@@ -232,7 +246,8 @@ export function CadastroServicosContent(props: Props) {
 
   const clientesPorGrupo = useMemo(() => {
     const map: Record<string, number> = {}
-    clientes.forEach((c) => {
+    ;(clientes || []).forEach((c) => {
+      if (!c) return
       const gid = c.grupoTarifaId || ''
       if (gid) map[gid] = (map[gid] || 0) + 1
     })
@@ -241,14 +256,14 @@ export function CadastroServicosContent(props: Props) {
 
   const itensGrupoSelecionado = useMemo(() => {
     if (!servicoGrupoSelecionadoId) return []
-    return servicos
-      .filter((s) => s.grupoId === servicoGrupoSelecionadoId)
+    return (servicos || [])
+      .filter((s) => s && s.grupoId === servicoGrupoSelecionadoId)
       .slice()
       .sort((a, b) => {
         const ca = servicoCodParaExibicao(a)
         const cb = servicoCodParaExibicao(b)
         if (ca && cb) return ca.localeCompare(cb)
-        return a.nome.localeCompare(b.nome)
+        return String(a?.nome || '').localeCompare(String(b?.nome || ''))
       })
   }, [servicos, servicoGrupoSelecionadoId])
 
@@ -369,9 +384,9 @@ export function CadastroServicosContent(props: Props) {
             </div>
             <div className="cadastro-valores-v2__grupo-list cadastro-valores-v2__grupo-list--strip" role="listbox" aria-label={safeT.servicosGruposTitulo || 'Grupos de tarifa'}>
               {gruposOrdenados.map((g, index) => {
-                const nServ = servicos.filter((s) => s.grupoId === g.id).length
+                const nServ = (servicos || []).filter((s) => s && s.grupoId === g.id).length
                 const nCli = clientesPorGrupo[g.id] || 0
-                const nZero = servicos.filter((s) => s.grupoId === g.id && (!s.valor || s.valor <= 0)).length
+                const nZero = (servicos || []).filter((s) => s && s.grupoId === g.id && (!s.valor || s.valor <= 0)).length
                 const sel = servicoGrupoSelecionadoId === g.id
                 return (
                   <button
@@ -558,7 +573,19 @@ export function CadastroServicosContent(props: Props) {
                   </p>
                 </div>
 
-                {showServicoForm && <ServicoFormBlock {...props} />}
+                {showServicoForm && (
+                  <ServicoFormBlock
+                    safeT={safeT}
+                    servicoGrupos={servicoGrupos}
+                    servicoGrupoSelecionadoId={servicoGrupoSelecionadoId}
+                    servicoForm={props.servicoForm}
+                    servicoValorInput={props.servicoValorInput}
+                    editingServico={props.editingServico}
+                    showServicoForm={showServicoForm}
+                    onSaveServico={props.onSaveServico}
+                    onResetServicoForm={props.onResetServicoForm}
+                  />
+                )}
 
                 {itensGrupoSelecionado.length === 0 ? (
                   <p className="cadastro-valores-v2__empty">
@@ -726,14 +753,14 @@ export function CadastroServicosContent(props: Props) {
           ) : (
             <div className="cadastro-valores-v2__list-groups">
               {gruposOrdenados.map((g) => {
-                const itens = servicos
-                  .filter((s) => s.grupoId === g.id)
+                const itens = (servicos || [])
+                  .filter((s) => s && s.grupoId === g.id)
                   .slice()
                   .sort((a, b) => {
                     const ca = servicoCodParaExibicao(a)
                     const cb = servicoCodParaExibicao(b)
                     if (ca && cb) return ca.localeCompare(cb)
-                    return a.nome.localeCompare(b.nome)
+                    return String(a?.nome || '').localeCompare(String(b?.nome || ''))
                   })
                 if (itens.length === 0) return null
                 const nZero = itens.filter((s) => !s.valor || s.valor <= 0).length

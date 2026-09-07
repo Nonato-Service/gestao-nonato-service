@@ -5517,49 +5517,62 @@ export default function Dashboard() {
   /** Repõe valor das diárias no fechamento quando o cadastro carrega (serviço antigo com valor 0, ex. DDH). */
   useEffect(() => {
     if (!servicos.length) return
-    setFechamentosRelatorios((prev) => {
-      let changed = false
-      const next: Record<string, FechamentoItem[]> = { ...prev }
-      for (const [rid, list] of Object.entries(prev)) {
-        if (!Array.isArray(list) || list.length === 0) continue
-        const repaired = list.map((it) => {
-          if (it.id !== 'diarias') return it
-          const tpl = getServicoParaLinhaFechamento(
-            servicos as ServicoCadastroFechamentoMin[],
-            'diarias',
-            it.servicoId,
-            fechamentoGrupoPorRelatorioId[rid]
-          )
-          if (!tpl || normalizeServicoValorStored(tpl.valor) <= 0) return it
-          const enriched = enriquecerLinhaFechamentoComCadastro(
-            { ...it, tipoCobranca: 'diarias' },
-            servicos as ServicoCadastroFechamentoMin[],
-            it.servicoId,
-            fechamentoGrupoPorRelatorioId[rid]
-          )
-          if (
-            normalizeServicoValorStored(enriched.valorUnitario) <= 0 &&
-            normalizeServicoValorStored(it.valorUnitario) <= 0
-          ) {
-            return it
+    let cancelled = false
+    /** Diferir: ao guardar tarifas no Cadastro de Serviços, não bloquear a UI no mesmo tick. */
+    const tid = window.setTimeout(() => {
+      if (cancelled) return
+      try {
+        setFechamentosRelatorios((prev) => {
+          let changed = false
+          const next: Record<string, FechamentoItem[]> = { ...prev }
+          for (const [rid, list] of Object.entries(prev)) {
+            if (!Array.isArray(list) || list.length === 0) continue
+            const repaired = list.map((it) => {
+              if (!it || it.id !== 'diarias') return it
+              const tpl = getServicoParaLinhaFechamento(
+                servicos as ServicoCadastroFechamentoMin[],
+                'diarias',
+                it.servicoId,
+                fechamentoGrupoPorRelatorioId[rid]
+              )
+              if (!tpl || normalizeServicoValorStored(tpl.valor) <= 0) return it
+              const enriched = enriquecerLinhaFechamentoComCadastro(
+                { ...it, tipoCobranca: 'diarias' },
+                servicos as ServicoCadastroFechamentoMin[],
+                it.servicoId,
+                fechamentoGrupoPorRelatorioId[rid]
+              )
+              if (
+                normalizeServicoValorStored(enriched.valorUnitario) <= 0 &&
+                normalizeServicoValorStored(it.valorUnitario) <= 0
+              ) {
+                return it
+              }
+              if (
+                it.servicoId === enriched.servicoId &&
+                normalizeServicoValorStored(it.valorUnitario) ===
+                  normalizeServicoValorStored(enriched.valorUnitario) &&
+                it.tipoCobranca === 'diarias'
+              ) {
+                return it
+              }
+              changed = true
+              return { ...enriched, cobrarDiaria: it.cobrarDiaria }
+            })
+            next[rid] = repaired
           }
-          if (
-            it.servicoId === enriched.servicoId &&
-            normalizeServicoValorStored(it.valorUnitario) ===
-              normalizeServicoValorStored(enriched.valorUnitario) &&
-            it.tipoCobranca === 'diarias'
-          ) {
-            return it
-          }
-          changed = true
-          return { ...enriched, cobrarDiaria: it.cobrarDiaria }
+          if (!changed) return prev
+          void saveData('nonato-fechamentos-relatorios', next)
+          return next
         })
-        next[rid] = repaired
+      } catch (err) {
+        console.error('[Cadastro Serviços] reparo diárias no fechamento falhou:', err)
       }
-      if (!changed) return prev
-      void saveData('nonato-fechamentos-relatorios', next)
-      return next
-    })
+    }, 0)
+    return () => {
+      cancelled = true
+      window.clearTimeout(tid)
+    }
   }, [servicos, fechamentoGrupoPorRelatorioId])
 
   // ===== Biblioteca de Grupos e Peças (Equipamentos Desmontados) =====
@@ -12674,9 +12687,14 @@ export default function Dashboard() {
     setShowServicoForm(true)
   }
 
-  const handleSaveServico = async () => {
-    const valor = parseServicoValorInput(servicoValorInput)
-    if (!servicoForm.nome.trim() || valor < 0 || Number.isNaN(valor)) {
+  const handleSaveServico = async (payload?: {
+    form?: typeof servicoForm
+    valorInput?: string
+  }) => {
+    const form = payload?.form ?? servicoForm
+    const valorRaw = payload?.valorInput ?? servicoValorInput
+    const valor = parseServicoValorInput(valorRaw)
+    if (!String(form.nome || '').trim() || valor < 0 || Number.isNaN(valor)) {
       alert((t as any).preenchaNomeValor || 'Preencha o nome e um valor válido (zero ou maior) para o serviço!')
       return
     }
@@ -12685,8 +12703,8 @@ export default function Dashboard() {
 
     const idsG = new Set(servicoGrupos.map((g) => g.id))
     const grupoId =
-      typeof servicoForm.grupoId === 'string' && idsG.has(servicoForm.grupoId)
-        ? servicoForm.grupoId
+      typeof form.grupoId === 'string' && idsG.has(form.grupoId)
+        ? form.grupoId
         : (ordenarServicoGrupos(servicoGrupos)[0]?.id ?? DEFAULT_SERVICO_GRUPO_ID)
 
     let updatedServicos: typeof servicos
@@ -12695,31 +12713,31 @@ export default function Dashboard() {
       savedServico = {
         ...editingServico,
         grupoId,
-        cod: servicoForm.cod || undefined,
-        nome: servicoForm.nome,
-        descricao: servicoForm.descricao || undefined,
+        cod: form.cod || undefined,
+        nome: form.nome,
+        descricao: form.descricao || undefined,
         valor,
-        tipoCobranca: servicoForm.tipoCobranca,
-        categoria: servicoForm.categoria
+        tipoCobranca: form.tipoCobranca,
+        categoria: form.categoria
       }
       updatedServicos = servicos.map(s =>
-        s.id === editingServico.id
+        s && s.id === editingServico.id
           ? savedServico
           : s
-      )
+      ).filter(Boolean) as typeof servicos
     } else {
       const newServico = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         grupoId,
-        cod: servicoForm.cod || undefined,
-        nome: servicoForm.nome,
-        descricao: servicoForm.descricao || undefined,
+        cod: form.cod || undefined,
+        nome: form.nome,
+        descricao: form.descricao || undefined,
         valor,
-        tipoCobranca: servicoForm.tipoCobranca,
-        categoria: servicoForm.categoria
+        tipoCobranca: form.tipoCobranca,
+        categoria: form.categoria
       }
       savedServico = newServico
-      updatedServicos = [...servicos, newServico]
+      updatedServicos = [...servicos.filter(Boolean), newServico]
     }
     setServicos(updatedServicos)
 
