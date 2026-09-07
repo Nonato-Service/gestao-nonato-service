@@ -199,7 +199,21 @@ export function segmentoIdEquipamentoExibivel(valor: string | undefined): string
 }
 
 /**
- * N.º de série a partir dos campos possíveis no cadastro / linha de relatório.
+ * Heurística: valor gravado em `id`/`equipamentoId` que na prática é n.º de série
+ * (ex. `S_001321`, `0-201-13-9672`), não código numérico puro de armazém.
+ */
+export function pareceNumeroSerieEquipamento(valor: string | undefined): boolean {
+  const t = String(valor ?? '').trim()
+  if (!t || equipamentoIdPlaceholderInvalido(t) || equipamentoIdETecnicoGerado(t)) return false
+  // Código só-dígitos → tratar como ID de armazém/cadastro, não série.
+  if (/^\d+$/.test(t)) return false
+  // Letras, underscore ou hífen (padrão típico de S/N).
+  return /[A-Za-z_]|-/.test(t)
+}
+
+/**
+ * N.º de série a partir dos campos do cadastro / linha de relatório.
+ * Ordem: campos de série dedicados → se vazios/zeros, `id`/`equipamentoId` com padrão de série.
  * Nunca devolve placeholder só-zeros.
  */
 export function resolverSegmentoSerieEquipamento(
@@ -210,21 +224,28 @@ export function resolverSegmentoSerieEquipamento(
         nSerie?: string
         serie?: string
         serialNumber?: string
+        equipamentoId?: string
+        id?: string
       }
     | null
     | undefined
 ): string {
   if (eq == null || typeof eq !== 'object') return ''
-  const candidatos = [eq.numeroMaquina, eq.numeroSerie, eq.nSerie, eq.serie, eq.serialNumber]
-  for (const c of candidatos) {
+  const dedicados = [eq.numeroMaquina, eq.numeroSerie, eq.nSerie, eq.serie, eq.serialNumber]
+  for (const c of dedicados) {
     const s = segmentoIdEquipamentoExibivel(c)
     if (s) return s
+  }
+  // Legado / cadastro sem série: série só no campo id (ex. id=S_001321, numeroSerie=0000000000).
+  for (const c of [eq.equipamentoId, eq.id]) {
+    const bruto = String(c ?? '').trim()
+    if (pareceNumeroSerieEquipamento(bruto)) return bruto
   }
   return ''
 }
 
 /**
- * ID próprio para label: omite vazio, zeros, UUID/eqc e eco da série no campo id.
+ * ID próprio para label: omite vazio, zeros, UUID/eqc, eco da série e id que é a própria série.
  */
 export function segmentoIdProprioEquipamentoParaLabel(
   idRaw: string | undefined,
@@ -233,6 +254,8 @@ export function segmentoIdProprioEquipamentoParaLabel(
   const id = segmentoIdEquipamentoExibivel(idRaw)
   if (!id || equipamentoIdETecnicoGerado(id)) return ''
   if (serie && id.toLowerCase() === serie.toLowerCase()) return ''
+  // Se o único «id» é na prática a série, não repetir como segmento de ID.
+  if (!serie && pareceNumeroSerieEquipamento(id)) return ''
   return id
 }
 
@@ -260,13 +283,9 @@ export function formatarLabelEquipamentoSelectCurto(
   idx = 0
 ): string {
   if (eq == null || typeof eq !== 'object') return `#${idx + 1}`
-  let serie = resolverSegmentoSerieEquipamento(eq)
+  const serie = resolverSegmentoSerieEquipamento(eq)
   const idBruto = String(eq.equipamentoId ?? eq.id ?? '').trim()
   const id = segmentoIdProprioEquipamentoParaLabel(idBruto, serie)
-  // Legado sem campo de série: id gravado = série (não UUID) → mostrar como série, não como ID.
-  if (!serie && !id && idBruto && !equipamentoIdETecnicoGerado(idBruto) && !equipamentoIdPlaceholderInvalido(idBruto)) {
-    serie = idBruto
-  }
   const modelo =
     String(eq.maquinaModelo ?? '').trim() ||
     `${String(eq.modelo ?? '').trim()} ${String(eq.marca ?? '').trim()}`.trim()
@@ -279,7 +298,7 @@ export function formatarLabelEquipamentoSelectCurto(
 
 /**
  * Valor + texto da `<option>` do cadastro do cliente.
- * Label: id · modelo · série (sem id → modelo · série).
+ * Label unificado via `formatarLabelEquipamentoSelectCurto` (id · modelo · série).
  * `value` nunca fica preso em placeholder se existir UUID/série equivalente.
  */
 export function opcaoEquipamentoClienteSelectRelatorio(
@@ -292,21 +311,17 @@ export function opcaoEquipamentoClienteSelectRelatorio(
     idEquipamentoCadastroParaGravarNoRelatorio(item, idx, equipamentosArmazem) ||
     snLimpo ||
     ''
-  // Nunca usar UUID técnico nem série “eco” como segmento de ID no label.
-  const idLabel = segmentoIdProprioEquipamentoParaLabel(
-    resolverIdEquipamentoVisivelCliente(item, equipamentosArmazem) || String(item.id ?? ''),
-    snLimpo
+  const label = formatarLabelEquipamentoSelectCurto(
+    {
+      id: item.id,
+      equipamentoId: item.id,
+      modelo: item.modelo,
+      marca: item.marca,
+      numeroSerie: item.numeroSerie,
+    },
+    idx
   )
-  const modelo = `${String(item.modelo ?? '').trim()} ${String(item.marca ?? '').trim()}`.trim()
-  const parts: string[] = []
-  if (idLabel) parts.push(idLabel)
-  if (modelo) parts.push(modelo)
-  if (snLimpo) parts.push(snLimpo)
-  if (parts.length === 0 && value) {
-    const vShow = segmentoIdProprioEquipamentoParaLabel(value, '') || snLimpo || segmentoIdEquipamentoExibivel(value)
-    if (vShow) parts.push(vShow)
-  }
-  return { value, label: parts.join(' · ') || snLimpo || '—' }
+  return { value, label: label || snLimpo || '—' }
 }
 
 /**

@@ -1925,9 +1925,17 @@ export default function RelatorioEspecialHub({
                         className="relatorio-equipamento-card__select relatorio-equipamento-card__select--blue"
                       >
                         <option value="">{t.selecioneEquipamentoArmazem || 'Selecione equipamento do armazém'}</option>
-                        {equipamentosAtivos.map((itemEq) => (
+                        {equipamentosAtivos.map((itemEq, idxArmazem) => (
                           <option key={itemEq.id} value={itemEq.id}>
-                            [Armazém] ID {itemEq.id} · {itemEq.modelo} {itemEq.marca}
+                            {formatarLabelEquipamentoSelectCurto(
+                              {
+                                equipamentoId: itemEq.id,
+                                maquinaModelo:
+                                  `${itemEq.modelo || ''} ${itemEq.marca || ''}`.trim(),
+                                numeroMaquina: itemEq.numeroSerie,
+                              },
+                              idxArmazem
+                            ) || itemEq.id}
                           </option>
                         ))}
                       </select>
