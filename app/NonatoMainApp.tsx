@@ -59,6 +59,7 @@ import {
 } from './lib/diarioLembrete'
 import {
   dedupeEquipamentosClientePorSerie,
+  mergeEquipamentosClienteLists,
   mergeNonatoClientesDeferServerLocal,
 } from './lib/clienteMergeUtils'
 import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer, deduplicarPecasBibliotecaPorCodigo } from './lib/mergePecasBiblioteca'
@@ -4617,9 +4618,23 @@ export default function Dashboard() {
         }))
         const { lista: normalized } = garantirCodigosClientes(base)
         setClientes((prev) => {
-          const merged = mergeNonatoClientesDeferServerLocal(normalized, prev) as Cliente[]
-          if (merged.length >= prev.length || prev.length === 0) return merged
-          return mergeNonatoClientesDeferServerLocal(prev, normalized) as Cliente[]
+          let merged = mergeNonatoClientesDeferServerLocal(normalized, prev) as Cliente[]
+          if (merged.length < prev.length && prev.length > 0) {
+            merged = mergeNonatoClientesDeferServerLocal(prev, normalized) as Cliente[]
+          }
+          // Nunca perder equipamentos locais num sync que só compara nº de clientes.
+          const prevById = new Map(prev.map((c) => [c.id, c]))
+          return merged.map((c) => {
+            const p = prevById.get(c.id)
+            if (!p) return c
+            const pEq = Array.isArray(p.equipamentos) ? p.equipamentos : []
+            const mEq = Array.isArray(c.equipamentos) ? c.equipamentos : []
+            if (pEq.length <= mEq.length) return c
+            return {
+              ...c,
+              equipamentos: mergeEquipamentosClienteLists(mEq, pEq) as Cliente['equipamentos'],
+            }
+          })
         })
       } catch {
         /* ignorar */
@@ -7900,7 +7915,8 @@ export default function Dashboard() {
           return (raw?.equipamentos?.length || 0) !== (n.equipamentos?.length || 0)
         })
         setClientes(normalized)
-        if (codigosAlterados || dedupedVsRaw || normalized.length > 0) {
+        // Só regravar se houve alteração real (códigos ou dedupe) — nunca em todo o boot.
+        if (codigosAlterados || dedupedVsRaw) {
           saveData('nonato-clientes', normalized, true, false).catch(() => {})
         }
       } else if (savedClientes && Array.isArray(savedClientes)) {
@@ -12043,7 +12059,7 @@ export default function Dashboard() {
   }
 
   const handleEditEquipamento = (equipamento: Equipamento) => {
-    setEditingEquipamento(equipamento)
+    setEditingEquipamento({ ...equipamento })
     setSearchedEquipamento(null)
     setEquipamentoForm(equipamentoToFormState(equipamento))
     setNewItem('')
@@ -14159,6 +14175,7 @@ export default function Dashboard() {
     enabled: showEquipamentoForm,
     sessionKey: String(editingEquipamento?.id ?? 'novo'),
     current: equipamentoForm,
+    // Só grava se o utilizador escolher «Guardar» no diálogo (acção explícita). Descarta no «Sair sem guardar».
     save: () => handleSaveEquipamento(),
     discard: () => {
       setShowEquipamentoForm(false)
@@ -14947,7 +14964,8 @@ export default function Dashboard() {
         : equipamento
     if (eqAtual == null || typeof eqAtual !== 'object') return
     setSelectedClienteForEquipamento(latest)
-    setEditingEquipamentoCliente(eqAtual)
+    // Snapshot: nunca manter a mesma referência do cadastro (editar sem Guardar não pode mutar a lista).
+    setEditingEquipamentoCliente({ ...eqAtual })
     const idxEdit = index >= 0 ? index : null
     setEditingEquipamentoClienteIndex(idxEdit)
     editingEquipamentoClienteIndexRef.current = idxEdit
@@ -14962,7 +14980,8 @@ export default function Dashboard() {
       ...eqAtual,
       id: temCodigoProprio ? idBruto : '',
       itemsIncluded: eqAtual.itemsIncluded ? [...eqAtual.itemsIncluded] : [],
-      relatorios: eqAtual.relatorios ? [...eqAtual.relatorios] : [],
+      relatorios: eqAtual.relatorios ? eqAtual.relatorios.map((r) => ({ ...r })) : [],
+      photoLibrary: Array.isArray(eqAtual.photoLibrary) ? [...eqAtual.photoLibrary] : [],
     })
     setNewItemCliente('')
     setShowEquipamentoClienteForm(true)
@@ -15007,13 +15026,13 @@ export default function Dashboard() {
     setEquipamentoClienteGuardadoMsg('')
   }
 
-  const handleSaveEquipamentoCliente = async () => {
-    if (!selectedClienteForEquipamento) return
-    if (isSavingEquipamentoCliente) return
+  const handleSaveEquipamentoCliente = async (): Promise<boolean> => {
+    if (!selectedClienteForEquipamento) return false
+    if (isSavingEquipamentoCliente) return false
 
     if (!equipamentoClienteForm.tipoEquipamento || !equipamentoClienteForm.modelo || !equipamentoClienteForm.marca || !equipamentoClienteForm.numeroSerie) {
       alert(safeT?.fillAllFields || t.fillAllFields)
-      return
+      return false
     }
 
     const serialNorm = String(equipamentoClienteForm.numeroSerie).trim()
@@ -15033,7 +15052,7 @@ export default function Dashboard() {
           (safeT as any)?.equipamentoClienteDuplicadoSerie ||
             'Já existe um equipamento com este número de série neste cliente. Use «Editar» no equipamento existente ou indique outro n.º de série.'
         )
-        return
+        return false
       }
     }
 
@@ -15065,7 +15084,7 @@ export default function Dashboard() {
         (safeT as any)?.equipamentoClienteEditNaoEncontrado ||
           'Não foi possível localizar o equipamento a editar. Feche o formulário, toque em «Editar» no cartão correcto e guarde outra vez. Não foi criado um equipamento novo.'
       )
-      return
+      return false
     }
 
     if (clienteAtual && idUsuario) {
@@ -15079,7 +15098,7 @@ export default function Dashboard() {
           (safeT as any)?.equipamentoClienteDuplicadoId ||
             'Já existe um equipamento com este ID neste cliente. Indique outro ID ou deixe em branco (na edição mantém-se o ID técnico actual).'
         )
-        return
+        return false
       }
     }
 
@@ -15146,7 +15165,7 @@ export default function Dashboard() {
           (safeT as any)?.equipamentoClienteEditNaoEncontrado ||
             'Não foi possível localizar o equipamento a editar. Feche o formulário, toque em «Editar» no cartão correcto e guarde outra vez. Não foi criado um equipamento novo.'
         )
-        return
+        return false
       }
     }
 
@@ -15159,7 +15178,7 @@ export default function Dashboard() {
       setClientes(previousClientes)
       alert((t as any).erroSalvar || 'Erro ao salvar. Tente novamente.')
       setIsSavingEquipamentoCliente(false)
-      return
+      return false
     }
 
     const serverOk = await saveData('nonato-clientes', updatedClientes, false, true).catch(() => false)
@@ -15189,7 +15208,26 @@ export default function Dashboard() {
       )
     }
     window.setTimeout(() => setIsSavingEquipamentoCliente(false), 700)
+    return true
   }
+
+  useUnsavedFormGuard({
+    id: 'equipamento-cliente',
+    label: 'Equipamento do cliente',
+    enabled: showEquipamentoClienteForm,
+    sessionKey: `${selectedClienteForEquipamento?.id ?? 'cli'}-${editingEquipamentoCliente?.id ?? editingEquipamentoClienteIndex ?? 'novo'}`,
+    current: equipamentoClienteForm,
+    // «Guardar» no diálogo de saída = acção explícita; «Sair sem guardar» descarta o rascunho.
+    save: () => handleSaveEquipamentoCliente(),
+    discard: () => {
+      setShowEquipamentoClienteForm(false)
+      setEditingEquipamentoCliente(null)
+      setEditingEquipamentoClienteIndex(null)
+      editingEquipamentoClienteIndexRef.current = null
+      setEquipamentoClienteGuardadoMsg('')
+      setEquipamentoClienteForm(createEmptyEquipamentoClienteForm())
+    },
+  })
 
   const handleAddItemCliente = () => {
     if (newItemCliente.trim()) {
@@ -32445,9 +32483,9 @@ export default function Dashboard() {
                                                 idxCli,
                                                 equipamentos
                                               )
-                                              if (!op.value) return null
+                                              const optVal = op.value || `eq-cli-${idxCli}`
                                               return (
-                                                <option key={op.value} value={op.value}>
+                                                <option key={`${optVal}-${idxCli}`} value={optVal}>
                                                   {op.label}
                                                 </option>
                                               )

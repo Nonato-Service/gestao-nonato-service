@@ -794,6 +794,28 @@ try {
   } else {
     fail('módulo equipamentos incompleto (index.ts)')
   }
+  {
+    const mergeUtils = fs.readFileSync(path.join(root, 'app/lib/clienteMergeUtils.ts'), 'utf8')
+    if (
+      mergeUtils.includes('mergeEquipamentoClienteSameId') &&
+      mergeUtils.includes('pickBetterField') &&
+      !mergeUtils.includes('byId.set(k, { ...byId.get(k)!, ...e })')
+    ) {
+      ok('merge equipamentos: mesmo ID não clobber com fantasma do servidor')
+    } else {
+      fail('merge equipamentos ainda sobrescreve local com spread cego do servidor')
+    }
+    const formState = fs.readFileSync(path.join(root, 'app/modules/equipamentos/formState.ts'), 'utf8')
+    if (
+      formState.includes('Clonar tudo') &&
+      formState.includes('[...equipamento.photoLibrary]') &&
+      formState.includes('equipamento.itemsIncluded.map')
+    ) {
+      ok('formState equipamento clona arrays (sem mutar cadastro ao editar)')
+    } else {
+      fail('formState equipamento ainda partilha referências com o cadastro')
+    }
+  }
   // Regressão label: ID · modelo · série (nunca inverter; série só de campo dedicado / cadastro)
   {
     const equipamentoIdETecnicoGerado = (id) => {

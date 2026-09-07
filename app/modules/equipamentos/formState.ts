@@ -127,10 +127,12 @@ export function createEmptyEquipamentoForm(): EquipamentoFormState {
 
 export function equipamentoToFormState(equipamento: Equipamento): EquipamentoFormState {
   const qtd = Math.max(1, equipamento.quantidadePartes ?? (equipamento.partes?.length ?? 1))
-  const partes =
+  const partesSrc =
     equipamento.partes && equipamento.partes.length > 0
       ? equipamento.partes
       : buildPartesPadraoEquipamento(qtd)
+  // Clonar tudo: editar o formulário NÃO pode mutar o cadastro em memória (evita «gravou sozinho»).
+  const partes = partesSrc.map((p) => ({ ...p }))
   return {
     id: equipamento.id,
     tipoEquipamento: equipamento.tipoEquipamento,
@@ -145,11 +147,15 @@ export function equipamentoToFormState(equipamento: Equipamento): EquipamentoFor
     partes,
     photo: equipamento.photo || '',
     coverPhoto: equipamento.coverPhoto || '',
-    photoLibrary: equipamento.photoLibrary || [],
+    photoLibrary: Array.isArray(equipamento.photoLibrary) ? [...equipamento.photoLibrary] : [],
     manualPdf: equipamento.manualPdf || '',
-    documentosPdf: equipamento.documentosPdf || [],
-    itemsIncluded: equipamento.itemsIncluded || [],
-    historico: equipamento.historico || [],
+    documentosPdf: Array.isArray(equipamento.documentosPdf) ? [...equipamento.documentosPdf] : [],
+    itemsIncluded: Array.isArray(equipamento.itemsIncluded)
+      ? equipamento.itemsIncluded.map((it) => ({ ...it }))
+      : [],
+    historico: Array.isArray(equipamento.historico)
+      ? equipamento.historico.map((h) => ({ ...h }))
+      : [],
     modeloManuaisId: equipamento.modeloManuaisId || '',
   }
 }

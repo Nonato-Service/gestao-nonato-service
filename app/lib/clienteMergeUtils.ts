@@ -39,6 +39,66 @@ function serialNormEquipamento(e: EquipamentoClienteMerge): string {
   return s
 }
 
+function isSerialPlaceholder(s: string): boolean {
+  const t = String(s ?? '').trim()
+  return !t || /^0+$/.test(t)
+}
+
+function pickBetterField(localVal: unknown, serverVal: unknown, opts?: { serial?: boolean }): unknown {
+  const l = localVal
+  const s = serverVal
+  const lStr = l == null ? '' : String(l).trim()
+  const sStr = s == null ? '' : String(s).trim()
+  if (opts?.serial) {
+    const lOk = lStr && !isSerialPlaceholder(lStr)
+    const sOk = sStr && !isSerialPlaceholder(sStr)
+    if (lOk && !sOk) return l
+    if (sOk && !lOk) return s
+    if (lOk && sOk) return l // mesmo ID: local (aparelho) prevalece sobre sync atrasado
+    return lOk ? l : sOk ? s : l || s
+  }
+  if (lStr && !sStr) return l
+  if (sStr && !lStr) return s
+  if (lStr && sStr) return l // preservar edição local recente
+  if (l != null && l !== '') return l
+  return s
+}
+
+/**
+ * Mesmo ID local+servidor: NÃO fazer spread cego do servidor (apagava série/modelo bons
+ * com fantasma 0000000000 / campos vazios do Railway atrasado).
+ */
+export function mergeEquipamentoClienteSameId(
+  local: EquipamentoClienteMerge,
+  server: EquipamentoClienteMerge
+): EquipamentoClienteMerge {
+  const keys = new Set([...Object.keys(local || {}), ...Object.keys(server || {})])
+  const out: EquipamentoClienteMerge = { ...local }
+  for (const key of keys) {
+    if (key === 'numeroSerie') {
+      out.numeroSerie = pickBetterField(local?.numeroSerie, server?.numeroSerie, { serial: true }) as
+        | string
+        | undefined
+      continue
+    }
+    if (key === 'id') {
+      out.id = String(local?.id ?? server?.id ?? '').trim() || local?.id || server?.id
+      continue
+    }
+    // Arrays: preferir o mais longo (não perder fotos/relatórios/itens locais).
+    const lv = (local as Record<string, unknown>)?.[key]
+    const sv = (server as Record<string, unknown>)?.[key]
+    if (Array.isArray(lv) || Array.isArray(sv)) {
+      const la = Array.isArray(lv) ? lv : []
+      const sa = Array.isArray(sv) ? sv : []
+      ;(out as Record<string, unknown>)[key] = la.length >= sa.length ? la : sa
+      continue
+    }
+    ;(out as Record<string, unknown>)[key] = pickBetterField(lv, sv)
+  }
+  return out
+}
+
 /** Prefere UUID técnico / registo mais completo face a ID de armazém fantasma (ex. 0000000000). */
 export function preferEquipamentoClienteMerge(
   a: EquipamentoClienteMerge,
@@ -60,8 +120,15 @@ export function preferEquipamentoClienteMerge(
   const sa = score(idA)
   const sb = score(idB)
   if (sa !== sb) return sa > sb ? a : b
+  const serialScore = (e: EquipamentoClienteMerge) =>
+    isSerialPlaceholder(String(e?.numeroSerie ?? '')) ? 0 : 2
+  const ss = serialScore(a) - serialScore(b)
+  if (ss !== 0) return ss > 0 ? a : b
   const filled = (e: EquipamentoClienteMerge) =>
-    [e.modelo, e.marca, e.tipoEquipamento, e.numeroSerie].filter((x) => String(x ?? '').trim()).length
+    [e.modelo, e.marca, e.tipoEquipamento, e.numeroSerie].filter((x) => {
+      const t = String(x ?? '').trim()
+      return t && !isSerialPlaceholder(t)
+    }).length
   return filled(a) >= filled(b) ? a : b
 }
 
@@ -95,8 +162,8 @@ export function dedupeEquipamentosClientePorSerie(
 
 /**
  * Une equipamentos local/servidor.
- * - Mesmo ID: campos do servidor prevalecem.
- * - Mesma série com IDs diferentes: mantém o local (não ressuscita duplicado apagado no aparelho).
+ * - Mesmo ID: funde campo a campo (local prevalece em série/modelo bons; nunca zeros do servidor apagam série real).
+ * - Mesma série com IDs diferentes: mantém o melhor (UUID > código > zeros).
  * - Série nova só no servidor: adiciona (outro dispositivo).
  * No fim, colapsa residual por série.
  */
@@ -128,8 +195,9 @@ export function mergeEquipamentosClienteLists(
     const k = equipamentoClienteDedupeKey(e)
     const s = serialNormEquipamento(e)
     if (byId.has(k)) {
-      byId.set(k, { ...byId.get(k)!, ...e })
-      rememberSerial(e, k)
+      const merged = mergeEquipamentoClienteSameId(byId.get(k)!, e)
+      byId.set(k, merged)
+      rememberSerial(merged, k)
       continue
     }
     // Mesma série, IDs diferentes: ficar com o melhor (UUID > código > zeros),

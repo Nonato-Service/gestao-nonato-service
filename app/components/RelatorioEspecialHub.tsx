@@ -2029,9 +2029,9 @@ export default function RelatorioEspecialHub({
                                   idxCli,
                                   equipamentosArmazem
                                 )
-                                if (!op.value) return null
+                                const optVal = op.value || `eq-cli-${idxCli}`
                                 return (
-                                  <option key={op.value} value={op.value}>
+                                  <option key={`${optVal}-${idxCli}`} value={optVal}>
                                     {op.label}
                                   </option>
                                 )
@@ -2110,9 +2110,9 @@ export default function RelatorioEspecialHub({
                               idxCli,
                               equipamentosArmazem
                             )
-                            if (!op.value) return null
+                            const optVal = op.value || `eq-cli-${idxCli}`
                             return (
-                              <option key={op.value} value={op.value}>
+                              <option key={`${optVal}-${idxCli}`} value={optVal}>
                                 {op.label}
                               </option>
                             )

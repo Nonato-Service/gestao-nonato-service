@@ -431,7 +431,8 @@ export function opcaoEquipamentoClienteSelectRelatorio(
   const value =
     idEquipamentoCadastroParaGravarNoRelatorio(item, idx, equipamentosArmazem) ||
     snLimpo ||
-    ''
+    resolverIdEquipamentoCliente(item, idx) ||
+    `eq-cli-${idx}`
   const label = formatarLabelEquipamentoSelectCurto(
     {
       id: item.id,
@@ -442,7 +443,7 @@ export function opcaoEquipamentoClienteSelectRelatorio(
     },
     idx
   )
-  return { value, label: label || snLimpo || '—' }
+  return { value, label: label || snLimpo || value || '—' }
 }
 
 /**
