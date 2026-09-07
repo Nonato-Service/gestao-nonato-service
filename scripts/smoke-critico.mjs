@@ -759,8 +759,9 @@ try {
     rel.includes('formatarLabelEquipamentoSelectCurto') &&
     rel.includes('opcaoEquipamentoClienteSelectRelatorio') &&
     rel.includes('equipamentoIdPlaceholderInvalido') &&
-    rel.includes('pareceNumeroSerieEquipamento') &&
     rel.includes('resolverSegmentoSerieEquipamento') &&
+    rel.includes('encontrarEquipamentoClientePorRefRelatorio') &&
+    rel.includes('serieSnapshotRelatorioUtil') &&
     idx.includes('getSequenciaEtiquetasArmazem') &&
     idx.includes('enriquecerBlocoEquipamentoPedido') &&
     idx.includes('createEmptyEquipamentoForm') &&
@@ -770,7 +771,7 @@ try {
   } else {
     fail('módulo equipamentos incompleto (index.ts)')
   }
-  // Regressão label: série em id (S_001321) + numeroSerie zeros → modelo · série
+  // Regressão label: ID · modelo · série (nunca inverter; série só de campo dedicado / cadastro)
   {
     const equipamentoIdETecnicoGerado = (id) => {
       const t = String(id ?? '').trim()
@@ -788,38 +789,54 @@ try {
       if (!t || equipamentoIdPlaceholderInvalido(t)) return ''
       return t
     }
-    const pareceNumeroSerieEquipamento = (valor) => {
-      const t = String(valor ?? '').trim()
-      if (!t || equipamentoIdPlaceholderInvalido(t) || equipamentoIdETecnicoGerado(t)) return false
-      if (/^\d+$/.test(t)) return false
-      return /[A-Za-z_]|-/.test(t)
-    }
     const resolverSegmentoSerieEquipamento = (eq) => {
       if (eq == null || typeof eq !== 'object') return ''
       for (const c of [eq.numeroMaquina, eq.numeroSerie, eq.nSerie, eq.serie, eq.serialNumber]) {
         const s = segmentoIdEquipamentoExibivel(c)
         if (s) return s
       }
-      for (const c of [eq.equipamentoId, eq.id]) {
-        const bruto = String(c ?? '').trim()
-        if (pareceNumeroSerieEquipamento(bruto)) return bruto
+      return ''
+    }
+    const serieSnapshotRelatorioUtil = (eq) => {
+      if (eq == null || typeof eq !== 'object') return ''
+      const id = String(eq.equipamentoId ?? eq.id ?? '').trim()
+      for (const c of [eq.numeroMaquina, eq.numeroSerie]) {
+        const s = segmentoIdEquipamentoExibivel(c)
+        if (!s) continue
+        if (id && s.toLowerCase() === id.toLowerCase()) continue
+        return s
       }
       return ''
     }
-    const segmentoIdProprioEquipamentoParaLabel = (idRaw, serie) => {
+    const segmentoIdProprioEquipamentoParaLabel = (idRaw) => {
       const id = segmentoIdEquipamentoExibivel(idRaw)
       if (!id || equipamentoIdETecnicoGerado(id)) return ''
-      if (serie && id.toLowerCase() === serie.toLowerCase()) return ''
-      if (!serie && pareceNumeroSerieEquipamento(id)) return ''
       return id
     }
-    const formatarLabelEquipamentoSelectCurto = (eq, idx = 0) => {
+    const formatarLabelEquipamentoSelectCurto = (eq, idx = 0, opts) => {
       if (eq == null || typeof eq !== 'object') return `#${idx + 1}`
-      const serie = resolverSegmentoSerieEquipamento(eq)
-      const idBruto = String(eq.equipamentoId ?? eq.id ?? '').trim()
-      const id = segmentoIdProprioEquipamentoParaLabel(idBruto, serie)
+      const cli = opts?.equipamentosCliente
+      let match = null
+      if (Array.isArray(cli) && cli.length > 0) {
+        const alvo = String(eq.equipamentoId ?? '').trim().toLowerCase()
+        match =
+          cli.find((e) => String(e?.id ?? '').trim().toLowerCase() === alvo) ||
+          cli.find((e) => String(e?.numeroSerie ?? '').trim().toLowerCase() === alvo) ||
+          null
+      }
+      const id =
+        segmentoIdProprioEquipamentoParaLabel(String(eq.equipamentoId ?? eq.id ?? '').trim()) ||
+        (match ? segmentoIdProprioEquipamentoParaLabel(String(match.id ?? '').trim()) : '')
+      let serie =
+        (match ? segmentoIdEquipamentoExibivel(match.numeroSerie) : '') ||
+        serieSnapshotRelatorioUtil(eq) ||
+        resolverSegmentoSerieEquipamento(eq)
+      if (serie && id && serie.toLowerCase() === id.toLowerCase()) serie = ''
       const modelo =
         String(eq.maquinaModelo ?? '').trim() ||
+        (match
+          ? `${String(match.modelo ?? '').trim()} ${String(match.marca ?? '').trim()}`.trim()
+          : '') ||
         `${String(eq.modelo ?? '').trim()} ${String(eq.marca ?? '').trim()}`.trim()
       const parts = []
       if (id) parts.push(id)
@@ -843,10 +860,39 @@ try {
       maquinaModelo: 'KFL HOMAG',
       numeroMaquina: 'S_001321',
     })
-    if (casoA === 'KFL HOMAG · S_001321' && casoB === 'KFL HOMAG · S_001321' && casoC === '42 · KFL HOMAG · S_001321') {
-      ok('label equipamento: série em id / modelo·série / id·modelo·série')
+    const casoD = formatarLabelEquipamentoSelectCurto(
+      {
+        equipamentoId: 'S_001321',
+        maquinaModelo: 'KFL HOMAG',
+        numeroMaquina: '',
+      },
+      0,
+      {
+        equipamentosCliente: [
+          {
+            id: 'S_001321',
+            modelo: 'PROFI KF 20/23/PU/25',
+            marca: 'HOMAG',
+            numeroSerie: '0-201-13-9672',
+          },
+        ],
+      }
+    )
+    const casoE = formatarLabelEquipamentoSelectCurto({
+      equipamentoId: '008323',
+      maquinaModelo: 'KDF 860 C HOMAG',
+      numeroMaquina: '0-261-06-6191',
+    })
+    if (
+      casoA === 'S_001321 · KFL HOMAG' &&
+      casoB === 'S_001321 · KFL HOMAG' &&
+      casoC === '42 · KFL HOMAG · S_001321' &&
+      casoD === 'S_001321 · KFL HOMAG · 0-201-13-9672' &&
+      casoE === '008323 · KDF 860 C HOMAG · 0-261-06-6191'
+    ) {
+      ok('label equipamento: ID·modelo·série (+ série do cadastro)')
     } else {
-      fail(`label equipamento regressão: A=${casoA} B=${casoB} C=${casoC}`)
+      fail(`label equipamento regressão: A=${casoA} B=${casoB} C=${casoC} D=${casoD} E=${casoE}`)
     }
   }
   if (!exists('app/modules/equipamentos/formState.ts')) {

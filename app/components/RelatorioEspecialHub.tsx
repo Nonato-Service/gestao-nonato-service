@@ -109,8 +109,15 @@ const inputStyle: React.CSSProperties = {
   borderRadius: '4px',
 }
 
-function labelEquipamentoCurto(eq: RelatorioEquipamentoRef, idx: number): string {
-  return formatarLabelEquipamentoSelectCurto(eq, idx)
+function labelEquipamentoCurto(
+  eq: RelatorioEquipamentoRef,
+  idx: number,
+  opts?: {
+    equipamentosCliente?: { id?: string; numeroSerie?: string; modelo?: string; marca?: string }[] | null
+    equipamentosArmazem?: { id?: string; numeroSerie?: string }[] | null
+  }
+): string {
+  return formatarLabelEquipamentoSelectCurto(eq, idx, opts)
 }
 
 function nomePessoaCadastro(p: { name?: string; nome?: string } | null | undefined): string {
@@ -700,6 +707,14 @@ export default function RelatorioEspecialHub({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- syncKey é a fonte de verdade do cadastro
   }, [modo, clienteIdEfetivo, clienteEquipamentosSyncKey, equipamentosArmazem])
 
+  const labelOptsCadastro = useMemo(
+    () => ({
+      equipamentosCliente: clienteEquipamentos,
+      equipamentosArmazem,
+    }),
+    [clienteEquipamentos, equipamentosArmazem]
+  )
+
   const abrirEditar = useCallback(
     (rel: RelatorioEspecial) => {
       const cid =
@@ -919,7 +934,7 @@ export default function RelatorioEspecialHub({
   const fecharPorEquipamento = (uid: string) => {
     const horas = formComTotais.horasPorEquipamentoResumo?.[uid] || '0:00'
     const eq = form.equipamentos?.find((e) => e.uid === uid)
-    const nome = eq ? labelEquipamentoCurto(eq, form.equipamentos!.indexOf(eq)) : uid
+    const nome = eq ? labelEquipamentoCurto(eq, form.equipamentos!.indexOf(eq), labelOptsCadastro) : uid
     if (!window.confirm(`${t.relatorioEspecialConfirmarFechamentoEq || 'Fechar horas do equipamento'} ${nome}?\nTotal: ${horas}`)) return
     setForm((prev) => {
       const fech = prev.fechamento || { porEquipamento: [] }
@@ -1238,7 +1253,7 @@ export default function RelatorioEspecialHub({
                       borderRadius: 8,
                     }}
                   >
-                    <span style={{ flex: 1 }}>{labelEquipamentoCurto(eq, i)}</span>
+                    <span style={{ flex: 1 }}>{labelEquipamentoCurto(eq, i, labelOptsCadastro)}</span>
                     <strong>{total}</strong>
                     {fechado ? (
                       <span style={{ color: '#00ff00', fontSize: 12 }} aria-label={t.relatorioEspecialFechadoEm || 'Fechado'}>
@@ -1718,7 +1733,7 @@ export default function RelatorioEspecialHub({
           <div className="relatorio-equipamentos-list">
             {(form.equipamentos || []).map((eq, eqIdx) => {
               const aberto = equipExpandidos.has(eq.uid)
-              const resumoLinha = formatarLabelEquipamentoSelectCurto(eq, eqIdx)
+              const resumoLinha = formatarLabelEquipamentoSelectCurto(eq, eqIdx, labelOptsCadastro)
               return (
               <div
                 key={eq.uid}
@@ -2166,7 +2181,7 @@ export default function RelatorioEspecialHub({
 
                   {(eq.equipamentoId || eq.maquinaModelo || eq.numeroMaquina) && (
                     <div className="relatorio-equipamento-card__preview relatorio-equipamento-card__field--full">
-                      {formatarLabelEquipamentoSelectCurto(eq)}
+                      {formatarLabelEquipamentoSelectCurto(eq, 0, labelOptsCadastro)}
                       {eq.clienteExternoNome && eq.equipamentoOrigem === 'clientes-externos' ? (
                         <>
                           <span className="relatorio-equipamento-card__sep"> · </span>
@@ -2439,7 +2454,7 @@ export default function RelatorioEspecialHub({
             .map((h) => {
               const eq = form.equipamentos?.find((e) => e.uid === h.equipamentoUid)
               const idx = eq ? form.equipamentos!.indexOf(eq) : 0
-              return `${eq ? labelEquipamentoCurto(eq, idx) : '?'}: ${h.horasDuracao}`
+              return `${eq ? labelEquipamentoCurto(eq, idx, labelOptsCadastro) : '?'}: ${h.horasDuracao}`
             })
             .join(' · ')
           const resumoLinha =
@@ -2562,7 +2577,7 @@ export default function RelatorioEspecialHub({
                               <option value="">—</option>
                               {(form.equipamentos || []).map((eq, ei) => (
                                 <option key={eq.uid} value={eq.uid}>
-                                  {labelEquipamentoCurto(eq, ei)}
+                                  {labelEquipamentoCurto(eq, ei, labelOptsCadastro)}
                                 </option>
                               ))}
                             </select>
@@ -2841,7 +2856,7 @@ export default function RelatorioEspecialHub({
           return (
             <div key={eq.uid} className="relatorio-especial-resumo-equip" style={{ marginBottom: 16 }}>
               <div style={{ fontWeight: 600, marginBottom: 8, color: '#00c853' }}>
-                {labelEquipamentoCurto(eq, i)} — <strong>{total}</strong>
+                {labelEquipamentoCurto(eq, i, labelOptsCadastro)} — <strong>{total}</strong>
                 <span style={{ fontSize: 11, color: '#888', fontWeight: 400, marginLeft: 6 }}>
                   ({t.relatorioEspecialTotalEquipamentoLiquido || 'total cobrável — almoço descontado uma vez na máquina activa'})
                 </span>
