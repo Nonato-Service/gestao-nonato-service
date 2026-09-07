@@ -670,6 +670,29 @@ try {
   } else {
     fail('RelatorioEspecialHub sem destaque de equipamento na viagem ou chips de técnico')
   }
+  if (
+    hub.includes('labelOptsCadastro') &&
+    hub.includes('prepararEquipamentosRelatorioParaEdicao') &&
+    hub.includes('relatorioEspecialHoraTrabalhada') &&
+    hub.includes('horasPorEquipamento') &&
+    hub.includes('labelEquipamentoCurto(eqLabel, ei, labelOptsCadastro)')
+  ) {
+    ok('RelatorioEspecialHub: select Hora trabalhada enriquece série do cadastro')
+  } else {
+    fail('RelatorioEspecialHub select Hora trabalhada sem enrich de série do cadastro')
+  }
+  {
+    const relEq = fs.readFileSync(path.join(root, 'app/modules/equipamentos/relatorio.ts'), 'utf8')
+    if (
+      relEq.includes('preferirEquipamentoClienteComSerie') &&
+      relEq.includes('encontrarEquipamentoClientePorRefRelatorio') &&
+      relEq.includes('idsComSerieReal')
+    ) {
+      ok('equipamentos: match cadastro prefere série real vs fantasma 0000000000')
+    } else {
+      fail('equipamentos sem preferência de série real no match do cadastro')
+    }
+  }
   const calc = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/calculos.ts'), 'utf8')
   if (
     calc.includes('equipamentosContextoDiaEspecial') &&
@@ -813,17 +836,44 @@ try {
       if (!id || equipamentoIdETecnicoGerado(id)) return ''
       return id
     }
+    const preferirEquipamentoClienteComSerie = (candidatos, seriePreferida = '') => {
+      if (candidatos.length === 0) return null
+      if (candidatos.length === 1) return candidatos[0]
+      const pref = String(seriePreferida || '')
+        .trim()
+        .toLowerCase()
+      if (pref) {
+        const exact = candidatos.find(
+          (e) => segmentoIdEquipamentoExibivel(e.numeroSerie).toLowerCase() === pref
+        )
+        if (exact) return exact
+      }
+      const comSerie = candidatos.filter((e) => segmentoIdEquipamentoExibivel(e.numeroSerie))
+      return comSerie[0] || candidatos[0]
+    }
+    const encontrarEquipamentoClientePorRefRelatorio = (eq, clienteEquipamentos) => {
+      const list = (Array.isArray(clienteEquipamentos) ? clienteEquipamentos : []).filter(
+        (e) => e != null && typeof e === 'object'
+      )
+      const alvo = String(eq.equipamentoId ?? '').trim().toLowerCase()
+      const snSnap = serieSnapshotRelatorioUtil(eq)
+      const candidatos = []
+      for (const e of list) {
+        const id = String(e?.id ?? '').trim().toLowerCase()
+        const sn = String(e?.numeroSerie ?? '').trim().toLowerCase()
+        if ((alvo && (id === alvo || sn === alvo)) || (snSnap && sn === snSnap.toLowerCase())) {
+          candidatos.push(e)
+        }
+      }
+      return preferirEquipamentoClienteComSerie(candidatos, snSnap)
+    }
     const formatarLabelEquipamentoSelectCurto = (eq, idx = 0, opts) => {
       if (eq == null || typeof eq !== 'object') return `#${idx + 1}`
       const cli = opts?.equipamentosCliente
-      let match = null
-      if (Array.isArray(cli) && cli.length > 0) {
-        const alvo = String(eq.equipamentoId ?? '').trim().toLowerCase()
-        match =
-          cli.find((e) => String(e?.id ?? '').trim().toLowerCase() === alvo) ||
-          cli.find((e) => String(e?.numeroSerie ?? '').trim().toLowerCase() === alvo) ||
-          null
-      }
+      const match =
+        Array.isArray(cli) && cli.length > 0
+          ? encontrarEquipamentoClientePorRefRelatorio(eq, cli)
+          : null
       const id =
         segmentoIdProprioEquipamentoParaLabel(String(eq.equipamentoId ?? eq.id ?? '').trim()) ||
         (match ? segmentoIdProprioEquipamentoParaLabel(String(match.id ?? '').trim()) : '')
@@ -883,16 +933,39 @@ try {
       maquinaModelo: 'KDF 860 C HOMAG',
       numeroMaquina: '0-261-06-6191',
     })
+    // Fantasma sem série primeiro + cartão real com a mesma ID (regressão KFL).
+    const casoF = formatarLabelEquipamentoSelectCurto(
+      {
+        equipamentoId: 'S_001321',
+        maquinaModelo: 'KFL HOMAG',
+        numeroMaquina: '',
+      },
+      0,
+      {
+        equipamentosCliente: [
+          { id: 'S_001321', modelo: 'KFL', marca: 'HOMAG', numeroSerie: '0000000000' },
+          {
+            id: 'S_001321',
+            modelo: 'PROFI KF 20/23/PU/25',
+            marca: 'HOMAG',
+            numeroSerie: '0-201-13-9672',
+          },
+        ],
+      }
+    )
     if (
       casoA === 'S_001321 · KFL HOMAG' &&
       casoB === 'S_001321 · KFL HOMAG' &&
       casoC === '42 · KFL HOMAG · S_001321' &&
       casoD === 'S_001321 · KFL HOMAG · 0-201-13-9672' &&
-      casoE === '008323 · KDF 860 C HOMAG · 0-261-06-6191'
+      casoE === '008323 · KDF 860 C HOMAG · 0-261-06-6191' &&
+      casoF === 'S_001321 · KFL HOMAG · 0-201-13-9672'
     ) {
       ok('label equipamento: ID·modelo·série (+ série do cadastro)')
     } else {
-      fail(`label equipamento regressão: A=${casoA} B=${casoB} C=${casoC} D=${casoD} E=${casoE}`)
+      fail(
+        `label equipamento regressão: A=${casoA} B=${casoB} C=${casoC} D=${casoD} E=${casoE} F=${casoF}`
+      )
     }
   }
   if (!exists('app/modules/equipamentos/formState.ts')) {

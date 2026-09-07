@@ -265,9 +265,30 @@ export function serieSnapshotRelatorioUtil(
   return ''
 }
 
+/** Preferir cartão com série real (evita fantasma `0000000000` com o mesmo ID). */
+function preferirEquipamentoClienteComSerie(
+  candidatos: EquipamentoClienteIdLookup[],
+  seriePreferida = ''
+): EquipamentoClienteIdLookup | null {
+  if (candidatos.length === 0) return null
+  if (candidatos.length === 1) return candidatos[0]
+  const pref = String(seriePreferida || '')
+    .trim()
+    .toLowerCase()
+  if (pref) {
+    const exact = candidatos.find(
+      (e) => segmentoIdEquipamentoExibivel(e.numeroSerie).toLowerCase() === pref
+    )
+    if (exact) return exact
+  }
+  const comSerie = candidatos.filter((e) => segmentoIdEquipamentoExibivel(e.numeroSerie))
+  return comSerie[0] || candidatos[0]
+}
+
 /**
  * Localiza o equipamento do cadastro do cliente a partir da linha do relatório.
  * Aceita ID próprio (`S_001321`), UUID, série, e ponte via armazém (id armazém → série → cliente).
+ * Se houver vários com o mesmo ID, prefere o que tem `numeroSerie` real (não zeros).
  */
 export function encontrarEquipamentoClientePorRefRelatorio(
   eq:
@@ -302,24 +323,22 @@ export function encontrarEquipamentoClientePorRefRelatorio(
     serieViaArmazem = segmentoIdEquipamentoExibivel(wh?.numeroSerie)
   }
 
+  const candidatos: EquipamentoClienteIdLookup[] = []
   for (let idx = 0; idx < list.length; idx++) {
     const e = list[idx]
     if (e == null || typeof e !== 'object') continue
     const chaves = chavesLookupEquipamentoCliente(e, idx, equipamentosArmazem).map(
       normalizarChaveIdEquipamento
     )
-    if (alvo && chaves.includes(normalizarChaveIdEquipamento(alvo))) return e
-    if (snSnap && chaves.includes(normalizarChaveIdEquipamento(snSnap))) return e
     const snCad = segmentoIdEquipamentoExibivel(e.numeroSerie)
-    if (
-      serieViaArmazem &&
-      snCad &&
-      snCad.toLowerCase() === serieViaArmazem.toLowerCase()
-    ) {
-      return e
-    }
+    const hitId = Boolean(alvo && chaves.includes(normalizarChaveIdEquipamento(alvo)))
+    const hitSnap = Boolean(snSnap && chaves.includes(normalizarChaveIdEquipamento(snSnap)))
+    const hitWh = Boolean(
+      serieViaArmazem && snCad && snCad.toLowerCase() === serieViaArmazem.toLowerCase()
+    )
+    if (hitId || hitSnap || hitWh) candidatos.push(e)
   }
-  return null
+  return preferirEquipamentoClienteComSerie(candidatos, snSnap || serieViaArmazem)
 }
 
 export type FormatLabelEquipamentoOpts = {
@@ -552,6 +571,17 @@ export function equipamentosClienteParaSelectRelatorio(
     const sb = scoreId(idB)
     if (sb > sa) bySerial.set(s, { eq, idx })
   })
+  // Mesmo ID com série real e fantasma sem série (0000000000): ficar só com o da série.
+  const idsComSerieReal = new Set(
+    [...bySerial.values()]
+      .map((x) => String(x.eq.id ?? '').trim().toLowerCase())
+      .filter(Boolean)
+  )
+  for (const idKey of [...byIdSemSerie.keys()]) {
+    if (idsComSerieReal.has(String(idKey).trim().toLowerCase())) {
+      byIdSemSerie.delete(idKey)
+    }
+  }
   return [
     ...byIdSemSerie.values(),
     ...semSerieSemId,

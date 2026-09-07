@@ -2575,11 +2575,20 @@ export default function RelatorioEspecialHub({
                               style={inputStyle}
                             >
                               <option value="">—</option>
-                              {(form.equipamentos || []).map((eq, ei) => (
-                                <option key={eq.uid} value={eq.uid}>
-                                  {labelEquipamentoCurto(eq, ei, labelOptsCadastro)}
-                                </option>
-                              ))}
+                              {(form.equipamentos || []).map((eq, ei) => {
+                                // Enrich da série a partir do cadastro (evita fantasma 0000000000 / snapshot sem S/N).
+                                const eqLabel =
+                                  prepararEquipamentosRelatorioParaEdicao(
+                                    [eq],
+                                    clienteEquipamentos,
+                                    equipamentosArmazem
+                                  )[0] || eq
+                                return (
+                                  <option key={eq.uid} value={eq.uid}>
+                                    {labelEquipamentoCurto(eqLabel, ei, labelOptsCadastro)}
+                                  </option>
+                                )
+                              })}
                             </select>
                           </div>
                           <div>
