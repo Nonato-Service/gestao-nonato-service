@@ -20,7 +20,7 @@ export function ordenarServicoGrupos(grupos: ServicoCadastroGrupo[]): ServicoCad
 
 export function nomeGrupoTarifaServico(servicoGrupos: ServicoCadastroGrupo[], grupoId?: string): string {
   if (!grupoId) return ''
-  return servicoGrupos.find((g) => g.id === grupoId)?.nome || ''
+  return (Array.isArray(servicoGrupos) ? servicoGrupos : []).find((g) => g && g.id === grupoId)?.nome || ''
 }
 
 /**
@@ -39,6 +39,7 @@ export function migrarServicoLegacyCodNomeDesc<
     grupoId?: string
   }
 >(s: T): { row: T; touched: boolean } {
+  if (!s || typeof s !== 'object') return { row: s, touched: false }
   const codExistente = (typeof s.cod === 'string' ? s.cod : '').trim()
   if (codExistente) return { row: s, touched: false }
   const nome = (s.nome || '').trim()

@@ -5516,13 +5516,18 @@ export default function Dashboard() {
 
   /** Repõe valor das diárias no fechamento quando o cadastro carrega (serviço antigo com valor 0, ex. DDH). */
   useEffect(() => {
-    if (!servicos.length) return
+    if (!Array.isArray(servicos) || servicos.length === 0) return
+    const servicosSafe = servicos.filter(
+      (s): s is (typeof servicos)[number] => !!s && typeof s === 'object' && typeof (s as { id?: unknown }).id === 'string'
+    ) as ServicoCadastroFechamentoMin[]
+    if (servicosSafe.length === 0) return
     let cancelled = false
     /** Diferir: ao guardar tarifas no Cadastro de Serviços, não bloquear a UI no mesmo tick. */
     const tid = window.setTimeout(() => {
       if (cancelled) return
       try {
         setFechamentosRelatorios((prev) => {
+          if (!prev || typeof prev !== 'object') return prev
           let changed = false
           const next: Record<string, FechamentoItem[]> = { ...prev }
           for (const [rid, list] of Object.entries(prev)) {
@@ -5530,17 +5535,17 @@ export default function Dashboard() {
             const repaired = list.map((it) => {
               if (!it || it.id !== 'diarias') return it
               const tpl = getServicoParaLinhaFechamento(
-                servicos as ServicoCadastroFechamentoMin[],
+                servicosSafe,
                 'diarias',
                 it.servicoId,
-                fechamentoGrupoPorRelatorioId[rid]
+                fechamentoGrupoPorRelatorioId?.[rid]
               )
               if (!tpl || normalizeServicoValorStored(tpl.valor) <= 0) return it
               const enriched = enriquecerLinhaFechamentoComCadastro(
                 { ...it, tipoCobranca: 'diarias' },
-                servicos as ServicoCadastroFechamentoMin[],
+                servicosSafe,
                 it.servicoId,
-                fechamentoGrupoPorRelatorioId[rid]
+                fechamentoGrupoPorRelatorioId?.[rid]
               )
               if (
                 normalizeServicoValorStored(enriched.valorUnitario) <= 0 &&
@@ -7675,11 +7680,13 @@ export default function Dashboard() {
       let servicosLista: Array<(typeof servicos)[number]> = []
       let persistServicosMigrados = false
       if (savedServicos && Array.isArray(savedServicos)) {
-        const aposMigracao = savedServicos.map((s: any) => {
-          const { row, touched } = migrarServicoLegacyCodNomeDesc(s)
-          if (touched) persistServicosMigrados = true
-          return row
-        })
+        const aposMigracao = savedServicos
+          .filter((s: unknown) => !!s && typeof s === 'object')
+          .map((s: any) => {
+            const { row, touched } = migrarServicoLegacyCodNomeDesc(s)
+            if (touched) persistServicosMigrados = true
+            return row
+          })
         servicosLista = aposMigracao.map((s) => ({
           ...s,
           valor: normalizeServicoValorStored(s.valor),
@@ -7693,11 +7700,13 @@ export default function Dashboard() {
       }
 
       const idsGrupo = new Set(gruposInicial.map((g) => g.id))
-      servicosLista = servicosLista.map((s) => {
-        const gid = typeof s.grupoId === 'string' && idsGrupo.has(s.grupoId) ? s.grupoId : gruposInicial[0].id
-        if (gid !== s.grupoId) persistServicosMigrados = true
-        return { ...s, grupoId: gid }
-      })
+      servicosLista = servicosLista
+        .filter((s) => !!s && typeof s === 'object')
+        .map((s) => {
+          const gid = typeof s.grupoId === 'string' && idsGrupo.has(s.grupoId) ? s.grupoId : gruposInicial[0].id
+          if (gid !== s.grupoId) persistServicosMigrados = true
+          return { ...s, grupoId: gid }
+        })
 
       setServicoGrupos(gruposInicial)
       setServicos(servicosLista)
@@ -12691,17 +12700,24 @@ export default function Dashboard() {
     form?: typeof servicoForm
     valorInput?: string
   }) => {
-    const form = payload?.form ?? servicoForm
-    const valorRaw = payload?.valorInput ?? servicoValorInput
+    /** Ignorar SyntheticEvent de onClick={handleSaveServico} no modal legado. */
+    const fromDraft =
+      payload &&
+      typeof payload === 'object' &&
+      !('nativeEvent' in payload) &&
+      (Object.prototype.hasOwnProperty.call(payload, 'form') ||
+        Object.prototype.hasOwnProperty.call(payload, 'valorInput'))
+    const form = fromDraft && payload.form ? payload.form : servicoForm
+    const valorRaw = fromDraft && typeof payload.valorInput === 'string' ? payload.valorInput : servicoValorInput
     const valor = parseServicoValorInput(valorRaw)
-    if (!String(form.nome || '').trim() || valor < 0 || Number.isNaN(valor)) {
+    if (!String(form?.nome || '').trim() || valor < 0 || Number.isNaN(valor)) {
       alert((t as any).preenchaNomeValor || 'Preencha o nome e um valor válido (zero ou maior) para o serviço!')
       return
     }
 
     createAutoBackupBeforeOperation()
 
-    const idsG = new Set(servicoGrupos.map((g) => g.id))
+    const idsG = new Set((servicoGrupos || []).filter((g) => g && typeof g.id === 'string').map((g) => g.id))
     const grupoId =
       typeof form.grupoId === 'string' && idsG.has(form.grupoId)
         ? form.grupoId
@@ -73887,7 +73903,7 @@ A1;Peça exemplo;10`}
                     }}
                   >
                     {g.nome}{' '}
-                    <span style={{ opacity: 0.6 }}>({servicos.filter((s) => s.grupoId === g.id).length})</span>
+                    <span style={{ opacity: 0.6 }}>({servicos.filter((s) => s && s.grupoId === g.id).length})</span>
                   </button>
                 ))}
                 <input
@@ -74036,12 +74052,12 @@ A1;Peça exemplo;10`}
                 </div>
               </div>
             )}
-            {servicos.filter((s) => s.grupoId === servicoGrupoSelecionadoId).length === 0 ? (
+            {servicos.filter((s) => s && s.grupoId === servicoGrupoSelecionadoId).length === 0 ? (
               <p style={{ fontSize: '14px', opacity: 0.85 }}>{(safeT as any)?.servicosNenhumItemNoGrupo || 'Nenhum item neste grupo.'}</p>
             ) : (
               <ul style={{ listStyle: 'none', padding: 0, marginTop: '12px' }}>
                 {servicos
-                  .filter((s) => s.grupoId === servicoGrupoSelecionadoId)
+                  .filter((s) => s && s.grupoId === servicoGrupoSelecionadoId)
                   .map((servico) => {
                   const codExModal = servicoCodParaExibicao(servico)
                   return (

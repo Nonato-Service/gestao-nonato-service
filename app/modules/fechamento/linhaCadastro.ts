@@ -7,9 +7,12 @@ export function filtrarServicosCadastroPorGrupo(
   servicos: ServicoCadastroFechamentoMin[],
   grupoId?: string | null
 ): ServicoCadastroFechamentoMin[] {
-  if (!grupoId) return servicos
-  const filtered = servicos.filter((s) => s.grupoId === grupoId)
-  return filtered.length > 0 ? filtered : servicos
+  const list = Array.isArray(servicos)
+    ? servicos.filter((s): s is ServicoCadastroFechamentoMin => !!s && typeof s === 'object')
+    : []
+  if (!grupoId) return list
+  const filtered = list.filter((s) => s.grupoId === grupoId)
+  return filtered.length > 0 ? filtered : list
 }
 
 function txtServicoFechamento(s: ServicoCadastroFechamentoMin): string {
@@ -125,8 +128,11 @@ export function getServicoParaLinhaFechamento(
   savedServicoId?: string,
   grupoId?: string | null
 ): ServicoCadastroFechamentoMin | undefined {
+  const list = Array.isArray(servicos)
+    ? servicos.filter((s): s is ServicoCadastroFechamentoMin => !!s && typeof s === 'object')
+    : []
   if (savedServicoId) {
-    const byId = servicos.find((s) => s.id === savedServicoId)
+    const byId = list.find((s) => s.id === savedServicoId)
     if (
       byId &&
       servicoCombinaLinhaFechamento(byId, linhaId) &&
@@ -135,7 +141,7 @@ export function getServicoParaLinhaFechamento(
       return byId
     }
   }
-  const r = resolverServicosFechamentoTemplate(servicos, grupoId)
+  const r = resolverServicosFechamentoTemplate(list, grupoId)
   if (linhaId === 'ht') return r.fechServHt
   if (linhaId === 'hida') return r.fechServHida
   if (linhaId === 'hret') return r.fechServHret
@@ -152,15 +158,19 @@ export function enriquecerLinhaFechamentoComCadastro(
   grupoId?: string | null,
   opts?: { forcarValorCadastro?: boolean }
 ): FechamentoItem {
-  const tpl = getServicoParaLinhaFechamento(servicos, item.id, undefined, grupoId)
+  if (!item) return item
+  const list = Array.isArray(servicos)
+    ? servicos.filter((s): s is ServicoCadastroFechamentoMin => !!s && typeof s === 'object')
+    : []
+  const tpl = getServicoParaLinhaFechamento(list, item.id, undefined, grupoId)
   let svc = tpl
-  const savedRaw = savedServicoId ? servicos.find((s) => s.id === savedServicoId) : undefined
+  const savedRaw = savedServicoId ? list.find((s) => s.id === savedServicoId) : undefined
   const savedMesmoGrupo =
     !!savedRaw &&
     servicoCombinaLinhaFechamento(savedRaw, item.id) &&
     servicoPertenceAoGrupoFechamento(savedRaw, grupoId)
   if (savedMesmoGrupo && savedServicoId) {
-    const bySaved = getServicoParaLinhaFechamento(servicos, item.id, savedServicoId, grupoId)
+    const bySaved = getServicoParaLinhaFechamento(list, item.id, savedServicoId, grupoId)
     const vSaved = bySaved ? normalizeServicoValorStored(bySaved.valor) : 0
     if (item.id === 'diarias') {
       const cod = String(bySaved?.cod || '').trim().toUpperCase()
@@ -182,7 +192,7 @@ export function enriquecerLinhaFechamentoComCadastro(
     valorUnit > 0 &&
     valorUnitStored > 0 &&
     Math.abs(valorUnit - valorUnitStored) > 0.009 &&
-    servicos.some(
+    list.some(
       (s) =>
         s.id !== svc.id &&
         servicoCombinaLinhaFechamento(s, item.id) &&
