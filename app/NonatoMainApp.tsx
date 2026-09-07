@@ -493,11 +493,14 @@ import {
   equipamentoIdPlaceholderInvalido,
   resolverIdEquipamentoVisivelRelatorio,
   resolverEquipamentoRelatorioParaExibicao,
+  resolverNumeroMaquinaRelatorioParaExibicao,
   resolverClienteIdRelatorio,
   resolverChaveEquipamentoClienteRelatorio,
   equipamentosClienteParaBiblioteca,
   equipamentosClienteParaSelectRelatorio,
   idEquipamentoCadastroParaGravarNoRelatorio,
+  opcaoEquipamentoClienteSelectRelatorio,
+  formatarLabelEquipamentoSelectCurto,
   coletarRelatoriosServicoPorEquipamentoCliente,
   prepararEquipamentosRelatorioParaEdicao,
   aplicarBaixaVendaEquipamentosArmazemRelatorio,
@@ -32234,7 +32237,16 @@ export default function Dashboard() {
                                           </option>
                                           {equipamentosAtivos.map(itemEq => (
                                             <option key={itemEq.id} value={itemEq.id}>
-                                              [Armazém] ID {itemEq.id} · {itemEq.familia || '—'} · {itemEq.modelo} {itemEq.marca}
+                                              {formatarLabelEquipamentoSelectCurto(
+                                                {
+                                                  equipamentoId: itemEq.id,
+                                                  maquinaModelo:
+                                                    `${itemEq.familia || ''} ${itemEq.modelo || ''} ${itemEq.marca || ''}`.trim() ||
+                                                    `${itemEq.modelo || ''} ${itemEq.marca || ''}`.trim(),
+                                                  numeroMaquina: itemEq.numeroSerie,
+                                                },
+                                                0
+                                              ) || `[Armazém] ID ${itemEq.id}`}
                                             </option>
                                           ))}
                                         </select>
@@ -32259,8 +32271,21 @@ export default function Dashboard() {
                                               onChange={(e) => {
                                                 const chave = e.target.value
                                                 const selectedEquipamento = eqsExternos.find(
-                                                  (itemCli, idxCli) =>
-                                                    resolverIdEquipamentoCliente(itemCli, idxCli) === chave
+                                                  (itemCli, idxCli) => {
+                                                    const op = opcaoEquipamentoClienteSelectRelatorio(
+                                                      itemCli,
+                                                      idxCli,
+                                                      equipamentos
+                                                    )
+                                                    return (
+                                                      op.value === chave ||
+                                                      resolverIdEquipamentoCliente(itemCli, idxCli) ===
+                                                        chave ||
+                                                      String(itemCli.numeroSerie ?? '').trim() ===
+                                                        chave ||
+                                                      String(itemCli.id ?? '').trim() === chave
+                                                    )
+                                                  }
                                                 )
                                                 const idxSel = selectedEquipamento
                                                   ? eqsExternos.indexOf(selectedEquipamento)
@@ -32272,13 +32297,16 @@ export default function Dashboard() {
                                                       equipamentos
                                                     )
                                                   : chave
+                                                const snSel = selectedEquipamento
+                                                  ? String(selectedEquipamento.numeroSerie || '').trim()
+                                                  : ''
                                                 const next = equipamentosForm.map(item =>
                                                   item.uid === eq.uid
                                                     ? {
                                                         ...item,
                                                         equipamentoOrigem: 'clientes-externos' as const,
-                                                        equipamentoId: idGravar || chave,
-                                                        numeroMaquina: selectedEquipamento?.numeroSerie || '',
+                                                        equipamentoId: idGravar || snSel || chave,
+                                                        numeroMaquina: snSel,
                                                         maquinaModelo: selectedEquipamento
                                                           ? `${selectedEquipamento.modelo} ${selectedEquipamento.marca}`.trim()
                                                           : '',
@@ -32295,36 +32323,37 @@ export default function Dashboard() {
                                               </option>
                                               {cidExt &&
                                                 eqsExternos.map((itemCli, idxCli) => {
-                                                  const eqKey = resolverIdEquipamentoCliente(itemCli, idxCli)
-                                                  const idVisivel = resolverIdEquipamentoVisivelCliente(
+                                                  const op = opcaoEquipamentoClienteSelectRelatorio(
                                                     itemCli,
+                                                    idxCli,
                                                     equipamentos
                                                   )
-                                                  const idLabel =
-                                                    idVisivel ||
-                                                    (!equipamentoIdPlaceholderInvalido(eqKey) ? eqKey : '') ||
-                                                    String(itemCli.numeroSerie || '').trim() ||
-                                                    eqKey
+                                                  if (!op.value) return null
                                                   return (
-                                                    <option key={eqKey} value={eqKey}>
-                                                      ID {idLabel} · {itemCli.modelo} {itemCli.marca}
-                                                      {itemCli.numeroSerie &&
-                                                      String(itemCli.numeroSerie).trim() !== idLabel
-                                                        ? ` · ${itemCli.numeroSerie}`
-                                                        : ''}
+                                                    <option key={op.value} value={op.value}>
+                                                      {op.label}
                                                     </option>
                                                   )
                                                 })}
                                               {cidExt &&
                                                 eq.equipamentoId &&
-                                                !eqsExternos.some(
-                                                  (itemCli, idxCli) =>
-                                                    resolverChaveEquipamentoClienteRelatorio(
-                                                      eq.equipamentoId || '',
-                                                      eqsExternos,
-                                                      equipamentos
-                                                    ) === resolverIdEquipamentoCliente(itemCli, idxCli)
-                                                ) && (
+                                                !eqsExternos.some((itemCli, idxCli) => {
+                                                  const chaveSel = resolverChaveEquipamentoClienteRelatorio(
+                                                    eq.equipamentoId || '',
+                                                    eqsExternos,
+                                                    equipamentos
+                                                  )
+                                                  const op = opcaoEquipamentoClienteSelectRelatorio(
+                                                    itemCli,
+                                                    idxCli,
+                                                    equipamentos
+                                                  )
+                                                  return (
+                                                    chaveSel ===
+                                                      resolverIdEquipamentoCliente(itemCli, idxCli) ||
+                                                    op.value === chaveSel
+                                                  )
+                                                }) && (
                                                   <option
                                                     value={resolverChaveEquipamentoClienteRelatorio(
                                                       eq.equipamentoId || '',
@@ -32332,12 +32361,14 @@ export default function Dashboard() {
                                                       equipamentos
                                                     )}
                                                   >
-                                                    ID{' '}
-                                                    {resolverEquipamentoRelatorioParaExibicao(
-                                                      eq,
-                                                      equipamentos,
-                                                      eqsExternos
-                                                    ) || eq.equipamentoId}{' '}
+                                                    {formatarLabelEquipamentoSelectCurto(eq) ||
+                                                      `ID ${
+                                                        resolverEquipamentoRelatorioParaExibicao(
+                                                          eq,
+                                                          equipamentos,
+                                                          eqsExternos
+                                                        ) || eq.equipamentoId
+                                                      }`}{' '}
                                                     · {(safeT as any)?.relatorioEquipamentoCadastroAnterior ||
                                                       'cadastro anterior'}
                                                   </option>
@@ -32359,8 +32390,19 @@ export default function Dashboard() {
                                           onChange={(e) => {
                                             const chave = e.target.value
                                             const selectedEquipamento = clienteEquipamentos.find(
-                                              (itemCli, idxCli) =>
-                                                resolverIdEquipamentoCliente(itemCli, idxCli) === chave
+                                              (itemCli, idxCli) => {
+                                                const op = opcaoEquipamentoClienteSelectRelatorio(
+                                                  itemCli,
+                                                  idxCli,
+                                                  equipamentos
+                                                )
+                                                return (
+                                                  op.value === chave ||
+                                                  resolverIdEquipamentoCliente(itemCli, idxCli) === chave ||
+                                                  String(itemCli.numeroSerie ?? '').trim() === chave ||
+                                                  String(itemCli.id ?? '').trim() === chave
+                                                )
+                                              }
                                             )
                                             const idxSel = selectedEquipamento
                                               ? clienteEquipamentos.indexOf(selectedEquipamento)
@@ -32372,13 +32414,16 @@ export default function Dashboard() {
                                                   equipamentos
                                                 )
                                               : chave
+                                            const snSel = selectedEquipamento
+                                              ? String(selectedEquipamento.numeroSerie || '').trim()
+                                              : ''
                                             const next = equipamentosForm.map(item =>
                                               item.uid === eq.uid
                                                 ? {
                                                     ...item,
                                                     equipamentoOrigem: 'cliente' as const,
-                                                    equipamentoId: idGravar || chave,
-                                                    numeroMaquina: selectedEquipamento?.numeroSerie || '',
+                                                    equipamentoId: idGravar || snSel || chave,
+                                                    numeroMaquina: snSel,
                                                     maquinaModelo: selectedEquipamento
                                                       ? `${selectedEquipamento.modelo} ${selectedEquipamento.marca}`.trim()
                                                       : '',
@@ -32395,33 +32440,36 @@ export default function Dashboard() {
                                           <option value="">{safeT?.selecioneEquipamento || 'Selecione o equipamento'}</option>
                                           {clienteIdEfetivo &&
                                             clienteEquipamentos.map((itemCli, idxCli) => {
-                                              const eqKey = resolverIdEquipamentoCliente(itemCli, idxCli)
-                                              const idVisivel = resolverIdEquipamentoVisivelCliente(itemCli, equipamentos)
-                                              const idLabel =
-                                                idVisivel ||
-                                                (!equipamentoIdPlaceholderInvalido(eqKey) ? eqKey : '') ||
-                                                String(itemCli.numeroSerie || '').trim() ||
-                                                eqKey
+                                              const op = opcaoEquipamentoClienteSelectRelatorio(
+                                                itemCli,
+                                                idxCli,
+                                                equipamentos
+                                              )
+                                              if (!op.value) return null
                                               return (
-                                                <option key={eqKey} value={eqKey}>
-                                                  ID {idLabel} · {itemCli.modelo} {itemCli.marca}
-                                                  {itemCli.numeroSerie &&
-                                                  String(itemCli.numeroSerie).trim() !== idLabel
-                                                    ? ` · ${itemCli.numeroSerie}`
-                                                    : ''}
+                                                <option key={op.value} value={op.value}>
+                                                  {op.label}
                                                 </option>
                                               )
                                             })}
                                           {clienteIdEfetivo &&
                                             eq.equipamentoId &&
-                                            !clienteEquipamentos.some(
-                                              (itemCli, idxCli) =>
-                                                resolverChaveEquipamentoClienteRelatorio(
-                                                  eq.equipamentoId || '',
-                                                  clienteEquipamentos,
-                                                  equipamentos
-                                                ) === resolverIdEquipamentoCliente(itemCli, idxCli)
-                                            ) && (
+                                            !clienteEquipamentos.some((itemCli, idxCli) => {
+                                              const chaveSel = resolverChaveEquipamentoClienteRelatorio(
+                                                eq.equipamentoId || '',
+                                                clienteEquipamentos,
+                                                equipamentos
+                                              )
+                                              const op = opcaoEquipamentoClienteSelectRelatorio(
+                                                itemCli,
+                                                idxCli,
+                                                equipamentos
+                                              )
+                                              return (
+                                                chaveSel === resolverIdEquipamentoCliente(itemCli, idxCli) ||
+                                                op.value === chaveSel
+                                              )
+                                            }) && (
                                               <option
                                                 value={resolverChaveEquipamentoClienteRelatorio(
                                                   eq.equipamentoId || '',
@@ -32429,12 +32477,14 @@ export default function Dashboard() {
                                                   equipamentos
                                                 )}
                                               >
-                                                ID{' '}
-                                                {resolverEquipamentoRelatorioParaExibicao(
-                                                  eq,
-                                                  equipamentos,
-                                                  clienteEquipamentos
-                                                ) || eq.equipamentoId}{' '}
+                                                {formatarLabelEquipamentoSelectCurto(eq) ||
+                                                  `ID ${
+                                                    resolverEquipamentoRelatorioParaExibicao(
+                                                      eq,
+                                                      equipamentos,
+                                                      clienteEquipamentos
+                                                    ) || eq.equipamentoId
+                                                  }`}{' '}
                                                 · {(safeT as any)?.relatorioEquipamentoCadastroAnterior ||
                                                   'cadastro anterior'}
                                               </option>
@@ -32488,19 +32538,9 @@ export default function Dashboard() {
                                         )
                                       })()}
 
-                                    {(eq.equipamentoId || eq.maquinaModelo) && (
+                                    {(eq.equipamentoId || eq.maquinaModelo || eq.numeroMaquina) && (
                                       <div className="relatorio-equipamento-card__preview">
-                                        <strong>{safeT?.relatorioEquipamentoIdLabel || 'ID'}:</strong>{' '}
-                                        <span className="relatorio-equipamento-card__id">
-                                          {resolverEquipamentoRelatorioParaExibicao(
-                                            eq,
-                                            equipamentos,
-                                            eq.equipamentoOrigem === 'clientes-externos'
-                                              ? clientes.find((c) => c.id === (eq.clienteExternoId || ''))
-                                                  ?.equipamentos ?? []
-                                              : clienteEquipamentos
-                                          ) || '—'}
-                                        </span>
+                                        {formatarLabelEquipamentoSelectCurto(eq)}
                                         {eq.clienteExternoNome &&
                                         eq.equipamentoOrigem === 'clientes-externos' ? (
                                           <>
@@ -32509,12 +32549,6 @@ export default function Dashboard() {
                                               {safeT?.clienteExternoRelatorio || 'Cliente externo'}:
                                             </strong>{' '}
                                             {eq.clienteExternoNome}
-                                          </>
-                                        ) : null}
-                                        {eq.maquinaModelo ? (
-                                          <>
-                                            <span className="relatorio-equipamento-card__sep"> · </span>
-                                            <strong>{safeT?.maquinaModelo || 'Modelo'}:</strong> {eq.maquinaModelo}
                                           </>
                                         ) : null}
                                       </div>
@@ -75798,7 +75832,16 @@ A1;Peça exemplo;10`}
                     return (
                       <div className="relatorio-equipamentos-view-list">
                         {eqListView.map((eq, eqIdx) => {
-                          const idVisivel = resolverEquipamentoRelatorioParaExibicao(eq, equipamentos, eqCliView)
+                          const idVisivel = resolverEquipamentoRelatorioParaExibicao(
+                            eq,
+                            equipamentos,
+                            eqCliView
+                          )
+                          const serieVisivel = resolverNumeroMaquinaRelatorioParaExibicao(
+                            eq,
+                            equipamentos,
+                            eqCliView
+                          )
                           return (
                             <p
                               key={eq.uid || `view-eq-${eqIdx}`}
@@ -75809,13 +75852,16 @@ A1;Peça exemplo;10`}
                                   {(safeT?.relatorioEquipamentoNumero || 'Equipamento {n}').replace('{n}', String(eqIdx + 1))}:
                                 </span>
                               )}
-                              {idVisivel ? (
-                                <span style={{ color: '#66b3ff', fontWeight: 'bold' }}>
-                                  {safeT?.relatorioEquipamentoIdLabel || 'ID'}: {idVisivel}
-                                </span>
-                              ) : null}
-                              {idVisivel && eq.maquinaModelo ? <span style={{ color: '#888' }}> · </span> : null}
-                              {eq.maquinaModelo || null}
+                              <span style={{ color: '#fff' }}>
+                                {formatarLabelEquipamentoSelectCurto(
+                                  {
+                                    equipamentoId: idVisivel,
+                                    maquinaModelo: eq.maquinaModelo,
+                                    numeroMaquina: serieVisivel || eq.numeroMaquina,
+                                  },
+                                  eqIdx
+                                )}
+                              </span>
                             </p>
                           )
                         })}

@@ -2156,29 +2156,14 @@ export default function RelatorioEspecialHub({
                     />
                   </div>
 
-                  {(eq.equipamentoId || eq.maquinaModelo) && (
+                  {(eq.equipamentoId || eq.maquinaModelo || eq.numeroMaquina) && (
                     <div className="relatorio-equipamento-card__preview relatorio-equipamento-card__field--full">
-                      <strong>{t.relatorioEquipamentoIdLabel || 'ID'}:</strong>{' '}
-                      <span className="relatorio-equipamento-card__id">
-                        {resolverEquipamentoRelatorioParaExibicao(
-                          eq,
-                          equipamentosArmazem,
-                          eq.equipamentoOrigem === 'clientes-externos'
-                            ? clientes.find((c) => c.id === (eq.clienteExternoId || ''))?.equipamentos ?? []
-                            : clienteEquipamentos
-                        ) || '—'}
-                      </span>
+                      {formatarLabelEquipamentoSelectCurto(eq)}
                       {eq.clienteExternoNome && eq.equipamentoOrigem === 'clientes-externos' ? (
                         <>
                           <span className="relatorio-equipamento-card__sep"> · </span>
                           <strong>{t.clienteExternoRelatorio || 'Cliente externo'}:</strong>{' '}
                           {eq.clienteExternoNome}
-                        </>
-                      ) : null}
-                      {eq.maquinaModelo ? (
-                        <>
-                          <span className="relatorio-equipamento-card__sep"> · </span>
-                          <strong>{t.maquinaModelo || 'Modelo'}:</strong> {eq.maquinaModelo}
                         </>
                       ) : null}
                     </div>

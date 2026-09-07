@@ -199,28 +199,81 @@ export function segmentoIdEquipamentoExibivel(valor: string | undefined): string
 }
 
 /**
+ * N.º de série a partir dos campos possíveis no cadastro / linha de relatório.
+ * Nunca devolve placeholder só-zeros.
+ */
+export function resolverSegmentoSerieEquipamento(
+  eq:
+    | {
+        numeroMaquina?: string
+        numeroSerie?: string
+        nSerie?: string
+        serie?: string
+        serialNumber?: string
+      }
+    | null
+    | undefined
+): string {
+  if (eq == null || typeof eq !== 'object') return ''
+  const candidatos = [eq.numeroMaquina, eq.numeroSerie, eq.nSerie, eq.serie, eq.serialNumber]
+  for (const c of candidatos) {
+    const s = segmentoIdEquipamentoExibivel(c)
+    if (s) return s
+  }
+  return ''
+}
+
+/**
+ * ID próprio para label: omite vazio, zeros, UUID/eqc e eco da série no campo id.
+ */
+export function segmentoIdProprioEquipamentoParaLabel(
+  idRaw: string | undefined,
+  serie: string
+): string {
+  const id = segmentoIdEquipamentoExibivel(idRaw)
+  if (!id || equipamentoIdETecnicoGerado(id)) return ''
+  if (serie && id.toLowerCase() === serie.toLowerCase()) return ''
+  return id
+}
+
+/**
  * Label curto do select (horas / resumos): id · modelo · série.
- * Omite segmentos vazios; nunca inclui placeholder `0000000000`.
+ * Sem ID válido → modelo · série. Nunca esconde a série quando existe.
+ * Omite segmentos vazios; nunca inclui placeholder `0000000000` nem UUID técnico.
  */
 export function formatarLabelEquipamentoSelectCurto(
   eq:
     | {
         equipamentoId?: string
+        id?: string
         maquinaModelo?: string
+        modelo?: string
+        marca?: string
         numeroMaquina?: string
+        numeroSerie?: string
+        nSerie?: string
+        serie?: string
+        serialNumber?: string
       }
     | null
     | undefined,
   idx = 0
 ): string {
   if (eq == null || typeof eq !== 'object') return `#${idx + 1}`
-  const id = segmentoIdEquipamentoExibivel(eq.equipamentoId)
-  const modelo = String(eq.maquinaModelo ?? '').trim()
-  const serie = segmentoIdEquipamentoExibivel(eq.numeroMaquina)
+  let serie = resolverSegmentoSerieEquipamento(eq)
+  const idBruto = String(eq.equipamentoId ?? eq.id ?? '').trim()
+  const id = segmentoIdProprioEquipamentoParaLabel(idBruto, serie)
+  // Legado sem campo de série: id gravado = série (não UUID) → mostrar como série, não como ID.
+  if (!serie && !id && idBruto && !equipamentoIdETecnicoGerado(idBruto) && !equipamentoIdPlaceholderInvalido(idBruto)) {
+    serie = idBruto
+  }
+  const modelo =
+    String(eq.maquinaModelo ?? '').trim() ||
+    `${String(eq.modelo ?? '').trim()} ${String(eq.marca ?? '').trim()}`.trim()
   const parts: string[] = []
   if (id) parts.push(id)
   if (modelo) parts.push(modelo)
-  if (serie && serie !== id && !parts.includes(serie)) parts.push(serie)
+  if (serie) parts.push(serie)
   return parts.length > 0 ? parts.join(' · ') : `#${idx + 1}`
 }
 
@@ -234,26 +287,26 @@ export function opcaoEquipamentoClienteSelectRelatorio(
   idx: number,
   equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
 ): { value: string; label: string } {
-  const snLimpo = segmentoIdEquipamentoExibivel(item.numeroSerie)
+  const snLimpo = resolverSegmentoSerieEquipamento(item)
   const value =
     idEquipamentoCadastroParaGravarNoRelatorio(item, idx, equipamentosArmazem) ||
     snLimpo ||
     ''
-  const idVis = segmentoIdEquipamentoExibivel(
-    resolverIdEquipamentoVisivelCliente(item, equipamentosArmazem)
+  // Nunca usar UUID técnico nem série “eco” como segmento de ID no label.
+  const idLabel = segmentoIdProprioEquipamentoParaLabel(
+    resolverIdEquipamentoVisivelCliente(item, equipamentosArmazem) || String(item.id ?? ''),
+    snLimpo
   )
-  const idTech = segmentoIdEquipamentoExibivel(String(item.id ?? ''))
-  const idLabel =
-    (idVis && idVis.toLowerCase() !== snLimpo.toLowerCase() ? idVis : '') ||
-    (idTech && idTech.toLowerCase() !== snLimpo.toLowerCase() ? idTech : '') ||
-    ''
   const modelo = `${String(item.modelo ?? '').trim()} ${String(item.marca ?? '').trim()}`.trim()
   const parts: string[] = []
   if (idLabel) parts.push(idLabel)
   if (modelo) parts.push(modelo)
-  if (snLimpo && snLimpo !== idLabel && !parts.includes(snLimpo)) parts.push(snLimpo)
-  if (parts.length === 0 && value) parts.push(segmentoIdEquipamentoExibivel(value) || value)
-  return { value, label: parts.join(' · ') || (segmentoIdEquipamentoExibivel(value) || value) || '—' }
+  if (snLimpo) parts.push(snLimpo)
+  if (parts.length === 0 && value) {
+    const vShow = segmentoIdProprioEquipamentoParaLabel(value, '') || snLimpo || segmentoIdEquipamentoExibivel(value)
+    if (vShow) parts.push(vShow)
+  }
+  return { value, label: parts.join(' · ') || snLimpo || '—' }
 }
 
 /**
