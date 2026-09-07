@@ -63,7 +63,9 @@ git push -u origin main
 4. Selecione o repositório **gestao-tecnica-nonato-service** (ou o nome que usou)
 5. Clique em **Deploy Now**
 
-O Railway vai começar a fazer o deploy. Aguarde alguns minutos. O projeto usa `railway.json` (build: `npm run build`, start: `npm start`) e escuta na porta `PORT` definida pelo Railway.
+O Railway vai começar a fazer o deploy. Aguarde alguns minutos. O projeto usa `railway.json` (Dockerfile + `node scripts/start-server.js`) e escuta na porta `PORT` em `0.0.0.0`.
+
+**Healthcheck de deploy desactivado:** `railway.json` **não** define `healthcheckPath` (a Railway recomenda omitir o campo para não bloquear em «Configuring network»). O endpoint `/api/health` continua disponível para diagnóstico. Em **Settings → Healthcheck** do serviço, deixe o path **vazio** se a UI tiver um valor antigo (a UI pode sobrepor o ficheiro).
 
 ---
 
