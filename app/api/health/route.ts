@@ -1,6 +1,7 @@
 // Endpoint para health check do Railway + diagnóstico de persistência de dados
 import fs from 'fs'
 import path from 'path'
+import { PWA_VERSION } from '../../lib/pwaVersion'
 import { DATA_DIR, ensureDataDir } from '../data/shared'
 
 export const dynamic = 'force-dynamic'
@@ -62,10 +63,18 @@ export async function GET() {
       'Clientes OK mas biblioteca de peças ausente ou muito pequena — envie nonato-pecas-biblioteca.json ao volume.'
   }
 
+  const gitSha =
+    process.env.RAILWAY_GIT_COMMIT_SHA ||
+    process.env.GIT_COMMIT ||
+    process.env.COMMIT_SHA ||
+    null
+
   return new Response(
     JSON.stringify({
       ok: true,
       alive: true,
+      appVersion: PWA_VERSION,
+      gitCommit: gitSha ? String(gitSha).slice(0, 7) : null,
       persistence: {
         dataDir,
         fileCount,
@@ -79,7 +88,7 @@ export async function GET() {
     }),
     {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
     }
   )
 }
