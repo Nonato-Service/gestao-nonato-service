@@ -41,7 +41,9 @@ import {
 import { mergeRelatoriosServicoDeferServerLocal } from '../lib/bibliotecaRelatoriosRecovery'
 import {
   canAutoPullServerChanges,
+  collectLocalNonatoSnapshot,
 } from './syncDiff'
+import { assessPullServerRisk } from './syncRisk'
 import {
   isPecasBibliotecaCatalogIncomplete,
   pecasBibliotecaMinExpected,
@@ -758,6 +760,13 @@ export const NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE = new Set([
   'nonato-despesas-documentos',
   'nonato-cartoes-empresa-despesas',
   'nonato-comprovantes-despesas',
+  'nonato-orcamentos-avulso',
+  'nonato-orcamentos-pecas-especiais',
+  'nonato-pedidos-orcamento',
+  'nonato-mensagens-comunicacao',
+  'nonato-solicitacoes-servico-tecnico',
+  'nonato-pecas-solicitadas-armazem',
+  'nonato-users',
 ])
 
 function isEmptyDataArray(value: unknown): boolean {
@@ -1114,6 +1123,7 @@ export async function saveToServer(key: string, value: any): Promise<boolean> {
         if (next === undefined) break
         current = next
       }
+      if (!lastOk) dispatchSaveServerResult(key, false)
       return lastOk
     } finally {
       pendingSaveByKey.delete(requestKey)
@@ -2456,6 +2466,8 @@ const SKIP_PULL_KEYS = new Set([
   'nonato-protocolo-servico-draft',
   /** Preferências só deste aparelho — não sobrescrever na sync automática. */
   'nonato-bottom-tabs-order',
+  /** Catálogo lite — não substituir a cópia local completa. */
+  PECAS_BIBLIOTECA_LITE_KEY,
 ])
 
 function serverPullValueIsEmpty(value: unknown): boolean {
@@ -2858,7 +2870,7 @@ export async function applySilentServerSync(server: Record<string, unknown>): Pr
 export type SilentServerSyncResult = 'noop' | 'ok' | 'fail'
 
 export type PullServerUpdatesResult = {
-  status: SilentServerSyncResult | 'offline'
+  status: SilentServerSyncResult | 'offline' | 'risk'
   changedKeys: string[]
 }
 
@@ -2872,8 +2884,14 @@ export async function pullServerUpdatesIfNewer(): Promise<PullServerUpdatesResul
     if (!st) return { status: 'offline', changedKeys: [] }
     const lastAcc = getLastAcceptedRevision()
     if (st.revision <= lastAcc) return { status: 'noop', changedKeys: [] }
-    const { data: serverData, ok } = await loadAllFromServer()
+    /** Bundle leve — nunca puxar catálogo completo (~38 MB) no poll automático. */
+    const { data: serverData, ok } = await loadAllFromServer({ bootstrap: true })
     if (!ok || Object.keys(serverData).length === 0) return { status: 'fail', changedKeys: [] }
+    const risk = assessPullServerRisk(serverData as Record<string, unknown>, collectLocalNonatoSnapshot())
+    if (risk.severity === 'severe') {
+      console.warn('[Nonato] Sync automático adiado: servidor parece incompleto face a este aparelho.')
+      return { status: 'risk', changedKeys: [] }
+    }
     const changedKeys = await applySilentServerSync(serverData as Record<string, unknown>)
     const stAfter = await fetchSyncStatus()
     const rev = Math.max(st.revision, stAfter?.revision ?? 0)
@@ -2898,6 +2916,7 @@ export async function runSilentServerSync(expectedRevision?: number): Promise<Si
   const pulled = await pullServerUpdatesIfNewer()
   if (pulled.status === 'offline') return 'fail'
   if (pulled.status === 'fail') return 'fail'
+  if (pulled.status === 'risk') return 'fail'
   if (pulled.status === 'ok') return 'ok'
   if (expectedRevision != null && expectedRevision > getLastAcceptedRevision()) {
     setLastAcceptedRevision(expectedRevision)

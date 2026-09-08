@@ -227,8 +227,10 @@ export function OfflineIndicator() {
   }, [])
 
   useEffect(() => {
-    if (pendingCount === 0) setLastFailed(null)
-  }, [pendingCount])
+    if (!lastFailed || pendingCount > 0) return
+    const t = setTimeout(() => setLastFailed(null), 12_000)
+    return () => clearTimeout(t)
+  }, [lastFailed, pendingCount])
 
   useEffect(() => {
     if (lastSync && online && pendingCount === 0 && !syncing && !lastFailed) {
@@ -251,7 +253,7 @@ export function OfflineIndicator() {
     }
   }, [blockedMsg])
 
-  const showFailed = lastFailed && pendingCount > 0
+  const showFailed = Boolean(lastFailed) && (pendingCount > 0 || Date.now() - (lastFailed ?? 0) < 12_000)
 
   const hidden =
     online &&
@@ -361,10 +363,15 @@ export function OfflineIndicator() {
           <>{getStoredUiString('offlineSyncing', 'A sincronizar com o servidor…')}</>
         ) : showFailed ? (
           <>
-            {getStoredUiString(
-              'offlineSyncFailed',
-              '⚠ {n} alteração(ões) NÃO confirmada(s) no servidor — toque para tentar de novo'
-            ).replace('{n}', String(pendingCount))}
+            {pendingCount > 0
+              ? getStoredUiString(
+                  'offlineSyncFailed',
+                  '⚠ {n} alteração(ões) NÃO confirmada(s) no servidor — toque para tentar de novo'
+                ).replace('{n}', String(pendingCount))
+              : getStoredUiString(
+                  'saveServerFailed',
+                  '⚠ Não foi possível confirmar no servidor — as alterações ficam neste aparelho.'
+                )}
           </>
         ) : pendingCount > 0 ? (
           <>

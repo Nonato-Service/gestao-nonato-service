@@ -5,6 +5,7 @@ import { DATA_DIR, ensureDataDir, resolveDataDirForKey } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { bumpSyncMeta } from '../syncMeta'
 import { serializeJsonForDisk } from '../writeIfChanged'
+import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -25,6 +26,18 @@ function writeJsonFile(filePath: string, value: unknown) {
 
 export async function POST(request: NextRequest) {
   try {
+    const host = (request.headers.get('host') || '').split(':')[0].toLowerCase()
+    const isLocalDevHost =
+      process.env.NODE_ENV === 'development' ||
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '[::1]' ||
+      host === '::1'
+    if (!isLocalDevHost) {
+      const authDenied = rejectUnauthenticatedProductionAccess(request)
+      if (authDenied) return authDenied
+    }
+
     const { dataDir } = getDemoContext(request)
     ensureDataDir()
     ensureDemoDataDir(dataDir)

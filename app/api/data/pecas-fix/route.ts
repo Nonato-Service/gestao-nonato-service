@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 import { DATA_DIR, ensureDataDir } from '../shared'
+import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -9,9 +10,20 @@ export const dynamic = 'force-dynamic'
 const LITE = 'nonato-pecas-biblioteca-lite.json'
 const FULL = 'nonato-pecas-biblioteca.json'
 
-/** Dev/local: devolve catálogo completo do disco — sem login, sem falhar. */
-export async function GET() {
+/** Catálogo do disco — em produção exige sessão; localhost/dev continua livre. */
+export async function GET(request: NextRequest) {
   try {
+    const host = (request.headers.get('host') || '').split(':')[0].toLowerCase()
+    const isLocalDevHost =
+      process.env.NODE_ENV === 'development' ||
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '[::1]' ||
+      host === '::1'
+    if (!isLocalDevHost) {
+      const authDenied = rejectUnauthenticatedProductionAccess(request)
+      if (authDenied) return authDenied
+    }
     ensureDataDir()
     const litePath = path.join(DATA_DIR, LITE)
     const fullPath = path.join(DATA_DIR, FULL)

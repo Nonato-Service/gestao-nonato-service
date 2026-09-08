@@ -20,12 +20,15 @@ const ARRAY_RISK_KEYS: string[] = [
   'nonato-biblioteca-pecas',
   'nonato-faturas-pecas',
   'nonato-mensagens-comunicacao',
-  'nonato-agenda',
+  'nonato-agendamentos',
   'nonato-checklists',
   'nonato-pre-checks',
   'nonato-desmontados',
   'nonato-solicitacoes-servico-tecnico',
   'nonato-pecas-solicitadas-armazem',
+  'nonato-orcamentos-avulso',
+  'nonato-orcamentos-pecas-especiais',
+  'nonato-pedidos-orcamento',
   'nonato-pedidos-separacao',
   'nonato-passwords',
   'nonato-tipos-gestores',
@@ -84,6 +87,8 @@ export function assessPullServerRisk(
     const l = local[key]
     const s = server[key]
     if (!Array.isArray(l) || l.length === 0) continue
+    /** Chave ausente no bundle (ex.: bootstrap sem peças ~38 MB) ≠ lista vazia no servidor. */
+    if (s === undefined) continue
     const sArr = Array.isArray(s) ? s : []
 
     if (sArr.length === 0) {

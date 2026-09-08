@@ -2416,6 +2416,62 @@ try {
   fail(`hub cliente-equipamento: ${e.message}`)
 }
 
+// 3b) Fase 1 estabilidade: sync leve + chaves protegidas + APIs autenticadas
+try {
+  const keysSrc = fs.readFileSync(path.join(root, 'app/lib/criticalCadastroKeys.ts'), 'utf8')
+  for (const k of [
+    'nonato-orcamentos-avulso',
+    'nonato-mensagens-comunicacao',
+    'nonato-solicitacoes-servico-tecnico',
+    'nonato-pecas-solicitadas-armazem',
+  ]) {
+    if (keysSrc.includes(`'${k}'`)) ok(`cadastro crítico inclui ${k}`)
+    else fail(`cadastro crítico sem ${k}`)
+  }
+  const storageSrc = fs.readFileSync(path.join(root, 'app/utils/dataStorage.ts'), 'utf8')
+  if (storageSrc.includes('loadAllFromServer({ bootstrap: true })')) {
+    ok('pull automático usa bundle bootstrap (sem catálogo ~38 MB)')
+  } else {
+    fail('pullServerUpdatesIfNewer não usa loadAllFromServer({ bootstrap: true })')
+  }
+  if (storageSrc.includes("status: SilentServerSyncResult | 'offline' | 'risk'")) {
+    ok('pull avalia risco grave antes de aplicar sync')
+  } else {
+    fail('pull sem estado risk / assessPullServerRisk')
+  }
+  const riskSrc = fs.readFileSync(path.join(root, 'app/utils/syncRisk.ts'), 'utf8')
+  if (riskSrc.includes("'nonato-agendamentos'") && !/['"]nonato-agenda['"]/.test(riskSrc)) {
+    ok('syncRisk usa nonato-agendamentos (não nonato-agenda)')
+  } else {
+    fail('syncRisk ainda usa chave errada nonato-agenda')
+  }
+  if (riskSrc.includes('if (s === undefined) continue')) {
+    ok('syncRisk ignora chaves ausentes no bundle bootstrap')
+  } else {
+    fail('syncRisk trata chave ausente como lista vazia')
+  }
+  const pecasFix = fs.readFileSync(path.join(root, 'app/api/data/pecas-fix/route.ts'), 'utf8')
+  const restoreServ = fs.readFileSync(path.join(root, 'app/api/data/restore-cadastro-servicos/route.ts'), 'utf8')
+  if (pecasFix.includes('rejectUnauthenticatedProductionAccess')) {
+    ok('pecas-fix exige sessão em produção')
+  } else {
+    fail('pecas-fix sem autenticação')
+  }
+  if (restoreServ.includes('rejectUnauthenticatedProductionAccess')) {
+    ok('restore-cadastro-servicos exige sessão em produção')
+  } else {
+    fail('restore-cadastro-servicos sem autenticação')
+  }
+  const nmaPull = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nmaPull.includes('pulled.status === \'risk\'') || nmaPull.includes('pulled.status === "risk"')) {
+    ok('runAutoServerPull respeita risco grave (não aplica bundle incompleto)')
+  } else {
+    fail('runAutoServerPull não trata status risk')
+  }
+} catch (e) {
+  fail(`fase 1 estabilidade: ${e.message}`)
+}
+
 // 4) i18n
 const i18n = spawnSync('node', ['scripts/check-i18n-keys.mjs'], {
   cwd: root,

@@ -1644,6 +1644,7 @@ export default function Dashboard() {
   const [syncPendingPullRisk, setSyncPendingPullRisk] = useState<PullRiskSeverity>('none')
   /** Sync automática falhou (rede/servidor) — semáforo amarelo; modal só se o utilizador abrir Admin. */
   const [syncAutoSyncFailed, setSyncAutoSyncFailed] = useState(false)
+  const syncAutoRiskSkipRef = useRef(false)
   const [serverAutoPullActive, setServerAutoPullActive] = useState(false)
   const serverAutoPullInFlightRef = useRef(false)
   const syncAutoFailStreakRef = useRef(0)
@@ -5971,36 +5972,40 @@ export default function Dashboard() {
     if (!dataBootstrapCompleteRef.current) return
     serverAutoPullInFlightRef.current = true
     try {
-      const st = await fetchSyncStatus()
-      if (!st) {
-        syncAutoFailStreakRef.current += 1
-        if (syncAutoFailStreakRef.current >= 4) setSyncAutoSyncFailed(true)
-        return
-      }
-      const lastAcc = getLastAcceptedRevision()
-      if (st.revision <= lastAcc) {
-        syncAutoFailStreakRef.current = 0
-        setSyncAutoSyncFailed(false)
-        return
-      }
       setServerAutoPullActive(true)
-      const { data: serverData, ok } = await loadAllFromServer()
-      if (!ok || Object.keys(serverData).length === 0) {
-        syncAutoFailStreakRef.current += 1
-        if (syncAutoFailStreakRef.current >= 2) setSyncAutoSyncFailed(true)
+      const pulled = await pullServerUpdatesIfNewer()
+      if (pulled.status === 'risk') {
+        syncAutoRiskSkipRef.current = true
+        setSyncAutoSyncFailed(true)
         return
       }
-      await applySilentServerSync(serverData as Record<string, unknown>)
-      const stAfter = await fetchSyncStatus()
-      const rev = Math.max(st.revision, stAfter?.revision ?? 0)
-      if (Number.isFinite(rev) && rev > 0) setLastAcceptedRevision(rev)
+      if (pulled.status === 'offline') {
+        syncAutoFailStreakRef.current += 1
+        if (syncAutoFailStreakRef.current >= 4) {
+          syncAutoRiskSkipRef.current = false
+          setSyncAutoSyncFailed(true)
+        }
+        return
+      }
+      if (pulled.status === 'fail') {
+        syncAutoFailStreakRef.current += 1
+        if (syncAutoFailStreakRef.current >= 2) {
+          syncAutoRiskSkipRef.current = false
+          setSyncAutoSyncFailed(true)
+        }
+        return
+      }
       syncAutoFailStreakRef.current = 0
+      syncAutoRiskSkipRef.current = false
       setSyncAutoSyncFailed(false)
       setSyncPendingRemote(null)
       setSyncDecisionModalOpen(false)
     } catch {
       syncAutoFailStreakRef.current += 1
-      if (syncAutoFailStreakRef.current >= 3) setSyncAutoSyncFailed(true)
+      if (syncAutoFailStreakRef.current >= 3) {
+        syncAutoRiskSkipRef.current = false
+        setSyncAutoSyncFailed(true)
+      }
     } finally {
       serverAutoPullInFlightRef.current = false
       setServerAutoPullActive(false)
@@ -67189,7 +67194,10 @@ A1;Peça exemplo;10`}
       : syncTrafficPhase === 'syncing'
         ? trSync.syncUpdatingNewInfo || trSync.syncTrafficBlue || 'A atualizar novas informações…'
         : syncAutoSyncFailed
-          ? trSync.syncTrafficAutoFail || 'Não foi possível sincronizar automaticamente — verifique a ligação ou use Administrador.'
+          ? syncAutoRiskSkipRef.current
+            ? trSync.syncTrafficAutoRiskSkip ||
+              'Sincronização automática adiada: o servidor parece incompleto. Use Administrador se precisar de enviar dados deste aparelho.'
+            : trSync.syncTrafficAutoFail || 'Não foi possível sincronizar automaticamente — verifique a ligação ou use Administrador.'
           : `${trSync.syncTrafficGreen || 'Atualizado — alinhado com o servidor.'} ${trSync.syncTrafficAutoSave || 'Guarda automática — não precisa de botão «Salvar».'}`
   /** Texto curto na barra lateral — altura fixa, evita saltos ao mudar cor. */
   const syncTrafficSidebarCaption =
@@ -67198,7 +67206,9 @@ A1;Peça exemplo;10`}
       : syncTrafficPhase === 'syncing'
         ? trSync.syncTrafficBlueShort || 'A atualizar…'
         : syncAutoSyncFailed
-          ? trSync.syncTrafficAutoFailShort || 'Sem ligação'
+          ? syncAutoRiskSkipRef.current
+            ? trSync.syncTrafficAutoRiskSkipShort || 'Servidor incompleto'
+            : trSync.syncTrafficAutoFailShort || 'Sem ligação'
           : trSync.syncTrafficGreenShort || 'Sincronizado'
   const syncTrafficTitle = trSync.syncTrafficTitle || 'Sincronização'
   const syncTrafficLightsRow = (

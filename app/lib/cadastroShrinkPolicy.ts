@@ -14,8 +14,11 @@ export const ALLOW_PROTECTED_SUBSET_SHRINK_KEYS = new Set<string>([
   'nonato-agendamentos',
   'nonato-solicitacoes-servico-tecnico',
   'nonato-orcamentos-avulso',
+  'nonato-orcamentos-pecas-especiais',
   'nonato-pedidos-orcamento',
   'nonato-pedidos-orcamento-avulso',
+  'nonato-mensagens-comunicacao',
+  'nonato-pecas-solicitadas-armazem',
 ])
 
 function itemId(item: unknown): string {
