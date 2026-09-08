@@ -1471,6 +1471,9 @@ export default function Dashboard() {
   type EquipamentosArmazemEtapa = 'hub' | 'cadastrar' | 'visualizar-familias' | 'visualizar-lista'
   const [equipamentosArmazemEtapa, setEquipamentosArmazemEtapa] = useState<EquipamentosArmazemEtapa>('hub')
   const [equipamentosVisualizarFamilia, setEquipamentosVisualizarFamilia] = useState<string | '__ALL__' | null>(null)
+  const [equipamentosArmazemListaLimite, setEquipamentosArmazemListaLimite] = useState(LISTA_UI_LOTE)
+  const [equipamentosInfoMecanicaListaLimite, setEquipamentosInfoMecanicaListaLimite] = useState(LISTA_UI_LOTE)
+  const [equipamentosModalListaLimite, setEquipamentosModalListaLimite] = useState(LISTA_UI_LOTE)
   const [equipamentoDetailTab, setEquipamentoDetailTab] = useState<'historico' | 'documentos' | 'fotos' | 'itens' | 'etiquetas'>('historico')
   const [historicoForm, setHistoricoForm] = useState<{ tipo: string; descricao: string; responsavel: string; observacoes: string }>({ tipo: 'outro', descricao: '', responsavel: '', observacoes: '' })
   const [newItemIncluded, setNewItemIncluded] = useState('')
@@ -4366,6 +4369,9 @@ export default function Dashboard() {
   const [financeiroDespesasBibClienteAberto, setFinanceiroDespesasBibClienteAberto] = useState<Set<string>>(
     () => new Set()
   )
+  const [fechamentoOsListaLimite, setFechamentoOsListaLimite] = useState(LISTA_UI_LOTE)
+  const [fechamentoDespesasGrupoLimites, setFechamentoDespesasGrupoLimites] = useState<Record<string, number>>({})
+  const [bibliotecaRelatoriosListaLimites, setBibliotecaRelatoriosListaLimites] = useState<Record<string, number>>({})
   const [comprovantesDespesas, setComprovantesDespesas] = useState<ComprovanteDespesa[]>([])
   const [comprovantesFiltroMes, setComprovantesFiltroMes] = useState<string>('')
   const [comprovantesFiltroSemana, setComprovantesFiltroSemana] = useState<string>('')
@@ -5694,6 +5700,10 @@ export default function Dashboard() {
     }
     return equipamentos.filter((eq) => (eq.familia || '').trim() === equipamentosVisualizarFamilia)
   }, [equipamentos, equipamentosVisualizarFamilia, t])
+
+  useEffect(() => {
+    setEquipamentosArmazemListaLimite(LISTA_UI_LOTE)
+  }, [equipamentosVisualizarFamilia])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -28496,7 +28506,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '18px' }}>
-                      {equipamentosListaVisualizar.map((equipamento) => {
+                      {equipamentosListaVisualizar.slice(0, equipamentosArmazemListaLimite).map((equipamento) => {
                         const isBaixado = equipamento.status === 'baixado'
                         const isVendido =
                           isBaixado && equipamento.motivoBaixa === MOTIVO_BAIXA_EQUIPAMENTO_VENDIDO
@@ -28651,6 +28661,19 @@ export default function Dashboard() {
                         )
                       })}
                     </div>
+                    {equipamentosListaVisualizar.length > equipamentosArmazemListaLimite ? (
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        style={{ margin: '16px 0 0', width: '100%' }}
+                        onClick={() => setEquipamentosArmazemListaLimite((n) => n + LISTA_UI_LOTE)}
+                      >
+                        {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                          '{n}',
+                          String(equipamentosListaVisualizar.length - equipamentosArmazemListaLimite)
+                        )}
+                      </button>
+                    ) : null}
                   </>
                 )}
               </>
@@ -56464,16 +56487,31 @@ A1;Peça exemplo;10`}
               <div style={{ backgroundColor: '#404040', borderRadius: '12px', border: '1px solid rgba(0, 200, 83, 0.2)', overflow: 'hidden' }}>
                 <div style={{ padding: '16px', borderBottom: '1px solid rgba(0, 200, 83, 0.2)', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
                   <span style={{ color: '#00c853', fontWeight: '600' }}>{(safeT as any)?.filtrarPor || 'Filtrar por'}:</span>
-                  <select value={informacoesMecanicasFiltroFamilia} onChange={(e) => setInformacoesMecanicasFiltroFamilia(e.target.value)} style={{ padding: '8px 12px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', minWidth: '160px' }}><option value="">{safeT?.familia || 'Família'} (todas)</option>{familiasEquipamento.map(f => <option key={f} value={f}>{f}</option>)}</select>
-                  <select value={informacoesMecanicasFiltroGrupo} onChange={(e) => setInformacoesMecanicasFiltroGrupo(e.target.value)} style={{ padding: '8px 12px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', minWidth: '160px' }}><option value="">{safeT?.grupo || 'Grupo'} (todos)</option>{gruposEquipamento.map(g => <option key={g.nome + g.familia} value={g.nome}>{g.nome} ({g.familia})</option>)}</select>
+                  <select value={informacoesMecanicasFiltroFamilia} onChange={(e) => { setInformacoesMecanicasFiltroFamilia(e.target.value); setEquipamentosInfoMecanicaListaLimite(LISTA_UI_LOTE) }} style={{ padding: '8px 12px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', minWidth: '160px' }}><option value="">{safeT?.familia || 'Família'} (todas)</option>{familiasEquipamento.map(f => <option key={f} value={f}>{f}</option>)}</select>
+                  <select value={informacoesMecanicasFiltroGrupo} onChange={(e) => { setInformacoesMecanicasFiltroGrupo(e.target.value); setEquipamentosInfoMecanicaListaLimite(LISTA_UI_LOTE) }} style={{ padding: '8px 12px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '6px', minWidth: '160px' }}><option value="">{safeT?.grupo || 'Grupo'} (todos)</option>{gruposEquipamento.map(g => <option key={g.nome + g.familia} value={g.nome}>{g.nome} ({g.familia})</option>)}</select>
                   <span style={{ color: '#aaa', fontSize: '13px' }}>{listagemFiltrada.length} {(safeT as any)?.equipamentosAtivos || 'equipamento(s)'}</span>
                 </div>
                 <div style={{ overflowX: 'auto' }}>
                   {listagemFiltrada.length === 0 ? <p style={{ textAlign: 'center', padding: '32px', color: '#888' }}>{(safeT as any)?.nenhumEquipamentoFiltro || 'Nenhum equipamento encontrado.'}</p> : (
+                    <>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                       <thead><tr style={{ backgroundColor: 'rgba(0, 200, 83, 0.1)', borderBottom: '2px solid rgba(0, 200, 83, 0.3)' }}><th style={{ padding: '12px', textAlign: 'left', color: '#00c853' }}>{safeT?.equipamentoId || 'ID'}</th><th style={{ padding: '12px', textAlign: 'left', color: '#00c853' }}>{safeT?.tipoEquipamento || 'Tipo'}</th><th style={{ padding: '12px', textAlign: 'left', color: '#00c853' }}>{safeT?.modelo || 'Modelo'}</th><th style={{ padding: '12px', textAlign: 'left', color: '#00c853' }}>{safeT?.marca || 'Marca'}</th><th style={{ padding: '12px', textAlign: 'left', color: '#00c853' }}>{safeT?.numeroSerie || 'Nº Série'}</th><th style={{ padding: '12px', textAlign: 'left', color: '#00c853' }}>{safeT?.familia || 'Família'}</th><th style={{ padding: '12px', textAlign: 'left', color: '#00c853' }}>{safeT?.grupo || 'Grupo'}</th><th style={{ padding: '12px', textAlign: 'center', color: '#00c853' }}>{(safeT as any)?.acoes || 'Ações'}</th></tr></thead>
-                      <tbody>{listagemFiltrada.map(eq => (<tr key={eq.id} style={{ borderBottom: '1px solid rgba(0, 200, 83, 0.15)' }}><td style={{ padding: '10px', color: '#ccc' }}>{eq.id}</td><td style={{ padding: '10px', color: '#ccc' }}>{eq.tipoEquipamento}</td><td style={{ padding: '10px', color: '#ccc' }}>{eq.modelo}</td><td style={{ padding: '10px', color: '#ccc' }}>{eq.marca}</td><td style={{ padding: '10px', color: '#ccc' }}>{eq.numeroSerie}</td><td style={{ padding: '10px', color: '#ccc' }}>{eq.familia}</td><td style={{ padding: '10px', color: '#ccc' }}>{eq.grupo}</td><td style={{ padding: '10px', textAlign: 'center' }}><button type="button" onClick={() => setViewingEquipamento(eq)} style={{ marginRight: '6px', padding: '6px 10px', fontSize: '12px', backgroundColor: 'rgba(0, 200, 83, 0.15)', border: '1px solid rgba(0, 200, 83, 0.4)', borderRadius: '4px', color: '#00c853', cursor: 'pointer' }}>{safeT?.view || 'Ver'}</button><button type="button" onClick={() => { setInformacoesMecanicasAba('cadastro'); handleEditEquipamento(eq); }} style={{ padding: '6px 10px', fontSize: '12px', backgroundColor: 'rgba(0, 200, 255, 0.15)', border: '1px solid rgba(0, 200, 255, 0.4)', borderRadius: '4px', color: '#66b3ff', cursor: 'pointer' }}>{safeT?.edit || 'Editar'}</button></td></tr>))}</tbody>
+                      <tbody>{listagemFiltrada.slice(0, equipamentosInfoMecanicaListaLimite).map(eq => (<tr key={eq.id} style={{ borderBottom: '1px solid rgba(0, 200, 83, 0.15)' }}><td style={{ padding: '10px', color: '#ccc' }}>{eq.id}</td><td style={{ padding: '10px', color: '#ccc' }}>{eq.tipoEquipamento}</td><td style={{ padding: '10px', color: '#ccc' }}>{eq.modelo}</td><td style={{ padding: '10px', color: '#ccc' }}>{eq.marca}</td><td style={{ padding: '10px', color: '#ccc' }}>{eq.numeroSerie}</td><td style={{ padding: '10px', color: '#ccc' }}>{eq.familia}</td><td style={{ padding: '10px', color: '#ccc' }}>{eq.grupo}</td><td style={{ padding: '10px', textAlign: 'center' }}><button type="button" onClick={() => setViewingEquipamento(eq)} style={{ marginRight: '6px', padding: '6px 10px', fontSize: '12px', backgroundColor: 'rgba(0, 200, 83, 0.15)', border: '1px solid rgba(0, 200, 83, 0.4)', borderRadius: '4px', color: '#00c853', cursor: 'pointer' }}>{safeT?.view || 'Ver'}</button><button type="button" onClick={() => { setInformacoesMecanicasAba('cadastro'); handleEditEquipamento(eq); }} style={{ padding: '6px 10px', fontSize: '12px', backgroundColor: 'rgba(0, 200, 255, 0.15)', border: '1px solid rgba(0, 200, 255, 0.4)', borderRadius: '4px', color: '#66b3ff', cursor: 'pointer' }}>{safeT?.edit || 'Editar'}</button></td></tr>))}</tbody>
                     </table>
+                    {listagemFiltrada.length > equipamentosInfoMecanicaListaLimite ? (
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        style={{ margin: '12px', width: 'calc(100% - 24px)' }}
+                        onClick={() => setEquipamentosInfoMecanicaListaLimite((n) => n + LISTA_UI_LOTE)}
+                      >
+                        {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                          '{n}',
+                          String(listagemFiltrada.length - equipamentosInfoMecanicaListaLimite)
+                        )}
+                      </button>
+                    ) : null}
+                    </>
                   )}
                 </div>
               </div>
@@ -59827,7 +59865,7 @@ A1;Peça exemplo;10`}
                             </div>
                           ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                              {listaFechOs.map(rel => {
+                              {listaFechOs.slice(0, fechamentoOsListaLimite).map(rel => {
                                 const itens = fechamentosRelatorios[rel.id] || []
                                 const itensVis = filtrarFechamentoItensPorOmitidos(
                                   fechamentoItensOmitidosPorRelatorio,
@@ -59882,10 +59920,23 @@ A1;Peça exemplo;10`}
                                       >
                                         📄 {txOs.gerarPDF || safeT?.gerarPDF || 'PDF'}
                                       </button>
+                                      </div>
                                     </div>
-                                  </div>
-                                )
+                                  )
                               })}
+                              {listaFechOs.length > fechamentoOsListaLimite ? (
+                                <button
+                                  type="button"
+                                  className="btn-secondary"
+                                  style={{ width: '100%' }}
+                                  onClick={() => setFechamentoOsListaLimite((n) => n + LISTA_UI_LOTE)}
+                                >
+                                  {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                                    '{n}',
+                                    String(listaFechOs.length - fechamentoOsListaLimite)
+                                  )}
+                                </button>
+                              ) : null}
                             </div>
                           )}
                         </div>
@@ -61273,10 +61324,15 @@ A1;Peça exemplo;10`}
                                 </button>
                                 {aberto ? (
                                   <div className="financeiro-despesas-bib-grupo__body">
+                                    {(() => {
+                                      const limiteG = fechamentoDespesasGrupoLimites[grupo.key] ?? LISTA_UI_LOTE
+                                      const relsVis = grupo.rels.slice(0, limiteG)
+                                      return (
+                                        <>
                                     {!grupoVariosEstados
-                                      ? grupo.rels.map(rel => renderFechamentoDespesaCard(rel))
+                                      ? relsVis.map(rel => renderFechamentoDespesaCard(rel))
                                       : estadosNoGrupo.map(estSec => {
-                                          const relsSec = grupo.rels.filter(
+                                          const relsSec = relsVis.filter(
                                             r =>
                                               getEstadoCobrancaFinanceiraVisual(
                                                 fechamentoFluxoFinanceiroPorRelatorioId[r.id]
@@ -61295,6 +61351,27 @@ A1;Peça exemplo;10`}
                                             </div>
                                           )
                                         })}
+                                    {grupo.rels.length > limiteG ? (
+                                      <button
+                                        type="button"
+                                        className="btn-secondary"
+                                        style={{ marginTop: '8px', width: '100%' }}
+                                        onClick={() =>
+                                          setFechamentoDespesasGrupoLimites((prev) => ({
+                                            ...prev,
+                                            [grupo.key]: limiteG + LISTA_UI_LOTE,
+                                          }))
+                                        }
+                                      >
+                                        {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                                          '{n}',
+                                          String(grupo.rels.length - limiteG)
+                                        )}
+                                      </button>
+                                    ) : null}
+                                        </>
+                                      )
+                                    })()}
                                   </div>
                                 ) : null}
                               </div>
@@ -62233,7 +62310,7 @@ A1;Peça exemplo;10`}
                           </p>
                         ) : (
                           <div className="biblioteca-relatorios-equip-list">
-                            {equipamentos.map(({ equipamento, equipamentoKey, relatorios }) => {
+                            {equipamentos.slice(0, bibliotecaRelatoriosListaLimites[`eq-${cliente.id}`] ?? LISTA_UI_LOTE).map(({ equipamento, equipamentoKey, relatorios }) => {
                               const eqKey = bibliotecaEquipKey(cliente.id, equipamentoKey)
                               const eqLabel = [equipamento.modelo, equipamento.marca]
                                 .filter(Boolean)
@@ -62507,6 +62584,28 @@ A1;Peça exemplo;10`}
                                 </details>
                               )
                             })}
+                            {equipamentos.length > (bibliotecaRelatoriosListaLimites[`eq-${cliente.id}`] ?? LISTA_UI_LOTE) ? (
+                              <button
+                                type="button"
+                                className="btn-secondary"
+                                style={{ margin: '8px 0', width: '100%' }}
+                                onClick={() =>
+                                  setBibliotecaRelatoriosListaLimites((prev) => ({
+                                    ...prev,
+                                    [`eq-${cliente.id}`]:
+                                      (prev[`eq-${cliente.id}`] ?? LISTA_UI_LOTE) + LISTA_UI_LOTE,
+                                  }))
+                                }
+                              >
+                                {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                                  '{n}',
+                                  String(
+                                    equipamentos.length -
+                                      (bibliotecaRelatoriosListaLimites[`eq-${cliente.id}`] ?? LISTA_UI_LOTE)
+                                  )
+                                )}
+                              </button>
+                            ) : null}
                           </div>
                         )}
 
@@ -62536,7 +62635,7 @@ A1;Peça exemplo;10`}
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {despesasCliente.map(({ relatorio, itens }) => {
+                                  {despesasCliente.slice(0, bibliotecaRelatoriosListaLimites[`desp-${cliente.id}`] ?? LISTA_UI_LOTE).map(({ relatorio, itens }) => {
                                     const itensDespesasVisiveis = filtrarFechamentoItensPorOmitidos(
                                       fechamentoItensOmitidosPorRelatorio,
                                       relatorio.id,
@@ -62693,6 +62792,32 @@ A1;Peça exemplo;10`}
                                       </tr>
                                     )
                                   })}
+                                  {despesasCliente.length > (bibliotecaRelatoriosListaLimites[`desp-${cliente.id}`] ?? LISTA_UI_LOTE) ? (
+                                    <tr>
+                                      <td colSpan={5} style={{ padding: '8px 10px' }}>
+                                        <button
+                                          type="button"
+                                          className="btn-secondary"
+                                          style={{ width: '100%' }}
+                                          onClick={() =>
+                                            setBibliotecaRelatoriosListaLimites((prev) => ({
+                                              ...prev,
+                                              [`desp-${cliente.id}`]:
+                                                (prev[`desp-${cliente.id}`] ?? LISTA_UI_LOTE) + LISTA_UI_LOTE,
+                                            }))
+                                          }
+                                        >
+                                          {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                                            '{n}',
+                                            String(
+                                              despesasCliente.length -
+                                                (bibliotecaRelatoriosListaLimites[`desp-${cliente.id}`] ?? LISTA_UI_LOTE)
+                                            )
+                                          )}
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ) : null}
                                 </tbody>
                               </table>
                             </div>
@@ -71466,7 +71591,7 @@ A1;Peça exemplo;10`}
                   <p>{safeT?.noEquipamentos || 'Nenhum equipamento cadastrado'}</p>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
-                    {equipamentos.map(equipamento => (
+                    {equipamentos.slice(0, equipamentosModalListaLimite).map(equipamento => (
                       <div key={equipamento.id} style={{ padding: '15px', backgroundColor: '#404040', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                         {equipamento.photo && (
                           <img src={equipamento.photo} alt={equipamento.modelo} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
@@ -71514,6 +71639,19 @@ A1;Peça exemplo;10`}
                       </div>
                     ))}
                   </div>
+                  {equipamentos.length > equipamentosModalListaLimite ? (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      style={{ marginTop: '12px', width: '100%' }}
+                      onClick={() => setEquipamentosModalListaLimite((n) => n + LISTA_UI_LOTE)}
+                    >
+                      {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                        '{n}',
+                        String(equipamentos.length - equipamentosModalListaLimite)
+                      )}
+                    </button>
+                  ) : null}
                 )}
               </>
             )}

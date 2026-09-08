@@ -2530,6 +2530,15 @@ try {
   } else {
     fail('ClienteAlfabetoPicker sem lote / letras fechadas')
   }
+  if (
+    nma3.includes('equipamentosArmazemListaLimite') &&
+    nma3.includes('fechamentoOsListaLimite') &&
+    nma3.includes('fechamentoDespesasGrupoLimites')
+  ) {
+    ok('equipamentos e fechamento usam lote de ecrã')
+  } else {
+    fail('listas de equipamentos/fechamento ainda sem lote')
+  }
 } catch (e) {
   fail(`fase 3 listas: ${e.message}`)
 }
