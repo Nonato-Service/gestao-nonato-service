@@ -2569,6 +2569,15 @@ try {
   } else {
     fail('listas de equipamentos/fechamento ainda sem lote')
   }
+  if (
+    nma3.includes('pecasBibliotecaModalListaLimite') &&
+    nma3.includes('relatoriosServicoModalListaLimite') &&
+    nma3.includes('pecasAgendaListaLimite')
+  ) {
+    ok('peças, relatórios e agenda usam lote de ecrã')
+  } else {
+    fail('modais de peças/relatórios ainda sem lote')
+  }
 } catch (e) {
   fail(`fase 3 listas: ${e.message}`)
 }

@@ -3086,6 +3086,10 @@ export default function Dashboard() {
       if (filtro === 'lidas') return mensagens.filter(m => m.lida)
       return mensagens
     }, [mensagens, filtro])
+    const [mensagensListaLimite, setMensagensListaLimite] = useState(LISTA_UI_LOTE)
+    React.useEffect(() => {
+      setMensagensListaLimite(LISTA_UI_LOTE)
+    }, [filtro])
 
     return (
       <div className="comunicacao-stack">
@@ -3110,7 +3114,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            {mensagensFiltradas.map(mensagem => (
+            {mensagensFiltradas.slice(0, mensagensListaLimite).map(mensagem => (
               <div
                 key={mensagem.id}
                 className={`comunicacao-msg-card ${mensagem.lida ? 'comunicacao-msg-card--read' : 'comunicacao-msg-card--unread'}`}
@@ -3199,6 +3203,19 @@ export default function Dashboard() {
                 </div>
               </div>
             ))}
+            {mensagensFiltradas.length > mensagensListaLimite ? (
+              <button
+                type="button"
+                className="btn-secondary"
+                style={{ width: '100%' }}
+                onClick={() => setMensagensListaLimite((n) => n + LISTA_UI_LOTE)}
+              >
+                {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                  '{n}',
+                  String(mensagensFiltradas.length - mensagensListaLimite)
+                )}
+              </button>
+            ) : null}
           </div>
         )}
       </div>
@@ -3405,6 +3422,7 @@ export default function Dashboard() {
     mensagens: MensagemComunicacao[]
     safeT: any
   }) => {
+    const [enviadasListaLimite, setEnviadasListaLimite] = useState(LISTA_UI_LOTE)
     return (
       <div className="comunicacao-stack">
         <h3 className="text-ns-info" style={{ margin: 0 }}>
@@ -3417,7 +3435,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            {mensagens.map(mensagem => (
+            {mensagens.slice(0, enviadasListaLimite).map(mensagem => (
               <div key={mensagem.id} className="comunicacao-msg-card comunicacao-msg-card--read">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                   <div>
@@ -3435,6 +3453,19 @@ export default function Dashboard() {
                 </p>
               </div>
             ))}
+            {mensagens.length > enviadasListaLimite ? (
+              <button
+                type="button"
+                className="btn-secondary"
+                style={{ width: '100%' }}
+                onClick={() => setEnviadasListaLimite((n) => n + LISTA_UI_LOTE)}
+              >
+                {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                  '{n}',
+                  String(mensagens.length - enviadasListaLimite)
+                )}
+              </button>
+            ) : null}
           </div>
         )}
       </div>
@@ -3655,6 +3686,7 @@ export default function Dashboard() {
   const [statusDiaSelecionado, setStatusDiaSelecionado] = useState<'nenhum' | 'folga' | 'doente' | 'ferias'>('nenhum')
   const [statusTecnicoPorDia, setStatusTecnicoPorDia] = useState<Record<string, Record<string, 'nenhum' | 'pre' | 'agendamento' | 'folga' | 'doente' | 'ferias'>>>({})
   const [showSelecionarPecasModal, setShowSelecionarPecasModal] = useState(false)
+  const [pecasAgendaListaLimite, setPecasAgendaListaLimite] = useState(LISTA_UI_LOTE)
   const [pecasSelecionadasAgenda, setPecasSelecionadasAgenda] = useState<PecaBiblioteca[]>([])
   const [showAgendaLembreteModal, setShowAgendaLembreteModal] = useState(false)
   /** Mensagem do modal centrado de bloqueio por conflito (técnico/cliente) — substitui alert() nativo */
@@ -3877,6 +3909,7 @@ export default function Dashboard() {
     [categoriasPecas]
   )
   const [showBibliotecaPecasModal, setShowBibliotecaPecasModal] = useState(false)
+  const [pecasBibliotecaModalListaLimite, setPecasBibliotecaModalListaLimite] = useState(LISTA_UI_LOTE)
   const [showBibliotecaPecasForm, setShowBibliotecaPecasForm] = useState(false)
   const [editingPecaBiblioteca, setEditingPecaBiblioteca] = useState<PecaBiblioteca | null>(null)
   const [filtroGrupoBiblioteca, setFiltroGrupoBiblioteca] = useState<string>('')
@@ -5399,6 +5432,7 @@ export default function Dashboard() {
     new Set()
   )
   const [showRelatorioServicoModal, setShowRelatorioServicoModal] = useState(false)
+  const [relatoriosServicoModalListaLimite, setRelatoriosServicoModalListaLimite] = useState(LISTA_UI_LOTE)
   const [showRelatorioServicoForm, setShowRelatorioServicoForm] = useState(false)
   const [editingRelatorioServico, setEditingRelatorioServico] = useState<RelatorioServico | null>(null)
   const [viewingRelatorioServico, setViewingRelatorioServico] = useState<RelatorioServico | null>(null)
@@ -63846,6 +63880,7 @@ A1;Peça exemplo;10`}
     })
     const [buscaCodigoPeca, setBuscaCodigoPeca] = useState('')
     const [pecasFiltradas, setPecasFiltradas] = useState<PecaBiblioteca[]>([])
+    const [orcamentoPecasBuscaLimite, setOrcamentoPecasBuscaLimite] = useState(LISTA_UI_LOTE)
     const [orcamentoEditando, setOrcamentoEditando] = useState<string | null>(null)
     const [numeroOrcamentoManual, setNumeroOrcamentoManual] = useState(
       Boolean(rascunhoEfetivo.numeroOrcamentoManual)
@@ -65761,6 +65796,7 @@ A1;Peça exemplo;10`}
                         onChange={(e) => {
                           setBuscaCodigoPeca(e.target.value)
                           buscarPecaPorCodigo(e.target.value)
+                          setOrcamentoPecasBuscaLimite(LISTA_UI_LOTE)
                         }}
                         placeholder={safeT?.codigoPeca || 'Código da Peça'}
                         style={{
@@ -65787,7 +65823,7 @@ A1;Peça exemplo;10`}
                           borderRadius: '6px',
                           backgroundColor: '#484848'
                         }}>
-                          {pecasFiltradas.map(peca => (
+                          {pecasFiltradas.slice(0, orcamentoPecasBuscaLimite).map(peca => (
                             <div
                               key={peca.id}
                               onClick={() => selecionarPeca(peca)}
@@ -65819,6 +65855,19 @@ A1;Peça exemplo;10`}
                               </div>
                             </div>
                           ))}
+                          {pecasFiltradas.length > orcamentoPecasBuscaLimite ? (
+                            <button
+                              type="button"
+                              className="btn-secondary"
+                              style={{ width: '100%', margin: '6px 0' }}
+                              onClick={() => setOrcamentoPecasBuscaLimite((n) => n + LISTA_UI_LOTE)}
+                            >
+                              {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                                '{n}',
+                                String(pecasFiltradas.length - orcamentoPecasBuscaLimite)
+                              )}
+                            </button>
+                          ) : null}
                         </div>
                       )}
                     </div>
@@ -72795,8 +72844,9 @@ A1;Peça exemplo;10`}
             {relatoriosServico.length === 0 ? (
               <p>{safeT?.noRelatoriosServico || 'Nenhum relatório de serviço cadastrado.'}</p>
             ) : (
+              <>
               <ul style={{ listStyle: 'none', padding: 0, marginTop: '20px' }}>
-                {relatoriosServico.map(relatorio => {
+                {relatoriosServico.slice(0, relatoriosServicoModalListaLimite).map(relatorio => {
                   const fluxoPendenteFinanceiro = relatorioServicoFluxoFinanceiroPendente(
                     fechamentoFluxoFinanceiroPorRelatorioId[relatorio.id]
                   )
@@ -72847,6 +72897,20 @@ A1;Peça exemplo;10`}
                   )
                 })}
               </ul>
+              {relatoriosServico.length > relatoriosServicoModalListaLimite ? (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ width: '100%', marginTop: '8px' }}
+                  onClick={() => setRelatoriosServicoModalListaLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(relatoriosServico.length - relatoriosServicoModalListaLimite)
+                  )}
+                </button>
+              ) : null}
+              </>
             )}
             <button className="btn-primary" onClick={() => setShowRelatorioServicoModal(false)} style={{ width: '100%', marginTop: '20px' }}>
               {safeT?.close || 'Fechar'}
@@ -73152,8 +73216,9 @@ A1;Peça exemplo;10`}
             {pecasBiblioteca.length === 0 ? (
               <p>{safeT?.noPecasBiblioteca || 'Nenhuma peça cadastrada.'}</p>
             ) : (
+              <>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginTop: '20px' }}>
-                {pecasBiblioteca.map(peca => (
+                {pecasBiblioteca.slice(0, pecasBibliotecaModalListaLimite).map(peca => (
                   <div key={peca.id} style={{ backgroundColor: '#404040', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                     <img
                       src={pecaBibliotecaSrcCapaDisplay(peca)}
@@ -73190,6 +73255,20 @@ A1;Peça exemplo;10`}
                   </div>
                 ))}
               </div>
+              {pecasBiblioteca.length > pecasBibliotecaModalListaLimite ? (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ width: '100%', marginTop: '12px' }}
+                  onClick={() => setPecasBibliotecaModalListaLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(pecasBiblioteca.length - pecasBibliotecaModalListaLimite)
+                  )}
+                </button>
+              ) : null}
+              </>
             )}
             <button className="btn-primary" onClick={() => setShowBibliotecaPecasModal(false)} style={{ width: '100%', marginTop: '20px' }}>
               {safeT?.close || 'Fechar'}
@@ -73226,8 +73305,9 @@ A1;Peça exemplo;10`}
                   {safeT?.nenhumaPecaCadastrada || 'Nenhuma peça cadastrada.'}
                 </p>
               ) : (
+                <>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
-                  {pecasBiblioteca.map(peca => {
+                  {pecasBiblioteca.slice(0, pecasAgendaListaLimite).map(peca => {
                     const isSelecionada = pecasSelecionadasAgenda.some(p => p.id === peca.id)
                     return (
                       <div
@@ -73285,6 +73365,20 @@ A1;Peça exemplo;10`}
                     )
                   })}
                 </div>
+                {pecasBiblioteca.length > pecasAgendaListaLimite ? (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ width: '100%', marginTop: '10px' }}
+                    onClick={() => setPecasAgendaListaLimite((n) => n + LISTA_UI_LOTE)}
+                  >
+                    {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                      '{n}',
+                      String(pecasBiblioteca.length - pecasAgendaListaLimite)
+                    )}
+                  </button>
+                ) : null}
+              </>
               )}
             </div>
 
