@@ -29,6 +29,7 @@ const critical = [
   'app/utils/cadastroSafety.ts',
   'app/lib/criticalCadastroKeys.ts',
   'app/lib/listaUiLote.ts',
+  'scripts/runtime-fase4.mjs',
   'app/lib/formatMoney.ts',
   'app/lib/orcamentosAlfabeto.ts',
   'app/lib/clienteDevedorUtils.ts',
@@ -2541,6 +2542,15 @@ const i18n = spawnSync('node', ['scripts/check-i18n-keys.mjs'], {
 })
 if (i18n.status === 0) ok('i18n:check — chaves alinhadas')
 else fail(`i18n:check falhou\n${i18n.stdout || ''}${i18n.stderr || ''}`)
+
+// 4b) Fase 4 — executar guardas de gravar/sync (não só ler o código)
+const fase4 = spawnSync('node', ['scripts/runtime-fase4.mjs'], {
+  cwd: root,
+  encoding: 'utf8',
+  shell: true,
+})
+if (fase4.status === 0) ok('runtime-fase4 — guardas de gravar/sync executadas')
+else fail(`runtime-fase4 falhou\n${fase4.stdout || ''}${fase4.stderr || ''}`)
 
 console.log('')
 if (failed > 0) {

@@ -29,7 +29,8 @@
     "manual:capture-screenshots": "node scripts/capture-manual-screenshots.mjs",
     "pwa:sync": "node scripts/sync-pwa-version.mjs",
     "pwa:bump": "node scripts/bump-pwa-version.mjs",
-    "smoke:critico": "node scripts/smoke-critico.mjs"
+    "smoke:critico": "node scripts/smoke-critico.mjs",
+    "smoke:runtime": "node scripts/runtime-fase4.mjs"
   },
   "dependencies": {
     "adm-zip": "^0.6.0",
