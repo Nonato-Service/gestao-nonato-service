@@ -1,7 +1,16 @@
+/** Normaliza texto monetário: espaços/€ fora; vírgula decimal → ponto (ex.: 0,6 → 0.6). */
+function textoValorMonetarioParaParse(raw: unknown): string {
+  return String(raw ?? '')
+    .trim()
+    .replace(/\s/g, '')
+    .replace(/€/g, '')
+    .replace(',', '.')
+}
+
 /** Cadastro de serviços: valores vindos do JSON/localStorage podem ser string. */
 export function normalizeServicoValorStored(v: unknown): number {
   if (typeof v === 'number' && Number.isFinite(v)) return v
-  const n = parseFloat(String(v ?? '').replace(/\s/g, '').replace(',', '.'))
+  const n = parseFloat(textoValorMonetarioParaParse(v))
   return Number.isFinite(n) ? n : 0
 }
 
@@ -12,7 +21,7 @@ export function formatServicoValorExibicao(v: unknown): string {
 
 /** Campo de valor (texto): aceita vírgula ou ponto; vazio trata-se como 0 ao guardar. */
 export function parseServicoValorInput(raw: string | undefined | null): number {
-  const t = String(raw ?? '').trim().replace(/\s/g, '').replace(/€/g, '').replace(',', '.')
+  const t = textoValorMonetarioParaParse(raw)
   if (t === '' || t === '-' || t === '.') return 0
   const n = parseFloat(t)
   return Number.isFinite(n) ? n : NaN

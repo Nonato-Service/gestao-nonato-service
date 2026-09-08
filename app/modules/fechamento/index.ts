@@ -16,6 +16,7 @@ export {
   servicoCodParaExibicao,
   servicoDescricaoLegivelFechamento,
   servicoRotuloParaSelectFechamento,
+  servicoOpcaoSelectFechamentoComValor,
 } from './servicoRotulos'
 
 export {
@@ -64,6 +65,7 @@ export type {
   BuildItensFechamentoParaExibirOpts,
 } from './exibirItens'
 export {
+  resolverQuantidadeLinhaFechamentoExibir,
   buildItensFechamentoParaExibirFromSalvos,
   labelLinhaFechamentoFixa,
   filtrarOpcoesServicoLinhaFechamento,

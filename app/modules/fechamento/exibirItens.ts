@@ -1,6 +1,7 @@
 /**
  * Helpers de UI para exibir itens do fechamento (cobrança).
- * Semântica de quantidade: preserva `saved.quantidade ?? item` (NÃO força qty do resumo como no sync).
+ * Semântica de quantidade: edição do utilizador prevalece, mas 0 guardado
+ * não bloqueia qty nova do relatório (`??` não trata 0 — regressão típica pós-v430).
  */
 import { enriquecerLinhaFechamentoComCadastro, filtrarServicosCadastroPorGrupo } from './linhaCadastro'
 import { isLinhaManualFechamento } from './cobrancaRelatorio'
@@ -20,8 +21,23 @@ export type BuildItensFechamentoParaExibirOpts = {
 }
 
 /**
+ * Quantidade na tabela: edição guardada prevalece; se o guardado ficou 0
+ * (fechamento aberto antes de haver horas/km) e o resumo já tem qty > 0, usa o resumo.
+ */
+export function resolverQuantidadeLinhaFechamentoExibir(
+  savedQty: number | undefined | null,
+  qtyDoResumo: number | undefined | null
+): number {
+  const fromReport =
+    typeof qtyDoResumo === 'number' && Number.isFinite(qtyDoResumo) ? qtyDoResumo : 0
+  if (typeof savedQty !== 'number' || !Number.isFinite(savedQty)) return fromReport
+  if (savedQty === 0 && fromReport > 0) return fromReport
+  return savedQty
+}
+
+/**
  * Monta a lista para a tabela de cobrança a partir do guardado + base do resumo.
- * Quantidade: `saved.quantidade ?? item.quantidade` (edição do utilizador prevalece).
+ * Quantidade: edição do utilizador prevalece, com cura de 0 obsoleto vs resumo.
  * Diferente de `sincronizarItensFechamentoComRelatorioAtualizado`, que força qty do resumo.
  */
 export function buildItensFechamentoParaExibirFromSalvos(
@@ -47,7 +63,7 @@ export function buildItensFechamentoParaExibirFromSalvos(
         ...item,
         ...saved,
         id: item.id,
-        quantidade: saved.quantidade ?? item.quantidade ?? 0,
+        quantidade: resolverQuantidadeLinhaFechamentoExibir(saved.quantidade, item.quantidade),
         tipoCobranca: item.tipoCobranca,
         origem: saved.origem ?? item.origem,
       },

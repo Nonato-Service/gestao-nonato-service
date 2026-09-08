@@ -44,3 +44,20 @@ export function servicoRotuloParaSelectFechamento(s: {
   if (legivel) return cod ? `${cod} — ${legivel}` : legivel
   return cod || '—'
 }
+
+/**
+ * Opção do select: COD + valor € primeiro (evita truncar `50.00 €` no fim da célula
+ * estreita — sintoma OCR tipo `- 50.I` / `- 0.I`).
+ */
+export function servicoOpcaoSelectFechamentoComValor(
+  s: { cod?: string; nome: string; descricao?: string; valor?: unknown },
+  formatValor: (v: unknown) => string
+): string {
+  const cod = servicoCodParaExibicao(s) || '—'
+  const valorTxt = formatValor(s.valor)
+  const legivel = servicoDescricaoLegivelFechamento(s)
+  const legNorm = String(legivel ?? '').trim().toUpperCase()
+  const codNorm = cod.trim().toUpperCase()
+  if (legivel && legNorm !== codNorm) return `${cod} · ${valorTxt} € — ${legivel}`
+  return `${cod} · ${valorTxt} €`
+}

@@ -707,7 +707,7 @@ import {
   servicoValorToInputString,
   servicoCodParaExibicao,
   servicoDescricaoLegivelFechamento,
-  servicoRotuloParaSelectFechamento,
+  servicoOpcaoSelectFechamentoComValor,
   filtrarServicosCadastroPorGrupo,
   resolverServicosFechamentoTemplate,
   getServicoParaLinhaFechamento,
@@ -20008,10 +20008,13 @@ export default function Dashboard() {
     if (savedRelatorio.servicoConcluido) {
       arquivarRelatorioConcluidoNaBiblioteca(savedRelatorio)
     }
-    if (fechamentosGuardadosBibliotecaIds.includes(savedRelatorio.id)) {
+    /** Sempre sincronizar qty do relatório → fechamento se já existir (não só após arquivo na Biblioteca). */
+    {
       const rid = savedRelatorio.id
       setFechamentosRelatorios((prev) => {
-        const merged = sincronizarItensFechamentoComRelatorioAtualizado(savedRelatorio, prev[rid])
+        const cur = prev[rid]
+        if (!Array.isArray(cur) || cur.length === 0) return prev
+        const merged = sincronizarItensFechamentoComRelatorioAtualizado(savedRelatorio, cur)
         const next = { ...prev, [rid]: merged }
         void saveData('nonato-fechamentos-relatorios', next)
         return next
@@ -46103,10 +46106,14 @@ A1;Peça exemplo;10`}
             const idx = list.findIndex(i => i.id === id)
             if (idx === -1) return prev
             const item = { ...list[idx], ...upd }
+            const qty = normalizeServicoValorStored(item.quantidade)
+            const vu = normalizeServicoValorStored(item.valorUnitario)
+            item.quantidade = qty
+            item.valorUnitario = vu
             if (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret') {
-              item.valorTotal = Math.round(item.quantidade * item.valorUnitario * 100) / 100
+              item.valorTotal = Math.round(qty * vu * 100) / 100
             } else if (item.tipoCobranca === 'valor-fixo' || item.tipoCobranca === 'unidade') {
-              item.valorTotal = Math.round(item.valorUnitario * (item.quantidade || 1) * 100) / 100
+              item.valorTotal = Math.round(vu * (qty || 1) * 100) / 100
             }
             const nova = [...list.slice(0, idx), item, ...list.slice(idx + 1)]
             const next = { ...prev, [rid]: nova }
@@ -47158,7 +47165,11 @@ A1;Peça exemplo;10`}
                                 }
                                 min={0}
                                 value={item.quantidade === 0 ? '' : item.quantidade}
-                                onChange={(e) => atualizarItem(item.id, { quantidade: parseFloat(e.target.value) || 0 })}
+                                onChange={(e) =>
+                                  atualizarItem(item.id, {
+                                    quantidade: normalizeServicoValorStored(e.target.value),
+                                  })
+                                }
                                 className="fechamento-itens-qty-input"
                                 style={{ width: '72px', textAlign: 'right' }}
                                 placeholder="0"
@@ -47179,7 +47190,11 @@ A1;Peça exemplo;10`}
                                 step="0.01"
                                 min={0}
                                 value={item.valorUnitario === 0 ? '' : item.valorUnitario}
-                                onChange={(e) => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })}
+                                onChange={(e) =>
+                                  atualizarItem(item.id, {
+                                    valorUnitario: normalizeServicoValorStored(e.target.value),
+                                  })
+                                }
                                 className={item.valorUnitario <= 0 ? 'fechamento-item-input--warn-val fechamento-itens-val-input' : 'fechamento-itens-val-input'}
                                 style={{ width: '92px', textAlign: 'right' }}
                                 placeholder={(safeT as any)?.inserirValorEuro || 'Valor €'}
@@ -47190,7 +47205,20 @@ A1;Peça exemplo;10`}
                                 {valorUnitExibir.toFixed(2)} €
                               </span>
                             ) : (
-                              <input type="number" step="0.01" min={0} value={item.valorUnitario === 0 ? '' : item.valorUnitario} onChange={e => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })} className="fechamento-itens-val-input" style={{ width: '80px' }} placeholder="0,00" />
+                              <input
+                                type="number"
+                                step="0.01"
+                                min={0}
+                                value={item.valorUnitario === 0 ? '' : item.valorUnitario}
+                                onChange={(e) =>
+                                  atualizarItem(item.id, {
+                                    valorUnitario: normalizeServicoValorStored(e.target.value),
+                                  })
+                                }
+                                className="fechamento-itens-val-input"
+                                style={{ width: '80px' }}
+                                placeholder="0,00"
+                              />
                             )}
                           </td>
                           <td style={{ textAlign: 'right', fontWeight: 600, color: cobrarDiaria ? '#00c853' : '#888' }}>{totalExibir.toFixed(2)} €{eDiarias && !cobrarDiaria ? ' (' + ((safeT as any)?.naoCobrar || 'não cobrar') + ')' : ''}</td>
@@ -47218,7 +47246,7 @@ A1;Peça exemplo;10`}
                                 <option value="">{(safeT as any)?.servicoDiarias || '— Diárias —'}</option>
                                 {servicosParaItem(item).map((s) => (
                                   <option key={s.id} value={s.id}>
-                                    {servicoRotuloParaSelectFechamento(s)} · {formatServicoValorExibicao(s.valor)} €
+                                    {servicoOpcaoSelectFechamentoComValor(s, formatServicoValorExibicao)}
                                   </option>
                                 ))}
                               </select>
@@ -47235,7 +47263,7 @@ A1;Peça exemplo;10`}
                                 <option value="">{(safeT as any)?.fechamentoSelecionarServico || '— Selecionar serviço —'}</option>
                                 {servicosParaItem(item).map((s) => (
                                   <option key={s.id} value={s.id}>
-                                    {servicoRotuloParaSelectFechamento(s)} · {formatServicoValorExibicao(s.valor)} €
+                                    {servicoOpcaoSelectFechamentoComValor(s, formatServicoValorExibicao)}
                                   </option>
                                 ))}
                               </select>
@@ -47250,7 +47278,7 @@ A1;Peça exemplo;10`}
                                   <option value="">{(safeT as any)?.selecioneServicoAnexar || '— Selecionar serviço (código, descrição, valor) —'}</option>
                                   {servicosParaItem(item).map((s) => (
                                     <option key={s.id} value={s.id}>
-                                      {servicoRotuloParaSelectFechamento(s)} · {formatServicoValorExibicao(s.valor)} €
+                                      {servicoOpcaoSelectFechamentoComValor(s, formatServicoValorExibicao)}
                                     </option>
                                   ))}
                                 </select>

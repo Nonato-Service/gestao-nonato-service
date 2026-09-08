@@ -130,7 +130,8 @@ try {
   }
   if (
     idx.includes('buildItensFechamentoParaExibirFromSalvos') &&
-    idx.includes('filtrarOpcoesServicoLinhaFechamento')
+    idx.includes('filtrarOpcoesServicoLinhaFechamento') &&
+    idx.includes('resolverQuantidadeLinhaFechamentoExibir')
   ) {
     ok('módulo fechamento exporta exibirItens UI')
   } else {
