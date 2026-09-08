@@ -40,8 +40,12 @@ export async function runPecasBibliotecaSyncExclusive<T>(
   }
 }
 
-/** Tablet/telemóvel: carregar só catálogo (sem fotos base64) — poupa memória e rede. */
+/** Nunca descarregar fotos base64 no arranque — só no botão «Baixar» da biblioteca. */
 export function shouldDeferPecasBibliotecaImageHydration(): boolean {
+  return true
+}
+
+export function isBibliotecaMobileDevice(): boolean {
   if (typeof window === 'undefined') return false
   try {
     const coarse = window.matchMedia('(pointer: coarse)').matches
@@ -52,10 +56,6 @@ export function shouldDeferPecasBibliotecaImageHydration(): boolean {
   } catch {
     return false
   }
-}
-
-export function isBibliotecaMobileDevice(): boolean {
-  return shouldDeferPecasBibliotecaImageHydration()
 }
 
 export function shouldRejectPartialPecasSave(count: number, expected?: number | null): boolean {

@@ -8,6 +8,15 @@ import translate from 'google-translate-api-x'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 const FILE = path.join(ROOT, 'app', 'translations.ts')
+if (fs.existsSync(FILE)) {
+  const head = fs.readFileSync(FILE, 'utf8').slice(0, 400)
+  if (head.includes('ensureTranslationBundle') || head.includes('i18n/messages')) {
+    console.error(
+      'i18n:sync ainda espera o monólito translations.ts. Os textos estão em app/i18n/messages/*.json — não correr este script até ser actualizado.'
+    )
+    process.exit(1)
+  }
+}
 const CACHE = path.join(ROOT, 'scripts', '.i18n-sync-cache.json')
 
 const LANGS = ['pt-BR', 'es', 'fr', 'it', 'de', 'en']

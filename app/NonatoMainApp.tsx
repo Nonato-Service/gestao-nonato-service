@@ -7,6 +7,7 @@ import { PecaObservacaoToggle } from './components/PecaObservacaoToggle'
 import {
   translations,
   translationBundleKey,
+  ensureTranslationBundle,
   isEnglishUi,
   localeForLongDatetime,
   localeDateShort,
@@ -96,6 +97,7 @@ import {
   agruparRelatoriosOrfaosPorNome,
   nomesClienteCorrespondem,
   isPecasBibliotecaCatalogIncomplete,
+  buildPecasBibliotecaLite,
   pecasBibliotecaMinExpected,
   pecasBibliotecaMeetsServerTotal,
   getCachedPecasBibliotecaServerTotal,
@@ -1203,6 +1205,15 @@ export default function Dashboard() {
   }
   
   const [selectedLanguage, setSelectedLanguage] = useState<string>(getInitialLanguage())
+  const [translationReadyTick, setTranslationReadyTick] = useState(0)
+
+  useEffect(() => {
+    const key = translationBundleKey(selectedLanguage)
+    if (key === 'pt-BR') return
+    void ensureTranslationBundle(selectedLanguage).then(() => {
+      setTranslationReadyTick((n) => n + 1)
+    })
+  }, [selectedLanguage])
   
   // Definir traduções de forma segura e atualizada quando o idioma muda
   const t = useMemo(() => {
@@ -1219,7 +1230,7 @@ export default function Dashboard() {
       console.error('Erro ao carregar traduções:', error)
       return { title: 'Gestão Técnica da Nonato Service', welcome: 'Bem-vindo ao Painel de Controlo' } as any
     }
-  }, [selectedLanguage])
+  }, [selectedLanguage, translationReadyTick])
   
   const safeT = useMemo(() => {
     try {
@@ -1235,7 +1246,7 @@ export default function Dashboard() {
       console.error('Erro ao carregar traduções:', error)
       return { title: 'Gestão Técnica da Nonato Service', welcome: 'Bem-vindo ao Painel de Controlo' } as any
     }
-  }, [selectedLanguage])
+  }, [selectedLanguage, translationReadyTick])
 
   const writingAssistLangOptions = useMemo(() => getLanguages(safeT), [safeT])
   const trCardDesc = useMemo(
@@ -3835,6 +3846,7 @@ export default function Dashboard() {
 
   // Estados para Biblioteca de Peças
   const [pecasBiblioteca, setPecasBiblioteca] = useState<PecaBiblioteca[]>([])
+  const pecasBgRepairPendingRef = useRef<number | null>(null)
   const [pecasBibliotecaReparoLoading, setPecasBibliotecaReparoLoading] = useState(false)
   const [pecasBibliotecaReparoProgress, setPecasBibliotecaReparoProgress] = useState('')
   const [categoriasPecas, setCategoriasPecas] = useState<CategoriaPeca[]>([])
@@ -8402,59 +8414,21 @@ export default function Dashboard() {
           }
           // Preservar categorias já atribuídas na UI se o incoming vier sem classificação.
           toSave = mergePecasBibliotecaArrays(sequenciada, prev) as PecaBiblioteca[]
-          return toSave
+          return buildPecasBibliotecaLite(toSave) as PecaBiblioteca[]
         })
         void savePecasBibliotecaLocally(toSave)
         void pushPecasBibliotecaClassificationsIfRicher(toSave as unknown[])
         return toSave
       }
       if (savedPecasBiblioteca && Array.isArray(savedPecasBiblioteca) && savedPecasBiblioteca.length > 0) {
-        const lista = applyPecasBootList(savedPecasBiblioteca as PecaBiblioteca[])
-        const faltamFotos = lista.filter(
-          (p) =>
-            (p as PecaBiblioteca & { temImagemServidor?: boolean }).temImagemServidor &&
-            !(typeof p.imagem === 'string' && p.imagem.startsWith('data:'))
-        ).length
-        if (faltamFotos >= 5 && !shouldDeferPecasBibliotecaImageHydration()) {
-          void (async () => {
-            try {
-              const comFotos = await hydratePecasBibliotecaImagensFromServer(lista as unknown[])
-              if (Array.isArray(comFotos) && comFotos.length > 0) {
-                await savePecasBibliotecaLocally(comFotos)
-                applyPecasBootList(comFotos as PecaBiblioteca[])
-              }
-            } catch (e) {
-              console.warn('[Nonato] Hidratação de fotos no arranque:', e)
-            }
-          })()
-        }
+        applyPecasBootList(savedPecasBiblioteca as PecaBiblioteca[])
       }
-      // Reposição/reparo completo: só após o overlay (não bloquear nos 52–64%).
       if (
         pecasIncompletas(savedPecasBiblioteca) &&
         !bootOffline &&
         isOnline()
       ) {
-        const catsForBg = catsInicial.length
-        void (async () => {
-          try {
-            let next = await bootstrapLoadPecasBiblioteca(catsForBg)
-            if (pecasIncompletas(next)) {
-              const reposto = await reporPecasBibliotecaEmergencia()
-              if (Array.isArray(reposto) && reposto.length > 0) next = reposto
-            }
-            if (pecasIncompletas(next)) {
-              const reparado = await repairPecasBibliotecaIfStale(next ?? [], catsForBg)
-              if (Array.isArray(reparado) && reparado.length > 0) next = reparado
-            }
-            if (Array.isArray(next) && next.length > 0) {
-              applyPecasBootList(next as PecaBiblioteca[])
-              console.info(`[Nonato] Biblioteca completa em segundo plano: ${next.length} peça(s).`)
-            }
-          } catch (e) {
-            console.warn('[Nonato] Reposição de peças em segundo plano:', e)
-          }
-        })()
+        pecasBgRepairPendingRef.current = catsInicial.length
       }
       await reportBoot(61)
 
@@ -22722,6 +22696,33 @@ export default function Dashboard() {
     })()
   }, [appInitialLoading, categoriasPecas, pecasBiblioteca.length])
 
+  useEffect(() => {
+    if (appInitialLoading) return
+    const pecasTab = activeTabType === 'biblioteca-pecas' || activeTabType === 'pecas-biblioteca'
+    if (!pecasTab) return
+    const catsN = pecasBgRepairPendingRef.current
+    if (catsN == null) return
+    pecasBgRepairPendingRef.current = null
+    void (async () => {
+      try {
+        let next = await bootstrapLoadPecasBiblioteca(catsN)
+        if (isPecasBibliotecaCatalogIncomplete(Array.isArray(next) ? next.length : 0, catsN)) {
+          const reposto = await reporPecasBibliotecaEmergencia()
+          if (Array.isArray(reposto) && reposto.length > 0) next = reposto
+        }
+        if (Array.isArray(next) && next.length > 0) {
+          const raw = (next as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+          const { lista } = garantirNumerosSequenciaPecaBiblioteca(raw, categoriasPecas)
+          setPecasBiblioteca(buildPecasBibliotecaLite(lista) as PecaBiblioteca[])
+          void savePecasBibliotecaLocally(lista)
+          console.info(`[Nonato] Biblioteca completa ao abrir o ecrã: ${lista.length} peça(s).`)
+        }
+      } catch (e) {
+        console.warn('[Nonato] Reposição de peças ao abrir biblioteca:', e)
+      }
+    })()
+  }, [activeTabType, appInitialLoading, categoriasPecas])
+
   const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
     const normalizado = next.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
     const semCodigoRepetido = deduplicarPecasBibliotecaPorCodigo(normalizado)
@@ -22732,14 +22733,23 @@ export default function Dashboard() {
       )
     }
     const { lista: comNumeros } = garantirNumerosSequenciaPecaBiblioteca(semCodigoRepetido, categoriasPecas)
-    setPecasBiblioteca(comNumeros)
-    void saveData('nonato-pecas-biblioteca', comNumeros, true, true).catch((err) => {
-      console.error('[pecas biblioteca]', err)
-      alert(
-        (t as any)?.importacaoErroGravarFila ??
-          'Não foi possível gravar na biblioteca no servidor. Os dados ficaram neste aparelho — verifique ligação ou volume Railway (/app/data).'
-      )
-    })
+    setPecasBiblioteca(buildPecasBibliotecaLite(comNumeros) as PecaBiblioteca[])
+    void (async () => {
+      try {
+        const stored = await loadPecasBibliotecaFromBrowserStorage()
+        const merged = mergePecasBibliotecaArrays(
+          comNumeros,
+          Array.isArray(stored) ? stored : []
+        )
+        await saveData('nonato-pecas-biblioteca', merged, true, true)
+      } catch (err) {
+        console.error('[pecas biblioteca]', err)
+        alert(
+          (t as any)?.importacaoErroGravarFila ??
+            'Não foi possível gravar na biblioteca no servidor. Os dados ficaram neste aparelho — verifique ligação ou volume Railway (/app/data).'
+        )
+      }
+    })()
   }, [t, categoriasPecas])
 
   const handleHomagExportMergeFicheiro = useCallback(

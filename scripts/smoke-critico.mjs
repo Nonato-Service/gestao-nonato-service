@@ -2472,6 +2472,46 @@ try {
   fail(`fase 1 estabilidade: ${e.message}`)
 }
 
+// 3c) Fase 2 arranque: fotos a pedido + i18n lazy + catálogo lite na UI
+try {
+  const syncCoord = fs.readFileSync(path.join(root, 'app/modules/biblioteca/syncCoordinator.ts'), 'utf8')
+  if (syncCoord.includes('export function shouldDeferPecasBibliotecaImageHydration(): boolean {\n  return true')) {
+    ok('fotos da biblioteca não hidratam no arranque')
+  } else if (syncCoord.includes('return true') && syncCoord.includes('shouldDeferPecasBibliotecaImageHydration')) {
+    ok('fotos da biblioteca não hidratam no arranque')
+  } else {
+    fail('shouldDeferPecasBibliotecaImageHydration já não adia sempre as fotos')
+  }
+  const nma2 = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma2.includes('pecasBgRepairPendingRef') && nma2.includes("activeTabType === 'biblioteca-pecas'")) {
+    ok('reparo pesado da biblioteca só ao abrir o ecrã')
+  } else {
+    fail('reparo da biblioteca ainda corre no arranque')
+  }
+  if (nma2.includes('buildPecasBibliotecaLite(toSave)') || nma2.includes('buildPecasBibliotecaLite(toSave) as')) {
+    ok('estado React da biblioteca usa catálogo lite (sem base64)')
+  } else {
+    fail('setPecasBiblioteca no boot ainda guarda imagens base64')
+  }
+  if (nma2.includes('ensureTranslationBundle')) {
+    ok('idioma extra carrega em chunk à parte')
+  } else {
+    fail('NonatoMainApp sem ensureTranslationBundle')
+  }
+  const tr = fs.readFileSync(path.join(root, 'app/translations.ts'), 'utf8')
+  if (tr.includes("import ptBR from './i18n/messages/pt-BR.json'") && tr.includes('ensureTranslationBundle')) {
+    ok('translations.ts é loader (só pt-BR no bundle inicial)')
+  } else {
+    fail('translations.ts ainda embute os 6 idiomas')
+  }
+  for (const lang of ['pt-BR', 'es', 'fr', 'it', 'de', 'en']) {
+    if (exists(`app/i18n/messages/${lang}.json`)) ok(`existe i18n ${lang}.json`)
+    else fail(`em falta: app/i18n/messages/${lang}.json`)
+  }
+} catch (e) {
+  fail(`fase 2 arranque: ${e.message}`)
+}
+
 // 4) i18n
 const i18n = spawnSync('node', ['scripts/check-i18n-keys.mjs'], {
   cwd: root,

@@ -1,32 +1,18 @@
 import fs from 'fs'
+import path from 'path'
 
-const src = fs.readFileSync('app/translations.ts', 'utf8')
 const langs = ['pt-BR', 'es', 'fr', 'it', 'de', 'en']
-const blocks = {}
+const msgDir = path.join(process.cwd(), 'app', 'i18n', 'messages')
 
+const blocks = {}
 for (const lang of langs) {
-  const marker = `'${lang}': {`
-  const start = src.indexOf(marker)
-  if (start < 0) {
-    console.error('block not found', lang)
+  const file = path.join(msgDir, `${lang}.json`)
+  if (!fs.existsSync(file)) {
+    console.error('em falta:', file)
     process.exit(1)
   }
-  let depth = 0
-  let i = start + marker.length - 1
-  for (; i < src.length; i++) {
-    if (src[i] === '{') depth++
-    else if (src[i] === '}') {
-      depth--
-      if (depth === 0) break
-    }
-  }
-  const body = src.slice(start, i + 1)
-  const re = /^\s+(?:([a-zA-Z_][a-zA-Z0-9_]*)|'([^']+)'|"([^"]+)"):/gm
-  const keys = []
-  for (const m of body.matchAll(re)) {
-    keys.push(m[1] || m[2] || m[3])
-  }
-  blocks[lang] = new Set(keys)
+  const obj = JSON.parse(fs.readFileSync(file, 'utf8'))
+  blocks[lang] = new Set(Object.keys(obj))
 }
 
 const base = [...blocks['pt-BR']]
