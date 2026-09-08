@@ -13,6 +13,7 @@ import {
   documentPdfDateLocale,
   localeDatetimeGeneral,
 } from './translations'
+import { formatMoneyEUR, formatMoneyNumber } from './lib/formatMoney'
 import {
   loadData,
   saveData,
@@ -16277,7 +16278,7 @@ export default function Dashboard() {
       const desc = (item.descricao || '').replace(/</g, '&lt;')
       const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
       const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
-      return `<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${desc}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
+      return `<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${desc}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${formatMoneyEUR(item.valorUnitario)}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
     }).join('')
     const ivPdf = totaisFechamentoLiquidoComIva(
       itens,
@@ -16340,8 +16341,8 @@ export default function Dashboard() {
     })
     const footPdf =
       ivPdf.incluir && ivPdf.iva > 0.0001
-        ? `<tr><td colspan="3" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-size:12px;border-top:1px solid #c8e6c9">${esc(tAny.totalSemIva || 'Total s/ IVA')}</td><td colspan="2" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-weight:700;border-top:1px solid #c8e6c9">${ivPdf.liquido.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-size:12px">${esc(tAny.valorIva || 'IVA')} (${ivPdf.taxa}%)</td><td colspan="2" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-weight:700">${ivPdf.iva.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#0d7a3d">${esc(tAny.totalComIva || 'Total com IVA')}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#0d7a3d">${totalCobranca.toFixed(2)} €</td></tr>`
-        : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#0d7a3d">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#0d7a3d">${totalCobranca.toFixed(2)} €</td></tr>`
+        ? `<tr><td colspan="3" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-size:12px;border-top:1px solid #c8e6c9">${esc(tAny.totalSemIva || 'Total s/ IVA')}</td><td colspan="2" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-weight:700;border-top:1px solid #c8e6c9">${formatMoneyEUR(ivPdf.liquido)}</td></tr><tr><td colspan="3" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-size:12px">${esc(tAny.valorIva || 'IVA')} (${ivPdf.taxa}%)</td><td colspan="2" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-weight:700">${formatMoneyEUR(ivPdf.iva)}</td></tr><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#0d7a3d">${esc(tAny.totalComIva || 'Total com IVA')}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#0d7a3d">${formatMoneyEUR(totalCobranca)}</td></tr>`
+        : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#0d7a3d">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#0d7a3d">${formatMoneyEUR(totalCobranca)}</td></tr>`
     const tableContent = `<div style="margin:8px 0 24px;border-radius:8px;overflow:hidden;border:1px solid #c8e6c9"><table class="fech-pdf-itens" style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdf}</tfoot></table></div>`
     const rodape = buildPdfDocumentFooterHtml(`${esc(docGeradoEm)} ${dataHoraGerado} · Nonato Service`)
     const pdfRowStyles = `.pdf-tbody tr:nth-child(odd){background:#fff}.pdf-tbody tr:nth-child(even){background:#f1f8e9}.fech-pdf-itens{min-width:0;width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 24px;border-radius:8px;overflow:hidden;border:1.5px solid #94a3b8}.fech-pdf-itens th,.fech-pdf-itens td{border:1.5px solid #94a3b8}.fech-pdf-itens th{padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase}.fech-pdf-itens td{padding:12px 14px;font-size:12px}`
@@ -20870,7 +20871,7 @@ export default function Dashboard() {
     const linhasDespesas = todosItens
       .map(
         (i) =>
-          `<tr><td>${esc(i.descricao)}</td><td style="text-align:right">${i.quantidade}</td><td style="text-align:right">${(i.valorUnitario || 0).toFixed(2)} €</td><td style="text-align:right">${(i.valorTotal || 0).toFixed(2)} €</td></tr>`
+          `<tr><td>${esc(i.descricao)}</td><td style="text-align:right">${i.quantidade}</td><td style="text-align:right">${formatMoneyEUR((i.valorUnitario || 0))}</td><td style="text-align:right">${formatMoneyEUR((i.valorTotal || 0))}</td></tr>`
       )
       .join('')
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(rel.numero)} — Peças e Despesas</title>
@@ -20883,7 +20884,7 @@ export default function Dashboard() {
 <table><thead><tr><th>${esc(safeT?.codigo || 'Código')}</th><th>${esc(safeT?.descricaoItem || 'Descrição')}</th><th>${esc(safeT?.quantidade || 'Qtd.')}</th></tr></thead><tbody>${linhasPecasInstaladas || `<tr><td colspan="3">—</td></tr>`}</tbody></table>
 <h2>${esc((safeT as any)?.relatorioResumoDespesasPecas || 'Resumo de despesas, peças e serviços')}</h2>
 <table><thead><tr><th>${esc(safeT?.descricaoItem || 'Descrição')}</th><th>${esc(safeT?.quantidade || 'Qtd.')}</th><th>${esc(safeT?.valorUnitario || 'Unit.')}</th><th>${esc(safeT?.total || 'Total')}</th></tr></thead><tbody>${linhasDespesas}</tbody>
-<tfoot><tr><td colspan="3" style="text-align:right;font-weight:700">${esc(safeT?.total || 'Total')}</td><td style="text-align:right;font-weight:700">${totalGeral.toFixed(2)} €</td></tr></tfoot></table>
+<tfoot><tr><td colspan="3" style="text-align:right;font-weight:700">${esc(safeT?.total || 'Total')}</td><td style="text-align:right;font-weight:700">${formatMoneyEUR(totalGeral)}</td></tr></tfoot></table>
 <script>window.onload=function(){window.print()}</script></body></html>`
     const w = window.open('', '_blank')
     if (!w) {
@@ -25561,10 +25562,10 @@ export default function Dashboard() {
                       <td style={{ padding: '10px 8px', color: '#ffffff' }}>{item.descricao || '—'}</td>
                       <td style={{ padding: '10px 8px', textAlign: 'right', color: '#ffffff' }}>{qtd}</td>
                       <td style={{ padding: '10px 8px', textAlign: 'right', color: '#ffffff' }}>
-                        {item.valorUnitario.toFixed(2)} €
+                        {formatMoneyEUR(item.valorUnitario)}
                       </td>
                       <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 700, color: '#ffffff' }}>
-                        {linTot.toFixed(2)} €
+                        {formatMoneyEUR(linTot)}
                       </td>
                     </tr>
                   )
@@ -25585,19 +25586,19 @@ export default function Dashboard() {
             {mostrarIvaDetalhado ? (
               <>
                 <div>
-                  {tm.totalSemIva || 'Total s/ IVA'}: €{ivModal.liquido.toFixed(2)}
+                  {tm.totalSemIva || 'Total s/ IVA'}: {formatMoneyEUR(ivModal.liquido)}
                 </div>
                 <div style={{ marginTop: '6px', color: '#bae6fd' }}>
-                  {tm.valorIva || 'IVA'} ({ivModal.taxa}%): €{ivModal.iva.toFixed(2)}
+                  {tm.valorIva || 'IVA'} ({ivModal.taxa}%): {formatMoneyEUR(ivModal.iva)}
                 </div>
                 <div style={{ marginTop: '8px', fontSize: '18px' }}>
-                  {tm.totalComIva || 'Total com IVA'}: €{totV.toFixed(2)}
+                  {tm.totalComIva || 'Total com IVA'}: {formatMoneyEUR(totV)}
                 </div>
               </>
             ) : (
               <>
                 <div style={{ fontSize: '18px' }}>
-                  {(tm.somaTotal || tm.totalSemIva || tm.total || 'Total')}: €{totV.toFixed(2)}
+                  {(tm.somaTotal || tm.totalSemIva || tm.total || 'Total')}: {formatMoneyEUR(totV)}
                 </div>
                 <div
                   style={{
@@ -35011,7 +35012,7 @@ export default function Dashboard() {
                         {Number(editingCliente.saldoPendente ?? 0) > 0 ? (
                           <div style={{ fontSize: '15px', color: '#fff', marginTop: '6px', fontWeight: 700 }}>
                             {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
-                            {Number(editingCliente.saldoPendente ?? 0).toFixed(2)}
+                            {formatMoneyNumber(Number(editingCliente.saldoPendente ?? 0))}
                           </div>
                         ) : null}
                         {Number(editingCliente.relatoriosNaoPagoCount ?? 0) > 0 ? (
@@ -35110,7 +35111,7 @@ export default function Dashboard() {
                                         {(txc.relatorioNumeroLabel || 'Rel.')} {rel.numero}
                                       </span>
                                       <span style={{ fontWeight: 600, color: '#fbbf77', marginLeft: '8px' }}>
-                                        · {txc.total || 'Total'} €{tot.toFixed(2)}
+                                        · {txc.total || 'Total'} {formatMoneyEUR(tot)}
                                       </span>
                                       <span
                                         style={{
@@ -35171,7 +35172,7 @@ export default function Dashboard() {
                                             subject: buildAssuntoEnvioFechamentoRelatorio(rel, safeT as Record<string, string | undefined>),
                                             body: buildTextoEnvioGenerico(
                                               buildAssuntoEnvioFechamentoRelatorio(rel, safeT as Record<string, string | undefined>),
-                                              `Total: € ${tot.toFixed(2)}`,
+                                              `Total: ${formatMoneyEUR(tot)}`,
                                               safeT as Record<string, string | undefined>
                                             ),
                                             relatorio: rel,
@@ -35193,7 +35194,7 @@ export default function Dashboard() {
                                             subject: buildAssuntoEnvioFechamentoRelatorio(rel, safeT as Record<string, string | undefined>),
                                             body: buildTextoEnvioGenerico(
                                               buildAssuntoEnvioFechamentoRelatorio(rel, safeT as Record<string, string | undefined>),
-                                              `Total: € ${tot.toFixed(2)}`,
+                                              `Total: ${formatMoneyEUR(tot)}`,
                                               safeT as Record<string, string | undefined>
                                             ),
                                             relatorio: rel,
@@ -46280,7 +46281,7 @@ A1;Peça exemplo;10`}
               item.origem === 'manual' || item.id.startsWith('peca-') || item.id.startsWith('m')
                 ? normalizeServicoValorStored(item.valorUnitario)
                 : item.valorUnitario
-            return `<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600;color:inherit">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${descHtml}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${vuLinha.toFixed(2)} €</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
+            return `<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600;color:inherit">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${descHtml}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${formatMoneyEUR(vuLinha)}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
           }).join('')
           const esc = (s: string) =>
             String(s ?? '')
@@ -46329,8 +46330,8 @@ A1;Peça exemplo;10`}
           const tableContent = (thBg: string, thColor: string, footBg: string, footColor: string, borderColor: string) => {
             const footPdfFech =
               fechTotIva.incluir && fechTotIva.iva > 0.0001
-                ? `<tr><td colspan="3" style="padding:12px 16px;text-align:right;background:rgba(0,0,0,0.04);font-size:12px;border-top:1px solid ${borderColor}">${esc(lblTotalSemIva)}</td><td colspan="2" style="padding:12px 16px;text-align:right;font-weight:600;border-top:1px solid ${borderColor}">${fechTotIva.liquido.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:12px 16px;text-align:right;background:rgba(0,0,0,0.04);font-size:12px">${esc(lblValorIva)} (${fechTotIva.taxa}%)</td><td colspan="2" style="padding:12px 16px;text-align:right;font-weight:600">${fechTotIva.iva.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:700;font-size:13px;border-top:3px solid ${borderColor}">${esc(lblTotalComIva)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:800;font-size:18px;border-top:3px solid ${borderColor}">${fechTotIva.comIva.toFixed(2)} €</td></tr>`
-                : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:700;font-size:13px;border-top:3px solid ${borderColor}">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:800;font-size:18px;border-top:3px solid ${borderColor}">${fechTotIva.comIva.toFixed(2)} €</td></tr>`
+                ? `<tr><td colspan="3" style="padding:12px 16px;text-align:right;background:rgba(0,0,0,0.04);font-size:12px;border-top:1px solid ${borderColor}">${esc(lblTotalSemIva)}</td><td colspan="2" style="padding:12px 16px;text-align:right;font-weight:600;border-top:1px solid ${borderColor}">${formatMoneyEUR(fechTotIva.liquido)}</td></tr><tr><td colspan="3" style="padding:12px 16px;text-align:right;background:rgba(0,0,0,0.04);font-size:12px">${esc(lblValorIva)} (${fechTotIva.taxa}%)</td><td colspan="2" style="padding:12px 16px;text-align:right;font-weight:600">${formatMoneyEUR(fechTotIva.iva)}</td></tr><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:700;font-size:13px;border-top:3px solid ${borderColor}">${esc(lblTotalComIva)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:800;font-size:18px;border-top:3px solid ${borderColor}">${formatMoneyEUR(fechTotIva.comIva)}</td></tr>`
+                : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:700;font-size:13px;border-top:3px solid ${borderColor}">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:800;font-size:18px;border-top:3px solid ${borderColor}">${formatMoneyEUR(fechTotIva.comIva)}</td></tr>`
             return `<div style="margin:24px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid ${borderColor}"><table class="fech-pdf-itens" style="width:100%;border-collapse:collapse;font-size:12px;min-width:0"><thead><tr><th style="padding:14px 18px;text-align:left;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdfFech}</tfoot></table></div>`
           }
           const rodape = `<div style="margin-top:32px;padding-top:20px;border-top:1px solid #e0e0e0;text-align:center"><div style="font-size:11px;color:#666;margin-bottom:4px">${esc(docGeradoEm)} ${dataHoraGerado}</div><div style="font-size:10px;color:#999">Nonato Service — Gestão Técnica</div></div>`
@@ -46424,14 +46425,14 @@ A1;Peça exemplo;10`}
           const linhas = itensVisiveisFechamento
             .map(
               (i) =>
-                `• ${(i.cod || i.descricao || '').toString().slice(0, 40)}: ${(i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal).toFixed(2)} €`
+                `• ${(i.cod || i.descricao || '').toString().slice(0, 40)}: ${formatMoneyEUR((i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal))}`
             )
             .join('\n')
           const extraIva =
             fechTotIva.incluir && fechTotIva.iva > 0.0001
-              ? `\n${(safeT as any)?.totalSemIva || 'Total s/ IVA'}: ${fechTotIva.liquido.toFixed(2)} €\n${(safeT as any)?.valorIva || 'IVA'} (${fechTotIva.taxa}%): ${fechTotIva.iva.toFixed(2)} €\n`
+              ? `\n${(safeT as any)?.totalSemIva || 'Total s/ IVA'}: ${formatMoneyEUR(fechTotIva.liquido)}\n${(safeT as any)?.valorIva || 'IVA'} (${fechTotIva.taxa}%): ${formatMoneyEUR(fechTotIva.iva)}\n`
               : '\n'
-          return `Fechamento Relatório ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento(s):\n${textoEquipamentosResumoRelatorioDespesas(relatorioSelecionado, equipamentos, equipamentosClienteDoRelatorioDespesas(relatorioSelecionado, clientes))}\nData: ${relatorioSelecionado.data}\n\nItens:\n${linhas}${extraIva}\n*${(safeT as any)?.totalComIva || 'Total'}: ${fechTotIva.comIva.toFixed(2)} €*`
+          return `Fechamento Relatório ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento(s):\n${textoEquipamentosResumoRelatorioDespesas(relatorioSelecionado, equipamentos, equipamentosClienteDoRelatorioDespesas(relatorioSelecionado, clientes))}\nData: ${relatorioSelecionado.data}\n\nItens:\n${linhas}${extraIva}\n*${(safeT as any)?.totalComIva || 'Total'}: ${formatMoneyEUR(fechTotIva.comIva)}*`
         }
         const handleEnviarWhatsAppFechamento = () => {
           if (!relatorioSelecionado) return
@@ -47202,7 +47203,7 @@ A1;Peça exemplo;10`}
                               />
                             ) : itemFixoDoRelatorio ? (
                               <span style={{ color: valorUnitExibir > 0 ? '#ccc' : '#ff8800' }}>
-                                {valorUnitExibir.toFixed(2)} €
+                                {formatMoneyEUR(valorUnitExibir)}
                               </span>
                             ) : (
                               <input
@@ -47221,7 +47222,7 @@ A1;Peça exemplo;10`}
                               />
                             )}
                           </td>
-                          <td style={{ textAlign: 'right', fontWeight: 600, color: cobrarDiaria ? '#00c853' : '#888' }}>{totalExibir.toFixed(2)} €{eDiarias && !cobrarDiaria ? ' (' + ((safeT as any)?.naoCobrar || 'não cobrar') + ')' : ''}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 600, color: cobrarDiaria ? '#00c853' : '#888' }}>{formatMoneyEUR(totalExibir)}{eDiarias && !cobrarDiaria ? ' (' + ((safeT as any)?.naoCobrar || 'não cobrar') + ')' : ''}</td>
                           <td className="fechamento-itens-cobrar-diaria-cell">
                             {eDiarias ? (
                               <div className="fechamento-itens-cobrar-diaria-pills" role="group" aria-label={(safeT as any)?.fechamentoColunaCobrarDiaria || 'Cobrar diária'}>
@@ -47312,7 +47313,7 @@ A1;Peça exemplo;10`}
                             ? (safeT as any)?.fechamentoTotalBaseLinhas || 'Soma das linhas (s/ IVA)'
                             : (safeT as any)?.somaTotal || 'SOMA TOTAL'}
                         </td>
-                        <td style={{ textAlign: 'right', fontSize: '16px' }}>{fechTotIva.liquido.toFixed(2)} €</td>
+                        <td style={{ textAlign: 'right', fontSize: '16px' }}>{formatMoneyEUR(fechTotIva.liquido)}</td>
                         <td></td>
                         <td></td>
                         {temLinhasManuaisFechamento && <td></td>}
@@ -47324,7 +47325,7 @@ A1;Peça exemplo;10`}
                             <td colSpan={4} style={{ textAlign: 'right', fontWeight: 600 }}>
                               {(safeT as any)?.valorIva || 'IVA'} ({fechTotIva.taxa}%)
                             </td>
-                            <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '15px' }}>{fechTotIva.iva.toFixed(2)} €</td>
+                            <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '15px' }}>{formatMoneyEUR(fechTotIva.iva)}</td>
                             <td></td>
                             <td></td>
                             {temLinhasManuaisFechamento && <td></td>}
@@ -47334,7 +47335,7 @@ A1;Peça exemplo;10`}
                             <td colSpan={4} style={{ textAlign: 'right' }}>
                               {(safeT as any)?.totalComIva || 'TOTAL com IVA'}
                             </td>
-                            <td style={{ textAlign: 'right', fontSize: '17px' }}>{fechTotIva.comIva.toFixed(2)} €</td>
+                            <td style={{ textAlign: 'right', fontSize: '17px' }}>{formatMoneyEUR(fechTotIva.comIva)}</td>
                             <td></td>
                             <td></td>
                             {temLinhasManuaisFechamento && <td></td>}
@@ -47375,19 +47376,19 @@ A1;Peça exemplo;10`}
                         <div>
                           <div className="fechamento-itens-footer__total-valor--azul">
                             {(safeT as any)?.fechamentoResumoTotalComIva || 'Total a enviar (com IVA)'}:{' '}
-                            {fechTotIva.comIva.toFixed(2)} €
+                            {formatMoneyEUR(fechTotIva.comIva)}
                           </div>
                           <div className="fechamento-itens-footer__total-dica">
-                            {(safeT as any)?.fechamentoResumoComIvaDetalhe || 'Inclui'} {fechTotIva.liquido.toFixed(2)} €
+                            {(safeT as any)?.fechamentoResumoComIvaDetalhe || 'Inclui'} {formatMoneyEUR(fechTotIva.liquido)}
                             {` ${(safeT as any)?.fechamentoResumoMaisIva || '+'} `}
-                            {fechTotIva.iva.toFixed(2)} € {(safeT as any)?.valorIva || 'IVA'} ({fechTotIva.taxa}%)
+                            {formatMoneyEUR(fechTotIva.iva)} {(safeT as any)?.valorIva || 'IVA'} ({fechTotIva.taxa}%)
                           </div>
                         </div>
                       ) : (
                         <div>
                           <div className="fechamento-itens-footer__total-valor--verde">
                             {(safeT as any)?.fechamentoResumoTotalSemIva || 'Total a enviar (s/ IVA)'}:{' '}
-                            {fechTotIva.liquido.toFixed(2)} €
+                            {formatMoneyEUR(fechTotIva.liquido)}
                           </div>
                           <div className="fechamento-itens-footer__total-dica">
                             {(safeT as any)?.fechamentoResumoSemIvaDica || 'Clica em «Fechamento com IVA» acima se o cliente paga IVA em cima destes valores.'}
@@ -47957,8 +47958,8 @@ A1;Peça exemplo;10`}
                 ) : null}
               </div>
               <div style={{ color: '#aaa', fontSize: '13px', marginTop: '2px' }}>
-                {(safeT as any)?.comprovantesValorUnitario || 'Valor unit.'}: {c.valorUnitario.toFixed(2)} × {c.quantidade} ={' '}
-                <strong style={{ color: '#00c853' }}>{c.valorTotal.toFixed(2)} €</strong>
+                {(safeT as any)?.comprovantesValorUnitario || 'Valor unit.'}: {formatMoneyNumber(c.valorUnitario)} × {c.quantidade} ={' '}
+                <strong style={{ color: '#00c853' }}>{formatMoneyEUR(c.valorTotal)}</strong>
               </div>
               {c.descricao ? (
                 <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>{c.descricao}</div>
@@ -48355,21 +48356,21 @@ A1;Peça exemplo;10`}
               {filtroPeriodoView === 'mensal' && filtroMes ? (
                 <span style={{ color: '#fde68a', fontWeight: 700, fontSize: '18px' }}>
                   {(safeT as any)?.comprovantesTotalMesDestaque || 'Total do mês selecionado'} ({filtroMes}):{' '}
-                  <strong style={{ color: '#00c853' }}>{totalGeral.toFixed(2)} €</strong>
+                  <strong style={{ color: '#00c853' }}>{formatMoneyEUR(totalGeral)}</strong>
                 </span>
               ) : filtroPeriodoView === 'semanal' && filtroSemana ? (
                 <span style={{ color: '#fde68a', fontWeight: 700, fontSize: '18px' }}>
                   {(safeT as any)?.comprovantesTotalSemanaDestaque || 'Total da semana'} ({filtroSemana}):{' '}
-                  <strong style={{ color: '#00c853' }}>{totalGeral.toFixed(2)} €</strong>
+                  <strong style={{ color: '#00c853' }}>{formatMoneyEUR(totalGeral)}</strong>
                 </span>
               ) : filtroPeriodoView === 'anual' && filtroAno ? (
                 <span style={{ color: '#fde68a', fontWeight: 700, fontSize: '18px' }}>
                   {(safeT as any)?.comprovantesTotalAnoDestaque || 'Total do ano'} ({filtroAno}):{' '}
-                  <strong style={{ color: '#00c853' }}>{totalGeral.toFixed(2)} €</strong>
+                  <strong style={{ color: '#00c853' }}>{formatMoneyEUR(totalGeral)}</strong>
                 </span>
               ) : (
                 <span style={{ color: '#00c853', fontWeight: 700, fontSize: '18px' }}>
-                  {(safeT as any)?.comprovantesTotalGeral || 'Total geral'}: {totalGeral.toFixed(2)} €
+                  {(safeT as any)?.comprovantesTotalGeral || 'Total geral'}: {formatMoneyEUR(totalGeral)}
                 </span>
               )}
               <div
@@ -48387,15 +48388,15 @@ A1;Peça exemplo;10`}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', color: '#d1d5db' }}>
                   <span>{(safeT as any)?.comprovantesFechamentoClientes || 'Despesas de clientes'}</span>
-                  <strong style={{ color: '#bbf7d0' }}>{totalDespesasClientes.toFixed(2)} €</strong>
+                  <strong style={{ color: '#bbf7d0' }}>{formatMoneyEUR(totalDespesasClientes)}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', color: '#d1d5db' }}>
                   <span>{(safeT as any)?.comprovantesFechamentoPessoais || 'Despesas da NONATO SERVICE'}</span>
-                  <strong style={{ color: '#fde68a' }}>{totalDespesasPessoais.toFixed(2)} €</strong>
+                  <strong style={{ color: '#fde68a' }}>{formatMoneyEUR(totalDespesasPessoais)}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', color: '#fff', fontWeight: 700, marginTop: '4px' }}>
                   <span>{(safeT as any)?.comprovantesFechamentoTotal || 'Total fechamento'}</span>
-                  <strong style={{ color: '#00c853' }}>{totalGeral.toFixed(2)} €</strong>
+                  <strong style={{ color: '#00c853' }}>{formatMoneyEUR(totalGeral)}</strong>
                 </div>
               </div>
             </div>
@@ -48497,7 +48498,7 @@ A1;Peça exemplo;10`}
                       ) : null}
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ color: '#4ade80', fontWeight: 700, fontSize: '16px' }}>{secao.subtotal.toFixed(2)} €</div>
+                      <div style={{ color: '#4ade80', fontWeight: 700, fontSize: '16px' }}>{formatMoneyEUR(secao.subtotal)}</div>
                       <div style={{ color: '#9ca3af', fontSize: '12px' }}>
                         {secao.items.length}{' '}
                         {secao.items.length === 1
@@ -48549,7 +48550,7 @@ A1;Peça exemplo;10`}
                     </span>
                     <span style={{ color: '#a7f3d0', fontSize: '13px' }}>
                       {(safeT as any)?.comprovantesSubtotalDia || 'Subtotal do dia'}:{' '}
-                      <strong style={{ color: '#4ade80' }}>{grupo.subtotal.toFixed(2)} €</strong>
+                      <strong style={{ color: '#4ade80' }}>{formatMoneyEUR(grupo.subtotal)}</strong>
                       <span style={{ color: '#6ee7b7', marginLeft: '8px', opacity: 0.9 }}>
                         ({grupo.items.length})
                       </span>
@@ -48561,7 +48562,7 @@ A1;Peça exemplo;10`}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ color: '#fff', fontWeight: 600 }}>{getClienteOuPessoal(c)}</div>
                           <div style={{ color: '#aaa', fontSize: '13px' }}>
-                            <strong style={{ color: '#00c853' }}>{c.valorTotal.toFixed(2)} €</strong>
+                            <strong style={{ color: '#00c853' }}>{formatMoneyEUR(c.valorTotal)}</strong>
                             {c.descricao ? ` · ${c.descricao}` : ''}
                           </div>
                         </div>
@@ -49465,7 +49466,7 @@ A1;Peça exemplo;10`}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
                     <div style={{ color: '#fff', fontWeight: 600 }}>
-                      {getClienteOuPessoal(comprovanteImagemAmpliada)} · {comprovanteImagemAmpliada.valorTotal.toFixed(2)} €
+                      {getClienteOuPessoal(comprovanteImagemAmpliada)} · {formatMoneyEUR(comprovanteImagemAmpliada.valorTotal)}
                     </div>
                     <button
                       type="button"
@@ -59568,7 +59569,7 @@ A1;Peça exemplo;10`}
                                       <strong style={{ color: '#fff' }}>{exata.numeroOS}</strong> · {tx.cliente || safeT?.cliente || 'Cliente'}: {exata.clienteNome}
                                     </div>
                                     <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', marginTop: '3px' }}>
-                                      {tx.dataAbertura || safeT?.dataAbertura || 'Data Abertura'}: {new Date(exata.dataAbertura).toLocaleDateString('pt-BR')} · {tx.valorTotal || safeT?.valorTotal || 'Valor Total'}: €{exata.valorTotal.toFixed(2)}
+                                      {tx.dataAbertura || safeT?.dataAbertura || 'Data Abertura'}: {new Date(exata.dataAbertura).toLocaleDateString('pt-BR')} · {tx.valorTotal || safeT?.valorTotal || 'Valor Total'}: {formatMoneyEUR(exata.valorTotal)}
                                     </div>
                                   </>
                                 ) : (
@@ -59702,7 +59703,7 @@ A1;Peça exemplo;10`}
                               {safeT?.dataAbertura || 'Data Abertura'}: {new Date(os.dataAbertura).toLocaleDateString('pt-BR')}
                             </p>
                             <p style={{ color: '#00c853', margin: '8px 0 0', fontSize: '15px', fontWeight: '700' }}>
-                              {safeT?.valorTotal || 'Valor Total'}: €{os.valorTotal.toFixed(2)}
+                              {safeT?.valorTotal || 'Valor Total'}: {formatMoneyEUR(os.valorTotal)}
                             </p>
                           </div>
                           <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
@@ -59800,7 +59801,7 @@ A1;Peça exemplo;10`}
                                       <span style={{ color: '#9fdf9f', fontWeight: 600, marginLeft: '8px' }}>{nomeCli}</span>
                                     </div>
                                     <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>
-                                      {txOs.total || 'Total'}: <strong style={{ color: '#ffcc66' }}>€{tot.toFixed(2)}</strong>
+                                      {txOs.total || 'Total'}: <strong style={{ color: '#ffcc66' }}>{formatMoneyEUR(tot)}</strong>
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
                                       <button
@@ -60406,10 +60407,10 @@ A1;Peça exemplo;10`}
                           </p>
                         )}
                         <p style={{ color: '#00c853', margin: '10px 0', fontSize: '16px', fontWeight: 'bold' }}>
-                          {safeT?.valorTotal || 'Valor Total'}: €{fatura.valorTotal.toFixed(2)} ({safeT?.comIVA || 'com IVA'})
+                          {safeT?.valorTotal || 'Valor Total'}: {formatMoneyEUR(fatura.valorTotal)} ({safeT?.comIVA || 'com IVA'})
                         </p>
                         <p style={{ color: '#ccc', margin: '5px 0', fontSize: '14px' }}>
-                          {safeT?.valorSemIVA || 'Valor sem IVA'}: €{fatura.valorSemIVA.toFixed(2)} | {safeT?.IVA || 'IVA'}: €{fatura.valorIVA.toFixed(2)} ({fatura.taxaIVA}%)
+                          {safeT?.valorSemIVA || 'Valor sem IVA'}: {formatMoneyEUR(fatura.valorSemIVA)} | {safeT?.IVA || 'IVA'}: {formatMoneyEUR(fatura.valorIVA)} ({fatura.taxaIVA}%)
                         </p>
                         {fatura.arquivoAnexo && (
                           <div style={{ marginTop: '12px' }}>
@@ -60532,7 +60533,7 @@ A1;Peça exemplo;10`}
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginTop: '15px' }}>
                             <div>
                               <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.saldoPendente || 'Saldo Pendente'}</p>
-                              <p style={{ color: '#ff0000', margin: 0, fontSize: '20px', fontWeight: 'bold' }}>€{devedor.saldoPendente.toFixed(2)}</p>
+                              <p style={{ color: '#ff0000', margin: 0, fontSize: '20px', fontWeight: 'bold' }}>{formatMoneyEUR(devedor.saldoPendente)}</p>
                             </div>
                             <div>
                               <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.faturasPendentes || 'Faturas Pendentes'}</p>
@@ -60570,7 +60571,7 @@ A1;Peça exemplo;10`}
                                 <div key={fatura.faturaId} style={{ marginBottom: '8px', padding: '8px', backgroundColor: '#404040', border: '1px solid rgba(255, 0, 0, 0.2)', borderRadius: '4px' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span style={{ color: '#ccc', fontSize: '12px' }}>{fatura.numeroFatura}</span>
-                                    <span style={{ color: '#ff0000', fontSize: '14px', fontWeight: 'bold' }}>€{fatura.valor.toFixed(2)}</span>
+                                    <span style={{ color: '#ff0000', fontSize: '14px', fontWeight: 'bold' }}>{formatMoneyEUR(fatura.valor)}</span>
                                   </div>
                                   {fatura.numeroOS && (
                                     <span style={{ color: '#888', fontSize: '11px' }}>{safeT?.ordemServico || 'OS'}: {fatura.numeroOS}</span>
@@ -61039,7 +61040,7 @@ A1;Peça exemplo;10`}
                             />
                             {' · '}
                             {tx.total || 'Total'}:{' '}
-                            <strong className="financeiro-despesas-bib-card__sub-total">€{tot.toFixed(2)}</strong>
+                            <strong className="financeiro-despesas-bib-card__sub-total">{formatMoneyEUR(tot)}</strong>
                           </div>
                         </div>
                       </div>
@@ -61205,7 +61206,7 @@ A1;Peça exemplo;10`}
                                   </span>
                                   <span className="financeiro-despesas-bib-grupo__meta">
                                     {grupo.rels.length} {metaFech} · {tx.total || 'Total'}{' '}
-                                    <strong>€{totGrupo.toFixed(2)}</strong>
+                                    <strong>{formatMoneyEUR(totGrupo)}</strong>
                                   </span>
                                 </button>
                                 {aberto ? (
@@ -61835,7 +61836,7 @@ A1;Peça exemplo;10`}
                                     {rel.tecnico || '—'}
                                   </span>
                                   <span className="biblioteca-relatorios-fechado-item__total">
-                                    {totalDesp != null ? `€${totalDesp.toFixed(2)}` : '—'}
+                                    {totalDesp != null ? `${formatMoneyEUR(totalDesp)}` : '—'}
                                   </span>
                                 </summary>
                                 <div className="bib-acoes-panel">
@@ -62483,7 +62484,7 @@ A1;Peça exemplo;10`}
                                             equipamentosArmazem={equipamentos}
                                           />
                                         </td>
-                                        <td className="bib-col-num bib-col-total">€{totalCobranca.toFixed(2)}</td>
+                                        <td className="bib-col-num bib-col-total">{formatMoneyEUR(totalCobranca)}</td>
                                         <td className="bib-col-fluxo">{renderBarraFluxoFechamento(relatorio.id, true)}</td>
                                         <td className="bib-col-acoes">
                                           <BibliotecaRowAcoesMenu label={txBib.acoes || 'Ações'}>
@@ -62554,7 +62555,7 @@ A1;Peça exemplo;10`}
                                                         relatorio,
                                                         safeT as Record<string, string | undefined>
                                                       ),
-                                                      `Total: € ${totalCobranca.toFixed(2)}`,
+                                                      `Total: ${formatMoneyEUR(totalCobranca)}`,
                                                       safeT as Record<string, string | undefined>
                                                     ),
                                                     relatorio,
@@ -62589,7 +62590,7 @@ A1;Peça exemplo;10`}
                                                         relatorio,
                                                         safeT as Record<string, string | undefined>
                                                       ),
-                                                      `Total: € ${totalCobranca.toFixed(2)}`,
+                                                      `Total: ${formatMoneyEUR(totalCobranca)}`,
                                                       safeT as Record<string, string | undefined>
                                                     ),
                                                     relatorio,
@@ -65340,18 +65341,18 @@ A1;Peça exemplo;10`}
                               {item.tipoItem === 'com-valor' && (
                                 <>
                                   <div style={{ fontSize: '12px', color: '#ccc' }}>
-                                    {safeT?.precoUnitario || 'Preço Unit.'}: € {item.precoUnitario.toFixed(2)}
+                                    {safeT?.precoUnitario || 'Preço Unit.'}: {formatMoneyEUR(item.precoUnitario)}
                                   </div>
                                   <div style={{ fontSize: '12px', color: '#ccc' }}>
-                                    {safeT?.totalSemIva || 'Subtotal'}: € {subtotal.toFixed(2)}
+                                    {safeT?.totalSemIva || 'Subtotal'}: {formatMoneyEUR(subtotal)}
                                   </div>
                                   {(item.iva ?? 0) > 0 && (
                                     <div style={{ fontSize: '12px', color: '#ffd700' }}>
-                                      {safeT?.iva || 'IVA'} ({item.iva ?? 0}%): € {valorIva.toFixed(2)}
+                                      {safeT?.iva || 'IVA'} ({item.iva ?? 0}%): {formatMoneyEUR(valorIva)}
                                     </div>
                                   )}
                                   <div style={{ color: '#66b3ff', fontWeight: 'bold', fontSize: '14px' }}>
-                                    {safeT?.totalComIva || 'Total'}: € {totalComIva.toFixed(2)}
+                                    {safeT?.totalComIva || 'Total'}: {formatMoneyEUR(totalComIva)}
                                   </div>
                                 </>
                               )}
@@ -65806,15 +65807,15 @@ A1;Peça exemplo;10`}
                           border: '1px solid rgba(0, 200, 83, 0.3)'
                         }}>
                           <div style={{ color: '#ccc', fontSize: '12px', marginBottom: '5px' }}>
-                            {safeT?.totalSemIva || 'Subtotal'}: € {(itemForm.quantidade * itemForm.precoUnitario).toFixed(2)}
+                            {safeT?.totalSemIva || 'Subtotal'}: {formatMoneyEUR((itemForm.quantidade * itemForm.precoUnitario))}
                           </div>
                           {itemForm.iva > 0 && (
                             <div style={{ color: '#ffd700', fontSize: '12px', marginBottom: '5px' }}>
-                              {safeT?.valorIva || 'IVA'} ({itemForm.iva}%): € {((itemForm.quantidade * itemForm.precoUnitario) * itemForm.iva / 100).toFixed(2)}
+                              {safeT?.valorIva || 'IVA'} ({itemForm.iva}%): {formatMoneyEUR(((itemForm.quantidade * itemForm.precoUnitario) * itemForm.iva / 100))}
                             </div>
                           )}
                           <div style={{ color: '#66b3ff', fontWeight: 'bold' }}>
-                            {safeT?.totalComIva || 'Total'}: € {((itemForm.quantidade * itemForm.precoUnitario) * (1 + itemForm.iva / 100)).toFixed(2)}
+                            {safeT?.totalComIva || 'Total'}: {formatMoneyEUR(((itemForm.quantidade * itemForm.precoUnitario) * (1 + itemForm.iva / 100)))}
                           </div>
                         </div>
                       )}
@@ -65868,15 +65869,15 @@ A1;Peça exemplo;10`}
                 textAlign: 'right'
               }}>
                 <div style={{ marginBottom: '10px', fontSize: '14px', color: '#ccc' }}>
-                  {safeT?.totalSemIva || 'Total sem IVA'}: € {calcularTotalSemIva().toFixed(2)}
+                  {safeT?.totalSemIva || 'Total sem IVA'}: {formatMoneyEUR(calcularTotalSemIva())}
                 </div>
                 {calcularTotalIva() > 0 && (
                   <div style={{ marginBottom: '10px', fontSize: '14px', color: '#ffd700' }}>
-                    {safeT?.valorIva || 'Valor do IVA'}: € {calcularTotalIva().toFixed(2)}
+                    {safeT?.valorIva || 'Valor do IVA'}: {formatMoneyEUR(calcularTotalIva())}
                   </div>
                 )}
                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#66b3ff' }}>
-                  {safeT?.totalComIva || 'Total com IVA'}: € {calcularTotal().toFixed(2)}
+                  {safeT?.totalComIva || 'Total com IVA'}: {formatMoneyEUR(calcularTotal())}
                 </div>
               </div>
             )}
@@ -66507,7 +66508,7 @@ A1;Peça exemplo;10`}
                           )}
                           {(orcamento.tipo !== 'orcamento-relatorio' && orcamento.tipo !== 'cliente-prioritario-fixo' && orcamento.total > 0) && (
                             <div style={{ color: '#66b3ff', fontSize: '16px', fontWeight: 'bold', marginTop: '10px' }}>
-                              {safeT?.total || 'Total'}: € {orcamento.total.toFixed(2)}
+                              {safeT?.total || 'Total'}: {formatMoneyEUR(orcamento.total)}
                             </div>
                           )}
                           {(orcamento.tipo === 'orcamento-relatorio' || orcamento.tipo === 'cliente-prioritario-fixo') && (
@@ -66977,21 +66978,21 @@ A1;Peça exemplo;10`}
                                             {safeT?.quantidade || 'Qtd'}: {item.quantidade}
                                           </div>
                                           <div style={{ color: '#ccc' }}>
-                                            {safeT?.precoUnitario || 'Preço Unit.'}: {temValor ? `€ ${(item.precoUnitario || 0).toFixed(2)}` : (safeT?.aDefinir || 'A definir')}
+                                            {safeT?.precoUnitario || 'Preço Unit.'}: {temValor ? `${formatMoneyEUR((item.precoUnitario || 0))}` : (safeT?.aDefinir || 'A definir')}
                                           </div>
                                           <div style={{ color: '#ccc' }}>
-                                            {safeT?.totalSemIva || 'Subtotal'}: {temValor ? `€ ${subtotal.toFixed(2)}` : (safeT?.aDefinir || 'A definir')}
+                                            {safeT?.totalSemIva || 'Subtotal'}: {temValor ? `${formatMoneyEUR(subtotal)}` : (safeT?.aDefinir || 'A definir')}
                                           </div>
                                           {item.iva && item.iva > 0 && temValor && (
                                             <div style={{ color: '#ffd700' }}>
-                                              {safeT?.iva || 'IVA'} ({item.iva}%): € {valorIva.toFixed(2)}
+                                              {safeT?.iva || 'IVA'} ({item.iva}%): {formatMoneyEUR(valorIva)}
                                             </div>
                                           )}
                                           {!item.iva || item.iva === 0 ? <div></div> : null}
                                           <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
                                             {temValor && (
                                               <div style={{ color: '#66b3ff', fontWeight: 'bold', fontSize: '14px' }}>
-                                                {safeT?.totalComIva || 'Total'}: € {((subtotal + valorIva).toFixed(2))}
+                                                {safeT?.totalComIva || 'Total'}: {formatMoneyEUR(subtotal + valorIva)}
                                               </div>
                                             )}
                                             <button
@@ -71787,7 +71788,7 @@ A1;Peça exemplo;10`}
                       {Number(editingCliente.saldoPendente ?? 0) > 0 ? (
                         <div style={{ fontSize: '14px', color: '#fff', marginTop: '6px', fontWeight: 700 }}>
                           {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
-                          {Number(editingCliente.saldoPendente ?? 0).toFixed(2)}
+                          {formatMoneyNumber(Number(editingCliente.saldoPendente ?? 0))}
                         </div>
                       ) : null}
                       {Number(editingCliente.relatoriosNaoPagoCount ?? 0) > 0 ? (
@@ -72058,7 +72059,7 @@ A1;Peça exemplo;10`}
                             {valorDividaPecas > 0 ? (
                               <div style={{ fontSize: '12px', color: '#fff', fontWeight: 700 }}>
                                 {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
-                                {valorDividaPecas.toFixed(2)}
+                                {formatMoneyNumber(valorDividaPecas)}
                               </div>
                             ) : null}
                             {faturasResumoPecas ? (
@@ -72330,16 +72331,16 @@ A1;Peça exemplo;10`}
                 {safeT?.valorEmDividaSaldo || 'Valor em dívida (saldo pendente)'}
               </p>
               <p style={{ margin: 0, color: '#ff3333', fontSize: '28px', fontWeight: 'bold' }}>
-                €{modalClienteDivida.saldoPendente.toFixed(2)}
+                {formatMoneyEUR(modalClienteDivida.saldoPendente)}
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '12px', fontSize: '13px', color: '#ccc' }}>
                 <div>
                   <span style={{ color: '#888' }}>{safeT?.totalDevidoRelatorio || 'Total em aberto (faturado)'}:</span>{' '}
-                  <span style={{ color: '#ffcccc' }}>€{modalClienteDivida.totalDevido.toFixed(2)}</span>
+                  <span style={{ color: '#ffcccc' }}>{formatMoneyEUR(modalClienteDivida.totalDevido)}</span>
                 </div>
                 <div>
                   <span style={{ color: '#888' }}>{safeT?.totalPagoRelatorio || 'Total já pago'}:</span>{' '}
-                  <span style={{ color: '#ffcccc' }}>€{modalClienteDivida.totalPago.toFixed(2)}</span>
+                  <span style={{ color: '#ffcccc' }}>{formatMoneyEUR(modalClienteDivida.totalPago)}</span>
                 </div>
                 <div>
                   <span style={{ color: '#888' }}>{safeT?.faturasPendentes || 'Faturas Pendentes'}:</span>{' '}
@@ -72363,7 +72364,7 @@ A1;Peça exemplo;10`}
                     <div key={fatura.faturaId} style={{ marginBottom: '8px', padding: '8px', backgroundColor: '#1a0a0a', borderRadius: '4px', border: '1px solid rgba(255, 0, 0, 0.2)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
                         <span style={{ color: '#ddd', fontSize: '12px', fontWeight: 'bold' }}>{fatura.numeroFatura}</span>
-                        <span style={{ color: '#ff5555', fontSize: '14px', fontWeight: 'bold' }}>€{fatura.valor.toFixed(2)}</span>
+                        <span style={{ color: '#ff5555', fontSize: '14px', fontWeight: 'bold' }}>{formatMoneyEUR(fatura.valor)}</span>
                       </div>
                       <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
                         {fatura.numeroOS && (
@@ -74643,7 +74644,7 @@ A1;Peça exemplo;10`}
                         if (!Number.isFinite(n) || n < 0) return f
                         return {
                           ...f,
-                          valorText: n.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                          valorText: formatMoneyNumber(n),
                         }
                       })
                     }}
@@ -74824,7 +74825,7 @@ A1;Peça exemplo;10`}
                       >
                         €{' '}
                         {Number.isFinite(fatura.valor)
-                          ? fatura.valor.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                          ? formatMoneyNumber(fatura.valor)
                           : '—'}
                       </span>
                     </div>
@@ -75324,7 +75325,7 @@ A1;Peça exemplo;10`}
                                           <span style={{ fontSize: 'clamp(1.15rem, 3.2vw, 1.45rem)', fontWeight: 700, color: '#f0fff4', fontVariantNumeric: 'tabular-nums' }}>
                                             €{' '}
                                             {Number.isFinite(fatura.valor)
-                                              ? fatura.valor.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                              ? formatMoneyNumber(fatura.valor)
                                               : '—'}
                                           </span>
                                         </div>

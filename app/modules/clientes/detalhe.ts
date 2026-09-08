@@ -16,6 +16,7 @@ export type RelatorioClienteLike = {
   numeroMaquina?: string
 }
 
+import { formatMoneyEUR } from '../../lib/formatMoney'
 import {
   equipamentoIdETecnicoGerado,
   resolverIdEquipamentoCliente,
@@ -115,11 +116,9 @@ function localeFromLanguage(language: string): string {
   return 'pt-PT'
 }
 
-export function fmtEuro(valor: number, language: string): string {
-  return new Intl.NumberFormat(localeFromLanguage(language), {
-    style: 'currency',
-    currency: 'EUR',
-  }).format(Number.isFinite(valor) ? valor : 0)
+/** Euro no formato único do programa: 14.087,50 € (idioma ignorado de propósito). */
+export function fmtEuro(valor: number, _language?: string): string {
+  return formatMoneyEUR(Number.isFinite(valor) ? valor : 0)
 }
 
 /** @deprecated use fmtEuro */

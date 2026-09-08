@@ -1,5 +1,7 @@
 /** Textos e telefones para envio de IBAN / cobrança (e-mail, WhatsApp, SMS). */
 
+import { formatMoneyEUR } from '../../lib/formatMoney'
+
 export type FichaCadastralBancariaMin = {
   nomeEmpresa?: string
   nif?: string
@@ -63,7 +65,7 @@ export function buildCorpoEnvioIbanFaturaPecas(
     'Olá,',
     '',
     `Seguem os dados para pagamento da fatura ${fatura.numeroFatura} (${fatura.clienteNome}).`,
-    `Valor total: €${fatura.valorTotal.toFixed(2)} (com IVA).`,
+    `Valor total: ${formatMoneyEUR(fatura.valorTotal)} (com IVA).`,
     '',
     `${nome} — dados bancários:`,
   ]
@@ -86,7 +88,7 @@ export function buildCorpoEnvioCobrancaFechamentoBiblioteca(
     '',
     `Seguem os dados para pagamento do fechamento do relatório ${rel.numero} (${nomeCli}).`,
     `Equipamento: ${rel.maquinaModelo || '—'}.`,
-    `Valor total (c/ IVA): €${totalComIva.toFixed(2)}.`,
+    `Valor total (c/ IVA): ${formatMoneyEUR(totalComIva)}.`,
     '',
     `${nome} — dados bancários:`,
   ]

@@ -5,6 +5,7 @@ import {
   fmtDataPdf,
   type OrcamentoPdfEmpresa,
 } from './orcamentoPdfPro'
+import { formatMoneyEUR } from './formatMoney'
 
 export type OrcamentoGeradoPdfItem = {
   descricao: string
@@ -72,9 +73,9 @@ function renderItemRow(
     <td class="orc-pdf-pro__desc-cell">${escapePdfHtml(item.descricao)}${obsLinha}</td>
     <td class="orc-pdf-pro__col-cod">${escapePdfHtml(item.codigo || '—')}</td>
     <td class="orc-pdf-pro__col-qtd">${item.quantidade}</td>
-    <td class="orc-pdf-pro__col-preco">${temValor ? `€ ${precoUnitario.toFixed(2)}` : escapePdfHtml(L.aDefinir || 'A definir')}</td>
-    <td class="orc-pdf-pro__col-preco">${temValor ? `€ ${subtotal.toFixed(2)}` : escapePdfHtml(L.aDefinir || 'A definir')}</td>
-    ${temIvaCol ? `<td class="orc-pdf-pro__col-iva">${item.iva && item.iva > 0 && temValor ? `${item.iva}% · € ${valorIva.toFixed(2)}` : '—'}</td>` : ''}
+    <td class="orc-pdf-pro__col-preco">${temValor ? formatMoneyEUR(precoUnitario) : escapePdfHtml(L.aDefinir || 'A definir')}</td>
+    <td class="orc-pdf-pro__col-preco">${temValor ? formatMoneyEUR(subtotal) : escapePdfHtml(L.aDefinir || 'A definir')}</td>
+    ${temIvaCol ? `<td class="orc-pdf-pro__col-iva">${item.iva && item.iva > 0 && temValor ? `${item.iva}% · ${formatMoneyEUR(valorIva)}` : '—'}</td>` : ''}
   </tr>`
 }
 
@@ -125,11 +126,11 @@ export function buildOrcamentoGeradoPdfHtml(data: OrcamentoGeradoPdfData): strin
 
   const summary = temValorTotal
     ? `<div class="orc-pdf-pro__summary">
-        ${(data.totalSemIva || 0) > 0 ? `<div class="orc-pdf-pro__summary-row"><span class="orc-pdf-pro__summary-label">${escapePdfHtml(L.totalSemIva || 'Total sem IVA')}</span><span class="orc-pdf-pro__summary-value">€ ${(data.totalSemIva || 0).toFixed(2)}</span></div>` : ''}
-        ${(data.totalIva || 0) > 0 ? `<div class="orc-pdf-pro__summary-row"><span class="orc-pdf-pro__summary-label">${escapePdfHtml(L.iva || 'IVA')}</span><span class="orc-pdf-pro__summary-value">€ ${(data.totalIva || 0).toFixed(2)}</span></div>` : ''}
+        ${(data.totalSemIva || 0) > 0 ? `<div class="orc-pdf-pro__summary-row"><span class="orc-pdf-pro__summary-label">${escapePdfHtml(L.totalSemIva || 'Total sem IVA')}</span><span class="orc-pdf-pro__summary-value">${formatMoneyEUR(data.totalSemIva || 0)}</span></div>` : ''}
+        ${(data.totalIva || 0) > 0 ? `<div class="orc-pdf-pro__summary-row"><span class="orc-pdf-pro__summary-label">${escapePdfHtml(L.iva || 'IVA')}</span><span class="orc-pdf-pro__summary-value">${formatMoneyEUR(data.totalIva || 0)}</span></div>` : ''}
         <div class="orc-pdf-pro__summary-row orc-pdf-pro__summary-row--total">
           <span class="orc-pdf-pro__summary-label">${escapePdfHtml(L.totalComIva || L.total || 'Total')}</span>
-          <span class="orc-pdf-pro__summary-value">€ ${(data.total || 0).toFixed(2)}</span>
+          <span class="orc-pdf-pro__summary-value">${formatMoneyEUR(data.total || 0)}</span>
         </div>
       </div>`
     : `<div class="orc-pdf-pro__summary">

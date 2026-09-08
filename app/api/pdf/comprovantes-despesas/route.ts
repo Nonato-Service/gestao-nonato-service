@@ -6,10 +6,7 @@ import {
   buildPdfMetaSectionHtml,
   escapePdfHtml,
 } from '../../../lib/pdfDocumentLayout'
-
-export const dynamic = 'force-dynamic'
-
-type ComprovantePayload = {
+import { formatMoneyEUR } from '../../../lib/formatMoney'
   id: string
   tipo: 'cliente' | 'pessoal'
   cliente: string
@@ -70,7 +67,7 @@ function buildHtml(body: Body): string {
   })
 
   const metaFields = [
-    { label: 'Total geral', value: `€ ${totalGeral.toFixed(2)}` },
+    { label: 'Total geral', value: `${formatMoneyEUR(totalGeral)}` },
     ...(periodo ? [{ label: 'Período', value: esc(periodo) }] : []),
     ...(tecnicoNome ? [{ label: 'Técnico', value: esc(tecnicoNome) }] : []),
     { label: 'Modelo', value: String(modelo) },
@@ -90,8 +87,8 @@ function buildHtml(body: Body): string {
         <table class="comp-pdf-table">
           <thead><tr><th>Cliente / Beneficiário</th><th>Total (€)</th></tr></thead>
           <tbody>
-            ${totalPorClienteEntries.map(([nome, tot]) => `<tr><td>${esc(nome)}</td><td class="num">${tot.toFixed(2)}</td></tr>`).join('')}
-            <tr class="total-row"><td>Total geral</td><td class="num">${totalGeral.toFixed(2)} €</td></tr>
+            ${totalPorClienteEntries.map(([nome, tot]) => `<tr><td>${esc(nome)}</td><td class="num">${formatMoneyEUR(tot)}</td></tr>`).join('')}
+            <tr class="total-row"><td>Total geral</td><td class="num">${formatMoneyEUR(totalGeral)}</td></tr>
           </tbody>
         </table>
       </div>`
@@ -104,10 +101,10 @@ function buildHtml(body: Body): string {
             ${comprovantes
               .map((c) => {
                 const mesArq = esc((c.mesCompetencia || '').trim() || '—')
-                return `<tr><td>${esc(String(c.data))}</td><td>${mesArq}</td><td>${esc(getClienteOuPessoal(c, labelPessoal))}</td><td class="num">${c.valorTotal.toFixed(2)}</td><td>${esc(c.descricao || '')}</td></tr>`
+                return `<tr><td>${esc(String(c.data))}</td><td>${mesArq}</td><td>${esc(getClienteOuPessoal(c, labelPessoal))}</td><td class="num">${formatMoneyEUR(c.valorTotal)}</td><td>${esc(c.descricao || '')}</td></tr>`
               })
               .join('')}
-            <tr class="total-row"><td colspan="3">Total</td><td class="num">${totalGeral.toFixed(2)} €</td><td></td></tr>
+            <tr class="total-row"><td colspan="3">Total</td><td class="num">${formatMoneyEUR(totalGeral)}</td><td></td></tr>
           </tbody>
         </table>
       </div>`
@@ -117,8 +114,8 @@ function buildHtml(body: Body): string {
         <table class="comp-pdf-table">
           <thead><tr><th>Cliente / Beneficiário</th><th>Total (€)</th></tr></thead>
           <tbody>
-            ${totalPorClienteEntries.map(([nome, tot]) => `<tr><td>${esc(nome)}</td><td class="num">${tot.toFixed(2)}</td></tr>`).join('')}
-            <tr class="total-row"><td>Total</td><td class="num">${totalGeral.toFixed(2)} €</td></tr>
+            ${totalPorClienteEntries.map(([nome, tot]) => `<tr><td>${esc(nome)}</td><td class="num">${formatMoneyEUR(tot)}</td></tr>`).join('')}
+            <tr class="total-row"><td>Total</td><td class="num">${formatMoneyEUR(totalGeral)}</td></tr>
           </tbody>
         </table>
       </div>`
@@ -128,8 +125,8 @@ function buildHtml(body: Body): string {
         <table class="comp-pdf-table">
           <thead><tr><th>Cliente / Beneficiário</th><th>Total (€)</th></tr></thead>
           <tbody>
-            ${totalPorClienteEntries.map(([nome, tot]) => `<tr><td>${esc(nome)}</td><td class="num">${tot.toFixed(2)}</td></tr>`).join('')}
-            <tr class="total-row"><td>Total geral</td><td class="num">${totalGeral.toFixed(2)} €</td></tr>
+            ${totalPorClienteEntries.map(([nome, tot]) => `<tr><td>${esc(nome)}</td><td class="num">${formatMoneyEUR(tot)}</td></tr>`).join('')}
+            <tr class="total-row"><td>Total geral</td><td class="num">${formatMoneyEUR(totalGeral)}</td></tr>
           </tbody>
         </table>
       </div>
@@ -139,7 +136,7 @@ function buildHtml(body: Body): string {
       <div class="comp-pdf-table-wrap">
         <table class="comp-pdf-table">
           <tbody>
-            ${totalPorClienteEntries.map(([nome, tot]) => `<tr><td>${esc(nome)}</td><td class="num">${tot.toFixed(2)} €</td></tr>`).join('')}
+            ${totalPorClienteEntries.map(([nome, tot]) => `<tr><td>${esc(nome)}</td><td class="num">${formatMoneyEUR(tot)}</td></tr>`).join('')}
           </tbody>
         </table>
       </div>`

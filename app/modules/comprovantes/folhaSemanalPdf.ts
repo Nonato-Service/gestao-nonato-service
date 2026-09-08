@@ -10,6 +10,7 @@ import {
   buildPdfMetaSectionHtml,
   escapePdfHtml,
 } from '../../lib/pdfDocumentLayout'
+import { formatMoneyEUR, formatMoneyNumber } from '../../lib/formatMoney'
 
 export type ComprovanteFolhaItem = {
   id: string
@@ -116,9 +117,9 @@ export function buildFolhaSemanalContadorHtml(params: FolhaSemanalContadorParams
       { label: labels.periodo, value: esc(semana) },
       { label: labels.quantidade, value: String(ordenados.length) },
       { label: labels.anexosTitulo, value: `${comImagens} / ${ordenados.length}` },
-      { label: labels.totalGeral, value: `€ ${totalGeral.toFixed(2)}` },
-      { label: labels.despesasClientes, value: `€ ${totalClientes.toFixed(2)}` },
-      { label: labels.despesasNonato, value: `€ ${totalNonato.toFixed(2)}` },
+      { label: labels.totalGeral, value: formatMoneyEUR(totalGeral) },
+      { label: labels.despesasClientes, value: formatMoneyEUR(totalClientes) },
+      { label: labels.despesasNonato, value: formatMoneyEUR(totalNonato) },
     ],
   })
 
@@ -130,9 +131,9 @@ export function buildFolhaSemanalContadorHtml(params: FolhaSemanalContadorParams
         <thead><tr><th>${esc(labels.cliente)}</th><th>${esc(labels.valor)} (€)</th></tr></thead>
         <tbody>
           ${totalPorClienteEntries
-            .map(([nome, tot]) => `<tr><td>${esc(nome)}</td><td class="num">${tot.toFixed(2)}</td></tr>`)
+            .map(([nome, tot]) => `<tr><td>${esc(nome)}</td><td class="num">${formatMoneyNumber(tot)}</td></tr>`)
             .join('')}
-          <tr class="total-row"><td>${esc(labels.totalGeral)}</td><td class="num">${totalGeral.toFixed(2)}</td></tr>
+          <tr class="total-row"><td>${esc(labels.totalGeral)}</td><td class="num">${formatMoneyNumber(totalGeral)}</td></tr>
         </tbody>
       </table>
     </div>`
@@ -158,7 +159,7 @@ export function buildFolhaSemanalContadorHtml(params: FolhaSemanalContadorParams
                 <td>${esc(formatDataPt(c.data))}</td>
                 <td>${mesArq}</td>
                 <td>${esc(clienteOuNonato(c, labelNonato))}</td>
-                <td class="num">${c.valorTotal.toFixed(2)}</td>
+                <td class="num">${formatMoneyNumber(c.valorTotal)}</td>
                 <td>${esc(c.descricao || '')}</td>
               </tr>`
             })
@@ -176,7 +177,7 @@ export function buildFolhaSemanalContadorHtml(params: FolhaSemanalContadorParams
         <div class="comp-pdf-receipt-meta">
           <div><strong>${esc(labels.dataRecibo)}:</strong> ${esc(formatDataPt(c.data))}</div>
           <div><strong>${esc(labels.cliente)}:</strong> ${esc(clienteOuNonato(c, labelNonato))}</div>
-          <div><strong>${esc(labels.valor)}:</strong> ${c.valorTotal.toFixed(2)} €</div>
+          <div><strong>${esc(labels.valor)}:</strong> ${formatMoneyEUR(c.valorTotal)}</div>
           ${c.descricao ? `<div><strong>${esc(labels.descricao)}:</strong> ${esc(c.descricao)}</div>` : ''}
         </div>`
       const imgBlock = imgSrc

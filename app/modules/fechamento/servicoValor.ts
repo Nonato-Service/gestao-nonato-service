@@ -1,29 +1,23 @@
-/** Normaliza texto monetário: espaços/€ fora; vírgula decimal → ponto (ex.: 0,6 → 0.6). */
-function textoValorMonetarioParaParse(raw: unknown): string {
-  return String(raw ?? '')
-    .trim()
-    .replace(/\s/g, '')
-    .replace(/€/g, '')
-    .replace(',', '.')
-}
+import { formatMoneyNumber, parseMoneyInput, toMoneyNumber } from '../../lib/formatMoney'
 
 /** Cadastro de serviços: valores vindos do JSON/localStorage podem ser string. */
 export function normalizeServicoValorStored(v: unknown): number {
-  if (typeof v === 'number' && Number.isFinite(v)) return v
-  const n = parseFloat(textoValorMonetarioParaParse(v))
-  return Number.isFinite(n) ? n : 0
+  return toMoneyNumber(v)
 }
 
-/** Exibição nos cartões/listas do cadastro: sempre 2 casas e ponto decimal (ex.: 0.60, 70.00). */
+/** Exibição nos cartões/listas do cadastro: 14.087,50 (pt-PT). */
 export function formatServicoValorExibicao(v: unknown): string {
-  return normalizeServicoValorStored(v).toFixed(2)
+  return formatMoneyNumber(v)
 }
 
 /** Campo de valor (texto): aceita vírgula ou ponto; vazio trata-se como 0 ao guardar. */
 export function parseServicoValorInput(raw: string | undefined | null): number {
-  const t = textoValorMonetarioParaParse(raw)
-  if (t === '' || t === '-' || t === '.') return 0
-  const n = parseFloat(t)
+  const t = String(raw ?? '')
+    .trim()
+    .replace(/\s/g, '')
+    .replace(/€/gi, '')
+  if (t === '' || t === '-' || t === '.' || t === ',') return 0
+  const n = parseMoneyInput(raw)
   return Number.isFinite(n) ? n : NaN
 }
 

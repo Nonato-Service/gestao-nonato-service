@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useMemo, useState } from 'react'
+import { formatMoneyEUR } from '../lib/formatMoney'
 
 export type ClienteFaturaListItem = {
   id: string
@@ -66,16 +67,7 @@ export function ClienteFaturasSection({
     [equipamentos]
   )
 
-  const fmt = (n: number) => {
-    try {
-      return new Intl.NumberFormat(language === 'en' ? 'en-GB' : 'pt-PT', {
-        style: 'currency',
-        currency: 'EUR',
-      }).format(n || 0)
-    } catch {
-      return `${(n || 0).toFixed(2)} €`
-    }
-  }
+  const fmt = (n: number) => formatMoneyEUR(n || 0)
 
   const fmtDate = (d?: string) => {
     if (!d) return '—'

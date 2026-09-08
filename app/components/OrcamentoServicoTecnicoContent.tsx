@@ -28,6 +28,7 @@ import {
   buildTextoEnvioGenerico,
 } from '../context/DocumentoEnvioClienteContext'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
+import { formatMoneyEUR } from '../lib/formatMoney'
 
 export type ServicoOrcamentoLinha = {
   id: string
@@ -80,14 +81,6 @@ function parseDecimalInput(raw: string): number {
   if (!s) return 0
   const n = parseFloat(s)
   return Number.isFinite(n) ? n : 0
-}
-
-function formatMoneyEUR(n: number): string {
-  try {
-    return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(n)
-  } catch {
-    return `${n.toFixed(2)} €`
-  }
 }
 
 function labelTipoCobranca(

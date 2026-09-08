@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { localeDatetimeGeneral } from '../translations'
+import { formatMoneyEUR } from '../lib/formatMoney'
 import {
   PedidoOrcamentoRef,
   PedidoAvulsoRef,
@@ -450,7 +451,7 @@ export function ClienteEquipamentoHistoricoPanel({
       <p className="cliente-equip-hist__line">{o.descricao || '—'}</p>
       <p className="cliente-equip-hist__line">
         {fmtDate(o.dataCriacao || o.data)}
-        {typeof o.total === 'number' && o.total > 0 ? ` · ${o.total.toFixed(2)} €` : ''}
+        {typeof o.total === 'number' && o.total > 0 ? ` · ${formatMoneyEUR(o.total)}` : ''}
       </p>
       {onCriarFaturaDeOrcamento && (
         <div className="cliente-equip-hist__pedido-actions">
@@ -596,7 +597,7 @@ export function ClienteEquipamentoHistoricoPanel({
         dataIso: f.dataEmissao || '',
         titulo: `${tr('clienteFaturasTitle') !== 'clienteFaturasTitle' ? tr('clienteFaturasTitle') : 'Fatura'} ${f.numeroFatura || f.id}`,
         subtitulo:
-          typeof f.valorTotal === 'number' ? `${f.valorTotal.toFixed(2)} €` : undefined,
+          typeof f.valorTotal === 'number' ? `${formatMoneyEUR(f.valorTotal)}` : undefined,
         statusLabel: st,
         action: {
           kind: 'fatura',
@@ -1034,7 +1035,7 @@ export function ClienteEquipamentoHistoricoPanel({
                 <p className="cliente-equip-hist__line">{o.descricao || '—'}</p>
                 <p className="cliente-equip-hist__line">
                   {fmtDate(o.dataCriacao || o.data)}
-                  {typeof o.total === 'number' && o.total > 0 ? ` · ${o.total.toFixed(2)} €` : ''}
+                  {typeof o.total === 'number' && o.total > 0 ? ` · ${formatMoneyEUR(o.total)}` : ''}
                 </p>
               </div>
             )
@@ -1065,7 +1066,7 @@ export function ClienteEquipamentoHistoricoPanel({
                   {orc && (
                     <p className="cliente-equip-hist__line">
                       {tr('orcamentosGerados')}: {orc.numeroOrcamento}
-                      {typeof orc.total === 'number' && orc.total > 0 ? ` · ${orc.total.toFixed(2)} €` : ''}
+                      {typeof orc.total === 'number' && orc.total > 0 ? ` · ${formatMoneyEUR(orc.total)}` : ''}
                     </p>
                   )}
                   {onCriarFaturaDeOrcamento && (
@@ -1110,7 +1111,7 @@ export function ClienteEquipamentoHistoricoPanel({
                   {orc && (
                     <p className="cliente-equip-hist__line">
                       {orc.descricao || p.equipamentoTexto || '—'}
-                      {typeof orc.total === 'number' && orc.total > 0 ? ` · ${orc.total.toFixed(2)} €` : ''}
+                      {typeof orc.total === 'number' && orc.total > 0 ? ` · ${formatMoneyEUR(orc.total)}` : ''}
                     </p>
                   )}
                   {onCriarFaturaDeOrcamento && (

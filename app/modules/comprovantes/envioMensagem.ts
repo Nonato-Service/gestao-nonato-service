@@ -1,6 +1,7 @@
 /** Textos de envio (WhatsApp / e-mail / copiar) para comprovantes de despesas. */
 
 import type { ComprovanteDespesa } from './tipos'
+import { formatMoneyEUR } from '../../lib/formatMoney'
 
 export type MensagemEnvioComprovanteTemplateId = 1 | 2 | 3 | 4 | 5
 
@@ -36,7 +37,7 @@ export function buildPeriodoPdfEnvioComprovantes(params: {
 function linhasTotaisPorCliente(totalPorCliente: Record<string, number>, bullet = false): string {
   return Object.entries(totalPorCliente)
     .sort((a, b) => b[1] - a[1])
-    .map(([nome, tot]) => (bullet ? `• ${nome}: ${tot.toFixed(2)} €` : `${nome}: ${tot.toFixed(2)} €`))
+    .map(([nome, tot]) => (bullet ? `• ${nome}: ${formatMoneyEUR(tot)}` : `${nome}: ${formatMoneyEUR(tot)}`))
     .join('\n')
 }
 
@@ -65,36 +66,36 @@ export function buildMensagemEnvioComprovantes(params: BuildMensagemEnvioComprov
 
   if (templateId === 1) {
     const porCli = linhasTotaisPorCliente(totalPorCliente)
-    return `${tituloRelatorio}\n\nTotal geral: ${totalGeral.toFixed(2)} €\n\n${porCli}`.trim()
+    return `${tituloRelatorio}\n\nTotal geral: ${formatMoneyEUR(totalGeral)}\n\n${porCli}`.trim()
   }
   if (templateId === 2) {
     let msg = `${tituloRelatorio}\n\n`
     filtrados.forEach((c) => {
-      msg += `${c.data} | ${labelCliente(c)} | ${c.valorTotal.toFixed(2)} €${
+      msg += `${c.data} | ${labelCliente(c)} | ${formatMoneyEUR(c.valorTotal)}${
         c.descricao ? ' | ' + c.descricao : ''
       }\n`
     })
-    msg += `\nTotal: ${totalGeral.toFixed(2)} €`
+    msg += `\nTotal: ${formatMoneyEUR(totalGeral)}`
     return msg.trim()
   }
   if (templateId === 3) {
     const porCli = linhasTotaisPorCliente(totalPorCliente)
-    return `${tituloRelatorio}\nPeríodo: ${periodoLabel}\n\nTotal do período: ${totalGeral.toFixed(2)} €\n\n${porCli}`.trim()
+    return `${tituloRelatorio}\nPeríodo: ${periodoLabel}\n\nTotal do período: ${formatMoneyEUR(totalGeral)}\n\n${porCli}`.trim()
   }
   if (templateId === 4) {
     const porCli = linhasTotaisPorCliente(totalPorCliente, true)
     let msg = `NONATO SERVICE\nRelatório de Comprovantes de Despesas\nData do relatório: ${reportDate.toLocaleDateString('pt-PT')}\n────────────────────────\n\n`
-    msg += `Total geral: ${totalGeral.toFixed(2)} €\n\nPor cliente/beneficiário:\n`
+    msg += `Total geral: ${formatMoneyEUR(totalGeral)}\n\nPor cliente/beneficiário:\n`
     msg += porCli
     msg += `\n\n────────────────────────\nFim do relatório.`
     return msg
   }
   if (templateId === 5) {
-    let msg = `Total: ${totalGeral.toFixed(2)} €`
+    let msg = `Total: ${formatMoneyEUR(totalGeral)}`
     Object.entries(totalPorCliente)
       .sort((a, b) => b[1] - a[1])
       .forEach(([nome, tot]) => {
-        msg += `\n${nome}: ${tot.toFixed(2)} €`
+        msg += `\n${nome}: ${formatMoneyEUR(tot)}`
       })
     return msg
   }

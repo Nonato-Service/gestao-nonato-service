@@ -1,5 +1,6 @@
 /** Estado vazio e mapeamento Fornecedor / FaturaFornecedor → formulário. */
 
+import { formatMoneyNumber } from '../../lib/formatMoney'
 import type {
   FaturaFornecedor,
   FaturaFornecedorFormState,
@@ -60,9 +61,7 @@ export function emptyFaturaFornecedorFormState(
 
 /** Formata valor numérico da fatura para o campo de texto PT (ex.: 350,00). */
 export function formatFaturaFornecedorValorText(valor: number): string {
-  return Number.isFinite(valor)
-    ? valor.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : ''
+  return Number.isFinite(valor) ? formatMoneyNumber(valor) : ''
 }
 
 export function faturaFornecedorToFormState(

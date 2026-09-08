@@ -11,6 +11,7 @@ import {
 } from '../../../lib/pdfDocumentShell'
 import { buildPdfDocumentFooterHtml } from '../../../lib/pdfDocumentLayout'
 import { normalizePdfModelo } from '../../../lib/pdfModelTypes'
+import { formatMoneyEUR } from '../../../lib/formatMoney'
 
 export const dynamic = 'force-dynamic'
 
@@ -183,9 +184,9 @@ function buildHtml(body: Body): string {
         <td>${esc(r.nome)}</td>
         <td>${esc(r.categoriaLabel)}</td>
         <td class="num">${r.quantidade}</td>
-        <td class="num">${r.totalPago.toFixed(2)} €</td>
-        <td class="num">${r.totalPendente.toFixed(2)} €</td>
-        <td class="num">${(r.totalPago + r.totalPendente).toFixed(2)} €</td>
+        <td class="num">${formatMoneyEUR(r.totalPago)}</td>
+        <td class="num">${formatMoneyEUR(r.totalPendente)}</td>
+        <td class="num">${formatMoneyEUR(r.totalPago + r.totalPendente)}</td>
       </tr>`
     )
     .join('')
@@ -203,7 +204,7 @@ function buildHtml(body: Body): string {
         <td>${esc(p.periodoReferencia || '—')}</td>
         <td>${esc(p.numeroDocumento || '—')}</td>
         <td class="${p.status === 'pago' ? 'status-pago' : 'status-pend'}">${esc(statusLabel)}</td>
-        <td class="num">${p.valor.toFixed(2)} €</td>
+        <td class="num">${formatMoneyEUR(p.valor)}</td>
         <td>${esc(p.descricao || '—')}${anexos}</td>
       </tr>`
     })
@@ -211,9 +212,9 @@ function buildHtml(body: Body): string {
 
   const bodyHtml = [
     buildPdfSummaryCardsHtml([
-      { label: L.totalPago, value: `${totalPago.toFixed(2)} €`, modifier: 'pago' },
-      { label: L.totalPendente, value: `${totalPendente.toFixed(2)} €`, modifier: 'pendente' },
-      { label: L.totalGeral, value: `${totalGeral.toFixed(2)} €`, modifier: 'total' },
+      { label: L.totalPago, value: `${formatMoneyEUR(totalPago)}`, modifier: 'pago' },
+      { label: L.totalPendente, value: `${formatMoneyEUR(totalPendente)}`, modifier: 'pendente' },
+      { label: L.totalGeral, value: `${formatMoneyEUR(totalGeral)}`, modifier: 'total' },
     ]),
     buildPdfSectionTitleHtml(L.resumoEntidade),
     wrapPdfTableHtml(
@@ -232,7 +233,7 @@ function buildHtml(body: Body): string {
         <th>${esc(L.colDoc)}</th><th>${esc(L.colEstado)}</th><th>${esc(L.colValor)}</th><th>${esc(L.colDescricao)}</th>
       </tr></thead><tbody>
         ${detalheRows || `<tr><td colspan="7">${esc(L.nenhumDetalhe)}</td></tr>`}
-        <tr class="total-row"><td colspan="5">${esc(L.totalFiltro)}</td><td class="num">${totalGeral.toFixed(2)} €</td><td></td></tr>
+        <tr class="total-row"><td colspan="5">${esc(L.totalFiltro)}</td><td class="num">${formatMoneyEUR(totalGeral)}</td><td></td></tr>
       </tbody>`,
       'expense'
     ),

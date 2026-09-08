@@ -1,5 +1,7 @@
 /** Utilitários partilhados — cadastro de serviços / grupos de tarifa. */
 
+import { formatMoneyNumber } from './formatMoney'
+
 export type { ServicoCadastroGrupo } from '../modules/fechamento'
 export {
   DEFAULT_SERVICO_GRUPO_ID,
@@ -33,9 +35,7 @@ export const TEMPLATE_SERVICOS_PADRAO: Omit<ServicoCadastroItem, 'id' | 'grupoId
 const COD_ORDEM_PADRAO = ['HTT', 'HVI', 'HVR', 'KRC', 'DFC', 'DDT', 'DDH', 'DCC']
 
 export function formatServicoValorExibicao(v: unknown): string {
-  const n = typeof v === 'number' ? v : parseFloat(String(v ?? '0').replace(',', '.'))
-  if (Number.isNaN(n)) return '0,00'
-  return n.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return formatMoneyNumber(v)
 }
 
 export function servicoCodParaExibicao(s: { cod?: string; nome: string }): string {

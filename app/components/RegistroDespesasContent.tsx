@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import { formatMoneyEUR, formatMoneyNumber } from '../lib/formatMoney'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 import {
   useDocumentoEnvioCliente,
@@ -314,7 +315,7 @@ export function RegistroDespesasContent({
   }
 
   const montarEnvioDespesasDoc = (doc: DespesaDocumento) => {
-    const total = doc.despesas.reduce((s, x) => s + x.valor, 0).toFixed(2)
+    const total = formatMoneyNumber(doc.despesas.reduce((s, x) => s + x.valor, 0))
     const titulo = doc.relatorioNumero
       ? (safeT?.envioSubjectDespesasComRelatorio || 'Despesas — Relatório {numero} — {cliente}')
           .replace('{numero}', doc.relatorioNumero)
@@ -811,7 +812,7 @@ export function RegistroDespesasContent({
                   }}
                 >
                   <div>
-                    <strong>{d.tipoNome}</strong> — € {d.valor.toFixed(2)} — {d.descricao}
+                    <strong>{d.tipoNome}</strong> — {formatMoneyEUR(d.valor)} — {d.descricao}
                     {d.cartaoRotulo && (
                       <span style={{ marginLeft: '8px', color: '#fbbf24', fontSize: '12px' }} title={safeT?.registroDespesasLinhaCartao || ''}>
                         💳 {d.cartaoRotulo}
@@ -1120,7 +1121,7 @@ export function RegistroDespesasContent({
                     String(doc.despesas.length)
                   )}
                   {' — € '}
-                  {doc.despesas.reduce((s, x) => s + x.valor, 0).toFixed(2)}
+                  {formatMoneyNumber(doc.despesas.reduce((s, x) => s + x.valor, 0))}
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <button className="btn-primary" onClick={() => gerarPDF(doc.id)} style={{ padding: '6px 12px', fontSize: '13px' }}>

@@ -47,6 +47,7 @@ export type OrcamentoPecasEspeciaisPdfData = {
 
 import { orcamentoPdfThemeCss } from './pdfDocumentThemes'
 import { normalizePdfModelo } from './pdfModelTypes'
+import { formatMoneyNumber } from './formatMoney'
 
 function esc(s: string): string {
   return String(s ?? '')
@@ -311,10 +312,7 @@ export function gerarNumeroOfertaPecasEspeciais(
 
 export function formatarPrecoOrcamentoEur(valor: number): string {
   if (!Number.isFinite(valor)) return '—'
-  const fixed = (Math.round(valor * 100) / 100).toFixed(2)
-  const [intPart, decPart] = fixed.split('.')
-  const withDots = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-  return `${withDots},${decPart}`
+  return formatMoneyNumber(valor)
 }
 
 function normalizarTaxaIva(taxaIva: number): number {

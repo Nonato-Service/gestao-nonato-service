@@ -28,6 +28,7 @@ const critical = [
   'app/NonatoMainApp.tsx',
   'app/utils/cadastroSafety.ts',
   'app/lib/criticalCadastroKeys.ts',
+  'app/lib/formatMoney.ts',
   'app/lib/orcamentosAlfabeto.ts',
   'app/lib/clienteDevedorUtils.ts',
   'app/modules/fechamento/index.ts',
@@ -84,6 +85,35 @@ try {
   else fail(`sw.js não alinhado com v${ver}`)
 } catch (e) {
   fail(`PWA sync: ${e.message}`)
+}
+
+// 2b) Formato monetário único (14.087,50 €)
+try {
+  const money = fs.readFileSync(path.join(root, 'app/lib/formatMoney.ts'), 'utf8')
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  const servicoValor = fs.readFileSync(path.join(root, 'app/modules/fechamento/servicoValor.ts'), 'utf8')
+  if (
+    money.includes('formatMoneyEUR') &&
+    money.includes('formatMoneyNumber') &&
+    money.includes('parseMoneyInput') &&
+    money.includes("replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.')")
+  ) {
+    ok('formatMoney: helper com milhar ponto e decimal vírgula')
+  } else {
+    fail('formatMoney.ts incompleto (esperado 14.087,50)')
+  }
+  if (nma.includes("from './lib/formatMoney'") && nma.includes('formatMoneyEUR(fechTotIva')) {
+    ok('NonatoMainApp usa formatMoneyEUR nos totais de fechamento')
+  } else {
+    fail('NonatoMainApp sem formatMoneyEUR no fechamento')
+  }
+  if (servicoValor.includes('formatMoneyNumber') && servicoValor.includes('parseMoneyInput')) {
+    ok('fechamento/servicoValor usa formatMoney (display ≠ parse)')
+  } else {
+    fail('servicoValor sem formatMoney')
+  }
+} catch (e) {
+  fail(`formatMoney: ${e.message}`)
 }
 
 // 3) Filtro A–Z usa letra inicial (não qualquer palavra)

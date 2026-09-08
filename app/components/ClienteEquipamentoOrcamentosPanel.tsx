@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
+import { formatMoneyEUR } from '../lib/formatMoney'
 import {
   OrcamentoGeradoRef,
   PedidoAvulsoRef,
@@ -423,7 +424,7 @@ export function ClienteEquipamentoOrcamentosPanel({
                 <p className="cliente-equip-orcamentos__line">{o.descricao || '—'}</p>
                 <p className="cliente-equip-orcamentos__line">
                   {new Date(o.dataCriacao || o.data).toLocaleDateString('pt-BR')}
-                  {typeof o.total === 'number' && o.total > 0 ? ` · ${o.total.toFixed(2)} €` : ''}
+                  {typeof o.total === 'number' && o.total > 0 ? ` · ${formatMoneyEUR(o.total)}` : ''}
                 </p>
               </div>
             )

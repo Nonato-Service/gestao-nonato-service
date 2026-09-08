@@ -12,6 +12,7 @@ import {
 } from './pdfDocumentShell'
 import { buildPdfDocumentFooterHtml } from './pdfDocumentLayout'
 import { normalizePdfModelo } from './pdfModelTypes'
+import { formatMoneyEUR } from './formatMoney'
 
 export type OrcamentoConfirmacaoKind = 'orcamento' | 'pedido-os' | 'separacao-envio'
 
@@ -59,7 +60,7 @@ function metaTableRows(
     if (endereco) push('endereco', esc(endereco))
     if (dc.telefone) push('telefone', esc(dc.telefone))
   }
-  push('valorTotal', `€ ${(orc.total ?? 0).toFixed(2)}`)
+  push('valorTotal', formatMoneyEUR(orc.total ?? 0))
   if (orc.descricao) {
     rows.push(
       `<tr><th scope="row">${esc(String(labels.descricao ?? 'Descrição'))}</th><td colspan="3">${esc(orc.descricao)}</td></tr>`
@@ -101,7 +102,7 @@ export function buildOrcamentoConfirmacaoPdfHtml(options: {
         : []),
       { label: String(labels.data ?? 'Data'), value: esc(orcamento.data) },
       { label: String(labels.cliente ?? 'Cliente'), value: esc(orcamento.clienteNome || 'N/A') },
-      { label: String(labels.valorTotal ?? 'Total'), value: `€ ${(orcamento.total ?? 0).toFixed(2)}` },
+      { label: String(labels.valorTotal ?? 'Total'), value: formatMoneyEUR(orcamento.total ?? 0) },
     ]
   )
 

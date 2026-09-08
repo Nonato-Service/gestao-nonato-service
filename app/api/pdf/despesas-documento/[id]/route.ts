@@ -10,6 +10,7 @@ import {
   buildPdfMetaSectionHtml,
   escapePdfHtml,
 } from '../../../../lib/pdfDocumentLayout'
+import { formatMoneyEUR } from '../../../../lib/formatMoney'
 
 export const dynamic = 'force-dynamic'
 
@@ -180,7 +181,7 @@ export async function GET(
           <td>${i + 1}</td>
           <td>${esc(d.tipoNome || '-')}</td>
           <td class="nowrap">${cartaoCell}</td>
-          <td class="num">€ ${(d.valor || 0).toFixed(2)}</td>
+          <td class="num">${formatMoneyEUR(d.valor || 0)}</td>
           <td>${esc(d.descricao || '-')}</td>
           <td>${esc(d.codigoBarras || '-')}</td>
         </tr>
@@ -200,7 +201,7 @@ export async function GET(
         ([rotulo, tot]) => `
       <tr>
         <th scope="row">${esc(rotulo)}</th>
-        <td class="num">€ ${tot.toFixed(2)}</td>
+        <td class="num">${formatMoneyEUR(tot)}</td>
       </tr>`
       )
       .join('')
@@ -224,7 +225,7 @@ export async function GET(
         ...(doc.relatorioNumero
           ? [{ label: labels.relatorio, value: esc(doc.relatorioNumero), fullWidth: String(doc.relatorioNumero).length > 36 }]
           : []),
-        { label: labels.total, value: `€ ${totalGeral.toFixed(2)}` },
+        { label: labels.total, value: `${formatMoneyEUR(totalGeral)}` },
       ],
     })
 
@@ -290,7 +291,7 @@ export async function GET(
         ${despesasHtml}
         <tr class="total-row">
           <td colspan="3">${labels.total}</td>
-          <td class="num">€ ${totalGeral.toFixed(2)}</td>
+          <td class="num">${formatMoneyEUR(totalGeral)}</td>
           <td colspan="2"></td>
         </tr>
       </tbody>

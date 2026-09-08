@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { documentPdfDateLocale, localeDateShort, localeForLongDatetime } from '../translations'
+import { formatMoneyEUR } from '../lib/formatMoney'
 import { PdfModeloPickerField } from './PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from '../lib/pdfModelStorage'
 import {
@@ -650,7 +651,7 @@ export function PagamentosContadorContent({
     )
     const tituloBase = tx(safeT, 'pagamentosContadorTitle', 'PAGAMENTOS AO CONTADOR')
     const titulo = periodoDesc ? `${tituloBase} — ${periodoDesc}` : tituloBase
-    const detalhe = `${pagamentosFiltrados.length} registo(s) — Total: € ${totais.total.toFixed(2)}`
+    const detalhe = `${pagamentosFiltrados.length} registo(s) — Total: ${formatMoneyEUR(totais.total)}`
     abrirEnvio({
       title: tx(safeT, 'pagamentosContadorEnvioTitulo', 'Enviar relatório ao contabilista'),
       subject: titulo,
@@ -821,15 +822,15 @@ export function PagamentosContadorContent({
           <div className="pagamentos-contador-resumo">
             <div className="pagamentos-contador-resumo__item pagamentos-contador-resumo__item--pago">
               <span>{tx(safeT, 'pagamentosContadorTotalPago', 'Pago')}</span>
-              <strong>€{totais.pago.toFixed(2)}</strong>
+              <strong>{formatMoneyEUR(totais.pago)}</strong>
             </div>
             <div className="pagamentos-contador-resumo__item pagamentos-contador-resumo__item--pend">
               <span>{tx(safeT, 'pagamentosContadorTotalPendente', 'Pendente')}</span>
-              <strong>€{totais.pendente.toFixed(2)}</strong>
+              <strong>{formatMoneyEUR(totais.pendente)}</strong>
             </div>
             <div className="pagamentos-contador-resumo__item">
               <span>{tx(safeT, 'pagamentosContadorTotalFiltrado', 'Total (filtro)')}</span>
-              <strong>€{totais.total.toFixed(2)}</strong>
+              <strong>{formatMoneyEUR(totais.total)}</strong>
             </div>
           </div>
 
@@ -998,7 +999,7 @@ export function PagamentosContadorContent({
                       )}
                     </div>
                     <div className="pagamentos-contador-item__side">
-                      <div className="pagamentos-contador-item__valor">€{p.valor.toFixed(2)}</div>
+                      <div className="pagamentos-contador-item__valor">{formatMoneyEUR(p.valor)}</div>
                       <button type="button" className="pagamentos-contador-btn-sm" onClick={() => abrirEditarPagamento(p)}>
                         {tx(safeT, 'editar', 'Editar')}
                       </button>

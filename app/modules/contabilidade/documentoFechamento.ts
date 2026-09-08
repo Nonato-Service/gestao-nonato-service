@@ -1,4 +1,5 @@
 import type { FechamentoItem } from '../fechamento'
+import { formatMoneyEUR } from '../../lib/formatMoney'
 import { CONTAB_PRINT_WINDOW_STYLES } from './estilosPrint'
 import { escAttr, preEsc, valDash } from './escape'
 import type {
@@ -57,7 +58,7 @@ export function buildHtmlFechamentoContabilidade(input: BuildHtmlFechamentoConta
           ? `${i.quantidade.toFixed(0)} km`
           : String(i.quantidade)
     const vl = i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal
-    return `  • ${cod} — ${descCompleta} | ${qtd} × ${i.valorUnitario.toFixed(2)} € = ${vl.toFixed(2)} €`
+    return `  • ${cod} — ${descCompleta} | ${qtd} × ${formatMoneyEUR(i.valorUnitario)} = ${formatMoneyEUR(vl)}`
   })
   const textoPlano = [
     titulo,
@@ -82,13 +83,13 @@ export function buildHtmlFechamentoContabilidade(input: BuildHtmlFechamentoConta
     `${t.itensCobrancaFechamento || 'Itens a cobrar'}:`,
     ...linhasItens,
     '',
-    `${t.totalSemIva || 'Total s/ IVA'}: ${ivContab.liquido.toFixed(2)} €`,
+    `${t.totalSemIva || 'Total s/ IVA'}: ${formatMoneyEUR(ivContab.liquido)}`,
     ...(ivContab.incluir && ivContab.iva > 0.0001
       ? [
-          `${t.valorIva || 'IVA'} (${ivContab.taxa}%): ${ivContab.iva.toFixed(2)} €`,
-          `${t.totalComIva || 'Total com IVA'}: ${total.toFixed(2)} €`,
+          `${t.valorIva || 'IVA'} (${ivContab.taxa}%): ${formatMoneyEUR(ivContab.iva)}`,
+          `${t.totalComIva || 'Total com IVA'}: ${formatMoneyEUR(total)}`,
         ]
-      : [`${lblSoma}: ${total.toFixed(2)} €`]),
+      : [`${lblSoma}: ${formatMoneyEUR(total)}`]),
     '',
     `${docGerado} ${dataHora}`,
   ]
@@ -120,14 +121,14 @@ export function buildHtmlFechamentoContabilidade(input: BuildHtmlFechamentoConta
     if (resumoFiscalShort) {
       a.push(resumoFiscalShort, '')
     }
-    a.push(`${t.totalSemIva || 'Total s/ IVA'}: ${ivContab.liquido.toFixed(2)} €`)
+    a.push(`${t.totalSemIva || 'Total s/ IVA'}: ${formatMoneyEUR(ivContab.liquido)}`)
     if (ivContab.incluir && ivContab.iva > 0.0001) {
       a.push(
-        `${t.valorIva || 'IVA'} (${ivContab.taxa}%): ${ivContab.iva.toFixed(2)} €`,
-        `${t.totalComIva || 'Total com IVA'}: ${total.toFixed(2)} €`
+        `${t.valorIva || 'IVA'} (${ivContab.taxa}%): ${formatMoneyEUR(ivContab.iva)}`,
+        `${t.totalComIva || 'Total com IVA'}: ${formatMoneyEUR(total)}`
       )
     } else {
-      a.push(`${t.somaTotal || t.totalComIva || 'Total a cobrar'}: ${total.toFixed(2)} €`)
+      a.push(`${t.somaTotal || t.totalComIva || 'Total a cobrar'}: ${formatMoneyEUR(total)}`)
     }
     a.push(emFim)
     return a.join('\n')
@@ -144,13 +145,13 @@ export function buildHtmlFechamentoContabilidade(input: BuildHtmlFechamentoConta
             : String(item.quantidade)
       )
       const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
-      return `<tr><td style="padding:8px 10px;border:1px solid #c8e6c9;font-weight:600">${cod}</td><td style="padding:8px 10px;border:1px solid #c8e6c9">${desc}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right">${qtd}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
+      return `<tr><td style="padding:8px 10px;border:1px solid #c8e6c9;font-weight:600">${cod}</td><td style="padding:8px 10px;border:1px solid #c8e6c9">${desc}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right">${qtd}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right">${formatMoneyEUR(item.valorUnitario)}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
     })
     .join('')
   const footIvaRows =
     ivContab.incluir && ivContab.iva > 0.0001
-      ? `<tr><td colspan="4" style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;background:#fafafa">${escAttr(t.totalSemIva || 'Total s/ IVA')}</td><td style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;font-weight:600;background:#fafafa">${ivContab.liquido.toFixed(2)} €</td></tr><tr><td colspan="4" style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;background:#fafafa">${escAttr(t.valorIva || 'IVA')} (${ivContab.taxa}%)</td><td style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;font-weight:600;background:#fafafa">${ivContab.iva.toFixed(2)} €</td></tr><tr><td colspan="4" style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:700;background:#f1f8e9">${escAttr(t.totalComIva || 'Total com IVA')}</td><td style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:800;background:#f1f8e9">${total.toFixed(2)} €</td></tr>`
-      : `<tr><td colspan="4" style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:700;background:#f1f8e9">${escAttr(lblSoma)}</td><td style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:800;background:#f1f8e9">${total.toFixed(2)} €</td></tr>`
+      ? `<tr><td colspan="4" style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;background:#fafafa">${escAttr(t.totalSemIva || 'Total s/ IVA')}</td><td style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;font-weight:600;background:#fafafa">${formatMoneyEUR(ivContab.liquido)}</td></tr><tr><td colspan="4" style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;background:#fafafa">${escAttr(t.valorIva || 'IVA')} (${ivContab.taxa}%)</td><td style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;font-weight:600;background:#fafafa">${formatMoneyEUR(ivContab.iva)}</td></tr><tr><td colspan="4" style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:700;background:#f1f8e9">${escAttr(t.totalComIva || 'Total com IVA')}</td><td style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:800;background:#f1f8e9">${formatMoneyEUR(total)}</td></tr>`
+      : `<tr><td colspan="4" style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:700;background:#f1f8e9">${escAttr(lblSoma)}</td><td style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:800;background:#f1f8e9">${formatMoneyEUR(total)}</td></tr>`
   const tableHtml = `<div class="contab-scroll"><table class="contab-items-table" style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:0"><thead><tr><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:left">${escAttr(lblCod)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:left">${escAttr(lblDesc)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblQtd)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblVu)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblTot)}</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot>${footIvaRows}</tfoot></table></div>`
   const infoRel = `<div class="contab-info-card" style="margin-bottom:16px;padding:14px;border-radius:10px;background:#f1f8e9;border:1px solid #c8e6c9;font-size:13px;line-height:1.5"><div style="word-wrap:break-word"><strong>${escAttr(lblNum)}:</strong> ${escAttr(relatorio.numero)}</div><div style="word-wrap:break-word"><strong>${escAttr(lblCliente)}:</strong> ${escAttr(relatorio.cliente)}</div><div style="word-wrap:break-word"><strong>${escAttr(lblEquip)}:</strong> ${escAttr(`${relatorio.maquinaModelo || ''}`.trim())}</div><div><strong>${escAttr(lblData)}:</strong> ${escAttr(relatorio.data)}</div></div>`
   const rowFiscalHtml = (a: string, b: string) =>
