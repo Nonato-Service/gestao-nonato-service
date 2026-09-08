@@ -5,6 +5,9 @@
 import fs from 'fs'
 import path from 'path'
 import { spawnSync } from 'child_process'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
 
 const root = process.cwd()
 let failed = 0
@@ -87,6 +90,33 @@ try {
   else fail(`sw.js não alinhado com v${ver}`)
 } catch (e) {
   fail(`PWA sync: ${e.message}`)
+}
+
+// 2a) Sintaxe do monólito — o Railway falha no webpack se JSX estiver partido
+try {
+  const ts = require('typescript')
+  const src = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  const parsed = ts.transpileModule(src, {
+    fileName: 'NonatoMainApp.tsx',
+    reportDiagnostics: true,
+    compilerOptions: { jsx: ts.JsxEmit.Preserve, target: ts.ScriptTarget.ES2020 },
+  })
+  const syntaxErrs = (parsed.diagnostics || []).filter(
+    (d) => d.category === ts.DiagnosticCategory.Error
+  )
+  if (syntaxErrs.length === 0) {
+    ok('NonatoMainApp.tsx sem erro de sintaxe')
+  } else {
+    const first = syntaxErrs[0]
+    let loc = ''
+    if (first.file && first.start != null) {
+      const p = first.file.getLineAndCharacterOfPosition(first.start)
+      loc = `${p.line + 1}:${p.character + 1} `
+    }
+    fail(`sintaxe NonatoMainApp.tsx: ${loc}${ts.flattenDiagnosticMessageText(first.messageText, ' ')}`)
+  }
+} catch (e) {
+  fail(`parse NonatoMainApp: ${e.message}`)
 }
 
 // 2b) Formato monetário único (14.087,50 €)

@@ -71590,6 +71590,7 @@ A1;Peça exemplo;10`}
                 {equipamentos.length === 0 ? (
                   <p>{safeT?.noEquipamentos || 'Nenhum equipamento cadastrado'}</p>
                 ) : (
+                  <>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
                     {equipamentos.slice(0, equipamentosModalListaLimite).map(equipamento => (
                       <div key={equipamento.id} style={{ padding: '15px', backgroundColor: '#404040', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
@@ -71652,6 +71653,7 @@ A1;Peça exemplo;10`}
                       )}
                     </button>
                   ) : null}
+                  </>
                 )}
               </>
             )}
