@@ -15,6 +15,7 @@ import {
   localeDatetimeGeneral,
 } from './translations'
 import { formatMoneyEUR, formatMoneyNumber } from './lib/formatMoney'
+import { LISTA_UI_LOTE, limiteListaUi } from './lib/listaUiLote'
 import {
   loadData,
   saveData,
@@ -3660,6 +3661,7 @@ export default function Dashboard() {
     () => new Set<AgendaListaSecaoId>(['exec'])
   )
   const [agendaListaCardsExpandidos, setAgendaListaCardsExpandidos] = useState<Set<string>>(() => new Set())
+  const [agendaListaLimite, setAgendaListaLimite] = useState(LISTA_UI_LOTE)
   const [buscaAgendaHistoricoConcluidos, setBuscaAgendaHistoricoConcluidos] = useState('')
   const [historicoConcluidoDataDesde, setHistoricoConcluidoDataDesde] = useState('')
   const [historicoConcluidoDataAte, setHistoricoConcluidoDataAte] = useState('')
@@ -4277,8 +4279,11 @@ export default function Dashboard() {
   const [buscaCliente, setBuscaCliente] = useState('')
   const [clienteListaDetalheId, setClienteListaDetalheId] = useState<string | null>(null)
   const [clientesAlfaLetraFiltro, setClientesAlfaLetraFiltro] = useState<string | null>(null)
-  /** Letras com lista retraída (vazia = todas expandidas). */
-  const [clientesAlfaLetrasRecolhidas, setClientesAlfaLetrasRecolhidas] = useState<Set<string>>(() => new Set())
+  /** Letras com lista retraída — arranque com todas fechadas (menos nós DOM). */
+  const [clientesAlfaLetrasRecolhidas, setClientesAlfaLetrasRecolhidas] = useState<Set<string>>(
+    () => new Set(CLIENTES_ALFABETO_INDICE)
+  )
+  const [clientesLetraLimites, setClientesLetraLimites] = useState<Record<string, number>>({})
   /** Cartões com INF. ADICIONAL expandida. */
   const [clientesListaDetalheExpandidoIds, setClientesListaDetalheExpandidoIds] = useState<Set<string>>(
     () => new Set()
@@ -4326,6 +4331,7 @@ export default function Dashboard() {
       limpar: (safeT as Record<string, string | undefined>)?.limpar || safeT?.delete,
       cliente: safeT?.cliente,
       filtrados: safeT?.filtrados,
+      carregarMais: (safeT as Record<string, string | undefined>)?.listaCarregarMais,
     }),
     [safeT]
   )
@@ -35647,7 +35653,13 @@ export default function Dashboard() {
                           </button>
                           {letraAberta ? (
                           <ul className="clientes-alfa-nomes">
-                            {listaLetra.map((c) => {
+                            {(() => {
+                              const limite = limiteListaUi(clientesLetraLimites[letra])
+                              const visiveis = listaLetra.slice(0, limite)
+                              const resto = listaLetra.length - visiveis.length
+                              return (
+                            <>
+                            {visiveis.map((c) => {
                               const devedor = isClienteMarcadoDevedor(c)
                               const cardAberto = clientesListaDetalheExpandidoIds.has(c.id)
                               return (
@@ -35688,6 +35700,28 @@ export default function Dashboard() {
                                 </li>
                               )
                             })}
+                            {resto > 0 ? (
+                              <li className="clientes-alfa-item">
+                                <button
+                                  type="button"
+                                  className="clientes-alfa-nome-btn"
+                                  onClick={() =>
+                                    setClientesLetraLimites((prev) => ({
+                                      ...prev,
+                                      [letra]: limite + LISTA_UI_LOTE,
+                                    }))
+                                  }
+                                >
+                                  {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                                    '{n}',
+                                    String(resto)
+                                  )}
+                                </button>
+                              </li>
+                            ) : null}
+                            </>
+                              )
+                            })()}
                           </ul>
                           ) : null}
                         </section>
@@ -44158,12 +44192,25 @@ A1;Peça exemplo;10`}
                         pulse={pulse}
                         collapsedHint={collapsedHintLista}
                       >
-                        {itens.map((ag) =>
+                        {itens.slice(0, agendaListaLimite).map((ag) =>
                           renderAgendaCard(ag, corPorItem ? corPorItem(ag) : cor, cardPulseClass, {
                             muted: mutedCards || normalizeStatusAgendamento(ag) === 'cancelado',
                             listaModo: true,
                           })
                         )}
+                        {itens.length > agendaListaLimite ? (
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            style={{ margin: '8px 0 4px', width: '100%' }}
+                            onClick={() => setAgendaListaLimite((n) => n + LISTA_UI_LOTE)}
+                          >
+                            {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                              '{n}',
+                              String(itens.length - agendaListaLimite)
+                            )}
+                          </button>
+                        ) : null}
                       </AgendaSecaoRecolhivel>
                     )
                   }
@@ -62249,7 +62296,7 @@ A1;Peça exemplo;10`}
                                           </tr>
                                         </thead>
                                         <tbody>
-                                          {relatorios.map((relatorio, relIndex) => {
+                                          {relatorios.slice(0, LISTA_UI_LOTE).map((relatorio, relIndex) => {
                                             const totais = calcularTotais(relatorio.diasTrabalho)
                                             const dataFormatada = new Date(
                                               relatorio.data
@@ -62443,6 +62490,16 @@ A1;Peça exemplo;10`}
                                               </tr>
                                             )
                                           })}
+                                          {relatorios.length > LISTA_UI_LOTE ? (
+                                            <tr>
+                                              <td colSpan={7} style={{ padding: '8px 10px', color: '#9dffd0' }}>
+                                                {((safeT as any)?.listaCarregarMaisHint ||
+                                                  'A mostrar {vis} de {tot}.')
+                                                  .replace('{vis}', String(LISTA_UI_LOTE))
+                                                  .replace('{tot}', String(relatorios.length))}
+                                              </td>
+                                            </tr>
+                                          ) : null}
                                         </tbody>
                                       </table>
                                     </div>
@@ -63645,6 +63702,7 @@ A1;Peça exemplo;10`}
       return relatoriosServico.find((r) => r.id === rascunhoEfetivo.relatorioSelecionadoId) ?? null
     })
     const [buscaRelatorio, setBuscaRelatorio] = useState(rascunhoEfetivo.buscaRelatorio || '')
+    const [orcRelatoriosListaLimite, setOrcRelatoriosListaLimite] = useState(LISTA_UI_LOTE)
     const [dadosOrcamento, setDadosOrcamento] = useState(() => ({
       ...rascunhoEfetivo.dadosOrcamento,
       itens: Array.isArray(rascunhoEfetivo.dadosOrcamento.itens) ? rascunhoEfetivo.dadosOrcamento.itens : [],
@@ -64838,22 +64896,31 @@ A1;Peça exemplo;10`}
               type="text"
               placeholder={safeT?.buscarRelatorio || 'Buscar relatório por número ou cliente...'}
               value={buscaRelatorio}
-              onChange={(e) => setBuscaRelatorio(e.target.value)}
+              onChange={(e) => {
+                setBuscaRelatorio(e.target.value)
+                setOrcRelatoriosListaLimite(LISTA_UI_LOTE)
+              }}
               className="orc-pro__search"
             />
             <div className="orc-pro__scroll-list">
-              {relatoriosServico.filter(rel => 
-                rel.numero.toLowerCase().includes(buscaRelatorio.toLowerCase()) ||
-                rel.cliente.toLowerCase().includes(buscaRelatorio.toLowerCase())
-              ).length === 0 ? (
+              {(() => {
+                const q = buscaRelatorio.toLowerCase()
+                const filtrados = relatoriosServico.filter(rel => 
+                  rel.numero.toLowerCase().includes(q) ||
+                  rel.cliente.toLowerCase().includes(q)
+                )
+                const visiveis = filtrados.slice(0, orcRelatoriosListaLimite)
+                const resto = filtrados.length - visiveis.length
+                if (filtrados.length === 0) {
+                  return (
                 <p className="orc-pro__empty-hint">
                   {safeT?.nenhumRelatorioEncontrado || 'Nenhum relatório encontrado'}
                 </p>
-              ) : (
-                relatoriosServico.filter(rel => 
-                  rel.numero.toLowerCase().includes(buscaRelatorio.toLowerCase()) ||
-                  rel.cliente.toLowerCase().includes(buscaRelatorio.toLowerCase())
-                ).map(relatorio => (
+                  )
+                }
+                return (
+                <>
+                {visiveis.map(relatorio => (
                   <button
                     type="button"
                     key={relatorio.id}
@@ -64869,8 +64936,19 @@ A1;Peça exemplo;10`}
                       <span>{safeT?.tecnico || 'Técnico'}: {relatorio.tecnico}</span>
                     </div>
                   </button>
-                ))
-              )}
+                ))}
+                {resto > 0 ? (
+                  <button
+                    type="button"
+                    className="orc-pro__pick-card"
+                    onClick={() => setOrcRelatoriosListaLimite((n) => n + LISTA_UI_LOTE)}
+                  >
+                    {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace('{n}', String(resto))}
+                  </button>
+                ) : null}
+                </>
+                )
+              })()}
             </div>
           </div>
         )}

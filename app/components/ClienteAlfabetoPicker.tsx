@@ -12,6 +12,7 @@ import {
 import { localeOrdenacaoClientes, ordenarClientesPorNome } from '../lib/ordenarClientes'
 import { ClienteListaLinhas } from './ClienteListaLinhas'
 import { ClienteDevedorNomeTag } from './ClienteDevedorNomeTag'
+import { LISTA_UI_LOTE, limiteListaUi } from '../lib/listaUiLote'
 
 export type ClienteAlfabetoPickerLabels = {
   buscar?: string
@@ -32,6 +33,7 @@ export type ClienteAlfabetoPickerLabels = {
   toqueFiltrar?: string
   expandirTodos?: string
   retrairTodos?: string
+  carregarMais?: string
 }
 
 export type ClienteAlfabetoPickerAction = {
@@ -70,7 +72,8 @@ export function ClienteAlfabetoPicker({
 }: Props) {
   const [busca, setBusca] = useState('')
   const [letraFiltro, setLetraFiltro] = useState<string | null>(null)
-  const [letrasRecolhidas, setLetrasRecolhidas] = useState<Set<string>>(() => new Set())
+  const [letrasRecolhidas, setLetrasRecolhidas] = useState<Set<string>>(() => new Set(CLIENTES_ALFABETO_INDICE))
+  const [letraLimites, setLetraLimites] = useState<Record<string, number>>({})
   const [cardsExpandidos, setCardsExpandidos] = useState<Set<string>>(() => new Set())
   const locale = localeOrdenacaoClientes(language)
 
@@ -281,7 +284,13 @@ export function ClienteAlfabetoPicker({
                   </button>
                   {letraAberta ? (
                   <ul className="clientes-alfa-nomes">
-                    {listaLetra.map((c) => {
+                    {(() => {
+                      const limite = limiteListaUi(letraLimites[letra])
+                      const visiveis = listaLetra.slice(0, limite)
+                      const resto = listaLetra.length - visiveis.length
+                      return (
+                    <>
+                    {visiveis.map((c) => {
                       const devedor = isDevedor?.(c) ?? false
                       const active = selectedId === c.id
                       const cardAberto = cardsExpandidos.has(c.id)
@@ -314,6 +323,25 @@ export function ClienteAlfabetoPicker({
                         </li>
                       )
                     })}
+                    {resto > 0 ? (
+                      <li className="clientes-alfa-item">
+                        <button
+                          type="button"
+                          className="clientes-alfa-nome-btn"
+                          onClick={() =>
+                            setLetraLimites((prev) => ({
+                              ...prev,
+                              [letra]: limite + LISTA_UI_LOTE,
+                            }))
+                          }
+                        >
+                          {(L.carregarMais || 'Mostrar mais ({n})').replace('{n}', String(resto))}
+                        </button>
+                      </li>
+                    ) : null}
+                    </>
+                      )
+                    })()}
                   </ul>
                   ) : null}
                 </section>

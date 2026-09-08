@@ -28,6 +28,7 @@ const critical = [
   'app/NonatoMainApp.tsx',
   'app/utils/cadastroSafety.ts',
   'app/lib/criticalCadastroKeys.ts',
+  'app/lib/listaUiLote.ts',
   'app/lib/formatMoney.ts',
   'app/lib/orcamentosAlfabeto.ts',
   'app/lib/clienteDevedorUtils.ts',
@@ -2510,6 +2511,26 @@ try {
   }
 } catch (e) {
   fail(`fase 2 arranque: ${e.message}`)
+}
+
+try {
+  const lote = fs.readFileSync(path.join(root, 'app/lib/listaUiLote.ts'), 'utf8')
+  if (lote.includes('export const LISTA_UI_LOTE')) ok('listaUiLote define lote de ecrã')
+  else fail('listaUiLote sem LISTA_UI_LOTE')
+  const nma3 = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nma3.includes('new Set(CLIENTES_ALFABETO_INDICE)')) {
+    ok('lista de clientes arranca com letras retraídas')
+  } else {
+    fail('clientes A–Z ainda abrem todas as letras no arranque')
+  }
+  const picker = fs.readFileSync(path.join(root, 'app/components/ClienteAlfabetoPicker.tsx'), 'utf8')
+  if (picker.includes('new Set(CLIENTES_ALFABETO_INDICE)') && picker.includes('LISTA_UI_LOTE')) {
+    ok('picker de clientes retraído + lote')
+  } else {
+    fail('ClienteAlfabetoPicker sem lote / letras fechadas')
+  }
+} catch (e) {
+  fail(`fase 3 listas: ${e.message}`)
 }
 
 // 4) i18n
