@@ -7,6 +7,10 @@ import {
   escapePdfHtml,
 } from '../../../lib/pdfDocumentLayout'
 import { formatMoneyEUR } from '../../../lib/formatMoney'
+
+export const dynamic = 'force-dynamic'
+
+type ComprovantePayload = {
   id: string
   tipo: 'cliente' | 'pessoal'
   cliente: string
