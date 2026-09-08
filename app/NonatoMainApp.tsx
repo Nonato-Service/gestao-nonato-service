@@ -4469,6 +4469,8 @@ export default function Dashboard() {
   const [showEnvioModal, setShowEnvioModal] = useState(false)
   const [envioForm, setEnvioForm] = useState<{ templateId: 1|2|3|4|5; whatsapp: boolean; email: boolean; telefone: string; emailDestino: string; tecnicoId: string; clienteId: string }>({ templateId: 1, whatsapp: true, email: false, telefone: '', emailDestino: '', tecnicoId: '', clienteId: '' })
   const [buscaOS, setBuscaOS] = useState('')
+  const [osListaLimite, setOsListaLimite] = useState(LISTA_UI_LOTE)
+  const [faturasPecasListaLimite, setFaturasPecasListaLimite] = useState(LISTA_UI_LOTE)
   /** Gestão financeira › Clientes › Ordem de serviço: recebimento sem fatura e consulta de fatura */
   const [osTabRecebSemFaturaRelId, setOsTabRecebSemFaturaRelId] = useState('')
   const [osTabConsultaFaturaNum, setOsTabConsultaFaturaNum] = useState('')
@@ -4547,6 +4549,10 @@ export default function Dashboard() {
   const [editingFornecedor, setEditingFornecedor] = useState<Fornecedor | null>(null)
   const [buscaFornecedor, setBuscaFornecedor] = useState('')
   const [fornecedorListaDetalheId, setFornecedorListaDetalheId] = useState<string | null>(null)
+  const [fornecedoresAlfaLetrasRecolhidas, setFornecedoresAlfaLetrasRecolhidas] = useState<Set<string>>(
+    () => new Set(CLIENTES_ALFABETO_INDICE)
+  )
+  const [fornecedoresLetraLimites, setFornecedoresLetraLimites] = useState<Record<string, number>>({})
   
   // Estado para pedidos de separação no almoxarifado
   const [pedidosSeparacao, setPedidosSeparacao] = useState<Array<{
@@ -36060,19 +36066,41 @@ export default function Dashboard() {
                     ))}
                   </nav>
                 )}
-                {fornecedoresLetrasOrdem.map(letra => (
+                {fornecedoresLetrasOrdem.map(letra => {
+                  const letraAberta = !fornecedoresAlfaLetrasRecolhidas.has(letra)
+                  const listaLetra = fornecedoresPorLetra.get(letra) ?? []
+                  const limite = limiteListaUi(fornecedoresLetraLimites[letra])
+                  const visiveis = listaLetra.slice(0, limite)
+                  const resto = listaLetra.length - visiveis.length
+                  return (
                   <section
                     key={letra}
                     id={`fornecedores-letra-${letra}`}
-                    className="clientes-alfa-secao"
+                    className={`clientes-alfa-secao${letraAberta ? ' clientes-alfa-secao--aberta' : ' clientes-alfa-secao--retraida'}`}
                   >
-                    <h3 className="clientes-alfa-letra">
+                    <button
+                      type="button"
+                      className="clientes-alfa-letra clientes-alfa-letra--toggle"
+                      aria-expanded={letraAberta}
+                      onClick={() =>
+                        setFornecedoresAlfaLetrasRecolhidas((prev) => {
+                          const next = new Set(prev)
+                          if (next.has(letra)) next.delete(letra)
+                          else next.add(letra)
+                          return next
+                        })
+                      }
+                    >
                       {letra === '#'
                         ? (safeT as any)?.clientesAlfabetoOutros || 'Outros'
                         : letra}
-                    </h3>
+                      <span className="clientes-alfa-letra__count" aria-hidden>
+                        {listaLetra.length}
+                      </span>
+                    </button>
+                    {letraAberta ? (
                     <ul className="clientes-alfa-nomes">
-                      {(fornecedoresPorLetra.get(letra) ?? []).map(f => (
+                      {visiveis.map(f => (
                         <li key={f.id}>
                           <button
                             type="button"
@@ -36083,9 +36111,30 @@ export default function Dashboard() {
                           </button>
                         </li>
                       ))}
+                      {resto > 0 ? (
+                        <li className="clientes-alfa-item">
+                          <button
+                            type="button"
+                            className="clientes-alfa-nome-btn"
+                            onClick={() =>
+                              setFornecedoresLetraLimites((prev) => ({
+                                ...prev,
+                                [letra]: limite + LISTA_UI_LOTE,
+                              }))
+                            }
+                          >
+                            {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                              '{n}',
+                              String(resto)
+                            )}
+                          </button>
+                        </li>
+                      ) : null}
                     </ul>
+                    ) : null}
                   </section>
-                ))}
+                  )
+                })}
               </div>
             )}
 
@@ -59649,7 +59698,10 @@ A1;Peça exemplo;10`}
                         type="text"
                         placeholder={safeT?.buscarPorNumeroOS || 'Buscar por número de OS...'}
                         value={buscaOS}
-                        onChange={(e) => setBuscaOS(e.target.value)}
+                        onChange={(e) => {
+                          setBuscaOS(e.target.value)
+                          setOsListaLimite(LISTA_UI_LOTE)
+                        }}
                         onKeyDown={(e) => {
                           if (e.key !== 'Enter') return
                           const q = buscaOS.trim()
@@ -59798,6 +59850,7 @@ A1;Peça exemplo;10`}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {ordensServico
                       .filter(os => !buscaOS || os.numeroOS.toLowerCase().includes(buscaOS.toLowerCase()))
+                      .slice(0, osListaLimite)
                       .map((os) => (
                         <div
                           key={os.id}
@@ -59858,6 +59911,22 @@ A1;Peça exemplo;10`}
                           </div>
                         </div>
                       ))}
+                    {ordensServico.filter(os => !buscaOS || os.numeroOS.toLowerCase().includes(buscaOS.toLowerCase())).length > osListaLimite ? (
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        style={{ width: '100%' }}
+                        onClick={() => setOsListaLimite((n) => n + LISTA_UI_LOTE)}
+                      >
+                        {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                          '{n}',
+                          String(
+                            ordensServico.filter(os => !buscaOS || os.numeroOS.toLowerCase().includes(buscaOS.toLowerCase())).length -
+                              osListaLimite
+                          )
+                        )}
+                      </button>
+                    ) : null}
                     {ordensServico.filter(os => !buscaOS || os.numeroOS.toLowerCase().includes(buscaOS.toLowerCase())).length === 0 && (
                       <div style={{
                         textAlign: 'center',
@@ -60354,7 +60423,7 @@ A1;Peça exemplo;10`}
 
                   {/* Lista de Faturas — padrão Visualizar Equipamento (card #484848, borda 1px verde) */}
                   <div style={{ display: 'grid', gap: '15px' }}>
-                    {faturasPecas.map((fatura) => {
+                    {faturasPecas.slice(0, faturasPecasListaLimite).map((fatura) => {
                       const sinalPag = getSinalPagamentoFaturaPecas(fatura)
                       const devedorCliente = clienteFaturaEhDevedor(fatura.clienteId)
                       const ftSig = safeT as Record<string, string | undefined>
@@ -60626,6 +60695,19 @@ A1;Peça exemplo;10`}
                       </div>
                     );
                     })}
+                    {faturasPecas.length > faturasPecasListaLimite ? (
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        style={{ width: '100%' }}
+                        onClick={() => setFaturasPecasListaLimite((n) => n + LISTA_UI_LOTE)}
+                      >
+                        {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                          '{n}',
+                          String(faturasPecas.length - faturasPecasListaLimite)
+                        )}
+                      </button>
+                    ) : null}
                     {faturasPecas.length === 0 && (
                       <div style={{ textAlign: 'center', padding: '40px', color: '#ccc' }}>
                         {safeT?.nenhumaFatura || 'Nenhuma fatura cadastrada'}

@@ -2578,6 +2578,15 @@ try {
   } else {
     fail('modais de peças/relatórios ainda sem lote')
   }
+  if (
+    nma3.includes('fornecedoresAlfaLetrasRecolhidas') &&
+    nma3.includes('osListaLimite') &&
+    nma3.includes('faturasPecasListaLimite')
+  ) {
+    ok('fornecedores A–Z retraídos + OS/faturas em lote')
+  } else {
+    fail('fornecedores/OS/faturas ainda sem lote')
+  }
 } catch (e) {
   fail(`fase 3 listas: ${e.message}`)
 }
