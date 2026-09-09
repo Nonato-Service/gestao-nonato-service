@@ -340,6 +340,10 @@ import {
   isFornecedorFormValid,
   createFornecedorFromForm,
   updateFornecedorFromForm,
+  isFaturaFornecedorFormValid,
+  isFaturaFornecedorValorPositivo,
+  createFaturaFornecedorFromForm,
+  updateFaturaFornecedorFromForm,
 } from './modules/fornecedores'
 import type {
   MensagemComunicacao,
@@ -13548,16 +13552,12 @@ export default function Dashboard() {
     const valor = parseMoedaPtFaturaFornecedor(faturaFornecedorForm.valorText)
     if (
       !selectedFornecedorForFatura ||
-      !faturaFornecedorForm.numeroFatura ||
-      !faturaFornecedorForm.mes ||
-      !faturaFornecedorForm.clienteId ||
-      !String(faturaFornecedorForm.valorText).trim() ||
-      !Number.isFinite(valor)
+      !isFaturaFornecedorFormValid(faturaFornecedorForm, valor)
     ) {
       alert(t.fillAllFields || 'Preencha todos os campos obrigatórios!')
       return
     }
-    if (valor <= 0) {
+    if (!isFaturaFornecedorValorPositivo(valor)) {
       alert(t.invalidValue || 'Valor inválido!')
       return
     }
@@ -13589,36 +13589,21 @@ export default function Dashboard() {
           // Editar fatura existente
           const updatedFaturas = f.faturas.map(fat => {
             if (fat.id !== editingFaturaFornecedor.id) return fat
-            const upd: FaturaFornecedor = {
-              ...fat,
-              numeroFatura: faturaFornecedorForm.numeroFatura,
-              mes: faturaFornecedorForm.mes,
-              valor: valor,
-              clienteId: faturaFornecedorForm.clienteId,
+            const upd = updateFaturaFornecedorFromForm(fat, faturaFornecedorForm, {
+              valor,
               clienteNome: nomeEntidade,
-              entidadeOrigem: origem,
-              dataVencimento: faturaFornecedorForm.dataVencimento || undefined,
-              status: faturaFornecedorForm.status,
-              observacoes: faturaFornecedorForm.observacoes || undefined,
-            }
+            })
             savedFaturaFornecedor = upd
             return upd
           })
           return { ...f, faturas: updatedFaturas }
         } else {
           // Adicionar nova fatura
-          const newFatura: FaturaFornecedor = {
+          const newFatura = createFaturaFornecedorFromForm(faturaFornecedorForm, {
             id: Date.now().toString(),
-            numeroFatura: faturaFornecedorForm.numeroFatura,
-            mes: faturaFornecedorForm.mes,
-            valor: valor,
-            clienteId: faturaFornecedorForm.clienteId,
+            valor,
             clienteNome: nomeEntidade,
-            entidadeOrigem: origem,
-            dataVencimento: faturaFornecedorForm.dataVencimento || undefined,
-            status: faturaFornecedorForm.status,
-            observacoes: faturaFornecedorForm.observacoes || undefined,
-          }
+          })
           savedFaturaFornecedor = newFatura
           return { ...f, faturas: [...(f.faturas || []), newFatura] }
         }

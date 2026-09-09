@@ -23,3 +23,11 @@ export {
   createFornecedorFromForm,
   updateFornecedorFromForm,
 } from './fornecedorFromForm'
+
+export type { FaturaFornecedorFromFormOpts } from './faturaFornecedorFromForm'
+export {
+  isFaturaFornecedorFormValid,
+  isFaturaFornecedorValorPositivo,
+  createFaturaFornecedorFromForm,
+  updateFaturaFornecedorFromForm,
+} from './faturaFornecedorFromForm'

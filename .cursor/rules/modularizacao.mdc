@@ -94,6 +94,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 74. `app/modules/clientes/` (isEquipamentoClienteFormValid / fromForm / duplicado série-ID) — feito
 75. `app/modules/equipamentos/` (isEquipamentoFormValid / fromForm / duplicado ID) — feito
 76. `app/modules/fornecedores/` (isFornecedorFormValid / fromForm) — feito
+77. `app/modules/fornecedores/` (isFaturaFornecedorFormValid / fromForm) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 
