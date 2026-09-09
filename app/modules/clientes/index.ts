@@ -5,6 +5,9 @@ export type { Cliente } from './clienteTipos'
 export type { ClienteFormState } from './clienteFormState'
 export { emptyClienteFormState, clienteToForm } from './clienteFormState'
 
+export type { ClienteFromFormCreateOpts } from './clienteFromForm'
+export { createClienteFromForm, updateClienteFromForm } from './clienteFromForm'
+
 export {
   CLIENTES_ALFABETO_INDICE,
   ORCAMENTOS_ALFABETO_INDICE,

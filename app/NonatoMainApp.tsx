@@ -412,6 +412,8 @@ import {
   getPagamentoRelatorio,
   emptyClienteFormState,
   clienteToForm,
+  createClienteFromForm,
+  updateClienteFromForm,
   emptyClientePrioritarioForm,
   clientePrioritarioToForm,
   isClientePrioritarioFormValid,
@@ -1090,7 +1092,7 @@ function NumeroSequenciaCirculo({
 /* EquipamentoCliente → app/modules/clientes (equipamentoClienteTipos) */
 
 /* Cliente → app/modules/clientes (clienteTipos) */
-/* ClienteFormState / emptyClienteFormState → app/modules/clientes (clienteFormState) */
+/* ClienteFormState / empty / toForm / fromForm → app/modules/clientes */
 
 /* findCliente → modules/relatorio-servico */
 
@@ -14117,13 +14119,9 @@ export default function Dashboard() {
 
     let updatedClientes: Cliente[]
     let savedCliente: Cliente
-    const grupoTarifaId = (clienteForm.grupoTarifaId || '').trim() || undefined
-    const kmIdaPadrao = normalizeKmForPersist(clienteForm.kmIdaPadrao)
-    const kmRetornoPadrao = normalizeKmForPersist(clienteForm.kmRetornoPadrao)
-    const tipoCliente = clienteForm.tipoCliente === 'juridica' ? 'juridica' : 'fisica'
     try {
       if (editingCliente) {
-        savedCliente = { ...editingCliente, ...clienteForm, grupoTarifaId, kmIdaPadrao, kmRetornoPadrao, tipoCliente }
+        savedCliente = updateClienteFromForm(editingCliente, clienteForm)
         updatedClientes = clientes.map(c =>
           c.id === editingCliente.id
             ? savedCliente
@@ -14131,17 +14129,7 @@ export default function Dashboard() {
         )
       } else {
         const codigoCliente = gerarProximoCodigoCliente(clientes)
-        const newCliente: Cliente = savedCliente = {
-          id: Date.now().toString(),
-          codigoCliente,
-          ...clienteForm,
-          grupoTarifaId,
-          kmIdaPadrao,
-          kmRetornoPadrao,
-          tipoCliente,
-          equipamentos: [],
-          relatorios: {},
-        }
+        const newCliente: Cliente = savedCliente = createClienteFromForm(clienteForm, { codigoCliente })
         updatedClientes = [...clientes, newCliente]
       }
       const previousClientes = clientes
