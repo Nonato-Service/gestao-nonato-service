@@ -266,7 +266,13 @@ try {
     idx.includes('createClienteFromForm') &&
     idx.includes('updateClienteFromForm') &&
     idx.includes('isClienteFormValid') &&
-    idx.includes('encontrarClienteDuplicadoCadastro')
+    idx.includes('encontrarClienteDuplicadoCadastro') &&
+    idx.includes('isEquipamentoClienteFormValid') &&
+    idx.includes('createEquipamentoClienteFromForm') &&
+    idx.includes('updateEquipamentoClienteFromForm') &&
+    idx.includes('equipamentoClienteSerieDuplicada') &&
+    idx.includes('equipamentoClienteIdDuplicado') &&
+    idx.includes('resolverIndiceEquipamentoClienteEdicao')
   ) {
     ok('módulo clientes exporta alfabeto/detalhe/prioritário/equipamentoCliente/Cliente/ClienteFormState')
   } else {
@@ -281,6 +287,7 @@ try {
     'clienteFormState.ts',
     'clienteFromForm.ts',
     'cadastroDuplicado.ts',
+    'equipamentoClienteFromForm.ts',
   ]) {
     if (exists(`app/modules/clientes/${f}`)) ok(`existe app/modules/clientes/${f}`)
     else fail(`falta app/modules/clientes/${f}`)
@@ -354,6 +361,23 @@ try {
     ok('NonatoMainApp usa ClienteFormState/empty/toForm/fromForm/valid/duplicado do módulo clientes')
   } else {
     fail('NonatoMainApp ainda valida/duplica Cliente no sítio ou módulo incompleto')
+  }
+  if (
+    idx.includes('isEquipamentoClienteFormValid') &&
+    idx.includes('createEquipamentoClienteFromForm') &&
+    idx.includes('updateEquipamentoClienteFromForm') &&
+    idx.includes('equipamentoClienteSerieDuplicada') &&
+    nma.includes('isEquipamentoClienteFormValid') &&
+    nma.includes('createEquipamentoClienteFromForm') &&
+    nma.includes('updateEquipamentoClienteFromForm') &&
+    nma.includes('equipamentoClienteSerieDuplicada') &&
+    nma.includes('equipamentoClienteIdDuplicado') &&
+    nma.includes('resolverIndiceEquipamentoClienteEdicao') &&
+    exists('app/modules/clientes/equipamentoClienteFromForm.ts')
+  ) {
+    ok('NonatoMainApp usa EquipamentoCliente fromForm/valid/duplicado do módulo clientes')
+  } else {
+    fail('NonatoMainApp ainda mapeia EquipamentoCliente no sítio ou módulo incompleto')
   }
   const dupLib = fs.readFileSync(path.join(root, 'app/lib/clienteCadastroDuplicadoUtils.ts'), 'utf8')
   if (dupLib.includes("from '../modules/clientes'")) {

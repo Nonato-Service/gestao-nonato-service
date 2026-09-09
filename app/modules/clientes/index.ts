@@ -93,6 +93,16 @@ export {
   createEmptyRelatorioEquipamentoForm,
 } from './equipamentoClienteForm'
 
+export type { EquipamentoClienteFromFormOpts } from './equipamentoClienteFromForm'
+export {
+  isEquipamentoClienteFormValid,
+  createEquipamentoClienteFromForm,
+  updateEquipamentoClienteFromForm,
+  equipamentoClienteSerieDuplicada,
+  equipamentoClienteIdDuplicado,
+  resolverIndiceEquipamentoClienteEdicao,
+} from './equipamentoClienteFromForm'
+
 export type {
   HubEqChip,
   HubEqChipTone,

@@ -425,6 +425,12 @@ import {
   updateClientePrioritarioFromForm,
   createEmptyEquipamentoClienteForm,
   createEmptyRelatorioEquipamentoForm,
+  isEquipamentoClienteFormValid,
+  createEquipamentoClienteFromForm,
+  updateEquipamentoClienteFromForm,
+  equipamentoClienteSerieDuplicada,
+  equipamentoClienteIdDuplicado,
+  resolverIndiceEquipamentoClienteEdicao,
   buildHubEqChips,
   hubEqChipToneStyle,
   filtrarFaturasDoEquipamento,
@@ -15110,7 +15116,7 @@ export default function Dashboard() {
     if (!selectedClienteForEquipamento) return false
     if (isSavingEquipamentoCliente) return false
 
-    if (!equipamentoClienteForm.tipoEquipamento || !equipamentoClienteForm.modelo || !equipamentoClienteForm.marca || !equipamentoClienteForm.numeroSerie) {
+    if (!isEquipamentoClienteFormValid(equipamentoClienteForm)) {
       alert(safeT?.fillAllFields || t.fillAllFields)
       return false
     }
@@ -15124,9 +15130,7 @@ export default function Dashboard() {
 
     const clienteAtual = clientes.find((c) => c.id === selectedClienteForEquipamento.id)
     if (clienteAtual && !editingEquipamentoCliente) {
-      const dup = clienteAtual.equipamentos.some(
-        (eq) => eq != null && String(eq.numeroSerie).trim() === serialNorm
-      )
+      const dup = equipamentoClienteSerieDuplicada(clienteAtual.equipamentos, serialNorm)
       if (dup) {
         alert(
           (safeT as any)?.equipamentoClienteDuplicadoSerie ||
@@ -15140,20 +15144,7 @@ export default function Dashboard() {
       if (!editingEquipamentoCliente) return -1
       const idxState =
         editingEquipamentoClienteIndex != null ? editingEquipamentoClienteIndex : editingEquipamentoClienteIndexRef.current
-      if (idxState != null && idxState >= 0 && idxState < equipamentosList.length) {
-        return idxState
-      }
-      const idOrig = String(editingEquipamentoCliente.id ?? '').trim()
-      if (idOrig) {
-        const byId = equipamentosList.findIndex((eq) => String(eq?.id ?? '').trim() === idOrig)
-        if (byId >= 0) return byId
-      }
-      return equipamentosList.findIndex(
-        (eq) =>
-          eq != null &&
-          eq.numeroSerie === editingEquipamentoCliente.numeroSerie &&
-          eq.tipoEquipamento === editingEquipamentoCliente.tipoEquipamento
-      )
+      return resolverIndiceEquipamentoClienteEdicao(equipamentosList, editingEquipamentoCliente, idxState)
     }
 
     const editIndexResolved =
@@ -15169,10 +15160,7 @@ export default function Dashboard() {
 
     if (clienteAtual && idUsuario) {
       const editIndex = editingEquipamentoCliente ? editIndexResolved : -1
-      const dupId = clienteAtual.equipamentos.some((eq, i) => {
-        if (editIndex >= 0 && i === editIndex) return false
-        return String(eq.id || '').trim() === idUsuario
-      })
+      const dupId = equipamentoClienteIdDuplicado(clienteAtual.equipamentos, idUsuario, editIndex)
       if (dupId) {
         alert(
           (safeT as any)?.equipamentoClienteDuplicadoId ||
@@ -15207,12 +15195,14 @@ export default function Dashboard() {
     setIsSavingEquipamentoCliente(true)
 
     let savedEquipamentoCliente: EquipamentoCliente = editingEquipamentoCliente
-      ? { ...editingEquipamentoCliente, ...equipamentoClienteForm, id: idFinal, numeroSerie: serialNorm }
-      : {
-          ...equipamentoClienteForm,
+      ? updateEquipamentoClienteFromForm(editingEquipamentoCliente, equipamentoClienteForm, {
+          id: idFinal,
           numeroSerie: serialNorm,
-          id: idFinal
-        }
+        })
+      : createEquipamentoClienteFromForm(equipamentoClienteForm, {
+          id: idFinal,
+          numeroSerie: serialNorm,
+        })
 
     const previousClientes = clientes
     const updatedClientes = clientes.map((c) => {
