@@ -264,7 +264,9 @@ try {
     idx.includes('emptyClienteFormState') &&
     idx.includes('clienteToForm') &&
     idx.includes('createClienteFromForm') &&
-    idx.includes('updateClienteFromForm')
+    idx.includes('updateClienteFromForm') &&
+    idx.includes('isClienteFormValid') &&
+    idx.includes('encontrarClienteDuplicadoCadastro')
   ) {
     ok('módulo clientes exporta alfabeto/detalhe/prioritário/equipamentoCliente/Cliente/ClienteFormState')
   } else {
@@ -278,6 +280,7 @@ try {
     'clienteTipos.ts',
     'clienteFormState.ts',
     'clienteFromForm.ts',
+    'cadastroDuplicado.ts',
   ]) {
     if (exists(`app/modules/clientes/${f}`)) ok(`existe app/modules/clientes/${f}`)
     else fail(`falta app/modules/clientes/${f}`)
@@ -335,18 +338,28 @@ try {
     idx.includes('clienteToForm') &&
     idx.includes('createClienteFromForm') &&
     idx.includes('updateClienteFromForm') &&
+    idx.includes('isClienteFormValid') &&
     nma.includes('emptyClienteFormState') &&
     nma.includes('clienteToForm') &&
     nma.includes('createClienteFromForm') &&
     nma.includes('updateClienteFromForm') &&
+    nma.includes('isClienteFormValid') &&
+    nma.includes('encontrarClienteDuplicadoCadastro') &&
     nma.includes('ClienteFormState') &&
     !nma.includes('type ClienteFormState = {') &&
     exists('app/modules/clientes/clienteFormState.ts') &&
-    exists('app/modules/clientes/clienteFromForm.ts')
+    exists('app/modules/clientes/clienteFromForm.ts') &&
+    exists('app/modules/clientes/cadastroDuplicado.ts')
   ) {
-    ok('NonatoMainApp usa ClienteFormState/empty/toForm/fromForm do módulo clientes')
+    ok('NonatoMainApp usa ClienteFormState/empty/toForm/fromForm/valid/duplicado do módulo clientes')
   } else {
-    fail('NonatoMainApp ainda mapeia Cliente no sítio ou módulo não exporta fromForm')
+    fail('NonatoMainApp ainda valida/duplica Cliente no sítio ou módulo incompleto')
+  }
+  const dupLib = fs.readFileSync(path.join(root, 'app/lib/clienteCadastroDuplicadoUtils.ts'), 'utf8')
+  if (dupLib.includes("from '../modules/clientes'")) {
+    ok('clienteCadastroDuplicadoUtils re-exporta o módulo clientes')
+  } else {
+    fail('lib/clienteCadastroDuplicadoUtils ainda não aponta para o módulo clientes')
   }
 } catch (e) {
   fail(`módulo clientes: ${e.message}`)

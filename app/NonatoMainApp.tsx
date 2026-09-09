@@ -412,8 +412,12 @@ import {
   getPagamentoRelatorio,
   emptyClienteFormState,
   clienteToForm,
+  isClienteFormValid,
   createClienteFromForm,
   updateClienteFromForm,
+  encontrarClienteDuplicadoCadastro,
+  encontrarClienteDuplicadoCadastroAntecipado,
+  listarClientesNomeSimilarCadastro,
   emptyClientePrioritarioForm,
   clientePrioritarioToForm,
   isClientePrioritarioFormValid,
@@ -747,11 +751,6 @@ import {
   mesclarComprovantesEmItensFechamento,
 } from './modules/fechamento'
 import { RelatorioCobrancaAcoes } from './components/RelatorioCobrancaAcoes'
-import {
-  encontrarClienteDuplicadoCadastro,
-  encontrarClienteDuplicadoCadastroAntecipado,
-  listarClientesNomeSimilarCadastro,
-} from './lib/clienteCadastroDuplicadoUtils'
 import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
 import { BibliotecaRowAcoesMenu } from './components/BibliotecaRowAcoesMenu'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
@@ -14087,7 +14086,7 @@ export default function Dashboard() {
   const handleSaveCliente = async (): Promise<boolean> => {
     if (clienteSaveInFlightRef.current) return false
 
-    if (!clienteForm.nomeEmpresa?.trim() || !clienteForm.morada?.trim()) {
+    if (!isClienteFormValid(clienteForm)) {
       alert(t.fillAllFields)
       return false
     }

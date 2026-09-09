@@ -44,6 +44,11 @@ export function emptyClienteFormState(grupoTarifaId = ''): ClienteFormState {
   }
 }
 
+/** Campos obrigatórios no save (nome e morada, com trim). */
+export function isClienteFormValid(form: Pick<ClienteFormState, 'nomeEmpresa' | 'morada'>): boolean {
+  return Boolean(form.nomeEmpresa?.trim() && form.morada?.trim())
+}
+
 /** Mapa Cliente → estado do formulário de cadastro (edição / sync pós-save). */
 export function clienteToForm(cliente: Cliente): ClienteFormState {
   return {

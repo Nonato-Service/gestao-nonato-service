@@ -3,7 +3,16 @@
 export type { Cliente } from './clienteTipos'
 
 export type { ClienteFormState } from './clienteFormState'
-export { emptyClienteFormState, clienteToForm } from './clienteFormState'
+export { emptyClienteFormState, clienteToForm, isClienteFormValid } from './clienteFormState'
+
+export type { ClienteDuplicadoMotivo, ClienteCadastroDuplicado } from './cadastroDuplicado'
+export {
+  normalizarNomeClienteComparacao,
+  normalizarNifClienteComparacao,
+  encontrarClienteDuplicadoCadastro,
+  encontrarClienteDuplicadoCadastroAntecipado,
+  listarClientesNomeSimilarCadastro,
+} from './cadastroDuplicado'
 
 export type { ClienteFromFormCreateOpts } from './clienteFromForm'
 export { createClienteFromForm, updateClienteFromForm } from './clienteFromForm'
