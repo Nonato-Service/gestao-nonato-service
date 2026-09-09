@@ -17,6 +17,7 @@ import {
   ChecklistBasicoItemStatus,
   newChecklistBasicoId,
 } from '../lib/checklistBasicoTypes'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 
 type EquipamentoClienteResumo = {
@@ -235,6 +236,8 @@ export function ChecklistBasicoContent(props: ChecklistBasicoContentProps) {
   const [motivoErro, setMotivoErro] = useState('')
   const [saveFlash, setSaveFlash] = useState(false)
   const [envioErro, setEnvioErro] = useState('')
+  const [gruposListaLimite, setGruposListaLimite] = useState(LISTA_UI_LOTE)
+  const [itensListaLimites, setItensListaLimites] = useState<Record<string, number>>({})
 
   const clientesOrdenados = useMemo(
     () => [...clientes].sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt', { sensitivity: 'base' })),
@@ -289,6 +292,11 @@ export function ChecklistBasicoContent(props: ChecklistBasicoContentProps) {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    setGruposListaLimite(LISTA_UI_LOTE)
+    setItensListaLimites({})
+  }, [instancia?.id])
 
   const persist = useCallback(async (next: ChecklistBasicoInstancia | null) => {
     if (!next) {
@@ -694,7 +702,9 @@ export function ChecklistBasicoContent(props: ChecklistBasicoContentProps) {
             </p>
           )}
 
-          {instancia.grupos.map((grupo) => (
+          {instancia.grupos.slice(0, gruposListaLimite).map((grupo) => {
+            const itemLimite = itensListaLimites[grupo.id] ?? LISTA_UI_LOTE
+            return (
             <section key={grupo.id} className="cb-pro__grupo">
               <header className="cb-pro__grupo-head">
                 <h3>{grupo.nome}</h3>
@@ -720,11 +730,45 @@ export function ChecklistBasicoContent(props: ChecklistBasicoContentProps) {
                 {grupo.itens.length === 0 ? (
                   <p className="cb-pro__hint">{safeT.checklistBasicoNovaSituacao || 'Adicione situações a verificar.'}</p>
                 ) : (
-                  grupo.itens.map((item) => renderItemRow(grupo.id, item))
+                  <>
+                    {grupo.itens.slice(0, itemLimite).map((item) => renderItemRow(grupo.id, item))}
+                    {grupo.itens.length > itemLimite ? (
+                      <button
+                        type="button"
+                        className="cb-pro__btn cb-pro__btn--secondary"
+                        style={{ width: '100%', marginTop: 8 }}
+                        onClick={() =>
+                          setItensListaLimites((prev) => ({
+                            ...prev,
+                            [grupo.id]: itemLimite + LISTA_UI_LOTE,
+                          }))
+                        }
+                      >
+                        {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                          '{n}',
+                          String(grupo.itens.length - itemLimite)
+                        )}
+                      </button>
+                    ) : null}
+                  </>
                 )}
               </div>
             </section>
-          ))}
+            )
+          })}
+          {instancia.grupos.length > gruposListaLimite ? (
+            <button
+              type="button"
+              className="cb-pro__btn cb-pro__btn--secondary"
+              style={{ width: '100%', marginTop: 8 }}
+              onClick={() => setGruposListaLimite((n) => n + LISTA_UI_LOTE)}
+            >
+              {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                '{n}',
+                String(instancia.grupos.length - gruposListaLimite)
+              )}
+            </button>
+          ) : null}
 
           <section className="cb-pro__panel cb-pro__panel--tecnico">
             <h2 className="cb-pro__section-title">

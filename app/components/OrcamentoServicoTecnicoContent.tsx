@@ -29,6 +29,7 @@ import {
 } from '../context/DocumentoEnvioClienteContext'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 import { formatMoneyEUR } from '../lib/formatMoney'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 
 export type ServicoOrcamentoLinha = {
   id: string
@@ -229,6 +230,8 @@ export function OrcamentoServicoTecnicoContent({
   const [propostas, setPropostas] = useState<OstPropostaSalva[]>([])
   const [propostaEditandoId, setPropostaEditandoId] = useState<string | null>(formBoot.propostaEditandoId)
   const [propostaNome, setPropostaNome] = useState(formBoot.propostaNome)
+  const [propostasListaLimite, setPropostasListaLimite] = useState(LISTA_UI_LOTE)
+  const [servicosListaLimite, setServicosListaLimite] = useState(LISTA_UI_LOTE)
 
   useEffect(() => {
     let cancel = false
@@ -607,9 +610,11 @@ export function OrcamentoServicoTecnicoContent({
                 {t.orcamentoServicoTecnicoPropostasVazio || 'Ainda não há propostas guardadas.'}
               </p>
             ) : (
+              <>
               <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[...propostas]
                   .sort((a, b) => (b.atualizadoEm || '').localeCompare(a.atualizadoEm || ''))
+                  .slice(0, propostasListaLimite)
                   .map((p) => (
                     <li
                       key={p.id}
@@ -638,6 +643,20 @@ export function OrcamentoServicoTecnicoContent({
                     </li>
                   ))}
               </ul>
+              {propostas.length > propostasListaLimite ? (
+                <button
+                  type="button"
+                  className="secondary"
+                  style={{ width: '100%', marginTop: 8 }}
+                  onClick={() => setPropostasListaLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {(t.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(propostas.length - propostasListaLimite)
+                  )}
+                </button>
+              ) : null}
+              </>
             )}
           </div>
 
@@ -990,6 +1009,7 @@ export function OrcamentoServicoTecnicoContent({
               {t.orcamentoServicoTecnicoSemServicos || 'Não há serviços cadastrados.'}
             </p>
           ) : (
+            <>
             <div style={{ overflowX: 'auto', borderRadius: 10, border: '1px solid rgba(148,163,184,0.22)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
@@ -1000,7 +1020,7 @@ export function OrcamentoServicoTecnicoContent({
                   </tr>
                 </thead>
                 <tbody>
-                  {servicosLista.map((s) => (
+                  {servicosLista.slice(0, servicosListaLimite).map((s) => (
                     <tr key={s.id} style={{ borderTop: '1px solid rgba(148,163,184,0.15)' }}>
                       <td style={{ padding: '10px 12px', verticalAlign: 'top' }}>
                         {(s.cod ? `${s.cod} — ` : '') + s.nome}
@@ -1013,6 +1033,20 @@ export function OrcamentoServicoTecnicoContent({
                 </tbody>
               </table>
             </div>
+            {servicosLista.length > servicosListaLimite ? (
+              <button
+                type="button"
+                className="secondary"
+                style={{ width: '100%', marginTop: 8 }}
+                onClick={() => setServicosListaLimite((n) => n + LISTA_UI_LOTE)}
+              >
+                {(t.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                  '{n}',
+                  String(servicosLista.length - servicosListaLimite)
+                )}
+              </button>
+            ) : null}
+            </>
           )}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 18 }}>
             {onOpenCadastroServicosModal ? (

@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { pecaBibliotecaMatchesBuscaCompleta } from '../lib/pecaCodigoBusca'
 import {
   formatPrecoBibliotecaExibicao,
@@ -245,6 +246,12 @@ export function BibliotecaPecasGaleriaCategorias({
   t = {},
 }: Props) {
   const [limiteCategoria, setLimiteCategoria] = useState(GALERIA_PECAS_POR_LOTE)
+  const [categoriasListaLimite, setCategoriasListaLimite] = useState(LISTA_UI_LOTE)
+  const [limiteBusca, setLimiteBusca] = useState(LISTA_UI_LOTE)
+
+  useEffect(() => {
+    setLimiteBusca(LISTA_UI_LOTE)
+  }, [buscaCodigo, buscaModo])
 
   const categoriasOrdenadas = useMemo(
     () =>
@@ -384,9 +391,14 @@ export function BibliotecaPecasGaleriaCategorias({
             {t.buscaVazio || 'Nenhuma peça encontrada para esta busca.'}
           </p>
         ) : (
+          <>
           <div className="biblioteca-pecas-hub__piece-grid biblioteca-galeria-categorias__grid-pecas">
-            {resultados.map((peca) => renderPecaCard(peca, cardOptsFor(peca)))}
+            {resultados.slice(0, limiteBusca).map((peca) => renderPecaCard(peca, cardOptsFor(peca)))}
           </div>
+          {botaoCarregarMais(resultados.length, limiteBusca, () =>
+            setLimiteBusca((n) => n + LISTA_UI_LOTE)
+          )}
+          </>
         )}
       </div>
     )
@@ -443,8 +455,9 @@ export function BibliotecaPecasGaleriaCategorias({
           {t.semPecasCategoria || 'Nenhuma categoria cadastrada.'}
         </p>
       ) : (
+        <>
         <div className="biblioteca-galeria-categorias__grid">
-          {categoriasOrdenadas.map((cat) => {
+          {categoriasOrdenadas.slice(0, categoriasListaLimite).map((cat) => {
             const info = indiceCategorias.meta.get(cat.id)
             const total = info?.total ?? 0
             const capa = info?.capa
@@ -483,6 +496,10 @@ export function BibliotecaPecasGaleriaCategorias({
             )
           })}
         </div>
+        {botaoCarregarMais(categoriasOrdenadas.length, categoriasListaLimite, () =>
+          setCategoriasListaLimite((n) => n + LISTA_UI_LOTE)
+        )}
+        </>
       )}
     </div>
   )

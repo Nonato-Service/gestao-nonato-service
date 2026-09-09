@@ -1509,6 +1509,11 @@ export default function Dashboard() {
   const [translatorLibraryTo, setTranslatorLibraryTo] = useState<string>('en')
   const [libraryEntrySource, setLibraryEntrySource] = useState('')
   const [libraryEntryTarget, setLibraryEntryTarget] = useState('')
+  const [translatorLibraryListaLimite, setTranslatorLibraryListaLimite] = useState(LISTA_UI_LOTE)
+
+  useEffect(() => {
+    setTranslatorLibraryListaLimite(LISTA_UI_LOTE)
+  }, [translatorLibraryFrom, translatorLibraryTo])
   const [writingAssistOpen, setWritingAssistOpen] = useState(false)
   const [writingAssistField, setWritingAssistField] = useState<{
     initial: string
@@ -36828,8 +36833,9 @@ export default function Dashboard() {
                     {safeT?.noEntriesForThisPair || 'Nenhuma entrada para este par de idiomas. Adicione acima.'}
                   </p>
                 ) : (
+                  <>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {libraryFiltered.map(entry => (
+                    {libraryFiltered.slice(0, translatorLibraryListaLimite).map(entry => (
                       <div
                         key={entry.id}
                         style={{
@@ -36859,6 +36865,20 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
+                  {libraryFiltered.length > translatorLibraryListaLimite ? (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      style={{ width: '100%', marginTop: 8 }}
+                      onClick={() => setTranslatorLibraryListaLimite((n) => n + LISTA_UI_LOTE)}
+                    >
+                      {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                        '{n}',
+                        String(libraryFiltered.length - translatorLibraryListaLimite)
+                      )}
+                    </button>
+                  ) : null}
+                  </>
                 )}
               </div>
             </div>

@@ -2774,6 +2774,36 @@ try {
   } else {
     fail('EquipamentosArmazemMenu ainda pinta todas as famílias')
   }
+  const cbc = fs.readFileSync(path.join(root, 'app/components/ChecklistBasicoContent.tsx'), 'utf8')
+  if (cbc.includes('gruposListaLimite') && cbc.includes('itensListaLimites')) {
+    ok('checklist básico usa lote nos grupos e situações')
+  } else {
+    fail('ChecklistBasicoContent ainda pinta todos os grupos/itens')
+  }
+  const ost = fs.readFileSync(path.join(root, 'app/components/OrcamentoServicoTecnicoContent.tsx'), 'utf8')
+  if (ost.includes('propostasListaLimite') && ost.includes('servicosListaLimite')) {
+    ok('orçamento de serviço técnico usa lote nas propostas e serviços')
+  } else {
+    fail('OrcamentoServicoTecnicoContent ainda pinta propostas/serviços todos')
+  }
+  const gal = fs.readFileSync(path.join(root, 'app/components/BibliotecaPecasGaleriaCategorias.tsx'), 'utf8')
+  if (gal.includes('categoriasListaLimite') && gal.includes('limiteBusca')) {
+    ok('galeria de peças usa lote nas categorias e na busca')
+  } else {
+    fail('BibliotecaPecasGaleriaCategorias ainda pinta categorias/busca todas')
+  }
+  if (nma3.includes('translatorLibraryListaLimite')) {
+    ok('biblioteca do tradutor usa lote de ecrã')
+  } else {
+    fail('tradutor ainda pinta todas as entradas')
+  }
+  const alh = fs.readFileSync(path.join(root, 'app/components/admin/AdminLogosHub.tsx'), 'utf8')
+  const apl = fs.readFileSync(path.join(root, 'app/components/admin/AdminPdfLogosBySituation.tsx'), 'utf8')
+  if (alh.includes('logosListaLimite') && apl.includes('logosListaLimite')) {
+    ok('biblioteca de logos usa lote de ecrã')
+  } else {
+    fail('Admin logos ainda pintam todas as imagens')
+  }
   const tsExtra = require('typescript')
   for (const rel of [
     'app/components/PedidoOrcamentosAvulsoContent.tsx',
@@ -2787,6 +2817,11 @@ try {
     'app/components/admin/AdminPasswordsSection.tsx',
     'app/components/ClienteDetalheView.tsx',
     'app/components/EquipamentosArmazemMenu.tsx',
+    'app/components/ChecklistBasicoContent.tsx',
+    'app/components/OrcamentoServicoTecnicoContent.tsx',
+    'app/components/BibliotecaPecasGaleriaCategorias.tsx',
+    'app/components/admin/AdminLogosHub.tsx',
+    'app/components/admin/AdminPdfLogosBySituation.tsx',
   ]) {
     const extraSrc = fs.readFileSync(path.join(root, rel), 'utf8')
     const extraParsed = tsExtra.transpileModule(extraSrc, {

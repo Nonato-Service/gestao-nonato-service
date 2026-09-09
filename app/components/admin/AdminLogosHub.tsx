@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useMemo, useState } from 'react'
+import { LISTA_UI_LOTE } from '../../lib/listaUiLote'
 import { NonatoBrandLogo } from '../NonatoBrandLogo'
 import {
   PDF_LOGO_SITUATIONS,
@@ -322,6 +323,7 @@ export function AdminLogosHub(props: AdminLogosHubProps) {
   const compact = variant === 'compact'
   const [activeTab, setActiveTab] = useState<'pdf' | 'interface' | 'brand'>('pdf')
   const [activePdfSituation, setActivePdfSituation] = useState<PdfLogoSituationId>('relatorios')
+  const [logosListaLimite, setLogosListaLimite] = useState(LISTA_UI_LOTE)
 
   const selectedBySituation = useMemo(
     (): Record<PdfLogoSituationId, string> =>
@@ -645,8 +647,9 @@ export function AdminLogosHub(props: AdminLogosHubProps) {
               {logosRelatorios.length === 0 && !adminBibliotecaLogoDraft ? (
                 <p className="admin-logos-hub-library__empty">{tr(safeT, 'nenhumLogoRelatorio', 'Biblioteca vazia.')}</p>
               ) : (
+                <>
                 <div className="admin-logos-hub-library__grid">
-                  {logosRelatorios.map((l) => (
+                  {logosRelatorios.slice(0, logosListaLimite).map((l) => (
                     <div key={l.id} className="admin-logos-hub-library__item">
                       <div className="admin-logos-hub-library__thumb">{l.data ? <img src={l.data} alt={l.name} /> : null}</div>
                       <div>
@@ -663,6 +666,20 @@ export function AdminLogosHub(props: AdminLogosHubProps) {
                     </div>
                   ))}
                 </div>
+                {logosRelatorios.length > logosListaLimite ? (
+                  <button
+                    type="button"
+                    className="admin-logos-hub-btn admin-logos-hub-btn--secondary"
+                    style={{ width: '100%', marginTop: 8 }}
+                    onClick={() => setLogosListaLimite((n) => n + LISTA_UI_LOTE)}
+                  >
+                    {tr(safeT, 'listaCarregarMais', 'Mostrar mais ({n})').replace(
+                      '{n}',
+                      String(logosRelatorios.length - logosListaLimite)
+                    )}
+                  </button>
+                ) : null}
+                </>
               )}
             </div>
           </details>

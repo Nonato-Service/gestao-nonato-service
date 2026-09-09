@@ -1,6 +1,7 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
+import { LISTA_UI_LOTE } from '../../lib/listaUiLote'
 import {
   PDF_LOGO_SITUATIONS,
   type PdfLogoSituationId,
@@ -219,6 +220,7 @@ export function AdminPdfLogosBySituation({
 }: AdminPdfLogosBySituationProps) {
   const compact = variant === 'compact'
   const tr = safeT
+  const [logosListaLimite, setLogosListaLimite] = useState(LISTA_UI_LOTE)
 
   const unifiedSelectedId = logoRelatorioSelecionadoId
 
@@ -441,8 +443,9 @@ export function AdminPdfLogosBySituation({
             {tr.nenhumLogoRelatorio || 'Nenhuma imagem na biblioteca. Adicione logos acima ou nesta secção.'}
           </p>
         ) : logosRelatorios.length > 0 ? (
+          <>
           <div className="admin-logos-biblioteca__grid">
-            {logosRelatorios.map((l) => (
+            {logosRelatorios.slice(0, logosListaLimite).map((l) => (
               <div key={l.id} className="admin-logos-biblioteca__item">
                 <div className="admin-logos-biblioteca__thumb">
                   {l.type === 'image' && l.data ? (
@@ -469,6 +472,20 @@ export function AdminPdfLogosBySituation({
               </div>
             ))}
           </div>
+          {logosRelatorios.length > logosListaLimite ? (
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: '100%', marginTop: 8 }}
+              onClick={() => setLogosListaLimite((n) => n + LISTA_UI_LOTE)}
+            >
+              {((tr as Record<string, string | undefined>).listaCarregarMais || 'Mostrar mais ({n})').replace(
+                '{n}',
+                String(logosRelatorios.length - logosListaLimite)
+              )}
+            </button>
+          ) : null}
+          </>
         ) : null}
       </section>
     </div>
