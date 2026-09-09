@@ -2655,6 +2655,27 @@ try {
   } else {
     fail('ClienteEquipamentoHistoricoPanel ainda renderiza a lista toda')
   }
+  if (
+    nma3.includes('protocoloExecListaLimite') &&
+    nma3.includes('protocoloArquivoGruposLimite') &&
+    nma3.includes('pecasImportadasListaLimite')
+  ) {
+    ok('protocolos e fila de importação usam lote de ecrã')
+  } else {
+    fail('protocolos/importação ainda sem lote')
+  }
+  const ogb = fs.readFileSync(path.join(root, 'app/components/OrcamentosGeradosBrowse.tsx'), 'utf8')
+  if (ogb.includes('pastaAguardandoLimite') && ogb.includes('pastaEntregaLimite')) {
+    ok('orçamentos gerados usam lote nas pastas')
+  } else {
+    fail('OrcamentosGeradosBrowse ainda renderiza as pastas todas')
+  }
+  const gdc = fs.readFileSync(path.join(root, 'app/components/GestaoDemosContent.tsx'), 'utf8')
+  if (gdc.includes('demoNomesLimite') && gdc.includes('LISTA_UI_LOTE')) {
+    ok('lista de demonstrações usa lote de ecrã')
+  } else {
+    fail('GestaoDemosContent ainda renderiza a lista toda')
+  }
 } catch (e) {
   fail(`fase 3 listas: ${e.message}`)
 }

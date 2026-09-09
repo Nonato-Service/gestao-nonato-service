@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import {
   buildDemoMailto,
   buildDemoModulesComplete,
@@ -107,9 +108,11 @@ export function GestaoDemosContent({
   const [saving, setSaving] = useState(false)
   const [revealedPasswordIds, setRevealedPasswordIds] = useState<Record<string, boolean>>({})
   const [demoListaDetalheId, setDemoListaDetalheId] = useState<string | null>(null)
+  const [demoNomesLimite, setDemoNomesLimite] = useState(LISTA_UI_LOTE)
 
   useEffect(() => {
     setDemoListaDetalheId(null)
+    setDemoNomesLimite(LISTA_UI_LOTE)
   }, [statusFilter, search])
 
   useEffect(() => {
@@ -1056,7 +1059,7 @@ export function GestaoDemosContent({
               <section key={letra} id={`demo-alfa-${letra}`} className="clientes-alfa-secao">
                 <div className="clientes-alfa-letra">{letra}</div>
                 <div className="clientes-alfa-nomes">
-                  {items.map((r) => (
+                  {items.slice(0, demoNomesLimite).map((r) => (
                     <button
                       key={r.id}
                       type="button"
@@ -1067,6 +1070,19 @@ export function GestaoDemosContent({
                       {r.nome}
                     </button>
                   ))}
+                  {items.length > demoNomesLimite ? (
+                    <button
+                      type="button"
+                      className="clientes-alfa-nome-btn"
+                      style={{ fontWeight: 700 }}
+                      onClick={() => setDemoNomesLimite((n) => n + LISTA_UI_LOTE)}
+                    >
+                      {tr(safeT, 'listaCarregarMais', 'Mostrar mais ({n})').replace(
+                        '{n}',
+                        String(items.length - demoNomesLimite)
+                      )}
+                    </button>
+                  ) : null}
                 </div>
               </section>
             ))}

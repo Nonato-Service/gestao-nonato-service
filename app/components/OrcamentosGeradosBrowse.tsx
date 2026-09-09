@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import {
   orcamentoGeradoPendente,
   orcamentoEntregaAguardandoNotaFiscal,
@@ -92,9 +93,18 @@ export function OrcamentosGeradosBrowse({
   const [letraFiltro, setLetraFiltro] = useState<string | null>(null)
   const [clienteChave, setClienteChave] = useState<string | null>(null)
   const [notaFiscalInputs, setNotaFiscalInputs] = useState<Record<string, string>>({})
+  const [pastaAguardandoLimite, setPastaAguardandoLimite] = useState(LISTA_UI_LOTE)
+  const [pastaConfirmadosLimite, setPastaConfirmadosLimite] = useState(LISTA_UI_LOTE)
+  const [pastaMercadoriaLimite, setPastaMercadoriaLimite] = useState(LISTA_UI_LOTE)
+  const [pastaEntregaLimite, setPastaEntregaLimite] = useState(LISTA_UI_LOTE)
+  const [clientesLetraLimite, setClientesLetraLimite] = useState(LISTA_UI_LOTE)
   const [pedidosAvulso, setPedidosAvulso] = useState<PedidoAvulsoRef[]>([])
   const listaOrcamentos = Array.isArray(orcamentos) ? orcamentos : []
   const listaClientes = Array.isArray(clientes) ? clientes : []
+
+  useEffect(() => {
+    setClientesLetraLimite(LISTA_UI_LOTE)
+  }, [letraFiltro])
 
   useEffect(() => {
     if (!loadData) return
@@ -333,7 +343,8 @@ export function OrcamentosGeradosBrowse({
                 {safeT?.pastaVaziaAguardando || 'Nenhum orçamento aguardando confirmação.'}
               </p>
             ) : (
-              itensPastaAguardando.map((o) => (
+              <>
+              {itensPastaAguardando.slice(0, pastaAguardandoLimite).map((o) => (
                 <div key={o.id} className="cliente-equip-orcamentos__card orc-gerados-browse__pasta-card">
                   <div className="cliente-equip-orcamentos__card-head">
                     <strong>{o.numeroOrcamento}</strong>
@@ -354,7 +365,21 @@ export function OrcamentosGeradosBrowse({
                     </button>
                   </div>
                 </div>
-              ))
+              ))}
+              {itensPastaAguardando.length > pastaAguardandoLimite ? (
+                <button
+                  type="button"
+                  className="cliente-equip-orcamentos__btn cliente-equip-orcamentos__btn--ok"
+                  style={{ width: '100%', marginTop: 8 }}
+                  onClick={() => setPastaAguardandoLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(itensPastaAguardando.length - pastaAguardandoLimite)
+                  )}
+                </button>
+              ) : null}
+              </>
             )}
           </div>
         </details>
@@ -374,7 +399,8 @@ export function OrcamentosGeradosBrowse({
                 {safeT?.pastaVaziaConfirmados || 'Nenhum pedido confirmado pelo cliente.'}
               </p>
             ) : (
-              itensPastaConfirmados.map((o) => (
+              <>
+              {itensPastaConfirmados.slice(0, pastaConfirmadosLimite).map((o) => (
                 <div key={o.id} className="cliente-equip-orcamentos__card orc-gerados-browse__pasta-card">
                   <div className="cliente-equip-orcamentos__card-head">
                     <strong>{o.numeroOrcamento}</strong>
@@ -398,7 +424,21 @@ export function OrcamentosGeradosBrowse({
                     </button>
                   </div>
                 </div>
-              ))
+              ))}
+              {itensPastaConfirmados.length > pastaConfirmadosLimite ? (
+                <button
+                  type="button"
+                  className="cliente-equip-orcamentos__btn cliente-equip-orcamentos__btn--ok"
+                  style={{ width: '100%', marginTop: 8 }}
+                  onClick={() => setPastaConfirmadosLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(itensPastaConfirmados.length - pastaConfirmadosLimite)
+                  )}
+                </button>
+              ) : null}
+              </>
             )}
           </div>
         </details>
@@ -411,7 +451,7 @@ export function OrcamentosGeradosBrowse({
               <span className="cliente-orc-pasta__count">{itensPastaMercadoria.length}</span>
             </summary>
             <div className="cliente-orc-pasta__body">
-              {itensPastaMercadoria.map((o) => (
+              {itensPastaMercadoria.slice(0, pastaMercadoriaLimite).map((o) => (
                 <div key={o.id} className="cliente-equip-orcamentos__card orc-gerados-browse__pasta-card">
                   <div className="cliente-equip-orcamentos__card-head">
                     <strong>{o.numeroOrcamento}</strong>
@@ -427,6 +467,19 @@ export function OrcamentosGeradosBrowse({
                   </p>
                 </div>
               ))}
+              {itensPastaMercadoria.length > pastaMercadoriaLimite ? (
+                <button
+                  type="button"
+                  className="cliente-equip-orcamentos__btn cliente-equip-orcamentos__btn--ok"
+                  style={{ width: '100%', marginTop: 8 }}
+                  onClick={() => setPastaMercadoriaLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(itensPastaMercadoria.length - pastaMercadoriaLimite)
+                  )}
+                </button>
+              ) : null}
             </div>
           </details>
         ) : null}
@@ -446,7 +499,8 @@ export function OrcamentosGeradosBrowse({
                 {safeT?.pastaVaziaEntrega || 'Nenhum pedido entregue aguardando nota fiscal.'}
               </p>
             ) : (
-              itensPastaEntrega.map((o) => (
+              <>
+              {itensPastaEntrega.slice(0, pastaEntregaLimite).map((o) => (
                 <div key={o.id} className="cliente-equip-orcamentos__card orc-gerados-browse__pasta-card">
                   <div className="cliente-equip-orcamentos__card-head">
                     <strong>{o.numeroOrcamento}</strong>
@@ -476,7 +530,21 @@ export function OrcamentosGeradosBrowse({
                     </button>
                   </div>
                 </div>
-              ))
+              ))}
+              {itensPastaEntrega.length > pastaEntregaLimite ? (
+                <button
+                  type="button"
+                  className="cliente-equip-orcamentos__btn cliente-equip-orcamentos__btn--ok"
+                  style={{ width: '100%', marginTop: 8 }}
+                  onClick={() => setPastaEntregaLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(itensPastaEntrega.length - pastaEntregaLimite)
+                  )}
+                </button>
+              ) : null}
+              </>
             )}
           </div>
         </details>
@@ -555,7 +623,7 @@ export function OrcamentosGeradosBrowse({
                   'Selecione o cliente para ver os orçamentos gerados.'}
               </p>
               <ul className="clientes-alfa-nomes">
-                {clientesNaLetraAlfabeto(letraAtiva).map((c) => (
+                {clientesNaLetraAlfabeto(letraAtiva).slice(0, clientesLetraLimite).map((c) => (
                   <li key={c.chave} className="clientes-alfa-item">
                     <button
                       type="button"
@@ -570,6 +638,19 @@ export function OrcamentosGeradosBrowse({
                   </li>
                 ))}
               </ul>
+              {clientesNaLetraAlfabeto(letraAtiva).length > clientesLetraLimite ? (
+                <button
+                  type="button"
+                  className="orc-pro__btn orc-pro__btn--secondary"
+                  style={{ width: '100%', marginBottom: 8 }}
+                  onClick={() => setClientesLetraLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(clientesNaLetraAlfabeto(letraAtiva).length - clientesLetraLimite)
+                  )}
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="orc-pro__btn orc-pro__btn--secondary orc-gerados-browse__voltar"

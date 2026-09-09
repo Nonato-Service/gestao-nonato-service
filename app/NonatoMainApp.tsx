@@ -4158,6 +4158,7 @@ export default function Dashboard() {
   const [showImportacaoGuiaHomag, setShowImportacaoGuiaHomag] = useState(false)
   const [importacaoGuiaPlataforma, setImportacaoGuiaPlataforma] = useState<'windows' | 'android' | 'ipad'>('windows')
   const [filtroImportacaoPendente, setFiltroImportacaoPendente] = useState<'todos' | 'sem-grupo' | 'sem-subgrupo'>('todos')
+  const [pecasImportadasListaLimite, setPecasImportadasListaLimite] = useState(LISTA_UI_LOTE)
   const importacaoFileInputRef = useRef<HTMLInputElement>(null)
   const homagExportFileInputRef = useRef<HTMLInputElement>(null)
   const [homagMergeLoading, setHomagMergeLoading] = useState(false)
@@ -5519,6 +5520,11 @@ export default function Dashboard() {
   const [protocoloFormPassoAtivo, setProtocoloFormPassoAtivo] = useState(1)
   const [protocoloPreviewAberto, setProtocoloPreviewAberto] = useState(true)
   const [protocoloHubVista, setProtocoloHubVista] = useState<'exec' | 'arquivo'>('exec')
+  const [protocoloExecListaLimite, setProtocoloExecListaLimite] = useState(LISTA_UI_LOTE)
+  const [protocoloExecGruposLimite, setProtocoloExecGruposLimite] = useState(LISTA_UI_LOTE)
+  const [protocoloExecItensLimites, setProtocoloExecItensLimites] = useState<Record<string, number>>({})
+  const [protocoloArquivoGruposLimite, setProtocoloArquivoGruposLimite] = useState(LISTA_UI_LOTE)
+  const [protocoloArquivoItensLimites, setProtocoloArquivoItensLimites] = useState<Record<string, number>>({})
   const [protocoloCardAcoesId, setProtocoloCardAcoesId] = useState<string | null>(null)
   /** Acordeão do arquivo: quais clientes estão expandidos (por defeito só poucos grupos). */
   const [protocoloArquivoAbertos, setProtocoloArquivoAbertos] = useState<Record<string, boolean>>({})
@@ -23364,6 +23370,10 @@ export default function Dashboard() {
     return pecasImportadasPendentes
   }, [filtroImportacaoPendente, pecasImportadasPendentes])
 
+  useEffect(() => {
+    setPecasImportadasListaLimite(LISTA_UI_LOTE)
+  }, [filtroImportacaoPendente])
+
   const toggleSelecaoPecaBiblioteca = useCallback((pecaId: string) => {
     setSelecaoPecasBibliotecaIds((prev) =>
       prev.includes(pecaId) ? prev.filter((id) => id !== pecaId) : [...prev, pecaId]
@@ -31677,17 +31687,70 @@ export default function Dashboard() {
                         </div>
                       )
                     ) : protocoloServicoAgruparPorCliente ? (
-                      gruposProtocolosLista.map((grupo) => (
+                      <>
+                      {gruposProtocolosLista.slice(0, protocoloExecGruposLimite).map((grupo) => {
+                        const itemLimite = protocoloExecItensLimites[grupo.clienteId] ?? LISTA_UI_LOTE
+                        return (
                         <section key={grupo.clienteId} className="proto-cockpit-group">
                           <div className="proto-cockpit-group__head">
                             <h3 className="proto-cockpit-group__title">{grupo.nomeGrupo}</h3>
                             <span className="proto-cockpit-group__sub">{grupo.itens.length}</span>
                           </div>
-                          <div className="proto-cockpit-feed">{grupo.itens.map((p) => renderProtocoloCard(p, 'exec'))}</div>
+                          <div className="proto-cockpit-feed">
+                            {grupo.itens.slice(0, itemLimite).map((p) => renderProtocoloCard(p, 'exec'))}
+                            {grupo.itens.length > itemLimite ? (
+                              <button
+                                type="button"
+                                className="btn-secondary"
+                                style={{ width: '100%', marginTop: 8 }}
+                                onClick={() =>
+                                  setProtocoloExecItensLimites((prev) => ({
+                                    ...prev,
+                                    [grupo.clienteId]: itemLimite + LISTA_UI_LOTE,
+                                  }))
+                                }
+                              >
+                                {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                                  '{n}',
+                                  String(grupo.itens.length - itemLimite)
+                                )}
+                              </button>
+                            ) : null}
+                          </div>
                         </section>
-                      ))
+                        )
+                      })}
+                      {gruposProtocolosLista.length > protocoloExecGruposLimite ? (
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          style={{ width: '100%', marginTop: 8 }}
+                          onClick={() => setProtocoloExecGruposLimite((n) => n + LISTA_UI_LOTE)}
+                        >
+                          {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                            '{n}',
+                            String(gruposProtocolosLista.length - protocoloExecGruposLimite)
+                          )}
+                        </button>
+                      ) : null}
+                      </>
                     ) : (
-                      protocolosEmExecucao.map((p) => renderProtocoloCard(p, 'exec'))
+                      <>
+                      {protocolosEmExecucao.slice(0, protocoloExecListaLimite).map((p) => renderProtocoloCard(p, 'exec'))}
+                      {protocolosEmExecucao.length > protocoloExecListaLimite ? (
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          style={{ width: '100%', marginTop: 8 }}
+                          onClick={() => setProtocoloExecListaLimite((n) => n + LISTA_UI_LOTE)}
+                        >
+                          {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                            '{n}',
+                            String(protocolosEmExecucao.length - protocoloExecListaLimite)
+                          )}
+                        </button>
+                      ) : null}
+                      </>
                     )
                   ) : protocolosExecutadosFiltrados.length === 0 ? (
                     <div className="proto-cockpit-empty">
@@ -31723,11 +31786,12 @@ export default function Dashboard() {
                           })}
                         </nav>
                       ) : null}
-                      {gruposProtocolosArquivo.map((grupoCliente) => {
+                      {gruposProtocolosArquivo.slice(0, protocoloArquivoGruposLimite).map((grupoCliente) => {
                         const itensCliente = grupoCliente.porData.flatMap((g) => g.itens)
                         const totalItens = itensCliente.length
                         const aberto = arquivoClienteAberto(grupoCliente.clienteId)
                         const mostrarAcordeao = !clienteArquivoFiltrado && gruposProtocolosArquivo.length > 1
+                        const arqLimite = protocoloArquivoItensLimites[grupoCliente.clienteId] ?? LISTA_UI_LOTE
                         return (
                           <section
                             key={grupoCliente.clienteId}
@@ -31763,10 +31827,45 @@ export default function Dashboard() {
                                 </span>
                               </div>
                             )}
-                            {aberto ? renderProtocoloArquivoTabela(itensCliente) : null}
+                            {aberto ? (
+                              <>
+                                {renderProtocoloArquivoTabela(itensCliente.slice(0, arqLimite))}
+                                {totalItens > arqLimite ? (
+                                  <button
+                                    type="button"
+                                    className="btn-secondary"
+                                    style={{ width: '100%', marginTop: 8 }}
+                                    onClick={() =>
+                                      setProtocoloArquivoItensLimites((prev) => ({
+                                        ...prev,
+                                        [grupoCliente.clienteId]: arqLimite + LISTA_UI_LOTE,
+                                      }))
+                                    }
+                                  >
+                                    {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                                      '{n}',
+                                      String(totalItens - arqLimite)
+                                    )}
+                                  </button>
+                                ) : null}
+                              </>
+                            ) : null}
                           </section>
                         )
                       })}
+                      {gruposProtocolosArquivo.length > protocoloArquivoGruposLimite ? (
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          style={{ width: '100%', marginTop: 8 }}
+                          onClick={() => setProtocoloArquivoGruposLimite((n) => n + LISTA_UI_LOTE)}
+                        >
+                          {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                            '{n}',
+                            String(gruposProtocolosArquivo.length - protocoloArquivoGruposLimite)
+                          )}
+                        </button>
+                      ) : null}
                     </>
                   )}
                 </div>
@@ -40678,8 +40777,9 @@ export default function Dashboard() {
                       {safeT?.importacaoPendentesEmpty || 'Nenhuma peça importada pendente neste momento.'}
                     </div>
                   ) : (
+                    <>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
-                      {pecasImportadasPendentesFiltradas.map((peca) => (
+                      {pecasImportadasPendentesFiltradas.slice(0, pecasImportadasListaLimite).map((peca) => (
                         <div key={peca.id} style={{ padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(20, 20, 20, 0.9)', border: '1px solid rgba(255, 193, 7, 0.22)' }}>
                           <div style={{ color: '#ffffff', fontSize: '13px', fontWeight: 700, marginBottom: '4px' }}>{peca.nome}</div>
                           <div style={{ color: '#ffdc73', fontSize: '12px', marginBottom: '6px' }}>{peca.codigo}</div>
@@ -40727,6 +40827,20 @@ export default function Dashboard() {
                         </div>
                       ))}
                     </div>
+                    {pecasImportadasPendentesFiltradas.length > pecasImportadasListaLimite ? (
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        style={{ width: '100%', marginTop: 8 }}
+                        onClick={() => setPecasImportadasListaLimite((n) => n + LISTA_UI_LOTE)}
+                      >
+                        {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                          '{n}',
+                          String(pecasImportadasPendentesFiltradas.length - pecasImportadasListaLimite)
+                        )}
+                      </button>
+                    ) : null}
+                    </>
                   )}
                 </div>
                 {importacaoUrlError && (
@@ -41333,8 +41447,9 @@ A1;Peça exemplo;10`}
                     {safeT?.importacaoPendentesEmpty || 'Nenhuma peça importada pendente neste momento.'}
                   </div>
                 ) : (
+                  <>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
-                    {pecasImportadasPendentesFiltradas.map((peca) => (
+                    {pecasImportadasPendentesFiltradas.slice(0, pecasImportadasListaLimite).map((peca) => (
                       <div key={peca.id} style={{ padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(20, 20, 20, 0.9)', border: '1px solid rgba(255, 193, 7, 0.22)' }}>
                         <div style={{ color: '#ffffff', fontSize: '13px', fontWeight: 700, marginBottom: '4px' }}>{peca.nome}</div>
                         <div style={{ color: '#ffdc73', fontSize: '12px', marginBottom: '6px' }}>{peca.codigo}</div>
@@ -41383,6 +41498,20 @@ A1;Peça exemplo;10`}
                       </div>
                     ))}
                   </div>
+                  {pecasImportadasPendentesFiltradas.length > pecasImportadasListaLimite ? (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      style={{ width: '100%', marginTop: 8 }}
+                      onClick={() => setPecasImportadasListaLimite((n) => n + LISTA_UI_LOTE)}
+                    >
+                      {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                        '{n}',
+                        String(pecasImportadasPendentesFiltradas.length - pecasImportadasListaLimite)
+                      )}
+                    </button>
+                  ) : null}
+                  </>
                 )}
               </div>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '16px' }}>
