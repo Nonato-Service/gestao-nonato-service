@@ -2587,6 +2587,15 @@ try {
   } else {
     fail('fornecedores/OS/faturas ainda sem lote')
   }
+  if (
+    nma3.includes('relatoriosFinanceirosListaLimite') &&
+    nma3.includes('pedidosSeparacaoListaLimite') &&
+    nma3.includes('fornecedoresModalListaLimite')
+  ) {
+    ok('relatórios financeiros, pedidos de separação e modal fornecedores em lote')
+  } else {
+    fail('listas financeiras/separação/fornecedores modal ainda sem lote')
+  }
 } catch (e) {
   fail(`fase 3 listas: ${e.message}`)
 }

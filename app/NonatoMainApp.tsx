@@ -4471,6 +4471,9 @@ export default function Dashboard() {
   const [buscaOS, setBuscaOS] = useState('')
   const [osListaLimite, setOsListaLimite] = useState(LISTA_UI_LOTE)
   const [faturasPecasListaLimite, setFaturasPecasListaLimite] = useState(LISTA_UI_LOTE)
+  const [relatoriosFinanceirosListaLimite, setRelatoriosFinanceirosListaLimite] = useState(LISTA_UI_LOTE)
+  const [pedidosSeparacaoListaLimite, setPedidosSeparacaoListaLimite] = useState(LISTA_UI_LOTE)
+  const [fornecedoresModalListaLimite, setFornecedoresModalListaLimite] = useState(LISTA_UI_LOTE)
   /** Gestão financeira › Clientes › Ordem de serviço: recebimento sem fatura e consulta de fatura */
   const [osTabRecebSemFaturaRelId, setOsTabRecebSemFaturaRelId] = useState('')
   const [osTabConsultaFaturaNum, setOsTabConsultaFaturaNum] = useState('')
@@ -61085,7 +61088,7 @@ A1;Peça exemplo;10`}
                         {txRf.relatoriosFinanceirosGuardados || 'Relatórios guardados'}
                       </h3>
                       <div className="gf-rel-fin__guardados-list">
-                        {relatoriosFiltrados.map(relatorio => {
+                        {relatoriosFiltrados.slice(0, relatoriosFinanceirosListaLimite).map(relatorio => {
                           const isAtual =
                             relatorio.periodo === relatorioFinanceiroVivo.periodo &&
                             relatorio.tipo === relatorioFinanceiroVivo.tipo
@@ -61148,6 +61151,19 @@ A1;Peça exemplo;10`}
                             </article>
                           )
                         })}
+                        {relatoriosFiltrados.length > relatoriosFinanceirosListaLimite ? (
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            style={{ width: '100%', marginTop: '8px' }}
+                            onClick={() => setRelatoriosFinanceirosListaLimite((n) => n + LISTA_UI_LOTE)}
+                          >
+                            {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                              '{n}',
+                              String(relatoriosFiltrados.length - relatoriosFinanceirosListaLimite)
+                            )}
+                          </button>
+                        ) : null}
                         {relatoriosFiltrados.length === 0 && (
                           <p className="gf-rel-fin__empty">{safeT?.nenhumRelatorio || 'Nenhum relatório gerado para este período'}</p>
                         )}
@@ -72796,8 +72812,9 @@ A1;Peça exemplo;10`}
             {fornecedores.length === 0 ? (
               <p>{safeT?.noFornecedores || 'Nenhum fornecedor cadastrado.'}</p>
             ) : (
+              <>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
-                {fornecedores.map(fornecedor => (
+                {fornecedores.slice(0, fornecedoresModalListaLimite).map(fornecedor => (
                   <div key={fornecedor.id} style={{ backgroundColor: '#404040', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                     <p><strong>{fornecedor.nomeEmpresa}</strong></p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{fornecedor.localidade}, {fornecedor.pais}</p>
@@ -72818,6 +72835,20 @@ A1;Peça exemplo;10`}
                   </div>
                 ))}
               </div>
+              {fornecedores.length > fornecedoresModalListaLimite ? (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ width: '100%', marginTop: '12px' }}
+                  onClick={() => setFornecedoresModalListaLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(fornecedores.length - fornecedoresModalListaLimite)
+                  )}
+                </button>
+              ) : null}
+              </>
             )}
             <button className="btn-primary" onClick={() => setShowFornecedoresModal(false)} style={{ width: '100%', marginTop: '20px' }}>
               {safeT?.close || 'Fechar'}
@@ -76766,7 +76797,7 @@ A1;Peça exemplo;10`}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {pedidosSeparacao.map((pedido) => {
+                {pedidosSeparacao.slice(0, pedidosSeparacaoListaLimite).map((pedido) => {
                   // Função para calcular status geral baseado nos status individuais
                   const calcularStatusGeral = (itens: Array<{status: 'aguardando-fornecedor' | 'separado-nao-embalado' | 'pronto-envio'}>) => {
                     if (itens.length === 0) return 'aguardando-fornecedor' as const
@@ -76992,6 +77023,19 @@ A1;Peça exemplo;10`}
                     </div>
                   )
                 })}
+                {pedidosSeparacao.length > pedidosSeparacaoListaLimite ? (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ width: '100%' }}
+                    onClick={() => setPedidosSeparacaoListaLimite((n) => n + LISTA_UI_LOTE)}
+                  >
+                    {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                      '{n}',
+                      String(pedidosSeparacao.length - pedidosSeparacaoListaLimite)
+                    )}
+                  </button>
+                ) : null}
               </div>
             )}
           </div>
