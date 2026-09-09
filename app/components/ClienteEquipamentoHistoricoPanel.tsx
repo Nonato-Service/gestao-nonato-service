@@ -161,10 +161,16 @@ export function ClienteEquipamentoHistoricoPanel({
   const [reloadTick, setReloadTick] = useState(0)
   const [timelineListaLimite, setTimelineListaLimite] = useState(LISTA_UI_LOTE)
   const [gruposListaLimite, setGruposListaLimite] = useState(LISTA_UI_LOTE)
+  const [orcPendentesLimite, setOrcPendentesLimite] = useState(LISTA_UI_LOTE)
+  const [orcAprovadosLimite, setOrcAprovadosLimite] = useState(LISTA_UI_LOTE)
+  const [orcCanceladosLimite, setOrcCanceladosLimite] = useState(LISTA_UI_LOTE)
 
   useEffect(() => {
     setTimelineListaLimite(LISTA_UI_LOTE)
     setGruposListaLimite(LISTA_UI_LOTE)
+    setOrcPendentesLimite(LISTA_UI_LOTE)
+    setOrcAprovadosLimite(LISTA_UI_LOTE)
+    setOrcCanceladosLimite(LISTA_UI_LOTE)
   }, [vista, equipamento.id, equipamento.numeroSerie, equipamentoIndex])
 
   const recarregarDados = useCallback(() => {
@@ -986,7 +992,7 @@ export function ClienteEquipamentoHistoricoPanel({
         pedidosOrcamentoPendentes.length,
         tr('semPedidoPecasRelatorio'),
         <div className="cliente-equip-hist__lista-orc">
-          {pedidosOrcamentoPendentes.map((item) => {
+          {pedidosOrcamentoPendentes.slice(0, orcPendentesLimite).map((item) => {
             if (item.tipo === 'pedido-relatorio') {
               const pedido = item.data
               const orc = findOrcamentoGeradoParaPedidoRelatorio(pedido, orcamentosEquipamento)
@@ -1074,6 +1080,19 @@ export function ClienteEquipamentoHistoricoPanel({
               </div>
             )
           })}
+          {pedidosOrcamentoPendentes.length > orcPendentesLimite ? (
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: '100%', marginTop: '8px' }}
+              onClick={() => setOrcPendentesLimite((n) => n + LISTA_UI_LOTE)}
+            >
+              {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                '{n}',
+                String(pedidosOrcamentoPendentes.length - orcPendentesLimite)
+              )}
+            </button>
+          ) : null}
         </div>
       )}
 
@@ -1082,7 +1101,7 @@ export function ClienteEquipamentoHistoricoPanel({
         orcamentosAprovados.length,
         tr('nenhumOrcamentoEquipamento'),
         <div className="cliente-equip-hist__lista-orc">
-          {orcamentosAprovados.map((item) => {
+          {orcamentosAprovados.slice(0, orcAprovadosLimite).map((item) => {
             if (item.tipo === 'pedido-relatorio') {
               const pedido = item.data
               const orc = findOrcamentoGeradoParaPedidoRelatorio(pedido, orcamentosEquipamento)
@@ -1171,6 +1190,19 @@ export function ClienteEquipamentoHistoricoPanel({
             const o = item.data
             return renderCardOrcamento(o, badgeWorkflow(o))
           })}
+          {orcamentosAprovados.length > orcAprovadosLimite ? (
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: '100%', marginTop: '8px' }}
+              onClick={() => setOrcAprovadosLimite((n) => n + LISTA_UI_LOTE)}
+            >
+              {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                '{n}',
+                String(orcamentosAprovados.length - orcAprovadosLimite)
+              )}
+            </button>
+          ) : null}
         </div>
       )}
 
@@ -1179,7 +1211,7 @@ export function ClienteEquipamentoHistoricoPanel({
         orcamentosCancelados.length,
         tr('nenhumOrcamentoFiltro'),
         <div className="cliente-equip-hist__lista-orc">
-          {orcamentosCancelados.map((item) => {
+          {orcamentosCancelados.slice(0, orcCanceladosLimite).map((item) => {
             if (item.tipo === 'pedido-relatorio') {
               const pedido = item.data
               const badge = badgePedido(pedido.status)
@@ -1222,6 +1254,19 @@ export function ClienteEquipamentoHistoricoPanel({
               </div>
             )
           })}
+          {orcamentosCancelados.length > orcCanceladosLimite ? (
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: '100%', marginTop: '8px' }}
+              onClick={() => setOrcCanceladosLimite((n) => n + LISTA_UI_LOTE)}
+            >
+              {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                '{n}',
+                String(orcamentosCancelados.length - orcCanceladosLimite)
+              )}
+            </button>
+          ) : null}
         </div>,
         false
       )}

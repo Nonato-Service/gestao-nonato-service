@@ -2650,7 +2650,13 @@ try {
     fail('RegistroDespesasContent ainda renderiza a lista toda')
   }
   const hist = fs.readFileSync(path.join(root, 'app/components/ClienteEquipamentoHistoricoPanel.tsx'), 'utf8')
-  if (hist.includes('timelineListaLimite') && hist.includes('gruposListaLimite')) {
+  if (
+    hist.includes('timelineListaLimite') &&
+    hist.includes('gruposListaLimite') &&
+    hist.includes('orcPendentesLimite') &&
+    hist.includes('orcAprovadosLimite') &&
+    hist.includes('orcCanceladosLimite')
+  ) {
     ok('histórico do equipamento usa lote de ecrã')
   } else {
     fail('ClienteEquipamentoHistoricoPanel ainda renderiza a lista toda')
@@ -2665,8 +2671,8 @@ try {
     fail('protocolos/importação ainda sem lote')
   }
   const ogb = fs.readFileSync(path.join(root, 'app/components/OrcamentosGeradosBrowse.tsx'), 'utf8')
-  if (ogb.includes('pastaAguardandoLimite') && ogb.includes('pastaEntregaLimite')) {
-    ok('orçamentos gerados usam lote nas pastas')
+  if (ogb.includes('pastaAguardandoLimite') && ogb.includes('pastaEntregaLimite') && ogb.includes('visiveisListaLimite')) {
+    ok('orçamentos gerados usam lote nas pastas e na busca')
   } else {
     fail('OrcamentosGeradosBrowse ainda renderiza as pastas todas')
   }
@@ -2675,6 +2681,30 @@ try {
     ok('lista de demonstrações usa lote de ecrã')
   } else {
     fail('GestaoDemosContent ainda renderiza a lista toda')
+  }
+  const reh = fs.readFileSync(path.join(root, 'app/components/RelatorioEspecialHub.tsx'), 'utf8')
+  if (reh.includes('listaRelatoriosLimite') && reh.includes('relatoriosOrdenados')) {
+    ok('lista de relatórios especiais usa lote de ecrã')
+  } else {
+    fail('RelatorioEspecialHub ainda renderiza a lista toda')
+  }
+  const fge = fs.readFileSync(path.join(root, 'app/components/FamiliasGruposEquipamentosContent.tsx'), 'utf8')
+  if (fge.includes('familiasListaLimite') && fge.includes('gruposListaLimite')) {
+    ok('famílias/grupos de equipamentos usam lote de ecrã')
+  } else {
+    fail('FamiliasGruposEquipamentosContent ainda renderiza a lista toda')
+  }
+  const mic = fs.readFileSync(path.join(root, 'app/components/ManuaisInformacoesContent.tsx'), 'utf8')
+  if (mic.includes('familiasListaLimite') && mic.includes('LISTA_UI_LOTE')) {
+    ok('manuais/informações usam lote de ecrã')
+  } else {
+    fail('ManuaisInformacoesContent ainda renderiza a árvore toda')
+  }
+  const fgc = fs.readFileSync(path.join(root, 'app/components/FamiliasGruposChecklistContent.tsx'), 'utf8')
+  if (fgc.includes('familiasListaLimite') && fgc.includes('gruposListaLimite')) {
+    ok('famílias/grupos de checklist usam lote de ecrã')
+  } else {
+    fail('FamiliasGruposChecklistContent ainda renderiza a lista toda')
   }
 } catch (e) {
   fail(`fase 3 listas: ${e.message}`)

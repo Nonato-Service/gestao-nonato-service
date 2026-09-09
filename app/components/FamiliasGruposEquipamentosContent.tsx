@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { GrupoEquipamento } from '../lib/equipamentosTypes'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 
 type SetState<T> = React.Dispatch<React.SetStateAction<T>>
 
@@ -84,6 +85,8 @@ export function FamiliasGruposEquipamentosContent(props: FamiliasGruposEquipamen
   } = props
 
   const [navSearch, setNavSearch] = useState('')
+  const [familiasListaLimite, setFamiliasListaLimite] = useState(LISTA_UI_LOTE)
+  const [gruposListaLimite, setGruposListaLimite] = useState(LISTA_UI_LOTE)
   const tr = (key: string, fallback: string) => safeT[key] || fallback
   const navQuery = navSearch.trim().toLowerCase()
 
@@ -108,6 +111,14 @@ export function FamiliasGruposEquipamentosContent(props: FamiliasGruposEquipamen
       .filter((g) => g.familia === selectedFamiliaForGrupos)
       .sort((a, b) => a.nome.localeCompare(b.nome, undefined, { sensitivity: 'base' }))
   }, [gruposEquipamento, selectedFamiliaForGrupos])
+
+  useEffect(() => {
+    setFamiliasListaLimite(LISTA_UI_LOTE)
+  }, [navQuery])
+
+  useEffect(() => {
+    setGruposListaLimite(LISTA_UI_LOTE)
+  }, [selectedFamiliaForGrupos])
 
   const persistEquipamentoFg = (familias: string[], grupos: GrupoEquipamento[]) => {
     saveData('nonato-familias-grupos-equipamento', { familias, grupos })
@@ -233,7 +244,8 @@ export function FamiliasGruposEquipamentosContent(props: FamiliasGruposEquipamen
             {filteredFamilias.length === 0 ? (
               <p className="fg-checklist-pro__empty-hint">{tr('nenhumaFamilia', 'Nenhuma familia. Crie uma acima.')}</p>
             ) : (
-              filteredFamilias.map((familia) => {
+              <>
+              {filteredFamilias.slice(0, familiasListaLimite).map((familia) => {
                 const gruposCount = gruposEquipamento.filter((g) => g.familia === familia).length
                 const isActive = selectedFamiliaForGrupos === familia
                 return (
@@ -279,7 +291,21 @@ export function FamiliasGruposEquipamentosContent(props: FamiliasGruposEquipamen
                     </div>
                   </div>
                 )
-              })
+              })}
+              {filteredFamilias.length > familiasListaLimite ? (
+                <button
+                  type="button"
+                  className="fg-checklist-pro__btn fg-checklist-pro__btn--primary"
+                  style={{ width: '100%', marginTop: 8 }}
+                  onClick={() => setFamiliasListaLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {(tr('listaCarregarMais', 'Mostrar mais ({n})')).replace(
+                    '{n}',
+                    String(filteredFamilias.length - familiasListaLimite)
+                  )}
+                </button>
+              ) : null}
+              </>
             )}
           </div>
         </aside>
@@ -333,7 +359,7 @@ export function FamiliasGruposEquipamentosContent(props: FamiliasGruposEquipamen
                   <p className="fg-checklist-pro__empty-hint">{tr('nenhumGrupoNestaFamilia', 'Nenhum grupo. Use o formulario acima.')}</p>
                 ) : (
                   <div className="fg-checklist-pro__grupo-list">
-                    {gruposDestaFamilia.map((g, idx) => {
+                    {gruposDestaFamilia.slice(0, gruposListaLimite).map((g, idx) => {
                       const isEditing =
                         editingGrupoFamilia === selectedFamiliaForGrupos && editingGrupoNome === g.nome
                       return (
@@ -409,6 +435,19 @@ export function FamiliasGruposEquipamentosContent(props: FamiliasGruposEquipamen
                         </div>
                       )
                     })}
+                    {gruposDestaFamilia.length > gruposListaLimite ? (
+                      <button
+                        type="button"
+                        className="fg-checklist-pro__btn fg-checklist-pro__btn--primary"
+                        style={{ width: '100%', marginTop: 8 }}
+                        onClick={() => setGruposListaLimite((n) => n + LISTA_UI_LOTE)}
+                      >
+                        {(tr('listaCarregarMais', 'Mostrar mais ({n})')).replace(
+                          '{n}',
+                          String(gruposDestaFamilia.length - gruposListaLimite)
+                        )}
+                      </button>
+                    ) : null}
                   </div>
                 )}
               </section>

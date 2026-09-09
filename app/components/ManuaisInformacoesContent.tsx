@@ -1,6 +1,7 @@
 ﻿'use client'
 
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { ContextualBackBar } from './ContextualBackBar'
 import {
   EquipamentoManuaisRef,
@@ -318,6 +319,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
   const tr = (key: string, fallback: string) => safeT[key] || fallback
 
   const [navSearch, setNavSearch] = useState('')
+  const [familiasListaLimite, setFamiliasListaLimite] = useState(LISTA_UI_LOTE)
   const [expandedFamilias, setExpandedFamilias] = useState<Record<string, boolean>>({})
   const [expandedGrupos, setExpandedGrupos] = useState<Record<string, boolean>>({})
   const [mainTab, setMainTab] = useState<'ficha' | 'docs' | 'equip'>('ficha')
@@ -977,6 +979,10 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
     })
   }, [familiasListManuais, grupos, modelos, navQuery])
 
+  useEffect(() => {
+    setFamiliasListaLimite(LISTA_UI_LOTE)
+  }, [navQuery])
+
   const textareaStyle: React.CSSProperties = {
     width: '100%',
     padding: '12px 14px',
@@ -1198,7 +1204,8 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
             {filteredFamilias.length === 0 ? (
               <p className="manuais-pro__empty-hint">{tr('manuaisNenhumaFamilia', 'Nenhuma familia. Crie uma acima.')}</p>
             ) : (
-              filteredFamilias.map((familia) => {
+              <>
+              {filteredFamilias.slice(0, familiasListaLimite).map((familia) => {
                 const famGrupos = grupos
                   .filter((g) => g.familia === familia)
                   .filter((g) => {
@@ -1407,7 +1414,21 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                       })}
                   </div>
                 )
-              })
+              })}
+              {filteredFamilias.length > familiasListaLimite ? (
+                <button
+                  type="button"
+                  className="manuais-pro__btn manuais-pro__btn--primary"
+                  style={{ width: '100%', marginTop: 8 }}
+                  onClick={() => setFamiliasListaLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {(tr('listaCarregarMais', 'Mostrar mais ({n})')).replace(
+                    '{n}',
+                    String(filteredFamilias.length - familiasListaLimite)
+                  )}
+                </button>
+              ) : null}
+              </>
             )}
           </div>
         </aside>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, Fragment as ReactFragment } from 'react'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 import type { ClienteAlfabetoRow } from '../lib/clienteAlfabetoBusca'
 import {
@@ -485,10 +486,15 @@ export default function RelatorioEspecialHub({
   /** 'eliminar' = não mostrar textos de «guardar» durante a exclusão */
   const [acaoEmCurso, setAcaoEmCurso] = useState<'guardar' | 'eliminar' | null>(null)
   const [recuperando, setRecuperando] = useState(false)
+  const [listaRelatoriosLimite, setListaRelatoriosLimite] = useState(LISTA_UI_LOTE)
   const snapshotGuardadoRef = useRef('')
   const rascunhoOferecidoRef = useRef(false)
 
   const formComTotais = useMemo(() => aplicarTotaisNoRelatorioEspecial(form), [form])
+  const relatoriosOrdenados = useMemo(
+    () => [...(relatorios || [])].sort((a, b) => String(b.data).localeCompare(String(a.data))),
+    [relatorios]
+  )
 
   const marcarSnapshot = useCallback((rel: RelatorioEspecial) => {
     snapshotGuardadoRef.current = JSON.stringify(aplicarTotaisNoRelatorioEspecial(rel))
@@ -1112,9 +1118,7 @@ export default function RelatorioEspecialHub({
           <p style={{ color: '#aaa' }}>{t.relatorioEspecialListaVazia || 'Nenhum relatório especial ainda.'}</p>
         ) : (
           <div className="relatorio-especial-hub__lista">
-            {[...relatorios]
-              .sort((a, b) => String(b.data).localeCompare(String(a.data)))
-              .map((rel) => {
+            {relatoriosOrdenados.slice(0, listaRelatoriosLimite).map((rel) => {
                 const prep = aplicarTotaisNoRelatorioEspecial(rel)
                 return (
                   <div key={rel.id} className="relatorio-especial-card">
@@ -1188,6 +1192,19 @@ export default function RelatorioEspecialHub({
                   </div>
                 )
               })}
+            {relatoriosOrdenados.length > listaRelatoriosLimite ? (
+              <button
+                type="button"
+                className="btn-secondary"
+                style={{ width: '100%', marginTop: 8 }}
+                onClick={() => setListaRelatoriosLimite((n) => n + LISTA_UI_LOTE)}
+              >
+                {(t.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                  '{n}',
+                  String(relatoriosOrdenados.length - listaRelatoriosLimite)
+                )}
+              </button>
+            ) : null}
           </div>
         )}
         {modalEscolhaSecoesPdf}

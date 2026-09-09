@@ -98,6 +98,7 @@ export function OrcamentosGeradosBrowse({
   const [pastaMercadoriaLimite, setPastaMercadoriaLimite] = useState(LISTA_UI_LOTE)
   const [pastaEntregaLimite, setPastaEntregaLimite] = useState(LISTA_UI_LOTE)
   const [clientesLetraLimite, setClientesLetraLimite] = useState(LISTA_UI_LOTE)
+  const [visiveisListaLimite, setVisiveisListaLimite] = useState(LISTA_UI_LOTE)
   const [pedidosAvulso, setPedidosAvulso] = useState<PedidoAvulsoRef[]>([])
   const listaOrcamentos = Array.isArray(orcamentos) ? orcamentos : []
   const listaClientes = Array.isArray(clientes) ? clientes : []
@@ -105,6 +106,10 @@ export function OrcamentosGeradosBrowse({
   useEffect(() => {
     setClientesLetraLimite(LISTA_UI_LOTE)
   }, [letraFiltro])
+
+  useEffect(() => {
+    setVisiveisListaLimite(LISTA_UI_LOTE)
+  }, [busca, letraFiltro, clienteChave])
 
   useEffect(() => {
     if (!loadData) return
@@ -296,6 +301,7 @@ export function OrcamentosGeradosBrowse({
     : letraAtiva && clienteChave
       ? orcamentosVisiveis.length
       : 0
+  const orcamentosVisiveisLote = orcamentosVisiveis.slice(0, visiveisListaLimite)
 
   return (
     <div className="orc-gerados-browse">
@@ -692,7 +698,22 @@ export function OrcamentosGeradosBrowse({
               </p>
             </div>
           ) : (
-            children(orcamentosVisiveis)
+            <>
+            {children(orcamentosVisiveisLote)}
+            {orcamentosVisiveis.length > visiveisListaLimite ? (
+              <button
+                type="button"
+                className="orc-pro__btn orc-pro__btn--secondary"
+                style={{ width: '100%', marginTop: 8 }}
+                onClick={() => setVisiveisListaLimite((n) => n + LISTA_UI_LOTE)}
+              >
+                {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                  '{n}',
+                  String(orcamentosVisiveis.length - visiveisListaLimite)
+                )}
+              </button>
+            ) : null}
+            </>
           )}
         </>
       )}
