@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useMemo, useState } from 'react'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { formatMoneyEUR } from '../lib/formatMoney'
 
 export type ClienteFaturaListItem = {
@@ -53,6 +54,7 @@ export function ClienteFaturasSection({
 }: Props) {
   const tr = (key: string, fb: string) => safeT[key] || fb
   const [selByFat, setSelByFat] = useState<Record<string, string>>({})
+  const [faturasListaLimite, setFaturasListaLimite] = useState(LISTA_UI_LOTE)
 
   const eqLabelById = useMemo(() => {
     const map = new Map<string, string>()
@@ -121,8 +123,9 @@ export function ClienteFaturasSection({
           {tr('clienteFaturasVazio', 'Nenhuma fatura registada para este cliente.')}
         </p>
       ) : (
+        <>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {faturas.map((f) => {
+          {faturas.slice(0, faturasListaLimite).map((f) => {
             const semEq = faturaSemEquipamentoUtil(f)
             const eqTxt =
               f.equipamentoTexto ||
@@ -243,6 +246,20 @@ export function ClienteFaturasSection({
             )
           })}
         </div>
+        {faturas.length > faturasListaLimite ? (
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{ width: '100%', marginTop: '8px' }}
+            onClick={() => setFaturasListaLimite((n) => n + LISTA_UI_LOTE)}
+          >
+            {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+              '{n}',
+              String(faturas.length - faturasListaLimite)
+            )}
+          </button>
+        ) : null}
+        </>
       )}
     </section>
   )

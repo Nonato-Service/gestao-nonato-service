@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { formatMoneyEUR, formatMoneyNumber } from '../lib/formatMoney'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 import {
@@ -106,6 +107,8 @@ export function RegistroDespesasContent({
   const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null)
   const [relatorioSelecionado, setRelatorioSelecionado] = useState<RelatorioServico | null>(null)
   const [documentos, setDocumentos] = useState<DespesaDocumento[]>([])
+  const [documentosListaLimite, setDocumentosListaLimite] = useState(LISTA_UI_LOTE)
+  const [relatoriosListaLimite, setRelatoriosListaLimite] = useState(LISTA_UI_LOTE)
   const [docAtual, setDocAtual] = useState<DespesaDocumento | null>(null)
   const [showDespesaForm, setShowDespesaForm] = useState(false)
   const [despesaForm, setDespesaForm] = useState<Partial<DespesaRegistro>>({
@@ -135,6 +138,11 @@ export function RegistroDespesasContent({
     (r.numero?.toLowerCase().includes(buscaRelatorio?.toLowerCase()) ||
      r.cliente?.toLowerCase().includes(buscaRelatorio?.toLowerCase()))
   )
+  const relatoriosLista = relatoriosFiltrados.filter(r => !clienteSelecionado || r.clienteId === clienteSelecionado.id)
+
+  useEffect(() => {
+    setRelatoriosListaLimite(LISTA_UI_LOTE)
+  }, [buscaRelatorio, clienteSelecionado?.id])
 
   const loadDocumentos = async () => {
     try {
@@ -537,7 +545,7 @@ export function RegistroDespesasContent({
             >
               {safeT?.nenhumRelatorio || 'Nenhum relatório'}
             </div>
-            {relatoriosFiltrados.filter(r => !clienteSelecionado || r.clienteId === clienteSelecionado.id).map(r => (
+            {relatoriosLista.slice(0, relatoriosListaLimite).map(r => (
               <div
                 key={r.id}
                 onClick={() => setRelatorioSelecionado(r)}
@@ -553,6 +561,19 @@ export function RegistroDespesasContent({
                 {r.numero} - {r.cliente} ({new Date(r.data).toLocaleDateString(uiLocale)})
               </div>
             ))}
+            {relatoriosLista.length > relatoriosListaLimite ? (
+              <button
+                type="button"
+                className="btn-secondary"
+                style={{ width: '100%', marginTop: '4px' }}
+                onClick={() => setRelatoriosListaLimite((n) => n + LISTA_UI_LOTE)}
+              >
+                {(safeT?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                  '{n}',
+                  String(relatoriosLista.length - relatoriosListaLimite)
+                )}
+              </button>
+            ) : null}
           </div>
 
           <button
@@ -1097,7 +1118,7 @@ export function RegistroDespesasContent({
         <div style={{ marginTop: '32px', padding: '20px', backgroundColor: '#484848', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
           <h3 style={{ marginTop: 0, color: '#00c853' }}>{safeT?.documentosSalvos || 'Documentos salvos'}</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {documentos.map(doc => (
+            {documentos.slice(0, documentosListaLimite).map(doc => (
               <div
                 key={doc.id}
                 style={{
@@ -1148,6 +1169,19 @@ export function RegistroDespesasContent({
                 </div>
               </div>
             ))}
+            {documentos.length > documentosListaLimite ? (
+              <button
+                type="button"
+                className="btn-secondary"
+                style={{ width: '100%', marginTop: '4px' }}
+                onClick={() => setDocumentosListaLimite((n) => n + LISTA_UI_LOTE)}
+              >
+                {(safeT?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                  '{n}',
+                  String(documentos.length - documentosListaLimite)
+                )}
+              </button>
+            ) : null}
           </div>
         </div>
       )}

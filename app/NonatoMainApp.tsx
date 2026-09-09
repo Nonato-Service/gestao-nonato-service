@@ -1274,6 +1274,10 @@ export default function Dashboard() {
   const [diarioPedidoImgBusy, setDiarioPedidoImgBusy] = useState(false)
   const [diarioPedidosBusca, setDiarioPedidosBusca] = useState('')
   const [diarioPedidosFiltroStatus, setDiarioPedidosFiltroStatus] = useState<'todos' | DiarioPedidoStatus>('todos')
+  const [diarioPedidosListaLimite, setDiarioPedidosListaLimite] = useState(LISTA_UI_LOTE)
+  useEffect(() => {
+    setDiarioPedidosListaLimite(LISTA_UI_LOTE)
+  }, [diarioPedidosBusca, diarioPedidosFiltroStatus])
   const [diarioComposeClienteSel, setDiarioComposeClienteSel] = useState<string>('')
   const [diarioComposeClienteNomeLivre, setDiarioComposeClienteNomeLivre] = useState('')
   const [diarioPedidosModalTopoRetraido, setDiarioPedidosModalTopoRetraido] = useState(false)
@@ -3697,6 +3701,8 @@ export default function Dashboard() {
   )
   const [agendaListaCardsExpandidos, setAgendaListaCardsExpandidos] = useState<Set<string>>(() => new Set())
   const [agendaListaLimite, setAgendaListaLimite] = useState(LISTA_UI_LOTE)
+  const [agendaModalListaLimite, setAgendaModalListaLimite] = useState(LISTA_UI_LOTE)
+  const [sstListaLimite, setSstListaLimite] = useState(LISTA_UI_LOTE)
   const [buscaAgendaHistoricoConcluidos, setBuscaAgendaHistoricoConcluidos] = useState('')
   const [historicoConcluidoDataDesde, setHistoricoConcluidoDataDesde] = useState('')
   const [historicoConcluidoDataAte, setHistoricoConcluidoDataAte] = useState('')
@@ -5662,6 +5668,7 @@ export default function Dashboard() {
   const [showDesmontadosModal, setShowDesmontadosModal] = useState(false)
   const [gruposDesmontados, setGruposDesmontados] = useState<GrupoDesmontado[]>([])
   const [pecasDesmontadas, setPecasDesmontadas] = useState<PecaDesmontada[]>([])
+  const [pecasDesmontadasListaLimite, setPecasDesmontadasListaLimite] = useState(LISTA_UI_LOTE)
   const [buscaDesmontados, setBuscaDesmontados] = useState('')
   const [abaDesmontados, setAbaDesmontados] = useState<'grupos' | 'pecas'>('pecas')
   const [showGrupoDesmontadoForm, setShowGrupoDesmontadoForm] = useState(false)
@@ -26395,8 +26402,9 @@ export default function Dashboard() {
             </p>
           </div>
         ) : (
+          <>
           <ul className="ns-diario-list">
-            {diarioPedidosOrdenadosFiltrados.map((item) => {
+            {diarioPedidosOrdenadosFiltrados.slice(0, diarioPedidosListaLimite).map((item) => {
               const statusLabel =
                 item.status === 'em_curso'
                   ? (safeT as any)?.diarioPedidosStatusEmCurso || 'Em execução'
@@ -27014,6 +27022,20 @@ export default function Dashboard() {
               )
             })}
           </ul>
+          {diarioPedidosOrdenadosFiltrados.length > diarioPedidosListaLimite ? (
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: '100%', marginTop: '8px' }}
+              onClick={() => setDiarioPedidosListaLimite((n) => n + LISTA_UI_LOTE)}
+            >
+              {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                '{n}',
+                String(diarioPedidosOrdenadosFiltrados.length - diarioPedidosListaLimite)
+              )}
+            </button>
+          ) : null}
+          </>
         )}
       </section>
       </div>
@@ -42423,7 +42445,7 @@ A1;Peça exemplo;10`}
                       </tr>
                     </thead>
                     <tbody>
-                      {sstOrdenadas.map(s => {
+                      {sstOrdenadas.slice(0, sstListaLimite).map(s => {
                         const endResumo = (s.endereco || '').length > 48 ? `${(s.endereco || '').slice(0, 48)}…` : (s.endereco || '')
                         return (
                           <tr key={s.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', verticalAlign: 'top' }}>
@@ -42556,6 +42578,19 @@ A1;Peça exemplo;10`}
                       })}
                     </tbody>
                   </table>
+                  {sstOrdenadas.length > sstListaLimite ? (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      style={{ width: '100%', marginTop: '8px' }}
+                      onClick={() => setSstListaLimite((n) => n + LISTA_UI_LOTE)}
+                    >
+                      {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                        '{n}',
+                        String(sstOrdenadas.length - sstListaLimite)
+                      )}
+                    </button>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -73973,7 +74008,7 @@ A1;Peça exemplo;10`}
               <p>{safeT?.noAgendamentos || 'Nenhum agendamento encontrado.'}</p>
             ) : (
               <div style={{ marginTop: '20px' }}>
-                {agendamentos.map(agendamento => (
+                {agendamentos.slice(0, agendaModalListaLimite).map(agendamento => (
                   <div key={agendamento.id} style={{ backgroundColor: '#404040', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)', marginBottom: '10px' }}>
                     <p><strong>{agendamento.cliente}</strong> - {agendamento.data} {agendamento.hora}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tecnico || 'Técnico'}: {agendamento.tecnico}</p>
@@ -73989,6 +74024,19 @@ A1;Peça exemplo;10`}
                     </div>
                   </div>
                 ))}
+                {agendamentos.length > agendaModalListaLimite ? (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ width: '100%', marginTop: '8px' }}
+                    onClick={() => setAgendaModalListaLimite((n) => n + LISTA_UI_LOTE)}
+                  >
+                    {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                      '{n}',
+                      String(agendamentos.length - agendaModalListaLimite)
+                    )}
+                  </button>
+                ) : null}
               </div>
             )}
             <button className="btn-primary" onClick={() => setShowAgendaModal(false)} style={{ width: '100%', marginTop: '20px' }}>
@@ -74347,8 +74395,9 @@ A1;Peça exemplo;10`}
                 {pecasDesmontadas.length === 0 ? (
                   <p>{safeT?.nenhumaPecaEncontrada || 'Nenhuma peça encontrada.'}</p>
                 ) : (
+                  <>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginTop: '20px' }}>
-                    {pecasDesmontadas.map(peca => (
+                    {pecasDesmontadas.slice(0, pecasDesmontadasListaLimite).map(peca => (
                       <div key={peca.id} style={{ backgroundColor: '#404040', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 200, 83, 0.2)' }}>
                         {peca.imagens && peca.imagens.length > 0 && <img src={peca.imagens[0]} alt="Imagem da Peça" style={{ maxWidth: '100%', maxHeight: '100px', objectFit: 'cover', marginBottom: '10px' }} />}
                         <p><strong>{peca.nome}</strong> ({peca.numeroPeca})</p>
@@ -74366,6 +74415,20 @@ A1;Peça exemplo;10`}
                       </div>
                     ))}
                   </div>
+                  {pecasDesmontadas.length > pecasDesmontadasListaLimite ? (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      style={{ width: '100%', marginTop: '12px' }}
+                      onClick={() => setPecasDesmontadasListaLimite((n) => n + LISTA_UI_LOTE)}
+                    >
+                      {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                        '{n}',
+                        String(pecasDesmontadas.length - pecasDesmontadasListaLimite)
+                      )}
+                    </button>
+                  ) : null}
+                  </>
                 )}
               </div>
             )}

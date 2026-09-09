@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { localeDatetimeGeneral } from '../translations'
 import { formatMoneyEUR } from '../lib/formatMoney'
 import {
@@ -158,6 +159,13 @@ export function ClienteEquipamentoHistoricoPanel({
   const [pedidosAvulso, setPedidosAvulso] = useState<PedidoAvulsoRef[]>([])
   const [orcamentosGerados, setOrcamentosGerados] = useState<OrcamentoGeradoRef[]>([])
   const [reloadTick, setReloadTick] = useState(0)
+  const [timelineListaLimite, setTimelineListaLimite] = useState(LISTA_UI_LOTE)
+  const [gruposListaLimite, setGruposListaLimite] = useState(LISTA_UI_LOTE)
+
+  useEffect(() => {
+    setTimelineListaLimite(LISTA_UI_LOTE)
+    setGruposListaLimite(LISTA_UI_LOTE)
+  }, [vista, equipamento.id, equipamento.numeroSerie, equipamentoIndex])
 
   const recarregarDados = useCallback(() => {
     if (!loadData) return
@@ -678,7 +686,7 @@ export function ClienteEquipamentoHistoricoPanel({
       <div className="cliente-equip-hist">
         {barraEstado}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {timelineItems.map((item) => {
+          {timelineItems.slice(0, timelineListaLimite).map((item) => {
             const clickable = Boolean(item.action && onAbrirTimelineItem)
             const rowStyle: React.CSSProperties = {
               display: 'grid',
@@ -754,6 +762,19 @@ export function ClienteEquipamentoHistoricoPanel({
               </div>
             )
           })}
+          {timelineItems.length > timelineListaLimite ? (
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: '100%', marginTop: '4px' }}
+              onClick={() => setTimelineListaLimite((n) => n + LISTA_UI_LOTE)}
+            >
+              {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                '{n}',
+                String(timelineItems.length - timelineListaLimite)
+              )}
+            </button>
+          ) : null}
         </div>
       </div>
     )
@@ -804,7 +825,7 @@ export function ClienteEquipamentoHistoricoPanel({
         gruposParaVista.length,
         tr(emptyMsgKey),
         <div className="cliente-equip-hist__grupos">
-          {gruposParaVista.map((grupo) => {
+          {gruposParaVista.slice(0, gruposListaLimite).map((grupo) => {
           const rel = grupo.relatorio
           const temPecasNoRel = rel ? relatorioTemPecas(rel) : false
           const pecasRel = rel ? todasPecasRelatorio(rel) : []
@@ -943,6 +964,19 @@ export function ClienteEquipamentoHistoricoPanel({
             </article>
           )
         })}
+          {gruposParaVista.length > gruposListaLimite ? (
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: '100%', marginTop: '8px' }}
+              onClick={() => setGruposListaLimite((n) => n + LISTA_UI_LOTE)}
+            >
+              {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                '{n}',
+                String(gruposParaVista.length - gruposListaLimite)
+              )}
+            </button>
+          ) : null}
         </div>,
         gruposParaVista.length > 0
       )}

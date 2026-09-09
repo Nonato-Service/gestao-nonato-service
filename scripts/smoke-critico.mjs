@@ -2627,6 +2627,34 @@ try {
   } else {
     fail('ConhecimentoTecnicosContent ainda renderiza a lista toda')
   }
+  if (
+    nma3.includes('diarioPedidosListaLimite') &&
+    nma3.includes('sstListaLimite') &&
+    nma3.includes('agendaModalListaLimite') &&
+    nma3.includes('pecasDesmontadasListaLimite')
+  ) {
+    ok('diário, SST, agenda modal e desmontados usam lote de ecrã')
+  } else {
+    fail('diário/SST/agenda/desmontados ainda sem lote')
+  }
+  const cfs = fs.readFileSync(path.join(root, 'app/components/ClienteFaturasSection.tsx'), 'utf8')
+  if (cfs.includes('LISTA_UI_LOTE') && cfs.includes('faturasListaLimite')) {
+    ok('faturas do cliente usam lote de ecrã')
+  } else {
+    fail('ClienteFaturasSection ainda renderiza a lista toda')
+  }
+  const rdc = fs.readFileSync(path.join(root, 'app/components/RegistroDespesasContent.tsx'), 'utf8')
+  if (rdc.includes('documentosListaLimite') && rdc.includes('relatoriosListaLimite')) {
+    ok('registo de despesas usa lote de ecrã')
+  } else {
+    fail('RegistroDespesasContent ainda renderiza a lista toda')
+  }
+  const hist = fs.readFileSync(path.join(root, 'app/components/ClienteEquipamentoHistoricoPanel.tsx'), 'utf8')
+  if (hist.includes('timelineListaLimite') && hist.includes('gruposListaLimite')) {
+    ok('histórico do equipamento usa lote de ecrã')
+  } else {
+    fail('ClienteEquipamentoHistoricoPanel ainda renderiza a lista toda')
+  }
 } catch (e) {
   fail(`fase 3 listas: ${e.message}`)
 }
