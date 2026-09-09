@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { IconHome, IconIdCard } from './UiIcons'
 import { translations, translationBundleKey } from '../translations'
 import { ClienteEnderecoMapsActions } from './ClienteEnderecoMapsActions'
@@ -250,6 +251,11 @@ export function ClienteDetalheView({
   onAssociarEquipamentoFatura,
 }: Props) {
   const tr = useDetalheTr(language)
+  const [equipamentosListaLimite, setEquipamentosListaLimite] = useState(LISTA_UI_LOTE)
+
+  useEffect(() => {
+    setEquipamentosListaLimite(LISTA_UI_LOTE)
+  }, [cliente.id])
 
   const safeT = useMemo(() => {
     return (translations[translationBundleKey(language)] || translations['pt-BR']) as Record<
@@ -498,7 +504,7 @@ export function ClienteDetalheView({
           <p className="cliente-detalhe-v2__empty">{tr('noEquipamentos')}</p>
         ) : (
           <div className="cliente-detalhe-v2__equip-grid">
-            {equipamentos.map((eq, index) => {
+            {equipamentos.slice(0, equipamentosListaLimite).map((eq, index) => {
               const photo = eq.photo || eq.coverPhoto
               const idEquip = rotuloIdEquipamentoCliente(eq, equipamentosArmazem, index)
               const rsEq = coletarRelatoriosServicoPorEquipamentoCliente({
@@ -593,6 +599,19 @@ export function ClienteDetalheView({
                 </button>
               )
             })}
+            {equipamentos.length > equipamentosListaLimite ? (
+              <button
+                type="button"
+                className="cliente-detalhe-v2__btn-add"
+                style={{ width: '100%', marginTop: 8 }}
+                onClick={() => setEquipamentosListaLimite((n) => n + LISTA_UI_LOTE)}
+              >
+                {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                  '{n}',
+                  String(equipamentos.length - equipamentosListaLimite)
+                )}
+              </button>
+            ) : null}
           </div>
         )}
       </section>

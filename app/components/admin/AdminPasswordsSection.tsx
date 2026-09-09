@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { LISTA_UI_LOTE } from '../../lib/listaUiLote'
 import type { PasswordEntry, SafeT } from './adminTypes'
 
 export type AdminPasswordsSectionProps = {
@@ -67,6 +68,11 @@ export function AdminPasswordsSection(props: AdminPasswordsSectionProps) {
   const [copyId, setCopyId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [saveFlash, setSaveFlash] = useState(false)
+  const [passwordsListaLimite, setPasswordsListaLimite] = useState(LISTA_UI_LOTE)
+
+  useEffect(() => {
+    setPasswordsListaLimite(LISTA_UI_LOTE)
+  }, [search, sortBy])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -308,7 +314,8 @@ export function AdminPasswordsSection(props: AdminPasswordsSectionProps) {
             <p>{tr(safeT, 'adminPasswordsEmptyFiltered', 'Nenhum resultado para esta pesquisa.')}</p>
           </div>
         ) : (
-          filtered.map((entry) => {
+          <>
+          {filtered.slice(0, passwordsListaLimite).map((entry) => {
             const visible = visiblePasswords.has(entry.id)
             const copied = copyId === entry.id
             const confirming = confirmDeleteId === entry.id
@@ -378,7 +385,21 @@ export function AdminPasswordsSection(props: AdminPasswordsSectionProps) {
                 </div>
               </article>
             )
-          })
+          })}
+          {filtered.length > passwordsListaLimite ? (
+            <button
+              type="button"
+              className="admin-passwords-hub-btn admin-passwords-hub-btn--secondary"
+              style={{ width: '100%', marginTop: 8 }}
+              onClick={() => setPasswordsListaLimite((n) => n + LISTA_UI_LOTE)}
+            >
+              {tr(safeT, 'listaCarregarMais', 'Mostrar mais ({n})').replace(
+                '{n}',
+                String(filtered.length - passwordsListaLimite)
+              )}
+            </button>
+          ) : null}
+          </>
         )}
       </div>
     </section>

@@ -2695,8 +2695,13 @@ try {
     fail('FamiliasGruposEquipamentosContent ainda renderiza a lista toda')
   }
   const mic = fs.readFileSync(path.join(root, 'app/components/ManuaisInformacoesContent.tsx'), 'utf8')
-  if (mic.includes('familiasListaLimite') && mic.includes('LISTA_UI_LOTE')) {
-    ok('manuais/informações usam lote de ecrã')
+  if (
+    mic.includes('familiasListaLimite') &&
+    mic.includes('gruposNavLimite') &&
+    mic.includes('modelosNavLimite') &&
+    mic.includes('LISTA_UI_LOTE')
+  ) {
+    ok('manuais/informações usam lote na árvore (famílias, grupos e modelos)')
   } else {
     fail('ManuaisInformacoesContent ainda renderiza a árvore toda')
   }
@@ -2741,6 +2746,34 @@ try {
   } else {
     fail('CadastroServicosContent ainda renderiza as tabelas todas')
   }
+  if (
+    nma3.includes('alertaGestoresLimite') &&
+    nma3.includes('alertaTecnicosInternosLimite') &&
+    nma3.includes('alertaTecnicosExternosLimite')
+  ) {
+    ok('alerta de mensagens (gestores/técnicos) usa lote de ecrã')
+  } else {
+    fail('cartões de alerta ainda pintam gestores/técnicos todos')
+  }
+  const aus = fs.readFileSync(path.join(root, 'app/components/admin/AdminUsersSection.tsx'), 'utf8')
+  const aps = fs.readFileSync(path.join(root, 'app/components/admin/AdminPasswordsSection.tsx'), 'utf8')
+  if (aus.includes('usersListaLimite') && aps.includes('passwordsListaLimite')) {
+    ok('administração de utilizadores e senhas usa lote de ecrã')
+  } else {
+    fail('AdminUsers/Passwords ainda renderizam a lista toda')
+  }
+  const cdv = fs.readFileSync(path.join(root, 'app/components/ClienteDetalheView.tsx'), 'utf8')
+  if (cdv.includes('equipamentosListaLimite') && cdv.includes('LISTA_UI_LOTE')) {
+    ok('grelha de equipamentos do cliente usa lote de ecrã')
+  } else {
+    fail('ClienteDetalheView ainda pinta todos os equipamentos')
+  }
+  const eam = fs.readFileSync(path.join(root, 'app/components/EquipamentosArmazemMenu.tsx'), 'utf8')
+  if (eam.includes('familiasListaLimite') && eam.includes('LISTA_UI_LOTE')) {
+    ok('menu de famílias do armazém usa lote de ecrã')
+  } else {
+    fail('EquipamentosArmazemMenu ainda pinta todas as famílias')
+  }
   const tsExtra = require('typescript')
   for (const rel of [
     'app/components/PedidoOrcamentosAvulsoContent.tsx',
@@ -2749,6 +2782,11 @@ try {
     'app/components/ClienteEquipamentoOrcamentosPanel.tsx',
     'app/components/CadastroServicosContent.tsx',
     'app/components/FamiliasGruposChecklistContent.tsx',
+    'app/components/ManuaisInformacoesContent.tsx',
+    'app/components/admin/AdminUsersSection.tsx',
+    'app/components/admin/AdminPasswordsSection.tsx',
+    'app/components/ClienteDetalheView.tsx',
+    'app/components/EquipamentosArmazemMenu.tsx',
   ]) {
     const extraSrc = fs.readFileSync(path.join(root, rel), 'utf8')
     const extraParsed = tsExtra.transpileModule(extraSrc, {

@@ -4487,6 +4487,9 @@ export default function Dashboard() {
   const [faturasGeralFornecedoresLimite, setFaturasGeralFornecedoresLimite] = useState(LISTA_UI_LOTE)
   const [faturasGeralClienteLimites, setFaturasGeralClienteLimites] = useState<Record<string, number>>({})
   const [estadoVisualTecnicosLimite, setEstadoVisualTecnicosLimite] = useState(LISTA_UI_LOTE)
+  const [alertaGestoresLimite, setAlertaGestoresLimite] = useState(LISTA_UI_LOTE)
+  const [alertaTecnicosInternosLimite, setAlertaTecnicosInternosLimite] = useState(LISTA_UI_LOTE)
+  const [alertaTecnicosExternosLimite, setAlertaTecnicosExternosLimite] = useState(LISTA_UI_LOTE)
   /** Gestão financeira › Clientes › Ordem de serviço: recebimento sem fatura e consulta de fatura */
   const [osTabRecebSemFaturaRelId, setOsTabRecebSemFaturaRelId] = useState('')
   const [osTabConsultaFaturaNum, setOsTabConsultaFaturaNum] = useState('')
@@ -57806,7 +57809,7 @@ A1;Peça exemplo;10`}
                     gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
                     gap: '20px'
                   }}>
-                    {gestoresPorArea[area].map(gestor => {
+                    {gestoresPorArea[area].slice(0, alertaGestoresLimite).map(gestor => {
                       const mensagensGestor = mensagensComunicacaoVisiveis.filter((m: MensagemComunicacao) => m.destinatarioId === gestor.id)
                       const totalMensagens = mensagensGestor.length
                       const mensagensLidas = mensagensGestor.filter((m: MensagemComunicacao) => m.lida).length
@@ -57913,6 +57916,19 @@ A1;Peça exemplo;10`}
                         )}
                       </div>
                     )})}
+                    {gestoresPorArea[area].length > alertaGestoresLimite ? (
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        style={{ width: '100%', marginTop: 8 }}
+                        onClick={() => setAlertaGestoresLimite((n) => n + LISTA_UI_LOTE)}
+                      >
+                        {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                          '{n}',
+                          String(gestoresPorArea[area].length - alertaGestoresLimite)
+                        )}
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               ))
@@ -57925,7 +57941,7 @@ A1;Peça exemplo;10`}
                   {safeT?.tecnicosInternos || 'TÉCNICOS INTERNOS'}
                 </h2>
                 <div className="alerta-mensagens-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px' }}>
-                  {tecnicosInternosLista.map((tecnico: Tecnico) => {
+                  {tecnicosInternosLista.slice(0, alertaTecnicosInternosLimite).map((tecnico: Tecnico) => {
                     const mensagensTecnico = mensagensComunicacaoVisiveis.filter((m: MensagemComunicacao) => m.destinatarioId === tecnico.id)
                     const totalMensagens = mensagensTecnico.length
                     const mensagensLidas = mensagensTecnico.filter((m: MensagemComunicacao) => m.lida).length
@@ -57973,6 +57989,19 @@ A1;Peça exemplo;10`}
                     )
                   })}
                 </div>
+                {tecnicosInternosLista.length > alertaTecnicosInternosLimite ? (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ width: '100%', marginTop: 8 }}
+                    onClick={() => setAlertaTecnicosInternosLimite((n) => n + LISTA_UI_LOTE)}
+                  >
+                    {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                      '{n}',
+                      String(tecnicosInternosLista.length - alertaTecnicosInternosLimite)
+                    )}
+                  </button>
+                ) : null}
                 {tecnicosInternosLista.length === 0 && (
                   <p style={{ color: '#888', fontSize: '14px', marginTop: '15px', marginBottom: 0 }}>{safeT?.nenhumTecnicoInterno || 'Nenhum técnico interno cadastrado'}</p>
                 )}
@@ -57984,7 +58013,7 @@ A1;Peça exemplo;10`}
                   {safeT?.tecnicosExternos || 'TÉCNICOS EXTERNOS'}
                 </h2>
                 <div className="alerta-mensagens-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px' }}>
-                  {tecnicosExternosLista.map((tecnico: Tecnico) => {
+                  {tecnicosExternosLista.slice(0, alertaTecnicosExternosLimite).map((tecnico: Tecnico) => {
                     const mensagensTecnico = mensagensComunicacaoVisiveis.filter((m: MensagemComunicacao) => m.destinatarioId === tecnico.id)
                     const totalMensagens = mensagensTecnico.length
                     const mensagensLidas = mensagensTecnico.filter((m: MensagemComunicacao) => m.lida).length
@@ -58032,6 +58061,19 @@ A1;Peça exemplo;10`}
                     )
                   })}
                 </div>
+                {tecnicosExternosLista.length > alertaTecnicosExternosLimite ? (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ width: '100%', marginTop: 8 }}
+                    onClick={() => setAlertaTecnicosExternosLimite((n) => n + LISTA_UI_LOTE)}
+                  >
+                    {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                      '{n}',
+                      String(tecnicosExternosLista.length - alertaTecnicosExternosLimite)
+                    )}
+                  </button>
+                ) : null}
                 {tecnicosExternosLista.length === 0 && (
                   <p style={{ color: '#888', fontSize: '14px', marginTop: '15px', marginBottom: 0 }}>{safeT?.nenhumTecnicoExterno || 'Nenhum técnico externo cadastrado'}</p>
                 )}

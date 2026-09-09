@@ -1,6 +1,7 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { ContextualBackBar } from './ContextualBackBar'
 
 type Props = {
@@ -26,6 +27,7 @@ export function EquipamentosArmazemMenu(props: Props) {
     onVoltarHub,
   } = props
   const tr = (key: string, fallback: string) => safeT[key] || fallback
+  const [familiasListaLimite, setFamiliasListaLimite] = useState(LISTA_UI_LOTE)
 
   if (etapa === 'hub') {
     return (
@@ -90,7 +92,8 @@ export function EquipamentosArmazemMenu(props: Props) {
             {tr('equipamentosSemFamilias', 'Nenhuma família cadastrada. Use «Cadastrar Equipamentos» ou «Famílias e grupos».')}
           </div>
         ) : (
-          familias.map((familia) => (
+          <>
+          {familias.slice(0, familiasListaLimite).map((familia) => (
             <button
               key={familia.nome}
               type="button"
@@ -105,7 +108,21 @@ export function EquipamentosArmazemMenu(props: Props) {
                 {familia.total} {tr('equipamentosAtivos', 'equipamento(s)')}
               </span>
             </button>
-          ))
+          ))}
+          {familias.length > familiasListaLimite ? (
+            <button
+              type="button"
+              className="ns-equip-hub__card"
+              style={{ fontWeight: 700 }}
+              onClick={() => setFamiliasListaLimite((n) => n + LISTA_UI_LOTE)}
+            >
+              {(tr('listaCarregarMais', 'Mostrar mais ({n})')).replace(
+                '{n}',
+                String(familias.length - familiasListaLimite)
+              )}
+            </button>
+          ) : null}
+          </>
         )}
       </div>
     </div>

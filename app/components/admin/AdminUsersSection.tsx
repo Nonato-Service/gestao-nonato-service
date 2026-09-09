@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { LISTA_UI_LOTE } from '../../lib/listaUiLote'
 import {
   USER_PERMISSION_KEYS,
   countActivePermissions,
@@ -66,6 +67,11 @@ export function AdminUsersSection({
   const [filter, setFilter] = useState<'all' | 'admins' | 'standard'>('all')
   const [sortBy, setSortBy] = useState<'name' | 'role'>('name')
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [usersListaLimite, setUsersListaLimite] = useState(LISTA_UI_LOTE)
+
+  useEffect(() => {
+    setUsersListaLimite(LISTA_UI_LOTE)
+  }, [search, filter, sortBy])
 
   const stats = useMemo(() => {
     const admins = users.filter((u) => u.isAdmin).length
@@ -112,7 +118,7 @@ export function AdminUsersSection({
           <p className="admin-users-hub__compact-empty">{safeT?.noUsers || 'Nenhum usuário cadastrado'}</p>
         ) : (
           <div className="admin-users-hub__compact-list">
-            {users.map((user) => (
+            {users.slice(0, usersListaLimite).map((user) => (
               <div key={user.id} className="admin-users-hub-card admin-users-hub-card--compact">
                 <div className="admin-users-hub-card__main">
                   <div className="admin-users-hub-card__avatar" aria-hidden="true">
@@ -135,6 +141,19 @@ export function AdminUsersSection({
                 </div>
               </div>
             ))}
+            {users.length > usersListaLimite ? (
+              <button
+                type="button"
+                className="admin-users-hub-btn admin-users-hub-btn--secondary"
+                style={{ width: '100%', marginTop: 8 }}
+                onClick={() => setUsersListaLimite((n) => n + LISTA_UI_LOTE)}
+              >
+                {tr(safeT, 'listaCarregarMais', 'Mostrar mais ({n})').replace(
+                  '{n}',
+                  String(users.length - usersListaLimite)
+                )}
+              </button>
+            ) : null}
           </div>
         )}
       </div>
@@ -272,7 +291,8 @@ export function AdminUsersSection({
             <p>{tr(safeT, 'adminUsersEmptyFiltered', 'Nenhum resultado para esta pesquisa ou filtro.')}</p>
           </div>
         ) : (
-          filtered.map((user) => {
+          <>
+          {filtered.slice(0, usersListaLimite).map((user) => {
             const activeKeys = getActivePermissionKeys(user.permissions, user.isAdmin)
             const activeCount = countActivePermissions(user.permissions, user.isAdmin)
             const visibleChips = activeKeys.slice(0, 5)
@@ -371,7 +391,21 @@ export function AdminUsersSection({
                 </div>
               </article>
             )
-          })
+          })}
+          {filtered.length > usersListaLimite ? (
+            <button
+              type="button"
+              className="admin-users-hub-btn admin-users-hub-btn--secondary"
+              style={{ width: '100%', marginTop: 8 }}
+              onClick={() => setUsersListaLimite((n) => n + LISTA_UI_LOTE)}
+            >
+              {tr(safeT, 'listaCarregarMais', 'Mostrar mais ({n})').replace(
+                '{n}',
+                String(filtered.length - usersListaLimite)
+              )}
+            </button>
+          ) : null}
+          </>
         )}
       </div>
     </section>

@@ -320,6 +320,8 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
 
   const [navSearch, setNavSearch] = useState('')
   const [familiasListaLimite, setFamiliasListaLimite] = useState(LISTA_UI_LOTE)
+  const [gruposNavLimite, setGruposNavLimite] = useState(LISTA_UI_LOTE)
+  const [modelosNavLimite, setModelosNavLimite] = useState(LISTA_UI_LOTE)
   const [expandedFamilias, setExpandedFamilias] = useState<Record<string, boolean>>({})
   const [expandedGrupos, setExpandedGrupos] = useState<Record<string, boolean>>({})
   const [mainTab, setMainTab] = useState<'ficha' | 'docs' | 'equip'>('ficha')
@@ -981,6 +983,8 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
 
   useEffect(() => {
     setFamiliasListaLimite(LISTA_UI_LOTE)
+    setGruposNavLimite(LISTA_UI_LOTE)
+    setModelosNavLimite(LISTA_UI_LOTE)
   }, [navQuery])
 
   const textareaStyle: React.CSSProperties = {
@@ -1279,8 +1283,9 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                       )}
                     </div>
 
-                    {famExpanded &&
-                      famGrupos.map((grupo) => {
+                    {famExpanded && (
+                      <>
+                      {famGrupos.slice(0, gruposNavLimite).map((grupo) => {
                         const grupoModelos = modelos
                           .filter((m) => m.grupoId === grupo.id)
                           .filter(
@@ -1356,8 +1361,9 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                               )}
                             </div>
 
-                            {grpExpanded &&
-                              grupoModelos.map((modelo) => (
+                            {grpExpanded && (
+                              <>
+                              {grupoModelos.slice(0, modelosNavLimite).map((modelo) => (
                                 <div
                                   key={modelo.id}
                                   className={`manuais-pro__row manuais-pro__row--modelo ${selectedModeloManuaisId === modelo.id ? 'is-active' : ''}`}
@@ -1409,9 +1415,39 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
                                   )}
                                 </div>
                               ))}
+                              {grupoModelos.length > modelosNavLimite ? (
+                                <button
+                                  type="button"
+                                  className="manuais-pro__btn manuais-pro__btn--primary"
+                                  style={{ width: '100%', marginTop: 8 }}
+                                  onClick={() => setModelosNavLimite((n) => n + LISTA_UI_LOTE)}
+                                >
+                                  {(tr('listaCarregarMais', 'Mostrar mais ({n})')).replace(
+                                    '{n}',
+                                    String(grupoModelos.length - modelosNavLimite)
+                                  )}
+                                </button>
+                              ) : null}
+                              </>
+                            )}
                           </div>
                         )
                       })}
+                      {famGrupos.length > gruposNavLimite ? (
+                        <button
+                          type="button"
+                          className="manuais-pro__btn manuais-pro__btn--primary"
+                          style={{ width: '100%', marginTop: 8 }}
+                          onClick={() => setGruposNavLimite((n) => n + LISTA_UI_LOTE)}
+                        >
+                          {(tr('listaCarregarMais', 'Mostrar mais ({n})')).replace(
+                            '{n}',
+                            String(famGrupos.length - gruposNavLimite)
+                          )}
+                        </button>
+                      ) : null}
+                      </>
+                    )}
                   </div>
                 )
               })}
