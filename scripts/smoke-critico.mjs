@@ -2701,10 +2701,64 @@ try {
     fail('ManuaisInformacoesContent ainda renderiza a árvore toda')
   }
   const fgc = fs.readFileSync(path.join(root, 'app/components/FamiliasGruposChecklistContent.tsx'), 'utf8')
-  if (fgc.includes('familiasListaLimite') && fgc.includes('gruposListaLimite')) {
+  if (
+    fgc.includes('familiasListaLimite') &&
+    fgc.includes('gruposListaLimite') &&
+    fgc.includes('parentesListaLimite') &&
+    fgc.includes('servicosListaLimite')
+  ) {
     ok('famílias/grupos de checklist usam lote de ecrã')
   } else {
     fail('FamiliasGruposChecklistContent ainda renderiza a lista toda')
+  }
+  if (nma3.includes('proto-arquivo-nav') && nma3.includes('gruposProtocolosArquivo.slice(0, protocoloArquivoGruposLimite)')) {
+    ok('pílulas do arquivo de protocolos usam lote de ecrã')
+  } else {
+    fail('pílulas do arquivo de protocolos ainda pintam todos os clientes')
+  }
+  const poa = fs.readFileSync(path.join(root, 'app/components/PedidoOrcamentosAvulsoContent.tsx'), 'utf8')
+  if (poa.includes('historicoListaLimite') && poa.includes('pecasBuscaLimite')) {
+    ok('pedido avulso usa lote no histórico e na busca de peças')
+  } else {
+    fail('PedidoOrcamentosAvulsoContent ainda renderiza o histórico todo')
+  }
+  const pcc = fs.readFileSync(path.join(root, 'app/components/PagamentosContadorContent.tsx'), 'utf8')
+  if (pcc.includes('pagamentosListaLimite') && pcc.includes('LISTA_UI_LOTE')) {
+    ok('pagamentos ao contabilista usam lote de ecrã')
+  } else {
+    fail('PagamentosContadorContent ainda renderiza a lista toda')
+  }
+  const cof = fs.readFileSync(path.join(root, 'app/components/ClienteOrcamentosFichaSection.tsx'), 'utf8')
+  const cop = fs.readFileSync(path.join(root, 'app/components/ClienteEquipamentoOrcamentosPanel.tsx'), 'utf8')
+  if (cof.includes('itensListaLimite') && cop.includes('itensListaLimite')) {
+    ok('orçamentos do cliente/equipamento usam lote de ecrã')
+  } else {
+    fail('fichas de orçamento do cliente ainda pintam a lista toda')
+  }
+  const csc = fs.readFileSync(path.join(root, 'app/components/CadastroServicosContent.tsx'), 'utf8')
+  if (csc.includes('itensListaLimite') && csc.includes('listarGruposLimite') && csc.includes('matrizLinhasLimite')) {
+    ok('cadastro de serviços usa lote na tabela, matriz e lista')
+  } else {
+    fail('CadastroServicosContent ainda renderiza as tabelas todas')
+  }
+  const tsExtra = require('typescript')
+  for (const rel of [
+    'app/components/PedidoOrcamentosAvulsoContent.tsx',
+    'app/components/PagamentosContadorContent.tsx',
+    'app/components/ClienteOrcamentosFichaSection.tsx',
+    'app/components/ClienteEquipamentoOrcamentosPanel.tsx',
+    'app/components/CadastroServicosContent.tsx',
+    'app/components/FamiliasGruposChecklistContent.tsx',
+  ]) {
+    const extraSrc = fs.readFileSync(path.join(root, rel), 'utf8')
+    const extraParsed = tsExtra.transpileModule(extraSrc, {
+      fileName: rel,
+      reportDiagnostics: true,
+      compilerOptions: { jsx: tsExtra.JsxEmit.Preserve, target: tsExtra.ScriptTarget.ES2020 },
+    })
+    const extraErrs = (extraParsed.diagnostics || []).filter((d) => d.category === tsExtra.DiagnosticCategory.Error)
+    if (extraErrs.length === 0) ok(`${path.basename(rel)} sem erro de sintaxe`)
+    else fail(`${rel} com erro de sintaxe JSX`)
   }
 } catch (e) {
   fail(`fase 3 listas: ${e.message}`)

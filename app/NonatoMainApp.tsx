@@ -31760,7 +31760,7 @@ export default function Dashboard() {
                     <>
                       {!clienteArquivoFiltrado && gruposProtocolosArquivo.length >= 4 ? (
                         <nav className="proto-arquivo-nav" aria-label={protoT?.protocolosServicoArquivoNav || 'Ir para cliente'}>
-                          {gruposProtocolosArquivo.map((grupoCliente) => {
+                          {gruposProtocolosArquivo.slice(0, protocoloArquivoGruposLimite).map((grupoCliente) => {
                             const n = grupoCliente.porData.reduce((acc, g) => acc + g.itens.length, 0)
                             const nomeCurto =
                               grupoCliente.nomeCliente.length > 28
@@ -31784,6 +31784,19 @@ export default function Dashboard() {
                               </button>
                             )
                           })}
+                          {gruposProtocolosArquivo.length > protocoloArquivoGruposLimite ? (
+                            <button
+                              type="button"
+                              className="proto-arquivo-nav__pill"
+                              style={{ fontWeight: 700 }}
+                              onClick={() => setProtocoloArquivoGruposLimite((n) => n + LISTA_UI_LOTE)}
+                            >
+                              {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                                '{n}',
+                                String(gruposProtocolosArquivo.length - protocoloArquivoGruposLimite)
+                              )}
+                            </button>
+                          ) : null}
                         </nav>
                       ) : null}
                       {gruposProtocolosArquivo.slice(0, protocoloArquivoGruposLimite).map((grupoCliente) => {

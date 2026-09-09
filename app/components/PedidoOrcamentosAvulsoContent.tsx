@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect, useId, useCallback } from 'react'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 import { useBuscaPecaBibliotecaComServidor } from '../lib/useBuscaPecaBibliotecaComServidor'
 import { openPedidoOrcamentoAvulsoPdf } from '../lib/pedidoOrcamentoAvulsoPdf'
@@ -288,6 +289,8 @@ export function PedidoOrcamentosAvulsoContent({
   const [pedidosGerados, setPedidosGerados] = useState<PedidoAvulsoGuardado[]>(() => lerPedidosLocalStorage())
   const [codigoUltimoGerado, setCodigoUltimoGerado] = useState<string | null>(null)
   const [buscaHistorico, setBuscaHistorico] = useState('')
+  const [historicoListaLimite, setHistoricoListaLimite] = useState(LISTA_UI_LOTE)
+  const [pecasBuscaLimite, setPecasBuscaLimite] = useState(LISTA_UI_LOTE)
   const [historicoCarregando, setHistoricoCarregando] = useState(false)
   const lastHubSeedTokenRef = React.useRef<number | null>(null)
 
@@ -396,6 +399,14 @@ export function PedidoOrcamentosAvulsoContent({
       return codigo.includes(q) || cliente.includes(q) || equip.includes(q)
     })
   }, [pedidosGerados, buscaHistorico])
+
+  useEffect(() => {
+    setHistoricoListaLimite(LISTA_UI_LOTE)
+  }, [buscaHistorico])
+
+  useEffect(() => {
+    setPecasBuscaLimite(LISTA_UI_LOTE)
+  }, [buscaPeca])
 
   const clientesFiltrados = useMemo(() => {
     if (!buscaCliente.trim()) return clientes
@@ -1308,7 +1319,7 @@ export function PedidoOrcamentosAvulsoContent({
           </p>
         ) : (
           <div className="orc-pro__history-list">
-            {pedidosHistoricoFiltrados.slice(0, 50).map((p) => (
+            {pedidosHistoricoFiltrados.slice(0, historicoListaLimite).map((p) => (
               <div key={p.codigo} className="orc-pro__history-card">
                 <div className="orc-pro__history-head">
                   <span className="orc-pro__history-code">{p.codigo}</span>
@@ -1370,6 +1381,19 @@ export function PedidoOrcamentosAvulsoContent({
                 </div>
               </div>
             ))}
+            {pedidosHistoricoFiltrados.length > historicoListaLimite ? (
+              <button
+                type="button"
+                className="orc-pro__btn orc-pro__btn--secondary"
+                style={{ width: '100%', marginTop: 8 }}
+                onClick={() => setHistoricoListaLimite((n) => n + LISTA_UI_LOTE)}
+              >
+                {((safeT as Record<string, string | undefined>)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                  '{n}',
+                  String(pedidosHistoricoFiltrados.length - historicoListaLimite)
+                )}
+              </button>
+            ) : null}
           </div>
         )}
       </section>
@@ -1649,7 +1673,7 @@ export function PedidoOrcamentosAvulsoContent({
                                           'Nenhuma peça encontrada. A busca aceita código com ou sem hífens (ex.: 2-029-95-0951). Se não existir na biblioteca, use «Manual» ou cadastre na Biblioteca de Peças.'}
                                       </p>
                                     ) : null}
-                                    {pecasFiltradas.map((peca) => (
+                                    {pecasFiltradas.slice(0, pecasBuscaLimite).map((peca) => (
                                       <div
                                         key={peca.id}
                                         className="orc-pro__list-item orc-pro__list-item--peca"
@@ -1676,6 +1700,20 @@ export function PedidoOrcamentosAvulsoContent({
                                         </button>
                                       </div>
                                     ))}
+                                    {pecasFiltradas.length > pecasBuscaLimite ? (
+                                      <button
+                                        type="button"
+                                        className="orc-pro__btn orc-pro__btn--secondary"
+                                        style={{ width: '100%', marginTop: 8 }}
+                                        onClick={() => setPecasBuscaLimite((n) => n + LISTA_UI_LOTE)}
+                                      >
+                                        {((safeT as Record<string, string | undefined>)?.listaCarregarMais ||
+                                          'Mostrar mais ({n})').replace(
+                                          '{n}',
+                                          String(pecasFiltradas.length - pecasBuscaLimite)
+                                        )}
+                                      </button>
+                                    ) : null}
                                   </div>
                                 </>
                               )}

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { AssistTextarea } from './AssistTextFields'
 import {
   coletarCodigosMatriz,
@@ -13,6 +13,7 @@ import {
   type ServicoCadastroGrupo,
   type ServicoCadastroItem,
 } from '../lib/servicosCadastroUtils'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 
 type TabId = 'grupos' | 'matriz' | 'listar'
 
@@ -235,9 +236,21 @@ export function CadastroServicosContent(props: Props) {
   const [activeTab, setActiveTab] = useState<TabId>('grupos')
   const [duplicarNome, setDuplicarNome] = useState('')
   const [duplicarOrigemId, setDuplicarOrigemId] = useState('')
+  const [itensListaLimite, setItensListaLimite] = useState(LISTA_UI_LOTE)
+  const [listarGruposLimite, setListarGruposLimite] = useState(LISTA_UI_LOTE)
+  const [matrizLinhasLimite, setMatrizLinhasLimite] = useState(LISTA_UI_LOTE)
 
   const gruposOrdenados = useMemo(() => ordenarServicoGrupos(servicoGrupos || []), [servicoGrupos])
   const codigosMatriz = useMemo(() => coletarCodigosMatriz(servicos || []), [servicos])
+
+  useEffect(() => {
+    setItensListaLimite(LISTA_UI_LOTE)
+  }, [servicoGrupoSelecionadoId])
+
+  useEffect(() => {
+    setListarGruposLimite(LISTA_UI_LOTE)
+    setMatrizLinhasLimite(LISTA_UI_LOTE)
+  }, [activeTab])
   const servicosSafe = Array.isArray(servicos) ? servicos : []
   const gruposSafeLen = Array.isArray(servicoGrupos) ? servicoGrupos.length : 0
 
@@ -612,7 +625,7 @@ export function CadastroServicosContent(props: Props) {
                         </tr>
                       </thead>
                       <tbody>
-                        {itensGrupoSelecionado.map((servico) => {
+                        {itensGrupoSelecionado.slice(0, itensListaLimite).map((servico) => {
                           const cod = servicoCodParaExibicao(servico)
                           const valorZero = !servico.valor || servico.valor <= 0
                           return (
@@ -659,6 +672,19 @@ export function CadastroServicosContent(props: Props) {
                         })}
                       </tbody>
                     </table>
+                    {itensGrupoSelecionado.length > itensListaLimite ? (
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        style={{ width: '100%', marginTop: 8 }}
+                        onClick={() => setItensListaLimite((n) => n + LISTA_UI_LOTE)}
+                      >
+                        {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                          '{n}',
+                          String(itensGrupoSelecionado.length - itensListaLimite)
+                        )}
+                      </button>
+                    ) : null}
                   </div>
                 )}
               </>
@@ -709,7 +735,7 @@ export function CadastroServicosContent(props: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {codigosMatriz.map((cod) => (
+                  {codigosMatriz.slice(0, matrizLinhasLimite).map((cod) => (
                     <tr key={cod}>
                       <td className="cadastro-valores-v2__cod-cell cadastro-valores-v2__matriz-td-sticky">{cod}</td>
                       {gruposOrdenados.map((g) => {
@@ -732,6 +758,19 @@ export function CadastroServicosContent(props: Props) {
                   ))}
                 </tbody>
               </table>
+              {codigosMatriz.length > matrizLinhasLimite ? (
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ width: '100%', marginTop: 8 }}
+                  onClick={() => setMatrizLinhasLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(codigosMatriz.length - matrizLinhasLimite)
+                  )}
+                </button>
+              ) : null}
             </div>
           )}
         </div>
@@ -750,7 +789,7 @@ export function CadastroServicosContent(props: Props) {
             <p className="cadastro-valores-v2__empty">{safeT.noServicos || 'Nenhum serviço ou despesa cadastrado.'}</p>
           ) : (
             <div className="cadastro-valores-v2__list-groups">
-              {gruposOrdenados.map((g) => {
+              {gruposOrdenados.slice(0, listarGruposLimite).map((g) => {
                 const itens = (servicos || [])
                   .filter((s) => s && s.grupoId === g.id)
                   .slice()
@@ -805,7 +844,7 @@ export function CadastroServicosContent(props: Props) {
                           </tr>
                         </thead>
                         <tbody>
-                          {itens.map((servico) => {
+                          {itens.slice(0, LISTA_UI_LOTE).map((servico) => {
                             const valorZero = !servico.valor || servico.valor <= 0
                             return (
                               <tr key={servico.id} className={valorZero ? 'cadastro-valores-v2__row--warn' : undefined}>
@@ -855,6 +894,19 @@ export function CadastroServicosContent(props: Props) {
                   </div>
                 )
               })}
+              {gruposOrdenados.length > listarGruposLimite ? (
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ width: '100%', marginTop: 8 }}
+                  onClick={() => setListarGruposLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(gruposOrdenados.length - listarGruposLimite)
+                  )}
+                </button>
+              ) : null}
             </div>
           )}
         </div>

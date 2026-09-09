@@ -10,6 +10,7 @@ import {
   buildTextoEnvioGenerico,
 } from '../context/DocumentoEnvioClienteContext'
 import { DocumentoEnvioAcoes } from './DocumentoEnvioAcoes'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 
 const STORAGE_ENTIDADES = 'nonato-contador-entidades'
 const STORAGE_PAGAMENTOS = 'nonato-contador-pagamentos'
@@ -256,6 +257,7 @@ export function PagamentosContadorContent({
   const [filtroDataFim, setFiltroDataFim] = useState('')
   const [filtroStatus, setFiltroStatus] = useState<'todos' | 'pago' | 'pendente'>('todos')
   const [busca, setBusca] = useState('')
+  const [pagamentosListaLimite, setPagamentosListaLimite] = useState(LISTA_UI_LOTE)
   const [pdfModeloContador, setPdfModeloContador] = useState(() => loadPdfModeloPadrao('pagamentosContador'))
 
   const [showPagamentoForm, setShowPagamentoForm] = useState(false)
@@ -352,6 +354,10 @@ export function PagamentosContadorContent({
     filtroStatus,
     busca,
   ])
+
+  useEffect(() => {
+    setPagamentosListaLimite(LISTA_UI_LOTE)
+  }, [filtroEntidade, filtroPeriodoModo, filtroMes, filtroDataInicio, filtroDataFim, filtroStatus, busca])
 
   const totais = useMemo(() => {
     let pago = 0
@@ -955,7 +961,7 @@ export function PagamentosContadorContent({
             </div>
           ) : (
             <div className="pagamentos-contador-lista">
-              {pagamentosFiltrados.map(p => {
+              {pagamentosFiltrados.slice(0, pagamentosListaLimite).map(p => {
                 const ent = entidades.find(e => e.id === p.entidadeId)
                 const cor = ent ? CATEGORIA_COR[ent.categoria] : '#94a3b8'
                 return (
@@ -1014,6 +1020,19 @@ export function PagamentosContadorContent({
                   </article>
                 )
               })}
+              {pagamentosFiltrados.length > pagamentosListaLimite ? (
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ width: '100%', marginTop: 8 }}
+                  onClick={() => setPagamentosListaLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {tx(safeT, 'listaCarregarMais', 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(pagamentosFiltrados.length - pagamentosListaLimite)
+                  )}
+                </button>
+              ) : null}
             </div>
           )}
         </>

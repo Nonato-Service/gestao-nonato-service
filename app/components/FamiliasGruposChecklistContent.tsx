@@ -210,6 +210,8 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
   const [navSearch, setNavSearch] = useState('')
   const [familiasListaLimite, setFamiliasListaLimite] = useState(LISTA_UI_LOTE)
   const [gruposListaLimite, setGruposListaLimite] = useState(LISTA_UI_LOTE)
+  const [parentesListaLimite, setParentesListaLimite] = useState(LISTA_UI_LOTE)
+  const [servicosListaLimite, setServicosListaLimite] = useState(LISTA_UI_LOTE)
   const [workTab, setWorkTab] = useState<'add' | 'groups' | 'services'>('groups')
   const [servicosScope, setServicosScope] = useState<'parente' | 'familia'>('parente')
   const [servicosGrupoFilterId, setServicosGrupoFilterId] = useState<string | null>(null)
@@ -242,6 +244,8 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
 
   useEffect(() => {
     setGruposListaLimite(LISTA_UI_LOTE)
+    setParentesListaLimite(LISTA_UI_LOTE)
+    setServicosListaLimite(LISTA_UI_LOTE)
   }, [selectedFamiliaForGrupos, selectedParenteIdForPainelGrupos])
 
   const parentesCount = parentesChecklist.length
@@ -765,7 +769,7 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
 
                     {famExpanded && (
                       <div className="fg-ck-shell__parent-list fg-checklist-pro__tree-nested">
-                        {parentesDestaFamilia.map((p) => {
+                        {parentesDestaFamilia.slice(0, parentesListaLimite).map((p) => {
                           const isParenteActive = selectedParenteIdForPainelGrupos === p.id && selectedFamiliaForGrupos === familia
                           const gruposParente = gruposChecklist.filter((g) => g.parenteId === p.id).length
                           return (
@@ -869,6 +873,19 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                             </div>
                           )
                         })}
+                        {parentesDestaFamilia.length > parentesListaLimite ? (
+                          <button
+                            type="button"
+                            className="fg-ck-shell__btn fg-ck-shell__btn--primary"
+                            style={{ width: '100%', marginTop: 8 }}
+                            onClick={() => setParentesListaLimite((n) => n + LISTA_UI_LOTE)}
+                          >
+                            {(tr('listaCarregarMais', 'Mostrar mais ({n})')).replace(
+                              '{n}',
+                              String(parentesDestaFamilia.length - parentesListaLimite)
+                            )}
+                          </button>
+                        ) : null}
                         <div className="fg-ck-shell__field-row fg-ck-shell__field-row--nested">
                           <input
                             type="text"
@@ -1238,7 +1255,7 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                 ) : (
                   <div className="fg-ck-shell__serv-list">
                     {servicosScope === 'familia' && !servicosGrupoFilterId
-                      ? parentesDestaFamiliaSelecionada.map((parente) => {
+                      ? parentesDestaFamiliaSelecionada.slice(0, servicosListaLimite).map((parente) => {
                           const gruposParente = gruposParaServicos.filter((g) => g.parenteId === parente.id)
                           if (gruposParente.length === 0) return null
                           return (
@@ -1254,7 +1271,26 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                             </div>
                           )
                         })
-                      : gruposParaServicos.map((gr) => renderServicoGrupoBlock(gr))}
+                      : gruposParaServicos.slice(0, servicosListaLimite).map((gr) => renderServicoGrupoBlock(gr))}
+                    {(servicosScope === 'familia' && !servicosGrupoFilterId
+                      ? parentesDestaFamiliaSelecionada.length
+                      : gruposParaServicos.length) > servicosListaLimite ? (
+                      <button
+                        type="button"
+                        className="fg-ck-shell__btn fg-ck-shell__btn--primary"
+                        style={{ width: '100%', marginTop: 8 }}
+                        onClick={() => setServicosListaLimite((n) => n + LISTA_UI_LOTE)}
+                      >
+                        {(tr('listaCarregarMais', 'Mostrar mais ({n})')).replace(
+                          '{n}',
+                          String(
+                            (servicosScope === 'familia' && !servicosGrupoFilterId
+                              ? parentesDestaFamiliaSelecionada.length
+                              : gruposParaServicos.length) - servicosListaLimite
+                          )
+                        )}
+                      </button>
+                    ) : null}
                   </div>
                 )}
               </section>

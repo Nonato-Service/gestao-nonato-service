@@ -18,6 +18,7 @@ import {
   orcamentoGeradoPendente,
   orcamentoGeradoAprovado,
 } from '../lib/clienteEquipamentoOrcamentos'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 
 type FiltroOrigem = 'todos' | 'relatorio' | 'avulso'
 type FiltroEstado = 'todos' | 'pendentes' | 'aprovados'
@@ -62,6 +63,11 @@ export function ClienteEquipamentoOrcamentosPanel({
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>('todos')
   const [pedidosAvulso, setPedidosAvulso] = useState<PedidoAvulsoRef[]>([])
   const [orcamentosGerados, setOrcamentosGerados] = useState<OrcamentoGeradoRef[]>([])
+  const [itensListaLimite, setItensListaLimite] = useState(LISTA_UI_LOTE)
+
+  useEffect(() => {
+    setItensListaLimite(LISTA_UI_LOTE)
+  }, [filtroOrigem, filtroEstado, equipamento.id, equipamento.numeroSerie, equipamentoIndex])
 
   useEffect(() => {
     if (!loadData) return
@@ -308,7 +314,7 @@ export function ClienteEquipamentoOrcamentosPanel({
         </p>
       ) : (
         <div className="cliente-equip-orcamentos__list">
-          {itensVisiveis.map((item) => {
+          {itensVisiveis.slice(0, itensListaLimite).map((item) => {
             if (item.kind === 'relatorio-pedido') {
               const p = item.data
               const badge = badgeRelatorio(p.status)
@@ -429,6 +435,19 @@ export function ClienteEquipamentoOrcamentosPanel({
               </div>
             )
           })}
+          {itensVisiveis.length > itensListaLimite ? (
+            <button
+              type="button"
+              className="cliente-equip-orcamentos__btn"
+              style={{ width: '100%', marginTop: 8 }}
+              onClick={() => setItensListaLimite((n) => n + LISTA_UI_LOTE)}
+            >
+              {(safeT?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                '{n}',
+                String(itensVisiveis.length - itensListaLimite)
+              )}
+            </button>
+          ) : null}
         </div>
       )}
     </div>
