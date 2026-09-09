@@ -2612,6 +2612,21 @@ try {
   } else {
     fail('GestoresTecnicosPanel ainda renderiza a lista toda')
   }
+  if (
+    nma3.includes('faturasFornecedorListaLimite') &&
+    nma3.includes('faturasGeralFornecedoresLimite') &&
+    nma3.includes('estadoVisualTecnicosLimite')
+  ) {
+    ok('faturas por fornecedor e estado visual usam lote de ecrã')
+  } else {
+    fail('faturas/estado visual ainda sem lote')
+  }
+  const ctc = fs.readFileSync(path.join(root, 'app/components/ConhecimentoTecnicosContent.tsx'), 'utf8')
+  if (ctc.includes('LISTA_UI_LOTE') && ctc.includes('tecnicosRailLimite') && ctc.includes('conhecimentosListaLimite')) {
+    ok('conhecimento técnico usa lote no rail e nos cartões')
+  } else {
+    fail('ConhecimentoTecnicosContent ainda renderiza a lista toda')
+  }
 } catch (e) {
   fail(`fase 3 listas: ${e.message}`)
 }

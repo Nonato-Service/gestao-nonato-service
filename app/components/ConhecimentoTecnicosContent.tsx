@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { ContextualBackBar } from './ContextualBackBar'
 import { saveData } from '../utils/dataStorage'
 import { AssistTextarea } from './AssistTextFields'
@@ -139,6 +140,8 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
   } = props
 
   const [buscaTecnico, setBuscaTecnico] = useState('')
+  const [tecnicosRailLimite, setTecnicosRailLimite] = useState(LISTA_UI_LOTE)
+  const [conhecimentosListaLimite, setConhecimentosListaLimite] = useState(LISTA_UI_LOTE)
 
   const nivelOpcoes: NivelOpcao[] = [
     { value: 0, label: safeT.conhecimentoNivelNenhum ?? 'Nenhum' },
@@ -158,6 +161,14 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
     if (!q) return tecnicos
     return tecnicos.filter((t) => t.name.toLowerCase().includes(q))
   }, [buscaTecnico, tecnicos])
+
+  useEffect(() => {
+    setTecnicosRailLimite(LISTA_UI_LOTE)
+  }, [buscaTecnico])
+
+  useEffect(() => {
+    setConhecimentosListaLimite(LISTA_UI_LOTE)
+  }, [tecnicoConhecimentoSelecionado])
 
   useEffect(() => {
     if (tecnicos.length === 0) {
@@ -340,7 +351,7 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
                 />
               </label>
               <div className="ct-pro__rail-list">
-                {tecnicosFiltrados.map((tecnico) => {
+                {tecnicosFiltrados.slice(0, tecnicosRailLimite).map((tecnico) => {
                   const nReg = conhecimentoTecnicos.filter((c) => c.tecnicoId === tecnico.id).length
                   const isActive = tecnicoConhecimentoSelecionado === tecnico.id
                   return (
@@ -367,6 +378,19 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
                     </button>
                   )
                 })}
+                {tecnicosFiltrados.length > tecnicosRailLimite ? (
+                  <button
+                    type="button"
+                    className="ct-pro__rail-item"
+                    style={{ justifyContent: 'center', fontWeight: 700 }}
+                    onClick={() => setTecnicosRailLimite((n) => n + LISTA_UI_LOTE)}
+                  >
+                    {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                      '{n}',
+                      String(tecnicosFiltrados.length - tecnicosRailLimite)
+                    )}
+                  </button>
+                ) : null}
               </div>
             </aside>
 
@@ -483,8 +507,9 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
                       </p>
                     </div>
                   ) : (
+                    <>
                     <div className="ct-pro__cards">
-                      {conhecimentosDoTecnico.map((ent) => {
+                      {conhecimentosDoTecnico.slice(0, conhecimentosListaLimite).map((ent) => {
                         const camposDesc = SKILL_META.filter((s) => ent[s.field] > 0)
                         return (
                           <article key={ent.id} className="ct-pro__equip-card">
@@ -553,6 +578,20 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
                         )
                       })}
                     </div>
+                    {conhecimentosDoTecnico.length > conhecimentosListaLimite ? (
+                      <button
+                        type="button"
+                        className="ct-pro__rail-item"
+                        style={{ width: '100%', marginTop: 12, minHeight: 40, justifyContent: 'center', fontWeight: 700 }}
+                        onClick={() => setConhecimentosListaLimite((n) => n + LISTA_UI_LOTE)}
+                      >
+                        {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                          '{n}',
+                          String(conhecimentosDoTecnico.length - conhecimentosListaLimite)
+                        )}
+                      </button>
+                    ) : null}
+                    </>
                   )}
                 </div>
               )}

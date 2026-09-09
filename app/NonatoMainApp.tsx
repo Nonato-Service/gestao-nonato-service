@@ -4476,6 +4476,10 @@ export default function Dashboard() {
   const [relatoriosFinanceirosListaLimite, setRelatoriosFinanceirosListaLimite] = useState(LISTA_UI_LOTE)
   const [pedidosSeparacaoListaLimite, setPedidosSeparacaoListaLimite] = useState(LISTA_UI_LOTE)
   const [fornecedoresModalListaLimite, setFornecedoresModalListaLimite] = useState(LISTA_UI_LOTE)
+  const [faturasFornecedorListaLimite, setFaturasFornecedorListaLimite] = useState(LISTA_UI_LOTE)
+  const [faturasGeralFornecedoresLimite, setFaturasGeralFornecedoresLimite] = useState(LISTA_UI_LOTE)
+  const [faturasGeralClienteLimites, setFaturasGeralClienteLimites] = useState<Record<string, number>>({})
+  const [estadoVisualTecnicosLimite, setEstadoVisualTecnicosLimite] = useState(LISTA_UI_LOTE)
   /** Gestão financeira › Clientes › Ordem de serviço: recebimento sem fatura e consulta de fatura */
   const [osTabRecebSemFaturaRelId, setOsTabRecebSemFaturaRelId] = useState('')
   const [osTabConsultaFaturaNum, setOsTabConsultaFaturaNum] = useState('')
@@ -4582,6 +4586,9 @@ export default function Dashboard() {
   
   const [fornecedorForm, setFornecedorForm] = useState<FornecedorFormState>(() => emptyFornecedorFormState())
   const [selectedFornecedorForFatura, setSelectedFornecedorForFatura] = useState<Fornecedor | null>(null)
+  useEffect(() => {
+    setFaturasFornecedorListaLimite(LISTA_UI_LOTE)
+  }, [selectedFornecedorForFatura?.id])
   const relatoriosEquipamentoModalBodyRef = useRef<HTMLDivElement | null>(null)
   const [showFaturaFornecedorForm, setShowFaturaFornecedorForm] = useState(false)
   const [editingFaturaFornecedor, setEditingFaturaFornecedor] = useState<FaturaFornecedor | null>(null)
@@ -45018,7 +45025,7 @@ A1;Peça exemplo;10`}
                   </p>
                 </div>
               ) : null}
-              {tecnicos.map(tecnico => {
+              {tecnicos.slice(0, estadoVisualTecnicosLimite).map(tecnico => {
                 const hoje = formatDataYYYYMMDDLocal(new Date())
                 const hojeDate = parseDataAgendaLocal(hoje)
                 // Janela até ao fim do mês seguinte — cobre trabalhos que atravessam o mês (ex.: até dia 4).
@@ -45329,6 +45336,19 @@ A1;Peça exemplo;10`}
                   </div>
                 )
               })}
+              {tecnicos.length > estadoVisualTecnicosLimite ? (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ gridColumn: '1 / -1', width: '100%' }}
+                  onClick={() => setEstadoVisualTecnicosLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(tecnicos.length - estadoVisualTecnicosLimite)
+                  )}
+                </button>
+              ) : null}
             </div>
 
             {/* CSS para animação */}
@@ -75231,7 +75251,7 @@ A1;Peça exemplo;10`}
             )}
             {selectedFornecedorForFatura.faturas && selectedFornecedorForFatura.faturas.length > 0 ? (
               <div style={{ marginTop: '20px' }}>
-                {selectedFornecedorForFatura.faturas.map(fatura => {
+                {selectedFornecedorForFatura.faturas.slice(0, faturasFornecedorListaLimite).map(fatura => {
                   const sinalFf = getSinalPagamentoFaturaFornecedor(fatura)
                   const ftFf = safeT as Record<string, string | undefined>
                   const labelFf =
@@ -75317,6 +75337,19 @@ A1;Peça exemplo;10`}
                   </div>
                   )
                 })}
+                {selectedFornecedorForFatura.faturas.length > faturasFornecedorListaLimite ? (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ width: '100%', marginTop: '8px' }}
+                    onClick={() => setFaturasFornecedorListaLimite((n) => n + LISTA_UI_LOTE)}
+                  >
+                    {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                      '{n}',
+                      String(selectedFornecedorForFatura.faturas.length - faturasFornecedorListaLimite)
+                    )}
+                  </button>
+                ) : null}
               </div>
             ) : (
               <p>{safeT?.nenhumaFatura || 'Nenhuma fatura encontrada.'}</p>
@@ -75690,8 +75723,7 @@ A1;Peça exemplo;10`}
 
             {/* Lista de Faturas por Fornecedor */}
             <div style={{ marginTop: '20px' }}>
-              {fornecedores.map(fornecedor => {
-                if (!fornecedor.faturas || fornecedor.faturas.length === 0) return null
+              {fornecedores.filter(f => f.faturas && f.faturas.length > 0).slice(0, faturasGeralFornecedoresLimite).map(fornecedor => {
                 
                 const hoje = new Date()
                 hoje.setHours(0, 0, 0, 0)
@@ -75756,7 +75788,7 @@ A1;Peça exemplo;10`}
                             
                             {/* Lista detalhada de faturas */}
                             <div style={{ marginTop: '10px' }}>
-                              {faturas.map(fatura => {
+                              {faturas.slice(0, faturasGeralClienteLimites[`${fornecedor.id}:${clienteId}`] ?? LISTA_UI_LOTE).map(fatura => {
                                 const sinalGeral = getSinalPagamentoFaturaFornecedor(fatura)
                                 const ftG = safeT as Record<string, string | undefined>
                                 const labelGeral =
@@ -75828,6 +75860,28 @@ A1;Peça exemplo;10`}
                                   </div>
                                 )
                               })}
+                              {faturas.length > (faturasGeralClienteLimites[`${fornecedor.id}:${clienteId}`] ?? LISTA_UI_LOTE) ? (
+                                <button
+                                  type="button"
+                                  className="btn-secondary"
+                                  style={{ width: '100%', marginTop: '8px' }}
+                                  onClick={() =>
+                                    setFaturasGeralClienteLimites((prev) => ({
+                                      ...prev,
+                                      [`${fornecedor.id}:${clienteId}`]:
+                                        (prev[`${fornecedor.id}:${clienteId}`] ?? LISTA_UI_LOTE) + LISTA_UI_LOTE,
+                                    }))
+                                  }
+                                >
+                                  {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                                    '{n}',
+                                    String(
+                                      faturas.length -
+                                        (faturasGeralClienteLimites[`${fornecedor.id}:${clienteId}`] ?? LISTA_UI_LOTE)
+                                    )
+                                  )}
+                                </button>
+                              ) : null}
                             </div>
                           </div>
                         )
@@ -75836,6 +75890,22 @@ A1;Peça exemplo;10`}
                   </div>
                 )
               })}
+              {fornecedores.filter(f => f.faturas && f.faturas.length > 0).length > faturasGeralFornecedoresLimite ? (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ width: '100%', marginTop: '8px' }}
+                  onClick={() => setFaturasGeralFornecedoresLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(
+                      fornecedores.filter(f => f.faturas && f.faturas.length > 0).length -
+                        faturasGeralFornecedoresLimite
+                    )
+                  )}
+                </button>
+              ) : null}
             </div>
             
             <button className="btn-primary" onClick={() => setShowFaturasGeralModal(false)} style={{ width: '100%', marginTop: '20px' }}>
