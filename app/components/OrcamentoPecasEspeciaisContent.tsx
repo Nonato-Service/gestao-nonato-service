@@ -16,6 +16,7 @@ import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
 import { formatClienteIdentidadeTexto } from './ClienteIdentidadeChips'
 import { PdfModeloPickerField } from './PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from '../lib/pdfModelStorage'
+import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 import {
   useDocumentoEnvioCliente,
@@ -252,6 +253,7 @@ export function OrcamentoPecasEspeciaisContent({
   const [formDirty, setFormDirty] = useState(false)
   const [gravando, setGravando] = useState(false)
   const [rascunhoAviso, setRascunhoAviso] = useState(false)
+  const [salvosListaLimite, setSalvosListaLimite] = useState(LISTA_UI_LOTE)
   const imagemInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const draftRestoredRef = useRef(false)
   const suppressDirtyRef = useRef(true)
@@ -1355,7 +1357,7 @@ export function OrcamentoPecasEspeciaisContent({
           <div className="orcamento-pecas-especiais-section">
             <h3>{t.orcamentoPecasEspGravadosTitulo || 'Orçamentos gravados'}</h3>
             <ul className="orcamento-pecas-especiais-salvos">
-              {salvos.slice(0, 20).map((o) => (
+              {salvos.slice(0, salvosListaLimite).map((o) => (
                 <li key={o.id}>
                   <button type="button" className="orcamento-pecas-especiais-salvo-btn" onClick={() => carregarSalvo(o)}>
                     <strong>{o.numeroOferta}</strong> — {o.clienteNome} (
@@ -1365,6 +1367,19 @@ export function OrcamentoPecasEspeciaisContent({
                 </li>
               ))}
             </ul>
+            {salvos.length > salvosListaLimite ? (
+              <button
+                type="button"
+                className="btn-secondary"
+                style={{ width: '100%', marginTop: 8 }}
+                onClick={() => setSalvosListaLimite((n) => n + LISTA_UI_LOTE)}
+              >
+                {(t.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                  '{n}',
+                  String(salvos.length - salvosListaLimite)
+                )}
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>

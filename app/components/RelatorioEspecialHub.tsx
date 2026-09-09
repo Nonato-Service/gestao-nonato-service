@@ -487,6 +487,13 @@ export default function RelatorioEspecialHub({
   const [acaoEmCurso, setAcaoEmCurso] = useState<'guardar' | 'eliminar' | null>(null)
   const [recuperando, setRecuperando] = useState(false)
   const [listaRelatoriosLimite, setListaRelatoriosLimite] = useState(LISTA_UI_LOTE)
+  const [tecnicosListaLimite, setTecnicosListaLimite] = useState(LISTA_UI_LOTE)
+  const [diasListaLimite, setDiasListaLimite] = useState(LISTA_UI_LOTE)
+
+  useEffect(() => {
+    setTecnicosListaLimite(LISTA_UI_LOTE)
+    setDiasListaLimite(LISTA_UI_LOTE)
+  }, [editandoId, modo])
   const snapshotGuardadoRef = useRef('')
   const rascunhoOferecidoRef = useRef(false)
 
@@ -1526,7 +1533,7 @@ export default function RelatorioEspecialHub({
             <label>{t.selecioneTecnico || 'Técnico'}</label>
             {tecnicosOpcoes.length > 0 ? (
               <div className="relatorio-especial-tecnicos-chips" role="listbox" aria-label={t.selecioneTecnico || 'Técnico'}>
-                {tecnicosOpcoes.map((tec) => {
+                {tecnicosOpcoes.slice(0, tecnicosListaLimite).map((tec) => {
                   const selected = form.tecnico === tec.name
                   return (
                     <button
@@ -1541,6 +1548,19 @@ export default function RelatorioEspecialHub({
                     </button>
                   )
                 })}
+                {tecnicosOpcoes.length > tecnicosListaLimite ? (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ width: '100%', marginTop: 8 }}
+                    onClick={() => setTecnicosListaLimite((n) => n + LISTA_UI_LOTE)}
+                  >
+                    {(t.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                      '{n}',
+                      String(tecnicosOpcoes.length - tecnicosListaLimite)
+                    )}
+                  </button>
+                ) : null}
               </div>
             ) : (
               <p className="relatorio-especial-tecnicos-vazio">
@@ -2457,7 +2477,7 @@ export default function RelatorioEspecialHub({
           </p>
         )}
 
-        {diasOrdenados.map((dia, diaIdx) => {
+        {diasOrdenados.slice(0, diasListaLimite).map((dia, diaIdx) => {
           const diaCalc = atualizarCalculosDiaEspecial(dia)
           const aberto = diaExpandido === dia.id
           const horasResumoCard = resumoHorasTrabalhoDia(diaCalc)
@@ -2844,6 +2864,19 @@ export default function RelatorioEspecialHub({
             </div>
           )
         })}
+        {diasOrdenados.length > diasListaLimite ? (
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{ width: '100%', marginTop: 8 }}
+            onClick={() => setDiasListaLimite((n) => n + LISTA_UI_LOTE)}
+          >
+            {(t.listaCarregarMais || 'Mostrar mais ({n})').replace(
+              '{n}',
+              String(diasOrdenados.length - diasListaLimite)
+            )}
+          </button>
+        ) : null}
       </section>
       </BibliotecaHubPainelRecolhivel>
 

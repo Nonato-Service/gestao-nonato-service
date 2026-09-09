@@ -393,7 +393,7 @@ export function CadastroServicosContent(props: Props) {
               </p>
             </div>
             <div className="cadastro-valores-v2__grupo-list cadastro-valores-v2__grupo-list--strip" role="listbox" aria-label={safeT.servicosGruposTitulo || 'Grupos de tarifa'}>
-              {gruposOrdenados.map((g, index) => {
+              {gruposOrdenados.slice(0, listarGruposLimite).map((g, index) => {
                 const nServ = (servicos || []).filter((s) => s && s.grupoId === g.id).length
                 const nCli = clientesPorGrupo[g.id] || 0
                 const nZero = (servicos || []).filter((s) => s && s.grupoId === g.id && (!s.valor || s.valor <= 0)).length
@@ -435,6 +435,19 @@ export function CadastroServicosContent(props: Props) {
                   </button>
                 )
               })}
+              {gruposOrdenados.length > listarGruposLimite ? (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ width: '100%', marginTop: 8 }}
+                  onClick={() => setListarGruposLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(gruposOrdenados.length - listarGruposLimite)
+                  )}
+                </button>
+              ) : null}
             </div>
 
             <div className="cadastro-valores-v2__grupos-admin">

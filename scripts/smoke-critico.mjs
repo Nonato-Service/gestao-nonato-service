@@ -2655,7 +2655,9 @@ try {
     hist.includes('gruposListaLimite') &&
     hist.includes('orcPendentesLimite') &&
     hist.includes('orcAprovadosLimite') &&
-    hist.includes('orcCanceladosLimite')
+    hist.includes('orcCanceladosLimite') &&
+    hist.includes('pecasListaLimites') &&
+    hist.includes('pedidosPecasLimites')
   ) {
     ok('histórico do equipamento usa lote de ecrã')
   } else {
@@ -2683,8 +2685,12 @@ try {
     fail('GestaoDemosContent ainda renderiza a lista toda')
   }
   const reh = fs.readFileSync(path.join(root, 'app/components/RelatorioEspecialHub.tsx'), 'utf8')
-  if (reh.includes('listaRelatoriosLimite') && reh.includes('relatoriosOrdenados')) {
-    ok('lista de relatórios especiais usa lote de ecrã')
+  if (
+    reh.includes('listaRelatoriosLimite') &&
+    reh.includes('diasListaLimite') &&
+    reh.includes('tecnicosListaLimite')
+  ) {
+    ok('relatório especial usa lote na lista, dias e técnicos')
   } else {
     fail('RelatorioEspecialHub ainda renderiza a lista toda')
   }
@@ -2804,6 +2810,12 @@ try {
   } else {
     fail('Admin logos ainda pintam todas as imagens')
   }
+  const ope = fs.readFileSync(path.join(root, 'app/components/OrcamentoPecasEspeciaisContent.tsx'), 'utf8')
+  if (ope.includes('salvosListaLimite') && ope.includes('LISTA_UI_LOTE')) {
+    ok('orçamentos de peças especiais gravados usam lote de ecrã')
+  } else {
+    fail('OrcamentoPecasEspeciaisContent ainda pinta todos os gravados')
+  }
   const tsExtra = require('typescript')
   for (const rel of [
     'app/components/PedidoOrcamentosAvulsoContent.tsx',
@@ -2822,6 +2834,9 @@ try {
     'app/components/BibliotecaPecasGaleriaCategorias.tsx',
     'app/components/admin/AdminLogosHub.tsx',
     'app/components/admin/AdminPdfLogosBySituation.tsx',
+    'app/components/RelatorioEspecialHub.tsx',
+    'app/components/OrcamentoPecasEspeciaisContent.tsx',
+    'app/components/ClienteEquipamentoHistoricoPanel.tsx',
   ]) {
     const extraSrc = fs.readFileSync(path.join(root, rel), 'utf8')
     const extraParsed = tsExtra.transpileModule(extraSrc, {

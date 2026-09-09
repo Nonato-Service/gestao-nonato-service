@@ -164,6 +164,8 @@ export function ClienteEquipamentoHistoricoPanel({
   const [orcPendentesLimite, setOrcPendentesLimite] = useState(LISTA_UI_LOTE)
   const [orcAprovadosLimite, setOrcAprovadosLimite] = useState(LISTA_UI_LOTE)
   const [orcCanceladosLimite, setOrcCanceladosLimite] = useState(LISTA_UI_LOTE)
+  const [pecasListaLimites, setPecasListaLimites] = useState<Record<string, number>>({})
+  const [pedidosPecasLimites, setPedidosPecasLimites] = useState<Record<string, number>>({})
 
   useEffect(() => {
     setTimelineListaLimite(LISTA_UI_LOTE)
@@ -171,6 +173,8 @@ export function ClienteEquipamentoHistoricoPanel({
     setOrcPendentesLimite(LISTA_UI_LOTE)
     setOrcAprovadosLimite(LISTA_UI_LOTE)
     setOrcCanceladosLimite(LISTA_UI_LOTE)
+    setPecasListaLimites({})
+    setPedidosPecasLimites({})
   }, [vista, equipamento.id, equipamento.numeroSerie, equipamentoIndex])
 
   const recarregarDados = useCallback(() => {
@@ -439,9 +443,12 @@ export function ClienteEquipamentoHistoricoPanel({
   const renderListaPecas = (
     pecas: Array<{ codigo: string; descricao: string; quantidade: number | string }>,
     keyPrefix: string
-  ) => (
+  ) => {
+    const pecasLimite = pecasListaLimites[keyPrefix] ?? LISTA_UI_LOTE
+    return (
+    <>
     <ul className="cliente-equip-hist__pecas-list">
-      {pecas.map((p, i) => (
+      {pecas.slice(0, pecasLimite).map((p, i) => (
         <li key={`${keyPrefix}-${p.codigo}-${i}`} className="cliente-equip-hist__peca-item">
           <span className="cliente-equip-hist__peca-cod">{p.codigo || '—'}</span>
           <span className="cliente-equip-hist__peca-desc">{p.descricao || '—'}</span>
@@ -449,7 +456,27 @@ export function ClienteEquipamentoHistoricoPanel({
         </li>
       ))}
     </ul>
-  )
+    {pecas.length > pecasLimite ? (
+      <button
+        type="button"
+        className="btn-secondary"
+        style={{ width: '100%', marginTop: 8 }}
+        onClick={() =>
+          setPecasListaLimites((prev) => ({
+            ...prev,
+            [keyPrefix]: pecasLimite + LISTA_UI_LOTE,
+          }))
+        }
+      >
+        {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+          '{n}',
+          String(pecas.length - pecasLimite)
+        )}
+      </button>
+    ) : null}
+    </>
+    )
+  }
 
   const renderCardOrcamento = (o: OrcamentoGeradoRef, tag: string) => (
     <div key={`orc-${o.id}`} className="cliente-equip-hist__pedido-card">
@@ -838,6 +865,7 @@ export function ClienteEquipamentoHistoricoPanel({
           const divida = rel && relatorioComDivida?.(rel.id)
           const pecasLabel =
             pecasRel.length === 1 ? tr('pecaSingular') : tr('pecasPlural')
+          const pedPecasLimite = pedidosPecasLimites[grupo.numero] ?? LISTA_UI_LOTE
 
           return (
             <article key={grupo.numero} className="cliente-equip-hist__grupo">
@@ -919,7 +947,8 @@ export function ClienteEquipamentoHistoricoPanel({
                   {grupo.pedidosPecas.length === 0 ? (
                     <p className="cliente-equip-hist__col-empty">{tr('semPedidoPecasRelatorio')}</p>
                   ) : (
-                    grupo.pedidosPecas.map((pedido) => {
+                    <>
+                    {grupo.pedidosPecas.slice(0, pedPecasLimite).map((pedido) => {
                       const orc = findOrcamentoGeradoParaPedidoRelatorio(pedido, orcamentosEquipamento)
                       const status = statusEfetivoPedidoRelatorio(pedido, orc)
                       const badge = badgePedido(status)
@@ -962,7 +991,26 @@ export function ClienteEquipamentoHistoricoPanel({
                           </div>
                         </div>
                       )
-                    })
+                    })}
+                    {grupo.pedidosPecas.length > pedPecasLimite ? (
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        style={{ width: '100%', marginTop: 8 }}
+                        onClick={() =>
+                          setPedidosPecasLimites((prev) => ({
+                            ...prev,
+                            [grupo.numero]: pedPecasLimite + LISTA_UI_LOTE,
+                          }))
+                        }
+                      >
+                        {(safeT.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                          '{n}',
+                          String(grupo.pedidosPecas.length - pedPecasLimite)
+                        )}
+                      </button>
+                    ) : null}
+                    </>
                   )}
                 </section>
                 )}
