@@ -337,6 +337,9 @@ import {
   emptyFaturaFornecedorFormState,
   faturaFornecedorToFormState,
   inferFaturaFornecedorEntidadeOrigem,
+  isFornecedorFormValid,
+  createFornecedorFromForm,
+  updateFornecedorFromForm,
 } from './modules/fornecedores'
 import type {
   MensagemComunicacao,
@@ -14920,7 +14923,7 @@ export default function Dashboard() {
   }
 
   const handleSaveFornecedor = () => {
-    if (!fornecedorForm.nomeEmpresa || !fornecedorForm.morada || !fornecedorForm.email) {
+    if (!isFornecedorFormValid(fornecedorForm)) {
       alert(t.fillAllFields)
       return
     }
@@ -14928,12 +14931,8 @@ export default function Dashboard() {
     createAutoBackupBeforeOperation()
 
     const savedFornecedor: Fornecedor = editingFornecedor
-      ? { ...editingFornecedor, ...fornecedorForm }
-      : {
-          id: Date.now().toString(),
-          ...fornecedorForm,
-          faturas: []
-        }
+      ? updateFornecedorFromForm(editingFornecedor, fornecedorForm)
+      : createFornecedorFromForm(fornecedorForm, { id: Date.now().toString() })
 
     if (editingFornecedor) {
       const updatedFornecedores = fornecedores.map(f => 
@@ -14949,20 +14948,7 @@ export default function Dashboard() {
       setFornecedores(updatedFornecedores)
       saveData('nonato-fornecedores', updatedFornecedores)
     }
-    setFornecedorForm({
-      nomeEmpresa: savedFornecedor.nomeEmpresa,
-      morada: savedFornecedor.morada,
-      localidade: savedFornecedor.localidade,
-      conselho: savedFornecedor.conselho,
-      pais: savedFornecedor.pais,
-      codigoPostal: savedFornecedor.codigoPostal,
-      freguesia: savedFornecedor.freguesia,
-      numeroContribuicaoFiscal: savedFornecedor.numeroContribuicaoFiscal || '',
-      telefones: savedFornecedor.telefones,
-      email: savedFornecedor.email,
-      contato: savedFornecedor.contato,
-      iban: savedFornecedor.iban || ''
-    })
+    setFornecedorForm(fornecedorToFormState(savedFornecedor))
     setEditingFornecedor(savedFornecedor)
     alert(t.supplierSavedSuccess || t.fornecedorSaved || 'Fornecedor salvo com sucesso!')
   }

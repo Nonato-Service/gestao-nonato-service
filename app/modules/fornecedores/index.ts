@@ -16,3 +16,10 @@ export {
 } from './formState'
 
 export { inferFaturaFornecedorEntidadeOrigem } from './entidadeOrigem'
+
+export type { FornecedorFromFormOpts } from './fornecedorFromForm'
+export {
+  isFornecedorFormValid,
+  createFornecedorFromForm,
+  updateFornecedorFromForm,
+} from './fornecedorFromForm'

@@ -2237,13 +2237,16 @@ try {
     idx.includes('fornecedorToFormState') &&
     idx.includes('emptyFaturaFornecedorFormState') &&
     idx.includes('faturaFornecedorToFormState') &&
-    idx.includes('inferFaturaFornecedorEntidadeOrigem')
+    idx.includes('inferFaturaFornecedorEntidadeOrigem') &&
+    idx.includes('isFornecedorFormValid') &&
+    idx.includes('createFornecedorFromForm') &&
+    idx.includes('updateFornecedorFromForm')
   ) {
     ok('módulo fornecedores exporta tipos + formState + entidadeOrigem')
   } else {
     fail('módulo fornecedores incompleto (index.ts)')
   }
-  for (const f of ['tipos.ts', 'formState.ts', 'entidadeOrigem.ts', 'index.ts']) {
+  for (const f of ['tipos.ts', 'formState.ts', 'entidadeOrigem.ts', 'fornecedorFromForm.ts', 'index.ts']) {
     if (exists(`app/modules/fornecedores/${f}`)) ok(`existe app/modules/fornecedores/${f}`)
     else fail(`falta app/modules/fornecedores/${f}`)
   }
@@ -2257,11 +2260,14 @@ try {
     !nma.includes('type Fornecedor = {') &&
     !nma.includes('type FaturaFornecedor = {') &&
     nma.includes('Fornecedor') &&
-    nma.includes('inferFaturaFornecedorEntidadeOrigem')
+    nma.includes('inferFaturaFornecedorEntidadeOrigem') &&
+    nma.includes('isFornecedorFormValid') &&
+    nma.includes('createFornecedorFromForm') &&
+    nma.includes('updateFornecedorFromForm')
   ) {
-    ok('NonatoMainApp usa Fornecedor/FaturaFornecedor do módulo fornecedores')
+    ok('NonatoMainApp usa Fornecedor/FaturaFornecedor/fromForm do módulo fornecedores')
   } else {
-    fail('NonatoMainApp ainda define Fornecedor/FaturaFornecedor localmente')
+    fail('NonatoMainApp ainda define Fornecedor/FaturaFornecedor/fromForm localmente')
   }
   const formComp = fs.readFileSync(path.join(root, 'app/components/FornecedorCadastroForm.tsx'), 'utf8')
   if (
