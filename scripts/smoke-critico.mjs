@@ -896,7 +896,11 @@ try {
     idx.includes('getSequenciaEtiquetasArmazem') &&
     idx.includes('enriquecerBlocoEquipamentoPedido') &&
     idx.includes('createEmptyEquipamentoForm') &&
-    idx.includes('equipamentoToFormState')
+    idx.includes('equipamentoToFormState') &&
+    idx.includes('isEquipamentoFormValid') &&
+    idx.includes('createEquipamentoFromForm') &&
+    idx.includes('updateEquipamentoFromForm') &&
+    idx.includes('equipamentoIdDuplicado')
   ) {
     ok('módulo equipamentos exporta relatório/etiquetas/formState')
   } else {
@@ -1103,6 +1107,11 @@ try {
   } else {
     ok('existe app/modules/equipamentos/formState.ts')
   }
+  if (!exists('app/modules/equipamentos/equipamentoFromForm.ts')) {
+    fail('falta app/modules/equipamentos/equipamentoFromForm.ts')
+  } else {
+    ok('existe app/modules/equipamentos/equipamentoFromForm.ts')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/equipamentos'") || nma.includes('from "./modules/equipamentos"')) {
     ok('NonatoMainApp importa app/modules/equipamentos')
@@ -1116,11 +1125,15 @@ try {
     !nma.includes('function equipamentoClienteIdETecnicoGerado(') &&
     !nma.includes('equipamentoClienteIdETecnicoGerado(') &&
     !nma.includes('idEquipamentoVisivelParaProtocolo(') &&
-    nma.includes('createEmptyEquipamentoForm')
+    nma.includes('createEmptyEquipamentoForm') &&
+    nma.includes('isEquipamentoFormValid') &&
+    nma.includes('createEquipamentoFromForm') &&
+    nma.includes('updateEquipamentoFromForm') &&
+    nma.includes('equipamentoIdDuplicado')
   ) {
-    ok('NonatoMainApp usa formState/aliases do módulo equipamentos')
+    ok('NonatoMainApp usa formState/aliases/fromForm do módulo equipamentos')
   } else {
-    fail('NonatoMainApp ainda define Equipamento/formState/aliases localmente')
+    fail('NonatoMainApp ainda define Equipamento/formState/aliases/fromForm localmente')
   }
 } catch (e) {
   fail(`módulo equipamentos: ${e.message}`)

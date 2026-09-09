@@ -539,6 +539,10 @@ import {
   type GrupoEquipamento,
   createEmptyEquipamentoForm,
   equipamentoToFormState,
+  isEquipamentoFormValid,
+  equipamentoIdDuplicado,
+  createEquipamentoFromForm,
+  updateEquipamentoFromForm,
 } from './modules/equipamentos'
 import {
   coletarIdsRelatoriosClienteParaExclusao,
@@ -12287,41 +12291,19 @@ export default function Dashboard() {
   }
 
   const handleSaveEquipamento = async (): Promise<boolean> => {
-    if (!equipamentoForm.id || !equipamentoForm.tipoEquipamento || !equipamentoForm.modelo || !equipamentoForm.marca || !equipamentoForm.numeroSerie || !equipamentoForm.familia || !equipamentoForm.grupo) {
+    if (!isEquipamentoFormValid(equipamentoForm)) {
       alert(t.fillAllFields)
       return false
     }
 
-    // Verificar se o ID já existe (apenas para novos equipamentos)
-    if (!editingEquipamento) {
-      const idExists = equipamentos.some(e => e.id === equipamentoForm.id)
-      if (idExists) {
-        alert(t.equipamentoIdExists)
-        return false
-      }
-    } else {
-      // Se está editando, verificar se o ID mudou e se o novo ID já existe
-      if (editingEquipamento.id !== equipamentoForm.id) {
-        const idExists = equipamentos.some(e => e.id === equipamentoForm.id && e.id !== editingEquipamento.id)
-        if (idExists) {
-          alert(t.equipamentoIdExists)
-          return false
-        }
-      }
-    }
-
-    const equipamentoPayload: Equipamento = {
-      ...equipamentoForm,
-      status: editingEquipamento?.status || 'ativo',
-      dataBaixa: editingEquipamento?.dataBaixa
+    if (equipamentoIdDuplicado(equipamentos, equipamentoForm.id, editingEquipamento?.id)) {
+      alert(t.equipamentoIdExists)
+      return false
     }
 
     const savedEquipamento: Equipamento = editingEquipamento
-      ? { ...equipamentoPayload }
-      : {
-          ...equipamentoPayload,
-          status: 'ativo'
-        }
+      ? updateEquipamentoFromForm(editingEquipamento, equipamentoForm)
+      : createEquipamentoFromForm(equipamentoForm)
 
     if (editingEquipamento) {
       const updatedEquipamentos = equipamentos.map(e => 

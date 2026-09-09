@@ -33,3 +33,11 @@ export {
   createEmptyEquipamentoForm,
   equipamentoToFormState,
 } from './formState'
+
+export type { EquipamentoFormCamposObrigatorios } from './equipamentoFromForm'
+export {
+  isEquipamentoFormValid,
+  equipamentoIdDuplicado,
+  createEquipamentoFromForm,
+  updateEquipamentoFromForm,
+} from './equipamentoFromForm'
