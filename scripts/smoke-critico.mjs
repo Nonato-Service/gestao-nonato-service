@@ -2596,6 +2596,22 @@ try {
   } else {
     fail('listas financeiras/separação/fornecedores modal ainda sem lote')
   }
+  if (nma3.includes('comprovantesSecoesLimite') && nma3.includes('comprovantesItensLimites')) {
+    ok('comprovantes usam lote de ecrã')
+  } else {
+    fail('lista de comprovantes ainda sem lote')
+  }
+  if (nma3.includes('POLL_MS = 45_000') && !/runAutoServerPull[\s\S]{0,500}30_000/.test(nma3.slice(nma3.indexOf('const runAutoServerPull')))) {
+    ok('sync automático usa um só intervalo de 45s')
+  } else {
+    fail('ainda existe intervalo de 30s a puxar o servidor')
+  }
+  const gtp = fs.readFileSync(path.join(root, 'app/components/pessoas/GestoresTecnicosPanel.tsx'), 'utf8')
+  if (gtp.includes('LISTA_UI_LOTE') && gtp.includes('gestoresLimite') && gtp.includes('tecnicosLimite')) {
+    ok('gestores e técnicos usam lote de ecrã')
+  } else {
+    fail('GestoresTecnicosPanel ainda renderiza a lista toda')
+  }
 } catch (e) {
   fail(`fase 3 listas: ${e.message}`)
 }

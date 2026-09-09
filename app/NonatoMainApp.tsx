@@ -4411,6 +4411,8 @@ export default function Dashboard() {
   const [comprovantesFiltroPeriodoView, setComprovantesFiltroPeriodoView] = useState<'semanal' | 'mensal' | 'anual'>('mensal')
   const [comprovantesFiltroAno, setComprovantesFiltroAno] = useState<string>('')
   const [comprovantesFiltroCliente, setComprovantesFiltroCliente] = useState<string>('')
+  const [comprovantesSecoesLimite, setComprovantesSecoesLimite] = useState(LISTA_UI_LOTE)
+  const [comprovantesItensLimites, setComprovantesItensLimites] = useState<Record<string, number>>({})
   const [comprovantesForm, setComprovantesForm] = useState({ cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
   const [showComprovantesForm, setShowComprovantesForm] = useState(false)
   const [formComp, setFormComp] = useState<{
@@ -6143,19 +6145,9 @@ export default function Dashboard() {
     ) {
       return
     }
+    /** Um pull ao abrir a aba — o intervalo de 45s do efeito acima cobre o resto. */
     void runAutoServerPull()
-    // Abas quentes: 30s (antes 10s) — evita competir com o poll global e com o foco.
-    const tid = window.setInterval(() => {
-      if (document.visibilityState === 'hidden') return
-      void runAutoServerPull()
-    }, 30_000)
-    return () => window.clearInterval(tid)
   }, [activeTabType, appInitialLoading, runAutoServerPull])
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || appInitialLoading) return
-    void runAutoServerPull()
-  }, [appInitialLoading, runAutoServerPull])
 
   const aceitarSincronizacaoServidor = useCallback(async () => {
     if (typeof window === 'undefined') return
@@ -27180,6 +27172,7 @@ export default function Dashboard() {
                 fechar: safeT?.close,
                 novoCadastro: (safeT as any)?.novoCadastro || 'Novo cadastro',
                 editarCadastro: (safeT as any)?.editarCadastro || 'Editar cadastro',
+                listaCarregarMais: (safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})',
               }}
             />
           </div>
@@ -48587,7 +48580,7 @@ A1;Peça exemplo;10`}
                   {(safeT as any)?.comprovantesNenhumComprovante || 'Nenhum comprovante. Clique em "Adicionar comprovante".'}
                 </p>
               )}
-              {secoesComprovantesPainel.map((secao) => (
+              {secoesComprovantesPainel.slice(0, comprovantesSecoesLimite).map((secao) => (
                 <div
                   key={secao.nome}
                   style={{
@@ -48683,10 +48676,43 @@ A1;Peça exemplo;10`}
                       {(safeT as any)?.comprovantesNenhumComprovanteCliente || 'Nenhum comprovante registado ainda.'}
                     </p>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>{secao.items.map(renderLinhaComprovante)}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {secao.items.slice(0, comprovantesItensLimites[secao.nome] ?? LISTA_UI_LOTE).map(renderLinhaComprovante)}
+                      {secao.items.length > (comprovantesItensLimites[secao.nome] ?? LISTA_UI_LOTE) ? (
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          style={{ width: '100%' }}
+                          onClick={() =>
+                            setComprovantesItensLimites((prev) => ({
+                              ...prev,
+                              [secao.nome]: (prev[secao.nome] ?? LISTA_UI_LOTE) + LISTA_UI_LOTE,
+                            }))
+                          }
+                        >
+                          {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                            '{n}',
+                            String(secao.items.length - (comprovantesItensLimites[secao.nome] ?? LISTA_UI_LOTE))
+                          )}
+                        </button>
+                      ) : null}
+                    </div>
                   )}
                 </div>
               ))}
+              {secoesComprovantesPainel.length > comprovantesSecoesLimite ? (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ width: '100%' }}
+                  onClick={() => setComprovantesSecoesLimite((n) => n + LISTA_UI_LOTE)}
+                >
+                  {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                    '{n}',
+                    String(secoesComprovantesPainel.length - comprovantesSecoesLimite)
+                  )}
+                </button>
+              ) : null}
             </div>
             {/* Lista por data — consulta opcional */}
             <details style={{ marginTop: '28px' }}>

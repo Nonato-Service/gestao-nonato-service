@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { LISTA_UI_LOTE } from '../../lib/listaUiLote'
 import {
   type Gestor,
   type GestorFormState,
@@ -67,6 +68,7 @@ export type GestoresTecnicosLabels = {
   fechar?: string
   novoCadastro?: string
   editarCadastro?: string
+  listaCarregarMais?: string
 }
 
 type Props = {
@@ -124,6 +126,9 @@ export function GestoresTecnicosPanel({
   const [editingTecnico, setEditingTecnico] = useState<Tecnico | null>(null)
   const [tecnicoForm, setTecnicoForm] = useState<TecnicoFormState>(() => emptyTecnicoForm('internal'))
 
+  const [gestoresLimite, setGestoresLimite] = useState(LISTA_UI_LOTE)
+  const [tecnicosLimite, setTecnicosLimite] = useState(LISTA_UI_LOTE)
+
   const [tiposOpen, setTiposOpen] = useState(false)
   const [editingTipo, setEditingTipo] = useState<TipoGestor | null>(null)
   const [tipoForm, setTipoForm] = useState<TipoGestorFormState>({
@@ -148,6 +153,10 @@ export function GestoresTecnicosPanel({
     })
   }, [gestores, filtroArea, q])
 
+  useEffect(() => {
+    setGestoresLimite(LISTA_UI_LOTE)
+  }, [q, filtroArea])
+
   const tecnicosFiltrados = useMemo(() => {
     return tecnicos.filter((t) => {
       if (filtroTecnico !== 'todos' && t.type !== filtroTecnico) return false
@@ -159,6 +168,10 @@ export function GestoresTecnicosPanel({
       )
     })
   }, [tecnicos, filtroTecnico, q])
+
+  useEffect(() => {
+    setTecnicosLimite(LISTA_UI_LOTE)
+  }, [q, filtroTecnico])
 
   const tiposOrdenados = useMemo(
     () => [...tiposGestores].sort((a, b) => a.ordem - b.ordem),
@@ -315,8 +328,9 @@ export function GestoresTecnicosPanel({
         gestoresFiltrados.length === 0 ? (
           <p className="gt-empty">{q || filtroArea !== 'todas' ? L.nenhumGestorFiltro : L.noGestores}</p>
         ) : (
+          <>
           <div className="gt-grid">
-            {gestoresFiltrados.map((gestor) => {
+            {gestoresFiltrados.slice(0, gestoresLimite).map((gestor) => {
               const tipo = tiposGestores.find((t) => t.id === gestor.area)
               return (
                 <article key={gestor.id} className="gt-card">
@@ -353,12 +367,27 @@ export function GestoresTecnicosPanel({
               )
             })}
           </div>
+          {gestoresFiltrados.length > gestoresLimite ? (
+            <button
+              type="button"
+              className="gt-btn gt-btn--ghost"
+              style={{ width: '100%', marginTop: 16 }}
+              onClick={() => setGestoresLimite((n) => n + LISTA_UI_LOTE)}
+            >
+              {(L.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                '{n}',
+                String(gestoresFiltrados.length - gestoresLimite)
+              )}
+            </button>
+          ) : null}
+          </>
         )
       ) : tecnicosFiltrados.length === 0 ? (
         <p className="gt-empty">{L.noTecnicos}</p>
       ) : (
+        <>
         <div className="gt-grid">
-          {tecnicosFiltrados.map((tecnico) => (
+          {tecnicosFiltrados.slice(0, tecnicosLimite).map((tecnico) => (
             <article key={tecnico.id} className="gt-card">
               <div className="gt-card__head">
                 <PessoaAvatar
@@ -396,6 +425,20 @@ export function GestoresTecnicosPanel({
             </article>
           ))}
         </div>
+        {tecnicosFiltrados.length > tecnicosLimite ? (
+          <button
+            type="button"
+            className="gt-btn gt-btn--ghost"
+            style={{ width: '100%', marginTop: 16 }}
+            onClick={() => setTecnicosLimite((n) => n + LISTA_UI_LOTE)}
+          >
+            {(L.listaCarregarMais || 'Mostrar mais ({n})').replace(
+              '{n}',
+              String(tecnicosFiltrados.length - tecnicosLimite)
+            )}
+          </button>
+        ) : null}
+        </>
       )}
 
       {gestorFormOpen ? (
