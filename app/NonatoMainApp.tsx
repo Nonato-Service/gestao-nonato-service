@@ -296,6 +296,13 @@ import {
   getSidebarGroupLabel as getSidebarGroupLabelFromModule,
   getDashboardMainHubTitle as getDashboardMainHubTitleFromModule,
   formatNavBackToHub as formatNavBackToHubFromModule,
+  emptySidebarButtonForm,
+  sidebarButtonToForm,
+  isSidebarButtonFormValid,
+  findSidebarButtonTranslationKey,
+  isSidebarButtonCustomName,
+  createSidebarButtonFromForm,
+  updateSidebarButtonFromForm,
 } from './modules/sidebar'
 import type { DiarioPedidoStatus, DiarioPedidoAnexo, DiarioPedidoItem } from './modules/diario'
 import {
@@ -1391,7 +1398,7 @@ export default function Dashboard() {
   const [showSidebarButtonOrganizer, setShowSidebarButtonOrganizer] = useState(false)
   const [sidebarOrganizerSearch, setSidebarOrganizerSearch] = useState('')
   const [editingButton, setEditingButton] = useState<SidebarButton | null>(null)
-  const [buttonForm, setButtonForm] = useState({ name: '', action: '' })
+  const [buttonForm, setButtonForm] = useState(() => emptySidebarButtonForm())
   const [draggedButton, setDraggedButton] = useState<string | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set()) // Nenhum grupo expandido por padrão
@@ -10990,13 +10997,13 @@ export default function Dashboard() {
 
   const handleAddButton = () => {
     setEditingButton(null)
-    setButtonForm({ name: '', action: '' })
+    setButtonForm(emptySidebarButtonForm())
     setShowButtonForm(true)
   }
 
   const handleEditButton = (button: SidebarButton) => {
     setEditingButton(button)
-    setButtonForm({ name: button.name, action: button.action })
+    setButtonForm(sidebarButtonToForm(button))
     setShowButtonForm(true)
   }
 
@@ -11186,49 +11193,28 @@ export default function Dashboard() {
   }, [safeT])
 
   const handleSaveButton = () => {
-    if (!buttonForm.name || !buttonForm.action) {
+    if (!isSidebarButtonFormValid(buttonForm)) {
       alert(t.fillAllFields)
       return
     }
 
-    // Verificar se o nome corresponde a alguma tradução conhecida
-    const findTranslationKey = (name: string): string | undefined => {
-      const nameLower = name.toLowerCase().trim()
-      const translationKeys = Object.keys(translations['pt-BR']) as Array<keyof typeof translations['pt-BR']>
-      
-      for (const key of translationKeys) {
-        const ptValue = String(translations['pt-BR'][key]).toLowerCase().trim()
-        if (ptValue === nameLower) {
-          return key as string
-        }
-      }
-      return undefined
-    }
-
-    // Verificar se o nome corresponde a uma tradução conhecida
-    const translationKey = findTranslationKey(buttonForm.name)
-    const defaultTranslation = translationKey ? (translations['pt-BR'] as any)[translationKey] : null
-    
-    // Se o nome editado é diferente da tradução padrão, marcar como customizado
-    // Isso permite que o nome customizado seja preservado mesmo ao mudar de idioma
-    const isCustomName = !translationKey || !defaultTranslation || buttonForm.name !== defaultTranslation
+    const translationKey = findSidebarButtonTranslationKey(
+      buttonForm.name,
+      translations['pt-BR'] as Record<string, unknown>
+    )
+    const defaultTranslation = translationKey
+      ? String((translations['pt-BR'] as Record<string, unknown>)[translationKey] ?? '')
+      : null
+    const isCustomName = isSidebarButtonCustomName(buttonForm.name, translationKey, defaultTranslation)
 
     const savedButton: SidebarButton = editingButton
-      ? {
-          ...editingButton,
-          name: buttonForm.name,
-          action: buttonForm.action,
-          translationKey: translationKey || editingButton.translationKey,
-          customName: isCustomName
-        }
-      : {
+      ? updateSidebarButtonFromForm(editingButton, buttonForm, { translationKey, customName: isCustomName })
+      : createSidebarButtonFromForm(buttonForm, {
           id: Date.now().toString(),
-          name: buttonForm.name,
-          action: buttonForm.action,
           order: sidebarButtons.length,
           translationKey,
-          customName: isCustomName
-        }
+          customName: isCustomName,
+        })
 
     if (editingButton) {
       const updatedButtons = sidebarButtons.map(b => 
@@ -11244,7 +11230,7 @@ export default function Dashboard() {
       setSidebarButtons(updatedButtons)
       saveData('nonato-sidebar-buttons', updatedButtons)
     }
-    setButtonForm({ name: savedButton.name, action: savedButton.action })
+    setButtonForm(sidebarButtonToForm(savedButton))
     setEditingButton(savedButton)
   }
 
@@ -71433,7 +71419,7 @@ A1;Peça exemplo;10`}
 
       {/* Modal de Formulário de Botão - Só mostra se não houver aba de administrador aberta */}
       {showButtonForm && !openTabs.some(tab => tab.type === 'administrador') && (
-        <div className="modal-overlay" onClick={() => { setShowButtonForm(false); setEditingButton(null); setButtonForm({ name: '', action: '' }); }}>
+        <div className="modal-overlay" onClick={() => { setShowButtonForm(false); setEditingButton(null); setButtonForm(emptySidebarButtonForm()); }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>{editingButton ? safeT?.editButton : safeT?.addButton}</h2>
             <div style={{ marginBottom: '15px' }}>
@@ -71459,7 +71445,7 @@ A1;Peça exemplo;10`}
               <button className="btn-primary" onClick={handleSaveButton} style={{ flex: 1 }}>
                 {safeT?.save || 'Salvar'}
               </button>
-              <button className="btn-primary" onClick={() => { setShowButtonForm(false); setEditingButton(null); setButtonForm({ name: '', action: '' }); }} style={{ flex: 1 }}>
+              <button className="btn-primary" onClick={() => { setShowButtonForm(false); setEditingButton(null); setButtonForm(emptySidebarButtonForm()); }} style={{ flex: 1 }}>
                 {safeT?.cancel || 'Cancelar'}
               </button>
             </div>

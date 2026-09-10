@@ -1630,6 +1630,28 @@ try {
   } else {
     fail('NonatoMainApp ainda define tabIntro/hubLabels localmente')
   }
+  if (
+    idx.includes('isSidebarButtonFormValid') &&
+    idx.includes('createSidebarButtonFromForm') &&
+    idx.includes('updateSidebarButtonFromForm') &&
+    idx.includes('sidebarButtonToForm') &&
+    exists('app/modules/sidebar/buttonForm.ts') &&
+    exists('app/modules/sidebar/buttonFromForm.ts')
+  ) {
+    ok('módulo sidebar exporta SidebarButton form/fromForm')
+  } else {
+    fail('módulo sidebar sem SidebarButton form/fromForm')
+  }
+  if (
+    nma.includes('isSidebarButtonFormValid') &&
+    nma.includes('createSidebarButtonFromForm') &&
+    nma.includes('updateSidebarButtonFromForm') &&
+    nma.includes('sidebarButtonToForm')
+  ) {
+    ok('NonatoMainApp usa SidebarButton fromForm do módulo sidebar')
+  } else {
+    fail('NonatoMainApp ainda mapeia SidebarButton no sítio')
+  }
 } catch (e) {
   fail(`módulo sidebar: ${e.message}`)
 }

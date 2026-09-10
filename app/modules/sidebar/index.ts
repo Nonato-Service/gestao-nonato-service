@@ -47,3 +47,14 @@ export {
   getDashboardMainHubTitle,
   formatNavBackToHub,
 } from './hubLabels'
+
+export type { SidebarButtonFormState } from './buttonForm'
+export { emptySidebarButtonForm, sidebarButtonToForm } from './buttonForm'
+
+export {
+  isSidebarButtonFormValid,
+  findSidebarButtonTranslationKey,
+  isSidebarButtonCustomName,
+  createSidebarButtonFromForm,
+  updateSidebarButtonFromForm,
+} from './buttonFromForm'
